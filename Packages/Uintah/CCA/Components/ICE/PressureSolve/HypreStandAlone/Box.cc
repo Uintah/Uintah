@@ -124,7 +124,7 @@ operator << (std::ostream& os,
 
 Box
 Box::faceExtents(const Counter d,
-                 const Side& s)
+                 const Side& s) const
   /*_____________________________________________________________________
     Function faceExtents:
     Compute face box extents of the numDims-dimensional box *this.

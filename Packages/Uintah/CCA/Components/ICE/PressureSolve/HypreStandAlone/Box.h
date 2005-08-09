@@ -88,7 +88,7 @@ class Box {
   bool          degenerate(void) const;
   bool          degenerate(const Counter d) const;
   Box           faceExtents(const Counter d,
-                            const Side& s); 
+                            const Side& s) const;
   Box           coarseNbhrExtents(const Vector<Counter>& refRat,
                                   const Counter d,
                                   const Side& s) const;

@@ -43,8 +43,8 @@ int DebugBuf::overflow(int ch)
 }
 
 streamsize
-DebugBuf::xsputn (const char* s,
-                  streamsize num)
+DebugBuf::xsputn(const char* s,
+                 streamsize num)
   // Writing num characters of the char array s: our implementation
   // of the virtual function streambuf::xsputn().
 {

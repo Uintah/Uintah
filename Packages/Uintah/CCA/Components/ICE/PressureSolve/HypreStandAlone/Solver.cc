@@ -88,9 +88,9 @@ Solver::setup(void)
   //-----------------------------------------------------------
   // Solver setup phase
   //-----------------------------------------------------------
-  linePrint("#",40);
+  linePrint("#",60);
   dbg0 << "Solver setup phase" << "\n";
-  linePrint("#",40);
+  linePrint("#",60);
   int time_index = hypre_InitializeTiming("AMG Setup");
   hypre_BeginTiming(time_index);
   
@@ -108,9 +108,9 @@ Solver::solve(void)
   //-----------------------------------------------------------
   // Solver solve phase
   //-----------------------------------------------------------
-  linePrint("#",40);
+  linePrint("#",60);
   dbg0 << "Solver solve phase" << "\n";
-  linePrint("#",40);
+  linePrint("#",60);
 
   this->solve(); // which setup will this be? The derived class's?
 
@@ -119,182 +119,301 @@ Solver::solve(void)
   //-----------------------------------------------------------
   // TODO: SolverSStruct is derived from Solver; implement the following
   // in SolverSStruct. For SolverStruct (PFMG), another gather vector required.
-  linePrint("#",40);
+  linePrint("#",60);
   dbg0 << "Gather the solution vector" << "\n";
-  linePrint("#",40);
+  linePrint("#",60);
 
   HYPRE_SStructVectorGather(_x);
 } //end solve()
 
 /*================= GRAPH CONSTRUCTION FUNCTIONS =========================*/
 void
-Solver::makeFCConnections(const Counter level,
-                          const Level* lev,
-                          const ConstructionStatus& status)
-  // Build the fine-to-coarse connections at all patches of level "level".
+Solver::makeConnections(const ConstructionStatus& status,
+                        const Hierarchy& hier,
+                        const HYPRE_SStructStencil& stencil,
+                        const Counter level,
+                        const Patch* patch,
+                        const Counter& d,
+                        const Side& s,
+                        const CoarseFineViewpoint& viewpoint)
+  // Build the C/F connections at the (d,s) C/F face of patch "patch"
+  // at level "level" (connecting to level-1). We add fine-to-coarse
+  // connections if viewpoint = FineToCoarse, otherwise we add
+  // coarse-to-fine connections.
 {
-  if (level == 0) return; // Coarsest level is never the fine level at C/F bdry
-  linePrint("=",30);
-  dbg0 << "Building fine-to-coarse (FC) connections at level = "
-       << level << "\n";
-  linePrint("=",30);
-  const int numDims   = _param->numDims;
+  linePrint("=",50);
+  dbg0 << "Building connections" 
+       << "  level = " << level 
+       << "  patch =\n" << *patch << "\n"
+       << "  status = " << status
+       << "  viewpoint = " << viewpoint << "\n"
+       << "  Face d = " << d
+       << " , s = " << s << "\n";
+  linePrint("=",50);
+  dbg.setLevel(2);
+  const Counter numDims = _param->numDims;
+
+  // Level info initialization
+  Counter fineLevel, coarseLevel;
+  if (viewpoint == FineToCoarse) {
+    fineLevel = level;
+    coarseLevel = level-1;
+  } else { // viewpoint == CoarseToFine
+    coarseLevel = level;
+    fineLevel = level+1;
+  }
+
+  const Level* lev = hier._levels[fineLevel];
   const Vector<Counter>& refRat = lev->_refRat;
-  dbg.indent();
-  // Loop over patches of this proc
-  for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
-    Patch* patch = lev->_patchList[MYID][i];
-    dbg.setLevel(2);
-    dbg << "Processing patch " << patch->_box << "\n";
+  const Vector<double>& h = lev->_meshSize;
+  Vector<double> fineOffset = 0.5 * h;
+  double cellVolume = h.prod();
+  double faceArea = cellVolume / h[d];
 
-    // Loop over fine-to-coarse boundaries of this patch
-    for (Counter d = 0; d < numDims; d++) {
-      for (Side s = Left; s <= Right; ++s) {
-        if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
-          dbg
-            << "--- Processing Fine-to-Coarse face d = " << d
-            << " , s = " << s << " ---" << "\n";
-          // Fine cells of this face
-          Box faceFineBox = patch->_box.faceExtents(d,s);
-          char c = d + 'x';
-          string cc = "a";
-          cc[0] = c;
-          dbg << "Face(d = " << cc
-              << ", s = " << s << ") "
-              << faceFineBox << "\n";
-          
-          Box faceCoarseBox = faceFineBox.coarseNbhrExtents( refRat, d, s );
+  const Level* coarseLev = hier._levels[coarseLevel];
+  const Vector<double>& coarseH = coarseLev->_meshSize;
+  Vector<double> coarseOffset = 0.5 * coarseH;
+  double coarseCellVolume = coarseH.prod();
+  double coarseFaceArea = coarseCellVolume / coarseH[d];
 
-          // Loop over the coarse cells that border the fine face.
-          for( Box::iterator coarse_iter = faceCoarseBox.begin();
-               coarse_iter != faceCoarseBox.end(); ++coarse_iter ) {
+  // Stencil info initialization
+  Counter stencilSize = hypre_SStructStencilSize(stencil);
 
-            // Fine cell 
-            Vector<int> cellFaceLower;
-            if (s == Left) {
-              Vector<int> coarseCellOverFineCells = *coarse_iter;
-              coarseCellOverFineCells[d] -= s;
-              cellFaceLower = coarseCellOverFineCells * refRat;
-            } else { // s == Right
-              Vector<int> coarseCellOverFineCells = *coarse_iter;
-              cellFaceLower = coarseCellOverFineCells * refRat;
-              cellFaceLower[d] -= s;
-            }
-              
-            Vector<int> offset = refRat - 1;
-            offset[d] = 0;
-            Vector<int> cellFaceUpper = cellFaceLower + offset;
-              
-            Box fineCellFace(cellFaceLower,cellFaceUpper);
+  // Fine cells of this face
+  Box faceFineBox = patch->_box.faceExtents(d,s);
+  // Coarse cells on the other side of the C/F boundary
+  Box faceCoarseBox = faceFineBox.coarseNbhrExtents(refRat,d,s);
 
-            // Loop over the fine cells that neighbor the coarse cell.
-            for( Box::iterator fine_iter = fineCellFace.begin();
-                 fine_iter != fineCellFace.end(); ++fine_iter ) {
-              dbg << "Coarse cell: " << *coarse_iter << "\n";
-
-              if (status == Graph) {
-                // Add the connections between the fine and coarse nodes
-                // to the graph
-                dbg << "  Adding fine-to-coarse connection to graph" << "\n";
-                HYPRE_SStructGraphAddEntries(_graph,
-                                             level,(*fine_iter).getData(),
-                                             0,
-                                             level-1,(*coarse_iter).getData(),
-                                             0);
-                
-                // TODO: this call does not work when different procs
-                // own the fine, coarse patches. Move to pseudo code below.
-                HYPRE_SStructGraphAddEntries(_graph,
-                                             level-1,(*coarse_iter).getData(),
-                                             0,
-                                             level,(*fine_iter).getData(),
-                                             0); 
-              } else { // status == Matrix
-                // TODO: move matrix connection stuff here from
-                // makeLinearSystem()
-              } // end if status
-            } // end for fine_iter
-          } // end for coarse_iter
-        } // end if boundary is CF interface
-      } // end for s
-    } // end for d
-  } // end for i (patches)
-  dbg.unindent();
-} // end makeFCConnections
-
-void
-Solver::makeCFConnections(const Hierarchy& hier,
-                          const Counter level,
-                          const Level* lev,
-                          const ConstructionStatus& status)
-  // Build the coarse-to-fine connections at all patches of level "level".
-{
-  const int numLevels = hier._levels.size();
-  if (level == numLevels-1) return; // Finest level cannot be the coarse level at C/F boundaries
-  linePrint("=",30);
-  dbg0 << "Building coarse-to-fine (CF) connections at level = "
-       << level << "\n";
-  linePrint("=",30);
-  //  const int numDims   = _param->numDims;
-  //  const Vector<Counter>& refRat = lev->_refRat;
-  dbg.indent();
-  // Loop over patches of this proc
-  for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
-    const Patch* patch = lev->_patchList[MYID][i];
-    // Find all next-finer level patches that cover this patch
-    std::vector<Patch*> finePatchList = hier.finePatchesOverMe(*patch);
-
-    // Loop over coarse-to-fine internal boundaries of this patch
-    // Pseudo-code
-#if 0
-    for (all finePatch that patch intersects) {
-      
-      for (Counter d = 0; d < numDims; d++) {
-        for (Side s = Left; s <= Right; ++s) {
-          if (finePatch->getBoundaryType(d,s) == Patch::CoarseFine) {
-            
-            if (coarseNbhrExtents is outside patch extent) {
-              continue;
-            }
-            
-            // Find all coarse cells that nbhr this finePatch boundary
-            
-            // Set the coarse side connections of each C/F boundary
-            // of these fine patches.
-            
-            // Delete the underlying coarse cell equations (under each
-            // fine patch).
-            
-            // Note: some of the functions can be written for graph and A
-            // together. Make a structured code with appropriate functions
-            // implementing the operations outlined above.
-            
-            // The following is old stuff, HYPRE call should be similar though.
-            for (Counter cell = 0; !eoc;
-                 cell++,
-                   IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,
-                                 active,subCoarse,eoc)) {
-              
-              for (Counter child = 0; !eocChild;
-                   child++,
-                     IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
-                
-                dbg
-                  << "  Adding coarse-to-fine connection to graph" << "\n";
-                HYPRE_SStructGraphAddEntries(_graph,
-                                             level-1, hypreSubCoarse, 0,
-                                             level,   hypreSubFine,   0);
-              } // end for fine cell children of the nbhr of the coarse cell
-            } // end for coarse cells
-            
-          }
-        }
-      }
+  dbg.setLevel(2);
+  dbg << "coarseLevel = " << coarseLevel << "\n";
+  dbg << "fineLevel   = " << fineLevel   << "\n";
+  // Loop over the C/F coarse cells and add connections
+  for(Box::iterator coarse_iter = faceCoarseBox.begin();
+      coarse_iter != faceCoarseBox.end(); ++coarse_iter) {
+    // Compute the part fineCellFace of the fine face that directly
+    // borders this coarse cell.
+    Vector<int> cellFaceLower;
+    if (s == Left) {
+      Vector<int> coarseCellOverFineCells = *coarse_iter;
+      coarseCellOverFineCells[d] -= s;
+      cellFaceLower = coarseCellOverFineCells * refRat;
+    } else { // s == Right
+      Vector<int> coarseCellOverFineCells = *coarse_iter;
+      cellFaceLower = coarseCellOverFineCells * refRat;
+      cellFaceLower[d] -= s;
     }
-#endif 
-  } // end for i (patches)
-  dbg.unindent();
-} // end makeCFConnections
+    Vector<int> offset = refRat - 1;
+    offset[d] = 0;
+    Vector<int> cellFaceUpper = cellFaceLower + offset;
+    Box fineCellFace(cellFaceLower,cellFaceUpper);
+
+    // Loop over the fine cells in fineCellFace and add their
+    // connections to graph/matrix
+    dbg.indent();
+    bool removeCCconnection = true; // C-C connection is removed once
+                                    // per the loop over the fine cells below
+    Counter fineCell = 0;
+    for (Box::iterator fine_iter = fineCellFace.begin();
+         fine_iter != fineCellFace.end(); ++fine_iter, ++fineCell) {
+      dbg.setLevel(2);
+      dbg << "Coarse cell: " << *coarse_iter << "\n";
+      dbg << "Fine   cell: " << *fine_iter   << "\n";
+      if (status == Graph) {
+        if (viewpoint == FineToCoarse) {
+          //====================================================
+          // Add F->C connections to graph
+          //====================================================
+          dbg << "Adding F->C connection to graph" << "\n";
+          HYPRE_SStructGraphAddEntries(_graph,
+                                       fineLevel,(*fine_iter).getData(),0,
+                                       coarseLevel,(*coarse_iter).getData(),0);
+          dbg << "HYPRE call done" << "\n";
+        } else { // viewpoint == CoarseToFine
+          //====================================================
+          // Add C->F connections to graph
+          //====================================================
+          dbg << "Adding C->F connection to graph" << "\n";
+          HYPRE_SStructGraphAddEntries(_graph,
+                                       coarseLevel,(*coarse_iter).getData(),0,
+                                       fineLevel,(*fine_iter).getData(),0);
+          dbg << "HYPRE call done" << "\n";
+        } // end if viewpoint
+      } else { // status == Matrix
+        
+        //########################################################
+        // Compute C-F interface flux.
+        // Compute coordinates of:
+        // This cell's center: xCell
+        // The neighboring's cell data point: xNbhr
+        // The face crossing between xCell and xNbhr: xFace
+        //########################################################
+        // xCell at this level, xNbhr at coarser level
+        Vector<double> xCell = fineOffset + (h * (*fine_iter));
+        Vector<double> xNbhr = coarseOffset + (coarseH * (*coarse_iter));
+        // xFace is a convex combination of xCell, xNbhr with
+        // weights depending on the distances of the coarse and fine
+        // meshsizes, i.e., their distances in the d dimension from
+        // the C/F boundary.
+        double alpha = coarseH[d] / (coarseH[d] + h[d]);
+        dbg.setLevel(3);
+        dbg << "alpha = " << alpha << "\n";
+        Vector<double> xFace(0,numDims);
+        for (Counter dd = 0; dd < numDims; dd++) {
+          xFace[dd] = alpha*xCell[dd] + (1-alpha)*xNbhr[dd];
+        }
+        dbg << "xCell = " << xCell
+            << ", xFace = " << xFace
+            << ", xNbhr = " << xNbhr << "\n";
+        
+        //########################################################
+        // Compute the harmonic average of the diffusion coefficient
+        //########################################################
+        double a    = 1.0; // Assumed constant a for now
+        double diff = 0;
+        for (Counter dd = 0; dd < numDims; dd++) {
+          diff += pow(xNbhr[dd] - xCell[dd],2);
+        }
+        diff = sqrt(diff);
+        double flux = a * faceArea / diff;
+        dbg << "C/F flux = " << flux
+            << "   a = " << a
+            << " face = " << faceArea
+            << " diff = " << diff << "\n";
+        
+        if (viewpoint == FineToCoarse) {
+          //====================================================
+          // Compute matrix entries of the F->C graph connections
+          //====================================================
+          dbg << "Adding F->C flux to matrix" << "\n";
+                    
+          //########################################################
+          // Add the flux to the fine cell equation - stencil part
+          //########################################################
+          const int numStencilEntries = 1;
+          int stencilEntries[numStencilEntries] = {0};
+          double stencilValues[numStencilEntries] = {flux};
+          dbg << "Calling HYPRE_SStructMatrixAddToValues A (stencil)" << "\n";
+          HYPRE_SStructMatrixAddToValues(_A,
+                                         fineLevel, (*fine_iter).getData(),
+                                         0, numStencilEntries,
+                                         stencilEntries,
+                                         stencilValues);
+
+          //########################################################
+          // Add the C-F flux to the fine cell equation - graph part
+          //########################################################
+          const int numGraphEntries = 1;
+          Counter entry = stencilSize;
+          // Find the correct graph entry corresponding to this coarse
+          // nbhr (subCoarse) of the fine cell subFine
+          for (Counter dd = 0; dd < d; dd++) {
+            // Are we near the ss-side boundary and is it a C/F bdry?
+            for (Side ss = Left; ss <= Right; ++ss) {
+              if ((patch->getBoundaryType(dd,ss) == Patch::CoarseFine) &&
+                  ((*fine_iter)[dd] == patch->_box.get(ss)[dd])) {
+                entry++;
+              }
+            }
+          }
+          if ((s == Right) &&
+              (patch->getBoundaryType(d,s) == Patch::CoarseFine) &&
+              ((*fine_iter)[d] == patch->_box.get(Left)[d])) {
+            entry++;
+          }
+          dbg.setLevel(2);
+          dbg << "entry (Fine cell -> coarse) = " << entry << "\n";
+          int graphEntries[numGraphEntries] = {entry};
+          double graphValues[numGraphEntries] = {-flux};
+          dbg << "Calling HYPRE_SStructMatrixAddToValues A (graph)" << "\n";
+          HYPRE_SStructMatrixAddToValues(_A,
+                                         fineLevel,(*fine_iter).getData(),
+                                         0,numGraphEntries,
+                                         graphEntries,
+                                         graphValues);
+        } else { // viewpoint == CoarseToFine
+          //====================================================
+          // Compute matrix entries of the C->F graph connections
+          //====================================================
+          dbg << "Adding C->F flux to matrix" << "\n";
+
+          //########################################################
+          // Add the C/F flux coarse cell equation - stencil part
+          //########################################################
+          const int numCoarseStencilEntries = 1;
+          int coarseStencilEntries[numCoarseStencilEntries] = {0};
+          double coarseStencilValues[numCoarseStencilEntries] = {flux};
+          dbg << "Calling HYPRE_SStructMatrixAddToValues A (stencil)" << "\n";
+          HYPRE_SStructMatrixAddToValues(_A,
+                                         coarseLevel,(*coarse_iter).getData()
+                                         ,0,numCoarseStencilEntries,
+                                         coarseStencilEntries,
+                                         coarseStencilValues);
+
+          //########################################################
+          // Add the C/F flux coarse cell equation - graph part
+          //########################################################
+          const int numCoarseGraphEntries = 1;
+          int coarseGraphEntries[numCoarseGraphEntries] =
+            {stencilSize+fineCell};
+          dbg << "fineCell = " << fineCell << "\n";
+          dbg << "entry (coarse cell -> fine cell) = "
+              << stencilSize+fineCell << "\n";
+          double coarseGraphValues[numCoarseGraphEntries] = {-flux};
+          dbg << "Calling HYPRE_SStructMatrixAddToValues A (graph)" << "\n";
+          HYPRE_SStructMatrixAddToValues(_A,
+                                         coarseLevel, (*coarse_iter).getData(), 0,
+                                         numCoarseGraphEntries,
+                                         coarseGraphEntries,
+                                         coarseGraphValues);
+          if (removeCCconnection) {
+            //########################################################
+            // Remove the flux from the coarse nbhr to its coarse
+            // stencil nbhr that underlies the fine patch.
+            //########################################################
+            // Compute coordinates of:
+            // This cell's center: xCell
+            // The neighboring's cell data point: xNbhr
+            // The face crossing between xCell and xNbhr: xFace
+            removeCCconnection = false;
+            dbg << "Removing C/C flux connections from matrix" << "\n";
+            Side s2 = Side(-s);
+            dbg << "      s = " << s
+                << ", s2 = " << s2 << "\n";
+            xCell = coarseOffset + (coarseH * (*coarse_iter));
+            xNbhr    = xCell;
+            xNbhr[d] += s2*coarseH[d];
+            xFace    = xCell;
+            xFace[d] = 0.5*(xCell[d] + xNbhr[d]);
+            dbg << "xCell = " << xCell
+                << ", xFace = " << xFace
+                << ", xNbhr = " << xNbhr << "\n";
+            
+            // Compute the harmonic average of the diffusion
+            // coefficient
+            double a    = 1.0; // Assumed constant a for now
+            double diff = fabs(xNbhr[d] - xCell[d]);
+            double flux = a * coarseFaceArea / diff;
+            dbg << "      C/F flux = " << flux
+                << "   a = " << a
+                << " face = " << faceArea
+                << " diff = " << diff << "\n";
+            const int coarseNumStencilEntries = 2;
+            int coarseStencilEntries[coarseNumStencilEntries] =
+              {0, 2*d + ((-s+1)/2) + 1};
+            double coarseStencilValues[coarseNumStencilEntries] =
+              {-flux, flux};
+            HYPRE_SStructMatrixAddToValues(_A,
+                                           coarseLevel,(*coarse_iter).getData(), 0,
+                                           coarseNumStencilEntries,
+                                           coarseStencilEntries,
+                                           coarseStencilValues);
+          } // end if (fineCell == 0)
+        } // end if viewpoint
+      } // end if status
+    } // end for fine_iter
+    dbg.unindent();
+  } // end for coarse_iter
+} // end makeConnections
 
 void
 Solver::makeGraph(const Hierarchy& hier,
@@ -307,13 +426,14 @@ Solver::makeGraph(const Hierarchy& hier,
   //_____________________________________________________________________
 {
   serializeProcsBegin();
-  dbg << "Solver::makeGraph() begin" << "\n";
+  funcPrint("Solver::makeGraph()",FBegin);
+  const Counter numDims = _param->numDims;
   //-----------------------------------------------------------
   // Set up the graph
   //-----------------------------------------------------------
-  linePrint("#",40);
+  linePrint("#",60);
   dbg0 << "Set up the graph" << "\n";
-  linePrint("#",40);
+  linePrint("#",60);
   serializeProcsEnd();
 
   // Create an empty graph
@@ -324,40 +444,143 @@ Solver::makeGraph(const Hierarchy& hier,
     HYPRE_SStructGraphSetObjectType(_graph, HYPRE_PARCSR);
   }
 
-  serializeProcsBegin();
   //  const int numDims   = _param->numDims;
   const int numLevels = hier._levels.size();
   //======================================================================
   //  Add structured equations (stencil-based) at the interior of
   //  each patch at every level to the graph.
   //======================================================================
-
-  linePrint("=",30);
-  dbg0 << "Graph interior connections" << "\n";
-  linePrint("=",30);
+  serializeProcsBegin();
+  linePrint("*",50);
+  dbg0 << "Graph structured (interior) connections" << "\n";
+  linePrint("*",50);
   for (Counter level = 0; level < numLevels; level++) {
     dbg0 << "  Initializing graph stencil at level " << level
          << " of " << numLevels << "\n";
     HYPRE_SStructGraphSetStencil(_graph, level, 0, stencil);
   }
-  
-  // Add the unstructured part of the stencil connecting the coarse
-  // and fine level at every C/F boundary.
+  serializeProcsEnd();
 
-  // TODO: change level = 1 to level = 0 here!!!!!!!!!!!!!!!!!!!!!!!!
+  //======================================================================
+  // Add to graph the unstructured part of the stencil connecting the
+  // coarse and fine level at every C/F boundary (F->C connections at
+  // this patch's outer boundaries, and C->F connections at all
+  // applicable C/F boundaries of next-finer-level patches that lie
+  // above this patch.
+  //======================================================================
+  serializeProcsBegin();
+  linePrint("*",50);
+  dbg0 << "Graph unstructured (C/F) connections" << "\n";
+  linePrint("*",50);
   for (Counter level = 0; level < numLevels; level++) {
     dbg.setLevel(1);
     const Level* lev = hier._levels[level];
-    makeFCConnections(level,lev,Graph);
-    makeCFConnections(hier,level,lev,Graph);
+    dbg.indent();
+    // Loop over patches of this proc
+    for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
+      Patch* patch = lev->_patchList[MYID][i];
+      dbg.setLevel(2);
+      linePrint("$",40);
+      dbg << "Processing Patch" << "\n"
+          << *patch << "\n";
+      linePrint("$",40);
+      
+      if (level > 0) {
+        // If not at coarsest level,
+        // loop over outer boundaries of this patch and add
+        // fine-to-coarse connections
+        linePrint("=",50);
+        dbg0 << "Building fine-to-coarse connections" << "\n";
+        linePrint("=",50);
+        for (Counter d = 0; d < numDims; d++) {
+          for (Side s = Left; s <= Right; ++s) {
+            if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
+              dbg.setLevel(2);
+              dbg << "boundary is " << patch->getBoundaryType(d,s) << "\n";
+              makeConnections(Graph,hier,stencil,level,patch,d,s,FineToCoarse);
+            } // end if boundary is CF interface
+          } // end for s
+        } // end for d
+      }
+
+      if (level < numLevels-1) {
+        linePrint("=",50);
+        dbg0 << "Building coarse-to-fine connections" << "\n";
+        linePrint("=",50);
+        //  const int numDims   = _param->numDims;
+        const Vector<Counter>& refRat = hier._levels[level+1]->_refRat;
+        dbg.indent();
+        // List of fine patches covering this patch
+        vector<Patch*> finePatchList = hier.finePatchesOverMe(*patch);
+        Box coarseRefined(patch->_box.get(Left) * refRat,
+                          (patch->_box.get(Right) + 1) * refRat - 1);
+        dbg << "coarseRefined " << coarseRefined << "\n";
+    
+        //===================================================================
+        // Loop over next-finer level patches that cover this patch
+        //===================================================================
+        for (vector<Patch*>::iterator iter = finePatchList.begin();
+             iter != finePatchList.end(); ++iter) {
+          //===================================================================
+          // Compute relevant boxes at coarse and fine levels
+          //===================================================================
+          Patch* finePatch = *iter;
+          dbg.setLevel(3);
+          dbg << "Considering patch "
+              << "ID=" << setw(2) << left << finePatch->_patchID << " "
+              << "owner=" << setw(2) << left << finePatch->_procID << " "
+              << finePatch->_box << " ..." << "\n";
+          // Intersection of fine and coarse patches in fine-level subscripts
+          Box fineIntersect = coarseRefined.intersect(finePatch->_box);
+          // Intersection of fine and coarse patches in coarse-level subscripts
+          Box coarseUnderFine(fineIntersect.get(Left) / refRat, 
+                              fineIntersect.get(Right) / refRat);
+          dbg.setLevel(2);
+          dbg << "fineIntersect   = " << fineIntersect   << "\n";
+          dbg << "coarseUnderFine = " << coarseUnderFine << "\n";
+          //===================================================================
+          // Delete the underlying coarse cell equations (those under the
+          // fine patch). Replace them by the identity operator.
+          //===================================================================
+          // No need to change the graph; only the matrix changes.
+          //makeUnderlyingIdentity(level,stencil,coarseUnderFine);
+          
+          //===================================================================
+          // Loop over coarse-to-fine internal boundaries of the fine patch;
+          // add C-to-F connections; delete the old C-to-coarseUnderFine
+          // connections.
+          //===================================================================
+          for (Counter d = 0; d < numDims; d++) {
+            for (Side s = Left; s <= Right; ++s) {
+              if (finePatch->getBoundaryType(d,s) == Patch::CoarseFine) {
+               dbg << "fine boundary is " << finePatch->getBoundaryType(d,s) << "\n";
+               // Coarse cell nbhring the C/F boundary on the other side
+                // of the fine patch
+                Box faceCoarseBox =
+                  fineIntersect.coarseNbhrExtents(refRat,d,s);
+                if (patch->_box.intersect(faceCoarseBox).degenerate()) {
+                  // The coarse nbhrs of this fine patch C/F boundary are
+                  // outside this coarse patch, ignore this face.
+                  continue;
+                }
+                // Set the coarse-to-fine connections
+                makeConnections(Graph,hier,stencil,level,finePatch,d,s,CoarseToFine);
+
+              } // end if CoarseFine boundary
+            } // end for s
+          } // end for d
+        } // end for all fine patches that cover this patch
+      } // end if (level < numLevels-1)
+    } // end for i (patches)
+    dbg.unindent();
   } // end for level
   serializeProcsEnd();
-
+  
   // Assemble the graph
   HYPRE_SStructGraphAssemble(_graph);
   dbg << "Assembled graph, nUVentries = "
       << hypre_SStructGraphNUVEntries(_graph) << "\n";
-  dbg << "Solver::makeGraph() end" << "\n";
+  funcPrint("Solver::makeGraph()",FEnd);
 } // end makeGraph()
 
 void 
@@ -367,31 +590,27 @@ Solver::makeUnderlyingIdentity(const Counter level,
   // Replace the matrix equations for the underlying coarse box
   // with the identity matrix.
 {
-  dbg << "Putting identity on underlying coarse data, "
-      << coarseUnderFine << "\n";
-  dbg << "\n";
-
+  dbg.setLevel(2);
+  dbg << "Putting identity on underlying coarse data" << "\n"
+      << "coarseUnderFine " << coarseUnderFine << "\n";
   Counter stencilSize = hypre_SStructStencilSize(stencil);
   int* entries = new int[stencilSize];
   for (Counter entry = 0; entry < stencilSize; entry++) {
     entries[entry] = entry;
   }
-
-  Counter numCoarseCells = coarseUnderFine.volume();
-  dbg << "# coarse cells in box = " << numCoarseCells << "\n";
-
+  const Counter numCoarseCells = coarseUnderFine.volume();
   double* values    = new double[stencilSize * numCoarseCells];
   double* rhsValues = new double[numCoarseCells];
-        
+
+  dbg.setLevel(3);
   dbg << "Looping over cells in coarse underlying box:" 
       << "\n";
   Counter cell = 0;
-  for( Box::iterator coarse_iter = coarseUnderFine.begin();
-       coarse_iter != coarseUnderFine.end(); ++coarse_iter, cell++ ) {
-
-    dbg << "cell = " << cell
-        << *coarse_iter << "\n";
-          
+  for (Box::iterator coarse_iter = coarseUnderFine.begin();
+       coarse_iter != coarseUnderFine.end(); ++coarse_iter, cell++) {
+    dbg.setLevel(3);
+    dbg << "cell = " << cell << " " << *coarse_iter << "\n";
+    
     int offsetValues    = stencilSize * cell;
     int offsetRhsValues = cell;
     // Initialize the stencil values of this cell's equation to 0
@@ -403,16 +622,18 @@ Solver::makeUnderlyingIdentity(const Counter level,
     // Set the corresponding RHS entry to 0.0
     rhsValues[offsetRhsValues] = 0.0;
   } // end for cell
-
+  
   printValues(coarseUnderFine.volume(),stencilSize,values,rhsValues);
   
   // Effect the identity operator change in the Hypre structure
   // for A
   Box box(coarseUnderFine);
+  dbg0 << "Calling HYPRE_SStructMatrixSetBoxValues A" << "\n";
   HYPRE_SStructMatrixSetBoxValues(_A, level,
 				  box.get(Left).getData(),
 				  box.get(Right).getData(),
 				  0, stencilSize, entries, values);
+  dbg0 << "Calling HYPRE_SStructVectorSetBoxValues b" << "\n";
   HYPRE_SStructVectorSetBoxValues(_b, level, 
 				  box.get(Left).getData(),
 				  box.get(Right).getData(),
@@ -434,6 +655,10 @@ Solver::makeInteriorEquations(const Counter level,
   //_____________________________________________________________________
 {
   funcPrint("Solver::makeLinearSystem()",FBegin);
+  linePrint("=",50);
+  dbg0 << "Adding interior equations to A, level = "
+       << level << "\n";
+  linePrint("=",50);
   const Counter& numDims   = _param->numDims;
   Counter stencilSize = hypre_SStructStencilSize(stencil);
   int* entries = new int[stencilSize];
@@ -445,6 +670,7 @@ Solver::makeInteriorEquations(const Counter level,
   //const Vector<Counter>& resolution = lev->_resolution;
   Vector<double> offset = 0.5 * h;
   double cellVolume = h.prod();
+  dbg.indent();
   for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
     dbg0 << "At patch = " << i << "\n";
     // Add equations of interior cells of this patch to A
@@ -452,18 +678,15 @@ Solver::makeInteriorEquations(const Counter level,
     double* values    = new double[stencilSize * patch->_numCells];
     double* rhsValues = new double[patch->_numCells];
     double* solutionValues = new double[patch->_numCells];
-
-    dbg << "  Adding interior equations at Patch " << i
-        << ", Extents = ";
-    dbg << patch->_box << "\n";
+    dbg.setLevel(3);
+    dbg << "Adding interior equations at Patch " << i
+        << ", Extents = " << patch->_box << "\n";
     dbg << "Looping over cells in this patch:" << "\n";
 
     Counter cell = 0;
-    for( Box::iterator iter = patch->_box.begin();
-         iter != patch->_box.end(); ++iter, cell++ ) {
-
+    for(Box::iterator iter = patch->_box.begin();
+        iter != patch->_box.end(); ++iter, cell++ ) {
       dbg << "  sub = " << *iter << "\n";
-
       int offsetValues    = stencilSize * cell;
       int offsetRhsValues = cell;
       // Initialize the stencil values of this cell's equation to 0
@@ -474,9 +697,7 @@ Solver::makeInteriorEquations(const Counter level,
       // Compute RHS integral over the cell. Using the mid-point
       // rule, and assuming that xCell is also the centroid of the
       // cell.
-
       Vector<double> xCell = offset + (h * (*iter));;
-
       rhsValues[offsetRhsValues] = cellVolume * _param->rhs(xCell);
 
       // Assuming a constant initial guess
@@ -588,7 +809,6 @@ Solver::makeInteriorEquations(const Counter level,
 
     } // end for cell
       
-    dbg0 << "Calling HYPRE SetBoxValues()" << "\n";
     printValues(patch->_box.volume(),stencilSize,
                 values,rhsValues,solutionValues);
 
@@ -617,6 +837,7 @@ Solver::makeInteriorEquations(const Counter level,
     delete[] rhsValues;
     delete[] solutionValues;
   } // end for patch
+  dbg.unindent();
   delete entries;
   funcPrint("Solver::makeInteriorEquations()",FEnd);
 } // end makeInteriorEquations()
@@ -638,291 +859,132 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   const int numLevels = hier._levels.size();
   serializeProcsEnd();
 
-  //-----------------------------------------------------------------------
-  // Add equations at all interior cells of every patch owned by this proc
-  // to A. Eliminate boundary conditions at domain boundaries.
-  //-----------------------------------------------------------------------
+  //======================================================================
+  // Add structured equations (stencil-based) at the interior of
+  // each patch at every level to the graph.
+  // Eliminate boundary conditions at domain boundaries.
+  //======================================================================
+  linePrint("*",50);
+  dbg0 << "Matrix structured (interior) equations" << "\n";
+  linePrint("*",50);
   for (Counter level = 0; level < numLevels; level++) {
     serializeProcsBegin();
-    linePrint("=",30);
-    dbg0 << "Adding interior equations to A, level = "
-         << level << "\n";
-    linePrint("=",30);
     makeInteriorEquations(level,hier,grid,stencil);
     serializeProcsEnd();
   } // end for level
 
+  //======================================================================
+  // Add to graph the unstructured part of the stencil connecting the
+  // coarse and fine level at every C/F boundary (F->C connections at
+  // this patch's outer boundaries, and C->F connections at all
+  // applicable C/F boundaries of next-finer-level patches that lie
+  // above this patch.
+  //======================================================================
   serializeProcsBegin();
-  dbg0 << "Begin C/F interface equation construction" << "\n";
-  // 
-  // Set the values on the graph links of the unstructured part
-  // connecting the coarse and fine level at every C/F boundary.
-  //
-
-  dbg.setLevel(2);
-  for (Counter level = 1; level < numLevels; level++) {
-    dbg0 << "  Updating coarse-fine boundaries at level "
-	 << level << "\n";
+  linePrint("*",50);
+  dbg0 << "Matrix unstructured (C/F) equations" << "\n";
+  linePrint("*",50);
+  for (Counter level = 0; level < numLevels; level++) {
+    dbg.setLevel(1);
     const Level* lev = hier._levels[level];
-    const Vector<Counter>& refRat = lev->_refRat;
-    const Vector<double>& h = lev->_meshSize;
-    Vector<double> fineOffset = 0.5 * h;
-    double cellVolume = h.prod();
-
-    const Level* coarseLev = hier._levels[level-1];
-    const Vector<double>& coarseH = coarseLev->_meshSize;
-    Vector<double> coarseOffset = 0.5 * coarseH;
-    double coarseCellVolume = coarseH.prod();
-
+    dbg.indent();
     // Loop over patches of this proc
     for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
       Patch* patch = lev->_patchList[MYID][i];
-    
-      dbg << "Patch i = " << setw(2) << left << i
-	  << "extends from " << patch->_box << "\n";
+      dbg.setLevel(2);
+      linePrint("%",40);
+      dbg << "Processing Patch" << "\n"
+          << *patch << "\n";
+      linePrint("%",40);
       
-      // Compute the extents of the box [coarselower,coarseupper] at
-      // the coarse patch that underlies fine patch i
-      Vector<int> coarselower(0,numDims);
-      Vector<int> coarseupper(0,numDims);
+      if (level > 0) {
+        // If not at coarsest level,
+        // loop over outer boundaries of this patch and add
+        // fine-to-coarse connections
+        linePrint("=",50);
+        dbg0 << "Building fine-to-coarse connections" << "\n";
+        linePrint("=",50);
+        for (Counter d = 0; d < numDims; d++) {
+          for (Side s = Left; s <= Right; ++s) {
+            if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
+              makeConnections(Matrix,hier,stencil,level,patch,d,s,FineToCoarse);
+            } // end if boundary is CF interface
+          } // end for s
+        } // end for d
+      }
 
-      Box coarseUnderFine( patch->_box.get(Left) / refRat, 
-			   patch->_box.get(Right) / refRat );
+      if (level < numLevels-1) {
+        linePrint("=",50);
+        dbg0 << "Building coarse-to-fine connections" 
+             << " Patch ID = " << patch->_patchID
+             << "\n";
+        linePrint("=",50);
+        //  const int numDims   = _param->numDims;
+        const Vector<Counter>& refRat = hier._levels[level+1]->_refRat;
+        dbg.indent();
+        // List of fine patches covering this patch
+        vector<Patch*> finePatchList = hier.finePatchesOverMe(*patch);
+        Box coarseRefined(patch->_box.get(Left) * refRat,
+                          (patch->_box.get(Right) + 1) * refRat - 1);
+        dbg << "coarseRefined " << coarseRefined << "\n";
+    
+        //===================================================================
+        // Loop over next-finer level patches that cover this patch
+        //===================================================================
+        for (vector<Patch*>::iterator iter = finePatchList.begin();
+             iter != finePatchList.end(); ++iter) {
+          //===================================================================
+          // Compute relevant boxes at coarse and fine levels
+          //===================================================================
+          Patch* finePatch = *iter;
+          dbg.setLevel(3);
+          dbg << "Considering patch "
+              << "ID=" << setw(2) << left << finePatch->_patchID << " "
+              << "owner=" << setw(2) << left << finePatch->_procID << " "
+              << finePatch->_box << " ..." << "\n";
+          // Intersection of fine and coarse patches in fine-level subscripts
+          Box fineIntersect = coarseRefined.intersect(finePatch->_box);
+          // Intersection of fine and coarse patches in coarse-level subscripts
+          Box coarseUnderFine(fineIntersect.get(Left) / refRat, 
+                              fineIntersect.get(Right) / refRat);
+          
+          //===================================================================
+          // Delete the underlying coarse cell equations (those under the
+          // fine patch). Replace them by the identity operator.
+          //===================================================================
+          makeUnderlyingIdentity(level,stencil,coarseUnderFine);
+          
+          //===================================================================
+          // Loop over coarse-to-fine internal boundaries of the fine patch;
+          // add C-to-F connections; delete the old C-to-coarseUnderFine
+          // connections.
+          //===================================================================
+          for (Counter d = 0; d < numDims; d++) {
+            for (Side s = Left; s <= Right; ++s) {
+              if (finePatch->getBoundaryType(d,s) == Patch::CoarseFine) {
+                // Coarse cell nbhring the C/F boundary on the other side
+                // of the fine patch
+                Box faceCoarseBox =
+                  fineIntersect.coarseNbhrExtents(refRat,d,s);
+                if (patch->_box.intersect(faceCoarseBox).degenerate()) {
+                  // The coarse nbhrs of this fine patch C/F boundary are
+                  // outside this coarse patch, ignore this face.
+                  continue;
+                }
+                // Set the coarse-to-fine connections
+                makeConnections(Matrix,hier,stencil,level,finePatch,d,s,CoarseToFine);
 
-      makeUnderlyingIdentity(level-1,stencil,coarseUnderFine);
-        
-      dbg << "Finished deleting underlying coarse data" << "\n";
-
-      dbg << "Looping over C/F boundaries of Patch " << i
-	  << ", Level " << patch->_levelID << "\n";
-      Counter stencilSize = hypre_SStructStencilSize(stencil);
-      // Loop over C/F boundaries of this patch
-      for (Counter d = 0; d < numDims; d++) {
-	double faceArea = cellVolume / h[d];
-	double coarseFaceArea = coarseCellVolume / coarseH[d];
-	for (Side s = Left; s <= Right; ++s) {
-	  dbg << "  boundary( d = " << d
-	      << " , s = " << s 
-	      << " ) = " << Patch::boundaryTypeString
-	    [patch->getBoundaryType(d,s)].c_str()
-	      << "\n";
-	  if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
-	    dbg << "--- Processing Fine-to-Coarse face d = " << d
-		<< " , s = " << s << " ---" << "\n";
-	    // Fine cells of this face
-	    Box faceFineBox = patch->_box.faceExtents(d,s);
-
-	    // Coarse cell nbhring the C/F boundary on the other side of the
-	    // fine patch
-	    Box faceCoarseBox = faceFineBox.coarseNbhrExtents( refRat, d, s );
-
-	    // Loop over the coarse cells that border the fine face.
-	    for( Box::iterator coarse_iter = faceCoarseBox.begin();
-		 coarse_iter != faceCoarseBox.end(); ++coarse_iter ) {
-
-	      // Fine cell 
-	      Vector<int> cellFaceLower;
-	      if (s == Left) {
-		Vector<int> coarseCellOverFineCells = *coarse_iter;
-		coarseCellOverFineCells[d] -= s;
-		cellFaceLower = coarseCellOverFineCells * refRat;
-	      } else { // s == Right
-		Vector<int> coarseCellOverFineCells = *coarse_iter;
-		cellFaceLower = coarseCellOverFineCells * refRat;
-		cellFaceLower[d] -= s;
-	      }
-              
-	      Vector<int> offset = refRat - 1;
-	      offset[d] = 0;
-	      Vector<int> cellFaceUpper = cellFaceLower + offset;
-              
-	      Box fineCellFace( cellFaceLower, cellFaceUpper );
-
-	      // Loop over the fine cells that neighbor the coarse cell.
-	      Counter child = 0;
-	      for( Box::iterator fine_iter = fineCellFace.begin();
-		   fine_iter != fineCellFace.end(); ++fine_iter, ++child) {
-		dbg << "Coarse cell: " << *coarse_iter << "\n";
-
-		// Set the weights on the connections between the fine
-		// and coarse nodes in A
-		dbg << "    Adding C/F flux to matrix" << "\n";
-
-		//====================================================
-		// Add the flux from the fine child cell to the
-		// coarse nbhr cell.
-		//====================================================
-		// Compute coordinates of:
-		// This cell's center: xCell
-		// The neighboring's cell data point: xNbhr
-		// The face crossing between xCell and xNbhr: xFace
-
-		Vector<double> xCell = fineOffset + (h * (*fine_iter));
-		Vector<double> xNbhr = coarseOffset + (coarseH * (*coarse_iter));
-
-		// xFace is a convex combination of xCell, xNbhr with
-		// weights depending on the distances of the coarse
-		// and fine meshsizes, i.e., their distances in the d
-		// dimension from the C/F boundary.
-		double alpha = coarseH[d] / (coarseH[d] + h[d]);
-		dbg << "      alpha = " << alpha << "\n";
-
-		Vector<double> xFace(0,numDims);
-
-		for (Counter dd = 0; dd < numDims; dd++) {
-		  xFace[dd] = alpha*xCell[dd] + (1-alpha)*xNbhr[dd];
-		}
-		dbg << "      xCell = " << xCell
-		    << ", xFace = " << xFace
-		    << ", xNbhr = " << xNbhr << "\n";
-                
-		// Compute the harmonic average of the diffusion
-		// coefficient
-		double a    = 1.0; // Assumed constant a for now
-		double diff = 0;
-		for (Counter dd = 0; dd < numDims; dd++) {
-		  diff += pow(xNbhr[dd] - xCell[dd],2);
-		}
-		diff = sqrt(diff);
-		double flux = a * faceArea / diff;
-		dbg << "      C/F flux = " << flux
-		    << "   a = %f" << a
-		    << " face = " << faceArea
-		    << " diff = " << diff << "\n";
-                
-		// Add the C-F flux to the fine cell equation -
-		// stencil part
-		const int numStencilEntries = 1;
-		int stencilEntries[numStencilEntries] = {0};
-		double stencilValues[numStencilEntries] = {flux};
-		HYPRE_SStructMatrixAddToValues(_A,
-					       level, (*fine_iter).getData(),
-					       0,
-					       numStencilEntries,
-					       stencilEntries,
-					       stencilValues);
-		dbg << "      Done HYPRE_SStructMatrixAddToValues 1" << "\n";
-
-		// Add the C-F flux to the fine cell equation - graph
-		// part
-		const int numGraphEntries = 1;
-		Counter entry = stencilSize;
-		// Find the correct graph entry corresponding to this coarse
-		// nbhr (subCoarse) of the fine cell subFine
-		for (Counter dd = 0; dd < d; dd++) {
-		  // Are we near the ss-side boundary and is it a C/F bdry?
-		  for (Side ss = Left; ss <= Right; ++ss) {
-		    if ((patch->getBoundaryType(dd,ss) == Patch::CoarseFine) &&
-			((*fine_iter)[dd] == patch->_box.get(ss)[dd])) {
-		      entry++;
-		    }
-		  }
-		}
-		if ((s == Right) &&
-		    (patch->getBoundaryType(d,s) == Patch::CoarseFine) &&
-		    ((*fine_iter)[d] == patch->_box.get(Left)[d])) {
-		  entry++;
-		}
-		dbg << "      fine equation, entry of coarse cell = "
-		    << "entry " << entry << "\n";
-		int graphEntries[numGraphEntries] = {entry};
-		double graphValues[numGraphEntries] = {-flux};
-		HYPRE_SStructMatrixAddToValues(_A,
-					       level, (*fine_iter).getData(),     0,
-					       numGraphEntries,
-					       graphEntries,
-					       graphValues);
-		dbg << "      Done HYPRE_SStructMatrixAddToValues 2" << "\n";
-
-		// Subtract the C-F flux from the coarse cell equation
-		// - stencil part
-		const int numCoarseStencilEntries = 1;
-		int coarseStencilEntries[numCoarseStencilEntries] = {0};
-		double coarseStencilValues[numCoarseStencilEntries] = {flux};
-		HYPRE_SStructMatrixAddToValues(_A,
-					       level-1, (*coarse_iter).getData(),  0,
-					       numCoarseStencilEntries,
-					       coarseStencilEntries,
-					       coarseStencilValues);
-		dbg << "      Done HYPRE_SStructMatrixAddToValues 3" << "\n";
-
-		// Subtract the C-F flux from the coarse cell equation
-		// - graph part
-		const int numCoarseGraphEntries = 1;
-		int coarseGraphEntries[numCoarseGraphEntries] =
-		  {stencilSize+child};
-		dbg << "      coarse equation, entry of fine cell = "
-		    << stencilSize+child << "\n";
-		double coarseGraphValues[numCoarseGraphEntries] = {-flux};
-		HYPRE_SStructMatrixAddToValues(_A,
-					       level-1, (*coarse_iter).getData(), 0,
-					       numCoarseGraphEntries,
-					       coarseGraphEntries,
-					       coarseGraphValues);
-		dbg << "      Done HYPRE_SStructMatrixAddToValues 4"
-		    << "\n";
-
-		if (child == 0) { // Potential source for bugs: remove
-		  // coarse-coarse flux only ONCE in the
-		  // child loop.
-		  dbg
-		    << "    Removing C/C flux connections from matrix"
-		    << "\n";
-		  //====================================================
-		  // Remove the flux from the coarse nbhr to its coarse
-		  // stencil nbhr that underlies the fine patch.
-		  //====================================================
-		  // Compute coordinates of: This cell's center: xCell
-		  // The neighboring's cell data point: xNbhr The face
-		  // crossing between xCell and xNbhr: xFace
-
-		  Side s2 = Side(-s);
-		  dbg << "      s = " << s
-		      << ", s2 = " << s2 << "\n";
-		  xCell = coarseOffset + (coarseH * (*coarse_iter));
-		  xNbhr    = xCell;
-		  xNbhr[d] += s2*coarseH[d];
-		  xFace    = xCell;
-		  xFace[d] = 0.5*(xCell[d] + xNbhr[d]);
-		  dbg << "xCell = " << xCell
-		      << ", xFace = " << xFace
-		      << ", xNbhr = " << xNbhr << "\n";
-
-		  // Compute the harmonic average of the diffusion
-		  // coefficient
-		  double a    = 1.0; // Assumed constant a for now
-		  double diff = fabs(xNbhr[d] - xCell[d]);
-		  double flux = a * coarseFaceArea / diff;
-		  dbg << "      C/F flux = " << flux
-		      << "   a = %f" << a
-		      << " face = " << faceArea
-		      << " diff = " << diff << "\n";
-		  const int coarseNumStencilEntries = 2;
-		  int coarseStencilEntries[coarseNumStencilEntries] =
-		    {0, 2*d + ((-s+1)/2) + 1};
-		  double coarseStencilValues[coarseNumStencilEntries] =
-		    {-flux, flux};
-		  HYPRE_SStructMatrixAddToValues(_A,
-						 level-1,
-						 (*coarse_iter).getData(), 0,
-						 coarseNumStencilEntries,
-						 coarseStencilEntries,
-						 coarseStencilValues);
-		} // if (child == 0)
-	      } // end for cell
-
-	    } // end for child
-              //            delete[] fineIndex;
-              //            delete[] coarseIndex;
-	  } // end if boundary is CF interface
-	} // end for s
-      } // end for d
+              } // end if CoarseFine boundary
+            } // end for s
+          } // end for d
+        } // end for all fine patches that cover this patch
+      } // end if (level < numLevels-1)
     } // end for i (patches)
+    dbg.unindent();
   } // end for level
-
-  dbg << "End C/F interface equation construction" << "\n";
-  funcPrint("Solver::makeLinearSystem()",FEnd);
   serializeProcsEnd();
+
+  funcPrint("Solver::makeLinearSystem()",FEnd);
 } // end makeLinearSystem()
 
 void
@@ -967,6 +1029,7 @@ Solver::printValues(const Counter numCells,
                     const double* solutionValues /* = 0 */)
   // Print values, rhsValues vectors
 {
+  dbg.setLevel(3);
   dbg << "--- Printing values,rhsValues,solutionValues arrays ---" << "\n";
   for (Counter cell = 0; cell < numCells; cell++) {
     int offsetValues    = stencilSize * cell;
@@ -992,3 +1055,24 @@ Solver::printValues(const Counter numCells,
     dbg << "-------------------------------" << "\n";
   } // end for cell
 } // end printValues()
+
+
+std::ostream&
+operator << (std::ostream& os, const Solver::CoarseFineViewpoint& v)
+     // Write side s to the stream os.
+{
+  if      (v == Solver::CoarseToFine) os << "CoarseToFine";
+  else if (v == Solver::FineToCoarse) os << "FineToCoarse";
+  else os << "N/A";
+  return os;
+}
+
+
+std::ostream&
+operator << (std::ostream& os, const Solver::ConstructionStatus& s)
+{
+  if      (s == Solver::Graph ) os << "Graph ";
+  else if (s == Solver::Matrix) os << "Matrix";
+  else os << "ST WRONG!!!";
+  return os;
+}
