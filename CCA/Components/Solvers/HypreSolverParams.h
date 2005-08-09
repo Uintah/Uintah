@@ -2,7 +2,7 @@
 CLASS
    HypreSolverParams
    
-   Parameters struct for HypreSolverAMR and HypreInterface.
+   Parameters struct for HypreSolverAMR and HypreDriver.
 
 GENERAL INFORMATION
 
@@ -17,10 +17,10 @@ GENERAL INFORMATION
    Copyright (C) 2005 SCI Group
 
 KEYWORDS
-   HypreSolverAMR, HypreInterface, HypreSolverParams, HypreGenericSolver.
+   HypreSolverAMR, HypreDriver, HypreSolverParams, HypreGenericSolver.
 
 DESCRIPTION
-   Parameters struct for HypreSolverAMR and HypreInterface.
+   Parameters struct for HypreSolverAMR and HypreDriver.
  
 WARNING
 

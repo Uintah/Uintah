@@ -1,4 +1,4 @@
-#include "Solver.h"
+#include "HypreGenericSolver.h"
 
 #include "util.h"
 #include "Level.h"
@@ -8,79 +8,6 @@
 #include <map>
 
 using namespace std;
-
-void
-Solver::initialize(const Hierarchy& hier,
-                   const HYPRE_SStructGrid& grid,
-                   const HYPRE_SStructStencil& stencil)
-{
-  Print("Solver::initialize() begin\n");
-  _requiresPar =
-    (((_solverID >= 20) && (_solverID <= 30)) ||
-     ((_solverID >= 40) && (_solverID < 60)));
-  Proc0Print("requiresPar = %d\n",_requiresPar);
-
-  makeGraph(hier, grid, stencil);
-  initializeData(hier, grid);
-  makeLinearSystem(hier, grid, stencil);
-  assemble();
-  Print("Solver::initialize() end\n");
-}
-
-void
-Solver::initializeData(const Hierarchy& hier,
-                       const HYPRE_SStructGrid& grid)
-{
-  Print("Solver::initializeData() begin\n");
-
-  /* Create an empty matrix with the graph non-zero pattern */
-  HYPRE_SStructMatrixCreate(MPI_COMM_WORLD, _graph, &_A);
-  Proc0Print("Created empty SStructMatrix\n");
-  /* Initialize RHS vector b and solution vector x */
-  Print("Create empty b,x\n");
-  HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &_b);
-  Print("Done b\n");
-  HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &_x);
-  Print("Done x\n");
-
-  /* If using AMG, set (A,b,x)'s object type to ParCSR now */
-  if (_requiresPar) {
-    Proc0Print("Matrix object type set to HYPRE_PARCSR\n");
-    HYPRE_SStructMatrixSetObjectType(_A, HYPRE_PARCSR);
-    Print("Vector object type set to HYPRE_PARCSR\n");
-    HYPRE_SStructVectorSetObjectType(_b, HYPRE_PARCSR);
-    Print("Done b\n");
-    HYPRE_SStructVectorSetObjectType(_x, HYPRE_PARCSR);
-    Print("Done x\n");
-  }
-  Print("Init A\n");
-  HYPRE_SStructMatrixInitialize(_A);
-  Print("Init b,x\n");
-  HYPRE_SStructVectorInitialize(_b);
-  Print("Done b\n");
-  HYPRE_SStructVectorInitialize(_x);
-  Print("Done x\n");
-
-  Print("Solver::initializeData() end\n");
-}
-
-void
-Solver::assemble(void)
-{
-  Print("Solver::assemble() begin\n");
-  /* Assemble the matrix - a collective call */
-  HYPRE_SStructMatrixAssemble(_A); 
-  HYPRE_SStructVectorAssemble(_b);
-  HYPRE_SStructVectorAssemble(_x);
-
-  /* For BoomerAMG solver: set up the linear system in ParCSR format */
-  if (_requiresPar) {
-    HYPRE_SStructMatrixGetObject(_A, (void **) &_parA);
-    HYPRE_SStructVectorGetObject(_b, (void **) &_parB);
-    HYPRE_SStructVectorGetObject(_x, (void **) &_parX);
-  }
-  Print("Solver::assemble() end\n");
-}
 
 void
 Solver::setup(void)
@@ -94,7 +21,7 @@ Solver::setup(void)
   int time_index = hypre_InitializeTiming("AMG Setup");
   hypre_BeginTiming(time_index);
   
-  this->setup(); // which setup will this be? The derived class's?
+  this->setup(); // Derived Solver's setup()
   
   hypre_EndTiming(time_index);
   hypre_PrintTiming("Setup phase times", MPI_COMM_WORLD);
@@ -112,7 +39,7 @@ Solver::solve(void)
   Proc0Print("Solver solve phase\n");
   Proc0Print("----------------------------------------------------\n");
 
-  this->solve(); // which setup will this be? The derived class's?
+  this->solve(); // Derived Solver's solve()
 
   /*-----------------------------------------------------------
    * Gather the solution vector
