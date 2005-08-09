@@ -105,6 +105,16 @@ namespace Uintah {
                           support symmetric SStruct in the interface */
     p->restart=true;
 
+    /* Check parameter correctness */
+    cerr << "Checking arguments and parameters ... ";
+    if ((param->solverType == Param::FAC) &&
+        ((numLevels < 2) || (numDims != 3))) {
+      cerr << "\n\nFAC solver needs a 3D problem and at least 2 levels."
+           << "\n";
+      clean();
+      exit(1);
+    }
+
     return p;
   } // end readParameters()
 
