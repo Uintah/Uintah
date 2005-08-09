@@ -292,15 +292,6 @@ public:
       int num_iterations;
       double final_res_norm;
 
-/*`==========TESTING==========*/
-#if 1 
-      cout << " I'm about to print the matrix " << endl;
-      HYPRE_StructMatrixPrint ("hypre.HA",HA, 0);
-      //HYPRE_StructMatrixPrint ("hypre.HB",HB, 0); 
-#endif
-/*===========TESTING==========`*/
-
-
       // Solve the system
       if (params->solvertype == "SMG" || params->solvertype == "smg"){
 	int time_index = hypre_InitializeTiming("SMG Setup");
