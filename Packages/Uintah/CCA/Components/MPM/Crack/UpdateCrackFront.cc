@@ -60,7 +60,7 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m=0; m<numMPMMatls; m++) {
-      if(d_calFractParameters!="false"||d_doCrackPropagation!="false") {
+      if(d_calFractParameters || d_doCrackPropagation) {
         // cfnset - subset of crack-front nodes in each patch
         cfnset[m][pid].clear();
         for(int j=0; j<(int)cfSegNodes[m].size(); j++) {
@@ -159,7 +159,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
       constParticleVariable<Vector> psize;
       old_dw->get(psize, lb->pSizeLabel, pset);
 
-      if(d_doCrackPropagation!="false") {
+      if(d_doCrackPropagation) {
 
 	      
         // Task 1: Detect if crack-front nodes are inside the material
