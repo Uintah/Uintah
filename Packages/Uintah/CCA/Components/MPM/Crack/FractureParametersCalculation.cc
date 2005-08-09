@@ -657,7 +657,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                  
                   // Task 11a: Find COD near crack tip (point(-d,0,0) in local coordinates)
                   double d;
-                  if(d_doCrackPropagation!="false")  // For crack propagation
+                  if(d_doCrackPropagation)  // For crack propagation
                     d=(rdadx<1.? 1.:rdadx)*dx_max;
                   else  // For calculation of pure fracture parameters
                     d=d_rJ/2.;
@@ -716,10 +716,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
             delete [] cfK;
           } // End if(num>0)
         } // End of loop over ranks (i)
+	if(pid==0) OutputCrackFrontResults(m);
       } // End if(calFractParameters || doCrackPropagation)
-   
-      if(pid==0) OutputCrackFrontResults(m);
-      
     } // End of loop over matls
     delete interpolator;
   } 
@@ -731,38 +729,33 @@ void Crack::DetectIfDoingFractureAnalysisAtThisTimeStep(double time)
   static double timeforpropagation=-1.e-200;
 
   // For fracture parameters calculation
-  if(d_calFractParameters=="true") {
+  if(d_calFractParameters) {
     if(time>=timeforcalculateJK) {
       calFractParameters=YES;
-      timeforcalculateJK=time+calFractParasInterval;
+      timeforcalculateJK=time+computeJKInterval;
     }
     else {
      calFractParameters=NO;
     }
   }
-  else if(d_calFractParameters=="false") {
+  else {
    calFractParameters=NO;
-  }
-  else if(d_calFractParameters=="every_time_step"){
-    calFractParameters=YES;
   }
 
   // For crack propagation
-  if(d_doCrackPropagation=="true") {
+  if(d_doCrackPropagation) {
     if(time>=timeforpropagation){
       doCrackPropagation=YES;
-      timeforpropagation=time+crackPropInterval;
+      timeforpropagation=time+growCrackInterval;
     }
     else {
       doCrackPropagation=NO;
     }
   }
-  else if(d_doCrackPropagation=="false") {
+  else {
     doCrackPropagation=NO;
   }
-  else if(d_doCrackPropagation=="every_time_step"){
-    doCrackPropagation=YES;
-  }
+
 }
 
 // Determine parameters (A[14]) of J-integral contour
@@ -1029,7 +1022,7 @@ void Crack::OutputCrackFrontResults(const int& m)
     
     ofstream outCrkFrt(outFileName, ios::app);
 	
-    /*
+    
     char outFileName0[200];
     char outFileName1[200];
     char outFileName2[200];
@@ -1042,7 +1035,7 @@ void Crack::OutputCrackFrontResults(const int& m)
     ofstream outCrkFrt0(outFileName0, ios::app);
     ofstream outCrkFrt1(outFileName1, ios::app);
     ofstream outCrkFrt2(outFileName2, ios::app);
-    */
+    
     
     double time=d_sharedState->getElapsedTime();
     int timestep=d_sharedState->getCurrentTopLevelTimeStep();
@@ -1073,8 +1066,8 @@ void Crack::OutputCrackFrontResults(const int& m)
           outCrkFrt << setw(15) << "inf" << endl;
 
         if(i==cfSegMaxIdx[m][i]) outCrkFrt << endl;
-        /*
-	if(i==0) {
+ /*       
+	if(i==2) {
           outCrkFrt0 << setw(5) << timestep
 	            << setw(15) << time
 	            << setw(5)  << (i-1+2*numSubCracks)/2
@@ -1091,7 +1084,7 @@ void Crack::OutputCrackFrontResults(const int& m)
 	    outCrkFrt0 << setw(15) << "inf" << endl;	
 	}
 
-	if(i==2) {
+	if(i==4) {
 	  outCrkFrt1 << setw(5) << timestep
 	             << setw(15) << time
 	             << setw(5)  << (i-1+2*numSubCracks)/2
@@ -1108,7 +1101,7 @@ void Crack::OutputCrackFrontResults(const int& m)
             outCrkFrt1 << setw(15) << "inf" << endl;      
         }
 
-        if(i==4) {
+        if(i==6) {
 	  outCrkFrt2 << setw(5) << timestep
 	             << setw(15) << time
 	             << setw(5)  << (i-1+2*numSubCracks)/2
@@ -1124,7 +1117,7 @@ void Crack::OutputCrackFrontResults(const int& m)
           else 
             outCrkFrt2 << setw(15) << "inf" << endl;           
         }	  
-        */  	
+*/          	
       }
     } // End of loop over i 
   } 
