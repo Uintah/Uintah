@@ -203,15 +203,15 @@ namespace Uintah {
                        DataWarehouse* new_dw,
                        bool initial);
                        
-    void compute_q_CC_gradient( constCCVariable<double>& q_CC,
-                                CCVariable<Vector>& q_CC_grad,                   
-                                const Patch* patch);
+    void compute_Mag_gradient( constCCVariable<double>& q_CC,
+                               CCVariable<double>& mag_grad_q_CC,                   
+                               const Patch* patch);
                                
-    void compute_q_CC_gradient( constCCVariable<Vector>& q_CC,
-                                CCVariable<Vector>& q_CC_grad,                   
-                                const Patch* patch);
+    void compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
+                                 CCVariable<double>& mag_div_q_CC,                   
+                                 const Patch* patch);
 
-    void set_refineFlags( CCVariable<Vector>& q_CC_grad,
+    void set_refineFlags( CCVariable<double>& q_CC_grad,
                           double threshold,
                           CCVariable<int>& refineFlag,
                           PerPatch<PatchFlagP>& refinePatchFlag,

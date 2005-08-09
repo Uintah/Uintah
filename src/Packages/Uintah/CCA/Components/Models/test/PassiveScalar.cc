@@ -106,8 +106,8 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->diffusionCoefLabel = VarLabel::create("scalar-diffCoef",td_CCdouble);
   d_scalar->scalar_source_CCLabel = 
                                  VarLabel::create("scalar-f_src",   td_CCdouble);
-  d_scalar->scalar_gradLabel = 
-                                 VarLabel::create("scalar-f_grad",  td_CCVector);                                 
+  d_scalar->mag_grad_scalarLabel = 
+                               VarLabel::create("mag_grad_scalar-f",td_CCdouble);                                 
   
   //__________________________________
   //  register the AMRrefluxing variables                               
@@ -495,7 +495,7 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
   Ghost::GhostType  gac  = Ghost::AroundCells; 
   t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  gac, 1);
   
-  t->computes(d_scalar->scalar_gradLabel);
+  t->computes(d_scalar->mag_grad_scalarLabel);
   t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
   t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
   
@@ -527,32 +527,36 @@ void PassiveScalar::errorEstimate(const ProcessorGroup*,
 
     int indx = d_matl->getDWIndex();
     constCCVariable<double> f;
-    CCVariable<Vector> f_grad;
+    CCVariable<double> mag_grad_f;
     
-    new_dw->get(f,                 d_scalar->scalar_CCLabel,  indx ,patch,gac,1);
-    new_dw->allocateAndPut(f_grad, d_scalar->scalar_gradLabel, indx,patch);
+    new_dw->get(f,                     d_scalar->scalar_CCLabel,  indx ,patch,gac,1);
+    new_dw->allocateAndPut(mag_grad_f, d_scalar->mag_grad_scalarLabel, 
+                           indx,patch);
+    mag_grad_f.initialize(0.0);
     
     //__________________________________
     // compute gradient
     Vector dx = patch->dCell(); 
-
-    for(int dir = 0; dir <3; dir ++ ) { 
-      double inv_dx = 0.5 /dx[dir];
-      for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-          IntVector c = *iter;
-          IntVector r = c;
-          IntVector l = c;
-          r[dir] += 1;
-          l[dir] -= 1;
-          f_grad[c][dir] = (f[r] - f[l])*inv_dx;
+    
+    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      IntVector r = c;
+      IntVector l = c;
+      Vector grad_f;
+      for(int dir = 0; dir <3; dir ++ ) { 
+        double inv_dx = 0.5 /dx[dir];
+        r[dir] += 1;
+        l[dir] -= 1;
+        grad_f[dir] = (f[r] - f[l])*inv_dx;
       }
+      mag_grad_f[c] = grad_f.length();
     }
     //__________________________________
     // set refinement flag
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
     for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      if( f_grad[c].length() > d_scalar->refineCriteria){
+      if( mag_grad_f[c] > d_scalar->refineCriteria){
         refineFlag[c] = true;
         refinePatch->set();
       }

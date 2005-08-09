@@ -138,7 +138,7 @@ WARNING
       // labels for this particular scalar
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_source_CCLabel;
-      VarLabel* scalar_gradLabel;
+      VarLabel* mag_grad_scalarLabel;
       VarLabel* diffusionCoefLabel;
       
       vector<Region*> regions;
