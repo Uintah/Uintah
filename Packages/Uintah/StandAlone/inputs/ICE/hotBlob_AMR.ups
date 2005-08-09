@@ -149,10 +149,10 @@
       <save label="press_CC"/>
       <save label="vol_frac_CC"/>
       <save label="delP_Dilatate"/>
-      <save label="vel_CC_mag_grad"/>
-      <save label="rho_CC_grad"/>
-      <save label="temp_CC_grad"/>
-      <save label="press_CC_grad"/>
+      <save label="mag_div_vel_CC"/>
+      <save label="mag_grad_rho_CC"/>
+      <save label="mag_grad_temp_CC"/>
+      <save label="mag_grad_press_CC"/>
       <save label="refineFlag"/> 
       <checkpoint timestepInterval="20" cycle="2"/>"
    </DataArchiver>

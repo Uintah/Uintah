@@ -1909,11 +1909,11 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->requires(Task::NewDW, lb->vol_frac_CCLabel,  gac, 1);
   t->requires(Task::NewDW, lb->press_CCLabel,    d_press_matl,oims,gac, 1);
   
-  t->computes(lb->rho_CC_gradLabel);
-  t->computes(lb->temp_CC_gradLabel);
-  t->computes(lb->vel_CC_mag_gradLabel);
-  t->computes(lb->vol_frac_CC_gradLabel);
-  t->computes(lb->press_CC_gradLabel);
+  t->computes(lb->mag_grad_rho_CCLabel);
+  t->computes(lb->mag_grad_temp_CCLabel);
+  t->computes(lb->mag_div_vel_CCLabel);
+  t->computes(lb->mag_grad_vol_frac_CCLabel);
+  t->computes(lb->mag_grad_press_CCLabel);
   
   t->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
   t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
@@ -1928,54 +1928,56 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   }
 }
 /*_____________________________________________________________________ 
-Function~  AMRICE::compute_q_CC_gradient--
-Purpose~   computes the gradient of q_CC in each direction.
+Function~  AMRICE::compute_Mag_gradient--
+Purpose~   computes the magnitude of the gradient/divergence of q_CC.
            First order central difference.
 ______________________________________________________________________*/
-void AMRICE::compute_q_CC_gradient( constCCVariable<double>& q_CC,
-                                    CCVariable<Vector>& q_CC_grad,
+void AMRICE::compute_Mag_gradient( constCCVariable<double>& q_CC,
+                                    CCVariable<double>& mag_grad_q_CC,
                                     const Patch* patch) 
 {                  
   Vector dx = patch->dCell(); 
-      
-  for(int dir = 0; dir <3; dir ++ ) { 
-    double inv_dx = 0.5 /dx[dir];
-    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        IntVector r = c;
-        IntVector l = c;
-        r[dir] += 1;
-        l[dir] -= 1;
-        q_CC_grad[c][dir] = (q_CC[r] - q_CC[l])*inv_dx;
+  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    IntVector c = *iter;
+    IntVector r = c;
+    IntVector l = c;
+    Vector grad_q_CC;
+    for(int dir = 0; dir <3; dir ++ ) { 
+      double inv_dx = 0.5 /dx[dir];
+      r[dir] += 1;
+      l[dir] -= 1;
+      grad_q_CC[dir] = (q_CC[r] - q_CC[l])*inv_dx;
     }
+    mag_grad_q_CC[c] = grad_q_CC.length();
   }
 }
 //______________________________________________________________________
 //          vector version
-void AMRICE::compute_q_CC_gradient( constCCVariable<Vector>& q_CC,
-                                    CCVariable<Vector>& q_CC_grad,
+void AMRICE::compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
+                                    CCVariable<double>& mag_div_q_CC,
                                     const Patch* patch) 
 {                  
   Vector dx = patch->dCell(); 
   
-  //__________________________________
-  // Vectors:  take the gradient of the magnitude
-  for(int dir = 0; dir <3; dir ++ ) { 
-    double inv_dx = 0.5 /dx[dir];
-    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        IntVector r = c;
-        IntVector l = c;
-        r[dir] += 1;
-        l[dir] -= 1;
-        q_CC_grad[c][dir] = (q_CC[r].length() - q_CC[l].length())*inv_dx;
+
+  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    IntVector c = *iter;
+    IntVector r = c;
+    IntVector l = c;
+    Vector Divergence_q_CC;
+    for(int dir = 0; dir <3; dir ++ ) { 
+      double inv_dx = 0.5 /dx[dir];
+      r[dir] += 1;
+      l[dir] -= 1;
+      Divergence_q_CC[dir]=(q_CC[r][dir] - q_CC[l][dir])*inv_dx;
     }
+    mag_div_q_CC[c] = Divergence_q_CC.length();
   }
 }
 /*_____________________________________________________________________
  Function~  AMRICE::set_refinementFlags
 ______________________________________________________________________*/         
-void AMRICE::set_refineFlags( CCVariable<Vector>& q_CC_grad,
+void AMRICE::set_refineFlags( CCVariable<double>& mag_grad_q_CC,
                               double threshold,
                               CCVariable<int>& refineFlag,
                               PerPatch<PatchFlagP>& refinePatchFlag,
@@ -1984,7 +1986,7 @@ void AMRICE::set_refineFlags( CCVariable<Vector>& q_CC_grad,
   PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
   for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
     IntVector c = *iter;
-    if( q_CC_grad[c].length() > threshold){
+    if( mag_grad_q_CC[c] > threshold){
       refineFlag[c] = true;
       refinePatch->set();
     }
@@ -2021,19 +2023,17 @@ AMRICE::errorEstimate(const ProcessorGroup*,
 
 
     //__________________________________
-    //  PRESSURE       --- just computes the gradient
-    //  I still need to figure out how 
-    //  set the refinement flags for this index 0
-    //  and then do it again in the matl loop below
+    //  PRESSURE      
     constCCVariable<double> press_CC;
-    CCVariable<Vector> press_CC_grad;
+    CCVariable<double> mag_grad_press_CC;
     
     new_dw->get(press_CC, lb->press_CCLabel,    0,patch,gac,1);
-    new_dw->allocateAndPut(press_CC_grad,
-                       lb->press_CC_gradLabel,  0,patch);
+    new_dw->allocateAndPut(mag_grad_press_CC,
+                       lb->mag_grad_press_CCLabel,  0,patch);
+    mag_grad_press_CC.initialize(0.0);
     
-    compute_q_CC_gradient(press_CC, press_CC_grad, patch);
-    set_refineFlags( press_CC_grad, d_press_threshold,refineFlag, 
+    compute_Mag_gradient(press_CC, mag_grad_press_CC, patch);
+    set_refineFlags( mag_grad_press_CC, d_press_threshold,refineFlag, 
                             refinePatchFlag, patch);
     //__________________________________
     //  RHO, TEMP, VEL_CC, VOL_FRAC
@@ -2044,43 +2044,48 @@ AMRICE::errorEstimate(const ProcessorGroup*,
               
       constCCVariable<double> rho_CC, temp_CC, vol_frac_CC;
       constCCVariable<Vector> vel_CC;
-      CCVariable<Vector> rho_CC_grad, temp_CC_grad; 
-      CCVariable<Vector> vel_CC_mag_grad, vol_frac_CC_grad;
+      CCVariable<double> mag_grad_rho_CC, mag_grad_temp_CC, mag_grad_vol_frac_CC;
+      CCVariable<double> mag_div_vel_CC;
       
       new_dw->get(rho_CC,      lb->rho_CCLabel,      indx,patch,gac,1);
       new_dw->get(temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1);
       new_dw->get(vel_CC,      lb->vel_CCLabel,      indx,patch,gac,1);
       new_dw->get(vol_frac_CC, lb->vol_frac_CCLabel, indx,patch,gac,1);
 
-      new_dw->allocateAndPut(rho_CC_grad,     
-                         lb->rho_CC_gradLabel,     indx,patch);
-      new_dw->allocateAndPut(temp_CC_grad,    
-                         lb->temp_CC_gradLabel,    indx,patch);
-      new_dw->allocateAndPut(vel_CC_mag_grad, 
-                         lb->vel_CC_mag_gradLabel, indx,patch);
-      new_dw->allocateAndPut(vol_frac_CC_grad,
-                         lb->vol_frac_CC_gradLabel,indx,patch);
+      new_dw->allocateAndPut(mag_grad_rho_CC,     
+                         lb->mag_grad_rho_CCLabel,     indx,patch);
+      new_dw->allocateAndPut(mag_grad_temp_CC,    
+                         lb->mag_grad_temp_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(mag_div_vel_CC, 
+                         lb->mag_div_vel_CCLabel,      indx,patch);
+      new_dw->allocateAndPut(mag_grad_vol_frac_CC,
+                         lb->mag_grad_vol_frac_CCLabel,indx,patch);
+                         
+      mag_grad_rho_CC.initialize(0.0);
+      mag_grad_temp_CC.initialize(0.0);
+      mag_div_vel_CC.initialize(0.0);
+      mag_grad_vol_frac_CC.initialize(0.0);
       
       //__________________________________
       // compute the gradients and set the refinement flags
                                         // Density
-      compute_q_CC_gradient(rho_CC,      rho_CC_grad,      patch); 
-      set_refineFlags( rho_CC_grad,     d_rho_threshold,refineFlag, 
+      compute_Mag_gradient(rho_CC,      mag_grad_rho_CC,      patch); 
+      set_refineFlags( mag_grad_rho_CC, d_rho_threshold,refineFlag, 
                             refinePatchFlag, patch);
       
                                         // Temperature
-      compute_q_CC_gradient(temp_CC,     temp_CC_grad,     patch); 
-      set_refineFlags( temp_CC_grad,    d_temp_threshold,refineFlag, 
+      compute_Mag_gradient(temp_CC,      mag_grad_temp_CC,     patch); 
+      set_refineFlags( mag_grad_temp_CC, d_temp_threshold,refineFlag, 
                             refinePatchFlag, patch);
       
                                         // Vol Fraction
-      compute_q_CC_gradient(vol_frac_CC, vol_frac_CC_grad, patch); 
-      set_refineFlags( vol_frac_CC_grad, d_vol_frac_threshold,refineFlag, 
+      compute_Mag_gradient(vol_frac_CC,  mag_grad_vol_frac_CC, patch); 
+      set_refineFlags( mag_grad_vol_frac_CC, d_vol_frac_threshold,refineFlag, 
                             refinePatchFlag, patch);
       
                                         // Velocity
-      compute_q_CC_gradient(vel_CC,      vel_CC_mag_grad,  patch); 
-      set_refineFlags( vel_CC_mag_grad, d_vel_threshold,refineFlag, 
+      compute_Mag_Divergence(vel_CC,      mag_div_vel_CC,  patch); 
+      set_refineFlags( mag_div_vel_CC, d_vel_threshold,refineFlag, 
                             refinePatchFlag, patch);
     }  // matls
     

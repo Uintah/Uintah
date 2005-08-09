@@ -119,11 +119,11 @@ namespace Uintah {
     
     // AMR variables
     const VarLabel* AMR_SyncTaskgraphLabel;
-    const VarLabel* rho_CC_gradLabel;
-    const VarLabel* temp_CC_gradLabel;
-    const VarLabel* vel_CC_mag_gradLabel;
-    const VarLabel* vol_frac_CC_gradLabel;
-    const VarLabel* press_CC_gradLabel;
+    const VarLabel* mag_grad_rho_CCLabel;
+    const VarLabel* mag_grad_temp_CCLabel;
+    const VarLabel* mag_div_vel_CCLabel;
+    const VarLabel* mag_grad_vol_frac_CCLabel;
+    const VarLabel* mag_grad_press_CCLabel;
     
     const VarLabel* mass_X_FC_fluxLabel;
     const VarLabel* mass_Y_FC_fluxLabel;

@@ -178,7 +178,7 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/> 
       <save label="scalar-f"/>
-      <save label="scalar-f_grad"/>
+      <save label="mag_grad_scalar-f"/>
       <save label="refineFlag"/> 
       <checkpoint interval="0.005" cycle="2"/>"
    </DataArchiver>
