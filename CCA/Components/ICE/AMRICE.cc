@@ -102,11 +102,11 @@ void AMRICE::addRefineDependencies(Task* task,
   Ghost::GhostType  gac = Ghost::AroundCells;
   if(step != nsteps) {
     cout_dbg << " requires from CoarseOldDW ";
-    task->requires(Task::CoarseOldDW, var, 0, Task::CoarseLevel, matls, DS, gac, d_orderOfInterpolation-1);
+    task->requires(Task::CoarseOldDW, var, 0, Task::CoarseLevel, matls, DS, gac, 1);
   }
   if(step != 0) {
     cout_dbg << " requires from CoarseNewDW ";
-    task->requires(Task::CoarseNewDW, var, 0, Task::CoarseLevel, matls, DS, gac, d_orderOfInterpolation-1);
+    task->requires(Task::CoarseNewDW, var, 0, Task::CoarseLevel, matls, DS, gac, 1);
   }
   cout_dbg <<""<<endl;
 }
@@ -331,8 +331,8 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
       //__________________________________
       // for higher order interpolation increase the coarse level foot print
       // by the order of interpolation - 1
-      if(d_orderOfInterpolation >= 2){
-        IntVector interOrder(d_orderOfInterpolation-1,d_orderOfInterpolation-1,d_orderOfInterpolation-1);
+      if(d_orderOfInterpolation >= 1){
+        IntVector interOrder(1,1,1);
         coarseLow  -= interOrder;
         coarseHigh += interOrder;
       } 
@@ -502,19 +502,19 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
   Ghost::GhostType  gac = Ghost::AroundCells;
   
   task->requires(Task::NewDW, lb->press_CCLabel,
-               0, Task::CoarseLevel, subset, Task::OutOfDomain, gac,d_orderOfInterpolation-1);
+               0, Task::CoarseLevel, subset, Task::OutOfDomain, gac,1);
                  
   task->requires(Task::NewDW, lb->rho_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,d_orderOfInterpolation-1);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
                
   task->requires(Task::NewDW, lb->sp_vol_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,d_orderOfInterpolation-1);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
   
   task->requires(Task::NewDW, lb->temp_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,d_orderOfInterpolation-1);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
   
   task->requires(Task::NewDW, lb->vel_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,d_orderOfInterpolation-1);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
 
   //__________________________________
   // Model Variables.
@@ -525,7 +525,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
        iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
       task->requires(Task::NewDW, tvar->var,
-                  0, Task::CoarseLevel, 0, Task::NormalDomain, gac,d_orderOfInterpolation-1);
+                  0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
       task->computes(tvar->var);
     }
   }
@@ -735,9 +735,9 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   // region of fine space that will correspond to the coarse we need to get
   IntVector fl, fh;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  int ngc = (d_orderOfInterpolation-1) * Max(Max(refineRatio.x(), refineRatio.y()), refineRatio.z());
+
   finePatch->computeVariableExtents(varLabel->typeDescription()->getType(),
-                                    IntVector(0,0,0), gac,ngc, fl, fh); 
+                                    IntVector(0,0,0), gac,1, fl, fh); 
   
   // coarse region we need to get from the dw
   IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
