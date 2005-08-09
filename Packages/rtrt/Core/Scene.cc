@@ -12,6 +12,7 @@
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/DpyBase.h>
+#include <Packages/rtrt/Core/DpyGui.h>
 #include <Packages/rtrt/Core/Shadows/NoShadows.h>
 #include <Packages/rtrt/Core/Shadows/HardShadows.h>
 #include <Packages/rtrt/Core/Shadows/SingleSampleSoftShadows.h>
@@ -327,6 +328,11 @@ void Scene::hide_auxiliary_displays() {
 void Scene::show_auxiliary_displays() {
   for(int i=0;i<aux_displays.size();i++)
     aux_displays[i]->Show();
+}
+
+void Scene::attach_displays_to_engine(DpyGui* dpygui) {
+  for(int i=0;i<displays.size();++i)
+    dpygui->addExternalUIInterface(displays[i]);
 }
 
 void

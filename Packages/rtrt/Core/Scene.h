@@ -31,6 +31,7 @@ class Light;
 class Ray;
 class HitInfo;
 class DpyBase;
+class DpyGui;
 class GGT;
 class Material;
 class ShadowBase;
@@ -326,6 +327,8 @@ public:
   void attach_auxiliary_display(DpyBase *dpy);
   void hide_auxiliary_displays();
   void show_auxiliary_displays();
+
+  void attach_displays_to_engine(DpyGui* gui);
 
   void init(const Camera& cam, const Color& bgcolor);
   void add_shadowmode(const char* name, ShadowBase* s);

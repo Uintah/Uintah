@@ -4,6 +4,8 @@
 
 #include <Core/Thread/Runnable.h>
 
+#include <Packages/rtrt/Core/ExternalUIInterface.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -37,7 +39,7 @@ enum {
   BufferModeMask = 0x00000001
 };
 
-class DpyBase : public Runnable {
+class DpyBase : public ExternalUIInterface, public Runnable {
 protected:
   
   // The width and height of the window.
@@ -155,14 +157,16 @@ public:
   // I don't think this function is needed right now.
   //  virtual void animate(double t, bool& changed);
 
-  // This causes the thread to end at the first opportunity closing
-  // the window.  It also generates an X event so that a thread
-  // waiting for an event will actually stop.
-  void stop();
-  
   void set_scene(Scene *new_scene) { scene = new_scene; }
 
 public:
+  ////////////////////////////////////////
+  // From ExternalUIInterface
+  //
+  // This causes the thread to end at the first opportunity closing
+  // the window.
+  virtual void stop();
+  
   // These functions try to minimize the number of things going on
   // with the xserver.
   static void xlock();

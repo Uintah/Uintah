@@ -836,8 +836,7 @@ Dpy::renderFrameless() {
 
       if(scene->no_aa || priv->last_changed){
         priv->accum_count=0;
-        scene->get_image(showing_scene)->draw( renderWindowSize_,
-                                               fullScreenMode_ );
+        displayedImage->draw( renderWindowSize_, fullScreenMode_ );
       } else {
         if(priv->accum_count==0){
           // Load last image...
@@ -848,8 +847,7 @@ Dpy::renderFrameless() {
         }
         priv->accum_count++;
         glAccum(GL_MULT, 1.-1./priv->accum_count);
-        scene->get_image(showing_scene)->draw( renderWindowSize_,
-                                               fullScreenMode_ );
+        displayedImage->draw( renderWindowSize_, fullScreenMode_ );
         glAccum(GL_ACCUM, 1.0/priv->accum_count);
         if(priv->accum_count>=4){
           /* The picture jumps around quite a bit when we show one
@@ -861,24 +859,9 @@ Dpy::renderFrameless() {
           swap = false;
         }
       }
-      if (priv->show_frame_rate) {
-        // Display textual information on the screen:
-        char buf[200];
-        if (framerate > 1)
-          sprintf( buf, "%3.1lf fps", framerate);
-        else
-          sprintf( buf, "%2.2lf fps - %3.1lf spf", framerate , 1.0f/framerate);
-	// Figure out how wide the string is
-	int width = calc_width(fontInfo, buf);
-	// Now we want to draw a gray box beneth the font using blending. :)
-	glEnable(GL_BLEND);
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	glColor4f(0.5,0.5,0.5,0.5);
-	glRecti(8,3-fontInfo->descent-2,12+width,fontInfo->ascent+3);
-	glDisable(GL_BLEND);
-	printString(fontbase, 10, 3, buf, Color(1,1,1));
-      }
-
+      if (priv->show_frame_rate)
+        display_frame_rate(framerate);
+      
       //st->add(SCIRun::Time::currentSeconds(), Color(0,0,1));
 
       // Draw stats removed
@@ -889,7 +872,8 @@ Dpy::renderFrameless() {
         glXSwapBuffers(dpy, win);
       XFlush(dpy);
       //st->add(SCIRun::Time::currentSeconds(), Color(1,1,0));
-      
+
+      save_frame(displayedImage);
     }
   } // if (display_frames && !bench)
 #else
@@ -1047,24 +1031,9 @@ Dpy::renderFrame() {
       } else {
         displayedImage->draw_depth( scene->max_depth );
       }
-      if (priv->show_frame_rate) {
-        // Display textual information on the screen:
-        char buf[200];
-        if (priv->FrameRate > 1)
-          sprintf( buf, "%3.1lf fps", (priv->FrameRate) );
-        else
-          sprintf( buf, "%2.2lf fps - %3.1lf spf", (priv->FrameRate) ,
-                   1.0f/(priv->FrameRate));
-	// Figure out how wide the string is
-	int width = calc_width(fontInfo, buf);
-	// Now we want to draw a gray box beneth the font using blending. :)
-	glEnable(GL_BLEND);
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	glColor4f(0.5,0.5,0.5,0.5);
-	glRecti(8,3-fontInfo->descent-2,12+width,fontInfo->ascent+3);
-	glDisable(GL_BLEND);
-	printString(fontbase, 10, 3, buf, Color(1,1,1));
-      }
+      if (priv->show_frame_rate)
+        display_frame_rate(priv->FrameRate);
+      
       display();
 #if 0
       if(priv->displayRStats_ )
@@ -1081,36 +1050,7 @@ Dpy::renderFrame() {
 		   cum_dt);
       }
 #endif
-      switch (priv->dumpFrame) {
-      case 1:
-        // Dump a single frame
-        if (!scene->display_depth)
-          displayedImage->save_ppm( "images/image" );
-        else
-          displayedImage->save_depth( "images/depth" );
-        priv->dumpFrame = 0;
-        break;
-      case -1:
-        // Initialize the stream and dump a frame
-        if (displayedImage->start_ppm_stream( "movies/movie" )) {
-          displayedImage->save_to_ppm_stream();
-          priv->dumpFrame = -2;
-        } else {
-          // Something went wrong, so set dumpFrame to stop
-          priv->dumpFrame = 0;
-        }
-        break;
-      case -2:
-        // Dump the next frame
-        displayedImage->save_to_ppm_stream();
-        break;
-      case -3:
-        // Stop recording
-        displayedImage->save_to_ppm_stream();
-        displayedImage->end_ppm_stream();
-        priv->dumpFrame = 0;
-        break;
-      }
+      save_frame(displayedImage);
     }
   } else {
     // Do stuff that the benchmark will notice
@@ -1241,6 +1181,56 @@ void Dpy::change_nworkers(int num) {
     cerr << "Dpy::change_nworkers:: Number of threads requested ("<<num<<") is outside the acceptable range [1, "<<SCIRun::Thread::numProcessors()<<"].\n";
 }
 
+void Dpy::display_frame_rate(double framerate) {
+  // Display textual information on the screen:
+  char buf[200];
+  if (framerate > 1)
+    sprintf( buf, "%3.1lf fps", framerate);
+  else
+    sprintf( buf, "%2.2lf fps - %3.1lf spf", framerate , 1.0f/framerate);
+  // Figure out how wide the string is
+  int width = calc_width(fontInfo, buf);
+  // Now we want to draw a gray box beneth the font using blending. :)
+  glEnable(GL_BLEND);
+  glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+  glColor4f(0.5,0.5,0.5,0.5);
+  glRecti(8,3-fontInfo->descent-2,12+width,fontInfo->ascent+3);
+  glDisable(GL_BLEND);
+  printString(fontbase, 10, 3, buf, Color(1,1,1));
+}
+
+void Dpy::save_frame(Image* image) {
+  switch (priv->dumpFrame) {
+  case 1:
+    // Dump a single frame
+    if (!scene->display_depth)
+      image->save_ppm( "images/image" );
+    else
+      image->save_depth( "images/depth" );
+    priv->dumpFrame = 0;
+    break;
+  case -1:
+    // Initialize the stream and dump a frame
+    if (image->start_ppm_stream( "movies/movie" )) {
+      image->save_to_ppm_stream();
+      priv->dumpFrame = -2;
+    } else {
+      // Something went wrong, so set dumpFrame to stop
+      priv->dumpFrame = 0;
+    }
+    break;
+  case -2:
+    // Dump the next frame
+    image->save_to_ppm_stream();
+    break;
+  case -3:
+    // Stop recording
+    image->save_to_ppm_stream();
+    image->end_ppm_stream();
+    priv->dumpFrame = 0;
+    break;
+  }
+}
 #if 0 /////////////////////////////////////////////////////////
 // Looks like this displays the string with a shadow on it...
 void

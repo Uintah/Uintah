@@ -696,6 +696,9 @@ main(int argc, char* argv[])
     new Thread( worker, buf, rtrt_engine_tg);
   } // end for (create workers)
 
+  // Add the other displays to our GUI for cleanup.
+  scene->attach_displays_to_engine(dpygui);
+  
   // If we return now, we won't be able to access stdin, or CNTR-C and
   // stuff.
   rtrt_engine_tg->join();

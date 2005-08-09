@@ -114,14 +114,18 @@ void GridSpheresDpy::setup_vars() {
       if(!in){
 	cerr << "GridSpheresDpy::setup_vars:Error opening file: " << in_file
 	     << ", using defaults.\n";
+        compute_hist(fontbase);
 	return;
       }
       int ndata_file;
       in >> ndata_file;
       in >> colordata;
       newcolordata = colordata;
-      if (ndata_file != ndata)
-	return;
+      if (ndata_file != ndata) {
+        cerr << "GridSpheresDpy::setup_vars:: ndata_file("<<ndata_file<<") != ndata("<<ndata<<")\n";
+        compute_hist(fontbase);
+        return;
+      }
       for(int i=0;i<ndata_file;i++){
 	in >> original_min[i] >> original_max[i];
 	in >> min[i] >> max[i];
@@ -326,6 +330,7 @@ void GridSpheresDpy::compute_hist(GLuint fid)
   if (hist)
     delete(hist);
   hist=new int[total];
+  cerr << "GridSpheresDpy::compute_hist: hist allocated\n";
   for(int i=0;i<total;i++){
     hist[i]=0;
   }
@@ -495,6 +500,7 @@ void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct)
 // This scales the histograms to match the min and max of the range
 // as well as the horizontal resolution.
 void GridSpheresDpy::compute_scaled_hist() {
+  cerr << "GridSpheresDpy::compute_scaled_hist: start\n";
   if (xres < 1)
     // This isn't a case we should handle.
     return;
@@ -520,6 +526,7 @@ void GridSpheresDpy::compute_scaled_hist() {
   // For each current histogram
   int* ho = hist;
   int* sh = scaled_hist;
+  cerr << "GridSpheresDpy::compute_scaled_hist: hist = "<<hist<<", scaled_hist = "<<scaled_hist<<"\n";
   for(int j = 0; j < ndata; j++) {
     for(int i = 0; i < nhist; i++) {
       // Figure out which value ho[i] maps to
