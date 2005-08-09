@@ -102,11 +102,11 @@ void AMRICE::addRefineDependencies(Task* task,
   Ghost::GhostType  gac = Ghost::AroundCells;
   if(step != nsteps) {
     cout_dbg << " requires from CoarseOldDW ";
-    task->requires(Task::CoarseOldDW, var, 0, Task::CoarseLevel, matls, DS, gac, 1);
+    task->requires(Task::CoarseOldDW, var, 0, Task::CoarseLevel, matls, DS, gac, d_orderOfInterpolation-1);
   }
   if(step != 0) {
     cout_dbg << " requires from CoarseNewDW ";
-    task->requires(Task::CoarseNewDW, var, 0, Task::CoarseLevel, matls, DS, gac, 1);
+    task->requires(Task::CoarseNewDW, var, 0, Task::CoarseLevel, matls, DS, gac, d_orderOfInterpolation-1);
   }
   cout_dbg <<""<<endl;
 }
@@ -332,12 +332,11 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
       // for higher order interpolation increase the coarse level foot print
       // by the order of interpolation - 1
       if(d_orderOfInterpolation >= 2){
-        IntVector one(1,1,1);
-        IntVector interOrder(d_orderOfInterpolation,d_orderOfInterpolation,d_orderOfInterpolation);
-        coarseLow  -= interOrder - one;
-        coarseHigh += interOrder - one;
+        IntVector interOrder(d_orderOfInterpolation-1,d_orderOfInterpolation-1,d_orderOfInterpolation-1);
+        coarseLow  -= interOrder;
+        coarseHigh += interOrder;
       } 
-      
+      /*
       //__________________________________
       // If the face is orthogonal to a neighboring
       // patch face increase the coarse level foot print
@@ -350,7 +349,7 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
       
       coarseHigh += expandCellsHi;
       coarseLow  -= expandCellsLo;
-      
+      */
       //__________________________________
       // coarseHigh and coarseLow cannot lie outside
       // of the coarselevel index range
@@ -362,14 +361,14 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
       cout_dbg<< " face " << face << " refineRatio "<< refineRatio
               << " BC type " << patch->getBCType(face)
               << " FineLevel iterator" << fl << " " << fh 
-              << " expandCellsHi " << expandCellsHi
+        /*              << " expandCellsHi " << expandCellsHi
               << " expandCellsLo " << expandCellsLo
-              << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
+        */              << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
 
-       
       //__________________________________
       // subCycleProgress_var near 1.0 
       //  interpolation using the coarse_new_dw data
+
       if(subCycleProgress_var > 1-1.e-10){ 
        constCCVariable<varType> q_NewDW;
        coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
@@ -503,19 +502,19 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
   Ghost::GhostType  gac = Ghost::AroundCells;
   
   task->requires(Task::NewDW, lb->press_CCLabel,
-               0, Task::CoarseLevel, subset, Task::OutOfDomain, gac,1);
+               0, Task::CoarseLevel, subset, Task::OutOfDomain, gac,d_orderOfInterpolation-1);
                  
   task->requires(Task::NewDW, lb->rho_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,d_orderOfInterpolation-1);
                
   task->requires(Task::NewDW, lb->sp_vol_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,d_orderOfInterpolation-1);
   
   task->requires(Task::NewDW, lb->temp_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,d_orderOfInterpolation-1);
   
   task->requires(Task::NewDW, lb->vel_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,d_orderOfInterpolation-1);
 
   //__________________________________
   // Model Variables.
@@ -526,7 +525,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
        iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
       task->requires(Task::NewDW, tvar->var,
-                  0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+                  0, Task::CoarseLevel, 0, Task::NormalDomain, gac,d_orderOfInterpolation-1);
       task->computes(tvar->var);
     }
   }
@@ -731,28 +730,28 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
                                   const Level* fineLevel,
                                   const Level* coarseLevel)
 {
-  IntVector refineRatio = coarseLevel->getRefinementRatio();
+  IntVector refineRatio = fineLevel->getRefinementRatio();
                        
   // region of fine space that will correspond to the coarse we need to get
   IntVector fl, fh;
   Ghost::GhostType  gac = Ghost::AroundCells;
+  int ngc = (d_orderOfInterpolation-1) * Max(Max(refineRatio.x(), refineRatio.y()), refineRatio.z());
   finePatch->computeVariableExtents(varLabel->typeDescription()->getType(),
-                                    IntVector(0,0,0), gac,1, fl, fh); 
+                                    IntVector(0,0,0), gac,ngc, fl, fh); 
   
   // coarse region we need to get from the dw
   IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
-  IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + 
-  finePatch->getLevel()->getRefinementRatio() - IntVector(1,1,1);
+  IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + refineRatio - IntVector(1,1,1);
   
   //__________________________________
   // for higher order interpolation increase the coarse level foot print
   // by the order of interpolation - 1
-  if(d_orderOfInterpolation >= 2){
-    IntVector one(1,1,1);
-    IntVector interOrder(d_orderOfInterpolation,d_orderOfInterpolation,d_orderOfInterpolation);
-    cl  -= interOrder - one;
-    ch += interOrder - one;
-  }
+//   if(d_orderOfInterpolation >= 2){
+//     IntVector one(1,1,1);
+//     IntVector interOrder(d_orderOfInterpolation,d_orderOfInterpolation,d_orderOfInterpolation);
+//     cl  -= (interOrder - one);
+//     ch += (interOrder - one);
+//   }
 
   //__________________________________
   // coarseHigh and coarseLow cannot lie outside
@@ -767,14 +766,14 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   IntVector hi = finePatch->getInteriorCellHighIndex();
 
   cout_dbg <<" coarseToFineOperator: " << varLabel->getName()
-           <<" finePatch  "<< finePatch->getID() << " " 
-           << lo<<" "<< hi<< " fl " << fl << " fh " << fh 
+           <<" finePatch  "<< finePatch->getID() << " "
+           << lo<<" "<< hi<< " fl " << fl << " fh " << fh
            <<" coarseRegion " << cl << " " << ch <<endl;
   
   constCCVariable<T> coarse_q_CC;
   new_dw->getRegion(coarse_q_CC, varLabel, indx, coarseLevel, cl, ch);
-    
-    
+  
+  
   selectInterpolator(coarse_q_CC, d_orderOfInterpolation, coarseLevel, fineLevel,
                       refineRatio, lo,hi,q_CC);
   
