@@ -56,8 +56,8 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   else if(n8or27==MAX_BASIS) 
     {NGP=2; NGN=2;} 
     
-  d_calFractParameters = "false";
-  d_doCrackPropagation = "false";
+  d_calFractParameters = false;
+  d_doCrackPropagation = false;
   useVolumeIntegral    = false; 
   smoothCrackFront     = false;
   outputJ              = false; 
@@ -67,8 +67,8 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   rJ=-1.;                       // Radius of J-integral contour
   NJ=2;                         // J-integral contour size  
   
-  calFractParasInterval=0.;     // Intervals of calculating J & K
-  crackPropInterval=0.;         // Interval of doing crack propagation
+  computeJKInterval=0.;         // Intervals of calculating J & K
+  growCrackInterval=0.;         // Interval of doing crack propagation
   
   GLP=Point(-9e99,-9e99,-9e99); // Highest global grid
   GHP=Point( 9e99, 9e99, 9e99); // Lowest global grid
@@ -85,23 +85,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   ProblemSpecP mpm_soln_ps = ps->findBlock("MPM");
   if(mpm_soln_ps) {
      mpm_soln_ps->get("calculate_fracture_parameters", d_calFractParameters);
-     if(d_calFractParameters!="true" && d_calFractParameters!="false"
-	                 && d_calFractParameters!="every_time_step") {
-        cout << "Error: 'calculate_fracture_parameters' can either be "
-	     <<	"'true' or 'false' or 'every_time_step'." 
-	     << " Program terminated." << endl;
-        exit(1);	
-     }
-     
      mpm_soln_ps->get("do_crack_propagation", d_doCrackPropagation);
-     if(d_doCrackPropagation!="true" && d_doCrackPropagation!="false"
-                         && d_doCrackPropagation!="every_time_step") {        
-       cout << "Error: 'do_crack_propagation' can either be "
-            << "'true' or 'false' or 'every_time_step'." 
-            << " Program terminated." << endl;
-       exit(1);
-     }
-
      mpm_soln_ps->get("use_volume_integral", useVolumeIntegral);
      mpm_soln_ps->get("smooth_crack_front", smoothCrackFront);
      mpm_soln_ps->get("J_radius", rJ);
@@ -113,6 +97,8 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   ProblemSpecP uda_ps = ps->findBlock("DataArchiver");
   uda_ps->get("filebase", udaDir);
   uda_ps->get("save_crack_geometry", saveCrackGeometry);
+  uda_ps->get("computeJKInterval",computeJKInterval);
+  uda_ps->get("growCrackInterval",growCrackInterval);
            
   // Read in extent of the global grid
   ProblemSpecP grid_level_ps = ps->findBlock("Grid")
@@ -502,12 +488,12 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
           cout << "    Frictional coefficient: " << cmu[m] << endl;
 
         cout <<"  Crack geometry:" << endl;
-        // quad cracks
+        // general quad cracks
         for(int i=0;i<(int)quads[m].size();i++) {
           cout << "  * Quad " << i+1 << ": meshed by [" << quadN12[m][i]
                << ", " << quadN23[m][i] << ", " << quadN12[m][i]
                << ", " << quadN23[m][i] << "]" << endl;
-          for(int j=0;j<4;j++)
+          for(int j=0;j<8;j++)
             cout << "    p" << j+1 << ": " << quads[m][i][j] << endl;
           for(int j=0;j<4;j++) {
             if(quadCrackSidesAtFront[m][i][j]) {
@@ -618,7 +604,7 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
     } // End of loop over materials
 
     // Ratio of crack propagation incremental to cell-size
-    if(d_doCrackPropagation!="false") {
+    if(d_doCrackPropagation) {
       cout << "  Ratio of crack increment to cell size (dadx) = "
            << rdadx << "." << endl << endl;
     }
@@ -708,7 +694,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
         }
 
 	// Controlling parameters for fracture parameter calculation and crack propagation
-        if(d_calFractParameters!="false"||d_doCrackPropagation!="false") {
+        if(d_calFractParameters ||d_doCrackPropagation) {
 	  // Initialize parameters of crack-front nodes  
 	  int num=(int)cfSegNodes[m].size(); 
 	  cfSegVel[m].resize(num);
@@ -763,7 +749,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           }
         } 
          
-#if 1
+#if 0
         OutputInitialCrackMesh(m);
 #endif
       }
