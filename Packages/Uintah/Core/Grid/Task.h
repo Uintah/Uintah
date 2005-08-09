@@ -595,19 +595,10 @@ WARNING
       getMaterialsUnderDomain(const MaterialSubset* domainMaterials) const;
 
     private:
-      template <class T>
-      static constHandle< ComputeSubset<T> >
-      getComputeSubsetUnderDomain(std::string domString, DomainSpec dom,
-				  const ComputeSubset<T>* subset,
-				  const ComputeSubset<T>* domainSubset);
-      static constHandle< MaterialSubset >
-      getOtherLevelComputeSubset(DomainSpec dom,
-				 const MaterialSubset* subset,
-				 const MaterialSubset* domainSubset);
       static constHandle< PatchSubset >
-      getOtherLevelComputeSubset(DomainSpec dom,
+      getOtherLevelPatchSubset(DomainSpec dom,
 				 const PatchSubset* subset,
-				 const PatchSubset* domainSubset);
+				 const PatchSubset* domainSubset, int ngc);
      
       Dependency();
       Dependency& operator=(const Dependency& copy);

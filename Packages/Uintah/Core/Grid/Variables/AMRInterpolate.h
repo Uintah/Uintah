@@ -8,6 +8,9 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/MiscMath.h>
 
+#include <sstream>
+using namespace std;
+
 namespace Uintah {
 
 
@@ -187,7 +190,8 @@ template<class T>
   Vector inv_c_dx = Vector(1.0)/c_dx;
   GridP grid = coarseLevel->getGrid();
   IntVector gridLo, gridHi;
-  grid->getLevel(0)->findCellIndexRange(gridLo,gridHi);
+  coarseLevel->findCellIndexRange(gridLo,gridHi);
+  
   gridHi -= IntVector(1,1,1);
   
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
@@ -242,7 +246,7 @@ template<class T>
     //  Q_CL(-1, 1,k)      Q_CL(0, 1,k)          Q_CL(1, 1,k)      
         
     vector<T> q_XY_Plane(3);
-     
+
     int k = -2; 
     // loop over the three X-Y planes
     for(int p = 0; p < 3; p++){

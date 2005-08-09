@@ -887,16 +887,26 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
       ASSERT(req->patches == NULL);
       ASSERT(task->patches->size() == 1);
       const Patch* origPatch = task->patches->get(0);
-      origPatch->computeVariableExtents(req->var->typeDescription()->getType(),
-                                        req->var->getBoundaryLayer(),
-                                        req->gtype, req->numGhostCells,
-                                        otherLevelLow, otherLevelHigh);
       if (req->patches_dom == Task::CoarseLevel) {
+        // change the ghost cells to reflect coarse level
+        IntVector ratio = origPatch->getLevel()->getRefinementRatio();
+        int ngc = req->numGhostCells * Max(Max(ratio.x(), ratio.y()), ratio.z());
+        IntVector ghost(ngc,ngc,ngc);
+
+        // manually set it, can't use computeVariableExtents since there might not be
+        // a neighbor fine patch, and it would throw it off.  
+        otherLevelLow = origPatch->getLowIndex() - ghost;
+        otherLevelHigh = origPatch->getHighIndex() + ghost;
+
         otherLevelLow = origPatch->getLevel()->mapCellToCoarser(otherLevelLow);
         otherLevelHigh = origPatch->getLevel()->mapCellToCoarser(otherLevelHigh) + 
-          origPatch->getLevel()->getRefinementRatio() - IntVector(1,1,1);
+          ratio - IntVector(1,1,1);
       }
       else {
+        origPatch->computeVariableExtents(req->var->typeDescription()->getType(),
+                                          req->var->getBoundaryLayer(),
+                                          req->gtype, req->numGhostCells,
+                                          otherLevelLow, otherLevelHigh);
         otherLevelLow = origPatch->getLevel()->mapCellToFiner(otherLevelLow);
         otherLevelHigh = origPatch->getLevel()->mapCellToFiner(otherLevelHigh);
       }
@@ -926,9 +936,13 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 
           if (high.x() <= low.x() || high.y() <= low.y() || high.z() <= low.z())
             continue;
+          
+          // don't need to selectPatches, patches is already all the patches we'll need.
+          neighbors.push_back(patch);
         }
-
-        patch->getLevel()->selectPatches(low, high, neighbors);
+        else {
+          patch->getLevel()->selectPatches(low, high, neighbors);
+        }
 	ASSERT(is_sorted(neighbors.begin(), neighbors.end(),
 			 Patch::Compare()));
 	if(dbg.active()){

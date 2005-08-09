@@ -496,7 +496,7 @@ WARNING
      void getCoarseLevelPatches(selectType& coarsePatches) const
      { getOtherLevelPatches(-1, coarsePatches); }
 
-     void getOtherLevelPatches(int levelOffset, selectType& patches)
+     void getOtherLevelPatches(int levelOffset, selectType& patches, int numGhostCells = 0)
        const;
      
      class Compare {

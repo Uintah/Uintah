@@ -427,9 +427,14 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
   double regridTime = Time::currentSeconds() - start;
   if (currentGrid != oldGrid) {
     if (d_myworld->myrank() == 0) {
-      cout << "  REGRIDDING!!!!!\n";
+      cout << "  REGRIDDING:";
       //amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-      amrout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+      for (int i = 0; i < currentGrid->numLevels(); i++) {
+        cout << " Level " << i << " has " << currentGrid->getLevel(i)->numPatches() << " patches...";
+      }
+      cout << endl;
+      if (amrout.active())
+        amrout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
     }
          
     // Compute number of dataWarehouses
