@@ -38,7 +38,7 @@
 	<time_integrator>fracture</time_integrator>
 	<nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>false</calculate_fracture_parameters>
-        <do_crack_propagation>every_time_step</do_crack_propagation>
+        <do_crack_propagation>true</do_crack_propagation>
         <use_volume_integral>false</use_volume_integral>
         <smooth_crack_front>false</smooth_crack_front>
         <dadx>0.5</dadx>
