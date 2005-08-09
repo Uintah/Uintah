@@ -49,12 +49,6 @@ public:
              const BoundaryCondition& bc);
   void setDomainBoundaries(const Level& lev);
 
-  /* Static members & functions */
-  static bool initialized /* = false */;
-  static std::map<BoundaryType, std::string> boundaryTypeString;  
-  static std::map<BoundaryCondition, std::string> bcString;
-  static void init(void);
-
   int         _procID;    // Owning processor's ID
   Counter     _levelID;   // Which level this Patch belongs to
   Box         _box;       // Patch box extents
@@ -69,5 +63,9 @@ public:
 
 std::ostream&
 operator << (std::ostream& os, const Patch& patch);
+std::ostream&
+operator << (std::ostream& os, const Patch::BoundaryCondition& c);
+std::ostream&
+operator << (std::ostream& os, const Patch::BoundaryType& b);
 
 #endif // __PATCH_H__

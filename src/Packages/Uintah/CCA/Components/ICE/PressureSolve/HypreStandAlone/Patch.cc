@@ -6,32 +6,13 @@
 
 using namespace std;
 
-map<Patch::BoundaryType, string> Patch::boundaryTypeString; 
-map<Patch::BoundaryCondition, string> Patch::bcString; 
-bool Patch::initialized = false;
-
-void
-Patch::init(void)
-{
-  boundaryTypeString[Domain    ] = "Domain    ";
-  boundaryTypeString[CoarseFine] = "CoarseFine";
-  boundaryTypeString[Neighbor  ] = "Neighbor  ";
-
-  bcString[NA       ] = "NA       ";
-  bcString[Dirichlet] = "Dirichlet";
-  bcString[Neumann  ] = "Neumann  ";
-}
-
 Patch::Patch(const int procID, 
              const Counter levelID,
              const Box& box) :
   _box(box)
 {
   funcPrint("Patch::Patch()",FBegin);
-  if (!initialized) {
-    init();
-    initialized = true;
-  }
+
   const Counter numDims = box.getNumDims();
   _procID = procID;
   _levelID = levelID; 
@@ -153,11 +134,33 @@ operator << (std::ostream& os, const Patch& patch)
       os << "BOUNDARY(d = " << d
          << " , s = " << s << "): "
          << "boundary type = "
-         << Patch::boundaryTypeString[patch.getBoundaryType(d,s)].c_str()
+         << patch.getBoundaryType(d,s)
          << "  bc = "
-         << Patch::bcString[patch.getBC(d,s)].c_str()
+         << patch.getBC(d,s)
          << "\n";
     }
   }
   return os;
 }
+
+std::ostream&
+operator << (std::ostream& os, const Patch::BoundaryType& b)
+{
+  if      (b == Patch::Domain    ) os << "Domain    ";
+  else if (b == Patch::CoarseFine) os << "CoarseFine";
+  else if (b == Patch::Neighbor  ) os << "Neighbor  ";
+  else os << "BT WRONG!!!";
+  return os;
+}
+
+std::ostream&
+operator << (std::ostream& os, const Patch::BoundaryCondition& c)
+{
+  if      (c == Patch::NA       ) os << "NA         ";
+  else if (c == Patch::Dirichlet) os << "Dirichlet  ";
+  else if (c == Patch::Neumann  ) os << "Neumann    ";
+  else os << "BC WRONG!!!";
+  return os;
+}
+
+
