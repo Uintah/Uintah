@@ -497,17 +497,7 @@ Task::Dependency::~Dependency()
 // for xlC:
 namespace Uintah {
 
-// MaterialSubset specialization
-constHandle< MaterialSubset > Task::Dependency::
-getOtherLevelComputeSubset(Task::DomainSpec,
-			   const MaterialSubset*,
-			   const MaterialSubset*)
-{
-  // PatchSubset and MaterialSubset specializations are in Task.cc
-  SCI_THROW(InternalError("The DomainSpec for a Task::Dependency's MaterialSubset cannot be coarseLevel or FineLevel",
-                          __FILE__, __LINE__));
-}
-
+  /*
 template <class T>
 constHandle< ComputeSubset<T> > Task::Dependency::
 getComputeSubsetUnderDomain(string domString, Task::DomainSpec dom,
@@ -528,27 +518,42 @@ getComputeSubsetUnderDomain(string domString, Task::DomainSpec dom,
                             __FILE__, __LINE__));
   }
 }
-
+*/
 constHandle<PatchSubset>
 Task::Dependency::getPatchesUnderDomain(const PatchSubset* domainPatches) const
 {
-  return getComputeSubsetUnderDomain("patches_dom", patches_dom, patches,
-				     domainPatches);
+  switch(patches_dom){
+  case Task::NormalDomain:
+  case Task::OtherGridDomain: // use the same patches, we'll figure out where it corresponds on the other grid
+    return PatchSubset::intersection(patches, domainPatches);
+  case Task::CoarseLevel:
+  case Task::FineLevel:      
+    return getOtherLevelPatchSubset(patches_dom, patches, domainPatches, numGhostCells);
+  default:
+    SCI_THROW(InternalError(string("Unknown patch domain ") + " type "+to_string(static_cast<int>(patches_dom)),
+                            __FILE__, __LINE__));
+  }
 }
       
 constHandle<MaterialSubset>
 Task::Dependency::getMaterialsUnderDomain(const MaterialSubset* domainMaterials) const
 {
-  return getComputeSubsetUnderDomain("matls_dom", matls_dom, matls,
-				     domainMaterials);
+  switch(matls_dom){
+  case Task::NormalDomain:
+    return MaterialSubset::intersection(matls, domainMaterials);
+  case Task::OutOfDomain:
+    return matls;
+  default:
+    SCI_THROW(InternalError(string("Unknown matl domain ") + " type "+to_string(static_cast<int>(matls_dom)),
+                            __FILE__, __LINE__));
+  }
 }
 
 
-// PatcheSubset specialization
 constHandle< PatchSubset > Task::Dependency::
-getOtherLevelComputeSubset(Task::DomainSpec dom,
+getOtherLevelPatchSubset(Task::DomainSpec dom,
 			   const PatchSubset* subset,
-			   const PatchSubset* domainSubset)
+			   const PatchSubset* domainSubset, int ngc)
 {
   constHandle<PatchSubset> myLevelSubset =
     PatchSubset::intersection(subset, domainSubset);
@@ -570,7 +575,7 @@ getOtherLevelComputeSubset(Task::DomainSpec dom,
   for (int p = 0; p < myLevelSubset->size(); p++) {
     const Patch* patch = myLevelSubset->get(p);
     Patch::selectType somePatches;
-    patch->getOtherLevelPatches(levelOffset, somePatches);
+    patch->getOtherLevelPatches(levelOffset, somePatches, ngc); 
     patches.insert(somePatches.begin(), somePatches.end());
   }
 
