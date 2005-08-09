@@ -36,7 +36,7 @@
     <MPM>
 	<time_integrator>fracture</time_integrator>
 	<nodes8or27>8</nodes8or27>
-        <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
+        <calculate_fracture_parameters>true</calculate_fracture_parameters>
         <J_radius>24.0e-3</J_radius>  <!-- 12X12 cells --> 
         <use_volume_integral>true</use_volume_integral> <!-- use it in J-->
         <do_crack_propagation>false</do_crack_propagation>
