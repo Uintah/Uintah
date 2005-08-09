@@ -46,6 +46,49 @@ doc.insertDocType("article", entities)
 <article class="faq">
   <title>User FAQ (v. <!--%= doc.edition %-->)</title>
 
+  <qandaset defaultlabel="itkosx103">
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>8/9/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  I get link errors when compiling ITK 2.0.1 OS X 10.3 to use with SCIRun.
+	</para>
+      </question>
+      <answer>
+	<para>
+	  If building ITK 2.0.1 on OS X 10.3, users may see the following errors: <br/>
+	  InsightToolkit-2.0.1/bin/libitkvnl.dylib...
+	  ld: vnl_math.o illegal reference for -dynamic code (section   
+	  difference reference from section (__TEXT,__eh_frame) relocation   
+	  entry (0) to symbol: ___isnan defined in dylib: /usr/lib/libm.dylib)
+	  /usr/bin/libtool: internal link edit command failed
+	  make[9]: *** [/Users/blah/Code/C++/ITK/InsightToolkit-2.0.1/ 
+	  bin/ libitkvnl.dylib] Error 1.
+	</para>
+	<para>
+	  The solution is to either
+	  (a) checkout a recent CVS copy of ITK (directions are on the ITK  
+	  download page), or
+	  (b) Edit the file:
+	  [INSIGHT_ROOT]/Utilities/vxl/core/vnl/vnl_math.cxx
+	  changing line 62 from:
+	  # define isnan __isnan
+	  to
+	  # define isnan(x) __isnand((double)x)
+	  
+	  This simple fix will allow ITK 2.0.1 to compile on OS X.
+	</para>
+      </answer>
+    </qandaentry>
+
+<!-- ++++++++++++++++++++ -->
+
   <qandaset defaultlabel="number">
 
     <qandaentry>
