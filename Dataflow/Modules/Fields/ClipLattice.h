@@ -37,6 +37,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Clipper.h>
+#include <Core/Datatypes/NrrdData.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 
@@ -46,7 +47,8 @@ class ClipLatticeAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle fieldh,
-			      const Point &a, const Point &b) = 0;
+			      const Point &a, const Point &b,
+			      NrrdDataHandle nrrdh) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc);
@@ -59,14 +61,16 @@ class ClipLatticeAlgoT : public ClipLatticeAlgo
 public:
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle fieldh,
-			      const Point &a, const Point &b);
+			      const Point &a, const Point &b,
+			      NrrdDataHandle nrrdh);
 };
 
 
 template <class FIELD>
 FieldHandle
 ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
-				 const Point &a, const Point &b)
+				 const Point &a, const Point &b,
+				 NrrdDataHandle nrrdh)
 {
   FIELD *lv = dynamic_cast<FIELD *>(fieldh.get_rep());
   LatVolMesh *omesh = lv->get_typed_mesh().get_rep();
@@ -132,14 +136,20 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
   {
     LatVolMesh::Node::iterator si, ei;
     mesh->begin(si); mesh->end(ei);
-
+    LatVolMesh::Node::size_type ns;
+    omesh->size(ns);
+    unsigned int dim = (unsigned int)ns;
+    nrrdAlloc(nrrdh->nrrd, nrrdTypeUChar, 1, dim);
+    unsigned char *mask = (unsigned char *)nrrdh->nrrd->data;
+    memset(mask, 0, dim*sizeof(unsigned char));
     while (si != ei)
     {
       LatVolMesh::Node::index_type idx = *si;
       idx.i_ += s.i_;
       idx.j_ += s.j_;
       idx.k_ += s.k_;
-
+      idx.mesh_ = omesh;
+      mask[(unsigned int)idx] = 1;
       typename FIELD::value_type val;
       lv->value(val, idx);
       fld->set_value(val, *si);
@@ -151,14 +161,20 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
   {
     LatVolMesh::Cell::iterator si, ei;
     mesh->begin(si); mesh->end(ei);
-
+    LatVolMesh::Cell::size_type ns;
+    omesh->size(ns);
+    unsigned int dim = (unsigned int)ns;
+    nrrdAlloc(nrrdh->nrrd, nrrdTypeUChar, 1, dim);
+    unsigned char *mask = (unsigned char *)nrrdh->nrrd->data;
+    memset(mask, 0, dim*sizeof(unsigned char));
     while (si != ei)
     {
       LatVolMesh::Cell::index_type idx = *si;
       idx.i_ += s.i_;
       idx.j_ += s.j_;
       idx.k_ += s.k_;
-
+      idx.mesh_ = omesh;
+      mask[(unsigned int)idx] = 1;
       typename FIELD::value_type val;
       lv->value(val, idx);
       fld->set_value(val, *si);
