@@ -9,6 +9,14 @@
 
 using namespace std;
 
+HypreGenericSolver(const std::string& solverTitle,
+                   const HypreInterface& hypreInterface)
+{ 
+  _solverType = getSolverType(solverTitle);
+  _results.numIterations = 0;
+  _results.finalResNorm  = 1.23456e+30; // Large number
+}
+  
 void
 Solver::setup(void)
 {

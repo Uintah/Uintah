@@ -43,13 +43,13 @@ WARNING
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 
 namespace Uintah {
-
+  
   class HypreGenericSolver {
 
-    /*========================== PUBLIC SECTION ==========================*/
+    //========================== PUBLIC SECTION ==========================
   public:
   
-    /*---------- Types ----------*/
+    //---------- Types ----------
 
     enum SolverType {
       SMG, PFMG, SparseMSG, CG, Hybrid, GMRES, AMG, FAC
@@ -61,59 +61,43 @@ namespace Uintah {
       PrecondDiagonal, PrecondAMG, PrecondFAC
     };
 
-    /* Solver results are output to this struct */
+    // Solver results are output to this struct 
     struct Results {
       int        numIterations;   // Number of solver iterations performed
       double     finalResNorm;    // Final residual norm ||A*x-b||_2
     };
     
-    HypreGenericSolver(const SolverType& solverType,
-                       HypreDriver::HypreInterface& hypreInterface)
-      : _solverType(solverType), _hypreInterface(hypreInterface)
-      {
-        _results.numIterations = 0;
-        _results.finalResNorm  = 1.23456e+30; // Large number
-      }
-  
-    virtual ~HypreGenericSolver(void) {
-      // TODO: move to HypreDriver
-      /* Destroy graph objects */
-      //      HYPRE_SStructGraphDestroy(_graph);
-
-      /* Destroy matrix, RHS, solution objects */
-      //      HYPRE_SStructMatrixDestroy(_A);
-      //      HYPRE_SStructVectorDestroy(_b);
-      //      HYPRE_SStructVectorDestroy(_x);
-    }
+    HypreGenericSolver(const std::string& solverTitle,
+                       const HypreInterface& hypreInterface); 
+    virtual ~HypreGenericSolver(void) {}
 
     virtual void setup(void);
     virtual void solve(void);
 
-    /* Utilities */
+    // Utilities 
     virtual void printMatrix(const string& fileName = "output");
     virtual void printRHS(const string& fileName = "output_b");
     virtual void printSolution(const string& fileName = "output_x");
 
-    /*========================== PROTECTED SECTION ==========================*/
+    //========================== PROTECTED SECTION ==========================
   protected:
 
-    /* Utilities */
-    static SolverType solverFromTitle(const string& solverTitle);
-    static PrecondType precondFromTitle(const string& precondTitle);
-    static HypreDriver::InterfaceType solverInterface
-      (const SolverType& solverType);
+    //---------- Data members ----------
+    SolverType  _solverType;      // Hypre solver type
+    int         _solverID;        // Hypre solver ID computed from solverType
+    Results     _results;         // Solver results are stored here
 
-    /*========================== PRIVATE SECTION ==========================*/
-  private:
-    /*---------- Data members ----------*/
-    SolverType            _solverType;
-    HypreDriver::HypreInterface& _hypreInterface;
-    bool                  _requiresPar;   // Does solver require Par input?
-    int                   _solverID;      // Hypre solver ID
-    Results               _results;       // Solver results are stored to here
+  }; // end class HypreGenericSolver
 
-    void makeGraph();
-  };
+  // Utilities
+  HypreGenericSolver::SolverType
+    getSolverType(const std::string& solverTitle);
+  
+  HypreGenericSolver::PrecondType
+    precondFromTitle(const std::string& precondTitle);
+  
+  HypreInterface getSolverInterface(const std::string& solverType);
+
 } // end namespace Uintah
 
 #endif // Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
