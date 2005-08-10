@@ -43,6 +43,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Datatypes/LatVolField.h>
@@ -264,10 +265,16 @@ ClipLattice::execute()
     }
 
     // Execute the clip.
-    FieldHandle ofield = algo->execute(ifieldhandle, top, bottom);
+    NrrdDataHandle nrrdh = scinew NrrdData();
+    FieldHandle ofield = algo->execute(ifieldhandle, top, bottom, nrrdh);
 
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
     ofield_port->send(ofield);
+
+    NrrdOPort *nrrd_oport = (NrrdOPort *)get_oport("MaskVector");
+    nrrd_oport->send(nrrdh);
+
+
   }
 }
 
