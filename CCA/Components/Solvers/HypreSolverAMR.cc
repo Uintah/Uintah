@@ -101,34 +101,26 @@ namespace Uintah {
       p->jump = 0;
       p->logging = 0;
     }
-    p->symmetric=true; /* TODO: this is currently turned off in AMR mode until we can
-                          support symmetric SStruct in the interface */
+    p->symmetric=true; // TODO: this is currently turned off in AMR
+                       // mode until we can support symmetric SStruct
+                       // in the interface
     p->restart=true;
-
-    /* Check parameter correctness */
-    cerr << "Checking arguments and parameters ... ";
-    if ((param->solverType == Param::FAC) &&
-        ((numLevels < 2) || (numDims != 3))) {
-      cerr << "\n\nFAC solver needs a 3D problem and at least 2 levels."
-           << "\n";
-      clean();
-      exit(1);
-    }
 
     return p;
   } // end readParameters()
 
-  void HypreSolverAMR::scheduleSolve(const LevelP& level, SchedulerP& sched,
-                                     const MaterialSet* matls,
-                                     const VarLabel* A,
-                                     Task::WhichDW which_A_dw,  
-                                     const VarLabel* x,
-                                     bool modifies_x,
-                                     const VarLabel* b,
-                                     Task::WhichDW which_b_dw,  
-                                     const VarLabel* guess,
-                                     Task::WhichDW which_guess_dw,
-                                     const SolverParameters* params)
+  void
+  HypreSolverAMR::scheduleSolve(const LevelP& level, SchedulerP& sched,
+                                const MaterialSet* matls,
+                                const VarLabel* A,
+                                Task::WhichDW which_A_dw,  
+                                const VarLabel* x,
+                                bool modifies_x,
+                                const VarLabel* b,
+                                Task::WhichDW which_b_dw,  
+                                const VarLabel* guess,
+                                Task::WhichDW which_guess_dw,
+                                const SolverParameters* params)
     /*_____________________________________________________________________
       Function HypreSolverAMR::scheduleSolve
       Create the Uintah task that solves the linear system using Hypre.
@@ -150,6 +142,16 @@ namespace Uintah {
       throw InternalError("Wrong type of params passed to hypre solver!",
                           __FILE__, __LINE__);
 
+    /* Decide which Hypre interface to use */
+    HypreInterface interface;
+    if (level->hasCoarserLevel() || level->hasFinerLevel()) {
+      /* Composite grid of uniform patches */
+      interface = HypreSStruct;
+    } else {
+      /* A uniform grid */
+      interface = HypreStruct;
+    }
+
     switch (domtype) {
     case TypeDescription::SFCXVariable:
     case TypeDescription::SFCYVariable:
@@ -162,10 +164,10 @@ namespace Uintah {
       
     case TypeDescription::CCVariable:
       {
-        HypreDriver<CCTypes>* that = 
-          new HypreDriver<CCTypes>(level.get_rep(), matls, A, which_A_dw,
-                                     x, modifies_x, b, which_b_dw, guess, 
-                                     which_guess_dw, dparams);
+        HypreDriver<CCTypes>* that = newHypreDriver<CCTypes>
+          (interface,level.get_rep(), matls, A, which_A_dw,
+           x, modifies_x, b, which_b_dw, guess, 
+           which_guess_dw, dparams);
         Handle<HypreDriver<CCTypes> > handle = that;
         task = scinew Task("Matrix solve", that,
                            &HypreDriver<CCTypes>::solve, handle);

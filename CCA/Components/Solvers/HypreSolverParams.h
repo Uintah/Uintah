@@ -28,7 +28,7 @@ WARNING
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
 
-//#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 
 namespace Uintah {
 
@@ -74,14 +74,6 @@ namespace Uintah {
     bool   printSystem;    // Linear system dump to file
     bool   timing;         // Time results
     // Input functions to be defined in derived test cases
-    virtual double harmonicAvg(const Location& x,
-                               const Location& y,
-                               const Location& z) const;
-    virtual double diffusion(const Location& x) const = 0;    // Diffusion coef
-    virtual double rhs(const Location& x) const = 0;          // PDE RHS
-    virtual double rhsBC(const Location& x) const = 0;        // BC RHS
-    virtual double exactSolution(const Location& x) const = 0;// Exact solution
-
   }; // class HypreSolverParams
 } // end namespace Uintah
 
