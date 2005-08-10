@@ -500,7 +500,6 @@ void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct)
 // This scales the histograms to match the min and max of the range
 // as well as the horizontal resolution.
 void GridSpheresDpy::compute_scaled_hist() {
-  cerr << "GridSpheresDpy::compute_scaled_hist: start\n";
   if (xres < 1)
     // This isn't a case we should handle.
     return;
@@ -526,7 +525,6 @@ void GridSpheresDpy::compute_scaled_hist() {
   // For each current histogram
   int* ho = hist;
   int* sh = scaled_hist;
-  cerr << "GridSpheresDpy::compute_scaled_hist: hist = "<<hist<<", scaled_hist = "<<scaled_hist<<"\n";
   for(int j = 0; j < ndata; j++) {
     for(int i = 0; i < nhist; i++) {
       // Figure out which value ho[i] maps to
