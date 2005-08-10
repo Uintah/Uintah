@@ -67,23 +67,39 @@ WARNING
 
 namespace Uintah {
 
-  using std::cerr;
-
   // Forward declarations
   class HypreSolverParams;
 
+  //---------- Types ----------
+  
+  enum HypreInterface {       // Hypre system interface for the solver
+    HypreStruct  = 0x1,
+    HypreSStruct = 0x2,
+    HypreParCSR  = 0x4
+  };
+  
+  enum CoarseFineViewpoint {
+    DoingCoarseToFine,
+    DoingFineToCoarse
+  };
+  
+  enum ConstructionStatus {
+    DoingGraph,
+    DoingMatrix
+  };
+  
+  enum BoxSide {  // Left/right boundary in each dim
+    LeftSide  = -1,
+    RightSide = 1,
+    NASide    = 3
+  };
+  
   template<class Types>
-    class HypreDriver : public RefCounted {
+  class HypreDriver : public RefCounted {
 
     //========================== PUBLIC SECTION ==========================
   public:
 
-    //---------- Types ----------
-
-    enum InterfaceType {       // Hypre system interface for the solver
-      Struct, SStruct, ParCSR
-    };
-    
     //---------- Construction & Destruction ----------
 
     HypreDriver(const Level* level,
@@ -93,81 +109,30 @@ namespace Uintah {
                 const VarLabel* b, Task::WhichDW which_b_dw,
                 const VarLabel* guess,
                 Task::WhichDW which_guess_dw,
-                const HypreSolverParams* params)
-      : level(level), matlset(matlset),
+                const HypreSolverParams* params) :
+      level(level), matlset(matlset),
       A_label(A), which_A_dw(which_A_dw),
-      X_label(x), 
+      X_label(x), modifies_x(modifies_x),
       B_label(b), which_b_dw(which_b_dw),
-      modifies_x(modifies_x),
-      guess_label(guess), which_guess_dw(which_guess_dw), params(params)
-      {
-        // No interfaces are currently active
-        _active.clear();
-        _active[Struct ] = false;
-        _active[SStruct] = false;
-        _active[ParCSR ] = false;
-      }
-    
-    virtual ~HypreDriver(void)
-      {
-        cerr << "Destroying Solver object" << "\n";
-        /* Destroy graph objects */
-        /* Destroy matrix, RHS, solution objects */
-
-        if (_active[Struct]) {
-          cerr << "Destroying Struct matrix, RHS, solution objects" << "\n";
-          HYPRE_StructMatrixDestroy(_A_Struct);
-          HYPRE_StructVectorDestroy(_b_Struct);
-          HYPRE_StructVectorDestroy(_x_Struct);
-        }
-        if (_active[SStruct]) {
-          cerr << "Destroying SStruct matrix, RHS, solution objects" << "\n";
-          HYPRE_SStructMatrixDestroy(_A_SStruct);
-          HYPRE_SStructVectorDestroy(_b_SStruct);
-          HYPRE_SStructVectorDestroy(_x_SStruct);
-          cerr << "Destroying graph objects" << "\n";
-          HYPRE_SStructGraphDestroy(_graph_SStruct);
-        }
-        if (_active[ParCSR]) {
-          cerr << "Destroying ParCSR matrix, RHS, solution objects" << "\n";
-          HYPRE_ParCSRMatrixDestroy(_A_Par);
-          HYPRE_ParVectorDestroy(_b_Par);
-          HYPRE_ParVectorDestroy(_x_Par);
-        }
-      }
+      guess_label(guess), which_guess_dw(which_guess_dw),
+      params(params), _activeInterface(0)
+      {}    
+    virtual ~HypreDriver(void);
 
     void solve(const ProcessorGroup* pg,
                const PatchSubset* patches,
                const MaterialSubset* matls,
                DataWarehouse* old_dw,
                DataWarehouse* new_dw,
-               Handle<HypreDriver<Types> >);
+               Handle<HypreDriver >);
+    virtual void makeLinearSystem(void) = 0;
+    virtual void getSolution(void) = 0;
 
-    void convertData(const InterfaceType& fromInterface,
-                     const InterfaceType& toInterface);
+    //========================== PROTECTED SECTION ==========================
+  protected:
 
-    //========================== PRIVATE SECTION ==========================
-  private:
-
-    //---------- Types ----------
-
-    enum CoarseFineViewpoint {
-      CoarseToFine,
-      FineToCoarse
-    };
-    
-    enum ConstructionStatus {
-      Graph,
-      Matrix
-    };
-
-    //================================================================
-    // Common to all interfaces and variable types
-    //================================================================
-
-    void initialize(const InterfaceType& fromInterface);
-    void initializeData(const InterfaceType& fromInterface);
-    void assemble(const InterfaceType& fromInterface);
+    virtual void initialize(void) = 0;
+    virtual void clear(void) = 0;
 
     // Utilities
     void printValues(const Patch* patch,
@@ -177,43 +142,6 @@ namespace Uintah {
                      const double* rhsValues = 0,
                      const double* solutionValues = 0);
 
-    //================================================================
-    // Implementation of linear system construction for specific Hypre
-    // interfaces and variable types
-    //================================================================
-    template<class Types>
-      void makeLinearSystemStruct(void);
-    template<class Types>
-      void makeLinearSystemSStruct(void);
-    template<class Types>
-      void getSolutionStruct(void);
-    template<class Types>
-      void getSolutionSStruct(void);
-
-    // SStruct C/F graph & matrix construction
-    void makeConnections(const ConstructionStatus& status,
-                         const Hierarchy& hier,
-                         const HYPRE_SStructStencil& stencil,
-                         const Counter level,
-                         const Patch* patch,
-                         const Counter& d,
-                         const Side& s,
-                         const CoarseFineViewpoint& viewpoint);
-
-    // SStruct Graph construction
-    void makeGraph(const Hierarchy& hier,
-                   const HYPRE_SStructGrid& grid,
-                   const HYPRE_SStructStencil& stencil);
-    
-    // SStruct matrix construction
-    void makeInteriorEquations(const Counter level,
-                               const Hierarchy& hier,
-                               const HYPRE_SStructGrid& grid,
-                               const HYPRE_SStructStencil& stencil);
-    void makeUnderlyingIdentity(const Counter level,
-                                const HYPRE_SStructStencil& stencil,
-                                const Box& coarseUnderFine);
-
 #if 0
     // Make these functions virtual or incorporate them into a generic
     //   solver setup function?
@@ -221,9 +149,7 @@ namespace Uintah {
                       HYPRE_PtrToSolverFcn& precond,
                       HYPRE_PtrToSolverFcn& pcsetup,
                       HYPRE_StructSolver& precond_solver);
-    void destroyPrecond(HYPRE_StructSolver& precond_solver); // TODO:
-                                                             // use &
-                                                             // or
+    void destroyPrecond(HYPRE_StructSolver& precond_solver); // TODO: use & or
                                                              // not?
 #endif
 
@@ -234,25 +160,25 @@ namespace Uintah {
     const VarLabel*          A_label;
     Task::WhichDW            which_A_dw;
     const VarLabel*          X_label;
+    bool                     modifies_x;
     const VarLabel*          B_label;
     Task::WhichDW            which_b_dw;
-    bool                     modifies_x;
     const VarLabel*          guess_label;
     Task::WhichDW            which_guess_dw;
     const HypreSolverParams* params;
 
-    std::map<InterfaceType,bool> _active;             // Which interfaces
-                                                      // are active
+    int _activeInterface;                             // Bit mask: which
+                                                      // interfaces are active
 
     // Hypre Struct interface objects
-    HYPRE_StructGrid        _grid_Struct;             // level&patch hierarchy
+    HYPRE_StructGrid         _grid_Struct;            // level&patch hierarchy
     HYPRE_StructMatrix       _A_Struct;               // Left-hand-side matrix
     HYPRE_StructVector       _b_Struct;               // Right-hand-side vector
     HYPRE_StructVector       _x_Struct;               // Solution vector
 
     // Hypre SStruct interface objects
     HYPRE_SStructGrid        _grid_SStruct;           // level&patch hierarchy
-    HYPRE_SStructStencil     _stencil_SStruct;        // Same stencil @ all levels
+    HYPRE_SStructStencil     _stencil_SStruct;        // Same stencil@all levls
     HYPRE_SStructMatrix      _A_SStruct;              // Left-hand-side matrix
     HYPRE_SStructVector      _b_SStruct;              // Right-hand-side vector
     HYPRE_SStructVector      _x_SStruct;              // Solution vector
@@ -265,10 +191,44 @@ namespace Uintah {
 
   }; // end class HypreDriver
 
+
+  // Useful functions, printouts
+
+  template<class Types>
+    HypreDriver<Types>* newHypreDriver
+    (const HypreInterface& interface,
+     const Level* level,
+     const MaterialSet* matlset,
+     const VarLabel* A, Task::WhichDW which_A_dw,
+     const VarLabel* x, bool modifies_x,
+     const VarLabel* b, Task::WhichDW which_b_dw,
+     const VarLabel* guess,
+     Task::WhichDW which_guess_dw,
+     const HypreSolverParams* params);
+
+  template<class Types>
+    typename HypreDriver<Types>::Side&
+    operator++(typename HypreDriver<Types>::Side &s);
+
+  template<class Types>
   std::ostream&
-    operator << (std::ostream& os, const HypreDriver::CoarseFineViewpoint& v);
+    operator << (std::ostream& os,
+                 const typename HypreDriver<Types>::CoarseFineViewpoint& v);
+  template<class Types>
   std::ostream&
-    operator << (std::ostream& os, const HypreDriver::ConstructionStatus& s);
+    operator << (std::ostream& os,
+                 const typename HypreDriver<Types>::ConstructionStatus& s);
+  template<class Types>
+  std::ostream&
+    operator << (std::ostream& os,
+                 const typename HypreDriver<Types>::Side& s);
+
+  // TODO: move this to impICE.cc/BoundaryCond.cc where A is constructed.
+  double harmonicAvg(const Point& x,
+                     const Point& y,
+                     const Point& z,
+                     const double& Ax,
+                     const double& Ay);
 } // end namespace Uintah
 
 #endif // Packages_Uintah_CCA_Components_Solvers_HypreDriver_h
