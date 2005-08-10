@@ -81,6 +81,8 @@ DpyGui::DpyGui():
 
   resize_xres = xres;
   resize_yres = yres;
+
+  scene = 0;
 }
 
 DpyGui::~DpyGui() {
@@ -254,6 +256,26 @@ void DpyGui::key_pressed(unsigned long key) {
       rtrt_dpy->guiCam_->print();
     }
     break;
+  case XK_d:
+    if (shift_pressed) {
+      bool ds = rtrt_dpy->scene->display_sils;
+      rtrt_dpy->scene->display_depth = false;
+      rtrt_dpy->scene->display_sils = !ds;
+      rtrt_dpy->scene->store_depth = !ds;
+    } else {
+      bool dd = rtrt_dpy->scene->display_depth;
+      bool ds = rtrt_dpy->scene->display_sils;
+      rtrt_dpy->scene->display_depth = !dd && !ds;
+      rtrt_dpy->scene->display_sils = dd && !ds;
+      rtrt_dpy->scene->store_depth = !ds;
+    }
+    if (rtrt_dpy->scene->display_depth)
+      cerr << "Displaying depth\n";
+    else if (rtrt_dpy->scene->display_sils)
+      cerr << "Displaying sils\n";
+    else
+      cerr << "Displaying normally\n";
+    break;
   case XK_f:
     if (shift_pressed)
       rtrt_dpy->synch_frameless = 1 - rtrt_dpy->synch_frameless;
@@ -264,8 +286,6 @@ void DpyGui::key_pressed(unsigned long key) {
   case XK_g:
     if (shift_pressed)
       startDefaultGui();
-    else
-      stopUIs();
     break;
   case XK_m:
     switch (rtrt_dpy->priv->dumpFrame) {
