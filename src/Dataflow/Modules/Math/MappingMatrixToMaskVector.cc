@@ -102,7 +102,6 @@ MappingMatrixToMaskVector::execute()
     if (rr[i+1] == rr[i]) continue; // No entires on this row
     int col = cc[rr[i]];
     if (data[rr[i]] > 0.0) {
-      cerr << "Row: " << i << " Col: " << col << std::endl;
       mask[col] = 1;
     }
   }
