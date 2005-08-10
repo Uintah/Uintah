@@ -55,6 +55,8 @@ SRCS     += \
         $(SRCDIR)/MinNormLeastSq.cc\
 	$(SRCDIR)/SolveMatrix.cc\
 	$(SRCDIR)/Submatrix.cc\
+	$(SRCDIR)/MaskVectorToMappingMatrix.cc\
+	$(SRCDIR)/MappingMatrixToMaskVector.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports \
