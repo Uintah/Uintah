@@ -92,6 +92,11 @@ WARNING
      virtual double recomputeTimestep(double delt);
      virtual bool restartableTimesteps();
 
+     // if we have a "special" lockstep component, have it take care of its own
+     // task graph scheduling rather than have the SimController do it
+     virtual bool useLockstepTimeAdvance() { return false;}
+     virtual void scheduleLockstepTimeAdvance(const GridP& grid) {};
+
      //////////
      // ask the component if it needs to be recompiled
      virtual bool needRecompile(double /*time*/, double /*dt*/,
