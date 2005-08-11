@@ -13,11 +13,11 @@ namespace Uintah {
     double  w, e, s, n, b, t;
     // diagonal term
     double p;
-    double& operator=(int index) {
+    double& operator[](int index) {
       ASSERTRANGE(index, 0, 7);
       return (&w)[index];
     }
-    const double& operator=(int index) const {
+    const double& operator[](int index) const {
       ASSERTRANGE(index, 0, 7);
       return (&w)[index];
     }
