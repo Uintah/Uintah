@@ -71,8 +71,7 @@ namespace Uintah {
     //========================== PUBLIC SECTION ==========================
   public:
 
-    //---------- Construction & Destruction ----------
-
+    // Construction & Destruction
     HypreDriverStruct(const Level* level,
                       const MaterialSet* matlset,
                       const VarLabel* A, Task::WhichDW which_A_dw,
@@ -80,23 +79,30 @@ namespace Uintah {
                       const VarLabel* b, Task::WhichDW which_b_dw,
                       const VarLabel* guess,
                       Task::WhichDW which_guess_dw,
-                      const HypreSolverParams* params) :
-      HypreDriver<Types>(level,matlset,A,which_A_dw,x,modifies_x,
-                         b,which_b_dw,guess,which_guess_dw,params) {}
-    
-    virtual ~HypreDriverStruct(void) {}
+                      const HypreSolverParams* params);
+    virtual ~HypreDriverStruct(void);
 
-    void makeLinearSystem(void);
-    void getSolution(void);
+    // Set up linear system, read back solution
+    void makeLinearSystem(const int matl);
+    void getSolution(const int matl);
+
+    // Set up & destroy preconditioners for SStruct solvers that can
+    // use them (e.g. PCG). These functions are called by the solver object.
+    void setupPrecond(void);
+    void destroyPrecond(void);
 
     //========================== PRIVATE SECTION ==========================
   private:
 
-    void initialize(void);
-    void initializeData(void);
-    void assemble(void);
-
     //---------- Data members ----------
+    // Hypre Struct interface objects
+    HYPRE_StructGrid         _grid;                   // level&patch hierarchy
+    HYPRE_StructMatrix       _HA;                     // Left-hand-side matrix
+    HYPRE_StructVector       _HB;                     // Right-hand-side vector
+    HYPRE_StructVector       _HX;                     // Solution vector
+
+    // Preconditioner objects
+    HYPRE_StructSolver*      _precond_solver;
 
   }; // end class HypreDriverStruct
 

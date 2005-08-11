@@ -86,8 +86,8 @@ namespace Uintah {
     
     virtual ~HypreDriverSStruct(void) {}
 
-    void makeLinearSystem(void);
-    void getSolution(void);
+    void makeLinearSystem(const int matl);
+    void getSolution(const int matl);
 
     //========================== PRIVATE SECTION ==========================
   private:
@@ -112,6 +112,14 @@ namespace Uintah {
     void makeUnderlyingIdentity(const int level);
     
     //---------- Data members ----------
+    // Hypre SStruct interface objects
+    HYPRE_SStructGrid        _grid_SStruct;           // level&patch hierarchy
+    HYPRE_SStructStencil     _stencil_SStruct;        // Same stencil@all levls
+    HYPRE_SStructMatrix      _A_SStruct;              // Left-hand-side matrix
+    HYPRE_SStructVector      _b_SStruct;              // Right-hand-side vector
+    HYPRE_SStructVector      _x_SStruct;              // Solution vector
+    HYPRE_SStructGraph       _graph_SStruct;          // Unstructured
+                                                      // connection graph
 
   }; // end class HypreDriverSStruct
 

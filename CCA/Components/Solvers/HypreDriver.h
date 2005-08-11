@@ -119,14 +119,26 @@ namespace Uintah {
       {}    
     virtual ~HypreDriver(void);
 
+    // Main solve function
     void solve(const ProcessorGroup* pg,
                const PatchSubset* patches,
                const MaterialSubset* matls,
                DataWarehouse* old_dw,
                DataWarehouse* new_dw,
                Handle<HypreDriver >);
-    virtual void makeLinearSystem(void) = 0;
-    virtual void getSolution(void) = 0;
+
+    // Set up linear system, read back solution
+    virtual void makeLinearSystem(const int matl) = 0;
+    virtual void getSolution(const int matl) = 0;
+
+    // Set up & destroy preconditioners
+    virtual void setupPrecond(void) = 0;
+    virtual void destroyPrecond(void) = 0;
+
+    // Printouts
+    virtual void printMatrix(const string& fileName = "output") = 0;
+    virtual void printRHS(const string& fileName = "output_b") = 0;
+    virtual void printSolution(const string& fileName = "output_x") = 0;
 
     //========================== PROTECTED SECTION ==========================
   protected:
@@ -142,17 +154,6 @@ namespace Uintah {
                      const double* rhsValues = 0,
                      const double* solutionValues = 0);
 
-#if 0
-    // Make these functions virtual or incorporate them into a generic
-    //   solver setup function?
-    void setupPrecond(const ProcessorGroup* pg,
-                      HYPRE_PtrToSolverFcn& precond,
-                      HYPRE_PtrToSolverFcn& pcsetup,
-                      HYPRE_StructSolver& precond_solver);
-    void destroyPrecond(HYPRE_StructSolver& precond_solver); // TODO: use & or
-                                                             // not?
-#endif
-
     //---------- Data members ----------
     // Uintah input data
     const Level*             level;
@@ -166,24 +167,23 @@ namespace Uintah {
     const VarLabel*          guess_label;
     Task::WhichDW            which_guess_dw;
     const HypreSolverParams* params;
+    
+    // Assigned inside solve() for our internal setup / getSolution functions
+    const ProcessorGroup*    _pg;
+    const PatchSubset*       _patches;
+    const MaterialSubset*    _matls;
+    DataWarehouse*           _old_dw;
+    DataWarehouse*           _new_dw;
+    DataWarehouse*           _A_dw;
+    DataWarehouse*           _b_dw;
+    DataWarehouse*           _guess_dw;
+
+    HYPRE_PtrToSolverFcn*    _precond;
+    HYPRE_PtrToSolverFcn*    _pcsetup;
 
     int _activeInterface;                             // Bit mask: which
                                                       // interfaces are active
 
-    // Hypre Struct interface objects
-    HYPRE_StructGrid         _grid_Struct;            // level&patch hierarchy
-    HYPRE_StructMatrix       _A_Struct;               // Left-hand-side matrix
-    HYPRE_StructVector       _b_Struct;               // Right-hand-side vector
-    HYPRE_StructVector       _x_Struct;               // Solution vector
-
-    // Hypre SStruct interface objects
-    HYPRE_SStructGrid        _grid_SStruct;           // level&patch hierarchy
-    HYPRE_SStructStencil     _stencil_SStruct;        // Same stencil@all levls
-    HYPRE_SStructMatrix      _A_SStruct;              // Left-hand-side matrix
-    HYPRE_SStructVector      _b_SStruct;              // Right-hand-side vector
-    HYPRE_SStructVector      _x_SStruct;              // Solution vector
-    HYPRE_SStructGraph       _graph_SStruct;          // Unstructured
-                                                      // connection graph
     // Hypre ParCSR interface objects
     HYPRE_ParCSRMatrix       _A_Par;                  // Left-hand-side matrix
     HYPRE_ParVector          _b_Par;                  // Right-hand-side vector

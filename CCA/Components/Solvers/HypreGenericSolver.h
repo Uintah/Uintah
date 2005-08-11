@@ -26,7 +26,7 @@ DESCRIPTION
 
    preconditioners. It does not know about the internal Hypre interfaces
    like Struct and SStruct. Instead, it uses the generic HypreDriver
-   and HypreGenericSolver::newSolver to determine the specific Hypre
+   and newSolver to determine the specific Hypre
    interface and solver, based on the parameters in HypreSolverParams.
    The solver is called through the solve() function. This is also the
    task-scheduled function in HypreSolverAMR::scheduleSolve() that is
@@ -73,11 +73,6 @@ namespace Uintah {
 
     virtual void setup(void);
     virtual void solve(void);
-
-    // Utilities 
-    virtual void printMatrix(const string& fileName = "output");
-    virtual void printRHS(const string& fileName = "output_b");
-    virtual void printSolution(const string& fileName = "output_x");
 
     //========================== PROTECTED SECTION ==========================
   protected:

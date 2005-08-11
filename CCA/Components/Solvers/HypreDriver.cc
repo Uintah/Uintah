@@ -110,12 +110,19 @@ namespace Uintah {
       Main solve function.
       _____________________________________________________________________*/
   {
-    typedef typename Types::sol_type sol_type;
     cout_doing << "HypreSolverAMR<Types>::solve()" << endl;
+    double tstart = Time::currentSeconds();
 
-    DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
-    DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
-    DataWarehouse* guess_dw = new_dw->getOtherDataWarehouse(which_guess_dw);
+    // Assign HypreDriver references that are convenient to have in
+    // makeLinearSystem(), getSolution().
+    _pg = pg;
+    _patches = patches;
+    _matls = matls;
+    _old_dw = old_dw;
+    _new_dw = new_dw;
+    _A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
+    _b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
+    _guess_dw = new_dw->getOtherDataWarehouse(which_guess_dw);
     
     // Check parameter correctness
     cerr << "Checking arguments and parameters ... ";
@@ -134,15 +141,14 @@ namespace Uintah {
 
       /* Construct Hypre linear system for the specific variable type
          and Hypre interface */
-      makeLinearSystemStruct();
+      makeLinearSystemStruct(matl);
     
       /* Construct Hypre solver object that uses the hypreInterface we
          chose. Specific solver object is arbitrated in HypreGenericSolver
          according to param->solverType. */
       HypreGenericSolver::SolverType solverType =
-        HypreGenericSolver::solverFromTitle(params->solverTitle);
-      HypreGenericSolver* _hypreSolver =
-        HypreGenericSolver::newSolver(solverType,_hypreInterface);
+        solverFromTitle(params->solverTitle);
+      HypreGenericSolver* _hypreSolver = newSolver(solverType,_hypreInterface);
 
       /* Solve the linear system */
       double solve_start = Time::currentSeconds();
