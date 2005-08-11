@@ -40,27 +40,27 @@ WARNING
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
+#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+//#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 
 namespace Uintah {
+  
+  // Forward declarations
+  template <class Types> class HypreDriver;
+  class HyprePrecond;
+
+  //---------- Types ----------
+  
+  enum SolverType {
+    SMG, PFMG, SparseMSG, CG, Hybrid, GMRES, AMG, FAC
+  };
   
   class HypreGenericSolver {
 
     //========================== PUBLIC SECTION ==========================
   public:
   
-    //---------- Types ----------
-
-    enum SolverType {
-      SMG, PFMG, SparseMSG, CG, Hybrid, GMRES, AMG, FAC
-    };
-
-    enum PrecondType {
-      PrecondNA, // No preconditioner, use solver directly
-      PrecondSMG, PrecondPFMG, PrecondSparseMSG, PrecondJacobi,
-      PrecondDiagonal, PrecondAMG, PrecondFAC
-    };
-
     // Solver results are output to this struct 
     struct Results {
       int        numIterations;   // Number of solver iterations performed
@@ -78,20 +78,17 @@ namespace Uintah {
   protected:
 
     //---------- Data members ----------
-    SolverType  _solverType;      // Hypre solver type
-    int         _solverID;        // Hypre solver ID computed from solverType
-    Results     _results;         // Solver results are stored here
+    SolverType    _solverType;      // Hypre solver type
+    int           _solverID;        // Hypre solver ID computed from solverType
+    Results       _results;         // Solver results are stored here
+    HyprePrecond& _precond;         // Preconditioner (optional)
 
   }; // end class HypreGenericSolver
 
   // Utilities
-  HypreGenericSolver::SolverType
-    getSolverType(const std::string& solverTitle);
-  
-  HypreGenericSolver::PrecondType
-    precondFromTitle(const std::string& precondTitle);
-  
-  HypreInterface getSolverInterface(const std::string& solverType);
+  SolverType          getSolverType(const std::string& solverTitle);
+  HypreInterface      getSolverInterface(const std::string& solverType);
+  HypreGenericSolver* newHypreGenericSolver(const SolverType solverType);
 
 } // end namespace Uintah
 

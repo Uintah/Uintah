@@ -39,14 +39,12 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
     cerr << "Hypre solver not available, hypre not configured\n";
     exit(1);
 #endif
-#if OREN
   } else if(solver == "HypreSolverAMR" || solver == "hypreamr"){
 #if HAVE_HYPRE
     solve = new HypreSolverAMR(world);
 #else
     cerr << "Hypre solver not available, hypre not configured\n";
     exit(1);
-#endif
 #endif
   } else {
     throw ProblemSetupException("Unknown solver.  "

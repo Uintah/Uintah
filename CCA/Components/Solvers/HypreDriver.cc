@@ -126,7 +126,7 @@ namespace Uintah {
     
     // Check parameter correctness
     cerr << "Checking arguments and parameters ... ";
-    HypreGenericSolver::SolverType solverType =
+    SolverType solverType =
       getSolverType(p->solverTitle);
     const int numLevels = new_dw->getGrid()->numLevels();
     if ((solverType == HypreGenericSolver::FAC) && (numLevels < 2)) {
@@ -146,11 +146,11 @@ namespace Uintah {
       /* Construct Hypre solver object that uses the hypreInterface we
          chose. Specific solver object is arbitrated in HypreGenericSolver
          according to param->solverType. */
-      HypreGenericSolver::SolverType solverType =
+      SolverType solverType =
         solverFromTitle(params->solverTitle);
-      HypreGenericSolver* _hypreSolver = newSolver(solverType,_hypreInterface);
+      HypreGenericSolver* _hypreSolver = newSolver(solverType,*this);
 
-      /* Solve the linear system */
+      // Solve the linear system
       double solve_start = Time::currentSeconds();
       _hypresolver->setup();  // Depends only on A
       _hypresolver->solve();  // Depends on A and b
@@ -366,6 +366,16 @@ namespace Uintah {
 
 #endif
 
+  HypreInterface& operator++(HypreInterface &s)
+  {
+    return s = HypreInterface(2*s);
+  }
+  
+  BoxSide& operator++(BoxSide &s)
+  {
+    return s = BoxSide(s+2);
+  }
+  
   std::ostream&
   operator << (std::ostream& os, const CoarseFineViewpoint& v)
     // Write side s to the stream os.
@@ -386,11 +396,6 @@ namespace Uintah {
     return os;
   }
 
-  BoxSide& operator++(BoxSide &s)
-  {
-    return s = BoxSide(s+2);
-  }
-  
   std::ostream&
   operator << (std::ostream& os, const BoxSide& s)
     // Write side s to the stream os.
