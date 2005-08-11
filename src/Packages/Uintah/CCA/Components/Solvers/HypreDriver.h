@@ -73,9 +73,10 @@ namespace Uintah {
   //---------- Types ----------
   
   enum HypreInterface {       // Hypre system interface for the solver
-    HypreStruct  = 0x1,
-    HypreSStruct = 0x2,
-    HypreParCSR  = 0x4
+    HypreStruct      = 0x1,
+    HypreSStruct     = 0x2,
+    HypreParCSR      = 0x4,
+    HypreInterfaceNA = 0x8
   };
   
   enum CoarseFineViewpoint {
@@ -91,7 +92,7 @@ namespace Uintah {
   enum BoxSide {  // Left/right boundary in each dim
     LeftSide  = -1,
     RightSide = 1,
-    NASide    = 3
+    BoxSideNA = 3
   };
   
   template<class Types>
@@ -206,9 +207,8 @@ namespace Uintah {
      Task::WhichDW which_guess_dw,
      const HypreSolverParams* params);
 
-  template<class Types>
-    typename HypreDriver<Types>::Side&
-    operator++(typename HypreDriver<Types>::Side &s);
+  HypreInterface& operator ++ (HypreInterface& i);
+  BoxSide&        operator ++ (BoxSide& i);
 
   template<class Types>
   std::ostream&

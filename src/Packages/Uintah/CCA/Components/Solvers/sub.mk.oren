@@ -11,8 +11,10 @@ SRCS     += \
 
 ifeq ($(HAVE_HYPRE),yes)
 SRCS += $(SRCDIR)/HypreSolver.cc \
+        \
 	$(SRCDIR)/HypreSolverAMR.cc \
 	$(SRCDIR)/HypreDriver.cc \
+        $(SRCDIR)/HyprePrecond.cc \
 	$(SRCDIR)/HypreDriverStruct.cc \
 	$(SRCDIR)/HypreDriverSStruct.cc \
         $(SRCDIR)/HypreGenericSolver.cc \
