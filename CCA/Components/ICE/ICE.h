@@ -231,7 +231,18 @@ namespace Uintah {
                                          const MaterialSubset* press_matl,
                                          const MaterialSubset* ice_matls,
                                          const MaterialSubset* mpm_matls,
-                                         const MaterialSet* all_matls);  
+                                         const MaterialSet* all_matls);
+//__________________________________ 
+//  I M P L I C I T   A M R I C E                                                       
+      void scheduleCoarsenPressure(SchedulerP& sched, 
+                                   const LevelP& level,
+                                   const MaterialSubset* press_matl);
+                                       
+      void coarsenPressure(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse*,
+                           DataWarehouse* new_dw);                                 
                                    
 //__________________________________ 
 //   M O D E L S
