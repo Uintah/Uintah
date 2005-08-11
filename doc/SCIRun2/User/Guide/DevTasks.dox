@@ -5,8 +5,11 @@
 
 \subsection ayla Ayla
 
+\li GUI Prototypes: by Aug 24
 \li Replace Qt GUI toolkit: TBD
+\li CCA spec upgrade: TBD
 \li Migrate loading/saving network files to a Framework service: TBD
+<!-- merge branch babel_sidl_v0_9_1 to trunk -->
 <!-- MPICH done, others? -->
 
 \subsection keming Keming
