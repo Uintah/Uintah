@@ -19,14 +19,14 @@ ConvergenceFailure::ConvergenceFailure(const string& message,
                                        int line)
 {
   ostringstream s;
-  s << message << " failed to converge in " << numiterations << " iterations"
+  s << "A ConvergenceFailure exception was thrown.\n"
+    << file << ":" << line << "\n"
+    << message << " failed to converge in " << numiterations << " iterations"
     << ", final residual=" << final_residual 
     << ", target_residual=" << target_residual;
   d_msg = s.str();
   
 #ifdef EXCEPTIONS_CRASH
-  cout << "A ConvergenceFailure exception was thrown.\n";
-  cout << file << ":" << line << "\n";
   cout << d_msg << "\n";
 #endif
 }

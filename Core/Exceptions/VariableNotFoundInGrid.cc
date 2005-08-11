@@ -15,6 +15,9 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
                                                const char* file, int line)
 {
   ostringstream s;
+  s << "A VariableNotFoundInGrid exception was thrown.\n"
+    << file << ":" << line << "\n";
+
   s << "Particle Variable not found: " << varname;
   
   s << " with particleID (" << particleID << ")";
@@ -26,8 +29,6 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
   d_msg = s.str();
   
 #ifdef EXCEPTIONS_CRASH
-  cout << "A VariableNotFoundInGrid exception was thrown.\n";
-  cout << file << ":" << line << "\n";
   cout << d_msg << "\n";
 #endif
 }

@@ -1,15 +1,19 @@
 
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <iostream>
+#include <sstream>
 
 using namespace Uintah;
 
 TypeMismatchException::TypeMismatchException(const std::string& msg, const char* file, int line)
     : d_msg(msg)
 {
+  std::ostringstream s;
+  s << "A TypeMismatchException was thrown.\n"
+    << file << ":" << line << "\n";
+  d_msg = s.str();
+
 #ifdef EXCEPTIONS_CRASH
-  std::cout << "A TypeMismatchException was thrown.\n";
-  std::cout << file << ":" << line << "\n";
   std::cout << d_msg << "\n";
 #endif
 }
