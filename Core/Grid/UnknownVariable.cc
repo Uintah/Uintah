@@ -6,7 +6,6 @@
 #include <iostream>
 
 using namespace Uintah;
-using namespace std;
 
 UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
                                  const Patch* patch, int matlIndex,
@@ -14,7 +13,10 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
                                  const char* file,
                                  int line)
 {
-   ostringstream s;
+   std::ostringstream s;
+   s << "An UnknownVariable exception was thrown.\n";
+   s << file << ":" << line << "\n";
+
    s << "Unknown variable: " << varname;
 
    s << " requested from DW " << dwid;
@@ -31,8 +33,6 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
    d_msg = s.str();
 
 #ifdef EXCEPTIONS_CRASH
-   std::cout << "An UnknownVariable exception was thrown.\n";
-   std::cout << file << ":" << line << "\n";
    std::cout << d_msg << "\n";
 #endif
 }
