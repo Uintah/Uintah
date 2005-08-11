@@ -398,6 +398,7 @@ GridVisualizer::execute()
   switch (initialize_grid()) {
   case 0:
     // Grid didn't change, so don't update gui
+    update_tcl_window();
     break;
   case 1:
     // Grid changed so update the gui

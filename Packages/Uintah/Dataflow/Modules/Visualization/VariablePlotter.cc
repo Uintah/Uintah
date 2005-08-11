@@ -264,10 +264,19 @@ VariablePlotter::execute()
   //cerr << "VariablePlotter::execute:start\n";
   initialize_ports();
   
-  if (initialize_grid() != 2)
-    {
-      update_tcl_window();
-    }
+  switch (initialize_grid()) {
+  case 0:
+    // Grid didn't change, so don't update gui
+    update_tcl_window();
+    break;
+  case 1:
+    // Grid changed so update the gui
+    update_tcl_window();
+    break;
+  case 2:
+    // Didn't get a grid handle
+    return;
+  }
   //cerr << "VariablePlotter::execute:end\n";
 }
 
