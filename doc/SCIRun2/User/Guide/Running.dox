@@ -1,9 +1,11 @@
 /*!
 \page running Running the SCIRun2 Software
 
-\section running1 Executables
+\section exec Executables
+
 SCIRun2 requires that an MPI service be running.
 If you're using Lam-MPI, start \b lamd using \b lamboot. 
+<!-- and MPICH? -->
 
 Start SCIRun2 from the command line.
 Specify \b qt as the builder option for the graphical interface.
@@ -13,30 +15,35 @@ Optionally load a previously saved component network input file \b net_file.
 sr [-]-b[uilder] qt/txt net_file
 \endcode
 
-\section running2 Environment Variables
+\section env Environment Variables
+
 %CCA component models rely on several environment variables in order to
 find the necessary libraries and xml descriptions for associated
 components.
+Examples are written for the bash shell; modify as required for
+other shells.
 
 
 <!-- add configuration file information -->
 
-\subsection running3 SIDL_DLL_PATH
+\subsection sidl_dll SIDL_DLL_PATH
+
 This is a <b>semicolon-separated</b> list of paths where
 the shared libraries can be found for the %CCA components.
-For a SCIRun2 build as described on \ref building "this page", set your
-SIDL_DLL_PATH as follows (bash shell).
+For a SCIRun2 build as described in the \ref building "build instructions",
+set your \b SIDL_DLL_PATH as follows:
 
 \code
-BUILD_DIR=/path/to/your/scirun2/build
-export SIDL_DLL_PATH="$BUILD_DIR/lib"
+BUILD_DIR="/path/to/your/scirun2/build"
+export SIDL_DLL_PATH="$BUILD_DIR/lib;$BABEL_HOME/lib"
 \endcode
 
-\subsection running4 SIDL_XML_PATH
+\subsection sidl_xml SIDL_XML_PATH
+
 This is a <b>semicolon-separated</b> list of paths where
 the XML descriptions of %CCA components are found.
-For a SCIRun2 build as described on \ref building "this page", set your
-SIDL_DLL_PATH as follows (bash shell).
+For a SCIRun2 build as described in the \ref building "build instructions",
+set your \b SIDL_XML_PATH as follows:
 
 \code
 SRC_DIR="/path/to/your/scirun/source"
@@ -44,6 +51,37 @@ export SIDL_XML_PATH="$SRC_DIR/src/CCA/Components/BabelTest/xml; \
 $SRC_DIR/src/CCA/Components/xml;$SRC_DIR/src/CCA/Components/VTK/xml"
 \endcode
 
-<!-- \section running5 Loading your own components into SCIRun2 -->
+\subsection babel_java Babel Java language bindings
+
+Babel components implemented in Java require that the Java \b CLASSPATH
+be set.
+Be sure to include Babel jar files and either the \em all directories to
+component class files or paths to component jar files.
+
+\code
+export CLASSPATH="$BABEL_HOME/lib/babel-0.10.2.jar:\
+$BABEL_HOME/lib/java-getopt-1.0.7.jar:\
+$BABEL_HOME/lib/sidl-0.10.2.jar:\
+$BABEL_HOME/lib/xerces-2.4.0.jar:\
+$BABEL_HOME/lib/xml-apis.jar:\
+$BUILD_DIR/CCA/Components/Babel/MyBabelComponent/MyBabelComponent.jar"
+\endcode
+
+Java library loaders also use \b LD_LIBRARY_PATH or the \b java.library.path
+system property to locate and load shared libraries.
+Include the paths to directories containing Java native libraries
+(\b libjvm.so, \b libjava.so, \b libawt.so, \b libverify.so),
+SCIRun2 Babel component libraries and Babel libraries.
+
+
+<!--
+\section load Loading your own components into SCIRun2
+
+Using the graphical builder (eventually the text builder?), it
+is possible to add additional components and component models at
+runtime through xml description files.
+See (Builder.dox - is there a section explaining this?) for details...
+
+-->
 
 */
