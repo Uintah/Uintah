@@ -419,6 +419,35 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	    frame $w.vars -borderwidth 3 -relief ridge
 	     pack $w.vars -fill x -padx 2 -pady 2
 	    
+            # This is the scrollable frame
+            iwidgets::scrolledframe $w.vars.canvas -width 350 -height 300 \
+		-vscrollmode dynamic -hscrollmode dynamic \
+		-sbwidth 10
+
+            pack $w.vars.canvas -side top -padx 2 -pady 2 -fill both \
+                -expand yes
+
+            # Get the childsite, so we can add stuff to it.
+            set cs [$w.vars.canvas childsite]
+
+            set stuff [$cs configure]
+            puts "stuff = $stuff"
+
+            # Populate the scroll pane with buttons
+#	    puts "var_list length [llength $var_list]"
+	    for {set i 0} { $i < [llength $var_list] } { incr i } {
+		set newvar [lindex $var_list $i]
+		set newmat_list [lindex $mat_lists $i]
+		set newtype [lindex $type_list $i]
+		addVar $cs $newvar $newmat_list $newtype $i
+	    }
+	}
+    }
+    method buildVarFrameOld {w} {
+	if {[llength $var_list] > 0} {
+	    frame $w.vars -borderwidth 3 -relief ridge
+	     pack $w.vars -fill x -padx 2 -pady 2
+	    
             # Create a scrolling pane within this frame
             # Width and height set to some default, no other options set yet.
             # These will be dyanimcailly determined and set after all the buttons
@@ -461,8 +490,9 @@ itcl_class Uintah_Visualization_VariablePlotter {
             # must change if padding in addVar changes
             set yincr [expr $yincr + 4]
 
-            $w.vars.canvas config -yscrollincrement $yincr
-            $w.vars.canvas config -scrollregion "0 0 $width $height"
+#             $w.vars.canvas config -yscrollincrement $yincr
+#             $w.vars.canvas config -scrollregion "0 0 $width $height"
+            puts "width = $width, height = $height"
             
             # Calculate the correct height to display up to 8 materials
             set max [llength $var_list]
