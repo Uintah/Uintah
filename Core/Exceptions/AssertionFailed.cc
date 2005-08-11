@@ -45,6 +45,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
 
 namespace SCIRun {
 
@@ -52,13 +53,13 @@ AssertionFailed::AssertionFailed(const char* message,
 				 const char* file,
 				 int line)
 {
-    size_t len = strlen(message)+strlen(file)+strlen(stacktrace_)+100;
-    message_ = (char*)malloc(len);
-    sprintf(message_, "%s (file: %s, line: %d)\n%s", message, file, line, stacktrace_);
+  std::ostringstream s;
+  
+  s << "An AssertionFailed exception was thrown.\n"
+    << file << ":" << line << "\n" << message;
+  message_ = (char*)(s.str().c_str());
     
 #ifdef EXCEPTIONS_CRASH
-    std::cout << "An AssertionFailed exception was thrown.\n";
-    std::cout << file << ":" << line << "\n";
     std::cout << message_ << "\n";
 #endif
 }

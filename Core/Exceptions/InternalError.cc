@@ -41,6 +41,7 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
+#include <sstream>
 
 namespace SCIRun {
 
@@ -48,9 +49,12 @@ namespace SCIRun {
 InternalError::InternalError(const std::string& message, const char* file, int line)
     : message_(message)
 {
+  std::ostringstream s;
+  s << "An InternalError exception was thrown.\n"
+    << file << ":" << line << "\n";
+  message_ = s.str();
+
 #ifdef EXCEPTIONS_CRASH
-  std::cout << "An InternalError exception was thrown.\n";
-  std::cout << file << ":" << line << "\n";
   std::cout << message_ << "\n";
 #endif
 }
