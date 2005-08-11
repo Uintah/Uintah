@@ -1339,15 +1339,15 @@ void CI::emit_proxy(EmitState& e)
   e.out << fn << "::" << cn << "(const ::SCIRun::ReferenceMgr& _ref) :\n";
   SymbolTable* localScope=symbols->getParent();
   
-  e.out << "::SCIRun::ProxyBase(_ref),";
-
-  e.out << cppfullname(localScope) << "(false)";
   vector<BaseInterface*> parents;
   gatherParentInterfaces(parents);
   for(vector<BaseInterface*>::iterator iter=parents.begin();
       iter != parents.end(); iter++){
-    e.out  << ",\n   "<< (*iter)->cppfullname(localScope) << "(false)";
+    e.out  << "   "<< (*iter)->cppfullname(localScope) << "(false),";
   }
+  e.out << "::SCIRun::ProxyBase(_ref),";
+  e.out << cppfullname(localScope) << "(false)";
+
   e.out << "\n";
   e.out << "{\n";
   if(doRedistribution) {
@@ -1358,13 +1358,14 @@ void CI::emit_proxy(EmitState& e)
   //Another constructor that takes just a reference:
   e.out << fn << "::" << cn << "(const ::SCIRun::Reference& _ref) :\n";
   localScope=symbols->getParent();
-  e.out << "::SCIRun::ProxyBase(_ref),";
-  e.out << cppfullname(localScope) << "(false)";
   gatherParentInterfaces(parents);
   for(vector<BaseInterface*>::iterator iter=parents.begin();
       iter != parents.end(); iter++){
-    e.out  << ",\n   "<< (*iter)->cppfullname(localScope) << "(false)";
+    e.out  << "   "<< (*iter)->cppfullname(localScope) << "(false),";
   }
+  e.out << "::SCIRun::ProxyBase(_ref),";
+  e.out << cppfullname(localScope) << "(false)";
+
   e.out << "\n";
   e.out << "{\n";
   if(doRedistribution) {
@@ -1890,7 +1891,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 
     if (isCollective && !(throws_clause)){
       e.out << leader2 << "/*CALLNORET reply*/\n";
-      e.out << "for(int i=0; i<save_callnoret_msg.size(); i++){\n";
+      e.out << "for(unsigned int i=0; i<save_callnoret_msg.size(); i++){\n";
       e.out << "  save_callnoret_msg[i]->waitReply();\n";
       e.out << "  save_callnoret_msg[i]->unmarshalInt(&_x_flag);\n";
       e.out << "  save_callnoret_msg[i]->destroyMessage();\n";
