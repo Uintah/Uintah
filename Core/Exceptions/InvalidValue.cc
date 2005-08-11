@@ -15,7 +15,7 @@ InvalidValue::InvalidValue(const std::string& msg, const char* file, int line)
   d_msg = s.str();
   
 #ifdef EXCEPTIONS_CRASH
-  cout << d_msg << "\n";
+  std::cout << d_msg << "\n";
 #endif
 }
 
