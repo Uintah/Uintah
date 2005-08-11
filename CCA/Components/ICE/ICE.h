@@ -236,13 +236,13 @@ namespace Uintah {
 //  I M P L I C I T   A M R I C E                                                       
       void scheduleCoarsenPressure(SchedulerP& sched, 
                                    const LevelP& level,
-                                   const MaterialSubset* press_matl);
-                                       
-      void coarsenPressure(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw);                                 
+                                   const MaterialSubset* press_matl); 
+                                   
+      void schedule_matrixBC_CFI_coarsePatch(const LevelP& coarseLevel,
+                                             SchedulerP& sched);
+                                             
+      void schedule_matrixBC_CFI_finePatch(const LevelP& fineLevel,
+                                            SchedulerP& sched);                       
                                    
 //__________________________________ 
 //   M O D E L S
@@ -518,7 +518,37 @@ namespace Uintah {
                                  Scheduler* sched,
                                  const MaterialSubset*,
                                  const MaterialSubset*);
-                                                
+
+//__________________________________ 
+//  I M P L I C I T   A M R I C E
+      void zeroMatrix_RHS_UnderFinePatches(const PatchSubset* coarsePatches,
+                                           DataWarehouse* new_dw);
+                                      
+      void coarsenPressure(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse*,
+                           DataWarehouse* new_dw);
+                           
+      void matrixBC_CFI_finePatch(const ProcessorGroup*,
+                                  const PatchSubset* finePatches,
+                                  const MaterialSubset*,
+                                  DataWarehouse*,
+                                  DataWarehouse* new_dw);
+                                  
+      void matrixCoarseLevelIterator(Patch::FaceType patchFace,
+                                       const Patch* coarsePatch,
+                                       const Patch* finePatch,
+                                       const Level* fineLevel,
+                                       CellIterator& iter,
+                                       bool& isRight_CP_FP_pair);
+                                  
+      void matrixBC_CFI_coarsePatch(const ProcessorGroup*,
+                                    const PatchSubset* coarsePatches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse*,
+                                    DataWarehouse* new_dw);
+                                                                              
 //__________________________________ 
 //   M O D E L S
                                
