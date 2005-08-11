@@ -892,6 +892,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                            mpm_matls_sub,  
                                                            all_matls);     
   }
+//  scheduleCoarsenPressure(                sched, level,   d_press_matl);
   
   scheduleComputePressFC(                 sched, patches, d_press_matl,
                                                           all_matls);
@@ -2257,9 +2258,9 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
     //__________________________________
     // Is it time to dump printData ?
     // You need to do this in the first task
-    // and only on the first patch of each level
-    d_dbgTime_to_printData = false;
-    if (p == 0) {
+    // and only on the first patch
+    if (patch->getID() == 0) {
+      d_dbgTime_to_printData = false;
       double time= dataArchiver->getCurrentTime() + d_SMALL_NUM;
       
       if (time >= d_dbgStartTime && 

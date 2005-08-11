@@ -16,6 +16,7 @@ SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/DynamicModel.cc \
        $(SRCDIR)/TurbulenceFactory.cc \
        $(SRCDIR)/impICE.cc \
+       $(SRCDIR)/impAMRICE.cc \
        $(SRCDIR)/customInitialize.cc   
        
 SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs
