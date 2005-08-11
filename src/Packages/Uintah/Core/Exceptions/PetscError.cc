@@ -12,12 +12,12 @@ PetscError::PetscError(int petsc_code, const std::string& msg, const char* file,
     : petsc_code(petsc_code)
 {
   ostringstream out;
-  out << "PETSc error: " << petsc_code << ", " << msg;
+  out << "A PetscError exception was thrown.\n"
+      << file << ":" << line << "\n"
+      << "PETSc error: " << petsc_code << ", " << msg;
   d_msg = out.str();
   
 #ifdef EXCEPTIONS_CRASH
-  cout << "A PetscError exception was thrown.\n";
-  cout << file << ":" << line << "\n";
   cout << d_msg << "\n";
 #endif  
 }

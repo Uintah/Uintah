@@ -1,14 +1,18 @@
 
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <iostream>
-
+#include <sstream>
 using namespace Uintah;
 
 InvalidGrid::InvalidGrid(const std::string& msg, const char* file, int line)
     : d_msg(msg)
 {
+  std::ostringstream s;
+  s << "InvalidGrid Exception: " << file << ":" << line << "\n" << d_msg;
+  d_msg = s.str();
+
 #ifdef EXCEPTIONS_CRASH
-  std::cout << "InvalidGrid Exception: " << file << ":" << line << "\n";
+  std::cout << d_msg << "\n";
 #endif
 }
 
