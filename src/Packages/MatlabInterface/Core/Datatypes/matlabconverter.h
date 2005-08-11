@@ -782,7 +782,7 @@ template <class FIELD>       bool matlabconverter::addmask(FIELD* scifield,field
 
 template <class T>           bool matlabconverter::addmask(SCIRun::MaskedHexVolField<T>* scifield,fieldstruct &fs)
 {
-  std::vector<char>& maskvec = field->mask();
+  std::vector<char>& maskvec = scifield->mask();
   if (!fs.mask.isempty())
   {
     fs.mask.getnumericarray(maskvec);
@@ -792,7 +792,7 @@ template <class T>           bool matlabconverter::addmask(SCIRun::MaskedHexVolF
    
 template <class T>           bool matlabconverter::addmask(SCIRun::MaskedTetVolField<T>* scifield,fieldstruct &fs)
 {
-  std::vector<char>& maskvec = field->mask();
+  std::vector<char>& maskvec = scifield->mask();
   if (!fs.mask.isempty())
   {
     fs.mask.getnumericarray(maskvec);
@@ -802,7 +802,7 @@ template <class T>           bool matlabconverter::addmask(SCIRun::MaskedTetVolF
    
 template <class T>           bool matlabconverter::addmask(SCIRun::MaskedLatVolField<T>* scifield,fieldstruct &fs)
 {
-  std::vector<char>& maskvec = field->mask();
+  std::vector<char>& maskvec = scifield->mask();
   if (!fs.mask.isempty())
   {
     fs.mask.getnumericarray(maskvec);
@@ -812,7 +812,7 @@ template <class T>           bool matlabconverter::addmask(SCIRun::MaskedLatVolF
    
 template <class T>           bool matlabconverter::addmask(SCIRun::MaskedTriSurfField<T>* scifield,fieldstruct &fs)
 {
-  std::vector<char>& maskvec = field->mask();
+  std::vector<char>& maskvec = scifield->mask();
   if (!fs.mask.isempty())
   {
     fs.mask.getnumericarray(maskvec);
