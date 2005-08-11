@@ -77,9 +77,9 @@ babel_ext [A-Za-z][A-Za-z0-9_]*
 "version"       return VERSION;
 "void"		return VOID;
 
-("["){babel_ext}("]") {
-                    return BABEL_EXT;
-                  }
+("["){babel_ext}("]") { yylval.ident = strdup(yytext);
+                        return BABEL_EXT;
+                      }
 
 -?{integer} { yylval.number = strtol(yytext, 0, 0);
 	 return INTEGER;
