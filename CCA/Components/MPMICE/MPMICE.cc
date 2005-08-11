@@ -644,8 +644,7 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
     if (cout_doing.active())
       cout_doing << "MPMICE:scheduleCoarsenCC mpm_matls" << endl;
 
-    scheduleMassWeightedCoarsenVariableCC(
-                              sched, patches, mpm_matls, Ilb->rho_CCLabel,
+    scheduleCoarsenVariableCC(   sched, patches, mpm_matls, Ilb->rho_CCLabel,
                                                          1e-12); // modifies??
     scheduleCoarsenAddVariableCC(sched, patches, mpm_matls, Ilb->mass_L_CCLabel,
                                                          1.9531e-15);
@@ -1194,9 +1193,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         
         for (int in=0;in<8;in++){
           double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
-//          if(c==IntVector(-1,9,-1)){
-//             cout << "NC_CCweight[nodeIdx[in]] = " << NC_CCweight[nodeIdx[in]] << " gmass[nodeIdx[in]] = " << gmass[nodeIdx[in]] << " nodeIdx[in] = " << nodeIdx[in] << endl;
-//          }
           cmass[c]    += NC_CCw_mass;
           cvolume[c]  += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
           sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
@@ -1206,12 +1202,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         double inv_cmass = 1.0/cmass[c];
         vel_CC_mpm  *= inv_cmass;    
         Temp_CC_mpm *= inv_cmass;
-//        if(c==IntVector(-1,9,-1)){
-//          cout << "sp_vol_mpm = " <<  sp_vol_mpm  << " inv_cmass = " << inv_cmass << " cmass = " << cmass[c] << endl;
-//        }
         sp_vol_mpm  *= inv_cmass;
 
-        
         //__________________________________
         // set *_CC = to either vel/Temp_CC_ice or vel/Temp_CC_mpm
         // depending upon if there is cmass.  You need
@@ -1687,6 +1679,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         old_dw->get(vel_CC[m],    Ilb->vel_CCLabel,       indx,patch,gn,0);
         new_dw->get(cv[m],        Ilb->specific_heatLabel,indx,patch,gn,0);
         new_dw->get(gamma[m],     Ilb->gammaLabel,        indx,patch,gn,0);
+        new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,  indx,patch);
       }
       if(mpm_matl[m]){                    // M P M
         new_dw->get(Temp[m],     MIlb->temp_CCLabel, indx,patch,gn,0);
@@ -1694,10 +1687,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         new_dw->get(vel_CC[m],   MIlb->vel_CCLabel,  indx,patch,gn,0);
         new_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0); 
         new_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,  indx,patch,gn,0);
-
+        new_dw->getModifiable(rho_CC_new[m], Ilb->rho_CCLabel, indx,patch);
       }
       new_dw->allocateTemporary(rho_micro[m],  patch);
-      new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,       indx,patch);
       new_dw->allocateAndPut(vol_frac[m],   Ilb->vol_frac_CCLabel,  indx,patch);
       new_dw->allocateAndPut(f_theta[m],    Ilb->f_theta_CCLabel,   indx,patch);
       new_dw->allocateAndPut(speedSound[m], Ilb->speedSound_CCLabel,indx,patch);
@@ -2908,9 +2900,6 @@ void MPMICE::switchTest(const ProcessorGroup* group,
 
   // Get the pbx surface temperature
 #if 1
-
-  double max_temp = 0.;
-
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);  
     
