@@ -469,14 +469,21 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
   d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
   
-  d_sim->scheduleTimeAdvance(currentGrid->getLevel(0), d_scheduler, 0, 1);
+  if (d_sim->useLockstepTimeAdvance()) {
+    d_sim->scheduleLockstepTimeAdvance(currentGrid);
+  }
+  else {
+
+    d_sim->scheduleTimeAdvance(currentGrid->getLevel(0), d_scheduler, 0, 1);
   
-  if(currentGrid->numLevels() > 1)
-    subCycle(currentGrid, 0, totalFine, 1);
-  
-  d_scheduler->clearMappings();
-  d_scheduler->mapDataWarehouse(Task::OldDW, 0);
-  d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
+    if(currentGrid->numLevels() > 1)
+      subCycle(currentGrid, 0, totalFine, 1);
+    
+    d_scheduler->clearMappings();
+    d_scheduler->mapDataWarehouse(Task::OldDW, 0);
+    d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
+  }
+    
   for(int i = currentGrid->numLevels()-1; i >= 0; i--){
     if (d_doAMR) {
       d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
@@ -484,7 +491,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
     }
     d_sim->scheduleComputeStableTimestep(currentGrid->getLevel(i), d_scheduler);
   }
-  
+
   if(d_output)
     d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, true, d_sharedState->needAddMaterial());
   
