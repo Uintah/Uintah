@@ -1,15 +1,19 @@
 
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
+#include <sstream>
 
 using namespace Uintah;
 
 ProblemSetupException::ProblemSetupException(const std::string& msg, const char* file, int line)
     : d_msg(msg)
 {
+  std::ostringstream s;
+  s << "A ProblemSetup exception was thrown.\n"
+    << file << ":" << line << "\n";
+  d_msg = s.str();
+
 #ifdef EXCEPTIONS_CRASH
-  std::cout << "A ProblemSetup exception was thrown.\n";
-  std::cout << file << ":" << line << "\n";
   std::cout << d_msg << "\n";
 #endif
 }

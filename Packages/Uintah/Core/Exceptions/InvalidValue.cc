@@ -1,16 +1,20 @@
 
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <iostream>
+#include <sstream>
 
 using namespace Uintah;
 
 InvalidValue::InvalidValue(const std::string& msg, const char* file, int line)
   : d_msg(msg)
 {
+  std::ostringstream s;
+  s  << "An InvalidValue exception was thrown.\n" 
+     << file << ":" << line << "\n" << d_msg;
+  d_msg = s.str();
+  
 #ifdef EXCEPTIONS_CRASH
-  std::cout << "An InvalidValue exception was thrown.\n";
-  std::cout << file << ":" << line << "\n";
-  std::cout << msg << "\n";
+  cout << d_msg << "\n";
 #endif
 }
 
