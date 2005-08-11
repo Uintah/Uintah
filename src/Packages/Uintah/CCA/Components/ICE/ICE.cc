@@ -892,7 +892,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                            mpm_matls_sub,  
                                                            all_matls);     
   }
-//  scheduleCoarsenPressure(                sched, level,   d_press_matl);
   
   scheduleComputePressFC(                 sched, patches, d_press_matl,
                                                           all_matls);
