@@ -43,6 +43,7 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/BoxWidget.h>
@@ -214,6 +215,26 @@ ClipByFunction::execute()
   {
     MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
     omatrix_port->send(mHandle_);
+
+    SparseRowMatrix *matrix = dynamic_cast<SparseRowMatrix *>(mHandle_.get_rep());
+    const unsigned int dim = matrix->ncols();    
+    NrrdDataHandle nrrdH = scinew NrrdData;
+    Nrrd *nrrd = nrrdH->nrrd;
+    nrrdAlloc(nrrd, nrrdTypeUChar, 1, dim);
+    unsigned char *mask = (unsigned char *)nrrd->data;
+    memset(mask, 0, dim*sizeof(unsigned char));
+    int *rr = matrix->rows;
+    int *cc = matrix->columns;
+    double *data = matrix->a;
+    for (unsigned int i = 0; i < matrix->nrows(); ++i) {
+      if (rr[i+1] == rr[i]) continue; // No entires on this row
+      int col = cc[rr[i]];
+      if (data[rr[i]] > 0.0) {
+	mask[col] = 1;
+      }
+    }
+    NrrdOPort *nrrd_oport = (NrrdOPort *)get_oport("MaskVector");
+    nrrd_oport->send(nrrdH);
   }
 }
 
