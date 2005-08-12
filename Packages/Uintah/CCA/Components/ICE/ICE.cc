@@ -801,7 +801,7 @@ void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, 
                           int step, int nsteps )
 {
-  if(!doICEOnLevel(level))
+  if(!doICEOnLevel(level->getIndex()))
     return;
 
   // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
@@ -952,7 +952,9 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
     return;
 
   Task* t;
-  cout_doing << "ICE::schedulecomputeThermoTransportProperties" << endl;
+  cout_doing << "ICE::schedulecomputeThermoTransportProperties" 
+             << "\t\t\tL-"<< level->getIndex()<< endl;
+             
   t = scinew Task("ICE::computeThermoTransportProperties", 
             this, &ICE::computeThermoTransportProperties); 
             
@@ -989,7 +991,8 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
                                   const MaterialSubset* press_matl,
                                   const MaterialSet* ice_matls)
 {
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   Task* t = 0;
@@ -999,7 +1002,8 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
                      this, &ICE::computeRateFormPressure);
   }
   else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleComputeEquilibrationPressure" << endl;
+    cout_doing << "ICE::scheduleComputeEquilibrationPressure" 
+               << "\t\t\tL-" << levelIndex<< endl;
     t = scinew Task("ICE::computeEquilibrationPressure",
                      this, &ICE::computeEquilibrationPressure);
   }         
@@ -1042,11 +1046,14 @@ void ICE::scheduleComputeTempFC(SchedulerP& sched,
                                 const MaterialSubset* mpm_matls,
                                 const MaterialSet* all_matls)
 { 
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   Task* t;
-  cout_doing << "ICE::scheduleComputeTempFC" << endl;
+  cout_doing << "ICE::scheduleComputeTempFC" 
+             << "\t\t\t\t\tL-"<< levelIndex<< endl;
+             
   t = scinew Task("ICE::computeTempFC", this, &ICE::computeTempFC);
   
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1070,17 +1077,21 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
                                 const MaterialSet* all_matls,
                                 bool recursion)
 { 
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   Task* t = 0;
   if (d_RateForm) {     //RATE FORM
-    cout_doing << "ICE::scheduleComputeFaceCenteredVelocitiesRF" << endl;
+    cout_doing << "ICE::scheduleComputeFaceCenteredVelocitiesRF" 
+               << "\t\t\t\t\tL-" << levelIndex<< endl;
     t = scinew Task("ICE::computeFaceCenteredVelocitiesRF",
               this, &ICE::computeFaceCenteredVelocitiesRF);
   }
   else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleComputeVel_FC" << endl;
+    cout_doing << "ICE::scheduleComputeVel_FC" 
+               << "\t\t\t\t\tL-" << levelIndex<< endl;
+               
     t = scinew Task("ICE::computeVel_FC",
               this, &ICE::computeVel_FC, recursion);
   }
@@ -1117,10 +1128,12 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
                                            const MaterialSet* all_matls,
                                            const bool recursion)
 {
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
-  cout_doing << "ICE::scheduleAddExchangeContributionToFCVel" << endl;
+  cout_doing << "ICE::scheduleAddExchangeContributionToFCVel" 
+             << "\t\t\tL-" << levelIndex<< endl;
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                      this, &ICE::addExchangeContributionToFCVel, recursion);
 
@@ -1152,11 +1165,15 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
                                       const LevelP& level,
                                       const MaterialSet* matls)
 {
-  if(!doICEOnLevel(level->getIndex()))
+  int levelIndex = level->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   if(d_models.size() != 0){
-    cout_doing << "ICE::scheduleModelMassExchange" << endl;
+    cout_doing << "ICE::scheduleModelMassExchange" 
+               << "\t\t\tL-"<< levelIndex<< endl;
+    
+    
     Task* task = scinew Task("ICE::zeroModelSources",this, 
                              &ICE::zeroModelSources);
     task->computes(lb->modelMass_srcLabel);
@@ -1189,11 +1206,14 @@ void ICE::scheduleUpdateVolumeFraction(SchedulerP& sched,
                                        const MaterialSubset* press_matl,
                                        const MaterialSet* matls)
 {
-  if(!doICEOnLevel(level->getIndex()))
+  int levelIndex =level->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   if(d_models.size() != 0){
-    cout_doing << "ICE::scheduleUpdateVolumeFraction" << endl;
+    cout_doing << "ICE::scheduleUpdateVolumeFraction" 
+               << "\t\t\tL-"<< levelIndex<< endl;
+               
     Task* task = scinew Task("ICE::updateVolumeFraction",
                        this, &ICE::updateVolumeFraction);
     Ghost::GhostType  gn = Ghost::None;  
@@ -1219,10 +1239,12 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
 					    const MaterialSubset* /*mpm_matls*/,
                                             const MaterialSet* matls)
 {
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
-  cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
+  cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" 
+             << "\t\t\tL-"<< levelIndex<< endl;
   Task *task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
                             this, &ICE::computeDelPressAndUpdatePressCC);
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1267,10 +1289,13 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
                              const MaterialSubset* press_matl,
                              const MaterialSet* matls)
 { 
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
-  cout_doing << "ICE::scheduleComputePressFC" << endl;                   
+  cout_doing << "ICE::scheduleComputePressFC" 
+             << "\t\t\t\t\tL-"<< levelIndex<< endl;
+                                
   Task* task = scinew Task("ICE::computePressFC",
                      this, &ICE::computePressFC);
                      
@@ -1297,11 +1322,14 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
 					   const MaterialSubset* /*mpm_matls_sub*/,
 					   const MaterialSet* matls)
 {
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   Task* t;
-  cout_doing << "ICE::scheduleAccumulateMomentumSourceSinks" << endl; 
+  cout_doing << "ICE::scheduleAccumulateMomentumSourceSinks" 
+             << "\t\t\tL-"<< levelIndex<< endl;
+              
   t = scinew Task("ICE::accumulateMomentumSourceSinks", 
             this, &ICE::accumulateMomentumSourceSinks);
 
@@ -1351,11 +1379,14 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
                                          const MaterialSet* matls)
 
 {
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   Task* t;              // EQ
-    cout_doing << "ICE::scheduleAccumulateEnergySourceSinks" << endl;
+    cout_doing << "ICE::scheduleAccumulateEnergySourceSinks" 
+               << "\t\t\tL-" << levelIndex << endl;
+               
     t = scinew Task("ICE::accumulateEnergySourceSinks",
               this, &ICE::accumulateEnergySourceSinks);
                      
@@ -1410,10 +1441,13 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* ice_matls)
 {
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
-  cout_doing << "ICE::scheduleComputeLagrangianValues" << endl;
+  cout_doing << "ICE::scheduleComputeLagrangianValues" 
+             << "\t\t\t\tL-"<< levelIndex<< endl;
+             
   Task* t = scinew Task("ICE::computeLagrangianValues",
                       this,&ICE::computeLagrangianValues);
   Ghost::GhostType  gn  = Ghost::None;
@@ -1447,7 +1481,8 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
                                             const MaterialSubset* press_matl,
                                             const MaterialSet* matls)
 {
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   Task* t = 0;
@@ -1458,7 +1493,8 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
                this,&ICE::computeLagrangianSpecificVolumeRF);
   }
   else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleComputeLagrangianSpecificVolume" << endl;
+    cout_doing << "ICE::scheduleComputeLagrangianSpecificVolume" 
+               << "\t\t\tL-"<< levelIndex<< endl;
     t = scinew Task("ICE::computeLagrangianSpecificVolume",
                this,&ICE::computeLagrangianSpecificVolume);
   }
@@ -1505,11 +1541,14 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
                                                      const PatchSet* patches,
                                                      const MaterialSet* matls)
 {
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   if(d_models.size() > 0 && d_modelSetup->tvars.size() > 0){
-    cout_doing << "ICE::scheduleComputeLagrangian_Transported_Vars" << endl;
+    cout_doing << "ICE::scheduleComputeLagrangian_Transported_Vars" 
+               << "\t\t\tL-"<<levelIndex<< endl;
+               
     Task* t = scinew Task("ICE::computeLagrangian_Transported_Vars",
                      this,&ICE::computeLagrangian_Transported_Vars);
     Ghost::GhostType  gn  = Ghost::None;
@@ -1542,7 +1581,8 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                                const MaterialSubset* press_matl,
                                const MaterialSet* all_matls)
 {
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   Task* t = 0;
@@ -1552,7 +1592,8 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                   this, &ICE::addExchangeToMomentumAndEnergyRF);
   }
   else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy" << endl;
+    cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy" 
+               << "\t\t\tL-"<< levelIndex << endl;
     t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
                   this, &ICE::addExchangeToMomentumAndEnergy);
   }
@@ -1608,11 +1649,13 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
                                      const MaterialSet* matls,
                                      vector<PatchSubset*> & /*maxMach_PSS*/)
 { 
-  if(!doICEOnLevel(level->getIndex()))
+  int levelIndex = level->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   if(d_customBC_var_basket->usingLodi) {
-    cout_doing << "ICE::scheduleMaxMach_on_Lodi_BC_Faces" << endl;
+    cout_doing << "ICE::scheduleMaxMach_on_Lodi_BC_Faces" 
+               << "\t\t\tL-levelIndex" << endl;
     Task* task = scinew Task("ICE::maxMach_on_Lodi_BC_Faces",
                        this, &ICE::maxMach_on_Lodi_BC_Faces);
     Ghost::GhostType  gn = Ghost::None;  
@@ -1712,13 +1755,16 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const MaterialSubset* /*press_matl*/,
                                     const MaterialSet* ice_matls)
 {
-  if(!doICEOnLevel(getLevel(patch_set)->getIndex()))
+  int levelIndex = getLevel(patch_set)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   Ghost::GhostType  gac  = Ghost::AroundCells; 
   Ghost::GhostType  gn   = Ghost::None;
   
-  cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
+  cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" 
+             << "\t\t\t\tL-"<< levelIndex << endl;
+             
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                      this, &ICE::advectAndAdvanceInTime, AMR_subCycleProgressVar);
 //  task->requires(Task::OldDW, lb->delTLabel);     for AMR
@@ -1770,11 +1816,14 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
                                    const MaterialSubset* ice_matls,
                                    const MaterialSet* all_matls)
 {
-  if(!doICEOnLevel(getLevel(patches)->getIndex()))
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
     return;
 
   if(d_conservationTest->onOff) {
-    cout_doing << "ICE::scheduleTestConservation" << endl;
+    cout_doing << "ICE::scheduleTestConservation" 
+               << "\t\t\tL-"<< levelIndex<< endl;
+    
     Task* t= scinew Task("ICE::TestConservation",
                    this, &ICE::TestConservation);
 
