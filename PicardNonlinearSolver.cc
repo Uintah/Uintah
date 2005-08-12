@@ -331,6 +331,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   }
   if (d_enthalpySolve) {
     tsk->computes(d_lab->d_enthalpySPLabel);
+    tsk->computes(d_lab->d_totalRadSrcLabel);
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_cpINLabel);
     if (d_radiationCalc) {
@@ -379,10 +380,11 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     tsk->computes(d_lab->d_denAccumLabel);
     tsk->computes(d_lab->d_netflowOUTBCLabel);
     tsk->computes(d_lab->d_scalarFlowRateLabel);
-    tsk->computes(d_lab->d_scalarEfficiencyLabel);
     if (d_boundaryCondition->getCarbonBalance()) {
     tsk->computes(d_lab->d_CO2FlowRateLabel);
-    tsk->computes(d_lab->d_carbonEfficiencyLabel);
+    }
+    if (d_enthalpySolve) {
+      tsk->computes(d_lab->d_enthalpyFlowRateLabel);
     }
   }
   tsk->computes(d_lab->d_totalKineticEnergyLabel);
@@ -406,6 +408,11 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
   sched->addTask(tsk, d_perproc_patches, d_lab->d_sharedState->allArchesMaterials());
 
+  const PatchSet* patches = level->eachPatch();
+  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  if (d_boundaryCondition->anyArchesPhysicalBC()) {
+    d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
+  }
 
   return(0);
 
@@ -553,10 +560,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       d_boundaryCondition->sched_correctVelocityOutletBC(subsched, local_patches, local_matls,
 					    d_timeIntegratorLabels[curr_level]);
     }
-    if ((d_boundaryCondition->anyArchesPhysicalBC())&&
-        (d_timeIntegratorLabels[curr_level]->integrator_last_step)) {
+    if (d_boundaryCondition->anyArchesPhysicalBC()) {
       d_boundaryCondition->sched_getScalarFlowRate(subsched, local_patches, local_matls);
-      d_boundaryCondition->sched_getScalarEfficiency(subsched, local_patches, local_matls);
     }
   
     sched_interpolateFromFCToCC(subsched, local_patches, local_matls,
@@ -657,7 +662,9 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       subsched->advanceDataWarehouse(grid);
       subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
       subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
-      d_enthalpySolver->set_iteration_number(nlIterations);
+      if (d_enthalpySolve) {
+        d_enthalpySolver->set_iteration_number(nlIterations);
+      }
       subsched->execute();    
       
       delt_vartype delT;
@@ -733,6 +740,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     }
     if (d_enthalpySolve) {
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_enthalpySPLabel, patches, matls); 
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_totalRadSrcLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_tempINLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_cpINLabel, patches, matls); 
     if (d_radiationCalc) {
@@ -770,7 +778,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     }  
     }
     delt_vartype uvwout;
-    delt_vartype efficiency;
     sum_vartype flowin;
     sum_vartype flowout;
     sum_vartype denaccum;
@@ -784,7 +791,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       subsched->get_dw(3)->get(denaccum, d_lab->d_denAccumLabel);
       subsched->get_dw(3)->get(netflowoutbc, d_lab->d_netflowOUTBCLabel);
       subsched->get_dw(3)->get(scalarfr, d_lab->d_scalarFlowRateLabel);
-      subsched->get_dw(3)->get(efficiency, d_lab->d_scalarEfficiencyLabel);
       fin = flowin;
       fout = flowout;
       da = denaccum;
@@ -801,14 +807,17 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       new_dw->put(sum_vartype(da), d_lab->d_denAccumLabel);
       new_dw->put(sum_vartype(nbc), d_lab->d_netflowOUTBCLabel);
       new_dw->put(sum_vartype(sfr), d_lab->d_scalarFlowRateLabel);
-      new_dw->put(efficiency, d_lab->d_scalarEfficiencyLabel);
       if (d_boundaryCondition->getCarbonBalance()) {
       subsched->get_dw(3)->get(scalarfr, d_lab->d_CO2FlowRateLabel);
-      subsched->get_dw(3)->get(efficiency, d_lab->d_carbonEfficiencyLabel);
       sfr = scalarfr;
       sfr /= num_procs;
       new_dw->put(sum_vartype(sfr), d_lab->d_CO2FlowRateLabel);
-      new_dw->put(efficiency, d_lab->d_carbonEfficiencyLabel);
+      }
+      if (d_enthalpySolve) {
+      subsched->get_dw(3)->get(scalarfr, d_lab->d_enthalpyFlowRateLabel);
+      sfr = scalarfr;
+      sfr /= num_procs;
+      new_dw->put(sum_vartype(sfr), d_lab->d_enthalpyFlowRateLabel);
       }
     }
     sum_vartype totalkineticenergy;
