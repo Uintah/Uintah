@@ -470,7 +470,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
   d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
   
   if (d_sim->useLockstepTimeAdvance()) {
-    d_sim->scheduleLockstepTimeAdvance(currentGrid);
+    d_sim->scheduleLockstepTimeAdvance(currentGrid, d_scheduler);
   }
   else {
 
