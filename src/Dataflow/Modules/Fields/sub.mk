@@ -113,7 +113,7 @@ PSELIBS := Dataflow/Network Dataflow/Ports  Dataflow/Widgets \
 	Core/Math Core/Util Core/Algorithms/Geometry Core/GeomInterface \
 	Core/XMLUtil
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY) $(THREAD_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY) $(THREAD_LIBRARY) $(TEEM_LIBRARY)
 
 # Sandia Meshing Library
 ifeq ($(HAVE_CAMAL),yes)
