@@ -90,14 +90,27 @@ public:
                                   const MaterialSubset*,
                                   const MaterialSet*);
 
+  void scheduleCoarsenCC_0(SchedulerP&, 
+                                  const PatchSet*,
+                                  const MaterialSubset*,
+                                  const MaterialSet*);
+
   
   void scheduleComputeLagrangianValuesMPM(SchedulerP&, 
                                           const PatchSet*,
                                           const MaterialSubset*,
                                           const MaterialSet*);
 
+  void scheduleCoarsenLagrangianValuesMPM(SchedulerP&, 
+                                          const PatchSet*,
+                                          const MaterialSubset*,
+                                          const MaterialSet*);
+
   void scheduleInterpolateCCToNC(SchedulerP&, const PatchSet*,
                                  const MaterialSet*);
+
+  void scheduleRefineCC(SchedulerP&, const PatchSet*,
+                        const MaterialSet*);
 
   void scheduleComputeNonEquilibrationPressure(SchedulerP&, 
                                                const PatchSet*,
@@ -119,12 +132,24 @@ public:
                                           const MaterialSubset*,
                                           const MaterialSet*);
 
+  void scheduleRefinePressCC(SchedulerP&, 
+                                      const PatchSet*,
+                                      const MaterialSubset*,
+                                      const MaterialSet*);
+
   void scheduleInterpolatePAndGradP(SchedulerP&, 
                                     const PatchSet*,
                                     const MaterialSubset*,
                                     const MaterialSubset*,
                                     const MaterialSubset*,
                                     const MaterialSet*);
+
+  void scheduleRefinePAndGradP(SchedulerP&, 
+                               const PatchSet*,
+                               const MaterialSubset*,
+                               const MaterialSubset*,
+                               const MaterialSubset*,
+                               const MaterialSet*);
 
   void scheduleInterpolateMassBurnFractionToNC( SchedulerP&, 
                                                 const PatchSet*,
@@ -308,21 +333,21 @@ public:
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
                                    const VarLabel* variable,
-                                   T defaultValue);
+                                   T defaultValue, bool modifies = false);
 
   template<typename T>
     void scheduleMassWeightedCoarsenVariableCC(SchedulerP& sched,
                                                const PatchSet* patches,
                                                const MaterialSet* matls,
                                                const VarLabel* variable,
-                                               T defaultValue);
+                                               T defaultValue, bool modifies = false);
 
   template<typename T>
-    void scheduleCoarsenAddVariableCC(SchedulerP& sched,
+    void scheduleCoarsenSumVariableCC(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls,
                                       const VarLabel* variable,
-                                      T defaultValue);
+                                      T defaultValue, bool modifies = false);
 
   template<typename T>
     void refineVariableCC(const ProcessorGroup*,
@@ -347,7 +372,7 @@ public:
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
                            const VarLabel* variable,
-                           T defaultValue);
+                           T defaultValue, bool modifies);
 
   template<typename T>
     void massWeightedCoarsenVariableCC(const ProcessorGroup*,
@@ -356,16 +381,16 @@ public:
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw,
                                        const VarLabel* variable,
-                                       T defaultValue);
+                                       T defaultValue, bool modifies);
 
   template<typename T>
-    void coarsenAddVariableCC(const ProcessorGroup*,
+    void coarsenSumVariableCC(const ProcessorGroup*,
                               const PatchSubset* patch,
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
                               const VarLabel* variable,
-                              T defaultValue);
+                              T defaultValue, bool modifies);
 
 private:
   void setBC_rho_micro(const Patch* patch,
