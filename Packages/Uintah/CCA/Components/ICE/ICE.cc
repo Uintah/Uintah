@@ -545,7 +545,6 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
  _____________________________________________________________________*/
 void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
 {
-                                                                                
   cout_doing << "Doing ICE::scheduleInitializeAddedMaterial " << endl;
   Task* t = scinew Task("ICE::actuallyInitializeAddedMaterial",
                   this, &ICE::actuallyInitializeAddedMaterial);
@@ -646,6 +645,9 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
 _____________________________________________________________________*/
 void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 {
+  if(!doICEOnLevel(level->getIndex())){
+    return;
+  }
 
   cout_doing << "Doing ICE::scheduleInitialize " << endl;
   Task* t = scinew Task("ICE::actuallyInitialize",
