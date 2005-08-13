@@ -9,7 +9,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.1       </maxTime>
+       <maxTime>            0.5       </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -98,8 +98,8 @@
        </Level>
        <Level>
            <Box label = " Level 2">
-              <lower>        [0.5,0.0,1.125]    </lower>
-              <upper>        [2.0,2.0,1.375]    </upper>
+              <lower>        [0.75,0.0,1.125]    </lower>
+              <upper>        [2.75,2.0,1.375]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
