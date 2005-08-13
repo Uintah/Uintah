@@ -242,6 +242,8 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   one_matl->add(0);
   one_matl->addReference();
   t->computes(lb->NC_CCweightLabel, one_matl);
+  if (one_matl->removeReference())
+    delete one_matl; 
 
   LoadBalancer* loadbal = sched->getLoadBalancer();
   d_perproc_patches = loadbal->createPerProcessorPatchSet(level);
@@ -368,6 +370,9 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                     lb->pXLabel, 
                                     d_sharedState->d_particleState,
                                     lb->pParticleIDLabel, matls);
+
+  if (one_matl->removeReference())
+    delete one_matl; 
 }
 
 void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
@@ -1199,7 +1204,7 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
         solid_vol += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
       }
       if(solid_vol/cell_vol < .5){
-         double CCheatrate = 1.e1;
+         double CCheatrate = 1.e0;
          for (int in=0;in<8;in++){
            gextHR[nodeIdx[in]] += CCheatrate *
                      (NC_CCweight[nodeIdx[in]]*gvolume[nodeIdx[in]])/solid_vol;
