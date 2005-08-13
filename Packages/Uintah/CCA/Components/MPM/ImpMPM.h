@@ -163,6 +163,12 @@ private:
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+  void projectCCHeatSourceToNodes(     const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
   void rigidBody(                      const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
@@ -331,6 +337,10 @@ private:
                                                const MaterialSet*);
 
   void scheduleInterpolateParticlesToGrid(     SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleProjectCCHeatSourceToNodes(     SchedulerP&, const PatchSet*,
+                                               const MaterialSubset*,
                                                const MaterialSet*);
 
   void scheduleComputeHeatExchange(SchedulerP&, const PatchSet*,

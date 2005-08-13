@@ -238,6 +238,11 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pErosionLabel);  //  only used for imp -> exp transition
   t->computes(d_sharedState->get_delt_label());
 
+  MaterialSubset* one_matl = scinew MaterialSubset();
+  one_matl->add(0);
+  one_matl->addReference();
+  t->computes(lb->NC_CCweightLabel, one_matl);
+
   LoadBalancer* loadbal = sched->getLoadBalancer();
   d_perproc_patches = loadbal->createPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
@@ -279,6 +284,23 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                          mpm_matl, new_dw);
     }
+
+   //__________________________________
+   // - Initialize NC_CCweight = 0.125
+   // - Find the walls with symmetry BC and double NC_CCweight
+   NCVariable<double> NC_CCweight;
+   new_dw->allocateAndPut(NC_CCweight, lb->NC_CCweightLabel,    0, patch);
+   NC_CCweight.initialize(0.125);
+   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+        face=Patch::nextFace(face)){
+      int mat_id = 0;
+      if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+        for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars");
+                                                  !iter.done(); iter++) {
+          NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
+        }
+      }
+    }
   }
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 
@@ -310,9 +332,15 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
     d_perproc_patches->addReference();
   }
 
+  MaterialSubset* one_matl;
+  one_matl = scinew MaterialSubset();
+  one_matl->add(0);
+  one_matl->addReference();
+
   scheduleApplyExternalLoads(             sched, d_perproc_patches,matls);
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
-//  scheduleComputeHeatExchange(            sched, d_perproc_patches,matls);
+//  scheduleProjectCCHeatSourceToNodes(     sched, d_perproc_patches,one_matl,
+//                                                                   matls);
   scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
   scheduleCreateMatrix(                   sched, d_perproc_patches,matls);
   scheduleDestroyHCMatrix(                sched, d_perproc_patches,matls);
@@ -388,6 +416,24 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureLabel);
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gExternalHeatRateLabel);
+
+  sched->addTask(t, patches, matls);
+}
+
+void ImpMPM::scheduleProjectCCHeatSourceToNodes(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSubset* one_matl,
+                                                const MaterialSet* matls)
+{
+  Task* t = scinew Task("ImpMPM::projectCCHeatSourceToNodes",
+                        this,&ImpMPM::projectCCHeatSourceToNodes);
+
+  t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,
+                                                    Ghost::AroundCells, 1);
+  t->requires(Task::NewDW,lb->gVolumeLabel,         Ghost::None);
+
+  t->computes(lb->gExternalHeatRateLabel);
+  t->computes(lb->NC_CCweightLabel, one_matl);
 
   sched->addTask(t, patches, matls);
 }
@@ -1113,6 +1159,56 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
   }  // patch loop
 }
 
+void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* ,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    if (cout_doing.active()) {
+      cout_doing <<"Doing projectCCHeatSourceToNodes on patch "
+                 << patch->getID() <<"\t\t IMPM"<< "\n" << "\n";
+    }
+
+    Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+
+    Vector dx = patch->dCell();
+    double cell_vol = dx.x()*dx.y()*dx.z();
+
+    constNCVariable<double> gvolume,NC_CCweight;
+    NCVariable<double> gextHR, NC_CCweight_copy;
+
+    new_dw->get(gvolume,         lb->gVolumeLabel,           0, patch,gn, 0);
+    old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0,patch, gac,1);
+    new_dw->getModifiable(gextHR,lb->gExternalHeatRateLabel, 0, patch);
+    new_dw->allocateAndPut(NC_CCweight_copy, lb->NC_CCweightLabel, 0,patch);
+    // carry forward interpolation weight
+    IntVector low = patch->getNodeLowIndex();
+    IntVector hi  = patch->getNodeHighIndex();
+    NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
+
+    for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      double solid_vol=1.e-200;
+      IntVector nodeIdx[8];
+      patch->findNodesFromCell(c, nodeIdx);
+      for (int in=0;in<8;in++){
+        solid_vol += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
+      }
+      if(solid_vol/cell_vol < .5){
+         double CCheatrate = 1.e1;
+         for (int in=0;in<8;in++){
+           gextHR[nodeIdx[in]] += CCheatrate *
+                     (NC_CCweight[nodeIdx[in]]*gvolume[nodeIdx[in]])/solid_vol;
+         }
+      }
+    }
+  }
+}
+
 void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* ,
@@ -1132,8 +1228,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     ni.reserve(interpolator->size());
     vector<double> S;
     S.reserve(interpolator->size());
-
-    
 
     int numMatls = d_sharedState->getNumMPMMatls();
     // Create arrays for the grid data
