@@ -88,6 +88,7 @@ using std::vector;
       const VarLabel* gVelocityStarLabel;
       const VarLabel* gMomExedVelocityStarLabel;
       const VarLabel* gExternalForceLabel;
+      const VarLabel* NC_CCweightLabel;
       const VarLabel* gInternalForceLabel;
       const VarLabel* gContactForceLabel;
       const VarLabel* gContactLabel;

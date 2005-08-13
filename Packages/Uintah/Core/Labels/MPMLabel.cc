@@ -237,6 +237,9 @@ MPMLabel::MPMLabel()
   gExternalHeatRateLabel = VarLabel::create("g.externalHeatRate",
 			NCVariable<double>::getTypeDescription());
 
+  NC_CCweightLabel     = VarLabel::create("NC_CCweight",
+                     NCVariable<double>::getTypeDescription());
+
   gThermalContactHeatExchangeRateLabel = 
      VarLabel::create("g.thermalContactHeatExchangeRate",
      NCVariable<double>::getTypeDescription());
@@ -636,6 +639,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gTemperatureRateLabel);
   VarLabel::destroy(gInternalHeatRateLabel);
   VarLabel::destroy(gExternalHeatRateLabel);
+  VarLabel::destroy(NC_CCweightLabel);
   VarLabel::destroy(gThermalContactHeatExchangeRateLabel);
   VarLabel::destroy(gStressForSavingLabel);
   VarLabel::destroy(gVolumeLabel);
