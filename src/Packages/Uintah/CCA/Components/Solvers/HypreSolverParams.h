@@ -58,16 +58,15 @@ namespace Uintah {
     //    SolverType solverType;   // Hypre Solver type
     //    PrecondType precondType; // Hypre Preconditioner type
 
-    /* SMG parameters */
+    // SMG parameters
     int    nPre;                  // # pre relaxations for Hypre SMG solver
     int    nPost;                 // # post relaxations for Hypre SMG solver
 
-    /* PFMG parameters */
+    // PFMG parameters
     int    skip;                  // Hypre PFMG parameter
 
-    /* SparseMSG parameters */
+    // SparseMSG parameters
     int    jump;                  // Hypre Sparse MSG parameter
-
 
     //===== Oren's extra parameters & functions, might be removed later. =====
     // Debugging and control flags

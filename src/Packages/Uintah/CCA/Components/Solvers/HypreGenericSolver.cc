@@ -1,4 +1,20 @@
-#include "HypreGenericSolver.h"
+#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Util/DebugStream.h>
+
+// hypre includes
+//#define HYPRE_TIMING
+#include <utilities.h>
+#include <HYPRE_struct_ls.h>
+#include <krylov.h>
+#ifndef HYPRE_TIMING
+#ifndef hypre_ClearTiming
+// This isn't in utilities.h for some reason...
+#define hypre_ClearTiming()
+#endif
+#endif
 
 using namespace Uintah;
 //__________________________________
@@ -9,56 +25,74 @@ static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
 namespace Uintah {
 
-  HypreGenericSolver(const std::string& solverTitle,
-                     const HypreInterface& hypreInterface)
-  { 
-    _solverType = getSolverType(solverTitle);
+  HypreGenericSolver::HypreGenericSolver(const HypreInterface& interface,
+                                         const ProcessorGroup* pg,
+                                         const HypreSolverParams* params,
+                                         const int acceptableInterface)
+    : _interface(interface), _pg(pg), _params(params)
+  {
+    assertInterface(acceptableInterface);
+
+    //    _solverType = getSolverType(solverTitle);
     _results.numIterations = 0;
     _results.finalResNorm  = 1.23456e+30; // Large number
   }
   
   void
-  Solver::setup(void)
-  {
-    //-----------------------------------------------------------
-    // Solver setup phase
-    //-----------------------------------------------------------
-    linePrint("#",60);
-    dbg0 << "Solver setup phase" << "\n";
-    linePrint("#",60);
-    int time_index = hypre_InitializeTiming("AMG Setup");
-    hypre_BeginTiming(time_index);
-  
-    this->setup(); // which setup will this be? The derived class's?
-  
-    hypre_EndTiming(time_index);
-    hypre_PrintTiming("Setup phase times", MPI_COMM_WORLD);
-    hypre_FinalizeTiming(time_index);
-    hypre_ClearTiming();
+  HypreGenericSolver::assertInterface(const int acceptableInterface)
+  { 
+    if (acceptableInterface & _interface) {
+      return;
+    }
+    throw InternalError("Solver does not support Hypre interface: "
+                        +_interface,__FILE__, __LINE__);
   }
 
   void
-  Solver::solve(void)
+  HypreGenericSolver::setup(void)
+    //-----------------------------------------------------------
+    // Solver setup phase
+    //-----------------------------------------------------------
+  {
+    cerr << "Solver setup phase" << "\n";
+    int time_index = hypre_InitializeTiming("Solver Setup");
+    hypre_BeginTiming(time_index);
+    this->setup(); // The derived Solver setup()
+    hypre_EndTiming(time_index);
+    hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
+    hypre_FinalizeTiming(time_index);
+    hypre_ClearTiming();
+    cerr << "Setup phase time = " << time_index << "\n";
+  } // end setup()
+
+  void
+  HypreGenericSolver::solve(const HypreDriver* hypreDriver)
   {
     //-----------------------------------------------------------
     // Solver solve phase
     //-----------------------------------------------------------
-    linePrint("#",60);
-    dbg0 << "Solver solve phase" << "\n";
-    linePrint("#",60);
-
-    this->solve(); // which setup will this be? The derived class's?
+    cerr << "Solver solve phase" << "\n";
+    int time_index = hypre_InitializeTiming("Solver Setup");
+    hypre_BeginTiming(time_index);
+    this->solve(); // The derived Solver solve()
 
     //-----------------------------------------------------------
-    // Gather the solution vector
+    //Gather the solution vector
     //-----------------------------------------------------------
-    // TODO: SolverSStruct is derived from Solver; implement the following
-    // in SolverSStruct. For SolverStruct (PFMG), another gather vector required.
-    linePrint("#",60);
-    dbg0 << "Gather the solution vector" << "\n";
-    linePrint("#",60);
-
-    HYPRE_SStructVectorGather(_x);
+    //TODO: SolverSStruct is derived from Solver; implement the
+    //following in SolverSStruct. For SolverStruct (PFMG), another
+    //gather vector required.
+    cerr << "Gather the solution vector" << "\n";
+    if (_interface == HypreStruct) {
+      const HypreDriverStruct* structDriver =
+        dynamic_cast<const HypreDriverStruct*>(hypreDriver);
+      if (!structDriver) {
+        throw InternalError("interface = Struct but HypreDriver is not!",
+                            __FILE__, __LINE__);
+      }
+      HYPRE_SStructVectorGather(hypreDriver->_HX);
+    }
+    cerr << "Solve phase time = " << time_index << "\n";
   } //end solve()
 
   void
