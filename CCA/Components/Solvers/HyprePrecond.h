@@ -40,8 +40,6 @@ WARNING
 #ifndef Packages_Uintah_CCA_Components_Solvers_HyprePrecond_h
 #define Packages_Uintah_CCA_Components_Solvers_HyprePrecond_h
 
-//#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-//#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 
 namespace Uintah {
@@ -63,6 +61,8 @@ namespace Uintah {
   public:
   
     HyprePrecond(const HypreInterface& interface,
+                 const ProcessorGroup* pg,
+                 const HypreSolverParams* params,
                  const int acceptableInterface);
     virtual ~HyprePrecond(void);
 
@@ -74,15 +74,22 @@ namespace Uintah {
   protected:
 
     //---------- Data members ----------
-    HypreInterface _interface;       // Hypre system interface
-    PrecondType    _precondType;     // Hypre preconditioner type
+    HypreInterface           _interface;       // Hypre system interface
+    const ProcessorGroup*    _pg;
+    const HypreSolverParams* _params;
+    //    PrecondType              _precondType;     // Hypre preconditioner type
+    HYPRE_PtrToSolverFcn     _precond;
+    HYPRE_PtrToSolverFcn     _pcsetup;
+    HYPRE_Solver             _precond_solver;
 
   }; // end class HyprePrecond
 
   // Utilities
   PrecondType   precondFromTitle(const std::string& precondTitle);
-  HyprePrecond* newHyprePrecond(const PrecondType& precondType);
-
+  HyprePrecond* newHyprePrecond(const PrecondType& precondType,
+                                const HypreInterface& interface,
+                                const ProcessorGroup* pg,
+                                const HypreSolverParams* params);
 } // end namespace Uintah
 
 #endif // Packages_Uintah_CCA_Components_Solvers_HyprePrecond_h

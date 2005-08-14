@@ -65,6 +65,18 @@ namespace Uintah {
   // Forward declarations
   class HypreSolverParams;
 
+  //---------- Types ----------
+
+  enum CoarseFineViewpoint {
+    DoingCoarseToFine,
+    DoingFineToCoarse
+  };
+  
+  enum ConstructionStatus {
+    DoingGraph,
+    DoingMatrix
+  };
+  
   template<class Types>
     class HypreDriverSStruct : public HypreDriver<Types> {
 
