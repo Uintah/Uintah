@@ -21,6 +21,200 @@ using namespace Uintah;
 
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 static DebugStream cout_dbg("impAMRICE_DBG", false);
+
+
+/* _____________________________________________________________________
+ Function~  ICE::scheduleLockstepTimeAdvance--
+_____________________________________________________________________*/
+void
+ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
+{
+  int maxLevel = grid->numLevels();
+  vector<const PatchSet*> allPatchSets;
+  
+  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
+  const MaterialSet* all_matls = d_sharedState->allMaterials();  
+
+  MaterialSubset* one_matl = d_press_matl;
+  const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
+  const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
+  double AMR_subCycleProgressVar = 0; 
+  
+  cout_doing << "--------------------------------------------------------"<< endl;
+  cout_doing << "ICE::scheduleLockstepTimeAdvance"<< endl;  
+  
+  
+  //__________________________________
+  //
+  for(int L = 0; L<maxLevel; L++){
+    LevelP level = grid->getLevel(L);
+    const PatchSet* patches = level->eachPatch();
+    allPatchSets.push_back(level->eachPatch());
+    
+    if(!doICEOnLevel(level->getIndex())){
+      return;
+    }
+
+    // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
+    // get the init delt when it didn't compute delt on L0.
+    if (d_sharedState->getCurrentTopLevelTimeStep() > 1){
+      d_initialDt = 10000.0;
+    }
+
+
+    if(d_turbulence){
+      // The turblence model is also called directly from
+      // accumlateMomentumSourceSinks.  This method just allows other
+      // quantities (such as variance) to be computed
+      d_turbulence->scheduleTurbulence1(sched, patches, ice_matls);
+    }
+    vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
+    scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
+                                                            maxMach_PSS);
+
+    scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
+
+    scheduleComputePressure(                sched, patches, d_press_matl,
+                                                            all_matls);
+
+    if (d_RateForm) {
+      schedulecomputeDivThetaVel_CC(        sched, patches, ice_matls_sub,        
+                                                            mpm_matls_sub,        
+                                                            all_matls);           
+    }  
+
+    scheduleComputeTempFC(                   sched, patches, ice_matls_sub,  
+                                                             mpm_matls_sub,
+                                                             all_matls);    
+
+    scheduleComputeModelSources(             sched, level,   all_matls);
+
+    scheduleUpdateVolumeFraction(            sched, level,   d_press_matl,
+                                                             all_matls);
+
+
+    scheduleComputeVel_FC(                   sched, patches,ice_matls_sub, 
+                                                           mpm_matls_sub, 
+                                                           d_press_matl,    
+                                                           all_matls,     
+                                                           false);        
+
+    scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
+                                                           all_matls,
+                                                           false);
+
+    if(d_impICE) {        //  I M P L I C I T
+
+      scheduleSetupRHS(                     sched, patches,  one_matl, 
+                                                             all_matls,
+                                                             false);
+
+      scheduleImplicitPressureSolve(         sched, level,   patches,
+                                                             one_matl,      
+                                                             d_press_matl,    
+                                                             ice_matls_sub,  
+                                                             mpm_matls_sub, 
+                                                             all_matls);
+
+      scheduleComputeDel_P(                   sched,  level, patches,  
+                                                             one_matl,
+                                                             d_press_matl,
+                                                             all_matls);
+    }                    
+
+    if(!d_impICE){         //  E X P L I C I T
+      scheduleComputeDelPressAndUpdatePressCC(sched, patches,d_press_matl,     
+                                                             ice_matls_sub,  
+                                                             mpm_matls_sub,  
+                                                             all_matls);     
+    }
+  }
+//______________________________________________________________________
+// MULTI-LEVEL PRESSURE SOLVE AND COARSEN
+
+
+  if(d_doAMR){
+    for(int L = maxLevel-1; L> 0; L--){ // from finer to coarser levels
+      LevelP coarseLevel = grid->getLevel(L-1);
+      scheduleCoarsenPressure(  sched,  coarseLevel,  d_press_matl);
+    }
+  }
+
+//______________________________________________________________________
+
+  for(int L = 0; L<maxLevel; L++){
+    LevelP level = grid->getLevel(L);
+    const PatchSet* patches = level->eachPatch();
+    
+    if(!doICEOnLevel(level->getIndex())){
+      return;
+    }    
+    scheduleComputePressFC(                 sched, patches, d_press_matl,
+                                                            all_matls);
+
+    scheduleAccumulateMomentumSourceSinks(  sched, patches, d_press_matl,
+                                                            ice_matls_sub,
+                                                            mpm_matls_sub,
+                                                            all_matls);
+    scheduleAccumulateEnergySourceSinks(    sched, patches, ice_matls_sub,
+                                                            mpm_matls_sub,
+                                                            d_press_matl,
+                                                            all_matls);
+
+    scheduleComputeLagrangianValues(        sched, patches, all_matls);
+
+    scheduleAddExchangeToMomentumAndEnergy( sched, patches, ice_matls_sub,
+                                                            mpm_matls_sub,
+                                                            d_press_matl,
+                                                            all_matls);
+
+    scheduleComputeLagrangianSpecificVolume(sched, patches, ice_matls_sub,
+                                                            mpm_matls_sub, 
+                                                            d_press_matl,
+                                                            all_matls);
+
+    scheduleComputeLagrangian_Transported_Vars(sched, patches,
+                                                            all_matls);
+
+    scheduleAdvectAndAdvanceInTime(         sched, patches, AMR_subCycleProgressVar,
+                                                            ice_matls_sub,
+                                                            mpm_matls_sub,
+                                                            d_press_matl,
+                                                            all_matls);
+
+    scheduleTestConservation(               sched, patches, ice_matls_sub,
+                                                            all_matls); 
+  }
+  //__________________________________
+  //  coarsen and refineInterface
+  if(d_doAMR){
+    for(int L = maxLevel-1; L> 0; L--){ // from finer to coarser levels
+      LevelP coarseLevel = grid->getLevel(L-1);
+      scheduleCoarsen(coarseLevel, sched);
+    }
+    for(int L = 1; L<maxLevel; L++){   // from coarser to finer levels
+      LevelP fineLevel = grid->getLevel(L);
+      scheduleRefineInterface(fineLevel, sched, 1, 1);
+    }
+  }
+
+#if 0
+    if(d_canAddICEMaterial){
+      //  This checks to see if the model on THIS patch says that it's
+      //  time to add a new material
+      scheduleCheckNeedAddMaterial(           sched, level,   all_matls);
+
+      //  This one checks to see if the model on ANY patch says that it's
+      //  time to add a new material
+      scheduleSetNeedAddMaterialFlag(         sched, level,   all_matls);
+    }
+#endif
+    cout_doing << "---------------------------------------------------------"<<endl;
+}
+
+
+
 /*______________________________________________________________________
  Function~  ICE::scheduleCoarsenPressure--
  Purpose:  After the implicit pressure solve is performed on all levels 
