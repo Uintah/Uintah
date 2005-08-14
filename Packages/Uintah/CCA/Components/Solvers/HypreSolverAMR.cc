@@ -58,8 +58,9 @@ namespace Uintah {
   
   HypreSolverAMR::~HypreSolverAMR() {}
 
-  SolverParameters* HypreSolverAMR::readParameters(ProblemSpecP& params,
-                                                   const string& varname)
+  SolverParameters*
+  HypreSolverAMR::readParameters(ProblemSpecP& params,
+                                 const string& varname)
     /*_____________________________________________________________________
       Function HypreSolverAMR::readParameters
       Load input parameters into the HypreSolverAMR parameter struct;

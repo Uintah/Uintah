@@ -40,9 +40,7 @@ WARNING
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-//#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 
 namespace Uintah {
   
@@ -67,21 +65,27 @@ namespace Uintah {
       double     finalResNorm;    // Final residual norm ||A*x-b||_2
     };
     
-    HypreGenericSolver(const std::string& solverTitle,
-                       const HypreInterface& hypreInterface); 
+    HypreGenericSolver(const HypreInterface& interface,
+                       const ProcessorGroup* pg,
+                       const HypreSolverParams* params,
+                       const int acceptableInterface);
     virtual ~HypreGenericSolver(void) {}
 
-    virtual void setup(void);
-    virtual void solve(void);
+    void         assertInterface(const int acceptableInterface);
+    virtual void setup(const HypreDriver* hypreDriver);
+    virtual void solve(const HypreDriver* hypreDriver);
 
     //========================== PROTECTED SECTION ==========================
   protected:
 
     //---------- Data members ----------
-    SolverType    _solverType;      // Hypre solver type
-    int           _solverID;        // Hypre solver ID computed from solverType
+    HypreInterface           _interface;       // Hypre system interface
+    const ProcessorGroup*    _pg;
+    const HypreSolverParams* _params;
+    //    SolverType    _solverType;      // Hypre solver type
+    //    int           _solverID;        // Hypre solver ID computed from solverType
     Results       _results;         // Solver results are stored here
-    HyprePrecond& _precond;         // Preconditioner (optional)
+    HyprePrecond* _precond;         // Preconditioner (optional)
 
   }; // end class HypreGenericSolver
 

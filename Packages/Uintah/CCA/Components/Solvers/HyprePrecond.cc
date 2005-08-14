@@ -6,6 +6,7 @@
 // done in the classes derived from HyprePrecond.
 //--------------------------------------------------------------------------
 #include <Packages/Uintah/CCA/Components/Solvers/HyprePrecond.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondSMG.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
@@ -19,8 +20,10 @@ static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 namespace Uintah {
 
   HyprePrecond::HyprePrecond(const HypreInterface& interface,
-                             const int acceptableInterface)
-    : _interface(interface)
+                             const ProcessorGroup* pg,
+                             const HypreSolverParams* params,
+                             const int acceptableInterface) :
+    _interface(interface), _pg(pg), _params(params)
   { 
     assertInterface(acceptableInterface);
     this->setup(); // Derived class setup()
@@ -34,11 +37,8 @@ namespace Uintah {
   void
   HyprePrecond::assertInterface(const int acceptableInterface)
   { 
-    for (HypreInterface interface = HypreStruct;
-         interface <= HypreParCSR; ++interface) {
-      if ((acceptableInterface & interface) && (_interface == interface)) {
-        return;
-      }
+    if (acceptableInterface & _interface) {
+      return;
     }
     throw InternalError("Preconditioner does not support Hypre interface: "
                         +_interface,__FILE__, __LINE__);
@@ -78,7 +78,10 @@ namespace Uintah {
   } // end precondFromTitle()
 
   HyprePrecond*
-  newHyprePrecond(const PrecondType& precondType)
+  newHyprePrecond(const PrecondType& precondType,
+                  const HypreInterface& interface,
+                  const ProcessorGroup* pg,
+                  const HypreSolverParams* params)
     // Create a new preconditioner object of specific precond type
     // "precondType" but a generic preconditioner pointer type.
   {
@@ -90,8 +93,9 @@ namespace Uintah {
       }
     case PrecondSMG:
       {
-        return new HyprePrecondSMG();
+        return new HyprePrecondSMG(interface,pg,params);
       }
+#if 0
     case PrecondPFMG:
       {
         return new HyprePrecondPFMG();
@@ -108,6 +112,7 @@ namespace Uintah {
       {
         return new HyprePrecondDiagonal();
       }
+#endif
     default:
       throw InternalError("Unknown preconditionertype in newHyprePrecond: "
                           +precondType, __FILE__, __LINE__);

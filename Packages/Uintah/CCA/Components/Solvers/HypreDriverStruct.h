@@ -88,8 +88,8 @@ namespace Uintah {
 
     // Set up & destroy preconditioners for SStruct solvers that can
     // use them (e.g. PCG). These functions are called by the solver object.
-    void setupPrecond(void);
-    void destroyPrecond(void);
+    //    void setupPrecond(void);
+    //    void destroyPrecond(void);
 
     //========================== PRIVATE SECTION ==========================
   private:

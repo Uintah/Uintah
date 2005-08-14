@@ -79,16 +79,6 @@ namespace Uintah {
     HypreInterfaceNA = 0x8
   };
   
-  enum CoarseFineViewpoint {
-    DoingCoarseToFine,
-    DoingFineToCoarse
-  };
-  
-  enum ConstructionStatus {
-    DoingGraph,
-    DoingMatrix
-  };
-  
   enum BoxSide {  // Left/right boundary in each dim
     LeftSide  = -1,
     RightSide = 1,
@@ -110,7 +100,7 @@ namespace Uintah {
                 const VarLabel* b, Task::WhichDW which_b_dw,
                 const VarLabel* guess,
                 Task::WhichDW which_guess_dw,
-                const HypreSolverParams* params) :
+                HypreSolverParams* params) :
       level(level), matlset(matlset),
       A_label(A), which_A_dw(which_A_dw),
       X_label(x), modifies_x(modifies_x),
@@ -168,8 +158,9 @@ namespace Uintah {
     const VarLabel*          guess_label;
     Task::WhichDW            which_guess_dw;
     const HypreSolverParams* params;
-    
-    // Assigned inside solve() for our internal setup / getSolution functions
+
+    // Uintah variables assigned inside solve() for our internal setup
+    // / getSolution functions
     const ProcessorGroup*    _pg;
     const PatchSubset*       _patches;
     const MaterialSubset*    _matls;
@@ -178,9 +169,6 @@ namespace Uintah {
     DataWarehouse*           _A_dw;
     DataWarehouse*           _b_dw;
     DataWarehouse*           _guess_dw;
-
-    HYPRE_PtrToSolverFcn*    _precond;
-    HYPRE_PtrToSolverFcn*    _pcsetup;
 
     int _activeInterface;                             // Bit mask: which
                                                       // interfaces are active

@@ -10,7 +10,17 @@ SRCS     += \
 	$(SRCDIR)/SolverFactory.cc
 
 ifeq ($(HAVE_HYPRE),yes)
-SRCS += $(SRCDIR)/HypreSolver.cc
+SRCS += $(SRCDIR)/HypreSolver.cc \
+        \
+	$(SRCDIR)/HypreSolverAMR.cc \
+	$(SRCDIR)/HypreDriver.cc \
+        $(SRCDIR)/HyprePrecond.cc \
+        $(SRCDIR)/HyprePrecondSMG.cc \
+        $(SRCDIR)/HypreGenericSolver.cc \
+	$(SRCDIR)/HypreDriverStruct.cc \
+	$(SRCDIR)/HypreDriverSStruct.cc \
+        $(SRCDIR)/HypreSolverAMG.cc \
+        $(SRCDIR)/HypreSolverFAC.cc
 endif
 
 PSELIBS := \
