@@ -76,6 +76,8 @@ namespace Uintah {
       virtual void scheduleTimeAdvance( const LevelP& level, 
                                         SchedulerP&, int step, int nsteps );
                                              
+      virtual void scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched);
+
       void scheduleComputePressure(SchedulerP&, 
                                    const PatchSet*,
                                    const MaterialSubset*,
@@ -234,9 +236,6 @@ namespace Uintah {
                                          const MaterialSet* all_matls);
 //__________________________________ 
 //  I M P L I C I T   A M R I C E                                                       
-      void scheduleLockstepTimeAdvance(const GridP& grid, 
-                                       SchedulerP& sched);
-
       void scheduleCoarsenPressure(SchedulerP& sched, 
                                    const LevelP& level,
                                    const MaterialSubset* press_matl); 
