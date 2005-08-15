@@ -1,3 +1,4 @@
+#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 #include <iostream>
 #include <vector>
