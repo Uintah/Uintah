@@ -1822,7 +1822,8 @@ namespace Uintah {
 #endif
 
   std::ostream&
-  operator << (std::ostream& os, const Solver::CoarseFineViewpoint& v)
+  operator << (std::ostream& os,
+               const HypreDriverSStruct::CoarseFineViewpoint& v)
     // Write side s to the stream os.
   {
     if      (v == Solver::CoarseToFine) os << "CoarseToFine";
@@ -1833,7 +1834,8 @@ namespace Uintah {
 
 
   std::ostream&
-  operator << (std::ostream& os, const Solver::ConstructionStatus& s)
+  operator << (std::ostream& os,
+               const HypreDriverSStruct::ConstructionStatus& s)
   {
     if      (s == Solver::Graph ) os << "Graph ";
     else if (s == Solver::Matrix) os << "Matrix";

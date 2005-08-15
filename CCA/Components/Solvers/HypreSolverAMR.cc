@@ -134,9 +134,9 @@ namespace Uintah {
     // when the task gets freed.  The downside is that the refcount gets
     // tweaked everytime solve is called.
 
-    TypeDescription::Type domtype = A->typeDescription()->getType();
-    ASSERTEQ(domtype, x->typeDescription()->getType());
-    ASSERTEQ(domtype, b->typeDescription()->getType());
+    TypeDescription::Type domType = A->typeDescription()->getType();
+    ASSERTEQ(domType, x->typeDescription()->getType());
+    ASSERTEQ(domType, b->typeDescription()->getType());
     const HypreSolverParams* dparams =
       dynamic_cast<const HypreSolverParams*>(params);
     if(!dparams)
@@ -153,32 +153,55 @@ namespace Uintah {
       interface = HypreStruct;
     }
 
-    switch (domtype) {
+    HypreDriver* that = newHypreDriver
+      (interface,level.get_rep(), matls, A, which_A_dw,
+       x, modifies_x, b, which_b_dw, guess, 
+       which_guess_dw, dparams);
+    Handle<HypreDriver > handle = that;
+
+    switch (domType) {
     case TypeDescription::SFCXVariable:
+      {
+        task = scinew Task("Matrix solve SFCX", that,
+                           &HypreDriver::solve<SFCXTypes>, handle);
+        break;
+      } // end case SFCXVariable 
+
     case TypeDescription::SFCYVariable:
+      {
+        task = scinew Task("Matrix solve SFCY", that,
+                           &HypreDriver::solve<SFCYTypes>, handle);
+        break;
+      } // end case SFCYVariable 
+
     case TypeDescription::SFCZVariable:
+      {
+        task = scinew Task("Matrix solve SFCZ", that,
+                           &HypreDriver::solve<SFCZTypes>, handle);
+        break;
+      } // end case SFCZVariable 
+
     case TypeDescription::NCVariable:
       {
-        throw InternalError("No supported solver for this variable type"
-                            "in scheduleSolve", __FILE__, __LINE__);
-      }
-      
+        task = scinew Task("Matrix solve NC", that,
+                           &HypreDriver::solve<NCTypes>, handle);
+        break;
+      } // end case NCVariable 
+
     case TypeDescription::CCVariable:
       {
-        HypreDriver<CCTypes>* that = newHypreDriver<CCTypes>
-          (interface,level.get_rep(), matls, A, which_A_dw,
-           x, modifies_x, b, which_b_dw, guess, 
-           which_guess_dw, dparams);
-        Handle<HypreDriver<CCTypes> > handle = that;
-        task = scinew Task("Matrix solve", that,
-                           &HypreDriver<CCTypes>::solve, handle);
+        task = scinew Task("Matrix solve CC", that,
+                           &HypreDriver::solve<CCTypes>, handle);
         break;
-      } // case CCVariable
+      } // end case CCVariable
 
     default:
-      throw InternalError("Unknown variable type in scheduleSolve",
-                          __FILE__, __LINE__);
-    }
+      {
+        throw InternalError("Unknown variable type in scheduleSolve",
+                            __FILE__, __LINE__);
+      } // end default
+
+    } // end switch (domType)
 
     task->requires(which_A_dw, A, Ghost::None, 0);
     if (modifies_x) {

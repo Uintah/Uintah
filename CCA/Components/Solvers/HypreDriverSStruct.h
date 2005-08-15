@@ -65,24 +65,23 @@ namespace Uintah {
   // Forward declarations
   class HypreSolverParams;
 
-  //---------- Types ----------
-
-  enum CoarseFineViewpoint {
-    DoingCoarseToFine,
-    DoingFineToCoarse
-  };
-  
-  enum ConstructionStatus {
-    DoingGraph,
-    DoingMatrix
-  };
-  
-  template<class Types>
-    class HypreDriverSStruct : public HypreDriver<Types> {
+  class HypreDriverSStruct : public HypreDriver {
 
     //========================== PUBLIC SECTION ==========================
   public:
 
+    //---------- Types ----------
+    
+    enum CoarseFineViewpoint {
+      DoingCoarseToFine,
+      DoingFineToCoarse
+    };
+    
+    enum ConstructionStatus {
+      DoingGraph,
+      DoingMatrix
+    };
+    
     //---------- Construction & Destruction ----------
 
     HypreDriverSStruct(const Level* level,
@@ -93,8 +92,8 @@ namespace Uintah {
                        const VarLabel* guess,
                        Task::WhichDW which_guess_dw,
                        const HypreSolverParams* params) :
-      HypreDriver<Types>(level,matlset,A,which_A_dw,x,modifies_x,
-                         b,which_b_dw,guess,which_guess_dw,params) {}
+      HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
+                  b,which_b_dw,guess,which_guess_dw,params) {}
     
     virtual ~HypreDriverSStruct(void) {}
 
@@ -134,6 +133,12 @@ namespace Uintah {
                                                       // connection graph
 
   }; // end class HypreDriverSStruct
+
+  //========================== Utilities, printouts ==========================
+  std::ostream& operator << (std::ostream& os,
+                             const HypreDriverSStruct::CoarseFineViewpoint& v);
+  std::ostream& operator << (std::ostream& os,
+                             const HypreDriverSStruct::ConstructionStatus& s);
 
 } // end namespace Uintah
 
