@@ -70,6 +70,7 @@ namespace Uintah {
                        const HypreSolverParams* params,
                        const int acceptableInterface);
     virtual ~HypreGenericSolver(void) {}
+    const Results& getResults(void) const { return _results; }
 
     void         assertInterface(const int acceptableInterface);
     virtual void setup(const HypreDriver* hypreDriver);
