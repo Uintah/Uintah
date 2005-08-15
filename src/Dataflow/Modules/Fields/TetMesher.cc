@@ -30,6 +30,7 @@
 //    Author : Jason Shepherd
 //    Date   : Dec 8 2004
 
+#include <Core/Thread/Mutex.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
@@ -47,6 +48,9 @@ namespace SCIRun {
 using std::cerr;
 using std::endl;
 
+// Mutes for guarding the tetmesher: CAMAL is not threadsafe
+SCIRun::Mutex TetMesherMutex("TetMesherMutex");
+
 class TetMesher : public Module
 {
 public:
@@ -58,7 +62,8 @@ public:
 private:
   bool read_tri_file(int &npoints, double *&points, int &ntris, int *&tris);
   bool write_tet_file(const int &npoints, double* const points,
-                    const int &ntets, int* const tets);
+                    const int &ntets, int* const tets, 
+                    const int &noldpoints, double* const oldpoints);
 };
 
 
@@ -75,20 +80,28 @@ TetMesher::~TetMesher()
 
 void TetMesher::execute() 
 {
+
+  // FIX: Camal is NOT THreadsafe hence we need to make it thread safe by adding a mutex
+  // Lock the tetmesher so no other module can address the tetmesher at the same time
+  TetMesherMutex.lock();
+  
   bool ret_value = true;
   
     // read input file
-  int    *tris   = NULL; // array allocated in read_tri_file
+  int   *tris   = NULL; // array allocated in read_tri_file
+  int   *tets   = NULL;
   double *points = NULL; // array allocated in read_tri_file
+  double *tetpoints = NULL;
   int num_tris = 0, num_points = 0;
   ret_value = read_tri_file(num_points, points, num_tris, tris);
   if (!ret_value) 
   {
-    printf("Failed read input\n");
+    // printf("Failed read input\n");
+    error("Failed read input\n");
   }
 
     // mesh the volume
-  int *tets = NULL;
+
   int new_points = 0, num_tets = 0;
   if (ret_value) 
   {
@@ -97,7 +110,8 @@ void TetMesher::execute()
                                              num_tris, tris);
     if (!ret_value) 
     {
-      printf("Failed setting boundary mesh\n");
+      // printf("Failed setting boundary mesh\n");
+      error("Failed setting boundary mesh\n");
     }
 
       // generate the mesh
@@ -106,7 +120,8 @@ void TetMesher::execute()
       ret_value = tet_mesher.generate_mesh(new_points, num_tets);
       if (!ret_value) 
       {
-        printf("Failed generating mesh\n");
+        // printf("Failed generating mesh\n");
+        error("Failed generating mesh\n");
       }
     }
 
@@ -114,10 +129,11 @@ void TetMesher::execute()
     if (ret_value) 
     {
       tets   = new int [num_tets * 4];
-      points = new double [new_points * 3];
-      ret_value = tet_mesher.get_mesh(new_points, points, num_tets, tets);
+      tetpoints = new double [new_points * 3];
+      ret_value = tet_mesher.get_mesh(new_points, tetpoints, num_tets, tets);
       if (!ret_value) {
-        printf("Failed reading tet mesh\n");
+        // printf("Failed reading tet mesh\n");
+        error("Failed reading tet mesh\n");
       }
     }
   }
@@ -125,16 +141,23 @@ void TetMesher::execute()
     // write output file
   if (ret_value) 
   {    
-    ret_value = write_tet_file(new_points, points, num_tets, tets);
+    ret_value = write_tet_file(new_points, tetpoints, num_tets, tets, num_points, points);
     if (!ret_value) 
     {
-      printf("Failed writing tet mesh file\n");
+      // printf("Failed writing tet mesh file\n");
+      error("Failed writing tet mesh file\n");
     }
   }
 
     // delete remaining arrays
+  delete [] tetpoints;  
   delete [] points;
   delete [] tets;
+  delete [] tris;
+  
+  // Unlock the TetMesher, so the nextr module can use it
+  TetMesherMutex.unlock();
+  
 }
 
 bool TetMesher::read_tri_file(int &npoints, double *&points, int &ntris, int *&tris)
@@ -203,11 +226,26 @@ bool TetMesher::read_tri_file(int &npoints, double *&points, int &ntris, int *&t
 }
 
 bool TetMesher::write_tet_file(const int &npoints, double* const points, 
-                    const int &ntets, int* const tets)
+                    const int &ntets, int* const tets, const int &noldpoints, double* const oldpoints)
 {
   int i;
   TetVolMesh *tvm = new TetVolMesh();
-  for ( i=0; i<npoints; i++) 
+  // THis code should fix the following problems:
+  // (1) The number of nodes in a mesh should be reserved before inserting them
+  //       Can SOMEONE clean up the Field classes so it will become clear to people 
+  //       not familiar with the mehs classes
+  // (2) Somehow Camal uses a different numeric format inside hence nodes in fixed boundaries
+  //     end up somewhere else it is close to the original position but not exactly, which is
+  //     annoying if you want to merge different meshes together.
+  // The following lines of code fix the problem            
+  
+  tvm->node_reserve(npoints);
+  for ( i=0; i<noldpoints; i++)
+  {
+    tvm->add_point( Point( oldpoints[i*3], oldpoints[i*3+1], oldpoints[i*3+2] ));    
+  }
+  
+  for ( i=noldpoints; i<npoints; i++) 
   {
     tvm->add_point( Point( points[i*3], points[i*3+1], points[i*3+2] ));
   }
