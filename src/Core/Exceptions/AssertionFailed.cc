@@ -71,7 +71,6 @@ AssertionFailed::AssertionFailed(const AssertionFailed& copy)
 
 AssertionFailed::~AssertionFailed()
 {
-    free(message_);
 }
 
 const char* AssertionFailed::message() const
