@@ -43,19 +43,19 @@ namespace Uintah {
   class HypreSolverAMR :
     public SolverInterface, public UintahParallelComponent { 
 
-    /*========================== PUBLIC SECTION ==========================*/
+    //========================== PUBLIC SECTION ==========================
   public:
 
     HypreSolverAMR(const ProcessorGroup* myworld);
     virtual ~HypreSolverAMR();
 
-    /* Load solver parameters from input struct */
+    // Load solver parameters from input struct
     virtual SolverParameters* readParameters(ProblemSpecP& params,
                                              const std::string& name);
 
-    /* Main task that solves the pressure equation and returns
-       cell-centered pressure. In the future we can also implement here
-       solutions of other variable types, like node-centered. */
+    // Main task that solves the pressure equation and returns
+    // cell-centered pressure. In the future we can also implement
+    // here solutions of other variable types, like node-centered.
     virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,
                                const MaterialSet* matls,
                                const VarLabel* A,    
@@ -68,8 +68,8 @@ namespace Uintah {
                                Task::WhichDW guess_dw,
                                const SolverParameters* params);
     
-    /*========================== PRIVATE SECTION ==========================*/
-  private:
+    //========================== PRIVATE SECTION ==========================
+    private:
   };
 }
 

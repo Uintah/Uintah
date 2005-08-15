@@ -40,19 +40,19 @@ WARNING
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
+//#include <Core/Thread/Time.h>
+//#include <Core/Util/DebugStream.h>
+#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+//#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
 
 namespace Uintah {
   
   // Forward declarations
-  template <class Types> class HypreDriver;
   class HyprePrecond;
+  class HypreDriver;
 
   //---------- Types ----------
-  
-  enum SolverType {
-    SMG, PFMG, SparseMSG, CG, Hybrid, GMRES, AMG, FAC
-  };
   
   class HypreGenericSolver {
 

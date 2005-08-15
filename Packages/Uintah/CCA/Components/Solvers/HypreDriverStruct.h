@@ -65,9 +65,8 @@ namespace Uintah {
   // Forward declarations
   class HypreSolverParams;
 
-  template<class Types>
-    class HypreDriverStruct : public HypreDriver<Types> {
-
+  class HypreDriverStruct : public HypreDriver {
+    
     //========================== PUBLIC SECTION ==========================
   public:
 
