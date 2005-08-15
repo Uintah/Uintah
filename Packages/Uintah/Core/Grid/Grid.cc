@@ -484,9 +484,9 @@ void Grid::partition(list<int> primes, int a, int b, int c)
       small = min(a,b);
     }
     
-    double new_norm = sqrt( pow(large/medium,2) +
-                            pow(medium/small,2) +
-                            pow(large/small, 2) );
+    double new_norm = sqrt( pow(double(large/medium),2) +
+                            pow(double(medium/small),2) +
+                            pow(double(large/small), 2) );
 
     if( new_norm < nf_ || nf_ == 0 ) {
       nf_ = new_norm;
