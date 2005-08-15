@@ -13,64 +13,85 @@ SimulationInterface::~SimulationInterface()
 {
 }
 
-void SimulationInterface::scheduleRefine(const PatchSet*, 
-					 SchedulerP&)
+void
+SimulationInterface::scheduleRefine(const PatchSet*, 
+                                    SchedulerP&)
 {
   throw InternalError("scheduleRefine not implemented for this component\n", __FILE__, __LINE__);
 }
 
-void SimulationInterface::scheduleRefineInterface(const LevelP&, 
-						  SchedulerP&,
-						  int, int)
+void
+SimulationInterface::scheduleRefineInterface(const LevelP&, 
+                                             SchedulerP&,
+                                             int, int)
 {
-  throw InternalError("scheduleRefineInterface not implemented for this component\n", __FILE__, __LINE__);
+  throw InternalError("scheduleRefineInterface not implemented for this component\n",
+                      __FILE__, __LINE__);
 }
 
-void SimulationInterface::scheduleCoarsen(const LevelP&, 
-					  SchedulerP&)
+void
+SimulationInterface::scheduleCoarsen(const LevelP&, 
+                                     SchedulerP&)
 {
   throw InternalError("scheduleCoarsen not implemented for this component\n", __FILE__, __LINE__);
 }
 
-void SimulationInterface::scheduleTimeAdvance(const LevelP&,
-					      SchedulerP&,
-					      int, int)
+void
+SimulationInterface::scheduleTimeAdvance(const LevelP&,
+                                         SchedulerP&,
+                                         int, int)
 {
   throw InternalError("no simulation implemented?", __FILE__, __LINE__);
 }
 
-void SimulationInterface::scheduleErrorEstimate(const LevelP&,
+void
+SimulationInterface::scheduleErrorEstimate(const LevelP&,
 						SchedulerP&)
 {
-  throw InternalError("scheduleErrorEstimate not implemented for this component", __FILE__, __LINE__);
+  throw InternalError("scheduleErrorEstimate not implemented for this component",
+                      __FILE__, __LINE__);
 }
 
-void SimulationInterface::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
-                                                       SchedulerP& sched)
+void
+SimulationInterface::scheduleInitialErrorEstimate(const LevelP& /*coarseLevel*/,
+                                                  SchedulerP& /*sched*/)
 {
-  throw InternalError("scheduleInitialErrorEstimate not implemented for this component", __FILE__, __LINE__);
+  throw InternalError("scheduleInitialErrorEstimate not implemented for this component",
+                      __FILE__, __LINE__);
 }
 
-double SimulationInterface::recomputeTimestep(double)
+double
+SimulationInterface::recomputeTimestep(double)
 {
   throw InternalError("recomputeTimestep not implemented for this component", __FILE__, __LINE__);
 }
 
-bool SimulationInterface::restartableTimesteps()
+bool
+SimulationInterface::restartableTimesteps()
 {
   return false;
 }
 
-void SimulationInterface::addMaterial(const ProblemSpecP& params, GridP& grid,
-                                      SimulationStateP& state)
+void
+SimulationInterface::addMaterial(const ProblemSpecP& /*params*/, GridP& /*grid*/,
+                                 SimulationStateP& /*state*/)
 {
   throw InternalError("addMaterial not implemented for this component", __FILE__, __LINE__);
 }
 
-void SimulationInterface::scheduleInitializeAddedMaterial(const LevelP&
-                                                                coarseLevel,
-                                                          SchedulerP& sched)
+void
+SimulationInterface::scheduleLockstepTimeAdvance(const GridP& /*grid*/, SchedulerP& /*sched*/)
 {
-  throw InternalError("scheduleInitializeAddedMaterial not implemented for this component", __FILE__, __LINE__);
+  throw InternalError("scheduleLockstepTimeAdvance is not implemented for this component",
+                      __FILE__, __LINE__);
+}
+
+void
+SimulationInterface::scheduleInitializeAddedMaterial(const LevelP&
+                                                     coarseLevel,
+                                                     SchedulerP& /*sched*/)
+{
+  throw InternalError("scheduleInitializeAddedMaterial not implemented for this component",
+                      __FILE__, __LINE__);
 }
 
