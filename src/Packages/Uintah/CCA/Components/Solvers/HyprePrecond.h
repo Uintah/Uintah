@@ -49,12 +49,6 @@ namespace Uintah {
 
   //---------- Types ----------
   
-  enum PrecondType {
-    PrecondNA, // No preconditioner, use solver directly
-    PrecondSMG, PrecondPFMG, PrecondSparseMSG, PrecondJacobi,
-    PrecondDiagonal, PrecondAMG, PrecondFAC
-  };
-  
   class HyprePrecond {
 
     //========================== PUBLIC SECTION ==========================

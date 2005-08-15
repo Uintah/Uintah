@@ -68,20 +68,10 @@ namespace Uintah {
     and all Hypre interfaces
     _____________________________________________________________________*/
 
-  template<class Types>
-  HypreDriver<Types>::~HypreDriver<Types>(void)
+  HypreDriver::~HypreDriver(void)
   {
-    cerr << "Destroying Solver object" << "\n";
-    /* Destroy graph objects */
-    /* Destroy matrix, RHS, solution objects */
-    
-    if (_activeInterface & Struct) {
-      cerr << "Destroying Struct matrix, RHS, solution objects" << "\n";
-      HYPRE_StructMatrixDestroy(_A_Struct);
-      HYPRE_StructVectorDestroy(_b_Struct);
-      HYPRE_StructVectorDestroy(_x_Struct);
-    }
-    if (_activeInterface & SStruct) {
+#if 0
+    if (_activeInterface & HypreSStruct) {
       cerr << "Destroying SStruct matrix, RHS, solution objects" << "\n";
       HYPRE_SStructMatrixDestroy(_A_SStruct);
       HYPRE_SStructVectorDestroy(_b_SStruct);
@@ -89,282 +79,145 @@ namespace Uintah {
       cerr << "Destroying graph objects" << "\n";
       HYPRE_SStructGraphDestroy(_graph_SStruct);
     }
-    if (_activeInterface & ParCSR) {
+    if (_activeInterface & HypreParCSR) {
       cerr << "Destroying ParCSR matrix, RHS, solution objects" << "\n";
       HYPRE_ParCSRMatrixDestroy(_A_Par);
       HYPRE_ParVectorDestroy(_b_Par);
       HYPRE_ParVectorDestroy(_x_Par);
     }
+#endif
   }
 
-  template<class Types>
   void
-  HypreDriver<Types>::solve(const ProcessorGroup* pg,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw,
-                            Handle<HypreDriver<Types> >)
-    /*_____________________________________________________________________
-      Function HypreDriver::solve~
-      Main solve function.
-      _____________________________________________________________________*/
+  HypreDriver::makeLinearSystem_SFCX(const int matl)
   {
-    cout_doing << "HypreSolverAMR<Types>::solve()" << endl;
-    double tstart = Time::currentSeconds();
+    throw InternalError("solve() is not implemented for SFCX variables",
+                        __FILE__, __LINE__);
+  }
 
-    // Assign HypreDriver references that are convenient to have in
-    // makeLinearSystem(), getSolution().
-    _pg = pg;
-    _patches = patches;
-    _matls = matls;
-    _old_dw = old_dw;
-    _new_dw = new_dw;
-    _A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
-    _b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
-    _guess_dw = new_dw->getOtherDataWarehouse(which_guess_dw);
-    
-    // Check parameter correctness
-    cerr << "Checking arguments and parameters ... ";
-    SolverType solverType =
-      getSolverType(p->solverTitle);
-    const int numLevels = new_dw->getGrid()->numLevels();
-    if ((solverType == HypreGenericSolver::FAC) && (numLevels < 2)) {
-      cerr << "\n\nFAC solver needs a 3D problem and at least 2 levels."
-           << "\n";
-      clean();
-      exit(1);
-    }
+  void
+  HypreDriver::makeLinearSystem_SFCY(const int matl)
+  {
+    throw InternalError("solve() is not implemented for SFCY variables",
+                        __FILE__, __LINE__);
+  }
 
-    for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
+  void
+  HypreDriver::makeLinearSystem_SFCZ(const int matl)
+  {
+    throw InternalError("solve() is not implemented for SFCZ variables",
+                        __FILE__, __LINE__);
+  }
 
-      /* Construct Hypre linear system for the specific variable type
-         and Hypre interface */
-      makeLinearSystemStruct(matl);
-    
-      /* Construct Hypre solver object that uses the hypreInterface we
-         chose. Specific solver object is arbitrated in HypreGenericSolver
-         according to param->solverType. */
-      SolverType solverType =
-        solverFromTitle(params->solverTitle);
-      HypreGenericSolver* _hypreSolver = newSolver(solverType,*this);
+  void
+  HypreDriver::makeLinearSystem_NC(const int matl)
+  {
+    throw InternalError("solve() is not implemented for NC variables",
+                        __FILE__, __LINE__);
+  }
+  void
+  HypreDriver::makeLinearSystem_CC(const int matl)
+  {
+    throw InternalError("solve() is not implemented for CC variables",
+                        __FILE__, __LINE__);
+  }
 
-      // Solve the linear system
-      double solve_start = Time::currentSeconds();
-      _hypresolver->setup();  // Depends only on A
-      _hypresolver->solve();  // Depends on A and b
-      double solve_dt = Time::currentSeconds()-solve_start;
+  void
+  HypreDriver::getSolution_SFCX(const int matl)
+  {
+    throw InternalError("solve() is not implemented for SFCX variables",
+                        __FILE__, __LINE__);
+  }
 
-      /* Check if converged, print solve statistics */
-      const HypreGenericSolver::Results& results = _hypreSolver->getResults();
-      const double& finalResNorm = results->finalResNorm;
-      if ((finalResNorm > params->tolerance) ||
-          (finite(finalResNorm) == 0)) {
-        if (params->restart){
-          if(pg->myrank() == 0)
-            cerr << "HypreSolver not converged in " << results.numIterations 
-                 << "iterations, final residual= " << finalResNorm
-                 << ", requesting smaller timestep\n";
-          //new_dw->abortTimestep();
-          //new_dw->restartTimestep();
-        } else {
-          throw ConvergenceFailure("HypreSolver variable: "
-                                   +X_label->getName()+
-                                   ",solver: "+params->solverTitle+
-                                   ", preconditioner: "+params->precondTitle,
-                                   num_iterations, final_res_norm,
-                                   params->tolerance,__FILE__,__LINE__);
-        }
-      } // if (finalResNorm is ok)
+  void
+  HypreDriver::getSolution_SFCY(const int matl)
+  {
+    throw InternalError("solve() is not implemented for SFCY variables",
+                        __FILE__, __LINE__);
+  }
 
-      /* Get the solution x values back into Uintah */
-      getSolutionStruct(matl);
+  void
+  HypreDriver::getSolution_SFCZ(const int matl)
+  {
+    throw InternalError("solve() is not implemented for SFCZ variables",
+                        __FILE__, __LINE__);
+  }
 
-      /*-----------------------------------------------------------
-       * Print the solution and other info
-       *-----------------------------------------------------------*/
-      linePrint("-",50);
-      dbg0 << "Print the solution vector" << "\n";
-      linePrint("-",50);
-      solver->printSolution("output_x1");
-      dbg0 << "Iterations = " << solver->_results.numIterations << "\n";
-      dbg0 << "Final Relative Residual Norm = "
-           << solver->_results.finalResNorm << "\n";
-      dbg0 << "" << "\n";
-      
-      delete _hypreSolver;
-      clear(); // Destroy Hypre objects
+  void
+  HypreDriver::getSolution_NC(const int matl)
+  {
+    throw InternalError("solve() is not implemented for NC variables",
+                        __FILE__, __LINE__);
+  }
+  void
+  HypreDriver::getSolution_CC(const int matl)
+  {
+    throw InternalError("solve() is not implemented for CC variables",
+                        __FILE__, __LINE__);
+  }
 
-      double dt=Time::currentSeconds()-tstart;
-      if(pg->myrank() == 0){
-        cerr << "Solve of " << X_label->getName() 
-             << " on level " << level->getIndex()
-             << " completed in " << dt 
-             << " seconds (solve only: " << solve_dt 
-             << " seconds, " << num_iterations 
-             << " iterations, residual=" << final_res_norm << ")\n";
+  //_____________________________________________________________________
+  // Function TypeTemplate2Enum~
+  // Convert a template variable type to an enum variarable type.
+  // Add instantiations for every new variable type that is later added.
+  //_____________________________________________________________________
+  
+  TypeDescription::Type TypeTemplate2Enum(const SFCXTypes& t)
+  {
+    return TypeDescription::SFCXVariable;
+  }
+
+  TypeDescription::Type TypeTemplate2Enum(const SFCYTypes& t)
+  {
+    return TypeDescription::SFCYVariable;
+  }
+
+  TypeDescription::Type TypeTemplate2Enum(const SFCZTypes& t)
+  {
+    return TypeDescription::SFCZVariable;
+  }
+
+  TypeDescription::Type TypeTemplate2Enum(const NCTypes& t)
+  {
+    return TypeDescription::NCVariable;
+  }
+
+  TypeDescription::Type TypeTemplate2Enum(const CCTypes& t)
+  {
+    return TypeDescription::CCVariable;
+  }
+
+  HypreDriver*
+  newHypreDriver(const HypreInterface& interface,
+                 const Level* level,
+                 const MaterialSet* matlset,
+                 const VarLabel* A, Task::WhichDW which_A_dw,
+                 const VarLabel* x, bool modifies_x,
+                 const VarLabel* b, Task::WhichDW which_b_dw,
+                 const VarLabel* guess,
+                 Task::WhichDW which_guess_dw,
+                 const HypreSolverParams* params)
+  {
+    switch (interface) {
+    case HypreStruct: 
+      {
+        return new HypreDriverStruct
+          (level, matlset, A, which_A_dw,
+           x, modifies_x, b, which_b_dw, guess, 
+           which_guess_dw, params);
       }
-      tstart = Time::currentSeconds();
-    } // for m (matls loop)
-  } // end solve() for
-
-#if 0
-  template<class Types>
-  void HypreDriver<Types>::setupPrecond(const ProcessorGroup* pg,
-                                        HYPRE_PtrToSolverFcn& precond,
-                                        HYPRE_PtrToSolverFcn& pcsetup,
-                                        HYPRE_StructSolver& precond_solver)
-    /*_____________________________________________________________________
-      Function HypreDriver::setupPrecond
-      Set up and initialize the Hypre preconditioner, if we use one.
-      _____________________________________________________________________*/
-  {
-    switch (params->precondType) {
-    case HypreSolverParams::PrecondNA:
+    case HypreSStruct:
       {
-        /* No preconditioner, do nothing */
-        break;
-      } // case HypreSolverParams::PrecondNA
-
-    case HypreSolverParams::PrecondSMG:
-      /* use symmetric SMG as preconditioner */
-      {
-        HYPRE_StructSMGCreate(pg->getComm(), &precond_solver);
-        HYPRE_StructSMGSetMemoryUse(precond_solver, 0);
-        HYPRE_StructSMGSetMaxIter(precond_solver, 1);
-        HYPRE_StructSMGSetTol(precond_solver, 0.0);
-        HYPRE_StructSMGSetZeroGuess(precond_solver);
-        HYPRE_StructSMGSetNumPreRelax(precond_solver, params->nPre);
-        HYPRE_StructSMGSetNumPostRelax(precond_solver, params->nPost);
-        HYPRE_StructSMGSetLogging(precond_solver, 0);
-        precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSolve;
-        pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSetup;
-        break;
-      } // case HypreSolverParams::PrecondSMG
-
-    case HypreSolverParams::PrecondPFMG:
-      /* use symmetric PFMG as preconditioner */
-      {
-        HYPRE_StructPFMGCreate(pg->getComm(), &precond_solver);
-        HYPRE_StructPFMGSetMaxIter(precond_solver, 1);
-        HYPRE_StructPFMGSetTol(precond_solver, 0.0);
-        HYPRE_StructPFMGSetZeroGuess(precond_solver);
-        /* weighted Jacobi = 1; red-black GS = 2 */
-        HYPRE_StructPFMGSetRelaxType(precond_solver, 1);
-        HYPRE_StructPFMGSetNumPreRelax(precond_solver, params->nPre);
-        HYPRE_StructPFMGSetNumPostRelax(precond_solver, params->nPost);
-        HYPRE_StructPFMGSetSkipRelax(precond_solver, params->skip);
-        HYPRE_StructPFMGSetLogging(precond_solver, 0);
-        precond = (HYPRE_PtrToSolverFcn)HYPRE_StructPFMGSolve;
-        pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructPFMGSetup;
-        break;
-      } // case HypreSolverParams::PrecondPFMG
-
-    case HypreSolverParams::PrecondSparseMSG:
-      /* use symmetric SparseMSG as preconditioner */
-      {
-        HYPRE_StructSparseMSGCreate(pg->getComm(), &precond_solver);
-        HYPRE_StructSparseMSGSetMaxIter(precond_solver, 1);
-        HYPRE_StructSparseMSGSetJump(precond_solver, params->jump);
-        HYPRE_StructSparseMSGSetTol(precond_solver, 0.0);
-        HYPRE_StructSparseMSGSetZeroGuess(precond_solver);
-        /* weighted Jacobi = 1; red-black GS = 2 */
-        HYPRE_StructSparseMSGSetRelaxType(precond_solver, 1);
-        HYPRE_StructSparseMSGSetNumPreRelax(precond_solver, params->nPre);
-        HYPRE_StructSparseMSGSetNumPostRelax(precond_solver, params->nPost);
-        HYPRE_StructSparseMSGSetLogging(precond_solver, 0);
-        precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSparseMSGSolve;
-        pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSparseMSGSetup;
-        break;
-      } // case HypreSolverParams::PrecondSparseMSG
-
-    case HypreSolverParams::PrecondJacobi:
-      /* use two-step Jacobi as preconditioner */
-      {
-        HYPRE_StructJacobiCreate(pg->getComm(), &precond_solver);
-        HYPRE_StructJacobiSetMaxIter(precond_solver, 2);
-        HYPRE_StructJacobiSetTol(precond_solver, 0.0);
-        HYPRE_StructJacobiSetZeroGuess(precond_solver);
-        precond = (HYPRE_PtrToSolverFcn)HYPRE_StructJacobiSolve;
-        pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructJacobiSetup;
-        break;
-      } // case HypreSolverParams::PrecondJacobi
-
-    case HypreSolverParams::PrecondDiagonal:
-      /* use diagonal scaling as preconditioner */
-      {
-#ifdef HYPRE_USE_PTHREADS
-        for (i = 0; i < hypre_NumThreads; i++)
-          precond[i] = NULL;
-#else
-        precond = NULL;
-#endif
-        precond = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScale;
-        pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScaleSetup;
-        break;
-      } // case HypreSolverParams::PrecondDiagonal
-
+        return new HypreDriverSStruct
+          (level, matlset, A, which_A_dw,
+           x, modifies_x, b, which_b_dw, guess, 
+           which_guess_dw, params);
+      }
     default:
-      // This should have been caught in readParameters...
-      throw InternalError("Unknown preconditionertype: "
-                          +params->precondTitle,
+      throw InternalError("Unsupported Hypre Interface: "+interface,
                           __FILE__, __LINE__);
-    } // end switch (param->precondType)
-  } // end setupPrecond()
-
-  template<class Types>
-  void HypreDriver<Types>::destroyPrecond
-  (HYPRE_StructSolver& precond_solver)
-    /*_____________________________________________________________________
-      Function HypreDriver::destroyPrecond
-      Destroy (+free) the Hypre preconditioner.
-      _____________________________________________________________________*/
-  {
-    switch (params->precondType) {
-    case HypreSolverParams::PrecondNA:
-      {
-        /* No preconditioner, do nothing */
-        break;
-      } // case HypreSolverParams::PrecondNA
-    case HypreSolverParams::PrecondSMG:
-      {
-        HYPRE_StructSMGDestroy(precond_solver);
-        break;
-      } // case HypreSolverParams::PrecondSMG
-
-    case HypreSolverParams::PrecondPFMG:
-      {
-        HYPRE_StructPFMGDestroy(precond_solver);
-        break;
-      } // case HypreSolverParams::PrecondPFMG
-
-    case HypreSolverParams::PrecondSparseMSG:
-      {
-        HYPRE_StructSparseMSGDestroy(precond_solver);
-        break;
-      } // case HypreSolverParams::PrecondSparseMSG
-      
-    case HypreSolverParams::PrecondJacobi:
-      {
-        HYPRE_StructJacobiDestroy(precond_solver);
-        break;
-      } // case HypreSolverParams::PrecondJacobi
-
-    case HypreSolverParams::PrecondDiagonal:
-      /* Nothing to destroy for diagonal preconditioner */
-      {
-        break;
-      } // case HypreSolverParams::PrecondDiagonal
-
-    default:
-      // This should have been caught in readParameters...
-      throw InternalError("Unknown preconditionertype in destroyPrecond: "
-                          +params->precondType, __FILE__, __LINE__);
-    } // end switch (param->precondType)
-  } // end destroyPrecond()
-
-#endif
+    } // end switch (interface)
+  }
 
   HypreInterface& operator++(HypreInterface &s)
   {
@@ -377,26 +230,6 @@ namespace Uintah {
   }
   
   std::ostream&
-  operator << (std::ostream& os, const CoarseFineViewpoint& v)
-    // Write side s to the stream os.
-  {
-    if      (v == DoingCoarseToFine) os << "CoarseToFine";
-    else if (v == DoingFineToCoarse) os << "FineToCoarse";
-    else os << "N/A";
-    return os;
-  }
-
-
-  std::ostream&
-  operator << (std::ostream& os, const ConstructionStatus& s)
-  {
-    if      (s == DoingGraph ) os << "Graph ";
-    else if (s == DoingMatrix) os << "Matrix";
-    else os << "ST WRONG!!!";
-    return os;
-  }
-
-  std::ostream&
   operator << (std::ostream& os, const BoxSide& s)
     // Write side s to the stream os.
   {
@@ -404,39 +237,6 @@ namespace Uintah {
     else if (s == RightSide) os << "Right";
     else os << "N/A";
     return os;
-  }
-
-  template<class Types>
-  HypreDriver<Types>*
-  newHypreDriver(const HypreInterface& interface,
-                 const Level* level,
-                 const MaterialSet* matlset,
-                 const VarLabel* A, Task::WhichDW which_A_dw,
-                 const VarLabel* x, bool modifies_x,
-                 const VarLabel* b, Task::WhichDW which_b_dw,
-                 const VarLabel* guess,
-                 Task::WhichDW which_guess_dw,
-                 const HypreSolverParams* params)
-  {
-    switch (interface) {
-    case HypreInterface::Struct: 
-      {
-        return new HypreDriverStruct<Types>
-          (level, matls, A, which_A_dw,
-           x, modifies_x, b, which_b_dw, guess, 
-           which_guess_dw, dparams);
-      }
-    case HypreInterface::SStruct:
-      {
-        return new HypreDriverSStruct<Types>
-          (level, matls, A, which_A_dw,
-           x, modifies_x, b, which_b_dw, guess, 
-           which_guess_dw, dparams);
-      }
-    default:
-      throw InternalError("Unsupported Hypre Interface: "+interface,
-                          __FILE__, __LINE__);
-    } // end switch (interface)
   }
 
   double harmonicAvg(const Point& x,

@@ -121,4 +121,162 @@ namespace Uintah {
     return 0;
   } // end newHyprePrecond()
 
+
+#if 0
+  template<class Types>
+  void HypreDriver<Types>::setupPrecond(const ProcessorGroup* pg,
+                                        HYPRE_PtrToSolverFcn& precond,
+                                        HYPRE_PtrToSolverFcn& pcsetup,
+                                        HYPRE_StructSolver& precond_solver)
+    /*_____________________________________________________________________
+      Function HypreDriver::setupPrecond
+      Set up and initialize the Hypre preconditioner, if we use one.
+      _____________________________________________________________________*/
+  {
+    switch (params->precondType) {
+    case HypreSolverParams::PrecondNA:
+      {
+        /* No preconditioner, do nothing */
+        break;
+      } // case HypreSolverParams::PrecondNA
+
+    case HypreSolverParams::PrecondSMG:
+      /* use symmetric SMG as preconditioner */
+      {
+        HYPRE_StructSMGCreate(pg->getComm(), &precond_solver);
+        HYPRE_StructSMGSetMemoryUse(precond_solver, 0);
+        HYPRE_StructSMGSetMaxIter(precond_solver, 1);
+        HYPRE_StructSMGSetTol(precond_solver, 0.0);
+        HYPRE_StructSMGSetZeroGuess(precond_solver);
+        HYPRE_StructSMGSetNumPreRelax(precond_solver, params->nPre);
+        HYPRE_StructSMGSetNumPostRelax(precond_solver, params->nPost);
+        HYPRE_StructSMGSetLogging(precond_solver, 0);
+        precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSolve;
+        pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSetup;
+        break;
+      } // case HypreSolverParams::PrecondSMG
+
+    case HypreSolverParams::PrecondPFMG:
+      /* use symmetric PFMG as preconditioner */
+      {
+        HYPRE_StructPFMGCreate(pg->getComm(), &precond_solver);
+        HYPRE_StructPFMGSetMaxIter(precond_solver, 1);
+        HYPRE_StructPFMGSetTol(precond_solver, 0.0);
+        HYPRE_StructPFMGSetZeroGuess(precond_solver);
+        /* weighted Jacobi = 1; red-black GS = 2 */
+        HYPRE_StructPFMGSetRelaxType(precond_solver, 1);
+        HYPRE_StructPFMGSetNumPreRelax(precond_solver, params->nPre);
+        HYPRE_StructPFMGSetNumPostRelax(precond_solver, params->nPost);
+        HYPRE_StructPFMGSetSkipRelax(precond_solver, params->skip);
+        HYPRE_StructPFMGSetLogging(precond_solver, 0);
+        precond = (HYPRE_PtrToSolverFcn)HYPRE_StructPFMGSolve;
+        pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructPFMGSetup;
+        break;
+      } // case HypreSolverParams::PrecondPFMG
+
+    case HypreSolverParams::PrecondSparseMSG:
+      /* use symmetric SparseMSG as preconditioner */
+      {
+        HYPRE_StructSparseMSGCreate(pg->getComm(), &precond_solver);
+        HYPRE_StructSparseMSGSetMaxIter(precond_solver, 1);
+        HYPRE_StructSparseMSGSetJump(precond_solver, params->jump);
+        HYPRE_StructSparseMSGSetTol(precond_solver, 0.0);
+        HYPRE_StructSparseMSGSetZeroGuess(precond_solver);
+        /* weighted Jacobi = 1; red-black GS = 2 */
+        HYPRE_StructSparseMSGSetRelaxType(precond_solver, 1);
+        HYPRE_StructSparseMSGSetNumPreRelax(precond_solver, params->nPre);
+        HYPRE_StructSparseMSGSetNumPostRelax(precond_solver, params->nPost);
+        HYPRE_StructSparseMSGSetLogging(precond_solver, 0);
+        precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSparseMSGSolve;
+        pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSparseMSGSetup;
+        break;
+      } // case HypreSolverParams::PrecondSparseMSG
+
+    case HypreSolverParams::PrecondJacobi:
+      /* use two-step Jacobi as preconditioner */
+      {
+        HYPRE_StructJacobiCreate(pg->getComm(), &precond_solver);
+        HYPRE_StructJacobiSetMaxIter(precond_solver, 2);
+        HYPRE_StructJacobiSetTol(precond_solver, 0.0);
+        HYPRE_StructJacobiSetZeroGuess(precond_solver);
+        precond = (HYPRE_PtrToSolverFcn)HYPRE_StructJacobiSolve;
+        pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructJacobiSetup;
+        break;
+      } // case HypreSolverParams::PrecondJacobi
+
+    case HypreSolverParams::PrecondDiagonal:
+      /* use diagonal scaling as preconditioner */
+      {
+#ifdef HYPRE_USE_PTHREADS
+        for (i = 0; i < hypre_NumThreads; i++)
+          precond[i] = NULL;
+#else
+        precond = NULL;
+#endif
+        precond = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScale;
+        pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScaleSetup;
+        break;
+      } // case HypreSolverParams::PrecondDiagonal
+
+    default:
+      // This should have been caught in readParameters...
+      throw InternalError("Unknown preconditionertype: "
+                          +params->precondTitle,
+                          __FILE__, __LINE__);
+    } // end switch (param->precondType)
+  } // end setupPrecond()
+
+  template<class Types>
+  void HypreDriver<Types>::destroyPrecond
+  (HYPRE_StructSolver& precond_solver)
+    /*_____________________________________________________________________
+      Function HypreDriver::destroyPrecond
+      Destroy (+free) the Hypre preconditioner.
+      _____________________________________________________________________*/
+  {
+    switch (params->precondType) {
+    case HypreSolverParams::PrecondNA:
+      {
+        /* No preconditioner, do nothing */
+        break;
+      } // case HypreSolverParams::PrecondNA
+    case HypreSolverParams::PrecondSMG:
+      {
+        HYPRE_StructSMGDestroy(precond_solver);
+        break;
+      } // case HypreSolverParams::PrecondSMG
+
+    case HypreSolverParams::PrecondPFMG:
+      {
+        HYPRE_StructPFMGDestroy(precond_solver);
+        break;
+      } // case HypreSolverParams::PrecondPFMG
+
+    case HypreSolverParams::PrecondSparseMSG:
+      {
+        HYPRE_StructSparseMSGDestroy(precond_solver);
+        break;
+      } // case HypreSolverParams::PrecondSparseMSG
+      
+    case HypreSolverParams::PrecondJacobi:
+      {
+        HYPRE_StructJacobiDestroy(precond_solver);
+        break;
+      } // case HypreSolverParams::PrecondJacobi
+
+    case HypreSolverParams::PrecondDiagonal:
+      /* Nothing to destroy for diagonal preconditioner */
+      {
+        break;
+      } // case HypreSolverParams::PrecondDiagonal
+
+    default:
+      // This should have been caught in readParameters...
+      throw InternalError("Unknown preconditionertype in destroyPrecond: "
+                          +params->precondType, __FILE__, __LINE__);
+    } // end switch (param->precondType)
+  } // end destroyPrecond()
+
+#endif
+
 } // end namespace Uintah
