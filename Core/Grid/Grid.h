@@ -9,6 +9,7 @@
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <list>
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
@@ -93,6 +94,24 @@ WARNING
     
     Grid(const Grid&);
     Grid& operator=(const Grid&);
+
+    // For automatic patch layout.  run_partition() will initialize the values of
+    // af_, bf_, cf_, and nf_, then start the recursive call.  You should never
+    // explicitly call partition(), only run_partition().
+    IntVector run_partition(std::list<int> primes);
+    void partition(std::list<int> primes, int a, int b, int c);
+    
+    // The current (final) values of a,b,c, and norm for the partitian function.
+    // Used to hold data between recursive calls.
+    int af_;
+    int bf_;
+    int cf_;
+    double nf_;
+
+    // Arbitrary desired maxium value for the norm.  If the norm of the best possible
+    // patch layout exceeds this number, a warning message will be printed suggestion
+    // the user run on a different number of processors.
+    // static const double PATCH_TOLERANCE_ = 3;  
   };
 
 } // End namespace Uintah
