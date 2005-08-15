@@ -321,7 +321,10 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         std::string autoPatch = std::string("autoPatch");
         std::string autoPatchValue = std::string("true");
         if(box_ps->get(autoPatch, autoPatchValue)) {
-          cout << "Automatically performing patch layout.\n";
+          if(pg->myrank() == 0) {
+            cout << "Automatically performing patch layout.\n";
+          }
+          
           int numProcs = pg->size();
           
           Primes::FactorType factors;
@@ -329,12 +332,27 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           
           if(numFactors == 1) {
             patches = IntVector(factors[0],1,1);
+            af_ = factors[0];
+            bf_ = 1;
+            cf_ = 1;
+            nf_ = sqrt( 2.0*af_*af_ + 1 ); 
           }
           else if(numFactors == 2) {
-            if( factors[1] > factors[0] )
+            if( factors[1] > factors[0] ) {
               patches = IntVector(factors[1],factors[0],1);
-            else
+              af_ = factors[1];
+              bf_ = factors[0];
+              cf_ = 1;
+            }
+            else {
               patches = IntVector(factors[0],factors[1],1);
+              af_ = factors[0];
+              bf_ = factors[1];
+              cf_ = 1; 
+            }
+
+            nf_ = sqrt( double(af_)*af_/(bf_*bf_) +
+                        bf_*bf_ + af_*af_ );
           }
           else {
             // Brute force determine the ideal patch arrangement.  Try every possible
@@ -352,9 +370,27 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         else {
           box_ps->getWithDefault("patches", patches,IntVector(1,1,1));
         }
-         
-        cout << "Using patch layout: (" << patches.x() << ","
-             << patches.y() << "," << patches.z() << ")\n";
+
+        // If the value of the norm nf_ is too high, then user chose a 
+        // bad number of processors, warn them.
+      if( nf_ > 3 ) {
+        cout << "\n********************\n";
+        cout << "*\n";
+        cout << "* WARNING:\n";
+        cout << "* The number of processors you are running on\n";
+        cout << "* does not factor well into patches.  Consider\n";
+        cout << "* using a differnt number of processors.\n";
+        cout << "*\n";
+        cout << "********************\n\n";
+      }
+
+
+        
+        
+        if(pg->myrank() == 0) {
+          cout << "Using patch layout: (" << patches.x() << ","
+               << patches.y() << "," << patches.z() << ")\n";
+        }
 
         level->setPatchDistributionHint(patches);
         for(int i=0;i<patches.x();i++){
@@ -448,18 +484,6 @@ IntVector Grid::run_partition(list<int> primes)
 {
   nf_ = 0;
   partition(primes, 1, 1, 1);
-
-  if( nf_ > 3 ) {
-    cout << "\n********************\n";
-    cout << "*\n";
-    cout << "* WARNING:\n";
-    cout << "* The number of processors you are running on\n";
-    cout << "* does not factor well into patches.  Consider\n";
-    cout << "* using a differnt number of processors.\n";
-    cout << "*\n";
-    cout << "********************\n\n";
-  }
-
   return IntVector(af_, bf_, cf_);
 }
 
@@ -484,9 +508,9 @@ void Grid::partition(list<int> primes, int a, int b, int c)
       small = min(a,b);
     }
     
-    double new_norm = sqrt( pow(double(large/medium),2) +
-                            pow(double(medium/small),2) +
-                            pow(double(large/small), 2) );
+    double new_norm = sqrt( double(large)*large/(medium*medium) +
+                            double(medium)*medium/(small*small) +
+                            double(large)*large/(small*small) );
 
     if( new_norm < nf_ || nf_ == 0 ) {
       nf_ = new_norm;
