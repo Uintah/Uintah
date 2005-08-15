@@ -114,7 +114,7 @@ LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_L
 
 RTRT_PSELIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(SOUND_LIBRARY) $(LAPACKMP_LIBRARY)
 
-RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_Core_DataArchive -lPackages_Uintah_Core_Grid -lCore_Persistent -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lDataflow_XMLUtil $(SCI_THIRDPARTY_LIBRARY) $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc -lCore_Thread  $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(LAPACKMP_LIBRARY) $(M_LIBRARY)
+RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_Core_DataArchive -lPackages_Uintah_Core_Grid -lCore_Persistent -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lCore_XMLUtil $(SCI_THIRDPARTY_LIBRARY) $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc -lCore_Thread  $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(LAPACKMP_LIBRARY) $(M_LIBRARY)
 
 $(SRCDIR)/uintahparticle2.$(RSE): $(SRCDIR)/uintahparticle2.o
 	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.$(RSE),%.o,$(filter %.$(RSE),$@)) $(RTRT_ULIBS)
