@@ -428,17 +428,15 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     }
     
     d_modelInfo = scinew ModelInfo(d_sharedState->get_delt_label(),
-                               lb->modelMass_srcLabel,
-                               lb->modelMom_srcLabel,
-                               lb->modelEng_srcLabel,
-                               lb->modelVol_srcLabel,
-                               lb->rho_CCLabel,
-                               lb->vel_CCLabel,
-                               lb->temp_CCLabel,
-                               lb->press_CCLabel,
-                               lb->sp_vol_CCLabel,
-                               lb->specific_heatLabel,
-                               lb->gammaLabel);
+                                   lb->modelMass_srcLabel,
+                                   lb->modelMom_srcLabel,
+                                   lb->modelEng_srcLabel,
+                                   lb->modelVol_srcLabel,
+                                   lb->rho_CCLabel,
+                                   lb->vel_CCLabel,
+                                   lb->otemp_CCLabel,
+                                   lb->press_CCLabel,
+                                   lb->sp_vol_CCLabel);
   }
 
 }
@@ -564,8 +562,6 @@ void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
   t->computes(lb->speedSound_CCLabel, add_matl);
   t->computes(lb->thermalCondLabel,   add_matl);
   t->computes(lb->viscosityLabel,     add_matl);
-  t->computes(lb->gammaLabel,         add_matl);
-  t->computes(lb->specific_heatLabel, add_matl);
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 
@@ -601,8 +597,6 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
     cout << "Added Material Index = " << indx << endl;
     new_dw->allocateAndPut(viscosity,     lb->viscosityLabel,    indx,patch);
     new_dw->allocateAndPut(thermalCond,   lb->thermalCondLabel,  indx,patch);
-    new_dw->allocateAndPut(cv,            lb->specific_heatLabel,indx,patch);
-    new_dw->allocateAndPut(gamma,         lb->gammaLabel,        indx,patch);
     new_dw->allocateAndPut(rho_micro,     lb->rho_micro_CCLabel, indx,patch); 
     new_dw->allocateAndPut(sp_vol_CC,     lb->sp_vol_CCLabel,    indx,patch); 
     new_dw->allocateAndPut(rho_CC,        lb->rho_CCLabel,       indx,patch); 
@@ -664,8 +658,6 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->speedSound_CCLabel);
   t->computes(lb->thermalCondLabel);
   t->computes(lb->viscosityLabel);
-  t->computes(lb->gammaLabel);
-  t->computes(lb->specific_heatLabel);
   t->computes(lb->press_CCLabel,     d_press_matl, oims);
   t->computes(lb->initialGuessLabel, d_press_matl, oims); 
   
@@ -1014,10 +1006,8 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   t->requires(Task::OldDW,lb->press_CCLabel, press_matl, oims, gn);
   t->requires(Task::OldDW,lb->rho_CCLabel,               gn);
-  t->requires(Task::OldDW,lb->temp_CCLabel,              gn); 
+  t->requires(Task::OldDW,lb->int_eng_CCLabel,              gn); 
   t->requires(Task::OldDW,lb->sp_vol_CCLabel,            gn);
-  t->requires(Task::NewDW,lb->gammaLabel,                gn);
-  t->requires(Task::NewDW,lb->specific_heatLabel,        gn);
   
   t->computes(lb->f_theta_CCLabel); 
   t->computes(lb->speedSound_CCLabel);
@@ -1039,6 +1029,7 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   sched->addTask(t, patches, ice_matls);
 }
 
+#if 0
 /* _____________________________________________________________________
  Function~  ICE::scheduleComputeTempFC--
 _____________________________________________________________________*/
@@ -1068,6 +1059,8 @@ void ICE::scheduleComputeTempFC(SchedulerP& sched,
   t->computes(lb->TempZ_FCLabel);
   sched->addTask(t, patches, all_matls);
 }
+#endif
+
 /* _____________________________________________________________________
  Function~  ICE::scheduleComputeVel_FC--
 _____________________________________________________________________*/
@@ -1403,7 +1396,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 //  t->requires(Task::OldDW, lb->delTLabel);  FOR AMR
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->compressiblityLabel,                gn);
-  t->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, gac,1);
+  t->requires(Task::NewDW, lb->otemp_CCLabel,     ice_matls, gac,1);
   t->requires(Task::NewDW, lb->thermalCondLabel,  ice_matls, gac,1);
   t->requires(Task::NewDW, lb->rho_CCLabel,                  gac,1);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,               gac,1);
@@ -1453,10 +1446,9 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
   Task* t = scinew Task("ICE::computeLagrangianValues",
                       this,&ICE::computeLagrangianValues);
   Ghost::GhostType  gn  = Ghost::None;
-  t->requires(Task::NewDW,lb->specific_heatLabel,      gn); 
   t->requires(Task::NewDW,lb->rho_CCLabel,             gn);
   t->requires(Task::OldDW,lb->vel_CCLabel,             gn);
-  t->requires(Task::OldDW,lb->temp_CCLabel,            gn);
+  t->requires(Task::OldDW,lb->int_eng_CCLabel,         gn);
   t->requires(Task::NewDW,lb->mom_source_CCLabel,      gn);
   t->requires(Task::NewDW,lb->int_eng_source_CCLabel,  gn);
 
@@ -1610,9 +1602,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t->requires(Task::OldDW,MIlb->NC_CCweightLabel, press_matl, gac, 1);
   }
                                 // I C E
-  t->requires(Task::OldDW,  lb->temp_CCLabel,      ice_matls, gn);
-  t->requires(Task::NewDW,  lb->specific_heatLabel,ice_matls, gn);
-  t->requires(Task::NewDW,  lb->gammaLabel,        ice_matls, gn);
+  t->requires(Task::NewDW,  lb->otemp_CCLabel,     ice_matls, gn);
                                 // A L L  M A T L S
   t->requires(Task::NewDW,  lb->mass_L_CCLabel,           gn);      
   t->requires(Task::NewDW,  lb->mom_L_CCLabel,            gn);      
@@ -1636,7 +1626,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
   t->computes(lb->eng_L_ME_CCLabel); 
   
   if (mpm_matls->size() > 0){  
-    t->modifies(lb->temp_CCLabel, mpm_matls);
+    t->modifies(lb->otemp_CCLabel, mpm_matls);
     t->modifies(lb->vel_CCLabel,  mpm_matls);
   }
   sched->addTask(t, patches, all_matls);
@@ -1790,7 +1780,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
-  task->computes(lb->temp_CCLabel);
+  task->computes(lb->int_eng_CCLabel);
   task->computes(lb->vel_CCLabel);
   task->computes(lb->machLabel);    
   
@@ -1833,8 +1823,7 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
 //  t->requires(Task::OldDW, lb->delTLabel);     for AMR                  
     t->requires(Task::NewDW,lb->rho_CCLabel,        ice_matls, gn);
     t->requires(Task::NewDW,lb->vel_CCLabel,        ice_matls, gn);
-    t->requires(Task::NewDW,lb->temp_CCLabel,       ice_matls, gn);
-    t->requires(Task::NewDW,lb->specific_heatLabel, ice_matls, gn);
+    t->requires(Task::NewDW,lb->int_eng_CCLabel,       ice_matls, gn);
     t->requires(Task::NewDW,lb->uvel_FCMELabel,     ice_matls, gn);
     t->requires(Task::NewDW,lb->vvel_FCMELabel,     ice_matls, gn);
     t->requires(Task::NewDW,lb->wvel_FCMELabel,     ice_matls, gn);
@@ -5149,22 +5138,12 @@ void ICE::TestConservation(const ProcessorGroup*,
     //__________________________________
     // conservation of internal_energy
     if(d_conservationTest->energy){
-      CCVariable<double> int_eng;
-      constCCVariable<double> temp_CC;
-      constCCVariable<double> cv;
-      new_dw->allocateTemporary(int_eng,patch);
-
       for (int m = 0; m < numICEmatls; m++ ) {
-
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         int indx = ice_matl->getDWIndex();
-        new_dw->get(temp_CC, lb->temp_CCLabel,      indx, patch, gn,0);
-        new_dw->get(cv,      lb->specific_heatLabel,indx, patch, gn,0);
-        
-        for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-          IntVector c = *iter;
-          int_eng[c] = mass[m][c] * cv[c] * temp_CC[c];
-        }
+
+        constCCVariable<double> int_eng;
+        new_dw->get(int_eng, lb->int_eng_CCLabel,      indx, patch, gn,0);
         
         double mat_int_eng(0);
         
@@ -5588,4 +5567,3 @@ bool ICE::doICEOnLevel(int level)
        x0            xright              delX_left         delX_right
                          
 ______________________________________________________________________*/ 
-

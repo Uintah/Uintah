@@ -162,9 +162,8 @@ void JWLpp::scheduleComputeModelSources(SchedulerP& sched,
     // Reactants
     t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
     t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
-    t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
+    t->requires(Task::OldDW, Ilb->int_eng_CCLabel,      react_matl, gn);
     t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
-    t->requires(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
 
     t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
     t->computes(reactedFractionLabel, react_matl);
@@ -282,8 +281,8 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
     new_dw->getModifiable(energy_src_1,  mi->energy_source_CCLabel,   m1,patch);
     new_dw->getModifiable(sp_vol_src_1,  mi->sp_vol_source_CCLabel,   m1,patch);
 
-    constCCVariable<double> press_CC, cv_reactant;
-    constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho;
+    constCCVariable<double> press_CC;
+    constCCVariable<double> rctIntEng,rctRho,rctSpvol,prodRho;
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
     CCVariable<double> delF;
@@ -294,13 +293,12 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
    
     //__________________________________
     // Reactant data
-    old_dw->get(rctTemp,       Ilb->temp_CCLabel,  m0,patch,gn, 0);
-    old_dw->get(rctvel_CC,     Ilb->vel_CCLabel,   m0,patch,gn, 0);
-    new_dw->get(rctRho,        Ilb->rho_CCLabel,   m0,patch,gn, 0);
-    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,m0,patch,gn, 0);
-    new_dw->get(cv_reactant,   Ilb->specific_heatLabel,m0,patch,gn, 0);
-    new_dw->allocateAndPut(Fr,   reactedFractionLabel,m0,patch);
-    new_dw->allocateAndPut(delF, delFLabel,           m0,patch);
+    old_dw->get(rctIntEng,     Ilb->int_eng_CCLabel,   m0,patch,gn, 0);
+    old_dw->get(rctvel_CC,     Ilb->vel_CCLabel,       m0,patch,gn, 0);
+    new_dw->get(rctRho,        Ilb->rho_CCLabel,       m0,patch,gn, 0);
+    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,    m0,patch,gn, 0);
+    new_dw->allocateAndPut(Fr,   reactedFractionLabel, m0,patch);
+    new_dw->allocateAndPut(delF, delFLabel,            m0,patch);
     Fr.initialize(0.);
     delF.initialize(0.);
 
@@ -338,7 +336,7 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
         momentum_src_0[c] -= momX;
         momentum_src_1[c] += momX;
 
-        double energyX   = cv_reactant[c]*rctTemp[c]*burnedMass; 
+        double energyX   = rctIntEng[c]*burnedMass; 
         double releasedHeat = burnedMass * d_E0;
         energy_src_0[c] -= energyX;
         energy_src_1[c] += energyX + releasedHeat;

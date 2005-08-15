@@ -68,11 +68,9 @@ WARNING
 	      const VarLabel* sp_vol_source,
 	      const VarLabel* density, 
 	      const VarLabel* velocity,
-	      const VarLabel* temperature, 
+	      const VarLabel* otemperature, 
 	      const VarLabel* pressure,
-	      const VarLabel* specificVol,
-             const VarLabel* specific_heat,
-             const VarLabel* gamma)
+	      const VarLabel* specificVol)
       : delT_Label(delt), 
         mass_source_CCLabel(mass_source),
         momentum_source_CCLabel(momentum_source),
@@ -80,11 +78,9 @@ WARNING
         sp_vol_source_CCLabel(sp_vol_source),
         density_CCLabel(density), 
         velocity_CCLabel(velocity),
-        temperature_CCLabel(temperature), 
+        otemperature_CCLabel(otemperature), 
         pressure_CCLabel(pressure),
-        sp_vol_CCLabel(specificVol),
-        specific_heatLabel(specific_heat),
-        gammaLabel(gamma)
+        sp_vol_CCLabel(specificVol)
       {
       }
     const VarLabel* delT_Label;
@@ -95,7 +91,7 @@ WARNING
     const VarLabel* sp_vol_source_CCLabel;
     const VarLabel* density_CCLabel;
     const VarLabel* velocity_CCLabel;
-    const VarLabel* temperature_CCLabel;
+    const VarLabel* otemperature_CCLabel;
     const VarLabel* pressure_CCLabel;
     const VarLabel* sp_vol_CCLabel;
     const VarLabel* specific_heatLabel;

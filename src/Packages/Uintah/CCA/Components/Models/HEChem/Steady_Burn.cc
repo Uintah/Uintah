@@ -148,8 +148,8 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& l
   const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
   const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
   
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      ice_matls,  gac, 1);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      mpm_matls,  gac, 1);
+  t->requires(Task::OldDW, Ilb->otemp_CCLabel,      ice_matls,  gac, 1);
+  t->requires(Task::OldDW, Ilb->otemp_CCLabel,      mpm_matls,  gac, 1);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,              gac, 1);
   t->requires(Task::NewDW, Ilb->rho_CCLabel,                   gn);
 
@@ -241,9 +241,9 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     CCVariable<int> PartFlag;
         
     constNCVariable<double>   NC_CCweight, NCsolidMass;
-    constSFCXVariable<double> gasTempX_FC, solidTempX_FC;
-    constSFCYVariable<double> gasTempY_FC, solidTempY_FC;
-    constSFCZVariable<double> gasTempZ_FC, solidTempZ_FC;
+    //constSFCXVariable<double> gasTempX_FC, solidTempX_FC;
+    //constSFCYVariable<double> gasTempY_FC, solidTempY_FC;
+    //constSFCZVariable<double> gasTempZ_FC, solidTempZ_FC;
     constCCVariable<Vector>   vel_CC;
     
     Ghost::GhostType  gn  = Ghost::None;    
@@ -253,9 +253,9 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->get(solidTemp,       MIlb->temp_CCLabel,    m0, patch, gn, 0);
     new_dw->get(solidMass,       MIlb->cMassLabel,      m0, patch, gn, 0);
     new_dw->get(solidSp_vol,     Ilb->sp_vol_CCLabel,   m0, patch, gn, 0);
-    new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel,    m0, patch, gac,2);
-    new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel,    m0, patch, gac,2);
-    new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel,    m0, patch, gac,2);
+    //new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel,    m0, patch, gac,2);
+    //new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel,    m0, patch, gac,2);
+    //new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel,    m0, patch, gac,2);
     new_dw->get(vel_CC,          MIlb->vel_CCLabel,     m0, patch, gn, 0);
     new_dw->get(NCsolidMass,     Mlb->gMassLabel,       m0, patch, gac,1);
     new_dw->get(solidVol_frac,   Ilb->vol_frac_CCLabel, m0, patch, gn, 0);
@@ -265,10 +265,10 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     
 
     /* Product Data */
-    new_dw->get(gasTempX_FC,      Ilb->TempX_FCLabel,m1,patch,gac,2);
-    new_dw->get(gasTempY_FC,      Ilb->TempY_FCLabel,m1,patch,gac,2);
-    new_dw->get(gasTempZ_FC,      Ilb->TempZ_FCLabel,m1,patch,gac,2);
-    old_dw->get(gasTemp,          Ilb->temp_CCLabel, m1,patch,gn, 0);
+    //new_dw->get(gasTempX_FC,      Ilb->TempX_FCLabel,m1,patch,gac,2);
+    //new_dw->get(gasTempY_FC,      Ilb->TempY_FCLabel,m1,patch,gac,2);
+    //new_dw->get(gasTempZ_FC,      Ilb->TempZ_FCLabel,m1,patch,gac,2);
+    //old_dw->get(gasTemp,          Ilb->temp_CCLabel, m1,patch,gn, 0);
     new_dw->get(gasVol_frac,      Ilb->vol_frac_CCLabel,m1,patch,gn,0);
     
     /* Get a new variable from the dw */
@@ -290,7 +290,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     for (int m = 0; m < numAllMatls; m++) {
       Material* matl = d_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();
-      old_dw->get(temp_CC[m],       Ilb->temp_CCLabel,      indx, patch, gn, 0);
+      old_dw->get(temp_CC[m],       Ilb->otemp_CCLabel,      indx, patch, gn, 0);
       new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel,  indx, patch, gn, 0);
       new_dw->get(rho_CC[m],        Ilb->rho_CCLabel,       indx, patch, gn, 0);
     }
