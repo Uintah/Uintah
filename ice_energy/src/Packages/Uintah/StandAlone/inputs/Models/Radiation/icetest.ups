@@ -1,0 +1,401 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- @version: -->
+<Uintah_specification>
+
+   <Meta>
+       <title/>
+   </Meta>
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+	<maxTime> 1.0 </maxTime>
+       <max_iterations>            2000       </max_iterations>
+       <initTime>           0.0       </initTime>
+       <delt_min>           0.0       </delt_min>
+       <delt_max>           0.1     </delt_max>
+       <delt_init>          1.0e-2    </delt_init>
+	<max_delt_increase>  0.5      </max_delt_increase>
+       <timestep_multiplier> 1        </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>  
+      <Face side = "x+">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face circle = "y-" origin = "0.0 0.0 0.0" radius = "0.5">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                              <value> [0.0,0.351,0.0] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Dirichlet">
+                              <value> 637.4657  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Dirichlet">
+                              <value>  0.23861344 </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f" var = "Dirichlet">
+                              <value> 1.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                              <value> [0.,0.01,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Dirichlet">
+                              <value> 298.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Dirichlet">
+                              <value> 1.1798322  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f" var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0" label = "Pressure" var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>  
+     
+      <Face side = "z+">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity" var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+  <!--      Don't forget to change z- z+ boundary condition
+       <Level>
+           <Box label = "2">
+              <lower>        [-3,0.0,-0.03]     </lower>
+              <upper>        [ 3,6.0, 0.03]    </upper>         
+              <extraCells>   [1,1,1]         </extraCells>
+              <patches>      [1,1,1]         </patches>    
+              <resolution>   [100,100,1]     </resolution>
+           </Box>
+       </Level>
+  -->
+
+        <Level>
+        <Box label = "3d">
+          <lower>         [-2.0, 0, -2.0]   </lower>
+          <upper>         [ 2.0, 4,  2.0]   </upper>
+          <extraCells>    [1,1,1]         </extraCells>
+          <patches>       [1,1,1]       </patches>
+          <resolution>    [21,21,21] </resolution>
+        </Box>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>icetest.uda</filebase>
+     <outputInterval>0.01</outputInterval>
+      <save label = "press_CC"/>  
+      <save label = "rho_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "scalar-f"/>
+      <save label = "modelEng_src"/>
+      <save label = "cumulativeEnergyReleased"/>
+      <save label = "qfluxE"/>
+      <save label = "qfluxW"/>
+      <save label = "qfluxN"/>
+      <save label = "qfluxS"/>
+      <save label = "qfluxT"/>
+      <save label = "qfluxB"/>
+      <save label = "radiationSrc"/>
+      <compression>gzip</compression>
+      <checkpoint cycle = "4" interval = "0.05"/>
+	<outputInitTimestep/>
+   </DataArchiver>
+
+   <Debug>
+	<dbg_GnuPlot>false</dbg_GnuPlot>
+	<dbg_var1>  0     </dbg_var1>
+	<dbg_var2>  0     </dbg_var2>
+	<dbg_SigFigs>5    </dbg_SigFigs>
+	<dbg_Level>  0    </dbg_Level>
+    </Debug>
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+      <cfl>0.4</cfl>
+      <ICE>
+        <max_iteration_equilibration> 50 </max_iteration_equilibration>
+        <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
+        <solution technique = "EqForm"/>
+        
+        <!--______________turbulence models____________-->
+<!--
+       <turbulence model = "Germano">                 
+          <model_constant>      1.00 </model_constant>
+          <filter_width>        1.0 </filter_width>
+          <test_filter_width>   2.0 </test_filter_width>
+          <turb_Pr>             0.4 </turb_Pr>                          
+          <FilterScalar>
+             <name>scalar-f</name>
+             <material>BackgroundGas</material>
+          </FilterScalar>
+        </turbulence>
+       
+
+        <turbulence model = "Smagorinsky">         
+          <model_constant>      0.1 </model_constant>            
+          <filter_width>        1.0 </filter_width>
+          <FilterScalar>
+             <name>scalar-f</name>
+             <material>BackgroundGas</material>
+          </FilterScalar>
+        </turbulence> 
+-->        
+        <TimeStepControl>
+          <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.00            </knob_for_speedSound>
+        </TimeStepControl>
+        
+         
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-6   </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 15 </iters_before_timestep_restart>
+           <Parameters variable = "implicitPressure">
+	     <!-- Common options -->
+              <tolerance>1.e-8    </tolerance>
+
+	     <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+	     <!-- Hypre options -->
+	     <solver>         hybrid  </solver>
+	     <preconditioner> pfmg    </preconditioner>
+	      <tolerance>      1.e-8  </tolerance>
+	     <maxiterations>  7500    </maxiterations>
+	     <npre>           1       </npre>
+	     <npost>          1       </npost>
+	     <skip>           0       </skip>
+	     <jump>           0       </jump>
+           
+	<logging>0</logging></Parameters>
+        </ImplicitSolver>
+      </ICE>       
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,-9.81,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--  Note:  The initial density, pressure and temperature for the      -->
+    <!--         for the entire flow field is set to the reference state    -->
+    <!--         of the table.  What you specify below will be wiped out    --> 
+    <!--         by the model.                                              -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material name = "BackgroundGas">
+           <burn type = "null"/>
+           <EOS type = "ideal_gas">                     </EOS>
+           <isSurroundingMatl>          true            </isSurroundingMatl>
+           <dynamic_viscosity>          0.00002         </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.5           </specific_heat>
+           <speed_of_sound>             376             </speed_of_sound>
+           <gamma>                      1.4             </gamma>
+           
+           <geom_object>
+              <box label = "world">
+                  <min>            [-5.0, -5.0, -5.0] </min>
+                  <max>            [ 5.0,  8.0,  5.0] </max>                 
+              </box>
+              <res>                [2,2,2]             </res>
+              <velocity>           [.0,.01,.0]         </velocity>
+              <density>            1.1798322           </density>
+              <pressure>           101325.0            </pressure>     
+              <temperature>        300.0               </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+      
+       <exchange_properties>
+         <exchange_coefficients>
+              <momentum>              []           </momentum>
+              <heat>                  []           </heat>
+        </exchange_coefficients>
+       </exchange_properties>
+    
+    </MaterialProperties>
+    <!--__________________________________-->
+    <Models>
+       <Model type = "AdiabaticTable">
+	<tableValue>CO2</tableValue>
+	<tableValue>H2O</tableValue>	  
+	<tableValue>Temp</tableValue>	  
+	<tableValue>density</tableValue>	  
+        <table name = "adiabatic" type = "Arches">
+          <defaultValue name = "Hl">0.0</defaultValue>
+          <defaultValue name = "Fvar">0.0</defaultValue>
+          <derivedValue name = "heat_capac_Cv">[heat_capac]-8314*[mix_mol_wt]</derivedValue>
+          <derivedValue name = "gamma">[heat_capac]/[heat_capac_Cv]</derivedValue>
+          <constantValue name = "viscosity">0.000020</constantValue>
+          <constantValue name = "thermal_conductivity">0.1</constantValue>
+          <derivedValue name = "reference_Temp">298*(1-{F})+627.46570*{F}</derivedValue>
+          <derivedValue name = "reference_heat_capac_Cp">1011.3630*(1-{F}) + 7973.8389*{F}</derivedValue>
+          <derivedValue name = "reference_mix_mol_wt">0.034661818*(1-{F}) + 0.081395872*{F}</derivedValue>
+          <derivedValue name = "reference_heat_capac_Cv">[reference_heat_capac_Cp]-8314*[reference_mix_mol_wt]</derivedValue>
+          <derivedValue name = "reference_gamma">[reference_heat_capac_Cp]/[reference_heat_capac_Cv]</derivedValue>
+	   <filename>JP8_reaction.tbl</filename>
+	</table>
+        <material>BackgroundGas</material>
+       <scalar name = "f">
+        <constants>
+	   <diffusivity>0</diffusivity>
+        </constants> 
+          <geom_object>
+             <box label = "world">
+                  <min>       [-5, -5, -5]   </min>
+                  <max>       [5,   8,  5]   </max>
+             </box>
+             <scalar>    0.00   </scalar>
+          </geom_object>
+	
+	<test_conservation>false</test_conservation></scalar>
+      
+	<varianceScale>0</varianceScale>
+	<varianceMax>1</varianceMax>
+      </Model>
+      <Model type = "Radiation">
+       <RadiationModel>
+	<radiationCalcFreq>5</radiationCalcFreq>
+        <DORadiationModel>
+         <ordinates>2</ordinates>
+         <opl>0.24</opl>
+	 <property_model>radcoef</property_model>
+	 <spherical_harmonics>false</spherical_harmonics>
+	 <linear_solver>hypre</linear_solver>
+	 <LinearSolver>
+	  <max_iter>1000</max_iter>
+	  <tolerance>1.0e-8</tolerance>
+	 </LinearSolver>
+        </DORadiationModel>
+       </RadiationModel>
+      </Model>
+	
+    </Models>
+
+    <PhysicalBC>
+       <MPM>
+      </MPM>
+    </PhysicalBC>
+       
+</Uintah_specification>
+

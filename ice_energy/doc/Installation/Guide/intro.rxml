@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!--% matlab_info = %Q{
+<listitem>
+  <para>
+    SCIRun's MatlabInterface package requires Matlab version 6 or version 7.
+  </para>
+</listitem>}
+%-->
+
+<!--% gcc_itk_info = %Q{
+<listitem>
+  <para>
+    Note that SCIRun is compatible with GCC 3.4. However,  when building
+    ITK, for use with
+    SCIRun's ITK package, ITK version 2.0 must be used because
+    earlier ITK versions are not compatible with GCC 3.4.
+  </para>
+</listitem>}
+%-->
+
+<section id="sec.intro">
+  <title>Introduction</title>
+
+  <para>This guide provides instructions for installing SCIRun, its
+  sample data sets, and SCIRun documentation on the &pf; platform.  SCIRun
+  may be installed from <phrase os="linux">an RPM or</phrase> <phrase
+  os="osx">a tarball or</phrase> built from source code.</para>
+
+  <para>&pf; platform guidelines are listed in <xref
+  linkend="tbl.pltfm_req"/>.</para>
+  
+  <para os="linux">Linux has been tested on the specified systems and RPMs are
+  provided for these systems.  SCIRun should work on other Linux systems
+  as well.</para>
+
+  <para>
+    Disk space requirements <phrase os="linux;osx">for a source code
+    installation</phrase> are listed in <xref
+    linkend="tbl.disk_space"/>.
+  </para>
+
+  <table id="tbl.pltfm_req">
+    <title>Platform Guidelines for &pf;</title>
+    <tgroup cols="2">
+      <thead>
+	<row>
+	  <entry>Hardware</entry>
+	  <entry>Software</entry>
+	</row>
+      </thead>
+      <tbody>
+	<row valign="top" os="linux">
+	  <entry>
+	    <itemizedlist>
+	      <listitem>
+		<para>OpenGL compatible video card and driver.</para>
+		<para>Nvidia FX class or better and ATI Radeon 9500 or
+		better video cards are required to enable SCIRun's
+		advance volume rendering code.  See the <ulink
+		url="(%= doc.treeUrl(%Q{doc/User/FAQ/faq.html})
+		%)">User FAQ</ulink> for more information on video
+		cards and drivers.</para>
+	      </listitem>
+	      <listitem>
+		<para>512 Mb (or more) RAM</para>
+	      </listitem>
+	    </itemizedlist>
+	  </entry>
+	  <entry>
+	    <itemizedlist>
+	      <listitem>
+		<para>Redhat 9 or Mandrake 9.2</para>
+	      </listitem>
+	      <listitem>
+		<para>GCC 3.x.  SCIRun has been updated to work with
+		the recently released GCC 3.4 compiler, however, our
+		development team does not currently use this compiler
+		extensively, so there is a small possibility that
+		problems will occur when using GCC 3.4.</para>
+	      </listitem>
+	      <!--%= matlab_info %-->
+	    </itemizedlist>
+	  </entry>
+	</row>
+	<row valign="top" os="irix">
+	  <entry>
+	    <itemizedlist>
+	      <listitem>
+		<para>MIPS R10000 (or more recent) CPU</para>
+	      </listitem>
+	      <listitem>
+		<para>512 Mb (or more) RAM</para>
+	      </listitem>
+	    </itemizedlist>
+	  </entry>
+	  <entry>
+	    <itemizedlist>
+	      <listitem>
+		<para>Irix 6.5</para>
+	      </listitem>
+	      <listitem>
+		<para>MIPSpro compiler 7.3.1.1m (or later)</para>
+	      </listitem>
+	      <!--%= matlab_info %-->
+	    </itemizedlist>
+	  </entry>
+	</row>
+	<row valign="top" os="osx">
+	  <entry>
+	    <itemizedlist>
+	      <listitem>
+		<para>G4 or G5 processor</para>
+	      </listitem>
+	      <listitem>
+		<para>512 Mb (or more) RAM</para>
+	      </listitem>
+	    </itemizedlist>
+	  </entry>
+	  <entry>
+	    <itemizedlist>
+	      <listitem>
+		<para>OS X 10.3 (Panther)</para>
+	      </listitem>
+	      <listitem>
+		<para>Apple's X11 server software, Xcode 1.5 developer
+		tools, and X11 software development kit.</para>
+		<para>The compiler distributed with Xcode 1.5 may need
+		updating with Apple's
+		<filename>November2004GCCUpdater</filename> package.
+		If the command <command>gcc -v</command> yields build
+		number 1666 then the updater package must be applied.
+		If the build number is 1671 then the updater package
+		does not need to be applied.
+		<filename>November2004GCCUpdater</filename> is
+		available from <ulink
+		url="http://developer.apple.com/">Apple's Developer
+		Connection page</ulink>.</para>
+	      </listitem>
+	      <!--%= matlab_info %-->
+	      <listitem>
+		<para>SCIRun's TEEM package supports PNG images if PNG libraries
+		are installed.  PNG libraries can be installed via the <ulink
+		url="http://fink.sourceforge.net/">fink</ulink>
+		software distribution system.</para>
+	      </listitem>
+	    </itemizedlist>
+	  </entry>
+	</row>
+      </tbody>
+    </tgroup>
+  </table>
+
+  <table id="tbl.disk_space">
+    <title>Disk Space Requirements</title>
+    <tgroup cols="2">
+      <tbody>
+	<row>
+	  <entry><para>Build with debugging support</para></entry>
+	  <entry><para>1.3 GB</para></entry>
+	</row>
+	<row>
+	  <entry><para>Optimized build</para></entry>
+	  <entry><para>650 MB</para></entry>
+	</row>
+	<row>
+	  <entry><para>SCIRun sample data (optional)</para></entry>
+	  <entry><para>1 GB</para></entry>
+	</row>
+      </tbody>
+    </tgroup>
+  </table>
+
+  <para os="osx">
+    Additional notes:
+    <itemizedlist>
+      <listitem>
+	<para>
+	  Apple's X11 server software, Xcode developer tools, and X11
+	  SDK are distributed with Mac OS X but are not part of the
+	  Mac OS X default installation.  They are installed by
+	  double-clicking, in turn, the files
+	  <filename>X11User.pkg</filename>,
+	  <filename>Developer.mpkg</filename>, and
+	  <filename>X11SDK.pkg</filename>.  These files may be present
+	  on the hard drive, the Mac OS X installation CDs, or DVD.
+	  <filename>Developer.mpkg</filename> and
+	  <filename>X11SDK.pkg</filename> are part of the Xcode
+	  distribution.
+	</para>
+      </listitem>
+      <!--%= gcc_itk_info %-->
+    </itemizedlist>
+  </para>
+
+  <para os="linux">
+    Additional notes:
+    <itemizedlist>
+      <!--%= gcc_itk_info %-->
+      <listitem>
+	<para>
+	  See the <ulink url="(%=
+	  doc.treeUrl(%Q{doc/User/FAQ/faq.html}) %)">User FAQ</ulink>
+	  for information on video cards and drivers that work with
+	  SCIRun's advanced volume rendering code.
+	</para>
+      </listitem>
+      <listitem>
+	<para>NVIDIA drivers, versions 1.0-5328, 1.0-5336, and
+	1.0-6106, will not work for hardware based texture volume
+	rendering in SCIRun.  Please do not update to these drivers if
+	you wish your volume rendering to work.</para>
+      </listitem>
+      <listitem>
+	<para>Driver versions 1.0-4496, 1.0-4363 will work, but
+	1.0-6111 or later is required for advanced volume
+	rendering.</para>
+      </listitem>
+      <listitem>
+	<para>Driver version 1.0-4191 does not work.  SCI has not
+	tested versions earlier than 1.0-4191&#x2014;they may or may
+	not work.</para>
+      </listitem>
+      <listitem>
+	<para>SCI has experienced a number of strange behaviors when
+	running SCIRun on Red Hat Enterprise Linux.  We do not recommend
+	running SCIRun on this system at this time.</para>
+      </listitem>
+      <listitem>
+	<para>While NVIDIA graphic cards and drivers seem to work best
+	under linux, we recently have had success with ATI
+	cards/drivers.
+        </para>
+	<itemizedlist>
+	  <listitem>
+	    <para>Note, we have seen problems with vertex arrays.  A
+	    workaround for this is available by setting the
+	    environment variable
+	    <envar>SCIRUN_DRAWARRAYS_DISABLE</envar> to true.  (This
+	    may be done in the .scirunrc file or in the shell's
+	    environment.)
+            </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Note - Pbuffers on the ATI card has shown some problems
+	      resulting in saved images not being optimal.
+            </para>
+	  </listitem>
+	</itemizedlist>
+      </listitem>
+    </itemizedlist>
+  </para>
+
+  <para os="linux">
+    Proceed to <xref linkend="sec.rpminst" /> to install SCIRun from
+    an <acronym>RPM</acronym>.
+  </para>
+
+  <para os="osx">
+    Proceed to <xref linkend="sec.dmg_inst"/> to install SCIRun from a
+    tarball.
+  </para>
+
+  <para>
+    Proceed to <xref linkend="sec.source_inst"/> to build SCIRun
+    from source code.
+  </para>
+
+</section>

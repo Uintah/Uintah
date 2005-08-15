@@ -1,0 +1,5 @@
+void addtranssrc(IntVector idxLoU, IntVector idxHiU,
+	Array3<double> uu, Array3<double> su,
+	Array3<double> ap, CCVariable<double> old_den,
+	double deltat, OffsetArray1<double> sewu,
+	OffsetArray1<double> sns, OffsetArray1<double> stb);

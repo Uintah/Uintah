@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section id="sec.starting">
+  <title>Starting SCIRun</title>
+
+  <para os="linux;osx">
+    If installed from its <phrase os="linux">RPM</phrase><phrase
+    os="osx">binary tarball</phrase>, SCIRun's installation can be tested
+    by changing the working directory (<command>cd</command>ing) to
+    <filename>/usr/local/SCIRun/bin/</filename> and typing:
+    <command>./scirun</command>.
+  </para>
+
+  <para>
+    If built from source code, SCIRun's installation can be
+    tested by changing the working directory (<command>cd</command>ing) to
+    SCIRun's build directory and typing <command>./scirun</command>.
+  </para>
+
+  <para>
+    After starting SCIRun, its network editor window and
+    shell prompt should appear.
+  </para>
+
+  <para>
+    If the window does not appear, note any displayed errors and see <xref
+    linkend="sec.help"/>.
+  </para>
+
+  <para>
+    See SCIRun's <ulink 
+    url="(%= doc.treeUrl(%Q{doc/User/Tutorials/SCIRun_Intro/index.html}) %)" >
+    tutorial</ulink> for an introduction to the use of SCIRun.
+    The tutorial uses the previously downloaded sample data sets.
+  </para>
+
+  <para>See the <ulink
+  url="(%= doc.treeUrl(%Q{doc/User/Guide/usersguide/index.html}) %)">SCIRun Users
+  Guide</ulink> for particulars on the use of SCIRun.</para>
+
+  <para>See tutorials for the <ulink url="(%= doc.treeUrl(%Q{doc/User/Tutorials/BioFEM/BioFEM.html}) %)">BioFEM</ulink>, <ulink url="(%= doc.treeUrl(%Q{doc/User/Tutorials/BioTensor/BioTensor.html}) %)">BioTensor</ulink>, <ulink url="(%= doc.treeUrl(%Q{doc/User/Tutorials/BioImage/index.html}) %)">BioImage</ulink>, and <ulink url="(%= doc.treeUrl(%Q{doc/User/Tutorials/FusionViewer/FusionViewer.html}) %)">FusionViewer</ulink> PowerApps.</para>
+</section>
+

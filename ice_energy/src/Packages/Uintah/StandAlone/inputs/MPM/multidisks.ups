@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>Colliding Disks</title>
+   </Meta>
+
+   <SimulationComponent>
+       <type>switcher</type>
+       <subcomponent>
+           <SimulationComponent>
+               <type> mpm </type>
+           </SimulationComponent>
+           <input_file> inputs/IMPM/disks_include1.ups</input_file>
+       </subcomponent>
+       <subcomponent>
+           <SimulationComponent>
+               <type> mpm </type>
+           </SimulationComponent>
+           <input_file> inputs/IMPM/disks_include1.ups</input_file>
+       </subcomponent>
+   </SimulationComponent>
+   
+
+</Uintah_specification>
+

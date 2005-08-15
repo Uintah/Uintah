@@ -1,0 +1,16 @@
++==========================================================================+
+| A Matlab simulation of Oren's discretization scheme for a scalar         |
+| diffusion problem div(a grad u) = f, on an AMR grid.                     |
+|                                                                          |
+| README File                                                              |
++==========================================================================+
+
+Update 12-JUL-2005
+* Works for general dimension (tested in 2D with a=1 so far).
+* Supports adaptive mesh refinement for an L-shaped problem.
+* Accuracy so far is in accordance with theory (second order in L2, and
+even better than the expected first order in H1, but H1 is not yet the proper
+energy norm).
+* Tested normally for a problem with a known continuous solution.
+==========================================================================
+

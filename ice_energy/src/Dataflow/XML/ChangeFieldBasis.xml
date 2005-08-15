@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<component name="ChangeFieldBasis" category="FieldsData">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+    </authors>
+    <summary>
+      <p>
+      ChangeFieldBasis can modify the location of data in the input field.
+      </p>
+    </summary>
+    <description>
+      <p>
+      Upon execution the UI will display the input field name and the
+      current location the data values for the that field are located.  
+      </p>
+      <p>
+      The output field's new data value location is selected from a list
+      of available basis types.  The output field will contain the same
+      geometry as the input field with the data value storage at the
+      newly specified location.  All output data values are reset to 0.
+      </p>
+      <p>
+      There is currently support for three basis functions within
+      SCIRun.  The first is None, meaning that there is no data
+      associated with the field and that no interpolation is
+      supported.  The Constant basis is when data is associated with
+      the elements of a field.  This data is not interpolated but is constant
+      within each element and non-continuous at element boundaries.
+      The third basis function is Linear.  Linear means that the data is
+      associated with the nodes of a field.  Any interpolation will be done
+      linearly within elements (but not across element boundaries).
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input</name>
+        <datatype>SCIRun::Field</datatype>
+	<description>
+          <p>
+            The field to be edited.
+          </p>
+        </description>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output</name>
+        <datatype>SCIRun::Field</datatype>
+        <description>
+          <p>
+            The edited field.
+          </p>
+        </description>
+      </port>
+      <port>
+        <name>Mapping</name>
+        <datatype>SCIRun::Matrix</datatype>
+        <description>
+          <p>
+            An interpolant matrix that maps the input locations on to
+            the output locations.
+          </p>
+        </description>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+    </description>
+  </gui>
+  <testing>
+  </testing>
+</component>
+
