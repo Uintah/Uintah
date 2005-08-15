@@ -152,10 +152,9 @@ void LightTime::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
   t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
+  t->requires(Task::OldDW, Ilb->int_eng_CCLabel,      react_matl, gn);
   t->requires(Task::OldDW, reactedFractionLabel,   react_matl, gn);
   t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
-  t->requires(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
 
   t->computes(reactedFractionLabel, react_matl);
   t->computes(delFLabel,            react_matl);
@@ -203,8 +202,8 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     new_dw->getModifiable(sp_vol_src_1,  mi->sp_vol_source_CCLabel,   m1,patch);
 
     constCCVariable<double> vol_frac_rct, vol_frac_prd;
-    constCCVariable<double> cv_reactant,Fr_old;
-    constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho;
+    constCCVariable<double> Fr_old;
+    constCCVariable<double> rctIntEng,rctRho,rctSpvol,prodRho;
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
     CCVariable<double> delF;
@@ -215,14 +214,13 @@ void LightTime::computeModelSources(const ProcessorGroup*,
    
     //__________________________________
     // Reactant data
-    old_dw->get(rctTemp,       Ilb->temp_CCLabel,      m0,patch,gn, 0);
+    old_dw->get(rctIntEng,     Ilb->int_eng_CCLabel,      m0,patch,gn, 0);
     old_dw->get(rctvel_CC,     Ilb->vel_CCLabel,       m0,patch,gn, 0);
     old_dw->get(Fr_old,        reactedFractionLabel,   m0,patch,gn, 0);
     new_dw->get(rctRho,        Ilb->rho_CCLabel,       m0,patch,gn, 0);
     new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,    m0,patch,gn, 0);
     new_dw->get(vol_frac_rct,  Ilb->vol_frac_CCLabel,  m0,patch,gn, 0);
     new_dw->get(vol_frac_prd,  Ilb->vol_frac_CCLabel,  m1,patch,gn, 0);
-    new_dw->get(cv_reactant,   Ilb->specific_heatLabel,m0,patch,gn, 0);
     new_dw->allocateAndPut(Fr, reactedFractionLabel,   m0,patch);
     new_dw->allocateAndPut(delF, delFLabel,            m0,patch);
     Fr.initialize(0.);
@@ -284,7 +282,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
           momentum_src_0[c] -= momX;
           momentum_src_1[c] += momX;
 
-          double energyX   = cv_reactant[c]*rctTemp[c]*burnedMass; 
+          double energyX   = rctIntEng[c]*burnedMass; 
           double releasedHeat = burnedMass * d_E0;
           energy_src_0[c] -= energyX;
           energy_src_1[c] += energyX + releasedHeat;

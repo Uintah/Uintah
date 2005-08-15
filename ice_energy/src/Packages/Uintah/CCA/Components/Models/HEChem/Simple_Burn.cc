@@ -183,7 +183,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   
   //__________________________________
   // Products
-  t->requires(Task::OldDW,  Ilb->temp_CCLabel,    prod_matl, gn);       
+  t->requires(Task::OldDW,  Ilb->otemp_CCLabel,    prod_matl, gn);       
   t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,prod_matl, gn);       
   t->requires(Task::NewDW,  Ilb->TempX_FCLabel,   prod_matl, gac,2);    
   t->requires(Task::NewDW,  Ilb->TempY_FCLabel,   prod_matl, gac,2);    
@@ -284,7 +284,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->get(gasTempX_FC,      Ilb->TempX_FCLabel,m1,patch,gac,2);
     new_dw->get(gasTempY_FC,      Ilb->TempY_FCLabel,m1,patch,gac,2);
     new_dw->get(gasTempZ_FC,      Ilb->TempZ_FCLabel,m1,patch,gac,2);
-    old_dw->get(gasTemp,          Ilb->temp_CCLabel, m1,patch,gn, 0);
+    old_dw->get(gasTemp,          Ilb->otemp_CCLabel, m1,patch,gn, 0);
     new_dw->get(gasVol_frac,      Ilb->vol_frac_CCLabel,  m1, patch,gn, 0);
     //__________________________________
     //   Misc.

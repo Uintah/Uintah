@@ -813,11 +813,9 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
               this, &MPMICE::computeEquilibrationPressure);
   }
                               // I C E
-  t->requires(Task::OldDW,Ilb->temp_CCLabel,         ice_matls, Ghost::None);
+  t->requires(Task::OldDW,Ilb->int_eng_CCLabel,      ice_matls, Ghost::None);
   t->requires(Task::OldDW,Ilb->rho_CCLabel,          ice_matls, Ghost::None);
   t->requires(Task::OldDW,Ilb->sp_vol_CCLabel,       ice_matls, Ghost::None);
-  t->requires(Task::NewDW,Ilb->specific_heatLabel,   ice_matls, Ghost::None);
-  t->requires(Task::NewDW,Ilb->gammaLabel,           ice_matls, Ghost::None);
 
                               // M P M
   t->requires(Task::NewDW,MIlb->temp_CCLabel,        mpm_matls, Ghost::None);
@@ -1738,7 +1736,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > cv(numALLMatls);
     StaticArray<constCCVariable<double> > gamma(numALLMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls); 
-    StaticArray<constCCVariable<double> > Temp(numALLMatls);
+    StaticArray<constCCVariable<double> > int_eng(numALLMatls);
     StaticArray<constCCVariable<double> > rho_CC_old(numALLMatls);
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
@@ -1765,7 +1763,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       if(ice_matl[m]){                    // I C E
-        old_dw->get(Temp[m],      Ilb->temp_CCLabel,      indx,patch,gn,0);
+        old_dw->get(int_eng[m],   Ilb->int_eng_CCLabel,   indx,patch,gn,0);
         old_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,       indx,patch,gn,0);
         old_dw->get(sp_vol_CC[m], Ilb->sp_vol_CCLabel,    indx,patch,gn,0);
         old_dw->get(vel_CC[m],    Ilb->vel_CCLabel,       indx,patch,gn,0);

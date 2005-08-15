@@ -510,7 +510,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
   task->requires(Task::NewDW, lb->sp_vol_CCLabel,
                0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
   
-  task->requires(Task::NewDW, lb->temp_CCLabel,
+  task->requires(Task::NewDW, lb->int_eng_CCLabel,
                0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
   
   task->requires(Task::NewDW, lb->vel_CCLabel,
@@ -535,7 +535,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
     task->computes(lb->press_CCLabel);
     task->computes(lb->rho_CCLabel);
     task->computes(lb->sp_vol_CCLabel);
-    task->computes(lb->temp_CCLabel);
+    task->computes(lb->int_eng_CCLabel);
     task->computes(lb->vel_CCLabel);
   }
 
@@ -586,7 +586,7 @@ void AMRICE::refine(const ProcessorGroup*,
       
       new_dw->allocateAndPut(rho_CC,   lb->rho_CCLabel,    indx, finePatch);
       new_dw->allocateAndPut(sp_vol_CC,lb->sp_vol_CCLabel, indx, finePatch);
-      new_dw->allocateAndPut(temp,     lb->temp_CCLabel,   indx, finePatch);
+      new_dw->allocateAndPut(int_eng,  lb->int_eng_CCLabel,   indx, finePatch);
       new_dw->allocateAndPut(vel_CC,   lb->vel_CCLabel,    indx, finePatch);  
       
       rho_CC.initialize(d_EVIL_NUM);
@@ -601,7 +601,7 @@ void AMRICE::refine(const ProcessorGroup*,
       CoarseToFineOperator<double>(sp_vol_CC, lb->sp_vol_CCLabel,indx, new_dw, 
                          invRefineRatio, finePatch, fineLevel, coarseLevel);
 
-      CoarseToFineOperator<double>(temp,      lb->temp_CCLabel, indx, new_dw, 
+      CoarseToFineOperator<double>(int_eng,   lb->int_eng_CCLabel, indx, new_dw, 
                          invRefineRatio, finePatch, fineLevel, coarseLevel);
        
       CoarseToFineOperator<Vector>( vel_CC,   lb->vel_CCLabel,  indx, new_dw, 
@@ -822,7 +822,7 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb->sp_vol_CCLabel,
                0, Task::FineLevel,  all_matls_sub,ND, gn, 0);
   
-  task->requires(Task::NewDW, lb->temp_CCLabel,
+  task->requires(Task::NewDW, lb->int_eng_CCLabel,
                0, Task::FineLevel,  all_matls_sub,ND, gn, 0);
   
   task->requires(Task::NewDW, lb->vel_CCLabel,
@@ -848,7 +848,7 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   task->modifies(lb->press_CCLabel, d_press_matl, oims);
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
-  task->modifies(lb->temp_CCLabel);
+  task->modifies(lb->int_eng_CCLabel);
   task->modifies(lb->vel_CCLabel);
 
   sched->addTask(task, coarseLevel->eachPatch(), all_matls); 
@@ -888,13 +888,13 @@ void AMRICE::coarsen(const ProcessorGroup*,
       int indx = matls->get(m);
 
       constCCVariable<double> cv;
-      CCVariable<double> rho_CC, temp, sp_vol_CC;
+      CCVariable<double> rho_CC, int_eng, sp_vol_CC;
       CCVariable<Vector> vel_CC;
       
       new_dw->get(cv,                 lb->specific_heatLabel, indx, coarsePatch, gn,0);
       new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,        indx, coarsePatch);
       new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel,     indx, coarsePatch);
-      new_dw->getModifiable(temp,     lb->temp_CCLabel,       indx, coarsePatch);
+      new_dw->getModifiable(int_eng,  lb->int_eng_CCLabel,    indx, coarsePatch);
       new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,        indx, coarsePatch);  
       
       // coarsen         
@@ -907,7 +907,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
                          coarsePatch, coarseLevel, fineLevel);
 
       fineToCoarseOperator<double>(temp,      rho_CC, cv, "energy",   
-                         lb->temp_CCLabel, indx, new_dw, 
+                         lb->int_eng_CCLabel, indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
        
       fineToCoarseOperator<Vector>( vel_CC,   rho_CC, cv, "momentum",   
@@ -1636,7 +1636,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb->rho_CCLabel,     gn, 0);
   task->requires(Task::NewDW, lb->vel_CCLabel,     gn, 0);
   task->requires(Task::NewDW, lb->sp_vol_CCLabel,  gn, 0);
-  task->requires(Task::NewDW, lb->temp_CCLabel,    gn, 0);                         
+  task->requires(Task::NewDW, lb->int_eng_CCLabel,    gn, 0);                         
   //__________________________________
   // Correction fluxes  from the coarse level            
                                       // MASS
@@ -1674,7 +1674,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
 
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
-  task->modifies(lb->temp_CCLabel);
+  task->modifies(lb->int_eng_CCLabel);
   task->modifies(lb->vel_CCLabel);
 
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMaterials()); 
@@ -1710,7 +1710,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       Ghost::GhostType  gn  = Ghost::None;
       new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx, coarsePatch);
       new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx, coarsePatch);
-      new_dw->getModifiable(temp,     lb->temp_CCLabel,   indx, coarsePatch);
+      new_dw->getModifiable(int_eng,  lb->int_eng_CCLabel,   indx, coarsePatch);
       new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx, coarsePatch);
       new_dw->get(cv,                 lb->specific_heatLabel,indx,coarsePatch, gn,0);
       
