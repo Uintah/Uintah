@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Math/Primes.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MiscMath.h>
@@ -15,7 +16,9 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
+
 Grid::Grid()
+  : af_(0), bf_(0), cf_(0)
 {
 }
 
@@ -312,7 +315,47 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         }
         
         IntVector patches;
-        box_ps->getWithDefault("patches", patches,IntVector(1,1,1));
+
+        // Check if autoPatch is enabled, if it is ignore the values in the
+        // patches tag and compute them based on the number or processors
+        std::string autoPatch = std::string("autoPatch");
+        std::string autoPatchValue = std::string("true");
+        if(box_ps->get(autoPatch, autoPatchValue)) {
+          cout << "Automatically performing patch layout.\n";
+          int numProcs = pg->size();
+          
+          Primes::FactorType factors;
+          int numFactors = Primes::factorize(numProcs, factors);
+          
+          if(numFactors == 1) {
+            patches = IntVector(factors[0],1,1);
+          }
+          else if(numFactors == 2) {
+            if( factors[1] > factors[0] )
+              patches = IntVector(factors[1],factors[0],1);
+            else
+              patches = IntVector(factors[0],factors[1],1);
+          }
+          else {
+            // Brute force determine the ideal patch arrangement.  Try every possible
+            // combination (a,b,c) where a,b, and c are products of the primes 
+            // s.t. a >= b >= c.  The best arrangement will minimize the function
+            // sqrt( (a/b)^2 + (b/c)^2 + (a/c)^2 ).
+            list<int> primeList;
+            for(int i=0; i<numFactors; ++i) {
+              primeList.push_back(factors[i]);
+            }
+              
+            patches = run_partition(primeList);
+          }
+        } 
+        else {
+          box_ps->getWithDefault("patches", patches,IntVector(1,1,1));
+        }
+         
+        cout << "Using patch layout: (" << patches.x() << ","
+             << patches.y() << "," << patches.z() << ")\n";
+
         level->setPatchDistributionHint(patches);
         for(int i=0;i<patches.x();i++){
           for(int j=0;j<patches.y();j++){
@@ -327,7 +370,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               endcell += IntVector(endcell.x() == highPointCell.x() ? extraCells.x():0,
                                    endcell.y() == highPointCell.y() ? extraCells.y():0,
                                    endcell.z() == highPointCell.z() ? extraCells.z():0);
-
+              
               Patch* p = level->addPatch(startcell, endcell,
                                          inStartCell, inEndCell);
               p->setLayoutHint(IntVector(i,j,k));
@@ -335,6 +378,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           }
         }
       }
+
       if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr) {
         throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
                                     __FILE__, __LINE__);
@@ -398,4 +442,67 @@ bool Grid::operator==(const Grid& othergrid)
   }
   return true;
 
+}
+
+IntVector Grid::run_partition(list<int> primes)
+{
+  nf_ = 0;
+  partition(primes, 1, 1, 1);
+
+  if( nf_ > 3 ) {
+    cout << "\n********************\n";
+    cout << "*\n";
+    cout << "* WARNING:\n";
+    cout << "* The number of processors you are running on\n";
+    cout << "* does not factor well into patches.  Consider\n";
+    cout << "* using a differnt number of processors.\n";
+    cout << "*\n";
+    cout << "********************\n\n";
+  }
+
+  return IntVector(af_, bf_, cf_);
+}
+
+void Grid::partition(list<int> primes, int a, int b, int c)
+{
+  // base case: no primes left, compute the norm and store values
+  // of a,b,c if they are the best so far.
+  if( primes.size() == 0 ) {
+    int large, medium, small;  // for sorting a,b,c in order
+    large = max(a,b);
+    large = max(large,c);
+    if(large == a) {
+      medium = max(b,c);
+      small = min(b,c);
+    }
+    else if(large == b) {
+      medium = max(a,c);
+      small = min(a,c);
+    }
+    else {
+      medium = max(a,b);
+      small = min(a,b);
+    }
+    
+    double new_norm = sqrt( pow(large/medium,2) +
+                            pow(medium/small,2) +
+                            pow(large/small, 2) );
+
+    if( new_norm < nf_ || nf_ == 0 ) {
+      nf_ = new_norm;
+      af_ = a;
+      bf_ = b;
+      cf_ = c;
+    }
+    
+    return;
+  }
+
+  int head = primes.front();
+  primes.pop_front();
+  partition(primes, a*head, b, c);
+  partition(primes, a, b*head, c);
+  partition(primes, a, b, c*head);
+
+  return;
 }
