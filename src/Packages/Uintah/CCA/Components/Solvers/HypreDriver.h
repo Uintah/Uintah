@@ -104,7 +104,7 @@ namespace Uintah {
                  const MaterialSubset* matls,
                  DataWarehouse* old_dw,
                  DataWarehouse* new_dw,
-                 Handle<HypreDriver >);
+                 Handle<HypreDriver>);
     template<class Types>
       void makeLinearSystem(const int matl);
     template<class Types>
@@ -218,14 +218,13 @@ namespace Uintah {
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw,
-                     Handle<HypreDriver >)
+                     Handle<HypreDriver>)
     //_____________________________________________________________________
     // Function HypreDriver::solve~
     // Main solve function.
     //_____________________________________________________________________
   {
     using namespace SCIRun;
-    cout_doing << "HypreSolverAMR::solve()" << endl;
     double tstart = Time::currentSeconds();
 
     // Assign HypreDriver references that are convenient to have in
@@ -241,14 +240,11 @@ namespace Uintah {
     
     // Check parameter correctness
     cerr << "Checking arguments and parameters ... ";
-    SolverType solverType =
-      getSolverType(p->solverTitle);
+    SolverType solverType = getSolverType(params->solverTitle);
     const int numLevels = new_dw->getGrid()->numLevels();
-    if ((solverType == HypreGenericSolver::FAC) && (numLevels < 2)) {
-      cerr << "\n\nFAC solver needs a 3D problem and at least 2 levels."
-           << "\n";
-      clean();
-      exit(1);
+    if ((solverType == FAC) && (numLevels < 2)) {
+      throw InternalError("FAC solver needs at least 2 levels",
+                          __FILE__, __LINE__);
     }
 
     for(int m = 0;m<matls->size();m++){
@@ -256,40 +252,40 @@ namespace Uintah {
 
       /* Construct Hypre linear system for the specific variable type
          and Hypre interface */
-      makeLinearSystem(matl);
+      makeLinearSystem<Types>(matl);
     
       /* Construct Hypre solver object that uses the hypreInterface we
          chose. Specific solver object is arbitrated in HypreGenericSolver
          according to param->solverType. */
-      SolverType solverType =
-        solverFromTitle(params->solverTitle);
-      HypreGenericSolver* _hypreSolver = newSolver(solverType,*this);
+      SolverType solverType = getSolverType(params->solverTitle);
+      HypreGenericSolver* hypreSolver = newHypreGenericSolver(solverType);
 
       // Solve the linear system
       double solve_start = Time::currentSeconds();
-      _hypresolver->setup();  // Depends only on A
-      _hypresolver->solve();  // Depends on A and b
+      hypreSolver->setup(this);  // Depends only on A
+      hypreSolver->solve(this);  // Depends on A and b
       double solve_dt = Time::currentSeconds()-solve_start;
 
       /* Check if converged, print solve statistics */
-      const HypreGenericSolver::Results& results = _hypreSolver->getResults();
-      const double& finalResNorm = results->finalResNorm;
+      const HypreGenericSolver::Results& results = hypreSolver->getResults();
+      double finalResNorm = results.finalResNorm;
+      int numIterations = results.numIterations;
       if ((finalResNorm > params->tolerance) ||
           (finite(finalResNorm) == 0)) {
         if (params->restart){
           if(pg->myrank() == 0)
-            cerr << "HypreSolver not converged in " << results.numIterations 
+            cerr << "HypreSolver not converged in " << numIterations 
                  << "iterations, final residual= " << finalResNorm
                  << ", requesting smaller timestep\n";
           //new_dw->abortTimestep();
           //new_dw->restartTimestep();
         } else {
-          throw ConvergenceFailure("HypreSolver variable: "
-                                   +X_label->getName()+
-                                   ",solver: "+params->solverTitle+
-                                   ", preconditioner: "+params->precondTitle,
-                                   num_iterations, final_res_norm,
-                                   params->tolerance,__FILE__,__LINE__);
+	  throw ConvergenceFailure("HypreSolver variable: "
+                                   +X_label->getName()+", solver: "
+                                   +params->solverTitle+", preconditioner: "
+                                   +params->precondTitle,
+				   numIterations, finalResNorm,
+				   params->tolerance,__FILE__,__LINE__);
         }
       } // if (finalResNorm is ok)
 
@@ -303,13 +299,12 @@ namespace Uintah {
       dbg0 << "Print the solution vector" << "\n";
       linePrint("-",50);
       solver->printSolution("output_x1");
-      dbg0 << "Iterations = " << solver->_results.numIterations << "\n";
+      dbg0 << "Iterations = " << numIterations << "\n";
       dbg0 << "Final Relative Residual Norm = "
-           << solver->_results.finalResNorm << "\n";
+           << finalResNorm << "\n";
       dbg0 << "" << "\n";
       
-      delete _hypreSolver;
-      clear(); // Destroy Hypre objects
+      delete hypreSolver;
 
       double dt=Time::currentSeconds()-tstart;
       if(pg->myrank() == 0){
@@ -317,8 +312,8 @@ namespace Uintah {
              << " on level " << level->getIndex()
              << " completed in " << dt 
              << " seconds (solve only: " << solve_dt 
-             << " seconds, " << num_iterations 
-             << " iterations, residual=" << final_res_norm << ")\n";
+             << " seconds, " << numIterations
+             << " iterations, residual=" << finalResNorm << ")\n";
       }
       tstart = Time::currentSeconds();
     } // for m (matls loop)
@@ -333,7 +328,6 @@ namespace Uintah {
     // template class.
     //_____________________________________________________________________
   {
-    cout_doing << "HypreSolverAMR::makeLinearSystem()" << endl;
     Types t;
     TypeDescription::Type domType = TypeTemplate2Enum(t);
     switch (domType) {
