@@ -95,22 +95,25 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
 
 
     scheduleComputeVel_FC(                   sched, patches,ice_matls_sub, 
-                                                           mpm_matls_sub, 
-                                                           d_press_matl,    
-                                                           all_matls,     
-                                                           false);        
+                                                            mpm_matls_sub, 
+                                                            d_press_matl,    
+                                                            all_matls,     
+                                                            false);        
 
     scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
                                                            all_matls,
                                                            false);
-
+  }
+//______________________________________________________________________
+// MULTI-LEVEL PRESSURE SOLVE AND
+#if 0
     if(d_impICE) {        //  I M P L I C I T
 
       scheduleSetupRHS(                     sched, patches,  one_matl, 
                                                              all_matls,
                                                              false);
 
-      scheduleImplicitPressureSolve(         sched, level,   patches,
+      scheduleMultiLevelPressureSolve(       sched, level,   patches,
                                                              one_matl,      
                                                              d_press_matl,    
                                                              ice_matls_sub,  
@@ -123,23 +126,18 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                              all_matls);
     }                    
 
-    if(!d_impICE){         //  E X P L I C I T
-      scheduleComputeDelPressAndUpdatePressCC(sched, patches,d_press_matl,     
-                                                             ice_matls_sub,  
-                                                             mpm_matls_sub,  
-                                                             all_matls);     
-    }
-  }
-//______________________________________________________________________
-// MULTI-LEVEL PRESSURE SOLVE AND COARSEN
+
+
+
 
 
   if(d_doAMR){
     for(int L = maxLevel-1; L> 0; L--){ // from finer to coarser levels
       LevelP coarseLevel = grid->getLevel(L-1);
-      scheduleCoarsenPressure(  sched,  coarseLevel,  d_press_matl);
+      scheduleCoarsen_imp_delP(  sched,  coarseLevel,  d_press_matl);
     }
   }
+#endif
 
 //______________________________________________________________________
 
@@ -150,6 +148,13 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     if(!doICEOnLevel(level->getIndex())){
       return;
     }    
+    if(!d_impICE){         //  E X P L I C I T
+      scheduleComputeDelPressAndUpdatePressCC(sched, patches,d_press_matl,     
+                                                             ice_matls_sub,  
+                                                             mpm_matls_sub,  
+                                                             all_matls);     
+    }
+    
     scheduleComputePressFC(                 sched, patches, d_press_matl,
                                                             all_matls);
 
@@ -215,39 +220,342 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
 
 
 
-/*______________________________________________________________________
- Function~  ICE::scheduleCoarsenPressure--
- Purpose:  After the implicit pressure solve is performed on all levels 
- you need to project/coarsen the fine level solution onto the coarser level
- _____________________________________________________________________*/
-void ICE::scheduleCoarsenPressure(SchedulerP& sched, 
-                                  const LevelP& coarseLevel,
-                                  const MaterialSubset* press_matl)
+
+/*___________________________________________________________________
+ Function~  ICE::scheduleMultiLevelPressureSolve--
+_____________________________________________________________________*/
+void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
+                                          const LevelP& level,
+                                          const PatchSet*,
+                                          const MaterialSubset* one_matl,
+                                          const MaterialSubset* press_matl,
+                                          const MaterialSubset* ice_matls,
+                                          const MaterialSubset* mpm_matls,
+                                          const MaterialSet* all_matls)
 {
-  //if (d_doAMR &&  d_impICE){ 
-  if (d_doAMR){                                                                           
-    cout_doing << "ICE::scheduleCoarsenPressure\t\t\t\tL-" 
-               << coarseLevel->getIndex() << endl;
+  cout_doing << "ICE::scheduleMultiLevelPressureSolve" << endl;
+  
+  Task* t = scinew Task("ICE::multiLevelPressureSolve", 
+                   this, &ICE::multiLevelPressureSolve,
+                   level, sched.get_rep(), ice_matls, mpm_matls);
+ 
+  t->hasSubScheduler();
+  Ghost::GhostType  gac = Ghost::AroundCells;  
+  Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  //__________________________________
+  // The computes and requires when you're looking up 
+  // from implicitPressure solve
+  // OldDW = ParentOldDW
+  // NewDW = ParentNewDW
+  //__________________________________
+  // common Variables
+//  t->requires( Task::OldDW, lb->delTLabel);    AMR
+  t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
+  t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
+  t->requires( Task::NewDW, lb->press_equil_CCLabel, press_matl, oims,gac,1);
+  t->requires( Task::NewDW, lb->rhsLabel,            one_matl,   oims,gn,0);
+  //t->requires( Task::OldDW, lb->initialGuessLabel, one_matl,   oims,gn,0);
+  //__________________________________
+  // SetupRHS
+  if(d_models.size() > 0){  
+    t->requires(Task::NewDW,lb->modelMass_srcLabel, gn,0);
+  } 
+  t->requires( Task::NewDW, lb->speedSound_CCLabel, gn,0);
+  t->requires( Task::NewDW, lb->max_RHSLabel);
+  
+  //__________________________________
+  // setup Matrix
+  t->requires( Task::NewDW, lb->sp_volX_FCLabel,    gac,1);            
+  t->requires( Task::NewDW, lb->sp_volY_FCLabel,    gac,1);            
+  t->requires( Task::NewDW, lb->sp_volZ_FCLabel,    gac,1);            
+  t->requires( Task::NewDW, lb->vol_fracX_FCLabel,  gac,1);            
+  t->requires( Task::NewDW, lb->vol_fracY_FCLabel,  gac,1);            
+  t->requires( Task::NewDW, lb->vol_fracZ_FCLabel,  gac,1);            
+  t->requires( Task::NewDW, lb->sumKappaLabel,  press_matl,oims,gn,0);         
+   
+  //__________________________________
+  // Update Pressure
+  t->requires( Task::NewDW, lb->rho_CCLabel,                       gac,1);            
+  t->requires( Task::NewDW, lb->press_CCLabel,   press_matl, oims, gac,1);  
+  
+  computesRequires_CustomBCs(t, "implicitPressureSolve", lb, ice_matls,
+                             d_customBC_var_basket);
 
-    Task* t = scinew Task("ICE::coarsenPressure",
-                    this, &ICE::coarsenPressure);
+  //__________________________________
+  // ImplicitVel_FC
+  t->requires(Task::OldDW,lb->vel_CCLabel,       ice_matls,  gac,1);    
+  t->requires(Task::NewDW,lb->vel_CCLabel,       mpm_matls,  gac,1);
 
-    Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-    Ghost::GhostType  gn = Ghost::None;
+  //__________________________________
+  //  what's produced from this task
+  t->modifies(lb->press_CCLabel, press_matl,oims);  
+  t->modifies(lb->term2Label,    one_matl,  oims);   
 
-    t->requires(Task::NewDW, lb->press_CCLabel,
-                0, Task::FineLevel,  press_matl,oims, gn, 0);
-                
-    t->modifies(lb->press_CCLabel, d_press_matl, oims);        
+  t->modifies(lb->uvel_FCMELabel);
+  t->modifies(lb->vvel_FCMELabel);
+  t->modifies(lb->wvel_FCMELabel);
+  
+  t->modifies(lb->vol_fracX_FCLabel);
+  t->modifies(lb->vol_fracY_FCLabel);
+  t->modifies(lb->vol_fracZ_FCLabel);  
+  
+  LoadBalancer* loadBal = sched->getLoadBalancer();
+  const PatchSet* perproc_patches =  
+                        loadBal->createPerProcessorPatchSet(level);
+  sched->addTask(t, perproc_patches, all_matls);
+}
+/*___________________________________________________________________ 
+ Function~  ICE::multiLevelPressureSolve-- 
+_____________________________________________________________________*/
+void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
+		                    const PatchSubset* patch_sub, 
+		                    const MaterialSubset*,       
+		                    DataWarehouse* ParentOldDW,    
+                                  DataWarehouse* ParentNewDW,    
+		                    LevelP level,                 
+                                  Scheduler* sched,
+                                  const MaterialSubset* ice_matls,
+                                  const MaterialSubset* mpm_matls)
+{
+  cout_doing<<"Doing multiLevelPressureSolve "<<"\t\t\t\t ICE \tL-" 
+            << level->getIndex()<< endl;
 
-    sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
+  //__________________________________
+  // define Matl sets and subsets
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  MaterialSubset* one_matl    = d_press_matl;
+  MaterialSet* press_matlSet  = scinew MaterialSet();
+  press_matlSet->add(0);
+  press_matlSet->addReference(); 
+  
+  //__________________________________
+  //  turn off parentDW scrubbing
+  DataWarehouse::ScrubMode ParentOldDW_scrubmode =
+                           ParentOldDW->setScrubbing(DataWarehouse::ScrubNone);
+  DataWarehouse::ScrubMode ParentNewDW_scrubmode =
+                           ParentNewDW->setScrubbing(DataWarehouse::ScrubNone);
+  //__________________________________
+  // create a new subscheduler
+  SchedulerP subsched = sched->createSubScheduler();
+  subsched->setRestartable(true); 
+  subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
+  subsched->clearMappings();
+  subsched->mapDataWarehouse(Task::ParentOldDW, 0);
+  subsched->mapDataWarehouse(Task::ParentNewDW, 1);
+  subsched->mapDataWarehouse(Task::OldDW, 2);
+  subsched->mapDataWarehouse(Task::NewDW, 3);
+  
+  DataWarehouse* subOldDW = subsched->get_dw(2);
+  DataWarehouse* subNewDW = subsched->get_dw(3);
+
+  GridP grid = level->getGrid();
+  subsched->advanceDataWarehouse(grid);
+  const PatchSet* patch_set = level->eachPatch();
+
+  //__________________________________
+  //  Move data from parentOldDW to subSchedNewDW.
+  delt_vartype dt;
+  subNewDW = subsched->get_dw(3);
+  ParentOldDW->get(dt, d_sharedState->get_delt_label());
+  subNewDW->put(dt, d_sharedState->get_delt_label());
+   
+  max_vartype max_RHS_old;
+  ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);
+  subNewDW->put(   max_RHS_old, lb->max_RHSLabel);
+  
+  subNewDW->transferFrom(ParentNewDW,lb->press_CCLabel,     patch_sub, d_press_matl); 
+  subNewDW->transferFrom(ParentNewDW,lb->rhsLabel,          patch_sub, one_matl);
+  //subNewDW->transferFrom(ParentOldDW,lb->initialGuessLabel, patch_sub, one_matl);  
+  //__________________________________
+  //  Iteration Loop
+  max_vartype max_RHS = 1/d_SMALL_NUM;
+  double smallest_max_RHS_sofar = max_RHS; 
+  int counter = 0;
+  bool restart   = false;
+  bool recursion = true;
+  bool firstIter = true;
+  //const VarLabel* whichInitialGuess = lb->initialGuessLabel;
+  const VarLabel* whichInitialGuess = NULL;
+  
+  while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
+  
+    //__________________________________
+    // schedule the tasks
+    subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
+   
+
+
+    scheduleSetupMatrix(    subsched, level,  patch_set,  one_matl, 
+                                                          all_matls,
+                                                          firstIter);
+
+    solver->scheduleSolve(level, subsched, press_matlSet,
+                          lb->matrixLabel,   Task::NewDW,
+                          lb->imp_delPLabel, false,
+                          lb->rhsLabel,      Task::OldDW,
+                          whichInitialGuess, Task::OldDW,
+			     solver_parameters);
+
+
+
+    scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
+                                                          mpm_matls, 
+                                                          d_press_matl,  
+                                                          all_matls);
+                                                          
+    scheduleImplicitVel_FC( subsched,         patch_set,  ice_matls,
+                                                          mpm_matls, 
+                                                          d_press_matl, 
+                                                          all_matls,
+                                                          recursion);
+
+    scheduleSetupRHS(       subsched,         patch_set,  one_matl, 
+                                                          all_matls,
+                                                          recursion);
+
+    subsched->compile();
+    //__________________________________
+    //  - move subNewDW to subOldDW
+    //  - scrub the subScheduler
+    //  - execute the tasks
+    subsched->advanceDataWarehouse(grid); 
+    subOldDW = subsched->get_dw(2);
+    subNewDW = subsched->get_dw(3);
+    subOldDW->setScrubbing(DataWarehouse::ScrubComplete);
+    subNewDW->setScrubbing(DataWarehouse::ScrubNone);
+    
+    subsched->execute();
+    
+    counter ++;
+    firstIter = false;
+    whichInitialGuess = NULL;
+    
+    //__________________________________
+    // diagnostics
+    subNewDW->get(max_RHS,     lb->max_RHSLabel);
+    subOldDW->get(max_RHS_old, lb->max_RHSLabel);
+    
+    if(pg->myrank() == 0) {
+      cout << "Outer iteration " << counter
+           << " max_rhs before solve "<< max_RHS_old
+           << " after solve " << max_RHS<< endl;
+    }
+    
+    //__________________________________
+    // restart timestep
+                                          //  too many outer iterations
+    if (counter > d_iters_before_timestep_restart ){
+      restart = true;
+      if(pg->myrank() == 0)
+        cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
+    }
+                                          //  solver has requested a restart
+    if (subsched->get_dw(3)->timestepRestarted() ) {
+      if(pg->myrank() == 0)
+        cout << "\nWARNING: Solver had requested a restart\n" <<endl;
+      restart = true;
+    }
+    
+                                           //  solution is diverging
+    if(max_RHS < smallest_max_RHS_sofar){
+      smallest_max_RHS_sofar = max_RHS;
+    }
+    if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
+      if(pg->myrank() == 0)
+        cout << "\nWARNING: outer interation is diverging now "
+             << "restarting the timestep"
+             << " Max_RHS " << max_RHS 
+             << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
+      restart = true;
+    }
+    if(restart){
+      ParentNewDW->abortTimestep();
+      ParentNewDW->restartTimestep();
+      return;
+    }
+  }  // outer iteration loop
+  
+  //__________________________________
+  //  BULLET PROOFING
+  if ( (counter == d_max_iter_implicit)   && 
+       (max_RHS > d_outer_iter_tolerance) &&
+       counter > 1) {
+    ostringstream s;
+    s <<"ERROR ICE::implicitPressureSolve, the maximum number of outer"
+      <<" iterations was reached. \n " 
+      << "Try either increasing the max_outer_iterations "
+      <<" or decrease outer_iteration_tolerance\n ";
+    throw ConvergenceFailure(s.str(),counter,max_RHS,d_outer_iter_tolerance,__FILE__,__LINE__);
+  }
+
+  //__________________________________
+  // Move products of iteration (only) from sub_new_dw -> parent_new_dw
+  subNewDW  = subsched->get_dw(3);
+  bool replace = true;
+  const MaterialSubset* all_matls_sub = all_matls->getUnion();
+  ParentNewDW->transferFrom(subNewDW,         // press
+                    lb->press_CCLabel,       patch_sub,  d_press_matl, replace); 
+  ParentNewDW->transferFrom(subNewDW,         // term2
+                    lb->term2Label,          patch_sub,  one_matl,     replace);    
+  ParentNewDW->transferFrom(subNewDW,         // uvel_FC
+                    lb->uvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // vvel_FC
+                    lb->vvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // wvel_FC
+                    lb->wvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
+                    lb->vol_fracX_FCLabel,   patch_sub, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
+                    lb->vol_fracY_FCLabel,   patch_sub, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
+                    lb->vol_fracZ_FCLabel,   patch_sub, all_matls_sub,replace);                 
+    
+  //__________________________________
+  //  Turn scrubbing back on
+  ParentOldDW->setScrubbing(ParentOldDW_scrubmode);
+  ParentNewDW->setScrubbing(ParentNewDW_scrubmode);  
+
+  //__________________________________
+  // clean up memory  
+  if(press_matlSet->removeReference()){
+    delete press_matlSet;
   }
 }
 
+
+
+
+/*______________________________________________________________________
+ Function~  ICE::scheduleCoarsen_imp_delP--
+ Purpose:  After the implicit pressure solve is performed on all levels 
+ you need to project/coarsen the fine level solution onto the coarser levels
+ _____________________________________________________________________*/
+void ICE::scheduleCoarsen_imp_delP(SchedulerP& sched, 
+                                  const LevelP& coarseLevel,
+                                  const MaterialSubset* press_matl)
+{                                                                          
+  cout_doing << "ICE::scheduleCoarsen_imp_delP\t\t\t\tL-" 
+             << coarseLevel->getIndex() << endl;
+
+  Task* t = scinew Task("ICE::coarsen_imp_delP",
+                  this, &ICE::coarsen_imp_delP);
+
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Ghost::GhostType  gn = Ghost::None;
+
+  t->requires(Task::NewDW, lb->press_CCLabel,
+              0, Task::FineLevel,  press_matl,oims, gn, 0);
+
+  t->modifies(lb->press_CCLabel, d_press_matl, oims);        
+
+  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
+}
+
 /* _____________________________________________________________________
- Function~  ICE::CoarsenPressure
+ Function~  ICE::Coarsen_imp_delP
  _____________________________________________________________________  */
-void ICE::coarsenPressure(const ProcessorGroup*,
+void ICE::coarsen_imp_delP(const ProcessorGroup*,
                           const PatchSubset* coarsePatches,
                           const MaterialSubset* matls,
                           DataWarehouse*,
@@ -259,10 +567,10 @@ void ICE::coarsenPressure(const ProcessorGroup*,
   for(int p=0;p<coarsePatches->size();p++){
     const Patch* coarsePatch = coarsePatches->get(p);
     
-    cout_doing << "Doing CoarsenPressure on patch "
+    cout_doing << "Doing Coarsen_imp_delP on patch "
                << coarsePatch->getID() << "\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
-    CCVariable<double> press_CC, notUsed;                  
-    new_dw->getModifiable(press_CC, lb->press_CCLabel, 0, coarsePatch);
+    CCVariable<double> imp_delP;                  
+    new_dw->getModifiable(imp_delP, lb->imp_delPLabel, 0, coarsePatch);
    
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
@@ -291,8 +599,8 @@ void ICE::coarsenPressure(const ProcessorGroup*,
         continue;
       }
 
-      constCCVariable<double> fine_press_CC;
-      new_dw->getRegion(fine_press_CC,  lb->press_CCLabel, 0, fineLevel, fl, fh);
+      constCCVariable<double> fine_imp_delP;
+      new_dw->getRegion(fine_imp_delP,  lb->imp_delPLabel, 0, fineLevel, fl, fh);
 
       //cout << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
       //         << " coarsePatch "<< cl << " " << ch << endl;
@@ -302,7 +610,7 @@ void ICE::coarsenPressure(const ProcessorGroup*,
       // iterate over coarse level cells
       for(CellIterator iter(cl, ch); !iter.done(); iter++){
         IntVector c = *iter;
-        double press_CC_tmp(0.0);
+        double imp_delP_tmp(0.0);
         IntVector fineStart = coarseLevel->mapCellToFiner(c);
 
         // for each coarse level cell iterate over the fine level cells   
@@ -310,9 +618,9 @@ void ICE::coarsenPressure(const ProcessorGroup*,
                                             !inside.done(); inside++){
           IntVector fc = fineStart + *inside;
 
-          press_CC_tmp += fine_press_CC[fc] * fineCellVol;
+          imp_delP_tmp += fine_imp_delP[fc] * fineCellVol;
         }
-        press_CC[c] =press_CC_tmp / coarseCellVol;
+        imp_delP[c] =imp_delP_tmp / coarseCellVol;
       }
     }
   }
