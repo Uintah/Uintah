@@ -228,7 +228,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   one_matl->addReference();
   t->computes(MIlb->vel_CCLabel);
   t->computes(Ilb->rho_CCLabel); 
-  t->computes(Ilb->temp_CCLabel);
+  t->computes(Ilb->ntemp_CCLabel);
   t->computes(Ilb->sp_vol_CCLabel);
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(MIlb->NC_CCweightLabel, one_matl);
@@ -1767,12 +1767,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         old_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,       indx,patch,gn,0);
         old_dw->get(sp_vol_CC[m], Ilb->sp_vol_CCLabel,    indx,patch,gn,0);
         old_dw->get(vel_CC[m],    Ilb->vel_CCLabel,       indx,patch,gn,0);
-        new_dw->get(cv[m],        Ilb->specific_heatLabel,indx,patch,gn,0);
-        new_dw->get(gamma[m],     Ilb->gammaLabel,        indx,patch,gn,0);
         new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,  indx,patch);
       }
       if(mpm_matl[m]){                    // M P M
-        new_dw->get(Temp[m],     MIlb->temp_CCLabel, indx,patch,gn,0);
+        throw InternalError("MPM  temp not finished", __FILE__, __LINE__);
+        //new_dw->get(Temp[m],     MIlb->otemp_CCLabel, indx,patch,gn,0);
         new_dw->get(mass_CC[m],  MIlb->cMassLabel,   indx,patch,gn,0);
         new_dw->get(vel_CC[m],   MIlb->vel_CCLabel,  indx,patch,gn,0);
         new_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0); 
@@ -1826,7 +1825,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->getID();
         d_ice->printData( indx,patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);
         d_ice->printData( indx,patch,1,desc.str(),"rho_micro", rho_micro[m]);
-        d_ice->printData( indx,patch,1,desc.str(),"Temp_CC",   Temp[m]);     
+        d_ice->printData( indx,patch,1,desc.str(),"int_eng_CC",int_eng[m]);     
         d_ice->printData( indx,patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
       }
     }
@@ -1834,6 +1833,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
 
+    throw InternalError("computeEquilibrationPressure not finished", __FILE__, __LINE__);
+#if 0
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;  
       double delPress = 0.;
@@ -1931,11 +1932,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      //  then try a binary search
      if(count >= d_ice->d_max_iter_equilibration) {
 
+       throw InternalError("binaryPressureSearch not finished");
+#if 0
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
                               speedSound,  dp_drho,  dp_de, 
                               press_eos, press, press_new, press_ref,
                               cv, gamma, convergence_crit, 
                               numALLMatls, count, sum, c);
+#endif
 
      }
      test_max_iter = std::max(test_max_iter, count);
@@ -1967,13 +1971,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           i,j,k,m,count,n_passes);
           cout << "r_m " << rho_micro[m][c] << endl;
           cout << "v_f " << vol_frac[m][c]  << endl;
-          cout << "tmp " << Temp[m][c]      << endl;
+          cout << "i_e " << int_eng[m][c]   << endl;
           cout << "p_n " << press_new[c]    << endl;
-          cout << "m_v " << mat_volume[m]       << endl;
+          cout << "m_v " << mat_volume[m]   << endl;
           d_ice->Message(1," calc_equilibration_press:", 
               " rho_micro < 0 || vol_frac < 0", warning);
       }
     }     // end of cell interator
+#endif
     if (cout_norm.active())
       cout_norm<<"max number of iterations in any cell \t"<<test_max_iter<<endl;
 
@@ -2312,7 +2317,7 @@ void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
     add_matl->addReference();
     t->computes(MIlb->vel_CCLabel,       add_matl);
     t->computes(Ilb->rho_CCLabel,        add_matl);
-    t->computes(Ilb->temp_CCLabel,       add_matl);
+    t->computes(Ilb->ntemp_CCLabel,       add_matl);
     t->computes(Ilb->sp_vol_CCLabel,     add_matl);
     t->computes(Ilb->speedSound_CCLabel, add_matl);
 

@@ -51,6 +51,8 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
                                     DataWarehouse* /*old_dw*/,
                                     DataWarehouse* new_dw)
 {
+  throw InternalError("actuallyComputeStableRF not finished", __FILE__, __LINE__);
+#if 0
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Compute Stable Timestep RF on patch " << patch->getID() 
@@ -182,6 +184,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     d_dbgTime_to_printData  = true;
     d_dbgNextDumpTime = d_dbgOutputInterval * ceil(time/d_dbgOutputInterval); 
   }
+#endif
 }
 
 /* --------------------------------------------------------------------- 
@@ -195,6 +198,8 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
+  throw InternalError("computeRateFormPressure not finished", __FILE__, __LINE__);
+#if 0
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -341,6 +346,7 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
      }
     }
   } // patches
+#endif
 }
 
 /* --------------------------------------------------------------------- 
@@ -645,7 +651,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     CCVariable<double> term1, term2, term3;
     
     constCCVariable<double> sp_vol_CC, speedSound, press_CC;
-    constCCVariable<double> f_theta, rho_CC, Temp_CC, thermalCond;
+    constCCVariable<double> f_theta, rho_CC, int_eng_CC, thermalCond;
     
     constSFCXVariable<double> pressX_FC, pressDiffX_FC;
     constSFCYVariable<double> pressY_FC, pressDiffY_FC;
@@ -703,7 +709,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       new_dw->get(pressDiffX_FC, lb->press_diffX_FCLabel,indx,patch,gac, 1);      
       new_dw->get(pressDiffY_FC, lb->press_diffY_FCLabel,indx,patch,gac, 1);      
       new_dw->get(pressDiffZ_FC, lb->press_diffZ_FCLabel,indx,patch,gac, 1);
-      old_dw->get(Temp_CC,       lb->temp_CCLabel,       indx,patch,gac, 1);
+      old_dw->get(int_eng_CC,    lb->int_eng_CCLabel,       indx,patch,gac, 1);
       new_dw->get(thermalCond,   lb->thermalCondLabel,   indx,patch,gac, 1); 
       new_dw->allocateAndPut(int_eng_source, 
                                  lb->int_eng_source_CCLabel, indx,patch);
@@ -769,6 +775,8 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         //  Source due to conduction
         //   I C E   O N L Y
         if(ice_matl){
+          throw InternalError("conduction not finished", __FILE__, __LINE__);
+#if 0
           double thermalCond_test = ice_matl->getThermalConductivity();
           if(thermalCond_test != 0.0){ 
             bool use_vol_frac = true; // include vol_frac in diffusion calc.
@@ -776,6 +784,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
                                  vol_fracX_FC[m], vol_fracY_FC[m], vol_fracZ_FC[m],
                                  heatCond_src, thermalCond, delT);
           } 
+#endif
         }        
         //__________________________________
         //  Divergence of work flux
@@ -880,6 +889,8 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
+  throw InternalError("addExchangeToMomentumAndEnergyRF not finished", __FILE__, __LINE__);
+#if 0
   const Level* level = getLevel(patches);
   
   for(int p=0;p<patches->size();p++){
@@ -1153,6 +1164,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       }
     }
   } //patches
+#endif
 }
 
 /* ---------------------------------------------------------------------
@@ -1164,6 +1176,8 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
                                           DataWarehouse* old_dw, 
                                           DataWarehouse* new_dw)
 {
+  throw InternalError("computeLagrangianSpecificVolumeRF not finished", __FILE__, __LINE__);
+#if 0
   const Level* level = getLevel(patches);
   
   for(int p=0;p<patches->size();p++){
@@ -1349,4 +1363,5 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
      } 
     }  // end numALLMatl loop
   }  // patch loop
+#endif
 }

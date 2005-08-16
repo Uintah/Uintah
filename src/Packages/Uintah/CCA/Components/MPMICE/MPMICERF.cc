@@ -31,6 +31,8 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
+  throw InternalError("computeRateFormPressure not finished", __FILE__, __LINE__);
+#if 0
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
@@ -297,4 +299,5 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       }
     }
   } // patches
+#endif
 }

@@ -97,7 +97,7 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
   } 
                                   // All matls
   t->requires( DW,  mi->velocity_CCLabel,   matl0->thisMaterial(), gn);
-  t->requires( DW,  mi->temperature_CCLabel,matl0->thisMaterial(), gn); 
+  t->requires( DW,  mi->internalEnergy_CCLabel,matl0->thisMaterial(), gn); 
   t->requires( NDW, mi->sp_vol_CCLabel,     matl0->thisMaterial(), gn);
   
   t->requires( Task::OldDW, mi->delT_Label);
@@ -168,10 +168,10 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     }
 
     constCCVariable<Vector> vel_0;    // MPM  pull from new_dw
-    constCCVariable<double> temp_0;   // ICE  pull from old_dw
+    constCCVariable<double> int_eng_0;   // ICE  pull from old_dw
     constCCVariable<double> sp_vol_0;
     dw  ->  get(vel_0,    mi->velocity_CCLabel,    m0, patch, gn, 0);    
-    dw  ->  get(temp_0,   mi->temperature_CCLabel, m0, patch, gn, 0);    
+    dw  ->  get(int_eng_0,   mi->internalEnergy_CCLabel, m0, patch, gn, 0);    
     new_dw->get(sp_vol_0, mi->sp_vol_CCLabel,      m0, patch, gn, 0);
         
     double tm = 0;
@@ -191,7 +191,7 @@ void TestModel::computeModelSources(const ProcessorGroup*,
       mom_src_0[c] -= momx;
       mom_src_1[c] += momx;
       
-      double energyx = temp_0[c] * massx * cv[c];
+      double energyx = int_eng_0[c] * massx;
       eng_src_0[c] -= energyx;
       eng_src_1[c] += energyx;
     

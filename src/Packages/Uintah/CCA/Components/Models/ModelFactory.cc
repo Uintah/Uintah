@@ -48,10 +48,12 @@ void ModelFactory::makeModels(const ProblemSpecP& params,
       throw ProblemSetupException("Model does not specify type=\"name\"", __FILE__, __LINE__);
     }
     
+#if 0
     if(type == "SimpleRxn")
       models.push_back(scinew SimpleRxn(d_myworld, model));
     else if(type == "AdiabaticTable")
       models.push_back(scinew AdiabaticTable(d_myworld, model));
+#endif
     else if(type == "Test")
       models.push_back(scinew TestModel(d_myworld, model));
     else if(type == "Mixing")
@@ -66,10 +68,12 @@ void ModelFactory::makeModels(const ProblemSpecP& params,
       models.push_back(scinew JWLpp(d_myworld, model));
     else if(type == "LightTime")
       models.push_back(scinew LightTime(d_myworld, model));
+#if 0
     else if(type == "flameSheet_rxn")
       models.push_back(scinew flameSheet_rxn(d_myworld, model));
     else if(type == "PassiveScalar")
       models.push_back(scinew PassiveScalar(d_myworld, model, doAMR));
+#endif
     else if(type == "VorticityConfinement")
       models.push_back(scinew VorticityConfinement(d_myworld, model));
     else if(type == "Radiation")

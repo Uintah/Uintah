@@ -107,8 +107,6 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
   Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
                                             sum_vartype::getTypeDescription());                         
   
-  d_modelComputesThermoTransportProps = true;
-  
   setup->registerTransportedVariable(d_matl_set->getSubset(0),
                                      d_scalar->scalar_CCLabel,
                                      d_scalar->scalar_source_CCLabel);  

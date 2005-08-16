@@ -30,6 +30,7 @@ namespace Uintah {
     const VarLabel* rho_CCLabel;
     const VarLabel* int_eng_CCLabel;
     const VarLabel* otemp_CCLabel;
+    const VarLabel* ntemp_CCLabel;
     const VarLabel* temp_CC_XchangeLabel;
     const VarLabel* vel_CCLabel;
     const VarLabel* vel_CC_XchangeLabel;
