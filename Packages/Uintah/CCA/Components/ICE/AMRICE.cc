@@ -64,6 +64,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
   amr_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
   amr_ps->getWithDefault( "regridderTest", d_regridderTest,     false);
   amr_ps->getWithDefault( "do_Refluxing",  d_doRefluxing,       true);
+  amr_ps->getWithDefault( "useLockStep",   d_useLockStep,       false);
   refine_ps->getWithDefault("Density",     d_rho_threshold,     1e100);
   refine_ps->getWithDefault("Temperature", d_temp_threshold,    1e100);
   refine_ps->getWithDefault("Pressure",    d_press_threshold,   1e100);

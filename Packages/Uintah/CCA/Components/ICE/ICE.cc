@@ -5458,6 +5458,11 @@ ICE::refineBoundaries(const Patch*, SFCYVariable<double>&,
   throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 
+bool ICE::useLockstepTimeAdvance() 
+{ 
+  return d_useLockStep;
+}
+
 void
 ICE::refineBoundaries(const Patch*, SFCZVariable<double>&,
 			    DataWarehouse*, const VarLabel*,
