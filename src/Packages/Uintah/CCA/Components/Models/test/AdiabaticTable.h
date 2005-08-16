@@ -44,7 +44,10 @@ WARNING
   class GeometryPiece;
   class AdiabaticTable :public ModelInterface {
   public:
-    AdiabaticTable(const ProcessorGroup* myworld, ProblemSpecP& params);
+    AdiabaticTable(const ProcessorGroup* myworld, 
+                   ProblemSpecP& params,
+                   const bool doAMR);
+                   
     virtual ~AdiabaticTable();
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
@@ -112,7 +115,14 @@ WARNING
                                DataWarehouse* new_dw,                                 
                                const int indx,                                        
                                constCCVariable<double> f_old,                         
-                               vector<constCCVariable<double> >& ind_vars);            
+                               vector<constCCVariable<double> >& ind_vars); 
+                               
+    void  errorEstimate(const ProcessorGroup*,
+			   const PatchSubset* patches,
+			   const MaterialSubset*,
+			   DataWarehouse*,
+			   DataWarehouse* new_dw,
+                        bool);    
 
     //__________________________________
     AdiabaticTable(const AdiabaticTable&);
@@ -138,6 +148,7 @@ WARNING
       // labels for this particular scalar
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_src_CCLabel;
+      VarLabel* mag_grad_scalarLabel;
       VarLabel* diffusionCoeffLabel;
       VarLabel* varianceLabel;
       VarLabel* scaledVarianceLabel;
@@ -145,6 +156,7 @@ WARNING
       
       vector<Region*> regions;
       double diff_coeff;
+      double refineCriteria;
     };
 
     double oldProbeDumpTime;
@@ -153,12 +165,8 @@ WARNING
     VarLabel* cumulativeEnergyReleased_CCLabel;
     VarLabel* cumulativeEnergyReleased_src_CCLabel;
     
-    SimulationStateP sharedState;
+    SimulationStateP d_sharedState;
     Output* dataArchiver;
-    vector<Vector> d_probePts;
-    vector<string> d_probePtsNames;
-    bool d_usingProbePts;
-    double d_probeFreq;
 
     TableInterface* table;
     struct TableValue {
@@ -167,7 +175,15 @@ WARNING
       VarLabel* label;
     };
     vector<TableValue*> tablevalues;
-
+    
+    //__________________________________
+    // global constants
+    bool d_doAMR;
+    vector<Vector> d_probePts;
+    vector<string> d_probePtsNames;
+    bool d_usingProbePts;
+    double d_probeFreq;
+    
     int d_density_index;
     int d_gamma_index;
     int d_cv_index;
