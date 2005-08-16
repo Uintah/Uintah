@@ -290,7 +290,7 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
   
   if ( Mod( d_patchSize[k], d_latticeRefinementRatio[k] ) != IntVector(0,0,0) ) {
     ostringstream msg;
-    msg << "Problem Setup: Regridder: you've specified a patch size that is not divisible by the lattice ratio on level 0 \n"
+    msg << "Problem Setup: Regridder: you've specified a patch size (interiorCellHighIndex() - interiorCellLowIndex()) on a patch that is not divisible by the lattice ratio on level 0 \n"
         << " patch size " <<  d_patchSize[k] << " lattice refinement ratio " << d_latticeRefinementRatio[k] << endl;
     throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
   }
