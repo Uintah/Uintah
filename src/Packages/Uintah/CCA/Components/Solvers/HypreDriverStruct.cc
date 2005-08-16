@@ -47,7 +47,6 @@ using namespace Uintah;
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
-typedef CCTypes::sol_type sol_type;
 
 namespace Uintah {
 
@@ -55,8 +54,7 @@ namespace Uintah {
   // class HypreDriver implementation common to all variable types
   //#####################################################################
   
-  template <class Types>
-  HypreDriverStruct<Types>::HypreDriverStruct<Types>
+  HypreDriverStruct::HypreDriverStruct
   (const Level* level,
    const MaterialSet* matlset,
    const VarLabel* A, Task::WhichDW which_A_dw,
@@ -68,13 +66,12 @@ namespace Uintah {
     //___________________________________________________________________
     // HypreDriverStruct constructor
     //___________________________________________________________________
-    HypreDriver<Types>(level,matlset,A,which_A_dw,x,modifies_x,
-                       b,which_b_dw,guess,which_guess_dw,params)
+    HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
+                b,which_b_dw,guess,which_guess_dw,params)
   {
   }
 
-  template <class Types>
-  HypreDriverStruct<Types>::~HypreDriverStruct<Types>(void)
+  HypreDriverStruct::~HypreDriverStruct(void)
     //___________________________________________________________________
     // HypreDriverStruct destructor
     //___________________________________________________________________
@@ -86,8 +83,7 @@ namespace Uintah {
     HYPRE_StructGridDestroy(grid);
   }
 
-  template<class Types>
-  void HypreDriverStruct<Types>::setupPrecond(void)
+  void HypreDriverStruct::setupPrecond(void)
     /*_____________________________________________________________________
       Function HypreDriverStruct::setupPrecond
       Set up and initialize the Hypre preconditioner to be used by
@@ -187,8 +183,7 @@ namespace Uintah {
     } // end switch (param->precondType)
   } // end setupPrecond()
 
-  template<class Types>
-  void HypreDriverStruct<Types>::destroyPrecond(void)
+  void HypreDriverStruct::destroyPrecond(void)
     /*_____________________________________________________________________
       Function HypreDriverStruct::destroyPrecond
       Destroy the Hypre preconditioner object used by an SStruct solver.
@@ -242,9 +237,9 @@ namespace Uintah {
   //#####################################################################
 
   void
-  HypreDriverStruct<CCTypes>::makeLinearSystem(const int matl)
+  HypreDriverStruct::makeLinearSystem_CC(const int matl)
     //___________________________________________________________________
-    // Function HypreDriverStruct<CCTypes>::makeLinearSystem~
+    // Function HypreDriverStruct::makeLinearSystem_CC~
     // Construct the linear system for CC variables (e.g. pressure),
     // for the Hypre Struct interface (1-level problem / uniform grid).
     // We set up the matrix at all patches of the "level" data member.
@@ -252,6 +247,7 @@ namespace Uintah {
     // matl=0 (pressure).
     //_____________________________________________________________________
   {
+    typedef CCTypes::sol_type sol_type;
     ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
 
     //==================================================================
@@ -435,16 +431,18 @@ namespace Uintah {
       }  // initialGuess
     } // patch loop
     HYPRE_StructVectorAssemble(_HX);
-  } // end HypreDriverStruct<CCTypes>::makeLinearSystem()
+  } // end HypreDriverStruct::makeLinearSystem()
 
 
-  void HypreDriverStruct<CCTypes>::getSolution(const int matl)
+  void
+  HypreDriverStruct::getSolution_CC(const int matl)
     //_____________________________________________________________________
-    // Function HypreDriverStruct<CCTypes>::getSolution~
+    // Function HypreDriverStruct::getSolution~
     // Get the solution vector for a 1-level, CC variable problem from
     // the Hypre Struct interface.
     //_____________________________________________________________________*/
   {
+    //    typedef CCTypes::sol_type sol_type;
     for(int p=0;p<_patches->size();p++){
       const Patch* patch = _patches->get(p);
 
@@ -476,6 +474,40 @@ namespace Uintah {
         }
       }
     }
-  } // end HypreDriverStruct<CCTypes>::getSolution()
+  } // end HypreDriverStruct::getSolution()
+
+  void
+  HypreDriverStruct::printMatrix(const string& fileName /* =  "output" */)
+  {
+    cout_doing << "HypreDriverStruct::printMatrix() begin" << "\n";
+    if (!_param->printSystem) return;
+    HYPRE_SStructMatrixPrint((fileName + ".sstruct").c_str(), _A, 0);
+    if (_requiresPar) {
+      HYPRE_ParCSRMatrixPrint(_parA, (fileName + ".par").c_str());
+      /* Print CSR matrix in IJ format, base 1 for rows and cols */
+      HYPRE_ParCSRMatrixPrintIJ(_parA, 1, 1, (fileName + ".ij").c_str());
+    }
+    cout_doing << "HypreDriverStruct::printMatrix() end" << "\n";
+  }
+
+  void
+  HypreDriverStruct::printRHS(const string& fileName /* =  "output_b" */)
+  {
+    if (!_param->printSystem) return;
+    HYPRE_SStructVectorPrint(fileName.c_str(), _b, 0);
+    if (_requiresPar) {
+      HYPRE_ParVectorPrint(_parB, (fileName + ".par").c_str());
+    }
+  }
+
+  void
+  HypreDriverStruct::printSolution(const string& fileName /* =  "output_x" */)
+  {
+    if (!_param->printSystem) return;
+    HYPRE_SStructVectorPrint(fileName.c_str(), _x, 0);
+    if (_requiresPar) {
+      HYPRE_ParVectorPrint(_parX, (fileName + ".par").c_str());
+    }
+  }
 
 } // end namespace Uintah
