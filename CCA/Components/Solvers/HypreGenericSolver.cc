@@ -49,7 +49,7 @@ namespace Uintah {
   }
 
   void
-  HypreGenericSolver::setup(void)
+  HypreGenericSolver::setup(HypreDriver* hypreDriver)
     //-----------------------------------------------------------
     // Solver setup phase
     //-----------------------------------------------------------
@@ -57,7 +57,7 @@ namespace Uintah {
     cerr << "Solver setup phase" << "\n";
     int time_index = hypre_InitializeTiming("Solver Setup");
     hypre_BeginTiming(time_index);
-    this->setup(); // The derived Solver setup()
+    this->setup(hypreDriver); // The derived Solver setup()
     hypre_EndTiming(time_index);
     hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
     hypre_FinalizeTiming(time_index);
@@ -66,7 +66,7 @@ namespace Uintah {
   } // end setup()
 
   void
-  HypreGenericSolver::solve(const HypreDriver* hypreDriver)
+  HypreGenericSolver::solve(HypreDriver* hypreDriver)
   {
     //-----------------------------------------------------------
     // Solver solve phase
@@ -74,7 +74,7 @@ namespace Uintah {
     cerr << "Solver solve phase" << "\n";
     int time_index = hypre_InitializeTiming("Solver Setup");
     hypre_BeginTiming(time_index);
-    this->solve(); // The derived Solver solve()
+    this->solve(hypreDriver); // The derived Solver solve()
 
     //-----------------------------------------------------------
     //Gather the solution vector
@@ -83,91 +83,83 @@ namespace Uintah {
     //following in SolverSStruct. For SolverStruct (PFMG), another
     //gather vector required.
     cerr << "Gather the solution vector" << "\n";
-    if (_interface == HypreStruct) {
-      const HypreDriverStruct* structDriver =
-        dynamic_cast<const HypreDriverStruct*>(hypreDriver);
-      if (!structDriver) {
-        throw InternalError("interface = Struct but HypreDriver is not!",
-                            __FILE__, __LINE__);
+    switch (_interface) {
+    case HypreStruct:
+      {
+        // It seems it is not necessary to gather the solution vector
+        // for the Struct interface.
+        /*
+        HypreDriverStruct* structDriver =
+          dynamic_cast<HypreDriverStruct*>(hypreDriver);
+        if (!structDriver) {
+          throw InternalError("interface = Struct but HypreDriver is not!",
+                              __FILE__, __LINE__);
+        }
+        HYPRE_StructVectorGather(structDriver->getX());
+        */
       }
-      HYPRE_SStructVectorGather(hypreDriver->_HX);
-    }
+#if 0
+    case HypreSStruct:
+      {
+        HypreDriverSStruct* sstructDriver =
+          dynamic_cast<HypreDriverSStruct*>(hypreDriver);
+        if (!sstructDriver) {
+          throw InternalError("interface = SStruct but HypreDriver is not!",
+                              __FILE__, __LINE__);
+        }
+        HYPRE_SStructVectorGather(sstructDriver->getX());
+      }
+#endif
+    default:
+      throw InternalError("Unsupported Hypre Interface: "+_interface,
+                          __FILE__, __LINE__);
+    } // end switch (interface)
+    
     cerr << "Solve phase time = " << time_index << "\n";
   } //end solve()
 
-  void
-  Solver::printMatrix(const string& fileName /* = "solver" */)
+  // TODO: include all derived classes here.
+  HypreGenericSolver*
+  newHypreGenericSolver(const SolverType& solverType)
+    /* Create a new solver object of specific solverType solver type
+       but a generic solver pointer type. */
   {
-    Print("Solver::printMatrix() begin\n");
-    if (!_param->printSystem) return;
-    HYPRE_SStructMatrixPrint((fileName + ".sstruct").c_str(), _A, 0);
-    if (_requiresPar) {
-      HYPRE_ParCSRMatrixPrint(_parA, (fileName + ".par").c_str());
-      /* Print CSR matrix in IJ format, base 1 for rows and cols */
-      HYPRE_ParCSRMatrixPrintIJ(_parA, 1, 1, (fileName + ".ij").c_str());
-    }
-    Print("Solver::printMatrix() end\n");
+    switch (solverType) {
+    case SMG:
+      {
+        return new HypreSolverSMG(hypreData);
+      }
+    case PFMG:
+      {
+        return new HypreSolverPFMG(hypreData);
+      }
+    case SparseMSG:
+      {
+        return new HypreSolverSparseMSG(hypreData);
+      }
+    case CG:
+      {
+        return new HypreSolverCG(hypreData);
+      }
+    case Hybrid: 
+      {
+        return new HypreSolverHybrid(hypreData);
+      }
+    case GMRES:
+      {
+        return new HypreSolverGMRES(hypreData);
+      }
+    default:
+      throw InternalError("Unsupported solver type: "+params->solverTitle,
+                          __FILE__, __LINE__);
+    } // switch (solverType)
+    return 0;
   }
 
-  void
-  Solver::printRHS(const string& fileName /* = "solver" */)
+  SolverType
+  getSolverType(const string& solverTitle)
   {
-    if (!_param->printSystem) return;
-    HYPRE_SStructVectorPrint(fileName.c_str(), _b, 0);
-    if (_requiresPar) {
-      HYPRE_ParVectorPrint(_parB, (fileName + ".par").c_str());
-    }
-  }
-
-  void
-  Solver::printSolution(const string& fileName /* = "solver" */)
-  {
-    if (!_param->printSystem) return;
-    HYPRE_SStructVectorPrint(fileName.c_str(), _x, 0);
-    if (_requiresPar) {
-      HYPRE_ParVectorPrint(_parX, (fileName + ".par").c_str());
-    }
-  }
-
-  void
-  Solver::printValues(const Patch* patch,
-                      const int stencilSize,
-                      const int numCells,
-                      const double* values /* = 0 */,
-                      const double* rhsValues /* = 0 */,
-                      const double* solutionValues /* = 0 */)
-    /* Print values, rhsValues vectors */
-  {
-#if DRIVER_DEBUG
-    Print("--- Printing values,rhsValues,solutionValues arrays ---\n");
-    for (Counter cell = 0; cell < numCells; cell++) {
-      int offsetValues    = stencilSize * cell;
-      int offsetRhsValues = cell;
-      Print("cell = %4d\n",cell);
-      if (values) {
-        for (Counter entry = 0; entry < stencilSize; entry++) {
-          Print("values   [%5d] = %+.3f\n",
-                offsetValues + entry,values[offsetValues + entry]);
-        }
-      }
-      if (rhsValues) {
-        Print("rhsValues[%5d] = %+.3f\n",
-              offsetRhsValues,rhsValues[offsetRhsValues]);
-      }
-      if (solutionValues) {
-        Print("solutionValues[%5d] = %+.3f\n",
-              offsetRhsValues,solutionValues[offsetRhsValues]);
-      }
-      Print("-------------------------------\n");
-    } // end for cell
-#endif
-  } // end printValues()
-
-
-  HypreGenericSolver::SolverType
-  HypreGenericSolver::solverFromTitle(const string& solverTitle)
-  {
-    /* Determine solver type from title */
+    // Determine solver type from title
     if ((solverTitle == "SMG") ||
         (solverTitle == "smg")) {
       return SMG;
@@ -202,41 +194,9 @@ namespace Uintah {
     } // end "switch" (solverTitle)
   } // end solverFromTitle()
 
-  HypreGenericSolver::precondType
-  HypreGenericSolver::precondFromTitle(const string& precondTitle)
-  {
-    /* Determine preconditioner type from title */
-    if ((precondTitle == "SMG") ||
-        (precondTitle == "smg")) {
-      return PrecondSMG;
-    } else if ((precondTitle == "PFMG") ||
-               (precondTitle == "pfmg")) {
-      return PrecondPFMG;
-    } else if ((precondTitle == "SparseMSG") ||
-               (precondTitle == "sparsemsg")) {
-      return PrecondSparseMSG;
-    } else if ((precondTitle == "Jacobi") ||
-               (precondTitle == "jacobi")) {
-      return PrecondJacobi;
-    } else if ((precondTitle == "Diagonal") ||
-               (precondTitle == "diagonal")) {
-      return PrecondDiagonal;
-    } else if ((precondTitle == "AMG") ||
-               (precondTitle == "amg") ||
-               (precondTitle == "BoomerAMG") ||
-               (precondTitle == "boomeramg")) {
-      return PrecondAMG;
-    } else if ((precondTitle == "FAC") ||
-               (precondTitle == "fac")) {
-      return PrecondFAC;
-    } else {
-      throw InternalError("Unknown preconditionertype: "+precondTitle,
-                          __FILE__, __LINE__);
-    } // end "switch" (precondTitle)
-  } // end precondFromTitle()
 
-  HypreDriver::Interface
-  HypreGenericSolver::solverInterface(const SolverType& solverType)
+  HypreInterface
+  getSolverInterface(const SolverType& solverType)
     /* Determine the Hypre interface this solver uses */
   {
     switch (solverType) {
@@ -277,44 +237,5 @@ namespace Uintah {
                           __FILE__, __LINE__);
     } // switch (solverType)
   } // end solverInterface()
-
-
-  // TODO: include all derived classes here.
-  HypreGenericSolver*
-  HypreGenericSolver::newSolver(const SolverType& solverType)
-    /* Create a new solver object of specific solverType solver type
-       but a generic solver pointer type. */
-  {
-    switch (solverType) {
-    case HypreSolverParams::SMG:
-      {
-        return new HypreSolverSMG(hypreData);
-      }
-    case HypreSolverParams::PFMG:
-      {
-        return new HypreSolverPFMG(hypreData);
-      }
-    case HypreSolverParams::SparseMSG:
-      {
-        return new HypreSolverSparseMSG(hypreData);
-      }
-    case HypreSolverParams::CG:
-      {
-        return new HypreSolverCG(hypreData);
-      }
-    case HypreSolverParams::Hybrid: 
-      {
-        return new HypreSolverHybrid(hypreData);
-      }
-    case HypreSolverParams::GMRES:
-      {
-        return new HypreSolverGMRES(hypreData);
-      }
-    default:
-      throw InternalError("Unsupported solver type: "+params->solverTitle,
-                          __FILE__, __LINE__);
-    } // switch (solverType)
-    return 0;
-  }
 
 } // end namespace Uintah

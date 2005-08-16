@@ -80,15 +80,23 @@ namespace Uintah {
                       Task::WhichDW which_guess_dw,
                       const HypreSolverParams* params);
     virtual ~HypreDriverStruct(void);
+    // Data member modifyable access
+    HYPRE_StructMatrix& getA(void) { return _HA; }  // LHS
+    HYPRE_StructVector& getB(void) { return _HB; }  // RHS
+    HYPRE_StructVector& getX(void) { return _HX; }  // Solution
+    // Data member unmodifyable access
+    const HYPRE_StructMatrix& getA(void) const { return _HA; }  // LHS
+    const HYPRE_StructVector& getB(void) const { return _HB; }  // RHS
+    const HYPRE_StructVector& getX(void) const { return _HX; }  // Solution
 
-    // Set up linear system, read back solution
-    void makeLinearSystem(const int matl);
-    void getSolution(const int matl);
+    // CC variables: set up linear system & read back solution
+    virtual void makeLinearSystem_CC(const int matl);
+    virtual void getSolution_CC(const int matl);
 
-    // Set up & destroy preconditioners for SStruct solvers that can
-    // use them (e.g. PCG). These functions are called by the solver object.
-    //    void setupPrecond(void);
-    //    void destroyPrecond(void);
+    // HYPRE data printouts
+    virtual void printMatrix(const string& fileName = "output");
+    virtual void printRHS(const string& fileName = "output_b");
+    virtual void printSolution(const string& fileName = "output_x");
 
     //========================== PRIVATE SECTION ==========================
   private:
