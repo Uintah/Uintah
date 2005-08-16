@@ -148,10 +148,10 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& l
   const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
   const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
   
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      ice_matls,  gac, 1);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      mpm_matls,  gac, 1);
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,              gac, 1);
-  t->requires(Task::NewDW, Ilb->rho_CCLabel,                   gn);
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,      ice_matls,  gn,0);
+  t->requires(Task::NewDW, Ilb->temp_CCLabel,      mpm_matls,  gn,0);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,              gn,0);
+  t->requires(Task::NewDW, Ilb->rho_CCLabel,                   gn,0);
 
   /*     Products     */
   t->requires(Task::NewDW,  Ilb->TempX_FCLabel,   prod_matl, gac,2);    
