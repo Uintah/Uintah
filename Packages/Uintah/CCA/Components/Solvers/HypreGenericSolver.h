@@ -40,10 +40,8 @@ WARNING
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 
-//#include <Core/Thread/Time.h>
-//#include <Core/Util/DebugStream.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-//#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
 
 namespace Uintah {
@@ -73,8 +71,8 @@ namespace Uintah {
     const Results& getResults(void) const { return _results; }
 
     void         assertInterface(const int acceptableInterface);
-    virtual void setup(const HypreDriver* hypreDriver);
-    virtual void solve(const HypreDriver* hypreDriver);
+    virtual void setup(HypreDriver* hypreDriver);
+    virtual void solve(HypreDriver* hypreDriver);
 
     //========================== PROTECTED SECTION ==========================
   protected:
@@ -84,16 +82,16 @@ namespace Uintah {
     const ProcessorGroup*    _pg;
     const HypreSolverParams* _params;
     //    SolverType    _solverType;      // Hypre solver type
-    //    int           _solverID;        // Hypre solver ID computed from solverType
+    //    int           _solverID;  // Hypre solver ID computed from solverType
     Results       _results;         // Solver results are stored here
     HyprePrecond* _precond;         // Preconditioner (optional)
 
   }; // end class HypreGenericSolver
 
   // Utilities
+  HypreGenericSolver* newHypreGenericSolver(const SolverType solverType);
   SolverType          getSolverType(const std::string& solverTitle);
   HypreInterface      getSolverInterface(const std::string& solverType);
-  HypreGenericSolver* newHypreGenericSolver(const SolverType solverType);
 
 } // end namespace Uintah
 

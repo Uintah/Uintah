@@ -206,6 +206,7 @@ namespace Uintah {
            x, modifies_x, b, which_b_dw, guess, 
            which_guess_dw, params);
       }
+#if 0
     case HypreSStruct:
       {
         return new HypreDriverSStruct
@@ -213,6 +214,7 @@ namespace Uintah {
            x, modifies_x, b, which_b_dw, guess, 
            which_guess_dw, params);
       }
+#endif
     default:
       throw InternalError("Unsupported Hypre Interface: "+interface,
                           __FILE__, __LINE__);
@@ -238,6 +240,38 @@ namespace Uintah {
     else os << "N/A";
     return os;
   }
+
+  void
+  printValues(const int stencilSize,
+              const int numCells,
+              const double* values /* = 0 */,
+              const double* rhsValues /* = 0 */,
+              const double* solutionValues /* = 0 */)
+    /* Print values, rhsValues vectors */
+  {
+    cout_doing << "--- Printing values,rhsValues,solutionValues arrays ---" << "\n";
+    for (int cell = 0; cell < numCells; cell++) {
+      int offsetValues    = stencilSize * cell;
+      int offsetRhsValues = cell;
+      cout_doing << "cell = " << cell << "\n";
+      if (values) {
+        for (int entry = 0; entry < stencilSize; entry++) {
+          cout_doing << "values   [" << offsetValues + entry
+                     << "] = "  << values[offsetValues + entry]
+                     << "\n";
+        }
+      }
+      if (rhsValues) {
+        cout_doing << "rhsValues[" << offsetRhsValues 
+                   << "] = " << rhsValues[offsetRhsValues] << "\n";
+      }
+      if (solutionValues) {
+        cout_doing << "solutionValues[" << offsetRhsValues 
+                   << "] = " << solutionValues[offsetRhsValues] << "\n";
+      }
+      cout_doing << "-------------------------------" << "\n";
+    } // end for cell
+  } // end printValues()
 
   double harmonicAvg(const Point& x,
                      const Point& y,

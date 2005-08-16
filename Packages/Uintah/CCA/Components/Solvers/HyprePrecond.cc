@@ -7,8 +7,15 @@
 //--------------------------------------------------------------------------
 #include <Packages/Uintah/CCA/Components/Solvers/HyprePrecond.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondSMG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <iomanip>
 
 using namespace Uintah;
 //__________________________________
@@ -121,6 +128,39 @@ namespace Uintah {
     return 0;
   } // end newHyprePrecond()
 
+
+  PrecondType
+  getPrecondType(const string& precondTitle)
+  {
+    /* Determine preconditioner type from title */
+    if ((precondTitle == "SMG") ||
+        (precondTitle == "smg")) {
+      return PrecondSMG;
+    } else if ((precondTitle == "PFMG") ||
+               (precondTitle == "pfmg")) {
+      return PrecondPFMG;
+    } else if ((precondTitle == "SparseMSG") ||
+               (precondTitle == "sparsemsg")) {
+      return PrecondSparseMSG;
+    } else if ((precondTitle == "Jacobi") ||
+               (precondTitle == "jacobi")) {
+      return PrecondJacobi;
+    } else if ((precondTitle == "Diagonal") ||
+               (precondTitle == "diagonal")) {
+      return PrecondDiagonal;
+    } else if ((precondTitle == "AMG") ||
+               (precondTitle == "amg") ||
+               (precondTitle == "BoomerAMG") ||
+               (precondTitle == "boomeramg")) {
+      return PrecondAMG;
+    } else if ((precondTitle == "FAC") ||
+               (precondTitle == "fac")) {
+      return PrecondFAC;
+    } else {
+      throw InternalError("Unknown preconditionertype: "+precondTitle,
+                          __FILE__, __LINE__);
+    } // end "switch" (precondTitle)
+  } // end precondFromTitle()
 
 #if 0
   template<class Types>

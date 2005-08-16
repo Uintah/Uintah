@@ -40,12 +40,13 @@ WARNING
 #ifndef Packages_Uintah_CCA_Components_Solvers_HyprePrecond_h
 #define Packages_Uintah_CCA_Components_Solvers_HyprePrecond_h
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
+#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
 
 namespace Uintah {
   
   // Forward declarations
-  template <class Types> class HypreDriver;
+  class HypreSolverParams;
 
   //---------- Types ----------
   
@@ -71,7 +72,7 @@ namespace Uintah {
     HypreInterface           _interface;       // Hypre system interface
     const ProcessorGroup*    _pg;
     const HypreSolverParams* _params;
-    //    PrecondType              _precondType;     // Hypre preconditioner type
+    //    PrecondType              _precondType; // Hypre preconditioner type
     HYPRE_PtrToSolverFcn     _precond;
     HYPRE_PtrToSolverFcn     _pcsetup;
     HYPRE_Solver             _precond_solver;
@@ -79,11 +80,12 @@ namespace Uintah {
   }; // end class HyprePrecond
 
   // Utilities
-  PrecondType   precondFromTitle(const std::string& precondTitle);
   HyprePrecond* newHyprePrecond(const PrecondType& precondType,
                                 const HypreInterface& interface,
                                 const ProcessorGroup* pg,
                                 const HypreSolverParams* params);
+  PrecondType   getPrecondType(const std::string& precondTitle);
+
 } // end namespace Uintah
 
 #endif // Packages_Uintah_CCA_Components_Solvers_HyprePrecond_h

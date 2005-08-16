@@ -1,3 +1,6 @@
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreDriver_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreDriver_h
+
 /*--------------------------------------------------------------------------
 CLASS
    HypreDriver
@@ -53,20 +56,14 @@ WARNING
    it may still work with the Struct solvers in earlier Hypre versions (e.g., 
    1.7.7).
    --------------------------------------------------------------------------*/
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreDriver_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreDriver_h
 
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
-
-// hypre includes
-#include <utilities.h>
-#include <HYPRE_struct_ls.h>
-#include <HYPRE_sstruct_ls.h>
-#include <krylov.h>
 
 namespace Uintah {
 
@@ -125,11 +122,7 @@ namespace Uintah {
     virtual void getSolution_NC(const int matl);
     virtual void getSolution_CC(const int matl);
 
-    // Set up & destroy preconditioners
-    //    virtual void setupPrecond(void) = 0;
-    //    virtual void destroyPrecond(void) = 0;
-
-    // Printouts
+    // HYPRE data printouts
     virtual void printMatrix(const string& fileName = "output") = 0;
     virtual void printRHS(const string& fileName = "output_b") = 0;
     virtual void printSolution(const string& fileName = "output_x") = 0;
@@ -137,16 +130,8 @@ namespace Uintah {
     //========================== PROTECTED SECTION ==========================
   protected:
 
-    virtual void initialize(void) = 0;
-    virtual void clear(void) = 0;
-
-    // Utilities
-    void printValues(const Patch* patch,
-                     const int stencilSize,
-                     const int numCells,
-                     const double* values = 0,
-                     const double* rhsValues = 0,
-                     const double* solutionValues = 0);
+    //    virtual void initialize(void) = 0;
+    //    virtual void clear(void) = 0;
 
     //---------- Data members ----------
     // Uintah input data
@@ -204,12 +189,23 @@ namespace Uintah {
   std::ostream&   operator << (std::ostream& os,
                                const BoxSide& s);
 
+    // Utilities
+    void printValues(const int stencilSize,
+                     const int numCells,
+                     const double* values = 0,
+                     const double* rhsValues = 0,
+                     const double* solutionValues = 0);
+
   // TODO: move this to impICE.cc/BoundaryCond.cc where A is constructed.
   double harmonicAvg(const Point& x,
                      const Point& y,
                      const Point& z,
                      const double& Ax,
                      const double& Ay);
+
+  //========================================================================
+  // Implementation of the templated part of class HypreDriver
+  //========================================================================
 
   template<class Types>
   void
@@ -290,19 +286,17 @@ namespace Uintah {
       } // if (finalResNorm is ok)
 
       /* Get the solution x values back into Uintah */
-      getSolution(matl);
+      getSolution<Types>(matl);
 
       /*-----------------------------------------------------------
        * Print the solution and other info
        *-----------------------------------------------------------*/
-      linePrint("-",50);
-      dbg0 << "Print the solution vector" << "\n";
-      linePrint("-",50);
-      solver->printSolution("output_x1");
-      dbg0 << "Iterations = " << numIterations << "\n";
-      dbg0 << "Final Relative Residual Norm = "
+      std::cerr << "Print the solution vector" << "\n";
+      printSolution("output_x1");
+      std::cerr << "Iterations = " << numIterations << "\n";
+      std::cerr << "Final Relative Residual Norm = "
            << finalResNorm << "\n";
-      dbg0 << "" << "\n";
+      std::cerr << "" << "\n";
       
       delete hypreSolver;
 
@@ -381,7 +375,6 @@ namespace Uintah {
     // template class.
     //_____________________________________________________________________
   {
-    cout_doing << "HypreSolverAMR::getSolution()" << endl;
     Types t;
     TypeDescription::Type domType = TypeTemplate2Enum(t);
     switch (domType) {
