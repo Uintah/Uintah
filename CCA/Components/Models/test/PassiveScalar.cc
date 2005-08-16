@@ -58,8 +58,10 @@ PassiveScalar::~PassiveScalar()
   VarLabel::destroy(d_scalar->scalar_CCLabel);
   VarLabel::destroy(d_scalar->scalar_source_CCLabel);
   VarLabel::destroy(d_scalar->diffusionCoefLabel);
+  VarLabel::destroy(d_scalar->mag_grad_scalarLabel);
   VarLabel::destroy(Slb->lastProbeDumpTimeLabel);
   VarLabel::destroy(Slb->sum_scalar_fLabel);
+
   delete lb;
   delete Slb;
   
