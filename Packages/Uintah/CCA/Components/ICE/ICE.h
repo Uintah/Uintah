@@ -236,15 +236,24 @@ namespace Uintah {
                                          const MaterialSet* all_matls);
 //__________________________________ 
 //  I M P L I C I T   A M R I C E                                                       
-      void scheduleCoarsenPressure(SchedulerP& sched, 
-                                   const LevelP& level,
-                                   const MaterialSubset* press_matl); 
+      void scheduleCoarsen_imp_delP(SchedulerP& sched, 
+                                    const LevelP& level,
+                                    const MaterialSubset* press_matl); 
                                    
       void schedule_matrixBC_CFI_coarsePatch(const LevelP& coarseLevel,
                                              SchedulerP& sched);
                                              
       void schedule_matrixBC_CFI_finePatch(const LevelP& fineLevel,
-                                            SchedulerP& sched);                       
+                                            SchedulerP& sched);
+                                            
+      void scheduleMultiLevelPressureSolve(SchedulerP& sched,
+                                         const LevelP& level,
+                                         const PatchSet*,
+                                         const MaterialSubset* one_matl,
+                                         const MaterialSubset* press_matl,
+                                         const MaterialSubset* ice_matls,
+                                         const MaterialSubset* mpm_matls,
+                                         const MaterialSet* all_matls);                       
                                    
 //__________________________________ 
 //   M O D E L S
@@ -526,11 +535,11 @@ namespace Uintah {
       void zeroMatrix_RHS_UnderFinePatches(const PatchSubset* coarsePatches,
                                            DataWarehouse* new_dw);
                                       
-      void coarsenPressure(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw);
+      void coarsen_imp_delP(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse*,
+                            DataWarehouse* new_dw);
                            
       void matrixBC_CFI_finePatch(const ProcessorGroup*,
                                   const PatchSubset* finePatches,
@@ -550,6 +559,16 @@ namespace Uintah {
                                     const MaterialSubset* matls,
                                     DataWarehouse*,
                                     DataWarehouse* new_dw);
+                                    
+      void multiLevelPressureSolve(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,     
+                                 DataWarehouse* old_dw,     
+                                 DataWarehouse* new_dw,     
+                                 LevelP level,     
+                                 Scheduler* sched,
+                                 const MaterialSubset*,
+                                 const MaterialSubset*);
                                                                               
 //__________________________________ 
 //   M O D E L S
