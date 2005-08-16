@@ -11,11 +11,13 @@
 #include <Packages/Uintah/CCA/Components/Models/test/AdiabaticTable.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TableFactory.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TableInterface.h>
+#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -43,9 +45,11 @@ static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 
 //______________________________________________________________________              
 AdiabaticTable::AdiabaticTable(const ProcessorGroup* myworld, 
-                     ProblemSpecP& params)
+                     ProblemSpecP& params,
+                     const bool doAMR)
   : ModelInterface(myworld), params(params)
 {
+  d_doAMR = doAMR;
   d_scalar = 0;
   d_matl_set = 0;
   lb  = scinew ICELabel();
@@ -67,6 +71,8 @@ AdiabaticTable::~AdiabaticTable()
     VarLabel::destroy(d_scalar->varianceLabel);
     VarLabel::destroy(d_scalar->scaledVarianceLabel);
     VarLabel::destroy(d_scalar->sum_scalar_fLabel);
+    VarLabel::destroy(d_scalar->mag_grad_scalarLabel);
+      
     if(d_scalar->scalar_src_CCLabel){
       VarLabel::destroy(d_scalar->scalar_src_CCLabel);
     }
@@ -100,8 +106,8 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
                         ModelSetup* setup)
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
-  sharedState = in_state;
-  d_matl = sharedState->parseAndLookupMaterial(params, "material");
+  d_sharedState = in_state;
+  d_matl = d_sharedState->parseAndLookupMaterial(params, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -144,44 +150,6 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
 //  d_MW_index        = table->addDependentVariable("mix_mol_wt");
   table->setup();
 
-#if 0
-  ofstream out("graph.dat");
-  int ng = 100;
-  vector<double> mm;
-  int nv;
-  if(d_useVariance){
-    mm.resize(2);
-    nv = 10;
-  } else {
-    mm.resize(1);
-    nv = 0;
-  }
-  for(int j=0;j<=nv;j++){
-    if(d_useVariance)
-      mm[1] = j/(double)nv;
-    for(int i=0;i<=ng;i++){
-      double mix = i/(double)ng;
-      mm[0]=mix;
-      double pressure = table->interpolate(d_temp_index, mm) 
-        * table->interpolate(d_cv_index, mm)
-        * (table->interpolate(d_gamma_index, mm)-1)
-        * table->interpolate(d_density_index, mm);
-      out << mix << " "
-          << table->interpolate(d_temp_index, mm) << " "
-          << pressure << " "
-          << table->interpolate(d_density_index, mm) << " "
-          << table->interpolate(d_gamma_index, mm) << " "
-          << table->interpolate(d_cv_index, mm) << " "
-          << table->interpolate(d_viscosity_index, mm) << " "
-          << table->interpolate(d_thermalcond_index, mm) << " "
-          << table->interpolate(d_ref_cv_index, mm) << " "
-          << table->interpolate(d_ref_gamma_index, mm) << " "
-          << table->interpolate(d_ref_temp_index, mm) << "\n";
-    }
-    out << '\n';
-  }
-#endif
-
   //__________________________________
   // - create Label names
   // - Let ICE know that this model computes the 
@@ -194,44 +162,62 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
   d_scalar->scalar_CCLabel = VarLabel::create("scalar-f",         td_CCdouble);
   d_scalar->varianceLabel  = VarLabel::create("scalar-f-variance",td_CCdouble);
+  d_scalar->mag_grad_scalarLabel = 
+                                  VarLabel::create("mag_grad_scalar-f",
+                                                                  td_CCdouble);
   d_scalar->scaledVarianceLabel = VarLabel::create("scalar-f-scaledvariance", 
                                                                   td_CCdouble);
   d_scalar->diffusionCoeffLabel = VarLabel::create("scalar-diffCoeff",
                                                                   td_CCdouble);
   d_scalar->sum_scalar_fLabel   = VarLabel::create("sum_scalar_f", 
-                                            sum_vartype::getTypeDescription());
+                                            sum_vartype::getTypeDescription()); 
+                                            
+                                            
   d_modelComputesThermoTransportProps = true;
   
   //__________________________________
   // Read in the constants for the scalar
-   ProblemSpecP child = params->findBlock("scalar");
-   if (!child){
-     throw ProblemSetupException("AdiabaticTable: Couldn't find scalar tag", __FILE__, __LINE__);    
-   }
+  ProblemSpecP child = params->findBlock("scalar");
+  if (!child){
+    throw ProblemSetupException("AdiabaticTable: Couldn't find scalar tag", __FILE__, __LINE__);    
+  }
    
-   child->getWithDefault("test_conservation", d_test_conservation, false);
-   child->getWithDefault("doTableTest",       d_doTableTest,      false);
+  child->getWithDefault("test_conservation", d_test_conservation, false);
+  child->getWithDefault("doTableTest",       d_doTableTest,      false);
    
-   ProblemSpecP const_ps = child->findBlock("constants");
-   if(!const_ps) {
-     throw ProblemSetupException("AdiabaticTable:Couldn't find constants tag", __FILE__, __LINE__);
-   }
+  ProblemSpecP const_ps = child->findBlock("constants");
+  if(!const_ps) {
+    throw ProblemSetupException("AdiabaticTable:Couldn't find constants tag", __FILE__, __LINE__);
+  }
  
-   const_ps->getWithDefault("diffusivity",  d_scalar->diff_coeff, 0.0);
-   // scalar src is only needed if we have non-zero diffusivity
-   if(d_scalar->diff_coeff)
-     d_scalar->scalar_src_CCLabel = VarLabel::create("scalar-f_src",
-                                                     td_CCdouble);
-   else
-     d_scalar->scalar_src_CCLabel = 0;
+  const_ps->getWithDefault("diffusivity",  d_scalar->diff_coeff, 0.0);
+  const_ps->getWithDefault("AMR_Refinement_Criteria", d_scalar->refineCriteria,1e100);
 
-   // Tell ICE to transport the scalar and the energy
-   setup->registerTransportedVariable(d_matl_set->getSubset(0),
-                                      d_scalar->scalar_CCLabel,
-                                      d_scalar->scalar_src_CCLabel);
-   setup->registerTransportedVariable(d_matl_set->getSubset(0),
-                                      cumulativeEnergyReleased_CCLabel,
-                                      cumulativeEnergyReleased_src_CCLabel);
+  // scalar src is only needed if we have non-zero diffusivity
+  if(d_scalar->diff_coeff){
+    d_scalar->scalar_src_CCLabel = VarLabel::create("scalar-f_src",td_CCdouble);
+  }else{
+    d_scalar->scalar_src_CCLabel = 0;
+  }
+
+  //__________________________________
+  //  register transport variables scalar and the energy
+  setup->registerTransportedVariable(d_matl_set->getSubset(0),
+                                     d_scalar->scalar_CCLabel,
+                                     d_scalar->scalar_src_CCLabel);
+  setup->registerTransportedVariable(d_matl_set->getSubset(0),
+                                     cumulativeEnergyReleased_CCLabel,
+                                     cumulativeEnergyReleased_src_CCLabel);
+
+  //__________________________________
+  //  register the AMRrefluxing variables                               
+  if(d_doAMR){
+   setup->registerAMR_RefluxVariable(d_matl_set->getSubset(0),
+                                     d_scalar->scalar_CCLabel);
+
+   setup->registerAMR_RefluxVariable(d_matl_set->getSubset(0),
+                                     cumulativeEnergyReleased_CCLabel);
+  }
   //__________________________________
   //  Read in the geometry objects for the scalar
   for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
@@ -357,7 +343,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       }
     }
     
-    setBC(f,"scalar-f", patch, sharedState,indx, new_dw); 
+    setBC(f,"scalar-f", patch, d_sharedState,indx, new_dw); 
 
     //__________________________________
     // initialize other properties
@@ -412,7 +398,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       else
         eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
     }
-    setBC(eReleased,"cumulativeEnergyReleased", patch, sharedState,indx, new_dw); 
+    setBC(eReleased,"cumulativeEnergyReleased", patch, d_sharedState,indx, new_dw); 
 
     //__________________________________
     //  Dump out a header for the probe point files
@@ -529,8 +515,17 @@ void AdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
   if(d_useVariance){
     computeScaledVariance(patch, new_dw, indx, f, ind_vars);
   }
-  table->interpolate(d_cv_index, cv_new, patch->getExtraCellIterator(),
-                     ind_vars);
+  
+  // Hit the extra cells only on the coarsest level
+  // All of the data in the extaCells should be handled by
+  // refine_CFI tasks
+  CellIterator iterator = patch->getExtraCellIterator();
+  int levelIndex = patch->getLevel()->getIndex();
+  if(d_doAMR && levelIndex != 0){
+    iterator = patch->getCellIterator();
+  }
+  
+  table->interpolate(d_cv_index, cv_new, iterator,ind_vars);
 } 
 
 //______________________________________________________________________
@@ -857,7 +852,83 @@ void AdiabaticTable::scheduleComputeStableTimestep(SchedulerP&,
 
 //______________________________________________________________________
 //
-void AdiabaticTable::scheduleErrorEstimate(const LevelP&,
-                                           SchedulerP&)
+void AdiabaticTable::scheduleErrorEstimate(const LevelP& coarseLevel,
+                                          SchedulerP& sched)
 {
+  cout_doing << "AdiabaticTable::scheduleErrorEstimate \t\t\tL-" 
+             << coarseLevel->getIndex() << '\n';
+  
+  Task* t = scinew Task("AdiabaticTable::errorEstimate", 
+                  this, &AdiabaticTable::errorEstimate, false);  
+  
+  Ghost::GhostType  gac  = Ghost::AroundCells; 
+  t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  gac, 1);
+  
+  t->computes(d_scalar->mag_grad_scalarLabel);
+  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  
+  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
+}
+/*_____________________________________________________________________
+ Function~  AdiabaticTable::errorEstimate--
+______________________________________________________________________*/
+void AdiabaticTable::errorEstimate(const ProcessorGroup*,
+			             const PatchSubset* patches,
+			             const MaterialSubset*,
+			             DataWarehouse*,
+			             DataWarehouse* new_dw,
+                                  bool)
+{
+  cout_doing << "Doing errorEstimate \t\t\t\t\t AdiabaticTable"<< endl;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
+    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    
+    CCVariable<int> refineFlag;
+    new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      
+
+    PerPatch<PatchFlagP> refinePatchFlag;
+    new_dw->get(refinePatchFlag, refinePatchLabel, 0, patch);
+
+    int indx = d_matl->getDWIndex();
+    constCCVariable<double> f;
+    CCVariable<double> mag_grad_f;
+    
+    new_dw->get(f,                     d_scalar->scalar_CCLabel,  indx ,patch,gac,1);
+    new_dw->allocateAndPut(mag_grad_f, d_scalar->mag_grad_scalarLabel, 
+                           indx,patch);
+    mag_grad_f.initialize(0.0);
+    
+    //__________________________________
+    // compute gradient
+    Vector dx = patch->dCell(); 
+    
+    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      IntVector r = c;
+      IntVector l = c;
+      Vector grad_f;
+      for(int dir = 0; dir <3; dir ++ ) { 
+        double inv_dx = 0.5 /dx[dir];
+        r[dir] += 1;
+        l[dir] -= 1;
+        grad_f[dir] = (f[r] - f[l])*inv_dx;
+      }
+      mag_grad_f[c] = grad_f.length();
+    }
+    //__________________________________
+    // set refinement flag
+    PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
+    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      if( mag_grad_f[c] > d_scalar->refineCriteria){
+        refineFlag[c] = true;
+        refinePatch->set();
+      }
+    }
+  }  // patches
 }

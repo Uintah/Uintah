@@ -51,7 +51,7 @@ void ModelFactory::makeModels(const ProblemSpecP& params,
     if(type == "SimpleRxn")
       models.push_back(scinew SimpleRxn(d_myworld, model));
     else if(type == "AdiabaticTable")
-      models.push_back(scinew AdiabaticTable(d_myworld, model));
+      models.push_back(scinew AdiabaticTable(d_myworld, model,doAMR));
     else if(type == "Test")
       models.push_back(scinew TestModel(d_myworld, model));
     else if(type == "Mixing")
