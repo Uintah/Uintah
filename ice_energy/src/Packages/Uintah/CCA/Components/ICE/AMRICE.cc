@@ -136,15 +136,15 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
     const MaterialSubset* all_matls_sub = all_matls->getUnion();
     
     addRefineDependencies(task, lb->press_CCLabel, oims,d_press_matl, step, nsteps);
-    addRefineDependencies(task, lb->rho_CCLabel,   ND,  all_matls_sub,step, nsteps);
-    addRefineDependencies(task, lb->sp_vol_CCLabel,ND,  all_matls_sub,step, nsteps);
-    addRefineDependencies(task, lb->temp_CCLabel,  ND,  all_matls_sub,step, nsteps);
-    addRefineDependencies(task, lb->vel_CCLabel,   ND,  all_matls_sub,step, nsteps);
+    addRefineDependencies(task, lb->rho_CCLabel,    ND,  all_matls_sub,step, nsteps);
+    addRefineDependencies(task, lb->sp_vol_CCLabel, ND,  all_matls_sub,step, nsteps);
+    addRefineDependencies(task, lb->int_eng_CCLabel,ND,  all_matls_sub,step, nsteps);
+    addRefineDependencies(task, lb->vel_CCLabel,    ND,  all_matls_sub,step, nsteps);
     
     task->modifies(lb->press_CCLabel, d_press_matl, oims);
     task->modifies(lb->rho_CCLabel);
     task->modifies(lb->sp_vol_CCLabel);
-    task->modifies(lb->temp_CCLabel);
+    task->modifies(lb->int_eng_CCLabel);
     task->modifies(lb->vel_CCLabel);
 
     //__________________________________
@@ -195,13 +195,13 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
       for (int m = 0; m < numMatls; m++) {
         ICEMaterial* matl = d_sharedState->getICEMaterial(m);
         int indx = matl->getDWIndex();    
-        CCVariable<double> press_CC, rho_CC, sp_vol_CC, temp_CC;
+        CCVariable<double> press_CC, rho_CC, sp_vol_CC, int_eng_CC;
         CCVariable<Vector> vel_CC;
 
         fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch);
         fine_new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx,patch);
         fine_new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx,patch);
-        fine_new_dw->getModifiable(temp_CC,  lb->temp_CCLabel,   indx,patch);
+        fine_new_dw->getModifiable(int_eng_CC,lb->int_eng_CCLabel,   indx,patch);
         fine_new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx,patch);
 
         //__________________________________
@@ -213,7 +213,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
           printData(indx, patch,   1, desc.str(), "press_CC",    press_CC);
           printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
           printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-          printData(indx, patch,   1, desc.str(), "Temp_CC",     temp_CC);
+          printData(indx, patch,   1, desc.str(), "int_eng_CC",     int_eng_CC);
           printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
         }
 
@@ -226,8 +226,8 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         refineCoarseFineBoundaries(patch, sp_vol_CC,fine_new_dw,
                                    lb->sp_vol_CCLabel, indx,subCycleProgress);
 
-        refineCoarseFineBoundaries(patch, temp_CC,  fine_new_dw,
-                                   lb->temp_CCLabel,   indx,subCycleProgress);
+        refineCoarseFineBoundaries(patch, int_eng_CC,  fine_new_dw,
+                                   lb->int_eng_CCLabel,   indx,subCycleProgress);
 
         refineCoarseFineBoundaries(patch, vel_CC,   fine_new_dw,
                                    lb->vel_CCLabel,    indx,subCycleProgress);
@@ -269,7 +269,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
           printData(indx, patch,   1, desc.str(), "press_CC",  press_CC);
           printData(indx, patch,   1, desc.str(), "rho_CC",    rho_CC);
           printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
-          printData(indx, patch,   1, desc.str(), "Temp_CC",   temp_CC);
+          printData(indx, patch,   1, desc.str(), "int_eng_CC",   int_eng_CC);
           printVector(indx, patch, 1, desc.str(), "vel_CC", 0, vel_CC);
         }
       }
@@ -581,7 +581,7 @@ void AMRICE::refine(const ProcessorGroup*,
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
-      CCVariable<double> rho_CC, temp, sp_vol_CC;
+      CCVariable<double> rho_CC, int_eng, sp_vol_CC;
       CCVariable<Vector> vel_CC;
       
       new_dw->allocateAndPut(rho_CC,   lb->rho_CCLabel,    indx, finePatch);
@@ -591,7 +591,7 @@ void AMRICE::refine(const ProcessorGroup*,
       
       rho_CC.initialize(d_EVIL_NUM);
       sp_vol_CC.initialize(d_EVIL_NUM);
-      temp.initialize(d_EVIL_NUM);
+      int_eng.initialize(d_EVIL_NUM);
       vel_CC.initialize(Vector(d_EVIL_NUM));
 
       // refine  
@@ -640,7 +640,7 @@ void AMRICE::refine(const ProcessorGroup*,
         printData(indx, finePatch,   1, desc.str(), "press_CC",  press_CC);
         printData(indx, finePatch,   1, desc.str(), "rho_CC",    rho_CC);
         printData(indx, finePatch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
-        printData(indx, finePatch,   1, desc.str(), "Temp_CC",   temp);
+        printData(indx, finePatch,   1, desc.str(), "int_eng_CC",   int_eng);
         printVector(indx, finePatch, 1, desc.str(), "vel_CC", 0, vel_CC);
       }
     }
@@ -828,9 +828,6 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb->vel_CCLabel,
                0, Task::FineLevel,  all_matls_sub,ND, gn, 0);
                
-  task->requires(Task::NewDW, lb->specific_heatLabel,
-               0, Task::FineLevel,  all_matls_sub,ND, gn, 0);
-
   //__________________________________
   // Model Variables.
   if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -891,7 +888,6 @@ void AMRICE::coarsen(const ProcessorGroup*,
       CCVariable<double> rho_CC, int_eng, sp_vol_CC;
       CCVariable<Vector> vel_CC;
       
-      new_dw->get(cv,                 lb->specific_heatLabel, indx, coarsePatch, gn,0);
       new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,        indx, coarsePatch);
       new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel,     indx, coarsePatch);
       new_dw->getModifiable(int_eng,  lb->int_eng_CCLabel,    indx, coarsePatch);
@@ -906,7 +902,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
                          lb->sp_vol_CCLabel,indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
 
-      fineToCoarseOperator<double>(temp,      rho_CC, cv, "energy",   
+      fineToCoarseOperator<double>(int_eng,   rho_CC, cv, "energy",   
                          lb->int_eng_CCLabel, indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
        
@@ -957,7 +953,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
        // printData(indx, coarsePatch,   1, desc.str(), "press_CC",    press_CC);
         printData(indx, coarsePatch,   1, desc.str(), "rho_CC",      rho_CC);
         printData(indx, coarsePatch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-        printData(indx, coarsePatch,   1, desc.str(), "Temp_CC",     temp);
+        printData(indx, coarsePatch,   1, desc.str(), "int_eng_CC",  int_eng);
         printVector(indx, coarsePatch, 1, desc.str(), "vel_CC", 0,   vel_CC);
       }
     }
@@ -980,6 +976,9 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
                                   const Level* coarseLevel,
                                   const Level* fineLevel)
 {
+  throw InternalError("fineToCoarseOperator not finished", __FILE__, __LINE__);
+  // I think that switch3 can go away.  I don't like them anyway :)
+#if 0
   Level::selectType finePatches;
   coarsePatch->getFineLevelPatches(finePatches);
    
@@ -1066,6 +1065,7 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     }
   }
   cout_dbg.setActive(false);// turn off the switch for cout_dbg
+#endif
 }
  
 /*___________________________________________________________________
@@ -1085,7 +1085,6 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   Ghost::GhostType gn  = Ghost::None;
   Ghost::GhostType gac = Ghost::AroundCells;
   task->requires(Task::NewDW, lb->rho_CCLabel,        gac, 1);
-  task->requires(Task::NewDW, lb->specific_heatLabel, gac, 1);
   
   //__________________________________
   // Fluxes from the fine level            
@@ -1186,7 +1185,6 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(rho_CC,lb->rho_CCLabel,       indx,coarsePatch, gac,1);
-      new_dw->get(cv,    lb->specific_heatLabel,indx,coarsePatch, gac,1);
       
       Level::selectType finePatches;
       coarsePatch->getFineLevelPatches(finePatches);
@@ -1703,8 +1701,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
     
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);     
-      CCVariable<double> rho_CC, temp, sp_vol_CC;
-      constCCVariable<double> cv;
+      CCVariable<double> rho_CC, int_eng, sp_vol_CC;
       CCVariable<Vector> vel_CC;
 
       Ghost::GhostType  gn  = Ghost::None;
@@ -1712,7 +1709,6 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx, coarsePatch);
       new_dw->getModifiable(int_eng,  lb->int_eng_CCLabel,   indx, coarsePatch);
       new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx, coarsePatch);
-      new_dw->get(cv,                 lb->specific_heatLabel,indx,coarsePatch, gn,0);
       
       Level::selectType finePatches;
       coarsePatch->getFineLevelPatches(finePatches); 
@@ -1734,7 +1730,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
           refluxOperator_applyCorrectionFluxes<Vector>(vel_CC, "mom",     indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
 
-          refluxOperator_applyCorrectionFluxes<double>(temp,  "int_eng", indx, 
+          refluxOperator_applyCorrectionFluxes<double>(int_eng,  "int_eng", indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw);
           //__________________________________
           //    Model Variables
@@ -1769,7 +1765,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
         desc << "Reflux_applyCorrection_Mat_" << indx << "_patch_"<< coarsePatch->getID();
         printData(indx, coarsePatch,   1, desc.str(), "rho_CC",   rho_CC);
         printData(indx, coarsePatch,   1, desc.str(), "sp_vol_CC",sp_vol_CC);
-        printData(indx, coarsePatch,   1, desc.str(), "Temp_CC",  temp);
+        printData(indx, coarsePatch,   1, desc.str(), "int_eng_CC",  int_eng);
         printVector(indx, coarsePatch, 1, desc.str(), "vel_CC", 0,vel_CC);
       }
     }  // matl loop
@@ -1904,7 +1900,7 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
                   
   t->requires(Task::NewDW, lb->rho_CCLabel,       gac, 1);
-  t->requires(Task::NewDW, lb->temp_CCLabel,      gac, 1);
+  t->requires(Task::NewDW, lb->ntemp_CCLabel,     gac, 1);
   t->requires(Task::NewDW, lb->vel_CCLabel,       gac, 1);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel,  gac, 1);
   t->requires(Task::NewDW, lb->press_CCLabel,    d_press_matl,oims,gac, 1);
@@ -2048,7 +2044,7 @@ AMRICE::errorEstimate(const ProcessorGroup*,
       CCVariable<double> mag_div_vel_CC;
       
       new_dw->get(rho_CC,      lb->rho_CCLabel,      indx,patch,gac,1);
-      new_dw->get(temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1);
+      new_dw->get(temp_CC,     lb->ntemp_CCLabel,    indx,patch,gac,1);
       new_dw->get(vel_CC,      lb->vel_CCLabel,      indx,patch,gac,1);
       new_dw->get(vol_frac_CC, lb->vol_frac_CCLabel, indx,patch,gac,1);
 

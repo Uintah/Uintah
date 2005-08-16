@@ -20,17 +20,17 @@ ______________________________________________________________________*/
 template<class T>
 void  conservationTest(const Patch* patch,
                        const double& delT,
-                       CCVariable<T>& mass_q_CC,
-                       constSFCXVariable<double>& uvel_FC,
-                       constSFCYVariable<double>& vvel_FC,
-                       constSFCZVariable<double>& wvel_FC,
+                       const constCCVariable<T>& mass_q_CC,
+                       const constSFCXVariable<double>& uvel_FC,
+                       const constSFCYVariable<double>& vvel_FC,
+                       const constSFCZVariable<double>& wvel_FC,
                        T& sum)
 {
   //__________________________________
   // sum all the interior
   T zero(0.0);
   T sum_interior(zero);
-
+  
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
     IntVector c = *iter;
     sum_interior += mass_q_CC[c];

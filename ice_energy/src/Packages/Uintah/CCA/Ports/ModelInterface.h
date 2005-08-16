@@ -68,6 +68,7 @@ WARNING
 	      const VarLabel* sp_vol_source,
 	      const VarLabel* density, 
 	      const VarLabel* velocity,
+              const VarLabel* internalEnergy,
 	      const VarLabel* otemperature, 
 	      const VarLabel* pressure,
 	      const VarLabel* specificVol)
@@ -78,6 +79,7 @@ WARNING
         sp_vol_source_CCLabel(sp_vol_source),
         density_CCLabel(density), 
         velocity_CCLabel(velocity),
+        internalEnergy_CCLabel(internalEnergy),
         otemperature_CCLabel(otemperature), 
         pressure_CCLabel(pressure),
         sp_vol_CCLabel(specificVol)
@@ -91,6 +93,7 @@ WARNING
     const VarLabel* sp_vol_source_CCLabel;
     const VarLabel* density_CCLabel;
     const VarLabel* velocity_CCLabel;
+    const VarLabel* internalEnergy_CCLabel;
     const VarLabel* otemperature_CCLabel;
     const VarLabel* pressure_CCLabel;
     const VarLabel* sp_vol_CCLabel;
@@ -128,15 +131,6 @@ WARNING
 						    const LevelP& level,
 						    const ModelInfo*) = 0;
                                               
-     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                const LevelP&,
-                                                const MaterialSet*) = 0;
-                                                
-     virtual void computeSpecificHeat(CCVariable<double>&,
-                                     const Patch* patch,
-                                     DataWarehouse* new_dw,
-                                     const int indx) = 0;
-                                     
      virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched) =0;                                  
     
@@ -150,8 +144,6 @@ WARNING
 
      virtual void setMPMLabel(MPMLabel* MLB);
                                                
-    bool computesThermoTransportProps() const;
-    bool d_modelComputesThermoTransportProps;
     Output* d_dataArchiver;
    
    protected:

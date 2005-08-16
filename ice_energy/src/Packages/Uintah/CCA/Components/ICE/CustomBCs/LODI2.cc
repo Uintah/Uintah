@@ -150,6 +150,8 @@ void addRequires_Lodi(Task* t,
     t->computes(lb->vel_CC_XchangeLabel);
     t->computes(lb->temp_CC_XchangeLabel);
   }
+  throw InternalError("LODI2 not finished", __FILE__, __LINE__);
+#if 0
   if(where == "Advection"){
     setLODI_bcs = true;
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
@@ -158,6 +160,7 @@ void addRequires_Lodi(Task* t,
     // requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
   }
+#endif
   //__________________________________
   //   All tasks Lodi faces require(maxMach_<face>)
   if(setLODI_bcs){
@@ -218,6 +221,8 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   }
   //__________________________________
   //    cc_ Exchange
+  throw InternalError("microslip not finished", __FILE__, __LINE__);
+#if 0
   if(where == "CC_Exchange"){
     setLodiBcs = true;
     new_dw->get(lv->vel_CC,     lb->vel_CC_XchangeLabel,indx,patch,gn,0);
@@ -236,6 +241,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     new_dw->get(lv->gamma,     lb->gammaLabel,         indx,patch,gn,0); 
     new_dw->get(lv->press_CC,  lb->press_CCLabel,      0,   patch,gn,0); 
   }
+#endif
   
   //__________________________________
   //compute Li at boundary cells

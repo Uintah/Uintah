@@ -110,7 +110,9 @@ void addRequires_MicroSlip(Task* t,
     t->requires(Task::ParentNewDW, lb->press_CCLabel, press_matl,oims,gn, 0);
   }
 #endif
-  
+
+  throw InternalError("microslip not finished", __FILE__, __LINE__);
+#if 0
   if(where == "CC_Exchange"){
     t->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn);
     t->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn); 
@@ -126,6 +128,7 @@ void addRequires_MicroSlip(Task* t,
     // requires(Task::NewDW, lb->vel_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
   }
+#endif
 }
 /*__________________________________________________________________
  Function~ meanFreePath-
@@ -199,6 +202,8 @@ void  preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
   }
   //__________________________________
   //    cc_ Exchange
+  throw InternalError("microslip not finished", __FILE__, __LINE__);
+#if 0
   if(where == "CC_Exchange"){
     setMicroSlipBcs = true;
     new_dw->get(sv->rho_CC,     lb->rho_CCLabel,         indx,patch,gn,0);
@@ -227,6 +232,7 @@ void  preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
     sv->alpha_temperature = var_basket->alpha_temperature;
     meanFreePath(new_dw, patch, sharedState, sv);
   }
+#endif
 }
 /* ______________________________________________________________________ 
  Function~  is_MicroSlip_face--   

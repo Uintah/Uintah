@@ -41,6 +41,8 @@ ICELabel::ICELabel()
     VarLabel::create("int_eng_CC",      CCVariable<double>::getTypeDescription());
   otemp_CCLabel      = 
     VarLabel::create("otemp_CC",      CCVariable<double>::getTypeDescription());
+  ntemp_CCLabel      = 
+    VarLabel::create("ntemp_CC",      CCVariable<double>::getTypeDescription());
   vel_CCLabel       = 
     VarLabel::create("vel_CC",       CCVariable<Vector>::getTypeDescription());
   rho_micro_CCLabel = 
@@ -275,6 +277,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(compressiblityLabel);
     VarLabel::destroy(sumKappaLabel);    
     VarLabel::destroy(otemp_CCLabel);
+    VarLabel::destroy(ntemp_CCLabel);
     VarLabel::destroy(int_eng_CCLabel);
     VarLabel::destroy(temp_CC_XchangeLabel);
     VarLabel::destroy(vel_CCLabel);
