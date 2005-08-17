@@ -92,6 +92,7 @@ namespace Uintah {
     // CC variables: set up linear system & read back solution
     virtual void makeLinearSystem_CC(const int matl);
     virtual void getSolution_CC(const int matl);
+    virtual void gatherSolutionVector(void);
 
     // HYPRE data printouts
     virtual void printMatrix(const string& fileName = "output");
