@@ -90,9 +90,14 @@ namespace Uintah {
       X_label(x), modifies_x(modifies_x),
       B_label(b), which_b_dw(which_b_dw),
       guess_label(guess), which_guess_dw(which_guess_dw),
-      params(params), _activeInterface(0)
+      params(params), _interface(0)
       {}    
     virtual ~HypreDriver(void);
+
+    // Data member modifyable access
+    HYPRE_StructMatrix& getA(void) { return _HA; }  // LHS
+    HYPRE_StructVector& getB(void) { return _HB; }  // RHS
+    HYPRE_StructVector& getX(void) { return _HX; }  // Solution
 
     // Generic solve functions
     template<class Types>
@@ -132,22 +137,19 @@ namespace Uintah {
     //========================== PROTECTED SECTION ==========================
   protected:
 
-    //    virtual void initialize(void) = 0;
-    //    virtual void clear(void) = 0;
-
     //---------- Data members ----------
     // Uintah input data
-    const Level*             level;
-    const MaterialSet*       matlset;
-    const VarLabel*          A_label;
-    Task::WhichDW            which_A_dw;
-    const VarLabel*          X_label;
-    bool                     modifies_x;
-    const VarLabel*          B_label;
-    Task::WhichDW            which_b_dw;
-    const VarLabel*          guess_label;
-    Task::WhichDW            which_guess_dw;
-    const HypreSolverParams* params;
+    const Level*             _level;
+    const MaterialSet*       _matlset;
+    const VarLabel*          _A_label;
+    Task::WhichDW            _which_A_dw;
+    const VarLabel*          _X_label;
+    bool                     _modifies_x;
+    const VarLabel*          _B_label;
+    Task::WhichDW            _which_b_dw;
+    const VarLabel*          _guess_label;
+    Task::WhichDW            _which_guess_dw;
+    const HypreSolverParams* _params;
 
     // Uintah variables assigned inside solve() for our internal setup
     // / getSolution functions
@@ -160,13 +162,14 @@ namespace Uintah {
     DataWarehouse*           _b_dw;
     DataWarehouse*           _guess_dw;
 
-    int _activeInterface;                             // Bit mask: which
-                                                      // interfaces are active
+    HypreInterface           _interface;  // Hypre interface currently in use
 
+    // TODO: create a HypreParCSR interface that can be constructed
+    // from a struct or sstruct hypre driver object.
     // Hypre ParCSR interface objects
-    HYPRE_ParCSRMatrix       _A_Par;                  // Left-hand-side matrix
-    HYPRE_ParVector          _b_Par;                  // Right-hand-side vector
-    HYPRE_ParVector          _x_Par;                  // Solution vector
+    //    HYPRE_ParCSRMatrix       _A_Par;                  // Left-hand-side matrix
+    //    HYPRE_ParVector          _b_Par;                  // Right-hand-side vector
+    //    HYPRE_ParVector          _x_Par;                  // Solution vector
 
   }; // end class HypreDriver
 
@@ -256,7 +259,7 @@ namespace Uintah {
          chose. Specific solver object is arbitrated in HypreGenericSolver
          according to param->solverType. */
       SolverType solverType = getSolverType(params->solverTitle);
-      HypreGenericSolver* hypreSolver = 
+      HypreGenericSolver* solver = 
         newHypreGenericSolver(solverType,this);
 
       //-----------------------------------------------------------
@@ -267,7 +270,7 @@ namespace Uintah {
       // Setup phase
       int timeSetup = hypre_InitializeTiming("Solver Setup");
       hypre_BeginTiming(timeSetup);
-      hypreSolver->setup(this);  // Depends only on A
+      solver->setup(this);  // Depends only on A
       hypre_EndTiming(timeSetup);
       hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
       hypre_FinalizeTiming(timeSetup);
@@ -277,7 +280,7 @@ namespace Uintah {
       // Solve phase
       int timeSolve = hypre_InitializeTiming("Solver Setup");
       hypre_BeginTiming(timeSolve);
-      hypreSolver->solve(this);  // Depends on A and b
+      solver->solve(this);  // Depends on A and b
       gatherSolutionVector();
       hypre_EndTiming(timeSolve);
       hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
@@ -290,7 +293,7 @@ namespace Uintah {
       //-----------------------------------------------------------
       // Check if converged, print solve statisticsS
       //-----------------------------------------------------------
-      const HypreGenericSolver::Results& results = hypreSolver->getResults();
+      const HypreGenericSolver::Results& results = solver->getResults();
       double finalResNorm = results.finalResNorm;
       int numIterations = results.numIterations;
       if ((finalResNorm > params->tolerance) ||
@@ -325,7 +328,7 @@ namespace Uintah {
            << finalResNorm << "\n";
       std::cerr << "" << "\n";
       
-      delete hypreSolver;
+      delete solver;
 
       double dt=Time::currentSeconds()-tstart;
       if(pg->myrank() == 0){

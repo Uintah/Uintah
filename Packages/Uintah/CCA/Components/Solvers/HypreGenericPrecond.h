@@ -47,6 +47,7 @@ namespace Uintah {
   
   // Forward declarations
   class HypreSolverParams;
+  class HypreGenericSolver;
 
   //---------- Types ----------
   
@@ -56,16 +57,19 @@ namespace Uintah {
   public:
   
     virtual ~HypreGenericPrecond(void) {}
+    void                  assertInterface(const int acceptableInterface);
 
-    void assertInterface(const int acceptableInterface);
+    // Data member modifyable access
+    HypreGenericSolver*   getSolver(void) { return _solver; }
+    HYPRE_PtrToSolverFcn& getPrecond(void) { return _precond; }
+    HYPRE_PtrToSolverFcn& getPCSetup(void) { return _pcsetup; }
+    HYPRE_Solver&         getPrecondSolver(void) { return _precond_solver; }
 
     //========================== PROTECTED SECTION ==========================
   protected:
 
     //---------- Data members ----------
     HypreGenericSolver*      _solver;       // Hypre system interface
-    const ProcessorGroup*    _pg;
-    const HypreSolverParams* _params;
     HYPRE_PtrToSolverFcn     _precond;
     HYPRE_PtrToSolverFcn     _pcsetup;
     HYPRE_Solver             _precond_solver;
@@ -73,10 +77,8 @@ namespace Uintah {
     //========================== PRIVATE SECTION ==========================
   private:
     // Ensure that this class cannot be instantiated
-    HypreGenericPrecond(const HypreInterface& interface,
-                 const ProcessorGroup* pg,
-                 const HypreSolverParams* params,
-                 const int acceptableInterface)
+    HypreGenericPrecond(HypreGenericSolver* _solver,
+                        const int acceptableInterface)
       {
         assertInterface(acceptableInterface);
       }
@@ -84,10 +86,8 @@ namespace Uintah {
   }; // end class HypreGenericPrecond
 
   // Utilities
-  HypreGenericPrecond* newHypreGenericPrecond(const PrecondType& precondType,
-                                const HypreInterface& interface,
-                                const ProcessorGroup* pg,
-                                const HypreSolverParams* params);
+  HypreGenericPrecond* newHyprePrecond(const PrecondType& precondType,
+                                       HypreGenericSolver* solver);
   PrecondType   getPrecondType(const std::string& precondTitle);
 
 } // end namespace Uintah
