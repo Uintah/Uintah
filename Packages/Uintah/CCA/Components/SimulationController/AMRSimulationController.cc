@@ -65,8 +65,9 @@ void AMRSimulationController::run()
    ProblemSpecP debug = d_ups->findBlock("debug");
    if(debug){
      ProblemSpecP log_mem = debug->findBlock("logmemory");
-     if(log_mem)
+     if(log_mem){
        log_dw_mem=true;
+     }
    }
 #endif
 
@@ -101,11 +102,11 @@ void AMRSimulationController::run()
      // and should not use a delt factor.
      d_timeinfo->delt_factor = 1;
      d_timeinfo->delt_min = 0;
-     if (d_reduceUda)
+     if (d_reduceUda){
        d_timeinfo->maxTime = static_cast<UdaReducer*>(d_sim)->getMaxTime();
-     else
+     }else{
        d_timeinfo->maxTime = static_cast<PatchCombiner*>(d_sim)->getMaxTime();
-
+     }
      cout << " MaxTime: " << d_timeinfo->maxTime << endl;
      d_timeinfo->delt_max = d_timeinfo->maxTime;
    }
@@ -121,12 +122,14 @@ void AMRSimulationController::run()
    // the number of levels the regridder can handle .
    // Only do if not restarting
 
-   if (d_doAMR && !d_restarting && d_regridder->isAdaptive())
+   if (d_doAMR && !d_restarting && d_regridder->isAdaptive()){
      while (currentGrid->numLevels() < d_regridder->maxLevels() &&
             d_regridder->flaggedCellsOnFinestLevel(currentGrid, d_scheduler)) {
-       if (!doInitialTimestepRegridding(currentGrid))
+       if (!doInitialTimestepRegridding(currentGrid)) {
          break;
+       }
      }
+   }
 
 
    ////////////////////////////////////////////////////////////////////////////
@@ -139,9 +142,9 @@ void AMRSimulationController::run()
    // if we end the simulation for a timestep, decide whether to march max_iterations
    // or to end at a certain timestep
    int max_iterations = d_timeinfo->max_iterations;
-   if (d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep() < max_iterations)
+   if (d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep() < max_iterations) {
      max_iterations = d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep();
-
+   }
    while( t < d_timeinfo->maxTime && iterations < max_iterations) {
      if (d_doAMR && d_regridder->needsToReGrid() && !first) {
        doRegridding(currentGrid);
@@ -150,8 +153,9 @@ void AMRSimulationController::run()
      // Compute number of dataWarehouses - multiplies by the time refinement
      // ratio for each level you increase
      int totalFine=1;
-     for(int i=1;i<currentGrid->numLevels();i++)
+     for(int i=1;i<currentGrid->numLevels();i++) {
        totalFine *= currentGrid->getLevel(i)->timeRefinementRatio();
+     }
      
      iterations ++;
      calcWallTime();
@@ -198,8 +202,9 @@ void AMRSimulationController::run()
        d_scheduler->initialize();
        for (int i = 0; i < currentGrid->numLevels(); i++) {
          d_sim->scheduleInitializeAddedMaterial(currentGrid->getLevel(i), d_scheduler);
-         if (d_doAMR && i > 0)
+         if (d_doAMR && i > 0){
            d_sim->scheduleRefineInterface(currentGrid->getLevel(i), d_scheduler, 1, 1);
+         }
        }
        d_scheduler->compile();
        d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
@@ -222,8 +227,9 @@ void AMRSimulationController::run()
        recompile(t, delt, currentGrid, totalFine);
      }
      else {
-       if (d_output)
+       if (d_output){
          d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, 0);
+       }
      }
 
      // adjust the delt for each level and store it in all applicable dws.
@@ -245,8 +251,9 @@ void AMRSimulationController::run()
      // Execute the current timestep, restarting if necessary
      executeTimestep(t, delt, currentGrid, totalFine);
 
-     if(d_output)
+     if(d_output){
        d_output->executedTimestep(delt, currentGrid);
+     }
 
      t += delt;
      TAU_DB_DUMP();
@@ -255,7 +262,7 @@ void AMRSimulationController::run()
    d_ups->releaseDocument();
 }
 
-
+//______________________________________________________________________
 void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, int numLevel)
 {
   //amrout << "Start AMRSimulationController::subCycle, level=" << numLevel << '\n';
@@ -283,7 +290,7 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
     }
     // do refineInterface after the freshest data we can get; after the finer
     // level's coarsen completes
-    if (d_doAMR) {
+    if (d_doAMR && step < numSteps -1) {
       d_scheduler->clearMappings();
       d_scheduler->mapDataWarehouse(Task::OldDW, curDW);
       d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
@@ -295,15 +302,20 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
 
     curDW += newDWStride;
   }
-  // Coarsening always happens at the final timestep, completely within the
-  // last DW
+  // Coarsen and then refine_CFI at the end of the W-cycle
   d_scheduler->clearMappings();
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
   d_scheduler->mapDataWarehouse(Task::NewDW, curDW);
-  if (d_doAMR)
+  d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
+  d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
+  if (d_doAMR){
     d_sim->scheduleCoarsen(coarseLevel, d_scheduler);
+     // For clarity this belongs outside of the W-cycle after we've coarsened and done the error estimation and are
+     // about to start a new timestep.  see ICE/Docs/W-cycle.pdf
+    d_sim->scheduleRefineInterface(fineLevel, d_scheduler, 1, 1); 
+  }
 }
-
+//______________________________________________________________________
 bool
 AMRSimulationController::needRecompile(double time, double delt,
 				       const GridP& grid)
@@ -315,11 +327,12 @@ AMRSimulationController::needRecompile(double time, double delt,
   recompile |= (d_output && d_output->needRecompile(time, delt, grid));
   recompile |= (d_sim && d_sim->needRecompile(time, delt, grid));
   recompile |= (d_lb && d_lb->needRecompile(time, delt, grid));
-  if (d_doAMR)
+  if (d_doAMR){
     recompile |= (d_regridder && d_regridder->needRecompile(time, delt, grid));
+  }
   return recompile;
 }
-
+//______________________________________________________________________
 void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 {
   if(d_myworld->myrank() == 0){
@@ -372,7 +385,7 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 
   
 }
-
+//______________________________________________________________________
 bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
 {
   double start = Time::currentSeconds();
@@ -418,7 +431,7 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
 
   return true;
 }
-
+//______________________________________________________________________
 void AMRSimulationController::doRegridding(GridP& currentGrid)
 {
   double start = Time::currentSeconds();
@@ -433,8 +446,9 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
         cout << " Level " << i << " has " << currentGrid->getLevel(i)->numPatches() << " patches...";
       }
       cout << endl;
-      if (amrout.active())
+      if (amrout.active()) {
         amrout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+      }
     }
          
     // Compute number of dataWarehouses
@@ -448,13 +462,14 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
     scheduleTime = Time::currentSeconds() - scheduleTime;
 
     double time = Time::currentSeconds() - start;
-    if(d_myworld->myrank() == 0)
+    if(d_myworld->myrank() == 0){
       cout << "done regridding (" << time << " seconds, regridding took " << regridTime 
            << ", scheduling and copying took " << scheduleTime << ")\n";
+    }
   }
 }
 
-
+//______________________________________________________________________
 void AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, int totalFine)
 {
   if(d_myworld->myrank() == 0)
@@ -473,13 +488,13 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
   
   if (d_sim->useLockstepTimeAdvance()) {
     d_sim->scheduleLockstepTimeAdvance(currentGrid, d_scheduler);
-  }
-  else {
+  }else {
 
     d_sim->scheduleTimeAdvance(currentGrid->getLevel(0), d_scheduler, 0, 1);
   
-    if(currentGrid->numLevels() > 1)
+    if(currentGrid->numLevels() > 1){
       subCycle(currentGrid, 0, totalFine, 1);
+    }
     
     d_scheduler->clearMappings();
     d_scheduler->mapDataWarehouse(Task::OldDW, 0);
@@ -490,12 +505,13 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
     if (d_doAMR) {
       d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
       d_sim->scheduleErrorEstimate(currentGrid->getLevel(i), d_scheduler);
-    }
+    }    
     d_sim->scheduleComputeStableTimestep(currentGrid->getLevel(i), d_scheduler);
   }
 
-  if(d_output)
+  if(d_output){
     d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, true, d_sharedState->needAddMaterial());
+  }
   
   d_scheduler->compile();
  
@@ -505,7 +521,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
   
   d_sharedState->setNeedAddMaterial(0);
 }
-
+//______________________________________________________________________
 void AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
 {
   // If the timestep needs to be
@@ -533,16 +549,18 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
       ASSERT(restartable);
       // Figure out new delt
       double new_delt = d_sim->recomputeTimestep(delt);
-      if(d_myworld->myrank() == 0)
+      if(d_myworld->myrank() == 0){
         cout << "Restarting timestep at " << t << ", changing delt from "
              << delt << " to " << new_delt << '\n';
+      }
       d_output->reEvaluateOutputTimestep(orig_delt, new_delt);
       delt = new_delt;
       d_scheduler->get_dw(0)->override(delt_vartype(new_delt),
                                        d_sharedState->get_delt_label());
 
-      for (int i=1; i <= totalFine; i++)
+      for (int i=1; i <= totalFine; i++){
         d_scheduler->replaceDataWarehouse(i, currentGrid);
+      }
 
       double delt_fine = delt;
       int skip=totalFine;
