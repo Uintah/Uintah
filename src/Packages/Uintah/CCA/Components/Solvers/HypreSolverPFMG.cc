@@ -1,5 +1,4 @@
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverPFMG.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -37,47 +36,109 @@ namespace Uintah {
                         +_interface,__FILE__, __LINE__);
   }
 
+  void
+  HypreGenericSolver::setup(HypreDriver* hypreDriver)
+    //-----------------------------------------------------------
+    // Solver setup phase
+    //-----------------------------------------------------------
+  {
+    cerr << "Solver setup phase" << "\n";
+    int time_index = hypre_InitializeTiming("Solver Setup");
+    hypre_BeginTiming(time_index);
+    this->setup(hypreDriver); // The derived Solver setup()
+    hypre_EndTiming(time_index);
+    hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
+    hypre_FinalizeTiming(time_index);
+    hypre_ClearTiming();
+    cerr << "Setup phase time = " << time_index << "\n";
+  } // end setup()
+
+  void
+  HypreGenericSolver::solve(HypreDriver* hypreDriver)
+  {
+    //-----------------------------------------------------------
+    // Solver solve phase
+    //-----------------------------------------------------------
+    cerr << "Solver solve phase" << "\n";
+    int time_index = hypre_InitializeTiming("Solver Setup");
+    hypre_BeginTiming(time_index);
+    this->solve(hypreDriver); // The derived Solver solve()
+
+    //-----------------------------------------------------------
+    //Gather the solution vector
+    //-----------------------------------------------------------
+    //TODO: SolverSStruct is derived from Solver; implement the
+    //following in SolverSStruct. For SolverStruct (PFMG), another
+    //gather vector required.
+    cerr << "Gather the solution vector" << "\n";
+    switch (_interface) {
+    case HypreStruct:
+      {
+        // It seems it is not necessary to gather the solution vector
+        // for the Struct interface.
+        /*
+        HypreDriverStruct* structDriver =
+          dynamic_cast<HypreDriverStruct*>(hypreDriver);
+        if (!structDriver) {
+          throw InternalError("interface = Struct but HypreDriver is not!",
+                              __FILE__, __LINE__);
+        }
+        HYPRE_StructVectorGather(structDriver->getX());
+        */
+      }
+#if 0
+    case HypreSStruct:
+      {
+        HypreDriverSStruct* sstructDriver =
+          dynamic_cast<HypreDriverSStruct*>(hypreDriver);
+        if (!sstructDriver) {
+          throw InternalError("interface = SStruct but HypreDriver is not!",
+                              __FILE__, __LINE__);
+        }
+        HYPRE_SStructVectorGather(sstructDriver->getX());
+      }
+#endif
+    default:
+      throw InternalError("Unsupported Hypre Interface: "+_interface,
+                          __FILE__, __LINE__);
+    } // end switch (interface)
+    
+    cerr << "Solve phase time = " << time_index << "\n";
+  } //end solve()
+
   // TODO: include all derived classes here.
   HypreGenericSolver*
-  newHypreGenericSolver(const SolverType& solverType,
-                        const HypreInterface& interface,
-                        const ProcessorGroup* pg,
-                        const HypreSolverParams* params,
-                        const int acceptableInterface)
+  newHypreGenericSolver(const SolverType& solverType)
     /* Create a new solver object of specific solverType solver type
        but a generic solver pointer type. */
   {
     switch (solverType) {
-#if 0
     case SMG:
       {
-        return new HypreSolverSMG(interface,pg,params,acceptableInterface);
+        return new HypreSolverSMG(hypreData);
       }
-#endif
     case PFMG:
       {
-        return new HypreSolverPFMG(interface,pg,params,acceptableInterface);
+        return new HypreSolverPFMG(hypreData);
       }
-#if 0
     case SparseMSG:
       {
-        return new HypreSolverSparseMSG(interface,pg,params,acceptableInterface);
+        return new HypreSolverSparseMSG(hypreData);
       }
     case CG:
       {
-        return new HypreSolverCG(interface,pg,params,acceptableInterface);
+        return new HypreSolverCG(hypreData);
       }
     case Hybrid: 
       {
-        return new HypreSolverHybrid(interface,pg,params,acceptableInterface);
+        return new HypreSolverHybrid(hypreData);
       }
     case GMRES:
       {
-        return new HypreSolverGMRES(interface,pg,params,acceptableInterface);
+        return new HypreSolverGMRES(hypreData);
       }
-#endif
     default:
-      throw InternalError("Unsupported solver type: "+solverType,
+      throw InternalError("Unsupported solver type: "+params->solverTitle,
                           __FILE__, __LINE__);
     } // switch (solverType)
     return 0;

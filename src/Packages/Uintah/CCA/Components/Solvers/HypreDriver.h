@@ -122,6 +122,8 @@ namespace Uintah {
     virtual void getSolution_NC(const int matl);
     virtual void getSolution_CC(const int matl);
 
+    virtual void gatherSolutionVector(void) = 0;
+
     // HYPRE data printouts
     virtual void printMatrix(const string& fileName = "output") = 0;
     virtual void printRHS(const string& fileName = "output_b") = 0;
@@ -254,15 +256,40 @@ namespace Uintah {
          chose. Specific solver object is arbitrated in HypreGenericSolver
          according to param->solverType. */
       SolverType solverType = getSolverType(params->solverTitle);
-      HypreGenericSolver* hypreSolver = newHypreGenericSolver(solverType);
+      HypreGenericSolver* hypreSolver = 
+        newHypreGenericSolver(solverType,this);
 
+      //-----------------------------------------------------------
       // Solve the linear system
+      //-----------------------------------------------------------
       double solve_start = Time::currentSeconds();
+
+      // Setup phase
+      int timeSetup = hypre_InitializeTiming("Solver Setup");
+      hypre_BeginTiming(timeSetup);
       hypreSolver->setup(this);  // Depends only on A
+      hypre_EndTiming(timeSetup);
+      hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
+      hypre_FinalizeTiming(timeSetup);
+      hypre_ClearTiming();
+      timeSetup = 0; // to eliminate unused warning
+
+      // Solve phase
+      int timeSolve = hypre_InitializeTiming("Solver Setup");
+      hypre_BeginTiming(timeSolve);
       hypreSolver->solve(this);  // Depends on A and b
+      gatherSolutionVector();
+      hypre_EndTiming(timeSolve);
+      hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
+      hypre_FinalizeTiming(timeSolve);
+      hypre_ClearTiming();
+      timeSolve = 0; // to eliminate unused warning
+
       double solve_dt = Time::currentSeconds()-solve_start;
 
-      /* Check if converged, print solve statistics */
+      //-----------------------------------------------------------
+      // Check if converged, print solve statisticsS
+      //-----------------------------------------------------------
       const HypreGenericSolver::Results& results = hypreSolver->getResults();
       double finalResNorm = results.finalResNorm;
       int numIterations = results.numIterations;
