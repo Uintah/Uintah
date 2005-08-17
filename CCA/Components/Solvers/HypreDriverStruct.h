@@ -80,10 +80,12 @@ namespace Uintah {
                       Task::WhichDW which_guess_dw,
                       const HypreSolverParams* params);
     virtual ~HypreDriverStruct(void);
+
     // Data member modifyable access
     HYPRE_StructMatrix& getA(void) { return _HA; }  // LHS
     HYPRE_StructVector& getB(void) { return _HB; }  // RHS
     HYPRE_StructVector& getX(void) { return _HX; }  // Solution
+
     // Data member unmodifyable access
     const HYPRE_StructMatrix& getA(void) const { return _HA; }  // LHS
     const HYPRE_StructVector& getB(void) const { return _HB; }  // RHS

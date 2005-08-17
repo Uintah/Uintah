@@ -67,19 +67,19 @@ namespace Uintah {
     const Results& getResults(void) const { return _results; }
 
     void         assertInterface(const int acceptableInterface);
-    virtual void setup(HypreDriver* hypreDriver) = 0;
-    virtual void solve(HypreDriver* hypreDriver) = 0;
+    virtual void setup(HypreDriver* driver) = 0;
+    virtual void solve(HypreDriver* driver) = 0;
 
     //========================== PROTECTED SECTION ==========================
   protected:
 
     //---------- Data members ----------
-    HypreDriver*             _hypreDriver; // Hypre data containers
+    HypreDriver*             _driver;      // Hypre data containers
     Results                  _results;     // Solver results stored here
     HypreGenericPrecond*     _precond;     // Preconditioner (optional)
 
   private:
-    HypreGenericSolver(HypreDriver* hypreDriver,
+    HypreGenericSolver(HypreDriver* driver,
                        const int acceptableInterface);
 
  }; // end class HypreGenericSolver
@@ -87,7 +87,7 @@ namespace Uintah {
   // Utilities
   HypreGenericSolver*
     newHypreGenericSolver(const SolverType& solverType,
-                          HypreDriver* hypreDriver);
+                          HypreDriver* driver);
   SolverType          getSolverType(const std::string& solverTitle);
   HypreInterface      getSolverInterface(const std::string& solverType);
 
