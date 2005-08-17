@@ -6,7 +6,8 @@
 // done in the classes derived from HypreGenericPrecond.
 //--------------------------------------------------------------------------
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericPrecond.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericPrecondSMG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondSMG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondPFMG.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -71,9 +72,7 @@ namespace Uintah {
 
   HypreGenericPrecond*
   newHyprePrecond(const PrecondType& precondType,
-                  const HypreInterface& interface,
-                  const ProcessorGroup* pg,
-                  const HypreSolverParams* params)
+                  HypreGenericSolver* solver)
     // Create a new preconditioner object of specific precond type
     // "precondType" but a generic preconditioner pointer type.
   {
@@ -85,24 +84,24 @@ namespace Uintah {
       }
     case PrecondSMG:
       {
-        return new HypreGenericPrecondSMG(interface,pg,params);
+        return new HypreGenericPrecondSMG(solver);
       }
-#if 0
     case PrecondPFMG:
       {
-        return new HypreGenericPrecondPFMG();
+        return new HypreGenericPrecondPFMG(solver);
       }
+#if 0
     case PrecondSparseMSG:
       {
-        return new HypreGenericPrecondSparseMSG();
+        return new HypreGenericPrecondSparseMSG(solver);
       }
     case PrecondJacobi:
       {
-        return new HypreGenericPrecondJacobi();
+        return new HypreGenericPrecondJacobi(solver);
       }
     case PrecondDiagonal:
       {
-        return new HypreGenericPrecondDiagonal();
+        return new HypreGenericPrecondDiagonal(solver);
       }
 #endif
     default:

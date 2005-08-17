@@ -62,6 +62,7 @@ namespace Uintah {
   HypreDriver::~HypreDriver(void)
   {
 #if 0
+    // TODO: move to derived HypreDrivers
     if (_activeInterface & HypreSStruct) {
       cerr << "Destroying SStruct matrix, RHS, solution objects" << "\n";
       HYPRE_SStructMatrixDestroy(_A_SStruct);
