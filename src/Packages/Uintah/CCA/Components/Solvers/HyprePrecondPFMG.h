@@ -1,12 +1,12 @@
 /*--------------------------------------------------------------------------
 CLASS
-   HypreGenericPrecondPFMG
+   HyprePrecondPFMG
    
    A generic Hypre preconditioner driver.
 
 GENERAL INFORMATION
 
-   File: HypreGenericPrecondPFMG.h
+   File: HyprePrecondPFMG.h
 
    Oren E. Livne
    Department of Computer Science
@@ -20,7 +20,7 @@ KEYWORDS
    HypreDriver, HypreSolverParams.
 
 DESCRIPTION
-   Class HypreGenericPrecondPFMG is a base class for Hypre solvers. It uses the
+   Class HyprePrecondPFMG is a base class for Hypre solvers. It uses the
    generic HypreDriver and fetches only the data it can work with (either
    Struct, SStruct, or 
 
@@ -37,8 +37,8 @@ WARNING
    in the future. Currently only CC is implemented for the pressure solver
    in implicit [AMR] ICE.
    --------------------------------------------------------------------------*/
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericPrecondPFMG_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreGenericPrecondPFMG_h
+#ifndef Packages_Uintah_CCA_Components_Solvers_HyprePrecondPFMG_h
+#define Packages_Uintah_CCA_Components_Solvers_HyprePrecondPFMG_h
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericPrecond.h>
 
@@ -46,21 +46,23 @@ namespace Uintah {
   
   //---------- Types ----------
   
-  class HypreGenericPrecondPFMG : public HypreGenericPrecond {
+  class HyprePrecondPFMG : public HypreGenericPrecond {
 
     //========================== PUBLIC SECTION ==========================
   public:
   
-    HypreGenericPrecondPFMG(const HypreInterface& interface,
-                    const ProcessorGroup* pg,
-                    const HypreSolverParams* params);
-    virtual ~HypreGenericPrecondPFMG(void) {}
+    HypreGenericPFMG(const Priorities& precondPriority) :
+      HypreGenericPrecond(initPriority(precondPriority)) {}
+    virtual ~HyprePrecondPFMG(void);
+
+    virtual void setup(HypreGenericSolver* solver);
 
     //========================== PROTECTED SECTION ==========================
   protected:
+    static Priorities initPriority(void);
 
-  }; // end class HypreGenericPrecondPFMG
+  }; // end class HyprePrecondPFMG
 
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreGenericPrecondPFMG_h
+#endif // Packages_Uintah_CCA_Components_Solvers_HyprePrecondPFMG_h

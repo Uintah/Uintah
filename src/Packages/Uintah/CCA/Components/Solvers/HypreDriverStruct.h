@@ -78,7 +78,8 @@ namespace Uintah {
                       const VarLabel* b, Task::WhichDW which_b_dw,
                       const VarLabel* guess,
                       Task::WhichDW which_guess_dw,
-                      const HypreSolverParams* params);
+                      const HypreSolverParams* params,
+                      const HypreInterface& interface = HypreInterfaceNA);
     virtual ~HypreDriverStruct(void);
 
     // Data member modifyable access
@@ -106,15 +107,15 @@ namespace Uintah {
 
     //---------- Data members ----------
     // Hypre Struct interface objects
-    HYPRE_StructGrid         _grid;                   // level&patch hierarchy
-    HYPRE_StructMatrix       _HA;                     // Left-hand-side matrix
-    HYPRE_StructVector       _HB;                     // Right-hand-side vector
-    HYPRE_StructVector       _HX;                     // Solution vector
-
-    // Preconditioner objects
-    HYPRE_StructSolver*      _precond_solver;
+    HYPRE_StructGrid         _grid;              // level&patch hierarchy
+    HYPRE_StructMatrix       _HA;                // Left-hand-side matrix
+    HYPRE_StructVector       _HB;                // Right-hand-side vector
+    HYPRE_StructVector       _HX;                // Solution vector
+    HYPRE_StructSolver*      _precond_solver;    // Preconditioner object
 
   }; // end class HypreDriverStruct
+
+  HypreDriverStruct* newHypreDriverStruct(const HypreDriver& other);
 
 } // end namespace Uintah
 

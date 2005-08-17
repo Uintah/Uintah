@@ -56,39 +56,40 @@ namespace Uintah {
     //========================== PUBLIC SECTION ==========================
   public:
   
+    HypreGenericPrecond(const Priorities& priority);
     virtual ~HypreGenericPrecond(void) {}
-    void                  assertInterface(const int acceptableInterface);
 
     // Data member modifyable access
     HypreGenericSolver*   getSolver(void) { return _solver; }
     HYPRE_PtrToSolverFcn& getPrecond(void) { return _precond; }
     HYPRE_PtrToSolverFcn& getPCSetup(void) { return _pcsetup; }
     HYPRE_Solver&         getPrecondSolver(void) { return _precond_solver; }
+    Priorities&           getPriority(void) { return _priority; }
+    
+    // Data member unmodifyable access
+    const HypreGenericSolver*   getSolver(void) const { return _solver; }
+    const HYPRE_PtrToSolverFcn& getPrecond(void) const { return _precond; }
+    const HYPRE_PtrToSolverFcn& getPCSetup(void) const { return _pcsetup; }
+    const HYPRE_Solver&         getPrecondSolver(void) const { return _precond_solver; }
+    const Priorities&           getPriority(void) const { return _priority; }
+
+    virtual void setup(HypreGenericSolver* solver) = 0;
 
     //========================== PROTECTED SECTION ==========================
   protected:
 
     //---------- Data members ----------
-    HypreGenericSolver*      _solver;       // Hypre system interface
-    HYPRE_PtrToSolverFcn     _precond;
-    HYPRE_PtrToSolverFcn     _pcsetup;
-    HYPRE_Solver             _precond_solver;
-
-    //========================== PRIVATE SECTION ==========================
-  private:
-    // Ensure that this class cannot be instantiated
-    HypreGenericPrecond(HypreGenericSolver* _solver,
-                        const int acceptableInterface)
-      {
-        assertInterface(acceptableInterface);
-      }
+    HypreGenericSolver*      _solver;         // The calling solver
+    HYPRE_PtrToSolverFcn     _precond;        // Hypre ptr-to-function
+    HYPRE_PtrToSolverFcn     _pcsetup;        // Hypre ptr-to-function
+    HYPRE_Solver             _precond_solver; // Hypre precond object   
+    Priorities               _priority;       // Prioritized acceptable drivers
 
   }; // end class HypreGenericPrecond
 
   // Utilities
-  HypreGenericPrecond* newHyprePrecond(const PrecondType& precondType,
-                                       HypreGenericSolver* solver);
-  PrecondType   getPrecondType(const std::string& precondTitle);
+  HypreGenericPrecond* newHyprePrecond(const PrecondType& precondType);
+  PrecondType          getPrecondType(const std::string& precondTitle);
 
 } // end namespace Uintah
 
