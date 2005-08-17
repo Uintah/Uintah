@@ -14,8 +14,9 @@ SRCS += $(SRCDIR)/HypreSolver.cc \
         \
 	$(SRCDIR)/HypreSolverAMR.cc \
 	$(SRCDIR)/HypreDriver.cc \
-        $(SRCDIR)/HyprePrecond.cc \
+        $(SRCDIR)/HypreGenericPrecond.cc \
         $(SRCDIR)/HyprePrecondSMG.cc \
+        $(SRCDIR)/HyprePrecondPFMG.cc \
         $(SRCDIR)/HypreGenericSolver.cc \
 	$(SRCDIR)/HypreDriverStruct.cc \
 	$(SRCDIR)/HypreDriverSStruct.cc \
