@@ -1,7 +1,9 @@
 #ifndef __EQUATION_OF_STATE_H__
 #define __EQUATION_OF_STATE_H__
 
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/CCA/Components/ICE/PropertyBase.h>
 
 namespace Uintah {
 
@@ -37,7 +39,7 @@ WARNING
   
 ****************************************/
 
-  class EquationOfState {
+  class EquationOfState : public PropertyBase {
   public:
     EquationOfState();
     virtual ~EquationOfState();
@@ -72,8 +74,11 @@ WARNING
                                             const CCVariable<double>& cv,
                                             const Vector& dx,
                                             CCVariable<double>& Temp_CC)=0;
+
+     // Scheduling
+     virtual void addTaskDependencies_speedOfSound(Task* t, Task::WhichDW dw,
+                                                   int numGhostCells) = 0;
   };
 } // End namespace Uintah
       
 #endif  // __EQUATION_OF_STATE_H__
-

@@ -544,7 +544,10 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       new_dw->get(sp_vol_CC,     lb->sp_vol_CCLabel,      indx,patch,gac,1);
       new_dw->get(matl_press_CC, lb->matl_press_CCLabel,  indx,patch,gac,1);
       new_dw->get(vol_frac,      lb->vol_frac_CCLabel,    indx,patch,gac,1);
+      throw InternalError("RF not finished", __FILE__, __LINE__);
+#if 0
       new_dw->get(speedSound,    lb->speedSound_CCLabel,  indx,patch,gac,1);
+#endif
 
       //---- P R I N T   D A T A ------
       if (switchDebug_vel_FC ) {
@@ -704,7 +707,10 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       CCVariable<double> heatCond_src;
       new_dw->get(rho_CC,        lb->rho_CCLabel,        indx,patch,gac, 1);
       new_dw->get(sp_vol_CC,     lb->sp_vol_CCLabel,     indx,patch,gac, 1);
+      throw InternalError("RF not finished", __FILE__, __LINE__);
+#if 0
       new_dw->get(speedSound,    lb->speedSound_CCLabel, indx,patch,gn,  0);
+#endif
       new_dw->get(f_theta,       lb->f_theta_CCLabel,    indx,patch,gn,  0);
       new_dw->get(pressDiffX_FC, lb->press_diffX_FCLabel,indx,patch,gac, 1);      
       new_dw->get(pressDiffY_FC, lb->press_diffY_FCLabel,indx,patch,gac, 1);      

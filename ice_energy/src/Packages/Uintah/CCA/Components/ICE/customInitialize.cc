@@ -107,6 +107,8 @@ void customInitialization(const Patch* patch,
   // See:  "A non-trival analytical solution to the 2d incompressible
   //        Navier-Stokes equations" by Randy McDermott
   if(cib->which == "mms_1"){
+    throw InternalError("mms_1 not finished", __FILE__, __LINE__);
+#if 0
     double t = 0.0; 
     double A = cib->mms_inputs->A;
     double nu = ice_matl->getViscosity();
@@ -129,6 +131,7 @@ void customInitialization(const Patch* patch,
       // back out temperature from the perfect gas law
       temp_CC[c]= press_CC[c]/ ( (gamma - 1.0) * cv * rho_CC[c] );
     }
+#endif
   } // mms_1
 }
 } // end uintah namespace
