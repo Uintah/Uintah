@@ -20,7 +20,10 @@ static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
 namespace Uintah {
 
-  void HyprePrecondSMG::setup(void)
+  HyprePrecondSMG::HyprePrecondSMG(const HypreInterface& interface,
+                                   const ProcessorGroup* pg,
+                                   const HypreSolverParams* params) :
+    HyprePrecond(interface, pg, params,int(HypreStruct))
   {
     if (_interface == HypreStruct) {
       HYPRE_StructSolver precond_solver_struct;
@@ -38,7 +41,7 @@ namespace Uintah {
     }
   }
 
-  void HyprePrecondSMG::destroy(void)
+  void HyprePrecondSMG::~HyprePrecondSMG(void)
   {
     if (_interface == HypreStruct) {
       HYPRE_StructSMGDestroy((HYPRE_StructSolver) _precond_solver);

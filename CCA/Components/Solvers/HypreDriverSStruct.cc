@@ -44,15 +44,6 @@
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
-// hypre includes
-//#define HYPRE_TIMING
-#ifndef HYPRE_TIMING
-#ifndef hypre_ClearTiming
-// This isn't in utilities.h for some reason...
-#define hypre_ClearTiming()
-#endif
-#endif
-
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
@@ -1663,6 +1654,22 @@ namespace Uintah {
 
     funcPrint("Solver::makeLinearSystem()",FEnd);
   } // end makeLinearSystem()
+
+  void
+  HypreDriverSStruct::gatherSolutionVector(void)
+  {
+    HypreDriverSStruct* sstructDriver =
+      dynamic_cast<HypreDriverSStruct*>(hypreDriver);
+    if (!sstructDriver) {
+      throw InternalError("interface = SStruct but HypreDriver is not!",
+                          __FILE__, __LINE__);
+    }
+    HYPRE_SStructVectorGather(sstructDriver->getX());
+  } // end HypreDriverStruct::gatherSolutionVector()
+
+
+
+
 
 #if 0
   template<class Types>

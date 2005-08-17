@@ -1,12 +1,15 @@
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
+
 /*--------------------------------------------------------------------------
 CLASS
-   HypreGenericSolver
+   HypreSolverPFMG
    
    A generic Hypre solver driver.
 
 GENERAL INFORMATION
 
-   File: HypreGenericSolver.h
+   File: HypreSolverPFMG.h
 
    Oren E. Livne
    Department of Computer Science
@@ -20,7 +23,7 @@ KEYWORDS
    HypreDriver, HypreSolverParams.
 
 DESCRIPTION
-   Class HypreGenericSolver is a base class for Hypre solvers. It uses the
+   Class HypreSolverPFMG is a base class for Hypre solvers. It uses the
    generic HypreDriver and fetches only the data it can work with (either
    Struct, SStruct, or 
 
@@ -37,22 +40,18 @@ WARNING
    in the future. Currently only CC is implemented for the pressure solver
    in implicit [AMR] ICE.
    --------------------------------------------------------------------------*/
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
 
 namespace Uintah {
   
   // Forward declarations
-  class HypreGenericPrecond;
+  class HyprePrecond;
   class HypreDriver;
 
   //---------- Types ----------
   
-  class HypreGenericSolver {
+  class HypreSolverPFMG : public HypreGenericSolver {
 
     //========================== PUBLIC SECTION ==========================
   public:
@@ -63,34 +62,36 @@ namespace Uintah {
       double     finalResNorm;    // Final residual norm ||A*x-b||_2
     };
     
-    virtual ~HypreGenericSolver(void) {}
-    const Results& getResults(void) const { return _results; }
+    HypreSolverPFMG(const HypreInterface& interface,
+                    const ProcessorGroup* pg,
+                    const HypreSolverParams* params,
+                    const int acceptableInterface) :
+      HypreGenericSolver(interface, pg, params,
+                           int(HypreStruct)) {}
+    virtual ~HypreSolverPFMG(void) {}
 
-    void         assertInterface(const int acceptableInterface);
-    virtual void setup(HypreDriver* hypreDriver) = 0;
-    virtual void solve(HypreDriver* hypreDriver) = 0;
+    void setup(HypreDriver* hypreDriver);
+    void solve(HypreDriver* hypreDriver);
 
     //========================== PROTECTED SECTION ==========================
   protected:
 
     //---------- Data members ----------
-    HypreDriver*             _hypreDriver; // Hypre data containers
-    Results                  _results;     // Solver results stored here
-    HypreGenericPrecond*     _precond;     // Preconditioner (optional)
+    HypreInterface           _interface;       // Hypre system interface
+    const ProcessorGroup*    _pg;
+    const HypreSolverParams* _params;
+    //    SolverType    _solverType;      // Hypre solver type
+    //    int           _solverID;  // Hypre solver ID computed from solverType
+    Results       _results;         // Solver results are stored here
+    HyprePrecond* _precond;         // Preconditioner (optional)
 
-  private:
-    HypreGenericSolver(HypreDriver* hypreDriver,
-                       const int acceptableInterface);
-
- }; // end class HypreGenericSolver
+  }; // end class HypreSolverPFMG
 
   // Utilities
-  HypreGenericSolver*
-    newHypreGenericSolver(const SolverType& solverType,
-                          HypreDriver* hypreDriver);
+  HypreSolverPFMG* newHypreSolverPFMG(const SolverType solverType);
   SolverType          getSolverType(const std::string& solverTitle);
   HypreInterface      getSolverInterface(const std::string& solverType);
 
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
+#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h

@@ -1,12 +1,12 @@
 /*--------------------------------------------------------------------------
 CLASS
-   HyprePrecondSMG
+   HypreGenericPrecondPFMG
    
    A generic Hypre preconditioner driver.
 
 GENERAL INFORMATION
 
-   File: HyprePrecondSMG.h
+   File: HypreGenericPrecondPFMG.h
 
    Oren E. Livne
    Department of Computer Science
@@ -20,7 +20,7 @@ KEYWORDS
    HypreDriver, HypreSolverParams.
 
 DESCRIPTION
-   Class HyprePrecondSMG is a base class for Hypre solvers. It uses the
+   Class HypreGenericPrecondPFMG is a base class for Hypre solvers. It uses the
    generic HypreDriver and fetches only the data it can work with (either
    Struct, SStruct, or 
 
@@ -37,8 +37,8 @@ WARNING
    in the future. Currently only CC is implemented for the pressure solver
    in implicit [AMR] ICE.
    --------------------------------------------------------------------------*/
-#ifndef Packages_Uintah_CCA_Components_Solvers_HyprePrecondSMG_h
-#define Packages_Uintah_CCA_Components_Solvers_HyprePrecondSMG_h
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericPrecondPFMG_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreGenericPrecondPFMG_h
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericPrecond.h>
 
@@ -46,21 +46,21 @@ namespace Uintah {
   
   //---------- Types ----------
   
-  class HyprePrecondSMG : public HypreGenericPrecond {
+  class HypreGenericPrecondPFMG : public HypreGenericPrecond {
 
     //========================== PUBLIC SECTION ==========================
   public:
   
-    HyprePrecondSMG(const HypreInterface& interface,
+    HypreGenericPrecondPFMG(const HypreInterface& interface,
                     const ProcessorGroup* pg,
                     const HypreSolverParams* params);
-    virtual ~HyprePrecondSMG(void) {}
+    virtual ~HypreGenericPrecondPFMG(void) {}
 
     //========================== PROTECTED SECTION ==========================
   protected:
 
-  }; // end class HyprePrecondSMG
+  }; // end class HypreGenericPrecondPFMG
 
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HyprePrecondSMG_h
+#endif // Packages_Uintah_CCA_Components_Solvers_HypreGenericPrecondPFMG_h

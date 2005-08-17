@@ -32,15 +32,6 @@
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
-// hypre includes
-//#define HYPRE_TIMING
-#ifndef HYPRE_TIMING
-#ifndef hypre_ClearTiming
-// This isn't in utilities.h for some reason...
-#define hypre_ClearTiming()
-#endif
-#endif
-
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
@@ -475,6 +466,13 @@ namespace Uintah {
       }
     }
   } // end HypreDriverStruct::getSolution()
+
+  void
+  HypreDriverStruct::gatherSolutionVector(void)
+  {
+    // It seems it is not necessary to gather the solution vector
+    // for the Struct interface.
+  } // end HypreDriverStruct::gatherSolutionVector()
 
   void
   HypreDriverStruct::printMatrix(const string& fileName /* =  "output" */)

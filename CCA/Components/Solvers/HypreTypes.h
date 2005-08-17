@@ -33,6 +33,14 @@ WARNING
 #include <HYPRE_sstruct_ls.h>
 #include <krylov.h>
 
+//#define HYPRE_TIMING
+#ifndef HYPRE_TIMING
+#ifndef hypre_ClearTiming
+// This isn't in utilities.h for some reason...
+#define hypre_ClearTiming()
+#endif
+#endif
+
 namespace Uintah {
 
   //---------- Types ----------
