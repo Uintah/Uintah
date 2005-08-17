@@ -8,17 +8,11 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
-#include <fstream>
-#include <iostream>
 #include <string>
 #if 0
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Harlow.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/StiffGas.h>
 #endif
-
-using std::cerr;
-using std::ifstream;
-using std::ofstream;
 
 using namespace Uintah;
 
@@ -33,6 +27,8 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     
     if (mat_type == "ideal_gas") 
       return(scinew IdealGas(child));
+#if 0
+    // Others busted - Steve
     else if (mat_type == "JWL") 
       return(scinew JWL(child));
     else if (mat_type == "JWLC") 
@@ -51,6 +47,7 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     else if (mat_type == "stiff_gas") 
       return(scinew StiffGas(child));
 #endif    
+#endif
     else
       throw ProblemSetupException("Unknown EOS Type R ("+mat_type+")", __FILE__, __LINE__);
 

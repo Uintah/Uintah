@@ -98,7 +98,6 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   t->requires( pNewDW,      lb->press_equil_CCLabel,press_matl,oims,gn,0); 
   t->requires( pNewDW,      lb->sumKappaLabel,      press_matl,oims,gn,0);
   t->requires( pNewDW,      lb->sp_vol_CCLabel,                gn,0);
-  t->requires( pNewDW,      lb->speedSound_CCLabel,            gn,0);
   t->requires( pNewDW,      lb->vol_frac_CCLabel,              gac,2);
   t->requires( Task::NewDW, lb->uvel_FCMELabel,                gac,2);          
   t->requires( Task::NewDW, lb->vvel_FCMELabel,                gac,2);          
@@ -278,7 +277,6 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   if(d_models.size() > 0){  
     t->requires(Task::NewDW,lb->modelMass_srcLabel, gn,0);
   } 
-  t->requires( Task::NewDW, lb->speedSound_CCLabel, gn,0);
   t->requires( Task::NewDW, lb->max_RHSLabel);
   
   //__________________________________
@@ -501,7 +499,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     Advector* advector = d_advector->clone(new_dw,patch);
     CCVariable<double> q_advected, rhs;
     CCVariable<double> sumAdvection, massExchTerm;
-    constCCVariable<double> press_CC, oldPressure, speedSound, sumKappa;
+    constCCVariable<double> press_CC, oldPressure, sumKappa;
     
     const IntVector gc(1,1,1);
     Ghost::GhostType  gn  = Ghost::None;
@@ -530,7 +528,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       SFCXVariable<double> vol_fracX_FC;
       SFCYVariable<double> vol_fracY_FC;
       SFCZVariable<double> vol_fracZ_FC;
-      constCCVariable<double> vol_frac, burnedMass, sp_vol_CC, speedSound;
+      constCCVariable<double> vol_frac, burnedMass, sp_vol_CC;
 
       new_dw->allocateAndPut(vol_fracX_FC, lb->vol_fracX_FCLabel,  indx,patch);
       new_dw->allocateAndPut(vol_fracY_FC, lb->vol_fracY_FCLabel,  indx,patch);
@@ -548,7 +546,6 @@ void ICE::setupRHS(const ProcessorGroup*,
       new_dw->get(wvel_FC,    lb->wvel_FCMELabel,     indx,patch,gac, 2);       
       pNewDW->get(vol_frac,   lb->vol_frac_CCLabel,   indx,patch,gac, 2);
       pNewDW->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,0);
-      pNewDW->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
 
       //---- P R I N T   D A T A ------  
       if (switchDebug_setupRHS) {

@@ -1,7 +1,10 @@
+
 #include <Packages/Uintah/CCA/Components/ICE/EOS/IdealGas.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/ThermoInterface.h>
 
 using namespace Uintah;
 
@@ -89,4 +92,11 @@ void IdealGas::hydrostaticTempAdjustment(Patch::FaceType face,
      IntVector c = *iter;
      Temp_CC[c] += plusMinusOne * dx_grav/( (gamma[c] - 1.0) * cv[c] ); 
   }
+}
+
+void IdealGas::addTaskDependencies_speedOfSound(Task* t, Task::WhichDW dw,
+                                                int numGhostCells)
+{
+  ice_matl->getThermo()->addTaskDependencies_gamma(t, dw, numGhostCells);
+  ice_matl->getThermo()->addTaskDependencies_R(t, dw, numGhostCells);
 }

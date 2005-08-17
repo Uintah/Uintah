@@ -67,6 +67,11 @@ WARNING
                                      const CCVariable<double>& cv,
                                      const Vector& dx,
                                      CCVariable<double>& Temp_CC);
+
+    // Scheduling
+    virtual void addTaskDependencies_speedOfSound(Task* t, Task::WhichDW dw,
+                                                  int numGhostCells);
+
   };
 } // End namespace Uintah
       

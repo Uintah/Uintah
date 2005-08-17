@@ -10,6 +10,7 @@ SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/ICEMaterial.cc \
        $(SRCDIR)/Diffusion.cc \
        $(SRCDIR)/BoundaryCond.cc \
+       $(SRCDIR)/PropertyBase.cc \
        $(SRCDIR)/GeometryObject2.cc \
        $(SRCDIR)/Turbulence.cc \
        $(SRCDIR)/SmagorinskyModel.cc \
@@ -19,7 +20,7 @@ SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/impAMRICE.cc \
        $(SRCDIR)/customInitialize.cc   
        
-SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs
+SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs $(SRCDIR)/Thermo $(SRCDIR)/Combined
 
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 

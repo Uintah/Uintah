@@ -19,6 +19,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/TurbulenceFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/ThermoInterface.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -567,7 +568,6 @@ void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
   t->computes(lb->sp_vol_CCLabel,     add_matl);
   t->computes(lb->vol_frac_CCLabel,   add_matl);
   t->computes(lb->rho_micro_CCLabel,  add_matl);
-  t->computes(lb->speedSound_CCLabel, add_matl);
   t->computes(lb->thermalCondLabel,   add_matl);
   t->computes(lb->viscosityLabel,     add_matl);
 
@@ -593,8 +593,8 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing InitializeAddedMaterial on patch " << patch->getID() 
          << "\t\t\t ICE" << endl;
-    CCVariable<double>  rho_micro, sp_vol_CC, rho_CC, Temp_CC, thermalCond;
-    CCVariable<double>  speedSound,vol_frac_CC, cv, gamma, viscosity,dummy;
+    CCVariable<double>  rho_micro, sp_vol_CC, rho_CC, Temp_CC;
+    CCVariable<double>  vol_frac_CC, viscosity,dummy;
     CCVariable<Vector>  vel_CC;
     
     //__________________________________
@@ -604,32 +604,26 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
     int indx= ice_matl->getDWIndex();
     cout << "Added Material Index = " << indx << endl;
     new_dw->allocateAndPut(viscosity,     lb->viscosityLabel,    indx,patch);
-    new_dw->allocateAndPut(thermalCond,   lb->thermalCondLabel,  indx,patch);
     new_dw->allocateAndPut(rho_micro,     lb->rho_micro_CCLabel, indx,patch); 
     new_dw->allocateAndPut(sp_vol_CC,     lb->sp_vol_CCLabel,    indx,patch); 
     new_dw->allocateAndPut(rho_CC,        lb->rho_CCLabel,       indx,patch); 
     new_dw->allocateAndPut(Temp_CC,       lb->ntemp_CCLabel,      indx,patch); 
-    new_dw->allocateAndPut(speedSound,    lb->speedSound_CCLabel,indx,patch); 
     new_dw->allocateAndPut(vol_frac_CC,   lb->vol_frac_CCLabel,  indx,patch); 
     new_dw->allocateAndPut(vel_CC,        lb->vel_CCLabel,       indx,patch);
     new_dw->allocateTemporary(dummy, patch);
     cout << "Done allocateAndPut Index = " << indx << endl;
 
-    gamma.initialize(       ice_matl->getGamma());
-    cv.initialize(          ice_matl->getSpecificHeat());    
     viscosity.initialize  ( ice_matl->getViscosity());
-    thermalCond.initialize( ice_matl->getThermalConductivity());
 
     int numALLMatls = d_sharedState->getNumMatls();
     ice_matl->initializeCells(rho_micro,  rho_CC,
-                              Temp_CC,    speedSound, 
+                              Temp_CC,
                               vol_frac_CC, vel_CC, 
                               dummy, numALLMatls, patch, new_dw);
 
     setBC(rho_CC,     "Density",     patch, d_sharedState, indx, new_dw);
     setBC(rho_micro,  "Density",     patch, d_sharedState, indx, new_dw);
     setBC(Temp_CC,    "Temperature", patch, d_sharedState, indx, new_dw);
-    setBC(speedSound, "zeroNeumann", patch, d_sharedState, indx, new_dw); 
     setBC(vel_CC,     "Velocity",    patch, d_sharedState, indx, new_dw); 
             
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
@@ -663,7 +657,6 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->sp_vol_CCLabel);
   t->computes(lb->vol_frac_CCLabel);
   t->computes(lb->rho_micro_CCLabel);
-  t->computes(lb->speedSound_CCLabel);
   t->computes(lb->thermalCondLabel);
   t->computes(lb->viscosityLabel);
   t->computes(lb->press_CCLabel,     d_press_matl, oims);
@@ -774,15 +767,34 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
                             // COMMON TO EQ AND RATE FORM
-  t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);  
-  t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
   t->requires(Task::NewDW, lb->thermalCondLabel,   gn,  0);
-  throw InternalError("scheduleComputeStableTimestep not finished", __FILE__, __LINE__);
-#if 0
-  t->requires(Task::NewDW, lb->gammaLabel,         gn,  0);
-  t->requires(Task::NewDW, lb->specific_heatLabel, gn,  0);
-#endif
-                            
+  int numGhostCells;
+  if (d_delT_scheme == "aggressive") {
+    // Agressive scheme
+    numGhostCells = 0;
+  } else {
+    // Conservative scheme - needs 1 layer of ghost cells on velocity and speed of sound
+    numGhostCells = 1;
+  }
+  Ghost::GhostType ghostType = numGhostCells == 0? Ghost::None:Ghost::AroundCells;
+
+  if(d_delT_knob != 0){
+    // Require speed of sound unless delt_knob == 0
+    t->requires(Task::NewDW, lb->speedSound_CCLabel, ghostType, numGhostCells);
+  }
+
+  // Thermo/EOS dependencies may vary per material
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    if(d_delT_scheme == "conservative"){
+      // Require data to compute thermal diffusivity
+      ice_matl->getThermo()->addTaskDependencies_thermalDiffusivity(t, Task::NewDW, 0);
+    }
+  }
+
+  t->requires(Task::NewDW, lb->vel_CCLabel,        ghostType, numGhostCells);  
+
   if (d_EqForm){            // EQ      
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gn,  0);   
     t->requires(Task::NewDW, lb->viscosityLabel,   gn,  0);        
@@ -2091,11 +2103,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     StaticArray<CCVariable<double>   > sp_vol_CC(numMatls);
     StaticArray<CCVariable<double>   > rho_CC(numMatls); 
     StaticArray<CCVariable<double>   > Temp_CC(numMatls);
-    StaticArray<CCVariable<double>   > speedSound(numMatls);
     StaticArray<CCVariable<double>   > vol_frac_CC(numMatls);
     StaticArray<CCVariable<Vector>   > vel_CC(numMatls);
-    StaticArray<CCVariable<double>   > cv(numMatls);
-    StaticArray<CCVariable<double>   > gamma(numMatls);
     CCVariable<double>    press_CC, imp_initialGuess;
     
     new_dw->allocateAndPut(press_CC,         lb->press_CCLabel,     0,patch);
@@ -2107,12 +2116,10 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx= ice_matl->getDWIndex();
-      CCVariable<double> viscosity, thermalCond;
+      CCVariable<double> viscosity;
       new_dw->allocateAndPut(viscosity,     lb->viscosityLabel,    indx,patch);
-      new_dw->allocateAndPut(thermalCond,   lb->thermalCondLabel,  indx,patch);
       
       viscosity.initialize  ( ice_matl->getViscosity());
-      thermalCond.initialize( ice_matl->getThermalConductivity());
       
       if(ice_matl->isSurroundingMatl()) {
         d_surroundingMatl_indx = indx;  //which matl. is the surrounding matl
@@ -2138,7 +2145,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(sp_vol_CC[m],  lb->sp_vol_CCLabel,    indx,patch); 
       new_dw->allocateAndPut(rho_CC[m],     lb->rho_CCLabel,       indx,patch); 
       new_dw->allocateAndPut(Temp_CC[m],    lb->ntemp_CCLabel,      indx,patch); 
-      new_dw->allocateAndPut(speedSound[m], lb->speedSound_CCLabel,indx,patch); 
       new_dw->allocateAndPut(vol_frac_CC[m],lb->vol_frac_CCLabel,  indx,patch); 
       new_dw->allocateAndPut(vel_CC[m],     lb->vel_CCLabel,       indx,patch);
     }
@@ -2150,7 +2156,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
       ice_matl->initializeCells(rho_micro[m],  rho_CC[m],
-                                Temp_CC[m],    speedSound[m], 
+                                Temp_CC[m],
                                 vol_frac_CC[m], vel_CC[m], 
                                 press_CC, numALLMatls, patch, new_dw);
       
@@ -2161,7 +2167,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       setBC(rho_CC[m],     "Density",     patch, d_sharedState, indx, new_dw);
       setBC(rho_micro[m],  "Density",     patch, d_sharedState, indx, new_dw);
       setBC(Temp_CC[m],    "Temperature", patch, d_sharedState, indx, new_dw);
-      setBC(speedSound[m], "zeroNeumann", patch, d_sharedState, indx, new_dw); 
       setBC(vel_CC[m],     "Velocity",    patch, d_sharedState, indx, new_dw); 
       setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx, 
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
