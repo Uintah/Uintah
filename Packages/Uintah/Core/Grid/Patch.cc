@@ -1427,6 +1427,7 @@ Patch::VariableBasis Patch::translateTypeToBasis(TypeDescription::Type type,
   case TypeDescription::SFCZVariable:
     return ZFaceBased;
   case TypeDescription::ParticleVariable:
+  case TypeDescription::PerPatch:
     return CellBased;
   default:
     if (mustExist)
