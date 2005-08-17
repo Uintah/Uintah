@@ -93,10 +93,3 @@ void IdealGas::hydrostaticTempAdjustment(Patch::FaceType face,
      Temp_CC[c] += plusMinusOne * dx_grav/( (gamma[c] - 1.0) * cv[c] ); 
   }
 }
-
-void IdealGas::addTaskDependencies_speedOfSound(Task* t, Task::WhichDW dw,
-                                                int numGhostCells)
-{
-  ice_matl->getThermo()->addTaskDependencies_gamma(t, dw, numGhostCells);
-  ice_matl->getThermo()->addTaskDependencies_R(t, dw, numGhostCells);
-}
