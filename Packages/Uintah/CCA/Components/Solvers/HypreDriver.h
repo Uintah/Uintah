@@ -64,6 +64,7 @@ WARNING
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericPrecond.h>
 
 namespace Uintah {
 
@@ -84,20 +85,26 @@ namespace Uintah {
                 const VarLabel* b, Task::WhichDW which_b_dw,
                 const VarLabel* guess,
                 Task::WhichDW which_guess_dw,
-                const HypreSolverParams* params) :
-      level(level), matlset(matlset),
-      A_label(A), which_A_dw(which_A_dw),
-      X_label(x), modifies_x(modifies_x),
-      B_label(b), which_b_dw(which_b_dw),
-      guess_label(guess), which_guess_dw(which_guess_dw),
-      params(params), _interface(0)
+                const HypreSolverParams* params,
+                const HypreInterface& interface = HypreInterfaceNA) :
+      _level(level), _matlset(matlset),
+      _A_label(A), _which_A_dw(which_A_dw),
+      _X_label(x), _modifies_x(modifies_x),
+      _B_label(b), _which_b_dw(which_b_dw),
+      _guess_label(guess), _which_guess_dw(which_guess_dw),
+      _params(params), _interface(interface)
       {}    
     virtual ~HypreDriver(void);
 
     // Data member modifyable access
-    HYPRE_StructMatrix& getA(void) { return _HA; }  // LHS
-    HYPRE_StructVector& getB(void) { return _HB; }  // RHS
-    HYPRE_StructVector& getX(void) { return _HX; }  // Solution
+    // void setInterface(HypreInterface& interface) { _interface = interface; }
+
+    // Data member unmodifyable access
+    const HypreSolverParams* getParams(void) const { return _params; }
+    const ProcessorGroup*    getPG(void) const { return _pg; }
+    const HypreInterface&    getInterface(void) const { return _interface; }
+    
+    bool                     isConvertable(const HypreInterface& to);
 
     // Generic solve functions
     template<class Types>
@@ -162,14 +169,14 @@ namespace Uintah {
     DataWarehouse*           _b_dw;
     DataWarehouse*           _guess_dw;
 
-    HypreInterface           _interface;  // Hypre interface currently in use
+    HypreInterface           _interface;   // Hypre interface currently in use
+    bool                     _requiresPar; // Solver requires ParCSR format
 
-    // TODO: create a HypreParCSR interface that can be constructed
-    // from a struct or sstruct hypre driver object.
-    // Hypre ParCSR interface objects
-    //    HYPRE_ParCSRMatrix       _A_Par;                  // Left-hand-side matrix
-    //    HYPRE_ParVector          _b_Par;                  // Right-hand-side vector
-    //    HYPRE_ParVector          _x_Par;                  // Solution vector
+    // Hypre ParCSR interface objects. Can be used by Struct or
+    // SStruct to feed certain solvers.
+    HYPRE_ParCSRMatrix       _HA_Par;       // Left-hand-side matrix
+    HYPRE_ParVector          _HB_Par;       // Right-hand-side vector
+    HYPRE_ParVector          _HX_Par;       // Solution vector
 
   }; // end class HypreDriver
 
@@ -179,16 +186,15 @@ namespace Uintah {
   template<class Types>
     TypeDescription::Type TypeTemplate2Enum(const Types& t);
 
-  HypreDriver* newHypreDriver
-    (const HypreInterface& interface,
-     const Level* level,
-     const MaterialSet* matlset,
-     const VarLabel* A, Task::WhichDW which_A_dw,
-     const VarLabel* x, bool modifies_x,
-     const VarLabel* b, Task::WhichDW which_b_dw,
-     const VarLabel* guess,
-     Task::WhichDW which_guess_dw,
-     const HypreSolverParams* params);
+  HypreDriver*    newHypreDriver(const HypreInterface& interface,
+                                 const Level* level,
+                                 const MaterialSet* matlset,
+                                 const VarLabel* A, Task::WhichDW which_A_dw,
+                                 const VarLabel* x, bool modifies_x,
+                                 const VarLabel* b, Task::WhichDW which_b_dw,
+                                 const VarLabel* guess,
+                                 Task::WhichDW which_guess_dw,
+                                 const HypreSolverParams* params);
   HypreInterface& operator ++ (HypreInterface& i);
   BoxSide&        operator ++ (BoxSide& i);
   std::ostream&   operator << (std::ostream& os,
@@ -235,13 +241,13 @@ namespace Uintah {
     _matls = matls;
     _old_dw = old_dw;
     _new_dw = new_dw;
-    _A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
-    _b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
-    _guess_dw = new_dw->getOtherDataWarehouse(which_guess_dw);
+    _A_dw = new_dw->getOtherDataWarehouse(_which_A_dw);
+    _b_dw = new_dw->getOtherDataWarehouse(_which_b_dw);
+    _guess_dw = new_dw->getOtherDataWarehouse(_which_guess_dw);
     
     // Check parameter correctness
     cerr << "Checking arguments and parameters ... ";
-    SolverType solverType = getSolverType(params->solverTitle);
+    SolverType solverType = getSolverType(_params->solverTitle);
     const int numLevels = new_dw->getGrid()->numLevels();
     if ((solverType == FAC) && (numLevels < 2)) {
       throw InternalError("FAC solver needs at least 2 levels",
@@ -251,36 +257,36 @@ namespace Uintah {
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
-      /* Construct Hypre linear system for the specific variable type
-         and Hypre interface */
+      // Initialize the preconditioner
+      PrecondType precondType = getPrecondType(_params->precondTitle);
+      HypreGenericPrecond* precond = newHyprePrecond(precondType);
+
+      // Construct Hypre solver object that uses the hypreInterface we
+      // chose. Specific solver object is arbitrated in
+      // HypreGenericSolver. The solver is linked to the HypreDriver
+      // data and the preconditioner.
+      SolverType solverType = getSolverType(_params->solverTitle);
+      HypreGenericSolver* solver = newHypreSolver(solverType,this,precond);
+
+      // Set up the preconditioner and tie it to solver
+      precond->setup(solver);
+
+      // Construct Hypre linear system for the specific variable type
+      // and Hypre interface
+      _requiresPar = solver->requiresPar();
       makeLinearSystem<Types>(matl);
     
-      /* Construct Hypre solver object that uses the hypreInterface we
-         chose. Specific solver object is arbitrated in HypreGenericSolver
-         according to param->solverType. */
-      SolverType solverType = getSolverType(params->solverTitle);
-      HypreGenericSolver* solver = 
-        newHypreGenericSolver(solverType,this);
-
       //-----------------------------------------------------------
       // Solve the linear system
       //-----------------------------------------------------------
       double solve_start = Time::currentSeconds();
-
-      // Setup phase
-      int timeSetup = hypre_InitializeTiming("Solver Setup");
-      hypre_BeginTiming(timeSetup);
-      solver->setup(this);  // Depends only on A
-      hypre_EndTiming(timeSetup);
-      hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
-      hypre_FinalizeTiming(timeSetup);
-      hypre_ClearTiming();
-      timeSetup = 0; // to eliminate unused warning
-
-      // Solve phase
+      // Setup & solve phases
       int timeSolve = hypre_InitializeTiming("Solver Setup");
       hypre_BeginTiming(timeSolve);
-      solver->solve(this);  // Depends on A and b
+      solver->solve();  // Depends on A, b, x; some solvers can be
+                        // more efficient by separating the setup
+                        // phase that depends on A only from the
+                        // solution stage (TODO).
       gatherSolutionVector();
       hypre_EndTiming(timeSolve);
       hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
@@ -296,9 +302,9 @@ namespace Uintah {
       const HypreGenericSolver::Results& results = solver->getResults();
       double finalResNorm = results.finalResNorm;
       int numIterations = results.numIterations;
-      if ((finalResNorm > params->tolerance) ||
+      if ((finalResNorm > _params->tolerance) ||
           (finite(finalResNorm) == 0)) {
-        if (params->restart){
+        if (_params->restart){
           if(pg->myrank() == 0)
             cerr << "HypreSolver not converged in " << numIterations 
                  << "iterations, final residual= " << finalResNorm
@@ -307,11 +313,11 @@ namespace Uintah {
           //new_dw->restartTimestep();
         } else {
 	  throw ConvergenceFailure("HypreSolver variable: "
-                                   +X_label->getName()+", solver: "
-                                   +params->solverTitle+", preconditioner: "
-                                   +params->precondTitle,
+                                   +_X_label->getName()+", solver: "
+                                   +_params->solverTitle+", preconditioner: "
+                                   +_params->precondTitle,
 				   numIterations, finalResNorm,
-				   params->tolerance,__FILE__,__LINE__);
+				   _params->tolerance,__FILE__,__LINE__);
         }
       } // if (finalResNorm is ok)
 
@@ -332,8 +338,8 @@ namespace Uintah {
 
       double dt=Time::currentSeconds()-tstart;
       if(pg->myrank() == 0){
-        cerr << "Solve of " << X_label->getName() 
-             << " on level " << level->getIndex()
+        cerr << "Solve of " << _X_label->getName() 
+             << " on level " << _level->getIndex()
              << " completed in " << dt 
              << " seconds (solve only: " << solve_dt 
              << " seconds, " << numIterations

@@ -55,24 +55,22 @@ namespace Uintah {
     int    logging;            // Log Hypre solver (using Hypre options)
     bool   symmetric;          // Is LHS matrix symmetric
     bool   restart;            // Allow solver to restart if not converged
-    //    SolverType solverType;   // Hypre Solver type
-    //    PrecondType precondType; // Hypre Preconditioner type
 
     // SMG parameters
-    int    nPre;                  // # pre relaxations for Hypre SMG solver
-    int    nPost;                 // # post relaxations for Hypre SMG solver
+    int    nPre;               // # pre relaxations for Hypre SMG solver
+    int    nPost;              // # post relaxations for Hypre SMG solver
 
     // PFMG parameters
-    int    skip;                  // Hypre PFMG parameter
+    int    skip;               // Hypre PFMG parameter
 
     // SparseMSG parameters
-    int    jump;                  // Hypre Sparse MSG parameter
+    int    jump;               // Hypre Sparse MSG parameter
 
     //===== Oren's extra parameters & functions, might be removed later. =====
     // Debugging and control flags
     bool   printSystem;    // Linear system dump to file
     bool   timing;         // Time results
-    // Input functions to be defined in derived test cases
+
   }; // class HypreSolverParams
 } // end namespace Uintah
 

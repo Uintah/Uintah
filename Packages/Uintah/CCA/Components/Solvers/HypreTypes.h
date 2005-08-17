@@ -45,28 +45,40 @@ namespace Uintah {
 
   //---------- Types ----------
   
-  enum HypreInterface {       // Hypre system interface for the solver
+  // WARNING WARNING WARNING WARNING
+  // Hypre system interface for the solver. If you add or delete items
+  // from this list, you need to modify (among other places)
+  // HypreGenericSolver::assertInterface() and change the rules for
+  // requiresPar.
+ enum HypreInterface {
     HypreStruct      = 0x1,
     HypreSStruct     = 0x2,
     HypreParCSR      = 0x4,
     HypreInterfaceNA = 0x8
   };
-  
-  enum BoxSide {  // Left/right boundary in each dim
+
+  // Left/right boundary in each dim
+  enum BoxSide {
     LeftSide  = -1,
     RightSide = 1,
     BoxSideNA = 3
   };
   
+  // Hypre solvers
   enum SolverType {
     SMG, PFMG, SparseMSG, CG, Hybrid, GMRES, AMG, FAC
   };
   
+  // Hypre preconditioners
   enum PrecondType {
     PrecondNA, // No preconditioner, use solver directly
     PrecondSMG, PrecondPFMG, PrecondSparseMSG, PrecondJacobi,
     PrecondDiagonal, PrecondAMG, PrecondFAC
   };
+
+  // List of Solver/Preconditioner interface priorities
+  typedef std::vector<HypreInterface> Priorities;
+    
   
 } // end namespace Uintah
 

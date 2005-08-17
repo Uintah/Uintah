@@ -45,8 +45,6 @@ WARNING
 
 namespace Uintah {
   
-  // Forward declarations
-  class HyprePrecond;
   class HypreDriver;
 
   //---------- Types ----------
@@ -56,41 +54,18 @@ namespace Uintah {
     //========================== PUBLIC SECTION ==========================
   public:
   
-    // Solver results are output to this struct 
-    struct Results {
-      int        numIterations;   // Number of solver iterations performed
-      double     finalResNorm;    // Final residual norm ||A*x-b||_2
-    };
-    
-    HypreSolverPFMG(const HypreInterface& interface,
-                    const ProcessorGroup* pg,
-                    const HypreSolverParams* params,
-                    const int acceptableInterface) :
-      HypreGenericSolver(interface, pg, params,
-                           int(HypreStruct)) {}
+    HypreSolverPFMG(HypreDriver* driver,
+                    HypreGenericPrecond* precond) :
+      HypreGenericSolver(driver,precond,initPriority(precondPriority)) {}
     virtual ~HypreSolverPFMG(void) {}
 
-    void setup(HypreDriver* hypreDriver);
-    void solve(HypreDriver* hypreDriver);
+    virtual void solve(void);
 
-    //========================== PROTECTED SECTION ==========================
-  protected:
-
-    //---------- Data members ----------
-    HypreInterface           _interface;       // Hypre system interface
-    const ProcessorGroup*    _pg;
-    const HypreSolverParams* _params;
-    //    SolverType    _solverType;      // Hypre solver type
-    //    int           _solverID;  // Hypre solver ID computed from solverType
-    Results       _results;         // Solver results are stored here
-    HyprePrecond* _precond;         // Preconditioner (optional)
+    //========================== PRIVATE SECTION ==========================
+  private:
+    static Priorities initPriority(const Priorities& precondPriority);
 
   }; // end class HypreSolverPFMG
-
-  // Utilities
-  HypreSolverPFMG* newHypreSolverPFMG(const SolverType solverType);
-  SolverType          getSolverType(const std::string& solverTitle);
-  HypreInterface      getSolverInterface(const std::string& solverType);
 
 } // end namespace Uintah
 

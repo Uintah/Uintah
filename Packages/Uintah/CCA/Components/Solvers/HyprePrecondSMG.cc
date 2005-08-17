@@ -18,34 +18,30 @@ using namespace Uintah;
 
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
-namespace Uintah {
-
-  HyprePrecondSMG::HyprePrecondSMG(const HypreInterface& interface,
-                                   const ProcessorGroup* pg,
-                                   const HypreSolverParams* params) :
-    HyprePrecond(interface, pg, params,int(HypreStruct))
-  {
-    if (_interface == HypreStruct) {
-      HYPRE_StructSolver precond_solver_struct;
-      HYPRE_StructSMGCreate(_pg->getComm(), &precond_solver_struct);
-      HYPRE_StructSMGSetMemoryUse(precond_solver_struct, 0);
-      HYPRE_StructSMGSetMaxIter(precond_solver_struct, 1);
-      HYPRE_StructSMGSetTol(precond_solver_struct, 0.0);
-      HYPRE_StructSMGSetZeroGuess(precond_solver_struct);
-      HYPRE_StructSMGSetNumPreRelax(precond_solver_struct, _params->nPre);
-      HYPRE_StructSMGSetNumPostRelax(precond_solver_struct, _params->nPost);
-      HYPRE_StructSMGSetLogging(precond_solver_struct, 0);
-      _precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSolve;
-      _pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSetup;
-      _precond_solver = (HYPRE_Solver) precond_solver_struct;
-    }
+HyprePrecondSMG::HyprePrecondSMG(const HypreInterface& interface,
+                                 const ProcessorGroup* pg,
+                                 const HypreSolverParams* params) :
+  HyprePrecond(interface, pg, params, int(HypreStruct))
+{
+  if (_interface == HypreStruct) {
+    HYPRE_StructSolver precond_solver_struct;
+    HYPRE_StructSMGCreate(_pg->getComm(), &precond_solver_struct);
+    HYPRE_StructSMGSetMemoryUse(precond_solver_struct, 0);
+    HYPRE_StructSMGSetMaxIter(precond_solver_struct, 1);
+    HYPRE_StructSMGSetTol(precond_solver_struct, 0.0);
+    HYPRE_StructSMGSetZeroGuess(precond_solver_struct);
+    HYPRE_StructSMGSetNumPreRelax(precond_solver_struct, _params->nPre);
+    HYPRE_StructSMGSetNumPostRelax(precond_solver_struct, _params->nPost);
+    HYPRE_StructSMGSetLogging(precond_solver_struct, 0);
+    _precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSolve;
+    _pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSetup;
+    _precond_solver = (HYPRE_Solver) precond_solver_struct;
   }
+}
 
-  void HyprePrecondSMG::~HyprePrecondSMG(void)
-  {
-    if (_interface == HypreStruct) {
-      HYPRE_StructSMGDestroy((HYPRE_StructSolver) _precond_solver);
-    }
+void HyprePrecondSMG::~HyprePrecondSMG(void)
+{
+  if (_interface == HypreStruct) {
+    HYPRE_StructSMGDestroy((HYPRE_StructSolver) _precond_solver);
   }
-
-} // end namespace Uintah
+}
