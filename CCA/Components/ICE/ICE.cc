@@ -2282,11 +2282,12 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
                                           DataWarehouse* new_dw)
 { 
   const Level* level = getLevel(patches);
+  int levelIndex = level->getIndex();
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing computeThermoTransportProperties on patch "
-               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+               << patch->getID() << "\t ICE \tL-" <<levelIndex<< endl;
    
     int numMatls = d_sharedState->getNumICEMatls();
     
@@ -2309,10 +2310,9 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
     // Is it time to dump printData ?
     // You need to do this in the first task
     // and only on the first patch
-    if (patch->getID() == 0) {
+    if (levelIndex == 0 && p == 0) {
       d_dbgTime_to_printData = false;
       double time= dataArchiver->getCurrentTime() + d_SMALL_NUM;
-      
       if (time >= d_dbgStartTime && 
           time <= d_dbgStopTime  &&
           time >= d_dbgNextDumpTime) {
