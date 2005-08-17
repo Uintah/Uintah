@@ -804,8 +804,8 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
     
   Ghost::GhostType  gn = Ghost::None; 
   cout_doing << d_myworld->myrank() 
-             << " AMRICE::scheduleCoarsen\t\t\t\tL-" << coarseLevel->getIndex() 
-             << '\n';
+             << " AMRICE::scheduleCoarsen\t\t\t\tL-" 
+             << fineLevel->getIndex()<< "->"<<coarseLevel->getIndex()<<endl; 
              
   Task* task = scinew Task("coarsen",this, &AMRICE::coarsen);
 
@@ -875,7 +875,8 @@ void AMRICE::coarsen(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   cout_doing << d_myworld->myrank()
-             << " Doing coarsen \t\t\t\t\t AMRICE L-" <<fineLevel->getIndex();
+             << " Doing coarsen \t\t\t\t\t AMRICE L-" 
+             <<fineLevel->getIndex()<< "->"<<coarseLevel->getIndex();
   
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
   Ghost::GhostType  gn = Ghost::None;
@@ -1075,10 +1076,10 @@ _____________________________________________________________________*/
 void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
                                                     SchedulerP& sched)
 {
- 
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep(); 
   cout_doing << d_myworld->myrank() 
              << " AMRICE::scheduleReflux_computeCorrectionFluxes\tL-" 
-             << coarseLevel->getIndex() << '\n';
+             << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
              
   Task* task = scinew Task("reflux_computeCorrectionFluxes",
                            this, &AMRICE::reflux_computeCorrectionFluxes);
@@ -1172,7 +1173,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
   
   cout_doing << d_myworld->myrank() 
              << " Doing reflux_computeCorrectionFluxes \t\t\t AMRICE L-"
-             <<coarseLevel->getIndex();
+             <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
   
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
   
@@ -1620,10 +1621,10 @@ _____________________________________________________________________*/
 void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
                                             SchedulerP& sched)
 {
- 
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   cout_doing << d_myworld->myrank() 
              << " AMRICE::scheduleReflux_applyCorrectionFluxes\t\tL-" 
-             << coarseLevel->getIndex() <<endl;
+             << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
              
   Task* task = scinew Task("reflux_applyCorrectionFluxes",
                           this, &AMRICE::reflux_applyCorrectionFluxes);
@@ -1694,7 +1695,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
   
   cout_doing << d_myworld->myrank() 
              << " Doing reflux_applyCorrectionFluxes \t\t\t AMRICE L-"
-             <<coarseLevel->getIndex();
+             <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
   
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
   
