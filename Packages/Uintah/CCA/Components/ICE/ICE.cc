@@ -69,6 +69,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   MIlb = scinew MPMICELabel();
 
   d_doAMR               = doAMR;
+  d_useLockStep         = false;
   d_RateForm            = false;
   d_EqForm              = false; 
   d_add_heat            = false;
