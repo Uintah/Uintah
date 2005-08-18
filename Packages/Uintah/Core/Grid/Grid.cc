@@ -369,6 +369,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         } 
         else {
           box_ps->getWithDefault("patches", patches,IntVector(1,1,1));
+          nf_ = 0;
         }
 
         // If the value of the norm nf_ is too high, then user chose a 
