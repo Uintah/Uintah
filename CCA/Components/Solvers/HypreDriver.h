@@ -57,11 +57,11 @@ WARNING
    1.7.7).
    --------------------------------------------------------------------------*/
 
+#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
 #include <Core/Thread/Time.h>
-#include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericPrecond.h>
@@ -70,6 +70,8 @@ namespace Uintah {
 
   // Forward declarations
   class HypreSolverParams;
+  class VarLabel;
+  class Level;
   
   class HypreDriver : public RefCounted {
 
@@ -77,7 +79,6 @@ namespace Uintah {
   public:
 
     //---------- Construction & Destruction ----------
-
     HypreDriver(const Level* level,
                 const MaterialSet* matlset,
                 const VarLabel* A, Task::WhichDW which_A_dw,
@@ -104,9 +105,13 @@ namespace Uintah {
     const ProcessorGroup*    getPG(void) const { return _pg; }
     const HypreInterface&    getInterface(void) const { return _interface; }
     
-    bool                     isConvertable(const HypreInterface& to);
+    // Utilities, HYPRE data printouts
+    bool         isConvertable(const HypreInterface& to);
+    virtual void printMatrix(const string& fileName = "output") = 0;
+    virtual void printRHS(const string& fileName = "output_b") = 0;
+    virtual void printSolution(const string& fileName = "output_x") = 0;
 
-    // Generic solve functions
+    // Generic solve functions (common for all var types)
     template<class Types>
       void solve(const ProcessorGroup* pg,
                  const PatchSubset* patches,
@@ -118,7 +123,8 @@ namespace Uintah {
       void makeLinearSystem(const int matl);
     template<class Types>
       void getSolution(const int matl);
-    
+    virtual void gatherSolutionVector(void) = 0;
+
     // Set up linear system, read back solution for each variable type
     // (default: throw exception; if implemented in derived classes
     // from HypreDriver, it will be activated from the code therein)
@@ -133,13 +139,6 @@ namespace Uintah {
     virtual void getSolution_SFCZ(const int matl);
     virtual void getSolution_NC(const int matl);
     virtual void getSolution_CC(const int matl);
-
-    virtual void gatherSolutionVector(void) = 0;
-
-    // HYPRE data printouts
-    virtual void printMatrix(const string& fileName = "output") = 0;
-    virtual void printRHS(const string& fileName = "output_b") = 0;
-    virtual void printSolution(const string& fileName = "output_x") = 0;
 
     //========================== PROTECTED SECTION ==========================
   protected:
@@ -180,7 +179,6 @@ namespace Uintah {
 
   }; // end class HypreDriver
 
-
   //========================== Utilities, printouts ==========================
 
   template<class Types>
@@ -197,266 +195,250 @@ namespace Uintah {
                                  const HypreSolverParams* params);
   HypreInterface& operator ++ (HypreInterface& i);
   BoxSide&        operator ++ (BoxSide& i);
-  std::ostream&   operator << (std::ostream& os,
-                               const BoxSide& s);
-
-    // Utilities
-    void printValues(const int stencilSize,
-                     const int numCells,
-                     const double* values = 0,
-                     const double* rhsValues = 0,
-                     const double* solutionValues = 0);
-
-  // TODO: move this to impICE.cc/BoundaryCond.cc where A is constructed.
-  double harmonicAvg(const Point& x,
-                     const Point& y,
-                     const Point& z,
-                     const double& Ax,
-                     const double& Ay);
 
   //========================================================================
   // Implementation of the templated part of class HypreDriver
   //========================================================================
 
   template<class Types>
-  void
-  HypreDriver::solve(const ProcessorGroup* pg,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     Handle<HypreDriver>)
+    void
+    HypreDriver::solve(const ProcessorGroup* pg,
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw,
+                       Handle<HypreDriver>)
     //_____________________________________________________________________
     // Function HypreDriver::solve~
     // Main solve function.
     //_____________________________________________________________________
-  {
-    using namespace SCIRun;
-    double tstart = Time::currentSeconds();
+    {
+      double tstart = SCIRun::Time::currentSeconds();
 
-    // Assign HypreDriver references that are convenient to have in
-    // makeLinearSystem(), getSolution().
-    _pg = pg;
-    _patches = patches;
-    _matls = matls;
-    _old_dw = old_dw;
-    _new_dw = new_dw;
-    _A_dw = new_dw->getOtherDataWarehouse(_which_A_dw);
-    _b_dw = new_dw->getOtherDataWarehouse(_which_b_dw);
-    _guess_dw = new_dw->getOtherDataWarehouse(_which_guess_dw);
+      // Assign HypreDriver references that are convenient to have in
+      // makeLinearSystem(), getSolution().
+      _pg = pg;
+      _patches = patches;
+      _matls = matls;
+      _old_dw = old_dw;
+      _new_dw = new_dw;
+      _A_dw = new_dw->getOtherDataWarehouse(_which_A_dw);
+      _b_dw = new_dw->getOtherDataWarehouse(_which_b_dw);
+      _guess_dw = new_dw->getOtherDataWarehouse(_which_guess_dw);
     
-    // Check parameter correctness
-    cerr << "Checking arguments and parameters ... ";
-    SolverType solverType = getSolverType(_params->solverTitle);
-    const int numLevels = new_dw->getGrid()->numLevels();
-    if ((solverType == FAC) && (numLevels < 2)) {
-      throw InternalError("FAC solver needs at least 2 levels",
-                          __FILE__, __LINE__);
-    }
-
-    for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
-
-      // Initialize the preconditioner
-      PrecondType precondType = getPrecondType(_params->precondTitle);
-      HypreGenericPrecond* precond = newHyprePrecond(precondType);
-
-      // Construct Hypre solver object that uses the hypreInterface we
-      // chose. Specific solver object is arbitrated in
-      // HypreGenericSolver. The solver is linked to the HypreDriver
-      // data and the preconditioner.
+      // Check parameter correctness
+      cerr << "Checking arguments and parameters ... ";
       SolverType solverType = getSolverType(_params->solverTitle);
-      HypreGenericSolver* solver = newHypreSolver(solverType,this,precond);
-
-      // Set up the preconditioner and tie it to solver
-      precond->setSolver(solver);
-      precond->setup();
-
-      // Construct Hypre linear system for the specific variable type
-      // and Hypre interface
-      _requiresPar = solver->requiresPar();
-      makeLinearSystem<Types>(matl);
-    
-      //-----------------------------------------------------------
-      // Solve the linear system
-      //-----------------------------------------------------------
-      double solve_start = Time::currentSeconds();
-      // Setup & solve phases
-      int timeSolve = hypre_InitializeTiming("Solver Setup");
-      hypre_BeginTiming(timeSolve);
-      solver->solve();  // Depends on A, b, x; some solvers can be
-                        // more efficient by separating the setup
-                        // phase that depends on A only from the
-                        // solution stage (TODO).
-      gatherSolutionVector();
-      hypre_EndTiming(timeSolve);
-      hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
-      hypre_FinalizeTiming(timeSolve);
-      hypre_ClearTiming();
-      timeSolve = 0; // to eliminate unused warning
-
-      double solve_dt = Time::currentSeconds()-solve_start;
-
-      //-----------------------------------------------------------
-      // Check if converged, print solve statisticsS
-      //-----------------------------------------------------------
-      const HypreGenericSolver::Results& results = solver->getResults();
-      double finalResNorm = results.finalResNorm;
-      int numIterations = results.numIterations;
-      if ((finalResNorm > _params->tolerance) ||
-          (finite(finalResNorm) == 0)) {
-        if (_params->restart){
-          if(pg->myrank() == 0)
-            cerr << "HypreSolver not converged in " << numIterations 
-                 << "iterations, final residual= " << finalResNorm
-                 << ", requesting smaller timestep\n";
-          //new_dw->abortTimestep();
-          //new_dw->restartTimestep();
-        } else {
-	  throw ConvergenceFailure("HypreSolver variable: "
-                                   +_X_label->getName()+", solver: "
-                                   +_params->solverTitle+", preconditioner: "
-                                   +_params->precondTitle,
-				   numIterations, finalResNorm,
-				   _params->tolerance,__FILE__,__LINE__);
-        }
-      } // if (finalResNorm is ok)
-
-      /* Get the solution x values back into Uintah */
-      getSolution<Types>(matl);
-
-      /*-----------------------------------------------------------
-       * Print the solution and other info
-       *-----------------------------------------------------------*/
-      std::cerr << "Print the solution vector" << "\n";
-      printSolution("output_x1");
-      std::cerr << "Iterations = " << numIterations << "\n";
-      std::cerr << "Final Relative Residual Norm = "
-           << finalResNorm << "\n";
-      std::cerr << "" << "\n";
-      
-      delete solver;
-      delete precond;
-
-      double dt=Time::currentSeconds()-tstart;
-      if(pg->myrank() == 0){
-        cerr << "Solve of " << _X_label->getName() 
-             << " on level " << _level->getIndex()
-             << " completed in " << dt 
-             << " seconds (solve only: " << solve_dt 
-             << " seconds, " << numIterations
-             << " iterations, residual=" << finalResNorm << ")\n";
+      const int numLevels = new_dw->getGrid()->numLevels();
+      if ((solverType == FAC) && (numLevels < 2)) {
+        throw InternalError("FAC solver needs at least 2 levels",
+                            __FILE__, __LINE__);
       }
-      tstart = Time::currentSeconds();
-    } // for m (matls loop)
-  } // end solve() for
+
+      for(int m = 0;m<matls->size();m++){
+        int matl = matls->get(m);
+
+        // Initialize the preconditioner
+        PrecondType precondType = getPrecondType(_params->precondTitle);
+        HypreGenericPrecond* precond = newHyprePrecond(precondType);
+
+        // Construct Hypre solver object that uses the hypreInterface we
+        // chose. Specific solver object is arbitrated in
+        // HypreGenericSolver. The solver is linked to the HypreDriver
+        // data and the preconditioner.
+        SolverType solverType = getSolverType(_params->solverTitle);
+        HypreGenericSolver* solver = newHypreSolver(solverType,this,precond);
+
+        // Set up the preconditioner and tie it to solver
+        precond->setSolver(solver);
+        precond->setup();
+
+        // Construct Hypre linear system for the specific variable type
+        // and Hypre interface
+        _requiresPar = solver->requiresPar();
+        makeLinearSystem<Types>(matl);
+    
+        //-----------------------------------------------------------
+        // Solve the linear system
+        //-----------------------------------------------------------
+        double solve_start = SCIRun::Time::currentSeconds();
+        // Setup & solve phases
+        int timeSolve = hypre_InitializeTiming("Solver Setup");
+        hypre_BeginTiming(timeSolve);
+        solver->solve();  // Depends on A, b, x; some solvers can be
+        // more efficient by separating the setup
+        // phase that depends on A only from the
+        // solution stage (TODO).
+        gatherSolutionVector();
+        hypre_EndTiming(timeSolve);
+        hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
+        hypre_FinalizeTiming(timeSolve);
+        hypre_ClearTiming();
+        timeSolve = 0; // to eliminate unused warning
+
+        double solve_dt = SCIRun::Time::currentSeconds()-solve_start;
+
+        //-----------------------------------------------------------
+        // Check if converged, print solve statisticsS
+        //-----------------------------------------------------------
+        const HypreGenericSolver::Results& results = solver->getResults();
+        double finalResNorm = results.finalResNorm;
+        int numIterations = results.numIterations;
+        if ((finalResNorm > _params->tolerance) ||
+            (finite(finalResNorm) == 0)) {
+          if (_params->restart){
+            if(pg->myrank() == 0)
+              cerr << "HypreSolver not converged in " << numIterations 
+                   << "iterations, final residual= " << finalResNorm
+                   << ", requesting smaller timestep\n";
+            //new_dw->abortTimestep();
+            //new_dw->restartTimestep();
+          } else {
+            throw ConvergenceFailure("HypreSolver variable: "
+                                     +_X_label->getName()+", solver: "
+                                     +_params->solverTitle+", preconditioner: "
+                                     +_params->precondTitle,
+                                     numIterations, finalResNorm,
+                                     _params->tolerance,__FILE__,__LINE__);
+          }
+        } // if (finalResNorm is ok)
+
+        /* Get the solution x values back into Uintah */
+        getSolution<Types>(matl);
+
+        /*-----------------------------------------------------------
+         * Print the solution and other info
+         *-----------------------------------------------------------*/
+        std::cerr << "Print the solution vector" << "\n";
+        printSolution("output_x1");
+        std::cerr << "Iterations = " << numIterations << "\n";
+        std::cerr << "Final Relative Residual Norm = "
+                  << finalResNorm << "\n";
+        std::cerr << "" << "\n";
+      
+        delete solver;
+        delete precond;
+
+        double dt = SCIRun::Time::currentSeconds()-tstart;
+        if(pg->myrank() == 0){
+          cerr << "Solve of " << _X_label->getName() 
+               << " on level " << _level->getIndex()
+               << " completed in " << dt 
+               << " seconds (solve only: " << solve_dt 
+               << " seconds, " << numIterations
+               << " iterations, residual=" << finalResNorm << ")\n";
+        }
+        tstart = SCIRun::Time::currentSeconds();
+      } // for m (matls loop)
+    } // end solve() for
 
   template<class Types>
-  void
-  HypreDriver::makeLinearSystem(const int matl)
+    void
+    HypreDriver::makeLinearSystem(const int matl)
     //_____________________________________________________________________
     // Function HypreDriver::makeLinearSystem~
     // Switch between makeLinearSystems of specific variable types by
     // template class.
     //_____________________________________________________________________
-  {
-    Types t;
-    TypeDescription::Type domType = TypeTemplate2Enum(t);
-    switch (domType) {
-    case TypeDescription::SFCXVariable:
-      {
-        makeLinearSystem_SFCX(matl);
-        break;
-      } // end case SFCXVariable 
+    {
+      Types t;
+      TypeDescription::Type domType = TypeTemplate2Enum(t);
+      switch (domType) {
+      case TypeDescription::SFCXVariable:
+        {
+          makeLinearSystem_SFCX(matl);
+          break;
+        } // end case SFCXVariable 
 
-    case TypeDescription::SFCYVariable:
-      {
-        makeLinearSystem_SFCY(matl);
-        break;
-      } // end case SFCYVariable 
+      case TypeDescription::SFCYVariable:
+        {
+          makeLinearSystem_SFCY(matl);
+          break;
+        } // end case SFCYVariable 
 
-    case TypeDescription::SFCZVariable:
-      {
-        makeLinearSystem_SFCZ(matl);
-        break;
-      } // end case SFCZVariable 
+      case TypeDescription::SFCZVariable:
+        {
+          makeLinearSystem_SFCZ(matl);
+          break;
+        } // end case SFCZVariable 
 
-    case TypeDescription::NCVariable:
-      {
-        makeLinearSystem_NC(matl);
-        break;
-      } // end case NCVariable 
+      case TypeDescription::NCVariable:
+        {
+          makeLinearSystem_NC(matl);
+          break;
+        } // end case NCVariable 
 
-    case TypeDescription::CCVariable:
-      {
-        makeLinearSystem_CC(matl);
-        break;
-      } // end case CCVariable
+      case TypeDescription::CCVariable:
+        {
+          makeLinearSystem_CC(matl);
+          break;
+        } // end case CCVariable
 
-    default:
-      {
-        throw InternalError("Unknown variable type in scheduleSolve",
-                            __FILE__, __LINE__);
-      } // end default
+      default:
+        {
+          throw InternalError("Unknown variable type in scheduleSolve",
+                              __FILE__, __LINE__);
+        } // end default
 
-    } // end switch (domType)
+      } // end switch (domType)
 
-  } // end makeLinearSystem() for
+    } // end makeLinearSystem() for
 
 
   template<class Types>
-  void
-  HypreDriver::getSolution(const int matl)
+    void
+    HypreDriver::getSolution(const int matl)
     //_____________________________________________________________________
     // Function HypreDriver::getSolution~
     // Switch between getSolutions of specific variable types by
     // template class.
     //_____________________________________________________________________
-  {
-    Types t;
-    TypeDescription::Type domType = TypeTemplate2Enum(t);
-    switch (domType) {
-    case TypeDescription::SFCXVariable:
-      {
-        getSolution_SFCX(matl);
-        break;
-      } // end case SFCXVariable 
+    {
+      Types t;
+      TypeDescription::Type domType = TypeTemplate2Enum(t);
+      switch (domType) {
+      case TypeDescription::SFCXVariable:
+        {
+          getSolution_SFCX(matl);
+          break;
+        } // end case SFCXVariable 
 
-    case TypeDescription::SFCYVariable:
-      {
-        getSolution_SFCY(matl);
-        break;
-      } // end case SFCYVariable 
+      case TypeDescription::SFCYVariable:
+        {
+          getSolution_SFCY(matl);
+          break;
+        } // end case SFCYVariable 
 
-    case TypeDescription::SFCZVariable:
-      {
-        getSolution_SFCZ(matl);
-        break;
-      } // end case SFCZVariable 
+      case TypeDescription::SFCZVariable:
+        {
+          getSolution_SFCZ(matl);
+          break;
+        } // end case SFCZVariable 
 
-    case TypeDescription::NCVariable:
-      {
-        getSolution_NC(matl);
-        break;
-      } // end case NCVariable 
+      case TypeDescription::NCVariable:
+        {
+          getSolution_NC(matl);
+          break;
+        } // end case NCVariable 
 
-    case TypeDescription::CCVariable:
-      {
-        getSolution_CC(matl);
-        break;
-      } // end case CCVariable
+      case TypeDescription::CCVariable:
+        {
+          getSolution_CC(matl);
+          break;
+        } // end case CCVariable
 
-    default:
-      {
-        throw InternalError("Unknown variable type in scheduleSolve",
-                            __FILE__, __LINE__);
-      } // end default
+      default:
+        {
+          throw InternalError("Unknown variable type in scheduleSolve",
+                              __FILE__, __LINE__);
+        } // end default
 
-    } // end switch (domType)
+      } // end switch (domType)
 
-  } // end getSolution() for
-
+    } // end getSolution() for
 
 } // end namespace Uintah
+
+std::ostream&   operator << (std::ostream& os, const Uintah::BoxSide& s);
 
 #endif // Packages_Uintah_CCA_Components_Solvers_HypreDriver_h
