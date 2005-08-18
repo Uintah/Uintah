@@ -5,6 +5,8 @@
 // Double-check that all otemp/ntemps are from new dw
 // otemp/ntemp -> temp?
 // Look for cv, gamma
+// Delete combined models?
+// Push cp/cv further into EOS?
 #ifdef __APPLE__
 // This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
 // make the isnan function not work.  This define makes the cmath header
@@ -564,11 +566,11 @@ void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
                                                                                 
   t->computes(lb->vel_CCLabel,        add_matl);
   t->computes(lb->rho_CCLabel,        add_matl);
+
   t->computes(lb->ntemp_CCLabel,      add_matl);
   t->computes(lb->sp_vol_CCLabel,     add_matl);
   t->computes(lb->vol_frac_CCLabel,   add_matl);
   t->computes(lb->rho_micro_CCLabel,  add_matl);
-  t->computes(lb->thermalCondLabel,   add_matl);
   t->computes(lb->viscosityLabel,     add_matl);
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
@@ -577,6 +579,14 @@ void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
   if (add_matl->removeReference()){
     delete add_matl; // shouln't happen, but...
   }
+
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->scheduleInitializeThermo(sched, level->eachPatch(), ice_matl);
+  }
+  scheduleComputeInternalEnergy(sched, level->eachPatch(), d_sharedState->allICEMaterials());
+  scheduleComputeSpeedOfSound(sched, level->eachPatch(), d_sharedState->allICEMaterials());
 }
 
 /*______________________________________________________________________
@@ -657,7 +667,6 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->sp_vol_CCLabel);
   t->computes(lb->vol_frac_CCLabel);
   t->computes(lb->rho_micro_CCLabel);
-  t->computes(lb->thermalCondLabel);
   t->computes(lb->viscosityLabel);
   t->computes(lb->press_CCLabel,     d_press_matl, oims);
   t->computes(lb->initialGuessLabel, d_press_matl, oims); 
@@ -699,7 +708,13 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
     sched->addTask(t2, level->eachPatch(), ice_matls);
 #endif
   }
-  
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->scheduleInitializeThermo(sched, level->eachPatch(), ice_matl);
+  }
+  scheduleComputeInternalEnergy(sched, level->eachPatch(), d_sharedState->allICEMaterials());
+  scheduleComputeSpeedOfSound(sched, level->eachPatch(), ice_matls);
 }
 
 /* _____________________________________________________________________
@@ -766,8 +781,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
-                            // COMMON TO EQ AND RATE FORM
-  t->requires(Task::NewDW, lb->thermalCondLabel,   gn,  0);
+  // COMMON TO EQ AND RATE FORM
   int numGhostCells;
   if (d_delT_scheme == "aggressive") {
     // Agressive scheme
@@ -814,6 +828,60 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
     }
   }
 }
+
+/* _____________________________________________________________________
+ Function~  ICE::scheduleTimeAdvance--
+_____________________________________________________________________*/
+void ICE::scheduleComputeInternalEnergy(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* ice_matls)
+{
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
+    return;
+  
+  cout_doing << "ICE::scheduleComputeInternalEnergy \t\t\tL-"
+             << levelIndex << endl;
+  Task* t = scinew Task("ICE::computeInternalEnergy",
+                        this, &ICE::computeInternalEnergy);
+  t->requires(Task::NewDW, lb->ntemp_CCLabel, Ghost::None);
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->addTaskDependencies_int_eng(t, Task::NewDW, 0);
+  }
+  t->computes(lb->int_eng_CCLabel);
+  sched->addTask(t, patches, ice_matls);
+}
+
+/* _____________________________________________________________________
+ Function~  ICE::scheduleTimeAdvance--
+_____________________________________________________________________*/
+void ICE::scheduleComputeSpeedOfSound(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSet* ice_matls)
+{
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
+    return;
+  
+  cout_doing << "ICE::scheduleComputeSpeedOfSound \t\t\tL-"
+             << levelIndex << endl;
+  Task* t = scinew Task("ICE::computeSpeedOfSound",
+                        this, &ICE::computeSpeedOfSound);
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->int_eng_CCLabel, Ghost::None);
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->addTaskDependencies_cv(t, Task::NewDW, 0);
+    ice_matl->getThermo()->addTaskDependencies_gamma(t, Task::NewDW, 0);
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, Task::NewDW, 0);
+  }
+  t->computes(lb->speedSound_CCLabel);
+  sched->addTask(t, patches, ice_matls);
+}
+
 /* _____________________________________________________________________
  Function~  ICE::scheduleTimeAdvance--
 _____________________________________________________________________*/
@@ -986,9 +1054,6 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
   //}           
   
   t->computes(lb->viscosityLabel);
-  t->computes(lb->thermalCondLabel);
-  t->computes(lb->gammaLabel);
-  t->computes(lb->specific_heatLabel);
   
   sched->addTask(t, level->eachPatch(), ice_matls);
 
@@ -1067,7 +1132,7 @@ void ICE::scheduleComputeTempFC(SchedulerP& sched,
                                 const MaterialSubset* mpm_matls,
                                 const MaterialSet* all_matls)
 { 
-  throw InternalError("scheduleComputeTempFC might go away", __FILE__, __LINE__);
+  cerr << "WARNING: scheduleComputeTempFC not finished\n";
 #if 0
   int levelIndex = getLevel(patches)->getIndex();
   if(!doICEOnLevel(levelIndex))
@@ -1427,7 +1492,6 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->compressiblityLabel,                gn);
   t->requires(Task::NewDW, lb->otemp_CCLabel,     ice_matls, gac,1);
-  t->requires(Task::NewDW, lb->thermalCondLabel,  ice_matls, gac,1);
   t->requires(Task::NewDW, lb->rho_CCLabel,                  gac,1);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,               gac,1);
   t->requires(Task::NewDW, lb->vol_fracX_FCLabel, ice_matls, gac,2);
@@ -1913,11 +1977,18 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     double inv_sum_invDelx_sqr = 1.0/( 1.0/(delX * delX) 
                                      + 1.0/(delY * delY) 
                                      + 1.0/(delZ * delZ) );
-    constCCVariable<double> speedSound, sp_vol_CC, thermalCond, viscosity;
-    constCCVariable<double> cv, gamma;
+    constCCVariable<double> speedSound, sp_vol_CC;
     constCCVariable<Vector> vel_CC;
     Ghost::GhostType  gn  = Ghost::None; 
     Ghost::GhostType  gac = Ghost::AroundCells;
+    int numGhostCells;
+    if (d_delT_scheme == "aggressive") {
+      // Agressive scheme
+      numGhostCells = 0;
+    } else {
+      // Conservative scheme - needs 1 layer of ghost cells on velocity and speed of sound
+      numGhostCells = 1;
+    }
 
     double dCFL = d_CFL;
     delt_CFL = 1000.0; 
@@ -1926,14 +1997,14 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       Material* matl = d_sharedState->getICEMaterial(m);
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       int indx = matl->getDWIndex(); 
-      new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
-      new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
+      new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, numGhostCells);
+      new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, numGhostCells);
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,  0);
-      new_dw->get(viscosity,  lb->viscosityLabel,     indx,patch,gn,  0);
-      new_dw->get(thermalCond,lb->thermalCondLabel,   indx,patch,gn,  0);
-      throw InternalError("actuallyComputeStableTimestep not finished\n", __FILE__, __LINE__);
-      //new_dw->get(gamma,      lb->gammaLabel,         indx,patch,gn,  0);
-      //new_dw->get(cv,         lb->specific_heatLabel, indx,patch,gn,  0);
+      CCVariable<double> thermalDiffusivity;
+      new_dw->allocateTemporary(thermalDiffusivity, patch);
+      ice_matl->getThermo()->compute_thermalDiffusivity(patch->getCellIterator(),
+                                                        thermalDiffusivity,
+                                                        new_dw, sp_vol_CC);
       
       if (d_delT_scheme == "aggressive") {     //      A G G R E S S I V E
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -1953,6 +2024,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       } 
 
       if (d_delT_scheme == "conservative") {  //      C O N S E R V A T I V E
+        constCCVariable<double> viscosity;
+        new_dw->get(viscosity,  lb->viscosityLabel,     indx,patch,gn,  0);
+
         //__________________________________
         // Use a characteristic velocity
         // to compute a sweptvolume. The
@@ -1978,7 +2052,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           double sumSwept_Vol = 0.0;
           IntVector c = *iter;
-          double cp = cv[c] * gamma[c];
           
           for (int dir = 0; dir <3; dir++) {  //loop over all three directions
             IntVector L = c - adj_offset[dir];
@@ -1997,8 +2070,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
             double relative_vel       = fabs(vel_R - vel_L);
 
-            double thermalDiffusivity = thermalCond[c] * sp_vol_CC[c]/cp;
-            double diffusion_vel    = std::max(thermalDiffusivity, viscosity[c])
+            double diffusion_vel    = std::max(thermalDiffusivity[c], viscosity[c])
                                       /dx_length;
 
             double characteristicVel_R = vel_FC_R 
@@ -2034,9 +2106,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-          double cp = cv[c] * gamma[c];
-          double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond[c]);
-          double A = d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
+          double A = d_CFL * 0.5 * inv_sum_invDelx_sqr / thermalDiffusivity[c];
           delt_cond = std::min(A, delt_cond);
         }
       }  //
@@ -2287,6 +2357,89 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
     }
   }
 } 
+
+/* _____________________________________________________________________
+ Function~  ICE::computeInternalEnergy
+ Purpose~   
+ _____________________________________________________________________  */
+void ICE::computeInternalEnergy(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* /*ice_matls*/,
+                                DataWarehouse* /*old_dw*/,
+                                DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing computeInternalEnergy on patch "
+               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+   
+    int numMatls = d_sharedState->getNumICEMatls();
+    
+    for (int m = 0; m < numMatls; m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx = ice_matl->getDWIndex();
+      CCVariable<double> int_eng;
+      constCCVariable<double> Temp;
+      new_dw->allocateAndPut(int_eng, lb->int_eng_CCLabel, indx, patch);
+      new_dw->get(Temp, lb->ntemp_CCLabel, indx, patch, Ghost::None, 0);
+      ice_matl->getThermo()->compute_int_eng(patch->getCellIterator(), int_eng, new_dw,
+                                             Temp);
+    }
+  }
+}
+
+/* _____________________________________________________________________
+ Function~  ICE::computeSpeedOfSound
+ Purpose~   
+ _____________________________________________________________________  */
+void ICE::computeSpeedOfSound(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* /*ice_matls*/,
+                              DataWarehouse* /*old_dw*/,
+                              DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing computeSpeedOfSound on patch "
+               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+   
+    int numMatls = d_sharedState->getNumICEMatls();
+    
+    for (int m = 0; m < numMatls; m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      EquationOfState* eos = ice_matl->getEOS();
+      int indx = ice_matl->getDWIndex();
+      CCVariable<double> speedSound;
+      constCCVariable<double> sp_vol, int_eng;
+      new_dw->allocateAndPut(speedSound, lb->speedSound_CCLabel, indx, patch);
+      new_dw->get(sp_vol, lb->sp_vol_CCLabel, indx, patch, Ghost::None, 0);
+      new_dw->get(int_eng, lb->int_eng_CCLabel, indx, patch, Ghost::None, 0);
+      CCVariable<double> cv;
+      new_dw->allocateTemporary(cv, patch);
+      ice_matl->getThermo()->compute_cv(patch->getCellIterator(), cv, new_dw);
+      CCVariable<double> gamma;
+      new_dw->allocateTemporary(gamma, patch);
+      ice_matl->getThermo()->compute_gamma(patch->getCellIterator(), gamma, new_dw);
+      CCVariable<double> temp;
+      new_dw->allocateTemporary(temp, patch);
+      ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), temp, new_dw,
+                                          int_eng);
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        const IntVector& c = *iter;
+        double rhoM = 1./sp_vol[c];
+        double press_eos, dp_drho, dp_de;
+        eos->computePressEOS(rhoM, gamma[c], cv[c], temp[c], press_eos, dp_drho, dp_de);
+        double cSquared = dp_drho + dp_de * press_eos * sp_vol[c] * sp_vol[c];
+        speedSound[c] = sqrt(cSquared);
+      }
+    }
+  }
+}
 
 #if 0
 /* _____________________________________________________________________
@@ -3840,8 +3993,8 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
             " calculation doesn't work for multiple materials. Set the ICE: thermal conductivity to 0.0 --Todd"<< endl;
           }
           constCCVariable<double> Temp_CC;
+          throw InternalError("thermalCond not finished", __FILE__, __LINE__);
           constCCVariable<double> thermalCond;
-          new_dw->get(thermalCond, lb->thermalCondLabel, indx,patch,gac,1); 
           new_dw->get(Temp_CC,     lb->otemp_CCLabel,    indx,patch,gac,1); 
 
           constSFCXVariable<double> vol_fracX_FC;

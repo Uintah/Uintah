@@ -54,14 +54,14 @@ WARNING
                                   double& press, double& dp_drho, 
                                   double& dp_de) = 0;
 
-    virtual void computeTempCC(const Patch* patch,
-                               const string& comp_domain,
-                               const CCVariable<double>& press, 
-                               const CCVariable<double>& gamma,
-                               const CCVariable<double>& cv,
-                               const CCVariable<double>& rho_micro, 
-                               CCVariable<double>& Temp,
-                               Patch::FaceType face)=0;
+     virtual void computeTempCC(const Patch* patch,
+                                const string& comp_domain,
+                                const CCVariable<double>& press, 
+                                const CCVariable<double>& gamma,
+                                const CCVariable<double>& cv,
+                                const CCVariable<double>& rho_micro, 
+                                CCVariable<double>& Temp,
+                                Patch::FaceType face)=0;
 
      virtual double getAlpha(double temp,double sp_v,double P, double cv)=0;
 
@@ -74,10 +74,6 @@ WARNING
                                             const CCVariable<double>& cv,
                                             const Vector& dx,
                                             CCVariable<double>& Temp_CC)=0;
-
-     // Scheduling
-     virtual void addTaskDependencies_speedOfSound(Task* t, Task::WhichDW dw,
-                                                   int numGhostCells) = 0;
   };
 } // End namespace Uintah
       
