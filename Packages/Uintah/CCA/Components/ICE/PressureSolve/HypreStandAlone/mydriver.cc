@@ -10,7 +10,6 @@
  *-------------------------------------------------------------------------*/
 
 /*================== Library includes ==================*/
-
 #include "DebugStream.h"
 #include "util.h"
 #include "Hierarchy.h"
@@ -182,8 +181,8 @@ main(int argc, char *argv[]) {
    *-----------------------------------------------------------*/
   /* Set test cast parameters */
   Param*                param;
-  param = new TestLinear(2,8); // numDims, baseResolution
-  param->solverType    = Param::AMG; // Hypre solver
+  param = new TestLinear(3,8); // numDims, baseResolution
+  param->solverType    = Param::FAC; // Hypre solver
   param->numLevels     = 2;          // # AMR levels
   param->printSystem   = true;
   param->verboseLevel  = 2;
@@ -334,9 +333,13 @@ main(int argc, char *argv[]) {
   linePrint("-",50);
   dbg0 << "Print out the system and initial guess" << "\n";
   linePrint("-",50);
+  dbg0 << "Print A" << "\n";
   solver->printMatrix("output_A");
+  dbg0 << "Print b" << "\n";
   solver->printRHS("output_b");
+  dbg0 << "Printing x0" << "\n";
   solver->printSolution("output_x0");
+  dbg0 << "Done" << "\n";
 
   /*-----------------------------------------------------------
    * Solver setup phase

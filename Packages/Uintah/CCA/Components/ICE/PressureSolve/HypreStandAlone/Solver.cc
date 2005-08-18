@@ -15,7 +15,7 @@ Solver::initialize(const Hierarchy& hier,
                    const HYPRE_SStructStencil& stencil)
 {
   funcPrint("Solver::initialize()",FBegin);
-  _requiresPar =
+  _requiresPar = 
     (((_solverID >= 20) && (_solverID <= 30)) ||
      ((_solverID >= 40) && (_solverID < 60)));
   dbg0 << "requiresPar = " << _requiresPar << "\n";
