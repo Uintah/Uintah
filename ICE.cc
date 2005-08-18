@@ -5018,6 +5018,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
         mach[c]  = vel_CC[c].length()/speedSound[c];
       }
 
+      
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
        ostringstream desc;
@@ -5314,6 +5315,7 @@ void ICE::getExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
      throw InvalidValue("Number of exchange components don't match.", __FILE__, __LINE__);
   
 }
+
 /*_____________________________________________________________________
  Function~  ICE::upwindCell--
  purpose:   find the upwind cell in each direction  This is a knock off
