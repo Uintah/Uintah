@@ -3017,7 +3017,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
         bool pointInReal = lvl->containsPointInRealCells(pxnew[idx]);
         bool pointInAny = lvl->containsPoint(pxnew[idx]);
-        if((!pointInReal && pointInAny) || (pmassNew[idx] <= d_min_part_mass)){
+        if((!pointInReal && pointInAny) || (pmassNew[idx] <= d_min_part_mass)
+            || pTempNew[idx] < 0. ){
           delset->addParticle(idx);
 //	  cout << "Material = " << m << " Deleted Particle = " << idx 
 //               << " xold = " << px[idx] << " xnew = " << pxnew[idx]
