@@ -43,7 +43,7 @@ HypreGenericSolver::assertInterface(void)
     const Priorities& precondPriority = _precond->getPriority();
     for (unsigned int i = 0; i < _priority.size(); i++) {
       bool remove = false;
-      for (unsigned int j = 0; j < priority.size(); j++) {
+      for (unsigned int j = 0; j < _priority.size(); j++) {
         if (_priority[i] == precondPriority[j]) {
           // Remove this solver interface entry
           remove = true;
@@ -102,8 +102,8 @@ HypreGenericSolver::assertInterface(void)
 
 HypreGenericSolver*
 newHypreSolver(const SolverType& solverType,
-               const PrecondType& precondType,
-               HypreDriver* driver)
+               HypreDriver* driver,
+               HypreGenericPrecond* precond)
   // Create a new solver object of specific solverType solver type
   // but a generic solver pointer type.
   // TODO: include all derived classes here.
@@ -113,29 +113,29 @@ newHypreSolver(const SolverType& solverType,
 #if 0
   case SMG:
     {
-      return new HypreSolverSMG(driver);
+      return new HypreSolverSMG(driver,precond);
     }
 #endif
   case PFMG:
     {
-      return new HypreSolverPFMG(driver,precondPriority);
+      return new HypreSolverPFMG(driver,precond);
     }
 #if 0
   case SparseMSG:
     {
-      return new HypreSolverSparseMSG(driver);
+      return new HypreSolverSparseMSG(driver,precond);
     }
   case CG:
     {
-      return new HypreSolverCG(driver);
+      return new HypreSolverCG(driver,precond);
     }
   case Hybrid: 
     {
-      return new HypreSolverHybrid(driver);
+      return new HypreSolverHybrid(driver,precond);
     }
   case GMRES:
     {
-      return new HypreSolverGMRES(driver);
+      return new HypreSolverGMRES(driver,precond);
     }
 #endif
   default:

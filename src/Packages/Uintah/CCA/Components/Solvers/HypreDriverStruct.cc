@@ -69,8 +69,8 @@ HypreDriverStruct::~HypreDriverStruct(void)
   HYPRE_StructMatrixDestroy(_HA);
   HYPRE_StructVectorDestroy(_HB);
   HYPRE_StructVectorDestroy(_HX);
-  HYPRE_StructStencilDestroy(stencil);
-  HYPRE_StructGridDestroy(grid);
+  HYPRE_StructStencilDestroy(_stencil);
+  HYPRE_StructGridDestroy(_grid);
 }
 
 HypreDriverStruct* newHypreDriverStruct(const HypreDriver& other)
@@ -96,6 +96,7 @@ HypreDriverStruct* newHypreDriverStruct(const HypreDriver& other)
   return 0;
 }
 
+#if 0
 void HypreDriverStruct::setupPrecond(void)
   /*_____________________________________________________________________
     Function HypreDriverStruct::setupPrecond
@@ -244,6 +245,7 @@ void HypreDriverStruct::destroyPrecond(void)
                         +params->precondType, __FILE__, __LINE__);
   } // end switch (param->precondType)
 } // end destroyPrecond()
+#endif
 
   //#####################################################################
   // class HypreDriver implementation for CC variable type
@@ -273,8 +275,8 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
     Patch::VariableBasis basis =
       Patch::translateTypeToBasis(sol_type::getTypeDescription()
                                   ->getType(), true);
-    IntVector ec = params->getSolveOnExtraCells() ?
-      IntVector(0,0,0) : -level->getExtraCells();
+    IntVector ec = _params->getSolveOnExtraCells() ?
+      IntVector(0,0,0) : -_level->getExtraCells();
     IntVector l = patch->getLowIndex(basis, ec);
     IntVector h1 = patch->getHighIndex(basis, ec)-IntVector(1,1,1);
 
@@ -286,7 +288,7 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   // Set up the stencil
   //==================================================================
   HYPRE_StructStencil stencil;
-  if(params->symmetric){
+  if(_params->symmetric){
     HYPRE_StructStencilCreate(3, 4, &stencil);
     int offsets[4][3] = {{0,0,0},
                          {-1,0,0},
@@ -308,12 +310,14 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   // Set up the Struct left-hand-side matrix _HA
   //==================================================================
   HYPRE_StructMatrixCreate(_pg->getComm(), _grid, stencil, &_HA);
-  HYPRE_StructMatrixSetSymmetric(_HA, params->symmetric);
+  HYPRE_StructMatrixSetSymmetric(_HA, _params->symmetric);
   int ghost[] = {1,1,1,1,1,1};
   HYPRE_StructMatrixSetNumGhost(_HA, ghost);
-  if (_requiresPar) {
-    HYPRE_StructMatrixSetObjectType(_HA, HYPRE_PARCSR);
-  }
+  // This works only for SStruct -> ParCSR. TODO: convert Struct -> SStruct
+  // -> ParCSR for complicated diffusion 1-level problems that need AMG.
+  //  if (_requiresPar) {
+  //    HYPRE_StructMatrixSetObjectType(_HA, HYPRE_PARCSR);
+  //  }
   HYPRE_StructMatrixInitialize(_HA);
 
   for(int p=0;p<_patches->size();p++){
@@ -321,18 +325,18 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
 
     // Get the data from Uintah
     CCTypes::matrix_type A;
-    _A_dw->get(A, A_label, matl, patch, Ghost::None, 0);
+    _A_dw->get(A, _A_label, matl, patch, Ghost::None, 0);
 
     Patch::VariableBasis basis =
       Patch::translateTypeToBasis(sol_type::getTypeDescription()
                                   ->getType(), true);
-    IntVector ec = params->getSolveOnExtraCells() ?
-      IntVector(0,0,0) : -level->getExtraCells();
+    IntVector ec = _params->getSolveOnExtraCells() ?
+      IntVector(0,0,0) : -_level->getExtraCells();
     IntVector l = patch->getLowIndex(basis, ec);
     IntVector h = patch->getHighIndex(basis, ec);
 
     // Feed it to Hypre
-    if(params->symmetric){
+    if(_params->symmetric){
       double* values = new double[(h.x()-l.x())*4];	
       int stencil_indices[] = {0,1,2,3};
       for(int z=l.z();z<h.z();z++){
@@ -378,9 +382,11 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   // Set up the Struct right-hand-side vector _HB
   //==================================================================
   HYPRE_StructVectorCreate(_pg->getComm(), _grid, &_HB);
-  if (_requiresPar) {
-    HYPRE_StructVectorSetObjectType(_HB, HYPRE_PARCSR);
-  }
+  // This works only for SStruct -> ParCSR. TODO: convert Struct -> SStruct
+  // -> ParCSR for complicated diffusion 1-level problems that need AMG.
+  //  if (_requiresPar) {
+  //    HYPRE_StructVectorSetObjectType(_HB, HYPRE_PARCSR);
+  //  }
   HYPRE_StructVectorInitialize(_HB);
 
   for(int p=0;p<_patches->size();p++){
@@ -388,13 +394,13 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
 
     // Get the data from Uintah
     CCTypes::const_type B;
-    _b_dw->get(B, B_label, matl, patch, Ghost::None, 0);
+    _b_dw->get(B, _B_label, matl, patch, Ghost::None, 0);
 
     Patch::VariableBasis basis =
       Patch::translateTypeToBasis(sol_type::getTypeDescription()
                                   ->getType(), true);
-    IntVector ec = params->getSolveOnExtraCells() ?
-      IntVector(0,0,0) : -level->getExtraCells();
+    IntVector ec = _params->getSolveOnExtraCells() ?
+      IntVector(0,0,0) : -_level->getExtraCells();
     IntVector l = patch->getLowIndex(basis, ec);
     IntVector h = patch->getHighIndex(basis, ec);
 
@@ -417,24 +423,26 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   // Set up the Struct solution vector _HX
   //==================================================================
   HYPRE_StructVectorCreate(_pg->getComm(), _grid, &_HX);
-  if (_requiresPar) {
-    HYPRE_StructVectorSetObjectType(_HX, HYPRE_PARCSR);
-  }
+  // This works only for SStruct -> ParCSR. TODO: convert Struct -> SStruct
+  // -> ParCSR for complicated diffusion 1-level problems that need AMG.
+  //  if (_requiresPar) {
+  //    HYPRE_StructVectorSetObjectType(_HX, HYPRE_PARCSR);
+  //  }
   HYPRE_StructVectorInitialize(_HX);
 
   for(int p=0;p<_patches->size();p++){
     const Patch* patch = _patches->get(p);
 
-    if(guess_label){
+    if (_guess_label) {
       CCTypes::const_type X;
-      _guess_dw->get(X, guess_label, matl, patch, Ghost::None, 0);
+      _guess_dw->get(X, _guess_label, matl, patch, Ghost::None, 0);
 
       // Get the initial guess from Uintah
       Patch::VariableBasis basis =
         Patch::translateTypeToBasis(sol_type::getTypeDescription()
                                     ->getType(), true);
-      IntVector ec = params->getSolveOnExtraCells() ?
-        IntVector(0,0,0) : -level->getExtraCells();
+      IntVector ec = _params->getSolveOnExtraCells() ?
+        IntVector(0,0,0) : -_level->getExtraCells();
       IntVector l = patch->getLowIndex(basis, ec);
       IntVector h = patch->getHighIndex(basis, ec);
 
@@ -455,11 +463,13 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   HYPRE_StructVectorAssemble(_HX);
 
   // If solver requires ParCSR format, convert Struct to ParCSR.
-  if (_requiresPar) {
-    HYPRE_StructMatrixGetObject(_HA, (void **) &_HA_Par);
-    HYPRE_StructVectorGetObject(_HB, (void **) &_HB_Par);
-    HYPRE_StructVectorGetObject(_HX, (void **) &_HX_Par);
-  }
+  // This works only for SStruct -> ParCSR. TODO: convert Struct -> SStruct
+  // -> ParCSR for complicated diffusion 1-level problems that need AMG.
+  //  if (_requiresPar) {
+  //    HYPRE_StructMatrixGetObject(_HA, (void **) &_HA_Par);
+  //    HYPRE_StructVectorGetObject(_HB, (void **) &_HB_Par);
+  //    HYPRE_StructVectorGetObject(_HX, (void **) &_HX_Par);
+  //  }
 
 } // end HypreDriverStruct::makeLinearSystem()
 
@@ -472,24 +482,24 @@ HypreDriverStruct::getSolution_CC(const int matl)
   // the Hypre Struct interface.
   //_____________________________________________________________________*/
 {
-  //    typedef CCTypes::sol_type sol_type;
+  typedef CCTypes::sol_type sol_type;
   for(int p=0;p<_patches->size();p++){
     const Patch* patch = _patches->get(p);
 
     Patch::VariableBasis basis =
       Patch::translateTypeToBasis(sol_type::getTypeDescription()
                                   ->getType(), true);
-    IntVector ec = params->getSolveOnExtraCells() ?
-      IntVector(0,0,0) : -level->getExtraCells();
+    IntVector ec = _params->getSolveOnExtraCells() ?
+      IntVector(0,0,0) : -_level->getExtraCells();
     IntVector l = patch->getLowIndex(basis, ec);
     IntVector h = patch->getHighIndex(basis, ec);
     CellIterator iter(l, h);
 
     sol_type Xnew;
-    if(modifies_x)
-      _new_dw->getModifiable(Xnew, X_label, matl, patch);
+    if(_modifies_x)
+      _new_dw->getModifiable(Xnew, _X_label, matl, patch);
     else
-      _new_dw->allocateAndPut(Xnew, X_label, matl, patch);
+      _new_dw->allocateAndPut(Xnew, _X_label, matl, patch);
 	
     // Get the solution back from hypre
     for(int z=l.z();z<h.z();z++){
@@ -517,32 +527,32 @@ void
 HypreDriverStruct::printMatrix(const string& fileName /* =  "output" */)
 {
   cout_doing << "HypreDriverStruct::printMatrix() begin" << "\n";
-  if (!_param->printSystem) return;
-  HYPRE_SStructMatrixPrint((fileName + ".sstruct").c_str(), _A, 0);
-  if (_requiresPar) {
-    HYPRE_ParCSRMatrixPrint(_parA, (fileName + ".par").c_str());
-    /* Print CSR matrix in IJ format, base 1 for rows and cols */
-    HYPRE_ParCSRMatrixPrintIJ(_parA, 1, 1, (fileName + ".ij").c_str());
-  }
+  if (!_params->printSystem) return;
+  HYPRE_StructMatrixPrint((fileName + ".sstruct").c_str(), _HA, 0);
+  //  if (_requiresPar) {
+  //    HYPRE_ParCSRMatrixPrint(_HA_Par, (fileName + ".par").c_str());
+  //    // Print CSR matrix in IJ format, base 1 for rows and cols
+  //    HYPRE_ParCSRMatrixPrintIJ(_HA_Par, 1, 1, (fileName + ".ij").c_str());
+  //  }
   cout_doing << "HypreDriverStruct::printMatrix() end" << "\n";
 }
 
 void
 HypreDriverStruct::printRHS(const string& fileName /* =  "output_b" */)
 {
-  if (!_param->printSystem) return;
-  HYPRE_SStructVectorPrint(fileName.c_str(), _b, 0);
-  if (_requiresPar) {
-    HYPRE_ParVectorPrint(_parB, (fileName + ".par").c_str());
-  }
+  if (!_params->printSystem) return;
+  HYPRE_StructVectorPrint(fileName.c_str(), _HB, 0);
+  //  if (_requiresPar) {
+  //    HYPRE_ParVectorPrint(_HB_Par, (fileName + ".par").c_str());
+  //  }
 }
 
 void
 HypreDriverStruct::printSolution(const string& fileName /* =  "output_x" */)
 {
-  if (!_param->printSystem) return;
-  HYPRE_SStructVectorPrint(fileName.c_str(), _x, 0);
-  if (_requiresPar) {
-    HYPRE_ParVectorPrint(_parX, (fileName + ".par").c_str());
-  }
+  if (!_params->printSystem) return;
+  HYPRE_StructVectorPrint(fileName.c_str(), _HX, 0);
+  //  if (_requiresPar) {
+  //    HYPRE_ParVectorPrint(_HX_Par, (fileName + ".par").c_str());
+  //  }
 }

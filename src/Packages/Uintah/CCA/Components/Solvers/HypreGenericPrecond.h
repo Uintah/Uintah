@@ -61,6 +61,8 @@ namespace Uintah {
 
     // Data member modifyable access
     HypreGenericSolver*   getSolver(void) { return _solver; }
+    void                  setSolver(HypreGenericSolver* solver)
+      { _solver = solver; }
     HYPRE_PtrToSolverFcn& getPrecond(void) { return _precond; }
     HYPRE_PtrToSolverFcn& getPCSetup(void) { return _pcsetup; }
     HYPRE_Solver&         getPrecondSolver(void) { return _precond_solver; }
@@ -70,10 +72,11 @@ namespace Uintah {
     const HypreGenericSolver*   getSolver(void) const { return _solver; }
     const HYPRE_PtrToSolverFcn& getPrecond(void) const { return _precond; }
     const HYPRE_PtrToSolverFcn& getPCSetup(void) const { return _pcsetup; }
-    const HYPRE_Solver&         getPrecondSolver(void) const { return _precond_solver; }
+    const HYPRE_Solver&         getPrecondSolver(void) const
+      { return _precond_solver; }
     const Priorities&           getPriority(void) const { return _priority; }
 
-    virtual void setup(HypreGenericSolver* solver) = 0;
+    virtual void setup(void) = 0;
 
     //========================== PROTECTED SECTION ==========================
   protected:

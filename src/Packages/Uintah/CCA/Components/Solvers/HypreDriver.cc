@@ -220,8 +220,12 @@ HypreDriver::isConvertable(const HypreInterface& to)
   // "_interface" to "to" ?
 {
   // Add here any known rules of conversion.
-  if ((_interface == HypreStruct ) && (to == HypreParCSR)) return true;
+
+  // It does not seem possible to convert from Struct to ParCSR.
+  //  if ((_interface == HypreStruct ) && (to == HypreParCSR)) return true;
+
   if ((_interface == HypreSStruct) && (to == HypreParCSR)) return true;
+
   return false;
 } // end isConvertable()
 

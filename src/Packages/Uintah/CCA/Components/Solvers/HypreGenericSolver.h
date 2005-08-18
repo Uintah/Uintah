@@ -68,8 +68,13 @@ namespace Uintah {
                        const Priorities& priority);
     virtual ~HypreGenericSolver(void);
 
-    const Results& getResults(void) const { return _results; }
-    const bool&    requiresPar(void) const { return _requiresPar; }
+    // Data member unmodifyable access
+    HypreDriver*       getDriver(void) { return _driver; }
+
+    // Data member unmodifyable access
+    const HypreDriver* getDriver(void) const { return _driver; }
+    const Results&     getResults(void) const { return _results; }
+    const bool&        requiresPar(void) const { return _requiresPar; }
 
     void         assertInterface(void);
     virtual void solve(void) = 0;
