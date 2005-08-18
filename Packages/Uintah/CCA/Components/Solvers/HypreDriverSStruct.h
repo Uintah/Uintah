@@ -57,12 +57,16 @@ WARNING
 #define Packages_Uintah_CCA_Components_Solvers_HypreDriverSStruct_h
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+
+#include <iostream>
 
 namespace Uintah {
-
-  using std::cerr;
-
   // Forward declarations
+  class Level;
+  class Patch;
+  class VarLabel;
   class HypreSolverParams;
 
   class HypreDriverSStruct : public HypreDriver {
@@ -109,16 +113,14 @@ namespace Uintah {
     const HYPRE_SStructVector& getX(void) const { return _HX; }  // Solution
 
     // Common for all var types
+    virtual void printMatrix(const string& fileName = "output");
+    virtual void printRHS(const string& fileName = "output_b");
+    virtual void printSolution(const string& fileName = "output_x");
     virtual void gatherSolutionVector(void);
 
     // CC variables: set up linear system & read back solution
     virtual void makeLinearSystem_CC(const int matl);
     virtual void getSolution_CC(const int matl);
-
-    // HYPRE data printouts
-    virtual void printMatrix(const string& fileName = "output");
-    virtual void printRHS(const string& fileName = "output_b");
-    virtual void printSolution(const string& fileName = "output_x");
 
     //========================== PRIVATE SECTION ==========================
   private:
@@ -152,15 +154,15 @@ namespace Uintah {
     HYPRE_SStructVector      _HB;           // Right-hand-side vector
     HYPRE_SStructVector      _HX;           // Solution vector
     HYPRE_SStructGraph       _graph;        // Unstructured connection graph
-
   }; // end class HypreDriverSStruct
-
-  //========================== Utilities, printouts ==========================
-  std::ostream& operator << (std::ostream& os,
-                             const HypreDriverSStruct::CoarseFineViewpoint& v);
-  std::ostream& operator << (std::ostream& os,
-                             const HypreDriverSStruct::ConstructionStatus& s);
 
 } // end namespace Uintah
 
+//========================== Utilities, printouts ==========================
+std::ostream& operator << (std::ostream& os,
+                           const Uintah::HypreDriverSStruct::CoarseFineViewpoint& v);
+std::ostream& operator << (std::ostream& os,
+                           const Uintah::HypreDriverSStruct::ConstructionStatus& s);
+
 #endif // Packages_Uintah_CCA_Components_Solvers_HypreDriverSStruct_h
+

@@ -35,11 +35,15 @@ WARNING
 
 //#define HYPRE_TIMING
 #ifndef HYPRE_TIMING
-#ifndef hypre_ClearTiming
-// This isn't in utilities.h for some reason...
-#define hypre_ClearTiming()
+#  ifndef hypre_ClearTiming
+     // This isn't in utilities.h for some reason...
+#    define hypre_ClearTiming()
+#  endif
 #endif
-#endif
+
+// vector must be included after krylov.h because krylov defines 'max'
+// and this causes some strange error in something vector includes.
+#include <vector>
 
 namespace Uintah {
 

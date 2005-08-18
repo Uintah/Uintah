@@ -55,6 +55,47 @@ HypreDriverStruct::~HypreDriverStruct(void)
   HYPRE_StructGridDestroy(_grid);
 }
 
+void
+HypreDriverStruct::printMatrix(const string& fileName /* =  "output" */)
+{
+  cout_doing << "HypreDriverStruct::printMatrix() begin" << "\n";
+  if (!_params->printSystem) return;
+  HYPRE_StructMatrixPrint((fileName + ".sstruct").c_str(), _HA, 0);
+  //  if (_requiresPar) {
+  //    HYPRE_ParCSRMatrixPrint(_HA_Par, (fileName + ".par").c_str());
+  //    // Print CSR matrix in IJ format, base 1 for rows and cols
+  //    HYPRE_ParCSRMatrixPrintIJ(_HA_Par, 1, 1, (fileName + ".ij").c_str());
+  //  }
+  cout_doing << "HypreDriverStruct::printMatrix() end" << "\n";
+}
+
+void
+HypreDriverStruct::printRHS(const string& fileName /* =  "output_b" */)
+{
+  if (!_params->printSystem) return;
+  HYPRE_StructVectorPrint(fileName.c_str(), _HB, 0);
+  //  if (_requiresPar) {
+  //    HYPRE_ParVectorPrint(_HB_Par, (fileName + ".par").c_str());
+  //  }
+}
+
+void
+HypreDriverStruct::printSolution(const string& fileName /* =  "output_x" */)
+{
+  if (!_params->printSystem) return;
+  HYPRE_StructVectorPrint(fileName.c_str(), _HX, 0);
+  //  if (_requiresPar) {
+  //    HYPRE_ParVectorPrint(_HX_Par, (fileName + ".par").c_str());
+  //  }
+}
+
+void
+HypreDriverStruct::gatherSolutionVector(void)
+{
+  // It seems it is not necessary to gather the solution vector
+  // for the Struct interface.
+} // end HypreDriverStruct::gatherSolutionVector()
+
 //#####################################################################
 // class HypreDriver implementation for CC variable type
 //#####################################################################
@@ -95,29 +136,28 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   // Set up the stencil
   //==================================================================
-  HYPRE_StructStencil stencil;
   if(_params->symmetric){
-    HYPRE_StructStencilCreate(3, 4, &stencil);
+    HYPRE_StructStencilCreate(3, 4, &_stencil);
     int offsets[4][3] = {{0,0,0},
                          {-1,0,0},
                          {0,-1,0},
                          {0,0,-1}};
     for(int i=0;i<4;i++)
-      HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
+      HYPRE_StructStencilSetElement(_stencil, i, offsets[i]);
   } else {
-    HYPRE_StructStencilCreate(3, 7, &stencil);
+    HYPRE_StructStencilCreate(3, 7, &_stencil);
     int offsets[7][3] = {{0,0,0},
                          {1,0,0}, {-1,0,0},
                          {0,1,0}, {0,-1,0},
                          {0,0,1}, {0,0,-1}};
     for(int i=0;i<7;i++)
-      HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
+      HYPRE_StructStencilSetElement(_stencil, i, offsets[i]);
   }
 
   //==================================================================
   // Set up the Struct left-hand-side matrix _HA
   //==================================================================
-  HYPRE_StructMatrixCreate(_pg->getComm(), _grid, stencil, &_HA);
+  HYPRE_StructMatrixCreate(_pg->getComm(), _grid, _stencil, &_HA);
   HYPRE_StructMatrixSetSymmetric(_HA, _params->symmetric);
   int ghost[] = {1,1,1,1,1,1};
   HYPRE_StructMatrixSetNumGhost(_HA, ghost);
@@ -279,13 +319,13 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   //    HYPRE_StructVectorGetObject(_HX, (void **) &_HX_Par);
   //  }
 
-} // end HypreDriverStruct::makeLinearSystem()
+} // end HypreDriverStruct::makeLinearSystem_CC()
 
 
 void
 HypreDriverStruct::getSolution_CC(const int matl)
   //_____________________________________________________________________
-  // Function HypreDriverStruct::getSolution~
+  // Function HypreDriverStruct::getSolution_CC~
   // Get the solution vector for a 1-level, CC variable problem from
   // the Hypre Struct interface.
   //_____________________________________________________________________*/
@@ -322,45 +362,4 @@ HypreDriverStruct::getSolution_CC(const int matl)
       }
     }
   }
-} // end HypreDriverStruct::getSolution()
-
-void
-HypreDriverStruct::gatherSolutionVector(void)
-{
-  // It seems it is not necessary to gather the solution vector
-  // for the Struct interface.
-} // end HypreDriverStruct::gatherSolutionVector()
-
-void
-HypreDriverStruct::printMatrix(const string& fileName /* =  "output" */)
-{
-  cout_doing << "HypreDriverStruct::printMatrix() begin" << "\n";
-  if (!_params->printSystem) return;
-  HYPRE_StructMatrixPrint((fileName + ".sstruct").c_str(), _HA, 0);
-  //  if (_requiresPar) {
-  //    HYPRE_ParCSRMatrixPrint(_HA_Par, (fileName + ".par").c_str());
-  //    // Print CSR matrix in IJ format, base 1 for rows and cols
-  //    HYPRE_ParCSRMatrixPrintIJ(_HA_Par, 1, 1, (fileName + ".ij").c_str());
-  //  }
-  cout_doing << "HypreDriverStruct::printMatrix() end" << "\n";
-}
-
-void
-HypreDriverStruct::printRHS(const string& fileName /* =  "output_b" */)
-{
-  if (!_params->printSystem) return;
-  HYPRE_StructVectorPrint(fileName.c_str(), _HB, 0);
-  //  if (_requiresPar) {
-  //    HYPRE_ParVectorPrint(_HB_Par, (fileName + ".par").c_str());
-  //  }
-}
-
-void
-HypreDriverStruct::printSolution(const string& fileName /* =  "output_x" */)
-{
-  if (!_params->printSystem) return;
-  HYPRE_StructVectorPrint(fileName.c_str(), _HX, 0);
-  //  if (_requiresPar) {
-  //    HYPRE_ParVectorPrint(_HX_Par, (fileName + ".par").c_str());
-  //  }
-}
+} // end HypreDriverStruct::getSolution_CC()
