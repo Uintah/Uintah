@@ -109,6 +109,12 @@ public:
   void scheduleInterpolateCCToNC(SchedulerP&, const PatchSet*,
                                  const MaterialSet*);
 
+  void scheduleComputeCCVelAndTempRates(SchedulerP&, const PatchSet*,
+                                        const MaterialSet*);
+
+  void scheduleInterpolateCCToNCRefined(SchedulerP&, const PatchSet*,
+                                        const MaterialSet*);
+
   void scheduleRefineCC(SchedulerP&, const PatchSet*,
                         const MaterialSet*);
 
@@ -220,6 +226,18 @@ public:
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw);
+
+  void computeCCVelAndTempRates(const ProcessorGroup*,
+                                const PatchSubset* patch,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+  void interpolateCCToNCRefined(const ProcessorGroup*,
+                                const PatchSubset* patch,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
 
   void interpolatePressCCToPressNC(const ProcessorGroup*,
                                    const PatchSubset* patch,
