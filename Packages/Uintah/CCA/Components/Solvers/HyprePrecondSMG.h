@@ -51,13 +51,14 @@ namespace Uintah {
     //========================== PUBLIC SECTION ==========================
   public:
   
-    HyprePrecondSMG(const HypreInterface& interface,
-                    const ProcessorGroup* pg,
-                    const HypreSolverParams* params);
-    virtual ~HyprePrecondSMG(void) {}
+    HyprePrecondSMG(void) : HypreGenericPrecond(initPriority()) {}
+    virtual ~HyprePrecondSMG(void);
 
+    virtual void setup(void);
+    
     //========================== PROTECTED SECTION ==========================
   protected:
+    static Priorities initPriority(void);
 
   }; // end class HyprePrecondSMG
 

@@ -56,14 +56,14 @@ namespace Uintah {
   
     HypreSolverPFMG(HypreDriver* driver,
                     HypreGenericPrecond* precond) :
-      HypreGenericSolver(driver,precond,initPriority(precondPriority)) {}
+      HypreGenericSolver(driver,precond,initPriority()) {}
     virtual ~HypreSolverPFMG(void) {}
 
     virtual void solve(void);
 
     //========================== PRIVATE SECTION ==========================
   private:
-    static Priorities initPriority(const Priorities& precondPriority);
+    static Priorities initPriority(void);
 
   }; // end class HypreSolverPFMG
 

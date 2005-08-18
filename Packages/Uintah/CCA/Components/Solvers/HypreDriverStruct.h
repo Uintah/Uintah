@@ -108,6 +108,7 @@ namespace Uintah {
     //---------- Data members ----------
     // Hypre Struct interface objects
     HYPRE_StructGrid         _grid;              // level&patch hierarchy
+    HYPRE_StructStencil      _stencil;           // stencil pattern
     HYPRE_StructMatrix       _HA;                // Left-hand-side matrix
     HYPRE_StructVector       _HB;                // Right-hand-side vector
     HYPRE_StructVector       _HX;                // Solution vector

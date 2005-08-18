@@ -6,6 +6,8 @@
 // done in the classes derived from HyprePrecondSMG.
 //--------------------------------------------------------------------------
 #include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondSMG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -18,30 +20,41 @@ using namespace Uintah;
 
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
-HyprePrecondSMG::HyprePrecondSMG(const HypreInterface& interface,
-                                 const ProcessorGroup* pg,
-                                 const HypreSolverParams* params) :
-  HyprePrecond(interface, pg, params, int(HypreStruct))
+Priorities
+HyprePrecondSMG::initPriority(void)
 {
-  if (_interface == HypreStruct) {
-    HYPRE_StructSolver precond_solver_struct;
-    HYPRE_StructSMGCreate(_pg->getComm(), &precond_solver_struct);
-    HYPRE_StructSMGSetMemoryUse(precond_solver_struct, 0);
-    HYPRE_StructSMGSetMaxIter(precond_solver_struct, 1);
-    HYPRE_StructSMGSetTol(precond_solver_struct, 0.0);
-    HYPRE_StructSMGSetZeroGuess(precond_solver_struct);
-    HYPRE_StructSMGSetNumPreRelax(precond_solver_struct, _params->nPre);
-    HYPRE_StructSMGSetNumPostRelax(precond_solver_struct, _params->nPost);
-    HYPRE_StructSMGSetLogging(precond_solver_struct, 0);
+  Priorities priority;
+  priority.push_back(HypreStruct);
+  return priority;
+}
+
+void
+HyprePrecondSMG::setup(void)
+{
+  const HypreDriver* driver = _solver->getDriver();
+  const HypreSolverParams* params = driver->getParams();
+  const HypreInterface& interface = driver->getInterface();
+  if (interface == HypreStruct) {
+    HYPRE_StructSolver precond_solver;
+    HYPRE_StructSMGCreate(driver->getPG()->getComm(), &precond_solver);
+    HYPRE_StructSMGSetMemoryUse(precond_solver, 0);
+    HYPRE_StructSMGSetMaxIter(precond_solver, 1);
+    HYPRE_StructSMGSetTol(precond_solver, 0.0);
+    HYPRE_StructSMGSetZeroGuess(precond_solver);
+    HYPRE_StructSMGSetNumPreRelax(precond_solver, params->nPre);
+    HYPRE_StructSMGSetNumPostRelax(precond_solver, params->nPost);
+    HYPRE_StructSMGSetLogging(precond_solver, 0);
     _precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSolve;
     _pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSetup;
-    _precond_solver = (HYPRE_Solver) precond_solver_struct;
+    _precond_solver = (HYPRE_Solver) precond_solver;
   }
 }
 
-void HyprePrecondSMG::~HyprePrecondSMG(void)
+HyprePrecondSMG::~HyprePrecondSMG(void)
 {
-  if (_interface == HypreStruct) {
+  const HypreDriver* driver = _solver->getDriver();
+  const HypreInterface& interface = driver->getInterface();
+  if (interface == HypreStruct) {
     HYPRE_StructSMGDestroy((HYPRE_StructSolver) _precond_solver);
   }
 }

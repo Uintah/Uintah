@@ -269,7 +269,8 @@ namespace Uintah {
       HypreGenericSolver* solver = newHypreSolver(solverType,this,precond);
 
       // Set up the preconditioner and tie it to solver
-      precond->setup(solver);
+      precond->setSolver(solver);
+      precond->setup();
 
       // Construct Hypre linear system for the specific variable type
       // and Hypre interface
