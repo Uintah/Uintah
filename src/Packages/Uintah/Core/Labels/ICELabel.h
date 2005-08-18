@@ -55,6 +55,8 @@ namespace Uintah {
     const VarLabel* thermalCondLabel;
     const VarLabel* gammaLabel;
     const VarLabel* specific_heatLabel;
+    const VarLabel* dTdt_CCLabel;
+    const VarLabel* dVdt_CCLabel;
 //__________________________________
 //    IMPLICIT      
     const VarLabel* matrixLabel;

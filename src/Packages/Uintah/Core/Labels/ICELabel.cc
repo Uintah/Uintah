@@ -94,8 +94,11 @@ ICELabel::ICELabel()
   temp_CC_XchangeLabel  = 
     VarLabel::create("temp_CC_Xchange",CCVariable<double>::getTypeDescription());
   vel_CC_XchangeLabel = 
-    VarLabel::create("vel_CC_Xchange", CCVariable<Vector>::getTypeDescription());
- 
+   VarLabel::create("vel_CC_Xchange", CCVariable<Vector>::getTypeDescription());
+  dTdt_CCLabel =
+    VarLabel::create("dTdt_CC",       CCVariable<double>::getTypeDescription());
+  dVdt_CCLabel =
+    VarLabel::create("dVdt_CC",       CCVariable<Vector>::getTypeDescription());
  
   //__________________________________
   // Implicit Labels
@@ -305,6 +308,8 @@ ICELabel::~ICELabel()
     VarLabel::destroy(thermalCondLabel);
     VarLabel::destroy(gammaLabel);
     VarLabel::destroy(specific_heatLabel);      
+    VarLabel::destroy(dTdt_CCLabel);
+    VarLabel::destroy(dVdt_CCLabel);
     
     // Implicit Labels
     VarLabel::destroy(matrixLabel);
