@@ -195,8 +195,8 @@
         <advection type = "FirstOrderCE" />
         <solution technique = "EqForm" />
         <TimeStepControl>
-          <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
-          <knob_for_speedSound>  0.001          </knob_for_speedSound>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.00         </knob_for_speedSound>
         </TimeStepControl>
         
         <ImplicitSolver>

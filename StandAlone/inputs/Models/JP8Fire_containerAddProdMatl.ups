@@ -336,7 +336,7 @@
 
 <!-- (A)  DELETE THIS TO RUN EXPLICIT  -->
         <TimeStepControl>
-          <Scheme_for_delT_calc> conservative </Scheme_for_delT_calc>  
+          <Scheme_for_delT_calc> aggressive </Scheme_for_delT_calc>  
           <knob_for_speedSound>  0.000        </knob_for_speedSound>   
         </TimeStepControl>
 
