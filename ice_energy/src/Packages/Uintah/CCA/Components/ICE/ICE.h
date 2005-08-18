@@ -70,6 +70,14 @@ namespace Uintah {
 
       virtual void restartInitialize();
       
+      void scheduleComputeInternalEnergy(SchedulerP&, 
+                                         const PatchSet*,
+                                         const MaterialSet*);
+                 
+      void scheduleComputeSpeedOfSound(SchedulerP&, 
+                                       const PatchSet*,
+                                       const MaterialSet*);
+                 
       virtual void scheduleComputeStableTimestep(const LevelP&,
                                                 SchedulerP&);
       
@@ -286,6 +294,18 @@ namespace Uintah {
                                      DataWarehouse*, 
                                      DataWarehouse* new_dw);
                                           
+      void computeInternalEnergy(const ProcessorGroup*, 
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse*, 
+                                 DataWarehouse* new_dw);
+                              
+      void computeSpeedOfSound(const ProcessorGroup*, 
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse*, 
+                               DataWarehouse* new_dw);
+                              
       void actuallyComputeStableTimestep(const ProcessorGroup*, 
                                          const PatchSubset* patch,  
                                          const MaterialSubset* matls,

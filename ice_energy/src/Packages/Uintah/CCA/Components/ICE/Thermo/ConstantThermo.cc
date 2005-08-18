@@ -1,5 +1,6 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/Thermo/ConstantThermo.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 
 using namespace Uintah;
 
@@ -14,26 +15,33 @@ ConstantThermo::~ConstantThermo()
 {
 }
 
+void ConstantThermo::scheduleInitializeThermo(SchedulerP& sched,
+                                              const PatchSet* patches,
+                                              ICEMaterial* ice_matl)
+{
+  // No initialization
+}
+
 void ConstantThermo::addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
                                                             int numGhostCells)
 {
   // No additional requirements
 }
 
-void ConstantThermo::addTaskDependencies_Cp(Task* t, Task::WhichDW dw,
+void ConstantThermo::addTaskDependencies_cp(Task* t, Task::WhichDW dw,
                                             int numGhostCells)
 {
   // No additional requirements
 }
 
-void ConstantThermo::addTaskDependencies_Cv(Task* t, Task::WhichDW dw,
+void ConstantThermo::addTaskDependencies_cv(Task* t, Task::WhichDW dw,
                                             int numGhostCells)
 {
   // No additional requirements
 }
 
 void ConstantThermo::addTaskDependencies_gamma(Task* t, Task::WhichDW dw,
-                                            int numGhostCells)
+                                               int numGhostCells)
 {
   // No additional requirements
 }
@@ -42,4 +50,71 @@ void ConstantThermo::addTaskDependencies_R(Task* t, Task::WhichDW dw,
                                            int numGhostCells)
 {
   // No additional requirements
+}
+
+void ConstantThermo::addTaskDependencies_Temp(Task* t, Task::WhichDW dw,
+                                              int numGhostCells)
+{
+  // No additional requirements
+}
+
+void ConstantThermo::addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
+                                                 int numGhostCells)
+{
+  // No additional requirements
+}
+
+void ConstantThermo::compute_thermalDiffusivity(CellIterator iter,
+                                                CCVariable<double>& thermalDiffusivity,
+                                                DataWarehouse*, constCCVariable<double>& sp_vol)
+{
+  double cp = d_specificHeat * d_gamma;
+  double factor = d_thermalConductivity/cp;
+  for(;!iter.done();iter++)
+    thermalDiffusivity[*iter] = factor * sp_vol[*iter];
+}
+
+void ConstantThermo::compute_cp(CellIterator iter, CCVariable<double>& cp,
+                                DataWarehouse*)
+{
+  double tmp = d_specificHeat * d_gamma;
+  for(;!iter.done();iter++)
+    cp[*iter] = tmp;
+}
+
+void ConstantThermo::compute_cv(CellIterator iter, CCVariable<double>& cv,
+                                DataWarehouse*)
+{
+  for(;!iter.done();iter++)
+    cv[*iter] = d_specificHeat;
+}
+
+void ConstantThermo::compute_gamma(CellIterator iter, CCVariable<double>& gamma,
+                                   DataWarehouse*)
+{
+  for(;!iter.done();iter++)
+    gamma[*iter] = d_gamma;
+}
+
+void ConstantThermo::compute_R(CellIterator iter, CCVariable<double>& R,
+                               DataWarehouse*)
+{
+  double tmp = (d_gamma-1) * d_specificHeat;
+  for(;!iter.done();iter++)
+    R[*iter] = tmp;
+}
+
+void ConstantThermo::compute_Temp(CellIterator iter, CCVariable<double>& temp,
+                                  DataWarehouse*, constCCVariable<double>& int_eng)
+{
+  double factor = 1./d_specificHeat;
+  for(;!iter.done();iter++)
+    temp[*iter] = int_eng[*iter] * factor;
+}
+
+void ConstantThermo::compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
+                                     DataWarehouse*, constCCVariable<double>& temp)
+{
+  for(;!iter.done();iter++)
+    int_eng[*iter] = temp[*iter] * d_specificHeat;
 }

@@ -40,13 +40,13 @@ WARNING
    IdealGas(ProblemSpecP& ps);
    virtual ~IdealGas();
 
-    virtual double computeRhoMicro(double press,double gamma,
-                                   double cv, double Temp, double rho_guess);
+   virtual double computeRhoMicro(double press,double gamma,
+                                  double cv, double Temp, double rho_guess);
 
-    virtual void computePressEOS(double rhoM, double gamma,
-                                 double cv, double Temp,
-                                 double& press, double& dp_drho,
-                                 double& dp_de);
+   virtual void computePressEOS(double rhoM, double gamma,
+                                double cv, double Temp,
+                                double& press, double& dp_drho, 
+                                double& dp_de);
 
     virtual void computeTempCC(const Patch* patch,
                                const string& comp_domain,
@@ -60,18 +60,13 @@ WARNING
     virtual double getAlpha(double Temp,double sp_vol,double P, double cv);
 
     virtual void hydrostaticTempAdjustment(Patch::FaceType face, 
-                                     const Patch* patch,
-                                     const vector<IntVector>& bound,
-                                     Vector& gravity,
-                                     const CCVariable<double>& gamma,
-                                     const CCVariable<double>& cv,
-                                     const Vector& dx,
-                                     CCVariable<double>& Temp_CC);
-
-    // Scheduling
-    virtual void addTaskDependencies_speedOfSound(Task* t, Task::WhichDW dw,
-                                                  int numGhostCells);
-
+                                           const Patch* patch,
+                                           const vector<IntVector>& bound,
+                                           Vector& gravity,
+                                           const CCVariable<double>& gamma,
+                                           const CCVariable<double>& cv,
+                                           const Vector& dx,
+                                           CCVariable<double>& Temp_CC);
   };
 } // End namespace Uintah
       

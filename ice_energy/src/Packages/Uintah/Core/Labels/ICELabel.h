@@ -54,7 +54,6 @@ namespace Uintah {
     const VarLabel* Tdot_CCLabel;
     const VarLabel* turb_viscosity_CCLabel;
     const VarLabel* viscosityLabel;
-    const VarLabel* thermalCondLabel;
 //__________________________________
 //    IMPLICIT      
     const VarLabel* matrixLabel;

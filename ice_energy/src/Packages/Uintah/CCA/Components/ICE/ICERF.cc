@@ -710,13 +710,13 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       throw InternalError("RF not finished", __FILE__, __LINE__);
 #if 0
       new_dw->get(speedSound,    lb->speedSound_CCLabel, indx,patch,gn,  0);
+      new_dw->get(thermalCond,   lb->thermalCondLabel,   indx,patch,gac, 1); 
 #endif
       new_dw->get(f_theta,       lb->f_theta_CCLabel,    indx,patch,gn,  0);
       new_dw->get(pressDiffX_FC, lb->press_diffX_FCLabel,indx,patch,gac, 1);      
       new_dw->get(pressDiffY_FC, lb->press_diffY_FCLabel,indx,patch,gac, 1);      
       new_dw->get(pressDiffZ_FC, lb->press_diffZ_FCLabel,indx,patch,gac, 1);
       old_dw->get(int_eng_CC,    lb->int_eng_CCLabel,       indx,patch,gac, 1);
-      new_dw->get(thermalCond,   lb->thermalCondLabel,   indx,patch,gac, 1); 
       new_dw->allocateAndPut(int_eng_source, 
                                  lb->int_eng_source_CCLabel, indx,patch);
       new_dw->allocateAndPut(heatCond_src, 
