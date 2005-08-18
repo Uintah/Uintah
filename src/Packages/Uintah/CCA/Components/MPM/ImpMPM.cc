@@ -436,6 +436,7 @@ void ImpMPM::scheduleProjectCCHeatSourceToNodes(SchedulerP& sched,
   t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,
                                                     Ghost::AroundCells, 1);
   t->requires(Task::NewDW,lb->gVolumeLabel,         Ghost::None);
+  t->requires(Task::NewDW,lb->heatFlux_CCLabel,Ghost::AroundCells,1);
 
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->NC_CCweightLabel, one_matl);
@@ -1176,39 +1177,48 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
       cout_doing <<"Doing projectCCHeatSourceToNodes on patch "
                  << patch->getID() <<"\t\t IMPM"<< "\n" << "\n";
     }
+    
+    for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int indx = mpm_matl->getDWIndex();
 
-    Ghost::GhostType  gn  = Ghost::None;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-
-    Vector dx = patch->dCell();
-    double cell_vol = dx.x()*dx.y()*dx.z();
-
-    constNCVariable<double> gvolume,NC_CCweight;
-    NCVariable<double> gextHR, NC_CCweight_copy;
-
-    new_dw->get(gvolume,         lb->gVolumeLabel,           0, patch,gn, 0);
-    old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0,patch, gac,1);
-    new_dw->getModifiable(gextHR,lb->gExternalHeatRateLabel, 0, patch);
-    new_dw->allocateAndPut(NC_CCweight_copy, lb->NC_CCweightLabel, 0,patch);
-    // carry forward interpolation weight
-    IntVector low = patch->getNodeLowIndex();
-    IntVector hi  = patch->getNodeHighIndex();
-    NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
-
-    for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
-      IntVector c = *iter;
-      double solid_vol=1.e-200;
-      IntVector nodeIdx[8];
-      patch->findNodesFromCell(c, nodeIdx);
-      for (int in=0;in<8;in++){
-        solid_vol += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
-      }
-      if(solid_vol/cell_vol < .5){
-         double CCheatrate = 1.e0;
-         for (int in=0;in<8;in++){
-           gextHR[nodeIdx[in]] += CCheatrate *
-                     (NC_CCweight[nodeIdx[in]]*gvolume[nodeIdx[in]])/solid_vol;
-         }
+      Ghost::GhostType  gn  = Ghost::None;
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      
+      Vector dx = patch->dCell();
+      double cell_vol = dx.x()*dx.y()*dx.z();
+      
+      constNCVariable<double> gvolume,NC_CCweight;
+      NCVariable<double> gextHR, NC_CCweight_copy;
+      constCCVariable<double> CCheatrate;
+        
+      new_dw->get(gvolume,    lb->gVolumeLabel,           0, patch,gn, 0);
+      new_dw->get(CCheatrate,   lb->heatFlux_CCLabel,   indx, patch,gac, 1);
+      old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0,patch, gac,1);
+      new_dw->getModifiable(gextHR,lb->gExternalHeatRateLabel, 0, patch);
+      new_dw->allocateAndPut(NC_CCweight_copy, lb->NC_CCweightLabel, 0,patch);
+      // carry forward interpolation weight
+      IntVector low = patch->getNodeLowIndex();
+      IntVector hi  = patch->getNodeHighIndex();
+      NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
+      
+      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();
+          iter++){
+        IntVector c = *iter;
+        double solid_vol=1.e-200;
+        IntVector nodeIdx[8];
+        patch->findNodesFromCell(c, nodeIdx);
+        for (int in=0;in<8;in++){
+          solid_vol += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
+        }
+        if(solid_vol/cell_vol < .5){
+          // Add in the heat from ICE.
+          //double CCheatrate = 1.e0;
+          for (int in=0;in<8;in++){
+            gextHR[nodeIdx[in]] += CCheatrate[nodeIdx[in]] *
+              (NC_CCweight[nodeIdx[in]]*gvolume[nodeIdx[in]])/solid_vol;
+          }
+        }
       }
     }
   }
