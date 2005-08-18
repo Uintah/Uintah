@@ -28,8 +28,8 @@ DESCRIPTION
    arbitration is based on input file parameters.
   
 WARNING
-   Make sure to #if 0 any solver that is not completed yet, otherwise sus
-   cannot pass linkage.
+   Make sure to comment out any solver that is not completed yet, otherwise
+   sus cannot pass linking.
    --------------------------------------------------------------------------*/
 #ifndef Packages_Uintah_CCA_Components_Solvers_SolverFactory_h
 #define Packages_Uintah_CCA_Components_Solvers_SolverFactory_h

@@ -94,7 +94,7 @@ namespace Uintah {
       _guess_label(guess), _which_guess_dw(which_guess_dw),
       _params(params), _interface(interface)
       {}    
-    virtual ~HypreDriver(void);
+    virtual ~HypreDriver(void) {}
 
     // Data member modifyable access
     // void setInterface(HypreInterface& interface) { _interface = interface; }
@@ -336,6 +336,7 @@ namespace Uintah {
       std::cerr << "" << "\n";
       
       delete solver;
+      delete precond;
 
       double dt=Time::currentSeconds()-tstart;
       if(pg->myrank() == 0){

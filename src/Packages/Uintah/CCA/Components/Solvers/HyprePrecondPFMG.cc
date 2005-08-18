@@ -1,10 +1,9 @@
 //--------------------------------------------------------------------------
 // File: HyprePrecondPFMG.cc
 // 
-// A generic Hypre preconditioner driver that checks whether the precond
-// can work with the input interface. The actual precond setup/destroy is
-// done in the classes derived from HyprePrecondPFMG.
+// Hypre PFMG (geometric multigrid #2) preconditioner.
 //--------------------------------------------------------------------------
+
 #include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondPFMG.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
@@ -22,6 +21,12 @@ static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
 Priorities
 HyprePrecondPFMG::initPriority(void)
+  //___________________________________________________________________
+  // Function HyprePrecondPFMG::initPriority~
+  // Set the Hypre interfaces that PFMG can work with. Currently, only
+  // the Struct interface is supported here. The vector of interfaces
+  // is sorted by descending priority.
+  //___________________________________________________________________
 {
   Priorities priority;
   priority.push_back(HypreStruct);
@@ -30,6 +35,11 @@ HyprePrecondPFMG::initPriority(void)
 
 void
 HyprePrecondPFMG::setup(void)
+  //___________________________________________________________________
+  // Function HyprePrecondPFMG::setup~
+  // Set up the preconditioner object. After this function call, a
+  // Hypre solver can use the preconditioner.
+  //___________________________________________________________________
 {
   const HypreDriver* driver = _solver->getDriver();
   const HypreSolverParams* params = driver->getParams();
@@ -53,6 +63,10 @@ HyprePrecondPFMG::setup(void)
 }
 
 HyprePrecondPFMG::~HyprePrecondPFMG(void)
+  //___________________________________________________________________
+  // HyprePrecondPFMG destructor~
+  // Destroy the Hypre objects associated with the preconditioner.
+  //___________________________________________________________________
 {
   const HypreDriver* driver = _solver->getDriver();
   const HypreInterface& interface = driver->getInterface();

@@ -1,15 +1,15 @@
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverSMG_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreSolverSMG_h
 
 /*--------------------------------------------------------------------------
 CLASS
-   HypreSolverPFMG
+   HypreSolverSMG
    
-   A Hypre PFMG (geometric multigrid #2) solver.
+   A Hypre SMG (geometric multigrid #1) solver.
 
 GENERAL INFORMATION
 
-   File: HypreSolverPFMG.h
+   File: HypreSolverSMG.h
 
    Oren E. Livne
    Department of Computer Science
@@ -23,12 +23,10 @@ KEYWORDS
    HypreDriver, HypreGenericSolver, HypreSolverParams.
 
 DESCRIPTION
-   Class HyprePrecondPFMG sets up and destroys the Hypre PFMG
-   solver to be used with Hypre solvers. PFMG is the Parallel
-   Full Multigrid solver that uses geometric interpolation and
-   restriction transfers and well suited for Poisson or a diffusion
-   operator with a smooth diffusion coefficient.
-   PFMG is used as to solve or as a
+   Class HyprePrecondSMG sets up and destroys the Hypre SMG
+   solver to be used with Hypre solvers. SMG is a geometric multigrid
+   solver well suited for Poisson or a diffusion operator with a
+   smooth diffusion coefficient.  SMG is used as to solve or as a
    preconditioner is often used with CG or GMRES.
 
 WARNING
@@ -43,15 +41,15 @@ namespace Uintah {
 
   //---------- Types ----------
   
-  class HypreSolverPFMG : public HypreGenericSolver {
+  class HypreSolverSMG : public HypreGenericSolver {
 
     //========================== PUBLIC SECTION ==========================
   public:
   
-    HypreSolverPFMG(HypreDriver* driver,
+    HypreSolverSMG(HypreDriver* driver,
                     HypreGenericPrecond* precond) :
       HypreGenericSolver(driver,precond,initPriority()) {}
-    virtual ~HypreSolverPFMG(void) {}
+    virtual ~HypreSolverSMG(void) {}
 
     virtual void solve(void);
 
@@ -59,8 +57,8 @@ namespace Uintah {
   private:
     static Priorities initPriority(void);
 
-  }; // end class HypreSolverPFMG
+  }; // end class HypreSolverSMG
 
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
+#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverSMG_h

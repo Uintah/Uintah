@@ -1,8 +1,11 @@
+#ifndef Packages_Uintah_CCA_Components_Solvers_HyprePrecondSMG_h
+#define Packages_Uintah_CCA_Components_Solvers_HyprePrecondSMG_h
+
 /*--------------------------------------------------------------------------
 CLASS
    HyprePrecondSMG
    
-   A generic Hypre preconditioner driver.
+   A Hypre SMG (geometric multigrid #1) preconditioner.
 
 GENERAL INFORMATION
 
@@ -17,28 +20,16 @@ GENERAL INFORMATION
    Copyright (C) 2005 SCI Group
 
 KEYWORDS
-   HypreDriver, HypreSolverParams.
+   HypreGenericSolver, Precond, HypreGenericSolver, HypreSolverParams.
 
 DESCRIPTION
-   Class HyprePrecondSMG is a base class for Hypre solvers. It uses the
-   generic HypreDriver and fetches only the data it can work with (either
-   Struct, SStruct, or 
-
-   preconditioners. It does not know about the internal Hypre interfaces
-   like Struct and SStruct. Instead, it uses the generic HypreDriver
-   and newSolver to determine the specific Hypre
-   interface and solver, based on the parameters in HypreSolverParams.
-   The solver is called through the solve() function. This is also the
-   task-scheduled function in HypreSolverAMR::scheduleSolve() that is
-   activated by Components/ICE/impICE.cc.
+   Class HyprePrecondSMG sets up and destroys the Hypre SMG preconditioner
+   to be used with Hypre solvers. SMG preconditioner is often used with CG
+   or GMRES.
   
 WARNING
-   solve() is a generic function for all Types, but this may need to change
-   in the future. Currently only CC is implemented for the pressure solver
-   in implicit [AMR] ICE.
+   Works with Hypre Struct interface only.
    --------------------------------------------------------------------------*/
-#ifndef Packages_Uintah_CCA_Components_Solvers_HyprePrecondSMG_h
-#define Packages_Uintah_CCA_Components_Solvers_HyprePrecondSMG_h
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericPrecond.h>
 

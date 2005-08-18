@@ -1,10 +1,10 @@
 //--------------------------------------------------------------------------
-// File: HypreSolverPFMG.cc
+// File: HypreSolverSparseMSG.cc
 // 
-// Hypre PFMG (geometric multigrid #2) solver.
+// Hypre SparseMSG (geometric multigrid #1) solver.
 //--------------------------------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverPFMG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverSparseMSG.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -18,10 +18,10 @@ using namespace Uintah;
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
 Priorities
-HypreSolverPFMG::initPriority(void)
+HypreSolverSparseMSG::initPriority(void)
   //___________________________________________________________________
-  // Function HypreSolverPFMG::initPriority~
-  // Set the Hypre interfaces that PFMG can work with. Currently, only
+  // Function HypreSolverSparseMSG::initPriority~
+  // Set the Hypre interfaces that SparseMSG can work with. Currently, only
   // the Struct interface is supported here. The vector of interfaces
   // is sorted by descending priority.
   //___________________________________________________________________
@@ -32,9 +32,9 @@ HypreSolverPFMG::initPriority(void)
 }
 
 void
-HypreSolverPFMG::solve(void)
+HypreSolverSparseMSG::solve(void)
   //___________________________________________________________________
-  // Function HyprePrecondPFMG::solve~
+  // Function HyprePrecondSparseMSG::solve~
   // Set up phase, solution stage, and destruction of all Hypre solver
   // objects.
   //___________________________________________________________________
@@ -42,33 +42,33 @@ HypreSolverPFMG::solve(void)
   const HypreSolverParams* params = _driver->getParams();
   if (_driver->getInterface() == HypreStruct) {
     HYPRE_StructSolver solver;
-    HYPRE_StructPFMGCreate(_driver->getPG()->getComm(), &solver);
-    HYPRE_StructPFMGSetMaxIter(solver, params->maxIterations);
-    HYPRE_StructPFMGSetTol(solver, params->tolerance);
-    HYPRE_StructPFMGSetRelChange(solver, 0);
+    HYPRE_StructSparseMSGCreate(_driver->getPG()->getComm(), &solver);
+    HYPRE_StructSparseMSGSetMaxIter(solver, params->maxIterations);
+    HYPRE_StructSparseMSGSetJump(solver, params->jump);
+    HYPRE_StructSparseMSGSetTol(solver, params->tolerance);
+    HYPRE_StructSparseMSGSetRelChange(solver, 0);
     /* weighted Jacobi = 1; red-black GS = 2 */
-    HYPRE_StructPFMGSetRelaxType(solver, 1);
-    HYPRE_StructPFMGSetNumPreRelax(solver, params->nPre);
-    HYPRE_StructPFMGSetNumPostRelax(solver, params->nPost);
-    HYPRE_StructPFMGSetSkipRelax(solver, params->skip);
-    HYPRE_StructPFMGSetLogging(solver, params->logging);
+    HYPRE_StructSparseMSGSetRelaxType(solver, 1);
+    HYPRE_StructSparseMSGSetNumPreRelax(solver, params->nPre);
+    HYPRE_StructSparseMSGSetNumPostRelax(solver, params->nPost);
+    HYPRE_StructSparseMSGSetLogging(solver, params->logging);
     HypreDriverStruct* structDriver =
       dynamic_cast<HypreDriverStruct*>(_driver);
     // This HYPRE setup can and should be broken in the future into
     // setup that depends on HA only, and setup that depends on HB, HX.
-    HYPRE_StructPFMGSetup(solver,
+    HYPRE_StructSparseMSGSetup(solver,
                           structDriver->getA(),
                           structDriver->getB(),
                           structDriver->getX());
-    HYPRE_StructPFMGSolve(solver,
+    HYPRE_StructSparseMSGSolve(solver,
                           structDriver->getA(),
                           structDriver->getB(),
                           structDriver->getX());
-    HYPRE_StructPFMGGetNumIterations
+    HYPRE_StructSparseMSGGetNumIterations
       (solver, &_results.numIterations);
-    HYPRE_StructPFMGGetFinalRelativeResidualNorm
+    HYPRE_StructSparseMSGGetFinalRelativeResidualNorm
       (solver, &_results.finalResNorm);
 
-    HYPRE_StructPFMGDestroy(solver);
+    HYPRE_StructSparseMSGDestroy(solver);
   }
 }
