@@ -22,6 +22,9 @@ using std::vector;
 
       const VarLabel* partCountLabel;
       
+      // Heat flux from fire
+      const VarLabel* heatFlux_CCLabel;
+
       //non PermanentParticleState
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pPressureLabel;
