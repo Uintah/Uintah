@@ -834,8 +834,6 @@ namespace Uintah {
                                  const string& message2, 
                                  const CCVariable<Vector>& q_CC);
                                  
-
-      
       ICELabel* lb; 
       MPMICELabel* MIlb;
       SimulationStateP d_sharedState;

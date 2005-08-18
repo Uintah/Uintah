@@ -780,6 +780,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   t->modifies(Mlb->gVelocityStarLabel, mss);             
   t->modifies(Mlb->gAccelerationLabel, mss);             
   t->computes(Mlb->dTdt_NCLabel);
+  t->computes(Mlb->heatFlux_CCLabel);
 
   sched->addTask(t, patches, mpm_matls);
 }
@@ -1589,6 +1590,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       constCCVariable<double> mass_L_CC;
       constCCVariable<Vector> mom_L_ME_CC, old_mom_L_CC;
       constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC; 
+      CCVariable<double> heatFlux;
       
       new_dw->getModifiable(gvelocity,    Mlb->gVelocityStarLabel,indx,patch);
       new_dw->getModifiable(gacceleration,Mlb->gAccelerationLabel,indx,patch);
@@ -1599,6 +1601,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);
       new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gac,1);
       new_dw->get(eng_L_ME_CC,     Ilb->eng_L_ME_CCLabel,    indx,patch,gac,1);
+      new_dw->allocateAndPut(heatFlux, Mlb->heatFlux_CCLabel,indx,patch);
 
       double cv = mpm_matl->getSpecificHeat();     
 
@@ -1607,6 +1610,12 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       IntVector cIdx[8];
       Vector dvdt_tmp;
       double dTdt_tmp;
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+          heatFlux[*iter]  = ( eng_L_ME_CC[*iter] - old_int_eng_L_CC[*iter]);
+      }
+
+          
       //__________________________________
       //  Take care of momentum and specific volume source
      if(!d_rigidMPM){

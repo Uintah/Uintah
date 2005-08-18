@@ -21,6 +21,11 @@ using std::endl;
 MPMLabel::MPMLabel()
 {
 
+  // Heat flux from fire
+
+  heatFlux_CCLabel = 
+    VarLabel::create("tempFlux_CC",  CCVariable<Vector>::getTypeDescription());
+
   // Particle Variables
 
   //non PermanentParticleState
