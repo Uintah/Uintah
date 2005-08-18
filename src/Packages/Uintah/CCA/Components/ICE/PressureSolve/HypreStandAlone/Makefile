@@ -11,6 +11,7 @@
 ##################################################################
 
 PACKAGE    = HypreStandAlone
+#HYPRE_SRC  = /scratch/SCIRun/hypre-1.9.0b/src
 HYPRE_SRC  = /home/csafe/livne/hypre-1.9.0b/src
 CC         = g++
 CCFLAGS    = #-O2 -MD -Wall # Allow .d files, output all warnings

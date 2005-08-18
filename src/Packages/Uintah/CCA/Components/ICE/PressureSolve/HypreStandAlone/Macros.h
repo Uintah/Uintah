@@ -16,6 +16,9 @@
 #define _MACROS_H
 
 /*================== Standard Library includes ==================*/
+#ifndef MPIPP_H
+#  define MPIPP_H
+#endif
 #include <string>
 #include <math.h>
 #include <stdlib.h>

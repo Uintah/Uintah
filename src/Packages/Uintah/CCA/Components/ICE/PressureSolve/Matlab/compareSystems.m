@@ -1,7 +1,17 @@
-function compare = compareSystems(grid,A,b,x,A1,b1,x1)
+function [compare,A0,b0,x0] = compareSystems(grid,A,b,x,A1,b1,x1)
+% Append and compare:
+% A,b,x = MATLAB linear system
+% A1,b1,x1 = C++ (HypreStandAlone) linear system
 
-matlabPatch = [1,1, 2,2, 3,3, 4,4];
+% % for offset = 0 in Hierarchy::make()
+% matlabPatch = [1,1, 2,2, 3,3, 4,4];
+% matlabLevel = [1,2, 1,2, 1,2, 1,2];
+
+% for offset = level in Hierarchy::make()
+matlabPatch = [1,4, 2,1, 3,2, 4,3];
 matlabLevel = [1,2, 1,2, 1,2, 1,2];
+
+compare = 1;
 
 active = [];
 for i = 1:length(matlabPatch),
