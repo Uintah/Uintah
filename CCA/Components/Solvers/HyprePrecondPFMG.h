@@ -51,12 +51,11 @@ namespace Uintah {
     //========================== PUBLIC SECTION ==========================
   public:
   
-    HypreGenericPFMG(const Priorities& precondPriority) :
-      HypreGenericPrecond(initPriority(precondPriority)) {}
+    HyprePrecondPFMG(void) : HypreGenericPrecond(initPriority()) {}
     virtual ~HyprePrecondPFMG(void);
 
-    virtual void setup(HypreGenericSolver* solver);
-
+    virtual void setup(void);
+    
     //========================== PROTECTED SECTION ==========================
   protected:
     static Priorities initPriority(void);

@@ -6,6 +6,8 @@
 // done in the classes derived from HyprePrecondPFMG.
 //--------------------------------------------------------------------------
 #include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondPFMG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -27,12 +29,14 @@ HyprePrecondPFMG::initPriority(void)
 }
 
 void
-HyprePrecondPFMG::setup(HypreGenericSolver* solver)
+HyprePrecondPFMG::setup(void)
 {
-  _solver = solver;   // Set link to our calling solver
-
-  if (_interface == HypreStruct) {
-    HYPRE_StructPFMGCreate(_pg->getComm(), &precond_solver);
+  const HypreDriver* driver = _solver->getDriver();
+  const HypreSolverParams* params = driver->getParams();
+  const HypreInterface& interface = driver->getInterface();
+  if (interface == HypreStruct) {
+    HYPRE_StructSolver precond_solver;
+    HYPRE_StructPFMGCreate(driver->getPG()->getComm(), &precond_solver);
     HYPRE_StructPFMGSetMaxIter(precond_solver, 1);
     HYPRE_StructPFMGSetTol(precond_solver, 0.0);
     HYPRE_StructPFMGSetZeroGuess(precond_solver);
@@ -48,9 +52,11 @@ HyprePrecondPFMG::setup(HypreGenericSolver* solver)
   }
 }
 
-void HyprePrecondPFMG::~HyprePrecondPFMG(void)
+HyprePrecondPFMG::~HyprePrecondPFMG(void)
 {
-  if (_interface == HypreStruct) {
+  const HypreDriver* driver = _solver->getDriver();
+  const HypreInterface& interface = driver->getInterface();
+  if (interface == HypreStruct) {
     HYPRE_StructPFMGDestroy((HYPRE_StructSolver) _precond_solver);
   }
 }
