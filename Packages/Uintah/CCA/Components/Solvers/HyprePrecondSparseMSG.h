@@ -1,15 +1,15 @@
-#ifndef Packages_Uintah_CCA_Components_Solvers_HyprePrecondPFMG_h
-#define Packages_Uintah_CCA_Components_Solvers_HyprePrecondPFMG_h
+#ifndef Packages_Uintah_CCA_Components_Solvers_HyprePrecondSparseMSG_h
+#define Packages_Uintah_CCA_Components_Solvers_HyprePrecondSparseMSG_h
 
 /*--------------------------------------------------------------------------
 CLASS
-   HyprePrecondPFMG
+   HyprePrecondSparseMSG
    
-   A Hypre PFMG (geometric multigrid #2) preconditioner.
+   A Hypre SparseMSG (distributed sparse linear solver?) preconditioner.
 
 GENERAL INFORMATION
 
-   File: HyprePrecondPFMG.h
+   File: HyprePrecondSparseMSG.h
 
    Oren E. Livne
    Department of Computer Science
@@ -22,13 +22,11 @@ GENERAL INFORMATION
 KEYWORDS
    HypreGenericSolver, Precond, HypreGenericSolver, HypreSolverParams.
 
-DESCRIPTION
-   Class HyprePrecondPFMG sets up and destroys the Hypre PFMG
-   preconditioner to be used with Hypre solvers. PFMG is the Parallel
-   Full Multigrid solver that uses geometric interpolation and
-   restriction transfers and well suited for Poisson or a diffusion
-   operator with a smooth diffusion coefficient.
-   PFMG preconditioner is often used with CG or GMRES.
+DESCRIPTION 
+   Class HyprePrecondSparseMSG sets up and destroys the Hypre
+   SparseMSG preconditioner to be used with Hypre solvers. SparseMSG
+   is the distributed sparse linear solver. SparseMSG preconditioner
+   is often used with CG or GMRES.
   
 WARNING
    Works with Hypre Struct interface only.
@@ -40,13 +38,13 @@ namespace Uintah {
   
   //---------- Types ----------
   
-  class HyprePrecondPFMG : public HypreGenericPrecond {
+  class HyprePrecondSparseMSG : public HypreGenericPrecond {
 
     //========================== PUBLIC SECTION ==========================
   public:
   
-    HyprePrecondPFMG(void) : HypreGenericPrecond(initPriority()) {}
-    virtual ~HyprePrecondPFMG(void);
+    HyprePrecondSparseMSG(void) : HypreGenericPrecond(initPriority()) {}
+    virtual ~HyprePrecondSparseMSG(void);
 
     virtual void setup(void);
     
@@ -54,8 +52,8 @@ namespace Uintah {
   protected:
     static Priorities initPriority(void);
 
-  }; // end class HyprePrecondPFMG
+  }; // end class HyprePrecondSparseMSG
 
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HyprePrecondPFMG_h
+#endif // Packages_Uintah_CCA_Components_Solvers_HyprePrecondSparseMSG_h

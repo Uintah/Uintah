@@ -91,14 +91,34 @@ namespace Uintah {
                        const VarLabel* b, Task::WhichDW which_b_dw,
                        const VarLabel* guess,
                        Task::WhichDW which_guess_dw,
-                       const HypreSolverParams* params) :
+                       const HypreSolverParams* params,
+                       const HypreInterface& interface = HypreInterfaceNA) :
       HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
-                  b,which_b_dw,guess,which_guess_dw,params) {}
-    
-    virtual ~HypreDriverSStruct(void) {}
+                  b,which_b_dw,guess,which_guess_dw,params,interface) {}
+    virtual ~HypreDriverSStruct(void);
 
-    void makeLinearSystem(const int matl);
-    void getSolution(const int matl);
+ 
+    // Data member modifyable access
+    HYPRE_SStructMatrix& getA(void) { return _HA; }  // LHS
+    HYPRE_SStructVector& getB(void) { return _HB; }  // RHS
+    HYPRE_SStructVector& getX(void) { return _HX; }  // Solution
+
+    // Data member unmodifyable access
+    const HYPRE_SStructMatrix& getA(void) const { return _HA; }  // LHS
+    const HYPRE_SStructVector& getB(void) const { return _HB; }  // RHS
+    const HYPRE_SStructVector& getX(void) const { return _HX; }  // Solution
+
+    // Common for all var types
+    virtual void gatherSolutionVector(void);
+
+    // CC variables: set up linear system & read back solution
+    virtual void makeLinearSystem_CC(const int matl);
+    virtual void getSolution_CC(const int matl);
+
+    // HYPRE data printouts
+    virtual void printMatrix(const string& fileName = "output");
+    virtual void printRHS(const string& fileName = "output_b");
+    virtual void printSolution(const string& fileName = "output_x");
 
     //========================== PRIVATE SECTION ==========================
   private:
@@ -107,30 +127,31 @@ namespace Uintah {
     void initializeData(void);
     void assemble(void);
 
+    // CC Variables implementation
+
     // SStruct C/F graph & matrix construction
-    void makeConnections(const ConstructionStatus& status,
-                         const int level,
-                         const Patch* patch,
-                         const int d,
-                         const BoxSide& s,
-                         const CoarseFineViewpoint& viewpoint);
+    void makeConnections_CC(const ConstructionStatus& status,
+                            const int level,
+                            const Patch* patch,
+                            const int d,
+                            const BoxSide& s,
+                            const CoarseFineViewpoint& viewpoint);
 
     // SStruct Graph construction
-    void makeGraph(void);
+    void makeGraph_CC(void);
     
     // SStruct matrix construction
-    void makeInteriorEquations(const int level);
-    void makeUnderlyingIdentity(const int level);
+    void makeInteriorEquations_CC(const int level);
+    void makeUnderlyingIdentity_CC(const int level);
     
     //---------- Data members ----------
     // Hypre SStruct interface objects
-    HYPRE_SStructGrid        _grid;           // level&patch hierarchy
-    HYPRE_SStructStencil     _stencil;        // Same stencil@all levls
-    HYPRE_SStructMatrix      _A;              // Left-hand-side matrix
-    HYPRE_SStructVector      _b;              // Right-hand-side vector
-    HYPRE_SStructVector      _x;              // Solution vector
-    HYPRE_SStructGraph       _graph;          // Unstructured connection graph
-    HYPRE_StructSolver*      _precond_solver; // Preconditioner object
+    HYPRE_SStructGrid        _grid;         // level&patch hierarchy
+    HYPRE_SStructStencil     _stencil;      // Same stencil@all levls
+    HYPRE_SStructMatrix      _HA;           // Left-hand-side matrix
+    HYPRE_SStructVector      _HB;           // Right-hand-side vector
+    HYPRE_SStructVector      _HX;           // Solution vector
+    HYPRE_SStructGraph       _graph;        // Unstructured connection graph
 
   }; // end class HypreDriverSStruct
 

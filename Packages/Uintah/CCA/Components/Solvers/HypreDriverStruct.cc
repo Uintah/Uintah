@@ -43,24 +43,6 @@ static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 // class HypreDriver implementation common to all variable types
 //#####################################################################
   
-HypreDriverStruct::HypreDriverStruct
-(const Level* level,
- const MaterialSet* matlset,
- const VarLabel* A, Task::WhichDW which_A_dw,
- const VarLabel* x, bool modifies_x,
- const VarLabel* b, Task::WhichDW which_b_dw,
- const VarLabel* guess,
- Task::WhichDW which_guess_dw,
- const HypreSolverParams* params,
- const HypreInterface& interface /* = HypreInterfaceNA */) :
-  //___________________________________________________________________
-  // HypreDriverStruct constructor
-  //___________________________________________________________________
-  HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
-              b,which_b_dw,guess,which_guess_dw,params,interface)
-{
-}
-
 HypreDriverStruct::~HypreDriverStruct(void)
   //___________________________________________________________________
   // HypreDriverStruct destructor
@@ -73,183 +55,9 @@ HypreDriverStruct::~HypreDriverStruct(void)
   HYPRE_StructGridDestroy(_grid);
 }
 
-HypreDriverStruct* newHypreDriverStruct(const HypreDriver& other)
-{
-  switch (other.getInterface()) {
-  case HypreStruct:
-    {
-      // Not implemented yet
-      break;
-    }
-  case HypreSStruct:
-    {
-      // Not implemented yet
-      break;
-    }
-  default:
-    {
-      break;
-    }
-  } // switch (other.getInterface())
-
-    // If not found any convertion method, return a null pointer
-  return 0;
-}
-
-#if 0
-void HypreDriverStruct::setupPrecond(void)
-  /*_____________________________________________________________________
-    Function HypreDriverStruct::setupPrecond
-    Set up and initialize the Hypre preconditioner to be used by
-    an SStruct solver. Preconditioner type is determined by params.
-    _____________________________________________________________________*/
-{
-  switch (params->precondType) {
-  case HypreGenericSolver::PrecondNA:
-    {
-      /* No preconditioner, do nothing */
-      break;
-    } // case HypreGenericSolver::PrecondNA
-
-  case HypreGenericSolver::PrecondSMG:
-    /* use symmetric SMG as preconditioner */
-    {
-      HYPRE_StructSMGCreate(_pg->getComm(), precond_solver);
-      HYPRE_StructSMGSetMemoryUse(*precond_solver, 0);
-      HYPRE_StructSMGSetMaxIter(precond_solver, 1);
-      HYPRE_StructSMGSetTol(precond_solver, 0.0);
-      HYPRE_StructSMGSetZeroGuess(precond_solver);
-      HYPRE_StructSMGSetNumPreRelax(precond_solver, params->nPre);
-      HYPRE_StructSMGSetNumPostRelax(precond_solver, params->nPost);
-      HYPRE_StructSMGSetLogging(precond_solver, 0);
-      precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSolve;
-      pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSMGSetup;
-      break;
-    } // case HypreGenericSolver::PrecondSMG
-
-  case HypreGenericSolver::PrecondPFMG:
-    /* use symmetric PFMG as preconditioner */
-    {
-      HYPRE_StructPFMGCreate(_pg->getComm(), &precond_solver);
-      HYPRE_StructPFMGSetMaxIter(precond_solver, 1);
-      HYPRE_StructPFMGSetTol(precond_solver, 0.0);
-      HYPRE_StructPFMGSetZeroGuess(precond_solver);
-      /* weighted Jacobi = 1; red-black GS = 2 */
-      HYPRE_StructPFMGSetRelaxType(precond_solver, 1);
-      HYPRE_StructPFMGSetNumPreRelax(precond_solver, params->nPre);
-      HYPRE_StructPFMGSetNumPostRelax(precond_solver, params->nPost);
-      HYPRE_StructPFMGSetSkipRelax(precond_solver, params->skip);
-      HYPRE_StructPFMGSetLogging(precond_solver, 0);
-      precond = (HYPRE_PtrToSolverFcn)HYPRE_StructPFMGSolve;
-      pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructPFMGSetup;
-      break;
-    } // case HypreGenericSolver::PrecondPFMG
-
-  case HypreGenericSolver::PrecondSparseMSG:
-    /* use symmetric SparseMSG as preconditioner */
-    {
-      HYPRE_StructSparseMSGCreate(_pg->getComm(), &precond_solver);
-      HYPRE_StructSparseMSGSetMaxIter(precond_solver, 1);
-      HYPRE_StructSparseMSGSetJump(precond_solver, params->jump);
-      HYPRE_StructSparseMSGSetTol(precond_solver, 0.0);
-      HYPRE_StructSparseMSGSetZeroGuess(precond_solver);
-      /* weighted Jacobi = 1; red-black GS = 2 */
-      HYPRE_StructSparseMSGSetRelaxType(precond_solver, 1);
-      HYPRE_StructSparseMSGSetNumPreRelax(precond_solver, params->nPre);
-      HYPRE_StructSparseMSGSetNumPostRelax(precond_solver, params->nPost);
-      HYPRE_StructSparseMSGSetLogging(precond_solver, 0);
-      precond = (HYPRE_PtrToSolverFcn)HYPRE_StructSparseMSGSolve;
-      pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructSparseMSGSetup;
-      break;
-    } // case HypreGenericSolver::PrecondSparseMSG
-
-  case HypreGenericSolver::PrecondJacobi:
-    /* use two-step Jacobi as preconditioner */
-    {
-      HYPRE_StructJacobiCreate(_pg->getComm(), &precond_solver);
-      HYPRE_StructJacobiSetMaxIter(precond_solver, 2);
-      HYPRE_StructJacobiSetTol(precond_solver, 0.0);
-      HYPRE_StructJacobiSetZeroGuess(precond_solver);
-      precond = (HYPRE_PtrToSolverFcn)HYPRE_StructJacobiSolve;
-      pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructJacobiSetup;
-      break;
-    } // case HypreGenericSolver::PrecondJacobi
-
-  case HypreGenericSolver::PrecondDiagonal:
-    /* use diagonal scaling as preconditioner */
-    {
-#ifdef HYPRE_USE_PTHREADS
-      for (i = 0; i < hypre_NumThreads; i++)
-        precond[i] = NULL;
-#else
-      precond = NULL;
-#endif
-      precond = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScale;
-      pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScaleSetup;
-      break;
-    } // case HypreGenericSolver::PrecondDiagonal
-
-  default:
-    // This should have been caught in readParameters...
-    throw InternalError("Unknown preconditionertype: "
-                        +params->precondTitle,
-                        __FILE__, __LINE__);
-  } // end switch (param->precondType)
-} // end setupPrecond()
-
-void HypreDriverStruct::destroyPrecond(void)
-  /*_____________________________________________________________________
-    Function HypreDriverStruct::destroyPrecond
-    Destroy the Hypre preconditioner object used by an SStruct solver.
-    _____________________________________________________________________*/
-{
-  switch (params->precondType) {
-  case HypreGenericSolver::PrecondNA:
-    {
-      /* No preconditioner, do nothing */
-      break;
-    } // case HypreGenericSolver::PrecondNA
-  case HypreGenericSolver::PrecondSMG:
-    {
-      HYPRE_StructSMGDestroy(precond_solver);
-      break;
-    } // case HypreGenericSolver::PrecondSMG
-
-  case HypreGenericSolver::PrecondPFMG:
-    {
-      HYPRE_StructPFMGDestroy(precond_solver);
-      break;
-    } // case HypreGenericSolver::PrecondPFMG
-
-  case HypreGenericSolver::PrecondSparseMSG:
-    {
-      HYPRE_StructSparseMSGDestroy(precond_solver);
-      break;
-    } // case HypreGenericSolver::PrecondSparseMSG
-      
-  case HypreGenericSolver::PrecondJacobi:
-    {
-      HYPRE_StructJacobiDestroy(precond_solver);
-      break;
-    } // case HypreGenericSolver::PrecondJacobi
-
-  case HypreGenericSolver::PrecondDiagonal:
-    /* Nothing to destroy for diagonal preconditioner */
-    {
-      break;
-    } // case HypreGenericSolver::PrecondDiagonal
-
-  default:
-    // This should have been caught in readParameters...
-    throw InternalError("Unknown preconditionertype in destroyPrecond: "
-                        +params->precondType, __FILE__, __LINE__);
-  } // end switch (param->precondType)
-} // end destroyPrecond()
-#endif
-
-  //#####################################################################
-  // class HypreDriver implementation for CC variable type
-  //#####################################################################
+//#####################################################################
+// class HypreDriver implementation for CC variable type
+//#####################################################################
 
 void
 HypreDriverStruct::makeLinearSystem_CC(const int matl)
@@ -260,7 +68,7 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   // We set up the matrix at all patches of the "level" data member.
   // matl is a fake material index. We always have one material here,
   // matl=0 (pressure).
-  //_____________________________________________________________________
+  //___________________________________________________________________
 {
   typedef CCTypes::sol_type sol_type;
   ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));

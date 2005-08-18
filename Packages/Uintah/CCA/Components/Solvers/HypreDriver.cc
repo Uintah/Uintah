@@ -57,27 +57,6 @@ static DebugStream cout_doing("HYPRE_DOING_COUT", false);
   and all Hypre interfaces
   _____________________________________________________________________*/
 
-HypreDriver::~HypreDriver(void)
-{
-#if 0
-  // TODO: move to derived HypreDrivers
-  if (HypreSStruct) {
-    cerr << "Destroying SStruct matrix, RHS, solution objects" << "\n";
-    HYPRE_SStructMatrixDestroy(_A_SStruct);
-    HYPRE_SStructVectorDestroy(_b_SStruct);
-    HYPRE_SStructVectorDestroy(_x_SStruct);
-    cerr << "Destroying graph objects" << "\n";
-    HYPRE_SStructGraphDestroy(_graph_SStruct);
-  }
-  if (HypreParCSR) {
-    cerr << "Destroying ParCSR matrix, RHS, solution objects" << "\n";
-    HYPRE_ParCSRMatrixDestroy(_A_Par);
-    HYPRE_ParVectorDestroy(_b_Par);
-    HYPRE_ParVectorDestroy(_x_Par);
-  }
-#endif
-}
-
 void
 HypreDriver::makeLinearSystem_SFCX(const int matl)
 {
@@ -199,15 +178,13 @@ newHypreDriver(const HypreInterface& interface,
          x, modifies_x, b, which_b_dw, guess, 
          which_guess_dw, params, interface);
     }
-#if 0
   case HypreSStruct:
     {
       return new HypreDriverSStruct
         (level, matlset, A, which_A_dw,
          x, modifies_x, b, which_b_dw, guess, 
-         which_guess_dw, params);
+         which_guess_dw, params, interface);
     }
-#endif
   default:
     throw InternalError("Unsupported Hypre Interface: "+interface,
                         __FILE__, __LINE__);
@@ -280,45 +257,3 @@ printValues(const int stencilSize,
     cout_doing << "-------------------------------" << "\n";
   } // end for cell
 } // end printValues()
-
-#if 0
-double harmonicAvg(const Point& x,
-                   const Point& y,
-                   const Point& z,
-                   const double& Ax,
-                   const double& Ay)
-  /*_____________________________________________________________________
-    Function harmonicAvg~: 
-    Harmonic average of the diffusion coefficient.
-    A = harmonicAvg(X,Y,Z) returns the harmonic average of the
-    diffusion coefficient a(T) (T in R^D) along the line connecting
-    the points X,Y in R^D. That is, A = 1/(integral_0^1
-    1/a(t1(s),...,tD(s)) ds), where td(s) = x{d} + s*(y{d} -
-    x{d})/norm(y-x) is the arclength parameterization of the
-    d-coordinate of the line x-y, d = 1...D.  We assume that A is
-    piecewise constant with jump at Z (X,Y are normally cell centers
-    and Z at the cell face). X,Y,Z are Dx1 location arrays.  In
-    general, A can be analytically computed for the specific cases we
-    consider; in general, use some simple quadrature formula for A
-    from discrete a-values. This can be implemented by the derived
-    test cases from Param.
-
-    ### NOTE: ### If we use a different
-    refinement ratio in different dimensions, near the interface we
-    may need to compute A along lines X-Y that cross more than one
-    cell boundary. This is currently ignored and we assume all lines
-    cut one cell interface only.
-    _____________________________________________________________________*/
-
-{
-  const int numDims = 3;
-  /* Compute distances x-y and x-z */
-  double dxy = 0.0, dxz = 0.0;
-  for (int d = 0; d < numDims; d++) {
-    dxy += pow(fabs(y(d) - x(d)),2.0);
-    dxz += pow(fabs(z(d) - x(d)),2.0);
-  }
-  double K = sqrt(dxz/dxy);
-  return (Ax*Ay)/((1-K)*Ax + K*Ay);
-}
-#endif

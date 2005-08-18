@@ -1,15 +1,15 @@
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverSparseMSG_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreSolverSparseMSG_h
 
 /*--------------------------------------------------------------------------
 CLASS
-   HypreSolverPFMG
+   HypreSolverSparseMSG
    
-   A Hypre PFMG (geometric multigrid #2) solver.
+   A Hypre SparseMSG (distributed sparse linear solver?) solver.
 
 GENERAL INFORMATION
 
-   File: HypreSolverPFMG.h
+   File: HypreSolverSparseMSG.h
 
    Oren E. Livne
    Department of Computer Science
@@ -23,13 +23,8 @@ KEYWORDS
    HypreDriver, HypreGenericSolver, HypreSolverParams.
 
 DESCRIPTION
-   Class HyprePrecondPFMG sets up and destroys the Hypre PFMG
-   solver to be used with Hypre solvers. PFMG is the Parallel
-   Full Multigrid solver that uses geometric interpolation and
-   restriction transfers and well suited for Poisson or a diffusion
-   operator with a smooth diffusion coefficient.
-   PFMG is used as to solve or as a
-   preconditioner is often used with CG or GMRES.
+   Class HyprePrecondSparseMSG sets up and destroys the Hypre SparseMSG
+   solver to be used with Hypre solvers.
 
 WARNING
       Works with Hypre Struct interface only.
@@ -43,15 +38,15 @@ namespace Uintah {
 
   //---------- Types ----------
   
-  class HypreSolverPFMG : public HypreGenericSolver {
+  class HypreSolverSparseMSG : public HypreGenericSolver {
 
     //========================== PUBLIC SECTION ==========================
   public:
   
-    HypreSolverPFMG(HypreDriver* driver,
+    HypreSolverSparseMSG(HypreDriver* driver,
                     HypreGenericPrecond* precond) :
       HypreGenericSolver(driver,precond,initPriority()) {}
-    virtual ~HypreSolverPFMG(void) {}
+    virtual ~HypreSolverSparseMSG(void) {}
 
     virtual void solve(void);
 
@@ -59,8 +54,8 @@ namespace Uintah {
   private:
     static Priorities initPriority(void);
 
-  }; // end class HypreSolverPFMG
+  }; // end class HypreSolverSparseMSG
 
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
+#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverSparseMSG_h
