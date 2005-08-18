@@ -1,10 +1,10 @@
 //--------------------------------------------------------------------------
-// File: HypreSolverPFMG.cc
+// File: HypreSolverGMRES.cc
 // 
-// Hypre PFMG (geometric multigrid #2) solver.
+// Hypre GMRES ([preconditioned] conjugate gradient) solver.
 //--------------------------------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverPFMG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverGMRES.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -18,10 +18,10 @@ using namespace Uintah;
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
 Priorities
-HypreSolverPFMG::initPriority(void)
+HypreSolverGMRES::initPriority(void)
   //___________________________________________________________________
-  // Function HypreSolverPFMG::initPriority~
-  // Set the Hypre interfaces that PFMG can work with. Currently, only
+  // Function HypreSolverGMRES::initPriority~
+  // Set the Hypre interfaces that GMRES can work with. Currently, only
   // the Struct interface is supported here. The vector of interfaces
   // is sorted by descending priority.
   //___________________________________________________________________
@@ -32,9 +32,9 @@ HypreSolverPFMG::initPriority(void)
 }
 
 void
-HypreSolverPFMG::solve(void)
+HypreSolverGMRES::solve(void)
   //___________________________________________________________________
-  // Function HyprePrecondPFMG::solve~
+  // Function HyprePrecondGMRES::solve~
   // Set up phase, solution stage, and destruction of all Hypre solver
   // objects.
   //___________________________________________________________________
@@ -42,33 +42,35 @@ HypreSolverPFMG::solve(void)
   const HypreSolverParams* params = _driver->getParams();
   if (_driver->getInterface() == HypreStruct) {
     HYPRE_StructSolver solver;
-    HYPRE_StructPFMGCreate(_driver->getPG()->getComm(), &solver);
-    HYPRE_StructPFMGSetMaxIter(solver, params->maxIterations);
-    HYPRE_StructPFMGSetTol(solver, params->tolerance);
-    HYPRE_StructPFMGSetRelChange(solver, 0);
-    /* weighted Jacobi = 1; red-black GS = 2 */
-    HYPRE_StructPFMGSetRelaxType(solver, 1);
-    HYPRE_StructPFMGSetNumPreRelax(solver, params->nPre);
-    HYPRE_StructPFMGSetNumPostRelax(solver, params->nPost);
-    HYPRE_StructPFMGSetSkipRelax(solver, params->skip);
-    HYPRE_StructPFMGSetLogging(solver, params->logging);
+    HYPRE_StructGMRESCreate(_driver->getPG()->getComm(), &solver);
+    HYPRE_GMRESSetMaxIter( (HYPRE_Solver)solver, params->maxIterations);
+    HYPRE_GMRESSetTol( (HYPRE_Solver)solver, params->tolerance );
+    HYPRE_GMRESSetRelChange( (HYPRE_Solver)solver, 0 );
+    HYPRE_GMRESSetLogging( (HYPRE_Solver)solver, params->logging);
+    // Set up the preconditioner if we're using one
+    if (_precond) {
+      HYPRE_PCGSetPrecond((HYPRE_Solver)solver,
+                          _precond->getPrecond(),
+                          _precond->getPCSetup(),
+                          HYPRE_Solver(_precond->getPrecondSolver()));
+    }
     HypreDriverStruct* structDriver =
       dynamic_cast<HypreDriverStruct*>(_driver);
     // This HYPRE setup can and should be broken in the future into
     // setup that depends on HA only, and setup that depends on HB, HX.
-    HYPRE_StructPFMGSetup(solver,
-                          structDriver->getA(),
-                          structDriver->getB(),
-                          structDriver->getX());
-    HYPRE_StructPFMGSolve(solver,
-                          structDriver->getA(),
-                          structDriver->getB(),
-                          structDriver->getX());
-    HYPRE_StructPFMGGetNumIterations
+    HYPRE_StructGMRESSetup(solver,
+                         structDriver->getA(),
+                         structDriver->getB(),
+                         structDriver->getX());
+    HYPRE_StructGMRESSolve(solver,
+                         structDriver->getA(),
+                         structDriver->getB(),
+                         structDriver->getX());
+    HYPRE_StructGMRESGetNumIterations
       (solver, &_results.numIterations);
-    HYPRE_StructPFMGGetFinalRelativeResidualNorm
+    HYPRE_StructGMRESGetFinalRelativeResidualNorm
       (solver, &_results.finalResNorm);
 
-    HYPRE_StructPFMGDestroy(solver);
+    HYPRE_StructGMRESDestroy(solver);
   }
 }

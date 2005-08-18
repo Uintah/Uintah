@@ -1,5 +1,10 @@
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverSMG.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverPFMG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverSparseMSG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverCG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverHybrid.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverGMRES.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -110,17 +115,14 @@ newHypreSolver(const SolverType& solverType,
 {
   const Priorities precondPriority;
   switch (solverType) {
-#if 0
   case SMG:
     {
       return new HypreSolverSMG(driver,precond);
     }
-#endif
   case PFMG:
     {
       return new HypreSolverPFMG(driver,precond);
     }
-#if 0
   case SparseMSG:
     {
       return new HypreSolverSparseMSG(driver,precond);
@@ -137,7 +139,6 @@ newHypreSolver(const SolverType& solverType,
     {
       return new HypreSolverGMRES(driver,precond);
     }
-#endif
   default:
     throw InternalError("Unsupported solver type: "+solverType,
                         __FILE__, __LINE__);

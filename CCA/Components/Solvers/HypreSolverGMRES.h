@@ -1,15 +1,15 @@
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverGMRES_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreSolverGMRES_h
 
 /*--------------------------------------------------------------------------
 CLASS
-   HypreSolverPFMG
+   HypreSolverGMRES
    
-   A Hypre PFMG (geometric multigrid #2) solver.
+   A Hypre GMRES (generalized minimum residual) solver.
 
 GENERAL INFORMATION
 
-   File: HypreSolverPFMG.h
+   File: HypreSolverGMRES.h
 
    Oren E. Livne
    Department of Computer Science
@@ -23,16 +23,12 @@ KEYWORDS
    HypreDriver, HypreGenericSolver, HypreSolverParams.
 
 DESCRIPTION
-   Class HyprePrecondPFMG sets up and destroys the Hypre PFMG
-   solver to be used with Hypre solvers. PFMG is the Parallel
-   Full Multigrid solver that uses geometric interpolation and
-   restriction transfers and well suited for Poisson or a diffusion
-   operator with a smooth diffusion coefficient.
-   PFMG is used as to solve or as a
-   preconditioner is often used with CG or GMRES.
+   Class HyprePrecondGMRES sets up and destroys the Hypre GMRES solver.
+   It can optionally employ a preconditioner. Unlike CG and Hybrid, it can
+   work with non-symmetric matrices.
 
 WARNING
-      Works with Hypre Struct interface only.
+   Works with Hypre Struct interface only.
    --------------------------------------------------------------------------*/
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
@@ -43,15 +39,15 @@ namespace Uintah {
 
   //---------- Types ----------
   
-  class HypreSolverPFMG : public HypreGenericSolver {
+  class HypreSolverGMRES : public HypreGenericSolver {
 
     //========================== PUBLIC SECTION ==========================
   public:
   
-    HypreSolverPFMG(HypreDriver* driver,
+    HypreSolverGMRES(HypreDriver* driver,
                     HypreGenericPrecond* precond) :
       HypreGenericSolver(driver,precond,initPriority()) {}
-    virtual ~HypreSolverPFMG(void) {}
+    virtual ~HypreSolverGMRES(void) {}
 
     virtual void solve(void);
 
@@ -59,8 +55,8 @@ namespace Uintah {
   private:
     static Priorities initPriority(void);
 
-  }; // end class HypreSolverPFMG
+  }; // end class HypreSolverGMRES
 
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverPFMG_h
+#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverGMRES_h
