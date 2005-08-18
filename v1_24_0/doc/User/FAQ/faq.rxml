@@ -46,7 +46,7 @@ doc.insertDocType("article", entities)
 <article class="faq">
   <title>User FAQ (v. <!--%= doc.edition %-->)</title>
 
-  <qandaset defaultlabel="itkosx103">
+  <qandaset defaultlabel="number">
 
     <qandaentry>
       <revhistory>
@@ -62,34 +62,33 @@ doc.insertDocType("article", entities)
       </question>
       <answer>
 	<para>
-	  If building ITK 2.0.1 on OS X 10.3, users may see the following errors: <br/>
-	  InsightToolkit-2.0.1/bin/libitkvnl.dylib...
-	  ld: vnl_math.o illegal reference for -dynamic code (section   
-	  difference reference from section (__TEXT,__eh_frame) relocation   
-	  entry (0) to symbol: ___isnan defined in dylib: /usr/lib/libm.dylib)
-	  /usr/bin/libtool: internal link edit command failed
-	  make[9]: *** [/Users/blah/Code/C++/ITK/InsightToolkit-2.0.1/ 
-	  bin/ libitkvnl.dylib] Error 1.
-	</para>
-	<para>
+	  If building ITK 2.0.1 on OS X 10.3, users may see the following errors:
+	<literallayout class="monospaced">	
+InsightToolkit-2.0.1/bin/libitkvnl.dylib...
+ld: vnl_math.o illegal reference for -dynamic code (section   
+difference reference from section (__TEXT,__eh_frame) relocation   
+entry (0) to symbol: ___isnan defined in dylib: /usr/lib/libm.dylib)
+/usr/bin/libtool: internal link edit command failed
+make[9]: *** [/Users/blah/Code/C++/ITK/InsightToolkit-2.0.1/ 
+bin/ libitkvnl.dylib] Error 1.
+	</literallayout>
 	  The solution is to either
-	  (a) checkout a recent CVS copy of ITK (directions are on the ITK  
+	  checkout a recent CVS copy of ITK (directions are on the ITK  
 	  download page), or
-	  (b) Edit the file:
-	  [INSIGHT_ROOT]/Utilities/vxl/core/vnl/vnl_math.cxx
+	  edit the file:
+	  <filename><replaceable>INSIGHT_ROOT</replaceable>/Utilities/vxl/core/vnl/vnl_math.cxx</filename>,
 	  changing line 62 from:
-	  # define isnan __isnan
-	  to
-	  # define isnan(x) __isnand((double)x)
-	  
+<literallayout class="monospaced">
+# define isnan __isnan
+to
+# define isnan(x) __isnand((double)x)
+</literallayout>
 	  This simple fix will allow ITK 2.0.1 to compile on OS X.
 	</para>
       </answer>
     </qandaentry>
 
 <!-- ++++++++++++++++++++ -->
-
-  <qandaset defaultlabel="number">
 
     <qandaentry>
       <revhistory>
