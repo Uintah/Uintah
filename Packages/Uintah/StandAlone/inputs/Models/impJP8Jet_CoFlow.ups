@@ -138,8 +138,8 @@
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0" label = "Pressure"      var = "Neumann">
-                              <value> 0.0   </value>
+        <BCType id = "0" label = "Pressure"     var = "Dirichlet">
+                              <value> 101325   </value>
         </BCType>
         <BCType id = "0" label = "Velocity"    var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -162,8 +162,8 @@
       </Face>  
      
       <Face side = "z+">
-        <BCType id = "0" label = "Pressure"       var = "Neumann">
-                              <value> 0.0   </value>
+        <BCType id = "0" label = "Pressure"     var = "Dirichlet">
+                              <value> 101325   </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -266,11 +266,12 @@
              <material>BackgroundGas</material>
           </FilterScalar>
         </turbulence> 
--->        
+        
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.01            </knob_for_speedSound>
         </TimeStepControl>
+-->
         
          
         <ImplicitSolver>
