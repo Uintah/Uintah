@@ -139,7 +139,7 @@ SolverFAC::printMatrix(const string& fileName /* = "solver" */)
 
   // TODO: implement facA printout in SolverFAC in addition to the
   // generic printMatrix()
-  HYPRE_SStructMatrixPrint((fileName + ".fac").c_str(), _facA, 0);
+  //  HYPRE_SStructMatrixPrint((fileName + ".fac").c_str(), _facA, 0);
 
   if (_requiresPar) {
     HYPRE_ParCSRMatrixPrint(_parA, (fileName + ".par").c_str());
