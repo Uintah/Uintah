@@ -179,19 +179,16 @@ using std::pair;
 
       class SaveItem {
       public:
-	void setMaterials(const ConsecutiveRangeSet& matls,
+	void setMaterials(int level, const ConsecutiveRangeSet& matls,
 			  ConsecutiveRangeSet& prevMatls,
 			  MaterialSetP& prevMatlSet);
 
-	const MaterialSet* getMaterialSet() const
-	{ return matlSet_.get_rep(); }
+	MaterialSet* getMaterialSet(int level)
+	{ return matlSet_[level].get_rep(); }
 	  
 	const VarLabel* label_;
 
-        // store as CRS as the grid can change
-        ConsecutiveRangeSet levels;
-      private:
-	MaterialSetP matlSet_;
+	map<int, MaterialSetP> matlSet_;
       };
 
    private:
