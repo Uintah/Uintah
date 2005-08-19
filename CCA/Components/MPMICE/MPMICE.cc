@@ -1675,7 +1675,8 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       double dTdt_tmp;
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-          heatFlux[*iter]  = ( eng_L_ME_CC[*iter] - old_int_eng_L_CC[*iter]);
+        heatFlux[*iter]  = (eng_L_ME_CC[*iter] - old_int_eng_L_CC[*iter])/delT;
+        //  cout << "heatFlux[" << *iter << "]= " << heatFlux[*iter] << endl;
       }
 
       //__________________________________
@@ -3147,16 +3148,16 @@ void MPMICE::switchTest(const ProcessorGroup* group,
 {
   double sw = 0;
 
-#if 0
+#if 1
   int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-  if (time_step == 100)
+  if (time_step == 10)
     sw = 1;
   else
     sw = 0;
 #endif
 
   // Get the pbx surface temperature
-#if 1
+#if 0
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);  
     
