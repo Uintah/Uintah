@@ -76,7 +76,7 @@ class Regridder;
 
       //! recursively schedule refinement, coarsening, and time advances for
       //! finer levels - compensating for time refinement.
-      void subCycle(GridP& grid, int startDW, int dwStride, int numLevel);
+      void subCycle(GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle);
    };
 
 } // End namespace Uintah
