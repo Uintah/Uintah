@@ -24,7 +24,7 @@ MPMLabel::MPMLabel()
   // Heat flux from fire
 
   heatFlux_CCLabel = 
-    VarLabel::create("tempFlux_CC",  CCVariable<Vector>::getTypeDescription());
+    VarLabel::create("heatFlux_CC",  CCVariable<double>::getTypeDescription());
 
   // Particle Variables
 
@@ -569,6 +569,7 @@ MPMLabel::MPMLabel()
 
 MPMLabel::~MPMLabel()
 {
+  VarLabel::destroy(heatFlux_CCLabel);
   //non PermanentParticleState
   VarLabel::destroy(pVolumeDeformedLabel);
   VarLabel::destroy(pTemperatureGradientLabel);
