@@ -92,6 +92,7 @@ void AMRSimulationController::run()
 
    // Parse time struct
    d_timeinfo = new SimulationTime(d_ups);
+   d_sharedState->d_simTime = d_timeinfo;
     
    if (d_restarting){
      restartSetup(currentGrid, t);

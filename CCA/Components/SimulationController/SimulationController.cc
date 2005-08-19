@@ -280,6 +280,17 @@ namespace Uintah {
   
   void SimulationController::adjustDelT(double& delt, double prev_delt, int iterations, double t) 
   {
+#if 0
+    cout << "maxTime = " << d_timeinfo->maxTime << endl;
+    cout << "initTime = " << d_timeinfo->initTime << endl;
+    cout << "delt_min = " << d_timeinfo->delt_min << endl;
+    cout << "delt_max = " << d_timeinfo->delt_max << endl;
+    cout << "timestep_multiplier = " << d_timeinfo->delt_factor << endl;
+    cout << "delt_init = " << d_timeinfo->max_initial_delt << endl;
+    cout << "initial_delt_range = " << d_timeinfo->initial_delt_range << endl;
+    cout << "max_delt_increase = " << d_timeinfo->max_delt_increase << endl;
+#endif
+
     delt *= d_timeinfo->delt_factor;
       
     if(delt < d_timeinfo->delt_min){

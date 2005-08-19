@@ -70,6 +70,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_isCopyDataTimestep = 0;
 
   d_switchState = false;
+  d_simTime = 0;
+  
 }
 
 void SimulationState::registerMaterial(Material* matl)

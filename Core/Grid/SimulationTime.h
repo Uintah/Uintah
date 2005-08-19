@@ -37,6 +37,8 @@ namespace Uintah {
 class SimulationTime {
 public:
   SimulationTime(const ProblemSpecP& params);
+
+  void problemSetup(const ProblemSpecP& params);
   double maxTime;
   double initTime;
   double max_initial_delt;
