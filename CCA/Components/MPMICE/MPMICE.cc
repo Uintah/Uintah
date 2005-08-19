@@ -270,7 +270,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
   // Note - this will probably not work for AMR ICE...
   // If we have a finer level, then assume that we are doing multilevel MPMICE
   // Otherwise, it is plain-ole MPMICE
-  bool do_mlmpmice = false;
+  do_mlmpmice = false;
   if(inlevel->hasFinerLevel())
     do_mlmpmice = true;
   const LevelP& ice_level = inlevel;
@@ -702,7 +702,7 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
     t->requires(Task::NewDW, MIlb->temp_CCLabel,           gn);
     t->requires(Task::NewDW, MIlb->vel_CCLabel,            gn);
 
-    if(d_ice->d_models.size() > 0){
+    if(d_ice->d_models.size() > 0 && !do_mlmpmice){
       t->requires(Task::NewDW, Ilb->modelMass_srcLabel,   gn);
       t->requires(Task::NewDW, Ilb->modelMom_srcLabel,    gn);
       t->requires(Task::NewDW, Ilb->modelEng_srcLabel,    gn);
@@ -1523,7 +1523,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       }
       //__________________________________
       //  NO REACTION
-      if(d_ice->d_models.size() == 0)  { 
+      if(d_ice->d_models.size() == 0 || do_mlmpmice)  { 
         for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
                                                     iter++){ 
          IntVector c = *iter;
@@ -1540,7 +1540,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       // goes to min_mass then cmomentum and int_eng_L
       // need to be scaled by min_mass to avoid inf temp and vel_CC
       // in 
-      if(d_ice->d_models.size() > 0)  { 
+      if(d_ice->d_models.size() > 0 && !do_mlmpmice){
         constCCVariable<double> modelMass_src;
         constCCVariable<double> modelEng_src;
         constCCVariable<Vector> modelMom_src;
