@@ -51,6 +51,7 @@
        <carry_over var="scalar-f" />
        <carry_over var="cumulativeEnergyReleased" />
        <carry_over var="NC_CCweight" />
+       <carry_over var="heatFlux_CC" />
 
  </SimulationComponent>
 
