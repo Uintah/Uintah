@@ -194,13 +194,13 @@ void
 SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
 {
   bool printedHeader = false;
-  LoadBalancer* lb =  dynamic_cast<LoadBalancer*>(getPort("load balancer"));
+  LoadBalancer* lb = getLoadBalancer();
   for (int i = 0; i < (int) trackingVars_.size(); i++) {
     bool printedVarName = false;
 
     // that DW may not have been mapped....
     if (dt->getTask()->mapDataWarehouse(trackingDWs_[i]) < 0 || 
-        dt->getTask()->mapDataWarehouse(trackingDWs_[i]) >= dws.size())
+        dt->getTask()->mapDataWarehouse(trackingDWs_[i]) >= (int) dws.size())
       continue;
 
     OnDemandDataWarehouseP dw = dws[dt->getTask()->mapDataWarehouse(trackingDWs_[i])];
@@ -229,21 +229,22 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
       continue;
 
     // add one in case we want the extra cells/b.l.'s 
-    Level::selectType patches;
-    level->selectPatches(trackingStartIndex_ - IntVector(1,1,1), trackingEndIndex_ + IntVector(1,1,1), patches);
-    for (int p = 0; p < patches.size(); p++) {
+    //Level::selectType patches;
+    //level->selectPatches(trackingStartIndex_ - IntVector(1,1,1), trackingEndIndex_ + IntVector(1,1,1), patches);
+    const PatchSubset* patches = dt->getPatches();
+    for (int p = 0; patches && p < patches->size(); p++) {
 
-      const Patch* patch = patches[p];
+      const Patch* patch = patches->get(p);
 
       // don't print ghost patches (dw->get will yell at you)
       if ((trackingDWs_[i] == Task::OldDW && lb->getOldProcessorAssignment(0,patch,0) != d_myworld->myrank()) ||
           (trackingDWs_[i] == Task::NewDW && lb->getPatchwiseProcessorAssignment(patch) != d_myworld->myrank()))
         continue;
-
+      
       const TypeDescription* td = label->typeDescription();
       Patch::VariableBasis basis = patch->translateTypeToBasis(td->getType(), false);
       IntVector start = 
-        Max(patch->getLowIndex(basis, IntVector(0,0,0)), trackingStartIndex_);
+          Max(patch->getLowIndex(basis, IntVector(0,0,0)), trackingStartIndex_);
       IntVector end = 
         Min(patch->getHighIndex(basis, IntVector(0,0,0)), trackingEndIndex_);
       
@@ -252,7 +253,24 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
         if (!dw->exists(label, m, patch))
           continue;
         if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z()))
+          continue;        
+        if (td->getType() != TypeDescription::CCVariable || 
+            td->getSubType()->getType() != TypeDescription::double_type)
+          // only allow CCVariable<double> for now
           continue;
+
+        // pending the task that allocates the var, we may not have allocated it yet
+        CCVariableBase* v = dw->d_ccDB.get(label, m, patch);
+
+        start = Max(start, v->getLow());
+        end = Min(end, v->getHigh());
+        if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z())) 
+          continue;
+
+        // now get it the way a normal task would get it
+        constCCVariable<double> var;
+        dw->get(var, label, m, patch, Ghost::None, 0);
+        
         if (!printedHeader) {
           cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
                << *dt << endl;
@@ -261,13 +279,6 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
         if (!printedVarName) {
           cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
         }
-
-        if (td->getType() != TypeDescription::CCVariable || 
-            td->getSubType()->getType() != TypeDescription::double_type)
-          // only allow CCVariable<double> for now
-          continue;
-        constCCVariable<double> var;
-        dw->get(var, label, m, patch, Ghost::None, 0);
 
         for (int z = start.z(); z < end.z(); z++) {
           for (int y = start.y(); y < end.y(); y++) {
@@ -802,7 +813,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 
           IntVector copyLowIndex = Max(newLowIndex, oldLowIndex);
           IntVector copyHighIndex = Min(newHighIndex, oldHighIndex);
-        
+
           // based on the selectPatches above, we might have patches we don't want to use, so prune them here.
           if (copyLowIndex.x() >= copyHighIndex.x() || copyLowIndex.y() >= copyHighIndex.y() || copyLowIndex.z() >= copyHighIndex.z())
             continue;
@@ -839,18 +850,19 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             break;
           case TypeDescription::CCVariable:
             {
-              if(!oldDataWarehouse->exists(label, matl, oldPatch))
+              if(!oldDataWarehouse->exists(label, matl, oldPatch)) {
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo NCVariable", __FILE__, __LINE__));
+                                          "in copyDataTo CCVariable", __FILE__, __LINE__));
+              }
               CCVariableBase* v = oldDataWarehouse->d_ccDB.get(label, matl, oldPatch);
-        
+              CCVariableBase* newVariable;
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
-                CCVariableBase* newVariable = dynamic_cast<CCVariableBase*>(v->cloneType());
+                newVariable = dynamic_cast<CCVariableBase*>(v->cloneType());
                 newVariable->rewindow( newLowIndex, newHighIndex );
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
                 newDataWarehouse->d_ccDB.put(label, matl, newPatch, newVariable, false);
               } else {
-                CCVariableBase* newVariable = newDataWarehouse->d_ccDB.get(label, matl, newPatch );
+                newVariable = newDataWarehouse->d_ccDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
                 newVariable->rewindow(newLowIndex, newHighIndex);
                 if (oldPatch->isVirtual()) {
@@ -871,7 +883,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo NCVariable", __FILE__, __LINE__));
+                                          "in copyDataTo SFCXVariable", __FILE__, __LINE__));
               SFCXVariableBase* v = oldDataWarehouse->d_sfcxDB.get(label, matl, oldPatch);
               
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
@@ -900,7 +912,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo NCVariable", __FILE__, __LINE__));
+                                          "in copyDataTo SFCYVariable", __FILE__, __LINE__));
               SFCYVariableBase* v = oldDataWarehouse->d_sfcyDB.get(label, matl, oldPatch);
               
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
@@ -929,7 +941,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo NCVariable", __FILE__, __LINE__));
+                                          "in copyDataTo SFCZVariable", __FILE__, __LINE__));
               SFCZVariableBase* v = oldDataWarehouse->d_sfczDB.get(label, matl, oldPatch);
               
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {

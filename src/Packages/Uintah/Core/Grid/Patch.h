@@ -207,6 +207,8 @@ WARNING
 
      IntVector getLowIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
      IntVector getHighIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
+     IntVector getInteriorLowIndex(VariableBasis basis) const;
+     IntVector getInteriorHighIndex(VariableBasis basis) const;
      
      IntVector getLowIndex() const
      { return d_lowIndex; }

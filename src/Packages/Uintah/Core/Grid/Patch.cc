@@ -1515,6 +1515,33 @@ IntVector Patch::getHighIndex(VariableBasis basis,
   }
 }
 
+IntVector Patch::getInteriorLowIndex(VariableBasis basis) const
+{
+  return d_inLowIndex;
+}
+
+IntVector Patch::getInteriorHighIndex(VariableBasis basis) const
+{
+  switch (basis) {
+  case CellBased:
+    return d_inHighIndex;
+  case NodeBased:
+    return getInteriorNodeHighIndex();
+  case XFaceBased:
+    return d_inHighIndex+IntVector(d_bctypes[xplus] == Neighbor? 0:1,0,0);
+  case YFaceBased:
+    return d_inHighIndex+IntVector(0,d_bctypes[yplus] == Neighbor? 0:1,0);
+  case ZFaceBased:
+    return d_inHighIndex+IntVector(0,0,d_bctypes[zplus] == Neighbor? 0:1);
+  case AllFaceBased:
+    SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getInteriorHighIndex(basis)",
+                            __FILE__, __LINE__));
+  default:
+    SCI_THROW(InternalError("Illegal VariableBasis in Patch::getInteriorHighIndex(basis)",
+                            __FILE__, __LINE__));
+  }
+}
+
 
 void Patch::finalizePatch()
 {

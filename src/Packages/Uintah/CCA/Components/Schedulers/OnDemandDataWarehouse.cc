@@ -2094,24 +2094,21 @@ getGridVar(VariableBase& var, DWDatabase& db,
 				    matlIndex, neighbor == patch?
 				    "on patch":"on neighbor", __FILE__, __LINE__));
         }
+
         VariableBase* srcvar = dynamic_cast<VariableBase*>(var.cloneType());
 	db.get(label, matlIndex, neighbor, *srcvar);
 	if(neighbor->isVirtual())
 	  srcvar->offsetGrid(neighbor->getVirtualOffset());
 	
-	IntVector low = Max(lowIndex,
-			    neighbor->getLowIndex(basis,
-						  label->getBoundaryLayer()));
-	IntVector high= Min(highIndex, 
-			    neighbor->getHighIndex(basis,
-						   label->getBoundaryLayer()));
+	IntVector low = Max(lowIndex, srcvar->getLow());
+	IntVector high= Min(highIndex, srcvar->getHigh());
 	
 	if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-	    || ( high.z() < low.z() ) )
-	  SCI_THROW(InternalError("Patch doesn't overlap?", __FILE__, __LINE__));
-	
+	    || ( high.z() < low.z() ) ) {
+	  //SCI_THROW(InternalError("Patch doesn't overlap?", __FILE__, __LINE__));
+        }
+
 	var.copyPatch(srcvar, low, high);
-	
 	dn = high-low;
 	total+=dn.x()*dn.y()*dn.z();
 	delete srcvar;
