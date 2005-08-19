@@ -22,6 +22,10 @@ Linux.
 In theory, it should be possible to configure SCIRun2 on any
 Unix-like platform.
 
+<!--
+Building SCIRun2 requires GNU make version 3.79 or better, Autoconf 2.59 (or better?).
+-->
+
 \section depend Dependencies
 
 SCIRun2 code has dependencies on multiple third-party software packages.
@@ -143,13 +147,18 @@ LD_LIBRARY_PATH=$QTDIR/lib:$LD_LIBRARY_PATH
 
 \subsection depend_babel Babel
 
+<b>
+If you are using Babel 0.9.x, please upgrade to Babel 0.10.x.
+</b>
+
 The Babel compiler can be freely obtained from
 <a href="http://www.llnl.gov/CASC/components/babel.html">
 www.llnl.gov/CASC/components/babel.html</a>.
-SCIRun2 currently supports Babel version 0.9.0 and 0.9.2.
+SCIRun2 currently supports Babel version 0.10.0 or higher.
 
-Babel requires Java.
-See the Babel build instructions for details.
+Babel requires Java, at least libxml2 2.4.0 and Python to build the testing
+framework.
+Please read the Babel install instructions for details.
 
 Estimated time to build: < 1 hour
 
@@ -160,7 +169,8 @@ JAVA_HOME=/path/to/java/install
 BABEL_HOME=/path/to/babel/install
 PATH=$JAVA_HOME/bin:$BABEL_HOME/bin:$PATH
 \endcode
-        
+
+<!--
 \subsubsection depend_babel_1 Babel 0.9.0
 
 \em IMPORTANT! The standard distribution of Babel version 0.9.0 requires
@@ -189,6 +199,7 @@ for further details.
 
 The standard distribution of Babel version 0.9.2 requires at least
 libxml2 2.4.0.
+-->
 
 \subsection depend_mpi MPI
 
