@@ -268,8 +268,8 @@ void TxtBuilder::list_ports(string args[])
         cout<<"#"<<i<<":\t"<<upNames[i]<<endl;
       }
   }
-  catch (CCAException &e) {
-      std::cerr << e.message() << std::endl;
+  catch (const sci::cca::CCAException::pointer &pe) {
+      std::cerr << pe->getNote() << std::endl;
   }
 }
 
