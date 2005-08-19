@@ -238,7 +238,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pErosionLabel);  //  only used for imp -> exp transition
   t->computes(d_sharedState->get_delt_label());
 
-//  t->computes(lb->heatFlux_CCLabel);
+  t->computes(lb->heatFlux_CCLabel);
 
   MaterialSubset* one_matl = scinew MaterialSubset();
   one_matl->add(0);
@@ -277,11 +277,10 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
 
-//    CCVariable<double> heatFlux;
-//    new_dw->allocateAndPut(heatFlux,lb->heatFlux_CCLabel,0,patch);
-//    heatFlux.initialize(1.0);
+    CCVariable<double> heatFlux;
+    new_dw->allocateAndPut(heatFlux,lb->heatFlux_CCLabel,0,patch);
+    heatFlux.initialize(1.0);
 
-    
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( matl );
