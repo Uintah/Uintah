@@ -33,7 +33,7 @@ root := ${shell cd ..; basename `pwd` }
 tarfile := ${notdir ${shell cd ..; pwd}}.tar
 tarball := ${tarfile}.gz
 tarcmd := gnutar --exclude='*CVS*' --exclude='auto' \
---create --verbose --file=${root}/doc/${tarfile} 
+--create --file=${root}/doc/${tarfile} --files-from ${root}/doc/tarlist
 products := User Installation Developer Documentum
 edition := ../src/main/sci_version.h
 
@@ -48,13 +48,14 @@ tarball : tar
 
 # Construct list of files to be included in the tar archive.  Edit
 # tarlist to make changes to this list.
-tarlist = ${shell ruby tarlist}
+#tarlist = ${shell ruby tarlist}
 
 # Build all docs and put them in a tar archive.
 tar: index.html products
 	@echo "Making a tar archive"
 	-rm -f ${tarfile} ${tarball}
-	cd ../..; ${tarcmd} ${tarlist}
+	ruby tarlist.rb >tarlist
+	cd ../..; ${tarcmd}
 
 index.html: index.rhtml ${edition}
 	eruby --delimiters html $< >$@
