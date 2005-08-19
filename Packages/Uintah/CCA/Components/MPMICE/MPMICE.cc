@@ -1039,8 +1039,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     NCVariable<double> NC_CCweight;
     new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,    0, patch);
 
-
-
    //__________________________________
    // - Initialize NC_CCweight = 0.125
    // - Find the walls with symmetry BC and
@@ -1652,6 +1650,8 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn  = Ghost::None;
 
     for (int m = 0; m < numMPMMatls; m++) {
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1659,15 +1659,15 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       NCVariable<Vector> gacceleration, gvelocity;
       NCVariable<double> dTdt_NC;
 
-      constCCVariable<double> mass_L_CC;
+      constCCVariable<double> mass_L_CC, old_heatFlux;
       constCCVariable<Vector> mom_L_ME_CC, old_mom_L_CC;
       constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC; 
       CCVariable<double> heatFlux;
       
       new_dw->getModifiable(gvelocity,    Mlb->gVelocityStarLabel,indx,patch);
       new_dw->getModifiable(gacceleration,Mlb->gAccelerationLabel,indx,patch);
+      old_dw->get(old_heatFlux,      Mlb->heatFlux_CCLabel,  indx,patch,gn,0);
                   
-      Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(old_mom_L_CC,    Ilb->mom_L_CCLabel,       indx,patch,gac,1);
       new_dw->get(old_int_eng_L_CC,Ilb->int_eng_L_CCLabel,   indx,patch,gac,1);
       new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);
@@ -1684,8 +1684,8 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       double dTdt_tmp;
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-        heatFlux[*iter]  = (eng_L_ME_CC[*iter] - old_int_eng_L_CC[*iter])/delT;
-        //  cout << "heatFlux[" << *iter << "]= " << heatFlux[*iter] << endl;
+        double heatFlx  = (eng_L_ME_CC[*iter] - old_int_eng_L_CC[*iter])/delT;
+        heatFlux[*iter]  = .05*heatFlx + .95*old_heatFlux[*iter];
       }
 
       //__________________________________
@@ -3159,7 +3159,7 @@ void MPMICE::switchTest(const ProcessorGroup* group,
 
 #if 1
   int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-  if (time_step == 10)
+  if (time_step == 200)
     sw = 1;
   else
     sw = 0;
