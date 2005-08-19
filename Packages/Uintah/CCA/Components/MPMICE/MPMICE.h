@@ -444,6 +444,7 @@ protected:
   bool             d_recompile;
   bool             d_doAMR;
   bool             d_testForNegTemps_mpm;
+  bool             do_mlmpmice;
 
   int              pbx_matl_num;
   MaterialSubset*  pbx_matl;
