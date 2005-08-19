@@ -2,23 +2,19 @@
 // File:          BridgeTest_BridgeTestPort_Impl.hh
 // Symbol:        BridgeTest.BridgeTestPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040412 13:28:09 MST
-// Generated:     20040412 13:28:11 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for BridgeTest.BridgeTestPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 15
-// source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/BridgeTest/BridgeTest.sidl
+// babel-version = 0.10.2
 // 
 
 #ifndef included_BridgeTest_BridgeTestPort_Impl_hh
 #define included_BridgeTest_BridgeTestPort_Impl_hh
 
-#ifndef included_SIDL_cxx_hh
-#include "SIDL_cxx.hh"
+#ifndef included_sidl_cxx_hh
+#include "sidl_cxx.hh"
 #endif
 #ifndef included_BridgeTest_BridgeTestPort_IOR_h
 #include "BridgeTest_BridgeTestPort_IOR.h"
@@ -29,13 +25,16 @@
 #ifndef included_BridgeTest_BridgeTestPort_hh
 #include "BridgeTest_BridgeTestPort.hh"
 #endif
-#ifndef included_SIDL_BaseInterface_hh
-#include "SIDL_BaseInterface.hh"
+#ifndef included_sidl_BaseInterface_hh
+#include "sidl_BaseInterface.hh"
+#endif
+#ifndef included_sidl_ClassInfo_hh
+#include "sidl_ClassInfo.hh"
 #endif
 
 
 // DO-NOT-DELETE splicer.begin(BridgeTest.BridgeTestPort._includes)
-// Put additional includes or other arbitrary code here...
+// Insert-Code-Here {BridgeTest.BridgeTestPort._includes} (includes or arbitrary code)
 // DO-NOT-DELETE splicer.end(BridgeTest.BridgeTestPort._includes)
 
 namespace BridgeTest { 
@@ -45,7 +44,7 @@ namespace BridgeTest {
    */
   class BridgeTestPort_impl
   // DO-NOT-DELETE splicer.begin(BridgeTest.BridgeTestPort._inherits)
-  // Put additional inheritance here...
+  // Insert-Code-Here {BridgeTest.BridgeTestPort._inherits} (optional inheritance here)
   // DO-NOT-DELETE splicer.end(BridgeTest.BridgeTestPort._inherits)
   {
 
@@ -55,15 +54,16 @@ namespace BridgeTest {
     BridgeTestPort self;
 
     // DO-NOT-DELETE splicer.begin(BridgeTest.BridgeTestPort._implementation)
-    // Put additional implementation details here...
+    // Insert-Code-Here {BridgeTest.BridgeTestPort._implementation} (additional details)
     // DO-NOT-DELETE splicer.end(BridgeTest.BridgeTestPort._implementation)
 
   private:
     // private default constructor (required)
-    BridgeTestPort_impl() {} 
+    BridgeTestPort_impl() 
+    {} 
 
   public:
-    // SIDL constructor (required)
+    // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
     BridgeTestPort_impl( struct BridgeTest_BridgeTestPort__object * s ) : 
@@ -78,6 +78,9 @@ namespace BridgeTest {
     // user defined destruction
     void _dtor();
 
+    // static class initializer
+    static void _load();
+
   public:
 
     /**
@@ -85,7 +88,7 @@ namespace BridgeTest {
      */
     void
     m2 (
-      /*in*/ ::SIDL::array<int> a
+      /* in */ ::sidl::array<int32_t> a
     )
     throw () 
     ;
@@ -95,7 +98,7 @@ namespace BridgeTest {
 } // end namespace BridgeTest
 
 // DO-NOT-DELETE splicer.begin(BridgeTest.BridgeTestPort._misc)
-// Put miscellaneous things here...
+// Insert-Code-Here {BridgeTest.BridgeTestPort._misc} (miscellaneous things)
 // DO-NOT-DELETE splicer.end(BridgeTest.BridgeTestPort._misc)
 
 #endif

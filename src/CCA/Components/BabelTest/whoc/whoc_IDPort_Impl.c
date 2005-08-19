@@ -102,7 +102,7 @@ impl_whoc_IDPort_getID(
   whoc_IDPort self)
 {
   /* DO-NOT-DELETE splicer.begin(whoc.IDPort.getID) */
-  char *id="World (in C )";
+  char *id="World (in C)";
   char *s=(char*)malloc(strlen(id)+1);
   strcpy(s, id);
   return s;
