@@ -34,7 +34,7 @@
 
 require 'net/smtp'
 require 'getoptlong'
-require 'utils'
+
 
 class CmdLine
   attr_reader :checkSyntax, :confFile
@@ -89,7 +89,7 @@ class Log
     IO.popen(cmd) do |p|
       l = p.gets("\n")
       while l != nil
-	write(l, "\n")
+	write(l)
 	l = p.gets("\n")
       end
     end
@@ -127,6 +127,41 @@ module TreeDir
   def TreeDir.src()
     docRootAbs() + "/src"
   end
+end
+
+class SrcTopLevel
+  def initialize(srcRoot, packageList)
+    @srcRoot = srcRoot
+    @packageList = packageList
+  end
+  
+  # Invoke block for each top-level source file
+  def eachFile
+    Dir.foreach(@srcRoot) do |m|
+      yield(m) if File.stat(@srcRoot + "/" + m).file? and not m =~ /^\./
+    end
+  end
+
+  # Invoke block for each top-level directory
+  def eachDir
+    Dir.foreach(@srcRoot) do |m|
+      yield(m) if File::stat(@srcRoot + "/" + m).directory? and not m =~ /^(Packages|CVS)$|^\./
+    end
+    @packageList.each do |p|
+      yield("Packages/" + p)
+    end
+  end
+
+  # Invoke block for each top-level file and directory
+  def each
+    self.eachFile do |f|
+      yield(f)
+    end
+    self.eachDir do |d|
+      yield(d)
+    end
+  end
+  
 end
 
 class ConfError < RuntimeError
@@ -208,6 +243,13 @@ class ConfHash < Hash
       return if v == selfP(key)
     end
     confError("\"#{selfP(key)}\" is an invalid enumeration value")
+  end
+
+  def errorIfNotStringArray(key)
+    errorIfNotArray(key)
+    selfP(key).each do |v|
+      confError("Not a string \"#{v}\"") if not v.instance_of?(String)
+    end
   end
 end
 
@@ -335,7 +377,7 @@ class Configuration < ConfHash
   ToAddr = "toAddr"
   SCM = "scm"
   SCM_Command = "scmCommand"
-  UpdateList = "updateList"
+  PackageList = "packageList"
 
   def ivinit()
     super
@@ -466,6 +508,10 @@ class Configuration < ConfHash
       when SCM_SVN
 	self[SCM_Command] = SVNCommand.new
       end
+    }
+    @iv[PackageList] = proc {
+      errorIfMissing(PackageList)
+      errorIfNotStringArray(PackageList)
     }
   end
 
@@ -684,7 +730,8 @@ INSTALL_SCRIPT
   def update()
     $log.write("Updating...\n")
     srcTop = @treeRoot + "/src"
-    SrcTopLevel.filesAndDirs(srcTop).each do |m|
+    srcTopLevel = SrcTopLevel.new(srcTop, @conf[Configuration::PackageList])
+    srcTopLevel.each do |m|
       updateOne(srcTop + "/" + m)
     end
     $log.write("Done Updating src directory\n")
