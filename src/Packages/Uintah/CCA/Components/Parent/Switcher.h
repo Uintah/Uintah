@@ -32,6 +32,8 @@ namespace Uintah {
     virtual bool needRecompile(double time, double delt, const GridP& grid);
     virtual void restartInitialize();
 
+    virtual bool restartableTimesteps();
+
 
     // direct component to add a new material
     virtual void addMaterial(const ProblemSpecP& params, GridP& grid,
