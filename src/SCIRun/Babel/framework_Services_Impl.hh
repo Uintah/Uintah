@@ -25,28 +25,25 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
+// 
 
 // 
 // File:          framework_Services_Impl.hh
 // Symbol:        framework.Services-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040129 15:00:00 MST
-// Generated:     20040129 15:00:06 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for framework.Services
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 7
-// source-url    = file:/home/sci/damevski/SCIRun/ccadebug-RH8/../src/SCIRun/Babel/framework.sidl
+// babel-version = 0.10.2
 // 
 
 #ifndef included_framework_Services_Impl_hh
 #define included_framework_Services_Impl_hh
 
-#ifndef included_SIDL_cxx_hh
-#include "SIDL_cxx.hh"
+#ifndef included_sidl_cxx_hh
+#include "sidl_cxx.hh"
 #endif
 #ifndef included_framework_Services_IOR_h
 #include "framework_Services_IOR.h"
@@ -54,9 +51,6 @@
 // 
 // Includes for all method dependencies.
 // 
-#ifndef included_SIDL_BaseInterface_hh
-#include "SIDL_BaseInterface.hh"
-#endif
 #ifndef included_framework_Services_hh
 #include "framework_Services.hh"
 #endif
@@ -66,11 +60,20 @@
 #ifndef included_gov_cca_ComponentID_hh
 #include "gov_cca_ComponentID.hh"
 #endif
+#ifndef included_gov_cca_ComponentRelease_hh
+#include "gov_cca_ComponentRelease.hh"
+#endif
 #ifndef included_gov_cca_Port_hh
 #include "gov_cca_Port.hh"
 #endif
 #ifndef included_gov_cca_TypeMap_hh
 #include "gov_cca_TypeMap.hh"
+#endif
+#ifndef included_sidl_BaseInterface_hh
+#include "sidl_BaseInterface.hh"
+#endif
+#ifndef included_sidl_ClassInfo_hh
+#include "sidl_ClassInfo.hh"
 #endif
 
 
@@ -103,10 +106,11 @@ namespace framework {
 
   private:
     // private default constructor (required)
-    Services_impl() {} 
+    Services_impl() 
+    {} 
 
   public:
-    // SIDL constructor (required)
+    // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
     Services_impl( struct framework_Services__object * s ) : self(s,
@@ -120,6 +124,9 @@ namespace framework {
 
     // user defined destruction
     void _dtor();
+
+    // static class initializer
+    static void _load();
 
   public:
 
@@ -142,15 +149,15 @@ namespace framework {
      * Disconnect Event is successfully dispatched to the caller,
      * or a runtime exception (such as network failure) occurs during 
      * invocation of some function in the Port. 
-     * &lt;p&gt;
+     * <p>
      * Subtle interpretation: If the Component is not listening for
      * Disconnect events, then the framework has no clean way to
      * break the connection until after the component calls releasePort.
-     * &lt;/p&gt;
-     * &lt;p&gt;The framework may go through some machinations to obtain
+     * </p>
+     * <p>The framework may go through some machinations to obtain
      *    the port, possibly involving an interactive user or network 
      *    queries, before giving up and throwing an exception.
-     * &lt;/p&gt;
+     * </p>
      * 
      * @param portName The previously registered or provide port which
      * 	   the component now wants to use.
@@ -159,7 +166,7 @@ namespace framework {
      */
     ::gov::cca::Port
     getPort (
-      /*in*/ const ::std::string& portName
+      /* in */ const ::std::string& portName
     )
     throw ( 
       ::gov::cca::CCAException
@@ -183,7 +190,7 @@ namespace framework {
      */
     ::gov::cca::Port
     getPortNonblocking (
-      /*in*/ const ::std::string& portName
+      /* in */ const ::std::string& portName
     )
     throw ( 
       ::gov::cca::CCAException
@@ -203,7 +210,7 @@ namespace framework {
      */
     void
     releasePort (
-      /*in*/ const ::std::string& portName
+      /* in */ const ::std::string& portName
     )
     throw ( 
       ::gov::cca::CCAException
@@ -234,12 +241,12 @@ namespace framework {
      * associated with this port.
      * In these properties, all frameworks recognize at least the
      * following keys and values in implementing registerUsesPort:
-     * &lt;pre&gt;
+     * <pre xml:space="preserve">
      * key:              standard values (in string form)     default
-     * &quot;MAX_CONNECTIONS&quot; any nonnegative integer, &quot;unlimited&quot;.   1
-     * &quot;MIN_CONNECTIONS&quot; any integer &gt; 0.                        0
-     * &quot;ABLE_TO_PROXY&quot;   &quot;true&quot;, &quot;false&quot;                      &quot;false&quot;
-     * &lt;/pre&gt;
+     * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
+     * "MIN_CONNECTIONS" any integer > 0.                        0
+     * "ABLE_TO_PROXY"   "true", "false"                      "false"
+     * </pre>
      * The component is not expected to work if the framework
      * has not satisfied the connection requirements.
      * The framework is allowed to return an error if it
@@ -252,9 +259,9 @@ namespace framework {
      */
     void
     registerUsesPort (
-      /*in*/ const ::std::string& portName,
-      /*in*/ const ::std::string& type,
-      /*in*/ ::gov::cca::TypeMap properties
+      /* in */ const ::std::string& portName,
+      /* in */ const ::std::string& type,
+      /* in */ ::gov::cca::TypeMap properties
     )
     throw ( 
       ::gov::cca::CCAException
@@ -272,7 +279,7 @@ namespace framework {
      */
     void
     unregisterUsesPort (
-      /*in*/ const ::std::string& portName
+      /* in */ const ::std::string& portName
     )
     throw ( 
       ::gov::cca::CCAException
@@ -301,12 +308,12 @@ namespace framework {
      * associated with this port.
      * In these properties, all frameworks recognize at least the
      * following keys and values in implementing registerUsesPort:
-     * &lt;pre&gt;
+     * <pre xml:space="preserve">
      * key:              standard values (in string form)     default
-     * &quot;MAX_CONNECTIONS&quot; any nonnegative integer, &quot;unlimited&quot;.   1
-     * &quot;MIN_CONNECTIONS&quot; any integer &gt; 0.                        0
-     * &quot;ABLE_TO_PROXY&quot;   &quot;true&quot;, &quot;false&quot;                      &quot;false&quot;
-     * &lt;/pre&gt;
+     * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
+     * "MIN_CONNECTIONS" any integer > 0.                        0
+     * "ABLE_TO_PROXY"   "true", "false"                      "false"
+     * </pre>
      * The component is not expected to work if the framework
      * has not satisfied the connection requirements.
      * The framework is allowed to return an error if it
@@ -319,10 +326,10 @@ namespace framework {
      */
     void
     addProvidesPort (
-      /*in*/ ::gov::cca::Port inPort,
-      /*in*/ const ::std::string& portName,
-      /*in*/ const ::std::string& type,
-      /*in*/ ::gov::cca::TypeMap properties
+      /* in */ ::gov::cca::Port inPort,
+      /* in */ const ::std::string& portName,
+      /* in */ const ::std::string& type,
+      /* in */ ::gov::cca::TypeMap properties
     )
     throw ( 
       ::gov::cca::CCAException
@@ -333,15 +340,15 @@ namespace framework {
      * Returns the complete list of the properties for a Port.  This
      * includes the properties defined when the port was registered
      * (these properties can be modified by the framework), two special
-     * properties &quot;cca.portName&quot; and &quot;cca.portType&quot;, and any other
+     * properties "cca.portName" and "cca.portType", and any other
      * properties that the framework wishes to disclose to the component.
      * The framework may also choose to provide only the subset of input
      * properties (i.e. from addProvidesPort/registerUsesPort) that it
-     * will honor.      
+     * will honor.
      */
     ::gov::cca::TypeMap
     getPortProperties (
-      /*in*/ const ::std::string& name
+      /* in */ const ::std::string& name
     )
     throw () 
     ;
@@ -357,7 +364,7 @@ namespace framework {
      */
     void
     removeProvidesPort (
-      /*in*/ const ::std::string& portName
+      /* in */ const ::std::string& portName
     )
     throw ( 
       ::gov::cca::CCAException
@@ -371,6 +378,26 @@ namespace framework {
     ::gov::cca::ComponentID
     getComponentID() throw () 
     ;
+
+    /**
+     * Obtain a callback for component destruction.
+     * @param callback an object that implements the ComponentRelease
+     * interface that will be called when the component is to be destroyed.
+     * 
+     * Register a callback to be executed when the component is going
+     * to be destroyed.  During this callback, the Services object passed
+     * through setServices will still be valid, but after all such
+     * callbacks are made for a specific component, subsequent usage
+     * of the Services object is not allowed/is undefined.
+     */
+    void
+    registerForRelease (
+      /* in */ ::gov::cca::ComponentRelease callback
+    )
+    throw ( 
+      ::gov::cca::CCAException
+    );
+
   };  // end class Services_impl
 
 } // end namespace framework

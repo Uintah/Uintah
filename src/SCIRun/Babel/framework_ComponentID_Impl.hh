@@ -25,28 +25,25 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
+// 
 
 // 
 // File:          framework_ComponentID_Impl.hh
 // Symbol:        framework.ComponentID-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040129 15:00:03 MST
-// Generated:     20040129 15:00:05 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for framework.ComponentID
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 21
-// source-url    = file:/home/sci/damevski/SCIRun/ccadebug-RH8/../src/SCIRun/Babel/framework.sidl
+// babel-version = 0.10.2
 // 
 
 #ifndef included_framework_ComponentID_Impl_hh
 #define included_framework_ComponentID_Impl_hh
 
-#ifndef included_SIDL_cxx_hh
-#include "SIDL_cxx.hh"
+#ifndef included_sidl_cxx_hh
+#include "sidl_cxx.hh"
 #endif
 #ifndef included_framework_ComponentID_IOR_h
 #include "framework_ComponentID_IOR.h"
@@ -54,14 +51,17 @@
 // 
 // Includes for all method dependencies.
 // 
-#ifndef included_SIDL_BaseInterface_hh
-#include "SIDL_BaseInterface.hh"
-#endif
 #ifndef included_framework_ComponentID_hh
 #include "framework_ComponentID.hh"
 #endif
 #ifndef included_gov_cca_CCAException_hh
 #include "gov_cca_CCAException.hh"
+#endif
+#ifndef included_sidl_BaseInterface_hh
+#include "sidl_BaseInterface.hh"
+#endif
+#ifndef included_sidl_ClassInfo_hh
+#include "sidl_ClassInfo.hh"
 #endif
 
 
@@ -91,10 +91,11 @@ namespace framework {
 
   private:
     // private default constructor (required)
-    ComponentID_impl() {} 
+    ComponentID_impl() 
+    {} 
 
   public:
-    // SIDL constructor (required)
+    // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
     ComponentID_impl( struct framework_ComponentID__object * s ) : self(s,
@@ -109,15 +110,18 @@ namespace framework {
     // user defined destruction
     void _dtor();
 
+    // static class initializer
+    static void _load();
+
   public:
 
 
     /**
      * Returns the instance name provided in 
-     * &lt;code&gt;BuilderService.createInstance()&lt;/code&gt;
+     * <code>BuilderService.createInstance()</code>
      * or in 
-     * &lt;code&gt;AbstractFramework.getServices()&lt;/code&gt;.
-     * @throws CCAException if &lt;code&gt;ComponentID&lt;/code&gt; is invalid
+     * <code>AbstractFramework.getServices()</code>.
+     * @throws CCAException if <code>ComponentID</code> is invalid
      */
     ::std::string
     getInstanceName() throw ( 
@@ -126,7 +130,7 @@ namespace framework {
 
     /**
      * Returns a framework specific serialization of the ComponentID.
-     * @throws CCAException if &lt;code&gt;ComponentID&lt;/code&gt; is
+     * @throws CCAException if <code>ComponentID</code> is
      * invalid.
      */
     ::std::string
