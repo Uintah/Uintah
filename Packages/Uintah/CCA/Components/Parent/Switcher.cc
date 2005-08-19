@@ -463,3 +463,7 @@ void Switcher::scheduleInitializeAddedMaterial(const LevelP& level,
 void Switcher::restartInitialize() {
   d_sim->restartInitialize();
 }
+
+bool Switcher::restartableTimesteps() {
+  return d_sim->restartableTimesteps();
+}
