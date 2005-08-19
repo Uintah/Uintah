@@ -59,3 +59,21 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
     }
 }
 
+void SimulationTime::problemSetup(const ProblemSpecP& params)
+{
+  ProblemSpecP time_ps = params->findBlock("Time");
+  time_ps->require("delt_min", delt_min);
+  time_ps->require("delt_max", delt_max);
+  time_ps->require("timestep_multiplier", delt_factor);
+
+  if(!time_ps->get("delt_init", max_initial_delt)
+     && !time_ps->get("max_initial_delt", max_initial_delt))
+    max_initial_delt = MAXDOUBLE;
+  if(!time_ps->get("initial_delt_range", initial_delt_range))
+    initial_delt_range = 0;
+  if(!time_ps->get("max_delt_increase", max_delt_increase))
+    max_delt_increase=1.e99;
+  
+  time_ps->get( "override_restart_delt", override_restart_delt);
+
+}

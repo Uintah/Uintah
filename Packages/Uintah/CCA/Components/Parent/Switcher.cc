@@ -423,6 +423,8 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
     // re-initialize the DataArchiver to output according the the new component's specs
     dynamic_cast<Output*>(getPort("output"))->problemSetup(ups, d_sharedState.get_rep());
 
+    d_sharedState->d_simTime->problemSetup(ups);
+
     retval = true;
   } else
     d_sharedState->d_switchState = false;

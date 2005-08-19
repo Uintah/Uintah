@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/SimulationTime.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
@@ -164,6 +165,8 @@ public:
   vector<vector<const VarLabel* > > d_particleState_preReloc;
 
   bool d_switchState;
+
+  SimulationTime* d_simTime;
 
 private:
 
