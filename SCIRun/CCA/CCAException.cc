@@ -39,31 +39,40 @@
  */
 
 #include <SCIRun/CCA/CCAException.h>
+#include <Core/Util/NotFinished.h>
+//#include <iostream>
 
 namespace SCIRun {
 
-CCAException::CCAException(const std::string& description)
-  : description(description)
+CCAException::CCAException(const std::string &msg, sci::cca::CCAExceptionType type)
+  : message(msg), type(type)
 {
-}
-
-CCAException::CCAException(const CCAException& copy)
-  : description(copy.description)
-{
+    // Omitting this will cause the framework to
+    // segfault when an exception is thrown.
+    addReference();
 }
 
 CCAException::~CCAException()
 {
+    deleteReference();
 }
 
-const char* CCAException::message() const
+// TODO: implement stack trace
+std::string CCAException::getTrace()
 {
-  return description.c_str();
+    NOT_FINISHED("string .SSIDL.BaseException.getTrace()");
+    return std::string(0);
 }
 
-const char* CCAException::type() const
+// TODO: implement add functions
+void CCAException::add(const std::string &traceline)
 {
-  return "CCAException";
+    NOT_FINISHED("void .SSIDL.BaseException.add(in string traceline)");
+}
+
+void CCAException::add(const std::string &filename, int lineno, const std::string &methodname)
+{
+    NOT_FINISHED("void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)");
 }
 
 } // end namespace SCIRun

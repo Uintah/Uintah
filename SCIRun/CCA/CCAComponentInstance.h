@@ -140,6 +140,7 @@ sci::cca::Port::pointer getPort(const std::string& name);
   // Methods from ComponentInstance
   virtual PortInstance* getPortInstance(const std::string& name);
   virtual PortInstanceIterator* getPorts();
+  virtual void registerForRelease(const sci::cca::ComponentRelease::pointer &compRel);
 
 private:
   class Iterator : public PortInstanceIterator
