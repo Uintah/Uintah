@@ -64,11 +64,11 @@
     <maxTime>            1.0         </maxTime>
     <initTime>           0.0         </initTime>
     <delt_min>           1.0e-19     </delt_min>
-    <delt_max>           1.0e-4      </delt_max>
+    <delt_max>           0.5         </delt_max>
     <delt_init>          1.0e-7      </delt_init>
-    <max_delt_increase>  0.15        </max_delt_increase>
-    <timestep_multiplier>0.4         </timestep_multiplier>
-    <override_restart_delt> 2.5e-10   </override_restart_delt>
+    <max_delt_increase>  0.5         </max_delt_increase>
+    <timestep_multiplier>1.0         </timestep_multiplier>
+    <override_restart_delt> 2.5e-10  </override_restart_delt>
     <!--<max_iterations>      10         </max_iterations>-->
   </Time>
 
@@ -282,10 +282,10 @@
 <!--      UNCOMMENT THIS FOR 3D AND COMMENT OUT THE ABOVE -->
            <Box label = "3D">
               <lower>        [0.0,-0.1,0.0]     </lower>
-              <upper>        [0.1, 0.3,0.1]     </upper>
+              <upper>        [0.1, 0.2,0.1]     </upper>
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [1,1,1]            </patches>
-              <resolution>   [20,80,20]         </resolution>
+              <resolution>   [40,120,40]         </resolution>
            </Box>
        </Level>
   </Grid>
@@ -295,8 +295,9 @@
   <!--____________________________________________________________________-->
   <DataArchiver>
     <filebase>JP8_IS_lowres.uda</filebase>
-    <outputInterval> 0.0005  </outputInterval>
+    <outputTimestepInterval> 10 </outputTimestepInterval>
     <!--
+    <outputInterval> 0.0005  </outputInterval>
     use the following for the explosion phase
     <outputInterval> 0.0000025 </outputInterval>
     -->
@@ -315,6 +316,7 @@
     <save label="p.particleID"/>
     <save label="p.mass"/>
     <save label="p.temperature"/>
+    <save label="heatFlux_CC"/>
     <!-- 
     <save label="p.volume"/>
     <save label="p.stress"/> 
@@ -346,7 +348,7 @@
   <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
   <!--____________________________________________________________________-->
   <CFD>
-       <cfl>0.3</cfl>  <!-- IMPLICIT CFL = 0.5, EXPLICIT CFL = 0.2ISH -->
+       <cfl>0.15</cfl>  <!-- IMPLICIT CFL = 0.5, EXPLICIT CFL = 0.2ISH -->
        <CanAddICEMaterial>false</CanAddICEMaterial>
        <ICE>
         <max_iteration_equilibration> 1000 </max_iteration_equilibration>
@@ -356,7 +358,7 @@
 
 <!-- (A)  DELETE THIS TO RUN EXPLICIT  -->
         <TimeStepControl>
-          <Scheme_for_delT_calc> conservative </Scheme_for_delT_calc>  
+          <Scheme_for_delT_calc> aggressive </Scheme_for_delT_calc>  
           <knob_for_speedSound>  0.000        </knob_for_speedSound>   
         </TimeStepControl>
 
