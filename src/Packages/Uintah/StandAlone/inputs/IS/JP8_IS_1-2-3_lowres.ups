@@ -348,7 +348,7 @@
   <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
   <!--____________________________________________________________________-->
   <CFD>
-       <cfl>0.15</cfl>  <!-- IMPLICIT CFL = 0.5, EXPLICIT CFL = 0.2ISH -->
+       <cfl>0.15</cfl>  <!-- IMPLICIT CFL = 0.3, EXPLICIT CFL = 0.2ISH -->
        <CanAddICEMaterial>false</CanAddICEMaterial>
        <ICE>
         <max_iteration_equilibration> 1000 </max_iteration_equilibration>
