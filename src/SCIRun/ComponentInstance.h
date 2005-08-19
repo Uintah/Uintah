@@ -86,9 +86,6 @@ public:
     inline std::string
     getInstanceName() const { return instanceName; }
 
-    inline void
-    setClassName(const std::string &name) { className = name; }
-
     inline std::string
     getClassName() const { return className; }
         

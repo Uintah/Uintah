@@ -170,26 +170,28 @@ SCIRunFramework::createComponentInstance(const std::string& name,
             }
         }
         if (count > 1) {
-            throw CCAException("More than one component model wants to build " + type);
+            throw sci::cca::CCAException::pointer(
+                new CCAException("More than one component model wants to build " + type));
         }
     }
 
     if (!mod) {
-        throw CCAException("Unknown class name for " + name);
+        throw sci::cca::CCAException::pointer(
+            new CCAException("Unknown class name for " + name));
     }
-    // "cca.className" is a standard CCA component property key
     properties->putString("cca.className", className);
     ComponentInstance* ci;
 #if HAVE_BABEL 
     if (mod->getName() == "babel") {
+        // create gov.cca.TypeMap from Babel Component Model?
         ci = ((BabelComponentModel*) mod)->createInstance(name, type);
         if (ci) {
-             ci->setComponentProperties(properties);
+            ci->setComponentProperties(properties);
         } else {
             std::cerr << "Error: failed to create BabelComponentInstance"
                       << std::endl;
             return ComponentID::pointer(0);
-	}
+        }
     } else {
         ci = mod->createInstance(name, type, properties);
         if (! ci) {
@@ -204,7 +206,7 @@ SCIRunFramework::createComponentInstance(const std::string& name,
         std::cerr << "Error: failed to create ComponentInstance" << std::endl;
         return ComponentID::pointer(0);
     }
-#endif 
+#endif
 
     sci::cca::ComponentID::pointer cid = registerComponent(ci, name);
 
@@ -237,7 +239,8 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
   //#2 unregister the component instance
   ComponentInstance *ci = unregisterComponent(cid->getInstanceName());
   if (ci == 0) {
-      throw CCAException("Invalid component instance");
+    throw sci::cca::CCAException::pointer(
+        new CCAException("Invalid component instance"));
   }
 
   //#3 find the associated component model
@@ -274,11 +277,13 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
       }
     }
     if (count > 1) {
-        throw CCAException("More than one component model wants to build " + type);
+      throw sci::cca::CCAException::pointer(
+        new CCAException("More than one component model wants to build " + type));
     }
   }
   if (!mod) {
-    throw CCAException("Unknown class name for " + type);
+    throw sci::cca::CCAException::pointer(
+        new CCAException("Unknown class name for " + type));
   }
   //#4 destroy the component instance
   mod->destroyInstance(ci);
