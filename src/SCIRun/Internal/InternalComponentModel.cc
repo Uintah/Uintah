@@ -46,11 +46,11 @@
 #include <SCIRun/Internal/ComponentRegistry.h>
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/Internal/FrameworkProxyService.h>
+#include <SCIRun/SCIRunFramework.h>
 
 #ifdef BUILD_DATAFLOW
  #include <SCIRun/Dataflow/DataflowScheduler.h>
 #endif
-#include <SCIRun/SCIRunFramework.h>
 #include <iostream>
 
 #ifndef DEBUG

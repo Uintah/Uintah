@@ -28,7 +28,6 @@
 
 #include <SCIRun/Internal/ConnectionEventService.h>
 #include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/CCA/CCAException.h>
 
 
 namespace SCIRun {
