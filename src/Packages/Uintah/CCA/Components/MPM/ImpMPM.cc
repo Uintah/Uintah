@@ -2671,11 +2671,8 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
       }
       delT_new = min(delT_new, old_dt);
 
-
       new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                   lb->delTLabel);
-
-      
     }
    }
   }
@@ -2696,10 +2693,40 @@ void ImpMPM::switchTest(const ProcessorGroup* group,
   int time_step = d_sharedState->getCurrentTopLevelTimeStep();
   double sw = 0;
 #if 1
-  if (time_step == 20)
+  if (time_step == 300)
     sw = 1;
   else
     sw = 0;
+#endif
+
+#if 0
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    if (cout_doing.active()) {
+      cout_doing <<"Doing switchTest on patch "
+                 << patch->getID() <<"\t IMPM"<< "\n" << "\n";
+    }
+                                                                                
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwindex = mpm_matl->getDWIndex();
+                                                                                
+      ParticleSubset* pset = new_dw->getParticleSubset(dwindex, patch);
+                                                                                
+      constParticleVariable<double> ptemperature;
+      new_dw->get(ptemperature, lb->pTemperatureLabel, pset);
+ 
+      double thresholdTemp=301.;
+                                                                                
+      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
+        particleIndex idx = *iter;
+        if(ptemperature[idx]>thresholdTemp){
+          sw=1;
+        }
+     }
+    }
+  }
 #endif
 
   max_vartype switch_condition(sw);
