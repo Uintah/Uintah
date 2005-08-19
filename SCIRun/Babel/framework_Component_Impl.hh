@@ -25,28 +25,25 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
+// 
 
 // 
 // File:          framework_Component_Impl.hh
 // Symbol:        framework.Component-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040129 15:00:03 MST
-// Generated:     20040129 15:00:06 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for framework.Component
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 11
-// source-url    = file:/home/sci/damevski/SCIRun/ccadebug-RH8/../src/SCIRun/Babel/framework.sidl
+// babel-version = 0.10.2
 // 
 
 #ifndef included_framework_Component_Impl_hh
 #define included_framework_Component_Impl_hh
 
-#ifndef included_SIDL_cxx_hh
-#include "SIDL_cxx.hh"
+#ifndef included_sidl_cxx_hh
+#include "sidl_cxx.hh"
 #endif
 #ifndef included_framework_Component_IOR_h
 #include "framework_Component_IOR.h"
@@ -54,14 +51,17 @@
 // 
 // Includes for all method dependencies.
 // 
-#ifndef included_SIDL_BaseInterface_hh
-#include "SIDL_BaseInterface.hh"
-#endif
 #ifndef included_framework_Component_hh
 #include "framework_Component.hh"
 #endif
 #ifndef included_gov_cca_Services_hh
 #include "gov_cca_Services.hh"
+#endif
+#ifndef included_sidl_BaseInterface_hh
+#include "sidl_BaseInterface.hh"
+#endif
+#ifndef included_sidl_ClassInfo_hh
+#include "sidl_ClassInfo.hh"
 #endif
 
 
@@ -91,10 +91,11 @@ namespace framework {
 
   private:
     // private default constructor (required)
-    Component_impl() {} 
+    Component_impl() 
+    {} 
 
   public:
-    // SIDL constructor (required)
+    // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
     Component_impl( struct framework_Component__object * s ) : self(s,
@@ -109,18 +110,32 @@ namespace framework {
     // user defined destruction
     void _dtor();
 
+    // static class initializer
+    static void _load();
+
   public:
 
 
     /**
-     * Obtain Services handle, through which the 
-     * component communicates with the framework. 
-     * This is the one method that every CCA Component
-     * must implement. 
+     * Starts up a component presence in the calling framework.
+     * @param Svc the component instance's handle on the framework world.
+     * Contracts concerning Svc and setServices:
+     * 
+     * The component interaction with the CCA framework
+     * and Ports begins on the call to setServices by the framework.
+     * 
+     * This function is called exactly once for each instance created
+     * by the framework.
+     * 
+     * The argument Svc will never be nil/null.
+     * 
+     * Those uses ports which are automatically connected by the framework
+     * (so-called service-ports) may be obtained via getPort during
+     * setServices.
      */
     void
     setServices (
-      /*in*/ ::gov::cca::Services services
+      /* in */ ::gov::cca::Services services
     )
     throw () 
     ;

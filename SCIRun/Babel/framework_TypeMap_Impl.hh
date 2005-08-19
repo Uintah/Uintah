@@ -1,11 +1,11 @@
 //
 //  For more information, please see: http://software.sci.utah.edu
-// 
+//
 //  The MIT License
-// 
+//
 //  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 //  University of Utah.
-// 
+//
 //  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -13,10 +13,10 @@
 //  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 //  and/or sell copies of the Software, and to permit persons to whom the
 //  Software is furnished to do so, subject to the following conditions:
-// 
+//
 //  The above copyright notice and this permission notice shall be included
 //  in all copies or substantial portions of the Software.
-// 
+//
 //  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 //  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 //  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -25,28 +25,25 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-
+//
+                                                                                           
 // 
 // File:          framework_TypeMap_Impl.hh
 // Symbol:        framework.TypeMap-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040129 15:00:03 MST
-// Generated:     20040129 15:00:05 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for framework.TypeMap
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 17
-// source-url    = file:/home/sci/damevski/SCIRun/ccadebug-RH8/../src/SCIRun/Babel/framework.sidl
+// babel-version = 0.10.2
 // 
 
 #ifndef included_framework_TypeMap_Impl_hh
 #define included_framework_TypeMap_Impl_hh
 
-#ifndef included_SIDL_cxx_hh
-#include "SIDL_cxx.hh"
+#ifndef included_sidl_cxx_hh
+#include "sidl_cxx.hh"
 #endif
 #ifndef included_framework_TypeMap_IOR_h
 #include "framework_TypeMap_IOR.h"
@@ -54,9 +51,6 @@
 // 
 // Includes for all method dependencies.
 // 
-#ifndef included_SIDL_BaseInterface_hh
-#include "SIDL_BaseInterface.hh"
-#endif
 #ifndef included_framework_TypeMap_hh
 #include "framework_TypeMap.hh"
 #endif
@@ -68,6 +62,12 @@
 #endif
 #ifndef included_gov_cca_TypeMismatchException_hh
 #include "gov_cca_TypeMismatchException.hh"
+#endif
+#ifndef included_sidl_BaseInterface_hh
+#include "sidl_BaseInterface.hh"
+#endif
+#ifndef included_sidl_ClassInfo_hh
+#include "sidl_ClassInfo.hh"
 #endif
 
 
@@ -97,10 +97,11 @@ namespace framework {
 
   private:
     // private default constructor (required)
-    TypeMap_impl() {} 
+    TypeMap_impl() 
+    {} 
 
   public:
-    // SIDL constructor (required)
+    // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
     TypeMap_impl( struct framework_TypeMap__object * s ) : self(s,
@@ -114,6 +115,9 @@ namespace framework {
 
     // user defined destruction
     void _dtor();
+
+    // static class initializer
+    static void _load();
 
   public:
 
@@ -136,8 +140,8 @@ namespace framework {
      */
     int32_t
     getInt (
-      /*in*/ const ::std::string& key,
-      /*in*/ int32_t dflt
+      /* in */ const ::std::string& key,
+      /* in */ int32_t dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -148,8 +152,8 @@ namespace framework {
      */
     int64_t
     getLong (
-      /*in*/ const ::std::string& key,
-      /*in*/ int64_t dflt
+      /* in */ const ::std::string& key,
+      /* in */ int64_t dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -160,8 +164,8 @@ namespace framework {
      */
     float
     getFloat (
-      /*in*/ const ::std::string& key,
-      /*in*/ float dflt
+      /* in */ const ::std::string& key,
+      /* in */ float dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -172,8 +176,8 @@ namespace framework {
      */
     double
     getDouble (
-      /*in*/ const ::std::string& key,
-      /*in*/ double dflt
+      /* in */ const ::std::string& key,
+      /* in */ double dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -184,8 +188,8 @@ namespace framework {
      */
     ::std::complex<float>
     getFcomplex (
-      /*in*/ const ::std::string& key,
-      /*in*/ const ::std::complex<float>& dflt
+      /* in */ const ::std::string& key,
+      /* in */ const ::std::complex<float>& dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -196,8 +200,8 @@ namespace framework {
      */
     ::std::complex<double>
     getDcomplex (
-      /*in*/ const ::std::string& key,
-      /*in*/ const ::std::complex<double>& dflt
+      /* in */ const ::std::string& key,
+      /* in */ const ::std::complex<double>& dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -208,8 +212,8 @@ namespace framework {
      */
     ::std::string
     getString (
-      /*in*/ const ::std::string& key,
-      /*in*/ const ::std::string& dflt
+      /* in */ const ::std::string& key,
+      /* in */ const ::std::string& dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -220,8 +224,8 @@ namespace framework {
      */
     bool
     getBool (
-      /*in*/ const ::std::string& key,
-      /*in*/ bool dflt
+      /* in */ const ::std::string& key,
+      /* in */ bool dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -230,10 +234,10 @@ namespace framework {
     /**
      * user defined non-static method.
      */
-    ::SIDL::array<int>
+    ::sidl::array<int32_t>
     getIntArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array<int> dflt
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array<int32_t> dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -242,10 +246,10 @@ namespace framework {
     /**
      * user defined non-static method.
      */
-    ::SIDL::array<long>
+    ::sidl::array<int64_t>
     getLongArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array<long> dflt
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array<int64_t> dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -254,10 +258,10 @@ namespace framework {
     /**
      * user defined non-static method.
      */
-    ::SIDL::array<float>
+    ::sidl::array<float>
     getFloatArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array<float> dflt
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array<float> dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -266,10 +270,10 @@ namespace framework {
     /**
      * user defined non-static method.
      */
-    ::SIDL::array<double>
+    ::sidl::array<double>
     getDoubleArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array<double> dflt
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array<double> dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -278,10 +282,10 @@ namespace framework {
     /**
      * user defined non-static method.
      */
-    ::SIDL::array< ::SIDL::fcomplex>
+    ::sidl::array< ::sidl::fcomplex>
     getFcomplexArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array< ::SIDL::fcomplex> dflt
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array< ::sidl::fcomplex> dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -290,10 +294,10 @@ namespace framework {
     /**
      * user defined non-static method.
      */
-    ::SIDL::array< ::SIDL::dcomplex>
+    ::sidl::array< ::sidl::dcomplex>
     getDcomplexArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array< ::SIDL::dcomplex> dflt
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array< ::sidl::dcomplex> dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -302,10 +306,10 @@ namespace framework {
     /**
      * user defined non-static method.
      */
-    ::SIDL::array< ::std::string>
+    ::sidl::array< ::std::string>
     getStringArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array< ::std::string> dflt
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array< ::std::string> dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -314,10 +318,10 @@ namespace framework {
     /**
      * user defined non-static method.
      */
-    ::SIDL::array<bool>
+    ::sidl::array<bool>
     getBoolArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array<bool> dflt
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array<bool> dflt
     )
     throw ( 
       ::gov::cca::TypeMismatchException
@@ -330,8 +334,8 @@ namespace framework {
      */
     void
     putInt (
-      /*in*/ const ::std::string& key,
-      /*in*/ int32_t value
+      /* in */ const ::std::string& key,
+      /* in */ int32_t value
     )
     throw () 
     ;
@@ -341,8 +345,8 @@ namespace framework {
      */
     void
     putLong (
-      /*in*/ const ::std::string& key,
-      /*in*/ int64_t value
+      /* in */ const ::std::string& key,
+      /* in */ int64_t value
     )
     throw () 
     ;
@@ -352,8 +356,8 @@ namespace framework {
      */
     void
     putFloat (
-      /*in*/ const ::std::string& key,
-      /*in*/ float value
+      /* in */ const ::std::string& key,
+      /* in */ float value
     )
     throw () 
     ;
@@ -363,8 +367,8 @@ namespace framework {
      */
     void
     putDouble (
-      /*in*/ const ::std::string& key,
-      /*in*/ double value
+      /* in */ const ::std::string& key,
+      /* in */ double value
     )
     throw () 
     ;
@@ -374,8 +378,8 @@ namespace framework {
      */
     void
     putFcomplex (
-      /*in*/ const ::std::string& key,
-      /*in*/ const ::std::complex<float>& value
+      /* in */ const ::std::string& key,
+      /* in */ const ::std::complex<float>& value
     )
     throw () 
     ;
@@ -385,8 +389,8 @@ namespace framework {
      */
     void
     putDcomplex (
-      /*in*/ const ::std::string& key,
-      /*in*/ const ::std::complex<double>& value
+      /* in */ const ::std::string& key,
+      /* in */ const ::std::complex<double>& value
     )
     throw () 
     ;
@@ -396,8 +400,8 @@ namespace framework {
      */
     void
     putString (
-      /*in*/ const ::std::string& key,
-      /*in*/ const ::std::string& value
+      /* in */ const ::std::string& key,
+      /* in */ const ::std::string& value
     )
     throw () 
     ;
@@ -407,8 +411,8 @@ namespace framework {
      */
     void
     putBool (
-      /*in*/ const ::std::string& key,
-      /*in*/ bool value
+      /* in */ const ::std::string& key,
+      /* in */ bool value
     )
     throw () 
     ;
@@ -418,8 +422,8 @@ namespace framework {
      */
     void
     putIntArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array<int> value
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array<int32_t> value
     )
     throw () 
     ;
@@ -429,8 +433,8 @@ namespace framework {
      */
     void
     putLongArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array<long> value
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array<int64_t> value
     )
     throw () 
     ;
@@ -440,8 +444,8 @@ namespace framework {
      */
     void
     putFloatArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array<float> value
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array<float> value
     )
     throw () 
     ;
@@ -451,8 +455,8 @@ namespace framework {
      */
     void
     putDoubleArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array<double> value
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array<double> value
     )
     throw () 
     ;
@@ -462,8 +466,8 @@ namespace framework {
      */
     void
     putFcomplexArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array< ::SIDL::fcomplex> value
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array< ::sidl::fcomplex> value
     )
     throw () 
     ;
@@ -473,8 +477,8 @@ namespace framework {
      */
     void
     putDcomplexArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array< ::SIDL::dcomplex> value
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array< ::sidl::dcomplex> value
     )
     throw () 
     ;
@@ -484,8 +488,8 @@ namespace framework {
      */
     void
     putStringArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array< ::std::string> value
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array< ::std::string> value
     )
     throw () 
     ;
@@ -495,8 +499,8 @@ namespace framework {
      */
     void
     putBoolArray (
-      /*in*/ const ::std::string& key,
-      /*in*/ ::SIDL::array<bool> value
+      /* in */ const ::std::string& key,
+      /* in */ ::sidl::array<bool> value
     )
     throw () 
     ;
@@ -507,7 +511,7 @@ namespace framework {
      */
     void
     remove (
-      /*in*/ const ::std::string& key
+      /* in */ const ::std::string& key
     )
     throw () 
     ;
@@ -519,9 +523,9 @@ namespace framework {
      *  will be returned in an arbitrary order. If type specified is
      *  None (no specification) all keys of all types are returned.
      */
-    ::SIDL::array< ::std::string>
+    ::sidl::array< ::std::string>
     getAllKeys (
-      /*in*/ ::gov::cca::Type t
+      /* in */ ::gov::cca::Type t
     )
     throw () 
     ;
@@ -532,7 +536,7 @@ namespace framework {
      */
     bool
     hasKey (
-      /*in*/ const ::std::string& key
+      /* in */ const ::std::string& key
     )
     throw () 
     ;
@@ -543,7 +547,7 @@ namespace framework {
      */
     ::gov::cca::Type
     typeOf (
-      /*in*/ const ::std::string& key
+      /* in */ const ::std::string& key
     )
     throw () 
     ;
