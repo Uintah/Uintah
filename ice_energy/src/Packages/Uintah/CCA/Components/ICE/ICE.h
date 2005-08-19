@@ -422,13 +422,11 @@ namespace Uintah {
                                           DataWarehouse*); 
 
       template< class V, class T>
-      void update_q_CC(const std::string& desc,
-                      CCVariable<T>& q_CC,
-                      V& q_Lagrangian,
-                      const CCVariable<T>& q_advected,
-                      const CCVariable<double>& mass_new,
-                      const CCVariable<double>& cv_new,
-                      const Patch* patch); 
+      void update_q_CC(CCVariable<T>& q_CC,
+                       V& q_Lagrangian,
+                       const CCVariable<T>& q_advected,
+                       const CCVariable<double>& mass_new,
+                       const Patch* patch); 
  
       void maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
                                     const PatchSubset* patches,
