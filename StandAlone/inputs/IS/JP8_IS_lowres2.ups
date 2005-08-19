@@ -330,7 +330,7 @@
   <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
   <!--____________________________________________________________________-->
   <CFD>
-       <cfl>0.3</cfl>  <!-- IMPLICIT CFL = 0.5, EXPLICIT CFL = 0.2ISH -->
+       <cfl>0.3</cfl>  <!-- IMPLICIT CFL = 0.3, EXPLICIT CFL = 0.2ISH -->
        <CanAddICEMaterial>false</CanAddICEMaterial>
        <ICE>
         <max_iteration_equilibration> 1000 </max_iteration_equilibration>
@@ -340,7 +340,7 @@
 
 <!-- (A)  DELETE THIS TO RUN EXPLICIT  -->
         <TimeStepControl>
-          <Scheme_for_delT_calc> conservative </Scheme_for_delT_calc>  
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>  
           <knob_for_speedSound>  0.000        </knob_for_speedSound>   
         </TimeStepControl>
 

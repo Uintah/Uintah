@@ -301,14 +301,14 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-      <cfl>0.4</cfl>
+      <cfl>0.3</cfl>
       <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
         <solution technique = "EqForm"/>
                
         <TimeStepControl>
-          <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.00           </knob_for_speedSound>
         </TimeStepControl>
         
