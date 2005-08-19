@@ -34,10 +34,16 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/CCA/SSIDL
 
 SRCS     += \
-	$(SRCDIR)/sidl_sidl.cc \
-	$(SRCDIR)/Object.cc \
-	$(SRCDIR)/BaseInterface.cc \
-	$(SRCDIR)/BaseException.cc 
+            $(SRCDIR)/sidl_sidl.cc \
+            $(SRCDIR)/BaseInterface.cc \
+            $(SRCDIR)/BaseException.cc \
+            $(SRCDIR)/BaseClass.cc \
+            $(SRCDIR)/ClassInfo.cc \
+            $(SRCDIR)/ClassInfoI.cc \
+            $(SRCDIR)/Deserializer.cc \
+            $(SRCDIR)/Serializer.cc \
+            $(SRCDIR)/Serializeable.cc
+#$(SRCDIR)/DLL.cc
 
 # We cannot use the implicit rule for SSIDL, since it needs that
 # special -cia flag

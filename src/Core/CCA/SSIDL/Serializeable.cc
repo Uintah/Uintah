@@ -26,59 +26,20 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-
-/*
- *  BaseInterface: Implementation of SSIDL.BaseInterface for PIDL
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   September 1999
- *
- *  Copyright (C) 1999 SCI Group
- */
-
 #include <Core/CCA/SSIDL/sidl_sidl.h>
 #include <Core/Util/NotFinished.h>
 
-using SSIDL::BaseInterface;
-//using SSIDL::BaseClass;
-using SSIDL::ClassInfo;
+using SSIDL::io::Serializeable;
+using SSIDL::io::Serializer;
+using SSIDL::io::Deserializer;
 
 
-void BaseInterface::addRef()
+void Serializeable::packObj(const CCALib::SmartPointer<Serializer >& ser)
 {
-    SCIRun::Object::addReference();
+    NOT_FINISHED("void .SSIDL.io.Serializeable.packObj(in .SSIDL.io.Serializer ser)");
 }
 
-void BaseInterface::deleteRef()
+void Serializeable::unpackObj(const Deserializer::pointer& des)
 {
-    SCIRun::Object::deleteReference();
-}
-
-bool BaseInterface::isSame(const BaseInterface::pointer& /*object*/)
-{
-    NOT_FINISHED("bool .SSIDL.BaseInterface.isSame(in .SSIDL.BaseInterface object)");
-    return false;
-}
-
-BaseInterface::pointer BaseInterface::queryInt(const std::string& /*name*/)
-{
-    NOT_FINISHED(".SSIDL.BaseInterface .SSIDL.BaseInterface.queryInt(in .SSIDL.string name)");
-    return BaseInterface::pointer(0);
-}
-
-bool BaseInterface::isType(const std::string& /*name*/)
-{
-    NOT_FINISHED("bool .SSIDL.BaseInterface.isType(in .SSIDL.string name)");
-    return false;
-}
-
-// SSIDL::ClassInfo BaseInterface::getClassInfo()
-ClassInfo::pointer BaseInterface::getClassInfo()
-{
-    NOT_FINISHED("ClassInfo .SSIDL.getClassInfo()");
-    return ClassInfo::pointer(0);
+    NOT_FINISHED("void .SSIDL.io.Serializeable.unpackObj(in .SSIDL.io.Deserializer des)");
 }
