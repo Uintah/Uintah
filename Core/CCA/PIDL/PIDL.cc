@@ -143,7 +143,7 @@ void
 PIDL::finalize()
 {
   if(sampleProxy) {
-#ifdef HAVE_MPI
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
     if(PIDL::size > 1) { ::std::cerr << "YOYO\n"; (*optr)->getException(); }
     delete optr;
 #endif

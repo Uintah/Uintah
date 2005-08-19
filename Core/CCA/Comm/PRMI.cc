@@ -205,7 +205,7 @@ PRMI::internal_unlock(){
 
 void 
 PRMI::lock(){
-#ifdef HAVE_MPI
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
 #ifndef MPI_IS_THREADSAFE
   internal_lock();
 #endif
@@ -214,7 +214,7 @@ PRMI::lock(){
 
 void 
 PRMI::unlock(){
-#ifdef HAVE_MPI
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
 #ifndef MPI_IS_THREADSAFE
   internal_unlock();
 #endif
