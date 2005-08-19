@@ -59,7 +59,7 @@ ComponentInstance::~ComponentInstance()
 void
 ComponentInstance::setComponentProperties(const sci::cca::TypeMap::pointer &tm)
 {
-    // TODO: check properties - do not allow cca.className to be removed
+    // TODO: check properties - do not allow cca.className to be changed
     comProperties = tm;
 }
 
