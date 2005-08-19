@@ -1748,6 +1748,9 @@ void DataArchiver::output(const ProcessorGroup*,
 
         // add info for this variable to the current xml file
 	int matlIndex = matls->get(m);
+        // Variables may not exist when we get here due to something whacky with weird AMR stuff...
+        if(patch && !new_dw->exists(var, matlIndex, patch))
+          break;
 	ProblemSpecP pdElem = doc->appendChild("Variable");
 	doc->appendText("\n");
 	
@@ -2133,6 +2136,7 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
    d_checkpointLabels.clear();
 
    map< string, ConsecutiveRangeSet > label_matl_map;
+   map< string, ConsecutiveRangeSet > label_level_map;
 
    for (dep_vector::const_iterator iter = initreqs.begin();
 	iter != initreqs.end(); iter++) {
@@ -2147,7 +2151,19 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
 		       matSubset->getVector().end());
       ConsecutiveRangeSet& unionedVarMatls =
 	label_matl_map[dep->var->getName()];
-      unionedVarMatls = unionedVarMatls.unioned(matls);      
+      unionedVarMatls = unionedVarMatls.unioned(matls);
+
+      ConsecutiveRangeSet patches;
+      const PatchSubset* patchSubset = (dep->patches != 0)?
+        dep->patches : dep->task->getPatchSet()->getUnion();
+
+      for(int i=0;i<patchSubset->size();i++){
+        const Patch* patch = patchSubset->get(i);
+        patches.addInOrder(patch->getLevel()->getIndex());
+      }
+      ConsecutiveRangeSet& unionedVarLevels =
+        label_level_map[dep->var->getName()];
+      unionedVarLevels = unionedVarLevels.unioned(patches);
    }
          
    d_checkpointLabels.reserve(label_matl_map.size());
@@ -2162,7 +2178,7 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
 
       saveItem.label_ = var;
       saveItem.setMaterials((*mapIter).second, prevMatls_, prevMatlSet_);
-      saveItem.levels = ConsecutiveRangeSet::all;
+      saveItem.levels = label_level_map[mapIter->first];
 
       if (string(var->getName()) == "delT") {
 	hasDelT = true;
