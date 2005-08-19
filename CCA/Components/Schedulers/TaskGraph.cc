@@ -917,6 +917,10 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	const Patch* patch = patches->get(i);
 	Patch::selectType neighbors;
 	IntVector low, high;
+
+	Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(),
+								 false);
+
 	patch->computeVariableExtents(req->var->typeDescription()->getType(),
 				      req->var->getBoundaryLayer(),
 				      req->gtype, req->numGhostCells,
@@ -928,9 +932,9 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
           IntVector origlow = low, orighigh = high;
           low = Max(low, otherLevelLow);
           if (req->patches_dom == Task::FineLevel) {
-            // by itself this won't grab the nodes or extra cells of a finer patch
-            // whose boundary is shared with the current patch
-            low = low - IntVector(1,1,1);
+            // don't coarsen the extra cells
+            low = patch->getInteriorLowIndex(basis);
+            high = patch->getInteriorHighIndex(basis);
           }
           high = Min(high, otherLevelHigh);
 
@@ -950,8 +954,6 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	  dbg << d_myworld->myrank() << "      Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
 	}
         
-	Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(),
-								 false);
 	for(int i=0;i<neighbors.size();i++){
 	  const Patch* neighbor=neighbors[i];
           Patch::selectType fromNeighbors;
@@ -977,8 +979,47 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
           for (int j = 0; j < fromNeighbors.size(); j++) {
             const Patch* fromNeighbor = fromNeighbors[j];
 
-            IntVector from_l = Max(fromNeighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l);
-            IntVector from_h = Min(fromNeighbor->getHighIndex(basis, req->var->getBoundaryLayer()), h);
+            IntVector from_l;
+            IntVector from_h;
+            if (req->patches_dom == Task::OtherGridDomain) {
+              // DON'T send extra cells
+              from_l = Max(fromNeighbor->getInteriorLowIndex(basis), l);
+              from_h = Min(fromNeighbor->getInteriorHighIndex(basis), h);
+            }
+            else {
+              from_l = Max(fromNeighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l);
+              from_h = Min(fromNeighbor->getHighIndex(basis, req->var->getBoundaryLayer()), h);
+            }
+
+            if (patch->getLevel()->getIndex() > 0 && patch != fromNeighbor && basis == Patch::CellBased &&
+                req->patches_dom == Task::NormalDomain) {
+                
+              // on certain AMR grid configurations, with extra cells, patches can overlap
+              // such that the extra cell of one patch overlaps a normal cell of another
+              // in such conditions, we shall exclude that extra cell from MPI communication
+              IntVector in_low = patch->getInteriorLowIndex(basis);
+              IntVector in_high = patch->getInteriorHighIndex(basis);
+             
+              // intersection of patch's interior with the other patch's send buffer
+              IntVector int_low = Max(in_low, from_l);
+              IntVector int_high = Min(in_high, from_h);
+
+              if (int_high.x() > int_low.x() && int_high.y() > int_low.y() && int_high.z() > int_low.z()) {
+                // exclude the overlapped com by not sending this patch's extra cells.  Because of the nature
+                // of the overlapping, an extra cell that would be sent is already an extra cell on the other patch
+                // (and so would any other cell)
+                continue;
+#if 0
+                IntVector old_l = from_l, old_h = from_h;
+                from_l = Max(fromNeighbor->getInteriorLowIndex(basis), l);
+                from_h = Min(fromNeighbor->getInteriorHighIndex(basis), h);
+
+                if (from_h.x() <= from_l.x() || from_h.y() <= from_l.y() || from_h.z() <= from_l.z()) {
+                  continue;
+                }
+#endif
+              }
+            }
             
             dbg << d_myworld->myrank() << "        Neighbor: patch " << fromNeighbor->getID() << " low= " << from_l 
                 << ", high=" << from_h << '\n';
@@ -1029,6 +1070,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
                       static ProgressiveWarning warn("WARNING - task that requires with Ghost cells *and* modifies may not be correct",10);
                       warn.invoke();
                       dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
+                      //cout <<  d_myworld->myrank() << " RGM: var: " << *req->var << " compute: " 
+                      //<< *creator << " mod " << *task << " PRT " << *prevReqTask << endl;
                     }
 		  } else if(prevReqTask != task){
 		    // dep requires what is to be modified before it is to be

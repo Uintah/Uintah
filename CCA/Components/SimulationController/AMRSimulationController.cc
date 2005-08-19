@@ -263,7 +263,7 @@ void AMRSimulationController::run()
 }
 
 //______________________________________________________________________
-void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, int numLevel)
+void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle)
 {
   //amrout << "Start AMRSimulationController::subCycle, level=" << numLevel << '\n';
   // We are on (the fine) level numLevel
@@ -286,18 +286,28 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
 
     if(numLevel+1 < grid->numLevels()){
       ASSERT(newDWStride > 0);
-      subCycle(grid, curDW, newDWStride, numLevel+1);
+      subCycle(grid, curDW, newDWStride, numLevel+1, false);
     }
     // do refineInterface after the freshest data we can get; after the finer
     // level's coarsen completes
+    // do all the levels at this point in time as well, so all the coarsens go in order,
+    // and then the refineInterfaces
     if (d_doAMR && step < numSteps -1) {
       d_scheduler->clearMappings();
       d_scheduler->mapDataWarehouse(Task::OldDW, curDW);
       d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
       d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
       d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
+      
+      for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
+        if (i == fineLevel->getIndex()) {
+          d_sim->scheduleRefineInterface(fineLevel, d_scheduler, step+1, numSteps);
+        }
+        else {
+          d_sim->scheduleRefineInterface(fineLevel, d_scheduler, numSteps, numSteps);
+        }
+      }
     
-      d_sim->scheduleRefineInterface(fineLevel, d_scheduler, step+1, numSteps);
     }
 
     curDW += newDWStride;
@@ -312,7 +322,13 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
     d_sim->scheduleCoarsen(coarseLevel, d_scheduler);
      // For clarity this belongs outside of the W-cycle after we've coarsened and done the error estimation and are
      // about to start a new timestep.  see ICE/Docs/W-cycle.pdf
-    d_sim->scheduleRefineInterface(fineLevel, d_scheduler, 1, 1); 
+
+    if (rootCycle) {
+      // if we're called from the coarsest level, then refineInterface all the way down
+      for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
+        d_sim->scheduleRefineInterface(fineLevel, d_scheduler, 1, 1); 
+      }
+    }
   }
 }
 //______________________________________________________________________
@@ -493,7 +509,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
     d_sim->scheduleTimeAdvance(currentGrid->getLevel(0), d_scheduler, 0, 1);
   
     if(currentGrid->numLevels() > 1){
-      subCycle(currentGrid, 0, totalFine, 1);
+      subCycle(currentGrid, 0, totalFine, 1, true);
     }
     
     d_scheduler->clearMappings();
