@@ -28,7 +28,7 @@
 
 
 /*
- *  BridgeModule.h: 
+ *  BridgeModule.h:
  *
  *  Written by:
  *   Kostadin Damevski
@@ -50,9 +50,11 @@
 namespace SCIRun {
   class BridgeModule : public Module {
   public:
-    BridgeModule(BridgeComponent* bc) 
-    : Module("BridgeModule", SCIRunComponentModel::gui->createContext("BridgeModule_" + bc->bridgeID), Filter),
-      component(bc) 
+    BridgeModule(BridgeComponent* bc)
+    : Module("BridgeModule",
+             SCIRunComponentModel::gui->createContext("BridgeModule_" + bc->bridgeID),
+             Filter),
+      component(bc)
     {
       SCIRunComponentModel::net->add_instantiated_module(this);
     }
