@@ -943,7 +943,7 @@ Optional Packages:
 --with-lapack=DIR       Use the lapack installation in DIR
 --with-fortran=DIR      Use the fortran (eg: g2c) installation in DIR/lib
 --with-ptolemyII=DIR    Use the Ptolemy II (eg: ptII4.0.1) installation in
-                          DIR (Ptolemypa ckage only)
+                          DIR (Ptolemy package only)
 --with-java=DIR         Use the Java distribution in DIR (Ptolemy package
                           only)
 --with-mpi=DIR          Use the mpi installation in DIR
@@ -964,6 +964,8 @@ Optional Packages:
 --with-ssl=DIR          Use the ssl installation in DIR (only for use with
                           globus)
 --with-insight=DIR      Use the Insight installation in DIR
+--with-babel=DIR        Use the Babel installation in DIR (strongly
+                          recommended for SCIRun2)
 --with-qt=DIR           Use the Qt installation in DIR
 --with-ruby=DIR         Use the ruby installation in DIR where DIR points to
                           the --prefix option specified when installing ruby.
@@ -2128,6 +2130,24 @@ echo "$as_me: error: The file or directory parameter ($insight) specified for --
 
 
 
+# Check whether --with-babel or --without-babel was given.
+if test "${with_babel+set}" = set; then
+  withval="$with_babel"
+  with_babel="$withval"
+   sci_required_babel=yes
+else
+  with_babel=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-babel --without-babel"
+  if test -n "$babel" -a ! -e "$babel"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($babel) specified for --with-babel does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($babel) specified for --with-babel does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
 # Check whether --with-qt or --without-qt was given.
 if test "${with_qt+set}" = set; then
   withval="$with_qt"
@@ -2981,7 +3001,7 @@ path_to_src=`echo $0 | sed 's/\/configure//'`
 
 
 BUILD_DATAFLOW="$sci_required_dataflow"
-if test "$sci_required_dataflow"; then
+if test "$sci_required_dataflow" = "yes"; then
   DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW"
 fi
 
@@ -6624,7 +6644,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6627:" \
+echo "$as_me:6647:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -47705,8 +47725,69 @@ fi
 
 
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-   DEF_BABEL="#define HAVE_BABEL 1"
-   HAVE_BABEL="yes"
+  ## check for compatible version (0.10.0 or greater)
+
+    ##  SCI_CHECK_VERSION
+    _SCI_CORRECT_='echo $echo_n "$echo_c"'
+    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_VER_1_="0"
+    _SCI_VER_2_="0.10.0"
+    _CUR_1_=""
+    _CUR_2_=""
+
+    echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 0.10.0" >&5
+echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.10.0... $ECHO_C" >&6
+
+    if test ""; then
+      _SCI_CORRECT_=''
+    fi
+
+    if test "echo configure: error: wrong Babel version.; exit"; then
+      _SCI_NOTCORRECT_='echo configure: error: wrong Babel version.; exit'
+    fi
+
+    if test ""; then
+      _SCI_COMP_=""
+    else
+      _SCI_COMP_="-gt"
+    fi
+
+    eval "$BABEL_BIN --version 2> conftest.out >> conftest.out"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
+    _SCI_VER_1_="$_SCI_REPORT_"
+
+    _SCI_BIGGER_=yes
+    _SCI_LAST_=""
+    while test "$_SCI_VER_2_"; do
+      if test "$_SCI_LAST_" = "$_SCI_VER_2_"; then
+        break
+      fi
+      _SCI_LAST_="$_SCI_VER_2_"
+      _CUR_1_=`echo $_SCI_VER_1_ | sed 's%\.[0-9]*[a-z]*%%g'`
+      _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
+      _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
+      _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
+      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+        _SCI_BIGGER_=no
+        break
+      elif test $_CUR_1_ -gt $_CUR_2_; then
+        break
+      fi
+    done
+
+    if test "$_SCI_BIGGER_" = "yes"; then
+      echo "$as_me:$LINENO: result: yes ($_SCI_REPORT_)" >&5
+echo "${ECHO_T}yes ($_SCI_REPORT_)" >&6
+      eval $_SCI_CORRECT_
+    else
+      echo "$as_me:$LINENO: result: no ($_SCI_REPORT_)" >&5
+echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
+      eval $_SCI_NOTCORRECT_
+    fi
+
+
+  DEF_BABEL="#define HAVE_BABEL 1"
+  HAVE_BABEL="yes"
 fi
 
 if test "$with_babel" && test ! "$DEF_BABEL"; then
@@ -60512,6 +60593,10 @@ echo "$as_me: WARNING: Skipping uuid check on MAC. Will use custom uuid generati
 echo "$as_me: WARNING: cannot find uuid_generate or uuid_create.  Will use custom uuid generation instead." >&2;}
         ;;
     esac
+  fi
+  if test "$HAVE_BABEL" != "yes"; then
+    { echo "$as_me:$LINENO: WARNING: could not find a Babel installation (recommended for SCIRun2)." >&5
+echo "$as_me: WARNING: could not find a Babel installation (recommended for SCIRun2)." >&2;}
   fi
   BUILD_SCIRUN2="yes"
 else

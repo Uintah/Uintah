@@ -226,7 +226,7 @@ SCI_ARG_WITH(fortran,
   [with_fortran=""])
 SCI_ARG_WITH(ptolemyII,
   AC_HELP_STRING(--with-ptolemyII=DIR, 
-                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemypa ckage only)),
+                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
   [with_ptolemyII="$withval"
    sci_required_ptolemyII=yes],
   [with_ptolemyII=""])
@@ -328,6 +328,12 @@ SCI_ARG_WITH(insight,
   [with_insight="$withval"
    sci_required_insight=yes],
   [with_insight=""])
+SCI_ARG_WITH(babel,
+  AC_HELP_STRING(--with-babel=DIR,
+                 Use the Babel installation in DIR (strongly recommended for SCIRun2)),
+  [with_babel="$withval"
+   sci_required_babel=yes],
+  [with_babel=""])
 SCI_ARG_WITH(qt,
   AC_HELP_STRING(--with-qt=DIR,
                  Use the Qt installation in DIR),
@@ -632,7 +638,7 @@ path_to_src=`echo $0 | sed 's/\/configure//'`
 
  
 BUILD_DATAFLOW="$sci_required_dataflow"
-if test "$sci_required_dataflow"; then
+if test "$sci_required_dataflow" = "yes"; then
   DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW"
 fi
 AC_SUBST(DEF_BUILD_DATAFLOW)
@@ -3786,8 +3792,12 @@ AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
 AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
   
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-   DEF_BABEL="#define HAVE_BABEL 1"
-   HAVE_BABEL="yes"
+  ## check for compatible version (0.10.0 or greater)
+  SCI_CHECK_VERSION($BABEL_BIN, --version, 0.10.0, ,
+    echo configure: error: wrong Babel version.; exit)
+
+  DEF_BABEL="#define HAVE_BABEL 1"
+  HAVE_BABEL="yes"
 fi
   
 if test "$with_babel" && test ! "$DEF_BABEL"; then
@@ -4885,6 +4895,9 @@ if test "$enable_scirun2" = "yes"; then
         AC_MSG_WARN([cannot find uuid_generate or uuid_create.  Will use custom uuid generation instead.])
         ;;
     esac
+  fi
+  if test "$HAVE_BABEL" != "yes"; then
+    AC_MSG_WARN([could not find a Babel installation (recommended for SCIRun2).])
   fi
   BUILD_SCIRUN2="yes"
 else
