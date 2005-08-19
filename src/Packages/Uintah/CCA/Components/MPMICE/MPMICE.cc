@@ -232,6 +232,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   t->computes(Ilb->sp_vol_CCLabel);
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(MIlb->NC_CCweightLabel, one_matl);
+  t->computes(Mlb->heatFlux_CCLabel);
     
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
   if (cout_doing.active()) {
@@ -765,6 +766,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,      gac,1);  
   t->requires(Task::NewDW, Ilb->mom_L_ME_CCLabel,       gac,1);
   t->requires(Task::NewDW, Ilb->eng_L_ME_CCLabel,       gac,1);
+  t->requires(Task::OldDW, Mlb->heatFlux_CCLabel,       gac,1);
   
   t->modifies(Mlb->gVelocityStarLabel, mss);             
   t->modifies(Mlb->gAccelerationLabel, mss);             
@@ -1036,6 +1038,9 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 
     NCVariable<double> NC_CCweight;
     new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,    0, patch);
+
+
+
    //__________________________________
    // - Initialize NC_CCweight = 0.125
    // - Find the walls with symmetry BC and
@@ -1076,6 +1081,10 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);
       new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
+
+      CCVariable<double> heatFlux;
+      new_dw->allocateAndPut(heatFlux, Mlb->heatFlux_CCLabel,    indx, patch);
+      heatFlux.initialize(0.0);
 
       // Ignore the dummy materials that are used when particles are
       // localized

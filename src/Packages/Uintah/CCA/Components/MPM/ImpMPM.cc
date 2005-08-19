@@ -348,7 +348,9 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 
   scheduleApplyExternalLoads(             sched, d_perproc_patches,matls);
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
-  //scheduleProjectCCHeatSourceToNodes(sched, d_perproc_patches,one_matl,matls);
+#if 0
+  scheduleProjectCCHeatSourceToNodes(sched, d_perproc_patches,one_matl,matls);
+#endif
   scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
   scheduleCreateMatrix(                   sched, d_perproc_patches,matls);
   scheduleDestroyHCMatrix(                sched, d_perproc_patches,matls);
@@ -1216,7 +1218,7 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
       cout << "CCheatrate[" << *iter << "]= " << CCheatrate[*iter] << endl;
 #endif
     
-    for(CellIterator iter =patch->getExtraCellIterator();!iter.done();
+    for(CellIterator iter =patch->getCellIterator();!iter.done();
         iter++){
       IntVector c = *iter;
       double solid_vol=1.e-200;
