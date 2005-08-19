@@ -49,6 +49,9 @@
 #include <winsock2.h>
 #endif
 
+//TODO - BJW - if multilevel reduction doesn't work, fix all
+//       getMaterialSet(0)
+
 #define PADSIZE 1024L
 
 // RNJ - Leave a define that will turn on and off
@@ -822,8 +825,13 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
       SaveItem& saveItem = d_saveReductionLabels[i];
       const VarLabel* var = saveItem.label_;
-      const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
-      t->requires(Task::NewDW, var, matls);
+
+      map<int, MaterialSetP>::iterator liter;
+      for (liter = saveItem.matlSet_.begin(); liter != saveItem.matlSet_.end(); liter++) {
+        const MaterialSubset* matls = saveItem.getMaterialSet(liter->first)->getUnion();
+        t->requires(Task::NewDW, var, matls);
+        break; // this might break things later, but we'll leave it for now
+      }
       t->setType(Task::Output);
     }
     
@@ -842,8 +850,13 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
       SaveItem& saveItem = d_checkpointReductionLabels[i];
       const VarLabel* var = saveItem.label_;
-      const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
-      t->requires(Task::NewDW, var, matls);
+      map<int, MaterialSetP>::iterator liter;
+      for (liter = saveItem.matlSet_.begin(); liter != saveItem.matlSet_.end(); liter++) {
+
+        const MaterialSubset* matls = saveItem.getMaterialSet(0)->getUnion();
+        t->requires(Task::NewDW, var, matls);
+        break;
+      }
       t->setType(Task::Output);
     }
     sched->addTask(t, 0, 0);
@@ -1391,15 +1404,20 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
     const LevelP& level = grid->getLevel(i);
     vector< SaveItem >::iterator saveIter;
     const PatchSet* patches = level->eachPatch();
+    
     for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end();
 	saveIter++) {
-      const MaterialSet* matls = (*saveIter).getMaterialSet();
-      ConsecutiveRangeSet* range = &saveIter->levels;
-
       // check to see if the input file requested to save on this level.
       // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
-      if (range->find(level->getIndex()) != range->end() ||
-          range->find(level->getIndex() - level->getGrid()->numLevels()) != range->end()) {
+      map<int, MaterialSetP>::iterator iter;
+
+      iter = saveIter->matlSet_.find(level->getIndex());
+      if (iter == saveIter->matlSet_.end())
+        iter = saveIter->matlSet_.find(level->getIndex() - level->getGrid()->numLevels());
+      if (iter != saveIter->matlSet_.end()) {
+
+        const MaterialSet* matls = iter->second.get_rep();
+
         Task* t = scinew Task((isThisCheckpoint ? "DataArchiver::checkpoint" : "DataArchiver::output"), 
                               this, &DataArchiver::output,
                               &baseDir, (*saveIter).label_, isThisCheckpoint);
@@ -1446,7 +1464,8 @@ void DataArchiver::indexAddGlobals()
 	 iter != d_saveReductionLabels.end(); iter++) {
       SaveItem& saveItem = *iter;
       const VarLabel* var = saveItem.label_;
-      const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
+      // FIX - multi-level query
+      const MaterialSubset* matls = saveItem.getMaterialSet(0)->getUnion();
       for (int m = 0; m < matls->size(); m++) {
 	int matlIndex = matls->get(m);
 	ostringstream href;
@@ -1486,7 +1505,8 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
   for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
     SaveItem& saveItem = d_saveReductionLabels[i];
     const VarLabel* var = saveItem.label_;
-    const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
+    // FIX, see above
+    const MaterialSubset* matls = saveItem.getMaterialSet(0)->getUnion();
     for (int m = 0; m < matls->size(); m++) {
       int matlIndex = matls->get(m);
       dbg << "Reduction matl " << matlIndex << endl;
@@ -1529,7 +1549,8 @@ void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
   for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
     SaveItem& saveItem = d_checkpointReductionLabels[i];
     const VarLabel* var = saveItem.label_;
-    const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
+    // FIX - see above
+    const MaterialSubset* matls = saveItem.getMaterialSet(0)->getUnion();
     PatchSubset* patches = scinew PatchSubset(0);
     patches->add(0);
     output(world, patches, matls, old_dw, new_dw, &d_checkpointsDir, var, true);
@@ -1749,8 +1770,6 @@ void DataArchiver::output(const ProcessorGroup*,
         // add info for this variable to the current xml file
 	int matlIndex = matls->get(m);
         // Variables may not exist when we get here due to something whacky with weird AMR stuff...
-        if(patch && !new_dw->exists(var, matlIndex, patch))
-          break;
 	ProblemSpecP pdElem = doc->appendChild("Variable");
 	doc->appendText("\n");
 	
@@ -2102,21 +2121,23 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
                                     " variable not computed for saving.", __FILE__, __LINE__);
     }
     saveItem.label_ = var;
-    ConsecutiveRangeSet matlsToSave =
-      (ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
-    saveItem.setMaterials(matlsToSave, prevMatls_, prevMatlSet_);
-      
-    if (((*it).matls != ConsecutiveRangeSet::all) &&
-	((*it).matls != matlsToSave)) {
-      throw ProblemSetupException((*it).labelName +
-				  " variable not computed for all materials specified to save.", __FILE__, __LINE__);
+    saveItem.matlSet_.clear();
+    for (ConsecutiveRangeSet::iterator iter = (*it).levels.begin(); iter != (*it).levels.end(); iter++) {
+      ConsecutiveRangeSet matlsToSave =
+        (ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
+      saveItem.setMaterials(*iter, matlsToSave, prevMatls_, prevMatlSet_);
+
+      if (((*it).matls != ConsecutiveRangeSet::all) &&
+          ((*it).matls != matlsToSave)) {
+        throw ProblemSetupException((*it).labelName +
+                                    " variable not computed for all materials specified to save.", __FILE__, __LINE__);
+      }
     }
-    saveItem.levels = (*it).levels;
-      
     if (saveItem.label_->typeDescription()->isReductionVariable()) {
       d_saveReductionLabels.push_back(saveItem);
     }
     else {
+
       d_saveLabels.push_back(saveItem);
     }
   }
@@ -2135,60 +2156,69 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
    d_checkpointReductionLabels.clear();
    d_checkpointLabels.clear();
 
-   map< string, ConsecutiveRangeSet > label_matl_map;
-   map< string, ConsecutiveRangeSet > label_level_map;
+   // label -> level -> matls
+   // we can't store them in two different maps, since we need to know 
+   // which levels depend on which materials
+   typedef map<string, map<int, ConsecutiveRangeSet> > label_type;
+   label_type label_map;
 
    for (dep_vector::const_iterator iter = initreqs.begin();
 	iter != initreqs.end(); iter++) {
-      const Task::Dependency* dep = *iter;
-      ConsecutiveRangeSet matls;
-      const MaterialSubset* matSubset = (dep->matls != 0) ?
-	dep->matls : dep->task->getMaterialSet()->getUnion();
+     const Task::Dependency* dep = *iter;
+     
+     ConsecutiveRangeSet levels;
+     const PatchSubset* patchSubset = (dep->patches != 0)?
+       dep->patches : dep->task->getPatchSet()->getUnion();
+     
+     for(int i=0;i<patchSubset->size();i++){
+       const Patch* patch = patchSubset->get(i);
+       levels.addInOrder(patch->getLevel()->getIndex());
+     }
 
-      // The matSubset is assumed to be in ascending order or
-      // addInOrder will throw an exception.
-      matls.addInOrder(matSubset->getVector().begin(),
-		       matSubset->getVector().end());
-      ConsecutiveRangeSet& unionedVarMatls =
-	label_matl_map[dep->var->getName()];
-      unionedVarMatls = unionedVarMatls.unioned(matls);
+     ConsecutiveRangeSet matls;
+     const MaterialSubset* matSubset = (dep->matls != 0) ?
+       dep->matls : dep->task->getMaterialSet()->getUnion();
+     
+     // The matSubset is assumed to be in ascending order or
+     // addInOrder will throw an exception.
+     matls.addInOrder(matSubset->getVector().begin(),
+                      matSubset->getVector().end());
 
-      ConsecutiveRangeSet patches;
-      const PatchSubset* patchSubset = (dep->patches != 0)?
-        dep->patches : dep->task->getPatchSet()->getUnion();
-
-      for(int i=0;i<patchSubset->size();i++){
-        const Patch* patch = patchSubset->get(i);
-        patches.addInOrder(patch->getLevel()->getIndex());
-      }
-      ConsecutiveRangeSet& unionedVarLevels =
-        label_level_map[dep->var->getName()];
-      unionedVarLevels = unionedVarLevels.unioned(patches);
+     for(ConsecutiveRangeSet::iterator liter = levels.begin(); liter != levels.end(); liter++) {
+       ConsecutiveRangeSet& unionedVarMatls =
+         label_map[dep->var->getName()][*liter];
+       unionedVarMatls = unionedVarMatls.unioned(matls);
+     }
    }
          
-   d_checkpointLabels.reserve(label_matl_map.size());
-   map< string, ConsecutiveRangeSet >::iterator mapIter;
+   d_checkpointLabels.reserve(label_map.size());
+   label_type::iterator mapIter;
    bool hasDelT = false;
-   for (mapIter = label_matl_map.begin();
-        mapIter != label_matl_map.end(); mapIter++) {
-      VarLabel* var = VarLabel::find((*mapIter).first);
-      if (var == NULL)
-         throw ProblemSetupException((*mapIter).first +
-				  " variable not found to checkpoint.", __FILE__, __LINE__);
-
-      saveItem.label_ = var;
-      saveItem.setMaterials((*mapIter).second, prevMatls_, prevMatlSet_);
-      saveItem.levels = label_level_map[mapIter->first];
-
-      if (string(var->getName()) == "delT") {
-	hasDelT = true;
-      }
-
-      if (saveItem.label_->typeDescription()->isReductionVariable())
-         d_checkpointReductionLabels.push_back(saveItem);
-      else
-         d_checkpointLabels.push_back(saveItem);
+   for (mapIter = label_map.begin();
+        mapIter != label_map.end(); mapIter++) {
+     VarLabel* var = VarLabel::find(mapIter->first);
+     if (var == NULL)
+       throw ProblemSetupException(mapIter->first +
+                                   " variable not found to checkpoint.", __FILE__, __LINE__);
+     
+     saveItem.label_ = var;
+     saveItem.matlSet_.clear();
+     map<int, ConsecutiveRangeSet>::iterator liter;
+     for (liter = mapIter->second.begin(); liter != mapIter->second.end(); liter++) {
+       
+       saveItem.setMaterials(liter->first, liter->second, prevMatls_, prevMatlSet_);
+       
+       if (string(var->getName()) == "delT") {
+         hasDelT = true;
+       }
+     }
+     if (saveItem.label_->typeDescription()->isReductionVariable())
+       d_checkpointReductionLabels.push_back(saveItem);
+     else
+       d_checkpointLabels.push_back(saveItem);
    }
+
+
 
    if (!hasDelT) {
      VarLabel* var = VarLabel::find("delT");
@@ -2196,13 +2226,13 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
        throw ProblemSetupException("delT variable not found to checkpoint.", __FILE__, __LINE__);
      saveItem.label_ = var;
      ConsecutiveRangeSet globalMatl("-1");
-     saveItem.setMaterials(globalMatl, prevMatls_, prevMatlSet_);
+     saveItem.setMaterials(0,globalMatl, prevMatls_, prevMatlSet_);
      ASSERT(saveItem.label_->typeDescription()->isReductionVariable());
      d_checkpointReductionLabels.push_back(saveItem);
    }     
 }
 
-void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
+void DataArchiver::SaveItem::setMaterials(int level, const ConsecutiveRangeSet& matls,
 					  ConsecutiveRangeSet& prevMatls,
 					  MaterialSetP& prevMatlSet)
 {
@@ -2210,20 +2240,22 @@ void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
   // SaveItems in a row -- easier than finding all reusable material set, but
   // effective in many common cases.
   if ((prevMatlSet != 0) && (matls == prevMatls)) {
-    matlSet_ = prevMatlSet;
+    matlSet_[level] = prevMatlSet;
   }
   else {
-    matlSet_ = scinew MaterialSet();
+    MaterialSetP& m = matlSet_[level];
+    m = scinew MaterialSet();
     vector<int> matlVec;
     matlVec.reserve(matls.size());
     for (ConsecutiveRangeSet::iterator iter = matls.begin();
 	 iter != matls.end(); iter++) {
       matlVec.push_back(*iter);
     }
-    matlSet_->addAll(matlVec);
-    prevMatlSet = matlSet_;
+    m->addAll(matlVec);
+    prevMatlSet = m;
     prevMatls = matls;
   }
+  
 }
 
 bool DataArchiver::needRecompile(double /*time*/, double /*dt*/,
