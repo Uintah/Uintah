@@ -2837,9 +2837,29 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* finePatch = patches->get(p);
     
-    Level::selectType coarsePatches;
-    finePatch->getCoarseLevelPatches(coarsePatches);
+    // region of fine space that will correspond to the coarse we need to get
+    IntVector fl, fh;
+    Ghost::GhostType  gac = Ghost::AroundCells;
     
+    finePatch->computeVariableExtents(variable->typeDescription()->getType(),
+                                      IntVector(0,0,0), gac,1, fl, fh); 
+  
+    // coarse region we need to get from the dw
+    IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
+    IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + refineRatio - IntVector(1,1,1);
+    
+    //__________________________________
+    // coarseHigh and coarseLow cannot lie outside
+    // of the coarselevel index range
+    IntVector cl_tmp, ch_tmp;
+    coarseLevel->findCellIndexRange(cl_tmp,ch_tmp);
+    cl = Max(cl_tmp, cl);
+    ch = Min(ch_tmp, ch);
+    
+    // fine region to work over
+    IntVector lo = finePatch->getCellLowIndex();
+    IntVector hi = finePatch->getCellHighIndex();
+  
     if (cout_doing.active()) {
       cout_doing<<"Doing refineVariableCC (" << variable->getName() 
                 << ") on patch "<<finePatch->getID()
@@ -2852,28 +2872,13 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
       CCVariable<T> fine_q_CC;
       new_dw->allocateAndPut(fine_q_CC, variable, indx, finePatch);
       
-      IntVector fl = finePatch->getCellLowIndex();
-      IntVector fh = finePatch->getCellHighIndex();
-
-      for(int i=0;i<coarsePatches.size();i++){
-        const Patch* coarsePatch = coarsePatches[i];
-        constCCVariable<T> coarse_q_CC;
-        new_dw->get(coarse_q_CC, variable, indx, coarsePatch,
-                    Ghost::AroundCells, 1);
+      constCCVariable<T> coarse_q_CC;
+      new_dw->getRegion(coarse_q_CC, variable, indx, coarseLevel, cl, ch);
     
-        // Only interpolate over the intersection of the fine and coarse patches
-        // coarse cell 
-        IntVector cl = coarsePatch->getLowIndex();
-        IntVector ch = coarsePatch->getHighIndex();
-         
-        IntVector fl_tmp = coarseLevel->mapCellToFiner(cl);
-        IntVector fh_tmp = coarseLevel->mapCellToFiner(ch);
-    
-        IntVector lo = Max(fl, fl_tmp);
-        IntVector hi = Min(fh, fh_tmp);
-        linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
-                               refineRatio, lo, hi, fine_q_CC);
-      }
+      // Only interpolate over the intersection of the fine and coarse patches
+      // coarse cell 
+      linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
+                             refineRatio, lo, hi, fine_q_CC);
     }
   }
 }
@@ -2893,8 +2898,29 @@ void MPMICE::refineExtensiveVariableCC(const ProcessorGroup*,
                                                                                    for(int p=0;p<patches->size();p++){
     const Patch* finePatch = patches->get(p);
                                                                                 
-    Level::selectType coarsePatches;
-    finePatch->getCoarseLevelPatches(coarsePatches);                                                                                 
+    // region of fine space that will correspond to the coarse we need to get
+    IntVector fl, fh;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    
+    finePatch->computeVariableExtents(variable->typeDescription()->getType(),
+                                      IntVector(0,0,0), gac,1, fl, fh); 
+  
+    // coarse region we need to get from the dw
+    IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
+    IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + refineRatio - IntVector(1,1,1);
+    
+    //__________________________________
+    // coarseHigh and coarseLow cannot lie outside
+    // of the coarselevel index range
+    IntVector cl_tmp, ch_tmp;
+    coarseLevel->findCellIndexRange(cl_tmp,ch_tmp);
+    cl = Max(cl_tmp, cl);
+    ch = Min(ch_tmp, ch);
+    
+    // fine region to work over
+    IntVector lo = finePatch->getCellLowIndex();
+    IntVector hi = finePatch->getCellHighIndex();
+  
     if (cout_doing.active()) {
       cout_doing<<"Doing refineExtensiveVariableCC (" << variable->getName()
                 << ") on patch "<<finePatch->getID()
@@ -2913,32 +2939,17 @@ void MPMICE::refineExtensiveVariableCC(const ProcessorGroup*,
       IntVector fl = finePatch->getCellLowIndex();
       IntVector fh = finePatch->getCellHighIndex();
                                                                                 
-      for(int i=0;i<coarsePatches.size();i++){
-        const Patch* coarsePatch = coarsePatches[i];
-        constCCVariable<T> coarse_q_CC;
-        constCCVariable<double> mass_L_coarse;
-        new_dw->get(coarse_q_CC,   variable,            indx, coarsePatch,
-                    Ghost::AroundCells, 1);
-        new_dw->get(mass_L_coarse, Ilb->mass_L_CCLabel, indx, coarsePatch,
-                    Ghost::AroundCells, 1);
-                                                                                
-        // Only interpolate over the intersection of the fine and coarse patches        // coarse cell
-        IntVector cl = coarsePatch->getLowIndex();
-        IntVector ch = coarsePatch->getHighIndex();
-                                                                                
-        IntVector fl_tmp = coarseLevel->mapCellToFiner(cl);
-        IntVector fh_tmp = coarseLevel->mapCellToFiner(ch);
-                                                                                
-        IntVector lo = Max(fl, fl_tmp);
-        IntVector hi = Min(fh, fh_tmp);
-
-        for(CellIterator iter(fl,fh); !iter.done(); iter++){
-          IntVector f_cell = *iter;
-          IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
-
-          fine_q_CC[f_cell] = (coarse_q_CC[c_cell]/mass_L_coarse[c_cell])
-                            * mass_L_fine[f_cell];
-        }
+      constCCVariable<T> coarse_q_CC;
+      constCCVariable<double> mass_L_coarse;
+      new_dw->getRegion(coarse_q_CC, variable, indx, coarseLevel, cl, ch);
+      new_dw->getRegion(mass_L_coarse, Ilb->mass_L_CCLabel, indx, coarseLevel, cl, ch);
+      
+      for(CellIterator iter(fl,fh); !iter.done(); iter++){
+        IntVector f_cell = *iter;
+        IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+        
+        fine_q_CC[f_cell] = (coarse_q_CC[c_cell]/mass_L_coarse[c_cell])
+          * mass_L_fine[f_cell];
       }
     }
   }
@@ -2979,8 +2990,7 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
       coarsePatch->getFineLevelPatches(finePatches);
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
-        constCCVariable<T> fine_q_CC;
-        new_dw->get(fine_q_CC, variable, indx, finePatch, Ghost::None, 0);
+  
         IntVector fl(finePatch->getInteriorCellLowIndex());
         IntVector fh(finePatch->getInteriorCellHighIndex());
         IntVector cl(fineLevel->mapCellToCoarser(fl));
@@ -2989,6 +2999,16 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
         cl = Max(cl, coarsePatch->getCellLowIndex());
         ch = Min(ch, coarsePatch->getCellHighIndex());
     
+        // get the region of the fine patch that overlaps the coarse patch
+        // we might not have the entire patch in this proc's DW
+        fl = coarseLevel->mapCellToFiner(cl);
+        fh = coarseLevel->mapCellToFiner(ch);
+        if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
+          continue;
+        }
+        
+        constCCVariable<T> fine_q_CC;
+        new_dw->getRegion(fine_q_CC,  variable, indx, fineLevel, fl, fh);
         IntVector refinementRatio = fineLevel->getRefinementRatio();
         double ratio = 1./(refinementRatio.x()*refinementRatio.y()*refinementRatio.z());
         
@@ -3046,12 +3066,6 @@ void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
       coarsePatch->getFineLevelPatches(finePatches);
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
-        constCCVariable<T> fine_q_CC;
-        constCCVariable<double> cMass;
-        new_dw->get(fine_q_CC, variable,   indx, finePatch, Ghost::None, 0);
-        new_dw->get(cMass,     MIlb->cMassLabel,
-                                           indx, finePatch, Ghost::None, 0);
-
         IntVector fl(finePatch->getInteriorCellLowIndex());
         IntVector fh(finePatch->getInteriorCellHighIndex());
         IntVector cl(fineLevel->mapCellToCoarser(fl));
@@ -3060,6 +3074,19 @@ void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
         cl = Max(cl, coarsePatch->getCellLowIndex());
         ch = Min(ch, coarsePatch->getCellHighIndex());
     
+        // get the region of the fine patch that overlaps the coarse patch
+        // we might not have the entire patch in this proc's DW
+        fl = coarseLevel->mapCellToFiner(cl);
+        fh = coarseLevel->mapCellToFiner(ch);
+        if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
+          continue;
+        }
+        
+        constCCVariable<T> fine_q_CC;
+        constCCVariable<double> cMass;
+        new_dw->getRegion(fine_q_CC,  variable, indx, fineLevel, fl, fh);
+        new_dw->getRegion(cMass,  MIlb->cMassLabel, indx, fineLevel, fl, fh);
+
         IntVector refinementRatio = fineLevel->getRefinementRatio();
 
         T zero(0.0);
@@ -3118,8 +3145,6 @@ void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
       coarsePatch->getFineLevelPatches(finePatches);
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
-        constCCVariable<T> fine_q_CC;
-        new_dw->get(fine_q_CC, variable, indx, finePatch, Ghost::None, 0);
         IntVector fl(finePatch->getInteriorCellLowIndex());
         IntVector fh(finePatch->getInteriorCellHighIndex());
         IntVector cl(fineLevel->mapCellToCoarser(fl));
@@ -3128,6 +3153,16 @@ void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
         cl = Max(cl, coarsePatch->getCellLowIndex());
         ch = Min(ch, coarsePatch->getCellHighIndex());
     
+        // get the region of the fine patch that overlaps the coarse patch
+        // we might not have the entire patch in this proc's DW
+        fl = coarseLevel->mapCellToFiner(cl);
+        fh = coarseLevel->mapCellToFiner(ch);
+        if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
+          continue;
+        }
+        
+        constCCVariable<T> fine_q_CC;
+        new_dw->getRegion(fine_q_CC,  variable, indx, fineLevel, fl, fh);
         IntVector refinementRatio = fineLevel->getRefinementRatio();
         
         T zero(0.0);
