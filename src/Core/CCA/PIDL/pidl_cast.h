@@ -91,7 +91,7 @@ pidl_cast(const F& ptr)
     ptr_type* p=dynamic_cast<ptr_type*>(result);
     if(!p)
       throw SCIRun::InternalError("TypeInfo::pidl_cast returned wrong object!", __FILE__, __LINE__);
-#ifdef HAVE_MPI
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
     if(!(SCIRun::PIDL::sampleProxy)) {
       //SCIRun::PIDL::optr = ((SCIRun::Object::pointer*) new T(p));
       SCIRun::PIDL::sampleProxy = true;
