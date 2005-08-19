@@ -67,10 +67,12 @@ enum storageT {
   doRetreive
 };
 
+/** Base class for SIDL interface definitions. */
 class Definition {
 public:
   virtual ~Definition();
   virtual void staticCheck(SymbolTable*)=0;
+  /** Fill in symbol tables. */
   virtual void gatherSymbols(SymbolTable*)=0;
   SymbolTable* getSymbolTable() const;
   std::string fullname() const;
@@ -79,6 +81,7 @@ public:
   bool isEmitted() { return emitted_declaration; }
   bool isImport;
   std::string curfile;
+
 protected:
   Definition(const std::string& curfile, int lineno,
 	     const std::string& name);
@@ -94,8 +97,7 @@ protected:
 
 class DistributionArray : public Definition {
 public:
-  DistributionArray(const std::string& curfile, int lineno, const std::string& name, 
-		    ArrayType* arr_t);
+  DistributionArray(const std::string& curfile, int lineno, const std::string& name, ArrayType* arr_t);
   virtual ~DistributionArray();
   ArrayType* getArrayType();
   std::string getName();
@@ -253,6 +255,7 @@ public:
   std::vector<Definition*> list;
 };
 
+
 class BaseInterface : public CI {
 public:
   BaseInterface(const std::string& curfile, int lineno, const std::string& id,
@@ -261,9 +264,11 @@ public:
   virtual void staticCheck(SymbolTable*);
   virtual void gatherSymbols(SymbolTable*);
   Method* findMethod(const Method*) const;
+  BaseInterface* findParent(const std::string&);
 private:
   ScopedNameList* interface_extends;
 };
+
 
 class Method {
 public:
@@ -278,6 +283,9 @@ public:
   Method(const std::string& curfile, int lineno, bool copy_return,
 	 Type* return_type, const std::string& name, ArgumentList* args,
 	 Modifier2 modifier2,  ScopedNameList* throws_clause);
+  Method(const std::string& curfile, int lineno, bool copy_return,
+         Type* return_type, const std::string& name, const std::string& babel_ext,
+         ArgumentList* args, Modifier2 modifier2, ScopedNameList* throws_clause);
   ~Method();
 
   bool detectRedistribution();
@@ -319,6 +327,7 @@ public:
   std::string get_classname() const;
   bool isCollective;
   int numRedisMessages;
+
 protected:
   friend class CI;
   int handlerNum;
@@ -330,6 +339,7 @@ private:
   bool copy_return;
   Type* return_type;
   std::string name;
+  std::string babel_ext;
   ArgumentList* args;
   Modifier2 modifier2;
   ScopedNameList* throws_clause;
@@ -485,10 +495,15 @@ public:
   ~SpecificationList();
   void add(Specification* spec);
   void processImports();
+
+  /** Iterates over stored Specifications to fill in the global SymbolTable (globals) and checks the validity of SymbolTable contents.*/
   void staticCheck();
+
+  /** Generate header and implementation files. */
   void emit(std::ostream& out, std::ostream& headerout,
 	    const std::string& hname) const;
-public:
+private:
+  // initialized during staticCheck(..)
   SymbolTable* globals;
   std::vector<Specification*> specs;
 };

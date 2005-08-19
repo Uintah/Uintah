@@ -38,6 +38,9 @@ char* curfile;
 
 integer [0-9]+
 
+/* Babel extension for overloading methods in languages that do not support method overloading.  */
+babel_ext [A-Za-z][A-Za-z0-9_]*
+
 %%
 
 "abstract"	return ABSTRACT;
@@ -73,6 +76,10 @@ integer [0-9]+
 "throws"	return THROWS;
 "version"       return VERSION;
 "void"		return VOID;
+
+("["){babel_ext}("]") { yylval.ident = strdup(yytext);
+                        return BABEL_EXT;
+                      }
 
 -?{integer} { yylval.number = strtol(yytext, 0, 0);
 	 return INTEGER;
@@ -134,23 +141,3 @@ int yywrap()
 }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
