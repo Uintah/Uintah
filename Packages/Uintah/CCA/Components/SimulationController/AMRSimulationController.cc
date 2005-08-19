@@ -80,6 +80,9 @@ void AMRSimulationController::run()
    // set up scheduler, lb, sim, regridder, and finalize sharedState
    postGridSetup(currentGrid);
 
+   if (d_myworld->myrank() == 0)
+     cout << "GRID: " << *currentGrid.get_rep() << endl;
+
    calcStartTime();
 
    d_scheduler->initialize(1, 1);
@@ -293,18 +296,24 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
     // do all the levels at this point in time as well, so all the coarsens go in order,
     // and then the refineInterfaces
     if (d_doAMR && step < numSteps -1) {
-      d_scheduler->clearMappings();
-      d_scheduler->mapDataWarehouse(Task::OldDW, curDW);
-      d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
-      d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
-      d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
       
       for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
         if (i == fineLevel->getIndex()) {
+          d_scheduler->clearMappings();
+          d_scheduler->mapDataWarehouse(Task::OldDW, curDW);
+          d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
+          d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
+          d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
           d_sim->scheduleRefineInterface(fineLevel, d_scheduler, step+1, numSteps);
         }
         else {
-          d_sim->scheduleRefineInterface(fineLevel, d_scheduler, numSteps, numSteps);
+          // look in the NewDW all the way down
+          d_scheduler->clearMappings();
+          d_scheduler->mapDataWarehouse(Task::OldDW, 0);
+          d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
+          d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
+          d_scheduler->mapDataWarehouse(Task::CoarseNewDW, curDW+newDWStride);
+          d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, numSteps, numSteps);
         }
       }
     
@@ -326,7 +335,7 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
     if (rootCycle) {
       // if we're called from the coarsest level, then refineInterface all the way down
       for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
-        d_sim->scheduleRefineInterface(fineLevel, d_scheduler, 1, 1); 
+        d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, 1, 1); 
       }
     }
   }
