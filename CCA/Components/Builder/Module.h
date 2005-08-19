@@ -105,6 +105,7 @@ public slots:
     void destroy();
     void ui();
     void desc();
+    //void log();
 
 signals:
     void destroyModule(Module *);

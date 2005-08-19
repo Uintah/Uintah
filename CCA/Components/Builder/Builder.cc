@@ -88,6 +88,12 @@ void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
   app->unlock();
 #endif
 }
+myBuilderPort::~myBuilderPort()
+{
+  if (builder) {
+    delete builder;
+  }
+}
 
 void myBuilderPort::buildRemotePackageMenus(
     const sci::cca::ports::ComponentRepository::pointer &reg,
@@ -108,8 +114,8 @@ Builder::~Builder()
         builderPort.services->removeProvidesPort("builderPort");
         builderPort.services->unregisterUsesPort("builder");
     }
-    catch (const CCAException &e) {
-        std::cerr << e.type() << ", " << e.message() << std::endl;
+    catch (const sci::cca::CCAException::pointer &e) {
+        std::cerr << e->getCCAExceptionType() << ", " << e->getNote() << std::endl;
     }
 }
 
