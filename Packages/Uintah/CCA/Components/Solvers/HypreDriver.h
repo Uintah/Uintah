@@ -310,6 +310,8 @@ namespace Uintah {
          * Print the solution and other info
          *-----------------------------------------------------------*/
         std::cerr << "Print the solution vector" << "\n";
+        printMatrix("output_A");
+        printRHS("output_b");
         printSolution("output_x1");
         std::cerr << "Iterations = " << numIterations << "\n";
         std::cerr << "Final Relative Residual Norm = "
