@@ -99,7 +99,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
 
 ICE::~ICE()
 {
-  cout_doing << "Doing: ICE destructor " << endl;
+  cout_doing << d_myworld->myrank() << " Doing: ICE destructor " << endl;
   delete d_customInitialize_basket;
   delete d_customBC_var_basket->Lodi_var_basket;
   delete d_customBC_var_basket->Slip_var_basket;
@@ -118,7 +118,7 @@ ICE::~ICE()
   
   //__________________________________
   // MODELS
-  cout_doing << "Doing: destorying Model Machinery " << endl;
+  cout_doing << d_myworld->myrank() << " Doing: destorying Model Machinery " << endl;
   // delete transported Lagrangian variables
   vector<TransportedVariable*>::iterator t_iter;
   for( t_iter  = d_modelSetup->tvars.begin();
@@ -546,7 +546,7 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
  _____________________________________________________________________*/
 void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
 {
-  cout_doing << "Doing ICE::scheduleInitializeAddedMaterial " << endl;
+  cout_doing << d_myworld->myrank() << " Doing ICE::scheduleInitializeAddedMaterial " << endl;
   Task* t = scinew Task("ICE::actuallyInitializeAddedMaterial",
                   this, &ICE::actuallyInitializeAddedMaterial);
 
@@ -588,7 +588,7 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
   new_dw->unfinalize();
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing InitializeAddedMaterial on patch " << patch->getID() 
+    cout_doing << d_myworld->myrank() << " Doing InitializeAddedMaterial on patch " << patch->getID() 
          << "\t\t\t ICE" << endl;
     CCVariable<double>  rho_micro, sp_vol_CC, rho_CC, Temp_CC, thermalCond;
     CCVariable<double>  speedSound,vol_frac_CC, cv, gamma, viscosity,dummy;
@@ -650,7 +650,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
     return;
   }
 
-  cout_doing << "Doing ICE::scheduleInitialize " << endl;
+  cout_doing << d_myworld->myrank() << " Doing ICE::scheduleInitialize " << endl;
   Task* t = scinew Task("ICE::actuallyInitialize",
                   this, &ICE::actuallyInitialize);
 
@@ -691,7 +691,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   if (grav.length() > 0 ) {
-    cout_doing << "Doing ICE::scheduleHydroStaticAdj " << endl;
+    cout_doing << d_myworld->myrank() << " Doing ICE::scheduleHydroStaticAdj " << endl;
     Task* t2 = scinew Task("ICE::initializeSubTask_hydrostaticAdj",
                      this, &ICE::initializeSubTask_hydrostaticAdj);
     Ghost::GhostType  gn  = Ghost::None;
@@ -714,7 +714,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 _____________________________________________________________________*/
 void ICE::restartInitialize()
 {
-    cout_doing << "Doing restartInitialize "<< "\t\t\t ICE" << endl;
+    cout_doing << d_myworld->myrank() << " Doing restartInitialize "<< "\t\t\t ICE" << endl;
   // disregard initial dt when restarting
   d_initialDt = 10000.0;
   
@@ -758,12 +758,12 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 
   Task* t = 0;
   if (d_EqForm) {             // EQ 
-    cout_doing << "ICE::scheduleComputeStableTimestep \t\t\tL-"
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeStableTimestep \t\t\tL-"
                <<level->getIndex() << endl;
     t = scinew Task("ICE::actuallyComputeStableTimestep",
                      this, &ICE::actuallyComputeStableTimestep);
   } else if (d_RateForm) {    // RF
-    cout_doing << "ICE::scheduleComputeStableTimestepRF " << endl;
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeStableTimestepRF " << endl;
     t = scinew Task("ICE::actuallyComputeStableTimestepRF",
                       this, &ICE::actuallyComputeStableTimestepRF);
   }
@@ -814,9 +814,9 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   
   double AMR_subCycleProgressVar = double(step)/double(nsteps);  
   
-  cout_doing << "--------------------------------------------------------L-" 
+  cout_doing << d_myworld->myrank() << " --------------------------------------------------------L-" 
              <<level->getIndex()<< "  progressVar " << AMR_subCycleProgressVar << endl;  
-  cout_doing << "ICE::scheduleTimeAdvance\t\t\t\tL-" <<level->getIndex()<< endl;
+  cout_doing << d_myworld->myrank() << " ICE::scheduleTimeAdvance\t\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
@@ -955,7 +955,7 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
     return;
 
   Task* t;
-  cout_doing << "ICE::schedulecomputeThermoTransportProperties" 
+  cout_doing << d_myworld->myrank() << " ICE::schedulecomputeThermoTransportProperties" 
              << "\t\t\tL-"<< level->getIndex()<< endl;
              
   t = scinew Task("ICE::computeThermoTransportProperties", 
@@ -1000,12 +1000,12 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
 
   Task* t = 0;
   if (d_RateForm) {     //RATE FORM
-    cout_doing << "ICE::scheduleComputeRateFormPressure" << endl;
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeRateFormPressure" << endl;
     t = scinew Task("ICE::computeRateFormPressure",
                      this, &ICE::computeRateFormPressure);
   }
   else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleComputeEquilibrationPressure" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeEquilibrationPressure" 
                << "\t\t\tL-" << levelIndex<< endl;
     t = scinew Task("ICE::computeEquilibrationPressure",
                      this, &ICE::computeEquilibrationPressure);
@@ -1054,7 +1054,7 @@ void ICE::scheduleComputeTempFC(SchedulerP& sched,
     return;
 
   Task* t;
-  cout_doing << "ICE::scheduleComputeTempFC" 
+  cout_doing << d_myworld->myrank() << " ICE::scheduleComputeTempFC" 
              << "\t\t\t\t\tL-"<< levelIndex<< endl;
              
   t = scinew Task("ICE::computeTempFC", this, &ICE::computeTempFC);
@@ -1086,13 +1086,13 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
 
   Task* t = 0;
   if (d_RateForm) {     //RATE FORM
-    cout_doing << "ICE::scheduleComputeFaceCenteredVelocitiesRF" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeFaceCenteredVelocitiesRF" 
                << "\t\t\t\t\tL-" << levelIndex<< endl;
     t = scinew Task("ICE::computeFaceCenteredVelocitiesRF",
               this, &ICE::computeFaceCenteredVelocitiesRF);
   }
   else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleComputeVel_FC" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeVel_FC" 
                << "\t\t\t\t\tL-" << levelIndex<< endl;
                
     t = scinew Task("ICE::computeVel_FC",
@@ -1135,7 +1135,7 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
   if(!doICEOnLevel(levelIndex))
     return;
 
-  cout_doing << "ICE::scheduleAddExchangeContributionToFCVel" 
+  cout_doing << d_myworld->myrank() << " ICE::scheduleAddExchangeContributionToFCVel" 
              << "\t\t\tL-" << levelIndex<< endl;
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                      this, &ICE::addExchangeContributionToFCVel, recursion);
@@ -1173,7 +1173,7 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
     return;
 
   if(d_models.size() != 0){
-    cout_doing << "ICE::scheduleModelMassExchange" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleModelMassExchange" 
                << "\t\t\tL-"<< levelIndex<< endl;
     
     
@@ -1214,7 +1214,7 @@ void ICE::scheduleUpdateVolumeFraction(SchedulerP& sched,
     return;
 
   if(d_models.size() != 0){
-    cout_doing << "ICE::scheduleUpdateVolumeFraction" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleUpdateVolumeFraction" 
                << "\t\t\tL-"<< levelIndex<< endl;
                
     Task* task = scinew Task("ICE::updateVolumeFraction",
@@ -1246,7 +1246,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   if(!doICEOnLevel(levelIndex))
     return;
 
-  cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" 
+  cout_doing << d_myworld->myrank() << " ICE::scheduleComputeDelPressAndUpdatePressCC" 
              << "\t\t\tL-"<< levelIndex<< endl;
   Task *task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
                             this, &ICE::computeDelPressAndUpdatePressCC);
@@ -1296,7 +1296,7 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
   if(!doICEOnLevel(levelIndex))
     return;
 
-  cout_doing << "ICE::scheduleComputePressFC" 
+  cout_doing << d_myworld->myrank() << " ICE::scheduleComputePressFC" 
              << "\t\t\t\t\tL-"<< levelIndex<< endl;
                                 
   Task* task = scinew Task("ICE::computePressFC",
@@ -1330,7 +1330,7 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
     return;
 
   Task* t;
-  cout_doing << "ICE::scheduleAccumulateMomentumSourceSinks" 
+  cout_doing << d_myworld->myrank() << " ICE::scheduleAccumulateMomentumSourceSinks" 
              << "\t\t\tL-"<< levelIndex<< endl;
               
   t = scinew Task("ICE::accumulateMomentumSourceSinks", 
@@ -1387,14 +1387,14 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
     return;
 
   Task* t;              // EQ
-    cout_doing << "ICE::scheduleAccumulateEnergySourceSinks" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleAccumulateEnergySourceSinks" 
                << "\t\t\tL-" << levelIndex << endl;
                
     t = scinew Task("ICE::accumulateEnergySourceSinks",
               this, &ICE::accumulateEnergySourceSinks);
                      
   if (d_RateForm) {     //RATE FORM
-    cout_doing << "ICE::scheduleAccumulateEnergySourceSinks_RF" << endl;
+    cout_doing << d_myworld->myrank() << " ICE::scheduleAccumulateEnergySourceSinks_RF" << endl;
     t = scinew Task("ICE::accumulateEnergySourceSinks_RF",
               this, &ICE::accumulateEnergySourceSinks_RF);
   }
@@ -1448,7 +1448,7 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
   if(!doICEOnLevel(levelIndex))
     return;
 
-  cout_doing << "ICE::scheduleComputeLagrangianValues" 
+  cout_doing << d_myworld->myrank() << " ICE::scheduleComputeLagrangianValues" 
              << "\t\t\t\tL-"<< levelIndex<< endl;
              
   Task* t = scinew Task("ICE::computeLagrangianValues",
@@ -1491,12 +1491,12 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   Task* t = 0;
 
   if (d_RateForm) {     //RATE FORM
-    cout_doing << "ICE::scheduleComputeLagrangianSpecificVolumeRF" << endl;
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeLagrangianSpecificVolumeRF" << endl;
     t = scinew Task("ICE::computeLagrangianSpecificVolumeRF",
                this,&ICE::computeLagrangianSpecificVolumeRF);
   }
   else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleComputeLagrangianSpecificVolume" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeLagrangianSpecificVolume" 
                << "\t\t\tL-"<< levelIndex<< endl;
     t = scinew Task("ICE::computeLagrangianSpecificVolume",
                this,&ICE::computeLagrangianSpecificVolume);
@@ -1549,7 +1549,7 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
     return;
 
   if(d_models.size() > 0 && d_modelSetup->tvars.size() > 0){
-    cout_doing << "ICE::scheduleComputeLagrangian_Transported_Vars" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeLagrangian_Transported_Vars" 
                << "\t\t\tL-"<<levelIndex<< endl;
                
     Task* t = scinew Task("ICE::computeLagrangian_Transported_Vars",
@@ -1590,12 +1590,12 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 
   Task* t = 0;
   if (d_RateForm) {     //RATE FORM
-    cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy_RF" << endl;
+    cout_doing << d_myworld->myrank() << " ICE::scheduleAddExchangeToMomentumAndEnergy_RF" << endl;
     t=scinew Task("ICE::addExchangeToMomentumAndEnergyRF",
                   this, &ICE::addExchangeToMomentumAndEnergyRF);
   }
   else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleAddExchangeToMomentumAndEnergy" 
                << "\t\t\tL-"<< levelIndex << endl;
     t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
                   this, &ICE::addExchangeToMomentumAndEnergy);
@@ -1657,7 +1657,7 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
     return;
 
   if(d_customBC_var_basket->usingLodi) {
-    cout_doing << "ICE::scheduleMaxMach_on_Lodi_BC_Faces" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleMaxMach_on_Lodi_BC_Faces" 
                << "\t\t\tL-levelIndex" << endl;
     Task* task = scinew Task("ICE::maxMach_on_Lodi_BC_Faces",
                        this, &ICE::maxMach_on_Lodi_BC_Faces);
@@ -1689,7 +1689,7 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
                                     const double AMR_subCycleProgressVar,
                                     const MaterialSet* ice_matls)
 {
-  cout_doing << "     computesRequires_AMR_Refluxing  progressVar " 
+  cout_doing << d_myworld->myrank() << "      computesRequires_AMR_Refluxing  progressVar " 
              << AMR_subCycleProgressVar << endl;
   Ghost::GhostType  gn   = Ghost::None;
   task->computes(lb->mass_X_FC_fluxLabel);
@@ -1765,7 +1765,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   Ghost::GhostType  gac  = Ghost::AroundCells; 
   Ghost::GhostType  gn   = Ghost::None;
   
-  cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" 
+  cout_doing << d_myworld->myrank() << " ICE::scheduleAdvectAndAdvanceInTime" 
              << "\t\t\t\tL-"<< levelIndex << endl;
              
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
@@ -1824,7 +1824,7 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
     return;
 
   if(d_conservationTest->onOff) {
-    cout_doing << "ICE::scheduleTestConservation" 
+    cout_doing << d_myworld->myrank() << " ICE::scheduleTestConservation" 
                << "\t\t\tL-"<< levelIndex<< endl;
     
     Task* t= scinew Task("ICE::TestConservation",
@@ -1878,7 +1878,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing Compute Stable Timestep on patch " << patch->getID() 
+    cout_doing << d_myworld->myrank() << " Doing Compute Stable Timestep on patch " << patch->getID() 
          << "\t\t ICE \tL-" <<level->getIndex()<< endl;
       
     Vector dx = patch->dCell();
@@ -2068,7 +2068,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing Initialize on patch " << patch->getID() 
+    cout_doing << d_myworld->myrank() << " Doing Initialize on patch " << patch->getID() 
          << "\t\t\t ICE \tL-" <<L_indx<< endl;
     int numMatls    = d_sharedState->getNumICEMatls();
     int numALLMatls = d_sharedState->getNumMatls();
@@ -2221,7 +2221,7 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing initialize_hydrostaticAdj on patch "
+    cout_doing << d_myworld->myrank() << " Doing initialize_hydrostaticAdj on patch "
                << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
    
     Ghost::GhostType  gn = Ghost::None;
@@ -2287,7 +2287,7 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing computeThermoTransportProperties on patch "
+    cout_doing << d_myworld->myrank() << " Doing computeThermoTransportProperties on patch "
                << patch->getID() << "\t ICE \tL-" <<levelIndex<< endl;
    
     int numMatls = d_sharedState->getNumICEMatls();
@@ -2359,7 +2359,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing calc_equilibration_pressure on patch "<<patch->getID()
+    cout_doing << d_myworld->myrank() << " Doing calc_equilibration_pressure on patch "<<patch->getID()
                << "\t\t ICE \tL-" <<L_indx<< endl;
     double    converg_coeff = 15;              
     double    convergence_crit = converg_coeff * DBL_EPSILON;
@@ -2713,7 +2713,7 @@ void ICE::computeTempFC(const ProcessorGroup*,
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << "Doing compute_FC_Temp on patch " 
+    cout_doing << d_myworld->myrank() << " Doing compute_FC_Temp on patch " 
               << patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
             
     int numMatls = d_sharedState->getNumMatls();
@@ -2814,7 +2814,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << "Doing computeVel_FC on patch " 
+    cout_doing << d_myworld->myrank() << " Doing computeVel_FC on patch " 
            << patch->getID() << "\t\t\t\t ICE \tL-"<<level->getIndex()<< endl;
 
     int numMatls = d_sharedState->getNumMatls();
@@ -3030,7 +3030,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing Add_exchange_contribution_to_FC_vel on patch " <<
+    cout_doing << d_myworld->myrank() << " Doing Add_exchange_contribution_to_FC_vel on patch " <<
       patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
  
     // change the definition of parent(old/new)DW
@@ -3177,7 +3177,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
-    cout_doing << "Doing explicit delPress on patch " << patch->getID() 
+    cout_doing << d_myworld->myrank() << " Doing explicit delPress on patch " << patch->getID() 
          <<  "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
 
     int numMatls  = d_sharedState->getNumMatls();
@@ -3378,7 +3378,7 @@ void ICE::computePressFC(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << "Doing press_face_MM on patch " << patch->getID() 
+    cout_doing << d_myworld->myrank() << " Doing press_face_MM on patch " << patch->getID() 
          << "\t\t\t\t ICE \tL-" <<level->getIndex()<< endl;
     Ghost::GhostType  gac = Ghost::AroundCells;
     
@@ -3534,7 +3534,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << "Doing accumulate_momentum_source_sinks_MM on patch " <<
+    cout_doing << d_myworld->myrank() << " Doing accumulate_momentum_source_sinks_MM on patch " <<
       patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
 
     int indx;
@@ -3764,7 +3764,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing accumulate_energy_source_sinks on patch " 
+    cout_doing << d_myworld->myrank() << " Doing accumulate_energy_source_sinks on patch " 
          << patch->getID() << "\t\t ICE \tL-" <<level->getIndex()<< endl;
 
     int numMatls = d_sharedState->getNumMatls();
@@ -3894,7 +3894,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << "Doing Lagrangian mass, momentum and energy on patch " <<
+    cout_doing << d_myworld->myrank() << " Doing Lagrangian mass, momentum and energy on patch " <<
       patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
 
     int numALLMatls = d_sharedState->getNumMatls();
@@ -4046,7 +4046,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << "Doing computeLagrangianSpecificVolume " <<
+    cout_doing << d_myworld->myrank() << " Doing computeLagrangianSpecificVolume " <<
       patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
 
     delt_vartype delT;
@@ -4226,7 +4226,7 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << "Doing computeLagrangian_Transported_Vars on patch " 
+    cout_doing << d_myworld->myrank() << " Doing computeLagrangian_Transported_Vars on patch " 
                << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
     Ghost::GhostType  gn  = Ghost::None;
     int numMatls = d_sharedState->getNumICEMatls();
@@ -4336,7 +4336,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing doCCMomExchange on patch "<< patch->getID()
+    cout_doing << d_myworld->myrank() << " Doing doCCMomExchange on patch "<< patch->getID()
                <<"\t\t\t ICE \tL-" <<level->getIndex()<< endl;
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
@@ -4700,7 +4700,7 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing maxMach_on_Lodi_BC_Faces " <<
+    cout_doing << d_myworld->myrank() << " Doing maxMach_on_Lodi_BC_Faces " <<
       patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
       
     Ghost::GhostType  gn = Ghost::None;
@@ -4805,7 +4805,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
  
-    cout_doing << "Doing Advect and Advance in Time on patch " 
+    cout_doing << d_myworld->myrank() << " Doing Advect and Advance in Time on patch " 
                << patch->getID() << "\t\t ICE \tL-" <<L_indx
                << " progressVar " << AMR_subCycleProgressVar << endl;
 
@@ -5074,7 +5074,7 @@ void ICE::TestConservation(const ProcessorGroup*,
   for(int p=0; p<patches->size(); p++)  {
     const Patch* patch = patches->get(p);
     
-    cout_doing << "Doing TestConservation on patch " 
+    cout_doing << d_myworld->myrank() << " Doing TestConservation on patch " 
                << patch->getID() << "\t\t\t ICE \tL-"<<level->getIndex()<< endl;      
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
@@ -5491,7 +5491,7 @@ void ICE::scheduleCheckNeedAddMaterial(SchedulerP& sched,
                                        const MaterialSet* /*ice_matls*/)
 {
   if(d_models.size() != 0){
-    cout_doing << "ICE::scheduleCheckNeedAddMaterial" << endl;
+    cout_doing << d_myworld->myrank() << " ICE::scheduleCheckNeedAddMaterial" << endl;
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
        iter != d_models.end(); iter++){
       ModelInterface* model = *iter;
@@ -5505,7 +5505,7 @@ void ICE::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
                                        const MaterialSet* all_matls)
 {
   if(d_models.size() != 0){
-    cout_doing << "ICE::scheduleSetNeedAddMaterialFlag" << endl;
+    cout_doing << d_myworld->myrank() << " ICE::scheduleSetNeedAddMaterialFlag" << endl;
     Task* t= scinew Task("ICE::setNeedAddMaterialFlag",
                  this, &ICE::setNeedAddMaterialFlag);
     t->requires(Task::NewDW, lb->NeedAddIceMaterialLabel);

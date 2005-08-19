@@ -1359,20 +1359,12 @@ void AMRICE::refluxOperator_computeCorrectionFluxes(
   xfl = yfl = zfl = finePatch->getInteriorCellLowIndex();
   xcl = ycl = zcl = coarsePatch->getInteriorCellLowIndex();
   
-  fh = finePatch->getInteriorCellHighIndex();
-  ch = coarsePatch->getInteriorCellHighIndex();
-
-  // get the highs to the right values... 
-  // (find the correct x-face-centered high value, etc.)
-  IntVector fineNeighbors(finePatch->neighborsHigh());
-  IntVector coarseNeighbors(coarsePatch->neighborsHigh());
-  xfh = fh + IntVector(fineNeighbors.x(),       0,                0);
-  yfh = fh + IntVector(     0,            fineNeighbors.y(),      0);
-  zfh = fh + IntVector(     0,                  0,            fineNeighbors.z());
-  
-  xch = ch + IntVector(coarseNeighbors.x(),     0,                0);
-  ych = ch + IntVector(     0,            coarseNeighbors.y(),    0);
-  zch = ch + IntVector(     0,                  0,            coarseNeighbors.z());
+  xfh = finePatch->getInteriorHighIndex(Patch::XFaceBased);
+  yfh = finePatch->getInteriorHighIndex(Patch::YFaceBased);
+  zfh = finePatch->getInteriorHighIndex(Patch::ZFaceBased);
+  xch = coarsePatch->getInteriorHighIndex(Patch::XFaceBased);
+  ych = coarsePatch->getInteriorHighIndex(Patch::YFaceBased);
+  zch = coarsePatch->getInteriorHighIndex(Patch::ZFaceBased);
 
   // Intersection of coarse and fine patches
   xfl = Max(coarseLevel->mapCellToFiner(xcl), xfl);
