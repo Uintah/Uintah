@@ -46,6 +46,7 @@
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/CCA/ComponentID.h>
 #include <SCIRun/CCA/CCAException.h>
+#include <SCIRun/Dataflow/SCIRunComponentModel.h>
 
 #include <qapplication.h>
 #include <qpushbutton.h>
@@ -123,8 +124,8 @@ Module::makePorts() {
     ComponentID *compID = dynamic_cast<ComponentID*>(cid.getPointer());
     SCIRunFramework* fwk = compID->framework;
     if (!fwk) {
-        std::cerr << "Error: could not get the framework!" << std::endl;
-        // quit here?
+        viewWindow->p2BuilderWindow->displayMsg("Error: could not get the framework, cannot make Module " + instanceName);
+        return;
     }
 
     sci::cca::ports::BuilderService::pointer bs =
@@ -149,11 +150,13 @@ Module::makePorts() {
 
         std::string loaderName;
         int nNodes = 1;
+        bool isDataflow = false;
         sci::cca::TypeMap::pointer properties =
             bs->getComponentProperties(cid);
         if (!properties.isNull()) {
             loaderName = properties->getString("LOADER NAME", loaderName);
             nNodes = properties->getInt("np", nNodes);
+            isDataflow = properties->getBool("dataflow", false);
         }
 
         std::ostringstream nameWithNodes;
@@ -245,15 +248,15 @@ Module::makePorts() {
             try {
                 services->registerUsesPort(uiPortName, "sci.cca.ports.UIPort", sci::cca::TypeMap::pointer(0));
             }
-            catch (const Exception& e) {
-                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            catch (const sci::cca::CCAException::pointer &pe) {
+                viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
             }
 
             try {
                 bs->connect(services->getComponentID(), uiPortName, cid, isSciPort ? "sci.ui" : "ui");
             }
-            catch (const Exception& e) {
-                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            catch (const sci::cca::CCAException::pointer &pe) {
+                viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
             }
         } else {
             uiButton = 0;
@@ -266,19 +269,22 @@ Module::makePorts() {
                 services->registerUsesPort(goPortName, "sci.cca.ports.GoPort",
                     sci::cca::TypeMap::pointer(0));
             }
-            catch (const Exception& e) {
-                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            catch (const sci::cca::CCAException::pointer &pe) {
+                viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
             }
 
             try {
-std::cerr << "Module connect go in " << services->getComponentID()->getInstanceName() << std::endl;
                 bs->connect(services->getComponentID(), goPortName,
                     cid,  isSciPort ? "sci.go" : "go");
             }
-            catch (const Exception& e) {
-                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            catch (const sci::cca::CCAException::pointer &pe) {
+                viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
             }
         }
+
+        //if (isDataflow) {
+        //    menu->insertItem("Dataflow Log", this, SLOT(log()) );
+        //}
 
         if (hasComponentIcon) {
             // progress bar etc.
@@ -289,15 +295,15 @@ std::cerr << "Module connect go in " << services->getComponentID()->getInstanceN
                     "sci.cca.ports.ComponentIcon",
                         sci::cca::TypeMap::pointer(0));
             }
-            catch (const Exception& e) {
-                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            catch (const sci::cca::CCAException::pointer &pe) {
+                viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
             }
 
             try {
                 bs->connect(services->getComponentID(), iconName, cid, "icon");
             }
-            catch (const Exception& e) {
-                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            catch (const sci::cca::CCAException::pointer &pe) {
+                viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
             }
 
             sci::cca::Port::pointer p = services->getPort(iconName);
@@ -342,12 +348,11 @@ std::cerr << "Module connect go in " << services->getComponentID()->getInstanceN
                     type = pi->getType();
                     if (type == "sci.cca.ports.Progress") {
                         try {
-std::cerr << "Module connect progress in " << services->getComponentID()->getInstanceName() << std::endl;
                             bs->connect(cid, "progress", services->getComponentID(), progPortName);
                             progress->show();
                         }
-                        catch (const Exception& e) {
-                            viewWindow->p2BuilderWindow->displayMsg(e.message());
+                        catch (const sci::cca::CCAException::pointer &pe) {
+                            viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
                         }
                         continue;
                     }
@@ -369,30 +374,30 @@ Module::~Module()
             services->unregisterUsesPort(uiPortName);
         }
     }
-    catch (const CCAException& e) {
-        viewWindow->p2BuilderWindow->displayMsg(e.message());
+    catch (const sci::cca::CCAException::pointer &pe) {
+        viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
     }
     try {
         if (hasGoPort) {
             services->unregisterUsesPort(goPortName);
         }
     }
-    catch (const CCAException& e) {
-        viewWindow->p2BuilderWindow->displayMsg(e.message());
+    catch (const sci::cca::CCAException::pointer &pe) {
+        viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
     }
     try {
         if (hasComponentIcon) {
             services->unregisterUsesPort(iconName);
         }
     }
-    catch (const CCAException& e) {
-        viewWindow->p2BuilderWindow->displayMsg(e.message());
+    catch (const sci::cca::CCAException::pointer &pe) {
+        viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
     }
     try {
         services->removeProvidesPort(progPortName);
     }
-    catch (const CCAException& e) {
-        viewWindow->p2BuilderWindow->displayMsg(e.message());
+    catch (const sci::cca::CCAException::pointer &pe) {
+        viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
     }
 
     for (unsigned int i = 0; i < ports.size(); i++) {
@@ -543,6 +548,11 @@ void Module::desc()
   QMessageBox::information(this, dName.c_str(), mDesc.c_str());
 }
 
+//void Module::log()
+//{
+//    SCIRunComponentModel::displayDataflowLog();
+//}
+
 void
 Module::updatePorts() {
     int top = 5;
@@ -558,7 +568,8 @@ Module::updatePorts() {
     ComponentID *compID = dynamic_cast<ComponentID*>(cid.getPointer());
     SCIRunFramework* fwk = compID->framework;
     if (!fwk) {
-        std::cerr << "Error: could not get the framework!" << std::endl;
+        viewWindow->p2BuilderWindow->displayMsg("Error: could not get the framework, cannot make Module " + instanceName);
+        return; 
     }
 
     sci::cca::ports::BuilderService::pointer bs =
@@ -639,17 +650,16 @@ Module::updatePorts() {
                 services->registerUsesPort(uiPortName, "sci.cca.ports.UIPort",
                     sci::cca::TypeMap::pointer(0));
             }
-            catch (const CCAException& e) {
-                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            catch (const sci::cca::CCAException::pointer &pe) {
+                viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
             }  
 
             try {
-std::cerr << "Module connect ui in " << services->getComponentID()->getInstanceName() << std::endl;
                 bs->connect(services->getComponentID(), uiPortName,
                     cid, isSciPort ? "sci.ui" : "ui");
             }
-            catch (const CCAException& e) {
-                viewWindow->p2BuilderWindow->displayMsg(e.message());
+            catch (const sci::cca::CCAException::pointer &pe) {
+                viewWindow->p2BuilderWindow->displayMsg(pe->getNote());
             }  
         }
         int positionCtr = 0;
