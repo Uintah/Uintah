@@ -28,67 +28,21 @@
 
 
 
-/*
- *  Object: Implementation of SSIDL.Object for PIDL
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   September 1999
- *
- *  Copyright (C) 1999 SCI Group
- */
-
 #include <Core/CCA/SSIDL/sidl_sidl.h>
+#include <Core/Util/NotFinished.h>
 
-//using SSIDL::Class;
 using SSIDL::BaseInterface;
-using SSIDL::Object;
+using SSIDL::BaseClass;
+using SSIDL::ClassInfo;
 
-/*
- * These are all implemented in SSIDL.interface, so these are just
- * up calls, since they will get generated from cia spec.
- */
-
-void Object::addReference()
+std::string ClassInfo::getName()
 {
-  BaseInterface::addReference();
+    NOT_FINISHED("string ClassInfo::getName()");
+    return "";
 }
 
-void Object::deleteReference()
+std::string ClassInfo::getIORVersion()
 {
-  BaseInterface::deleteReference();
+    NOT_FINISHED("string ClassInfo::getIORVersion()");
+    return "";
 }
-
-/*Class::pointer Object::getClass()
-{
-  return  BaseInterface::getClass();
-}*/
-
-bool Object::isSame(const BaseInterface::pointer& i)
-{
-  return BaseInterface::isSame(i);
-}
-/*
-bool Object::isInstanceOf(const Class::pointer& c)
-{
-  return BaseInterface::isInstanceOf(c);
-}
-
-bool Object::supportsInterface(const Class::pointer& c)
-{
-  return BaseInterface::supportsInterface(c);
-}*/
-/*
-BaseInterface::pointer Object::queryInterface(const Class::pointer& c)
-{
-  return BaseInterface::queryInterface(c);
-}
-*/
-
-BaseInterface::pointer Object::queryInterface(const std::string& c)
-{
-  return BaseInterface::queryInterface(c);
-}
-

@@ -28,57 +28,68 @@
 
 
 
-/*
- *  BaseInterface: Implementation of SSIDL.BaseInterface for PIDL
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   September 1999
- *
- *  Copyright (C) 1999 SCI Group
- */
-
 #include <Core/CCA/SSIDL/sidl_sidl.h>
 #include <Core/Util/NotFinished.h>
 
 using SSIDL::BaseInterface;
-//using SSIDL::BaseClass;
-using SSIDL::ClassInfo;
+using SSIDL::BaseClass;
+using SSIDL::BaseException;
+using SSIDL::SIDLException;
 
 
-void BaseInterface::addRef()
+std::string
+SIDLException::getNote()
 {
-    SCIRun::Object::addReference();
+  NOT_FINISHED("string SIDLException::getNote()");
+  return "";
 }
 
-void BaseInterface::deleteRef()
+/**
+ * Set the message associated with the exception.
+ */
+void
+SIDLException::setNote(const std::string& /*message*/)
 {
-    SCIRun::Object::deleteReference();
+  NOT_FINISHED("string SIDLException::setNote()");
+  return;
 }
 
-bool BaseInterface::isSame(const BaseInterface::pointer& /*object*/)
+/**
+ * Returns formatted string containing the concatenation of all 
+ * tracelines.
+ */
+std::string
+SIDLException::getTrace()
 {
-    NOT_FINISHED("bool .SSIDL.BaseInterface.isSame(in .SSIDL.BaseInterface object)");
-    return false;
+  NOT_FINISHED("string SIDLException::getTrace()");
+  return "";
 }
 
-BaseInterface::pointer BaseInterface::queryInt(const std::string& /*name*/)
+/**
+ * Adds a stringified entry/line to the stack trace.
+ */
+void
+// how to represent [Line] in C++: [Line] is extension for
+// method overloading
+//
+// f_addLine???
+//SIDLException::addLine(const string &/*traceline*/) ???
+SIDLException::add(const std::string& /*traceline*/)
 {
-    NOT_FINISHED(".SSIDL.BaseInterface .SSIDL.BaseInterface.queryInt(in .SSIDL.string name)");
-    return BaseInterface::pointer(0);
+  NOT_FINISHED("string SIDLException::add(const std::string& traceline)");
+  return;
 }
 
-bool BaseInterface::isType(const std::string& /*name*/)
+/**
+ * Formats and adds an entry to the stack trace based on the 
+ * file name, line number, and method name.
+ */
+void
+SIDLException::add(const std::string& /*filename*/,
+			   int /*lineno*/, 
+               const std::string& /*methodname*/)
 {
-    NOT_FINISHED("bool .SSIDL.BaseInterface.isType(in .SSIDL.string name)");
-    return false;
+  NOT_FINISHED("string SIDLException::add(const std::string& filename, int lineno, const std::string& methodname)");
+  return;
 }
 
-// SSIDL::ClassInfo BaseInterface::getClassInfo()
-ClassInfo::pointer BaseInterface::getClassInfo()
-{
-    NOT_FINISHED("ClassInfo .SSIDL.getClassInfo()");
-    return ClassInfo::pointer(0);
-}

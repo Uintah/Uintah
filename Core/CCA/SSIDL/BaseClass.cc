@@ -29,7 +29,7 @@
 
 
 /*
- *  BaseInterface: Implementation of SSIDL.BaseInterface for PIDL
+ *  BaseClass: Implementation of SSIDL.BaseClass for PIDL
  *
  *  Written by:
  *   Steven G. Parker
@@ -41,44 +41,69 @@
  */
 
 #include <Core/CCA/SSIDL/sidl_sidl.h>
-#include <Core/Util/NotFinished.h>
 
+//using SSIDL::Class;
 using SSIDL::BaseInterface;
-//using SSIDL::BaseClass;
+using SSIDL::BaseClass;
 using SSIDL::ClassInfo;
 
+/*
+ * These are all implemented in SSIDL.interface, so these are just
+ * up calls, since they will get generated from cia spec.
+ */
 
-void BaseInterface::addRef()
+//void Object::addReference()
+void BaseClass::addRef()
 {
-    SCIRun::Object::addReference();
+    //BaseInterface::addReference();
+    BaseInterface::addRef();
 }
 
-void BaseInterface::deleteRef()
+//void Object::deleteReference()
+void BaseClass::deleteRef()
 {
-    SCIRun::Object::deleteReference();
+    //BaseInterface::deleteReference();
+    BaseInterface::deleteRef();
 }
 
-bool BaseInterface::isSame(const BaseInterface::pointer& /*object*/)
+/*Class::pointer Object::getClass()
 {
-    NOT_FINISHED("bool .SSIDL.BaseInterface.isSame(in .SSIDL.BaseInterface object)");
-    return false;
+  return  BaseInterface::getClass();
+}*/
+
+bool BaseClass::isSame(const BaseInterface::pointer& iobj)
+{
+  return BaseInterface::isSame(iobj);
+}
+/*
+bool BaseClass::isInstanceOf(const Class::pointer& c)
+{
+  return BaseInterface::isInstanceOf(c);
 }
 
-BaseInterface::pointer BaseInterface::queryInt(const std::string& /*name*/)
+bool BaseClass::supportsInterface(const Class::pointer& c)
 {
-    NOT_FINISHED(".SSIDL.BaseInterface .SSIDL.BaseInterface.queryInt(in .SSIDL.string name)");
-    return BaseInterface::pointer(0);
+  return BaseInterface::supportsInterface(c);
+}*/
+
+/*
+BaseInterface::pointer BaseClass::queryInterface(const Class::pointer& c)
+{
+  return BaseInterface::queryInterface(c);
+}
+*/
+ //BaseInterface::pointer Object::queryInterface(const std::string& c)
+BaseInterface::pointer BaseClass::queryInt(const std::string& name)
+{
+  return BaseInterface::queryInt(name);
 }
 
-bool BaseInterface::isType(const std::string& /*name*/)
+bool BaseClass::isType(const std::string& name)
 {
-    NOT_FINISHED("bool .SSIDL.BaseInterface.isType(in .SSIDL.string name)");
-    return false;
+  return BaseInterface::isType(name);
 }
 
-// SSIDL::ClassInfo BaseInterface::getClassInfo()
-ClassInfo::pointer BaseInterface::getClassInfo()
+ClassInfo::pointer BaseClass::getClassInfo()
 {
-    NOT_FINISHED("ClassInfo .SSIDL.getClassInfo()");
-    return ClassInfo::pointer(0);
+    return BaseInterface::getClassInfo();
 }
