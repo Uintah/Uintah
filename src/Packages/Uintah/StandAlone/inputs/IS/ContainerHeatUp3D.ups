@@ -193,10 +193,10 @@
     <Level>
            <Box label="3D">
               <lower>        [-0.1,-0.1,-0.1]   </lower>
-              <upper>        [ 0.1, 0.1, 0.1]   </upper>
+              <upper>        [ 0.1, 0.2, 0.1]   </upper>
               <extraCells>   [0,0,0]            </extraCells>
-              <patches>      [2,2,2]            </patches>
-              <resolution>   [200,400,200]      </resolution>
+              <patches>      [1,1,1]            </patches>
+              <resolution>   [40,120,40]      </resolution>
            </Box>
 
 <!--      UNCOMMENT THIS FOR 2D AND COMMENT OUT THE ABOVE
@@ -216,7 +216,7 @@
   <!--____________________________________________________________________-->
   <DataArchiver>
     <filebase>ContainerHeatUp3D.uda</filebase>
-    <outputInterval> 5.0  </outputInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <compression>gzip</compression>
     <save label = "p.x"/>
     <save label = "p.velocity"/>
@@ -229,6 +229,7 @@
     <save label = "g.temperatureStar"/>
     <save label = "g.externalHeatRate"/>
     <save label = "g.mass"/>
+    <save label = "heatFlux_CC"/>
 
     <checkpoint cycle = "2" timestepInterval = "10"/>
   </DataArchiver>
