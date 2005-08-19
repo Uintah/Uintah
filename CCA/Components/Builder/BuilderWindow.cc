@@ -168,7 +168,6 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
   : QMainWindow(0, "SCIRun", WDestructiveClose | WType_TopLevel),
     services(services)
 {
-std::cerr << "BuilderWindow::BuilderWindow" << std::endl;
     addReference(); // Do something better than this! - used because of memory leak? (AK)
 
 #if !defined (_WIN32) && !defined (__APPLE__)
@@ -752,9 +751,10 @@ BuilderWindow::loadFile()
                 builder->connect(cidTable[iu], up, cidTable[ip], pp);
         }
     }
-    catch(const CCAException &e) {
-        displayMsg(e.message());
+    catch(const sci::cca::CCAException::pointer &pe) {
+        displayMsg(pe->getNote());
     }
+    // is this still needed? - for SCIRun Dataflow maybe?
     catch(const Exception &e) {
         displayMsg(e.message());
     }
@@ -848,8 +848,8 @@ void BuilderWindow::instantiateComponent(
             statusBar()->clear();
         }
     }
-    catch(const CCAException &e) {
-        displayMsg(e.message());
+    catch(const sci::cca::CCAException::pointer &pe) {
+        displayMsg(pe->getNote());
     }
     catch(...) {
         displayMsg("Caught unexpected exception while instantiating " +
@@ -892,8 +892,8 @@ BuilderWindow::instantiateBridgeComponent(const std::string& className,
             unsetCursor();
         }
     }
-    catch(const CCAException &e) {
-        displayMsg(e.message());
+    catch(const sci::cca::CCAException::pointer &pe) {
+        displayMsg(pe->getNote());
     }
     catch(const Exception& e) {
         displayMsg(e.message());
@@ -930,7 +930,6 @@ void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::poi
             bool isBridge = tm->getBool("bridge", false);
             // deal with Bridges later
             if (isBridge) {
-                std::cerr << "Bridge!!!" << std::endl;
                 return;
             }
         }
@@ -1053,8 +1052,8 @@ void BuilderWindow::addLoader()
 
     //this is based on the assumption that ploader & SCIrun2 Framework both have MPI or
     //neither of them has it. In the long run, this is not the case, and it should be changed.
-#ifdef HAVE_MPI
-        std::string loaderPath="'cd "+path+" && mpirun -np "+copies+" "+path+"/ploader'";
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
+    std::string loaderPath="'cd "+path+" && mpirun -np "+copies+" "+path+"/ploader'";
 #else
     std::string loaderPath="'cd "+path+" && "+path+"/ploader'";
 #endif 
