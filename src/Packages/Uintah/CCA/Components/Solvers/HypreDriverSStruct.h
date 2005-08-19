@@ -73,21 +73,21 @@ namespace Uintah {
 
     //========================== PUBLIC SECTION ==========================
   public:
-
     //---------- Types ----------
-    
+    // When constructing graph/matrix entries, is the current patch
+    // the coarse or the fine one at a C/F boundary?
     enum CoarseFineViewpoint {
       DoingCoarseToFine,
       DoingFineToCoarse
     };
     
+    // Stages in constructing the SStruct matrix
     enum ConstructionStatus {
       DoingGraph,
       DoingMatrix
     };
-    
-    //---------- Construction & Destruction ----------
 
+    //---------- Construction & Destruction ----------
     HypreDriverSStruct(const Level* level,
                        const MaterialSet* matlset,
                        const VarLabel* A, Task::WhichDW which_A_dw,
@@ -102,35 +102,29 @@ namespace Uintah {
     virtual ~HypreDriverSStruct(void);
 
  
-    // Data member modifyable access
+    //---------- Data member modifyable access ----------
     HYPRE_SStructMatrix& getA(void) { return _HA; }  // LHS
     HYPRE_SStructVector& getB(void) { return _HB; }  // RHS
     HYPRE_SStructVector& getX(void) { return _HX; }  // Solution
 
-    // Data member unmodifyable access
+    //---------- Data member unmodifyable access ----------
     const HYPRE_SStructMatrix& getA(void) const { return _HA; }  // LHS
     const HYPRE_SStructVector& getB(void) const { return _HB; }  // RHS
     const HYPRE_SStructVector& getX(void) const { return _HX; }  // Solution
 
-    // Common for all var types
+    //---------- Common for all var types ----------
     virtual void printMatrix(const string& fileName = "output");
     virtual void printRHS(const string& fileName = "output_b");
     virtual void printSolution(const string& fileName = "output_x");
     virtual void gatherSolutionVector(void);
 
-    // CC variables: set up linear system & read back solution
+    //---------- CC Variables implementation ----------
     virtual void makeLinearSystem_CC(const int matl);
     virtual void getSolution_CC(const int matl);
 
     //========================== PRIVATE SECTION ==========================
   private:
-
-    void initialize(void);
-    void initializeData(void);
-    void assemble(void);
-
-    // CC Variables implementation
-
+    //---------- CC Variables implementation ----------
     // SStruct C/F graph & matrix construction
     void makeConnections_CC(const ConstructionStatus& status,
                             const int level,
@@ -143,26 +137,52 @@ namespace Uintah {
     void makeGraph_CC(void);
     
     // SStruct matrix construction
-    void makeInteriorEquations_CC(const int level);
-    void makeUnderlyingIdentity_CC(const int level);
+    void makeInteriorEquations_CC(void);
     
     //---------- Data members ----------
     // Hypre SStruct interface objects
     HYPRE_SStructGrid        _grid;         // level&patch hierarchy
+    HYPRE_SStructVariable*   _vars;         // Types of Hypre variables used (CC,...)
     HYPRE_SStructStencil     _stencil;      // Same stencil@all levls
     HYPRE_SStructMatrix      _HA;           // Left-hand-side matrix
     HYPRE_SStructVector      _HB;           // Right-hand-side vector
     HYPRE_SStructVector      _HX;           // Solution vector
     HYPRE_SStructGraph       _graph;        // Unstructured connection graph
+    int                      _stencilSize;  // # entries in stencil
   }; // end class HypreDriverSStruct
+
+  class HyprePatchSStruct {
+  //___________________________________________________________________
+  // class HyprePatchSStruct~
+  // A convenient structure that holds a Uintah patch grid &
+  // geometry data that the Hypre SStruct interface uses
+  //___________________________________________________________________
+  public:
+    HyprePatchSStruct(const Patch* patch);  // Construction from Uintah patch
+    const Patch* getPatch(void) const { return _patch; }
+    int          getLevel(void) const { return _level; }
+
+    //---------- CC Variables implementation ----------
+    void addToGrid(HYPRE_SStructGrid& grid,
+                   const HYPRE_SStructVariable* _vars);
+
+  private:
+    //---------- Data members ----------
+    const Patch* _patch;   // Uintah patch pointer
+    int          _level;   // Patch belong to this level
+    IntVector    _low;     // Lower-left interior cell
+    IntVector    _high;    // Upper-right interior cell
+  };
 
 } // end namespace Uintah
 
 //========================== Utilities, printouts ==========================
+void          printLine(const std::string& s, const unsigned int len);
 std::ostream& operator << (std::ostream& os,
                            const Uintah::HypreDriverSStruct::CoarseFineViewpoint& v);
 std::ostream& operator << (std::ostream& os,
                            const Uintah::HypreDriverSStruct::ConstructionStatus& s);
+std::ostream& operator << (std::ostream& os,
+                           const Uintah::HyprePatchSStruct& p);
 
 #endif // Packages_Uintah_CCA_Components_Solvers_HypreDriverSStruct_h
-
