@@ -80,9 +80,6 @@ void AMRSimulationController::run()
    // set up scheduler, lb, sim, regridder, and finalize sharedState
    postGridSetup(currentGrid);
 
-   if (d_myworld->myrank() == 0)
-     cout << "GRID: " << *currentGrid.get_rep() << endl;
-
    calcStartTime();
 
    d_scheduler->initialize(1, 1);
