@@ -28,6 +28,12 @@ void ConstantThermo::addTaskDependencies_thermalDiffusivity(Task* t, Task::Which
   // No additional requirements
 }
 
+void ConstantThermo::addTaskDependencies_thermalConductivity(Task* t, Task::WhichDW dw,
+                                                             int numGhostCells)
+{
+  // No additional requirements
+}
+
 void ConstantThermo::addTaskDependencies_cp(Task* t, Task::WhichDW dw,
                                             int numGhostCells)
 {
@@ -72,6 +78,14 @@ void ConstantThermo::compute_thermalDiffusivity(CellIterator iter,
   double factor = d_thermalConductivity/cp;
   for(;!iter.done();iter++)
     thermalDiffusivity[*iter] = factor * sp_vol[*iter];
+}
+
+void ConstantThermo::compute_thermalConductivity(CellIterator iter,
+                                                 CCVariable<double>& thermalConductivity,
+                                                 DataWarehouse*)
+{
+  for(;!iter.done();iter++)
+    thermalConductivity[*iter] = d_thermalConductivity;
 }
 
 void ConstantThermo::compute_cp(CellIterator iter, CCVariable<double>& cp,
