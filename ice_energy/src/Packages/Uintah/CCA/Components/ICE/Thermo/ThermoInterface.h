@@ -46,6 +46,8 @@ WARNING
                                           ICEMaterial* ice_matl) = 0;
     virtual void addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
                                                         int numGhostCells) = 0;
+    virtual void addTaskDependencies_thermalConductivity(Task* t, Task::WhichDW dw,
+                                                         int numGhostCells) = 0;
     virtual void addTaskDependencies_cp(Task* t, Task::WhichDW dw,
                                         int numGhostCells) = 0;
     virtual void addTaskDependencies_cv(Task* t, Task::WhichDW dw,
@@ -63,6 +65,9 @@ WARNING
                                             CCVariable<double>& thermalDiffusivity,
                                             DataWarehouse* dw,
                                             constCCVariable<double>& sp_vol) = 0;
+    virtual void compute_thermalConductivity(CellIterator iter,
+                                             CCVariable<double>& thermalConducitivity,
+                                             DataWarehouse* dw) = 0;
     virtual void compute_cp(CellIterator iter, CCVariable<double>& cp,
                             DataWarehouse* dw) = 0;
     virtual void compute_cv(CellIterator iter, CCVariable<double>& cv,

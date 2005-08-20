@@ -1503,10 +1503,19 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->compressiblityLabel,                gn);
   t->requires(Task::NewDW, lb->rho_CCLabel,                  gac,1);
+  t->requires(Task::OldDW, lb->int_eng_CCLabel,              gac,1);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,               gac,1);
   t->requires(Task::NewDW, lb->vol_fracX_FCLabel, ice_matls, gac,2);
   t->requires(Task::NewDW, lb->vol_fracY_FCLabel, ice_matls, gac,2);
   t->requires(Task::NewDW, lb->vol_fracZ_FCLabel, ice_matls, gac,2);
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    // Require data to compute thermal conductivity
+    ice_matl->getThermo()->addTaskDependencies_thermalConductivity(t, Task::NewDW, 0);
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, Task::NewDW, 0);
+  }
+  
 
   if (d_EqForm) {       //EQ FORM
     t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
@@ -4008,10 +4017,20 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
             cout <<"ICE:Compute heat diffusion:  currently the heat diffusion" 
             " calculation doesn't work for multiple materials. Set the ICE: thermal conductivity to 0.0 --Todd"<< endl;
           }
-          constCCVariable<double> Temp_CC;
-          throw InternalError("thermalCond not finished", __FILE__, __LINE__);
-          constCCVariable<double> thermalCond;
-          new_dw->get(Temp_CC,     lb->otemp_CCLabel,    indx,patch,gac,1); 
+          constCCVariable<double> int_eng;
+          old_dw->get(int_eng,     lb->int_eng_CCLabel,    indx,patch,gac,1); 
+          CCVariable<double> Temp_CC;
+          new_dw->allocateTemporary(Temp_CC, patch, Ghost::AroundCells, 1);
+          cerr << "int_eng: " << int_eng.getWindow()->getLowIndex() << " " << int_eng.getWindow()->getHighIndex() << '\n';
+          cerr << "Temp_CC: " << Temp_CC.getWindow()->getLowIndex() << " " << Temp_CC.getWindow()->getHighIndex() << '\n';
+          cerr << "iterator: " << patch->getExtraCellIterator(IntVector(0,0,0)).begin() << " " << patch->getExtraCellIterator(IntVector(0,0,0)).end() << '\n';
+          cerr << "WARNING: iterators likely wrong for multipatch problems\n";
+          ice_matl->getThermo()->compute_Temp(patch->getExtraCellIterator(IntVector(0,0,0)),
+                                              Temp_CC, new_dw, int_eng);
+          CCVariable<double> thermalCond;
+          new_dw->allocateTemporary(thermalCond, patch, Ghost::AroundCells, 1);
+          ice_matl->getThermo()->compute_thermalConductivity(patch->getExtraCellIterator(IntVector(0,0,0)),
+                                                             thermalCond, new_dw);
 
           constSFCXVariable<double> vol_fracX_FC;
           constSFCYVariable<double> vol_fracY_FC;
@@ -4536,8 +4555,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
-  throw InternalError("addExchangeToMomentumAndEnergy not finished", __FILE__, __LINE__);
-#if 0
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -4554,9 +4571,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     //Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
-    StaticArray<CCVariable<double> > cv(numALLMatls);
     StaticArray<CCVariable<double> > Temp_CC(numALLMatls);
-    StaticArray<constCCVariable<double> > gamma(numALLMatls);  
     StaticArray<constCCVariable<double> > vol_frac_CC(numALLMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > mom_L(numALLMatls);
@@ -4592,25 +4607,28 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int indx = matl->getDWIndex();
-      new_dw->allocateTemporary(cv[m], patch);
       
       if(mpm_matl){                 // M P M
         CCVariable<double> oldTemp;
-        new_dw->getCopy(oldTemp,          lb->temp_CCLabel,indx,patch,gn,0);
+        new_dw->getCopy(oldTemp,          lb->otemp_CCLabel,indx,patch,gn,0);
         new_dw->getModifiable(vel_CC[m],  lb->vel_CCLabel, indx,patch);
-        new_dw->getModifiable(Temp_CC[m], lb->temp_CCLabel,indx,patch);
+        new_dw->getModifiable(Temp_CC[m], lb->otemp_CCLabel,indx,patch);
         old_temp[m] = oldTemp;
-        cv[m].initialize(mpm_matl->getSpecificHeat());
+        cerr << "WARNING: need to do something about MPM cv\n";
+        //cv[m].initialize(mpm_matl->getSpecificHeat());
       }
       if(ice_matl){                 // I C E
-        constCCVariable<double> cv_ice;
-        old_dw->get(old_temp[m],   lb->temp_CCLabel,      indx, patch,gn,0);
-        new_dw->get(cv_ice,        lb->specific_heatLabel,indx, patch,gn,0);
-        new_dw->get(gamma[m],      lb->gammaLabel,        indx, patch,gn,0);
+        cerr << "Dependencies not finished for addExchangeToMomentumAndEnergy\n";
+        constCCVariable<double> int_eng;
+        old_dw->get(int_eng,   lb->int_eng_CCLabel,      indx, patch,gn,0);
+        CCVariable<double> otemp;
+        new_dw->allocateTemporary(otemp, patch);
+        ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), otemp, new_dw,
+                                            int_eng);
+        old_temp[m] = otemp;
        
         new_dw->allocateTemporary(vel_CC[m],  patch);
         new_dw->allocateTemporary(Temp_CC[m], patch); 
-        cv[m].copyData(cv_ice);
       }                             // A L L  M A T L S
 
       new_dw->get(mass_L[m],        lb->mass_L_CCLabel,   indx, patch,gn, 0);
@@ -4624,12 +4642,18 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     }
 
     // Convert momenta to velocities and internal energy to Temp
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      for (int m = 0; m < numALLMatls; m++) {
-        Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m][c]);
+    for (int m = 0; m < numALLMatls; m++) {
+      CCVariable<double> spec_int_eng_L;
+      new_dw->allocateTemporary(spec_int_eng_L, patch);
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        spec_int_eng_L[c] = int_eng_L[m][c]/mass_L[m][c];
         vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c];
       }
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      constCCVariable<double> tmp = spec_int_eng_L;
+      ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), Temp_CC[m], new_dw,
+                                          tmp);
     }
     //---- P R I N T   D A T A ------ 
     if (switchDebugMomentumExchange_CC ) {
@@ -4648,6 +4672,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }
 
+    cerr << "WARNING: energy/momentum exchange disabled\n";
+#if 0
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
       //---------- M O M E N T U M   E X C H A N G E
@@ -4712,8 +4738,11 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         Temp_CC[m][c] = Temp_CC[m][c] + b[m];
       }
     }  //end CellIterator loop
+#endif
 
   if(d_convective){
+    cerr << "WARNING: convector heat transfer broken\n";
+#if 0
     //  Loop over matls
     //  if (mpm_matl)
     //  Loop over cells
@@ -4830,6 +4859,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         }    // cellIterator
       }      // if mpm_matl
     }        // for ALL matls
+#endif
    }
 
     /*`==========TESTING==========*/ 
@@ -4857,13 +4887,18 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       setBC(vel_CC[m], "Velocity",   patch, d_sharedState, indx, new_dw,
                                                         d_customBC_var_basket);
+      cerr << "WARNING: setBC not finished\n";
+#if 0
       setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_sharedState, 
                                          indx, new_dw,  d_customBC_var_basket);
+#endif
     }
     
     delete_CustomBCs(d_customBC_var_basket);
     //__________________________________
     // Convert vars. primitive-> flux 
+    cerr << "WARNING: exchange really broken\n";
+#if 0
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
       for (int m = 0; m < numALLMatls; m++) {
@@ -4872,6 +4907,16 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
       }
     }
+#else
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      for (int m = 0; m < numALLMatls; m++) {
+        int_eng_L_ME[m][c] = int_eng_L[m][c];
+        mom_L_ME[m][c]     = vel_CC[m][c]           * mass_L[m][c];
+        Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
+      }
+    }
+#endif
 
     //---- P R I N T   D A T A ------ 
     if (switchDebugMomentumExchange_CC ) {
@@ -4889,7 +4934,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }
   } //patches
-#endif
 }
 
 /* _____________________________________________________________________
