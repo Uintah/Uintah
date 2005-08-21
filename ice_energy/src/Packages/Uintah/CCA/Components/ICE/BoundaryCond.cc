@@ -400,12 +400,10 @@ void setBC(CCVariable<double>& press_CC,
 }
 /* --------------------------------------------------------------------- 
  Function~  setBC--
- Purpose~   Takes care any CCvariable<double>, except Pressure
+ Purpose~   Takes care of temperature, density, and other CC variables
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<double>& var_CC,
            const string& desc,
-           const CCVariable<double>& gamma,
-           const CCVariable<double>& cv,
            const Patch* patch,
            SimulationStateP& sharedState, 
            const int mat_id,
@@ -507,12 +505,15 @@ void setBC(CCVariable<double>& var_CC,
         Material *matl = sharedState->getMaterial(mat_id);
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         int P_dir =  patch->faceAxes(face)[0];  // principal direction
-        
+      
         if (gravity[P_dir] != 0 && desc == "Temperature" && ice_matl 
              && topLevelTimestep >0) {
+          cerr << "(benign) WARNING: hydrostaticTempAdjustment not finished\n";
+#if 0
           ice_matl->getEOS()->
               hydrostaticTempAdjustment(face, patch, bound, gravity,
                                         gamma, cv, cell_dx, var_CC);
+#endif
         }
         //__________________________________
         //  debugging
@@ -826,7 +827,7 @@ void setBC(CCVariable<double>& var,
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
   
-  setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
+  setBC(var, type, patch, sharedState, 
         mat_id, new_dw,basket);
   
   delete basket;
