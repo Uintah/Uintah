@@ -469,3 +469,8 @@ void Switcher::restartInitialize() {
 bool Switcher::restartableTimesteps() {
   return d_sim->restartableTimesteps();
 }
+
+
+double Switcher::recomputeTimestep(double dt) {
+  return d_sim->recomputeTimestep(dt);
+}
