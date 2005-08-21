@@ -636,7 +636,6 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
 
     setBC(rho_CC,     "Density",     patch, d_sharedState, indx, new_dw);
     setBC(rho_micro,  "Density",     patch, d_sharedState, indx, new_dw);
-    setBC(Temp_CC,    "Temperature", patch, d_sharedState, indx, new_dw);
     setBC(vel_CC,     "Velocity",    patch, d_sharedState, indx, new_dw); 
             
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
@@ -688,6 +687,16 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   }
  
   //__________________________________
+  // Initialize the thermo manager and get internal energy out of the
+  // initial temperature field
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->scheduleInitializeThermo(sched, level->eachPatch(), ice_matl);
+  }
+  scheduleComputeInternalEnergy(sched, level->eachPatch(), d_sharedState->allICEMaterials());
+
+  //__________________________________
   // Make adjustments to the hydrostatic pressure
   // and temperature fields.  You need to do this
   // after the models have initialized the flowfield
@@ -711,12 +720,6 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
     sched->addTask(t2, level->eachPatch(), ice_matls);
 #endif
   }
-  int numICEMatls = d_sharedState->getNumICEMatls();
-  for(int m = 0;m < numICEMatls; m++){
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    ice_matl->getThermo()->scheduleInitializeThermo(sched, level->eachPatch(), ice_matl);
-  }
-  scheduleComputeInternalEnergy(sched, level->eachPatch(), d_sharedState->allICEMaterials());
   scheduleComputeSpeedOfSound(sched, level->eachPatch(), ice_matls);
 }
 
@@ -2255,7 +2258,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                                     
       setBC(rho_CC[m],     "Density",     patch, d_sharedState, indx, new_dw);
       setBC(rho_micro[m],  "Density",     patch, d_sharedState, indx, new_dw);
-      setBC(Temp_CC[m],    "Temperature", patch, d_sharedState, indx, new_dw);
       setBC(vel_CC[m],     "Velocity",    patch, d_sharedState, indx, new_dw); 
       setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx, 
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
@@ -2403,8 +2405,9 @@ void ICE::computeInternalEnergy(const ProcessorGroup*,
       constCCVariable<double> Temp;
       new_dw->allocateAndPut(int_eng, lb->int_eng_CCLabel, indx, patch);
       new_dw->get(Temp, lb->ntemp_CCLabel, indx, patch, Ghost::None, 0);
-      ice_matl->getThermo()->compute_int_eng(patch->getExtraCellIterator(), int_eng, new_dw,
+      ice_matl->getThermo()->compute_int_eng(patch->getCellIterator(), int_eng, new_dw,
                                              Temp);
+      setBC(int_eng,    "Temperature", patch, d_sharedState, indx, new_dw);
     }
   }
 }
@@ -2632,7 +2635,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     // Compute temp, gamma, cv
     for (int m = 0; m < numMatls; m++) {
-      cerr << "WARNING: computeTemp not finished for MPMICE\n";
+      cerr << "(benign) WARNING: computeTemp not finished for MPMICE\n";
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
 
@@ -4672,7 +4675,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }
 
-    cerr << "WARNING: energy/momentum exchange disabled\n";
+    cerr << "(benign) WARNING: energy/momentum exchange disabled\n";
 #if 0
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
@@ -4887,17 +4890,12 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       setBC(vel_CC[m], "Velocity",   patch, d_sharedState, indx, new_dw,
                                                         d_customBC_var_basket);
-      cerr << "WARNING: setBC not finished\n";
-#if 0
-      setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_sharedState, 
-                                         indx, new_dw,  d_customBC_var_basket);
-#endif
     }
     
     delete_CustomBCs(d_customBC_var_basket);
     //__________________________________
     // Convert vars. primitive-> flux 
-    cerr << "WARNING: exchange really broken\n";
+    cerr << "(benign) WARNING: exchange really broken\n";
 #if 0
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
@@ -4917,6 +4915,13 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }
 #endif
+
+    for (int m = 0; m < numALLMatls; m++)  {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      setBC(int_eng_L_ME[m],"Temperature", patch, d_sharedState, 
+            indx, new_dw,  d_customBC_var_basket);
+    }
 
     //---- P R I N T   D A T A ------ 
     if (switchDebugMomentumExchange_CC ) {
@@ -5222,15 +5227,12 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       preprocess_CustomBCs("Advection",old_dw, new_dw, lb,  patch, 999,
                            d_customBC_var_basket);
        
-      setBC(rho_CC, "Density",  placeHolder, placeHolder,
+      setBC(rho_CC, "Density",
             patch,d_sharedState, indx, new_dw, d_customBC_var_basket);
       setBC(vel_CC, "Velocity", 
             patch,d_sharedState, indx, new_dw, d_customBC_var_basket);       
-      cerr << "WARNING: temp bc not finished\n";
-#if 0
-      setBC(temp,"Temperature",gamma, cv,
+      setBC(int_eng,"Temperature",
             patch,d_sharedState, indx, new_dw, d_customBC_var_basket);
-#endif
             
       setSpecificVolBC(sp_vol_CC, "SpecificVol", false,rho_CC,vol_frac,
                        patch,d_sharedState, indx);     
@@ -5238,7 +5240,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                                
       //__________________________________
       // Compute Auxilary quantities
-      cerr << "WARNING: mach number not finished\n";
+      cerr << "(benign) WARNING: mach number not finished\n";
 #if 0
       for(CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done(); iter++){
@@ -5379,15 +5381,21 @@ void ICE::TestConservation(const ProcessorGroup*,
     //__________________________________
     // conservation of internal_energy
     if(d_conservationTest->energy){
+      CCVariable<double> int_eng;
+      constCCVariable<double> spec_int_eng;
+      new_dw->allocateTemporary(int_eng, patch);
+      
       for (int m = 0; m < numICEmatls; m++ ) {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         int indx = ice_matl->getDWIndex();
+        new_dw->get(spec_int_eng, lb->int_eng_CCLabel,      indx, patch, gn,0);
 
-        constCCVariable<double> int_eng;
-        new_dw->get(int_eng, lb->int_eng_CCLabel,      indx, patch, gn,0);
-        
+        for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
+          int_eng[c] = mass[m][c] * spec_int_eng[c];
+        }
+
         double mat_int_eng(0);
-        
         conservationTest<double>(patch, delT, int_eng,
                                  uvel_FC[m],vvel_FC[m],wvel_FC[m], mat_int_eng);
         total_int_eng += mat_int_eng;
