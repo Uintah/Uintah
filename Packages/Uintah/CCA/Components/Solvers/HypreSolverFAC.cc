@@ -1,8 +1,5 @@
-#include "SolverFAC.h"
+#include <Packages/Uintah/CCA/Components/Solvers/HyperSolverFAC.h>
 
-#include "util.h"
-#include "Level.h"
-#include "Patch.h"
 #include <string>
 
 using namespace std;

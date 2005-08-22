@@ -32,6 +32,8 @@ WARNING
 #include <HYPRE_struct_ls.h>
 #include <HYPRE_sstruct_ls.h>
 #include <krylov.h>
+#include <sstruct_mv.h>
+#include <sstruct_ls.h>
 
 //#define HYPRE_TIMING
 #ifndef HYPRE_TIMING

@@ -1,3 +1,6 @@
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
+
 /*--------------------------------------------------------------------------
 CLASS
    HypreSolverParams
@@ -25,8 +28,6 @@ DESCRIPTION
 WARNING
 
    --------------------------------------------------------------------------*/
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
 
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 

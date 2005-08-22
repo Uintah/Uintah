@@ -1,4 +1,3 @@
-
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreSolver_h
 
@@ -6,7 +5,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
-  class HypreSolver2 : public SolverInterface, public UintahParallelComponent { 
+  class HypreSolver2 : public SolverInterface, public UintahParallelComponent {
   public:
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
@@ -29,5 +28,4 @@ namespace Uintah {
   };
 }
 
-#endif
-
+#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolver_h

@@ -1,9 +1,9 @@
 #ifndef __SOLVERAMG_H__
 #define __SOLVERAMG_H__
 
-#include "Solver.h"
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
 
-class SolverAMG : public Solver {
+class HypreSolverAMG : public HypreSolver {
   /*_____________________________________________________________________
     class SolverAMG:
     Solve the linear system with BoomerAMG (Hypre solver ID = 30).
