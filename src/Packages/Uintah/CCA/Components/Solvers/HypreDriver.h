@@ -63,8 +63,9 @@ WARNING
 #include <Core/Thread/Time.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverBase.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondBase.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
+#include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 
 namespace Uintah {
 
@@ -183,6 +184,17 @@ namespace Uintah {
 
   template<class Types>
     TypeDescription::Type TypeTemplate2Enum(const Types& t);
+  // Specific instantiations
+  template<>
+    TypeDescription::Type TypeTemplate2Enum(const SFCXTypes& t);
+  template<>
+    TypeDescription::Type TypeTemplate2Enum(const SFCYTypes& t);
+  template<>
+    TypeDescription::Type TypeTemplate2Enum(const SFCZTypes& t);
+  template<>
+    TypeDescription::Type TypeTemplate2Enum(const NCTypes& t);
+  template<>
+    TypeDescription::Type TypeTemplate2Enum(const CCTypes& t);
 
   HypreDriver*    newHypreDriver(const HypreInterface& interface,
                                  const Level* level,
