@@ -100,7 +100,7 @@ void Test1::initialize(const ProcessorGroup*,
                       DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
+    //const Patch* patch = patches->get(p);
     
     SoleVariable<double> sdouble(1.1);
     new_dw->put(sdouble,SVariableLabel,getLevel(patches));
@@ -116,9 +116,9 @@ void Test1::timeAdvance(const ProcessorGroup*,
 			DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
+    //const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
+      //int matl = matls->get(m);
 
       delt_vartype delt;
       old_dw->get(delt,delt_label,getLevel(patches));

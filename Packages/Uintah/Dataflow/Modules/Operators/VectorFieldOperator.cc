@@ -55,7 +55,7 @@ VectorFieldOperator::execute(void)
 
     performOperation( vectorField, scalarField );
     
-    for(int i = 0; i < vectorField->nproperties(); i++){
+    for(unsigned int i = 0; i < vectorField->nproperties(); i++){
       string prop_name(vectorField->get_property_name( i ));
       if(prop_name == "varname"){
         string prop_component;
@@ -109,7 +109,7 @@ VectorFieldOperator::execute(void)
       } else {
         warning( "Unknown field property, not transferred.");
       }
-  }
+    }
   }   
 
   if( scalarField )

@@ -1287,12 +1287,12 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
     constCCVariable<double> newCCVVel;
     constCCVariable<double> newCCWVel;
 
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    //bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    //bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    //bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    //bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    //bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    //bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
@@ -1350,7 +1350,7 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
 	  IntVector idxxminus(ii-1,jj,kk);
 	  IntVector idxyminus(ii,jj-1,kk);
 	  IntVector idxzminus(ii,jj,kk-1);
-	  double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
+	  //double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
 	  
 	  vorticityX[idx] = 0.5*(newCCWVel[idxV]-newCCWVel[idxyminus])/cellinfo->sns[jj]
 			   -0.5*(newCCVVel[idxW]-newCCVVel[idxzminus])/cellinfo->stb[kk];
@@ -2268,7 +2268,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
       cellInfoP.setData(scinew CellInformation(patch));
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    //CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values)

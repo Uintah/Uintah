@@ -78,7 +78,7 @@ void SimulationState::registerMaterial(Material* matl)
 {
    matl->setDWIndex((int)matls.size());
    matls.push_back(matl);
-   if (matls.size() > max_matl_index) {
+   if ((int)matls.size() > max_matl_index) {
      max_matl_index = matls.size();
    }
 
