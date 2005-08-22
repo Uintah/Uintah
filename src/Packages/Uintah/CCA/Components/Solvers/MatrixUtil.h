@@ -1,4 +1,3 @@
-
 #ifndef Packages_Uintah_CCA_Components_Solvers_MatrixUtil_h
 #define Packages_Uintah_CCA_Components_Solvers_MatrixUtil_h
 
@@ -46,5 +45,4 @@ namespace Uintah {
   };
 }
 
-#endif
-
+#endif // Packages_Uintah_CCA_Components_Solvers_MatrixUtil_h

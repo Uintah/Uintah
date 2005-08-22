@@ -193,8 +193,8 @@ namespace Uintah {
                                  const VarLabel* guess,
                                  Task::WhichDW which_guess_dw,
                                  const HypreSolverParams* params);
-  HypreInterface& operator ++ (HypreInterface& i);
-  BoxSide&        operator ++ (BoxSide& i);
+  HypreInterface& operator ++ (HypreInterface& interface);
+  BoxSide&        operator ++ (BoxSide& side);
 
   //========================================================================
   // Implementation of the templated part of class HypreDriver

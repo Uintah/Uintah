@@ -1,4 +1,3 @@
-
 #ifndef Packages_Uintah_CCA_Components_Solvers_CGSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_CGSolver_h
 
@@ -29,5 +28,4 @@ namespace Uintah {
   };
 }
 
-#endif
-
+#endif // Packages_Uintah_CCA_Components_Solvers_CGSolver_h
