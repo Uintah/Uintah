@@ -36,7 +36,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();  
 
-  MaterialSubset* one_matl = d_press_matl;
+  //MaterialSubset* one_matl = d_press_matl;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
   double AMR_subCycleProgressVar = 0; 
