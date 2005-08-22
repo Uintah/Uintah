@@ -1,32 +1,61 @@
-#ifndef __SOLVERAMG_H__
-#define __SOLVERAMG_H__
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverAMG_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreSolverAMG_h
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
+/*--------------------------------------------------------------------------
+CLASS
+   HypreSolverAMG
+   
+   A Hypre CG (conjugate gradient) solver.
 
-class HypreSolverAMG : public HypreSolver {
-  /*_____________________________________________________________________
-    class SolverAMG:
-    Solve the linear system with BoomerAMG (Hypre solver ID = 30).
-    _____________________________________________________________________*/
-public:
+GENERAL INFORMATION
+
+   File: HypreSolverAMG.h
+
+   Oren E. Livne
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-  SolverAMG(const Param* param)
-    : Solver(param)
-    {
-      _solverID = 30;
-    }
+   Copyright (C) 2005 SCI Group
 
-  virtual ~SolverAMG(void) {
-    dbg << "Destroying SolverAMG object" << "\n";
-  }
+KEYWORDS
+   HypreDriver, HypreGenericSolver, HypreSolverParams.
 
-  virtual void setup(void);
-  virtual void solve(void);
+DESCRIPTION
+   Class HypreSolverCG sets up and destroys the Hypre conjugate gradient
+   solver. It can optionally employ a preconditioner.
 
-private:
-  //  virtual void assemble(void);
+WARNING
+   Works with Hypre Struct interface only.
+   --------------------------------------------------------------------------*/
 
-  HYPRE_Solver  _parSolver;
-};
+#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
 
-#endif // __SOLVERAMG_H__
+namespace Uintah {
+  
+  class HypreDriver;
+
+  //---------- Types ----------
+  
+  class HypreSolverAMG : public HypreGenericSolver {
+
+    //========================== PUBLIC SECTION ==========================
+  public:
+  
+    HypreSolverAMG(HypreDriver* driver,
+                    HypreGenericPrecond* precond) :
+      HypreGenericSolver(driver,precond,initPriority()) {}
+    virtual ~HypreSolverAMG(void) {}
+
+    virtual void solve(void);
+
+    //========================== PRIVATE SECTION ==========================
+  private:
+    static Priorities initPriority(void);
+
+  }; // end class HypreSolverAMG
+
+} // end namespace Uintah
+
+#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverAMG_h

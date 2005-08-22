@@ -23,7 +23,7 @@ KEYWORDS
    HypreDriver, HypreGenericSolver, HypreSolverParams.
 
 DESCRIPTION
-   Class HyprePrecondCG sets up and destroys the Hypre conjugate gradient
+   Class HypreSolverCG sets up and destroys the Hypre conjugate gradient
    solver. It can optionally employ a preconditioner.
 
 WARNING

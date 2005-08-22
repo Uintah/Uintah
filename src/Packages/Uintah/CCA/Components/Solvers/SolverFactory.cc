@@ -3,7 +3,7 @@
 #include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
 #include <sci_defs/hypre_defs.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverAMR.h>
+#include <Packages/Uintah/CCA/Components/Solvers/AMRSolver.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
@@ -40,9 +40,9 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
     exit(1);
 #endif
 #ifdef OREN
-  } else if(solver == "HypreSolverAMR" || solver == "hypreamr"){
+  } else if(solver == "AMRSolver" || solver == "hypreamr"){
 #if HAVE_HYPRE
-    solve = new HypreSolverAMR(world);
+    solve = new AMRSolver(world);
 #else
     cerr << "Hypre solver not available, hypre not configured\n";
     exit(1);

@@ -32,7 +32,7 @@ DESCRIPTION
    and newSolver to determine the specific Hypre
    interface and solver, based on the parameters in HypreSolverParams.
    The solver is called through the solve() function. This is also the
-   task-scheduled function in HypreSolverAMR::scheduleSolve() that is
+   task-scheduled function in AMRSolver::scheduleSolve() that is
    activated by Components/ICE/impICE.cc.
   
 WARNING
