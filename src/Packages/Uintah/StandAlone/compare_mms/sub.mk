@@ -32,6 +32,7 @@ else
         Packages/Uintah/CCA/Components/DataArchiver  \
         Packages/Uintah/CCA/Components/LoadBalancers \
         Packages/Uintah/CCA/Components/Regridder     \
+        Packages/Uintah/CCA/Components/Solvers       \
         Packages/Uintah/Core/ProblemSpec             \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Schedulers           \
