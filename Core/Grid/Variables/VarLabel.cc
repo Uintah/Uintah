@@ -15,10 +15,11 @@ static map<string, VarLabel*> allLabels;
 string VarLabel::defaultCompressionMode = "none";
 static Mutex lock("VarLabel create/destroy lock");
 
-VarLabel* VarLabel::create(const string& name,
-			   const TypeDescription* td,
-			   const IntVector& boundaryLayer /*= IntVector(0,0,0) */,
-			   VarType vartype /*= Normal*/)
+VarLabel*
+VarLabel::create(const string& name,
+                 const TypeDescription* td,
+                 const IntVector& boundaryLayer /*= IntVector(0,0,0) */,
+                 VarType vartype /*= Normal*/)
 {
   VarLabel* label = 0;
   lock.lock();
@@ -48,7 +49,8 @@ VarLabel* VarLabel::create(const string& name,
   return label;
 }
 
-bool VarLabel::destroy(const VarLabel* label)
+bool
+VarLabel::destroy(const VarLabel* label)
 {
   if (label == 0) return false;
   if (label->removeReference()) {
@@ -75,14 +77,16 @@ VarLabel::~VarLabel()
 {
 }
 
-void VarLabel::printAll()
+void
+VarLabel::printAll()
 {
   map<string, VarLabel*>::iterator iter = allLabels.begin();
   for (; iter != allLabels.end(); iter++)
     std::cerr << (*iter).second->d_name << std::endl;
 }
 
-VarLabel* VarLabel::find(string name)
+VarLabel*
+VarLabel::find(string name)
 {
    map<string, VarLabel*>::iterator found = allLabels.find(name);
    if (found == allLabels.end())
@@ -105,17 +109,20 @@ VarLabel::getFullName(int matlIndex, const Patch* patch) const
         return out.str();
 }                             
 
-void VarLabel::allowMultipleComputes()
+void
+VarLabel::allowMultipleComputes()
 {
    if (!d_td->isReductionVariable())
      SCI_THROW(InternalError(string("Only reduction variables may allow multiple computes.\n'" + d_name + "' is not a reduction variable."), __FILE__, __LINE__));
    d_allowMultipleComputes = true;
 }
 
-ostream & 
-operator<<( ostream & out, const Uintah::VarLabel & vl )
-{
-  out << vl.getName();
-  return out;
+namespace Uintah {
+  ostream & 
+  operator<<( ostream & out, const Uintah::VarLabel & vl )
+  {
+    out << vl.getName();
+    return out;
+  }
 }
 

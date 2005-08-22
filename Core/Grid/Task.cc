@@ -611,99 +611,128 @@ Task::display( ostream & out ) const
   out << "]";
 }
 
-std::ostream &
-operator << ( std::ostream & out, const Uintah::Task::Dependency & dep )
-{
-  out << "[" << *(dep.var);
-  if(dep.var->typeDescription()->isReductionVariable()){
-    if(dep.reductionLevel) {
-      out << " Level: " << dep.reductionLevel->getIndex();
-    } else {
-      out << " Global level";
-    }
-  } else {
-    if( dep.patches ){
-      out << " Patches: ";
-      for(int i=0;i<dep.patches->size();i++){
-	if(i > 0)
-	  out << ",";
-	out << dep.patches->get(i)->getID();
+namespace Uintah {
+  std::ostream &
+  operator << ( std::ostream & out, const Uintah::Task::Dependency & dep )
+  {
+    out << "[" << *(dep.var);
+    if(dep.var->typeDescription()->isReductionVariable()){
+      if(dep.reductionLevel) {
+        out << " Level: " << dep.reductionLevel->getIndex();
+      } else {
+        out << " Global level";
       }
-    } else if(dep.reductionLevel) {
-      out << " Level: " << dep.reductionLevel->getIndex();
     } else {
-      out << " No patches";
+      if( dep.patches ){
+        out << " Patches: ";
+        for(int i=0;i<dep.patches->size();i++){
+          if(i > 0)
+            out << ",";
+          out << dep.patches->get(i)->getID();
+        }
+      } else if(dep.reductionLevel) {
+        out << " Level: " << dep.reductionLevel->getIndex();
+      } else {
+        out << " No patches";
+      }
     }
+
+    out << ", MI: ";
+    if(dep.matls){
+      for(int i=0;i<dep.matls->size();i++){
+        if(i>0)
+          out << ",";
+        out << dep.matls->get(i);
+      }
+    } else {
+      out << "none";
+    }
+    out << ", ";
+    switch(dep.whichdw){
+    case Task::OldDW:
+      out << "OldDW";
+      break;
+    case Task::NewDW:
+      out << "NewDW";
+      break;
+    case Task::CoarseOldDW:
+      out << "CoarseOldDW";
+      break;
+    case Task::CoarseNewDW:
+      out << "CoarseNewDW";
+      break;
+    case Task::ParentOldDW:
+      out << "ParentOldDW";
+      break;
+    case Task::ParentNewDW:
+      out << "ParentNewDW";
+      break;
+    default:
+      out << "Unknown DW!";
+      break;
+    }
+    out << " (mapped to dw index " << dep.task->mapDataWarehouse(dep.whichdw) << ")";
+    out << ", ";
+    switch(dep.gtype){
+    case Ghost::None:
+      out << "Ghost::None";
+      break;
+    case Ghost::AroundNodes:
+      out << "Ghost::AroundNodes";
+      break;
+    case Ghost::AroundCells:
+      out << "Ghost::AroundCells";
+      break;
+    case Ghost::AroundFacesX:
+      out << "Ghost::AroundFacesX";
+      break;
+    case Ghost::AroundFacesY:
+      out << "Ghost::AroundFacesY";
+      break;
+    case Ghost::AroundFacesZ:
+      out << "Ghost::AroundFacesZ";
+      break;
+    case Ghost::AroundFaces:
+      out << "Ghost::AroundFaces";
+      break;
+    default:
+      out << "Unknown ghost type";
+      break;
+    }
+    if(dep.gtype != Ghost::None)
+      out << ":" << dep.numGhostCells;
+
+    out << "]";
+    return out;
   }
 
-  out << ", MI: ";
-  if(dep.matls){
-    for(int i=0;i<dep.matls->size();i++){
-      if(i>0)
-	out << ",";
-      out << dep.matls->get(i);
-    }
-  } else {
-    out << "none";
+  ostream &
+  operator << (ostream &out, const Task & task)
+  {
+    task.display( out );
+    return out;
   }
-  out << ", ";
-  switch(dep.whichdw){
-  case Task::OldDW:
-    out << "OldDW";
-    break;
-  case Task::NewDW:
-    out << "NewDW";
-    break;
-  case Task::CoarseOldDW:
-    out << "CoarseOldDW";
-    break;
-  case Task::CoarseNewDW:
-    out << "CoarseNewDW";
-    break;
-  case Task::ParentOldDW:
-    out << "ParentOldDW";
-    break;
-  case Task::ParentNewDW:
-    out << "ParentNewDW";
-    break;
-  default:
-    out << "Unknown DW!";
-    break;
-  }
-  out << " (mapped to dw index " << dep.task->mapDataWarehouse(dep.whichdw) << ")";
-  out << ", ";
-  switch(dep.gtype){
-  case Ghost::None:
-    out << "Ghost::None";
-    break;
-  case Ghost::AroundNodes:
-    out << "Ghost::AroundNodes";
-    break;
-  case Ghost::AroundCells:
-    out << "Ghost::AroundCells";
-    break;
-  case Ghost::AroundFacesX:
-    out << "Ghost::AroundFacesX";
-    break;
-  case Ghost::AroundFacesY:
-    out << "Ghost::AroundFacesY";
-    break;
-  case Ghost::AroundFacesZ:
-    out << "Ghost::AroundFacesZ";
-    break;
-  case Ghost::AroundFaces:
-    out << "Ghost::AroundFaces";
-    break;
-  default:
-    out << "Unknown ghost type";
-    break;
-  }
-  if(dep.gtype != Ghost::None)
-    out << ":" << dep.numGhostCells;
 
-  out << "]";
-  return out;
-}
+  ostream &
+  operator << (ostream &out, const Task::TaskType & tt)
+  {
+    switch( tt ) {
+    case Task::Normal:
+      out << "Normal";
+      break;
+    case Task::Reduction:
+      out << "Reduction";
+      break;
+    case Task::InitialSend:
+      out << "InitialSend";
+      break;
+    case Task::Output:
+      out << "Output";
+      break;
+    }
+    return out;
+  }
+} // end namespace Uintah
 
 void
 Task::displayAll(ostream& out) const
@@ -741,29 +770,3 @@ DataWarehouse* Task::mapDataWarehouse(WhichDW dw, vector<DataWarehouseP>& dws) c
   }
 }
 
-ostream &
-operator << (ostream &out, const Task & task)
-{
-  task.display( out );
-  return out;
-}
-
-ostream &
-operator << (ostream &out, const Task::TaskType & tt)
-{
-  switch( tt ) {
-  case Task::Normal:
-    out << "Normal";
-    break;
-  case Task::Reduction:
-    out << "Reduction";
-    break;
-  case Task::InitialSend:
-    out << "InitialSend";
-    break;
-  case Task::Output:
-    out << "Output";
-    break;
-  }
-  return out;
-}

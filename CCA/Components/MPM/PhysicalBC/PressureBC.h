@@ -108,8 +108,9 @@ WARNING
 
       // Load curve information (Pressure and time)
       LoadCurve<double>* d_loadCurve;
+
+      friend std::ostream& operator<<(std::ostream& out, const Uintah::PressureBC& bc);
    };
 } // End namespace Uintah
 
-std::ostream& operator<<(std::ostream& out, const Uintah::PressureBC& bc);
 #endif

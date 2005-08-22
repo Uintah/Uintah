@@ -52,6 +52,16 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+  class Patch;
+  template<class T> class ComputeSubset;
+  template<class T> class ComputeSet;
+
+  typedef ComputeSet<const Patch*>    PatchSet;
+  typedef ComputeSet<int>             MaterialSet;
+  typedef ComputeSubset<const Patch*> PatchSubset;
+  typedef ComputeSubset<int>          MaterialSubset;
+  
+
   template<class T>
   class ComputeSubset : public RefCounted {
   public:
@@ -152,7 +162,7 @@ WARNING
 
     ComputeSubset(const ComputeSubset&);
     ComputeSubset& operator=(const ComputeSubset&);
-  };
+  };  // end class ComputeSubset
 
   template<class T>
   class ComputeSet : public RefCounted {
@@ -189,14 +199,14 @@ WARNING
 
     ComputeSet(const ComputeSet&);
     ComputeSet& operator=(const ComputeSet&);
-  };
 
-  class Patch;
-  typedef ComputeSet<const Patch*>    PatchSet;
-  typedef ComputeSet<int>             MaterialSet;
-  typedef ComputeSubset<const Patch*> PatchSubset;
-  typedef ComputeSubset<int>          MaterialSubset;
-  
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+
+  };  // end class ComputeSet
+
   template<class T>
   ComputeSet<T>::ComputeSet()
   {
@@ -476,12 +486,6 @@ WARNING
   }
 
 } // end namespace Uintah
-
-std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
-std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
-std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
-std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
-
 
 #ifdef __PGI
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet_special.cc>

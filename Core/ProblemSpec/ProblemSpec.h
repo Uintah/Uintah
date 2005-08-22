@@ -316,6 +316,10 @@ WARNING
       }
       bool doWriteMessages() const
       { return d_write; }
+
+      //////////
+      // to output the document
+      friend std::ostream& operator<<(std::ostream& out, const Uintah::ProblemSpecP pspec);
    private:
 
       //////////
@@ -328,13 +332,10 @@ WARNING
       DOMNode* d_node;
       bool d_write;
    };
-   
+
 } // End namespace Uintah
 
-//////////
-// to output the document
-// Needs to be declared here or causes other code to not compile
-std::ostream& operator<<(std::ostream& out, const Uintah::ProblemSpecP pspec);
+// Need to be declared here or causes other code to not compile
 std::ostream& operator<<(std::ostream& out, const DOMNode* toWrite);
 std::ostream& operator<<(std::ostream& out, const DOMText* toWrite);
 

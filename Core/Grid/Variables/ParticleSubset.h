@@ -143,6 +143,9 @@ WARNING
     const std::vector<ParticleSubset*>& getNeighborSubsets() const {
       return neighbor_subsets;
     }
+    
+    friend ostream& operator<<(ostream& out, Uintah::ParticleSubset& pset);
+
    private:
     //////////
     // Insert Documentation Here:
@@ -169,7 +172,5 @@ WARNING
     ParticleSubset& operator=(const ParticleSubset&);
   };
 } // End namespace Uintah
-
-ostream& operator<<(ostream& out, Uintah::ParticleSubset& pset);
 
 #endif

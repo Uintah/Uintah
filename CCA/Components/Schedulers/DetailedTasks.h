@@ -289,6 +289,10 @@ namespace Uintah {
     void setScrubCount(const VarLabel* var, int matlindex,
 		       const Patch* patch, int dw,
 		       vector<OnDemandDataWarehouseP>& dws);
+
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::DetailedTask& task);
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::DetailedDep& task);
+
   protected:
     friend class DetailedTask;
 
@@ -296,6 +300,7 @@ namespace Uintah {
     SchedulerCommon* getSchedulerCommon() {
       return sc_;
     }
+
   private:
     void initializeBatches();
 
@@ -351,9 +356,6 @@ namespace Uintah {
     DetailedTasks& operator=(const DetailedTasks&);
   };
 } // End namespace Uintah
-
-std::ostream& operator<<(std::ostream& out, const Uintah::DetailedTask& task);
-std::ostream& operator<<(std::ostream& out, const Uintah::DetailedDep& task);
 
 #endif
 

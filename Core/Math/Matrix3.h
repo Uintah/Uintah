@@ -233,7 +233,9 @@ namespace Uintah {
     // solveHomogenous for a Matrix that has already by triangularReduced
     bool solveParticularReduced(const Vector& rhs, Vector& xp,
                                 int num_zero_rows) const;
-  };
+
+    friend std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
+  }; // end class Matrix3
 
   inline double Matrix3::Trace() const
     {
@@ -673,8 +675,6 @@ namespace Uintah {
 
 
 } // End namespace Uintah
-
-std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
 
 // Added for compatibility with core types
 #include <Core/Datatypes/TypeName.h>
