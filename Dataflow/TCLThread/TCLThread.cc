@@ -46,22 +46,20 @@ using namespace SCIRun;
 #  ifdef __cplusplus
      extern "C" {
 #  endif // __cplusplus
-#ifndef EXPERIMENTAL_TCL_THREAD
-  __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-#endif
+#  ifndef EXPERIMENTAL_TCL_THREAD
+       __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#  endif
        int tkMain(int argc, char** argv, 
-		  void (*nwait_func)(void*), void* nwait_func_data);
+                  void (*nwait_func)(void*), void* nwait_func_data);
 #  ifdef __cplusplus
      }
 #  endif // __cplusplus
-
-#else // _WIN32
-#ifndef EXPERIMENTAL_TCL_THREAD
-  extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-#endif
-  extern "C" int tkMain(int argc, char** argv,
-			void (*nwait_func)(void*), void* nwait_func_data);
-
+#else // not _WIN32
+#  ifndef EXPERIMENTAL_TCL_THREAD
+     extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#  endif
+     extern "C" int tkMain(int argc, char** argv,
+                           void (*nwait_func)(void*), void* nwait_func_data);
 #endif // _WIN32
 
 extern "C" Tcl_Interp* the_interp;
@@ -250,7 +248,7 @@ TCLThread::startNetworkEditor()
   if (startnetno) {
     gui->eval("loadnet {"+string(argv[startnetno])+"}");
     if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || 
-	sci_getenv_p("SCI_REGRESSION_TESTING"))
+        sci_getenv_p("SCI_REGRESSION_TESTING"))
     {
       gui->eval("netedit scheduleall");
     }
