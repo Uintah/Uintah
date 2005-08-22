@@ -4,8 +4,7 @@
 // Hypre Jacobi (geometric multigrid #2) preconditioner.
 //--------------------------------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondJacobi.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverBase.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondJacobi.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>

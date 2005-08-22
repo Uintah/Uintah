@@ -4,8 +4,7 @@
 // Hypre SMG (geometric multigrid #1) preconditioner.
 //--------------------------------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondSMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverBase.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondSMG.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
