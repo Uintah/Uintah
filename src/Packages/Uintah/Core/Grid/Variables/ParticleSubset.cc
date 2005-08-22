@@ -195,6 +195,7 @@ particleIndex ParticleSubset::addParticles(particleIndex count)
   return oldsize;  // The beginning of the new index range
 }
 
+namespace Uintah {
 ostream& operator<<(ostream& out, ParticleSubset& pset)
 {
     out << &pset
@@ -206,3 +207,4 @@ ostream& operator<<(ostream& out, ParticleSubset& pset)
         << pset.getNeighbors().size() << " neighbors" ;
     return out;
 }
+} // end namespace Uintah

@@ -1618,9 +1618,11 @@ operator<<(ostream& out,
   out << superBox.getBoxes().size() << ": ";
   Point low = superBox.getLow();
   Point high = superBox.getHigh();
-  ::operator<<(out, low);
+  //  ::operator<<(out, low);
+  out << low;
   out << " - ";
-  ::operator<<(out, high);
+  //  ::operator<<(out, high);
+  out << high;
   /*
   if (superBox.getBoxes().size() == 0) {
     out << "()";

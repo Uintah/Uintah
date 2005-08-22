@@ -121,6 +121,9 @@ namespace Uintah {
     static void printAll(); // for debugging
      
     string                 d_name;
+
+    friend std::ostream & operator<<( std::ostream & out, const Uintah::VarLabel & vl );
+
   private:
     // You must use VarLabel::create.
     VarLabel(const string&, const TypeDescription*,
@@ -142,7 +145,5 @@ namespace Uintah {
     VarLabel& operator=(const VarLabel&);
   };
 } // End namespace Uintah
-
-std::ostream & operator<<( std::ostream & out, const Uintah::VarLabel & vl );
 
 #endif

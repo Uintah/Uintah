@@ -80,13 +80,14 @@ using namespace SCIRun;
       bool degenerate() const {
 	 return d_lower.x() >= d_upper.x() || d_lower.y() >= d_upper.y() || d_lower.z() >= d_upper.z();
       }
+
+      friend std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
+
    private:
       Point d_lower;
       Point d_upper;
    };
 
 } // End namespace Uintah
-
-std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
 
 #endif

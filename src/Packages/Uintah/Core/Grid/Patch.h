@@ -70,6 +70,8 @@ WARNING
    class Patch {
    public:
 
+     friend std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
+
      enum BCType {
        None,
        Symmetry,
@@ -629,11 +631,9 @@ WARNING
      // Keep track of cells on the corner of the domain
      vector<IntVector> d_CornerCells[Patch::numFaces];
      
-   };
+   }; // end class Patch
 
 
 } // End namespace Uintah
-
-std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 #endif

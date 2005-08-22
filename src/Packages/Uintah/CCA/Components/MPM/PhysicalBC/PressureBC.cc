@@ -177,6 +177,7 @@ PressureBC::getForceVector(const Point& px, double forcePerParticle) const
   return force;
 }
 
+namespace Uintah {
 // A method to print out the pressure bcs
 ostream& operator<<(ostream& out, const PressureBC& bc) 
 {
@@ -209,3 +210,4 @@ ostream& operator<<(ostream& out, const PressureBC& bc)
    return out;
 }
 
+} // end namespace Uintah
