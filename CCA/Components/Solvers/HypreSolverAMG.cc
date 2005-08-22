@@ -1,8 +1,4 @@
-#include "SolverAMG.h"
-
-#include "util.h"
-#include "Level.h"
-#include "Patch.h"
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverAMG.h>
 
 #include <string>
 

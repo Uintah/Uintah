@@ -1,3 +1,6 @@
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericPrecond_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreGenericPrecond_h
+
 /*--------------------------------------------------------------------------
 CLASS
    HypreGenericPrecond
@@ -37,8 +40,6 @@ WARNING
    in the future. Currently only CC is implemented for the pressure solver
    in implicit [AMR] ICE.
    --------------------------------------------------------------------------*/
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericPrecond_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreGenericPrecond_h
 
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>

@@ -1,3 +1,6 @@
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreDriverStruct_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreDriverStruct_h
+
 /*--------------------------------------------------------------------------
 CLASS
    HypreDriver
@@ -53,8 +56,6 @@ WARNING
    it may still work with the Struct solvers in earlier Hypre versions (e.g., 
    1.7.7).
    --------------------------------------------------------------------------*/
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreDriverStruct_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreDriverStruct_h
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 

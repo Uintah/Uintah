@@ -43,20 +43,28 @@ using namespace std;
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_dbg("HYPRE_DBG", false);
 
 //#####################################################################
 // class HypreDriver implementation common to all variable types
 //#####################################################################
 
-HyprePatchSStruct::HyprePatchSStruct(const Patch* patch) :
+HypreDriverSStruct::HyprePatch::HyprePatch(const Patch* patch,
+                                           const int matl) :
   //___________________________________________________________________
-  // HypreDriverSStruct constructor from Uintah patch
+  // HypreDriverSStruct::HyprePatch constructor from Uintah patch
   //___________________________________________________________________
-  _patch(patch),
+  _patch(patch), _matl(matl),
   _level(patch->getLevel()->getIndex()),
   _low(patch->getInteriorCellLowIndex()),
   _high(patch->getInteriorCellHighIndex()-IntVector(1,1,1))
   // TODO: Check if we need to subtract (1,1,1) from high or not.
+{}
+
+HypreDriverSStruct::HyprePatch::~HyprePatch(void)
+  //___________________________________________________________________
+  // HypreDriverSStruct::HyprePatch destructor
+  //___________________________________________________________________
 {}
 
 HypreDriverSStruct::~HypreDriverSStruct(void)
@@ -138,9 +146,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // matl=0 (pressure).
   //___________________________________________________________________
 {
-  const Patch * asdfpatch;
-  cout << *asdfpatch;
-
   typedef CCTypes::sol_type sol_type;
   ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
 
@@ -152,11 +157,11 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   const int numLevels = _level->getGrid()->numLevels();
   HYPRE_SStructGridCreate(_pg->getComm(), numDims, numLevels, &_grid);
   _vars = new HYPRE_SStructVariable[CC_NUM_VARS];
-  _vars[CC_VAR] = HYPRE_SSTRUCT_VARIABLE_CELL; // We use only cell centered vars
+  _vars[CC_VAR] = HYPRE_SSTRUCT_VARIABLE_CELL; // We use only cell centered var
 
   // Loop over the Uintah patches that this proc owns
   for (int p = 0 ; p < _patches->size(); p++) {
-    HyprePatchSStruct hpatch(_patches->get(p)); // Read Uintah -> our patch struct
+    HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
     hpatch.addToGrid(_grid,_vars);
   }
   HYPRE_SStructGridAssemble(_grid);
@@ -227,37 +232,33 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // Add Uintah patches that this proc owns
   for (int p = 0; p < _patches->size(); p++) {
     // Read Uintah patch info into our data structure
-    HyprePatchSStruct hpatch(_patches->get(p)); // Read Uintah -> our patch struct
+    const Patch* patch = _patches->get(p);
+    HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
+    int level = hpatch.getLevel();
     printLine("$",40);
-    cout_doing << "Processing Patch" << "\n" << hpatch << "\n";
+    cout_dbg << "Processing Patch" << "\n" << hpatch << "\n";
     printLine("$",40);
     
-    if (hpatch.getLevel() > 0) {
-      // If not at coarsest level, loop over outer boundaries of this
-      // patch and add fine-to-coarse connections
+    if ((level > 0) && (patch->hasCoarseFineInterfaceFace())) {
+      // If not at coarsest level, add fine-to-coarse connections at all
+      // C/F interface faces.
       printLine("=",50);
       cout_doing << "Building fine-to-coarse connections" << "\n";
       printLine("=",50);
-      for (int d = 0; d < numDims; d++) {
-        for (BoxSide s = LeftSide; s <= RightSide; ++s) {
-          if (hpatch.getBoundaryType(d,s) == Patch::CoarseFine) {
-            cout_doing << "boundary is " << hpatch.getBoundaryType(d,s) << "\n";
-            makeConnectionsFineCoarse_CC(Graph,hpatch,d,s);
-          } // end if boundary is CF interface
-        } // end for s
-      } // end for d
-    } // if (level > 0)
+      patch->printPatchBCs(cout_dbg);
+      hpatch.makeConnections(_graph,DoingFineToCoarse);
+    } // end if (level > 0) and (patch has a CFI)
 
-    if (hpatch.getLevel() < numLevels-1) {
+    if (level < numLevels-1) {
       // If not at finest level, examine the connection list that
       // impAMRICE.cc provides us and add the coarse-to-fine
-      // connections to the Hypre graph one by one (this is done
-      // inside makeConnections()).
+      // connections to the Hypre graph. This list should cover all
+      // the C/F interfaces of all next-finer level patches inscribed
+      // in this patch.
       printLine("=",50);
       cout_doing << "Building coarse-to-fine connections" << "\n";
       printLine("=",50);
-      makeConnectionsCoarseFine_CC(Graph,hpatch);
-      
+      hpatch.makeConnections(_graph,DoingCoarseToFine);
     } // end if (level < numLevels-1)
   } // end for p (patches)
   
@@ -265,14 +266,22 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   HYPRE_SStructGraphAssemble(_graph);
   cout_doing << "Assembled graph, nUVentries = "
              << hypre_SStructGraphNUVEntries(_graph) << "\n";
-  funcPrint("Solver::makeGraph()",FEnd);
 
   //==================================================================
   // Set up the Struct left-hand-side matrix _HA
   //==================================================================
   // Create and initialize an empty SStruct matrix
   HYPRE_SStructMatrixCreate(_pg->getComm(), _graph, &_HA);
-  HYPRE_SStructMatrixSetSymmetric(_HA, _params->symmetric);
+
+  // If specified by input parameter, declare the structured and
+  // unstructured part of the matrix to be symmetric.
+  for (int level = 0; level < numLevels; level++) {
+    HYPRE_SStructMatrixSetSymmetric(_HA, level,
+                                    CC_VAR, CC_VAR,
+                                    _params->symmetric);
+  }
+  HYPRE_SStructMatrixSetNSSymmetric(_HA, _params->symmetric);
+
   // For solvers that require ParCSR format
   if (_requiresPar) {
     HYPRE_SStructMatrixSetObjectType(_HA, HYPRE_PARCSR);
@@ -283,54 +292,61 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // Add structured equation (stencil-based) entries at the interior of
   // each patch at every level to the matrix.
   //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+  printLine("*",50);
+  cout_doing << "Matrix structured (interior) entries" << "\n";
+  printLine("*",50);
   for (int p = 0 ; p < _patches->size(); p++) {
     // Read Uintah patch info into our data structure, set Uintah pointers
     const Patch* patch = _patches->get(p);
-    HyprePatch hpatch(*patch);
-    CCTypes::matrix_type A;
-    _A_dw->get(A, _A_label, matl, patch, Ghost::None, 0);
+    HyprePatch_CC hpatch(patch,matl); // Read Uintah patch data
+    hpatch.makeInteriorEquations(_HA, _A_dw, _A_label,
+                                 _stencilSize, _params->symmetric);
+  } // end for p (patches)
 
-    // Feed data from Uintah to Hypre
-    if (_params->symmetric) {
-      double* values = new double[(hpatch.high.x()-hpatch.low.x())*_stencilSize];
-      int stencil_indices[] = {0,1,2,3};
-      for(int z = hpatch.low.z(); z < h.z(); z++){
-        for(int y = hpatch.low.y(); y < h.y(); y++){
-          // Read data in "chunks" of fixed y-, z- index and running x-index
-          const Stencil7* AA = &A[IntVector(hpatch.low.x(), y, z)];
-          double* p = values;
-          for (int x = hpatch.low.x(); x < h.x(); x++){
-            *p++ = AA->p;
-            *p++ = AA->w;
-            *p++ = AA->s;
-            *p++ = AA->b;
-            AA++;
-          }
-          IntVector chunkLow(hpatch.low.x(), y, z);
-          IntVector chunkHigh(h.x()-1, y, z);
-          HYPRE_StructMatrixSetBoxValues(_HA,
-                                         chunkLow.get_pointer(),
-                                         chunkHigh.get_pointer(),
-                                         4, stencil_indices, values);
-        }
-      }
-      delete[] values;
-    } else {
-      int stencil_indices[] = {0,1,2,3,4,5,6};
-      for(int z=hpatch.low.z();z<h.z();z++){
-        for(int y=hpatch.low.y();y<h.y();y++){
-          const double* values = &A[IntVector(hpatch.low.x(), y, z)].p;
-          IntVector ll(hpatch.low.x(), y, z);
-          IntVector hh(h.x()-1, y, z);
-          HYPRE_StructMatrixSetBoxValues(_HA,
-                                         lhpatch.low.get_pointer(),
-                                         hh.get_pointer(),
-                                         7, stencil_indices,
-                                         const_cast<double*>(values));
-        }
-      }
-    }
-  }
+  //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+  // Add/update unstructured equation entries at C/F interfaces 
+  // each patch at every level to the matrix.
+  //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+  printLine("*",50);
+  cout_doing << "Matrix unstructured (C/F) entries" << "\n";
+  printLine("*",50);
+
+  // Add Uintah patches that this proc owns
+  for (int p = 0; p < _patches->size(); p++) {
+    // Read Uintah patch info into our data structure
+    const Patch* patch = _patches->get(p);
+    HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
+    int level = hpatch.getLevel();
+    printLine("$",40);
+    cout_dbg << "Processing Patch" << "\n" << hpatch << "\n";
+    printLine("$",40);
+    
+    if ((level > 0) && (patch->hasCoarseFineInterfaceFace())) {
+      // If not at coarsest level, add fine-to-coarse connections at all
+      // C/F interface faces.
+      printLine("=",50);
+      cout_doing << "Building fine-to-coarse entries" << "\n";
+      printLine("=",50);
+      patch->printPatchBCs(cout_dbg);
+      hpatch.makeConnections(_HA, _A_dw, _A_label,
+                             _stencilSize, DoingFineToCoarse);
+    } // end if (level > 0) and (patch has a CFI)
+
+    if (level < numLevels-1) {
+      // If not at finest level, examine the connection list that
+      // impAMRICE.cc provides us and add the coarse-to-fine
+      // connections to the Hypre graph. This list should cover all
+      // the C/F interfaces of all next-finer level patches inscribed
+      // in this patch.
+      printLine("=",50);
+      cout_doing << "Building coarse-to-fine entries" << "\n";
+      printLine("=",50);
+      hpatch.makeConnections(_HA, _A_dw, _A_label,
+                             _stencilSize, DoingCoarseToFine);
+    } // end if (level < numLevels-1)
+  } // end for p (patches)
+
+  // This is an all-proc collective call
   HYPRE_SStructMatrixAssemble(_HA);
 
   //==================================================================
@@ -343,85 +359,50 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   }
   HYPRE_SStructVectorInitialize(_HB);
 
-  for(int p=0;p<_patches->size();p++){
+  // Set RHS vector entries at the interior of
+  // each patch at every level to the matrix.
+  printLine("*",50);
+  cout_doing << "Set RHS vector entries" << "\n";
+  printLine("*",50);
+  for (int p = 0 ; p < _patches->size(); p++) {
+    // Read Uintah patch info into our data structure, set Uintah pointers
     const Patch* patch = _patches->get(p);
+    HyprePatch_CC hpatch(patch,matl); // Read Uintah patch data
+    hpatch.makeInteriorVector(_HB, _b_dw, _B_label);
+  } // end for p (patches)
 
-    // Get the data from Uintah
-    CCTypes::const_type B;
-    _b_dw->get(B, _B_label, matl, patch, Ghost::None, 0);
-
-    Patch::VariableBasis basis =
-      Patch::translateTypeToBasis(sol_type::getTypeDescription()
-                                  ->getType(), true);
-    IntVector ec = _params->getSolveOnExtraCells() ?
-      IntVector(0,0,0) : -_level->getExtraCells();
-    IntVector l = patch->getLowIndex(basis, ec);
-    IntVector h = patch->getHighIndex(basis, ec);
-
-    // Feed it to Hypre
-    for(int z=hpatch.low.z();z<h.z();z++){
-      for(int y=hpatch.low.y();y<h.y();y++){
-        const double* values = &B[IntVector(hpatch.low.x(), y, z)];
-        IntVector ll(hpatch.low.x(), y, z);
-        IntVector hh(h.x()-1, y, z);
-        HYPRE_StructVectorSetBoxValues(_HB,
-                                       ll.get_pointer(),
-                                       hh.get_pointer(),
-                                       const_cast<double*>(values));
-      }
-    }
-  }
   HYPRE_SStructVectorAssemble(_HB);
 
   //==================================================================
   // Set up the Struct solution vector _HX
   //==================================================================
-  HYPRE_StructVectorCreate(_pg->getComm(), _grid, &_HX);
+  HYPRE_SStructVectorCreate(_pg->getComm(), _grid, &_HX);
   // For solvers that require ParCSR format
   if (_requiresPar) {
     HYPRE_SStructVectorSetObjectType(_HX, HYPRE_PARCSR);
   }
   HYPRE_SStructVectorInitialize(_HX);
 
-  for(int p=0;p<_patches->size();p++){
+  // Set solution (initial guess) vector entries at the interior of
+  // each patch at every level to the matrix.
+  printLine("*",50);
+  cout_doing << "Set solution vector initial guess entries" << "\n";
+  printLine("*",50);
+  for (int p = 0 ; p < _patches->size(); p++) {
+    // Read Uintah patch info into our data structure, set Uintah pointers
     const Patch* patch = _patches->get(p);
+    HyprePatch_CC hpatch(patch,matl); // Read Uintah patch data
+    hpatch.makeInteriorVector(_HX, _guess_dw, _guess_label);
+  } // end for p (patches)
 
-    if (_guess_label) {
-      CCTypes::const_type X;
-      _guess_dw->get(X, _guess_label, matl, patch, Ghost::None, 0);
-
-      // Get the initial guess from Uintah
-      Patch::VariableBasis basis =
-        Patch::translateTypeToBasis(sol_type::getTypeDescription()
-                                    ->getType(), true);
-      IntVector ec = _params->getSolveOnExtraCells() ?
-        IntVector(0,0,0) : -_level->getExtraCells();
-      IntVector l = patch->getLowIndex(basis, ec);
-      IntVector h = patch->getHighIndex(basis, ec);
-
-      // Feed it to Hypre
-      for(int z=l.z();z<h.z();z++){
-        for(int y=l.y();y<h.y();y++){
-          const double* values = &X[IntVector(l.x(), y, z)];
-          IntVector ll(l.x(), y, z);
-          IntVector hh(h.x()-1, y, z);
-          HYPRE_StructVectorSetBoxValues(_HX,
-                                         ll.get_pointer(),
-                                         hh.get_pointer(),
-                                         const_cast<double*>(values));
-        }
-      }
-    }  // initialGuess
-  } // patch loop
   HYPRE_SStructVectorAssemble(_HX);
 
   // For solvers that require ParCSR format
   if (_requiresPar) {
-    HYPRE_StructMatrixGetObject(_HA, (void **) &_HA_Par);
-    HYPRE_StructVectorGetObject(_HB, (void **) &_HB_Par);
-    HYPRE_StructVectorGetObject(_HX, (void **) &_HX_Par);
+    HYPRE_SStructMatrixGetObject(_HA, (void **) &_HA_Par);
+    HYPRE_SStructVectorGetObject(_HB, (void **) &_HB_Par);
+    HYPRE_SStructVectorGetObject(_HX, (void **) &_HX_Par);
   }
-
 } // end HypreDriverSStruct::makeLinearSystem_CC()
 
 
@@ -433,6 +414,7 @@ HypreDriverSStruct::getSolution_CC(const int matl)
   // the Hypre SStruct interface.
   //_____________________________________________________________________*/
 {
+#if 0
   typedef CCTypes::sol_type sol_type;
   // Loop over the Uintah patches that this proc owns
   for (int p = 0 ; p < _patches->size(); p++) {
@@ -473,41 +455,263 @@ HypreDriverSStruct::getSolution_CC(const int matl)
       }
     }
   }
+#endif
 } // end HypreDriverSStruct::getSolution_CC()
 
-
-HyprePatchSStruct::addToGrid(HYPRE_SStructGrid& grid,
-                             const HYPRE_SStructVariable* _vars)
+void
+HypreDriverSStruct::HyprePatch_CC::addToGrid
+(HYPRE_SStructGrid& grid,
+ HYPRE_SStructVariable* vars)
   //___________________________________________________________________
   // Add this patch to the Hypre grid
   //___________________________________________________________________
 {
-  HYPRE_SStructGridSetExtents(_grid, _level,
+  HYPRE_SStructGridSetExtents(grid, _level,
                               _low.get_pointer(),
                               _high.get_pointer());
-  HYPRE_SStructGridSetVariables(_grid, _level, CC_NUM_VARS, vars);
+  HYPRE_SStructGridSetVariables(grid, _level, CC_NUM_VARS, vars);
 }
+
+void
+HypreDriverSStruct::HyprePatch_CC::makeConnections
+(HYPRE_SStructGraph& graph,
+ const CoarseFineViewpoint& viewpoint)
+  //___________________________________________________________________
+  // HypreDriverSStruct::HyprePatch_CC::makeConnections~
+  // Add the connections at C/F interfaces of this patch to the HYPRE
+  // Graph. If viewpoint == DoingFineToCoarse, we add the fine-to-coarse
+  // connections. If viewpoint == DoingCoarseToFine, we add the
+  // coarse-to-fine-connections that are read from the connection list
+  // prepared for this patch by ICE.
+  //___________________________________________________________________
+{
+  if (viewpoint == DoingFineToCoarse) {
+    //==================================================================
+    // Add fine-to-coarse connections to graph
+    //==================================================================
+    const int fineLevel = _level;
+    const int coarseLevel = _level-1;
+    const IntVector& refRat = _patch->getLevel()->getRefinementRatio();
+    vector<Patch::FaceType>::const_iterator iter;  
+    // Loop over all C/F interface faces (note: a Uintah patch face is
+    // marked as a coarsefine interface only when the current patch is
+    // the FINE patch (what Todd calls "looking up is easy, not
+    // looking down").  See also ICE/impAMRICE.cc,
+    // ICE::matrixBC_CFI_finePatch().
+   for (iter  = _patch->getCoarseFineInterfaceFaces()->begin(); 
+         iter != _patch->getCoarseFineInterfaceFaces()->end(); ++iter) {
+      Patch::FaceType face = *iter;                   // e.g. xminus=0
+      IntVector offset = _patch->faceDirection(face); // e.g. (-1,0,0)
+      CellIterator f_iter = 
+        _patch->getFaceCellIterator(face,"alongInteriorFaceCells");
+      for(; !f_iter.done(); f_iter++) {
+        // For each fine cell at C/F interface, compute the index of
+        // the neighboring coarse cell (add offset = outward normal to
+        // the face and divide by the refinement ratio to obtain
+        // "coarseLevel"-level index. Then add the connection between
+        // the fine and coarse cells to the graph.
+        IntVector fineCell = *f_iter;                        // inside patch
+        IntVector coarseCell = (fineCell + offset) / refRat; // outside patch
+        cout_doing << "Adding F->C connection to graph" << "\n";
+        HYPRE_SStructGraphAddEntries(graph,
+                                     fineLevel,fineCell.get_pointer(),
+                                     CC_VAR,
+                                     coarseLevel,coarseCell.get_pointer(),
+                                     CC_VAR);
+        cout_doing << "HYPRE call done" << "\n";
+      }
+    }
+  } else { // now viewpoint == DoingCoarseToFine
+    //==================================================================
+    // Add coarse-to-fine connections to graph, requires ICE list of
+    // C/F connections of this patch
+    //==================================================================
+    // TODO: this requires the list of connections to be prepared by ICE.
+    // Add this code later.
+  }
+} // end HyprePatch_CC::makeConnections(graph)
+
+void
+HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations
+(HYPRE_SStructMatrix& HA,
+ DataWarehouse* A_dw,
+ const VarLabel* A_label,
+ const int stencilSize,
+ const bool symmetric /* = false */)
+  //___________________________________________________________________
+  // HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations~
+  // Add the connections at C/F interfaces of this patch to the HYPRE
+  // Graph. If viewpoint == DoingFineToCoarse, we add the fine-to-coarse
+  // connections. If viewpoint == DoingCoarseToFine, we add the
+  // coarse-to-fine-connections that are read from the connection list
+  // prepared for this patch by ICE.
+  //___________________________________________________________________
+{
+  CCTypes::matrix_type A;
+  A_dw->get(A, A_label, _matl, _patch, Ghost::None, 0);
+  if (symmetric) {
+    //==================================================================
+    // Add symmetric stencil equations to HA
+    //==================================================================
+    // Because AA is 7-point and the stencil is 4-point, copy data from AA
+    // into stencil, and then feed it to Hypre
+    double* values = new double[(_high.x()-_low.x())*stencilSize];
+    int stencil_indices[] = {0,1,2,3};
+    for(int z = _low.z(); z < _high.z(); z++) {
+      for(int y = _low.y(); y < _high.y(); y++) {
+        // Read data in "chunks" of fixed y-, z- index and running x-index
+        const Stencil7* AA = &A[IntVector(_low.x(), y, z)];
+        double* p = values;
+        for (int x = _low.x(); x < _high.x(); x++) {
+          *p++ = AA->p;
+          *p++ = AA->w;
+          *p++ = AA->s;
+          *p++ = AA->b;
+          AA++;
+        }
+        IntVector chunkLow(_low.x(), y, z);
+        IntVector chunkHigh(_high.x()-1, y, z);
+        // Feed data from Uintah to Hypre
+        HYPRE_SStructMatrixSetBoxValues(HA, _level,
+                                        chunkLow.get_pointer(),
+                                        chunkHigh.get_pointer(), CC_VAR,
+                                        stencilSize, stencil_indices, values);
+      }
+    }
+    delete[] values;
+  } else { // now symmetric = false
+    //==================================================================
+    // Add non-symmetric stencil equations to HA
+    //==================================================================
+    // AA is 7-point and stencil is 7-point, feed data directly to Hypre
+    int stencil_indices[] = {0,1,2,3,4,5,6};
+    for(int z = _low.z(); z < _high.z(); z++) {
+      for(int y = _low.y(); y < _high.y(); y++) {
+        const double* values = &A[IntVector(_low.x(), y, z)].p;
+        IntVector chunkLow(_low.x(), y, z);
+        IntVector chunkHigh(_high.x()-1, y, z);
+        // Feed data from Uintah to Hypre
+        HYPRE_SStructMatrixSetBoxValues(HA, _level,
+                                        chunkLow.get_pointer(),
+                                        chunkHigh.get_pointer(), CC_VAR,
+                                        stencilSize, stencil_indices,
+                                        const_cast<double*>(values));
+      }
+    }
+  } // end if (symmetric) 
+} // end HyprePatch_CC::makeInteriorConnections()
+
+void
+HypreDriverSStruct::HyprePatch_CC::makeInteriorVector
+(HYPRE_SStructVector& HV,
+ DataWarehouse* V_dw,
+ const VarLabel* V_label)
+  //___________________________________________________________________
+  // HypreDriverSStruct::HyprePatch_CC::makeInteriorVector~
+  // Read the vector HV from Uintah into Hypre. HV can be the RHS
+  // or the solution (initial guess) vector. HV is defined at the interior
+  // cells of each patch.
+  //___________________________________________________________________
+{
+  CCTypes::const_type V;
+  V_dw->get(V, V_label, _matl, _patch, Ghost::None, 0);
+  for(int z = _low.z(); z < _high.z(); z++) {
+    for(int y = _low.y(); y < _high.y(); y++) {
+      const double* values = &V[IntVector(_low.x(), y, z)];
+      IntVector chunkLow(_low.x(), y, z);
+      IntVector chunkHigh(_high.x()-1, y, z);
+      // Feed data from Uintah to Hypre
+      HYPRE_SStructVectorSetBoxValues(HV, _level,
+                                      chunkLow.get_pointer(),
+                                      chunkHigh.get_pointer(), CC_VAR,
+                                        const_cast<double*>(values));
+    }
+  }
+} // end HyprePatch_CC::makeInteriorVector()
+
+void
+HypreDriverSStruct::HyprePatch_CC::makeConnections
+(HYPRE_SStructMatrix& HA,
+ DataWarehouse* A_dw,
+ const VarLabel* A_label,
+ const int stencilSize,
+ const CoarseFineViewpoint& viewpoint)
+  //___________________________________________________________________
+  // HypreDriverSStruct::HyprePatch_CC::makeConnections~
+  // Add the connections at C/F interfaces of this patch to the HYPRE
+  // Graph. If viewpoint == DoingFineToCoarse, we add the fine-to-coarse
+  // connections. If viewpoint == DoingCoarseToFine, we add the
+  // coarse-to-fine-connections that are read from the connection list
+  // prepared for this patch by ICE.
+  //___________________________________________________________________
+{
+  CCTypes::matrix_type A;
+  A_dw->get(A, A_label, _matl, _patch, Ghost::None, 0);
+  if (viewpoint == DoingFineToCoarse) {
+    //==================================================================
+    // Add fine-to-coarse entries to matrix
+    //==================================================================
+    //    const int fineLevel = _level;
+    //    const int coarseLevel = _level-1;
+    const IntVector& refRat = _patch->getLevel()->getRefinementRatio();
+    vector<Patch::FaceType>::const_iterator iter;  
+    // Loop over all C/F interface faces (note: a Uintah patch face is
+    // marked as a coarsefine interface only when the current patch is
+    // the FINE patch (what Todd calls "looking up is easy, not
+    // looking down").  See also ICE/impAMRICE.cc,
+    // ICE::matrixBC_CFI_finePatch().
+   for (iter  = _patch->getCoarseFineInterfaceFaces()->begin(); 
+         iter != _patch->getCoarseFineInterfaceFaces()->end(); ++iter) {
+      Patch::FaceType face = *iter;                   // e.g. xminus=0
+      IntVector offset = _patch->faceDirection(face); // e.g. (-1,0,0)
+      CellIterator f_iter =
+        _patch->getFaceCellIterator(face,"alongInteriorFaceCells");
+      // Add one entry to one equation at a time: the equation at fineCell,
+      // and the entry no. stencilSize (0..stencilSize-1 are the structured
+      // entries, with entry "face" set to 0 inside ICE, and replaced with
+      // the following unstructured (graph) entry.
+      const int numEntries = 1;
+      int stencilEntries[numEntries] = {stencilSize};
+      for(; !f_iter.done(); f_iter++) {
+        // For each fine cell at C/F interface, compute the index of
+        // the neighboring coarse cell (add offset = outward normal to
+        // the face and divide by the refinement ratio to obtain
+        // "coarseLevel"-level index. Then add the connection between
+        // the fine and coarse cells to the graph.
+        IntVector fineCell = *f_iter;                        // inside patch
+        IntVector coarseCell = (fineCell + offset) / refRat; // outside patch
+        cout_doing << "Adding F->C entry to matrix" << "\n";
+        const double* values = &A[fineCell][face];
+        HYPRE_SStructMatrixSetBoxValues(HA, _level,
+                                        fineCell.get_pointer(),
+                                        fineCell.get_pointer(),
+                                        CC_VAR, numEntries, stencilEntries,
+                                        const_cast<double*>(values));
+        cout_doing << "HYPRE call done" << "\n";
+      }
+    }
+  } else { // now viewpoint == DoingCoarseToFine
+    //==================================================================
+    // Add coarse-to-fine entries to matrix, requires ICE list of
+    // C/F connections of this patch
+    //==================================================================
+    // TODO: this requires the list of connections to be prepared by ICE.
+    // Add this code later.
+  }
+} // end HyprePatch_CC::makeConnections(matrix)
 
 //##############################################################
 // OLD CODE FROM STAND ALONE. TODO: MOVE THIS CODE TO MAKELINEARSYSTEM_CC
 // AND GETSOLUTION_CC.
 //##############################################################
 
-// Order of operations in constructing linear systems:
-//  makeGraph(hier, grid, stencil);
-//  makeLinearSystem(hier, grid, stencil);
-
-
 /*================= GRAPH CONSTRUCTION FUNCTIONS =========================*/
+
+#if 0
 void
-Solver::makeConnections(const ConstructionStatus& status,
-                        const Hierarchy& hier,
-                        const HYPRE_SStructStencil& stencil,
-                        const Counter level,
-                        const Patch* patch,
-                        const Counter& d,
-                        const Side& s,
-                        const CoarseFineViewpoint& viewpoint)
+HypreDriverSStruct::makeConnections(const ConstructionStatus& status,
+                                    const CoarseFineViewpoint& viewpoint
+                                    const HyprePatch& hpatch)
   // Build the C/F connections at the (d,s) C/F face of patch "patch"
   // at level "level" (connecting to level-1). We add fine-to-coarse
   // connections if viewpoint = FineToCoarse, otherwise we add
@@ -586,28 +790,8 @@ Solver::makeConnections(const ConstructionStatus& status,
          fine_iter != fineCellFace.end(); ++fine_iter, ++fineCell) {
       cout_doing << "Coarse cell: " << *coarse_iter << "\n";
       cout_doing << "Fine   cell: " << *fine_iter   << "\n";
-      if (status == Graph) {
-        if (viewpoint == FineToCoarse) {
-          //====================================================
-          // Add F->C connections to graph
-          //====================================================
-          cout_doing << "Adding F->C connection to graph" << "\n";
-          HYPRE_SStructGraphAddEntries(_graph,
-                                       fineLevel,(*fine_iter).getData(),CC_VAR,
-                                       coarseLevel,(*coarse_iter).getData(),CC_VAR);
-          cout_doing << "HYPRE call done" << "\n";
-        } else { // viewpoint == CoarseToFine
-          //====================================================
-          // Add C->F connections to graph
-          //====================================================
-          cout_doing << "Adding C->F connection to graph" << "\n";
-          HYPRE_SStructGraphAddEntries(_graph,
-                                       coarseLevel,(*coarse_iter).getData(),CC_VAR,
-                                       fineLevel,(*fine_iter).getData(),CC_VAR);
-          cout_doing << "HYPRE call done" << "\n";
-        } // end if viewpoint
-      } else { // status == Matrix
-        
+
+      if (status == Matrix) {
         //########################################################
         // Compute C-F interface flux.
         // Compute coordinates of:
@@ -779,13 +963,15 @@ Solver::makeConnections(const ConstructionStatus& status,
     } // end for fine_iter
   } // end for coarse_iter
 } // end makeConnections
+#endif
 
+#if 0
 void
-Solver::makeLinearSystem(const Hierarchy& hier,
-                         const HYPRE_SStructGrid& grid,
-                         const HYPRE_SStructStencil& stencil)
+HypreDriverSStruct::makeLinearSystem(const Hierarchy& hier,
+                                     const HYPRE_SStructGrid& grid,
+                                     const HYPRE_SStructStencil& stencil)
   //_____________________________________________________________________
-  // Function Solver::makeLinearSystem~
+  // Function HypreDriverSStruct::makeLinearSystem~
   // Initialize the linear system: set up the values on the links of the
   // graph of the LHS matrix A and value of the RHS vector b at all
   // patches of all levels. Delete coarse data underlying fine patches.
@@ -890,6 +1076,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
     } // end for i (patches)
   } // end for level
 } // end makeLinearSystem()
+#endif
 
 //#####################################################################
 // Utilities
@@ -903,49 +1090,27 @@ void printLine(const string& s, const unsigned int len)
   cout_doing << "\n";
 }
 
-std::ostream&
-operator << (std::ostream& os,
-             const HypreDriverSStruct::CoarseFineViewpoint& v)
-  // Write side s to the stream os.
-{
-  if      (v == Solver::CoarseToFine) os << "CoarseToFine";
-  else if (v == Solver::FineToCoarse) os << "FineToCoarse";
-  else os << "N/A";
-  return os;
-}
+namespace Uintah {
 
-std::ostream&
-operator << (std::ostream& os,
-             const HypreDriverSStruct::ConstructionStatus& s)
-{
-  if      (s == Solver::Graph ) os << "Graph ";
-  else if (s == Solver::Matrix) os << "Matrix";
-  else os << "ST WRONG!!!";
-  return os;
-}
+  std::ostream&
+  operator << (std::ostream& os,
+               const HypreDriverSStruct::CoarseFineViewpoint& v)
+  {
+    if      (v == HypreDriverSStruct::DoingCoarseToFine) os << "CoarseToFine";
+    else if (v == HypreDriverSStruct::DoingFineToCoarse) os << "FineToCoarse";
+    else os << "CoarseFineViewpoint WRONG!!!";
+    return os;
+  }
 
-HypreDriver::Side& operator++(HypreDriver::BoxSide &s)
-{
-  return s = Side(s+2);
-}
+  std::ostream& operator<< (std::ostream& os,
+                            const HypreDriverSStruct::HyprePatch& p)
+    // Write our patch structure to the stream os.
+  {
+    os << *(p.getPatch());
+    return os;
+  }
 
-std::ostream&
-operator << (std::ostream& os, const HypreDriver::Side& s)
-  // Write side s to the stream os.
-{
-  if      (s == LeftSide ) os << "Left ";
-  else if (s == RightSide) os << "Right";
-  else os << "N/A";
-  return os;
-}
-
-std::ostream&
-operator << (std::ostream& os, const HyprePatchSStruct& p)
-  // Write our patch structure to the stream os.
-{
-  os << *(p.getPatch());
-  return os;
-}
+} // end namespace Uintah
 
 #if 0
 // TODO: move this function to impAMRICE !!!!!

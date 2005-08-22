@@ -1,3 +1,6 @@
+#ifndef Packages_Uintah_CCA_Components_Solvers_SolverFactory_h
+#define Packages_Uintah_CCA_Components_Solvers_SolverFactory_h
+
 /*--------------------------------------------------------------------------
 CLASS
    SolverFactory
@@ -31,8 +34,6 @@ WARNING
    Make sure to comment out any solver that is not completed yet, otherwise
    sus cannot pass linking.
    --------------------------------------------------------------------------*/
-#ifndef Packages_Uintah_CCA_Components_Solvers_SolverFactory_h
-#define Packages_Uintah_CCA_Components_Solvers_SolverFactory_h
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
