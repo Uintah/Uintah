@@ -1,53 +1,61 @@
-#ifndef __SOLVERFAC_H__
-#define __SOLVERFAC_H__
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverFAC_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreSolverFAC_h
 
-#include "Solver.h"
+/*--------------------------------------------------------------------------
+CLASS
+   HypreSolverFAC
+   
+   A Hypre CG (conjugate gradient) solver.
 
-class SolverFAC : public Solver {
-  /*_____________________________________________________________________
-    class SolverFAC:
-    A solver handler that gets all the necessary data pointers (A,b,x,...),
-    solves the linear system by calling Hypre, and returns some output 
-    statistics and the solution vector.
-    _____________________________________________________________________*/
-public:
+GENERAL INFORMATION
+
+   File: HypreSolverFAC.h
+
+   Oren E. Livne
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-  SolverFAC(const Param* param)
-    : Solver(param)
-    {
-      _solverID = 99;
-    }
+   Copyright (C) 2005 SCI Group
 
-  ~SolverFAC(void) {
-    dbg << "Destroying SolverFAC object" << "\n";
-    hypre_TFree(_pLevel);
-    hypre_TFree(_refinementRatio);
+KEYWORDS
+   HypreDriver, HypreGenericSolver, HypreSolverParams.
 
-    dbg << "Destroying graph objects" << "\n";
-    HYPRE_SStructGraph facGraph = hypre_SStructMatrixGraph(_facA);
-    HYPRE_SStructGraphDestroy(facGraph);
-    
-    /* Destroy matrix, RHS, solution objects */
-    dbg << "Destroying matrix, RHS, solution objects" << "\n";
-    HYPRE_SStructMatrixDestroy(_facA);
-  }
+DESCRIPTION
+   Class HyprePrecondCG sets up and destroys the Hypre conjugate gradient
+   solver. It can optionally employ a preconditioner.
 
-  virtual void setup(void);
-  virtual void solve(void);
+WARNING
+   Works with Hypre Struct interface only.
+   --------------------------------------------------------------------------*/
+
+#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
+
+namespace Uintah {
   
-  /* Utilities */
-  virtual void printMatrix(const string& fileName = "output");
+  class HypreDriver;
 
-private:
-  void initializeData(const Hierarchy& hier,
-                      const HYPRE_SStructGrid& grid);
+  //---------- Types ----------
+  
+  class HypreSolverFAC : public HypreGenericSolver {
 
-  //  void assemble(void);
+    //========================== PUBLIC SECTION ==========================
+  public:
+  
+    HypreSolverFAC(HypreDriver* driver,
+                    HypreGenericPrecond* precond) :
+      HypreGenericSolver(driver,precond,initPriority()) {}
+    virtual ~HypreSolverFAC(void) {}
 
-  /* FAC objects */
-  HYPRE_SStructMatrix   _facA;
-  int*                  _pLevel;          // Needed by FAC: part # of level
-  hypre_Index*          _refinementRatio; // Needed by FAC
-};
+    virtual void solve(void);
 
-#endif // __SOLVERFAC_H__
+    //========================== PRIVATE SECTION ==========================
+  private:
+    static Priorities initPriority(void);
+
+  }; // end class HypreSolverFAC
+
+} // end namespace Uintah
+
+#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverFAC_h
