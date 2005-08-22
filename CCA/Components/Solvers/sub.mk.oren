@@ -13,25 +13,19 @@ ifeq ($(HAVE_HYPRE),yes)
 SRCS += $(SRCDIR)/HypreSolver.cc \
         \
 	$(SRCDIR)/AMRSolver.cc \
+        $(SRCDIR)/HypreSolverBase.cc \
+        $(SRCDIR)/HyprePrecondBase.cc \
 	$(SRCDIR)/HypreDriver.cc \
-        $(SRCDIR)/HypreGenericSolver.cc \
-        $(SRCDIR)/HypreSolverPFMG.cc \
-        $(SRCDIR)/HypreSolverSMG.cc \
-        $(SRCDIR)/HypreSolverSparseMSG.cc \
-        $(SRCDIR)/HypreSolverCG.cc \
-        $(SRCDIR)/HypreSolverHybrid.cc \
-        $(SRCDIR)/HypreSolverGMRES.cc \
-        $(SRCDIR)/HypreGenericPrecond.cc \
-        $(SRCDIR)/HyprePrecondSMG.cc \
-        $(SRCDIR)/HyprePrecondPFMG.cc \
-        $(SRCDIR)/HyprePrecondSparseMSG.cc \
-        $(SRCDIR)/HyprePrecondJacobi.cc \
-        $(SRCDIR)/HyprePrecondDiagonal.cc \
 	$(SRCDIR)/HypreDriverStruct.cc \
-	$(SRCDIR)/HypreDriverSStruct.cc \
-        $(SRCDIR)/HypreSolverAMG.cc \
-        $(SRCDIR)/HypreSolverFAC.cc
-endif
+	$(SRCDIR)/HypreDriverSStruct.cc
+
+SUBDIRS := \
+        $(SRCDIR)/HypreSolvers \
+        $(SRCDIR)/HyprePreconds
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+
+endif # if $(HAVE_HYPRE)
 
 PSELIBS := \
 	Core/Containers                  \

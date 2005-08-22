@@ -21,7 +21,7 @@ GENERAL INFORMATION
 
 KEYWORDS
    HYPRE_Struct, HYPRE_SStruct, HYPRE_ParCSR,
-   HypreGenericSolver, HypreSolverParams.
+   HypreSolverBase, HypreSolverParams.
 
 DESCRIPTION 
    Class HypreDriver is a wrapper for calling Hypre solvers
@@ -34,7 +34,7 @@ DESCRIPTION
    the interface data. If required by the solver, HypreDriver converts
    the data from one Hypre interface type to another.  HypreDriver is
    also responsible for deleting all Hypre objects.
-   HypreGenericSolver::newSolver determines the specific Hypre
+   HypreSolverBase::newSolver determines the specific Hypre
    interface and solver, based on the parameters in HypreSolverParams.
    HypreDriver::solve() is the task-scheduled function in
    AMRSolver::scheduleSolve() that is activated by
