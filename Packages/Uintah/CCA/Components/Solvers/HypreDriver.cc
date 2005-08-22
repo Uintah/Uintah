@@ -19,14 +19,8 @@
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverBase.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
@@ -133,31 +127,40 @@ HypreDriver::getSolution_CC(const int matl)
 
 namespace Uintah {
 
-  TypeDescription::Type TypeTemplate2Enum(const SFCXTypes& t)
+  template<>
+  TypeDescription::Type
+  TypeTemplate2Enum(const SFCXTypes& /*t*/)
   {
     return TypeDescription::SFCXVariable;
   }
 
-  TypeDescription::Type TypeTemplate2Enum(const SFCYTypes& t)
+  template<>
+  TypeDescription::Type
+  TypeTemplate2Enum(const SFCYTypes& /*t*/)
   {
     return TypeDescription::SFCYVariable;
   }
 
-  TypeDescription::Type TypeTemplate2Enum(const SFCZTypes& t)
+  template<>
+  TypeDescription::Type
+  TypeTemplate2Enum(const SFCZTypes& /*t*/)
   {
     return TypeDescription::SFCZVariable;
   }
 
-  TypeDescription::Type TypeTemplate2Enum(const NCTypes& t)
+  template<>
+  TypeDescription::Type
+  TypeTemplate2Enum(const NCTypes& /*t*/)
   {
     return TypeDescription::NCVariable;
   }
 
-  TypeDescription::Type TypeTemplate2Enum(const CCTypes& t)
+  template<>
+  TypeDescription::Type
+  TypeTemplate2Enum(const CCTypes& /*t*/)
   {
     return TypeDescription::CCVariable;
   }
-} // end namespace Uintah
 
 HypreDriver*
 newHypreDriver(const HypreInterface& interface,
@@ -205,6 +208,8 @@ HypreDriver::isConvertable(const HypreInterface& to)
 
   return false;
 } // end isConvertable()
+
+} // end namespace Uintah
 
 HypreInterface& operator++(HypreInterface &s)
 {
