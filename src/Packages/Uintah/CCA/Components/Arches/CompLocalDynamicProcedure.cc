@@ -1529,7 +1529,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 					DataWarehouse* new_dw,
 				        const TimeIntegratorLabel* timelabels)
 {
-  int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  //int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   for (int p = 0; p < patches->size(); p++) {
   TAU_PROFILE_TIMER(compute1, "Compute1", "[reComputeFilterValues::compute1]" , TAU_USER);
   TAU_PROFILE_TIMER(compute2, "Compute2", "[reComputeFilterValues::compute2]" , TAU_USER);
