@@ -38,7 +38,7 @@
     </summary>
     <description>
     <p>Modify attributes of a nrrd for a given axis. The only attributes which are set are the label, kind, minimum and maximum values, and the spacing.</p>
-    <p>The values given in the UI will be set to be the corresponding values of the new nrrd.</p>
+    <p>The values given in the UI will be set to be the corresponding values of the new nrrd. In order for a given field to be set in the output nrrd, check the box next to the field. NOTE: If the min, max, and spacing values are invalid due to the new given values, the max point will be re-calculated using the min, spacing, and number of samples.</p>
     </description>
   </overview>
   <implementation>
