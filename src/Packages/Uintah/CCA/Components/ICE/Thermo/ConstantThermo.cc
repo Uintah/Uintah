@@ -72,7 +72,9 @@ void ConstantThermo::addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
 
 void ConstantThermo::compute_thermalDiffusivity(CellIterator iter,
                                                 CCVariable<double>& thermalDiffusivity,
-                                                DataWarehouse*, constCCVariable<double>& sp_vol)
+                                                DataWarehouse*,
+                                                constCCVariable<double>&,
+                                                constCCVariable<double>& sp_vol)
 {
   double cp = d_specificHeat * d_gamma;
   double factor = d_thermalConductivity/cp;
@@ -89,7 +91,7 @@ void ConstantThermo::compute_thermalConductivity(CellIterator iter,
 }
 
 void ConstantThermo::compute_cp(CellIterator iter, CCVariable<double>& cp,
-                                DataWarehouse*)
+                                DataWarehouse*, constCCVariable<double>&)
 {
   double tmp = d_specificHeat * d_gamma;
   for(;!iter.done();iter++)
@@ -97,21 +99,21 @@ void ConstantThermo::compute_cp(CellIterator iter, CCVariable<double>& cp,
 }
 
 void ConstantThermo::compute_cv(CellIterator iter, CCVariable<double>& cv,
-                                DataWarehouse*)
+                                DataWarehouse*, constCCVariable<double>&)
 {
   for(;!iter.done();iter++)
     cv[*iter] = d_specificHeat;
 }
 
 void ConstantThermo::compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                                   DataWarehouse*)
+                                   DataWarehouse*, constCCVariable<double>&)
 {
   for(;!iter.done();iter++)
     gamma[*iter] = d_gamma;
 }
 
 void ConstantThermo::compute_R(CellIterator iter, CCVariable<double>& R,
-                               DataWarehouse*)
+                               DataWarehouse*, constCCVariable<double>&)
 {
   double tmp = (d_gamma-1) * d_specificHeat;
   for(;!iter.done();iter++)

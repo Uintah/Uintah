@@ -4,7 +4,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/ICE/Thermo
 
 SRCS     += $(SRCDIR)/ThermoInterface.cc \
 	$(SRCDIR)/ThermoFactory.cc \
-	$(SRCDIR)/ConstantThermo.cc
+	$(SRCDIR)/ConstantThermo.cc \
+        $(SRCDIR)/CanteraSingleMixture.cc
 
 PSELIBS := \
 	Packages/Uintah/CCA/Ports \
@@ -16,4 +17,9 @@ PSELIBS := \
 
 LIBS	:= 
 
-
+# Uncomment this like to compile with cantera
+CANTERA_DIR := /Users/sparker/sw
+ifneq ($(CANTERA_DIR),)
+ INCLUDES := $(INCLUDES) -I$(CANTERA_DIR)/include
+ CANTERA_LIBRARY := -L$(CANTERA_DIR)/lib/1.6.0 -loneD -lzeroD -ltransport -lcantera -lrecipes -lcvode -lctmath -ltpx -lconverters -lctcxx
+endif

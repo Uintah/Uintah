@@ -40,7 +40,7 @@ PSELIBS := \
        Core/Exceptions Core/Geometry                   \
        Core/Thread Core/Util
 
-LIBS       := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS       := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CANTERA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

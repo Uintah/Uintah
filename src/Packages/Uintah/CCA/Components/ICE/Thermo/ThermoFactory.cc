@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/ICE/Thermo/ThermoFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/Thermo/ConstantThermo.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/CanteraSingleMixture.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
@@ -18,6 +19,8 @@ ThermoInterface* ThermoFactory::create(ProblemSpecP& ps)
   
   if (type == "constant") 
     return(scinew ConstantThermo(child));
+  else if (type == "cantera single mixture") 
+    return(scinew CanteraSingleMixture(child));
   else
     throw ProblemSetupException("Unknown Thermo Type ("+type+")", __FILE__, __LINE__);
 }
