@@ -89,6 +89,8 @@ WARNING
     // For comparing grids - level and patch structure must be equal
     bool operator==(const Grid& othergrid);
 
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
+
   private:
     std::vector<LevelP> d_levels;
     
@@ -115,7 +117,5 @@ WARNING
   };
 
 } // End namespace Uintah
-
-std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
 #endif

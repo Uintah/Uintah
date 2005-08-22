@@ -211,9 +211,11 @@ public:
 
  friend void Pio( Piostream&, IntVector& );
 
+ friend std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
+
 private:
   int value_[3];
-};
+}; // end class IntVector
 
 inline Vector operator*(const Vector& a, const IntVector& b) {
   return Vector(a.x()*b.x(), a.y()*b.y(), a.z()*b.z());
@@ -238,12 +240,6 @@ inline IntVector Abs(const IntVector& v)
     return IntVector(x,y,z);
 }
 
-
-//std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
-
 } // End namespace SCIRun
-
-std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
-
 
 #endif

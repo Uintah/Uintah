@@ -724,7 +724,12 @@ WARNING
 
     int dwmap[TotalDWs];
     int sortedOrder;
-  };
+
+    friend std::ostream & operator << ( std::ostream & out, const Uintah::Task & task );
+    friend std::ostream & operator << ( std::ostream & out, const Uintah::Task::TaskType & tt );
+    friend std::ostream & operator << ( std::ostream & out, const Uintah::Task::Dependency & dep );
+
+  }; // end class Task
   
   inline void Task::Dependency::addComp(Edge* edge)
     {
@@ -744,11 +749,6 @@ WARNING
     }
 
 } // End namespace Uintah
-
-
-std::ostream & operator << ( std::ostream & out, const Uintah::Task & task );
-std::ostream & operator << ( std::ostream & out, const Uintah::Task::TaskType & tt );
-std::ostream & operator << ( std::ostream & out, const Uintah::Task::Dependency & dep );
 
 // This mus tbe at the bottom
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>

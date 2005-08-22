@@ -795,7 +795,7 @@ void DetailedTask::dependencySatisfied(InternalDependency* dep)
  internalDependencyLock.unlock();
 }
 
-
+namespace Uintah {
 ostream&
 operator<<(ostream& out, const DetailedTask& task)
 {
@@ -842,6 +842,7 @@ operator<<(ostream& out, const DetailedDep& dep)
     out << " on patch " << dep.fromPatch->getID();
   out << ", matl " << dep.matl << ", low=" << dep.low << ", high=" << dep.high;
   return out;
+}
 }
 
 void

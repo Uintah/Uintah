@@ -195,10 +195,10 @@ public:
       _z = z;
     }
       
-};
+  friend std::ostream& operator<<(std::ostream& os, const Vector& p);
+  friend std::istream& operator>>(std::istream& os, Vector& p);
 
-std::ostream& operator<<(std::ostream& os, const Vector& p);
-std::istream& operator>>(std::istream& os, Vector& p);
+}; // end class Vector
 
 } // End namespace SCIRun
 

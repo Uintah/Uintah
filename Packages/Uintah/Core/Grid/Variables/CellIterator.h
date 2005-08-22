@@ -125,6 +125,8 @@ WARNING
       return *this;
     }
 
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
+
   private:
     CellIterator();
     
@@ -133,9 +135,8 @@ WARNING
     IntVector d_s,d_e;
     IntVector d_cur;
     bool d_done;
+
   };
 } // End namespace Uintah
   
-std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
- 
 #endif
