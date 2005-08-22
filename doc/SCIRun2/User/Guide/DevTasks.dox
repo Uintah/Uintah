@@ -5,21 +5,21 @@
 
 \subsection ayla Ayla
 
-\li GUI Prototypes: by Aug 24
-\li Replace Qt GUI toolkit: TBD
-\li CCA spec upgrade: TBD
+\li GUI Prototypes: by September 2
+\li CCA spec upgrade, Services interface: by August 26
+\li CCA spec upgrade, ComponentRelease interface: by August 26
+\li Replace Qt GUI toolkit: by November 7
 \li Migrate loading/saving network files to a Framework service: TBD
-<!-- merge branch babel_sidl_v0_9_1 to trunk -->
 <!-- MPICH done, others? -->
 
 \subsection keming Keming
 
-\li Complete parallel component implementation: by Aug 15
+\li Complete parallel component implementation: by August 15
 \li Updates to text builder: by July 18
 \li PRMI without data redistribution, by July 25
-\li PRMI data redistribution, by Aug 1
-\li PRMI synchronization, by Aug 8
-\li PRMI concurrency control, by Aug 15
+\li PRMI data redistribution, by August 1
+\li PRMI synchronization, by August 8
+\li PRMI concurrency control, by August 15
 \li Update parallel component examples: TDB
 
 \subsection kosta Kosta
