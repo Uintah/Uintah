@@ -1,12 +1,12 @@
-#include "TestBoxGrouper.h"
+#include <Packages/Uintah/testprograms/TestBoxGrouper/TestBoxGrouper.h>
 #include <Packages/Uintah/testprograms/TestBoxGrouper/Box.h>
 #include <Packages/Uintah/testprograms/TestBoxGrouper/BoxRangeQuerier.h>
 #include <Core/Containers/SuperBox.h>
 
-namespace Uintah {
-
 using namespace std;
 using namespace SCIRun;
+
+namespace Uintah {
 
 typedef SuperBox<const Box*, IntVector, int, int,
   InternalAreaSuperBoxEvaluator<const Box*, int> > SuperBox;
