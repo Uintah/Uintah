@@ -60,6 +60,11 @@ public:
   GuiDouble           min_;
   GuiDouble           max_;
   GuiDouble           spacing_;
+  GuiInt              use_label_;
+  GuiInt              use_kind_;
+  GuiInt              use_min_;
+  GuiInt              use_max_;
+  GuiInt              use_spacing_;
 private:
   int                 generation_;
 };
@@ -74,6 +79,11 @@ UnuAxinfo::UnuAxinfo(GuiContext* ctx)
     min_(ctx->subVar("min")),
     max_(ctx->subVar("max")),
     spacing_(ctx->subVar("spacing")),
+    use_label_(ctx->subVar("use_label")),
+    use_kind_(ctx->subVar("use_kind")),
+    use_min_(ctx->subVar("use_min")),
+    use_max_(ctx->subVar("use_max")),
+    use_spacing_(ctx->subVar("use_spacing")),
     generation_(-1)
 {
 }
@@ -120,11 +130,12 @@ void UnuAxinfo::execute()
     return;
   }
   
-  
-  if (strlen(label_.get().c_str())) {
+  if (use_label_.get() && strlen(label_.get().c_str())) {
     nout->axis[axis].label = (char*)airFree(nout->axis[axis].label);
     nout->axis[axis].label = airStrdup(const_cast<char*>(label_.get().c_str()));
-    
+  }
+   
+  if (use_kind_.get()) {
     string kind = kind_.get();
     if (kind == "nrrdKindDomain") {
       nout->axis[axis].kind = nrrdKindDomain;
@@ -149,17 +160,32 @@ void UnuAxinfo::execute()
     } else {
       nout->axis[axis].kind = nrrdKindUnknown;
     }
-    
-    if (airExists(min_.get())) {
-      nout->axis[axis].min = min_.get();
-    }
-    if (airExists(max_.get())) {
-      nout->axis[axis].max = max_.get();
-    }
-    if (airExists(spacing_.get())) {
-      nout->axis[axis].spacing = spacing_.get();
-    }
   }
+   
+  if (use_min_.get() && airExists(min_.get())) 
+    nrrdAxisInfoSet(nout, nrrdAxisInfoMin, min_.get());
+
+  if (use_max_.get() && airExists(max_.get())) 
+    nrrdAxisInfoSet(nout, nrrdAxisInfoMax, max_.get());
+
+  if (use_spacing_.get() && airExists(spacing_.get())) 
+    nrrdAxisInfoSet(nout, nrrdAxisInfoSpacing, spacing_.get());
+
+  double calc_max = nout->axis[axis].min + 
+    (nout->axis[axis].spacing * (nout->axis[axis].size-1));
+
+  if (nout->axis[axis].center == nrrdCenterCell) 
+    calc_max = nout->axis[axis].min + 
+      (nout->axis[axis].spacing * nout->axis[axis].size-1);
+
+  if (airExists(nout->axis[axis].min) && 
+      airExists(nout->axis[axis].max) &&
+      airExists(nout->axis[axis].spacing) && 
+      calc_max != nout->axis[axis].max) {
+    warning("Warning: Output NRRD's min, max and spacing are not valid. Recalculating max.");
+    nrrdAxisInfoSet(nout, nrrdAxisInfoMax, calc_max);
+  }
+
   
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
