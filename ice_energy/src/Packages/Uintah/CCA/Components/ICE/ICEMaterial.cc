@@ -52,6 +52,9 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
     d_thermo = dynamic_cast<ThermoInterface*>(d_combined);
     //d_transport = dynamic_cast<TransportInterface*>(d_combined);
     d_combined->setICEMaterial(this);
+  } else {
+    d_eos = 0;
+    d_thermo = 0;
   }
 
   // Step 1b -- create the equation of state if necessary

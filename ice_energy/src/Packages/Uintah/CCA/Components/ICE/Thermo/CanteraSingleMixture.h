@@ -1,22 +1,25 @@
-#ifndef Uintah_ThermoInterface_h
-#define Uintah_ThermoInterface_h
+#ifndef Uintah_CanteraSingleMixture_h
+#define Uintah_CanteraSingleMixture_h
 
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/CCA/Components/ICE/PropertyBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/ThermoInterface.h>
+
+namespace Cantera {
+  class IdealGasMix;
+};
 
 namespace Uintah {
 
 /**************************************
 
 CLASS
-   ThermoInterface
+   CanteraSingleMixture
    
    Short description...
 
 GENERAL INFORMATION
 
-   ThermoInterface.h
+   CanteraSingleMixture.h
 
    Steven G. Parker
    Department of Computer Science
@@ -36,54 +39,57 @@ WARNING
   
 ****************************************/
 
-  class ThermoInterface : public PropertyBase {
+  class CanteraSingleMixture : public ThermoInterface {
   public:
-    ThermoInterface();
-    virtual ~ThermoInterface();
+    CanteraSingleMixture(ProblemSpecP& ps);
+    virtual ~CanteraSingleMixture();
 
     virtual void scheduleInitializeThermo(SchedulerP& sched,
                                           const PatchSet* patches,
-                                          ICEMaterial* ice_matl) = 0;
+                                          ICEMaterial* ice_matl);
+
     virtual void addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
-                                                        int numGhostCells) = 0;
+                                                        int numGhostCells);
     virtual void addTaskDependencies_thermalConductivity(Task* t, Task::WhichDW dw,
-                                                         int numGhostCells) = 0;
+                                                         int numGhostCells);
     virtual void addTaskDependencies_cp(Task* t, Task::WhichDW dw,
-                                        int numGhostCells) = 0;
+                                        int numGhostCells);
     virtual void addTaskDependencies_cv(Task* t, Task::WhichDW dw,
-                                        int numGhostCells) = 0;
+                                        int numGhostCells);
     virtual void addTaskDependencies_gamma(Task* t, Task::WhichDW dw,
-                                           int numGhostCells) = 0;
+                                           int numGhostCells);
     virtual void addTaskDependencies_R(Task* t, Task::WhichDW dw,
-                                       int numGhostCells) = 0;
+                                       int numGhostCells);
     virtual void addTaskDependencies_Temp(Task* t, Task::WhichDW dw,
-                                          int numGhostCells) = 0;
+                                          int numGhostCells);
     virtual void addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
-                                             int numGhostCells) = 0;
+                                             int numGhostCells);
 
     virtual void compute_thermalDiffusivity(CellIterator iter,
                                             CCVariable<double>& thermalDiffusivity,
                                             DataWarehouse* dw,
                                             constCCVariable<double>& int_eng,
-                                            constCCVariable<double>& sp_vol) = 0;
+                                            constCCVariable<double>& sp_vol);
     virtual void compute_thermalConductivity(CellIterator iter,
                                              CCVariable<double>& thermalDiffusivity,
-                                             DataWarehouse* dw) = 0;
+                                             DataWarehouse* dw);
     virtual void compute_cp(CellIterator iter, CCVariable<double>& cp,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng) = 0;
+                            DataWarehouse* dw, constCCVariable<double>& int_eng);
     virtual void compute_cv(CellIterator iter, CCVariable<double>& cv,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng) = 0;
+                            DataWarehouse* dw, constCCVariable<double>& int_eng);
     virtual void compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng) = 0;
+                            DataWarehouse* dw, constCCVariable<double>& int_eng);
     virtual void compute_R(CellIterator iter, CCVariable<double>& R,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng) = 0;
+                            DataWarehouse* dw, constCCVariable<double>& int_eng);
     virtual void compute_Temp(CellIterator iter, CCVariable<double>& temp,
-                              DataWarehouse* dw, constCCVariable<double>& int_eng) = 0;
+                              DataWarehouse* dw, constCCVariable<double>& int_eng);
     virtual void compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                                 DataWarehouse* dw, constCCVariable<double>& temp) = 0;
+                                 DataWarehouse* dw, constCCVariable<double>& temp);
+  private:
+    std::string d_speciesMix;
+    double d_thermalConductivity;
+    Cantera::IdealGasMix* d_gas;
   };
 } // End namespace Uintah
       
-#endif  // Uintah_ThermoInterface_h
-
-
+#endif  // Uintah_CanteraSingleMixture_h

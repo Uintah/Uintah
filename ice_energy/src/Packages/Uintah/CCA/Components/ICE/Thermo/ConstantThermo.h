@@ -64,18 +64,19 @@ WARNING
     virtual void compute_thermalDiffusivity(CellIterator iter,
                                             CCVariable<double>& thermalDiffusivity,
                                             DataWarehouse* dw,
+                                            constCCVariable<double>& int_eng,
                                             constCCVariable<double>& sp_vol);
     virtual void compute_thermalConductivity(CellIterator iter,
                                              CCVariable<double>& thermalDiffusivity,
                                              DataWarehouse* dw);
     virtual void compute_cp(CellIterator iter, CCVariable<double>& cp,
-                            DataWarehouse* dw);
+                            DataWarehouse* dw, constCCVariable<double>& int_eng);
     virtual void compute_cv(CellIterator iter, CCVariable<double>& cv,
-                            DataWarehouse* dw);
+                            DataWarehouse* dw, constCCVariable<double>& int_eng);
     virtual void compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                               DataWarehouse* dw);
+                            DataWarehouse* dw, constCCVariable<double>& int_eng);
     virtual void compute_R(CellIterator iter, CCVariable<double>& R,
-                           DataWarehouse* dw);
+                            DataWarehouse* dw, constCCVariable<double>& int_eng);
     virtual void compute_Temp(CellIterator iter, CCVariable<double>& temp,
                               DataWarehouse* dw, constCCVariable<double>& int_eng);
     virtual void compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,

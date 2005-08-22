@@ -814,6 +814,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   }
 
   t->requires(Task::NewDW, lb->vel_CCLabel,        ghostType, numGhostCells);  
+  t->requires(Task::NewDW, lb->int_eng_CCLabel, Ghost::None);
 
   if (d_EqForm){            // EQ      
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gn,  0);   
@@ -1999,7 +2000,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     double inv_sum_invDelx_sqr = 1.0/( 1.0/(delX * delX) 
                                      + 1.0/(delY * delY) 
                                      + 1.0/(delZ * delZ) );
-    constCCVariable<double> speedSound, sp_vol_CC;
+    constCCVariable<double> speedSound, sp_vol_CC, int_eng;
     constCCVariable<Vector> vel_CC;
     Ghost::GhostType  gn  = Ghost::None; 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -2022,11 +2023,12 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, numGhostCells);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, numGhostCells);
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,  0);
+      new_dw->get(int_eng,    lb->int_eng_CCLabel,    indx,patch,gn,  0);
       CCVariable<double> thermalDiffusivity;
       new_dw->allocateTemporary(thermalDiffusivity, patch);
       ice_matl->getThermo()->compute_thermalDiffusivity(patch->getCellIterator(),
                                                         thermalDiffusivity,
-                                                        new_dw, sp_vol_CC);
+                                                        new_dw, int_eng, sp_vol_CC);
       
       if (d_delT_scheme == "aggressive") {     //      A G G R E S S I V E
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -2442,10 +2444,10 @@ void ICE::computeSpeedOfSound(const ProcessorGroup*,
       new_dw->get(int_eng, lb->int_eng_CCLabel, indx, patch, Ghost::None, 0);
       CCVariable<double> cv;
       new_dw->allocateTemporary(cv, patch);
-      ice_matl->getThermo()->compute_cv(patch->getCellIterator(), cv, new_dw);
+      ice_matl->getThermo()->compute_cv(patch->getCellIterator(), cv, new_dw, int_eng);
       CCVariable<double> gamma;
       new_dw->allocateTemporary(gamma, patch);
-      ice_matl->getThermo()->compute_gamma(patch->getCellIterator(), gamma, new_dw);
+      ice_matl->getThermo()->compute_gamma(patch->getCellIterator(), gamma, new_dw, int_eng);
       CCVariable<double> temp;
       new_dw->allocateTemporary(temp, patch);
       ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), temp, new_dw,
@@ -2640,9 +2642,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       int indx = ice_matl->getDWIndex();
 
       new_dw->allocateTemporary(cv[m], patch);
-      ice_matl->getThermo()->compute_cv(patch->getExtraCellIterator(), cv[m], new_dw);
+      ice_matl->getThermo()->compute_cv(patch->getExtraCellIterator(), cv[m], new_dw, int_eng[m]);
       new_dw->allocateTemporary(gamma[m], patch);
-      ice_matl->getThermo()->compute_gamma(patch->getExtraCellIterator(), gamma[m], new_dw);
+      ice_matl->getThermo()->compute_gamma(patch->getExtraCellIterator(), gamma[m], new_dw, int_eng[m]);
       new_dw->allocateTemporary(Temp[m], patch);
       ice_matl->getThermo()->compute_Temp(patch->getExtraCellIterator(), Temp[m], new_dw,
                                           int_eng[m]);
@@ -4235,6 +4237,8 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
         }
         //____ B U L L E T   P R O O F I N G----
         // catch negative internal energies
+      cerr << "(benign) WARNING: check for negative internal energy disabled\n";
+#if 0
         IntVector neg_cell;
         if (!areAllValuesPositive(int_eng_L, neg_cell) ) {
          ostringstream warn;
@@ -4243,6 +4247,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
              <<neg_cell<<" Negative int_eng_L \n";
          throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
+#endif
       }  // if (ice_matl)
     }  // end numALLMatl loop
   }  // patch loop
@@ -4327,7 +4332,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
        CCVariable<double> cv;
        old_dw->allocateTemporary(cv, patch);
        // ???
-       ice_matl->getThermo()->compute_cv(patch->getCellIterator(), cv, old_dw);
+       ice_matl->getThermo()->compute_cv(patch->getCellIterator(), cv, old_dw, int_eng);
 
        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
           IntVector c = *iter;
@@ -5272,10 +5277,13 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
         warn << base.str() << neg_cell << " negative rho_CC\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
+      cerr << "(benign) WARNING: check for negative internal energy disabled\n";
+#if 0
       if (!areAllValuesPositive(int_eng, neg_cell)) {
         warn << base.str() << neg_cell << " negative int_eng_CC\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
+#endif
       if (!areAllValuesPositive(sp_vol_CC, neg_cell)) {
        warn << base.str() << neg_cell << " negative sp_vol_CC\n ";        
        throw InvalidValue(warn.str(), __FILE__, __LINE__);
