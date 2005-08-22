@@ -117,7 +117,7 @@ main(int argc, char** argv)
       usage("", args.progname());
     
     // global options
-    bool do_verbose = args.getLogical("verbose");
+    //bool do_verbose = args.getLogical("verbose");
   
     // time stepping
     int time_step_lower = args.getInteger("datasetlow",  0);
