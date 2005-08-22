@@ -20,7 +20,7 @@ GENERAL INFORMATION
    Copyright (C) 2005 SCI Group
 
 KEYWORDS
-  AMRSolver, HypreDriver, HypreSolverParams, HypreGenericSolver.
+  AMRSolver, HypreDriver, HypreSolverParams, HypreSolverBase.
 
 DESCRIPTION 
    Class AMRSolver is the main solver component that

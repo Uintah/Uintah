@@ -19,7 +19,7 @@
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverBase.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>

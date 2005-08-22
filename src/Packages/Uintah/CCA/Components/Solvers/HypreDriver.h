@@ -21,7 +21,7 @@ GENERAL INFORMATION
 
 KEYWORDS
    HYPRE_Struct, HYPRE_SStruct, HYPRE_ParCSR,
-   HypreGenericSolver, HypreSolverParams, RefCounted, solve, AMRSolver.
+   HypreSolverBase, HypreSolverParams, RefCounted, solve, AMRSolver.
 
 DESCRIPTION 
    Class HypreDriver is a wrapper for calling Hypre solvers
@@ -34,7 +34,7 @@ DESCRIPTION
    the interface data. If required by the solver, HypreDriver converts
    the data from one Hypre interface type to another.  HypreDriver is
    also responsible for deleting all Hypre objects.
-   HypreGenericSolver::newSolver determines the specific Hypre
+   HypreSolverBase::newSolver determines the specific Hypre
    interface and solver, based on the parameters in HypreSolverParams.
    HypreDriver::solve() is the task-scheduled function in
    AMRSolver::scheduleSolve() that is activated by
@@ -63,8 +63,8 @@ WARNING
 #include <Core/Thread/Time.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericPrecond.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverBase.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondBase.h>
 
 namespace Uintah {
 
@@ -240,14 +240,14 @@ namespace Uintah {
 
         // Initialize the preconditioner
         PrecondType precondType = getPrecondType(_params->precondTitle);
-        HypreGenericPrecond* precond = newHyprePrecond(precondType);
+        HyprePrecondBase* precond = newHyprePrecond(precondType);
 
         // Construct Hypre solver object that uses the hypreInterface we
         // chose. Specific solver object is arbitrated in
-        // HypreGenericSolver. The solver is linked to the HypreDriver
+        // HypreSolverBase. The solver is linked to the HypreDriver
         // data and the preconditioner.
         SolverType solverType = getSolverType(_params->solverTitle);
-        HypreGenericSolver* solver = newHypreSolver(solverType,this,precond);
+        HypreSolverBase* solver = newHypreSolver(solverType,this,precond);
 
         // Set up the preconditioner and tie it to solver
         precond->setSolver(solver);
@@ -281,7 +281,7 @@ namespace Uintah {
         //-----------------------------------------------------------
         // Check if converged, print solve statisticsS
         //-----------------------------------------------------------
-        const HypreGenericSolver::Results& results = solver->getResults();
+        const HypreSolverBase::Results& results = solver->getResults();
         double finalResNorm = results.finalResNorm;
         int numIterations = results.numIterations;
         if ((finalResNorm > _params->tolerance) ||

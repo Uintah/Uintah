@@ -54,7 +54,7 @@ namespace Uintah {
   // WARNING WARNING WARNING WARNING
   // Hypre system interface for the solver. If you add or delete items
   // from this list, you need to modify (among other places)
-  // HypreGenericSolver::assertInterface() and change the rules for
+  // HypreSolverBase::assertInterface() and change the rules for
   // requiresPar.
  enum HypreInterface {
     HypreStruct      = 0x1,
