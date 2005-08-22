@@ -32,7 +32,7 @@ WARNING
    Works with Hypre Struct interface only.
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePrecondBase.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
 
 namespace Uintah {
   
