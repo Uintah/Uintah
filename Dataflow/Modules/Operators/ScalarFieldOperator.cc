@@ -25,7 +25,7 @@ template<class T1, class T2>
 void
 ScalarFieldOperator::set_properties( T1* sf1, T2* sf2)
 {
-  for(int i = 0; i < sf1->nproperties(); i++){
+  for(size_t i = 0; i < sf1->nproperties(); i++){
     string prop_name(sf1->get_property_name( i ));
     if(prop_name == "varname"){
       string prop_component;

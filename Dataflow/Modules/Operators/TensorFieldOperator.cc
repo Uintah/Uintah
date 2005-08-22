@@ -62,7 +62,7 @@ void TensorFieldOperator::execute(void)
     scalarField = scinew LatVolField<double>(hTF->basis_order());
 
     performOperation( tensorField, scalarField );
-    for(int i = 0; i < tensorField->nproperties(); i++){
+    for(unsigned int i = 0; i < tensorField->nproperties(); i++){
       string prop_name(tensorField->get_property_name( i ));
       if(prop_name == "varname"){
         string prop_component;
