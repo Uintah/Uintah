@@ -5,6 +5,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/ICE/Thermo
 SRCS     += $(SRCDIR)/ThermoInterface.cc \
 	$(SRCDIR)/ThermoFactory.cc \
 	$(SRCDIR)/ConstantThermo.cc \
+        $(SRCDIR)/CanteraDetailed.cc \
         $(SRCDIR)/CanteraSingleMixture.cc
 
 PSELIBS := \
