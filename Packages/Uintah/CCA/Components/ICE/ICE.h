@@ -240,11 +240,13 @@ namespace Uintah {
                                     const LevelP& level,
                                     const MaterialSubset* press_matl); 
                                    
-      void schedule_matrixBC_CFI_coarsePatch(const LevelP& coarseLevel,
-                                             SchedulerP& sched);
+      void schedule_matrixBC_CFI_coarsePatch(SchedulerP& sched, 
+                                             const LevelP& coarseLevel,
+                                             const MaterialSet* all_matls);
                                              
-      void schedule_matrixBC_CFI_finePatch(const LevelP& fineLevel,
-                                            SchedulerP& sched);
+      void schedule_matrixBC_CFI_finePatch(SchedulerP& sched, 
+                                           const LevelP& fineLevel,
+                                           const MaterialSet* all_matls);
                                             
       void scheduleMultiLevelPressureSolve(SchedulerP& sched,
                                          const LevelP& level,
@@ -253,7 +255,30 @@ namespace Uintah {
                                          const MaterialSubset* press_matl,
                                          const MaterialSubset* ice_matls,
                                          const MaterialSubset* mpm_matls,
-                                         const MaterialSet* all_matls);                       
+                                         const MaterialSet* all_matls); 
+                                         
+      void scheduleZeroMatrix_RHS_UnderFinePatches(SchedulerP& sched, 
+                                                  const LevelP& coarseLevel,
+                                                  const MaterialSubset* one_matl);                      
+
+
+      void zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
+                                           const PatchSubset* coarsePatches,
+                                           const MaterialSubset*,
+                                           DataWarehouse*,
+                                           DataWarehouse* new_dw);
+
+      void schedule_bogus_imp_delP(SchedulerP& sched, 
+                                 const LevelP& level,
+                                 vector<const PatchSet*> allPatchSets,
+                                 const MaterialSubset* press_matl,
+                                 const MaterialSet* all_matls);
+                                   
+       void bogus_imp_delP(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse*,
+                           DataWarehouse* new_dw);
                                    
 //__________________________________ 
 //   M O D E L S
