@@ -1034,7 +1034,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	      // creator is the task that performs the original compute.
 	      // If the require is for the OldDW, then it will be a send old
 	      // data task
-	      DetailedTask* creator;
+	      DetailedTask* creator = 0;
 	      Task::Dependency* comp = 0;
 	      if(sc->isOldDW(req->mapDataWarehouse())){
 	        ASSERT(!modifies);
@@ -1045,7 +1045,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	        if (!ct.findcomp(req, neighbor, matl, creator, comp, d_myworld)){
 		  cout << "Failure finding " << *req << " for " << *task
 		      << "\n";
-		  cout << "creator=" << *creator << '\n';
+                  if (creator)
+                    cout << "creator=" << *creator << '\n';
 		  cout << "neighbor=" << *neighbor << ", matl=" << matl << '\n';
 		  cout << "me=" << me << '\n';
 		  SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));

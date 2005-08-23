@@ -38,9 +38,6 @@ using namespace std;
 // into trouble when you use Patches from the DataArchive instead of
 // the simulation.
 // 
-static map<int, const Patch*> patchIDtoPointerMap;
-static Mutex patchIDtoPointerMap_lock("patchIDtoPointerMap lock");
-
 static AtomicCounter* ids = 0;
 static Mutex ids_init("ID init");
 
@@ -65,19 +62,10 @@ Patch::Patch(const Level* level,
   if(d_id == -1){
     d_id = (*ids)++;
 
-    patchIDtoPointerMap_lock.lock();
-    if(patchIDtoPointerMap.find(d_id) != patchIDtoPointerMap.end()){
-      cerr << "id=" << d_id << '\n';
-      SCI_THROW(InternalError("duplicate patch!", __FILE__, __LINE__));
-    }
-    patchIDtoPointerMap[d_id]=this;
-    patchIDtoPointerMap_lock.unlock();
-    in_database=true;
   } else {
-    in_database=false;
     if(d_id >= *ids)
       ids->set(d_id+1);
-   }
+  }
   setBCType(xminus, None);
   setBCType(xplus, None);
   setBCType(yminus, None);
@@ -110,29 +98,18 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   // make the id be -1000 * realPatch id - some first come, first serve index
   d_id = -1000 * realPatch->d_id; // temporary
   int index = 1;
-  // Since we can have multiple grids adding their patches to the
-  // patchIDtoPointerMap variable, we need to count only those patches that
-  // actually match realPatch.
   int numVirtualPatches = 0;
-  map<int, const Patch*>::iterator iter;
-  // Need to lock this, so it will be thread safe
-  patchIDtoPointerMap_lock.lock();    
-  while ((iter = patchIDtoPointerMap.find(d_id - index)) !=
-         patchIDtoPointerMap.end()){
-    ++index;
-    // Check to see if this is one of our patches
-    if (d_realPatch == iter->second->getRealPatch())
+
+  for (Level::const_patchIterator iter = d_level->allPatchesBegin(); iter != d_level->allPatchesEnd(); iter++) {
+    if ((*iter)->d_realPatch == d_realPatch) {
+      ++index;
       if (++numVirtualPatches >= 27)
         SCI_THROW(InternalError("A real patch shouldn't have more than 26 (3*3*3 - 1) virtual patches",
                                 __FILE__, __LINE__));
+    }
   }
+
   d_id -= index;
-  // Double check to make sure that the patch has not already been added
-  ASSERT(patchIDtoPointerMap.find(d_id) == patchIDtoPointerMap.end());    
-  patchIDtoPointerMap[d_id]=this;
-  patchIDtoPointerMap_lock.unlock();    
-  in_database = true;
-  //}      
   
   for (int i = 0; i < numFaces; i++)
     d_bctypes[i] = realPatch->d_bctypes[i];
@@ -146,26 +123,11 @@ Patch::~Patch()
   for (FaceType face = startFace; face <= endFace; face = nextFace(face))
     d_CornerCells[face].clear();
 
-  if(in_database){
-//     patchIDtoPointerMap.erase( patchIDtoPointerMap.find(getID()));
-    patchIDtoPointerMap_lock.lock();
-    patchIDtoPointerMap.erase( getID() );
-    patchIDtoPointerMap_lock.unlock();
-  }
- for(Patch::FaceType face = Patch::startFace;
-     face <= Patch::endFace; face=Patch::nextFace(face))
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)) {
     delete array_bcs[face];
-
+  }
   array_bcs.clear();
-}
-
-const Patch* Patch::getByID(int id)
-{
-  map<int, const Patch*>::iterator iter = patchIDtoPointerMap.find(id);
-  if(iter == patchIDtoPointerMap.end())
-    return 0;
-  else
-    return iter->second;
 }
 
 Vector Patch::dCell() const {

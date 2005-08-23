@@ -628,6 +628,8 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  
   int total_reloc[3], v;
   total_reloc[0]=total_reloc[1]=total_reloc[2]=0;
   typedef MPIScatterRecords::maptype maptype;
@@ -642,7 +644,6 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
   keepsets.initialize(0);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    const Level* level = patch->getLevel();
 
     // Particles are only allowed to be one cell out
     IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
@@ -913,8 +914,8 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       int patchid;
       MPI_Unpack(buf, size, &position, &patchid, 1, MPI_INT,
 		 pg->getComm());
-      const Patch* toPatch = Patch::getByID(patchid);
-      ASSERT(toPatch != 0);
+      const Patch* toPatch = level->getPatchByID(patchid);
+      ASSERT(toPatch != 0 && toPatch->getID() == patchid);
       int matl;
       MPI_Unpack(buf, size, &position, &matl, 1, MPI_INT,
 		 pg->getComm());
@@ -938,7 +939,6 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
   // the local case
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    const Level* level = patch->getLevel();
 
     // Particles are only allowed to be one cell out
     IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
@@ -1106,7 +1106,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     int alltotal[3];
 
     // don't reduce if number of patches on this level is < num procs.  Will wait forever in reduce.
-    if (getLevel(patches)->numPatches() >= pg->size()) {
+    if (level->numPatches() >= pg->size()) {
       mpidbg << pg->myrank() << " Relocate reduce\n";
 
       MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0,

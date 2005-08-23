@@ -82,6 +82,10 @@ WARNING
       const_patchIterator patchesEnd() const;
       patchIterator patchesBegin();
       patchIterator patchesEnd();
+
+      // go through the virtual ones too
+      const_patchIterator allPatchesBegin() const;
+      const_patchIterator allPatchesEnd() const;
       
       Patch* addPatch(const IntVector& extraLowIndex,
 		      const IntVector& extraHighIndex,
@@ -176,6 +180,7 @@ WARNING
       const PatchSet* allPatches() const;
       const Patch* selectPatchForCellIndex( const IntVector& idx) const;
       const Patch* selectPatchForNodeIndex( const IntVector& idx) const;
+      const Patch* getPatchByID(int id) const;
       inline int getID() const {
         return d_id;
       }
