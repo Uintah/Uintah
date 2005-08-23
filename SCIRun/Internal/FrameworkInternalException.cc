@@ -28,49 +28,42 @@
 
 
 /*
- *  InternalComponentInstance.h: 
+ *  FrameworkInternalException.cc:
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   October 2001
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_Internal_InternalComponentInstance_h
-#define SCIRun_Internal_InternalComponentInstance_h
+#include <SCIRun/Internal/FrameworkInternalException.h>
 
-#include <SCIRun/ComponentInstance.h>
+namespace SCIRun {
 
-namespace SCIRun
-{
-
-/** \class InternalComponentInstance
- *
- *
- */
-class InternalComponentInstance : public ComponentInstance
-{
-public:
-  InternalComponentInstance(SCIRunFramework* framework,
-                            const std::string& intanceName,
-                            const std::string& className);
+  FrameworkInternalException::FrameworkInternalException(const std::string& description)
+    : description(description)
+  {
+  }
   
-  virtual PortInstance* getPortInstance(const std::string& name);
-  virtual ~InternalComponentInstance();
+  FrameworkInternalException::FrameworkInternalException(const FrameworkInternalException& copy)
+    : description(copy.description)
+  {
+  }
   
-  virtual PortInstanceIterator* getPorts();
+  FrameworkInternalException::~FrameworkInternalException()
+  {
+  }
   
-  void incrementUseCount();
-  bool decrementUseCount();
-private:
-  int useCount;
+  const char* FrameworkInternalException::message() const
+  {
+    return description.c_str();
+  }
   
-  InternalComponentInstance(const InternalComponentInstance&);
-  InternalComponentInstance& operator=(const InternalComponentInstance&);
-};
-
+  const char* FrameworkInternalException::type() const
+  {
+    return "FrameworkInternalException";
+  }
+  
 } // end namespace SCIRun
-
-#endif

@@ -28,48 +28,52 @@
 
 
 /*
- *  InternalComponentInstance.h: 
+ *  InternalFrameworkServiceDescription.h: 
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   October 2001
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_Internal_InternalComponentInstance_h
-#define SCIRun_Internal_InternalComponentInstance_h
+#ifndef SCIRun_Internal_InternalFrameworkServiceDescription_h
+#define SCIRun_Internal_InternalFrameworkServiceDescription_h
 
-#include <SCIRun/ComponentInstance.h>
+#include <SCIRun/Internal/InternalServiceDescription.h>
+#include <string>
 
-namespace SCIRun
-{
+namespace SCIRun {
 
-/** \class InternalComponentInstance
- *
- *
- */
-class InternalComponentInstance : public ComponentInstance
-{
-public:
-  InternalComponentInstance(SCIRunFramework* framework,
-                            const std::string& intanceName,
-                            const std::string& className);
+  class InternalComponentModel;
+  class InternalFrameworkServiceInstance;
   
-  virtual PortInstance* getPortInstance(const std::string& name);
-  virtual ~InternalComponentInstance();
-  
-  virtual PortInstanceIterator* getPorts();
-  
-  void incrementUseCount();
-  bool decrementUseCount();
-private:
-  int useCount;
-  
-  InternalComponentInstance(const InternalComponentInstance&);
-  InternalComponentInstance& operator=(const InternalComponentInstance&);
-};
+  /** \class InternalFrameworkServiceDescription
+   *
+   *
+   */
+  class InternalFrameworkServiceDescription : public InternalServiceDescription
+  {
+  public:
+    
+    InternalFrameworkServiceDescription(
+      InternalComponentModel* model,
+      const std::string& serviceType,
+      InternalFrameworkServiceInstance* (*create)(SCIRunFramework*));
+    
+    virtual ~InternalFrameworkServiceDescription();
+    
+    virtual InternalFrameworkServiceInstance *get(SCIRunFramework *);
+    virtual void release(SCIRunFramework *);
+
+  private:
+    InternalFrameworkServiceInstance* (*create)(SCIRunFramework*);
+    InternalFrameworkServiceInstance* singleton_instance;
+
+    InternalFrameworkServiceDescription(const InternalFrameworkServiceDescription&);
+    InternalFrameworkServiceDescription& operator=(const InternalFrameworkServiceDescription&);
+  };
 
 } // end namespace SCIRun
 

@@ -28,49 +28,29 @@
 
 
 /*
- *  InternalComponentInstance.h: 
+ *  InternalFrameworkServiceInstance.cc:
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   October 2001
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_Internal_InternalComponentInstance_h
-#define SCIRun_Internal_InternalComponentInstance_h
+#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <iostream>
 
-#include <SCIRun/ComponentInstance.h>
+namespace SCIRun {
 
-namespace SCIRun
-{
-
-/** \class InternalComponentInstance
- *
- *
- */
-class InternalComponentInstance : public ComponentInstance
-{
-public:
-  InternalComponentInstance(SCIRunFramework* framework,
-                            const std::string& intanceName,
-                            const std::string& className);
+  InternalFrameworkServiceInstance::InternalFrameworkServiceInstance(SCIRunFramework* framework,
+								     const std::string& className)
+    : InternalServiceInstance(framework, className, className)
+  {
+  }
   
-  virtual PortInstance* getPortInstance(const std::string& name);
-  virtual ~InternalComponentInstance();
-  
-  virtual PortInstanceIterator* getPorts();
-  
-  void incrementUseCount();
-  bool decrementUseCount();
-private:
-  int useCount;
-  
-  InternalComponentInstance(const InternalComponentInstance&);
-  InternalComponentInstance& operator=(const InternalComponentInstance&);
-};
+  InternalFrameworkServiceInstance::~InternalFrameworkServiceInstance()
+  {
+  }
 
 } // end namespace SCIRun
-
-#endif

@@ -99,9 +99,8 @@ std::string ComponentClassDescriptionAdapter::getLoaderName()
   return cd->getLoaderName();
 }
 
-ComponentRegistry::ComponentRegistry(SCIRunFramework* framework,
-                                     const std::string& name)
-  : InternalComponentInstance(framework, name, "internal:ComponentRegistry")
+ComponentRegistry::ComponentRegistry(SCIRunFramework* framework)
+  : InternalFrameworkServiceInstance(framework, "internal:ComponentRegistry")
 {
 }
 
@@ -110,10 +109,9 @@ ComponentRegistry::~ComponentRegistry()
   std::cerr << "Registry destroyed..." << std::endl;
 }
 
-InternalComponentInstance* ComponentRegistry::create(SCIRunFramework* framework,
-                                                     const std::string& name)
+InternalFrameworkServiceInstance* ComponentRegistry::create(SCIRunFramework* framework)
 {
-  ComponentRegistry* n = new ComponentRegistry(framework, name);
+  ComponentRegistry* n = new ComponentRegistry(framework);
   n->addReference();
   return n;
 }

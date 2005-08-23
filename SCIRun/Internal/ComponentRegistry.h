@@ -43,7 +43,7 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalComponentInstance.h>
+#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 #include <vector>
 
 namespace SCIRun
@@ -58,7 +58,7 @@ class SCIRunFramework;
  *
  */
 class ComponentRegistry : public sci::cca::ports::ComponentRepository,
-                          public InternalComponentInstance
+                          public InternalFrameworkServiceInstance
 {
 public:
   virtual ~ComponentRegistry();
@@ -66,8 +66,7 @@ public:
   /** Factory method for allocating new ComponentRegistry objects.  Returns
       a smart pointer to the newly allocated object registered to the framework
       \em fwk with the instance name \em name. */
-  static InternalComponentInstance* create(SCIRunFramework* fwk,
-                                           const std::string& name);
+  static InternalFrameworkServiceInstance* create(SCIRunFramework* fwk);
   
   /** Returns this service (?) - overrides InternalComponentInstance::getService. */
   sci::cca::Port::pointer getService(const std::string&);
@@ -82,7 +81,7 @@ public:
   virtual void addComponentClass(const std::string& componentClassName);
 
 private:
-  ComponentRegistry(SCIRunFramework* fwk, const std::string& name);
+  ComponentRegistry(SCIRunFramework* fwk);
 };
 
 } // end namespace SCIRun

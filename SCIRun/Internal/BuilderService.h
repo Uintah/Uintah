@@ -45,7 +45,7 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalComponentInstance.h>
+#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 
 #ifdef HAVE_RUBY
   #include <SCIRun/Bridge/AutoBridge.h>
@@ -76,17 +76,16 @@ class ConnectionEvent;
  * \sa InternalComponentModel
  */
 class BuilderService : public sci::cca::ports::BuilderService,
-                       public InternalComponentInstance
+                       public InternalFrameworkServiceInstance
 {
   public:
   virtual ~BuilderService();
-
+  
   /** Factory method for creating an instance of a BuilderService class.
       Returns a reference counted pointer to a newly-allocated BuilderService
       port.  The \em framework parameter is a pointer to the relevent framework
       and the \em name parameter will become the unique name for the new port.*/
-  static InternalComponentInstance*
-  create(SCIRunFramework* framework, const std::string& name);
+  static InternalFrameworkServiceInstance *create(SCIRunFramework* framework);
   
   /** Creates an instance of the component of type \em className.  The
       parameter \em instanceName is the unique name of the newly created
@@ -232,7 +231,7 @@ class BuilderService : public sci::cca::ports::BuilderService,
 
   private:
     friend class ConnectionEventService;
-    BuilderService(SCIRunFramework* fwk, const std::string& name);
+    BuilderService(SCIRunFramework* fwk);
     /** Returns the URL of this BuilderService component's framework. */
     std::string getFrameworkURL();
     /** ? */

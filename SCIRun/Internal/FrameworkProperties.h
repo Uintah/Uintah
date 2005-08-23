@@ -46,7 +46,7 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/TypeMap.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalComponentInstance.h>
+#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 
 namespace SCIRun {
 
@@ -62,7 +62,7 @@ class SCIRunFramework;
  *    network file           string         network file to be loaded by a builder
  */
 class FrameworkProperties : public ::sci::cca::ports::FrameworkProperties,
-			    public InternalComponentInstance
+			    public InternalFrameworkServiceInstance
 {
 public:
     virtual ~FrameworkProperties();
@@ -73,8 +73,7 @@ public:
       * port.  The \em framework parameter is a pointer to the relevent framework
       * and the \em name parameter will become the unique name for the new port.
       */
-    static InternalComponentInstance* create(SCIRunFramework* framework,
-					const std::string& name);
+  static InternalFrameworkServiceInstance* create(SCIRunFramework* framework);
 
     virtual sci::cca::Port::pointer getService(const std::string& name);
 
@@ -89,7 +88,7 @@ public:
     static std::string CACHE_FILE;
 
 private:
-    FrameworkProperties(SCIRunFramework* framework, const std::string& name);
+    FrameworkProperties(SCIRunFramework* framework);
 
     /** Gets user logged in on the controlling terminal of the process
         or a null pointer (see man getlogin(3)) */

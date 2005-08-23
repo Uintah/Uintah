@@ -8,21 +8,19 @@
 
 namespace SCIRun {
 
-FrameworkProxyService::FrameworkProxyService(SCIRunFramework* framework,
-                   const std::string& name)
-  : InternalComponentInstance(framework, name, "internal:FrameworkProxyService")
+  FrameworkProxyService::FrameworkProxyService(SCIRunFramework* framework)
+    : InternalFrameworkServiceInstance(framework, "internal:FrameworkProxyService")
 {
-    this->framework=framework;
 }
 
 FrameworkProxyService::~FrameworkProxyService()
 {
 }
 
-InternalComponentInstance*
-FrameworkProxyService::create(SCIRunFramework* framework, const std::string& name)
+InternalFrameworkServiceInstance*
+FrameworkProxyService::create(SCIRunFramework* framework)
 {
-    FrameworkProxyService* n = new FrameworkProxyService(framework, name);
+    FrameworkProxyService* n = new FrameworkProxyService(framework);
     n->addReference();
     return n;
 }
