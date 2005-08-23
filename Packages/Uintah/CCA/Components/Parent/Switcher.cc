@@ -120,10 +120,17 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
     comp->attachPort("modelmaker",modelmaker);
   }
 
-
+  for (unsigned i = 0; i < d_componentIndex; i++) {
+    SimulationInterface* sim = dynamic_cast<SimulationInterface*> (getPort("sim",i));	 
+    ProblemSpecInterface* psi = 
+      dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",i));
+    ProblemSpecP ups = psi->readInputFile();
+    sim->problemSetup(ups,grid,sharedState);
+    sharedState->clearMaterials();
+  }
   
   // clear it out and do the first one again
-  sharedState->clearMaterials();
+  //sharedState->clearMaterials();
   ProblemSpecInterface* psi = 
     dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",d_componentIndex));
   if (psi) {
