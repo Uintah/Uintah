@@ -43,6 +43,9 @@ WARNING
     virtual void scheduleInitializeThermo(SchedulerP& sched,
                                           const PatchSet* patches,
                                           ICEMaterial* ice_matl);
+    virtual void scheduleReactions(SchedulerP& sched,
+                                   const PatchSet* patches,
+                                   ICEMaterial* ice_matl);
 
     virtual void addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
                                                         int numGhostCells);
