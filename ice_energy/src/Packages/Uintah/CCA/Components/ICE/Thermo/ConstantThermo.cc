@@ -22,6 +22,13 @@ void ConstantThermo::scheduleInitializeThermo(SchedulerP& sched,
   // No initialization
 }
 
+void ConstantThermo::scheduleReactions(SchedulerP& sched,
+                                       const PatchSet* patches,
+                                       ICEMaterial* ice_matl)
+{
+  // No reactions
+}
+
 void ConstantThermo::addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
                                                             int numGhostCells)
 {

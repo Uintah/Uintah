@@ -42,6 +42,13 @@ void CanteraSingleMixture::scheduleInitializeThermo(SchedulerP& sched,
   // No initialization
 }
 
+void CanteraSingleMixture::scheduleReactions(SchedulerP& sched,
+                                             const PatchSet* patches,
+                                             ICEMaterial* ice_matl)
+{
+  // No reactions
+}
+
 void CanteraSingleMixture::addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
                                                             int numGhostCells)
 {
