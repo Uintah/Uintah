@@ -640,8 +640,8 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
       //				"on reduceMPI", __FILE__, __LINE__));
     }
     int sendcount;
-    MPI_Datatype senddatatype;
-    MPI_Op sendop;
+    MPI_Datatype senddatatype = NULL;
+    MPI_Op sendop = MPI_OP_NULL;
     var->getMPIInfo(sendcount, senddatatype, sendop);
     if(m==0){
       op=sendop;
