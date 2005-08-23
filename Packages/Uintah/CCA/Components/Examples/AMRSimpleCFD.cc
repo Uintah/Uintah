@@ -452,9 +452,10 @@ void AMRSimpleCFD::addRefineDependencies(Task* task,
              << " step " << step << " nsteps " << nsteps <<'\n';
   ASSERTRANGE(step, 0, nsteps+1);
 
-  TypeDescription::Type type = var->typeDescription()->getType();
   Ghost::GhostType gc = Ghost::AroundCells;
-  /*  if (type == TypeDescription::SFCXVariable)
+  /*
+  TypeDescription::Type type = var->typeDescription()->getType();
+  if (type == TypeDescription::SFCXVariable)
     gc = Ghost::AroundFacesX;
   else if (type == TypeDescription::SFCYVariable)
     gc = Ghost::AroundFacesY;
@@ -612,6 +613,9 @@ void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
 void AMRSimpleCFD::scheduleRefine(const PatchSet* patches,
 				   SchedulerP& sched)
 {
+  const PatchSet ps; // Have to declare this dummy var (which is not used) to get
+                     // around a compiler bug with the '<<' operator 2 lines below.
+
   Ghost::GhostType  gn = Ghost::None; 
   cout_doing << "AMRSimpleCFD::scheduleRefine on patches " << *patches << '\n';
   Task* task = scinew Task("refine",
