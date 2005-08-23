@@ -416,13 +416,6 @@ WARNING
      inline int getID() const {
        return d_id;
      }
-     // getByID should only be called when you know you have unique
-     // patch IDs for the entire software system.  This includes sus,
-     // but does not include SCIRun which can access multiple
-     // DataArchives as well as use multiple Grids for each
-     // DataArchive.  See additional comments for the static variable
-     // "patchIDtoPointerMap" in Patch.cc.
-     static const Patch* getByID(int);
      
      inline const Level* getLevel() const {
        return d_level;
@@ -614,7 +607,6 @@ WARNING
      // Added an extra vector<> for each material
      BCType d_bctypes[numFaces];  // specifies bc type for each face
      map<Patch::FaceType,BCDataArray* > array_bcs;
-     bool in_database;
      bool have_layout;
      IntVector layouthint;
 

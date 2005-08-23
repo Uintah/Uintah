@@ -130,6 +130,16 @@ Level::patchIterator Level::patchesEnd()
     return d_realPatches.end();
 }
 
+Level::const_patchIterator Level::allPatchesBegin() const
+{
+    return d_virtualAndRealPatches.begin();
+}
+
+Level::const_patchIterator Level::allPatchesEnd() const
+{
+    return d_virtualAndRealPatches.end();
+}
+
 Patch* Level::addPatch(const IntVector& lowIndex, 
 		       const IntVector& highIndex,
 		       const IntVector& inLowIndex, 
@@ -681,6 +691,12 @@ const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
   }
   return 0;
 }
+
+const Patch* Level::getPatchByID(int id) const
+{
+  return d_realPatches[id - d_realPatches[0]->getID()];
+}
+
 
 const LevelP& Level::getCoarserLevel() const
 {

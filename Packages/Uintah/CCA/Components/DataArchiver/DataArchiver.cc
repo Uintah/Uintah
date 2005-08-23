@@ -87,6 +87,7 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   d_outputDoubleAsFloat = false;
 
   d_fileSystemRetrys = 10;
+  d_numLevelsInOutput = 0;
 }
 
 DataArchiver::~DataArchiver()
@@ -787,8 +788,10 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
   // some changes here - we need to redo this if we add a material, or if we schedule output
   // on the initialization timestep (because there will be new computes on subsequent timestep)
+  // or if there is a component switch or a new level in the grid
   // - BJW
-  if (((delt != 0 || d_outputInitTimestep) && !wereSavesAndCheckpointsInitialized) || addMaterial !=0 || d_sharedState->d_switchState) {
+  if (((delt != 0 || d_outputInitTimestep) && !wereSavesAndCheckpointsInitialized) || 
+      addMaterial !=0 || d_sharedState->d_switchState || grid->numLevels() != d_numLevelsInOutput) {
       /* skip the initialization timestep (normally, anyway) for this
          because it needs all computes to be set
          to find the save labels */
@@ -796,7 +799,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     if (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) {
       initSaveLabels(sched, delt == 0);
      
-      if (!wereSavesAndCheckpointsInitialized)
+      if (!wereSavesAndCheckpointsInitialized && delt != 0)
         indexAddGlobals(); /* add saved global (reduction)
                               variables to index.xml */
     }
@@ -813,6 +816,8 @@ void DataArchiver::finalizeTimestep(double time, double delt,
         initCheckpoints(sched);
     }
   }
+  
+  d_numLevelsInOutput = grid->numLevels();
 
   // we don't want to schedule more tasks unless we're recompiling
   if (!recompile)
@@ -1175,6 +1180,9 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
       ProblemSpecP gridElem = rootElem->appendChild("Grid");
       gridElem->appendElement("numLevels", numLevels);
+      if (numLevels > 1) {
+        gridElem->appendElement("time_refinement_ratio", grid->getLevel(0)->timeRefinementRatio());
+      }
       for(int l = 0;l<numLevels;l++){
 	LevelP level = grid->getLevel(l);
 	ProblemSpecP levelElem = gridElem->appendChild("Level", 1, 1);
@@ -2132,7 +2140,7 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
       ConsecutiveRangeSet matlsToSave =
         (ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
       saveItem.setMaterials(*iter, matlsToSave, prevMatls_, prevMatlSet_);
-
+      
       if (((*it).matls != ConsecutiveRangeSet::all) &&
           ((*it).matls != matlsToSave)) {
         throw ProblemSetupException((*it).labelName +
@@ -2143,7 +2151,6 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
       d_saveReductionLabels.push_back(saveItem);
     }
     else {
-
       d_saveLabels.push_back(saveItem);
     }
   }
@@ -2218,8 +2225,9 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
          hasDelT = true;
        }
      }
-     if (saveItem.label_->typeDescription()->isReductionVariable())
+     if (saveItem.label_->typeDescription()->isReductionVariable()) {
        d_checkpointReductionLabels.push_back(saveItem);
+     }
      else
        d_checkpointLabels.push_back(saveItem);
    }
@@ -2230,8 +2238,9 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
      if (var == NULL)
        throw ProblemSetupException("delT variable not found to checkpoint.", __FILE__, __LINE__);
      saveItem.label_ = var;
+     saveItem.matlSet_.clear();
      ConsecutiveRangeSet globalMatl("-1");
-     saveItem.setMaterials(0,globalMatl, prevMatls_, prevMatlSet_);
+     saveItem.setMaterials(-1,globalMatl, prevMatls_, prevMatlSet_);
      ASSERT(saveItem.label_->typeDescription()->isReductionVariable());
      d_checkpointReductionLabels.push_back(saveItem);
    }     
