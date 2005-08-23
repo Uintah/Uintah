@@ -1032,7 +1032,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   if(d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
-//    t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
+    t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
   }
 
   t->computes(lb->pDispLabel_preReloc);
@@ -2924,11 +2924,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
       if(d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
-//        new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
-        NCVariable<double> massBurnFrac_create;
-        new_dw->allocateTemporary(massBurnFrac_create,           patch,gac,NGP);
-        massBurnFrac_create.initialize(0.);
-        massBurnFrac = massBurnFrac_create;         // reference created data
+        new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
+//        new_dw->allocateTemporary(massBurnFrac_create,         patch,gac,NGP);
+//        massBurnFrac_create.initialize(0.);
+//        massBurnFrac = massBurnFrac_create;         // reference created data
       }
       else{
         NCVariable<double> dTdt_create,massBurnFrac_create;
