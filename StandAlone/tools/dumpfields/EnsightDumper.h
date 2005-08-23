@@ -1,11 +1,12 @@
 #ifndef DUMPFIELDS_ENSIGHT_DUMPER_H
 #define DUMPFIELDS_ENSIGHT_DUMPER_H
 
-#include "FieldDumper.h"
-#include "Args.h"
-#include "FieldSelection.h"
+#include <Packages/Uintah/StandAlone/tools/dumpfields/FieldDumper.h>
+#include <Packages/Uintah/StandAlone/tools/dumpfields/Args.h>
+#include <Packages/Uintah/StandAlone/tools/dumpfields/FieldSelection.h>
 
 #include <iomanip>
+#include <fstream>
 
 namespace Uintah {
   
@@ -149,7 +150,7 @@ namespace Uintah {
     
   private:
     int           nsteps_;
-    ofstream      casestrm_;
+    std::ofstream casestrm_;
     int           tscol_;
     ostringstream tsstrm_;
     FldDumper     flddumper_;

@@ -1,14 +1,16 @@
-#include "HistogramDumper.h"
-#include "ScalarDiags.h"
-#include "TensorDiags.h"
+#include <Packages/Uintah/StandAlone/tools/dumpfields/HistogramDumper.h>
+#include <Packages/Uintah/StandAlone/tools/dumpfields/ScalarDiags.h>
+#include <Packages/Uintah/StandAlone/tools/dumpfields/TensorDiags.h>
+
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+
 #include <iomanip>
 #include <sstream>
-#include <float.h>
-using namespace std;
+#include <fstream>
 
+#include <float.h>
 
 using namespace std;
 

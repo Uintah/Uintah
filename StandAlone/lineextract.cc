@@ -31,13 +31,16 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iomanip>
-#include <stdio.h>
 #include <algorithm>
+
+#include <stdio.h>
 
 using namespace SCIRun;
 using namespace std;
