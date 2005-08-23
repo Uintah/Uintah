@@ -575,6 +575,18 @@ SCI_ARG_ENABLE(plume,
    [SCI_SET_PACKAGE_CHECKS(Plume, $host)]
    ],
   [enable_plume=${enable_plume='no'}])
+SCI_ARG_WITH(tena,
+  AC_HELP_STRING(--with-tena=DIR,
+                 Use the TENA installation in DIR),
+  [with_tena="$withval"
+   sci_required_tena=yes],
+  [with_tena=""])
+SCI_ARG_WITH(om,
+  AC_HELP_STRING(--with-om=DIR,
+                 Use the TENA OM installation in DIR),
+  [with_tena_om="$withval"
+   sci_required_tena_om=yes],
+  [with_tena_om=""])
 SCI_ARG_ENABLE(rath,
   AC_HELP_STRING(--enable-rpath,
                  Use the default runtime library search path),
@@ -4438,11 +4450,12 @@ elif test "$with_qt"; then
   _sci_optional=specific
 fi
 
+qt_bin=$_sci_lib/../bin
 # Only looking for one .h file... assuming all the rest are in the same place.
-SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_sci_inc,qt-mt,$_sci_lib,,,optional)   
+SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_sci_inc,qt-mt Xxf86vm,$_sci_lib /usr/X11R6/lib,,,optional)   
 QT_MOC_BIN=""
-AS_MESSAGE(checking for moc in $LIB_DIR_QT_MT/../bin...)
-AC_CHECK_PROG(QT_MOC_BIN,moc,$LIB_DIR_QT_MT/../bin/moc,NOMOC,$LIB_DIR_QT_MT/../bin)
+AS_MESSAGE(checking for moc in $qt_bin...)
+AC_CHECK_PROG(QT_MOC_BIN,moc,$qt_bin/moc,NOMOC,)
   
 if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
    DEF_QT="#define HAVE_QT 1"
@@ -4691,7 +4704,7 @@ if test "$sci_required_boost" = "yes"; then
   
   case $host in
     *linux*)
-       boost_ver=gcc_mt
+       boost_ver=gcc-mt
        ;;
     *-darwin*)
        boost_ver=1_32
@@ -4733,12 +4746,12 @@ if test "$sci_required_loki" = "yes"; then
     _sci_inc="/usr/local/include"
   else 
   if test "$with_boost" = "yes"; then
-    # --with-boost has been specified without a parameter.
+    # --with-loki has been specified without a parameter.
     _sci_lib=/usr/local/lib/
     _sci_inc=/usr/local/include
   else 
    if test "$with_boost"; then
-     #if --with-boost has been specified with a parameter, then use that parameter
+     #if --with-loki has been specified with a parameter, then use that parameter
     _sci_lib="$with_loki"
     _sci_inc="$with_loki"
     _sci_optional=specific
@@ -4767,6 +4780,99 @@ AC_SUBST(DEF_LOKI)
 AC_SUBST(INC_LOKI_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/loki_testdefs.h"
+
+
+##  --  search for TENA  ----------------------------------------------------
+
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+if test "$with_tena" = "yes"; then
+  _sci_optional=required
+elif test "$with_tena"; then
+  _sci_lib="$with_tena/lib"
+  _sci_inc="$with_tena/5.1/include"
+  TENA_HOME="$with_tena"
+  _sci_optional=specific
+fi
+
+# fixme
+HAVE_TENA="yes" 
+INC_TENA_H="-I$_sci_inc"
+TENA_LIB_DIR="-L$_sci_lib/"
+TENA_LIB_DIR_FLAG="-Wl,-rpath -Wl,$TENA_LIB_DIR"
+TENA_BIN_DIR="$with_tena/5.1/bin"
+
+#SCI_TRY_LINK(TENA,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,$_sci_optional)
+  
+AC_CHECKING(for TENA in $TENA_HOME)
+#AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
+
+
+if test "$HAVE_TENA" = "yes" ; then
+   DEF_TENA="#define HAVE_TENA 1"
+   HAVE_TENA="yes"
+fi
+
+TENA_VERSION="5.1"
+TENA_PLATFORM="fc3-gcc343"
+TENA_OMC_VERSION="0"
+
+PS_DEFINES="-D__EXTENSIONS__ -D_PTHREADS -D_POSIX_C_SOURCE=199506L -D_POSIX_PTHREAD_SEMANTICS -DTENA_PLATFORM=$TENA_PLATFORM"
+
+TENA_DEFINES="-D_REENTRANT $PS_DEFINES"
+
+AC_SUBST(HAVE_TENA)
+AC_SUBST(DEF_TENA)
+AC_SUBST(TENA_BIN_DIR)
+
+AC_SUBST(INC_TENA_H)
+AC_SUBST(TENA_LIB_DIR)
+AC_SUBST(TENA_LIB_DIR_FLAG)
+AC_SUBST(TENA_VERSION)
+AC_SUBST(TENA_PLATFORM)
+AC_SUBST(TENA_OMC_VERSION)
+AC_SUBST(TENA_DEFINES)
+
+sci_defs_files="$sci_defs_files include/sci_defs/tena_testdefs.h"
+
+
+##  --  search for TENA_OM  ----------------------------------------------------
+
+if test "$with_tena_om" = "yes"; then
+  _tena_om=$TENA_HOME
+  HAVE_TENA_OM="yes" 
+  _sci_optional=required
+elif test "$with_tena_om"; then
+  _tena_om="$with_tena_om"
+  HAVE_TENA_OM="yes" 
+  _sci_optional=specific
+fi
+
+
+
+if test "$HAVE_TENA_OM" = "yes" ; then
+   DEF_TENA_OM="#define HAVE_TENA_OM 1"
+   HAVE_TENA_OM="yes"
+
+   # fixme
+   TENA_OM_DEF_DIR="$_tena_om/$TENA_VERSION/include/OMs"
+   TENA_OM_IMPL_DIR="$_tena_om/$TENA_VERSION/src"
+
+fi
+  
+if test "$with_tena" && test ! "$DEF_TENA_OM"; then
+  echo
+  AC_MSG_ERROR(One or more of the TENA_OM components is missing.)
+fi 
+
+AC_SUBST(HAVE_TENA_OM)
+AC_SUBST(DEF_TENA_OM)
+
+AC_SUBST(TENA_OM_DEF_DIR)
+AC_SUBST(TENA_OM_IMPL_DIR)
+#sci_defs_files="$sci_defs_files include/sci_defs/tena_defs.h"
 
 
 ##  --  finis flags  ------------------------------------------------

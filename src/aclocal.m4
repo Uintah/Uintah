@@ -1137,7 +1137,8 @@ case $1 in
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt=no
+      sci_required_tena=yes  
+	#    sci_required_qt=no
       enable_scirun2=yes
       sci_required_uuid=yes
 	    

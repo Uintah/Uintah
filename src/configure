@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL OGL_ERR_MACRO AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY JAVA_PATH PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_UUID UUID_LIB_FLAG BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL OGL_ERR_MACRO AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY JAVA_PATH PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR HAVE_UUID UUID_LIB_FLAG BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -997,6 +997,8 @@ which is /usr/local by defaultCMake variable CMAKE_INSTALL_PREFIX
                           recommended.
 --with-boost=DIR        Use the Boost in DIR
 --with-loki=DIR         Use the Loki in DIR
+--with-tena=DIR         Use the TENA installation in DIR
+--with-om=DIR           Use the TENA OM installation in DIR
 
 Some influential environment variables:
   CC          C compiler command
@@ -2759,7 +2761,8 @@ case SCIRun2 in
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt=no
+      sci_required_tena=yes
+	#    sci_required_qt=no
       enable_scirun2=yes
       sci_required_uuid=yes
 
@@ -2857,7 +2860,8 @@ case Plume in
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt=no
+      sci_required_tena=yes
+	#    sci_required_qt=no
       enable_scirun2=yes
       sci_required_uuid=yes
 
@@ -2909,6 +2913,42 @@ else
   enable_plume=${enable_plume='no'}
 fi;
   sci_arg_enable_list="$sci_arg_enable_list --enable-plume --disable-plume"
+
+
+
+# Check whether --with-tena or --without-tena was given.
+if test "${with_tena+set}" = set; then
+  withval="$with_tena"
+  with_tena="$withval"
+   sci_required_tena=yes
+else
+  with_tena=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-tena --without-tena"
+  if test -n "$tena" -a ! -e "$tena"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($tena) specified for --with-tena does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($tena) specified for --with-tena does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
+# Check whether --with-om or --without-om was given.
+if test "${with_om+set}" = set; then
+  withval="$with_om"
+  with_tena_om="$withval"
+   sci_required_tena_om=yes
+else
+  with_tena_om=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-om --without-om"
+  if test -n "$om" -a ! -e "$om"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($om) specified for --with-om does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($om) specified for --with-om does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
 
 
   # Check whether --enable-rath or --disable-rath was given.
@@ -3061,7 +3101,8 @@ case $i in
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt=no
+      sci_required_tena=yes
+	#    sci_required_qt=no
       enable_scirun2=yes
       sci_required_uuid=yes
 
@@ -3160,7 +3201,8 @@ case Teem in
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt=no
+      sci_required_tena=yes
+	#    sci_required_qt=no
       enable_scirun2=yes
       sci_required_uuid=yes
 
@@ -3259,7 +3301,8 @@ case DataIO in
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt=no
+      sci_required_tena=yes
+	#    sci_required_qt=no
       enable_scirun2=yes
       sci_required_uuid=yes
 
@@ -3360,7 +3403,8 @@ case Ptolemy in
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt=no
+      sci_required_tena=yes
+	#    sci_required_qt=no
       enable_scirun2=yes
       sci_required_uuid=yes
 
@@ -6644,7 +6688,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6647:" \
+echo "$as_me:6691:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -55983,6 +56027,7 @@ elif test "$with_qt"; then
   _sci_optional=specific
 fi
 
+qt_bin=$_sci_lib/../bin
 # Only looking for one .h file... assuming all the rest are in the same place.
 
 ##
@@ -56021,8 +56066,8 @@ fi
 ## arg 2 : qt library
 ## arg 3 : qcanvas.h
 ## arg 4 : $_sci_inc
-## arg 5 : qt-mt
-## arg 6 : $_sci_lib
+## arg 5 : qt-mt Xxf86vm
+## arg 6 : $_sci_lib /usr/X11R6/lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
@@ -56104,10 +56149,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "qt-mt"; then
+if test -n "qt-mt Xxf86vm"; then
 
    found_framework=no
-   for lib in "" qt-mt; do
+   for lib in "" qt-mt Xxf86vm; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -56158,9 +56203,9 @@ fi
 
 ### Take care of arg 6 (the list of lib paths)
 
-if test -n "$_sci_lib"; then
+if test -n "$_sci_lib /usr/X11R6/lib"; then
 
-   for path in "" $_sci_lib; do
+   for path in "" $_sci_lib /usr/X11R6/lib; do
 
       if test -z "$path"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -56196,12 +56241,12 @@ fi
 
 if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
+  ### Determine if there is only one item in $_sci_lib /usr/X11R6/lib (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" $_sci_lib; do
+  for value in "" $_sci_lib /usr/X11R6/lib; do
     if test "$value" = ""; then
       continue
     fi
@@ -56213,8 +56258,8 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for QT_MT only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for QT_MT only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for QT_MT only one library path may be specified for arg 6 (you had: $_sci_lib /usr/X11R6/lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for QT_MT only one library path may be specified for arg 6 (you had: $_sci_lib /usr/X11R6/lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
@@ -56311,7 +56356,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-eval LIB_DIR_QT_MT='"$_sci_lib"'
+eval LIB_DIR_QT_MT='"$_sci_lib /usr/X11R6/lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -56430,7 +56475,7 @@ echo "$as_me: error: Specifically requested QT_MT include file '$_sci_inc/$i' wa
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" qt-mt; do
+  for i in "" qt-mt Xxf86vm; do
     if test -z "$i"; then
        continue
     fi
@@ -56438,9 +56483,9 @@ echo "$as_me: error: Specifically requested QT_MT include file '$_sci_inc/$i' wa
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specifically requested QT_MT library file '$_sci_lib/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested QT_MT library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
+    if test ! -e $_sci_lib /usr/X11R6/lib/lib$i.so && test ! -e $_sci_lib /usr/X11R6/lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested QT_MT library file '$_sci_lib /usr/X11R6/lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested QT_MT library file '$_sci_lib /usr/X11R6/lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -56462,8 +56507,8 @@ _sci_includes=''
 
 
 QT_MOC_BIN=""
-{ echo "$as_me:$LINENO: checking for moc in $LIB_DIR_QT_MT/../bin..." >&5
-echo "$as_me: checking for moc in $LIB_DIR_QT_MT/../bin..." >&6;}
+{ echo "$as_me:$LINENO: checking for moc in $qt_bin..." >&5
+echo "$as_me: checking for moc in $qt_bin..." >&6;}
 # Extract the first word of "moc", so it can be a program name with args.
 set dummy moc; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -56475,13 +56520,13 @@ else
   ac_cv_prog_QT_MOC_BIN="$QT_MOC_BIN" # Let the user override the test.
 else
 as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $LIB_DIR_QT_MT/../bin
+for as_dir in $PATH
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
   for ac_exec_ext in '' $ac_executable_extensions; do
   if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_QT_MOC_BIN="$LIB_DIR_QT_MT/../bin/moc"
+    ac_cv_prog_QT_MOC_BIN="$qt_bin/moc"
     echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -59138,7 +59183,7 @@ if test "$sci_required_boost" = "yes"; then
 
   case $host in
     *linux*)
-       boost_ver=gcc_mt
+       boost_ver=gcc-mt
        ;;
     *-darwin*)
        boost_ver=1_32
@@ -59658,12 +59703,12 @@ if test "$sci_required_loki" = "yes"; then
     _sci_inc="/usr/local/include"
   else
   if test "$with_boost" = "yes"; then
-    # --with-boost has been specified without a parameter.
+    # --with-loki has been specified without a parameter.
     _sci_lib=/usr/local/lib/
     _sci_inc=/usr/local/include
   else
    if test "$with_boost"; then
-     #if --with-boost has been specified with a parameter, then use that parameter
+     #if --with-loki has been specified with a parameter, then use that parameter
     _sci_lib="$with_loki"
     _sci_inc="$with_loki"
     _sci_optional=specific
@@ -60170,6 +60215,102 @@ fi # end sci_required_loki
 
 
 sci_defs_files="$sci_defs_files include/sci_defs/loki_testdefs.h"
+
+
+##  --  search for TENA  ----------------------------------------------------
+
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+if test "$with_tena" = "yes"; then
+  _sci_optional=required
+elif test "$with_tena"; then
+  _sci_lib="$with_tena/lib"
+  _sci_inc="$with_tena/5.1/include"
+  TENA_HOME="$with_tena"
+  _sci_optional=specific
+fi
+
+# fixme
+HAVE_TENA="yes"
+INC_TENA_H="-I$_sci_inc"
+TENA_LIB_DIR="-L$_sci_lib/"
+TENA_LIB_DIR_FLAG="-Wl,-rpath -Wl,$TENA_LIB_DIR"
+TENA_BIN_DIR="$with_tena/5.1/bin"
+
+#SCI_TRY_LINK(TENA,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,$_sci_optional)
+
+{ echo "$as_me:$LINENO: checking for TENA in $TENA_HOME..." >&5
+echo "$as_me: checking for TENA in $TENA_HOME..." >&6;}
+#AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
+
+
+if test "$HAVE_TENA" = "yes" ; then
+   DEF_TENA="#define HAVE_TENA 1"
+   HAVE_TENA="yes"
+fi
+
+TENA_VERSION="5.1"
+TENA_PLATFORM="fc3-gcc343"
+TENA_OMC_VERSION="0"
+
+PS_DEFINES="-D__EXTENSIONS__ -D_PTHREADS -D_POSIX_C_SOURCE=199506L -D_POSIX_PTHREAD_SEMANTICS -DTENA_PLATFORM=$TENA_PLATFORM"
+
+TENA_DEFINES="-D_REENTRANT $PS_DEFINES"
+
+
+
+
+
+
+
+
+
+
+
+
+
+sci_defs_files="$sci_defs_files include/sci_defs/tena_testdefs.h"
+
+
+##  --  search for TENA_OM  ----------------------------------------------------
+
+if test "$with_tena_om" = "yes"; then
+  _tena_om=$TENA_HOME
+  HAVE_TENA_OM="yes"
+  _sci_optional=required
+elif test "$with_tena_om"; then
+  _tena_om="$with_tena_om"
+  HAVE_TENA_OM="yes"
+  _sci_optional=specific
+fi
+
+
+
+if test "$HAVE_TENA_OM" = "yes" ; then
+   DEF_TENA_OM="#define HAVE_TENA_OM 1"
+   HAVE_TENA_OM="yes"
+
+   # fixme
+   TENA_OM_DEF_DIR="$_tena_om/$TENA_VERSION/include/OMs"
+   TENA_OM_IMPL_DIR="$_tena_om/$TENA_VERSION/src"
+
+fi
+
+if test "$with_tena" && test ! "$DEF_TENA_OM"; then
+  echo
+  { { echo "$as_me:$LINENO: error: One or more of the TENA_OM components is missing." >&5
+echo "$as_me: error: One or more of the TENA_OM components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+
+
+
+
+#sci_defs_files="$sci_defs_files include/sci_defs/tena_defs.h"
 
 
 ##  --  finis flags  ------------------------------------------------
@@ -61612,6 +61753,20 @@ s,@LOKI_LIB_FLAG@,$LOKI_LIB_FLAG,;t t
 s,@LOKI_LIB_DIR_FLAG@,$LOKI_LIB_DIR_FLAG,;t t
 s,@DEF_LOKI@,$DEF_LOKI,;t t
 s,@INC_LOKI_H@,$INC_LOKI_H,;t t
+s,@HAVE_TENA@,$HAVE_TENA,;t t
+s,@DEF_TENA@,$DEF_TENA,;t t
+s,@TENA_BIN_DIR@,$TENA_BIN_DIR,;t t
+s,@INC_TENA_H@,$INC_TENA_H,;t t
+s,@TENA_LIB_DIR@,$TENA_LIB_DIR,;t t
+s,@TENA_LIB_DIR_FLAG@,$TENA_LIB_DIR_FLAG,;t t
+s,@TENA_VERSION@,$TENA_VERSION,;t t
+s,@TENA_PLATFORM@,$TENA_PLATFORM,;t t
+s,@TENA_OMC_VERSION@,$TENA_OMC_VERSION,;t t
+s,@TENA_DEFINES@,$TENA_DEFINES,;t t
+s,@HAVE_TENA_OM@,$HAVE_TENA_OM,;t t
+s,@DEF_TENA_OM@,$DEF_TENA_OM,;t t
+s,@TENA_OM_DEF_DIR@,$TENA_OM_DEF_DIR,;t t
+s,@TENA_OM_IMPL_DIR@,$TENA_OM_IMPL_DIR,;t t
 s,@HAVE_UUID@,$HAVE_UUID,;t t
 s,@UUID_LIB_FLAG@,$UUID_LIB_FLAG,;t t
 s,@BUILD_SCIRUN2@,$BUILD_SCIRUN2,;t t

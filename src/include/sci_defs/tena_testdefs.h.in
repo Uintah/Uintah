@@ -1,6 +1,4 @@
-<?xml version="1.0" ?>
-<!DOCTYPE metacomponentmodel SYSTEM "metacomponentmodel.dtd">
-<!--
+/*
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -26,17 +24,13 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
--->
+*/
 
 
-<metacomponentmodel name = "cca">
-  <library name="libCCA_Components_Builder.so">
-    <component name="SCIRun.Builder" />
-  </library>
-  <library name="libCCA_Components_TxtBuilder.so">
-    <component name="SCIRun.TxtBuilder" />
-  </library>
-  <library name="libCCA_Components_Viewer.so">
-    <component name="SCIRun.Viewer" />
-  </library>
-</metacomponentmodel>
+#ifndef SCI_TENA_DEFS_H
+#define SCI_TENA_DEFS_H
+
+@DEF_TENA@
+
+#endif
+

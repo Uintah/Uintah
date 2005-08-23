@@ -104,7 +104,7 @@ class ComponentEventService;
 class SCIRunFramework : public sci::cca::AbstractFramework
 {
 public:
-    typedef std::map<std::string, ComponentInstance*> ComponentInstanceMap;
+  typedef std::map<std::string, ComponentInstance*> ComponentInstanceMap;
 
     SCIRunFramework();
     virtual ~SCIRunFramework();
@@ -250,6 +250,7 @@ protected:
     friend class BuilderService;
     friend class ComponentEventService;
     friend class FrameworkProxyService;
+    friend class ServiceRegistry;
 
     /** Creates an instance of the component defined by the string ``type'',
         which must uniquely define the type of the component.  The component
