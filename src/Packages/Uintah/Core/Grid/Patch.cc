@@ -66,14 +66,16 @@ Patch::Patch(const Level* level,
     if(d_id >= *ids)
       ids->set(d_id+1);
   }
+   
+  d_hasCoarsefineInterfaceFace = false;
+  d_hasBoundaryFaces = false;
+     
   setBCType(xminus, None);
   setBCType(xplus, None);
   setBCType(yminus, None);
   setBCType(yplus, None);
   setBCType(zminus, None);
   setBCType(zplus, None);
-  
-  d_hasCoarsefineInterfaceFace = false;
 
   d_nodeHighIndex = d_highIndex+
     IntVector(getBCType(xplus) == Neighbor?0:1,
@@ -325,6 +327,7 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
    if (newbc == Patch::None) {
     if(faceIdx == d_BoundaryFaces.end()){
      d_BoundaryFaces.push_back(face);
+     d_hasBoundaryFaces = true;
     }
    } else {
      if (faceIdx != d_BoundaryFaces.end()) {

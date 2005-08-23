@@ -447,6 +447,10 @@ WARNING
      bool hasCoarseFineInterfaceFace() const
      { return d_hasCoarsefineInterfaceFace;}
      
+     bool hasBoundaryFaces() const
+     { 
+        return d_hasBoundaryFaces;
+     }     
      
      //////////
      // Return the list of corner cells for the given face.
@@ -613,6 +617,7 @@ WARNING
      //////////
      // Keep track of faces on the edge of the domain
      vector<FaceType> d_BoundaryFaces;
+     bool d_hasBoundaryFaces;
 
      //////////
      // Keep track of faces on the edge of a courseFineInterface
