@@ -38,6 +38,11 @@
 using namespace Uintah;
 using namespace std;
 
+// FIX ME... we need to update to the new hypre to get the things
+// surrounded by this to compile:
+//
+//   #define NEW_HYPRE
+
 //__________________________________
 //  To turn on normal output
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
@@ -97,7 +102,9 @@ HypreDriverSStruct::printMatrix(const string& fileName /* =  "output" */)
   if (_requiresPar) {
     HYPRE_ParCSRMatrixPrint(_HA_Par, (fileName + ".par").c_str());
     // Print CSR matrix in IJ format, base 1 for rows and cols
+#ifdef NEW_HYPRE
     HYPRE_ParCSRMatrixPrintIJ(_HA_Par, 1, 1, (fileName + ".ij").c_str());
+#endif
   }
   cout_doing << "HypreDriverSStruct::printMatrix() end" << "\n";
 }
@@ -202,7 +209,9 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // For ParCSR-requiring solvers like AMG
   if (_requiresPar) {
     cout_doing << "graph object type set to HYPRE_PARCSR" << "\n";
+#if NEW_HYPRE
     HYPRE_SStructGraphSetObjectType(_graph, HYPRE_PARCSR);
+#endif
   }
 
   //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -273,6 +282,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // Create and initialize an empty SStruct matrix
   HYPRE_SStructMatrixCreate(_pg->getComm(), _graph, &_HA);
 
+#if NEW_HYPRE
   // If specified by input parameter, declare the structured and
   // unstructured part of the matrix to be symmetric.
   for (int level = 0; level < numLevels; level++) {
@@ -281,6 +291,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
                                     _params->symmetric);
   }
   HYPRE_SStructMatrixSetNSSymmetric(_HA, _params->symmetric);
+#endif
 
   // For solvers that require ParCSR format
   if (_requiresPar) {

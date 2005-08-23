@@ -18,7 +18,9 @@
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
+#ifdef NEW_HYPRE
+#  include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
+#endif
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -181,6 +183,7 @@ newHypreDriver(const HypreInterface& interface,
          x, modifies_x, b, which_b_dw, guess, 
          which_guess_dw, params, interface);
     }
+#ifdef NEW_HYPRE
   case HypreSStruct:
     {
       return new HypreDriverSStruct
@@ -188,6 +191,7 @@ newHypreDriver(const HypreInterface& interface,
          x, modifies_x, b, which_b_dw, guess, 
          which_guess_dw, params, interface);
     }
+#endif
   default:
     throw InternalError("Unsupported Hypre Interface: "+interface,
                         __FILE__, __LINE__);
