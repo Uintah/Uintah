@@ -1,9 +1,11 @@
 #ifndef DUMPFIELDS_TEXTDUMPER_H
 #define DUMPFIELDS_TEXTDUMPER_H
 
-#include "FieldDumper.h"
-#include "Args.h"
-#include "FieldSelection.h"
+#include <Packages/Uintah/StandAlone/tools/dumpfields/FieldDumper.h>
+#include <Packages/Uintah/StandAlone/tools/dumpfields/Args.h>
+#include <Packages/Uintah/StandAlone/tools/dumpfields/FieldSelection.h>
+
+#include <fstream>
 
 namespace Uintah {
 
@@ -50,7 +52,7 @@ namespace Uintah {
     void   finishStep(FieldDumper::Step * s);
     
   private:
-    ofstream               idxos_;
+    std::ofstream               idxos_;
     TextOpts               opts_;
     const FieldSelection & flds_;
     FILE*                  filelist_;

@@ -12,23 +12,25 @@
  */
 
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/OS/Dir.h>
-
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+
+#include <Core/Math/MinMax.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/OS/Dir.h>
+
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -43,12 +45,13 @@ using namespace Uintah;
 bool verbose = false;
 bool quite = false;
 
-void usage(const std::string& badarg, const std::string& progname)
+void
+usage(const std::string& badarg, const std::string& progname)
 {
     if(badarg != "")
-	cerr << "Error parsing argument: " << badarg << endl;
+        cerr << "Error parsing argument: " << badarg << endl;
     cerr << "Usage: " << progname << " [options] "
-	 << "-uda <archive file>\n\n";
+         << "-uda <archive file>\n\n";
     cerr << "Valid options are:\n";
     cerr << "  -h,--help\n";
     cerr << "  -v,--variable <variable name>\n";
@@ -70,11 +73,11 @@ void usage(const std::string& badarg, const std::string& progname)
 // dexcription of the variable being queried, and last is an output stream.
 
 template<class T>
-void printData(DataArchive* archive, string& variable_name,
-	       int material, IntVector& var_id, int levelIndex,
-               unsigned long time_step_lower, unsigned long time_step_upper,
-	       ostream& out) 
-
+void
+printData(DataArchive* archive, string& variable_name,
+          int material, IntVector& var_id, int levelIndex,
+          unsigned long time_step_lower, unsigned long time_step_upper,
+          ostream& out) 
 {
   vector<int> index;
   vector<double> times;
@@ -100,7 +103,7 @@ void printData(DataArchive* archive, string& variable_name,
 
   if (time_step_upper >= times.size() || time_step_upper < time_step_lower) {
     cerr << "timestephigh("<<time_step_upper<<") must be greater than " << time_step_lower 
-	 << " and less than " << times.size()-1 << endl;
+         << " and less than " << times.size()-1 << endl;
     exit(1);
   }
   
@@ -125,7 +128,8 @@ void printData(DataArchive* archive, string& variable_name,
   }
 } 
 
-int main(int argc, char** argv)
+int
+main(int argc, char** argv)
 {
   /*
    * Default values
@@ -213,8 +217,8 @@ int main(int argc, char** argv)
     unsigned int var_index = 0;
     for (;var_index < vars.size(); var_index++) {
       if (variable_name == vars[var_index]) {
-	var_found = true;
-	break;
+        var_found = true;
+        break;
       }
     }
     
@@ -224,7 +228,7 @@ int main(int argc, char** argv)
       cerr << "Possible variable names are:\n";
       var_index = 0;
       for (;var_index < vars.size(); var_index++) {
-	cout << "vars[" << var_index << "] = " << vars[var_index] << endl;
+        cout << "vars[" << var_index << "] = " << vars[var_index] << endl;
       }
       cerr << "Aborting!!\n";
       exit(-1);
@@ -245,9 +249,9 @@ int main(int argc, char** argv)
       ofstream *output = new ofstream();
       output->open(output_file_name.c_str());
       if (!(*output)) {
-	// Error!!
-	cerr << "Could not open "<<output_file_name<<" for writing.\n";
-	exit(1);
+        // Error!!
+        cerr << "Could not open "<<output_file_name<<" for writing.\n";
+        exit(1);
       }
       output_stream = output;
     } else {
@@ -256,19 +260,19 @@ int main(int argc, char** argv)
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
     printData<double>(archive, variable_name, material, var_id, levelIndex,
-		      time_step_lower, time_step_upper, *output_stream);
+                      time_step_lower, time_step_upper, *output_stream);
     break;
   case Uintah::TypeDescription::float_type:
     printData<float>(archive, variable_name, material, var_id, levelIndex,
-		      time_step_lower, time_step_upper, *output_stream);
+                      time_step_lower, time_step_upper, *output_stream);
     break;
   case Uintah::TypeDescription::int_type:
     printData<int>(archive, variable_name, material, var_id, levelIndex,
-		   time_step_lower, time_step_upper, *output_stream);
+                   time_step_lower, time_step_upper, *output_stream);
     break;
   case Uintah::TypeDescription::Vector:
     printData<Vector>(archive, variable_name, material, var_id, levelIndex,
-		   time_step_lower, time_step_upper, *output_stream);
+                   time_step_lower, time_step_upper, *output_stream);
     break;
   case Uintah::TypeDescription::Matrix3:
   case Uintah::TypeDescription::bool_type:
@@ -295,4 +299,5 @@ int main(int argc, char** argv)
     cerr << "Caught unknown exception\n";
     exit(1);
   }
-}
+} // end main
+
