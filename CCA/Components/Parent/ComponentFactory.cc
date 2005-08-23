@@ -95,8 +95,6 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
   } else if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR);
   } else {
-    char *c = 0;
-    *c = 0;
     throw ProblemSetupException("Unknown simulationComponent. Must specify -arches, -ice, -mpm, "
 		  "-impm, -fmpmice, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3",
                                 __FILE__, __LINE__);
