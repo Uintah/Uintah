@@ -66,6 +66,7 @@ WARNING
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
 namespace Uintah {
 
