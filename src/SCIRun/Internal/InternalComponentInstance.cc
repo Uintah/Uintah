@@ -79,9 +79,8 @@ void InternalComponentInstance::incrementUseCount()
 bool InternalComponentInstance::decrementUseCount()
 {
   if(useCount<=0)
-    {
     return false;
-    }
+  
   useCount--;
   return true;
 }

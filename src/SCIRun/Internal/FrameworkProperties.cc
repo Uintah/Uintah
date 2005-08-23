@@ -68,11 +68,9 @@ std::string FrameworkProperties::CONFIG_DIR("/.sr2");
 std::string FrameworkProperties::CONFIG_FILE("sr2rc");
 std::string FrameworkProperties::CACHE_FILE("sr2.cache");
 
-FrameworkProperties::FrameworkProperties(SCIRunFramework* framework,
-                        const std::string& name)
-  : InternalComponentInstance(framework, name, "internal:FrameworkProperties")
+FrameworkProperties::FrameworkProperties(SCIRunFramework* framework)
+  : InternalFrameworkServiceInstance(framework, "internal:FrameworkProperties")
 {
-    this->framework = framework;
     frameworkProperties = sci::cca::TypeMap::pointer(new TypeMap);
     frameworkProperties->putString("url", framework->getURL().getString());
     getLogin();
@@ -83,11 +81,10 @@ FrameworkProperties::~FrameworkProperties()
 {
 }
 
-InternalComponentInstance*
-FrameworkProperties::create(SCIRunFramework* framework, const std::string& name)
+InternalFrameworkServiceInstance*
+FrameworkProperties::create(SCIRunFramework* framework)
 {
-    FrameworkProperties* fp =
-    new FrameworkProperties(framework, name);
+    FrameworkProperties* fp = new FrameworkProperties(framework);
     fp->addReference();
     return fp;
 }

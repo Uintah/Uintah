@@ -47,9 +47,8 @@
 
 namespace SCIRun {
 
-ComponentEventService::ComponentEventService(SCIRunFramework* framework,
-                                             const std::string& name)
-  : InternalComponentInstance(framework, name, "internal:ComponentEventService")
+  ComponentEventService::ComponentEventService(SCIRunFramework* framework)
+  : InternalFrameworkServiceInstance(framework, "internal:ComponentEventService")
 {
 }
 
@@ -58,11 +57,9 @@ ComponentEventService::~ComponentEventService()
   std::cerr << "EventService destroyed..." << std::endl;
 }
 
-InternalComponentInstance* ComponentEventService::create(SCIRunFramework* framework,
-                          const std::string& name)
+InternalFrameworkServiceInstance* ComponentEventService::create(SCIRunFramework* framework)
 {
-    ComponentEventService* n =
-        new ComponentEventService(framework, name);
+    ComponentEventService* n = new ComponentEventService(framework);
     n->addReference();
     return n;
 }

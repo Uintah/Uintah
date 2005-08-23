@@ -49,7 +49,7 @@
 namespace SCIRun
 {
 class ComponentDescription;
-class InternalComponentDescription;
+class InternalFrameworkServiceDescription;
 class SCIRunFramework;
 
 /**
@@ -94,10 +94,13 @@ public:
   virtual void buildComponentList();
 
 private:
-    std::map<std::string, InternalComponentDescription*> services;
-    SCIRunFramework* framework;
+  typedef std::map<std::string, InternalFrameworkServiceDescription*> FrameworkServicesMap;
 
-    void addService(InternalComponentDescription* cd);
+  FrameworkServicesMap frameworkServices;
+  SCIRunFramework* framework;
+
+    void addService(InternalFrameworkServiceDescription* cd);
+  //void addService(InternalComponenServicetDescription* cd);
 
     InternalComponentModel(const InternalComponentModel&);
     InternalComponentModel& operator=(const InternalComponentModel&);

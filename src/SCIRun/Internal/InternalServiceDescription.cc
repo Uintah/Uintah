@@ -28,57 +28,40 @@
 
 
 /*
- *  InternalComponentDescription.h: 
+ *  InternalServiceDescription.cc:
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   October 2001
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_Internal_InternalComponentDescription_h
-#define SCIRun_Internal_InternalComponentDescription_h
-
-#include <SCIRun/ComponentDescription.h>
-#include <string>
+#include <SCIRun/Internal/InternalServiceDescription.h>
+#include <SCIRun/Internal/InternalComponentModel.h>
+#include <iostream>
 
 namespace SCIRun {
 
-class InternalComponentInstance;
-class InternalComponentModel;
-
-/** \class InternalComponentDescription
- *
- *
- */
-class InternalComponentDescription : public ComponentDescription
-{
-public:
-  InternalComponentDescription(InternalComponentModel* model,
-                               const std::string& serviceType,
-                               InternalComponentInstance* (*create)(SCIRunFramework*,
-                                                                    const std::string&),
-                               bool isSingleton);
-  virtual ~InternalComponentDescription();
-
-  /** */
-  virtual std::string getType() const;
-  /** */
-  virtual const ComponentModel* getModel() const;
+  InternalServiceDescription::InternalServiceDescription(InternalComponentModel* model,
+			       const std::string& serviceType)
+  : model(model), serviceType(serviceType)
+  {
+  }
   
-private:
-  friend class InternalComponentModel;
-  InternalComponentModel* model;
-  std::string serviceType;
-  InternalComponentInstance* (*create)(SCIRunFramework*, const std::string&);
-  InternalComponentInstance* singleton_instance;
-  bool isSingleton;
-  InternalComponentDescription(const InternalComponentDescription&);
-  InternalComponentDescription& operator=(const InternalComponentDescription&);
-};
-
+  InternalServiceDescription::~InternalServiceDescription()
+  {
+  }
+  
+  std::string InternalServiceDescription::getType() const
+  {
+    return serviceType;
+  }
+  
+  ComponentModel* InternalServiceDescription::getModel() const
+  {
+    return model;
+  }
+  
 } // end namespace SCIRun
-
-#endif

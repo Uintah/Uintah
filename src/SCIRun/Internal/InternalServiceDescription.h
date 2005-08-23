@@ -28,49 +28,49 @@
 
 
 /*
- *  InternalComponentInstance.h: 
+ *  InternalServiceDescription.h: 
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   October 2001
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_Internal_InternalComponentInstance_h
-#define SCIRun_Internal_InternalComponentInstance_h
+#ifndef SCIRun_Internal_InternalServiceDescription_h
+#define SCIRun_Internal_InternalServiceDescription_h
 
-#include <SCIRun/ComponentInstance.h>
+#include <SCIRun/ComponentDescription.h>
+#include <string>
 
-namespace SCIRun
-{
-
-/** \class InternalComponentInstance
- *
- *
- */
-class InternalComponentInstance : public ComponentInstance
-{
-public:
-  InternalComponentInstance(SCIRunFramework* framework,
-                            const std::string& intanceName,
-                            const std::string& className);
+namespace SCIRun {
   
-  virtual PortInstance* getPortInstance(const std::string& name);
-  virtual ~InternalComponentInstance();
+  class InternalComponentModel;
   
-  virtual PortInstanceIterator* getPorts();
+  /** \class InternalServiceDescription
+   *
+   *
+   */
+  class InternalServiceDescription : public ComponentDescription
+  {
+  public:
+    InternalServiceDescription(InternalComponentModel* model, const std::string&serviceType);
+    virtual ~InternalServiceDescription();
+    
+    /** */
+    virtual std::string getType() const;
+    /** */
+    virtual ComponentModel* getModel() const;
+    
+  private:
+    InternalComponentModel* model;
+    std::string serviceType;
+    
+    InternalServiceDescription(const InternalServiceDescription&);
+    InternalServiceDescription& operator=(const InternalServiceDescription&);
+  };
   
-  void incrementUseCount();
-  bool decrementUseCount();
-private:
-  int useCount;
-  
-  InternalComponentInstance(const InternalComponentInstance&);
-  InternalComponentInstance& operator=(const InternalComponentInstance&);
-};
-
 } // end namespace SCIRun
 
 #endif

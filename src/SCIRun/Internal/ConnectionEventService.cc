@@ -32,24 +32,22 @@
 
 namespace SCIRun {
 
-ConnectionEventService::ConnectionEventService(SCIRunFramework* framework,
-                        const std::string& name)
-    : InternalComponentInstance(framework, name, "internal:ConnectionEventService")
-{
-}
-
-ConnectionEventService::~ConnectionEventService()
-{
+  ConnectionEventService::ConnectionEventService(SCIRunFramework* framework)
+    : InternalFrameworkServiceInstance(framework, "internal:ConnectionEventService")
+  {
+  }
+  
+  ConnectionEventService::~ConnectionEventService()
+  {
     std::cerr << "ConnectionEventService destroyed..." << std::endl;
-}
-
-InternalComponentInstance* ConnectionEventService::create(SCIRunFramework* framework,
-                          const std::string& name)
-{
-  ConnectionEventService* n = new ConnectionEventService(framework, name);
-  n->addReference();
-  return n;
-}
+  }
+  
+  InternalFrameworkServiceInstance* ConnectionEventService::create(SCIRunFramework* framework)
+  {
+    ConnectionEventService* n = new ConnectionEventService(framework);
+    n->addReference();
+    return n;
+  }
 
 sci::cca::Port::pointer ConnectionEventService::getService(const std::string&)
 {
