@@ -155,36 +155,59 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   switch (domType) {
   case TypeDescription::SFCXVariable:
     {
-      task = scinew Task("Matrix solve SFCX", that,
-                         &HypreDriver::solve<SFCXTypes>, handle);
+      // The SGI compiler does't like accepting a templated function over
+      // a function call for some reason...  We use this hack to force it
+      // to figure out the correct type of the function.
+      void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
+                                const MaterialSubset*,
+                                DataWarehouse*, DataWarehouse*,
+                                Handle<HypreDriver>);
+      func = &HypreDriver::solve<SFCXTypes>;
+      task = scinew Task("Matrix solve SFCX", that, func, handle);
       break;
     } // end case SFCXVariable 
 
   case TypeDescription::SFCYVariable:
     {
-      task = scinew Task("Matrix solve SFCY", that,
-                         &HypreDriver::solve<SFCYTypes>, handle);
+      void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
+                                const MaterialSubset*,
+                                DataWarehouse*, DataWarehouse*,
+                                Handle<HypreDriver>);
+      func = &HypreDriver::solve<SFCYTypes>;
+      task = scinew Task("Matrix solve SFCY", that, func, handle);
       break;
     } // end case SFCYVariable 
 
   case TypeDescription::SFCZVariable:
     {
-      task = scinew Task("Matrix solve SFCZ", that,
-                         &HypreDriver::solve<SFCZTypes>, handle);
+      void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
+                                const MaterialSubset*,
+                                DataWarehouse*, DataWarehouse*,
+                                Handle<HypreDriver>);
+      func = &HypreDriver::solve<SFCZTypes>;
+      task = scinew Task("Matrix solve SFCZ", that, func, handle);
       break;
     } // end case SFCZVariable 
 
   case TypeDescription::NCVariable:
     {
-      task = scinew Task("Matrix solve NC", that,
-                         &HypreDriver::solve<NCTypes>, handle);
+      void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
+                                const MaterialSubset*,
+                                DataWarehouse*, DataWarehouse*,
+                                Handle<HypreDriver>);
+      func = &HypreDriver::solve<NCTypes>;
+      task = scinew Task("Matrix solve NC", that, func, handle);
       break;
     } // end case NCVariable 
 
   case TypeDescription::CCVariable:
     {
-      task = scinew Task("Matrix solve CC", that,
-                         &HypreDriver::solve<CCTypes>, handle);
+      void (HypreDriver::*func)(const ProcessorGroup*, const PatchSubset*,
+                                const MaterialSubset*,
+                                DataWarehouse*, DataWarehouse*,
+                                Handle<HypreDriver>);
+      func = &HypreDriver::solve<CCTypes>;
+      task = scinew Task("Matrix solve CC", that, func, handle);
       break;
     } // end case CCVariable
 
