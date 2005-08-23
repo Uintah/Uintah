@@ -163,13 +163,13 @@ void UnuAxinfo::execute()
   }
    
   if (use_min_.get() && airExists(min_.get())) 
-    nrrdAxisInfoSet(nout, nrrdAxisInfoMin, min_.get());
+    nout->axis[axis].min = min_.get();
 
   if (use_max_.get() && airExists(max_.get())) 
-    nrrdAxisInfoSet(nout, nrrdAxisInfoMax, max_.get());
+   nout->axis[axis].max = max_.get();
 
   if (use_spacing_.get() && airExists(spacing_.get())) 
-    nrrdAxisInfoSet(nout, nrrdAxisInfoSpacing, spacing_.get());
+    nout->axis[axis].spacing = spacing_.get();
 
   double calc_max = nout->axis[axis].min + 
     (nout->axis[axis].spacing * (nout->axis[axis].size-1));
@@ -183,7 +183,7 @@ void UnuAxinfo::execute()
       airExists(nout->axis[axis].spacing) && 
       calc_max != nout->axis[axis].max) {
     warning("Warning: Output NRRD's min, max and spacing are not valid. Recalculating max.");
-    nrrdAxisInfoSet(nout, nrrdAxisInfoMax, calc_max);
+    nout->axis[axis].max = calc_max;
   }
 
   
