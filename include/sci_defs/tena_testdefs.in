@@ -27,56 +27,10 @@
 */
 
 
-/*
- *  Scheduler Service for Dataflow components
- *
- *  Written by:
- *   Kostadin Damevski
- *   School of Computing
- *   University of Utah
- *   November, 2003
- *
- *  Copyright (C) 2003 SCI Group
- */
+#ifndef SCI_TENA_DEFS_H
+#define SCI_TENA_DEFS_H
 
-#include <SCIRun/Dataflow/DataflowScheduler.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <Dataflow/Network/Network.h>
+@DEF_TENA@
 
-namespace SCIRun {
+#endif
 
-DataflowScheduler::DataflowScheduler(SCIRunFramework* framework,
-                                     Scheduler* _sched)
-  : InternalFrameworkServiceInstance(framework, "internal:DataflowScheduler"), 
-    sched(_sched)
-{
-}
-
-DataflowScheduler::~DataflowScheduler()
-{
-}
-
-InternalFrameworkServiceInstance* DataflowScheduler::create(SCIRunFramework* framework)
-{
-  DataflowScheduler* n = new DataflowScheduler(framework, 
-                                               framework->dflow->net->get_scheduler());
-  n->addReference();
-  return n;
-}
-
-sci::cca::Port::pointer DataflowScheduler::getService(const std::string&)
-{
-  return sci::cca::Port::pointer(this);
-}
-
-bool DataflowScheduler::toggleOnOffScheduling() 
-{ 
-  return sched->toggleOnOffScheduling();
-} 
-
-void DataflowScheduler::do_scheduling() 
-{ 
-  sched->do_scheduling();
-}
-
-} // end namespace SCIRun

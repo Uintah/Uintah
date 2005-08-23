@@ -45,7 +45,7 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalComponentInstance.h>
+#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 
 namespace SCIRun {
 
@@ -58,15 +58,15 @@ class SCIRunFramework;
  * wrapper around the SCIRun(1) Scheduler object.
  */
 class DataflowScheduler : public ::sci::cca::ports::DataflowScheduler,
-                          public InternalComponentInstance
+                          public InternalFrameworkServiceInstance
 {
 public:
   virtual ~DataflowScheduler();
 
   /** Object factory method for allocating DataflowScheduler instances. Returns
       a smart pointer to the newly allocated object. */
-  static InternalComponentInstance* create(SCIRunFramework* fwk,
-                                           const std::string& name);
+  static InternalFrameworkServiceInstance* create(SCIRunFramework* fwk);
+
   /** Returns a pointer to this DataflowSchedular port. */
   sci::cca::Port::pointer getService(const std::string&);
 
@@ -78,7 +78,7 @@ public:
   void do_scheduling();
   
 private:
-  DataflowScheduler(SCIRunFramework* fwk, const std::string& name, Scheduler* _sched);
+  DataflowScheduler(SCIRunFramework* fwk, Scheduler* _sched);
   Scheduler* sched;
 };
 

@@ -87,11 +87,11 @@ main(int argc, char *argv[])
       sci::cca::ports::BuilderService::pointer builder_service
 	= pidl_cast<sci::cca::ports::BuilderService::pointer>(main_services->getPort("cca.BuilderService"));
       if(builder_service.isNull()) 
-	throw InvalidState("Cannot find plume builder service");
+	throw InvalidState("Cannot find plume builder service", __FILE__, __LINE__);
       
       Dugway::Config::Builders::iterator builder_iter = config.builder_types.find(config.builder);
       if ( builder_iter == config.builder_types.end() )
-	throw InvalidState("Can not find builder type");
+	throw InvalidState("Can not find builder type", __FILE__, __LINE__);
 
       ComponentID::pointer builder =
 	builder_service->createInstance((*builder_iter).first, (*builder_iter).second, sci::cca::TypeMap::pointer(0));
@@ -138,7 +138,7 @@ sci::cca::Services::pointer validate_framework(AbstractFramework::pointer sr)
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(main_services->getPort("cca.FrameworkProperties"));
 
   if (properties.isNull()) 
-    throw InternalError("Cannot find framework properties service");
+    throw InternalError("Cannot find framework properties service", __FILE__, __LINE__);
   main_services->releasePort("cca.FrameworkProperties");
 
   return main_services;

@@ -30,7 +30,7 @@
 #ifndef SCI_LOKI_DEFS_H
 #define SCI_LOKI_DEFS_H
 
-@DEF_RUBY@
+@DEF_LOKI@
 
 #endif
 
