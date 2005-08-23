@@ -209,7 +209,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // For ParCSR-requiring solvers like AMG
   if (_requiresPar) {
     cout_doing << "graph object type set to HYPRE_PARCSR" << "\n";
-#if NEW_HYPRE
+#ifdef NEW_HYPRE
     HYPRE_SStructGraphSetObjectType(_graph, HYPRE_PARCSR);
 #endif
   }
@@ -282,7 +282,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // Create and initialize an empty SStruct matrix
   HYPRE_SStructMatrixCreate(_pg->getComm(), _graph, &_HA);
 
-#if NEW_HYPRE
+#ifdef NEW_HYPRE
   // If specified by input parameter, declare the structured and
   // unstructured part of the matrix to be symmetric.
   for (int level = 0; level < numLevels; level++) {
