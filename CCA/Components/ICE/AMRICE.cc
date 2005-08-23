@@ -126,7 +126,9 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
                
     double subCycleProgress = double(step)/double(nsteps);
     
-    Task* task = scinew Task("AMRICE::refineCoarseFineInterface", 
+    ostringstream str;
+    str << "AMRICE::refineCoarseFineInterface" << " " << step << " " << nsteps;
+    Task* task = scinew Task(str.str().c_str(), 
                        this, &AMRICE::refineCoarseFineInterface, 
                        subCycleProgress);
   

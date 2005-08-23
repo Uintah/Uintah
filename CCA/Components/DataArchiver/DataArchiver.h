@@ -395,6 +395,10 @@ using std::pair;
 
       //! This is if you want to pass in the uda extension on the command line
       int d_udaSuffix;
+      
+      //! The number of levels the DA knows about.  If this changes, we need to 
+      //! redo output and Checkpoint tasks.
+      int d_numLevelsInOutput;
 
       Mutex d_outputLock;
 
