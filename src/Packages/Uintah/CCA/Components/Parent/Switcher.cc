@@ -153,8 +153,10 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
     if (label) {
       d_carryOverVarLabels.push_back(label);
     }
-    else
-      throw ProblemSetupException("Cannot find VarLabel", __FILE__, __LINE__);
+    else {
+      string error = "Cannot find VarLabel = " + d_carryOverVars[i];
+      throw ProblemSetupException(error, __FILE__, __LINE__);
+    }
   }
 
   d_sharedState = sharedState;
