@@ -1,9 +1,11 @@
 #ifndef DUMPFIELDS_HIST_DUMPER_H
 #define DUMPFIELDS_HIST_DUMPER_H
 
-#include "FieldDumper.h"
-#include "Args.h"
-#include "FieldSelection.h"
+#include <Packages/Uintah/StandAlone/tools/dumpfields/FieldDumper.h>
+#include <Packages/Uintah/StandAlone/tools/dumpfields/Args.h>
+#include <Packages/Uintah/StandAlone/tools/dumpfields/FieldSelection.h>
+
+#include <fstream>
 
 namespace Uintah {
   
@@ -61,8 +63,8 @@ namespace Uintah {
     void   finishStep(FieldDumper::Step * s);
   
   private:
-    ofstream idxos_;
-    FILE*    filelist_;
+    std::ofstream idxos_;
+    FILE*         filelist_;
     
     HistogramOpts opts_;
     const FieldSelection & fselect_;
