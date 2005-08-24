@@ -1,6 +1,7 @@
 
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
+#include <Packages/Uintah/Core/Grid/Variables/ConnectionList.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
@@ -264,6 +265,11 @@ ICELabel::ICELabel()
     VarLabel::create("int_eng_Y_FC_flux",SFCYVariable<double>::getTypeDescription()); 
   int_eng_Z_FC_fluxLabel = 
     VarLabel::create("int_eng_Z_FC_flux",SFCZVariable<double>::getTypeDescription()); 
+
+  //__________________________________
+  // Implicit AMR variable
+  connectionListLabel = 
+    VarLabel::create("connectionList",CCVariable<ConnectionList>::getTypeDescription());      
 }
 
 ICELabel::~ICELabel()
@@ -399,4 +405,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(int_eng_X_FC_fluxLabel);
     VarLabel::destroy(int_eng_Y_FC_fluxLabel);
     VarLabel::destroy(int_eng_Z_FC_fluxLabel);
+
+    // Implicit AMR labels
+    VarLabel::destroy(connectionListLabel);
 }

@@ -16,6 +16,7 @@ using SCIRun::Vector;
 
 class Matrix3;
 class Stencil7;
+class ConnectionList;
 class Short27;
 class TypeDescription;
 
@@ -41,6 +42,10 @@ const TypeDescription* fun_getTypeDescription(Matrix3*);
 // Matrix3 and Stencil7 are inplemented in their respective .cc files.
 const TypeDescription* fun_getTypeDescription(Stencil7*);
 const TypeDescription* fun_getTypeDescription(Short27*);
+
+// Added by Oren for implicit ICE AMR pressure solver type that
+// appears in ICELabel.cc.
+const TypeDescription* fun_getTypeDescription(ConnectionList*);
 
 // these functions are for getting safe values of types
 // return back the value in the argument (so we don't have to include

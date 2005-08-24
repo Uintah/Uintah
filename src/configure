@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL OGL_ERR_MACRO AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY JAVA_PATH PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR HAVE_UUID UUID_LIB_FLAG BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL OGL_ERR_MACRO AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY JAVA_PATH PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR HAVE_UUID UUID_LIB_FLAG BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -943,7 +943,7 @@ Optional Packages:
 --with-lapack=DIR       Use the lapack installation in DIR
 --with-fortran=DIR      Use the fortran (eg: g2c) installation in DIR/lib
 --with-ptolemyII=DIR    Use the Ptolemy II (eg: ptII4.0.1) installation in
-                          DIR (Ptolemy package only)
+                          DIR (Ptolemypa ckage only)
 --with-java=DIR         Use the Java distribution in DIR (Ptolemy package
                           only)
 --with-mpi=DIR          Use the mpi installation in DIR
@@ -964,8 +964,6 @@ Optional Packages:
 --with-ssl=DIR          Use the ssl installation in DIR (only for use with
                           globus)
 --with-insight=DIR      Use the Insight installation in DIR
---with-babel=DIR        Use the Babel installation in DIR (strongly
-                          recommended for SCIRun2)
 --with-qt=DIR           Use the Qt installation in DIR
 --with-ruby=DIR         Use the ruby installation in DIR where DIR points to
                           the --prefix option specified when installing ruby.
@@ -2132,24 +2130,6 @@ echo "$as_me: error: The file or directory parameter ($insight) specified for --
 
 
 
-# Check whether --with-babel or --without-babel was given.
-if test "${with_babel+set}" = set; then
-  withval="$with_babel"
-  with_babel="$withval"
-   sci_required_babel=yes
-else
-  with_babel=""
-fi;
-  sci_arg_with_list="$sci_arg_with_list --with-babel --without-babel"
-  if test -n "$babel" -a ! -e "$babel"; then
-    { { echo "$as_me:$LINENO: error: The file or directory parameter ($babel) specified for --with-babel does not exist!  Please verify that the path and file are correct." >&5
-echo "$as_me: error: The file or directory parameter ($babel) specified for --with-babel does not exist!  Please verify that the path and file are correct." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-
-
-
-
 # Check whether --with-qt or --without-qt was given.
 if test "${with_qt+set}" = set; then
   withval="$with_qt"
@@ -3041,7 +3021,7 @@ path_to_src=`echo $0 | sed 's/\/configure//'`
 
 
 BUILD_DATAFLOW="$sci_required_dataflow"
-if test "$sci_required_dataflow" = "yes"; then
+if test "$sci_required_dataflow"; then
   DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW"
 fi
 
@@ -6688,7 +6668,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6691:" \
+echo "$as_me:6671:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -47769,69 +47749,8 @@ fi
 
 
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.10.0 or greater)
-
-    ##  SCI_CHECK_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
-    _SCI_VER_1_="0"
-    _SCI_VER_2_="0.10.0"
-    _CUR_1_=""
-    _CUR_2_=""
-
-    echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 0.10.0" >&5
-echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.10.0... $ECHO_C" >&6
-
-    if test ""; then
-      _SCI_CORRECT_=''
-    fi
-
-    if test "echo configure: error: wrong Babel version.; exit"; then
-      _SCI_NOTCORRECT_='echo configure: error: wrong Babel version.; exit'
-    fi
-
-    if test ""; then
-      _SCI_COMP_=""
-    else
-      _SCI_COMP_="-gt"
-    fi
-
-    eval "$BABEL_BIN --version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
-    _SCI_VER_1_="$_SCI_REPORT_"
-
-    _SCI_BIGGER_=yes
-    _SCI_LAST_=""
-    while test "$_SCI_VER_2_"; do
-      if test "$_SCI_LAST_" = "$_SCI_VER_2_"; then
-        break
-      fi
-      _SCI_LAST_="$_SCI_VER_2_"
-      _CUR_1_=`echo $_SCI_VER_1_ | sed 's%\.[0-9]*[a-z]*%%g'`
-      _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
-      _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
-      _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
-        _SCI_BIGGER_=no
-        break
-      elif test $_CUR_1_ -gt $_CUR_2_; then
-        break
-      fi
-    done
-
-    if test "$_SCI_BIGGER_" = "yes"; then
-      echo "$as_me:$LINENO: result: yes ($_SCI_REPORT_)" >&5
-echo "${ECHO_T}yes ($_SCI_REPORT_)" >&6
-      eval $_SCI_CORRECT_
-    else
-      echo "$as_me:$LINENO: result: no ($_SCI_REPORT_)" >&5
-echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
-      eval $_SCI_NOTCORRECT_
-    fi
-
-
-  DEF_BABEL="#define HAVE_BABEL 1"
-  HAVE_BABEL="yes"
+   DEF_BABEL="#define HAVE_BABEL 1"
+   HAVE_BABEL="yes"
 fi
 
 if test "$with_babel" && test ! "$DEF_BABEL"; then
@@ -58661,6 +58580,9 @@ elif test "$with_hypre"; then
   _sci_optional=specific
 fi
 
+# We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
+# so we aren't going to check for it in any version.  If the other 3
+# libs exist, we will assume that HYPRE_blas is there if it is needed.
 
 ##
 ## SCI_TRY_LINK (HYPRE):  HYPRE libraries and headers
@@ -58698,7 +58620,7 @@ fi
 ## arg 2 : HYPRE libraries and headers
 ## arg 3 : HYPRE.h
 ## arg 4 : $_sci_inc
-## arg 5 : HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI
+## arg 5 : HYPRE_struct_mv HYPRE_struct_ls HYPRE_LSI
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -58781,10 +58703,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI"; then
+if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_LSI"; then
 
    found_framework=no
-   for lib in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI; do
+   for lib in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_LSI; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -59107,7 +59029,7 @@ echo "$as_me: error: Specifically requested HYPRE include file '$_sci_inc/$i' wa
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI; do
+  for i in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_LSI; do
     if test -z "$i"; then
        continue
     fi
@@ -59141,6 +59063,16 @@ _sci_includes=''
 
 if test "$HAVE_HYPRE" = "yes" ; then
   DEF_HYPRE="#define HAVE_HYPRE 1"
+
+  if test -f $LIB_DIR_HYPRE/../include/HYPRE_config.h; then
+    # Determine the version of hypre.
+    found_it=`grep "PACKAGE_VERSION" $LIB_DIR_HYPRE/../include/HYPRE_config.h | grep 1.9`
+    DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 0"
+    if test -n "$found_it"; then
+       DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 1"
+    fi
+  fi
+
 fi
 
 if test "$with_hypre" && test ! "$DEF_HYPRE"; then
@@ -59149,6 +59081,7 @@ if test "$with_hypre" && test ! "$DEF_HYPRE"; then
 echo "$as_me: error: One or more of the HYPRE components is missing." >&2;}
    { (exit 1); exit 1; }; }
 fi
+
 
 
 
@@ -60735,10 +60668,6 @@ echo "$as_me: WARNING: cannot find uuid_generate or uuid_create.  Will use custo
         ;;
     esac
   fi
-  if test "$HAVE_BABEL" != "yes"; then
-    { echo "$as_me:$LINENO: WARNING: could not find a Babel installation (recommended for SCIRun2)." >&5
-echo "$as_me: WARNING: could not find a Babel installation (recommended for SCIRun2)." >&2;}
-  fi
   BUILD_SCIRUN2="yes"
 else
   BUILD_SCIRUN2="no"
@@ -61741,6 +61670,7 @@ s,@INC_VDT_H@,$INC_VDT_H,;t t
 s,@VDT_LIB_FLAG@,$VDT_LIB_FLAG,;t t
 s,@VDT_LIB_DIR_FLAG@,$VDT_LIB_DIR_FLAG,;t t
 s,@HAVE_HYPRE@,$HAVE_HYPRE,;t t
+s,@DEF_HYPRE_1_9@,$DEF_HYPRE_1_9,;t t
 s,@DEF_HYPRE@,$DEF_HYPRE,;t t
 s,@INC_HYPRE_H@,$INC_HYPRE_H,;t t
 s,@HYPRE_LIB_FLAG@,$HYPRE_LIB_FLAG,;t t

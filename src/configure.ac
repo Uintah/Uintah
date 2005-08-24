@@ -226,7 +226,7 @@ SCI_ARG_WITH(fortran,
   [with_fortran=""])
 SCI_ARG_WITH(ptolemyII,
   AC_HELP_STRING(--with-ptolemyII=DIR, 
-                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
+                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemypa ckage only)),
   [with_ptolemyII="$withval"
    sci_required_ptolemyII=yes],
   [with_ptolemyII=""])
@@ -328,12 +328,6 @@ SCI_ARG_WITH(insight,
   [with_insight="$withval"
    sci_required_insight=yes],
   [with_insight=""])
-SCI_ARG_WITH(babel,
-  AC_HELP_STRING(--with-babel=DIR,
-                 Use the Babel installation in DIR (strongly recommended for SCIRun2)),
-  [with_babel="$withval"
-   sci_required_babel=yes],
-  [with_babel=""])
 SCI_ARG_WITH(qt,
   AC_HELP_STRING(--with-qt=DIR,
                  Use the Qt installation in DIR),
@@ -650,7 +644,7 @@ path_to_src=`echo $0 | sed 's/\/configure//'`
 
  
 BUILD_DATAFLOW="$sci_required_dataflow"
-if test "$sci_required_dataflow" = "yes"; then
+if test "$sci_required_dataflow"; then
   DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW"
 fi
 AC_SUBST(DEF_BUILD_DATAFLOW)
@@ -3804,12 +3798,8 @@ AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
 AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
   
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.10.0 or greater)
-  SCI_CHECK_VERSION($BABEL_BIN, --version, 0.10.0, ,
-    echo configure: error: wrong Babel version.; exit)
-
-  DEF_BABEL="#define HAVE_BABEL 1"
-  HAVE_BABEL="yes"
+   DEF_BABEL="#define HAVE_BABEL 1"
+   HAVE_BABEL="yes"
 fi
   
 if test "$with_babel" && test ! "$DEF_BABEL"; then
@@ -4658,12 +4648,25 @@ elif test "$with_hypre"; then
   _sci_optional=specific
 fi
 
+# We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
+# so we aren't going to check for it in any version.  If the other 3
+# libs exist, we will assume that HYPRE_blas is there if it is needed.
 SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI,
+                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_LSI,
                          $_sci_lib,,,$_sci_optional)
 
 if test "$HAVE_HYPRE" = "yes" ; then
   DEF_HYPRE="#define HAVE_HYPRE 1"
+
+  if test -f $LIB_DIR_HYPRE/../include/HYPRE_config.h; then
+    # Determine the version of hypre.
+    found_it=`grep "PACKAGE_VERSION" $LIB_DIR_HYPRE/../include/HYPRE_config.h | grep 1.9`
+    DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 0"
+    if test -n "$found_it"; then
+       DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 1"
+    fi
+  fi
+
 fi
 
 if test "$with_hypre" && test ! "$DEF_HYPRE"; then
@@ -4672,6 +4675,7 @@ if test "$with_hypre" && test ! "$DEF_HYPRE"; then
 fi
 
 AC_SUBST(HAVE_HYPRE)
+AC_SUBST(DEF_HYPRE_1_9)
 AC_SUBST(DEF_HYPRE)
 AC_SUBST(INC_HYPRE_H)
 AC_SUBST(HYPRE_LIB_FLAG)
@@ -5001,9 +5005,6 @@ if test "$enable_scirun2" = "yes"; then
         AC_MSG_WARN([cannot find uuid_generate or uuid_create.  Will use custom uuid generation instead.])
         ;;
     esac
-  fi
-  if test "$HAVE_BABEL" != "yes"; then
-    AC_MSG_WARN([could not find a Babel installation (recommended for SCIRun2).])
   fi
   BUILD_SCIRUN2="yes"
 else

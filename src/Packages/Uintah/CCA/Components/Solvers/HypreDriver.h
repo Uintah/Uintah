@@ -57,16 +57,16 @@ WARNING
    1.7.7).
    --------------------------------------------------------------------------*/
 
+#include <Core/Thread/Time.h>
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
-#include <Core/Thread/Time.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
+#include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
-#include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
 namespace Uintah {
 
