@@ -9,7 +9,7 @@
 
   GENERAL INFORMATION
 
-  File: HypreDriver.h
+  File: HypreDriverSStruct.h
 
   Oren E. Livne
   Department of Computer Science
@@ -20,8 +20,7 @@
   Copyright (C) 2005 SCI Group
 
   KEYWORDS
-  HYPRE_Struct, HYPRE_SStruct, HYPRE_ParCSR,
-  HypreSolverBase, HypreSolverParams.
+  HYPRE_Struct, HYPRE_SStruct, HypreSolverBase, HypreSolverParams.
 
   DESCRIPTION 
   Class HypreDriver is a wrapper for calling Hypre solvers
@@ -58,9 +57,6 @@
   --------------------------------------------------------------------------*/
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-
 #include <iostream>
 
 namespace Uintah {
@@ -163,6 +159,11 @@ namespace Uintah {
                                    const int stencilSize,
                                    const CoarseFineViewpoint& viewpoint) = 0;
 
+      virtual void getSolution(HYPRE_SStructVector& HX,
+                               DataWarehouse* new_dw,
+                               const VarLabel* X_label,
+                               const bool modifies_x) = 0;
+
     protected:
       //########## Data members ##########
       const Patch* _patch;   // Uintah patch pointer
@@ -212,6 +213,11 @@ namespace Uintah {
                                    const VarLabel* _A_label,
                                    const int stencilSize,
                                    const CoarseFineViewpoint& viewpoint);
+
+      virtual void getSolution(HYPRE_SStructVector& HX,
+                               DataWarehouse* new_dw,
+                               const VarLabel* X_label,
+                               const bool modifies_x);
 
     }; // end class HyprePatch_CC
 

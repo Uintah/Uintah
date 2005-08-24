@@ -15,8 +15,7 @@ SRCS += $(SRCDIR)/HypreSolver.cc \
 	$(SRCDIR)/AMRSolver.cc \
 	$(SRCDIR)/HypreDriver.cc \
 	$(SRCDIR)/HypreDriverStruct.cc \
-
-#	$(SRCDIR)/HypreDriverSStruct.cc
+	$(SRCDIR)/HypreDriverSStruct.cc
 
 SUBDIRS := \
         $(SRCDIR)/HypreSolvers \

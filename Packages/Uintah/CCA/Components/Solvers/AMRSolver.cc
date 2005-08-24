@@ -17,9 +17,12 @@
 // More efficient set?
 // Reuse some data between solves?
 
+#include <sci_defs/hypre_defs.h>
 #include <Packages/Uintah/CCA/Components/Solvers/AMRSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
+#if HAVE_HYPRE_1_9
+#  include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
+#endif
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -122,6 +125,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     NC, FC, etc. NOTE: Currently only CC is supported.
     _____________________________________________________________________*/
 {
+#if HAVE_HYPRE_1_9
   Task* task;
   // The extra handle arg ensures that the stencil7 object will get freed
   // when the task gets freed.  The downside is that the refcount gets
@@ -234,4 +238,9 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   task->requires(which_b_dw, b, Ghost::None, 0);
   LoadBalancer* lb = sched->getLoadBalancer();
   sched->addTask(task, lb->createPerProcessorPatchSet(level), matls);
+#else
+  throw InternalError("AMR Solver code was not compiled",
+                      __FILE__, __LINE__);
+ 
+#endif // HAVE_HYPRE_1_9
 } // end scheduleSolve()

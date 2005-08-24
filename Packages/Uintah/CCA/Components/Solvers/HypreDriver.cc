@@ -16,11 +16,12 @@
 // Where is the initial guess taken from and where to read & print it here?
 //   (right now in initialize() and solve()).
 
+#include <sci_defs/hypre_defs.h>
+
+#if HAVE_HYPRE_1_9
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#ifdef NEW_HYPRE
-#  include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
-#endif
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -183,7 +184,6 @@ newHypreDriver(const HypreInterface& interface,
          x, modifies_x, b, which_b_dw, guess, 
          which_guess_dw, params, interface);
     }
-#ifdef NEW_HYPRE
   case HypreSStruct:
     {
       return new HypreDriverSStruct
@@ -191,7 +191,6 @@ newHypreDriver(const HypreInterface& interface,
          x, modifies_x, b, which_b_dw, guess, 
          which_guess_dw, params, interface);
     }
-#endif
   default:
     throw InternalError("Unsupported Hypre Interface: "+interface,
                         __FILE__, __LINE__);
@@ -266,3 +265,5 @@ printValues(const int stencilSize,
     cout_doing << "-------------------------------" << "\n";
   } // end for cell
 } // end printValues()
+
+#endif // HAVE_HYPRE_1_9

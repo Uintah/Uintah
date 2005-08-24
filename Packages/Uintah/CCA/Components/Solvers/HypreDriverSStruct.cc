@@ -1,8 +1,8 @@
 /*--------------------------------------------------------------------------
- * File: HypreDriver.cc
+ * File: HypreDriverSStruct.cc
  *
- * Implementation of a wrapper of a Hypre solver for a particular variable
- * type. 
+ * Implementation of a wrapper of a Hypre solvers working with the Hypre
+ * SStruct system interface.
  *--------------------------------------------------------------------------*/
 // TODO: (taken from HypreSolver.cc)
 // Matrix file - why are ghosts there?
@@ -16,6 +16,9 @@
 // Where is the initial guess taken from and where to read & print it here?
 //   (right now in initialize() and solve()).
 
+#include <sci_defs/hypre_defs.h>
+
+#if HAVE_HYPRE_1_9
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 
@@ -37,11 +40,6 @@
 
 using namespace Uintah;
 using namespace std;
-
-// FIX ME... we need to update to the new hypre to get the things
-// surrounded by this to compile:
-//
-//   #define NEW_HYPRE
 
 //__________________________________
 //  To turn on normal output
@@ -102,9 +100,7 @@ HypreDriverSStruct::printMatrix(const string& fileName /* =  "output" */)
   if (_requiresPar) {
     HYPRE_ParCSRMatrixPrint(_HA_Par, (fileName + ".par").c_str());
     // Print CSR matrix in IJ format, base 1 for rows and cols
-#ifdef NEW_HYPRE
     HYPRE_ParCSRMatrixPrintIJ(_HA_Par, 1, 1, (fileName + ".ij").c_str());
-#endif
   }
   cout_doing << "HypreDriverSStruct::printMatrix() end" << "\n";
 }
@@ -153,7 +149,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // matl=0 (pressure).
   //___________________________________________________________________
 {
-  typedef CCTypes::sol_type sol_type;
   ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
 
   //==================================================================
@@ -209,9 +204,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // For ParCSR-requiring solvers like AMG
   if (_requiresPar) {
     cout_doing << "graph object type set to HYPRE_PARCSR" << "\n";
-#ifdef NEW_HYPRE
     HYPRE_SStructGraphSetObjectType(_graph, HYPRE_PARCSR);
-#endif
   }
 
   //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -281,8 +274,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   // Create and initialize an empty SStruct matrix
   HYPRE_SStructMatrixCreate(_pg->getComm(), _graph, &_HA);
-
-#ifdef NEW_HYPRE
   // If specified by input parameter, declare the structured and
   // unstructured part of the matrix to be symmetric.
   for (int level = 0; level < numLevels; level++) {
@@ -291,7 +282,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
                                     _params->symmetric);
   }
   HYPRE_SStructMatrixSetNSSymmetric(_HA, _params->symmetric);
-#endif
 
   // For solvers that require ParCSR format
   if (_requiresPar) {
@@ -425,48 +415,14 @@ HypreDriverSStruct::getSolution_CC(const int matl)
   // the Hypre SStruct interface.
   //_____________________________________________________________________*/
 {
-#if 0
-  typedef CCTypes::sol_type sol_type;
   // Loop over the Uintah patches that this proc owns
   for (int p = 0 ; p < _patches->size(); p++) {
     //==================================================================
     // Find patch extents and level it belongs to
     //==================================================================
-    const Patch* patch = _patches->get(p);
-    const int level = patch->getLevel()->getIndex();
-    IntVector low  = patch->getInteriorCellLowIndex();
-    IntVector high = patch->getInteriorCellHighIndex()-IntVector(1,1,1);
-    // TODO: Check if we need to subtract (1,1,1) from high or not.
-    
-    //==================================================================
-    // Read data from Hypre into Uintah
-    //==================================================================
-    // Initialize pointers to data, cells
-    CellIterator iter(l, h);
-    sol_type Xnew;
-    if (_modifies_x) {
-      _new_dw->getModifiable(Xnew, _X_label, matl, patch);
-    } else {
-      _new_dw->allocateAndPut(Xnew, _X_label, matl, patch);
-    }
-    // Get the solution back from hypre. Note: because the data is
-    // sorted in the same way in Uintah and Hypre, we can optimize by
-    // read chunks of the vector rather than individual entries.
-    for (int z = low.z(); z < high.z(); z++) {
-      for (int y = low.y(); y < high.y(); y++) {
-        // This chunk of Hypre data has fixed y- and z- indices, and
-        // running x-index.
-        const double* values = &Xnew[IntVector(l.x(), y, z)];
-        IntVector chunkLow(low.x(), y, z);
-        IntVector chunkHigh(high.x()-1, y, z); // TODO: need the -1 ???
-        HYPRE_SStructVectorGetBoxValues(_HX, level,
-                                        chunkLow.get_pointer(),
-                                        chunkHigh.get_pointer(),
-                                        CC_VAR, const_cast<double*>(values));
-      }
-    }
-  }
-#endif
+    HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
+    hpatch.getSolution(_HX,_new_dw,_X_label,_modifies_x);
+  } // for p (patches)
 } // end HypreDriverSStruct::getSolution_CC()
 
 void
@@ -710,6 +666,44 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
     // Add this code later.
   }
 } // end HyprePatch_CC::makeConnections(matrix)
+
+void
+HypreDriverSStruct::HyprePatch_CC::getSolution
+(HYPRE_SStructVector& HX,
+ DataWarehouse* new_dw,
+ const VarLabel* X_label,
+ const bool modifies_x)
+  //___________________________________________________________________
+  // HypreDriverSStruct::HyprePatch_CC::makeInteriorVector~
+  // Read the vector HV from Uintah into Hypre. HV can be the RHS
+  // or the solution (initial guess) vector. HV is defined at the interior
+  // cells of each patch.
+  //___________________________________________________________________
+{
+  // Initialize pointers to data, cells
+  typedef CCTypes::sol_type sol_type;
+  sol_type Xnew;
+  if (modifies_x) {
+    new_dw->getModifiable(Xnew, X_label, _matl, _patch);
+  } else {
+    new_dw->allocateAndPut(Xnew, X_label, _matl, _patch);
+  }
+  // Get the solution back from hypre. Note: because the data is
+  // sorted in the same way in Uintah and Hypre, we can optimize by
+  // read chunks of the vector rather than individual entries.
+  for(int z = _low.z(); z < _high.z(); z++) {
+    for(int y = _low.y(); y < _high.y(); y++) {
+      const double* values = &Xnew[IntVector(_low.x(), y, z)];
+      IntVector chunkLow(_low.x(), y, z);
+      IntVector chunkHigh(_high.x()-1, y, z);
+      // Feed data from Hypre to Uintah
+        HYPRE_SStructVectorGetBoxValues(HX, _level,
+                                        chunkLow.get_pointer(),
+                                        chunkHigh.get_pointer(),
+                                        CC_VAR, const_cast<double*>(values));
+    }
+  }
+} // end HyprePatch_CC::makeInteriorVector()
 
 //##############################################################
 // OLD CODE FROM STAND ALONE. TODO: MOVE THIS CODE TO MAKELINEARSYSTEM_CC
@@ -974,9 +968,7 @@ HypreDriverSStruct::makeConnections(const ConstructionStatus& status,
     } // end for fine_iter
   } // end for coarse_iter
 } // end makeConnections
-#endif
 
-#if 0
 void
 HypreDriverSStruct::makeLinearSystem(const Hierarchy& hier,
                                      const HYPRE_SStructGrid& grid,
@@ -1087,43 +1079,7 @@ HypreDriverSStruct::makeLinearSystem(const Hierarchy& hier,
     } // end for i (patches)
   } // end for level
 } // end makeLinearSystem()
-#endif
 
-//#####################################################################
-// Utilities
-//#####################################################################
-
-void printLine(const string& s, const unsigned int len)
-{
-  for (unsigned int i = 0; i < len; i++) {
-    cout_doing << s;
-  }
-  cout_doing << "\n";
-}
-
-namespace Uintah {
-
-  std::ostream&
-  operator << (std::ostream& os,
-               const HypreDriverSStruct::CoarseFineViewpoint& v)
-  {
-    if      (v == HypreDriverSStruct::DoingCoarseToFine) os << "CoarseToFine";
-    else if (v == HypreDriverSStruct::DoingFineToCoarse) os << "FineToCoarse";
-    else os << "CoarseFineViewpoint WRONG!!!";
-    return os;
-  }
-
-  std::ostream& operator<< (std::ostream& os,
-                            const HypreDriverSStruct::HyprePatch& p)
-    // Write our patch structure to the stream os.
-  {
-    os << *(p.getPatch());
-    return os;
-  }
-
-} // end namespace Uintah
-
-#if 0
 // TODO: move this function to impAMRICE !!!!!
 double harmonicAvg(const Point& x,
                    const Point& y,
@@ -1165,3 +1121,39 @@ double harmonicAvg(const Point& x,
   return (Ax*Ay)/((1-K)*Ax + K*Ay);
 }
 #endif
+
+//#####################################################################
+// Utilities
+//#####################################################################
+
+void printLine(const string& s, const unsigned int len)
+{
+  for (unsigned int i = 0; i < len; i++) {
+    cout_doing << s;
+  }
+  cout_doing << "\n";
+}
+
+namespace Uintah {
+
+  std::ostream&
+  operator << (std::ostream& os,
+               const HypreDriverSStruct::CoarseFineViewpoint& v)
+  {
+    if      (v == HypreDriverSStruct::DoingCoarseToFine) os << "CoarseToFine";
+    else if (v == HypreDriverSStruct::DoingFineToCoarse) os << "FineToCoarse";
+    else os << "CoarseFineViewpoint WRONG!!!";
+    return os;
+  }
+
+  std::ostream& operator<< (std::ostream& os,
+                            const HypreDriverSStruct::HyprePatch& p)
+    // Write our patch structure to the stream os.
+  {
+    os << *(p.getPatch());
+    return os;
+  }
+
+} // end namespace Uintah
+
+#endif // #if HAVE_HYPRE_1_9
