@@ -226,7 +226,7 @@ SCI_ARG_WITH(fortran,
   [with_fortran=""])
 SCI_ARG_WITH(ptolemyII,
   AC_HELP_STRING(--with-ptolemyII=DIR, 
-                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemypa ckage only)),
+                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
   [with_ptolemyII="$withval"
    sci_required_ptolemyII=yes],
   [with_ptolemyII=""])
@@ -2632,7 +2632,8 @@ cat > conftest-exc.cc <<EOF
     }
 EOF
     $CXX -o conftest-exc conftest-exc.cc
-    exc_error=`./conftest-exc >& the_void`
+    ./conftest-exc 2>&1 /dev/null
+
     if test "$?" != "0"; then
        AC_MSG_RESULT(not found)
        enable_exceptions_crash=1
@@ -2643,7 +2644,7 @@ EOF
        EXCEPTIONS_CRASH_DEF=""
     fi
 
-    rm -r conftest-exc.cc conftest-exc the_void
+    rm -f conftest-exc.cc conftest-exc
 AC_SUBST(EXCEPTIONS_CRASH_DEF)
 
 ##  --  search for mpeg  -------------------------------------------------
