@@ -165,6 +165,7 @@ public:
   vector<vector<const VarLabel* > > d_particleState_preReloc;
 
   bool d_switchState;
+  double d_prev_delt;
 
   SimulationTime* d_simTime;
 
@@ -207,7 +208,6 @@ private:
   MaterialSubset * allInOneMatl;
 
   double d_ref_press;
-  double d_elapsed_time;
   int    d_needAddMaterial;
 
   // The time step that the top level (w.r.t. AMR) is at during a
@@ -215,6 +215,7 @@ private:
   // number (it does for non-restarted, non-amr simulations).  I'm going to
   // attempt to make sure that it does also for restarts.
   int    d_topLevelTimeStep;
+  double d_elapsed_time;
 
   // some places need to know if this is a copy data timestep or
   // a normal timestep.  (A copy data timestep is AMR's current 
