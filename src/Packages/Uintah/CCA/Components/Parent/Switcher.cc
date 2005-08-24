@@ -110,8 +110,6 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
   Output* output = dynamic_cast<Output*>(getPort("output"));
   ModelMaker* modelmaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
   
-
-  
   for (unsigned i = 0; i < d_numComponents; i++) {
     UintahParallelComponent* comp =
       dynamic_cast<UintahParallelComponent*>(getPort("sim",i));
@@ -133,8 +131,9 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
   //sharedState->clearMaterials();
   ProblemSpecInterface* psi = 
     dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",d_componentIndex));
+  ProblemSpecP ups;
   if (psi) {
-    ProblemSpecP ups = psi->readInputFile();
+    ups = psi->readInputFile();
     d_sim->problemSetup(ups,grid,sharedState);
   } else {
     throw InternalError("psi dynamic_cast failed", __FILE__, __LINE__);
@@ -167,6 +166,12 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
   }
 
   d_sharedState = sharedState;
+
+  // re-initialize the DataArchiver to output according the the new component's specs
+  dynamic_cast<Output*>(getPort("output"))->problemSetup(ups, d_sharedState.get_rep());
+
+  // re-initialize the time info
+  d_sharedState->d_simTime->problemSetup(ups);
 }
  
 void Switcher::scheduleInitialize(const LevelP& level,
@@ -219,9 +224,12 @@ void Switcher::scheduleInitNewVars(const LevelP& level, SchedulerP& sched)
 // note - won't work if number of levels changes
 void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
 {
+
+  static bool first = true;
   Task* t = scinew Task("Switcher::carryOverVars",
                         this, & Switcher::carryOverVars);
-  if (d_switchState == switching) {
+  if (d_switchState == switching || first) {
+    first = false;
     // clear carry-over db
     if (level->getIndex() >= (int) d_matlVarsDB.size()) {
       d_matlVarsDB.resize(level->getIndex()+1);
@@ -246,10 +254,10 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
             found = true;
             break;
           }
-          // it's already being required by somebody else, so ignore it
-          if (found)
-            continue;
         }
+        // it's already being required by somebody else, so ignore it
+        if (found)
+          break;
       }
       if (found) {
         cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;

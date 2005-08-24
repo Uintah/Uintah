@@ -203,6 +203,15 @@ namespace Uintah {
       const ProblemSpecP spec = d_archive->getTimestep(d_restartTime, blah);
       d_sim->readFromTimestepXML(spec);
 
+      // set prevDelt to what it was in the last simulation.  If in the last 
+      // sim we were clamping delt based on the values of prevDelt, then
+      // delt will be off if it doesn't match.
+      ProblemSpecP timeSpec = spec->findBlock("Time");
+      if (timeSpec) {
+        d_sharedState->d_prev_delt = 0.0;
+        timeSpec->get("delt", d_sharedState->d_prev_delt);
+      }
+
       // eventually we will also probably query the material properties here.
     }
 
@@ -290,6 +299,8 @@ namespace Uintah {
     cout << "initial_delt_range = " << d_timeinfo->initial_delt_range << endl;
     cout << "max_delt_increase = " << d_timeinfo->max_delt_increase << endl;
 #endif
+
+    cout << "  Doing timestep tests, delt = " << delt << "  prev = " << prev_delt << endl;
 
     delt *= d_timeinfo->delt_factor;
       
