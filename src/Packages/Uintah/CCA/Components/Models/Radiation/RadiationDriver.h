@@ -93,7 +93,12 @@ class RadiationDriver : public ModelInterface {
   virtual void scheduleComputeModelSources(SchedulerP& sched, 
                                            const LevelP& level,
                                            const ModelInfo*);
-                                   
+
+  void scheduleComputeCO2_H2O(const LevelP& level,
+                              SchedulerP& sched,
+                              const PatchSet* patches,
+                              const MaterialSet* matls);
+                                                                                                       
   void scheduleCopyValues(const LevelP& level,
                           SchedulerP& sched,
                           const PatchSet* patches,
@@ -161,6 +166,8 @@ class RadiationDriver : public ModelInterface {
   VarLabel* sootVF_CCLabel;
   VarLabel* sootVFCopy_CCLabel;
 
+  VarLabel* scalar_CCLabel;
+  
   // Need to change the label below to a public source term for
   // use in ICE
   VarLabel* radiationSrc_CCLabel;
@@ -172,6 +179,8 @@ class RadiationDriver : public ModelInterface {
   int d_radCalcFreq;
   bool d_useIceTemp;
   bool d_useTableValues;
+  bool d_computeCO2_H2O_from_f;
+  
   const PatchSet* d_perproc_patches;
 
   ProblemSpecP params;
@@ -190,7 +199,13 @@ class RadiationDriver : public ModelInterface {
                          const MaterialSubset* matls,
                          DataWarehouse*,
                          DataWarehouse*);
-
+                         
+  void computeCO2_H2O(const ProcessorGroup*, 
+                      const PatchSubset* patches,
+                      const MaterialSubset*,
+                      DataWarehouse*,
+                      DataWarehouse* new_dw);
+                      
   void copyValues(const ProcessorGroup*,
                   const PatchSubset* patches,
                   const MaterialSubset* matls,
