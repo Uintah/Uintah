@@ -73,27 +73,27 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // HYPRE grid and stencil setup
       void gridSetup(const ProcessorGroup*,
-		     const Patch* patch, bool plusX, bool plusY, bool plusZ);
+                     const Patch* patch, bool plusX, bool plusY, bool plusZ);
 
       ////////////////////////////////////////////////////////////////////////
        // to close petsc
       void finalizeSolver();
 
       virtual void matrixCreate(const PatchSet* allpatches,
-			    const PatchSubset* mypatc) {};
+                            const PatchSubset* mypatc) {};
 
       void setMatrix(const ProcessorGroup* pc,
-		     const Patch* patch,
-		     RadiationVariables* vars,
-		     bool plusX, bool plusY, bool plusZ,
-		     CCVariable<double>& SU,
-		     CCVariable<double>& AB,
-		     CCVariable<double>& AS,
-		     CCVariable<double>& AW,
-		     CCVariable<double>& AP,
-		     CCVariable<double>& AE,
-		     CCVariable<double>& AN,
-		     CCVariable<double>& AT);
+                     const Patch* patch,
+                     RadiationVariables* vars,
+                     bool plusX, bool plusY, bool plusZ,
+                     CCVariable<double>& SU,
+                     CCVariable<double>& AB,
+                     CCVariable<double>& AS,
+                     CCVariable<double>& AW,
+                     CCVariable<double>& AP,
+                     CCVariable<double>& AE,
+                     CCVariable<double>& AN,
+                     CCVariable<double>& AT);
 
       bool radLinearSolve();
 

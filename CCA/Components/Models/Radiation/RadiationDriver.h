@@ -77,59 +77,59 @@ class RadiationDriver : public ModelInterface {
   ////////////////////////////////////////////////////////////////////////
 
   virtual void problemSetup(GridP& grid,
-			    SimulationStateP& sharedState,
-			    ModelSetup* setup);
+                            SimulationStateP& sharedState,
+                            ModelSetup* setup);
 
   virtual void scheduleInitialize(SchedulerP& sched,
-				  const LevelP& level,
-				  const ModelInfo*);
+                                  const LevelP& level,
+                                  const ModelInfo*);
 
   virtual void restartInitialize() {}
       
   virtual void scheduleComputeStableTimestep(SchedulerP&,
-					     const LevelP& level,
-					     const ModelInfo*);
+                                             const LevelP& level,
+                                             const ModelInfo*);
                                   
   virtual void scheduleComputeModelSources(SchedulerP& sched, 
-					   const LevelP& level,
-					   const ModelInfo*);
-				   
+                                           const LevelP& level,
+                                           const ModelInfo*);
+                                   
   void scheduleCopyValues(const LevelP& level,
-			  SchedulerP& sched,
-			  const PatchSet* patches,
-			  const MaterialSet* matls);
+                          SchedulerP& sched,
+                          const PatchSet* patches,
+                          const MaterialSet* matls);
 
   void scheduleComputeProps(const LevelP& level,
-			    SchedulerP& sched,
-			    const PatchSet* patches,
-			    const MaterialSet* matls);
+                            SchedulerP& sched,
+                            const PatchSet* patches,
+                            const MaterialSet* matls);
 
   void scheduleBoundaryCondition(const LevelP& level,
-				 SchedulerP& sched,
-				 const PatchSet* patches,
-				 const MaterialSet* matls);
+                                 SchedulerP& sched,
+                                 const PatchSet* patches,
+                                 const MaterialSet* matls);
 
   virtual void scheduleIntensitySolve(const LevelP& level,
-			      SchedulerP& sched,
-			      const PatchSet* patches,
-			      const MaterialSet* matls,
-			      const ModelInfo* mi);
+                              SchedulerP& sched,
+                              const PatchSet* patches,
+                              const MaterialSet* matls,
+                              const ModelInfo* mi);
 
   virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-						       const LevelP&,
-						       const MaterialSet*);
+                                                       const LevelP&,
+                                                       const MaterialSet*);
                                                 
   virtual void computeSpecificHeat(CCVariable<double>&,
-				   const Patch*,
-				   DataWarehouse*,
-				   const int);
+                                   const Patch*,
+                                   DataWarehouse*,
+                                   const int);
                                     
   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-				     SchedulerP& sched);
+                                     SchedulerP& sched);
                                       
   virtual void scheduleTestConservation(SchedulerP&,
-					const PatchSet* patches,
-					const ModelInfo* mi);
+                                        const PatchSet* patches,
+                                        const ModelInfo* mi);
 
   VarLabel* d_cellInfoLabel;
 
@@ -180,47 +180,47 @@ class RadiationDriver : public ModelInterface {
   SimulationStateP d_sharedState;
 
   void initialize(const ProcessorGroup*,
-		  const PatchSubset* patches,
-		  const MaterialSubset* matls,
-		  DataWarehouse*,
-		  DataWarehouse* new_dw);
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse*,
+                  DataWarehouse* new_dw);
 
   void buildLinearMatrix(const ProcessorGroup*,
-			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse*,
-			 DataWarehouse*);
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse*,
+                         DataWarehouse*);
 
   void copyValues(const ProcessorGroup*,
-		  const PatchSubset* patches,
-		  const MaterialSubset* matls,
-		  DataWarehouse* old_dw,
-		  DataWarehouse* new_dw);
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse* old_dw,
+                  DataWarehouse* new_dw);
 
   void computeProps(const ProcessorGroup* pc,
-		    const PatchSubset* patches,
-		    const MaterialSubset* matls,
-		    DataWarehouse* ,
-		    DataWarehouse* new_dw);
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* ,
+                    DataWarehouse* new_dw);
 
   void boundaryCondition(const ProcessorGroup* pc,
-			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse* ,
-			 DataWarehouse* new_dw);
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* ,
+                         DataWarehouse* new_dw);
 
   void intensitySolve(const ProcessorGroup* pc,
-		      const PatchSubset* patches,
-		      const MaterialSubset* matls,
-		      DataWarehouse* ,
-		      DataWarehouse* new_dw,
-		      const ModelInfo* mi);
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* ,
+                      DataWarehouse* new_dw,
+                      const ModelInfo* mi);
 
   void modifyThermoTransportProperties(const ProcessorGroup*, 
-				       const PatchSubset* patches,        
-				       const MaterialSubset*,             
-				       DataWarehouse*,                    
-				       DataWarehouse* new_dw);             
+                                       const PatchSubset* patches,        
+                                       const MaterialSubset*,             
+                                       DataWarehouse*,                    
+                                       DataWarehouse* new_dw);             
 
 }; // End class RadiationDriver
 } // End namespace Uintah
