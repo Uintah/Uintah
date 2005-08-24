@@ -74,6 +74,10 @@ void AMRSimulationController::run()
    // sets up sharedState, timeinfo, output
    preGridSetup();
 
+   // Parse time struct
+   d_timeinfo = new SimulationTime(d_ups);
+   d_sharedState->d_simTime = d_timeinfo;
+
    // create grid
    GridP currentGrid = gridSetup();
 
@@ -87,9 +91,6 @@ void AMRSimulationController::run()
     
    double t;
 
-   // Parse time struct
-   d_timeinfo = new SimulationTime(d_ups);
-   d_sharedState->d_simTime = d_timeinfo;
     
    if (d_restarting){
      restartSetup(currentGrid, t);
@@ -158,6 +159,10 @@ void AMRSimulationController::run()
        totalFine *= currentGrid->getLevel(i)->timeRefinementRatio();
      }
      
+     if (iterations != 0) {
+       // will be set in SimCont::postGridSetup
+       d_sharedState->d_prev_delt = delt;
+     }
      iterations ++;
      calcWallTime();
  
@@ -166,11 +171,10 @@ void AMRSimulationController::run()
      DataWarehouse* newDW = d_scheduler->getLastDW();
      newDW->get(delt_var, d_sharedState->get_delt_label());
 
-     double prev_delt = delt;
      delt = delt_var;
      
      // delt adjusted based on timeinfo parameters
-     adjustDelT(delt, prev_delt, iterations, t);
+     adjustDelT(delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), t);
      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
 
      printSimulationStats( d_sharedState, delt, t );
