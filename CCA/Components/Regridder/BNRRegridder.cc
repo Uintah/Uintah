@@ -5,16 +5,15 @@ using namespace Uintah;
 
 BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg)
 {
-
 }
 
 BNRRegridder::~BNRRegridder()
 {
-
 }
 
-Grid* BNRRegridder::regrid(Grid* oldgrid, SchedulerP& sched, 
-                           const ProblemSpecP& ups)
+Grid*
+BNRRegridder::regrid(Grid* oldgrid, SchedulerP& /*schedv*/, 
+                     const ProblemSpecP& /*ups*/)
 {
   return oldgrid;
 }
