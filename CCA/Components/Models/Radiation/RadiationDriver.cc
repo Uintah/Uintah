@@ -26,9 +26,6 @@ using namespace Uintah;
 using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
-//****************************************************************************
-// Default constructor for PressureSolver
-//****************************************************************************
 RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
                                  ProblemSpecP& params):
   ModelInterface (myworld), params(params), d_myworld(myworld)
@@ -133,6 +130,7 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   // equation. This variable and the fluxes are the outputs from
   // the radiation calculation to the energy transport.
   radiationSrc_CCLabel = VarLabel::create("radiationSrc", td_CCdouble);
+  scalar_CCLabel = VarLabel::create("scalar-f", td_CCdouble);
 }
 
 //****************************************************************************
@@ -175,6 +173,7 @@ RadiationDriver::~RadiationDriver()
   VarLabel::destroy(sootVFCopy_CCLabel);
 
   VarLabel::destroy(radiationSrc_CCLabel);
+  VarLabel::destroy(scalar_CCLabel);
 }
 
 //****************************************************************************
@@ -202,8 +201,11 @@ RadiationDriver::problemSetup(GridP& grid,
   // there is the additional d_useIceTemp variable) above.
   db->getWithDefault("useTableValues",d_useTableValues,true);
 
-  if (!d_useTableValues) 
+  db->getWithDefault("computeCO2_H2O_from_f",d_computeCO2_H2O_from_f,false);
+
+  if (!d_useTableValues) {
     d_useIceTemp = true;
+  }
   d_DORadiation = scinew Models_DORadiationModel(d_myworld);
   d_DORadiation->problemSetup(db);
 }
@@ -241,6 +243,11 @@ void RadiationDriver::scheduleInitialize(SchedulerP& sched,
   t->computes(tempCopy_CCLabel);
 
   t->computes(cellType_CCLabel);
+  
+  if(d_computeCO2_H2O_from_f){
+    t->computes(co2_CCLabel);
+    t->computes(h2o_CCLabel);
+  }
   
   sched->addTask(t, patches, matls);
 }
@@ -290,6 +297,7 @@ RadiationDriver::initialize(const ProcessorGroup*,
     new_dw->allocateAndPut(vars.ESRCG,  esrcg_CCLabel,         indx, patch);
     new_dw->allocateAndPut(vars.shgamma,shgamma_CCLabel,       indx, patch);
     new_dw->allocateAndPut(vars.temperature, tempCopy_CCLabel, indx, patch);
+    
 
     vars.qfluxe.initialize(0.0);
     vars.qfluxw.initialize(0.0);
@@ -307,9 +315,28 @@ RadiationDriver::initialize(const ProcessorGroup*,
     vars.shgamma.initialize(0.0);
     vars.temperature.initialize(298.0);
     
+    //__________________________________
+    //  If we're computing CO2 & H2O concentrations
+    //  from scalar-f
+    if(d_computeCO2_H2O_from_f){
+      CCVariable<double> H2O_concentration, CO2_concentration;
+      new_dw->allocateAndPut(H2O_concentration, h2o_CCLabel,indx, patch); 
+      new_dw->allocateAndPut(CO2_concentration, co2_CCLabel,indx, patch);
+
+      constCCVariable<double> scalar_f;
+      new_dw->get(scalar_f, scalar_CCLabel,indx,patch,Ghost::None,0);
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+        IntVector c = *iter;
+        H2O_concentration[c] = 0.5 * scalar_f[c];    // CHANGE THIS EQUATION
+        CO2_concentration[c] = 0.5 * scalar_f[c];
+      }
+    }
+
+    //__________________________________
+    //  specify cell types on the boundary
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
-
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -411,7 +438,6 @@ void RadiationDriver::scheduleComputeStableTimestep(SchedulerP&,
 //****************************************************************************
 // schedule the computation of radiation fluxes and the source term
 //****************************************************************************
-
 void
 RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
                                              const LevelP& level,
@@ -434,17 +460,17 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
   d_perproc_patches->addReference();
 
   sched->addTask(t, d_perproc_patches, ice_matls);
-
-  scheduleCopyValues(level,         sched, patches, ice_matls);
-  scheduleComputeProps(level,       sched, patches, ice_matls);    
-  scheduleBoundaryCondition(level,  sched, patches, ice_matls);    
-  scheduleIntensitySolve(level,     sched, patches, ice_matls, mi);
+  
+  scheduleComputeCO2_H2O(   level,sched, patches, ice_matls);     
+  scheduleCopyValues(       level,sched, patches, ice_matls);
+  scheduleComputeProps(     level,sched, patches, ice_matls);    
+  scheduleBoundaryCondition(level,sched, patches, ice_matls);    
+  scheduleIntensitySolve(   level,sched, patches, ice_matls, mi);
 }
 
 //****************************************************************************
 // Initialize linear solver matrix for petsc/hypre
 //****************************************************************************
-
 void
 RadiationDriver::buildLinearMatrix(const ProcessorGroup*,
                                    const PatchSubset* patches,
@@ -458,13 +484,65 @@ RadiationDriver::buildLinearMatrix(const ProcessorGroup*,
                << "\t\t\t Radiation" << endl;
   d_DORadiation->d_linearSolver->matrixCreate(d_perproc_patches, patches);
 }
-
+/*______________________________________________________________________
+ Task~  scheduleComputeCO2_H2O--
+ Purpose: Backout the CO2 and H2O concentrations from the mixture
+          fraction.  The mixture fraction (scalar-f) is computed in the
+          passiveScalar model
+ _____________________________________________________________________  */
+void
+RadiationDriver::scheduleComputeCO2_H2O(const LevelP& level,
+                                    SchedulerP& sched,
+                                    const PatchSet* patches,
+                                    const MaterialSet* matls)
+{
+  if(d_computeCO2_H2O_from_f){
+    cout_doing << "RADIATION::scheduleComputeCO2_H2O \t\tL-" 
+               << level->getIndex() << endl;
+    Task* t = scinew Task("RadiationDriver::computeCO2_H2O",
+                    this, &RadiationDriver::computeCO2_H2O);
+    Ghost::GhostType  gn = Ghost::None;
+    t->requires(Task::OldDW, scalar_CCLabel, gn, 0);
+                    
+    t->computes(co2_CCLabel);
+    t->computes(h2o_CCLabel);  
+    sched->addTask(t, patches, matls);               
+  }
+}
+//______________________________________________________________________
+void 
+RadiationDriver::computeCO2_H2O(const ProcessorGroup*, 
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
+{ 
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing computeCO2_H2O on patch "<<patch->getID()
+               << "\t\t\t\t Radiation" << endl;
+    int iceIndex = 0;
+    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    
+    CCVariable<double> H2O_concentration, CO2_concentration;
+    new_dw->allocateAndPut(H2O_concentration, h2o_CCLabel,indx, patch); 
+    new_dw->allocateAndPut(CO2_concentration, co2_CCLabel,indx, patch);
+    
+    constCCVariable<double> scalar_f;
+    old_dw->get(scalar_f, scalar_CCLabel,indx,patch,Ghost::None,0);
+        
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+      IntVector c = *iter;
+      H2O_concentration[c] = 0.5 * scalar_f[c];    // CHANGE THIS EQUATION
+      CO2_concentration[c] = 0.5 * scalar_f[c];
+    }
+  }
+}
 //****************************************************************************
 // schedule copy of values from previous time step; if the radiation is to
 // be updated using the radcounter, then we perform radiation calculations,
 // else we just use the values from previous time step
 //****************************************************************************
-
 void
 RadiationDriver::scheduleCopyValues(const LevelP& level,
                                     SchedulerP& sched,
@@ -626,7 +704,19 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     shgamma.copyData(oldShgamma);
     tempCopy.copyData(oldTempCopy);
     
+    
+    
   }
+#if 0   // furture changes
+  new_dw->transferFrom(old_dw,radCO2_CCLabel,     patches, matls);
+  new_dw->transferFrom(old_dw,radH2O_CCLabel,     patches, matls);
+  new_dw->transferFrom(old_dw,sootVFCopy_CCLabel, patches, matls);
+  new_dw->transferFrom(old_dw,mixfracCopy_CCLabel,patches, matls);
+  new_dw->transferFrom(old_dw,abskg_CCLabel,      patches, matls);
+  new_dw->transferFrom(old_dw,esrcg_CCLabel,      patches, matls);
+  new_dw->transferFrom(old_dw,shgamma_CCLabel,    patches, matls);
+  new_dw->transferFrom(old_dw,tempCopy_CCLabel,   patches, matls);
+#endif
   // end patches loop
 }
 
@@ -901,7 +991,6 @@ RadiationDriver::boundaryCondition(const ProcessorGroup* pc,
 //****************************************************************************
 // schedule solve for radiative intensities, radiative source, and heat fluxes
 //****************************************************************************
-
 void
 RadiationDriver::scheduleIntensitySolve(const LevelP& level,
                                         SchedulerP& sched,
@@ -1008,9 +1097,8 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
       radVars.src.initialize(0.0);
 
       d_DORadiation->intensitysolve(pc, patch, cellinfo, &radVars, &constRadVars);
-
     }
-
+    
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
