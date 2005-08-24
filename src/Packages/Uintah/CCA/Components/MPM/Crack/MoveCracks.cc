@@ -45,18 +45,20 @@ using std::vector;
 using std::string;
 
 
-void Crack::addComputesAndRequiresCrackPointSubset(Task* /*t*/,
-                                const PatchSet* /*patches*/,
-                                const MaterialSet* /*matls*/) const
+void
+Crack::addComputesAndRequiresCrackPointSubset(Task* /*t*/,
+                                              const PatchSet* /*patches*/,
+                                              const MaterialSet* /*matls*/) const
 {
   // Currently do nothing
 }
 
-void Crack::CrackPointSubset(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* /*matls*/,
-                      DataWarehouse* /*old_dw*/,
-                      DataWarehouse* /*new_dw*/)
+void
+Crack::CrackPointSubset(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* /*matls*/,
+                        DataWarehouse* /*old_dw*/,
+                        DataWarehouse* /*new_dw*/)
 {
   for(int p=0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -90,9 +92,10 @@ void Crack::CrackPointSubset(const ProcessorGroup*,
   }  
 }
 
-void Crack::addComputesAndRequiresMoveCracks(Task* t,
-                                const PatchSet* /*patches*/,
-                                const MaterialSet* /*matls*/) const
+void
+Crack::addComputesAndRequiresMoveCracks(Task* t,
+                                        const PatchSet* /*patches*/,
+                                        const MaterialSet* /*matls*/) const
 {
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
@@ -108,11 +111,12 @@ void Crack::addComputesAndRequiresMoveCracks(Task* t,
   t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
 }
 
-void Crack::MoveCracks(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw)
+void
+Crack::MoveCracks(const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset* /*matls*/,
+                  DataWarehouse* old_dw,
+                  DataWarehouse* new_dw)
 {
   for(int p=0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -176,7 +180,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
               Vector vg,vG;
               Vector vcm = Vector(0.0,0.0,0.0);
 
-	      interpolator->findCellAndWeights(pt, ni, S, psize[idx]);
+              interpolator->findCellAndWeights(pt, ni, S, psize[idx]);
 
               // Calculate center-of-velocity (vcm)
               // Sum of shape functions from nodes with particle(s) around them
@@ -186,7 +190,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
                 Point pi=patch->nodePosition(ni[k]);
                 if(PhysicalGlobalGridContainsPoint(dx_min,pi) &&  //ni[k] in real grid
                      (gnum[ni[k]]+Gnum[ni[k]]!=0)) {
-	   	  sumS += S[k];
+                  sumS += S[k];
                 }
               }
               if(sumS>1.e-6) {
@@ -209,15 +213,15 @@ void Crack::MoveCracks(const ProcessorGroup*,
               // Apply symmetric BCs for the new position
               ApplySymmetricBCsToCrackPoints(dx,pt,cptmp[j]);
 
-	      // Check if the node is still inside the grid
+              // Check if the node is still inside the grid
               if(!PhysicalGlobalGridContainsPoint(dx_min,cptmp[j])) {
                 cout << "Error: cx[" << m << "," << idx << "]=" << cx[m][idx]
                      << " has moved to " << cptmp[j] << ", outside the global grid."
                      << " Center-of-mass velocity, vcm=" << vcm 
-		     << ". Program terminated." << endl;
+                     << ". Program terminated." << endl;
                 exit(1);
-              }	  
-	      
+              }   
+              
             } // End of loop over numNodes
           } // End if(pid==i)
 
@@ -268,8 +272,9 @@ short Crack::PhysicalGlobalGridContainsPoint(const double& dx,const Point& pt)
 }
 
 // Apply symmetric boundary condition to crack points
-void Crack::ApplySymmetricBCsToCrackPoints(const Vector& cs,
-                        const Point& old_pt,Point& new_pt)
+void
+Crack::ApplySymmetricBCsToCrackPoints(const Vector& cs,
+                                      const Point& old_pt,Point& new_pt)
 {
   // cs -- cell size
   for(Patch::FaceType face = Patch::startFace;

@@ -36,18 +36,18 @@ ImplicitParticleCreator::~ImplicitParticleCreator()
 
 ParticleSubset* 
 ImplicitParticleCreator::createParticles(MPMMaterial* matl, 
-					 particleIndex numParticles,
-					 CCVariable<short int>& cellNAPID,
-					 const Patch* patch,
-					 DataWarehouse* new_dw,
-					 MPMLabel* lb,
-					 vector<GeometryObject*>& d_geom_objs)
+                                         particleIndex numParticles,
+                                         CCVariable<short int>& cellNAPID,
+                                         const Patch* patch,
+                                         DataWarehouse* new_dw,
+                                         MPMLabel* lb,
+                                         vector<GeometryObject*>& d_geom_objs)
 {
 
   ParticleSubset* subset = ParticleCreator::createParticles(matl,numParticles,
-							    cellNAPID,patch,
-							    new_dw,lb,
-							    d_geom_objs);
+                                                            cellNAPID,patch,
+                                                            new_dw,lb,
+                                                            d_geom_objs);
 
 
   return subset;
@@ -55,11 +55,11 @@ ImplicitParticleCreator::createParticles(MPMMaterial* matl,
 
 void 
 ImplicitParticleCreator::initializeParticle(const Patch* patch,
-					    vector<GeometryObject*>::const_iterator obj,
-					    MPMMaterial* matl,
-					    Point p, IntVector cell_idx,
-					    particleIndex i,
-					    CCVariable<short int>& cellNAPI)
+                                            vector<GeometryObject*>::const_iterator obj,
+                                            MPMMaterial* matl,
+                                            Point p, IntVector cell_idx,
+                                            particleIndex i,
+                                            CCVariable<short int>& cellNAPI)
 {
 
   ParticleCreator::initializeParticle(patch,obj,matl,p,cell_idx,i,cellNAPI);
@@ -69,7 +69,7 @@ ImplicitParticleCreator::initializeParticle(const Patch* patch,
 
 particleIndex 
 ImplicitParticleCreator::countParticles(const Patch* patch,
-					vector<GeometryObject*>& d_geom_objs) 
+                                        vector<GeometryObject*>& d_geom_objs) 
 {
 
   return ParticleCreator::countParticles(patch,d_geom_objs);
@@ -77,7 +77,7 @@ ImplicitParticleCreator::countParticles(const Patch* patch,
 
 particleIndex 
 ImplicitParticleCreator::countAndCreateParticles(const Patch* patch,
-						 GeometryObject* obj) 
+                                                 GeometryObject* obj) 
 {
   return ParticleCreator::countAndCreateParticles(patch,obj);
 }
@@ -85,14 +85,14 @@ ImplicitParticleCreator::countAndCreateParticles(const Patch* patch,
 
 ParticleSubset* 
 ImplicitParticleCreator::allocateVariables(particleIndex numParticles, 
-					   int dwi,MPMLabel* lb, 
-					   const Patch* patch,
-					   DataWarehouse* new_dw)
+                                           int dwi,MPMLabel* lb, 
+                                           const Patch* patch,
+                                           DataWarehouse* new_dw)
 {
 
   ParticleSubset* subset = ParticleCreator::allocateVariables(numParticles,
-							      dwi,lb,patch,
-							      new_dw);
+                                                              dwi,lb,patch,
+                                                              new_dw);
 
   new_dw->allocateAndPut(pacceleration, lb->pAccelerationLabel, subset);
 
@@ -101,8 +101,8 @@ ImplicitParticleCreator::allocateVariables(particleIndex numParticles,
 }
 
 void
-ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
-							MPMLabel* lb)
+ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* /*matl*/,
+                                                        MPMLabel* lb)
 {
   particle_state.push_back(lb->pAccelerationLabel);
   particle_state_preReloc.push_back(lb->pAccelerationLabel_preReloc);

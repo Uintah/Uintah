@@ -10,13 +10,13 @@ using namespace Uintah;
 using namespace SCIRun;
 using std::ifstream;
 
-NullGeometryPiece::NullGeometryPiece(ProblemSpecP& ps)
+NullGeometryPiece::NullGeometryPiece(ProblemSpecP& /*ps*/)
 {
   setName("null");
   d_box = Box(Point(0.,0.,0.),Point(0.,0.,0.));
 }
 
-NullGeometryPiece::NullGeometryPiece(const string& file_name)
+NullGeometryPiece::NullGeometryPiece(const string& /*file_name*/)
 {
 }
 
@@ -24,20 +24,21 @@ NullGeometryPiece::~NullGeometryPiece()
 {
 }
 
-NullGeometryPiece* NullGeometryPiece::clone()
+NullGeometryPiece*
+NullGeometryPiece::clone()
 {
   return scinew NullGeometryPiece(*this);
 }
 
-bool NullGeometryPiece::inside(const Point& p) const
+bool
+NullGeometryPiece::inside(const Point& /*p*/) const
 {
   return true;
 }
 
-Box NullGeometryPiece::getBoundingBox() const
+Box
+NullGeometryPiece::getBoundingBox() const
 {
   return d_box;
 }
-
-
 
