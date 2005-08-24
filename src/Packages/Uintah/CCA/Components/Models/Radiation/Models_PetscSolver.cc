@@ -56,35 +56,35 @@ Models_PetscSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
       db->getWithDefault("underrelax", d_underrelax, 1.0);
       db->getWithDefault("max_iter", d_maxSweeps, 75);
       if (d_shsolver)
-	db->getWithDefault("ksptype", d_kspType, "cg");
+        db->getWithDefault("ksptype", d_kspType, "cg");
       else
-	db->getWithDefault("ksptype", d_kspType, "gmres");
+        db->getWithDefault("ksptype", d_kspType, "gmres");
       
       if (!d_shsolver && (d_kspType == "cg"))
-	throw ProblemSetupException("Models_Radiation_PetscSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg cannot be used; Use gmres as the ksptype",
+        throw ProblemSetupException("Models_Radiation_PetscSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg cannot be used; Use gmres as the ksptype",
                                     __FILE__, __LINE__);
 
       if (d_shsolver && (d_kspType == "gmres"))
-	throw ProblemSetupException("Models_Radiation_PetscSolver:Spherical Harmonics generates a symmetric matrix; use cg as the ksptype",
+        throw ProblemSetupException("Models_Radiation_PetscSolver:Spherical Harmonics generates a symmetric matrix; use cg as the ksptype",
                                     __FILE__, __LINE__);
 
       db->getWithDefault("tolerance", d_tolerance, 1.0e-8);
       db->getWithDefault("pctype", d_pcType, "blockjacobi");
 
       if (d_pcType == "asm")
-	db->require("overlap",d_overlap);
+        db->require("overlap",d_overlap);
       if (d_pcType == "ilu")
-	db->require("fill",d_fill);
+        db->require("fill",d_fill);
     }
     else {
       d_underrelax = 1.0;
       d_maxSweeps = 75;
       d_pcType = "blockjacobi";
       if (d_shsolver) {
-	d_kspType = "cg";
+        d_kspType = "cg";
       }
       else {
-	d_kspType = "gmres";
+        d_kspType = "gmres";
       }
       d_tolerance = 1.0e-08;
     }
@@ -117,7 +117,7 @@ Models_PetscSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
 
 void 
 Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
-			      const PatchSubset* mypatches)
+                              const PatchSubset* mypatches)
 {
   // for global index get a petsc index that
   // make it a data memeber
@@ -138,8 +138,8 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
       IntVector phighIndex = patch->getCellFORTHighIndex()+IntVector(1,1,1);
   
       long nc = (phighIndex[0]-plowIndex[0])*
-	(phighIndex[1]-plowIndex[1])*
-	(phighIndex[2]-plowIndex[2]);
+        (phighIndex[1]-plowIndex[1])*
+        (phighIndex[2]-plowIndex[2]);
       d_petscGlobalStart[patch]=totalCells;
       totalCells+=nc;
       mytotal+=nc;
@@ -166,14 +166,14 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
       IntVector high= Min(highIndex, phigh);
 
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-	  || ( high.z() < low.z() ) )
-	throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
+          || ( high.z() < low.z() ) )
+        throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
       
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dcells = phigh-plow;
       IntVector start = low-plow;
       petscglobalIndex += start.z()*dcells.x()*dcells.y()
-	+start.y()*dcells.x()+start.x();
+        +start.y()*dcells.x()+start.x();
 #if 0
       cerr << "Looking at patch: " << neighbor->getID() << '\n';
       cerr << "low=" << low << '\n';
@@ -182,32 +182,32 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
       cerr << "globalIndex = " << petscglobalIndex << '\n';
 #endif
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
-	int idx_slab = petscglobalIndex;
-	petscglobalIndex += dcells.x()*dcells.y();
-	
-	for (int colY = low.y(); colY < high.y(); colY ++) {
-	  int idx = idx_slab;
-	  idx_slab += dcells.x();
-	  for (int colX = low.x(); colX < high.x(); colX ++) {
-	    l2g[IntVector(colX, colY, colZ)] = idx++;
-	  }
-	}
+        int idx_slab = petscglobalIndex;
+        petscglobalIndex += dcells.x()*dcells.y();
+        
+        for (int colY = low.y(); colY < high.y(); colY ++) {
+          int idx = idx_slab;
+          idx_slab += dcells.x();
+          for (int colX = low.x(); colX < high.x(); colX ++) {
+            l2g[IntVector(colX, colY, colZ)] = idx++;
+          }
+        }
       }
       IntVector d = high-low;
       totalCells+=d.x()*d.y()*d.z();
     }
     d_petscLocalToGlobal[patch].copyPointer(l2g);
 #if 0
-    {	
+    {   
       IntVector l = l2g.getWindow()->getLowIndex();
       IntVector h = l2g.getWindow()->getHighIndex();
       for(int z=l.z();z<h.z();z++){
-	for(int y=l.y();y<h.y();y++){
-	  for(int x=l.x();x<h.x();x++){
-	    IntVector idx(x,y,z);
-	    cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
-	  }
-	}
+        for(int y=l.y();y<h.y();y++){
+          for(int x=l.x();x<h.x();x++){
+            IntVector idx(x,y,z);
+            cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
+          }
+        }
       }
     }
 #endif
@@ -235,7 +235,7 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
 #if 0
   int ierr;
   ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+                             globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
     throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
@@ -263,22 +263,22 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
 // ****************************************************************************
 void 
 Models_PetscSolver::setMatrix(const ProcessorGroup* ,
-			   const Patch* patch,
-			   RadiationVariables* vars,
-			   bool plusX, bool plusY, bool plusZ,
-			   CCVariable<double>& SU,
-			   CCVariable<double>& AB,
-			   CCVariable<double>& AS,
-			   CCVariable<double>& AW,
-			   CCVariable<double>& AP,
-			   CCVariable<double>& AE,
-			   CCVariable<double>& AN,
-			   CCVariable<double>& AT)
+                           const Patch* patch,
+                           RadiationVariables* vars,
+                           bool plusX, bool plusY, bool plusZ,
+                           CCVariable<double>& SU,
+                           CCVariable<double>& AB,
+                           CCVariable<double>& AS,
+                           CCVariable<double>& AW,
+                           CCVariable<double>& AP,
+                           CCVariable<double>& AE,
+                           CCVariable<double>& AN,
+                           CCVariable<double>& AT)
 
 {
   int ierr;
   ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+                             globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
     throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
@@ -351,70 +351,70 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	int ii = colX+facX;
-	int jj = colY+facY;
-	int kk = colZ+facZ;
+        int ii = colX+facX;
+        int jj = colY+facY;
+        int kk = colZ+facZ;
 
-	if(d_shsolver){
-	  col_sh[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
-	  col_sh[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
-	  col_sh[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-	  col_sh[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	  col_sh[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-	  col_sh[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
-	  col_sh[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
-	}
-	else {
-	  col[0] = l2g[IntVector(colX,colY,kk)];  //ab
-	  col[1] = l2g[IntVector(colX, jj, colZ)]; // as
-	  col[2] = l2g[IntVector(ii, colY, colZ)]; // aw
-	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	}
+        if(d_shsolver){
+          col_sh[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
+          col_sh[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
+          col_sh[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+          col_sh[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+          col_sh[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+          col_sh[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
+          col_sh[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
+        }
+        else {
+          col[0] = l2g[IntVector(colX,colY,kk)];  //ab
+          col[1] = l2g[IntVector(colX, jj, colZ)]; // as
+          col[2] = l2g[IntVector(ii, colY, colZ)]; // aw
+          col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+        }
 
-	//#ifdef ARCHES_PETSC_DEBUG
+        //#ifdef ARCHES_PETSC_DEBUG
 
-	if(d_shsolver){
-	  value_sh[0] = -AB[IntVector(colX,colY,colZ)];
-	  value_sh[1] = -AS[IntVector(colX,colY,colZ)];
-	  value_sh[2] = -AW[IntVector(colX,colY,colZ)];
-	  value_sh[3] = AP[IntVector(colX,colY,colZ)];
-	  value_sh[4] = -AE[IntVector(colX,colY,colZ)];
-	  value_sh[5] = -AN[IntVector(colX,colY,colZ)];
-	  value_sh[6] = -AT[IntVector(colX,colY,colZ)];
-	}
-	else{
-	  value[0] = -AB[IntVector(colX,colY,colZ)];
-	  value[1] = -AS[IntVector(colX,colY,colZ)];
-	  value[2] = -AW[IntVector(colX,colY,colZ)];
-	  value[3] = AP[IntVector(colX,colY,colZ)];
-	}
+        if(d_shsolver){
+          value_sh[0] = -AB[IntVector(colX,colY,colZ)];
+          value_sh[1] = -AS[IntVector(colX,colY,colZ)];
+          value_sh[2] = -AW[IntVector(colX,colY,colZ)];
+          value_sh[3] = AP[IntVector(colX,colY,colZ)];
+          value_sh[4] = -AE[IntVector(colX,colY,colZ)];
+          value_sh[5] = -AN[IntVector(colX,colY,colZ)];
+          value_sh[6] = -AT[IntVector(colX,colY,colZ)];
+        }
+        else{
+          value[0] = -AB[IntVector(colX,colY,colZ)];
+          value[1] = -AS[IntVector(colX,colY,colZ)];
+          value[2] = -AW[IntVector(colX,colY,colZ)];
+          value[3] = AP[IntVector(colX,colY,colZ)];
+        }
 
-	int row;
-	if (d_shsolver) 
-	  row = col_sh[3];
-	else
-	  row = col[3];
+        int row;
+        if (d_shsolver) 
+          row = col_sh[3];
+        else
+          row = col[3];
 
-	if(d_shsolver){
-	  ierr = MatSetValues(A,1, &row, 7, col_sh, value_sh, INSERT_VALUES);
-	}
-	else{
-	  ierr = MatSetValues(A,1, &row, 4, col, value, INSERT_VALUES);
-	}
+        if(d_shsolver){
+          ierr = MatSetValues(A,1, &row, 7, col_sh, value_sh, INSERT_VALUES);
+        }
+        else{
+          ierr = MatSetValues(A,1, &row, 4, col, value, INSERT_VALUES);
+        }
 
-	if(ierr)
-	  throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
-	vecvalueb = SU[IntVector(colX,colY,colZ)];
-	vecvaluex = vars->cenint[IntVector(colX, colY, colZ)];
-	ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
-	if(ierr)
-	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-	ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-	if(ierr)
-	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+        if(ierr)
+          throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
+        vecvalueb = SU[IntVector(colX,colY,colZ)];
+        vecvaluex = vars->cenint[IntVector(colX, colY, colZ)];
+        ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
+        if(ierr)
+          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+        ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+        if(ierr)
+          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
 
 #ifdef ARCHES_PETSC_DEBUG
-	cerr << "ierr=" << ierr << '\n';
+        cerr << "ierr=" << ierr << '\n';
 #endif
       }
     }
@@ -433,10 +433,10 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	vecb[count] = SU[IntVector(colX,colY,colZ)];
-	vecx[count] = vars->cenint[IntVector(colX, colY, colZ)];
-	indexes[count] = l2g[IntVector(colX, colY, colZ)];	  
-	count++;
+        vecb[count] = SU[IntVector(colX,colY,colZ)];
+        vecx[count] = vars->cenint[IntVector(colX, colY, colZ)];
+        indexes[count] = l2g[IntVector(colX, colY, colZ)];        
+        count++;
       }
     }
   }
@@ -451,17 +451,17 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
 #if 0
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  vecvalueb = SU[IntVector(colX,colY,colZ)];
-	  vecvaluex = vars->cenint[IntVector(colX, colY, colZ)];
-	  int row = l2g[IntVector(colX, colY, colZ)];	  
-	  ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
-	  if(ierr)
-	    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-	  ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-	  if(ierr)
-	    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-	}
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          vecvalueb = SU[IntVector(colX,colY,colZ)];
+          vecvaluex = vars->cenint[IntVector(colX, colY, colZ)];
+          int row = l2g[IntVector(colX, colY, colZ)];     
+          ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
+          if(ierr)
+            throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+          ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+          if(ierr)
+            throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+        }
       }
     }
 #endif
@@ -680,8 +680,8 @@ Models_PetscSolver::copyRadSoln(const Patch* patch, RadiationVariables* vars)
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	int row = l2g[IntVector(colX, colY, colZ)]-rowinit;
-	vars->cenint[IntVector(colX, colY, colZ)] = xvec[row];
+        int row = l2g[IntVector(colX, colY, colZ)]-rowinit;
+        vars->cenint[IntVector(colX, colY, colZ)] = xvec[row];
       }
     }
   }

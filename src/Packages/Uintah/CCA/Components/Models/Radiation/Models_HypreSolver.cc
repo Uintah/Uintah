@@ -84,37 +84,37 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
       d_kspType = "2";
     else
       if (d_kspType == "gmres")
-	{
-	  d_kspFix = "gmres";
-	  db->getWithDefault("pctype", d_pcType, "jacobi");
-	  if (!d_shrad && ((d_pcType == "smg") ||(d_pcType == "pfmg")))
-	    throw ProblemSetupException("Discrete Ordinates generates a nonsymmetric Matrix, so smg/pfmg cannot be used as the pctype; use jacobi",
+        {
+          d_kspFix = "gmres";
+          db->getWithDefault("pctype", d_pcType, "jacobi");
+          if (!d_shrad && ((d_pcType == "smg") ||(d_pcType == "pfmg")))
+            throw ProblemSetupException("Discrete Ordinates generates a nonsymmetric Matrix, so smg/pfmg cannot be used as the pctype; use jacobi",
                                         __FILE__, __LINE__);
 
-	  if (d_pcType == "smg")
-	    d_kspType = "3";
-	  else
-	    if (d_pcType == "pfmg")
-	      d_kspType = "4";
-	    else
-	      if (d_pcType == "jacobi")
-		d_kspType = "5";
-	}
+          if (d_pcType == "smg")
+            d_kspType = "3";
+          else
+            if (d_pcType == "pfmg")
+              d_kspType = "4";
+            else
+              if (d_pcType == "jacobi")
+                d_kspType = "5";
+        }
       else
-	if (d_kspType == "cg")
-	  {
-	    d_kspFix = "cg";
-	    db->getWithDefault("pctype", d_pcType, "pfmg");
+        if (d_kspType == "cg")
+          {
+            d_kspFix = "cg";
+            db->getWithDefault("pctype", d_pcType, "pfmg");
 
-	    if (d_pcType == "smg")
-	      d_kspType = "6";
-	    else
-	      if (d_pcType == "pfmg")
-		d_kspType = "7";
-	      else
-		if (d_pcType == "jacobi")
-		  d_kspType = "8";
-	  }
+            if (d_pcType == "smg")
+              d_kspType = "6";
+            else
+              if (d_pcType == "pfmg")
+                d_kspType = "7";
+              else
+                if (d_pcType == "jacobi")
+                  d_kspType = "8";
+          }
 
   db->getWithDefault("max_iter", d_maxSweeps, 75);
   db->getWithDefault("underrelax", d_underrelax, 1.0);
@@ -126,8 +126,8 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
 // ***************************************************************************
 void
 Models_HypreSolver::gridSetup(const ProcessorGroup*,
-			  const Patch* patch,
-			  bool plusX, bool plusY, bool plusZ)
+                          const Patch* patch,
+                          bool plusX, bool plusY, bool plusZ)
 {
   int nx, ny, nz;
   int bx, by, bz;
@@ -198,13 +198,13 @@ Models_HypreSolver::gridSetup(const ProcessorGroup*,
   for (int iz = 0; iz < bz; iz++) {
     for (int iy = 0; iy < by; iy++) {
       for (int ix = 0; ix < bx; ix++) {
-	  d_ilower[ib][0] = idxLo.x();
-	  d_iupper[ib][0] = idxHi.x();
-	  d_ilower[ib][1] = idxLo.y();
-	  d_iupper[ib][1] = idxHi.y();
-	  d_ilower[ib][2] = idxLo.z();
-	  d_iupper[ib][2] = idxHi.z();
-	  ib++;
+          d_ilower[ib][0] = idxLo.x();
+          d_iupper[ib][0] = idxHi.x();
+          d_ilower[ib][1] = idxLo.y();
+          d_iupper[ib][1] = idxHi.y();
+          d_ilower[ib][2] = idxLo.z();
+          d_iupper[ib][2] = idxHi.z();
+          ib++;
       }
     }
   }
@@ -213,9 +213,9 @@ Models_HypreSolver::gridSetup(const ProcessorGroup*,
   for (int iz = 0; iz < bz; iz++) {
     for (int iy = 0; iy < by; iy++) {
       for (int ix = 0; ix < bx; ix++) {
-	printf("  d_ilower[%d](i,j,k)= (%d, %d, %d)\n",ib, d_ilower[ib][0], d_ilower[ib][1],   d_ilower[ib][2]);
-	printf("  d_iupper[%d](i,j,k)= (%d, %d, %d)\n",ib, d_iupper[ib][0], d_iupper[ib][1],   d_iupper[ib][2]);
-	ib++;
+        printf("  d_ilower[%d](i,j,k)= (%d, %d, %d)\n",ib, d_ilower[ib][0], d_ilower[ib][1],   d_ilower[ib][2]);
+        printf("  d_iupper[%d](i,j,k)= (%d, %d, %d)\n",ib, d_iupper[ib][0], d_iupper[ib][1],   d_iupper[ib][2]);
+        ib++;
       }
     }
   }
@@ -258,17 +258,17 @@ Models_HypreSolver::gridSetup(const ProcessorGroup*,
 // ****************************************************************************
 void 
 Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
-			  const Patch* patch,
-			  RadiationVariables* vars,
-			  bool plusX, bool plusY, bool plusZ,
-			  CCVariable<double>& SU,
-			  CCVariable<double>& AB,
-			  CCVariable<double>& AS,
-			  CCVariable<double>& AW,
-			  CCVariable<double>& AP,
-			  CCVariable<double>& AE,
-			  CCVariable<double>& AN,
-			  CCVariable<double>& AT)
+                          const Patch* patch,
+                          RadiationVariables* vars,
+                          bool plusX, bool plusY, bool plusZ,
+                          CCVariable<double>& SU,
+                          CCVariable<double>& AB,
+                          CCVariable<double>& AS,
+                          CCVariable<double>& AW,
+                          CCVariable<double>& AP,
+                          CCVariable<double>& AE,
+                          CCVariable<double>& AN,
+                          CCVariable<double>& AT)
 
 { 
   double start_time = Time::currentSeconds();
@@ -318,19 +318,19 @@ Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	d_value[i] = -AB[IntVector(colX,colY,colZ)];
-	d_value[i+1] = -AS[IntVector(colX,colY,colZ)];
-	d_value[i+2] = -AW[IntVector(colX,colY,colZ)];
-	d_value[i+3] = AP[IntVector(colX,colY,colZ)];
+        d_value[i] = -AB[IntVector(colX,colY,colZ)];
+        d_value[i+1] = -AS[IntVector(colX,colY,colZ)];
+        d_value[i+2] = -AW[IntVector(colX,colY,colZ)];
+        d_value[i+3] = AP[IntVector(colX,colY,colZ)];
 
 #if 0
-	cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
-	cerr << "value[AB]=" << d_value[i] << endl;
-	cerr << "value[AS]=" << d_value[i+1] << endl;
-	cerr << "value[AW]=" << d_value[i+2] << endl;
-	cerr << "value[AP]=" << d_value[i+3] << endl;
+        cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
+        cerr << "value[AB]=" << d_value[i] << endl;
+        cerr << "value[AS]=" << d_value[i+1] << endl;
+        cerr << "value[AW]=" << d_value[i+2] << endl;
+        cerr << "value[AP]=" << d_value[i+3] << endl;
 #endif
-	    i = i + d_stencilSize;
+            i = i + d_stencilSize;
       }
     }
   }
@@ -338,7 +338,7 @@ Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
   for (int ib = 0; ib < d_nblocks; ib++)
     {
       HYPRE_StructMatrixSetBoxValues(d_A, d_ilower[ib], d_iupper[ib], d_stencilSize,
-				     d_stencilIndices, d_value);
+                                     d_stencilIndices, d_value);
     }
 
 
@@ -358,9 +358,9 @@ Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	d_value[i] = SU[IntVector(colX,colY,colZ)];
-	//cerr << "b[" << i << "] =" << d_value[i] << endl;
-	i++;
+        d_value[i] = SU[IntVector(colX,colY,colZ)];
+        //cerr << "b[" << i << "] =" << d_value[i] << endl;
+        i++;
       }
     }
   }
@@ -375,9 +375,9 @@ Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	d_value[i] = vars->cenint[IntVector(colX, colY, colZ)];
-	//cerr << "x0[" << i << "] =" << d_value[i] << endl;
-	i++;;
+        d_value[i] = vars->cenint[IntVector(colX, colY, colZ)];
+        //cerr << "x0[" << i << "] =" << d_value[i] << endl;
+        i++;;
       }
     }
   }
@@ -505,9 +505,9 @@ Models_HypreSolver::radLinearSolve()
       HYPRE_StructSMGSetNumPostRelax(precond, n_post);
       HYPRE_StructSMGSetLogging(precond, 0);
       HYPRE_GMRESSetPrecond( (HYPRE_Solver) solver,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
-			   (HYPRE_Solver) precond);
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
+                           (HYPRE_Solver) precond);
       //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
 
@@ -525,9 +525,9 @@ Models_HypreSolver::radLinearSolve()
       /*HYPRE_StructPFMGSetDxyz(precond, dxyz);*/
       HYPRE_StructPFMGSetLogging(precond, 0);
       HYPRE_GMRESSetPrecond( (HYPRE_Solver) solver,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
-			   (HYPRE_Solver) precond);
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
+                           (HYPRE_Solver) precond);
       //      cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
 
@@ -538,9 +538,9 @@ Models_HypreSolver::radLinearSolve()
       HYPRE_StructJacobiSetTol(precond, d_residual);
       HYPRE_StructJacobiSetZeroGuess(precond);
       HYPRE_GMRESSetPrecond( (HYPRE_Solver) solver,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
-			   (HYPRE_Solver) precond);
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
+                           (HYPRE_Solver) precond);
       //      cerr << "Jacobi Precond time = " << Time::currentSeconds()-start_time << endl;
     }
     //    double dummy_start = Time::currentSeconds();
@@ -586,9 +586,9 @@ Models_HypreSolver::radLinearSolve()
       HYPRE_StructSMGSetNumPostRelax(precond, n_post);
       HYPRE_StructSMGSetLogging(precond, 0);
       HYPRE_PCGSetPrecond( (HYPRE_Solver) solver,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
-			   (HYPRE_Solver) precond);
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
+                           (HYPRE_Solver) precond);
       //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
   
@@ -606,9 +606,9 @@ Models_HypreSolver::radLinearSolve()
       /*HYPRE_StructPFMGSetDxyz(precond, dxyz);*/
       HYPRE_StructPFMGSetLogging(precond, 0);
       HYPRE_PCGSetPrecond( (HYPRE_Solver) solver,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
-			   (HYPRE_Solver) precond);
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
+                           (HYPRE_Solver) precond);
       //      cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
 
@@ -619,9 +619,9 @@ Models_HypreSolver::radLinearSolve()
       HYPRE_StructJacobiSetTol(precond, d_residual);
       HYPRE_StructJacobiSetZeroGuess(precond);
       HYPRE_PCGSetPrecond( (HYPRE_Solver) solver,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
-			   (HYPRE_Solver) precond);
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
+                           (HYPRE_Solver) precond);
       //      cerr << "Jacobi Precond time = " << Time::currentSeconds()-start_time << endl;
     }
     
@@ -685,9 +685,9 @@ Models_HypreSolver::copyRadSoln(const Patch* patch, RadiationVariables* vars)
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-  	vars->cenint[IntVector(colX, colY, colZ)] = xvec[i];
-	//cerr << "xvec[" << i << "] = " << xvec[i] << endl;
-	i++;
+        vars->cenint[IntVector(colX, colY, colZ)] = xvec[i];
+        //cerr << "xvec[" << i << "] = " << xvec[i] << endl;
+        i++;
       }
     }
   }
