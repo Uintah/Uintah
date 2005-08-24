@@ -37,7 +37,7 @@ WARNING
   class IdealGas : public EquationOfState {
   public:
 
-   IdealGas(ProblemSpecP& ps);
+    IdealGas(ProblemSpecP& ps, ICEMaterial* ice_matl);
    virtual ~IdealGas();
 
    virtual double computeRhoMicro(double press,double gamma,

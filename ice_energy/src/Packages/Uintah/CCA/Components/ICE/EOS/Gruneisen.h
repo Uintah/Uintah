@@ -38,7 +38,7 @@ WARNING
       class Gruneisen : public EquationOfState {
       public:
 
-        Gruneisen(ProblemSpecP& ps);
+    Gruneisen(ProblemSpecP& ps, ICEMaterial* ice_matl);
         virtual ~Gruneisen();
         
         virtual double computeRhoMicro(double press,double gamma,

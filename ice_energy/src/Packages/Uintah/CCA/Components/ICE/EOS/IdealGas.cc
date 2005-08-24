@@ -8,7 +8,8 @@
 
 using namespace Uintah;
 
-IdealGas::IdealGas(ProblemSpecP& )
+IdealGas::IdealGas(ProblemSpecP&, ICEMaterial* ice_matl )
+  : EquationOfState(ice_matl)
 {
    // Constructor
 }

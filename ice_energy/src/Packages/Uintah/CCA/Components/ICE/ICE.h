@@ -904,10 +904,12 @@ namespace Uintah {
       ModelInfo* d_modelInfo;
       
       struct TransportedVariable {
-       const MaterialSubset* matls;
-       const VarLabel* var;
-       const VarLabel* src;
-       const VarLabel* var_Lagrangian;
+        const MaterialSubset* matls;
+        Task::WhichDW fromDW;
+        const VarLabel* fromVar;
+        const VarLabel* var;
+        const VarLabel* src;
+        const VarLabel* var_Lagrangian;
       };
       struct AMR_refluxVariable {
        const MaterialSubset* matls;
@@ -922,8 +924,10 @@ namespace Uintah {
        ICEModelSetup();
        virtual ~ICEModelSetup();
        virtual void registerTransportedVariable(const MaterialSubset* matls,
-                                           const VarLabel* var,
-                                           const VarLabel* src);
+                                                Task::WhichDW fromDW,
+                                                const VarLabel* fromVar,
+                                                const VarLabel* var,
+                                                const VarLabel* src);
                                            
        virtual void registerAMR_RefluxVariable(const MaterialSubset* matls,
 						     const VarLabel* var);  

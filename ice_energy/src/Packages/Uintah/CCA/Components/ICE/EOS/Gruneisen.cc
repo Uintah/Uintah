@@ -8,7 +8,8 @@
 
 using namespace Uintah;
 
-Gruneisen::Gruneisen(ProblemSpecP& ps)
+Gruneisen::Gruneisen(ProblemSpecP& ps, ICEMaterial* ice_matl)
+  : EquationOfState(ice_matl)
 {
    // Constructor
   ps->require("A",A);

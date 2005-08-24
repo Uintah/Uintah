@@ -100,6 +100,8 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
                                   __FILE__, __LINE__);
 
     setup->registerTransportedVariable(mymatls->getSubset(0),
+                                       Task::OldDW,
+				       stream->massFraction_CCLabel,
 				       stream->massFraction_CCLabel,
 				       stream->massFraction_source_CCLabel);
     streams.push_back(stream);

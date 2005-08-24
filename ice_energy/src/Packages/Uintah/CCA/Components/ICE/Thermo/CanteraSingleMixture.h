@@ -39,9 +39,10 @@ WARNING
   
 ****************************************/
 
+  class ModelSetup;
   class CanteraSingleMixture : public ThermoInterface {
   public:
-    CanteraSingleMixture(ProblemSpecP& ps);
+    CanteraSingleMixture(ProblemSpecP& ps, ModelSetup* setup, ICEMaterial* ice_matl);
     virtual ~CanteraSingleMixture();
 
     virtual void scheduleInitializeThermo(SchedulerP& sched,
@@ -70,24 +71,39 @@ WARNING
 
     virtual void compute_thermalDiffusivity(CellIterator iter,
                                             CCVariable<double>& thermalDiffusivity,
-                                            DataWarehouse* dw,
+                                            DataWarehouse* dw, const Patch* patch,
+                                            int matl, int numGhostCells,
                                             constCCVariable<double>& int_eng,
                                             constCCVariable<double>& sp_vol);
     virtual void compute_thermalConductivity(CellIterator iter,
                                              CCVariable<double>& thermalDiffusivity,
-                                             DataWarehouse* dw);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_cp(CellIterator iter, CCVariable<double>& cp,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_cv(CellIterator iter, CCVariable<double>& cv,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_R(CellIterator iter, CCVariable<double>& R,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_Temp(CellIterator iter, CCVariable<double>& temp,
-                              DataWarehouse* dw, constCCVariable<double>& int_eng);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                                 DataWarehouse* dw, constCCVariable<double>& temp);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
   private:
     std::string d_speciesMix;
     double d_thermalConductivity;

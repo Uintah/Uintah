@@ -7,7 +7,7 @@
 
 using namespace Uintah;
 
-PropertyBase* CombinedFactory::create(ProblemSpecP& ps)
+PropertyBase* CombinedFactory::create(ProblemSpecP& ps, ModelSetup* setup, ICEMaterial* ice_matl)
 {
   ProblemSpecP child = ps->findBlock("Combined");
   if(!child)

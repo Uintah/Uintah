@@ -41,7 +41,7 @@ WARNING
 
   class EquationOfState : public PropertyBase {
   public:
-    EquationOfState();
+    EquationOfState(ICEMaterial* ice_matl);
     virtual ~EquationOfState();
 
     // Per cell
