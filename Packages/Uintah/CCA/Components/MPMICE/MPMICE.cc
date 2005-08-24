@@ -2753,7 +2753,9 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    taskName << "MPMICE::coarsenVariable(" << variable->getName() << (modifies?" modified":"") << ")";
    cerr << "adding " << taskName.str() << " on patches " << *patches << '\n';
 
-   // the sgis don't like accepting a templated function over a function call for some reason...
+   // The SGI compiler does't like accepting a templated function over
+   // a function call for some reason...  We use this hack to force it
+   // to figure out the correct type of the function.
    void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
                         DataWarehouse*, DataWarehouse*, const VarLabel*, T, bool);
    func = &MPMICE::coarsenVariableCC<T>;
