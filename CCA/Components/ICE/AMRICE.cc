@@ -190,11 +190,6 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       
-      // dummy variable needed to keep the taskgraph in sync
-      //CCVariable<int> dummy;
-      //fine_new_dw->allocateAndPut(dummy, lb->AMR_SyncTaskgraphLabel,0, patch);
-      
-      
       for (int m = 0; m < numMatls; m++) {
         ICEMaterial* matl = d_sharedState->getICEMaterial(m);
         int indx = matl->getDWIndex();    
@@ -243,12 +238,13 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
             TransportedVariable* tvar = *t_iter;
 
             if(tvar->matls->contains(indx)){
+              string Labelname = tvar->var->getName();
               CCVariable<double> q_CC;
               fine_new_dw->getModifiable(q_CC, tvar->var, indx, patch);
               
               if(switchDebug_AMR_refineInterface){ 
                 string name = tvar->var->getName();
-                printData(indx, patch, 1, "TOP_refineInterface", name, q_CC);
+                printData(indx, patch, 1, "TOP_refineInterface", Labelname, q_CC);
               }              
               
               refineCoarseFineBoundaries(patch, q_CC, fine_new_dw,
@@ -256,7 +252,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
               
               if(switchDebug_AMR_refineInterface){ 
                 string name = tvar->var->getName();
-                printData(indx, patch, 1, "BOT_refineInterface", name, q_CC);
+                printData(indx, patch, 1, "BOT_refineInterface", Labelname, q_CC);
               }
             }
           }
@@ -299,119 +295,120 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
   cout_dbg << *patch << " ";
   patch->printPatchBCs(cout_dbg);
   
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
+  //__________________________________
+  // Iterate over coarsefine interface faces
+  vector<Patch::FaceType>::const_iterator iter;  
+  for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
+       iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
 
-   if(patch->getBCType(face) != Patch::Neighbor) {
-      //__________________________________
-      // fine level hi & lo cell iter limits
-      // coarselevel hi and low index
-      CellIterator iter_tmp = patch->getFaceCellIterator(face, "plusEdgeCells");
-      IntVector fl = iter_tmp.begin();
-      IntVector fh = iter_tmp.end(); 
-      IntVector refineRatio = fineLevel->getRefinementRatio();
-      IntVector coarseLow  = fineLevel->mapCellToCoarser(fl);
-      IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
+    //__________________________________
+    // fine level hi & lo cell iter limits
+    // coarselevel hi and low index
+    CellIterator iter_tmp = patch->getFaceCellIterator(face, "plusEdgeCells");
+    IntVector fl = iter_tmp.begin();
+    IntVector fh = iter_tmp.end(); 
+    IntVector refineRatio = fineLevel->getRefinementRatio();
+    IntVector coarseLow  = fineLevel->mapCellToCoarser(fl);
+    IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
 
 
-      IntVector axes = patch->faceAxes(face);
-      int P_dir = axes[0];  // principal direction      
-        
-      //__________________________________
-      // enlarge the coarselevel foot print by oneCell
-      // x-           x+        y-       y+       z-        z+
-      // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
-      IntVector oneCell = patch->faceDirection(face);
-      if( face == Patch::xminus || face == Patch::yminus 
-                                || face == Patch::zminus) {
-        coarseHigh -= oneCell;
+    IntVector axes = patch->faceAxes(face);
+    int P_dir = axes[0];  // principal direction      
+
+    //__________________________________
+    // enlarge the coarselevel foot print by oneCell
+    // x-           x+        y-       y+       z-        z+
+    // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
+    IntVector oneCell = patch->faceDirection(face);
+    if( face == Patch::xminus || face == Patch::yminus 
+                              || face == Patch::zminus) {
+      coarseHigh -= oneCell;
+    }
+    if( face == Patch::xplus || face == Patch::yplus 
+                             || face == Patch::zplus) {
+      coarseLow  -= oneCell;
+    }
+
+    //__________________________________
+    // for higher order interpolation increase the coarse level foot print
+    // by the order of interpolation - 1
+    if(d_orderOfInterpolation >= 1){
+      IntVector interOrder(1,1,1);
+      coarseLow  -= interOrder;
+      coarseHigh += interOrder;
+    } 
+    /*
+    //__________________________________
+    // If the face is orthogonal to a neighboring
+    // patch face increase the coarse level foot print
+    IntVector expandCellsLo = IntVector(1,1,1) - patch->neighborsLow();
+    IntVector expandCellsHi = IntVector(1,1,1) - patch->neighborsHigh();
+
+    // in the face normal direction ignore the cell expansion
+    expandCellsLo[P_dir] = 0;
+    expandCellsHi[P_dir] = 0;
+
+    coarseHigh += expandCellsHi;
+    coarseLow  -= expandCellsLo;
+    */
+    //__________________________________
+    // coarseHigh and coarseLow cannot lie outside
+    // of the coarselevel index range
+    IntVector cl, ch;
+    coarseLevel->findCellIndexRange(cl,ch);
+    coarseLow   = Max(coarseLow, cl);
+    coarseHigh  = Min(coarseHigh, ch); 
+
+    cout_dbg<< " face " << face << " refineRatio "<< refineRatio
+            << " BC type " << patch->getBCType(face)
+            << " FineLevel iterator" << fl << " " << fh 
+      /*              << " expandCellsHi " << expandCellsHi
+            << " expandCellsLo " << expandCellsLo
+      */              << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
+
+    //__________________________________
+    // subCycleProgress_var near 1.0 
+    //  interpolation using the coarse_new_dw data
+
+    if(subCycleProgress_var > 1-1.e-10){ 
+     constCCVariable<varType> q_NewDW;
+     coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
+                           coarseLow, coarseHigh);
+
+     selectInterpolator(q_NewDW, d_orderOfInterpolation, coarseLevel, 
+                        fineLevel, refineRatio, fl,fh, Q);
+    } else {    
+
+    //__________________________________
+    // subCycleProgress_var somewhere between 0 or 1
+    //  interpolation from both coarse new and old dw 
+      constCCVariable<varType> q_OldDW, q_NewDW;
+      coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
+                           coarseLow, coarseHigh);
+      coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
+                           coarseLow, coarseHigh);
+
+      CCVariable<varType> Q_old, Q_new;
+      fine_new_dw->allocateTemporary(Q_old, patch);
+      fine_new_dw->allocateTemporary(Q_new, patch);
+
+      Q_old.initialize(varType(d_EVIL_NUM));
+      Q_new.initialize(varType(d_EVIL_NUM));
+
+      selectInterpolator(q_OldDW, d_orderOfInterpolation, coarseLevel, 
+                        fineLevel,refineRatio, fl,fh, Q_old);
+
+      selectInterpolator(q_NewDW, d_orderOfInterpolation, coarseLevel, 
+                        fineLevel,refineRatio, fl,fh, Q_new);
+
+      // Linear interpolation in time
+      for(CellIterator iter(fl,fh); !iter.done(); iter++){
+        IntVector f_cell = *iter;
+        Q[f_cell] = (1. - subCycleProgress_var)*Q_old[f_cell] 
+                        + subCycleProgress_var *Q_new[f_cell];
       }
-      if( face == Patch::xplus || face == Patch::yplus 
-                               || face == Patch::zplus) {
-        coarseLow  -= oneCell;
-      }
-      
-      //__________________________________
-      // for higher order interpolation increase the coarse level foot print
-      // by the order of interpolation - 1
-      if(d_orderOfInterpolation >= 1){
-        IntVector interOrder(1,1,1);
-        coarseLow  -= interOrder;
-        coarseHigh += interOrder;
-      } 
-      /*
-      //__________________________________
-      // If the face is orthogonal to a neighboring
-      // patch face increase the coarse level foot print
-      IntVector expandCellsLo = IntVector(1,1,1) - patch->neighborsLow();
-      IntVector expandCellsHi = IntVector(1,1,1) - patch->neighborsHigh();
-         
-      // in the face normal direction ignore the cell expansion
-      expandCellsLo[P_dir] = 0;
-      expandCellsHi[P_dir] = 0;
-      
-      coarseHigh += expandCellsHi;
-      coarseLow  -= expandCellsLo;
-      */
-      //__________________________________
-      // coarseHigh and coarseLow cannot lie outside
-      // of the coarselevel index range
-      IntVector cl, ch;
-      coarseLevel->findCellIndexRange(cl,ch);
-      coarseLow   = Max(coarseLow, cl);
-      coarseHigh  = Min(coarseHigh, ch); 
-    
-      cout_dbg<< " face " << face << " refineRatio "<< refineRatio
-              << " BC type " << patch->getBCType(face)
-              << " FineLevel iterator" << fl << " " << fh 
-        /*              << " expandCellsHi " << expandCellsHi
-              << " expandCellsLo " << expandCellsLo
-        */              << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
-
-      //__________________________________
-      // subCycleProgress_var near 1.0 
-      //  interpolation using the coarse_new_dw data
-
-      if(subCycleProgress_var > 1-1.e-10){ 
-       constCCVariable<varType> q_NewDW;
-       coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
-                             coarseLow, coarseHigh);
-                             
-       selectInterpolator(q_NewDW, d_orderOfInterpolation, coarseLevel, 
-                          fineLevel, refineRatio, fl,fh, Q);
-      } else {    
-                      
-      //__________________________________
-      // subCycleProgress_var somewhere between 0 or 1
-      //  interpolation from both coarse new and old dw 
-        constCCVariable<varType> q_OldDW, q_NewDW;
-        coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
-                             coarseLow, coarseHigh);
-        coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
-                             coarseLow, coarseHigh);
-                             
-        CCVariable<varType> Q_old, Q_new;
-        fine_new_dw->allocateTemporary(Q_old, patch);
-        fine_new_dw->allocateTemporary(Q_new, patch);
-        
-        Q_old.initialize(varType(d_EVIL_NUM));
-        Q_new.initialize(varType(d_EVIL_NUM));
-
-        selectInterpolator(q_OldDW, d_orderOfInterpolation, coarseLevel, 
-                          fineLevel,refineRatio, fl,fh, Q_old);
-                          
-        selectInterpolator(q_NewDW, d_orderOfInterpolation, coarseLevel, 
-                          fineLevel,refineRatio, fl,fh, Q_new);
-
-        // Linear interpolation in time
-        for(CellIterator iter(fl,fh); !iter.done(); iter++){
-          IntVector f_cell = *iter;
-          Q[f_cell] = (1. - subCycleProgress_var)*Q_old[f_cell] 
-                          + subCycleProgress_var *Q_new[f_cell];
-        }
-      }
-
-    }  // valid face
+    }
   }  // face loop
   //____ B U L L E T   P R O O F I N G_______ 
   // All values must be initialized at this point
@@ -1911,7 +1908,7 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->computes(lb->mag_grad_vol_frac_CCLabel);
   t->computes(lb->mag_grad_press_CCLabel);
   
-  t->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
   t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
   
   sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
@@ -2023,7 +2020,7 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     constCCVariable<double> press_CC;
     CCVariable<double> mag_grad_press_CC;
     
-    new_dw->get(press_CC, lb->press_CCLabel,    0,patch,gac,1);
+    new_dw->get(press_CC, lb->press_CCLabel, 0,patch,gac,1);
     new_dw->allocateAndPut(mag_grad_press_CC,
                        lb->mag_grad_press_CCLabel,  0,patch);
     mag_grad_press_CC.initialize(0.0);
