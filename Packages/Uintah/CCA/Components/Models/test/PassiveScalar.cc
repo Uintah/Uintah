@@ -102,7 +102,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->name  = "f";
   
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
-  const TypeDescription* td_CCVector = CCVariable<Vector>::getTypeDescription();
+  //const TypeDescription* td_CCVector = CCVariable<Vector>::getTypeDescription();
     
   d_scalar->scalar_CCLabel =     VarLabel::create("scalar-f",       td_CCdouble);
   d_scalar->diffusionCoefLabel = VarLabel::create("scalar-diffCoef",td_CCdouble);
