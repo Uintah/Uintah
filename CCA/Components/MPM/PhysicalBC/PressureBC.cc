@@ -28,7 +28,7 @@ PressureBC::PressureBC(ProblemSpecP& ps)
   //std::cerr << "PressureBC::go_type = " << go_type << endl;
   if (go_type == "box") {
     d_surface = new BoxGeometryPiece(child);
-    Box box = d_surface->getBoundingBox();
+    //Box box = d_surface->getBoundingBox();
     d_surfaceType = "box";
   } else if (go_type == "sphere") {
     d_surface = new SphereGeometryPiece(child);
@@ -84,11 +84,11 @@ PressureBC::flagMaterialPoint(const Point& p,
     double tol = dxpp.length();
     CylinderGeometryPiece* cgp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
     GeometryPiece* outer = new CylinderGeometryPiece(cgp->top(), 
-						     cgp->bottom(), 
-						     cgp->radius()+tol);
+                                                     cgp->bottom(), 
+                                                     cgp->radius()+tol);
     GeometryPiece* inner = new CylinderGeometryPiece(cgp->top(), 
-						     cgp->bottom(), 
-						     cgp->radius()-tol);
+                                                     cgp->bottom(), 
+                                                     cgp->radius()-tol);
     GeometryPiece* volume = new DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p)) flag = true;
     delete volume;
@@ -98,9 +98,9 @@ PressureBC::flagMaterialPoint(const Point& p,
     double tol = dxpp.length();
     SphereGeometryPiece* sgp = dynamic_cast<SphereGeometryPiece*>(d_surface);
     GeometryPiece* outer = new SphereGeometryPiece(sgp->origin(), 
-						   sgp->radius()+tol);
+                                                   sgp->radius()+tol);
     GeometryPiece* inner = new SphereGeometryPiece(sgp->origin(), 
-						   sgp->radius()-tol);
+                                                   sgp->radius()-tol);
     GeometryPiece* volume = new DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p)) flag = true;
     delete volume;

@@ -37,9 +37,9 @@ using namespace std;
 using std::vector;
 using std::string;
 
-void Crack::addComputesAndRequiresAdjustCrackContactInterpolated(
-            Task* t,const PatchSet* /*patches*/,
-            const MaterialSet* matls) const
+void
+Crack::addComputesAndRequiresAdjustCrackContactInterpolated(Task* t,const PatchSet* /*patches*/,
+                                                            const MaterialSet* matls) const
 {
   const MaterialSubset* mss = matls->getUnion();
 
@@ -62,11 +62,12 @@ void Crack::addComputesAndRequiresAdjustCrackContactInterpolated(
   t->computes(lb->frictionalWorkLabel);
 }
 
-void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
+void
+Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* /*old_dw*/,
+                                      DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -129,20 +130,20 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
         norm=GCrackNorm[m][c];
         if(norm.length()<1.e-16) continue;  // should not happen now, but ...
 
-	// Get nodal solutions
+        // Get nodal solutions
         ma=gmass[m][c];
         va=gvelocity[m][c];
         mb=Gmass[m][c];
         vb=Gvelocity[m][c];
         vc=(va*ma+vb*mb)/(ma+mb);
-	
-        // Check if contact	
-	short contact=NO;
-	Vector ua=gdisplacement[m][c];
-	Vector ub=Gdisplacement[m][c];
-	if(Dot((ub-ua),norm)>0.) contact=YES;  
-	  
-	// If contact, adjust velocity field 
+        
+        // Check if contact     
+        short contact=NO;
+        Vector ua=gdisplacement[m][c];
+        Vector ub=Gdisplacement[m][c];
+        if(Dot((ub-ua),norm)>0.) contact=YES;  
+          
+        // If contact, adjust velocity field 
         if(!contact) { // No contact
           gvelocity[m][c]=gvelocity[m][c];
           Gvelocity[m][c]=Gvelocity[m][c];
@@ -214,9 +215,10 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
   }  //End of loop over patches
 }
 
-void Crack::addComputesAndRequiresAdjustCrackContactIntegrated(Task* t,
-                                const PatchSet* /*patches*/,
-                                const MaterialSet* matls) const
+void
+Crack::addComputesAndRequiresAdjustCrackContactIntegrated(Task* t,
+                                                          const PatchSet* /*patches*/,
+                                                          const MaterialSet* matls) const
 {
   const MaterialSubset* mss = matls->getUnion();
 
@@ -241,15 +243,16 @@ void Crack::addComputesAndRequiresAdjustCrackContactIntegrated(Task* t,
 
 }
 
-void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
+void
+Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-	      
+              
     double mua=0.0,mub=0.0;
     double ma,mb,dvan,dvbn,dvat,dvbt,ratioa,ratiob;
     Vector aa,ab,va0,va,vb0,vb,vc,dva,dvb,ta,tb,na,nb,norm;
@@ -320,24 +323,24 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
         norm=GCrackNorm[m][c];
         if(norm.length()<1.e-16) continue;   // should not happen now, but ...
 
-	// Get nodal solutions
+        // Get nodal solutions
         ma=gmass[m][c];           // mass above crack
         mb=Gmass[m][c];           // mass below crack
         aa=gacceleration[m][c];   // acceleration above crack
-        ab=Gacceleration[m][c];	  // acceleration below crack
+        ab=Gacceleration[m][c];   // acceleration below crack
         va0=gvelocity[m][c];      // velocity before integration (above crack)
         vb0=Gvelocity[m][c];      // velocity before integration (below crack)
         va=gvelocity_star[m][c];  // velocity after integration  (above crack)
         vb=Gvelocity_star[m][c];  // velocity after integration  (below crack)
         vc=(va*ma+vb*mb)/(ma+mb); // center-of-mass velocity
-			
-	// Check if contact
-	short contact=NO;
-	Vector ua=gdisplacement[m][c]+delT*(va0+va)/2.;
-	Vector ub=Gdisplacement[m][c]+delT*(vb0+vb)/2.;
-	if(Dot((ub-ua),norm)>0.) contact=YES;	
-	  
-	// If contact, adjust velocity field  
+                        
+        // Check if contact
+        short contact=NO;
+        Vector ua=gdisplacement[m][c]+delT*(va0+va)/2.;
+        Vector ub=Gdisplacement[m][c]+delT*(vb0+vb)/2.;
+        if(Dot((ub-ua),norm)>0.) contact=YES;   
+          
+        // If contact, adjust velocity field  
         if(!contact) { // No contact
           gvelocity_star[m][c]=gvelocity_star[m][c];
           gacceleration[m][c]=gacceleration[m][c];
@@ -387,7 +390,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
                gacceleration[m][c]=aa+(vb-va)*mb/(ma+mb)/delT;
                frictionWork[m][c]+=0.0;
             }
-	    
+            
             // for velocity field below crack
             Vector deltvb(0.,0.,0.);
             dvb=vb-vc;

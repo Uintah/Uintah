@@ -93,7 +93,7 @@ Vector
 SpecifiedBodyContact::findVelFromProfile(double t) const
 {
   int smin = 0;
-  int smax = d_vel_profile.size()-1;
+  int smax = (int)(d_vel_profile.size())-1;
   double tmin = d_vel_profile[0].first;
   double tmax = d_vel_profile[smax].first;
   if(t<=tmin)
@@ -200,10 +200,10 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
 
 // apply boundary conditions to the interpolated velocity v^k+1
 void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw)
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int p=0;p<patches->size();p++){
@@ -268,8 +268,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 }
 
 void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
-					     const PatchSet* patches,
-					     const MaterialSet* ms) 
+                                             const PatchSet* patches,
+                                             const MaterialSet* ms) 
 {
   Task * t = new Task("SpecifiedBodyContact::exMomInterpolated",
                       this, &SpecifiedBodyContact::exMomInterpolated);
@@ -282,8 +282,8 @@ void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched
 }
 
 void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
-					     const PatchSet* patches,
-					     const MaterialSet* ms) 
+                                             const PatchSet* patches,
+                                             const MaterialSet* ms) 
 {
   Task * t = new Task("SpecifiedBodyContact::exMomIntegrated", 
                       this, &SpecifiedBodyContact::exMomIntegrated);

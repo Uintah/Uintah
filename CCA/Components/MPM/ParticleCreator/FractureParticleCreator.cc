@@ -7,8 +7,8 @@ using namespace Uintah;
 using std::vector;
 
 FractureParticleCreator::FractureParticleCreator(MPMMaterial* matl,
-						 MPMLabel* lb,
-						 MPMFlags* flags,
+                                                 MPMLabel* lb,
+                                                 MPMFlags* flags,
                                                  SimulationStateP& sharedState)
   :  ParticleCreator(matl,lb,flags,sharedState)
 {
@@ -26,18 +26,18 @@ FractureParticleCreator::~FractureParticleCreator()
 }
 
 ParticleSubset* FractureParticleCreator::createParticles(MPMMaterial* matl,
-					      particleIndex numParticles,
-					      CCVariable<short int>& cellNAPID,
-					      const Patch* patch,
-					      DataWarehouse* new_dw,
-					      MPMLabel* lb,
-					      vector<GeometryObject*>& d_geom_objs)
+                                              particleIndex numParticles,
+                                              CCVariable<short int>& cellNAPID,
+                                              const Patch* patch,
+                                              DataWarehouse* new_dw,
+                                              MPMLabel* lb,
+                                              vector<GeometryObject*>& d_geom_objs)
 {
 
  ParticleSubset* subset = ParticleCreator::createParticles(matl,numParticles,
-							   cellNAPID,patch,
-							   new_dw,lb,
-							   d_geom_objs);
+                                                           cellNAPID,patch,
+                                                           new_dw,lb,
+                                                           d_geom_objs);
 
  //ParticleVariable<Point> position0;
  //constParticleVariable<Point> position;
@@ -52,7 +52,7 @@ ParticleSubset* FractureParticleCreator::createParticles(MPMMaterial* matl,
 
 particleIndex 
 FractureParticleCreator::countParticles(const Patch* patch,
-					vector<GeometryObject*>& d_geom_objs) 
+                                        vector<GeometryObject*>& d_geom_objs) 
 {
 
   return ParticleCreator::countParticles(patch,d_geom_objs);
@@ -60,7 +60,7 @@ FractureParticleCreator::countParticles(const Patch* patch,
 
 particleIndex 
 FractureParticleCreator::countAndCreateParticles(const Patch* patch,
-						 GeometryObject* obj) 
+                                                 GeometryObject* obj) 
 {
 
   return ParticleCreator::countAndCreateParticles(patch,obj);
@@ -68,8 +68,8 @@ FractureParticleCreator::countAndCreateParticles(const Patch* patch,
 
 
 void
-FractureParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
-							MPMLabel* lb)
+FractureParticleCreator::registerPermanentParticleState(MPMMaterial* /*matl*/,
+                                                        MPMLabel* lb)
 {
   //particle_state.push_back(lb->pX0Label);
   //particle_state_preReloc.push_back(lb->pX0Label_preReloc);
@@ -79,6 +79,6 @@ FractureParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   particle_state.erase(r1);
 
   r2 = find(particle_state_preReloc.begin(), particle_state_preReloc.end(),
-	 lb->pErosionLabel_preReloc);
+         lb->pErosionLabel_preReloc);
   particle_state_preReloc.erase(r2);
 }
