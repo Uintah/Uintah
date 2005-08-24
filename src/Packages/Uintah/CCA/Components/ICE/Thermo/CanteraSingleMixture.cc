@@ -7,7 +7,8 @@
 using namespace Cantera;
 using namespace Uintah;
 
-CanteraSingleMixture::CanteraSingleMixture(ProblemSpecP& ps)
+CanteraSingleMixture::CanteraSingleMixture(ProblemSpecP& ps, ModelSetup*, ICEMaterial* ice_matl)
+  : ThermoInterface(ice_matl)
 {
   ps->require("thermal_conductivity", d_thermalConductivity);
   ps->require("speciesMix",d_speciesMix);
@@ -99,7 +100,8 @@ void CanteraSingleMixture::addTaskDependencies_int_eng(Task* t, Task::WhichDW dw
 
 void CanteraSingleMixture::compute_thermalDiffusivity(CellIterator iter,
                                                       CCVariable<double>& thermalDiffusivity,
-                                                      DataWarehouse*,
+                                                      DataWarehouse*, const Patch* patch,
+                                                      int matl, int numGhostCells,
                                                       constCCVariable<double>& int_eng,
                                                       constCCVariable<double>& sp_vol)
 {
@@ -112,15 +114,18 @@ void CanteraSingleMixture::compute_thermalDiffusivity(CellIterator iter,
 
 void CanteraSingleMixture::compute_thermalConductivity(CellIterator iter,
                                                        CCVariable<double>& thermalConductivity,
-                                                       DataWarehouse*)
+                                                       DataWarehouse*, const Patch* patch,
+                                                       int matl, int numGhostCells,
+                                                       constCCVariable<double>& int_eng)
 {
-  d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++)
     thermalConductivity[*iter] = d_thermalConductivity;
 }
 
 void CanteraSingleMixture::compute_cp(CellIterator iter, CCVariable<double>& cp,
-                                      DataWarehouse*, constCCVariable<double>& int_eng)
+                                      DataWarehouse*, const Patch* patch,
+                                      int matl, int numGhostCells,
+                                      constCCVariable<double>& int_eng)
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++){
@@ -130,7 +135,9 @@ void CanteraSingleMixture::compute_cp(CellIterator iter, CCVariable<double>& cp,
 }
 
 void CanteraSingleMixture::compute_cv(CellIterator iter, CCVariable<double>& cv,
-                                      DataWarehouse*, constCCVariable<double>& int_eng)
+                                      DataWarehouse*, const Patch* patch,
+                                      int matl, int numGhostCells,
+                                      constCCVariable<double>& int_eng)
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++){
@@ -140,7 +147,9 @@ void CanteraSingleMixture::compute_cv(CellIterator iter, CCVariable<double>& cv,
 }
 
 void CanteraSingleMixture::compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                                         DataWarehouse*, constCCVariable<double>& int_eng)
+                                         DataWarehouse*, const Patch* patch,
+                                         int matl, int numGhostCells,
+                                         constCCVariable<double>& int_eng)
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++){
@@ -150,7 +159,9 @@ void CanteraSingleMixture::compute_gamma(CellIterator iter, CCVariable<double>& 
 }
 
 void CanteraSingleMixture::compute_R(CellIterator iter, CCVariable<double>& R,
-                                     DataWarehouse*, constCCVariable<double>& int_eng)
+                                     DataWarehouse*, const Patch* patch,
+                                     int matl, int numGhostCells,
+                                     constCCVariable<double>& int_eng)
 {
   cerr << "csm not done: " << __LINE__ << '\n';
 #if 0
@@ -161,7 +172,9 @@ void CanteraSingleMixture::compute_R(CellIterator iter, CCVariable<double>& R,
 }
 
 void CanteraSingleMixture::compute_Temp(CellIterator iter, CCVariable<double>& temp,
-                                        DataWarehouse*, constCCVariable<double>& int_eng)
+                                        DataWarehouse*, const Patch* patch,
+                                        int matl, int numGhostCells,
+                                        constCCVariable<double>& int_eng)
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++){
@@ -171,7 +184,8 @@ void CanteraSingleMixture::compute_Temp(CellIterator iter, CCVariable<double>& t
 }
 
 void CanteraSingleMixture::compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                                           DataWarehouse*,
+                                           DataWarehouse*, const Patch* patch,
+                                           int matl, int numGhostCells,
                                            constCCVariable<double>& temp)
 {
   d_gas->setMassFractionsByName(d_speciesMix);

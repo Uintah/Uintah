@@ -39,11 +39,11 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-
+  class ModelSetup;
   class GeometryPiece;
   class CanteraDetailed : public ThermoInterface {
   public:
-    CanteraDetailed(ProblemSpecP& ps);
+    CanteraDetailed(ProblemSpecP& ps, ModelSetup* setup, ICEMaterial* ice_matl);
     virtual ~CanteraDetailed();
 
     virtual void scheduleInitializeThermo(SchedulerP& sched,
@@ -72,24 +72,39 @@ WARNING
 
     virtual void compute_thermalDiffusivity(CellIterator iter,
                                             CCVariable<double>& thermalDiffusivity,
-                                            DataWarehouse* dw,
+                                            DataWarehouse* dw, const Patch* patch,
+                                            int matl, int numGhostCells,
                                             constCCVariable<double>& int_eng,
                                             constCCVariable<double>& sp_vol);
     virtual void compute_thermalConductivity(CellIterator iter,
                                              CCVariable<double>& thermalDiffusivity,
-                                             DataWarehouse* dw);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_cp(CellIterator iter, CCVariable<double>& cp,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_cv(CellIterator iter, CCVariable<double>& cv,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_R(CellIterator iter, CCVariable<double>& R,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_Temp(CellIterator iter, CCVariable<double>& temp,
-                              DataWarehouse* dw, constCCVariable<double>& int_eng);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
     virtual void compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                                 DataWarehouse* dw, constCCVariable<double>& temp);
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng);
   private:
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
@@ -118,13 +133,16 @@ WARNING
       int index;
       string name;
       VarLabel* massFraction_CCLabel;
-      VarLabel* massFraction_source_CCLabel;
+      VarLabel* massFraction_L_CCLabel;
       vector<Region*> regions;
     };
 
     vector<Stream*> streams;
     map<string, Stream*> names;
 
+    MaterialSet* mymatls;
+
+    void addTaskDependencies_general(Task* t, Task::WhichDW dw, int numGhostCells);
   };
 } // End namespace Uintah
       

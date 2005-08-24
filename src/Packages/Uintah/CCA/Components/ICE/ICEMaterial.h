@@ -55,9 +55,10 @@ WARNING
 
 ****************************************/
  
+  class ModelSetup;
  class ICEMaterial : public Material {
  public:
-   ICEMaterial(ProblemSpecP&);
+    ICEMaterial(ProblemSpecP&, ModelSetup*);
    
    ~ICEMaterial();
    

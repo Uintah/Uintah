@@ -39,7 +39,7 @@ WARNING
       class Murnahan : public EquationOfState {
       public:
 
-        Murnahan(ProblemSpecP& ps);
+    Murnahan(ProblemSpecP& ps, ICEMaterial* ice_matl);
         virtual ~Murnahan();
         
         virtual double computeRhoMicro(double press,double gamma,

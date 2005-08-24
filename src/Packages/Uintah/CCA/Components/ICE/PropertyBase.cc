@@ -3,10 +3,6 @@
 
 using namespace Uintah;
 
-PropertyBase::PropertyBase()
-{
-}
-
 PropertyBase::~PropertyBase()
 {
 }

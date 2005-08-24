@@ -35,12 +35,9 @@ WARNING
   class PropertyBase {
   public:
     virtual ~PropertyBase();
-    void setICEMaterial(ICEMaterial* matl) {
-      ice_matl = matl;
-    }
 
   protected:
-    PropertyBase();
+    PropertyBase(ICEMaterial* ice_matl) : ice_matl(ice_matl) {}
     ICEMaterial* ice_matl;
   };
 } // End namespace Uintah

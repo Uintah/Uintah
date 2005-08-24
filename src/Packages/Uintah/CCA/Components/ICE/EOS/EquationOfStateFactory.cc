@@ -16,7 +16,7 @@
 
 using namespace Uintah;
 
-EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
+EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps, ICEMaterial* ice_matl)
 {
     ProblemSpecP child = ps->findBlock("EOS");
     if(!child)
@@ -26,19 +26,19 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
       throw ProblemSetupException("No type for EOS", __FILE__, __LINE__); 
     
     if (mat_type == "ideal_gas") 
-      return(scinew IdealGas(child));
+      return(scinew IdealGas(child, ice_matl));
 #if 0
     // Others busted - Steve
     else if (mat_type == "JWL") 
-      return(scinew JWL(child));
+      return(scinew JWL(child, ice_matl));
     else if (mat_type == "JWLC") 
-      return(scinew JWLC(child));
+      return(scinew JWLC(child, ice_matl));
     else if (mat_type == "Murnahan") 
-      return(scinew Murnahan(child));
+      return(scinew Murnahan(child, ice_matl));
     else if (mat_type == "Gruneisen") 
-      return(scinew Gruneisen(child));
+      return(scinew Gruneisen(child, ice_matl));
     else if (mat_type == "Tillotson") 
-      return(scinew Tillotson(child));
+      return(scinew Tillotson(child, ice_matl));
 #if 0   // Turn off harlow and stiff gas until everything with ideal
         // gas is working. Todd
     else if (mat_type == "harlow") 

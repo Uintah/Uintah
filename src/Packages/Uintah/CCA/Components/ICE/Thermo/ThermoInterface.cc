@@ -3,7 +3,8 @@
 
 using namespace Uintah;
 
-ThermoInterface::ThermoInterface()
+ThermoInterface::ThermoInterface(ICEMaterial* ice_matl)
+  : PropertyBase(ice_matl)
 {
 }
 

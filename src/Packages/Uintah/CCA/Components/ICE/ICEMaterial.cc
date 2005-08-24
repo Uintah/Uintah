@@ -28,7 +28,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
  // Constructor
-ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
+ICEMaterial::ICEMaterial(ProblemSpecP& ps, ModelSetup* setup): Material(ps)
 {
   // Follow the layout of the input file
   // Steps:
@@ -43,7 +43,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
   // Step 1a -- look for a combined model.  This allows a single subcomponent
   //   to operate as an equation of state and thermo interface (and possibly a
   //   a transport interface.
-  d_combined = CombinedFactory::create(ps);
+  d_combined = CombinedFactory::create(ps, setup, this);
   if(d_combined){
     // If the properties object implements the particular model, these casts
     // will succeed, otherwise they will fail and the model will be specified
@@ -51,7 +51,6 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
     d_eos = dynamic_cast<EquationOfState*>(d_combined);
     d_thermo = dynamic_cast<ThermoInterface*>(d_combined);
     //d_transport = dynamic_cast<TransportInterface*>(d_combined);
-    d_combined->setICEMaterial(this);
   } else {
     d_eos = 0;
     d_thermo = 0;
@@ -59,21 +58,19 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
 
   // Step 1b -- create the equation of state if necessary
   if(!d_eos){
-    d_eos = EquationOfStateFactory::create(ps);
+    d_eos = EquationOfStateFactory::create(ps, this);
     if(!d_eos) {
       throw ParameterNotFound("ICE: No EOS specified", __FILE__, __LINE__);
     }
-    d_eos->setICEMaterial(this);
   }
    
   // Step 1c -- create the thermo model if necessary
   if(!d_thermo){ // The thermo model may be from a "combined" model
-    d_thermo = ThermoFactory::create(ps);
+    d_thermo = ThermoFactory::create(ps, setup, this);
     if(!d_thermo){
       // default to constant thermo
-      d_thermo = new ConstantThermo(ps);
+      d_thermo = new ConstantThermo(ps, setup, this);
     }
-    d_thermo->setICEMaterial(this);
   }
 
   // Step 1d -- create the transport model if necessary

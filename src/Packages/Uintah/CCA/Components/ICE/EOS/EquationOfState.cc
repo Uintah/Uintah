@@ -2,7 +2,8 @@
 
 using namespace Uintah;
 
-EquationOfState::EquationOfState()
+EquationOfState::EquationOfState(ICEMaterial* ice_matl)
+  : PropertyBase(ice_matl)
 {
    // Constructor
 }

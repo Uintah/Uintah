@@ -38,7 +38,7 @@ WARNING
 
   class ThermoInterface : public PropertyBase {
   public:
-    ThermoInterface();
+    ThermoInterface(ICEMaterial* ice_matl);
     virtual ~ThermoInterface();
 
     virtual void scheduleInitializeThermo(SchedulerP& sched,
@@ -67,24 +67,39 @@ WARNING
 
     virtual void compute_thermalDiffusivity(CellIterator iter,
                                             CCVariable<double>& thermalDiffusivity,
-                                            DataWarehouse* dw,
+                                            DataWarehouse* dw, const Patch* patch,
+                                            int matl, int numGhostCells,
                                             constCCVariable<double>& int_eng,
                                             constCCVariable<double>& sp_vol) = 0;
     virtual void compute_thermalConductivity(CellIterator iter,
                                              CCVariable<double>& thermalDiffusivity,
-                                             DataWarehouse* dw) = 0;
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng) = 0;
     virtual void compute_cp(CellIterator iter, CCVariable<double>& cp,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng) = 0;
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng) = 0;
     virtual void compute_cv(CellIterator iter, CCVariable<double>& cv,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng) = 0;
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng) = 0;
     virtual void compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng) = 0;
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng) = 0;
     virtual void compute_R(CellIterator iter, CCVariable<double>& R,
-                            DataWarehouse* dw, constCCVariable<double>& int_eng) = 0;
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng) = 0;
     virtual void compute_Temp(CellIterator iter, CCVariable<double>& temp,
-                              DataWarehouse* dw, constCCVariable<double>& int_eng) = 0;
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng) = 0;
     virtual void compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                                 DataWarehouse* dw, constCCVariable<double>& temp) = 0;
+                            DataWarehouse* dw, const Patch* patch,
+                            int matl, int numGhostCells,
+                            constCCVariable<double>& int_eng) = 0;
   };
 } // End namespace Uintah
       

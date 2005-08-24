@@ -1,6 +1,7 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/Thermo/CanteraDetailed.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -8,14 +9,22 @@
 #include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Core/Containers/StaticArray.h>
 #include <cantera/Cantera.h>
 #include <cantera/IdealGasMix.h>
 
 using namespace Cantera;
 using namespace Uintah;
 
-CanteraDetailed::CanteraDetailed(ProblemSpecP& ps)
+CanteraDetailed::CanteraDetailed(ProblemSpecP& ps, ModelSetup* setup,
+                                 ICEMaterial* ice_matl)
+  : ThermoInterface(ice_matl)
 {
+  vector<int> m(1);
+  m[0] = ice_matl->getDWIndex();
+  mymatls = new MaterialSet();
+  mymatls->addAll(m);
+
   ps->require("thermal_conductivity", d_thermalConductivity);
   // Parse the Cantera XML file
   string fname;
@@ -29,7 +38,6 @@ CanteraDetailed::CanteraDetailed(ProblemSpecP& ps)
     cerr.precision(17);
     cerr << "Using ideal gas " << id << "(from " << fname << ") with " << nel << " elements and " << nsp << " species\n";
     d_gas->setState_TPY(300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
-    cerr << *d_gas;
   } catch (CanteraError) {
     showErrors(cerr);
     throw InternalError("Cantera initialization failed", __FILE__, __LINE__);
@@ -41,13 +49,14 @@ CanteraDetailed::CanteraDetailed(ProblemSpecP& ps)
     stream->name = d_gas->speciesName(k);
     string mfname = "massFraction-"+stream->name;
     stream->massFraction_CCLabel = VarLabel::create(mfname, CCVariable<double>::getTypeDescription());
+    string mflname = "massFraction_L-"+stream->name;
+    stream->massFraction_L_CCLabel = VarLabel::create(mflname, CCVariable<double>::getTypeDescription());
     
-    cerr << "Cantera setup not finished\n";
-#if 0  
     setup->registerTransportedVariable(mymatls->getSubset(0),
+                                       Task::NewDW,
+                                       stream->massFraction_L_CCLabel,
                                        stream->massFraction_CCLabel,
                                        0);
-#endif
     streams.push_back(stream);
     names[stream->name] = stream;
   }
@@ -98,13 +107,15 @@ void CanteraDetailed::scheduleInitializeThermo(SchedulerP& sched,
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
-    t->computes(stream->massFraction_CCLabel);
+    t->computes(stream->massFraction_L_CCLabel);
   }
-  vector<int> m(1);
-  m[0] = ice_matl->getDWIndex();
-  MaterialSet* mymatls = new MaterialSet();
-  mymatls->addAll(m);
   sched->addTask(t, patches, mymatls);
+}
+
+CanteraDetailed::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
+  : piece(piece)
+{
+  ps->require("massFraction", initialMassFraction);
 }
 
 void CanteraDetailed::initialize(const ProcessorGroup*, 
@@ -124,7 +135,7 @@ void CanteraDetailed::initialize(const ProcessorGroup*,
 	  iter != streams.end(); iter++){
 	Stream* stream = *iter;
 	CCVariable<double> mf;
-	new_dw->allocateAndPut(mf, stream->massFraction_CCLabel, matl, patch);
+	new_dw->allocateAndPut(mf, stream->massFraction_L_CCLabel, matl, patch);
 	mf.initialize(0);
 	for(vector<Region*>::iterator iter = stream->regions.begin();
 	    iter != stream->regions.end(); iter++){
@@ -135,10 +146,10 @@ void CanteraDetailed::initialize(const ProcessorGroup*,
    
 	  for(CellIterator iter = patch->getExtraCellIterator();
 	      !iter.done(); iter++){
- 
 	    Point p = patch->cellPosition(*iter);
-	    if(region->piece->inside(p))
+	    if(region->piece->inside(p)){
 	      mf[*iter] = region->initialMassFraction;
+            }
 	  } // Over cells
 	} // Over regions
 	for(CellIterator iter = patch->getExtraCellIterator();
@@ -162,17 +173,14 @@ void CanteraDetailed::scheduleReactions(SchedulerP& sched,
                                         const PatchSet* patches,
                                         ICEMaterial* ice_matl)
 {
-  Task* t = scinew Task("CanteraDetailed::initialize",
+  Task* t = scinew Task("CanteraDetailed::react",
 			this, &CanteraDetailed::react);
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
-    t->computes(stream->massFraction_CCLabel);
+    t->requires(Task::OldDW, stream->massFraction_CCLabel, Ghost::None, 0);
+    t->computes(stream->massFraction_L_CCLabel);
   }
-  vector<int> m(1);
-  m[0] = ice_matl->getDWIndex();
-  MaterialSet* mymatls = new MaterialSet();
-  mymatls->addAll(m);
   sched->addTask(t, patches, mymatls);
 }
 
@@ -182,112 +190,192 @@ void CanteraDetailed::react(const ProcessorGroup*,
                             DataWarehouse*,
                             DataWarehouse* new_dw)
 {
-  
+  cerr << "CanteraDetailed::react not finished\n";
+}
+
+void CanteraDetailed::addTaskDependencies_general(Task* t, Task::WhichDW dw,
+                                                  int numGhostCells)
+{
+  for(vector<Stream*>::iterator iter = streams.begin();
+      iter != streams.end(); iter++){
+    Stream* stream = *iter;
+    t->requires(Task::NewDW, stream->massFraction_L_CCLabel,
+                numGhostCells == 0? Ghost::None : Ghost::AroundCells);
+  }
 }
 
 void CanteraDetailed::addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
-                                                            int numGhostCells)
+                                                             int numGhostCells)
 {
-  // No additional requirements
+  addTaskDependencies_general(t, dw, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_thermalConductivity(Task* t, Task::WhichDW dw,
                                                              int numGhostCells)
 {
-  // No additional requirements
+  addTaskDependencies_general(t, dw, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_cp(Task* t, Task::WhichDW dw,
                                             int numGhostCells)
 {
-  // No additional requirements
+  addTaskDependencies_general(t, dw, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_cv(Task* t, Task::WhichDW dw,
                                             int numGhostCells)
 {
-  // No additional requirements
+  addTaskDependencies_general(t, dw, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_gamma(Task* t, Task::WhichDW dw,
                                                int numGhostCells)
 {
-  // No additional requirements
+  addTaskDependencies_general(t, dw, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_R(Task* t, Task::WhichDW dw,
                                            int numGhostCells)
 {
-  // No additional requirements
+  addTaskDependencies_general(t, dw, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_Temp(Task* t, Task::WhichDW dw,
                                               int numGhostCells)
 {
-  // No additional requirements
+  addTaskDependencies_general(t, dw, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
                                                  int numGhostCells)
 {
-  // No additional requirements
+  addTaskDependencies_general(t, dw, numGhostCells);
 }
 
-#if 0
 void CanteraDetailed::compute_thermalDiffusivity(CellIterator iter,
-                                                      CCVariable<double>& thermalDiffusivity,
-                                                      DataWarehouse*,
-                                                      constCCVariable<double>& int_eng,
-                                                      constCCVariable<double>& sp_vol)
+                                                 CCVariable<double>& thermalDiffusivity,
+                                                 DataWarehouse* new_dw, const Patch* patch,
+                                                 int matl, int numGhostCells,
+                                                 constCCVariable<double>& int_eng,
+                                                 constCCVariable<double>& sp_vol)
 {
-  d_gas->setMassFractionsByName(d_speciesMix);
+  int numSpecies = streams.size();
+  StaticArray<constCCVariable<double> > mf(numSpecies);
+  int index = 0;
+  double* tmp_mf = new double[numSpecies];
+  for(vector<Stream*>::iterator siter = streams.begin();
+      siter != streams.end(); siter++, index++){
+    Stream* stream = *siter;
+    constCCVariable<double> species_mf;
+    new_dw->get(species_mf, stream->massFraction_L_CCLabel, matl, patch,
+                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    mf[index] = species_mf;
+  }
+
   for(;!iter.done();iter++){
+    for(int i = 0; i< numSpecies; i++)
+      tmp_mf[i] = mf[i][*iter];
+    d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     thermalDiffusivity[*iter] = d_thermalConductivity/d_gas->cp_mass() * sp_vol[*iter];
   }
 }
 
 void CanteraDetailed::compute_thermalConductivity(CellIterator iter,
-                                                       CCVariable<double>& thermalConductivity,
-                                                       DataWarehouse*)
+                                                  CCVariable<double>& thermalConductivity,
+                                                  DataWarehouse*, const Patch* patch,
+                                                  int matl, int numGhostCells,
+                                                  constCCVariable<double>& int_eng)
 {
-  d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++)
     thermalConductivity[*iter] = d_thermalConductivity;
 }
 
 void CanteraDetailed::compute_cp(CellIterator iter, CCVariable<double>& cp,
-                                      DataWarehouse*, constCCVariable<double>& int_eng)
+                                 DataWarehouse* new_dw, const Patch* patch,
+                                 int matl, int numGhostCells,
+                                 constCCVariable<double>& int_eng)
 {
-  d_gas->setMassFractionsByName(d_speciesMix);
+  int numSpecies = streams.size();
+  StaticArray<constCCVariable<double> > mf(numSpecies);
+  int index = 0;
+  double* tmp_mf = new double[numSpecies];
+  for(vector<Stream*>::iterator siter = streams.begin();
+      siter != streams.end(); siter++, index++){
+    Stream* stream = *siter;
+    constCCVariable<double> species_mf;
+    new_dw->get(species_mf, stream->massFraction_L_CCLabel, matl, patch,
+                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    mf[index] = species_mf;
+  }
+
   for(;!iter.done();iter++){
+    for(int i = 0; i< numSpecies; i++)
+      tmp_mf[i] = mf[i][*iter];
+    d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cp[*iter] = d_gas->cp_mass();
   }
 }
 
 void CanteraDetailed::compute_cv(CellIterator iter, CCVariable<double>& cv,
-                                      DataWarehouse*, constCCVariable<double>& int_eng)
+                                 DataWarehouse* new_dw, const Patch* patch,
+                                 int matl, int numGhostCells,
+                                 constCCVariable<double>& int_eng)
 {
-  d_gas->setMassFractionsByName(d_speciesMix);
+  int numSpecies = streams.size();
+  StaticArray<constCCVariable<double> > mf(numSpecies);
+  int index = 0;
+  double* tmp_mf = new double[numSpecies];
+  for(vector<Stream*>::iterator siter = streams.begin();
+      siter != streams.end(); siter++, index++){
+    Stream* stream = *siter;
+    constCCVariable<double> species_mf;
+    new_dw->get(species_mf, stream->massFraction_L_CCLabel, matl, patch,
+                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    mf[index] = species_mf;
+  }
+
   for(;!iter.done();iter++){
+    for(int i = 0; i< numSpecies; i++)
+      tmp_mf[i] = mf[i][*iter];
+    d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cv[*iter] = d_gas->cv_mass();
   }
 }
 
 void CanteraDetailed::compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                                         DataWarehouse*, constCCVariable<double>& int_eng)
+                                 DataWarehouse* new_dw, const Patch* patch,
+                                 int matl, int numGhostCells,
+                                 constCCVariable<double>& int_eng)
 {
-  d_gas->setMassFractionsByName(d_speciesMix);
+  int numSpecies = streams.size();
+  StaticArray<constCCVariable<double> > mf(numSpecies);
+  int index = 0;
+  double* tmp_mf = new double[numSpecies];
+  for(vector<Stream*>::iterator siter = streams.begin();
+      siter != streams.end(); siter++, index++){
+    Stream* stream = *siter;
+    constCCVariable<double> species_mf;
+    new_dw->get(species_mf, stream->massFraction_L_CCLabel, matl, patch,
+                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    mf[index] = species_mf;
+  }
+
   for(;!iter.done();iter++){
+    for(int i = 0; i< numSpecies; i++)
+      tmp_mf[i] = mf[i][*iter];
+    d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     gamma[*iter] = d_gas->cp_mass()/d_gas->cv_mass();
   }
 }
 
 void CanteraDetailed::compute_R(CellIterator iter, CCVariable<double>& R,
-                                     DataWarehouse*, constCCVariable<double>& int_eng)
+                                DataWarehouse*, const Patch* patch,
+                                int matl, int numGhostCells,
+                                constCCVariable<double>& int_eng)
 {
   cerr << "csm not done: " << __LINE__ << '\n';
 #if 0
@@ -298,23 +386,55 @@ void CanteraDetailed::compute_R(CellIterator iter, CCVariable<double>& R,
 }
 
 void CanteraDetailed::compute_Temp(CellIterator iter, CCVariable<double>& temp,
-                                        DataWarehouse*, constCCVariable<double>& int_eng)
+                                   DataWarehouse* new_dw, const Patch* patch,
+                                   int matl, int numGhostCells,
+                                   constCCVariable<double>& int_eng)
 {
-  d_gas->setMassFractionsByName(d_speciesMix);
+  int numSpecies = streams.size();
+  StaticArray<constCCVariable<double> > mf(numSpecies);
+  int index = 0;
+  double* tmp_mf = new double[numSpecies];
+  for(vector<Stream*>::iterator siter = streams.begin();
+      siter != streams.end(); siter++, index++){
+    Stream* stream = *siter;
+    constCCVariable<double> species_mf;
+    new_dw->get(species_mf, stream->massFraction_L_CCLabel, matl, patch,
+                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    mf[index] = species_mf;
+  }
+
   for(;!iter.done();iter++){
+    for(int i = 0; i< numSpecies; i++)
+      tmp_mf[i] = mf[i][*iter];
+    d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     temp[*iter] = d_gas->temperature();
   }
 }
 
 void CanteraDetailed::compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                                           DataWarehouse*,
-                                           constCCVariable<double>& temp)
+                                      DataWarehouse* new_dw, const Patch* patch,
+                                      int matl, int numGhostCells,
+                                      constCCVariable<double>& Temp)
 {
-  d_gas->setMassFractionsByName(d_speciesMix);
+  int numSpecies = streams.size();
+  StaticArray<constCCVariable<double> > mf(numSpecies);
+  int index = 0;
+  double* tmp_mf = new double[numSpecies];
+  for(vector<Stream*>::iterator siter = streams.begin();
+      siter != streams.end(); siter++, index++){
+    Stream* stream = *siter;
+    constCCVariable<double> species_mf;
+    new_dw->get(species_mf, stream->massFraction_L_CCLabel, matl, patch,
+                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    mf[index] = species_mf;
+  }
+
   for(;!iter.done();iter++){
-    d_gas->setState_TR(temp[*iter], 1.0);
+    for(int i = 0; i< numSpecies; i++)
+      tmp_mf[i] = mf[i][*iter];
+    d_gas->setMassFractions(tmp_mf);
+    d_gas->setState_UV(int_eng[*iter], 1.0);
     int_eng[*iter] = d_gas->intEnergy_mass();
   }
 }
-#endif

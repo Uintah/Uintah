@@ -8,7 +8,8 @@
 
 using namespace Uintah;
 
-Murnahan::Murnahan(ProblemSpecP& ps)
+Murnahan::Murnahan(ProblemSpecP& ps, ICEMaterial* ice_matl)
+  : EquationOfState(ice_matl)
 {
    // Constructor
   ps->require("n",n);

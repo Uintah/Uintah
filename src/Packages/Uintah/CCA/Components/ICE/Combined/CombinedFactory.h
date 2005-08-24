@@ -4,7 +4,8 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
-
+  class ICEMaterial;
+  class ModelSetup;
   class PropertyBase;
 
   class CombinedFactory
@@ -13,7 +14,7 @@ namespace Uintah {
     // this function has a switch for all known mat_types
     // and calls the proper class' readParameters()
     // addMaterial() calls this
-    static PropertyBase* create(ProblemSpecP& ps);
+    static PropertyBase* create(ProblemSpecP& ps, ModelSetup* setup, ICEMaterial* ice_matl);
   };
 
 } // End namespace Uintah

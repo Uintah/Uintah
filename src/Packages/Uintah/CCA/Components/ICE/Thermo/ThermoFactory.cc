@@ -9,7 +9,7 @@
 
 using namespace Uintah;
 
-ThermoInterface* ThermoFactory::create(ProblemSpecP& ps)
+ThermoInterface* ThermoFactory::create(ProblemSpecP& ps, ModelSetup* setup, ICEMaterial* ice_matl)
 {
   ProblemSpecP child = ps->findBlock("Thermo");
   if(!child)
@@ -19,11 +19,11 @@ ThermoInterface* ThermoFactory::create(ProblemSpecP& ps)
     throw ProblemSetupException("No type for Thermo", __FILE__, __LINE__); 
   
   if (type == "constant") 
-    return scinew ConstantThermo(child);
+    return scinew ConstantThermo(child, setup, ice_matl);
   else if (type == "cantera detailed")
-    return scinew CanteraDetailed(child);
+    return scinew CanteraDetailed(child, setup, ice_matl);
   else if (type == "cantera single mixture") 
-    return scinew CanteraSingleMixture(child);
+    return scinew CanteraSingleMixture(child, setup, ice_matl);
   else
     throw ProblemSetupException("Unknown Thermo Type ("+type+")", __FILE__, __LINE__);
 }

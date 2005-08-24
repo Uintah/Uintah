@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Util/Handle.h>
@@ -51,6 +52,8 @@ WARNING
   class ModelSetup {
     public:
     virtual void registerTransportedVariable(const MaterialSubset* matls,
+                                             Task::WhichDW fromDW,
+                                             const VarLabel* fromVar,
 					     const VarLabel* var,
 					     const VarLabel* src) = 0;
                                         

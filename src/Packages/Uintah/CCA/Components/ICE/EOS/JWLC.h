@@ -39,7 +39,7 @@ WARNING
       class JWLC : public EquationOfState {
       public:
 
-        JWLC(ProblemSpecP& ps);
+    JWLC(ProblemSpecP& ps, ICEMaterial* ice_matl);
         virtual ~JWLC();
         
         virtual double computeRhoMicro(double press,double gamma,
