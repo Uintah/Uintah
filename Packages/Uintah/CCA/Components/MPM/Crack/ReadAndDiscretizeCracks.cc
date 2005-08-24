@@ -187,9 +187,9 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        // Crack surface contact type, either "friction", "stick" or "null"
        crk_ps->require("type",crackType[m]);
        if(crackType[m]!="friction" && crackType[m]!="stick" && crackType[m]!="null") {
-	 cout << "Error: unknown crack type: " << crackType[m] << endl;
-	 exit(1);
-       }	     
+         cout << "Error: unknown crack type: " << crackType[m] << endl;
+         exit(1);
+       }             
 
        // Friction coefficient needed for friction contact, zero by default
        cmu[m]=0.0;
@@ -211,11 +211,12 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   OutputInitialCrackPlane(numMPMMatls);
 }
 
-void Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
+void
+Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP cquad_ps=geom_ps->findBlock("curved_quad");
-	         cquad_ps!=0; cquad_ps=cquad_ps->findNextBlock("curved_quad")) {
-	   
+                 cquad_ps!=0; cquad_ps=cquad_ps->findNextBlock("curved_quad")) {
+           
     // Four vertices of the curved quad
     Point p;
     vector<Point> vertices;    
@@ -235,7 +236,7 @@ void Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
     vector<Point> ptsSide2,ptsSide4;                   
     ProblemSpecP side2_ps=cquad_ps->findBlock("points_curved_side2"); 
     for(ProblemSpecP pt_ps=side2_ps->findBlock("point"); pt_ps!=0; 
-		     pt_ps=pt_ps->findNextBlock("point")) {  
+                     pt_ps=pt_ps->findNextBlock("point")) {  
       pt_ps->get("val",p); 
       ptsSide2.push_back(p);
     }
@@ -243,7 +244,7 @@ void Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
 
     ProblemSpecP side4_ps=cquad_ps->findBlock("points_curved_side4");
     for(ProblemSpecP pt_ps=side4_ps->findBlock("point"); pt_ps!=0;
-		     pt_ps=pt_ps->findNextBlock("point")) {
+                     pt_ps=pt_ps->findNextBlock("point")) {
       pt_ps->get("val",p); 
       ptsSide4.push_back(p);
     }
@@ -251,7 +252,7 @@ void Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
     
     if(ptsSide4.size()!=ptsSide2.size()) {
       cout << "Error: The points on curved side 2 and side 4 "
-	   << "should appear in pairs." << endl;  
+           << "should appear in pairs." << endl;  
     }
     ptsSide2.clear();
     ptsSide4.clear();    
@@ -270,7 +271,7 @@ void Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
     }
     else if(cfsides.length()==0) {
       for(int i=0; i<4; i++)
-	crackSidesAtFront.push_back(NO);
+        crackSidesAtFront.push_back(NO);
     }
     cquadCrackSidesAtFront[m].push_back(crackSidesAtFront);
     crackSidesAtFront.clear();
@@ -286,7 +287,8 @@ void Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
   }
 }
 
-void Crack::ReadQuadCracks(const int& m,const ProblemSpecP& geom_ps)
+void
+Crack::ReadQuadCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP quad_ps=geom_ps->findBlock("quad");
       quad_ps!=0; quad_ps=quad_ps->findNextBlock("quad")) {
@@ -307,14 +309,14 @@ void Crack::ReadQuadCracks(const int& m,const ProblemSpecP& geom_ps)
     
     quads[m].push_back(vertices);
     vertices.clear();
-		  
+                  
     // Mesh resolutions 
     int n12=1,n23=1;
     quad_ps->get("resolution_p1_p2",n12);
     quadN12[m].push_back(n12);
     quad_ps->get("resolution_p2_p3",n23);
     quadN23[m].push_back(n23);
-		  
+                  
     // Crack front
     vector<short> crackSidesAtFront;
     string cfsides("");
@@ -344,15 +346,16 @@ void Crack::ReadQuadCracks(const int& m,const ProblemSpecP& geom_ps)
     quadOffset[m].push_back(offset);    
   }
 }  
-		  
-void Crack::ReadTriangularCracks(const int& m,const ProblemSpecP& geom_ps)
+                  
+void
+Crack::ReadTriangularCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP tri_ps=geom_ps->findBlock("triangle");
        tri_ps!=0; tri_ps=tri_ps->findNextBlock("triangle")) {
 
     // Three vertices of the triangle
     Point p;
-    vector<Point> vertices;	
+    vector<Point> vertices;     
     tri_ps->require("p1",p);    vertices.push_back(p);
     tri_ps->require("p2",p);    vertices.push_back(p);
     tri_ps->require("p3",p);    vertices.push_back(p); 
@@ -371,7 +374,7 @@ void Crack::ReadTriangularCracks(const int& m,const ProblemSpecP& geom_ps)
     if(cfsides.length()==3) {
       for(string::const_iterator iter=cfsides.begin();
                         iter!=cfsides.end(); iter++) {
-	short atFront=NO;      
+        short atFront=NO;      
         if( *iter=='Y' || *iter=='n') atFront=YES;
         crackSidesAtFront.push_back(atFront);
       }
@@ -384,7 +387,8 @@ void Crack::ReadTriangularCracks(const int& m,const ProblemSpecP& geom_ps)
   }
 }
 
-void Crack::ReadArcCracks(const int& m,const ProblemSpecP& geom_ps)
+void
+Crack::ReadArcCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP arc_ps=geom_ps->findBlock("arc");
                    arc_ps!=0; arc_ps=arc_ps->findNextBlock("arc")) {
@@ -410,7 +414,8 @@ void Crack::ReadArcCracks(const int& m,const ProblemSpecP& geom_ps)
   } 
 }
 
-void Crack::ReadEllipticCracks(const int& m,const ProblemSpecP& geom_ps)
+void
+Crack::ReadEllipticCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP ellipse_ps=geom_ps->findBlock("ellipse");
       ellipse_ps!=0; ellipse_ps=ellipse_ps->findNextBlock("ellipse")) {
@@ -436,12 +441,13 @@ void Crack::ReadEllipticCracks(const int& m,const ProblemSpecP& geom_ps)
   } 
 }
 
-void Crack::ReadPartialEllipticCracks(const int& m,
-                        const ProblemSpecP& geom_ps)
+void
+Crack::ReadPartialEllipticCracks(const int& m,
+                                 const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP pellipse_ps=geom_ps->findBlock("partial_ellipse");
                    pellipse_ps!=0; 
-		   pellipse_ps=pellipse_ps->findNextBlock("partial_ellipse")) {
+                   pellipse_ps=pellipse_ps->findNextBlock("partial_ellipse")) {
 
     // Center,two points on major and minor axes
     Point p;
@@ -469,7 +475,8 @@ void Crack::ReadPartialEllipticCracks(const int& m,
   } 
 }
 
-void Crack::OutputInitialCrackPlane(const int& numMatls)
+void
+Crack::OutputInitialCrackPlane(const int& numMatls)
 {
   int pid;
   MPI_Comm_rank(mpi_crack_comm, &pid);
@@ -499,44 +506,44 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
             }
           }
           // repetition information
-	  if(quadRepetition[m][i]>1) {
-	    cout << "    The quad is repeated by " << quadRepetition[m][i]
-	         << " times with the offset " << quadOffset[m][i] << "." << endl;
-	  }	  
+          if(quadRepetition[m][i]>1) {
+            cout << "    The quad is repeated by " << quadRepetition[m][i]
+                 << " times with the offset " << quadOffset[m][i] << "." << endl;
+          }       
         }
 
         // curved quad cracks
-	for(int i=0;i<(int)cquads[m].size();i++) {
-	  cout << "  * Curved quad " << i+1 << ":" << endl;
-	  cout << "    Four vertices:" << endl; 
-	  // four vertices
-	  for(int j=0;j<4;j++) 
-	    cout << "      p" << j+1 << ": " << cquads[m][i][j] << endl;
-	  // resolution on straight sides 1 & 3
-	  cout << "    Resolution on straight sides (sides p1-p2 and p3-p4):"
-   	       << cquadNStraightSides[m][i] << endl; 
-	  // points on curved egde 2
-	  cout << "    Points on curved side 2 (p2-p3): " << endl;
-	  for(int j=0; j< (int)cquadPtsSide2[m][i].size(); j++)
+        for(int i=0;i<(int)cquads[m].size();i++) {
+          cout << "  * Curved quad " << i+1 << ":" << endl;
+          cout << "    Four vertices:" << endl; 
+          // four vertices
+          for(int j=0;j<4;j++) 
+            cout << "      p" << j+1 << ": " << cquads[m][i][j] << endl;
+          // resolution on straight sides 1 & 3
+          cout << "    Resolution on straight sides (sides p1-p2 and p3-p4):"
+               << cquadNStraightSides[m][i] << endl; 
+          // points on curved egde 2
+          cout << "    Points on curved side 2 (p2-p3): " << endl;
+          for(int j=0; j< (int)cquadPtsSide2[m][i].size(); j++)
             cout << "      p" << j+1 << ": " << cquadPtsSide2[m][i][j] << endl;
-	  // points on curved side 3
+          // points on curved side 3
           cout << "    Points on curved side 4 (p1-p4): " << endl;
           for(int j=0; j< (int)cquadPtsSide4[m][i].size(); j++)
-	    cout << "      p" << j+1 << ": " << cquadPtsSide4[m][i][j] << endl; 
+            cout << "      p" << j+1 << ": " << cquadPtsSide4[m][i][j] << endl; 
           // crack-front sides
-	  for(int j=0;j<4;j++) {
-	    if(cquadCrackSidesAtFront[m][i][j]) {
-	      int j2=(j+2<5 ? j+2 : 1);
-	      cout << "    Side " << j+1 << " (p" << j+1 << "-" << "p" << j2
-	           << ") is a crack front." << endl;
-	    }
-	  }
-	  // repetition information
-	  if(cquadRepetition[m][i]>1) {
-  	    cout << "    The quad is repeated by " << cquadRepetition[m][i]
-		 << " times with the offset " << cquadOffset[m][i] << "." << endl;
-	  }   
-	}	
+          for(int j=0;j<4;j++) {
+            if(cquadCrackSidesAtFront[m][i][j]) {
+              int j2=(j+2<5 ? j+2 : 1);
+              cout << "    Side " << j+1 << " (p" << j+1 << "-" << "p" << j2
+                   << ") is a crack front." << endl;
+            }
+          }
+          // repetition information
+          if(cquadRepetition[m][i]>1) {
+            cout << "    The quad is repeated by " << cquadRepetition[m][i]
+                 << " times with the offset " << cquadOffset[m][i] << "." << endl;
+          }   
+        }       
 
         // Triangular cracks
         for(int i=0;i<(int)triangles[m].size();i++) {
@@ -559,9 +566,9 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
           cout << "  * Arc " << i+1 << ": meshed by " << arcNCells[m][i]
                << " cells on the circumference." << endl;
           if(arcCrkFrtSegID[m][i]==-1)
-	    cout << "   crack front: on the arc" << endl;
+            cout << "   crack front: on the arc" << endl;
           else
-	    cout << "   crack front segment ID: " << arcCrkFrtSegID[m][i] << endl;
+            cout << "   crack front segment ID: " << arcCrkFrtSegID[m][i] << endl;
           cout << "\n    start, middle and end points of the arc:"  << endl;
           for(int j=0;j<3;j++)
             cout << "    p" << j+1 << ": " << arcs[m][i][j] << endl;
@@ -571,9 +578,9 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
         for(int i=0;i<(int)ellipses[m].size();i++) {
           cout << "  * Ellipse " << i+1 << ": meshed by " << ellipseNCells[m][i]
                << " cells on the circumference." << endl;
-	  if(ellipseCrkFrtSegID[m][i]==-1)
-	    cout << "    crack front: on the ellipse circumference" << endl;
-          else	  
+          if(ellipseCrkFrtSegID[m][i]==-1)
+            cout << "    crack front: on the ellipse circumference" << endl;
+          else    
             cout << "    crack front segment ID: " << ellipseCrkFrtSegID[m][i]
                  << endl;
           cout << "    end point on axis1: " << ellipses[m][i][0] << endl;
@@ -607,18 +614,20 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
   }
 }
 
-void Crack::addComputesAndRequiresCrackDiscretization(Task* /*t*/,
-                                const PatchSet* /*patches*/,
-                                const MaterialSet* /*matls*/) const
-{         
+void
+Crack::addComputesAndRequiresCrackDiscretization(Task* /*t*/,
+                                                 const PatchSet* /*patches*/,
+                                                 const MaterialSet* /*matls*/) const
+{
   // Do nothing currently
 }      
 
-void Crack::CrackDiscretization(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* /*matls*/,
-                                DataWarehouse* /*old_dw*/,
-                                DataWarehouse* /*new_dw*/)
+void
+Crack::CrackDiscretization(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* /*matls*/,
+                           DataWarehouse* /*old_dw*/,
+                           DataWarehouse* /*new_dw*/)
 {      
   for(int p=0;p<patches->size();p++) { 
     const Patch* patch = patches->get(p);
@@ -674,71 +683,71 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
         // Discretize crack segments
         int nnode0=0;  
         DiscretizeQuadCracks(m,nnode0);
-	DiscretizeCurvedQuadCracks(m,nnode0);
+        DiscretizeCurvedQuadCracks(m,nnode0);
         DiscretizeTriangularCracks(m,nnode0);
         DiscretizeArcCracks(m,nnode0);
         DiscretizeEllipticCracks(m,nnode0);
         DiscretizePartialEllipticCracks(m,nnode0); 
 
-	// Combine crack segments 
-	CombineCrackSegments(m);
-	
+        // Combine crack segments 
+        CombineCrackSegments(m);
+        
         // Determine crack extent
         for(int i=0; i<(int)cx[m].size();i++) {
           cmin[m]=Min(cmin[m],cx[m][i]);
           cmax[m]=Max(cmax[m],cx[m][i]);
         }
 
-	// Controlling parameters for fracture parameter calculation and crack propagation
+        // Controlling parameters for fracture parameter calculation and crack propagation
         if(d_calFractParameters ||d_doCrackPropagation) {
-	  // Initialize parameters of crack-front nodes  
-	  int num=(int)cfSegNodes[m].size(); 
-	  cfSegVel[m].resize(num);
-	  cfSegTime[m].resize(num);
-	  cfSegDis[m].resize(num);
-	  for(int i=0; i<num; i++) {
-	    cfSegVel[m][i]=0.0;
-	    cfSegTime[m][i]=0.0;
-	    cfSegDis[m][i]=0.0;
-	  }
+          // Initialize parameters of crack-front nodes  
+          int num=(int)cfSegNodes[m].size(); 
+          cfSegVel[m].resize(num);
+          cfSegTime[m].resize(num);
+          cfSegDis[m].resize(num);
+          for(int i=0; i<num; i++) {
+            cfSegVel[m][i]=0.0;
+            cfSegTime[m][i]=0.0;
+            cfSegDis[m][i]=0.0;
+          }
 
           // Get average length of crack-front segments
-	  css[m]=0.;
-	  int ncfSegs=num/2;
-	  for(int i=0; i<ncfSegs; i++) {
-	    int n1=cfSegNodes[m][2*i];
-	    int n2=cfSegNodes[m][2*i+1];
-	    css[m]+=(cx[m][n1]-cx[m][n2]).length();
-	  }
-	  css[m]/=ncfSegs;
-	  
+          css[m]=0.;
+          int ncfSegs=num/2;
+          for(int i=0; i<ncfSegs; i++) {
+            int n1=cfSegNodes[m][2*i];
+            int n2=cfSegNodes[m][2*i+1];
+            css[m]+=(cx[m][n1]-cx[m][n2]).length();
+          }
+          css[m]/=ncfSegs;
+          
           // Determine connectivity of crack-front nodes
           FindCrackFrontNodeIndexes(m);
-	   
-	  // Get average angle (in degree) of crack-front segments
-	  csa[m]=0.;
-	  int count=0; 
-	  for(int i=0; i<num; i++) {
-	    int preIdx=cfSegPreIdx[m][i];
+           
+          // Get average angle (in degree) of crack-front segments
+          csa[m]=0.;
+          int count=0; 
+          for(int i=0; i<num; i++) {
+            int preIdx=cfSegPreIdx[m][i];
             if(preIdx>0) {
-	      Point p =cx[m][cfSegNodes[m][i]];	    
-	      Point p1=cx[m][cfSegNodes[m][i-2]];
-	      Point p2=cx[m][cfSegNodes[m][i+1]];
-	      Vector v1=TwoPtsDirCos(p1,p);
-	      Vector v2=TwoPtsDirCos(p,p2);
-	      csa[m]+=fabs(acos(Dot(v1,v2)))*180/3.141592654; 
-	      count++;
-	    }	    
-	  }
-	  if(count!=0)
-  	    csa[m]/=count; 
-	  else
-	    csa[m]=90; 
+              Point p =cx[m][cfSegNodes[m][i]];     
+              Point p1=cx[m][cfSegNodes[m][i-2]];
+              Point p2=cx[m][cfSegNodes[m][i+1]];
+              Vector v1=TwoPtsDirCos(p1,p);
+              Vector v2=TwoPtsDirCos(p,p2);
+              csa[m]+=fabs(acos(Dot(v1,v2)))*180/3.141592654; 
+              count++;
+            }       
+          }
+          if(count!=0)
+            csa[m]/=count; 
+          else
+            csa[m]=90; 
 
           // Calculate normals of crack plane at crack-front nodes
           if(smoothCrackFront) {
             if(!SmoothCrackFrontAndCalculateNormals(m))
-	      CalculateCrackFrontNormals(m);
+              CalculateCrackFrontNormals(m);
           }
           else {
             CalculateCrackFrontNormals(m);
@@ -753,24 +762,25 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
   } 
 }
 
-void Crack::DiscretizeCurvedQuadCracks(const int& m,int& nnode0)
+void
+Crack::DiscretizeCurvedQuadCracks(const int& m,int& nnode0)
 {
   int k,k1,i,j,ni,nj,n1,n2,n3,num;
   int nstart1,nstart2,nstart3;
   Point p1,p2,p3,p4,pt;
 
   for(k=0; k<(int)cquads[m].size(); k++) {
-    Vector offset=cquadOffset[m][k];	  
-    for(k1=0; k1<(int)cquadRepetition[m][k]; k1++) { 	   
+    Vector offset=cquadOffset[m][k];      
+    for(k1=0; k1<(int)cquadRepetition[m][k]; k1++) {       
       // Four vertices of the curved quad
       p1=cquads[m][k][0]+k1*offset;
       p2=cquads[m][k][1]+k1*offset;
       p3=cquads[m][k][2]+k1*offset;
       p4=cquads[m][k][3]+k1*offset;
-			
+                        
       // Mesh resolutions on curved sides (ni) & straight sides (nj)
       ni=cquadNStraightSides[m][k];
-      nj=cquadPtsSide2[m][k].size()+1;
+      nj=(int)(cquadPtsSide2[m][k].size())+1;
     
       // total number of nodes of the quad
       num=(ni+1)*(nj+1)+ni*nj;
@@ -790,28 +800,28 @@ void Crack::DiscretizeCurvedQuadCracks(const int& m,int& nnode0)
       for(int l=2; l<2*nj; l+=2) {
         p_s2[l]=cquadPtsSide2[m][k][l/2-1]+k1*offset;
         p_s4[l]=cquadPtsSide4[m][k][l/2-1]+k1*offset;
-      } 	
+      }         
       for(int l=1; l<2*nj; l+=2) {
         p_s2[l]=p_s2[l-1]+(p_s2[l+1]-p_s2[l-1])/2.;
         p_s4[l]=p_s4[l-1]+(p_s4[l+1]-p_s4[l-1])/2.; 
-      }	
+      } 
     
       // Generate crack nodes
       int count=-1; 
       for(j=0; j<=nj; j++) {
         for(i=0; i<=ni; i++) { 
           // Detect edge nodes      
-  	  count++;
-	  if(j==0)  nodeOnEdge[count][0]=YES;
-	  if(i==ni) nodeOnEdge[count][1]=YES;
-	  if(j==nj) nodeOnEdge[count][2]=YES;
-	  if(i==0)  nodeOnEdge[count][3]=YES;	      
+          count++;
+          if(j==0)  nodeOnEdge[count][0]=YES;
+          if(i==ni) nodeOnEdge[count][1]=YES;
+          if(j==nj) nodeOnEdge[count][2]=YES;
+          if(i==0)  nodeOnEdge[count][3]=YES;         
           pt=p_s4[2*j]+(p_s2[2*j]-p_s4[2*j])*(float)i/ni;
           cx[m].push_back(pt);
         }     
         if(j!=nj) {
           for(i=0; i<ni; i++) { 
-	    count++;	
+            count++;    
             int jj=2*j+1;
             pt=p_s4[jj]+(p_s2[jj]-p_s4[jj])*(float)(2*i+1)/(2*ni);
             cx[m].push_back(pt);
@@ -850,26 +860,27 @@ void Crack::DiscretizeCurvedQuadCracks(const int& m,int& nnode0)
             n1=ce[m][i].x();
             n2=ce[m][i].y();
             n3=ce[m][i].z();
-  	    if(n1<nnode0 || n2<nnode0 || n3<nnode0) continue;
+            if(n1<nnode0 || n2<nnode0 || n3<nnode0) continue;
             for(int s=0; s<3; s++) { // Loop over sides of the element
               int sn=n1,en=n2; 
               if(s==1) {sn=n2; en=n3;}
               if(s==2) {sn=n3; en=n1;}
-	      if(nodeOnEdge[sn-nnode0][j] && nodeOnEdge[en-nnode0][j]) {
+              if(nodeOnEdge[sn-nnode0][j] && nodeOnEdge[en-nnode0][j]) {
                 cfSegNodes[m].push_back(sn);
                 cfSegNodes[m].push_back(en);
               }
             }
           } // End of loop over i
         }
-      } // End of loop over j		  
+      } // End of loop over j             
       nnode0+=num;
       delete [] nodeOnEdge;
     }  
   } // End of loop over k
 }  
     
-void Crack::DiscretizeQuadCracks(const int& m,int& nnode0)
+void
+Crack::DiscretizeQuadCracks(const int& m,int& nnode0)
 {
   int k,l,i,j,ni,nj,n1,n2,n3,num;
   int nstart1,nstart2,nstart3;
@@ -890,33 +901,33 @@ void Crack::DiscretizeQuadCracks(const int& m,int& nnode0)
       for(i=0; i<num; i++) nodeOnEdge[i] = new short[4];  
       for(i=0; i<num; i++) {
         for(j=0; j<4; j++) nodeOnEdge[i][j]=NO;
-      }	    
+      }     
     
       // Generate crack nodes
       int count=-1; 
       for(j=0; j<=nj; j++) {
         for(i=0; i<=ni; i++) {
-	  // Detect edge nodes      
-	  count++;
+          // Detect edge nodes      
+          count++;
           if(j==0)  nodeOnEdge[count][0]=YES;
           if(i==ni) nodeOnEdge[count][1]=YES;
           if(j==nj) nodeOnEdge[count][2]=YES;
           if(i==0)  nodeOnEdge[count][3]=YES;
-	  // Intrinsic coordinates
-	  ksi=-1.0+(float)(2*i)/ni;
-          eta=-1.0+(float)(2*j)/nj;	
-	  // Global coordinates by shape function      
-	  GetGlobalCoordinates(m,k,l,ksi,eta,pt);       
+          // Intrinsic coordinates
+          ksi=-1.0+(float)(2*i)/ni;
+          eta=-1.0+(float)(2*j)/nj;     
+          // Global coordinates by shape function      
+          GetGlobalCoordinates(m,k,l,ksi,eta,pt);       
           cx[m].push_back(pt);
         }
         if(j!=nj) {
           for(i=0; i<ni; i++) {
-            count++;		
+            count++;            
             // intrinsic coordinates
-	    ksi=-1.0+(float)(2*i+1)/ni;
-	    eta=-1.0+(float)(2*j+1)/nj;	  
-            // Global coordinates		 
-	    GetGlobalCoordinates(m,k,l,ksi,eta,pt);
+            ksi=-1.0+(float)(2*i+1)/ni;
+            eta=-1.0+(float)(2*j+1)/nj;   
+            // Global coordinates                
+            GetGlobalCoordinates(m,k,l,ksi,eta,pt);
             cx[m].push_back(pt);
           }
         }
@@ -951,12 +962,12 @@ void Crack::DiscretizeQuadCracks(const int& m,int& nnode0)
             n1=ce[m][i].x();
             n2=ce[m][i].y();
             n3=ce[m][i].z();
-	    if(n1<nnode0 || n2<nnode0 || n3<nnode0) continue;
+            if(n1<nnode0 || n2<nnode0 || n3<nnode0) continue;
             for(int s=0; s<3; s++) { // Loop over sides of the element
               int sn=n1,en=n2;
               if(s==1) {sn=n2; en=n3;}
               if(s==2) {sn=n3; en=n1;}
-	      if(nodeOnEdge[sn-nnode0][j] && nodeOnEdge[en-nnode0][j]) {
+              if(nodeOnEdge[sn-nnode0][j] && nodeOnEdge[en-nnode0][j]) {
                 cfSegNodes[m].push_back(sn);
                 cfSegNodes[m].push_back(en);
               }
@@ -970,12 +981,13 @@ void Crack::DiscretizeQuadCracks(const int& m,int& nnode0)
   } // End of loop over quads
 }     
 
-void Crack::GetGlobalCoordinates(const int& m, const int& k, 
-	const int& l,const double& x, const double& y, Point& pt)
+void
+Crack::GetGlobalCoordinates(const int& m, const int& k, 
+                            const int& l,const double& x, const double& y, Point& pt)
 {
-  // (x,y) intrinsic coordinate of the points	 
+  // (x,y) intrinsic coordinate of the points    
   // Shape functions of the serendipity eight-noded element
-  double sf[8]; 	 
+  double sf[8];          
   sf[0]=(1.-x)*(1.-y)*(-1.-x-y)/4.;
   sf[1]=(1.+x)*(1.-y)*(-1.+x-y)/4.;
   sf[2]=(1.+x)*(1.+y)*(-1.+x+y)/4.;
@@ -995,7 +1007,8 @@ void Crack::GetGlobalCoordinates(const int& m, const int& k,
   pt=Point(px,py,pz);
 }
 
-void Crack::DiscretizeTriangularCracks(const int&m, int& nnode0)
+void
+Crack::DiscretizeTriangularCracks(const int&m, int& nnode0)
 {
   int k,i,j;
   int nstart1,nstart2,n1,n2,n3;
@@ -1083,7 +1096,8 @@ void Crack::DiscretizeTriangularCracks(const int&m, int& nnode0)
   }
 }
 
-void Crack::DiscretizeArcCracks(const int& m, int& nnode0)
+void
+Crack::DiscretizeArcCracks(const int& m, int& nnode0)
 {
   for(int k=0; k<(int)arcs[m].size(); k++) { 
     // Three points of the arc
@@ -1170,7 +1184,8 @@ void Crack::DiscretizeArcCracks(const int& m, int& nnode0)
   }
 }
 
-void Crack::DiscretizeEllipticCracks(const int& m, int& nnode0)
+void
+Crack::DiscretizeEllipticCracks(const int& m, int& nnode0)
 {
   for(int k=0; k<(int)ellipses[m].size(); k++) {
     // Three points of the ellipse
@@ -1228,7 +1243,8 @@ void Crack::DiscretizeEllipticCracks(const int& m, int& nnode0)
   } 
 }
 
-void Crack::DiscretizePartialEllipticCracks(const int& m, int& nnode0)
+void
+Crack::DiscretizePartialEllipticCracks(const int& m, int& nnode0)
 {
   for(int k=0; k<(int)pellipses[m].size(); k++) {
     double extent=0.0;
@@ -1286,9 +1302,10 @@ void Crack::DiscretizePartialEllipticCracks(const int& m, int& nnode0)
   } 
 }
 
-void Crack::CombineCrackSegments(const int& m)
+void
+Crack::CombineCrackSegments(const int& m)
 {
-  int num=(int)cx[m].size();	  
+  int num=(int)cx[m].size();      
   
   for(int i=0; i<num; i++) {
     for(int j=0; j<i; j++) {
@@ -1296,12 +1313,12 @@ void Crack::CombineCrackSegments(const int& m)
         ResetCrackNodes(m,i,j);
         ResetCrackElements(m,i,j);
         ResetCrackFrontNodes(m,i,j);
-	// After dropping node i, cx[m].size() decreses by 1 
+        // After dropping node i, cx[m].size() decreses by 1 
         num--;
-	// The components (>i) in cx[m] move back a record.
-	// It's tricky, but necessary for multiple coincidences.
-	i--;
-      }	
+        // The components (>i) in cx[m] move back a record.
+        // It's tricky, but necessary for multiple coincidences.
+        i--;
+      } 
     }
   } 
 
@@ -1313,9 +1330,9 @@ void Crack::CombineCrackSegments(const int& m)
     for(int j=0; j<num; j++) {
       if(i!=j && TwoPointsCoincide(cx[m][i],cx[m][j])) {
         cout << "Error: duplicate crack nodes are found: cx[" 
-	     << m << "][" << i << "] = " << "cx[" << m << "][" 
-	     << j << "]. Program terminated." << endl;
-	exit(1);
+             << m << "][" << i << "] = " << "cx[" << m << "][" 
+             << j << "]. Program terminated." << endl;
+        exit(1);
       }
     }
   }
@@ -1323,20 +1340,22 @@ void Crack::CombineCrackSegments(const int& m)
     int n1=ce[m][i].x(), n2=ce[m][i].y(), n3=ce[m][i].z();
     if(n1==n2 || n1==n3 || n2==n3) {
       cout << "Error: crack element ce[m][" << i << "] = " << ce[m][i] 
-	   << " has two same nodes. Program terminted." << endl; 	    
+           << " has two same nodes. Program terminted." << endl;            
       exit(1);
     }  
   } 
 }
 
-short Crack::TwoPointsCoincide(const Point& p1, const Point& p2)
+short
+Crack::TwoPointsCoincide(const Point& p1, const Point& p2)
 {
   return TwoDoublesEqual( p1.x(), p2.x() )  &&
          TwoDoublesEqual( p1.y(), p2.y() )  &&
          TwoDoublesEqual( p1.z(), p2.z() );
 }
-	
-short Crack::TwoDoublesEqual(const double& db1, const double& db2)
+        
+short
+Crack::TwoDoublesEqual(const double& db1, const double& db2)
 {
   double ab1=fabs(db1);
   double ab2=fabs(db2);
@@ -1355,11 +1374,12 @@ short Crack::TwoDoublesEqual(const double& db1, const double& db2)
     else return(NO);
   }
 }
-	
-void Crack::ResetCrackNodes(const int& m, const int& n1, const int& n2)
+        
+void
+Crack::ResetCrackNodes(const int& m, const int& n1, const int& /*n2*/)
 {
   // If cx[m][n1]=cx[m][n2], drop node n1
-	 	
+                
   int num=(int)cx[m].size();
   Point* tmp = new Point[num];    
   for(int i=0; i<num; i++) tmp[i]=cx[m][i];
@@ -1375,15 +1395,16 @@ void Crack::ResetCrackNodes(const int& m, const int& n1, const int& n2)
   delete [] tmp;
 }
 
-void Crack::ResetCrackElements(const int& m, const int& n1, const int& n2)
+void
+Crack::ResetCrackElements(const int& m, const int& n1, const int& n2)
 {
    int num=(int)ce[m].size();
    IntVector* tmp = new IntVector[num];
    for(int i=0; i<num; i++) tmp[i]=ce[m][i]; 
 
    for(int i=0; i<num; i++) { 
-     int n=-1;	   
-     // first node of the element	   
+     int n=-1;     
+     // first node of the element          
      n=tmp[i].x();
      if(n<n1)        ce[m][i][0]=n;
      else if(n==n1)  ce[m][i][0]=n2;
@@ -1402,14 +1423,15 @@ void Crack::ResetCrackElements(const int& m, const int& n1, const int& n2)
    delete [] tmp;
 }
 
-void Crack::ResetCrackFrontNodes(const int& m, const int& n1, const int& n2)
+void
+Crack::ResetCrackFrontNodes(const int& m, const int& n1, const int& n2)
 {
    int num=(int)cfSegNodes[m].size();
    int* tmp = new int[num];
    for(int i=0; i<num; i++) tmp[i]=cfSegNodes[m][i];
 
    for(int i=0; i<num; i++) {
-     int n=tmp[i];	   
+     int n=tmp[i];         
      if(n<n1)        cfSegNodes[m][i]=n;
      else if(n==n1)  cfSegNodes[m][i]=n2;
      else            cfSegNodes[m][i]=n-1;
@@ -1417,17 +1439,18 @@ void Crack::ResetCrackFrontNodes(const int& m, const int& n1, const int& n2)
    delete [] tmp;
 }
 
-void Crack::ReorderCrackFrontNodes(const int& m)
+void
+Crack::ReorderCrackFrontNodes(const int& m)
 {
-  int k1=-1,k2=-1,segs[2];	
+  int k1=-1,k2=-1,segs[2];      
   vector<int> tmp;
   
   int num=(int)cfSegNodes[m].size();
   for(int i=0; i<num/2; i++) { 
-    // two nodes of the crack-front element	  
+    // two nodes of the crack-front element       
     k1=cfSegNodes[m][2*i];
     k2=cfSegNodes[m][2*i+1];     
-    // element(s) connected by the first node k1	  
+    // element(s) connected by the first node k1          
     FindSegsFromNode(m,k1,segs); 
     if(segs[R]<0) { // a right edge element 
       tmp.push_back(k1);
@@ -1435,12 +1458,12 @@ void Crack::ReorderCrackFrontNodes(const int& m)
       // the rest elements of the sub crack front 
       FindSegsFromNode(m,k2,segs);
       while(segs[L]>=0) { // Node k2 is connected by segs[L] 
-	k1=cfSegNodes[m][2*segs[L]];
-	k2=cfSegNodes[m][2*segs[L]+1];
+        k1=cfSegNodes[m][2*segs[L]];
+        k2=cfSegNodes[m][2*segs[L]+1];
         tmp.push_back(k1);
         tmp.push_back(k2);
-	FindSegsFromNode(m,k2,segs);
-      }	
+        FindSegsFromNode(m,k2,segs);
+      } 
     } // End of if(segs[R]<0)
   } 
 
@@ -1469,7 +1492,8 @@ void Crack::ReorderCrackFrontNodes(const int& m)
 
 
 // Determine how the crack-font nodes are connected    
-void Crack::FindCrackFrontNodeIndexes(const int& m)
+void
+Crack::FindCrackFrontNodeIndexes(const int& m)
 {    
   // The previous node index of a crack-front node (cfSegPreIdx)
   // for which node[i]=node[preIdx] (preIdx<i)
@@ -1610,7 +1634,7 @@ short Crack::SmoothCrackFrontAndCalculateNormals(const int& mm)
     double* s=new double[m+1];  // positions of intervals
     double* ex=new double[n1+1];
     double* ey=new double[n1+1];
-    double* ez=new double[n1+1];	  
+    double* ez=new double[n1+1];          
 
     // Positins of the intervals
     s[1]=S[1]-(S[2]-S[1])/50.;
@@ -1750,7 +1774,7 @@ short Crack::SmoothCrackFrontAndCalculateNormals(const int& mm)
     else { // Calculated
       cfSegV2[mm][k]=cfSegV2[mm][preIdx];
     }
-  } // End of loop over crack-front nodes		    
+  } // End of loop over crack-front nodes                   
 
   
   // Task 3: Calculate bi-normals of crack plane at crack-front nodes
@@ -1775,15 +1799,15 @@ short Crack::CubicSpline(const int& n, const int& m, const int& n1,
   short flag=1;
   int i,k,n3,l,j1,nk,lk,llk,jj,lly,nnj,mmi,nn,ii,my,jm,ni,nij;
   double h1,h2,xlk,xlk1,a1,a2,a3,a4,t;
-	          
+                  
   double** f=new double*[n1+1];
   for(i=0; i<n1+1; i++) f[i]=new double[14];
-		      
+                      
   for(i=1; i<=n1; i++) {
     e[i]=0.;
     for(k=1; k<=13; k++) f[i][k]=0.;
   } 
-		        
+                        
   n3=0;
   for(l=1; l<=m; l++) {
     if(l<m)
@@ -1944,7 +1968,8 @@ short Crack::CubicSpline(const int& n, const int& m, const int& n1,
 
 // Calculate crack-front normals by weighted average method,
 // which is used by defualt 
-void Crack::CalculateCrackFrontNormals(const int& mm)
+void
+Crack::CalculateCrackFrontNormals(const int& mm)
 {
   // Task 1: Calculate crack-front tangential normals
   int num=cfSegNodes[mm].size();
@@ -1953,30 +1978,30 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
   for(int k=0; k<num; k++) {
     int node=cfSegNodes[mm][k];
     Point pt=cx[mm][node];
-	
+        
     int preIdx=cfSegPreIdx[mm][k];
     if(preIdx<0) {// a duplicate node, not operated
       int minIdx=cfSegMinIdx[mm][k];
       int maxIdx=cfSegMaxIdx[mm][k];
       int minNode=cfSegNodes[mm][minIdx];
       int maxNode=cfSegNodes[mm][maxIdx];
-	
+        
       // The node to the right of pt 
       int node1=-1;
       if(minNode==maxNode && (k==minIdx || k==maxIdx)) {
-	// for the ends of enclosed crack
-	node1=cfSegNodes[mm][maxIdx-2];
+        // for the ends of enclosed crack
+        node1=cfSegNodes[mm][maxIdx-2];
       }
       else { // for the nodes of non-enclosd cracks or
-  	     // non-end-nodes of enclosed cracks
-	int k1=-1;
-	if((maxIdx-minIdx+1)/2>2) { // three or more segments
-	  k1=(k-2)<minIdx+1 ? minIdx+1 : k-2;
-	}
-	else { // one or two segments
-	  k1=(k-2)<minIdx ? minIdx : k-2;
-	}
-	node1=cfSegNodes[mm][k1];
+             // non-end-nodes of enclosed cracks
+        int k1=-1;
+        if((maxIdx-minIdx+1)/2>2) { // three or more segments
+          k1=(k-2)<minIdx+1 ? minIdx+1 : k-2;
+        }
+        else { // one or two segments
+          k1=(k-2)<minIdx ? minIdx : k-2;
+        }
+        node1=cfSegNodes[mm][k1];
       }
       Point pt1=cx[mm][node1];
        
@@ -2035,11 +2060,11 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
     FindSegsFromNode(mm,node,segs);
     short edgeNode=NO;
     if(segs[L]<0 || segs[R]<0) edgeNode=YES;
-	    
+            
     // End information of the sub crack
     int minNode=cfSegNodes[mm][cfSegMinIdx[mm][k]];
     int maxNode=cfSegNodes[mm][cfSegMaxIdx[mm][k]];
-	    
+            
     int preIdx=cfSegPreIdx[mm][k];
     if(preIdx<0) {// a duplicate node, not operated
       Vector v2T=Vector(0.,0.,0.);
@@ -2049,51 +2074,51 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
         int n1=ce[mm][i].x();
         int n2=ce[mm][i].y();
         int n3=ce[mm][i].z();
-	    
+            
         // Detect if the elem is connected to the node
         short elemRelatedToNode=NO;
         if(node==n1 || node==n2 || node==n3) elemRelatedToNode=YES;
 
         // Detect if the elem is an inner elem
-	short innerElem=YES;
-	if(minNode!=maxNode &&
-	(n1==minNode || n2==minNode || n3==minNode ||
-	n1==maxNode || n2==maxNode || n3==maxNode)) innerElem=NO;
-	
-	// The elem will be used if it is connected to the node AND 
-	// 1. if it is an inner elem for non-edge nodes or
-	// 2. the node is an edge node.
-	if(elemRelatedToNode && (innerElem || edgeNode)) {
-	  // Three points of the triangle
-	  Point p1=cx[mm][n1];
-	  Point p2=cx[mm][n2];
-	  Point p3=cx[mm][n3];
-	  // Lengths of sides of the triangle
-	  double a=(p1-p2).length();
-	  double b=(p1-p3).length();
-	  double c=(p2-p3).length();
-	  // Half of perimeter of the triangle
-	  double s=(a+b+c)/2.;
-	  // Area of the triangle
-	  double thisArea=sqrt(s*(s-a)*(s-b)*(s-c));
-	  // Normal of the triangle
-	  Vector thisNorm=TriangleNormal(p1,p2,p3);
-	  // Area-weighted normal vector
-	  v2T+=thisNorm*thisArea;
-	  // Total area of crack plane related to the node
-	  totalArea+=thisArea;
-	}
+        short innerElem=YES;
+        if(minNode!=maxNode &&
+        (n1==minNode || n2==minNode || n3==minNode ||
+        n1==maxNode || n2==maxNode || n3==maxNode)) innerElem=NO;
+        
+        // The elem will be used if it is connected to the node AND 
+        // 1. if it is an inner elem for non-edge nodes or
+        // 2. the node is an edge node.
+        if(elemRelatedToNode && (innerElem || edgeNode)) {
+          // Three points of the triangle
+          Point p1=cx[mm][n1];
+          Point p2=cx[mm][n2];
+          Point p3=cx[mm][n3];
+          // Lengths of sides of the triangle
+          double a=(p1-p2).length();
+          double b=(p1-p3).length();
+          double c=(p2-p3).length();
+          // Half of perimeter of the triangle
+          double s=(a+b+c)/2.;
+          // Area of the triangle
+          double thisArea=sqrt(s*(s-a)*(s-b)*(s-c));
+          // Normal of the triangle
+          Vector thisNorm=TriangleNormal(p1,p2,p3);
+          // Area-weighted normal vector
+          v2T+=thisNorm*thisArea;
+          // Total area of crack plane related to the node
+          totalArea+=thisArea;
+        }
       } // End of loop over crack elems
-	
+        
       if(totalArea!=0.) {
         v2T/=totalArea;
       }
       else {
-	cout << "Error: divided by zero in calculating outer normal"
-	     << " at crack front node, cfSegNodes[" << mm << "][" << k 
-	     << "] = " << cfSegNodes[mm][k] << endl;
-	exit(1);
-      }	
+        cout << "Error: divided by zero in calculating outer normal"
+             << " at crack front node, cfSegNodes[" << mm << "][" << k 
+             << "] = " << cfSegNodes[mm][k] << endl;
+        exit(1);
+      } 
 
       cfSegV2[mm][k]=v2T/v2T.length();
     }
@@ -2113,7 +2138,7 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
     if(segs[L]<0) cfSegV2[mm][k]=cfSegV2[mm][k-1];
   }
   
-	  
+          
   // Task 3: Calculate bi-normals of crack plane at crack-front nodes
   // and adjust tangential normals to make sure the three axes
   // are perpendicular to each other. Keep V2 unchanged.
@@ -2128,7 +2153,8 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
 }
       
 // Find the segment numbers which are connected by the same node
-void Crack::FindSegsFromNode(const int& m,const int& node, int segs[])
+void
+Crack::FindSegsFromNode(const int& m,const int& node, int segs[])
 {
   // segs[R] -- the segment on the right of the node
   // segs[L] -- the segment on the left of the node
@@ -2202,7 +2228,8 @@ short Crack::TwoLinesCoincide(const Point& p1,const Point& p2,
      return NO;
 }
 
-void Crack::OutputInitialCrackMesh(const int& m)
+void
+Crack::OutputInitialCrackMesh(const int& m)
 {
   int pid;
   MPI_Comm_rank(mpi_crack_comm, &pid);
@@ -2241,7 +2268,7 @@ void Crack::OutputInitialCrackMesh(const int& m)
     cout << "  Average length of crack-front segments, css[m]="
          << css[m] << endl;
     cout << "  Average angle of crack-front segments, csa[m]="
-		         << csa[m] << endl;
+                         << csa[m] << endl;
     cout << "  Crack extent: " << cmin[m] << "-->"
          <<  cmax[m] << endl << endl;
   }

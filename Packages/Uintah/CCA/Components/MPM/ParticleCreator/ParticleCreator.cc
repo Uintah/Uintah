@@ -30,7 +30,7 @@ using std::ofstream;
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMLabel* lb,
                                  MPMFlags* flags, 
-                                 SimulationStateP& sharedState)
+                                 SimulationStateP& /*sharedState*/)
 {
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
@@ -47,11 +47,11 @@ ParticleCreator::~ParticleCreator()
 
 ParticleSubset* 
 ParticleCreator::createParticles(MPMMaterial* matl,
-				 particleIndex numParticles,
-				 CCVariable<short int>& cellNAPID,
-				 const Patch* patch,DataWarehouse* new_dw,
-				 MPMLabel* lb,
-				 vector<GeometryObject*>& d_geom_objs)
+                                 particleIndex numParticles,
+                                 CCVariable<short int>& cellNAPID,
+                                 const Patch* patch,DataWarehouse* new_dw,
+                                 MPMLabel* lb,
+                                 vector<GeometryObject*>& d_geom_objs)
 {
   // Print the physical boundary conditions
   printPhysicalBCs();
@@ -127,7 +127,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       
       if (volumes) {
         if (!volumes->empty()) {
-    	  pvolume[pidx] = *voliter;
+          pvolume[pidx] = *voliter;
           pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
           ++voliter;
         }
@@ -135,21 +135,21 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
       if (temperatures) {
         if (!temperatures->empty()) {
-    	  ptemperature[pidx] = *tempiter;
+          ptemperature[pidx] = *tempiter;
           ++tempiter;
         }
       }
 
       if (pforces) {
         if (!pforces->empty()) {
-    	  pexternalforce[pidx] = *forceiter;
+          pexternalforce[pidx] = *forceiter;
           ++forceiter;
         }
       }
 
       if (pfiberdirs) {
         if (!pfiberdirs->empty()) {
-    	  pfiberdir[pidx] = *fiberiter;
+          pfiberdir[pidx] = *fiberiter;
           ++fiberiter;
         }
       }
@@ -158,11 +158,11 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       // a physical BC attached to it then mark with the 
       // physical BC pointer
       if (d_useLoadCurves) {
-	if (checkForSurface(piece,*itr,dxpp)) {
-	  pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp);
-	} else {
-	  pLoadCurveID[pidx] = 0;
-	}
+        if (checkForSurface(piece,*itr,dxpp)) {
+          pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp);
+        } else {
+          pLoadCurveID[pidx] = 0;
+        }
       }
       count++;
     }
@@ -207,9 +207,9 @@ void ParticleCreator::printPhysicalBCs()
 
 void 
 ParticleCreator::applyForceBC(const Vector& dxpp, 
-			      const Point& pp,
-			      const double& pMass, 
-			      Vector& pExtForce)
+                              const Point& pp,
+                              const double& pMass, 
+                              Vector& pExtForce)
 {
   for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
@@ -217,13 +217,13 @@ ParticleCreator::applyForceBC(const Vector& dxpp,
     //cerr << " BC Type = " << bcs_type << endl;
     if (bcs_type == "Force") {
       ForceBC* bc = dynamic_cast<ForceBC*>
-	(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
+        (MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
 
       Box bcBox;
       if (d_fracture)
-	bcBox = Box(bc->getLowerRange(), bc->getUpperRange());
+        bcBox = Box(bc->getLowerRange(), bc->getUpperRange());
       else
-	bcBox = Box(bc->getLowerRange()-dxpp,bc->getUpperRange()+dxpp);
+        bcBox = Box(bc->getLowerRange()-dxpp,bc->getUpperRange()+dxpp);
 
       //cerr << "BC Box = " << bcBox << " Point = " << pp << endl;
       if(bcBox.contains(pp)) {
@@ -238,13 +238,13 @@ ParticleCreator::applyForceBC(const Vector& dxpp,
 
 ParticleSubset* 
 ParticleCreator::allocateVariables(particleIndex numParticles, 
-				   int dwi,MPMLabel* lb, 
-				   const Patch* patch,
-				   DataWarehouse* new_dw)
+                                   int dwi,MPMLabel* lb, 
+                                   const Patch* patch,
+                                   DataWarehouse* new_dw)
 {
 
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
-							patch);
+                                                        patch);
   new_dw->allocateAndPut(position,       lb->pXLabel,             subset);
   new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      subset); 
   new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, subset);
@@ -266,9 +266,9 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
 }
 
 void ParticleCreator::allocateVariablesAddRequires(Task* task, 
-						   const MPMMaterial* ,
-						   const PatchSet* ,
-						   MPMLabel* lb) const
+                                                   const MPMMaterial* ,
+                                                   const PatchSet* ,
+                                                   MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,lb->pDispLabel, Ghost::None);
@@ -293,10 +293,10 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
 
 
 void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
-					   ParticleSubset* addset,
-					   map<const VarLabel*, ParticleVariableBase*>* newState,
-					   ParticleSubset* delset,
-					   DataWarehouse* old_dw)
+                                           ParticleSubset* addset,
+                                           map<const VarLabel*, ParticleVariableBase*>* newState,
+                                           ParticleSubset* delset,
+                                           DataWarehouse* old_dw)
 {
   ParticleSubset::iterator n,o;
 
@@ -394,14 +394,14 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
     Point lower = patch->nodePosition(*iter) + dcorner;
     for(int ix=0;ix < ppc.x(); ix++){
       for(int iy=0;iy < ppc.y(); iy++){
-	for(int iz=0;iz < ppc.z(); iz++){
-	  IntVector idx(ix, iy, iz);
-	  Point p = lower + dxpp*idx;
-	  if (!b2.contains(p))
-	    throw InternalError("Particle created outside of patch?", __FILE__, __LINE__);
-	  if (piece->inside(p)) 
-	    d_object_points[key].push_back(p);
-	}
+        for(int iz=0;iz < ppc.z(); iz++){
+          IntVector idx(ix, iy, iz);
+          Point p = lower + dxpp*idx;
+          if (!b2.contains(p))
+            throw InternalError("Particle created outside of patch?", __FILE__, __LINE__);
+          if (piece->inside(p)) 
+            d_object_points[key].push_back(p);
+        }
       }
     }
   }
@@ -411,18 +411,18 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
 
 void 
 ParticleCreator::initializeParticle(const Patch* patch,
-				    vector<GeometryObject*>::const_iterator obj,
-				    MPMMaterial* matl,
-				    Point p,
-				    IntVector cell_idx,
-				    particleIndex i,
-				    CCVariable<short int>& cellNAPID)
+                                    vector<GeometryObject*>::const_iterator obj,
+                                    MPMMaterial* matl,
+                                    Point p,
+                                    IntVector cell_idx,
+                                    particleIndex i,
+                                    CCVariable<short int>& cellNAPID)
 {
   IntVector ppc = (*obj)->getNumParticlesPerCell();
   Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
   Vector size(1./((double) ppc.x()),
-	      1./((double) ppc.y()),
-	      1./((double) ppc.z()));
+              1./((double) ppc.y()),
+              1./((double) ppc.z()));
   position[i] = p;
   pvolume[i] = dxpp.x()*dxpp.y()*dxpp.z();
   psize[i] = size;
@@ -444,7 +444,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   perosion[i] = 1.0;
 
   ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
-	 && cell_idx.z() <= 0xffff);
+         && cell_idx.z() <= 0xffff);
   long64 cellID = ((long64)cell_idx.x() << 16) | 
     ((long64)cell_idx.y() << 32) | ((long64)cell_idx.z() << 48);
   short int& myCellNAPID = cellNAPID[cell_idx];
@@ -455,7 +455,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
 particleIndex 
 ParticleCreator::countParticles(const Patch* patch,
-				vector<GeometryObject*>& d_geom_objs)
+                                vector<GeometryObject*>& d_geom_objs)
 {
   particleIndex sum = 0;
   vector<GeometryObject*>::const_iterator geom;
@@ -468,7 +468,7 @@ ParticleCreator::countParticles(const Patch* patch,
 
 particleIndex 
 ParticleCreator::countAndCreateParticles(const Patch* patch, 
-					 GeometryObject* obj)
+                                         GeometryObject* obj)
 {
   geompoints::key_type key(patch,obj);
   geomvols::key_type volkey(patch,obj);
@@ -540,7 +540,7 @@ vector<const VarLabel* > ParticleCreator::returnParticleState()
 }
 
 void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
-						     MPMLabel* lb)
+                                                     MPMLabel* lb)
 {
   particle_state.push_back(lb->pDispLabel);
   particle_state_preReloc.push_back(lb->pDispLabel_preReloc);
@@ -590,11 +590,11 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   particle_state_preReloc.push_back(lb->pStressLabel_preReloc);
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
-						 particle_state_preReloc);
+                                                 particle_state_preReloc);
 }
 
 int ParticleCreator::checkForSurface(const GeometryPiece* piece, const Point p,
-				     const Vector dxpp)
+                                     const Vector dxpp)
 {
 
   //  Check the candidate points which surround the point just passed

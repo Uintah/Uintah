@@ -54,7 +54,7 @@ MPMFlags::~MPMFlags()
 }
 
 void
-MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& grid)
+MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& /*grid*/)
 {
   ps->get("time_integrator", d_integrator_type);
   if (d_integrator_type == "implicit") 
@@ -133,7 +133,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& grid)
   }
 }
 
-bool MPMFlags::doMPMOnLevel(int level) const
+bool
+MPMFlags::doMPMOnLevel(int level) const
 {
   return level >= d_minGridLevel && level <= d_maxGridLevel;
 }
