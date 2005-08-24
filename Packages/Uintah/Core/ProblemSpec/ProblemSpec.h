@@ -335,8 +335,4 @@ WARNING
 
 } // End namespace Uintah
 
-// Need to be declared here or causes other code to not compile
-std::ostream& operator<<(std::ostream& out, const DOMNode* toWrite);
-std::ostream& operator<<(std::ostream& out, const DOMText* toWrite);
-
 #endif

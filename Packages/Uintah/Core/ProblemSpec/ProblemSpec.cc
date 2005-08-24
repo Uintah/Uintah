@@ -38,6 +38,10 @@ using namespace SCIRun;
 
 using namespace std;
 
+// Forward Declarations
+std::ostream& operator<<(std::ostream& out, const DOMNode & toWrite);
+//std::ostream& operator<<(std::ostream& out, const DOMText & toWrite);
+
 ProblemSpec::~ProblemSpec()
 {
   // the problem spec doesn't allocate any new memory.
@@ -1462,23 +1466,23 @@ namespace Uintah {
   ostream&
   operator<<(ostream& out, ProblemSpecP pspec)
   {
-    out << pspec->getNode()->getOwnerDocument();
+    out << *(pspec->getNode()->getOwnerDocument());
     return out;
   }
 }
 
 ostream&
-operator<<(ostream& target, const DOMNode* toWrite) 
+operator<<(ostream& target, const DOMNode& toWrite) 
 {
   // Get the name and value out for convenience
-  const char *nodeName = XMLString::transcode(toWrite->getNodeName());
-  const char *nodeValue = XMLString::transcode(toWrite->getNodeValue());
+  const char *nodeName = XMLString::transcode(toWrite.getNodeName());
+  const char *nodeValue = XMLString::transcode(toWrite.getNodeValue());
 
   // nodeValue will be sometimes be deleted in outputContent, but
   // will not always call outputContent
   bool valueDeleted = false;
 
-  switch (toWrite->getNodeType()) {
+  switch (toWrite.getNodeType()) {
   case DOMNode::TEXT_NODE:
     {
       outputContent(target, nodeValue);
@@ -1505,17 +1509,17 @@ operator<<(ostream& target, const DOMNode* toWrite)
       //MLCh *enc_name = XMLPlatformUtils::fgTransService->getEncodingName();
       target << "<?xml version='1.0' encoding='ISO-8859-1' ?>\n";
 
-      DOMNode *brother = toWrite->getNextSibling();
+      DOMNode *brother = toWrite.getNextSibling();
       while(brother != 0)
         {
-          target << brother << endl;
+          target << *brother << endl;
           brother = brother->getNextSibling();
         }
 
-      DOMNode *child = toWrite->getFirstChild();
+      DOMNode *child = toWrite.getFirstChild();
       while(child != 0)
         {
-          target << child << endl;
+          target << *child << endl;
           child = child->getNextSibling();
         }
 
@@ -1528,7 +1532,7 @@ operator<<(ostream& target, const DOMNode* toWrite)
       target << '<' << nodeName;
 
       // Output any attributes on this element
-      DOMNamedNodeMap *attributes = toWrite->getAttributes();
+      DOMNamedNodeMap *attributes = toWrite.getAttributes();
       int attrCount = static_cast<int>(attributes->getLength());
       for (int i = 0; i < attrCount; i++) {
         DOMNode  *attribute = attributes->item(i);
@@ -1544,12 +1548,12 @@ operator<<(ostream& target, const DOMNode* toWrite)
 
       //  Test for the presence of children, which includes both
       //  text content and nested elements.
-      DOMNode *child = toWrite->getFirstChild();
+      DOMNode *child = toWrite.getFirstChild();
       if (child != 0) {
         // There are children. Close start-tag, and output children.
         target << ">";
         while(child != 0) {
-          target << child;
+          target << *child;
           child = child->getNextSibling();
         }
 
@@ -1566,9 +1570,9 @@ operator<<(ostream& target, const DOMNode* toWrite)
   case DOMNode::ENTITY_REFERENCE_NODE:
     {
       DOMNode *child;
-      for (child = toWrite->getFirstChild(); child != 0;
+      for (child = toWrite.getFirstChild(); child != 0;
            child = child->getNextSibling())
-        target << child;
+        target << *child;
       break;
     }
 
@@ -1586,7 +1590,7 @@ operator<<(ostream& target, const DOMNode* toWrite)
 
   default:
     cerr << "Unrecognized node type = "
-         << (long)toWrite->getNodeType() << endl;
+         << (long)toWrite.getNodeType() << endl;
   }
 
   delete [] nodeName;
@@ -1596,8 +1600,8 @@ operator<<(ostream& target, const DOMNode* toWrite)
 }
 
 ostream&
-operator<<(ostream& target, const DOMText* toWrite) {
-  const char *p = XMLString::transcode(toWrite->getData());
+operator<<(ostream& target, const DOMText& toWrite) {
+  const char *p = XMLString::transcode(toWrite.getData());
   target << p;
   delete [] p;
   return target;
