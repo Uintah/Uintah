@@ -1685,7 +1685,7 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
         t_iter != d_modelSetup->tvars.end(); t_iter++){
       TransportedVariable* tvar = *t_iter;
                          // require q_old
-      t->requires(Task::OldDW, tvar->var,   tvar->matls, gn, 0);
+      t->requires(tvar->fromDW, tvar->fromVar,   tvar->matls, gn, 0);
 
       if(tvar->src){     // require q_src
         t->requires(Task::NewDW, tvar->src, tvar->matls, gn, 0);
@@ -4509,7 +4509,8 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
         if(tvar->matls->contains(indx)){  
           constCCVariable<double> q_old,q_src;
           CCVariable<double> q_L_CC;
-          old_dw->get(q_old,             tvar->var, indx, patch, gn, 0);
+          DataWarehouse* fromdw = tvar->fromDW == Task::OldDW?old_dw:new_dw;
+          fromdw->get(q_old,             tvar->fromVar, indx, patch, gn, 0);
           new_dw->allocateAndPut(q_L_CC, tvar->var_Lagrangian, indx, patch);
 
           // initialize q_L to q_old
