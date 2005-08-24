@@ -300,8 +300,6 @@ namespace Uintah {
     cout << "max_delt_increase = " << d_timeinfo->max_delt_increase << endl;
 #endif
 
-    cout << "  Doing timestep tests, delt = " << delt << "  prev = " << prev_delt << endl;
-
     delt *= d_timeinfo->delt_factor;
       
     if(delt < d_timeinfo->delt_min){
