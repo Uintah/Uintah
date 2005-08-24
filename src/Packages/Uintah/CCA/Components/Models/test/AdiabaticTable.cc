@@ -733,7 +733,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         cerr << "interpolating " << tv->name << '\n';
         CCVariable<double> value;
         new_dw->allocateAndPut(value, tv->label, matl, patch);
-        CellIterator iter = patch->getCellIterator();
+        CellIterator iter = patch->getExtraCellIterator();
         table->interpolate(tv->index, value, iter, ind_vars);
       }
     }
