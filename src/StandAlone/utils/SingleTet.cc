@@ -53,7 +53,7 @@ main(int argc, char **argv) {
   Point p1(0.,0.,0.);
   Point p2(1.,0.,0.);
   Point p3(0.,1.,0.);
-  Point p4(0.,0.,1.);
+  Point p4(0.,0.,-1.);
   tvm->add_point(p1);
   tvm->add_point(p2);
   tvm->add_point(p3);

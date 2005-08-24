@@ -436,19 +436,19 @@ public:
 
     inline 
     const Point node0() const {
-      mesh_.points_[node0_index()];
+      return mesh_.points_[node0_index()];
     }
     inline 
     const Point node1() const {
-      mesh_.points_[node1_index()];
+      return mesh_.points_[node1_index()];
     }
     inline 
     const Point node2() const {
-      mesh_.points_[node2_index()];
+      return mesh_.points_[node2_index()];
     }
     inline 
     const Point node3() const {
-      mesh_.points_[node3_index()];
+      return mesh_.points_[node3_index()];
     }
 
   private:
@@ -767,14 +767,66 @@ public:
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pwl_approx_edge(vector<Point> &approx, typename Edge::index_type, 
-		       double epsilon) const;
+  void pwl_approx_edge(vector<vector<double> > &coords, 
+		       typename Cell::index_type ci, 
+		       typename Edge::index_type ei, 
+		       unsigned div_per_unit) const
+  {
+    // Needs to match UnitEdges in Basis/TetLinearLgn.cc 
+    // compare get_nodes order to the basis order
+    // map mesh order to basis order
+    int basis_idx = 0;
+    switch (ei % 6)
+    {
+    case 0: //0,1
+      basis_idx = 0;
+      break;
+    case 1: //0,2
+      basis_idx = 2;
+      break;
+    case 2: //0,3
+      basis_idx = 3;
+      break;
+    case 3: //1,2
+      basis_idx = 1;
+      break;
+    case 4: //2,3
+      basis_idx = 5;
+      break;
+    default:
+    case 5: //1,3
+      basis_idx = 4;
+    }
+    coords.resize(3);
+    coords.clear();
+    basis_.approx_edge(basis_idx, div_per_unit, coords); 
+  }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an face.
+  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+		       typename Cell::index_type ci, 
+		       typename Face::index_type fi, 
+		       unsigned div_per_unit) const
+  {
+    // Needs to match UnitEdges in Basis/TetLinearLgn.cc 
+    // compare get_nodes order to the basis order
+    basis_.approx_face(fi%4, div_per_unit, coords); 
+  }
+
   void get_coords(vector<double> &coords, 
 		  const Point &p,
 		  typename Cell::index_type idx) const
   {
     ElemData ed(*this, idx);
     basis_.get_coords(coords, p, ed); 
+  }
+  
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename Cell::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    pt = basis_.interpolate(coords, ed);
   }
 
   static const TypeDescription* node_type_description();
