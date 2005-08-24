@@ -30,18 +30,16 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
   SolverInterface* solve = 0;
   if(solver == "CGSolver") {
     solve = new CGSolver(world);
-  } else if(solver == "DirectSolve") {
+  } else if (solver == "DirectSolve") {
     solve = new DirectSolve(world);
-  } else if(solver == "HypreSolver" || solver == "hypre"){
+  } else if (solver == "HypreSolver" || solver == "hypre") {
 #if HAVE_HYPRE
     solve = new HypreSolver2(world);
 #else
     cerr << "Hypre solver not available, hypre not configured\n";
     exit(1);
-#endif
-#ifdef OREN
-  } else if(solver == "AMRSolver" || solver == "hypreamr"){
-#if HAVE_HYPRE
+  } else if (solver == "AMRSolver" || solver == "hypreamr") {
+#if HAVE_HYPRE_1_9
     solve = new AMRSolver(world);
 #else
     cerr << "Hypre solver not available, hypre not configured\n";

@@ -142,7 +142,10 @@ namespace Uintah {
     const VarLabel* int_eng_X_FC_fluxLabel;
     const VarLabel* int_eng_Y_FC_fluxLabel;
     const VarLabel* int_eng_Z_FC_fluxLabel;
-      
+
+    // Implicit AMR variables
+    const VarLabel* connectionListLabel;
+
     };
 } // end namespace Uintah
 

@@ -14,6 +14,7 @@ SRCS     += \
 	$(SRCDIR)/SoleVariableBase.cc \
 	$(SRCDIR)/SoleVariable_special.cc \
 	$(SRCDIR)/Stencil7.cc \
+	$(SRCDIR)/ConnectionList.cc \
 	$(SRCDIR)/VarLabel.cc \
 	$(SRCDIR)/VarLabelLevelDW.cc \
 	$(SRCDIR)/VarLabelMatlPatch.cc \
