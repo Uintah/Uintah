@@ -12,7 +12,7 @@
 #include <Packages/Uintah/CCA/Components/Models/Radiation/Models_DORadiationModel.h>
 #include <Packages/Uintah/CCA/Components/Models/Radiation/Models_PetscSolver.h>
 #ifdef HAVE_HYPRE
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_HypreSolver.h>
+#  include <Packages/Uintah/CCA/Components/Models/Radiation/Models_HypreSolver.h>
 #endif
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
