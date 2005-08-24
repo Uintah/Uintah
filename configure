@@ -943,7 +943,7 @@ Optional Packages:
 --with-lapack=DIR       Use the lapack installation in DIR
 --with-fortran=DIR      Use the fortran (eg: g2c) installation in DIR/lib
 --with-ptolemyII=DIR    Use the Ptolemy II (eg: ptII4.0.1) installation in
-                          DIR (Ptolemypa ckage only)
+                          DIR (Ptolemy package only)
 --with-java=DIR         Use the Java distribution in DIR (Ptolemy package
                           only)
 --with-mpi=DIR          Use the mpi installation in DIR
@@ -26134,7 +26134,8 @@ cat > conftest-exc.cc <<EOF
     }
 EOF
     $CXX -o conftest-exc conftest-exc.cc
-    exc_error=`./conftest-exc >& the_void`
+    ./conftest-exc 2>&1 /dev/null
+
     if test "$?" != "0"; then
        echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
@@ -26147,7 +26148,7 @@ echo "${ECHO_T}yes" >&6
        EXCEPTIONS_CRASH_DEF=""
     fi
 
-    rm -r conftest-exc.cc conftest-exc the_void
+    rm -f conftest-exc.cc conftest-exc
 
 
 ##  --  search for mpeg  -------------------------------------------------
