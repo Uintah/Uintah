@@ -48,7 +48,7 @@ using namespace SCIRun;
 //****************************************************************************
 Models_DORadiationModel::Models_DORadiationModel(const ProcessorGroup* myworld):
                                    Models_RadiationModel(),
-				   d_myworld(myworld)
+                                   d_myworld(myworld)
 {
   d_linearSolver = 0;
 }
@@ -193,10 +193,10 @@ Models_DORadiationModel::computeOrdinatesOPL() {
 
 void 
 Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
-					const Patch* patch,
-					Models_CellInformation* cellinfo,
-					RadiationVariables* vars,
-					RadiationConstVariables* constvars)
+                                        const Patch* patch,
+                                        Models_CellInformation* cellinfo,
+                                        RadiationVariables* vars,
+                                        RadiationConstVariables* constvars)
 
 {
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -211,40 +211,40 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
 
-	IntVector currCell(ii,jj,kk);
-	if (constvars->temperature[currCell] > 1000.0) {
-	  double bc = vars->mixfrac[currCell]*(84.0/100.0)*constvars->density[currCell];
-	  double c3 = 0.1;
-	  double rhosoot = 1950.0;
-	  double cmw = 12.0;
-	  double sootFactor = 0.01;
+        IntVector currCell(ii,jj,kk);
+        if (constvars->temperature[currCell] > 1000.0) {
+          double bc = vars->mixfrac[currCell]*(84.0/100.0)*constvars->density[currCell];
+          double c3 = 0.1;
+          double rhosoot = 1950.0;
+          double cmw = 12.0;
+          double sootFactor = 0.01;
 
-	  if (vars->mixfrac[currCell] > 0.1)
-	    vars->sootVF[currCell] = c3*bc*cmw/rhosoot*sootFactor;
-	  else
-	    vars->sootVF[currCell] = 0.0;
-	}
+          if (vars->mixfrac[currCell] > 0.1)
+            vars->sootVF[currCell] = c3*bc*cmw/rhosoot*sootFactor;
+          else
+            vars->sootVF[currCell] = 0.0;
+        }
       }
     }
   }
 
   fort_m_radcoef(idxLo, idxHi, 
-		 vars->temperature, 
-		 vars->co2,
-		 vars->h2o,
-	       d_opl, 
-               vars->sootVF, // Soot volume fraction
-               vars->ABSKG,  // Absorption coefficent
-               vars->ESRCG,  // 
-	       vars->shgamma,
-	       cellinfo->xx, 
-	       cellinfo->yy, 
-	       cellinfo->zz, 
-	       fraction, 
-	       fractiontwo,
-	       lprobone, lprobtwo, lprobthree, 
-	       lambda, 
-	       lradcal);
+                 vars->temperature, 
+                 vars->co2,
+                 vars->h2o,
+                 d_opl, 
+                 vars->sootVF, // Soot volume fraction
+                 vars->ABSKG,  // Absorption coefficent
+                 vars->ESRCG,  // 
+                 vars->shgamma,
+                 cellinfo->xx, 
+                 cellinfo->yy, 
+                 cellinfo->zz, 
+                 fraction, 
+                 fractiontwo,
+                 lprobone, lprobtwo, lprobthree, 
+                 lambda, 
+                 lradcal);
 }
 
 //***************************************************************************
@@ -252,9 +252,9 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 //***************************************************************************
 void 
 Models_DORadiationModel::boundaryCondition(const ProcessorGroup*,
-					   const Patch* patch,
-					   RadiationVariables* vars,
-					   RadiationConstVariables* constvars)
+                                           const Patch* patch,
+                                           RadiationVariables* vars,
+                                           RadiationConstVariables* constvars)
 {
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -287,12 +287,12 @@ Models_DORadiationModel::boundaryCondition(const ProcessorGroup*,
     // be a useful variable later.
 
     fort_m_rdombc(idxLo, idxHi, 
-		  vars->temperature,
-		  vars->ABSKG,
-		  constvars->cellType, ffield,
-		  xminus, xplus, yminus, yplus, zminus, zplus, 
-		  test_problems,
-		  lprobone, lprobtwo, lprobthree);
+                  vars->temperature,
+                  vars->ABSKG,
+                  constvars->cellType, ffield,
+                  xminus, xplus, yminus, yplus, zminus, zplus, 
+                  test_problems,
+                  lprobone, lprobtwo, lprobthree);
 
 }
 //***************************************************************************
@@ -300,10 +300,10 @@ Models_DORadiationModel::boundaryCondition(const ProcessorGroup*,
 //***************************************************************************
 void 
 Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
-					const Patch* patch,
-					Models_CellInformation* cellinfo,
-					RadiationVariables* vars,
-					RadiationConstVariables* constvars)
+                                        const Patch* patch,
+                                        Models_CellInformation* cellinfo,
+                                        RadiationVariables* vars,
+                                        RadiationConstVariables* constvars)
 {
 
   double solve_start = Time::currentSeconds();
@@ -375,149 +375,149 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       volq.initialize(0.0);
       // replacing vars->temperature with constvars->temperature
       if(lwsgg == true){    
-	fort_m_radwsgg(idxLo, idxHi, 
-		     vars->ABSKG, 
-		     vars->ESRCG, 
-		     vars->shgamma,
-		     bands, 
-		     constvars->cellType, ffield, 
-		     constvars->co2, 
-		     constvars->h2o, 
-		     constvars->sootVF, 
-		     constvars->temperature, 
-		     lambda, 
-		     fraction, 
-		     fractiontwo);
+        fort_m_radwsgg(idxLo, idxHi, 
+                     vars->ABSKG, 
+                     vars->ESRCG, 
+                     vars->shgamma,
+                     bands, 
+                     constvars->cellType, ffield, 
+                     constvars->co2, 
+                     constvars->h2o, 
+                     constvars->sootVF, 
+                     constvars->temperature, 
+                     lambda, 
+                     fraction, 
+                     fractiontwo);
       }
 
       // replacing vars->temperature with constvars->temperature
       if(lradcal==true){    
-	fort_m_radcal(idxLo, idxHi, 
-		    vars->ABSKG, 
-		    vars->ESRCG, 
-		    vars->shgamma,
-		    cellinfo->xx, 
-		    cellinfo->yy, 
-		    cellinfo->zz, 
-		    bands, 
-		    constvars->cellType, ffield, 
-		    constvars->co2, 
-		    constvars->h2o, 
-		    constvars->sootVF, 
-		    constvars->temperature, 
-		    lprobone, lprobtwo, 
-		    lplanckmean, lpatchmean, 
-		    lambda, 
-		    fraction, 
-		    rgamma, sd15, sd, sd7, sd3, 
-		    d_opl);
+        fort_m_radcal(idxLo, idxHi, 
+                    vars->ABSKG, 
+                    vars->ESRCG, 
+                    vars->shgamma,
+                    cellinfo->xx, 
+                    cellinfo->yy, 
+                    cellinfo->zz, 
+                    bands, 
+                    constvars->cellType, ffield, 
+                    constvars->co2, 
+                    constvars->h2o, 
+                    constvars->sootVF, 
+                    constvars->temperature, 
+                    lprobone, lprobtwo, 
+                    lplanckmean, lpatchmean, 
+                    lambda, 
+                    fraction, 
+                    rgamma, sd15, sd, sd7, sd3, 
+                    d_opl);
       }
       
       for (int direcn = 1; direcn <=d_totalOrds; direcn++) {
-	vars->cenint.initialize(0.0);
-	su.initialize(0.0);
-	aw.initialize(0.0);
-	as.initialize(0.0);
-	ab.initialize(0.0);
-	ap.initialize(0.0);
-	ae.initialize(0.0);
-	an.initialize(0.0);
-	at.initialize(0.0);
-	bool plusX, plusY, plusZ;
+        vars->cenint.initialize(0.0);
+        su.initialize(0.0);
+        aw.initialize(0.0);
+        as.initialize(0.0);
+        ab.initialize(0.0);
+        ap.initialize(0.0);
+        ae.initialize(0.0);
+        an.initialize(0.0);
+        at.initialize(0.0);
+        bool plusX, plusY, plusZ;
 
-	// rdomsolve sets coefficients and sources for DO linear equation
+        // rdomsolve sets coefficients and sources for DO linear equation
 
       // replacing vars->temperature with constvars->temperature
-	fort_m_rdomsolve(idxLo, idxHi, 
-			 cellinfo->sew,
-			 cellinfo->sns, 
-			 cellinfo->stb, 
-			 vars->ESRCG, direcn, 
-			 oxi, 
-			 omu,
-			 oeta, 
-			 wt, 
-			 vars->ABSKG, 
-			 volume,
-			 su,
-			 aw, as, ab, 
-			 ap, 
-			 ae, an, at,
-			 constvars->temperature,
-			 constvars->cellType, ffield,
-			 plusX, plusY, plusZ, 
-			 fraction, 
-			 bands, 
-			 d_opl);
+        fort_m_rdomsolve(idxLo, idxHi, 
+                         cellinfo->sew,
+                         cellinfo->sns, 
+                         cellinfo->stb, 
+                         vars->ESRCG, direcn, 
+                         oxi, 
+                         omu,
+                         oeta, 
+                         wt, 
+                         vars->ABSKG, 
+                         volume,
+                         su,
+                         aw, as, ab, 
+                         ap, 
+                         ae, an, at,
+                         constvars->temperature,
+                         constvars->cellType, ffield,
+                         plusX, plusY, plusZ, 
+                         fraction, 
+                         bands, 
+                         d_opl);
 
-	/*
-	if (patch->containsCell(IntVector(11,10,10))) {
-	  cout << "ap at 11,10,10 = " << ap[IntVector(11,10,10)] << endl;
-	  cout << "ae at 11,10,10 = " << ae[IntVector(11,10,10)] << endl;
-	  cout << "aw at 11,10,10 = " << aw[IntVector(11,10,10)] << endl;
-	  cout << "an at 11,10,10 = " << an[IntVector(11,10,10)] << endl;
-	  cout << "as at 11,10,10 = " << as[IntVector(11,10,10)] << endl;
-	  cout << "at at 11,10,10 = " << at[IntVector(11,10,10)] << endl;
-	  cout << "ab at 11,10,10 = " << ab[IntVector(11,10,10)] << endl;
-	  cout << "su at 11,10,10 = " << su[IntVector(11,10,10)] << endl;
-	}
-	*/
-	//      double timeSetMat = Time::currentSeconds();
+        /*
+        if (patch->containsCell(IntVector(11,10,10))) {
+          cout << "ap at 11,10,10 = " << ap[IntVector(11,10,10)] << endl;
+          cout << "ae at 11,10,10 = " << ae[IntVector(11,10,10)] << endl;
+          cout << "aw at 11,10,10 = " << aw[IntVector(11,10,10)] << endl;
+          cout << "an at 11,10,10 = " << an[IntVector(11,10,10)] << endl;
+          cout << "as at 11,10,10 = " << as[IntVector(11,10,10)] << endl;
+          cout << "at at 11,10,10 = " << at[IntVector(11,10,10)] << endl;
+          cout << "ab at 11,10,10 = " << ab[IntVector(11,10,10)] << endl;
+          cout << "su at 11,10,10 = " << su[IntVector(11,10,10)] << endl;
+        }
+        */
+        //      double timeSetMat = Time::currentSeconds();
 
-	d_linearSolver->setMatrix(pg, 
-				  patch, 
-				  vars, 
-				  plusX, plusY, plusZ, 
-				  su, 
-				  ab, 
-				  as, 
-				  aw, 
-				  ap, 
-				  ae, 
-				  an, 
-				  at);
+        d_linearSolver->setMatrix(pg, 
+                                  patch, 
+                                  vars, 
+                                  plusX, plusY, plusZ, 
+                                  su, 
+                                  ab, 
+                                  as, 
+                                  aw, 
+                                  ap, 
+                                  ae, 
+                                  an, 
+                                  at);
 
-	//      timeRadMatrix += Time::currentSeconds() - timeSetMat;
-	
-	bool converged =  d_linearSolver->radLinearSolve();
+        //      timeRadMatrix += Time::currentSeconds() - timeSetMat;
+        
+        bool converged =  d_linearSolver->radLinearSolve();
 
-	if (converged) {
-	  d_linearSolver->copyRadSoln(patch, vars);
-	}
-	else {
-	  if (pg->myrank() == 0) {
-	    cerr << "radiation solver not converged" << endl;
-	  }
-	  exit(1);
-	}
-	d_linearSolver->destroyMatrix();
+        if (converged) {
+          d_linearSolver->copyRadSoln(patch, vars);
+        }
+        else {
+          if (pg->myrank() == 0) {
+            cerr << "radiation solver not converged" << endl;
+          }
+          exit(1);
+        }
+        d_linearSolver->destroyMatrix();
 
-	fort_m_rdomvolq(idxLo, idxHi, 
-		      direcn, 
-		      wt, 
-		      vars->cenint, volq);
-	    
-	fort_m_rdomflux(idxLo, idxHi, 
-		      direcn, 
-		      oxi, 
-		      omu, 
-		      oeta, 
-		      wt, 
-		      vars->cenint,
-		      plusX, plusY, plusZ, 
-		      vars->qfluxe, 
-		      vars->qfluxw,
-		      vars->qfluxn, 
-		      vars->qfluxs,
-		      vars->qfluxt, 
-		      vars->qfluxb);
+        fort_m_rdomvolq(idxLo, idxHi, 
+                      direcn, 
+                      wt, 
+                      vars->cenint, volq);
+            
+        fort_m_rdomflux(idxLo, idxHi, 
+                      direcn, 
+                      oxi, 
+                      omu, 
+                      oeta, 
+                      wt, 
+                      vars->cenint,
+                      plusX, plusY, plusZ, 
+                      vars->qfluxe, 
+                      vars->qfluxw,
+                      vars->qfluxn, 
+                      vars->qfluxs,
+                      vars->qfluxt, 
+                      vars->qfluxb);
       }
 
       fort_m_rdomsrc(idxLo, idxHi, 
-		   vars->ABSKG, 
-		   vars->ESRCG,
-		   volq, 
-		   vars->src);
+                   vars->ABSKG, 
+                   vars->ESRCG,
+                   volq, 
+                   vars->src);
     }
 
     int me = d_myworld->myrank();
@@ -527,26 +527,26 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
     if (test_problems) {
       fort_m_rdombmcalc(idxLo, idxHi, 
-			constvars->cellType, ffield,
-			cellinfo->xx, 
-			cellinfo->zz, 
-			cellinfo->sew, 
-			cellinfo->sns, 
-			cellinfo->stb, 
-			volume,
-			srcbm, 
-			qfluxbbm, 
-			vars->src, 
-			vars->qfluxe, 
-			vars->qfluxw, 
-			vars->qfluxn, 
-			vars->qfluxs, 
-			vars->qfluxt, 
-			vars->qfluxb, 
-			lprobone, lprobtwo, lprobthree, 
-			srcpone, 
-			volq, 
-			srcsum);
+                        constvars->cellType, ffield,
+                        cellinfo->xx, 
+                        cellinfo->zz, 
+                        cellinfo->sew, 
+                        cellinfo->sns, 
+                        cellinfo->stb, 
+                        volume,
+                        srcbm, 
+                        qfluxbbm, 
+                        vars->src, 
+                        vars->qfluxe, 
+                        vars->qfluxw, 
+                        vars->qfluxn, 
+                        vars->qfluxs, 
+                        vars->qfluxt, 
+                        vars->qfluxb, 
+                        lprobone, lprobtwo, lprobthree, 
+                        srcpone, 
+                        volq, 
+                        srcsum);
       cerr << "Total radiative source =" << srcsum << " watts\n";
     } 
   }//end discrete ordinates
@@ -560,44 +560,44 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       // replacing vars->temperature with constvars->temperature
 
       if(lwsgg == true){    
-	fort_m_radwsgg(idxLo, idxHi, 
-		     vars->ABSKG, 
-		     vars->ESRCG, 
-		     vars->shgamma,
-		     bands, 
-		     constvars->cellType, ffield, 
-		     constvars->co2, 
-		     constvars->h2o, 
-		     constvars->sootVF, 
-		     constvars->temperature, 
-		     lambda, 
-		     fraction, 
-		     fractiontwo);
+        fort_m_radwsgg(idxLo, idxHi, 
+                     vars->ABSKG, 
+                     vars->ESRCG, 
+                     vars->shgamma,
+                     bands, 
+                     constvars->cellType, ffield, 
+                     constvars->co2, 
+                     constvars->h2o, 
+                     constvars->sootVF, 
+                     constvars->temperature, 
+                     lambda, 
+                     fraction, 
+                     fractiontwo);
       }
 
       // replacing vars->temperature with constvars->temperature
       if(lradcal==true){    
-	fort_m_radcal(idxLo, idxHi, 
-		    vars->ABSKG, 
-		    vars->ESRCG, 
-		    vars->shgamma,
-		    cellinfo->xx, 
-		    cellinfo->yy, 
-		    cellinfo->zz, 
-		    bands, 
-		    constvars->cellType, ffield, 
-		    constvars->co2, 
-		    constvars->h2o, 
-		    constvars->sootVF, 
-		    constvars->temperature, 
-		    lprobone, lprobtwo, 
-		    lplanckmean, lpatchmean, 
-		    lambda, 
-		    fraction, 
-		    rgamma, sd15, 
-		    sd, sd7, 
-		    sd3, 
-		    d_opl);
+        fort_m_radcal(idxLo, idxHi, 
+                    vars->ABSKG, 
+                    vars->ESRCG, 
+                    vars->shgamma,
+                    cellinfo->xx, 
+                    cellinfo->yy, 
+                    cellinfo->zz, 
+                    bands, 
+                    constvars->cellType, ffield, 
+                    constvars->co2, 
+                    constvars->h2o, 
+                    constvars->sootVF, 
+                    constvars->temperature, 
+                    lprobone, lprobtwo, 
+                    lplanckmean, lpatchmean, 
+                    lambda, 
+                    fraction, 
+                    rgamma, sd15, 
+                    sd, sd7, 
+                    sd3, 
+                    d_opl);
       }
 
       vars->cenint.initialize(0.0);
@@ -612,54 +612,54 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       bool plusX, plusY, plusZ;
 
       fort_m_rshsolve(idxLo, idxHi, 
-		    constvars->cellType, ffield, 
-		    cellinfo->sew, 
-		    cellinfo->sns, 
-		    cellinfo->stb,
-		    cellinfo->dxep, 
-		    cellinfo->dxpw, 
-		    cellinfo->dynp, 
-		    cellinfo->dyps, 
-		    cellinfo->dztp, 
-		    cellinfo->dzpb, 
-		    vars->ESRCG, 
-		    constvars->temperature, 
-		    vars->ABSKG, 
-		    vars->shgamma, 
-		    volume, 
-		    su, 
-		    ae, 
-		    aw, 
-		    an, 
-		    as, 
-		    at, 
-		    ab, 
-		    ap,
-		    plusX, plusY, plusZ, 
-		    fraction, 
-		    fractiontwo, 
-		    bands);
+                    constvars->cellType, ffield, 
+                    cellinfo->sew, 
+                    cellinfo->sns, 
+                    cellinfo->stb,
+                    cellinfo->dxep, 
+                    cellinfo->dxpw, 
+                    cellinfo->dynp, 
+                    cellinfo->dyps, 
+                    cellinfo->dztp, 
+                    cellinfo->dzpb, 
+                    vars->ESRCG, 
+                    constvars->temperature, 
+                    vars->ABSKG, 
+                    vars->shgamma, 
+                    volume, 
+                    su, 
+                    ae, 
+                    aw, 
+                    an, 
+                    as, 
+                    at, 
+                    ab, 
+                    ap,
+                    plusX, plusY, plusZ, 
+                    fraction, 
+                    fractiontwo, 
+                    bands);
 
       //      double timeSetMat = Time::currentSeconds();
 
       d_linearSolver->setMatrix(pg ,
-				patch, 
-				vars, 
-				plusX, plusY, plusZ, 
-				su, 
-				ab, 
-				as, 
-				aw, 
-				ap, 
-				ae, 
-				an, 
-				at);
-				
+                                patch, 
+                                vars, 
+                                plusX, plusY, plusZ, 
+                                su, 
+                                ab, 
+                                as, 
+                                aw, 
+                                ap, 
+                                ae, 
+                                an, 
+                                at);
+                                
       //      timeRadMatrix += Time::currentSeconds() - timeSetMat;
 
       bool converged =  d_linearSolver->radLinearSolve();
       if (converged) {
-	d_linearSolver->copyRadSoln(patch, vars);
+        d_linearSolver->copyRadSoln(patch, vars);
       }
       else {
         if (pg->myrank() == 0) {
@@ -670,29 +670,29 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       d_linearSolver->destroyMatrix();
 
       fort_m_rshresults(idxLo, idxHi, 
-		      vars->cenint, 
-		      volq,
-		      constvars->cellType, ffield,
-			cellinfo->dxep,
-			cellinfo->dxpw,
-			cellinfo->dynp,
-			cellinfo->dyps,
-			cellinfo->dztp,
-			cellinfo->dzpb,
-		      constvars->temperature,
-		      vars->qfluxe, 
-		      vars->qfluxw,
-		      vars->qfluxn, 
-		      vars->qfluxs,
-		      vars->qfluxt, 
-		      vars->qfluxb,
-		      vars->ABSKG, 
-		      vars->shgamma, 
-		      vars->ESRCG, 
-		      vars->src, 
-		      fraction, 
-		      fractiontwo, 
-		      bands);
+                      vars->cenint, 
+                      volq,
+                      constvars->cellType, ffield,
+                      cellinfo->dxep,
+                      cellinfo->dxpw,
+                      cellinfo->dynp,
+                      cellinfo->dyps,
+                      cellinfo->dztp,
+                      cellinfo->dzpb,
+                      constvars->temperature,
+                      vars->qfluxe, 
+                      vars->qfluxw,
+                      vars->qfluxn, 
+                      vars->qfluxs,
+                      vars->qfluxt, 
+                      vars->qfluxb,
+                      vars->ABSKG, 
+                      vars->shgamma, 
+                      vars->ESRCG, 
+                      vars->src, 
+                      fraction, 
+                      fractiontwo, 
+                      bands);
     }
 
     int me = d_myworld->myrank();
@@ -701,26 +701,26 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
     }
     if (test_problems) {
       fort_m_rdombmcalc(idxLo, idxHi, 
-			constvars->cellType, ffield,
-			cellinfo->xx, 
-			cellinfo->zz, 
-			cellinfo->sew, 
-			cellinfo->sns, 
-			cellinfo->stb, 
-			volume,
-			srcbm, 
-			qfluxbbm, 
-			vars->src, 
-			vars->qfluxe, 
-			vars->qfluxw, 
-			vars->qfluxn, 
-			vars->qfluxs, 
-			vars->qfluxt, 
-			vars->qfluxb, 
-			lprobone, lprobtwo, lprobthree, 
-			srcpone, 
-			volq, 
-			srcsum);
+                        constvars->cellType, ffield,
+                        cellinfo->xx, 
+                        cellinfo->zz, 
+                        cellinfo->sew, 
+                        cellinfo->sns, 
+                        cellinfo->stb, 
+                        volume,
+                        srcbm, 
+                        qfluxbbm, 
+                        vars->src, 
+                        vars->qfluxe, 
+                        vars->qfluxw, 
+                        vars->qfluxn, 
+                        vars->qfluxs, 
+                        vars->qfluxt, 
+                        vars->qfluxb, 
+                        lprobone, lprobtwo, lprobthree, 
+                        srcpone, 
+                        volq, 
+                        srcsum);
       cerr << "Total radiative source =" << srcsum << " watts\n";
     } 
   }

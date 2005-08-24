@@ -75,26 +75,26 @@ public:
       ///////////////////////////////////////////////////////////////////////
 
       void computeRadiationProps(const ProcessorGroup* pc,
-				 const Patch* patch,
-				 Models_CellInformation* cellinfo,
-				 RadiationVariables* vars,
-				 RadiationConstVariables* constvars);
+                                 const Patch* patch,
+                                 Models_CellInformation* cellinfo,
+                                 RadiationVariables* vars,
+                                 RadiationConstVariables* constvars);
       //
       /////////////////////////////////////////////////////////////////////////
       
 
       void boundaryCondition(const ProcessorGroup* pc,
-			     const Patch* patch,
-			     RadiationVariables* vars,
-			     RadiationConstVariables* constvars);
+                             const Patch* patch,
+                             RadiationVariables* vars,
+                             RadiationConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
 
       void intensitysolve(const ProcessorGroup* pc,
-			  const Patch* patch,
-			  Models_CellInformation* cellinfo, 
-			  RadiationVariables* vars,
-			  RadiationConstVariables* constvars);
+                          const Patch* patch,
+                          Models_CellInformation* cellinfo, 
+                          RadiationVariables* vars,
+                          RadiationConstVariables* constvars);
       ////////////////////////////////////////////////////////////////////////
 
 protected: 

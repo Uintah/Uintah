@@ -83,26 +83,26 @@ public:
       ///////////////////////////////////////////////////////////////////////
       //
       virtual void computeRadiationProps(const ProcessorGroup*,
-					 const Patch* patch,
-					 Models_CellInformation* cellinfo,
-					 RadiationVariables* vars,
-					 RadiationConstVariables* constvars) = 0;
+                                         const Patch* patch,
+                                         Models_CellInformation* cellinfo,
+                                         RadiationVariables* vars,
+                                         RadiationConstVariables* constvars) = 0;
 
 
       /////////////////////////////////////////////////////////////////////////
       //
       virtual void boundaryCondition(const ProcessorGroup*,
-				     const Patch* patch,
-				     RadiationVariables* vars,
-				     RadiationConstVariables* constvars)  = 0;
+                                     const Patch* patch,
+                                     RadiationVariables* vars,
+                                     RadiationConstVariables* constvars)  = 0;
 
       /////////////////////////////////////////////////////////////////////////
       //
       virtual void intensitysolve(const ProcessorGroup*,
-				  const Patch* patch,
-				  Models_CellInformation* cellinfo,
-				  RadiationVariables* vars,
-				  RadiationConstVariables* constvars)  = 0;
+                                  const Patch* patch,
+                                  Models_CellInformation* cellinfo,
+                                  RadiationVariables* vars,
+                                  RadiationConstVariables* constvars)  = 0;
 
       Models_RadiationSolver* d_linearSolver;
  protected:
