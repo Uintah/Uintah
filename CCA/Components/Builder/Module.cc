@@ -319,6 +319,7 @@ Module::makePorts() {
                 dName = icon->getDisplayName();
                 mDesc = icon->getDescription();
                 menu->insertItem("Description", this, SLOT(desc()) );
+                services->releasePort(iconName);
             }
         } else {
             dName = nameWithNodes.str();
