@@ -977,7 +977,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
 
 void DataArchiver::outputTimestep(Dir& baseDir,
 				  vector<DataArchiver::SaveItem>&,
-				  double /*time*/, double delt,
+				  double /*time*/, double /*delt*/,
 				  const GridP& grid,
 				  string* pTimestepDir /* passed back */,
 				  bool /* hasGlobals  = false */)
