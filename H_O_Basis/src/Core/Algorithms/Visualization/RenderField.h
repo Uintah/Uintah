@@ -903,7 +903,9 @@ void add_face_geom(GeomFastTriangles *faces, GeomFastQuads *qfaces,
   }
 }
 
-template <class Fld, class Loc>
+template <class Fld, class Loc>      //      cerr << " - render - ";
+
+
 GeomHandle
 RenderField<Fld, Loc>::render_texture_face(Fld *sfld,
                                            ColorMapHandle color_handle,
@@ -936,7 +938,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
       return render_texture_face(sfld, color_handle, def_mat,
 				 force_def_color, use_normals,
 				 use_transparency);
-      }
+    }
   }
   
   const bool with_normals = (use_normals && mesh->has_normals());
@@ -1005,77 +1007,101 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
       mesh->get_nodes(nodes, fidx);
       sort(nodes.begin(), nodes.end());
       
-//       typename Fld::mesh_type::Node::array_type::iterator nni = nodes.begin();
-//       while (nni != nodes.end()) {
-// 	cerr << *nni++ << " ";
-//       }
       typename face_ht_t::const_iterator it = rendered_faces.find(nodes);
 
       if (it != rendered_faces.end()) {
-// 	const typename Fld::mesh_type::Node::array_type &arr = *it;
-// 	typename Fld::mesh_type::Node::array_type::iterator ita = (typename Fld::mesh_type::Node::array_type::iterator)arr.begin();
-// 	while (ita != arr.end()) {
-// 	  cerr << *ita++ << " ";
-// 	}
-// 	cerr << " skipped..";
 	continue;
       } else {
 	rendered_faces.insert(nodes);
       }
       count++;
-      //      cerr << " - render - ";
-
 
       //coords organized as scanlines of quad/tri strips.
       vector<vector<vector<double> > > coords;
       mesh->pwl_approx_face(coords, *eiter, fidx, div);
-      vector<vector<vector<double> > >::iterator coord_iter = coords.begin();
+      const int face_sz = mesh->get_basis().get_approx_face_elements();
 
+      vector<vector<vector<double> > >::iterator coord_iter = coords.begin();
       while (coord_iter != coords.end()) {
 	vector<vector<double> > &sl = *coord_iter++;
 	vector<vector<double> >::iterator sliter = sl.begin();
-	while(sliter != sl.end()) {
-	  // FIX_ME must also work with tris...
-	  vector<double> &c0 = *sliter++;
-	  if (sliter == sl.end()) break;
-	  vector<double> &c1 = *sliter++;
-	  if (sliter == sl.end()) break;
-	  vector<double> &c2 = *sliter;
-	  vector<double> &c3 = *(sliter + 1);
 
-	  const int face_sz = mesh->get_basis().get_approx_face_elements();
-	  vector<Point> pnts(face_sz);
-	  vector<Vector> norms(face_sz);
-	  vector<typename Fld::value_type> vals(face_sz);
+	for (unsigned int i = 0; i < sl.size() - 2; i++) {
+	  //while(sliter != sl.end()) {
+	  if (face_sz == 3) {  // TRI STRIPS
+	    vector<vector<double> >::iterator it0,it1;
+	    
+	    vector<double> &c0 = !i%2 ? sl[i] : sl[i+1];
+	    vector<double> &c1 = !i%2 ? sl[i+1] : sl[i];
+	    vector<double> &c2 = sl[i+2];
+
+	    const int face_sz = mesh->get_basis().get_approx_face_elements();
+	    vector<Point> pnts(face_sz);
+	    vector<Vector> norms(face_sz);
+	    vector<typename Fld::value_type> vals(face_sz);
 	  
-	  // get the geometry at the approx.
-	  mesh->interpolate(pnts[0], c2, *eiter);
-	  mesh->interpolate(pnts[1], c3, *eiter);
-	  mesh->interpolate(pnts[2], c1, *eiter);
-	  mesh->interpolate(pnts[3], c0, *eiter);
+	    mesh->interpolate(pnts[0], c0, *eiter);
+	    mesh->interpolate(pnts[1], c1, *eiter);
+	    mesh->interpolate(pnts[2], c2, *eiter);
+	  
+	    //FIX_ME need to interp normals in meshes that have normals
+	  
+	    // get the field variables values at the approx (if they exist)
+	    if (sfld->basis_order() >= 0) {
+	      sfld->interpolate(vals[0], c0, *eiter);
+	      sfld->interpolate(vals[1], c1, *eiter);
+	      sfld->interpolate(vals[2], c2, *eiter);
+	    
+	    } else {
+	      def_color = true;
+	    }
+	    // add the geom_obj for this part....
+	  
+	    add_face_geom(faces, qfaces, pnts, norms, vals,
+			  def_color, vec_color, with_normals, 
+			  vcol, vvals, dvals);
 
-	  //FIX_ME need to interp normals in meshes that have normals
+	  } else { // QUADS
 
-	  // get the field variables values at the approx (if they exist)
-	  if (sfld->basis_order() >= 0) {
-	    sfld->interpolate(vals[0], c2, *eiter);
-	    sfld->interpolate(vals[1], c3, *eiter);
-	    sfld->interpolate(vals[2], c1, *eiter);
-	    sfld->interpolate(vals[3], c0, *eiter);
-	  } else {
-	    def_color = true;
+	    vector<double> &c0 = *sliter++;
+	    if (sliter == sl.end()) break;
+	    vector<double> &c1 = *sliter++;
+	    if (sliter == sl.end()) break;
+	    vector<double> &c2 = *sliter;
+	    vector<double> &c3 = *(sliter + 1);
+
+	    vector<Point> pnts(face_sz);
+	    vector<Vector> norms(face_sz);
+	    vector<typename Fld::value_type> vals(face_sz);
+	  
+	    // get the geometry at the approx.
+	    mesh->interpolate(pnts[0], c2, *eiter);
+	    mesh->interpolate(pnts[1], c3, *eiter);
+	    mesh->interpolate(pnts[2], c1, *eiter);
+	    mesh->interpolate(pnts[3], c0, *eiter);
+
+	    //FIX_ME need to interp normals in meshes that have normals
+
+	    // get the field variables values at the approx (if they exist)
+	    if (sfld->basis_order() >= 0) {
+	      sfld->interpolate(vals[0], c2, *eiter);
+	      sfld->interpolate(vals[1], c3, *eiter);
+	      sfld->interpolate(vals[2], c1, *eiter);
+	      sfld->interpolate(vals[3], c0, *eiter);
+	    } else {
+	      def_color = true;
+	    }
+	    // add the geom_obj for this part....
+	  
+	    add_face_geom(faces, qfaces, pnts, norms, vals,
+			  def_color, vec_color, with_normals, 
+			  vcol, vvals, dvals);
 	  }
-	  // add the geom_obj for this part....
-	  
-	  add_face_geom(faces, qfaces, pnts, norms, vals,
-			def_color, vec_color, with_normals, 
-			vcol, vvals, dvals);
 	}
       }
     }
     ++eiter;
   }
-  cerr << "rendered " << count << " faces." << endl;
   return face_switch;
 }
 

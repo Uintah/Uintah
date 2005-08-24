@@ -49,7 +49,7 @@ using std::string;
 class TetApprox {  
 public:
   static double UnitVertices[4][3];
-  static int UnitEdges[6][3];
+  static int UnitEdges[6][2];
   static int UnitFaces[4][3];
 
   TetApprox() {}
@@ -73,8 +73,9 @@ public:
     const double dz = v1[2] - p1z;
 
     for(unsigned i = 0; i <= div_per_unit; i++) {
-      const double d = (double)div_per_unit / (double)i;
+      const double d = (double)i / (double)div_per_unit;
       vector<double> &tmp = coords[i];
+      tmp.resize(3);
       tmp[0] = p1x + d * dx;
       tmp[1] = p1y + d * dy;
       tmp[2] = p1z + d * dz;
@@ -90,30 +91,31 @@ public:
     const double *v0 = UnitVertices[UnitFaces[face][0]];
     const double *v1 = UnitVertices[UnitFaces[face][1]];
     const double *v2 = UnitVertices[UnitFaces[face][2]];
-	
     coords.resize(div_per_unit);
     const double d = 1. / div_per_unit;
     for(unsigned j = 0; j<div_per_unit; j++) {
-      const double dj = (double)div_per_unit / (double)j;
+      const double dj = (double)j / (double)div_per_unit;
       unsigned e = 0;
       coords[j].resize((div_per_unit - j) * 2 + 1);
       vector<double> &tmp = coords[j][e++];
-
+      tmp.resize(3);
       tmp[0] = v0[0] + dj * (v2[0] - v0[0]);
       tmp[1] = v0[1] + dj * (v2[1] - v0[1]);
       tmp[2] = v0[2] + dj * (v2[2] - v0[2]);
 
       for(unsigned i = 0; i<div_per_unit - j; i++) {
-	const double di = (double)div_per_unit / (double)i;
-	tmp = coords[j][e++];
-	tmp[0] = v0[0] + (dj + d) * (v2[0] - v0[0]) + di * (v1[0] - v0[0]);
-	tmp[1] = v0[1] + (dj + d) * (v2[1] - v0[1]) + di * (v1[1] - v0[1]);
-	tmp[2] = v0[2] + (dj + d) * (v2[2] - v0[2]) + di * (v1[2] - v0[2]);
+	const double di = (double)i / (double)div_per_unit;
+	vector<double> &tmp1 = coords[j][e++];
+	tmp1.resize(3);
+	tmp1[0] = v0[0] + (dj + d) * (v2[0] - v0[0]) + di * (v1[0] - v0[0]);
+	tmp1[1] = v0[1] + (dj + d) * (v2[1] - v0[1]) + di * (v1[1] - v0[1]);
+	tmp1[2] = v0[2] + (dj + d) * (v2[2] - v0[2]) + di * (v1[2] - v0[2]);
 
-	tmp = coords[j][e++];
-	tmp[0] = v0[0] + dj * (v2[0] - v0[0]) + (di + d) * (v1[0] - v0[0]);
-	tmp[1] = v0[1] + dj * (v2[1] - v0[1]) + (di + d) * (v1[1] - v0[1]);
-	tmp[2] = v0[2] + dj * (v2[2] - v0[2]) + (di + d) * (v1[2] - v0[2]);
+	vector<double> &tmp2 = coords[j][e++];
+	tmp2.resize(3);
+	tmp2[0] = v0[0] + dj * (v2[0] - v0[0]) + (di + d) * (v1[0] - v0[0]);
+	tmp2[1] = v0[1] + dj * (v2[1] - v0[1]) + (di + d) * (v1[1] - v0[1]);
+	tmp2[2] = v0[2] + dj * (v2[2] - v0[2]) + (di + d) * (v1[2] - v0[2]);
       }
     }
   }
