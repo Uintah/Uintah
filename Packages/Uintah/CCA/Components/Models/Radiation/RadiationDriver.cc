@@ -35,6 +35,7 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   d_DORadiation = 0;
   d_radCounter = -1; //to decide how often radiation calc is done
   d_radCalcFreq = 0; 
+  const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
 
   d_cellInfoLabel = VarLabel::create("radCellInformation",
                                      PerPatch<Models_CellInformationP>::getTypeDescription());
@@ -44,14 +45,14 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   // of open or wall boundaries. This variable is necessary because
   // radiation is a surface-dependent process.
 
-  cellType_CCLabel = VarLabel::create("cellType_CC", CCVariable<double>::getTypeDescription());
+  cellType_CCLabel = VarLabel::create("cellType_CC", td_CCdouble);
 
   // shgamma is simply 1/(3*abskg). It is calculated and stored 
   // this way because it is more efficient to do so than just
   // calculating it on the fly each time.  This is done because
   // gradients of shgamma are needed in the P1 calculation.
 
-  shgamma_CCLabel = VarLabel::create("shgamma", CCVariable<double>::getTypeDescription());
+  shgamma_CCLabel = VarLabel::create("shgamma", td_CCdouble);
 
   // abskg is the absorption coefficient, units 1/m.  This is
   // the cardinal property of absorbing and emitting (participating)
@@ -63,47 +64,47 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   // So, for n = 2, we are talking about 8 directions, and for
   // n = 4, we are talking about 24 directions.  So there is a lot
   // of storage involved
-  abskg_CCLabel = VarLabel::create("abskg", CCVariable<double>::getTypeDescription());
-  esrcg_CCLabel = VarLabel::create("esrcg", CCVariable<double>::getTypeDescription());
-  cenint_CCLabel = VarLabel::create("cenint", CCVariable<double>::getTypeDescription());
+  abskg_CCLabel  = VarLabel::create("abskg", td_CCdouble);
+  esrcg_CCLabel  = VarLabel::create("esrcg", td_CCdouble);
+  cenint_CCLabel = VarLabel::create("cenint",td_CCdouble);
 
   // qfluxE, qfluxW, qfluxN, qfluxS, qfluxT, and qfluxB are the
   // heat fluxes in the east, west, north, south, top, and bottom
   // directions
-  qfluxE_CCLabel = VarLabel::create("qfluxE", CCVariable<double>::getTypeDescription());
-  qfluxW_CCLabel = VarLabel::create("qfluxW", CCVariable<double>::getTypeDescription());
-  qfluxN_CCLabel = VarLabel::create("qfluxN", CCVariable<double>::getTypeDescription());
-  qfluxS_CCLabel = VarLabel::create("qfluxS", CCVariable<double>::getTypeDescription());
-  qfluxT_CCLabel = VarLabel::create("qfluxT", CCVariable<double>::getTypeDescription());
-  qfluxB_CCLabel = VarLabel::create("qfluxB", CCVariable<double>::getTypeDescription());
+  qfluxE_CCLabel = VarLabel::create("qfluxE", td_CCdouble);
+  qfluxW_CCLabel = VarLabel::create("qfluxW", td_CCdouble);
+  qfluxN_CCLabel = VarLabel::create("qfluxN", td_CCdouble);
+  qfluxS_CCLabel = VarLabel::create("qfluxS", td_CCdouble);
+  qfluxT_CCLabel = VarLabel::create("qfluxT", td_CCdouble);
+  qfluxB_CCLabel = VarLabel::create("qfluxB", td_CCdouble);
 
   // CO2 and H2O are table values, and are used as constants.
-  co2_CCLabel = VarLabel::create("CO2", CCVariable<double>::getTypeDescription());
-  h2o_CCLabel = VarLabel::create("H2O", CCVariable<double>::getTypeDescription());
+  co2_CCLabel = VarLabel::create("CO2", td_CCdouble);
+  h2o_CCLabel = VarLabel::create("H2O", td_CCdouble);
 
   // radCO2 and radH2O are local variables, which are set here.
-  radCO2_CCLabel = VarLabel::create("radCO2", CCVariable<double>::getTypeDescription());
-  radH2O_CCLabel = VarLabel::create("radH2O", CCVariable<double>::getTypeDescription());
+  radCO2_CCLabel = VarLabel::create("radCO2", td_CCdouble);
+  radH2O_CCLabel = VarLabel::create("radH2O", td_CCdouble);
 
   // scalar-f comes from table (an ICE value, though)
-  mixfrac_CCLabel = VarLabel::create("scalar-f", CCVariable<double>::getTypeDescription());
-  mixfracCopy_CCLabel = VarLabel::create("mixfrac", CCVariable<double>::getTypeDescription());
+  mixfrac_CCLabel = VarLabel::create("scalar-f", td_CCdouble);
+  mixfracCopy_CCLabel = VarLabel::create("mixfrac", td_CCdouble);
 
   // density comes from the table
-  density_CCLabel = VarLabel::create("density", CCVariable<double>::getTypeDescription());
+  density_CCLabel = VarLabel::create("density", td_CCdouble);
 
   // rho_CC is the density from ICE
-  iceDensity_CCLabel = VarLabel::create("rho_CC", CCVariable<double>::getTypeDescription());
+  iceDensity_CCLabel = VarLabel::create("rho_CC", td_CCdouble);
 
   // Temp is the temperature from the table; right now, since fire in ICE does
   // not give correct values (algorithm needs reworking), I am
   // using table temperatures. Later, when adiabatic fire works
   // properly, we can start using ICE temperatures for radiation
   // calculations
-  temp_CCLabel = VarLabel::create("Temp", CCVariable<double>::getTypeDescription());
+  temp_CCLabel = VarLabel::create("Temp", td_CCdouble);
 
   // temp_CC is the temperature from ICE
-  iceTemp_CCLabel = VarLabel::create("temp_CC", CCVariable<double>::getTypeDescription());
+  iceTemp_CCLabel = VarLabel::create("temp_CC", td_CCdouble);
 
   // TempCopy is the temperature that is used in all actual
   // calculations in these radiative heat transfer calculations.
@@ -112,7 +113,7 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   // calculations modify the temperature at the boundary (see
   // comments for boundaryCondition), and we do not want to 
   // change the boundary conditions for the real temperature.
-  tempCopy_CCLabel = VarLabel::create("TempCopy", CCVariable<double>::getTypeDescription());
+  tempCopy_CCLabel = VarLabel::create("TempCopy", td_CCdouble);
 
   // sootVF is the variable that will eventually come from the
   // table. This will then be copied to sootVFCopy and used.
@@ -123,13 +124,13 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   // the temperature in whatever way it thinks necessary.
   // sootVFCopy is the copy of the soot volume fraction that is
   // actually used in all the radiation calculations.
-  sootVF_CCLabel = VarLabel::create("sootVF", CCVariable<double>::getTypeDescription());
-  sootVFCopy_CCLabel = VarLabel::create("sootVFCopy", CCVariable<double>::getTypeDescription());
+  sootVF_CCLabel = VarLabel::create("sootVF", td_CCdouble);
+  sootVFCopy_CCLabel = VarLabel::create("sootVFCopy", td_CCdouble);
 
   // radiationSrc is the source term that is used in the energy
   // equation. This variable and the fluxes are the outputs from
   // the radiation calculation to the energy transport.
-  radiationSrc_CCLabel = VarLabel::create("radiationSrc", CCVariable<double>::getTypeDescription());
+  radiationSrc_CCLabel = VarLabel::create("radiationSrc", td_CCdouble);
 }
 
 //****************************************************************************
@@ -264,26 +265,26 @@ RadiationDriver::initialize(const ProcessorGroup*,
     RadiationVariables vars;
 
     int iceIndex = 0;
-    int matlIndex = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
 
-    new_dw->allocateAndPut(vars.cellType, cellType_CCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vars.cellType, cellType_CCLabel, indx, patch);
 
-    new_dw->allocateAndPut(vars.qfluxe, qfluxE_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.qfluxw, qfluxW_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.qfluxn, qfluxN_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.qfluxs, qfluxS_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.qfluxt, qfluxT_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.qfluxb, qfluxB_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.src, radiationSrc_CCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vars.qfluxe, qfluxE_CCLabel, indx, patch);
+    new_dw->allocateAndPut(vars.qfluxw, qfluxW_CCLabel, indx, patch);
+    new_dw->allocateAndPut(vars.qfluxn, qfluxN_CCLabel, indx, patch);
+    new_dw->allocateAndPut(vars.qfluxs, qfluxS_CCLabel, indx, patch);
+    new_dw->allocateAndPut(vars.qfluxt, qfluxT_CCLabel, indx, patch);
+    new_dw->allocateAndPut(vars.qfluxb, qfluxB_CCLabel, indx, patch);
+    new_dw->allocateAndPut(vars.src,    radiationSrc_CCLabel, indx, patch);
 
-    new_dw->allocateAndPut(vars.co2, radCO2_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.h2o, radH2O_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.sootVF, sootVFCopy_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.mixfrac, mixfracCopy_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.ABSKG, abskg_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.ESRCG, esrcg_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.shgamma, shgamma_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vars.temperature, tempCopy_CCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vars.co2,    radCO2_CCLabel,        indx, patch);
+    new_dw->allocateAndPut(vars.h2o,    radH2O_CCLabel,        indx, patch);
+    new_dw->allocateAndPut(vars.sootVF, sootVFCopy_CCLabel,    indx, patch);
+    new_dw->allocateAndPut(vars.mixfrac,mixfracCopy_CCLabel,   indx, patch);
+    new_dw->allocateAndPut(vars.ABSKG,  abskg_CCLabel,         indx, patch);
+    new_dw->allocateAndPut(vars.ESRCG,  esrcg_CCLabel,         indx, patch);
+    new_dw->allocateAndPut(vars.shgamma,shgamma_CCLabel,       indx, patch);
+    new_dw->allocateAndPut(vars.temperature, tempCopy_CCLabel, indx, patch);
 
     vars.qfluxe.initialize(0.0);
     vars.qfluxw.initialize(0.0);
@@ -428,10 +429,10 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
 
   sched->addTask(t, d_perproc_patches, ice_matls);
 
-  scheduleCopyValues(level, sched, patches, ice_matls);
-  scheduleComputeProps(level, sched, patches, ice_matls);    
-  scheduleBoundaryCondition(level, sched, patches, ice_matls);    
-  scheduleIntensitySolve(level, sched, patches, ice_matls, mi);
+  scheduleCopyValues(level,         sched, patches, ice_matls);
+  scheduleComputeProps(level,       sched, patches, ice_matls);    
+  scheduleBoundaryCondition(level,  sched, patches, ice_matls);    
+  scheduleIntensitySolve(level,     sched, patches, ice_matls, mi);
 }
 
 //****************************************************************************
@@ -462,25 +463,25 @@ RadiationDriver::scheduleCopyValues(const LevelP& level,
 {
   Task* t = scinew Task("RadiationDriver::copyValues",
                       this, &RadiationDriver::copyValues);
-  int zeroGhostCells = 0;
 
-  t->requires(Task::OldDW, cellType_CCLabel, Ghost::None, zeroGhostCells);  
-  t->requires(Task::OldDW, qfluxE_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, qfluxW_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, qfluxN_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, qfluxS_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, qfluxT_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, qfluxB_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, radiationSrc_CCLabel, Ghost::None, zeroGhostCells);
+  Ghost::GhostType  gn = Ghost::None;
+  t->requires(Task::OldDW, cellType_CCLabel,    gn, 0);  
+  t->requires(Task::OldDW, qfluxE_CCLabel,      gn, 0);
+  t->requires(Task::OldDW, qfluxW_CCLabel,      gn, 0);
+  t->requires(Task::OldDW, qfluxN_CCLabel,      gn, 0);
+  t->requires(Task::OldDW, qfluxS_CCLabel,      gn, 0);
+  t->requires(Task::OldDW, qfluxT_CCLabel,      gn, 0);
+  t->requires(Task::OldDW, qfluxB_CCLabel,      gn, 0);
+  t->requires(Task::OldDW, radiationSrc_CCLabel, gn, 0);
 
-  t->requires(Task::OldDW, radCO2_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, radH2O_CCLabel, Ghost::None, zeroGhostCells);  
-  t->requires(Task::OldDW, sootVFCopy_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, mixfracCopy_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, abskg_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, esrcg_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, shgamma_CCLabel, Ghost::None, zeroGhostCells);
-  t->requires(Task::OldDW, tempCopy_CCLabel, Ghost::None, zeroGhostCells);
+  t->requires(Task::OldDW, radCO2_CCLabel,      gn, 0);
+  t->requires(Task::OldDW, radH2O_CCLabel,      gn, 0);  
+  t->requires(Task::OldDW, sootVFCopy_CCLabel,  gn, 0);
+  t->requires(Task::OldDW, mixfracCopy_CCLabel, gn, 0);
+  t->requires(Task::OldDW, abskg_CCLabel,       gn, 0);
+  t->requires(Task::OldDW, esrcg_CCLabel,       gn, 0);
+  t->requires(Task::OldDW, shgamma_CCLabel,     gn, 0);
+  t->requires(Task::OldDW, tempCopy_CCLabel,    gn, 0);
 
   t->computes(cellType_CCLabel);
   t->computes(qfluxE_CCLabel);
@@ -518,8 +519,7 @@ RadiationDriver::copyValues(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int iceIndex = 0;
-    int matlIndex = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
-    int zeroGhostCells = 0;
+    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
 
     constCCVariable<int> oldPcell;
     constCCVariable<double> oldFluxE;
@@ -538,40 +538,25 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     constCCVariable<double> oldEsrcg;
     constCCVariable<double> oldShgamma;
     constCCVariable<double> oldTempCopy;
+    
+    Ghost::GhostType  gn = Ghost::None;
+    old_dw->get(oldPcell, cellType_CCLabel, indx, patch,gn, 0);
+    old_dw->get(oldFluxE, qfluxE_CCLabel,   indx, patch,gn, 0);
+    old_dw->get(oldFluxW, qfluxW_CCLabel,   indx, patch,gn, 0);
+    old_dw->get(oldFluxN, qfluxN_CCLabel,   indx, patch,gn, 0);
+    old_dw->get(oldFluxS, qfluxS_CCLabel,   indx, patch,gn, 0);
+    old_dw->get(oldFluxT, qfluxT_CCLabel,   indx, patch,gn, 0);
+    old_dw->get(oldFluxB, qfluxB_CCLabel,   indx, patch,gn, 0);
+    old_dw->get(oldRadiationSrc, radiationSrc_CCLabel, indx, patch,gn, 0);
 
-    old_dw->get(oldPcell, cellType_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldFluxE, qfluxE_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldFluxW, qfluxW_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldFluxN, qfluxN_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldFluxS, qfluxS_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldFluxT, qfluxT_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldFluxB, qfluxB_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldRadiationSrc, radiationSrc_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-
-    old_dw->get(oldRadCO2, radCO2_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldRadH2O, radH2O_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldSootVF, sootVFCopy_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldMixfrac, mixfracCopy_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldAbskg, abskg_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldEsrcg, esrcg_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldShgamma, shgamma_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
-    old_dw->get(oldTempCopy, tempCopy_CCLabel, matlIndex, patch,
-                Ghost::None, zeroGhostCells);
+    old_dw->get(oldRadCO2,  radCO2_CCLabel,     indx, patch,gn, 0);
+    old_dw->get(oldRadH2O,  radH2O_CCLabel,     indx, patch,gn, 0);
+    old_dw->get(oldSootVF,  sootVFCopy_CCLabel, indx, patch,gn, 0);
+    old_dw->get(oldMixfrac, mixfracCopy_CCLabel,indx, patch,gn, 0);
+    old_dw->get(oldAbskg,   abskg_CCLabel,      indx, patch,gn, 0);
+    old_dw->get(oldEsrcg,   esrcg_CCLabel,      indx, patch,gn, 0);
+    old_dw->get(oldShgamma, shgamma_CCLabel,    indx, patch,gn, 0);
+    old_dw->get(oldTempCopy,tempCopy_CCLabel,   indx, patch,gn, 0);
 
     CCVariable<int> pcell;
     CCVariable<double> fluxE;
@@ -591,23 +576,23 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     CCVariable<double> shgamma;
     CCVariable<double> tempCopy;
     
-    new_dw->allocateAndPut(pcell, cellType_CCLabel, matlIndex, patch);    
-    new_dw->allocateAndPut(fluxE, qfluxE_CCLabel, matlIndex, patch);    
-    new_dw->allocateAndPut(fluxW, qfluxW_CCLabel, matlIndex, patch);    
-    new_dw->allocateAndPut(fluxN, qfluxN_CCLabel, matlIndex, patch);    
-    new_dw->allocateAndPut(fluxS, qfluxS_CCLabel, matlIndex, patch);    
-    new_dw->allocateAndPut(fluxT, qfluxT_CCLabel, matlIndex, patch);    
-    new_dw->allocateAndPut(fluxB, qfluxB_CCLabel, matlIndex, patch);    
-    new_dw->allocateAndPut(radiationSrc, radiationSrc_CCLabel, matlIndex, patch);    
+    new_dw->allocateAndPut(pcell, cellType_CCLabel, indx, patch);    
+    new_dw->allocateAndPut(fluxE, qfluxE_CCLabel,   indx, patch);   
+    new_dw->allocateAndPut(fluxW, qfluxW_CCLabel,   indx, patch);   
+    new_dw->allocateAndPut(fluxN, qfluxN_CCLabel,   indx, patch);   
+    new_dw->allocateAndPut(fluxS, qfluxS_CCLabel,   indx, patch);   
+    new_dw->allocateAndPut(fluxT, qfluxT_CCLabel,   indx, patch);   
+    new_dw->allocateAndPut(fluxB, qfluxB_CCLabel,   indx, patch);   
+    new_dw->allocateAndPut(radiationSrc, radiationSrc_CCLabel, indx, patch);    
 
-    new_dw->allocateAndPut(radCO2, radCO2_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(radH2O, radH2O_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(sootVF, sootVFCopy_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(mixfrac, mixfracCopy_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(abskg, abskg_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(esrcg, esrcg_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(shgamma, shgamma_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(tempCopy, tempCopy_CCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(radCO2,  radCO2_CCLabel,      indx, patch); 
+    new_dw->allocateAndPut(radH2O,  radH2O_CCLabel,      indx, patch); 
+    new_dw->allocateAndPut(sootVF,  sootVFCopy_CCLabel,  indx, patch); 
+    new_dw->allocateAndPut(mixfrac, mixfracCopy_CCLabel, indx, patch); 
+    new_dw->allocateAndPut(abskg,   abskg_CCLabel,       indx, patch); 
+    new_dw->allocateAndPut(esrcg,   esrcg_CCLabel,       indx, patch); 
+    new_dw->allocateAndPut(shgamma, shgamma_CCLabel,     indx, patch); 
+    new_dw->allocateAndPut(tempCopy,tempCopy_CCLabel,    indx, patch); 
 
     pcell.copyData(oldPcell);
     fluxE.copyData(oldFluxE);
@@ -634,7 +619,6 @@ RadiationDriver::copyValues(const ProcessorGroup*,
 //****************************************************************************
 // schedule computation of radiative properties
 //****************************************************************************
-
 void
 RadiationDriver::scheduleComputeProps(const LevelP& level,
                                        SchedulerP& sched,
@@ -643,40 +627,45 @@ RadiationDriver::scheduleComputeProps(const LevelP& level,
 {
   Task* t=scinew Task("RadiationDriver::computeProps",
                       this, &RadiationDriver::computeProps);
-  int zeroGhostCells = 0;
 
+  Ghost::GhostType  gn = Ghost::None;
+  
   if (d_useTableValues) {
-    t->requires(Task::NewDW, co2_CCLabel, Ghost::None, zeroGhostCells);
-    t->requires(Task::NewDW, h2o_CCLabel, Ghost::None, zeroGhostCells);
+    t->requires(Task::NewDW, co2_CCLabel, gn, 0);
+    t->requires(Task::NewDW, h2o_CCLabel, gn, 0);
   }
   t->modifies(radCO2_CCLabel);
   t->modifies(radH2O_CCLabel);
 
-  if (d_useTableValues) 
-    if (d_useIceTemp)
-      t->requires(Task::OldDW, iceTemp_CCLabel, Ghost::None, zeroGhostCells);
-    else
-      t->requires(Task::NewDW, temp_CCLabel, Ghost::None, zeroGhostCells);
-  else
-    t->requires(Task::OldDW, iceTemp_CCLabel, Ghost::None, zeroGhostCells);
+  if (d_useTableValues){ 
+    if (d_useIceTemp){
+      t->requires(Task::OldDW, iceTemp_CCLabel, gn, 0);
+    }else{
+      t->requires(Task::NewDW, temp_CCLabel, gn, 0);
+    }
+  }else{
+    t->requires(Task::OldDW, iceTemp_CCLabel, gn, 0);
+  }
   t->modifies(tempCopy_CCLabel);
 
   // Below is for later, when we get sootVF from reaction table.  But
   // currently we compute sootVF from mixture fraction and temperature inside
   // the properties function
-  //  t->requires(Task::NewDW, sootVF_CCLabel, Ghost::None, zeroGhostCells);
+  //  t->requires(Task::NewDW, sootVF_CCLabel, gn, 0);
 
   t->modifies(sootVFCopy_CCLabel);
 
-  if (d_useTableValues)
-    t->requires(Task::OldDW, mixfrac_CCLabel, Ghost::None, zeroGhostCells);
+  if (d_useTableValues){
+    t->requires(Task::OldDW, mixfrac_CCLabel, gn, 0);
+  }
   t->modifies(mixfracCopy_CCLabel);
 
-  if (d_useTableValues)
-    t->requires(Task::NewDW, density_CCLabel, Ghost::None, zeroGhostCells);
-  else
-    t->requires(Task::NewDW, iceDensity_CCLabel, Ghost::None, zeroGhostCells);
-
+  if (d_useTableValues){
+    t->requires(Task::NewDW, density_CCLabel, gn, 0);
+  }else{
+    t->requires(Task::NewDW, iceDensity_CCLabel, gn, 0);
+  }
+  
   t->modifies(abskg_CCLabel);
   t->modifies(esrcg_CCLabel);
   t->modifies(shgamma_CCLabel);
@@ -732,47 +721,43 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int iceIndex = 0;
-    int matlIndex = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
-    int zeroGhostCells = 0;
-    
+    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    Ghost::GhostType  gn = Ghost::None;
+        
     RadiationVariables radVars;
     RadiationConstVariables constRadVars;
     
     PerPatch<Models_CellInformationP> cellInfoP;
-    if (new_dw->exists(d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_cellInfoLabel, indx, patch)) 
+      new_dw->get(cellInfoP, d_cellInfoLabel, indx, patch);
     else {
       cellInfoP.setData(scinew Models_CellInformation(patch));
-      new_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+      new_dw->put(cellInfoP, d_cellInfoLabel, indx, patch);
     }
     Models_CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     if (d_useTableValues) {
-      new_dw->get(constRadVars.co2, co2_CCLabel, matlIndex, patch,
-                  Ghost::None, zeroGhostCells);
-      new_dw->get(constRadVars.h2o, h2o_CCLabel, matlIndex, patch,
-                  Ghost::None, zeroGhostCells);
+      new_dw->get(constRadVars.co2, co2_CCLabel, indx, patch,gn, 0);
+      new_dw->get(constRadVars.h2o, h2o_CCLabel, indx, patch,gn, 0);
     }
-    new_dw->getModifiable(radVars.co2, radCO2_CCLabel, matlIndex, patch);
-    new_dw->getModifiable(radVars.h2o, radH2O_CCLabel, matlIndex, patch);
+    new_dw->getModifiable(radVars.co2, radCO2_CCLabel, indx, patch);
+    new_dw->getModifiable(radVars.h2o, radH2O_CCLabel, indx, patch);
     if (d_useTableValues) {
       radVars.co2.copyData(constRadVars.co2);
       radVars.h2o.copyData(constRadVars.h2o);
     }
 
-    if (d_useTableValues) 
-      if (d_useIceTemp) 
-        new_dw->get(constRadVars.temperature, temp_CCLabel, matlIndex, patch,
-                    Ghost::None, zeroGhostCells);
-      else
-        old_dw->get(constRadVars.temperature, iceTemp_CCLabel, matlIndex, patch,
-                    Ghost::None, zeroGhostCells);
-    else
-      old_dw->get(constRadVars.temperature, iceTemp_CCLabel, matlIndex, patch,
-                  Ghost::None, zeroGhostCells);
-
-    new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel, 
-                          matlIndex, patch);
+    if (d_useTableValues){ 
+      if (d_useIceTemp){ 
+        new_dw->get(constRadVars.temperature, temp_CCLabel,    indx, patch,gn, 0);
+      }else{
+        old_dw->get(constRadVars.temperature, iceTemp_CCLabel, indx, patch,gn, 0);
+      }
+    }else{
+      old_dw->get(constRadVars.temperature, iceTemp_CCLabel, indx, patch,gn, 0);
+    }
+    new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel, indx, patch);
+    
     radVars.temperature.copyData(constRadVars.temperature);
     
     // We will use constRadVars.sootVF when we get it from the table.
@@ -785,35 +770,28 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     // calculations.  Instead, we now compute sootVF from mixture fraction
     // and temperature inside the properties function
     // 
-    //      new_dw->get(constRadVars.sootVF, sootVF_CCLabel, matlIndex, patch,
-    //            Ghost::None, zeroGhostCells);
+    //      new_dw->get(constRadVars.sootVF, sootVF_CCLabel, indx, patch,
+    //            gn, 0);
     new_dw->getModifiable(radVars.sootVF, sootVFCopy_CCLabel, 
-                          matlIndex, patch);
+                          indx, patch);
 
-    new_dw->getModifiable(radVars.mixfrac, mixfracCopy_CCLabel, matlIndex, patch);
+    new_dw->getModifiable(radVars.mixfrac, mixfracCopy_CCLabel, indx, patch);
     if (d_useTableValues) {
-      old_dw->get(constRadVars.mixfrac, mixfrac_CCLabel, matlIndex, patch,
-                  Ghost::None, zeroGhostCells);
+      old_dw->get(constRadVars.mixfrac, mixfrac_CCLabel, indx, patch,gn, 0);
       radVars.mixfrac.copyData(constRadVars.mixfrac);
     }
       
-    if (d_useTableValues)
-      new_dw->get(constRadVars.density, density_CCLabel, matlIndex, patch,
-                  Ghost::None, zeroGhostCells);
-    else
-      new_dw->get(constRadVars.density, iceDensity_CCLabel, matlIndex, patch,
-                  Ghost::None, zeroGhostCells);
-
-    new_dw->getModifiable(radVars.ABSKG, abskg_CCLabel, 
-                           matlIndex, patch);
-    new_dw->getModifiable(radVars.ESRCG, esrcg_CCLabel, 
-                           matlIndex, patch);
-    new_dw->getModifiable(radVars.shgamma, shgamma_CCLabel, 
-                           matlIndex, patch);
+    if (d_useTableValues){
+      new_dw->get(constRadVars.density, density_CCLabel,   indx, patch,gn, 0);
+    }else{
+      new_dw->get(constRadVars.density, iceDensity_CCLabel, indx, patch,gn, 0);
+    }
+    new_dw->getModifiable(radVars.ABSKG,   abskg_CCLabel,   indx, patch);
+    new_dw->getModifiable(radVars.ESRCG,   esrcg_CCLabel,   indx, patch);
+    new_dw->getModifiable(radVars.shgamma, shgamma_CCLabel, indx, patch);
 
     d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
     if (d_radCounter%d_radCalcFreq == 0) {
-      
       d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
                                            &radVars, &constRadVars);
     }
@@ -831,9 +809,8 @@ RadiationDriver::scheduleBoundaryCondition(const LevelP& level,
 {
   Task* t=scinew Task("RadiationDriver::boundaryCondition",
                       this, &RadiationDriver::boundaryCondition);
-  int numGhostCells = 1;
 
-  t->requires(Task::NewDW, cellType_CCLabel, Ghost::AroundCells, numGhostCells);
+  t->requires(Task::NewDW, cellType_CCLabel, Ghost::AroundCells, 1);
   t->modifies(tempCopy_CCLabel);
   t->modifies(abskg_CCLabel);
 
@@ -879,22 +856,19 @@ RadiationDriver::boundaryCondition(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int iceIndex = 0;
-    int matlIndex = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
-    int numGhostCells = 1;
+    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    Ghost::GhostType  gac = Ghost::AroundCells;
     
     RadiationVariables radVars;
     RadiationConstVariables constRadVars;
     d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
 
-    new_dw->get(constRadVars.cellType, cellType_CCLabel, matlIndex, patch,
-                Ghost::AroundCells, numGhostCells);
-    new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel, matlIndex, patch);
-    new_dw->getModifiable(radVars.ABSKG, abskg_CCLabel, matlIndex, patch);
+    new_dw->get(constRadVars.cellType,         cellType_CCLabel,indx, patch,gac, 1);
+    new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel,indx, patch);
+    new_dw->getModifiable(radVars.ABSKG,        abskg_CCLabel,  indx, patch);
 
     if (d_radCounter%d_radCalcFreq == 0) {
-
       d_DORadiation->boundaryCondition(pc, patch, &radVars, &constRadVars);
-
     }
   }
 }
@@ -911,17 +885,17 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
                                         const ModelInfo* mi)
 {
   Task* t=scinew Task("RadiationDriver::intensitySolve",
-                      this, &RadiationDriver::intensitySolve, mi);
-  int numGhostCells = 1;
-
-  t->requires(Task::NewDW, radCO2_CCLabel, Ghost::AroundCells, numGhostCells);
-  t->requires(Task::NewDW, radH2O_CCLabel, Ghost::AroundCells, numGhostCells);
-  t->requires(Task::NewDW, sootVFCopy_CCLabel, Ghost::AroundCells, numGhostCells);
-  t->requires(Task::NewDW, cellType_CCLabel, Ghost::AroundCells, numGhostCells);
-  t->requires(Task::NewDW, tempCopy_CCLabel, Ghost::AroundCells, numGhostCells);
-  t->requires(Task::NewDW, shgamma_CCLabel, Ghost::AroundCells, numGhostCells);
-  t->requires(Task::NewDW, abskg_CCLabel, Ghost::AroundCells, numGhostCells);
-  t->requires(Task::NewDW, esrcg_CCLabel, Ghost::AroundCells, numGhostCells);
+                this, &RadiationDriver::intensitySolve, mi);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  
+  t->requires(Task::NewDW, radCO2_CCLabel,    gac, 1);
+  t->requires(Task::NewDW, radH2O_CCLabel,    gac, 1);
+  t->requires(Task::NewDW, sootVFCopy_CCLabel,gac, 1);
+  t->requires(Task::NewDW, cellType_CCLabel,  gac, 1);
+  t->requires(Task::NewDW, tempCopy_CCLabel,  gac, 1);
+  t->requires(Task::NewDW, shgamma_CCLabel,   gac, 1);
+  t->requires(Task::NewDW, abskg_CCLabel,     gac, 1);
+  t->requires(Task::NewDW, esrcg_CCLabel,     gac, 1);
 
   t->modifies(qfluxE_CCLabel);
   t->modifies(qfluxW_CCLabel);
@@ -952,9 +926,9 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
 
     int iceIndex = 0;
-    int matlIndex = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
-    int numGhostCells = 1;
-
+    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    
     RadiationVariables radVars;
     RadiationConstVariables constRadVars;
     CCVariable<double> energySource;
@@ -966,41 +940,33 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     zeroSource.initialize(0.0);
 
     PerPatch<Models_CellInformationP> cellInfoP;
-    if (new_dw->exists(d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_cellInfoLabel, indx, patch)) 
+      new_dw->get(cellInfoP, d_cellInfoLabel, indx, patch);
     else {
       cellInfoP.setData(scinew Models_CellInformation(patch));
-      new_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+      new_dw->put(cellInfoP, d_cellInfoLabel, indx, patch);
     }
     Models_CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(constRadVars.co2, radCO2_CCLabel, matlIndex, patch,
-                Ghost::AroundCells, numGhostCells);
-    new_dw->get(constRadVars.h2o, radH2O_CCLabel, matlIndex, patch,
-                Ghost::AroundCells, numGhostCells);
-    new_dw->get(constRadVars.sootVF, sootVFCopy_CCLabel, matlIndex, patch,
-                Ghost::AroundCells, numGhostCells);
-    new_dw->get(constRadVars.temperature, tempCopy_CCLabel, matlIndex, patch,
-                Ghost::AroundCells, numGhostCells);
-    new_dw->get(constRadVars.cellType, cellType_CCLabel, matlIndex, patch,
-                Ghost::AroundCells, numGhostCells);
+    new_dw->get(constRadVars.co2,        radCO2_CCLabel,    indx, patch,gac,1);
+    new_dw->get(constRadVars.h2o,        radH2O_CCLabel,    indx, patch,gac,1);
+    new_dw->get(constRadVars.sootVF,     sootVFCopy_CCLabel,indx, patch,gac,1);
+    new_dw->get(constRadVars.temperature,tempCopy_CCLabel,  indx, patch,gac,1);
+    new_dw->get(constRadVars.cellType,   cellType_CCLabel,  indx, patch,gac,1);
 
-    new_dw->getCopy(radVars.ABSKG, abskg_CCLabel,
-                    matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->getCopy(radVars.shgamma, shgamma_CCLabel,
-                    matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->getCopy(radVars.ESRCG, esrcg_CCLabel,
-                    matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(radVars.ABSKG,  abskg_CCLabel,   indx, patch, gac,1);
+    new_dw->getCopy(radVars.shgamma, shgamma_CCLabel,indx, patch, gac,1);
+    new_dw->getCopy(radVars.ESRCG,   esrcg_CCLabel,  indx, patch, gac,1);
 
-    new_dw->getModifiable(radVars.qfluxe, qfluxE_CCLabel, matlIndex, patch);
-    new_dw->getModifiable(radVars.qfluxw, qfluxW_CCLabel, matlIndex, patch);
-    new_dw->getModifiable(radVars.qfluxn, qfluxN_CCLabel, matlIndex, patch);
-    new_dw->getModifiable(radVars.qfluxs, qfluxS_CCLabel, matlIndex, patch);
-    new_dw->getModifiable(radVars.qfluxt, qfluxT_CCLabel, matlIndex, patch);
-    new_dw->getModifiable(radVars.qfluxb, qfluxB_CCLabel, matlIndex, patch);
-    new_dw->getModifiable(radVars.src, radiationSrc_CCLabel, matlIndex, patch);
+    new_dw->getModifiable(radVars.qfluxe, qfluxE_CCLabel, indx, patch);
+    new_dw->getModifiable(radVars.qfluxw, qfluxW_CCLabel, indx, patch);
+    new_dw->getModifiable(radVars.qfluxn, qfluxN_CCLabel, indx, patch);
+    new_dw->getModifiable(radVars.qfluxs, qfluxS_CCLabel, indx, patch);
+    new_dw->getModifiable(radVars.qfluxt, qfluxT_CCLabel, indx, patch);
+    new_dw->getModifiable(radVars.qfluxb, qfluxB_CCLabel, indx, patch);
+    new_dw->getModifiable(radVars.src, radiationSrc_CCLabel, indx, patch);
 
-    new_dw->getModifiable(energySource, mi->energy_source_CCLabel, matlIndex, patch);
+    new_dw->getModifiable(energySource, mi->energy_source_CCLabel, indx, patch);
 
     d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
     if (d_radCounter%d_radCalcFreq == 0) {
