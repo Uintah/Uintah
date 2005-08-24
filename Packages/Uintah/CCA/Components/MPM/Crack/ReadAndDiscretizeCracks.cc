@@ -299,15 +299,11 @@ void Crack::ReadQuadCracks(const int& m,const ProblemSpecP& geom_ps)
     quad_ps->require("p3",p3);  vertices.push_back(p3);
     quad_ps->require("p4",p4);  vertices.push_back(p4);
     
-    // four middle points (p5-p8) of the quad
-    if(!quad_ps->get("p5",p5)) p5=p1+0.5*(p2-p1);
-    vertices.push_back(p5);
-    if(!quad_ps->get("p6",p6)) p6=p2+0.5*(p3-p2);
-    vertices.push_back(p6);
-    if(!quad_ps->get("p7",p7)) p7=p3+0.5*(p4-p3);
-    vertices.push_back(p7);
-    if(!quad_ps->get("p8",p8)) p8=p1+0.5*(p4-p1);
-    vertices.push_back(p8);
+    // Four middle points (p5-p8) of the quad
+    if(!quad_ps->get("p5",p5)) p5=p1+0.5*(p2-p1);  vertices.push_back(p5);
+    if(!quad_ps->get("p6",p6)) p6=p2+0.5*(p3-p2);  vertices.push_back(p6);
+    if(!quad_ps->get("p7",p7)) p7=p3+0.5*(p4-p3);  vertices.push_back(p7);
+    if(!quad_ps->get("p8",p8)) p8=p1+0.5*(p4-p1);  vertices.push_back(p8);
     
     quads[m].push_back(vertices);
     vertices.clear();
@@ -408,8 +404,8 @@ void Crack::ReadArcCracks(const int& m,const ProblemSpecP& geom_ps)
     arcNCells[m].push_back(n);
 
     // Crack front segment ID, -1 by default which means all segments are crack front
-    int cfsID=-1; 
-    arc_ps->get("crack_front_segment_ID",cfsID);
+    int cfsID; 
+    if(!arc_ps->get("crack_front_segment_ID",cfsID)) cfsID=-1;
     arcCrkFrtSegID[m].push_back(cfsID);
   } 
 }
@@ -434,8 +430,8 @@ void Crack::ReadEllipticCracks(const int& m,const ProblemSpecP& geom_ps)
     ellipseNCells[m].push_back(n);
 
     // Crack front segment ID, -1 by default which means all segments are crack front
-    int cfsID=-1;  
-    ellipse_ps->get("crack_front_segment_ID",cfsID);
+    int cfsID;  
+    if(!ellipse_ps->get("crack_front_segment_ID",cfsID)) cfsID=-1;
     ellipseCrkFrtSegID[m].push_back(cfsID);
   } 
 }
@@ -467,8 +463,8 @@ void Crack::ReadPartialEllipticCracks(const int& m,
     pellipseNCells[m].push_back(n);
 
     // Crack front segment ID, -1 by default which means all segments are crack front
-    int cfsID=-1; 
-    pellipse_ps->get("crack_front_segment_ID",cfsID);
+    int cfsID; 
+    if(!pellipse_ps->get("crack_front_segment_ID",cfsID)) cfsID=-1;
     pellipseCrkFrtSegID[m].push_back(cfsID);
   } 
 }
