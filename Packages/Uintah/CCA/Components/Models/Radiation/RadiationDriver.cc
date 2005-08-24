@@ -20,9 +20,11 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
 using namespace std;
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 //****************************************************************************
 // Default constructor for PressureSolver
@@ -213,6 +215,8 @@ void RadiationDriver::scheduleInitialize(SchedulerP& sched,
                                          const ModelInfo*)
                                          
 {
+  cout_doing << " Radiation:scheduleInitialize\t\t\tL-" 
+             << level->getIndex() << endl;
   Task* t = scinew Task("RadiationDriver::initialize", this, 
                         &RadiationDriver::initialize);
 
@@ -259,6 +263,7 @@ RadiationDriver::initialize(const ProcessorGroup*,
                             DataWarehouse*,
                             DataWarehouse* new_dw)
 {
+  cout_doing << "Doing Initialize \t\t\t\t\tRadiation" << endl;
   for (int p=0; p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -412,7 +417,8 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
                                              const LevelP& level,
                                              const ModelInfo* mi)
 {
-
+  cout_doing << "RADIATION::scheduleComputeModelSources\t\t\tL-" 
+             << level->getIndex() << endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
 
@@ -446,6 +452,10 @@ RadiationDriver::buildLinearMatrix(const ProcessorGroup*,
                                    DataWarehouse*,
                                    DataWarehouse*)
 {
+  const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
+  cout_doing << "Doing buildLinearMatrix on level "<<L_indx
+               << "\t\t\t Radiation" << endl;
   d_DORadiation->d_linearSolver->matrixCreate(d_perproc_patches, patches);
 }
 
@@ -461,6 +471,8 @@ RadiationDriver::scheduleCopyValues(const LevelP& level,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
+  cout_doing << "RADIATION::scheduleCopyValues \t\tL-" 
+             << level->getIndex() << endl;
   Task* t = scinew Task("RadiationDriver::copyValues",
                       this, &RadiationDriver::copyValues);
 
@@ -518,6 +530,8 @@ RadiationDriver::copyValues(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    cout_doing << "Doing copyValues on patch "<<patch->getID()
+               << "\t\t\t\t Radiation" << endl;
     int iceIndex = 0;
     int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
 
@@ -625,8 +639,12 @@ RadiationDriver::scheduleComputeProps(const LevelP& level,
                                        const PatchSet* patches,
                                        const MaterialSet* matls)
 {
+
+  cout_doing << "RADIATION::scheduleComputeProps \t\t\tL-" 
+             << level->getIndex() << endl;
+             
   Task* t=scinew Task("RadiationDriver::computeProps",
-                      this, &RadiationDriver::computeProps);
+                this, &RadiationDriver::computeProps);
 
   Ghost::GhostType  gn = Ghost::None;
   
@@ -720,6 +738,8 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    cout_doing << "Doing computeProps on patch "<<patch->getID()
+               << "\t\t\t\t Radiation" << endl;
     int iceIndex = 0;
     int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
     Ghost::GhostType  gn = Ghost::None;
@@ -807,8 +827,10 @@ RadiationDriver::scheduleBoundaryCondition(const LevelP& level,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
+  cout_doing << "RADIATION::scheduleBoundaryCondition\t\t\tL-" 
+             << level->getIndex() << endl;
   Task* t=scinew Task("RadiationDriver::boundaryCondition",
-                      this, &RadiationDriver::boundaryCondition);
+                this, &RadiationDriver::boundaryCondition);
 
   t->requires(Task::NewDW, cellType_CCLabel, Ghost::AroundCells, 1);
   t->modifies(tempCopy_CCLabel);
@@ -855,6 +877,9 @@ RadiationDriver::boundaryCondition(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    cout_doing << "Doing boundaryCondition on patch "<<patch->getID()
+               << "\t\t\t Radiation" << endl;
+    
     int iceIndex = 0;
     int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -884,6 +909,8 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
                                         const MaterialSet* matls,
                                         const ModelInfo* mi)
 {
+  cout_doing << "RADIATION::scheduleIntensitySolve\t\t\tL-" 
+             << level->getIndex() << endl;
   Task* t=scinew Task("RadiationDriver::intensitySolve",
                 this, &RadiationDriver::intensitySolve, mi);
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -924,7 +951,8 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
-
+    cout_doing << "Doing intensitySolve on patch "<<patch->getID()
+               << "\t\t\t\t Radiation" << endl;
     int iceIndex = 0;
     int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
     Ghost::GhostType  gac = Ghost::AroundCells;
