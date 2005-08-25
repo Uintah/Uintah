@@ -85,7 +85,7 @@
 		    </box>
 		    <res>[2,2,2]</res>
 		    <velocity>[0.,0.,0.]</velocity>
-		    <temperature>0.</temperature>
+		    <temperature>100.</temperature>
  		</geom_object>
 		<velocity_field>1</velocity_field>
 	    </material>
@@ -105,32 +105,32 @@
       <BoundaryConditions>
       	<Face side = "x-">
 	  <BCType id = "all" var = "Dirichlet" label = "Temperature">
-	  	<value> 0 </value>
+	  	<value> 300. </value>
 	  </BCType>
 	</Face>
 	<Face side = "x+">
 	  <BCType id = "all" var = "Dirichlet" label = "Temperature">
-		<value> 0 </value>
+		<value> 300. </value>
 	  </BCType>
 	</Face>
 	<Face side = "y-">
 	  <BCType id = "all" var = "Dirichlet" label = "Temperature">
-		<value> 0 </value>
+		<value> 300. </value>
 	  </BCType>
 	</Face>
 	<Face side = "y+">
 	  <BCType id = "all" var = "Dirichlet" label = "Temperature">
-		<value> 0 </value>
+		<value> 300. </value>
   	  </BCType>
 	</Face>
 	<Face side = "z-">
 	  <BCType id = "all" var = "Dirichlet" label = "Temperature"> 
-		<value> 0 </value>
+		<value> 300. </value>
 	</BCType>
 	</Face>
 	<Face side = "z+">
 	  <BCType id = "all" var = "Dirichlet" label = "Temperature"> 
-		<value> 0 </value>
+		<value> 300. </value>
 	</BCType>
 	</Face>
        </BoundaryConditions>	
