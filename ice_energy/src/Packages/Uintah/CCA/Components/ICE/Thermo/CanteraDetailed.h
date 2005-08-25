@@ -133,7 +133,7 @@ WARNING
       int index;
       string name;
       VarLabel* massFraction_CCLabel;
-      VarLabel* massFraction_L_CCLabel;
+      VarLabel* massFraction_reacted_CCLabel;
       vector<Region*> regions;
     };
 

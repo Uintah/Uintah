@@ -1669,7 +1669,7 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
   if(!doICEOnLevel(levelIndex))
     return;
 
-  if(d_models.size() > 0 && d_modelSetup->tvars.size() > 0){
+  if(d_modelSetup->tvars.size() > 0){
     cout_doing << "ICE::scheduleComputeLagrangian_Transported_Vars" 
                << "\t\t\tL-"<<levelIndex<< endl;
                
