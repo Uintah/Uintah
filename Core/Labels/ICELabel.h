@@ -145,6 +145,7 @@ namespace Uintah {
 
     // Implicit AMR variables
     const VarLabel* connectionListLabel;
+    const VarLabel* matrix_CFI_weightsLabel;
 
     };
 } // end namespace Uintah

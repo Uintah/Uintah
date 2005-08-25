@@ -238,14 +238,20 @@ namespace Uintah {
 //  I M P L I C I T   A M R I C E                                                       
       void scheduleCoarsen_imp_delP(SchedulerP& sched, 
                                     const LevelP& level,
-                                    const MaterialSubset* press_matl); 
-                                   
+                                    const MaterialSubset* press_matl);
+                                     
+      void scheduleCompute_matrix_CFI_weights(SchedulerP& sched, 
+                                              const LevelP& coarseLevel,
+                                              const MaterialSet* all_matls);
+                                                                                 
       void schedule_matrixBC_CFI_coarsePatch(SchedulerP& sched, 
                                              const LevelP& coarseLevel,
+                                             const MaterialSubset* one_matl,
                                              const MaterialSet* all_matls);
                                              
       void schedule_matrixBC_CFI_finePatch(SchedulerP& sched, 
                                            const LevelP& fineLevel,
+                                           const MaterialSubset* one_matl,
                                            const MaterialSet* all_matls);
                                             
       void scheduleMultiLevelPressureSolve(SchedulerP& sched,
@@ -268,11 +274,10 @@ namespace Uintah {
                                            DataWarehouse*,
                                            DataWarehouse* new_dw);
 
-      void schedule_bogus_imp_delP(SchedulerP& sched, 
-                                 const LevelP& level,
-                                 vector<const PatchSet*> allPatchSets,
-                                 const MaterialSubset* press_matl,
-                                 const MaterialSet* all_matls);
+      void schedule_bogus_imp_delP(SchedulerP& sched,
+                                   vector<const PatchSet*> allPatchSets,
+                                   const MaterialSubset* press_matl,
+                                   const MaterialSet* all_matls);
                                    
        void bogus_imp_delP(const ProcessorGroup*,
                            const PatchSubset* patches,
@@ -565,6 +570,12 @@ namespace Uintah {
                             const MaterialSubset* matls,
                             DataWarehouse*,
                             DataWarehouse* new_dw);
+                           
+     void compute_matrix_CFI_weights(const ProcessorGroup*,
+                                     const PatchSubset* finePatches,
+                                     const MaterialSubset*,
+                                     DataWarehouse*,
+                                     DataWarehouse* new_dw);
                            
       void matrixBC_CFI_finePatch(const ProcessorGroup*,
                                   const PatchSubset* finePatches,
