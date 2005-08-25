@@ -2513,6 +2513,7 @@ void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
     add_matl->add(addedMaterialIndex);
     add_matl->addReference();
     t->computes(MIlb->vel_CCLabel,       add_matl);
+    t->computes(Mlb->heatFlux_CCLabel,   add_matl);
     t->computes(Ilb->rho_CCLabel,        add_matl);
     t->computes(Ilb->temp_CCLabel,       add_matl);
     t->computes(Ilb->sp_vol_CCLabel,     add_matl);
@@ -2605,6 +2606,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     int indx = d_sharedState->getNumMatls() - 1;
     double p_ref = d_sharedState->getRefPress();
     CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
+    CCVariable<double>  heatFlux_CC;
     CCVariable<Vector> vel_CC;
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     new_dw->allocateTemporary(rho_micro, patch);
@@ -2613,6 +2615,9 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);
     new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);
     new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
+    new_dw->allocateAndPut(heatFlux_CC,Mlb->heatFlux_CCLabel, indx,patch);
+
+    heatFlux_CC.initialize(0.0);
 
     mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
                                          Temp_CC,     vel_CC, 0,patch);
@@ -3196,7 +3201,7 @@ void MPMICE::switchTest(const ProcessorGroup* group,
 
 #if 1
   int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-  if (time_step == 200)
+  if (time_step == 7)
     sw = 1;
   else
     sw = 0;
