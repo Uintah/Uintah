@@ -10,18 +10,19 @@ SRCS     += \
 	$(SRCDIR)/SolverFactory.cc
 
 ifeq ($(HAVE_HYPRE),yes)
-SRCS += $(SRCDIR)/HypreSolver.cc \
-        \
-	$(SRCDIR)/AMRSolver.cc \
+  SRCS += $(SRCDIR)/HypreSolver.cc 
+  
+  ifeq ($(HAVE_HYPRE_1_9),yes)
+    SRCS += $(SRCDIR)/AMRSolver.cc \
 	$(SRCDIR)/HypreDriver.cc \
 	$(SRCDIR)/HypreDriverStruct.cc \
 	$(SRCDIR)/HypreDriverSStruct.cc
-
-SUBDIRS := \
+    SUBDIRS := \
         $(SRCDIR)/HypreSolvers \
         $(SRCDIR)/HyprePreconds
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+    include $(SCIRUN_SCRIPTS)/recurse.mk
+  endif # if HAVE_HYPRE_1_9
 
 endif # if $(HAVE_HYPRE)
 
