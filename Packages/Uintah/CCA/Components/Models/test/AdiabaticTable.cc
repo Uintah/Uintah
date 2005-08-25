@@ -655,24 +655,34 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       //__________________________________
       //  table sanity test
       if(d_doTableTest){
-        CCVariable<double> rho_table, mix_mol_weight;
-        
-        
+        CCVariable<double> rho_table, mix_mol_weight, co2, h2o;
         new_dw->allocateTemporary(rho_table, patch);
-        new_dw->allocateTemporary(mix_mol_weight, patch);
+        new_dw->allocateTemporary(co2, patch);
+        new_dw->allocateTemporary(h2o, patch);
         table->interpolate(d_density_index, rho_table,     iter, ind_vars);
-//      table->interpolate(d_MW_index,      mix_mol_weight,iter, ind_vars);
+        
+        // get co2 and h2o
+        for(int i=0;i<(int)tablevalues.size();i++){
+          TableValue* tv = tablevalues[i];
+          CellIterator iter = patch->getCellIterator();
+          if(tv->name == "CO2"){
+            table->interpolate(tv->index, co2, iter, ind_vars);
+          }
+          if(tv->name == "H2O"){
+            table->interpolate(tv->index, h2o, iter, ind_vars);
+          }
+        }
         
         cout.setf(ios::scientific,ios::floatfield);
         cout.precision(10);
     
-        cout << "                MixtureFraction,                          temp_table,       gamma,             cv,          MW_mix           rho_table,      press_thermo,   (gamma-1)cv,      rho_table*temp_table"<< endl;
+        cout << "                 MixtureFraction,                      temp_table,       gamma,             cv,             rho_table,      press_thermo,   (gamma-1)cv,   rho_table*temp_table,  co2,           h2o"<< endl;        
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
           double press = (rho_table[c] * cv[c] * (gamma[c]-1) * flameTemp[c]);
           double thermo = cv[c] * (gamma[c]-1);
           double physical = rho_table[c] * flameTemp[c];
-          cout << level->getCellPosition(c) << " " << flameTemp[c] <<  " " << gamma[c] << " " << cv[c] << " " << mix_mol_weight[c] << " " << rho_table[c] << " " << press << " " <<thermo << " " <<physical <<endl;
+          cout << level->getCellPosition(c) << " " << flameTemp[c] <<  " " << gamma[c] << " " << cv[c] << " "  << " " << rho_table[c] << " " << press << " " <<thermo << " " <<physical <<" " <<co2[c] << " " << h2o[c] <<endl;
         }
         cout.setf(ios::scientific ,ios::floatfield);
       }

@@ -97,5 +97,17 @@ set size 1.0,1.0
 set origin 0.0,0.0
 set ylabel "density * temperature"
 plot  'gp.dat' using 1:10      t 'table'
+
+#__________________________________
+#  co2 & h2o
+#__________________________________
+#set terminal x11 7
+set terminal postscript color "Times-Roman" 9
+set output "concentrations.ps"
+set size 1.0,1.0
+set origin 0.0,0.0
+set ylabel "Concentrations"
+plot  'gp.dat' using 1:11      t 'co2',\
+      'gp.dat' using 1:12      t 'h2o'
 pause -1 "Hit return to continue"
 
