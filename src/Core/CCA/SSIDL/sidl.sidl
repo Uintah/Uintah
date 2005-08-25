@@ -123,7 +123,8 @@ package SSIDL {
      * class.
      * </p>
      */
-    final void addRef();
+    // added collective
+    final collective void addRef();
 
     /**
      * Decrease by one the intrinsic reference count in the underlying
@@ -132,7 +133,8 @@ package SSIDL {
      * Clients should call this method whenever they remove a
      * reference to an object or interface.
      */
-    final void deleteRef();
+    // added collective
+    final collective void deleteRef();
 
     /**
      * Return true if and only if <code>obj</code> refers to the same
