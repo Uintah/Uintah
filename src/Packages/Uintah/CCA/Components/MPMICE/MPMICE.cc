@@ -984,7 +984,7 @@ void MPMICE::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   
   
   // make sure this is done after relocation
-  t->requires(Task::NewDW, Mlb->pXLabel, Ghost::None );
+  t->requires(Task::NewDW, Mlb->pXLabel, d_sharedState->allMPMMaterials()->getUnion(), Ghost::None );
   t->computes(d_sharedState->get_switch_label(), level.get_rep());
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 
