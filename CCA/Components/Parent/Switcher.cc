@@ -260,7 +260,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
           break;
       }
       if (found) {
-        cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;
+        //cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;
         continue;
       }
       MaterialSubset* matls = scinew MaterialSubset;
@@ -268,7 +268,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
       for (int j = 0; j < d_sharedState->getMaxMatlIndex(); j++) {
         // if it exists in the old DW for this level (iff it is 
         // on the level, it will be in the procSet's patches)
-        if (sched->get_dw(0)->exists(d_carryOverVarLabels[i], j, procset->getSubset(0)->get(0))) {
+        if (sched->get_dw(0)->exists(d_carryOverVarLabels[i], j, procset->getSubset(d_myworld->myrank())->get(0))) {
           matls->add(j);
         }
       }
@@ -283,7 +283,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
          iter++) {
       t->requires(Task::OldDW, iter->first, iter->second, Task::OutOfDomain, Ghost::None, 0);
       t->computes(iter->first, iter->second, Task::OutOfDomain);
-      cout << "  Carry over " << *iter->first << " matl " << *iter->second << endl;
+      //cout << d_myworld->myrank() << "  Carry over " << *iter->first << " matl " << *iter->second << endl;
     }  
   }
   sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());

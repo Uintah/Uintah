@@ -868,7 +868,7 @@ void ImpMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   Task* task = scinew Task("switchTest",this, &ImpMPM::switchTest);
 
   // make sure this is done after relocation (non-data)
-  task->requires(Task::NewDW, lb->pXLabel, Ghost::None );
+  task->requires(Task::NewDW, lb->pXLabel, d_sharedState->allMPMMaterials()->getUnion(), Ghost::None );
   task->computes(d_sharedState->get_switch_label(), level.get_rep());
   sched->addTask(task, level->eachPatch(),d_sharedState->allMPMMaterials());
 
