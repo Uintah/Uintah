@@ -47,15 +47,16 @@
 #include <Core/Datatypes/MaskedLatVolMesh.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MusilRNG.h>
+
+#include <sci_comp_warn_fixes.h>
+
 #include <iostream>
-
-
-namespace SCIRun {
 
 using namespace std;
 
-PersistentTypeID MaskedLatVolMesh::type_id("MaskedLatVolMesh", "LatVolMesh", maker);
+namespace SCIRun {
 
+PersistentTypeID MaskedLatVolMesh::type_id("MaskedLatVolMesh", "LatVolMesh", maker);
 
 MaskedLatVolMesh::MaskedLatVolMesh():
   LatVolMesh(),
@@ -278,7 +279,7 @@ MaskedLatVolMesh::get_faces(Face::array_type &, Cell::index_type) const
 bool
 MaskedLatVolMesh::check_valid(MaskedLatVolMesh::Node::index_type idx) const
 {
-  unsigned i = idx.i_, j = idx.j_, k = idx.k_;
+  unsigned int i = idx.i_, j = idx.j_, k = idx.k_;
   return (check_valid(i  ,j  ,k  ) ||
 	  check_valid(i-1,j  ,k  ) ||
 	  check_valid(i  ,j-1,k  ) ||
@@ -403,9 +404,9 @@ MaskedLatVolMesh::update_count(MaskedLatVolMesh::Cell::index_type c,
   // These counts are the number of nodes, edges, faces that exist
   // ONLY from the presence of this cell, not because of the contribution 
   // of neighboring cells.
-  const unsigned faces = (i0?0:1)+(i1?0:1)+(j0?0:1)+(j1?0:1)+(k0?0:1)+(k1?0:1);
-  unsigned int   nodes = 0;
-  unsigned int   edges = 0;
+  const unsigned int faces = (i0?0:1)+(i1?0:1)+(j0?0:1)+(j1?0:1)+(k0?0:1)+(k1?0:1);
+  unsigned int       nodes = 0;
+  unsigned int       edges = 0;
 
   if (faces == 6) {  
 	nodes = 8; 
@@ -663,28 +664,28 @@ MaskedLatVolMesh::unmask_cell(Cell::index_type idx)
 }
 
 
-unsigned
+unsigned int
 MaskedLatVolMesh::num_masked_nodes() const
 {
   return masked_nodes_count_;
 }
 
-unsigned
+unsigned int
 MaskedLatVolMesh::num_masked_edges() const
 {
   return masked_edges_count_;
 }
 
-unsigned
+unsigned int
 MaskedLatVolMesh::num_masked_faces() const
 {
   return masked_faces_count_;
 }
 
-unsigned
+unsigned int
 MaskedLatVolMesh::num_masked_cells() const
 {
-  return masked_cells_.size();
+  return (unsigned int)masked_cells_.size();
 }
 
 void 
@@ -778,8 +779,8 @@ MaskedLatVolMesh::io(Piostream& stream)
   LatVolMesh::io(stream);
 
   // IO data members, in order
-  vector<unsigned> masked_vec(masked_cells_.begin(), 
-			      masked_cells_.end());
+  vector<unsigned int> masked_vec(masked_cells_.begin(), 
+                                  masked_cells_.end());
   Pio(stream, masked_vec);
   if (stream.reading())
     {

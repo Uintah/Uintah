@@ -10,6 +10,8 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
+#include <sci_comp_warn_fixes.h>
+
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
@@ -145,7 +147,7 @@ newHypreSolver(const SolverType& solverType,
     throw InternalError("Unsupported solver type: "+solverType,
                         __FILE__, __LINE__);
   } // switch (solverType)
-  return 0;
+  RETURN_0;
 }
 
 SolverType

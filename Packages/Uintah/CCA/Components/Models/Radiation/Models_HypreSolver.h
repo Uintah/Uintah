@@ -15,6 +15,7 @@
 #include <HYPRE_struct_ls.h>
 #include <krylov.h>
 
+#include <iostream>
 
 namespace Uintah {
 
@@ -55,50 +56,52 @@ class Models_HypreSolver: public Models_RadiationSolver {
 
 public:
 
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Construct an instance of a HypreSolver.
-      Models_HypreSolver(const ProcessorGroup* myworld);
+  // GROUP: Constructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Construct an instance of a HypreSolver.
+  Models_HypreSolver(const ProcessorGroup* myworld);
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual Destructor
-      virtual ~Models_HypreSolver();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual Destructor
+  virtual ~Models_HypreSolver();
 
-      // GROUP: Problem Setup:
-      ////////////////////////////////////////////////////////////////////////
-      // Problem setup
-      void problemSetup(const ProblemSpecP& params, bool shradiation);
+  // GROUP: Problem Setup:
+  ////////////////////////////////////////////////////////////////////////
+  // Problem setup
+  void problemSetup(const ProblemSpecP& params, bool shradiation);
 
-      ////////////////////////////////////////////////////////////////////////
-      // HYPRE grid and stencil setup
-      void gridSetup(const ProcessorGroup*,
-                     const Patch* patch, bool plusX, bool plusY, bool plusZ);
+  ////////////////////////////////////////////////////////////////////////
+  // HYPRE grid and stencil setup
+  void gridSetup(const ProcessorGroup*,
+                 const Patch* patch, bool plusX, bool plusY, bool plusZ);
 
-      ////////////////////////////////////////////////////////////////////////
-       // to close petsc
-      void finalizeSolver();
+  ////////////////////////////////////////////////////////////////////////
+  // to close petsc
+  void finalizeSolver();
 
-      virtual void matrixCreate(const PatchSet* allpatches,
-                            const PatchSubset* mypatc) {};
+  virtual void matrixCreate(const PatchSet* /*allpatches*/,
+                            const PatchSubset* /*mypatc*/) {
+    std::cout << "WARNING: Models_HypreSolver.h: matrixCreate NOT IMPLEMENTED!!!";
+  };
 
-      void setMatrix(const ProcessorGroup* pc,
-                     const Patch* patch,
-                     RadiationVariables* vars,
-                     bool plusX, bool plusY, bool plusZ,
-                     CCVariable<double>& SU,
-                     CCVariable<double>& AB,
-                     CCVariable<double>& AS,
-                     CCVariable<double>& AW,
-                     CCVariable<double>& AP,
-                     CCVariable<double>& AE,
-                     CCVariable<double>& AN,
-                     CCVariable<double>& AT);
+  void setMatrix(const ProcessorGroup* pc,
+                 const Patch* patch,
+                 RadiationVariables* vars,
+                 bool plusX, bool plusY, bool plusZ,
+                 CCVariable<double>& SU,
+                 CCVariable<double>& AB,
+                 CCVariable<double>& AS,
+                 CCVariable<double>& AW,
+                 CCVariable<double>& AP,
+                 CCVariable<double>& AE,
+                 CCVariable<double>& AN,
+                 CCVariable<double>& AT);
 
-      bool radLinearSolve();
+  bool radLinearSolve();
 
-      virtual void copyRadSoln(const Patch* patch, RadiationVariables* vars);
-      virtual void destroyMatrix();
+  virtual void copyRadSoln(const Patch* patch, RadiationVariables* vars);
+  virtual void destroyMatrix();
 protected:
 
 private:
@@ -134,7 +137,3 @@ private:
 } // End namespace Uintah
 
 #endif  
-
-
-
-
