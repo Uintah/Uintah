@@ -47,10 +47,6 @@ tarball : tar
 	@echo "Compressing the tar archive"
 	gzip ${tarfile}
 
-# Construct list of files to be included in the tar archive.  Edit
-# tarlist to make changes to this list.
-tarlist = ${shell ruby tarlist}
-
 # Build all docs and put them in a tar archive.
 tar: index.html products
 	@echo "Making a tar archive"
