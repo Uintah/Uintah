@@ -53,15 +53,6 @@
 #include <set>
 #include <sgi_stl_warnings_on.h>
 
-// This removes compiler warnings about unreachable statements.
-// Only use BREAK after lines that will kill the program.  Otherwise
-// use break.
-#if defined(__sgi) && !defined(__GNUC__)
-#  define BREAK 
-#else
-#  define BREAK break
-#endif
-
 namespace SCIRun {
 
 using std::string;
@@ -72,10 +63,10 @@ struct MLVMIndex
 {
 public:
   MLVMIndex() : i_(0), j_(0), k_(0), mesh_(0) {}
-  MLVMIndex(const MaskedLatVolMesh *m, unsigned i, unsigned j, 
-                 unsigned k) : i_(i), j_(j), k_(k), mesh_(m) {}
+  MLVMIndex(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, 
+                 unsigned int k) : i_(i), j_(j), k_(k), mesh_(m) {}
         
-  unsigned i_, j_, k_;
+  unsigned int i_, j_, k_;
 
   // Needs to be here so we can compute a sensible index.
   const MaskedLatVolMesh *mesh_;
@@ -85,9 +76,13 @@ public:
 struct MLVMCellIndex : public MLVMIndex
 {
   MLVMCellIndex() : MLVMIndex() {}
-  MLVMCellIndex(const MaskedLatVolMesh *m, unsigned i, unsigned j, unsigned k)
+  MLVMCellIndex(const MaskedLatVolMesh *m, 
+                unsigned int i, unsigned int j, unsigned int k)
     : MLVMIndex(m,i,j,k) {}
 
+  // The 'operator unsigned()' cast is used to convert a MLVMCellIndex
+  // into a single scalar, in this case an 'index' value that is used
+  // to index into a field.
   operator unsigned() const;
 
   bool operator ==(const MLVMCellIndex &a) const
@@ -111,9 +106,12 @@ struct MLVMCellIndex : public MLVMIndex
 struct MLVMNodeIndex : public MLVMIndex
 {
   MLVMNodeIndex() : MLVMIndex() {}
-  MLVMNodeIndex(const MaskedLatVolMesh *m, unsigned i, unsigned j, unsigned k)
+  MLVMNodeIndex(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
     : MLVMIndex(m,i,j,k) {}
 
+  // The 'operator unsigned()' cast is used to convert a MLVMNodeIndex
+  // into a single scalar, in this case an 'index' value that is used
+  // to index into a field.
   operator unsigned() const;
 
   bool operator ==(const MLVMIndex &a) const
@@ -137,10 +135,13 @@ struct MLVMNodeIndex : public MLVMIndex
 struct MLVMEdgeIndex : public MLVMIndex
 {
   MLVMEdgeIndex() : MLVMIndex(), dir_(0) {}
-  MLVMEdgeIndex(const MaskedLatVolMesh *m, unsigned i, unsigned j, unsigned k, 
-            unsigned dir)
+  MLVMEdgeIndex(const MaskedLatVolMesh *m, 
+                unsigned int i, unsigned int j, unsigned int k, unsigned int dir)
     : MLVMIndex(m, i,j,k) , dir_(dir){}
 
+  // The 'operator unsigned()' cast is used to convert a MLVMEdgeIndex
+  // into a single scalar, in this case an 'index' value that is used
+  // to index into a field.
   operator unsigned() const;
 
   bool operator ==(const MLVMEdgeIndex &a) const
@@ -154,22 +155,29 @@ struct MLVMEdgeIndex : public MLVMIndex
     return !(*this == a);
   }
 
-  static string type_name(int i=-1) 
-  { ASSERT(i<1); return "MaskedLatVolMesh::EdgeIndex"; }
+  static string type_name(int i=-1) { 
+    ASSERT(i<1); return "MaskedLatVolMesh::EdgeIndex";
+  }
+
+  unsigned int dir_;
+
   friend void Pio(Piostream&, MLVMEdgeIndex&);
   friend const TypeDescription* get_type_description(MLVMEdgeIndex *);
   friend const string find_type_name(MLVMEdgeIndex *);
-  unsigned dir_;
+
 };
 
 
 struct MLVMFaceIndex : public MLVMIndex
 {
   MLVMFaceIndex() : MLVMIndex() {}
-  MLVMFaceIndex(const MaskedLatVolMesh *m, unsigned i, unsigned j, unsigned k, 
-            unsigned dir)
+  MLVMFaceIndex(const MaskedLatVolMesh *m,
+                unsigned int i, unsigned int j, unsigned int k, unsigned int dir)
     : MLVMIndex(m, i,j,k) , dir_(dir){}
 
+  // The 'operator unsigned()' cast is used to convert a MLVMFaceIndex
+  // into a single scalar, in this case an 'index' value that is used
+  // to index into a field.
   operator unsigned() const;
 
   bool operator ==(const MLVMFaceIndex &a) const
@@ -183,12 +191,15 @@ struct MLVMFaceIndex : public MLVMIndex
     return !(*this == a);
   }
 
-  static string type_name(int i=-1) 
-  { ASSERT(i<1); return "MaskedLatVolMesh::FaceIndex"; }
+  static string type_name(int i=-1) { 
+    ASSERT(i<1); return "MaskedLatVolMesh::FaceIndex";
+  }
+
+  unsigned int dir_;
+
   friend void Pio(Piostream&, MLVMFaceIndex&);
   friend const TypeDescription* get_type_description(MLVMFaceIndex *);
   friend const string find_type_name(MLVMFaceIndex *);
-  unsigned dir_;
 };
 
 
@@ -196,22 +207,21 @@ struct MLVMCellSize : public MLVMIndex
 {
 public:
   MLVMCellSize() : MLVMIndex() {}
-  MLVMCellSize(const MaskedLatVolMesh *m, unsigned i, unsigned j, unsigned k) 
+  MLVMCellSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k) 
     : MLVMIndex(m, i, j, k) {}
-  operator unsigned () const 
+  operator unsigned() const 
   { 
     return i_*j_*k_;
   } 
 };
 
-
 struct MLVMNodeSize : public MLVMIndex
 {
 public:
   MLVMNodeSize() : MLVMIndex() {}
-  MLVMNodeSize(const MaskedLatVolMesh *m, unsigned i, unsigned j, unsigned k) 
+  MLVMNodeSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k) 
     : MLVMIndex(m, i, j, k) {}
-  operator unsigned () const 
+  operator unsigned() const 
   { 
     return i_*j_*k_;
   } 
@@ -222,10 +232,9 @@ struct MLVMEdgeSize : public MLVMIndex
 {
 public:
   MLVMEdgeSize() : MLVMIndex() {}
-  MLVMEdgeSize(const MaskedLatVolMesh *m, unsigned i, unsigned j, 
-           unsigned k) 
+  MLVMEdgeSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k) 
     : MLVMIndex(m, i, j, k) {}
-  operator unsigned () const 
+  operator unsigned() const 
   { 
     return (i_-1)*j_*k_ + i_*(j_-1)*k_ + i_*j_*(k_-1);
   } 
@@ -236,10 +245,9 @@ struct MLVMFaceSize : public MLVMIndex
 {
 public:
   MLVMFaceSize() : MLVMIndex() {}
-  MLVMFaceSize(const MaskedLatVolMesh *m, unsigned i, unsigned j, 
-           unsigned k) 
+  MLVMFaceSize(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k) 
     : MLVMIndex(m, i, j, k) {}
-  operator unsigned () const 
+  operator unsigned() const 
   { 
     return i_*(j_-1)*(k_-1) + (i_-1)*j_*(k_-1) + (i_-1)*(j_-1)*k_; 
   } 
@@ -250,7 +258,7 @@ struct MLVMNodeIter : public MLVMIndex
 {
 public:
   MLVMNodeIter() : MLVMIndex() {}
-  MLVMNodeIter(const MaskedLatVolMesh *m, unsigned i, unsigned j, unsigned k)
+  MLVMNodeIter(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
     : MLVMIndex(m, i, j, k) {}
 
   const MLVMNodeIndex &operator *() const
@@ -287,8 +295,8 @@ struct MLVMEdgeIter : public MLVMEdgeIndex
 public:
   MLVMEdgeIter() : MLVMEdgeIndex() {}
   MLVMEdgeIter(const MaskedLatVolMesh *m, 
-           unsigned i, unsigned j, 
-           unsigned k, unsigned dir)
+           unsigned int i, unsigned int j, 
+           unsigned int k, unsigned int dir)
     : MLVMEdgeIndex(m, i, j, k,dir) {}
 
   const MLVMEdgeIndex &operator *() const 
@@ -334,7 +342,7 @@ struct MLVMFaceIter : public MLVMFaceIndex
 public:
   MLVMFaceIter() : MLVMFaceIndex() {}
   MLVMFaceIter(const MaskedLatVolMesh *m, 
-           unsigned i, unsigned j, unsigned k, unsigned dir)
+           unsigned int i, unsigned int j, unsigned int k, unsigned int dir)
     : MLVMFaceIndex(m, i, j, k, dir){}
 
   const MLVMFaceIndex &operator *() const 
@@ -370,7 +378,7 @@ struct MLVMCellIter : public MLVMIndex
 {
 public:
   MLVMCellIter() : MLVMIndex() {}
-  MLVMCellIter(const MaskedLatVolMesh *m, unsigned i, unsigned j, unsigned k)
+  MLVMCellIter(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
     : MLVMIndex(m, i, j, k) {}
 
   const MLVMCellIndex &operator *() const 
@@ -485,11 +493,10 @@ public:
   //! Special Method to Reset Mesh
   void unmask_everything();  
   
-
-  unsigned num_masked_nodes() const;
-  unsigned num_masked_edges() const;
-  unsigned num_masked_faces() const;
-  unsigned num_masked_cells() const;
+  unsigned int num_masked_nodes() const;
+  unsigned int num_masked_edges() const;
+  unsigned int num_masked_faces() const;
+  unsigned int num_masked_cells() const;
 
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;
@@ -580,15 +587,15 @@ public:
 
 private:
   unsigned int	synchronized_;
-  map<Node::index_type, unsigned>	nodes_;
+  map<Node::index_type, unsigned int>	nodes_;
   Mutex					node_lock_;
-  set<unsigned>	masked_cells_;
-  unsigned	masked_nodes_count_;
-  unsigned	masked_edges_count_;
-  unsigned	masked_faces_count_;
+  set<unsigned int> masked_cells_;
+  unsigned	    masked_nodes_count_;
+  unsigned	    masked_edges_count_;
+  unsigned	    masked_faces_count_;
 
   bool		update_count(Cell::index_type, bool masking);
-  unsigned	num_missing_faces(Cell::index_type);
+  unsigned int	num_missing_faces(Cell::index_type);
   bool		check_valid(Node::index_type idx) const;
   bool		check_valid(Edge::index_type idx) const;
   bool		check_valid(Face::index_type idx) const;
@@ -598,9 +605,9 @@ private:
   bool		check_valid(Face::iterator idx) const;    
   bool		check_valid(Cell::iterator idx) const; 
 #if 0
-  inline bool	check_valid(unsigned i, unsigned j, unsigned k) const
+  inline bool	check_valid(unsigned int i, unsigned int j, unsigned int k) const
   { 
-    return (masked_cells_.find(unsigned(Cell::index_type(this,i,j,k))) == masked_cells_.end()); 
+    return (masked_cells_.find(unsigned int(Cell::index_type(this,i,j,k))) == masked_cells_.end()); 
   }
 #endif
   inline bool	check_valid(int i, int j, int k) const
