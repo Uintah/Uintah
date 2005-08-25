@@ -298,7 +298,11 @@ namespace Uintah {
     cout << "delt_init = " << d_timeinfo->max_initial_delt << endl;
     cout << "initial_delt_range = " << d_timeinfo->initial_delt_range << endl;
     cout << "max_delt_increase = " << d_timeinfo->max_delt_increase << endl;
+    cout << "iterations = " << iterations << endl;
+    cout << "delt = " << delt << endl;
+    cout << "prev_delt = " << prev_delt << endl;
 #endif
+
 
     delt *= d_timeinfo->delt_factor;
       
@@ -308,7 +312,7 @@ namespace Uintah {
              << " to minimum: " << d_timeinfo->delt_min << '\n';
       delt = d_timeinfo->delt_min;
     }
-    if(iterations > 1 && d_timeinfo->max_delt_increase < 1.e90
+    if(iterations > 0 && d_timeinfo->max_delt_increase < 1.e90
        && delt > (1+d_timeinfo->max_delt_increase)*prev_delt){
       if(d_myworld->myrank() == 0)
         cerr << "WARNING: lowering delt from " << delt 
