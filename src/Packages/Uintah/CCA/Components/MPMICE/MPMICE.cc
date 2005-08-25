@@ -2884,8 +2884,11 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
     
       // Only interpolate over the intersection of the fine and coarse patches
       // coarse cell 
-      linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
-                             refineRatio, lo, hi, fine_q_CC);
+//      linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
+//                             refineRatio, lo, hi, fine_q_CC);
+
+      piecewiseConstantInterpolation<T>(coarse_q_CC, fineLevel,
+                             lo, hi, fine_q_CC);
     }
   }
 }
