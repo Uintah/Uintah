@@ -214,7 +214,10 @@
     <!--__________________________________-->
     <Models>
        <Model type="AdiabaticTable">
+        <tableValue>CO2</tableValue>
+        <tableValue>H2O</tableValue>
         <table name="adiabatic" type="Arches">
+
           <!--____________CH4______________________
           <filename>inputs/Models/ch4.rxn</filename>-->
           
@@ -227,6 +230,7 @@
 	   <filename>inputs/Models/he.rxn</filename> -->   
           
           <!--____________JP8______________________-->
+
           <include href="inputs/Models/JP8.xml"/>
        </table>
        
