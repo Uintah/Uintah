@@ -4663,8 +4663,10 @@ if test "$HAVE_HYPRE" = "yes" ; then
     # Determine the version of hypre.
     found_it=`grep "PACKAGE_VERSION" $LIB_DIR_HYPRE/../include/HYPRE_config.h | grep 1.9`
     DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 0"
+    HAVE_HYPRE_1_9="no"
     if test -n "$found_it"; then
        DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 1"
+       HAVE_HYPRE_1_9="yes"
     fi
   fi
 
@@ -4676,6 +4678,7 @@ if test "$with_hypre" && test ! "$DEF_HYPRE"; then
 fi
 
 AC_SUBST(HAVE_HYPRE)
+AC_SUBST(HAVE_HYPRE_1_9)
 AC_SUBST(DEF_HYPRE_1_9)
 AC_SUBST(DEF_HYPRE)
 AC_SUBST(INC_HYPRE_H)
