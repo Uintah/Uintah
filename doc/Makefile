@@ -32,8 +32,9 @@
 root := ${shell cd ..; basename `pwd` }
 tarfile := ${notdir ${shell cd ..; pwd}}.tar
 tarball := ${tarfile}.gz
+tarlist := tarlist
 tarcmd := gnutar --exclude='*CVS*' --exclude='auto' \
---create --verbose --file=${root}/doc/${tarfile} 
+--create --file=${root}/doc/${tarfile} --files-from ${root}/doc/${tarlist}
 products := User Installation Developer Documentum
 edition := ../src/main/sci_version.h
 
@@ -54,6 +55,7 @@ tarlist = ${shell ruby tarlist}
 tar: index.html products
 	@echo "Making a tar archive"
 	-rm -f ${tarfile} ${tarball}
+	ruby tarlist.rb >${tarlist}
 	cd ../..; ${tarcmd} ${tarlist}
 
 index.html: index.rhtml ${edition}

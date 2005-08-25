@@ -90,8 +90,8 @@ globs = ["#{root}/doc/User/FAQ/*.gif",
   "#{root}/src/Dataflow/XML/*.html",
   "#{root}/src/Dataflow/Modules/*/doc/*.{jpg,gif,png}",
   "#{root}/src/Packages/*/Dataflow/XML/*.{html,jpg,gif,png}",
-  "#{root}/src/Packages/*/Dataflow/TeX/*/*.{jpg,gif,png}",
-  "#{root}/src/Packages/*/Dataflow/TeX/*/*/*",
+#   "#{root}/src/Packages/*/Dataflow/TeX/*/*.{jpg,gif,png}",
+#   "#{root}/src/Packages/*/Dataflow/TeX/*/*/*",
   "#{root}/src/Packages/*/Dataflow/Modules/*/doc/*.{jpg,gif,png}"]
 
 globs.each do |glob|
