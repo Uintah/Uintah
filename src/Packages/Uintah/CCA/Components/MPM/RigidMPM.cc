@@ -396,7 +396,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pxx[idx]             = px[idx];
         pTempPreNew[idx]     = pTempCurrent[idx]; // for thermal stress
 
-        thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
+        thermal_energy += pTempNew[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
         CMV += pvelocitynew[idx]*pmass[idx];

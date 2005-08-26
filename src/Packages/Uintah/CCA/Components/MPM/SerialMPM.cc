@@ -3023,11 +3023,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         if((!pointInReal && pointInAny) || (pmassNew[idx] <= d_min_part_mass)
             || pTempNew[idx] < 0. ){
           delset->addParticle(idx);
-//	  cout << "Material = " << m << " Deleted Particle = " << idx 
-//               << " xold = " << px[idx] << " xnew = " << pxnew[idx]
-//	       << " vold = " << pvelocity[idx] << " vnew = "<< pvelocitynew[idx]
-//	       << " massold = " << pmass[idx] << " massnew = " << pmassNew[idx]
-//	       << " volnew = " << pvolumeNew[idx] << endl;
+//        cout << "Material = " << m << " Deleted Particle = " << idx 
+//             << " xold = " << px[idx] << " xnew = " << pxnew[idx]
+//             << " vold = " << pvelocity[idx] << " vnew = "<< pvelocitynew[idx]
+//             << " massold = " << pmass[idx] << " massnew = " << pmassNew[idx]
+//             << " tempold = " << pTemperature[idx] 
+//             << " tempnew = " << pTempNew[idx]
+//             << " volnew = " << pvolumeNew[idx] << endl;
         }
         if(pvelocitynew[idx].length() > d_max_vel){
           pvelocitynew[idx]=pvelocity[idx];
