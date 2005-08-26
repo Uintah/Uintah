@@ -275,7 +275,7 @@ namespace Uintah {
                                            DataWarehouse* new_dw);
 
       void schedule_bogus_imp_delP(SchedulerP& sched,
-                                   vector<const PatchSet*> allPatchSets,
+                                   const PatchSet* perProcPatches,
                                    const MaterialSubset* press_matl,
                                    const MaterialSet* all_matls);
                                    
