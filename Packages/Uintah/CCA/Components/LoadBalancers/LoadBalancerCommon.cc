@@ -187,6 +187,8 @@ void LoadBalancerCommon::assignResources(DetailedTasks3& graph)
   }
 }
 
+// Creates a PatchSet containing PatchSubsets for each processor for a
+// single level.
 const PatchSet*
 LoadBalancerCommon::createPerProcessorPatchSet(const LevelP& level)
 {
@@ -199,6 +201,29 @@ LoadBalancerCommon::createPerProcessorPatchSet(const LevelP& level)
     ASSERTRANGE(proc, 0, d_myworld->size());
     PatchSubset* subset = patches->getSubset(proc);
     subset->add(patch);
+  }
+  patches->sortSubsets();  
+  return patches;
+}
+
+// Creates a PatchSet containing PatchSubsets for each processor for an
+// entire grid.
+const PatchSet*
+LoadBalancerCommon::createPerProcessorPatchSet(const GridP& grid)
+{
+  PatchSet* patches = scinew PatchSet();
+  patches->createEmptySubsets(d_myworld->size());
+  for (int i = 0; i < grid->numLevels(); i++) {
+    const LevelP level = grid->getLevel(i);
+    
+    for(Level::const_patchIterator iter = level->patchesBegin();
+        iter != level->patchesEnd(); iter++){
+      const Patch* patch = *iter;
+      int proc = getPatchwiseProcessorAssignment(patch);
+      ASSERTRANGE(proc, 0, d_myworld->size());
+      PatchSubset* subset = patches->getSubset(proc);
+      subset->add(patch);
+    }
   }
   patches->sortSubsets();  
   return patches;
