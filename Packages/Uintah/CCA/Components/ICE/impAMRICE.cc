@@ -106,6 +106,8 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
   
     bool firstIter = true;
     bool recursion = false;
+    sched->mapDataWarehouse(Task::ParentOldDW, 0);
+    sched->mapDataWarehouse(Task::ParentNewDW, 1);
     
     for(int L = 0; L<maxLevel; L++){
       LevelP level = grid->getLevel(L);
@@ -119,15 +121,23 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                           all_matls,
                                                           firstIter);
 
-
-      scheduleCompute_matrix_CFI_weights(sched,level,     all_matls);
+    }
+    
+    //__________________________________
+    // now adjust the matrix
+    for(int L = 0; L<maxLevel; L++){
+      LevelP level = grid->getLevel(L);
+      //scheduleCompute_matrix_CFI_weights(sched,level,     all_matls);
       
       schedule_matrixBC_CFI_coarsePatch(sched, level,     one_matl, 
                                                           all_matls);            
 
       schedule_matrixBC_CFI_finePatch(  sched, level,     one_matl, 
                                                           all_matls);
-    }                     
+                                                          
+      scheduleZeroMatrix_RHS_UnderFinePatches( sched,level,one_matl);
+    }
+                     
                                                             
     //__________________________________
     // strictly for testing purposes
@@ -668,25 +678,28 @@ void ICE::coarsen_imp_delP(const ProcessorGroup*,
 void ICE::scheduleZeroMatrix_RHS_UnderFinePatches(SchedulerP& sched, 
                                                   const LevelP& coarseLevel,
                                                   const MaterialSubset* one_matl)
-{                                                                          
-  cout_doing << "ICE::scheduleZeroMatrix_RHS_UnderFinePatches\t\t\t\tL-" 
-             << coarseLevel->getIndex() << endl;
+{ 
+  if(coarseLevel->hasFinerLevel()){                                                                      
+    cout_doing << d_myworld->myrank()
+               << " ICE::scheduleZeroMatrix_RHS_UnderFinePatches\t\t\tL-" 
+               << coarseLevel->getIndex() << endl;
 
-  Task* t = scinew Task("ICE::zeroMatrix_RHS_UnderFinePatches",
-                  this, &ICE::zeroMatrix_RHS_UnderFinePatches);
+    Task* t = scinew Task("ICE::zeroMatrix_RHS_UnderFinePatches",
+                    this, &ICE::zeroMatrix_RHS_UnderFinePatches);
 
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  Ghost::GhostType  gn = Ghost::None;
+    Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+    Ghost::GhostType  gn = Ghost::None;
 
-  t->requires(Task::NewDW, lb->matrixLabel,
-              0, Task::FineLevel,  one_matl,oims, gn, 0);
-  t->requires(Task::NewDW, lb->matrixLabel,
-              0, Task::FineLevel,  one_matl,oims, gn, 0);
+    t->requires(Task::NewDW, lb->matrixLabel,
+                0, Task::FineLevel,  one_matl,oims, gn, 0);
+    t->requires(Task::NewDW, lb->matrixLabel,
+                0, Task::FineLevel,  one_matl,oims, gn, 0);
 
-  t->modifies(lb->matrixLabel, one_matl, oims);
-  t->modifies(lb->rhsLabel,    one_matl, oims);       
+    t->modifies(lb->matrixLabel, one_matl, oims);
+    t->modifies(lb->rhsLabel,    one_matl, oims);       
 
-  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
+    sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
+  }
 }
 /* _____________________________________________________________________
  Function~  ICE::zeroMatrixUnderFinePatches
@@ -820,7 +833,7 @@ void ICE::scheduleCompute_matrix_CFI_weights(SchedulerP& sched,
 {
   if(fineLevel->getIndex() > 0 ){
     cout_doing << d_myworld->myrank() 
-               << " ICE::scheduleCompute_matrix_CFI_weights\t\tL-" 
+               << " ICE::scheduleCompute_matrix_CFI_weights\t\t\tL-" 
                << fineLevel->getIndex() <<endl;
 
     Task* task = scinew Task("compute_matrix_CFI_weights",
@@ -945,20 +958,22 @@ void ICE::schedule_matrixBC_CFI_coarsePatch(SchedulerP& sched,
                                             const MaterialSet* all_matls)
 
 {
-  cout_doing << d_myworld->myrank() 
-             << " ICE::schedule_Adjust_matrix_coarseFineInterfaces\t\tL-" 
-             << coarseLevel->getIndex() <<endl;
-             
-  Task* task = scinew Task("matrixBC_CFI_coarsePatch",
-                this, &ICE::matrixBC_CFI_coarsePatch);
+  if(coarseLevel->hasFinerLevel()){
+    cout_doing << d_myworld->myrank() 
+               << " ICE::matrixBC_CFI_coarsePatch\t\t\t\t\tL-" 
+               << coarseLevel->getIndex() <<endl;
 
-  Ghost::GhostType  gn  = Ghost::None;
-  task->requires(Task::NewDW, lb->matrix_CFI_weightsLabel,
-              0, Task::FineLevel, one_matl,Task::NormalDomain, gn, 0);
-                
-  task->modifies(lb->matrixLabel);
+    Task* task = scinew Task("schedule_matrixBC_CFI_coarsePatch",
+                  this, &ICE::matrixBC_CFI_coarsePatch);
 
-  sched->addTask(task, coarseLevel->eachPatch(), all_matls); 
+    Ghost::GhostType  gn  = Ghost::None;
+    task->requires(Task::NewDW, lb->matrix_CFI_weightsLabel,
+                0, Task::FineLevel, one_matl,Task::NormalDomain, gn, 0);
+
+    task->modifies(lb->matrixLabel);
+
+    sched->addTask(task, coarseLevel->eachPatch(), all_matls); 
+  }
 }
 /*___________________________________________________________________
  Function~  ICE::matrixBC_CFI_coarsePatch--
@@ -1090,7 +1105,7 @@ void ICE::schedule_matrixBC_CFI_finePatch(SchedulerP& sched,
 {
   if(fineLevel->getIndex() > 0 ){
     cout_doing << d_myworld->myrank() 
-               << " ICE::schedule_matrixBC_CFI_finePatch\t\tL-" 
+               << " ICE::schedule_matrixBC_CFI_finePatch\t\t\t\tL-" 
                << fineLevel->getIndex() <<endl;
 
     Task* task = scinew Task("matrixBC_CFI_finePatch",
@@ -1187,7 +1202,7 @@ void ICE::schedule_bogus_imp_delP(SchedulerP& sched,
                                  const MaterialSet* all_matls)
 {
   cout_doing << d_myworld->myrank() 
-             << "ICE::schedule_bogus_impDelP"<<endl;
+             << " ICE::schedule_bogus_impDelP"<<endl;
 
   Task* t = scinew Task("bogus_imp_delP",
              this, &ICE::bogus_imp_delP);
@@ -1195,6 +1210,7 @@ void ICE::schedule_bogus_imp_delP(SchedulerP& sched,
   t->computes(lb->imp_delPLabel, press_matl,Task::OutOfDomain);
   
   for(int p = 0; p< (int)allPatchSets.size(); p++){
+   // Dav:  this doesn't work
     const PatchSet* patches = allPatchSets[p];
     sched->addTask(t, patches, all_matls); 
   }
