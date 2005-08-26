@@ -101,6 +101,7 @@ WARNING
 
     //! Creates a patchset of all patches that have work done on this processor.
     virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level) = 0;
+    virtual const PatchSet* createPerProcessorPatchSet(const GridP& grid) = 0;
 
     //! For dynamic load balancers, Check if we need to rebalance the load, and do so if necessary.
     virtual bool possiblyDynamicallyReallocate(const GridP&, bool /*force*/) { return false;}

@@ -67,8 +67,16 @@ namespace Uintah {
      /// determines the dynamic algorithm based on values received in problemSetup.
      virtual void setDynamicAlgorithm(std::string, double, int, float, bool, double /*threshold*/) {}
 
-     /// creates a patchset of all patches that have work done on this processor.
+     /// Creates a patchset of all patches that have work done on each processor.
+     //    - There are two versions of this function.  The first works on a per level
+     //      basis.  The second works on the entire grid and will provide a PatchSet
+     //      that contains all patches.
+     //    - For example, if processor 1 works on patches 1,2 on level 0 and patch 3 on level 1,
+     //      and processor 2 works on 4,5 on level 0, and 6 on level 1, then
+     //      - Version 1 (for Level 1) will create {{3},{6}}
+     //      - Version 2 (for all levels) will create {{1,2,3},{4,5,6}}
      virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level);
+     virtual const PatchSet* createPerProcessorPatchSet(const GridP& grid);
 
      //! Returns n - data gets output every n procs.
      virtual int getNthProc() { return d_outputNthProc; }

@@ -30,7 +30,8 @@ void
 ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
 {
   int maxLevel = grid->numLevels();
-  vector<const PatchSet*> allPatchSets;
+  const PatchSet* perProcPatches = 
+    sched->getLoadBalancer()->createPerProcessorPatchSet(grid);
   
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
@@ -50,7 +51,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
   for(int L = 0; L<maxLevel; L++){
     LevelP level = grid->getLevel(L);
     const PatchSet* patches = level->eachPatch();
-    allPatchSets.push_back(level->eachPatch());
     
     if(!doICEOnLevel(level->getIndex())){
       return;
@@ -63,7 +63,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     }
 
 
-    if(d_turbulence){
+   if(d_turbulence){
       // The turblence model is also called directly from
       // accumlateMomentumSourceSinks.  This method just allows other
       // quantities (such as variance) to be computed
@@ -127,13 +127,11 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     // now adjust the matrix
     for(int L = 0; L<maxLevel; L++){
       LevelP level = grid->getLevel(L);
-      //scheduleCompute_matrix_CFI_weights(sched,level,     all_matls);
+      //scheduleCompute_matrix_CFI_weights(sched,level, all_matls);
       
-      schedule_matrixBC_CFI_coarsePatch(sched, level,     one_matl, 
-                                                          all_matls);            
+      //schedule_matrixBC_CFI_coarsePatch(sched, level, one_matl, all_matls);            
 
-      schedule_matrixBC_CFI_finePatch(  sched, level,     one_matl, 
-                                                          all_matls);
+      //schedule_matrixBC_CFI_finePatch(  sched, level, one_matl, all_matls);
                                                           
       scheduleZeroMatrix_RHS_UnderFinePatches( sched,level,one_matl);
     }
@@ -141,7 +139,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                             
     //__________________________________
     // strictly for testing purposes
-    schedule_bogus_imp_delP(sched,  allPatchSets,        d_press_matl,
+    schedule_bogus_imp_delP(sched,  perProcPatches,        d_press_matl,
                                                          all_matls);   
 #if 0    
     solver->scheduleSolve(level, sched, press_matlSet,
@@ -861,8 +859,8 @@ void ICE::compute_matrix_CFI_weights(const ProcessorGroup*,
 
   const Level* fineLevel = getLevel(finePatches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
-  Vector c_dx = coarseLevel->dCell();
-  Vector inv_c_dx = Vector(1.0)/c_dx;
+  //Vector c_dx = coarseLevel->dCell();
+  //Vector inv_c_dx = Vector(1.0)/c_dx;
   
   cout_doing << d_myworld->myrank() 
              << " Doing compute_matrix_CFI_weights \t\t\t\t\t\t AMRICE L-"
@@ -894,7 +892,7 @@ void ICE::compute_matrix_CFI_weights(const ProcessorGroup*,
       IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
 
       IntVector axes = finePatch->faceAxes(face);
-      int P_dir = axes[0];  // principal direction      
+      //int P_dir = axes[0];  // principal direction      
 
       //__________________________________
       // enlarge the coarselevel foot print by oneCell
@@ -943,7 +941,8 @@ void ICE::compute_matrix_CFI_weights(const ProcessorGroup*,
         //Point fine_cell_pos   = fineLevel->getCellPosition(f_cell);
         //Vector dist = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()) * inv_c_dx;
           
-        matrix_CFI_weight[f_cell] = vol_frac_coarse[c_cell] + vol_frac_fine[f_cell];  // need to add equation
+        // TODO: need to add equation
+        matrix_CFI_weight[f_cell] = vol_frac_coarse[c_cell] + vol_frac_fine[f_cell];  
       }
     }  // CFI loop
   }  // finePatch
@@ -1197,7 +1196,7 @@ void ICE::matrixBC_CFI_finePatch(const ProcessorGroup*,
  Function~  ICE::schedule_bogus_imp_DelP--  
 _____________________________________________________________________*/
 void ICE::schedule_bogus_imp_delP(SchedulerP& sched,
-                                 vector<const PatchSet*> allPatchSets,
+                                 const PatchSet* perProcPatches,
                                  const MaterialSubset* press_matl,
                                  const MaterialSet* all_matls)
 {
@@ -1205,15 +1204,12 @@ void ICE::schedule_bogus_imp_delP(SchedulerP& sched,
              << " ICE::schedule_bogus_impDelP"<<endl;
 
   Task* t = scinew Task("bogus_imp_delP",
-             this, &ICE::bogus_imp_delP);
-                             
+                        this, &ICE::bogus_imp_delP);
+    
   t->computes(lb->imp_delPLabel, press_matl,Task::OutOfDomain);
-  
-  for(int p = 0; p< (int)allPatchSets.size(); p++){
+
    // Dav:  this doesn't work
-    const PatchSet* patches = allPatchSets[p];
-    sched->addTask(t, patches, all_matls); 
-  }
+  sched->addTask(t, perProcPatches, all_matls); 
 }
 /*___________________________________________________________________ 
  Function~  bogus_imp_delP--  sets imp_delP = 0.0 used for testing
