@@ -39,6 +39,9 @@
  *  Copyright (C) 199? SCI Group
  */
 
+// Disable the fprintf warning that appears everywhere in this file on icpc.
+#pragma warning( disable : 181 )
+
 #define LINUX_GETENV_HACK 0
 //#define ALIGN 16
 const int ALIGN=16;
