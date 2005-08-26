@@ -554,8 +554,7 @@ method: return_type IDENTIFIER arguments method_modifiers2 opt_throws_clause ';'
        |
        COLLECTIVE return_type IDENTIFIER BABEL_EXT arguments method_modifiers2 opt_throws_clause ';'
 	{
-	  /* $$=new Method(curfile, lineno, $2.copy, $2.type, $3, $4, $5, $6); */
-	  $$=new Method(curfile, lineno, $2.copy, $2.type, $3, $5, $6, $7);
+	  $$=new Method(curfile, lineno, $2.copy, $2.type, $3, $4, $5, $6, $7);
 	  $$->isCollective = true;
 		
 	}
