@@ -46,11 +46,9 @@ WARNING
     virtual ~CanteraSingleMixture();
 
     virtual void scheduleInitializeThermo(SchedulerP& sched,
-                                          const PatchSet* patches,
-                                          ICEMaterial* ice_matl);
+                                          const PatchSet* patches);
     virtual void scheduleReactions(SchedulerP& sched,
-                                   const PatchSet* patches,
-                                   ICEMaterial* ice_matl);
+                                   const PatchSet* patches);
 
     virtual void addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
                                                         int numGhostCells);

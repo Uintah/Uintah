@@ -37,15 +37,13 @@ CanteraSingleMixture::~CanteraSingleMixture()
 }
 
 void CanteraSingleMixture::scheduleInitializeThermo(SchedulerP& sched,
-                                              const PatchSet* patches,
-                                              ICEMaterial* ice_matl)
+                                                    const PatchSet* patches)
 {
   // No initialization
 }
 
 void CanteraSingleMixture::scheduleReactions(SchedulerP& sched,
-                                             const PatchSet* patches,
-                                             ICEMaterial* ice_matl)
+                                             const PatchSet* patches)
 {
   // No reactions
 }

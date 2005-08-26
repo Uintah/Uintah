@@ -30,6 +30,8 @@ using namespace SCIRun;
  // Constructor
 ICEMaterial::ICEMaterial(ProblemSpecP& ps, ModelSetup* setup): Material(ps)
 {
+   lb = scinew ICELabel();
+
   // Follow the layout of the input file
   // Steps:
   // 1a. Look to see if there is a combined EOS/Thermo (and possibly transport) model.
@@ -112,7 +114,6 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps, ModelSetup* setup): Material(ps)
       piece_num++;
       d_geom_objs.push_back(scinew GeometryObject2(this,mainpiece,geom_obj_ps));
    }
-   lb = scinew ICELabel();
 }
  // Destructor
 ICEMaterial::~ICEMaterial()

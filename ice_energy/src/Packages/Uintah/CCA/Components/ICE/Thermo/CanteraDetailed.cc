@@ -1,5 +1,6 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/Thermo/CanteraDetailed.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -16,13 +17,11 @@
 #include <cantera/IdealGasMix.h>
 #include <cantera/zerodim.h>
 
-using namespace Cantera;
-using namespace CanteraZeroD;
 using namespace Uintah;
 
 CanteraDetailed::CanteraDetailed(ProblemSpecP& ps, ModelSetup* setup,
                                  ICEMaterial* ice_matl)
-  : ThermoInterface(ice_matl)
+  : ThermoInterface(ice_matl), lb(ice_matl->getLabel())
 {
   vector<int> m(1);
   m[0] = ice_matl->getDWIndex();
@@ -40,7 +39,6 @@ CanteraDetailed::CanteraDetailed(ProblemSpecP& ps, ModelSetup* setup,
     d_gas = new IdealGasMix(fname, id);
     int nsp = d_gas->nSpecies();
     int nel = d_gas->nElements();
-    cerr.precision(17);
     cerr << "Using ideal gas " << id << "(from " << fname << ") with " << nel << " elements and " << nsp << " species\n";
     d_gas->setState_TPY(300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
   } catch (CanteraError) {
@@ -104,14 +102,14 @@ CanteraDetailed::~CanteraDetailed()
 }
 
 void CanteraDetailed::scheduleInitializeThermo(SchedulerP& sched,
-                                              const PatchSet* patches,
-                                              ICEMaterial* ice_matl)
+                                               const PatchSet* patches)
 {
   Task* t = scinew Task("CanteraDetailed::initialize",
 			this, &CanteraDetailed::initialize);
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
+    t->computes(stream->massFraction_CCLabel);
     t->computes(stream->massFraction_reacted_CCLabel);
   }
   sched->addTask(t, patches, mymatls);
@@ -157,26 +155,34 @@ void CanteraDetailed::initialize(const ProcessorGroup*,
             }
 	  } // Over cells
 	} // Over regions
+
+        // Initialize into both the reacted and the non-reacted variable so that
+        // we can use it in subsequent thermo calcs, but it will also go to the
+        // next timestep nicely.
 	for(CellIterator iter = patch->getExtraCellIterator();
 	    !iter.done(); iter++)
 	  sum[*iter] += mf[*iter];
+        CCVariable<double> mf2;
+        new_dw->allocateAndPut(mf2, stream->massFraction_CCLabel, matl, patch);
+        for(CellIterator iter = patch->getExtraCellIterator();
+            !iter.done(); iter++)
+          mf2[*iter] = mf[*iter];
       } // Over streams
       for(CellIterator iter = patch->getExtraCellIterator();
-	  !iter.done(); iter++){
-	if(sum[*iter] != 1.0){
-	  ostringstream msg;
-	  msg << "Initial massFraction != 1.0: value=";
-	  msg << sum[*iter] << " at " << *iter;
-	  throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-	}
+          !iter.done(); iter++){
+        if(sum[*iter] != 1.0){
+          ostringstream msg;
+          msg << "Initial massFraction != 1.0: value=";
+          msg << sum[*iter] << " at " << *iter;
+          throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+        }
       } // Over cells
     } // Over matls
   }
 }
       
 void CanteraDetailed::scheduleReactions(SchedulerP& sched,
-                                        const PatchSet* patches,
-                                        ICEMaterial* ice_matl)
+                                        const PatchSet* patches)
 {
   Task* t = scinew Task("CanteraDetailed::react",
 			this, &CanteraDetailed::react);
@@ -186,6 +192,8 @@ void CanteraDetailed::scheduleReactions(SchedulerP& sched,
     t->requires(Task::OldDW, stream->massFraction_CCLabel, Ghost::None, 0);
     t->computes(stream->massFraction_reacted_CCLabel);
   }
+  t->requires(Task::OldDW, lb->int_eng_CCLabel, Ghost::None);
+  t->requires(Task::OldDW, lb->sp_vol_CCLabel, Ghost::None);
   sched->addTask(t, patches, mymatls);
 }
 
@@ -217,9 +225,11 @@ void CanteraDetailed::react(const ProcessorGroup*,
 			       matl, patch, Ghost::None, 0);
       }
       constCCVariable<double> int_eng;
-      old_dw->get(int_eng, int_eng_CCLabel, matl, patch, Ghost::None, 0);
+      old_dw->get(int_eng, lb->int_eng_CCLabel, matl, patch, Ghost::None, 0);
+      constCCVariable<double> spvol;
+      old_dw->get(spvol, lb->sp_vol_CCLabel, matl, patch, Ghost::None, 0);
       delt_vartype delT;
-      old_dw->get(delT, mi->delT_Label);
+      old_dw->get(delT, lb->delTLabel);
       double dt = delT;
 
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
@@ -231,11 +241,11 @@ void CanteraDetailed::react(const ProcessorGroup*,
 #if 1
 	double sum = 0;
 	for(int i=0;i<numSpecies;i++){
-	  ASSERT(tmp_mf[i] >= 0 && tmp_mf[i] <= 1);
+	  //ASSERT(tmp_mf[i] >= 0 && tmp_mf[i] <= 1);
 	  if(tmp_mf[i] < -1.e-8)
-	    cerr << "mf[" << i << "]=" << tmp_mf[i] << '\n';
+	    cerr << "mf[" << i << ", " << d_gas->speciesName(i) << "]=" << tmp_mf[i] << '\n';
 	  if(tmp_mf[i] > 1+1.e-8)
-	    cerr << "mf[" << i << "]=" << tmp_mf[i] << '\n';
+	    cerr << "mf[" << i << ", " << d_gas->speciesName(i) << "]=" << tmp_mf[i] << '\n';
 	  sum += tmp_mf[i];
 	}
 	if(sum < 1-1.e-8 || sum > 1+1.e-8){
@@ -244,14 +254,19 @@ void CanteraDetailed::react(const ProcessorGroup*,
 #endif
 	
         d_gas->setMassFractions(tmp_mf);
-	d_gas->setState_U?(int_eng[*iter], ???);
+	d_gas->setState_UV(int_eng[*iter], spvol[*iter]);
 
+        //        cerr << iter << ": before: T=" << d_gas->temperature() << " P=" << d_gas->pressure() << "\n";
         double t0 = d_gas->temperature();
 	  
 	// specify the thermodynamic property and kinetics managers
-        Reactor r1(*d_gas);
-        ReactorNet sim(r1);
+        Reactor r1;
+        r1.setThermoMgr(*d_gas);
+        r1.setKineticsMgr(*d_gas);
+        ReactorNet sim;
+        sim.addReactor(&r1);
 	sim.advance(dt);
+        //cerr << iter << ": after: T=" << d_gas->temperature() << " P=" << d_gas->pressure() << "\n\n";
 #if 1
         double t1 = d_gas->temperature();
         double threshold = 0.10;
@@ -262,7 +277,7 @@ void CanteraDetailed::react(const ProcessorGroup*,
         }
 #endif
 
-	gas->getMassFractions(new_mf);
+	d_gas->getMassFractions(new_mf);
 	for(int i = 0; i< numSpecies; i++)
 	  mfreacted[i][*iter] = new_mf[i];
       }
@@ -286,6 +301,7 @@ void CanteraDetailed::addTaskDependencies_general(Task* t, Task::WhichDW dw,
 void CanteraDetailed::addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
                                                              int numGhostCells)
 {
+  cerr << "Addign dependencies for " << t->getName() << "\n";
   addTaskDependencies_general(t, dw, numGhostCells);
 }
 
@@ -514,7 +530,8 @@ void CanteraDetailed::compute_int_eng(CellIterator iter, CCVariable<double>& int
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
     d_gas->setMassFractions(tmp_mf);
-    d_gas->setState_UV(int_eng[*iter], 1.0);
+    d_gas->setState_TR(Temp[*iter], 1.0);
     int_eng[*iter] = d_gas->intEnergy_mass();
+    //cerr << "initial temp: " << Temp[*iter] << ", energy=" << int_eng[*iter] << '\n';
   }
 }

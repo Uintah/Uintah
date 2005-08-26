@@ -96,7 +96,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   d_SMALL_NUM = 1.0e-100;                                                   
   d_TINY_RHO  = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
-  d_modelSetup = 0;
   d_recompile = false;
   d_conservationTest = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
@@ -159,9 +158,7 @@ ICE::~ICE()
   if(d_modelInfo){
     delete d_modelInfo;
   }
-  if(d_modelSetup){
-    delete d_modelSetup;
-  }
+  delete d_modelSetup;
   releasePort("solver");
 }
 
@@ -586,7 +583,7 @@ void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    ice_matl->getThermo()->scheduleInitializeThermo(sched, level->eachPatch(), ice_matl);
+    ice_matl->getThermo()->scheduleInitializeThermo(sched, level->eachPatch());
   }
   scheduleComputeInternalEnergy(sched, level->eachPatch(), d_sharedState->allICEMaterials());
   scheduleComputeSpeedOfSound(sched, level->eachPatch(), d_sharedState->allICEMaterials());
@@ -692,7 +689,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    ice_matl->getThermo()->scheduleInitializeThermo(sched, level->eachPatch(), ice_matl);
+    ice_matl->getThermo()->scheduleInitializeThermo(sched, level->eachPatch());
   }
   scheduleComputeInternalEnergy(sched, level->eachPatch(), d_sharedState->allICEMaterials());
 
@@ -807,10 +804,8 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    if(d_delT_scheme == "conservative"){
-      // Require data to compute thermal diffusivity
-      ice_matl->getThermo()->addTaskDependencies_thermalDiffusivity(t, Task::NewDW, 0);
-    }
+    // Require data to compute thermal diffusivity
+    ice_matl->getThermo()->addTaskDependencies_thermalDiffusivity(t, Task::NewDW, 0);
   }
 
   t->requires(Task::NewDW, lb->vel_CCLabel,        ghostType, numGhostCells);  
@@ -934,7 +929,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    ice_matl->getThermo()->scheduleReactions(sched, level->eachPatch(), ice_matl);
+    ice_matl->getThermo()->scheduleReactions(sched, level->eachPatch());
   }
   
   scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
@@ -1916,7 +1911,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   
   //__________________________________
   // Model Variables.
-  if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+  if(d_modelSetup->tvars.size() > 0){
     vector<TransportedVariable*>::iterator iter;
     
     for(iter = d_modelSetup->tvars.begin();
@@ -5209,7 +5204,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       //__________________________________
       // Advect model variables 
-      if(d_models.size() > 0 && d_modelSetup->tvars.size() > 0){
+      if(d_modelSetup->tvars.size() > 0){
         vector<TransportedVariable*>::iterator t_iter;
         for( t_iter  = d_modelSetup->tvars.begin();
              t_iter != d_modelSetup->tvars.end(); t_iter++){
