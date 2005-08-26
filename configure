@@ -37604,7 +37604,7 @@ _sci_includes=''
 ## arg 2 : blas library
 ## arg 3 :
 ## arg 4 :
-## arg 5 : blas
+## arg 5 : blas g2c
 ## arg 6 : $_sci_lib
 ## arg 7 : $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -37647,10 +37647,10 @@ fi
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "blas"; then
+if test -n "blas g2c"; then
 
    found_framework=no
-   for lib in "" blas; do
+   for lib in "" blas g2c; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -37973,7 +37973,7 @@ echo "$as_me: error: Specifically requested BLAS include file '/$i' was not foun
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" blas; do
+  for i in "" blas g2c; do
     if test -z "$i"; then
        continue
     fi
@@ -39411,7 +39411,7 @@ _sci_includes=''
 ## arg 2 : lapack library
 ## arg 3 :
 ## arg 4 :
-## arg 5 : lapack
+## arg 5 : lapack g2c
 ## arg 6 : $_sci_lib
 ## arg 7 : $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -39454,10 +39454,10 @@ fi
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "lapack"; then
+if test -n "lapack g2c"; then
 
    found_framework=no
-   for lib in "" lapack; do
+   for lib in "" lapack g2c; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -39780,7 +39780,7 @@ echo "$as_me: error: Specifically requested LAPACK include file '/$i' was not fo
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" lapack; do
+  for i in "" lapack g2c; do
     if test -z "$i"; then
        continue
     fi

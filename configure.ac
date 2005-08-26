@@ -2994,7 +2994,7 @@ if test "$HAVE_BLAS" != "yes"; then
                 DEF_CBLAS="#define HAVE_CBLAS 1"
                 AC_SUBST(DEF_CBLAS)
              else
-                SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,optional)
+                SCI_TRY_LINK(BLAS,blas library,,,blas g2c,$_sci_lib,$F_LIB_FLAG,,optional)
                 if test "$HAVE_BLAS" = "no"; then
 	           SCI_TRY_LINK(BLAS,optional fblas library,,,
 		   	     fblas,$_sci_lib,$F_LIB_FLAG,,optional)
@@ -3057,7 +3057,7 @@ case $host in
      fi
      ;;
    *)
-     SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+     SCI_TRY_LINK(LAPACK,lapack library,,,lapack g2c,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
      ;;
 esac
 
