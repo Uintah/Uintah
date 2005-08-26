@@ -84,7 +84,10 @@ WARNING
                      CCVariable<double>& press,
                      int numMatls,
                      const Patch* patch, DataWarehouse* new_dw);
-   
+
+   ICELabel* getLabel() {
+     return lb;
+   }
  private:
    
    // Specific equation of state associated with this material

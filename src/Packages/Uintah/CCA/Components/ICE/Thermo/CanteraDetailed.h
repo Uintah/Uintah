@@ -6,8 +6,7 @@
 
 namespace Cantera {
   class IdealGasMix;
-  class Reactor;
-};
+}
 
 namespace Uintah {
 
@@ -39,6 +38,7 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+  class ICELabel;
   class ModelSetup;
   class GeometryPiece;
   class CanteraDetailed : public ThermoInterface {
@@ -47,11 +47,9 @@ WARNING
     virtual ~CanteraDetailed();
 
     virtual void scheduleInitializeThermo(SchedulerP& sched,
-                                          const PatchSet* patches,
-                                          ICEMaterial* ice_matl);
+                                          const PatchSet* patches);
     virtual void scheduleReactions(SchedulerP& sched,
-                                   const PatchSet* patches,
-                                   ICEMaterial* ice_matl);
+                                   const PatchSet* patches);
 
     virtual void addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
                                                         int numGhostCells);
@@ -118,7 +116,6 @@ WARNING
                DataWarehouse* new_dw);
     double d_thermalConductivity;
     Cantera::IdealGasMix* d_gas;
-    Cantera::Reactor* reactor;
 
     class Region {
     public:
@@ -141,6 +138,7 @@ WARNING
     map<string, Stream*> names;
 
     MaterialSet* mymatls;
+    ICELabel* lb;
 
     void addTaskDependencies_general(Task* t, Task::WhichDW dw, int numGhostCells);
   };

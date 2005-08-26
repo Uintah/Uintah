@@ -42,11 +42,9 @@ WARNING
     virtual ~ThermoInterface();
 
     virtual void scheduleInitializeThermo(SchedulerP& sched,
-                                          const PatchSet* patches,
-                                          ICEMaterial* ice_matl) = 0;
+                                          const PatchSet* patches) = 0;
     virtual void scheduleReactions(SchedulerP& sched,
-                                   const PatchSet* patches,
-                                   ICEMaterial* ice_matl) = 0;
+                                   const PatchSet* patches) = 0;
 
     virtual void addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
                                                         int numGhostCells) = 0;

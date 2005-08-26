@@ -17,15 +17,13 @@ ConstantThermo::~ConstantThermo()
 }
 
 void ConstantThermo::scheduleInitializeThermo(SchedulerP& sched,
-                                              const PatchSet* patches,
-                                              ICEMaterial* ice_matl)
+                                              const PatchSet* patches)
 {
   // No initialization
 }
 
 void ConstantThermo::scheduleReactions(SchedulerP& sched,
-                                       const PatchSet* patches,
-                                       ICEMaterial* ice_matl)
+                                       const PatchSet* patches)
 {
   // No reactions
 }
