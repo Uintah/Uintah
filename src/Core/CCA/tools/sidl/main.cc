@@ -83,10 +83,10 @@ char* find_builtin()
 
 int main(int argc, char* argv[])
 {
-      extern int yydebug;
-      yydebug = 0;
-      bool failed = false;
-      int nfiles = 0;
+  extern int yydebug;
+  yydebug = 0;
+  bool failed = false;
+  int nfiles = 0;
 
   const char* cpp = find_cpp();
   bool done_builtin = false;
