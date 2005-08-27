@@ -416,7 +416,7 @@
         <include href="inputs/MPM/MaterialData/MatConst4340St.xml"/>
         <constitutive_model type="elastic_plastic">
           <isothermal>                    false </isothermal>
-          <tolerance>                  1.0e-15  </tolerance>
+          <tolerance>                  1.0e-10  </tolerance>
           <evolve_porosity>               true  </evolve_porosity>
           <evolve_damage>                 true  </evolve_damage>
           <compute_specific_heat>         true  </compute_specific_heat>
@@ -473,7 +473,7 @@
         <include href="inputs/MPM/MaterialData/MatConst4340St.xml"/>
         <constitutive_model type="elastic_plastic">
           <isothermal>                    false </isothermal>
-          <tolerance>                  1.0e-15  </tolerance>
+          <tolerance>                  1.0e-10  </tolerance>
           <evolve_porosity>               true  </evolve_porosity>
           <evolve_damage>                 true  </evolve_damage>
           <compute_specific_heat>         true  </compute_specific_heat>
