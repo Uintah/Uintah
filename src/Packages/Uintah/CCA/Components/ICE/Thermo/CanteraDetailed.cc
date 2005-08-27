@@ -294,7 +294,8 @@ void CanteraDetailed::addTaskDependencies_general(Task* t, Task::WhichDW dw,
       iter != streams.end(); iter++){
     Stream* stream = *iter;
     t->requires(Task::NewDW, stream->massFraction_reacted_CCLabel,
-                numGhostCells == 0? Ghost::None : Ghost::AroundCells);
+                numGhostCells == 0? Ghost::None : Ghost::AroundCells,
+                numGhostCells);
   }
 }
 
@@ -412,6 +413,7 @@ void CanteraDetailed::compute_cp(CellIterator iter, CCVariable<double>& cp,
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cp[*iter] = d_gas->cp_mass();
   }
+  delete[] tmp_mf;
 }
 
 void CanteraDetailed::compute_cv(CellIterator iter, CCVariable<double>& cv,
@@ -439,6 +441,7 @@ void CanteraDetailed::compute_cv(CellIterator iter, CCVariable<double>& cv,
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cv[*iter] = d_gas->cv_mass();
   }
+  delete[] tmp_mf;
 }
 
 void CanteraDetailed::compute_gamma(CellIterator iter, CCVariable<double>& gamma,
@@ -466,6 +469,7 @@ void CanteraDetailed::compute_gamma(CellIterator iter, CCVariable<double>& gamma
     d_gas->setState_UV(int_eng[*iter], 1.0);
     gamma[*iter] = d_gas->cp_mass()/d_gas->cv_mass();
   }
+  delete[] tmp_mf;
 }
 
 void CanteraDetailed::compute_R(CellIterator iter, CCVariable<double>& R,
@@ -506,6 +510,7 @@ void CanteraDetailed::compute_Temp(CellIterator iter, CCVariable<double>& temp,
     d_gas->setState_UV(int_eng[*iter], 1.0);
     temp[*iter] = d_gas->temperature();
   }
+  delete[] tmp_mf;
 }
 
 void CanteraDetailed::compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
@@ -534,4 +539,5 @@ void CanteraDetailed::compute_int_eng(CellIterator iter, CCVariable<double>& int
     int_eng[*iter] = d_gas->intEnergy_mass();
     //cerr << "initial temp: " << Temp[*iter] << ", energy=" << int_eng[*iter] << '\n';
   }
+  delete[] tmp_mf;
 }
