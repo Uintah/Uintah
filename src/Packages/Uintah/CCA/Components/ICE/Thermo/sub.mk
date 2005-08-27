@@ -6,6 +6,7 @@ SRCS     += $(SRCDIR)/ThermoInterface.cc \
 	$(SRCDIR)/ThermoFactory.cc \
 	$(SRCDIR)/ConstantThermo.cc \
         $(SRCDIR)/CanteraDetailed.cc \
+	$(SRCDIR)/CanteraMixtureFraction.cc \
         $(SRCDIR)/CanteraSingleMixture.cc
 
 PSELIBS := \
