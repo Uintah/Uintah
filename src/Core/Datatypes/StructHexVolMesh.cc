@@ -196,7 +196,7 @@ StructHexVolMesh::get_center(Point &result, const Cell::index_type &idx) const
 }
 
 
-double
+bool
 StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
 {
   static const int table[6][3][3] =
@@ -227,7 +227,6 @@ StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
   Point center;
   get_center(center, idx);
 
-  double minval = 1.0e6;
   for (int i = 0; i < 6; i++)
   {
     Node::index_type n0(this,
@@ -250,19 +249,22 @@ StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
 
     const Vector v0(p1 - p0), v1(p2 - p0);
     const Vector normal = Cross(v0, v1);
-    const Vector off0(p0 - p);
-    const Vector off1(p0 - center);
-    const double tmp = Dot(normal, off0) * Dot(normal, off1);
-    if (tmp < -1.0e-12)
-    {
-      return tmp;
-    }
-    if (tmp < minval)
-    {
-      minval = tmp;
-    }
+    const Vector off0(p - p0);
+    const Vector off1(center - p0);
+
+    double dotprod = Dot(off0, normal);
+
+    // Account for round off - the point may be on the plane!!
+    if( fabs( dotprod ) < MIN_ELEMENT_VAL )
+      continue;
+
+    // If orientated correctly the second dot product is not needed.
+    // Only need to check to see if the sign is negative.
+    if (dotprod * Dot(off1, normal) < 0.0)
+      return false;
   }
-  return minval;
+
+  return true;
 }
 
 
@@ -276,43 +278,29 @@ StructHexVolMesh::locate(Cell::index_type &cell, const Point &p)
   if (cell > Cell::index_type(this, 0, 0, 0) &&
       cell < Cell::index_type(this, ni_-1, nj_-1, nk_-1) &&
       inside8_p(cell, p))
-  {
       return true;
-  }
   
   if (grid_.get_rep() == 0)
-  {
     compute_grid();
-  }
+
   cell.mesh_ = this;
 
   unsigned int *iter, *end;
-  double mindist = -1.0;
-  if (grid_->lookup(&iter, &end, p))
-  {
-    while (iter != end)
-    {
+  if (grid_->lookup(&iter, &end, p)) {
+    while (iter != end) {
       Cell::index_type idx;
       to_index(idx, *iter);
-      const double tmp = inside8_p(idx, p);
-      if (tmp > mindist)
-      {
+
+      if( inside8_p(idx, p) ) {
 	cell = idx;
-	mindist = tmp;
+        locate_cache_ = cell;
+        return true;
       }
       ++iter;
     }
   }
 
-  if (mindist > -1.0e-12)
-  {
-    locate_cache_ = cell;
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+  return false;
 }
 
 
@@ -530,9 +518,7 @@ StructHexVolMesh::get_face_weights(double *w,
 				   int i0, int i1, int i2, int i3)
 {
   for (unsigned int j = 0; j < 8; j++)
-  {
     w[j] = 0.0;
-  }
 
   const Point &p0 = point(nodes[i0]);
   const Point &p1 = point(nodes[i1]);
@@ -540,42 +526,42 @@ StructHexVolMesh::get_face_weights(double *w,
   const Point &p3 = point(nodes[i3]);
 
   const double a0 = tri_area(p, p0, p1);
-  if (a0 < 1.0e-6)
+  if (a0 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p0 - p1;
     const Vector v1 = p - p1;
-    const double l2 = Dot(v0, v0);
-    w[i0] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+    w[i0] = Dot(v0, v1) / Dot(v0, v0);
+    if( !finite( w[i0] ) ) w[i0] = 0.5;
     w[i1] = 1.0 - w[i0];
     return;
   }
   const double a1 = tri_area(p, p1, p2);
-  if (a1 < 1.0e-6)
+  if (a1 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p1 - p2;
     const Vector v1 = p - p2;
-    const double l2 = Dot(v0, v0);
-    w[i1] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+    w[i1] = Dot(v0, v1) / Dot(v0, v0);
+    if( !finite( w[i1] ) ) w[i1] = 0.5;
     w[i2] = 1.0 - w[i1];
     return;
   }
   const double a2 = tri_area(p, p2, p3);
-  if (a2 < 1.0e-6)
+  if (a2 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p2 - p3;
     const Vector v1 = p - p3;
-    const double l2 = Dot(v0, v0);
-    w[i2] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+    w[i2] = Dot(v0, v1) / Dot(v0, v0);
+    if( !finite( w[i2] ) ) w[i2] = 0.5;
     w[i3] = 1.0 - w[i2];
     return;
   }
   const double a3 = tri_area(p, p3, p0);
-  if (a3 < 1.0e-6)
+  if (a3 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p3 - p0;
     const Vector v1 = p - p0;
-    const double l2 = Dot(v0, v0);
-    w[i3] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+    w[i3] = Dot(v0, v1) / Dot(v0, v0);
+    if( !finite( w[i3] ) ) w[i3] = 0.5;
     w[i0] = 1.0 - w[i3];
     return;
   }
@@ -612,7 +598,7 @@ StructHexVolMesh::get_weights(const Point &p,
       const double a0 =
 	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][0]]),
 		 point(nodes[wtable[i][1]]));
-      if (a0 < 1.0e-6)
+      if (a0 < MIN_ELEMENT_VAL)
       {
 	get_face_weights(w, nodes, p, i, wtable[i][0],
 			 wtable[i][3], wtable[i][1]);
@@ -621,7 +607,7 @@ StructHexVolMesh::get_weights(const Point &p,
       const double a1 =
 	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][1]]),
 		 point(nodes[wtable[i][2]]));
-      if (a1 < 1.0e-6)
+      if (a1 < MIN_ELEMENT_VAL)
       {
 	get_face_weights(w, nodes, p, i, wtable[i][1],
 			 wtable[i][4], wtable[i][2]);
@@ -630,7 +616,7 @@ StructHexVolMesh::get_weights(const Point &p,
       const double a2 =
 	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][2]]),
 		 point(nodes[wtable[i][0]]));
-      if (a2 < 1.0e-6)
+      if (a2 < MIN_ELEMENT_VAL)
       {
 	get_face_weights(w, nodes, p, i, wtable[i][2],
 			 wtable[i][5], wtable[i][0]);
