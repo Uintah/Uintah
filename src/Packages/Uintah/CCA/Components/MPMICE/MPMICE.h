@@ -112,9 +112,6 @@ public:
   void scheduleComputeCCVelAndTempRates(SchedulerP&, const PatchSet*,
                                         const MaterialSet*);
 
-  void scheduleInterpolateCCToNCRefined(SchedulerP&, const PatchSet*,
-                                        const MaterialSet*);
-
   void scheduleRefineCC(SchedulerP&, const PatchSet*,
                         const MaterialSet*);
 
