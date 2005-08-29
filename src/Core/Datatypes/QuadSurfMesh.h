@@ -28,7 +28,7 @@
 
 
 /*
- *  QuadSurfMesh.h: Templated Meshs defined on a 3D Regular Grid
+ *  QuadSurfMesh.h: Templated Mesh defined on an Irregular Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -180,6 +180,8 @@ public:
   void get_center(Point &p, Edge::index_type i) const;
   void get_center(Point &p, Face::index_type i) const;
   void get_center(Point &, Cell::index_type) const {}
+
+  bool inside3_p(Face::index_type i, const Point &p) const;
 
   bool locate(Node::index_type &loc, const Point &p) const;
   bool locate(Edge::index_type &loc, const Point &p) const;
