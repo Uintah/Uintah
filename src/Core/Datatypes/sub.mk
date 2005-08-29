@@ -62,6 +62,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/ScanlineMesh.cc           	\
 	$(SRCDIR)/SearchGrid.cc           	\
 	$(SRCDIR)/SparseRowMatrix.cc	    	\
+        $(SRCDIR)/String.cc                     \
 	$(SRCDIR)/StructCurveMesh.cc	    	\
 	$(SRCDIR)/StructQuadSurfMesh.cc	    	\
 	$(SRCDIR)/StructHexVolMesh.cc	    	\
@@ -80,7 +81,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \
-	Core/Math Core/Util
+	Core/Math Core/Util 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
 	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
