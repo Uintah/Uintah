@@ -28,7 +28,7 @@
 
 
 /*
- *  QuadSurfMesh.cc: Tetrahedral mesh with new design.
+ *  QuadSurfMesh.cc: Templated Mesh defined on an Irregular Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -44,6 +44,7 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Geometry/CompGeom.h>
 #include <sci_hash_map.h>
 
 namespace SCIRun {
@@ -380,25 +381,6 @@ QuadSurfMesh::locate(Node::index_type &loc, const Point &p) const
 }
 
 
-static double
-distance_to_line2(const Point &p, const Point &a, const Point &b)
-{
-  Vector m = b - a;
-  Vector n = p - a;
-  if (m.length2() < 1e-6)
-  {
-    return n.length2();
-  }
-  else
-  {
-    const double t0 = Dot(m, n) / Dot(m, m);
-    if (t0 <= 0) return (n).length2();
-    else if (t0 >= 1.0) return (p - b).length2();
-    else return (n - m * t0).length2();
-  }
-}
-
-
 bool
 QuadSurfMesh::locate(Edge::index_type &loc, const Point &p) const
 {
@@ -429,8 +411,79 @@ QuadSurfMesh::locate(Edge::index_type &loc, const Point &p) const
 }
 
 
+bool 
+QuadSurfMesh::inside3_p(Face::index_type i, const Point &p) const
+{
+  Node::array_type nodes;
+  get_nodes(nodes, i);
+
+  unsigned int n = nodes.size();
+
+  Point pts[n];
+  
+  for (unsigned int i = 0; i < n; i++)
+    get_center(pts[i], nodes[i]);
+
+  for (unsigned int i = 0; i < n; i+=2) {
+    Point p0 = pts[(i+0)%n];
+    Point p1 = pts[(i+1)%n];
+    Point p2 = pts[(i+2)%n];
+
+    Vector v01(p0-p1);
+    Vector v02(p0-p2);
+    Vector v0(p0-p);
+    Vector v1(p1-p);
+    Vector v2(p2-p);
+    const double a = Cross(v01, v02).length(); // area of the whole triangle (2x)
+    const double a0 = Cross(v1, v2).length();  // area opposite p0
+    const double a1 = Cross(v2, v0).length();  // area opposite p1
+    const double a2 = Cross(v0, v1).length();  // area opposite p2
+    const double s = a0+a1+a2;
+
+    // If the area of any of the sub triangles is very small then the point
+    // is on the edge of the subtriangle.
+    // TODO : How small is small ???
+//     if( a0 < MIN_ELEMENT_VAL ||
+// 	a1 < MIN_ELEMENT_VAL ||
+// 	a2 < MIN_ELEMENT_VAL )
+//       return true;
+
+    // For the point to be inside a CONVEX quad it must be inside one
+    // of the four triangles that can be formed by using three of the
+    // quad vertices.
+    if( fabs(s - a) < MIN_ELEMENT_VAL && a > MIN_ELEMENT_VAL )
+      return true;
+  }
+
+  return false;
+}
+
+#if 1
+bool
+QuadSurfMesh::locate(Face::index_type &face, const Point &p) const
+{  
+  Face::iterator bi, ei;
+  begin(bi);
+  end(ei);
+
+  while (bi != ei) {
+    if( inside3_p( *bi, p ) ) {
+      face = *bi;
+      return true;
+    }
+
+    ++bi;
+  }
+  return false;
+}
+
+#else
 // TODO: Nearest cell center is incorrect if the quads are not a
-// delanay triangulation of the cell centers which is most of the time.
+// delanay triangulation of the cell centers which is most of the
+// time.
+
+// Why was this EVER implemented? There are other implementation that
+// work such as the above.
 bool
 QuadSurfMesh::locate(Face::index_type &loc, const Point &p) const
 {  
@@ -456,7 +509,7 @@ QuadSurfMesh::locate(Face::index_type &loc, const Point &p) const
   }
   return found;
 }
-
+#endif
 
 bool
 QuadSurfMesh::locate(Cell::index_type &loc, const Point &) const
@@ -501,48 +554,48 @@ QuadSurfMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
     const Point &p3 = point(locs[3]);
 
     const double a0 = tri_area(p, p0, p1);
-    if (a0 < 1.0e-6)
+    if (a0 < MIN_ELEMENT_VAL)
     {
       const Vector v0 = p0 - p1;
       const Vector v1 = p - p1;
       const double l2 = Dot(v0, v0);
-      w[0] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+      w[0] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
       w[1] = 1.0 - w[0];
       w[2] = 0.0;
       w[3] = 0.0;
       return 4;
     }
     const double a1 = tri_area(p, p1, p2);
-    if (a1 < 1.0e-6)
+    if (a1 < MIN_ELEMENT_VAL)
     {
       const Vector v0 = p1 - p2;
       const Vector v1 = p - p2;
       const double l2 = Dot(v0, v0);
-      w[1] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+      w[1] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
       w[2] = 1.0 - w[1];
       w[3] = 0.0;
       w[0] = 0.0;
       return 4;
     }
     const double a2 = tri_area(p, p2, p3);
-    if (a2 < 1.0e-6)
+    if (a2 < MIN_ELEMENT_VAL)
     {
       const Vector v0 = p2 - p3;
       const Vector v1 = p - p3;
       const double l2 = Dot(v0, v0);
-      w[2] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+      w[2] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
       w[3] = 1.0 - w[2];
       w[0] = 0.0;
       w[1] = 0.0;
       return 4;
     }
     const double a3 = tri_area(p, p3, p0);
-    if (a3 < 1.0e-6)
+    if (a3 < MIN_ELEMENT_VAL)
     {
       const Vector v0 = p3 - p0;
       const Vector v1 = p - p0;
       const double l2 = Dot(v0, v0);
-      w[3] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+      w[3] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
       w[0] = 1.0 - w[3];
       w[1] = 0.0;
       w[2] = 0.0;
@@ -596,68 +649,6 @@ QuadSurfMesh::get_center(Point &p, Face::index_type idx) const
 }
 
 
-#if 0
-bool
-QuadSurfMesh::inside4_p(int i, const Point &p)
-{
-  // TODO: This has not been tested.
-  // TODO: Looks like too much code to check sign of 4 plane/point tests.
-
-  const Point &p0 = points_[faces_[i+0]];
-  const Point &p1 = points_[faces_[i+1]];
-  const Point &p2 = points_[faces_[i+2]];
-  const Point &p3 = points_[faces_[i+3]];
-  const double x0 = p0.x();
-  const double y0 = p0.y();
-  const double z0 = p0.z();
-  const double x1 = p1.x();
-  const double y1 = p1.y();
-  const double z1 = p1.z();
-  const double x2 = p2.x();
-  const double y2 = p2.y();
-  const double z2 = p2.z();
-  const double x3 = p3.x();
-  const double y3 = p3.y();
-  const double z3 = p3.z();
-
-  const double a0 = + x1*(y2*z3-y3*z2) + x2*(y3*z1-y1*z3) + x3*(y1*z2-y2*z1);
-  const double a1 = - x2*(y3*z0-y0*z3) - x3*(y0*z2-y2*z0) - x0*(y2*z3-y3*z2);
-  const double a2 = + x3*(y0*z1-y1*z0) + x0*(y1*z3-y3*z1) + x1*(y3*z0-y0*z3);
-  const double a3 = - x0*(y1*z2-y2*z1) - x1*(y2*z0-y0*z2) - x2*(y0*z1-y1*z0);
-  const double iV6 = 1.0 / (a0+a1+a2+a3);
-
-  const double b0 = - (y2*z3-y3*z2) - (y3*z1-y1*z3) - (y1*z2-y2*z1);
-  const double c0 = + (x2*z3-x3*z2) + (x3*z1-x1*z3) + (x1*z2-x2*z1);
-  const double d0 = - (x2*y3-x3*y2) - (x3*y1-x1*y3) - (x1*y2-x2*y1);
-  const double s0 = iV6 * (a0 + b0*p.x() + c0*p.y() + d0*p.z());
-  if (s0 < -1.e-6)
-    return false;
-
-  const double b1 = + (y3*z0-y0*z3) + (y0*z2-y2*z0) + (y2*z3-y3*z2);
-  const double c1 = - (x3*z0-x0*z3) - (x0*z2-x2*z0) - (x2*z3-x3*z2);
-  const double d1 = + (x3*y0-x0*y3) + (x0*y2-x2*y0) + (x2*y3-x3*y2);
-  const double s1 = iV6 * (a1 + b1*p.x() + c1*p.y() + d1*p.z());
-  if (s1 < -1.e-6)
-    return false;
-
-  const double b2 = - (y0*z1-y1*z0) - (y1*z3-y3*z1) - (y3*z0-y0*z3);
-  const double c2 = + (x0*z1-x1*z0) + (x1*z3-x3*z1) + (x3*z0-x0*z3);
-  const double d2 = - (x0*y1-x1*y0) - (x1*y3-x3*y1) - (x3*y0-x0*y3);
-  const double s2 = iV6 * (a2 + b2*p.x() + c2*p.y() + d2*p.z());
-  if (s2 < -1.e-6)
-    return false;
-
-  const double b3 = +(y1*z2-y2*z1) + (y2*z0-y0*z2) + (y0*z1-y1*z0);
-  const double c3 = -(x1*z2-x2*z1) - (x2*z0-x0*z2) - (x0*z1-x1*z0);
-  const double d3 = +(x1*y2-x2*y1) + (x2*y0-x0*y2) + (x0*y1-x1*y0);
-  const double s3 = iV6 * (a3 + b3*p.x() + c3*p.y() + d3*p.z());
-  if (s3 < -1.e-6)
-    return false;
-
-  return true;
-}
-#endif
-
 bool
 QuadSurfMesh::synchronize(unsigned int tosync)
 {
@@ -669,6 +660,7 @@ QuadSurfMesh::synchronize(unsigned int tosync)
     compute_edge_neighbors();
   return true;
 }
+
 
 void
 QuadSurfMesh::compute_normals()
