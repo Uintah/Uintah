@@ -32,7 +32,7 @@
  * DATE: 18 MAR 2004
  */
 
-#include "matlabconverter.h"
+#include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -163,67 +163,71 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
       numfields = proparray.getnumfields();
             
       for (long p=0; p<numfields; p++)
-        {
-          subarray = proparray.getfield(0,p);
-          mclass = subarray.getclass();
+      {
+        subarray = proparray.getfield(0,p);
+        mclass = subarray.getclass();
 
-          if (mclass == matlabarray::mlSTRING)
-            {   // only string arrays are converted
-              propname = proparray.getfieldname(p);
-              propval = subarray.getstring();
-              handle->set_property(propname,propval,false);
-              continue;
-            }
-          if ((fieldscore = sciFieldCompatible(subarray,dummyinfo,0)))
-          {
-            if (fieldscore > 1)
-            {
-               propname = proparray.getfieldname(p);
-               mlArrayTOsciField(subarray,field,0);
-  //             handle->set_property(propname,field,false);         
-               continue;
-            }          
-          }
-          
-          if ((matrixscore = sciMatrixCompatible(subarray,dummyinfo,0)))
-          {
-            if (matrixscore > 1)
-            {
-                 propname = proparray.getfieldname(p);
-                 mlArrayTOsciMatrix(subarray,matrix,0);
-                 handle->set_property(propname,matrix,false);         
-                 continue;
-            }
-            else
-            {
-              if (sciNrrdDataCompatible(subarray,dummyinfo,0))
-              {
-                 propname = proparray.getfieldname(p);
-                 mlArrayTOsciNrrdData(subarray,nrrd,0);
-                 handle->set_property(propname,nrrd,false);         
-                 continue;              
-              }
-               propname = proparray.getfieldname(p);
-               mlArrayTOsciMatrix(subarray,matrix,0);
-               handle->set_property(propname,matrix,false);         
-               continue;           
-            }
-          }
-          if (sciNrrdDataCompatible(subarray,dummyinfo,0))
-          {
-               propname = proparray.getfieldname(p);
-               mlArrayTOsciNrrdData(subarray,nrrd,0);
-               handle->set_property(propname,nrrd,false);         
-               continue;
-          }
-          if (fieldscore > 0)
+        // Check whether property is string
+        // In the property manager string are STL strings
+        if (mclass == matlabarray::mlSTRING)
+        {   // only string arrays are converted
+          propname = proparray.getfieldname(p);
+          propval = subarray.getstring();
+          handle->set_property(propname,propval,false);
+          continue;
+        }
+        
+        if ((fieldscore = sciFieldCompatible(subarray,dummyinfo,0)))
+        {
+          if (fieldscore > 1)
           {
              propname = proparray.getfieldname(p);
              mlArrayTOsciField(subarray,field,0);
- //            handle->set_property(propname,field,false);         
+             handle->set_property(propname,field,false);         
              continue;
-          }             
+          }          
         }
+        
+        if ((matrixscore = sciMatrixCompatible(subarray,dummyinfo,0)))
+        {
+          if (matrixscore > 1)
+          {
+               propname = proparray.getfieldname(p);
+               mlArrayTOsciMatrix(subarray,matrix,0);
+               handle->set_property(propname,matrix,false);         
+               continue;
+          }
+          else
+          {
+            if (sciNrrdDataCompatible(subarray,dummyinfo,0))
+            {
+               propname = proparray.getfieldname(p);
+               mlArrayTOsciNrrdData(subarray,nrrd,0);
+               handle->set_property(propname,nrrd,false);         
+               continue;              
+            }
+             propname = proparray.getfieldname(p);
+             mlArrayTOsciMatrix(subarray,matrix,0);
+             handle->set_property(propname,matrix,false);         
+             continue;           
+          }
+        }
+        
+        if (sciNrrdDataCompatible(subarray,dummyinfo,0))
+        {
+             propname = proparray.getfieldname(p);
+             mlArrayTOsciNrrdData(subarray,nrrd,0);
+             handle->set_property(propname,nrrd,false);         
+             continue;
+        }
+        if (fieldscore > 0)
+        {
+           propname = proparray.getfieldname(p);
+           mlArrayTOsciField(subarray,field,0);
+           handle->set_property(propname,field,false);         
+           continue;
+        }             
+      }
     }
 }
 
@@ -267,12 +271,12 @@ void matlabconverter::sciPropertyTOmlProperty(PropertyManager *handle,matlabarra
           numericarray_ = oldnumericarray_;
           proparray.setfield(0,propname,subarray);
         } 
-//      if (handle->get_property(propname,field))
-//        {
-//          subarray.clear();
-//          sciFieldTOmlArray(field,subarray,0);
-//          proparray.setfield(0,propname,subarray);
-//        } 
+      if (handle->get_property(propname,field))
+        {
+            subarray.clear();
+            sciFieldTOmlArray(field,subarray,0);
+            proparray.setfield(0,propname,subarray);
+        } 
     }
         
   ma.setfield(0,"property",proparray);
@@ -322,13 +326,6 @@ long matlabconverter::sciColorMapCompatible(matlabarray &ma, string &infotext, P
   return (0);
 }
                 
-
-
-
-
-
-
-
 
 
 // The next function checks whether
@@ -451,6 +448,54 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Pro
                 
 
 
+long matlabconverter::sciStringCompatible(matlabarray &ma, string &infotext, ProgressReporter *pr)
+{
+  infotext = "";
+  if (ma.isempty()) return(0);
+  if (ma.getnumelements() == 0) return(0);
+
+  matlabarray::mlclass mclass = ma.getclass();
+        
+  switch (mclass) 
+  {
+    case matlabarray::mlSTRING:
+      {
+        infotext = ma.getinfotext();
+        return(3);                        
+      }
+      break;           
+    default:
+      break;
+  }
+  
+  postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun String (matrix is not a string)"));
+  return (0);
+}
+
+void matlabconverter::mlArrayTOsciString(matlabarray &ma, StringHandle &handle, ProgressReporter *pr)
+{
+  matlabarray::mlclass mclass = ma.getclass();
+        
+  switch(mclass)
+  {
+    case matlabarray::mlSTRING:
+      {                   
+        handle = dynamic_cast<String *>(scinew String(ma.getstring()));
+      }
+      break;
+    default:
+      {   // The program should not get here
+        throw matlabconverter_error();
+      }
+  }
+}
+
+void matlabconverter::sciStringTOmlArray(StringHandle &scistr,matlabarray &mlmat, ProgressReporter *pr)
+{
+  mlmat.createstringarray(scistr->get());
+}
+
+
 void matlabconverter::mlArrayTOsciColorMap(matlabarray &ma,ColorMapHandle &handle, ProgressReporter *pr)
 {
   int m,n;
@@ -483,7 +528,7 @@ void matlabconverter::mlArrayTOsciColorMap(matlabarray &ma,ColorMapHandle &handl
     v += step;
   }
   
-  handle = scinew SCIRun::ColorMap(rgb,rgbT,alph,rgbT,static_cast<unsigned int>(n));
+  handle = dynamic_cast<SCIRun::ColorMap *>(scinew SCIRun::ColorMap(rgb,rgbT,alph,rgbT,static_cast<unsigned int>(n)));
 }
 
 
@@ -504,7 +549,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, P
             int m = static_cast<int>(ma.getm());
             int n = static_cast<int>(ma.getn());
                         
-            dmptr = new DenseMatrix(n,m);   // create dense matrix
+            dmptr = scinew DenseMatrix(n,m);   // create dense matrix
             // copy and cast elements:
             // getnumericarray is a templated function that casts the data to the supplied pointer
             // type. It needs the dimensions of the memory block (in elements) to make sure
@@ -562,7 +607,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, P
             ma.getrowsarray(rows,nnz); // automatically casts longs to ints
             ma.getcolsarray(cols,(n+1));
                         
-            smptr = new SparseRowMatrix(n,m,cols,rows,nnz,values);
+            smptr = scinew SparseRowMatrix(n,m,cols,rows,nnz,values);
                         
             handle = static_cast<Matrix *>(smptr); // cast it to a general matrix pointer
           }
@@ -943,36 +988,13 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
   switch(mclass)
     {
     
-    case matlabarray::mlSTRING:
-      {
-        try
-          {
-            // Use the dedicate class called NrrdString
-            // to convert a string into a nrrd
-            NrrdString nrrdstring(mlarray.getstring()); // nrrd is owned by the object
-            scinrrd = nrrdstring.gethandle();
-          }
-        catch (...)
-          {
-            scinrrd = 0;                        
-            throw;
-          }
-      }
-                        
-      if (scinrrd != 0)
-      {
-          string str = mlarray.getname();
-          scinrrd->set_filename(str);
-      }
-      break;
-      
     case matlabarray::mlDENSE:
       {   // new environment so I can create new variables
 
         try
           {
             // new nrrd data handle
-            nrrddataptr = new NrrdData(); // nrrd is owned by the object
+            nrrddataptr = scinew NrrdData(); // nrrd is owned by the object
             nrrddataptr->nrrd = nrrdNew();
                     
             // obtain the type of the new nrrd
@@ -1417,17 +1439,6 @@ void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray
   {
     return;
   }
-
-  // FILTER OUT STRINGS
-  if (nrrdptr->dim == 1)
-    if ((nrrdptr->type == nrrdTypeChar)||(nrrdptr->type == nrrdTypeUChar))
-      if ((strcmp(nrrdptr->axis[0].label,"nrrdstring")==0)||(strcmp(nrrdptr->axis[0].label,"string")==0))
-      {
-        NrrdString nrrdstring(scinrrd);
-        mlarray.createstringarray(nrrdstring.getstring());
-        return;
-      }
-
 
   // check if there is any data 
   if (nrrdptr->dim == 0) return;
@@ -3013,14 +3024,14 @@ bool matlabconverter::addfield(FData3d<Tensor> &fdata,matlabarray mlarray)
 
 bool matlabconverter::createmesh(LockingHandle<PointCloudMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new PointCloudMesh;
+  meshH = scinew PointCloudMesh;
   addnodes(meshH,fs.node);
   return(true);
 }
 
 bool matlabconverter::createmesh(LockingHandle<CurveMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new CurveMesh;
+  meshH = scinew CurveMesh;
   addnodes(meshH,fs.node);
   addedges(meshH,fs.edge);
   return(true);
@@ -3028,7 +3039,7 @@ bool matlabconverter::createmesh(LockingHandle<CurveMesh> &meshH,fieldstruct &fs
 
 bool matlabconverter::createmesh(LockingHandle<TriSurfMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new TriSurfMesh;
+  meshH = scinew TriSurfMesh;
   addnodes(meshH,fs.node);
   addfaces(meshH,fs.face);
   return(true);
@@ -3036,7 +3047,7 @@ bool matlabconverter::createmesh(LockingHandle<TriSurfMesh> &meshH,fieldstruct &
 
 bool matlabconverter::createmesh(LockingHandle<QuadSurfMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new QuadSurfMesh;
+  meshH = scinew QuadSurfMesh;
   addnodes(meshH,fs.node);
   addfaces(meshH,fs.face);
   return(true);
@@ -3044,7 +3055,7 @@ bool matlabconverter::createmesh(LockingHandle<QuadSurfMesh> &meshH,fieldstruct 
 
 bool matlabconverter::createmesh(LockingHandle<TetVolMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new TetVolMesh;
+  meshH = scinew TetVolMesh;
   addnodes(meshH,fs.node);
   addcells(meshH,fs.cell);
   return(true);
@@ -3052,7 +3063,7 @@ bool matlabconverter::createmesh(LockingHandle<TetVolMesh> &meshH,fieldstruct &f
 
 bool matlabconverter::createmesh(LockingHandle<HexVolMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new HexVolMesh;
+  meshH = scinew HexVolMesh;
   addnodes(meshH,fs.node);
   addcells(meshH,fs.cell);
   return(true);
@@ -3060,7 +3071,7 @@ bool matlabconverter::createmesh(LockingHandle<HexVolMesh> &meshH,fieldstruct &f
 
 bool matlabconverter::createmesh(LockingHandle<PrismVolMesh> &meshH,fieldstruct &fs)
 {
-  meshH = new PrismVolMesh;
+  meshH = scinew PrismVolMesh;
   addnodes(meshH,fs.node);
   addcells(meshH,fs.cell);
   return(true);
@@ -3093,7 +3104,7 @@ bool matlabconverter::createmesh(LockingHandle<ImageMesh> &meshH,fieldstruct &fs
 
   Point PointO(0.0,0.0,0.0);
   Point PointP(static_cast<double>(dims[0]),static_cast<double>(dims[1]),0.0);
-  meshH = new ImageMesh(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),PointO,PointP);
+  meshH = scinew ImageMesh(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),PointO,PointP);
   if (fs.transform.isdense())
     {
       Transform T;
@@ -3112,7 +3123,7 @@ bool matlabconverter::createmesh(LockingHandle<LatVolMesh> &meshH,fieldstruct &f
 
   Point PointO(0.0,0.0,0.0);
   Point PointP(static_cast<double>(dims[0]),static_cast<double>(dims[1]),static_cast<double>(dims[2]));
-  meshH = new LatVolMesh(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),static_cast<unsigned int>(dims[2]),PointO,PointP);
+  meshH = scinew LatVolMesh(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),static_cast<unsigned int>(dims[2]),PointO,PointP);
   if (fs.transform.isdense())
     {
       Transform T;
@@ -3141,7 +3152,7 @@ bool matlabconverter::createmesh(LockingHandle<StructCurveMesh> &meshH,fieldstru
       mdims[0] = fs.x.getm();
     }
 
-  meshH = new StructCurveMesh;
+  meshH = scinew StructCurveMesh;
   long numnodes =fs.x.getnumelements();
         
   vector<double> X;
@@ -3171,7 +3182,7 @@ bool matlabconverter::createmesh(LockingHandle<StructQuadSurfMesh> &meshH,fields
   mdims.resize(numdim); 
   for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
 
-  meshH = new StructQuadSurfMesh;
+  meshH = scinew StructQuadSurfMesh;
         
   vector<double> X;
   vector<double> Y;
@@ -3204,7 +3215,7 @@ bool matlabconverter::createmesh(LockingHandle<StructHexVolMesh> &meshH,fieldstr
   mdims.resize(numdim); 
   for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
 
-  meshH = new StructHexVolMesh;
+  meshH = scinew StructHexVolMesh;
         
   vector<double> X;
   vector<double> Y;
@@ -3891,8 +3902,6 @@ void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarr
         
 }
 
-// Bundle code
-#ifdef HAVE_BUNDLE
 
 long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostring, ProgressReporter *pr)
 {
@@ -3939,20 +3948,35 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
   if (mlarray.getnumelements()==0) throw matlabconverter_error();
   long numfields = mlarray.getnumfields();
   
-  scibundle = new Bundle;
+  scibundle = scinew Bundle;
   if (scibundle.get_rep() == 0)
   {
-    pr->error("Could not allocate bundle");
+    pr->error("Could not allocate bundle (not enough memory)");
     return;
   }
   
   std::string dummyinfo;
   std::string fname;
   matlabarray subarray;
+
   for (long p = 0; p < numfields; p++)
     {
       subarray = mlarray.getfield(0,p);
       fname = mlarray.getfieldname(p);
+
+      //! STRINGS Can always be translated
+      //! into strings
+      if (mlarray.isstring())
+      {
+        if (sciStringCompatible(subarray,dummyinfo,pr))
+        {
+          StringHandle strhandle;
+          mlArrayTOsciString(subarray,strhandle,pr);
+          scibundle->setString(fname,strhandle);
+          continue;          
+        }
+      }
+
       if (mlarray.isstruct())
       {
         if (prefer_bundles == true)
@@ -3969,46 +3993,46 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
       
       int score = sciFieldCompatible(subarray,dummyinfo,pr);
       if (score > 1)  
-        { 
-          FieldHandle field;
-          mlArrayTOsciField(subarray,field,pr);
-          scibundle->setField(fname,field);
-          continue;
-        }
+      { 
+        FieldHandle field;
+        mlArrayTOsciField(subarray,field,pr);
+        scibundle->setField(fname,field);
+        continue;
+      }
       if (prefer_nrrds) 
+      { 
+        if (sciNrrdDataCompatible(subarray,dummyinfo,pr))   
         { 
-          if (sciNrrdDataCompatible(subarray,dummyinfo,pr))   
-            { 
-              NrrdDataHandle nrrd;
-              mlArrayTOsciNrrdData(subarray,nrrd,pr);
-              scibundle->setNrrd(fname,nrrd);
-              continue; 
-            } 
-        }
-      if (sciMatrixCompatible(subarray,dummyinfo,pr)) 
-        {
-          MatrixHandle  matrix;
-          mlArrayTOsciMatrix(subarray,matrix,pr);
-          scibundle->setMatrix(fname,matrix);
+          NrrdDataHandle nrrd;
+          mlArrayTOsciNrrdData(subarray,nrrd,pr);
+          scibundle->setNrrd(fname,nrrd);
           continue; 
-        }
+        } 
+      }
+      if (sciMatrixCompatible(subarray,dummyinfo,pr)) 
+      {
+        MatrixHandle  matrix;
+        mlArrayTOsciMatrix(subarray,matrix,pr);
+        scibundle->setMatrix(fname,matrix);
+        continue; 
+      }
       if (!prefer_nrrds)
-        {
-          if (sciNrrdDataCompatible(subarray,dummyinfo,pr))   
-            { 
-              NrrdDataHandle nrrd;
-              mlArrayTOsciNrrdData(subarray,nrrd,pr);
-              scibundle->setNrrd(fname,nrrd);
-              continue; 
-            } 
-        }
-      if (score) 
+      {
+        if (sciNrrdDataCompatible(subarray,dummyinfo,pr))   
         { 
-          FieldHandle field;
-          mlArrayTOsciField(subarray,field,pr);
-          scibundle->setField(fname,field);
-          continue;
-        }
+          NrrdDataHandle nrrd;
+          mlArrayTOsciNrrdData(subarray,nrrd,pr);
+          scibundle->setNrrd(fname,nrrd);
+          continue; 
+        } 
+      }
+      if (score) 
+      { 
+        FieldHandle field;
+        mlArrayTOsciField(subarray,field,pr);
+        scibundle->setField(fname,field);
+        continue;
+      }
       if (sciBundleCompatible(subarray,dummyinfo,pr))
       {
         BundleHandle subbundle;
@@ -4026,56 +4050,66 @@ void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &m
   std::string name;
   Field* field = 0;
   Matrix* matrix = 0;
+  String* str = 0;
   NrrdData* nrrd = 0;
   Bundle* bundle = 0;
     
   mlmat.clear();
   mlmat.createstructarray();
     
+  //! This routine scans systematically whether certain
+  //! SCIRun objects are cointained in the bundle and then
+  //! converts them into matlab objects  
+    
   for (int p=0; p < numhandles; p++)
+  {
+    handle = scibundle->gethandle(p);
+    name = scibundle->getHandleName(p);
+    field = dynamic_cast<Field *>(handle.get_rep());
+    if (field)
     {
-      handle = scibundle->gethandle(p);
-      name = scibundle->getHandleName(p);
-      field = dynamic_cast<Field *>(handle.get_rep());
-      if (field)
-        {
-          FieldHandle  fhandle = field;
-          matlabarray subarray;
-          bool numericarray = numericarray_;
-          numericarray_ = false;
-          sciFieldTOmlArray(fhandle,subarray,pr);
-          mlmat.setfield(0,name,subarray);
-          numericarray_ = numericarray;
-        }
-      matrix = dynamic_cast<Matrix *>(handle.get_rep());
-      if (matrix)
-        {
-          MatrixHandle  fhandle = matrix;
-          matlabarray subarray;
-          sciMatrixTOmlArray(fhandle,subarray,pr);
-          mlmat.setfield(0,name,subarray);
-        }
-      nrrd = dynamic_cast<NrrdData *>(handle.get_rep());
-      if (nrrd)
-        {
-          NrrdDataHandle  fhandle = nrrd;
-          matlabarray subarray;
-          sciNrrdDataTOmlArray(fhandle,subarray,pr);
-          mlmat.setfield(0,name,subarray);
-        }
-      bundle = dynamic_cast<Bundle *>(handle.get_rep());
-      if (bundle)
-        {
-          BundleHandle fhandle = bundle;
-          matlabarray subarray;
-          sciBundleTOmlArray(fhandle,subarray,pr);
-          mlmat.setfield(0,name,subarray);
-        }
+      FieldHandle  fhandle = field;
+      matlabarray subarray;
+      bool numericarray = numericarray_;
+      numericarray_ = false;
+      sciFieldTOmlArray(fhandle,subarray,pr);
+      mlmat.setfield(0,name,subarray);
+      numericarray_ = numericarray;
     }
+    matrix = dynamic_cast<Matrix *>(handle.get_rep());
+    if (matrix)
+    {
+      MatrixHandle  fhandle = matrix;
+      matlabarray subarray;
+      sciMatrixTOmlArray(fhandle,subarray,pr);
+      mlmat.setfield(0,name,subarray);
+    }
+    str = dynamic_cast<String *>(handle.get_rep());
+    if (str)
+    {
+      StringHandle fhandle = str;
+      matlabarray subarray;
+      sciStringTOmlArray(fhandle,subarray,pr);
+      mlmat.setfield(0,name,subarray);
+    }
+    nrrd = dynamic_cast<NrrdData *>(handle.get_rep());
+    if (nrrd)
+    {
+      NrrdDataHandle  fhandle = nrrd;
+      matlabarray subarray;
+      sciNrrdDataTOmlArray(fhandle,subarray,pr);
+      mlmat.setfield(0,name,subarray);
+    }
+    bundle = dynamic_cast<Bundle *>(handle.get_rep());
+    if (bundle)
+    {
+      BundleHandle fhandle = bundle;
+      matlabarray subarray;
+      sciBundleTOmlArray(fhandle,subarray,pr);
+      mlmat.setfield(0,name,subarray);
+    }
+  }
 }
-
-#endif
-
 
 // FUNCTIONS FOR RETURNING MESSAGES TO THE USER FOR DEBUGGING PURPOSES
 

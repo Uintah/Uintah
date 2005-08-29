@@ -56,13 +56,12 @@
  * a large number of class definitions......
  */
  
-#define HAVE_BUNDLE 1
- 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Datatypes/String.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -94,6 +93,7 @@
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
+#include <Core/Bundle/Bundle.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geom/ColorMap.h>
@@ -103,11 +103,6 @@
 #include <Core/Util/ProgressReporter.h>
 
 #include <Dataflow/Ports/NrrdPort.h>
-
-#ifdef HAVE_BUNDLE
-#include <Core/Bundle/Bundle.h>
-#endif
- 
 
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
@@ -221,6 +216,11 @@
    void preferbundles();
    void prefersciobjects();
 
+   // SCIRun STRINGS
+   long sciStringCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+   void mlArrayTOsciString(matlabarray &mlmat,SCIRun::StringHandle &scistr, SCIRun::ProgressReporter* pr);
+   void sciStringTOmlArray(SCIRun::StringHandle &scistr,matlabarray &mlmat, SCIRun::ProgressReporter* pr);
+
    // SCIRun MATRICES
    long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
    void mlArrayTOsciMatrix(matlabarray &mlmat,SCIRun::MatrixHandle &scimat, SCIRun::ProgressReporter* pr);
@@ -236,7 +236,7 @@
    void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle, SCIRun::ProgressReporter* pr);
    void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::ProgressReporter* pr);
 
-    // Reading of Matlabn colormaps
+    // Reading of Matlab colormaps
    long sciColorMapCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
    void mlArrayTOsciColorMap(matlabarray &mlmat,SCIRun::ColorMapHandle &scinrrd, SCIRun::ProgressReporter* pr);
 

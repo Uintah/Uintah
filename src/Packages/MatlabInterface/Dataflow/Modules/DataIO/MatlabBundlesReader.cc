@@ -48,12 +48,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/BundlePort.h>
 #include <Core/Datatypes/NrrdData.h>
-#include <Dataflow/Ports/NrrdPort.h>
+#include <Core/Datatypes/String.h>
+#include <Dataflow/Ports/StringPort.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Datatypes/NrrdString.h>
 
 namespace MatlabIO {
 
@@ -109,7 +109,7 @@ private:
   
   // GUI variables
   GuiString				guifilename_;		// .mat filename (import from GUI)
-  GuiString       guifilenameset_;
+  GuiString                             guifilenameset_;
   GuiString				guimatrixinfotexts_;   	// A list of matrix-information strings of the contents of a .mat-file
   GuiString				guimatrixnames_;	// A list of matrix-names of the contents of a .mat-file 
   GuiString				guimatrixname_;		// the name of the matrix that has been selected
@@ -162,63 +162,60 @@ MatlabBundlesReader::~MatlabBundlesReader()
 void MatlabBundlesReader::execute()
 {
 
-      NrrdIPort *filenameport;
-      if ((filenameport = static_cast<NrrdIPort *>(getIPort("filename"))))
+  StringIPort *filenameport;
+  if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
+  {
+    StringHandle stringH;
+    if (filenameport->get(stringH))
+    {
+        std::string filename = stringH->get();
+        guifilename_.set(filename);
+        ctx->reset();
+    }
+  }
+
+  // Get the filename from TCL.
+  std::string filename = guifilename_.get();
+  
+  // If the filename is empty, launch an error
+  if (filename == "")
+  {
+    error("MatlabBundlesReader: No file name was specified");
+    return;
+  }
+
+  try
+  {
+    for (long p=0;p<NUMPORTS;p++)
+    {
+
+      // Find the output port the scheduler has created 
+      omatrix_[p] = static_cast<SCIRun::BundleOPort *>(get_oport(static_cast<int>(p)));
+
+      if(!omatrix_[p]) 
       {
-        NrrdDataHandle nrrdH;
-        if (filenameport->get(nrrdH))
-        {
-            NrrdString fname(nrrdH);
-            std::string filename = fname.getstring();
-            guifilename_.set(filename);
-            ctx->reset();
-        }
+        error("MatlabBundlesReader: Unable to initialize output port");
+        return;
       }
 
-	// Get the filename from TCL.
-	std::string filename = guifilename_.get();
-	
-	// If the filename is empty, launch an error
-	if (filename == "")
-	{
-		error("MatlabBundlesReader: No file name was specified");
-		return;
-	}
-
-	try
-	{
-		for (long p=0;p<NUMPORTS;p++)
-		{
-	
-			// Find the output port the scheduler has created 
-			omatrix_[p] = static_cast<SCIRun::BundleOPort *>(get_oport(static_cast<int>(p)));
-
-			if(!omatrix_[p]) 
-			{
-				error("MatlabBundlesReader: Unable to initialize output port");
-				return;
-			}
-	
-			// Now read the matrix from file
-			// The next function will open, read, and close the file
-			// Any error will be exported as an exception.
-			// The matlab classes are all based in the matfilebase class
-			// which carries the definitions of the exceptions. These
-			// definitions are inherited by all other "matlab classes"
-			
-			matlabarray ma = readmatlabarray(p);
-	
-			// An empty array means something must have gone wrong
-			// Or there is no data to put on this port.
-			// Do not translate empty arrays, but continue to the 
-			// next output port.
-			
-			if (ma.isempty())
-			{
-				continue;
-			}
-
+      // Now read the matrix from file
+      // The next function will open, read, and close the file
+      // Any error will be exported as an exception.
+      // The matlab classes are all based in the matfilebase class
+      // which carries the definitions of the exceptions. These
+      // definitions are inherited by all other "matlab classes"
       
+      matlabarray ma = readmatlabarray(p);
+
+      // An empty array means something must have gone wrong
+      // Or there is no data to put on this port.
+      // Do not translate empty arrays, but continue to the 
+      // next output port.
+      
+      if (ma.isempty())
+      {
+        continue;
+      }
 
       std::string guipnrrd = guipnrrd_.get();
       std::string pnrrd = "";
@@ -236,260 +233,259 @@ void MatlabBundlesReader::execute()
       gui->eval(ossbundle.str(),pbundle);
       gui->unlock();
 
-			// The data is still in matlab format and the next function
-			// creates a SCIRun matrix object
-	
-			SCIRun::BundleHandle mh;
+      // The data is still in matlab format and the next function
+      // creates a SCIRun matrix object
+
+      SCIRun::BundleHandle mh;
       translate_.prefermatrices();
       translate_.prefersciobjects();
       if (pnrrd == "prefer nrrds") translate_.prefernrrds();
       if (pbundle == "prefer bundles") translate_.preferbundles();
       
-			translate_.mlArrayTOsciBundle(ma,mh,static_cast<SCIRun::Module *>(this));
-			
-			// Put the SCIRun matrix in the hands of the scheduler
-			omatrix_[p]->send(mh);
-		}
-	}
-	
-	// in case something went wrong
-		
-	catch (matlabfile::could_not_open_file)
-	{
-		error("MatlabBundlesReader: Could not open file");
-	}
-	catch (matlabfile::invalid_file_format)
-	{
-		error("MatlabBundlesReader: Invalid file format");
-	}
-	catch (matlabfile::io_error)
-	{
-		error("MatlabBundlesReader: IO error");
-	}
-	catch (matlabfile::out_of_range)
-	{
-		error("MatlabBundlesReader: Out of range");
-	}
-	catch (matlabfile::invalid_file_access)
-	{
-		error("MatlabBundlesReader: Invalid file access");
-	}
-	catch (matlabfile::empty_matlabarray)
-	{
-		error("MatlabBundlesReader: Empty matlab array");
-	}
-	catch (matlabfile::matfileerror) 
-	{
-		error("MatlabBundlesReader: Internal error in reader");
-	}
+      translate_.mlArrayTOsciBundle(ma,mh,static_cast<SCIRun::Module *>(this));
+      
+      // Put the SCIRun matrix in the hands of the scheduler
+      omatrix_[p]->send(mh);
+    }
+  }
+  
+  // in case something went wrong          
+  catch (matlabfile::could_not_open_file)
+  {
+    error("MatlabBundlesReader: Could not open file");
+  }
+  catch (matlabfile::invalid_file_format)
+  {
+    error("MatlabBundlesReader: Invalid file format");
+  }
+  catch (matlabfile::io_error)
+  {
+    error("MatlabBundlesReader: IO error");
+  }
+  catch (matlabfile::out_of_range)
+  {
+    error("MatlabBundlesReader: Out of range");
+  }
+  catch (matlabfile::invalid_file_access)
+  {
+    error("MatlabBundlesReader: Invalid file access");
+  }
+  catch (matlabfile::empty_matlabarray)
+  {
+    error("MatlabBundlesReader: Empty matlab array");
+  }
+  catch (matlabfile::matfileerror) 
+  {
+    error("MatlabBundlesReader: Internal error in reader");
+  }
 }
 
 
 void MatlabBundlesReader::tcl_command(GuiArgs& args, void* userdata)
 {
-	if(args.count() < 2){
-		args.error("MatlabBundlesReader needs a minor command");
-		return;
-	}
+  if(args.count() < 2)
+  {
+    args.error("MatlabBundlesReader needs a minor command");
+    return;
+  }
 
-	if( args[1] == "indexmatlabfile" )
-	{
-		
-		// It turns out that in the current design, SCIRun reads variables once
-		// and then assumes they do not change and hence caches the data
-		// Why it is done so is unclear to me, but in order to have interactive
-		// GUIs I need to reset the context. (this synchronises the data again)
-		ctx->reset();
-		
-		// Find out what the .mat file contains
-		indexmatlabfile(true);
-		return;
-	}
-	else 
-	{
-		// Relay data to the Module class
-		Module::tcl_command(args, userdata);
-	}
+  if( args[1] == "indexmatlabfile" )
+  {
+    
+    // It turns out that in the current design, SCIRun reads variables once
+    // and then assumes they do not change and hence caches the data
+    // Why it is done so is unclear to me, but in order to have interactive
+    // GUIs I need to reset the context. (this synchronises the data again)
+    ctx->reset();
+    
+    // Find out what the .mat file contains
+    indexmatlabfile(true);
+    return;
+  }
+  else 
+  {
+    // Relay data to the Module class
+    Module::tcl_command(args, userdata);
+  }
 }
 
 
 matlabarray MatlabBundlesReader::readmatlabarray(long p)
 {
-	matlabarray marray;
-	std::string filename = guifilename_.get();
-	std::string guimatrixname = guimatrixname_.get();
-	std::string matrixname = "";
-	
-	// guimatrixname is a list with the name of the matrices per port
-	// use the TCL command lindex to select the proper string from the list
-	
-	std::ostringstream oss;
-	oss << "lindex {" << guimatrixname << "} " << p;
-	
-	gui->lock();
-	gui->eval(oss.str(),matrixname);
-	gui->unlock();
-	
-	if (matrixname == "")
-	{
-		// return an empty array
-		return(marray);
-	}
-	
-	if (matrixname == "<none>")
-	{
-		// return an empty array
-		return(marray);
-	}
-	
-	// this block contains the file IO
-	// The change of errors is reasonable
-	// hence errors are generated as exceptions
-		
-	// having a local matfile object here ensures
-	// the file will be closed (destructor of the object).
-	
-	matlabfile  mfile;
-	mfile.open(filename,"r");
-	marray = mfile.getmatlabarray(matrixname);
-	mfile.close();
+  matlabarray marray;
+  std::string filename = guifilename_.get();
+  std::string guimatrixname = guimatrixname_.get();
+  std::string matrixname = "";
+  
+  // guimatrixname is a list with the name of the matrices per port
+  // use the TCL command lindex to select the proper string from the list
+  
+  std::ostringstream oss;
+  oss << "lindex {" << guimatrixname << "} " << p;
+  
+  gui->lock();
+  gui->eval(oss.str(),matrixname);
+  gui->unlock();
+  
+  if (matrixname == "")
+  {
+    // return an empty array
+    return(marray);
+  }
+  
+  if (matrixname == "<none>")
+  {
+    // return an empty array
+    return(marray);
+  }
+  
+  // this block contains the file IO
+  // The change of errors is reasonable
+  // hence errors are generated as exceptions
+          
+  // having a local matfile object here ensures
+  // the file will be closed (destructor of the object).
+  
+  matlabfile  mfile;
+  mfile.open(filename,"r");
+  marray = mfile.getmatlabarray(matrixname);
+  mfile.close();
 
-	return(marray);
+  return(marray);
 }
 
 
 
 void MatlabBundlesReader::indexmatlabfile(bool postmsg)
-{
-	
-	std::string filename = "";
-	std::string matrixinfotexts = "";
-	std::string matrixnames = "";
-	std::string newmatrixname = "";
-	std::string matrixname = "";
-	
-	guimatrixinfotexts_.set(matrixinfotexts);
-	guimatrixnames_.set(matrixnames);
+{	
+  std::string filename = "";
+  std::string matrixinfotexts = "";
+  std::string matrixnames = "";
+  std::string newmatrixname = "";
+  std::string matrixname = "";
+  
+  guimatrixinfotexts_.set(matrixinfotexts);
+  guimatrixnames_.set(matrixnames);
 
-	translate_.setpostmsg(postmsg);
+  translate_.setpostmsg(postmsg);
 
-	
-	filename = guifilename_.get();	
+  
+  filename = guifilename_.get();	
 
-	if (filename == "") 
-	{
-		// No file has been loaded, so reset the
-		// matrix name variable
-		guimatrixname_.set(newmatrixname);
-		return;
-	}
-	
-	matrixname = guimatrixname_.get();
-	
-	std::vector<std::string> matrixnamelist(NUMPORTS);
-	bool foundmatrixname[NUMPORTS];
-	
-	for (long p=0;p<NUMPORTS;p++)
-	{
-		// TCL Dependent code
-		std::ostringstream oss;
-		oss << "lindex { " << matrixname << " } " << p;
-		gui->lock();
-		gui->eval(oss.str(),matrixnamelist[p]);
-		gui->unlock();
-		foundmatrixname[p] = false;
-	}
+  if (filename == "") 
+  {
+    // No file has been loaded, so reset the
+    // matrix name variable
+    guimatrixname_.set(newmatrixname);
+    return;
+  }
+  
+  matrixname = guimatrixname_.get();
+  
+  std::vector<std::string> matrixnamelist(NUMPORTS);
+  bool foundmatrixname[NUMPORTS];
+  
+  for (long p=0;p<NUMPORTS;p++)
+  {
+    // TCL Dependent code
+    std::ostringstream oss;
+    oss << "lindex { " << matrixname << " } " << p;
+    gui->lock();
+    gui->eval(oss.str(),matrixnamelist[p]);
+    gui->unlock();
+    foundmatrixname[p] = false;
+  }
 
-	try
-	{
-		matlabfile mfile;
-		// Open the .mat file
-		// This function also scans through the file and makes
-		// sure it is amat file and counts the number of arrays
-		
-		mfile.open(filename,"r");
-		
-		// all matlab data is stored in a matlabarray object
-		matlabarray ma;
-		long cindex = 0;		// compatibility index, which matlab array fits the SCIRun Bundle best? 
-		long maxindex = 0;		// highest index found so far
-			
-		// Scan the file and see which matrices are compatible
-		// Only those will be shown (you cannot select incompatible matrices).
-			
-		std::string infotext = "";
-		
-		for (long p=0;p<mfile.getnummatlabarrays();p++)
-		{
-			ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-			if ((cindex = translate_.sciBundleCompatible(ma,infotext,reinterpret_cast<SCIRun::ProgressReporter *>(this))))
-			{
-				// in case we need to propose a matrix to load, select
-				// the one that is most compatible with the data
-				if (cindex > maxindex) { maxindex = cindex; newmatrixname = ma.getname();}
-				
-				// create tcl style list to use in the array selection process
-				
-				matrixinfotexts += std::string("{" + infotext + "} ");
-				matrixnames += std::string("{" + ma.getname() + "} "); 
-				for (long q=0;q<NUMPORTS;q++)
-				{
-					if (ma.getname() == matrixnamelist[q]) foundmatrixname[q] = true;
-				}
-			}
-		}
+  try
+  {
+    matlabfile mfile;
+    // Open the .mat file
+    // This function also scans through the file and makes
+    // sure it is amat file and counts the number of arrays
+    
+    mfile.open(filename,"r");
+    
+    // all matlab data is stored in a matlabarray object
+    matlabarray ma;
+    long cindex = 0;		// compatibility index, which matlab array fits the SCIRun Bundle best? 
+    long maxindex = 0;		// highest index found so far
+            
+    // Scan the file and see which matrices are compatible
+    // Only those will be shown (you cannot select incompatible matrices).
+            
+    std::string infotext = "";
+    
+    for (long p=0;p<mfile.getnummatlabarrays();p++)
+    {
+      ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
+      if ((cindex = translate_.sciBundleCompatible(ma,infotext,reinterpret_cast<SCIRun::ProgressReporter *>(this))))
+      {
+        // in case we need to propose a matrix to load, select
+        // the one that is most compatible with the data
+        if (cindex > maxindex) { maxindex = cindex; newmatrixname = ma.getname();}
+        
+        // create tcl style list to use in the array selection process
+        
+        matrixinfotexts += std::string("{" + infotext + "} ");
+        matrixnames += std::string("{" + ma.getname() + "} "); 
+        for (long q=0;q<NUMPORTS;q++)
+        {
+          if (ma.getname() == matrixnamelist[q]) foundmatrixname[q] = true;
+        }
+      }
+    }
 
-		matrixinfotexts += "{none} ";
-		matrixnames += "{<none>} ";
-	
-		mfile.close();
-	
-		// automatically select a matrix if the current matrix name
-		// cannot be found or if no matrixname has been specified
-		
-		matrixname = "";
-		for (long p=0;p<NUMPORTS;p++)
-		{
-			if (foundmatrixname[p] == false) 
-			{   
-				if (p==0) 
-				{
-					matrixnamelist[p] = newmatrixname;
-				}
-				else
-				{
-					matrixnamelist[p] = "<none>";
-				}
-			}
-			matrixname += "{" + matrixnamelist[p] + "} ";
-		}
-		
-		// Update TCL on the contents of this matrix
-		guimatrixname_.set(matrixname);
-		guimatrixinfotexts_.set(matrixinfotexts);
-		guimatrixnames_.set(matrixnames);
-	}
-	
-	// in case something went wrong
-	// close the file and then dermine the problem
+    matrixinfotexts += "{none} ";
+    matrixnames += "{<none>} ";
 
-	catch (matlabfile::could_not_open_file)
-	{
-		displayerror("MatlabBundlesReader: Could not open file");
-	}
-	catch (matlabfile::invalid_file_format)
-	{
-		displayerror("MatlabBundlesReader: Invalid file format");
-	}
-	catch (matlabfile::io_error)
-	{
-		displayerror("MatlabBundlesReader: IO error");
-	}
-	catch (matlabfile::matfileerror) 
-	{
-		displayerror("MatlabBundlesReader: Internal error in reader");
-	}
-	return;
+    mfile.close();
+
+    // automatically select a matrix if the current matrix name
+    // cannot be found or if no matrixname has been specified
+    
+    matrixname = "";
+    for (long p=0;p<NUMPORTS;p++)
+    {
+      if (foundmatrixname[p] == false) 
+      {   
+        if (p==0) 
+        {
+          matrixnamelist[p] = newmatrixname;
+        }
+        else
+        {
+          matrixnamelist[p] = "<none>";
+        }
+      }
+      matrixname += "{" + matrixnamelist[p] + "} ";
+    }
+    
+    // Update TCL on the contents of this matrix
+    guimatrixname_.set(matrixname);
+    guimatrixinfotexts_.set(matrixinfotexts);
+    guimatrixnames_.set(matrixnames);
+  }
+  
+  // in case something went wrong
+  // close the file and then dermine the problem
+
+  catch (matlabfile::could_not_open_file)
+  {
+    displayerror("MatlabBundlesReader: Could not open file");
+  }
+  catch (matlabfile::invalid_file_format)
+  {
+    displayerror("MatlabBundlesReader: Invalid file format");
+  }
+  catch (matlabfile::io_error)
+  {
+    displayerror("MatlabBundlesReader: IO error");
+  }
+  catch (matlabfile::matfileerror) 
+  {
+    displayerror("MatlabBundlesReader: Internal error in reader");
+  }
+  return;
 }
 
 

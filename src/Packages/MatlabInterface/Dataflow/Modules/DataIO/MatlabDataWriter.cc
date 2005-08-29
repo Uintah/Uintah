@@ -33,21 +33,25 @@
  * DATE: 30 JUL 2004
  */ 
 
+#include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
+
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/StringPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Datatypes/NrrdString.h>
+#include <Core/Datatypes/String.h>
 
 namespace MatlabIO {
 
@@ -56,59 +60,57 @@ using namespace SCIRun;
 class MatlabDataWriter : public Module 
 {
 
-public:
+  public:
 
-	// Constructor
-	MatlabDataWriter(GuiContext*);
+    // Constructor
+    MatlabDataWriter(GuiContext*);
 
-	// Destructor
-	virtual ~MatlabDataWriter();
+    // Destructor
+    virtual ~MatlabDataWriter();
 
-	// Std functions for each module
-	// execute():
-	//   Execute the module and put data on the output port
-	
-	virtual void execute();
-	
-private:
+    // Std functions for each module
+    // execute():
+    //   Execute the module and put data on the output port
+    
+    virtual void execute();
+    
+  private:
 
-	// functions for converting SCIRun matrices into matlab matrices
-	// This class contains a scope of functions for translating data
-	// structures.
-	matlabconverter translate_;
+    // functions for converting SCIRun matrices into matlab matrices
+    // This class contains a scope of functions for translating data
+    // structures.
+    matlabconverter translate_;
 
-	// Support functions for converting between TCL and C++
-	// converttcllist:
-	// TCL lists are stings in which the elements are separated by {}.
-	// In a C++ environment it is easier to have them as a STL vector
-	// object. This function converts the TCL list into an STL object
-	// convertdataformat:
-	// In TCL the dataformat is a string this function is used to convert
-	// it into its matlab enum counterpart.
-	std::vector<std::string> converttcllist(std::string str);
-	matlabarray::mitype convertdataformat(std::string dataformat);
+    // Support functions for converting between TCL and C++
+    // converttcllist:
+    // TCL lists are stings in which the elements are separated by {}.
+    // In a C++ environment it is easier to have them as a STL vector
+    // object. This function converts the TCL list into an STL object
+    // convertdataformat:
+    // In TCL the dataformat is a string this function is used to convert
+    // it into its matlab enum counterpart.
+    std::vector<std::string> converttcllist(std::string str);
+    matlabarray::mitype convertdataformat(std::string dataformat);
 
-	// Support functions for the GUI
-	// displayerror:
-	// Directly reporting an error to the user (not in the error log)
-	// overwrite:
-	// Ask for confirmation to overwrite the file if it already exists
-	
-	void displayerror(std::string str);
-	bool overwrite();
+    // Support functions for the GUI
+    // displayerror:
+    // Directly reporting an error to the user (not in the error log)
+    // overwrite:
+    // Ask for confirmation to overwrite the file if it already exists
+    
+    void displayerror(std::string str);
+    bool overwrite();
 
-private:
+  private:
 
-  enum { NUMPORTS = 9};
-  
-  // GUI variables
-  GuiString				guifilename_;		// .mat filename (import from GUI)
-  GuiString       guifilenameset_;
-  GuiString				guimatrixname_;   	// A list of the matrix names
-  GuiString				guidataformat_;		// A list of the dataformat for each matrix (int, double etc.)
-  GuiString				guimatrixformat_;   // A list of the matlabarray format (numeric array, structured array)
-
-
+    enum { NUMPORTS = 9};
+    
+    // GUI variables
+    GuiString				guifilename_;		// .mat filename (import from GUI)
+    GuiString       guifilenameset_;
+    GuiString				guimatrixname_;   	// A list of the matrix names
+    GuiString				guidataformat_;		// A list of the dataformat for each matrix (int, double etc.)
+    GuiString				guimatrixformat_;   // A list of the matlabarray format (numeric array, structured array)
 };
 
 DECLARE_MAKER(MatlabDataWriter)
@@ -143,225 +145,221 @@ MatlabDataWriter::~MatlabDataWriter()
 void MatlabDataWriter::execute()
 {
 
-      NrrdIPort *filenameport;
-      if ((filenameport = static_cast<NrrdIPort *>(getIPort("filename"))))
+  StringIPort *filenameport;
+  if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
+  {
+    StringHandle stringH;
+    if (filenameport->get(stringH))
+    {
+        std::string filename = stringH->get();
+        guifilename_.set(filename);
+        ctx->reset();
+    }
+  }
+
+  bool porthasdata[NUMPORTS];
+  SCIRun::FieldHandle fieldhandle[3];
+  SCIRun::MatrixHandle matrixhandle[3];
+  SCIRun::NrrdDataHandle nrrdhandle[3];
+
+  
+  // find and evaluate which ports have been used
+  
+  for (long p=0; p<3; p++)
+  {
+    SCIRun::FieldIPort *iport;
+    iport = static_cast<SCIRun::FieldIPort *>(getIPort(p));
+    if (!iport) 
+    {
+      error("MatlabDataWriter: Unable to initialize field input port");
+      return;
+    }
+    
+    if (!iport->get(fieldhandle[p]) || !fieldhandle[p].get_rep())
+    {
+      porthasdata[p] = false;
+    }
+    else
+    {
+      porthasdata[p] = true;
+    }
+  }
+  
+  for (long p=0; p<3; p++)
+  {
+    SCIRun::MatrixIPort *iport;
+    iport = static_cast<SCIRun::MatrixIPort *>(getIPort(p+3));
+    if (!iport) 
+    {
+      error("MatlabDataWriter: Unable to initialize field input port");
+      return;
+    }
+    
+    if (!iport->get(matrixhandle[p]) || !matrixhandle[p].get_rep())
+    {
+      porthasdata[p+3] = false;
+    }
+    else
+    {
+      porthasdata[p+3] = true;
+    }
+  }
+	
+  
+  for (long p=0; p<3; p++)
+  {
+    SCIRun::NrrdIPort *iport;
+    iport = static_cast<SCIRun::NrrdIPort *>(getIPort(p+6));
+    if (!iport) 
+    {
+      error("MatlabDataWriter: Unable to initialize field input port");
+      return;
+    }
+    
+    if (!iport->get(nrrdhandle[p]) || !nrrdhandle[p].get_rep())
+    {
+      porthasdata[p+6] = false;
+    }
+    else
+    {
+      porthasdata[p+6] = true;
+    }
+  }
+  
+  // Reorder the TCL input and put them
+  // in orderly STL style vectors.
+  
+  // First update the GUI to C++ interface
+  gui->execute(id+" Synchronise");
+  ctx->reset();
+
+  // Get the contents of the filename entrybox
+  std::string filename = guifilename_.get();
+  
+  // Make sure we have a .mat extension
+  int filenamesize = filename.size();
+  if (filenamesize < 4) 
+  {   
+    filename += ".mat";
+  }
+  else
+  {
+    if (filename.substr(filenamesize-4,filenamesize) != ".mat") filename += ".mat";
+  }
+  
+  
+  // If the filename is empty, launch an error
+  if (filename == "")
+  {
+    error("MatlabDataWriter: No file name was specified");
+    return;
+  }
+
+  if (!overwrite()) return;
+
+  // get all the settings from the GUI
+  
+  std::vector<std::string> matrixname;
+  std::vector<std::string> matrixformat;
+  std::vector<std::string> dataformat;
+          
+  matrixname = converttcllist(guimatrixname_.get());
+  matrixformat = converttcllist(guimatrixformat_.get());
+  dataformat = converttcllist(guidataformat_.get());
+          
+  // Check the validity of the matrixnames
+
+  for (long p=0;p<matrixname.size();p++)
+  {
+    if (porthasdata[p] == false) continue; // Do not check not used ports
+    if (!translate_.isvalidmatrixname(matrixname[p]))
+    {
+      error("MatlabDataWriter: The matrix name specified is invalid");
+      return;
+    }
+    for (long q=0;q<p;q++)
+    {
+      if (porthasdata[q] == false) continue;
+      if (matrixname[q] == matrixname[p])
       {
-        NrrdDataHandle nrrdH;
-        if (filenameport->get(nrrdH))
-        {
-            NrrdString fname(nrrdH);
-            std::string filename = fname.getstring();
-            guifilename_.set(filename);
-            ctx->reset();
-        }
+        error("MatlabDataWriter: A matrix name is used twice");
+        return;
+      }
+    }
+  }
+
+  try
+  {
+    matlabfile mfile;   // matlab file object contains all function for reading and writing matlab arrayd
+    matlabarray ma;		// matlab style formatted array (can be stored in a matlabfile object)
+    mfile.open(filename,"w");   // open file for writing
+    
+    // Add an information tag to the data, so the origin of the file is known
+    // There are 116 bytes of free data storage at the header of the file.
+    // Do not start the file with 'SCI ', otherwise the file looks like a
+    // native SCIRun file which uses the same extension.
+    
+    mfile.setheadertext("Matlab V5 compatible file generated by SCIRun [module MatlabDataWriter version 1.1]");
+    
+    for (long p=0;p<NUMPORTS;p++)
+    {
+      if (porthasdata[p] == false) continue; // if the port is not connected skip to the next one
+      
+      // Convert the SCIRun matrixobject to a matlab object
+      
+      if (matrixformat[p] == "struct array")
+      {   
+        // translate the matrix into a matlab structured array, which
+        // can also store some data from the property manager
+        translate_.setdatatype(convertdataformat(dataformat[p]));
+        translate_.converttostructmatrix();
+      }
+      
+      if (matrixformat[p] == "numeric array")
+      {
+        // only store the numeric parts of the data
+        translate_.setdatatype(convertdataformat(dataformat[p]));
+        translate_.converttonumericmatrix();
       }
 
+      if (p<3)			{ translate_.sciFieldTOmlArray(fieldhandle[p],ma,static_cast<SCIRun::Module *>(this)); }		
+      if ((p>2)&&(p<6))   { translate_.sciMatrixTOmlArray(matrixhandle[p-3],ma,static_cast<SCIRun::Module *>(this)); }
+      if (p>5)			{ translate_.sciNrrdDataTOmlArray(nrrdhandle[p-6],ma,static_cast<SCIRun::Module *>(this)); }
+      
+      if (ma.isempty())
+      {
+        warning("One of the matrices is empty");
+        continue; // Do not write empty matrices
+      }
+      // Every thing seems OK, so proceed and store the matrix in the file
+      mfile.putmatlabarray(ma,matrixname[p]);
+    }
+    
+    mfile.close();
+  }	
 
-
-	bool porthasdata[NUMPORTS];
-	SCIRun::FieldHandle fieldhandle[3];
-	SCIRun::MatrixHandle matrixhandle[3];
-	SCIRun::NrrdDataHandle nrrdhandle[3];
-
-	
-	// find and evaluate which ports have been used
-	
-	for (long p=0; p<3; p++)
-	{
-		SCIRun::FieldIPort *iport;
-  		iport = static_cast<SCIRun::FieldIPort *>(getIPort(p));
-		if (!iport) 
-		{
-			error("MatlabDataWriter: Unable to initialize field input port");
-			return;
-		}
-		
-		if (!iport->get(fieldhandle[p]) || !fieldhandle[p].get_rep())
-		{
-			porthasdata[p] = false;
-		}
-		else
-		{
-			porthasdata[p] = true;
-		}
-	}
-	
-	for (long p=0; p<3; p++)
-	{
-		SCIRun::MatrixIPort *iport;
-  		iport = static_cast<SCIRun::MatrixIPort *>(getIPort(p+3));
-		if (!iport) 
-		{
-			error("MatlabDataWriter: Unable to initialize field input port");
-			return;
-		}
-		
-		if (!iport->get(matrixhandle[p]) || !matrixhandle[p].get_rep())
-		{
-			porthasdata[p+3] = false;
-		}
-		else
-		{
-			porthasdata[p+3] = true;
-		}
-	}
-	
-	
-	for (long p=0; p<3; p++)
-	{
-		SCIRun::NrrdIPort *iport;
-  		iport = static_cast<SCIRun::NrrdIPort *>(getIPort(p+6));
-		if (!iport) 
-		{
-			error("MatlabDataWriter: Unable to initialize field input port");
-			return;
-		}
-		
-		if (!iport->get(nrrdhandle[p]) || !nrrdhandle[p].get_rep())
-		{
-			porthasdata[p+6] = false;
-		}
-		else
-		{
-			porthasdata[p+6] = true;
-		}
-	}
-	
-	// Reorder the TCL input and put them
-	// in orderly STL style vectors.
-	
-	// First update the GUI to C++ interface
-	gui->execute(id+" Synchronise");
-	ctx->reset();
-
-	// Get the contents of the filename entrybox
-	std::string filename = guifilename_.get();
-	
-	// Make sure we have a .mat extension
-	int filenamesize = filename.size();
-	if (filenamesize < 4) 
-	{   
-		filename += ".mat";
-	}
-	else
-	{
-		if (filename.substr(filenamesize-4,filenamesize) != ".mat") filename += ".mat";
-	}
-	
-	
-	// If the filename is empty, launch an error
-	if (filename == "")
-	{
-		error("MatlabDataWriter: No file name was specified");
-		return;
-	}
-
-	if (!overwrite()) return;
-
-	// get all the settings from the GUI
-	
-	std::vector<std::string> matrixname;
-	std::vector<std::string> matrixformat;
-	std::vector<std::string> dataformat;
-		
-	matrixname = converttcllist(guimatrixname_.get());
-	matrixformat = converttcllist(guimatrixformat_.get());
-	dataformat = converttcllist(guidataformat_.get());
-		
-	// Check the validity of the matrixnames
-
-	for (long p=0;p<matrixname.size();p++)
-	{
-		if (porthasdata[p] == false) continue; // Do not check not used ports
-		if (!translate_.isvalidmatrixname(matrixname[p]))
-		{
-			error("MatlabDataWriter: The matrix name specified is invalid");
-			return;
-		}
-		for (long q=0;q<p;q++)
-		{
-			if (porthasdata[q] == false) continue;
-			if (matrixname[q] == matrixname[p])
-			{
-				error("MatlabDataWriter: A matrix name is used twice");
-				return;
-			}
-		}
-	}
-	
-	
-	try
-	{
-		matlabfile mfile;   // matlab file object contains all function for reading and writing matlab arrayd
-		matlabarray ma;		// matlab style formatted array (can be stored in a matlabfile object)
-		mfile.open(filename,"w");   // open file for writing
-		
-		// Add an information tag to the data, so the origin of the file is known
-		// There are 116 bytes of free data storage at the header of the file.
-		// Do not start the file with 'SCI ', otherwise the file looks like a
-		// native SCIRun file which uses the same extension.
-		
-		mfile.setheadertext("Matlab V5 compatible file generated by SCIRun [module MatlabDataWriter version 1.1]");
-		
-		for (long p=0;p<NUMPORTS;p++)
-		{
-			if (porthasdata[p] == false) continue; // if the port is not connected skip to the next one
-			
-			// Convert the SCIRun matrixobject to a matlab object
-			
-			if (matrixformat[p] == "struct array")
-			{   
-				// translate the matrix into a matlab structured array, which
-				// can also store some data from the property manager
-				translate_.setdatatype(convertdataformat(dataformat[p]));
-				translate_.converttostructmatrix();
-			}
-			
-			if (matrixformat[p] == "numeric array")
-			{
-				// only store the numeric parts of the data
-				translate_.setdatatype(convertdataformat(dataformat[p]));
-				translate_.converttonumericmatrix();
-			}
-
-			if (p<3)			{ translate_.sciFieldTOmlArray(fieldhandle[p],ma,static_cast<SCIRun::Module *>(this)); }		
-			if ((p>2)&&(p<6))   { translate_.sciMatrixTOmlArray(matrixhandle[p-3],ma,static_cast<SCIRun::Module *>(this)); }
-			if (p>5)			{ translate_.sciNrrdDataTOmlArray(nrrdhandle[p-6],ma,static_cast<SCIRun::Module *>(this)); }
-			
-			if (ma.isempty())
-			{
-				warning("One of the matrices is empty");
-				continue; // Do not write empty matrices
-			}
-			// Every thing seems OK, so proceed and store the matrix in the file
-			mfile.putmatlabarray(ma,matrixname[p]);
-		}
-		
-		mfile.close();
-	}	
-
-	// in case something went wrong
-		
-	catch (matlabfile::could_not_open_file)
-	{
-		error("MatlabDataWriter: Could not open file");
-	}
-	catch (matlabfile::invalid_file_format)
-	{
-		error("MatlabDataWriter: Invalid file format");
-	}
-	catch (matlabfile::io_error)
-	{   // IO error from ferror
-		error("MatlabDataWriter: IO error");
-	}
-	catch (matlabfile::matfileerror) 
-	{   // All other errors are classified as internal
-		// matfileerrror is the base class on which all
-		// other exceptions are based.
-		error("MatlabDataWriter: Internal error in writer");
-	}
-	// No handling of the SCIRun errors here yet, most SCIRun functions used
-	// do not use exceptions yet.
+  // in case something went wrong
+          
+  catch (matlabfile::could_not_open_file)
+  {
+    error("MatlabDataWriter: Could not open file");
+  }
+  catch (matlabfile::invalid_file_format)
+  {
+    error("MatlabDataWriter: Invalid file format");
+  }
+  catch (matlabfile::io_error)
+  {   // IO error from ferror
+    error("MatlabDataWriter: IO error");
+  }
+  catch (matlabfile::matfileerror) 
+  {   // All other errors are classified as internal
+      // matfileerrror is the base class on which all
+      // other exceptions are based.
+      error("MatlabDataWriter: Internal error in writer");
+  }
+  // No handling of the SCIRun errors here yet, most SCIRun functions used
+  // do not use exceptions yet.
 }
 
 // Additional support functions :
@@ -374,19 +372,19 @@ void MatlabDataWriter::execute()
 
 matlabarray::mitype MatlabDataWriter::convertdataformat(std::string dataformat)
 {
-	matlabarray::mitype type;
-	if (dataformat == "same as data")  { type = matlabarray::miSAMEASDATA; }
-	else if (dataformat == "double")   { type = matlabarray::miDOUBLE; }
-	else if (dataformat == "single")   { type = matlabarray::miSINGLE; }
-	else if (dataformat == "uint64")   { type = matlabarray::miUINT64; }
-	else if (dataformat == "int64")    { type = matlabarray::miINT64; }
-	else if (dataformat == "uint32")   { type = matlabarray::miUINT32; }
-	else if (dataformat == "int32")    { type = matlabarray::miINT32; }
-	else if (dataformat == "uint16")   { type = matlabarray::miUINT16; }
-	else if (dataformat == "int16")    { type = matlabarray::miINT16; }
-	else if (dataformat == "uint8")    { type = matlabarray::miUINT8; }
-	else if (dataformat == "int8")     { type = matlabarray::miINT8; }
-	return (type);
+  matlabarray::mitype type;
+  if (dataformat == "same as data")  { type = matlabarray::miSAMEASDATA; }
+  else if (dataformat == "double")   { type = matlabarray::miDOUBLE; }
+  else if (dataformat == "single")   { type = matlabarray::miSINGLE; }
+  else if (dataformat == "uint64")   { type = matlabarray::miUINT64; }
+  else if (dataformat == "int64")    { type = matlabarray::miINT64; }
+  else if (dataformat == "uint32")   { type = matlabarray::miUINT32; }
+  else if (dataformat == "int32")    { type = matlabarray::miINT32; }
+  else if (dataformat == "uint16")   { type = matlabarray::miUINT16; }
+  else if (dataformat == "int16")    { type = matlabarray::miINT16; }
+  else if (dataformat == "uint8")    { type = matlabarray::miUINT8; }
+  else if (dataformat == "int8")     { type = matlabarray::miINT8; }
+  return (type);
 }
 
 // converttcllist:
@@ -395,32 +393,32 @@ matlabarray::mitype MatlabDataWriter::convertdataformat(std::string dataformat)
 
 std::vector<std::string> MatlabDataWriter::converttcllist(std::string str)
 {
-	std::string result;
-	std::vector<std::string> list(0);
-	long lengthlist = 0;
-	
-	// Yeah, it is TCL dependent:
-	// TCL::llength determines the length of the list
-	gui->lock();
-	gui->eval("llength { "+str + " }",result);	
-	istringstream iss(result);
-	iss >> lengthlist;
-	gui->unlock();
-	if (lengthlist < 0) return(list);
-	
-	list.resize(lengthlist);
-	gui->lock();
-	for (long p = 0;p<lengthlist;p++)
-	{
-		ostringstream oss;
-		// TCL dependency:
-		// TCL::lindex retrieves the p th element from the list
-		oss << "lindex { " << str <<  " } " << p;
-		gui->eval(oss.str(),result);
-		list[p] = result;
-	}
-	gui->unlock();
-	return(list);
+  std::string result;
+  std::vector<std::string> list(0);
+  long lengthlist = 0;
+  
+  // Yeah, it is TCL dependent:
+  // TCL::llength determines the length of the list
+  gui->lock();
+  gui->eval("llength { "+str + " }",result);	
+  istringstream iss(result);
+  iss >> lengthlist;
+  gui->unlock();
+  if (lengthlist < 0) return(list);
+  
+  list.resize(lengthlist);
+  gui->lock();
+  for (long p = 0;p<lengthlist;p++)
+  {
+    ostringstream oss;
+    // TCL dependency:
+    // TCL::lindex retrieves the p th element from the list
+    oss << "lindex { " << str <<  " } " << p;
+    gui->eval(oss.str(),result);
+    list[p] = result;
+  }
+  gui->unlock();
+  return(list);
 }
 
 // overwrite:
@@ -432,7 +430,8 @@ bool MatlabDataWriter::overwrite()
   gui->lock();
   gui->eval(id+" overwrite",result);
   gui->unlock();
-  if (result == std::string("0")) {
+  if (result == std::string("0")) 
+  {
     warning("User chose to not save.");
     return(0);
   }
