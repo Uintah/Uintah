@@ -317,8 +317,6 @@ public:
 					    const TypeDescription *sloc,
 					    const TypeDescription *vfld);
 
-  static double RayPlaneIntersection(const Point &p, const Vector &dir,
-				     const Point &p0, const Vector &normal);
 };
 
 
