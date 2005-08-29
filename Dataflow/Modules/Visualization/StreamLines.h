@@ -31,15 +31,17 @@
 //    Author : Michael Callahan
 //    Date   : July 2001
 
-#if !defined(StreamLines_h)
-#define StreamLines_h
+#if !defined(_STREAMLINES_H_)
+#define _STREAMLINES_H_
 
-#include <Core/Thread/Thread.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/FieldInterface.h>
+#include <Core/Geometry/CompGeom.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
+
 #include <algorithm>
 
 namespace SCIRun {
@@ -520,7 +522,6 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
   return FieldHandle(cf);
 }
 
-
 } // end namespace SCIRun
 
-#endif // StreamLines_h
+#endif // _STREAMLINES_H_

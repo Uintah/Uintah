@@ -279,7 +279,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
     }
 
     // define shortcuts
-    CCVariable<double>& lamda  = sv->lamda;
+    //CCVariable<double>& lamda  = sv->lamda;
     constCCVariable<double> viscosity = sv->viscosity;
     constCCVariable<double> press_CC  = sv->press_CC;
     constCCVariable<double> rho_CC    = sv->rho_CC;
@@ -287,12 +287,12 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
     IntVector offset = patch->faceDirection(face);
     IntVector axes = patch->faceAxes(face);
     int P_dir = axes[0];  // principal direction
-    int dir1  = axes[1];  // Jennifer double check what these indicies
-    int dir2  = axes[2];  // are for the different faces
+    //int dir1  = axes[1];  // Jennifer double check what these indicies
+    //int dir2  = axes[2];  // are for the different faces
     
-    Vector DX = patch->dCell();
-    double dx = DX[P_dir];
-    double alpha_momentum = sv->alpha_momentum;
+    //Vector DX = patch->dCell();
+    //double dx = DX[P_dir];
+    //double alpha_momentum = sv->alpha_momentum;
 
 
     cout_dbg << "____________________velocity";
@@ -383,11 +383,13 @@ void set_MicroSlipTemperature_BC(const Patch* patch,
       IntVector c = *iter;
       IntVector in = c - offset;
       
-      double B = 2.0*(gamma[in] -1) / (gamma[in] + 1);
-      double C = gas_constant/viscosity[in] * lamda[in];
-      double grad = (Temp_CC[in] - Temp_CC[in-offset])/dx;
+      //double B = 2.0*(gamma[in] -1) / (gamma[in] + 1);
+      //double C = gas_constant/viscosity[in] * lamda[in];
+      //double grad = (Temp_CC[in] - Temp_CC[in-offset])/dx;
       // temp_CC[c] = A * B * C * grad + wall_temp???;  
-      temp_CC[c] = Temp_CC[in];  // Jennifer-- put equations here
+
+      // TODO: Jennifer-- put equations here
+      temp_CC[c] = Temp_CC[in];  
     }
   }
 } 

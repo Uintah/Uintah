@@ -157,12 +157,12 @@ public:
   void get_center(Point &, Face::index_type) const {}
   void get_center(Point &, Cell::index_type) const {}
 
-  bool get_neighbor(Edge::index_type &neighbor, Edge::index_type edge,
-		    Node::index_type node) const
-  {ASSERTFAIL("CurveMesh::get_neighbor for edges needs to be implemented"); }
-  void get_neighbors(vector<Node::index_type> &array,
-                     Node::index_type idx) const
-  {ASSERTFAIL("CurveMesh::get_neighbor for nodes needs to be implemented"); }
+  bool get_neighbor(Edge::index_type &/*neighbor*/, Edge::index_type /*edge*/,
+		    Node::index_type /*node*/) const
+    { ASSERTFAIL("CurveMesh::get_neighbor for edges needs to be implemented"); }
+  void get_neighbors(vector<Node::index_type> &/*array*/,
+                     Node::index_type /*idx*/) const
+    { ASSERTFAIL("CurveMesh::get_neighbor for nodes needs to be implemented"); }
 
   //! Get the size of an element (length, area, volume)
   double get_size(Node::index_type /*idx*/) const { return 0.0; }

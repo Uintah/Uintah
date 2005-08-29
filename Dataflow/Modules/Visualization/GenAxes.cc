@@ -97,10 +97,10 @@ private:
   void				add_GuiBool(const string &str);
 
 
-  const string			get_GuiString(const string &str);
-  const double			get_GuiDouble(const string &str);
-  const int		        get_GuiInt(const string &str);
-  const bool		        get_GuiBool(const string &str);
+  string			get_GuiString(const string &str);
+  double			get_GuiDouble(const string &str);
+  int		        get_GuiInt(const string &str);
+  bool		        get_GuiBool(const string &str);
 
   void				check_for_changed_fonts();
   
@@ -188,7 +188,7 @@ GenAxes::~GenAxes()
 //#define DEBUGPRINT  std::cerr << "[set " << str << "] { " << ret << " } " << std::endl; std::cerr.flush();
 #define DEBUGPRINT
 
-const string
+string
 GenAxes::get_GuiString(const string &str) {
   string ret("");
   var_iter_t pos = vars_.find(str);
@@ -201,7 +201,7 @@ GenAxes::get_GuiString(const string &str) {
 }
 
 
-const double
+double
 GenAxes::get_GuiDouble(const string &str) {
   double ret = 0.0;
   var_iter_t pos = vars_.find(str);
@@ -214,7 +214,7 @@ GenAxes::get_GuiDouble(const string &str) {
 }
 
 
-const int
+int
 GenAxes::get_GuiInt(const string &str) {
   int ret = 0;
   var_iter_t pos = vars_.find(str);
@@ -226,7 +226,7 @@ GenAxes::get_GuiInt(const string &str) {
   return ret;
 }
 
-const bool
+bool
 GenAxes::get_GuiBool(const string &str) {
   bool ret = false;
   var_iter_t pos = vars_.find(str);
@@ -424,8 +424,8 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
 
 
     GeomGroup *ticks = scinew GeomGroup();
-    GeomGroup *values = scinew GeomGroup();
 #ifdef HAVE_FTGL
+    GeomGroup *values = scinew GeomGroup();
     const int precision = get_GuiInt("precision");
 #endif
     Vector squash(1.,1.,1.);
@@ -503,7 +503,9 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
 
     tilted_tick = scinew GeomTransform(tickline, trans);
     ticks = scinew GeomGroup();    
+#ifdef HAVE_FTGL
     values = scinew GeomGroup();
+#endif
 
     for (int i = 0; i <= num; i++) {
       GeomTransform *ttick = scinew GeomTransform(tilted_tick);
