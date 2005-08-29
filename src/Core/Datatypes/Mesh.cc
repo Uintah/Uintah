@@ -37,7 +37,8 @@ namespace SCIRun{
 // initialize the static member type_id
 PersistentTypeID Mesh::type_id("Mesh", "PropertyManager", NULL);
 
-Mesh::Mesh()
+Mesh::Mesh() :
+  MIN_ELEMENT_VAL(1.0e-12)
 {
 }
 
