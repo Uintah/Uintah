@@ -223,7 +223,6 @@ PrismVolMesh::get_random_point(Point &p, const Cell::index_type &ei,
 BBox
 PrismVolMesh::get_bounding_box() const
 {
-  //! TODO: This could be included in the synchronize scheme
   BBox result;
 
   Node::iterator ni, nie;
@@ -1242,7 +1241,7 @@ PrismVolMesh::get_weights(const Point &pt, Node::array_type &nodes, double *w)
       if( prism_vol6( pt,
 		      p[fTable[0]],
 		      p[fTable[1]],
-		      p[fTable[2]] ) < 1.0e-8 )
+		      p[fTable[2]] ) < MIN_ELEMENT_VAL )
 	break;
     }
 
@@ -1300,7 +1299,7 @@ PrismVolMesh::get_weights(const Point &pt, Node::array_type &nodes, double *w)
 				p[fTable[j%QUAD_NNODES]]);
 	  
 	  // Special case point is on an edge.
-	  if( area[i] < 1.0e-8 )
+	  if( area[i] < MIN_ELEMENT_VAL )
 	    break;
 	}
 	
@@ -1416,7 +1415,7 @@ PrismVolMesh::orient(Cell::index_type idx) {
 
     double dotprod = Dot(off1, normal);
 
-    if( fabs( dotprod ) < 1.0e-8 ) {
+    if( fabs( dotprod ) < MIN_ELEMENT_VAL ) {
       cerr << "Warning cell " << idx << " face " << i;
       cerr << " is malformed " << endl;
     }
@@ -1448,26 +1447,15 @@ PrismVolMesh::inside(Cell::index_type idx, const Point &p)
     double dotprod = Dot(off0, normal);
 
     // Account for round off - the point may be on the plane!!
-    if( fabs( dotprod ) < 1.0e-8 )
+    if( fabs( dotprod ) < MIN_ELEMENT_VAL )
       continue;
-    /*
-    if( Dot(off1, normal) < 0.0) {
-      cerr << "Warning cell " << idx << " face " << i;
-      cerr << " is malformed " << endl;
-      cerr << "Negative Face Normal " << i << endl;
-      cerr << center << endl;
-      cerr << p  << endl;
-      cerr << p0 << endl;
-      cerr << p1 << endl;
-      cerr << p2 << endl;
-      cerr << normal << endl;
-    }
-    */
+
     // If orientated correctly the second dot product is not needed.
     // Only need to check to see if the sign is negitive.
     if (dotprod * Dot(off1, normal) < 0.0)
       return false;
   }
+
   return true;
 }
 
