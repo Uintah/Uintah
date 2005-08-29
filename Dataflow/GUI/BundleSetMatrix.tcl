@@ -40,18 +40,12 @@ itcl_class SCIRun_Bundle_BundleSetMatrix {
         global $this-matrix1-name
         global $this-matrix2-name
         global $this-matrix3-name
-        global $this-matrix1-usename
-        global $this-matrix2-usename
-        global $this-matrix3-usename
         global $this-bundlename
         
 
         set $this-matrix1-name "matrix1"
         set $this-matrix2-name "matrix2"
         set $this-matrix3-name "matrix3"
-        set $this-matrix1-usename 0
-        set $this-matrix2-usename 0
-        set $this-matrix3-usename 0
         set $this-bundlename ""
 
     }
@@ -68,9 +62,6 @@ itcl_class SCIRun_Bundle_BundleSetMatrix {
         global $this-matrix1-name
         global $this-matrix2-name
         global $this-matrix3-name
-        global $this-matrix1-usename
-        global $this-matrix2-usename
-        global $this-matrix3-usename
         global $this-bundlename
 
         toplevel $w 
@@ -108,8 +99,6 @@ itcl_class SCIRun_Bundle_BundleSetMatrix {
         entry $matrix1.name.entry -textvariable $this-matrix1-name
         pack $matrix1.name.label -side left 
         pack $matrix1.name.entry -side left -fill x -expand yes
-        checkbutton $matrix1.options.usename -text "Use object name" -variable $this-matrix1-usename
-        pack $matrix1.options.usename -side top -fill x
         
         frame $matrix2.name
         frame $matrix2.options
@@ -119,8 +108,6 @@ itcl_class SCIRun_Bundle_BundleSetMatrix {
         entry $matrix2.name.entry -textvariable $this-matrix2-name
         pack $matrix2.name.label -side left 
         pack $matrix2.name.entry -side left -fill x -expand yes
-        checkbutton $matrix2.options.usename -text "Use object name" -variable $this-matrix2-usename
-        pack $matrix2.options.usename -side top -fill x
         
         frame $matrix3.name
         frame $matrix3.options
@@ -130,8 +117,6 @@ itcl_class SCIRun_Bundle_BundleSetMatrix {
         entry $matrix3.name.entry -textvariable $this-matrix3-name
         pack $matrix3.name.label -side left 
         pack $matrix3.name.entry -side left -fill x -expand yes
-        checkbutton $matrix3.options.usename -text "Use object name" -variable $this-matrix3-usename
-        pack $matrix3.options.usename -side top -fill x
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w

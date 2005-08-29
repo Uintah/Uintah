@@ -19,6 +19,7 @@ SRCS += $(SRCDIR)/BundleSetBundle.cc\
         $(SRCDIR)/BundleSetColorMap.cc\
         $(SRCDIR)/BundleSetColorMap2.cc\
         $(SRCDIR)/BundleSetPath.cc\
+        $(SRCDIR)/BundleSetString.cc\
         $(SRCDIR)/BundleInfo.cc\
         $(SRCDIR)/BundleGetBundle.cc\
         $(SRCDIR)/BundleGetField.cc\
@@ -27,7 +28,8 @@ SRCS += $(SRCDIR)/BundleSetBundle.cc\
         $(SRCDIR)/BundleGetColorMap.cc\
         $(SRCDIR)/BundleGetColorMap2.cc\
         $(SRCDIR)/BundleGetPath.cc\
-        $(SRCDIR)/BundleMerge.cc
+        $(SRCDIR)/BundleGetString.cc\
+        $(SRCDIR)/BundleMerge.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
@@ -35,7 +37,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Core/Bundle Core/Volume
+        Core/Volume Core/Bundle
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

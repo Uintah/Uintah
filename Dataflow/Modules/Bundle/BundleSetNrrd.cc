@@ -58,9 +58,6 @@ private:
   GuiString     guinrrd1name_;
   GuiString     guinrrd2name_;
   GuiString     guinrrd3name_;
-  GuiInt        guinrrd1usename_;
-  GuiInt        guinrrd2usename_;
-  GuiInt        guinrrd3usename_;
   GuiString     guibundlename_;
 };
 
@@ -71,9 +68,6 @@ DECLARE_MAKER(BundleSetNrrd)
       guinrrd1name_(ctx->subVar("nrrd1-name")),
       guinrrd2name_(ctx->subVar("nrrd2-name")),
       guinrrd3name_(ctx->subVar("nrrd3-name")),
-      guinrrd1usename_(ctx->subVar("nrrd1-usename")),
-      guinrrd2usename_(ctx->subVar("nrrd2-usename")),
-      guinrrd3usename_(ctx->subVar("nrrd3-usename")),
       guibundlename_(ctx->subVar("bundlename"))
 {
 }
@@ -81,15 +75,11 @@ DECLARE_MAKER(BundleSetNrrd)
 BundleSetNrrd::~BundleSetNrrd(){
 }
 
-void
-BundleSetNrrd::execute()
+void BundleSetNrrd::execute()
 {
   string nrrd1name = guinrrd1name_.get();
   string nrrd2name = guinrrd2name_.get();
   string nrrd3name = guinrrd3name_.get();
-  int nrrd1usename = guinrrd1usename_.get();
-  int nrrd2usename = guinrrd2usename_.get();
-  int nrrd3usename = guinrrd3usename_.get();
   string bundlename = guibundlename_.get();
     
   BundleHandle handle, oldhandle;
@@ -99,69 +89,46 @@ BundleSetNrrd::execute()
   NrrdIPort *ifport;
         
   if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-    {
-      error("Could not find bundle input port");
-      return;
-    }
+  {
+    error("Could not find bundle input port");
+    return;
+  }
         
   // Create a new bundle
   // Since a bundle consists of only handles we can copy
   // it several times without too much memory overhead
   if (iport->get(oldhandle))
-    {   // Copy all the handles from the existing bundle
-      handle = oldhandle->clone();
-    }
+  {   // Copy all the handles from the existing bundle
+    handle = oldhandle->clone();
+  }
   else
-    {   // Create a brand new bundle
-      handle = scinew Bundle;
-    }
+  {   // Create a brand new bundle
+    handle = scinew Bundle;
+  }
         
   // Scan bundle input port 1
   if (!(ifport = static_cast<NrrdIPort *>(get_iport("nrrd1"))))
-    {
-      error("Could not find nrrd 1 input port");
-      return;
-    }
+  {
+    error("Could not find nrrd 1 input port");
+    return;
+  }
         
   if (ifport->get(fhandle))
-    {
-      if (nrrd1usename)
-        {
-          string name;
-          fhandle->get_property("name",name);
-          if (name != "") 
-            {
-              nrrd1name = name;
-              guinrrd1name_.set(name);
-              ctx->reset();
-            }
-        }
-      handle->setNrrd(nrrd1name,fhandle);
-    }
+  {
+    handle->setNrrd(nrrd1name,fhandle);
+  }
 
   // Scan nrrd input port 2     
   if (!(ifport = static_cast<NrrdIPort *>(get_iport("nrrd2"))))
-    {
-      error("Could not find nrrd 2 input port");
-      return;
-    }
+  {
+    error("Could not find nrrd 2 input port");
+    return;
+  }
         
   if (ifport->get(fhandle))
-    {
-      if (nrrd2usename)
-        {
-          string name;
-          fhandle->get_property("name",name);
-          if (name != "") 
-            {    
-              nrrd2name = name;
-              guinrrd2name_.set(name);
-              ctx->reset();
-            }    
-        }
-
-      handle->setNrrd(nrrd2name,fhandle);
-    }
+  {
+    handle->setNrrd(nrrd2name,fhandle);
+  }
 
   // Scan nrrd input port 3     
   if (!(ifport = static_cast<NrrdIPort *>(get_iport("nrrd3"))))
@@ -171,40 +138,27 @@ BundleSetNrrd::execute()
     }
         
   if (ifport->get(fhandle))
-    {
-      if (nrrd3usename)
-        {
-          string name;
-          fhandle->get_property("name",name);
-          if (name != "") 
-            {
-              nrrd3name = name;
-              guinrrd1name_.set(name);
-              ctx->reset();
-            }
-        }
-    
-      handle->setNrrd(nrrd3name,fhandle);
-    }
+  {
+    handle->setNrrd(nrrd3name,fhandle);
+  }
         
   // Now post the output
         
   if (!(oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-    {
-      error("Could not find bundle output port");
-      return;
-    }
+  {
+    error("Could not find bundle output port");
+    return;
+  }
     
   if (bundlename != "")
-    {
-      handle->set_property("name",bundlename,false);
-    }
+  {
+    handle->set_property("name",bundlename,false);
+  }
         
   oport->send(handle);
 }
 
-void
-BundleSetNrrd::tcl_command(GuiArgs& args, void* userdata)
+void BundleSetNrrd::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

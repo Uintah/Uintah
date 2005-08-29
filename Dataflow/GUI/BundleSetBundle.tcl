@@ -40,19 +40,12 @@ itcl_class SCIRun_Bundle_BundleSetBundle {
         global $this-bundle1-name
         global $this-bundle2-name
         global $this-bundle3-name
-        global $this-bundle1-usename
-        global $this-bundle2-usename
-        global $this-bundle3-usename
         global $this-bundlename
         
         set $this-bundle1-name "bundle1"
         set $this-bundle2-name "bundle2"
         set $this-bundle3-name "bundle3"
-        set $this-bundle1-usename 0
-        set $this-bundle2-usename 0
-        set $this-bundle3-usename 0
         set $this-bundlename ""
-
     }
 
     method ui {} {
@@ -67,15 +60,10 @@ itcl_class SCIRun_Bundle_BundleSetBundle {
         global $this-bundle1-name
         global $this-bundle2-name
         global $this-bundle3-name
-        global $this-bundle1-usename
-        global $this-bundle2-usename
-        global $this-bundle3-usename
         global $this-bundlename
 
         toplevel $w 
-
         wm minsize $w 100 150
-
         
         iwidgets::labeledframe $w.frame -labeltext "BUNDLE INPUTS"
         set childframe [$w.frame childsite]
@@ -107,8 +95,6 @@ itcl_class SCIRun_Bundle_BundleSetBundle {
         entry $bundle1.name.entry -textvariable $this-bundle1-name
         pack $bundle1.name.label -side left 
         pack $bundle1.name.entry -side left -fill x -expand yes
-        checkbutton $bundle1.options.usename -text "Use object name" -variable $this-bundle1-usename
-        pack $bundle1.options.usename -side top -fill x
         
         frame $bundle2.name
         frame $bundle2.options
@@ -118,9 +104,6 @@ itcl_class SCIRun_Bundle_BundleSetBundle {
         entry $bundle2.name.entry -textvariable $this-bundle2-name
         pack $bundle2.name.label -side left 
         pack $bundle2.name.entry -side left -fill x -expand yes
-        checkbutton $bundle2.options.usename -text "Use object name" -variable $this-bundle2-usename
-        pack $bundle2.options.usename -side top -fill x
-
         
         frame $bundle3.name
         frame $bundle3.options
@@ -130,8 +113,6 @@ itcl_class SCIRun_Bundle_BundleSetBundle {
         entry $bundle3.name.entry -textvariable $this-bundle3-name
         pack $bundle3.name.label -side left 
         pack $bundle3.name.entry -side left -fill x -expand yes
-        checkbutton $bundle3.options.usename -text "Use object name" -variable $this-bundle3-usename
-        pack $bundle3.options.usename -side top -fill x
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w

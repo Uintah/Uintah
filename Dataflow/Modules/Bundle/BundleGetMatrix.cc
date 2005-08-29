@@ -40,9 +40,6 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/NrrdData.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Core/Datatypes/NrrdString.h>
 
 using namespace SCIRun;
 using namespace std;
@@ -78,14 +75,12 @@ DECLARE_MAKER(BundleGetMatrix)
       guitransposenrrd3_(ctx->subVar("transposenrrd3")),
       guimatrixs_(ctx->subVar("matrix-selection"))
 {
-
 }
 
 BundleGetMatrix::~BundleGetMatrix(){
 }
 
-void
-BundleGetMatrix::execute()
+void BundleGetMatrix::execute()
 {
   string matrix1name = guimatrix1name_.get();
   string matrix2name = guimatrix2name_.get();
@@ -102,129 +97,79 @@ BundleGetMatrix::execute()
   MatrixOPort *ofport;
         
   if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-    {
-      error("Could not find bundle input port");
-      return;
-    }
+  {
+    error("Could not find bundle input port");
+    return;
+  }
 
   if (!(iport->get(handle)))
-    {   
-      warning("No bundle connected to the input port");
-      return;
-    }
-
+  {   
+    warning("No bundle connected to the input port");
+    return;
+  }
 
   if (handle.get_rep() == 0)
-    {   
-      warning("Empty bundle connected to the input port");
-      return;
-    }
+  {   
+    warning("Empty bundle connected to the input port");
+    return;
+  }
 
 
   int nummatrixs = handle->numMatrices();
   for (int p = 0; p < nummatrixs; p++)
-    {
-      matrixlist += "{" + handle->getMatrixName(p) + "} ";
-    }
+  {
+    matrixlist += "{" + handle->getMatrixName(p) + "} ";
+  }
 
   guimatrixs_.set(matrixlist);
   ctx->reset();
 
   if (!(ofport = static_cast<MatrixOPort *>(get_oport("matrix1"))))
-    {
-      error("Could not find matrix 1 output port");
-      return; 
-    }
- 
-  NrrdIPort *niport = static_cast<NrrdIPort *>(getIPort("name1"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          matrix1name = nrrdstring.getstring();
-          guimatrix1name_.set(matrix1name);
-          ctx->reset();
-        }
-    } 
- 
+  {
+    error("Could not find matrix 1 output port");
+    return; 
+  }
  
   if (handle->isMatrix(matrix1name))
-    {
-      handle->transposeNrrd(false);
-      if (transposenrrd1) handle->transposeNrrd(true);
-      fhandle = handle->getMatrix(matrix1name);
-      ofport->send(fhandle);
-    }
-        
+  {
+    handle->transposeNrrd(false);
+    if (transposenrrd1) handle->transposeNrrd(true);
+    fhandle = handle->getMatrix(matrix1name);
+    ofport->send(fhandle);
+  }        
  
   if (!(ofport = static_cast<MatrixOPort *>(get_oport("matrix2"))))
-    {
-      error("Could not find matrix 2 output port");
-      return; 
-    }
- 
-  niport = static_cast<NrrdIPort *>(getIPort("name2"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          matrix2name = nrrdstring.getstring();
-          guimatrix2name_.set(matrix2name);
-          ctx->reset();
-        }
-    } 
+  {
+    error("Could not find matrix 2 output port");
+    return; 
+  }
  
   if (handle->isMatrix(matrix2name))
-    {
-      handle->transposeNrrd(false);
-      if (transposenrrd2) handle->transposeNrrd(true);
-      fhandle = handle->getMatrix(matrix2name);
-      ofport->send(fhandle);
-    }
+  {
+    handle->transposeNrrd(false);
+    if (transposenrrd2) handle->transposeNrrd(true);
+    fhandle = handle->getMatrix(matrix2name);
+    ofport->send(fhandle);
+  }
         
- 
   if (!(ofport = static_cast<MatrixOPort *>(get_oport("matrix3"))))
-    {
-      error("Could not find matrix 3 output port");
-      return; 
-    }
- 
-     
-  niport = static_cast<NrrdIPort *>(getIPort("name3"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          matrix3name = nrrdstring.getstring();
-          guimatrix3name_.set(matrix3name);
-          ctx->reset();
-        }
-    } 
- 
+  {
+    error("Could not find matrix 3 output port");
+    return; 
+  }
+   
   if (handle->isMatrix(matrix3name))
-    {
-      handle->transposeNrrd(false);
-      if (transposenrrd3) handle->transposeNrrd(true);    
-      fhandle = handle->getMatrix(matrix3name);
-      ofport->send(fhandle);
-    }
+  {
+    handle->transposeNrrd(false);
+    if (transposenrrd3) handle->transposeNrrd(true);    
+    fhandle = handle->getMatrix(matrix3name);
+    ofport->send(fhandle);
+  }
         
   if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-    {
-      oport->send(handle);
-    }
+  {
+    oport->send(handle);
+  }
         
 }
 

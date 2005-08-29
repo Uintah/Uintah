@@ -53,6 +53,7 @@ SRCS := \
         $(SRCDIR)/BundleSetMatrix.tcl \
         $(SRCDIR)/BundleSetNrrd.tcl \
         $(SRCDIR)/BundleSetPath.tcl \
+        $(SRCDIR)/BundleSetString.tcl \
         $(SRCDIR)/BundleInfo.tcl \
         $(SRCDIR)/BundleGetBundle.tcl \
         $(SRCDIR)/BundleGetColorMap.tcl \
@@ -61,6 +62,7 @@ SRCS := \
         $(SRCDIR)/BundleGetMatrix.tcl \
         $(SRCDIR)/BundleGetNrrd.tcl \
         $(SRCDIR)/BundleGetPath.tcl \
+        $(SRCDIR)/BundleGetString.tcl \
         $(SRCDIR)/BundleReader.tcl \
         $(SRCDIR)/BundleWriter.tcl \
         $(SRCDIR)/Camera.tcl \
@@ -170,6 +172,13 @@ SRCS := \
         $(SRCDIR)/ViewWidget.tcl \
         $(SRCDIR)/VolumeSlicer.tcl \
         $(SRCDIR)/VolumeVisualizer.tcl \
+	$(SRCDIR)/CreateString.tcl\
+	$(SRCDIR)/StringInfo.tcl\
+	$(SRCDIR)/SprintfString.tcl\
+	$(SRCDIR)/SprintfMatrix.tcl\
+	$(SRCDIR)/ShowString.tcl\
+	$(SRCDIR)/CreateMatrix.tcl\
+	$(SRCDIR)/GetFileName.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

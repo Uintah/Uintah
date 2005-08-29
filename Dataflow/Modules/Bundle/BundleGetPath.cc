@@ -31,7 +31,7 @@
  *  BundleGetPath.cc:
  *
  *  Written by:
- *   jeroen
+ *   Jeroen Stinstra
  *
  */
 
@@ -41,9 +41,6 @@
 #include <Core/Geom/Path.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/NrrdData.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Core/Datatypes/NrrdString.h>
 
 using namespace SCIRun;
 using namespace std;
@@ -79,11 +76,8 @@ DECLARE_MAKER(BundleGetPath)
 BundleGetPath::~BundleGetPath(){
 }
 
-void
-BundleGetPath::execute()
+void BundleGetPath::execute()
 {
-
-
   string path1name = guipath1name_.get();
   string path2name = guipath2name_.get();
   string path3name = guipath3name_.get();
@@ -96,29 +90,29 @@ BundleGetPath::execute()
   PathOPort *ofport;
         
   if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-    {
-      error("Could not find bundle input port");
-      return;
-    }
+  {
+    error("Could not find bundle input port");
+    return;
+  }
 
   if (!(iport->get(handle)))
-    {   
-      warning("No bundle connected to the input port");
-      return;
-    }
+  {   
+    warning("No bundle connected to the input port");
+    return;
+  }
 
   int numPaths = handle->numPaths();
   for (int p = 0; p < numPaths; p++)
-    {
-      pathlist += "{" + handle->getPathName(p) + "} ";
-    }
+  {
+    pathlist += "{" + handle->getPathName(p) + "} ";
+  }
 
 
   if (handle.get_rep() == 0)
-    {   
-      warning("Empty bundle connected to the input port");
-      return;
-    }
+  {   
+    warning("Empty bundle connected to the input port");
+    return;
+  }
 
 
   guipaths_.set(pathlist);
@@ -126,100 +120,51 @@ BundleGetPath::execute()
 
  
   if (!(ofport = static_cast<PathOPort *>(get_oport("path1"))))
-    {
-      error("Could not find path 1 output port");
-      return; 
-    }
+  {
+    error("Could not find path 1 output port");
+    return; 
+  }
  
- 
-  NrrdIPort *niport = static_cast<NrrdIPort *>(getIPort("name1"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          path1name = nrrdstring.getstring();
-          guipath1name_.set(path1name);
-          ctx->reset();
-        }
-    }  
- 
-  if (handle->isPath(path1name))
-    {
-      fhandle = handle->getPath(path1name);
-      ofport->send(fhandle);
-    }
-        
+   if (handle->isPath(path1name))
+  {
+    fhandle = handle->getPath(path1name);
+    ofport->send(fhandle);
+  }
+      
  
   if (!(ofport = static_cast<PathOPort *>(get_oport("path2"))))
-    {
-      error("Could not find path 2 output port");
-      return; 
-    }
- 
- 
-  niport = static_cast<NrrdIPort *>(getIPort("name2"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          path2name = nrrdstring.getstring();
-          guipath2name_.set(path2name);
-          ctx->reset();
-        }
-    } 
-
+  {
+    error("Could not find path 2 output port");
+    return; 
+  }
  
   if (handle->isPath(path2name))
-    {
-      fhandle = handle->getPath(path2name);
-      ofport->send(fhandle);
-    }
-        
+  {
+    fhandle = handle->getPath(path2name);
+    ofport->send(fhandle);
+  }
+      
  
   if (!(ofport = static_cast<PathOPort *>(get_oport("path3"))))
-    {
-      error("Could not find path 3 output port");
-      return; 
-    }
+  {
+    error("Could not find path 3 output port");
+    return; 
+  }
     
-  niport = static_cast<NrrdIPort *>(getIPort("name3"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          path3name = nrrdstring.getstring();
-          guipath3name_.set(path3name);
-          ctx->reset();
-        }
-    } 
- 
   if (handle->isPath(path3name))
-    {
-      fhandle = handle->getPath(path3name);
-      ofport->send(fhandle);
-    }
+  {
+    fhandle = handle->getPath(path3name);
+    ofport->send(fhandle);
+  }
         
   if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-    {
-      oport->send(handle);
-    }
+  {
+    oport->send(handle);
+  }
         
 }
 
-void
-BundleGetPath::tcl_command(GuiArgs& args, void* userdata)
+void BundleGetPath::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
