@@ -141,7 +141,7 @@ public:
 
 private:
   void compute_grid();
-  double inside8_p(Cell::index_type i, const Point &p) const;
+  bool inside8_p(Cell::index_type i, const Point &p) const;
   double polygon_area(const Node::array_type &, const Vector) const;
   double pyramid_volume(const Node::array_type &, const Point &) const;
   void get_face_weights(double *w, const Node::array_type &nodes,
