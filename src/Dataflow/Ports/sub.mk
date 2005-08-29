@@ -44,12 +44,13 @@ SRCS     += $(SRCDIR)/BundlePort.cc		  \
             $(SRCDIR)/PathPort.cc                 \
             $(SRCDIR)/TexturePort.cc              \
             $(SRCDIR)/TimePort.cc                 \
+            $(SRCDIR)/StringPort.cc               \
             $(SRCDIR)/templates.cc		  \
 
 
 PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
 	Core/Thread Core/Geom Core/Geometry Core/Exceptions Core/Util \
-	Core/Persistent Core/Datatypes Core/Volume Core/Bundle
+	Core/Persistent Core/Datatypes Core/Volume
 
 LIBS := 
 

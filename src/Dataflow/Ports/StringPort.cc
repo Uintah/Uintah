@@ -27,47 +27,36 @@
 */
 
 
+
 /*
- * BundlePort.cc 
+ *  MatrixPort.cc
  *
+ *  Written by:
+ *   Jeroen Stinstra
+ *   Department of Computer Science
+ *   University of Utah
+ *   July 2005
+ *
+ *  Copyright (C) 2005 SCI Group
  */
 
-#include <Dataflow/Ports/BundlePort.h>
+#include <Dataflow/Ports/StringPort.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
 extern "C" {
-  IPort* make_BundleIPort(Module* module, const string& name) {
-  return scinew SimpleIPort<BundleHandle>(module,name);
+IPort* make_StringIPort(Module* module, const string& name) {
+  return scinew SimpleIPort<StringHandle>(module,name);
 }
-  OPort* make_BundleOPort(Module* module, const string& name) {
-  return scinew SimpleOPort<BundleHandle>(module,name);
+OPort* make_StringOPort(Module* module, const string& name) {
+  return scinew SimpleOPort<StringHandle>(module,name);
 }
-}
-
-template<> string SimpleIPort<BundleHandle>::port_type_("Bundle");
-template<> string SimpleIPort<BundleHandle>::port_color_("orange");
-
-//! Specialization for field ports.
-//! Field ports must only send const fields i.e. frozen fields.
-template<>
-void SimpleOPort<BundleHandle>::send(const BundleHandle& data)
-{
-  if (data.get_rep() && (! data->is_frozen()))
-    data->freeze();
-
-  do_send(data, SEND_NORMAL);
 }
 
-template<>
-void SimpleOPort<BundleHandle>::send_intermediate(const BundleHandle& data)
-{
-  if (data.get_rep() && (! data->is_frozen()))
-    data->freeze();
 
-  do_send(data, SEND_INTERMEDIATE);
-}
+template<> string SimpleIPort<StringHandle>::port_type_("String");
+template<> string SimpleIPort<StringHandle>::port_color_("green4");
 
 } // End namespace SCIRun
 
