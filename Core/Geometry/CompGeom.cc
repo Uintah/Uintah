@@ -42,6 +42,8 @@
 
 #include <Core/Geometry/CompGeom.h>
 
+#define TOLERANCE_MIN 1.0e-12
+
 namespace SCIRun {
 
 double
@@ -49,12 +51,10 @@ distance_to_line2(const Point &p, const Point &a, const Point &b)
 {
   Vector m = b - a;
   Vector n = p - a;
-  if (m.length2() < 1e-6)
-  {
+  if (m.length2() < TOLERANCE_MIN) {
     return n.length2();
   }
-  else
-  {
+  else {
     const double t0 = Dot(m, n) / Dot(m, m);
     if (t0 <= 0) return (n).length2();
     else if (t0 >= 1.0) return (p - b).length2();
@@ -62,4 +62,25 @@ distance_to_line2(const Point &p, const Point &a, const Point &b)
   }
 }
 
+
+double
+RayPlaneIntersection(const Point &p,  const Vector &dir,
+		     const Point &p0, const Vector &pn)
+{
+  // Compute divisor.
+  const double Vd = Dot(dir, pn);
+
+  // Return no intersection if parallel to plane or no cross product.
+  if (Vd < TOLERANCE_MIN)
+    return 1.0e24;
+
+  const double D = - Dot(pn, p0);
+
+  const double V0 = - (Dot(pn, p) + D);
+    
+  return V0 / Vd;
 }
+
+
+}
+
