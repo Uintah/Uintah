@@ -375,10 +375,10 @@ ImageMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
   const Point r = transform_.unproject(p);
   double ii = r.x();
   double jj = r.y();
-  if (ii>(ni_-1) && (ii-(1.e-10))<(ni_-1)) ii=ni_-1-(1.e-10);
-  if (jj>(nj_-1) && (jj-(1.e-10))<(nj_-1)) jj=nj_-1-(1.e-10);
-  if (ii<0 && ii>(-1.e-10)) ii=0;
-  if (jj<0 && jj>(-1.e-10)) jj=0;
+  if (ii>(ni_-1) && (ii-(MIN_ELEMENT_VAL))<(ni_-1)) ii=ni_-1-(MIN_ELEMENT_VAL);
+  if (jj>(nj_-1) && (jj-(MIN_ELEMENT_VAL))<(nj_-1)) jj=nj_-1-(MIN_ELEMENT_VAL);
+  if (ii<0 && ii>(-MIN_ELEMENT_VAL)) ii=0;
+  if (jj<0 && jj>(-MIN_ELEMENT_VAL)) jj=0;
 
   Node::index_type node0;
   node0.i_ = (unsigned int)floor(ii);
