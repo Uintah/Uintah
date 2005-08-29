@@ -1495,7 +1495,7 @@ TetVolMesh::inside(Cell::index_type idx, const Point &p)
     double dotprod = Dot(off0, normal);
 
     // Account for round off - the point may be on the plane!!
-    if( fabs( dotprod ) < 1.0e-8 )
+    if( fabs( dotprod ) < MIN_ELEMENT_VAL )
       continue;
 
     // If orientated correctly the second dot product is not needed.
@@ -1538,28 +1538,28 @@ TetVolMesh::inside(Cell::index_type idx, const Point &p)
   const double c0 = + (x2*z3-x3*z2) + (x3*z1-x1*z3) + (x1*z2-x2*z1);
   const double d0 = - (x2*y3-x3*y2) - (x3*y1-x1*y3) - (x1*y2-x2*y1);
   const double s0 = iV6 * (a0 + b0*p.x() + c0*p.y() + d0*p.z());
-  if (s0 < -1.e-12)
+  if (s0 < -MIN_ELEMENT_VAL)
     return false;
 
   const double b1 = + (y3*z0-y0*z3) + (y0*z2-y2*z0) + (y2*z3-y3*z2);
   const double c1 = - (x3*z0-x0*z3) - (x0*z2-x2*z0) - (x2*z3-x3*z2);
   const double d1 = + (x3*y0-x0*y3) + (x0*y2-x2*y0) + (x2*y3-x3*y2);
   const double s1 = iV6 * (a1 + b1*p.x() + c1*p.y() + d1*p.z());
-  if (s1 < -1.e-12)
+  if (s1 < -MIN_ELEMENT_VAL)
     return false;
 
   const double b2 = - (y0*z1-y1*z0) - (y1*z3-y3*z1) - (y3*z0-y0*z3);
   const double c2 = + (x0*z1-x1*z0) + (x1*z3-x3*z1) + (x3*z0-x0*z3);
   const double d2 = - (x0*y1-x1*y0) - (x1*y3-x3*y1) - (x3*y0-x0*y3);
   const double s2 = iV6 * (a2 + b2*p.x() + c2*p.y() + d2*p.z());
-  if (s2 < -1.e-12)
+  if (s2 < -MIN_ELEMENT_VAL)
     return false;
 
   const double b3 = +(y1*z2-y2*z1) + (y2*z0-y0*z2) + (y0*z1-y1*z0);
   const double c3 = -(x1*z2-x2*z1) - (x2*z0-x0*z2) - (x0*z1-x1*z0);
   const double d3 = +(x1*y2-x2*y1) + (x2*y0-x0*y2) + (x0*y1-x1*y0);
   const double s3 = iV6 * (a3 + b3*p.x() + c3*p.y() + d3*p.z());
-  if (s3 < -1.e-12)
+  if (s3 < -MIN_ELEMENT_VAL)
     return false;
 
   return true;
@@ -1885,7 +1885,7 @@ TetVolMesh::orient(Cell::index_type ci) {
     sgn=-sgn;
   }
 
-  if(sgn < 1.e-9){ // return 0; // Degenerate...
+  if(sgn < MIN_ELEMENT_VAL){ // return 0; // Degenerate...
     cerr << "Warning - small element, volume=" << sgn << endl;
   }
 }
