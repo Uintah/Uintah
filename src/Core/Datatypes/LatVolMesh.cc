@@ -839,12 +839,12 @@ LatVolMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
   double jj = r.y();
   double kk = r.z();
 
-  if (ii>(ni_-1) && (ii-(1.e-10))<(ni_-1)) ii=ni_-1-(1.e-10);
-  if (jj>(nj_-1) && (jj-(1.e-10))<(nj_-1)) jj=nj_-1-(1.e-10);
-  if (kk>(nk_-1) && (kk-(1.e-10))<(nk_-1)) kk=nk_-1-(1.e-10);
-  if (ii<0 && ii>(-1.e-10)) ii=0;
-  if (jj<0 && jj>(-1.e-10)) jj=0;
-  if (kk<0 && kk>(-1.e-10)) kk=0;
+  if (ii>(ni_-1) && (ii-(MIN_ELEMENT_VAL))<(ni_-1)) ii=ni_-1-(MIN_ELEMENT_VAL);
+  if (jj>(nj_-1) && (jj-(MIN_ELEMENT_VAL))<(nj_-1)) jj=nj_-1-(MIN_ELEMENT_VAL);
+  if (kk>(nk_-1) && (kk-(MIN_ELEMENT_VAL))<(nk_-1)) kk=nk_-1-(MIN_ELEMENT_VAL);
+  if (ii<0 && ii>(-MIN_ELEMENT_VAL)) ii=0;
+  if (jj<0 && jj>(-MIN_ELEMENT_VAL)) jj=0;
+  if (kk<0 && kk>(-MIN_ELEMENT_VAL)) kk=0;
 
   const unsigned int i = (unsigned int)floor(ii);
   const unsigned int j = (unsigned int)floor(jj);
