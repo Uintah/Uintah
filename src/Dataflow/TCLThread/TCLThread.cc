@@ -171,7 +171,6 @@ void
 TCLThread::startNetworkEditor()
 {
   gui = new TCLInterface;
-  new NetworkEditor(net, gui);
 
   // If the user doesnt have a .scirunrc file, provide them with a default one
   if (!find_and_parse_scirunrc()) 
@@ -192,7 +191,8 @@ TCLThread::startNetworkEditor()
     gui->eval(string("rename unknown _old_unknown"));
     gui->eval(string("proc unknown args {\n") +
               string("    catch \"[uplevel 1 _old_unknown $args]\" result\n") +
-              string("    return $result\n") +
+              string("    return 0\n") +
+              //string("    return $result\n") +
               string("}"));
   }
 
@@ -227,6 +227,10 @@ TCLThread::startNetworkEditor()
     }
 
   }
+
+  // Create the network editor here.  For now we just dangle it and
+  // let exitAll destroy it with everything else at the end.
+  new NetworkEditor(net, gui);
 
   packageDB = new PackageDB(gui);
   packageDB->loadPackage();  // load the packages
