@@ -450,7 +450,7 @@ QuadSurfMesh::inside3_p(Face::index_type i, const Point &p) const
 
     // For the point to be inside a CONVEX quad it must be inside one
     // of the four triangles that can be formed by using three of the
-    // quad vertices.
+    // quad vertices and the point in question.
     if( fabs(s - a) < MIN_ELEMENT_VAL && a > MIN_ELEMENT_VAL )
       return true;
   }

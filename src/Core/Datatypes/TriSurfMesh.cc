@@ -609,6 +609,10 @@ TriSurfMesh::inside3_p(int i, const Point &p) const
   const double a1 = Cross(v2, v0).length();  // area opposite p1
   const double a2 = Cross(v0, v1).length();  // area opposite p2
   const double s = a0+a1+a2;
+
+  // For the point to be inside a triangle it must be inside one
+  // of the four triangles that can be formed by using three of the
+  // triangle vertices and the point in question.
   return fabs(s - a) < MIN_ELEMENT_VAL && a > MIN_ELEMENT_VAL;
 }
 
