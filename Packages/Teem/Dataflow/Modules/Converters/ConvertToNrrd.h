@@ -39,6 +39,7 @@
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/QuadraticTetVolField.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/NrrdData.h>
@@ -714,15 +715,15 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
       // set the spaceDirection vectors if the transform 
       // matrix is not just a diagonal matrix
       bool axis_aligned = true;
-      if( (abs(trans[1] - 0.0) > 0.0001) ||
-	  (abs(trans[2] - 0.0) > 0.0001) ||
-	  (abs(trans[4] - 0.0) > 0.0001) ||
-	  (abs(trans[6] - 0.0) > 0.0001) ||
-	  (abs(trans[8] - 0.0) > 0.0001) ||
-	  (abs(trans[9] - 0.0) > 0.0001) ||
-	  (abs(trans[12] - 0.0) > 0.0001) ||
-	  (abs(trans[13] - 0.0) > 0.0001) ||
-	  (abs(trans[14] - 0.0) > 0.0001)) {
+      if( (Abs(trans[1] - 0.0) > 0.0001) ||
+	  (Abs(trans[2] - 0.0) > 0.0001) ||
+	  (Abs(trans[4] - 0.0) > 0.0001) ||
+	  (Abs(trans[6] - 0.0) > 0.0001) ||
+	  (Abs(trans[8] - 0.0) > 0.0001) ||
+	  (Abs(trans[9] - 0.0) > 0.0001) ||
+	  (Abs(trans[12] - 0.0) > 0.0001) ||
+	  (Abs(trans[13] - 0.0) > 0.0001) ||
+	  (Abs(trans[14] - 0.0) > 0.0001)) {
 	axis_aligned = false;
       }
 
