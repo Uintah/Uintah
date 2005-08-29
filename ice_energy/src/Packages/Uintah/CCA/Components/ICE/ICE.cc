@@ -805,7 +805,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     // Require data to compute thermal diffusivity
-    ice_matl->getThermo()->addTaskDependencies_thermalDiffusivity(t, Task::NewDW, 0);
+    ice_matl->getThermo()->addTaskDependencies_thermalDiffusivity(t, ThermoInterface::NewState, 0);
   }
 
   t->requires(Task::NewDW, lb->vel_CCLabel,        ghostType, numGhostCells);  
@@ -851,7 +851,7 @@ void ICE::scheduleComputeInternalEnergy(SchedulerP& sched,
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    ice_matl->getThermo()->addTaskDependencies_int_eng(t, Task::NewDW, 0);
+    ice_matl->getThermo()->addTaskDependencies_int_eng(t, ThermoInterface::NewState, 0);
   }
   t->computes(lb->int_eng_CCLabel);
   sched->addTask(t, patches, ice_matls);
@@ -877,9 +877,9 @@ void ICE::scheduleComputeSpeedOfSound(SchedulerP& sched,
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    ice_matl->getThermo()->addTaskDependencies_cv(t, Task::NewDW, 0);
-    ice_matl->getThermo()->addTaskDependencies_gamma(t, Task::NewDW, 0);
-    ice_matl->getThermo()->addTaskDependencies_Temp(t, Task::NewDW, 0);
+    ice_matl->getThermo()->addTaskDependencies_cv(t, ThermoInterface::NewState, 0);
+    ice_matl->getThermo()->addTaskDependencies_gamma(t, ThermoInterface::NewState, 0);
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, ThermoInterface::NewState, 0);
   }
   t->computes(lb->speedSound_CCLabel);
   sched->addTask(t, patches, ice_matls);
@@ -1126,9 +1126,9 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    ice_matl->getThermo()->addTaskDependencies_cv(t, Task::NewDW, 0);
-    ice_matl->getThermo()->addTaskDependencies_gamma(t, Task::NewDW, 0);
-    ice_matl->getThermo()->addTaskDependencies_Temp(t, Task::NewDW, 0);
+    ice_matl->getThermo()->addTaskDependencies_cv(t, ThermoInterface::IntermediateState, 0);
+    ice_matl->getThermo()->addTaskDependencies_gamma(t, ThermoInterface::IntermediateState, 0);
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, ThermoInterface::IntermediateState, 0);
   }
 
   if (d_RateForm) {     // RATE FORM
@@ -1518,9 +1518,9 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    // Require data to compute thermal conductivity
-    ice_matl->getThermo()->addTaskDependencies_thermalConductivity(t, Task::NewDW, 0);
-    ice_matl->getThermo()->addTaskDependencies_Temp(t, Task::NewDW, 0);
+    // Require data to compute thermal conduction
+    ice_matl->getThermo()->addTaskDependencies_thermalConductivity(t, ThermoInterface::IntermediateState, 0);
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, ThermoInterface::IntermediateState, 0);
   }
   
 
@@ -1628,8 +1628,9 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    ice_matl->getThermo()->addTaskDependencies_Temp(t, Task::OldDW, 0);
-    ice_matl->getThermo()->addTaskDependencies_cv(t, Task::OldDW, 0);
+    cerr << "WARNING: these may be intermediate state: line " << __LINE__ << '\n';
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, ThermoInterface::OldState, 0);
+    ice_matl->getThermo()->addTaskDependencies_cv(t, ThermoInterface::OldState, 0);
   }
 
   if (d_RateForm) {         // RATE FORM
@@ -1744,6 +1745,14 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, gn, oims);
     t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls,  gn); 
   }
+
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, ThermoInterface::OldState, 0);
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, ThermoInterface::IntermediateState, 0);
+  }
+
 
   computesRequires_CustomBCs(t, "CC_Exchange", lb, ice_matls,
                              d_customBC_var_basket); 
@@ -4047,7 +4056,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
           cerr << "iterator: " << patch->getExtraCellIterator(IntVector(0,0,0)).begin() << " " << patch->getExtraCellIterator(IntVector(0,0,0)).end() << '\n';
           cerr << "WARNING: iterators likely wrong for multipatch problems\n";
           ice_matl->getThermo()->compute_Temp(patch->getExtraCellIterator(IntVector(0,0,0)),
-                                              Temp_CC,
+                                              Temp_CC, // Intermediate...
                                               new_dw, patch, indx, 0,
                                               int_eng);
           CCVariable<double> thermalCond;
@@ -4655,6 +4664,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         old_dw->get(int_eng,   lb->int_eng_CCLabel,      indx, patch,gn,0);
         CCVariable<double> otemp;
         new_dw->allocateTemporary(otemp, patch);
+        // old state
         ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), otemp,
                                             new_dw, patch, indx, 0,
                                             int_eng);
@@ -4686,6 +4696,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       constCCVariable<double> tmp = spec_int_eng_L;
       int indx = ice_matl->getDWIndex();
+      // intermediate state
       ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), Temp_CC[m],
                                           new_dw, patch, indx, 0,
                                           tmp);

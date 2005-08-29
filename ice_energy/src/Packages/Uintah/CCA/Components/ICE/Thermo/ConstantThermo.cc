@@ -28,49 +28,49 @@ void ConstantThermo::scheduleReactions(SchedulerP& sched,
   // No reactions
 }
 
-void ConstantThermo::addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
+void ConstantThermo::addTaskDependencies_thermalDiffusivity(Task* t, State state,
                                                             int numGhostCells)
 {
   // No additional requirements
 }
 
-void ConstantThermo::addTaskDependencies_thermalConductivity(Task* t, Task::WhichDW dw,
+void ConstantThermo::addTaskDependencies_thermalConductivity(Task* t, State state,
                                                              int numGhostCells)
 {
   // No additional requirements
 }
 
-void ConstantThermo::addTaskDependencies_cp(Task* t, Task::WhichDW dw,
+void ConstantThermo::addTaskDependencies_cp(Task* t, State state,
                                             int numGhostCells)
 {
   // No additional requirements
 }
 
-void ConstantThermo::addTaskDependencies_cv(Task* t, Task::WhichDW dw,
+void ConstantThermo::addTaskDependencies_cv(Task* t, State state,
                                             int numGhostCells)
 {
   // No additional requirements
 }
 
-void ConstantThermo::addTaskDependencies_gamma(Task* t, Task::WhichDW dw,
+void ConstantThermo::addTaskDependencies_gamma(Task* t, State state,
                                                int numGhostCells)
 {
   // No additional requirements
 }
 
-void ConstantThermo::addTaskDependencies_R(Task* t, Task::WhichDW dw,
+void ConstantThermo::addTaskDependencies_R(Task* t, State state,
                                            int numGhostCells)
 {
   // No additional requirements
 }
 
-void ConstantThermo::addTaskDependencies_Temp(Task* t, Task::WhichDW dw,
+void ConstantThermo::addTaskDependencies_Temp(Task* t, State state,
                                               int numGhostCells)
 {
   // No additional requirements
 }
 
-void ConstantThermo::addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
+void ConstantThermo::addTaskDependencies_int_eng(Task* t, State state,
                                                  int numGhostCells)
 {
   // No additional requirements

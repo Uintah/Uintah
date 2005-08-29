@@ -156,17 +156,9 @@ void CanteraDetailed::initialize(const ProcessorGroup*,
 	  } // Over cells
 	} // Over regions
 
-        // Initialize into both the reacted and the non-reacted variable so that
-        // we can use it in subsequent thermo calcs, but it will also go to the
-        // next timestep nicely.
 	for(CellIterator iter = patch->getExtraCellIterator();
 	    !iter.done(); iter++)
 	  sum[*iter] += mf[*iter];
-        CCVariable<double> mf2;
-        new_dw->allocateAndPut(mf2, stream->massFraction_CCLabel, matl, patch);
-        for(CellIterator iter = patch->getExtraCellIterator();
-            !iter.done(); iter++)
-          mf2[*iter] = mf[*iter];
       } // Over streams
       for(CellIterator iter = patch->getExtraCellIterator();
           !iter.done(); iter++){
@@ -287,65 +279,73 @@ void CanteraDetailed::react(const ProcessorGroup*,
   }
 }
 
-void CanteraDetailed::addTaskDependencies_general(Task* t, Task::WhichDW dw,
+void CanteraDetailed::addTaskDependencies_general(Task* t, State state,
                                                   int numGhostCells)
 {
+  // State          DW    Label
+  // ----------------------
+  // Old            Old   unreacted
+  // Intermediate   New   reacted
+  // New            New   unreacted
+  Task::WhichDW fromDW = (state == OldState? Task::OldDW : Task::NewDW);
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
-    t->requires(Task::NewDW, stream->massFraction_reacted_CCLabel,
+    VarLabel* var = (state == IntermediateState?
+                     stream->massFraction_reacted_CCLabel :
+                     stream->massFraction_CCLabel);
+    t->requires(fromDW, var,
                 numGhostCells == 0? Ghost::None : Ghost::AroundCells,
                 numGhostCells);
   }
 }
 
-void CanteraDetailed::addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
+void CanteraDetailed::addTaskDependencies_thermalDiffusivity(Task* t, State state,
                                                              int numGhostCells)
 {
-  cerr << "Addign dependencies for " << t->getName() << "\n";
-  addTaskDependencies_general(t, dw, numGhostCells);
+  addTaskDependencies_general(t, state, numGhostCells);
 }
 
-void CanteraDetailed::addTaskDependencies_thermalConductivity(Task* t, Task::WhichDW dw,
-                                                             int numGhostCells)
+void CanteraDetailed::addTaskDependencies_thermalConductivity(Task* t, State state,
+                                                              int numGhostCells)
 {
-  addTaskDependencies_general(t, dw, numGhostCells);
+  addTaskDependencies_general(t, state, numGhostCells);
 }
 
-void CanteraDetailed::addTaskDependencies_cp(Task* t, Task::WhichDW dw,
+void CanteraDetailed::addTaskDependencies_cp(Task* t, State state,
                                             int numGhostCells)
 {
-  addTaskDependencies_general(t, dw, numGhostCells);
+  addTaskDependencies_general(t, state, numGhostCells);
 }
 
-void CanteraDetailed::addTaskDependencies_cv(Task* t, Task::WhichDW dw,
+void CanteraDetailed::addTaskDependencies_cv(Task* t, State state,
                                             int numGhostCells)
 {
-  addTaskDependencies_general(t, dw, numGhostCells);
+  addTaskDependencies_general(t, state, numGhostCells);
 }
 
-void CanteraDetailed::addTaskDependencies_gamma(Task* t, Task::WhichDW dw,
+void CanteraDetailed::addTaskDependencies_gamma(Task* t, State state,
                                                int numGhostCells)
 {
-  addTaskDependencies_general(t, dw, numGhostCells);
+  addTaskDependencies_general(t, state, numGhostCells);
 }
 
-void CanteraDetailed::addTaskDependencies_R(Task* t, Task::WhichDW dw,
+void CanteraDetailed::addTaskDependencies_R(Task* t, State state,
                                            int numGhostCells)
 {
-  addTaskDependencies_general(t, dw, numGhostCells);
+  addTaskDependencies_general(t, state, numGhostCells);
 }
 
-void CanteraDetailed::addTaskDependencies_Temp(Task* t, Task::WhichDW dw,
+void CanteraDetailed::addTaskDependencies_Temp(Task* t, State state,
                                               int numGhostCells)
 {
-  addTaskDependencies_general(t, dw, numGhostCells);
+  addTaskDependencies_general(t, state, numGhostCells);
 }
 
-void CanteraDetailed::addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
+void CanteraDetailed::addTaskDependencies_int_eng(Task* t, State state,
                                                  int numGhostCells)
 {
-  addTaskDependencies_general(t, dw, numGhostCells);
+  addTaskDependencies_general(t, state, numGhostCells);
 }
 
 void CanteraDetailed::compute_thermalDiffusivity(CellIterator iter,
