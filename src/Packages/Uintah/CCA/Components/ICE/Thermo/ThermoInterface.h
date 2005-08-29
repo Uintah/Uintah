@@ -41,26 +41,30 @@ WARNING
     ThermoInterface(ICEMaterial* ice_matl);
     virtual ~ThermoInterface();
 
+    enum State {
+      OldState, IntermediateState, NewState
+    };
+
     virtual void scheduleInitializeThermo(SchedulerP& sched,
                                           const PatchSet* patches) = 0;
     virtual void scheduleReactions(SchedulerP& sched,
                                    const PatchSet* patches) = 0;
 
-    virtual void addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_thermalDiffusivity(Task* t, State state,
                                                         int numGhostCells) = 0;
-    virtual void addTaskDependencies_thermalConductivity(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_thermalConductivity(Task* t, State state,
                                                          int numGhostCells) = 0;
-    virtual void addTaskDependencies_cp(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_cp(Task* t, State state,
                                         int numGhostCells) = 0;
-    virtual void addTaskDependencies_cv(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_cv(Task* t, State state,
                                         int numGhostCells) = 0;
-    virtual void addTaskDependencies_gamma(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_gamma(Task* t, State state,
                                            int numGhostCells) = 0;
-    virtual void addTaskDependencies_R(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_R(Task* t, State state,
                                        int numGhostCells) = 0;
-    virtual void addTaskDependencies_Temp(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_Temp(Task* t, State state,
                                           int numGhostCells) = 0;
-    virtual void addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_int_eng(Task* t, State state,
                                              int numGhostCells) = 0;
 
     virtual void compute_thermalDiffusivity(CellIterator iter,

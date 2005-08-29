@@ -51,21 +51,21 @@ WARNING
     virtual void scheduleReactions(SchedulerP& sched,
                                    const PatchSet* patches);
 
-    virtual void addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_thermalDiffusivity(Task* t, State state,
                                                         int numGhostCells);
-    virtual void addTaskDependencies_thermalConductivity(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_thermalConductivity(Task* t, State state,
                                                          int numGhostCells);
-    virtual void addTaskDependencies_cp(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_cp(Task* t, State state,
                                         int numGhostCells);
-    virtual void addTaskDependencies_cv(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_cv(Task* t, State state,
                                         int numGhostCells);
-    virtual void addTaskDependencies_gamma(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_gamma(Task* t, State state,
                                            int numGhostCells);
-    virtual void addTaskDependencies_R(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_R(Task* t, State state,
                                        int numGhostCells);
-    virtual void addTaskDependencies_Temp(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_Temp(Task* t, State state,
                                           int numGhostCells);
-    virtual void addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
+    virtual void addTaskDependencies_int_eng(Task* t, State state,
                                              int numGhostCells);
 
     virtual void compute_thermalDiffusivity(CellIterator iter,
@@ -133,7 +133,7 @@ WARNING
     MaterialSet* mymatls;
     ICELabel* lb;
 
-    void addTaskDependencies_general(Task* t, Task::WhichDW dw, int numGhostCells);
+    void addTaskDependencies_general(Task* t, State state, int numGhostCells);
   };
 } // End namespace Uintah
       

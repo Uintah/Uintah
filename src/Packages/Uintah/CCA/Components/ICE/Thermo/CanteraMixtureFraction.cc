@@ -152,66 +152,90 @@ void CanteraMixtureFraction::scheduleReactions(SchedulerP& sched,
   // Reactions are implicit - nothing to do here
 }
 
-void CanteraMixtureFraction::addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
+void CanteraMixtureFraction::addTaskDependencies_thermalDiffusivity(Task* t, State state,
                                                              int numGhostCells)
 {
-  t->requires(Task::NewDW, mixtureFraction_CCLabel,
+  // There is no intermediate state, so use either the old or the new mixture
+  // fraction
+  t->requires(state == ThermoInterface::NewState? Task::NewDW : Task::OldDW,
+              mixtureFraction_CCLabel,
               numGhostCells == 0? Ghost::None : Ghost::AroundCells,
               numGhostCells);
 }
 
-void CanteraMixtureFraction::addTaskDependencies_thermalConductivity(Task* t, Task::WhichDW dw,
+void CanteraMixtureFraction::addTaskDependencies_thermalConductivity(Task* t, State state,
                                                              int numGhostCells)
 {
-  t->requires(Task::OldDW, mixtureFraction_CCLabel,
+  // There is no intermediate state, so use either the old or the new mixture
+  // fraction
+  t->requires(state == ThermoInterface::NewState? Task::NewDW : Task::OldDW,
+              mixtureFraction_CCLabel,
               numGhostCells == 0? Ghost::None : Ghost::AroundCells,
               numGhostCells);
 }
 
-void CanteraMixtureFraction::addTaskDependencies_cp(Task* t, Task::WhichDW dw,
+void CanteraMixtureFraction::addTaskDependencies_cp(Task* t, State state,
                                             int numGhostCells)
 {
-  t->requires(Task::OldDW, mixtureFraction_CCLabel,
+  // There is no intermediate state, so use either the old or the new mixture
+  // fraction
+  t->requires(state == ThermoInterface::NewState? Task::NewDW : Task::OldDW,
+              mixtureFraction_CCLabel,
               numGhostCells == 0? Ghost::None : Ghost::AroundCells,
               numGhostCells);
 }
 
-void CanteraMixtureFraction::addTaskDependencies_cv(Task* t, Task::WhichDW dw,
+void CanteraMixtureFraction::addTaskDependencies_cv(Task* t, State state,
                                             int numGhostCells)
 {
-  t->requires(Task::OldDW, mixtureFraction_CCLabel,
+  // There is no intermediate state, so use either the old or the new mixture
+  // fraction
+  t->requires(state == ThermoInterface::NewState? Task::NewDW : Task::OldDW,
+              mixtureFraction_CCLabel,
               numGhostCells == 0? Ghost::None : Ghost::AroundCells,
               numGhostCells);
 }
 
-void CanteraMixtureFraction::addTaskDependencies_gamma(Task* t, Task::WhichDW dw,
+void CanteraMixtureFraction::addTaskDependencies_gamma(Task* t, State state,
                                                int numGhostCells)
 {
-  t->requires(Task::OldDW, mixtureFraction_CCLabel,
+  // There is no intermediate state, so use either the old or the new mixture
+  // fraction
+  t->requires(state == ThermoInterface::NewState? Task::NewDW : Task::OldDW,
+              mixtureFraction_CCLabel,
               numGhostCells == 0? Ghost::None : Ghost::AroundCells,
               numGhostCells);
 }
 
-void CanteraMixtureFraction::addTaskDependencies_R(Task* t, Task::WhichDW dw,
+void CanteraMixtureFraction::addTaskDependencies_R(Task* t, State state,
                                            int numGhostCells)
 {
-  t->requires(Task::OldDW, mixtureFraction_CCLabel,
+  // There is no intermediate state, so use either the old or the new mixture
+  // fraction
+  t->requires(state == ThermoInterface::NewState? Task::NewDW : Task::OldDW,
+              mixtureFraction_CCLabel,
               numGhostCells == 0? Ghost::None : Ghost::AroundCells,
               numGhostCells);
 }
 
-void CanteraMixtureFraction::addTaskDependencies_Temp(Task* t, Task::WhichDW dw,
+void CanteraMixtureFraction::addTaskDependencies_Temp(Task* t, State state,
                                               int numGhostCells)
 {
-  t->requires(Task::OldDW, mixtureFraction_CCLabel,
+  // There is no intermediate state, so use either the old or the new mixture
+  // fraction
+  t->requires(state == ThermoInterface::NewState? Task::NewDW : Task::OldDW,
+              mixtureFraction_CCLabel,
               numGhostCells == 0? Ghost::None : Ghost::AroundCells,
               numGhostCells);
 }
 
-void CanteraMixtureFraction::addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
+void CanteraMixtureFraction::addTaskDependencies_int_eng(Task* t, State state,
                                                  int numGhostCells)
 {
-  t->requires(Task::NewDW, mixtureFraction_CCLabel,
+  // There is no intermediate state, so use either the old or the new mixture
+  // fraction
+  t->requires(state == ThermoInterface::NewState? Task::NewDW : Task::OldDW,
+              mixtureFraction_CCLabel,
               numGhostCells == 0? Ghost::None : Ghost::AroundCells,
               numGhostCells);
 }

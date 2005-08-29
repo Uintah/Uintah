@@ -48,49 +48,49 @@ void CanteraSingleMixture::scheduleReactions(SchedulerP& sched,
   // No reactions
 }
 
-void CanteraSingleMixture::addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
+void CanteraSingleMixture::addTaskDependencies_thermalDiffusivity(Task* t, State state,
                                                             int numGhostCells)
 {
   // No additional requirements
 }
 
-void CanteraSingleMixture::addTaskDependencies_thermalConductivity(Task* t, Task::WhichDW dw,
+void CanteraSingleMixture::addTaskDependencies_thermalConductivity(Task* t, State state,
                                                              int numGhostCells)
 {
   // No additional requirements
 }
 
-void CanteraSingleMixture::addTaskDependencies_cp(Task* t, Task::WhichDW dw,
+void CanteraSingleMixture::addTaskDependencies_cp(Task* t, State state,
                                             int numGhostCells)
 {
   // No additional requirements
 }
 
-void CanteraSingleMixture::addTaskDependencies_cv(Task* t, Task::WhichDW dw,
+void CanteraSingleMixture::addTaskDependencies_cv(Task* t, State state,
                                             int numGhostCells)
 {
   // No additional requirements
 }
 
-void CanteraSingleMixture::addTaskDependencies_gamma(Task* t, Task::WhichDW dw,
+void CanteraSingleMixture::addTaskDependencies_gamma(Task* t, State state,
                                                int numGhostCells)
 {
   // No additional requirements
 }
 
-void CanteraSingleMixture::addTaskDependencies_R(Task* t, Task::WhichDW dw,
+void CanteraSingleMixture::addTaskDependencies_R(Task* t, State state,
                                            int numGhostCells)
 {
   // No additional requirements
 }
 
-void CanteraSingleMixture::addTaskDependencies_Temp(Task* t, Task::WhichDW dw,
+void CanteraSingleMixture::addTaskDependencies_Temp(Task* t, State state,
                                               int numGhostCells)
 {
   // No additional requirements
 }
 
-void CanteraSingleMixture::addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
+void CanteraSingleMixture::addTaskDependencies_int_eng(Task* t, State state,
                                                  int numGhostCells)
 {
   // No additional requirements
