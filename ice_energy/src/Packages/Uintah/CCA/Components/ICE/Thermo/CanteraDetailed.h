@@ -100,9 +100,10 @@ WARNING
                             int matl, int numGhostCells,
                             constCCVariable<double>& int_eng);
     virtual void compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                            DataWarehouse* dw, const Patch* patch,
-                            int matl, int numGhostCells,
-                            constCCVariable<double>& int_eng);
+                                 DataWarehouse* dw, const Patch* patch,
+                                 int matl, int numGhostCells,
+                                 constCCVariable<double>& int_eng,
+                                 constCCVariable<double>& sp_vol);
   private:
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,

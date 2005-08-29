@@ -832,7 +832,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 /* _____________________________________________________________________
- Function~  ICE::scheduleTimeAdvance--
+ Function~  ICE::scheduleComputeInternalEnergy--
 _____________________________________________________________________*/
 void ICE::scheduleComputeInternalEnergy(SchedulerP& sched,
                                         const PatchSet* patches,
@@ -847,6 +847,7 @@ void ICE::scheduleComputeInternalEnergy(SchedulerP& sched,
   Task* t = scinew Task("ICE::computeInternalEnergy",
                         this, &ICE::computeInternalEnergy);
   t->requires(Task::NewDW, lb->ntemp_CCLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel, Ghost::None);
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -2407,12 +2408,13 @@ void ICE::computeInternalEnergy(const ProcessorGroup*,
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
       CCVariable<double> int_eng;
-      constCCVariable<double> Temp;
+      constCCVariable<double> Temp, sp_vol;
       new_dw->allocateAndPut(int_eng, lb->int_eng_CCLabel, indx, patch);
       new_dw->get(Temp, lb->ntemp_CCLabel, indx, patch, Ghost::None, 0);
+      new_dw->get(sp_vol, lb->sp_vol_CCLabel, indx, patch, Ghost::None, 0);
       ice_matl->getThermo()->compute_int_eng(patch->getCellIterator(), int_eng,
                                              new_dw, patch, indx, 0,
-                                             Temp);
+                                             Temp, sp_vol);
       setBC(int_eng,    "Temperature", patch, d_sharedState, indx, new_dw);
     }
   }

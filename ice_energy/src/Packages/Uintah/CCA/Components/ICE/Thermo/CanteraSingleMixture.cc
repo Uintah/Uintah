@@ -184,7 +184,8 @@ void CanteraSingleMixture::compute_Temp(CellIterator iter, CCVariable<double>& t
 void CanteraSingleMixture::compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
                                            DataWarehouse*, const Patch* patch,
                                            int matl, int numGhostCells,
-                                           constCCVariable<double>& temp)
+                                           constCCVariable<double>& temp,
+                                           constCCVariable<double>& sp_vol)
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++){

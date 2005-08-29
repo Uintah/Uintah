@@ -34,9 +34,10 @@ void BoundCondFactory::create(ProblemSpecP& child,
   string::size_type pos1 = bc_attr["label"].find ("massFraction");
   string::size_type pos2 = bc_attr["label"].find ("scalar");
   string::size_type pos3 = bc_attr["label"].find ("cumulativeEnergyReleased");
+  string::size_type pos4 = bc_attr["label"].find ("mixtureFraction");
   
   if ( pos1 != std::string::npos || pos2 != std::string::npos 
-    || pos3 != std::string::npos){
+    || pos3 != std::string::npos || pos4 != std::string::npos){
     ModelsBC = true;
   }
   

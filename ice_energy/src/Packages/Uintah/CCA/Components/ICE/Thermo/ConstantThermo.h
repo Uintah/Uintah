@@ -83,21 +83,22 @@ WARNING
                             int matl, int numGhostCells,
                             constCCVariable<double>& int_eng);
     virtual void compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                            DataWarehouse* dw, const Patch* patch,
-                            int matl, int numGhostCells,
-                            constCCVariable<double>& int_eng);
+                               DataWarehouse* dw, const Patch* patch,
+                               int matl, int numGhostCells,
+                               constCCVariable<double>& int_eng);
     virtual void compute_R(CellIterator iter, CCVariable<double>& R,
-                            DataWarehouse* dw, const Patch* patch,
-                            int matl, int numGhostCells,
-                            constCCVariable<double>& int_eng);
+                           DataWarehouse* dw, const Patch* patch,
+                           int matl, int numGhostCells,
+                           constCCVariable<double>& int_eng);
     virtual void compute_Temp(CellIterator iter, CCVariable<double>& temp,
-                            DataWarehouse* dw, const Patch* patch,
-                            int matl, int numGhostCells,
-                            constCCVariable<double>& int_eng);
+                              DataWarehouse* dw, const Patch* patch,
+                              int matl, int numGhostCells,
+                              constCCVariable<double>& int_eng);
     virtual void compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                            DataWarehouse* dw, const Patch* patch,
-                            int matl, int numGhostCells,
-                            constCCVariable<double>& int_eng);
+                                 DataWarehouse* dw, const Patch* patch,
+                                 int matl, int numGhostCells,
+                                 constCCVariable<double>& int_eng,
+                                 constCCVariable<double>& sp_vol);
   private:
     double d_thermalConductivity;
     double d_specificHeat;

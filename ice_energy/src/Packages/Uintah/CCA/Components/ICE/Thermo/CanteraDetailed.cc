@@ -516,7 +516,8 @@ void CanteraDetailed::compute_Temp(CellIterator iter, CCVariable<double>& temp,
 void CanteraDetailed::compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
                                       DataWarehouse* new_dw, const Patch* patch,
                                       int matl, int numGhostCells,
-                                      constCCVariable<double>& Temp)
+                                      constCCVariable<double>& Temp,
+                                      constCCVariable<double>& sp_vol)
 {
   int numSpecies = streams.size();
   StaticArray<constCCVariable<double> > mf(numSpecies);
@@ -535,7 +536,7 @@ void CanteraDetailed::compute_int_eng(CellIterator iter, CCVariable<double>& int
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
     d_gas->setMassFractions(tmp_mf);
-    d_gas->setState_TR(Temp[*iter], 1.0);
+    d_gas->setState_TR(Temp[*iter], 1.0/sp_vol[*iter]);
     int_eng[*iter] = d_gas->intEnergy_mass();
     //cerr << "initial temp: " << Temp[*iter] << ", energy=" << int_eng[*iter] << '\n';
   }
