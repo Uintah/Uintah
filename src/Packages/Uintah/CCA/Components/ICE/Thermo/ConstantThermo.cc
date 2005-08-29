@@ -150,7 +150,8 @@ void ConstantThermo::compute_Temp(CellIterator iter, CCVariable<double>& temp,
 void ConstantThermo::compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
                                      DataWarehouse* dw, const Patch* patch,
                                      int matl, int numGhostCells,
-                                     constCCVariable<double>& temp)
+                                     constCCVariable<double>& temp,
+                                     constCCVariable<double>&)
 {
   for(;!iter.done();iter++)
     int_eng[*iter] = temp[*iter] * d_specificHeat;

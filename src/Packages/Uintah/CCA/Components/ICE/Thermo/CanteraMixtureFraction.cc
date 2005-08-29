@@ -12,6 +12,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Thread/Time.h>
 #include <Core/Util/ProgressiveWarning.h>
 #include <cantera/Cantera.h>
 #include <cantera/IdealGasMix.h>
@@ -35,17 +36,25 @@ CanteraMixtureFraction::CanteraMixtureFraction(ProblemSpecP& ps, ModelSetup* set
   ps->require("file", fname);
   string id;
   ps->require("id", id);
+  ps->require("species0", species0);
+  ps->require("species1", species1);
   try {
     d_gas = new IdealGasMix(fname, id);
     int nsp = d_gas->nSpecies();
     int nel = d_gas->nElements();
     cerr << "Using ideal gas " << id << "(from " << fname << ") with " << nel << " elements and " << nsp << " species\n";
     d_gas->setState_TPY(300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
+    mix0.resize(nsp);
+    mix1.resize(nsp);
+    d_gas->setState_TPY(300., 101325., species0);
+    d_gas->getMassFractions(&mix0[0]);
+    d_gas->setState_TPY(300., 101325., species1);
+    d_gas->getMassFractions(&mix1[0]);
   } catch (CanteraError) {
     showErrors(cerr);
     throw InternalError("Cantera initialization failed", __FILE__, __LINE__);
   }
-  mixtureFraction_CCLabel = VarLabel::create("f",
+  mixtureFraction_CCLabel = VarLabel::create("mixtureFraction",
                                              CCVariable<double>::getTypeDescription());
   setup->registerTransportedVariable(mymatls->getSubset(0),
                                      Task::OldDW,
@@ -146,7 +155,7 @@ void CanteraMixtureFraction::scheduleReactions(SchedulerP& sched,
 void CanteraMixtureFraction::addTaskDependencies_thermalDiffusivity(Task* t, Task::WhichDW dw,
                                                              int numGhostCells)
 {
-  t->requires(Task::OldDW, mixtureFraction_CCLabel,
+  t->requires(Task::NewDW, mixtureFraction_CCLabel,
               numGhostCells == 0? Ghost::None : Ghost::AroundCells,
               numGhostCells);
 }
@@ -202,7 +211,7 @@ void CanteraMixtureFraction::addTaskDependencies_Temp(Task* t, Task::WhichDW dw,
 void CanteraMixtureFraction::addTaskDependencies_int_eng(Task* t, Task::WhichDW dw,
                                                  int numGhostCells)
 {
-  t->requires(Task::OldDW, mixtureFraction_CCLabel,
+  t->requires(Task::NewDW, mixtureFraction_CCLabel,
               numGhostCells == 0? Ghost::None : Ghost::AroundCells,
               numGhostCells);
 }
@@ -232,23 +241,7 @@ void CanteraMixtureFraction::compute_cp(CellIterator iter, CCVariable<double>& c
                                  int matl, int numGhostCells,
                                  constCCVariable<double>& int_eng)
 {
-  constCCVariable<double> f;
-  new_dw->get(f, mixtureFraction_CCLabel, matl, patch,
-              numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
-  int numSpecies = d_gas->nSpecies();
-  double* tmp_mf = new double[numSpecies];
-
-  for(;!iter.done();iter++){
-    for(int i = 0; i< numSpecies; i++){
-      double mf = f[*iter];
-      tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
-    }
-    d_gas->setMassFractions(tmp_mf);
-    d_gas->setState_UV(int_eng[*iter], 1.0);
-    equilibrate(*d_gas, UV);
-    cp[*iter] = d_gas->cp_mass();
-  }
-  delete[] tmp_mf;
+  cerr << "compute_cp not  finished\n";
 }
 
 void CanteraMixtureFraction::compute_cv(CellIterator iter, CCVariable<double>& cv,
@@ -289,9 +282,28 @@ void CanteraMixtureFraction::compute_Temp(CellIterator iter, CCVariable<double>&
 }
 
 void CanteraMixtureFraction::compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                                      DataWarehouse* new_dw, const Patch* patch,
-                                      int matl, int numGhostCells,
-                                      constCCVariable<double>& Temp)
+                                             DataWarehouse* new_dw, const Patch* patch,
+                                             int matl, int numGhostCells,
+                                             constCCVariable<double>& Temp,
+                                             constCCVariable<double>& sp_vol)
 {
-  cerr << "compute_int_eng not finished\n";
+  constCCVariable<double> f;
+  new_dw->get(f, mixtureFraction_CCLabel, matl, patch,
+              numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+  int numSpecies = d_gas->nSpecies();
+  double* tmp_mf = new double[numSpecies];
+
+  for(;!iter.done();iter++){
+    double mf = f[*iter];
+    for(int i = 0; i< numSpecies; i++){
+      tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
+    }
+    d_gas->setMassFractions(tmp_mf);
+    d_gas->setState_TR(Temp[*iter], 1.0/sp_vol[*iter]);
+    double t0 = Time::currentSeconds();
+    equilibrate(*d_gas, UV);
+    double t1 = Time::currentSeconds();
+    int_eng[*iter] = d_gas->intEnergy_mass();
+  }
+  delete[] tmp_mf;
 }

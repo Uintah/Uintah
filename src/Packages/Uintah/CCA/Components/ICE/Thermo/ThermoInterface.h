@@ -95,9 +95,10 @@ WARNING
                             int matl, int numGhostCells,
                             constCCVariable<double>& int_eng) = 0;
     virtual void compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                            DataWarehouse* dw, const Patch* patch,
-                            int matl, int numGhostCells,
-                            constCCVariable<double>& int_eng) = 0;
+                                 DataWarehouse* dw, const Patch* patch,
+                                 int matl, int numGhostCells,
+                                 constCCVariable<double>& int_eng,
+                                 constCCVariable<double>& sp_vol) = 0;
   };
 } // End namespace Uintah
       
