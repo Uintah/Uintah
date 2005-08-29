@@ -45,6 +45,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
 
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -900,15 +901,15 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     // we have axis aligned data if all values are 0 
     // except on the diagonal
     bool axis_aligned = true;
-    if( (abs(trans[1] - 0.0) > 0.0001) ||
-	(abs(trans[2] - 0.0) > 0.0001) ||
-	(abs(trans[4] - 0.0) > 0.0001) ||
-	(abs(trans[6] - 0.0) > 0.0001) ||
-	(abs(trans[8] - 0.0) > 0.0001) ||
-	(abs(trans[9] - 0.0) > 0.0001) ||
-	(abs(trans[12] - 0.0) > 0.0001) ||
-	(abs(trans[13] - 0.0) > 0.0001) ||
-	(abs(trans[14] - 0.0) > 0.0001)) {
+    if( (Abs(trans[1] - 0.0) > 0.0001) ||
+	(Abs(trans[2] - 0.0) > 0.0001) ||
+	(Abs(trans[4] - 0.0) > 0.0001) ||
+	(Abs(trans[6] - 0.0) > 0.0001) ||
+	(Abs(trans[8] - 0.0) > 0.0001) ||
+	(Abs(trans[9] - 0.0) > 0.0001) ||
+	(Abs(trans[12] - 0.0) > 0.0001) ||
+	(Abs(trans[13] - 0.0) > 0.0001) ||
+	(Abs(trans[14] - 0.0) > 0.0001)) {
       axis_aligned = false;
     }
     
