@@ -93,8 +93,8 @@
     <inputs lastportdynamic="no">
       <port>
         <name>filename</name>
-        <datatype>SCIRun::Nrrd</datatype>
-        <description>filename stored as a char array in a nrrd</description>
+        <datatype>SCIRun::String</datatype>
+        <description>filename</description>
       </port>         
     </inputs>
     <outputs>
