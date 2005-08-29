@@ -47,4 +47,7 @@ namespace SCIRun {
 double
 distance_to_line2(const Point &p, const Point &a, const Point &b);
 
+double
+RayPlaneIntersection(const Point &p,  const Vector &dir,
+		     const Point &p0, const Vector &pn);
 }
