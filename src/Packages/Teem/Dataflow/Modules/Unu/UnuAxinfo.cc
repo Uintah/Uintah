@@ -42,6 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Ports/NrrdPort.h>
+#include <Core/Containers/StringUtil.h>
 
 namespace SCITeem {
 using namespace SCIRun;
@@ -59,6 +60,13 @@ public:
   GuiDouble           min_;
   GuiDouble           max_;
   GuiDouble           spacing_;
+  GuiString           space_dir_;
+  GuiInt              use_label_;
+  GuiInt              use_kind_;
+  GuiInt              use_min_;
+  GuiInt              use_max_;
+  GuiInt              use_spacing_;
+  GuiInt              use_space_dir_;
 private:
   int                 generation_;
 };
@@ -73,6 +81,13 @@ UnuAxinfo::UnuAxinfo(GuiContext* ctx)
     min_(ctx->subVar("min")),
     max_(ctx->subVar("max")),
     spacing_(ctx->subVar("spacing")),
+    space_dir_(ctx->subVar("spaceDir")),
+    use_label_(ctx->subVar("use_label")),
+    use_kind_(ctx->subVar("use_kind")),
+    use_min_(ctx->subVar("use_min")),
+    use_max_(ctx->subVar("use_max")),
+    use_spacing_(ctx->subVar("use_spacing")),
+    use_space_dir_(ctx->subVar("use_spaceDir")),
     generation_(-1)
 {
 }
@@ -119,11 +134,12 @@ void UnuAxinfo::execute()
     return;
   }
   
-  
-  if (strlen(label_.get().c_str())) {
-    if (nout->axis[axis].label) { airFree(nout->axis[axis].label); }
-    nout->axis[axis].label = airStrdup(label_.get().c_str());
-    
+  if (use_label_.get() && strlen(label_.get().c_str())) {
+    nout->axis[axis].label = (char*)airFree(nout->axis[axis].label);
+    nout->axis[axis].label = airStrdup(const_cast<char*>(label_.get().c_str()));
+  }
+
+  if (use_kind_.get()) { 
     string kind = kind_.get();
     if (kind == "nrrdKindDomain") {
       nout->axis[axis].kind = nrrdKindDomain;
@@ -148,17 +164,107 @@ void UnuAxinfo::execute()
     } else {
       nout->axis[axis].kind = nrrdKindUnknown;
     }
-    
-    if (airExists(min_.get())) {
+  }
+
+  // determine if this nrrd has min,max,spacing defined,
+  // or spaceDirection vectors
+  bool has_space = false;
+  
+  if (airExists(nout->axis[axis].spaceDirection[0]))
+    has_space = true;
+
+
+  // min, max and spacing can be modified as long as the 
+  // axis does NOT have spaceDirection vectors set.
+  if (use_min_.get() && airExists(min_.get())) { 
+    if (has_space) 
+      error("ERROR: Cannot change min point when spaceDirection vectors are defined.");
+    else
       nout->axis[axis].min = min_.get();
-    }
-    if (airExists(max_.get())) {
+  }
+  
+  if (use_max_.get() && airExists(max_.get())) {
+    if (has_space) 
+      error("ERROR: Cannot change max point when spaceDirection vectors are defined.");
+    else
       nout->axis[axis].max = max_.get();
-    }
-    if (airExists(spacing_.get())) {
+  }
+  
+  if (use_spacing_.get() && airExists(spacing_.get())) {
+    if (has_space)
+      error("ERROR: Cannot change spacing when spaceDirection vectors are defined.");
+    else
       nout->axis[axis].spacing = spacing_.get();
+  }
+  
+  string space_string = space_dir_.get();
+  if (use_space_dir_.get() && space_string.length() > 0) {
+    if (!has_space) 
+      error("ERROR: Cannot change spaceDirection vector when min, max, or spacing is defined.");
+    else {
+      // parse the space string for values separated by commas (there
+      // should be the same number of values as nout->spaceDim
+      int i=0, start=0, end=0, which=0, counter=0;
+      char ch;
+      bool in_num = false;
+      vector<double> spaceDirs;
+      while (i < (int)space_string.length()) {
+	ch = space_string[i];
+	if(isspace(ch) || ch == ',') {
+	  if (in_num) {
+	    end = i;
+	    spaceDirs.push_back(atof(space_string.substr(start, end-start).c_str()));
+	    which++;
+	    counter++;
+	    in_num = false;
+	  }
+	} else if (i == (int)space_string.length()-1) {
+	  if (!in_num) {
+	    start = i;
+	  }
+	  end = i+1;
+	  spaceDirs.push_back(atof(space_string.substr(start, end-start).c_str()));
+	  which++;
+	  counter++;
+	  in_num = false;
+	} else {
+	  if(!in_num) {
+	    start = i;
+	    in_num = true;
+	  }
+	}	
+	++i;
+      }
+      if ((int)spaceDirs.size() != (int)nout->spaceDim)
+	error(string("ERROR: You must specify "+ to_string(nout->spaceDim) + " components for your spaceDirection vector."));
+      else {
+	for(int i=0; i<nout->spaceDim; i++)
+	  nout->axis[axis].spaceDirection[i] = spaceDirs[i];
+      }	
     }
   }
+  
+  if (!has_space) {
+    double calc_max = nout->axis[axis].min + 
+      (nout->axis[axis].spacing * (nout->axis[axis].size-1));
+    
+    if (nout->axis[axis].center == nrrdCenterCell) 
+      calc_max = nout->axis[axis].min + 
+	(nout->axis[axis].spacing * nout->axis[axis].size-1);
+    
+    if (airExists(nout->axis[axis].min) && 
+	airExists(nout->axis[axis].max) &&
+	airExists(nout->axis[axis].spacing) && 
+	calc_max != nout->axis[axis].max) {
+      remark("Warning: Output NRRD's min, max and spacing are not valid. Recalculating max.");
+      nout->axis[axis].max = calc_max;
+    }
+  }
+
+  // verify it is a valid nrrd going out
+  if (nrrdCheck(nout))
+    error("ERROR: Invalid output NRRD.");
+
   
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;

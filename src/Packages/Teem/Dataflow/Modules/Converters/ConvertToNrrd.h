@@ -37,6 +37,7 @@
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/ImageField.h>
+#include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/QuadraticTetVolField.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -286,6 +287,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
     BBox bbox = m->get_bounding_box();
     minP = bbox.min();
     maxP = bbox.max();
+
     spc = maxP - minP;
     if (f->basis_order() == 0)
     {
@@ -682,7 +684,23 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
     if (!(ifh->mesh()->is_editable() && meshstr != "Struct"))
     {
       Transform t;
-      m->get_canonical_transform(t);
+
+      // get the actual transform if possible for later use
+      LatVolMesh *lv_m = dynamic_cast<LatVolMesh *> (ifh->mesh().get_rep());
+      ImageMesh *i_m = dynamic_cast<ImageMesh *> (ifh->mesh().get_rep());
+      ScanlineMesh *s_m = dynamic_cast<ScanlineMesh *> (ifh->mesh().get_rep());
+      if(lv_m)
+	t = lv_m->get_transform();
+      else if (i_m)
+	t = i_m->get_transform();
+      else if (s_m)
+	t = s_m->get_transform();
+      else
+      {
+	cerr << "ERROR: Mesh type must be of type LatVol, Image, or Scanline to get correct transform information\n";
+	return false;
+      }
+
       double trans[16];
       t.get(trans);
       string trans_string = "";
@@ -690,8 +708,91 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	trans_string += to_string(trans[i]);
 	trans_string += " ";
       }
+
       dataH = ndata;
-      dataH->set_property("Transform", trans_string, false);
+
+      // set the spaceDirection vectors if the transform 
+      // matrix is not just a diagonal matrix
+      bool axis_aligned = true;
+      if( (abs(trans[1] - 0.0) > 0.0001) ||
+	  (abs(trans[2] - 0.0) > 0.0001) ||
+	  (abs(trans[4] - 0.0) > 0.0001) ||
+	  (abs(trans[6] - 0.0) > 0.0001) ||
+	  (abs(trans[8] - 0.0) > 0.0001) ||
+	  (abs(trans[9] - 0.0) > 0.0001) ||
+	  (abs(trans[12] - 0.0) > 0.0001) ||
+	  (abs(trans[13] - 0.0) > 0.0001) ||
+	  (abs(trans[14] - 0.0) > 0.0001)) {
+	axis_aligned = false;
+      }
+
+      if (!axis_aligned) {
+	// Since we found a transform, set the appropriate
+	// space information.
+	Nrrd* n = dataH->nrrd;
+	
+	// set spaceDimension to always be 3
+	nrrdSpaceSet(n, nrrdSpaceUnknown);
+
+	// If axis aligned, set the space dimension
+	// to be that of the actual number of axes with
+	// domain information. But if there is the
+	// data is not axis aligned, assume a space
+	// of 3 (world space)
+	if (axis_aligned) {
+	  if (pad_data > 0)
+	    nrrdSpaceDimensionSet(n, dim-1);
+	  else
+	    nrrdSpaceDimensionSet(n, dim);
+	} else {
+	  nrrdSpaceDimensionSet(n, 3);
+	}
+	
+	// set the spaceOrigin which can be taken from the
+	// 4th column of the transform 
+	n->spaceOrigin[0] = trans[3];
+	n->spaceOrigin[1] = trans[7];
+	n->spaceOrigin[2] = trans[11];
+	
+	// set the spaceDirection to be the corresponding
+	// column of the transform matrix
+	double dir1[3], dir2[3], dir3[3];
+	dir1[0] = trans[0];
+	dir1[1] = trans[4];
+	dir1[2] = trans[8];
+	
+	dir2[0] = trans[1];
+	dir2[1] = trans[5];
+	dir2[2] = trans[9];
+	
+	dir3[0] = trans[2];
+	dir3[1] = trans[6];
+	dir3[2] = trans[10];
+	
+	// vector/tensor data has a vector of AIR_NANs
+	// for that axis
+	if (pad_data > 0) {
+	  double none[3];
+	  none[0] = AIR_NAN;
+	  none[1] = AIR_NAN;
+	  none[2] = AIR_NAN;
+	  nrrdAxisInfoSet(n, nrrdAxisInfoSpaceDirection,
+			  none, dir1, dir2, dir3);
+	}
+	else {
+	nrrdAxisInfoSet(n, nrrdAxisInfoSpaceDirection,
+			dir1, dir2, dir3);
+	}
+	
+	// set min/max and spacing and units to AIR_NAN now that 
+	// direction vectors are being used 
+	for(int a=0; a<dim; a++) {
+	  n->axis[a].min = AIR_NAN;
+	  n->axis[a].max = AIR_NAN;
+	  n->axis[a].spacing = AIR_NAN;
+	  n->axis[a].units = (char*)airFree(n->axis[a].units);
+	}
+      }
     } else {
       dataH = ndata;
     }

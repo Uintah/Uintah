@@ -42,6 +42,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	global $this-name
 	global $this-type
 	global $this-dimension
+	global $this-origin
 	global $this-active_tab
 	global $this-label0
 	global $this-kind0
@@ -50,13 +51,15 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	global $this-spacing0
 	global $this-min0
 	global $this-max0
+	global $this-spaceDir0
 	global $this-initialized
 		    
 	# these won't be saved 
-	set $this-firstwidth 12
+	set $this-firstwidth 15
 	set $this-name "---"
 	set $this-type "---"
 	set $this-dimension 0
+	set $this-origin 0
 	set $this-active_tab "Axis 0"
 	set $this-label0 "---"
 	set $this-kind0 "---"
@@ -65,6 +68,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	set $this-spacing0 "---"
 	set $this-min0 "---"
 	set $this-max0 "---"
+	set $this-spaceDir0 "---"
 	set $this-initialized 0
     }
 
@@ -97,6 +101,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 
 	    # Clear Axis 0 and dimension
 	    set $this-dimension 0
+	    set $this-origin "---"
 	    set $this-label0 "---"
 	    set $this-kind0 "---"
 	    set $this-center0 "---"
@@ -104,6 +109,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	    set $this-spacing0 "---"
 	    set $this-min0 "---"
 	    set $this-max0 "---"
+	    set $this-spaceDir0 "---"
 	}
     }
     
@@ -126,9 +132,10 @@ itcl_class Teem_NrrdData_NrrdInfo {
 		    labelpair $t.sp "Spacing" $this-spacing0
 		    labelpair $t.mn "Min" $this-min0
 		    labelpair $t.mx "Max" $this-max0
+		    labelpair $t.sd "Space Direction" $this-spaceDir0
 		    
-		    pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx  -side top \
-			-fill x 
+		    pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx $t.sd \
+			-side top -fill x 
 		    pack $t -side top -fill both -expand 1	
 		    set $this-initialized 1
 		}
@@ -144,9 +151,10 @@ itcl_class Teem_NrrdData_NrrdInfo {
 		    labelpair $t.sp "Spacing" $this-spacing$i
 		    labelpair $t.mn "Min" $this-min$i
 		    labelpair $t.mx "Max" $this-max$i
+		    labelpair $t.sd "Space Direction" $this-spaceDir$i
 		    
-		    pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx  -side top \
-			-fill x
+		    pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx $t.sd \
+			-side top -fill x
 		    pack $t -side top -fill both -expand 1
 		} 
 	    } else {
@@ -161,26 +169,15 @@ itcl_class Teem_NrrdData_NrrdInfo {
 		labelpair $t.sp "Spacing" $this-spacing0
 		labelpair $t.mn "Min" $this-min0
 		labelpair $t.mx "Max" $this-max0
+		labelpair $t.sd "Space Direction" $this-spaceDir0
 		
-		pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx  -side top \
-		    -fill x
+		pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx $t.sd \
+		    -side top -fill x
 		pack $t -side top -fill both -expand 1	
 		set $this-initialized 1
 	    }
 	}
     }
-    
-    #     method add_tuple_tab {af} {
-    
-    # 	set tuple [$af.tabs add -label "Tuple Axis" \
-    # 		       -command "$this set_active_tab \"Tuple Axis\""]
-    
-    # 	iwidgets::scrolledlistbox $tuple.listbox -vscrollmode static \
-    # 	    -hscrollmode dynamic -scrollmargin 3 -height 60
-    
-    # 	fill_tuple_tab
-    # 	pack $tuple.listbox -side top -fill both -expand 1
-    #     }
     
     method ui {} {
         set w .ui[modname]
@@ -199,6 +196,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	labelpair $att.name "Name" $this-name
 	labelpair $att.type "C Type" $this-type
 	labelpair $att.dim "Dimension" $this-dimension
+	labelpair $att.orig "Space Origin" $this-origin
 	
 	# notebook for the axis specific info.
 	iwidgets::tabnotebook  $att.tabs -height 350 -width 325 \
@@ -211,7 +209,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	$att.tabs view [set $this-active_tab]	
 	$att.tabs configure -tabpos "n"
 	
-	pack $att.name $att.type $att.dim -side top -anchor nw \
+	pack $att.name $att.type $att.dim $att.orig -side top -anchor nw \
 	    -expand yes -fill x
 	pack $att.tabs -side top -fill x -expand yes
 	

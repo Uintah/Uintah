@@ -485,28 +485,8 @@ execute(MeshHandle& mHandle,
       }
     }
 
-    // set transform if one of the nrrd properties
     fH = ifield;
-    const string meshstr =
-      fH->get_type_description(0)->get_name().substr(0, 6);
-    
-    if (!(imesh->is_editable() && meshstr != "Struct"))
-      {
-	string trans_string;
-	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
-	  double t[16];
-	  Transform trans;
-	  int old_index=0, new_index=0;
-	  for(int i=0; i<16; i++) {
-	    new_index = trans_string.find(" ", old_index);
-	    string temp = trans_string.substr(old_index, new_index-old_index);
-	    old_index = new_index+1;
-	    string_to_double(temp, t[i]);
-	  }
-	  trans.set(t);
-	  imesh->transform(trans);
-	} 
-      }	        
+
   } else {
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
     fH = ifield;
@@ -687,26 +667,6 @@ execute(MeshHandle& mHandle,
 
     // set transform if one of the nrrd properties
     fH = ifield;
-    const string meshstr =
-      fH->get_type_description(0)->get_name().substr(0, 6);
-    
-    if (!(imesh->is_editable() && meshstr != "Struct"))
-      {
-	string trans_string;
-	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
-	  double t[16];
-	  Transform trans;
-	  int old_index=0, new_index=0;
-	  for(int i=0; i<16; i++) {
-	    new_index = trans_string.find(" ", old_index);
-	    string temp = trans_string.substr(old_index, new_index-old_index);
-	    old_index = new_index+1;
-	    string_to_double(temp, t[i]);
-	  }
-	  trans.set(t);
-	  imesh->transform(trans);
-	} 
-      }	  
   } else {
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
     fH = ifield;
@@ -1529,26 +1489,6 @@ execute(MeshHandle& mHandle,
 
     // set transform if one of the nrrd properties
     fH = ifield;
-    const string meshstr =
-      fH->get_type_description(0)->get_name().substr(0, 6);
-    
-    if (!(imesh->is_editable() && meshstr != "Struct"))
-      {
-	string trans_string;
-	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
-	  double t[16];
-	  Transform trans;
-	  int old_index=0, new_index=0;
-	  for(int i=0; i<16; i++) {
-	    new_index = trans_string.find(" ", old_index);
-	    string temp = trans_string.substr(old_index, new_index-old_index);
-	    old_index = new_index+1;
-	    string_to_double(temp, t[i]);
-	  }
-	  trans.set(t);
-	  imesh->transform(trans);
-	} 
-      }	        
   } else {
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
     fH = ifield;

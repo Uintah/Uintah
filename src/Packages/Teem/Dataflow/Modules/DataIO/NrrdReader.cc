@@ -287,7 +287,9 @@ NrrdReader::read_file(string fn)
   for (int i = 0; i < read_handle_->nrrd->dim; i++)
   {
     if (!(airExists(read_handle_->nrrd->axis[i].min) && 
-	  airExists(read_handle_->nrrd->axis[i].max)))
+	  airExists(read_handle_->nrrd->axis[i].max)) &&
+	!(airExists(read_handle_->nrrd->axis[i].spaceDirection[0])))
+
       nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
   }
   return false;
