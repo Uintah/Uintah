@@ -15,12 +15,12 @@
 
 \subsection keming Keming
 
-\li Complete parallel component implementation: by August 15
-\li Updates to text builder: by July 18
-\li PRMI without data redistribution, by July 25
-\li PRMI data redistribution, by August 1
-\li PRMI synchronization, by August 8
-\li PRMI concurrency control, by August 15
+\li Updates to text builder: by Aug 25
+\li Complete parallel component implementation: by Sep 25 
+\li PRMI without data redistribution, by Sep 4 
+\li PRMI data redistribution, by Sep 11 
+\li PRMI synchronization, by Sep 18
+\li PRMI concurrency control, by Sep 25
 \li Update parallel component examples: TDB
 \li Bug 2710, Viewer CCA component broken: TBD
 
