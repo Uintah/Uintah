@@ -797,31 +797,156 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   } else if( has_data_ ) { // No points just data.
     Nrrd* data = dataH->nrrd;
 
-    bool has_min_pt = true;
+    vector<double> min_pt;
     vector<double> sp;
     int data_center = nrrdCenterUnknown;
-
+    int domain_axis = 0;
     int data_off;
+
+    // must have at 3 points for a point and
+    // the min defaults to (0,0,0)
+    min_pt.push_back(0.0);
+    min_pt.push_back(0.0);
+    min_pt.push_back(0.0);
 
     if( data_rank == 1 )
       data_off = 0;
     else 
       data_off = 1;
 
-    for (int i=data_off; i<dataH->nrrd->dim; i++) {
-      if (!(airExists(data->axis[i].min) && airExists(data->axis[i].max))) {
-	has_min_pt = false;
-	nrrdAxisInfoMinMaxSet(data, i, nrrdCenterNode);
+    // since there is a mutual exclusion between using
+    // the min, max and spacing and the spaceDirection vectors
+    // verify that this is a valid nrrd
+    if (nrrdCheck(data)) {
+      error("Error: Invalid NRRD.  Cannot compute transform.");
+      return false;
+    }
+
+    // initialize the transform to the identity matrix
+    double trans[16];
+    trans[0] = 1;  trans[1] = 0;  trans[2] = 0;  trans[3] = 0;
+    trans[4] = 0;  trans[5] = 1;  trans[6] = 0;  trans[7] = 0;
+    trans[8] = 0;  trans[9] = 0;  trans[10] = 1;  trans[11] = 0;
+    trans[12] = 0;  trans[13] = 0;  trans[14] = 0;  trans[15] = 1;
+
+    // handle the spaceOrigin first because it might contain
+    // more elements than the nrrd dimension
+    for (int i=0; i<dataH->nrrd->spaceDim; i++) {
+      double min = 0.0;
+
+      if (airExists(data->spaceOrigin[i])) 
+	min = data->spaceOrigin[i];
+
+      if ((int)min_pt.size() == i)
+	min_pt.push_back( min );
+      else
+	min_pt[i] = min;
+    }
+
+    // for each axis, determine the min/max/spacing or 
+    // spaceDirection vector
+    for (int i=data_off; i<dataH->nrrd->dim; i++, domain_axis++) {
+      // the origin may have all ready been set if it was coming
+      // from the spaceOrigin, otherwise use the min points
+      // we are guaranteed that both the spaceOrigin and min
+      // will not be set because we did a nrrdCheck
+      if (airExists(data->axis[i].min)) {
+	if ((int)min_pt.size() == domain_axis)
+	  min_pt.push_back( data->axis[i].min );
+	else
+	  min_pt[ domain_axis ] = data->axis[i].min;
       }
 
-      if (airExists(data->axis[i].spacing))
+      // get the spacing either from the spaceDirection vector
+      // via the nrrdSpacingCalculate call or the axis
+      // spacing field -- NOTE that only one of these
+      // should be set for each axis in order to have a valid nrrd
+      double spac = 0;
+      double *space_vec = new double[NRRD_SPACE_DIM_MAX];
+
+      int result = nrrdSpacingCalculate(data, i, &spac, space_vec);
+
+      if (result == nrrdSpacingStatusDirection && airExists(spac)) {
+	sp.push_back(spac);
+
+	// set rotation as columns in transform
+	if (domain_axis < 3) {
+	  trans[domain_axis] = data->axis[i].spaceDirection[0];
+	  
+	  if (data->spaceDim > 1) 
+	    trans[domain_axis+4] = data->axis[i].spaceDirection[1];
+	  
+	  if (data->spaceDim > 2) 
+	    trans[domain_axis+8] = data->axis[i].spaceDirection[2];
+	}
+      }
+      else if (airExists(data->axis[i].spacing)) {
 	sp.push_back(data->axis[i].spacing);
-      else
+      }
+      else 
 	sp.push_back(1.0);
 
       if (data->axis[i].center != nrrdCenterUnknown) 
 	data_center = data->axis[i].center;
+
+      delete space_vec;
     }
+
+    // Set origin/min to be the 4th column of the transform 
+    trans[3]  = min_pt[0];
+    trans[7]  = min_pt[1];
+    trans[11] = min_pt[2];
+
+    // we have axis aligned data if all values are 0 
+    // except on the diagonal
+    bool axis_aligned = true;
+    if( (abs(trans[1] - 0.0) > 0.0001) ||
+	(abs(trans[2] - 0.0) > 0.0001) ||
+	(abs(trans[4] - 0.0) > 0.0001) ||
+	(abs(trans[6] - 0.0) > 0.0001) ||
+	(abs(trans[8] - 0.0) > 0.0001) ||
+	(abs(trans[9] - 0.0) > 0.0001) ||
+	(abs(trans[12] - 0.0) > 0.0001) ||
+	(abs(trans[13] - 0.0) > 0.0001) ||
+	(abs(trans[14] - 0.0) > 0.0001)) {
+      axis_aligned = false;
+    }
+    
+    // create the transform
+    Transform t1, t2;
+    string trans_string = "";
+
+    for(int i=0; i<16; i++) {
+      trans_string += to_string(trans[i]);
+      trans_string += " ";
+    }
+    
+    // If the nrrd had a transform as a property, and is 
+    // axis_aligned data, apply that transform to the field.
+    // Else if the data nrrd's transform property is different from what
+    // we just calculated, then issue a warning to the user.
+    string nrrd_trans_string;
+    bool has_nrrd_transform = false;
+    if (dataH->get_property("Transform", nrrd_trans_string) && 
+	nrrd_trans_string != "Unknown" &&
+	axis_aligned) {
+      has_nrrd_transform = true;
+      double t[16];
+      int old_index=0, new_index=0;
+      for(int i=0; i<16; i++) {
+	new_index = nrrd_trans_string.find(" ", old_index);
+	string temp = nrrd_trans_string.substr(old_index, new_index-old_index);
+	old_index = new_index+1;
+	string_to_double(temp, t[i]);
+      }
+      t2.set(t);
+    } else if (dataH->get_property("Transform", nrrd_trans_string) &&
+	       nrrd_trans_string != "Unknown" &&
+	       nrrd_trans_string != trans_string) {
+      warning("Data NRRD all ready has a transform property which is different from transform based on the Data NRRD's spaceDirections.  Using the transform based on the spaceDirection vectors.");
+    }
+
+    t1.set(trans);
 
     int mesh_off, pt_off;
 
@@ -836,61 +961,104 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     topology_ = STRUCTURED;
     geometry_ = REGULAR;
 
+    // Use these as defaults for the min and max
+    // point.  They will be calculated later.  If the data
+    // is not axis aligned, it won't matter what they are 
+    // set to because the transform will overwrite them.
     Point minpt(0,0,0), maxpt(1,1,1);
-    string trans_str;
-    const bool has_transform = dataH->get_property("Transform", trans_str) &&
-      trans_str != "Unknown";
 
     switch (dataH->nrrd->dim-data_off) {
     case 1:
-      if (!has_transform)
       {
-        //get data from x axis and stuff into a Scanline
-        if (has_min_pt)
-        {
-          minpt = Point (data->axis[data_off].min, 0, 0);
-        }
-        maxpt = Point ((data->axis[data_off].size - pt_off) * sp[0] + minpt.x(), 0, 0);
+	//get data from x axis and stuff into a Scanline
+	if (!has_nrrd_transform) {
+	  minpt = Point (min_pt[0], 0, 0);
+	  maxpt = Point ((data->axis[data_off].size - pt_off) * 
+			 sp[0] + minpt.x(), 0, 0);
+	}
+
+	ScanlineMesh *mesh = scinew ScanlineMesh(data->axis[data_off].size + 
+						 mesh_off, minpt, maxpt );
+
+
+	// If not axis aligned, set the transform which
+	// contains the origin point and the axes spaceDirection vectors
+	// Otherwise, if it is axis aligned, but had a transform as a
+	// property of the nrrd, apply the transform
+	if (!axis_aligned)
+	  mesh->set_transform(t1);
+	else if (has_nrrd_transform)
+	  mesh->transform(t2);
+
+	mHandle = mesh;
       }
-      mHandle = scinew ScanlineMesh( data->axis[data_off].size + mesh_off,
-				     minpt, maxpt );
       break;
 
     case 2:
-      if (!has_transform)
       {
-        //get data from x,y axes and stuff into an Image
-        if (has_min_pt)
-        {
-          minpt = Point ( data->axis[data_off].min, data->axis[data_off+1].min, 0);
-        }
-        maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
-                       (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 0);
+	//get data from x,y axes and stuff into an Image
+	if (!has_nrrd_transform) {
+	  minpt = Point ( min_pt[0], min_pt[1], 0);
+	  maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + 
+			 minpt.x(), 
+			 (data->axis[data_off+1].size - pt_off) * sp[1] + 
+			 minpt.y(), 0);
+	}
+
+	ImageMesh *mesh = scinew ImageMesh(data->axis[data_off  ].size + 
+					   mesh_off, 
+					   data->axis[data_off+1].size + 
+					   mesh_off, minpt, maxpt);
+
+
+	// If not axis aligned, set the transform which
+	// contains the origin point and the axes spaceDirection vectors
+	// Otherwise, if it is axis aligned, but had a transform as a
+	// property of the nrrd, apply the transform
+	if (!axis_aligned)
+	  mesh->set_transform(t1);
+	else if (has_nrrd_transform)
+	  mesh->transform(t2);
+
+	mHandle = mesh;
       }
-      mHandle = scinew ImageMesh( data->axis[data_off  ].size + mesh_off, 
-				  data->axis[data_off+1].size + mesh_off, 
-				  minpt, maxpt);
       break;
 
     case 3:
-      if (!has_transform)
       {
-        //get data from x,y,z axes and stuff into a LatVol
-        if (has_min_pt)
-        {
-          minpt = Point ( data->axis[data_off  ].min,
-                          data->axis[data_off+1].min,
-                          data->axis[data_off+2].min);
-        }
-        maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
-                       (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 
-                       (data->axis[data_off+2].size - pt_off) * sp[2] + minpt.z());
-      }
+	//get data from x,y,z axes and stuff into a LatVol	
+	if (!has_nrrd_transform) {
+	  minpt = Point ( min_pt[0], min_pt[1], min_pt[2]);
+	  maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + 
+			 minpt.x(), 
+			 (data->axis[data_off+1].size - pt_off) * sp[1] + 
+			 minpt.y(), 
+			 (data->axis[data_off+2].size - pt_off) * sp[2] + 
+			 minpt.z());
+	}
 
-      mHandle = scinew LatVolMesh( data->axis[data_off  ].size + mesh_off, 
-				   data->axis[data_off+1].size + mesh_off, 
-				   data->axis[data_off+2].size + mesh_off, 
-				   minpt, maxpt );
+	
+	LatVolMesh *mesh = scinew LatVolMesh( 
+					      data->axis[data_off  ].size + 
+					      mesh_off, 
+					      data->axis[data_off+1].size + 
+					      mesh_off, 
+					      data->axis[data_off+2].size + 
+					      mesh_off, 
+					      minpt, maxpt );
+
+
+	// If not axis aligned, set the transform which
+	// contains the origin point and the axes spaceDirection vectors
+	// Otherwise, if it is axis aligned, but had a transform as a
+	// property of the nrrd, apply the transform
+	if (!axis_aligned)
+	  mesh->set_transform(t1);	
+	else if (has_nrrd_transform)
+	  mesh->transform(t2);
+
+	mHandle = mesh;
+      }			   
       break;
       
     default:
@@ -898,7 +1066,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       has_error_ = true;
       return 0;
     }
-
+    
   } else {
     // no data given
     error("Not enough information given to create a Field.");
@@ -908,7 +1076,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   
   
   
-// Now create field based on the mesh created above and send it
+  // Now create field based on the mesh created above and send it
   const TypeDescription *mtd = mHandle->get_type_description();
   
   string fname = mtd->get_name();
