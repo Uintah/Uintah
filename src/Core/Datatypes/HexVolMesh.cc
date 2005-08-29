@@ -28,7 +28,7 @@
 
 
 /*
- *  HexVolMesh.cc: Hexrahedral mesh with new design.
+ *  HexVolMesh.cc: Templated Mesh defined on a 3D Irregular Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -875,28 +875,28 @@ tet_inside_p(const Point &p, const Point &p0, const Point &p1,
   const double c0 = + (x2*z3-x3*z2) + (x3*z1-x1*z3) + (x1*z2-x2*z1);
   const double d0 = - (x2*y3-x3*y2) - (x3*y1-x1*y3) - (x1*y2-x2*y1);
   const double s0 = iV6 * (a0 + b0*p.x() + c0*p.y() + d0*p.z());
-  if (s0 < -1.e-12)
+  if (s0 < -MIN_ELEMENT_VAL)
     return false;
 
   const double b1 = + (y3*z0-y0*z3) + (y0*z2-y2*z0) + (y2*z3-y3*z2);
   const double c1 = - (x3*z0-x0*z3) - (x0*z2-x2*z0) - (x2*z3-x3*z2);
   const double d1 = + (x3*y0-x0*y3) + (x0*y2-x2*y0) + (x2*y3-x3*y2);
   const double s1 = iV6 * (a1 + b1*p.x() + c1*p.y() + d1*p.z());
-  if (s1 < -1.e-12)
+  if (s1 < -MIN_ELEMENT_VAL)
     return false;
 
   const double b2 = - (y0*z1-y1*z0) - (y1*z3-y3*z1) - (y3*z0-y0*z3);
   const double c2 = + (x0*z1-x1*z0) + (x1*z3-x3*z1) + (x3*z0-x0*z3);
   const double d2 = - (x0*y1-x1*y0) - (x1*y3-x3*y1) - (x3*y0-x0*y3);
   const double s2 = iV6 * (a2 + b2*p.x() + c2*p.y() + d2*p.z());
-  if (s2 < -1.e-12)
+  if (s2 < -MIN_ELEMENT_VAL)
     return false;
 
   const double b3 = +(y1*z2-y2*z1) + (y2*z0-y0*z2) + (y0*z1-y1*z0);
   const double c3 = -(x1*z2-x2*z1) - (x2*z0-x0*z2) - (x0*z1-x1*z0);
   const double d3 = +(x1*y2-x2*y1) + (x2*y0-x0*y2) + (x0*y1-x1*y0);
   const double s3 = iV6 * (a3 + b3*p.x() + c3*p.y() + d3*p.z());
-  if (s3 < -1.e-12)
+  if (s3 < -MIN_ELEMENT_VAL)
     return false;
 
   return true;
@@ -1050,42 +1050,42 @@ HexVolMesh::get_face_weights(double *w, const Node::array_type &nodes,
   const Point &p3 = point(nodes[i3]);
 
   const double a0 = tri_area(p, p0, p1);
-  if (a0 < 1.0e-6)
+  if (a0 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p0 - p1;
     const Vector v1 = p - p1;
     const double l2 = Dot(v0, v0);
-    w[i0] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+    w[i0] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
     w[i1] = 1.0 - w[i0];
     return;
   }
   const double a1 = tri_area(p, p1, p2);
-  if (a1 < 1.0e-6)
+  if (a1 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p1 - p2;
     const Vector v1 = p - p2;
     const double l2 = Dot(v0, v0);
-    w[i1] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+    w[i1] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
     w[i2] = 1.0 - w[i1];
     return;
   }
   const double a2 = tri_area(p, p2, p3);
-  if (a2 < 1.0e-6)
+  if (a2 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p2 - p3;
     const Vector v1 = p - p3;
     const double l2 = Dot(v0, v0);
-    w[i2] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+    w[i2] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
     w[i3] = 1.0 - w[i2];
     return;
   }
   const double a3 = tri_area(p, p3, p0);
-  if (a3 < 1.0e-6)
+  if (a3 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p3 - p0;
     const Vector v1 = p - p0;
     const double l2 = Dot(v0, v0);
-    w[i3] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+    w[i3] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
     w[i0] = 1.0 - w[i3];
     return;
   }
@@ -1121,7 +1121,7 @@ HexVolMesh::get_weights(const Point &p, Node::array_type &nodes, double *w)
       const double a0 =
         tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][0]]),
                  point(nodes[wtable[i][1]]));
-      if (a0 < 1.0e-6)
+      if (a0 < MIN_ELEMENT_VAL)
       {
         get_face_weights(w, nodes, p, i, wtable[i][0],
                          wtable[i][3], wtable[i][1]);
@@ -1130,7 +1130,7 @@ HexVolMesh::get_weights(const Point &p, Node::array_type &nodes, double *w)
       const double a1 =
         tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][1]]),
                  point(nodes[wtable[i][2]]));
-      if (a1 < 1.0e-6)
+      if (a1 < MIN_ELEMENT_VAL)
       {
         get_face_weights(w, nodes, p, i, wtable[i][1],
                          wtable[i][4], wtable[i][2]);
@@ -1139,7 +1139,7 @@ HexVolMesh::get_weights(const Point &p, Node::array_type &nodes, double *w)
       const double a2 =
         tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][2]]),
                  point(nodes[wtable[i][0]]));
-      if (a2 < 1.0e-6)
+      if (a2 < MIN_ELEMENT_VAL)
       {
         get_face_weights(w, nodes, p, i, wtable[i][2],
                          wtable[i][5], wtable[i][0]);
@@ -1225,8 +1225,7 @@ HexVolMesh::inside8_p(Cell::index_type i, const Point &p) const
   Point center;
   get_center(center, i);
 
-  for (unsigned int i = 0; i < faces.size(); i++)
-  {
+  for (unsigned int i = 0; i < faces.size(); i++) {
     Node::array_type nodes;
     get_nodes(nodes, faces[i]);
     Point p0, p1, p2;
@@ -1238,11 +1237,19 @@ HexVolMesh::inside8_p(Cell::index_type i, const Point &p) const
     const Vector normal = Cross(v0, v1);
     const Vector off0(p - p0);
     const Vector off1(center - p0);
-    if (Dot(off0, normal) * Dot(off1, normal) < 0.0)
-    {
+
+    double dotprod = Dot(off0, normal);
+
+    // Account for round off - the point may be on the plane!!
+    if( fabs( dotprod ) < MIN_ELEMENT_VAL )
+      continue;
+
+    // If orientated correctly the second dot product is not needed.
+    // Only need to check to see if the sign is negative.
+    if (dotprod * Dot(off1, normal) < 0.0)
       return false;
-    }
   }
+
   return true;
 }
     
