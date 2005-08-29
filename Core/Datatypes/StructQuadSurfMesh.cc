@@ -28,7 +28,7 @@
 
 
 /*
- *  StructQuadSurfMesh.cc: Templated Mesh defined on a 2D Regular Grid
+ *  StructQuadSurfMesh.cc: Templated Mesh defined on a 2D Structured Grid
  *
  *  Written by:
  *   Allen R. Sanderson
@@ -46,6 +46,7 @@
 
 #include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/CompGeom.h>
 #include <Core/Math/MusilRNG.h>
 #include <iostream>
 
@@ -268,18 +269,102 @@ StructQuadSurfMesh::locate(Node::index_type &node, const Point &p) const
   }
 }
 
+
 bool
-StructQuadSurfMesh::locate(Edge::index_type &node, const Point &) const
+StructQuadSurfMesh::locate(Edge::index_type &loc, const Point &p) const
 {
-  ASSERTFAIL("Locate Edge not implemented in StructQuadSurfMesh");
+  Edge::iterator bi, ei;
+  Node::array_type nodes;
+  begin(bi);
+  end(ei);
+  loc = 0;
+  
+  bool found = false;
+  double mindist = 0.0;
+  while (bi != ei)
+  {
+    get_nodes(nodes,*bi);
+
+    Point p0, p1;
+    get_center(p0, nodes[0]);
+    get_center(p1, nodes[1]);
+
+    const double dist = distance_to_line2(p, p0, p1);
+    if (!found || dist < mindist)
+    {
+      loc = *bi;
+      mindist = dist;
+      found = true;
+    }
+    ++bi;
+  }
+  return found;
+}
+
+
+bool 
+StructQuadSurfMesh::inside3_p(Face::index_type i, const Point &p) const
+{
+  Node::array_type nodes;
+  get_nodes(nodes, i);
+
+  unsigned int n = nodes.size();
+
+  Point pts[n];
+  
+  for (unsigned int i = 0; i < n; i++)
+    get_center(pts[i], nodes[i]);
+
+  for (unsigned int i = 0; i < n; i+=2) {
+    Point p0 = pts[(i+0)%n];
+    Point p1 = pts[(i+1)%n];
+    Point p2 = pts[(i+2)%n];
+
+    Vector v01(p0-p1);
+    Vector v02(p0-p2);
+    Vector v0(p0-p);
+    Vector v1(p1-p);
+    Vector v2(p2-p);
+    const double a = Cross(v01, v02).length(); // area of the whole triangle (2x)
+    const double a0 = Cross(v1, v2).length();  // area opposite p0
+    const double a1 = Cross(v2, v0).length();  // area opposite p1
+    const double a2 = Cross(v0, v1).length();  // area opposite p2
+    const double s = a0+a1+a2;
+
+    // If the area of any of the sub triangles is very small then the point
+    // is on the edge of the subtriangle.
+    // TODO : How small is small ???
+//     if( a0 < MIN_ELEMENT_VAL ||
+// 	a1 < MIN_ELEMENT_VAL ||
+// 	a2 < MIN_ELEMENT_VAL )
+//       return true;
+
+    // For the point to be inside a CONVEX quad it must be inside one
+    // of the four triangles that can be formed by using three of the
+    // quad vertices.
+    if( fabs(s - a) < MIN_ELEMENT_VAL && a > MIN_ELEMENT_VAL )
+      return true;
+  }
+
   return false;
 }
 
 
 bool
-StructQuadSurfMesh::locate(Face::index_type &loc, const Point &) const
-{
-  ASSERTFAIL("Locate Face not implemented in StructQuadSurfMesh");
+StructQuadSurfMesh::locate(Face::index_type &face, const Point &p) const
+{  
+  Face::iterator bi, ei;
+  begin(bi);
+  end(ei);
+
+  while (bi != ei) {
+    if( inside3_p( *bi, p ) ) {
+      face = *bi;
+      return true;
+    }
+
+    ++bi;
+  }
   return false;
 }
 
@@ -287,7 +372,7 @@ StructQuadSurfMesh::locate(Face::index_type &loc, const Point &) const
 bool
 StructQuadSurfMesh::locate(Cell::index_type &loc, const Point &) const
 {
-  ASSERTFAIL("Locate Cell not implemented in StructQuadSurfMesh");
+  loc = 0;
   return false;
 }
 
@@ -303,6 +388,9 @@ int
 StructQuadSurfMesh::get_weights(const Point &p,
 				Node::array_type &locs, double *w)
 {
+  for (unsigned int j = 0; j < 4; j++)
+    w[j] = 0.0;
+
   Face::index_type idx;
   if (locate(idx, p))
   {
@@ -313,51 +401,43 @@ StructQuadSurfMesh::get_weights(const Point &p,
     const Point &p3 = point(locs[3]);
 
     const double a0 = tri_area(p, p0, p1);
-    if (a0 < 1.0e-6)
+    if (a0 < MIN_ELEMENT_VAL)
     {
       const Vector v0 = p0 - p1;
       const Vector v1 = p - p1;
-      const double l2 = Dot(v0, v0);
-      w[0] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+      w[0] = Dot(v0, v1) / Dot(v0, v0);
+      if( !finite( w[0] ) ) w[0] = 0.5;
       w[1] = 1.0 - w[0];
-      w[2] = 0.0;
-      w[3] = 0.0;
       return 4;
     }
     const double a1 = tri_area(p, p1, p2);
-    if (a1 < 1.0e-6)
+    if (a1 < MIN_ELEMENT_VAL)
     {
       const Vector v0 = p1 - p2;
       const Vector v1 = p - p2;
-      const double l2 = Dot(v0, v0);
-      w[1] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+      w[1] = Dot(v0, v1) / Dot(v0, v0);
+      if( !finite( w[1] ) ) w[1] = 0.5;
       w[2] = 1.0 - w[1];
-      w[3] = 0.0;
-      w[0] = 0.0;
       return 4;
     }
     const double a2 = tri_area(p, p2, p3);
-    if (a2 < 1.0e-6)
+    if (a2 < MIN_ELEMENT_VAL)
     {
       const Vector v0 = p2 - p3;
       const Vector v1 = p - p3;
-      const double l2 = Dot(v0, v0);
-      w[2] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+      w[2] = Dot(v0, v1) / Dot(v0, v0);
+      if( !finite( w[2] ) ) w[2] = 0.5;
       w[3] = 1.0 - w[2];
-      w[0] = 0.0;
-      w[1] = 0.0;
       return 4;
     }
     const double a3 = tri_area(p, p3, p0);
-    if (a3 < 1.0e-6)
+    if (a3 < MIN_ELEMENT_VAL)
     {
       const Vector v0 = p3 - p0;
       const Vector v1 = p - p0;
-      const double l2 = Dot(v0, v0);
-      w[3] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+      w[3] = Dot(v0, v1) / Dot(v0, v0);
+      if( !finite( w[3] ) ) w[3] = 0.5;
       w[0] = 1.0 - w[3];
-      w[1] = 0.0;
-      w[2] = 0.0;
       return 4;
     }
 
