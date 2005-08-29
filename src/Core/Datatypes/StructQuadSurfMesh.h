@@ -28,7 +28,7 @@
 
 
 /*
- *  StructQuadSurfMesh.h: Templated Mesh defined on a 3D Structured Grid
+ *  StructQuadSurfMesh.h: Templated Mesh defined on a 2D Structured Grid
  *
  *  Written by:
  *   Allen R. Sanderson
@@ -141,6 +141,8 @@ public:
   void get_center(Point &, Edge::index_type) const;
   void get_center(Point &, const Face::index_type &) const;
   void get_center(Point &, Cell::index_type) const {}
+
+  bool inside3_p(Face::index_type i, const Point &p) const;
 
   bool locate(Node::index_type &, const Point &) const;
   bool locate(Edge::index_type &, const Point &) const;
