@@ -201,8 +201,8 @@ ScanlineMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
   Node::index_type node0, node1;
 
   double ii=r.x();
-  if (ii>(ni_-1) && (ii-(1.e-10))<(ni_-1)) ii=ni_-1-(1.e-10);
-  if (ii<0 && ii>(-1.e-10)) ii=0;
+  if (ii>(ni_-1) && (ii-(MIN_ELEMENT_VAL))<(ni_-1)) ii=ni_-1-(MIN_ELEMENT_VAL);
+  if (ii<0 && ii>(-MIN_ELEMENT_VAL)) ii=0;
   node0 = (unsigned int)floor(ii);
 
   if (node0 < (ni_-1)) 
