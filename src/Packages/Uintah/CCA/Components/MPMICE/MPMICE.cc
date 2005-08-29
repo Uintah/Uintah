@@ -900,7 +900,6 @@ void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
   Task* t = scinew Task("MPMICE::interpolateMassBurnFractionToNC",
                   this, &MPMICE::interpolateMassBurnFractionToNC);
 
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());  
   t->requires(Task::NewDW, MIlb->cMassLabel,        Ghost::AroundCells,1);
  
   if(d_ice->d_models.size() > 0){
@@ -1650,14 +1649,14 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
       dVdt_CC.initialize(Vector(0.0));
       //__________________________________
       for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+         IntVector c = *iter;
          if(!d_rigidMPM){
-           dVdt_CC[*iter]  = (mom_L_ME_CC[*iter] - old_mom_L_CC[*iter])
-                             /(mass_L_CC[*iter] * delT);
+           dVdt_CC[c] = (mom_L_ME_CC[c] - old_mom_L_CC[c])/(mass_L_CC[c]*delT);
          }
-         dTdt_CC[*iter]  = (eng_L_ME_CC[*iter] - old_int_eng_L_CC[*iter])
-                           /(mass_L_CC[*iter] * cv * delT);
-         double heatRte  = (eng_L_ME_CC[*iter] - old_int_eng_L_CC[*iter])/delT;
-         heatRate[*iter] = .05*heatRte + .95*old_heatRate[*iter];
+         dTdt_CC[c]   = (eng_L_ME_CC[c] - old_int_eng_L_CC[c])
+                           /(mass_L_CC[c] * cv * delT);
+         double heatRte  = (eng_L_ME_CC[c] - old_int_eng_L_CC[c])/delT;
+         heatRate[c] = .05*heatRte + .95*old_heatRate[c];
       }
       setBC(dTdt_CC,    "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
       setBC(dVdt_CC,    "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
@@ -2289,8 +2288,6 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
     int numALLMatls = d_sharedState->getNumMPMMatls() + 
       d_sharedState->getNumICEMatls();
 
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
     Ghost::GhostType  gac = Ghost::AroundCells;
     
     for (int m = 0; m < numALLMatls; m++) {
