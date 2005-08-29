@@ -40,18 +40,12 @@ itcl_class SCIRun_Bundle_BundleSetNrrd {
         global $this-nrrd1-name
         global $this-nrrd2-name
         global $this-nrrd3-name
-        global $this-nrrd1-usename
-        global $this-nrrd2-usename
-        global $this-nrrd3-usename
         global $this-bundlename
         
 
         set $this-nrrd1-name "nrrd1"
         set $this-nrrd2-name "nrrd2"
         set $this-nrrd3-name "nrrd3"
-        set $this-nrrd1-usename 0
-        set $this-nrrd2-usename 0
-        set $this-nrrd3-usename 0
         set $this-bundlename ""
 
     }
@@ -68,9 +62,6 @@ itcl_class SCIRun_Bundle_BundleSetNrrd {
         global $this-nrrd1-name
         global $this-nrrd2-name
         global $this-nrrd3-name
-        global $this-nrrd1-usename
-        global $this-nrrd2-usename
-        global $this-nrrd3-usename
         global $this-bundlename
 
         toplevel $w 
@@ -108,8 +99,6 @@ itcl_class SCIRun_Bundle_BundleSetNrrd {
         entry $nrrd1.name.entry -textvariable $this-nrrd1-name
         pack $nrrd1.name.label -side left 
         pack $nrrd1.name.entry -side left -fill x -expand yes
-        checkbutton $nrrd1.options.usename -text "Use object name" -variable $this-nrrd1-usename
-        pack $nrrd1.options.usename -side top -fill x
         
         frame $nrrd2.name
         frame $nrrd2.options
@@ -119,8 +108,6 @@ itcl_class SCIRun_Bundle_BundleSetNrrd {
         entry $nrrd2.name.entry -textvariable $this-nrrd2-name
         pack $nrrd2.name.label -side left 
         pack $nrrd2.name.entry -side left -fill x -expand yes
-        checkbutton $nrrd2.options.usename -text "Use object name" -variable $this-nrrd2-usename
-        pack $nrrd2.options.usename -side top -fill x
         
         frame $nrrd3.name
         frame $nrrd3.options
@@ -130,8 +117,6 @@ itcl_class SCIRun_Bundle_BundleSetNrrd {
         entry $nrrd3.name.entry -textvariable $this-nrrd3-name
         pack $nrrd3.name.label -side left 
         pack $nrrd3.name.entry -side left -fill x -expand yes
-        checkbutton $nrrd3.options.usename -text "Use object name" -variable $this-nrrd3-usename
-        pack $nrrd3.options.usename -side top -fill x
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w

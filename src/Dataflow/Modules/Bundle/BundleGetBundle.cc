@@ -38,9 +38,6 @@
 #include <Dataflow/Ports/BundlePort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/NrrdData.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Core/Datatypes/NrrdString.h>
 
 using namespace SCIRun;
 using namespace std;
@@ -53,8 +50,6 @@ public:
 
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
-  
-  //  void connection(Port::ConnectionState mode, int which_port, bool is_oport);
   
 private:
   GuiString             guibundle1name_;
@@ -80,8 +75,7 @@ BundleGetBundle::~BundleGetBundle(){
 }
 
 
-void
-BundleGetBundle::execute()
+void BundleGetBundle::execute()
 {
   string bundle1name = guibundle1name_.get();
   string bundle2name = guibundle2name_.get();
@@ -124,101 +118,52 @@ BundleGetBundle::execute()
 
  
   if (!(ofport = static_cast<BundleOPort *>(get_oport("bundle1"))))
-    {
-      error("Could not find bundle 1 output port");
-      return; 
-    }
- 
-  NrrdIPort *niport = static_cast<NrrdIPort *>(getIPort("name1"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          bundle1name = nrrdstring.getstring();
-          guibundle1name_.set(bundle1name);
-          ctx->reset();
-        }
-    }
- 
- 
+  {
+    error("Could not find bundle 1 output port");
+    return; 
+  }
  
   if (handle->isBundle(bundle1name))
-    {
-      fhandle = handle->getBundle(bundle1name);
-      ofport->send(fhandle);
-    }
+  {
+    fhandle = handle->getBundle(bundle1name);
+    ofport->send(fhandle);
+  }
         
  
   if (!(ofport = static_cast<BundleOPort *>(get_oport("bundle2"))))
-    {
-      error("Could not find bundle 2 output port");
-      return; 
-    }
-
-
-  niport = static_cast<NrrdIPort *>(getIPort("name2"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          bundle2name = nrrdstring.getstring();
-          guibundle2name_.set(bundle2name);
-          ctx->reset();
-        }
-    }
+  {
+    error("Could not find bundle 2 output port");
+    return; 
+  }
 
  
   if (handle->isBundle(bundle2name))
-    {
-      fhandle = handle->getBundle(bundle2name);
-      ofport->send(fhandle);
-    }
+  {
+    fhandle = handle->getBundle(bundle2name);
+    ofport->send(fhandle);
+  }
         
  
   if (!(ofport = static_cast<BundleOPort *>(get_oport("bundle3"))))
-    {
-      error("Could not find bundle 3 output port");
-      return; 
-    }
+  {
+    error("Could not find bundle 3 output port");
+    return; 
+  }
  
-  niport = static_cast<NrrdIPort *>(getIPort("name3"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          bundle3name = nrrdstring.getstring();
-          guibundle3name_.set(bundle3name);
-          ctx->reset();
-        }
-    }
-
   if (handle->isBundle(bundle3name))
-    {
-      fhandle = handle->getBundle(bundle3name);
-      ofport->send(fhandle);
-    }
+  {
+    fhandle = handle->getBundle(bundle3name);
+    ofport->send(fhandle);
+  }
         
   if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-    {
-      oport->send(handle);
-    }
-        
+  {
+    oport->send(handle);
+  }
+      
 }
 
-void
-BundleGetBundle::tcl_command(GuiArgs& args, void* userdata)
+void BundleGetBundle::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

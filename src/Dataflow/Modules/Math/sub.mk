@@ -57,6 +57,7 @@ SRCS     += \
 	$(SRCDIR)/Submatrix.cc\
 	$(SRCDIR)/MaskVectorToMappingMatrix.cc\
 	$(SRCDIR)/MappingMatrixToMaskVector.cc\
+	$(SRCDIR)/CreateMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports \

@@ -41,9 +41,6 @@
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/NrrdData.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Core/Datatypes/NrrdString.h>
 
 using namespace SCIRun;
 using namespace std;
@@ -81,12 +78,8 @@ BundleGetField::~BundleGetField(){
 }
 
 
-
-void
-BundleGetField::execute()
+void BundleGetField::execute()
 {
-
-
   string field1name = guifield1name_.get();
   string field2name = guifield2name_.get();
   string field3name = guifield3name_.get();
@@ -99,129 +92,79 @@ BundleGetField::execute()
   SCIRun::FieldOPort *ofport;
         
   if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-    {
-      error("Could not find bundle input port");
-      return;
-    }
+  {
+    error("Could not find bundle input port");
+    return;
+  }
 
   if (!(iport->get(handle)))
-    {   
-      warning("No bundle connected to the input port");
-      return;
-    }
+  {   
+    warning("No bundle connected to the input port");
+    return;
+  }
 
   if (handle.get_rep() == 0)
-    {   
-      warning("Empty bundle connected to the input port");
-      return;
-    }
-
+  {   
+    warning("Empty bundle connected to the input port");
+    return;
+  }
 
   int numfields = handle->numFields();
   for (int p = 0; p < numfields; p++)
-    {
-      fieldlist += "{" + handle->getFieldName(p) + "} ";
-    }
+  {
+    fieldlist += "{" + handle->getFieldName(p) + "} ";
+  }
 
   guifields_.set(fieldlist);
   ctx->reset();
 
  
   if (!(ofport = static_cast<FieldOPort *>(get_oport("field1"))))
-    {
-      error("Could not find field 1 output port");
-      return; 
-    }
+  {
+    error("Could not find field 1 output port");
+    return; 
+  }
 
- 
-  NrrdIPort *niport = static_cast<NrrdIPort *>(getIPort("name1"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          field1name = nrrdstring.getstring();
-          guifield1name_.set(field1name);
-          ctx->reset();
-        }
-    } 
-
- 
   if (handle->isField(field1name))
-    {
-      fhandle = handle->getField(field1name);
-      ofport->send(fhandle);
-    }
-        
+  {
+    fhandle = handle->getField(field1name);
+    ofport->send(fhandle);
+  }
+      
  
   if (!(ofport = static_cast<FieldOPort *>(get_oport("field2"))))
-    {
-      error("Could not find field 2 output port");
-      return; 
-    }
- 
-  niport = static_cast<NrrdIPort *>(getIPort("name2"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          field2name = nrrdstring.getstring();
-          guifield2name_.set(field2name);
-          ctx->reset();
-        }
-    }
-
+  {
+    error("Could not find field 2 output port");
+    return; 
+  }
  
   if (handle->isField(field2name))
-    {
-      fhandle = handle->getField(field2name);
-      ofport->send(fhandle);
-    }
-        
+  {
+    fhandle = handle->getField(field2name);
+    ofport->send(fhandle);
+  }
+      
  
   if (!(ofport = static_cast<FieldOPort *>(get_oport("field3"))))
-    {
-      error("Could not find field 3 output port");
-      return; 
-    }
- 
-  niport = static_cast<NrrdIPort *>(getIPort("name3"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          field3name = nrrdstring.getstring();
-          guifield3name_.set(field3name);
-          ctx->reset();
-        }
-    }
+  {
+    error("Could not find field 3 output port");
+    return; 
+  }
  
   if (handle->isField(field3name))
-    {
-      fhandle = handle->getField(field3name);
-      ofport->send(fhandle);
-    }
+  {
+    fhandle = handle->getField(field3name);
+    ofport->send(fhandle);
+  }
         
   if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-    {
-      oport->send(handle);
-    }
+  {
+    oport->send(handle);
+  }
         
 }
 
-void
-BundleGetField::tcl_command(GuiArgs& args, void* userdata)
+void BundleGetField::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

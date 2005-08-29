@@ -58,9 +58,6 @@ private:
   GuiString     guifield1name_;
   GuiString     guifield2name_;
   GuiString     guifield3name_;
-  GuiInt        guifield1usename_;
-  GuiInt        guifield2usename_;
-  GuiInt        guifield3usename_;
   GuiString     guibundlename_;
 };
 
@@ -71,9 +68,6 @@ DECLARE_MAKER(BundleSetField)
       guifield1name_(ctx->subVar("field1-name")),
       guifield2name_(ctx->subVar("field2-name")),
       guifield3name_(ctx->subVar("field3-name")),
-      guifield1usename_(ctx->subVar("field1-usename")),
-      guifield2usename_(ctx->subVar("field2-usename")),
-      guifield3usename_(ctx->subVar("field3-usename")),
       guibundlename_(ctx->subVar("bundlename"))
 {
 }
@@ -81,15 +75,11 @@ DECLARE_MAKER(BundleSetField)
 BundleSetField::~BundleSetField(){
 }
 
-void
-BundleSetField::execute()
+void BundleSetField::execute()
 {
   string field1name = guifield1name_.get();
   string field2name = guifield2name_.get();
   string field3name = guifield3name_.get();
-  int field1usename = guifield1usename_.get();
-  int field2usename = guifield2usename_.get();
-  int field3usename = guifield3usename_.get();
   string bundlename = guibundlename_.get();
     
   BundleHandle handle, oldhandle;
@@ -99,106 +89,71 @@ BundleSetField::execute()
   FieldIPort *ifport;
         
   if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-    {
-      error("Could not find bundle input port");
-      return;
-    }
+  {
+    error("Could not find bundle input port");
+    return;
+  }
         
   // Create a new bundle
   // Since a bundle consists of only handles we can copy
   // it several times without too much memory overhead
   if (iport->get(oldhandle))
-    {   // Copy all the handles from the existing bundle
-      handle = oldhandle->clone();
-    }
+  {   // Copy all the handles from the existing bundle
+    handle = oldhandle->clone();
+  }
   else
-    {   // Create a brand new bundle
-      handle = scinew Bundle;
-    }
+  {   // Create a brand new bundle
+    handle = scinew Bundle;
+  }
         
   // Scan bundle input port 1
   if (!(ifport = static_cast<FieldIPort *>(get_iport("field1"))))
-    {
-      error("Could not find field 1 input port");
-      return;
-    }
+  {
+    error("Could not find field 1 input port");
+    return;
+  }
         
   if (ifport->get(fhandle))
-    {
-      if (field1usename)
-        {
-          string name;
-          fhandle->get_property("name",name);
-          if (name != "") 
-            {
-              field1name = name;
-              guifield1name_.set(name);
-              ctx->reset();
-            }
-        }
-      handle->setField(field1name,fhandle);
-    }
+  {
+    handle->setField(field1name,fhandle);
+  }
 
   // Scan field input port 2      
   if (!(ifport = static_cast<FieldIPort *>(get_iport("field2"))))
-    {
-      error("Could not find field 2 input port");
-      return;
-    }
+  {
+    error("Could not find field 2 input port");
+    return;
+  }
         
   if (ifport->get(fhandle))
-    {
-      if (field2usename)
-        {
-          string name;
-          fhandle->get_property("name",name);
-          if (name != "") 
-            {    
-              field2name = name;
-              guifield2name_.set(name);
-              ctx->reset();
-            }    
-        }
-
-      handle->setField(field2name,fhandle);
-    }
+  {
+    handle->setField(field2name,fhandle);
+  }
 
   // Scan field input port 3      
   if (!(ifport = static_cast<FieldIPort *>(get_iport("field3"))))
-    {
-      error("Could not find field 3 input port");
-      return;
-    }
+  {
+    error("Could not find field 3 input port");
+    return;
+  }
         
   if (ifport->get(fhandle))
-    {
-      if (field3usename)
-        {
-          string name;
-          fhandle->get_property("name",name);
-          if (name != "") 
-            {
-              field3name = name;
-              guifield1name_.set(name);
-              ctx->reset();
-            }
-        }
-    
-      handle->setField(field3name,fhandle);
-    }
+  {
+    handle->setField(field3name,fhandle);
+  }
         
   // Now post the output
         
   if (!(oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-    {
-      error("Could not find bundle output port");
-      return;
-    }
+  {
+    error("Could not find bundle output port");
+    return;
+  }
     
   if (bundlename != "")
-    {
-      handle->set_property("name",bundlename,false);
-    }
+  {
+    handle->set_property("name",bundlename,false);
+  }
         
   oport->send(handle);
 }

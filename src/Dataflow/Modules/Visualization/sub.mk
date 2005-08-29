@@ -59,6 +59,7 @@ SRCS     += \
 	$(SRCDIR)/TextureBuilder.cc\
 	$(SRCDIR)/VolumeSlicer.cc\
 	$(SRCDIR)/VolumeVisualizer.cc\
+	$(SRCDIR)/ShowString.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
