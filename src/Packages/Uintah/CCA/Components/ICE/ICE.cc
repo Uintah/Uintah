@@ -9,6 +9,8 @@
 // Push cp/cv further into EOS?
 // In spvol - easier to compute cp from temperature than fromenergy?
 // dTdt
+// Do anything to specific volume in react?
+// cv/gamma -> cp/cv
 
 #ifdef __APPLE__
 // This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
@@ -795,10 +797,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   }
   Ghost::GhostType ghostType = numGhostCells == 0? Ghost::None:Ghost::AroundCells;
 
-  if(d_delT_knob != 0){
-    // Require speed of sound unless delt_knob == 0
-    t->requires(Task::NewDW, lb->speedSound_CCLabel, ghostType, numGhostCells);
-  }
+  t->requires(Task::NewDW, lb->speedSound_CCLabel, ghostType, numGhostCells);
 
   // Thermo/EOS dependencies may vary per material
   int numICEMatls = d_sharedState->getNumICEMatls();
@@ -854,6 +853,32 @@ void ICE::scheduleComputeInternalEnergy(SchedulerP& sched,
     ice_matl->getThermo()->addTaskDependencies_int_eng(t, ThermoInterface::NewState, 0);
   }
   t->computes(lb->int_eng_CCLabel);
+  sched->addTask(t, patches, ice_matls);
+}
+
+/* _____________________________________________________________________
+ Function~  ICE::scheduleComputeTemperature--
+_____________________________________________________________________*/
+void ICE::scheduleComputeTemperature(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* ice_matls)
+{
+  int levelIndex = getLevel(patches)->getIndex();
+  if(!doICEOnLevel(levelIndex))
+    return;
+  
+  cout_doing << "ICE::scheduleComputeTemperature \t\t\tL-"
+             << levelIndex << endl;
+  Task* t = scinew Task("ICE::computeTemperature",
+                        this, &ICE::computeTemperature);
+  t->requires(Task::NewDW, lb->int_eng_CCLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel, Ghost::None);
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for(int m = 0;m < numICEMatls; m++){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    ice_matl->getThermo()->addTaskDependencies_int_eng(t, ThermoInterface::NewState, 0);
+  }
+  t->computes(lb->ntemp_CCLabel);
   sched->addTask(t, patches, ice_matls);
 }
 
@@ -1026,6 +1051,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           
   scheduleTestConservation(               sched, patches, ice_matls_sub,
                                                           all_matls); 
+
+  scheduleComputeTemperature(             sched, patches, ice_matls);
 
   if(d_canAddICEMaterial){
     //  This checks to see if the model on THIS patch says that it's
@@ -2426,6 +2453,41 @@ void ICE::computeInternalEnergy(const ProcessorGroup*,
                                              patch, indx, 0,
                                              Temp, sp_vol);
       setBC(int_eng,    "Temperature", patch, d_sharedState, indx, new_dw);
+    }
+  }
+}
+
+/* _____________________________________________________________________
+ Function~  ICE::computeTemperature
+ Purpose~   
+ _____________________________________________________________________  */
+void ICE::computeTemperature(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* /*ice_matls*/,
+                             DataWarehouse* /*old_dw*/,
+                             DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing computeTemperature on patch "
+               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+   
+    int numMatls = d_sharedState->getNumICEMatls();
+    
+    for (int m = 0; m < numMatls; m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx = ice_matl->getDWIndex();
+      CCVariable<double> Temp;
+      constCCVariable<double> int_eng, sp_vol;
+      new_dw->allocateAndPut(Temp, lb->ntemp_CCLabel, indx, patch);
+      new_dw->get(int_eng, lb->int_eng_CCLabel, indx, patch, Ghost::None, 0);
+      new_dw->get(sp_vol, lb->sp_vol_CCLabel, indx, patch, Ghost::None, 0);
+      ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), Temp,
+                                          0, new_dw, ThermoInterface::NewState,
+                                          patch, indx, 0,
+                                          int_eng, sp_vol);
     }
   }
 }

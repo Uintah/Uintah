@@ -46,6 +46,7 @@ CanteraMixtureFraction::CanteraMixtureFraction(ProblemSpecP& ps, ModelSetup* set
     d_gas->setState_TPY(300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
     mix0.resize(nsp);
     mix1.resize(nsp);
+    cerr << "species0=" << species0 << ", species1=" << species1 << '\n';
     d_gas->setState_TPY(300., 101325., species0);
     d_gas->getMassFractions(&mix0[0]);
     d_gas->setState_TPY(300., 101325., species1);

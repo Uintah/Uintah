@@ -74,6 +74,10 @@ namespace Uintah {
                                          const PatchSet*,
                                          const MaterialSet*);
                  
+      void scheduleComputeTemperature(SchedulerP&, 
+                                      const PatchSet*,
+                                      const MaterialSet*);
+                 
       void scheduleComputeSpeedOfSound(SchedulerP&, 
                                        const PatchSet*,
                                        const MaterialSet*);
@@ -299,6 +303,12 @@ namespace Uintah {
                                  const MaterialSubset* matls,
                                  DataWarehouse*, 
                                  DataWarehouse* new_dw);
+                              
+      void computeTemperature(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*, 
+                              DataWarehouse* new_dw);
                               
       void computeSpeedOfSound(const ProcessorGroup*, 
                                const PatchSubset* patches,
