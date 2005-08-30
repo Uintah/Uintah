@@ -359,6 +359,7 @@
       </Model>
     <!--__________________________________   -->  
       <Model type = "Radiation">
+        <material>BackgroundGas</material>
         <RadiationModel>
         <radiationCalcFreq>      5    </radiationCalcFreq>
         <useIceTemp>            true  </useIceTemp>
