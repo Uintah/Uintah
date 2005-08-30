@@ -74,7 +74,6 @@
     <delt_init>          1.0e-7      </delt_init>
     <max_delt_increase>  0.5         </max_delt_increase>
     <timestep_multiplier>1.0         </timestep_multiplier>
-    <override_restart_delt> 2.5e-10  </override_restart_delt>
     <!--<max_iterations>      10         </max_iterations>-->
   </Time>
 
@@ -588,8 +587,8 @@
               <momentum>  [ 0, 1e15,
                                1e15]     </momentum>
 
-              <heat>      [ 0, 1e10,
-                               1e10]     </heat>
+              <heat>      [ 0, 1e4,
+                               1e4]     </heat>
         </exchange_coefficients>
         <do_convective_heat_transfer> true </do_convective_heat_transfer>
         <convective_fluid>2</convective_fluid>
@@ -638,7 +637,7 @@
                                1e10, 1e10,
                                      1e10]     </heat>
         </exchange_coefficients>
-        <do_convective_heat_transfer> true </do_convective_heat_transfer>
+        <do_convective_heat_transfer> false </do_convective_heat_transfer>
         <convective_fluid>2</convective_fluid>
         <convective_solid>0</convective_solid>
       </exchange_properties> 
