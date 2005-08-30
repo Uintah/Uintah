@@ -174,7 +174,21 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
   gui->execute(string("set ") + id + "-dimension " + to_string(nh->nrrd->dim));
 
 
-  int space_axis = 0;
+  // set spaceOrigin if available
+  if (nh->nrrd->spaceDim > 0 &&
+      airExists(nh->nrrd->spaceOrigin[0])) {
+    string space_origin_string = "\"(";
+    for (int d=0; d<nh->nrrd->spaceDim; d++) {
+      space_origin_string += to_string(nh->nrrd->spaceOrigin[d]);
+      if (d < (nh->nrrd->spaceDim-1))
+	space_origin_string += ", ";
+    }
+    space_origin_string += ")\"";
+    gui->execute(string("set ") + id + "-origin " + space_origin_string);
+  } else {
+    gui->execute(string("set ") + id + "-origin " + "\"not available\"");
+  }
+  
   for (int i = 0; i < nh->nrrd->dim; i++) {
     ostringstream sz, cntr, lab, kind, spac, min, max, spaceDir;
     
@@ -268,27 +282,15 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
       break;
     }
 
-    // use spaceOrigin and spaceDirection information
+    // use spaceDirection information
     // if available, else use min/max and spacing
     double spacing = 0;
     double *vec = new double[NRRD_SPACE_DIM_MAX];
     
     int result = nrrdSpacingCalculate(nh->nrrd, i, &spacing, vec);
     if (result ==  nrrdSpacingStatusDirection &&
-	airExists(nh->nrrd->axis[i].spaceDirection[0]) &&
-	airExists(nh->nrrd->spaceOrigin[space_axis]))
-      
+	airExists(nh->nrrd->axis[i].spaceDirection[0]))
     {
-      string space_origin_string = "\"(";
-      for (int d=0; d<nh->nrrd->spaceDim; d++) {
-	space_origin_string += to_string(nh->nrrd->spaceOrigin[d]);
-	if (d < (nh->nrrd->spaceDim-1))
-	  space_origin_string += ", ";
-      }
-      space_origin_string += ")\"";
-      gui->execute(string("set ") + id + "-origin " + space_origin_string);
-      
-      
       spac << "set " << id << "-spacing" << i 
 	   << " " << spacing;
       gui->execute(spac.str());
@@ -312,12 +314,8 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
       spaceDir << "set " << id << "-spaceDir" << i 
 	  << " " << space_dir_string;
       gui->execute(spaceDir.str());
-
-      space_axis++;
     } else
     {
-      gui->execute(string("set ") + id + "-origin " + "\"not available\"");
-
       spac << "set " << id << "-spacing" << i 
 	   << " " << nh->nrrd->axis[i].spacing;
       gui->execute(spac.str());
