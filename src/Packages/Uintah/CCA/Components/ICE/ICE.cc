@@ -1628,9 +1628,8 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    cerr << "WARNING: these may be intermediate state: line " << __LINE__ << '\n';
-    ice_matl->getThermo()->addTaskDependencies_Temp(t, ThermoInterface::OldState, 0);
-    ice_matl->getThermo()->addTaskDependencies_cv(t, ThermoInterface::OldState, 0);
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, ThermoInterface::IntermediateState, 0);
+    ice_matl->getThermo()->addTaskDependencies_cv(t, ThermoInterface::IntermediateState, 0);
   }
 
   if (d_RateForm) {         // RATE FORM
@@ -2040,7 +2039,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       new_dw->allocateTemporary(thermalDiffusivity, patch);
       ice_matl->getThermo()->compute_thermalDiffusivity(patch->getCellIterator(),
                                                         thermalDiffusivity,
-                                                        new_dw, patch, indx, 0,
+                                                        0, new_dw, ThermoInterface::NewState,
+                                                        patch, indx, 0,
                                                         int_eng, sp_vol_CC);
       
       if (d_delT_scheme == "aggressive") {     //      A G G R E S S I V E
@@ -2422,7 +2422,8 @@ void ICE::computeInternalEnergy(const ProcessorGroup*,
       new_dw->get(Temp, lb->ntemp_CCLabel, indx, patch, Ghost::None, 0);
       new_dw->get(sp_vol, lb->sp_vol_CCLabel, indx, patch, Ghost::None, 0);
       ice_matl->getThermo()->compute_int_eng(patch->getCellIterator(), int_eng,
-                                             new_dw, patch, indx, 0,
+                                             0, new_dw, ThermoInterface::NewState,
+                                             patch, indx, 0,
                                              Temp, sp_vol);
       setBC(int_eng,    "Temperature", patch, d_sharedState, indx, new_dw);
     }
@@ -2460,18 +2461,21 @@ void ICE::computeSpeedOfSound(const ProcessorGroup*,
       CCVariable<double> cv;
       new_dw->allocateTemporary(cv, patch);
       ice_matl->getThermo()->compute_cv(patch->getCellIterator(), cv,
-                                        new_dw, patch, indx, 0,
-                                        int_eng);
+                                        0, new_dw, ThermoInterface::NewState,
+                                        patch, indx, 0,
+                                        int_eng, sp_vol);
       CCVariable<double> gamma;
       new_dw->allocateTemporary(gamma, patch);
       ice_matl->getThermo()->compute_gamma(patch->getCellIterator(), gamma,
-                                           new_dw, patch, indx, 0,
-                                           int_eng);
+                                           0, new_dw, ThermoInterface::NewState,
+                                           patch, indx, 0,
+                                           int_eng, sp_vol);
       CCVariable<double> temp;
       new_dw->allocateTemporary(temp, patch);
       ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), temp,
-                                          new_dw, patch, indx, 0,
-                                          int_eng);
+                                          0, new_dw, ThermoInterface::NewState,
+                                          patch, indx, 0,
+                                          int_eng, sp_vol);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         const IntVector& c = *iter;
@@ -2663,16 +2667,19 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       new_dw->allocateTemporary(cv[m], patch);
       ice_matl->getThermo()->compute_cv(patch->getExtraCellIterator(), cv[m],
-                                        new_dw, patch, indx, 0,
-                                        int_eng[m]);
+                                        old_dw, new_dw, ThermoInterface::IntermediateState,
+                                        patch, indx, 0,
+                                        int_eng[m], sp_vol_CC[m]);
       new_dw->allocateTemporary(gamma[m], patch);
       ice_matl->getThermo()->compute_gamma(patch->getExtraCellIterator(), gamma[m],
-                                           new_dw, patch, indx, 0,
-                                           int_eng[m]);
+                                           old_dw, new_dw, ThermoInterface::IntermediateState,
+                                           patch, indx, 0,
+                                           int_eng[m], sp_vol_CC[m]);
       new_dw->allocateTemporary(Temp[m], patch);
       ice_matl->getThermo()->compute_Temp(patch->getExtraCellIterator(), Temp[m],
-                                          new_dw, patch, indx, 0,
-                                          int_eng[m]);
+                                          old_dw, new_dw, ThermoInterface::IntermediateState,
+                                          patch, indx, 0,
+                                          int_eng[m], sp_vol_CC[m]);
     }
     
 
@@ -4056,15 +4063,17 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
           cerr << "iterator: " << patch->getExtraCellIterator(IntVector(0,0,0)).begin() << " " << patch->getExtraCellIterator(IntVector(0,0,0)).end() << '\n';
           cerr << "WARNING: iterators likely wrong for multipatch problems\n";
           ice_matl->getThermo()->compute_Temp(patch->getExtraCellIterator(IntVector(0,0,0)),
-                                              Temp_CC, // Intermediate...
-                                              new_dw, patch, indx, 0,
-                                              int_eng);
+                                              Temp_CC,
+                                              old_dw, new_dw, ThermoInterface::IntermediateState,
+                                              patch, indx, 0,
+                                              int_eng, sp_vol_CC);
           CCVariable<double> thermalCond;
           new_dw->allocateTemporary(thermalCond, patch, Ghost::AroundCells, 1);
           ice_matl->getThermo()->compute_thermalConductivity(patch->getExtraCellIterator(IntVector(0,0,0)),
                                                              thermalCond,
-                                                             new_dw, patch, indx, 0,
-                                                             int_eng);
+                                                             old_dw, new_dw, ThermoInterface::IntermediateState,
+                                                             patch, indx, 0,
+                                                             int_eng, sp_vol_CC);
 
           constSFCXVariable<double> vol_fracX_FC;
           constSFCYVariable<double> vol_fracY_FC;
@@ -4310,8 +4319,9 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > Tdot(numALLMatls);
     StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
     StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
+    StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls);
     StaticArray<CCVariable<double> > alpha(numALLMatls);
-    constCCVariable<double> rho_CC, f_theta, sp_vol_CC;
+    constCCVariable<double> rho_CC, f_theta;
     constCCVariable<double> delP, P;
     CCVariable<double> sum_therm_exp;
     vector<double> if_mpm_matl_ignore(numALLMatls);
@@ -4327,6 +4337,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       int indx = matl->getDWIndex();
       
+      new_dw->get(sp_vol_CC[m], lb->sp_vol_CCLabel,    indx,patch,gn, 0);
       new_dw->get(Tdot[m],    lb->Tdot_CCLabel,    indx,patch, gn,0);
       new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,indx,patch, gac, 1);
       new_dw->allocateTemporary(alpha[m],patch);
@@ -4336,8 +4347,9 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         constCCVariable<double> int_eng;
         old_dw->get(int_eng, lb->int_eng_CCLabel, indx, patch, Ghost::None, 0);
         ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), tmp,
-                                            new_dw, patch, indx, 0,
-                                            int_eng);
+                                            old_dw, new_dw, ThermoInterface::IntermediateState,
+                                            patch, indx, 0,
+                                            int_eng, sp_vol_CC[m]);
         Temp_CC[m] = tmp;
       }
       if (mpm_matl) {
@@ -4356,20 +4368,19 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       
       if (ice_matl) {
        if_mpm_matl_ignore[m]=1.0;
-       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,gn, 0);
        constCCVariable<double> int_eng;
        old_dw->get(int_eng, lb->int_eng_CCLabel,    indx,patch,gn, 0);
        CCVariable<double> cv;
        old_dw->allocateTemporary(cv, patch);
-       // ???
        ice_matl->getThermo()->compute_cv(patch->getCellIterator(), cv,
-                                         new_dw, patch, indx, 0,
-                                         int_eng);
+                                         old_dw, new_dw, ThermoInterface::IntermediateState,
+                                         patch, indx, 0,
+                                         int_eng, sp_vol_CC[m]);
 
        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
           IntVector c = *iter;
           alpha[m][c]=
-            ice_matl->getEOS()->getAlpha(Temp_CC[m][c],sp_vol_CC[c],P[c],cv[c]);
+            ice_matl->getEOS()->getAlpha(Temp_CC[m][c],sp_vol_CC[m][c],P[c],cv[c]);
           sum_therm_exp[c] += vol_frac[m][c]*alpha[m][c]*Tdot[m][c];
         } 
       } else {
@@ -4389,7 +4400,6 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       new_dw->allocateAndPut(sp_vol_src,lb->sp_vol_src_CCLabel, indx,patch);
       sp_vol_src.initialize(0.);
 
-      new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn, 0);
       new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn, 0);
       new_dw->get(f_theta,    lb->f_theta_CCLabel,    indx,patch,gn, 0);
       new_dw->get(kappa,      lb->compressiblityLabel,indx,patch,gn, 0);
@@ -4398,7 +4408,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       //  compute sp_vol_L * mass
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-        sp_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
+        sp_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[m][c];
       }
       
       //---- P R I N T   D A T A ------ 
@@ -4406,7 +4416,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         ostringstream desc;
         desc <<"TOP_Lagrangian_sp_vol_Mat_"<<indx<< "_patch_"<<patch->getID();
          printData( indx, patch,1, desc.str(), "rho_CC",     rho_CC);      
-         printData( indx, patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC);     
+         printData( indx, patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC[m]);
          printData( indx, patch,1, desc.str(), "sp_vol_L",   sp_vol_L);      
       }
       //__________________________________
@@ -4437,7 +4447,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
 /*`==========TESTING==========*/
 //    do we really want this?  -Todd        
-        sp_vol_L[c] = max(sp_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[c]);
+        sp_vol_L[c] = max(sp_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[m][c]);
 /*==========TESTING==========`*/
      }
 
@@ -4464,7 +4474,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         cout << "sp_vol_src        "<< sp_vol_src[neg_cell] << endl;
         cout << "mass sp_vol_L     "<< sp_vol_L[neg_cell] << endl;
         cout << "mass sp_vol_L_old "
-             << (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
+             << (rho_CC[neg_cell]*vol*sp_vol_CC[m][neg_cell]) << endl;
         ostringstream warn;
         int L = level->getIndex();
         warn<<"ERROR ICE:("<<L<<"):computeLagrangianSpecificVolumeRF, mat "<<indx
@@ -4649,6 +4659,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int indx = matl->getDWIndex();
       
+      new_dw->get(sp_vol_CC[m],     lb->sp_vol_CCLabel,   indx, patch,gn, 0);
+
       if(mpm_matl){                 // M P M
         CCVariable<double> oldTemp;
         new_dw->getCopy(oldTemp,          lb->otemp_CCLabel,indx,patch,gn,0);
@@ -4666,8 +4678,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         new_dw->allocateTemporary(otemp, patch);
         // old state
         ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), otemp,
-                                            new_dw, patch, indx, 0,
-                                            int_eng);
+                                            old_dw, new_dw, ThermoInterface::OldState,
+                                            patch, indx, 0,
+                                            int_eng, sp_vol_CC[m]);
         old_temp[m] = otemp;
        
         new_dw->allocateTemporary(vel_CC[m],  patch);
@@ -4675,7 +4688,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }                             // A L L  M A T L S
 
       new_dw->get(mass_L[m],        lb->mass_L_CCLabel,   indx, patch,gn, 0);
-      new_dw->get(sp_vol_CC[m],     lb->sp_vol_CCLabel,   indx, patch,gn, 0);
       new_dw->get(mom_L[m],         lb->mom_L_CCLabel,    indx, patch,gn, 0);
       new_dw->get(int_eng_L[m],     lb->int_eng_L_CCLabel,indx, patch,gn, 0);
       new_dw->get(vol_frac_CC[m],   lb->vol_frac_CCLabel, indx, patch,gn, 0);
@@ -4694,12 +4706,12 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c];
       }
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      constCCVariable<double> tmp = spec_int_eng_L;
+      constCCVariable<double> tmpE = spec_int_eng_L;
       int indx = ice_matl->getDWIndex();
-      // intermediate state
       ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), Temp_CC[m],
-                                          new_dw, patch, indx, 0,
-                                          tmp);
+                                          old_dw, new_dw, ThermoInterface::IntermediateState,
+                                          patch, indx, 0,
+                                          tmpE, sp_vol_CC[m]);
     }
     //---- P R I N T   D A T A ------ 
     if (switchDebugMomentumExchange_CC ) {
