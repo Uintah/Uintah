@@ -1,0 +1,2 @@
+0 0 * * * /local/csafe/raid1/tester/bin/tcsh_run "qsub /local/csafe/raid1/tester/bin/Regress.pbs"
+0 19 * * 5 /local/csafe/raid1/tester/bin/tcsh_run "qsub /local/csafe/raid1/tester/bin/Weekly.pbs"

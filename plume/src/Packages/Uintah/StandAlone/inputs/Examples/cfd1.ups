@@ -1,0 +1,146 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>SimpleCFD test</title>
+   </Meta>
+
+   <Time>
+	<maxTime>30.0</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.00001</delt_min>
+	<delt_max>.1</delt_max>
+	<max_initial_delt>.01</max_initial_delt>
+	<timestep_multiplier>.5</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>cfd.uda</filebase>
+	<outputInterval>1.e-9</outputInterval>
+	<save label = "density"/>
+	<save label = "temperature"/>
+	<save label = "pressure"/>
+<!--	<save label = "xvelocity"/>
+	<save label = "yvelocity"/>
+	<save label = "zvelocity"/> -->
+	<save label = "ccvelocity"/>
+	<!--<save label = "ccvorticity"/>
+	<save label = "ccvorticitymag"/>
+	<save label = "vcforce"/>
+	<save label = "N"/> -->
+	<!--	<checkpoint cycle = "2" interval = "1"/> -->
+   </DataArchiver>
+   <PhysicalConstants>
+        <gravity>[0,0,-1]</gravity>
+   </PhysicalConstants>
+
+    <SimpleCFD>
+        <delt_multiplier>1</delt_multiplier>
+	<diffusion>.001</diffusion>
+	<viscosity>.0001</viscosity>
+	<dissipation>.001</dissipation>
+	<pressure_pin>[0.5,0.5,0.5]</pressure_pin>
+	<advection_tolerance>1.e-4</advection_tolerance>
+	<maxadvect>1</maxadvect>
+	<buoyancy>2</buoyancy>
+	<random_initial_velocities>[0,0,0]</random_initial_velocities>
+	<thermal_conduction>.1</thermal_conduction>
+	<vorticity_confinement>cellbased</vorticity_confinement>
+	<vorticity_confinement_scale>0</vorticity_confinement_scale>
+	<Solver>
+	   <Parameters>
+	      <tolerance>1.e-4</tolerance>
+	      <norm>LInfinity</norm>
+	      <criteria>Absolute</criteria>
+	   </Parameters>
+	   <Parameters variable="pressure">
+	      <tolerance>1.e-6</tolerance>
+	   </Parameters>
+	</Solver>
+        <Regions>
+		<sphere name="center">
+		      <origin>[3.5,3.5,3.5]</origin>
+		      <radius>.5</radius>
+		</sphere>
+        </Regions>
+	<InitialConditions>
+		<Condition var="density">
+		    <value>0</value>
+		</Condition>
+		<Condition var="xvelocity">
+		    <value>0</value>
+		</Condition>
+		<Condition var="yvelocity">
+		    <value>0</value>
+		</Condition>
+		<Condition var="zvelocity">
+		    <value>0</value>
+		</Condition>
+		<Condition var="density">
+		    <region name="center"/>
+		    <value>1</value>
+		</Condition>
+		<Condition var="temperature">
+		    <region name="center"/>
+		    <value>2</value>
+		</Condition>
+	</InitialConditions>
+	<BoundaryConditions>	
+		<Condition var="xvelocity">
+		    <region name="allfaces"/>
+		    <value>0</value>
+		    <type>FixedValue</type>
+		    <applyAt>AllFaces</applyAt>
+		</Condition>
+		<Condition var="yvelocity">
+		    <region name="allfaces"/>
+		    <value>0</value>
+		    <type>FixedValue</type>
+		    <applyAt>AllFaces</applyAt>
+		</Condition>
+		<Condition var="zvelocity">
+		    <region name="allfaces"/>
+		    <value>0</value>
+		    <type>FixedValue</type>
+		    <applyAt>AllFaces</applyAt>
+		</Condition>
+		<Condition var="density">
+		     <region name="center"/>
+		     <type>FixedRate</type>
+                     <value>1</value>
+		     <applyAt>Cell</applyAt>
+                </Condition>
+		<Condition var="density">
+		     <region name="allfaces"/>
+		     <type>FixedFlux</type>
+		     <value>0</value>
+		     <applyAt>AllFaces</applyAt>
+		</Condition>
+		<Condition var="temperature">
+		     <region name="center"/>
+		     <type>FixedRate</type>
+                     <value>2</value>
+		     <applyAt>Cell</applyAt>
+                </Condition>
+		<Condition var="temperature">
+		     <region name="allfaces"/>
+		     <type>FixedValue</type>
+		     <value>0</value>
+		     <applyAt>AllFaces</applyAt>
+		</Condition>
+	</BoundaryConditions>
+    </SimpleCFD>
+
+    <Grid>
+	<Level>
+	    <Box label = "1">
+		<lower>[0,0,0]</lower>
+		<upper>[7.0,7.0,7.0]</upper>
+	        <resolution>[7,7,7]</resolution>
+		<patches>[2,2,2]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+</Uintah_specification>

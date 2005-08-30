@@ -1,0 +1,181 @@
+# SCIRun Network v1.23.0
+
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
+set name {Main}
+set bbox {18 17 427 821}
+set creationDate {Tue Aug 31 2004}
+set creationTime {12:09:33}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a DataIO->Readers->HDF5DataReader Module
+set m1 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 18 17]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 232 331]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 232 222]
+
+# Create a SCIRun->FieldsCreate->FieldSubSample Module
+set m4 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSubSample" 18 331]
+
+# Create a SCIRun->FieldsCreate->SampleLattice Module
+set m5 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleLattice" 54 417]
+
+# Create a SCIRun->Visualization->GLTextureBuilder Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 18 596]
+
+# Create a SCIRun->FieldsData->DirectInterpolate Module
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 18 506]
+
+# Create a SCIRun->Render->Viewer Module
+set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 18 777]
+
+# Create a SCIRun->Visualization->TexCuttingPlanes Module
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 18 690]
+
+# Create a Fusion->Fields->NIMRODConverter Module
+set m10 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 18 111]
+
+# Create a Fusion->Fields->NIMRODConverter Module
+set m11 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 205 113]
+
+# Create a Teem->DataIO->NrrdToField Module
+set m12 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 18 233]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m10 0]
+set c2 [addConnection $m1 3 $m11 0]
+set c3 [addConnection $m10 0 $m12 0]
+set c4 [addConnection $m4 0 $m5 0]
+set c5 [addConnection $m4 0 $m7 0]
+set c6 [addConnection $m7 0 $m6 0]
+set c7 [addConnection $m6 0 $m9 0]
+set c8 [addConnection $m3 0 $m2 0]
+set c9 [addConnection $m9 0 $m8 0]
+set c10 [addConnection $m12 0 $m4 0]
+set c11 [addConnection $m1 1 $m10 1]
+set c12 [addConnection $m5 0 $m7 1]
+set c13 [addConnection $m2 0 $m9 1]
+set c14 [addConnection $m12 0 $m2 1]
+set c15 [addConnection $m1 2 $m10 2]
+set c16 [addConnection $m11 0 $m12 2]
+
+# Set GUI variables for the DataIO->Readers->HDF5DataReader Module
+set $m1-filename "$DATADIR/$DATASET/NIMROD_10107.h5"
+set $m1-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE PRESSURE Values}}
+set $m1-dumpname {/tmp/NIMROD_10107.h5.dump}
+set $m1-0-dim {41}
+set $m1-0-count {41}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m2-min {-0.005836251916}
+set $m2-max {0.725436424848}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m3-width {389}
+set $m3-height {40}
+set $m3-mapName {Old Rainbow}
+set $m3-minRes {12}
+set $m3-resolution {255}
+set $m3-realres {255}
+set $m3-gamma {0.0}
+
+# Set GUI variables for the SCIRun->FieldsCreate->FieldSubSample Module
+set $m4-wrap {1}
+set $m4-i-dim {145}
+set $m4-j-dim {85}
+set $m4-k-dim {41}
+set $m4-i-stop {40}
+set $m4-j-stop {84}
+set $m4-k-stop {144}
+
+# Set GUI variables for the SCIRun->FieldsCreate->SampleLattice Module
+set $m5-sizex {48}
+set $m5-sizey {48}
+set $m5-sizez {48}
+
+# Set GUI variables for the SCIRun->Visualization->GLTextureBuilder Module
+set $m6-max_brick_dim {128}
+set $m6-sel_brick_dim {64}
+set $m6-min {0.0}
+set $m6-max {0.724724562534}
+
+$m8 addViewer
+set $m8-ViewWindow_0-geometry 654x647+2412+20
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m8-ViewWindow_0-view-eyep-x {12.5133647963}
+set $m8-ViewWindow_0-view-eyep-y {-4.64784713753}
+set $m8-ViewWindow_0-view-eyep-z {10.5099184358}
+set $m8-ViewWindow_0-view-lookat-x {0.0434934940744}
+set $m8-ViewWindow_0-view-lookat-y {0.0434934940744}
+set $m8-ViewWindow_0-view-lookat-z {0.00998626807903}
+set $m8-ViewWindow_0-view-up-x {-0.579503467198}
+set $m8-ViewWindow_0-view-up-y {0.217507314239}
+set $m8-ViewWindow_0-view-up-z {0.785408364966}
+set $m8-ViewWindow_0-view-fov {20.0}
+set $m8-ViewWindow_0-sr {1}
+set $m8-ViewWindow_0-do_stereo {0}
+set $m8-ViewWindow_0-ortho-view {0}
+set $m8-ViewWindow_0-trackViewWindow0 {1}
+set $m8-ViewWindow_0-raxes {1}
+set $m8-ViewWindow_0-ambient-scale {1.0}
+set $m8-ViewWindow_0-diffuse-scale {1.0}
+set $m8-ViewWindow_0-specular-scale {0.4}
+set $m8-ViewWindow_0-emission-scale {1.0}
+set $m8-ViewWindow_0-shininess-scale {1.0}
+set $m8-ViewWindow_0-polygon-offset-factor {1.0}
+set $m8-ViewWindow_0-polygon-offset-units {0.0}
+set $m8-ViewWindow_0-point-size {1.0}
+set $m8-ViewWindow_0-line-width {1.0}
+set $m8-ViewWindow_0-sbase {0.4}
+set $m8-ViewWindow_0-bgcolor-r {0.0}
+set $m8-ViewWindow_0-bgcolor-g {0.0}
+set $m8-ViewWindow_0-bgcolor-b {0.0}
+set $m8-ViewWindow_0-currentvisual {0}
+set $m8-ViewWindow_0-caxes {0}
+set $m8-ViewWindow_0-global-light0 {1}
+set $m8-ViewWindow_0-global-light1 {0}
+set $m8-ViewWindow_0-global-light2 {0}
+set $m8-ViewWindow_0-global-light3 {0}
+set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m8-ViewWindow_0-global-light {1}
+set $m8-ViewWindow_0-global-fog {0}
+set $m8-ViewWindow_0-global-debug {0}
+set $m8-ViewWindow_0-global-clip {1}
+set $m8-ViewWindow_0-global-cull {0}
+set $m8-ViewWindow_0-global-dl {0}
+set $m8-ViewWindow_0-global-type {Gouraud}
+set "$m8-ViewWindow_0-Volume Slicer (1)" {1}
+set "$m8-ViewWindow_0-Control Widget (1)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->TexCuttingPlanes Module
+set $m9-control_pos_saved {1}
+set $m9-control_x {0.0434934940744}
+set $m9-control_y {0.0434934940744}
+set $m9-control_z {0.00998626807903}
+set $m9-drawZ {1}
+set $m9-draw_phi_0 {1}
+set $m9-draw_phi_1 {1}
+set $m9-phi_1 {115.0}
+set $m9-cyl_active {1}
+
+# Set GUI variables for the Fusion->Fields->NIMRODConverter Module
+set $m10-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }
+set $m10-allowUnrolling {1}
+
+# Set GUI variables for the Fusion->Fields->NIMRODConverter Module
+set $m11-datasets {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar}
+
+# Set GUI variables for the Teem->DataIO->NrrdToField Module
+set $m12-datasets {{Points : -NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {Connections : (none)} {Data : -NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar} {Original Field : (none)} }
+
+
+::netedit scheduleok

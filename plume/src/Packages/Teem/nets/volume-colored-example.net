@@ -1,0 +1,488 @@
+# SCIRun Network v1.25.0
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+addSubnetToDatabase {
+   set name {TransferFuncHisto}
+   set bbox {740 19 923 387}
+   set creationDate {Fri Jul 29 2005}
+   set creationTime {17:40:09}
+   set runDate {}
+   set runTime {}
+   set notes {}
+   set geometry {357x360+0+0}
+
+   # Create a Teem->UnuAtoM->UnuHeq Module
+   set m1 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 740 206]
+
+   # Create a Teem->UnuAtoM->UnuGamma Module
+   set m2 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 740 268]
+
+   # Create a Teem->UnuNtoZ->UnuQuantize Module
+   set m3 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 740 330]
+
+   # Create a Teem->UnuAtoM->UnuJhisto Module
+   set m4 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 758 19]
+
+   # Create a Teem->UnuAtoM->Unu2op Module
+   set m5 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 740 81]
+
+   # Create a Teem->UnuAtoM->Unu1op Module
+   set m6 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 740 142]
+
+   # Create the Connections between Modules
+   set c1 [addConnection $m6 0 $m1 0]
+   set c2 [addConnection $m5 0 $m6 0]
+   set c3 [addConnection $m2 0 $m3 0]
+   set c4 [addConnection $m1 0 $m2 0]
+   set c5 [addConnection $m3 0 Subnet 0]
+   set c6 [addConnection Subnet 0 $m4 1]
+   set c7 [addConnection $m4 0 $m5 1]
+   set c8 [addConnection Subnet 1 $m4 2]
+
+   # Set GUI variables for the Teem->UnuAtoM->UnuHeq Module
+   set $m1-bins {3000}
+   set $m1-sbins {1}
+
+   # Set GUI variables for the Teem->UnuAtoM->UnuGamma Module
+   set $m2-gamma {0.5}
+
+   # Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
+   set $m3-minf {0.0}
+   set $m3-maxf {8.70234}
+   set $m3-realmin {0.0}
+   set $m3-realmax {10.1096477509}
+   set $m3-nbits {8}
+
+   # Set GUI variables for the Teem->UnuAtoM->UnuJhisto Module
+   set $m4-bins {512 256}
+   set $m4-mins {nan nan}
+   set $m4-maxs {nan nan}
+   set $m4-type {nrrdTypeFloat}
+
+   # Set GUI variables for the Teem->UnuAtoM->Unu2op Module
+   set $m5-operator {+}
+
+   # Set GUI variables for the Teem->UnuAtoM->Unu1op Module
+   set $m6-operator {log}
+}
+
+
+set name {Main}
+set bbox {5 0 1273 1078}
+set creationDate {Fri Jul 29 2005}
+set creationTime {17:40:06}
+set runDate {}
+set runTime {}
+set notes {}
+set geometry {877x893+0+0}
+
+# Create a Teem->DataIO->NrrdReader Module
+set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 12 10]
+set Notes($m1) {Input Scalar Nrrd Volume
+}
+set Notes($m1-Position) {e}
+set Notes($m1-Color) {white}
+
+# Create a Teem->UnuNtoZ->UnuQuantize Module
+set m2 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 5 312]
+set Notes($m2) {Quantize to UChar
+(min->0, max->255)}
+set Notes($m2-Position) {n}
+set Notes($m2-Color) {white}
+
+# Create a Teem->UnuNtoZ->UnuQuantize Module
+set m3 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 426 357]
+set Notes($m3) {GM_UC}
+set Notes($m3-Position) {none}
+set Notes($m3-Color) {white}
+
+# Create a Teem->UnuNtoZ->UnuQuantize Module
+set m4 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 201 337]
+set Notes($m4) {N_UC}
+set Notes($m4-Position) {none}
+set Notes($m4-Color) {white}
+
+# Create an instance of a TransferFuncHisto Sub-Network
+set m5 [instanceSubnet "TransferFuncHisto" 431 432]
+
+# Create a Teem->UnuNtoZ->UnuProject Module
+set m6 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 544 290]
+set Notes($m6) {Gradient Magnitude}
+set Notes($m6-Position) {n}
+set Notes($m6-Color) {white}
+
+# Create a SCIRun->Visualization->EditColorMap2D Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 413 496]
+
+# Create a SCIRun->Visualization->VolumeVisualizer Module
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 159 951]
+set Notes($m8) {The surface has been converted into a fake gradient magnitude here.
+It is then selected from the new volume by using a linear alpha ramp
+in that direction from a 2Dized 1D texture map.}
+set Notes($m8-Position) {def}
+set Notes($m8-Color) {white}
+
+# Create a SCIRun->Render->Viewer Module
+set m9 [addModuleAtPosition "SCIRun" "Render" "Viewer" 111 1034]
+
+# Create a Teem->UnuAtoM->UnuCrop Module
+set m10 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 12 73]
+
+# Create a Teem->UnuNtoZ->UnuResample Module
+set m11 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuResample" 12 136]
+
+# Create a Teem->NrrdData->NrrdGradient Module
+set m12 [addModuleAtPosition "Teem" "NrrdData" "NrrdGradient" 237 213]
+
+# Create a Teem->UnuAtoM->UnuJoin Module
+set m13 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 157 446]
+
+# Create a Teem->UnuNtoZ->UnuRmapN Module
+set m14 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuRmapN" 289 720]
+set Notes($m14) {Use the first transfer function to extract the surface
+in software using the data and the gradient magnitude
+to select the opacity of the pixels.}
+set Notes($m14-Position) {e}
+set Notes($m14-Color) {white}
+
+# Create a Teem->Converters->ColorMap2ToNrrd Module
+set m15 [addModuleAtPosition "Teem" "Converters" "ColorMap2ToNrrd" 362 572]
+
+# Create a Teem->UnuNtoZ->UnuSlice Module
+set m16 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 229 799]
+
+# Create a Teem->UnuAtoM->UnuJoin Module
+set m17 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 30 717]
+set Notes($m17) {This is the data associated
+with the 1D colormap joined to the
+normals used for lighting.}
+set Notes($m17-Position) {n}
+set Notes($m17-Color) {white}
+
+# Create a SCIRun->Visualization->NrrdTextureBuilder Module
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 119 873]
+
+# Create a Teem->UnuNtoZ->UnuQuantize Module
+set m19 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 421 647]
+
+# Create a Teem->Converters->NrrdToColorMap2 Module
+set m20 [addModuleAtPosition "Teem" "Converters" "NrrdToColorMap2" 415 879]
+
+# Create a Teem->UnuAtoM->UnuAxinsert Module
+set m21 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinsert" 865 235]
+
+# Create a Teem->UnuNtoZ->UnuPad Module
+set m22 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPad" 848 307]
+
+# Create a Teem->UnuNtoZ->UnuReshape Module
+set m23 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuReshape" 1086 291]
+
+# Create a Teem->UnuAtoM->UnuAxinsert Module
+set m24 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinsert" 1099 224]
+
+# Create a Teem->UnuNtoZ->UnuPad Module
+set m25 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPad" 1073 363]
+
+# Create a Teem->UnuAtoM->UnuJoin Module
+set m26 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 929 442]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 873 0]
+
+# Create a Teem->Converters->ColorMapToNrrd Module
+set m28 [addModuleAtPosition "Teem" "Converters" "ColorMapToNrrd" 893 68]
+set Notes($m28) {Expand the 1D colormap into a 2D colormap with
+a linear alpha ramp in one direction.  The alpha ramp corresponds
+to the surface that we have picked out and should always be the
+same regardless of the colormap used.}
+set Notes($m28-Position) {def}
+set Notes($m28-Color) {white}
+
+# Create a Teem->UnuAtoM->UnuCrop Module
+set m29 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 898 159]
+
+# Create a Teem->UnuAtoM->UnuCrop Module
+set m30 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 1108 149]
+
+# Create a Teem->UnuAtoM->Unu2op Module
+set m31 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 960 509]
+
+# Create a Teem->UnuAtoM->UnuFlip Module
+set m32 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 886 592]
+
+# Create the Connections between Modules
+set c1 [addConnection $m7 0 $m15 0]
+set c2 [addConnection $m27 0 $m28 0]
+set c3 [addConnection $m18 0 $m8 0]
+set c4 [addConnection $m8 0 $m9 0]
+set c5 [addConnection $m15 0 $m19 0]
+set c6 [addConnection $m28 0 $m29 0]
+set c7 [addConnection $m28 0 $m30 0]
+set c8 [addConnection $m1 0 $m10 0]
+set c9 [addConnection $m12 0 $m6 0]
+set c10 [addConnection $m12 0 $m4 0]
+set c11 [addConnection $m31 0 $m32 0]
+set c12 [addConnection $m21 0 $m22 0]
+set c13 [addConnection $m24 0 $m23 0]
+set c14 [addConnection $m10 0 $m11 0]
+set c15 [addConnection $m29 0 $m21 0]
+set c16 [addConnection $m30 0 $m24 0]
+set c17 [addConnection $m32 0 $m20 0]
+set c18 [addConnection $m13 0 $m14 0]
+set c19 [addConnection $m17 0 $m18 0]
+set c20 [addConnection $m26 0 $m31 0]
+set c21 [addConnection $m22 0 $m26 0]
+set c22 [addConnection $m6 0 $m3 0]
+set c23 [addConnection $m2 0 $m13 0]
+set c24 [addConnection $m4 0 $m17 0]
+set c25 [addConnection $m11 0 $m5 0]
+set c26 [addConnection $m11 0 $m12 0]
+set c27 [addConnection $m11 0 $m2 0]
+set c28 [addConnection $m23 0 $m25 0]
+set c29 [addConnection $m14 0 $m16 0]
+set c30 [addConnection $m5 0 $m7 1]
+set c31 [addConnection $m25 0 $m26 1]
+set c32 [addConnection $m6 0 $m5 1]
+set c33 [addConnection $m2 0 $m17 1]
+set c34 [addConnection $m3 0 $m13 1]
+set c35 [addConnection $m19 0 $m14 1]
+set c36 [addConnection $m16 0 $m18 1]
+set c37 [addConnection $m20 0 $m8 2]
+
+# Set GUI variables for the Teem->DataIO->NrrdReader Module
+set $m1-filename "$DATADIR/volume/tooth.nhdr"
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
+set $m2-minf {0.0}
+set $m2-maxf {4095.0}
+set $m2-realmin {2.0}
+set $m2-realmax {1284.0}
+set $m2-nbits {8}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
+set $m3-minf {0.0}
+set $m3-maxf {255.0}
+set $m3-realmin {0.0}
+set $m3-realmax {320.024841309}
+set $m3-nbits {8}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
+set $m4-minf {0.0}
+set $m4-maxf {2180.43}
+set $m4-realmin {-288.62745098}
+set $m4-realmax {280.086021505}
+set $m4-nbits {8}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuProject Module
+set $m6-measure {9}
+
+# Set GUI variables for the SCIRun->Visualization->EditColorMap2D Module
+set $m7-panx {0.0}
+set $m7-pany {0.0}
+set $m7-scale_factor {1.0}
+set $m7-histo {0.5}
+set $m7-selected_widget {0}
+set $m7-selected_object {1}
+set $m7-num-entries {1}
+set $m7-faux {1}
+set $m7-name-0 {Rectangle}
+set $m7-0-color-r {0.66}
+set $m7-0-color-g {0.0}
+set $m7-0-color-b {0.18}
+set $m7-0-color-a {1.0}
+set $m7-state-0 {r 0 0.408203 0.530759 0.512862 0.269934 0.352686}
+set $m7-shadeType-0 {1}
+set $m7-on-0 {1}
+set $m7-marker {end}
+
+# Set GUI variables for the SCIRun->Visualization->VolumeVisualizer Module
+set $m8-sw_raster {1}
+set $m8-alpha_scale {-0.554}
+set $m8-shading {1}
+set $m8-ambient {0.5}
+set $m8-diffuse {0.5}
+set $m8-specular {0.388}
+set $m8-shine {24}
+
+$m9 addViewer
+set $m9-ViewWindow_0-geometry 654x572+542+151
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m9-ViewWindow_0-view-eyep-x {-125.630782962}
+set $m9-ViewWindow_0-view-eyep-y {660.257313866}
+set $m9-ViewWindow_0-view-eyep-z {284.754237588}
+set $m9-ViewWindow_0-view-lookat-x {48.1111739144}
+set $m9-ViewWindow_0-view-lookat-y {49.4766298905}
+set $m9-ViewWindow_0-view-lookat-z {81.9254385316}
+set $m9-ViewWindow_0-view-up-x {-0.0458534357568}
+set $m9-ViewWindow_0-view-up-y {-0.326550316518}
+set $m9-ViewWindow_0-view-up-z {0.944066921998}
+set $m9-ViewWindow_0-view-fov {20.0}
+set $m9-ViewWindow_0-sr {1}
+set $m9-ViewWindow_0-do_stereo {0}
+set $m9-ViewWindow_0-ortho-view {0}
+set $m9-ViewWindow_0-trackViewWindow0 {1}
+set $m9-ViewWindow_0-raxes {1}
+set $m9-ViewWindow_0-ambient-scale {1.0}
+set $m9-ViewWindow_0-diffuse-scale {1.0}
+set $m9-ViewWindow_0-specular-scale {0.4}
+set $m9-ViewWindow_0-emission-scale {1.0}
+set $m9-ViewWindow_0-shininess-scale {1.0}
+set $m9-ViewWindow_0-polygon-offset-factor {1.0}
+set $m9-ViewWindow_0-polygon-offset-units {0.0}
+set $m9-ViewWindow_0-point-size {1.0}
+set $m9-ViewWindow_0-line-width {1.0}
+set $m9-ViewWindow_0-sbase {0.4}
+set $m9-ViewWindow_0-bgcolor-r {0.0}
+set $m9-ViewWindow_0-bgcolor-g {0.0}
+set $m9-ViewWindow_0-bgcolor-b {0.0}
+set $m9-ViewWindow_0-fogusebg {1}
+set $m9-ViewWindow_0-fogcolor-r {0.0}
+set $m9-ViewWindow_0-fogcolor-g {0.0}
+set $m9-ViewWindow_0-fogcolor-b {1.0}
+set $m9-ViewWindow_0-fog-start {0.0}
+set $m9-ViewWindow_0-fog-end {0.714265}
+set $m9-ViewWindow_0-fog-visibleonly {1}
+set $m9-ViewWindow_0-currentvisual {0}
+set $m9-ViewWindow_0-caxes {0}
+set $m9-ViewWindow_0-global-light0 {1}
+set $m9-ViewWindow_0-global-light1 {0}
+set $m9-ViewWindow_0-global-light2 {0}
+set $m9-ViewWindow_0-global-light3 {0}
+set $m9-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m9-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m9-ViewWindow_0-global-light {1}
+set $m9-ViewWindow_0-global-fog {0}
+set $m9-ViewWindow_0-global-debug {0}
+set $m9-ViewWindow_0-global-clip {1}
+set $m9-ViewWindow_0-global-cull {0}
+set $m9-ViewWindow_0-global-dl {0}
+set $m9-ViewWindow_0-global-type {Gouraud}
+set "$m9-ViewWindow_0-VolumeRenderer Transparent (1)" {1}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuCrop Module
+set $m10-num-axes {3}
+set $m10-uis {3}
+set $m10-maxAxis0 {102}
+set $m10-absmaxAxis0 {102}
+set $m10-maxAxis1 {93}
+set $m10-absmaxAxis1 {93}
+set $m10-maxAxis2 {160}
+set $m10-absmaxAxis2 {160}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuResample Module
+set $m11-filtertype {tent}
+set $m11-dim {3}
+set $m11-uis {3}
+set $m11-resampAxis0 {128}
+set $m11-resampAxis1 {128}
+set $m11-resampAxis2 {128}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuJoin Module
+set $m13-incr-dim {1}
+set $m13-dim {3}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuSlice Module
+set $m16-position {3}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuJoin Module
+set $m17-dim {4}
+
+# Set GUI variables for the SCIRun->Visualization->NrrdTextureBuilder Module
+set $m18-card_mem {256}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
+set $m19-realmin {0.0}
+set $m19-realmax {1.0}
+set $m19-nbits {8}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuAxinsert Module
+set $m21-axis {2}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuPad Module
+set $m22-dim {3}
+set $m22-minAxis0 {0}
+set $m22-maxAxis0 {0}
+set $m22-minAxis1 {0}
+set $m22-maxAxis1 {0}
+set $m22-minAxis2 {0}
+set $m22-maxAxis2 {255}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuReshape Module
+set $m23-sz {1 1 256}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuAxinsert Module
+set $m24-axis {2}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuPad Module
+set $m25-dim {3}
+set $m25-minAxis0 {0}
+set $m25-maxAxis0 {0}
+set $m25-minAxis1 {0}
+set $m25-maxAxis1 {255}
+set $m25-minAxis2 {0}
+set $m25-maxAxis2 {0}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuJoin Module
+set $m26-dim {3}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m27-positionList {{0 40} {331 0}}
+set $m27-nodeList {257 258}
+set $m27-width {331}
+set $m27-height {40}
+
+# Open the SCIRun->Visualization->GenStandardColorMaps UI
+$m27 initialize_ui
+
+# Set GUI variables for the Teem->UnuAtoM->UnuCrop Module
+set $m29-num-axes {2}
+set $m29-uis {2}
+set $m29-reset_data {0}
+set $m29-maxAxis0 {2}
+set $m29-absmaxAxis0 {3}
+set $m29-absmaxAxis1 {255}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuCrop Module
+set $m30-num-axes {2}
+set $m30-uis {2}
+set $m30-reset_data {0}
+set $m30-minAxis0 {3}
+set $m30-absmaxAxis0 {3}
+set $m30-absmaxAxis1 {255}
+
+# Set GUI variables for the Teem->UnuAtoM->Unu2op Module
+set $m31-operator {x}
+set $m31-float_input {256.0}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuFlip Module
+set $m32-axis {2}
+
+
+::netedit scheduleok

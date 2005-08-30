@@ -1,0 +1,289 @@
+%%%% RENDERER.H %%%%
+
+class Renderer;
+
+/**************************************
+ 
+CLASS
+   clientRenderInfo
+   
+KEYWORDS
+   Rendering, Compression
+   
+DESCRIPTION
+
+   This class encapsulates a client/renderer/compressor tuple.
+      
+****************************************/
+struct clientRenderInfo {
+
+  //////////
+  // Constructor. Initializes everything to NULL.
+  clientRenderInfo() : name( NULL ), renderer( NULL ), compressor( NULL ) {}
+
+  //////////
+  // Constructor. Sets the client name.
+  clientRenderInfo( const char * clientName ) : renderer( NULL ),
+						compressor( NULL ) {
+    if ( clientName ) name = strdup( clientName );
+    else name = NULL;
+  }
+
+  //////////
+  // Destructor. Deletes client name.
+  ~clientRenderInfo() { delete name; }
+
+  //////////
+  // Returns the client name.
+  inline const char * getName() const { return name; }
+
+  //////////
+  // Sets the client name.
+  inline void   setName( const char * clientName ) {
+    delete name;
+    if ( clientName ) name = strdup( clientName );
+    else name = NULL;
+  }
+
+  //////////
+  // Returns the renderer
+  inline Renderer * getRenderer() { return renderer; }
+
+  //////////
+  // Sets the renderer.
+  inline void       setRenderer( Renderer * r ) { renderer = r; }
+
+
+  //////////
+  // Returns the compressor.
+  inline Compressor * getCompressor() { return compressor; }
+
+  //////////
+  // Sets the compressor.
+  inline void         setCompressor( Compressor * c ) { compressor = c; }
+  
+protected:
+  char *     name;         // Client name
+  Renderer * renderer;     // Renderer
+  Compressor * compressor; // Compressor
+  // Add multicastgroup pointer here, too?
+};
+
+
+
+
+
+//////////
+  // Adds a client to the list of those receiving data from this
+  // renderer.
+  //THIS MUST GOvirtual void addClient( const char * clientName, Renderer * renderer );
+
+  //////////
+  // Deletes the given client from the list of those receiving data
+  // from this renderer.
+  //THIS MUST GOvoid deleteClient( char * clientName );
+
+  //////////
+  // Returns true if this client is a client of the renderer.
+  //THIS MUST GObool isClient( const char * clientName ) const;
+  
+// Verifies that all clients are still connected. Updates the list
+  // if clients are missing.
+  //THIS MUST GOvoid verifyClients();
+
+// List of client/renderer/compressor combinations.
+  //THIS MUST GOlist<clientRenderInfo>     clients;
+
+// Sets the compressor for the given client. Returns true on success.
+  THIS MIGHT HAVE TO GObool    setCompression( const char * client,
+  Compressor * c ); 
+
+// Handles compressor changes.
+  THIS MIGHT HAVE TO GOvoid    compressInputHandler( SemotusVisum::Message::Compression &c,
+				const char * client );
+/// DELME
+  THIS MUST GOmulticastGroup *mGroup;
+%%%% RENDERER.CPP %%%%
+
+void
+Renderer::compressInputHandler( SemotusVisum::Message::Compression &c,
+				const char * client ) {
+
+  bool okay;
+  int type;
+  char buffer[1000];
+  Compressor * cc = NULL;
+
+  std::cerr << "In CIH. Size = " << clients.size() << endl;
+  // Get the compression method
+  if ( c.isRequest() ) {
+    // See if this compression method is allowed by the current renderer.
+    // DO THIS HERE
+    cc = mkCompressor( c.getName(), type );
+    if ( cc == NULL && type == CERROR )
+      okay = false;
+    else {
+      okay = true;
+     }
+  }
+  else 
+    okay = false;
+
+  // Set the compression. 
+  if ( !okay || !setCompression( client, cc ) ) {
+    delete cc;
+    snprintf( buffer, 1000,
+	      "Cannot find client %s in render list to switch compression!",
+	      client );
+    Log::log( Logging::ERROR, buffer );
+    okay = false;
+  }
+  
+  // Reply
+  SemotusVisum::Message::Compression *reply =
+    new SemotusVisum::Message::Compression(false);
+  
+  reply->setOkay( okay, c.getName() );
+  reply->finish();
+  
+  
+  if ( okay )
+    snprintf( buffer, 1000, "Switching compression for client %s to %s",
+	      client, c.getName() );
+  else 
+    snprintf( buffer, 1000, "Bad compression: %s",
+	      c.getName() );
+  
+  Log::log( Logging::MESSAGE, buffer );
+  NetInterface::getInstance().sendDataToClient( client, *reply );
+}
+
+bool
+Renderer::setCompression( const char * client, Compressor * c ) {
+  std::cerr << "In setcompression. Size = " << clients.size() << endl;
+  list<clientRenderInfo>::iterator i;
+  for ( i = clients.begin(); i != clients.end(); i++ ) {
+    std::cerr << "Testing client -" << client <<
+      "- vs listed -" << i->getName() << "-" << endl;
+    if ( !strcmp( client, i->getName() ) ) {
+      i->setCompressor( c );
+      return true;
+    }
+  } 
+  return false;
+}
+  
+
+void
+Renderer::addClient( const char * clientName, Renderer * renderer ) {
+  
+  /* First check to see that client is not already present in group */
+  list<clientRenderInfo>::const_iterator i;
+  for ( i = clients.begin() ; i != clients.end(); i++ )
+    if ( !strcmp( i->getName(), clientName ) )
+      return;
+  if ( !renderer ) return;
+  
+  char buffer[ 1000 ];
+
+  snprintf( buffer, 1000, "Adding %s to renderer %s",
+	    clientName, renderer->getName() );
+  
+  Log::log( Logging::MESSAGE, buffer );
+
+  clientRenderInfo * cri = new clientRenderInfo( clientName );
+  cri->setRenderer( renderer );
+  
+  clients.push_front( *cri );
+
+  std::cerr << "Client List Now: " << endl;
+  for ( i = clients.begin() ; i != clients.end(); i++ )
+    std::cerr << "\t" << i->getName() << endl;
+  std::cerr << "Creating multicast group..." << endl;
+  // Create a multicast group
+  /*if ( mGroup == NULL )
+    mGroup = NetInterface::getInstance().createMulticastGroup( clients ); 
+  else 
+    NetInterface::getInstance().addToMulticastGroup( clientName, mGroup );
+    std::cerr << "Created multicast group" << endl;*/
+}
+
+void
+Renderer::deleteClient( char * clientName ) {
+
+  list<clientRenderInfo>::iterator i;
+
+  char buffer[ 1000 ];
+
+  for ( i = clients.begin(); i != clients.end(); i++ ) {
+    if ( !strcmp( clientName, i->getName() ) ) {
+    
+      snprintf( buffer, 1000, "Removing %s from renderer %s",
+		clientName, name );
+  
+      Log::log( Logging::MESSAGE, buffer );
+  
+      clients.erase( i );
+      break;
+    }
+  }
+  
+  if ( mGroup != NULL )
+    NetInterface::getInstance().deleteFromMulticastGroup( clientName,
+							  mGroup );
+}
+
+bool
+Renderer::isClient( const char * clientName ) const {
+  list< clientRenderInfo >::const_iterator i;
+
+  for ( i = clients.begin(); i != clients.end(); i++ )
+    if ( !strcmp( clientName, i->getName() ) )
+      return true;
+
+  return false;
+}
+
+
+void
+Renderer::verifyClients() {
+  list<clientRenderInfo>::iterator i;
+  list<char *>::iterator j;
+  
+  list<char *> *netList = NetInterface::getInstance().getClientNames();
+  bool okay = false;
+
+  if ( netList == NULL ) {
+    std::cerr << "No net clients!" <<endl;
+    clients.clear();
+    return;
+  }
+  
+  for ( i = clients.begin(); i != clients.end(); i++ ) {
+    okay = false;
+    for ( j = netList->begin(); j != netList->end(); j++ ) {
+      std::cerr << "Testing " << i->getName() << " in renderer list vs " <<
+	*j << " in network list" << endl;
+      // If we find the name, we're okay.
+      if ( !strcmp( i->getName(), *j ) ) {
+	okay = true;
+	break;
+      }
+    }
+
+    if ( !okay ) {
+      char buffer[1000];
+      snprintf( buffer, 1000, "Removing client %s from renderer",
+		i->getName() );
+      std::cerr << buffer << endl;
+      Log::log( Logging::DEBUG, buffer );
+      i = clients.erase( i );
+      i--;
+      std::cerr << "Done erasing" << endl;
+    }
+    //i--;
+  }
+
+  netList->clear();
+  delete netList;
+}

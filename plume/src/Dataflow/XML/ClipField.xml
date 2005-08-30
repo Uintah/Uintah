@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="ClipField" category="FieldsCreate">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>Select a subset of a field.</summary>
+    <description>
+      <p>
+        The ClipField module clips out a subset of a field.  It does so by
+        preserving all of the elements in the input field that match the
+        clipping criteria.  By default this is every element who's center is
+        within the clipping widget or clipping field.  As a side
+        effect of this algorithm any degenerate non-element items in the input
+        field are discarded by the clip.
+      </p>
+      <p>
+        The module runs in one of two different modes.  If a field
+	is connected to the "Clip Field" port, the module will clip
+	the input field such that only those elements inside of the
+	clip field are preserved.  If no Clip Field is connected 
+	then the GUI widget is used to select which portion of the
+	input field to preserve.
+      </p>
+      <p>
+        The type of the field is preserved in the clip, as well as the
+        data values if possible.  Some field types are structured and
+        thus not clippable.  This includes the LatVolField, ImageField,
+        and Scanline field types.  There is an <modref package="SCIRun" name="Unstructure"/> module that
+        can be used to convert these fields to appropriately
+        unstructured versions before clipping.
+      </p>
+      <p>
+	Functional clipping has been deprecated from this module.  Use
+	the new and much faster <modref package="SCIRun" name="ClipByFunction"/> module if that is needed.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Clip Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Selection Widget</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+	<name>Output Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+<nets>
+<net id="ClipField-mesh">
+<title>ClipField-mesh Regression Test</title>
+
+<p>The ClipField module is used to extract a spherical input mesh from
+it's bounding <modref package="SCIRun" name="SampleLattice"/>.  The
+remaining cubes are the elements that the bounding box covers but that
+do not actually fall inside of the input field.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/ClipField-mesh.net.</p>
+
+</net>
+<net id="ClipField-widget">
+<title>ClipField-widget Regression Test</title>
+
+<p>In this network the ClipField module widget is used to select a chunk
+of the input field for extraction.  Further editing could be done by
+hand.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/ClipField-widget.net.</p>
+
+</net>
+</nets>
+</component>
