@@ -12,9 +12,9 @@
        <maxTime>            100       </maxTime>
        <initTime>           0.0       </initTime>
        <delt_min>           0.0       </delt_min>
-       <delt_max>           0.1     </delt_max>
+       <delt_max>           0.5     </delt_max>
        <delt_init>          1.0e-7    </delt_init>
-        <max_delt_increase>  0.5      </max_delt_increase>
+        <max_delt_increase>  0.15      </max_delt_increase>
        <timestep_multiplier> 1        </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -72,10 +72,10 @@
                               <value> [0.0,0.351,0.0] </value>
         </BCType>
         <BCType id = "1" label = "Temperature"  var = "Dirichlet">
-                              <value> 419.4444  </value>
+                              <value> 300  </value>
         </BCType>
         <BCType id = "1" label = "Density"      var = "Dirichlet">
-                              <value>  0.930025 </value>
+                              <value>  0.65168805574747168 </value>
         </BCType>
         <BCType id = "1" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
@@ -93,10 +93,10 @@
                               <value> [0.,0.01,0.] </value>
         </BCType>
         <BCType id = "1" label = "Temperature"  var = "Dirichlet">
-                              <value> 298.0  </value>
+                              <value> 300.0  </value>
         </BCType>
         <BCType id = "1" label = "Density"      var = "Dirichlet">
-                              <value> 1.1798322  </value>
+                              <value> 1.25700925809314334 </value>
         </BCType>
         <BCType id = "1" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
@@ -228,13 +228,14 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>IS_05.uda</filebase>
-      <outputInterval>0.1</outputInterval>
-     <!--<outputTimestepInterval> 1 </outputTimestepInterval>-->
+      <!--<outputInterval>0.1</outputInterval> -->
+      <outputTimestepInterval> 1 </outputTimestepInterval>
       <save label = "vol_frac_CC"/>
       <save label = "delP_Dilatate"/>
       <save label = "press_CC"/>  
       <save label = "vel_CC"/>
       <save label = "rho_CC"/>
+      <save label = "ntemp_CC"/>
 <!--      <save label = "temp_CC"/> -->
       <save label = "mixtureFraction"/>
       <save label = "sp_vol_CC"/>
@@ -330,14 +331,14 @@
 		<file>gri30.xml</file>
                 <id>gri30_mix</id>
                 <thermal_conductivity>0.0                    </thermal_conductivity>
-                <species0>CH4:1</species0>
-                <species1>O2:0.77 N2:0.23</species1>
+                <species0>O2:0.77 N2:0.23</species0>
+                <species1>CH4:1</species1>
                 <geom_object>
                   <box label="wholeDomain">
                   <min>       [-5.0,-5.0,-5.0 ]       </min>
                    <max>       [ 5.0, 8.0, 5.0 ]       </max>
                   </box>
-                 <mixtureFraction>   1.0                    </mixtureFraction>
+                 <mixtureFraction>   0.0                    </mixtureFraction>
                </geom_object>
            </Thermo>
            <isSurroundingMatl>          true            </isSurroundingMatl>
@@ -358,7 +359,7 @@
             </difference>
             <res>                [4,4,4]             </res>
             <velocity>           [.0,.01,.0]         </velocity>
-            <density>            1.1798322           </density>
+            <density>            1.25700925809314334 </density>
             <pressure>           101325.0            </pressure>     
             <temperature>        300.0               </temperature>
            </geom_object>
