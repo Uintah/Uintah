@@ -29,7 +29,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="CatStrings" category="String">
+<component name="JoinStrings" category="String">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
