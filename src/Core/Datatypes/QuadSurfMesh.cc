@@ -419,10 +419,11 @@ QuadSurfMesh::inside3_p(Face::index_type i, const Point &p) const
 
   unsigned int n = nodes.size();
 
-  Point pts[n];
+  Point * pts = new Point[n];
   
-  for (unsigned int i = 0; i < n; i++)
+  for (unsigned int i = 0; i < n; i++) {
     get_center(pts[i], nodes[i]);
+  }
 
   for (unsigned int i = 0; i < n; i+=2) {
     Point p0 = pts[(i+0)%n];
@@ -451,10 +452,12 @@ QuadSurfMesh::inside3_p(Face::index_type i, const Point &p) const
     // For the point to be inside a CONVEX quad it must be inside one
     // of the four triangles that can be formed by using three of the
     // quad vertices and the point in question.
-    if( fabs(s - a) < MIN_ELEMENT_VAL && a > MIN_ELEMENT_VAL )
+    if( fabs(s - a) < MIN_ELEMENT_VAL && a > MIN_ELEMENT_VAL ) {
+      delete [] pts;
       return true;
+    }
   }
-
+  delete [] pts;
   return false;
 }
 
