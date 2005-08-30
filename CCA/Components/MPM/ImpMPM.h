@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
 
 
 #include <sgi_stl_warnings_off.h>
@@ -425,6 +426,8 @@ private:
 
   ImplicitHeatConduction* heatConductionModel;
   ThermalContact* thermalContactModel;
+
+  SwitchingCriteria* d_switchCriteria;
 
   double           d_nextOutputTime;
   double           d_outputInterval;
