@@ -26,7 +26,8 @@ PSELIBS := \
         Packages/Uintah/CCA/Components/MPM       \
         Packages/Uintah/CCA/Components/MPMICE  	 \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Packages/Uintah/CCA/Components/Solvers
+	Packages/Uintah/CCA/Components/Solvers \
+	Packages/Uintah/CCA/Components/SwitchingCriteria
 
 LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY)
 

@@ -15,7 +15,9 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
+#include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
 #include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
+#include <Packages/Uintah/CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -25,10 +27,6 @@
 #include <Core/Malloc/Allocator.h>
 
 
-// TODO - fix VolumeOld
-// TODO - fix PETSC problem transitioning from rmpmice to impm
-// TODO - get DataArchiver to change output frequencies
-// TODO - make sure data carry-over is correct
 
 using namespace Uintah;
 
@@ -59,6 +57,12 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
                                                     no_solver_specified);
 
     comp->attachPort("solver", solver);
+
+    SwitchingCriteria* switch_criteria = 
+      SwitchingCriteriaFactory::create(child,myworld);
+
+    comp->attachPort("switch_criteria",switch_criteria);
+                                                                         
 
     // get the vars that will need to be initialized by this component
     for (ProblemSpecP var=child->findBlock("init"); var != 0; var = var->findNextBlock("init")) {
