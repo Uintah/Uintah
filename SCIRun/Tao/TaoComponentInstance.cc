@@ -56,6 +56,7 @@ TaoComponentInstance::TaoComponentInstance(
     const sci::cca::TypeMap::pointer &tm,
     tao::Component* component)
   : ComponentInstance(framework, instanceName, typeName, tm),
+    lock_ports("TaoComponentInstance::ports lock"),
     component(component)
 {
     mutex = new Mutex("getPort mutex");
@@ -69,7 +70,9 @@ TaoComponentInstance::~TaoComponentInstance()
 PortInstance*
 TaoComponentInstance::getPortInstance(const std::string& portname)
 {
+  lock_ports.lock();
   std::map<std::string, TaoPortInstance*>::iterator iter = ports.find(portname);
+  lock_ports.unlock();
   if (iter == ports.end()) {
     return 0;
   } else {
@@ -87,6 +90,7 @@ TaoComponentInstance::getPortInstance(const std::string& portname)
 void TaoComponentInstance::registerUsesPort(const std::string& portName,
                                             const std::string& portType)
 {
+    SCIRun::Guard g1(&lock_ports);
     std::map<std::string, TaoPortInstance*>::iterator iter = ports.find(portName);
     if (iter != ports.end()) {
         if (iter->second->porttype == TaoPortInstance::Provides) {
@@ -101,6 +105,7 @@ void TaoComponentInstance::registerUsesPort(const std::string& portName,
 void TaoComponentInstance::unregisterUsesPort(const std::string& portName)
 {
 std::cerr << "TaoComponentInstance::unregisterUsesPort: " << portName << std::endl;
+    SCIRun::Guard g1(&lock_ports);
     std::map<std::string, TaoPortInstance*>::iterator iter = ports.find(portName);
     if (iter != ports.end()) {
         if (iter->second->porttype == TaoPortInstance::Provides) {
@@ -116,6 +121,7 @@ std::cerr << "TaoComponentInstance::unregisterUsesPort: " << portName << std::en
 void TaoComponentInstance::addProvidesPort(const std::string& portName,
                                            const std::string& portType)
 {
+  SCIRun::Guard g1(&lock_ports);
   std::map<std::string, TaoPortInstance*>::iterator iter = ports.find(portName);
   if (iter != ports.end()) {
     if (iter->second->porttype == TaoPortInstance::Uses) {

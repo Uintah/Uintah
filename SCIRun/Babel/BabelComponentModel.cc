@@ -82,7 +82,8 @@ const std::string BabelComponentModel::DEFAULT_PATH =
 
 
 BabelComponentModel::BabelComponentModel(SCIRunFramework* framework)
-  : ComponentModel("babel"), framework(framework)
+  : ComponentModel("babel"), framework(framework),
+    lock_components("BabelComponentModel::components lock")
 {
   buildComponentList();
 }
@@ -94,6 +95,7 @@ BabelComponentModel::~BabelComponentModel()
 
 void BabelComponentModel::destroyComponentList()
 {
+  SCIRun::Guard g1(&lock_components);
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++) {
     delete iter->second;
@@ -208,7 +210,9 @@ void BabelComponentModel::readComponentDescription(const std::string& file)
       BabelComponentDescription* cd = new BabelComponentDescription(this);
       cd->type = component_name;
       //cd->setLibrary(library_name.c_str()); // record the DLL name
+      lock_components.lock();
       this->components[cd->type] = cd;
+      lock_components.unlock();
     }
   }
 }
@@ -240,6 +244,7 @@ BabelComponentModel::createServices(const std::string& instanceName,
 
 bool BabelComponentModel::haveComponent(const std::string& type)
 {
+  SCIRun::Guard g1(&lock_components);
   std::cerr << "CCA(Babel) looking for babel component of type: " << type
             << std::endl;
   return components.find(type) != components.end();
@@ -250,6 +255,8 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string &name, 
 std::cerr << "BabelComponentModel::createInstance: attempt to create " << name << " type " << type << std::endl;
   gov::cca::Component component;
   if (true) { //local component 
+   
+    lock_components.lock();
     componentDB_type::iterator iter = components.find(type);
     
     if (iter == components.end()) {
@@ -257,6 +264,7 @@ std::cerr << "BabelComponentModel::createInstance: attempt to create " << name <
                 << std::endl;
       return 0;
     }
+    lock_components.unlock();
 
 #if 0
     /*
@@ -374,6 +382,7 @@ std::string BabelComponentModel::getName() const
 void BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
                           bool /*listInternal*/)
 {
+  SCIRun::Guard g1(&lock_components);
   for (componentDB_type::iterator iter=components.begin();
        iter != components.end(); iter++) {
     list.push_back(iter->second);
@@ -387,7 +396,9 @@ std::string BabelComponentModel::createComponent(const std::string& name, const 
 std::cerr << "BabelComponentModel::createComponent: attempt to create " << name << " type " << type << std::endl;
 
   sci::cca::Component::pointer component;
+  lock_components.lock();
   componentDB_type::iterator iter = components.find(type);
+  lock_components.unlock();
   if (iter == components.end()) {
     return std::string();
   }

@@ -85,7 +85,8 @@
 namespace SCIRun {
 
   SCIRunFramework::SCIRunFramework()
-    //:d_slave_sema("Wait for a slave to regester Semaphore",0)
+   :lock_compIDs("SCIRunFramework::compIDs lock"),
+    lock_activeInstances("SCIRunFramework::activeInstances lock")
   {
     models.push_back(internalServices = new InternalComponentModel(this));
     models.push_back(cca = new CCAComponentModel(this));
@@ -229,13 +230,15 @@ namespace SCIRun {
 					  cid, sci::cca::TypeMap::pointer(0))); 
 
     //#1 remove cid from compIDs
+    lock_compIDs.lock();  
     for (unsigned i = 0; i<compIDs.size(); i++) {
       if (compIDs[i] == cid) {
 	compIDs.erase(compIDs.begin()+i);
 	break;
       }
     }
-  
+    lock_compIDs.unlock();
+ 
     //#2 unregister the component instance
     ComponentInstance *ci = unregisterComponent(cid->getInstanceName());
     if (ci == 0) {
@@ -297,17 +300,24 @@ namespace SCIRun {
   sci::cca::ComponentID::pointer
   SCIRunFramework::registerComponent(ComponentInstance *ci,
 				     const std::string& name)
-  {
+  { 
     std::string goodname = name;
     int count = 0;
+
+    lock_activeInstances.lock();   
     while (activeInstances.find(goodname) != activeInstances.end()) {
       std::ostringstream newname;
       newname << name << "_" << count++;
       goodname = newname.str();
     }
+    lock_activeInstances.unlock();  
+
     sci::cca::ComponentID::pointer cid =
       ComponentID::pointer(new ComponentID(this, goodname));
+
+    lock_compIDs.lock();
     compIDs.push_back(cid);
+    lock_compIDs.unlock();
 
     // TODO: get some properties
     emitComponentEvent(
@@ -317,13 +327,18 @@ namespace SCIRun {
     ci->framework = this;
     ci->setInstanceName(goodname);    
 
+    lock_activeInstances.lock();
     activeInstances[goodname] = ci;
+    lock_activeInstances.unlock(); 
+
     return cid;
   }
 
   ComponentInstance*
   SCIRunFramework::unregisterComponent(const std::string& instanceName)
   {
+    SCIRun::Guard g1(&lock_activeInstances);    
+
     ComponentInstanceMap::iterator found = activeInstances.find(instanceName);
     if (found != activeInstances.end()) {
       ComponentInstance *ci = found->second;
@@ -338,7 +353,9 @@ namespace SCIRun {
 
   ComponentInstance*
   SCIRunFramework::lookupComponent(const std::string& name)
-  {
+  { 
+    SCIRun::Guard g1(&lock_activeInstances);
+
     ComponentInstanceMap::iterator iter = activeInstances.find(name);
     if (iter == activeInstances.end()) {
       return 0;
@@ -349,12 +366,15 @@ namespace SCIRun {
 
   sci::cca::ComponentID::pointer
   SCIRunFramework::lookupComponentID(const std::string& componentInstanceName)
-  {
+  { 
+    SCIRun::Guard g1(&lock_compIDs);
+
     for (unsigned i = 0; i < compIDs.size(); i++) {
       if (componentInstanceName == compIDs[i]->getInstanceName()) {
 	return compIDs[i];
       }
     }
+   
     return sci::cca::ComponentID::pointer(0);
   }
 

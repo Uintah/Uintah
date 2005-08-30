@@ -41,6 +41,8 @@
 #ifndef SCIRun_Framework_CCAComponentInstance_h
 #define SCIRun_Framework_CCAComponentInstance_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/PortInstanceIterator.h>
 #include <Core/CCA/spec/cca_sidl.h>
@@ -158,7 +160,11 @@ private:
     Iterator& operator=(const Iterator&);
   };
   std::map<std::string, CCAPortInstance*> ports;
+  SCIRun::Mutex lock_ports;
+
   std::map<std::string, std::vector<Object::pointer> > preports;
+  SCIRun::Mutex lock_preports;
+
   std::map<std::string, int > precnt;
   std::map<std::string, ConditionVariable*> precond;
   

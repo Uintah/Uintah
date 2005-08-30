@@ -48,8 +48,9 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
                                  const std::string& type,
                                  const sci::cca::TypeMap::pointer& properties,
                                  PortType porttype)
-  : name(name), type(type), properties(properties), porttype(porttype),
-    useCount(0)
+  : name(name), type(type), properties(properties), 
+    lock_connections("CCAPortInstance::connections lock"), 
+    porttype(porttype), useCount(0)
 {
 }
 
@@ -59,6 +60,7 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
                                  const sci::cca::Port::pointer& port,
                                  PortType porttype)
   : name(name), type(type), properties(properties), port(port),
+    lock_connections("CCAPortInstance::connections lock"),
     porttype(porttype), useCount(0)
 {
 }
@@ -79,7 +81,9 @@ bool CCAPortInstance::connect(PortInstance* to)
   }
 
   if (portType() == From && p2->portType() == To) {
+    lock_connections.lock();
     connections.push_back(p2);
+    lock_connections.unlock();
   } else {
       p2->connect(this);
   }
@@ -125,6 +129,7 @@ bool CCAPortInstance::disconnect(PortInstance* to)
     return false;
   } 
   std::vector<PortInstance*>::iterator iter;
+  SCIRun::Guard g1(&lock_connections);
   for (iter=connections.begin(); iter<connections.end();iter++) {
     if (p2==(*iter)) {
       connections.erase(iter);

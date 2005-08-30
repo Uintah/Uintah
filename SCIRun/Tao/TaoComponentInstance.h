@@ -41,6 +41,8 @@
 #ifndef SCIRun_Framework_TaoComponentInstance_h
 #define SCIRun_Framework_TaoComponentInstance_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/Tao/Component.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/PortInstanceIterator.h>
@@ -119,10 +121,8 @@ private:
     Iterator& operator=(const Iterator&);
   };
   std::map<std::string, TaoPortInstance*> ports;
-  std::map<std::string, std::vector<Object::pointer> > preports;
-  std::map<std::string, int > precnt;
-  std::map<std::string, ConditionVariable*> precond;
-  
+  SCIRun::Mutex lock_ports;
+ 
   tao::Component* component;
   Mutex *mutex;
   

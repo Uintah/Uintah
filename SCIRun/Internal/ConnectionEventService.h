@@ -43,6 +43,8 @@
 #ifndef SCIRun_ConnectionEventService_h
 #define SCIRun_ConnectionEventService_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/BuilderService.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
@@ -97,6 +99,8 @@ private:
                 type(type), l(l) {}
     };
     std::vector<Listener*> listeners;
+    SCIRun::Mutex lock_listeners;
+
     ConnectionEventService(SCIRunFramework* framework);
     void emitConnectionEvent(const sci::cca::ports::ConnectionEvent::pointer &event);
 };

@@ -41,6 +41,8 @@
 #ifndef SCIRun_ComponentEventService_h
 #define SCIRun_ComponentEventService_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
@@ -100,7 +102,10 @@ private:
   };
 
   std::vector<Listener*> listeners;
+  SCIRun::Mutex lock_listeners; 
+  
   std::vector<sci::cca::ports::ComponentEvent::pointer> events;
+  SCIRun::Mutex lock_events;
 
   ComponentEventService(SCIRunFramework* fwk);
   void emitComponentEvent(const sci::cca::ports::ComponentEvent::pointer& event);

@@ -41,6 +41,8 @@
 #ifndef SCIRun_Framework_InternalComponentModel_h
 #define SCIRun_Framework_InternalComponentModel_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentModel.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <map>
@@ -96,15 +98,19 @@ public:
 private:
   typedef std::map<std::string, InternalFrameworkServiceDescription*> FrameworkServicesMap;
 
-  FrameworkServicesMap frameworkServices;
   SCIRunFramework* framework;
 
-    void addService(InternalFrameworkServiceDescription* cd);
+  FrameworkServicesMap frameworkServices;
+  SCIRun::Mutex lock_frameworkServices;
+
+  void addService(InternalFrameworkServiceDescription* cd);
   //void addService(InternalComponenServicetDescription* cd);
 
-    InternalComponentModel(const InternalComponentModel&);
-    InternalComponentModel& operator=(const InternalComponentModel&);
-  };
-}
+  InternalComponentModel(const InternalComponentModel&);
+  InternalComponentModel& operator=(const InternalComponentModel&);
+};
+
+
+} //End of namespace SCIRun
 
 #endif

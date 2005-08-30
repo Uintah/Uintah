@@ -33,7 +33,8 @@
 namespace SCIRun {
 
   ConnectionEventService::ConnectionEventService(SCIRunFramework* framework)
-    : InternalFrameworkServiceInstance(framework, "internal:ConnectionEventService")
+    : InternalFrameworkServiceInstance(framework, "internal:ConnectionEventService"),
+      lock_listeners("ConnectionEventService::listeners lock")
   {
   }
   
@@ -58,6 +59,7 @@ void ConnectionEventService::addConnectionEventListener(
         sci::cca::ports::EventType et,
         const sci::cca::ports::ConnectionEventListener::pointer& cel)
 {
+    SCIRun::Guard g1(&lock_listeners);
     std::cerr << "ConnectionEventService::addConnectionEventListener" << std::endl;
     listeners.push_back(new Listener(et, cel));
 }
@@ -66,6 +68,7 @@ void ConnectionEventService::removeConnectionEventListener(
         sci::cca::ports::EventType et,
         const sci::cca::ports::ConnectionEventListener::pointer& cel)
 {
+    SCIRun::Guard g1(&lock_listeners);
     for (std::vector<Listener*>::iterator iter = listeners.begin();
             iter != listeners.end(); iter++) {
         if ((*iter)->type == et && (*iter)->l == cel) {
@@ -83,6 +86,7 @@ ConnectionEventService::emitConnectionEvent(const sci::cca::ports::ConnectionEve
         return;
     }
 
+    lock_listeners.lock();
     for (std::vector<Listener*>::iterator iter=listeners.begin();
             iter != listeners.end(); iter++) {
         if ((*iter)->type == sci::cca::ports::ALL ||
@@ -90,6 +94,7 @@ ConnectionEventService::emitConnectionEvent(const sci::cca::ports::ConnectionEve
             (*iter)->l->connectionActivity(event);
         }
     }
+    lock_listeners.unlock();
 }
 
 
