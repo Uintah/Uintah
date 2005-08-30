@@ -15,7 +15,7 @@ SRCDIR   := Dataflow/Modules/String
 SRCS     += \
 	$(SRCDIR)/CreateString.cc\
 	$(SRCDIR)/StringInfo.cc\
-	$(SRCDIR)/CatStrings.cc\
+	$(SRCDIR)/JoinStrings.cc\
 	$(SRCDIR)/SprintfString.cc\
 	$(SRCDIR)/SprintfMatrix.cc\
 	$(SRCDIR)/GetFileName.cc\

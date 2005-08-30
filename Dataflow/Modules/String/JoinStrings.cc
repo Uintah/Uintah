@@ -35,11 +35,11 @@ namespace SCIRun {
 
 using namespace SCIRun;
 
-class CatStrings : public Module {
+class JoinStrings : public Module {
 public:
-  CatStrings(GuiContext*);
+  JoinStrings(GuiContext*);
 
-  virtual ~CatStrings();
+  virtual ~JoinStrings();
 
   virtual void execute();
 
@@ -47,16 +47,16 @@ public:
 };
 
 
-DECLARE_MAKER(CatStrings)
-CatStrings::CatStrings(GuiContext* ctx)
-  : Module("CatStrings", ctx, Source, "String", "SCIRun")
+DECLARE_MAKER(JoinStrings)
+JoinStrings::JoinStrings(GuiContext* ctx)
+  : Module("JoinStrings", ctx, Source, "String", "SCIRun")
 {
 }
 
-CatStrings::~CatStrings(){
+JoinStrings::~JoinStrings(){
 }
 
-void  CatStrings::execute()
+void  JoinStrings::execute()
 {
   StringHandle output;
   StringHandle input;
@@ -99,7 +99,7 @@ void  CatStrings::execute()
 }
 
 void
- CatStrings::tcl_command(GuiArgs& args, void* userdata)
+ JoinStrings::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
