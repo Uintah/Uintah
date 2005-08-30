@@ -136,6 +136,10 @@ namespace Uintah {
 				   ParticleSubset* delset,
 				   DataWarehouse* old_dw);
 
+    virtual void addInitialComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet*) const;
+
     virtual void addComputesAndRequires(Task* task,
 					const MPMMaterial* matl,
 					const PatchSet* patches) const;
