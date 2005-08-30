@@ -83,6 +83,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   heatConductionModel = 0;
   thermalContactModel = 0;
   d_perproc_patches = 0;
+  d_switchCriteria = 0;
 }
 
 bool ImpMPM::restartableTimesteps()
@@ -210,10 +211,21 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    thermalContactModel =
      ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
 
-  // Pull out from Time section
-  d_initialDt = 10000.0;
-  ProblemSpecP time_ps = prob_spec->findBlock("Time");
-  time_ps->get("delt_init",d_initialDt);
+   d_switchCriteria = dynamic_cast<SwitchingCriteria*>
+     (getPort("switch_criteria"));
+   
+   if (!d_switchCriteria) {
+     throw InternalError("IMPM:couldn't get switch_criteria port",
+                         __FILE__, __LINE__);
+   } else {
+     d_switchCriteria->problemSetup(prob_spec,d_sharedState);
+   }
+    
+   
+   // Pull out from Time section
+   d_initialDt = 10000.0;
+   ProblemSpecP time_ps = prob_spec->findBlock("Time");
+   time_ps->get("delt_init",d_initialDt);
 }
 
 void ImpMPM::scheduleInitialize(const LevelP& level,
@@ -865,12 +877,15 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
 
 void ImpMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
+   d_switchCriteria->scheduleSwitchTest(level,sched);
+#if 0
   Task* task = scinew Task("switchTest",this, &ImpMPM::switchTest);
 
   // make sure this is done after relocation (non-data)
   task->requires(Task::NewDW, lb->pXLabel, d_sharedState->allMPMMaterials()->getUnion(), Ghost::None );
   task->computes(d_sharedState->get_switch_label(), level.get_rep());
   sched->addTask(task, level->eachPatch(),d_sharedState->allMPMMaterials());
+#endif
 
 }
 
@@ -2693,7 +2708,7 @@ void ImpMPM::switchTest(const ProcessorGroup* group,
   int time_step = d_sharedState->getCurrentTopLevelTimeStep();
   double sw = 0;
 #if 1
-  if (time_step == 300)
+  if (time_step == 15)
     sw = 1;
   else
     sw = 0;
