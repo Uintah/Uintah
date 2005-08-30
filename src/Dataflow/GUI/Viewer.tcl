@@ -871,7 +871,7 @@ itcl_class ViewWindow {
 	    if { $IsAttached == 1 } { $this switch_frames }
 	    set xsize [set $this-x-resize]
 	    set ysize [set $this-y-resize]
-	     set size "$xsize\x$ysize"
+	    set size "$xsize\x$ysize"
 	    set xsize [expr $xsize + 14]
 	    set ysize [expr $ysize + 134]
 	    set geomsize "$xsize\x$ysize"
