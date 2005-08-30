@@ -250,12 +250,41 @@ ProblemSpec::get(const string& name, double &value)
         string stringValue(s);
         delete [] s;
         checkForInputError(stringValue,"double"); 
-        value = atof(stringValue.c_str());
+        istringstream ss(stringValue);
+        ss >> value;
       }
     }
   }
           
   return ps;
+}
+
+ProblemSpecP
+ProblemSpec::get(const string& name, unsigned int &value)
+{
+  ProblemSpecP ps = this;
+  ProblemSpecP node = findBlock(name);
+  if (node == 0) {
+    ps = 0;
+    return ps;
+  }
+  else {
+    DOMNode* found_node = node->d_node;
+    for (DOMNode* child = found_node->getFirstChild(); child != 0;
+        child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+        const char* s = XMLString::transcode(child->getNodeValue());
+        string stringValue(s);
+        delete [] s;
+        checkForInputError(stringValue,"int");
+        istringstream ss(stringValue);
+        ss >> value;
+      }
+    }
+  }
+          
+  return ps;
+
 }
 
 ProblemSpecP
@@ -276,7 +305,8 @@ ProblemSpec::get(const string& name, int &value)
         string stringValue(s);
         delete [] s;
         checkForInputError(stringValue,"int");
-        value = atoi(stringValue.c_str());
+        istringstream ss(stringValue);
+        ss >> value;
       }
     }
   }
@@ -284,6 +314,7 @@ ProblemSpec::get(const string& name, int &value)
   return ps;
 
 }
+
 
 ProblemSpecP
 ProblemSpec::get(const string& name, long &value)
@@ -303,7 +334,8 @@ ProblemSpec::get(const string& name, long &value)
         string stringValue(s);
         delete [] s;
         checkForInputError(stringValue,"int");
-        value = atoi(stringValue.c_str());
+        stringstream ss(stringValue);
+        ss >> value;
       }
     }
   }
@@ -685,14 +717,14 @@ bool ProblemSpec::get(string &value)
    for (DOMNode *child = d_node->getFirstChild(); child != 0;
         child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
-         const char* s = XMLString::transcode(child->getNodeValue());
-         // Remove the white space from the front and back of the string
-          string tmp(s);
-         delete [] s;
-          istringstream tmp_str(tmp);
-          string w;
-          while(tmp_str>>w) value += w;
-         return true;
+        const char* s = XMLString::transcode(child->getNodeValue());
+        // Remove the white space from the front and back of the string
+        string tmp(s);
+        delete [] s;
+        istringstream tmp_str(tmp);
+        string w;
+        while(tmp_str>>w) value += w;
+        return true;
       }
    }
    return false;
@@ -1048,6 +1080,16 @@ void ProblemSpec::require(const string& name, double& value)
 }
 
 void ProblemSpec::require(const string& name, int& value)
+{
+
+ // Check if the prob_spec is NULL
+
+  if (! this->get(name,value))
+      throw ParameterNotFound(name, __FILE__, __LINE__);
+  
+}
+
+void ProblemSpec::require(const string& name, unsigned int& value)
 {
 
  // Check if the prob_spec is NULL

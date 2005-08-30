@@ -219,6 +219,7 @@ WARNING
       // value.  If there is no node, an exception is thrown
       void require(const std::string& name, double& value);
       void require(const std::string& name, int& value);
+      void require(const std::string& name, unsigned int& value);
       void require(const std::string& name, long& value);
       void require(const std::string& name, bool& value);
       void require(const std::string& name, std::string& value);
@@ -239,6 +240,7 @@ WARNING
       // it back into value.  Returns 'this' if found, otherwise null
       ProblemSpecP get(const std::string& name, double& value);
       ProblemSpecP get(const std::string& name, int& value);
+      ProblemSpecP get(const std::string& name, unsigned int& value);
       ProblemSpecP get(const std::string& name, long& value);
       ProblemSpecP get(const std::string& name, bool& value);
       ProblemSpecP get(const std::string& name, std::string& value);
