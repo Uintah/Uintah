@@ -177,7 +177,7 @@ void AMRSimulationController::run()
      adjustDelT(delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), t);
      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
 
-     printSimulationStats( d_sharedState, delt, t );
+     // printSimulationStats( d_sharedState, delt, t );
 
      if(log_dw_mem){
        // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
@@ -227,6 +227,8 @@ void AMRSimulationController::run()
      d_sharedState->setElapsedTime(t);
      d_sharedState->incrementCurrentTopLevelTimeStep();
 
+     double old_init_delt = d_timeinfo->max_initial_delt;
+
      if(needRecompile(t, delt, currentGrid) || first ){
        first=false;
        recompile(t, delt, currentGrid, totalFine);
@@ -235,6 +237,26 @@ void AMRSimulationController::run()
        if (d_output){
          d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, 0);
        }
+     }
+
+     // Each component has their own init_delt specified.  On a switch
+     // from one component to the next, we need to adjust the delt to
+     // that specified in the input file.  To detect the switch of components,
+     // we compare the old_init_delt before the needRecompile() to the 
+     // new_init_delt after the needRecompile().  
+
+
+     double new_init_delt = d_timeinfo->max_initial_delt;
+
+     if (new_init_delt != old_init_delt) {
+       delt = new_init_delt;
+       DataWarehouse* newDW = d_scheduler->getLastDW();
+       newDW->override(delt_vartype(new_init_delt),
+                    d_sharedState->get_delt_label());
+
+       // Adjust the simulationstats so that the correct timestep is printed.
+       //d_sharedState->decrementCurrentTopLevelTimeStep();
+
      }
 
      // adjust the delt for each level and store it in all applicable dws.
@@ -254,6 +276,7 @@ void AMRSimulationController::run()
      }
 
      // Execute the current timestep, restarting if necessary
+     printSimulationStats(d_sharedState,delt,t);
      executeTimestep(t, delt, currentGrid, totalFine);
 
      if(d_output){
