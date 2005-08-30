@@ -241,53 +241,140 @@ void CanteraMixtureFraction::addTaskDependencies_int_eng(Task* t, State state,
 }
 
 void CanteraMixtureFraction::compute_thermalDiffusivity(CellIterator iter,
-                                                 CCVariable<double>& thermalDiffusivity,
-                                                 DataWarehouse* new_dw, const Patch* patch,
-                                                 int matl, int numGhostCells,
-                                                 constCCVariable<double>& int_eng,
-                                                 constCCVariable<double>& sp_vol)
+                                                        CCVariable<double>& thermalDiffusivity,
+                                                        DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                                        State state, const Patch* patch,
+                                                        int matl, int numGhostCells,
+                                                        constCCVariable<double>& int_eng,
+                                                        constCCVariable<double>& sp_vol)
 {
-  cerr << "compute_thermalDiffusivity not finished\n";
+  constCCVariable<double> f;
+  DataWarehouse* dw = (state == ThermoInterface::NewState? new_dw : old_dw);
+  dw->get(f, mixtureFraction_CCLabel, matl, patch,
+          numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+  int numSpecies = d_gas->nSpecies();
+  double* tmp_mf = new double[numSpecies];
+
+  for(;!iter.done();iter++){
+    double mf = f[*iter];
+    for(int i = 0; i< numSpecies; i++){
+      tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
+    }
+    d_gas->setMassFractions(tmp_mf);
+    d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
+    double t0 = Time::currentSeconds();
+    equilibrate(*d_gas, UV);
+    double t1 = Time::currentSeconds();
+    thermalDiffusivity[*iter] = d_thermalConductivity/d_gas->cp_mass() * sp_vol[*iter];
+  }
+  delete[] tmp_mf;
 }
 
 void CanteraMixtureFraction::compute_thermalConductivity(CellIterator iter,
-                                                  CCVariable<double>& thermalConductivity,
-                                                  DataWarehouse*, const Patch* patch,
-                                                  int matl, int numGhostCells,
-                                                  constCCVariable<double>& int_eng)
+                                                         CCVariable<double>& thermalConductivity,
+                                                         DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                                         State state, const Patch* patch,
+                                                         int matl, int numGhostCells,
+                                                         constCCVariable<double>& int_eng,
+                                                         constCCVariable<double>& sp_vol)
 {
   for(;!iter.done();iter++)
     thermalConductivity[*iter] = d_thermalConductivity;
 }
 
 void CanteraMixtureFraction::compute_cp(CellIterator iter, CCVariable<double>& cp,
-                                 DataWarehouse* new_dw, const Patch* patch,
-                                 int matl, int numGhostCells,
-                                 constCCVariable<double>& int_eng)
+                                        DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                        State state, const Patch* patch,
+                                        int matl, int numGhostCells,
+                                        constCCVariable<double>& int_eng,
+                                        constCCVariable<double>& sp_vol)
 {
-  cerr << "compute_cp not  finished\n";
+  constCCVariable<double> f;
+  DataWarehouse* dw = (state == ThermoInterface::NewState? new_dw : old_dw);
+  dw->get(f, mixtureFraction_CCLabel, matl, patch,
+          numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+  int numSpecies = d_gas->nSpecies();
+  double* tmp_mf = new double[numSpecies];
+
+  for(;!iter.done();iter++){
+    double mf = f[*iter];
+    for(int i = 0; i< numSpecies; i++){
+      tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
+    }
+    d_gas->setMassFractions(tmp_mf);
+    d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
+    double t0 = Time::currentSeconds();
+    equilibrate(*d_gas, UV);
+    double t1 = Time::currentSeconds();
+    cp[*iter] = d_gas->cp_mass();
+  }
+  delete[] tmp_mf;
 }
 
 void CanteraMixtureFraction::compute_cv(CellIterator iter, CCVariable<double>& cv,
-                                 DataWarehouse* new_dw, const Patch* patch,
-                                 int matl, int numGhostCells,
-                                 constCCVariable<double>& int_eng)
+                                        DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                        State state, const Patch* patch,
+                                        int matl, int numGhostCells,
+                                        constCCVariable<double>& int_eng,
+                                        constCCVariable<double>& sp_vol)
 {
-  cerr << "compute_cv not finished\n";
+  constCCVariable<double> f;
+  DataWarehouse* dw = (state == ThermoInterface::NewState? new_dw : old_dw);
+  dw->get(f, mixtureFraction_CCLabel, matl, patch,
+          numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+  int numSpecies = d_gas->nSpecies();
+  double* tmp_mf = new double[numSpecies];
+
+  for(;!iter.done();iter++){
+    double mf = f[*iter];
+    for(int i = 0; i< numSpecies; i++){
+      tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
+    }
+    d_gas->setMassFractions(tmp_mf);
+    d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
+    double t0 = Time::currentSeconds();
+    equilibrate(*d_gas, UV);
+    double t1 = Time::currentSeconds();
+    cv[*iter] = d_gas->cv_mass();
+  }
+  delete[] tmp_mf;
 }
 
 void CanteraMixtureFraction::compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                                 DataWarehouse* new_dw, const Patch* patch,
-                                 int matl, int numGhostCells,
-                                 constCCVariable<double>& int_eng)
+                                           DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                           State state, const Patch* patch,
+                                           int matl, int numGhostCells,
+                                           constCCVariable<double>& int_eng,
+                                           constCCVariable<double>& sp_vol)
 {
-  cerr << "compute_gamma not finished\n";
+  constCCVariable<double> f;
+  DataWarehouse* dw = (state == ThermoInterface::NewState? new_dw : old_dw);
+  dw->get(f, mixtureFraction_CCLabel, matl, patch,
+          numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+  int numSpecies = d_gas->nSpecies();
+  double* tmp_mf = new double[numSpecies];
+
+  for(;!iter.done();iter++){
+    double mf = f[*iter];
+    for(int i = 0; i< numSpecies; i++){
+      tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
+    }
+    d_gas->setMassFractions(tmp_mf);
+    d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
+    double t0 = Time::currentSeconds();
+    equilibrate(*d_gas, UV);
+    double t1 = Time::currentSeconds();
+    gamma[*iter] = d_gas->cp_mass()/d_gas->cv_mass();
+  }
+  delete[] tmp_mf;
 }
 
 void CanteraMixtureFraction::compute_R(CellIterator iter, CCVariable<double>& R,
-                                DataWarehouse*, const Patch* patch,
-                                int matl, int numGhostCells,
-                                constCCVariable<double>& int_eng)
+                                       DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                       State state, const Patch* patch,
+                                       int matl, int numGhostCells,
+                                       constCCVariable<double>& int_eng,
+                                       constCCVariable<double>& sp_vol)
 {
   cerr << "csm not done: " << __LINE__ << '\n';
 #if 0
@@ -298,22 +385,45 @@ void CanteraMixtureFraction::compute_R(CellIterator iter, CCVariable<double>& R,
 }
 
 void CanteraMixtureFraction::compute_Temp(CellIterator iter, CCVariable<double>& temp,
-                                   DataWarehouse* new_dw, const Patch* patch,
-                                   int matl, int numGhostCells,
-                                   constCCVariable<double>& int_eng)
+                                          DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                          State state, const Patch* patch,
+                                          int matl, int numGhostCells,
+                                          constCCVariable<double>& int_eng,
+                                          constCCVariable<double>& sp_vol)
 {
-  cerr << "compute_temp not finished\n";
+  constCCVariable<double> f;
+  DataWarehouse* dw = (state == ThermoInterface::NewState? new_dw : old_dw);
+  dw->get(f, mixtureFraction_CCLabel, matl, patch,
+          numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+  int numSpecies = d_gas->nSpecies();
+  double* tmp_mf = new double[numSpecies];
+
+  for(;!iter.done();iter++){
+    double mf = f[*iter];
+    for(int i = 0; i< numSpecies; i++){
+      tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
+    }
+    d_gas->setMassFractions(tmp_mf);
+    d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
+    double t0 = Time::currentSeconds();
+    equilibrate(*d_gas, UV);
+    double t1 = Time::currentSeconds();
+    temp[*iter] = d_gas->temperature();
+  }
+  delete[] tmp_mf;
 }
 
 void CanteraMixtureFraction::compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                                             DataWarehouse* new_dw, const Patch* patch,
+                                             DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                             State state, const Patch* patch,
                                              int matl, int numGhostCells,
                                              constCCVariable<double>& Temp,
                                              constCCVariable<double>& sp_vol)
 {
   constCCVariable<double> f;
-  new_dw->get(f, mixtureFraction_CCLabel, matl, patch,
-              numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+  DataWarehouse* dw = (state == ThermoInterface::NewState? new_dw : old_dw);
+  dw->get(f, mixtureFraction_CCLabel, matl, patch,
+          numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
   int numSpecies = d_gas->nSpecies();
   double* tmp_mf = new double[numSpecies];
 

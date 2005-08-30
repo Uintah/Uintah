@@ -110,7 +110,6 @@ void CanteraDetailed::scheduleInitializeThermo(SchedulerP& sched,
       iter != streams.end(); iter++){
     Stream* stream = *iter;
     t->computes(stream->massFraction_CCLabel);
-    t->computes(stream->massFraction_reacted_CCLabel);
   }
   sched->addTask(t, patches, mymatls);
 }
@@ -138,7 +137,7 @@ void CanteraDetailed::initialize(const ProcessorGroup*,
 	  iter != streams.end(); iter++){
 	Stream* stream = *iter;
 	CCVariable<double> mf;
-	new_dw->allocateAndPut(mf, stream->massFraction_reacted_CCLabel, matl, patch);
+	new_dw->allocateAndPut(mf, stream->massFraction_CCLabel, matl, patch);
 	mf.initialize(0);
 	for(vector<Region*>::iterator iter = stream->regions.begin();
 	    iter != stream->regions.end(); iter++){
@@ -313,44 +312,45 @@ void CanteraDetailed::addTaskDependencies_thermalConductivity(Task* t, State sta
 }
 
 void CanteraDetailed::addTaskDependencies_cp(Task* t, State state,
-                                            int numGhostCells)
+                                             int numGhostCells)
 {
   addTaskDependencies_general(t, state, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_cv(Task* t, State state,
-                                            int numGhostCells)
+                                             int numGhostCells)
 {
   addTaskDependencies_general(t, state, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_gamma(Task* t, State state,
-                                               int numGhostCells)
+                                                int numGhostCells)
 {
   addTaskDependencies_general(t, state, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_R(Task* t, State state,
-                                           int numGhostCells)
+                                            int numGhostCells)
 {
   addTaskDependencies_general(t, state, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_Temp(Task* t, State state,
-                                              int numGhostCells)
+                                               int numGhostCells)
 {
   addTaskDependencies_general(t, state, numGhostCells);
 }
 
 void CanteraDetailed::addTaskDependencies_int_eng(Task* t, State state,
-                                                 int numGhostCells)
+                                                  int numGhostCells)
 {
   addTaskDependencies_general(t, state, numGhostCells);
 }
 
 void CanteraDetailed::compute_thermalDiffusivity(CellIterator iter,
                                                  CCVariable<double>& thermalDiffusivity,
-                                                 DataWarehouse* new_dw, const Patch* patch,
+                                                 DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                                 State state, const Patch* patch,
                                                  int matl, int numGhostCells,
                                                  constCCVariable<double>& int_eng,
                                                  constCCVariable<double>& sp_vol)
@@ -359,12 +359,16 @@ void CanteraDetailed::compute_thermalDiffusivity(CellIterator iter,
   StaticArray<constCCVariable<double> > mf(numSpecies);
   int index = 0;
   double* tmp_mf = new double[numSpecies];
+  DataWarehouse* dw = (state == OldState? old_dw : new_dw);
   for(vector<Stream*>::iterator siter = streams.begin();
       siter != streams.end(); siter++, index++){
     Stream* stream = *siter;
     constCCVariable<double> species_mf;
-    new_dw->get(species_mf, stream->massFraction_reacted_CCLabel, matl, patch,
-                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    VarLabel* var = (state == IntermediateState?
+                     stream->massFraction_reacted_CCLabel :
+                     stream->massFraction_CCLabel);
+    dw->get(species_mf, var, matl, patch,
+            numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
     mf[index] = species_mf;
   }
 
@@ -380,29 +384,37 @@ void CanteraDetailed::compute_thermalDiffusivity(CellIterator iter,
 
 void CanteraDetailed::compute_thermalConductivity(CellIterator iter,
                                                   CCVariable<double>& thermalConductivity,
-                                                  DataWarehouse*, const Patch* patch,
+                                                  DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                                  State state, const Patch* patch,
                                                   int matl, int numGhostCells,
-                                                  constCCVariable<double>& int_eng)
+                                                  constCCVariable<double>& int_eng,
+                                                  constCCVariable<double>& sp_vol)
 {
   for(;!iter.done();iter++)
     thermalConductivity[*iter] = d_thermalConductivity;
 }
 
 void CanteraDetailed::compute_cp(CellIterator iter, CCVariable<double>& cp,
-                                 DataWarehouse* new_dw, const Patch* patch,
+                                 DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                 State state, const Patch* patch,
                                  int matl, int numGhostCells,
-                                 constCCVariable<double>& int_eng)
+                                 constCCVariable<double>& int_eng,
+                                 constCCVariable<double>& sp_vol)
 {
   int numSpecies = streams.size();
   StaticArray<constCCVariable<double> > mf(numSpecies);
   int index = 0;
   double* tmp_mf = new double[numSpecies];
+  DataWarehouse* dw = (state == OldState? old_dw : new_dw);
   for(vector<Stream*>::iterator siter = streams.begin();
       siter != streams.end(); siter++, index++){
     Stream* stream = *siter;
     constCCVariable<double> species_mf;
-    new_dw->get(species_mf, stream->massFraction_reacted_CCLabel, matl, patch,
-                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    VarLabel* var = (state == IntermediateState?
+                     stream->massFraction_reacted_CCLabel :
+                     stream->massFraction_CCLabel);
+    dw->get(species_mf, var, matl, patch,
+            numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
     mf[index] = species_mf;
   }
 
@@ -417,20 +429,26 @@ void CanteraDetailed::compute_cp(CellIterator iter, CCVariable<double>& cp,
 }
 
 void CanteraDetailed::compute_cv(CellIterator iter, CCVariable<double>& cv,
-                                 DataWarehouse* new_dw, const Patch* patch,
+                                 DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                 State state, const Patch* patch,
                                  int matl, int numGhostCells,
-                                 constCCVariable<double>& int_eng)
+                                 constCCVariable<double>& int_eng,
+                                 constCCVariable<double>& sp_vol)
 {
   int numSpecies = streams.size();
   StaticArray<constCCVariable<double> > mf(numSpecies);
   int index = 0;
   double* tmp_mf = new double[numSpecies];
+  DataWarehouse* dw = (state == OldState? old_dw : new_dw);
   for(vector<Stream*>::iterator siter = streams.begin();
       siter != streams.end(); siter++, index++){
     Stream* stream = *siter;
     constCCVariable<double> species_mf;
-    new_dw->get(species_mf, stream->massFraction_reacted_CCLabel, matl, patch,
-                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    VarLabel* var = (state == IntermediateState?
+                     stream->massFraction_reacted_CCLabel :
+                     stream->massFraction_CCLabel);
+    dw->get(species_mf, var, matl, patch,
+            numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
     mf[index] = species_mf;
   }
 
@@ -445,20 +463,26 @@ void CanteraDetailed::compute_cv(CellIterator iter, CCVariable<double>& cv,
 }
 
 void CanteraDetailed::compute_gamma(CellIterator iter, CCVariable<double>& gamma,
-                                 DataWarehouse* new_dw, const Patch* patch,
-                                 int matl, int numGhostCells,
-                                 constCCVariable<double>& int_eng)
+                                    DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                    State state, const Patch* patch,
+                                    int matl, int numGhostCells,
+                                    constCCVariable<double>& int_eng,
+                                    constCCVariable<double>& sp_vol)
 {
   int numSpecies = streams.size();
   StaticArray<constCCVariable<double> > mf(numSpecies);
   int index = 0;
   double* tmp_mf = new double[numSpecies];
+  DataWarehouse* dw = (state == OldState? old_dw : new_dw);
   for(vector<Stream*>::iterator siter = streams.begin();
       siter != streams.end(); siter++, index++){
     Stream* stream = *siter;
     constCCVariable<double> species_mf;
-    new_dw->get(species_mf, stream->massFraction_reacted_CCLabel, matl, patch,
-                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    VarLabel* var = (state == IntermediateState?
+                     stream->massFraction_reacted_CCLabel :
+                     stream->massFraction_CCLabel);
+    dw->get(species_mf, var, matl, patch,
+            numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
     mf[index] = species_mf;
   }
 
@@ -473,9 +497,11 @@ void CanteraDetailed::compute_gamma(CellIterator iter, CCVariable<double>& gamma
 }
 
 void CanteraDetailed::compute_R(CellIterator iter, CCVariable<double>& R,
-                                DataWarehouse*, const Patch* patch,
+                                DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                State state, const Patch* patch,
                                 int matl, int numGhostCells,
-                                constCCVariable<double>& int_eng)
+                                constCCVariable<double>& int_eng,
+                                constCCVariable<double>& sp_vol)
 {
   cerr << "csm not done: " << __LINE__ << '\n';
 #if 0
@@ -486,20 +512,26 @@ void CanteraDetailed::compute_R(CellIterator iter, CCVariable<double>& R,
 }
 
 void CanteraDetailed::compute_Temp(CellIterator iter, CCVariable<double>& temp,
-                                   DataWarehouse* new_dw, const Patch* patch,
+                                   DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                   State state, const Patch* patch,
                                    int matl, int numGhostCells,
-                                   constCCVariable<double>& int_eng)
+                                   constCCVariable<double>& int_eng,
+                                   constCCVariable<double>& sp_vol)
 {
   int numSpecies = streams.size();
   StaticArray<constCCVariable<double> > mf(numSpecies);
   int index = 0;
   double* tmp_mf = new double[numSpecies];
+  DataWarehouse* dw = (state == OldState? old_dw : new_dw);
   for(vector<Stream*>::iterator siter = streams.begin();
       siter != streams.end(); siter++, index++){
     Stream* stream = *siter;
     constCCVariable<double> species_mf;
-    new_dw->get(species_mf, stream->massFraction_reacted_CCLabel, matl, patch,
-                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    VarLabel* var = (state == IntermediateState?
+                     stream->massFraction_reacted_CCLabel :
+                     stream->massFraction_CCLabel);
+    dw->get(species_mf, var, matl, patch,
+            numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
     mf[index] = species_mf;
   }
 
@@ -514,7 +546,8 @@ void CanteraDetailed::compute_Temp(CellIterator iter, CCVariable<double>& temp,
 }
 
 void CanteraDetailed::compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
-                                      DataWarehouse* new_dw, const Patch* patch,
+                                      DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                      State state, const Patch* patch,
                                       int matl, int numGhostCells,
                                       constCCVariable<double>& Temp,
                                       constCCVariable<double>& sp_vol)
@@ -523,12 +556,16 @@ void CanteraDetailed::compute_int_eng(CellIterator iter, CCVariable<double>& int
   StaticArray<constCCVariable<double> > mf(numSpecies);
   int index = 0;
   double* tmp_mf = new double[numSpecies];
+  DataWarehouse* dw = (state == OldState? old_dw : new_dw);
   for(vector<Stream*>::iterator siter = streams.begin();
       siter != streams.end(); siter++, index++){
     Stream* stream = *siter;
     constCCVariable<double> species_mf;
-    new_dw->get(species_mf, stream->massFraction_reacted_CCLabel, matl, patch,
-                numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
+    VarLabel* var = (state == IntermediateState?
+                     stream->massFraction_reacted_CCLabel :
+                     stream->massFraction_CCLabel);
+    dw->get(species_mf, var, matl, patch,
+            numGhostCells==0?Ghost::None : Ghost::AroundCells, numGhostCells);
     mf[index] = species_mf;
   }
 
