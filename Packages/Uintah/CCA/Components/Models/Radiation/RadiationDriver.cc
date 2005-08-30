@@ -34,6 +34,8 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   d_DORadiation = 0;
   d_radCounter = -1; //to decide how often radiation calc is done
   d_radCalcFreq = 0; 
+  d_matl_set = 0;
+  
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
 
   d_cellInfoLabel = VarLabel::create("radCellInformation",
@@ -139,9 +141,10 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
 RadiationDriver::~RadiationDriver()
 {
   delete d_DORadiation;
-  if(d_perproc_patches && d_perproc_patches->removeReference())
+  if(d_perproc_patches && d_perproc_patches->removeReference()){
     delete d_perproc_patches;
-
+  }
+  
   VarLabel::destroy(d_cellInfoLabel);
 
   VarLabel::destroy(cellType_CCLabel);  
@@ -174,17 +177,29 @@ RadiationDriver::~RadiationDriver()
 
   VarLabel::destroy(radiationSrc_CCLabel);
   VarLabel::destroy(scalar_CCLabel);
+  
+  if(d_matl_set && d_matl_set->removeReference()) {
+    delete d_matl_set;
+  }
+  
 }
 
-//****************************************************************************
-// Problem Setup
-//****************************************************************************
+//______________________________________________________________________
+//     P R O B L E M   S E T U P
 void 
 RadiationDriver::problemSetup(GridP& grid,
                               SimulationStateP& sharedState,
                               ModelSetup* setup)
 {
   d_sharedState = sharedState;
+  d_matl = d_sharedState->parseAndLookupMaterial(params, "material");
+
+  vector<int> m(1);
+  m[0] = d_matl->getDWIndex();
+  d_matl_set = new MaterialSet();
+  d_matl_set->addAll(m);
+  d_matl_set->addReference();
+
 
   ProblemSpecP db = params->findBlock("RadiationModel");
 
@@ -223,7 +238,6 @@ void RadiationDriver::scheduleInitialize(SchedulerP& sched,
                         &RadiationDriver::initialize);
 
   const PatchSet* patches= level->eachPatch();
-  const MaterialSet* matls = d_sharedState->allICEMaterials();
 
   t->computes(qfluxE_CCLabel);
   t->computes(qfluxW_CCLabel);
@@ -249,7 +263,7 @@ void RadiationDriver::scheduleInitialize(SchedulerP& sched,
     t->computes(h2o_CCLabel);
   }
   
-  sched->addTask(t, patches, matls);
+  sched->addTask(t, patches, d_matl_set);
 }
 
 //****************************************************************************
@@ -275,9 +289,7 @@ RadiationDriver::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     RadiationVariables vars;
-
-    int iceIndex = 0;
-    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    int indx = d_matl->getDWIndex();
 
     new_dw->allocateAndPut(vars.cellType, cellType_CCLabel, indx, patch);
 
@@ -446,7 +458,6 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
   cout_doing << "RADIATION::scheduleComputeModelSources\t\t\tL-" 
              << level->getIndex() << endl;
   const PatchSet* patches = level->eachPatch();
-  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
 
   string taskname = "RadiationDriver::buildLinearMatrix";
 
@@ -459,13 +470,13 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
   d_perproc_patches = lb->createPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
 
-  sched->addTask(t, d_perproc_patches, ice_matls);
+  sched->addTask(t, d_perproc_patches, d_matl_set);
   
-  scheduleComputeCO2_H2O(   level,sched, patches, ice_matls);     
-  scheduleCopyValues(       level,sched, patches, ice_matls);
-  scheduleComputeProps(     level,sched, patches, ice_matls);    
-  scheduleBoundaryCondition(level,sched, patches, ice_matls);    
-  scheduleIntensitySolve(   level,sched, patches, ice_matls, mi);
+  scheduleComputeCO2_H2O(   level,sched, patches, d_matl_set);     
+  scheduleCopyValues(       level,sched, patches, d_matl_set);
+  scheduleComputeProps(     level,sched, patches, d_matl_set);    
+  scheduleBoundaryCondition(level,sched, patches, d_matl_set);    
+  scheduleIntensitySolve(   level,sched, patches, d_matl_set, mi);
 }
 
 //****************************************************************************
@@ -521,8 +532,7 @@ RadiationDriver::computeCO2_H2O(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing computeCO2_H2O on patch "<<patch->getID()
                << "\t\t\t\t Radiation" << endl;
-    int iceIndex = 0;
-    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    int indx = d_matl->getDWIndex();
     
     CCVariable<double> H2O_concentration, CO2_concentration;
     new_dw->allocateAndPut(H2O_concentration, h2o_CCLabel,indx, patch); 
@@ -610,8 +620,7 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing copyValues on patch "<<patch->getID()
                << "\t\t\t\t Radiation" << endl;
-    int iceIndex = 0;
-    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    int indx = d_matl->getDWIndex();
 
     constCCVariable<int> oldPcell;
     constCCVariable<double> oldFluxE;
@@ -830,8 +839,8 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing computeProps on patch "<<patch->getID()
                << "\t\t\t\t Radiation" << endl;
-    int iceIndex = 0;
-    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    int indx = d_matl->getDWIndex();
+    
     Ghost::GhostType  gn = Ghost::None;
         
     RadiationVariables radVars;
@@ -970,8 +979,8 @@ RadiationDriver::boundaryCondition(const ProcessorGroup* pc,
     cout_doing << "Doing boundaryCondition on patch "<<patch->getID()
                << "\t\t\t Radiation" << endl;
     
-    int iceIndex = 0;
-    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    int indx = d_matl->getDWIndex();
+    
     Ghost::GhostType  gac = Ghost::AroundCells;
     
     RadiationVariables radVars;
@@ -1042,8 +1051,8 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing intensitySolve on patch "<<patch->getID()
                << "\t\t\t\t Radiation" << endl;
-    int iceIndex = 0;
-    int indx = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    int indx = d_matl->getDWIndex();
+    
     Ghost::GhostType  gac = Ghost::AroundCells;
     
     RadiationVariables radVars;
