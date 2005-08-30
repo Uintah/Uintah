@@ -80,7 +80,9 @@ const std::string CCAComponentModel::DEFAULT_PATH =
 
 
 CCAComponentModel::CCAComponentModel(SCIRunFramework* framework)
-  : ComponentModel("cca"), framework(framework)
+  : ComponentModel("cca"), framework(framework),
+    lock_components("CCAComponentModel::components lock"),
+    lock_loaderList("CCAComponentModel::loaderList lock")
 {
   // move to framework properties
   // Record the path containing DLLs for components.
@@ -101,6 +103,7 @@ CCAComponentModel::~CCAComponentModel()
 
 void CCAComponentModel::destroyComponentList()
 {
+  SCIRun::Guard g1(&lock_components);
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++) {
     delete iter->second;
@@ -222,7 +225,10 @@ void CCAComponentModel::readComponentDescription(const std::string& file)
       CCAComponentDescription* cd = new CCAComponentDescription(this);
       cd->type = component_name;
       cd->setLibrary(library_name.c_str()); // record the DLL name
+
+      lock_components.lock();
       this->components[cd->type] = cd;
+      lock_components.unlock();
     }
   }
 }
@@ -251,7 +257,8 @@ bool CCAComponentModel::destroyServices(const sci::cca::Services::pointer& svc)
 }
 
 bool CCAComponentModel::haveComponent(const std::string& type)
-{
+{ 
+  SCIRun::Guard g1(&lock_components);
 #if DEBUG
   std::cerr << "CCA looking for component of type: " << type << std::endl;
 #endif
@@ -278,12 +285,14 @@ CCAComponentModel::createInstance(const std::string& name,
 #endif
   sci::cca::Component::pointer component;
   if (loaderName=="") {  //local component
+    lock_components.lock();
     componentDB_type::iterator iter = components.find(type);
     if (iter == components.end()) {
       std::cerr << "Error: could not locate any cca components.  Make sure the paths set in environment variable \"SIDL_DLL_PATH\" are correct." << std::endl;
       return 0;
     }
-
+    lock_components.unlock();
+ 
     // Get the list of DLL paths to search for the appropriate component library
     std::vector<std::string> possible_paths =
         splitPathString(this->getSidlDLLPath());
@@ -350,11 +359,14 @@ std::string CCAComponentModel::getName() const
 
 void CCAComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)
 {
+  lock_components.lock();
   for (componentDB_type::iterator iter = components.begin();
       iter != components.end(); iter++) {
     list.push_back(iter->second);
   }
-  
+  lock_components.unlock();
+
+  lock_loaderList.lock(); 
   for (unsigned int i = 0; i < loaderList.size(); i++) {
     SSIDL::array1<std::string> typeList;
     loaderList[i]->listAllComponentTypes(typeList);
@@ -367,11 +379,14 @@ void CCAComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>
       list.push_back(cd);
     }
   }
+  lock_loaderList.unlock();
 }
 
 int CCAComponentModel::addLoader(resourceReference *rr)
 {
+  lock_loaderList.lock();
   loaderList.push_back(rr);
+  lock_loaderList.unlock();
 #if DEBUG
   std::cerr << "Loader " << rr->getName()
             << " is added into cca component model" << std::endl;
@@ -399,6 +414,7 @@ resourceReference *
 CCAComponentModel::getLoader(std::string loaderName)
 {
   resourceReference *rr=0;
+  lock_loaderList.lock();
   for(unsigned int i=0; i<loaderList.size(); i++)
     {
     if(loaderList[i]->getName()==loaderName)
@@ -407,6 +423,7 @@ CCAComponentModel::getLoader(std::string loaderName)
       break;
       }
     }
+  lock_loaderList.unlock();
   return rr;
 }
 

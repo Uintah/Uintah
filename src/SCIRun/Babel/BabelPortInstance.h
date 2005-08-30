@@ -41,6 +41,8 @@
 #ifndef SCIRun_Babel_BabelPortInstance_h
 #define SCIRun_Babel_BabelPortInstance_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/PortInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Babel/gov_cca.hh>
@@ -83,7 +85,8 @@ public:
 public:
   PortType porttype;
   std::vector<PortInstance*> connections;
-    friend class BabelComponentInstance;
+  SCIRun::Mutex lock_connections;
+  friend class BabelComponentInstance;
   std::string name;
   std::string type;
   gov::cca::TypeMap properties;

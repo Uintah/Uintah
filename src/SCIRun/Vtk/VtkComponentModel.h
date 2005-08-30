@@ -41,6 +41,8 @@
 #ifndef SCIRun_Vtk_VtkComponentModel_h
 #define SCIRun_Vtk_VtkComponentModel_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentModel.h>
 #include <vector>
 #include <string>
@@ -120,6 +122,7 @@ private:
   SCIRunFramework* framework;
   typedef std::map<std::string, VtkComponentDescription*> componentDB_type;
   componentDB_type components;
+  SCIRun::Mutex lock_components;
 
   void readComponentDescription(const std::string& file);
 

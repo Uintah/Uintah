@@ -41,6 +41,8 @@
 #ifndef SCIRun_CCA_CCAPortInstance_h
 #define SCIRun_CCA_CCAPortInstance_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/PortInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <map>
@@ -96,6 +98,8 @@ private:
   std::string type;
   sci::cca::TypeMap::pointer properties;
   std::vector<PortInstance*> connections;
+  SCIRun::Mutex lock_connections;
+
   sci::cca::Port::pointer port;
   PortType porttype;
   int useCount;

@@ -61,7 +61,8 @@
 namespace SCIRun {
 
 InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
-  : ComponentModel("internal"), framework(framework)
+  : ComponentModel("internal"), framework(framework),
+    lock_frameworkServices("InternalComponentModel::frameworkServices lock")
 {
     addService(new InternalFrameworkServiceDescription(this, "cca.BuilderService", &BuilderService::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.ComponentRepository", &ComponentRegistry::create));
@@ -76,6 +77,7 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
 
 InternalComponentModel::~InternalComponentModel()
 {
+  SCIRun::Guard g1(&lock_frameworkServices);
   for (FrameworkServicesMap::iterator iter=frameworkServices.begin(); iter != frameworkServices.end(); iter++) {
     delete iter->second;
   }
@@ -83,6 +85,7 @@ InternalComponentModel::~InternalComponentModel()
 
 void InternalComponentModel::addService(InternalFrameworkServiceDescription* desc)
 {
+  SCIRun::Guard g1(&lock_frameworkServices);
   if (frameworkServices.find(desc->getType()) != frameworkServices.end()) 
     throw FrameworkInternalException("add duplicate service ["+desc->getType()+"]");
   frameworkServices[desc->getType()] = desc;
@@ -95,7 +98,9 @@ InternalComponentModel::getFrameworkService(const std::string& type,
   InternalServiceInstance *service = 0;
   sci::cca::Port::pointer port(0);
 
+  lock_frameworkServices.lock();
   FrameworkServicesMap::const_iterator fwkServiceDesc = frameworkServices.find(type);
+  lock_frameworkServices.unlock();
   if ( fwkServiceDesc != frameworkServices.end() )
     service = fwkServiceDesc->second->get(framework);
 
@@ -149,7 +154,9 @@ bool
 InternalComponentModel::releaseFrameworkService(const std::string& type,
                                                 const std::string& componentName)
 {
+  lock_frameworkServices.lock();
   FrameworkServicesMap::iterator iter = frameworkServices.find(type);
+  lock_frameworkServices.unlock();
   if (iter == frameworkServices.end()) { 
     return false; 
   }
@@ -229,6 +236,7 @@ void
 InternalComponentModel::listAllComponentTypes(
    std::vector<ComponentDescription*>& list, bool listInternal)
 {
+  SCIRun::Guard g1(&lock_frameworkServices);
   if (listInternal) {
     for (FrameworkServicesMap::iterator iter = frameworkServices.begin(); iter != frameworkServices.end(); iter++) {
       list.push_back(iter->second);

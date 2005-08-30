@@ -55,7 +55,8 @@ BridgeComponentInstance::BridgeComponentInstance(SCIRunFramework* framework,
                        const std::string& typeName,
                        const sci::cca::TypeMap::pointer &tm,
                        BridgeComponent* component)
-  : ComponentInstance(framework, instanceName, typeName, tm), component(component)
+  : ComponentInstance(framework, instanceName, typeName, tm), 
+    lock_ports("BridgeComponentInstance::ports lock"), component(component)
 {
   mutex = new Mutex("getPort mutex");
   SCIRunComponentModel::initGuiInterface();
@@ -72,6 +73,7 @@ BridgeComponentInstance::~BridgeComponentInstance()
 PortInstance*
 BridgeComponentInstance::getPortInstance(const std::string& portname)
 {
+  SCIRun::Guard g1(&lock_ports);
   map<string, PortInstance*>::iterator iter = ports.find(portname);
   if (iter == ports.end()) {
     //!!!!! Check if it is a dataflow port:
@@ -99,7 +101,9 @@ sci::cca::Port::pointer BridgeComponentInstance::getCCAPort(const std::string& n
   if (!svc.isNull()) {
     return svc;
   }
+  lock_ports.lock();
   map<string, PortInstance*>::iterator iter = ports.find(name);
+  lock_ports.unlock();
   if (iter == ports.end()) {
     return sci::cca::Port::pointer(0);
   }
@@ -124,7 +128,9 @@ sci::cca::Port::pointer BridgeComponentInstance::getCCAPort(const std::string& n
 gov::cca::Port BridgeComponentInstance::getBabelPort(const std::string& name)
 {
   mutex->lock();
+  lock_ports.lock();
   map<string, PortInstance*>::iterator iter = ports.find(name);
+  lock_ports.unlock();
   if (iter == ports.end()) {
     return 0;
   }
@@ -170,7 +176,9 @@ vtk::Port* BridgeComponentInstance::getVtkPort(const std::string& name)
 {
 
   mutex->lock();
+  lock_ports.lock();
   map<string, PortInstance*>::iterator iter = ports.find(name);
+  lock_ports.unlock();
   if (iter == ports.end()) {
     return 0;
   }
@@ -184,6 +192,7 @@ vtk::Port* BridgeComponentInstance::getVtkPort(const std::string& name)
 
 void BridgeComponentInstance::addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT) 
 {
+  SCIRun::Guard g1(&lock_ports);
   map<string, PortInstance*>::iterator iter;
   std::string portName = vtkport->getName();
 
@@ -207,7 +216,9 @@ void BridgeComponentInstance::releasePort(const std::string& name, const modelT 
     if (framework->releaseFrameworkService(name, instanceName)) {
       return;
     }
+    lock_ports.lock();
     iter = ports.find(name);
+    lock_ports.unlock();
     if (iter == ports.end()) {
       throw sci::cca::CCAException::pointer(new CCAException("Released an unknown port: " + name, sci::cca::BadPortName));
     }
@@ -224,7 +235,9 @@ void BridgeComponentInstance::releasePort(const std::string& name, const modelT 
     break;
 
   case Babel:
+    lock_ports.lock();
     iter = ports.find(name);
+    lock_ports.unlock();
     if (iter == ports.end()) {
       throw sci::cca::CCAException::pointer(new CCAException("Released an unknown port: " + name, sci::cca::BadPortName));
     }
@@ -257,6 +270,8 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
                         const std::string& portType,
                         const modelT model)
 {
+  SCIRun::Guard g1(&lock_ports);
+
   CCAPortInstance* cpr;
   BabelPortInstance* bpr;
   TaoPortInstance* tpr;
@@ -344,6 +359,8 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
 
 void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, const modelT model)
 {
+  SCIRun::Guard g1(&lock_ports);
+
   CCAPortInstance* cpr;
   BabelPortInstance* bpr;
   map<string, PortInstance*>::iterator iter;
@@ -401,6 +418,8 @@ void BridgeComponentInstance::addProvidesPort(void* port,
                        const std::string& portType,
                        const modelT model)
 {
+  SCIRun::Guard g1(&lock_ports);
+
   CCAPortInstance* cpr;
   BabelPortInstance* bpr;
   TaoPortInstance* tpr;

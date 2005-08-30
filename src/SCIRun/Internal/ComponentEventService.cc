@@ -48,7 +48,9 @@
 namespace SCIRun {
 
   ComponentEventService::ComponentEventService(SCIRunFramework* framework)
-  : InternalFrameworkServiceInstance(framework, "internal:ComponentEventService")
+  : InternalFrameworkServiceInstance(framework, "internal:ComponentEventService"),
+    lock_listeners("ComponentEventService::listeners lock"),
+    lock_events("ComponentEventService::events lock")
 {
 }
 
@@ -75,14 +77,18 @@ ComponentEventService::addComponentEventListener(sci::cca::ports::ComponentEvent
                          bool playInitialEvents)
 {
     Listener *listener = new Listener(type, l);
+    lock_listeners.lock();
     listeners.push_back(listener);
+    lock_listeners.unlock();
     if (playInitialEvents) {
         // send listener all events stored in vector
+        lock_events.lock();
         for (std::vector<sci::cca::ports::ComponentEvent::pointer>::iterator iter =
                 events.begin();
                 iter != events.end(); iter++) {
             listener->l->componentActivity((*iter));
         }
+        lock_events.unlock();
     }
 }
 
@@ -91,6 +97,7 @@ ComponentEventService::removeComponentEventListener(
                                   sci::cca::ports::ComponentEventType type,
                 const sci::cca::ports::ComponentEventListener::pointer& l)
 {
+    SCIRun::Guard g1(&lock_listeners);
     for (std::vector<Listener*>::iterator iter = listeners.begin();
             iter != listeners.end(); iter++) {
         if ((*iter)->type == type && (*iter)->l == l) {
@@ -148,6 +155,7 @@ ComponentEventService::emitComponentEvent(const sci::cca::ports::ComponentEvent:
         return;
     }
 
+    lock_listeners.lock();
     for (std::vector<Listener*>::iterator iter=listeners.begin();
             iter != listeners.end(); iter++) {
         if ((*iter)->type == sci::cca::ports::AllComponentEvents ||
@@ -155,8 +163,12 @@ ComponentEventService::emitComponentEvent(const sci::cca::ports::ComponentEvent:
             (*iter)->l->componentActivity(event);
         }
     }
+    lock_listeners.unlock();
+
     // how to keep track of events?
+    lock_events.lock();
     events.push_back(event);
+    lock_events.unlock();
 }
 
 } // end namespace SCIRun

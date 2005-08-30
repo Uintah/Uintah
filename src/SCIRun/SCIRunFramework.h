@@ -47,6 +47,8 @@
   #include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #endif
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/resourceReference.h>
 #include <vector>
@@ -281,10 +283,12 @@ private:
 
     /** ? */
     std::vector<sci::cca::ComponentID::pointer> compIDs;
+    SCIRun::Mutex lock_compIDs;  
 
     /** The set of registered components available in the framework, indexed by
         their instance names. */
     ComponentInstanceMap activeInstances;
+    SCIRun::Mutex lock_activeInstances;
 
     /** A pointer to the special SCIRun \em internal component model, whose
         framework-related components are not intended to be exposed to the user.
