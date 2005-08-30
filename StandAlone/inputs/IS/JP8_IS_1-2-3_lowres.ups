@@ -27,12 +27,18 @@
                <type> rigidmpmice </type>
            </SimulationComponent>
            <input_file> JP8_IS_1-2-3_lowres.ups</input_file>
+	   <SwitchCriteria type = "Timestep">
+	       <timestep> 5 </timestep>
+	   </SwitchCriteria>
        </subcomponent>
        <subcomponent>
            <SimulationComponent>
                <type> impm </type>
            </SimulationComponent>
            <input_file> ContainerHeatUp3D.ups</input_file>
+	   <SwitchCriteria type = "Timestep">
+	       <timestep> 10 </timestep>
+	   </SwitchCriteria>
            <init var = "p.acceleration" matls = "mpm_matls" />
        </subcomponent>
        <subcomponent>
