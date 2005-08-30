@@ -193,7 +193,7 @@ Viewer::process_event()
     stop_rendering_ = true;
     //stop spinning windows...
     for(unsigned i = 0; i < view_window_.size(); i++) {
-      view_window_[i]->inertia_mode_ = 0;
+      view_window_[i]->gui_inertia_mode_.set(0);
     }    
     break;
 

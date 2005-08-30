@@ -268,7 +268,8 @@ OpenGL::redraw_loop()
   for(;;)
   {
     int nreply=0;
-    if(view_window_->inertia_mode_)
+    view_window_->gui_inertia_mode_.reset();
+    if(view_window_->gui_inertia_mode_.get())
     {
       current_time_=throttle.time();
       if(animate_framerate_==0)
@@ -279,25 +280,20 @@ OpenGL::redraw_loop()
       {
 	animate_framerate_=1./delta;
 	frametime=delta;
-	newtime=current_time_;
       }
       if(delta > .85*frametime)
       {
 	animate_framerate_*=.9;
 	frametime=1./animate_framerate_;
-	newtime=current_time_;
       }
       else if(delta < .5*frametime)
       {
 	animate_framerate_*=1.1;
 	if(animate_framerate_>30)
-	{
 	  animate_framerate_=30;
-	}
 	frametime=1./animate_framerate_;
-	newtime=current_time_;
       }
-      newtime+=frametime;
+      newtime = current_time_+frametime;
       throttle.wait_for_time(newtime);
       while (send_mailbox_.tryReceive(r))
       {
@@ -332,6 +328,46 @@ OpenGL::redraw_loop()
 	  nreply++;
 	}
       }
+
+      view_window_->gui_inertia_recalculate_.reset();
+      if (view_window_->gui_inertia_recalculate_.get()) {
+	if (view_window_->gui_inertia_recalculate_.get() == 1) {
+	  view_window_->gui_inertia_recalculate_.set(0);
+	  view_window_->gui_inertia_x_.reset();
+	  view_window_->gui_inertia_y_.reset();
+	  view_window_->ball_->vDown = HVect(0.0, 0.0, 0.0, 1.0);
+	  view_window_->ball_->vNow = 
+	    HVect(view_window_->gui_inertia_x_.get()/2.0, 
+		  view_window_->gui_inertia_y_.get()/2.0, 0.0, 1.0);
+	  view_window_->ball_->dragging = 1;
+	  view_window_->ball_->Update();
+	  view_window_->ball_->qNorm = view_window_->ball_->qNow.Conj();
+	  const double c = 1.0/view_window_->ball_->qNow.VecMag();
+	  view_window_->ball_->qNorm.x *= c;
+	  view_window_->ball_->qNorm.y *= c;
+	  view_window_->ball_->qNorm.z *= c;
+	}
+	view_window_->gui_inertia_mag_.reset();
+	view_window_->angular_v_ = view_window_->gui_inertia_mag_.get();  
+	throttle.stop();
+	throttle.clear();
+	throttle.start();
+	current_time_ = throttle.time(); 
+	newtime = throttle.time()+frametime;
+	view_window_->gui_view_.reset();
+	View tmpview(view_window_->gui_view_.get());
+	view_window_->rot_view_ = tmpview;
+	Vector y_axis = tmpview.up();
+	Vector z_axis = tmpview.eyep() - tmpview.lookat();
+	Vector x_axis = Cross(y_axis,z_axis);
+	x_axis.normalize();
+	y_axis.normalize();
+	view_window_->eye_dist_ = z_axis.normalize();
+	view_window_->prev_trans_.load_frame(Point(0.0,0.0,0.0),
+					     x_axis,y_axis,z_axis);
+      }
+	
+
       // you want to just rotate around the current rotation
       // axis - the current quaternion is viewwindow->ball_->qNow	
       // the first 3 components of this
@@ -349,13 +385,13 @@ OpenGL::redraw_loop()
       Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
       Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
       tmpview.up(y_a.vector());
-      if (view_window_->inertia_mode_ == 1)
+      if (view_window_->gui_inertia_mode_.get() == 1)
       {
 	tmpview.eyep((z_a*(view_window_->eye_dist_))+
 		     tmpview.lookat().vector());
 	view_window_->gui_view_.set(tmpview);
       }
-      else if (view_window_->inertia_mode_ == 2)
+      else if (view_window_->gui_inertia_mode_.get() == 2)
       {
 	tmpview.lookat(tmpview.eyep()-
 		       (z_a*(view_window_->eye_dist_)).vector());

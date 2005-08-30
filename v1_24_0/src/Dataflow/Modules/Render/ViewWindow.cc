@@ -91,7 +91,6 @@ namespace SCIRun {
 
 ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
   : id_(ctx->getfullname()),
-    inertia_mode_(0),
     ball_(scinew BallData()),
     angular_v_(0.0),
     rot_view_(),
@@ -120,6 +119,11 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
     gui_fog_end_(ctx->subVar("fog-end")),
     gui_fog_visibleonly_(ctx->subVar("fog-visibleonly")),
     gui_total_frames_(ctx->subVar("total_frames"), 0),
+    gui_inertia_mag_(ctx->subVar("inertia_mag"), 1.0),
+    gui_inertia_x_(ctx->subVar("inertia_x"), 1.0),
+    gui_inertia_y_(ctx->subVar("inertia_y"), 0.0),
+    gui_inertia_recalculate_(ctx->subVar("inertia_recalculate", 0), 0),
+    gui_inertia_mode_(ctx->subVar("inertia_mode", 0), 0),
     // Private Variables
     viewer_(viewer),
     renderer_(new OpenGL(gui, viewer, this)),
@@ -345,8 +349,8 @@ ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
   switch(action){
   case MouseStart:
     {
-      if (inertia_mode_) {
-	inertia_mode_=0;
+      if (gui_inertia_mode_.get()) {
+	gui_inertia_mode_.set(0);
 	redraw();
       }
       last_x_=x;
@@ -416,8 +420,8 @@ ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
   switch(action){
   case MouseStart:
     {
-      if (inertia_mode_) {
-	inertia_mode_=0;
+      if (gui_inertia_mode_.get()) {
+	gui_inertia_mode_.set(0);
 	redraw();
       }
       if (dolly_throttle_ == 0) {
@@ -497,8 +501,8 @@ ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
   switch(action){
   case MouseStart:
     {
-      if (inertia_mode_) {
-	inertia_mode_=0;
+      if (gui_inertia_mode_.get()) {
+	gui_inertia_mode_.set(0);
 	redraw();
       }
       update_mode_string("scale: ");
@@ -783,8 +787,8 @@ ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
   switch(action){
   case MouseStart:
     {
-      if (inertia_mode_) {
-	inertia_mode_=0;
+      if (gui_inertia_mode_.get()) {
+	gui_inertia_mode_.set(0);
 	redraw();
       }
       extern int CAPTURE_Z_DATA_HACK;
@@ -863,8 +867,8 @@ ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
   switch(action){
   case MouseStart:
     {
-      if(inertia_mode_){
-	inertia_mode_=0;
+      if(gui_inertia_mode_.get()){
+	gui_inertia_mode_.set(0);
 	redraw();
       }
       update_mode_string("rotate:");
@@ -894,12 +898,10 @@ ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
 
       y_axis = tmpview.up();
       z_axis = tmpview.eyep() - tmpview.lookat();
-      eye_dist_ = z_axis.normalize();
       x_axis = Cross(y_axis,z_axis);
       x_axis.normalize();
-      y_axis = Cross(z_axis,x_axis);
       y_axis.normalize();
-      tmpview.up(y_axis); // having this correct could fix something?
+      eye_dist_ = z_axis.normalize();
 
       prev_trans_.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
 
@@ -914,7 +916,7 @@ ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
       prev_time_[1] = prev_time_[2] = -100;
       ball_->Update();
       last_time_=time;
-      inertia_mode_=0;
+      gui_inertia_mode_.set(0);
       need_redraw_ = 1;
     }
     break;
@@ -963,10 +965,11 @@ ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
       update_mode_string("rotate:");
 
       last_time_=time;
-      inertia_mode_=0;
+      gui_inertia_mode_.set(0);
     }
     break;
   case MouseEnd:
+    gui_inertia_mode_.set(0);
     if(time-last_time_ < 20){
       // now setup the normalized quaternion
       View tmpview(rot_view_);
@@ -1011,26 +1014,19 @@ ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
 	    
       ball_->qNorm = ball_->qNow.Conj();
       double mag = ball_->qNow.VecMag();
-
       // Go into inertia mode...
-      inertia_mode_=1;
-      need_redraw_=1;
-
-      if (mag < 0.00001) { // arbitrary ad-hoc threshold
-	inertia_mode_ = 0;
-	need_redraw_ = 1;
-      }
-      else {
+      if (mag > 0.00001) { // arbitrary ad-hoc threshold
+	gui_inertia_mode_.set(1);
 	double c = 1.0/mag;
-	// time between last 2 events
-	double dt = prev_time_[0] - prev_time_[index];
 	ball_->qNorm.x *= c;
 	ball_->qNorm.y *= c;
 	ball_->qNorm.z *= c;
-	angular_v_ = 2*acos(ball_->qNow.w)*1000.0/dt;
+	gui_inertia_y_.set(ball_->qNorm.x);
+	gui_inertia_x_.set(-ball_->qNorm.y);
+	angular_v_ = 2*acos(ball_->qNow.w)*1000.0/
+	  (prev_time_[0]-prev_time_[index]);
+	gui_inertia_mag_.set(angular_v_);
       }
-    } else {
-      inertia_mode_=0;
     }
     ball_->EndDrag();
     rotate_valid_p_ = 0; // so we don't have to draw this...
@@ -1046,8 +1042,8 @@ ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
   switch(action){
   case MouseStart:
     {
-      if(inertia_mode_){
-	inertia_mode_=0;
+      if(gui_inertia_mode_.get()){
+	gui_inertia_mode_.set(0);
 	redraw();
       }
       update_mode_string("rotate lookatp:");
@@ -1094,7 +1090,7 @@ ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
       prev_time_[1] = prev_time_[2] = -100;
       ball_->Update();
       last_time_=time;
-      inertia_mode_=0;
+      gui_inertia_mode_.set(0);
       need_redraw_ = 1;
     }
     break;
@@ -1143,7 +1139,7 @@ ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
       update_mode_string("rotate lookatp:");
 
       last_time_=time;
-      inertia_mode_=0;
+      gui_inertia_mode_.set(0);
     }
     break;
   case MouseEnd:
@@ -1193,11 +1189,11 @@ ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
       double mag = ball_->qNow.VecMag();
 
       // Go into inertia mode...
-      inertia_mode_=2;
+      gui_inertia_mode_.set(2);
       need_redraw_=1;
 
       if (mag < 0.00001) { // arbitrary ad-hoc threshold
-	inertia_mode_ = 0;
+	gui_inertia_mode_.set(0);
 	need_redraw_ = 1;
       }
       else {
@@ -1210,7 +1206,7 @@ ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
 	angular_v_ = 2*acos(ball_->qNow.w)*1000.0/dt;
       }
     } else {
-      inertia_mode_=0;
+      gui_inertia_mode_.set(0);
     }
     ball_->EndDrag();
     rotate_valid_p_ = 0; // so we don't have to draw this...
@@ -1232,8 +1228,8 @@ ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
   switch(action){
   case MouseStart:
     {
-      if (inertia_mode_) {
-	inertia_mode_=0;
+      if (gui_inertia_mode_.get()) {
+	gui_inertia_mode_.set(0);
 	redraw();
       }
       total_x_=0;
@@ -1450,12 +1446,12 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "sethome") {
     homeview_=gui_view_.get();
   } else if(args[1] == "gohome") {
-    inertia_mode_=0;
+    gui_inertia_mode_.set(0);
     gui_view_.set(homeview_);
     viewer_->mailbox.send(scinew ViewerMessage(id_)); // Redraw
   } else if(args[1] == "autoview") {
     BBox bbox;
-    inertia_mode_=0;
+    gui_inertia_mode_.set(0);
     get_bounds(bbox);
     autoview(bbox);
   } else if(args[1] == "Views") {
