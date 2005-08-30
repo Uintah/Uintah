@@ -79,6 +79,9 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   d_SMALL_NUM = d_ice->d_SMALL_NUM;
   d_TINY_RHO  = d_ice->d_TINY_RHO;
   
+
+  d_switchCriteria = 0;
+
   // Turn off all the debuging switches
   switchDebug_InterpolateNCToCC_0 = false;
   switchDebug_InterpolateCCToNC   = false;
@@ -125,6 +128,16 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     NGN=2;
   }
 
+  d_switchCriteria = dynamic_cast<SwitchingCriteria*>
+    (getPort("switch_criteria"));
+  
+  if (!d_switchCriteria) {
+    throw InternalError("MPMICE:couldn't get switch_criteria port",
+                        __FILE__, __LINE__);
+  } else {
+    d_switchCriteria->problemSetup(prob_spec,d_sharedState);
+  }
+    
   // Get the PBX matl id
   int matl_id = 0;
   for (ProblemSpecP child = prob_spec->findBlock("material"); child != 0;
@@ -933,6 +946,9 @@ void MPMICE::scheduleSolveEquationsMotion(SchedulerP& sched,
 
 void MPMICE::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
+
+  d_switchCriteria->scheduleSwitchTest(level,sched);
+#if 0
   Task* t = scinew Task("switchTest",this, &MPMICE::switchTest);
 
   pbx_matl     = scinew MaterialSubset();
@@ -957,6 +973,7 @@ void MPMICE::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   t->requires(Task::NewDW, Mlb->pXLabel, d_sharedState->allMPMMaterials()->getUnion(), Ghost::None );
   t->computes(d_sharedState->get_switch_label(), level.get_rep());
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
+#endif
 
 
 }
@@ -3053,6 +3070,9 @@ void MPMICE::switchTest(const ProcessorGroup* group,
                         DataWarehouse* new_dw)
 {
   double sw = 0;
+
+  if (!d_switchCriteria)
+    cout << "got a switch criteria" << endl;
 
 #if 1
   int time_step = d_sharedState->getCurrentTopLevelTimeStep();

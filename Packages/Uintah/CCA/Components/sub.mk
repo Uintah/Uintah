@@ -24,6 +24,7 @@ SUBDIRS := \
         $(SRCDIR)/ProblemSpecification \
         $(SRCDIR)/PatchCombiner \
         $(SRCDIR)/Solvers \
+        $(SRCDIR)/SwitchingCriteria \
         $(SRCDIR)/Parent
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

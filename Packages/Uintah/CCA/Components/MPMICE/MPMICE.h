@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
 #include <Core/Geometry/Vector.h>
 
 namespace Uintah {
@@ -309,10 +310,10 @@ public:
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
   virtual void switchTest(const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse*,
-                  DataWarehouse*);
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse*,
+                          DataWarehouse*);
 
   // AMR
   virtual void scheduleRefineInterface(const LevelP& fineLevel,
@@ -445,6 +446,8 @@ protected:
 
   int              pbx_matl_num;
   MaterialSubset*  pbx_matl;
+
+  SwitchingCriteria* d_switchCriteria;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;
