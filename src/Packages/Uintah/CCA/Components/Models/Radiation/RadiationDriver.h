@@ -184,6 +184,8 @@ class RadiationDriver : public ModelInterface {
   const PatchSet* d_perproc_patches;
 
   ProblemSpecP params;
+  const Material* d_matl;
+  MaterialSet* d_matl_set;
 
   const ProcessorGroup* d_myworld;
   SimulationStateP d_sharedState;
