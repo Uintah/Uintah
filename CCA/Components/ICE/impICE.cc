@@ -36,6 +36,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  int levelIndex = getLevel(patches)->getIndex();
   
   Task::WhichDW whichDW;
   if(firstIteration) {
@@ -45,7 +46,8 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   }   
   //__________________________________
   //  Form the matrix
-  cout_doing << "ICE::scheduleSetupMatrix" << endl;
+  cout_doing << d_myworld->myrank()<< " ICE::scheduleSetupMatrix" 
+            << "\t\t\t\t\tL-" << levelIndex<< endl;
   t = scinew Task("ICE::setupMatrix", this, 
                   &ICE::setupMatrix, firstIteration);
 //  t->requires( Task::ParentOldDW, lb->delTLabel);  for AMR
@@ -69,15 +71,19 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
                              const PatchSet* patches,
                              const MaterialSubset* one_matl,
                              const MaterialSet* all_matls,
-                             const bool insideOuterIterLoop)
+                             const bool insideOuterIterLoop,
+                             const string& computes_or_modifies)
 {
   Task* t;
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  int levelIndex = getLevel(patches)->getIndex();
  
-  cout_doing << "ICE::scheduleSetupRHS" << endl;
-  t = scinew Task("ICE::setupRHS", this, &ICE::setupRHS, insideOuterIterLoop);
+  cout_doing << d_myworld->myrank()<< " ICE::scheduleSetupRHS" 
+             << "\t\t\t\t\t\tL-" << levelIndex<< endl;
+  t = scinew Task("ICE::setupRHS", this, 
+                  &ICE::setupRHS, insideOuterIterLoop,computes_or_modifies);
  
   Task::WhichDW pNewDW;
   Task::WhichDW pOldDW;
@@ -110,8 +116,14 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   t->computes(lb->vol_fracZ_FCLabel);
   
   t->computes(lb->term2Label,        one_matl,oims);
-  t->computes(lb->rhsLabel,          one_matl,oims);
   t->computes(lb->max_RHSLabel);
+  
+  if(computes_or_modifies =="computes"){
+    t->computes(lb->rhsLabel,          one_matl,oims);
+  }
+  if(computes_or_modifies =="modifies"){
+    t->modifies(lb->rhsLabel,          one_matl,oims);
+  }
   
   sched->addTask(t, patches, all_matls);                     
 }
@@ -120,7 +132,7 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
  Function~  ICE::scheduleUpdatePressure--
 _____________________________________________________________________*/
 void ICE::scheduleUpdatePressure(  SchedulerP& sched,
-                                   const LevelP&,
+                                   const LevelP& level,
                                    const PatchSet* patches,
                                    const MaterialSubset* ice_matls,          
                                    const MaterialSubset* /*mpm_matls*/,
@@ -132,7 +144,8 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet. 
   //__________________________________
   // update the pressure
-  cout_doing << "ICE::scheduleUpdatePressure" << endl;
+  cout_doing << d_myworld->myrank()<<" ICE::scheduleUpdatePressure" 
+             << "\t\t\t\t\tL-" <<level->getIndex()<<endl;
   t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure);
   t->requires(Task::OldDW,  lb->press_CCLabel,   press_matl,oims,gn);       
   t->requires(Task::NewDW,  lb->imp_delPLabel,   press_matl,oims,gn);       
@@ -156,14 +169,12 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
                                  const bool recursion)
 { 
   Task* t = 0;
-  if (d_RateForm) {     //RATE FORM
-    throw ProblemSetupException("implicit Rate Form ICE isn't working", __FILE__, __LINE__);
-  }
-  else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::Implicit scheduleComputeVel_FC" << endl;
-    t = scinew Task("ICE::scheduleImplicitVel_FC",
-              this, &ICE::computeVel_FC, recursion);
-  }
+  int levelIndex = getLevel(patches)->getIndex();
+
+  cout_doing << d_myworld->myrank()<< " ICE::Implicit scheduleComputeVel_FC" 
+             << "\t\t\t\tL-"<< levelIndex<<endl;
+  t = scinew Task("ICE::scheduleImplicitVel_FC",
+            this, &ICE::computeVel_FC, recursion);
            
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.               
@@ -182,7 +193,8 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
   
   //__________________________________
   //  added exchange to 
-  cout_doing << "ICE::Implicit scheduleAddExchangeContributionToFCVel" << endl;
+  cout_doing << d_myworld->myrank()<< " ICE::Implicit scheduleAddExchangeContributionToFCVel" 
+             << "\t\tL-"<< levelIndex<<endl;
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                      this, &ICE::addExchangeContributionToFCVel, recursion);
 
@@ -220,9 +232,11 @@ void ICE::scheduleComputeDel_P(  SchedulerP& sched,
   Task* t;
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  int levelIndex = getLevel(patches)->getIndex();
   //__________________________________
   // update the pressure
-  cout_doing << "ICE::scheduleComputeDel_P" << endl;
+  cout_doing << d_myworld->myrank()<< " ICE::scheduleComputeDel_P" 
+             << "\t\t\t\t\tL-"<< levelIndex<<endl;
   t = scinew Task("ICE::scheduleComputeDel_P", this, &ICE::computeDel_P);
 
   t->requires(Task::NewDW, lb->press_equil_CCLabel,  press_matl, oims, gn);
@@ -250,7 +264,8 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
                                           const MaterialSubset* mpm_matls,
                                           const MaterialSet* all_matls)
 {
-  cout_doing << "ICE::scheduleImplicitPressureSolve" << endl;
+  cout_doing << d_myworld->myrank()
+              <<" ICE::scheduleImplicitPressureSolve" << endl;
   
   Task* t = scinew Task("ICE::implicitPressureSolve", 
                    this, &ICE::implicitPressureSolve,
@@ -337,7 +352,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing<<"Doing setupMatrix on patch "
+    cout_doing<< d_myworld->myrank()<<" Doing setupMatrix on patch "
               << patch->getID() <<"\t\t\t\t ICE \tL-" 
               << level->getIndex()<<endl;
               
@@ -469,13 +484,14 @@ void ICE::setupRHS(const ProcessorGroup*,
                    const MaterialSubset* ,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw,
-                   const bool insideOuterIterLoop)
+                   const bool insideOuterIterLoop,
+                   const string computes_or_modifies)
 {
   const Level* level = getLevel(patches);
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing<<"Doing setupRHS on patch "
+    cout_doing<< d_myworld->myrank()<<" Doing setupRHS on patch "
               << patch->getID() <<"\t\t\t\t ICE \tL-"
               << level->getIndex()<<endl;
     // define parent_new/old_dw 
@@ -511,11 +527,18 @@ void ICE::setupRHS(const ProcessorGroup*,
     pNewDW->get(sumKappa,               lb->sumKappaLabel,      0,patch,gn,0);
     new_dw->get(press_CC,               lb->press_CCLabel,      0,patch,gn,0);
     
-    new_dw->allocateAndPut(rhs,         lb->rhsLabel,           0,patch);
+    
     new_dw->allocateAndPut(massExchTerm,lb->term2Label,         0,patch);
     new_dw->allocateTemporary(q_advected,       patch);
     new_dw->allocateTemporary(sumAdvection,     patch);  
  
+    if(computes_or_modifies == "computes"){
+      new_dw->allocateAndPut(rhs, lb->rhsLabel, 0,patch);
+    }
+    if(computes_or_modifies == "modifies"){
+      new_dw->getModifiable(rhs, lb->rhsLabel, 0,patch);
+    }
+    
     rhs.initialize(0.0);
     sumAdvection.initialize(0.0);
     massExchTerm.initialize(0.0);
@@ -625,8 +648,8 @@ void ICE::updatePressure(const ProcessorGroup*,
  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing<<"Doing updatePressure on patch "
-              << patch->getID() <<"\t\t\t\t ICE \tL-" 
+    cout_doing<< d_myworld->myrank()<<" Doing updatePressure on patch "
+              << patch->getID() <<"\t\t\t ICE \tL-" 
               << level->getIndex()<<endl;
 
    // define parent_dw
@@ -719,7 +742,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing<<"Doing computeDel_P on patch "
+    cout_doing<< d_myworld->myrank()<<" Doing computeDel_P on patch "
               << patch->getID() <<"\t\t\t\t ICE \tL-" 
               << level->getIndex()<<endl;
             
@@ -885,7 +908,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
     scheduleSetupRHS(       subsched,         patch_set,  one_matl, 
                                                           all_matls,
-                                                          recursion);
+                                                          recursion,
+                                                          "computes");
 
     subsched->compile();
     //__________________________________

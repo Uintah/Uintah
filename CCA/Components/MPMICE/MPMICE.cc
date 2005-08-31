@@ -361,7 +361,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
   if(d_ice->d_impICE) {        //  I M P L I C I T 
     d_ice->scheduleSetupRHS(                  sched, ice_patches, one_matl, 
                                                                   all_matls,
-                                                                  false);
+                                                                  false,
+                                                                  "computes");
                                                                   
     d_ice->scheduleImplicitPressureSolve(     sched, ice_level,   ice_patches,
                                                                   one_matl, 
