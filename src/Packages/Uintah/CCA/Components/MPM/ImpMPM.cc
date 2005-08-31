@@ -454,7 +454,7 @@ void ImpMPM::scheduleProjectCCHeatSourceToNodes(SchedulerP& sched,
   t->requires(Task::OldDW,lb->heatFlux_CCLabel,         Ghost::AroundCells,1);
 
   t->computes(lb->heatFlux_CCLabel);
-  t->computes(lb->gExternalHeatRateLabel);
+  t->modifies(lb->gExternalHeatRateLabel);
   t->computes(lb->NC_CCweightLabel, one_matl);
 
   sched->addTask(t, patches, matls);
@@ -1174,12 +1174,12 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         particleIndex idx = *iter;
         pExtHeatRate[idx]=0.0;
 #if 0
-//        if(px[idx].x()*px[idx].x() + px[idx].y()*px[idx].y() > 0.0562*0.0562 ||
-//           px[idx].z()>.0562 || px[idx].z()<-.0562){
-        if(px[idx].x()*px[idx].x() + px[idx].y()*px[idx].y() > 0.0562*0.0562){ 
-          pExtHeatRate[idx]=0.01;
+      if(px[idx].x()*px[idx].x() + px[idx].y()*px[idx].y() > 0.0562*0.0562 ||
+         px[idx].z()>.0562 || px[idx].z()<-.0562){
+          pExtHeatRate[idx]=0.001;
         }
 #endif
+
       }
 
     } // matl loop
@@ -1226,7 +1226,7 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
       old_dw->get(CCheatrate,      lb->heatFlux_CCLabel,      dwi, patch,gac,1);
       new_dw->getModifiable(gextHR,lb->gExternalHeatRateLabel,dwi, patch);
       new_dw->allocateAndPut(CCheatrate_copy,  lb->heatFlux_CCLabel, dwi,patch);
-    
+
       // carry forward heat rate.
       CCheatrate_copy.copyData(CCheatrate);
 
@@ -1241,7 +1241,7 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
         // Add in the heat from ICE.
         //        double CCheatrate_j = 1.e0;
         for (int in=0;in<8;in++){
-          gextHR[nodeIdx[in]] += CCheatrate[nodeIdx[in]] *
+          gextHR[nodeIdx[in]] += CCheatrate[c] *
             (NC_CCweight[nodeIdx[in]]*gvolume[nodeIdx[in]])/solid_vol;
         }
       }
@@ -1327,7 +1327,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gextforce[m],  lb->gExternalForceLabel,matl,patch);
       new_dw->allocateAndPut(gintforce[m],  lb->gInternalForceLabel,matl,patch);
       new_dw->allocateAndPut(gExternalHeatRate[m],lb->gExternalHeatRateLabel,
-                                                                   matl,patch);
+                                                                    matl,patch);
 
       gmass[m].initialize(d_SMALL_NUM_MPM);
       gvolume[m].initialize(0);
@@ -2704,9 +2704,8 @@ void ImpMPM::switchTest(const ProcessorGroup* group,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw)
 {
-  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-  double sw = 0;
-
+//  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
+//  double sw = 0;
 #if 0
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2737,6 +2736,6 @@ void ImpMPM::switchTest(const ProcessorGroup* group,
   }
 #endif
 
-  max_vartype switch_condition(sw);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
+//  max_vartype switch_condition(sw);
+//  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
 }
