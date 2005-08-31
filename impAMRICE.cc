@@ -349,12 +349,12 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   subsched->mapDataWarehouse(Task::OldDW, 2);
   subsched->mapDataWarehouse(Task::NewDW, 3);
   
+  subsched->advanceDataWarehouse(grid);
   DataWarehouse* subOldDW = subsched->get_dw(2);
   DataWarehouse* subNewDW = subsched->get_dw(3);
 
   int maxLevel = grid->numLevels();
 
-  subsched->advanceDataWarehouse(grid);
 
   //__________________________________
   //  Move data from parentOldDW to subSchedNewDW.
@@ -389,12 +389,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   const VarLabel* whichInitialGuess = NULL;
   
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
-  
     //__________________________________
     // schedule the tasks
-    subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
-   
-
     for(int L = 0; L<maxLevel; L++){
       const LevelP level = grid->getLevel(L);
       const PatchSet* patch_set = level->eachPatch();
@@ -405,13 +401,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 
     for(int L = 0; L<maxLevel; L++){
       const LevelP level = grid->getLevel(L);
-      const PatchSet* patch_set = level->eachPatch();
-      const PatchSubset*  patch_sub = patch_set->getUnion();
       
-      
-      // BRYAN: we need to drag rhsLabel forward so we can modify it.
-      
-      subNewDW->transferFrom(subOldDW,lb->rhsLabel,patch_sub, one_matl);
       //scheduleCompute_matrix_CFI_weights(subsched,level, all_matls);
 
       //schedule_matrixBC_CFI_coarsePatch(subsched, level, one_matl, all_matls);
@@ -690,29 +680,24 @@ void ICE::scheduleZeroMatrix_RHS_UnderFinePatches(SchedulerP& sched,
                                                   const MaterialSubset* one_matl,
                                                   bool firstIter)
 { 
-  if(coarseLevel->hasFinerLevel()){                                                                      
-    cout_doing << d_myworld->myrank()
-               << " ICE::scheduleZeroMatrix_RHS_UnderFinePatches\t\t\tL-" 
-               << coarseLevel->getIndex() << endl;
-
-    Task* t = scinew Task("ICE::zeroMatrix_RHS_UnderFinePatches",
-                    this, &ICE::zeroMatrix_RHS_UnderFinePatches, firstIter);
-
-    Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-    Ghost::GhostType  gn = Ghost::None;
-
+  cout_doing << d_myworld->myrank()
+             << " ICE::scheduleZeroMatrix_RHS_UnderFinePatches\t\t\tL-" 
+             << coarseLevel->getIndex() << endl;
+  
+  Task* t = scinew Task("ICE::zeroMatrix_RHS_UnderFinePatches",
+                        this, &ICE::zeroMatrix_RHS_UnderFinePatches, firstIter);
+  
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Ghost::GhostType  gn = Ghost::None;
+  
     
-    t->requires(Task::NewDW, lb->matrixLabel,
-                0, Task::FineLevel,  one_matl,oims, gn, 0);
-                
-    t->requires(Task::NewDW, lb->rhsLabel,
-               0, Task::FineLevel,  one_matl,oims, gn, 0);
-
+  if(coarseLevel->hasFinerLevel()){                                                                      
     t->modifies(lb->matrixLabel, one_matl, oims);
-    t->modifies(lb->rhsLabel,    one_matl, oims);       
-
-    sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
   }
+  t->requires(Task::OldDW, lb->rhsLabel, one_matl, oims, gn, 0);
+  t->computes(lb->rhsLabel,              one_matl, oims);       
+
+  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
 }
 /* _____________________________________________________________________
  Function~  ICE::zeroMatrixUnderFinePatches
@@ -725,8 +710,13 @@ void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
                                           bool firstIter)
 { 
   const Level* coarseLevel = getLevel(coarsePatches);
-  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  const Level* fineLevel = 0;
   
+  // copy the rhs from the old, and then we can change it where necessary
+  MaterialSubset matls;
+  matls.add(0);
+  new_dw->transferFrom(old_dw, lb->rhsLabel, coarsePatches, &matls);
+
   for(int p=0;p<coarsePatches->size();p++){
     const Patch* coarsePatch = coarsePatches->get(p);
     
@@ -735,11 +725,17 @@ void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
                
     CCVariable<Stencil7> A; 
     CCVariable<double> rhs;            
+
     new_dw->getModifiable(A,  lb->matrixLabel, 0, coarsePatch);
-    new_dw->getModifiable(rhs,lb->rhsLabel, 0, coarsePatch);
+    new_dw->getModifiable(rhs,lb->rhsLabel,    0, coarsePatch);
     
     Level::selectType finePatches;
-    coarsePatch->getFineLevelPatches(finePatches);
+    if(coarseLevel->hasFinerLevel()){
+      // if there are no finer levels, do nothing.  We have accomplished what we
+      // need to by transferring the RHS above.
+      fineLevel = coarseLevel->getFinerLevel().get_rep();
+      coarsePatch->getFineLevelPatches(finePatches);
+    }
 
     for(int i=0;i<finePatches.size();i++){
       const Patch* finePatch = finePatches[i];
@@ -1240,9 +1236,8 @@ void ICE::bogus_imp_delP(const ProcessorGroup*,
                          DataWarehouse*,
                          DataWarehouse* new_dw)       
 { 
-  const Level* level = getLevel(patches);
   cout_doing<< d_myworld->myrank()<<" Doing bogus_imp_delP "
-            <<"\t\t\t\t\t ICE \tL-" << level->getIndex()<<endl;
+            <<"\t\t\t\t\t ICE \tALL LEVELS" << endl;
   for(int p=0;p<patches->size();p++){  
     const Patch* patch = patches->get(p);
     CCVariable<double> imp_delP;
