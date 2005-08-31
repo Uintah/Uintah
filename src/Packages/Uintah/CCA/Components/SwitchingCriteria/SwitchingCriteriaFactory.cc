@@ -17,14 +17,14 @@ using namespace Uintah;
 SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,
                                                     const ProcessorGroup* world)
 {
-  string criteria("none");
+  string criteria("");
   ProblemSpecP switch_ps = ps->findBlock("SwitchCriteria");
   if (switch_ps) {
     map<string,string> attributes;
     switch_ps->getAttributes(attributes);
     criteria = attributes["type"];
   } else {
-    cerr << "No switch criteria found" << endl;
+    return 0;
   }
 
   SwitchingCriteria* switch_criteria = 0;
