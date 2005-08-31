@@ -5,6 +5,8 @@
 #include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
+#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
 
 namespace Uintah {
 
@@ -30,8 +32,11 @@ namespace Uintah {
 
 
     private:
-      unsigned int d_timestep;
+      unsigned int d_material;
+      double d_temperature;
       SimulationStateP d_sharedState; 
+      MPMLabel* Mlb;
+      MPMICELabel* MIlb;
     };
 } // End namespace Uintah
 
