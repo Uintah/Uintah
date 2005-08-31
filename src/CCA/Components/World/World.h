@@ -70,8 +70,6 @@ public:
   virtual std::string getDescription();
   virtual std::string getIconShape();
   virtual int getProgressBar();
-  void setParent(World *com) { this->com = com; }
-  World *com;
 };
 
 
@@ -89,10 +87,6 @@ private:
         //MPI_COMM_COM=MPI_COMM_WORLD; //*(MPI_Comm*)(comm);
     }
     sci::cca::Services::pointer services;
-    StringPort strPort;
-    WUIPort uiPort;
-    ComponentIcon ciPort;
-    //Progress progPort;
 };
 
 

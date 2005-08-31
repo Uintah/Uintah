@@ -56,32 +56,33 @@ extern "C" sci::cca::Component::pointer make_SCIRun_World()
 }
 
 
-World::World()
+World::World(): text("World")
 {
-    strPort.setParent(this);
-    uiPort.setParent(this);
-    ciPort.setParent(this);
-    text = "World";
 }
 
 World::~World()
 {
+    services->removeProvidesPort("stringport");
+    services->removeProvidesPort("ui");
+    services->removeProvidesPort("icon");
 }
 
 void World::setServices(const sci::cca::Services::pointer& svc)
 {
     services = svc;
     sci::cca::TypeMap::pointer props = svc->createTypeMap();
-    StringPort::pointer strp(&strPort);
-    WUIPort::pointer uip(&uiPort);
-    ComponentIcon::pointer cip(&ciPort);
 
-    svc->addProvidesPort(strp, "stringport",
+    StringPort *sp = new StringPort();
+    sp->setParent(this);
+    svc->addProvidesPort(StringPort::pointer(sp), "stringport",
                          "sci.cca.ports.StringPort", props);
-    svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-    svc->addProvidesPort(cip, "icon",
+
+    WUIPort *uip = new WUIPort();
+    uip->setParent(this);
+    svc->addProvidesPort(WUIPort::pointer(uip),"ui","sci.cca.ports.UIPort", props);
+
+    svc->addProvidesPort(ComponentIcon::pointer(new ComponentIcon), "icon",
                          "sci.cca.ports.ComponentIcon", props);
-    //svc->registerUsesPort();
 }
 
 std::string StringPort::getString() { return com->text; }
