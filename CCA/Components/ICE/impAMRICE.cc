@@ -30,8 +30,6 @@ void
 ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
 {
   int maxLevel = grid->numLevels();
-  const PatchSet* perProcPatches = 
-    sched->getLoadBalancer()->createPerProcessorPatchSet(grid);
   
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
@@ -104,7 +102,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
 #if 1
   if(d_impICE) {        //  I M P L I C I T
   
-    bool firstIter = true;
     bool recursion = false;
     sched->mapDataWarehouse(Task::ParentOldDW, 0);
     sched->mapDataWarehouse(Task::ParentNewDW, 1);
@@ -115,73 +112,17 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
 
       scheduleSetupRHS(       sched,            patches,  one_matl, 
                                                           all_matls, 
-                                                          false);    
-
-      scheduleSetupMatrix(    sched,    level,  patches,  one_matl, 
-                                                          all_matls,
-                                                          firstIter);
-
+                                                          recursion);    
     }
     
-    //__________________________________
-    // now adjust the matrix
-    for(int L = 0; L<maxLevel; L++){
-      LevelP level = grid->getLevel(L);
-      //scheduleCompute_matrix_CFI_weights(sched,level, all_matls);
-      
-      //schedule_matrixBC_CFI_coarsePatch(sched, level, one_matl, all_matls);            
-
-      //schedule_matrixBC_CFI_finePatch(  sched, level, one_matl, all_matls);
-                                                          
-      scheduleZeroMatrix_RHS_UnderFinePatches( sched,level,one_matl);
-    }
-                     
-                                                            
-    //__________________________________
-    // strictly for testing purposes
-    schedule_bogus_imp_delP(sched,  perProcPatches,        d_press_matl,
-                                                         all_matls);   
-#if 0    
-    solver->scheduleSolve(level, sched, press_matlSet,
-                          lb->matrixLabel,   Task::NewDW,
-                          lb->imp_delPLabel, false,
-                          lb->rhsLabel,      Task::OldDW,
-                          whichInitialGuess, Task::OldDW,
-			  solver_parameters);
-#endif
-
-    for(int L = maxLevel-1; L> 0; L--){ 
-      LevelP coarseLevel = grid->getLevel(L-1);
-      scheduleCoarsen_imp_delP(  sched,  coarseLevel,  d_press_matl);
-    }
-    //__________________________________
-    //
-    for(int L = 0; L<maxLevel; L++){
-      LevelP level = grid->getLevel(L);
-      const PatchSet* patches = level->eachPatch();
-      scheduleUpdatePressure( sched,     level, patches,    ice_matls_sub,
-                                                            mpm_matls_sub, 
-                                                            d_press_matl,  
-                                                            all_matls);
-
-      scheduleImplicitVel_FC( sched,            patches,    ice_matls_sub,
-                                                            mpm_matls_sub, 
-                                                            d_press_matl, 
-                                                            all_matls,
-                                                            recursion);
-
-      scheduleSetupRHS(       sched,            patches,    one_matl, 
-                                                            all_matls,
-                                                            recursion);
-
-      scheduleComputeDel_P(                   sched,  level, patches,  
-                                                             one_matl,
-                                                             d_press_matl,
-                                                             all_matls);
-    }
+    scheduleMultiLevelPressureSolve(sched, grid,   0,
+                                                   one_matl,
+                                                   d_press_matl,
+                                                   ice_matls_sub,
+                                                   mpm_matls_sub,
+                                                   all_matls);
   }
 #endif
-
 //______________________________________________________________________
 
   for(int L = 0; L<maxLevel; L++){
@@ -189,13 +130,19 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     const PatchSet* patches = level->eachPatch();
     
     if(!doICEOnLevel(level->getIndex())){
-      return;
+      continue;
     }    
     if(!d_impICE){         //  E X P L I C I T
       scheduleComputeDelPressAndUpdatePressCC(sched, patches,d_press_matl,     
                                                              ice_matls_sub,  
                                                              mpm_matls_sub,  
                                                              all_matls);     
+    } else {
+      scheduleComputeDel_P(                   sched,  level, patches,  
+                                                             one_matl,
+                                                             d_press_matl,
+                                                             all_matls);    
+
     }
     
     scheduleComputePressFC(                 sched, patches, d_press_matl,
@@ -268,7 +215,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
  Function~  ICE::scheduleMultiLevelPressureSolve--
 _____________________________________________________________________*/
 void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
-                                          const LevelP& level,
+                                          const GridP grid,
                                           const PatchSet*,
                                           const MaterialSubset* one_matl,
                                           const MaterialSubset* press_matl,
@@ -280,72 +227,80 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
   
   Task* t = scinew Task("ICE::multiLevelPressureSolve", 
                    this, &ICE::multiLevelPressureSolve,
-                   level, sched.get_rep(), ice_matls, mpm_matls);
+                   grid, sched.get_rep(), ice_matls, mpm_matls);
  
   t->hasSubScheduler();
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  //__________________________________
-  // The computes and requires when you're looking up 
-  // from implicitPressure solve
-  // OldDW = ParentOldDW
-  // NewDW = ParentNewDW
-  //__________________________________
-  // common Variables
-//  t->requires( Task::OldDW, lb->delTLabel);    AMR
-  t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
-  t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
-  t->requires( Task::NewDW, lb->press_equil_CCLabel, press_matl, oims,gac,1);
-  t->requires( Task::NewDW, lb->rhsLabel,            one_matl,   oims,gn,0);
-  //t->requires( Task::OldDW, lb->initialGuessLabel, one_matl,   oims,gn,0);
-  //__________________________________
-  // SetupRHS
-  if(d_models.size() > 0){  
-    t->requires(Task::NewDW,lb->modelMass_srcLabel, gn,0);
-  } 
-  t->requires( Task::NewDW, lb->speedSound_CCLabel, gn,0);
-  t->requires( Task::NewDW, lb->max_RHSLabel);
-  
-  //__________________________________
-  // setup Matrix
-  t->requires( Task::NewDW, lb->sp_volX_FCLabel,    gac,1);            
-  t->requires( Task::NewDW, lb->sp_volY_FCLabel,    gac,1);            
-  t->requires( Task::NewDW, lb->sp_volZ_FCLabel,    gac,1);            
-  t->requires( Task::NewDW, lb->vol_fracX_FCLabel,  gac,1);            
-  t->requires( Task::NewDW, lb->vol_fracY_FCLabel,  gac,1);            
-  t->requires( Task::NewDW, lb->vol_fracZ_FCLabel,  gac,1);            
-  t->requires( Task::NewDW, lb->sumKappaLabel,  press_matl,oims,gn,0);         
-   
-  //__________________________________
-  // Update Pressure
-  t->requires( Task::NewDW, lb->rho_CCLabel,                       gac,1);            
-  t->requires( Task::NewDW, lb->press_CCLabel,   press_matl, oims, gac,1);  
-  
-  computesRequires_CustomBCs(t, "implicitPressureSolve", lb, ice_matls,
-                             d_customBC_var_basket);
+  Task::DomainSpec nd = Task::NormalDomain;   //normal patches (need to specify when we use oims)
 
-  //__________________________________
-  // ImplicitVel_FC
-  t->requires(Task::OldDW,lb->vel_CCLabel,       ice_matls,  gac,1);    
-  t->requires(Task::NewDW,lb->vel_CCLabel,       mpm_matls,  gac,1);
+  for (int L = 0; L < grid->numLevels(); L++) {
+    //__________________________________
+    // The computes and requires when you're looking up 
+    // from implicitPressure solve
+    // OldDW = ParentOldDW
+    // NewDW = ParentNewDW
 
-  //__________________________________
-  //  what's produced from this task
-  t->modifies(lb->press_CCLabel, press_matl,oims);  
-  t->modifies(lb->term2Label,    one_matl,  oims);   
-
-  t->modifies(lb->uvel_FCMELabel);
-  t->modifies(lb->vvel_FCMELabel);
-  t->modifies(lb->wvel_FCMELabel);
-  
-  t->modifies(lb->vol_fracX_FCLabel);
-  t->modifies(lb->vol_fracY_FCLabel);
-  t->modifies(lb->vol_fracZ_FCLabel);  
-  
+    const LevelP level = grid->getLevel(L);
+    const PatchSubset* patches = level->allPatches()->getUnion();
+    //__________________________________
+    // common Variables
+    //  t->requires( Task::OldDW, lb->delTLabel);    AMR
+    t->requires( Task::NewDW, lb->vol_frac_CCLabel, patches,  gac,2); 
+    t->requires( Task::NewDW, lb->sp_vol_CCLabel, patches,     gac,1);
+    t->requires( Task::NewDW, lb->press_equil_CCLabel, patches, nd, press_matl, oims,gac,1);
+    t->requires( Task::NewDW, lb->rhsLabel, patches, nd,           one_matl,   oims,gn,0);
+    //t->requires( Task::OldDW, lb->initialGuessLabel, patches, nd, one_matl,   oims,gn,0);
+    //__________________________________
+    // SetupRHS
+    if(d_models.size() > 0){  
+      t->requires(Task::NewDW,lb->modelMass_srcLabel, patches, gn,0);
+    } 
+    t->requires( Task::NewDW, lb->speedSound_CCLabel, patches, gn,0);
+    t->requires( Task::NewDW, lb->max_RHSLabel, patches, gn, 0);
+    
+    //__________________________________
+    // setup Matrix
+    t->requires( Task::NewDW, lb->sp_volX_FCLabel, patches,    gac,1);            
+    t->requires( Task::NewDW, lb->sp_volY_FCLabel, patches,    gac,1);            
+    t->requires( Task::NewDW, lb->sp_volZ_FCLabel, patches,    gac,1);            
+    t->requires( Task::NewDW, lb->vol_fracX_FCLabel, patches,  gac,1);            
+    t->requires( Task::NewDW, lb->vol_fracY_FCLabel, patches,  gac,1);            
+    t->requires( Task::NewDW, lb->vol_fracZ_FCLabel, patches,  gac,1);            
+    t->requires( Task::NewDW, lb->sumKappaLabel,  patches, nd, press_matl,oims,gn,0);         
+    
+    //__________________________________
+    // Update Pressure
+    t->requires( Task::NewDW, lb->rho_CCLabel, patches,                         gac,1);            
+    t->requires( Task::NewDW, lb->press_CCLabel, patches, nd, press_matl, oims, gac,1);  
+    
+#if 0 // fix me
+    computesRequires_CustomBCs(t, "implicitPressureSolve", lb, ice_matls,
+                               d_customBC_var_basket);
+#endif
+    
+    //__________________________________
+    // ImplicitVel_FC
+    t->requires(Task::OldDW,lb->vel_CCLabel, patches, ice_matls,  gac,1);    
+    t->requires(Task::NewDW,lb->vel_CCLabel, patches, mpm_matls,  gac,1);
+    
+    //__________________________________
+    //  what's produced from this task
+    t->modifies(lb->press_CCLabel, patches, nd, press_matl,oims);  
+    t->modifies(lb->term2Label, patches, nd,    one_matl,  oims);   
+    
+    t->modifies(lb->uvel_FCMELabel, patches);
+    t->modifies(lb->vvel_FCMELabel, patches);
+    t->modifies(lb->wvel_FCMELabel, patches);
+    
+    t->modifies(lb->vol_fracX_FCLabel, patches);
+    t->modifies(lb->vol_fracY_FCLabel, patches);
+    t->modifies(lb->vol_fracZ_FCLabel, patches);  
+  }
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  
-                        loadBal->createPerProcessorPatchSet(level);
+                        loadBal->createPerProcessorPatchSet(grid);
   sched->addTask(t, perproc_patches, all_matls);
 }
 /*___________________________________________________________________ 
@@ -356,14 +311,17 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 		                  const MaterialSubset*,       
 		                  DataWarehouse* ParentOldDW,    
                                   DataWarehouse* ParentNewDW,    
-		                  LevelP level,                 
+		                  GridP grid,                 
                                   Scheduler* sched,
                                   const MaterialSubset* ice_matls,
                                   const MaterialSubset* mpm_matls)
 {
-  cout_doing<<"Doing multiLevelPressureSolve "<<"\t\t\t\t ICE \tL-" 
-            << level->getIndex()<< endl;
+  cout_doing<<"Doing multiLevelPressureSolve "<<"\t\t\t\t ICE " << endl;
 
+  const PatchSet* perProcPatches = 
+    sched->getLoadBalancer()->createPerProcessorPatchSet(grid);
+
+  SchedulerP schedulerP(sched);
   //__________________________________
   // define Matl sets and subsets
   const MaterialSet* all_matls = d_sharedState->allMaterials();
@@ -392,9 +350,9 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   DataWarehouse* subOldDW = subsched->get_dw(2);
   DataWarehouse* subNewDW = subsched->get_dw(3);
 
-  GridP grid = level->getGrid();
+  int maxLevel = grid->numLevels();
+
   subsched->advanceDataWarehouse(grid);
-  const PatchSet* patch_set = level->eachPatch();
 
   //__________________________________
   //  Move data from parentOldDW to subSchedNewDW.
@@ -428,34 +386,62 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
    
 
-
-    scheduleSetupMatrix(    subsched, level,  patch_set,  one_matl, 
+    for(int L = 0; L<maxLevel; L++){
+      const LevelP level = grid->getLevel(L);
+      const PatchSet* patch_set = level->eachPatch();
+      scheduleSetupMatrix(    subsched, level,  patch_set,  one_matl, 
                                                           all_matls,
                                                           firstIter);
+    }
 
+    for(int L = 0; L<maxLevel; L++){
+      const LevelP level = grid->getLevel(L);
+      //scheduleCompute_matrix_CFI_weights(subsched,level, all_matls);
+
+      //schedule_matrixBC_CFI_coarsePatch(subsched, level, one_matl, all_matls);
+
+      //schedule_matrixBC_CFI_finePatch(  subsched, level, one_matl, all_matls);
+
+      scheduleZeroMatrix_RHS_UnderFinePatches( subsched,level,one_matl, firstIter);
+    }
+#if 0
     solver->scheduleSolve(level, subsched, press_matlSet,
                           lb->matrixLabel,   Task::NewDW,
                           lb->imp_delPLabel, false,
                           lb->rhsLabel,      Task::OldDW,
                           whichInitialGuess, Task::OldDW,
 			     solver_parameters);
+#else
+    //__________________________________
+    // strictly for testing purposes
+    schedule_bogus_imp_delP(subsched,  perProcPatches,        d_press_matl,
+                            all_matls);
+#endif
 
+    for(int L = maxLevel-1; L> 0; L--){
+      const LevelP coarseLevel = grid->getLevel(L-1);
+      scheduleCoarsen_imp_delP(  subsched,  coarseLevel,  d_press_matl, firstIter);
+    }
 
-
-    scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
-                                                          mpm_matls, 
-                                                          d_press_matl,  
-                                                          all_matls);
-                                                          
-    scheduleImplicitVel_FC( subsched,         patch_set,  ice_matls,
-                                                          mpm_matls, 
-                                                          d_press_matl, 
-                                                          all_matls,
-                                                          recursion);
-
-    scheduleSetupRHS(       subsched,         patch_set,  one_matl, 
-                                                          all_matls,
-                                                          recursion);
+    for(int L = 0; L<maxLevel; L++){
+      LevelP level = grid->getLevel(L);
+      const PatchSet* patch_set = level->eachPatch();
+      
+      scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
+                              mpm_matls, 
+                              d_press_matl,  
+                              all_matls);
+      
+      scheduleImplicitVel_FC( subsched,         patch_set,  ice_matls,
+                              mpm_matls, 
+                              d_press_matl, 
+                              all_matls,
+                              recursion);
+      
+      scheduleSetupRHS(       subsched,         patch_set,  one_matl, 
+                              all_matls,
+                              recursion);
+    }
 
     subsched->compile();
     //__________________________________
@@ -575,14 +561,15 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
  you need to project/coarsen the fine level solution onto the coarser levels
  _____________________________________________________________________*/
 void ICE::scheduleCoarsen_imp_delP(SchedulerP& sched, 
-                                  const LevelP& coarseLevel,
-                                  const MaterialSubset* press_matl)
+                                   const LevelP& coarseLevel,
+                                   const MaterialSubset* press_matl,
+                                   bool firstIter)
 {                                                                          
   cout_doing << "ICE::scheduleCoarsen_imp_delP\t\t\t\tL-" 
              << coarseLevel->getIndex() << endl;
 
   Task* t = scinew Task("ICE::coarsen_imp_delP",
-                  this, &ICE::coarsen_imp_delP);
+                  this, &ICE::coarsen_imp_delP, firstIter);
 
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   Ghost::GhostType  gn = Ghost::None;
@@ -599,10 +586,11 @@ void ICE::scheduleCoarsen_imp_delP(SchedulerP& sched,
  Function~  ICE::Coarsen_imp_delP
  _____________________________________________________________________  */
 void ICE::coarsen_imp_delP(const ProcessorGroup*,
-                          const PatchSubset* coarsePatches,
-                          const MaterialSubset* matls,
-                          DataWarehouse*,
-                          DataWarehouse* new_dw)
+                           const PatchSubset* coarsePatches,
+                           const MaterialSubset* matls,
+                           DataWarehouse*,
+                           DataWarehouse* new_dw,
+                           bool firstIter)
 { 
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
@@ -675,7 +663,8 @@ void ICE::coarsen_imp_delP(const ProcessorGroup*,
  _____________________________________________________________________*/
 void ICE::scheduleZeroMatrix_RHS_UnderFinePatches(SchedulerP& sched, 
                                                   const LevelP& coarseLevel,
-                                                  const MaterialSubset* one_matl)
+                                                  const MaterialSubset* one_matl,
+                                                  bool firstIter)
 { 
   if(coarseLevel->hasFinerLevel()){                                                                      
     cout_doing << d_myworld->myrank()
@@ -683,7 +672,7 @@ void ICE::scheduleZeroMatrix_RHS_UnderFinePatches(SchedulerP& sched,
                << coarseLevel->getIndex() << endl;
 
     Task* t = scinew Task("ICE::zeroMatrix_RHS_UnderFinePatches",
-                    this, &ICE::zeroMatrix_RHS_UnderFinePatches);
+                    this, &ICE::zeroMatrix_RHS_UnderFinePatches, firstIter);
 
     Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
     Ghost::GhostType  gn = Ghost::None;
@@ -706,7 +695,8 @@ void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
                                           const PatchSubset* coarsePatches,
                                           const MaterialSubset*,
                                           DataWarehouse*,
-                                          DataWarehouse* new_dw)
+                                          DataWarehouse* new_dw,
+                                          bool firstIter)
 { 
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
@@ -1206,8 +1196,12 @@ void ICE::schedule_bogus_imp_delP(SchedulerP& sched,
   Task* t = scinew Task("bogus_imp_delP",
                         this, &ICE::bogus_imp_delP);
     
-  t->computes(lb->imp_delPLabel, press_matl,Task::OutOfDomain);
-
+  GridP grid = perProcPatches->getUnion()->get(0)->getLevel()->getGrid();
+  for (int L = 0; L < grid->numLevels(); L++) {
+    const PatchSubset* patches = grid->getLevel(L)->allPatches()->getUnion();
+    
+    t->computes(lb->imp_delPLabel, patches, Task::NormalDomain, press_matl,Task::OutOfDomain);
+  }
    // Dav:  this doesn't work
   sched->addTask(t, perProcPatches, all_matls); 
 }
