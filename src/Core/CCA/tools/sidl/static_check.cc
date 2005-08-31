@@ -36,7 +36,11 @@ using std::map;
 using std::set;
 using std::vector;
 
-int exceptionCount = 0;
+int getExceptionID()
+{
+    static int exceptionCount = 0;
+    return ++exceptionCount;
+}
 
 void SpecificationList::staticCheck()
 {
@@ -132,9 +136,10 @@ void BaseInterface::staticCheck(SymbolTable* names)
             BaseInterface* i = (BaseInterface*)d;
             parent_ifaces.push_back(i);
 
-            // if it extends BaseException or an exception this class is an exception
+            // if it extends BaseException or other exception this
+            // interface defines an exception
             if ( (exceptionID == 0) && ((i->name == "BaseException") || (i->exceptionID)) ) {
-                exceptionID = ++exceptionCount;
+                exceptionID = getExceptionID();
 }
         }
     }
@@ -219,9 +224,9 @@ void Class::staticCheck(SymbolTable* names)
         parentclass = c;
 
 
-        // if it extends SIDLException or an exception this class is an exception
+        // if it extends SIDLException or other exception, then this is an exception
         if ((parentclass->name == "SIDLException") || (parentclass->exceptionID)) {
-            exceptionID = ++exceptionCount;
+            exceptionID = getExceptionID();
         }
     }
 
