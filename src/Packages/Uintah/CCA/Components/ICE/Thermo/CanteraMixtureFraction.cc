@@ -263,9 +263,7 @@ void CanteraMixtureFraction::compute_thermalDiffusivity(CellIterator iter,
     }
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
-    double t0 = Time::currentSeconds();
     equilibrate(*d_gas, UV);
-    double t1 = Time::currentSeconds();
     thermalDiffusivity[*iter] = d_thermalConductivity/d_gas->cp_mass() * sp_vol[*iter];
   }
   delete[] tmp_mf;
@@ -304,9 +302,7 @@ void CanteraMixtureFraction::compute_cp(CellIterator iter, CCVariable<double>& c
     }
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
-    double t0 = Time::currentSeconds();
     equilibrate(*d_gas, UV);
-    double t1 = Time::currentSeconds();
     cp[*iter] = d_gas->cp_mass();
   }
   delete[] tmp_mf;
@@ -333,9 +329,7 @@ void CanteraMixtureFraction::compute_cv(CellIterator iter, CCVariable<double>& c
     }
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
-    double t0 = Time::currentSeconds();
     equilibrate(*d_gas, UV);
-    double t1 = Time::currentSeconds();
     cv[*iter] = d_gas->cv_mass();
   }
   delete[] tmp_mf;
@@ -362,9 +356,7 @@ void CanteraMixtureFraction::compute_gamma(CellIterator iter, CCVariable<double>
     }
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
-    double t0 = Time::currentSeconds();
     equilibrate(*d_gas, UV);
-    double t1 = Time::currentSeconds();
     gamma[*iter] = d_gas->cp_mass()/d_gas->cv_mass();
   }
   delete[] tmp_mf;
@@ -406,9 +398,7 @@ void CanteraMixtureFraction::compute_Temp(CellIterator iter, CCVariable<double>&
     }
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
-    double t0 = Time::currentSeconds();
     equilibrate(*d_gas, UV);
-    double t1 = Time::currentSeconds();
     temp[*iter] = d_gas->temperature();
   }
   delete[] tmp_mf;
@@ -435,9 +425,7 @@ void CanteraMixtureFraction::compute_int_eng(CellIterator iter, CCVariable<doubl
     }
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_TR(Temp[*iter], 1.0/sp_vol[*iter]);
-    double t0 = Time::currentSeconds();
     equilibrate(*d_gas, UV);
-    double t1 = Time::currentSeconds();
     int_eng[*iter] = d_gas->intEnergy_mass();
   }
   delete[] tmp_mf;
