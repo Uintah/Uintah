@@ -31,14 +31,14 @@ void IdealGas::computeTempCC(const Patch* patch,
                              const CCVariable<double>& press, 
                              const CCVariable<double>& gamma,
                              const CCVariable<double>& cv,
-                             const CCVariable<double>& rho_micro, 
+                             const CCVariable<double>& sp_vol, 
                              CCVariable<double>& Temp,
                              Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] * rho_micro[c] );
+      Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] * sp_vol[c] );
     }
   } 
   // Although this isn't currently being used
@@ -47,7 +47,7 @@ void IdealGas::computeTempCC(const Patch* patch,
     for (CellIterator iter = patch->getFaceCellIterator(face);
          !iter.done();iter++) {
       IntVector c = *iter;                    
-      Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] * rho_micro[c] );
+      Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] / sp_vol[c] );
     }
   }
 }

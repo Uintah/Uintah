@@ -703,21 +703,20 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   if (grav.length() > 0 ) {
-    throw InternalError("scheduleHydroStaticAdj not finished", __FILE__, __LINE__);
-#if 0
-    cout_doing << "Doing ICE::scheduleHydroStaticAdj " << endl;
     Task* t2 = scinew Task("ICE::initializeSubTask_hydrostaticAdj",
                      this, &ICE::initializeSubTask_hydrostaticAdj);
     Ghost::GhostType  gn  = Ghost::None;
-    t2->requires(Task::NewDW,lb->gammaLabel,         ice_matls_sub, gn);
-    t2->requires(Task::NewDW,lb->specific_heatLabel, ice_matls_sub, gn);
-   
-    t2->modifies(lb->rho_micro_CCLabel);
-    t2->modifies(lb->temp_CCLabel);
-    t2->modifies(lb->press_CCLabel, d_press_matl, oims); 
+    t2->requires(Task::NewDW, lb->sp_vol_CCLabel, Ghost::None);
+    t2->modifies(lb->int_eng_CCLabel);
 
+    int numICEMatls = d_sharedState->getNumICEMatls();
+    for(int m = 0;m < numICEMatls; m++){
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      ice_matl->getThermo()->addTaskDependencies_cv(t2, ThermoInterface::NewState, 0);
+      ice_matl->getThermo()->addTaskDependencies_gamma(t2, ThermoInterface::NewState, 0);
+      ice_matl->getThermo()->addTaskDependencies_Temp(t2, ThermoInterface::NewState, 0);
+    }
     sched->addTask(t2, level->eachPatch(), ice_matls);
-#endif
   }
   scheduleComputeSpeedOfSound(sched, level->eachPatch(), ice_matls);
 }
@@ -2373,14 +2372,6 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
    
     Ghost::GhostType  gn = Ghost::None;
     int numMatls = d_sharedState->getNumICEMatls();
-    //__________________________________
-    // adjust the pressure field
-    CCVariable<double> rho_micro, press_CC;
-    new_dw->getModifiable(press_CC, lb->press_CCLabel,0, patch);
-    new_dw->getModifiable(rho_micro,lb->rho_micro_CCLabel,
-                                            d_surroundingMatl_indx, patch);
-    
-    hydrostaticPressureAdjustment(patch, rho_micro, press_CC);
     
     //__________________________________
     //  Adjust Temp field if g != 0
@@ -2388,19 +2379,62 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
-      constCCVariable<double> gamma, cv;
-      CCVariable<double> Temp;   
-      throw InternalError("hyrostaticAdj not finished", __FILE__, __LINE__);
- #if 0
-      new_dw->get(gamma, lb->gammaLabel,         indx, patch,gn,0);   
-      new_dw->get(cv,    lb->specific_heatLabel, indx, patch,gn,0);
-      new_dw->getModifiable(Temp,     lb->temp_CCLabel,       indx, patch);  
-      new_dw->getModifiable(rho_micro,lb->rho_micro_CCLabel,  indx, patch); 
- 
+      EquationOfState* eos = ice_matl->getEOS();
+
+      CCVariable<double> int_eng;
+      new_dw->getModifiable(int_eng, lb->int_eng_CCLabel, indx, patch);
+      constCCVariable<double> int_eng_const = int_eng;
+      constCCVariable<double> sp_vol;
+      new_dw->get(sp_vol, lb->sp_vol_CCLabel, indx, patch, Ghost::None, 0);
+      CCVariable<double> cv;
+      new_dw->allocateTemporary(cv, patch);
+      ice_matl->getThermo()->compute_cv(patch->getExtraCellIterator(), cv,
+                                        0, new_dw, ThermoInterface::NewState,
+                                        patch, indx, 0,
+                                        int_eng_const, sp_vol);
+      CCVariable<double> gamma;
+      new_dw->allocateTemporary(gamma, patch);
+      ice_matl->getThermo()->compute_gamma(patch->getExtraCellIterator(), gamma,
+                                           0, new_dw, ThermoInterface::NewState,
+                                           patch, indx, 0,
+                                           int_eng_const, sp_vol);
+      CCVariable<double> temp;
+      new_dw->allocateTemporary(temp, patch);
+      ice_matl->getThermo()->compute_Temp(patch->getExtraCellIterator(), temp,
+                                          0, new_dw, ThermoInterface::NewState,
+                                          patch, indx, 0,
+                                          int_eng_const, sp_vol);
+
+      //__________________________________
+      // compute the partial pressure for this material
+      CCVariable<double> press_CC;
+      new_dw->allocateTemporary(press_CC, patch);
+      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
+        IntVector c = *iter;
+        double junk1, junk2;
+        eos->computePressEOS(1./sp_vol[c], gamma[c], cv[c], temp[c], press_CC[c], junk1, junk2);
+      }
+
+      //__________________________________
+      // adjust the pressure field
+      hydrostaticPressureAdjustment(patch, sp_vol, press_CC);
+
+      CCVariable<double> newTemp;
+      new_dw->allocateTemporary(newTemp, patch);
+        // This may not be quite right because the gamma/cv are not necessarily valid
+        // at the new temperature.  However, we hope it is close enough...
+      cerr << "(benign) WARNING: hydrostaticPressureAdj may not be right\n";
       Patch::FaceType dummy = Patch::invalidFace; // This is a dummy variable
       ice_matl->getEOS()->computeTempCC( patch, "WholeDomain",
 					 press_CC, gamma, cv,
-					 rho_micro, Temp, dummy );
+					 sp_vol, newTemp, dummy );
+
+      // Convert back to internal energy
+      constCCVariable<double> constNewTemp = newTemp;
+      ice_matl->getThermo()->compute_int_eng(patch->getExtraCellIterator(), int_eng,
+                                             0, new_dw, ThermoInterface::NewState,
+                                             patch, indx, 0,
+                                             constNewTemp, sp_vol);
 
       //__________________________________
       //  Print Data
@@ -2412,11 +2446,10 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
           ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
           int indx = ice_matl->getDWIndex();      
           desc1 << "hydroStaticAdj_Mat_" << indx << "_patch_"<< patch->getID();
-          printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro);
-          printData(indx, patch,   1, desc.str(), "Temp_CC",     Temp);
+          printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol);
+          printData(indx, patch,   1, desc.str(), "Temp_CC",     temp);
         }   
       }
-#endif
     }
   }
 } 
@@ -2452,6 +2485,7 @@ void ICE::computeInternalEnergy(const ProcessorGroup*,
                                              0, new_dw, ThermoInterface::NewState,
                                              patch, indx, 0,
                                              Temp, sp_vol);
+      cerr << "BCS busted for temperature\n";
       setBC(int_eng,    "Temperature", patch, d_sharedState, indx, new_dw);
     }
   }
@@ -5036,6 +5070,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
+      cerr << "BCS busted for temperature\n";
       setBC(int_eng_L_ME[m],"Temperature", patch, d_sharedState, 
             indx, new_dw,  d_customBC_var_basket);
     }
@@ -5348,6 +5383,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
             patch,d_sharedState, indx, new_dw, d_customBC_var_basket);
       setBC(vel_CC, "Velocity", 
             patch,d_sharedState, indx, new_dw, d_customBC_var_basket);       
+      cerr << "BCS busted for temperature\n";
       setBC(int_eng,"Temperature",
             patch,d_sharedState, indx, new_dw, d_customBC_var_basket);
             
@@ -5590,8 +5626,8 @@ void ICE::TestConservation(const ProcessorGroup*,
  Notes:     press_hydro = rho_micro_CC[SURROUNDING_MAT] * grav * some_distance
 _______________________________________________________________________ */
 void ICE::hydrostaticPressureAdjustment(const Patch* patch,
-                                const CCVariable<double>& rho_micro_CC,
-                                CCVariable<double>& press_CC)
+                                        const CCVariable<double>& sp_vol_CC,
+                                        CCVariable<double>& press_CC)
 {
   Vector gravity = d_sharedState->getGravity();
   // find the upper and lower point of the domain.
@@ -5620,7 +5656,7 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
     Point here = level->getCellPosition(c);
     Vector dist_from_p_ref = (here.asVector() - press_ref_pt);
 
-    double press_hydro = rho_micro_CC[c] * gravity[dir] * dist_from_p_ref[dir];
+    double press_hydro =  gravity[dir] * dist_from_p_ref[dir] / sp_vol_CC[c];
     press_CC[c] += press_hydro;
   }
 }
