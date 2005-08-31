@@ -249,14 +249,8 @@ void AMRSimulationController::run()
      double new_init_delt = d_timeinfo->max_initial_delt;
 
      if (new_init_delt != old_init_delt) {
+       // gets overriden in the next section below
        delt = new_init_delt;
-       DataWarehouse* newDW = d_scheduler->getLastDW();
-       newDW->override(delt_vartype(new_init_delt),
-                    d_sharedState->get_delt_label());
-
-       // Adjust the simulationstats so that the correct timestep is printed.
-       //d_sharedState->decrementCurrentTopLevelTimeStep();
-
      }
 
      // adjust the delt for each level and store it in all applicable dws.
