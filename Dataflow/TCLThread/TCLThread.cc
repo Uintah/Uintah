@@ -196,6 +196,10 @@ TCLThread::startNetworkEditor()
               string("}"));
   }
 
+  // Create the network editor here.  For now we just dangle it and
+  // let exitAll destroy it with everything else at the end.
+  new NetworkEditor(net, gui);
+
   // Determine if we are loading an app.
   const bool powerapp_p = (startnetno && ends_with(argv[startnetno],".app"));
   if (!powerapp_p) {
@@ -228,9 +232,6 @@ TCLThread::startNetworkEditor()
 
   }
 
-  // Create the network editor here.  For now we just dangle it and
-  // let exitAll destroy it with everything else at the end.
-  new NetworkEditor(net, gui);
 
   packageDB = new PackageDB(gui);
   packageDB->loadPackage();  // load the packages
