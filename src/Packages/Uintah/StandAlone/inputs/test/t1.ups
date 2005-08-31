@@ -330,7 +330,7 @@
 		<file>gri30.xml</file>
                 <id>gri30_mix</id>
                 <thermal_conductivity>0.0                    </thermal_conductivity>
-                <species0>O2:0.77 N2:0.23</species0>
+                <species0>O2:0.77,N2:0.23</species0>
                 <species1>CH4:1</species1>
                 <geom_object>
                   <box label="wholeDomain">

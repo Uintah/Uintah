@@ -714,7 +714,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       ice_matl->getThermo()->addTaskDependencies_cv(t2, ThermoInterface::NewState, 0);
       ice_matl->getThermo()->addTaskDependencies_gamma(t2, ThermoInterface::NewState, 0);
-      ice_matl->getThermo()->addTaskDependencies_Temp(t2, ThermoInterface::NewState, 0);
+      ice_matl->getThermo()->addTaskDependencies_int_eng(t2, ThermoInterface::NewState, 0);
     }
     sched->addTask(t2, level->eachPatch(), ice_matls);
   }
@@ -2374,6 +2374,15 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumICEMatls();
     
     //__________________________________
+    // adjust the pressure field
+    CCVariable<double> sp_vol, press_CC;
+    new_dw->getModifiable(press_CC, lb->press_CCLabel,0, patch);
+    new_dw->getModifiable(sp_vol,lb->sp_vol_CCLabel,
+                                            d_surroundingMatl_indx, patch);
+    
+    hydrostaticPressureAdjustment(patch, sp_vol, press_CC);
+
+    //__________________________________
     //  Adjust Temp field if g != 0
     //  so fields are thermodynamically consistent
     for (int m = 0; m < numMatls; m++) {
@@ -2398,26 +2407,6 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
                                            0, new_dw, ThermoInterface::NewState,
                                            patch, indx, 0,
                                            int_eng_const, sp_vol);
-      CCVariable<double> temp;
-      new_dw->allocateTemporary(temp, patch);
-      ice_matl->getThermo()->compute_Temp(patch->getExtraCellIterator(), temp,
-                                          0, new_dw, ThermoInterface::NewState,
-                                          patch, indx, 0,
-                                          int_eng_const, sp_vol);
-
-      //__________________________________
-      // compute the partial pressure for this material
-      CCVariable<double> press_CC;
-      new_dw->allocateTemporary(press_CC, patch);
-      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
-        IntVector c = *iter;
-        double junk1, junk2;
-        eos->computePressEOS(1./sp_vol[c], gamma[c], cv[c], temp[c], press_CC[c], junk1, junk2);
-      }
-
-      //__________________________________
-      // adjust the pressure field
-      hydrostaticPressureAdjustment(patch, sp_vol, press_CC);
 
       CCVariable<double> newTemp;
       new_dw->allocateTemporary(newTemp, patch);
@@ -2447,7 +2436,7 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
           int indx = ice_matl->getDWIndex();      
           desc1 << "hydroStaticAdj_Mat_" << indx << "_patch_"<< patch->getID();
           printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol);
-          printData(indx, patch,   1, desc.str(), "Temp_CC",     temp);
+          printData(indx, patch,   1, desc.str(), "Temp_CC",   newTemp);
         }   
       }
     }

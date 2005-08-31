@@ -38,7 +38,7 @@ void IdealGas::computeTempCC(const Patch* patch,
   if(comp_domain == "WholeDomain") {
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] * sp_vol[c] );
+      Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] / sp_vol[c] );
     }
   } 
   // Although this isn't currently being used
