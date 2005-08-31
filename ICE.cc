@@ -847,7 +847,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
     schedulecomputeDivThetaVel_CC(        sched, patches, ice_matls_sub,        
                                                           mpm_matls_sub,        
                                                           all_matls);           
-  }  
+  }
 
   scheduleComputeTempFC(                   sched, patches, ice_matls_sub,  
                                                            mpm_matls_sub,
@@ -873,7 +873,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   
     scheduleSetupRHS(                     sched, patches,  one_matl, 
                                                            all_matls,
-                                                           false);
+                                                           false,
+                                                           "computes");
   
     scheduleImplicitPressureSolve(         sched, level,   patches,
                                                            one_matl,      
@@ -2815,7 +2816,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     cout_doing << d_myworld->myrank() << " Doing computeVel_FC on patch " 
-           << patch->getID() << "\t\t\t\t ICE \tL-"<<level->getIndex()<< endl;
+           << patch->getID() << "\t\t\tICE \tL-"<<level->getIndex()<< endl;
 
     int numMatls = d_sharedState->getNumMatls();
     
@@ -3379,7 +3380,7 @@ void ICE::computePressFC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing << d_myworld->myrank() << " Doing press_face_MM on patch " << patch->getID() 
-         << "\t\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+         << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
     Ghost::GhostType  gac = Ghost::AroundCells;
     
     constCCVariable<double> press_CC;
@@ -3765,7 +3766,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << d_myworld->myrank() << " Doing accumulate_energy_source_sinks on patch " 
-         << patch->getID() << "\t\t ICE \tL-" <<level->getIndex()<< endl;
+         << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
 
     int numMatls = d_sharedState->getNumMatls();
 
@@ -4047,7 +4048,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing << d_myworld->myrank() << " Doing computeLagrangianSpecificVolume " <<
-      patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+      patch->getID() << "\t\t ICE \tL-" <<level->getIndex()<< endl;
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
