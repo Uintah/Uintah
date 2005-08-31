@@ -201,7 +201,8 @@ namespace Uintah {
                               const PatchSet*, 
                               const MaterialSubset*,             
                               const MaterialSet*,
-                              const bool insideOuterIterLoop); 
+                              const bool insideOuterIterLoop,
+                              const string& computes_or_modifies); 
                                                   
       void scheduleUpdatePressure(  SchedulerP&,
                                    const LevelP&,
@@ -538,7 +539,8 @@ namespace Uintah {
                     const MaterialSubset* ,                          
                     DataWarehouse* old_dw,                           
                     DataWarehouse* new_dw,
-                    const bool insideOuterIterLoop);
+                    const bool insideOuterIterLoop,
+                    const string computes_or_modifies);
                        
        void updatePressure(const ProcessorGroup*,
                            const PatchSubset* patches,                      
