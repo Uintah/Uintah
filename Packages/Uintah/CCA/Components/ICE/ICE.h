@@ -238,7 +238,8 @@ namespace Uintah {
 //  I M P L I C I T   A M R I C E                                                       
       void scheduleCoarsen_imp_delP(SchedulerP& sched, 
                                     const LevelP& level,
-                                    const MaterialSubset* press_matl);
+                                    const MaterialSubset* press_matl,
+                                    bool firstIter);
                                      
       void scheduleCompute_matrix_CFI_weights(SchedulerP& sched, 
                                               const LevelP& coarseLevel,
@@ -255,7 +256,7 @@ namespace Uintah {
                                            const MaterialSet* all_matls);
                                             
       void scheduleMultiLevelPressureSolve(SchedulerP& sched,
-                                         const LevelP& level,
+                                         const GridP grid,
                                          const PatchSet*,
                                          const MaterialSubset* one_matl,
                                          const MaterialSubset* press_matl,
@@ -264,15 +265,16 @@ namespace Uintah {
                                          const MaterialSet* all_matls); 
                                          
       void scheduleZeroMatrix_RHS_UnderFinePatches(SchedulerP& sched, 
-                                                  const LevelP& coarseLevel,
-                                                  const MaterialSubset* one_matl);                      
-
+                                                   const LevelP& coarseLevel,
+                                                   const MaterialSubset* one_matl,
+                                                   bool firstIter);
 
       void zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
                                            const PatchSubset* coarsePatches,
                                            const MaterialSubset*,
                                            DataWarehouse*,
-                                           DataWarehouse* new_dw);
+                                           DataWarehouse* new_dw,
+                                           bool firstIter);
 
       void schedule_bogus_imp_delP(SchedulerP& sched,
                                    const PatchSet* perProcPatches,
@@ -569,7 +571,8 @@ namespace Uintah {
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
                             DataWarehouse*,
-                            DataWarehouse* new_dw);
+                            DataWarehouse* new_dw,
+                            bool firstIter);
                            
      void compute_matrix_CFI_weights(const ProcessorGroup*,
                                      const PatchSubset* finePatches,
@@ -601,7 +604,7 @@ namespace Uintah {
                                  const MaterialSubset*,     
                                  DataWarehouse* old_dw,     
                                  DataWarehouse* new_dw,     
-                                 LevelP level,     
+                                 GridP grid,     
                                  Scheduler* sched,
                                  const MaterialSubset*,
                                  const MaterialSubset*);
