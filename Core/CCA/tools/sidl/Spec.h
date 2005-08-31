@@ -136,8 +136,10 @@ public:
   std::string cppfullname(SymbolTable* forpackage) const;
   std::string cppclassname() const;
   MethodList* getMethods() const;
+  bool castException_isEmitted() const { return castException_emitted; }
   int exceptionID;
   void emit_proxyclass(EmitState& e);
+  void emit_exceptionCast(EmitState &e, Symbol *sym);
 protected:
   virtual void emit(EmitState& out);
   void emit_typeinfo(EmitState& e);
@@ -152,6 +154,7 @@ protected:
   MethodList* mymethods;
   DistributionArrayList* mydistarrays;
 private:
+  bool castException_emitted;
   bool doRedistribution; 
   int callerDistHandler;
   bool singly_inherited() const;
@@ -293,6 +296,8 @@ public:
   Modifier getModifier() const;
   void staticCheck(SymbolTable* names);
 
+  // Classes and interfaces (initialized as null) are set
+  // during staticCheck.
   void setClass(Class* c);
   void setInterface(BaseInterface* c);
 
