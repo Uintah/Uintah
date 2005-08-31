@@ -2085,17 +2085,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       new_dw->get(internalforce,lb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce,lb->gExternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(mass,         lb->gMassLabel,          dwi, patch, gnone, 0);
-#if 0
-      if(d_with_ice){
-        new_dw->get(gradPAccNC, lb->gradPAccNCLabel,     dwi, patch, gnone, 0);
-      }
-      else{
-        NCVariable<Vector> gradPAccNC_create;
-        new_dw->allocateTemporary(gradPAccNC_create,  patch);
-        gradPAccNC_create.initialize(Vector(0.,0.,0.));
-        gradPAccNC = gradPAccNC_create; // reference created data
-      }
-#endif
+
       //Uncomment to use damping
       //constNCVariable<Vector> velocity;
       //new_dw->get(velocity,  lb->gVelocityLabel,      dwi, patch, gnone, 0);
@@ -2113,13 +2103,10 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
         //if (mass[c] > 1.0e-199)
           acc = (internalforce[c] + externalforce[c])/mass[c] ;
           acceleration[c] = acc +  gravity;
-#if 0
-+ gradPAccNC[c];
-#endif
 //                 acceleration[c] =
 //                    (internalforce[c] + externalforce[c]
-//                    -5000.*velocity[c]*mass[c])/mass[c]
-//                    + gravity + gradPAccNC[c];
+//                    -50000.*velocity[c]*mass[c])/mass[c]
+//                    + gravity;
       }
     }
   }
