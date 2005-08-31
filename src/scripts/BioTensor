@@ -26,16 +26,20 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 #
-
-# This script is just a short cut to run the BioTensor SCIRun Power App
-# It will be copied to the top of the object side of the tree.
-
-export DISPLAY=:0.0
-export SCIRUN_OBJDIR=`cd ${0/"\/BioTensor"/""}; pwd`
+#!/bin/bash
+export SCIRUN_OBJDIR=`echo $0 | awk -F/ '{ for (i = 1; i < NF; i++) printf("%s/",$i); printf("\n") }'`
+export SCIRUN_OBJDIR=`cd ${SCIRUN_OBJDIR}; pwd`
 export SCIRUN_SRCDIR=`cd ${SCIRUN_OBJDIR}/../src; pwd`
 export SCIRUN_THIRDPARTY_DIR=`cd ${SCIRUN_OBJDIR}/../Thirdparty; pwd`
 export SCIRUN_ITCL_WIDGETS=${SCIRUN_THIRDPARTY_DIR}/lib/iwidgets/scripts
-export DYLD_LIBRARY_PATH=${SCIRUN_THIRDPARTY_DIR}/lib:${SCIRUN_OBJDIR}/lib/:/usr/local/mdsplus/lib:${SCIRUN_OBJDIR}/../Freetype/lib
 export TCL_LIBRARY=${SCIRUN_THIRDPARTY_DIR}/lib/tcl
-export LOAD_PACKAGE=SCIRun,Teem
-exec ${SCIRUN_OBJDIR}/scirun-bin ${SCIRUN_SRCDIR}/Packages/Teem/nets/PowerApps/BioTensor.app $1 $2 $3 $4 $5 $6 $7 $8 $9
+export SCIRUN_INSIGHT_LIB=${SCIRUN_THIRDPARTY_DIR}/lib/InsightToolkit
+export DYLD_LIBRARY_PATH=${SCIRUN_THIRDPARTY_DIR}/lib:${SCIRUN_INSIGHT_LIB}:${SCIRUN_OBJDIR}/lib/
+export DISPLAY=:0.0
+if [ -d /Applications/Utilities/X11.app ]; then
+    /usr/bin/open -a /Applications/Utilities/X11.app 
+elif [ -d /Applications/X11.app ]; then
+    /usr/bin/open -a /Applications/X11.app 
+fi
+
+${SCIRUN_OBJDIR}/scirun-bin ${SCIRUN_SRCDIR}/Packages/Teem/nets/PowerApps/BioTensor.app >& /dev/null
