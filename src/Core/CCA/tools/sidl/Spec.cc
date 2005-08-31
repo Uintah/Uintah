@@ -66,7 +66,8 @@ Definition::~Definition()
 string Definition::fullname() const
 {
   if (!symbols) {
-    cerr << "ERROR: Definition SymbolTable not set!" << endl;
+    cerr << "ERROR: Definition SymbolTable not set! " << __FILE__ << ", " <<
+            __LINE__ << endl;
     exit(1);
   }
   return symbols->fullname();
@@ -75,7 +76,8 @@ string Definition::fullname() const
 string CI::cppfullname(SymbolTable* forpackage) const
 {
   if (!symbols){
-    cerr << "ERROR: Definition SymbolTable not set!" << endl;
+    cerr << "ERROR: Definition SymbolTable not set! " << __FILE__ << ", " <<
+         __LINE__ << endl;
     exit(1);
   }
   if (forpackage == symbols->getParent()) {
@@ -186,6 +188,7 @@ CI::CI(const string& curfile, int lineno, const string& name,
        MethodList* methods, DistributionArrayList* arrays)
   : Definition(curfile, lineno, name), mymethods(methods), mydistarrays(arrays)
 {
+  castException_emitted = false;
   doRedistribution = false;
   exceptionID = 0;
   vtable_base = -1234;
@@ -634,7 +637,8 @@ int ScopedName::nnames() const
 string ScopedName::fullname() const
 {
   if (!sym) {
-    cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << endl;
+    cerr << "ERROR: Symbol not bound: " << getName() << " - " << this <<
+            ", " << __FILE__ << ", " << __LINE__ << endl;
     exit(1);
   }
   return sym->fullname();
@@ -643,7 +647,8 @@ string ScopedName::fullname() const
 string ScopedName::cppfullname(SymbolTable* forstab) const
 {
   if (!sym) {
-    cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << endl;
+    cerr << "ERROR: Symbol not bound: " << getName() << " - " << this <<
+            ", " << __FILE__ << ", " << __LINE__ << endl;
     exit(1);
   }
   return sym->cppfullname(forstab);

@@ -1572,56 +1572,64 @@ void CI::emit_proxy(EmitState& e)
   }  
 }
 
+void CI::emit_exceptionCast(EmitState &e, Symbol *sym)
+{
+    std::string xceptName = sym->cppfullname();
+
+    e.xcept << leader2 << "  case " << exceptionID << ": {\n";
+    e.xcept << leader2 << "    " << xceptName << "* _e_ptr = _unmarshal_exception<" << xceptName << ", " << xceptName << "_proxy>(*_xMsg);\n";
+    e.xcept << leader2 << "    throw _e_ptr;\n";
+    e.xcept << leader2 << "    break;\n";
+    e.xcept << leader2 << "  }\n";
+    castException_emitted = true;
+}
+
 void Method::emit_proxy(EmitState& e, const string& fn,
             SymbolTable* localScope) const
 {
   std::vector<Argument*>& list=args->getList();
   emit_prototype_defin(e, fn+"::", localScope);
   e.out << "\n{\n";
-  string oldleader=e.out.push_leader();  
+  string oldleader = e.out.push_leader();  
   e.out << leader2 << "::SCIRun::ReferenceMgr* _rm = _proxyGetReferenceMgr();\n";
-  if (isCollective) { 
+  if (isCollective) {
     e.out << leader2 << "::std::vector< ::SCIRun::Reference*> _ref;\n";
     e.out << leader2 << "::SCIRun::callType _flag;\n";
     e.out << leader2 << "::SCIRun::Message* save_callonly_msg = NULL;\n";
     e.out << leader2 << "::std::vector < ::SCIRun::Message*> save_callnoret_msg;\n";
     e.out << leader2 << "//Imprecise exception check if someone caught an exception\n";
     e.out << leader2 << "::SCIRun::Message* _xMsg;\n";
-    //#ifdef HAVE_MPI
+//#ifdef HAVE_MPI
     e.out << leader2 << "int _xid = xr->checkException(&_xMsg);\n";
     e.out << leader2 << "if (_xid != 0) {\n";
     e.out << leader2 << "  _castException(_xid,&_xMsg);\n";
     e.out << leader2 << "}\n";
-    //#endif
+//#endif
 
     if (throws_clause) {
       //Write things for the castException method
-      int cnt = -1;
-      const std::vector<ScopedName*>& thlist=throws_clause->getList();
-      for (vector<ScopedName*>::const_iterator iter = thlist.begin(); iter != thlist.end(); iter++) {
-        ::std::string name = (*iter)->cppfullname();
+      const std::vector<ScopedName*>& thlist = throws_clause->getList();
+      for (vector<ScopedName*>::const_iterator iter = thlist.begin();
+         iter != thlist.end(); iter++) {
         //STEST
         Definition* def = (*iter)->getSymbol()->getDefinition();
         CI* xci = dynamic_cast< CI*>(def);
-        if (xci) cnt = xci->exceptionID;
-        e.xcept << leader2 << "  case " << cnt << ": {\n";
-        e.xcept << leader2 << "    " << name << "* _e_ptr = _unmarshal_exception<" << name << ", " << name << "_proxy>(*_xMsg);\n";
-        e.xcept << leader2 << "    throw _e_ptr;\n";
-        e.xcept << leader2 << "    break;\n";
-        e.xcept << leader2 << "  }\n";
+        if (xci && ! xci->castException_isEmitted()) {
+            xci->emit_exceptionCast(e, (*iter)->getSymbol());
+        }
       }
       //EOF write things for the castException method
     }
  
     e.out << leader2 << "int remoteSize = _rm->getRemoteSize();\n";
-    //#ifdef HAVE_MPI
+//#ifdef HAVE_MPI
     //    e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
     e.out << leader2 << "SCIRun::ProxyID _sessionID = getProxyUUID();\n";
     //    e.out << leader2 << "//::std::cout << \" sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
     e.out << leader2 << "//::std::cout << \" sending _sessionID = '\" << _sessionID.iid <<'|'<<_sessionID.pid << \"'\\n\";\n";
     e.out << leader2 << "int _numCalls = (_rm->getSize() / remoteSize);\n";
     e.out << leader2 << "((_rm->getSize() % remoteSize) > _rm->getRank()) ?_numCalls++ :0;\n\n";
-    //#endif
+//#endif
   }
 
   if (reply_required()) {
