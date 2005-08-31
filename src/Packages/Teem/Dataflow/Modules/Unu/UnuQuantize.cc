@@ -101,10 +101,8 @@ UnuQuantize::execute()
   inrrd_ = (NrrdIPort *)get_iport("Nrrd");
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
 
-  if (!inrrd_->get(nrrdH))
-    return;
-  if (!nrrdH.get_rep()) {
-    error("Empty input Nrrd.");
+  if (!inrrd_->get(nrrdH) || !nrrdH.get_rep()) {
+    error( "No nrrd handle or representation" );
     return;
   }
 
@@ -119,8 +117,6 @@ UnuQuantize::execute()
     useinputmin_.reset();
     useinputmax_.reset();
   }
-
-
 
   double minf=minf_.get();
   double maxf=maxf_.get();
