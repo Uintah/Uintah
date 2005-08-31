@@ -137,8 +137,8 @@ package cca {
        *
        * @param portName The previously registered or provide port which
        *   the component now wants to use.
-       * @throws CCAException with the following types: NotConnected, PortNotDefined,
-       *   NetworkError, OutOfMemory.
+       * @throws CCAException with the following types: PortNotConnected,
+       *         PortNotDefined, NetworkError, OutOfMemory.
        */
       Port getPort(in string portName) throws CCAException;
 
@@ -375,6 +375,7 @@ package cca {
        * 2) It is good practice during releaseServices for the component
        * writer to remove or unregister all the ports it defined.
        */
+      collective
       void releaseServices(in Services Svc) throws CCAException;
     }
 
