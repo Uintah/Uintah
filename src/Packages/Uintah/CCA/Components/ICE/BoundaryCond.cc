@@ -508,7 +508,7 @@ void setBC(CCVariable<double>& var_CC,
       
         if (gravity[P_dir] != 0 && desc == "Temperature" && ice_matl 
              && topLevelTimestep >0) {
-          cerr << "(benign) WARNING: hydrostaticTempAdjustment not finished\n";
+          cerr << "WARNING: hydrostaticTempAdjustment not finished\n";
 #if 0
           ice_matl->getEOS()->
               hydrostaticTempAdjustment(face, patch, bound, gravity,
