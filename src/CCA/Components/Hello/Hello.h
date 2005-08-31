@@ -42,20 +42,24 @@
 #define SCIRun_CCA_Components_Hello_h
 
 #include <Core/CCA/spec/cca_sidl.h>
+#include <CCA/Components/Hello/Hello_sidl.h>
 
 namespace SCIRun {
 
 class Hello;
 
-class myUIPort : public virtual sci::cca::ports::UIPort {
+class myUIPort : public sci::cca::ports::UIPort {
 public:
+    virtual ~myUIPort() {}
     int ui();
     void setParent(Hello *com) { this->com = com; }
     Hello *com;
 };
 
-class myGoPort : public virtual sci::cca::ports::GoPort {
+class myGoPort : public sci::cca::ports::GoPort {
 public:
+    virtual ~myGoPort() {}
+
     myGoPort(const sci::cca::Services::pointer& svc);
     int go();
     void setParent(Hello *com) { this->com = com; }
@@ -65,7 +69,7 @@ private:
     sci::cca::Services::pointer services;
 };
 
-class myComponentIcon : public virtual sci::cca::ports::ComponentIcon {
+class myComponentIcon : public sci::cca::ports::ComponentIcon {
 public:
   myComponentIcon() {}
   virtual ~myComponentIcon() {}
@@ -74,16 +78,16 @@ public:
   virtual std::string getDescription();
   virtual std::string getIconShape();
   virtual int getProgressBar();
-  void setParent(Hello *com) { this->com = com; }
-  Hello *com;
   static const int STEPS = 50;
 };
 
-class Hello : public sci::cca::Component {
+// demonstrate use of Go port, UI port and ComponentRelease
+class Hello : public sci::cca::Hello {
 public:
     Hello();
     virtual ~Hello();
     virtual void setServices(const sci::cca::Services::pointer& svc);
+    virtual void releaseServices(const sci::cca::Services::pointer& svc);
     std::string text;
 
 private:
@@ -94,9 +98,6 @@ private:
     Hello& operator=(const Hello&);
 
     sci::cca::Services::pointer services;
-    myUIPort *uiPort;
-    myGoPort *goPort;
-    myComponentIcon *ciPort;
 };
   
 } //namespace SCIRun
