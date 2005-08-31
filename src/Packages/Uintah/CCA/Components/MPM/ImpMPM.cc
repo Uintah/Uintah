@@ -214,10 +214,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    d_switchCriteria = dynamic_cast<SwitchingCriteria*>
      (getPort("switch_criteria"));
    
-   if (!d_switchCriteria) {
-     throw InternalError("IMPM:couldn't get switch_criteria port",
-                         __FILE__, __LINE__);
-   } else {
+   if (d_switchCriteria) {
      d_switchCriteria->problemSetup(prob_spec,d_sharedState);
    }
     
@@ -877,7 +874,9 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
 
 void ImpMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
-   d_switchCriteria->scheduleSwitchTest(level,sched);
+  if (d_switchCriteria) {
+    d_switchCriteria->scheduleSwitchTest(level,sched);
+  }
 #if 0
   Task* task = scinew Task("switchTest",this, &ImpMPM::switchTest);
 
@@ -2707,12 +2706,6 @@ void ImpMPM::switchTest(const ProcessorGroup* group,
 {
   int time_step = d_sharedState->getCurrentTopLevelTimeStep();
   double sw = 0;
-#if 1
-  if (time_step == 15)
-    sw = 1;
-  else
-    sw = 0;
-#endif
 
 #if 0
   for(int p=0;p<patches->size();p++){
