@@ -172,6 +172,7 @@ WARNING
     //! These are so we can track certain variables over the taskgraph's
     //! execution.
     vector<string> trackingVars_;
+    vector<string> trackingTasks_;
     vector<Task::WhichDW> trackingDWs_;
     double trackingStartTime_;
     double trackingEndTime_;
