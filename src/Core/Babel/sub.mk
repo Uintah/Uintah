@@ -29,12 +29,6 @@
 
 # Makefile fragment for this subdirectory
 
-# --xml is provided for backward compatiblity with older versions of babel.  It should only cause an
-# "unrecognized option" warning on newer babel compilers.
 Core/Babel/timestamp: $(CCASIDL)
-	$(BABEL) --text=xml --xml --output-directory=$(BABEL_REPOSITORY) $< && touch $@
-#	$(BABEL) -x -o$(BABEL_REPOSITORY) $< && touch $@
-
-
-
-
+	$(BABEL) --text=xml --output-directory=$(BABEL_REPOSITORY) $< && touch $@
+#$(BABEL) -x -o$(BABEL_REPOSITORY) $< && touch $@
