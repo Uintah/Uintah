@@ -80,6 +80,25 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
     d_initMatls.push_back(init_matls);
     num_components++;
   }
+
+  // Make sure that a switching criteria was specified.  For n subcomponents,
+  // there should be n-1 switching critiera specified.
+
+  int num_switch_criteria = 0;
+  for (int i = 0; i < num_components; i++) {
+    UintahParallelComponent* comp = 
+      dynamic_cast<UintahParallelComponent*>(getPort("sim",i));
+    SwitchingCriteria* sw = 
+      dynamic_cast<SwitchingCriteria*>(comp->getPort("switch_criteria"));
+    if (sw)
+      num_switch_criteria++;
+  }
+  
+  if (num_switch_criteria != num_components - 1) {
+    throw  ProblemSetupException("Do not have enough switching criteria specified for the number of components.",
+                                 __FILE__, __LINE__);
+  }
+      
   
   // get the vars that will need to be initialized by this component
   for (ProblemSpecP var=sim_block->findBlock("carry_over"); var != 0; var = var->findNextBlock("carry_over")) {
