@@ -7,7 +7,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/SwitchingCriteria
 SRCS     += \
 	$(SRCDIR)/SwitchingCriteriaFactory.cc \
 	$(SRCDIR)/None.cc   \
-	$(SRCDIR)/TimestepNumber.cc
+	$(SRCDIR)/TimestepNumber.cc \
+	$(SRCDIR)/PBXTemperature.cc
 
 PSELIBS := \
 	Core/Exceptions                  \
