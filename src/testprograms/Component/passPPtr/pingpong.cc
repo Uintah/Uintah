@@ -91,7 +91,8 @@ int main(int argc, char* argv[])
 
     int myrank = 0;
     int mysize = 0;
-    int arrsize, sta, fin;
+    // unused:
+    //int arrsize, sta, fin;
 
     try {
         PIDL::initialize(mpi_rank, mpi_size);
