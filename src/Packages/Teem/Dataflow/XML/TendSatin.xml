@@ -35,12 +35,12 @@
     <author>Darby Van Uitert
     </author>
     <summary>Generate a pretty synthetic DT volume. The surface of a sphere or
-tous is covered with either linear or planar anisotropic tensors, or somewhere
+torus is covered with either linear or planar anisotropic tensors, or somewhere
 in between.
     </summary>
     <description>
-    <p>enerate a pretty synthetic DT volume. The surface of a sphere or
-tous is covered with either linear or planar anisotropic tensors, or somewhere
+    <p>Generate a pretty synthetic DT volume. The surface of a sphere or
+torus is covered with either linear or planar anisotropic tensors, or somewhere
 in between.</p>
     <p>Generate Torus Dataset : generate a torus dataset if checked, otherwise generate a sphere dataset.</p>
     <p>Anisotropy Parameter : anisotropy parameter. 0.0 for one direction of 
