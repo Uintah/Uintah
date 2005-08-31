@@ -2,6 +2,7 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/ThermoInterface.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -407,7 +408,9 @@ void setBC(CCVariable<double>& var_CC,
            const Patch* patch,
            SimulationStateP& sharedState, 
            const int mat_id,
-           DataWarehouse*,
+           DataWarehouse* old_dw, DataWarehouse* new_dw,
+           ThermoInterface::State state,
+           const constCCVariable<double>& sp_vol,
            customBC_var_basket* custom_BC_basket)    // NG hack
 {
   BC_doing << "setBC (double) "<< desc << " mat_id = " << mat_id << endl;
@@ -433,7 +436,7 @@ void setBC(CCVariable<double>& var_CC,
     if( desc == "Temperature"  && is_tempBC_lodi 
         && topLevelTimestep >0 && custom_BC_basket->setLodiBcs ){
       FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
-    }   
+    }
     if (desc == "Density"  && is_rhoBC_lodi 
         && topLevelTimestep >0 && custom_BC_basket->setLodiBcs){
       FaceDensity_LODI(patch, face, var_CC, lv, cell_dx);
@@ -509,11 +512,29 @@ void setBC(CCVariable<double>& var_CC,
         if (gravity[P_dir] != 0 && desc == "Temperature" && ice_matl 
              && topLevelTimestep >0) {
           cerr << "WARNING: hydrostaticTempAdjustment not finished\n";
-#if 0
+          // Compute temperatures from energy
+          CCVariable<double> temp;
+          new_dw->allocateTemporary(temp, patch);
+          ice_matl->getThermo()->compute_Temp(bound.begin(), bound.end(), temp, old_dw, new_dw,
+                                              state, patch, matl->getDWIndex(), 0,
+                                              var_CC, sp_vol);
+          CCVariable<double> cv;
+          new_dw->allocateTemporary(cv, patch);
+          ice_matl->getThermo()->compute_cv(bound.begin(), bound.end(), cv, old_dw, new_dw,
+                                            state, patch, matl->getDWIndex(), 0,
+                                            var_CC, sp_vol);
+          CCVariable<double> gamma;
+          new_dw->allocateTemporary(gamma, patch);
+          ice_matl->getThermo()->compute_gamma(bound.begin(), bound.end(), cv, old_dw, new_dw,
+                                               state, patch, matl->getDWIndex(), 0,
+                                               var_CC, sp_vol);
           ice_matl->getEOS()->
               hydrostaticTempAdjustment(face, patch, bound, gravity,
-                                        gamma, cv, cell_dx, var_CC);
-#endif
+                                        gamma, cv, cell_dx, temp);
+          // And back to energy
+          ice_matl->getThermo()->compute_Temp(iter, var_CC, old_dw, new_dw,
+                                              state, patch, matl->getDWIndex(), 0,
+                                              temp, sp_vol);
         }
         //__________________________________
         //  debugging

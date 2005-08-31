@@ -72,51 +72,94 @@ WARNING
                                             DataWarehouse* old_dw, DataWarehouse* new_dw,
                                             State state, const Patch* patch, int matl,
                                             int numGhostCells,
-                                            constCCVariable<double>& int_eng,
-                                            constCCVariable<double>& sp_vol) = 0;
+                                            const constCCVariable<double>& int_eng,
+                                            const constCCVariable<double>& sp_vol) = 0;
     virtual void compute_thermalConductivity(CellIterator iter,
                                              CCVariable<double>& thermalDiffusivity,
                                              DataWarehouse* old_dw, DataWarehouse* new_dw,
                                              State state, const Patch* patch, int matl,
                                              int numGhostCells,
-                                             constCCVariable<double>& int_eng,
-                                             constCCVariable<double>& sp_vol) = 0;
+                                             const constCCVariable<double>& int_eng,
+                                             const constCCVariable<double>& sp_vol) = 0;
     virtual void compute_cp(CellIterator iter, CCVariable<double>& cp,
                             DataWarehouse* old_dw, DataWarehouse* new_dw,
                             State state, const Patch* patch, int matl,
                             int numGhostCells,
-                            constCCVariable<double>& int_eng,
-                            constCCVariable<double>& sp_vol) = 0;
+                            const constCCVariable<double>& int_eng,
+                            const constCCVariable<double>& sp_vol) = 0;
     virtual void compute_cv(CellIterator iter, CCVariable<double>& cv,
                             DataWarehouse* old_dw, DataWarehouse* new_dw,
                             State state, const Patch* patch, int matl,
                             int numGhostCells,
-                            constCCVariable<double>& int_eng,
-                            constCCVariable<double>& sp_vol) = 0;
+                            const constCCVariable<double>& int_eng,
+                            const constCCVariable<double>& sp_vol) = 0;
     virtual void compute_gamma(CellIterator iter, CCVariable<double>& gamma,
                                DataWarehouse* old_dw, DataWarehouse* new_dw,
                                State state, const Patch* patch, int matl,
                                int numGhostCells,
-                               constCCVariable<double>& int_eng,
-                               constCCVariable<double>& sp_vol) = 0;
+                               const constCCVariable<double>& int_eng,
+                               const constCCVariable<double>& sp_vol) = 0;
     virtual void compute_R(CellIterator iter, CCVariable<double>& R,
                            DataWarehouse* old_dw, DataWarehouse* new_dw,
                            State state, const Patch* patch, int matl,
                            int numGhostCells,
-                           constCCVariable<double>& int_eng,
-                           constCCVariable<double>& sp_vol) = 0;
+                           const constCCVariable<double>& int_eng,
+                           const constCCVariable<double>& sp_vol) = 0;
     virtual void compute_Temp(CellIterator iter, CCVariable<double>& temp,
                               DataWarehouse* old_dw, DataWarehouse* new_dw,
                               State state, const Patch* patch, int matl,
                               int numGhostCells,
-                              constCCVariable<double>& int_eng,
-                              constCCVariable<double>& sp_vol) = 0;
+                              const constCCVariable<double>& int_eng,
+                              const constCCVariable<double>& sp_vol) = 0;
     virtual void compute_int_eng(CellIterator iter, CCVariable<double>& int_eng,
                                  DataWarehouse* old_dw, DataWarehouse* new_dw,
                                  State state, const Patch* patch, int matl,
                                  int numGhostCells,
-                                 constCCVariable<double>& int_eng,
-                                 constCCVariable<double>& sp_vol) = 0;
+                                 const constCCVariable<double>& int_eng,
+                                 const constCCVariable<double>& sp_vol) = 0;
+    typedef vector<IntVector> cellList;
+    virtual void compute_cp(cellList::iterator begin, cellList::iterator end,
+                            CCVariable<double>& cp,
+                            DataWarehouse* old_dw, DataWarehouse* new_dw,
+                            State state, const Patch* patch, int matl,
+                            int numGhostCells,
+                            const constCCVariable<double>& int_eng,
+                            const constCCVariable<double>& sp_vol) = 0;
+    virtual void compute_cv(cellList::iterator begin, cellList::iterator end,
+                            CCVariable<double>& cv,
+                            DataWarehouse* old_dw, DataWarehouse* new_dw,
+                            State state, const Patch* patch, int matl,
+                            int numGhostCells,
+                            const constCCVariable<double>& int_eng,
+                            const constCCVariable<double>& sp_vol) = 0;
+    virtual void compute_gamma(cellList::iterator begin, cellList::iterator end,
+                               CCVariable<double>& gamma,
+                               DataWarehouse* old_dw, DataWarehouse* new_dw,
+                               State state, const Patch* patch, int matl,
+                               int numGhostCells,
+                               const constCCVariable<double>& int_eng,
+                               const constCCVariable<double>& sp_vol) = 0;
+    virtual void compute_R(cellList::iterator begin, cellList::iterator end,
+                           CCVariable<double>& R,
+                           DataWarehouse* old_dw, DataWarehouse* new_dw,
+                           State state, const Patch* patch, int matl,
+                           int numGhostCells,
+                           const constCCVariable<double>& int_eng,
+                           const constCCVariable<double>& sp_vol) = 0;
+    virtual void compute_Temp(cellList::iterator begin, cellList::iterator end,
+                              CCVariable<double>& temp,
+                              DataWarehouse* old_dw, DataWarehouse* new_dw,
+                              State state, const Patch* patch, int matl,
+                              int numGhostCells,
+                              const constCCVariable<double>& int_eng,
+                              const constCCVariable<double>& sp_vol) = 0;
+    virtual void compute_int_eng(cellList::iterator begin, cellList::iterator end,
+                                 CCVariable<double>& int_eng,
+                                 DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                 State state, const Patch* patch, int matl,
+                                 int numGhostCells,
+                                 const constCCVariable<double>& int_eng,
+                                 const constCCVariable<double>& sp_vol) = 0;
   };
 } // End namespace Uintah
       
