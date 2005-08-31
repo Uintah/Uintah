@@ -220,7 +220,7 @@
                 <id>gri30_mix</id>
                 <thermal_conductivity>0.0                    </thermal_conductivity>
                 <species0>CH4:1</species0>
-                <species1>O2:0.77 N2:0.23</species1>
+                <species1>O2:0.77,N2:0.23</species1>
                 <geom_object>
                   <box label="wholeDomain">
                   <min>       [-1.0,-1.0,-1.0 ]       </min>
@@ -240,7 +240,7 @@
                <velocity>      [1.,1.,1.]               </velocity>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
-               <density>       0.65168805574747168</density>
+               <density>       1.25700925809314334</density>
            </geom_object>
          </material>
       </ICE>       
