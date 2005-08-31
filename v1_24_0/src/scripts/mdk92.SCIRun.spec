@@ -36,7 +36,7 @@
 %undefine	__check_files
 %define thirdpartydotver 2
 %define thirdpartyversion %{defver}.%{thirdpartydotver}
-%define insightver  2.0.1
+%define insightver  2.2.0
 
 
 Name:		SCIRunBioPSE
