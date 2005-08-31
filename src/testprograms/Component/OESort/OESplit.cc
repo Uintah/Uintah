@@ -42,7 +42,7 @@
 #include <sci_defs/mpi_defs.h>
 #include <iostream>
 #include <stdlib.h>
-#include <algo.h>
+#include <algorithm>
 #include <sci_mpi.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>
