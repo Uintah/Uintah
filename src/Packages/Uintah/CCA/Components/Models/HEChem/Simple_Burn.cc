@@ -195,9 +195,6 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   // Reactants
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
-  t->requires(Task::NewDW, Ilb->TempX_FCLabel,    react_matl, gac,2);
-  t->requires(Task::NewDW, Ilb->TempY_FCLabel,    react_matl, gac,2);
-  t->requires(Task::NewDW, Ilb->TempZ_FCLabel,    react_matl, gac,2);
   t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
   t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gn);
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
@@ -257,9 +254,9 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     constCCVariable<double> solidTemp,solidMass,solidSp_vol;
 
     constNCVariable<double> NC_CCweight,NCsolidMass;
-    constSFCXVariable<double> gasTempX_FC,solidTempX_FC;
-    constSFCYVariable<double> gasTempY_FC,solidTempY_FC;
-    constSFCZVariable<double> gasTempZ_FC,solidTempZ_FC;
+    constSFCXVariable<double> gasTempX_FC;
+    constSFCYVariable<double> gasTempY_FC;
+    constSFCZVariable<double> gasTempZ_FC;
     constCCVariable<Vector> vel_CC;
     
     Vector dx = patch->dCell();
@@ -273,9 +270,6 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->get(solidTemp,       MIlb->temp_CCLabel, m0,patch,gn, 0);
     new_dw->get(solidMass,       MIlb->cMassLabel,   m0,patch,gn, 0);
     new_dw->get(solidSp_vol,     Ilb->sp_vol_CCLabel,m0,patch,gn,0);
-    new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel, m0,patch,gac,2);
-    new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel, m0,patch,gac,2);
-    new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel, m0,patch,gac,2);
     new_dw->get(vel_CC,          MIlb->vel_CCLabel,  m0,patch,gn, 0);
     new_dw->get(NCsolidMass,     Mlb->gMassLabel,    m0,patch,gac,1);
 
@@ -324,12 +318,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
         double Temp = 0;
 
         if (gasVol_frac[c] < 0.2){             //--------------KNOB 2
-          Temp =std::max(Temp, solidTempX_FC[c] );    //L
-          Temp =std::max(Temp, solidTempY_FC[c] );    //Bot
-          Temp =std::max(Temp, solidTempZ_FC[c] );    //BK
-          Temp =std::max(Temp, solidTempX_FC[c + IntVector(1,0,0)] );
-          Temp =std::max(Temp, solidTempY_FC[c + IntVector(0,1,0)] );
-          Temp =std::max(Temp, solidTempZ_FC[c + IntVector(0,0,1)] );
+          Temp =solidTemp[c];
         }else {
           Temp =std::max(Temp, gasTempX_FC[c] );    //L
           Temp =std::max(Temp, gasTempY_FC[c] );    //Bot
@@ -339,55 +328,6 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
           Temp =std::max(Temp, gasTempZ_FC[c + IntVector(0,0,1)] );
         }
         surfaceTemp[c] = Temp;
-#if 0
-        double delZ = dx.z();
-
-        double gradRhoX = 0.25 *
-                          ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                            NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                            NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                            NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
-                          -
-                          ( NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                            NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-                            NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-                            NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-                          ) / delX;
-        double gradRhoY = 0.25 *
-                          ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                            NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                            NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                            NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
-                          -
-                          ( NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                            NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-                            NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-                            NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-                          ) / delY;
-        double gradRhoZ = 0.25 *
-                          ((NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                            NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-                            NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-                            NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-                          -
-                          ( NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                            NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                            NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                            NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])
-                          ) / delZ;
-
-        double absGradRho = sqrt(gradRhoX*gradRhoX +
-                                 gradRhoY*gradRhoY +
-                                 gradRhoZ*gradRhoZ );
-
-        double normalX = gradRhoX/absGradRho;
-        double normalY = gradRhoY/absGradRho;
-        double normalZ = gradRhoZ/absGradRho;
-
-        double TmpX = fabs(normalX*delX);
-        double TmpY = fabs(normalY*delY);
-        double TmpZ = fabs(normalZ*delZ);
-#endif
 
         double surfArea = delX*delY;  
         onSurface[c] = surfArea; // debugging var
@@ -449,17 +389,10 @@ void Simple_Burn::scheduleCheckNeedAddMaterial(SchedulerP& sched,
     MaterialSubset* one_matl     = scinew MaterialSubset();
     one_matl->add(0);
     one_matl->addReference();
-    MaterialSubset* press_matl   = one_matl;
 
-    t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, press_matl,gn);
-    t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl,  gac, 1);
-                                                                                
-    //__________________________________
-    // Reactants
-    t->requires(Task::NewDW, Ilb->TempX_FCLabel,    react_matl, gac,2);
-    t->requires(Task::NewDW, Ilb->TempY_FCLabel,    react_matl, gac,2);
-    t->requires(Task::NewDW, Ilb->TempZ_FCLabel,    react_matl, gac,2);
+    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,   gac,1);
     t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);
+    t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gn);
 
     t->computes(Simple_Burn::surfaceTempLabel,   one_matl);
   }
@@ -472,11 +405,11 @@ void Simple_Burn::scheduleCheckNeedAddMaterial(SchedulerP& sched,
 }
 
 void Simple_Burn::checkNeedAddMaterial(const ProcessorGroup*,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset*,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw,
-                                      const ModelInfo* mi)
+                                       const PatchSubset* patches,
+                                       const MaterialSubset*,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const ModelInfo* mi)
 {
   double need_add=0.;
   if(!d_active){
@@ -489,15 +422,11 @@ void Simple_Burn::checkNeedAddMaterial(const ProcessorGroup*,
     cout_doing << "Doing checkNeedAddMaterial on patch "<< patch->getID()
                <<"\t\t\t\t  Simple_Burn" << endl;
     
-    constCCVariable<double> press_CC,gasTemp,gasVol_frac;
-    constCCVariable<double> solidTemp,solidMass,solidSp_vol;
+    constCCVariable<double> solidTemp;
 
     CCVariable<double> surfaceTemp;
 
     constNCVariable<double> NC_CCweight,NCsolidMass;
-    constSFCXVariable<double> gasTempX_FC,solidTempX_FC;
-    constSFCYVariable<double> gasTempY_FC,solidTempY_FC;
-    constSFCZVariable<double> gasTempZ_FC,solidTempZ_FC;
     constCCVariable<Vector> vel_CC;
     
     Ghost::GhostType  gn  = Ghost::None;    
@@ -505,14 +434,11 @@ void Simple_Burn::checkNeedAddMaterial(const ProcessorGroup*,
    
     //__________________________________
     // Reactant data
-    new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel, m0,patch,gac,2);
-    new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel, m0,patch,gac,2);
-    new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel, m0,patch,gac,2);
-    new_dw->get(NCsolidMass,     Mlb->gMassLabel,    m0,patch,gac,1);
+    new_dw->get(solidTemp,   Ilb->temp_CCLabel, m0,patch,gn, 0);
+    new_dw->get(NCsolidMass, Mlb->gMassLabel,   m0,patch,gac,1);
 
     //__________________________________
     //   Misc.
-    new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
     old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,   0,  patch,gac,1);   
     new_dw->allocateAndPut(surfaceTemp,Simple_Burn::surfaceTempLabel, 0, patch);
     surfaceTemp.initialize(0.);
@@ -521,9 +447,8 @@ void Simple_Burn::checkNeedAddMaterial(const ProcessorGroup*,
     
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-
-     //__________________________________
-     // Find if the cell contains surface:
+      //__________________________________
+      // Find if the cell contains surface:
       patch->findNodesFromCell(*iter,nodeIdx);
       double MaxMass = d_SMALL_NUM;
       double MinMass = 1.0/d_SMALL_NUM;
@@ -541,16 +466,8 @@ void Simple_Burn::checkNeedAddMaterial(const ProcessorGroup*,
         //__________________________________
         //  On the surface, determine the maxiumum temperature
         //  use this to determine if it is time to activate the model.
-        double Temp = 0.;
-
-        Temp =std::max(Temp, solidTempX_FC[c] );    //L
-        Temp =std::max(Temp, solidTempY_FC[c] );    //Bot
-        Temp =std::max(Temp, solidTempZ_FC[c] );    //BK
-        Temp =std::max(Temp, solidTempX_FC[c + IntVector(1,0,0)] );
-        Temp =std::max(Temp, solidTempY_FC[c + IntVector(0,1,0)] );
-        Temp =std::max(Temp, solidTempZ_FC[c + IntVector(0,0,1)] );
-        surfaceTemp[c] = Temp;
-        if(Temp > .95*d_thresholdTemp){
+        surfaceTemp[c] = solidTemp[c];
+        if(surfaceTemp[c] > .95*d_thresholdTemp){
           need_add=1.;
         }
       }  // if (maxMass-MinMass....)
