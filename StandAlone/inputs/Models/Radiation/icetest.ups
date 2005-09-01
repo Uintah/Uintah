@@ -362,8 +362,9 @@
       </Model>
     <!--__________________________________   -->  
       <Model type = "Radiation">
+        <radiatingGas>BackgroundGas</radiatingGas>
         <RadiationModel>
-         <radiationCalcFreq> 5 </radiationCalcFreq>
+        <radiationCalcFreq> 5 </radiationCalcFreq>
         <DORadiationModel>
           <ordinates> 2 </ordinates>
           <opl> 0.24    </opl>
