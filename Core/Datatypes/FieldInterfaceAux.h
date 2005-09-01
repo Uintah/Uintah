@@ -272,6 +272,8 @@ public:
     field_(fld)
   {}
   
+  virtual bool compute_min_max(double &minout, double &maxout,
+			       bool cache = true);
   virtual bool compute_min_max(Vector &minout, Vector  &maxout,
 			       bool cache = true);
   virtual bool interpolate(Vector &result, const Point &p) const;
@@ -280,6 +282,7 @@ public:
   virtual double find_closest(Vector &result, const Point &p) const;
   virtual void io(Piostream&){};
 private:
+  bool compute_min_max_aux(double &minout, double &maxout) const;
   bool compute_min_max_aux(Vector &minout, Vector  &maxout) const;
   bool finterpolate(Vector &result, const Point &p) const;
 
@@ -363,6 +366,37 @@ VFInterface<F, L>::interpolate_many(vector<Vector> &results,
   return all_interped_p;
 }
 
+template <class F, class L>
+bool
+VFInterface<F, L>::compute_min_max_aux(double &minout, double &maxout) const
+{
+  bool result = false;
+  typename F::fdata_type::const_iterator bi, ei;
+  bi = field_->fdata().begin();
+  ei = field_->fdata().end();
+
+  if (bi != ei)
+  {
+    result = true;
+    minout = DBL_MAX;
+    maxout =-DBL_MAX;
+  }
+
+  while (bi != ei)
+  {
+    const double l = bi->length2();
+
+    if (!result || l < minout) minout = l;
+    if (!result || l > maxout) maxout = l;
+    ++bi;
+  }      
+
+  minout = sqrt ( minout );
+  maxout = sqrt ( maxout );
+
+  return result;
+}
+
 
 template <class F, class L>
 bool
@@ -420,6 +454,42 @@ VFInterface<F, L>::compute_min_max(Vector &minout, Vector &maxout, bool cache)
       if (compute_min_max_aux(minmax.first, minmax.second))
       {
 	field_->set_property("minmax", minmax, true);
+	minout = minmax.first;
+	maxout = minmax.second;
+	return true;
+      }
+      else
+      {
+	return false;
+      }
+    }
+  }
+  else
+  {
+    return compute_min_max_aux(minout, maxout);
+  }
+}
+
+
+template <class F, class L>
+bool
+VFInterface<F, L>::compute_min_max(double &minout, double &maxout, bool cache)
+{
+  if (cache)
+  {
+    std::pair<double, double> minmax;
+    if (field_->get_property("magminmax", minmax))
+    {
+      minout = minmax.first;
+      maxout = minmax.second;
+      return true;
+    }
+    else
+    {
+      field_->freeze();
+      if (compute_min_max_aux(minmax.first, minmax.second))
+      {
+	field_->set_property("magminmax", minmax, true);
 	minout = minmax.first;
 	maxout = minmax.second;
 	return true;
