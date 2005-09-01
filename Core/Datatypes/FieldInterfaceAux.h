@@ -272,7 +272,7 @@ public:
     field_(fld)
   {}
   
-  virtual bool compute_min_max(double &minout, double &maxout,
+  virtual bool compute_length_min_max(double &minout, double &maxout,
 			       bool cache = true);
   virtual bool compute_min_max(Vector &minout, Vector  &maxout,
 			       bool cache = true);
@@ -282,7 +282,7 @@ public:
   virtual double find_closest(Vector &result, const Point &p) const;
   virtual void io(Piostream&){};
 private:
-  bool compute_min_max_aux(double &minout, double &maxout) const;
+  bool compute_length_min_max_aux(double &minout, double &maxout) const;
   bool compute_min_max_aux(Vector &minout, Vector  &maxout) const;
   bool finterpolate(Vector &result, const Point &p) const;
 
@@ -368,7 +368,7 @@ VFInterface<F, L>::interpolate_many(vector<Vector> &results,
 
 template <class F, class L>
 bool
-VFInterface<F, L>::compute_min_max_aux(double &minout, double &maxout) const
+VFInterface<F, L>::compute_length_min_max_aux(double &minout, double &maxout) const
 {
   bool result = false;
   typename F::fdata_type::const_iterator bi, ei;
@@ -473,7 +473,7 @@ VFInterface<F, L>::compute_min_max(Vector &minout, Vector &maxout, bool cache)
 
 template <class F, class L>
 bool
-VFInterface<F, L>::compute_min_max(double &minout, double &maxout, bool cache)
+VFInterface<F, L>::compute_length_min_max(double &minout, double &maxout, bool cache)
 {
   if (cache)
   {
@@ -487,7 +487,7 @@ VFInterface<F, L>::compute_min_max(double &minout, double &maxout, bool cache)
     else
     {
       field_->freeze();
-      if (compute_min_max_aux(minmax.first, minmax.second))
+      if (compute_length_min_max_aux(minmax.first, minmax.second))
       {
 	field_->set_property("magminmax", minmax, true);
 	minout = minmax.first;
@@ -502,7 +502,7 @@ VFInterface<F, L>::compute_min_max(double &minout, double &maxout, bool cache)
   }
   else
   {
-    return compute_min_max_aux(minout, maxout);
+    return compute_length_min_max_aux(minout, maxout);
   }
 }
 

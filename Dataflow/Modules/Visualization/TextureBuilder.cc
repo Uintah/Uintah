@@ -239,7 +239,7 @@ TextureBuilder::execute()
 
 	// set gmin/gmax
 	double gmin, gmax;
-	vfi->compute_min_max(gmin, gmax);
+	vfi->compute_length_min_max(gmin, gmax);
 
 	gui_gminval_.set(gmin);
 	gui_gmaxval_.set(gmax);

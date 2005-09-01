@@ -82,8 +82,8 @@ public:
   VectorFieldInterface(const VectorFieldInterface&) {}
   virtual ~VectorFieldInterface() {}
 
-  virtual bool compute_min_max(double &minout, double &maxout,
-			       bool cache = true) = 0;
+  virtual bool compute_length_min_max(double &minout, double &maxout,
+				      bool cache = true) = 0;
   virtual bool compute_min_max(Vector &minout, Vector &maxout,
 			       bool cache = true) = 0;
   virtual bool interpolate(Vector &result, const Point &p) const = 0;

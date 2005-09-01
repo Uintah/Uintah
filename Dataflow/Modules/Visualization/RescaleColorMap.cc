@@ -187,7 +187,7 @@ RescaleColorMap::execute()
 	if ((sfi = fHandle->query_scalar_interface(this)).get_rep()) {
 	  sfi->compute_min_max(minmax_.first, minmax_.second);
 	} else if ((vfi = fHandle->query_vector_interface(this)).get_rep()) {
-	  vfi->compute_min_max(minmax_.first, minmax_.second);
+	  vfi->compute_length_min_max(minmax_.first, minmax_.second);
 	} else {
 	  error("An input field is not a scalar or vector field.");
 	  error_ = true;
