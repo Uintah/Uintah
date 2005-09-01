@@ -271,6 +271,8 @@
       <save label = "qfluxS"/>
       <save label = "qfluxT"/>
       <save label = "qfluxB"/>
+      <save label = "CO2"/>
+      <save label = "H2O"/> 
       <save label = "radiationSrc"/>
       <save label="p.x"/>
       <save label="p.particleID"/>
@@ -341,7 +343,7 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
       <MPM>
-        <material name = "Steel Ring">    <!-- MATL 0 -->
+        <material name = "SteelRing">    <!-- MATL 0 -->
         <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
         <constitutive_model type="elastic_plastic">
           <useModifiedEOS>                true  </useModifiedEOS>
@@ -463,8 +465,10 @@
       </Model>
     <!--__________________________________   -->  
       <Model type = "Radiation">
-        <material>BackgroundGas</material>
+        <radiatingGas>BackgroundGas</radiatingGas>
+        <absorbingSolid>SteelRing</absorbingSolid>
         <RadiationModel>
+        <absorbingSolid>         true </absorbingSolid>
         <radiationCalcFreq>      5    </radiationCalcFreq>
         <useIceTemp>            true  </useIceTemp>
         <useTableValues>        false </useTableValues>

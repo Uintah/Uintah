@@ -231,15 +231,17 @@
       <save label = "rho_CC"/>
       <save label = "temp_CC"/>
       <save label = "scalar-f"/>
-      <save label = "qfluxE"/>
-      <save label = "qfluxW"/>
-      <save label = "qfluxN"/>
-      <save label = "qfluxS"/>
-      <save label = "qfluxT"/>
-      <save label = "qfluxB"/>
-      <save label = "radiationSrc"/>
-      <!--<save label = "co2_CC"/>
-      <save label = "h2o_CC"/> -->
+      <save label="cellType_CC"/>
+      <save label="abskg"/>
+      <save label="qfluxE"/>
+      <save label="qfluxW"/>
+      <save label="qfluxN"/>
+      <save label="qfluxS"/>
+      <save label="qfluxT"/>
+      <save label="qfluxB"/>
+      <save label="radiationSrc"/>
+      <save label="CO2"/>
+      <save label="H2O"/>
       
       <compression>gzip</compression>
       <checkpoint cycle = "4" interval = "0.05"/>
@@ -359,7 +361,7 @@
       </Model>
     <!--__________________________________   -->  
       <Model type = "Radiation">
-        <material>BackgroundGas</material>
+        <radiatingGas>BackgroundGas</radiatingGas>
         <RadiationModel>
         <radiationCalcFreq>      5    </radiationCalcFreq>
         <useIceTemp>            true  </useIceTemp>
