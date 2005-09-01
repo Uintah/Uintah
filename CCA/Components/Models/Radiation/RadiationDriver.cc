@@ -1,5 +1,3 @@
-//----- RadiationDriver.cc --------------------------------------------------
-
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/Models/Radiation/Models_CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Models/Radiation/Models_DORadiationModel.h>
@@ -10,6 +8,7 @@
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
@@ -18,6 +17,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
@@ -34,7 +34,7 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   d_DORadiation = 0;
   d_radCounter = -1; //to decide how often radiation calc is done
   d_radCalcFreq = 0; 
-  d_matl_set = 0;
+  Ilb  = scinew ICELabel();
   
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
 
@@ -46,14 +46,14 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   // of open or wall boundaries. This variable is necessary because
   // radiation is a surface-dependent process.
 
-  cellType_CCLabel = VarLabel::create("cellType_CC", td_CCdouble);
+  cellType_CCLabel = VarLabel::create("cellType_CC", CCVariable<int>::getTypeDescription());
 
   // shgamma is simply 1/(3*abskg). It is calculated and stored 
   // this way because it is more efficient to do so than just
   // calculating it on the fly each time.  This is done because
   // gradients of shgamma are needed in the P1 calculation.
 
-  shgamma_CCLabel = VarLabel::create("shgamma", td_CCdouble);
+  shgamma_CCLabel  = VarLabel::create("shgamma", td_CCdouble);
 
   // abskg is the absorption coefficient, units 1/m.  This is
   // the cardinal property of absorbing and emitting (participating)
@@ -69,7 +69,6 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   esrcg_CCLabel  = VarLabel::create("esrcg", td_CCdouble);
   cenint_CCLabel = VarLabel::create("cenint",td_CCdouble);
 
-  // qfluxE, qfluxW, qfluxN, qfluxS, qfluxT, and qfluxB are the
   // heat fluxes in the east, west, north, south, top, and bottom
   // directions
   qfluxE_CCLabel = VarLabel::create("qfluxE", td_CCdouble);
@@ -178,10 +177,7 @@ RadiationDriver::~RadiationDriver()
   VarLabel::destroy(radiationSrc_CCLabel);
   VarLabel::destroy(scalar_CCLabel);
   
-  if(d_matl_set && d_matl_set->removeReference()) {
-    delete d_matl_set;
-  }
-  
+  delete Ilb;
 }
 
 //______________________________________________________________________
@@ -191,22 +187,29 @@ RadiationDriver::problemSetup(GridP& grid,
                               SimulationStateP& sharedState,
                               ModelSetup* setup)
 {
+  cout_doing << " RadiationDriver::problemSetup "<< endl;
+  
   d_sharedState = sharedState;
-  d_matl = d_sharedState->parseAndLookupMaterial(params, "material");
-
-  vector<int> m(1);
-  m[0] = d_matl->getDWIndex();
-  d_matl_set = new MaterialSet();
-  d_matl_set->addAll(m);
-  d_matl_set->addReference();
-
-
+  d_matl_G= d_sharedState->parseAndLookupMaterial(params, "radiatingGas");
+  
   ProblemSpecP db = params->findBlock("RadiationModel");
-
-  // how often radiation calculations are performed (not yet
-  // operational ... July 25, 2005)
+  
+  //__________________________________
+  // absorbing solid
+  db->getWithDefault("absorbingSolid",d_hasAbsorbingSolid, false);
+  if(d_hasAbsorbingSolid){
+    if (d_sharedState->getNumMPMMatls() == 0){
+      ostringstream warn;
+      warn<<"ERROR\n Radiation: If you have an absorbing solid you must"
+            " have at least 1 mpm material and use -mpmice/-rmpmice\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }    
+    d_matl_S = d_sharedState->parseAndLookupMaterial(params, "absorbingSolid");
+  }
+ 
+  // how often radiation calculations are performed 
   db->getWithDefault("radiationCalcFreq",d_radCalcFreq,5);
-
+  
   // logical to decide which temperature field to use; table
   // temperature or ICE temperature
   db->getWithDefault("useIceTemp",d_useIceTemp,false);
@@ -255,28 +258,28 @@ void RadiationDriver::scheduleInitialize(SchedulerP& sched,
   t->computes(esrcg_CCLabel);
   t->computes(shgamma_CCLabel);
   t->computes(tempCopy_CCLabel);
-
-  t->computes(cellType_CCLabel);
-  
+    
   if(d_computeCO2_H2O_from_f){
     t->computes(co2_CCLabel);
     t->computes(h2o_CCLabel);
   }
+ 
+  int m = d_matl_G->getDWIndex();
+  MaterialSet* matl_set = new MaterialSet();
+  matl_set->add(m);
+  matl_set->addReference();
   
-  sched->addTask(t, patches, d_matl_set);
+  sched->addTask(t, patches, matl_set);
+  
+  if(matl_set && matl_set->removeReference()) {
+    delete matl_set;
+  }
 }
 
-//****************************************************************************
-// Actually initialize variables at first time step
-//****************************************************************************
-// This function initializes the fluxes and the source terms to zero.
-// But the more significant function it performs is to calculate
-// the cellTypes that are needed.  The first cut for this is to
-// do this for the pure fire case, in which there are no embedded
-// solids. In this case, the only boundaries that need to be set
-// are the open, inlet, and wall boundaries, all of which are
-// at the domain boundaries.
-
+/*______________________________________________________________________
+ Function~  RadiationDriver::initialize--
+ This function initializes the fluxes and the source terms to zero.
+ _____________________________________________________________________*/
 void
 RadiationDriver::initialize(const ProcessorGroup*,
                             const PatchSubset* patches,
@@ -289,9 +292,7 @@ RadiationDriver::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     RadiationVariables vars;
-    int indx = d_matl->getDWIndex();
-
-    new_dw->allocateAndPut(vars.cellType, cellType_CCLabel, indx, patch);
+    int indx = d_matl_G->getDWIndex();
 
     new_dw->allocateAndPut(vars.qfluxe, qfluxE_CCLabel, indx, patch);
     new_dw->allocateAndPut(vars.qfluxw, qfluxW_CCLabel, indx, patch);
@@ -310,7 +311,6 @@ RadiationDriver::initialize(const ProcessorGroup*,
     new_dw->allocateAndPut(vars.shgamma,shgamma_CCLabel,       indx, patch);
     new_dw->allocateAndPut(vars.temperature, tempCopy_CCLabel, indx, patch);
     
-
     vars.qfluxe.initialize(0.0);
     vars.qfluxw.initialize(0.0);
     vars.qfluxn.initialize(0.0);
@@ -318,7 +318,7 @@ RadiationDriver::initialize(const ProcessorGroup*,
     vars.qfluxt.initialize(0.0);
     vars.qfluxb.initialize(0.0);
     vars.src.initialize(0.0);
-    vars.co2.initialize(0.03);
+    vars.co2.initialize(0.03);          // why 0.03?
     vars.h2o.initialize(0.0);
     vars.sootVF.initialize(0.0);
     vars.mixfrac.initialize(0.0);
@@ -329,7 +329,7 @@ RadiationDriver::initialize(const ProcessorGroup*,
     
     //__________________________________
     //  If we're computing CO2 & H2O concentrations
-    //  from scalar-f
+    //  from scalar-f initialize them
     if(d_computeCO2_H2O_from_f){
       CCVariable<double> H2O_concentration, CO2_concentration;
       new_dw->allocateAndPut(H2O_concentration, h2o_CCLabel,indx, patch); 
@@ -340,111 +340,11 @@ RadiationDriver::initialize(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
         IntVector c = *iter;
-        H2O_concentration[c] = 0.5 * scalar_f[c];    // CHANGE THIS EQUATION
+        H2O_concentration[c] = 0.5 * scalar_f[c];    // TODO:  CHANGE THIS EQUATION
         CO2_concentration[c] = 0.5 * scalar_f[c];
       }
     }
-
-    //__________________________________
-    //  specify cell types on the boundary
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-    // set cellType in domain to be ffield, and at boundaries to be 10
-    // We can generalize this with volume fraction information to account
-    // for intrusions
-
-    int ffield = -1;
-    vars.cellType.initialize(ffield);
-
-    if (xminus) {
-      int colX = idxLo.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-          IntVector xminusCell(colX-1, colY, colZ);
-          vars.cellType[xminusCell] = 10;
-        }
-      }
-    }
-    
-    if (xplus) {
-      int colX = idxHi.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-          IntVector xplusCell(colX+1, colY, colZ);
-          vars.cellType[xplusCell] = 10;
-        }
-      }
-    }
-    
-    if (yminus) {
-      int colY = idxLo.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector yminusCell(colX, colY-1, colZ);
-          vars.cellType[yminusCell] = 10;
-        }
-      }
-    }
-
-    if (yplus) {
-      int colY = idxHi.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector yplusCell(colX, colY+1, colZ);
-          vars.cellType[yplusCell] = 10;
-        }
-      }
-    }
-
-    if (zminus) {
-      int colZ = idxLo.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector zminusCell(colX, colY, colZ-1);
-          vars.cellType[zminusCell] = 10;
-        }
-      }
-    }
-      
-    if (zplus) {
-      int colZ = idxHi.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector zplusCell(colX, colY, colZ+1);
-          vars.cellType[zplusCell] = 10;
-        }
-      }
-    }
-    // Here you would add the section that would look like:
-    // for CellIterator inside domain, if volume fraction
-    // of solid (which you would need to get in fluid-solid
-    // problems, from MPM) is greater than 0.5, set cellType
-    // to be wall (something other than -1 and 10). For this
-    // case, you would get the temperature of this cell from
-    // MPM. The computation of radiative emission from these
-    // cells is already taken care of by the code in the
-    // radiation modules. The resulting fluxes that are 
-    // transmitted to the solid boundary are also obtained
-    // in the same stairstepped fashion.
   }
-  //end of patches loop
-}
-
-//****************************************************************************
-// dummy
-//****************************************************************************
-void RadiationDriver::scheduleComputeStableTimestep(SchedulerP&,
-                                                    const LevelP&,
-                                                    const ModelInfo*)
-{
-  // not applicable
 }
 
 //****************************************************************************
@@ -455,7 +355,7 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
                                              const LevelP& level,
                                              const ModelInfo* mi)
 {
-  cout_doing << "RADIATION::scheduleComputeModelSources\t\t\tL-" 
+  cout_doing << "RADIATION::scheduleComputeModelSources\t\t\t\tL-" 
              << level->getIndex() << endl;
   const PatchSet* patches = level->eachPatch();
 
@@ -464,19 +364,54 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
   Task* t = scinew Task("RadiationDriver::buildLinearMatrix", this, 
                         &RadiationDriver::buildLinearMatrix);
 
+// what is this ?? 
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
   LoadBalancer* lb = sched->getLoadBalancer();
   d_perproc_patches = lb->createPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
 
-  sched->addTask(t, d_perproc_patches, d_matl_set);
+  // compute the material set and subset
+  int m  = d_matl_G->getDWIndex();
+  MaterialSet* matl_set_G  = new MaterialSet();
+  MaterialSet* matl_set_GS = new MaterialSet();
+  const MaterialSubset* mss_G = d_matl_G->thisMaterial();
+  const MaterialSubset* mss_S; 
   
-  scheduleComputeCO2_H2O(   level,sched, patches, d_matl_set);     
-  scheduleCopyValues(       level,sched, patches, d_matl_set);
-  scheduleComputeProps(     level,sched, patches, d_matl_set);    
-  scheduleBoundaryCondition(level,sched, patches, d_matl_set);    
-  scheduleIntensitySolve(   level,sched, patches, d_matl_set, mi);
+  vector<int> g;
+  g.push_back(m);
+  if(d_hasAbsorbingSolid){
+    g.push_back(d_matl_S->getDWIndex());
+    mss_S = d_matl_S->thisMaterial();
+  }
+  matl_set_G->add(m);
+  matl_set_GS->addAll(g);
+  
+  matl_set_G->addReference();
+  matl_set_GS->addReference();
+  
+  //__________________________________
+  // shedule the tasts
+  sched->addTask(t, d_perproc_patches, matl_set_G);
+  
+  scheduleSet_cellType(     level,sched, patches, mss_G,
+                                                  mss_S,
+                                                  matl_set_GS);
+                                                  
+  scheduleComputeCO2_H2O(   level,sched, patches, matl_set_G);     
+  scheduleCopyValues(       level,sched, patches, matl_set_G);
+  scheduleComputeProps(     level,sched, patches, mss_G,
+                                                  mss_S,
+                                                  matl_set_GS);    
+  scheduleBoundaryCondition(level,sched, patches, matl_set_G);    
+  scheduleIntensitySolve(   level,sched, patches, matl_set_G, mi);
+  
+  if(matl_set_G && matl_set_G->removeReference()) {
+    delete matl_set_G;
+  }
+  if(matl_set_GS && matl_set_GS->removeReference()) {
+    delete matl_set_GS;
+  }
 }
 
 //****************************************************************************
@@ -490,9 +425,8 @@ RadiationDriver::buildLinearMatrix(const ProcessorGroup*,
                                    DataWarehouse*)
 {
   const Level* level = getLevel(patches);
-  int L_indx = level->getIndex();
-  cout_doing << "Doing buildLinearMatrix on level "<<L_indx
-               << "\t\t\t Radiation" << endl;
+  cout_doing << "Doing buildLinearMatrix on level "<<level->getIndex()
+             << "\t\t\t Radiation" << endl;
   d_DORadiation->d_linearSolver->matrixCreate(d_perproc_patches, patches);
 }
 /*______________________________________________________________________
@@ -503,12 +437,12 @@ RadiationDriver::buildLinearMatrix(const ProcessorGroup*,
  _____________________________________________________________________  */
 void
 RadiationDriver::scheduleComputeCO2_H2O(const LevelP& level,
-                                    SchedulerP& sched,
-                                    const PatchSet* patches,
-                                    const MaterialSet* matls)
+                                        SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls)
 {
   if(d_computeCO2_H2O_from_f){
-    cout_doing << "RADIATION::scheduleComputeCO2_H2O \t\tL-" 
+    cout_doing << "RADIATION::scheduleComputeCO2_H2O \t\t\t\tL-" 
                << level->getIndex() << endl;
     Task* t = scinew Task("RadiationDriver::computeCO2_H2O",
                     this, &RadiationDriver::computeCO2_H2O);
@@ -532,7 +466,7 @@ RadiationDriver::computeCO2_H2O(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing computeCO2_H2O on patch "<<patch->getID()
                << "\t\t\t\t Radiation" << endl;
-    int indx = d_matl->getDWIndex();
+    int indx = d_matl_G->getDWIndex();
     
     CCVariable<double> H2O_concentration, CO2_concentration;
     new_dw->allocateAndPut(H2O_concentration, h2o_CCLabel,indx, patch); 
@@ -541,13 +475,99 @@ RadiationDriver::computeCO2_H2O(const ProcessorGroup*,
     constCCVariable<double> scalar_f;
     old_dw->get(scalar_f, scalar_CCLabel,indx,patch,Ghost::None,0);
         
-    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();  iter++){
       IntVector c = *iter;
-      H2O_concentration[c] = 0.5 * scalar_f[c];    // CHANGE THIS EQUATION
+      H2O_concentration[c] = 0.5 * scalar_f[c];    // TODO:  CHANGE THIS EQUATION
       CO2_concentration[c] = 0.5 * scalar_f[c];
     }
   }
 }
+
+/*______________________________________________________________________
+ Task~  scheduleSet_cellType--
+ Purpose:  set the cell type through out the domain  
+ _____________________________________________________________________  */
+void
+RadiationDriver::scheduleSet_cellType(const LevelP& level,
+                                      SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSubset* mss_G,
+                                      const MaterialSubset* mss_S,
+                                      const MaterialSet* matls)
+{
+  // TODO:  We don't need to do this every timestep
+  cout_doing << "RADIATION::scheduleSet_cellType \t\t\t\tL-" 
+             << level->getIndex() << endl;
+
+  Task* t = scinew Task("RadiationDriver::set_cellType",
+                  this, &RadiationDriver::set_cellType);
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  if(d_hasAbsorbingSolid){
+    t->requires(Task::NewDW,Ilb->vol_frac_CCLabel, mss_S, gn,0);              
+  }
+
+  t->requires(Task::OldDW, abskg_CCLabel,  mss_G, gn,0);
+
+  t->computes(cellType_CCLabel, mss_G);  
+  sched->addTask(t, patches, matls);
+}
+//______________________________________________________________________
+void 
+RadiationDriver::set_cellType(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw)
+{ 
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing set_cellType on patch "<<patch->getID()
+               << "\t\t\t\t Radiation" << endl;
+    int indx0 = d_matl_G->getDWIndex();
+    
+    //__________________________________
+    //default value
+    RadiationVariables vars;
+    Ghost::GhostType gn = Ghost::None;
+    
+    int flowField = -1;
+     new_dw->allocateAndPut(vars.cellType,cellType_CCLabel,indx0,patch);
+     vars.cellType.initialize(flowField);
+
+    //__________________________________
+    //if there's an absorbing solid
+    // set cellType = 1
+    if(d_hasAbsorbingSolid){
+      
+      constCCVariable<double> vol_frac_solid;
+      int indx1 = d_matl_S->getDWIndex();
+      new_dw->get(vol_frac_solid,Ilb->vol_frac_CCLabel,indx1,patch,gn,0);
+      
+      for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        IntVector c = *iter; 
+        if(vol_frac_solid[c] > 0.5){
+          vars.cellType[c] = 1;
+        }
+      }
+    }    
+    //__________________________________
+    //  set boundary conditions
+    vector<Patch::FaceType>::const_iterator iter;
+  
+    for (iter  = patch->getBoundaryFaces()->begin(); 
+         iter != patch->getBoundaryFaces()->end(); ++iter){
+      Patch::FaceType face = *iter;
+      for(CellIterator itr = patch->getFaceCellIterator(face, "plusEdgeCells"); 
+                                      !itr.done();  itr++){
+        IntVector c = *itr;
+        vars.cellType[c] = 10;
+      } 
+    }  // domain faces
+  }  // patches
+}
+
 //****************************************************************************
 // schedule copy of values from previous time step; if the radiation is to
 // be updated using the radcounter, then we perform radiation calculations,
@@ -559,13 +579,13 @@ RadiationDriver::scheduleCopyValues(const LevelP& level,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
-  cout_doing << "RADIATION::scheduleCopyValues \t\tL-" 
+  cout_doing << "RADIATION::scheduleCopyValues \t\t\t\t\tL-" 
              << level->getIndex() << endl;
   Task* t = scinew Task("RadiationDriver::copyValues",
                       this, &RadiationDriver::copyValues);
 
   Ghost::GhostType  gn = Ghost::None;
-  t->requires(Task::OldDW, cellType_CCLabel,    gn, 0);  
+    
   t->requires(Task::OldDW, qfluxE_CCLabel,      gn, 0);
   t->requires(Task::OldDW, qfluxW_CCLabel,      gn, 0);
   t->requires(Task::OldDW, qfluxN_CCLabel,      gn, 0);
@@ -583,7 +603,7 @@ RadiationDriver::scheduleCopyValues(const LevelP& level,
   t->requires(Task::OldDW, shgamma_CCLabel,     gn, 0);
   t->requires(Task::OldDW, tempCopy_CCLabel,    gn, 0);
 
-  t->computes(cellType_CCLabel);
+  
   t->computes(qfluxE_CCLabel);
   t->computes(qfluxW_CCLabel);
   t->computes(qfluxN_CCLabel);
@@ -591,7 +611,6 @@ RadiationDriver::scheduleCopyValues(const LevelP& level,
   t->computes(qfluxT_CCLabel);
   t->computes(qfluxB_CCLabel);
   t->computes(radiationSrc_CCLabel);
-
   t->computes(radCO2_CCLabel);
   t->computes(radH2O_CCLabel);
   t->computes(sootVFCopy_CCLabel);
@@ -607,7 +626,6 @@ RadiationDriver::scheduleCopyValues(const LevelP& level,
 //****************************************************************************
 // Actual copy of old values of fluxes and source term
 //****************************************************************************
-
 void
 RadiationDriver::copyValues(const ProcessorGroup*,
                             const PatchSubset* patches,
@@ -620,9 +638,9 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing copyValues on patch "<<patch->getID()
                << "\t\t\t\t Radiation" << endl;
-    int indx = d_matl->getDWIndex();
+    int indx = d_matl_G->getDWIndex();
 
-    constCCVariable<int> oldPcell;
+    
     constCCVariable<double> oldFluxE;
     constCCVariable<double> oldFluxW;
     constCCVariable<double> oldFluxN;
@@ -630,7 +648,6 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     constCCVariable<double> oldFluxT;
     constCCVariable<double> oldFluxB;
     constCCVariable<double> oldRadiationSrc;
-
     constCCVariable<double> oldRadCO2;
     constCCVariable<double> oldRadH2O;
     constCCVariable<double> oldSootVF;
@@ -641,7 +658,6 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     constCCVariable<double> oldTempCopy;
     
     Ghost::GhostType  gn = Ghost::None;
-    old_dw->get(oldPcell, cellType_CCLabel, indx, patch,gn, 0);
     old_dw->get(oldFluxE, qfluxE_CCLabel,   indx, patch,gn, 0);
     old_dw->get(oldFluxW, qfluxW_CCLabel,   indx, patch,gn, 0);
     old_dw->get(oldFluxN, qfluxN_CCLabel,   indx, patch,gn, 0);
@@ -649,7 +665,6 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     old_dw->get(oldFluxT, qfluxT_CCLabel,   indx, patch,gn, 0);
     old_dw->get(oldFluxB, qfluxB_CCLabel,   indx, patch,gn, 0);
     old_dw->get(oldRadiationSrc, radiationSrc_CCLabel, indx, patch,gn, 0);
-
     old_dw->get(oldRadCO2,  radCO2_CCLabel,     indx, patch,gn, 0);
     old_dw->get(oldRadH2O,  radH2O_CCLabel,     indx, patch,gn, 0);
     old_dw->get(oldSootVF,  sootVFCopy_CCLabel, indx, patch,gn, 0);
@@ -659,7 +674,7 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     old_dw->get(oldShgamma, shgamma_CCLabel,    indx, patch,gn, 0);
     old_dw->get(oldTempCopy,tempCopy_CCLabel,   indx, patch,gn, 0);
 
-    CCVariable<int> pcell;
+    
     CCVariable<double> fluxE;
     CCVariable<double> fluxW;
     CCVariable<double> fluxN;
@@ -677,7 +692,7 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     CCVariable<double> shgamma;
     CCVariable<double> tempCopy;
     
-    new_dw->allocateAndPut(pcell, cellType_CCLabel, indx, patch);    
+        
     new_dw->allocateAndPut(fluxE, qfluxE_CCLabel,   indx, patch);   
     new_dw->allocateAndPut(fluxW, qfluxW_CCLabel,   indx, patch);   
     new_dw->allocateAndPut(fluxN, qfluxN_CCLabel,   indx, patch);   
@@ -695,7 +710,7 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     new_dw->allocateAndPut(shgamma, shgamma_CCLabel,     indx, patch); 
     new_dw->allocateAndPut(tempCopy,tempCopy_CCLabel,    indx, patch); 
 
-    pcell.copyData(oldPcell);
+    
     fluxE.copyData(oldFluxE);
     fluxW.copyData(oldFluxW);
     fluxN.copyData(oldFluxN);
@@ -703,7 +718,6 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     fluxT.copyData(oldFluxT);
     fluxB.copyData(oldFluxB);
     radiationSrc.copyData(oldRadiationSrc);
-
     radCO2.copyData(oldRadCO2);
     radH2O.copyData(oldRadH2O);
     sootVF.copyData(oldSootVF);
@@ -712,11 +726,17 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     esrcg.copyData(oldEsrcg);
     shgamma.copyData(oldShgamma);
     tempCopy.copyData(oldTempCopy);
-    
-    
-    
   }
-#if 0   // furture changes
+#if 0   // TODO: furture changes
+  new_dw->transferFrom(old_dw, cellType_CCLabel, patches, matls);    
+  new_dw->transferFrom(old_dw, qfluxE_CCLabel,   patches, matls);   
+  new_dw->transferFrom(old_dw, qfluxW_CCLabel,   patches, matls);   
+  new_dw->transferFrom(old_dw, qfluxN_CCLabel,   patches, matls);   
+  new_dw->transferFrom(old_dw, qfluxS_CCLabel,   patches, matls);   
+  new_dw->transferFrom(old_dw, qfluxT_CCLabel,   patches, matls);   
+  new_dw->transferFrom(old_dw, qfluxB_CCLabel,   patches, matls);   
+  new_dw->transferFrom(old_dw, radiationSrc_CCLabel, patches, matls);
+
   new_dw->transferFrom(old_dw,radCO2_CCLabel,     patches, matls);
   new_dw->transferFrom(old_dw,radH2O_CCLabel,     patches, matls);
   new_dw->transferFrom(old_dw,sootVFCopy_CCLabel, patches, matls);
@@ -736,56 +756,66 @@ void
 RadiationDriver::scheduleComputeProps(const LevelP& level,
                                        SchedulerP& sched,
                                        const PatchSet* patches,
+                                       const MaterialSubset* mss_G,
+                                       const MaterialSubset* mss_S,
                                        const MaterialSet* matls)
 {
-
-  cout_doing << "RADIATION::scheduleComputeProps \t\t\tL-" 
+  cout_doing << "RADIATION::scheduleComputeProps \t\t\t\tL-" 
              << level->getIndex() << endl;
              
   Task* t=scinew Task("RadiationDriver::computeProps",
                 this, &RadiationDriver::computeProps);
-
+                
+  t->requires( Task::OldDW, Ilb->delTLabel);
+  
   Ghost::GhostType  gn = Ghost::None;
+/*`==========TESTING==========*/
+//THIS IS GROSS
   
   if (d_useTableValues) {
-    t->requires(Task::NewDW, co2_CCLabel, gn, 0);
-    t->requires(Task::NewDW, h2o_CCLabel, gn, 0);
+    t->requires(Task::NewDW, co2_CCLabel, mss_G, gn, 0);
+    t->requires(Task::NewDW, h2o_CCLabel, mss_G, gn, 0);
   }
-  t->modifies(radCO2_CCLabel);
-  t->modifies(radH2O_CCLabel);
+  t->modifies(radCO2_CCLabel, mss_G);
+  t->modifies(radH2O_CCLabel, mss_G);
 
   if (d_useTableValues){ 
     if (d_useIceTemp){
-      t->requires(Task::OldDW, iceTemp_CCLabel, gn, 0);
+      t->requires(Task::OldDW, iceTemp_CCLabel,mss_G, gn, 0);
     }else{
-      t->requires(Task::NewDW, temp_CCLabel, gn, 0);
+      t->requires(Task::NewDW, temp_CCLabel,   mss_G, gn, 0);
     }
   }else{
-    t->requires(Task::OldDW, iceTemp_CCLabel, gn, 0);
+    t->requires(Task::OldDW, iceTemp_CCLabel,  mss_G, gn, 0);
   }
-  t->modifies(tempCopy_CCLabel);
+  t->modifies(tempCopy_CCLabel, mss_G);
 
   // Below is for later, when we get sootVF from reaction table.  But
   // currently we compute sootVF from mixture fraction and temperature inside
   // the properties function
-  //  t->requires(Task::NewDW, sootVF_CCLabel, gn, 0);
+  //  t->requires(Task::NewDW, sootVF_CCLabel,  mss_G, gn, 0);
 
-  t->modifies(sootVFCopy_CCLabel);
+  t->modifies(sootVFCopy_CCLabel, mss_G);
 
   if (d_useTableValues){
-    t->requires(Task::OldDW, mixfrac_CCLabel, gn, 0);
+    t->requires(Task::OldDW, mixfrac_CCLabel,mss_G, gn, 0);
   }
-  t->modifies(mixfracCopy_CCLabel);
+  t->modifies(mixfracCopy_CCLabel, mss_G);
 
   if (d_useTableValues){
-    t->requires(Task::NewDW, density_CCLabel, gn, 0);
+    t->requires(Task::NewDW, density_CCLabel,    mss_G,gn, 0);
   }else{
-    t->requires(Task::NewDW, iceDensity_CCLabel, gn, 0);
-  }
+    t->requires(Task::NewDW, iceDensity_CCLabel, mss_G,gn, 0);
+  } 
+/*===========TESTING==========`*/
+  if(d_hasAbsorbingSolid){
+    
+    t->requires(Task::NewDW,Ilb->vol_frac_CCLabel, mss_G, gn,0);              
+  } 
   
-  t->modifies(abskg_CCLabel);
-  t->modifies(esrcg_CCLabel);
-  t->modifies(shgamma_CCLabel);
+  t->modifies(abskg_CCLabel,   mss_G);
+  t->modifies(esrcg_CCLabel,   mss_G);
+  t->modifies(shgamma_CCLabel, mss_G);
 
   sched->addTask(t, patches, matls);
 }
@@ -839,7 +869,7 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing computeProps on patch "<<patch->getID()
                << "\t\t\t\t Radiation" << endl;
-    int indx = d_matl->getDWIndex();
+    int indx = d_matl_G->getDWIndex();
     
     Ghost::GhostType  gn = Ghost::None;
         
@@ -855,6 +885,8 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     }
     Models_CellInformation* cellinfo = cellInfoP.get().get_rep();
 
+/*`==========TESTING==========*/
+//THIS IS GROSS
     if (d_useTableValues) {
       new_dw->get(constRadVars.co2, co2_CCLabel, indx, patch,gn, 0);
       new_dw->get(constRadVars.h2o, h2o_CCLabel, indx, patch,gn, 0);
@@ -874,7 +906,8 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
       }
     }else{
       old_dw->get(constRadVars.temperature, iceTemp_CCLabel, indx, patch,gn, 0);
-    }
+    } 
+/*===========TESTING==========`*/
     new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel, indx, patch);
     
     radVars.temperature.copyData(constRadVars.temperature);
@@ -891,9 +924,8 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     // 
     //      new_dw->get(constRadVars.sootVF, sootVF_CCLabel, indx, patch,
     //            gn, 0);
-    new_dw->getModifiable(radVars.sootVF, sootVFCopy_CCLabel, 
-                          indx, patch);
-
+    
+    new_dw->getModifiable(radVars.sootVF,  sootVFCopy_CCLabel,  indx, patch);
     new_dw->getModifiable(radVars.mixfrac, mixfracCopy_CCLabel, indx, patch);
     if (d_useTableValues) {
       old_dw->get(constRadVars.mixfrac, mixfrac_CCLabel, indx, patch,gn, 0);
@@ -912,8 +944,23 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
     if (d_radCounter%d_radCalcFreq == 0) {
       d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
-                                           &radVars, &constRadVars);
-    }
+                                           &radVars, &constRadVars);      
+      //__________________________________
+      //if there's an absorbing solid
+      // set abskg = 1 in those cells
+      if(d_hasAbsorbingSolid){
+        constCCVariable<double> vol_frac_solid;
+        int indx1 = d_matl_S->getDWIndex();
+        new_dw->get(vol_frac_solid,Ilb->vol_frac_CCLabel,indx1,patch,gn,0);
+
+        for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+          IntVector c = *iter; 
+          if(vol_frac_solid[c] > 0.5){
+            radVars.ABSKG[c] = 1.0;
+          }
+        }
+      }  // has absorbingSolid                                         
+    }  // radiation timestep
   }
 }
 
@@ -926,7 +973,7 @@ RadiationDriver::scheduleBoundaryCondition(const LevelP& level,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
-  cout_doing << "RADIATION::scheduleBoundaryCondition\t\t\tL-" 
+  cout_doing << "RADIATION::scheduleBoundaryCondition\t\t\t\tL-" 
              << level->getIndex() << endl;
   Task* t=scinew Task("RadiationDriver::boundaryCondition",
                 this, &RadiationDriver::boundaryCondition);
@@ -979,7 +1026,7 @@ RadiationDriver::boundaryCondition(const ProcessorGroup* pc,
     cout_doing << "Doing boundaryCondition on patch "<<patch->getID()
                << "\t\t\t Radiation" << endl;
     
-    int indx = d_matl->getDWIndex();
+    int indx = d_matl_G->getDWIndex();
     
     Ghost::GhostType  gac = Ghost::AroundCells;
     
@@ -989,7 +1036,7 @@ RadiationDriver::boundaryCondition(const ProcessorGroup* pc,
 
     new_dw->get(constRadVars.cellType,         cellType_CCLabel,indx, patch,gac, 1);
     new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel,indx, patch);
-    new_dw->getModifiable(radVars.ABSKG,        abskg_CCLabel,  indx, patch);
+    new_dw->getModifiable(radVars.ABSKG,       abskg_CCLabel,   indx, patch);
 
     if (d_radCounter%d_radCalcFreq == 0) {
       d_DORadiation->boundaryCondition(pc, patch, &radVars, &constRadVars);
@@ -1007,21 +1054,25 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
                                         const MaterialSet* matls,
                                         const ModelInfo* mi)
 {
-  cout_doing << "RADIATION::scheduleIntensitySolve\t\t\tL-" 
+  cout_doing << "RADIATION::scheduleIntensitySolve\t\t\t\tL-" 
              << level->getIndex() << endl;
   Task* t=scinew Task("RadiationDriver::intensitySolve",
                 this, &RadiationDriver::intensitySolve, mi);
   Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn  = Ghost::None;
   
-  t->requires(Task::NewDW, radCO2_CCLabel,    gac, 1);
-  t->requires(Task::NewDW, radH2O_CCLabel,    gac, 1);
-  t->requires(Task::NewDW, sootVFCopy_CCLabel,gac, 1);
-  t->requires(Task::NewDW, cellType_CCLabel,  gac, 1);
-  t->requires(Task::NewDW, tempCopy_CCLabel,  gac, 1);
-  t->requires(Task::NewDW, shgamma_CCLabel,   gac, 1);
-  t->requires(Task::NewDW, abskg_CCLabel,     gac, 1);
-  t->requires(Task::NewDW, esrcg_CCLabel,     gac, 1);
-
+  // why are we using gac 1????
+  
+  t->requires(Task::NewDW, radCO2_CCLabel,        gac, 1);
+  t->requires(Task::NewDW, radH2O_CCLabel,        gac, 1);
+  t->requires(Task::NewDW, sootVFCopy_CCLabel,    gac, 1);
+  t->requires(Task::NewDW, cellType_CCLabel,      gac, 1);
+  t->requires(Task::NewDW, tempCopy_CCLabel,      gac, 1);
+  t->requires(Task::NewDW, shgamma_CCLabel,       gac, 1);
+  t->requires(Task::NewDW, abskg_CCLabel,         gac, 1);
+  t->requires(Task::NewDW, esrcg_CCLabel,         gac, 1);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, gn, 0);
+  
   t->modifies(qfluxE_CCLabel);
   t->modifies(qfluxW_CCLabel);
   t->modifies(qfluxN_CCLabel);
@@ -1029,7 +1080,6 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
   t->modifies(qfluxT_CCLabel);
   t->modifies(qfluxB_CCLabel);
   t->modifies(radiationSrc_CCLabel);
-
   t->modifies(mi->energy_source_CCLabel);
 
   sched->addTask(t, patches, matls);
@@ -1038,32 +1088,30 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
 //****************************************************************************
 // Actual solve for radiative intensities, radiative source and heat fluxes
 //****************************************************************************
-
 void
 RadiationDriver::intensitySolve(const ProcessorGroup* pc,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
-                                DataWarehouse* ,
+                                DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,
                                 const ModelInfo* mi)
 {
+  delt_vartype delT;
+  old_dw->get(delT, Ilb->delTLabel);
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     cout_doing << "Doing intensitySolve on patch "<<patch->getID()
                << "\t\t\t\t Radiation" << endl;
-    int indx = d_matl->getDWIndex();
+    int indx = d_matl_G->getDWIndex();
     
     Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn  = Ghost::None;
     
     RadiationVariables radVars;
     RadiationConstVariables constRadVars;
     CCVariable<double> energySource;
-
-    IntVector domLo = patch->getCellLowIndex();
-    IntVector domHi = patch->getCellHighIndex();
-    CCVariable<double> zeroSource;
-    zeroSource.allocate(domLo,domHi);
-    zeroSource.initialize(0.0);
+    constCCVariable<double> vol_frac_gas;
 
     PerPatch<Models_CellInformationP> cellInfoP;
     if (new_dw->exists(d_cellInfoLabel, indx, patch)) 
@@ -1074,13 +1122,14 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     }
     Models_CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(constRadVars.co2,        radCO2_CCLabel,    indx, patch,gac,1);
-    new_dw->get(constRadVars.h2o,        radH2O_CCLabel,    indx, patch,gac,1);
-    new_dw->get(constRadVars.sootVF,     sootVFCopy_CCLabel,indx, patch,gac,1);
-    new_dw->get(constRadVars.temperature,tempCopy_CCLabel,  indx, patch,gac,1);
-    new_dw->get(constRadVars.cellType,   cellType_CCLabel,  indx, patch,gac,1);
+    new_dw->get(constRadVars.co2,        radCO2_CCLabel,        indx, patch,gac,1);
+    new_dw->get(constRadVars.h2o,        radH2O_CCLabel,        indx, patch,gac,1);
+    new_dw->get(constRadVars.sootVF,     sootVFCopy_CCLabel,    indx, patch,gac,1);
+    new_dw->get(constRadVars.temperature,tempCopy_CCLabel,      indx, patch,gac,1);
+    new_dw->get(constRadVars.cellType,   cellType_CCLabel,      indx, patch,gac,1);
+    new_dw->get(vol_frac_gas,            Ilb->vol_frac_CCLabel, indx, patch,gn,0);
 
-    new_dw->getCopy(radVars.ABSKG,  abskg_CCLabel,   indx, patch, gac,1);
+    new_dw->getCopy(radVars.ABSKG,   abskg_CCLabel,  indx, patch, gac,1);
     new_dw->getCopy(radVars.shgamma, shgamma_CCLabel,indx, patch, gac,1);
     new_dw->getCopy(radVars.ESRCG,   esrcg_CCLabel,  indx, patch, gac,1);
 
@@ -1095,8 +1144,8 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     new_dw->getModifiable(energySource, mi->energy_source_CCLabel, indx, patch);
 
     d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
-    if (d_radCounter%d_radCalcFreq == 0) {
 
+    if (d_radCounter%d_radCalcFreq == 0) {
       radVars.qfluxe.initialize(0.0);
       radVars.qfluxw.initialize(0.0);
       radVars.qfluxn.initialize(0.0);
@@ -1108,46 +1157,40 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
       d_DORadiation->intensitysolve(pc, patch, cellinfo, &radVars, &constRadVars);
     }
     
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          double vol=cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-          energySource[currCell] += vol*radVars.src[currCell];
-        }
-      }
+    // TODO:  we might want to incorporate vol_frac_gas.  We don't want to be radiating
+    // in the middle of the solid.
+    
+    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      double vol=cellinfo->sew[c.x()]*cellinfo->sns[c.y()]*cellinfo->stb[c.z()];
+      energySource[c] += delT * vol*radVars.src[c];
     }
   }
 }
 //______________________________________________________________________
+// not applicable
 void RadiationDriver::scheduleModifyThermoTransportProperties(SchedulerP&,
                                                               const LevelP&,
                                                               const MaterialSet*)
-{
-  // not applicable  
+{    
 }
 void RadiationDriver::computeSpecificHeat(CCVariable<double>&,
                                           const Patch*,
                                           DataWarehouse*,
                                           const int)
 {
-  // not applicable
 }
-//______________________________________________________________________
-//
 void RadiationDriver::scheduleErrorEstimate(const LevelP&,
                                             SchedulerP&)
 {
-  // This may not be ever implemented, since it is known that the radiation
-  // calculations work fine with a coarse mesh.
 }
-//__________________________________
 void RadiationDriver::scheduleTestConservation(SchedulerP&,
                                                const PatchSet*,
                                                const ModelInfo*)
 {
-  // do nothing; there is a conservation test in Models_DORadiationModel;
-  // perhaps at a later time, I will move it here.
+}
+void RadiationDriver::scheduleComputeStableTimestep(SchedulerP&,
+                                                    const LevelP&,
+                                                    const ModelInfo*)
+{
 }
