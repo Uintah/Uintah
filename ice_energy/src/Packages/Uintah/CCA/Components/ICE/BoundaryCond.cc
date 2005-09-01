@@ -485,6 +485,43 @@ void setBC_Temperature(CCVariable<double>& var_CC,
                                  custom_BC_basket->mms_v);
         }
         //__________________________________
+        //  debugging
+        if( BC_dbg.active() ) {
+          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+               <<"\t child " << child  <<" NumChildren "<<numChildren 
+               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+	        << endl;
+        }
+      }  // if bc_kind != notSet  
+    }  // child loop
+  }  // faces loop
+
+
+  //__________________________________
+  //  Hydrostatic pressure - must be done after bcs are set on all of the faces
+  //  so that we have accurate values on the edges
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+          
+    bool IveSetBC = false;
+
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      string bc_kind = "NotSet";
+      vector<IntVector> bound;
+      bool foundIterator = 
+        getIteratorBCValueBCKind<double>( patch, face, child, "Temperature", mat_id,
+					       bc_value, bound,bc_kind); 
+      
+      if (foundIterator && bc_kind != "LODI") {
+
+        //__________________________________
         // Temperature and Gravity and ICE Matls
         // -Ignore this during intialization phase,
         //  since we backout the temperature field
@@ -518,15 +555,6 @@ void setBC_Temperature(CCVariable<double>& var_CC,
           ice_matl->getThermo()->compute_Temp(bound.begin(), bound.end(), var_CC, old_dw, new_dw,
                                               state, patch, matl->getDWIndex(), 0,
                                               temp, sp_vol);
-        }
-        //__________________________________
-        //  debugging
-        if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
-               <<"\t child " << child  <<" NumChildren "<<numChildren 
-               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
-	        << endl;
         }
       }  // if bc_kind != notSet  
     }  // child loop

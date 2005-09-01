@@ -336,6 +336,7 @@ void CanteraMixtureFraction::compute_cv(CellIterator iter, CCVariable<double>& c
   } catch (CanteraError) {
     showErrors(cerr);
     cerr << "cell: " << *iter << '\n';
+    cerr << "mixtureFraction: " << f[*iter] << '\n';
     cerr << "int_eng: " << int_eng[*iter] << '\n';
     cerr << "sp_vol: " << sp_vol[*iter] << '\n';
     cerr << "pressure: " << d_gas->pressure() << '\n';
@@ -428,15 +429,36 @@ void CanteraMixtureFraction::compute_int_eng(CellIterator iter, CCVariable<doubl
   int numSpecies = d_gas->nSpecies();
   double* tmp_mf = new double[numSpecies];
 
-  for(;!iter.done();iter++){
-    double mf = f[*iter];
-    for(int i = 0; i< numSpecies; i++){
-      tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
+  try {
+    for(;!iter.done();iter++){
+      double mf = f[*iter];
+      for(int i = 0; i< numSpecies; i++){
+        tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
+      }
+      d_gas->setMassFractions(tmp_mf);
+      d_gas->setState_TR(Temp[*iter], 1.0/sp_vol[*iter]);
+      if(mf != 1.0)
+        equilibrate(*d_gas, UV);
+      int_eng[*iter] = d_gas->intEnergy_mass();
     }
+  } catch (CanteraError) {
+    cerr.precision(17);
+    showErrors(cerr);
+    cerr << "cell: " << *iter << '\n';
+    cerr << "mixtureFraction: " << f[*iter] << '\n';
+    cerr << "int_eng: " << int_eng[*iter] << '\n';
+    cerr << "sp_vol: " << sp_vol[*iter] << '\n';
+    cerr << "pressure: " << d_gas->pressure() << '\n';
+    cerr << "temperature: " << d_gas->temperature() << '\n';
+    cerr << "density: " << d_gas->density() << '\n';
+    cerr << "initial temperature: " << Temp[*iter] << '\n';
+    cerr << "initial density: " << 1./sp_vol[*iter] << '\n';
+    cerr << *d_gas << '\n';
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_TR(Temp[*iter], 1.0/sp_vol[*iter]);
-    equilibrate(*d_gas, UV);
-    int_eng[*iter] = d_gas->intEnergy_mass();
+    cerr << "Initial gas\n";
+    cerr << *d_gas << '\n';
+    throw InternalError("Cantera equilibrate failed", __FILE__, __LINE__);
   }
   delete[] tmp_mf;
 }
@@ -571,10 +593,15 @@ void CanteraMixtureFraction::compute_Temp(cellList::iterator iter, cellList::ite
   } catch (CanteraError) {
     showErrors(cerr);
     cerr << "cell: " << *iter << '\n';
+    cerr << "mixtureFraction: " << f[*iter] << '\n';
     cerr << "int_eng: " << int_eng[*iter] << '\n';
     cerr << "sp_vol: " << sp_vol[*iter] << '\n';
     cerr << "pressure: " << d_gas->pressure() << '\n';
     cerr << "temperature: " << d_gas->temperature() << '\n';
+    cerr << *d_gas << '\n';
+    d_gas->setMassFractions(tmp_mf);
+    d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
+    cerr << "Initial gas\n";
     cerr << *d_gas << '\n';
     throw InternalError("Cantera equilibrate failed", __FILE__, __LINE__);
   }
@@ -596,15 +623,28 @@ void CanteraMixtureFraction::compute_int_eng(cellList::iterator iter, cellList::
   int numSpecies = d_gas->nSpecies();
   double* tmp_mf = new double[numSpecies];
 
-  for(;iter != end;iter++){
-    double mf = f[*iter];
-    for(int i = 0; i< numSpecies; i++){
-      tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
+  try {
+    for(;iter != end;iter++){
+      double mf = f[*iter];
+      for(int i = 0; i< numSpecies; i++){
+        tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
+      }
+      d_gas->setMassFractions(tmp_mf);
+      d_gas->setState_TR(Temp[*iter], 1.0/sp_vol[*iter]);
+      equilibrate(*d_gas, UV);
+      int_eng[*iter] = d_gas->intEnergy_mass();
     }
-    d_gas->setMassFractions(tmp_mf);
-    d_gas->setState_TR(Temp[*iter], 1.0/sp_vol[*iter]);
-    equilibrate(*d_gas, UV);
-    int_eng[*iter] = d_gas->intEnergy_mass();
+    delete[] tmp_mf;
+  } catch (CanteraError) {
+    showErrors(cerr);
+    cerr << "cell: " << *iter << '\n';
+    cerr << "mixtureFraction: " << f[*iter] << '\n';
+    cerr << "int_eng: " << int_eng[*iter] << '\n';
+    cerr << "sp_vol: " << sp_vol[*iter] << '\n';
+    cerr << "pressure: " << d_gas->pressure() << '\n';
+    cerr << "temperature: " << d_gas->temperature() << '\n';
+    cerr << *d_gas << '\n';
+    throw InternalError("Cantera equilibrate failed", __FILE__, __LINE__);
   }
   delete[] tmp_mf;
 }

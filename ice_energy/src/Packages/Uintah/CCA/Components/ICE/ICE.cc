@@ -2471,7 +2471,7 @@ void ICE::computeInternalEnergy(const ProcessorGroup*,
       new_dw->allocateAndPut(int_eng, lb->int_eng_CCLabel, indx, patch);
       new_dw->get(Temp, lb->ntemp_CCLabel, indx, patch, Ghost::None, 0);
       new_dw->get(sp_vol, lb->sp_vol_CCLabel, indx, patch, Ghost::None, 0);
-      ice_matl->getThermo()->compute_int_eng(patch->getExtraCellIterator(), int_eng,
+      ice_matl->getThermo()->compute_int_eng(patch->getCellIterator(), int_eng,
                                              0, new_dw, ThermoInterface::NewState,
                                              patch, indx, 0,
                                              Temp, sp_vol);
@@ -5061,8 +5061,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       cerr << "BCS busted for temperature\n";
-      setBC(int_eng_L_ME[m],"Temperature", patch, d_sharedState, 
-            indx, new_dw,  d_customBC_var_basket);
+      setBC_Temperature(int_eng_L_ME[m],"Temperature", patch, d_sharedState, 
+                        indx, old_dw, new_dw,  ThermoInterface::d_customBC_var_basket);
     }
 
     //---- P R I N T   D A T A ------ 
