@@ -18,6 +18,7 @@
 #include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
 #include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
 #include <Packages/Uintah/CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
+#include <Packages/Uintah/CCA/Components/SwitchingCriteria/None.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -61,7 +62,8 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
     SwitchingCriteria* switch_criteria = 
       SwitchingCriteriaFactory::create(child,myworld);
 
-    comp->attachPort("switch_criteria",switch_criteria);
+    if (switch_criteria)
+      comp->attachPort("switch_criteria",switch_criteria);
                                                                          
 
     // get the vars that will need to be initialized by this component
@@ -94,7 +96,16 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
       num_switch_criteria++;
   }
   
-  if (num_switch_criteria != num_components - 1) {
+  // Add the None SwitchCriteria to the last component, so the switchFlag label
+  // is computed in the last stage.
+
+  UintahParallelComponent* last_comp =
+    dynamic_cast<UintahParallelComponent*>(getPort("sim",num_components-1));
+
+  SwitchingCriteria* none_switch_criteria = new None();
+  last_comp->attachPort("switch_criteria",none_switch_criteria);
+  
+  if (num_switch_criteria != num_components-1) {
     throw  ProblemSetupException("Do not have enough switching criteria specified for the number of components.",
                                  __FILE__, __LINE__);
   }

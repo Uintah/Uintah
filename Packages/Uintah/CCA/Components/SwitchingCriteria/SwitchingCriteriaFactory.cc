@@ -30,7 +30,7 @@ SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,
 
   SwitchingCriteria* switch_criteria = 0;
   if (criteria == "none" || criteria == "None" || criteria == "NONE") {
-    switch_criteria = new None(switch_ps);
+    switch_criteria = new None();
   } else if (criteria == "timestep" || criteria == "Timestep" || 
              criteria == "TIMESTEP")  {
     switch_criteria = new TimestepNumber(switch_ps);

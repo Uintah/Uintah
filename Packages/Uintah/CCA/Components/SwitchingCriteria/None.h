@@ -16,7 +16,7 @@ namespace Uintah {
     public:
       // this function has a switch for all known SwitchingCriteria
     
-      None(ProblemSpecP& ps);
+      None();
       virtual ~None();
       
       virtual void problemSetup(const ProblemSpecP& ps, 
