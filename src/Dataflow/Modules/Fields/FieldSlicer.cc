@@ -183,6 +183,7 @@ void FieldSlicer::execute(){
 
   // Get the dimensions of the mesh.
   if( fHandle->get_type_description(0)->get_name() == "LatVolField" ||
+      fHandle->get_type_description(0)->get_name() == "ITKLatVolField" ||
       fHandle->get_type_description(0)->get_name() == "StructHexVolField" ) {
     LatVolMesh *lvmInput = (LatVolMesh*) fHandle->mesh().get_rep();
 
@@ -193,6 +194,7 @@ void FieldSlicer::execute(){
     dims = 3;
 
   } else if( fHandle->get_type_description(0)->get_name() == "ImageField" ||
+	     fHandle->get_type_description(0)->get_name() == "ITKImageField" ||
 	     fHandle->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
     ImageMesh *imInput = (ImageMesh*) fHandle->mesh().get_rep();
 
