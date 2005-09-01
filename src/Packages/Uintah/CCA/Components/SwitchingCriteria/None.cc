@@ -5,7 +5,7 @@
 
 using namespace Uintah;
 
-None::None(ProblemSpecP& ps)
+None::None()
 {
 }
 
