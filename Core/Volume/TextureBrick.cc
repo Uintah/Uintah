@@ -299,6 +299,57 @@ TextureBrick::compute_polygons(const Ray& view,
 }
 
 
+const string
+TextureBrick::type_name(int n)
+{
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0);
+    return name;
+
+  }
+  else if (n == 0)
+  {
+    return "TextureBrick";
+  }
+  else
+  {
+    return "";
+  }
+}
+
+
+const TypeDescription*
+TextureBrick::get_type_description(int n) const
+{
+  ASSERT((n >= -1) && n <= 1);
+
+  TypeDescription* td = 0;
+  static string name( type_name(0) );
+  static string namesp("SCIRun");
+  static string path(__FILE__);
+
+  if (n == -1) {
+    static TypeDescription* tdn1 = 0;
+    if (tdn1 == 0) {
+      tdn1 = scinew TypeDescription(name, 0, path, namesp);
+    } 
+    td = tdn1;
+  }
+  else if(n == 0) {
+    static TypeDescription* tdn0 = 0;
+    if (tdn0 == 0) {
+      tdn0 = scinew TypeDescription(name, 0, path, namesp);
+    }
+    td = tdn0;
+  }
+  else {
+    static TypeDescription* tdnn = 0;
+    td = tdnn;
+  }
+  return td;
+} 
 
 NrrdTextureBrick::NrrdTextureBrick(NrrdDataHandle n0, NrrdDataHandle n1,
 				   int nx, int ny, int nz, int nc, int *nb,
@@ -367,5 +418,56 @@ NrrdTextureBrick::tex_data(int c)
   return ptr + offset;
 }
 
+const string
+NrrdTextureBrick::type_name(int n)
+{
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0);
+    return name;
+
+  }
+  else if (n == 0)
+  {
+    return "NrrdTextureBrick";
+  }
+  else
+  {
+    return "";
+  }
+}
+
+
+const TypeDescription*
+NrrdTextureBrick::get_type_description(int n) const
+{
+  ASSERT((n >= -1) && n <= 1);
+
+  TypeDescription* td = 0;
+  static string name( type_name(0) );
+  static string namesp("SCIRun");
+  static string path(__FILE__);
+
+  if (n == -1) {
+    static TypeDescription* tdn1 = 0;
+    if (tdn1 == 0) {
+      tdn1 = scinew TypeDescription(name, 0, path, namesp);
+    } 
+    td = tdn1;
+  }
+  else if(n == 0) {
+    static TypeDescription* tdn0 = 0;
+    if (tdn0 == 0) {
+      tdn0 = scinew TypeDescription(name, 0, path, namesp);
+    }
+    td = tdn0;
+  }
+  else {
+    static TypeDescription* tdnn = 0;
+    td = tdnn;
+  }
+  return td;
+} 
 
 } // end namespace SCIRun

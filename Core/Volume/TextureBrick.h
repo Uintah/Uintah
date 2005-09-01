@@ -90,6 +90,9 @@ public:
                        vector<float>& vertex, vector<float>& texcoord,
                        vector<int>& size) const;
 
+  static const string type_name(int n = -1);
+  virtual const TypeDescription* get_type_description(int n = -1) const;
+
 protected:
   int nx_, ny_, nz_; // axis sizes (pow2)
   int nc_; // number of components (1 or 2)
@@ -129,6 +132,9 @@ public:
   void set_nrrds(const NrrdDataHandle &n0, const NrrdDataHandle &n1)
   { data_[0] = n0; data_[1] = n1; }
 
+  static const string type_name(int n = -1);
+  virtual const TypeDescription* get_type_description(int n = -1) const;
+
 protected:
   NrrdDataHandle data_[2];
 };
@@ -148,7 +154,10 @@ public:
   virtual void* tex_data(int c) { return data_[c]; }
   
   T* data(int c) { return data_[c]; }
-  
+
+  static const string type_name(int n = -1);
+  virtual const TypeDescription* get_type_description(int n = -1) const;
+ 
 protected:
   T* data_[2];
 };
@@ -176,6 +185,66 @@ TextureBrickT<T>::~TextureBrickT()
     delete[] data_[c];
   }
 }
+
+template <typename T>
+const string
+TextureBrickT<T>::type_name(int n)
+{
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
+
+  }
+  else if (n == 0)
+  {
+    return "TextureBrickT";
+  }
+  else
+  {
+    return find_type_name((T *)0);
+  }
+}
+
+
+template <typename T> 
+const TypeDescription*
+TextureBrickT<T>::get_type_description(int n) const
+{
+  ASSERT((n >= -1) && n <= 1);
+
+  TypeDescription* td = 0;
+  static string name( type_name(0) );
+  static string namesp("SCIRun");
+  static string path(__FILE__);
+
+  if (n == -1) {
+    static TypeDescription* tdn1 = 0;
+    if (tdn1 == 0) {
+      const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+      (*subs)[0] = sub;
+      tdn1 = scinew TypeDescription(name, subs, path, namesp);
+    } 
+    td = tdn1;
+  }
+  else if(n == 0) {
+    static TypeDescription* tdn0 = 0;
+    if (tdn0 == 0) {
+      tdn0 = scinew TypeDescription(name, 0, path, namesp);
+    }
+    td = tdn0;
+  }
+  else {
+    static TypeDescription* tdnn = 0;
+    if (tdnn == 0) {
+      tdnn = (TypeDescription *) SCIRun::get_type_description((T*)0);
+    }
+    td = tdnn;
+  }
+  return td;
+} 
 
 } // namespace SCIRun
 

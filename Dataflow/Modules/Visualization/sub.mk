@@ -41,6 +41,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Visualization
 
 SRCS     += \
+	$(SRCDIR)/Ren2Tex.cc\
 	$(SRCDIR)/AddLight.cc\
 	$(SRCDIR)/ChooseColorMap.cc\
 	$(SRCDIR)/EditColorMap.cc\
@@ -50,12 +51,12 @@ SRCS     += \
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTitle.cc\
 	$(SRCDIR)/Isosurface.cc\
+	$(SRCDIR)/NrrdTextureBuilder.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/ShowColorMap.cc\
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/ShowMatrix.cc\
 	$(SRCDIR)/StreamLines.cc\
-	$(SRCDIR)/NrrdTextureBuilder.cc\
 	$(SRCDIR)/TextureBuilder.cc\
 	$(SRCDIR)/VolumeSlicer.cc\
 	$(SRCDIR)/VolumeVisualizer.cc\
