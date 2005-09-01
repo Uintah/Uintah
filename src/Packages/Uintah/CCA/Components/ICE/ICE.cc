@@ -2436,6 +2436,7 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
           int indx = ice_matl->getDWIndex();      
           desc1 << "hydroStaticAdj_Mat_" << indx << "_patch_"<< patch->getID();
           printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol);
+          printData(indx, patch,   1, desc.str(), "pressure_CC",     press_CC);
           printData(indx, patch,   1, desc.str(), "Temp_CC",   newTemp);
         }   
       }
@@ -2470,12 +2471,12 @@ void ICE::computeInternalEnergy(const ProcessorGroup*,
       new_dw->allocateAndPut(int_eng, lb->int_eng_CCLabel, indx, patch);
       new_dw->get(Temp, lb->ntemp_CCLabel, indx, patch, Ghost::None, 0);
       new_dw->get(sp_vol, lb->sp_vol_CCLabel, indx, patch, Ghost::None, 0);
-      ice_matl->getThermo()->compute_int_eng(patch->getCellIterator(), int_eng,
+      ice_matl->getThermo()->compute_int_eng(patch->getExtraCellIterator(), int_eng,
                                              0, new_dw, ThermoInterface::NewState,
                                              patch, indx, 0,
                                              Temp, sp_vol);
-      cerr << "BCS busted for temperature\n";
-      setBC(int_eng,    "Temperature", patch, d_sharedState, indx, new_dw);
+      setBC_Temperature(int_eng, patch, d_sharedState, indx, 0, new_dw,
+                        ThermoInterface::NewState, sp_vol);
     }
   }
 }
@@ -5372,12 +5373,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
             patch,d_sharedState, indx, new_dw, d_customBC_var_basket);
       setBC(vel_CC, "Velocity", 
             patch,d_sharedState, indx, new_dw, d_customBC_var_basket);       
-      cerr << "BCS busted for temperature\n";
-      setBC(int_eng,"Temperature",
-            patch,d_sharedState, indx, new_dw, d_customBC_var_basket);
-            
       setSpecificVolBC(sp_vol_CC, "SpecificVol", false,rho_CC,vol_frac,
                        patch,d_sharedState, indx);     
+      setBC_Temperature(int_eng, patch,d_sharedState, indx, old_dw, new_dw,
+                        ThermoInterface::NewState, sp_vol_CC, d_customBC_var_basket);
+            
       delete_CustomBCs(d_customBC_var_basket);
                                
       //__________________________________

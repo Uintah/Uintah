@@ -81,8 +81,8 @@ void ConstantThermo::compute_thermalDiffusivity(CellIterator iter,
                                                 DataWarehouse* old_dw, DataWarehouse* new_dw,
                                                 State state, const Patch* patch,
                                                 int matl, int numGhostCells,
-                                                constCCVariable<double>& int_eng,
-                                                constCCVariable<double>& sp_vol)
+                                                const constCCVariable<double>& int_eng,
+                                                const constCCVariable<double>& sp_vol)
 {
   double cp = d_specificHeat * d_gamma;
   double factor = d_thermalConductivity/cp;
@@ -95,8 +95,8 @@ void ConstantThermo::compute_thermalConductivity(CellIterator iter,
                                                  DataWarehouse* old_dw, DataWarehouse* new_dw,
                                                  State state, const Patch* patch,
                                                  int matl, int numGhostCells,
-                                                 constCCVariable<double>& int_eng,
-                                                 constCCVariable<double>& sp_vol)
+                                                 const constCCVariable<double>& int_eng,
+                                                 const constCCVariable<double>& sp_vol)
 {
   for(;!iter.done();iter++)
     thermalConductivity[*iter] = d_thermalConductivity;
@@ -106,8 +106,8 @@ void ConstantThermo::compute_cp(CellIterator iter, CCVariable<double>& cp,
                                 DataWarehouse* old_dw, DataWarehouse* new_dw,
                                 State state, const Patch* patch,
                                 int matl, int numGhostCells,
-                                constCCVariable<double>& int_eng,
-                                constCCVariable<double>& sp_vol)
+                                const constCCVariable<double>& int_eng,
+                                const constCCVariable<double>& sp_vol)
 {
   double tmp = d_specificHeat * d_gamma;
   for(;!iter.done();iter++)
@@ -118,8 +118,8 @@ void ConstantThermo::compute_cv(CellIterator iter, CCVariable<double>& cv,
                                 DataWarehouse* old_dw, DataWarehouse* new_dw,
                                 State state, const Patch* patch,
                                 int matl, int numGhostCells,
-                                constCCVariable<double>& int_eng,
-                                constCCVariable<double>& sp_vol)
+                                const constCCVariable<double>& int_eng,
+                                const constCCVariable<double>& sp_vol)
 {
   for(;!iter.done();iter++)
     cv[*iter] = d_specificHeat;
@@ -129,8 +129,8 @@ void ConstantThermo::compute_gamma(CellIterator iter, CCVariable<double>& gamma,
                                    DataWarehouse* old_dw, DataWarehouse* new_dw,
                                    State state, const Patch* patch,
                                    int matl, int numGhostCells,
-                                   constCCVariable<double>& int_eng,
-                                   constCCVariable<double>& sp_vol)
+                                   const constCCVariable<double>& int_eng,
+                                   const constCCVariable<double>& sp_vol)
 {
   for(;!iter.done();iter++)
     gamma[*iter] = d_gamma;
@@ -140,8 +140,8 @@ void ConstantThermo::compute_R(CellIterator iter, CCVariable<double>& R,
                                DataWarehouse* old_dw, DataWarehouse* new_dw,
                                State state, const Patch* patch,
                                int matl, int numGhostCells,
-                               constCCVariable<double>& int_eng,
-                               constCCVariable<double>& sp_vol)
+                               const constCCVariable<double>& int_eng,
+                               const constCCVariable<double>& sp_vol)
 {
   double tmp = (d_gamma-1) * d_specificHeat;
   for(;!iter.done();iter++)
@@ -152,8 +152,8 @@ void ConstantThermo::compute_Temp(CellIterator iter, CCVariable<double>& temp,
                                   DataWarehouse* old_dw, DataWarehouse* new_dw,
                                   State state, const Patch* patch,
                                   int matl, int numGhostCells,
-                                  constCCVariable<double>& int_eng,
-                                  constCCVariable<double>& sp_vol)
+                                  const constCCVariable<double>& int_eng,
+                                  const constCCVariable<double>& sp_vol)
 {
   double factor = 1./d_specificHeat;
   for(;!iter.done();iter++)
@@ -164,9 +164,84 @@ void ConstantThermo::compute_int_eng(CellIterator iter, CCVariable<double>& int_
                                      DataWarehouse* old_dw, DataWarehouse* new_dw,
                                      State state, const Patch* patch,
                                      int matl, int numGhostCells,
-                                     constCCVariable<double>& temp,
-                                     constCCVariable<double>&)
+                                     const constCCVariable<double>& temp,
+                                     const constCCVariable<double>&)
 {
   for(;!iter.done();iter++)
+    int_eng[*iter] = temp[*iter] * d_specificHeat;
+}
+
+void ConstantThermo::compute_cp(cellList::iterator iter, cellList::iterator end,
+                                CCVariable<double>& cp,
+                                DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                State state, const Patch* patch,
+                                int matl, int numGhostCells,
+                                const constCCVariable<double>& int_eng,
+                                const constCCVariable<double>& sp_vol)
+{
+  double tmp = d_specificHeat * d_gamma;
+  for(;iter != end;iter++)
+    cp[*iter] = tmp;
+}
+
+void ConstantThermo::compute_cv(cellList::iterator iter, cellList::iterator end,
+                                CCVariable<double>& cv,
+                                DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                State state, const Patch* patch,
+                                int matl, int numGhostCells,
+                                const constCCVariable<double>& int_eng,
+                                const constCCVariable<double>& sp_vol)
+{
+  for(;iter != end;iter++)
+    cv[*iter] = d_specificHeat;
+}
+
+void ConstantThermo::compute_gamma(cellList::iterator iter, cellList::iterator end,
+                                   CCVariable<double>& gamma,
+                                   DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                   State state, const Patch* patch,
+                                   int matl, int numGhostCells,
+                                   const constCCVariable<double>& int_eng,
+                                   const constCCVariable<double>& sp_vol)
+{
+  for(;iter != end;iter++)
+    gamma[*iter] = d_gamma;
+}
+
+void ConstantThermo::compute_R(cellList::iterator iter, cellList::iterator end,
+                               CCVariable<double>& R,
+                               DataWarehouse* old_dw, DataWarehouse* new_dw,
+                               State state, const Patch* patch,
+                               int matl, int numGhostCells,
+                               const constCCVariable<double>& int_eng,
+                               const constCCVariable<double>& sp_vol)
+{
+  double tmp = (d_gamma-1) * d_specificHeat;
+  for(;iter != end;iter++)
+    R[*iter] = tmp;
+}
+
+void ConstantThermo::compute_Temp(cellList::iterator iter, cellList::iterator end,
+                                  CCVariable<double>& temp,
+                                  DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                  State state, const Patch* patch,
+                                  int matl, int numGhostCells,
+                                  const constCCVariable<double>& int_eng,
+                                  const constCCVariable<double>& sp_vol)
+{
+  double factor = 1./d_specificHeat;
+  for(;iter != end;iter++)
+    temp[*iter] = int_eng[*iter] * factor;
+}
+
+void ConstantThermo::compute_int_eng(cellList::iterator iter, cellList::iterator end,
+                                     CCVariable<double>& int_eng,
+                                     DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                     State state, const Patch* patch,
+                                     int matl, int numGhostCells,
+                                     const constCCVariable<double>& temp,
+                                     const constCCVariable<double>&)
+{
+  for(;iter != end;iter++)
     int_eng[*iter] = temp[*iter] * d_specificHeat;
 }
