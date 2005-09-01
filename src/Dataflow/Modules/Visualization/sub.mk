@@ -41,7 +41,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Visualization
 
 SRCS     += \
-	$(SRCDIR)/Ren2Tex.cc\
 	$(SRCDIR)/AddLight.cc\
 	$(SRCDIR)/ChooseColorMap.cc\
 	$(SRCDIR)/EditColorMap.cc\
