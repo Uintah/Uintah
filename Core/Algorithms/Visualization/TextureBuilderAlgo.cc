@@ -156,8 +156,6 @@ texture_build_bricks(vector<TextureBrickHandle>& bricks,
             num_brick[0] * num_brick[1] * num_brick[2] == 1 &&
 	    brick_pad[0] == nx && brick_pad[1] == ny && brick_pad[2] == nz)
 	{
-	  cerr << "Building NrrdTextureBricks\n";
-
 	  NrrdTextureBrick *b = scinew NrrdTextureBrick(0, 0,
             i < num_brick[0]-1 ? brick_size[0] : brick_pad[0],
             j < num_brick[1]-1 ? brick_size[1] : brick_pad[1],
@@ -175,8 +173,6 @@ texture_build_bricks(vector<TextureBrickHandle>& bricks,
 	}
 	else
 	{
-	  cerr << "Building TextureBrickT<unsigned char>\n";
-
 	  TextureBrick* b = scinew TextureBrickT<unsigned char>(
             i < num_brick[0]-1 ? brick_size[0] : brick_pad[0],
             j < num_brick[1]-1 ? brick_size[1] : brick_pad[1],

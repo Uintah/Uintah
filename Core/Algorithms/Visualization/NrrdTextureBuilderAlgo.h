@@ -181,8 +181,6 @@ NrrdTextureBuilderAlgoT<VTYPE,
 	ShaderProgramARB::shaders_supported() &&
 	ShaderProgramARB::texture_non_power_of_two())
     {
-      cerr << "Building NrrdTextureBricks\n";
-
       nrrd_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
     }
     else
@@ -191,8 +189,6 @@ NrrdTextureBuilderAlgoT<VTYPE,
 	  vmin == 0 && vmax == 255 &&
 	  gHandle->nrrd->type == nrrdTypeUChar &&
 	  gmin == 0 && gmax == 255 )
-	cerr << "Asking for NrrdTextureBricks\n";
-
       texture_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem,
 			   use_nrrd_brick );
 
@@ -224,13 +220,8 @@ NrrdTextureBuilderAlgoT<VTYPE,
 					   double gmin, double gmax,
 					   int ni, int nj, int /*nk*/)
 {
-  cerr << "Getting brick type name " << brick->type_name() << endl;
-  cerr << "Getting brick type desc " << brick->get_type_description(0)->get_name() << endl;
-
   if (brick->get_type_description(0)->get_name() == "NrrdTextureBrick") {
 
-    cerr << "Filling NrrdTextureBricks\n";
-    
     NrrdTextureBrick *nbrick = (NrrdTextureBrick *) brick.get_rep();
     nbrick->set_nrrds(vHandle, gHandle);
     return;
@@ -239,8 +230,6 @@ NrrdTextureBuilderAlgoT<VTYPE,
   Nrrd *nv_nrrd = vHandle->nrrd;
   Nrrd *gm_nrrd = (gHandle.get_rep() ? gHandle->nrrd : 0);
   
-  cerr << "Filling TextureBrickT<unsigned char>\n";
-
   TextureBrickT<unsigned char>* br =
     (TextureBrickT<unsigned char>*) brick.get_rep();
 
