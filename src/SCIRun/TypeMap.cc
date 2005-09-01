@@ -43,25 +43,29 @@
 #include <map>
 #include <string>
 
+#include <Core/Util/NotFinished.h>
+
 namespace SCIRun {
 
 TypeMap::TypeMap()
-{ }
+{
+}
 
 TypeMap::~TypeMap()
-{ }
+{
+}
 
 // .sci.cca.TypeMap .sci.cca.TypeMap.cloneTypeMap()
 sci::cca::TypeMap::pointer TypeMap::cloneTypeMap()
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  NOT_FINISHED("method not implemented");
   return sci::cca::TypeMap::pointer(0);  
 }
 
 // .sci.cca.TypeMap .sci.cca.TypeMap.cloneEmpty()
 sci::cca::TypeMap::pointer TypeMap::cloneEmpty()
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  NOT_FINISHED("method not implemented");
   return sci::cca::TypeMap::pointer(0); 
 }
 
@@ -113,7 +117,7 @@ TypeMap::getDouble(const std::string& key, double dflt)
 std::complex<float>
 TypeMap::getFcomplex(const std::string& key, std::complex<float>  dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  NOT_FINISHED("method not implemented");
   return dflt;
 }
 
@@ -121,7 +125,7 @@ TypeMap::getFcomplex(const std::string& key, std::complex<float>  dflt)
 std::complex<double> 
 TypeMap::getDcomplex(const std::string& key, std::complex<double>  dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  NOT_FINISHED("method not implemented");  
   return dflt;
 }
     
@@ -147,9 +151,10 @@ TypeMap::getBool(const std::string& key, bool dflt)
     return dflt;
 }
 
-// array1< int, 1> .sci.cca.TypeMap.getIntArray(in string key, in array1< int, 1> dflt)throws .sci.cca.TypeMismatchException
-::SSIDL::array1< int>
-TypeMap::getIntArray(const std::string& key, const ::SSIDL::array1< int>& dflt){
+// array1<int, 1> .sci.cca.TypeMap.getIntArray(in string key, in array1<int, 1> dflt)throws .sci.cca.TypeMismatchException
+::SSIDL::array1<int>
+TypeMap::getIntArray(const std::string& key, const ::SSIDL::array1<int>& dflt)
+{
   IntArrayMap::iterator found = intArrayMap.find(key);
   if (found != intArrayMap.end()) {
     return found->second;
@@ -157,9 +162,9 @@ TypeMap::getIntArray(const std::string& key, const ::SSIDL::array1< int>& dflt){
   return dflt;
 }
 
-// array1< long, 1> .sci.cca.TypeMap.getLongArray(in string key, in array1< long, 1> dflt)throws .sci.cca.TypeMismatchException
-SSIDL::array1< long>
-TypeMap::getLongArray(const std::string& key, const SSIDL::array1< long>& dflt)
+// array1<long, 1> .sci.cca.TypeMap.getLongArray(in string key, in array1<long, 1> dflt)throws .sci.cca.TypeMismatchException
+SSIDL::array1<long>
+TypeMap::getLongArray(const std::string& key, const SSIDL::array1<long>& dflt)
 {
   LongArrayMap::iterator found = longArrayMap.find(key);
   if (found != longArrayMap.end()) {
@@ -168,37 +173,43 @@ TypeMap::getLongArray(const std::string& key, const SSIDL::array1< long>& dflt)
   return dflt;
 }
 
-// array1< float, 1> .sci.cca.TypeMap.getFloatArray(in string key, in array1< float, 1> dflt)throws .sci.cca.TypeMismatchException
-SSIDL::array1< float>
-TypeMap::getFloatArray(const std::string& key, const SSIDL::array1< float>& dflt)
+// array1<float, 1> .sci.cca.TypeMap.getFloatArray(in string key, in array1<float, 1> dflt)throws .sci.cca.TypeMismatchException
+SSIDL::array1<float>
+TypeMap::getFloatArray(const std::string& key, const SSIDL::array1<float>& dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  NOT_FINISHED("method not implemented");  
   return dflt;
 }
 
-// array1< double, 1> .sci.cca.TypeMap.getDoubleArray(in string key, in array1< double, 1> dflt)throws .sci.cca.TypeMismatchException
-SSIDL::array1< double>
-TypeMap::getDoubleArray(const std::string& key, const SSIDL::array1< double>& dflt)
+// array1<double, 1> .sci.cca.TypeMap.getDoubleArray(in string key, in array1<double, 1> dflt)throws .sci.cca.TypeMismatchException
+SSIDL::array1<double>
+TypeMap::getDoubleArray(const std::string& key, const SSIDL::array1<double>& dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  NOT_FINISHED("method not implemented");  
   return dflt;
 }
 
-// array1< std::complex<float> , 1> .sci.cca.TypeMap.getFcomplexArray(in string key, in array1< std::complex<float> , 1> dflt)throws .sci.cca.TypeMismatchException
-SSIDL::array1< std::complex<float> >
+// array1<std::complex<float> , 1> .sci.cca.TypeMap.getFcomplexArray(in string key, in array1<std::complex<float> , 1> dflt)throws .sci.cca.TypeMismatchException
+SSIDL::array1<std::complex<float> >
 TypeMap::getFcomplexArray(const std::string& key,
-                          const SSIDL::array1< std::complex<float> >& dflt)
+                          const SSIDL::array1<std::complex<float> >& dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  FcomplexArrayMap::iterator found = fcomplexArrayMap.find(key);
+  if (found != fcomplexArrayMap.end()) {
+    return found->second;
+  }
   return dflt;
 }
 
-// array1< std::complex<double> , 1> .sci.cca.TypeMap.getDcomplexArray(in string key, in array1< std::complex<double> , 1> dflt)throws .sci.cca.TypeMismatchException
-SSIDL::array1< std::complex<double> >
+// array1<std::complex<double> , 1> .sci.cca.TypeMap.getDcomplexArray(in string key, in array1<std::complex<double> , 1> dflt)throws .sci.cca.TypeMismatchException
+SSIDL::array1<std::complex<double> >
 TypeMap::getDcomplexArray(const std::string& key,
-                          const SSIDL::array1< std::complex<double> >& dflt)
+                          const SSIDL::array1<std::complex<double> >& dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  DcomplexArrayMap::iterator found = dcomplexArrayMap.find(key);
+  if (found != dcomplexArrayMap.end()) {
+    return found->second;
+  }
   return dflt;
 }
 
@@ -213,12 +224,15 @@ TypeMap::getStringArray(const std::string& key, const SSIDL::array1<std::string>
     return dflt;
 }
 
-// array1< bool, 1> .sci.cca.TypeMap.getBoolArray(in string key, in array1< bool, 1> dflt)throws .sci.cca.TypeMismatchException
-SSIDL::array1< bool>
-TypeMap::getBoolArray(const std::string& key, const SSIDL::array1< bool>& dflt)
+// array1<bool, 1> .sci.cca.TypeMap.getBoolArray(in string key, in array1<bool, 1> dflt)throws .sci.cca.TypeMismatchException
+SSIDL::array1<bool>
+TypeMap::getBoolArray(const std::string& key, const SSIDL::array1<bool>& dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  return dflt;
+    BoolArrayMap::iterator found = boolArrayMap.find(key);
+    if (found != boolArrayMap.end()) {
+        return found->second;
+    }
+    return dflt;
 }
 
 // void .sci.cca.TypeMap.putInt(in string key, in int value)
@@ -243,7 +257,7 @@ TypeMap::putLong(const std::string& key, long value)
 void
 TypeMap::putFloat(const std::string& key, float value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  floatMap[key] = value;
   return;
 }
 
@@ -251,7 +265,7 @@ TypeMap::putFloat(const std::string& key, float value)
 void
 TypeMap::putDouble(const std::string& key, double value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  doubleMap[key] = value;
   return;
 }
 
@@ -259,7 +273,7 @@ TypeMap::putDouble(const std::string& key, double value)
 void
 TypeMap::putFcomplex(const std::string& key, std::complex<float> value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  fcomplexMap[key] = value;
   return;
 }
 
@@ -267,7 +281,7 @@ TypeMap::putFcomplex(const std::string& key, std::complex<float> value)
 void
 TypeMap::putDcomplex(const std::string& key, std::complex<double> value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  dcomplexMap[key] = value;
   return;
 }
 
@@ -289,72 +303,71 @@ TypeMap::putBool(const std::string& key, bool value)
     return;
 }
    
-// void .sci.cca.TypeMap.putIntArray(in string key, in array1< int, 1> value)
+// void .sci.cca.TypeMap.putIntArray(in string key, in array1<int, 1> value)
 void
 TypeMap::putIntArray(const std::string& key, const ::SSIDL::array1<int>& value) {
-  //intArrayMap.insert(IntArrayMap::value_type(key, value));
   intArrayMap[key] = value;
   return;
 }
 
-// void .sci.cca.TypeMap.putLongArray(in string key, in array1< long, 1> value)
+// void .sci.cca.TypeMap.putLongArray(in string key, in array1<long, 1> value)
 void
-TypeMap::putLongArray(const std::string& key, const SSIDL::array1< long>& value)
+TypeMap::putLongArray(const std::string& key, const SSIDL::array1<long>& value)
 {
   longArrayMap[key] = value;
   return;
 }
 
-// void .sci.cca.TypeMap.putFloatArray(in string key, in array1< float, 1> value)
+// void .sci.cca.TypeMap.putFloatArray(in string key, in array1<float, 1> value)
 void
-TypeMap::putFloatArray(const std::string& key, const SSIDL::array1< float>& value)
+TypeMap::putFloatArray(const std::string& key, const SSIDL::array1<float>& value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  floatArrayMap[key] = value;
   return;
 }
 
-// void .sci.cca.TypeMap.putDoubleArray(in string key, in array1< double, 1> value)
+// void .sci.cca.TypeMap.putDoubleArray(in string key, in array1<double, 1> value)
 void
-TypeMap::putDoubleArray(const std::string& key, const SSIDL::array1< double>& value)
+TypeMap::putDoubleArray(const std::string& key, const SSIDL::array1<double>& value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  doubleArrayMap[key] = value;
   return;
 }
 
 
-// void .sci.cca.TypeMap.putFcomplexArray(in string key, in array1< std::complex<float> , 1> value)
+// void .sci.cca.TypeMap.putFcomplexArray(in string key, in array1<std::complex<float> , 1> value)
 void
 TypeMap::putFcomplexArray(const std::string& key,
-                          const SSIDL::array1< std::complex<float> >& value)
+                          const SSIDL::array1<std::complex<float> >& value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  fcomplexArrayMap[key] = value;
   return;
 }
 
-// void .sci.cca.TypeMap.putDcomplexArray(in string key, in array1< std::complex<double> , 1> value)
+// void .sci.cca.TypeMap.putDcomplexArray(in string key, in array1<std::complex<double> , 1> value)
 void
 TypeMap::putDcomplexArray(const std::string& key,
-                          const SSIDL::array1< std::complex<double> >& value)
+                          const SSIDL::array1<std::complex<double> >& value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  dcomplexArrayMap[key] = value;
   return;
 }
     
-// void .sci.cca.TypeMap.putStringArray(in string key, in array1< string, 1> value)
+// void .sci.cca.TypeMap.putStringArray(in string key, in array1<string, 1> value)
 void
 TypeMap::putStringArray(const std::string& key,
-                        const SSIDL::array1< std::string>& value)
+                        const SSIDL::array1<std::string>& value)
 {
   //stringArrayMap.insert(StringArrayMap::value_type(key, value));
   stringArrayMap[key] = value;
   return;
 }
     
-// void .sci.cca.TypeMap.putBoolArray(in string key, in array1< bool, 1> value)
+// void .sci.cca.TypeMap.putBoolArray(in string key, in array1<bool, 1> value)
 void
-TypeMap::putBoolArray(const std::string& key, const SSIDL::array1< bool>& value)
+TypeMap::putBoolArray(const std::string& key, const SSIDL::array1<bool>& value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  boolArrayMap[key] = value;
   return;
 }
 
@@ -362,16 +375,16 @@ TypeMap::putBoolArray(const std::string& key, const SSIDL::array1< bool>& value)
 void
 TypeMap::remove(const std::string& key)
 {
-  std::cerr<<"method not implemented" << std::endl;
+  NOT_FINISHED("method not implemented");
   return;
 }
 
-// array1< string, 1> .sci.cca.TypeMap.getAllKeys(in .sci.cca.Type t)
-SSIDL::array1< std::string>
+// array1<string, 1> .sci.cca.TypeMap.getAllKeys(in .sci.cca.Type t)
+SSIDL::array1<std::string>
 TypeMap::getAllKeys(sci::cca::Type t)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  SSIDL::array1< std::string> temp;
+  NOT_FINISHED("method not implemented");  
+  SSIDL::array1<std::string> temp;
   return temp;
 }
 
@@ -379,7 +392,7 @@ TypeMap::getAllKeys(sci::cca::Type t)
 bool
 TypeMap::hasKey(const std::string& key)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  NOT_FINISHED("method not implemented");  
   return true;
 }
 
@@ -387,7 +400,7 @@ TypeMap::hasKey(const std::string& key)
 sci::cca::Type
 TypeMap::typeOf(const std::string& key)
 {
-  std::cerr<<"method not implemented" << std::endl;
+  NOT_FINISHED("method not implemented");
   return (sci::cca::Type)0;
 }
 
