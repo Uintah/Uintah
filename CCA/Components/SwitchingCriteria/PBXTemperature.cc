@@ -104,6 +104,7 @@ void PBXTemperature::switchTest(const ProcessorGroup* group,
 
       if(Temp_CC_mpm >= d_temperature){
        sw=1;
+       break;
       }
     }
 
