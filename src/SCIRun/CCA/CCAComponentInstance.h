@@ -49,6 +49,7 @@
 #include <Core/CCA/PIDL/Object.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <map>
+#include <vector>
 #include <string>
 
 namespace SCIRun
@@ -76,30 +77,33 @@ public:
   virtual ~CCAComponentInstance();
   
 /**
-* @param portName The previously registered or provide port which
-* 	   the component now wants to use.
-* @exception CCAException with the following types: NotConnected, PortNotDefined, 
-*                NetworkError, OutOfMemory.
-*/
-// calls getPortNonblocking from inside critical section
+ * @param portName The previously registered port (through addProvidePort or registerUsesPort) the component now wants to use.
+ * @exception CCAException with the following types: NotConnected, PortNotDefined, 
+ *                NetworkError, OutOfMemory.
+ */
 sci::cca::Port::pointer getPort(const std::string& name);
 
 /**
-* @return The named port, if it exists and is connected or self-provided,
-* 	      or NULL if it is registered and is not yet connected. Does not
-* 	      return if the Port is neither registered nor provided, but rather
-* 	      throws an exception.
-* @param portName registered or provided port that
-* 	     the component now wants to use.
-* @exception CCAException with the following types: PortNotDefined, OutOfMemory.
-*/
+ * @return The named port, if it exists and is connected or self-provided,
+ * 	      or NULL if it is registered and is not yet connected. Does not
+ * 	      return if the Port is neither registered nor provided, but rather
+ * 	      throws an exception.
+ * @param portName previously registered or provided port that
+ * 	     the component now wants to use.
+ * @throws CCAException with the following types: PortNotConnected,
+ *         PortNotDefined, NetworkError, OutOfMemory.
+ */
 // throws CCA exception if port type is PROVIDES (??)
 // returns null if port's connections vector size != 1
 // otherwise returns port peer (1st element of connections vector)
   sci::cca::Port::pointer getPortNonblocking(const std::string& name);
 
-  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */ 
+  /**
+   * A proxy method for gov::cca::Services.
+   * @return
+   * @param
+   * @throws
+   */ 
   void releasePort(const std::string& name);
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
@@ -167,7 +171,7 @@ private:
 
   std::map<std::string, int > precnt;
   std::map<std::string, ConditionVariable*> precond;
-  
+
   sci::cca::Component::pointer component;
   Mutex *mutex;
   int size;
