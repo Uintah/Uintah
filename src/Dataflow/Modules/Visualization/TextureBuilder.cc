@@ -42,13 +42,12 @@
 #include <Dataflow/Ports/TexturePort.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
-#include <Core/Util/DebugStream.h>
 
 #include <Core/Datatypes/MRLatVolField.h>
 
 namespace SCIRun {
 
-static SCIRun::DebugStream dbg("TextureBuilder", false);
+
 
 class TextureBuilder : public Module
 {
@@ -59,7 +58,7 @@ public:
   virtual void execute();
 
 private:
-  TextureHandle texture_;
+  TextureHandle tHandle_;
 
   GuiDouble gui_vminval_;
   GuiDouble gui_vmaxval_;
@@ -75,11 +74,6 @@ private:
   int gfield_last_generation_;
   double vminval_, vmaxval_;
   double gminval_, gmaxval_;
-
-  bool build_texture(FieldHandle, FieldHandle);
-
-  bool new_vfield(ScalarFieldInterfaceHandle sfi);
-  bool new_gfield(FieldHandle field);
 };
 
 
@@ -87,7 +81,7 @@ DECLARE_MAKER(TextureBuilder)
 
 TextureBuilder::TextureBuilder(GuiContext* ctx)
   : Module("TextureBuilder", ctx, Source, "Visualization", "SCIRun"),
-    texture_(new Texture),
+    tHandle_(new Texture),
     gui_vminval_(ctx->subVar("vmin")),
     gui_vmaxval_(ctx->subVar("vmax")),
     gui_gminval_(ctx->subVar("gmin")),
@@ -106,194 +100,197 @@ TextureBuilder::~TextureBuilder()
 void
 TextureBuilder::execute()
 {
+  bool update = false;
+
   if (card_mem_ != 0 && gui_card_mem_auto_.get())
-  {
     gui_card_mem_.set(card_mem_);
-  }
   else if (card_mem_ == 0)
-  {
     gui_card_mem_auto_.set(0);
-  }
 
-  FieldIPort* ivfield = (FieldIPort *)get_iport("Scalar Field");
-  FieldIPort* igfield = (FieldIPort*)get_iport("Gradient Field");
-  TextureOPort* otexture = (TextureOPort *)get_oport("Texture");
+  FieldHandle vHandle;
+  FieldHandle gHandle;
 
-  FieldHandle vfield;
-  ivfield->get(vfield);
-  if (!vfield.get_rep())
-  {
-    error("Field has no representation.");
+  // Get a handle to the input field port.
+  FieldIPort* vfield_port = (FieldIPort *) get_iport("Scalar Field");
+
+  // The scalar field input is required.
+  if (!vfield_port->get(vHandle) || !(vHandle.get_rep()) ||
+      !(vHandle->mesh().get_rep())) {
+    error( "No scalar field handle or representation" );
     return;
   }
 
-  if ((vfield->generation != vfield_last_generation_) ||
+  if( vHandle->get_type_description(0)->get_name() != "LatVolField" &&
+      vHandle->get_type_description(0)->get_name() != "MRLatVolField" &&
+      vHandle->get_type_description(0)->get_name() != "ITKLatVolField" ) {
+      
+    error( "Only availible for regular topology with uniformly gridded data." );
+    return;
+  }
+
+  // The input field must contain scalar data.
+  ScalarFieldInterfaceHandle sfi = vHandle->query_scalar_interface(this);
+  if (!sfi.get_rep()) {
+    error("Input scalar field does not contain scalar data.");
+    return;
+  }
+
+  if( !gui_fixed_.get() ){
+
+    double vmin = DBL_MAX, vmax = -DBL_MAX;
+
+    if( vHandle->get_type_description(0)->get_name() == "MRLatVolField" ) {
+      // Warning::Temporary Hack!
+      // In order to get the colors mapped correctly we need the min and max
+      // values for every level of a Multi-level field.  This
+      // temporary solution needs to be flushed out either in the sfi->minmax
+      // algorithm or someplace else. We don't want to have to handle every
+      // posible scalar type here.
+      if( vHandle->get_type_description(1)->get_name() == "double" ) {
+	MRLatVolField<double>* vmrfield = 
+	  (MRLatVolField< double > *) vHandle.get_rep();
+
+	for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
+	  const MultiResLevel<double>* lev = vmrfield->level( i );
+	  for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+	    // Each patch in a level corresponds to a LatVolField.
+	    // Grab the field.
+	    LatVolField<double>* vmr = lev->patches[j].get_rep(); 
+	    // Now, get the min_max for the scalar field.
+	    ScalarFieldInterfaceHandle sub_sfi =
+	      vmr->query_scalar_interface(this);
+
+	    // set vmin/vmax
+	    double vmintmp, vmaxtmp;
+	    sfi->compute_min_max(vmintmp, vmaxtmp);
+
+	    if( vmin > vmintmp ) vmin = vmintmp;
+	    if( vmax < vmaxtmp ) vmax = vmintmp;
+	  }
+	}
+      } else {
+	error("Input scalar field, MRLatVolField does not contain double data.");
+	return;
+      }
+    } else {
+      sfi->compute_min_max(vmin, vmax);
+    }
+
+    gui_vminval_.set(vmin);
+    gui_vmaxval_.set(vmax);
+  }
+
+  // Check to see if the input scalar field or the range has changed.
+  if( vfield_last_generation_ != vHandle->generation  ||
       (gui_vminval_.get() != vminval_) || 
-      (gui_vmaxval_.get() != vmaxval_))
-  {
-    // new field or range change
-    ScalarFieldInterfaceHandle sfi = vfield->query_scalar_interface(this);
-    if (!sfi.get_rep())
-    {
-      error("Input scalar field does not contain scalar data.");
+      (gui_vmaxval_.get() != vmaxval_)) {
+
+    vfield_last_generation_ = vHandle->generation;
+    
+    vminval_ = gui_vminval_.get();
+    vmaxval_ = gui_vmaxval_.get();
+    
+    update = true;
+  }
+
+  // Get a handle to the input gradient port.
+  FieldIPort* gfield_port = (FieldIPort *) get_iport("Gradient Field");
+
+  // The gradient field input is optional.
+  if (gfield_port->get(gHandle) && gHandle.get_rep()) {
+    
+    if (!ShaderProgramARB::shaders_supported()) {
+      // TODO: Runtime check, change message to reflect that.
+      warning("This machine does not support advanced volume rendering. The gradient field will be ignored.");
+      if( gfield_last_generation_ != -1 )
+	update = true;
+      gHandle = 0;
+      gfield_last_generation_ = -1;
+
+    } else {
+
+      if( gHandle->get_type_description(0)->get_name() != "LatVolField" &&
+	  gHandle->get_type_description(0)->get_name() != "MRLatVolField" &&
+	  gHandle->get_type_description(0)->get_name() != "ITKLatVolField" ) {
+    
+	error( "Only availible for regular topology with uniformly gridded data." );
+	return;
+      }
+ 
+      VectorFieldInterfaceHandle vfi = gHandle->query_vector_interface(this);
+      if (!vfi.get_rep()) {
+	error("Input gradient field does not contain vector data.");
+	return;
+      }
+
+      // The gradient and the scalar fields must share a mesh.
+      if (gHandle->mesh().get_rep() != vHandle->mesh().get_rep()) {
+	error("both input fields must share a mesh.");
+	return;
+      }
+ 
+      // The scalar and the gradient fields must have the same basis_order.
+      if (gHandle->basis_order() != vHandle->basis_order()) {
+	error("both input fields must have the same basis order.");
+	return;
+      }
+
+      if (!gui_fixed_.get()) {
+
+	// set gmin/gmax
+	double gmin, gmax;
+	vfi->compute_min_max(gmin, gmax);
+
+	gui_gminval_.set(gmin);
+	gui_gmaxval_.set(gmax);
+      }
+
+      // Check to see if the input gradient field has changed.
+      if( gfield_last_generation_ != gHandle->generation  ||
+	  (gui_gminval_.get() != gminval_) || 
+	  (gui_gmaxval_.get() != gmaxval_) ) {
+	gfield_last_generation_ = gHandle->generation;
+	
+	gminval_ = gui_gminval_.get();
+ 	gmaxval_ = gui_gmaxval_.get();
+	
+	update = true;
+      }
+    }
+  } else {
+    if( gfield_last_generation_ != -1 )
+      update = true;
+    gfield_last_generation_ = -1;
+  }
+
+  if( update ) {
+    const TypeDescription* vftd = vHandle->get_type_description();
+    const TypeDescription* gftd = (gHandle.get_rep() ?
+				   gHandle->get_type_description(0) :
+				   vHandle->get_type_description(0));
+
+    CompileInfoHandle ci = TextureBuilderAlgo::get_compile_info(vftd, gftd);
+
+    Handle<TextureBuilderAlgo> algo;
+    if (!module_dynamic_compile(ci, algo)) return;
+
+    algo->build(tHandle_,
+		vHandle, vminval_, vmaxval_,
+		gHandle, gminval_, gmaxval_,
+		gui_card_mem_.get());
+  }
+
+  // Get a handle to the output texture port.
+  if( tHandle_.get_rep() ) {
+    TextureOPort* otexture_port = (TextureOPort *)get_oport("Texture");
+
+    if (!otexture_port) {
+      error("Unable to initialize oport 'Texture'.");
       return;
     }
 
-    // Warning::Temporary Hack!
-    // In order to get the colors mapped correctly we need the min and max
-    // values for every level of a Multi-level field.  This
-    // temporary solution needs to be flushed out either in the sfi->minmax
-    // algorithm or someplace else. We don't want to have to handle every
-    // posible scalar type here.
-    if( MRLatVolField<double>* vmrfield =
-        dynamic_cast< MRLatVolField< double >* > (vfield.get_rep()) ) {
-      double minv = DBL_MAX, maxv = -DBL_MAX;
-      for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
-        const MultiResLevel<double>* lev = vmrfield->level( i );
-        for(unsigned int j = 0; j < lev->patches.size(); j++ ){
-          // Each patch in a level corresponds to a LatVolField.
-          // Grab the field.
-          LatVolField<double>* vmr = lev->patches[j].get_rep(); 
-          // Now, get the min_max for the scalar field.
-          ScalarFieldInterfaceHandle sub_sfi =
-            vmr->query_scalar_interface(this);
-          new_vfield(sub_sfi);
-          minv = Min(vminval_, minv);
-          maxv = Max(vmaxval_, maxv);
-        }
-        // Set the values
-        gui_vminval_.set(minv);  vminval_ = minv;
-        gui_vmaxval_.set(maxv);  vmaxval_ = maxv;
-      }
-    } else {
-      new_vfield( sfi );
-    }
-    vfield_last_generation_ = vfield->generation;
-
-  }
-
-
-  FieldHandle gfield = 0;
-  if (igfield)
-  {
-    igfield->get(gfield);
-    if (gfield.get_rep())
-    {
-      if (!ShaderProgramARB::shaders_supported())
-      {
-        // TODO: Runtime check, change message to reflect that.
-        warning("This machine does not support advanced volume rendering.  The gradient field will be ignored.");
-        gfield = 0;
-      }
-      else
-      {
-        if (gfield->generation != gfield_last_generation_)
-        {
-          // new field
-          if (!new_gfield(gfield)) return;
-          gfield_last_generation_ = gfield->generation;
-        }
-        // this field must share a mesh and must have the same basis_order.
-        if (vfield->basis_order() != gfield->basis_order())
-        {
-          error("both input fields must have the same basis order.");
-          return;
-        }
-        if (vfield->mesh().get_rep() != gfield->mesh().get_rep())
-        {
-          error("both input fields must share a mesh.");
-          return;
-        }
-      }
-    }
-  }
-  
-  if (build_texture(vfield, gfield))
-  {
-    otexture->send(texture_);
+    otexture_port->send(tHandle_);
   }
 }
-
-
-bool
-TextureBuilder::build_texture(FieldHandle vfield, FieldHandle gfield)
-{
-  // start new algorithm based code
-  const TypeDescription* td = vfield->get_type_description();
-  LockingHandle<TextureBuilderAlgoBase> builder;
-  CompileInfoHandle ci = TextureBuilderAlgoBase::get_compile_info(td);
-  if (!DynamicCompilation::compile(ci, builder, this))
-  {
-    error("Texture Builder can not work with this type of field.");
-    return false;
-  }
-  builder->build(texture_, vfield, vminval_, vmaxval_,
-                 gfield, gminval_, gmaxval_, gui_card_mem_.get());
-  return true;
-}
-
-
-bool
-TextureBuilder::new_vfield(ScalarFieldInterfaceHandle sfi)
-{
-  if( gui_fixed_.get() ){
-    vminval_ = gui_vminval_.get();
-    vmaxval_ = gui_vmaxval_.get();
-  } else {
-    // set vmin/vmax
-    pair<double, double> vminmax;
-    sfi->compute_min_max(vminmax.first, vminmax.second);
-    if(vminmax.first != vminval_ || vminmax.second != vmaxval_) {
-      gui_vminval_.set(vminmax.first);
-      gui_vmaxval_.set(vminmax.second);
-      vminval_ = vminmax.first;
-      vmaxval_ = vminmax.second;
-    }
-  }
-  return true;
-}
-
-
-bool
-TextureBuilder::new_gfield(FieldHandle gfield)
-{
-  // set gmin/gmax
-  LatVolField<Vector>* gfld =
-    dynamic_cast<LatVolField<Vector>*>(gfield.get_rep());
-
-  if (!gfld)
-  {
-    error("Input gradient field does not contain vector data.");
-    return false;
-  }
-
-  FData3d<Vector>::const_iterator bi, ei;
-  bi = gfld->fdata().begin();
-  ei = gfld->fdata().end();
-  double gminval = DBL_MAX;
-  double gmaxval = DBL_MIN;
-  // Moved sqrt out of loop, do after.
-  while (bi != ei)
-  {
-    const double g = (*bi).length2();
-    if (g < gminval) gminval = g;
-    if (g > gmaxval) gmaxval = g;
-    ++bi;
-  }
-  if (gmaxval >= 0)
-  {
-    gminval = sqrt(gminval);
-    gmaxval = sqrt(gmaxval);
-  }
-  if (!gui_fixed_.get())
-  {
-    gui_gminval_.set(gminval);
-    gui_gmaxval_.set(gmaxval);
-  }
-  gminval_ = gminval;
-  gmaxval_ = gmaxval;
-  return true;
-}
-
 
 } // end namespace SCIRun
