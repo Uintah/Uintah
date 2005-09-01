@@ -275,6 +275,7 @@ CCAComponentModel::createInstance(const std::string& name,
 {
   std::string loaderName;
   if (! properties.isNull()) {
+    // TODO: possible memory leak?
     properties->addReference();
     loaderName = properties->getString("LOADER NAME", "");
   }
@@ -284,7 +285,7 @@ CCAComponentModel::createInstance(const std::string& name,
            << loaderName << std::endl;
 #endif
   sci::cca::Component::pointer component;
-  if (loaderName=="") {  //local component
+  if (loaderName == "") {  //local component
     lock_components.lock();
     componentDB_type::iterator iter = components.find(type);
     if (iter == components.end()) {
@@ -328,11 +329,11 @@ CCAComponentModel::createInstance(const std::string& name,
     component = (*maker)();
  } else { 
     //use loader to load the component
-    resourceReference* loader=getLoader(loaderName);
+    resourceReference* loader = getLoader(loaderName);
     std::vector<int> nodes;
     nodes.push_back(0);
-    Object::pointer comObj=loader->createInstance(name, type, nodes);
-    component=pidl_cast<sci::cca::Component::pointer>(comObj);
+    Object::pointer comObj = loader->createInstance(name, type, nodes);
+    component = pidl_cast<sci::cca::Component::pointer>(comObj);
     properties->putInt("np",loader->getSize() );
   }
   CCAComponentInstance* ci =
@@ -344,12 +345,22 @@ CCAComponentModel::createInstance(const std::string& name,
 bool CCAComponentModel::destroyInstance(ComponentInstance *ci)
 {
   CCAComponentInstance* cca_ci = dynamic_cast<CCAComponentInstance*>(ci);
-  if(!cca_ci) {
+  if (!cca_ci) {
     std::cerr << "error: in destroyInstance() cca_ci is 0" << std::endl;
     return false;
   }
+  cca_ci->releaseComponentCallback(sci::cca::Services::pointer(cca_ci));
+  // addReference in CCAComponentModel::createInstance(..)
+  cca_ci->getComponentProperties()->deleteReference();
+
+  // Since a CCAComponentInstance is also a Services object,
+  // it is also implicitly a PIDL Object.
+  // Object::deleteReference will delete itself if it's reference
+  // count is 0.
+  //
+  // TODO: using 'delete' here tends to be unstable (needs investigating).
   cca_ci->deleteReference();
-  return true;  
+  return true;
 }
 
 std::string CCAComponentModel::getName() const
