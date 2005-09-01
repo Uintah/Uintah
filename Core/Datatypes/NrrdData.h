@@ -145,6 +145,10 @@ unsigned int get_nrrd_type()
   return nrrdTypeDouble;
 }
 
+void get_nrrd_compile_type( const unsigned int type,
+			    string & typeStr,
+			    string & typeName );
+
 } // end namespace SCIRun
 
 #endif // SCI_Teem_NrrdData_h
