@@ -92,13 +92,6 @@ public:
 
   void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
   
-   void switchTest(const ProcessorGroup*,
-                   const PatchSubset* patches,
-                   const MaterialSubset* matls,
-                   DataWarehouse*,
-                   DataWarehouse*);
-
-
   void setSharedState(SimulationStateP& ssp);
 
   void setMPMLabel(MPMLabel* Mlb)
