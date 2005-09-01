@@ -62,8 +62,8 @@ namespace SCIRun {
     typedef std::map<std::string, SSIDL::array1<long> > LongArrayMap;
     typedef std::map<std::string, SSIDL::array1<float> > FloatArrayMap;
     typedef std::map<std::string, SSIDL::array1<double> > DoubleArrayMap;
-    typedef std::map<std::string, SSIDL::array1< std::complex<float> > > FcomplexArrayMap;
-    typedef std::map<std::string, SSIDL::array1< std::complex<double> > > DcomplexArrayMap;
+    typedef std::map<std::string, SSIDL::array1<std::complex<float> > > FcomplexArrayMap;
+    typedef std::map<std::string, SSIDL::array1<std::complex<double> > > DcomplexArrayMap;
     typedef std::map<std::string, SSIDL::array1<bool> > BoolArrayMap;
     typedef std::map<std::string, SSIDL::array1<std::string> > StringArrayMap;
     
@@ -101,29 +101,29 @@ namespace SCIRun {
     // bool .sci.cca.TypeMap.getBool(in string key, in bool dflt)throws .sci.cca.TypeMismatchException
     virtual bool getBool(const std::string& key, bool dflt);
     
-    // array1< int, 1> .sci.cca.TypeMap.getIntArray(in string key, in array1< int, 1> dflt)throws .sci.cca.TypeMismatchException
-    virtual SSIDL::array1< int> getIntArray(const std::string& key, const SSIDL::array1< int>& dflt);
+    // array1<int, 1> .sci.cca.TypeMap.getIntArray(in string key, in array1<int, 1> dflt)throws .sci.cca.TypeMismatchException
+    virtual SSIDL::array1<int> getIntArray(const std::string& key, const SSIDL::array1<int>& dflt);
     
-    // array1< long, 1> .sci.cca.TypeMap.getLongArray(in string key, in array1< long, 1> dflt)throws .sci.cca.TypeMismatchException
-    virtual SSIDL::array1< long> getLongArray(const std::string& key, const SSIDL::array1< long>& dflt);
+    // array1<long, 1> .sci.cca.TypeMap.getLongArray(in string key, in array1<long, 1> dflt)throws .sci.cca.TypeMismatchException
+    virtual SSIDL::array1<long> getLongArray(const std::string& key, const SSIDL::array1<long>& dflt);
     
-    // array1< float, 1> .sci.cca.TypeMap.getFloatArray(in string key, in array1< float, 1> dflt)throws .sci.cca.TypeMismatchException
-    virtual SSIDL::array1< float> getFloatArray(const std::string& key, const SSIDL::array1< float>& dflt);
+    // array1<float, 1> .sci.cca.TypeMap.getFloatArray(in string key, in array1<float, 1> dflt)throws .sci.cca.TypeMismatchException
+    virtual SSIDL::array1<float> getFloatArray(const std::string& key, const SSIDL::array1<float>& dflt);
     
-    // array1< double, 1> .sci.cca.TypeMap.getDoubleArray(in string key, in array1< double, 1> dflt)throws .sci.cca.TypeMismatchException
-    virtual SSIDL::array1< double> getDoubleArray(const std::string& key, const SSIDL::array1< double>& dflt);
+    // array1<double, 1> .sci.cca.TypeMap.getDoubleArray(in string key, in array1<double, 1> dflt)throws .sci.cca.TypeMismatchException
+    virtual SSIDL::array1<double> getDoubleArray(const std::string& key, const SSIDL::array1<double>& dflt);
       
-    // array1< std::complex<float> , 1> .sci.cca.TypeMap.getFcomplexArray(in string key, in array1< std::complex<float> , 1> dflt)throws .sci.cca.TypeMismatchException
-    virtual SSIDL::array1< std::complex<float> > getFcomplexArray(const std::string& key, const SSIDL::array1< std::complex<float> >& dflt);
+    // array1<std::complex<float> , 1> .sci.cca.TypeMap.getFcomplexArray(in string key, in array1<std::complex<float> , 1> dflt)throws .sci.cca.TypeMismatchException
+    virtual SSIDL::array1<std::complex<float> > getFcomplexArray(const std::string& key, const SSIDL::array1<std::complex<float> >& dflt);
     
-    // array1< std::complex<double> , 1> .sci.cca.TypeMap.getDcomplexArray(in string key, in array1< std::complex<double> , 1> dflt)throws .sci.cca.TypeMismatchException
-    virtual SSIDL::array1< std::complex<double> > getDcomplexArray(const std::string& key, const SSIDL::array1< std::complex<double> >& dflt);
+    // array1<std::complex<double> , 1> .sci.cca.TypeMap.getDcomplexArray(in string key, in array1<std::complex<double> , 1> dflt)throws .sci.cca.TypeMismatchException
+    virtual SSIDL::array1<std::complex<double> > getDcomplexArray(const std::string& key, const SSIDL::array1<std::complex<double> >& dflt);
     
-    // array1< string, 1> .sci.cca.TypeMap.getStringArray(in string key, in array1< string, 1> dflt)throws .sci.cca.TypeMismatchException
-    virtual SSIDL::array1< std::string> getStringArray(const std::string& key, const SSIDL::array1< std::string>& dflt);
+    // array1<string, 1> .sci.cca.TypeMap.getStringArray(in string key, in array1<string, 1> dflt)throws .sci.cca.TypeMismatchException
+    virtual SSIDL::array1<std::string> getStringArray(const std::string& key, const SSIDL::array1<std::string>& dflt);
     
-    // array1< bool, 1> .sci.cca.TypeMap.getBoolArray(in string key, in array1< bool, 1> dflt)throws .sci.cca.TypeMismatchException
-    virtual SSIDL::array1< bool> getBoolArray(const std::string& key, const SSIDL::array1< bool>& dflt);
+    // array1<bool, 1> .sci.cca.TypeMap.getBoolArray(in string key, in array1<bool, 1> dflt)throws .sci.cca.TypeMismatchException
+    virtual SSIDL::array1<bool> getBoolArray(const std::string& key, const SSIDL::array1<bool>& dflt);
     
     // void .sci.cca.TypeMap.putInt(in string key, in int value)
     virtual void putInt(const std::string& key, int value);
@@ -149,34 +149,34 @@ namespace SCIRun {
     // void .sci.cca.TypeMap.putBool(in string key, in bool value)
     virtual void putBool(const std::string& key, bool value);
     
-    // void .sci.cca.TypeMap.putIntArray(in string key, in array1< int, 1> value)
-    virtual void putIntArray(const std::string& key, const SSIDL::array1< int>& value);
+    // void .sci.cca.TypeMap.putIntArray(in string key, in array1<int, 1> value)
+    virtual void putIntArray(const std::string& key, const SSIDL::array1<int>& value);
 
-    // void .sci.cca.TypeMap.putLongArray(in string key, in array1< long, 1> value)
-    virtual void putLongArray(const std::string& key, const SSIDL::array1< long>& value);
+    // void .sci.cca.TypeMap.putLongArray(in string key, in array1<long, 1> value)
+    virtual void putLongArray(const std::string& key, const SSIDL::array1<long>& value);
     
-    // void .sci.cca.TypeMap.putFloatArray(in string key, in array1< float, 1> value)
-    virtual void putFloatArray(const std::string& key, const SSIDL::array1< float>& value);
+    // void .sci.cca.TypeMap.putFloatArray(in string key, in array1<float, 1> value)
+    virtual void putFloatArray(const std::string& key, const SSIDL::array1<float>& value);
     
-    // void .sci.cca.TypeMap.putDoubleArray(in string key, in array1< double, 1> value)
-    virtual void putDoubleArray(const std::string& key, const SSIDL::array1< double>& value);
+    // void .sci.cca.TypeMap.putDoubleArray(in string key, in array1<double, 1> value)
+    virtual void putDoubleArray(const std::string& key, const SSIDL::array1<double>& value);
     
-    // void .sci.cca.TypeMap.putFcomplexArray(in string key, in array1< std::complex<float> , 1> value)
-    virtual void putFcomplexArray(const std::string& key, const SSIDL::array1< std::complex<float> >& value);
+    // void .sci.cca.TypeMap.putFcomplexArray(in string key, in array1<std::complex<float> , 1> value)
+    virtual void putFcomplexArray(const std::string& key, const SSIDL::array1<std::complex<float> >& value);
     
-    // void .sci.cca.TypeMap.putDcomplexArray(in string key, in array1< std::complex<double> , 1> value)
-    virtual void putDcomplexArray(const std::string& key, const SSIDL::array1< std::complex<double> >& value);
+    // void .sci.cca.TypeMap.putDcomplexArray(in string key, in array1<std::complex<double> , 1> value)
+    virtual void putDcomplexArray(const std::string& key, const SSIDL::array1<std::complex<double> >& value);
     
-    // void .sci.cca.TypeMap.putStringArray(in string key, in array1< string, 1> value)
-    virtual void putStringArray(const std::string& key, const SSIDL::array1< std::string>& value);
+    // void .sci.cca.TypeMap.putStringArray(in string key, in array1<string, 1> value)
+    virtual void putStringArray(const std::string& key, const SSIDL::array1<std::string>& value);
     
-    // void .sci.cca.TypeMap.putBoolArray(in string key, in array1< bool, 1> value)
-    virtual void putBoolArray(const std::string& key, const SSIDL::array1< bool>& value);
+    // void .sci.cca.TypeMap.putBoolArray(in string key, in array1<bool, 1> value)
+    virtual void putBoolArray(const std::string& key, const SSIDL::array1<bool>& value);
     
     // void .sci.cca.TypeMap.remove(in string key)
     virtual void remove(const std::string& key);
 
-    // array1< string, 1> .sci.cca.TypeMap.getAllKeys(in .sci.cca.Type t)
+    // array1<string, 1> .sci.cca.TypeMap.getAllKeys(in .sci.cca.Type t)
     virtual SSIDL::array1<std::string> getAllKeys(sci::cca::Type t);
     
     // bool .sci.cca.TypeMap.hasKey(in string key)
