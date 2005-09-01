@@ -219,14 +219,14 @@
 		<file>gri30.xml</file>
                 <id>gri30_mix</id>
                 <thermal_conductivity>0.0                    </thermal_conductivity>
-                <species0>CH4:1</species0>
-                <species1>O2:0.77,N2:0.23</species1>
+                <species0>O2:0.77,N2:0.23</species0>
+                <species1>CH4:1</species1>
                 <geom_object>
                   <box label="wholeDomain">
                   <min>       [-1.0,-1.0,-1.0 ]       </min>
                    <max>       [ 6.0, 6.0, 6.0 ]       </max>
                   </box>
-                 <mixtureFraction>   1.0                    </mixtureFraction>
+                 <mixtureFraction>   0.0                    </mixtureFraction>
                </geom_object>
            </Thermo>
            <isSurroundingMatl>          true            </isSurroundingMatl>

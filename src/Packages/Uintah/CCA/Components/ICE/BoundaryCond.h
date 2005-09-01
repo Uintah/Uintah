@@ -215,6 +215,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  double dx = cell_dx[dir[0]];
 
  bool IveSetBC = false;
+ cerr << "setndbc: Kind=" << bc_kind << '\n';
 
  if (bc_kind == "Neumann" && value == T(0)) { 
    bc_kind = "zeroNeumann";  // for speed
@@ -259,6 +260,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
    for (iter=bound.begin(); iter != bound.end(); iter++) {
      IntVector adjCell = *iter - oneCell;
      var[*iter] = var[adjCell] - value * dx;
+     cerr << *iter << ", var=" << var[*iter] << '\n';
    }
    IveSetBC = true;
  }
@@ -266,6 +268,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
    for (iter=bound.begin(); iter != bound.end(); iter++) {
      IntVector adjCell = *iter - oneCell;
      var[*iter] = var[adjCell];
+     cerr << *iter << ", var=" << var[*iter] << '\n';
    }
    IveSetBC = true;
    value = T(0.0);   // so the debugging output is accurate
@@ -291,6 +294,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
                                const string& whichVel)
 {
 
+ cerr << "setndbc2: Kind=" << bc_kind << '\n';
   if(bc_kind == "Neumann" && value == 0.0){
     bc_kind = "zeroNeumann";   // speedup
   }
