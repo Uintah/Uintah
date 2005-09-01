@@ -1054,21 +1054,23 @@ void ICE::scheduleComputeTempFC(SchedulerP& sched,
   if(!doICEOnLevel(levelIndex))
     return;
 
-  Task* t;
-  cout_doing << d_myworld->myrank() << " ICE::scheduleComputeTempFC" 
-             << "\t\t\t\t\tL-"<< levelIndex<< endl;
+  if(d_models.size()>0){
+    Task* t;
+    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeTempFC" 
+               << "\t\t\t\t\tL-"<< levelIndex<< endl;
              
-  t = scinew Task("ICE::computeTempFC", this, &ICE::computeTempFC);
+    t = scinew Task("ICE::computeTempFC", this, &ICE::computeTempFC);
   
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::NewDW,lb->rho_CCLabel,     /*all_matls*/ gac,1);
-  t->requires(Task::OldDW,lb->temp_CCLabel,      ice_matls,  gac,1);
-  t->requires(Task::NewDW,lb->temp_CCLabel,      mpm_matls,  gac,1);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    t->requires(Task::NewDW,lb->rho_CCLabel,     /*all_matls*/ gac,1);
+    t->requires(Task::OldDW,lb->temp_CCLabel,      ice_matls,  gac,1);
+    t->requires(Task::NewDW,lb->temp_CCLabel,      mpm_matls,  gac,1);
   
-  t->computes(lb->TempX_FCLabel);
-  t->computes(lb->TempY_FCLabel);
-  t->computes(lb->TempZ_FCLabel);
-  sched->addTask(t, patches, all_matls);
+    t->computes(lb->TempX_FCLabel);
+    t->computes(lb->TempY_FCLabel);
+    t->computes(lb->TempZ_FCLabel);
+    sched->addTask(t, patches, all_matls);
+  }
 }
 /* _____________________________________________________________________
  Function~  ICE::scheduleComputeVel_FC--
@@ -2709,7 +2711,7 @@ void ICE::computeTempFC(const ProcessorGroup*,
                         DataWarehouse* old_dw,                          
                         DataWarehouse* new_dw)                          
 {
-  const Level* level = getLevel(patches);
+ const Level* level = getLevel(patches);
   
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -2734,15 +2736,7 @@ void ICE::computeTempFC(const ProcessorGroup*,
         new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
         new_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1);
       }
-      //---- P R I N T   D A T A ------
-  #if 0
-      if (switchDebug_Temp_FC ) {
-        ostringstream desc;
-        desc << "TOP_computeTempFC_Mat_" << indx << "_patch_"<< patch->getID();
-        printData(indx, patch, 1, desc.str(), "rho_CC",      rho_CC);
-        printData(indx, patch, 1, desc.str(), "Temp_CC",    Temp_CC);
-      }
-  #endif
+
       SFCXVariable<double> TempX_FC;
       SFCYVariable<double> TempY_FC;
       SFCZVariable<double> TempZ_FC; 
@@ -2779,16 +2773,14 @@ void ICE::computeTempFC(const ProcessorGroup*,
       //__________________________________
       //  Compute the temperature on each face     
       //  Currently on used by HEChemistry 
-      if (d_models.size() > 0) {        
-        computeTempFace<SFCXVariable<double> >(XFC_iterator, adj_offset[0], 
-                                               rho_CC,Temp_CC, TempX_FC);
+      computeTempFace<SFCXVariable<double> >(XFC_iterator, adj_offset[0], 
+                                             rho_CC,Temp_CC, TempX_FC);
 
-        computeTempFace<SFCYVariable<double> >(YFC_iterator, adj_offset[1], 
-                                               rho_CC,Temp_CC, TempY_FC);
+      computeTempFace<SFCYVariable<double> >(YFC_iterator, adj_offset[1], 
+                                             rho_CC,Temp_CC, TempY_FC);
 
-        computeTempFace<SFCZVariable<double> >(ZFC_iterator,adj_offset[2],
-                                               rho_CC,Temp_CC, TempZ_FC);
-      }
+      computeTempFace<SFCZVariable<double> >(ZFC_iterator,adj_offset[2],
+                                             rho_CC,Temp_CC, TempZ_FC);
 
       //---- P R I N T   D A T A ------ 
       if (switchDebug_Temp_FC ) {
