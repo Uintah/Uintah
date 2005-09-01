@@ -40,6 +40,8 @@
 #include <Core/Containers/Array3.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/Persistent.h>
+#include <Core/Geom/ColorMap.h>
+#include <Core/Geometry/BBox.h>
 
 #include <string>
 using std::string;
@@ -125,6 +127,36 @@ protected:
 };
 
 typedef LockingHandle<CM2Widget> CM2WidgetHandle;
+
+
+class ClippingCM2Widget : public CM2Widget
+{
+public:
+  ClippingCM2Widget();
+  ClippingCM2Widget(ClippingCM2Widget& copy);
+  ClippingCM2Widget(vector<BBox> &bboxes);
+  ~ClippingCM2Widget();
+  vector<BBox> &	bboxes() { return bboxes_; }
+
+  virtual CM2Widget*	clone();
+  
+  virtual void		draw(){}
+  virtual void		rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer){}
+  virtual void		rasterize(Array3<float>& array){}
+  virtual int		pick1(int x, int y, int w, int h) { return 0; }
+  virtual int		pick2(int x, int y, int w, int h, int m){ return 0; }
+  virtual void		move(int x, int y, int w, int h){}
+  virtual void		release(int x, int y, int w, int h){}
+  virtual string	tcl_pickle() { return ""; };
+  virtual void		tcl_unpickle(const std::string &p) {};
+
+  virtual void		io(Piostream &stream);
+  static PersistentTypeID type_id;
+protected:
+  vector<BBox>		bboxes_;
+};
+  
+
 
 
 class TriangleCM2Widget : public CM2Widget
@@ -215,6 +247,33 @@ protected:
   int			pick_iy_;
 };
 
+
+
+class ColorMapCM2Widget : public RectangleCM2Widget
+{
+public:
+  ColorMapCM2Widget();
+  ColorMapCM2Widget(ColorMapCM2Widget& copy);
+  ColorMapCM2Widget(CM2RectangleType type, float left_x, float left_y,
+                     float width, float height, float offset);
+  ~ColorMapCM2Widget();
+  virtual CM2Widget*	clone();
+
+  virtual void		draw();
+  virtual void		rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
+  virtual void		rasterize(Array3<float>& array);
+  virtual string	tcl_pickle();
+  virtual void		tcl_unpickle(const std::string &p);
+
+  virtual void		io(Piostream &stream);
+  ColorMapHandle	get_colormap();
+  void			set_colormap(ColorMapHandle &cmap);
+  static PersistentTypeID type_id;
+protected:
+  ColorMapHandle	colormap_;
+};
+
+
 // The image widget cannot be manipulated, only drawn.
 class ImageCM2Widget : public CM2Widget
 {
@@ -282,6 +341,10 @@ protected:
   void			splat(Array3<float> &, double, int, int);
   Strokes		strokes_;
 };
+
+
+
+
 
 } // End namespace SCIRun
 
