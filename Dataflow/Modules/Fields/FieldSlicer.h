@@ -37,6 +37,8 @@
 #if !defined(FieldSlicer_h)
 #define FieldSlicer_h
 
+#include <include/sci_defs/insight_defs.h>
+
 #include <Core/Containers/Handle.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -49,8 +51,16 @@
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Math/Trig.h>
 
+#ifdef HAVE_INSIGHT
+#include "Packages/Insight/Core/Datatypes/ITKLatVolField.h"
+#include "Packages/Insight/Core/Datatypes/ITKImageField.h"
+#endif
 
 namespace SCIRun {
+
+#ifdef HAVE_INSIGHT
+using namespace Insight;
+#endif
 
 class FieldSlicerAlgo : public DynamicAlgoBase
 {
@@ -145,8 +155,10 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
   // Build the correct output field given the input field and and type.
 
+  string typeName = ifield->get_type_description(0)->get_name();
+
   // 3D LatVol to 2D Image
-  if( ifield->get_type_description(0)->get_name() == "LatVolField" ) {
+  if( typeName == "LatVolField" ) {
     
     typename ImageField<TYPE>::mesh_type *omesh =
       scinew typename ImageField<TYPE>::mesh_type();
@@ -163,8 +175,29 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     ofield_h = ofield;
 
+    // 3D ITKLatVolField to 2D ITKImage
+#ifdef HAVE_INSIGHT
+  } else if( typeName == "ITKLatVolField" ) {
+    
+    // These really should be ITKImageFields but the conversion will
+    // not work so for now make the ImageFields instead.
+    typename ImageField<TYPE>::mesh_type *omesh =
+      scinew typename ImageField<TYPE>::mesh_type();
+    omesh->copy_properties(imesh.get_rep());
+
+    omesh->set_min_i( new_min_i );
+    omesh->set_min_j( new_min_j );
+    omesh->set_ni( new_i );
+    omesh->set_nj( new_j );
+
+    ImageField<TYPE> *ofield =
+      scinew ImageField<TYPE>(omesh, ifield->basis_order());
+    ofield->copy_properties(ifield);
+
+    ofield_h = ofield;
+#endif
     // 3D StructHexVol to 2D StructQuadSurf
-  } else if( ifield->get_type_description(0)->get_name() == "StructHexVolField" ) {
+  } else if( typeName == "StructHexVolField" ) {
     typename StructQuadSurfField<TYPE>::mesh_type *omesh =
       scinew typename StructQuadSurfField<TYPE>::mesh_type(new_i,new_j);
     omesh->copy_properties(imesh.get_rep());
@@ -176,7 +209,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield_h = ofield;
 
     // 2D Image to 1D Scanline
-  } else if( ifield->get_type_description(0)->get_name() == "ImageField" ) {
+  } else if( typeName == "ImageField" ) {
     typename ScanlineField<TYPE>::mesh_type *omesh =
       scinew typename ScanlineField<TYPE>::mesh_type();
     omesh->copy_properties(imesh.get_rep());
@@ -190,8 +223,27 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     ofield_h = ofield;
 
+    // 2D ITKImage to 1D Scanline
+#ifdef HAVE_INSIGHT
+  } else if( typeName == "ITKImageField" ) {
+
+    // These really should be ITKScanlineFields but the conversion will
+    // not work so for now make the ScanlineFields instead.
+    typename ScanlineField<TYPE>::mesh_type *omesh =
+      scinew typename ScanlineField<TYPE>::mesh_type();
+    omesh->copy_properties(imesh.get_rep());
+
+    omesh->set_min_i( new_min_i );
+    omesh->set_ni( new_i );
+
+    ScanlineField<TYPE> *ofield = 
+      scinew ScanlineField<TYPE>(omesh, ifield->basis_order());
+    ofield->copy_properties(ifield);
+
+    ofield_h = ofield;
+#endif
     // 2D StructQuadSurf to 1D StructCurve
-  } else if( ifield->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
+  } else if( typeName == "StructQuadSurfField" ) {
     typename StructCurveField<TYPE>::mesh_type *omesh =
       scinew typename StructCurveField<TYPE>::mesh_type(new_i);
     omesh->copy_properties(imesh.get_rep());
@@ -203,7 +255,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield_h = ofield;
 
     // 1D Scanline to 0D Scanline
-  } else if( ifield->get_type_description(0)->get_name() == "ScanlineField" ) {
+  } else if( typeName == "ScanlineField" ) {
     typename ScanlineField<TYPE>::mesh_type *omesh =
       scinew typename ScanlineField<TYPE>::mesh_type();
     omesh->copy_properties(imesh.get_rep());
@@ -218,7 +270,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield_h = ofield;
 
     // 1D StructCurve to 0D PointCloud
-  } else if( ifield->get_type_description(0)->get_name() == "StructCurveField" ) {
+  } else if( typeName == "StructCurveField" ) {
     typename PointCloudField<TYPE>::mesh_type *omesh =
       scinew typename PointCloudField<TYPE>::mesh_type();
     omesh->copy_properties(imesh.get_rep());
