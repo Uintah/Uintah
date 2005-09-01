@@ -54,6 +54,7 @@ WARNING
 namespace Uintah {
   class ProcessorGroup;
   class Models_RadiationModel;
+  class ICELabel;
 
 class RadiationDriver : public ModelInterface {
 
@@ -98,7 +99,14 @@ class RadiationDriver : public ModelInterface {
                               SchedulerP& sched,
                               const PatchSet* patches,
                               const MaterialSet* matls);
-                                                                                                       
+                              
+  void scheduleSet_cellType(const LevelP& level,
+                            SchedulerP& sched,
+                            const PatchSet* patches,
+                            const MaterialSubset* mss_G,
+                            const MaterialSubset* mss_G,
+                            const MaterialSet* matls_set_GS);
+                                                                                                                                   
   void scheduleCopyValues(const LevelP& level,
                           SchedulerP& sched,
                           const PatchSet* patches,
@@ -107,7 +115,9 @@ class RadiationDriver : public ModelInterface {
   void scheduleComputeProps(const LevelP& level,
                             SchedulerP& sched,
                             const PatchSet* patches,
-                            const MaterialSet* matls);
+                            const MaterialSubset* mss_G,
+                            const MaterialSubset* mss_G,
+                            const MaterialSet* matls_set_GS);
 
   void scheduleBoundaryCondition(const LevelP& level,
                                  SchedulerP& sched,
@@ -180,12 +190,15 @@ class RadiationDriver : public ModelInterface {
   bool d_useIceTemp;
   bool d_useTableValues;
   bool d_computeCO2_H2O_from_f;
+  bool d_hasAbsorbingSolid;
   
   const PatchSet* d_perproc_patches;
 
+  ICELabel* Ilb;
+
   ProblemSpecP params;
-  const Material* d_matl;
-  MaterialSet* d_matl_set;
+  const Material* d_matl_G; //gas
+  const Material* d_matl_S; //solid
 
   const ProcessorGroup* d_myworld;
   SimulationStateP d_sharedState;
@@ -208,6 +221,12 @@ class RadiationDriver : public ModelInterface {
                       DataWarehouse*,
                       DataWarehouse* new_dw);
                       
+  void set_cellType(const ProcessorGroup*, 
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse*,
+                    DataWarehouse* new_dw);
+                                                   
   void copyValues(const ProcessorGroup*,
                   const PatchSubset* patches,
                   const MaterialSubset* matls,
