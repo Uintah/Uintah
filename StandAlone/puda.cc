@@ -1239,6 +1239,38 @@ int main(int argc, char** argv)
 		  //   C C   V A R I A B L E S
 		case Uintah::TypeDescription::CCVariable:
 		  switch(subtype->getType()){
+                  case Uintah::TypeDescription::int_type:
+		    {
+		      CCVariable<int> value;
+		      da->query(value, var, matl, patch, time);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+		      if(dx.x() && dx.y() && dx.z()){
+			int min, max;
+			IntVector c_min, c_max;
+			CellIterator iter = patch->getCellIterator();
+			min=max=value[*iter];
+			c_min = c_max = *iter;
+			// No need to do a comparison on the initial cell
+			iter++;
+			for(;!iter.done(); iter++){
+			  int val = value[*iter];
+			  if (val < min) {
+			    min = val;
+			    c_min = *iter;
+			  }
+			  if (val > max ) {
+			    max = val;
+			    c_max = *iter;
+			  }
+			}
+			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
+			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
+		      }
+		    }
+		  break;
 		  case Uintah::TypeDescription::double_type:
 		    {
 		      CCVariable<double> value;
