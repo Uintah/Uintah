@@ -1119,61 +1119,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 }
 
 void
- NrrdToField::tcl_command(GuiArgs& args, void* userdata)
+NrrdToField::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
 
-void get_nrrd_compile_type( const unsigned int type,
-			    string & typeStr,
-			    string & typeName )
-{
-  switch (type) {
-  case nrrdTypeChar :  
-    typeStr = string("char");
-    typeName = string("char");
-    break;
-  case nrrdTypeUChar : 
-    typeStr = string("unsigned char");
-    typeName = string("unsigned_char");
-    break;
-  case nrrdTypeShort : 
-    typeStr = string("short");
-    typeName = string("short");
-    break;
-  case nrrdTypeUShort :
-    typeStr = string("unsigned short");
-    typeName = string("unsigned_short");
-    break;
-  case nrrdTypeInt : 
-    typeStr = string("int");
-    typeName = string("int");
-    break;
-  case nrrdTypeUInt :  
-    typeStr = string("unsigned int");
-    typeName = string("unsigned_int");
-    break;
-  case nrrdTypeLLong : 
-    typeStr = string("long long");
-    typeName = string("long_long");
-    break;
-  case nrrdTypeULLong :
-    typeStr = string("unsigned long long");
-    typeName = string("unsigned_long_long");
-    break;
-  case nrrdTypeFloat :
-    typeStr = string("float");
-    typeName = string("float");
-    break;
-  case nrrdTypeDouble :
-    typeStr = string("double");
-    typeName = string("double");
-    break;
-  default:
-    typeStr = string("float");
-    typeName = string("float");
-  }
-}
 
 CompileInfoHandle
 NrrdToFieldMeshAlgo::get_compile_info( const string topoStr,
