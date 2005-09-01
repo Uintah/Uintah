@@ -60,7 +60,7 @@ band).  A vertical bar would represent a particular rate of change within the vo
   <implementation>
   </implementation>
   <io>
-    <inputs lastportdynamic="no">
+    <inputs lastportdynamic="yes">
       <port>
 	<name>Input Colormap</name>
 	<datatype>SCIRun::ColorMap2</datatype>
@@ -68,6 +68,10 @@ band).  A vertical bar would represent a particular rate of change within the vo
       <port>
 	<name>Histogram</name>
 	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Colormap</name>
+	<datatype>SCIRun::ColorMap</datatype>
       </port>
     </inputs>
     <outputs>
