@@ -59,8 +59,8 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
                                  const sci::cca::TypeMap::pointer& properties,
                                  const sci::cca::Port::pointer& port,
                                  PortType porttype)
-  : name(name), type(type), properties(properties), port(port),
-    lock_connections("CCAPortInstance::connections lock"),
+  : name(name), type(type), properties(properties),
+    lock_connections("CCAPortInstance::connections lock"), port(port),
     porttype(porttype), useCount(0)
 {
 }
@@ -125,13 +125,13 @@ bool CCAPortInstance::disconnect(PortInstance* to)
   }
 
   if (porttype != Uses) {
-    std::cerr<<"disconnect can be called only by user"<<std::endl; 
+    std::cerr << "disconnect can be called only by user" << std::endl; 
     return false;
   } 
   std::vector<PortInstance*>::iterator iter;
   SCIRun::Guard g1(&lock_connections);
-  for (iter=connections.begin(); iter<connections.end();iter++) {
-    if (p2==(*iter)) {
+  for (iter = connections.begin(); iter < connections.end(); iter++) {
+    if (p2 == (*iter)) {
       connections.erase(iter);
       return true;
     }
@@ -196,6 +196,11 @@ bool CCAPortInstance::decrementUseCount()
     }
     useCount--;
     return true;
+}
+
+bool CCAPortInstance::portInUse()
+{
+    return useCount > 0;
 }
 
 } // end namespace SCIRun
