@@ -72,36 +72,11 @@ public:
   
   //! Public member functions
   String* clone();
-  inline String& operator=(const String& s);
-  inline String& operator=(const std::string& s);
-
-  inline String& operator+=(const String& s);
-  inline String& operator+=(const std::string& s);
-  
-  inline String operator+(const String& s1);
-  inline String operator+(const char *s1);
-  inline String operator+(const std::string& s1);
-  
-  inline bool operator==(const String& s);
-  inline bool operator==(const std::string& s);
-  inline bool operator!=(const String& s);
-  inline bool operator!=(const std::string& s);
-
-  inline void        clear();
-  inline size_t      size();
-  inline size_t      length();
-  const  char*       c_str();
   inline void        set(std::string str);
   inline std::string get();
   inline void        setstring(std::string str);
   inline std::string getstring();
 
-  inline String      substr(size_t pos, size_t npos);
-
-  //! fast accessors
-  inline char& operator[](int idx);
-  inline char operator[](int idx) const;  
-    
   //! Persistent representation...
   virtual string type_name() { return "String"; }
   virtual void io(Piostream&);
@@ -109,44 +84,6 @@ public:
   
 };
 
-inline String& String::operator=(const String& s)
-{
-  str_ = s.str_;
-  return(*this);  
-}
-
-inline String& String::operator=(const std::string& s)
-{ 
-  str_ = s;
-  return(*this);
-}
-
-inline String& String::operator+=(const String& s)
-{
-  str_ += s.str_;
-  return(*this);  
-}
-
-inline String& String::operator+=(const std::string& s)
-{ 
-  str_ += s;
-  return(*this);
-}
-  
-inline void String::clear()
-{
-  str_ = std::string();  
-}
-
-inline size_t String::size()
-{
-  return(str_.size());
-}
-
-inline size_t String::length()
-{
-  return(str_.length());
-}
 
 inline void String::set(std::string str)
 {
@@ -167,65 +104,6 @@ inline std::string String::getstring()
   return(str_);
 }
     
-inline const char* String::c_str()
-{
-  return(str_.c_str());
-}
-
-inline bool String::operator==(const String& s)
-{
-  return(str_==s.str_);
-}
-
-inline bool String::operator==(const std::string& s)
-{
-  return(str_==s);
-}
-
-inline bool String::operator!=(const String& s)
-{
-  return(str_!=s.str_);
-}
-
-inline bool String::operator!=(const std::string& s)
-{
-  return(str_!=s);
-}
-
-
-inline char& String::operator[](int idx)
-{
-  return(str_[idx]);
-}
-
-inline char String::operator[](int idx) const
-{
-  return(str_[idx]);
-}
-
-inline String String::operator+(const String& s1)
-{
-  return(String(str_+s1.str_));
-}
-
-inline String String::operator+(const char *s1)
-{
-  return(String(str_+s1));
-}
-
-inline String String::operator+(const std::string& s1)
-{
-  return(String(str_+s1));
-}
-
-
-inline String String::substr(size_t pos, size_t npos)
-{
-  return(String(str_.substr(pos,npos)));
-}
-
-
-
 } // End namespace SCIRun
 
 #endif
