@@ -209,7 +209,7 @@
           <upper>         [ 3,  5.0,  0.03]   </upper>
           <extraCells>    [1,1,1]         </extraCells>
           <patches>       [1,1,1]         </patches>
-          <resolution>    [20,20,1]     </resolution>
+          <resolution>    [5,5,1]     </resolution>
         </Box>      
 <!--             
         <Box label = "3d">
@@ -246,17 +246,17 @@
    </DataArchiver>
 
    <Debug>
-  <!--
-       <dbg_timeStart>       100.0    </dbg_timeStart>
+       <dbg_timeStart>       0.0    </dbg_timeStart>
        <dbg_timeStop>        0.01    </dbg_timeStop>
        <dbg_outputInterval>  1e-9    </dbg_outputInterval>
        <dbg_Matls>           [0]       </dbg_Matls>
        <dbg_BeginIndex>      [-1,95,-1]  </dbg_BeginIndex>
        <dbg_EndIndex>      [1,101,1]    </dbg_EndIndex>
        <dbg_SigFigs>         5         </dbg_SigFigs> 
-       <dbg_Level>            0        </dbg_Level> 
+       <dbg_Level>            2        </dbg_Level> 
        
        <debug label = "switchDebugInitialize"/>        
+  <!--
        <debug label = "switchDebug_EQ_RF_press"/> 
        <debug label = "switchDebug_vel_FC"/> 
        <debug label = "switchDebug_setupMatrix"/>               

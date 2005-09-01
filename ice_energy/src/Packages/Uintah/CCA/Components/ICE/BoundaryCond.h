@@ -1,6 +1,7 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/MMS_BCs.h>
+#include <Packages/Uintah/CCA/Components/ICE/Thermo/ThermoInterface.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/C_BC_driver.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/NG_NozzleBCs.h>
@@ -34,7 +35,25 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
   void BC_bulletproofing(const ProblemSpecP& prob_spec,SimulationStateP& sharedState );
   
   //__________________________________
-  //  Temperature, density and other CCVariables
+  //  Temperature
+  void setBC_Temperature(CCVariable<double>& var,
+             const Patch* patch,  
+             SimulationStateP& sharedState,
+             const int mat_id,
+             DataWarehouse* old_dw, DataWarehouse* new_dw,
+             ThermoInterface::State state,
+             const constCCVariable<double>& sp_vol,
+             customBC_var_basket* C_BC_basket);
+  void setBC_Temperature(CCVariable<double>& var,     
+                         const Patch* patch,  
+                         SimulationStateP& sharedState,
+                         const int mat_id,
+                         DataWarehouse* old_dw, DataWarehouse* new_dw,
+                         ThermoInterface::State state,
+                         const constCCVariable<double>& sp_vol); 
+  
+  //__________________________________
+  //  Density and other CCVariables
   void setBC(CCVariable<double>& var,     
             const std::string& type,
             const Patch* patch,  
