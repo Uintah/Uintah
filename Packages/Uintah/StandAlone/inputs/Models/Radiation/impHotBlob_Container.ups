@@ -18,6 +18,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>  2.0        </max_delt_increase>
+       <!--<max_iterations>     10        </max_iterations> -->
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -166,6 +167,8 @@
       <save label="scalar-f"/>
       <save label="vol_frac_CC"/>
       
+      
+      <save label= "cellType_CC"/>
       <save label="modelEng_src"/>
       <save label="abskg"/>
       <save label="qfluxE"/>
@@ -213,7 +216,7 @@
          <cfl>0.2</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "SecondOrder" />
+        <advection type = "SecondOrder" useCompatibleFluxes = "true" />
         <solution technique = "EqForm" />
         
         <TimeStepControl>
@@ -257,7 +260,7 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
       <MPM>
-        <material name = "Steel Ring">    <!-- MATL 0 -->
+        <material name = "steelBall">    <!-- MATL 0 -->
         <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
         <constitutive_model type="elastic_plastic">
           <useModifiedEOS>                true  </useModifiedEOS>
@@ -292,7 +295,7 @@
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
            <geom_object>
-                <sphere label = "Steel ball">
+                <sphere label = "SteelBall">
                    <origin>           [0.0,0.0,0.0]   </origin>
                    <radius>           0.1             </radius>
                 </sphere>
@@ -393,24 +396,26 @@
       </Model>
       <!--__________________________________-->     
       <Model type = "Radiation">
-        <material>BackgroundGas</material>
+        <radiatingGas>BackgroundGas</radiatingGas>
+        <absorbingSolid>steelBall</absorbingSolid>
         <RadiationModel>
-        <radiationCalcFreq>      5    </radiationCalcFreq>
-        <useIceTemp>            true  </useIceTemp>
-        <useTableValues>        false </useTableValues>
-        <computeCO2_H2O_from_f>  true  </computeCO2_H2O_from_f>
-    
-        <DORadiationModel>
-          <ordinates> 2       </ordinates>
-          <opl>       0.24    </opl>
-           <property_model>      radcoef </property_model>
-           <spherical_harmonics> false   </spherical_harmonics>
-           <linear_solver>       hypre   </linear_solver>
-           <LinearSolver>
-             <max_iter>    1000    </max_iter>
-             <tolerance>   1.0e-8  </tolerance>
-           </LinearSolver>
-        </DORadiationModel>
+          <absorbingSolid>  true        </absorbingSolid>
+          <radiationCalcFreq>      5    </radiationCalcFreq>
+          <useIceTemp>            true  </useIceTemp>
+          <useTableValues>        false </useTableValues>
+          <computeCO2_H2O_from_f>  true  </computeCO2_H2O_from_f>
+
+          <DORadiationModel>
+            <ordinates> 2       </ordinates>
+            <opl>       0.24    </opl>
+             <property_model>      radcoef </property_model>
+             <spherical_harmonics> false   </spherical_harmonics>
+             <linear_solver>       hypre   </linear_solver>
+             <LinearSolver>
+               <max_iter>    1000    </max_iter>
+               <tolerance>   1.0e-8  </tolerance>
+             </LinearSolver>
+          </DORadiationModel>
         </RadiationModel>
       </Model>
  

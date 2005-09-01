@@ -153,6 +153,9 @@
       <save label="press_CC"/>
       <save label="delP_Dilatate"/>
       <save label="scalar-f"/>
+      <save label="cellType_CC"/>
+
+      <save label="abskg"/>
       <save label="qfluxE"/>
       <save label="qfluxW"/>
       <save label="qfluxN"/>
@@ -160,6 +163,8 @@
       <save label="qfluxT"/>
       <save label="qfluxB"/>
       <save label="radiationSrc"/>
+      <save label="CO2"/>
+      <save label="H2O"/> 
       <save label="rhs"/>
       
       <compression>gzip</compression>
@@ -192,7 +197,7 @@
          <cfl>0.2</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "SecondOrder" />
+        <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
         <solution technique = "EqForm" />
         
         <TimeStepControl>
@@ -319,7 +324,7 @@
       </Model>
     <!--__________________________________-->   
       <Model type = "Radiation">
-        <material>BackgroundGas</material>
+        <radiatingGas>BackgroundGas</radiatingGas>
         <RadiationModel>
         <radiationCalcFreq>      5    </radiationCalcFreq>
         <useIceTemp>            true  </useIceTemp>
