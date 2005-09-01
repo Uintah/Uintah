@@ -877,15 +877,6 @@ void ImpMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   if (d_switchCriteria) {
     d_switchCriteria->scheduleSwitchTest(level,sched);
   }
-#if 0
-  Task* task = scinew Task("switchTest",this, &ImpMPM::switchTest);
-
-  // make sure this is done after relocation (non-data)
-  task->requires(Task::NewDW, lb->pXLabel, d_sharedState->allMPMMaterials()->getUnion(), Ghost::None );
-  task->computes(d_sharedState->get_switch_label(), level.get_rep());
-  sched->addTask(task, level->eachPatch(),d_sharedState->allMPMMaterials());
-#endif
-
 }
 
 
@@ -2695,47 +2686,4 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 double ImpMPM::recomputeTimestep(double current_dt)
 {
   return current_dt*d_delT_decrease_factor;
-}
-
-
-void ImpMPM::switchTest(const ProcessorGroup* group,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw)
-{
-//  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-//  double sw = 0;
-#if 0
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing switchTest on patch "
-                 << patch->getID() <<"\t IMPM"<< "\n" << "\n";
-    }
-                                                                                
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwindex = mpm_matl->getDWIndex();
-                                                                                
-      ParticleSubset* pset = new_dw->getParticleSubset(dwindex, patch);
-                                                                                
-      constParticleVariable<double> ptemperature;
-      new_dw->get(ptemperature, lb->pTemperatureLabel, pset);
- 
-      double thresholdTemp=301.;
-                                                                                
-      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
-        particleIndex idx = *iter;
-        if(ptemperature[idx]>thresholdTemp){
-          sw=1;
-        }
-     }
-    }
-  }
-#endif
-
-//  max_vartype switch_condition(sw);
-//  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
 }
