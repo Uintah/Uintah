@@ -82,7 +82,7 @@ public:
 
   virtual void matrixCreate(const PatchSet* /*allpatches*/,
                             const PatchSubset* /*mypatc*/) {
-    std::cout << "WARNING: Models_HypreSolver.h: matrixCreate NOT IMPLEMENTED!!!";
+    std::cout << "WARNING: Models_HypreSolver.h: matrixCreate NOT IMPLEMENTED!!!"<< endl;
   };
 
   void setMatrix(const ProcessorGroup* pc,
