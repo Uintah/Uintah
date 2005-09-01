@@ -89,11 +89,14 @@ public:
     inline std::string
     getClassName() const { return className; }
         
-    inline sci::cca::TypeMap::pointer
+    inline sci::cca::TypeMap::pointer&
     getComponentProperties() { return comProperties; }
         
     void
     setComponentProperties(const sci::cca::TypeMap::pointer &tm);
+
+    bool
+    releaseComponentCallback(const sci::cca::Services::pointer &svc);
 
 protected:
   /** The unique name of this component instance. */
@@ -103,6 +106,9 @@ protected:
   std::string className;
 
   sci::cca::TypeMap::pointer comProperties;
+
+  /** See interface ComponentRelease */
+  sci::cca::ComponentRelease::pointer releaseCallback;
 
 private:
   ComponentInstance(const ComponentInstance&);
