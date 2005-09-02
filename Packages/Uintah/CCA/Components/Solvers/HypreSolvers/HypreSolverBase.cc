@@ -26,13 +26,13 @@ HypreSolverBase::HypreSolverBase(HypreDriver* driver,
                                  const Priorities& priority) :
   _driver(driver), _precond(precond), _priority(priority), _requiresPar(true)
 {
-  cout << "HypreSolverBase::constructor BEGIN" << "\n";
+  cerr << "HypreSolverBase::constructor BEGIN" << "\n";
   assertInterface();
 
   // Initialize results section
   _results.numIterations = 0;
   _results.finalResNorm  = 1.23456e+30; // Large number
-  cout << "HypreSolverBase::constructor END" << "\n";
+  cerr << "HypreSolverBase::constructor END" << "\n";
 }
   
 HypreSolverBase::~HypreSolverBase(void)
@@ -42,7 +42,7 @@ HypreSolverBase::~HypreSolverBase(void)
 void
 HypreSolverBase::assertInterface(void)
 { 
-  cout << "HypreSolverBase::assertInterface() BEGIN" << "\n";
+  cerr << "HypreSolverBase::assertInterface() BEGIN" << "\n";
   if (_priority.size() < 1) {
     throw InternalError("Solver created without interface priorities",
                         __FILE__, __LINE__);
@@ -51,14 +51,14 @@ HypreSolverBase::assertInterface(void)
 
   // Intersect solver and preconditioner priorities
   if (_precond) {
-    cout << "Intersect solver, precond priorities begin" << "\n";
+    cerr << "Intersect solver, precond priorities begin" << "\n";
     Priorities newSolverPriority;
     const Priorities& precondPriority = _precond->getPriority();
     for (unsigned int i = 0; i < _priority.size(); i++) {
-      cout << "i = " << i << "\n";
+      cerr << "i = " << i << "\n";
       bool remove = false;
       for (unsigned int j = 0; j < _priority.size(); j++) {
-        cout << "j = " << j << "\n";
+        cerr << "j = " << j << "\n";
         if (_priority[i] == precondPriority[j]) {
           // Remove this solver interface entry
           remove = true;
@@ -75,7 +75,7 @@ HypreSolverBase::assertInterface(void)
   // Check whether solver requires ParCSR or not, because we need to
   // know about that in HypreDriver::makeLinearSystem. Also check the
   // correctness of the values of _priority.
-  cout << "Check if solver requires par" << "\n";
+  cerr << "Check if solver requires par" << "\n";
   for (unsigned int i = 0; i < _priority.size(); i++) {
     if (_priority[i] == HypreInterfaceNA) {
       throw InternalError("Bad Solver interface priority "+_priority[i],
@@ -86,27 +86,29 @@ HypreSolverBase::assertInterface(void)
       _requiresPar = false;
     }
   }
+  cerr << "requiresPar = " << _requiresPar << "\n";
 
-  cout << "Look for requested interface in solver priorities" << "\n";
+  cerr << "Look for requested interface in solver priorities" << "\n";
   const HypreInterface& interface = _driver->getInterface();
-  cout << "interface = " << interface << "\n";
+  cerr << "interface = " << interface << "\n";
   bool found = false;
+  cerr << "Solver priorities:" << "\n";
   for (unsigned int i = 0; i < _priority.size(); i++) {
-    cout << "_priority[" << i << "] = " << _priority[i] << "\n";
+    cerr << "_priority[" << i << "] = " << _priority[i] << "\n";
     if (interface == _priority[i]) {
       // Found interface that solver can work with
       found = true;
       break;
     }
   }
-  cout << "1. found = " << found << "\n";
+  cerr << "1. found = " << found << "\n";
 
   // See whether we can convert the Hypre data to a format we can
   // work with.
   if (!found) {
-    cout << "Looking for possible conversions" << "\n";
+    cerr << "Looking for possible conversions" << "\n";
     for (unsigned int i = 0; i < _priority.size(); i++) {
-      cout << "i = " << i << "\n";
+      cerr << "i = " << i << "\n";
       // Try to convert from the current driver to _priority[i]
       if (_driver->isConvertable(_priority[i])) {
         // Conversion exists
@@ -115,14 +117,14 @@ HypreSolverBase::assertInterface(void)
       }
     }
   }
-  cout << "2. found = " << found << "\n";
+  cerr << "2. found = " << found << "\n";
 
   if (!found) {
     ostringstream msg;
     msg << "Solver does not support Hypre interface " << interface;
     throw InternalError(msg.str(),__FILE__, __LINE__); 
   }
-  cout << "HypreSolverBase::assertInterface() END" << "\n";
+  cerr << "HypreSolverBase::assertInterface() END" << "\n";
 }
 
 namespace Uintah {
@@ -152,7 +154,7 @@ namespace Uintah {
       }
     case CG:
       {
-        cout << "Doing new HypreSolverCG" << "\n";
+        cerr << "Doing new HypreSolverCG" << "\n";
         return new HypreSolverCG(driver,precond);
       }
     case Hybrid: 

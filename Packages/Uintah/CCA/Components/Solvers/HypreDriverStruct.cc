@@ -59,7 +59,7 @@ HypreDriverStruct::~HypreDriverStruct(void)
 void
 HypreDriverStruct::printMatrix(const string& fileName /* =  "output" */)
 {
-  cout_doing << "HypreDriverStruct::printMatrix() begin" << "\n";
+  cerr << "HypreDriverStruct::printMatrix() begin" << "\n";
   if (!_params->printSystem) return;
   HYPRE_StructMatrixPrint((fileName + ".sstruct").c_str(), _HA, 0);
   //  if (_requiresPar) {
@@ -67,7 +67,7 @@ HypreDriverStruct::printMatrix(const string& fileName /* =  "output" */)
   //    // Print CSR matrix in IJ format, base 1 for rows and cols
   //    HYPRE_ParCSRMatrixPrintIJ(_HA_Par, 1, 1, (fileName + ".ij").c_str());
   //  }
-  cout_doing << "HypreDriverStruct::printMatrix() end" << "\n";
+  cerr << "HypreDriverStruct::printMatrix() end" << "\n";
 }
 
 void

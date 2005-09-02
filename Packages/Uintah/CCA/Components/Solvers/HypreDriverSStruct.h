@@ -179,10 +179,14 @@ namespace Uintah {
                                          const int stencilSize,
                                          const bool symmetric) = 0;
 
-      // Interior matrix connections construction
+      // Interior vector - read from Uintah
       virtual void makeInteriorVector(HYPRE_SStructVector& HV,
                                       DataWarehouse* _V_dw,
                                       const VarLabel* _V_label) = 0;
+
+      // Interior vector - initialize with zeros
+      virtual void makeInteriorVectorZero(HYPRE_SStructVector& HV,
+                                          DataWarehouse* _V_dw) = 0;
 
       // C/F matrix connections construction
       virtual void makeConnections(HYPRE_SStructMatrix& HA,
@@ -234,10 +238,14 @@ namespace Uintah {
                                          const int stencilSize,
                                          const bool symmetric = false);
 
-      // Interior matrix connections construction
+      // Interior vector - read from Uintah
       virtual void makeInteriorVector(HYPRE_SStructVector& HV,
                                       DataWarehouse* _V_dw,
                                       const VarLabel* _V_label);
+
+      // Interior vector - initialize with zeros
+      virtual void makeInteriorVectorZero(HYPRE_SStructVector& HV,
+                                          DataWarehouse* _V_dw);
 
       // C/F matrix connections construction
       virtual void makeConnections(HYPRE_SStructMatrix& HA,

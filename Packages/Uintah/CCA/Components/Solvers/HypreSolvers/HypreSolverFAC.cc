@@ -38,6 +38,7 @@ HypreSolverFAC::solve(void)
   // objects.
   //___________________________________________________________________
 {
+  cerr << "HypreSolverFAC::solve() BEGIN" << "\n";
   const int numDims = 3; // Hard-coded for Uintah
   const HypreSolverParams* params = _driver->getParams();
 
@@ -107,6 +108,9 @@ HypreSolverFAC::solve(void)
     HYPRE_SStructFACGetNumIterations(solver, &_results.numIterations);
     HYPRE_SStructFACGetFinalRelativeResidualNorm(solver,
                                                  &_results.finalResNorm);
+    cerr << "FAC convergence statistics:" << "\n";
+    cerr << "numIterations = " << _results.numIterations << "\n";
+    cerr << "finalResNorm  = " << _results.finalResNorm << "\n";
 
     // Destroy & free
     HYPRE_SStructFACDestroy2(solver);
@@ -117,4 +121,6 @@ HypreSolverFAC::solve(void)
     HYPRE_SStructMatrixDestroy(facA);
 
   } // interface == HypreSStruct
+
+  cerr << "HypreSolverFAC::solve() END" << "\n";
 }
