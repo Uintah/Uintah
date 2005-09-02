@@ -2436,8 +2436,8 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
           int indx = ice_matl->getDWIndex();      
           desc1 << "hydroStaticAdj_Mat_" << indx << "_patch_"<< patch->getID();
           printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol);
-          printData(indx, patch,   1, desc.str(), "pressure_CC",     press_CC);
           printData(indx, patch,   1, desc.str(), "Temp_CC",   newTemp);
+          printData(indx, patch,   1, desc.str(), "int_eng",   int_eng);
         }   
       }
     }
@@ -2477,6 +2477,19 @@ void ICE::computeInternalEnergy(const ProcessorGroup*,
                                              Temp, sp_vol);
       setBC_Temperature(int_eng, patch, d_sharedState, indx, 0, new_dw,
                         ThermoInterface::NewState, sp_vol);
+      //__________________________________
+      //  Print Data
+      if (switchDebugInitialize){     
+        ostringstream desc, desc1;
+        desc << "computeInternalEnergy_patch_"<< patch->getID();
+        for (int m = 0; m < numMatls; m++ ) { 
+          ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+          int indx = ice_matl->getDWIndex();      
+          desc1 << "computeInternalEnergy_Mat_" << indx << "_patch_"<< patch->getID();
+          printData(indx, patch,   1, desc.str(), "Temp", Temp);
+          printData(indx, patch,   1, desc.str(), "int_eng",   int_eng);
+        }   
+      }
     }
   }
 }
@@ -4794,7 +4807,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       constCCVariable<double> tmpE = spec_int_eng_L;
       int indx = ice_matl->getDWIndex();
-      ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), Temp_CC[m],
+      ice_matl->getThermo()->compute_Temp(patch->getExtraCellIterator(), Temp_CC[m],
                                           old_dw, new_dw, ThermoInterface::IntermediateState,
                                           patch, indx, 0,
                                           tmpE, sp_vol_CC[m]);
@@ -5057,12 +5070,26 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     }
 #endif
 
+    // Set bcs on temperature before multiplying by mass
+    // I do not like this because we bounce back and forth between the
+    // mass-independent energy and the mass-weighted energy.  There should
+    // be a better way - possibly by changing the way that the bcs work - Steve
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      setBC_Temperature(int_eng_L_ME[m], patch, d_sharedState, 
+      CCVariable<double> spec_int_eng_L_ME;
+      new_dw->allocateTemporary(spec_int_eng_L_ME, patch);
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        spec_int_eng_L_ME[c] = int_eng_L_ME[m][c]/mass_L[m][c];
+      }
+      setBC_Temperature(spec_int_eng_L_ME, patch, d_sharedState, 
                         indx, old_dw, new_dw,  ThermoInterface::IntermediateState,
                         sp_vol_CC[m], d_customBC_var_basket);
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        int_eng_L_ME[m][c] = spec_int_eng_L_ME[c]*mass_L[m][c];
+      }
     }
 
     //---- P R I N T   D A T A ------ 
@@ -5355,7 +5382,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       //__________________________________
       // Advect internal energy
-      cerr << "WARNING: advect internal energy not done - is_Q_massSpecific?\n";
       varBasket->is_Q_massSpecific = true;
       varBasket->desc = "int_eng";
       advector->advectQ(int_eng_L_ME, mass_L, q_advected, varBasket);

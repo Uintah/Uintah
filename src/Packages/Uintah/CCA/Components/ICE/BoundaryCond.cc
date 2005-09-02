@@ -550,7 +550,7 @@ void setBC_Temperature(CCVariable<double>& var_CC,
                                             var_CC, sp_vol);
           CCVariable<double> gamma;
           new_dw->allocateTemporary(gamma, patch);
-          ice_matl->getThermo()->compute_gamma(bound.begin(), bound.end(), cv, old_dw, new_dw,
+          ice_matl->getThermo()->compute_gamma(bound.begin(), bound.end(), gamma, old_dw, new_dw,
                                                state, patch, matl->getDWIndex(), 0,
                                                var_CC, sp_vol);
           ice_matl->getEOS()->
