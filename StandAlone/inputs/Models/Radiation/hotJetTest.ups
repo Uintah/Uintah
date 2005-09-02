@@ -231,6 +231,7 @@
       <save label = "rho_CC"/>
       <save label = "temp_CC"/>
       <save label = "scalar-f"/>
+      <save label = "modelEng_src"/>
       <save label="cellType_CC"/>
       <save label="abskg"/>
       <save label="qfluxE"/>

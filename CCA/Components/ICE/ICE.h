@@ -730,7 +730,7 @@ namespace Uintah {
       virtual bool useLockstepTimeAdvance();
      
       // Debugging switches
-      bool switchDebugInitialize;
+      bool switchDebug_Initialize;
       bool switchDebug_EQ_RF_press;
       bool switchDebug_vel_FC;
       bool switchDebug_Temp_FC;
@@ -742,11 +742,11 @@ namespace Uintah {
       bool switchDebug_updatePressure;
       bool switchDebug_computeDelP;
       bool switchDebug_PressFC;
-      bool switchDebugLagrangianValues;
-      bool switchDebugLagrangianSpecificVol;
-      bool switchDebugLagrangianTransportedVars;
-      bool switchDebugMomentumExchange_CC;
-      bool switchDebugSource_Sink;
+      bool switchDebug_LagrangianValues;
+      bool switchDebug_LagrangianSpecificVol;
+      bool switchDebug_LagrangianTransportedVars;
+      bool switchDebug_MomentumExchange_CC;
+      bool switchDebug_Source_Sink;
       bool switchDebug_advance_advect;
       bool switchDebug_AMR_refine;
       bool switchDebug_AMR_refineInterface;

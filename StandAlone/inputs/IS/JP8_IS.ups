@@ -318,7 +318,7 @@
      <dbg_EndIndex>        [2, 2, 2]  </dbg_EndIndex>
      <dbg_SigFigs>         5          </dbg_SigFigs>
      <dbg_Matls>        [0,1,2]       </dbg_Matls>
-     <debug label = "switchDebugLagrangianTransportedVars"/>
+     <debug label = "switchDebug_LagrangianTransportedVars"/>
      <debug label = "switchDebug_advance_advect"/> 
   </Debug>
 

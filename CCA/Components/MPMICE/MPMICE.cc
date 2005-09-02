@@ -1099,7 +1099,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       }
       
       //---- P R I N T   D A T A ------        
-      if (d_ice->switchDebugInitialize){      
+      if (d_ice->switchDebug_Initialize){      
         ostringstream desc;
         desc << "MPMICE_Initialization_Mat_" << indx << "_patch_"
              << patch->getID();
@@ -1454,7 +1454,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       IntVector nodeIdx[8];
 
       //---- P R I N T   D A T A ------ 
-      if(d_ice->switchDebugLagrangianValues) {
+      if(d_ice->switchDebug_LagrangianValues) {
         ostringstream desc;
         desc <<"TOP_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
              <<  indx<<patch->getID();
@@ -1556,7 +1556,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
        setBC(rho_CC,    "Density",      patch, d_sharedState, indx, new_dw);  
 
       //---- P R I N T   D A T A ------ 
-      if(d_ice->switchDebugLagrangianValues) {
+      if(d_ice->switchDebug_LagrangianValues) {
         ostringstream desc;
         desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
             <<  patch->getID();
