@@ -14,7 +14,6 @@ SRCS     += \
 PSELIBS := \
 	Core/Exceptions                  \
 	Core/Util                        \
-	Packages/Uintah/CCA/Components/MPM \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Exceptions  \
