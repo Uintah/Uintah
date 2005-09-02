@@ -95,16 +95,26 @@ void PBXTemperature::switchTest(const ProcessorGroup* group,
       double Temp_CC_mpm = 0.0;
       double cmass = 1.e-100;
 
+      double MaxMass = d_SMALL_NUM;
+      double MinMass = 1.0/d_SMALL_NUM;
+
       for (int in=0;in<8;in++){
         double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+        MaxMass = std::max(MaxMass,NC_CCw_mass);
+        MinMass = std::min(MinMass,NC_CCw_mass);
         cmass    += NC_CCw_mass;
         Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
       }
       Temp_CC_mpm /= cmass;
 
-      if(Temp_CC_mpm >= d_temperature){
-       sw=1;
-       break;
+
+      if ( (MaxMass-MinMass)/MaxMass > 0.4            //--------------KNOB 1
+        && (MaxMass-MinMass)/MaxMass < 1.0
+        &&  MaxMass > d_TINY_RHO){
+        if(Temp_CC_mpm >= d_temperature){
+         sw=1;
+         break;
+        }
       }
     }
 
