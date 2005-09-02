@@ -37,6 +37,8 @@ namespace Uintah {
       SimulationStateP d_sharedState; 
       MPMLabel* Mlb;
       MPMICELabel* MIlb;
+      #define d_SMALL_NUM 1e-100
+      #define d_TINY_RHO 1e-12
     };
 } // End namespace Uintah
 
