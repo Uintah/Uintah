@@ -340,8 +340,8 @@ RadiationDriver::initialize(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
         IntVector c = *iter;
-        H2O_concentration[c] = 0.5 * scalar_f[c];    // TODO:  CHANGE THIS EQUATION
-        CO2_concentration[c] = 0.5 * scalar_f[c];
+        H2O_concentration[c] = 0.085 * scalar_f[c];
+        CO2_concentration[c] = 0.18 * scalar_f[c];
       }
     }
   }
@@ -477,8 +477,8 @@ RadiationDriver::computeCO2_H2O(const ProcessorGroup*,
         
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();  iter++){
       IntVector c = *iter;
-      H2O_concentration[c] = 0.5 * scalar_f[c];    // TODO:  CHANGE THIS EQUATION
-      CO2_concentration[c] = 0.5 * scalar_f[c];
+      H2O_concentration[c] = 0.085 * scalar_f[c];   // Hardwired for JP8
+      CO2_concentration[c] = 0.18 * scalar_f[c];
     }
   }
 }
