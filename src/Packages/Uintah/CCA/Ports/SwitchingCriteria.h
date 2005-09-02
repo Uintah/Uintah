@@ -19,6 +19,8 @@ namespace Uintah {
     virtual void problemSetup(const ProblemSpecP& params,
                               SimulationStateP& state) = 0;
 
+    virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched)
+      {};
     virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
       {};
 
