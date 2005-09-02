@@ -5,10 +5,8 @@
 
 \subsection ayla Ayla
 
-\li GUI Prototypes: by September 2
-\li CCA spec upgrade, Services interface: by August 26
-\li CCA spec upgrade, ComponentRelease interface: by August 26
-\li Bug 2770, getPort should not return null: TBD
+\li CCA spec upgrade, Services interface: by September 16
+\li GUI Prototypes: by September 23
 \li Replace Qt GUI toolkit: by November 7
 \li Migrate loading/saving network files to a Framework service: TBD
 <!-- MPICH done, others? -->
