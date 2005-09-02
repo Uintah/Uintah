@@ -72,6 +72,41 @@ template class GenericField<HVMesh, FDucharBasis,  vector<unsigned char> >;
 template class GenericField<HVMesh, FDulongBasis,  vector<unsigned long> >;
 
 
+PersistentTypeID backwards_compat_HVFT("HexVolField<Tensor>", "Field",
+				       GenericField<HVMesh, FDTensorBasis, 
+				       vector<Tensor> >::maker, true);
+PersistentTypeID backwards_compat_HVFV("HexVolField<Vector>", "Field",
+				       GenericField<HVMesh, FDVectorBasis, 
+				       vector<Vector> >::maker, true);
+PersistentTypeID backwards_compat_HVFd("HexVolField<double>", "Field",
+				       GenericField<HVMesh, FDdoubleBasis, 
+				       vector<double> >::maker, true);
+PersistentTypeID backwards_compat_HVFf("HexVolField<float>", "Field",
+				       GenericField<HVMesh, FDfloatBasis, 
+				       vector<float> >::maker, true);
+PersistentTypeID backwards_compat_HVFi("HexVolField<int>", "Field",
+				       GenericField<HVMesh, FDintBasis, 
+				       vector<int> >::maker, true);
+PersistentTypeID backwards_compat_HVFs("HexVolField<short>", "Field",
+				       GenericField<HVMesh, FDshortBasis, 
+				       vector<short> >::maker, true);
+PersistentTypeID backwards_compat_HVFc("HexVolField<char>", "Field",
+				       GenericField<HVMesh, FDcharBasis, 
+				       vector<char> >::maker, true);
+PersistentTypeID backwards_compat_HVFui("HexVolField<unsigned_int>", "Field",
+				       GenericField<HVMesh, FDuintBasis, 
+				       vector<unsigned int> >::maker, true);
+PersistentTypeID backwards_compat_HVFus("HexVolField<unsigned_short>", "Field",
+				       GenericField<HVMesh, FDushortBasis, 
+				       vector<unsigned short> >::maker, true);
+PersistentTypeID backwards_compat_HVFuc("HexVolField<unsigned_char>", "Field",
+				       GenericField<HVMesh, FDucharBasis, 
+				       vector<unsigned char> >::maker, true);
+PersistentTypeID backwards_compat_HVFul("HexVolField<unsigned_long>", "Field",
+				       GenericField<HVMesh, FDulongBasis, 
+				       vector<unsigned long> >::maker, true);
+
+
 typedef HexTricubicHmt<double>             HTCdoubleBasis;
 typedef NoDataBasis<double>                NDdoubleBasis;
 

@@ -75,6 +75,40 @@ template class GenericField<PVMesh, PFDushortBasis, vector<unsigned short> >;
 template class GenericField<PVMesh, PFDucharBasis,  vector<unsigned char> >;
 template class GenericField<PVMesh, PFDulongBasis,  vector<unsigned long> >;
 
+PersistentTypeID backwards_compat_PVFT("PrismVolField<Tensor>", "Field",
+				       GenericField<PVMesh, PFDTensorBasis, 
+				       vector<Tensor> >::maker, true);
+PersistentTypeID backwards_compat_PVFV("PrismVolField<Vector>", "Field",
+				       GenericField<PVMesh, PFDVectorBasis, 
+				       vector<Vector> >::maker, true);
+PersistentTypeID backwards_compat_PVFd("PrismVolField<double>", "Field",
+				       GenericField<PVMesh, PFDdoubleBasis, 
+				       vector<double> >::maker, true);
+PersistentTypeID backwards_compat_PVFf("PrismVolField<float>", "Field",
+				       GenericField<PVMesh, PFDfloatBasis, 
+				       vector<float> >::maker, true);
+PersistentTypeID backwards_compat_PVFi("PrismVolField<int>", "Field",
+				       GenericField<PVMesh, PFDintBasis, 
+				       vector<int> >::maker, true);
+PersistentTypeID backwards_compat_PVFs("PrismVolField<short>", "Field",
+				       GenericField<PVMesh, PFDshortBasis, 
+				       vector<short> >::maker, true);
+PersistentTypeID backwards_compat_PVFc("PrismVolField<char>", "Field",
+				       GenericField<PVMesh, PFDcharBasis, 
+				       vector<char> >::maker, true);
+PersistentTypeID backwards_compat_PVFui("PrismVolField<unsigned_int>", "Field",
+				       GenericField<PVMesh, PFDuintBasis, 
+				       vector<unsigned int> >::maker, true);
+PersistentTypeID backwards_compat_PVFus("PrismVolField<unsigned_short>", "Field",
+				       GenericField<PVMesh, PFDushortBasis, 
+				       vector<unsigned short> >::maker, true);
+PersistentTypeID backwards_compat_PVFuc("PrismVolField<unsigned_char>", "Field",
+				       GenericField<PVMesh, PFDucharBasis, 
+				       vector<unsigned char> >::maker, true);
+PersistentTypeID backwards_compat_PVFul("PrismVolField<unsigned_long>", "Field",
+				       GenericField<PVMesh, PFDulongBasis, 
+				       vector<unsigned long> >::maker, true);
+
 typedef NoDataBasis<double>                 NDBasis;
 typedef TetLinearLgn<Tensor>                TFDTensorBasis;
 typedef TetLinearLgn<Vector>                TFDVectorBasis;
@@ -102,11 +136,39 @@ template class GenericField<TVMesh, TFDushortBasis, vector<unsigned short> >;
 template class GenericField<TVMesh, TFDucharBasis,  vector<unsigned char> >;
 template class GenericField<TVMesh, TFDulongBasis,  vector<unsigned long> >;
 
+PersistentTypeID backwards_compat_TVFT("TetVolField<Tensor>", "Field",
+				       GenericField<TVMesh, TFDTensorBasis, 
+				       vector<Tensor> >::maker, true);
+PersistentTypeID backwards_compat_TVFV("TetVolField<Vector>", "Field",
+				       GenericField<TVMesh, TFDVectorBasis, 
+				       vector<Vector> >::maker, true);
 PersistentTypeID backwards_compat_TVFd("TetVolField<double>", "Field",
 				       GenericField<TVMesh, TFDdoubleBasis, 
-				       vector<double> >::maker);
-
-
+				       vector<double> >::maker, true);
+PersistentTypeID backwards_compat_TVFf("TetVolField<float>", "Field",
+				       GenericField<TVMesh, TFDfloatBasis, 
+				       vector<float> >::maker, true);
+PersistentTypeID backwards_compat_TVFi("TetVolField<int>", "Field",
+				       GenericField<TVMesh, TFDintBasis, 
+				       vector<int> >::maker, true);
+PersistentTypeID backwards_compat_TVFs("TetVolField<short>", "Field",
+				       GenericField<TVMesh, TFDshortBasis, 
+				       vector<short> >::maker, true);
+PersistentTypeID backwards_compat_TVFc("TetVolField<char>", "Field",
+				       GenericField<TVMesh, TFDcharBasis, 
+				       vector<char> >::maker, true);
+PersistentTypeID backwards_compat_TVFui("TetVolField<unsigned_int>", "Field",
+				       GenericField<TVMesh, TFDuintBasis, 
+				       vector<unsigned int> >::maker, true);
+PersistentTypeID backwards_compat_TVFus("TetVolField<unsigned_short>", "Field",
+				       GenericField<TVMesh, TFDushortBasis, 
+				       vector<unsigned short> >::maker, true);
+PersistentTypeID backwards_compat_TVFuc("TetVolField<unsigned_char>", "Field",
+				       GenericField<TVMesh, TFDucharBasis, 
+				       vector<unsigned char> >::maker, true);
+PersistentTypeID backwards_compat_TVFul("TetVolField<unsigned_long>", "Field",
+				       GenericField<TVMesh, TFDulongBasis, 
+				       vector<unsigned long> >::maker, true);
 
 
 typedef TetQuadraticLgn<Tensor>                TQFDTensorBasis;

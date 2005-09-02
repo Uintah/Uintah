@@ -54,7 +54,7 @@
 
 using namespace std;
 
-#define DEBUG 1
+#define DEBUG 0
 
 namespace SCIRun {
 
@@ -77,8 +77,12 @@ const int Piostream::PERSISTENT_VERSION = 2;
 //----------------------------------------------------------------------
 PersistentTypeID::PersistentTypeID(const string& typeName, 
 				   const string& parentName,
-				   Persistent* (*maker)())
-  :  type(typeName), parent(parentName), maker(maker)
+				   Persistent* (*maker)(),
+				   bool backwards_compat) :  
+  type(typeName),
+  parent(parentName), 
+  maker(maker),
+  backwards_compat_(backwards_compat)
 {
 #if DEBUG
   // Using printf as cerr causes a core dump (probably cerr has not
@@ -376,6 +380,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	if (found_pid)
         {
 	  maker = found_pid->maker;
+	  if (found_pid->backwards_compat_) set_backwards_compat_id(true);
 	}
         else
         {

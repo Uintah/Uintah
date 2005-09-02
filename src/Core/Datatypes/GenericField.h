@@ -362,25 +362,23 @@ GenericField<Mesh, Basis, FData>::type_id(type_name(-1), "Field", maker);
 template <class Mesh, class Basis, class FData>
 void GenericField<Mesh, Basis, FData>::io(Piostream& stream)
 {
-  cerr << "start ::io GenericField" << std::endl;
   // we need to pass -1 to type_name() on SGI to fix a compile bug
   int version = stream.begin_class(type_name(-1), GENERICFIELD_VERSION);
-  cerr << "1 ::io GenericField" << std::endl;
+  if (stream.backwards_compat_id()) {
+    version = stream.begin_class(type_name(-1), GENERICFIELD_VERSION);
+  }
   Field::io(stream);
-  cerr << "2 ::io GenericField" << std::endl;
   if (version < 2)
     mesh_->io(stream);
   else
     Pio(stream, mesh_);
   mesh_->freeze();
-  cerr << "done mesh_ in ::io GenericField" << std::endl;
   if (version >= 3) { 
     basis_.io(stream);
   }
   Pio(stream, fdata_);
   freeze();
   stream.end_class();
-  cerr << "end ::io GenericField" << std::endl;
 }
 
 

@@ -3498,7 +3498,6 @@ TetVolMesh<Basis>::io(Piostream &stream)
   const int version = stream.begin_class(type_name(-1), TETVOLMESH_VERSION);
   Mesh::io(stream);
 
-  cerr << "begin TetVolMesh<Basis>::io" << std::endl;
   SCIRun::Pio(stream, points_);
   SCIRun::Pio(stream, cells_);
   if (version == 1)
@@ -3507,7 +3506,6 @@ TetVolMesh<Basis>::io(Piostream &stream)
     SCIRun::Pio(stream, neighbors);
   }
 
-  cerr << "orient TetVolMesh<Basis>::io" << std::endl;
   // orient the tets..
   typename Cell::iterator iter, endit;
   begin(iter);
@@ -3518,7 +3516,6 @@ TetVolMesh<Basis>::io(Piostream &stream)
   }
 
   stream.end_class();
-  cerr << "end TetVolMesh<Basis>::io" << std::endl;
 }
 
 template <class Basis>

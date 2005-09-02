@@ -86,6 +86,39 @@ template class GenericField<CMesh, CFDushortBasis, vector<unsigned short> >;
 template class GenericField<CMesh, CFDucharBasis,  vector<unsigned char> >;
 template class GenericField<CMesh, CFDulongBasis,  vector<unsigned long> >;
 
+PersistentTypeID backwards_compat_SCFT("StructCurveField<Tensor>", "Field",
+				       GenericField<CMesh, CFDTensorBasis, 
+				       vector<Tensor> >::maker, true);
+PersistentTypeID backwards_compat_SCFV("StructCurveField<Vector>", "Field",
+				       GenericField<CMesh, CFDVectorBasis, 
+				       vector<Vector> >::maker, true);
+PersistentTypeID backwards_compat_SCFd("StructCurveField<double>", "Field",
+				       GenericField<CMesh, CFDdoubleBasis, 
+				       vector<double> >::maker, true);
+PersistentTypeID backwards_compat_SCFf("StructCurveField<float>", "Field",
+				       GenericField<CMesh, CFDfloatBasis, 
+				       vector<float> >::maker, true);
+PersistentTypeID backwards_compat_SCFi("StructCurveField<int>", "Field",
+				       GenericField<CMesh, CFDintBasis, 
+				       vector<int> >::maker, true);
+PersistentTypeID backwards_compat_SCFs("StructCurveField<short>", "Field",
+				       GenericField<CMesh, CFDshortBasis, 
+				       vector<short> >::maker, true);
+PersistentTypeID backwards_compat_SCFc("StructCurveField<char>", "Field",
+				       GenericField<CMesh, CFDcharBasis, 
+				       vector<char> >::maker, true);
+PersistentTypeID backwards_compat_SCFui("StructCurveField<unsigned_int>", "Field",
+				       GenericField<CMesh, CFDuintBasis, 
+				       vector<unsigned int> >::maker, true);
+PersistentTypeID backwards_compat_SCFus("StructCurveField<unsigned_short>", "Field",
+				       GenericField<CMesh, CFDushortBasis, 
+				       vector<unsigned short> >::maker, true);
+PersistentTypeID backwards_compat_SCFuc("StructCurveField<unsigned_char>", "Field",
+				       GenericField<CMesh, CFDucharBasis, 
+				       vector<unsigned char> >::maker, true);
+PersistentTypeID backwards_compat_SCFul("StructCurveField<unsigned_long>", "Field",
+				       GenericField<CMesh, CFDulongBasis, 
+				       vector<unsigned long> >::maker, true);
 
 typedef QuadBilinearLgn<Tensor>                QFDTensorBasis;
 typedef QuadBilinearLgn<Vector>                QFDVectorBasis;
@@ -116,6 +149,40 @@ template class GenericField<SQMesh, QFDucharBasis,  FData2d<unsigned char,
 template class GenericField<SQMesh, QFDulongBasis,  FData2d<unsigned long,
 							    SQMesh> >;
 
+PersistentTypeID backwards_compat_SQSFT("StructQuadSurfField<Tensor>", "Field",
+				       GenericField<SQMesh, QFDTensorBasis, 
+				       FData2d<Tensor, SQMesh> >::maker, true);
+PersistentTypeID backwards_compat_SQSFV("StructQuadSurfField<Vector>", "Field",
+				       GenericField<SQMesh, QFDVectorBasis, 
+				       FData2d<Vector, SQMesh> >::maker, true);
+PersistentTypeID backwards_compat_SQSFd("StructQuadSurfField<double>", "Field",
+				       GenericField<SQMesh, QFDdoubleBasis, 
+				       FData2d<double, SQMesh> >::maker, true);
+PersistentTypeID backwards_compat_SQSFf("StructQuadSurfField<float>", "Field",
+				       GenericField<SQMesh, QFDfloatBasis, 
+				       FData2d<float, SQMesh> >::maker, true);
+PersistentTypeID backwards_compat_SQSFi("StructQuadSurfField<int>", "Field",
+				       GenericField<SQMesh, QFDintBasis, 
+				       FData2d<int, SQMesh> >::maker, true);
+PersistentTypeID backwards_compat_SQSFs("StructQuadSurfField<short>", "Field",
+				       GenericField<SQMesh, QFDshortBasis, 
+				       FData2d<short, SQMesh> >::maker, true);
+PersistentTypeID backwards_compat_SQSFc("StructQuadSurfField<char>", "Field",
+				       GenericField<SQMesh, QFDcharBasis, 
+				       FData2d<char, SQMesh> >::maker, true);
+PersistentTypeID backwards_compat_SQSFui("StructQuadSurfField<unsigned_int>", "Field",
+				       GenericField<SQMesh, QFDuintBasis, 
+				       FData2d<unsigned int, SQMesh> >::maker, true);
+PersistentTypeID backwards_compat_SQSFus("StructQuadSurfField<unsigned_short>", "Field",
+				       GenericField<SQMesh, QFDushortBasis, 
+				       FData2d<unsigned short, SQMesh> >::maker, true);
+PersistentTypeID backwards_compat_SQSFuc("StructQuadSurfField<unsigned_char>", "Field",
+				       GenericField<SQMesh, QFDucharBasis, 
+				       FData2d<unsigned char, SQMesh> >::maker, true);
+PersistentTypeID backwards_compat_SQSFul("StructQuadSurfField<unsigned_long>", "Field",
+				       GenericField<SQMesh, QFDulongBasis, 
+				       FData2d<unsigned long, SQMesh> >::maker, true);
+
 
 typedef HexTrilinearLgn<Tensor>                HFDTensorBasis;
 typedef HexTrilinearLgn<Vector>                HFDVectorBasis;
@@ -145,6 +212,41 @@ template class GenericField<SHMesh, HFDucharBasis,  FData3d<unsigned char,
 							    SHMesh> >;
 template class GenericField<SHMesh, HFDulongBasis,  FData3d<unsigned long,
 							    SHMesh> >;
+
+
+PersistentTypeID backwards_compat_SHVFT("StructHexVolField<Tensor>", "Field",
+				       GenericField<SHMesh, HFDTensorBasis, 
+				       FData3d<Tensor, SHMesh> >::maker, true);
+PersistentTypeID backwards_compat_SHVFV("StructHexVolField<Vector>", "Field",
+				       GenericField<SHMesh, HFDVectorBasis, 
+				       FData3d<Vector, SHMesh> >::maker, true);
+PersistentTypeID backwards_compat_SHVFd("StructHexVolField<double>", "Field",
+				       GenericField<SHMesh, HFDdoubleBasis, 
+				       FData3d<double, SHMesh> >::maker, true);
+PersistentTypeID backwards_compat_SHVFf("StructHexVolField<float>", "Field",
+				       GenericField<SHMesh, HFDfloatBasis, 
+				       FData3d<float, SHMesh> >::maker, true);
+PersistentTypeID backwards_compat_SHVFi("StructHexVolField<int>", "Field",
+				       GenericField<SHMesh, HFDintBasis, 
+				       FData3d<int, SHMesh> >::maker, true);
+PersistentTypeID backwards_compat_SHVFs("StructHexVolField<short>", "Field",
+				       GenericField<SHMesh, HFDshortBasis, 
+				       FData3d<short, SHMesh> >::maker, true);
+PersistentTypeID backwards_compat_SHVFc("StructHexVolField<char>", "Field",
+				       GenericField<SHMesh, HFDcharBasis, 
+				       FData3d<char, SHMesh> >::maker, true);
+PersistentTypeID backwards_compat_SHVFui("StructHexVolField<unsigned_int>", "Field",
+				       GenericField<SHMesh, HFDuintBasis, 
+				       FData3d<unsigned int, SHMesh> >::maker, true);
+PersistentTypeID backwards_compat_SHVFus("StructHexVolField<unsigned_short>", "Field",
+				       GenericField<SHMesh, HFDushortBasis, 
+				       FData3d<unsigned short, SHMesh> >::maker, true);
+PersistentTypeID backwards_compat_SHVFuc("StructHexVolField<unsigned_char>", "Field",
+				       GenericField<SHMesh, HFDucharBasis, 
+				       FData3d<unsigned char, SHMesh> >::maker, true);
+PersistentTypeID backwards_compat_SHVFul("StructHexVolField<unsigned_long>", "Field",
+				       GenericField<SHMesh, HFDulongBasis, 
+				       FData3d<unsigned long, SHMesh> >::maker, true);
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

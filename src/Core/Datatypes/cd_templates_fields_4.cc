@@ -71,6 +71,40 @@ template class GenericField<TSMesh, FDushortBasis, vector<unsigned short> >;
 template class GenericField<TSMesh, FDucharBasis,  vector<unsigned char> >;
 template class GenericField<TSMesh, FDulongBasis,  vector<unsigned long> >;
 
+PersistentTypeID backwards_compat_TSFT("TriSurfField<Tensor>", "Field",
+				       GenericField<TSMesh, FDTensorBasis, 
+				       vector<Tensor> >::maker, true);
+PersistentTypeID backwards_compat_TSFV("TriSurfField<Vector>", "Field",
+				       GenericField<TSMesh, FDVectorBasis, 
+				       vector<Vector> >::maker, true);
+PersistentTypeID backwards_compat_TSFd("TriSurfField<double>", "Field",
+				       GenericField<TSMesh, FDdoubleBasis, 
+				       vector<double> >::maker, true);
+PersistentTypeID backwards_compat_TSFf("TriSurfField<float>", "Field",
+				       GenericField<TSMesh, FDfloatBasis, 
+				       vector<float> >::maker, true);
+PersistentTypeID backwards_compat_TSFi("TriSurfField<int>", "Field",
+				       GenericField<TSMesh, FDintBasis, 
+				       vector<int> >::maker, true);
+PersistentTypeID backwards_compat_TSFs("TriSurfField<short>", "Field",
+				       GenericField<TSMesh, FDshortBasis, 
+				       vector<short> >::maker, true);
+PersistentTypeID backwards_compat_TSFc("TriSurfField<char>", "Field",
+				       GenericField<TSMesh, FDcharBasis, 
+				       vector<char> >::maker, true);
+PersistentTypeID backwards_compat_TSFui("TriSurfField<unsigned_int>", "Field",
+				       GenericField<TSMesh, FDuintBasis, 
+				       vector<unsigned int> >::maker, true);
+PersistentTypeID backwards_compat_TSFus("TriSurfField<unsigned_short>", "Field",
+				       GenericField<TSMesh, FDushortBasis, 
+				       vector<unsigned short> >::maker, true);
+PersistentTypeID backwards_compat_TSFuc("TriSurfField<unsigned_char>", "Field",
+				       GenericField<TSMesh, FDucharBasis, 
+				       vector<unsigned char> >::maker, true);
+PersistentTypeID backwards_compat_TSFul("TriSurfField<unsigned_long>", "Field",
+				       GenericField<TSMesh, FDulongBasis, 
+				       vector<unsigned long> >::maker, true);
+
 typedef CrvLinearLgn<Tensor>                CFDTensorBasis;
 typedef CrvLinearLgn<Vector>                CFDVectorBasis;
 typedef CrvLinearLgn<double>                CFDdoubleBasis;
@@ -95,6 +129,40 @@ template class GenericField<CMesh, CFDuintBasis,   vector<unsigned int> >;
 template class GenericField<CMesh, CFDushortBasis, vector<unsigned short> >;
 template class GenericField<CMesh, CFDucharBasis,  vector<unsigned char> >;
 template class GenericField<CMesh, CFDulongBasis,  vector<unsigned long> >;
+
+PersistentTypeID backwards_compat_CFT("CurveField<Tensor>", "Field",
+				       GenericField<CMesh, CFDTensorBasis, 
+				       vector<Tensor> >::maker, true);
+PersistentTypeID backwards_compat_CFV("CurveField<Vector>", "Field",
+				       GenericField<CMesh, CFDVectorBasis, 
+				       vector<Vector> >::maker, true);
+PersistentTypeID backwards_compat_CFd("CurveField<double>", "Field",
+				       GenericField<CMesh, CFDdoubleBasis, 
+				       vector<double> >::maker, true);
+PersistentTypeID backwards_compat_CFf("CurveField<float>", "Field",
+				       GenericField<CMesh, CFDfloatBasis, 
+				       vector<float> >::maker, true);
+PersistentTypeID backwards_compat_CFi("CurveField<int>", "Field",
+				       GenericField<CMesh, CFDintBasis, 
+				       vector<int> >::maker, true);
+PersistentTypeID backwards_compat_CFs("CurveField<short>", "Field",
+				       GenericField<CMesh, CFDshortBasis, 
+				       vector<short> >::maker, true);
+PersistentTypeID backwards_compat_CFc("CurveField<char>", "Field",
+				       GenericField<CMesh, CFDcharBasis, 
+				       vector<char> >::maker, true);
+PersistentTypeID backwards_compat_CFui("CurveField<unsigned_int>", "Field",
+				       GenericField<CMesh, CFDuintBasis, 
+				       vector<unsigned int> >::maker, true);
+PersistentTypeID backwards_compat_CFus("CurveField<unsigned_short>", "Field",
+				       GenericField<CMesh, CFDushortBasis, 
+				       vector<unsigned short> >::maker, true);
+PersistentTypeID backwards_compat_CFuc("CurveField<unsigned_char>", "Field",
+				       GenericField<CMesh, CFDucharBasis, 
+				       vector<unsigned char> >::maker, true);
+PersistentTypeID backwards_compat_CFul("CurveField<unsigned_long>", "Field",
+				       GenericField<CMesh, CFDulongBasis, 
+				       vector<unsigned long> >::maker, true);
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

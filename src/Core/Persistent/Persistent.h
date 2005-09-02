@@ -64,8 +64,9 @@ struct PersistentTypeID {
   string parent;
   Persistent* (*maker)();
   PersistentTypeID(const string& type, const string& parent,
-		   Persistent* (*maker)());
+		   Persistent* (*maker)(), bool backward_compat = false);
   ~PersistentTypeID();
+  bool backwards_compat_;
 };
 
 //----------------------------------------------------------------------
@@ -107,7 +108,7 @@ protected:
 
   ProgressReporter *reporter_;
   bool own_reporter_;
-
+  bool backwards_compat_id_;
   virtual void emit_pointer(int& have_data, int& pointer_id);
   static bool readHeader(ProgressReporter *pr,
                          const string& filename, char* hdr,
@@ -145,7 +146,8 @@ public:
   bool writing() const { return dir == Write; }
   bool error() const { return err; }
   int version() const { return version_; }
-
+  bool backwards_compat_id() const { return backwards_compat_id_; }
+  void set_backwards_compat_id(bool p) { backwards_compat_id_ = p; }
   virtual bool supports_block_io() { return false; } // deprecated, redundant.
   // Returns true if bkock_io was supported (even on error).
   virtual bool block_io(void*, size_t, size_t) { return false; }

@@ -278,10 +278,8 @@ PropertyManager::clear_transient()
 void
 PropertyManager::io(Piostream &stream)
 {
-  cerr << "start ::io PropertyManager" << std::endl;
   const int version =
     stream.begin_class("PropertyManager", PROPERTYMANAGER_VERSION);
-  cerr << "1 ::io PropertyManager" << std::endl;
   if ( stream.writing() )
   {
     lock.lock();
@@ -300,10 +298,8 @@ PropertyManager::io(Piostream &stream)
   }
   else
   {
-    cerr << "2 ::io PropertyManager" << std::endl;
     unsigned int size;
     Pio( stream, size );
-    cerr << "3 ::io PropertyManager, size == " << size << std::endl;
     lock.lock();
 
     string name;
@@ -322,7 +318,6 @@ PropertyManager::io(Piostream &stream)
   }
 
   stream.end_class();
-  cerr << "end ::io PropertyManager" << std::endl;
 }
 
 
