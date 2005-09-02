@@ -72,6 +72,7 @@ Hello::~Hello()
 void Hello::setServices(const sci::cca::Services::pointer& svc)
 {
     services = svc;
+    svc->registerForRelease(sci::cca::ComponentRelease::pointer(this));
     sci::cca::TypeMap::pointer props = svc->createTypeMap();
 
     myUIPort *uip = new myUIPort();
@@ -103,12 +104,14 @@ void Hello::setServices(const sci::cca::Services::pointer& svc)
 
 void Hello::releaseServices(const sci::cca::Services::pointer& svc)
 {
-    services->unregisterUsesPort("stringport");
-    services->unregisterUsesPort("progress");
+std::cerr << "Hello::releaseServices" << std::endl;
 
-    services->removeProvidesPort("ui");
-    services->removeProvidesPort("go");
-    services->removeProvidesPort("icon");
+    svc->unregisterUsesPort("stringport");
+    svc->unregisterUsesPort("progress");
+
+    svc->removeProvidesPort("ui");
+    svc->removeProvidesPort("go");
+    svc->removeProvidesPort("icon");
 }
 
 
@@ -139,13 +142,13 @@ int myGoPort::go()
     sci::cca::Port::pointer pp;
     sci::cca::Port::pointer progPort;
     try {
-        pp = services->getPort("stringport");	
-        progPort = services->getPort("progress");	
+        pp = services->getPort("stringport");
+        progPort = services->getPort("progress");
     }
     catch (const sci::cca::CCAException::pointer &e) {
         std::cerr << e->getNote() << std::endl;
         return 1;
-    }  
+    }
 
     sci::cca::ports::Progress::pointer pPtr =
         pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
@@ -183,9 +186,9 @@ int myComponentIcon::getProgressBar()
 {
     return STEPS;
 }
- 
+
 std::string myComponentIcon::getIconShape()
 {
     return std::string("RECT");
 }
- 
+

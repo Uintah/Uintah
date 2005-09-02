@@ -1,3 +1,30 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
 
 #include <CCA/Components/ZListWriter/ZListWriter.h>
 
@@ -16,76 +43,69 @@ extern "C" sci::cca::Component::pointer make_SCIRun_ZListWriter()
 
 ZListWriter::ZListWriter()
 {
-  ciPort.setParent(this);
 }
 
 ZListWriter::~ZListWriter()
 {
     services->unregisterUsesPort("listport");
-    services->unregisterUsesPort("progress");
+
+    services->removeProvidesPort("ui");
+    services->removeProvidesPort("icon");
 }
 
 void ZListWriter::setServices(const sci::cca::Services::pointer& svc)
 {
-  services=svc;
+  services = svc;
   //register provides ports here ...
 
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  uiPort = new ZLUIPort(services);
-  uiPort->setParent(this);
-  ZLUIPort::pointer uip(uiPort);
-  ZLComponentIcon::pointer cip(&ciPort);
+  ZLUIPort *uip = new ZLUIPort(services);
+  uip->setParent(this);
+  ZLUIPort::pointer uiPortPtr = ZLUIPort::pointer(uip);
 
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-  svc->addProvidesPort(cip, "icon",
+  svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort", props);
+
+  ZLComponentIcon::pointer ciPortPtr =
+    ZLComponentIcon::pointer(new ZLComponentIcon);
+
+  svc->addProvidesPort(ciPortPtr, "icon",
                        "sci.cca.ports.ComponentIcon", props);
   svc->registerUsesPort("listport","ZListPort", props);
-
-  svc->registerUsesPort("progress","sci.cca.ports.Progress",
-    sci::cca::TypeMap::pointer(0));
 }
 
 int ZLUIPort::ui()
 {
-  sci::cca::Port::pointer pp=services->getPort("listport"); 
-  if(pp.isNull()){
-    QMessageBox::warning(0, "ListPlotter", "listport is not available!");
+  sci::cca::ports::ZListPort::pointer lport;
+  try {
+    sci::cca::Port::pointer pp = services->getPort("listport"); 
+    lport =
+      pidl_cast<sci::cca::ports::ZListPort::pointer>(pp);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    QMessageBox::warning(0, "ZListWriter", e->getNote());
     return 1;
   }  
-  sci::cca::ports::ZListPort::pointer lport =
-      pidl_cast<sci::cca::ports::ZListPort::pointer>(pp);
   SSIDL::array1<double> data = lport->getList();  
-
   services->releasePort("listport");
 
   QString filename;
   QString fn = QFileDialog::getSaveFileName(QString::null, "ZList File (*.lst)");
   if (fn.isEmpty()) {
-      return 2;
+    return 2;
   }
   if (fn.endsWith(".lst")) {
-     filename = fn;
+    filename = fn;
   } else {
-     QString fnExt = fn + ".lst";
-     filename = fnExt;
+    QString fnExt = fn + ".lst";
+    filename = fnExt;
   }
-
-  //sci::cca::Port::pointer progPort = services->getPort("progress");	
-  //if (progPort.isNull()) {
-  //  std::cerr << "progress is not available!\n";
-  //  return 1;
-  //}  
-  //sci::cca::ports::Progress::pointer pPtr =
-  //  pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
 
   std::ofstream saveOutputFile(filename);
   for (unsigned int i = 0; i < data.size(); i++) {
-  //    pPtr->updateProgress(i, data.size());
-      saveOutputFile << data[i] << std::endl;
+    saveOutputFile << data[i] << std::endl;
   }
   saveOutputFile.close();
 
-  //services->releasePort("progress");
   return 0;
 }
 

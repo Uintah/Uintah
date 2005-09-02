@@ -47,7 +47,6 @@
 #include <qmessagebox.h>
 
 
-
 using namespace std;
 using namespace SCIRun;
 
@@ -63,35 +62,44 @@ PDEdriver::PDEdriver()
 
 PDEdriver::~PDEdriver()
 {
-   services->unregisterUsesPort("progress");
+std::cerr << "PDEdriver::~PDEdriver" << std::endl;
+//   services->removeProvidesPort("go");
+//   services->removeProvidesPort("icon");
+//   services->unregisterUsesPort("pde");
+//   services->unregisterUsesPort("mesh");
+//   services->unregisterUsesPort("fem_matrix");
+//   services->unregisterUsesPort("linsolver");
+//   services->unregisterUsesPort("viewer");
+//   services->unregisterUsesPort("progress");
 }
 
 void PDEdriver::setServices(const sci::cca::Services::pointer& svc)
 {
-  services=svc;
+  services = svc;
   //register provides ports here ...  
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
 
-  myGoPort::pointer goport(new myGoPort(svc));
-  svc->addProvidesPort(goport,"go","sci.cca.ports.GoPort", props);
+  myGoPort *gop = new myGoPort(svc);
+  svc->addProvidesPort(myGoPort::pointer(gop),"go","sci.cca.ports.GoPort", props);
+  svc->addProvidesPort(PDEComponentIcon::pointer(new PDEComponentIcon), "icon", "sci.cca.ports.ComponentIcon", svc->createTypeMap());
 
-  PDEComponentIcon::pointer cip(new PDEComponentIcon);
-  svc->addProvidesPort(cip, "icon", "sci.cca.ports.ComponentIcon",
-    sci::cca::TypeMap::pointer(0));
+  svc->registerUsesPort("pde","sci.cca.ports.PDEdescriptionPort", svc->createTypeMap());
+  svc->registerUsesPort("mesh","sci.cca.ports.MeshPort", svc->createTypeMap());
+  svc->registerUsesPort("fem_matrix","sci.cca.ports.FEMmatrixPort", svc->createTypeMap());
+  svc->registerUsesPort("linsolver","sci.cca.ports.LinSolverPort", svc->createTypeMap());
+  svc->registerUsesPort("viewer","sci.cca.ports.ViewPort", svc->createTypeMap());
 
-  sci::cca::TypeMap::pointer nullProperty(0);
-
-  svc->registerUsesPort("pde","sci.cca.ports.PDEdescriptionPort", nullProperty);
-  svc->registerUsesPort("mesh","sci.cca.ports.MeshPort", nullProperty);
-  svc->registerUsesPort("fem_matrix","sci.cca.ports.FEMmatrixPort", nullProperty);
-  svc->registerUsesPort("linsolver","sci.cca.ports.LinSolverPort", nullProperty);
-  svc->registerUsesPort("viewer","sci.cca.ports.ViewPort", nullProperty);
-
-  svc->registerUsesPort("progress","sci.cca.ports.Progress", nullProperty);
+  svc->registerUsesPort("progress","sci.cca.ports.Progress", svc->createTypeMap());
 }
 
-myGoPort::myGoPort(sci::cca::Services::pointer svc){
-  this->svc=svc;
+myGoPort::myGoPort(const sci::cca::Services::pointer& svc) {
+  this->svc = svc;
+}
+
+void myGoPort::updateProgress(int counter)
+{
+  if (pPtr.isNull()) return;
+  pPtr->updateProgress(counter);
 }
 
 int myGoPort::go() 
@@ -106,122 +114,119 @@ int myGoPort::go()
   SSIDL::array1<double> fg;
   SSIDL::array1<double> x;
 
-  int size;
-  int progressCounter = 0;
-
-  sci::cca::Port::pointer progPort = svc->getPort("progress");	
-  if (progPort.isNull()) {
-    std::cerr << "progress is not available!\n";
-    return 0;
+  int size = 0;
+  int progCtr = 0;
+  try {
+    sci::cca::Port::pointer progPort = svc->getPort("progress");  
+    pPtr = pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    QMessageBox::warning(0, "PDEdriver", e->getNote());
   }  
-  sci::cca::ports::Progress::pointer pPtr =
-    pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
-
-  sci::cca::Port::pointer pp=svc->getPort("pde");	
-  if(pp.isNull()){
-    QMessageBox::warning(0, "PDEdriver", "Port 'pde' is not available!");
+  sci::cca::ports::PDEdescriptionPort::pointer pdePort;
+  try {
+    sci::cca::Port::pointer pp = svc->getPort("pde");   
+    pdePort = pidl_cast<sci::cca::ports::PDEdescriptionPort::pointer>(pp);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    QMessageBox::warning(0, "PDEdriver", e->getNote());
     return 1;
   }
-  sci::cca::ports::PDEdescriptionPort::pointer pdePort=
-    pidl_cast<sci::cca::ports::PDEdescriptionPort::pointer>(pp);
   pdePort->getPDEdescription(nodes, boundries, dirichletNodes, dirichletValues);
   svc->releasePort("pde");
+  updateProgress(++progCtr);
 
-  pPtr->updateProgress(progressCounter++);
-
-  pp=svc->getPort("mesh");	
-  if(pp.isNull()){
-    QMessageBox::warning(0, "PDEdriver", "Port 'mesh' is not available!");
+  sci::cca::ports::MeshPort::pointer meshPort;
+  try {
+    sci::cca::Port::pointer pp = svc->getPort("mesh");  
+    meshPort = pidl_cast<sci::cca::ports::MeshPort::pointer>(pp);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    QMessageBox::warning(0, "PDEdriver", e->getNote());
     return 1;
   }
-  sci::cca::ports::MeshPort::pointer meshPort=
-    pidl_cast<sci::cca::ports::MeshPort::pointer>(pp);
   meshPort->triangulate(nodes, boundries, triangles);
   svc->releasePort("mesh");
+  updateProgress(++progCtr);
 
-  pPtr->updateProgress(progressCounter++);
-
-  pp=svc->getPort("fem_matrix");	
-  if(pp.isNull()){
-    QMessageBox::warning(0, "PDEdriver", "Port 'fem_matrix' is not available!");
+  sci::cca::ports::FEMmatrixPort::pointer fem_matrixPort;
+  try {
+    sci::cca::Port::pointer pp = svc->getPort("fem_matrix");    
+    fem_matrixPort = pidl_cast<sci::cca::ports::FEMmatrixPort::pointer>(pp);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    QMessageBox::warning(0, "PDEdriver", e->getNote());
     return 1;
   }
-  sci::cca::ports::FEMmatrixPort::pointer fem_matrixPort=
-    pidl_cast<sci::cca::ports::FEMmatrixPort::pointer>(pp);
-  fem_matrixPort->makeFEMmatrices(triangles, nodes, dirichletNodes, dirichletValues, Ag, fg, size);
+  fem_matrixPort->makeFEMmatrices(triangles, nodes,
+                                  dirichletNodes, dirichletValues,
+                                  Ag, fg, size);
   svc->releasePort("fem_matrix");
+  updateProgress(++progCtr);
 
-  pPtr->updateProgress(progressCounter++);
-
-  pp=svc->getPort("linsolver");	
-  if(pp.isNull()){
-    QMessageBox::warning(0, "PDEdriver", "Port 'linsolver' is not available!");
+  sci::cca::ports::LinSolverPort::pointer linsolverPort;
+  try {
+    sci::cca::Port::pointer pp = svc->getPort("linsolver"); 
+    linsolverPort = pidl_cast<sci::cca::ports::LinSolverPort::pointer>(pp);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    QMessageBox::warning(0, "PDEdriver", e->getNote());
     return 1;
   }
-  sci::cca::ports::LinSolverPort::pointer linsolverPort=
-    pidl_cast<sci::cca::ports::LinSolverPort::pointer>(pp);
-
-  pPtr->updateProgress(progressCounter++);
+  updateProgress(++progCtr);
 
   /////////////////////////////
   //NEED REVERSE THIS dr[0] dr[1] AFTER KOSTA CHANGES THE
   //CONVENTION
-
   Index* dr[2];
-  const int stride=1;
+  const int stride = 1;
   dr[1] = new Index(0, size, stride); //row is divided into blocks
   dr[0] = new Index(0, size, stride);  //col is not changed.
-  MxNArrayRep* arrr = new MxNArrayRep(2,dr);
-  delete dr[0];   delete dr[1]; 
+  // unused variable:
+  //MxNArrayRep* arrr = new MxNArrayRep(2,dr);
+  delete dr[0];
+  delete dr[1]; 
 
-  //  linsolverPort->setCallerDistribution("DMatrix",arrr); 
-
-
+  // linsolverPort->setCallerDistribution("DMatrix",arrr); 
   linsolverPort->jacobi(Ag, fg, x);
   svc->releasePort("linsolver");
+  updateProgress(++progCtr);
 
-  pPtr->updateProgress(progressCounter++);
-
-
-  pp=svc->getPort("viewer");	
-  if(pp.isNull()){
-    QMessageBox::warning(0, "PDEdriver", "Port 'viewer' is not available!");
+  sci::cca::ports::ViewPort::pointer viewPort;
+  try {
+    sci::cca::Port::pointer pp = svc->getPort("viewer");    
+    viewPort = pidl_cast<sci::cca::ports::ViewPort::pointer>(pp);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    QMessageBox::warning(0, "PDEdriver", e->getNote());
     return 1;
   }
-  sci::cca::ports::ViewPort::pointer viewPort=
-    pidl_cast<sci::cca::ports::ViewPort::pointer>(pp);
   viewPort->view2dPDE(nodes, triangles, x);
-
-  pPtr->updateProgress(progressCounter++);
-
   svc->releasePort("viewer");
+  updateProgress(++progCtr);
 
   svc->releasePort("progress");
-
   return 0;
 }
 
 
 std::string PDEComponentIcon::getDisplayName()
 {
-    return "PDE Driver";
+  return "PDE Driver";
 }
 
 std::string PDEComponentIcon::getDescription()
 {
-    return "PDE Driver Component";
+  return "PDE Driver Component";
 }
 
 int PDEComponentIcon::getProgressBar()
 {
-    return 6;
+  return 6;
 }
  
 std::string PDEComponentIcon::getIconShape()
 {
-    return "RECT";
+  return "RECT";
 }
-
-
-
 
