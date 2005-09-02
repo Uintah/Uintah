@@ -243,6 +243,10 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(MIlb->NC_CCweightLabel, one_matl);
   t->computes(Mlb->heatFlux_CCLabel);
+
+  if (d_switchCriteria) {
+    d_switchCriteria->scheduleInitialize(level,sched);
+  }
     
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
   if (cout_doing.active()) {
@@ -944,37 +948,9 @@ void MPMICE::scheduleSolveEquationsMotion(SchedulerP& sched,
 
 void MPMICE::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
-
   if (d_switchCriteria) {
     d_switchCriteria->scheduleSwitchTest(level,sched);
   }
-#if 0
-  Task* t = scinew Task("switchTest",this, &MPMICE::switchTest);
-
-  pbx_matl     = scinew MaterialSubset();
-  pbx_matl->add(pbx_matl_num);
-  pbx_matl->addReference();
-  
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gn  = Ghost::None;
-
-  t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, d_ice->d_press_matl,gn);
-  t->requires(Task::OldDW,  MIlb->NC_CCweightLabel, d_ice->d_press_matl,gac,1);
-  
-  //__________________________________
-  // PBX_Matl
-  t->requires(Task::NewDW, Ilb->TempX_FCLabel,    pbx_matl, gac,2);
-  t->requires(Task::NewDW, Ilb->TempY_FCLabel,    pbx_matl, gac,2);
-  t->requires(Task::NewDW, Ilb->TempZ_FCLabel,    pbx_matl, gac,2);
-  t->requires(Task::NewDW, Mlb->gMassLabel,       pbx_matl, gac,1);
-  
-  
-  // make sure this is done after relocation
-  t->requires(Task::NewDW, Mlb->pXLabel, d_sharedState->allMPMMaterials()->getUnion(), Ghost::None );
-  t->computes(d_sharedState->get_switch_label(), level.get_rep());
-  sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
-#endif
-
 
 }
 
@@ -3063,105 +3039,5 @@ void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
     }
   }
 }
-void MPMICE::switchTest(const ProcessorGroup* group,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw)
-{
-  double sw = 0;
 
-  if (!d_switchCriteria)
-    cout << "got a switch criteria" << endl;
 
-#if 1
-  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-  if (time_step == 7)
-    sw = 1;
-  else
-    sw = 0;
-#endif
-
-  // Get the pbx surface temperature
-#if 0
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);  
-    
-    cout_doing << "Doing switchTest on patch "<< patch->getID()
-               <<"\t\t\t\t  MPMICE" << endl;
-    
-    constCCVariable<double> press_CC;
-    constCCVariable<double> solidTemp,solidMass;
-
-    CCVariable<double> surfaceTemp;
-
-    constNCVariable<double> NC_CCweight,NCsolidMass;
-    constSFCXVariable<double> solidTempX_FC;
-    constSFCYVariable<double> solidTempY_FC;
-    constSFCZVariable<double> solidTempZ_FC;
-    
-    Ghost::GhostType  gn  = Ghost::None;    
-    Ghost::GhostType  gac = Ghost::AroundCells;   
-   
-    //__________________________________
-    // Reactant data
-    new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel, pbx_matl_num,patch,gac,2);
-    new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel, pbx_matl_num,patch,gac,2);
-    new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel, pbx_matl_num,patch,gac,2);
-    new_dw->get(NCsolidMass,     Mlb->gMassLabel,    pbx_matl_num,patch,gac,1);
-
-    //__________________________________
-    //   Misc.
-    new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
-    old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,   0,  patch,gac,1);   
-    new_dw->allocateTemporary(surfaceTemp,patch);
-    surfaceTemp.initialize(0.);
-  
-    IntVector nodeIdx[8];
-
-    double thresholdTemp = 301.;
-    
-    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-      IntVector c = *iter;
-
-     //__________________________________
-     // Find if the cell contains surface:
-      patch->findNodesFromCell(*iter,nodeIdx);
-      double MaxMass = d_SMALL_NUM;
-      double MinMass = 1.0/d_SMALL_NUM;
-      for (int nN=0; nN<8; nN++) {
-        MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
-                                   NCsolidMass[nodeIdx[nN]]);
-        MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
-                                   NCsolidMass[nodeIdx[nN]]); 
-      }               
-
-      if ( (MaxMass-MinMass)/MaxMass > 0.4       // Find the "surface"
-        && (MaxMass-MinMass)/MaxMass < 1.0
-        &&  MaxMass > d_TINY_RHO){
-
-        //__________________________________
-        //  On the surface, determine the maxiumum temperature
-        //  use this to determine if it is time to activate the model.
-        double Temp = 0.;
-
-        Temp =std::max(Temp, solidTempX_FC[c] );    //L
-        Temp =std::max(Temp, solidTempY_FC[c] );    //Bot
-        Temp =std::max(Temp, solidTempZ_FC[c] );    //BK
-        Temp =std::max(Temp, solidTempX_FC[c + IntVector(1,0,0)] );
-        Temp =std::max(Temp, solidTempY_FC[c + IntVector(0,1,0)] );
-        Temp =std::max(Temp, solidTempZ_FC[c + IntVector(0,0,1)] );
-        surfaceTemp[c] = Temp;
-        if(Temp > thresholdTemp){
-          sw = 1.;
-        }
-      }  // if (maxMass-MinMass....)
-    }  // cell iterator  
-   }
-
-#endif
-  
-  max_vartype switch_condition(sw);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
-
-}
