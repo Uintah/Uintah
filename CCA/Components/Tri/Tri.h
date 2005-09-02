@@ -45,21 +45,21 @@
 
 namespace SCIRun {
   
-  class myMeshPort: public virtual sci::cca::ports::MeshPort{
-  public:
-    virtual ~myMeshPort(){}
-    virtual int triangulate(const SSIDL::array1<double> &nodes, const SSIDL::array1<int> &boundaries, SSIDL::array1<int> &triangles);
-  };
+class myMeshPort: public virtual sci::cca::ports::MeshPort{
+public:
+  virtual ~myMeshPort() {}
+  virtual int triangulate(const SSIDL::array1<double> &nodes, const SSIDL::array1<int> &boundaries, SSIDL::array1<int> &triangles);
+};
   
-  class Tri : public sci::cca::Component{
-  public:
-    Tri();
-    virtual ~Tri();
-    virtual void setServices(const sci::cca::Services::pointer& svc);
-  private:
+class Tri : public sci::cca::Component {
+public:
+  Tri();
+  virtual ~Tri();
+  virtual void setServices(const sci::cca::Services::pointer& svc);
+private:
   Tri& operator=(const Tri&);
   sci::cca::Services::pointer services;
-  };
+};
   
 }
 
