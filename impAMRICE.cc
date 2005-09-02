@@ -30,7 +30,7 @@ void
 ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
 {
   int maxLevel = grid->numLevels();
-  
+
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();  
@@ -208,8 +208,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
 #endif
     cout_doing << "---------------------------------------------------------"<<endl;
 }
-
-
 
 
 /*___________________________________________________________________
@@ -410,18 +408,24 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 
       scheduleZeroMatrix_RHS_UnderFinePatches( subsched,level,one_matl, firstIter);
     }
-#if 0
-    solver->scheduleSolve(level, subsched, press_matlSet,
+#if 1
+    // Level argument is not really used in this version of scheduleSolve(),
+    // so just pass in the coarsest level as it always exists.
+    const VarLabel* whichInitialGuess = NULL; // Taken from impICE.cc
+    // I hope the following is correct:
+    MaterialSet* press_matlSet  = scinew MaterialSet();
+    press_matlSet->add(0);
+    press_matlSet->addReference(); 
+  
+    solver->scheduleSolve(grid->getLevel(0), subsched, press_matlSet,
                           lb->matrixLabel,   Task::NewDW,
                           lb->imp_delPLabel, false,
-                          lb->rhsLabel,      Task::OldDW,
-                          whichInitialGuess, Task::OldDW,
-			     solver_parameters);
+                          lb->rhsLabel,      Task::NewDW,
+                          whichInitialGuess, Task::OldDW, // Guess does not exist yet?
+			  solver_parameters);
 #else
-    //__________________________________
-    // strictly for testing purposes
     schedule_bogus_imp_delP(subsched,  perProcPatches,        d_press_matl,
-                            all_matls);
+                            all_matls);   
 #endif
 
     for(int L = maxLevel-1; L> 0; L--){
@@ -1224,7 +1228,6 @@ void ICE::schedule_bogus_imp_delP(SchedulerP& sched,
     
     t->computes(lb->imp_delPLabel, patches, Task::NormalDomain, press_matl,Task::OutOfDomain);
   }
-   // Dav:  this doesn't work
   sched->addTask(t, perProcPatches, all_matls); 
 }
 /*___________________________________________________________________ 
