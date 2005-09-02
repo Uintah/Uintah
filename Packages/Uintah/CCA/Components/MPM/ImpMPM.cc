@@ -249,6 +249,10 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
 
   t->computes(lb->heatFlux_CCLabel);
 
+  if (d_switchCriteria) {
+    d_switchCriteria->scheduleInitialize(level,sched);
+  }
+
   MaterialSubset* one_matl = scinew MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
