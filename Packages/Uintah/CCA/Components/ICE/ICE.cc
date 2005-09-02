@@ -2190,7 +2190,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       }
     }   // numMatls
 
-    if (switchDebugInitialize){     
+    if (switchDebug_Initialize){     
       ostringstream desc1;
       desc1 << "Initialization_patch_"<< patch->getID();
       printData(0, patch, 1, desc1.str(), "press_CC", press_CC);         
@@ -2259,7 +2259,7 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
 
       //__________________________________
       //  Print Data
-      if (switchDebugInitialize){     
+      if (switchDebug_Initialize){     
         ostringstream desc, desc1;
         desc << "hydroStaticAdj_patch_"<< patch->getID();
         printData(0, patch, 1, desc.str(), "press_CC", press_CC);         
@@ -2711,7 +2711,7 @@ void ICE::computeTempFC(const ProcessorGroup*,
                         DataWarehouse* old_dw,                          
                         DataWarehouse* new_dw)                          
 {
- const Level* level = getLevel(patches);
+  const Level* level = getLevel(patches);
   
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -3732,7 +3732,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       setBC(press_force, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
 
       //---- P R I N T   D A T A ------ 
-      if (switchDebugSource_Sink) {
+      if (switchDebug_Source_Sink) {
         ostringstream desc;
         desc << "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printVector(indx, patch, 1, desc.str(), "mom_source",  0, mom_source);
@@ -3861,7 +3861,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       }  // if add heat
 
       //---- P R I N T   D A T A ------ 
-      if (switchDebugSource_Sink) {
+      if (switchDebug_Source_Sink) {
         ostringstream desc;
         desc <<  "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printData(indx, patch,1,desc.str(),"int_eng_source", int_eng_source);
@@ -4003,7 +4003,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
         //---- P R I N T   D A T A ------ 
         // Dump out all the matls data
-        if (switchDebugLagrangianValues ) {
+        if (switchDebug_LagrangianValues ) {
           ostringstream desc;
           desc <<"BOT_Lagrangian_Values_Mat_"<<indx<< "_patch_"<<patch->getID();
           printData(  indx, patch,1, desc.str(), "mass_L_CC",    mass_L);
@@ -4132,7 +4132,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       }
       
       //---- P R I N T   D A T A ------ 
-      if (switchDebugLagrangianSpecificVol ) {
+      if (switchDebug_LagrangianSpecificVol ) {
         ostringstream desc;
         desc <<"TOP_Lagrangian_sp_vol_Mat_"<<indx<< "_patch_"<<patch->getID();
          printData( indx, patch,1, desc.str(), "rho_CC",     rho_CC);      
@@ -4177,7 +4177,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
                        patch,d_sharedState, indx);
       
       //---- P R I N T   D A T A ------ 
-      if (switchDebugLagrangianSpecificVol ) {
+      if (switchDebug_LagrangianSpecificVol ) {
         ostringstream desc;
         desc <<"BOT_Lagrangian_sp_vol_Mat_"<<indx<< "_patch_"<<patch->getID();
         printData( indx, patch,1, desc.str(), "sp_vol_L",   sp_vol_L);    
@@ -4272,7 +4272,7 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
           }
           
           //---- P R I N T   D A T A ------
-          if (switchDebugLagrangianTransportedVars ) {
+          if (switchDebug_LagrangianTransportedVars ) {
             ostringstream desc;
             desc <<"BOT_LagrangianTransVars_BC_Mat_" <<indx<<"_patch_" 
                  <<patch->getID();
@@ -4420,7 +4420,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }
     //---- P R I N T   D A T A ------ 
-    if (switchDebugMomentumExchange_CC ) {
+    if (switchDebug_MomentumExchange_CC ) {
       for (int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
@@ -4662,7 +4662,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     }
 
     //---- P R I N T   D A T A ------ 
-    if (switchDebugMomentumExchange_CC ) {
+    if (switchDebug_MomentumExchange_CC ) {
       for(int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
