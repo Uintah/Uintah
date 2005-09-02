@@ -457,6 +457,11 @@ void setBC_Temperature(CCVariable<double>& var_CC,
 					       bc_value, bound,bc_kind); 
       
       if (foundIterator && bc_kind != "LODI") {
+        //__________________________________
+        // LOGIC
+        if ( bc_kind == "symmetric"){
+          bc_kind = "zeroNeumann";
+        }
 
         //__________________________________
         // Apply the boundary condition
@@ -552,9 +557,9 @@ void setBC_Temperature(CCVariable<double>& var_CC,
               hydrostaticTempAdjustment(face, patch, bound, gravity,
                                         gamma, cv, cell_dx, temp);
           // And back to energy
-          ice_matl->getThermo()->compute_Temp(bound.begin(), bound.end(), var_CC, old_dw, new_dw,
-                                              state, patch, matl->getDWIndex(), 0,
-                                              temp, sp_vol);
+          ice_matl->getThermo()->compute_int_eng(bound.begin(), bound.end(), var_CC, old_dw, new_dw,
+                                                 state, patch, matl->getDWIndex(), 0,
+                                                 temp, sp_vol);
         }
       }  // if bc_kind != notSet  
     }  // child loop

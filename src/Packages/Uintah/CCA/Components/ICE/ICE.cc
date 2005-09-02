@@ -5060,9 +5060,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      cerr << "BCS busted for temperature\n";
-      setBC_Temperature(int_eng_L_ME[m],"Temperature", patch, d_sharedState, 
-                        indx, old_dw, new_dw,  ThermoInterface::d_customBC_var_basket);
+      setBC_Temperature(int_eng_L_ME[m], patch, d_sharedState, 
+                        indx, old_dw, new_dw,  ThermoInterface::IntermediateState,
+                        sp_vol_CC[m], d_customBC_var_basket);
     }
 
     //---- P R I N T   D A T A ------ 
