@@ -13,7 +13,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1.0        </maxTime>
+       <maxTime>            1        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -40,9 +40,6 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -56,9 +53,6 @@
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
-                              <value> 0.0 </value>       
         </BCType>
       </Face>
       <Face side = "y-">
@@ -74,9 +68,6 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -89,9 +80,6 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
                               <value> 0.0 </value>       
         </BCType>
       </Face>
@@ -108,9 +96,6 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>       
         </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
       </Face>
       <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -123,9 +108,6 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
                               <value> 0.0 </value>       
         </BCType>
       </Face>
@@ -166,14 +148,8 @@
   <Debug>
       <dbg_timeStart>       0.00   </dbg_timeStart>
       <dbg_timeStop>        0.01   </dbg_timeStop>
-      <dbg_BeginIndex>[-1,-1,-1]</dbg_BeginIndex>
-      <dbg_EndIndex>[6,6,6]</dbg_EndIndex>
       <dbg_outputInterval>  1e-9   </dbg_outputInterval>
-<dbg_Level>  0    </dbg_Level>
-<dbg_Matls>           [0]         </dbg_Matls>
      <!--
-       <debug label = "switchDebugMomentumExchange_CC"/>
-       <debug label = "switchDebugInitialize"/>
        <debug label = "switchDebug_EQ_RF_press"/>
        <debug label = "switchDebug_explicit_press"/> 
        <debug label = "switchDebug_advance_advect"/>
@@ -209,7 +185,7 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>            [0,0,0]   </gravity>
+       <gravity>            [0,-2000,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
     
@@ -221,33 +197,21 @@
          <material>
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
-           <Thermo type = "cantera mixture fraction">
-		<file>gri30.xml</file>
-                <id>gri30_mix</id>
-                <thermal_conductivity>0.0                    </thermal_conductivity>
-                <species0>O2:0.77,N2:0.23</species0>
-                <species1>CH4:1</species1>
-                <geom_object>
-                  <box label="wholeDomain">
-                  <min>       [-1.0,-1.0,-1.0 ]       </min>
-                   <max>       [ 6.0, 6.0, 6.0 ]       </max>
-                  </box>
-                 <mixtureFraction>   0.0                    </mixtureFraction>
-               </geom_object>
-           </Thermo>
-           <isSurroundingMatl>          true            </isSurroundingMatl>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
-           <thermal_conductivity>1.0                    </thermal_conductivity>
+           <thermal_conductivity>0.0                    </thermal_conductivity>
+           <specific_heat>      716.0                   </specific_heat>
+           <speed_of_sound>     376                     </speed_of_sound>
+           <gamma>              1.4                     </gamma>
            <geom_object>
                 <box label="wholeDomain">
                     <min>       [ 0.0, 0.0, 0.0 ]       </min>
                     <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
                <res>                 [2,2,2]            </res>
-               <velocity>      [0,0,0]               </velocity>
+               <velocity>      [1.,1.,1.]               </velocity>
+               <density>       1.1792946927374306000e+00</density>
                <pressure>      101325.0                 </pressure>     
-               <temperature>   320.0                    </temperature>
-               <density>      0.84745624190103708</density>
+               <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
       </ICE>       

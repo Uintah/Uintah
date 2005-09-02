@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/ICE/Thermo/CanteraMixtureFraction.h>
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
@@ -18,6 +17,7 @@
 #include <cantera/IdealGasMix.h>
 #include <cantera/equilibrium.h>
 
+#define equilibrate(a, b)
 using namespace Uintah;
 
 CanteraMixtureFraction::CanteraMixtureFraction(ProblemSpecP& ps, ModelSetup* setup,
@@ -634,10 +634,12 @@ void CanteraMixtureFraction::compute_int_eng(cellList::iterator iter, cellList::
       equilibrate(*d_gas, UV);
       int_eng[*iter] = d_gas->intEnergy_mass();
     }
-    delete[] tmp_mf;
   } catch (CanteraError) {
     showErrors(cerr);
     cerr << "cell: " << *iter << '\n';
+    cerr << "initial temperature: " << Temp[*iter] << '\n';
+    cerr << "initial density: " << 1./sp_vol[*iter] << '\n';
+    cerr << "initial specific volume: " << sp_vol[*iter] << '\n';
     cerr << "mixtureFraction: " << f[*iter] << '\n';
     cerr << "int_eng: " << int_eng[*iter] << '\n';
     cerr << "sp_vol: " << sp_vol[*iter] << '\n';
