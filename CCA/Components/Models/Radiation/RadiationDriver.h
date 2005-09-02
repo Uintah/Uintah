@@ -104,9 +104,9 @@ class RadiationDriver : public ModelInterface {
                             SchedulerP& sched,
                             const PatchSet* patches,
                             const MaterialSubset* mss_G,
-                            const MaterialSubset* mss_G,
+                            const MaterialSubset* mss_S,
                             const MaterialSet* matls_set_GS);
-                                                                                                                                   
+
   void scheduleCopyValues(const LevelP& level,
                           SchedulerP& sched,
                           const PatchSet* patches,
@@ -116,7 +116,7 @@ class RadiationDriver : public ModelInterface {
                             SchedulerP& sched,
                             const PatchSet* patches,
                             const MaterialSubset* mss_G,
-                            const MaterialSubset* mss_G,
+                            const MaterialSubset* mss_S,
                             const MaterialSet* matls_set_GS);
 
   void scheduleBoundaryCondition(const LevelP& level,

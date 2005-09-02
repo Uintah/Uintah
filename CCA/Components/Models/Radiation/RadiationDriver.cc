@@ -201,7 +201,7 @@ RadiationDriver::problemSetup(GridP& grid,
     if (d_sharedState->getNumMPMMatls() == 0){
       ostringstream warn;
       warn<<"ERROR\n Radiation: If you have an absorbing solid you must"
-            " have at least 1 mpm material and use -mpmice/-rmpmice\n";
+        " have at least 1 mpm material and use -mpmice/-rmpmice\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }    
     d_matl_S = d_sharedState->parseAndLookupMaterial(params, "absorbingSolid");
@@ -445,7 +445,7 @@ RadiationDriver::scheduleComputeCO2_H2O(const LevelP& level,
     cout_doing << "RADIATION::scheduleComputeCO2_H2O \t\t\t\tL-" 
                << level->getIndex() << endl;
     Task* t = scinew Task("RadiationDriver::computeCO2_H2O",
-                    this, &RadiationDriver::computeCO2_H2O);
+                          this, &RadiationDriver::computeCO2_H2O);
     Ghost::GhostType  gn = Ghost::None;
     t->requires(Task::OldDW, scalar_CCLabel, gn, 0);
                     
@@ -488,19 +488,19 @@ RadiationDriver::computeCO2_H2O(const ProcessorGroup*,
  Purpose:  set the cell type through out the domain  
  _____________________________________________________________________  */
 void
-RadiationDriver::scheduleSet_cellType(const LevelP& level,
-                                      SchedulerP& sched,
-                                      const PatchSet* patches,
+RadiationDriver::scheduleSet_cellType(const LevelP&         level,
+                                      SchedulerP&           sched,
+                                      const PatchSet*       patches,
                                       const MaterialSubset* mss_G,
                                       const MaterialSubset* mss_S,
-                                      const MaterialSet* matls)
+                                      const MaterialSet*    matls)
 {
   // TODO:  We don't need to do this every timestep
   cout_doing << "RADIATION::scheduleSet_cellType \t\t\t\tL-" 
              << level->getIndex() << endl;
 
   Task* t = scinew Task("RadiationDriver::set_cellType",
-                  this, &RadiationDriver::set_cellType);
+                        this, &RadiationDriver::set_cellType);
 
   Ghost::GhostType  gn = Ghost::None;
 
@@ -533,8 +533,8 @@ RadiationDriver::set_cellType(const ProcessorGroup*,
     Ghost::GhostType gn = Ghost::None;
     
     int flowField = -1;
-     new_dw->allocateAndPut(vars.cellType,cellType_CCLabel,indx0,patch);
-     vars.cellType.initialize(flowField);
+    new_dw->allocateAndPut(vars.cellType,cellType_CCLabel,indx0,patch);
+    vars.cellType.initialize(flowField);
 
     //__________________________________
     //if there's an absorbing solid
@@ -560,7 +560,7 @@ RadiationDriver::set_cellType(const ProcessorGroup*,
          iter != patch->getBoundaryFaces()->end(); ++iter){
       Patch::FaceType face = *iter;
       for(CellIterator itr = patch->getFaceCellIterator(face, "plusEdgeCells"); 
-                                      !itr.done();  itr++){
+          !itr.done();  itr++){
         IntVector c = *itr;
         vars.cellType[c] = 10;
       } 
@@ -582,7 +582,7 @@ RadiationDriver::scheduleCopyValues(const LevelP& level,
   cout_doing << "RADIATION::scheduleCopyValues \t\t\t\t\tL-" 
              << level->getIndex() << endl;
   Task* t = scinew Task("RadiationDriver::copyValues",
-                      this, &RadiationDriver::copyValues);
+                        this, &RadiationDriver::copyValues);
 
   Ghost::GhostType  gn = Ghost::None;
     
@@ -753,18 +753,18 @@ RadiationDriver::copyValues(const ProcessorGroup*,
 // schedule computation of radiative properties
 //****************************************************************************
 void
-RadiationDriver::scheduleComputeProps(const LevelP& level,
-                                       SchedulerP& sched,
-                                       const PatchSet* patches,
-                                       const MaterialSubset* mss_G,
-                                       const MaterialSubset* mss_S,
-                                       const MaterialSet* matls)
+RadiationDriver::scheduleComputeProps(const LevelP&        level,
+                                      SchedulerP&           sched,
+                                      const PatchSet*       patches,
+                                      const MaterialSubset* mss_G,
+                                      const MaterialSubset* mss_S,
+                                      const MaterialSet*    matls_set_GS)
 {
   cout_doing << "RADIATION::scheduleComputeProps \t\t\t\tL-" 
              << level->getIndex() << endl;
              
   Task* t=scinew Task("RadiationDriver::computeProps",
-                this, &RadiationDriver::computeProps);
+                      this, &RadiationDriver::computeProps);
                 
   t->requires( Task::OldDW, Ilb->delTLabel);
   
@@ -817,7 +817,7 @@ RadiationDriver::scheduleComputeProps(const LevelP& level,
   t->modifies(esrcg_CCLabel,   mss_G);
   t->modifies(shgamma_CCLabel, mss_G);
 
-  sched->addTask(t, patches, matls);
+  sched->addTask(t, patches, matls_set_GS);
 }
 
 //****************************************************************************
@@ -976,7 +976,7 @@ RadiationDriver::scheduleBoundaryCondition(const LevelP& level,
   cout_doing << "RADIATION::scheduleBoundaryCondition\t\t\t\tL-" 
              << level->getIndex() << endl;
   Task* t=scinew Task("RadiationDriver::boundaryCondition",
-                this, &RadiationDriver::boundaryCondition);
+                      this, &RadiationDriver::boundaryCondition);
 
   t->requires(Task::NewDW, cellType_CCLabel, Ghost::AroundCells, 1);
   t->modifies(tempCopy_CCLabel);
@@ -1057,7 +1057,7 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
   cout_doing << "RADIATION::scheduleIntensitySolve\t\t\t\tL-" 
              << level->getIndex() << endl;
   Task* t=scinew Task("RadiationDriver::intensitySolve",
-                this, &RadiationDriver::intensitySolve, mi);
+                      this, &RadiationDriver::intensitySolve, mi);
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
   
