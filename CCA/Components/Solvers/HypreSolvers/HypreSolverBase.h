@@ -65,8 +65,8 @@ namespace Uintah {
     };
     
     HypreSolverBase(HypreDriver* driver,
-                       HyprePrecondBase* precond,
-                       const Priorities& priority);
+                    HyprePrecondBase* precond,
+                    const Priorities& priority);
     virtual ~HypreSolverBase(void);
 
     // Data member unmodifyable access
@@ -94,9 +94,10 @@ namespace Uintah {
 
   // Utilities
   HypreSolverBase* newHypreSolver(const SolverType& solverType,
-                                     HypreDriver* driver,
-                                     HyprePrecondBase* precond);
-  SolverType          getSolverType(const std::string& solverTitle);
+                                  HypreDriver* driver,
+                                  HyprePrecondBase* precond);
+  SolverType       getSolverType(const std::string& solverTitle);
+  ostream&         operator << (ostream& os, const SolverType& solverType);
 
 } // end namespace Uintah
 

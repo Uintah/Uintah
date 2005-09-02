@@ -44,7 +44,7 @@ namespace Uintah {
   public:
   
     HypreSolverCG(HypreDriver* driver,
-                    HyprePrecondBase* precond) :
+                  HyprePrecondBase* precond) :
       HypreSolverBase(driver,precond,initPriority()) {}
     virtual ~HypreSolverCG(void) {}
 

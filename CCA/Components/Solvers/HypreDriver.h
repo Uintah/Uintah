@@ -2,60 +2,60 @@
 #define Packages_Uintah_CCA_Components_Solvers_HypreDriver_h
 
 /*--------------------------------------------------------------------------
-CLASS
-   HypreDriver
+  CLASS
+  HypreDriver
    
-   Wrapper of a Hypre solver for a particular variable type.
+  Wrapper of a Hypre solver for a particular variable type.
 
-GENERAL INFORMATION
+  GENERAL INFORMATION
 
-   File: HypreDriver.h
+  File: HypreDriver.h
 
-   Oren E. Livne
-   Department of Computer Science
-   University of Utah
+  Oren E. Livne
+  Department of Computer Science
+  University of Utah
 
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2005 SCI Group
+  Copyright (C) 2005 SCI Group
 
-KEYWORDS
-   HYPRE_Struct, HYPRE_SStruct, HYPRE_ParCSR,
-   HypreSolverBase, HypreSolverParams, RefCounted, solve, AMRSolver.
+  KEYWORDS
+  HYPRE_Struct, HYPRE_SStruct, HYPRE_ParCSR,
+  HypreSolverBase, HypreSolverParams, RefCounted, solve, AMRSolver.
 
-DESCRIPTION 
-   Class HypreDriver is a wrapper for calling Hypre solvers
-   and preconditioners. It allows access to multiple Hypre interfaces:
-   Struct (structured grid), SStruct (composite AMR grid), ParCSR
-   (parallel compressed sparse row representation of the matrix).
-   Only one of them is activated per solver, by running
-   makeLinearSystem(), thereby creating the objects (usually A,b,x) of
-   the specific interface.  The solver can then be constructed from
-   the interface data. If required by the solver, HypreDriver converts
-   the data from one Hypre interface type to another.  HypreDriver is
-   also responsible for deleting all Hypre objects.
-   HypreSolverBase::newSolver determines the specific Hypre
-   interface and solver, based on the parameters in HypreSolverParams.
-   HypreDriver::solve() is the task-scheduled function in
-   AMRSolver::scheduleSolve() that is activated by
-   Components/ICE/impICE.cc.
+  DESCRIPTION 
+  Class HypreDriver is a wrapper for calling Hypre solvers
+  and preconditioners. It allows access to multiple Hypre interfaces:
+  Struct (structured grid), SStruct (composite AMR grid), ParCSR
+  (parallel compressed sparse row representation of the matrix).
+  Only one of them is activated per solver, by running
+  makeLinearSystem(), thereby creating the objects (usually A,b,x) of
+  the specific interface.  The solver can then be constructed from
+  the interface data. If required by the solver, HypreDriver converts
+  the data from one Hypre interface type to another.  HypreDriver is
+  also responsible for deleting all Hypre objects.
+  HypreSolverBase::newSolver determines the specific Hypre
+  interface and solver, based on the parameters in HypreSolverParams.
+  HypreDriver::solve() is the task-scheduled function in
+  AMRSolver::scheduleSolve() that is activated by
+  Components/ICE/impICE.cc.
 
-WARNING
-   * solve() is a generic function for all Types, but this *might* need
-   to change in the future. Currently only CC is implemented for the
-   pressure solver in implicit [AMR] ICE.
-   * If we intend to use other Hypre system interfaces (e.g., IJ interface),
-   their data types (Matrix, Vector, etc.) should be added to the data
-   members of this class. Specific solvers deriving from HypreSolverGeneric
-   should have a specific Hypre interface they work with that exists in
-   HypreDriver.
-   * Each new interface requires its own makeLinearSystem() -- construction
-   of the linear system objects, and getSolution() -- getting the solution
-   vector back to Uintah.
-   * This interface is written for Hypre 1.9.0b (released 2005). However,
-   it may still work with the Struct solvers in earlier Hypre versions (e.g., 
-   1.7.7).
-   --------------------------------------------------------------------------*/
+  WARNING
+  * solve() is a generic function for all Types, but this *might* need
+  to change in the future. Currently only CC is implemented for the
+  pressure solver in implicit [AMR] ICE.
+  * If we intend to use other Hypre system interfaces (e.g., IJ interface),
+  their data types (Matrix, Vector, etc.) should be added to the data
+  members of this class. Specific solvers deriving from HypreSolverGeneric
+  should have a specific Hypre interface they work with that exists in
+  HypreDriver.
+  * Each new interface requires its own makeLinearSystem() -- construction
+  of the linear system objects, and getSolution() -- getting the solution
+  vector back to Uintah.
+  * This interface is written for Hypre 1.9.0b (released 2005). However,
+  it may still work with the Struct solvers in earlier Hypre versions (e.g., 
+  1.7.7).
+  --------------------------------------------------------------------------*/
 
 #include <Core/Thread/Time.h>
 #include <Packages/Uintah/Core/Util/RefCounted.h>
@@ -99,13 +99,20 @@ namespace Uintah {
       {}    
     virtual ~HypreDriver(void) {}
 
-    // Data member modifyable access
+    //---------- Data member modifyable access ----------
     // void setInterface(HypreInterface& interface) { _interface = interface; }
+    HYPRE_ParCSRMatrix& getAPar(void) { return _HA_Par; }  // LHS
+    HYPRE_ParVector&    getBPar(void) { return _HB_Par; }  // RHS
+    HYPRE_ParVector&    getXPar(void) { return _HX_Par; }  // Solution
 
-    // Data member unmodifyable access
-    const HypreSolverParams* getParams(void) const { return _params; }
-    const ProcessorGroup*    getPG(void) const { return _pg; }
-    const HypreInterface&    getInterface(void) const { return _interface; }
+    //---------- Data member unmodifyable access ----------
+    const HypreSolverParams*  getParams(void) const { return _params; }
+    const ProcessorGroup*     getPG(void) const { return _pg; }
+    const PatchSubset*        getPatches(void) { return _patches; }
+    const HypreInterface&     getInterface(void) const { return _interface; }
+    const HYPRE_ParCSRMatrix& getAPar(void) const { return _HA_Par; }
+    const HYPRE_ParVector&    getBPar(void) const { return _HB_Par; }
+    const HYPRE_ParVector&    getXPar(void) const { return _HX_Par; }
     
     // Utilities, HYPRE data printouts
     bool         isConvertable(const HypreInterface& to);
@@ -174,7 +181,8 @@ namespace Uintah {
     bool                     _requiresPar; // Solver requires ParCSR format
 
     // Hypre ParCSR interface objects. Can be used by Struct or
-    // SStruct to feed certain solvers.
+    // SStruct to feed certain solvers. This should maybe be part of a
+    // future HypreParCSR interface.
     HYPRE_ParCSRMatrix       _HA_Par;       // Left-hand-side matrix
     HYPRE_ParVector          _HB_Par;       // Right-hand-side vector
     HYPRE_ParVector          _HX_Par;       // Solution vector
@@ -206,8 +214,13 @@ namespace Uintah {
                                  const VarLabel* guess,
                                  Task::WhichDW which_guess_dw,
                                  const HypreSolverParams* params);
+
   HypreInterface& operator ++ (HypreInterface& interface);
+  ostream&        operator << (ostream& os, const HypreInterface& i);
+  
   BoxSide&        operator ++ (BoxSide& side);
+  ostream&        operator << (ostream& os, const BoxSide& s);
+  BoxSide         patchFaceSide(const Patch::FaceType& patchFace);
 
   //========================================================================
   // Implementation of the templated part of class HypreDriver
@@ -226,6 +239,7 @@ namespace Uintah {
     // Main solve function.
     //_____________________________________________________________________
     {
+      cerr << "HypreDriver::solve() BEGIN" << "\n";
       double tstart = SCIRun::Time::currentSeconds();
 
       // Assign HypreDriver references that are convenient to have in
@@ -243,6 +257,8 @@ namespace Uintah {
       cerr << "Checking arguments and parameters ... ";
       SolverType solverType = getSolverType(_params->solverTitle);
       const int numLevels = new_dw->getGrid()->numLevels();
+      cerr << "numLevels = " << numLevels << "\n";
+      cerr << "solverType = " << solverType << "\n";
       if ((solverType == FAC) && (numLevels < 2)) {
         throw InternalError("FAC solver needs at least 2 levels",
                             __FILE__, __LINE__);
@@ -250,38 +266,46 @@ namespace Uintah {
 
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
+        cerr << "Doing m = " << m << "/" << matls->size()
+             << "  matl = " << matl << "\n";
 
         // Initialize the preconditioner
+        cerr << "Creating preconditioner" << "\n";
         PrecondType precondType = getPrecondType(_params->precondTitle);
+        cerr << "precondType = " << precondType << "\n";
         HyprePrecondBase* precond = newHyprePrecond(precondType);
-
+        
         // Construct Hypre solver object that uses the hypreInterface we
         // chose. Specific solver object is arbitrated in
         // HypreSolverBase. The solver is linked to the HypreDriver
         // data and the preconditioner.
+        cerr << "Creating solver" << "\n";
         SolverType solverType = getSolverType(_params->solverTitle);
+        cerr << "solverType = " << solverType << "\n";
         HypreSolverBase* solver = newHypreSolver(solverType,this,precond);
 
         // Set up the preconditioner and tie it to solver
-        precond->setSolver(solver);
-        precond->setup();
+        if (precond) {
+          cerr << "Setting up preconditioner" << "\n";
+          precond->setSolver(solver);
+          precond->setup();
+        }
 
         // Construct Hypre linear system for the specific variable type
         // and Hypre interface
         _requiresPar = solver->requiresPar();
+        cerr << "Making linear system" << "\n";
         makeLinearSystem<Types>(matl);
     
         //-----------------------------------------------------------
         // Solve the linear system
         //-----------------------------------------------------------
+        cerr << "Solving the linear system" << "\n";
         double solve_start = SCIRun::Time::currentSeconds();
         // Setup & solve phases
         int timeSolve = hypre_InitializeTiming("Solver Setup");
         hypre_BeginTiming(timeSolve);
-        solver->solve();  // Depends on A, b, x; some solvers can be
-        // more efficient by separating the setup
-        // phase that depends on A only from the
-        // solution stage (TODO).
+        solver->solve();  // Currently depends on A, b, x
         gatherSolutionVector();
         hypre_EndTiming(timeSolve);
         hypre_PrintTiming("Setup phase time", MPI_COMM_WORLD);
@@ -294,6 +318,7 @@ namespace Uintah {
         //-----------------------------------------------------------
         // Check if converged, print solve statisticsS
         //-----------------------------------------------------------
+        cerr << "Print solve statistics" << "\n";
         const HypreSolverBase::Results& results = solver->getResults();
         double finalResNorm = results.finalResNorm;
         int numIterations = results.numIterations;
@@ -322,14 +347,14 @@ namespace Uintah {
         /*-----------------------------------------------------------
          * Print the solution and other info
          *-----------------------------------------------------------*/
-        std::cerr << "Print the solution vector" << "\n";
+        cerr << "Print the solution vector" << "\n";
         printMatrix("output_A");
         printRHS("output_b");
         printSolution("output_x1");
-        std::cerr << "Iterations = " << numIterations << "\n";
-        std::cerr << "Final Relative Residual Norm = "
-                  << finalResNorm << "\n";
-        std::cerr << "" << "\n";
+        cerr << "Iterations = " << numIterations << "\n";
+        cerr << "Final Relative Residual Norm = "
+             << finalResNorm << "\n";
+        cerr << "" << "\n";
       
         delete solver;
         delete precond;
@@ -345,6 +370,7 @@ namespace Uintah {
         }
         tstart = SCIRun::Time::currentSeconds();
       } // for m (matls loop)
+      cerr << "HypreDriver::solve() END" << "\n";
     } // end solve() for
 
   template<class Types>
@@ -450,10 +476,8 @@ namespace Uintah {
 
       } // end switch (domType)
 
-    } // end getSolution() for
+    } // end getSolution()
 
 } // end namespace Uintah
-
-std::ostream&   operator << (std::ostream& os, const Uintah::BoxSide& s);
 
 #endif // Packages_Uintah_CCA_Components_Solvers_HypreDriver_h
