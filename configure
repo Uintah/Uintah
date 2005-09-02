@@ -58621,7 +58621,7 @@ fi
 ## arg 2 : HYPRE libraries and headers
 ## arg 3 : HYPRE.h
 ## arg 4 : $_sci_inc
-## arg 5 : HYPRE_struct_mv HYPRE_struct_ls HYPRE_LSI
+## arg 5 : HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -58704,10 +58704,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_LSI"; then
+if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI"; then
 
    found_framework=no
-   for lib in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_LSI; do
+   for lib in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -59030,7 +59030,7 @@ echo "$as_me: error: Specifically requested HYPRE include file '$_sci_inc/$i' wa
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_LSI; do
+  for i in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI; do
     if test -z "$i"; then
        continue
     fi
