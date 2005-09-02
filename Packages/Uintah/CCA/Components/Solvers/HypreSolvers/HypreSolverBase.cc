@@ -5,6 +5,8 @@
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverCG.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverHybrid.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverGMRES.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverAMG.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -20,15 +22,17 @@ using namespace Uintah;
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
 HypreSolverBase::HypreSolverBase(HypreDriver* driver,
-                                       HyprePrecondBase* precond,
-                                       const Priorities& priority) :
+                                 HyprePrecondBase* precond,
+                                 const Priorities& priority) :
   _driver(driver), _precond(precond), _priority(priority), _requiresPar(true)
 {
+  cout << "HypreSolverBase::constructor BEGIN" << "\n";
   assertInterface();
 
   // Initialize results section
   _results.numIterations = 0;
   _results.finalResNorm  = 1.23456e+30; // Large number
+  cout << "HypreSolverBase::constructor END" << "\n";
 }
   
 HypreSolverBase::~HypreSolverBase(void)
@@ -38,6 +42,7 @@ HypreSolverBase::~HypreSolverBase(void)
 void
 HypreSolverBase::assertInterface(void)
 { 
+  cout << "HypreSolverBase::assertInterface() BEGIN" << "\n";
   if (_priority.size() < 1) {
     throw InternalError("Solver created without interface priorities",
                         __FILE__, __LINE__);
@@ -46,11 +51,14 @@ HypreSolverBase::assertInterface(void)
 
   // Intersect solver and preconditioner priorities
   if (_precond) {
+    cout << "Intersect solver, precond priorities begin" << "\n";
     Priorities newSolverPriority;
     const Priorities& precondPriority = _precond->getPriority();
     for (unsigned int i = 0; i < _priority.size(); i++) {
+      cout << "i = " << i << "\n";
       bool remove = false;
       for (unsigned int j = 0; j < _priority.size(); j++) {
+        cout << "j = " << j << "\n";
         if (_priority[i] == precondPriority[j]) {
           // Remove this solver interface entry
           remove = true;
@@ -67,6 +75,7 @@ HypreSolverBase::assertInterface(void)
   // Check whether solver requires ParCSR or not, because we need to
   // know about that in HypreDriver::makeLinearSystem. Also check the
   // correctness of the values of _priority.
+  cout << "Check if solver requires par" << "\n";
   for (unsigned int i = 0; i < _priority.size(); i++) {
     if (_priority[i] == HypreInterfaceNA) {
       throw InternalError("Bad Solver interface priority "+_priority[i],
@@ -78,20 +87,26 @@ HypreSolverBase::assertInterface(void)
     }
   }
 
+  cout << "Look for requested interface in solver priorities" << "\n";
   const HypreInterface& interface = _driver->getInterface();
+  cout << "interface = " << interface << "\n";
   bool found = false;
   for (unsigned int i = 0; i < _priority.size(); i++) {
+    cout << "_priority[" << i << "] = " << _priority[i] << "\n";
     if (interface == _priority[i]) {
       // Found interface that solver can work with
       found = true;
       break;
     }
   }
+  cout << "1. found = " << found << "\n";
 
   // See whether we can convert the Hypre data to a format we can
   // work with.
   if (!found) {
+    cout << "Looking for possible conversions" << "\n";
     for (unsigned int i = 0; i < _priority.size(); i++) {
+      cout << "i = " << i << "\n";
       // Try to convert from the current driver to _priority[i]
       if (_driver->isConvertable(_priority[i])) {
         // Conversion exists
@@ -100,92 +115,125 @@ HypreSolverBase::assertInterface(void)
       }
     }
   }
+  cout << "2. found = " << found << "\n";
 
   if (!found) {
-    throw InternalError("Solver does not support Hypre interface "+interface,
-                        __FILE__, __LINE__); 
+    ostringstream msg;
+    msg << "Solver does not support Hypre interface " << interface;
+    throw InternalError(msg.str(),__FILE__, __LINE__); 
   }
+  cout << "HypreSolverBase::assertInterface() END" << "\n";
 }
 
 namespace Uintah {
 
-HypreSolverBase*
-newHypreSolver(const SolverType& solverType,
-               HypreDriver* driver,
-               HyprePrecondBase* precond)
-  // Create a new solver object of specific solverType solver type
-  // but a generic solver pointer type.
-  // TODO: include all derived classes here.
-{
-  const Priorities precondPriority;
-  switch (solverType) {
-  case SMG:
-    {
-      return new HypreSolverSMG(driver,precond);
-    }
-  case PFMG:
-    {
-      return new HypreSolverPFMG(driver,precond);
-    }
-  case SparseMSG:
-    {
-      return new HypreSolverSparseMSG(driver,precond);
-    }
-  case CG:
-    {
-      return new HypreSolverCG(driver,precond);
-    }
-  case Hybrid: 
-    {
-      return new HypreSolverHybrid(driver,precond);
-    }
-  case GMRES:
-    {
-      return new HypreSolverGMRES(driver,precond);
-    }
-  default:
-    throw InternalError("Unsupported solver type: "+solverType,
-                        __FILE__, __LINE__);
-  } // switch (solverType)
-  RETURN_0;
-}
+  HypreSolverBase*
+  newHypreSolver(const SolverType& solverType,
+                 HypreDriver* driver,
+                 HyprePrecondBase* precond)
+    // Create a new solver object of specific solverType solver type
+    // but a generic solver pointer type.
+    // TODO: include all derived classes here.
+  {
+    cerr << "newHypreSolver() BEGIN" << "\n";
+    const Priorities precondPriority;
+    switch (solverType) {
+    case SMG:
+      {
+        return new HypreSolverSMG(driver,precond);
+      }
+    case PFMG:
+      {
+        return new HypreSolverPFMG(driver,precond);
+      }
+    case SparseMSG:
+      {
+        return new HypreSolverSparseMSG(driver,precond);
+      }
+    case CG:
+      {
+        cout << "Doing new HypreSolverCG" << "\n";
+        return new HypreSolverCG(driver,precond);
+      }
+    case Hybrid: 
+      {
+        return new HypreSolverHybrid(driver,precond);
+      }
+    case GMRES:
+      {
+        return new HypreSolverGMRES(driver,precond);
+      }
+    case AMG:
+      {
+        return new HypreSolverAMG(driver,precond);
+      }
+    case FAC:
+      {
+        return new HypreSolverFAC(driver,precond);
+      }
+    default:
+      throw InternalError("Unsupported solver type: "+solverType,
+                          __FILE__, __LINE__);
+    } // switch (solverType)
+    cerr << "newHypreSolver() END (shouldn't be reached)" << "\n";
+    RETURN_0;
+  }
 
-SolverType
-getSolverType(const string& solverTitle)
-{
-  // Determine solver type from title
-  if ((solverTitle == "SMG") ||
-      (solverTitle == "smg")) {
-    return SMG;
-  } else if ((solverTitle == "PFMG") ||
-             (solverTitle == "pfmg")) {
-    return PFMG;
-  } else if ((solverTitle == "SparseMSG") ||
-             (solverTitle == "sparsemsg")) {
-    return SparseMSG;
-  } else if ((solverTitle == "CG") ||
-             (solverTitle == "cg") ||
-             (solverTitle == "PCG") ||
-             (solverTitle == "conjugategradient")) {
-    return CG;
-  } else if ((solverTitle == "Hybrid") ||
-             (solverTitle == "hybrid")) {
-    return Hybrid;
-  } else if ((solverTitle == "GMRES") ||
-             (solverTitle == "gmres")) {
-    return GMRES;
-  } else if ((solverTitle == "AMG") ||
-             (solverTitle == "amg") ||
-             (solverTitle == "BoomerAMG") ||
-             (solverTitle == "boomeramg")) {
-    return AMG;
-  } else if ((solverTitle == "FAC") ||
-             (solverTitle == "fac")) {
-    return FAC;
-  } else {
-    throw InternalError("Unknown solver type: "+solverTitle,
-                        __FILE__, __LINE__);
-  } // end "switch" (solverTitle)
-} // end solverFromTitle()
+  SolverType
+  getSolverType(const string& solverTitle)
+  {
+    // Determine solver type from title
+    if ((solverTitle == "SMG") ||
+        (solverTitle == "smg")) {
+      return SMG;
+    } else if ((solverTitle == "PFMG") ||
+               (solverTitle == "pfmg")) {
+      return PFMG;
+    } else if ((solverTitle == "SparseMSG") ||
+               (solverTitle == "sparsemsg")) {
+      return SparseMSG;
+    } else if ((solverTitle == "CG") ||
+               (solverTitle == "cg") ||
+               (solverTitle == "PCG") ||
+               (solverTitle == "conjugategradient")) {
+      return CG;
+    } else if ((solverTitle == "Hybrid") ||
+               (solverTitle == "hybrid")) {
+      return Hybrid;
+    } else if ((solverTitle == "GMRES") ||
+               (solverTitle == "gmres")) {
+      return GMRES;
+    } else if ((solverTitle == "AMG") ||
+               (solverTitle == "amg") ||
+               (solverTitle == "BoomerAMG") ||
+               (solverTitle == "boomeramg")) {
+      return AMG;
+    } else if ((solverTitle == "FAC") ||
+               (solverTitle == "fac")) {
+      return FAC;
+    } else {
+      throw InternalError("Unknown solver type: "+solverTitle,
+                          __FILE__, __LINE__);
+    } // end "switch" (solverTitle)
+  } // end solverFromTitle()
+
+  ostream&
+  operator << (ostream& os, const SolverType& solverType)
+    // Write a solver type (enum) to the stream os.
+  {
+    switch (solverType) {
+    case SMG:       { os << "SMG"; break; }
+    case PFMG:      { os << "PFMG"; break; }
+    case SparseMSG: { os << "SparseMSG"; break; }
+    case CG:        { os << "CG";  break; }
+    case Hybrid:    { os << "Hybrid"; break; }
+    case GMRES:     { os << "GMRES"; break; }
+    case AMG:       { os << "AMG"; break; }
+    case FAC:       { os << "FAC"; break; }
+    default:        { os << "???"; break; }
+    } // switch (solverType)
+
+    return os;
+  }
 
 } // end namespace Uintah

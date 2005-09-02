@@ -93,7 +93,8 @@ namespace Uintah {
 
   // Utilities
   HyprePrecondBase* newHyprePrecond(const PrecondType& precondType);
-  PrecondType          getPrecondType(const std::string& precondTitle);
+  PrecondType       getPrecondType(const std::string& precondTitle);
+  ostream&          operator << (ostream& os, const PrecondType& precondType);
 
 } // end namespace Uintah
 

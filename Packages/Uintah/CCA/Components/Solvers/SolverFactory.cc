@@ -38,18 +38,20 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
 #else
     cerr << "Hypre solver not available, hypre not configured\n";
     exit(1);
+#endif
   } else if (solver == "AMRSolver" || solver == "hypreamr") {
 #if HAVE_HYPRE_1_9
+    cerr << "Creating AMRSolver object" << "\n";
     solve = new AMRSolver(world);
 #else
-    cerr << "Hypre solver not available, hypre not configured\n";
+    cerr << "Hypre 1.9.0b solver not available, hypre not configured\n";
     exit(1);
 #endif
-#endif
   } else {
-    throw ProblemSetupException("Unknown solver.  "
-                                "Valid Solvers: CGSolver, DirectSolve, hypre",
-                                __FILE__, __LINE__);
+    ostringstream msg;
+    msg << "Unknown solver " << solver
+        << "Valid Solvers: CGSolver, DirectSolver, HypreSolver, AMGSolver";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
 
   return solve;

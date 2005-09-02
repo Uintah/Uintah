@@ -82,7 +82,14 @@ namespace Uintah {
                        const HypreSolverParams* params,
                        const HypreInterface& interface = HypreInterfaceNA) :
       HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
-                  b,which_b_dw,guess,which_guess_dw,params,interface) {}
+                  b,which_b_dw,guess,which_guess_dw,params,interface),
+      _vars(0)
+      {
+        _exists.resize(sizeof(Data));
+        for (unsigned i = 0; i < _exists.size(); i++) {
+          _exists[i] = SStructStart;
+        }
+      }
     virtual ~HypreDriverSStruct(void);
 
  
@@ -101,6 +108,7 @@ namespace Uintah {
     virtual void printRHS(const string& fileName = "output_b");
     virtual void printSolution(const string& fileName = "output_x");
     virtual void gatherSolutionVector(void);
+    void printDataStatus(void);
 
     //---------- CC Variables implementation ----------
     virtual void makeLinearSystem_CC(const int matl);
@@ -116,6 +124,30 @@ namespace Uintah {
       {
         DoingCoarseToFine,
         DoingFineToCoarse
+      };
+
+    enum Data
+      // Data types for which we should keep track of whether they are
+      // initialized or not, so that we know whether to destroy them or
+      // not upon HypreDriverSStruct destruction.
+      {
+        SStructGrid = 0,
+        SStructStencil,
+        SStructA,
+        SStructB,
+        SStructX,
+        SStructGraph
+      };
+
+    enum DataStatus
+      // Status of data during the course of this object: init,
+      // created, destroyed.
+      {
+        SStructStart = 0,
+        SStructCreated,
+        SStructInitialized,
+        SStructAssembled,
+        SStructDestroyed
       };
 
     class HyprePatch {
@@ -236,6 +268,7 @@ namespace Uintah {
     HYPRE_SStructVector      _HX;           // Solution vector
     HYPRE_SStructGraph       _graph;        // Unstructured connection graph
     int                      _stencilSize;  // # entries in stencil
+    std::vector<DataStatus>  _exists;       // Status of data types
   }; // end class HypreDriverSStruct
 
 } // end namespace Uintah
