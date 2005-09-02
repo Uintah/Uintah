@@ -26,10 +26,10 @@ HypreSolverCG::initPriority(void)
   // is sorted by descending priority.
   //___________________________________________________________________
 {
-  cout << "HypreSolverCG::initPriority() BEGIN" << "\n";
+  cout_doing << "HypreSolverCG::initPriority() BEGIN" << "\n";
   Priorities priority;
   priority.push_back(HypreStruct);
-  cout << "HypreSolverCG::initPriority() END" << "\n";
+  cout_doing << "HypreSolverCG::initPriority() END" << "\n";
   return priority;
 }
 

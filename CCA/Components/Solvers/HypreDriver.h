@@ -264,7 +264,7 @@ namespace Uintah {
                             __FILE__, __LINE__);
       }
 
-      for(int m = 0;m<matls->size();m++){
+      for(int m = 0; m < matls->size(); m++){
         int matl = matls->get(m);
         cerr << "Doing m = " << m << "/" << matls->size()
              << "  matl = " << matl << "\n";
@@ -274,7 +274,6 @@ namespace Uintah {
         PrecondType precondType = getPrecondType(_params->precondTitle);
         cerr << "precondType = " << precondType << "\n";
         HyprePrecondBase* precond = newHyprePrecond(precondType);
-        
         // Construct Hypre solver object that uses the hypreInterface we
         // chose. Specific solver object is arbitrated in
         // HypreSolverBase. The solver is linked to the HypreDriver
@@ -290,6 +289,7 @@ namespace Uintah {
           precond->setSolver(solver);
           precond->setup();
         }
+#if 0
 
         // Construct Hypre linear system for the specific variable type
         // and Hypre interface
@@ -316,7 +316,7 @@ namespace Uintah {
         double solve_dt = SCIRun::Time::currentSeconds()-solve_start;
 
         //-----------------------------------------------------------
-        // Check if converged, print solve statisticsS
+        // Check if converged, print solve statistics
         //-----------------------------------------------------------
         cerr << "Print solve statistics" << "\n";
         const HypreSolverBase::Results& results = solver->getResults();
@@ -326,13 +326,13 @@ namespace Uintah {
             (finite(finalResNorm) == 0)) {
           if (_params->restart){
             if(pg->myrank() == 0)
-              cerr << "HypreSolver not converged in " << numIterations 
-                   << "iterations, final residual= " << finalResNorm
+              cerr << "AMRSolver not converged in " << numIterations 
+                   << " iterations, final residual= " << finalResNorm
                    << ", requesting smaller timestep\n";
             //new_dw->abortTimestep();
             //new_dw->restartTimestep();
           } else {
-            throw ConvergenceFailure("HypreSolver variable: "
+            throw ConvergenceFailure("AMRSolver variable: "
                                      +_X_label->getName()+", solver: "
                                      +_params->solverTitle+", preconditioner: "
                                      +_params->precondTitle,
@@ -340,10 +340,12 @@ namespace Uintah {
                                      _params->tolerance,__FILE__,__LINE__);
           }
         } // if (finalResNorm is ok)
-
+#endif
         /* Get the solution x values back into Uintah */
+        cerr << "Calling getSolution" << "\n";
         getSolution<Types>(matl);
 
+#if 0
         /*-----------------------------------------------------------
          * Print the solution and other info
          *-----------------------------------------------------------*/
@@ -356,9 +358,6 @@ namespace Uintah {
              << finalResNorm << "\n";
         cerr << "" << "\n";
       
-        delete solver;
-        delete precond;
-
         double dt = SCIRun::Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
           cerr << "Solve of " << _X_label->getName() 
@@ -369,6 +368,9 @@ namespace Uintah {
                << " iterations, residual=" << finalResNorm << ")\n";
         }
         tstart = SCIRun::Time::currentSeconds();
+#endif
+        delete solver;
+        delete precond;
       } // for m (matls loop)
       cerr << "HypreDriver::solve() END" << "\n";
     } // end solve() for

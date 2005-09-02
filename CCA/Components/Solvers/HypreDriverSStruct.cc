@@ -68,7 +68,7 @@ HypreDriverSStruct::~HypreDriverSStruct(void)
   // HypreDriverSStruct destructor
   //___________________________________________________________________
 {
-  cout << "HypreDriverSStruct destructor" << "\n";
+  cerr << "HypreDriverSStruct destructor BEGIN" << "\n";
   printDataStatus();
   // Destroy matrix, RHS, solution objects
   cerr << "Destroying SStruct matrix, RHS, solution objects" << "\n";
@@ -94,7 +94,7 @@ HypreDriverSStruct::~HypreDriverSStruct(void)
 
   // Destroying grid, stencil
   if (_exists[SStructStencil] >= SStructCreated) {
-    cerr << "Destroying stencil, grid objects" << "\n";
+    cerr << "Destroying stencil object" << "\n";
     HYPRE_SStructStencilDestroy(_stencil);
     _exists[SStructStencil] = SStructDestroyed;
   }
@@ -102,9 +102,11 @@ HypreDriverSStruct::~HypreDriverSStruct(void)
     delete _vars;
   }
   if (_exists[SStructGrid] >= SStructAssembled) {
+    cerr << "Destroying grid object" << "\n";
     HYPRE_SStructGridDestroy(_grid);
     _exists[SStructGrid] = SStructDestroyed;
   }
+  cerr << "HypreDriverSStruct destructor END" << "\n";
 }
 
 void
@@ -185,6 +187,8 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   const int numDims = 3;
   const int numLevels = _level->getGrid()->numLevels();
   HYPRE_SStructGridCreate(_pg->getComm(), numDims, numLevels, &_grid);
+  cerr << "Constructed empty grid, numDims " << numDims
+       << " numParts " << numLevels << "\n";
   _exists[SStructGrid] = SStructCreated;
   _vars = new HYPRE_SStructVariable[CC_NUM_VARS];
   _vars[CC_VAR] = HYPRE_SSTRUCT_VARIABLE_CELL; // We use only cell centered var
@@ -202,6 +206,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   cerr << "Setting up the SStruct stencil" << "\n";
   // Prepare index offsets and stencil size
+  cerr << "Symmetric = " << _params->symmetric << "\n";
   if (_params->symmetric) {
     _stencilSize = numDims+1;
     int offsets[4][numDims] = {{0,0,0},
@@ -225,6 +230,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
       HYPRE_SStructStencilSetEntry(_stencil, i, offsets[i], 0);
     }
   }
+  _exists[SStructStencil] = SStructCreated;
 
   //==================================================================
   // Set up the SStruct unstructured connection graph _graph
@@ -270,7 +276,8 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
     int level = hpatch.getLevel();
     printLine("$",40);
-    cout_dbg << "Processing Patch" << "\n" << hpatch << "\n";
+    cerr << "Processing Patch" << "\n" << hpatch << "\n";
+    patch->printPatchBCs(cerr);
     printLine("$",40);
     
     if ((level > 0) && (patch->hasCoarseFineInterfaceFace())) {
@@ -279,7 +286,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
       printLine("=",50);
       cerr << "Building fine-to-coarse connections" << "\n";
       printLine("=",50);
-      patch->printPatchBCs(cout_dbg);
       hpatch.makeConnections(_graph,DoingFineToCoarse);
     } // end if (level > 0) and (patch has a CFI)
 
@@ -320,6 +326,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
 
   // For solvers that require ParCSR format
   if (_requiresPar) {
+    cerr << "HA object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructMatrixSetObjectType(_HA, HYPRE_PARCSR);
   }
   HYPRE_SStructMatrixInitialize(_HA);
@@ -355,7 +362,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
     int level = hpatch.getLevel();
     printLine("$",40);
-    cout_dbg << "Processing Patch" << "\n" << hpatch << "\n";
+    cerr << "Processing Patch" << "\n" << hpatch << "\n";
     printLine("$",40);
     
     if ((level > 0) && (patch->hasCoarseFineInterfaceFace())) {
@@ -364,7 +371,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
       printLine("=",50);
       cerr << "Building fine-to-coarse entries" << "\n";
       printLine("=",50);
-      patch->printPatchBCs(cout_dbg);
+      patch->printPatchBCs(cerr);
       hpatch.makeConnections(_HA, _A_dw, _A_label,
                              _stencilSize, DoingFineToCoarse);
     } // end if (level > 0) and (patch has a CFI)
@@ -395,6 +402,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   _exists[SStructB] = SStructCreated;
   // For solvers that require ParCSR format
   if (_requiresPar) {
+    cerr << "HB object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructVectorSetObjectType(_HB, HYPRE_PARCSR);
   }
   HYPRE_SStructVectorInitialize(_HB);
@@ -423,6 +431,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   _exists[SStructX] = SStructCreated;
   // For solvers that require ParCSR format
   if (_requiresPar) {
+    cerr << "HX object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructVectorSetObjectType(_HX, HYPRE_PARCSR);
   }
   HYPRE_SStructVectorInitialize(_HX);
@@ -433,19 +442,32 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   printLine("*",50);
   cerr << "Set solution vector initial guess entries" << "\n";
   printLine("*",50);
-  for (int p = 0 ; p < _patches->size(); p++) {
-    // Read Uintah patch info into our data structure, set Uintah pointers
-    const Patch* patch = _patches->get(p);
-    HyprePatch_CC hpatch(patch,matl); // Read Uintah patch data
-    hpatch.makeInteriorVector(_HX, _guess_dw, _guess_label);
-  } // end for p (patches)
+  if (_guess_label) {
+    // If guess is provided by ICE, read it from Uintah
+    cerr << "Reading initial guess from ICE" << "\n";
+    for (int p = 0 ; p < _patches->size(); p++) {
+      // Read Uintah patch info into our data structure, set Uintah pointers
+      const Patch* patch = _patches->get(p);
+      HyprePatch_CC hpatch(patch,matl); // Read Uintah patch data
+      hpatch.makeInteriorVector(_HX, _guess_dw, _guess_label);
+    } // end for p (patches)
+  } else {
+    // If guess is not provided by ICE, use zero as initial guess
+    cerr << "Default initial guess: zero" << "\n";
+    for (int p = 0 ; p < _patches->size(); p++) {
+      // Read Uintah patch info into our data structure, set Uintah pointers
+      const Patch* patch = _patches->get(p);
+      HyprePatch_CC hpatch(patch,matl); // Read Uintah patch data
+      hpatch.makeInteriorVectorZero(_HX, _guess_dw);
+    } // end for p (patches)
+  }
 
   HYPRE_SStructVectorAssemble(_HX);
   _exists[SStructX] = SStructAssembled;
 
   // For solvers that require ParCSR format
   if (_requiresPar) {
-    cerr << "Setting object types to ParCSR" << "\n";
+    cerr << "Making ParCSR objects from SStruct objects" << "\n";
     HYPRE_SStructMatrixGetObject(_HA, (void **) &_HA_Par);
     HYPRE_SStructVectorGetObject(_HB, (void **) &_HB_Par);
     HYPRE_SStructVectorGetObject(_HX, (void **) &_HX_Par);
@@ -480,6 +502,9 @@ HypreDriverSStruct::HyprePatch_CC::addToGrid
   // Add this patch to the Hypre grid
   //___________________________________________________________________
 {
+  cerr << "Adding patch " << _patch->getID()
+       << " from "<< _low << " to " << _high
+       << " Level " << _level << "\n";
   HYPRE_SStructGridSetExtents(grid, _level,
                               _low.get_pointer(),
                               _high.get_pointer());
@@ -500,7 +525,8 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
   //___________________________________________________________________
 {
   cerr << "Doing makeConnections graph for Patch "
-       << _patch->getID()<< endl;
+       << _patch->getID() 
+       << " Level " << _level << "\n";
   const GridP grid = _patch->getLevel()->getGrid();
   if (viewpoint == DoingFineToCoarse) {
     //==================================================================
@@ -522,6 +548,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
       IntVector offset = _patch->faceDirection(face); // e.g. (-1,0,0)
       CellIterator f_iter = 
         _patch->getFaceCellIterator(face,"alongInteriorFaceCells");
+      cerr << "F/C Face " << face << " offset " << offset << "\n";
       for(; !f_iter.done(); f_iter++) {
         // For each fine cell at C/F interface, compute the index of
         // the neighboring coarse cell (add offset = outward normal to
@@ -530,7 +557,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
         // the fine and coarse cells to the graph.
         IntVector fineCell = *f_iter;                        // inside patch
         IntVector coarseCell = (fineCell + offset) / refRat; // outside patch
-        cerr << "F-C entry" 
+        cerr << "F-C entry"
              << " fLev " << fineLevel << " fCell " << fineCell
              << " cLev " << coarseLevel << " cCell " << coarseCell;
         HYPRE_SStructGraphAddEntries(graph,
@@ -560,6 +587,11 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
     for(int i = 0; i < finePatches.size(); i++){  
       const Patch* finePatch = finePatches[i];        
       if (finePatch->hasCoarseFineInterfaceFace()) {
+        printLine("@",40);
+        cerr << "finePatch " << i << " / " << finePatches.size() << "\n"
+             << *finePatch << "\n";
+        finePatch->printPatchBCs(cerr);
+        printLine("@",40);
         // Iterate over coarsefine interface faces
         vector<Patch::FaceType>::const_iterator iter;  
         for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
@@ -567,7 +599,8 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
           Patch::FaceType face = *iter;                   // e.g. xminus=0
           IntVector offset = _patch->faceDirection(face); // e.g. (-1,0,0)
           CellIterator f_iter = 
-            _patch->getFaceCellIterator(face,"alongInteriorFaceCells");
+            finePatch->getFaceCellIterator(face,"alongInteriorFaceCells");
+          cerr << "C/F Face " << face << " offset " << offset << "\n";
           for(; !f_iter.done(); f_iter++) {
             // For each fine cell at C/F interface, compute the index of
             // the neighboring coarse cell (add offset = outward normal to
@@ -576,7 +609,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
             // the fine and coarse cells to the graph.
             IntVector fineCell = *f_iter;                        // in patch
             IntVector coarseCell = (fineCell + offset) / refRat; // outside p.
-            cerr << "C-F entry" 
+            cerr << "C-F graph" 
                  << " cLev " << coarseLevel << " cCell " << coarseCell
                  << " fLev " << fineLevel << " fCell " << fineCell;
             HYPRE_SStructGraphAddEntries(graph,
@@ -608,6 +641,9 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations
   // prepared for this patch by ICE.
   //___________________________________________________________________
 {
+  cerr << "Adding interior eqns in patch " << _patch->getID()
+       << " from "<< _low << " to " << _high
+       << " Level " << _level << "\n";
   CCTypes::matrix_type A;
   A_dw->get(A, A_label, _matl, _patch, Ghost::None, 0);
   if (symmetric) {
@@ -691,6 +727,35 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorVector
 } // end HyprePatch_CC::makeInteriorVector()
 
 void
+HypreDriverSStruct::HyprePatch_CC::makeInteriorVectorZero
+(HYPRE_SStructVector& HV,
+ DataWarehouse* V_dw)
+  //___________________________________________________________________
+  // HypreDriverSStruct::HyprePatch_CC::makeInteriorVector~
+  // Read the vector HV from Uintah into Hypre. HV can be the RHS
+  // or the solution (initial guess) vector. HV is defined at the interior
+  // cells of each patch.
+  //___________________________________________________________________
+{
+  // Make a vector of zeros
+  CCVariable<double> Zero;
+  V_dw->allocateTemporary(Zero, _patch);
+  Zero.initialize(0.0);
+  for(int z = _low.z(); z < _high.z(); z++) {
+    for(int y = _low.y(); y < _high.y(); y++) {
+      const double* values = &Zero[IntVector(_low.x(), y, z)];
+      IntVector chunkLow(_low.x(), y, z);
+      IntVector chunkHigh(_high.x()-1, y, z);
+      // Feed data from Uintah to Hypre
+      HYPRE_SStructVectorSetBoxValues(HV, _level,
+                                      chunkLow.get_pointer(),
+                                      chunkHigh.get_pointer(), CC_VAR,
+                                      const_cast<double*>(values));
+    }
+  }
+} // end HyprePatch_CC::makeInteriorVector()
+
+void
 HypreDriverSStruct::HyprePatch_CC::makeConnections
 (HYPRE_SStructMatrix& HA,
  DataWarehouse* A_dw,
@@ -706,14 +771,15 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
   // prepared for this patch by ICE.
   //___________________________________________________________________
 {
-  CCTypes::matrix_type A;
-  A_dw->get(A, A_label, _matl, _patch, Ghost::None, 0);
   const GridP grid = _patch->getLevel()->getGrid();
   const double ZERO = 0.0;
   if (viewpoint == DoingFineToCoarse) {
     //==================================================================
     // Add fine-to-coarse entries to matrix
     //==================================================================
+    const int fineLevel = _level;
+    CCTypes::matrix_type A;
+    A_dw->get(A, A_label, _matl, _patch, Ghost::None, 0);
     vector<Patch::FaceType>::const_iterator iter;  
     // Loop over all C/F interface faces
     for (iter  = _patch->getCoarseFineInterfaceFaces()->begin(); 
@@ -721,6 +787,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
       Patch::FaceType face = *iter;                   // e.g. xminus=0
       CellIterator f_iter =
         _patch->getFaceCellIterator(face,"alongInteriorFaceCells");
+      cerr << "F/C Face " << face << "\n";
       // he equation at fineCell has one unstructured entry no. stencilSize
       // (0..stencilSize-1 are the structured entries). We use the value
       // from ICE A[fineCell][face] as the unstructured connection, because
@@ -733,7 +800,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
         IntVector fineCell = *f_iter;                        // inside patch
         const double* graphValues = &A[fineCell][face];
         cerr << "F-C " 
-             << " fLev " << _level << " fCell " << fineCell
+             << " fLev " << fineLevel << " fCell " << fineCell
              << " entry " << graphEntries[0]
              << " value " << graphValues[0];
         HYPRE_SStructMatrixSetValues(HA, _level,
@@ -748,7 +815,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
              << " fLev " << _level << " fCell " << fineCell
              << " entry " << stencilEntries[0]
              << " value " << stencilValues[0];
-        HYPRE_SStructMatrixSetValues(HA, _level,
+        HYPRE_SStructMatrixSetValues(HA, fineLevel,
                                      fineCell.get_pointer(),
                                      CC_VAR, numStencilEntries, stencilEntries,
                                      const_cast<double*>(stencilValues));
@@ -782,6 +849,14 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
     for(int i = 0; i < finePatches.size(); i++){  
       const Patch* finePatch = finePatches[i];        
       if (finePatch->hasCoarseFineInterfaceFace()) {
+        printLine("@",40);
+        cerr << "finePatch " << i << " / " << finePatches.size() << "\n"
+             << *finePatch << "\n";
+        finePatch->printPatchBCs(cerr);
+        printLine("@",40);
+        // Retrieve A of the fine patch, not this patch
+        CCTypes::matrix_type AF;
+        A_dw->get(AF, A_label, _matl, finePatch, Ghost::None, 0);
         // Iterate over coarsefine interface faces
         vector<Patch::FaceType>::const_iterator iter; 
         for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
@@ -789,7 +864,8 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
           Patch::FaceType face = *iter;                   // e.g. xminus=0
           IntVector offset = _patch->faceDirection(face); // e.g. (-1,0,0)
           CellIterator f_iter = 
-            _patch->getFaceCellIterator(face,"alongInteriorFaceCells");
+            finePatch->getFaceCellIterator(face,"alongInteriorFaceCells");
+          cerr << "C/F Face " << face << " offset " << offset << "\n";
           for(; !f_iter.done(); f_iter++) {
             // For each fine cell at C/F interface, compute the index of
             // the neighboring coarse cell (add offset = outward normal to
@@ -801,11 +877,13 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
             const int numGraphEntries = 1;
             int graphEntries[numGraphEntries] = {entry[coarseCell]};
             entry[coarseCell]++;    // Update #unstructured connection counter
-            const double* graphValues = &A[fineCell][face];
-            cerr << "C-F entry" 
+            cerr << "C-F matrix" 
                  << " cLev " << coarseLevel << " cCell " << coarseCell
-                 << " fLev " << fineLevel << " fCell " << fineCell;
-            HYPRE_SStructMatrixSetValues(HA, _level,
+                 << " (fLev " << fineLevel << " fCell " << fineCell << ")"
+                 << " entry " << graphEntries[0];
+            const double* graphValues = &AF[fineCell][face];
+            cerr << " value " << graphValues[0];
+            HYPRE_SStructMatrixSetValues(HA, coarseLevel,
                                          coarseCell.get_pointer(),
                                          CC_VAR, numGraphEntries, graphEntries,
                                          const_cast<double*>(graphValues));
@@ -839,8 +917,16 @@ HypreDriverSStruct::HyprePatch_CC::getSolution
   if (modifies_x) {
     new_dw->getModifiable(Xnew, X_label, _matl, _patch);
   } else {
+    cerr << "  AllocateAndPut Xnew" 
+         << " X_label " << X_label
+         << " _matl " << _matl 
+         << " _patch " << *_patch << "\n";
     new_dw->allocateAndPut(Xnew, X_label, _matl, _patch);
   }
+#if 1
+  // TESTING
+  Xnew.initialize(0.0);
+#else
   // Get the solution back from hypre. Note: because the data is
   // sorted in the same way in Uintah and Hypre, we can optimize by
   // read chunks of the vector rather than individual entries.
@@ -856,6 +942,7 @@ HypreDriverSStruct::HyprePatch_CC::getSolution
                                       CC_VAR, const_cast<double*>(values));
     }
   }
+#endif
 } // end HyprePatch_CC::makeInteriorVector()
 
 //#####################################################################
