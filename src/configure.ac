@@ -4653,7 +4653,7 @@ fi
 # so we aren't going to check for it in any version.  If the other 3
 # libs exist, we will assume that HYPRE_blas is there if it is needed.
 SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_LSI,
+                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI,
                          $_sci_lib,,,$_sci_optional)
 
 if test "$HAVE_HYPRE" = "yes" ; then
