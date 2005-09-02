@@ -162,10 +162,11 @@ TextureBuilder::execute()
 
 	    // set vmin/vmax
 	    double vmintmp, vmaxtmp;
-	    sfi->compute_min_max(vmintmp, vmaxtmp);
+	    sub_sfi->compute_min_max(vmintmp, vmaxtmp);
 
 	    if( vmin > vmintmp ) vmin = vmintmp;
-	    if( vmax < vmaxtmp ) vmax = vmintmp;
+	    if( vmax < vmaxtmp ) vmax = vmaxtmp;
+
 	  }
 	}
       } else {
