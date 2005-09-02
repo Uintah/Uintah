@@ -38,15 +38,17 @@
  *
  */
 
+#include <sci_defs/qt_defs.h>
 #include <CCA/Components/TTClient/TTClient.h>
-#include <iostream>
 #include <CCA/Components/Builder/QtUtils.h>
+#include <Core/Thread/Time.h>
+#include <iostream>
 
-//#include <qapplication.h>
-//#include <qpushbutton.h>
-//#include <qmessagebox.h>
-
-
+#if HAVE_QT
+ #include <qmessagebox.h>
+ #include <qinputdialog.h>
+ #include <qstring.h>
+#endif
 
 using namespace std;
 using namespace SCIRun;
@@ -57,61 +59,92 @@ extern "C" sci::cca::Component::pointer make_SCIRun_TTClient()
 }
 
 
-TTClient::TTClient()
+TTClient::TTClient() : count(12)
 {
-  uiPort.setParent(this);
-  goPort.setParent(this);
 }
 
 TTClient::~TTClient()
 {
-
+  services->removeProvidesPort("ui");
+  services->removeProvidesPort("go");
+  services->unregisterUsesPort("tt");
+  services->unregisterUsesPort("progress");
 }
 
 void TTClient::setServices(const sci::cca::Services::pointer& svc)
 {
-  services=svc;
-  //register provides ports here ...  
-
+  services = svc;
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  ttUIPort::pointer uip(&uiPort);
-  ttGoPort::pointer gop(&goPort);
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
-  svc->registerUsesPort("tt","sci.cca.ports.TTPort", props);
-  // Remember that if the PortInfo is created but not used in a call to the svc object
-  // then it must be freed.
-  // Actually - the ref counting will take care of that automatically - Steve
+
+  ttUIPort *uip = new ttUIPort();
+  uip->setParent(this);
+  ttUIPort::pointer uiPortPtr(uip);
+  svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort", props);
+
+  ttGoPort *gop = new ttGoPort();
+  gop->setParent(this);
+  ttGoPort::pointer goPortPtr(gop);
+  svc->addProvidesPort(goPortPtr, "go", "sci.cca.ports.GoPort", props);
+
+  svc->registerUsesPort("tt", "sci.cca.ports.TTPort", props);
+    svc->registerUsesPort("progress","sci.cca.ports.Progress", props);
 }
 
 int ttUIPort::ui() 
 {
-//  QMessageBox::warning(0, "TTClient", "You have clicked the UI button!");
+#if HAVE_QT
+    bool ok;
+    int res = QInputDialog::getInteger("TTClient", "TTClient iterate count (from [0, 1000]):",
+        TTCl->getCount(), 0, 1000, 1, &ok);
+    if (ok) {
+      TTCl->setCount(res);
+    }
+#else
+    std::cerr << "UI not available, using default (count = " << count << ")." << std::endl;
+#endif
   return 0;
 }
 
 
 int ttGoPort::go() 
 {
-  //QMessageBox::warning(0, "TTClient", "Go ...");
-  cout<<"GoGoGo!"<<endl;
-  sci::cca::Port::pointer pp=TTCl->getServices()->getPort("tt");
-  if(pp.isNull()){
-    //QMessageBox::warning(0, "Tri", "Port tt is not available!");
-    cout<<"pp_isNULL"<<endl;
+  PP::PingPong::pointer PPptr;
+  sci::cca::ports::Progress::pointer pPtr;
+  try {
+      sci::cca::Port::pointer pp = TTCl->getServices()->getPort("tt");
+      PPptr = pidl_cast<PP::PingPong::pointer>(pp);
+      sci::cca::Port::pointer progPort = TTCl->getServices()->getPort("progress");
+      pPtr = pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+#if HAVE_QT
+    QMessageBox::critical(0, "TTClient", e->getNote());
+#else
+    cout << e->getNote() << endl;
+#endif
     return 1;
   }
 
-  PP::PingPong::pointer PPptr=
-       pidl_cast<PP::PingPong::pointer>(pp);
+  const int mi = TTCl->getCount();
+  double start = Time::currentSeconds();
+  for (int i = 0; i < mi; i++) {
+      int retval = PPptr->pingpong(i);
+      pPtr->updateProgress(i+1, mi);
+      cout << "Pingpong: retval = " << retval << endl;
+  }
+  double elapsed = Time::currentSeconds() - start;
+  ostringstream stm;
+  stm << mi << " reps in " << elapsed << " seconds" << std::endl;
+  double us = elapsed / mi * 1000 * 1000;
+  stm << us << " us/rep" << std::endl;
 
-  if(PPptr.isNull()) {
-    cout<<"PPptr_isNULL"<<endl;
-  } 
+#if HAVE_QT
+  QMessageBox::information(0, "TTClient", stm.str());
+#else
+  std::cerr << stm.str();
+#endif
 
-  PPptr->pingpong(13);
-  cout<<"PPptr-All_WELL_AND_DONE"<<endl;
-
+  TTCl->getServices()->releasePort("tt");
+  TTCl->getServices()->releasePort("progress");
   return 0;
 }
- 

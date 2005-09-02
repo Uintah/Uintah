@@ -42,34 +42,29 @@
 #define SCIRun_Framework_ListPlotter_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include "ListPlotterForm.h"
-//namespace SCIRun {
+
+namespace SCIRun {
   
-  class ImUIPort : public virtual sci::cca::ports::UIPort {
-
-  public:
-    void setServices(const sci::cca::Services::pointer &svc);
-    virtual ~ImUIPort(){}
+class ImUIPort : public virtual sci::cca::ports::UIPort {
+public:
+    ImUIPort(const sci::cca::Services::pointer &svc) : services(svc) {}
+    virtual ~ImUIPort() {}
     virtual int ui();
-  private:
+private:
     sci::cca::Services::pointer services;
-  };
+};
 
-class ListPlotter : public sci::cca::Component{
-                
-  public:
+class ListPlotter : public sci::cca::Component {
+public:
     ListPlotter();
     virtual ~ListPlotter();
-
     virtual void setServices(const sci::cca::Services::pointer& svc);
-  private:
-
+private:
     ListPlotter(const ListPlotter&);
     ListPlotter& operator=(const ListPlotter&);
-    ImUIPort ui;
     sci::cca::Services::pointer services;
-  };
-//}
+};
+}
 
 
 
