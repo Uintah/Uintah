@@ -226,7 +226,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   vector<Specification*>::const_iterator iter;
   for (iter = specs.begin(); iter != specs.end(); iter++) {
     if ((*iter)->isImport) {
-      Definition* def = (*iter)->packages->list.front();
+      Definition* def = (*iter)->packages->list.back();
       string fname = def->curfile;
       int start_pos = fname.find("src");
       start_pos += 4;
