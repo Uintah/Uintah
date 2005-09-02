@@ -92,7 +92,8 @@ AMRSolver::readParameters(ProblemSpecP& params,
     p->jump = 0;
     p->logging = 0;
   }
-  p->symmetric=true;
+  p->symmetric = false;
+  //  p->symmetric=true;
   p->restart=true;
 
   return p;
@@ -223,13 +224,13 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     const PatchSubset* subset = lb->createPerProcessorPatchSet(l)->getUnion();
     task->requires(which_A_dw, A, subset, Ghost::None, 0);
     if (modifies_x) {
-      cerr << "Task modifies x" << endl;
-      cerr << x;
+      cerr << "Task modifies x" << "\n";
+      cerr << *x << "\n";
       task->modifies(x, subset, 0);
     }
     else {
       cerr << "Task computes x" << endl;
-      cerr << x;
+      cerr << *x << "\n";
       task->computes(x, subset);
     }
     

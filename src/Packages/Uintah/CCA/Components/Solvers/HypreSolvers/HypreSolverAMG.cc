@@ -21,14 +21,14 @@ Priorities
 HypreSolverAMG::initPriority(void)
   //___________________________________________________________________
   // Function HypreSolverAMG::initPriority~
-  // Set the Hypre interfaces that AMG can work with. Currently, only
-  // the SStruct interface is supported here, however we may want to
-  // add Struct later on. The vector of interfaces
-  // is sorted by descending priority.
+  // Set the Hypre interfaces that AMG can work with. It can work
+  // with the ParCSR interface only, anything else should be converted
+  // to Par.
+  // The vector of interfaces is sorted by descending priority.
   //___________________________________________________________________
 {
   Priorities priority;
-  priority.push_back(HypreSStruct);
+  priority.push_back(HypreParCSR);
   return priority;
 }
 
@@ -40,6 +40,7 @@ HypreSolverAMG::solve(void)
   // objects.
   //___________________________________________________________________
 {
+  cerr << "HypreSolverAMG::solve() BEGIN" << "\n";
   //  const HypreSolverParams* params = _driver->getParams();
 
   if (_driver->getInterface() == HypreSStruct) {
@@ -65,8 +66,13 @@ HypreSolverAMG::solve(void)
     HYPRE_BoomerAMGGetNumIterations(parSolver,&_results.numIterations);
     HYPRE_BoomerAMGGetFinalRelativeResidualNorm(parSolver,
                                                 &_results.finalResNorm);
-    
+    cerr << "AMG convergence statistics:" << "\n";
+    cerr << "numIterations = " << _results.numIterations << "\n";
+    cerr << "finalResNorm  = " << _results.finalResNorm << "\n";
+
     // Destroy & free
     HYPRE_BoomerAMGDestroy(parSolver);
   } // interface == HypreSStruct
+
+  cerr << "HypreSolverAMG::solve() END" << "\n";
 }
