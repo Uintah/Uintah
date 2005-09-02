@@ -43,8 +43,9 @@
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geometry/BBox.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
-using std::string;
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 
@@ -59,71 +60,71 @@ public:
   CM2Widget();
   CM2Widget(CM2Widget& copy);
   virtual ~CM2Widget();  
-  virtual CM2Widget*	clone() = 0;
+  virtual CM2Widget*    clone() = 0;
   
   // Draw widget frame
-  virtual void		draw() = 0;
+  virtual void          draw() = 0;
   // Draw widget to hardware GL buffer
-  virtual void		rasterize(CM2ShaderFactory& factory, Pbuffer *buf) = 0;
+  virtual void          rasterize(CM2ShaderFactory& factory, Pbuffer *buf) = 0;
   // Draw widget to software GL buffer
-  virtual void		rasterize(Array3<float>& array) = 0;
+  virtual void          rasterize(Array3<float>& array) = 0;
 
   // Getters/Setters
-  virtual range_t	get_value_range() { return value_range_; }
-  virtual void		set_value_range(range_t range);
-  virtual string	get_name() { return name_; }
-  virtual void		set_name(string name) { name_ = name; }
-  virtual int		get_shadeType() { return shadeType_; }
-  virtual void		set_shadeType(int type) { shadeType_ = type; }
-  virtual int		get_onState() { return onState_; }
-  virtual void		set_onState(int state) { onState_ = state; }
-  virtual bool		get_faux() { return faux_; }
-  virtual void		set_faux(bool faux) { faux_ = faux; }
-  virtual Color		get_color() const { return color_; }
-  virtual void		set_color(const Color &c) { color_ = c; }
-  virtual float		get_alpha() const { return alpha_; }
-  virtual void		set_alpha(float alpha) { alpha_ = alpha; }
+  virtual range_t       get_value_range() { return value_range_; }
+  virtual void          set_value_range(range_t range);
+  virtual std::string   get_name() { return name_; }
+  virtual void          set_name(std::string name) { name_ = name; }
+  virtual int           get_shadeType() { return shadeType_; }
+  virtual void          set_shadeType(int type) { shadeType_ = type; }
+  virtual int           get_onState() { return onState_; }
+  virtual void          set_onState(int state) { onState_ = state; }
+  virtual bool          get_faux() { return faux_; }
+  virtual void          set_faux(bool faux) { faux_ = faux; }
+  virtual Color         get_color() const { return color_; }
+  virtual void          set_color(const Color &c) { color_ = c; }
+  virtual float         get_alpha() const { return alpha_; }
+  virtual void          set_alpha(float alpha) { alpha_ = alpha; }
 
   // selection
-  virtual void		select(int obj) { selected_ = obj; }
-  virtual void		unselect_all() { selected_ = 0; }
-  virtual string	tk_cursorname(int) { return "left_ptr"; };
+  virtual void          select(int obj) { selected_ = obj; }
+  virtual void          unselect_all() { selected_ = 0; }
+  virtual std::string   tk_cursorname(int) { return "left_ptr"; };
 
   // Pure Virtual Methods below
 
   // Picking/movement
-  virtual int		pick1(int x, int y, int w, int h) = 0;
-  virtual int		pick2(int x, int y, int w, int h, int m) = 0;
-  virtual void		move(int x, int y, int w, int h) = 0;
-  virtual void		release(int x, int y, int w, int h) = 0;
+  virtual int           pick1(int x, int y, int w, int h) = 0;
+  virtual int           pick2(int x, int y, int w, int h, int m) = 0;
+  virtual void          move(int x, int y, int w, int h) = 0;
+  virtual void          release(int x, int y, int w, int h) = 0;
 
 
   // State management to/from a string
-  virtual string	tcl_pickle() = 0;
-  virtual void		tcl_unpickle(const string &p) = 0;
+  virtual std::string   tcl_pickle() = 0;
+  virtual void          tcl_unpickle(const std::string &p) = 0;
 
   // State management to/from disk
-  virtual void		io(Piostream &stream) = 0;
+  virtual void          io(Piostream &stream) = 0;
   static PersistentTypeID type_id;
 
 protected:
-  virtual void		normalize() {}
-  virtual void		un_normalize() {}
-  virtual void		draw_thick_gl_line(double x1, double y1, 
-					   double x2, double y2,
-					   double r, double g, double b);
-  virtual void		draw_thick_gl_point(double x1, double y1,
-					    double r, double g, double b);
+  virtual void          normalize() {}
+  virtual void          un_normalize() {}
+  virtual void          draw_thick_gl_line(double x1, double y1, 
+                                           double x2, double y2,
+                                           double r, double g, double b);
+  virtual void          draw_thick_gl_point(double x1, double y1,
+                                            double r, double g, double b);
 
-  string		name_;
-  Color			color_;
-  float			alpha_;
-  int			selected_;
-  int			shadeType_;
-  int			onState_;
-  bool			faux_;
-  HSVColor		last_hsv_;
-  range_t		value_range_;
+  std::string           name_;
+  Color                 color_;
+  float                 alpha_;
+  int                   selected_;
+  int                   shadeType_;
+  int                   onState_;
+  bool                  faux_;
+  HSVColor              last_hsv_;
+  range_t               value_range_;
 };
 
 typedef LockingHandle<CM2Widget> CM2WidgetHandle;
@@ -136,24 +137,39 @@ public:
   ClippingCM2Widget(ClippingCM2Widget& copy);
   ClippingCM2Widget(vector<BBox> &bboxes);
   ~ClippingCM2Widget();
-  vector<BBox> &	bboxes() { return bboxes_; }
+  vector<BBox> &        bboxes() { return bboxes_; }
 
-  virtual CM2Widget*	clone();
+  virtual CM2Widget*    clone();
   
-  virtual void		draw(){}
-  virtual void		rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer){}
-  virtual void		rasterize(Array3<float>& array){}
-  virtual int		pick1(int x, int y, int w, int h) { return 0; }
-  virtual int		pick2(int x, int y, int w, int h, int m){ return 0; }
-  virtual void		move(int x, int y, int w, int h){}
-  virtual void		release(int x, int y, int w, int h){}
-  virtual string	tcl_pickle() { return ""; };
-  virtual void		tcl_unpickle(const std::string &p) {};
+  virtual void          draw(){}
+  virtual void          rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* /*pbuffer*/){
+    printf("rasterize1: not implemented\n"); }
+  virtual void          rasterize(Array3<float>& /*array*/){
+    printf("rasterize2: not implemented\n"); }
+  virtual int           pick1(int /*x*/, int /*y*/, int /*w*/, int /*h*/) {
+    printf("pick1: not implemented\n"); 
+    return 0; }
+  virtual int           pick2(int /*x*/, int /*y*/, int /*w*/, int /*h*/, int /*m*/){
+    printf("pick2: not implemented\n");
+    return 0; }
+  virtual void          move(int /*x*/, int /*y*/, int /*w*/, int /*h*/){
+    printf("move: not implemented\n");
+  }
+  virtual void          release(int /*x*/, int /*y*/, int /*w*/, int /*h*/){
+    printf("release: not implemented\n");
+  }
+  virtual std::string   tcl_pickle() { 
+    printf("release: not implemented\n");
+    return "";
+  }
+  virtual void          tcl_unpickle(const std::string &/*p*/) {
+    printf("release: not implemented\n");
+  }
 
-  virtual void		io(Piostream &stream);
+  virtual void          io(Piostream &stream);
   static PersistentTypeID type_id;
 protected:
-  vector<BBox>		bboxes_;
+  vector<BBox>          bboxes_;
 };
   
 
@@ -167,37 +183,37 @@ public:
   TriangleCM2Widget(float base, float top_x, float top_y,
                     float width, float bottom);
   ~TriangleCM2Widget();
-  virtual CM2Widget*	clone();
+  virtual CM2Widget*    clone();
   
-  virtual void		draw();
-  virtual void		rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
-  virtual void		rasterize(Array3<float>& array);
-  virtual int		pick1(int x, int y, int w, int h);
-  virtual int		pick2(int x, int y, int w, int h, int m);
-  virtual void		move(int x, int y, int w, int h);
-  virtual void		release(int x, int y, int w, int h);
-  virtual string	tk_cursorname(int obj);
-  virtual string	tcl_pickle();
-  virtual void		tcl_unpickle(const std::string &p);
+  virtual void          draw();
+  virtual void          rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
+  virtual void          rasterize(Array3<float>& array);
+  virtual int           pick1(int x, int y, int w, int h);
+  virtual int           pick2(int x, int y, int w, int h, int m);
+  virtual void          move(int x, int y, int w, int h);
+  virtual void          release(int x, int y, int w, int h);
+  virtual std::string   tk_cursorname(int obj);
+  virtual std::string   tcl_pickle();
+  virtual void          tcl_unpickle(const std::string &p);
 
-  virtual void		io(Piostream &stream);
+  virtual void          io(Piostream &stream);
   static PersistentTypeID type_id;
 protected:
-  void			normalize();
-  void			un_normalize();  
+  void                  normalize();
+  void                  un_normalize();  
 
-  float			base_;
-  float			top_x_;
-  float			top_y_;
-  float			width_;
-  float			bottom_;
+  float                 base_;
+  float                 top_x_;
+  float                 top_y_;
+  float                 width_;
+  float                 bottom_;
 
   // Used by picking.
-  float			last_x_;
-  float			last_y_;
-  float			last_width_;
-  int			pick_ix_;
-  int			pick_iy_;
+  float                 last_x_;
+  float                 last_y_;
+  float                 last_width_;
+  int                   pick_ix_;
+  int                   pick_iy_;
 };
 
 enum CM2RectangleType
@@ -214,37 +230,37 @@ public:
   RectangleCM2Widget(CM2RectangleType type, float left_x, float left_y,
                      float width, float height, float offset);
   ~RectangleCM2Widget();
-  virtual CM2Widget*	clone();
+  virtual CM2Widget*    clone();
 
-  virtual void		draw();
-  virtual void		rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
-  virtual void		rasterize(Array3<float>& array);
-  virtual int		pick1(int x, int y, int w, int h);
-  virtual int		pick2(int x, int y, int w, int h, int m);
-  virtual void		move(int x, int y, int w, int h);
-  virtual void		release(int x, int y, int w, int h);
-  virtual string	tk_cursorname(int obj);
-  virtual string	tcl_pickle();
-  virtual void		tcl_unpickle(const std::string &p);
+  virtual void          draw();
+  virtual void          rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
+  virtual void          rasterize(Array3<float>& array);
+  virtual int           pick1(int x, int y, int w, int h);
+  virtual int           pick2(int x, int y, int w, int h, int m);
+  virtual void          move(int x, int y, int w, int h);
+  virtual void          release(int x, int y, int w, int h);
+  virtual std::string   tk_cursorname(int obj);
+  virtual std::string   tcl_pickle();
+  virtual void          tcl_unpickle(const std::string &p);
 
-  virtual void		io(Piostream &stream);
+  virtual void          io(Piostream &stream);
   static PersistentTypeID type_id;
 protected:
-  void			normalize();
-  void			un_normalize();
+  void                  normalize();
+  void                  un_normalize();
   
-  CM2RectangleType	type_;
-  float			left_x_;
-  float			left_y_;
-  float			width_;
-  float			height_;
-  float			offset_;
+  CM2RectangleType      type_;
+  float                 left_x_;
+  float                 left_y_;
+  float                 width_;
+  float                 height_;
+  float                 offset_;
 
   // Used by picking.
-  float			last_x_;
-  float			last_y_;
-  int			pick_ix_;
-  int			pick_iy_;
+  float                 last_x_;
+  float                 last_y_;
+  int                   pick_ix_;
+  int                   pick_iy_;
 };
 
 
@@ -257,20 +273,20 @@ public:
   ColorMapCM2Widget(CM2RectangleType type, float left_x, float left_y,
                      float width, float height, float offset);
   ~ColorMapCM2Widget();
-  virtual CM2Widget*	clone();
+  virtual CM2Widget*    clone();
 
-  virtual void		draw();
-  virtual void		rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
-  virtual void		rasterize(Array3<float>& array);
-  virtual string	tcl_pickle();
-  virtual void		tcl_unpickle(const std::string &p);
+  virtual void          draw();
+  virtual void          rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
+  virtual void          rasterize(Array3<float>& array);
+  virtual std::string   tcl_pickle();
+  virtual void          tcl_unpickle(const std::string &p);
 
-  virtual void		io(Piostream &stream);
-  ColorMapHandle	get_colormap();
-  void			set_colormap(ColorMapHandle &cmap);
+  virtual void          io(Piostream &stream);
+  ColorMapHandle        get_colormap();
+  void                  set_colormap(ColorMapHandle &cmap);
   static PersistentTypeID type_id;
 protected:
-  ColorMapHandle	colormap_;
+  ColorMapHandle        colormap_;
 };
 
 
@@ -285,21 +301,34 @@ public:
 
   virtual CM2Widget* clone();
 
-  virtual void		draw();
-  virtual void		rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
-  virtual void		rasterize(Array3<float>& array);
-  virtual int		pick1(int x, int y, int w, int h) { return 0; }
-  virtual int		pick2(int x, int y, int w, int h, int m) { return 0; }
-  virtual void		move(int x, int y, int w, int h) {}
-  virtual void		release(int x, int y, int w, int h) {}
-  virtual string	tcl_pickle() { return "i"; }
-  virtual void		tcl_unpickle(const std::string &) {}
+  virtual void          draw();
+  virtual void          rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
+  virtual void          rasterize(Array3<float>& array);
+  virtual int           pick1(int /*x*/, int /*y*/, int /*w*/, int /*h*/) {
+    printf("pick1: not implemented\n"); 
+    return 0; }
+  virtual int           pick2(int /*x*/, int /*y*/, int /*w*/, int /*h*/, int /*m*/){
+    printf("pick2: not implemented\n");
+    return 0; }
+  virtual void          move(int /*x*/, int /*y*/, int /*w*/, int /*h*/){
+    printf("move: not implemented\n");
+  }
+  virtual void          release(int /*x*/, int /*y*/, int /*w*/, int /*h*/){
+    printf("release: not implemented\n");
+  }
+  virtual std::string   tcl_pickle() { 
+    printf("release: not implemented\n");
+    return "";
+  }
+  virtual void          tcl_unpickle(const std::string &/*p*/) {
+    printf("release: not implemented\n");
+  }
 
-  virtual void		io(Piostream &stream);
+  virtual void          io(Piostream &stream);
   static PersistentTypeID type_id;
 protected:
-  Nrrd*			resize(int w, int h);  // nrrdSpatialResample ...
-  NrrdDataHandle	pixels_;
+  Nrrd*                 resize(int w, int h);  // nrrdSpatialResample ...
+  NrrdDataHandle        pixels_;
 };
 
 
@@ -307,39 +336,52 @@ protected:
 class PaintCM2Widget : public CM2Widget
 {
 public:
-  typedef pair<double, double>		Coordinate;
-  typedef vector<Coordinate>		Stroke;
-  typedef vector<pair<double, Stroke> >	Strokes;
+  typedef pair<double, double>          Coordinate;
+  typedef vector<Coordinate>            Stroke;
+  typedef vector<pair<double, Stroke> > Strokes;
 
   PaintCM2Widget();
   ~PaintCM2Widget();
   PaintCM2Widget(PaintCM2Widget& copy);
-  virtual CM2Widget*	clone();
+  virtual CM2Widget*    clone();
   
-  virtual void		draw();
-  virtual void		rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
-  virtual void		rasterize(Array3<float>& array);
-  virtual int		pick1(int x, int y, int w, int h) { return 0; }
-  virtual int		pick2(int x, int y, int w, int h, int m) { return 0; }
-  virtual void		move(int x, int y, int w, int h) {}
-  virtual void		release(int x, int y, int w, int h) {};
-  virtual string	tcl_pickle() { return "p"; }
-  virtual void		tcl_unpickle(const std::string &) {}
+  virtual void          draw();
+  virtual void          rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer);
+  virtual void          rasterize(Array3<float>& array);
+  virtual int           pick1(int /*x*/, int /*y*/, int /*w*/, int /*h*/) {
+    printf("pick1: not implemented\n"); 
+    return 0; }
+  virtual int           pick2(int /*x*/, int /*y*/, int /*w*/, int /*h*/, int /*m*/){
+    printf("pick2: not implemented\n");
+    return 0; }
+  virtual void          move(int /*x*/, int /*y*/, int /*w*/, int /*h*/){
+    printf("move: not implemented\n");
+  }
+  virtual void          release(int /*x*/, int /*y*/, int /*w*/, int /*h*/){
+    printf("release: not implemented\n");
+  }
+  virtual std::string   tcl_pickle() { 
+    printf("release: not implemented\n");
+    return "";
+  }
+  virtual void          tcl_unpickle(const std::string &/*p*/) {
+    printf("release: not implemented\n");
+  }
 
-  virtual void		io(Piostream &stream);
+  virtual void          io(Piostream &stream);
   static PersistentTypeID type_id;
 
-  void			add_stroke(double width = -1.0);
-  bool			pop_stroke();
-  void			add_coordinate(const Coordinate &);
+  void                  add_stroke(double width = -1.0);
+  bool                  pop_stroke();
+  void                  add_coordinate(const Coordinate &);
 protected:
-  void			normalize();
-  void			un_normalize();  
+  void                  normalize();
+  void                  un_normalize();  
 
-  void			line(Array3<float> &, double, 
-			     int, int, int, int, bool first);
-  void			splat(Array3<float> &, double, int, int);
-  Strokes		strokes_;
+  void                  line(Array3<float> &, double, 
+                             int, int, int, int, bool first);
+  void                  splat(Array3<float> &, double, int, int);
+  Strokes               strokes_;
 };
 
 
