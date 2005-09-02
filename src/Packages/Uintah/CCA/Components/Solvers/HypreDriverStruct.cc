@@ -4,6 +4,9 @@
 // Implementation of the interface from Uintah to Hypre's Struct system
 // interface, for cell-centered variables (e.g., pressure in implicit ICE).
 //--------------------------------------------------------------------------
+// TODO:
+// * Add conversion Struct -> SStruct -> ParCSR for complicated diffusion
+//   1-level problems that need AMG.
 
 #include <sci_defs/hypre_defs.h>
 
@@ -159,8 +162,8 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   HYPRE_StructMatrixSetSymmetric(_HA, _params->symmetric);
   int ghost[] = {1,1,1,1,1,1};
   HYPRE_StructMatrixSetNumGhost(_HA, ghost);
-  // This works only for SStruct -> ParCSR. TODO: convert Struct -> SStruct
-  // -> ParCSR for complicated diffusion 1-level problems that need AMG.
+  // We would like to use the following call, but currently HYPRE only
+  // supports SStruct -> ParCSR.
   //  if (_requiresPar) {
   //    HYPRE_StructMatrixSetObjectType(_HA, HYPRE_PARCSR);
   //  }
@@ -228,8 +231,8 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   // Set up the Struct right-hand-side vector _HB
   //==================================================================
   HYPRE_StructVectorCreate(_pg->getComm(), _grid, &_HB);
-  // This works only for SStruct -> ParCSR. TODO: convert Struct -> SStruct
-  // -> ParCSR for complicated diffusion 1-level problems that need AMG.
+  // We would like to use the following call, but currently HYPRE only
+  // supports SStruct -> ParCSR.
   //  if (_requiresPar) {
   //    HYPRE_StructVectorSetObjectType(_HB, HYPRE_PARCSR);
   //  }
@@ -269,8 +272,8 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   // Set up the Struct solution vector _HX
   //==================================================================
   HYPRE_StructVectorCreate(_pg->getComm(), _grid, &_HX);
-  // This works only for SStruct -> ParCSR. TODO: convert Struct -> SStruct
-  // -> ParCSR for complicated diffusion 1-level problems that need AMG.
+  // We would like to use the following call, but currently HYPRE only
+  // supports SStruct -> ParCSR.
   //  if (_requiresPar) {
   //    HYPRE_StructVectorSetObjectType(_HX, HYPRE_PARCSR);
   //  }
@@ -309,8 +312,8 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   HYPRE_StructVectorAssemble(_HX);
 
   // If solver requires ParCSR format, convert Struct to ParCSR.
-  // This works only for SStruct -> ParCSR. TODO: convert Struct -> SStruct
-  // -> ParCSR for complicated diffusion 1-level problems that need AMG.
+  // We would like to use the following call, but currently HYPRE only
+  // supports SStruct -> ParCSR.
   //  if (_requiresPar) {
   //    HYPRE_StructMatrixGetObject(_HA, (void **) &_HA_Par);
   //    HYPRE_StructVectorGetObject(_HB, (void **) &_HB_Par);

@@ -7,15 +7,9 @@
  * here.
  * See also AMRSolver.h.
  *--------------------------------------------------------------------------*/
-// TODO (taken from HypreSolver.cc):
-// Matrix file - why are ghosts there?
-// Read hypre options from input file
-// 3D performance
-// Logging?
-// Report mflops
-// Use a symmetric matrix
-// More efficient set?
-// Reuse some data between solves?
+// TODO:
+// * Use a symmetric matrix
+// * Reuse some data between solves?
 
 #include <sci_defs/hypre_defs.h>
 #include <Packages/Uintah/CCA/Components/Solvers/AMRSolver.h>
@@ -98,9 +92,7 @@ AMRSolver::readParameters(ProblemSpecP& params,
     p->jump = 0;
     p->logging = 0;
   }
-  p->symmetric=true; // TODO: this is currently turned off in AMR
-  // mode until we can support symmetric SStruct
-  // in the interface
+  p->symmetric=true;
   p->restart=true;
 
   return p;
@@ -108,16 +100,16 @@ AMRSolver::readParameters(ProblemSpecP& params,
 
 void
 AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
-                              const MaterialSet* matls,
-                              const VarLabel* A,
-                              Task::WhichDW which_A_dw,  
-                              const VarLabel* x,
-                              bool modifies_x,
-                              const VarLabel* b,
-                              Task::WhichDW which_b_dw,  
-                              const VarLabel* guess,
-                              Task::WhichDW which_guess_dw,
-                              const SolverParameters* params)
+                         const MaterialSet* matls,
+                         const VarLabel* A,
+                         Task::WhichDW which_A_dw,  
+                         const VarLabel* x,
+                         bool modifies_x,
+                         const VarLabel* b,
+                         Task::WhichDW which_b_dw,  
+                         const VarLabel* guess,
+                         Task::WhichDW which_guess_dw,
+                         const SolverParameters* params)
   /*_____________________________________________________________________
     Function AMRSolver::scheduleSolve
     Create the Uintah task that solves the linear system using Hypre.
@@ -126,6 +118,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     _____________________________________________________________________*/
 {
 #if HAVE_HYPRE_1_9
+  cerr << "AMRSolver::scheduleSolve() BEGIN" << "\n";
   Task* task;
   // The extra handle arg ensures that the stencil7 object will get freed
   // when the task gets freed.  The downside is that the refcount gets
@@ -142,7 +135,8 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
 
   /* Decide which Hypre interface to use */
   HypreInterface interface;
-  if (level->hasCoarserLevel() || level->hasFinerLevel()) {
+  int numLevels = level->getGrid()->numLevels();
+  if (numLevels > 1) {
     /* Composite grid of uniform patches */
     interface = HypreSStruct;
   } else {
@@ -223,21 +217,33 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
 
   } // end switch (domType)
 
-  task->requires(which_A_dw, A, Ghost::None, 0);
-  if (modifies_x) {
-    task->modifies(x);
-  }
-  else {
-    task->computes(x);
-  }
-    
-  if (guess) {
-    task->requires(which_guess_dw, guess, Ghost::None, 0); 
-  }
-
-  task->requires(which_b_dw, b, Ghost::None, 0);
   LoadBalancer* lb = sched->getLoadBalancer();
-  sched->addTask(task, lb->createPerProcessorPatchSet(level), matls);
+  for (int i = 0; i < level->getGrid()->numLevels(); i++) {
+    const LevelP l = level->getGrid()->getLevel(i);
+    const PatchSubset* subset = lb->createPerProcessorPatchSet(l)->getUnion();
+    task->requires(which_A_dw, A, subset, Ghost::None, 0);
+    if (modifies_x) {
+      cerr << "Task modifies x" << endl;
+      cerr << x;
+      task->modifies(x, subset, 0);
+    }
+    else {
+      cerr << "Task computes x" << endl;
+      cerr << x;
+      task->computes(x, subset);
+    }
+    
+    if (guess) {
+      task->requires(which_guess_dw, guess, subset, Ghost::None, 0); 
+    }
+    
+    task->requires(which_b_dw, b, subset, Ghost::None, 0);
+  }
+  const PatchSet* perProcPatches = lb->createPerProcessorPatchSet(level->getGrid());
+
+  sched->addTask(task, perProcPatches, matls);
+
+  cerr << "AMRSolver::scheduleSolve() END" << "\n";
 #else
   throw InternalError("AMR Solver code was not compiled",
                       __FILE__, __LINE__);

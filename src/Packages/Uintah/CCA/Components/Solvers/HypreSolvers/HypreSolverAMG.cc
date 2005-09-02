@@ -21,13 +21,14 @@ Priorities
 HypreSolverAMG::initPriority(void)
   //___________________________________________________________________
   // Function HypreSolverAMG::initPriority~
-  // Set the Hypre interfaces that CG can work with. Currently, only
-  // the Struct interface is supported here. The vector of interfaces
+  // Set the Hypre interfaces that AMG can work with. Currently, only
+  // the SStruct interface is supported here, however we may want to
+  // add Struct later on. The vector of interfaces
   // is sorted by descending priority.
   //___________________________________________________________________
 {
   Priorities priority;
-  priority.push_back(HypreStruct);
+  priority.push_back(HypreSStruct);
   return priority;
 }
 
@@ -39,39 +40,33 @@ HypreSolverAMG::solve(void)
   // objects.
   //___________________________________________________________________
 {
-  const HypreSolverParams* params = _driver->getParams();
-  if (_driver->getInterface() == HypreStruct) {
-    HYPRE_StructSolver solver;
-    HYPRE_StructPCGCreate(_driver->getPG()->getComm(), &solver);
-    HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, params->maxIterations);
-    HYPRE_PCGSetTol( (HYPRE_Solver)solver, params->tolerance);
-    HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
-    HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
-    HYPRE_PCGSetLogging( (HYPRE_Solver)solver, params->logging);
-    // Set up the preconditioner if we're using one
-    if (_precond) {
-      HYPRE_PCGSetPrecond((HYPRE_Solver)solver,
-                          _precond->getPrecond(),
-                          _precond->getPCSetup(),
-                          HYPRE_Solver(_precond->getPrecondSolver()));
-    }
-    HypreDriverStruct* structDriver =
-      dynamic_cast<HypreDriverStruct*>(_driver);
-    // This HYPRE setup can and should be broken in the future into
-    // setup that depends on HA only, and setup that depends on HB, HX.
-    HYPRE_StructPCGSetup(solver,
-                         structDriver->getA(),
-                         structDriver->getB(),
-                         structDriver->getX());
-    HYPRE_StructPCGSolve(solver,
-                         structDriver->getA(),
-                         structDriver->getB(),
-                         structDriver->getX());
-    HYPRE_StructPCGGetNumIterations
-      (solver, &_results.numIterations);
-    HYPRE_StructPCGGetFinalRelativeResidualNorm
-      (solver, &_results.finalResNorm);
+  //  const HypreSolverParams* params = _driver->getParams();
 
-    HYPRE_StructPCGDestroy(solver);
-  }
+  if (_driver->getInterface() == HypreSStruct) {
+    // AMG parameters setup and setup phase
+    HYPRE_Solver parSolver;
+    HYPRE_BoomerAMGCreate(&parSolver);
+    HYPRE_BoomerAMGSetCoarsenType(parSolver, 6);
+    HYPRE_BoomerAMGSetStrongThreshold(parSolver, 0.);
+    HYPRE_BoomerAMGSetTruncFactor(parSolver, 0.3);
+    //HYPRE_BoomerAMGSetMaxLevels(parSolver, 4);
+    HYPRE_BoomerAMGSetTol(parSolver, 1.0e-06);
+    HYPRE_BoomerAMGSetPrintLevel(parSolver, 1);
+    HYPRE_BoomerAMGSetPrintFileName(parSolver, "sstruct.out.log");
+    HYPRE_BoomerAMGSetMaxIter(parSolver, 200);
+    HYPRE_BoomerAMGSetup(parSolver, _driver->getAPar(), _driver->getBPar(),
+                         _driver->getXPar());
+    
+    // call AMG solver
+    HYPRE_BoomerAMGSolve(parSolver, _driver->getAPar(), _driver->getBPar(),
+                         _driver->getXPar());
+  
+    // Retrieve convergence information
+    HYPRE_BoomerAMGGetNumIterations(parSolver,&_results.numIterations);
+    HYPRE_BoomerAMGGetFinalRelativeResidualNorm(parSolver,
+                                                &_results.finalResNorm);
+    
+    // Destroy & free
+    HYPRE_BoomerAMGDestroy(parSolver);
+  } // interface == HypreSStruct
 }

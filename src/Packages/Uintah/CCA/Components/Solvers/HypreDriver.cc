@@ -4,17 +4,10 @@
  * Implementation of a wrapper of a Hypre solver for a particular variable
  * type. 
  *--------------------------------------------------------------------------*/
-// TODO: (taken from HypreSolver.cc)
-// Matrix file - why are ghosts there?
-// Read hypre options from input file
-// 3D performance
-// Logging?
-// Report mflops
-// Use a symmetric matrix whenever possible
-// More efficient set?
-// Reuse some data between solves?
-// Where is the initial guess taken from and where to read & print it here?
-//   (right now in initialize() and solve()).
+// TODO: 
+// * Separate setup from solver phase in solvers. Some solvers can be
+//   more efficient by separating the setup phase that depends
+//   on A only, from the solution stage, that depends on A, b, x.
 
 #include <sci_defs/hypre_defs.h>
 
@@ -57,70 +50,85 @@ static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 void
 HypreDriver::makeLinearSystem_SFCX(const int matl)
 {
-  throw InternalError("solve() is not implemented for SFCX variables",
+  throw InternalError("makeLinearSystem is not implemented for SFCX variables",
                       __FILE__, __LINE__);
 }
 
 void
 HypreDriver::makeLinearSystem_SFCY(const int matl)
 {
-  throw InternalError("solve() is not implemented for SFCY variables",
+  throw InternalError("makeLinearSystem is not implemented for SFCY variables",
                       __FILE__, __LINE__);
 }
 
 void
 HypreDriver::makeLinearSystem_SFCZ(const int matl)
 {
-  throw InternalError("solve() is not implemented for SFCZ variables",
+  throw InternalError("makeLinearSystem is not implemented for SFCZ variables",
                       __FILE__, __LINE__);
 }
 
 void
 HypreDriver::makeLinearSystem_NC(const int matl)
 {
-  throw InternalError("solve() is not implemented for NC variables",
+  throw InternalError("makeLinearSystem is not implemented for NC variables",
                       __FILE__, __LINE__);
 }
 void
 HypreDriver::makeLinearSystem_CC(const int matl)
 {
-  throw InternalError("solve() is not implemented for CC variables",
+  throw InternalError("makeLinearSystem is not implemented for CC variables",
                       __FILE__, __LINE__);
 }
 
 void
 HypreDriver::getSolution_SFCX(const int matl)
 {
-  throw InternalError("solve() is not implemented for SFCX variables",
+  throw InternalError("getSolution is not implemented for SFCX variables",
                       __FILE__, __LINE__);
 }
 
 void
 HypreDriver::getSolution_SFCY(const int matl)
 {
-  throw InternalError("solve() is not implemented for SFCY variables",
+  throw InternalError("getSolution is not implemented for SFCY variables",
                       __FILE__, __LINE__);
 }
 
 void
 HypreDriver::getSolution_SFCZ(const int matl)
 {
-  throw InternalError("solve() is not implemented for SFCZ variables",
+  throw InternalError("getSolution is not implemented for SFCZ variables",
                       __FILE__, __LINE__);
 }
 
 void
 HypreDriver::getSolution_NC(const int matl)
 {
-  throw InternalError("solve() is not implemented for NC variables",
+  throw InternalError("getSolution is not implemented for NC variables",
                       __FILE__, __LINE__);
 }
 void
 HypreDriver::getSolution_CC(const int matl)
 {
-  throw InternalError("solve() is not implemented for CC variables",
+  throw InternalError("getSolution is not implemented for CC variables",
                       __FILE__, __LINE__);
 }
+
+bool
+HypreDriver::isConvertable(const HypreInterface& to)
+  // Is it possible to convert from the current HypreInterface
+  // "_interface" to "to" ?
+{
+  // Add here any known rules of conversion.
+
+  // It does not seem possible to convert from Struct to ParCSR.
+  //  if ((_interface == HypreStruct ) && (to == HypreParCSR)) return true;
+
+  if ((_interface == HypreSStruct) && (to == HypreParCSR)) return true;
+
+  return false;
+} // end isConvertable()
 
 //_____________________________________________________________________
 // Function TypeTemplate2Enum~
@@ -165,105 +173,99 @@ namespace Uintah {
     return TypeDescription::CCVariable;
   }
 
-HypreDriver*
-newHypreDriver(const HypreInterface& interface,
-               const Level* level,
-               const MaterialSet* matlset,
-               const VarLabel* A, Task::WhichDW which_A_dw,
-               const VarLabel* x, bool modifies_x,
-               const VarLabel* b, Task::WhichDW which_b_dw,
-               const VarLabel* guess,
-               Task::WhichDW which_guess_dw,
-               const HypreSolverParams* params)
-{
-  switch (interface) {
-  case HypreStruct: 
-    {
-      return new HypreDriverStruct
-        (level, matlset, A, which_A_dw,
-         x, modifies_x, b, which_b_dw, guess, 
-         which_guess_dw, params, interface);
+  HypreDriver*
+  newHypreDriver(const HypreInterface& interface,
+                 const Level* level,
+                 const MaterialSet* matlset,
+                 const VarLabel* A, Task::WhichDW which_A_dw,
+                 const VarLabel* x, bool modifies_x,
+                 const VarLabel* b, Task::WhichDW which_b_dw,
+                 const VarLabel* guess,
+                 Task::WhichDW which_guess_dw,
+                 const HypreSolverParams* params)
+  {
+    switch (interface) {
+    case HypreStruct: 
+      {
+        return new HypreDriverStruct
+          (level, matlset, A, which_A_dw,
+           x, modifies_x, b, which_b_dw, guess, 
+           which_guess_dw, params, interface);
+      }
+    case HypreSStruct:
+      {
+        return new HypreDriverSStruct
+          (level, matlset, A, which_A_dw,
+           x, modifies_x, b, which_b_dw, guess, 
+           which_guess_dw, params, interface);
+      }
+    default:
+      throw InternalError("Unsupported Hypre Interface: "+interface,
+                          __FILE__, __LINE__);
+    } // end switch (interface)
+  }
+
+  //_____________________________________________________________________
+  // HypreInterface operations
+  //_____________________________________________________________________
+
+  HypreInterface& operator++(HypreInterface &s)
+  {
+    return s = HypreInterface(2*s);
+  }
+  
+  std::ostream&
+  operator << (std::ostream& os, const HypreInterface& i)
+    // Write Hypre interface i to the stream os.
+  {
+    if      (i == HypreStruct     ) os << "HypreStruct (1)";
+    else if (i == HypreSStruct    ) os << "HypreSStruct (2)";
+    else if (i == HypreParCSR     ) os << "HypreParCSR (4)";
+    else if (i == HypreInterfaceNA) os << "HypreInterfaceNA (8)";
+    else os << "N/A";
+    return os;
+  }
+
+  //_____________________________________________________________________
+  // BoxSide operations
+  //_____________________________________________________________________
+
+  BoxSide& operator++(BoxSide &s)
+  {
+    return s = BoxSide(s+2);
+  }
+  
+  std::ostream&
+  operator << (std::ostream& os, const BoxSide& s)
+    // Write side s to the stream os.
+  {
+    if      (s == LeftSide ) os << "Left ";
+    else if (s == RightSide) os << "Right";
+    else os << "N/A";
+    return os;
+  }
+
+  BoxSide
+  patchFaceSide(const Patch::FaceType& patchFace)
+    // Correspondence between Uintah patch face and their BoxSide
+    // (left or right).
+  {
+    if (patchFace == Patch::xminus || 
+        patchFace == Patch::yminus || 
+        patchFace == Patch::zminus) {
+      return LeftSide;
+    } else if (patchFace == Patch::xplus || 
+               patchFace == Patch::yplus || 
+               patchFace == Patch::zplus){
+      return RightSide;
+    } else {
+      ostringstream msg;
+      msg << "patchFaceSide() called with invalid Patch::FaceType "
+          << patchFace;
+      throw InternalError(msg.str(),__FILE__, __LINE__);
     }
-  case HypreSStruct:
-    {
-      return new HypreDriverSStruct
-        (level, matlset, A, which_A_dw,
-         x, modifies_x, b, which_b_dw, guess, 
-         which_guess_dw, params, interface);
-    }
-  default:
-    throw InternalError("Unsupported Hypre Interface: "+interface,
-                        __FILE__, __LINE__);
-  } // end switch (interface)
-}
-
-bool
-HypreDriver::isConvertable(const HypreInterface& to)
-  // Is it possible to convert from the current HypreInterface
-  // "_interface" to "to" ?
-{
-  // Add here any known rules of conversion.
-
-  // It does not seem possible to convert from Struct to ParCSR.
-  //  if ((_interface == HypreStruct ) && (to == HypreParCSR)) return true;
-
-  if ((_interface == HypreSStruct) && (to == HypreParCSR)) return true;
-
-  return false;
-} // end isConvertable()
+  }
 
 } // end namespace Uintah
-
-HypreInterface& operator++(HypreInterface &s)
-{
-  return s = HypreInterface(2*s);
-}
-  
-BoxSide& operator++(BoxSide &s)
-{
-  return s = BoxSide(s+2);
-}
-  
-std::ostream&
-operator << (std::ostream& os, const BoxSide& s)
-  // Write side s to the stream os.
-{
-  if      (s == LeftSide ) os << "Left ";
-  else if (s == RightSide) os << "Right";
-  else os << "N/A";
-  return os;
-}
-
-void
-printValues(const int stencilSize,
-            const int numCells,
-            const double* values /* = 0 */,
-            const double* rhsValues /* = 0 */,
-            const double* solutionValues /* = 0 */)
-  /* Print values, rhsValues vectors */
-{
-  cout_doing << "--- Printing values,rhsValues,solutionValues arrays ---" << "\n";
-  for (int cell = 0; cell < numCells; cell++) {
-    int offsetValues    = stencilSize * cell;
-    int offsetRhsValues = cell;
-    cout_doing << "cell = " << cell << "\n";
-    if (values) {
-      for (int entry = 0; entry < stencilSize; entry++) {
-        cout_doing << "values   [" << offsetValues + entry
-                   << "] = "  << values[offsetValues + entry]
-                   << "\n";
-      }
-    }
-    if (rhsValues) {
-      cout_doing << "rhsValues[" << offsetRhsValues 
-                 << "] = " << rhsValues[offsetRhsValues] << "\n";
-    }
-    if (solutionValues) {
-      cout_doing << "solutionValues[" << offsetRhsValues 
-                 << "] = " << solutionValues[offsetRhsValues] << "\n";
-    }
-    cout_doing << "-------------------------------" << "\n";
-  } // end for cell
-} // end printValues()
 
 #endif // HAVE_HYPRE_1_9

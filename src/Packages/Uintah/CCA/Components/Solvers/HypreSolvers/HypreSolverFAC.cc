@@ -5,7 +5,7 @@
 //--------------------------------------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
@@ -21,13 +21,12 @@ Priorities
 HypreSolverFAC::initPriority(void)
   //___________________________________________________________________
   // Function HypreSolverFAC::initPriority~
-  // Set the Hypre interfaces that CG can work with. Currently, only
-  // the Struct interface is supported here. The vector of interfaces
-  // is sorted by descending priority.
+  // Set the Hypre interfaces that FAC can work with. Only SStruct
+  // is supported.
   //___________________________________________________________________
 {
   Priorities priority;
-  priority.push_back(HypreStruct);
+  priority.push_back(HypreSStruct);
   return priority;
 }
 
@@ -39,39 +38,83 @@ HypreSolverFAC::solve(void)
   // objects.
   //___________________________________________________________________
 {
+  const int numDims = 3; // Hard-coded for Uintah
   const HypreSolverParams* params = _driver->getParams();
-  if (_driver->getInterface() == HypreStruct) {
-    HYPRE_StructSolver solver;
-    HYPRE_StructPCGCreate(_driver->getPG()->getComm(), &solver);
-    HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, params->maxIterations);
-    HYPRE_PCGSetTol( (HYPRE_Solver)solver, params->tolerance);
-    HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
-    HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
-    HYPRE_PCGSetLogging( (HYPRE_Solver)solver, params->logging);
-    // Set up the preconditioner if we're using one
-    if (_precond) {
-      HYPRE_PCGSetPrecond((HYPRE_Solver)solver,
-                          _precond->getPrecond(),
-                          _precond->getPCSetup(),
-                          HYPRE_Solver(_precond->getPrecondSolver()));
-    }
-    HypreDriverStruct* structDriver =
-      dynamic_cast<HypreDriverStruct*>(_driver);
-    // This HYPRE setup can and should be broken in the future into
-    // setup that depends on HA only, and setup that depends on HB, HX.
-    HYPRE_StructPCGSetup(solver,
-                         structDriver->getA(),
-                         structDriver->getB(),
-                         structDriver->getX());
-    HYPRE_StructPCGSolve(solver,
-                         structDriver->getA(),
-                         structDriver->getB(),
-                         structDriver->getX());
-    HYPRE_StructPCGGetNumIterations
-      (solver, &_results.numIterations);
-    HYPRE_StructPCGGetFinalRelativeResidualNorm
-      (solver, &_results.finalResNorm);
 
-    HYPRE_StructPCGDestroy(solver);
-  }
+  if (_driver->getInterface() == HypreSStruct) {
+    HYPRE_SStructSolver solver;
+    HypreDriverSStruct* sstructDriver =
+      dynamic_cast<HypreDriverSStruct*>(_driver);
+    const PatchSubset* patches = sstructDriver->getPatches();
+    if (patches->size() < 1) {
+      cerr << "Warning: empty list of patches for FAC solver" << "\n";
+      return;
+    }
+    const GridP grid = patches->get(0)->getLevel()->getGrid();
+    int numLevels   = grid->numLevels();
+
+    // Set the special arrays required by FAC
+    int* pLevel;                  // Part ID of each level
+    hypre_Index* refinementRatio; // Refinement ratio of level to level-1.
+    refinementRatio = hypre_TAlloc(hypre_Index, numLevels);
+    pLevel          = hypre_TAlloc(int , numLevels);
+    HYPRE_SStructMatrix facA;
+     for (int level = 0; level < numLevels; level++) {
+      pLevel[level] = level;      // part ID of this level
+      if (level == 0) {           // Dummy value
+        for (int d = 0; d < numDims; d++) {
+          refinementRatio[level][d] = 1;
+        }
+      } else {
+        for (int d = 0; d < numDims; d++) {
+          refinementRatio[level][d] =
+            grid->getLevel(level)->getRefinementRatio()[d];
+        }
+      }
+    }
+
+    // Solver setup phase:
+    // Prepare FAC operator hierarchy using Galerkin coarsening
+    // with Dandy-black-box interpolation, on the original meshes
+    hypre_AMR_RAP(sstructDriver->getA(), refinementRatio, &facA);
+    // FAC parameters
+    int n_pre  = refinementRatio[numLevels-1][0]-1; // # pre-relaxation sweeps
+    int n_post = refinementRatio[numLevels-1][0]-1; // #post-relaxation sweeps
+    // n_pre+= n_post;
+    // n_post= 0;
+    HYPRE_SStructFACCreate(_driver->getPG()->getComm(), &solver);
+    HYPRE_SStructFACSetMaxLevels(solver, numLevels);
+    HYPRE_SStructFACSetMaxIter(solver, params->maxIterations);
+    HYPRE_SStructFACSetTol(solver, params->tolerance);
+    HYPRE_SStructFACSetPLevels(solver, numLevels, pLevel);
+    HYPRE_SStructFACSetPRefinements(solver, numLevels, refinementRatio);
+    HYPRE_SStructFACSetRelChange(solver, 0);
+    HYPRE_SStructFACSetRelaxType(solver, 2); // or 1
+    HYPRE_SStructFACSetNumPreRelax(solver, n_pre);
+    HYPRE_SStructFACSetNumPostRelax(solver, n_post);
+    HYPRE_SStructFACSetCoarseSolverType(solver, 2);
+    HYPRE_SStructFACSetLogging(solver, params->logging);
+    HYPRE_SStructFACSetup2(solver, facA, sstructDriver->getB(),
+                           sstructDriver->getX());
+    hypre_FacZeroCData(solver, facA, sstructDriver->getB(),
+                       sstructDriver->getX());
+
+    // Call the FAC solver
+    HYPRE_SStructFACSolve3(solver, facA, sstructDriver->getB(),
+                           sstructDriver->getX());
+
+    // Retrieve convergence information
+    HYPRE_SStructFACGetNumIterations(solver, &_results.numIterations);
+    HYPRE_SStructFACGetFinalRelativeResidualNorm(solver,
+                                                 &_results.finalResNorm);
+
+    // Destroy & free
+    HYPRE_SStructFACDestroy2(solver);
+    hypre_TFree(pLevel);
+    hypre_TFree(refinementRatio);
+    HYPRE_SStructGraph facGraph = hypre_SStructMatrixGraph(facA);
+    HYPRE_SStructGraphDestroy(facGraph);
+    HYPRE_SStructMatrixDestroy(facA);
+
+  } // interface == HypreSStruct
 }
