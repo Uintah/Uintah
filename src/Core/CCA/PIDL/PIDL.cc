@@ -57,9 +57,13 @@
 #include <iostream>
 #include <sstream>
 
+//////////////////////////////////////////////////////////////////////////
+// removed in revision 30469:
+//
 //#ifdef HAVE_MPI
 //#include <Core/CCA/Comm/Intra/IntraCommMPI.h>
 //#endif
+//////////////////////////////////////////////////////////////////////////
 
 #ifdef HAVE_GLOBUS
 #include <Core/CCA/Comm/NexusSpChannel.h>
@@ -71,11 +75,16 @@
 #define COMM_NEXUS  1
 #define COMM_SOCKET 2
 
+//////////////////////////////////////////////////////////////////////////
+// removed in revision 30469:
+//
 //Intra-Component Comm libraries supported
 //#define INTRA_COMM_MPI 1
+//static int intra_comm_type = 0;
+//////////////////////////////////////////////////////////////////////////
 
 static int comm_type = 0;
-static int intra_comm_type = 0;
+
 using namespace SCIRun;
 
 Warehouse* PIDL::warehouse;
@@ -120,15 +129,20 @@ PIDL::initialize(int rank,int size)
     break;
 #endif
   }
-  //#ifdef HAVE_MPI
-  //  setIntraCommunication(INTRA_COMM_MPI);
-  //#endif
+
+//////////////////////////////////////////////////////////////////////////
+// removed in revision 30469:
+//
+//#ifdef HAVE_MPI
+//  setIntraCommunication(INTRA_COMM_MPI);
+//#endif
+//////////////////////////////////////////////////////////////////////////
 
   PIDL::rank = rank;
   PIDL::size = size;
 
-  if(!warehouse){
-    warehouse=new Warehouse;
+  if (!warehouse) {
+    warehouse = new Warehouse;
   }
 
 }
@@ -228,6 +242,9 @@ PIDL::serveObjects()
   warehouse->run();
 }
 
+//////////////////////////////////////////////////////////////////////////
+// removed in revision 30469:
+//
 // IntraComm* 
 // PIDL::getIntraComm()
 // {
@@ -241,7 +258,8 @@ PIDL::serveObjects()
 // #endif
 //   return NULL;
 // }
- 
+//////////////////////////////////////////////////////////////////////////
+
 //PRIVATE:
 
 void
@@ -255,6 +273,9 @@ PIDL::setCommunication(int c)
 }
 
 
+//////////////////////////////////////////////////////////////////////////
+// removed in revision 30469:
+//
 // void
 // PIDL::setIntraCommunication(int c)
 // {
@@ -264,6 +285,7 @@ PIDL::setCommunication(int c)
 //     intra_comm_type = c;
 //   }
 // }
+//////////////////////////////////////////////////////////////////////////
 
 
 DataTransmitter*

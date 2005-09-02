@@ -39,20 +39,19 @@
  *
  *  Copyright (C) 1999 SCI Group
  */
+
 #include <Core/Thread/Thread.h>
 #include <Core/CCA/PIDL/ProxyBase.h>
 #include <Core/CCA/PIDL/TypeInfo.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/Comm/DT/DataTransmitter.h>
 #include <iostream>
-//#include <Core/CCA/tools/sidl/uuid_wrapper.h>
 #include <assert.h>
 
 using namespace SCIRun;
 
 ProxyBase::ProxyBase() 
   : proxy_uuid()
-  //: proxy_uuid("NONENONENONENONENONENONENONENONENONE") 
 {
     xr = new XceptionRelay(this);
 }
@@ -60,7 +59,6 @@ ProxyBase::ProxyBase()
 //remove it later
 ProxyBase::ProxyBase(const Reference& ref)
   : proxy_uuid()
-  //: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
     xr = new XceptionRelay(this);
   rm.insertReference( ((Reference*)&ref)->clone());
@@ -68,7 +66,6 @@ ProxyBase::ProxyBase(const Reference& ref)
 
 ProxyBase::ProxyBase(Reference *ref)
   : proxy_uuid()
-  //: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
     xr = new XceptionRelay(this);
   rm.insertReference(ref);
@@ -76,23 +73,26 @@ ProxyBase::ProxyBase(Reference *ref)
 
 ProxyBase::ProxyBase(const ReferenceMgr& refM)
 : rm(refM), proxy_uuid()
-  //  proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
     xr = new XceptionRelay(this);
 }
 
 ProxyBase::~ProxyBase()
 {
-  /*Close all connections*/
+  // Close all connections
   refList::iterator iter = rm.d_ref.begin();
   for(unsigned int i=0; i < rm.d_ref.size(); i++, iter++) {
     (*iter)->chan->closeConnection();
   }
-  /*Delete intercommunicator*/
+      // Delete intercommunicator
+//////////////////////////////////////////////////////////////////////////
+// removed in revision 30469:
+//
 //    if((rm.localSize > 1)&&(rm.intracomm != NULL)) {
 //      delete (rm.intracomm);
 //      rm.intracomm = NULL; 
 //    } 
+//////////////////////////////////////////////////////////////////////////
   
   /*Delete exception relay*/
    if(xr) {
@@ -160,11 +160,11 @@ int ProxyBase::_proxygetException(int xid, int lineid)
   } role_t;
   role_t role;
 
-  //Rank for loser (calculated by winner) and vice versa
+  // Rank for loser (calculated by winner) and vice versa
   int rloser;
   int rwinner;
 
-  //Allocate some space in buffers
+  // Allocate some space in buffers
   char* recvb = (char*)malloc(20);
   char* sendb = (char*)malloc(20);
 
@@ -227,9 +227,13 @@ int ProxyBase::_proxygetException(int xid, int lineid)
   delete sendb;
   delete recvb;
 
-  //Broadcast definitive exception
-  int champ = 0;
-  //  (rm.intracomm)->broadcast(champ,(char *)&xid,(int)sizeof(int));
+  // Broadcast definitive exception
+//////////////////////////////////////////////////////////////////////////
+// removed in revision 30469:
+//
+//  int champ = 0;
+//  (rm.intracomm)->broadcast(champ,(char *)&xid,(int)sizeof(int));
+//////////////////////////////////////////////////////////////////////////
   std::cout << "Rank " << rank << " will throw xid=" << xid << "\n";
   return xid;
 }
