@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/SwitchingCriteria/None.h>
 #include <Packages/Uintah/CCA/Components/SwitchingCriteria/TimestepNumber.h>
 #include <Packages/Uintah/CCA/Components/SwitchingCriteria/PBXTemperature.h>
+#include <Packages/Uintah/CCA/Components/SwitchingCriteria/SteadyState.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -37,6 +38,8 @@ SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,
   } else if (criteria == "PBXTemperature" || criteria == "pbxtemperature" || 
              criteria == "PBX_temperature")  {
     switch_criteria = new PBXTemperature(switch_ps);
+  } else if (criteria == "SteadyState" || criteria == "steadystate")  {
+    switch_criteria = new SteadyState(switch_ps);
   } else {
     throw ProblemSetupException("Unknown switching criteria."
                                 "Valid criteria: None",
