@@ -51,29 +51,35 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Tri()
 }
 
 
-Tri::Tri(){
+Tri::Tri()
+{
 }
 
-Tri::~Tri(){
+Tri::~Tri()
+{
+  services->removeProvidesPort("mesh");
 }
 
-void Tri::setServices(const sci::cca::Services::pointer& svc){
-  services=svc;
+void Tri::setServices(const sci::cca::Services::pointer& svc)
+{
+  services = svc;
   myMeshPort::pointer meshp(new myMeshPort);
-  svc->addProvidesPort(meshp,"mesh","sci.cca.ports.MeshPort", sci::cca::TypeMap::pointer(NULL));
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
+  svc->addProvidesPort(meshp, "mesh", "sci.cca.ports.MeshPort", props);
 }
 
 int 
-myMeshPort::triangulate(const SSIDL::array1<double> &nodes, const SSIDL::array1<int> &boundaries, SSIDL::array1<int> &triangles){
-  Delaunay* mesh=new Delaunay(nodes, boundaries);
+myMeshPort::triangulate(const SSIDL::array1<double> &nodes, const SSIDL::array1<int> &boundaries, SSIDL::array1<int> &triangles)
+{
+  Delaunay* mesh = new Delaunay(nodes, boundaries);
   mesh->triangulation();
 
   std::vector<Triangle> tri=mesh->getTriangles();
   
-  for(unsigned int i=0; i<tri.size();i++){
-    triangles.push_back(tri[i].index[0]-4);
-    triangles.push_back(tri[i].index[1]-4);
-    triangles.push_back(tri[i].index[2]-4);
+  for (unsigned int i=0; i<tri.size();i++) {
+    triangles.push_back(tri[i].index[0] - 4);
+    triangles.push_back(tri[i].index[1] - 4);
+    triangles.push_back(tri[i].index[2] - 4);
   }
   delete mesh;
   return 0;

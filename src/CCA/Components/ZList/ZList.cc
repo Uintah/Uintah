@@ -45,8 +45,6 @@
 #include <qpushbutton.h>
 #include <qmessagebox.h>
 
-//#include "ListForm.h"
-
 extern "C" sci::cca::Component::pointer make_SCIRun_ZList()
 {
   return sci::cca::Component::pointer(new ZList());
@@ -55,27 +53,29 @@ extern "C" sci::cca::Component::pointer make_SCIRun_ZList()
 
 ZList::ZList()
 {
-  uiport.setParent(this);
-  listport.setParent(this);
 }
 
 ZList::~ZList()
 {
+  services->removeProvidesPort("ui");
+  services->removeProvidesPort("listport");
 }
 
 void ZList::setServices(const sci::cca::Services::pointer& svc)
 {
-  services=svc;
-  //register provides ports here ...
-
+  services = svc;
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  ImUIPort1::pointer uip(&uiport);
-  ImZListPort::pointer zlp(&listport);
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-  svc->addProvidesPort(zlp,"listport","ZListPort", props);
+
+  ImUIPort *uip = new ImUIPort();
+  uip->setParent(this);
+  svc->addProvidesPort(ImUIPort::pointer(uip), "ui", "sci.cca.ports.UIPort", props);
+
+  ImZListPort *lp = new ImZListPort();
+  lp->setParent(this);
+  svc->addProvidesPort(ImZListPort::pointer(lp), "listport", "ZListPort", props);
 }
 
-int ImUIPort1::ui()
+int ImUIPort::ui()
 {
   ListForm *w = new ListForm(com);
   w->show();

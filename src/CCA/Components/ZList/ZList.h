@@ -46,56 +46,42 @@
 #include "ListForm.h"
 
 
-
-//namespace SCIRun {
-
-
-//#define ImUIPort1 
-//ImUIPort
-
 class ZList;
 
-  class ImUIPort1 : public virtual sci::cca::ports::UIPort {
+class ImUIPort : public virtual sci::cca::ports::UIPort {
+public:
+  virtual ~ImUIPort(){}
+  virtual int ui();
+  void setParent(ZList *com){this->com=com;}
 
-  public:
-    virtual ~ImUIPort1(){}
-    virtual int ui();
-    void setParent(ZList *com){this->com=com;}
-  private:
-    ZList *com;	   	
-  };
+private:
+  ZList *com;	   	
+};
 
-  class ImZListPort : public virtual sci::cca::ports::ZListPort {
+class ImZListPort : public virtual sci::cca::ports::ZListPort {
+public:
+  ImZListPort(){};	
+  virtual ~ImZListPort(){};
+  virtual SSIDL::array1<double> getList();
+  void setParent(ZList *com){this->com=com;}
 
-  public:
-    ImZListPort(){};	
-    virtual ~ImZListPort(){};
-    virtual SSIDL::array1<double> getList();
-    void setParent(ZList *com){this->com=com;}
-  private:
-    ZList *com;	   	
-  };
-
-
-class ZList : public sci::cca::Component{
-
-  public:
-    std::vector<double> datalist; 	
-    ZList();
-    virtual ~ZList();
-
-    virtual void setServices(const sci::cca::Services::pointer& svc);
-  private:
-
-    ZList(const ZList&);
-    ZList& operator=(const ZList&);
-    ImUIPort1 uiport;
-    ImZListPort listport;
-    sci::cca::Services::pointer services;
-  };
-//}
+private:
+  ZList *com;	   	
+};
 
 
+class ZList : public sci::cca::Component {
+public:
+  std::vector<double> datalist; 	
+  ZList();
+  virtual ~ZList();
+  virtual void setServices(const sci::cca::Services::pointer& svc);
+
+private:
+  ZList(const ZList&);
+  ZList& operator=(const ZList&);
+  sci::cca::Services::pointer services;
+};
 
 
 #endif

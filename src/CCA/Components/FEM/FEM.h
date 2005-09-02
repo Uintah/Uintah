@@ -55,7 +55,6 @@ class myFEMmatrixPort: public virtual sci::cca::ports::FEMmatrixPort{
 
 
 class FEM : public sci::cca::Component{
-                
   public:
     FEM();
     virtual ~FEM();
