@@ -31,7 +31,7 @@
  *  PDEdriver.h
  *
  *  Written by:
- *   Keming Zhang 
+ *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
  *   Dec 2004
@@ -43,34 +43,38 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-#define myGoPort PDEdriverGoPort
+//#define myGoPort PDEdriverGoPort
 
 namespace SCIRun {
-  
+
 class PDEdriver : public sci::cca::Component {
-                
-  public:
-    PDEdriver();
-    virtual ~PDEdriver();
-    virtual void setServices(const sci::cca::Services::pointer& svc);
-  private:
-    PDEdriver(const PDEdriver&);
-    PDEdriver& operator=(const PDEdriver&);
-    sci::cca::Services::pointer services;
-  };
+public:
+  PDEdriver();
+  virtual ~PDEdriver();
+  virtual void setServices(const sci::cca::Services::pointer& svc);
+
+private:
+  PDEdriver(const PDEdriver&);
+  PDEdriver& operator=(const PDEdriver&);
+
+  sci::cca::Services::pointer services;
+};
 
 class myGoPort : public virtual sci::cca::ports::GoPort {
 public:
-  myGoPort(sci::cca::Services::pointer svc);
+  myGoPort(const sci::cca::Services::pointer &svc);
   virtual ~myGoPort(){}
   virtual int go();
+
+private:
+  void updateProgress(int counter);
   sci::cca::Services::pointer svc;
+  sci::cca::ports::Progress::pointer pPtr;
 };
 
 class PDEComponentIcon : public virtual sci::cca::ports::ComponentIcon {
 public:
   virtual ~PDEComponentIcon() {}
-
   virtual std::string getDisplayName();
   virtual std::string getDescription();
   virtual std::string getIconShape();
