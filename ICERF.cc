@@ -820,7 +820,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       }  // if add heat
 
       //---- P R I N T   D A T A ------ 
-      if (switchDebugSource_Sink) {
+      if (switchDebug_Source_Sink) {
         ostringstream desc;
         desc <<  "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printData(indx, patch,1,desc.str(),"int_eng_source_RF", int_eng_source);
@@ -998,7 +998,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       }
     }
     //---- P R I N T   D A T A ------ 
-    if (switchDebugMomentumExchange_CC ) {
+    if (switchDebug_MomentumExchange_CC ) {
       for (int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
@@ -1139,7 +1139,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     }
 
     //---- P R I N T   D A T A ------ 
-    if (switchDebugMomentumExchange_CC ) {
+    if (switchDebug_MomentumExchange_CC ) {
       for(int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
@@ -1319,7 +1319,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       setBC(sp_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
 
       //---- P R I N T   D A T A ------ 
-      if (switchDebugLagrangianSpecificVol ) {
+      if (switchDebug_LagrangianSpecificVol ) {
         ostringstream desc;
         desc <<"BOT_Lagrangian_spVolRF_Mat_"<<indx<< "_patch_"<<patch->getID();
         printData(indx, patch,1, desc.str(), "Temp",          Temp_CC[m]); 
