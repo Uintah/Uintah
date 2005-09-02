@@ -47,7 +47,7 @@ namespace SCIRun {
 
 class myPDEdescriptionPort : public virtual sci::cca::ports::PDEdescriptionPort {
 public:
-   virtual ~myPDEdescriptionPort(){}
+   virtual ~myPDEdescriptionPort() {}
    virtual int getPDEdescription(SSIDL::array1<double> &nodes, 
 				 SSIDL::array1<int> &boundaries,
 				 SSIDL::array1<int> &dirichletNodes,
@@ -55,18 +55,16 @@ public:
 };
 
 
-class FileReader : public sci::cca::Component{
-                
-  public:
+class FileReader : public sci::cca::Component {
+public:
     FileReader();
     virtual ~FileReader();
     virtual void setServices(const sci::cca::Services::pointer& svc);
-  private:
+private:
     FileReader(const FileReader&);
     FileReader& operator=(const FileReader&);
-    myPDEdescriptionPort pdePort;
     sci::cca::Services::pointer services;
-  };
+};
 }
 
 #endif

@@ -54,62 +54,74 @@ extern "C" sci::cca::Component::pointer make_SCIRun_LinSolver()
   return sci::cca::Component::pointer(new LinSolver);
 }
 
+LinSolver::LinSolver()
+{
+}
+
+LinSolver::~LinSolver()
+{
+  services->removeProvidesPort("linsolver");
+  services->removeProvidesPort("icon");
+}
+
 void LinSolver::setServices(const sci::cca::Services::pointer& svc)
 {
   services = svc;
-  LSComponentIcon::pointer cip(&ciPort);
   myLinSolverPort::pointer lsp(new myLinSolverPort);
 
   svc->addProvidesPort(lsp, "linsolver", "sci.cca.ports.LinSolverPort",
     sci::cca::TypeMap::pointer(0));
-  svc->addProvidesPort(cip, "icon", "sci.cca.ports.ComponentIcon",
-    sci::cca::TypeMap::pointer(0));
 
+  LSComponentIcon::pointer ciPortPtr = LSComponentIcon::pointer(new LSComponentIcon);
+
+  svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon",
+    sci::cca::TypeMap::pointer(0));
 }
 
 int 
 myLinSolverPort::jacobi(const SSIDL::array2<double> &A, 
-			const SSIDL::array1<double> &b,::SSIDL::array1< double>& x)
+            const SSIDL::array1<double> &b,
+                        SSIDL::array1< double>& x)
 {
   //we might set the accurracy by UI
-  double eps=1e-6;
-  int maxiter=1000;
+  double eps = 1e-6;
+  int maxiter = 1000;
   
-  int N=b.size();
+  int N = b.size();
   x.clear();
-  while(x.size()<b.size()) x.push_back(1.0);
+  while (x.size() < b.size()) x.push_back(1.0);
 
   int iter;
   
-  for(iter=0; iter<maxiter; iter++){
-    double norm=0;
-    for(int i=0; i<N; i++){
-      double res_i=0;
-      for(int k=0; k<N; k++){
-	res_i+=A[i][k]*x[k];
+  for (iter = 0; iter < maxiter; iter++) {
+    double norm = 0;
+    for (int i = 0; i < N; i++) {
+      double res_i = 0;
+      for (int k = 0; k < N; k++) {
+        res_i += A[i][k] * x[k];
       }
-      res_i-=b[i];
-      norm+=res_i*res_i;
+      res_i -= b[i];
+      norm += res_i * res_i;
     }
-    if(norm<eps*eps) break;
-    //cerr<<"iter="<<iter<<"  norm2="<<norm<<endl;
+    if (norm < eps * eps) break;
+    //cerr<<"iter = "<<iter<<"  norm2 = "<<norm<<endl;
     
-    SSIDL::array1<double> tempx=x;
-    for(int i=0; i<N; i++){
-      tempx[i]=b[i];
-      for(int k=0; k<N; k++){
-	if(i==k) continue;
-	tempx[i]-=A[i][k]*x[k];
+    SSIDL::array1<double> tempx = x;
+    for (int i = 0; i < N; i++) {
+      tempx[i] = b[i];
+      for (int k = 0; k < N; k++) {
+        if (i == k) continue;
+        tempx[i] -= A[i][k]*x[k];
       }
-      tempx[i]/=A[i][i];
+      tempx[i] /= A[i][i];
     }
-    x=tempx;
+    x = tempx;
   }
 
   if (iter != maxiter) {
-      return 0;
+    return 0;
   } else {
-      return 1;
+    return 1;
   }
 }  
 

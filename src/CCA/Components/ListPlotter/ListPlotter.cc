@@ -46,6 +46,8 @@
 #include "ListPlotter.h"
 #include "ListPlotterForm.h"
 
+using namespace SCIRun;
+
 extern "C" sci::cca::Component::pointer make_SCIRun_ListPlotter()
 {
   return sci::cca::Component::pointer(new ListPlotter());
@@ -54,49 +56,44 @@ extern "C" sci::cca::Component::pointer make_SCIRun_ListPlotter()
 
 ListPlotter::ListPlotter()
 {
-	
 }
 
 ListPlotter::~ListPlotter()
 {
+    services->unregisterUsesPort("listport");
+    services->removeProvidesPort("ui");
 }
 
 void ListPlotter::setServices(const sci::cca::Services::pointer& svc)
 {
-  services=svc;
-  ui.setServices(svc);	
-  //register provides ports here ...  
-
+  services = svc;
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  ImUIPort::pointer uip(&ui);
-	ImUIPort::pointer gop(&ui);
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-  svc->registerUsesPort("listport","ZListPort", props);
-}
+  ImUIPort::pointer uip = ImUIPort::pointer(new ImUIPort(svc));
 
-void ImUIPort::setServices(const sci::cca::Services::pointer& svc)
-{
-	services=svc;
+  svc->addProvidesPort(uip, "ui", "sci.cca.ports.UIPort", props);
+  svc->registerUsesPort("listport", "ZListPort", props);
 }
 
 int ImUIPort::ui()
 {
   
   ListPlotterForm *w = new ListPlotterForm; 
-  sci::cca::Port::pointer pp=services->getPort("listport");	
-  if(pp.isNull()){
-    QMessageBox::warning(0, "ListPlotter", "listport is not available!");
+  sci::cca::ports::ZListPort::pointer lport;
+  try {
+    sci::cca::Port::pointer pp = services->getPort("listport");	
+    lport = pidl_cast<sci::cca::ports::ZListPort::pointer>(pp);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    QMessageBox::warning(0, "ListPlotter", e->getNote());
     return 1;
   }  
-  sci::cca::ports::ZListPort::pointer lport=pidl_cast<sci::cca::ports::ZListPort::pointer>(pp);
-  SSIDL::array1<double> data=lport->getList();	
-
+  SSIDL::array1<double> data = lport->getList();	
   services->releasePort("listport");
 
-  int size=data.size();
-  double *val=new double[size]; 	
-  for(int i=0; i<size; i++){
-	val[i]=data[i];	
+  int size = data.size();
+  double *val = new double[size]; 	
+  for (int i = 0; i < size; i++) {
+	val[i] = data[i];	
   }
   w->setData(val, size);
   w->show();

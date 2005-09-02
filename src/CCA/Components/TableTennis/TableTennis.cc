@@ -39,13 +39,8 @@
  */
 
 #include <CCA/Components/TableTennis/TableTennis.h>
-#include <iostream>
 #include <CCA/Components/Builder/QtUtils.h>
-
-//#include <qapplication.h>
-//#include <qpushbutton.h>
-//#include <qmessagebox.h>
-
+#include <iostream>
 
 
 using namespace std;
@@ -59,43 +54,21 @@ extern "C" sci::cca::Component::pointer make_SCIRun_TableTennis()
 
 TableTennis::TableTennis()
 {
-
 }
 
 TableTennis::~TableTennis()
 {
-  cerr << "called ~TableTennis()\n";
+  services->removeProvidesPort("tt");
 }
 
 void TableTennis::setServices(const sci::cca::Services::pointer& svc)
 {
-  services=svc;
+  services = svc;
   //register provides ports here ...  
 
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  myUIPort::pointer uip(&uiPort);
-  myGoPort::pointer gop(&goPort);
-  myTTPort::pointer ttp(&ttPort);
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
+  myTTPort::pointer ttp(new myTTPort);
   svc->addProvidesPort(ttp,"tt","sci.cca.ports.TTPort", props);
-  // Remember that if the PortInfo is created but not used in a call to the svc object
-  // then it must be freed.
-  // Actually - the ref counting will take care of that automatically - Steve
-}
-
-int myUIPort::ui() 
-{
-//  QMessageBox::warning(0, "TableTennis", "You have clicked the UI button!");
-  return 0;
-}
-
-
-int myGoPort::go() 
-{
-  //QMessageBox::warning(0, "TableTennis", "Go ...");
-  cout<<"Nowhere to go!"<<endl;
-  return 0;
 }
 
 int myTTPort::pingpong(int test)
