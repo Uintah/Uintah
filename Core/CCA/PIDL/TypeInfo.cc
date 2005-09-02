@@ -53,7 +53,7 @@ using namespace SCIRun;
 using std::cerr;
 
 TypeInfo::TypeInfo(TypeInfo_internal* priv)
-    : d_priv(priv)
+  : d_priv(priv)
 {
 }
 
@@ -67,10 +67,8 @@ int TypeInfo::computeVtableOffset(const TypeInfo* ti) const
   TypeInfo_internal::MapType::iterator iter=d_priv->classname_map.find(ti->d_priv->fullclassname);
   if (iter == d_priv->classname_map.end()) {
     throw SCIRun::InternalError("computeVtableOffset: " +
-	ti->d_priv->fullclassname +
-	" should be an ancestor of " +
-	d_priv->fullclassname +
-	", but is not!", __FILE__, __LINE__);
+      ti->d_priv->fullclassname + " should be an ancestor of " +
+      d_priv->fullclassname + ", but is not!", __FILE__, __LINE__);
   }
   return iter->second.second-vtable_methods_start;
 }
@@ -142,13 +140,13 @@ Object* TypeInfo::pidl_cast(Object* obj) const
       save_callnoret_msg.push_back(message);
     }
 
-    for(int i=0; i<save_callnoret_msg.size(); i++){
+    for (unsigned int i = 0; i < save_callnoret_msg.size(); i++) {
       int _x_flag;
       save_callnoret_msg[i]->waitReply();
       save_callnoret_msg[i]->unmarshalInt(&_x_flag);
       save_callnoret_msg[i]->destroyMessage();
-      if(_x_flag != 0) {
-	throw ::SCIRun::InternalError("Unexpected user exception", __FILE__, __LINE__);
+      if (_x_flag != 0) {
+        throw ::SCIRun::InternalError("Unexpected user exception", __FILE__, __LINE__);
       }
     }
 
@@ -161,14 +159,15 @@ Object* TypeInfo::pidl_cast(Object* obj) const
 }
 
 
-int TypeInfo::isa(const std::string& classname /*, const std::string& uuid*/) const
+int TypeInfo::isa(const std::string& classname) const
 {
   TypeInfo_internal::MapType::iterator classname_iter =
     d_priv->classname_map.find(classname);
   if (classname_iter == d_priv->classname_map.end()) {
     return vtable_invalid;
   }
-  const TypeInfo_internal* tip=classname_iter->second.first;
+  // unused:
+  //const TypeInfo_internal* tip = classname_iter->second.first;
   return classname_iter->second.second;
 }
 
