@@ -44,7 +44,7 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   d_dbgTime_to_printData = false;
   
   // Turn off all the debuging switches
-  switchDebugInitialize           = false;
+  switchDebug_Initialize           = false;
   switchDebug_EQ_RF_press         = false;
   switchDebug_vel_FC              = false;
   switchDebug_Temp_FC             = false;
@@ -56,11 +56,11 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   switchDebug_updatePressure      = false;
   switchDebug_computeDelP         = false;
   switchDebug_PressFC             = false;
-  switchDebugLagrangianValues     = false;
-  switchDebugLagrangianSpecificVol= false;
-  switchDebugLagrangianTransportedVars = false;
-  switchDebugMomentumExchange_CC       = false; 
-  switchDebugSource_Sink               = false; 
+  switchDebug_LagrangianValues     = false;
+  switchDebug_LagrangianSpecificVol= false;
+  switchDebug_LagrangianTransportedVars = false;
+  switchDebug_MomentumExchange_CC       = false; 
+  switchDebug_Source_Sink               = false; 
   switchDebug_advance_advect           = false;
   
   switchDebug_AMR_refine          = false;
@@ -100,8 +100,8 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
         child = child->findNextBlock("debug")) {
       map<string,string> debug_attr;
       child->getAttributes(debug_attr);
-      if (debug_attr["label"]      == "switchDebugInitialize")
-       switchDebugInitialize            = true;
+      if (debug_attr["label"]      == "switchDebug_Initialize")
+       switchDebug_Initialize            = true;
       else if (debug_attr["label"] == "switchDebug_EQ_RF_press")
        switchDebug_EQ_RF_press          = true;
       else if (debug_attr["label"] == "switchDebug_PressDiffRF")
@@ -124,16 +124,16 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
        switchDebug_computeDelP          = true;
       else if (debug_attr["label"] == "switchDebug_PressFC")
        switchDebug_PressFC              = true;
-      else if (debug_attr["label"] == "switchDebugLagrangianValues")
-       switchDebugLagrangianValues      = true;
-      else if (debug_attr["label"] == "switchDebugLagrangianSpecificVol")
-       switchDebugLagrangianSpecificVol = true;
-      else if (debug_attr["label"] == "switchDebugLagrangianTransportedVars")
-       switchDebugLagrangianTransportedVars = true;
-      else if (debug_attr["label"] == "switchDebugMomentumExchange_CC")
-       switchDebugMomentumExchange_CC   = true;
-      else if (debug_attr["label"] == "switchDebugSource_Sink")
-       switchDebugSource_Sink           = true;
+      else if (debug_attr["label"] == "switchDebug_LagrangianValues")
+       switchDebug_LagrangianValues      = true;
+      else if (debug_attr["label"] == "switchDebug_LagrangianSpecificVol")
+       switchDebug_LagrangianSpecificVol = true;
+      else if (debug_attr["label"] == "switchDebug_LagrangianTransportedVars")
+       switchDebug_LagrangianTransportedVars = true;
+      else if (debug_attr["label"] == "switchDebug_MomentumExchange_CC")
+       switchDebug_MomentumExchange_CC   = true;
+      else if (debug_attr["label"] == "switchDebug_Source_Sink")
+       switchDebug_Source_Sink           = true;
       else if (debug_attr["label"] == "switchDebug_advance_advect")
        switchDebug_advance_advect       = true;
       else if (debug_attr["label"] == "switchDebug_AMR_refine")
@@ -152,7 +152,7 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
     d_dbgTime_to_printData = true;
     d_dbgNextDumpTime = d_dbgStartTime;
   }
-  if(switchDebugInitialize){ 
+  if(switchDebug_Initialize){ 
     d_dbgTime_to_printData = true;
   }
  
