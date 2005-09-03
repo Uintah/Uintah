@@ -52,6 +52,7 @@ void SteadyState::scheduleInitialize(const LevelP& level, SchedulerP& sched)
                         this, &SteadyState::initialize);
   t->computes(heatFluxSumLabel);
   t->computes(heatFluxSumTimeDerivativeLabel);
+  t->computes(d_sharedState->get_switch_label());
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMaterials());
 
@@ -79,17 +80,12 @@ void SteadyState::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   container->add(d_material);
   container->addReference();
 
-#if 0
   t->requires(Task::NewDW, heatFlux_CCLabel,container,Ghost::None);
   t->requires(Task::OldDW, heatFluxSumLabel);
-
+  t->requires(Task::OldDW, d_sharedState->get_delt_label());
 
   t->computes(heatFluxSumLabel);
   t->computes(heatFluxSumTimeDerivativeLabel);
-#endif
-
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
-  // t->requires(Task::OldDW,d_sharedState->get_switch_label());
   t->computes(d_sharedState->get_switch_label(), level.get_rep());
 
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
@@ -106,7 +102,7 @@ void SteadyState::switchTest(const ProcessorGroup* group,
   double sw = 0;
   double heatFluxSum = 0;
 
-#if 0
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);  
     
@@ -118,7 +114,7 @@ void SteadyState::switchTest(const ProcessorGroup* group,
     }   
   }
 
-  new_dw->put(max_vartype(heatFluxSum),heatFluxSumLabel,getLevel(patches));
+  new_dw->put(max_vartype(heatFluxSum),heatFluxSumLabel);
   cout << "heatFluxSum = " << heatFluxSum << endl;
 
   max_vartype oldHeatFluxSum;
@@ -132,32 +128,20 @@ void SteadyState::switchTest(const ProcessorGroup* group,
   double dH_dt = (heatFluxSum - oldHeatFluxSum)/delT;
   max_vartype heatFluxSumTimeDerivative(dH_dt);
 
-  new_dw->put(heatFluxSumTimeDerivative,heatFluxSumTimeDerivativeLabel,
-              getLevel(patches));
-#endif
+  cout << "heatFluxSumTimeDerivative = " << heatFluxSumTimeDerivative << endl;
 
-  delt_vartype delT;
-  old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+  new_dw->put(heatFluxSumTimeDerivative,heatFluxSumTimeDerivativeLabel);
 
-  cout << "delT = " << delT << endl;
-
-#if 0
-  max_vartype old_sw;
-  old_dw->get(old_sw,d_sharedState->get_switch_label(),getLevel(patches));
-  cout << "old_sw = " << old_sw << endl;
-#endif
-  
-#if 1
   max_vartype switch_condition(sw);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
-#endif
+  new_dw->put(switch_condition,d_sharedState->get_switch_label());
+
 }
 
 
 void SteadyState::scheduleDummy(const LevelP& level, SchedulerP& sched)
 {
   Task* t = scinew Task("SteadyState::dummy", this, &SteadyState::dummy);
-  t->requires(Task::NewDW,d_sharedState->get_switch_label(),level.get_rep());
+  t->requires(Task::OldDW,d_sharedState->get_switch_label(),level.get_rep());
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 }
 
@@ -167,7 +151,7 @@ void SteadyState::dummy(const ProcessorGroup* group,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw)
 {
-  max_vartype new_sw(1.23);
-  new_dw->get(new_sw,d_sharedState->get_switch_label(),getLevel(patches));
-  cout << "new_sw = " << new_sw << endl;
+  max_vartype old_sw(1.23);
+  old_dw->get(old_sw,d_sharedState->get_switch_label());
+  cout << "old_sw = " << old_sw << endl;
 }
