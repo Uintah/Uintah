@@ -37,6 +37,9 @@ LOG
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+namespace SCIRun {
+  class GeomText;
+}
 
 namespace Uintah {
 
@@ -56,7 +59,10 @@ public:
 
   // GROUP: cloning and execution 
   ////////// 
-  virtual void execute(); 
+  virtual void execute();
+
+  // Accept TCL commands
+  virtual void tcl_command(GuiArgs& args, void* userdata);
 
   // This is a callback made by the scheduler when the network
   // finishes.  It should ask for a reexecute if the module and
@@ -97,6 +103,12 @@ private:
   
   GuiString                font_size_;
 
+  GuiDouble                timeposition_x;
+  GuiDouble                timeposition_y;
+
+  GeomText*                timestep_text;
+  void update_timeposition();
+  
 }; //class 
 } // End namespace Uintah
 
