@@ -106,6 +106,7 @@ void CanteraSingleMixture::compute_thermalDiffusivity(CellIterator iter,
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++){
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setState_UV(int_eng[*iter], 1.0);
     thermalDiffusivity[*iter] = d_thermalConductivity/d_gas->cp_mass() * sp_vol[*iter];
   }
@@ -132,6 +133,7 @@ void CanteraSingleMixture::compute_cp(CellIterator iter, CCVariable<double>& cp,
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++){
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cp[*iter] = d_gas->cp_mass();
   }
@@ -146,6 +148,7 @@ void CanteraSingleMixture::compute_cv(CellIterator iter, CCVariable<double>& cv,
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++){
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cv[*iter] = d_gas->cv_mass();
   }
@@ -160,6 +163,7 @@ void CanteraSingleMixture::compute_gamma(CellIterator iter, CCVariable<double>& 
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++){
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setState_UV(int_eng[*iter], 1.0);
     gamma[*iter] = d_gas->cp_mass()/d_gas->cv_mass();
   }
@@ -189,6 +193,7 @@ void CanteraSingleMixture::compute_Temp(CellIterator iter, CCVariable<double>& t
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;!iter.done();iter++){
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setState_UV(int_eng[*iter], 1.0);
     temp[*iter] = d_gas->temperature();
   }
@@ -218,6 +223,7 @@ void CanteraSingleMixture::compute_cp(cellList::iterator iter, cellList::iterato
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;iter != end;iter++){
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cp[*iter] = d_gas->cp_mass();
   }
@@ -233,6 +239,7 @@ void CanteraSingleMixture::compute_cv(cellList::iterator iter, cellList::iterato
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;iter != end;iter++){
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cv[*iter] = d_gas->cv_mass();
   }
@@ -248,6 +255,7 @@ void CanteraSingleMixture::compute_gamma(cellList::iterator iter, cellList::iter
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;iter != end;iter++){
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setState_UV(int_eng[*iter], 1.0);
     gamma[*iter] = d_gas->cp_mass()/d_gas->cv_mass();
   }
@@ -279,6 +287,7 @@ void CanteraSingleMixture::compute_Temp(cellList::iterator iter, cellList::itera
 {
   d_gas->setMassFractionsByName(d_speciesMix);
   for(;iter != end;iter++){
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setState_UV(int_eng[*iter], 1.0);
     temp[*iter] = d_gas->temperature();
   }

@@ -185,7 +185,7 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>            [0,0,0]   </gravity>
+       <gravity>            [0,-5000,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
     
@@ -197,6 +197,7 @@
          <material>
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
+           <isSurroundingMatl>          true            </isSurroundingMatl>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
@@ -208,7 +209,7 @@
                     <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
                <res>                 [2,2,2]            </res>
-               <velocity>      [1.,1.,1.]               </velocity>
+               <velocity>      [0,0,0]               </velocity>
                <density>       1.1792946927374306000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
