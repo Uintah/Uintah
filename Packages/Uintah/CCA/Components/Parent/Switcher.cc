@@ -331,7 +331,7 @@ void Switcher::switchTest(const ProcessorGroup*,
                           DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   max_vartype switch_condition;
-  new_dw->get(switch_condition,d_sharedState->get_switch_label());
+  new_dw->get(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
 
   if (switch_condition) {
     // we'll set it back to idle at the bottom of the next timestep's scheduleCarryOverVars
@@ -348,7 +348,7 @@ void Switcher::initNewVars(const ProcessorGroup*,
                           DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   max_vartype switch_condition;
-  new_dw->get(switch_condition,d_sharedState->get_switch_label());
+  new_dw->get(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
 
   if (!switch_condition)
     return;
