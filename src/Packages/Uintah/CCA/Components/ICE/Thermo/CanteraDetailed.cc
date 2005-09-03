@@ -244,6 +244,7 @@ void CanteraDetailed::react(const ProcessorGroup*,
 	}
 #endif
 	
+        d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
         d_gas->setMassFractions(tmp_mf);
 	d_gas->setState_UV(int_eng[*iter], spvol[*iter]);
 
@@ -375,6 +376,7 @@ void CanteraDetailed::compute_thermalDiffusivity(CellIterator iter,
   for(;!iter.done();iter++){
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     thermalDiffusivity[*iter] = d_thermalConductivity/d_gas->cp_mass() * sp_vol[*iter];
@@ -421,6 +423,7 @@ void CanteraDetailed::compute_cp(CellIterator iter, CCVariable<double>& cp,
   for(;!iter.done();iter++){
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cp[*iter] = d_gas->cp_mass();
@@ -455,6 +458,7 @@ void CanteraDetailed::compute_cv(CellIterator iter, CCVariable<double>& cv,
   for(;!iter.done();iter++){
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cv[*iter] = d_gas->cv_mass();
@@ -489,6 +493,7 @@ void CanteraDetailed::compute_gamma(CellIterator iter, CCVariable<double>& gamma
   for(;!iter.done();iter++){
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     gamma[*iter] = d_gas->cp_mass()/d_gas->cv_mass();
@@ -538,6 +543,7 @@ void CanteraDetailed::compute_Temp(CellIterator iter, CCVariable<double>& temp,
   for(;!iter.done();iter++){
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     temp[*iter] = d_gas->temperature();
@@ -609,6 +615,7 @@ void CanteraDetailed::compute_cp(cellList::iterator iter, cellList::iterator end
   for(;iter != end;iter++){
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cp[*iter] = d_gas->cp_mass();
@@ -644,6 +651,7 @@ void CanteraDetailed::compute_cv(cellList::iterator iter, cellList::iterator end
   for(;iter != end;iter++){
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     cv[*iter] = d_gas->cv_mass();
@@ -679,6 +687,7 @@ void CanteraDetailed::compute_gamma(cellList::iterator iter, cellList::iterator 
   for(;iter != end;iter++){
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     gamma[*iter] = d_gas->cp_mass()/d_gas->cv_mass();
@@ -730,6 +739,7 @@ void CanteraDetailed::compute_Temp(cellList::iterator iter, cellList::iterator e
   for(;iter != end;iter++){
     for(int i = 0; i< numSpecies; i++)
       tmp_mf[i] = mf[i][*iter];
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], 1.0);
     temp[*iter] = d_gas->temperature();

@@ -149,10 +149,17 @@
       <dbg_timeStart>       0.00   </dbg_timeStart>
       <dbg_timeStop>        0.01   </dbg_timeStop>
       <dbg_outputInterval>  1e-9   </dbg_outputInterval>
+      <dbg_SigFigs> 17 </dbg_SigFigs>
+<dbg_Level>  0    </dbg_Level>
+<dbg_Matls>           [0]         </dbg_Matls>
      <!--
+       <debug label = "switchDebugMomentumExchange_CC"/>
+       <debug label = "switchDebugInitialize"/>
+       <debug label = "switchDebug_advance_advect"/>
+       <debug label = "switchDebug_PressFC"/>
+       <debug label = "switchDebug_EQ_RF_press"/>
        <debug label = "switchDebug_EQ_RF_press"/>
        <debug label = "switchDebug_explicit_press"/> 
-       <debug label = "switchDebug_advance_advect"/>
        <debug label = "switchDebug_Exchange_FC"/>
        <debug label = "switchDebug_EQ_RF_press"/>
        <debug label = "switchDebug_vel_FC"/>
@@ -185,7 +192,7 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>            [0,0,0]   </gravity>
+       <gravity>            [0,-2000,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
     
@@ -197,21 +204,25 @@
          <material>
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
+           <Thermo type = "cantera single mixture">
+		<speciesMix>CH4:1</speciesMix>
+		<file>gri30.xml</file>
+                <id>gri30_mix</id>
+                <thermal_conductivity>1.0                    </thermal_conductivity>
+           </Thermo>
+           <isSurroundingMatl>          true            </isSurroundingMatl>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
-           <thermal_conductivity>0.0                    </thermal_conductivity>
-           <specific_heat>      716.0                   </specific_heat>
-           <speed_of_sound>     376                     </speed_of_sound>
-           <gamma>              1.4                     </gamma>
+           <thermal_conductivity>1.0                    </thermal_conductivity>
            <geom_object>
                 <box label="wholeDomain">
                     <min>       [ 0.0, 0.0, 0.0 ]       </min>
                     <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
                <res>                 [2,2,2]            </res>
-               <velocity>      [1.,1.,1.]               </velocity>
-               <density>       1.1792946927374306000e+00</density>
+               <velocity>      [0,0,0]               </velocity>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
+               <density>       0.65168805574747168</density>
            </geom_object>
          </material>
       </ICE>       

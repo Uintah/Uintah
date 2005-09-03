@@ -261,6 +261,7 @@ void CanteraMixtureFraction::compute_thermalDiffusivity(CellIterator iter,
     for(int i = 0; i< numSpecies; i++){
       tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
     }
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
     equilibrate(*d_gas, UV);
@@ -300,6 +301,7 @@ void CanteraMixtureFraction::compute_cp(CellIterator iter, CCVariable<double>& c
     for(int i = 0; i< numSpecies; i++){
       tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
     }
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
     equilibrate(*d_gas, UV);
@@ -328,6 +330,7 @@ void CanteraMixtureFraction::compute_cv(CellIterator iter, CCVariable<double>& c
       for(int i = 0; i< numSpecies; i++){
         tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
       }
+      d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
       d_gas->setMassFractions(tmp_mf);
       d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
       equilibrate(*d_gas, UV);
@@ -365,6 +368,7 @@ void CanteraMixtureFraction::compute_gamma(CellIterator iter, CCVariable<double>
     for(int i = 0; i< numSpecies; i++){
       tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
     }
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
     equilibrate(*d_gas, UV);
@@ -407,6 +411,7 @@ void CanteraMixtureFraction::compute_Temp(CellIterator iter, CCVariable<double>&
     for(int i = 0; i< numSpecies; i++){
       tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
     }
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
     equilibrate(*d_gas, UV);
@@ -484,6 +489,7 @@ void CanteraMixtureFraction::compute_cp(cellList::iterator iter, cellList::itera
     for(int i = 0; i< numSpecies; i++){
       tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
     }
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
     equilibrate(*d_gas, UV);
@@ -512,6 +518,7 @@ void CanteraMixtureFraction::compute_cv(cellList::iterator iter, cellList::itera
     for(int i = 0; i< numSpecies; i++){
       tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
     }
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
     equilibrate(*d_gas, UV);
@@ -540,6 +547,7 @@ void CanteraMixtureFraction::compute_gamma(cellList::iterator iter, cellList::it
     for(int i = 0; i< numSpecies; i++){
       tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
     }
+    d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
     d_gas->setMassFractions(tmp_mf);
     d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
     equilibrate(*d_gas, UV);
@@ -585,6 +593,7 @@ void CanteraMixtureFraction::compute_Temp(cellList::iterator iter, cellList::ite
       for(int i = 0; i< numSpecies; i++){
         tmp_mf[i] = mix0[i] * (1-mf) + mix1[i] * mf;
       }
+      d_gas->setState_TR(300, 1.0); // Ensure that we always start from the same initial guess
       d_gas->setMassFractions(tmp_mf);
       d_gas->setState_UV(int_eng[*iter], sp_vol[*iter]);
       equilibrate(*d_gas, UV);
