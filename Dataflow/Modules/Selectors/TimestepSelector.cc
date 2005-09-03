@@ -46,7 +46,10 @@ TimestepSelector::TimestepSelector(GuiContext* ctx) :
   def_color_b_(ctx->subVar("def-color-b")),
   def_color_a_(ctx->subVar("def-color-a")),
   def_mat_handle_(scinew Material(Color(1.0, 1.0, 1.0))),
-  font_size_(ctx->subVar("font_size"))
+  font_size_(ctx->subVar("font_size")),
+  timeposition_x(ctx->subVar("timeposition_x")),
+  timeposition_y(ctx->subVar("timeposition_y")),
+  timestep_text(0)
 { 
 } 
 
@@ -168,9 +171,10 @@ TimestepSelector::execute()
   }
   oss<<microseconds<<"ms";
   all = scinew GeomGroup();
-  all->add(scinew GeomText(oss.str(), ref + along,
-                           def_mat_handle_->diffuse, 
-                           font_size_.get()));
+  timestep_text = scinew GeomText(oss.str(), ref + along,
+                                  def_mat_handle_->diffuse, 
+                                  font_size_.get());
+  all->add(timestep_text);
   GeomSticky *sticky = scinew GeomSticky(all);
   ogeom->delAll();
   ogeom->addObj(sticky, "TimeStamp");
@@ -179,6 +183,29 @@ TimestepSelector::execute()
   // DumpAllocator(default_allocator, "timedump.allocator");
 
 } // end execute()
+
+void
+TimestepSelector::tcl_command(GuiArgs& args, void* userdata) {
+  if(args.count() < 2) {
+    args.error("GridVisualizer needs a minor command");
+    return;
+  }
+  if(args[1] == "update_timeposition") {
+    update_timeposition();
+  }
+  else {
+    Module::tcl_command(args, userdata);
+  }
+}
+
+void
+TimestepSelector::update_timeposition() {
+  if (timestep_text) {
+    // Update the new possition
+    double x = timeposition_x.get();
+    double y = timeposition_y.get();
+  }
+}
 
 // This is a callback made by the scheduler when the network finishes.
 // It should ask for a reexecute if the module and increment the
