@@ -61,8 +61,6 @@ WARNING
 
 namespace Uintah {
 
-  using std::cerr;
-
   // Forward declarations
   class HypreSolverParams;
 

@@ -34,6 +34,13 @@
 
 using namespace Uintah;
 
+//__________________________________
+//  To turn on normal output
+//  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
+
+static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_dbg("HYPRE_DBG", false);
+
 /*_____________________________________________________________________
   class AMRSolver implementation
   _____________________________________________________________________*/
@@ -114,7 +121,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     NC, FC, etc. NOTE: Currently only CC is supported.
     _____________________________________________________________________*/
 {
-  cerr << "AMRSolver::scheduleSolve() BEGIN" << "\n";
+  cout_doing << "AMRSolver::scheduleSolve() BEGIN" << "\n";
   Task* task;
   // The extra handle arg ensures that the stencil7 object will get freed
   // when the task gets freed.  The downside is that the refcount gets
@@ -219,13 +226,9 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     const PatchSubset* subset = lb->createPerProcessorPatchSet(l)->getUnion();
     task->requires(which_A_dw, A, subset, Ghost::None, 0);
     if (modifies_x) {
-      cerr << "Task modifies x" << "\n";
-      cerr << *x << "\n";
       task->modifies(x, subset, 0);
     }
     else {
-      cerr << "Task computes x" << endl;
-      cerr << *x << "\n";
       task->computes(x, subset);
     }
     
@@ -239,5 +242,5 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
 
   sched->addTask(task, perProcPatches, matls);
 
-  cerr << "AMRSolver::scheduleSolve() END" << "\n";
+  cout_doing << "AMRSolver::scheduleSolve() END" << "\n";
 } // end scheduleSolve()

@@ -35,6 +35,7 @@ using namespace Uintah;
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_dbg("HYPRE_DBG", false);
 
 //#####################################################################
 // class HypreDriver implementation common to all variable types
@@ -55,7 +56,7 @@ HypreDriverStruct::~HypreDriverStruct(void)
 void
 HypreDriverStruct::printMatrix(const string& fileName /* =  "output" */)
 {
-  cerr << "HypreDriverStruct::printMatrix() begin" << "\n";
+  cout_doing << "HypreDriverStruct::printMatrix() begin" << "\n";
   if (!_params->printSystem) return;
   HYPRE_StructMatrixPrint((fileName + ".sstruct").c_str(), _HA, 0);
   //  if (_requiresPar) {
@@ -63,7 +64,7 @@ HypreDriverStruct::printMatrix(const string& fileName /* =  "output" */)
   //    // Print CSR matrix in IJ format, base 1 for rows and cols
   //    HYPRE_ParCSRMatrixPrintIJ(_HA_Par, 1, 1, (fileName + ".ij").c_str());
   //  }
-  cerr << "HypreDriverStruct::printMatrix() end" << "\n";
+  cout_doing << "HypreDriverStruct::printMatrix() end" << "\n";
 }
 
 void
