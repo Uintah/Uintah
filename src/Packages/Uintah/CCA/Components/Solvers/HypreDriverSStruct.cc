@@ -7,7 +7,6 @@
 
 #include <sci_defs/hypre_defs.h>
 
-#if HAVE_HYPRE_1_9
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 
@@ -115,7 +114,12 @@ HypreDriverSStruct::printMatrix(const string& fileName /* =  "output" */)
   if (_requiresPar) {
     HYPRE_ParCSRMatrixPrint(_HA_Par, (fileName + ".par").c_str());
     // Print CSR matrix in IJ format, base 1 for rows and cols
+#if HAVE_HYPRE_1_9
     HYPRE_ParCSRMatrixPrintIJ(_HA_Par, 1, 1, (fileName + ".ij").c_str());
+#else
+    cerr << "Warning: this Hypre version does not support printing the "
+         << "matrix in IJ format to a file, skipping this printout" << "\n";
+#endif // #if HAVE_HYPRE_1_9
   }
   cerr << "HypreDriverSStruct::printMatrix() end" << "\n";
 }
@@ -237,8 +241,15 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   _exists[SStructGraph] = SStructCreated;
   // For ParCSR-requiring solvers like AMG
   if (_requiresPar) {
+#if HAVE_HYPRE_1_9
     cerr << "graph object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructGraphSetObjectType(_graph, HYPRE_PARCSR);
+#else
+    ostringstream msg;
+    msg << "Hypre version does not support solvers that require "
+        << "conversion from SStruct to ParCSR" << "\n";
+    throw InternalError(msg.str(),__FILE__, __LINE__);
+#endif // #if HAVE_HYPRE_1_9
   }
 
   //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -313,12 +324,18 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   _exists[SStructA] = SStructCreated;
   // If specified by input parameter, declare the structured and
   // unstructured part of the matrix to be symmetric.
+#if HAVE_HYPRE_1_9
   for (int level = 0; level < numLevels; level++) {
     HYPRE_SStructMatrixSetSymmetric(_HA, level,
                                     CC_VAR, CC_VAR,
                                     _params->symmetric);
   }
   HYPRE_SStructMatrixSetNSSymmetric(_HA, _params->symmetric);
+#else
+  cerr << "Warning: Hypre version does not correctly support "
+       << "symmetric matrices; proceeding without doing anything "
+       << "at this point." << "\n";
+#endif // #if HAVE_HYPRE_1_9
 
   // For solvers that require ParCSR format
   if (_requiresPar) {
@@ -1054,5 +1071,3 @@ namespace Uintah {
   }
 
 } // end namespace Uintah
-
-#endif // #if HAVE_HYPRE_1_9

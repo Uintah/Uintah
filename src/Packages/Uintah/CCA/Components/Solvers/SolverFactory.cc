@@ -40,7 +40,7 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
     exit(1);
 #endif
   } else if (solver == "AMRSolver" || solver == "hypreamr") {
-#if HAVE_HYPRE_1_9
+#if HAVE_HYPRE
     cerr << "Creating AMRSolver object" << "\n";
     solve = new AMRSolver(world);
 #else
