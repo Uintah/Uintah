@@ -644,7 +644,7 @@ path_to_src=`echo $0 | sed 's/\/configure//'`
 
  
 BUILD_DATAFLOW="$sci_required_dataflow"
-if test "$sci_required_dataflow"; then
+if test "$sci_required_dataflow" == "yes"; then
   DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW"
 fi
 AC_SUBST(DEF_BUILD_DATAFLOW)

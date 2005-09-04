@@ -42,7 +42,7 @@
 #define SCIRun_Tao_Component_h
 
 #include <SCIRun/PortInstance.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun
 {

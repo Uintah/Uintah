@@ -39,7 +39,7 @@
  */
 
 #include <SCIRun/resourceReference.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/TypeMap.h>
 using namespace std;
 using namespace SCIRun;

@@ -60,11 +60,10 @@ bool PortInstance::available()
   return true;
 }
 
-PortInstance* PortInstance::getPeer()
+sci::cca::internal::PortInstance::pointer PortInstance::getPeer()
 {
-  std::cerr << "default getPeer() is called!"
-            << std::endl;
-  return 0;
+  std::cerr << "default getPeer() is called!" << std::endl;
+  return sci::cca::internal::PortInstance::pointer(0);
 }
 
 PortInstance::PortInstance()

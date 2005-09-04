@@ -46,7 +46,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <Core/CCA/PIDL/ProxyBase.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <sci_defs/mpi_defs.h> 
 #include <sci_mpi.h>
 

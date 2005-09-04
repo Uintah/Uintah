@@ -54,8 +54,14 @@
  #include <SCIRun/Vtk/VtkComponentModel.h>
 #endif
 
+#if HAVE_CORBA
 #include <SCIRun/Corba/CorbaComponentModel.h>
+#endif
+
+#if HAVE_TAO
 #include <SCIRun/Tao/TaoComponentModel.h>
+#endif
+
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
 
@@ -127,8 +133,12 @@ void FrameworkProperties::getSidlPaths()
 #if HAVE_VTK
         sArray.push_back(srcDir + VtkComponentModel::DEFAULT_PATH);
 #endif
+#if HAVE_CORBA
         sArray.push_back(srcDir + CorbaComponentModel::DEFAULT_PATH);
+#endif
+#if HAVE_TAO
         sArray.push_back(srcDir + TaoComponentModel::DEFAULT_PATH);
+#endif
         frameworkProperties->putStringArray("sidl_xml_path", sArray);
     }
     // SIDL_DLL_PATH env. variable is read and parsed in VtkComponentModel

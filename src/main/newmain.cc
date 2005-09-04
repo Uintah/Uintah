@@ -41,7 +41,7 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Util/Environment.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/Thread/Thread.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
@@ -139,9 +139,9 @@ main(int argc, char *argv[]) {
   
   // Create a new framework
   try {
-    AbstractFramework::pointer sr;
+    sci::cca::DistributedComponentModelFramework::pointer sr;
     if(framework) {
-      sr = AbstractFramework::pointer(new SCIRunFramework());
+      sr = sci::cca::DistributedComponentModelFramework::pointer(new SCIRunFramework());
       std::cerr << "URL to framework:\n" << sr->getURL().getString() << std::endl;
       //ofstream f("framework.url");
       //std::string s;

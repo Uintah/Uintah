@@ -45,7 +45,7 @@
 #include <CCA/Components/Builder/Builder.h>
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <CCA/Components/Builder/QtUtils.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/Util/Environment.h>
 #include <SCIRun/CCA/CCAException.h>
 

@@ -44,7 +44,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 #include $(SCIRUN_SCRIPTS)/program.mk
 
-$(SRCDIR)/PLinSolver.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/PLinSolver.o: Core/CCA/spec/sci_sidl.h
 
 
 

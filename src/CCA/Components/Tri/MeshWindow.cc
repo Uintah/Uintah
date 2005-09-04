@@ -49,7 +49,7 @@
 #include "vector2d.h"
 #include "Delaunay.h"
 #include "MeshWindow.h"
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 MeshWindow::MeshWindow( QWidget *parent, Delaunay *mesh)
   : QFrame( parent)

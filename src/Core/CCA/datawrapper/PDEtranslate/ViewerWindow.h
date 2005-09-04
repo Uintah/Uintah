@@ -46,7 +46,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "/home/sci/damevski/SCIRun/ccadebug/Core/CCA/spec/cca_sidl.h"
+#include "/home/sci/damevski/SCIRun/ccadebug/Core/CCA/spec/sci_sidl.h"
 #include "vector2d.h"
 
 class QPoint {

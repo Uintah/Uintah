@@ -44,6 +44,6 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 #include $(SCIRUN_SCRIPTS)/program.mk
 
-$(SRCDIR)/Tri.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/MeshWindow.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/Delaunay.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/Tri.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/MeshWindow.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/Delaunay.o: Core/CCA/spec/sci_sidl.h

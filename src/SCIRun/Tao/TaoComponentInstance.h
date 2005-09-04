@@ -46,7 +46,7 @@
 #include <SCIRun/Tao/Component.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/PortInstanceIterator.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/CCA/PIDL/Object.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <map>

@@ -29,7 +29,7 @@
 #ifndef SCIRun_Dataflow_SCIRunGoPort
 #define SCIRun_Dataflow_SCIRunGoPort 1
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
 class SCIRunComponentInstance;

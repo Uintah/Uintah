@@ -1,4 +1,4 @@
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 
 namespace SCIRun {

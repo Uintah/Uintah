@@ -41,7 +41,7 @@
 #ifndef SCIRun_Dataflow_SCIRunUIPort_h
 #define SCIRun_Dataflow_SCIRunUIPort_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
   class SCIRunComponentInstance;

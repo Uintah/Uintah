@@ -113,43 +113,6 @@ InternalComponentModel::getFrameworkService(const std::string& type,
   return port;
 }
 
-#if 0
-    //std::cerr<<"getFrameworkService #"<<1<<std::endl;
-    std::map<std::string, InternalComponentDescription*>::iterator iter =
-    services.find(type);
-    if (iter == services.end()) {
-    return sci::cca::Port::pointer(0);
-    }
-    //std::cerr<<"getFrameworkService #"<<2<<std::endl;
-    InternalComponentDescription* cd = iter->second;
-    InternalComponentInstance* ci;
-    if (cd->isSingleton) {
-    //std::cerr<<"getFrameworkService #"<<3<<std::endl;
-    std::string cname = "internal: "+type;
-    if (!cd->singleton_instance) {
-        cd->singleton_instance = (*cd->create)(framework, cname);
-        framework->registerComponent(cd->singleton_instance, cname);
-    }
-    //std::cerr<<"getFrameworkService #"<<4<<std::endl;
-    ci = cd->singleton_instance;
-    } else {
-    //std::cerr<<"getFrameworkService #"<<5<<std::endl;
-    std::string cname = "internal: " + type + " for " + componentName;
-    ci = (*cd->create)(framework, cname);
-    //std::cerr<<"getFrameworkService #"<<6<<std::endl;
-    framework->registerComponent(ci, cname);
-    //std::cerr<<"getFrameworkService #"<<7<<std::endl;
-    }
-    ci->incrementUseCount();
-    //std::cerr<<"getFrameworkService #"<<8<<std::endl;
-    sci::cca::Port::pointer ptr = ci->getService(type);
-    //std::cerr<<"getFrameworkService #"<<9<<std::endl;
-    ptr->addReference();
-    //std::cerr<<"getFrameworkService #"<<10<<std::endl;
-    return ptr;
-}
-
-#endif
 bool
 InternalComponentModel::releaseFrameworkService(const std::string& type,
                                                 const std::string& componentName)
@@ -165,28 +128,6 @@ InternalComponentModel::releaseFrameworkService(const std::string& type,
 
   return true;
 }
-
-#if 0
-  InternalComponentDescription* cd = iter->second;
-  InternalComponentInstance* ci;
-  if (cd->isSingleton) {
-    ci = cd->singleton_instance;
-  } else {
-    std::string cname = "internal: " + type + " for " + componentName;
-    ci = dynamic_cast<InternalComponentInstance*>(
-						  framework->lookupComponent(cname));
-    if (!ci) {
-      throw InternalError("Cannot find Service component of type: " +
-			  type + " for component " + componentName, __FILE__, __LINE__);
-    }
-  }
-  if (!ci->decrementUseCount()) {
-    throw InternalError("Service released without correspond get",
-			__FILE__, __LINE__);
-  }
-  return true;
-}
-#endif
 
 bool InternalComponentModel::haveComponent(const std::string& /*name*/)
 {
@@ -213,13 +154,13 @@ void InternalComponentModel::buildComponentList()
 #endif
 }
 
-ComponentInstance* InternalComponentModel::createInstance(const std::string&,
+ComponentInstance::pointer InternalComponentModel::createInstance(const std::string&,
                                                           const std::string&)
 {
     return 0;
 }
 
-bool InternalComponentModel::destroyInstance(ComponentInstance *ic)
+bool InternalComponentModel::destroyInstance(const ComponentInstance::pointer &ic)
 {
 #if DEBUG
     std::cerr << "Warning: I don't know how to destroy a internal component instance!" << std::endl;

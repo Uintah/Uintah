@@ -43,7 +43,7 @@
 #include <SCIRun/Babel/BabelPortInstance.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/PortInstanceIterator.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Babel/framework.hh>
 #include <SCIRun/Babel/gov_cca.hh>
 #include <map>

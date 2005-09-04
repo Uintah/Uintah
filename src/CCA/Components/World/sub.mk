@@ -40,4 +40,4 @@ PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-$(SRCDIR)/World.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/World.o: Core/CCA/spec/sci_sidl.h

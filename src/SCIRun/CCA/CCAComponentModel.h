@@ -45,7 +45,7 @@
 #include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentModel.h>
 #include <SCIRun/ComponentInstance.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -89,13 +89,13 @@ public:
       \em name is assigned as the unique name of the newly created instance.
       Returns a smart pointer to the newly created instance, or a null pointer
       on failure. */
-  virtual ComponentInstance* createInstance(const std::string& name,
+  virtual ComponentInstance::pointer createInstance(const std::string& name,
                                             const std::string& type,
                                             const sci::cca::TypeMap::pointer& properties);
   
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
-  virtual bool destroyInstance(ComponentInstance *ci);
+  virtual bool destroyInstance(const ComponentInstance::pointer &ci);
 
   /** Returns the name (as a string) of this component model. */
   virtual std::string getName() const;

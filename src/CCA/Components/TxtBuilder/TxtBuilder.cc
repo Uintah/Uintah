@@ -39,7 +39,7 @@
  */
 
 #include <CCA/Components/TxtBuilder/TxtBuilder.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
@@ -74,7 +74,7 @@ void TxtBuilder::setServices(const sci::cca::Services::pointer& services)
   //services->registerUsesPort("builder", "sci.cca.ports.BuilderPort", props);
 
   svc=services;
-  bs=pidl_cast<sci::cca::ports::BuilderService::pointer>
+  bs=pidl_cast<sci::cca::ports::BridgeBuilderService::pointer>
     (svc->getPort("cca.BuilderService"));
   if(bs.isNull()){
     cerr << "Fatal Error: cannot get BuilderService port\n";

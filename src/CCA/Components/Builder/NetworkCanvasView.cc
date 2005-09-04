@@ -606,8 +606,8 @@ NetworkCanvasView::showPossibleConnections(Module *m,
                                            const std::string &portname,
                                            PortIcon::PortType porttype)
 {
-    sci::cca::ports::BuilderService::pointer bs =
-        pidl_cast<sci::cca::ports::BuilderService::pointer>(
+    sci::cca::ports::BridgeBuilderService::pointer bs =
+        pidl_cast<sci::cca::ports::BridgeBuilderService::pointer>(
             services->getPort("cca.BuilderService"));
     if (bs.isNull()) {
         p2BuilderWindow->displayMsg("Error: cannot find builder service.");

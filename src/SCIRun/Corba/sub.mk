@@ -44,5 +44,5 @@ SRCS     += $(SRCDIR)/CorbaComponentModel.cc \
 
 
 
-$(SRCDIR)/CorbaComponentInstance.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/CorbaComponentModel.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/CorbaComponentInstance.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/CorbaComponentModel.o: Core/CCA/spec/sci_sidl.h

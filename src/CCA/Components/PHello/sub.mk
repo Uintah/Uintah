@@ -42,4 +42,4 @@ LIBS := $(QT_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-$(SRCDIR)/PHello.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/PHello.o: Core/CCA/spec/sci_sidl.h

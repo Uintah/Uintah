@@ -41,7 +41,7 @@
 #ifndef SCIRun_ComponentRegistry_h
 #define SCIRun_ComponentRegistry_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 #include <vector>

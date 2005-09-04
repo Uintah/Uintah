@@ -39,11 +39,11 @@ SRCS     += \
 # Hack until I get the guts to put this in Makefile.in  
 $(SRCDIR)/TableTennis_sidl.o: $(SRCDIR)/TableTennis_sidl.cc $(SRCDIR)/TableTennis_sidl.h
 
-$(SRCDIR)/TableTennis_sidl.cc: $(SRCDIR)/TableTennis.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/cca.sidl -o $@ $<
+$(SRCDIR)/TableTennis_sidl.cc: $(SRCDIR)/TableTennis.sidl $(SRCTOP_ABS)/Core/CCA/spec/sci.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/sci.sidl -o $@ $<
 
-$(SRCDIR)/TableTennis_sidl.h: $(SRCDIR)/TableTennis.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/cca.sidl -h -o $@ $<
+$(SRCDIR)/TableTennis_sidl.h: $(SRCDIR)/TableTennis.sidl $(SRCTOP_ABS)/Core/CCA/spec/sci.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/sci.sidl -h -o $@ $<
 
 GENHDRS := $(SRCDIR)/TableTennis_sidl.h
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
@@ -55,4 +55,4 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 #include $(SCIRUN_SCRIPTS)/program.mk
 
-$(SRCDIR)/TableTennis.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/TableTennis.o: Core/CCA/spec/sci_sidl.h

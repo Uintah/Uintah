@@ -46,4 +46,4 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 #include $(SCIRUN_SCRIPTS)/program.mk
 
 $(SRCDIR)/TTClient.o: CCA/Components/TableTennis/TableTennis_sidl.h
-$(SRCDIR)/TTClient.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/TTClient.o: Core/CCA/spec/sci_sidl.h

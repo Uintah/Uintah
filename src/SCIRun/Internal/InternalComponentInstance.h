@@ -57,7 +57,7 @@ public:
                             const std::string& intanceName,
                             const std::string& className);
   
-  virtual PortInstance* getPortInstance(const std::string& name);
+  virtual sci::cca::internal::PortInstance::pointer getPortInstance(const std::string& name);
   virtual ~InternalComponentInstance();
   
   virtual PortInstanceIterator* getPorts();

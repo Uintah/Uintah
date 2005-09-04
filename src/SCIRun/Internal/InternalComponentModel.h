@@ -44,7 +44,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentModel.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <map>
 #include <string>
 
@@ -68,11 +68,11 @@ public:
   virtual bool haveComponent(const std::string& type);
 
   /** */
-  virtual ComponentInstance* createInstance(const std::string& name,
+  virtual ComponentInstance::pointer createInstance(const std::string& name,
                                             const std::string& type);
 
   /** */
-  virtual bool destroyInstance(ComponentInstance *ci);
+  virtual bool destroyInstance(const ComponentInstance::pointer &ci);
 
   /** */
   sci::cca::Port::pointer getFrameworkService(const std::string& type,

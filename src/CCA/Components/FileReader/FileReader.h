@@ -41,7 +41,7 @@
 #ifndef CCA_Components_FileReader_h
 #define CCA_Components_FileReader_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
 

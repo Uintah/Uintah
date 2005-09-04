@@ -46,66 +46,69 @@
 #include <SCIRun/Corba/Port.h>
 #include <SCIRun/Corba/Component.h>
 #include <SCIRun/Corba/CorbaPortInstance.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <string>
 #include <vector>
 
 namespace SCIRun {
 
-class CCAPortInstance;
-class Module;
+  using sci::cca::internal::PortInstance::pointer;
 
-/**
- * \class CorbaComponentInstance
- *
- * A handle to an instantiation of a Corba component in the SCIRun framework.  This
- * class is a container for information necessary to interact with an
- * instantiation of a Corba component such as its unique instance name, its
- * type, its ports, and the framework to which it belongs.
- *
- */
-class CorbaComponentInstance : public ComponentInstance {
-  friend class CorbaPortInstance;
-public:
-  /** Constructor specifies the SCIRunFramework to which this instance belongs
-      (\em fwk), the unique \em instanceName of the component instance, and a
-      pointer to an allocated corba::Component object.*/
-  CorbaComponentInstance(SCIRunFramework *fwk,
-                       const std::string &instanceName,
-                       const std::string &className,
-                       const sci::cca::TypeMap::pointer &tm,
-                       corba::Component *component);
-  virtual ~CorbaComponentInstance();
-  
-  // Methods from ComponentInstance
-  /** Returns a pointer to the port named \em name.  If no such port exists in
-      this component, returns a null pointer. */
-  virtual PortInstance* getPortInstance(const std::string& name);
+  class CCAPortInstance;
+  class Module;
 
-  /** Returns the list of ports associated with this component. */
-  virtual PortInstanceIterator* getPorts();
-
-  /** Returns a pointer to the corba::Component referenced by this class */
-  corba::Component* getComponent() {
-    return component;
+  /**
+   * \class CorbaComponentInstance
+   *
+   * A handle to an instantiation of a Corba component in the SCIRun framework.  This
+   * class is a container for information necessary to interact with an
+   * instantiation of a Corba component such as its unique instance name, its
+   * type, its ports, and the framework to which it belongs.
+   *
+   */
+  class CorbaComponentInstance : public ComponentInstance {
+    friend class CorbaPortInstance;
+  public:
+    /** Constructor specifies the SCIRunFramework to which this instance belongs
+	(\em fwk), the unique \em instanceName of the component instance, and a
+	pointer to an allocated corba::Component object.*/
+    CorbaComponentInstance(SCIRunFramework *fwk,
+			   const std::string &instanceName,
+			   const std::string &className,
+			   const sci::cca::TypeMap::pointer &tm,
+			   corba::Component *component);
+    virtual ~CorbaComponentInstance();
+    
+    // Methods from ComponentInstance
+    /** Returns a pointer to the port named \em name.  If no such port exists in
+	this component, returns a null pointer. */
+    virtual PortInstance::pointer getPortInstance(const std::string& name);
+    
+    /** Returns the list of ports associated with this component. */
+    virtual PortInstanceIterator* getPorts();
+    
+    /** Returns a pointer to the corba::Component referenced by this class */
+    corba::Component* getComponent() {
+      return component;
     }
   private:
+
     class Iterator : public PortInstanceIterator {
     public:
       Iterator(CorbaComponentInstance*);
       virtual ~Iterator();
-      virtual PortInstance* get();
+      virtual PortInstance::pointer get();
       virtual bool done();
       virtual void next();
     private:
       Iterator(const Iterator&);
       Iterator& operator=(const Iterator&);
-
-      CorbaComponentInstance* ci;
+      
+      CorbaComponentInstance::pointer ci;
       int index;
     };
     corba::Component* component;
-    std::vector<CCAPortInstance*> specialPorts;
+    std::vector<CCAPortInstance::pointer> specialPorts;
     CorbaComponentInstance(const CorbaComponentInstance&);
     CorbaComponentInstance& operator=(const CorbaComponentInstance);
   };

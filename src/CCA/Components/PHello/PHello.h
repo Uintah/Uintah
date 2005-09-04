@@ -42,7 +42,7 @@
 #define SCIRun_CCA_Components_PHello_h
 
 #include <sci_defs/mpi_defs.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <mpi.h>
 namespace SCIRun {
   

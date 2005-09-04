@@ -44,7 +44,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/Corba/Component.h>
 namespace SCIRun

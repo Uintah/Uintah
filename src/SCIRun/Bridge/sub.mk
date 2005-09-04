@@ -39,7 +39,7 @@ SRCS     += \
 
 PSELIBS := Core/CCA/tools/strauss  
 
-$(SRCDIR)/BridgeComponentModel.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/BridgeComponentDescription.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/BridgeComponentInstance.o: Core/CCA/spec/cca_sidl.h 
+$(SRCDIR)/BridgeComponentModel.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/BridgeComponentDescription.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/BridgeComponentInstance.o: Core/CCA/spec/sci_sidl.h 
 

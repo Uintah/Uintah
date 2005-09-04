@@ -41,6 +41,7 @@
 #ifndef SCIRun_PortInstance_h
 #define SCIRun_PortInstance_h
 
+#include <Core/CCA/spec/sci_sidl.h>
 #include <string>
 
 namespace SCIRun
@@ -52,40 +53,40 @@ namespace SCIRun
  *
  *
  */
-class PortInstance
-{
-public:
-  PortInstance();
-  virtual ~PortInstance();
-  
-  enum PortType {
-    From=0,
-    To=1
+  class PortInstance : virtual public sci::cca::internal::PortInstance 
+  {
+  public:
+    typedef sci::cca::internal::From From;
+    typedef sci::cca::internal::To To;
+    typedef sci::cca::internal::PortInstance::pointer pointer;
+    typedef sci::cca::internal::PortType PortType;
+
+    PortInstance();
+    virtual ~PortInstance();
+    
+    /** */
+    virtual bool connect(const sci::cca::internal::PortInstance::pointer &) = 0;
+    /** */
+    virtual PortType portType() = 0;
+    /** */
+    virtual std::string getType();
+    /** */
+    virtual std::string getModel();
+    /** */
+    virtual std::string getUniqueName() = 0;
+    /** */
+    virtual bool disconnect(const sci::cca::internal::PortInstance::pointer &) =0;
+    /** */
+    virtual bool canConnectTo(const sci::cca::internal::PortInstance::pointer &)=0;
+    /** */
+    virtual bool available();
+    /** */
+    virtual sci::cca::internal::PortInstance::pointer getPeer();
+  private:
+    PortInstance(const PortInstance&);
+    PortInstance& operator=(const PortInstance&);
   };
-
-  /** */
-  virtual bool connect(PortInstance*) = 0;
-  /** */
-  virtual PortType portType() = 0;
-  /** */
-  virtual std::string getType();
-  /** */
-  virtual std::string getModel();
-  /** */
-  virtual std::string getUniqueName() = 0;
-  /** */
-  virtual bool disconnect(PortInstance*) =0;
-  /** */
-  virtual bool canConnectTo(PortInstance *)=0;
-  /** */
-  virtual bool available();
-  /** */
-  virtual PortInstance* getPeer();
-private:
-  PortInstance(const PortInstance&);
-  PortInstance& operator=(const PortInstance&);
-};
-
+  
 } // end namespace SCIRun
 
 #endif

@@ -34,6 +34,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := SCIRun
 
 SRCS     += \
+            $(SRCDIR)/DistributedFramework.cc \
+            $(SRCDIR)/LocalFramework.cc \
+            $(SRCDIR)/DistributedComponentModelFramework.cc \
             $(SRCDIR)/SCIRunFramework.cc \
             $(SRCDIR)/ComponentDescription.cc \
             $(SRCDIR)/ComponentInstance.cc \
@@ -48,8 +51,15 @@ SRCS     += \
             $(SRCDIR)/SCIRunLoader.cc
 
 
-SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Internal \
-           $(SRCDIR)/Corba $(SRCDIR)/Tao
+SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Internal 
+
+ifeq ($(HAVE_CORBA),yes)
+SUBDIRS += $(SRCDIR)/Corba 
+endif
+
+ifeq ($(HAVE_TAO),yes)
+SUBDIRS += $(SRCDIR)/Tao
+endif
 
 ifeq ($(BUILD_DATAFLOW),yes)
   SUBDIRS += $(SRCDIR)/Dataflow 
