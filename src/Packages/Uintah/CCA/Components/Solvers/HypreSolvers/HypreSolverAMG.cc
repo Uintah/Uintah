@@ -4,6 +4,7 @@
 // Hypre CG ([preconditioned] conjugate gradient) solver.
 //--------------------------------------------------------------------------
 
+#include <sci_defs/hypre_defs.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverAMG.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -16,6 +17,7 @@ using namespace Uintah;
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_dbg("HYPRE_DBG", false);
 
 Priorities
 HypreSolverAMG::initPriority(void)
@@ -40,7 +42,7 @@ HypreSolverAMG::solve(void)
   // objects.
   //___________________________________________________________________
 {
-  cerr << "HypreSolverAMG::solve() BEGIN" << "\n";
+  cout_doing << "HypreSolverAMG::solve() BEGIN" << "\n";
   //  const HypreSolverParams* params = _driver->getParams();
 
   if (_driver->getInterface() == HypreSStruct) {
@@ -58,7 +60,7 @@ HypreSolverAMG::solve(void)
     HYPRE_BoomerAMGSetPrintFileName(parSolver, "sstruct.out.log");
 #else
     ostringstream msg;
-    cerr << "Warning: Hypre version does not fully support AMG printouts "
+    cout_dbg << "Warning: Hypre version does not fully support AMG printouts "
          << "to files, proceeding without them" << "\n";
 #endif // #if HAVE_HYPRE_1_9
 
@@ -74,13 +76,13 @@ HypreSolverAMG::solve(void)
     HYPRE_BoomerAMGGetNumIterations(parSolver,&_results.numIterations);
     HYPRE_BoomerAMGGetFinalRelativeResidualNorm(parSolver,
                                                 &_results.finalResNorm);
-    cerr << "AMG convergence statistics:" << "\n";
-    cerr << "numIterations = " << _results.numIterations << "\n";
-    cerr << "finalResNorm  = " << _results.finalResNorm << "\n";
+    cout_doing << "AMG convergence statistics:" << "\n";
+    cout_doing << "numIterations = " << _results.numIterations << "\n";
+    cout_doing << "finalResNorm  = " << _results.finalResNorm << "\n";
 
     // Destroy & free
     HYPRE_BoomerAMGDestroy(parSolver);
   } // interface == HypreSStruct
 
-  cerr << "HypreSolverAMG::solve() END" << "\n";
+  cout_doing << "HypreSolverAMG::solve() END" << "\n";
 }

@@ -22,19 +22,20 @@ using namespace Uintah;
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_dbg("HYPRE_DBG", false);
 
 HypreSolverBase::HypreSolverBase(HypreDriver* driver,
                                  HyprePrecondBase* precond,
                                  const Priorities& priority) :
   _driver(driver), _precond(precond), _priority(priority), _requiresPar(true)
 {
-  cerr << "HypreSolverBase::constructor BEGIN" << "\n";
+  cout_doing << "HypreSolverBase::constructor BEGIN" << "\n";
   assertInterface();
 
   // Initialize results section
   _results.numIterations = 0;
   _results.finalResNorm  = 1.23456e+30; // Large number
-  cerr << "HypreSolverBase::constructor END" << "\n";
+  cout_doing << "HypreSolverBase::constructor END" << "\n";
 }
   
 HypreSolverBase::~HypreSolverBase(void)
@@ -44,7 +45,7 @@ HypreSolverBase::~HypreSolverBase(void)
 void
 HypreSolverBase::assertInterface(void)
 { 
-  cerr << "HypreSolverBase::assertInterface() BEGIN" << "\n";
+  cout_doing << "HypreSolverBase::assertInterface() BEGIN" << "\n";
   if (_priority.size() < 1) {
     throw InternalError("Solver created without interface priorities",
                         __FILE__, __LINE__);
@@ -53,14 +54,14 @@ HypreSolverBase::assertInterface(void)
 
   // Intersect solver and preconditioner priorities
   if (_precond) {
-    cerr << "Intersect solver, precond priorities begin" << "\n";
+    cout_dbg << "Intersect solver, precond priorities begin" << "\n";
     Priorities newSolverPriority;
     const Priorities& precondPriority = _precond->getPriority();
     for (unsigned int i = 0; i < _priority.size(); i++) {
-      cerr << "i = " << i << "\n";
+      cout_dbg << "i = " << i << "\n";
       bool remove = false;
       for (unsigned int j = 0; j < _priority.size(); j++) {
-        cerr << "j = " << j << "\n";
+        cout_dbg << "j = " << j << "\n";
         if (_priority[i] == precondPriority[j]) {
           // Remove this solver interface entry
           remove = true;
@@ -77,7 +78,7 @@ HypreSolverBase::assertInterface(void)
   // Check whether solver requires ParCSR or not, because we need to
   // know about that in HypreDriver::makeLinearSystem. Also check the
   // correctness of the values of _priority.
-  cerr << "Check if solver requires par" << "\n";
+  cout_dbg << "Check if solver requires par" << "\n";
   for (unsigned int i = 0; i < _priority.size(); i++) {
     if (_priority[i] == HypreInterfaceNA) {
       throw InternalError("Bad Solver interface priority "+_priority[i],
@@ -88,29 +89,29 @@ HypreSolverBase::assertInterface(void)
       _requiresPar = false;
     }
   }
-  cerr << "requiresPar = " << _requiresPar << "\n";
+  cout_dbg << "requiresPar = " << _requiresPar << "\n";
 
-  cerr << "Look for requested interface in solver priorities" << "\n";
+  cout_dbg << "Look for requested interface in solver priorities" << "\n";
   const HypreInterface& interface = _driver->getInterface();
-  cerr << "interface = " << interface << "\n";
+  cout_dbg << "interface = " << interface << "\n";
   bool found = false;
-  cerr << "Solver priorities:" << "\n";
+  cout_dbg << "Solver priorities:" << "\n";
   for (unsigned int i = 0; i < _priority.size(); i++) {
-    cerr << "_priority[" << i << "] = " << _priority[i] << "\n";
+    cout_dbg << "_priority[" << i << "] = " << _priority[i] << "\n";
     if (interface == _priority[i]) {
       // Found interface that solver can work with
       found = true;
       break;
     }
   }
-  cerr << "1. found = " << found << "\n";
+  cout_dbg << "1. found = " << found << "\n";
 
   // See whether we can convert the Hypre data to a format we can
   // work with.
   if (!found) {
-    cerr << "Looking for possible conversions" << "\n";
+    cout_dbg << "Looking for possible conversions" << "\n";
     for (unsigned int i = 0; i < _priority.size(); i++) {
-      cerr << "i = " << i << "\n";
+      cout_dbg << "i = " << i << "\n";
       // Try to convert from the current driver to _priority[i]
       if (_driver->isConvertable(_priority[i])) {
         // Conversion exists
@@ -119,14 +120,14 @@ HypreSolverBase::assertInterface(void)
       }
     }
   }
-  cerr << "2. found = " << found << "\n";
+  cout_dbg << "2. found = " << found << "\n";
 
   if (!found) {
     ostringstream msg;
     msg << "Solver does not support Hypre interface " << interface;
     throw InternalError(msg.str(),__FILE__, __LINE__); 
   }
-  cerr << "HypreSolverBase::assertInterface() END" << "\n";
+  cout_doing << "HypreSolverBase::assertInterface() END" << "\n";
 }
 
 namespace Uintah {
@@ -139,7 +140,7 @@ namespace Uintah {
     // but a generic solver pointer type.
     // Include all derived solver classes here.
   {
-    cerr << "newHypreSolver() BEGIN" << "\n";
+    cout_doing << "newHypreSolver() BEGIN" << "\n";
     const Priorities precondPriority;
     switch (solverType) {
     case SMG:
@@ -156,7 +157,7 @@ namespace Uintah {
       }
     case CG:
       {
-        cerr << "Doing new HypreSolverCG" << "\n";
+        cout_dbg << "Doing new HypreSolverCG" << "\n";
         return new HypreSolverCG(driver,precond);
       }
     case Hybrid: 
@@ -181,7 +182,7 @@ namespace Uintah {
       throw InternalError("Unsupported solver type: "+solverType,
                           __FILE__, __LINE__);
     } // switch (solverType)
-    cerr << "newHypreSolver() END (shouldn't be reached)" << "\n";
+    cout_doing << "newHypreSolver() END (shouldn't be reached)" << "\n";
     RETURN_0;
   }
 

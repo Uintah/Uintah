@@ -86,8 +86,6 @@ namespace Uintah {
       _vars(0)
       {
         _exists.resize(SStructNumData);
-        cerr << "sizeof(Data) = " << sizeof(Data) << "\n";
-        cerr << "SStructNumData = " << SStructNumData << "\n";
         for (unsigned i = 0; i < _exists.size(); i++) {
           _exists[i] = SStructStart;
         }
