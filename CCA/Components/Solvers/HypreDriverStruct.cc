@@ -7,7 +7,6 @@
 
 #include <sci_defs/hypre_defs.h>
 
-#if HAVE_HYPRE_1_9
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
@@ -361,5 +360,3 @@ HypreDriverStruct::getSolution_CC(const int matl)
     }
   }
 } // end HypreDriverStruct::getSolution_CC()
-
-#endif // HAVE_HYPRE_1_9

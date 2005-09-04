@@ -53,7 +53,15 @@ HypreSolverAMG::solve(void)
     //HYPRE_BoomerAMGSetMaxLevels(parSolver, 4);
     HYPRE_BoomerAMGSetTol(parSolver, 1.0e-06);
     HYPRE_BoomerAMGSetPrintLevel(parSolver, 1);
+
+#if HAVE_HYPRE_1_9
     HYPRE_BoomerAMGSetPrintFileName(parSolver, "sstruct.out.log");
+#else
+    ostringstream msg;
+    cerr << "Warning: Hypre version does not fully support AMG printouts "
+         << "to files, proceeding without them" << "\n";
+#endif // #if HAVE_HYPRE_1_9
+
     HYPRE_BoomerAMGSetMaxIter(parSolver, 200);
     HYPRE_BoomerAMGSetup(parSolver, _driver->getAPar(), _driver->getBPar(),
                          _driver->getXPar());

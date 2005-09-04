@@ -7,7 +7,6 @@
 
 #include <sci_defs/hypre_defs.h>
 
-#if HAVE_HYPRE_1_9
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
@@ -263,5 +262,3 @@ namespace Uintah {
   }
 
 } // end namespace Uintah
-
-#endif // HAVE_HYPRE_1_9
