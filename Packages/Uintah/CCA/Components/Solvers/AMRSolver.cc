@@ -11,9 +11,7 @@
 #include <sci_defs/hypre_defs.h>
 #include <Packages/Uintah/CCA/Components/Solvers/AMRSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
-#if HAVE_HYPRE_1_9
-#  include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
-#endif
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -116,7 +114,6 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     NC, FC, etc. NOTE: Currently only CC is supported.
     _____________________________________________________________________*/
 {
-#if HAVE_HYPRE_1_9
   cerr << "AMRSolver::scheduleSolve() BEGIN" << "\n";
   Task* task;
   // The extra handle arg ensures that the stencil7 object will get freed
@@ -243,9 +240,4 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   sched->addTask(task, perProcPatches, matls);
 
   cerr << "AMRSolver::scheduleSolve() END" << "\n";
-#else
-  throw InternalError("AMR Solver code was not compiled",
-                      __FILE__, __LINE__);
- 
-#endif // HAVE_HYPRE_1_9
 } // end scheduleSolve()

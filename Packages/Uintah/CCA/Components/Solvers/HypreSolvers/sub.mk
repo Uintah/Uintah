@@ -9,5 +9,10 @@ SRCS += $(SRCDIR)/HypreSolverBase.cc \
         $(SRCDIR)/HypreSolverCG.cc \
         $(SRCDIR)/HypreSolverHybrid.cc \
         $(SRCDIR)/HypreSolverGMRES.cc \
-        $(SRCDIR)/HypreSolverAMG.cc \
-        $(SRCDIR)/HypreSolverFAC.cc
+        $(SRCDIR)/HypreSolverAMG.cc
+
+ifeq ($(HAVE_HYPRE_1_9),yes)
+
+  SRCS += $(SRCDIR)/HypreSolverFAC.cc
+
+endif # if HAVE_HYPRE_1_9

@@ -21,5 +21,17 @@ TODO List - Solvers Component
   (e.g. filled with zeros) attached to _HX.
 * Add conversion Struct -> SStruct -> ParCSR for complicated diffusion
   1-level problems that need AMG.
+* Can Hypre 1.7.7 work with SStruct and AMG? It does not have the function
+  of setting graph to PARCSR type. Does it matter?
+* advect_impAMR_oren.ups AMRSolver test:
+  - Diagonal element on fine patch is missing.
+  - Correctly scale A at C/F (see impICE.cc dt^2/dx thing).
+  - Is C-C connection at C/f boundary correctly zeroed out?
+  - Patch boundaries are marked wrong for 4x4x4 patch 0, 4x4x4 patch 1
+    (x+,y+,z+ should also be C/F boundaries but marked as "None" = domain
+    boundaries).
+
+Done:
+=====
 * Put hypre 1.9 #ifdef only around FAC, because AMG and sstruct already
-  exist in Hypre 1.7.7b. Correct sub.mk's as well.// TODO:
+  exist in Hypre 1.7.7b. Correct sub.mk's as well.

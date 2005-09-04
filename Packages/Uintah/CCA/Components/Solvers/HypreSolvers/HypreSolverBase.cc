@@ -6,7 +6,9 @@
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverHybrid.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverGMRES.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverAMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
+#if HAVE_HYPRE_1_9
+#  include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
+#endif // #if HAVE_HYPRE_1_9
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -171,7 +173,9 @@ namespace Uintah {
       }
     case FAC:
       {
+#if HAVE_HYPRE_1_9
         return new HypreSolverFAC(driver,precond);
+#endif // #if HAVE_HYPRE_1_9
       }
     default:
       throw InternalError("Unsupported solver type: "+solverType,
