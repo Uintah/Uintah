@@ -1,9 +1,3 @@
-
-// TODO
-//  - dynamic compilation tests
-//  - Bench on cluster
-//  - Can we do any better?  Tiling? ???
-
 #include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>

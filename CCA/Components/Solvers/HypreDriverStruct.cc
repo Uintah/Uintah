@@ -4,9 +4,6 @@
 // Implementation of the interface from Uintah to Hypre's Struct system
 // interface, for cell-centered variables (e.g., pressure in implicit ICE).
 //--------------------------------------------------------------------------
-// TODO:
-// * Add conversion Struct -> SStruct -> ParCSR for complicated diffusion
-//   1-level problems that need AMG.
 
 #include <sci_defs/hypre_defs.h>
 

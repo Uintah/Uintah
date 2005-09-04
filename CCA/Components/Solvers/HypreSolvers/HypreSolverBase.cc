@@ -135,7 +135,7 @@ namespace Uintah {
                  HyprePrecondBase* precond)
     // Create a new solver object of specific solverType solver type
     // but a generic solver pointer type.
-    // TODO: include all derived classes here.
+    // Include all derived solver classes here.
   {
     cerr << "newHypreSolver() BEGIN" << "\n";
     const Priorities precondPriority;

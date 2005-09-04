@@ -240,7 +240,6 @@ namespace Uintah {
     //_____________________________________________________________________
     {
       cerr << "HypreDriver::solve() BEGIN" << "\n";
-      double tstart = SCIRun::Time::currentSeconds();
 
       // Assign HypreDriver references that are convenient to have in
       // makeLinearSystem(), getSolution().
@@ -265,6 +264,7 @@ namespace Uintah {
       }
 
       for(int m = 0; m < matls->size(); m++){
+        double tstart = SCIRun::Time::currentSeconds();
         int matl = matls->get(m);
         cerr << "Doing m = " << m << "/" << matls->size()
              << "  matl = " << matl << "\n";
@@ -289,14 +289,15 @@ namespace Uintah {
           precond->setSolver(solver);
           precond->setup();
         }
-#if 0
 
         // Construct Hypre linear system for the specific variable type
         // and Hypre interface
         _requiresPar = solver->requiresPar();
         cerr << "Making linear system" << "\n";
         makeLinearSystem<Types>(matl);
-    
+        printMatrix("output_A");
+        printRHS("output_b");
+
         //-----------------------------------------------------------
         // Solve the linear system
         //-----------------------------------------------------------
@@ -340,18 +341,15 @@ namespace Uintah {
                                      _params->tolerance,__FILE__,__LINE__);
           }
         } // if (finalResNorm is ok)
-#endif
+
         /* Get the solution x values back into Uintah */
         cerr << "Calling getSolution" << "\n";
         getSolution<Types>(matl);
 
-#if 0
         /*-----------------------------------------------------------
          * Print the solution and other info
          *-----------------------------------------------------------*/
         cerr << "Print the solution vector" << "\n";
-        printMatrix("output_A");
-        printRHS("output_b");
         printSolution("output_x1");
         cerr << "Iterations = " << numIterations << "\n";
         cerr << "Final Relative Residual Norm = "
@@ -367,8 +365,7 @@ namespace Uintah {
                << " seconds, " << numIterations
                << " iterations, residual=" << finalResNorm << ")\n";
         }
-        tstart = SCIRun::Time::currentSeconds();
-#endif
+
         delete solver;
         delete precond;
       } // for m (matls loop)

@@ -1,0 +1,25 @@
+TODO List - Solvers Component
+=============================
+* HypreSolver (assuming it's not obsolete yet):
+  - Matrix file - why are ghosts there?
+  - 3D performance
+  - Logging?
+  - Report mflops
+  - Use a symmetric matrix (does the current implementation work?)
+  - More efficient set?
+* CGSolver:
+  - dynamic compilation tests
+  - Bench on cluster
+  - Can we do any better?  Tiling? ???
+* DirectSolver could be made somewhat faster by using a banded matrix.
+* Reuse some data between solves? (initial guess, setup phase?)
+* Separate setup from solver phase in solvers. Some solvers can be
+  more efficient by separating the setup phase that depends
+  on A only, from the solution stage, that depends on A, b, x.
+* Read hypre options from input file
+* Prepare initial guess in ICE or create our own by a CCVariable<double>
+  (e.g. filled with zeros) attached to _HX.
+* Add conversion Struct -> SStruct -> ParCSR for complicated diffusion
+  1-level problems that need AMG.
+* Put hypre 1.9 #ifdef only around FAC, because AMG and sstruct already
+  exist in Hypre 1.7.7b. Correct sub.mk's as well.// TODO:

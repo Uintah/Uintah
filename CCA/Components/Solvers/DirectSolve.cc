@@ -1,5 +1,3 @@
-// TODO:
-// This could be made somewhat faster by using a banded matrix
 #include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
