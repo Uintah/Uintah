@@ -120,7 +120,7 @@
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [1,1,1]            </patches>
            </Box>
-           <spacing>         [.25,.25,.25]      </spacing>
+           <spacing>         [.125,.125,.125]      </spacing>
        </Level>
        <time_refinement_ratio>    1 </time_refinement_ratio>       
 
@@ -131,7 +131,7 @@
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [1,1,1]            </patches>
            </Box>
-           <spacing>         [.125,.125,.125]   </spacing>
+           <spacing>         [.0625,.0625,.0625]   </spacing>
        </Level>
       
 <!--      
