@@ -421,7 +421,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                           lb->matrixLabel,   Task::NewDW,
                           lb->imp_delPLabel, false,
                           lb->rhsLabel,      Task::NewDW,
-                          whichInitialGuess, Task::OldDW, // Guess does not exist yet?
+                          whichInitialGuess, 
+                          Task::NewDW, // Guess doesn't exist yet
 			  solver_parameters);
 #else
     schedule_bogus_imp_delP(subsched,  perProcPatches,        d_press_matl,
@@ -466,6 +467,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     subNewDW->setScrubbing(DataWarehouse::ScrubNone);
     
     subsched->execute();
+
+
     
     counter ++;
     firstIter = false;
@@ -551,11 +554,14 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     ParentNewDW->transferFrom(subNewDW,         // wvel_FC
                       lb->wvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
     ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
-                      lb->vol_fracX_FCLabel,   patch_sub, all_matls_sub,replace); 
+                              lb->vol_fracX_FCLabel,   patch_sub, all_matls_sub,replace); 
     ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
                       lb->vol_fracY_FCLabel,   patch_sub, all_matls_sub,replace); 
     ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
                       lb->vol_fracZ_FCLabel,   patch_sub, all_matls_sub,replace);
+    ParentNewDW->transferFrom(subNewDW,         // imp_delP
+                      lb->imp_delPLabel,       patch_sub, d_press_matl,replace);
+
   }               
     
   //__________________________________

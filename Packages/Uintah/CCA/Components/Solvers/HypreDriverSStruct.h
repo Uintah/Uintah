@@ -85,7 +85,9 @@ namespace Uintah {
                   b,which_b_dw,guess,which_guess_dw,params,interface),
       _vars(0)
       {
-        _exists.resize(sizeof(Data));
+        _exists.resize(SStructNumData);
+        cerr << "sizeof(Data) = " << sizeof(Data) << "\n";
+        cerr << "SStructNumData = " << SStructNumData << "\n";
         for (unsigned i = 0; i < _exists.size(); i++) {
           _exists[i] = SStructStart;
         }
@@ -136,7 +138,8 @@ namespace Uintah {
         SStructA,
         SStructB,
         SStructX,
-        SStructGraph
+        SStructGraph,
+        SStructNumData // Has to be the last in this list!
       };
 
     enum DataStatus
@@ -186,7 +189,8 @@ namespace Uintah {
 
       // Interior vector - initialize with zeros
       virtual void makeInteriorVectorZero(HYPRE_SStructVector& HV,
-                                          DataWarehouse* _V_dw) = 0;
+                                          DataWarehouse* _V_dw,
+                                          const VarLabel* V_label) = 0;
 
       // C/F matrix connections construction
       virtual void makeConnections(HYPRE_SStructMatrix& HA,
@@ -245,7 +249,8 @@ namespace Uintah {
 
       // Interior vector - initialize with zeros
       virtual void makeInteriorVectorZero(HYPRE_SStructVector& HV,
-                                          DataWarehouse* _V_dw);
+                                          DataWarehouse* _V_dw,
+                                          const VarLabel* V_label);
 
       // C/F matrix connections construction
       virtual void makeConnections(HYPRE_SStructMatrix& HA,

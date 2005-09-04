@@ -4,10 +4,6 @@
  * Implementation of a wrapper of a Hypre solver for a particular variable
  * type. 
  *--------------------------------------------------------------------------*/
-// TODO: 
-// * Separate setup from solver phase in solvers. Some solvers can be
-//   more efficient by separating the setup phase that depends
-//   on A only, from the solution stage, that depends on A, b, x.
 
 #include <sci_defs/hypre_defs.h>
 

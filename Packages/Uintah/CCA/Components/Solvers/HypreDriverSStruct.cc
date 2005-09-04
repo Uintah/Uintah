@@ -4,9 +4,6 @@
  * Implementation of a wrapper of a Hypre solvers working with the Hypre
  * SStruct system interface.
  *--------------------------------------------------------------------------*/
-// TODO:
-// * Where is the initial guess taken from and where to read & print it here?
-//   (right now in initialize() and solve()).
 
 #include <sci_defs/hypre_defs.h>
 
@@ -178,7 +175,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
 {
   cerr << "HypreDriverSStruct::makeLinearSystem_CC() BEGIN" << "\n";
   ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
-
   //==================================================================
   // Set up the grid
   //==================================================================
@@ -452,14 +448,16 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
       hpatch.makeInteriorVector(_HX, _guess_dw, _guess_label);
     } // end for p (patches)
   } else {
+#if 0
     // If guess is not provided by ICE, use zero as initial guess
     cerr << "Default initial guess: zero" << "\n";
     for (int p = 0 ; p < _patches->size(); p++) {
       // Read Uintah patch info into our data structure, set Uintah pointers
       const Patch* patch = _patches->get(p);
       HyprePatch_CC hpatch(patch,matl); // Read Uintah patch data
-      hpatch.makeInteriorVectorZero(_HX, _guess_dw);
+      hpatch.makeInteriorVectorZero(_HX, _guess_dw, _guess_label);
     } // end for p (patches)
+#endif
   }
 
   HYPRE_SStructVectorAssemble(_HX);
@@ -652,14 +650,17 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations
     //==================================================================
     // Because AA is 7-point and the stencil is 4-point, copy data from AA
     // into stencil, and then feed it to Hypre
-    double* values = new double[(_high.x()-_low.x())*stencilSize];
+    double* values =
+      new double[(_high.x()-_low.x()+1)*stencilSize];
     int stencil_indices[] = {0,1,2,3};
-    for(int z = _low.z(); z < _high.z(); z++) {
-      for(int y = _low.y(); y < _high.y(); y++) {
+    cerr << "Reading 4-point stencil from ICE::A" << "\n";
+    cerr << "stencilSize = " << stencilSize << "\n";
+    for(int z = _low.z(); z <= _high.z(); z++) {
+      for(int y = _low.y(); y <= _high.y(); y++) {
         // Read data in "chunks" of fixed y-, z- index and running x-index
         const Stencil7* AA = &A[IntVector(_low.x(), y, z)];
         double* p = values;
-        for (int x = _low.x(); x < _high.x(); x++) {
+        for (int x = _low.x(); x <= _high.x(); x++) {
           *p++ = AA->p;
           *p++ = AA->w;
           *p++ = AA->s;
@@ -667,7 +668,7 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations
           AA++;
         }
         IntVector chunkLow(_low.x(), y, z);
-        IntVector chunkHigh(_high.x()-1, y, z);
+        IntVector chunkHigh(_high.x(), y, z);
         // Feed data from Uintah to Hypre
         HYPRE_SStructMatrixSetBoxValues(HA, _level,
                                         chunkLow.get_pointer(),
@@ -680,13 +681,21 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations
     //==================================================================
     // Add non-symmetric stencil equations to HA
     //==================================================================
+#if 0
+    // Taken from Steve's HypreSolver code, but seems dubious, because
+    // p is the last, not first data member of Stencil7, so pointing to
+    // it and incrementing the pointer to retrieve indices 0,1,2,3,4,5,6
+    // seems out of order.
+
     // AA is 7-point and stencil is 7-point, feed data directly to Hypre
+    cerr << "Reading 7-point stencil from ICE::A" << "\n";
+    cerr << "stencilSize = " << stencilSize << "\n";
     int stencil_indices[] = {0,1,2,3,4,5,6};
-    for(int z = _low.z(); z < _high.z(); z++) {
-      for(int y = _low.y(); y < _high.y(); y++) {
+    for(int z = _low.z(); z <= _high.z(); z++) {
+      for(int y = _low.y(); y <= _high.y(); y++) {
         const double* values = &A[IntVector(_low.x(), y, z)].p;
         IntVector chunkLow(_low.x(), y, z);
-        IntVector chunkHigh(_high.x()-1, y, z);
+        IntVector chunkHigh(_high.x(), y, z);
         // Feed data from Uintah to Hypre
         HYPRE_SStructMatrixSetBoxValues(HA, _level,
                                         chunkLow.get_pointer(),
@@ -695,6 +704,52 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations
                                         const_cast<double*>(values));
       }
     }
+#else
+    // Use similar code to the symmetric case, with specific points to 
+    // data members of Stencil7, not relying on their ordering.
+    double* values =
+      new double[(_high.x()-_low.x()+1)*stencilSize];
+    int stencil_indices[] = {0,1,2,3,4,5,6};
+    cerr << "'Manually' Reading 7-point stencil from ICE::A" << "\n";
+    cerr << "stencilSize = " << stencilSize << "\n";
+    cerr << "_low        = " << _low << "\n";
+    cerr << "_high       = " << _high << "\n";
+    for(int z = _low.z(); z <= _high.z(); z++) {
+      for(int y = _low.y(); y <= _high.y(); y++) {
+        // Read data in "chunks" of fixed y-, z- index and running x-index
+        const Stencil7* AA = &A[IntVector(_low.x(), y, z)];
+        double* p = values;
+        for (int x = _low.x(); x <= _high.x(); x++) {
+          *p++ = AA->p;
+          *p++ = AA->e;
+          *p++ = AA->w;
+          *p++ = AA->n;
+          *p++ = AA->s;
+          *p++ = AA->t;
+          *p++ = AA->b;
+          cerr << "Stencil at (" << x << "," << y << "," << z << ") = " << "\n";
+          cerr << "p " << AA->p
+               << " e " << AA->e
+               << " w " << AA->w
+               << " n " << AA->n
+               << " s " << AA->s
+               << " t " << AA->t
+               << " b " << AA->b
+               << "\n";
+          AA++;
+        }
+        IntVector chunkLow(_low.x(), y, z);
+        IntVector chunkHigh(_high.x(), y, z);
+        // Feed data from Uintah to Hypre
+        HYPRE_SStructMatrixSetBoxValues(HA, _level,
+                                        chunkLow.get_pointer(),
+                                        chunkHigh.get_pointer(), CC_VAR,
+                                        stencilSize, stencil_indices, values);
+      }
+    }
+    delete[] values;
+    cerr << "Finished interior equation loop" << "\n";
+#endif
   } // end if (symmetric) 
 } // end HyprePatch_CC::makeInteriorConnections()
 
@@ -712,11 +767,11 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorVector
 {
   CCTypes::const_type V;
   V_dw->get(V, V_label, _matl, _patch, Ghost::None, 0);
-  for(int z = _low.z(); z < _high.z(); z++) {
-    for(int y = _low.y(); y < _high.y(); y++) {
+  for(int z = _low.z(); z <= _high.z(); z++) {
+    for(int y = _low.y(); y <= _high.y(); y++) {
       const double* values = &V[IntVector(_low.x(), y, z)];
       IntVector chunkLow(_low.x(), y, z);
-      IntVector chunkHigh(_high.x()-1, y, z);
+      IntVector chunkHigh(_high.x(), y, z);
       // Feed data from Uintah to Hypre
       HYPRE_SStructVectorSetBoxValues(HV, _level,
                                       chunkLow.get_pointer(),
@@ -729,7 +784,8 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorVector
 void
 HypreDriverSStruct::HyprePatch_CC::makeInteriorVectorZero
 (HYPRE_SStructVector& HV,
- DataWarehouse* V_dw)
+ DataWarehouse* V_dw,
+ const VarLabel* V_label)
   //___________________________________________________________________
   // HypreDriverSStruct::HyprePatch_CC::makeInteriorVector~
   // Read the vector HV from Uintah into Hypre. HV can be the RHS
@@ -737,15 +793,21 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorVectorZero
   // cells of each patch.
   //___________________________________________________________________
 {
+#if 0
   // Make a vector of zeros
-  CCVariable<double> Zero;
-  V_dw->allocateTemporary(Zero, _patch);
-  Zero.initialize(0.0);
-  for(int z = _low.z(); z < _high.z(); z++) {
-    for(int y = _low.y(); y < _high.y(); y++) {
-      const double* values = &Zero[IntVector(_low.x(), y, z)];
+  // Is this a way to create a vector of zeros in Uintah?
+  CCVariable<double> V;
+  V_dw->allocateAndPut(V, V_label, _matl, _patch);
+  V.initialize(0.0);
+
+  // Or that?
+  CCTypes::const_type V;
+  V_dw->get(V, V_label, _matl, _patch, Ghost::None, 0);
+  for(int z = _low.z(); z <= _high.z(); z++) {
+    for(int y = _low.y(); y <= _high.y(); y++) {
+      const double* values = &V[IntVector(_low.x(), y, z)];
       IntVector chunkLow(_low.x(), y, z);
-      IntVector chunkHigh(_high.x()-1, y, z);
+      IntVector chunkHigh(_high.x(), y, z);
       // Feed data from Uintah to Hypre
       HYPRE_SStructVectorSetBoxValues(HV, _level,
                                       chunkLow.get_pointer(),
@@ -753,6 +815,7 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorVectorZero
                                       const_cast<double*>(values));
     }
   }
+#endif
 } // end HyprePatch_CC::makeInteriorVector()
 
 void
@@ -788,7 +851,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
       CellIterator f_iter =
         _patch->getFaceCellIterator(face,"alongInteriorFaceCells");
       cerr << "F/C Face " << face << "\n";
-      // he equation at fineCell has one unstructured entry no. stencilSize
+      // The equation at fineCell has one unstructured entry no. stencilSize
       // (0..stencilSize-1 are the structured entries). We use the value
       // from ICE A[fineCell][face] as the unstructured connection, because
       // it is an approximate flux across the fine face of the C/F boundary.
@@ -866,6 +929,8 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
           CellIterator f_iter = 
             finePatch->getFaceCellIterator(face,"alongInteriorFaceCells");
           cerr << "C/F Face " << face << " offset " << offset << "\n";
+          const int numStencilEntries = 1;
+          int stencilEntries[numStencilEntries] = {face};
           for(; !f_iter.done(); f_iter++) {
             // For each fine cell at C/F interface, compute the index of
             // the neighboring coarse cell (add offset = outward normal to
@@ -890,6 +955,17 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
             cerr << " done" << "\n";
             // The corresponding C-C structured connection is already set to 0
             // in impAMRICE.cc.
+            // Hmmm, maybe not. Let's do it outselves.
+            const double* stencilValues = &ZERO;
+            cerr << "C-C " 
+                 << " cLev " << _level << " cCell " << coarseCell
+                 << " entry " << stencilEntries[0]
+                 << " value " << stencilValues[0];
+            HYPRE_SStructMatrixSetValues(HA, _level,
+                                         coarseCell.get_pointer(),
+                                         CC_VAR, numStencilEntries, stencilEntries,
+                                         const_cast<double*>(stencilValues));
+            cerr << " done" << "\n";
             
           }  // coarse cell interator
         }  // coarseFineInterface faces
@@ -923,18 +999,18 @@ HypreDriverSStruct::HyprePatch_CC::getSolution
          << " _patch " << *_patch << "\n";
     new_dw->allocateAndPut(Xnew, X_label, _matl, _patch);
   }
-#if 1
+#if 0
   // TESTING
   Xnew.initialize(0.0);
 #else
   // Get the solution back from hypre. Note: because the data is
   // sorted in the same way in Uintah and Hypre, we can optimize by
   // read chunks of the vector rather than individual entries.
-  for(int z = _low.z(); z < _high.z(); z++) {
-    for(int y = _low.y(); y < _high.y(); y++) {
+  for(int z = _low.z(); z <= _high.z(); z++) {
+    for(int y = _low.y(); y <= _high.y(); y++) {
       const double* values = &Xnew[IntVector(_low.x(), y, z)];
       IntVector chunkLow(_low.x(), y, z);
-      IntVector chunkHigh(_high.x()-1, y, z);
+      IntVector chunkHigh(_high.x(), y, z);
       // Feed data from Hypre to Uintah
       HYPRE_SStructVectorGetBoxValues(HX, _level,
                                       chunkLow.get_pointer(),
