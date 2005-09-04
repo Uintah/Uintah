@@ -55,7 +55,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 #include "vector2d.h"
 #include "Colormap.h"

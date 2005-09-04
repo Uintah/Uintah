@@ -41,7 +41,7 @@
 #ifndef SCIRun_Vtk_VtkUIPort_h
 #define SCIRun_Vtk_VtkUIPort_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun
 {

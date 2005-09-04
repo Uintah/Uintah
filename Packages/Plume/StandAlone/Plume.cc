@@ -40,7 +40,7 @@
 #include <iostream>
 
 #include <Core/CCA/PIDL/PIDL.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/Thread/Thread.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <Core/Exceptions/InvalidState.h>

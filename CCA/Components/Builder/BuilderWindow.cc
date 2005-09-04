@@ -43,7 +43,7 @@
 
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <CCA/Components/Builder/NetworkCanvasView.h>
 #include <CCA/Components/Builder/ClusterDialog.h>
 #include <CCA/Components/Builder/PathDialog.h>

@@ -34,7 +34,7 @@
 #ifndef PortIcon_h
 #define PortIcon_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 #include <qcolor.h>
 #include <qrect.h>

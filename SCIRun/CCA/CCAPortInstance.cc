@@ -44,13 +44,16 @@
 
 namespace SCIRun {
 
+  using namespace sci::cca::internal;
+  using namespace sci::cca::internal::cca;
+
 CCAPortInstance::CCAPortInstance(const std::string& name,
                                  const std::string& type,
                                  const sci::cca::TypeMap::pointer& properties,
-                                 PortType porttype)
+                                 PortUsage port_usage)
   : name(name), type(type), properties(properties), 
     lock_connections("CCAPortInstance::connections lock"), 
-    porttype(porttype), useCount(0)
+    port_usage(port_usage), useCount(0)
 {
 }
 
@@ -58,10 +61,10 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
                                  const std::string& type,
                                  const sci::cca::TypeMap::pointer& properties,
                                  const sci::cca::Port::pointer& port,
-                                 PortType porttype)
-  : name(name), type(type), properties(properties), port(port),
+                                 PortUsage port_usage)
+  : name(name), type(type), properties(properties), 
     lock_connections("CCAPortInstance::connections lock"),
-    porttype(porttype), useCount(0)
+    port(port), port_usage(port_usage), useCount(0)
 {
 }
 
@@ -69,14 +72,14 @@ CCAPortInstance::~CCAPortInstance()
 {
 }
 
-bool CCAPortInstance::connect(PortInstance* to)
+bool CCAPortInstance::connect(const PortInstance::pointer &to)
 {
   if (!canConnectTo(to)) {
     return false;
   }
   //CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
-  PortInstance* p2 = to;
-  if (!p2) {
+  PortInstance::pointer p2 = to;
+  if (p2.isNull()) {
     return false;
   }
 
@@ -85,18 +88,14 @@ bool CCAPortInstance::connect(PortInstance* to)
     connections.push_back(p2);
     lock_connections.unlock();
   } else {
-      p2->connect(this);
+      p2->connect(PortInstance::pointer(this));
   }
   return true;
 }
 
 PortInstance::PortType CCAPortInstance::portType()
 {
-    if (porttype == Uses) {
-        return From;
-    } else {
-        return To;
-    }
+  return port_usage == cca::Uses ? From : To;
 }
 
 
@@ -117,18 +116,19 @@ std::string CCAPortInstance::getUniqueName()
     return name;
 }
 
-bool CCAPortInstance::disconnect(PortInstance* to)
+bool CCAPortInstance::disconnect(const PortInstance::pointer &to)
 {
-  CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
-  if (!p2) {
+  //CCAPortInstance::pointer p2 = pidl_cast<CCAPortInstance::pointer>(to);
+  PortInstance::pointer p2 = to;
+  if (p2.isNull()) {
     return false;
   }
 
-  if (porttype != Uses) {
+  if (port_usage != Uses) {
     std::cerr<<"disconnect can be called only by user"<<std::endl; 
     return false;
   } 
-  std::vector<PortInstance*>::iterator iter;
+  std::vector<PortInstance::pointer>::iterator iter;
   SCIRun::Guard g1(&lock_connections);
   for (iter=connections.begin(); iter<connections.end();iter++) {
     if (p2==(*iter)) {
@@ -151,11 +151,11 @@ bool CCAPortInstance::disconnect(PortInstance* to)
 // connect should fail for invalid components,
 //   nonexistent ports
 //   other???
-bool CCAPortInstance::canConnectTo(PortInstance* to)
+bool CCAPortInstance::canConnectTo(const PortInstance::pointer &to)
 {
   //CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
-  PortInstance* p2 = to;
-  if (p2 && getType() == p2->getType() && portType() != p2->portType()) {
+  PortInstance::pointer p2 = to;
+  if (!p2.isNull() && getType() == p2->getType() && portType() != p2->portType()) {
       if (available() && p2->available()) { return true; }
   }
   std::cerr << "CCAPortInstance::canConnectTo: can't connect" << std::endl;
@@ -168,15 +168,30 @@ bool CCAPortInstance::canConnectTo(PortInstance* to)
  */
 bool CCAPortInstance::available()
 {
-    return portType() == To || connections.size() == 0;
+  return portType() == To || connections.size() == 0;
 }
 
 // return a PortInstance on the other side of the connection
 // -- the USES (From) port
 // called by: CCAComponentInstance::getPortNonblocking, framework::Services_impl::getPortNonblocking
-PortInstance* CCAPortInstance::getPeer()
+PortInstance::pointer CCAPortInstance::getPeer()
 {
     return connections[0];
+}
+
+int CCAPortInstance::numOfConnections()
+{
+  return connections.size();
+}
+
+PortUsage CCAPortInstance::portUsage()
+{
+    return port_usage;
+}
+
+sci::cca::Port::pointer CCAPortInstance::getPort()
+{
+  return port;
 }
 
 std::string CCAPortInstance::getName()

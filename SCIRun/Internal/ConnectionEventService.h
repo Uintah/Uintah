@@ -45,7 +45,7 @@
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Internal/BuilderService.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalFrameworkServiceInstance.h>

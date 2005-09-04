@@ -44,7 +44,7 @@
 #define delaunay_h
 
 #include "vector2d.h"
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 
 class Edge{

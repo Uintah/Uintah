@@ -43,7 +43,7 @@
 
 #include <sci_defs/ruby_defs.h>
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 
@@ -75,7 +75,7 @@ class ConnectionEvent;
  * \sa SCIRunFramework
  * \sa InternalComponentModel
  */
-class BuilderService : public sci::cca::ports::BuilderService,
+class BuilderService : public sci::cca::ports::BridgeBuilderService,
                        public InternalFrameworkServiceInstance
 {
   public:

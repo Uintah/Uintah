@@ -41,7 +41,7 @@
 #ifndef Matrix_h
 #define Matrix_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 class Matrix: public sci::cca::Matrix{
 public:

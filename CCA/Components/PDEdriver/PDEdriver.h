@@ -41,7 +41,7 @@
 #ifndef CCA_Components_PDEdriver_h
 #define CCA_Components_PDEdriver_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 #define myGoPort PDEdriverGoPort
 

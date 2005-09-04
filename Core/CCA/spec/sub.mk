@@ -33,13 +33,15 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Core/CCA/spec
 
-$(SRCDIR)/cca.sidl:$(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
+#$(SRCDIR)/sci.sidl: $(SRCDIR)/cca.sidl $(SRCDIR)/distributed.sidl  $(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
+#	touch $(SRCDIR)/sci.sidl
 
-$(SRCDIR)/cca_sidl.cc: $(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
-$(SRCDIR)/cca_sidl.h: $(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
+$(SRCDIR)/sci_sidl.h: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/distributed.sidl  $(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
 
-SRCS := $(SRCS) $(SRCDIR)/cca.sidl $(SRCDIR)/cca_sidl.cc
-GENHDRS := $(GENHDRS) $(SRCDIR)/cca_sidl.h
+$(SRCDIR)/sci_sidl.cc: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/distributed.sidl  $(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
+
+SRCS := $(SRCS) $(SRCDIR)/sci.sidl $(SRCDIR)/sci_sidl.cc
+GENHDRS := $(GENHDRS) $(SRCDIR)/sci_sidl.h
 
 PSELIBS := Core/CCA/SSIDL Core/CCA/Comm Core/CCA/PIDL
 LIBS := 

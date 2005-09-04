@@ -40,16 +40,16 @@ SRCS := $(SRCDIR)/Matrix_sidl.cc $(SRCDIR)/MatrixWrap.cc $(SRCDIR)/ColumnMatrixW
 $(SRCDIR)/Matrix_sidl.o: $(SRCDIR)/Matrix_sidl.cc $(SRCDIR)/Matrix_sidl.h
 
 $(SRCDIR)/Matrix_sidl.cc: $(SRCDIR)/Matrix.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -I $(SRCTOP)/Core/CCA/spec/cca.sidl -o $@ $<
+	$(SIDL_EXE) -I $(SRCTOP)/Core/CCA/spec/sci.sidl -o $@ $<
 
 $(SRCDIR)/Matrix_sidl.h: $(SRCDIR)/Matrix.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -I $(SRCTOP)/Core/CCA/spec/cca.sidl -h -o $@ $<
+	$(SIDL_EXE) -I $(SRCTOP)/Core/CCA/spec/sci.sidl -h -o $@ $<
 
 GENHDRS := $(SRCDIR)/Matrix_sidl.h $(SRCDIR)/MatrixWrap.h $(SRCDIR)/ColumnMatrixWrap.h \
 	$(SRCDIR)/DenseMatrixWrap.h $(SRCDIR)/SparseRowMatrixWrap.h 
 PSELIBS := Core/CCA/PIDL Core/Thread 
 
-$(SRCDIR)/Matrix_sidl.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/Matrix_sidl.o: Core/CCA/spec/sci_sidl.h
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

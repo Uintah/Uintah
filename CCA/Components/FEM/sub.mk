@@ -44,7 +44,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 #include $(SCIRUN_SCRIPTS)/program.mk
 
-$(SRCDIR)/FEM.o: Core/CCA/spec/cca_sidl.h
-#$(SRCDIR)/Matrix.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/FEM.o: Core/CCA/spec/sci_sidl.h
+#$(SRCDIR)/Matrix.o: Core/CCA/spec/sci_sidl.h
 
 

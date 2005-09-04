@@ -42,7 +42,7 @@
 #define SCIRun_LinSolver_h
 
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
   

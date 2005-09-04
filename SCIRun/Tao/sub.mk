@@ -40,8 +40,8 @@ SRCS     += \
 	$(SRCDIR)/TaoGoPort.cc \
 	$(SRCDIR)/Component.cc
 
-$(SRCDIR)/TaoComponentModel.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/TaoComponentDescription.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/TaoComponentInstance.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/TaoPortInstance.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/TaoComponentModel.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/TaoComponentDescription.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/TaoComponentInstance.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/TaoPortInstance.o: Core/CCA/spec/sci_sidl.h
 

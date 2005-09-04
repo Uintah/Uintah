@@ -48,6 +48,6 @@ INCLUDES += $(TAO_INCLUDE)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-$(SRCDIR)/FileReader.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/FileReader.o: Core/CCA/spec/sci_sidl.h
 
 

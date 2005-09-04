@@ -29,7 +29,7 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <CCA/Components/Builder/PortIcon.h>
 
 #include <qcanvas.h>

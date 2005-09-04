@@ -43,5 +43,5 @@ SRCS     += $(SRCDIR)/VtkComponentModel.cc \
 
 
 
-$(SRCDIR)/VtkComponentInstance.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/VtkComponentModel.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/VtkComponentInstance.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/VtkComponentModel.o: Core/CCA/spec/sci_sidl.h

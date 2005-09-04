@@ -228,8 +228,8 @@ Module::makePorts() {
                 ComponentInstance *ci =
                     fwk->lookupComponent(instanceName);
                 if (ci) {
-                    PortInstance* pi = ci->getPortInstance(pp[i]);
-                    if (pi) {
+                    PortInstance::pointer pi = ci->getPortInstance(pp[i]);
+                    if (!pi.isNull()) {
                         model = pi->getModel();
                         type = pi->getType();
                     }
@@ -343,8 +343,8 @@ Module::makePorts() {
             std::string type;
             ComponentInstance *ci = fwk->lookupComponent(instanceName);
             if (ci) {
-                PortInstance* pi = ci->getPortInstance(up[i]);
-                if (pi) {
+                PortInstance::pointer pi = ci->getPortInstance(up[i]);
+                if (!pi.isNull()) {
                     model = pi->getModel();
                     type = pi->getType();
                     if (type == "sci.cca.ports.Progress") {
@@ -628,8 +628,8 @@ Module::updatePorts() {
                 ComponentInstance *ci =
                     fwk->lookupComponent(instanceName);
                 if (ci) {
-                    PortInstance* pi = ci->getPortInstance(pp[i]);
-                    if (pi) {
+                    PortInstance::pointer pi = ci->getPortInstance(pp[i]);
+                    if (!pi.isNull()) {
                         model = pi->getModel();
                         type = pi->getType();
                     }
@@ -669,8 +669,8 @@ Module::updatePorts() {
             std::string type;
             ComponentInstance *ci = fwk->lookupComponent(cid->getInstanceName());
             if (ci) {
-                PortInstance* pi = ci->getPortInstance(up[i]);
-                if (pi) {
+                PortInstance::pointer pi = ci->getPortInstance(up[i]);
+                if (!pi.isNull()) {
                     model = pi->getModel();
                     type = pi->getType();
                     if (type == "sci.cca.ports.Progress") {

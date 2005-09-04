@@ -44,7 +44,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
 #include <SCIRun/PortInstance.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Babel/gov_cca.hh>
 #include <map>
 #include <string>

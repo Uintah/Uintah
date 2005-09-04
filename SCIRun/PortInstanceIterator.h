@@ -41,9 +41,10 @@
 #ifndef SCIRun_Framework_PortInstanceIterator_h
 #define SCIRun_Framework_PortInstanceIterator_h
 
+#include <SCIRun/PortInstance.h>
+
 namespace SCIRun
 {
-class PortInstance;
 
 /**
  * \class PortInstanceIterator
@@ -54,7 +55,7 @@ class PortInstanceIterator
 {
 public:
   virtual ~PortInstanceIterator();
-  virtual PortInstance* get() = 0;
+  virtual PortInstance::pointer get() = 0;
   virtual bool done() = 0;
   virtual void next() = 0;
 };

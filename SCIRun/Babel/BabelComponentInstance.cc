@@ -42,7 +42,7 @@
 #include <SCIRun/CCA/CCAPortInstance.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <iostream>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Babel/BabelComponentInstance.h>
 #include <SCIRun/SCIRunFramework.h>
 

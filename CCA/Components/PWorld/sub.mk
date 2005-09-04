@@ -44,4 +44,4 @@ LIBS := $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-$(SRCDIR)/PWorld.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/PWorld.o: Core/CCA/spec/sci_sidl.h
