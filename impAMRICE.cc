@@ -307,19 +307,19 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
  Function~  ICE::multiLevelPressureSolve-- 
 _____________________________________________________________________*/
 void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
-		                    const PatchSubset*, 
-		                    const MaterialSubset*,       
-		                    DataWarehouse* ParentOldDW,    
+                                  const PatchSubset*, 
+                                  const MaterialSubset*,       
+                                  DataWarehouse* ParentOldDW,    
                                   DataWarehouse* ParentNewDW,    
-		                    GridP grid,                 
+                                  GridP grid,                 
                                   Scheduler* sched,
                                   const MaterialSubset* ice_matls,
                                   const MaterialSubset* mpm_matls)
 {
   cout_doing<<"Doing multiLevelPressureSolve "<<"\t\t\t\t ICE " << endl;
 
-  const PatchSet* perProcPatches = 
-    sched->getLoadBalancer()->createPerProcessorPatchSet(grid);
+  //const PatchSet* perProcPatches = 
+  //  sched->getLoadBalancer()->createPerProcessorPatchSet(grid);
 
   SchedulerP schedulerP(sched);
   //__________________________________
@@ -384,7 +384,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   bool recursion = true;
   bool firstIter = true;
   //const VarLabel* whichInitialGuess = lb->initialGuessLabel;
-  const VarLabel* whichInitialGuess = NULL;
+  //  const VarLabel* whichInitialGuess = NULL;
   
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
     //__________________________________
@@ -402,7 +402,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       
       //scheduleCompute_matrix_CFI_weights(subsched,level, all_matls);
 
-      //schedule_matrixBC_CFI_coarsePatch(subsched, level, one_matl, all_matls);
+      schedule_matrixBC_CFI_coarsePatch(subsched, level, one_matl, all_matls);
 
       //schedule_matrixBC_CFI_finePatch(  subsched, level, one_matl, all_matls);
 
@@ -987,9 +987,9 @@ void ICE::schedule_matrixBC_CFI_coarsePatch(SchedulerP& sched,
     Task* task = scinew Task("schedule_matrixBC_CFI_coarsePatch",
                   this, &ICE::matrixBC_CFI_coarsePatch);
 
-    Ghost::GhostType  gn  = Ghost::None;
-    task->requires(Task::NewDW, lb->matrix_CFI_weightsLabel,
-                0, Task::FineLevel, one_matl,Task::NormalDomain, gn, 0);
+    //    Ghost::GhostType  gn  = Ghost::None;
+    //    task->requires(Task::NewDW, lb->matrix_CFI_weightsLabel,
+    //                0, Task::FineLevel, one_matl,Task::NormalDomain, gn, 0);
 
     task->modifies(lb->matrixLabel);
 
@@ -1042,10 +1042,21 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
 
       if(finePatch->hasCoarseFineInterfaceFace() ){
       
-        constCCVariable<double>A_CFI_weights_fine;
+        // A_CFI_weights_fine equals A for now. Higher order
+        // ghost node interpolation can be developed at
+        // a later stage.
+        constCCVariable<Stencil7>A_CFI_weights_fine;
+        //        constCCVariable<double>A_CFI_weights_fine;
         Ghost::GhostType  gn  = Ghost::None;
+        //        new_dw->get(A_CFI_weights_fine, 
+        //                    lb->matrix_CFI_weightsLabel, 0,finePatch,gn,0);
         new_dw->get(A_CFI_weights_fine, 
-                    lb->matrix_CFI_weightsLabel, 0,finePatch,gn,0);
+                    lb->matrixLabel, 0,finePatch,gn,0);
+
+        IntVector fl(finePatch->getInteriorCellLowIndex());
+        IntVector fh(finePatch->getInteriorCellHighIndex());
+        //        cerr << "fl = " << fl << "\n";
+        //        cerr << "fh = " << fh << "\n";
 
         //__________________________________
         // Iterate over coarsefine interface faces
@@ -1065,6 +1076,9 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
             return;
           };   
 
+          // Offset from cell c to nbhr cell underlying the fine patch
+          IntVector offset = coarsePatch->faceDirection(patchFace);
+
           // The matix element is opposite
           // of the patch face
           int element = patchFace;
@@ -1078,10 +1092,15 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
              patchFace == Patch::zplus){
             element -= 1;   // w, s, b
           }
+          //          cerr << "patchFace = " << patchFace << "\n";
+          //          cerr << "offset    = " << offset    << "\n";
+          //          cerr << "element   = " << element   << "\n";
           
           for(; !c_iter.done(); c_iter++){
             IntVector c = *c_iter;
-            A_coarse[c].p = A_coarse[c].p + A_coarse[c][element];
+            //            cerr << "impAMRICE " << c << " A.p " << A_coarse[c].p
+            //                 << " += A[" << element << " ] " << A_coarse[c][element] << "\n";
+            A_coarse[c].p += A_coarse[c][element];
             A_coarse[c][element] = 0.0;
             
             IntVector fineStart = coarseLevel->mapCellToFiner(c);
@@ -1092,12 +1111,21 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
             IntVector refinementRatio = fineLevel->getRefinementRatio();
               
             for(CellIterator inside(IntVector(0,0,0),refinementRatio );
-                                                !inside.done(); inside++){
-              IntVector fc = fineStart + *inside;
-              sum_weights += A_CFI_weights_fine[fc];
+                !inside.done(); inside++){
+              IntVector fc = fineStart + *inside - offset;
+              if ((fl.x() <= fc.x()) && (fl.y() <= fc.y()) && (fl.z() <= fc.z()) &&
+                  (fc.x() <  fh.x()) && (fc.y() <  fh.y()) && (fc.z() <  fh.z())) {
+                //                cerr << "impAMRICE sum_weights += A["
+                //                     << fc << "][" << patchFace << "] ";
+                //                cerr << A_CFI_weights_fine[fc][patchFace] << "\n";
+                sum_weights += A_CFI_weights_fine[fc][patchFace];
+              }
             }
             
-            A_coarse[c].p = A_coarse[c].p - sum_weights;
+            //            cerr << "impAMRICE " << c << " A.p " << A_coarse[c].p
+            //                 << " -= sum_weights" << sum_weights  
+            //                 << " result " << A_coarse[c].p - sum_weights << "\n\n";
+            A_coarse[c].p -= sum_weights;
           }  // coarse cell interator
         }  // coarseFineInterface faces
       }  // patch has a coarseFineInterface
@@ -1131,8 +1159,8 @@ void ICE::schedule_matrixBC_CFI_finePatch(SchedulerP& sched,
 
     Task* task = scinew Task("matrixBC_CFI_finePatch",
                   this, &ICE::matrixBC_CFI_finePatch);
-    Ghost::GhostType  gn  = Ghost::None;
-    task->requires(Task::NewDW,lb->matrix_CFI_weightsLabel,one_matl, gn,0); 
+    //Ghost::GhostType  gn  = Ghost::None;
+    //    task->requires(Task::NewDW,lb->matrix_CFI_weightsLabel,one_matl, gn,0); 
                    
     task->modifies(lb->matrixLabel);
 
@@ -1176,10 +1204,16 @@ void ICE::matrixBC_CFI_finePatch(const ProcessorGroup*,
       cout_dbg << *finePatch << " ";
       finePatch->printPatchBCs(cout_dbg);
       CCVariable<Stencil7> A;
-      constCCVariable<double>A_CFI_weights;
+      // A_CFI_weights_fine equals A for now. Higher order
+      // ghost node interpolation can be developed at
+      // a later stage.
+      //      constCCVariable<double>A_CFI_weights;
+      constCCVariable<Stencil7>A_CFI_weights;
       
       new_dw->getModifiable(A,   lb->matrixLabel, 0,   finePatch);
-      new_dw->get(A_CFI_weights, lb->matrix_CFI_weightsLabel, 0,finePatch,gn,0);
+      //      new_dw->get(A_CFI_weights, lb->matrix_CFI_weightsLabel, 0,finePatch,gn,0);
+      new_dw->get(A_CFI_weights, lb->matrixLabel, 0,finePatch,gn,0);
+
       //__________________________________
       // Iterate over coarsefine interface faces
       vector<Patch::FaceType>::const_iterator iter;  
@@ -1192,11 +1226,11 @@ void ICE::matrixBC_CFI_finePatch(const ProcessorGroup*,
 
         for(; !f_iter.done(); f_iter++){
           IntVector c = *f_iter;
-          A[c].p  = A[c].p + A[c][f];
+          A[c].p  += A[c][f];
           
           // add back the connection CFI weights
-          A[c][f] = A_CFI_weights[c];
-          A[c].p  = A[c].p - A[c][f];
+          A[c][f] = A_CFI_weights[c][f];
+          A[c].p  -= A[c][f];
         }
       }  //CFI interface loop
       
