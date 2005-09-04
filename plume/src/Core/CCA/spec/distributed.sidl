@@ -1,0 +1,159 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+package sci {
+  
+  package cca {
+    
+    interface DistributedFramework extends AbstractFramework {
+      
+      bool isRoot();
+      DistributedFramework getParent();
+      array<DistributedFramework,1> getChildren();
+
+      /*
+       * For Kemming MPIFramework
+       */
+
+      /**
+       * Registers the slave framework with the master framework. Intended to be called 
+       * only by the representative slave framework process. 
+       * @param size Total number of parallel slave frameworks.
+       * @param slaveURLs Urls of the slave framework.
+       * @param slaveName Name of the slave resource.
+       * @return A positive number or zero if framework was registered 
+       *   successfully, negative number on error.
+       */
+      int registerLoader(in string slaveName, in array<string,1> slaveURLs);
+      int unregisterLoader(in string slaveName);
+    }
+    
+    interface LocalFramework extends DistributedFramework {
+    }
+
+    interface GlobalFramework extends DistributedFramework {
+    }
+
+    interface MPIFramework extends LocalFramework {
+    }
+
+    interface DistributedComponentModelFramework extends LocalFramework {
+    }
+
+    package ports {
+      
+      interface ExtendedBuilderService extends BuilderService {
+
+        array<string> getCompatiblePortList(in sci.cca.ComponentID c1,
+                                            in string port1,
+                                            in sci.cca.ComponentID c2);
+      }
+
+      interface BridgeBuilderService extends ExtendedBuilderService {
+
+        /**
+         * TODO: document getBridgablePortList
+         * @param 
+         * @param 
+         * @param 
+         */
+        array<string> getBridgablePortList(in sci.cca.ComponentID c1,
+                                           in string port1,
+                                           in sci.cca.ComponentID c2);
+
+        string generateBridge(in cca.ComponentID user, 
+                              in string usingPortName,   
+                              in cca.ComponentID provider, 
+                              in string providingPortName);
+
+      }
+
+    } // package ports
+
+
+    package internal {
+      
+      enum PortType {
+	From = 0,
+	To   = 1,
+      }
+
+      class PortInstance {
+	bool connect(in PortInstance portInstance);
+	bool disconnect(in PortInstance portInstance);
+	bool available();
+	bool canConnectTo(in PortInstance portInstance);
+	
+	Port getPort();
+	PortInstance getPeer();
+	PortType portType();
+
+	string getUniqueName();
+	string getType();
+	string getModel();
+      };
+      
+    
+      class ComponentInstance {
+	DistributedFramework getFramework();
+	
+	PortInstance getPortInstance(in string portName);
+	
+	string getClassName();
+	TypeMap getProperties();
+	void setProperties( in TypeMap properties);
+      }
+
+      package cca {
+	enum PortUsage {
+	  Uses = 0,
+	  Provides = 1,
+	}
+
+	class CCAPortInstance extends PortInstance {
+
+	  string getName();
+	  int numOfConnections();
+	  PortUsage portUsage();
+
+	  void incrementUseCount();
+	  bool decrementUseCount();
+	}
+
+ 	class CCAComponentServices extends ComponentInstance implements Services {
+ 	}
+
+      } // package cca
+
+
+    } // package internal
+    
+  } // package cca
+
+} // package sci
+
