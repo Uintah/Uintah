@@ -36,6 +36,7 @@ using namespace Uintah;
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_dbg("HYPRE_DBG", false);
 
 /*_____________________________________________________________________
   class HypreDriver implementation common to all variable types

@@ -4,6 +4,7 @@
 // Hypre CG ([preconditioned] conjugate gradient) solver.
 //--------------------------------------------------------------------------
 
+#include <sci_defs/hypre_defs.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -16,6 +17,7 @@ using namespace Uintah;
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
 static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_dbg("HYPRE_DBG", false);
 
 Priorities
 HypreSolverFAC::initPriority(void)
@@ -38,7 +40,7 @@ HypreSolverFAC::solve(void)
   // objects.
   //___________________________________________________________________
 {
-  cerr << "HypreSolverFAC::solve() BEGIN" << "\n";
+  cout_doing << "HypreSolverFAC::solve() BEGIN" << "\n";
   const int numDims = 3; // Hard-coded for Uintah
   const HypreSolverParams* params = _driver->getParams();
 
@@ -48,7 +50,7 @@ HypreSolverFAC::solve(void)
       dynamic_cast<HypreDriverSStruct*>(_driver);
     const PatchSubset* patches = sstructDriver->getPatches();
     if (patches->size() < 1) {
-      cerr << "Warning: empty list of patches for FAC solver" << "\n";
+      cout_dbg << "Warning: empty list of patches for FAC solver" << "\n";
       return;
     }
     const GridP grid = patches->get(0)->getLevel()->getGrid();
@@ -108,9 +110,9 @@ HypreSolverFAC::solve(void)
     HYPRE_SStructFACGetNumIterations(solver, &_results.numIterations);
     HYPRE_SStructFACGetFinalRelativeResidualNorm(solver,
                                                  &_results.finalResNorm);
-    cerr << "FAC convergence statistics:" << "\n";
-    cerr << "numIterations = " << _results.numIterations << "\n";
-    cerr << "finalResNorm  = " << _results.finalResNorm << "\n";
+    cout_dbg << "FAC convergence statistics:" << "\n";
+    cout_dbg << "numIterations = " << _results.numIterations << "\n";
+    cout_dbg << "finalResNorm  = " << _results.finalResNorm << "\n";
 
     // Destroy & free
     HYPRE_SStructFACDestroy2(solver);
@@ -122,5 +124,5 @@ HypreSolverFAC::solve(void)
 
   } // interface == HypreSStruct
 
-  cerr << "HypreSolverFAC::solve() END" << "\n";
+  cout_doing << "HypreSolverFAC::solve() END" << "\n";
 }

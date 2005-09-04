@@ -22,6 +22,8 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
+#define OREN 1
+
 /*___________________________________________________________________
  Function~  ICE::scheduleSetupMatrix--
 _____________________________________________________________________*/
@@ -444,9 +446,19 @@ void ICE::setupMatrix(const ProcessorGroup*,
     //__________________________________
     //  Multiple stencil by delT^2 * area/dx
     double delT_2 = delT * delT;
+#if OREN
+    // Oren: scale matrix to finite volume formulation, otherwise
+    // it is hard to properly define the AMR analogue of the
+    // implicit pressure solver system.
+    double vol     = dx.x()*dx.y()*dx.z();
+    double tmp_e_w = vol * delT_2/( dx.x() * dx.x() );
+    double tmp_n_s = vol * delT_2/( dx.y() * dx.y() );
+    double tmp_t_b = vol * delT_2/( dx.z() * dx.z() );
+#else
     double tmp_e_w = delT_2/( dx.x() * dx.x() );
     double tmp_n_s = delT_2/( dx.y() * dx.y() );
     double tmp_t_b = delT_2/( dx.z() * dx.z() );
+#endif
         
    for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){ 
       IntVector c = *iter;
@@ -459,9 +471,16 @@ void ICE::setupMatrix(const ProcessorGroup*,
 
       A_tmp.t *= -tmp_t_b;
       A_tmp.b *= -tmp_t_b;
-      
+
+#if OREN
+      // Remember to scale the identity term (sumKappa) by vol
+      // as well, to match the off diagonal entries' scaling.
+      A_tmp.p = vol * sumKappa[c] -
+          (A_tmp.n + A_tmp.s + A_tmp.e + A_tmp.w + A_tmp.t + A_tmp.b);
+#else      
       A_tmp.p = sumKappa[c] -
           (A_tmp.n + A_tmp.s + A_tmp.e + A_tmp.w + A_tmp.t + A_tmp.b);
+#endif
     }  
     //__________________________________
     //  Boundary conditons on A.e, A.w, A.n, A.s, A.t, A.b
@@ -618,7 +637,20 @@ void ICE::setupRHS(const ProcessorGroup*,
       
       double term1 = sumKappa[c] *  (press_CC[c] - oldPressure[c]); 
       rhs[c] = -term1 + massExchTerm[c] + sumAdvection[c];
+#if OREN
+      // Oren: Max RHS should be max(abs(rhs)) over all cells,
+      // not max(rhs^2). See implicit ICE document, p. 1.
+      rhs_max = std::max(rhs_max, abs(rhs[c]));
+      // Oren: scale RHS to finite volume formulation, otherwise
+      // it is hard to properly define the AMR analogue of the
+      // implicit pressure solver system. Notice that the max
+      // RHS is not scaled so that it is scale-invariant and
+      // can be compared against a scale-invariant tolerance
+      // in the outer iteration.
+      rhs[c] *= vol;
+#else
       rhs_max = std::max(rhs_max, rhs[c] * rhs[c]); 
+#endif
     }
     new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
 
