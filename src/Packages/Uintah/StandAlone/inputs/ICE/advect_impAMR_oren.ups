@@ -18,7 +18,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-3      </delt_init>
-        <max_iterations>    10          </max_iterations>
+        <max_iterations>    1           </max_iterations>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -120,18 +120,18 @@
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [1,1,1]            </patches>
            </Box>
-           <spacing>         [.1,.1,.1]         </spacing>
+           <spacing>         [.25,.25,.25]      </spacing>
        </Level>
        <time_refinement_ratio>    1 </time_refinement_ratio>       
 
        <Level>
            <Box label="2">
-              <lower>        [.2,.2,.2]         </lower>
-              <upper>        [0.8,0.8,0.8]      </upper>
+              <lower>        [.25,.25,.25]      </lower>
+              <upper>        [.75,.75,.75]      </upper>
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [1,1,1]            </patches>
            </Box>
-           <spacing>         [0.05,0.05,0.05]   </spacing>
+           <spacing>         [.125,.125,.125]   </spacing>
        </Level>
       
 <!--      
@@ -185,8 +185,8 @@
       <dbg_timeStart>       1.00        </dbg_timeStart>
       <dbg_timeStop>        0.01        </dbg_timeStop>
       <dbg_outputInterval>  1e-9        </dbg_outputInterval>
-      <dbg_BeginIndex>      [7,3,3]  </dbg_BeginIndex>
-      <dbg_EndIndex>        [12,7,7]     </dbg_EndIndex>
+<!--      <dbg_BeginIndex>      [7,3,3]  </dbg_BeginIndex>
+      <dbg_EndIndex>        [12,7,7]     </dbg_EndIndex> -->
       <dbg_Matls>           [0]         </dbg_Matls>
       <dbg_Level>           1         </dbg_Level>
       
@@ -231,7 +231,7 @@
             <tolerance>1.e-8    </tolerance>
 
 	     <!-- Hypre options -->
-	     <solver>         fac     </solver>
+	     <solver>         amg     </solver>
              <preconditioner> none    </preconditioner>
 	     <maxiterations>  7500    </maxiterations>
 	     <npre>           1       </npre>

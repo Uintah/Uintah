@@ -7,9 +7,6 @@
  * here.
  * See also AMRSolver.h.
  *--------------------------------------------------------------------------*/
-// TODO:
-// * Use a symmetric matrix
-// * Reuse some data between solves?
 
 #include <sci_defs/hypre_defs.h>
 #include <Packages/Uintah/CCA/Components/Solvers/AMRSolver.h>
@@ -94,7 +91,8 @@ AMRSolver::readParameters(ProblemSpecP& params,
   }
   p->symmetric = false;
   //  p->symmetric=true;
-  p->restart=true;
+  p->restart=false;
+  //  p->restart=true;
 
   return p;
 } // end readParameters()

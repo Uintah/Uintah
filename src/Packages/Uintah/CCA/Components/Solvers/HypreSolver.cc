@@ -1,12 +1,3 @@
-// TODO:
-// Matrix file - why are ghosts there?
-// Read hypre options from input file
-// 3D performance
-// Logging?
-// Report mflops
-// Use a symmetric matrix
-// More efficient set?
-// Reuse some data between solves?
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
