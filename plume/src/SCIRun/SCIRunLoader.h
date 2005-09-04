@@ -42,7 +42,7 @@
 #define SCIRun_SCIRunLoader_h
 
 #include <Core/Thread/Mutex.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <vector>
 #include <map>
 #include <string>

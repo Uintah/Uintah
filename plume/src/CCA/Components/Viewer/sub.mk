@@ -50,7 +50,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 #include $(SCIRUN_SCRIPTS)/program.mk
 
-$(SRCDIR)/Viewer.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/ViewerWindow.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/MainWindow.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/Colormap.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/Viewer.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/ViewerWindow.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/MainWindow.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/Colormap.o: Core/CCA/spec/sci_sidl.h

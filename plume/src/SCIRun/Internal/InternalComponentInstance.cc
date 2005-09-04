@@ -39,6 +39,7 @@
  */
 
 #include <SCIRun/Internal/InternalComponentInstance.h>
+#include <SCIRun/PortInstance.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -56,12 +57,12 @@ InternalComponentInstance::~InternalComponentInstance()
 {
 }
 
-PortInstance*
+PortInstance::pointer
 InternalComponentInstance::getPortInstance(const std::string& /*name*/)
 {
   std::cerr << "InternalComponentInstance::getPortInstance not finished"
             << std::endl;
-  return 0;
+  return PortInstance::pointer(0);
 }
 
 PortInstanceIterator* InternalComponentInstance::getPorts()

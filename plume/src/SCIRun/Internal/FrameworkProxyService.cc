@@ -1,6 +1,6 @@
 #include <SCIRun/Internal/FrameworkProxyService.h>
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/CCA/ComponentID.h>

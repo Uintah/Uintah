@@ -39,7 +39,7 @@
  */
 
 #include <SCIRun/Internal/BuilderService.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/PortInstanceIterator.h>
 #include <SCIRun/SCIRunFramework.h>
@@ -57,6 +57,9 @@
 using namespace std;
 
 namespace SCIRun {
+
+  using sci::cca::internal::From;
+  using sci::cca::internal::To;
 
 BuilderService::BuilderService(SCIRunFramework* framework)
   : InternalFrameworkServiceInstance(framework, "internal:BuilderService")
@@ -92,26 +95,26 @@ BuilderService::connect(const sci::cca::ComponentID::pointer &user,
   if (uCID->framework != framework || pCID->framework != framework) {
     throw sci::cca::CCAException::pointer(new CCAException("Cannot connect components from different frameworks"));
   }
-  ComponentInstance* uCI =
+  ComponentInstance::pointer uCI =
     framework->lookupComponent(user->getInstanceName());
   if (! uCI) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown ComponentInstance " + user->getInstanceName()));
   }
   sci::cca::TypeMap::pointer uProps = uCI->getComponentProperties();
   
-  PortInstance* usesPort = uCI->getPortInstance(usesPortName);
-  if (! usesPort) {
+  PortInstance::pointer usesPort = uCI->getPortInstance(usesPortName);
+  if (usesPort.isNull()) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown port " + usesPortName, sci::cca::BadPortName));
   }
   
-  ComponentInstance* pCI =
+  ComponentInstance::pointer pCI =
     framework->lookupComponent(provider->getInstanceName());
   if (! pCI) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown ComponentInstance " + provider->getInstanceName()));
   }
   sci::cca::TypeMap::pointer pProps = pCI->getComponentProperties();
-  PortInstance* providesPort = pCI->getPortInstance(providesPortName);
-  if (! providesPort) {
+  PortInstance::pointer providesPort = pCI->getPortInstance(providesPortName);
+  if (providesPort.isNull()) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown port " + providesPortName));
   }
   
@@ -229,8 +232,8 @@ BuilderService::getProvidedPortNames(const sci::cca::ComponentID::pointer &cid)
 
     for (PortInstanceIterator* iter = ci->getPorts();
             !iter->done(); iter->next()) {
-        PortInstance* port = iter->get();
-        if (port->portType() == PortInstance::To) {
+        PortInstance::pointer port = iter->get();
+        if (port->portType() == To) {
             result.push_back(port->getUniqueName());
         }
     }
@@ -249,8 +252,8 @@ BuilderService::getUsedPortNames(const sci::cca::ComponentID::pointer &cid)
 
     for (PortInstanceIterator* iter = ci->getPorts();
             !iter->done(); iter->next()) {
-        PortInstance* port = iter->get();
-        if (port->portType() == PortInstance::From) {
+        PortInstance::pointer port = iter->get();
+        if (port->portType() == From) {
             result.push_back(port->getUniqueName());
         }
     }
@@ -262,11 +265,11 @@ BuilderService::getUsedPortNames(const sci::cca::ComponentID::pointer &cid)
 sci::cca::TypeMap::pointer
 BuilderService::getPortProperties(const sci::cca::ComponentID::pointer &cid, const std::string &portname)
 {
-    ComponentInstance* comp = framework->lookupComponent(cid->getInstanceName());
+    ComponentInstance::pointer comp = framework->lookupComponent(cid->getInstanceName());
     if (! comp) {
         return framework->createTypeMap();
     }
-    CCAComponentInstance* ccaComp = dynamic_cast<CCAComponentInstance*>(comp);
+    CCAComponentInstance::pointer ccaComp = dynamic_cast<CCAComponentInstance::pointer>(comp);
     if (! ccaComp) {
         return framework->createTypeMap();
     }
@@ -337,11 +340,11 @@ BuilderService::disconnect(const sci::cca::ConnectionID::pointer& connID,
   ComponentID* userID=dynamic_cast<ComponentID*>(connID->getUser().getPointer());
   ComponentID* providerID=dynamic_cast<ComponentID*>(connID->getProvider().getPointer());
 
-  ComponentInstance* user=framework->lookupComponent(userID->name);
-  ComponentInstance* provider=framework->lookupComponent(providerID->name);
+  ComponentInstance::pointer user=framework->lookupComponent(userID->name);
+  ComponentInstance::pointer provider=framework->lookupComponent(providerID->name);
 
-  PortInstance* userPort=user->getPortInstance(connID->getUserPortName());
-  PortInstance* providerPort=provider->getPortInstance(connID->getProviderPortName());
+  PortInstance::pointer userPort=user->getPortInstance(connID->getUserPortName());
+  PortInstance::pointer providerPort=provider->getPortInstance(connID->getProviderPortName());
   userPort->disconnect(providerPort);
   for(unsigned i=0; i<framework->connIDs.size();i++) {
     if (framework->connIDs[i]==connID) {
@@ -380,11 +383,11 @@ BuilderService::getCompatiblePortList(
     if (uCID->framework != framework || pCID->framework != framework) {
         throw sci::cca::CCAException::pointer(new CCAException("Cannot connect components from different frameworks"));
     }
-    ComponentInstance* uCI = framework->lookupComponent(uCID->name);
-    ComponentInstance* pCI = framework->lookupComponent(pCID->name);
+    ComponentInstance::pointer uCI = framework->lookupComponent(uCID->name);
+    ComponentInstance::pointer pCI = framework->lookupComponent(pCID->name);
 
-    PortInstance* usesPort = uCI->getPortInstance(usesPortName);
-    if (! usesPort) {
+    PortInstance::pointer usesPort = uCI->getPortInstance(usesPortName);
+    if (usesPort.isNull()) {
         throw sci::cca::CCAException::pointer(new CCAException("Unknown uses port"));
     }
 
@@ -394,7 +397,7 @@ BuilderService::getCompatiblePortList(
     }
     for (PortInstanceIterator* iter = pCI->getPorts();
             !iter->done(); iter->next()) {
-        PortInstance* providesPort = iter->get();
+        PortInstance::pointer providesPort = iter->get();
         if (usesPort->canConnectTo(providesPort)) {
             availablePorts.push_back(providesPort->getUniqueName());
         }
@@ -419,11 +422,11 @@ BuilderService::getBridgablePortList(
   if (cid1->framework != framework || cid2->framework != framework) {
     throw sci::cca::CCAException::pointer(new CCAException("Cannot connect components from different frameworks"));
   }
-  ComponentInstance* comp1=framework->lookupComponent(cid1->name);
-  ComponentInstance* comp2=framework->lookupComponent(cid2->name);
+  ComponentInstance::pointer comp1=framework->lookupComponent(cid1->name);
+  ComponentInstance::pointer comp2=framework->lookupComponent(cid2->name);
 
   std::cerr<<"Component: "<<cid2->getInstanceName()<<std::endl;
-  PortInstance* pr1=comp1->getPortInstance(port1);
+  PortInstance::pointer pr1=comp1->getPortInstance(port1);
   if (!pr1)
     throw sci::cca::CCAException::pointer(new CCAException("Unknown port"));
 
@@ -432,7 +435,7 @@ BuilderService::getBridgablePortList(
   }
   for(PortInstanceIterator* iter = comp2->getPorts(); !iter->done();
       iter->next()) {
-    PortInstance* pr2 = iter->get();
+    PortInstance::pointer pr2 = iter->get();
     if ((pr1->getModel() != pr2->getModel())&&(autobr.canBridge(pr1,pr2)))
       availablePorts.push_back(pr2->getUniqueName());
   }
@@ -456,13 +459,13 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
   if (cid1->framework != framework || cid2->framework != framework) {
     throw sci::cca::CCAException::pointer(new CCAException("Cannot connect components from different frameworks"));
   }
-  ComponentInstance* comp1=framework->lookupComponent(cid1->name);
-  ComponentInstance* comp2=framework->lookupComponent(cid2->name);
-  PortInstance* pr1=comp1->getPortInstance(port1);
+  ComponentInstance::pointer comp1=framework->lookupComponent(cid1->name);
+  ComponentInstance::pointer comp2=framework->lookupComponent(cid2->name);
+  PortInstance::pointer pr1=comp1->getPortInstance(port1);
   if (!pr1) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown uses port"));
   }
-  PortInstance* pr2=comp2->getPortInstance(port2);
+  PortInstance::pointer pr2=comp2->getPortInstance(port2);
   if (!pr2) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown provides port"));
   }

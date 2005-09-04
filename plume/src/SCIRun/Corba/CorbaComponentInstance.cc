@@ -55,12 +55,12 @@ CorbaComponentInstance::CorbaComponentInstance(
   : ComponentInstance(framework, instanceName, className, tm), component(component)
 
 {
-    // See if we have a user-interface...
-    if (component->haveUI()) {
-        specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
-                               sci::cca::TypeMap::pointer(0),
-                               sci::cca::Port::pointer(new CorbaUIPort(this)),
-                               CCAPortInstance::Provides));
+  // See if we have a user-interface...
+  if (component->haveUI()) {
+    specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
+					       sci::cca::TypeMap::pointer(0),
+					       sci::cca::Port::pointer(new CorbaUIPort(this)),
+					       CCAPortInstance::Provides));
     }
 }
 
@@ -68,26 +68,25 @@ CorbaComponentInstance::~CorbaComponentInstance()
 {
 }
 
-PortInstance* CorbaComponentInstance::getPortInstance(const std::string& name)
+PortInstance::pointer CorbaComponentInstance::getPortInstance(const std::string& name)
 {
-    //if the port is CCA port, find it from the specialPorts
-    if (name=="ui" || name=="go") {
-        for(unsigned int i=0; i < specialPorts.size(); i++) {
-            if (specialPorts[i]->getName() == name) {
-                return specialPorts[i];
-            }
-            return 0;
-        }
+  //if the port is CCA port, find it from the specialPorts
+  if (name=="ui" || name=="go") {
+    for(unsigned int i=0; i < specialPorts.size(); i++) {
+      if (specialPorts[i]->getName() == name) {
+	return specialPorts[i];
+      }
+      return PortInstance::pointer(0);
     }
-
-    //otherwise it is corba port
-    corba::Port* port = component->getPort(name);
-    if (!port) {
-        return 0;
-    }
-    //TODO: check memory leak
-    return new CorbaPortInstance(this, port, port->isUses() ?
-        CorbaPortInstance::Uses : CorbaPortInstance::Provides);
+  }
+  
+  //otherwise it is corba port
+  corba::Port* port = component->getPort(name);
+  if (!port) {
+    return PortInstance::pointer(0);
+  }
+  //TODO: check memory leak
+  return new CorbaPortInstance(this, port, port->isUses() ? Uses : Provides);
 }
 
 PortInstanceIterator* CorbaComponentInstance::getPorts()

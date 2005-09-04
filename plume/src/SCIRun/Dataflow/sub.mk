@@ -42,6 +42,6 @@ SRCS     += \
             $(SRCDIR)/DataflowScheduler.cc 
 
 
-$(SRCDIR)/SCIRunComponentInstance.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/SCIRunComponentModel.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/DataflowScheduler.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/SCIRunComponentInstance.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/SCIRunComponentModel.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/DataflowScheduler.o: Core/CCA/spec/sci_sidl.h

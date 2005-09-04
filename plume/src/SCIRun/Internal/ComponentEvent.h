@@ -44,7 +44,7 @@
 #ifndef SCIRun_ComponentEvent_h
 #define SCIRun_ComponentEvent_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
 

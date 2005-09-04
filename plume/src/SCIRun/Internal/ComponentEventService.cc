@@ -109,7 +109,7 @@ ComponentEventService::removeComponentEventListener(
 void
 ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y)
 {
-    ComponentInstance* ci = framework->lookupComponent(id->getInstanceName());
+    ComponentInstance::pointer ci = framework->lookupComponent(id->getInstanceName());
     if (ci) {
         std::string cn = ci->getClassName();
         unsigned int firstColon = cn.find(':');
@@ -122,10 +122,10 @@ ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& id, i
         sci::cca::TypeMap::pointer properties;
         if (modelName == "CCA") {
             // empty string argument gets component properties;
-            properties =
-                ((CCAComponentInstance*)ci)->getPortProperties("");
+	  CCAComponentInstance::pointer cci = pidl_cast<CCAComponentInstance::pointer>(ci);
+            properties = cci->getPortProperties("");
             if (properties.isNull()) {
-                properties = TypeMap::pointer(new TypeMap);
+	      properties = TypeMap::pointer(new TypeMap);
             }
         } else {
             properties = TypeMap::pointer(new TypeMap);

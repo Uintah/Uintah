@@ -238,7 +238,10 @@ CCAComponentModel::createServices(const std::string& instanceName,
                   const std::string& className,
                   const sci::cca::TypeMap::pointer& properties)
 {
-  CCAComponentInstance* ci = new CCAComponentInstance(framework, instanceName, className, properties, sci::cca::Component::pointer(0));
+  CCAComponentInstance::pointer ci = CCAComponentInstance::pointer(new CCAComponentInstance(framework, 
+											    instanceName, 
+											    className, 
+											    properties, sci::cca::Component::pointer(0)));
   framework->registerComponent(ci, instanceName);
   ci->addReference();
   return sci::cca::Services::pointer(ci);
@@ -246,10 +249,9 @@ CCAComponentModel::createServices(const std::string& instanceName,
 
 bool CCAComponentModel::destroyServices(const sci::cca::Services::pointer& svc)
 {
-    CCAComponentInstance *ci =
-    dynamic_cast<CCAComponentInstance*>(svc.getPointer());
-    if (ci == 0) {
-        return false;
+  CCAComponentInstance::pointer ci = pidl_cast<CCAComponentInstance::pointer>(svc.getPointer());
+    if (ci.isNull()) {
+      return false;
     }
     framework->unregisterComponent(ci->getInstanceName());
     ci->deleteReference();
@@ -267,7 +269,7 @@ bool CCAComponentModel::haveComponent(const std::string& type)
 
 
 
-ComponentInstance*
+ComponentInstance::pointer
 CCAComponentModel::createInstance(const std::string& name,
                                   const std::string& type,
                                   const sci::cca::TypeMap::pointer& properties)
@@ -335,16 +337,16 @@ CCAComponentModel::createInstance(const std::string& name,
     component=pidl_cast<sci::cca::Component::pointer>(comObj);
     properties->putInt("np",loader->getSize() );
   }
-  CCAComponentInstance* ci =
-        new CCAComponentInstance(framework, name, type, properties, component);
-  component->setServices(sci::cca::Services::pointer(ci));
+  CCAComponentInstance::pointer ci = CCAComponentInstance::pointer( new CCAComponentInstance(framework, name, type, properties, component));
+  //component->setServices(sci::cca::Services::pointer(ci));
+  component->setServices(ci);
   return ci;
 }
 
-bool CCAComponentModel::destroyInstance(ComponentInstance *ci)
+bool CCAComponentModel::destroyInstance(const ComponentInstance::pointer &ci)
 {
-  CCAComponentInstance* cca_ci = dynamic_cast<CCAComponentInstance*>(ci);
-  if(!cca_ci) {
+  CCAComponentInstance::pointer cca_ci = pidl_cast<CCAComponentInstance::pointer>(ci);
+  if(cca_ci.isNull()) {
     std::cerr << "error: in destroyInstance() cca_ci is 0" << std::endl;
     return false;
   }

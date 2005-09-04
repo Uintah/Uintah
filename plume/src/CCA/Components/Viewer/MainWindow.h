@@ -41,7 +41,7 @@
 #ifndef SCIRun_Viewer_MainWindow_h
 #define SCIRun_Viewer_MainWindow_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 #include <qwidget.h>
 #include <vector>

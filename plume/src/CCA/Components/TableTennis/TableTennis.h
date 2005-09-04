@@ -41,9 +41,9 @@
 #ifndef SCIRun_Framework_TableTennis_h
 #define SCIRun_Framework_TableTennis_h
 
+#include <Core/CCA/spec/sci_sidl.h>
 #include <CCA/Components/TableTennis/TableTennis_sidl.h>
-#include <Core/CCA/spec/cca_sidl.h>
-#include <Core/CCA/spec/cca_sidl.h>
+
 
 //namespace SCIRun {
   

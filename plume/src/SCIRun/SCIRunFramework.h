@@ -42,6 +42,7 @@
 #define SCIRun_Framework_SCIRunFramework_h
 
 #include <include/sci_defs/dataflow_defs.h>
+#include <SCIRun/DistributedComponentModelFramework.h>
 
 #ifdef BUILD_DATAFLOW
   #include <SCIRun/Dataflow/SCIRunComponentModel.h>
@@ -49,8 +50,9 @@
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/resourceReference.h>
+#include <SCIRun/ComponentInstance.h>
 #include <vector>
 #include <map>
 #include <string>
@@ -60,7 +62,7 @@ namespace SCIRun {
 
 class ComponentDescription;
 class ComponentModel;
-class ComponentInstance;
+  //class ComponentInstance;
 class ComponentEvent;
 class InternalComponentModel;
 class CCAComponentModel;
@@ -103,10 +105,10 @@ class ComponentEventService;
  * \todo implement shutdownComponent?
  * \todo createEmptyFramework is not fully implemented
  * \todo register a creation event for component (in registerComponent)  */
-class SCIRunFramework : public sci::cca::AbstractFramework
+class SCIRunFramework : public DistributedComponentModelFramework
 {
 public:
-  typedef std::map<std::string, ComponentInstance*> ComponentInstanceMap;
+  typedef std::map<std::string, ComponentInstance::pointer> ComponentInstanceMap;
 
     SCIRunFramework();
     virtual ~SCIRunFramework();
@@ -193,13 +195,13 @@ public:
         registered component instance name, this method will automatically append
         an integer to create a new, unique instance name.*/ 
     sci::cca::ComponentID::pointer
-    registerComponent(ComponentInstance *ci,
+    registerComponent(const ComponentInstance::pointer &ci,
                       const std::string& name);
 
     /** Removes a component instance description from the list of active
         framework components.  Returns the pointer to the component description
         that was successfully unregistered. */
-    ComponentInstance*
+  ComponentInstance::pointer
     unregisterComponent(const std::string& instanceName);
 
     /** This method is unimplemented. */
@@ -225,7 +227,7 @@ public:
     /** Returns a component instance description (ComponentInstance) from the
         list of active framework components.  Returns a null pointer if the
         instance \em name is not found. */
-    ComponentInstance*
+  ComponentInstance::pointer
     lookupComponent(const std::string &name);
 
     /** ? */

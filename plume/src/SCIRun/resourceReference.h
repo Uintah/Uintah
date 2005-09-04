@@ -47,7 +47,7 @@
 #include <Core/CCA/SSIDL/array.h>
 #include <Core/CCA/PIDL/URL.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
 

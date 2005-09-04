@@ -41,7 +41,7 @@
 #ifndef SCIRun_Framework_BuilderWindow_h
 #define SCIRun_Framework_BuilderWindow_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <CCA/Components/Builder/Module.h>
 #include <CCA/Components/Builder/Connection.h>
 #include <map>

@@ -42,7 +42,7 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/Comm/DT/DataTransmitter.h>
 #include <Core/CCA/Comm/PRMI.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/CCA/PIDL/MalformedURL.h>
 #include <Core/Thread/Thread.h>
 #include <SCIRun/SCIRunLoader.h>
@@ -71,16 +71,21 @@ usage()
 int
 main(int argc, char *argv[] )
 {
-    if (argc < 3) {
-	usage();
-    }
- /*Loader is MPI enabled*/
- MPI_Init(&argc,&argv);
- int mpi_size, mpi_rank;
- MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
- MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-
-
+#if !defined (HAVE_MPI) and !defined (HAVE_MPICH)
+  std::cout << "CCA Parallel Component Loader" << std::endl;
+  std::cout << "MPI is not supported on this platform.\n";
+  return 1;
+#else
+  if (argc < 3) {
+    usage();
+  }
+  /*Loader is MPI enabled*/
+  MPI_Init(&argc,&argv);
+  int mpi_size, mpi_rank;
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  
+  
   try {
     PIDL::initialize(mpi_rank, mpi_size);
   } 
@@ -92,7 +97,7 @@ main(int argc, char *argv[] )
     std::cerr << "Caught unexpected exception!\n";
     abort();
   }
-
+  
   std::string loaderName=argv[1];
   std::string frameworkURL=argv[2];
   try {
@@ -102,12 +107,12 @@ main(int argc, char *argv[] )
     
     //allowing the framework to access ploader by URL anytime
     ploader->addReference();
-
+    
     std::cout << "ploader started." << std::endl;
-
+    
     MPI_Comm_size(MPI_COMM_WORLD,&(sl->mpi_size));
     MPI_Comm_rank(MPI_COMM_WORLD,&(sl->mpi_rank));
-
+    
     //--------------------------------------
     //initialize MPI lock manager
     PRMI::init(mpi_rank, mpi_size);
@@ -130,22 +135,18 @@ main(int argc, char *argv[] )
       short_buf=new short[mpi_size];
     }
     DTPoint* lockSvc_ep=PRMI::lockSvcEp.getEP();
-
-#if defined (HAVE_MPI) || defined (HAVE_MPICH)
+    
     //root broadcast order service ep and DT address
     MPI_Bcast(&PRMI::orderSvc_ep, 1, MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&PRMI::orderSvc_addr.ip, 1, MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&PRMI::orderSvc_addr.port, 1, MPI_SHORT,0,MPI_COMM_WORLD);
     //root gatheres lockSvc_ep and lockSvc_addr
     MPI_Gather(&lockSvc_ep, 1, MPI_INT, PRMI::lockSvc_ep_list, 1, MPI_INT,
-	     0, MPI_COMM_WORLD);
+	       0, MPI_COMM_WORLD);
     MPI_Gather(&dtAddr.ip, 1, MPI_INT, int_buf, 1, MPI_INT,
 	       0, MPI_COMM_WORLD);
     MPI_Gather(&dtAddr.port, 1, MPI_SHORT, short_buf, 1, MPI_SHORT,
 	       0, MPI_COMM_WORLD);
-#else
-    //TODO: need do the broadcasting somehow....
-#endif
     if(mpi_rank==0){
       for(int i=0; i<mpi_size; i++){
 	PRMI::lockSvc_addr_list[i].ip=int_buf[i];
@@ -155,27 +156,26 @@ main(int argc, char *argv[] )
       delete []short_buf;
     }
     //=================================================
-
+    
     //Inform everyone else of my distribution
     //(this is in correspondence with the instantiate() call)
     Index* dr[1];
     dr[0] = new Index((sl->mpi_rank),(sl->mpi_rank)+1,1);  //first, last, stride
     MxNArrayRep* arrr = new MxNArrayRep(1,dr);
     sl->setCalleeDistribution("dURL",arrr);   //server is callee
-   
+    
     Object::pointer obj=PIDL::objectFrom(frameworkURL);
     if(obj.isNull()){
       std::cerr << "Cannot get framework from url=" << frameworkURL << std::endl;
       return 0;
     }
-
+    
     sci::cca::AbstractFramework::pointer framework=pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
-  
+    
     typedef char urlString[100] ;
     urlString s;
     std::strcpy(s, ploader->getURL().getString().c_str());
-
-#if defined (HAVE_MPI) || defined (HAVE_MPICH)
+    
     urlString *buf;
     if(sl->mpi_rank==0){
       buf=new urlString[sl->mpi_size];
@@ -191,15 +191,15 @@ main(int argc, char *argv[] )
       framework->registerLoader(loaderName, URLs);
       delete buf;
     }
-#else
-    SSIDL::array1< std::string> URLs;
-    std::string url(s);
-    URLs.push_back(url);
-    framework->registerLoader(loaderName, URLs);
-#endif
+
+//     for the case of a no mpi
+//     SSIDL::array1< std::string> URLs;
+//     std::string url(s);
+//     URLs.push_back(url);
+//     framework->registerLoader(loaderName, URLs);
   }catch(const MalformedURL& e) {
-	std::cerr << "slaveTest.cc: Caught MalformedURL exception:\n";
-	std::cerr << e.message() << '\n';
+    std::cerr << "slaveTest.cc: Caught MalformedURL exception:\n";
+    std::cerr << e.message() << '\n';
   }
   catch(const Exception& e) {
     std::cerr << "Caught exception:\n";
@@ -209,10 +209,11 @@ main(int argc, char *argv[] )
     std::cerr << "Caught unexpected exception!\n";
     abort();
   }
-
+  
   PIDL::serveObjects();
   PIDL::finalize();
-
+  
   MPI_Finalize();
   return 0;
+#endif
 }

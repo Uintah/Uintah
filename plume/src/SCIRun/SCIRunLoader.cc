@@ -53,7 +53,7 @@
 #include <Core/Util/soloader.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/resourceReference.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1375

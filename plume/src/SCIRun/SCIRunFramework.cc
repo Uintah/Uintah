@@ -181,7 +181,7 @@ namespace SCIRun {
 					    new CCAException("Unknown class name for " + name));
     }
     properties->putString("cca.className", className);
-    ComponentInstance* ci;
+    ComponentInstance::pointer ci;
 #if HAVE_BABEL 
     if (mod->getName() == "babel") {
       // create gov.cca.TypeMap from Babel Component Model?
@@ -203,7 +203,7 @@ namespace SCIRun {
     }
 #else
     ci = mod->createInstance(name, type, properties);
-    if (! ci) {
+    if (ci.isNull()) {
       std::cerr << "Error: failed to create ComponentInstance" << std::endl;
       return ComponentID::pointer(0);
     }
@@ -240,8 +240,8 @@ namespace SCIRun {
     lock_compIDs.unlock();
  
     //#2 unregister the component instance
-    ComponentInstance *ci = unregisterComponent(cid->getInstanceName());
-    if (ci == 0) {
+    ComponentInstance::pointer ci = ComponentInstance::pointer(unregisterComponent(cid->getInstanceName()));
+    if (ci.isNull()) {
       throw sci::cca::CCAException::pointer(
 					    new CCAException("Invalid component instance"));
     }
@@ -298,67 +298,63 @@ namespace SCIRun {
 
 
   sci::cca::ComponentID::pointer
-  SCIRunFramework::registerComponent(ComponentInstance *ci,
+  SCIRunFramework::registerComponent(const ComponentInstance::pointer &ci,
 				     const std::string& name)
   { 
-    std::string goodname = name;
-    int count = 0;
-
     lock_activeInstances.lock();   
-    while (activeInstances.find(goodname) != activeInstances.end()) {
-      std::ostringstream newname;
-      newname << name << "_" << count++;
-      goodname = newname.str();
+    if ( activeInstances.find(name) != activeInstances.end()) {
+      lock_activeInstances.unlock();  
+      throw sci::cca::CCAException::pointer( new CCAException("component name already in use [" + name +"]"));
     }
     lock_activeInstances.unlock();  
 
-    sci::cca::ComponentID::pointer cid =
-      ComponentID::pointer(new ComponentID(this, goodname));
+    sci::cca::ComponentID::pointer cid = ComponentID::pointer(new ComponentID(this, name));
 
     lock_compIDs.lock();
     compIDs.push_back(cid);
     lock_compIDs.unlock();
 
     // TODO: get some properties
-    emitComponentEvent(
-		       new ComponentEvent(sci::cca::ports::InstantiatePending,
-					  cid, sci::cca::TypeMap::pointer(0)));
+    emitComponentEvent( new ComponentEvent(sci::cca::ports::InstantiatePending,
+					   cid, 
+					   sci::cca::TypeMap::pointer(0)));
 
-    ci->framework = this;
-    ci->setInstanceName(goodname);    
+    // fixme: [yarden] why do we set the framework ? it should be set when the CI was created.
+    //ci->framework = this;
+    //ci->setInstanceName(name);    
 
     lock_activeInstances.lock();
-    activeInstances[goodname] = ci;
+    activeInstances[name] = ci;
     lock_activeInstances.unlock(); 
 
     return cid;
   }
 
-  ComponentInstance*
+  ComponentInstance::pointer
   SCIRunFramework::unregisterComponent(const std::string& instanceName)
   {
     SCIRun::Guard g1(&lock_activeInstances);    
 
     ComponentInstanceMap::iterator found = activeInstances.find(instanceName);
     if (found != activeInstances.end()) {
-      ComponentInstance *ci = found->second;
+      ComponentInstance::pointer ci = found->second;
       activeInstances.erase(found);
       return ci;
     } else {
       std::cerr << "Error: component instance " << instanceName << " not found!"
 		<< std::endl;;
-      return 0;
+      return ComponentInstance::pointer(0);
     }
   }
 
-  ComponentInstance*
+  ComponentInstance::pointer
   SCIRunFramework::lookupComponent(const std::string& name)
   { 
     SCIRun::Guard g1(&lock_activeInstances);
 
     ComponentInstanceMap::iterator iter = activeInstances.find(name);
     if (iter == activeInstances.end()) {
-      return 0;
+      return ComponentInstance::pointer(0);
     } else {
       return iter->second;
     }

@@ -43,7 +43,7 @@
 #ifndef SCIRun_FrameworkProperties_h
 #define SCIRun_FrameworkProperties_h
 
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/TypeMap.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalFrameworkServiceInstance.h>

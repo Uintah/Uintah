@@ -41,7 +41,7 @@
 #ifndef SCIRun_Framework_TxtBuilder_h
 #define SCIRun_Framework_TxtBuilder_h
 #include <Core/Thread/Runnable.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 using namespace std;
 namespace SCIRun {
@@ -68,7 +68,7 @@ namespace SCIRun {
     TxtBuilder& operator=(const TxtBuilder&);
     //myBuilderPort builderPort;
     sci::cca::Services::pointer svc;
-    sci::cca::ports::BuilderService::pointer bs;
+    sci::cca::ports::BridgeBuilderService::pointer bs;
     sci::cca::ports::ComponentRepository::pointer cr;
     void run();
     bool exec_command(char cmdline[]);

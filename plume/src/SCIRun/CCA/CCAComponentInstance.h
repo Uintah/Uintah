@@ -45,11 +45,13 @@
 #include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/PortInstanceIterator.h>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/CCA/PIDL/Object.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <map>
 #include <string>
+
+namespace cci = sci::cca::internal::cca;
 
 namespace SCIRun
 {
@@ -64,10 +66,12 @@ class Mutex;
  * This class is a container for information about the CCA component
  * instantiation that is used by the framework.
  */
-class CCAComponentInstance : public ComponentInstance,
-                             public sci::cca::Services
+  class CCAComponentInstance : virtual public sci::cca::internal::cca::CCAComponentServices,
+			       virtual public ComponentInstance
 {
 public:
+  typedef sci::cca::internal::cca::CCAComponentServices::pointer pointer;
+
   CCAComponentInstance(SCIRunFramework* framework,
                        const std::string& instanceName,
                        const std::string& className,
@@ -140,26 +144,26 @@ sci::cca::Port::pointer getPort(const std::string& name);
   sci::cca::ComponentID::pointer getComponentID();
   
   // Methods from ComponentInstance
-  virtual PortInstance* getPortInstance(const std::string& name);
+  virtual sci::cca::internal::PortInstance::pointer getPortInstance(const std::string& name);
   virtual PortInstanceIterator* getPorts();
   virtual void registerForRelease(const sci::cca::ComponentRelease::pointer &compRel);
 
 private:
   class Iterator : public PortInstanceIterator
   {
-    std::map<std::string, CCAPortInstance*>::iterator iter;
+    std::map<std::string, cci::CCAPortInstance::pointer>::iterator iter;
     CCAComponentInstance* comp;
   public:
-    Iterator(CCAComponentInstance*);
+    Iterator(const CCAComponentInstance::pointer &);
     virtual ~Iterator();
-    virtual PortInstance* get();
+    virtual sci::cca::internal::PortInstance::pointer get();
     virtual bool done();
     virtual void next();
   private:
     Iterator(const Iterator&);
     Iterator& operator=(const Iterator&);
   };
-  std::map<std::string, CCAPortInstance*> ports;
+  std::map<std::string, cci::CCAPortInstance::pointer> ports;
   SCIRun::Mutex lock_ports;
 
   std::map<std::string, std::vector<Object::pointer> > preports;

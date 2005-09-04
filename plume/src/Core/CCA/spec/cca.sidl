@@ -1,5 +1,5 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+	   For more information, please see: http://software.sci.utah.edu
 
    The MIT License
 
@@ -26,19 +26,18 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-version sci 0.1;
 version cca 0.7.8;
 
 
 package sci {
-
-/** Common Component Architecture. Component approaches for Scientific Computing. */
-package cca {
-
+  
+  /** Common Component Architecture. Component approaches for Scientific Computing. */
+  package cca {
+    
     /** All ports must derive from this port type */
     //(gkk) unchanged from 0.5
     interface Port {} 
-
+    
     /**
      * Mapping of standard exceptional event types
      * occuring in the Services interface to integers. 
@@ -645,32 +644,6 @@ package cca {
        * of another instance.  
        */
       AbstractFramework createEmptyFramework() throws CCAException;
-      //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-      //non-spec interface
-      /**
-       * Registers the slave framework with the master framework. Intended to be called 
-       * only by the representative slave framework process. 
-       * @param size Total number of parallel slave frameworks.
-       * @param slaveURLs Urls of the slave framework.
-       * @param slaveName Name of the slave resource.
-       * @return A positive number or zero if framework was registered 
-       *   successfully, negative number on error.
-       */
-      int registerLoader(in string slaveName, in array<string,1> slaveURLs);
-      int unregisterLoader(in string slaveName);
-
-      /** start to share the CCA components with other CCA frameworks by
-          1. broadcasting its own framework URL
-          2. listening to other frameworks' broadcasting
-          3. query the CCA components set availabe in other framewors.                    
-      */  
-      //void share(in sci.cca.Services svc);
-      /** This one is in test for distributed computing       
-
-      */
-      //string createComponent(in string name, in string type);
-      //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     }  // end interface AbstractFramework
 
     /**
@@ -1074,28 +1047,7 @@ package cca {
          */
         void disconnectAll(in cca.ComponentID id1, in cca.ComponentID id2, 
                            in float timeout) throws cca.CCAException ; 
-        //<<<<<<<<<<<<<<<<<<<<<<<
-        /** Get available ports in c2 that can be connected to port1 of c1. */
-        array<string> getCompatiblePortList(in sci.cca.ComponentID c1,
-                                            in string port1,
-                                            in sci.cca.ComponentID c2);
 
-        //Bridge methods:
-        /**
-         * TODO: document getBridgablePortList
-         * @param 
-         * @param 
-         * @param 
-         */
-        array<string> getBridgablePortList(in sci.cca.ComponentID c1,
-                                           in string port1,
-                                           in sci.cca.ComponentID c2);
-
-        string generateBridge(in cca.ComponentID user, 
-                              in string usingPortName,   
-                              in cca.ComponentID provider, 
-                              in string providingPortName);
-        //>>>>>>>>>>>>>>>>>>>>>
       } // end interface BuilderService
 
       /** 
@@ -1839,10 +1791,10 @@ package cca {
          * has changed the ParameterPort definitions.
          */
         bool updateParameterPort(in string portName);
-
+	
       } // end interface ParameterGetListener
       
-///////////////////////////////////////////////////////////////////////
+      ///////////////////////////////////////////////////////////////////////
       /** This interface is typically implemented by a 
        * component writer using the ParameterPortFactory in a dynamic
        * fashion.
@@ -1852,7 +1804,7 @@ package cca {
        *   @see ParameterGetListener
        */
       interface ParameterSetListener {
-
+	
         /** The component wishing to be told after a parameter is changed
          * implements this function.
          * @param portName the name of the port (typemap) on which the
@@ -1861,15 +1813,8 @@ package cca {
          */
          void updatedParameterValue(in string portName, in string fieldName);
       } // end interface ParameterSetListener
-
-//########### ################## ################## ##################
-//<<<<<<<<<<<<<<<<<<<<<<<<<
-#include "SCIRun2Ports.sidl"
-//>>>>>>>>>>>>>>>>>>>>>>>>>
-    
-    } // end of package cca.ports
-//<<<<<<<<<<<<<<<<<<<<<<<<<
-#include "SCIRun2Classes.sidl"
-//>>>>>>>>>>>>>>>>>>>>>>>>>
-} // end of package cca
-} // end package sci
+      
+      
+    } //  package ports
+  } // package cca
+} // package sci

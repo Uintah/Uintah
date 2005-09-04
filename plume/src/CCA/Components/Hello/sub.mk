@@ -47,4 +47,4 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 #include $(SCIRUN_SCRIPTS)/program.mk
 
-$(SRCDIR)/Hello.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/Hello.o: Core/CCA/spec/sci_sidl.h

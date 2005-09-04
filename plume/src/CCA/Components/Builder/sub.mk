@@ -59,7 +59,7 @@ LIBS := $(QT_LIBRARY) $(LIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-$(SRCDIR)/Builder.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/BuilderWindow.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/moc_BuilderWindow.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/builder_main.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/Builder.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/BuilderWindow.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/moc_BuilderWindow.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/builder_main.o: Core/CCA/spec/sci_sidl.h

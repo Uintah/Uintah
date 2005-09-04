@@ -42,7 +42,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fstream>
-#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 using namespace std;
 
 Delaunay::Delaunay()

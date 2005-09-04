@@ -26,204 +26,217 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-distribution array DMatrix <double,2>;
 
+package sci {
+  
+  package cca {
 
-/** Port to Framework properties. */
-interface FrameworkProperties extends sci.cca.Port
-{
-    TypeMap getProperties();
-    void setProperties(in TypeMap properties);
-}
+    package ports {
 
-interface FrameworkProxyService extends sci.cca.Port
-{
-    int addLoader(in string loaderName, in string login, in string domain, in string path);
-    int removeLoader(in string name);
+      distribution array DMatrix <double,2>;
+      
+      
+      /** Port to Framework properties. */
+      interface FrameworkProperties extends sci.cca.Port
+	{
+	  TypeMap getProperties();
+	  void setProperties(in TypeMap properties);
+	}
+      
+      interface FrameworkProxyService extends sci.cca.Port
+	{
+	  int addLoader(in string loaderName, in string login, in string domain, in string path);
+	  int removeLoader(in string name);
+	  
+	  //void registerFramework(in string frameworkURL); 	
+	  //void registerServices(in sci.cca.Services svc);
+	}
+      
+      
+      //Temp test (Bridge)
+      interface IDPort extends sci.cca.Port
+	{
+	  collective string getID();
+	}
+      
+      interface BridgeTestPort extends sci.cca.Port
+	{
+	  //int m1(in int i);
+	  void m2(in array<int, 1> a);  
+	}
+      
+      
+      /** Port to SCIRun(1) scheduler interface. */
+      interface DataflowScheduler extends sci.cca.Port
+	{
+	  bool toggleOnOffScheduling();
+	  void do_scheduling();
+	}
+      
+      //abstract interface 
+      interface StringPort extends sci.cca.Port
+	{
+	  collective string getString();
+	}
+      
+      /**
+       * Component representation in GUI - set Qt widgets
+       * and other properties in Module class.
+       */
+      interface ComponentIcon extends sci.cca.Port {
+	collective string getDisplayName();
+	collective string getDescription();
+	
+	// only "RECT" is supported, which draws a standard raised QFrame
+	collective string getIconShape();
+	
+	// set steps = 0 to omit progress bar from icon
+	// progress bar - return # steps
+	collective int getProgressBar();
+      }
+      
+      
+      // report component progress
+      interface Progress extends sci.cca.Port {
+	collective void updateProgress(in int progress);
+	collective void updateProgress(in int progress, in int totalSteps);
+      }
+      
+      /**
+       * Provide a user interface for a component - a UI button
+       * will be added to the components iconic representation in the GUI...
+       *
+       */
+      //abstract interface
+      interface UIPort extends sci.cca.Port
+	{
+	  /**
+	   * Component user interface...
+	   * @return 0 for success, -1 for fatal error, other non-zero
+	   *  values for others errors.
+	   */
+	  collective int ui();
+	}
+      
+      //abstract interface 
+      interface BuilderPort extends sci.cca.Port
+	{
+	  /** The builder port is designed for the Builder only
+	   *  There is only one port for convenience.
+	   *  All final modification should be done through 
+	   *  the BuilderService and the BuilderService will tranverse
+	   *  each Builder
+	   */
+	  void buildRemotePackageMenus(in sci.cca.ports.ComponentRepository reg, in string frameworkURL);
+	}
+      
+      
+      //abstract interface
+      interface ZListPort extends sci.cca.Port
+	{
+	  array<double> getList();
+	}
+      /* $Source: /usr/sci/projects/cvsrepository/SCIRun/src/Core/CCA/spec/SCIRun2Ports.sidl,v $ */
+      
+      
+      
+      //abstract interface 
+      interface LinSolverPort extends sci.cca.Port
+	{
+	  //provides a interface to 
+	  collective	
+	    int jacobi(in DMatrix A, in array<double> b, out array<double> x);
+	}
+      
+      //abstract interface 
+      interface PDEdescriptionPort extends sci.cca.Port
+	{
+	  //provides a interface to 
+	  int getPDEdescription(out array<double> nodes, out array<int> boundaries, 
+				out array<int> dirichletNodes, out array<double> dirichletValues);
+	}
+      
+      //abstract interface 
+      interface MeshPort extends sci.cca.Port
+	{
+	  //provides a interface to 
+	  int triangulate(in array<double> nodes, in array<int> boundaries, out array<int> triangles);
+	}
+      
+      //abstract interface 
+      interface ViewPort extends sci.cca.Port
+	{
+	  //provides a interface to 
+	  int view2dPDE(in array<double> nodes, in array<int> triangles, in array<double> solution);
+	}
+      
+      //abstract interface 
+      interface FEMmatrixPort extends sci.cca.Port
+	{
+	  //provides a interface to 
+	  int makeFEMmatrices(in array<int> mesh, in array<double> nodes, 
+			      in array<int> dirichletNodes, in array<double> dirichletValues,
+			      out array<double,2> Ag, out array<double> fg, out int size);
+	}
+      
+      // BEGIN proposed sparker
+      // Builder events
+      // Component created
+      // Component destroyed
+      // Component moved
+      // Connection created
+      // Connection destroyed
+      // Connection moved
+      enum ComponentEventType {
+	AllComponentEvents = 0,
+	InstantiatePending=1,
+	ComponentInstantiated=2,
+	DestroyPending=3,
+	ComponentDestroyed=4,
+	ComponentMoved=5,
+      }
+      interface ComponentEventListener {
+	void componentActivity(in ComponentEvent evt);
+      }
+      
+      interface ComponentEvent {
+	ComponentEventType getEventType() ;
+	
+	/** Get the ComponentID of the affected Component. */
+	ComponentID getComponentID();
+	
+	/** Get the Properties of the affected Component. */
+	TypeMap getComponentProperties() ;
+      }
+      
+      interface ComponentEventService extends Port {
+	/** Sign up to be told about component activity.
+	    @param ComponentEventType must be one of the integer values 
+	    ALL, ConnectPending, Connected, DisconnectPending, Disconnected
+	    as defined in @see ContainerEventType. 
+	    ALL means listening to all of the other four listed here.
+	    @param l, an object (this component or its delegate) that listens
+	    by implementing the ConnectionEventListener callback.
+	    @param playInitialEvents, send events for components that have
+	    already been instantiated
+	*/
+	void addComponentEventListener(in ComponentEventType type, in ComponentEventListener l, in bool playInitialEvents);
+	
+	/** Ignore future ComponentEvents of the given type.
+	    Removing a non-added listener is not an error. 
+	    @param ComponentEventType must be one of the integer values defined in
+	    addConnectionEventListener.
+	    @param l, a previously added listener interface.
+	*/
+	void removeComponentEventListener(in ComponentEventType type, in ComponentEventListener l) ;
+	
+	void moveComponent(in ComponentID component, in int x, in int y);
+      }
+      
+      // END proposed - sparker
 
-    //void registerFramework(in string frameworkURL); 	
-    //void registerServices(in sci.cca.Services svc);
-}
+    } // package ports
 
+  } // package cca
 
-//Temp test (Bridge)
-interface IDPort extends sci.cca.Port
-{
-  collective string getID();
-}
-
-interface BridgeTestPort extends sci.cca.Port
-{
-  //int m1(in int i);
-  void m2(in array<int, 1> a);  
-}
-
-
-/** Port to SCIRun(1) scheduler interface. */
-interface DataflowScheduler extends sci.cca.Port
-{
-  bool toggleOnOffScheduling();
-  void do_scheduling();
-}
-
-//abstract interface 
-interface StringPort extends sci.cca.Port
-{
-  collective string getString();
-}
-
-/**
- * Component representation in GUI - set Qt widgets
- * and other properties in Module class.
- */
-interface ComponentIcon extends sci.cca.Port {
-    collective string getDisplayName();
-    collective string getDescription();
-
-    // only "RECT" is supported, which draws a standard raised QFrame
-    collective string getIconShape();
-
-    // set steps = 0 to omit progress bar from icon
-    // progress bar - return # steps
-    collective int getProgressBar();
-}
-
-
-// report component progress
-interface Progress extends sci.cca.Port {
-    collective void updateProgress(in int progress);
-    collective void updateProgress(in int progress, in int totalSteps);
-}
-
-/**
- * Provide a user interface for a component - a UI button
- * will be added to the components iconic representation in the GUI...
- *
- */
-//abstract interface
-interface UIPort extends sci.cca.Port
-{
-  /**
-   * Component user interface...
-   * @return 0 for success, -1 for fatal error, other non-zero
-   *  values for others errors.
-   */
-    collective int ui();
-}
-
-//abstract interface 
-interface BuilderPort extends sci.cca.Port
-{
-    /** The builder port is designed for the Builder only
-     *  There is only one port for convenience.
-     *  All final modification should be done through 
-     *  the BuilderService and the BuilderService will tranverse
-     *  each Builder
-     */
-    void buildRemotePackageMenus(in sci.cca.ports.ComponentRepository reg, in string frameworkURL);
-}
-
-
-//abstract interface
-interface ZListPort extends sci.cca.Port
-{
-    array<double> getList();
-}
-/* $Source: /usr/sci/projects/cvsrepository/SCIRun/src/Core/CCA/spec/SCIRun2Ports.sidl,v $ */
-
-
-
-//abstract interface 
-interface LinSolverPort extends sci.cca.Port
-{
-    //provides a interface to 
-    collective	
-    int jacobi(in DMatrix A, in array<double> b, out array<double> x);
-}
-
-//abstract interface 
-interface PDEdescriptionPort extends sci.cca.Port
-{
-    //provides a interface to 
-    int getPDEdescription(out array<double> nodes, out array<int> boundaries, 
-			  out array<int> dirichletNodes, out array<double> dirichletValues);
-}
-
-//abstract interface 
-interface MeshPort extends sci.cca.Port
-{
-    //provides a interface to 
-    int triangulate(in array<double> nodes, in array<int> boundaries, out array<int> triangles);
-}
-
-//abstract interface 
-interface ViewPort extends sci.cca.Port
-{
-    //provides a interface to 
-    int view2dPDE(in array<double> nodes, in array<int> triangles, in array<double> solution);
-}
-
-//abstract interface 
-interface FEMmatrixPort extends sci.cca.Port
-{
-    //provides a interface to 
-    int makeFEMmatrices(in array<int> mesh, in array<double> nodes, 
-	                in array<int> dirichletNodes, in array<double> dirichletValues,
-			out array<double,2> Ag, out array<double> fg, out int size);
-}
-
-// BEGIN proposed sparker
-// Builder events
-// Component created
-// Component destroyed
-// Component moved
-// Connection created
-// Connection destroyed
-// Connection moved
-enum ComponentEventType {
-  AllComponentEvents = 0,
-  InstantiatePending=1,
-  ComponentInstantiated=2,
-  DestroyPending=3,
-  ComponentDestroyed=4,
-  ComponentMoved=5,
-}
-interface ComponentEventListener {
-  void componentActivity(in ComponentEvent evt);
-}
-
-interface ComponentEvent {
-  ComponentEventType getEventType() ;
-
-   /** Get the ComponentID of the affected Component. */
-  ComponentID getComponentID();
-
-   /** Get the Properties of the affected Component. */
-  TypeMap getComponentProperties() ;
-}
-
-interface ComponentEventService extends Port {
-  /** Sign up to be told about component activity.
-      @param ComponentEventType must be one of the integer values 
-             ALL, ConnectPending, Connected, DisconnectPending, Disconnected
-             as defined in @see ContainerEventType. 
-             ALL means listening to all of the other four listed here.
-      @param l, an object (this component or its delegate) that listens
-             by implementing the ConnectionEventListener callback.
-      @param playInitialEvents, send events for components that have
-             already been instantiated
-  */
-   void addComponentEventListener(in ComponentEventType type, in ComponentEventListener l, in bool playInitialEvents);
-
-  /** Ignore future ComponentEvents of the given type.
-      Removing a non-added listener is not an error. 
-      @param ComponentEventType must be one of the integer values defined in
-             addConnectionEventListener.
-      @param l, a previously added listener interface.
-   */
-   void removeComponentEventListener(in ComponentEventType type, in ComponentEventListener l) ;
- 
-   void moveComponent(in ComponentID component, in int x, in int y);
-}
-
-// END proposed - sparker
+} // package sci

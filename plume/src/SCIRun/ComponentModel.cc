@@ -61,7 +61,7 @@ bool ComponentModel::haveComponent(const std::string& type)
   return false;
 }
 
-ComponentInstance*
+ComponentInstance::pointer
 ComponentModel::createInstance(const std::string& name,
                                const std::string& type,
                                const sci::cca::TypeMap::pointer &tm)
@@ -71,7 +71,7 @@ ComponentModel::createInstance(const std::string& name,
   return 0;
 }
 
-bool ComponentModel::destroyInstance(ComponentInstance* ic)
+bool ComponentModel::destroyInstance(const ComponentInstance::pointer &ic)
 {
   std::cerr << "Error: this component model does not implement destroyInstance"
             << std::endl;
