@@ -52,8 +52,8 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	set $this-timeval 0
 	set $this-animate 0
 	set $this-tinc 1
-        set $this-timeposition_x 0.5
-        set $this-timeposition_y 0.5
+        set $this-timeposition_x 0.25
+        set $this-timeposition_y 0.85
 	set $this-def-color-r 1.0
 	set $this-def-color-g 1.0
 	set $this-def-color-b 1.0
@@ -153,16 +153,21 @@ itcl_class Uintah_Selectors_TimestepSelector {
 
         # This is the text position
         frame $w.timeVis.position -relief flat -borderwidth 2
-        pack $w.timeVis.position -side top -fill x -expand yes
+        pack $w.timeVis.position -side left -fill x -expand yes
 
         canvas $w.timeVis.position.canvas -bg "#ffffff" -height 70 -width 70
-	pack $w.timeVis.position.canvas -side top -anchor w -expand yes \
-            -fill x -fill y
+        label $w.timeVis.position.l -text "Time Step Position"
+	pack $w.timeVis.position.l $w.timeVis.position.canvas \
+            -side top -anchor w -expand yes -fill x -fill y
 
 	bind $w.timeVis.position.canvas <Expose> "$this canvasExpose"
 	bind $w.timeVis.position.canvas <Button-1> "$this moveNode %x %y"
 	bind $w.timeVis.position.canvas <B1-Motion> "$this moveNode %x %y"
-#	bind $w.f.f1.canvas <ButtonRelease> "$this update; $this-c needexecute"
+	bind $w.timeVis.position.canvas <ButtonRelease> "$this-c update_timeposition"
+
+        # This is the clock
+#        frame $w.timeVis.clock -relief  -borderwidth 2
+#        pack $w.timeVis.clock -side left -fill x -expand yes
 
         pack $w.timeVis -side top -fill x
         ######    end timeVis section
@@ -207,7 +212,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	set ib [expr int([set $this-def-color-b] * 65535)]
 
 	set w .ui[modname]
-	$w.cs.colorFrame.col config -background [format #%04x%04x%04x $ir $ig $ib]
+	$w.timeVis.cs.colorFrame.col config -background [format #%04x%04x%04x $ir $ig $ib]
         $this-c needexecute
     }
     method addColorSelection {frame} {
