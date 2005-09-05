@@ -91,6 +91,9 @@ TimestepSelector::execute()
     error(e.message());
     return;
   }
+
+  // Make sure we are dealing with a fresh set of GUI variables.
+  reset_vars();
   
   // Check to see if the text color has changed.
   Color current_text_color( def_color_r_.get(), def_color_g_.get(), def_color_b_.get() );
@@ -107,13 +110,6 @@ TimestepSelector::execute()
     idx = times.size()-1;
     time.set( idx );
   }
-
-  // now set up time for dumping to vis
-
-  GeomGroup *all;
-  Point ref(14.0/16, 31.0/16, 0.0);
-  Vector along(-0.5, -1.0, 0.0);
-  double v, hour, min, sec, microseconds;
 
   if( animate.get() ) {
     // Make sure the caching is off
@@ -152,6 +148,9 @@ TimestepSelector::execute()
 
 
   // Generate the timestep geometry for the viewer
+  Point text_pos(timeposition_x.get(), timeposition_y.get(), 0.0);
+  double v, hour, min, sec, microseconds;
+
   v =  times[idx];
   hour = trunc( v/3600.0);
   min = trunc( v/60.0 - (hour * 60));
@@ -170,12 +169,10 @@ TimestepSelector::execute()
     oss<<sec<<" + ";
   }
   oss<<microseconds<<"ms";
-  all = scinew GeomGroup();
-  timestep_text = scinew GeomText(oss.str(), ref + along,
+  timestep_text = scinew GeomText(oss.str(), text_pos,
                                   def_mat_handle_->diffuse, 
                                   font_size_.get());
-  all->add(timestep_text);
-  GeomSticky *sticky = scinew GeomSticky(all);
+  GeomHandle sticky = scinew GeomSticky(timestep_text);
   ogeom->delAll();
   ogeom->addObj(sticky, "TimeStamp");
 
@@ -200,10 +197,23 @@ TimestepSelector::tcl_command(GuiArgs& args, void* userdata) {
 
 void
 TimestepSelector::update_timeposition() {
-  if (timestep_text) {
-    // Update the new possition
-    double x = timeposition_x.get();
-    double y = timeposition_y.get();
+  if (timestep_text.get_rep()) {
+    // Make sure we get current GUI variable values.
+    reset_vars();
+    Point text_pos(timeposition_x.get(), timeposition_y.get(), 0.0);
+    // Since we are storing timestep_text as a GeomObj handle we need
+    // to reinterpret it back to a GeomText.
+    GeomText* tt = dynamic_cast<GeomText*>(timestep_text.get_rep());
+    ASSERT(tt);
+    tt->moveTo(text_pos);
+    // For some reason we have to delete the geometry and create a new
+    // one for the changes to take effect.
+    GeomHandle sticky = scinew GeomSticky(timestep_text);
+    // Do we need to get the port?
+    //    ogeom=(GeometryOPort *) get_oport("Geometry");
+    ogeom->delAll();
+    ogeom->addObj(sticky, "TimeStamp");
+    ogeom->flush();
   }
 }
 
