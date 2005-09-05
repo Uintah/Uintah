@@ -208,22 +208,22 @@ RadiationDriver::problemSetup(GridP& grid,
   }
  
   // how often radiation calculations are performed 
-  db->getWithDefault("radiationCalcFreq",d_radCalcFreq,5);
-  
-  // logical to decide which temperature field to use; table
-  // temperature or ICE temperature
-  db->getWithDefault("useIceTemp",d_useIceTemp,false);
+  db->getWithDefault("radiationCalcFreq",d_radCalcFreq,5);  
+
+  // use ICE or Table density and temperature
+  db->getWithDefault("table_or_ice_temp_density",d_table_or_ice_temp_density,"ice"); 
+  if(d_table_or_ice_temp_density != "ice" && d_table_or_ice_temp_density != "table"){
+    ostringstream warn;
+    warn<<"ERROR\n Radiation: If you must specify either ice/table in <table_or_ice_temp_density>\n";
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  } 
 
   // logical to decide whether table values should be used
-  // for co2, h2o, sootVF, and temperature (but for temperature,
-  // there is the additional d_useIceTemp variable) above.
+  // for co2, h2o, sootVF
   db->getWithDefault("useTableValues",d_useTableValues,true);
 
   db->getWithDefault("computeCO2_H2O_from_f",d_computeCO2_H2O_from_f,false);
 
-  if (!d_useTableValues) {
-    d_useIceTemp = true;
-  }
   d_DORadiation = scinew Models_DORadiationModel(d_myworld);
   d_DORadiation->problemSetup(db);
 }
@@ -764,50 +764,37 @@ RadiationDriver::scheduleComputeProps(const LevelP&        level,
              << level->getIndex() << endl;
              
   Task* t=scinew Task("RadiationDriver::computeProps",
-                      this, &RadiationDriver::computeProps);
+                this, &RadiationDriver::computeProps);
                 
   t->requires( Task::OldDW, Ilb->delTLabel);
   
   Ghost::GhostType  gn = Ghost::None;
-/*`==========TESTING==========*/
-//THIS IS GROSS
-  
-  if (d_useTableValues) {
-    t->requires(Task::NewDW, co2_CCLabel, mss_G, gn, 0);
-    t->requires(Task::NewDW, h2o_CCLabel, mss_G, gn, 0);
-  }
-  t->modifies(radCO2_CCLabel, mss_G);
-  t->modifies(radH2O_CCLabel, mss_G);
 
-  if (d_useTableValues){ 
-    if (d_useIceTemp){
-      t->requires(Task::OldDW, iceTemp_CCLabel,mss_G, gn, 0);
-    }else{
-      t->requires(Task::NewDW, temp_CCLabel,   mss_G, gn, 0);
-    }
+  if(d_table_or_ice_temp_density == "ice"){
+   t->requires(Task::OldDW, iceTemp_CCLabel,    mss_G,gn, 0);
+   t->requires(Task::NewDW, iceDensity_CCLabel, mss_G,gn, 0);
   }else{
-    t->requires(Task::OldDW, iceTemp_CCLabel,  mss_G, gn, 0);
+   t->requires(Task::NewDW, temp_CCLabel,       mss_G,gn, 0);
+   t->requires(Task::NewDW, density_CCLabel,    mss_G,gn, 0);
   }
-  t->modifies(tempCopy_CCLabel, mss_G);
 
+  if (d_useTableValues){
+    t->requires(Task::NewDW, co2_CCLabel,    mss_G, gn, 0);
+    t->requires(Task::NewDW, h2o_CCLabel,    mss_G, gn, 0);
+    t->requires(Task::OldDW, mixfrac_CCLabel,mss_G, gn, 0);
+  }
+  
   // Below is for later, when we get sootVF from reaction table.  But
   // currently we compute sootVF from mixture fraction and temperature inside
   // the properties function
   //  t->requires(Task::NewDW, sootVF_CCLabel,  mss_G, gn, 0);
-
+  
+  t->modifies(radCO2_CCLabel,     mss_G);
+  t->modifies(radH2O_CCLabel,     mss_G);  
+  t->modifies(tempCopy_CCLabel,   mss_G);
   t->modifies(sootVFCopy_CCLabel, mss_G);
+  t->modifies(mixfracCopy_CCLabel,mss_G);
 
-  if (d_useTableValues){
-    t->requires(Task::OldDW, mixfrac_CCLabel,mss_G, gn, 0);
-  }
-  t->modifies(mixfracCopy_CCLabel, mss_G);
-
-  if (d_useTableValues){
-    t->requires(Task::NewDW, density_CCLabel,    mss_G,gn, 0);
-  }else{
-    t->requires(Task::NewDW, iceDensity_CCLabel, mss_G,gn, 0);
-  } 
-/*===========TESTING==========`*/
   if(d_hasAbsorbingSolid){
     
     t->requires(Task::NewDW,Ilb->vol_frac_CCLabel, mss_G, gn,0);              
@@ -836,22 +823,6 @@ RadiationDriver::scheduleComputeProps(const LevelP&        level,
 // (= 1/(3*abskg)) as a function of co2, h2o, soot volume fraction,
 // and temperature.  Modification to properties are also made for
 // the test problems. 
-// There is an option to get temperature values from the table, which is
-// how you would do reacting flow cases.  But if this option is
-// not used (i.e., if d_useIceTemp = true), the temperature that is
-// used comes from the ICE calculations.  In an ideal world, we
-// would always use the ICE temperatures, but since those temperatures
-// are way off for the fire at the time of writing (July 25,2005),
-// we use the table temperatures for fire.
-// Another logical used here is d_useTableValues, which tells
-// you whether you want to use the table values at all.
-// If this option is false, we HAVE to use the ICE values for
-// temperature, AND hardwire co2 and h2o concentrations.
-// You can have d_useTableValues = true but d_useIceTemp = true,
-// which means that all values other than temperature (i.e.,
-// co2, h2o, and soot volume fraction) are calculated from
-// the table.  This is the eventual option for doing fire in
-// ICE.
 // If you are performing a nongray calculation, then the only
 // thing this function does is to calculate the soot volume 
 // fraction used in radiation calculations. (Well, the test
@@ -876,6 +847,7 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     RadiationVariables radVars;
     RadiationConstVariables constRadVars;
     
+// Stas:  Do you know what this is?    
     PerPatch<Models_CellInformationP> cellInfoP;
     if (new_dw->exists(d_cellInfoLabel, indx, patch)) 
       new_dw->get(cellInfoP, d_cellInfoLabel, indx, patch);
@@ -884,33 +856,35 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
       new_dw->put(cellInfoP, d_cellInfoLabel, indx, patch);
     }
     Models_CellInformation* cellinfo = cellInfoP.get().get_rep();
+//----
 
-/*`==========TESTING==========*/
-//THIS IS GROSS
-    if (d_useTableValues) {
-      new_dw->get(constRadVars.co2, co2_CCLabel, indx, patch,gn, 0);
-      new_dw->get(constRadVars.h2o, h2o_CCLabel, indx, patch,gn, 0);
-    }
-    new_dw->getModifiable(radVars.co2, radCO2_CCLabel, indx, patch);
-    new_dw->getModifiable(radVars.h2o, radH2O_CCLabel, indx, patch);
-    if (d_useTableValues) {
-      radVars.co2.copyData(constRadVars.co2);
-      radVars.h2o.copyData(constRadVars.h2o);
-    }
-
-    if (d_useTableValues){ 
-      if (d_useIceTemp){ 
-        new_dw->get(constRadVars.temperature, temp_CCLabel,    indx, patch,gn, 0);
-      }else{
-        old_dw->get(constRadVars.temperature, iceTemp_CCLabel, indx, patch,gn, 0);
-      }
+    if(d_table_or_ice_temp_density == "ice"){
+      new_dw->get(constRadVars.density,     iceDensity_CCLabel, indx, patch,gn,0);
+      old_dw->get(constRadVars.temperature, iceTemp_CCLabel,    indx, patch,gn,0);
     }else{
-      old_dw->get(constRadVars.temperature, iceTemp_CCLabel, indx, patch,gn, 0);
-    } 
-/*===========TESTING==========`*/
-    new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel, indx, patch);
+      new_dw->get(constRadVars.density,     density_CCLabel,    indx, patch,gn,0);
+      new_dw->get(constRadVars.temperature, temp_CCLabel,       indx, patch,gn,0);
+    }   
+    
+    new_dw->getModifiable(radVars.co2,        radCO2_CCLabel,     indx, patch);
+    new_dw->getModifiable(radVars.h2o,        radH2O_CCLabel,     indx, patch); 
+    new_dw->getModifiable(radVars.temperature,tempCopy_CCLabel,   indx, patch);
+    new_dw->getModifiable(radVars.sootVF,     sootVFCopy_CCLabel, indx, patch);
+    new_dw->getModifiable(radVars.mixfrac,    mixfracCopy_CCLabel,indx, patch);
+    new_dw->getModifiable(radVars.ABSKG,      abskg_CCLabel,      indx, patch);
+    new_dw->getModifiable(radVars.ESRCG,      esrcg_CCLabel,      indx, patch);
+    new_dw->getModifiable(radVars.shgamma,    shgamma_CCLabel,    indx, patch);
     
     radVars.temperature.copyData(constRadVars.temperature);
+    
+    if (d_useTableValues) {
+      new_dw->get(constRadVars.co2,     co2_CCLabel,    indx, patch,gn, 0);
+      new_dw->get(constRadVars.h2o,     h2o_CCLabel,    indx, patch,gn, 0);
+      old_dw->get(constRadVars.mixfrac, mixfrac_CCLabel,indx, patch,gn, 0);
+      radVars.co2.copyData(constRadVars.co2);
+      radVars.h2o.copyData(constRadVars.h2o);
+      radVars.mixfrac.copyData(constRadVars.mixfrac);
+    }
     
     // We will use constRadVars.sootVF when we get it from the table.
     // For now, calculate sootVF in radcoef.F
@@ -924,27 +898,12 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     // 
     //      new_dw->get(constRadVars.sootVF, sootVF_CCLabel, indx, patch,
     //            gn, 0);
-    
-    new_dw->getModifiable(radVars.sootVF,  sootVFCopy_CCLabel,  indx, patch);
-    new_dw->getModifiable(radVars.mixfrac, mixfracCopy_CCLabel, indx, patch);
-    if (d_useTableValues) {
-      old_dw->get(constRadVars.mixfrac, mixfrac_CCLabel, indx, patch,gn, 0);
-      radVars.mixfrac.copyData(constRadVars.mixfrac);
-    }
-      
-    if (d_useTableValues){
-      new_dw->get(constRadVars.density, density_CCLabel,   indx, patch,gn, 0);
-    }else{
-      new_dw->get(constRadVars.density, iceDensity_CCLabel, indx, patch,gn, 0);
-    }
-    new_dw->getModifiable(radVars.ABSKG,   abskg_CCLabel,   indx, patch);
-    new_dw->getModifiable(radVars.ESRCG,   esrcg_CCLabel,   indx, patch);
-    new_dw->getModifiable(radVars.shgamma, shgamma_CCLabel, indx, patch);
+
 
     d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
     if (d_radCounter%d_radCalcFreq == 0) {
       d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
-                                           &radVars, &constRadVars);      
+                                           &radVars, &constRadVars);
       //__________________________________
       //if there's an absorbing solid
       // set abskg = 1 in those cells
@@ -1163,7 +1122,7 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       double vol=cellinfo->sew[c.x()]*cellinfo->sns[c.y()]*cellinfo->stb[c.z()];
-      energySource[c] += delT * vol*radVars.src[c];
+      energySource[c] += delT * vol * radVars.src[c];
     }
   }
 }
