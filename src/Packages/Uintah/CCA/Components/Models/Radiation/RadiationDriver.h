@@ -191,6 +191,7 @@ class RadiationDriver : public ModelInterface {
   bool d_useTableValues;
   bool d_computeCO2_H2O_from_f;
   bool d_hasAbsorbingSolid;
+  string d_table_or_ice_temp_density;
   
   const PatchSet* d_perproc_patches;
 
