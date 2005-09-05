@@ -37,10 +37,6 @@ LOG
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-namespace SCIRun {
-  class GeomText;
-}
-
 namespace Uintah {
 
 using namespace SCIRun;
@@ -92,7 +88,7 @@ private:
   
   ArchiveHandle archiveH;
   void setVars(ArchiveHandle ar);
- 
+
 private:
   //! default color and material
   GuiDouble                def_color_r_;
@@ -106,7 +102,7 @@ private:
   GuiDouble                timeposition_x;
   GuiDouble                timeposition_y;
 
-  GeomText*                timestep_text;
+  GeomHandle               timestep_text;
   void update_timeposition();
   
 }; //class 
