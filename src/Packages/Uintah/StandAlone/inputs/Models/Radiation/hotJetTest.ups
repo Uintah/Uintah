@@ -9,7 +9,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            100       </maxTime>
+       <maxTime>            10       </maxTime>
        <initTime>           0.0       </initTime>
        <delt_min>           0.0       </delt_min>
        <delt_max>           0.1     </delt_max>
@@ -73,7 +73,7 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.0,10.,0.0] </value>
+                              <value> [0.0,1.0,0.0] </value>
         </BCType>
         <BCType id = "0" label = "Temperature"  var = "Dirichlet">
                               <value> 2000  </value>
@@ -223,7 +223,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>hotJet.uda</filebase>
+      <filebase>hotJet_withRad.uda</filebase>
      <outputInterval>0.1</outputInterval>
       <save label = "delP_Dilatate"/>
       <save label = "press_CC"/>  
@@ -232,6 +232,7 @@
       <save label = "temp_CC"/>
       <save label = "scalar-f"/>
       <save label = "modelEng_src"/>
+      <!--
       <save label="cellType_CC"/>
       <save label="abskg"/>
       <save label="qfluxE"/>
@@ -242,7 +243,7 @@
       <save label="qfluxB"/>
       <save label="radiationSrc"/>
       <save label="CO2"/>
-      <save label="H2O"/>
+      <save label="H2O"/>-->
       
       <compression>gzip</compression>
       <checkpoint cycle = "4" interval = "0.05"/>
@@ -365,13 +366,9 @@
         <radiatingGas>BackgroundGas</radiatingGas>
         <RadiationModel>
         <radiationCalcFreq>      5    </radiationCalcFreq>
-        <useIceTemp>            true  </useIceTemp>
+        <table_or_ice_temp_density> ice  </table_or_ice_temp_density>
         <useTableValues>        false </useTableValues>
         <computeCO2_H2O_from_f>  true  </computeCO2_H2O_from_f>
-        <!--
-        <max_CO2>                0.5 </max_CO2>
-        <max_H2O>                0.5 </max_H2O>
-        -->
         <DORadiationModel>
           <ordinates> 2       </ordinates>
           <opl>       0.24    </opl>
