@@ -399,11 +399,11 @@
         <radiatingGas>BackgroundGas</radiatingGas>
         <absorbingSolid>steelBall</absorbingSolid>
         <RadiationModel>
-          <absorbingSolid>  true        </absorbingSolid>
-          <radiationCalcFreq>      5    </radiationCalcFreq>
-          <useIceTemp>            true  </useIceTemp>
-          <useTableValues>        false </useTableValues>
-          <computeCO2_H2O_from_f>  true  </computeCO2_H2O_from_f>
+          <absorbingSolid>            true  </absorbingSolid>
+          <radiationCalcFreq>         5     </radiationCalcFreq>
+          <table_or_ice_temp_density> ice   </table_or_ice_temp_density>
+          <useTableValues>            false </useTableValues>
+          <computeCO2_H2O_from_f>     true  </computeCO2_H2O_from_f>
 
           <DORadiationModel>
             <ordinates> 2       </ordinates>

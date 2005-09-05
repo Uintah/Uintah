@@ -468,15 +468,11 @@
         <radiatingGas>BackgroundGas</radiatingGas>
         <absorbingSolid>SteelRing</absorbingSolid>
         <RadiationModel>
-        <absorbingSolid>         true </absorbingSolid>
-        <radiationCalcFreq>      5    </radiationCalcFreq>
-        <useIceTemp>            true  </useIceTemp>
-        <useTableValues>        false </useTableValues>
-        <computeCO2_H2O_from_f>  true  </computeCO2_H2O_from_f>
-        <!--
-        <max_CO2>                0.5 </max_CO2>
-        <max_H2O>                0.5 </max_H2O>
-        -->
+        <absorbingSolid>          true </absorbingSolid>
+        <radiationCalcFreq>         5    </radiationCalcFreq>
+        <table_or_ice_temp_density> ice  </table_or_ice_temp_density>
+        <useTableValues>           false </useTableValues>
+        <computeCO2_H2O_from_f>    true  </computeCO2_H2O_from_f>
         <DORadiationModel>
           <ordinates>             2      </ordinates>
           <opl>                   0.24   </opl>
