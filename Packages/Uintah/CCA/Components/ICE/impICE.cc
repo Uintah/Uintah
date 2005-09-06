@@ -15,7 +15,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/InternalError.h>
-
+#include <cmath>
 using namespace SCIRun;
 using namespace Uintah;
 
@@ -640,7 +640,7 @@ void ICE::setupRHS(const ProcessorGroup*,
 #if OREN
       // Oren: Max RHS should be max(abs(rhs)) over all cells,
       // not max(rhs^2). See implicit ICE document, p. 1.
-      rhs_max = std::max(rhs_max, abs(rhs[c]));
+      rhs_max = std::max(rhs_max, std::abs(rhs[c]));
       // Oren: scale RHS to finite volume formulation, otherwise
       // it is hard to properly define the AMR analogue of the
       // implicit pressure solver system. Notice that the max
