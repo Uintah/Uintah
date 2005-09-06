@@ -54,6 +54,11 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	global $this-use_stencil
 	global $this-multi_level
 	global $this-outline_levels
+	global $this-def-color-r
+	global $this-def-color-g
+	global $this-def-color-b
+        global $this-colors
+        global $this-color_changed
 	set $this-drawX 0
 	set $this-drawY 0
 	set $this-drawZ 0
@@ -67,7 +72,12 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	set $this-use_stencil 0
 	set $this-multi_level 1
 	set $this-outline_levels 0
-    }
+ 	set $this-def-color-r 1.0 
+	set $this-def-color-g 1.0 
+	set $this-def-color-b 1.0 
+        set $this-colors {}
+        set $this-color_changed 1
+   }
 
 
     method set_active_tab {act} {
@@ -354,7 +364,6 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
     method build_multi_level { } {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    puts -nonewline "building ml frame"
 	    frame $w.main.f4.f -relief groove -borderwidth 2
 	    pack $w.main.f4.f -padx 2 -pady 2 -fill x -expand yes -side top
 	    frame $w.main.f4.f.f1 -relief flat -borderwidth 2
@@ -376,6 +385,8 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 		checkbutton $w.main.f4.f.f2.f.b$i -text $i \
 		    -variable $this-l$i -command "$this-c needexecute" 
 		pack $w.main.f4.f.f2.f.b$i -side left
+                addColorSelection $w.main.f4.f.f2.f $i \
+                    $this-def-color "color_changed"
 		if { [isOn l$i] } {
 		    set selected 1
 		}
@@ -400,6 +411,79 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 
     method isOn { bval } {
 	return  [set $this-$bval]
+    }
+
+    method getOutlineColors { } {
+        set csize [llength [set $this-colors]]
+	set scolors [join [set $this-colors]]
+        return "$csize $scolors"
+    }
+    
+    method raiseColor {col i color colMsg} {
+	 global $color
+	 set window .ui[modname]
+	 if {[winfo exists $window.color]} {
+	     SciRaise $window.color
+	     return
+	 } else {
+	     # makeColorPicker now creates the $window.color toplevel.
+	     makeColorPicker $window.color $color \
+		     "$this setColor $col $i $color $colMsg" \
+		     "destroy $window.color"
+	 }
+    }
+
+    method setColor {col i color colMsg} {
+	 global $color
+	 global $color-r
+	 global $color-g
+	 global $color-b
+	 set ir [expr int([set $color-r] * 65535)]
+	 set ig [expr int([set $color-g] * 65535)]
+	 set ib [expr int([set $color-b] * 65535)]
+
+        set c [list [set $color-r] [set $color-g] [set $color-b] ]
+        set $this-colors [lreplace [set $this-colors] $i $i $c]
+
+	 set window .ui[modname]
+	 $col configure -background [format #%04x%04x%04x $ir $ig $ib]
+         set $this-color_changed 1                        
+	 $this-c needexecute
+    }
+
+    method addColorSelection {frame i color colMsg} {
+	 #add node color picking 
+	 global $color
+	 global $color-r
+	 global $color-g
+	 global $color-b
+         
+         set length [llength [set $this-colors]]
+         if { $i < $length } {
+             
+             set c [lindex [set $this-colors] $i]
+             set ir [expr int([lindex $c 0] * 65535)]
+             set ig [expr int([lindex $c 1] * 65535)]
+             set ib [expr int([lindex $c 2] * 65535)]
+
+         } else {
+             set ir [expr int([set $color-r] * 65535)]
+             set ig [expr int([set $color-g] * 65535)]
+             set ib [expr int([set $color-b] * 65535)]
+             set c [list [set $color-r] [set $color-g] [set $color-b] ]
+             set $this-colors [linsert [set $this-colors] $i $c ]
+         }
+	 frame $frame.f$i
+	 set cmmd "$this raiseColor $frame.f$i.set_color $i $color $colMsg"
+
+	 button $frame.f$i.set_color -command $cmmd \
+                             -height 1 -width 2 \
+                             -background [format #%04x%04x%04x $ir $ig $ib]
+
+	 #pack the node color frame
+	 pack $frame.f$i.set_color -side left
+	 pack $frame.f$i -side left
+
     }
 
 }

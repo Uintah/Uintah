@@ -92,6 +92,7 @@ private:
   GuiDouble phi1_;
   GuiInt cyl_active_;
   GuiInt gui_multi_level_;
+  GuiInt gui_color_changed_;
   GuiInt gui_outline_levels_;
   GuiInt gui_use_stencil_;
 
@@ -106,6 +107,8 @@ private:
   Vector ddy_;
   Vector ddz_;
   double ddview_;
+
+  int color_changed_;
 };
 
 
@@ -136,6 +139,7 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     phi1_(ctx->subVar("phi_1")),
     cyl_active_(ctx->subVar("cyl_active")),   
     gui_multi_level_(ctx->subVar("multi_level")),
+    gui_color_changed_(ctx->subVar("color_changed")),
     gui_outline_levels_(ctx->subVar("outline_levels")),
     gui_use_stencil_(ctx->subVar("use_stencil")),
     old_tex_(0),
@@ -143,7 +147,8 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     old_cmap2_(0),
     old_min_(Point(0,0,0)), old_max_(Point(0,0,0)),
     geom_id_(-1),
-    slice_ren_(0)
+    slice_ren_(0),
+    color_changed_(true)
 {}
 
 VolumeSlicer::~VolumeSlicer()
@@ -296,7 +301,26 @@ void VolumeSlicer::execute()
       old_cmap2_ = cmap2;
     }
   }
- 
+
+  if(gui_multi_level_.get() > 1 && gui_color_changed_.get() == 1){
+    gui_color_changed_.set(0);
+    string outline_colors;
+    gui->eval(id+" getOutlineColors", outline_colors);
+
+    istringstream is( outline_colors );
+    // Slurp in the rgb values.
+    unsigned int rgbsize;
+    is >> rgbsize;
+    vector< Color > rgbs(rgbsize);
+    for (int i = 0; i < rgbsize; i++)
+    {
+      double r, g, b;
+      is >> r >> g >> b;
+      rgbs[i] = Color(r, g, b);
+    }
+    slice_ren_->set_outline_colors( rgbs );
+  }
+
   slice_ren_->set_interp(bool(interp_mode_.get()));
   if(draw_x_.get() || draw_y_.get() || draw_z_.get()){
     if(control_id_ == -1) {
@@ -377,7 +401,18 @@ VolumeSlicer::tcl_command(GuiArgs& args, void* userdata)
     control_y_.set(w.y());
     control_z_.set(w.z());
     control_pos_saved_.set( 1 );
-    ogeom_->flushViews();				  
+    ogeom_->flushViews();
+  } else if (args[1] == "color_changed") {
+    color_changed_ = true;
+
+//     def_color_r_.reset();
+//     def_color_g_.reset();
+//     def_color_b_.reset();
+//     def_color_a_.reset();
+//     def_material_->diffuse =
+//       Color(def_color_r_.get(), def_color_g_.get(), def_color_b_.get());
+//     def_material_->transparency = def_color_a_.get();
+				  
   } else {
     Module::tcl_command(args, userdata);
   }

@@ -81,6 +81,10 @@ SliceRenderer::SliceRenderer(TextureHandle tex,
 #ifdef _WIN32
   glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
 #endif
+  outline_colors_.resize(20);
+  for(int i = 0; i < 20; i++){
+    outline_colors_[i] = Color(1.0,1.0, 1.0);
+  }
 }
 
 SliceRenderer::SliceRenderer(const SliceRenderer& copy)
@@ -109,6 +113,21 @@ SliceRenderer::clone()
 {
   return scinew SliceRenderer(*this);
 }
+
+void 
+SliceRenderer::set_outline_colors( vector< Color >& colors )
+{
+  if( outline_colors_.size() != colors.size() ){
+    outline_colors_.resize( colors.size() );
+    outline_colors_.clear();
+  }
+
+  for(int i = 0; i < colors.size(); i++){
+    //reverse them
+    outline_colors_[i] = colors[(colors.size() - 1) - i];
+  }
+}
+
 
 #ifdef SCI_OPENGL
 void
@@ -364,6 +383,7 @@ SliceRenderer::multi_level_draw()
     tex_->unlock_bricks();
     return;
   }
+  
   GLboolean use_fog = glIsEnabled(GL_FOG);
   
   //--------------------------------------------------------------------------
@@ -469,7 +489,6 @@ SliceRenderer::multi_level_draw()
       for(int j = 0; j < levels; ++j ){
 	if(!draw_level_[j]) continue;
 	vector<TextureBrickHandle>& bs  = blevels[j];
-	
 	for(unsigned int i=0; i<bs.size(); i++) {
 	  double t;
 	  TextureBrickHandle b = bs[i];
@@ -482,7 +501,12 @@ SliceRenderer::multi_level_draw()
 	  b->compute_polygon(r, t, vertex, texcoord, size);
 	}
 	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
+        if(shader) shader->release(); 
+	Color co = outline_colors_[j];
+        glColor3f(co.r(), co.g(), co.b());
         draw_level_outline(vertex, size, use_fog);
+        glColor4f(1.0, 1.0, 1.0, 1.0);
+        if(shader) shader->bind();
       }
     }
     if(draw_phi1_) {
@@ -515,7 +539,12 @@ SliceRenderer::multi_level_draw()
 	  b->compute_polygon(r, t, vertex, texcoord, size);
 	}
 	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-        draw_level_outline(vertex, size, use_fog);	    
+        if(shader) shader->release(); 
+	Color co = outline_colors_[j];
+        glColor3f(co.r(), co.g(), co.b());
+        draw_level_outline(vertex, size, use_fog);
+        glColor4f(1.0,1.0,1.0,1.0);
+        if(shader) shader->bind();
       }
     }
     if(draw_z_) {
@@ -546,7 +575,13 @@ SliceRenderer::multi_level_draw()
 	  b->compute_polygon(view_ray, t, vertex, texcoord, size);
 	}
 	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
+            // shader messes with line drawing. why?
+        if(shader) shader->release(); 
+	Color co = outline_colors_[j];
+        glColor3f(co.r(), co.g(), co.b());
         draw_level_outline(vertex, size, use_fog);
+        glColor4f(1.0,1.0,1.0,1.0);
+        if(shader) shader->bind();
       }
 
     } else {
@@ -587,7 +622,13 @@ SliceRenderer::multi_level_draw()
 	      b->compute_polygon(r, t, vertex, texcoord, size);
 	    }
 	    draw_polygons(vertex, texcoord, size, true, use_fog, 0);
+            // shader messes with line drawing. why?
+            if(shader) shader->release(); 
+            Color co = outline_colors_[j];
+            glColor3f(co.r(), co.g(), co.b());
             draw_level_outline(vertex, size, use_fog);
+            glColor4f(1.0,1.0,1.0,1.0);
+            if(shader) shader->bind();
 	  }
 	}
       }
@@ -628,7 +669,12 @@ SliceRenderer::multi_level_draw()
 	    }
 	  }
 	  draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-          draw_level_outline(vertex, size, use_fog);
+        if(shader) shader->release(); // shader messes with line drawing. why?
+        Color co = outline_colors_[j];
+        glColor3f(co.r(), co.g(), co.b());
+        draw_level_outline(vertex, size, use_fog);
+        glColor4f(1.0,1.0,1.0,1.0);
+        if(shader) shader->bind();
 	}
       }
       if(draw_z_) {
@@ -672,8 +718,13 @@ SliceRenderer::multi_level_draw()
 	  r.planeIntersectParameter(-r.direction(), control_point_, t);
 	  b->compute_polygon(r, t, vertex, texcoord, size);
 	}
-	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
+ 	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
+        if(shader) shader->release(); // shader messes with line drawing. why?
+        Color co = outline_colors_[j];
+        glColor3f(co.r(), co.g(), co.b());
         draw_level_outline(vertex, size, use_fog);
+        if(shader) shader->bind();
+        glColor4f(1.0,1.0,1.0,1.0);
       }
     }
   }
@@ -884,18 +935,67 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
     if(use_stencil_){
       glDisable(GL_STENCIL_TEST);
     }
+
+    GLboolean lighting = glIsEnabled(GL_LIGHTING);
+    glDisable(GL_LIGHTING);
     // We don't need these so pass in dummy ones.
     vector<float> texcoord;
+
     // If we don't disable the texturing we won't get the color we
     // specify here.
-    glDisable(GL_TEXTURE_3D);
-    glColor4f(0.8,0.8,0.8,1.0);
-    draw_polygons_wireframe(vertex, texcoord, poly, true, use_fog, 0);
-    // Renable the texturing.
-    glEnable(GL_TEXTURE_3D);
-    if(use_stencil_){
-      glEnable(GL_STENCIL_TEST);
+    GLint n_tex_regs = 1;
+    // first is multi-texturing enabled?
+    bool multitex = gluCheckExtension((GLubyte*)"GL_ARB_multitexture",
+                                      glGetString(GL_EXTENSIONS));
+    if( multitex ) //if so, how many texture units?
+      glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &n_tex_regs);
+
+    GLboolean *tex1d = new GLboolean[n_tex_regs];
+    GLboolean *tex2d = new GLboolean[n_tex_regs];
+    GLboolean *tex3d = new GLboolean[n_tex_regs];
+
+    if(multitex){ // for each texture unit, mark what is enabled
+      for( int i = 0; i < n_tex_regs; i++){
+        glActiveTexture(GL_TEXTURE0+i);
+        tex1d[i] = glIsEnabled(GL_TEXTURE_1D);
+        glDisable(GL_TEXTURE_1D);
+        tex2d[i] = glIsEnabled(GL_TEXTURE_2D);
+        glDisable(GL_TEXTURE_2D);
+        tex3d[i] = glIsEnabled(GL_TEXTURE_3D);
+        glDisable(GL_TEXTURE_3D);
+      }
+    } else {
+      tex1d[0] = glIsEnabled(GL_TEXTURE_1D);
+      glDisable(GL_TEXTURE_1D);
+      tex2d[0] = glIsEnabled(GL_TEXTURE_2D);
+      glDisable(GL_TEXTURE_2D);
+      tex3d[0] = glIsEnabled(GL_TEXTURE_3D);
+      glDisable(GL_TEXTURE_3D);
     }
+    //    glColor4f(0.8,0.8,0.8,1.0);
+    draw_polygons_wireframe(vertex, texcoord, poly, true, use_fog, 0);
+
+    // Renable the texturing.
+    if(multitex){ // re-enable textures for each texture unit.
+      for(int i = 0; i < n_tex_regs; i++){
+        glActiveTexture(GL_TEXTURE0+i);
+        if(tex1d[i]) glEnable(GL_TEXTURE_1D);
+        if(tex2d[i]) glEnable(GL_TEXTURE_2D);
+        if(tex3d[i]) glEnable(GL_TEXTURE_3D);
+      }
+    } else {
+      if(tex1d[0]) glEnable(GL_TEXTURE_1D);
+      if(tex2d[0]) glEnable(GL_TEXTURE_2D);
+      if(tex3d[0]) glEnable(GL_TEXTURE_3D);
+    }
+
+    delete [] tex1d;
+    delete [] tex2d;
+    delete [] tex3d;
+
+    if( lighting ) glEnable(GL_LIGHTING);
+    if( use_stencil_ ) glEnable(GL_STENCIL_TEST);
+    
   }
 }
 

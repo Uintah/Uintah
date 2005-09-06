@@ -68,6 +68,7 @@ public:
     draw_view_ = b;
   }
   inline void set_level_outline( bool b ) { draw_level_outline_ = b;}
+  void set_outline_colors( vector< Color >& colors );
 
   bool draw_x() const { return draw_x_; }
   bool draw_y() const { return draw_y_; }
@@ -116,7 +117,7 @@ protected:
   bool draw_cyl_;
   bool draw_level_outline_;
   vector< bool > draw_level_;
-
+  vector< Color > outline_colors_;
 };
 
 } // end namespace SCIRun
