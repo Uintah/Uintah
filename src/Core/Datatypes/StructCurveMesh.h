@@ -187,13 +187,13 @@ public:
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
 
+  // returns a StructCurveMesh
+  static Persistent *maker() { return new StructCurveMesh<Basis>(); }
+
 private:
 
   //! the points
   Array1<Point> points_;
-
-  // returns a StructCurveMesh
-  static Persistent *maker() { return new StructCurveMesh<Basis>(); }
 }; // end class StructCurveMesh
 
 template <class Basis>

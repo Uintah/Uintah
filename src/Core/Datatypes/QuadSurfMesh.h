@@ -222,9 +222,11 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
-  
-private:
 
+  // returns a QuadSurfMesh
+  static Persistent *maker() { return new QuadSurfMesh<Basis>(); }
+
+private:
 
   static double
   distance2(const Point &p0, const Point &p1)
@@ -257,9 +259,6 @@ private:
   Mutex				normal_lock_;
   unsigned int			synchronized_;
   Basis                         basis_;
-
-  // returns a QuadSurfMesh
-  static Persistent *maker() { return new QuadSurfMesh<Basis>(); }
 
 
 #ifdef HAVE_HASH_MAP

@@ -354,14 +354,14 @@ public:
     return td;
   }
  
+  // returns a CurveMesh
+  static Persistent *maker() { return new CurveMesh<Basis>(); }
+
 private:
 
   vector<Point>           nodes_;
   vector<index_pair_type> edges_;
   Basis                   basis_;
-
-  // returns a CurveMesh
-  static Persistent *maker() { return new CurveMesh<Basis>(); }
 };
 
 //typedef LockingHandle<CurveMesh<Basis> > CurveMeshHandle;

@@ -46,6 +46,9 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 
 using namespace SCIRun;
 typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
+PersistentTypeID backwards_compat_IM("ImageMesh", "Mesh",
+				      IMesh::maker, true);
+
 typedef QuadBilinearLgn<Tensor>             FDTensorBasis;
 typedef QuadBilinearLgn<Vector>             FDVectorBasis;
 typedef QuadBilinearLgn<double>             FDdoubleBasis;
@@ -106,6 +109,9 @@ PersistentTypeID backwards_compat_IFul("ImageField<unsigned_long>", "Field",
 
 
 typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
+PersistentTypeID backwards_compat_QSM("QuadSurfMesh", "Mesh",
+				      QSMesh::maker, true);
+
 template class GenericField<QSMesh, FDTensorBasis, vector<Tensor> >;       
 template class GenericField<QSMesh, FDVectorBasis, vector<Vector> >;       
 template class GenericField<QSMesh, FDdoubleBasis, vector<double> >;       

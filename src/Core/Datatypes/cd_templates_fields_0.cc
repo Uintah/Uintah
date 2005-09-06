@@ -50,6 +50,9 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 
 using namespace SCIRun;
 typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+PersistentTypeID backwards_compat_LVM("LatVolMesh", "Mesh",
+				      LVMesh::maker, true);
+
 typedef HexTrilinearLgn<Tensor>             FDTensorBasis;
 typedef HexTrilinearLgn<Vector>             FDVectorBasis;
 typedef HexTrilinearLgn<double>             FDdoubleBasis;
@@ -114,6 +117,8 @@ PersistentTypeID backwards_compat_LVFul("LatVolField<unsigned_long>", "Field",
 
 
 typedef MaskedLatVolMesh<HexTrilinearLgn<Point> > MLVMesh;
+PersistentTypeID backwards_compat_MLVM("MaskedLatVolMesh", "Mesh",
+				      MLVMesh::maker, true);
 
 template class GenericField<MLVMesh, FDTensorBasis, FData3d<Tensor, MLVMesh> >;
 template class GenericField<MLVMesh, FDVectorBasis, FData3d<Vector, MLVMesh> >;

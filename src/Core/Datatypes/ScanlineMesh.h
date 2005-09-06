@@ -235,6 +235,9 @@ public:
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
 
+  // returns a ScanlineMesh
+  static Persistent *maker() { return new ScanlineMesh(); }
+
 protected:
 
   //! the min typename Node::index_type ( incase this is a subLattice )
@@ -249,8 +252,6 @@ protected:
 
   //! the basis fn 
   Basis                basis_;
-  // returns a ScanlineMesh
-  static Persistent *maker() { return new ScanlineMesh(); }
 };
 
 template <class Basis>

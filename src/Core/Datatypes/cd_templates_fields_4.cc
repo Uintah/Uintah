@@ -59,6 +59,9 @@ typedef TriLinearLgn<unsigned char>         FDucharBasis;
 typedef TriLinearLgn<unsigned long>         FDulongBasis;
 
 typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+PersistentTypeID backwards_compat_TSM("TriSurfMesh", "Mesh",
+				      TSMesh::maker, true);
+
 template class GenericField<TSMesh, FDTensorBasis, vector<Tensor> >;       
 template class GenericField<TSMesh, FDVectorBasis, vector<Vector> >;       
 template class GenericField<TSMesh, FDdoubleBasis, vector<double> >;       
@@ -118,6 +121,9 @@ typedef CrvLinearLgn<unsigned char>         CFDucharBasis;
 typedef CrvLinearLgn<unsigned long>         CFDulongBasis;
 
 typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
+PersistentTypeID backwards_compat_CM("CurveMesh", "Mesh",
+				      CMesh::maker, true);
+
 template class GenericField<CMesh, CFDTensorBasis, vector<Tensor> >;       
 template class GenericField<CMesh, CFDVectorBasis, vector<Vector> >;       
 template class GenericField<CMesh, CFDdoubleBasis, vector<double> >;       

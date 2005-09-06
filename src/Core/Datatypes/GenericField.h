@@ -367,6 +367,7 @@ void GenericField<Mesh, Basis, FData>::io(Piostream& stream)
   if (stream.backwards_compat_id()) {
     version = stream.begin_class(type_name(-1), GENERICFIELD_VERSION);
   }
+
   Field::io(stream);
   if (version < 2)
     mesh_->io(stream);
@@ -378,6 +379,10 @@ void GenericField<Mesh, Basis, FData>::io(Piostream& stream)
   }
   Pio(stream, fdata_);
   freeze();
+
+  if (stream.backwards_compat_id()) {
+    stream.end_class();
+  }
   stream.end_class();
 }
 

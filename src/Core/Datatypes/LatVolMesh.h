@@ -716,6 +716,9 @@ public:
 
   virtual int dimensionality() const { return 3; }
 
+  // returns a LatVolMesh
+  static Persistent *maker() { return new LatVolMesh(); }
+
 protected:
 
   //! the min_Node::index_type ( incase this is a subLattice )
@@ -726,8 +729,6 @@ protected:
 
   Transform transform_;
   Basis     basis_;
-  // returns a LatVolMesh
-  static Persistent *maker() { return new LatVolMesh(); }
 };
 
 template <class Basis>

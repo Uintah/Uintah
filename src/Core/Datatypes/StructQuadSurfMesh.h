@@ -186,6 +186,9 @@ public:
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
 
+  // returns a StructQuadSurfMesh
+  static Persistent *maker() { return new StructQuadSurfMesh<Basis>(); }
+
 protected:
   void compute_normals();
   void compute_edge_neighbors(double err = 1.0e-8);
@@ -200,9 +203,6 @@ protected:
   Array2<Vector> normals_; //! normalized per node
   Mutex		 normal_lock_;
   unsigned int   synchronized_;
-
-  // returns a StructQuadSurfMesh
-  static Persistent *maker() { return new StructQuadSurfMesh<Basis>(); }
 };
 
 template <class Basis>

@@ -968,6 +968,9 @@ public:
 
   unsigned int	get_sequential_node_index(const typename Node::index_type idx);
 
+  // returns a MaskedLatVolMesh
+  static Persistent *maker() { return new MaskedLatVolMesh<Basis>(); }
+
 private:
   unsigned int	synchronized_;
   map<typename Node::index_type, unsigned>	nodes_;
@@ -1004,10 +1007,6 @@ private:
       }
     return false;
   }
-  
-  
-  // returns a MaskedLatVolMesh
-  static Persistent *maker() { return new MaskedLatVolMesh<Basis>(); }
 };
 
 template <class Basis>

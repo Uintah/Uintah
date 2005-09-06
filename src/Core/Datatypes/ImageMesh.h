@@ -395,6 +395,10 @@ public:
   static const TypeDescription* cell_type_description();
   static const TypeDescription* node_index_type_description();
   static const TypeDescription* face_index_type_description();
+
+  // returns a ImageMesh
+  static Persistent *maker() { return new ImageMesh<Basis>(); }
+
 protected:
 
   //! the min_typename Node::index_type ( incase this is a subLattice )
@@ -413,8 +417,6 @@ protected:
   //! The basis class 
   Basis                  basis_;
 
-  // returns a ImageMesh
-  static Persistent *maker() { return new ImageMesh<Basis>(); }
 };
 
 template <class Basis>

@@ -59,6 +59,9 @@ typedef HexTrilinearLgn<unsigned char>         FDucharBasis;
 typedef HexTrilinearLgn<unsigned long>         FDulongBasis;
 
 typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
+PersistentTypeID backwards_compat_HVM("HexVolMesh", "Mesh",
+				      HVMesh::maker, true);
+
 template class GenericField<HVMesh, FDTensorBasis, vector<Tensor> >;       
 template class GenericField<HVMesh, FDVectorBasis, vector<Vector> >;       
 template class GenericField<HVMesh, FDdoubleBasis, vector<double> >;       
