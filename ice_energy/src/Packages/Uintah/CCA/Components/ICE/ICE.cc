@@ -2752,7 +2752,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        desc << "TOP_equilibration_Mat_" << indx << "_patch_"<<patch->getID();
        printData(indx, patch, 1, desc.str(), "rho_CC",       rho_CC[m]);    
        printData(indx, patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);  
-       printData(indx, patch, 1, desc.str(), "speedSound",   speedSound_new[m]);
        printData(indx, patch, 1, desc.str(), "int_eng_CC",   int_eng[m]);
        printData(indx, patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);   
       }
@@ -2963,7 +2962,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        printData( indx, patch, 1, desc.str(), "sp_vol_CC",    sp_vol_new[m]); 
        printData( indx, patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);
        printData( indx, patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);
-       
+       printData(indx, patch, 1, desc.str(), "speedSound",   speedSound_new[m]);       
      }
     }
   }  // patch loop
@@ -4776,7 +4775,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         CCVariable<double> otemp;
         new_dw->allocateTemporary(otemp, patch);
         // old state
-        ice_matl->getThermo()->compute_Temp(patch->getCellIterator(), otemp,
+        ice_matl->getThermo()->compute_Temp(patch->getExtraCellIterator(), otemp,
                                             old_dw, new_dw, ThermoInterface::OldState,
                                             patch, indx, 0,
                                             int_eng, sp_vol_CC[m]);
