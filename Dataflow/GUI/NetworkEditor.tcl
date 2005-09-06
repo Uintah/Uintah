@@ -145,9 +145,13 @@ proc safeSetWindowGeometry { w geom } {
 }
 
 proc geometryTrace { args } {
-    global geometry
+    global geometry Subnet
     if { [info exists geometry] } {
-	safeSetWindowGeometry . $geometry
+	set w .
+	if { $Subnet(Loading) } {
+	    set w .subnet$Subnet(Loading)
+	}
+	safeSetWindowGeometry $w $geometry
     }
 }
 
