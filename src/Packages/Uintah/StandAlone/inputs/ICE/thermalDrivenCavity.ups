@@ -144,18 +144,22 @@
       <save label = "ntemp_CC"/>
       <save label = "rho_CC"/>
       <save label = "vel_CC"/>  
+      <save label="KineticEnergy"/>
+      <save label="TotalIntEng"/>
    </DataArchiver>
 
   <Debug>
-      <dbg_timeStart>       999.00      </dbg_timeStart>
+      <dbg_timeStart>       0      </dbg_timeStart>
       <dbg_timeStop>        0.01      </dbg_timeStop>
       <dbg_outputInterval>  1e-9      </dbg_outputInterval>
       <dbg_BeginIndex>      [-1,16,0] </dbg_BeginIndex>
       <dbg_EndIndex>        [3,21,1]  </dbg_EndIndex>
       <dbg_SigFigs>         12         </dbg_SigFigs>
       <dbg_Matls>           [0]       </dbg_Matls>
+<dbg_Level>  0    </dbg_Level>
       
  <!--       
+       <debug label = "switchDebugMomentumExchange_CC"/>
        <debug label = "switchTestConservation"/>
       <debug label = "switchDebug_setupMatrix"/>        
       <debug label = "switchDebug_setupRHS"/>           
