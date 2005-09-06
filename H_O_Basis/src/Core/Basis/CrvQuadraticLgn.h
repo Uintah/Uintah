@@ -47,7 +47,9 @@ namespace SCIRun {
     CrvQuadraticLgn() {}
     virtual ~CrvQuadraticLgn() {}
   
-    // Value at coord
+   int polynomial_order() const { return 2; }
+
+    //! get value at parametric coordinate
     template <class CellData>
       T interpolate(const vector<double> &coords, const CellData &cd) const
       {
@@ -57,7 +59,7 @@ namespace SCIRun {
 		 +x*(-1 + 2*x)* nodes_[cd.edge0_index()]);
       }
   
-    //! First derivative at coord.
+    //! get first derivative at parametric coordinate
     template <class CellData>
       void derivate(const vector<double> &coords, const CellData &cd, 
 		    vector<double> &derivs) const
@@ -76,7 +78,7 @@ namespace SCIRun {
 
     static  const string type_name(int n = -1);
 
-    //! return the parametric coordinates for value within the element.
+    //! get parametric coordinate for value within the element
     template <class CellData>
       void get_coords(vector<double> &coords, const T& value, 
 		      const CellData &cd) const  
@@ -88,7 +90,6 @@ namespace SCIRun {
     virtual void io (Piostream& str);
   protected:
     //! Additional support values.
-
     //! Quadratic Lagrangian only needs additional nodes stored for each edge
     //! in the topology.
     vector<T>          nodes_; 
@@ -147,7 +148,6 @@ namespace SCIRun {
 
   template <class T>
     double CrvQuadraticLgn<T>::GaussianWeights[2] = {.5, .5};
-
 
 } //namespace SCIRun
 

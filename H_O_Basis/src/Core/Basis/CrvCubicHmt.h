@@ -42,12 +42,16 @@ template <class T>
 public:
   typedef T value_type;
 
+  static int    GaussianNum;
+  static double GaussianPoints[3][1];
+  static double GaussianWeights[3];
+  
   CrvCubicHmt() {}
   virtual ~CrvCubicHmt() {}
   
   int polynomial_order() const { return 3; }
 
-  // Value at coord
+  //! get value at parametric coordinate
   template <class CellData>
   T interpolate(const vector<double> &coords, const CellData &cd) const
   {
@@ -58,7 +62,7 @@ public:
 	     +(-1+x)*x*x * derivs_[cd.node1_index()]);
   }
   
-  //! First derivative at coord.
+  //! get first derivative at parametric coordinate
   template <class CellData>
   void derivate(const vector<double> &coords, const CellData &cd, 
 		vector<double> &derivs) const
@@ -78,7 +82,7 @@ public:
 
   static  const string type_name(int n = -1);
 
-  //! return the parametric coordinates for value within the element.
+  //! get parametric coordinate for value within the element
     template <class CellData>
       void get_coords(vector<double> &coords, const T& value, 
 		      const CellData &cd) const  
@@ -165,6 +169,16 @@ CrvCubicHmt<T>::io(Piostream &stream)
   stream.end_class();
 }
  
+  template <class T>
+    int CrvCubicHmt<T>::GaussianNum = 3;
+
+  template <class T>
+    double CrvCubicHmt<T>::GaussianPoints[3][1] = {{(-0.774596669241+1.)/2.}, {0.5}, {(0.774596669241+1.)/2.}};
+
+  template <class T>
+    double CrvCubicHmt<T>::GaussianWeights[3] = {.2777777777, .4444444444, .2777777777};
+
+
 } //namespace SCIRun
 
 #endif // CrvCubicHmt_h

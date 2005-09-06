@@ -162,7 +162,7 @@ namespace SCIRun {
 	tmp[0] = 1.0;
       }
 
-      // Value at coord
+      //! get value at parametric coordinate
       template <class CellData>
 	T interpolate(const vector<double> &coords, const CellData &cd) const
 	{
@@ -170,7 +170,7 @@ namespace SCIRun {
 	  return (T)((1-x)*cd.node0()+x*cd.node1());
 	}
     
-      //! First derivative at coord.
+      //! get first derivative at parametric coordinate
       template <class CellData>
 	void derivate(const vector<double> &coords, const CellData &cd, 
 		      vector<double> &derivs) const
@@ -180,7 +180,7 @@ namespace SCIRun {
 	  derivs[0] = -cd.node0() + cd.node1();
 	}
 
-      //! return the parametric coordinates for value within the element.
+      //! get parametric coordinate for value within the element
       template <class CellData>
 	void get_coords(vector<double> &coords, const T& value, 
 			const CellData &cd) const  
