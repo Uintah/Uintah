@@ -163,6 +163,7 @@ class ShowField : public Module
   GuiInt                   showProgress_;
   GuiString                interactive_mode_;
   GuiString                gui_field_name_;
+  GuiInt                   gui_field_name_override_;
   GuiInt                   gui_field_name_update_;
 
   //! Refinement resolution for cylinders and spheres
@@ -282,6 +283,7 @@ ShowField::ShowField(GuiContext* ctx) :
   showProgress_(ctx->subVar("show_progress")),
   interactive_mode_(ctx->subVar("interactive_mode")),
   gui_field_name_(ctx->subVar("field-name")),
+  gui_field_name_override_(ctx->subVar("field-name-override")),
   gui_field_name_update_(ctx->subVar("field-name-update")),
   gui_node_resolution_(ctx->subVar("node-resolution")),
   gui_edge_resolution_(ctx->subVar("edge-resolution")),
@@ -449,8 +451,9 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     (vfld_handle->generation != vector_generation_):
     (vector_generation_ != -1);
 
-  // Update the field name.
-  if ((field_new || vector_new) && gui_field_name_update_.get())
+  // Update the field name but only if the user does not enter an overriding name.
+  if ((field_new || vector_new) &&
+      !gui_field_name_override_.get() && gui_field_name_update_.get())
   {
     string fname;
     if (vfld_handle.get_rep() &&

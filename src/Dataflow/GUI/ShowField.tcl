@@ -94,6 +94,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-show-faces
 	global $this-text-show-cells
 	global $this-field-name
+	global $this-field-name-override
 	global $this-field-name-update
 	global $this-tensors-emphasis
 	set $this-node_display_type Points
@@ -154,6 +155,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-show-faces 0
 	set $this-text-show-cells 0
 	set $this-field-name ""
+	set $this-field-name-override 0
 	set $this-field-name-update 1
 	set $this-tensors-emphasis 0.825
 	trace variable $this-active_tab w "$this switch_to_active_tab"
@@ -703,10 +705,15 @@ itcl_class SCIRun_Visualization_ShowField {
 	frame $window.fname -borderwidth 2
 	label $window.fname.label -text "Field Name"
 	entry $window.fname.entry -textvar $this-field-name
+	checkbutton $window.fname.override \
+		-text "Override" \
+		-variable $this-field-name-override
+
 	TooltipMultiWidget "$window.fname.entry $window.fname.label" \
 	    "Enter (optional) Field Name here.  The name will be displayed\nin the Viewer Window's list of Objects."
 	
 	pack $window.fname.label $window.fname.entry -side left
+	pack $window.fname.override -side left -padx 6
 	pack $window.fname -anchor w -padx 6 -pady 6
 
 
