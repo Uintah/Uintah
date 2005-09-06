@@ -99,10 +99,13 @@ protected:
   unsigned int adv_tex_;
   bool adv_dirty_;
   bool adv_is_initialized_;
+  int adv_accums_;
+
   Array3<float> conv_array_;
   unsigned int conv_tex_;
   bool conv_dirty_;
   bool conv_is_initialized_;
+  int conv_accums_;
 
   Array3<float> flow_array_;
   unsigned int flow_tex_;
@@ -185,7 +188,8 @@ protected:
   
 public:
   void reset();
-
+  void set_adv_accums( int i ){ adv_accums_ = i; }
+  void set_conv_accums( int i ){ conv_accums_ = i; }
 };
 
 } // End namespace SCIRun
