@@ -227,30 +227,30 @@ void AMRSimulationController::run()
      d_sharedState->setElapsedTime(t);
      d_sharedState->incrementCurrentTopLevelTimeStep();
 
-     double old_init_delt = d_timeinfo->max_initial_delt;
-
-     if(needRecompile(t, delt, currentGrid) || first ){
-       first=false;
-       recompile(t, delt, currentGrid, totalFine);
-     }
-     else {
-       if (d_output){
-         d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, 0);
-       }
-     }
-
      // Each component has their own init_delt specified.  On a switch
      // from one component to the next, we need to adjust the delt to
      // that specified in the input file.  To detect the switch of components,
      // we compare the old_init_delt before the needRecompile() to the 
      // new_init_delt after the needRecompile().  
 
+     double old_init_delt = d_timeinfo->max_initial_delt;
+     double new_init_delt = 0.;
 
-     double new_init_delt = d_timeinfo->max_initial_delt;
-
-     if (new_init_delt != old_init_delt) {
-       // gets overriden in the next section below
-       delt = new_init_delt;
+     if(needRecompile(t, delt, currentGrid) || first ){
+       new_init_delt = d_timeinfo->max_initial_delt;
+       if (new_init_delt != old_init_delt) {
+         // gets overriden in the next section below
+         delt = new_init_delt;
+       }
+       first=false;
+       recompile(t, delt, currentGrid, totalFine);
+     }
+     else {
+       if (d_output){
+         // This is not correct if we have switched to a different
+         // component, since the delt will be wrong 
+         d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, 0);
+       }
      }
 
      // adjust the delt for each level and store it in all applicable dws.
