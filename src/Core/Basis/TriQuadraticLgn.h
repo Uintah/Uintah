@@ -82,7 +82,7 @@ namespace SCIRun {
 	  -4*(-1 + x +2*y)*nodes_[cd.edge2_index()];
       };
 
-    //! get the parametric coordinate for value within the element.
+    //! get the parametric coordinate for value within the element
     //! iterative solution...
     template <class ElemData>
       void get_coords(vector<double> &coords, const T& value, 

@@ -47,7 +47,7 @@ public:
   
   int polynomial_order() const { return 3; }
 
-  // Value at coord
+  //! get value at parametric coordinate
   template <class CellData>
   T interpolate(const vector<double> &coords, const CellData &cd) const
   {
@@ -186,7 +186,7 @@ public:
       +x12*x*(-1 + y)*y2*(-1 + z)*z2*sdxyz7);
   }
   
-  //! First derivative at coord.
+  //! get first derivative at parametric coordinate
   template <class CellData>
   void derivate(const vector<double> &coords, const CellData &cd,
 		vector<double> &derivs) const
@@ -461,7 +461,7 @@ public:
       +x12*x*(-1 + y)*y2*z*(-2 + 3*z)*sdxyz7;
   }  
 
-  //! return the parametric coordinates for value within the element.
+  //! get parametric coordinate for value within the element
   template <class CellData>
   void get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const  
