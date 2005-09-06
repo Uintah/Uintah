@@ -148,10 +148,9 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& l
   const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
   const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
   
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      ice_matls,  gn,0);
-  t->requires(Task::NewDW, Ilb->temp_CCLabel,      mpm_matls,  gn,0);
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,              gn,0);
-  t->requires(Task::NewDW, Ilb->rho_CCLabel,                   gn,0);
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,      ice_matls,  gac,1);
+  t->requires(Task::NewDW, Ilb->temp_CCLabel,      mpm_matls,  gac,1);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,              gac,1);
 
   /*     Products     */
   t->requires(Task::NewDW,  Ilb->TempX_FCLabel,   prod_matl, gac,2);    
@@ -285,14 +284,12 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     int numAllMatls = d_sharedState->getNumMatls();
     StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
     StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
-    StaticArray<constCCVariable<double> > rho_CC(numAllMatls);
 
     for (int m = 0; m < numAllMatls; m++) {
       Material* matl = d_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();
       old_dw->get(temp_CC[m],       Ilb->temp_CCLabel,      indx, patch, gn, 0);
       new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel,  indx, patch, gn, 0);
-      new_dw->get(rho_CC[m],        Ilb->rho_CCLabel,       indx, patch, gn, 0);
     }
     
     
@@ -344,7 +341,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       }
       
       if(burning){
-       	cout<<"\tThe burning cell is : " << c << " solid vol_frac = " << solidVol_frac[c] <<"  solidMass = " <<solidMass[c] <<endl;
+       	//cout<<"\tThe burning cell is : " << c << " solid vol_frac = " << solidVol_frac[c] <<"  solidMass = " <<solidMass[c] <<endl;
        	Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
        	double surfArea = computeSurfaceArea(rhoGradVector, dx); 
 
