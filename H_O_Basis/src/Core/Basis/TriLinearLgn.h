@@ -42,210 +42,210 @@
 
 namespace SCIRun {
 
-using std::vector;
-using std::string;
+  using std::vector;
+  using std::string;
   
-class TriApprox {  
-public:
-  static double UnitVertices[3][2];
-  static int UnitEdges[3][2];
-  static int UnitFaces[1][3];
+  class TriApprox {  
+  public:
+    static double UnitVertices[3][2];
+    static int UnitEdges[3][2];
+    static int UnitFaces[1][3];
 
-  TriApprox() {}
-  virtual ~TriApprox() {}
+    TriApprox() {}
+    virtual ~TriApprox() {}
   
-  //! Approximate edge for element by piecewise linear segments
-  //! return: coords describes an array of points approximating the edge.
-  virtual void approx_edge(const unsigned edge, const unsigned div_per_unit, 
-			   vector<vector<double> > &coords) const
-  {
-    coords.resize(div_per_unit+1);
+    //! Approximate edge for element by piecewise linear segments
+    //! return: coords describes an array of points approximating the edge.
+    virtual void approx_edge(const unsigned edge, const unsigned div_per_unit, 
+			     vector<vector<double> > &coords) const
+    {
+      coords.resize(div_per_unit+1);
 
-    const double *v0 = UnitVertices[UnitEdges[edge][0]];
-    const double *v1 = UnitVertices[UnitEdges[edge][1]];
+      const double *v0 = UnitVertices[UnitEdges[edge][0]];
+      const double *v1 = UnitVertices[UnitEdges[edge][1]];
 
-    const double &p1x = v0[0];
-    const double &p1y = v0[1];
-    const double dx = v1[0] - p1x;
-    const double dy = v1[1] - p1y;
+      const double &p1x = v0[0];
+      const double &p1y = v0[1];
+      const double dx = v1[0] - p1x;
+      const double dy = v1[1] - p1y;
 
-    for(unsigned i = 0; i <= div_per_unit; i++) {
-      const double d = (double)div_per_unit / (double)i;
-      vector<double> &tmp = coords[i];
-      tmp[0] = p1x + d * dx;
-      tmp[1] = p1y + d * dy;
-    } 	
-  }
+      for(unsigned i = 0; i <= div_per_unit; i++) {
+	const double d = (double)div_per_unit / (double)i;
+	vector<double> &tmp = coords[i];
+	tmp[0] = p1x + d * dx;
+	tmp[1] = p1y + d * dy;
+      } 	
+    }
   
-  virtual int get_approx_face_elements() const { return 3; }
+    virtual int get_approx_face_elements() const { return 3; }
   
-  virtual void approx_face(const unsigned /* face */, 
-			   const unsigned div_per_unit, 
-			   vector<vector<vector<double> > > &coords) const
-  {
-    coords.resize(div_per_unit);
-    const double d = 1. / div_per_unit;
+    virtual void approx_face(const unsigned /* face */, 
+			     const unsigned div_per_unit, 
+			     vector<vector<vector<double> > > &coords) const
+    {
+      coords.resize(div_per_unit);
+      const double d = 1. / div_per_unit;
 
-    for(unsigned j = 0; j < div_per_unit; j++) {
-      const double dj = (double)div_per_unit / (double)j;
-      unsigned e = 0;
-      coords[j].resize((div_per_unit - j) * 2 + 1);
-      vector<double> &tmp = coords[j][e++];
-      tmp[0] = 0;
-      tmp[1] = dj;
-      for(unsigned i = 0; i<div_per_unit - j; i++) {
-	const double di = (double)div_per_unit / (double)i;
-	tmp = coords[j][e++];
-	tmp[0] = di;
-	tmp[1] = dj + d;
-	tmp = coords[j][e++];
-	tmp[0] = di + d;
+      for(unsigned j = 0; j < div_per_unit; j++) {
+	const double dj = (double)div_per_unit / (double)j;
+	unsigned e = 0;
+	coords[j].resize((div_per_unit - j) * 2 + 1);
+	vector<double> &tmp = coords[j][e++];
+	tmp[0] = 0;
 	tmp[1] = dj;
+	for(unsigned i = 0; i<div_per_unit - j; i++) {
+	  const double di = (double)div_per_unit / (double)i;
+	  tmp = coords[j][e++];
+	  tmp[0] = di;
+	  tmp[1] = dj + d;
+	  tmp = coords[j][e++];
+	  tmp[0] = di + d;
+	  tmp[1] = dj;
+	}
       }
     }
-  }
-};
+  };
 
 
-//! Triangular topology
-template <class T>
-class TriLinearLgn : public TriApprox {
-public:
-  static int GaussianNum;
-  static double GaussianPoints[3][2];
-  static double GaussianWeights[3];
+  //! Triangular topology
+  template <class T>
+    class TriLinearLgn : public TriApprox {
+  public:
+    static int GaussianNum;
+    static double GaussianPoints[3][2];
+    static double GaussianWeights[3];
 
-  TriLinearLgn() {}
-  virtual ~TriLinearLgn() {}
+    TriLinearLgn() {}
+    virtual ~TriLinearLgn() {}
   
-  virtual int polynomial_order() const { return 1; }
+    virtual int polynomial_order() const { return 1; }
 
-  virtual void approx_edge(const unsigned edge, 
-			   const unsigned /* div_per_unit */,
-			   vector<vector<double> > &coords) const
-  {
-    coords.resize(2);
-    vector<double> &tmp = coords[0];
-    tmp[0] = UnitVertices[UnitEdges[edge][0]][0];
-    tmp[1] = UnitVertices[UnitEdges[edge][0]][1];
-    tmp = coords[1];
-    tmp[0] = UnitVertices[UnitEdges[edge][1]][0];
-    tmp[1] = UnitVertices[UnitEdges[edge][1]][1];
-  }
+    virtual void approx_edge(const unsigned edge, 
+			     const unsigned /* div_per_unit */,
+			     vector<vector<double> > &coords) const
+    {
+      coords.resize(2);
+      vector<double> &tmp = coords[0];
+      tmp[0] = UnitVertices[UnitEdges[edge][0]][0];
+      tmp[1] = UnitVertices[UnitEdges[edge][0]][1];
+      tmp = coords[1];
+      tmp[0] = UnitVertices[UnitEdges[edge][1]][0];
+      tmp[1] = UnitVertices[UnitEdges[edge][1]][1];
+    }
 
-  virtual void approx_face(const unsigned /* face */, 
-			   const unsigned div_per_unit,
-			   vector<vector<vector<double> > > &coords) const
-  {
-    coords.resize(1);
-    coords[0].resize(3);
-    vector<double> &tmp = coords[0][0];
-    tmp[0] = 0;
-    tmp[1] = 0;
-    tmp = coords[0][1];
-    tmp[0] = 1;
-    tmp[1] = 0;
-    tmp = coords[0][2];
-    tmp[0] = 0;
-    tmp[1] = 1;
-  }
+    virtual void approx_face(const unsigned /* face */, 
+			     const unsigned div_per_unit,
+			     vector<vector<vector<double> > > &coords) const
+    {
+      coords.resize(1);
+      coords[0].resize(3);
+      vector<double> &tmp = coords[0][0];
+      tmp[0] = 0;
+      tmp[1] = 0;
+      tmp = coords[0][1];
+      tmp[0] = 1;
+      tmp[1] = 0;
+      tmp = coords[0][2];
+      tmp[0] = 0;
+      tmp[1] = 1;
+    }
 
-  // Value at coord
-  template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
-  {
-    const double x = coords[0], y = coords[1];  
-    return (T)((1 - x - y) * cd.node0() + x * cd.node1() + y * cd.node2());
-  }
+    //! get value at parametric coordinate
+    template <class ElemData>
+      T interpolate(const vector<double> &coords, const ElemData &cd) const
+      {
+	const double x = coords[0], y = coords[1];  
+	return (T)((1 - x - y) * cd.node0() + x * cd.node1() + y * cd.node2());
+      }
   
-  //! First spatial derivative at coord.
-  template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<double> &derivs) const
-  {
-    derivs.resize(2);
+    //! get first derivative at parametric coordinate
+    template <class ElemData>
+      void derivate(const vector<double> &coords, const ElemData &cd, 
+		    vector<double> &derivs) const
+      {
+	derivs.resize(2);
 
-    derivs[0] = -cd.node0() + cd.node1();
-    derivs[1] = -cd.node0() + cd.node2();
-  }
+	derivs[0] = -cd.node0() + cd.node1();
+	derivs[1] = -cd.node0() + cd.node2();
+      }
 	
-  //! return the parametric coordinates for value within the element.
-  //! iterative solution...
-  template <class ElemData>
-  void get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
+    //! get the parametric coordinate for value within the element
+    //! iterative solution...
+    template <class ElemData>
+      void get_coords(vector<double> &coords, const T& value, 
+		      const ElemData &cd) const;  
 
-  static const string type_name(int n = -1);
+    static const string type_name(int n = -1);
 
-  virtual void io (Piostream& str);
+    virtual void io (Piostream& str);
 
-protected:
+  protected:
 
-  double distance(const T&, const T&) const;
-};
-
-
-template <class T>
-const TypeDescription* get_type_description(TriLinearLgn<T> *)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription(TriLinearLgn<T>::type_name(0), subs, 
-				string(__FILE__),
-				"SCIRun");
-  }
-  return td;
-}
-
-template <class T>
-const string
-TriLinearLgn<T>::type_name(int n)
-{
-  ASSERT((n >= -1) && n <= 1);
-  if (n == -1)
-  {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
-    return name;
-  }
-  else if (n == 0)
-  {
-    static const string nm("TriLinearLgn");
-    return nm;
-  } else {
-    return find_type_name((T *)0);
-  }
-}
+    double distance(const T&, const T&) const;
+  };
 
 
-template <class T>
-template <class ElemData>
-void 
-TriLinearLgn<T>::get_coords(vector<double> &coords, const T& value, 
-			    const ElemData &cd) const
-{
-}
+  template <class T>
+    const TypeDescription* get_type_description(TriLinearLgn<T> *)
+    {
+      static TypeDescription* td = 0;
+      if(!td){
+	const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+	TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+	(*subs)[0] = sub;
+	td = scinew TypeDescription(TriLinearLgn<T>::type_name(0), subs, 
+				    string(__FILE__),
+				    "SCIRun");
+      }
+      return td;
+    }
 
-const int TRILINEARLGN_VERSION = 1;
-template <class T>
-void
-TriLinearLgn<T>::io(Piostream &stream)
-{
-  stream.begin_class(type_name(-1), TRILINEARLGN_VERSION);
-  stream.end_class();
-}
+  template <class T>
+    const string
+    TriLinearLgn<T>::type_name(int n)
+    {
+      ASSERT((n >= -1) && n <= 1);
+      if (n == -1)
+	{
+	  static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+	  return name;
+	}
+      else if (n == 0)
+	{
+	  static const string nm("TriLinearLgn");
+	  return nm;
+	} else {
+	return find_type_name((T *)0);
+      }
+    }
 
-template <class T>
-int TriLinearLgn<T>::GaussianNum = 3;
 
-template <class T>
-double TriLinearLgn<T>::GaussianPoints[3][2] = {
-  {1./6.,1./6.}, {2./3.,1./6.}, {1./6.,2./3.}};
+  template <class T>
+    template <class ElemData>
+    void 
+    TriLinearLgn<T>::get_coords(vector<double> &coords, const T& value, 
+				const ElemData &cd) const
+    {
+    }
 
-template <class T>
-double TriLinearLgn<T>::GaussianWeights[3] = {1./3., 1./3., 1./3.};
+  const int TRILINEARLGN_VERSION = 1;
+  template <class T>
+    void 
+    TriLinearLgn<T>::io(Piostream &stream)
+    {
+      stream.begin_class(type_name(-1), TRILINEARLGN_VERSION);
+      stream.end_class();
+    }
+
+  template <class T>
+    int TriLinearLgn<T>::GaussianNum = 3;
+
+  template <class T>
+    double TriLinearLgn<T>::GaussianPoints[3][2] = {
+    {1./6.,1./6.}, {2./3.,1./6.}, {1./6.,2./3.}};
+
+  template <class T>
+    double TriLinearLgn<T>::GaussianWeights[3] = {1./3., 1./3., 1./3.};
 
 } //namespace SCIRun
 
