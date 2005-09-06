@@ -55,14 +55,7 @@ public:
 
   int polynomial_order() const { return 2; }
 
-  //! Piecewise Linear approximation to within epsilon accuracy.
-  //! return: approx has the values on the curve that satisfy epsilon.
-  //! return: coords has the [0:1] coordinate corresponding to nodes in approx.
-  template <class ElemData>
-  void pl_approx(vector<T> &approx, vector<double> &coords, 
-		 const ElemData &cd, double epsilon) const;
-
-  // Value at coord
+  //! get value at parametric coordinate 
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
@@ -89,7 +82,7 @@ public:
 	       +4*(-1 + x)*(-1 + y)*y*z*nodes_[cd.edge11_index()]);
   }
   
-  //! First derivative at coord.
+  //! get first derivative at parametric coordinate
   template <class ElemData>
   void derivate(const vector<double> &coords, const ElemData &cd, 
 		vector<double> &derivs) const
@@ -160,7 +153,7 @@ public:
       +4*(-1 + x)*(-1 + y)*y*nodes_[cd.edge11_index()];  
   }
 
-  //! return the parametric coordinates for value within the element.
+  //! get first derivative at parametric coordinate
   //! iterative solution...
   template <class ElemData>
   void get_coords(vector<double> &coords, const T& value, 
