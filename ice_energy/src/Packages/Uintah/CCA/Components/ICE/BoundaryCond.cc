@@ -465,9 +465,20 @@ void setBC_Temperature(CCVariable<double>& var_CC,
 
         //__________________________________
         // Apply the boundary condition
+
         IveSetBC =  setNeumanDirichletBC<double>
 	  (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx,mat_id,child);
          
+        if(bc_kind == "Dirichlet"){
+          // The BC set temperature, so we need to back out energy
+          Material *matl = sharedState->getMaterial(mat_id);
+          ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+          ice_matl->getThermo()->compute_int_eng(bound.begin(), bound.end(), var_CC,
+                                                 old_dw, new_dw, state, patch,
+                                                 matl->getDWIndex(), 0,
+                                                 var_CC, sp_vol);
+        }
+
         //__________________________________
         //  hardwiring for NGC nozzle simulation   
         if ( bc_kind == "Custom" && custom_BC_basket->setLodiBcs) {
