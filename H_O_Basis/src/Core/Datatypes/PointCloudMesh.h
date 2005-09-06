@@ -233,6 +233,10 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+
+  // returns a PointCloudMesh
+  static Persistent *maker() { return new PointCloudMesh(); }
+
 private:
   //! the nodes
   vector<Point> points_;
@@ -240,8 +244,6 @@ private:
   //! basis fns
   Basis         basis_;
 
-  // returns a PointCloudMesh
-  static Persistent *maker() { return new PointCloudMesh(); }
 };  // end class PointCloudMesh
 
 template <class Basis>

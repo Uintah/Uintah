@@ -148,6 +148,9 @@ public:
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
 
+  // returns a StructHexVolMesh
+  static Persistent *maker() { return new StructHexVolMesh<Basis>(); }
+
 private:
   void compute_grid();
   double inside8_p(typename Cell::index_type i, const Point &p) const;
@@ -165,8 +168,6 @@ private:
   Mutex                               grid_lock_; // Bad traffic!
   typename Cell::index_type           locate_cache_;
 
-  // returns a StructHexVolMesh
-  static Persistent *maker() { return new StructHexVolMesh<Basis>(); }
 
   static double
   distance2(const Point &p0, const Point &p1)

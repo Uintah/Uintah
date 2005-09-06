@@ -946,13 +946,13 @@ TextPiostream::begin_class(const string& classname, int current_version)
 
   if (dir==Read)
   {
-    if (classname != gname)
-    {
-      err = true;
-      reporter_->error("Expecting class: " + classname +
-                       ", got class: " + gname + ".");
-      return 0;
-    }
+//     if (classname != gname)
+//     {
+//       err = true;
+//       reporter_->error("Expecting class: " + classname +
+//                        ", got class: " + gname + ".");
+//       return 0;
+//     }
   }
   io(version);
 

@@ -52,6 +52,8 @@ typedef CrvLinearLgn<unsigned char>         FDucharBasis;
 typedef CrvLinearLgn<unsigned long>         FDulongBasis;
 
 typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
+PersistentTypeID backwards_compat_SLM("ScanlineMesh", "Mesh",
+				      SLMesh::maker, true);
 template class GenericField<SLMesh, FDTensorBasis, vector<Tensor> >;       
 template class GenericField<SLMesh, FDVectorBasis, vector<Vector> >;       
 template class GenericField<SLMesh, FDdoubleBasis, vector<double> >;       
@@ -112,6 +114,9 @@ typedef ConstantBasis<unsigned char>         FDCucharBasis;
 typedef ConstantBasis<unsigned long>         FDCulongBasis;
 
 typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+PersistentTypeID backwards_compat_PCM("PointCloudMesh", "Mesh",
+				      PCMesh::maker, true);
+
 template class GenericField<PCMesh, FDCTensorBasis, vector<Tensor> >;       
 template class GenericField<PCMesh, FDCVectorBasis, vector<Vector> >;       
 template class GenericField<PCMesh, FDCdoubleBasis, vector<double> >;       

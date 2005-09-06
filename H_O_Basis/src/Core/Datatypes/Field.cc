@@ -49,20 +49,16 @@ Field::~Field()
 const int FIELD_VERSION = 3;
 
 void 
-Field::io(Piostream& stream){
-  cerr << "start ::io Field" << std::endl;
+Field::io(Piostream& stream)
+{
   int version = stream.begin_class("Field", FIELD_VERSION);
-  cerr << "version is" << version << " ::io Field" << std::endl;
   if (version < 3) {
     // used to be data_location, then order at this point.
     unsigned tmp = 0;
     Pio(stream, tmp);
   }
-  cerr << "1 ::io Field" << std::endl;
   PropertyManager::io(stream);
-  cerr << "2 ::io Field" << std::endl;
   stream.end_class();
-  cerr << "end ::io Field" << std::endl;
 }
 
 const string

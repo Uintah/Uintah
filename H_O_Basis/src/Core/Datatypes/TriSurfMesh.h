@@ -281,6 +281,10 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+
+  // returns a TriSurfMesh
+  static Persistent *maker() { return new TriSurfMesh<Basis>(); }
+
 private:
   void                  walk_face_orient(typename Face::index_type face, 
 					 vector<bool> &tested);
@@ -308,8 +312,6 @@ private:
   Mutex			node_neighbor_lock_;
   unsigned int		synchronized_;
   Basis                 basis_;
-  // returns a TriSurfMesh
-  static Persistent *maker() { return new TriSurfMesh<Basis>(); }
 
 #ifdef HAVE_HASH_MAP
 

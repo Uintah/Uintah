@@ -63,6 +63,9 @@ typedef PrismLinearLgn<unsigned char>         PFDucharBasis;
 typedef PrismLinearLgn<unsigned long>         PFDulongBasis;
 
 typedef PrismVolMesh<PrismLinearLgn<Point> > PVMesh;
+PersistentTypeID backwards_compat_PVM("PrismVolMesh", "Mesh",
+				      PVMesh::maker, true);
+
 template class GenericField<PVMesh, PFDTensorBasis, vector<Tensor> >;       
 template class GenericField<PVMesh, PFDVectorBasis, vector<Vector> >;       
 template class GenericField<PVMesh, PFDdoubleBasis, vector<double> >;       
@@ -123,6 +126,9 @@ typedef TetLinearLgn<unsigned char>         TFDucharBasis;
 typedef TetLinearLgn<unsigned long>         TFDulongBasis;
 
 typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+PersistentTypeID backwards_compat_TVM("TetVolMesh", "Mesh",
+				      TVMesh::maker, true);
+
 template class GenericField<TVMesh, TFDTensorBasis, vector<Tensor> >;       
 template class GenericField<TVMesh, TFDVectorBasis, vector<Vector> >;       
 template class GenericField<TVMesh, TFDdoubleBasis, vector<double> >;       

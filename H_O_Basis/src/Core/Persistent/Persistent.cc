@@ -184,7 +184,8 @@ Piostream::Piostream(Direction dir, int version, const string &name,
     have_peekname_(false),
     reporter_(pr),
     own_reporter_(false),
-    file_name(name)
+    file_name(name),
+    backwards_compat_id_(false)
 {
   if (reporter_ == NULL)
   {
@@ -369,7 +370,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 #endif
 
       Persistent* (*maker)() = 0;
-      if (in_name == want_name)
+      if (in_name == want_name || backwards_compat_id_)
       {
 	maker = pid.maker;
       }

@@ -74,6 +74,9 @@ typedef CrvLinearLgn<unsigned char>         CFDucharBasis;
 typedef CrvLinearLgn<unsigned long>         CFDulongBasis;
 
 typedef StructCurveMesh<CrvLinearLgn<Point> > CMesh;
+PersistentTypeID backwards_compat_SCM("StructCurveMesh", "Mesh",
+				      CMesh::maker, true);
+
 template class GenericField<CMesh, CFDTensorBasis, vector<Tensor> >;       
 template class GenericField<CMesh, CFDVectorBasis, vector<Vector> >;       
 template class GenericField<CMesh, CFDdoubleBasis, vector<double> >;       
@@ -133,6 +136,9 @@ typedef QuadBilinearLgn<unsigned char>         QFDucharBasis;
 typedef QuadBilinearLgn<unsigned long>         QFDulongBasis;
 
 typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQMesh;
+PersistentTypeID backwards_compat_SQM("StructQuadSurfMesh", "Mesh",
+				      SQMesh::maker, true);
+
 template class GenericField<SQMesh, QFDTensorBasis, FData2d<Tensor,SQMesh> >;
 template class GenericField<SQMesh, QFDVectorBasis, FData2d<Vector,SQMesh> >;
 template class GenericField<SQMesh, QFDdoubleBasis, FData2d<double,SQMesh> >;
@@ -197,6 +203,9 @@ typedef HexTrilinearLgn<unsigned char>         HFDucharBasis;
 typedef HexTrilinearLgn<unsigned long>         HFDulongBasis;
 
 typedef StructHexVolMesh<HexTrilinearLgn<Point> > SHMesh;
+PersistentTypeID backwards_compat_SHVM("StructHexVolMesh", "Mesh",
+				       SHMesh::maker, true);
+
 template class GenericField<SHMesh, HFDTensorBasis, FData3d<Tensor,SHMesh> >;
 template class GenericField<SHMesh, HFDVectorBasis, FData3d<Vector,SHMesh> >;
 template class GenericField<SHMesh, HFDdoubleBasis, FData3d<double,SHMesh> >;
