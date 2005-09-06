@@ -103,7 +103,8 @@ public:
 protected:
 
   void draw_level_outline(vector<float>& vertex, vector<int>& poly,
-                          bool use_fog);
+                          bool use_fog, int color_index, 
+                          FragmentProgramARB* shader);
   
   Point control_point_;
   bool draw_x_;

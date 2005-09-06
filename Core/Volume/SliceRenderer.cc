@@ -501,12 +501,7 @@ SliceRenderer::multi_level_draw()
 	  b->compute_polygon(r, t, vertex, texcoord, size);
 	}
 	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-        if(shader) shader->release(); 
-	Color co = outline_colors_[j];
-        glColor3f(co.r(), co.g(), co.b());
-        draw_level_outline(vertex, size, use_fog);
-        glColor4f(1.0, 1.0, 1.0, 1.0);
-        if(shader) shader->bind();
+        draw_level_outline(vertex, size, use_fog, j, shader);
       }
     }
     if(draw_phi1_) {
@@ -539,12 +534,7 @@ SliceRenderer::multi_level_draw()
 	  b->compute_polygon(r, t, vertex, texcoord, size);
 	}
 	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-        if(shader) shader->release(); 
-	Color co = outline_colors_[j];
-        glColor3f(co.r(), co.g(), co.b());
-        draw_level_outline(vertex, size, use_fog);
-        glColor4f(1.0,1.0,1.0,1.0);
-        if(shader) shader->bind();
+        draw_level_outline(vertex, size, use_fog, j, shader);
       }
     }
     if(draw_z_) {
@@ -575,15 +565,9 @@ SliceRenderer::multi_level_draw()
 	  b->compute_polygon(view_ray, t, vertex, texcoord, size);
 	}
 	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-            // shader messes with line drawing. why?
-        if(shader) shader->release(); 
-	Color co = outline_colors_[j];
-        glColor3f(co.r(), co.g(), co.b());
-        draw_level_outline(vertex, size, use_fog);
-        glColor4f(1.0,1.0,1.0,1.0);
-        if(shader) shader->bind();
+        draw_level_outline(vertex, size, use_fog, j, shader);
       }
-
+      
     } else {
       if(draw_x_) {
 	if( use_stencil_){
@@ -622,13 +606,7 @@ SliceRenderer::multi_level_draw()
 	      b->compute_polygon(r, t, vertex, texcoord, size);
 	    }
 	    draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-            // shader messes with line drawing. why?
-            if(shader) shader->release(); 
-            Color co = outline_colors_[j];
-            glColor3f(co.r(), co.g(), co.b());
-            draw_level_outline(vertex, size, use_fog);
-            glColor4f(1.0,1.0,1.0,1.0);
-            if(shader) shader->bind();
+            draw_level_outline(vertex, size, use_fog, j, shader);
 	  }
 	}
       }
@@ -669,12 +647,7 @@ SliceRenderer::multi_level_draw()
 	    }
 	  }
 	  draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-        if(shader) shader->release(); // shader messes with line drawing. why?
-        Color co = outline_colors_[j];
-        glColor3f(co.r(), co.g(), co.b());
-        draw_level_outline(vertex, size, use_fog);
-        glColor4f(1.0,1.0,1.0,1.0);
-        if(shader) shader->bind();
+          draw_level_outline(vertex, size, use_fog, j, shader);
 	}
       }
       if(draw_z_) {
@@ -719,12 +692,7 @@ SliceRenderer::multi_level_draw()
 	  b->compute_polygon(r, t, vertex, texcoord, size);
 	}
  	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-        if(shader) shader->release(); // shader messes with line drawing. why?
-        Color co = outline_colors_[j];
-        glColor3f(co.r(), co.g(), co.b());
-        draw_level_outline(vertex, size, use_fog);
-        if(shader) shader->bind();
-        glColor4f(1.0,1.0,1.0,1.0);
+        draw_level_outline(vertex, size, use_fog, j, shader);
       }
     }
   }
@@ -929,9 +897,16 @@ SliceRenderer::draw_wireframe()
 
 void SliceRenderer::draw_level_outline(vector<float>& vertex,
                                        vector<int>& poly,
-                                       bool use_fog)
+                                       bool use_fog,
+                                       int color_index,
+                                       FragmentProgramARB* shader)
 {
   if( draw_level_outline_ ){
+
+    if(shader) shader->release(); // shader messes with line drawing. why?
+    Color co = outline_colors_[color_index];
+    glColor3f(co.r(), co.g(), co.b());
+
     if(use_stencil_){
       glDisable(GL_STENCIL_TEST);
     }
@@ -995,7 +970,9 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
 
     if( lighting ) glEnable(GL_LIGHTING);
     if( use_stencil_ ) glEnable(GL_STENCIL_TEST);
-    
+
+    if(shader) shader->bind();   
+    glColor4f(1.0,1.0,1.0,1.0);
   }
 }
 
