@@ -111,16 +111,8 @@ setenv PATH $JAVA_HOME/bin:$PATH
       url="http://www.itk.org"><acronym>ITK</acronym> web
       site</ulink>.  A brief set of ITK installation instructions are
       given <link linkend="sec.cmake">below</link>.  SCIRun supports
-      <acronym>ITK</acronym> versions 1.8, and 2.0.
+      <acronym>ITK</acronym> version 2.2.
     </para>
-
-    <note os="linux;osx">
-      <para>
-	<acronym>ITK</acronym> version 1.8 is not compatible
-	with GCC 3.4.  Use <acronym>ITK</acronym> 2.0 if compiling
-	with GCC 3.4.
-      </para>
-    </note>
 
     <para>
       <acronym>ITK</acronym> installation requires CMake, an

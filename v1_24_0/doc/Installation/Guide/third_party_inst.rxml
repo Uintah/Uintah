@@ -120,7 +120,7 @@ setenv TEEM_ZLIB_IPATH -I/usr/local/include
     installation.</para>
   </note>
 
-  <para>Follow these steps to build internal third-party distribution:</para>
+  <para>Follow these steps to build the internal third-party distribution:</para>
 
   <orderedlist os="linux;irix">
 
@@ -203,6 +203,13 @@ python install /usr/local/SCIRun/Thirdparty 32 1
 
   <para os="osx">Follow these steps to install the third-party
   distribution:</para>
+
+  <note os="osx">
+    <para>
+      Third-party libraries built under OSX 10.3 are not compatible
+      with SCIRun built under OSX 10.4 and vice-versa.
+    </para>
+  </note>
 
   <orderedlist os="osx">
     <listitem>
