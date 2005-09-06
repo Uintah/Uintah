@@ -22,7 +22,7 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-#define OREN 1
+#define OREN 0
 
 /*___________________________________________________________________
  Function~  ICE::scheduleSetupMatrix--
