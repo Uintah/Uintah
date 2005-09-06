@@ -140,7 +140,7 @@ namespace SCIRun {
     }
   
   template <class T>
-    int CrvQuadraticLgn<T>::GaussianNum = 1;
+    int CrvQuadraticLgn<T>::GaussianNum = 2;
 
   template <class T>
     double CrvQuadraticLgn<T>::GaussianPoints[2][1] = {{0.211324865405}, {0.788675134595}};
