@@ -42,10 +42,7 @@ DEALINGS IN THE SOFTWARE.
 <!--% gcc_itk_info = %Q{
 <listitem>
   <para>
-    Note that SCIRun is compatible with GCC 3.4. However,  when building
-    ITK, for use with
-    SCIRun's ITK package, ITK version 2.0 must be used because
-    earlier ITK versions are not compatible with GCC 3.4.
+    <acronym>ITK</acronym> 2.2 is required when building SCIRun with <acronym>ITK</acronym> support (SCIRun's <acronym>ITK</acronym> package).  Earlier versions of <acronym>ITK</acronym> will not work.
   </para>
 </listitem>}
 %-->
@@ -229,6 +226,11 @@ DEALINGS IN THE SOFTWARE.
     <itemizedlist>
       <!--%= gcc_itk_info %-->
       <listitem>
+	<para>SCI has experienced a number of strange behaviors with
+	ATI cards.  We do not recommend the use of ATI cards at this
+	time.</para>
+      </listitem>
+      <listitem>
 	<para>
 	  See the <ulink url="(%=
 	  doc.treeUrl(%Q{doc/User/FAQ/faq.html}) %)">User FAQ</ulink>
@@ -256,29 +258,6 @@ DEALINGS IN THE SOFTWARE.
 	<para>SCI has experienced a number of strange behaviors when
 	running SCIRun on Red Hat Enterprise Linux.  We do not recommend
 	running SCIRun on this system at this time.</para>
-      </listitem>
-      <listitem>
-	<para>While NVIDIA graphic cards and drivers seem to work best
-	under linux, we recently have had success with ATI
-	cards/drivers.
-        </para>
-	<itemizedlist>
-	  <listitem>
-	    <para>Note, we have seen problems with vertex arrays.  A
-	    workaround for this is available by setting the
-	    environment variable
-	    <envar>SCIRUN_DRAWARRAYS_DISABLE</envar> to true.  (This
-	    may be done in the .scirunrc file or in the shell's
-	    environment.)
-            </para>
-	  </listitem>
-	  <listitem>
-	    <para>
-	      Note - Pbuffers on the ATI card has shown some problems
-	      resulting in saved images not being optimal.
-            </para>
-	  </listitem>
-	</itemizedlist>
       </listitem>
     </itemizedlist>
   </para>

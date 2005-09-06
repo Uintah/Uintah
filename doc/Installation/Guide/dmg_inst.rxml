@@ -52,6 +52,9 @@ DEALINGS IN THE SOFTWARE.
   linkend="sec.mdsplus_inst"/> for MDSplus software installation
   instructions.</para>
 
+  <para>Separate binary tarballs are provided for OSX 10.3 (Panther)
+  and OSX 10.4 (Tiger) platforms.</para>
+
   <para>
     Follow these steps to install SCIRun:
     <orderedlist>
@@ -87,10 +90,10 @@ DEALINGS IN THE SOFTWARE.
       <itemizedlist>
 	<listitem>
 	  <para>
-	    <filename>SCIRunBioPSE-OSX.<!--%= doc.version
-	    %-->.tar.gz</filename> or
-	    <filename>SCIRunFusion-OSX.<!--%= doc.version
-	    %-->.tar.gz</filename>
+	    <filename>SCIRunBioPSE-<!--%= doc.version %-->-OSX-10.3-bin.tar.gz</filename> or
+	    <filename>SCIRunFusion-<!--%= doc.version %-->-OSX-10.3-bin.tar.gz</filename> or
+	    <filename>SCIRunBioPSE-<!--%= doc.version %-->-OSX-10.4-bin.tar.gz</filename> or
+	    <filename>SCIRunFusion-<!--%= doc.version %-->-OSX-10.4-bin.tar.gz</filename>
 	  </para>
 	</listitem>
 	<listitem>
@@ -123,12 +126,12 @@ DEALINGS IN THE SOFTWARE.
       To install SCIRun, <command>cd</command> to the directory
       containing the binary tarball and type:
       <literallayout class="monospaced">
-sudo sh -c 'gunzip -c SCIRunBioPSE-OSX.<!--%= doc.version %-->.tar.gz \
+sudo sh -c 'gunzip -c SCIRunBioPSE-Tiger.<!--%= doc.version %-->.tar.gz \
  | (cd /usr/local &amp;&amp; tar xf -)'
       </literallayout>
       or the following if installing SCIRunWithFusion:
       <literallayout class="monospaced">
-sudo sh -c 'gunzip -c SCIRunFusion-OSX.<!--%= doc.version %-->.tar.gz \
+sudo sh -c 'gunzip -c SCIRunFusion-Tiger.<!--%= doc.version %-->.tar.gz \
  | (cd /usr/local &amp;&amp; tar xf -)'
       </literallayout>
       SCIRun and it's PowerApps are found in
