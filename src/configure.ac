@@ -522,9 +522,14 @@ SCI_ARG_ENABLE(package,
   [package=""])
 SCI_ARG_ENABLE(dataflow,
   AC_HELP_STRING(--disable-dataflow,
-                 do not build Dataflow),
+                 Do not build Dataflow),
   [sci_required_dataflow=no],
   [sci_required_dataflow=yes])
+SCI_ARG_ENABLE(scirun,
+  AC_HELP_STRING(--disable-scirun,
+                 Do not require SCIRun components),
+  [sci_required_scirun=no],
+  [sci_required_scirun=yes])
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
                  Use name for executable name instead of the default: scirun),
@@ -761,6 +766,7 @@ fi
 echo 
 IS_OSX="no"
 IS_WIN="no"
+IS_AIX="no"
 unset NUM_CPUS
 case $host in
   *-irix*)
@@ -783,6 +789,7 @@ case $host in
     ;;
   *-aix*)
     NUM_CPUS=4
+    IS_AIX="yes"
     ;;
   *-mingw*)
     NUM_CPUS=2
@@ -802,6 +809,7 @@ esac
 
 AC_SUBST(IS_OSX)
 AC_SUBST(IS_WIN)
+AC_SUBST(IS_AIX)
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
 
 AC_MSG_CHECKING(physical processor count)
@@ -2227,7 +2235,12 @@ echo
 AC_CHECKING(for required Tcl components...)
 echo
 
-_sci_optional=required
+if test "$sci_required_scirun" = "no"; then
+  _sci_optional=optional
+else
+  _sci_optional=required
+fi
+
 if test "$with_tcl"; then
   _sci_inc="$with_tcl/include"
   _sci_lib="$with_tcl/lib"
@@ -2279,7 +2292,7 @@ fi
 
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
 SCI_TRY_LINK(TK,tk library and headers, tk.h tk3d.h tkPort.h,
-      $_x_inc_dir $_sci_tk_inc,tk $TCL_LIB_FLAG,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG,,required)
+      $_x_inc_dir $_sci_tk_inc,tk $TCL_LIB_FLAG,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG,,$_sci_optional)
 
 SCI_SUBST_THIRDPARTY_DIR(TK_LIB_DIR_FLAG)
 SCI_SUBST_THIRDPARTY_DIR(INC_TK_H)
@@ -2290,7 +2303,7 @@ AC_SUBST(INC_TK_H)
 
 # -- itcl --
 SCI_TRY_LINK(ITCL,itcl library and headers, itcl.h,
-             $_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
+             $_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional)
 
 if test "$IS_WIN" = "yes"; then
   # change the unix-style dir to a windows-style dir for tclsh to read
@@ -2307,7 +2320,7 @@ AC_SUBST(ITCL_LIB_DIR_FLAG)
 AC_SUBST(INC_ITCL_H)
 
 # -- itk --
-SCI_TRY_LINK(ITK,itk library and headers, itk.h, $_x_inc_dir $_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
+SCI_TRY_LINK(ITK,itk library and headers, itk.h, $_x_inc_dir $_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional)
 
 SCI_SUBST_THIRDPARTY_DIR(ITK_LIB_DIR_FLAG_H)
 SCI_SUBST_THIRDPARTY_DIR(INC_ITK_H)
@@ -2317,7 +2330,7 @@ AC_SUBST(ITK_LIB_DIR_FLAG)
 AC_SUBST(INC_ITK_H)
 
 # -- blt --
-SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required) 
+SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional) 
 
 if test "$IS_WIN" = "yes"; then
   # Windows BLT needs these other libs
@@ -2371,12 +2384,12 @@ else
 fi
 
 _xer_lib="xerces-c"
-case $host in
-  *aix*)
+#case $host in
+#  *aix*)
       # Needed on blue pacific for stricmp
-      _xer_lib="xerces-c cfgdce"
-      ;;
-esac
+#      _xer_lib="xerces-c cfgdce"
+#      ;;
+#esac
 
 SCI_TRY_LINK(XERCES_C,xerces library and headers, xercesc/dom/DOMNamedNodeMap.hpp xercesc/util/PlatformUtils.hpp xercesc/parsers/XercesDOMParser.hpp xercesc/dom/DOMNode.hpp xercesc/util/XMLUni.hpp xercesc/sax/SAXException.hpp xercesc/sax/SAXParseException.hpp xercesc/sax/ErrorHandler.hpp,$_xer_inc,$_xer_lib,$_xer_lib_path,,[
   DOMNode *node = 0;

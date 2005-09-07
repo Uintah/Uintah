@@ -88,7 +88,7 @@ PACK_PSELIBS = $(patsubst SCIRUN%,,$(TMP_PACK_PSELIBS))
 
 $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst %,$(LIBDIR)/%,$(PACK_PSELIBS))
 	rm -f $@
-  ifeq ($(CC),newmpxlc)
+  ifeq ($(IS_AIX),yes)
 	ar -v -q $@ $(filter %.o,$^)
   else
   ifeq ($(IS_OSX),yes)

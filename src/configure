@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL OGL_ERR_MACRO AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY JAVA_PATH PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR HAVE_UUID UUID_LIB_FLAG BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL OGL_ERR_MACRO AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY JAVA_PATH PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR HAVE_UUID UUID_LIB_FLAG BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -912,7 +912,8 @@ Optional Features:
 --enable-perfex         Use perfex hardware counters (sgi only)
 --enable-package=<list> Use the SCIRun packages specified by list. example:
                           --enable-package='BioPSE Teem'
---disable-dataflow      do not build Dataflow
+--disable-dataflow      Do not build Dataflow
+--disable-scirun        Do not require SCIRun components
 --enable-exename=<name> Use name for executable name instead of the default:
                           scirun
 --enable-largesos       Build one .so per directory
@@ -1691,6 +1692,7 @@ host_os=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
   sci_required_ruby=no
   sci_required_ssl=no
   sci_required_tau=no
+  sci_required_tcl=yes
   sci_required_teem=no
   sci_required_thirdparty=no
   sci_required_tiff=no
@@ -2637,6 +2639,16 @@ fi;
   sci_arg_enable_list="$sci_arg_enable_list --enable-dataflow --disable-dataflow"
 
 
+  # Check whether --enable-scirun or --disable-scirun was given.
+if test "${enable_scirun+set}" = set; then
+  enableval="$enable_scirun"
+  sci_required_scirun=no
+else
+  sci_required_scirun=yes
+fi;
+  sci_arg_enable_list="$sci_arg_enable_list --enable-scirun --disable-scirun"
+
+
   # Check whether --enable-exename or --disable-exename was given.
 if test "${enable_exename+set}" = set; then
   enableval="$enable_exename"
@@ -3502,6 +3514,7 @@ fi
 echo
 IS_OSX="no"
 IS_WIN="no"
+IS_AIX="no"
 unset NUM_CPUS
 case $host in
   *-irix*)
@@ -3699,6 +3712,7 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
     ;;
   *-aix*)
     NUM_CPUS=4
+    IS_AIX="yes"
     ;;
   *-mingw*)
     NUM_CPUS=2
@@ -3718,6 +3732,7 @@ echo "$as_me: WARNING: !!!!!! This system is untested - You are on your own !!!!
     NUM_CPUS="1"
     ;;
 esac
+
 
 
 
@@ -6668,7 +6683,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6671:" \
+echo "$as_me:6686:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -18660,7 +18675,12 @@ echo
 echo "$as_me: checking for required Tcl components......" >&6;}
 echo
 
-_sci_optional=required
+if test "$sci_required_scirun" = "no"; then
+  _sci_optional=optional
+else
+  _sci_optional=required
+fi
+
 if test "$with_tcl"; then
   _sci_inc="$with_tcl/include"
   _sci_lib="$with_tcl/lib"
@@ -19273,7 +19293,7 @@ fi
 ## arg 6 : $_sci_lib
 ## arg 7 : $TK_DEFS $TCL_LIB_DIR_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : required
+## arg 9 : $_sci_optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -19292,8 +19312,8 @@ echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for tk libr
 fi
 
 
-echo "$as_me:$LINENO: checking for tk library and headers (required)" >&5
-echo $ECHO_N "checking for tk library and headers (required)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for tk library and headers ($_sci_optional)" >&5
+echo $ECHO_N "checking for tk library and headers ($_sci_optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -19301,10 +19321,10 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for tk library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for tk library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for tk library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for tk library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -19442,7 +19462,7 @@ echo "$as_me: WARNING: The path given $the_path is not a valid directory... igno
    done
 fi
 
-if test "required" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -19622,7 +19642,7 @@ eval INC_TK_H=''
 eval HAVE_TK_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "required" != "optional"; then
+if test "$_sci_optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -19666,7 +19686,7 @@ fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
-if test "required" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
   for i in "" tk.h tk3d.h tkPort.h; do
@@ -19785,7 +19805,7 @@ _sci_includes=''
 ## arg 6 : $_sci_lib
 ## arg 7 : $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : required
+## arg 9 : $_sci_optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -19804,8 +19824,8 @@ echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for itcl li
 fi
 
 
-echo "$as_me:$LINENO: checking for itcl library and headers (required)" >&5
-echo $ECHO_N "checking for itcl library and headers (required)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for itcl library and headers ($_sci_optional)" >&5
+echo $ECHO_N "checking for itcl library and headers ($_sci_optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -19813,10 +19833,10 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for itcl library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for itcl library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for itcl library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for itcl library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -19954,7 +19974,7 @@ echo "$as_me: WARNING: The path given $the_path is not a valid directory... igno
    done
 fi
 
-if test "required" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -20134,7 +20154,7 @@ eval INC_ITCL_H=''
 eval HAVE_ITCL_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "required" != "optional"; then
+if test "$_sci_optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -20178,7 +20198,7 @@ fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
-if test "required" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
   for i in "" itcl.h; do
@@ -20317,7 +20337,7 @@ fi
 ## arg 6 : $_sci_lib
 ## arg 7 : $ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : required
+## arg 9 : $_sci_optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -20336,8 +20356,8 @@ echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for itk lib
 fi
 
 
-echo "$as_me:$LINENO: checking for itk library and headers (required)" >&5
-echo $ECHO_N "checking for itk library and headers (required)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for itk library and headers ($_sci_optional)" >&5
+echo $ECHO_N "checking for itk library and headers ($_sci_optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -20345,10 +20365,10 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for itk library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for itk library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for itk library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for itk library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -20486,7 +20506,7 @@ echo "$as_me: WARNING: The path given $the_path is not a valid directory... igno
    done
 fi
 
-if test "required" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -20666,7 +20686,7 @@ eval INC_ITK_H=''
 eval HAVE_ITK_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "required" != "optional"; then
+if test "$_sci_optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -20710,7 +20730,7 @@ fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
-if test "required" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
   for i in "" itk.h; do
@@ -20829,7 +20849,7 @@ _sci_includes=''
 ## arg 6 : $_sci_lib
 ## arg 7 : $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : required
+## arg 9 : $_sci_optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -20848,8 +20868,8 @@ echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for BLT lib
 fi
 
 
-echo "$as_me:$LINENO: checking for BLT library and headers (required)" >&5
-echo $ECHO_N "checking for BLT library and headers (required)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for BLT library and headers ($_sci_optional)" >&5
+echo $ECHO_N "checking for BLT library and headers ($_sci_optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -20857,10 +20877,10 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for BLT library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for BLT library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for BLT library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for BLT library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -20998,7 +21018,7 @@ echo "$as_me: WARNING: The path given $the_path is not a valid directory... igno
    done
 fi
 
-if test "required" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -21178,7 +21198,7 @@ eval INC_BLT_H=''
 eval HAVE_BLT_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "required" != "optional"; then
+if test "$_sci_optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -21222,7 +21242,7 @@ fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
-if test "required" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
   for i in "" blt.h; do
@@ -21517,12 +21537,12 @@ else
 fi
 
 _xer_lib="xerces-c"
-case $host in
-  *aix*)
+#case $host in
+#  *aix*)
       # Needed on blue pacific for stricmp
-      _xer_lib="xerces-c cfgdce"
-      ;;
-esac
+#      _xer_lib="xerces-c cfgdce"
+#      ;;
+#esac
 
 
 ##
@@ -61405,6 +61425,7 @@ s,@DEF_COLLAB_VIS@,$DEF_COLLAB_VIS,;t t
 s,@HAVE_COLLAB_VIS@,$HAVE_COLLAB_VIS,;t t
 s,@IS_OSX@,$IS_OSX,;t t
 s,@IS_WIN@,$IS_WIN,;t t
+s,@IS_AIX@,$IS_AIX,;t t
 s,@ac_ct_CC@,$ac_ct_CC,;t t
 s,@EXEEXT@,$EXEEXT,;t t
 s,@OBJEXT@,$OBJEXT,;t t

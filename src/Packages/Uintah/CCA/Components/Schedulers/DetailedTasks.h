@@ -355,6 +355,10 @@ namespace Uintah {
     DetailedTasks(const DetailedTasks&);
     DetailedTasks& operator=(const DetailedTasks&);
   };
+
+  std::ostream& operator<<(std::ostream& out, const Uintah::DetailedTask& task);
+  std::ostream& operator<<(std::ostream& out, const Uintah::DetailedDep& task);
+
 } // End namespace Uintah
 
 #endif
