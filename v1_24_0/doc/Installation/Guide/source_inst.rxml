@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
     source code</phrase>:
     <orderedlist>
       <listitem>
-	<para><link linkend="src_download">Download</link> and <link
+	<para><link linkend="sec.title.sources">Download</link> and <link
 	linkend="src_unpack">unpack</link> SCIRun sources, packages,
 	third party software, sample data sets, and
 	documentation.</para>
