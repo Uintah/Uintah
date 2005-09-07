@@ -15,6 +15,9 @@ c*********************************************************************
 
       integer TOTORD, ORDOCT, i, j, total,count,m
       double precision ORD(SN/2)
+      double precision pi
+
+      pi = dacos(-1.0D0)
       
         TOTORD = SN*(SN+2)
         ORDOCT = SN*(SN+2)/8     
@@ -108,15 +111,20 @@ c       Generate values of "Mu" for all 8 octants
         enddo
 
 c       Generate weights "WT"
-
+        
         do i=1,TOTORD
            if (SN.EQ.2) then
-              WT(i)=1.5707963d0
+c              WT(i)=1.5707963d0
+c replacing it by pi/2
+              WT(i)=pi/2.0D0
 
            else if (SN.EQ.4) then
-              WT(i)=0.5235987d0
+c              WT(i)=0.5235987d0
+c replacing it by pi/6
+              WT(i)=pi/6.0D0
 
            else if (SN.EQ.6) then
+c have no clue what is this value here, why not pi/12, leaving it
               WT(i)=0.1609517d0
 
               if ((ABS(OXI(i)).EQ.ORD(2)).OR.

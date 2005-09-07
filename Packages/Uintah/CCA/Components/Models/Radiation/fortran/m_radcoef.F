@@ -219,6 +219,8 @@ C-----------------------------------------------------------------------
      $                   MIN( 25.0d0,((4.0d0/OPL) 
      1                   *DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)))
 
+c hardcoded abskg to one if not flow field
+                    if (pcell(i,j,k).ne.ffield) abskg(i,j,k)=1.0d0
                     abskgtemp = abskg(i,j,k)
                     if(abskgtemp.le.1.0d-06)abskgtemp = 1.0d-06
 
