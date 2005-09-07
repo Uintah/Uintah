@@ -111,7 +111,7 @@ setenv PATH $JAVA_HOME/bin:$PATH
       url="http://www.itk.org"><acronym>ITK</acronym> web
       site</ulink>.  A brief set of ITK installation instructions are
       given <link linkend="sec.cmake">below</link>.  SCIRun supports
-      <acronym>ITK</acronym> version 2.2.
+      <acronym>ITK</acronym> version 2.2.  Earlier versions are not supported.
     </para>
 
     <para>
@@ -152,7 +152,7 @@ setenv PATH $JAVA_HOME/bin:$PATH
       following command creates directory
       <filename>InsightToolkit-<replaceable>x.x.x</replaceable></filename>:
       <literallayout class="monospaced">
-gunzip -c InsightToolkit-<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+tar -x -z -f InsightToolkit-<replaceable>x.x.x</replaceable>.tar.gz
       </literallayout>
     </para>
     <para>

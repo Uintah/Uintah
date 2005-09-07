@@ -140,8 +140,11 @@ DEALINGS IN THE SOFTWARE.
 	<listitem>
 	  <para>
 	    Unpack:
-	    <literallayout class="monospaced">
+	    <literallayout class="monospaced" os="irix">
 gunzip -c v2.1.6.petsc.tar.gz | tar xvf -
+	    </literallayout>
+	    <literallayout class="monospaced" os="osx;linux">
+tar -x -z -f v2.1.6.petsc.tar.gz
 	    </literallayout>
 	    creates the directory
 	    <filename>petsc-<replaceable>x.x.x</replaceable></filename> where
