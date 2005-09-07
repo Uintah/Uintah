@@ -19,7 +19,7 @@
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>  2.0        </max_delt_increase>
        <!--<max_iterations>     10        </max_iterations> -->
-       <timestep_multiplier>1.0         </timestep_multiplier>
+        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
     <!--   B O U N D A R Y   C O N D I T I O N S                            -->
@@ -400,7 +400,7 @@
         <absorbingSolid>steelBall</absorbingSolid>
         <RadiationModel>
           <absorbingSolid>            true  </absorbingSolid>
-          <radiationCalcFreq>         5     </radiationCalcFreq>
+          <calcFreq>                  5     </calcFreq>
           <table_or_ice_temp_density> ice   </table_or_ice_temp_density>
           <useTableValues>            false </useTableValues>
           <computeCO2_H2O_from_f>     true  </computeCO2_H2O_from_f>
