@@ -14,4 +14,6 @@ void m_radcoef(IntVector idxlo, IntVector idxhi,
 	     OffsetArray1<double> fractiontwo, 
 	     bool lprobone, bool lprobtwo, bool lprobthree, 
 	     int lambda, 
-	     bool lradcal);
+	     bool lradcal,
+             constCCVariable<int> pcell,
+             int ffield);

@@ -794,10 +794,11 @@ RadiationDriver::scheduleComputeProps(const LevelP&        level,
   t->modifies(tempCopy_CCLabel,   mss_G);
   t->modifies(sootVFCopy_CCLabel, mss_G);
   t->modifies(mixfracCopy_CCLabel,mss_G);
+  t->requires(Task::NewDW, cellType_CCLabel, mss_G, gn, 0);
 
   if(d_hasAbsorbingSolid){
     
-    t->requires(Task::NewDW,Ilb->vol_frac_CCLabel, mss_G, gn,0);              
+    t->requires(Task::NewDW,Ilb->vol_frac_CCLabel, mss_S, gn,0);              
   } 
   
   t->modifies(abskg_CCLabel,   mss_G);
@@ -874,6 +875,7 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     new_dw->getModifiable(radVars.ABSKG,      abskg_CCLabel,      indx, patch);
     new_dw->getModifiable(radVars.ESRCG,      esrcg_CCLabel,      indx, patch);
     new_dw->getModifiable(radVars.shgamma,    shgamma_CCLabel,    indx, patch);
+    new_dw->get(constRadVars.cellType,         cellType_CCLabel,  indx, patch,gn,0);
     
     radVars.temperature.copyData(constRadVars.temperature);
     
@@ -907,6 +909,9 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
       //__________________________________
       //if there's an absorbing solid
       // set abskg = 1 in those cells
+      // This is actually useless for radcoef property model 
+      // since abskg is hardcoded to be 1 if not flow field in m_radcoef.F
+      // Still, may be needed for other things
       if(d_hasAbsorbingSolid){
         constCCVariable<double> vol_frac_solid;
         int indx1 = d_matl_S->getDWIndex();
