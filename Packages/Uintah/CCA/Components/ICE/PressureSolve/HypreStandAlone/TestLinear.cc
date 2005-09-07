@@ -38,6 +38,17 @@ TestLinear::TestLinear(const Counter d,
 double TestLinear::diffusion(const Location& x) const
   // Diffusion coefficient
 {
+  //  return 1.0;
+  //  return random()/RAND_MAX;
+
+  bool upperLeft = true;
+  for (Counter d = 0; d < numDims; d++) {
+    if (abs(x[d]) <= 0.5) {
+      upperLeft = false;
+      break;
+    }
+  }
+  if (upperLeft) return 1e+10;
   return 1.0;
 }
 
