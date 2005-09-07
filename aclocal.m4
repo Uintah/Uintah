@@ -1079,6 +1079,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_ruby=no
   sci_required_ssl=no
   sci_required_tau=no
+  sci_required_tcl=yes
   sci_required_teem=no
   sci_required_thirdparty=no
   sci_required_tiff=no

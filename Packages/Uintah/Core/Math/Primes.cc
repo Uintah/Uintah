@@ -113,6 +113,7 @@ using namespace Uintah;
 static int numPrimes = sizeof(primes)/sizeof(unsigned long);
 //const int Primes::MaxFactors = 64; // Enough for any 64 bit number
 
+const int Primes::MaxFactors;
 
 int Primes::factorize(unsigned long n, FactorType result)
 {

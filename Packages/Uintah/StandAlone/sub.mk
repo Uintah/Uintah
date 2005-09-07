@@ -14,7 +14,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 SRCS := $(SRCDIR)/sus.cc
 
-ifeq ($(CC),newmpxlc)
+ifeq ($(IS_AIX),yes)
   AIX_LIBRARY := \
         Core/XMLUtil  \
         Core/Malloc       \
@@ -22,7 +22,10 @@ ifeq ($(CC),newmpxlc)
         Core/Containers   \
 	Core/Persistent   \
 	Core/OS		  \
+	Packages/Uintah/Core/Math			\
         Packages/Uintah/Core/GeometryPiece              \
+	Packages/Uintah/CCA/Components/Parent		\
+	Packages/Uintah/CCA/Components/SwitchingCriteria\
         Packages/Uintah/CCA/Components/Arches/Mixing    \
         Packages/Uintah/CCA/Components/Arches/fortran   \
         Packages/Uintah/CCA/Components/Arches/Radiation \
@@ -70,7 +73,7 @@ else
         $(AIX_LIBRARY)
 endif
 
-ifeq ($(CC),newmpxlc)
+ifeq ($(IS_AIX),yes)
   LIBS := \
 	$(TCL_LIBRARY) \
 	$(TEEM_LIBRARY) \

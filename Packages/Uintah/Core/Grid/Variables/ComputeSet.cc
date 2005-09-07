@@ -7,7 +7,8 @@ using namespace std;
 using namespace Uintah;
 
 namespace Uintah {
-  std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet& ps)
+
+  ostream& operator<<(ostream& out, const Uintah::PatchSet& ps)
   {
     if(&ps == 0)
       out << "(null PatchSet)";
@@ -24,7 +25,32 @@ namespace Uintah {
     return out;
   }
 
-  std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet& ms)
+  ostream& operator<<(ostream& out, const Uintah::PatchSubset& pss)
+  {
+    out << "{";
+    for(int j=0;j<pss.size();j++){
+      if(j != 0)
+        out << ",";
+      const Patch* patch = pss.get(j);
+      out << patch->getID();
+    }
+    out << "}";
+    return out;
+  }
+
+  ostream& operator<<(ostream& out, const Uintah::MaterialSubset& mss)
+  {
+    out << "{";
+    for(int j=0;j<mss.size();j++){
+      if(j != 0)
+        out << ",";
+      out << mss.get(j);
+    }
+    out << "}";
+    return out;
+  }
+
+  ostream& operator<<(ostream& out, const Uintah::MaterialSet& ms)
   {
     if(&ms == 0)
       out << "(null Materials)";
@@ -41,30 +67,7 @@ namespace Uintah {
     return out;
   }
 
-  std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset& pss)
-  {
-    out << "{";
-    for(int j=0;j<pss.size();j++){
-      if(j != 0)
-        out << ",";
-      const Patch* patch = pss.get(j);
-      out << patch->getID();
-    }
-    out << "}";
-    return out;
-  }
+} // end namespace Uintah
 
-  std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset& mss)
-  {
-    out << "{";
-    for(int j=0;j<mss.size();j++){
-      if(j != 0)
-        out << ",";
-      out << mss.get(j);
-    }
-    out << "}";
-    return out;
-  }
-}
 
   
