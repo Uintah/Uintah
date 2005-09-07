@@ -925,10 +925,14 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
     if( multitex ) //if so, how many texture units?
       glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &n_tex_regs);
 
+
+#if defined(GL_ARB_fragment_program)
+#ifdef _WIN32
+    if (glActiveTexture) {
+#endif
     GLboolean *tex1d = new GLboolean[n_tex_regs];
     GLboolean *tex2d = new GLboolean[n_tex_regs];
     GLboolean *tex3d = new GLboolean[n_tex_regs];
-
     if(multitex){ // for each texture unit, mark what is enabled
       for( int i = 0; i < n_tex_regs; i++){
         glActiveTexture(GL_TEXTURE0+i);
@@ -947,9 +951,17 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
       tex3d[0] = glIsEnabled(GL_TEXTURE_3D);
       glDisable(GL_TEXTURE_3D);
     }
+#ifdef _WIN32
+    }
+#endif
+#endif
     //    glColor4f(0.8,0.8,0.8,1.0);
     draw_polygons_wireframe(vertex, texcoord, poly, true, use_fog, 0);
 
+#if defined(GL_ARB_fragment_program)
+#ifdef _WIN32
+    if (glActiveTexture) {
+#endif
     // Renable the texturing.
     if(multitex){ // re-enable textures for each texture unit.
       for(int i = 0; i < n_tex_regs; i++){
@@ -967,6 +979,10 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
     delete [] tex1d;
     delete [] tex2d;
     delete [] tex3d;
+#ifdef _WIN32
+    }
+#endif
+#endif
 
     if( lighting ) glEnable(GL_LIGHTING);
     if( use_stencil_ ) glEnable(GL_STENCIL_TEST);
