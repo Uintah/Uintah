@@ -29,7 +29,7 @@ using namespace SCIRun;
 
 // _________________transversely isotropic hyperelastic material [Jeff Weiss's]
 
-ViscoTransIsoHyper::ViscoTransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
+ViscoTransIsoHyper::ViscoTransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb, 
                              MPMFlags* Mflag)
   //______________________CONSTRUCTOR (READS INPUT, INITIALIZES SOME MODULI)
 {
@@ -44,11 +44,12 @@ ViscoTransIsoHyper::ViscoTransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
   ps->require("c3", d_initialData.c3);//scales exponential stresses
   ps->require("c4", d_initialData.c4);//controls uncrimping of fibers
   ps->require("c5", d_initialData.c5);//straightened fibers modulus
-  ps->require("fiber_stretch", d_initialData.lambda_star);
-  ps->require("direction_of_symm", d_initialData.a0);
+  ps->require("fiber_stretch", d_initialData.lambda_star);//toe region limit
+  ps->require("direction_of_symm", d_initialData.a0);//fiber direction(initial)
   ps->require("failure_option",d_initialData.failure);//failure flag True/False
-  ps->require("max_fiber_strain",d_initialData.crit_stretch);
-  ps->require("max_matrix_strain",d_initialData.crit_shear);
+  ps->require("max_fiber_strain",d_initialData.crit_stretch);//failure limit fibers
+  ps->require("max_matrix_strain",d_initialData.crit_shear);//failure limit matrix
+  ps->get("useModifiedEOS",d_useModifiedEOS);//no negative pressure for solids
   ps->require("y1", d_initialData.y1);//viscoelastic prop's
   ps->require("y2", d_initialData.y2);
   ps->require("y3", d_initialData.y3);
@@ -61,7 +62,6 @@ ViscoTransIsoHyper::ViscoTransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
   ps->require("t4", d_initialData.t4);
   ps->require("t5", d_initialData.t5);
   ps->require("t6", d_initialData.t6);
-  ps->get("useModifiedEOS",d_useModifiedEOS);//no negative pressure for solids
 
   //______________________interpolation
   d_8or27 = flag->d_8or27;
@@ -73,19 +73,18 @@ ViscoTransIsoHyper::ViscoTransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
 
   pStretchLabel = VarLabel::create("p.stretch",
      ParticleVariable<double>::getTypeDescription());
-
   pStretchLabel_preReloc = VarLabel::create("p.stretch+",
      ParticleVariable<double>::getTypeDescription());
 
   pFailureLabel = VarLabel::create("p.fail",
      ParticleVariable<double>::getTypeDescription());
   pFailureLabel_preReloc = VarLabel::create("p.fail+",
-     ParticleVariable<double>::getTypeDescription());//fail_label
-
+     ParticleVariable<double>::getTypeDescription());
+     
   pViscoStressLabel = VarLabel::create("p.pviscostress",
         ParticleVariable<Matrix3>::getTypeDescription());
   pViscoStressLabel_preReloc = VarLabel::create("p.pviscostress+",
-        ParticleVariable<Matrix3>::getTypeDescription());//visco label
+        ParticleVariable<Matrix3>::getTypeDescription());
 
   pPrevStressLabel = VarLabel::create("p.prevstress",
         ParticleVariable<Matrix3>::getTypeDescription());
@@ -127,8 +126,8 @@ ViscoTransIsoHyper::ViscoTransIsoHyper(const ViscoTransIsoHyper* cm)
 {
   lb = cm->lb;
   flag = cm->flag;
-  d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
+  d_8or27 = cm->d_8or27;
 
   d_useModifiedEOS = cm->d_useModifiedEOS ;
 
@@ -143,7 +142,8 @@ ViscoTransIsoHyper::ViscoTransIsoHyper(const ViscoTransIsoHyper* cm)
   d_initialData.failure = cm->d_initialData.failure;
   d_initialData.crit_stretch = cm->d_initialData.crit_stretch;
   d_initialData.crit_shear = cm->d_initialData.crit_shear;
-  d_initialData.y1 = cm->d_initialData.y1;
+  
+  d_initialData.y1 = cm->d_initialData.y1;//visco parameters
   d_initialData.y2 = cm->d_initialData.y2;
   d_initialData.y3 = cm->d_initialData.y3;
   d_initialData.y4 = cm->d_initialData.y4;
@@ -155,7 +155,6 @@ ViscoTransIsoHyper::ViscoTransIsoHyper(const ViscoTransIsoHyper* cm)
   d_initialData.t4 = cm->d_initialData.t4;
   d_initialData.t5 = cm->d_initialData.t5;
   d_initialData.t6 = cm->d_initialData.t6;
-
 }
 
 ViscoTransIsoHyper::~ViscoTransIsoHyper()
@@ -163,16 +162,13 @@ ViscoTransIsoHyper::~ViscoTransIsoHyper()
 {
   VarLabel::destroy(pStretchLabel);
   VarLabel::destroy(pStretchLabel_preReloc);
-
   VarLabel::destroy(pFailureLabel);
-  VarLabel::destroy(pFailureLabel_preReloc);//fail_label
-
+  VarLabel::destroy(pFailureLabel_preReloc);
+  
   VarLabel::destroy(pViscoStressLabel);
   VarLabel::destroy(pViscoStressLabel_preReloc);//visco labels
-
   VarLabel::destroy(pPrevStressLabel);
   VarLabel::destroy(pPrevStressLabel_preReloc);
-
   VarLabel::destroy(pHistory1Label);
   VarLabel::destroy(pHistory1Label_preReloc);
   VarLabel::destroy(pHistory2Label);
@@ -201,32 +197,31 @@ void ViscoTransIsoHyper::initializeCMData(const Patch* patch,
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
-
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
   Matrix3 Identity, zero(0.);
   Identity.Identity();
 
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-  ParticleVariable<Matrix3> prevstress;//visco
-  ParticleVariable<Matrix3> history1,history2,history3,history4,history5,history6;
-  ParticleVariable<double> pstretch,pfail;//fail_label
+  ParticleVariable<double> stretch,fail;
+  ParticleVariable<Matrix3> prevstress,history1,history2,history3,history4,history5,history6;
 
-  new_dw->allocateAndPut(prevstress,         pPrevStressLabel,pset);
-  new_dw->allocateAndPut(history1,           pHistory1Label,pset);
-  new_dw->allocateAndPut(history2,           pHistory2Label,pset);
-  new_dw->allocateAndPut(history3,           pHistory3Label,pset);
-  new_dw->allocateAndPut(history4,           pHistory4Label,pset);
-  new_dw->allocateAndPut(history5,           pHistory5Label,pset);
-  new_dw->allocateAndPut(history6,           pHistory6Label,pset);
-  new_dw->allocateAndPut(pstretch,           pStretchLabel,   pset);
-  new_dw->allocateAndPut(pfail,              pFailureLabel,   pset);
+  new_dw->allocateAndPut(stretch,pStretchLabel,   pset);
+  new_dw->allocateAndPut(fail,   pFailureLabel,   pset);
 
-  for(ParticleSubset::iterator iter = pset->begin();
-      iter != pset->end(); iter++) {
+  new_dw->allocateAndPut(prevstress,pPrevStressLabel,pset);
+  new_dw->allocateAndPut(history1,  pHistory1Label,  pset);
+  new_dw->allocateAndPut(history2,  pHistory2Label,  pset);
+  new_dw->allocateAndPut(history3,  pHistory3Label,  pset);
+  new_dw->allocateAndPut(history4,  pHistory4Label,  pset);
+  new_dw->allocateAndPut(history5,  pHistory5Label,  pset);
+  new_dw->allocateAndPut(history6,  pHistory6Label,  pset);
+
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end(); iter++){
+    fail[*iter] = 0.0 ;
+    stretch[*iter] = 1.0;
     prevstress[*iter] = zero;// no pre-initial stress
-    pstretch[*iter] = 1.0;
-    pfail[*iter] = 0.0;
     history1[*iter] = 0.0;// no initial 'relaxation'
     history2[*iter] = 0.0;
     history3[*iter] = 0.0;
@@ -234,7 +229,6 @@ void ViscoTransIsoHyper::initializeCMData(const Patch* patch,
     history5[*iter] = 0.0;
     history6[*iter] = 0.0;
   }
-
   computeStableTimestep(patch, matl, new_dw);
 }
 
@@ -250,24 +244,50 @@ void ViscoTransIsoHyper::allocateCMDataAddRequires(Task* task,
   // for the particle convert operation
   // This method is defined in the ConstitutiveModel base class.
   addSharedRForConvertExplicit(task, matlset, patches);
-
   // Add requires local to this model
+  task->requires(Task::NewDW,pFailureLabel_preReloc,    matlset, Ghost::None);
+  task->requires(Task::NewDW,pStretchLabel_preReloc,    matlset, Ghost::None);
+
+  task->requires(Task::NewDW,pViscoStressLabel_preReloc,matlset, Ghost::None);//visco
+  task->requires(Task::NewDW,pPrevStressLabel_preReloc, matlset, Ghost::None);
+  task->requires(Task::NewDW,pHistory1Label_preReloc,   matlset, Ghost::None);
+  task->requires(Task::NewDW,pHistory2Label_preReloc,   matlset, Ghost::None);
+  task->requires(Task::NewDW,pHistory3Label_preReloc,   matlset, Ghost::None);
+  task->requires(Task::NewDW,pHistory4Label_preReloc,   matlset, Ghost::None);
+  task->requires(Task::NewDW,pHistory5Label_preReloc,   matlset, Ghost::None);
+  task->requires(Task::NewDW,pHistory6Label_preReloc,   matlset, Ghost::None);
 }
 
 
 void ViscoTransIsoHyper::allocateCMDataAdd(DataWarehouse* new_dw,
-                                           ParticleSubset* addset,
-            map<const VarLabel*, ParticleVariableBase*>* newState,
-                                           ParticleSubset* delset,
-                                           DataWarehouse* )
+                                      ParticleSubset* addset,
+       map<const VarLabel*, ParticleVariableBase*>* newState,
+                                      ParticleSubset* delset,
+                                      DataWarehouse* )
 {
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
+  // Copy the data common to all constitutive models from the particle to be
+  // deleted to the particle to be added.
   // This method is defined in the ConstitutiveModel base class.
   copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
+
+  // Copy the data local to this constitutive model from the particles to
   // be deleted to the particles to be added
+  ParticleVariable<double> stretch,fail;
+  constParticleVariable<double> o_stretch,o_fail;
+
+  new_dw->allocateTemporary(stretch,            addset);
+  new_dw->allocateTemporary(fail,               addset);
+
+  new_dw->get(o_stretch,pStretchLabel_preReloc,                  delset);
+  new_dw->get(o_fail,   pFailureLabel_preReloc,                  delset);
+
+  ParticleSubset::iterator o,n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    stretch[*n] = o_stretch[*o];
+    fail[*n] = o_fail[*o];
+  }
+  (*newState)[pStretchLabel]=stretch.clone();
+  (*newState)[pFailureLabel]=fail.clone();
 }
 
 void ViscoTransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
@@ -279,7 +299,12 @@ void ViscoTransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
   // Add the local particle state data for this constitutive model.
   from.push_back(lb->pFiberDirLabel);
   from.push_back(pStretchLabel);
-  from.push_back(pFailureLabel);//fail_labels
+  from.push_back(pFailureLabel);
+
+  to.push_back(lb->pFiberDirLabel_preReloc);
+  to.push_back(pStretchLabel_preReloc);
+  to.push_back(pFailureLabel_preReloc);
+  
   from.push_back(pViscoStressLabel);//visco_labels
   from.push_back(pPrevStressLabel);
   from.push_back(pHistory1Label);
@@ -289,10 +314,7 @@ void ViscoTransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pHistory5Label);
   from.push_back(pHistory6Label);
 
-  to.push_back(lb->pFiberDirLabel_preReloc);
-  to.push_back(pStretchLabel_preReloc);
-  to.push_back(pFailureLabel_preReloc);//fail_labels
-  to.push_back(pViscoStressLabel_preReloc);//visco_labels
+  to.push_back(pViscoStressLabel_preReloc);
   to.push_back(pPrevStressLabel_preReloc);
   to.push_back(pHistory1Label_preReloc);
   to.push_back(pHistory2Label_preReloc);
@@ -343,7 +365,7 @@ void ViscoTransIsoHyper::computeStableTimestep(const Patch* patch,
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)),
+  new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
               lb->delTLabel);
 }
 
@@ -351,7 +373,6 @@ Vector ViscoTransIsoHyper::getInitialFiberDir()
 {
   return d_initialData.a0;
 }
-
 
 void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
                                         const MPMMaterial* matl,
@@ -384,12 +405,10 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     vector<Vector> d_S;
     d_S.reserve(interpolator->size());
 
-
     Identity.Identity();
 
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -397,10 +416,6 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    ParticleVariable<Matrix3> pviscostress;//visco
-    ParticleVariable<Matrix3> prevstress;
-    ParticleVariable<Matrix3> history1,history2,history3,history4,history5,history6;
-
     constParticleVariable<double> pmass,pvolume;
     ParticleVariable<double> pvolume_deformed;
     ParticleVariable<double> stretch;
@@ -411,6 +426,12 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Vector> pfiberdir_carry;
     constNCVariable<Vector> gvelocity;
     constParticleVariable<Vector> psize;
+    
+    ParticleVariable<Matrix3> pviscostress,prevstress;//visco
+    constParticleVariable<Matrix3> pviscostress_old,prevstress_old;
+    ParticleVariable<Matrix3> history1,history2,history3,history4,history5,history6;
+    constParticleVariable<Matrix3> history1_old,history2_old,history3_old,history4_old,history5_old,history6_old;
+    
     delt_vartype delT;
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
@@ -420,9 +441,20 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pfiberdir,           lb->pFiberDirLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(fail_old,            pFailureLabel,                pset);
-    old_dw->get(psize,             lb->pSizeLabel,              pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
+
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pviscostress,     pViscoStressLabel_preReloc, pset);//visco
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
+    new_dw->allocateAndPut(deformationGradient_new,
+                                             lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
+    new_dw->allocateAndPut(fail,             pFailureLabel_preReloc,     pset);
+
+    new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
+    new_dw->allocateAndPut(pviscostress,     pViscoStressLabel_preReloc, pset);
     new_dw->allocateAndPut(prevstress,       pPrevStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(history1,         pHistory1Label_preReloc,    pset);
     new_dw->allocateAndPut(history2,         pHistory2Label_preReloc,    pset);
@@ -430,21 +462,11 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(history4,         pHistory4Label_preReloc,    pset);
     new_dw->allocateAndPut(history5,         pHistory5Label_preReloc,    pset);
     new_dw->allocateAndPut(history6,         pHistory6Label_preReloc,    pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-                           lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
-    new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-    new_dw->allocateAndPut(fail,    pFailureLabel_preReloc,     pset);//fail_labels
-    
+
     // Allocate variable to store internal heating rate
     ParticleVariable<double> pIntHeatRate;
-    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
-                           pset);
-
-    //material parameters
+    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc,pset);
+    //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
     double c1 = d_initialData.c1;
     double c2 = d_initialData.c2;
@@ -476,11 +498,9 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pIntHeatRate[idx] = 0.0;
-
       // Get the node indices that surround the cell
-      interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
-      
-      
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
       Vector gvel;
       velGrad.set(0.0);
       for(int k = 0; k < d_8or27; k++) {
@@ -493,26 +513,22 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
         }
       }
       
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
+      // Compute the deformation gradient increment using the time_step velocity gradient
       // F_n^np1 = dudx * dt + Identity
       deformationGradientInc = velGrad * delT + Identity;
 
       // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-        deformationGradient[idx];
+      deformationGradient_new[idx] = deformationGradientInc * deformationGradient[idx];
 
       // get the volumetric part of the deformation
       J = deformationGradient_new[idx].Determinant();
 
       // carry forward fiber direction
       pfiberdir_carry[idx] = pfiberdir[idx];
-      deformed_fiber_vector =pfiberdir[idx]; // not actually deformed yet
+      deformed_fiber_vector = pfiberdir[idx]; // not actually deformed yet
 
       //_______________________UNCOUPLE DEVIATORIC AND DILATIONAL PARTS
-      //_______________________Ftilde=J^(-1/3)*F
-      //_______________________Fvol=J^1/3*Identity
-
+      //_______________________Ftilde=J^(-1/3)*F, Fvol=J^1/3*Identity
       //_______________________right Cauchy Green (C) tilde and invariants
       rightCauchyGreentilde_new = deformationGradient_new[idx].Transpose()
         * deformationGradient_new[idx]*pow(J,-(2./3.));
@@ -523,14 +539,10 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
       I4tilde = Dot(deformed_fiber_vector,
                     (rightCauchyGreentilde_new*deformed_fiber_vector));
       lambda_tilde = sqrt(I4tilde);
-
-      // For diagnostics only
-      double I4 = I4tilde*pow(J,(2./3.));
+      double I4 = I4tilde*pow(J,(2./3.));// For diagnostics only
       stretch[idx] = sqrt(I4);
-
       deformed_fiber_vector = deformationGradient_new[idx]*deformed_fiber_vector
         *(1./lambda_tilde*pow(J,-(1./3.)));
-
       Matrix3 DY(deformed_fiber_vector,deformed_fiber_vector);
 
       //________________________________left Cauchy Green (B) tilde
@@ -577,8 +589,8 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
         double Dkk = tensorD.Trace();
         double c_bulk = sqrt(Bulk/rho_cur);
         qVisco = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
-      } */
-
+      }
+      */
       //________________________________Failure and stress terms
       fail[idx] = 0.;
       if (failure == 1)
@@ -617,15 +629,15 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
           if (e2 < e3) swap(e2,e3);
           };
         double max_shear_strain = (e1-e3)/2.;
-        if (max_shear_strain<= crit_shear)
-          {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
-               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
-               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
-          }
-        else
+        if (max_shear_strain > crit_shear || fail_old[idx]== 1.0 || fail_old[idx] == 3.0)
           {deviatoric_stress = Identity*0.;
           fail[idx] = 1.;
           matrix_failed = 1.;
+          }
+        else
+         {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
+               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
           }
         //________________________________fiber stress term + failure of fibers
         if (stretch[idx] > crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
@@ -666,23 +678,21 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
           //Cauchy stress
           pstress[idx] = pressure + deviatoric_stress + fiber_stress;
         }
-
-      //_______________________________Viscoelastic stress
-      //__________COMPUTE COEFFICIENTS
+	     //_______________________________Viscoelastic stress
       if (t1 > 0.)
       {double exp1 = exp(- delT/t1);
        double fac1 = (1. - exp1)*t1/delT;
        history1[idx] = history1[idx]*exp1+(pstress[idx]-prevstress[idx])*fac1;}
       else
        history1[idx]= Identity*0.;
-      
+
       if (t2 > 0.)
       {double exp2 = exp(- delT/t2);
        double fac2 = (1. - exp2)*t2/delT;
        history2[idx] = history2[idx]*exp2+(pstress[idx]-prevstress[idx])*fac2;}
       else
        history2[idx]= Identity*0.;
-      
+
       if (t3 > 0.)
       {double exp3 = exp(- delT/t3);
        double fac3 = (1. - exp3)*t3/delT;
@@ -714,7 +724,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
       pviscostress[idx] = history1[idx]*y1+history2[idx]*y2+history3[idx]*y3
                         + history4[idx]*y4+history5[idx]*y5+history6[idx]*y6
                         + prevstress[idx];
-      prevstress[idx] = pstress[idx];// updated 
+      prevstress[idx] = pstress[idx];// updated
 
       //________________________________end stress
 
@@ -751,7 +761,7 @@ void ViscoTransIsoHyper::carryForward(const PatchSubset* patches,
                                  const MPMMaterial* matl,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
-  //used with RigidMPM
+  //_____________________________used with RigidMPM
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -763,60 +773,60 @@ void ViscoTransIsoHyper::carryForward(const PatchSubset* patches,
     // This method is defined in the ConstitutiveModel base class.
     carryForwardSharedData(pset, old_dw, new_dw, matl);
 
-    // Carry forward the data local to this constitutive model
-    constParticleVariable<Vector> pfibdir;
+    // Carry forward the data local to this constitutive model 
+    constParticleVariable<Vector> pfibdir;  
     ParticleVariable<Vector> pfibdir_new;
-
     ParticleVariable<double> pstretch;
-
     constParticleVariable<Vector> pfail_old;
-    ParticleVariable<double> pfail;//fail_label
+    ParticleVariable<double> pfail;
     
-    ParticleVariable<Matrix3> pviscostress_new;//visco_label
-    constParticleVariable<Matrix3> prevstress;
-    ParticleVariable<Matrix3> prevstress_new;
+    ParticleVariable<Matrix3> pviscostress_new,prevstress_new;//visco_label
+    constParticleVariable<Matrix3> pviscostress,prevstress;
     constParticleVariable<Matrix3> history1,history2,history3,history4,history5,history6;
     ParticleVariable<Matrix3> history1_new,history2_new,history3_new,history4_new,history5_new,history6_new;
 
-    old_dw->get(pfibdir,          lb->pFiberDirLabel,                  pset);
-    old_dw->get(pfail_old,        pFailureLabel,                       pset);
-    old_dw->get(prevstress,       pPrevStressLabel,                    pset);
+    old_dw->get(pfibdir,         lb->pFiberDirLabel,                   pset);
+    old_dw->get(pfail_old,       pFailureLabel,                        pset);
+
+    new_dw->allocateAndPut(pfibdir_new,      lb->pFiberDirLabel_preReloc, pset);
+    new_dw->allocateAndPut(pstretch,         pStretchLabel_preReloc,      pset);
+    new_dw->allocateAndPut(pfail,            pFailureLabel_preReloc,      pset);
+    
+    old_dw->get(prevstress,       pPrevStressLabel,                    pset);//visco_label
     old_dw->get(history1,         pHistory1Label,                      pset);
     old_dw->get(history2,         pHistory2Label,                      pset);
     old_dw->get(history3,         pHistory3Label,                      pset);
     old_dw->get(history4,         pHistory4Label,                      pset);
     old_dw->get(history5,         pHistory5Label,                      pset);
     old_dw->get(history6,         pHistory6Label,                      pset);
+    
+    new_dw->allocateAndPut(pviscostress_new,  pViscoStressLabel_preReloc,  pset);
+    new_dw->allocateAndPut(prevstress_new,    pPrevStressLabel_preReloc,   pset);
+    new_dw->allocateAndPut(history1_new,      pHistory1Label_preReloc,     pset);
+    new_dw->allocateAndPut(history2_new,      pHistory2Label_preReloc,     pset);
+    new_dw->allocateAndPut(history3_new,      pHistory3Label_preReloc,     pset);
+    new_dw->allocateAndPut(history4_new,      pHistory4Label_preReloc,     pset);
+    new_dw->allocateAndPut(history5_new,      pHistory5Label_preReloc,     pset);
+    new_dw->allocateAndPut(history6_new,      pHistory6Label_preReloc,     pset);
 
-    new_dw->allocateAndPut(pfibdir_new,      lb->pFiberDirLabel_preReloc, pset);
-    new_dw->allocateAndPut(pstretch,         pStretchLabel_preReloc,      pset);
-    new_dw->allocateAndPut(pfail,            pFailureLabel_preReloc,      pset);
-    new_dw->allocateAndPut(pviscostress_new, pViscoStressLabel_preReloc,  pset);//visco_label
-    new_dw->allocateAndPut(prevstress_new,   pPrevStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(history1_new,      pHistory1Label_preReloc,    pset);
-    new_dw->allocateAndPut(history2_new,      pHistory2Label_preReloc,    pset);
-    new_dw->allocateAndPut(history3_new,      pHistory3Label_preReloc,    pset);
-    new_dw->allocateAndPut(history4_new,      pHistory4Label_preReloc,    pset);
-    new_dw->allocateAndPut(history5_new,      pHistory5Label_preReloc,    pset);
-    new_dw->allocateAndPut(history6_new,      pHistory6Label_preReloc,    pset);
 
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
       pfibdir_new[idx] = pfibdir[idx];
       pstretch[idx] = 1.0;
       pfail[idx] = 0.0;
-
+      
       pviscostress_new[idx] = Matrix3(0.0);//visco_label
-      prevstress_new[idx] = prevstress[idx];// pass on the old value
+      prevstress_new[idx] = prevstress[idx];// pass on the old values
       history1_new[idx] = history1[idx];
       history2_new[idx] = history2[idx];
       history3_new[idx] = history3[idx];
       history4_new[idx] = history4[idx];
       history5_new[idx] = history5[idx];
       history6_new[idx] = history6[idx];
+
     }
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)),
-                lb->delTLabel);
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)),lb->delTLabel);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }
@@ -830,14 +840,6 @@ void ViscoTransIsoHyper::addInitialComputesAndRequires(Task* task,
   task->computes(pStretchLabel,              matlset);
   task->computes(lb->pStressLabel_preReloc,  matlset);
   task->computes(lb->pVolumeDeformedLabel,   matlset);
-  /*task->computes(pViscoStressLabel,          matlset);
-  task->computes(pPrevStressLabel            matlset);
-  task->computes(pHistory1Label,             matlset);
-  task->computes(pHistory2Label,             matlset);
-  task->computes(pHistory3Label,             matlset);
-  task->computes(pHistory4Label,             matlset);
-  task->computes(pHistory5Label,             matlset);
-  task->computes(pHistory6Label,             matlset);*/
 }
 
 void ViscoTransIsoHyper::addComputesAndRequires(Task* task,
@@ -850,13 +852,17 @@ void ViscoTransIsoHyper::addComputesAndRequires(Task* task,
   // constitutive models.  The method is defined in the ConstitutiveModel
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForHypoExplicit(task, matlset, patches);
+  addSharedCRForExplicit(task, matlset, patches);
 
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, lb->pFiberDirLabel, matlset, gnone);
+  task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
+  task->requires(Task::OldDW, pFailureLabel,      matlset,gnone);
 
+  task->computes(lb->pFiberDirLabel_preReloc, matlset);
+  task->computes(pStretchLabel_preReloc,      matlset);
+  task->computes(pFailureLabel_preReloc,      matlset);
   task->computes(pViscoStressLabel_preReloc,            matlset);//visco_label
   task->computes(pPrevStressLabel_preReloc,             matlset);
   task->computes(pHistory1Label_preReloc,               matlset);
@@ -865,9 +871,6 @@ void ViscoTransIsoHyper::addComputesAndRequires(Task* task,
   task->computes(pHistory4Label_preReloc,               matlset);
   task->computes(pHistory5Label_preReloc,               matlset);
   task->computes(pHistory6Label_preReloc,               matlset);
-  task->computes(lb->pFiberDirLabel_preReloc,           matlset);
-  task->computes(pStretchLabel_preReloc,                matlset);
-  task->computes(pFailureLabel_preReloc,                matlset);//fail_labels
 }
 
 void ViscoTransIsoHyper::addComputesAndRequires(Task* ,
