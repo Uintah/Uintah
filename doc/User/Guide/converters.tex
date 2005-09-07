@@ -26,25 +26,84 @@
 %  DEALINGS IN THE SOFTWARE.
 %
 
-
 \chapter{Importing and Exporting \sr{} Data}
 \label{ch:import_export} 
 \index{importing}
 \index{exporting}
 \index{converter}
 
-\sr{} does not import or export ``foreign'' data directly. A set of
-command line utilities, called \dfn{converters}, import and export
-data.  The import utilities convert foreign data to \sr{}  
-objects.  The export utilities convert \sr{} objects to
-foreign data. The converters import/export the following \sr{} data
-types: \datatype{Field}, \datatype{Matrix}, and \datatype{ColorMap}.
-Foreign data is text based.
+Data is communicated between \sr{} dataflow modules using data pipes.
+Each type of pipe carries a specific type of data.  For example, some
+of the data types built into \sr{} are Matrix, Color Map, Field, Nrrd,
+Texture, and Geometry.  The majority of ``real'' data that is sent
+through most networks is contained in \sr{} Fields.  Fields can
+contain 1, 2, or 3 dimensional data in structured or unstructured
+organizations.  Once your data exists in \sr{} as a Field, it is easy
+to use.
+
+However, the first question many people ask themselves is, ``How do I
+get my data into \sr{} in the first place?''  \sr{} includes a number
+of tools to support doing this.  These data converter tools exist in
+the src/StandAlone/convert/ directory and are described in more detail
+below.  However, to minimize the effort required to use these tools,
+the \sr{} FieldReader module has been updated to automatically use
+these converter tools from within \sr{}.  For example, if you have a
+text file that contains a list of point locations (see
+{sec:node_loc_fmt}), you can use the ``Files of type:'' menu on the
+FieldReader GUI (set to ``TextPointCloudField (*.pts)'') to
+automatically read in your ``point cloud'' data.
+
+\sr{} data files use the following naming convention to identify the
+type of data contained in the file.  (While it is not required to
+follow this convention (the Reader/Writer modules do not care), it is
+highly encouraged.)  The convention uses two or three letters to
+describe the data.  The first two letters represent the type of data
+structure, the final (optional) letter represents the type of the data
+within the structure.
+
+The following chart lists the data type, and the corresponding two
+letter convention:
+
+\begin{itemize}
+  \item cf - Curved Field
+  \item lv - Latice Volume
+  \item pc - Point Cloud
+  \item ts - Triangulated Surface
+  \item tv - Tetrahedral Volume
+  \item hv - Hexahedral Volume
+\end{itemize}
+
+The third letter, if present, denotes what type of data is contained
+within the file:
+
+\begin{itemize}
+  \item i - int
+  \item d - double
+  \item s - short
+  \item v - Vector (x, y, z (direction and magnitude))
+  \item t - tensor (int field with a "conductivity_table" property)
+\end{itemize}
+
+While \sr{} now can import and export ``foreign'' (text-based) data
+directly, a set of command line utilities, called \dfn{converters},
+may also be used (by hand - from the command line) to convert data
+into and out of \sr{} formats directly.  The import utilities convert
+foreign data to \sr{} objects (eg: a Field) which can be read in
+directly from the appropriate Reader module (eg: FieldReader).  The
+export utilities convert \sr{} objects to foreign data. The converters
+import/export the following \sr{} data types: \datatype{Field},
+\datatype{Matrix}, and \datatype{ColorMap}.  Remember, \sr{} only
+knows how to deal with text-based foreign data that is in a specific
+(though fairly standard) format (see below).
+
+It is important to note that \sr{} data files (eg: Fields (.fld)) are
+not meant to be viewed or edited directly.  If you need to view the
+data in a Field, it is best to convert the Field to a text-based data
+file and view/edit it there.
 
 \sr{}'s file-based objects, field export/import mechanics, format of
 foreign data files, converter command line options, and converter
 synopses are discussed in the following sections.
-
 
 \section{\sr{} Persistent (File-based) Objects}
 \label{sec:sr_file_object}
