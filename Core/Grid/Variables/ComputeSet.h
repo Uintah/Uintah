@@ -207,6 +207,11 @@ WARNING
 
   };  // end class ComputeSet
 
+  std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
+  std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+  std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
+  std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+
   template<class T>
   ComputeSet<T>::ComputeSet()
   {
