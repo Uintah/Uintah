@@ -175,8 +175,7 @@ sudo tar -x -z -f SCIRunData.<!--%= doc.version %-->.tar.gz -C /usr/local
 	</listitem>
 	<listitem>
 	  <para>
-	    If installing <filename>FusionData.<!--%= doc.version
-	    %-->.tar.gz</filename> type:
+	    If installing <filename>FusionData.<!--%= doc.version %-->.tar.gz</filename> type:
 	    <literallayout class="monospaced">
 sudo tar -x -z -f  FusionData.<!--%= doc.version %-->.tar.gz -C /usr/local
 	    </literallayout>
@@ -201,6 +200,20 @@ sudo tar -x -z -f SCIRunDocs.<!--%= doc.version %-->.tar.gz -C /usr/local
       Open <filename>/usr/local/SCIRunDocs.<!--%= doc.version
       %-->/doc/index.html</filename> with a web browser to view
       SCIRun's online documentation.
+    </para>
+  </section>
+
+  <section id="sec.dmg_remove">
+    <title>Removing SCIRun</title>
+    <para>
+      To remove SCIRun, type the following:
+      <literallayout class="monospaced">
+sudo rm -rf /usr/local/SCIRun	
+      </literallayout>
+      Each SCIRun user should type:
+      <literallayout class="monospaced">
+rm -rf ~/SCIRun/on-the-fly-libs	
+      </literallayout>
     </para>
   </section>
 
