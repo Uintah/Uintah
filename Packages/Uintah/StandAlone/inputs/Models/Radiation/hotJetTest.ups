@@ -202,7 +202,7 @@
               <lower>        [-3,0.0,-0.03]     </lower>
               <upper>        [ 3,6.0, 0.03]    </upper>         
               <extraCells>   [1,1,1]         </extraCells>
-              <patches>      [1,1,1]         </patches>    
+              <patches>      [2,2,1]         </patches>    
               <resolution>   [100,100,1]     </resolution>
            </Box>
        </Level>
@@ -365,10 +365,11 @@
       <Model type = "Radiation">
         <radiatingGas>BackgroundGas</radiatingGas>
         <RadiationModel>
-        <radiationCalcFreq>      5    </radiationCalcFreq>
-        <table_or_ice_temp_density> ice  </table_or_ice_temp_density>
-        <useTableValues>        false </useTableValues>
-        <computeCO2_H2O_from_f>  true  </computeCO2_H2O_from_f>
+        <!--<calcFreq>      5    </calcFreq> -->
+        <calcInterval>              2.0e-06 </calcInterval>
+        <table_or_ice_temp_density> ice     </table_or_ice_temp_density>
+        <useTableValues>            false   </useTableValues>
+        <computeCO2_H2O_from_f>     true    </computeCO2_H2O_from_f>
         <DORadiationModel>
           <ordinates> 2       </ordinates>
           <opl>       0.24    </opl>

@@ -10,7 +10,7 @@
     <!--____________________________________________________________________-->
    <Time>
        <maxTime>         100.0          </maxTime>
-       <!--<max_iterations>    100       </max_iterations> -->
+       <max_iterations>    100       </max_iterations>
        <initTime>           0.0       </initTime>
        <delt_min>           0.0       </delt_min>
        <delt_max>           0.1       </delt_max>
@@ -225,7 +225,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>JP8_withOutRad.uda</filebase>
+      <filebase>JP8_withRad.uda</filebase>
       <outputInterval>0.01</outputInterval>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval> -->
       <save label = "press_CC"/>  
@@ -382,7 +382,8 @@
       <Model type = "Radiation">
         <radiatingGas>BackgroundGas</radiatingGas>
         <RadiationModel>
-        <radiationCalcFreq>         5    </radiationCalcFreq>
+        <!--<calcFreq>                  5    </calcFreq> -->
+        <calcInterval>           0.005   </calcInterval>
         <table_or_ice_temp_density> ice  </table_or_ice_temp_density>
         <useTableValues>            true </useTableValues>
         

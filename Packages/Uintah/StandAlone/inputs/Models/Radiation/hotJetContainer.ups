@@ -468,8 +468,8 @@
         <radiatingGas>BackgroundGas</radiatingGas>
         <absorbingSolid>SteelRing</absorbingSolid>
         <RadiationModel>
-        <absorbingSolid>          true </absorbingSolid>
-        <radiationCalcFreq>         5    </radiationCalcFreq>
+        <absorbingSolid>          true   </absorbingSolid>
+        <calcFreq>                 5     </calcFreq>
         <table_or_ice_temp_density> ice  </table_or_ice_temp_density>
         <useTableValues>           false </useTableValues>
         <computeCO2_H2O_from_f>    true  </computeCO2_H2O_from_f>
