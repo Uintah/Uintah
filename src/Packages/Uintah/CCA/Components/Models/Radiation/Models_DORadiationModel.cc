@@ -228,6 +228,7 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
     }
   }
 
+  int flowField = -1;
   fort_m_radcoef(idxLo, idxHi, 
                  vars->temperature, 
                  vars->co2,
@@ -244,7 +245,8 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
                  fractiontwo,
                  lprobone, lprobtwo, lprobthree, 
                  lambda, 
-                 lradcal);
+                 lradcal,
+                 constvars->cellType,flowField);
 }
 
 //***************************************************************************
