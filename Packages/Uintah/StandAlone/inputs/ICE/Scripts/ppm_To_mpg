@@ -14,7 +14,7 @@ if( $firstTime == "true" ) then
   cp *.ppm orgs/.
 
   echo "Now converting ppm names"
-  cat *.ppm movie2.*.ppm | pnmsplit - %d.ppm
+  cat *.ppm movie2.*.*.*.ppm| pnmsplit - %d.ppm
 
   /bin/rm -f movie.*.ppm
 endif
