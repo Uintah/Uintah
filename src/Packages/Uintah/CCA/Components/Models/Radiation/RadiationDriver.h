@@ -187,7 +187,9 @@ class RadiationDriver : public ModelInterface {
   Models_RadiationModel* d_DORadiation;
   int d_radCounter; //to decide how often radiation calc is done
   int d_radCalcFreq;
-  bool d_useIceTemp;
+  double d_radCalc_interval;
+  double d_radCalc_nextTime;
+  bool d_doRadCalc;
   bool d_useTableValues;
   bool d_computeCO2_H2O_from_f;
   bool d_hasAbsorbingSolid;
