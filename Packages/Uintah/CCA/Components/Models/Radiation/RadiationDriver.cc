@@ -208,7 +208,16 @@ RadiationDriver::problemSetup(GridP& grid,
   }
  
   // how often radiation calculations are performed 
-  db->getWithDefault("radiationCalcFreq",d_radCalcFreq,5);  
+  db->getWithDefault("calcFreq",     d_radCalcFreq,     999999);  
+  db->getWithDefault("calcInterval", d_radCalc_interval,999999);
+  d_radCalc_nextTime = d_radCalc_interval;
+  if(d_radCalcFreq == 999999 && d_radCalc_interval == 999999){
+    ostringstream warn;
+    warn<<"ERROR\n Radiation: If you must specify either <radiationCalcFreq> or <radiationCalc_interval>\n";
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }   
+
+
 
   // use ICE or Table density and temperature
   db->getWithDefault("table_or_ice_temp_density",d_table_or_ice_temp_density,"ice"); 
@@ -223,6 +232,7 @@ RadiationDriver::problemSetup(GridP& grid,
   db->getWithDefault("useTableValues",d_useTableValues,true);
 
   db->getWithDefault("computeCO2_H2O_from_f",d_computeCO2_H2O_from_f,false);
+
 
   d_DORadiation = scinew Models_DORadiationModel(d_myworld);
   d_DORadiation->problemSetup(db);
@@ -521,12 +531,35 @@ RadiationDriver::set_cellType(const ProcessorGroup*,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw)
 { 
+  const Level* level = getLevel(patches);
+  int levelIndex = level->getIndex();
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing set_cellType on patch "<<patch->getID()
-               << "\t\t\t\t Radiation" << endl;
-    int indx0 = d_matl_G->getDWIndex();
+               << "\t\t\t\t Radiation L-" << levelIndex<< endl;
+               
+    //__________________________________
+    // Is it time to radiate?
+    // You need to check this in the first task
+    // and only on the first patch of level 0
+    d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
     
+    if (levelIndex == 0 && patch->getID() == 0) { 
+      d_doRadCalc = false;
+      if (d_radCounter%d_radCalcFreq == 0) {
+        d_doRadCalc = true;
+      }
+      double time= d_dataArchiver->getCurrentTime() + 1E-100;
+      
+      if (time >= d_radCalc_nextTime) {
+        d_doRadCalc  = true;
+        d_radCalc_nextTime = d_radCalc_interval 
+                          * ceil(time/d_radCalc_interval + 1E-100); 
+      }
+    }
+               
+    int indx0 = d_matl_G->getDWIndex();
     //__________________________________
     //default value
     RadiationVariables vars;
@@ -902,8 +935,7 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     //            gn, 0);
 
 
-    d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
-    if (d_radCounter%d_radCalcFreq == 0) {
+    if (d_doRadCalc) {
       d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
                                            &radVars, &constRadVars);
       //__________________________________
@@ -996,13 +1028,12 @@ RadiationDriver::boundaryCondition(const ProcessorGroup* pc,
     
     RadiationVariables radVars;
     RadiationConstVariables constRadVars;
-    d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
 
     new_dw->get(constRadVars.cellType,         cellType_CCLabel,indx, patch,gac, 1);
     new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel,indx, patch);
     new_dw->getModifiable(radVars.ABSKG,       abskg_CCLabel,   indx, patch);
 
-    if (d_radCounter%d_radCalcFreq == 0) {
+    if (d_doRadCalc) {
       d_DORadiation->boundaryCondition(pc, patch, &radVars, &constRadVars);
     }
   }
@@ -1107,9 +1138,7 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
 
     new_dw->getModifiable(energySource, mi->energy_source_CCLabel, indx, patch);
 
-    d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
-
-    if (d_radCounter%d_radCalcFreq == 0) {
+    if (d_doRadCalc) {
       radVars.qfluxe.initialize(0.0);
       radVars.qfluxw.initialize(0.0);
       radVars.qfluxn.initialize(0.0);
