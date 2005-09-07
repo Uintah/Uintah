@@ -46,15 +46,15 @@ namespace SCIRun {
 
   class CrvApprox {
   public:
-    static double UnitVertices[1][2];
-    static int UnitEdges[1][2];
+    static double UnitVertices[1][2]; //! Parametric coordinates of vertices of unit edge
+    static int UnitEdges[1][2]; //! References to vertices of unit edge
 
     CrvApprox() {}
     virtual ~CrvApprox() {}
   
     //! Approximate edge for element by piecewise linear segments
-    //! return: coords is vector of the parametric coordinates at the 
-    //!         approximation point. Use interpolate to get the values.
+    //! return: coords gives parametric coordinates of the approximation.
+    //! Use interpolate with coordinates to get the world coordinates.
     virtual void approx_edge(const unsigned /* edge */, 
 			     const unsigned div_per_unit, 
 			     vector<vector<double> > &coords) const
@@ -67,12 +67,18 @@ namespace SCIRun {
       }
     }
   
+    //! return number of vertices per face 
     virtual int get_approx_face_elements() const { return 0; }
   
+    //! Approximate faces for element by piecewise linear elements
+    //! return: coords gives parametric coordinates at the approximation point.
+    //! Use interpolate with coordinates to get the world coordinates.
     virtual void approx_face(const unsigned /* face */, 
 			     const unsigned /* div_per_unit */, 
-			     vector<vector<double> > & /* coords */) const
-    {}
+			     vector<vector<double> > &coords) const
+    {
+      coords.resize(0);
+    }
   };
  
 
