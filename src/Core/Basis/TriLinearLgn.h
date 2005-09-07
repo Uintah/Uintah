@@ -47,15 +47,16 @@ namespace SCIRun {
   
   class TriApprox {  
   public:
-    static double UnitVertices[3][2];
-    static int UnitEdges[3][2];
-    static int UnitFaces[1][3];
+    static double UnitVertices[3][2]; //! Parametric coordinates of vertices of unit edge
+    static int UnitEdges[3][2]; //! References to vertices of unit edge
+    static int UnitFaces[1][3]; //! References to vertices of unit face
 
     TriApprox() {}
     virtual ~TriApprox() {}
   
     //! Approximate edge for element by piecewise linear segments
-    //! return: coords describes an array of points approximating the edge.
+    //! return: coords gives parametric coordinates of the approximation.
+    //! Use interpolate with coordinates to get the world coordinates.
     virtual void approx_edge(const unsigned edge, const unsigned div_per_unit, 
 			     vector<vector<double> > &coords) const
     {
@@ -75,10 +76,14 @@ namespace SCIRun {
 	tmp[0] = p1x + d * dx;
 	tmp[1] = p1y + d * dy;
       } 	
-    }
+    } 
   
+    //! return number of vertices per face 
     virtual int get_approx_face_elements() const { return 3; }
   
+    //! Approximate faces for element by piecewise linear elements
+    //! return: coords gives parametric coordinates at the approximation point.
+    //! Use interpolate with coordinates to get the world coordinates.
     virtual void approx_face(const unsigned /* face */, 
 			     const unsigned div_per_unit, 
 			     vector<vector<vector<double> > > &coords) const

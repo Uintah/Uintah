@@ -47,15 +47,16 @@ namespace SCIRun {
 
   class HexApprox {  
   public:
-    static double UnitVertices[8][3];
-    static int UnitEdges[12][2];
-    static int UnitFaces[6][4];
+    static double UnitVertices[8][3]; //! Parametric coordinates of vertices of unit edge
+    static int UnitEdges[12][2]; //! References to vertices of unit edge
+    static int UnitFaces[6][4]; //! References to vertices of unit face
 
     HexApprox() {}
     virtual ~HexApprox() {}
   
     //! Approximate edge for element by piecewise linear segments
-    //! return: coords has the parametric coordinates of the approximation.
+    //! return: coords gives parametric coordinates of the approximation.
+    //! Use interpolate with coordinates to get the world coordinates.
     virtual void approx_edge(const unsigned edge, const unsigned div_per_unit, 
 			     vector<vector<double> > &coords) const
     {
@@ -81,8 +82,12 @@ namespace SCIRun {
       } 	
     }
   
+    //! return number of vertices per face 
     virtual int get_approx_face_elements() const { return 4; }
   
+    //! Approximate faces for element by piecewise linear elements
+    //! return: coords gives parametric coordinates at the approximation point.
+    //! Use interpolate with coordinates to get the world coordinates.
     virtual void approx_face(const unsigned face, 
 			     const unsigned div_per_unit, 
 			     vector<vector<vector<double> > > &coords) const
