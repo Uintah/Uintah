@@ -66,6 +66,7 @@ enum Scheme { Scheme1, Scheme2, Scheme3, Scheme4,
 #define RealVariable BaseVariable
 
 class BaseConstraint;
+class ConstraintSolver;
 
 class PSECORESHARE BaseVariable {
    friend class BaseConstraint;
