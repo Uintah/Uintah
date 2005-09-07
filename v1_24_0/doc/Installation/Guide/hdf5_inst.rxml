@@ -92,8 +92,11 @@ doc.doIfPrint {
 	<listitem>
 	  <para>
 	    Unpack.  In a terminal window type:
-	    <literallayout>
+	    <literallayout os="irix">
 gunzip -c hdf5-1.6.4.tar.gz | tar xvf -	      
+	    </literallayout>
+	    <literallayout os="osx;linux">
+tar -x -z -f hdf5-1.6.4.tar.gz
 	    </literallayout>
 	  </para>
 	</listitem>

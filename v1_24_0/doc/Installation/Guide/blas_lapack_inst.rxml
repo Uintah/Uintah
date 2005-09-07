@@ -122,8 +122,11 @@ rpm -ivh lapack-3_0-2_i386.rpm
 	  <para>
 	    Unpack the <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
 	    distribution:
-	    <literallayout class="monospaced">
+	    <literallayout class="monospaced" os="irix">
 gunzip -c fblaslapack.tar.gz | tar xvf -
+	    </literallayout>
+	    <literallayout class="monospaced" os="linux">
+tar -x -z -f fblaslapack.tar.gz
 	    </literallayout>
 	    This creates the <filename>fblaslapack</filename> directory.
 	  </para>
@@ -163,8 +166,11 @@ make
 	<listitem>
 	  <para>
 	    Unpack the <acronym>ATLAS</acronym> distribution:
-	    <literallayout class="monospaced">
+	    <literallayout class="monospaced" os="irix">
 gunzip -c atlas<replaceable>x.x.x</replaceable>.tar.gz | tar xvf -
+	    </literallayout>
+	    <literallayout class="monospaced" os="linux">
+tar -x -z -f atlas<replaceable>x.x.x</replaceable>.tar.gz
 	    </literallayout>
 	    This creates a directory named <filename>ATLAS</filename>.
 	  </para>

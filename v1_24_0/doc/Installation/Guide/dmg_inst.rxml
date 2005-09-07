@@ -89,11 +89,11 @@ DEALINGS IN THE SOFTWARE.
 
       <itemizedlist>
 	<listitem>
-	  <para>
-	    <filename>SCIRunBioPSE-<!--%= doc.version %-->-OSX-10.3-bin.tar.gz</filename> or
-	    <filename>SCIRunFusion-<!--%= doc.version %-->-OSX-10.3-bin.tar.gz</filename> or
-	    <filename>SCIRunBioPSE-<!--%= doc.version %-->-OSX-10.4-bin.tar.gz</filename> or
-	    <filename>SCIRunFusion-<!--%= doc.version %-->-OSX-10.4-bin.tar.gz</filename>
+	  <para>One of: <simplelist type="vert">
+	    <member><filename>SCIRunBioPSE-<!--%= doc.version %-->-OSX-10.3-bin.tar.gz</filename></member>
+	    <member><filename>SCIRunFusion-<!--%= doc.version %-->-OSX-10.3-bin.tar.gz</filename></member>
+	    <member><filename>SCIRunBioPSE-<!--%= doc.version %-->-OSX-10.4-bin.tar.gz</filename></member>
+	    <member><filename>SCIRunFusion-<!--%= doc.version %-->-OSX-10.4-bin.tar.gz</filename></member></simplelist>
 	  </para>
 	</listitem>
 	<listitem>
@@ -126,13 +126,13 @@ DEALINGS IN THE SOFTWARE.
       To install SCIRun, <command>cd</command> to the directory
       containing the binary tarball and type:
       <literallayout class="monospaced">
-sudo sh -c 'gunzip -c SCIRunBioPSE-Tiger.<!--%= doc.version %-->.tar.gz \
- | (cd /usr/local &amp;&amp; tar xf -)'
+sudo tar -x -z -f SCIRunBioPSE-<!--%= doc.version %-->-OSX-10.3-bin.tar.gz \
+ -C /usr/local
       </literallayout>
       or the following if installing SCIRunWithFusion:
       <literallayout class="monospaced">
-sudo sh -c 'gunzip -c SCIRunFusion-Tiger.<!--%= doc.version %-->.tar.gz \
- | (cd /usr/local &amp;&amp; tar xf -)'
+sudo tar -x -z -f SCIRunFusion-<!--%= doc.version %-->-OSX-10.3-bin.tar.gz \
+ -C /usr/local
       </literallayout>
       SCIRun and it's PowerApps are found in
       <filename>/usr/local/SCIRun/bin</filename>. Read <xref
@@ -160,8 +160,7 @@ sudo sh -c 'gunzip -c SCIRunFusion-Tiger.<!--%= doc.version %-->.tar.gz \
 	    type:
 	    <literallayout class="monospaced">
 sudo mv /usr/local/SCIRunData/1.24.0b /usr/local/SCIRunData/1.24.1
-sudo sh -c 'gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz \
- | (cd /usr/local &amp;&amp; tar xf -)'
+sudo tar -x -z -f SCIRunData.1.24.0b_to_1.24.1.tar.gz -C /usr/local
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -170,8 +169,7 @@ sudo sh -c 'gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz \
 	    If installing <filename>SCIRunData.<!--%= doc.version
 	    %-->.tar.gz</filename> type:
 	    <literallayout class="monospaced">
-sudo sh -c 'gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz \
- | (cd /usr/local &amp;&amp; tar xf -)'
+sudo tar -x -z -f SCIRunData.<!--%= doc.version %-->.tar.gz -C /usr/local
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -180,8 +178,7 @@ sudo sh -c 'gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz \
 	    If installing <filename>FusionData.<!--%= doc.version
 	    %-->.tar.gz</filename> type:
 	    <literallayout class="monospaced">
-sudo sh -c 'gunzip -c FusionData.<!--%= doc.version %-->.tar.gz \
- | (cd /usr/local &amp;&amp; tar xf -)'
+sudo tar -x -z -f  FusionData.<!--%= doc.version %-->.tar.gz -C /usr/local
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -197,8 +194,7 @@ sudo sh -c 'gunzip -c FusionData.<!--%= doc.version %-->.tar.gz \
       %--></filename> (although they may be installed anywhere).
       Administrative privilages are required.  Type:
       <literallayout class="monospaced">
-sudo sh -c 'gunzip -c SCIRunDocs.<!--%= doc.version %-->.tar.gz \
- | (cd /usr/local &amp;&amp; tar xf -)'	
+sudo tar -x -z -f SCIRunDocs.<!--%= doc.version %-->.tar.gz -C /usr/local
       </literallayout>
     </para>
     <para>

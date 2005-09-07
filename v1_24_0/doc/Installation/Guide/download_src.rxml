@@ -116,8 +116,11 @@ DEALINGS IN THE SOFTWARE.
     <listitem id="src_unpack">
       <para>
 	Unpack SCIRun sources:
-	<literallayout class="monospaced">
+	<literallayout class="monospaced" os="irix">
 gunzip -c SCIRun.<!--%= doc.version() %-->.tar.gz | tar xf -
+	</literallayout>
+	<literallayout class="monospaced" os="osx;linux">
+tar -x -z -f SCIRun.<!--%= doc.version() %-->.tar.gz
 	</literallayout>
 	This creates a directory called <filename>SCIRun</filename>.
 	Below, the term <filename>SCIRun</filename> refers to this directory.
@@ -129,8 +132,11 @@ gunzip -c SCIRun.<!--%= doc.version() %-->.tar.gz | tar xf -
 	Unpack the compressed package sources into
 	<filename>SCIRun/src/Packages</filename>. For example, to unpack the
 	BioPSE package type:
-	<literallayout class="monospaced">
+	<literallayout class="monospaced" os="irix">
 gunzip -c BioPSE.PKG.<!--%= doc.version() %-->.tar.gz | (cd SCIRun/src/Packages &amp;&amp; tar xf -)
+	</literallayout>
+	<literallayout class="monospaced" os="osx;linux">
+tar -x -z -f BioPSE.PKG.<!--%= doc.version() %-->.tar.gz -C SCIRun/src/Packages
 	</literallayout>
 	Repeat for other packages.
       </para>
@@ -154,9 +160,13 @@ pushd SCIRunData
 mv 1.20.0b 1.20.1
 	      </literallayout>
 	      then:
-	      <literallayout class="monospaced">
+	      <literallayout class="monospaced" os="irix">
 popd
 gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz | tar xf -
+	      </literallayout>
+	      <literallayout class="monospaced" os="osx;linux">
+popd
+tar -x -z -f SCIRunData.1.24.0b_to_1.24.1.tar.gz
 	      </literallayout>
 	    </para>
 	  </listitem>
@@ -164,8 +174,11 @@ gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz | tar xf -
 	    <para>
 	      If installing <filename>SCIRunData.<!--%= doc.version
 	      %-->.tar.gz</filename> type:
-	      <literallayout class="monospaced">
+	      <literallayout class="monospaced" os="irix">
 gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz | tar xf -
+	      </literallayout>
+	      <literallayout class="monospaced" os="osx;linux">
+tar -x -z -f SCIRunData.<!--%= doc.version %-->.tar.gz
 	      </literallayout>
 	    </para>
 	  </listitem>
@@ -173,8 +186,11 @@ gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz | tar xf -
 	    <para>
 	      If installing <filename>FusionData.<!--%= doc.version
 	      %-->.tar.gz</filename> type:
-	      <literallayout class="monospaced">
+	      <literallayout class="monospaced" os="irix">
 gunzip -c FusionData.<!--%= doc.version %-->.tar.gz | tar xf -
+	      </literallayout>
+	      <literallayout class="monospaced" os="osx;linux">
+tar -x -z -f FusionData.<!--%= doc.version %-->.tar.gz
 	      </literallayout>
 	    </para>
 	  </listitem>
@@ -187,8 +203,11 @@ gunzip -c FusionData.<!--%= doc.version %-->.tar.gz | tar xf -
 	Unpack third party sources.
       </para>
       <para>
-	<literallayout class="monospaced">
+	<literallayout class="monospaced" os="irix">
 gunzip -c Thirdparty_<!--%= tpsuffix %-->.<!--%= doc.version() %-->.tar.gz | tar xf -
+	</literallayout>
+	<literallayout class="monospaced" os="osx;linux">
+tar -x -z -f Thirdparty_<!--%= tpsuffix %-->.<!--%= doc.version() %-->.tar.gz
 	</literallayout>
 	This creates the directory <filename>Thirdparty_<!--%= tpsuffix %-->.<!--%= doc.version() %--></filename>.
       </para>
@@ -197,8 +216,11 @@ gunzip -c Thirdparty_<!--%= tpsuffix %-->.<!--%= doc.version() %-->.tar.gz | tar
     <listitem>
       <para>
 	Unpack the documentation:
-	<literallayout class="monospaced">
+	<literallayout class="monospaced" os="irix">
 gunzip -c SCIRunDocs.<!--%= doc.version() %-->.tar.gz | tar xf -
+	</literallayout>
+	<literallayout class="monospaced" os="osx;linux">
+tar -x -z -f SCIRunDocs.<!--%= doc.version() %-->.tar.gz
 	</literallayout>
 	This creates the directory
 	<filename>SCIRunDocs</filename>.<!--%= doc.version()

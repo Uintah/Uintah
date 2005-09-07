@@ -184,8 +184,7 @@ rpm -e SCIRun
 	    type:
 	    <literallayout class="monospaced">
 mv /usr/local/SCIRunData/1.24.0b /usr/local/SCIRunData/1.24.1
-gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz \
- | (cd /usr/local &amp;&amp; tar xf -)
+tar -x -z -f SCIRunData.1.24.0b_to_1.24.1.tar.gz -C /usr/local
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -194,8 +193,7 @@ gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz \
 	    If installing <filename>SCIRunData.<!--%= doc.version
 	    %-->.tar.gz</filename> type:
 	    <literallayout class="monospaced">
-gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz \
- | (cd /usr/local &amp;&amp; tar xf -)
+tar -x -z -f SCIRunData.<!--%= doc.version %-->.tar.gz -C /usr/local
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -204,8 +202,7 @@ gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz \
 	    If installing <filename>FusionData.<!--%= doc.version
 	    %-->.tar.gz</filename> type:
 	    <literallayout class="monospaced">
-gunzip -c FusionData.<!--%= doc.version %-->.tar.gz \
- | (cd /usr/local &amp;&amp; tar xf -)
+tar -x -z -f FusionData.<!--%= doc.version %-->.tar.gz -C /usr/local
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -225,7 +222,7 @@ gunzip -c FusionData.<!--%= doc.version %-->.tar.gz \
       <command>cd</command> to the directory containing the compressed
       documentation tarball and type:
       <literallayout class="monospaced">
-gunzip -c SCIRunDocs.<!--%= doc.version %-->.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+tar -x -z -f SCIRunDocs.<!--%= doc.version %-->.tar.gz -C /usr/local
       </literallayout>
       This will create <filename>/usr/local/SCIRunDocs.<!--%= doc.version %--></filename> (the
       SCIRun documentation directory). Type <command>exit</command> to leave the
