@@ -52,8 +52,10 @@ DEALINGS IN THE SOFTWARE.
 
   <para>This guide provides instructions for installing SCIRun, its
   sample data sets, and SCIRun documentation on the &pf; platform.  SCIRun
-  may be installed from <phrase os="linux">an RPM or</phrase> <phrase
-  os="osx">a tarball or</phrase> built from source code.</para>
+  can be <phrase os="linux">installed from an RPM or</phrase> <phrase
+  os="osx">installed from a (binary) tarball or</phrase> built from
+  source code.  <phrase os="irix">A binary installation is not
+  provided under IRIX.</phrase>.</para>
 
   <para>&pf; platform guidelines are listed in <xref
   linkend="tbl.pltfm_req"/>.</para>
@@ -129,6 +131,8 @@ DEALINGS IN THE SOFTWARE.
 	      </listitem>
 	      <listitem>
 		<para>MIPSpro compiler 7.3.1.1m (or later)</para>
+		<para>Note, we have found bugs in the SGI 7.4
+                      compilers and do not recommend using them.</para>
 	      </listitem>
 	      <!--%= matlab_info %-->
 	    </itemizedlist>
@@ -227,7 +231,7 @@ DEALINGS IN THE SOFTWARE.
       <!--%= gcc_itk_info %-->
       <listitem>
 	<para>SCI has experienced a number of strange behaviors with
-	ATI cards.  We do not recommend the use of ATI cards at this
+	ATI video cards.  We do not recommend the use of ATI cards at this
 	time.</para>
       </listitem>
       <listitem>

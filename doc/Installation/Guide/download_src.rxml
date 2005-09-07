@@ -107,9 +107,10 @@ DEALINGS IN THE SOFTWARE.
       doc.version() %-->.tar.gz</filename> should also be
       downloaded.</para>
 
-      <para>SCIRun documentation, <filename>SCIRunDocs.<!--%=
-      doc.version() %-->.tar.gz</filename>, may also be
-      downloaded.</para>
+      <para>While not required, you may also wish to download the SCIRun documentation: <filename>SCIRunDocs.<!--%=
+      doc.version() %-->.tar.gz</filename>.  Note, you may find it
+      easier just to browse the documentation directly from the SCIRun<ulink
+      url="http://software.sci.utah.edu/doc>documentation web page</ulink>.</para>
 
     </listitem>
     

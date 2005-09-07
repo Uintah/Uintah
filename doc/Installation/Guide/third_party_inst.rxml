@@ -39,7 +39,10 @@ standard_loc = Doc::Platform == Doc::OSX ? "/sw/lib" : "/usr/lib"
 <listitem>
   <para><emphasis>Optional:</emphasis> Enable
   <acronym>PNG</acronym> support in the Teem third party
-  library.  To enable <acronym>PNG</acronym> support in the Teem third party
+  library.  Note, PNG is a useful image format that is known to many
+  image processing tools.  If you would like to be able to use Teem
+  (with SCIRun) to save images in this format, you will need to enable
+  PNG support.  To enable <acronym>PNG</acronym> support in the Teem third party
   library set the <envar>TEEM_ZLIB</envar> and
   <envar>TEEM_PNG</envar> environment variables:</para>
   <para>
@@ -69,13 +72,13 @@ setenv TEEM_PNG
   <para>
     For sh-type shells:
     <literallayout class="monospaced">
-TEEM_PNG_LPATH=-I/usr/local/lib
+TEEM_PNG_LPATH=-L/usr/local/lib
 TEEM_PNG_IPATH=-I/usr/local/include
 export TEEM_PNG_LPATH TEEM_PNG_IPATH
     </literallayout>
     for csh-type shells:
     <literallayout class="monospaced">
-setenv TEEM_PNG_LPATH -I/usr/local/lib
+setenv TEEM_PNG_LPATH -L/usr/local/lib
 setenv TEEM_PNG_IPATH -I/usr/local/include
     </literallayout>
   </para>
@@ -91,13 +94,13 @@ setenv TEEM_PNG_IPATH -I/usr/local/include
   <para>
     For sh-type shells:
     <literallayout class="monospaced">
-TEEM_ZLIB_LPATH=-I/usr/local/lib
+TEEM_ZLIB_LPATH=-L/usr/local/lib
 TEEM_ZLIB_IPATH=-I/usr/local/include
 export TEEM_ZLIB_LPATH TEEM_ZLIB_IPATH
     </literallayout>
     for csh-type shells:
     <literallayout class="monospaced">
-setenv TEEM_ZLIB_LPATH -I/usr/local/lib
+setenv TEEM_ZLIB_LPATH -L/usr/local/lib
 setenv TEEM_ZLIB_IPATH -I/usr/local/include
     </literallayout>
   </para>
@@ -189,8 +192,8 @@ python install /usr/local/SCIRun/Thirdparty 32 1
     </literallayout>
     creates the installation under:
     <literallayout class="monospaced">
-<phrase os="linux">/usr/local/SCIRun/Thirdparty/1.8/Linux/gcc-3.2-32bit</phrase>
-<phrase os="irix">/usr/local/SCIRun/Thirdparty/1.8/IRIX64/MIPSpro-7.3.1.3m-32bit</phrase>
+<phrase os="linux">/usr/local/SCIRun/Thirdparty/1.24/Linux/gcc-3.2-32bit</phrase>
+<phrase os="irix">/usr/local/SCIRun/Thirdparty/1.24/IRIX64/MIPSpro-7.3.1.3m-32bit</phrase>
     </literallayout>
   </para>
 

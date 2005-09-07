@@ -97,6 +97,14 @@ cd SCIRun/<replaceable>build-dir</replaceable>
 	Above, replace <replaceable>third-party-dir</replaceable> by
 	the path provided by the third-party installation script.
       </para>
+      <para os="irix;linux">
+	If you are trying to build a 64 bit installation, you will
+        need to use <option>--enable-64bit</option>.  A 32 bit build
+        is the default (but may be explicitly requested with
+        <option>--enable-32bit</option>).  If you wish to
+        create a debug build, use <option>--enable-debug</option>.
+        For an optimized build, use <option>--enable-optimize</option>.
+      </para>
       <para os="osx">
 	Above, replace <replaceable>third-party-dir</replaceable> by  the path
 	given to the third-party installation script.
@@ -213,7 +221,7 @@ make -j <replaceable>N</replaceable>
 
   <tip>
     <para>It is possible to build SCIRun for multiple machine
-    architectures and multiple sets of configure options within the
+    architectures and multiple sets of configure options using the
     same source code directory.  See <xref
     linkend="app.multi_builds"/> for details.</para>
   </tip>
