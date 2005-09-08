@@ -4680,6 +4680,10 @@ if test "$HAVE_HYPRE" = "yes" ; then
     if test -n "$found_it"; then
        DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 1"
        HAVE_HYPRE_1_9="yes"
+       # Hypre 1.9 added the 'superlu' lib... can't check for it above as 1.7 doesn't have it.
+       # Once we force an upgrade to 1.9 for everyone, then we will check for it, but for now
+       # I just hardcode it here.
+       HYPRE_LIB_FLAG="$HYPRE_LIB_FLAG -lHYPRE_superlu"
     fi
   fi
 
