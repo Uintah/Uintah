@@ -183,11 +183,13 @@ void VolumeVis<DataType>::intersect(Ray& ray, HitInfo& hit, DepthStats* ds,
    
   t1 =  DBL_MIN; 
   t2 =  DBL_MAX;
-   
+
+  // Figure out the entrance
   if (tx1 > t1) t1 = tx1;
   if (ty1 > t1) t1 = ty1;
   if (tz1 > t1) t1 = tz1;
-   
+
+  // Figure out the exit point
   if (tx2 < t2) t2 = tx2;
   if (ty2 < t2) t2 = ty2;
   if (tz2 < t2) t2 = tz2;
@@ -199,45 +201,48 @@ void VolumeVis<DataType>::intersect(Ray& ray, HitInfo& hit, DepthStats* ds,
   // groups.
   if (child && !(hit.was_hit && hit.hit_obj != child))
     child->intersect(ray, hitchild, ds, ppc);
+
+  // FLT_EPSILON ~= 1.19209e-07
   
+  bool box_hit = false;
+  if (t1 < t2) {
+    if (t1 >= FLT_EPSILON) {
+      // Normal case.
+      box_hit = true;
+    } else if (t2 > FLT_EPSILON) {
+      //      cerr << "t1 = "<<t1<<", t2 = "<<t2<<", dpy->t_inc = "<<dpy->t_inc<<"\n";
+      // Case where origin is inside the box.  Push t1 to the origin
+      // (or close to it anyway).  We compare t2 to dpy->t_inc to see
+      // if we have enough box to do any meaningful work with.
+      t1 = 1.01e-6;
+      box_hit = true;
+      if (t2 < 1.01e-6)
+        t2 = 1.011e-6;
+    }
+  }
+
   if (hitchild.was_hit == false) {
-    // t1 is t_min and t2 is t_max
-    if (t2 > t1) {
-      if (t1 > FLT_EPSILON) {
-        if (hit.hit(this, t1)) {
-          float* tmax=(float*)hit.scratchpad;
-          tmax[30] = t2;
-          tmax[31] = t2;
-        }
-      }
-      //else if (t2 > FLT_EPSILON)
-      //hit.hit(this, t2);
+    // Child wasn't hit, so just go about life as if it wasn't there.
+    if (box_hit && hit.hit(this, t1)) {
+      float* tmax=(float*)hit.scratchpad;
+      tmax[30] = t2;
+      tmax[31] = t2;
     }
   } else {
-    // The box wasn't hit, so let's see if the child does
     if (hit.hit(hitchild.hit_obj, hitchild.min_t))
       // If the child was hit, copy the HitInfo over, since there may
       // be scratch data that's needed.
       hit = hitchild;
 
     // The child was hit, let's see who was closer
-    if (t2 > t1) {
-      if (t1 > FLT_EPSILON) {
-        // The box was hit, figure out who was first
-        if (t1 < hitchild.min_t) {
-          if (hit.hit(this, t1)) {
-            float* tmax=(float*)hit.scratchpad;
-            tmax[30] = t2;
-            tmax[31] = hitchild.min_t;
-          }
-          // We know that the child can't be hit if the box didn't
-          // register a hit.
-          return;
-        }
+    if (box_hit && t1 < hitchild.min_t) {
+      if (hit.hit(this, t1)) {
+        float* tmax=(float*)hit.scratchpad;
+        tmax[30] = t2;
+        tmax[31] = hitchild.min_t;
       }
     }
   }
-   
 }
 
 // All incoming vectors should be normalized

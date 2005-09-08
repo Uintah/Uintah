@@ -15,6 +15,7 @@ namespace rtrt {
 using SCIRun::Point;
 using SCIRun::Transform;
 
+  // Returns true if the file was successfully loaded
 bool
 readObjFile(const string geom_fname, const string matl_fname, 
 	    Transform &t, Array1<Material *> &matl, Group *g, 
