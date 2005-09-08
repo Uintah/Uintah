@@ -105,9 +105,9 @@ _glmNormalize(float* n)
 
   /* normalize */
   l = (float)sqrt(n[X] * n[X] + n[Y] * n[Y] + n[Z] * n[Z]);
-  n[0] /= l;
-  n[1] /= l;
-  n[2] /= l;
+  n[X] /= l;
+  n[Y] /= l;
+  n[Z] /= l;
 }
 
 /* _glmEqual: compares two vectors and returns true if they are

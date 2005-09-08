@@ -215,6 +215,9 @@ glmReadOBJ(const char* filename);
  *            GLM_SMOOTH  -  write vertex normals
  *            GLM_TEXTURE -  write texture coords
  *            GLM_FLAT and GLM_SMOOTH should not both be specified.
+ *
+ * returns 1 if there was error, 0 otherwise.
+ * 
  */
 int
 glmWriteOBJ(GLMmodel* model, char* filename, unsigned int mode);

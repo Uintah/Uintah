@@ -982,8 +982,18 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
                                atten, accumcolor, ctx);
     } else {
       // Grab the background color
-      Ray r(ray.origin() + ray.direction() * t_max,ray.direction());
+      Ray r(ray.origin() + ray.direction() * t_max, ray.direction());
+#if 1
+      // We should do something to prevent infinate recursion by
+      // checking the depth.
+      if (depth < ctx->scene->maxdepth)
+        Worker::traceRay(bgcolor, r, ray_depth+1, atten, accumcolor, ctx);
+      else
+        ctx->scene->get_bgcolor( ray.direction(), bgcolor );
+#else
       Worker::traceRay(bgcolor, r, ray_depth+1, atten, accumcolor, ctx);
+#endif
+      
     }
     total += bgcolor * (1-alpha);
   }

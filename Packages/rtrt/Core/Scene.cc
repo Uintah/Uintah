@@ -313,12 +313,17 @@ void Scene::waitForEmpty(int which)
 #endif
 
 void Scene::attach_display(DpyBase *dpy) {
-  displays.add(dpy);
-  dpy->set_scene(this);
+  // Don't do null dpys
+  if (dpy) {
+    displays.add(dpy);
+    dpy->set_scene(this);
+  }
 }
 
 void Scene::attach_auxiliary_display(DpyBase *dpy) {
-  aux_displays.add(dpy);
+  // Don't do null dpys
+  if (dpy) 
+    aux_displays.add(dpy);
 }
 
 void Scene::hide_auxiliary_displays() {
