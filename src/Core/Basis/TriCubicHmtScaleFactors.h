@@ -27,7 +27,7 @@
 //  
 //    File   : TriCubicHmtScaleFactors.h
 //    Author : Martin Cole, Frank B. Sachse
-//    Date   : Dec 04 2004
+//    Date   : Mar 01 2005
 
 #if !defined(TriCubicHmtScaleFactors_h)
 #define TriCubicHmtScaleFactors_h
@@ -36,7 +36,7 @@
 
 namespace SCIRun {
 
-  //! Triangular topology
+  //! Class for handling of element of type triangle with cubic hermitian interpolation with scale factors
   template <class T>
     class TriCubicHmtScaleFactors : public TriApprox<T> {
   public:

@@ -45,11 +45,12 @@ namespace SCIRun {
   using std::vector;
   using std::string;
 
+  //! Class for creating geometrical approximations of Hex meshes
   class HexApprox {  
   public:
-    static double UnitVertices[8][3]; //! Parametric coordinates of vertices of unit edge
-    static int UnitEdges[12][2]; //! References to vertices of unit edge
-    static int UnitFaces[6][4]; //! References to vertices of unit face
+    static double UnitVertices[8][3]; //!< Parametric coordinates of vertices of unit edge
+    static int UnitEdges[12][2]; //!< References to vertices of unit edge
+    static int UnitFaces[6][4]; //!< References to vertices of unit face
 
     HexApprox() {}
     virtual ~HexApprox() {}
@@ -142,6 +143,7 @@ namespace SCIRun {
       return t0 - t1;
     }
   
+  //! Class for searching of parametric coordinates related to a value in Hex meshes and fields
   template <class HexBasis>
     class HexLocate {
   public:
@@ -241,6 +243,7 @@ namespace SCIRun {
  
 
 
+  //! Class for handling of element of type hexahedron with trilinear lagrangian interpolation
   template <class T>
     class HexTrilinearLgn : public HexApprox
   {

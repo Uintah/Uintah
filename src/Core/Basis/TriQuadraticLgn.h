@@ -36,10 +36,12 @@
 
 namespace SCIRun {
 
-  //! Triangular topology
+  //! Class for handling of element of type triangle with linear quadratic interpolation
   template <class T>
     class TriQuadraticLgn : public TriApprox<T> {
   public:
+    typedef T value_type;
+    
     static int GaussianNum;
     double GaussianPoints[7][2];
     double GaussianWeights[7];

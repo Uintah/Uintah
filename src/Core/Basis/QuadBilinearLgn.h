@@ -45,11 +45,12 @@ namespace SCIRun {
   using std::vector;
   using std::string;
 
+  //! Class for creating geometrical approximations of Quad meshes
   class QuadApprox {  
   public:
-    static double UnitVertices[4][2]; //! Parametric coordinates of vertices of unit edge
-    static int UnitEdges[4][2]; //! References to vertices of unit edge
-    static int UnitFaces[1][4]; //! References to vertices of unit face
+    static double UnitVertices[4][2]; //!< Parametric coordinates of vertices of unit edge
+    static int UnitEdges[4][2]; //!< References to vertices of unit edge
+    static int UnitFaces[1][4]; //!< References to vertices of unit face
 
     QuadApprox() {}
     virtual ~QuadApprox() {}
@@ -103,7 +104,10 @@ namespace SCIRun {
     }
   };
  
+  //! Class for searching of parametric coordinates related to a value in Quad meshes and fields
+  //! to do
 
+  //! Class for handling of element of type quad with bilinear lagrangian interpolation
   template <class T>
     class QuadBilinearLgn : public QuadApprox
   {
