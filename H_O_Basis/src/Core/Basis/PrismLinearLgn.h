@@ -45,11 +45,12 @@ namespace SCIRun {
   using std::vector;
   using std::string;
 
+  //! Class for creating geometrical approximations of Prism meshes
   class PrismApprox {  
   public:
-    static double UnitVertices[6][3]; //! Parametric coordinates of vertices of unit edge
-    static int UnitEdges[9][3]; //! References to vertices of unit edge
-    static int UnitFaces[5][4]; //! References to vertices of unit face
+    static double UnitVertices[6][3]; //!< Parametric coordinates of vertices of unit edge
+    static int UnitEdges[9][3]; //!< References to vertices of unit edge
+    static int UnitFaces[5][4]; //!< References to vertices of unit face
 
     PrismApprox() {}
     virtual ~PrismApprox() {}
@@ -131,7 +132,10 @@ namespace SCIRun {
     }
   };
 
+  //! Class for searching of parametric coordinates related to a value in Prism meshes and fields
+  //! to do
 
+  //! Class for handling of element of type prism with linear lagrangian interpolation
   template <class T>
     class PrismLinearLgn : public PrismApprox {
   public:

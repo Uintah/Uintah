@@ -45,11 +45,12 @@ namespace SCIRun {
   using std::vector;
   using std::string;
   
+  //! Class for creating geometrical approximations of Tri meshes
   class TriApprox {  
   public:
-    static double UnitVertices[3][2]; //! Parametric coordinates of vertices of unit edge
-    static int UnitEdges[3][2]; //! References to vertices of unit edge
-    static int UnitFaces[1][3]; //! References to vertices of unit face
+    static double UnitVertices[3][2]; //!< Parametric coordinates of vertices of unit edge
+    static int UnitEdges[3][2]; //!< References to vertices of unit edge
+    static int UnitFaces[1][3]; //!< References to vertices of unit face
 
     TriApprox() {}
     virtual ~TriApprox() {}
@@ -111,8 +112,10 @@ namespace SCIRun {
     }
   };
 
+  //! Class for searching of parametric coordinates related to a value in Tri meshes and fields
+  //! to do
 
-  //! Triangular topology
+  //! Class for handling of element of type triangle with linear lagrangian interpolation
   template <class T>
     class TriLinearLgn : public TriApprox {
   public:

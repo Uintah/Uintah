@@ -44,7 +44,7 @@ namespace SCIRun {
   using std::string;
 
 
-  //! used for creation of fields without storage for field variables.
+  //! Class for handling of element with constant field variables
   template <class T>
     class ConstantBasis : public Datatype
   {

@@ -36,10 +36,13 @@
 
 namespace SCIRun {
 
+  //! Class for handling of element of type curve with quadratic lagrangian interpolation
   template <class T>
     class CrvQuadraticLgn : public CrvApprox
   {
   public:
+    typedef T value_type;
+     
     static int GaussianNum;
     static double GaussianPoints[2][1];
     static double GaussianWeights[2];

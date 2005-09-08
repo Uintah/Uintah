@@ -44,10 +44,11 @@ namespace SCIRun {
   using std::vector;
   using std::string;
 
+  //! Class for creating geometrical approximations of Crv meshes
   class CrvApprox {
   public:
-    static double UnitVertices[1][2]; //! Parametric coordinates of vertices of unit edge
-    static int UnitEdges[1][2]; //! References to vertices of unit edge
+    static double UnitVertices[1][2]; //!< Parametric coordinates of vertices of unit edge
+    static int UnitEdges[1][2]; //!< References to vertices of unit edge
 
     CrvApprox() {}
     virtual ~CrvApprox() {}
@@ -82,6 +83,7 @@ namespace SCIRun {
   };
  
 
+  //! Class for searching of parametric coordinates related to a value in Crv meshes and fields
   template <class CrvBasis>
     class CrvLocate {
   public:
@@ -139,7 +141,7 @@ namespace SCIRun {
   };
 
 
-  //! Curve topology
+  //! Class for handling of element of type curve with linear lagrangian interpolation
   template <class T>
     class CrvLinearLgn : public CrvApprox
   {

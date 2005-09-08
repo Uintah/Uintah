@@ -46,11 +46,12 @@ namespace SCIRun {
   using std::vector;
   using std::string;
 
+  //! Class for creating geometrical approximations of Tet meshes
   class TetApprox {  
   public:
-    static double UnitVertices[4][3]; //! Parametric coordinates of vertices of unit edge
-    static int UnitEdges[6][2]; //! References to vertices of unit edge
-    static int UnitFaces[4][3]; //! References to vertices of unit face
+    static double UnitVertices[4][3]; //!< Parametric coordinates of vertices of unit edge
+    static int UnitEdges[6][2]; //!< References to vertices of unit edge
+    static int UnitFaces[4][3]; //!< References to vertices of unit face
 
     TetApprox() {}
     virtual ~TetApprox() {}
@@ -126,7 +127,10 @@ namespace SCIRun {
     }
   };
 
+  //! Class for searching of parametric coordinates related to a value in Tet meshes and fields
+  //! to do
 
+  //! Class for handling of element of type tetrahedron with linear lagrangian interpolation
   template <class T>
     class TetLinearLgn : public TetApprox {
   public:

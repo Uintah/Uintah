@@ -43,8 +43,7 @@ namespace SCIRun {
   using std::vector;
   using std::string;
 
-
-  //! used for creation of fields without storage for field variables.
+  //! Class for handling of element without storage for field variables
   template <class T> //! for compilation consistency
     class NoDataBasis : public Datatype
   {

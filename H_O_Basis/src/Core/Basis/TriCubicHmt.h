@@ -36,10 +36,12 @@
 
 namespace SCIRun {
 
-  //! Triangular topology
+  //! Class for handling of element of type triangle with cubic hermitian interpolation
   template <class T>
     class TriCubicHmt : public TriApprox<T> {
   public:
+    typedef T value_type;
+
     static int GaussianNum;
     double GaussianPoints[7][2];
     double GaussianWeights[7];
