@@ -39,7 +39,9 @@
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Geom/ShaderProgramARB.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using std::endl;
@@ -923,7 +925,13 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
     bool multitex = gluCheckExtension((GLubyte*)"GL_ARB_multitexture",
                                       glGetString(GL_EXTENSIONS));
     if( multitex ) //if so, how many texture units?
+#if defined(__sgi)
+      n_tex_regs = 1;  // <- DON'T KNOW IF THIS IS RIGHT!!! But it
+                       //    allows the SGIs to compile.  Kurt (I think)
+                       //    please fix!  -Dav
+#else      
       glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &n_tex_regs);
+#endif
 
 
 #if defined(GL_ARB_fragment_program)
