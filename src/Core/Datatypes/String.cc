@@ -46,7 +46,8 @@
 
 namespace SCIRun {
 
-static Persistent* maker()
+static Persistent*
+maker()
 {
   return scinew String;
 }
@@ -60,17 +61,17 @@ String::String()
 }
 
 String::String(const String& s) :
-str_(s.str_)
+  str_(s.str_)
 {
 }
 
 String::String(const std::string& s) :
-str_(s)
+  str_(s)
 {
 }
 
 String::String(const char* s) :
-str_(s)
+  str_(s)
 {
 }
 
@@ -78,17 +79,18 @@ String::~String()
 {
 }
 
-String* String::clone()
+String*
+String::clone()
 {
   return scinew String(*this);
 }
 
-
 #define STRING_VERSION 1
 
-void String::io(Piostream& stream)
+void
+String::io(Piostream& stream)
 {
-  int version=stream.begin_class("String", STRING_VERSION);
+  /*int version=*/stream.begin_class("String", STRING_VERSION);
 
   // Do the base class first.
   PropertyManager::io(stream);
