@@ -179,10 +179,19 @@ MatlabCallErrorHandler::MatlabCallErrorHandler(MatlabCall* handle) :
 
 bool MatlabCallErrorHandler::execute(std::string line)
 {
+ // The following piece of code quits the matlab engine and reports an
+ // error as soon as matlab reports an error on the stderr channel
+ //
+ // However under OSX Tiger Matlab always reports errors on stderr as
+ // some code is probably not fully compatible
+ // Hence we disable this security feature here
+
+ /*
   if (!handle_->passed_test_)
-    {
-      handle_->wait_test_.conditionSignal();
-    }
+  {
+    std::cout << "ERROR DETECTED : " << line << "\n";
+    handle_->wait_test_.conditionBroadcast();
+  }
 
   // release engine if data is send to stderr
 
@@ -195,6 +204,7 @@ bool MatlabCallErrorHandler::execute(std::string line)
   handle_->detected_error_ = false;
   handle_->engine_in_use_ = false;
   handle_->wait_in_use_.conditionSignal();
+*/
         
   return(true);
 }
@@ -318,16 +328,17 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
   matlab_handle_ = matlab_processes_[session];
     
   if (session == 0)
-    {
-      // Create new unique session
-      int p = 1;
-      while(1)
-        {
-          if(matlab_processes_[p].get_rep() == 0) break;
-        }
-        session = p;
-
-    }
+  {
+    // Create new unique session
+    int p = 1;
+    while(1)
+      {
+        if(matlab_processes_[p].get_rep() == 0) break;
+      }
+      session = p;
+      p++;
+  }
+    
   setsession(session);
     
   putmsg("MatlabEngine: getting matlab process handle");
@@ -405,7 +416,6 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
         
     }
 
-
   putmsg("MatlabEngine: Send test to matlab to see whether it is working");
   matlab_handle_->dolock();
   if (!(matlab_handle_->start_test_))
@@ -436,7 +446,8 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
       tm.tv_nsec = 0;
       tm.tv_sec = tv.tv_sec + secondstowait;
                 
-      matlab_handle_->wait_test_.timedWait(matlab_handle_->lock,&tm);
+      bool succ = matlab_handle_->wait_test_.timedWait(matlab_handle_->lock,&tm);
+
 #endif
       if (!(matlab_handle_->passed_test_))
         {
