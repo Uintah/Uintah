@@ -140,17 +140,70 @@ namespace SCIRun {
       }
   };
 
+  //! Class with weights and coordinates for 1st order Gaussian integration
+  template <class T>
+    class CrvGaussian1 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[1][1];
+      static T GaussianWeights[1];
+    };
+
+  template <class T>
+    int CrvGaussian1<T>::GaussianNum = 1;
+
+  template <class T>
+    T CrvGaussian1<T>::GaussianPoints[1][1] = {{0.5}};
+
+  template <class T>
+    T CrvGaussian1<T>::GaussianWeights[1] = {1.};
+
+  //! Class with weights and coordinates for 2nd order Gaussian integration
+  template <class T>
+    class CrvGaussian2 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[2][1];
+      static T GaussianWeights[2];
+    };
+
+  template <class T>
+    int CrvGaussian2<T>::GaussianNum = 2;
+
+  template <class T>
+    T CrvGaussian2<T>::GaussianPoints[2][1] = {{0.211324865405}, {0.788675134595}};
+
+  template <class T>
+    T CrvGaussian2<T>::GaussianWeights[2] = {.5, .5};
+
+  //! Class with weights and coordinates for 3rd order Gaussian integration
+  template <class T>
+    class CrvGaussian3 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[3][1];
+      static T GaussianWeights[3];
+    };
+
+  template <class T>
+    int CrvGaussian3<T>::GaussianNum = 3;
+
+  template <class T>
+    T CrvGaussian3<T>::GaussianPoints[3][1] = {{0.11270166537950}, {0.5}, {0.88729833462050}};
+
+  template <class T>
+    T CrvGaussian3<T>::GaussianWeights[3] = {.2777777777, .4444444444, .2777777777};
+
 
   //! Class for handling of element of type curve with linear lagrangian interpolation
   template <class T>
-    class CrvLinearLgn : public CrvApprox
+    class CrvLinearLgn : public CrvApprox, public CrvGaussian1<double>
   {
   public:
     typedef T value_type;
-
-    static int    GaussianNum;
-    static double GaussianPoints[1][1];
-    static double GaussianWeights[1];
 
     int polynomial_order() const { return 1; }
 
@@ -246,15 +299,6 @@ namespace SCIRun {
       stream.begin_class(type_name(-1), CRVLINEARLGN_VERSION);
       stream.end_class();
     }
-
-  template <class T>
-    int CrvLinearLgn<T>::GaussianNum = 1;
-
-  template <class T>
-    double CrvLinearLgn<T>::GaussianPoints[1][1] = {{0.5}};
-
-  template <class T>
-    double CrvLinearLgn<T>::GaussianWeights[1] = {1.};
 
 } //namespace SCIRun
 

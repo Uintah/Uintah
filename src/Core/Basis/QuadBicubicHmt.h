@@ -36,9 +36,10 @@
 
 namespace SCIRun {
 
+  
   //! Class for handling of element of type quad with bicubic hermitian interpolation
   template <class T>
-    class QuadBicubicHmt : public QuadApprox<T>
+    class QuadBicubicHmt : public QuadApprox, public QuadGaussian2<double>
   {
   public:
     typedef T value_type;

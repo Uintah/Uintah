@@ -32,13 +32,14 @@
 #if !defined(PrismCubicHmt_h)
 #define PrismCubicHmt_h
 
-#include <PrismLinearLgn.h>
+#include <Core/Basis/PrismLinearLgn.h>
 
 namespace SCIRun {
 
   //! Class for handling of element of type prism with cubic hermitian interpolation
   template <class T>
-    class PrismCubicHmt : public PrismApprox<T> {
+    class PrismCubicHmt : public PrismApprox, public PrismGaussian2<T> 
+  {
   public:
     typedef T value_type;
 

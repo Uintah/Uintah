@@ -115,13 +115,56 @@ namespace SCIRun {
   //! Class for searching of parametric coordinates related to a value in Tri meshes and fields
   //! to do
 
+  //! Class with weights and coordinates for 2nd order Gaussian integration
+  template <class T>
+    class TriGaussian2 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[3][2];
+      static T GaussianWeights[3];
+    };
+
+  template <class T>
+    int TriGaussian2<T>::GaussianNum = 3;
+
+  template <class T>
+    T TriGaussian2<T>::GaussianPoints[3][2] = {
+    {1./6.,1./6.}, {2./3.,1./6.}, {1./6.,2./3.}};
+
+  template <class T>
+    T TriGaussian2<T>::GaussianWeights[3] = {1./3., 1./3., 1./3.};
+
+  //! Class with weights and coordinates for 3rd order Gaussian integration
+  template <class T>
+    class TriGaussian3 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[7][2];
+      static T GaussianWeights[7];
+    };
+
+  template <class T>
+    int TriGaussian3<T>::GaussianNum = 7;
+
+  template <class T>
+    T TriGaussian3<T>::GaussianPoints[7][2] = {
+    {0.1012865073, 0.1012865073}, {0.7974269853, 0.1012865073}, {0.1012865073, 0.7974269853},
+    {0.4701420641, 0.0597158717}, {0.4701420641, 0.4701420641}, {0.0597158717, 0.4701420641},
+    {0.3333333333, 0.3333333333}};
+
+  template <class T>
+    T TriGaussian3<T>::GaussianWeights[7] = 
+    {0.1259391805, 0.1259391805, 0.1259391805, 0.1323941527, 0.1323941527, 0.1323941527, 0.0225};
+
+
   //! Class for handling of element of type triangle with linear lagrangian interpolation
   template <class T>
-    class TriLinearLgn : public TriApprox {
+    class TriLinearLgn : public TriApprox, public TriGaussian2<double>  
+  { 
   public:
-    static int GaussianNum;
-    static double GaussianPoints[3][2];
-    static double GaussianWeights[3];
+    typedef T value_type;
 
     TriLinearLgn() {}
     virtual ~TriLinearLgn() {}
@@ -245,15 +288,6 @@ namespace SCIRun {
       stream.end_class();
     }
 
-  template <class T>
-    int TriLinearLgn<T>::GaussianNum = 3;
-
-  template <class T>
-    double TriLinearLgn<T>::GaussianPoints[3][2] = {
-    {1./6.,1./6.}, {2./3.,1./6.}, {1./6.,2./3.}};
-
-  template <class T>
-    double TriLinearLgn<T>::GaussianWeights[3] = {1./3., 1./3., 1./3.};
 
 } //namespace SCIRun
 
