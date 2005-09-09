@@ -130,16 +130,74 @@ namespace SCIRun {
   //! Class for searching of parametric coordinates related to a value in Tet meshes and fields
   //! to do
 
+  //! Class with weights and coordinates for 2nd order Gaussian integration
+  template <class T>
+    class TetGaussian2 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[4][3];
+      static T GaussianWeights[4];
+    };
+
+  template <class T>
+    int TetGaussian2<T>::GaussianNum = 4;
+
+  template <class T>
+    T TetGaussian2<T>::GaussianPoints[4][3] = {
+    {1./6., 1./6., 1./6.}, {2./3., 1./6., 1./6.}, 
+    {1./6., 2./3., 1./6.}, {1./6., 1./6., 2./3.}};
+
+  template <class T>
+    T TetGaussian2<T>::GaussianWeights[4] = {.25, .25, 25., .25};
+
+
+  //! Class with weights and coordinates for 3rd order Gaussian integration
+  template <class T>
+    class TetGaussian3 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[11][3];
+      static T GaussianWeights[11];
+    };
+
+  template <class T>
+    T TetGaussian3<T>::GaussianPoints[11][3] = {
+    {0.2500000,  0.2500000, 0.2500000},
+    {0.7857143, 0.07142857, 0.07142857},
+    {0.07142857, 0.7857143, 0.07142857},
+    {0.07142857, 0.07142857, 0.7857143},
+    {0.07142857, 0.07142857, 0.07142857},
+    {0.1005964, 0.1005964, 0.3994034},
+    {0.1005964, 0.3994034, 0.1005964},
+    {0.1005964, 0.3994034, 0.3994034},
+    {0.3994034, 0.1005964, 0.1005964},
+    {0.3994034, 0.1005964, 0.3994034},
+    {0.3994034, 0.3994034, 0.1005964}};
+
+  template <class T>
+    T TetGaussian3<T>::GaussianWeights[11] = {
+    -0.01315556,
+    0.007622222,
+    0.007622222,
+    0.007622222,
+    0.007622222,
+    0.02488889,
+    0.02488889,
+    0.02488889,
+    0.02488889,
+    0.02488889,
+    0.02488889};
+
+
   //! Class for handling of element of type tetrahedron with linear lagrangian interpolation
   template <class T>
-    class TetLinearLgn : public TetApprox {
+    class TetLinearLgn : public TetApprox, public TetGaussian2<double> 
+  {
   public:
     typedef T value_type;
 
-    static int GaussianNum;
-    static double GaussianPoints[4][2];
-    static double GaussianWeights[4];
-  
     TetLinearLgn() {}
     virtual ~TetLinearLgn() {}
 
@@ -233,16 +291,6 @@ namespace SCIRun {
       stream.end_class();
     }
 
-  template <class T>
-    int TetLinearLgn<T>::GaussianNum = 4;
-
-  template <class T>
-    double TetLinearLgn<T>::GaussianPoints[4][2] = {
-    {1./6., 1./6., 0., 1./6.}, {2./3., 1./6., 0., 1./6.}, 
-    {1./6., 2./3., 0., 1./6.}, {1./6., 1./6., 2./3., 0.}};
-
-  template <class T>
-    double TetLinearLgn<T>::GaussianWeights[4] = {.25, .25, 25.};
 
 } //namespace SCIRun
 

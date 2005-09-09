@@ -135,16 +135,39 @@ namespace SCIRun {
   //! Class for searching of parametric coordinates related to a value in Prism meshes and fields
   //! to do
 
+  //! Class with weights and coordinates for 2nd order Gaussian integration
+  template <class T>
+    class PrismGaussian2 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[6][3];
+      static T GaussianWeights[6];
+    };
+
+  template <class T>
+    int PrismGaussian2<T>::GaussianNum = 6;
+
+  template <class T>
+    T PrismGaussian2<T>::GaussianPoints[6][3] = {
+    {1./6.,1./6., 0.211324865405}, {2./3.,1./6., 0.211324865405}, 
+    {1./6.,2./3., 0.211324865405}, {1./6.,1./6., 0.788675134595}, 
+    {2./3.,1./6., 0.788675134595}, {1./6.,2./3., 0.788675134595}};
+
+  template <class T>
+    T PrismGaussian2<T>::GaussianWeights[6] = 
+    {1./6., 1./6., 1./6., 1./6., 1./6., 1./6.};
+  
+  //! Class with weights and coordinates for 3rd order Gaussian integration
+  //! to do
+
   //! Class for handling of element of type prism with linear lagrangian interpolation
   template <class T>
-    class PrismLinearLgn : public PrismApprox {
+    class PrismLinearLgn : public PrismApprox, public PrismGaussian2<double> 
+  {
   public:
     typedef T value_type;
 
-    static int GaussianNum;
-    static double GaussianPoints[6][2];
-    static double GaussianWeights[6];
-  
     PrismLinearLgn() {}
     virtual ~PrismLinearLgn() {}
 
@@ -250,19 +273,6 @@ namespace SCIRun {
       stream.end_class();
     }
 
-  template <class T>
-    int PrismLinearLgn<T>::GaussianNum = 6;
-
-  template <class T>
-    double PrismLinearLgn<T>::GaussianPoints[6][2] = {
-    {1./6.,1./6., 0.211324865405}, {2./3.,1./6., 0.211324865405}, 
-    {1./6.,2./3., 0.211324865405}, {1./6.,1./6., 0.788675134595}, 
-    {2./3.,1./6., 0.788675134595}, {1./6.,2./3., 0.788675134595}};
-
-  template <class T>
-    double PrismLinearLgn<T>::GaussianWeights[6] = 
-    {1./6., 1./6., 1./6., 1./6., 1./6., 1./6.};
-  
 } //namespace SCIRun
 
 #endif // PrismLinearLgn_h

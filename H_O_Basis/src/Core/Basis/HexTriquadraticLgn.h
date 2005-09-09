@@ -32,13 +32,14 @@
 #if !defined(HexTriquadraticLgn_h)
 #define HexTriquadraticLgn_h
 
-#include <HexTrilinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
 
 namespace SCIRun {
 
   //! Class for handling of element of type hexahedron with triquadratic lagrangian interpolation
   template <class T>
-    class HexTriquadraticLgn : public HexApprox<T> {
+    class HexTriquadraticLgn : public HexApprox, public HexGaussian3<double>
+  {
   public:
     typedef T value_type;
 

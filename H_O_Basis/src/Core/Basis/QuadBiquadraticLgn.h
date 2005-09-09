@@ -35,10 +35,10 @@
 #include <QuadBilinearLgn.h>
 
 namespace SCIRun {
-
+ 
   //! Class for handling of element of type quad with biquadratic lagrangian interpolation
   template <class T>
-    class QuadBiquadraticLgn : public QuadApprox<T>
+    class QuadBiquadraticLgn : public QuadApprox, public QuadGaussian3<double>
   {
   public:
     typedef T value_type;
@@ -161,6 +161,8 @@ namespace SCIRun {
       Pio(stream, nodes_);
       stream.end_class();
     }
+};
+
 
 } //namespace SCIRun
 

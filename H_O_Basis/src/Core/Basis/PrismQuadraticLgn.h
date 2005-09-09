@@ -32,13 +32,14 @@
 #if !defined(PrismQuadraticLgn_h)
 #define PrismQuadraticLgn_h
 
-#include <PrismLinearLgn.h>
+#include <Core/Basis/PrismLinearLgn.h>
 
 namespace SCIRun {
 
   //! Class for handling of element of type prism with quadratic lagrangian interpolation
   template <class T>
-    class PrismQuadraticLgn : public PrismApprox<T> {
+    class PrismQuadraticLgn : public PrismApprox, public PrismGaussian2<T> 
+  {
   public:
     typedef T value_type;
 

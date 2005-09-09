@@ -38,7 +38,7 @@ namespace SCIRun {
 
   //! Class for handling of element of type curve with cubic hermitian interpolation
   template <class T>
-    class CrvCubicHmt : public CrvApprox
+    class CrvCubicHmt : public CrvApprox, public CrvGaussian3<double>
   {
   public:
     typedef T value_type;
@@ -170,15 +170,6 @@ namespace SCIRun {
       stream.end_class();
     }
  
-  template <class T>
-    int CrvCubicHmt<T>::GaussianNum = 3;
-
-  template <class T>
-    double CrvCubicHmt<T>::GaussianPoints[3][1] = {{(-0.774596669241+1.)/2.}, {0.5}, {(0.774596669241+1.)/2.}};
-
-  template <class T>
-    double CrvCubicHmt<T>::GaussianWeights[3] = {.2777777777, .4444444444, .2777777777};
-
 
 } //namespace SCIRun
 

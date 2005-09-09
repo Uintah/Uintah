@@ -38,15 +38,11 @@ namespace SCIRun {
 
   //! Class for handling of element of type curve with quadratic lagrangian interpolation
   template <class T>
-    class CrvQuadraticLgn : public CrvApprox
+    class CrvQuadraticLgn : public CrvApprox, public CrvGaussian2<double>
   {
   public:
     typedef T value_type;
      
-    static int GaussianNum;
-    static double GaussianPoints[2][1];
-    static double GaussianWeights[2];
-
     CrvQuadraticLgn() {}
     virtual ~CrvQuadraticLgn() {}
   
@@ -143,15 +139,6 @@ namespace SCIRun {
       stream.end_class();
     }
   
-  template <class T>
-    int CrvQuadraticLgn<T>::GaussianNum = 2;
-
-  template <class T>
-    double CrvQuadraticLgn<T>::GaussianPoints[2][1] = {{0.211324865405}, {0.788675134595}};
-
-  template <class T>
-    double CrvQuadraticLgn<T>::GaussianWeights[2] = {.5, .5};
-
 } //namespace SCIRun
 
 #endif // CrvQuadraticLgn_h

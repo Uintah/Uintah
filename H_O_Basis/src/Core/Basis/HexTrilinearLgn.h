@@ -242,10 +242,80 @@ namespace SCIRun {
     };
  
 
+  //! Class with weights and coordinates for 2nd order Gaussian integration
+  template <class T>
+    class HexGaussian2 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[8][3];
+      static T GaussianWeights[8];
+    };
 
+  template <class T>
+    int HexGaussian2<T>::GaussianNum = 8;
+  
+  template <class T>
+    T HexGaussian2<T>::GaussianPoints[8][3] = {
+    {0.211324865405, 0.211324865405, 0.211324865405},
+    {0.788675134595, 0.211324865405, 0.211324865405},
+    {0.788675134595, 0.788675134595, 0.211324865405},
+    {0.211324865405, 0.788675134595, 0.211324865405},
+    {0.211324865405, 0.211324865405, 0.788675134595},
+    {0.788675134595, 0.211324865405, 0.788675134595},
+    {0.788675134595, 0.788675134595, 0.788675134595},
+    {0.211324865405, 0.788675134595, 0.788675134595}};
+  
+  template <class T>
+    T HexGaussian2<T>::GaussianWeights[8] = 
+    {.125, .125, .125, .125, .125, .125, .125, .125};
+
+  //! Class with weights and coordinates for 3rd order Gaussian integration
+  template <class T>
+    class HexGaussian3 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[27][3];
+      static T GaussianWeights[27];
+    };
+
+  template <class T>
+    T HexGaussian3<T>::GaussianPoints[27][3] = 
+    {
+      {0.11270166537950, 0.11270166537950, 0.11270166537950}, {0.5, 0.11270166537950, 0.11270166537950}, {0.88729833462050, 0.11270166537950, 0.11270166537950},
+      {0.11270166537950, 0.5, 0.11270166537950}, {0.5, 0.5, 0.11270166537950}, {0.88729833462050, 0.5, 0.11270166537950},
+      {0.11270166537950, 0.88729833462050, 0.11270166537950}, {0.5, 0.88729833462050, 0.11270166537950}, {0.88729833462050, 0.88729833462050, 0.11270166537950},
+      
+      {0.11270166537950, 0.11270166537950, 0.5}, {0.5, 0.11270166537950, 0.5}, {0.88729833462050, 0.11270166537950, 0.5},
+      {0.11270166537950, 0.5, 0.5}, {0.5, 0.5, 0.5}, {0.88729833462050, 0.5, 0.5},
+      {0.11270166537950, 0.88729833462050, 0.5}, {0.5, 0.88729833462050, 0.5}, {0.88729833462050, 0.88729833462050, 0.5},
+      
+      {0.11270166537950, 0.11270166537950, 0.88729833462050}, {0.5, 0.11270166537950, 0.88729833462050}, {0.88729833462050, 0.11270166537950, 0.88729833462050},
+      {0.11270166537950, 0.5, 0.88729833462050}, {0.5, 0.5, 0.88729833462050}, {0.88729833462050, 0.5, 0.88729833462050},
+      {0.11270166537950, 0.88729833462050, 0.88729833462050}, {0.5, 0.88729833462050, 0.88729833462050}, {0.88729833462050, 0.88729833462050, 0.88729833462050}
+    };
+  
+  template <class T>
+    T HexGaussian3<T>::GaussianWeights[27] = 
+    {  
+      0.03429355278944,   0.05486968447298,   0.03429355278944,
+      0.05486968447298,   0.08779149517257,   0.05486968447298,
+      0.03429355278944,   0.05486968447298,   0.03429355278944,
+
+      0.03429355278944,   0.05486968447298,   0.03429355278944,
+      0.05486968447298,   0.08779149517257,   0.05486968447298,
+      0.03429355278944,   0.05486968447298,   0.03429355278944,
+
+      0.03429355278944,   0.05486968447298,   0.03429355278944,
+      0.05486968447298,   0.08779149517257,   0.05486968447298,
+      0.03429355278944,   0.05486968447298,   0.03429355278944
+    };
+
+  
   //! Class for handling of element of type hexahedron with trilinear lagrangian interpolation
   template <class T>
-    class HexTrilinearLgn : public HexApprox
+    class HexTrilinearLgn : public HexApprox, public HexGaussian2<double>
   {
   public:
     typedef T value_type;
@@ -255,10 +325,6 @@ namespace SCIRun {
   
     int polynomial_order() const { return 1; }
 
-    static int GaussianNum;
-    static double GaussianPoints[8][3];
-    static double GaussianWeights[8];
- 
     //! get value at parametric coordinate 
     template <class ElemData>
       T interpolate(const vector<double> &coords, const ElemData &cd) const
@@ -386,25 +452,7 @@ namespace SCIRun {
       stream.begin_class(type_name(-1), HEX_TRILINEAR_LGN_VERSION);
       stream.end_class();
     }
-  
-  template <class T>
-    int HexTrilinearLgn<T>::GaussianNum = 8;
-  
-  template <class T>
-    double HexTrilinearLgn<T>::GaussianPoints[8][3] = {
-    {0.211324865405, 0.211324865405, 0.211324865405},
-    {0.788675134595, 0.211324865405, 0.211324865405},
-    {0.788675134595, 0.788675134595, 0.211324865405},
-    {0.211324865405, 0.788675134595, 0.211324865405},
-    {0.211324865405, 0.211324865405, 0.788675134595},
-    {0.788675134595, 0.211324865405, 0.788675134595},
-    {0.788675134595, 0.788675134595, 0.788675134595},
-    {0.211324865405, 0.788675134595, 0.788675134595}};
-  
-  template <class T>
-    double HexTrilinearLgn<T>::GaussianWeights[8] = 
-    {.125, .125, .125, .125, .125, .125, .125, .125};
-  
+    
 } //namespace SCIRun
 
 #endif // HexTrilinear_h

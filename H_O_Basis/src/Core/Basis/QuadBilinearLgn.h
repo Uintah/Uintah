@@ -107,16 +107,62 @@ namespace SCIRun {
   //! Class for searching of parametric coordinates related to a value in Quad meshes and fields
   //! to do
 
+  //! Class with weights and coordinates for 2nd order Gaussian integration
+   template <class T>
+    class QuadGaussian2 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[4][2];
+      static T GaussianWeights[4];
+    };
+
+  template <class T>
+    int QuadGaussian2<T>::GaussianNum = 4;
+
+  template <class T>
+    T QuadGaussian2<T>::GaussianPoints[4][2] = {
+    {0.211324865405, 0.211324865405},
+    {0.788675134595, 0.211324865405},
+    {0.788675134595, 0.788675134595},
+    {0.211324865405, 0.788675134595}};
+
+  template <class T>
+    T QuadGaussian2<T>::GaussianWeights[4] = {.25, .25, .25, .25};
+
+  //! Class with weights and coordinates for 3rd order Gaussian integration
+  template <class T>
+    class QuadGaussian3 
+    {
+    public:
+      static int GaussianNum;
+      static T GaussianPoints[9][2];
+      static T GaussianWeights[9];
+    };
+
+  template <class T>
+    int QuadGaussian3<T>::GaussianNum = 9;
+
+  template <class T>
+    T QuadGaussian3<T>::GaussianPoints[9][2] = {
+    {0.11270166537950, 0.11270166537950}, {0.5, 0.11270166537950}, {0.88729833462050, 0.11270166537950},
+    {0.11270166537950, 0.5}, {0.5, 0.5}, {0.88729833462050, 0.5},
+    {0.11270166537950, 0.88729833462050}, {0.5, 0.88729833462050}, {0.88729833462050, 0.88729833462050}
+  };
+  
+  template <class T>
+    T QuadGaussian3<T>::GaussianWeights[9] = {
+    0.07716049378395,   0.12345679007654,   0.07716049378395,
+    0.12345679007654,   0.19753086415802,   0.12345679007654,
+    0.07716049378395,   0.12345679007654,   0.07716049378395
+  };
+
   //! Class for handling of element of type quad with bilinear lagrangian interpolation
   template <class T>
-    class QuadBilinearLgn : public QuadApprox
+    class QuadBilinearLgn : public QuadApprox, public QuadGaussian2<double> 
   {
   public:
     typedef T value_type;
-
-    static int GaussianNum;
-    static double GaussianPoints[4][2];
-    static double GaussianWeights[4];
 
     QuadBilinearLgn() {}
     virtual ~QuadBilinearLgn() {}
@@ -209,19 +255,6 @@ namespace SCIRun {
       stream.begin_class(type_name(-1), QUADBILINEARLGN_VERSION);
       stream.end_class();
     }
-
-  template <class T>
-    int QuadBilinearLgn<T>::GaussianNum = 4;
-
-  template <class T>
-    double QuadBilinearLgn<T>::GaussianPoints[4][2] = {
-    {0.211324865405, 0.211324865405},
-    {0.788675134595, 0.211324865405},
-    {0.788675134595, 0.788675134595},
-    {0.211324865405, 0.788675134595}};
-
-  template <class T>
-    double QuadBilinearLgn<T>::GaussianWeights[4] = {.25, .25, .25, .25};
 
 } //namespace SCIRun
 
