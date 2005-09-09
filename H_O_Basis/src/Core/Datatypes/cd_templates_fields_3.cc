@@ -30,9 +30,8 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Basis/TetLinearLgn.h>
 #include <Core/Basis/TetQuadraticLgn.h>
-#include <Core/Basis/HexQuadraticLgn.h>
+#include <Core/Basis/HexTriquadraticLgn.h>
 #include <Core/Basis/PrismLinearLgn.h>
 #include <Core/Datatypes/PrismVolMesh.h>
 #include <Core/Datatypes/TetVolMesh.h>
@@ -203,19 +202,19 @@ template class GenericField<QTVMesh, TQFDucharBasis,  vector<unsigned char> >;
 template class GenericField<QTVMesh, TQFDulongBasis,  vector<unsigned long> >;
 
 
-typedef HexQuadraticLgn<Tensor>                QHFDTensorBasis;
-typedef HexQuadraticLgn<Vector>                QHFDVectorBasis;
-typedef HexQuadraticLgn<double>                QHFDdoubleBasis;
-typedef HexQuadraticLgn<float>                 QHFDfloatBasis;
-typedef HexQuadraticLgn<int>                   QHFDintBasis;
-typedef HexQuadraticLgn<short>                 QHFDshortBasis;
-typedef HexQuadraticLgn<char>                  QHFDcharBasis;
-typedef HexQuadraticLgn<unsigned int>          QHFDuintBasis;
-typedef HexQuadraticLgn<unsigned short>        QHFDushortBasis;
-typedef HexQuadraticLgn<unsigned char>         QHFDucharBasis;
-typedef HexQuadraticLgn<unsigned long>         QHFDulongBasis;
+typedef HexTriquadraticLgn<Tensor>                QHFDTensorBasis;
+typedef HexTriquadraticLgn<Vector>                QHFDVectorBasis;
+typedef HexTriquadraticLgn<double>                QHFDdoubleBasis;
+typedef HexTriquadraticLgn<float>                 QHFDfloatBasis;
+typedef HexTriquadraticLgn<int>                   QHFDintBasis;
+typedef HexTriquadraticLgn<short>                 QHFDshortBasis;
+typedef HexTriquadraticLgn<char>                  QHFDcharBasis;
+typedef HexTriquadraticLgn<unsigned int>          QHFDuintBasis;
+typedef HexTriquadraticLgn<unsigned short>        QHFDushortBasis;
+typedef HexTriquadraticLgn<unsigned char>         QHFDucharBasis;
+typedef HexTriquadraticLgn<unsigned long>         QHFDulongBasis;
 
-typedef LatVolMesh<HexQuadraticLgn<Point> > HQVMesh;
+typedef LatVolMesh<HexTriquadraticLgn<Point> > HQVMesh;
 template class GenericField<HQVMesh, QHFDTensorBasis, vector<Tensor> >;
 template class GenericField<HQVMesh, QHFDVectorBasis, vector<Vector> >;
 template class GenericField<HQVMesh, QHFDdoubleBasis, vector<double> >;
