@@ -740,11 +740,13 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       // concentrations.
       for(int i=0;i<(int)tablevalues.size();i++){
         TableValue* tv = tablevalues[i];
-        cerr << "interpolating " << tv->name << '\n';
         CCVariable<double> value;
         new_dw->allocateAndPut(value, tv->label, matl, patch);
         CellIterator iter = patch->getExtraCellIterator();
         table->interpolate(tv->index, value, iter, ind_vars);
+        if(patch->getID() == 0){ 
+          cerr << "interpolating " << tv->name << '\n';
+        }
       }
     }
   }
