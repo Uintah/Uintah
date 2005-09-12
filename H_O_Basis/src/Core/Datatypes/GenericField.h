@@ -109,6 +109,8 @@ public:
     val = basis_.interpolate(coords, fcd);
   }
 
+  void cell_gradient(typename mesh_type::Elem::index_type ci,
+		     vector<value_type> &grad);
   virtual void resize_fdata();
 
   fdata_type& fdata();
@@ -136,6 +138,8 @@ private:
   class ElemData
   {
   public:
+    typedef typename FData::value_type value_type;
+
     ElemData(const FLD& fld, 
 		typename FLD::mesh_type::Elem::index_type idx) :
       fld_(fld),
@@ -693,6 +697,23 @@ GenericField<Mesh, Basis, FData>::get_type_description(int n) const
   return sub3;
 }
 
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::
+cell_gradient(typename mesh_type::Elem::index_type ci,
+	      vector<value_type> &grad)
+{
+  // supported for linear, should be expanded to support higher order.
+  ASSERT(this->basis_order() == 1);
+
+  ElemData<field_type> fcd(*this, ci);
+  // derivative is constant anywhere in the linear cell
+  vector<double> coords(3);
+  coords[0] = 0.5;
+  coords[1] = 0.5;
+  coords[2] = 0.5;
+  basis_.derivate(coords, fcd, grad);
+}
 
 template <class Mesh, class Basis, class FData>
 const TypeDescription *

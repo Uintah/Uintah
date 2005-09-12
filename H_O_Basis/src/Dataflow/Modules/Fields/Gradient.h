@@ -61,7 +61,9 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
-					    const TypeDescription *ttd,
+					    const TypeDescription *mtd,
+					    const TypeDescription *btd,
+					    const TypeDescription *dtd,
 					    const TypeDescription *otd);
 };
 
@@ -83,7 +85,7 @@ GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
 
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
     
-  OFIELD *ofield = scinew OFIELD(imesh, 0);
+  OFIELD *ofield = scinew OFIELD(imesh);
 
   typename IFIELD::mesh_type::Cell::iterator in, end;
   typename OFIELD::mesh_type::Cell::iterator out;
@@ -94,9 +96,12 @@ GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
   ofield->get_typed_mesh()->begin( out );
 
   typename OFIELD::value_type gradient;
-
+  vector<typename IFIELD::value_type> grad;
   while (in != end) {
-    gradient = ifield->cell_gradient(*in);
+    ifield->cell_gradient(*in, grad);
+    gradient.x(grad[0]);
+    gradient.y(grad[1]);
+    gradient.z(grad[2]);
     ofield->set_value(gradient, *out);
     ++in; ++out;
   }
