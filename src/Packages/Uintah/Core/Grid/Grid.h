@@ -87,7 +87,7 @@ WARNING
     void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr); 
 
     // For comparing grids - level and patch structure must be equal
-    bool operator==(const Grid& othergrid);
+    bool operator==(const Grid& othergrid) const;
 
     friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
