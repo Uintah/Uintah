@@ -460,7 +460,7 @@ namespace Uintah
   }
 }
 
-bool Grid::operator==(const Grid& othergrid) 
+bool Grid::operator==(const Grid& othergrid) const
 {
   if (numLevels() != othergrid.numLevels())
     return false;
