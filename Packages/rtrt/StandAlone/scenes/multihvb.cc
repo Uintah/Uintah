@@ -99,6 +99,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     scene->select_shadow_mode( No_Shadows );
     scene->maxdepth=0;
     scene->attach_display(dpy);
-    //scene->attach_display(pdpy);
+    scene->attach_display(pdpy);
     return scene;
 }
