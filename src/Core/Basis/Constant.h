@@ -40,100 +40,104 @@
 
 namespace SCIRun {
 
-  using std::vector;
-  using std::string;
+using std::vector;
+using std::string;
 
 
-  //! Class for handling of element with constant field variables
-  template <class T>
-    class ConstantBasis : public Datatype
+//! Class for handling of element with constant field variables
+template <class T>
+class ConstantBasis : public Datatype
+{
+public:
+  ConstantBasis() {}
+  virtual ~ConstantBasis() {}
+  
+  unsigned polynomial_order() const { return 0; }
+
+  //! get value at parametric coordinate 
+  template <class CellData>
+  T interpolate(const vector<double> &coords, const CellData &cd) const
   {
-  public:
-    ConstantBasis() {}
-    virtual ~ConstantBasis() {}
+    return cd.elem();
+  }
   
-    unsigned polynomial_order() const { return 0; }
+  //! get first derivative at parametric coordinate
+  template <class CellData>
+  void derivate(const vector<double> &coords, const CellData &cd, 
+		vector<T> &grad) const
+  {
+    grad.resize(3);
+    grad[0] = T(0);
+    grad[0] = T(0);
+    grad[0] = T(0);
+  }
 
-    //! get value at parametric coordinate 
-    template <class CellData>
-      T interpolate(const vector<double> &coords, const CellData &cd) const
-      {
-	return cd.elem();
-      }
-  
-    //! get first derivative at parametric coordinate
-    template <class CellData>
-      T derivate(const vector<double> &coords, const CellData &cd) const
-      {
-	return (T)0;
-      }
+//   //! get second derivative at parametric coordinate
+//   template <class CellData>
+//   T derivate2(const vector<double> &coords, const CellData &cd) const
+//   {
+//     return (T)0;
+//   }
 
-    //! get second derivative at parametric coordinate
-    template <class CellData>
-      T derivate2(const vector<double> &coords, const CellData &cd) const
-      {
-	return (T)0;
-      }
+  //! get parametric coordinate for value within the element
+  //! iterative solution...
+  template <class CellData>
+  void get_coords(vector<double> &coords, const T& value, 
+		  const CellData &cd) const
+  {
+    coords.resize(3,0);
+  }
+  virtual int get_approx_face_elements() const { return 0; }
+  static  const string type_name(int n = -1);
+  virtual void io (Piostream& str);
 
-    //! get parametric coordinate for value within the element
-    //! iterative solution...
-    template <class CellData>
-      void get_coords(vector<double> &coords, const T& value, 
-		      const CellData &cd) const
-      {
-	coords.resize(3,0);
-      }
-    virtual int get_approx_face_elements() const { return 0; }
-    static  const string type_name(int n = -1);
-    virtual void io (Piostream& str);
+};
 
-  };
+template <class T>
+const string
+ConstantBasis<T>::type_name(int n)
+{
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
+  }
+  else if (n == 0)
+  {
+    static const string nm("ConstantBasis");
+    return nm;
+  }
+  else 
+  {
+    return find_type_name((T *)0);
+  }
+}
 
-  template <class T>
-    const string
-    ConstantBasis<T>::type_name(int n)
-    {
-      ASSERT((n >= -1) && n <= 1);
-      if (n == -1)
-	{
-	  static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
-	  return name;
-	}
-      else if (n == 0)
-	{
-	  static const string nm("ConstantBasis");
-	  return nm;
-	}
-      else 
-	{
-	  return find_type_name((T *)0);
-	}
-    }
-
-  template <class T>
-    const TypeDescription* get_type_description(ConstantBasis<T> *)
-    {
-      static TypeDescription* td = 0;
-      if(!td){
-	const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-	TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-	(*subs)[0] = sub;
-	td = scinew TypeDescription(ConstantBasis<T>::type_name(0), subs, 
-				    string(__FILE__),
-				    "SCIRun");
-      }
-      return td;
-    }
+template <class T>
+const TypeDescription* get_type_description(ConstantBasis<T> *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(ConstantBasis<T>::type_name(0), subs, 
+				string(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
 
 #define CONSTANTBASIS_VERSION 1
 
-  template <class T>
-    void
-    ConstantBasis<T>::io(Piostream &stream)
-    {
-      stream.begin_class(type_name(-1), CONSTANTBASIS_VERSION);
-      stream.end_class();
-    }
+template <class T>
+void
+ConstantBasis<T>::io(Piostream &stream)
+{
+  stream.begin_class(type_name(-1), CONSTANTBASIS_VERSION);
+  stream.end_class();
+}
 
 }
 #endif // Constant_h
