@@ -15,7 +15,6 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
 #include <Packages/rtrt/Core/Camera.h>
-#include <Packages/rtrt/Core/CatmullRomSpline.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Phong.h>

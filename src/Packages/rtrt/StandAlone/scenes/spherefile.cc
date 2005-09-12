@@ -732,11 +732,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   else
     scene->addAnimateObject(all);
 
-#if 0 // GridSpheresDpy needs to be made to inherit DpyBase.
   scene->attach_display(display);
   display->setName("Particle Vis");
-  scene->attach_auxiliary_display(display);
-#endif
   (new Thread(display, "GridSpheres display thread\n"))->detach();
 
   return scene;
