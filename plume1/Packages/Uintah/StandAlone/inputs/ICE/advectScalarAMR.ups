@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>Advect a scalar through a 2 level grid</title>
+   </Meta>
+   
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            1.0        </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-5      </delt_init>
+       <max_iterations>     5         </max_iterations>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0" 
+                           label = "Temperature"  var = "Neumann"> 
+                            <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+        <BCType id = "0" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+        <BCType id = "0" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+        <BCType id = "0" label = "scalar-f" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,0]    </lower>
+              <upper>        [1,1,1]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [1,1,1]    </patches>
+           </Box>
+           <spacing>         [.1,.1,.1]    </spacing>
+       </Level>  
+<!--
+       <Level>
+           <Box label="2">
+              <lower>        [.2,.2,.2]    </lower>
+              <upper>        [.8,.8,.8]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [1,1,1]    </patches>
+           </Box>
+           <spacing>         [0.05,0.05,0.05]    </spacing>
+       </Level>
+-->
+    </Grid> 
+    <!--____________________________________________________________________-->
+    <!--    A M R   G R I D                                                 -->
+    <!--____________________________________________________________________-->  
+     
+    <Regridder>
+      <max_levels>2</max_levels>
+      <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
+      <lattice_refinement_ratio> [[2,2,1]]  </lattice_refinement_ratio>
+      <cell_creation_dilation>   [2,1,1]   </cell_creation_dilation>   
+      <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>   
+      <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+    </Regridder>   
+    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>advectScalarAMR.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label="press_equil_CC"/>
+      <save label="delP_Dilatate"/>
+      <save label="press_CC"/>
+      <save label="mom_L_ME_CC"/>
+      <save label="rho_CC"/>
+      <save label="vel_CC"/> 
+      <save label="scalar-f"/>
+      <save label="mag_grad_scalar-f"/>
+      <save label="refineFlag"/> 
+      <checkpoint interval="0.005" cycle="2"/>"
+   </DataArchiver>
+
+  <Debug>
+      <dbg_timeStart>       1.00        </dbg_timeStart>
+      <dbg_timeStop>        0.01        </dbg_timeStop>
+      <dbg_outputInterval>  1e-9        </dbg_outputInterval>
+      <dbg_BeginIndex>      [-1,30,-1]  </dbg_BeginIndex>
+      <dbg_EndIndex>        [3,32,3]    </dbg_EndIndex>
+      <dbg_Matls>           [0]         </dbg_Matls>
+      <dbg_Level>           1        </dbg_Level>
+      <debug label = "switchDebug_AMR_refine"/>
+      <debug label = "switchDebug_AMR_refineInterface"/>
+      
+  <!--
+      <debug label = "switchDebug_EQ_RF_press"/>
+      <debug label = "switchDebug_EQ_RF_press"/>
+      <debug label = "switchDebug_press"/>
+      <debug label = "switchDebug_vel_FC"/>            
+      <debug label = "switchDebug_explicit_press"/>   
+      <debug label = "switchDebug_PressFC"/>         
+      <debug label = "switchDebugLagrangianValues"/>   
+      <debug label = "switchDebugSource_Sink"/>     
+      <debug label = "switchDebug_advance_advect"/>
+    -->
+    </Debug>
+    
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.5</cfl>
+      <ICE>
+        <max_iteration_equilibration> 50 </max_iteration_equilibration>
+        <advection type = "FirstOrder" />
+        <solution technique = "EqForm" />
+        <AMR>
+          <orderOfInterpolation>1 </orderOfInterpolation>
+          <!--if gradient is > knob then refine -->
+          <Refinement_Criteria_Thresholds>
+            <Density>     1e100    </Density>
+            <Temperature> 1e100    </Temperature>
+            <Pressure>    1e100    </Pressure>
+            <VolumeFrac>  1e100    </VolumeFrac>
+            <Velocity>    1e100    </Velocity>
+          </Refinement_Criteria_Thresholds>
+        </AMR>
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    
+    <!--____________________________________________________________________-->
+    <!--      material Properties and Initial Conditions                    -->
+    <!--____________________________________________________________________-->                      
+    <MaterialProperties>
+       <ICE>
+         <material name = "BackgroundGas">
+           <burn type = "null" />
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>   0.0                    </dynamic_viscosity>
+           <thermal_conductivity>0.0                    </thermal_conductivity>
+           <specific_heat>      716.0                   </specific_heat>
+           <speed_of_sound>     376                     </speed_of_sound>
+           <gamma>              1.4                     </gamma>
+           <geom_object>
+                <box label="wholeDomain">
+                    <min>       [ -1., -1., -1. ]       </min>
+                    <max>       [  1.,  1.,  1. ]       </max>
+                </box>
+               <res>                 [2,2,2]            </res>
+               <velocity>      [0.,0.,0.]               </velocity>
+               <density>       1.1792946927374306000e+00</density>
+               <pressure>      101325.0                 </pressure>     
+               <temperature>   300.0                    </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+       <exchange_properties>
+         <exchange_coefficients>
+            <momentum>          []              </momentum>
+            <heat>              []              </heat>
+        </exchange_coefficients>
+       </exchange_properties>
+    </MaterialProperties> 
+    <!--____________________________________________________________________-->
+    <!--  Use passiveScalar model to advect a scalar around                -->
+    <Models>
+       <Model type="PassiveScalar">
+        <material>BackgroundGas</material>
+	 <scalar name="f">
+        <constants>
+          <diffusivity>              0.0    </diffusivity>                      
+          <initialize_diffusion_knob>  0    </initialize_diffusion_knob>         
+          <AMR_Refinement_Criteria>    1    </AMR_Refinement_Criteria>          
+              
+        </constants>
+         <geom_object>
+            <difference>
+            <box label="wholeDomain">
+                <min>       [ -1., -1., -1. ]        </min>
+                <max>       [  1.,  1.,  1. ]        </max>
+            </box>
+            <box label="scalarPlug">
+              <min>         [0.4,0.4,0.4]            </min>
+              <max>         [ 0.6, 0.6, 0.6]         </max>
+            </box>
+            </difference>
+            <scalar>    0.00   </scalar>
+         </geom_object>
+          <geom_object>
+            <box label="scalarPlug">
+              <min>          [0.4,0.4,0.4]       </min>
+              <max>          [ 0.6, 0.6, 0.6]    </max>
+            </box>
+            <scalar>    1.00   </scalar>
+         </geom_object>
+	</scalar>
+      </Model>
+    </Models>      
+</Uintah_specification>

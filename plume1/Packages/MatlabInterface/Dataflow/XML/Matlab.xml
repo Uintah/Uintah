@@ -1,0 +1,604 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<component name="Matlab" category="DataIO">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      Interactive Matlab Interface: This module accomplishes a number of steps to integrate MATLAB code into
+      SCIRun, (1) it translates a SCIRun object (field/matrix/nrrd) into a matlabarray and puts the object in
+      the current workspace of matlab, (2) it executes MATLAB code that can be provided within the interface, 
+      (3) it translates back the matlabarrays in MATLAB's workspace into SCIRun objects.
+    </summary>
+    <description>
+
+    <section>
+    <title>Overview</title>
+
+    <p>
+    This module launches MATLAB as a separate process under control of SCIRun. The process can be on a remote 
+    machine or a local machine. In case the module is running on a remote machine the communication with matlab
+    will be through sockets. In the latter case the entry fields in the middle panel of the GUI will need 
+    to be filled out with the IP address (it will automatically do a DNS lookup), the port number and a password.
+    A password is only necessary for a remote MATLAB engine that is configured to require a password when launching
+    MATLAB. The current implementation has an optional password in the matlabegine.rc, if this field is left empty
+    no password check is done. The current implementation does not make use of secure sockets, this implementation
+    is still under development. In order to run
+    multiple MATLAB processes simultaneously different sessions can be launched. Each session on the same machine
+    will share the global workspace in MATLAB and code is being executed sequentially for all modules making use
+    of that session. Hence variables declared in the global workspace can be shared between these matlab modules.
+    </p>
+
+    <p>
+    Once matlab is launched the intro message will appear in the MATLAB OUTPUT window. The module needs to be executed
+    in order to launch matlab, but will then remain active until the module is destroyed. Alternatively MATLAB can be
+    launched from the MatlabEngine Status panel in the right lower corner. It can be disconnected using the 'disconnect'
+    button in the same panel. That the MATLAB process is kept alive between executions is done to smoothen
+    the executing of matlab networks and as well to be able to store variables in matlab's workspace for later usage.
+    However before the module is executed the translation table of SCIRun objects to matlab objects needs to be setup.
+    This is accomplished by connecting the SCIRun object to one of the input ports on the module. Note that there are
+    ports for Matrices, Fields and Nrrds. In the translation menu the Field section deals with the translation of fields,
+    the Matrix section with the translation of Matrices and the Nrrd section with the translation of the nrrds. Each line
+    in this translation table refers to one set of input and output ports. First of all the module will need to know how
+    the object should be called in MATLAB, it is going to be a matlab array and thus needs to have a name. Then depending 
+    on the SCIRun object the object can be translated into structured arrays or numeric arrays, whose numeric format can be 
+    set as well. See the sections below for more details. Then at the end of the line the name of the matlab array that needs
+    to be translated back into a SCIRun object. Here a name is sufficient as the translation process will do the rest. The
+    name can be the same as the input array, but it might refer to another array as well.
+    </p>
+
+    <p>
+    The process of running code in MATLAB is accomplished as follows: SCIRun will translate the SCIRun objects into matlab
+    compatible objects and write them in a file and then instructs matlab to read this file. Since all communication is through
+    the stdin of matlab, using files makes sure that the data does not have to be written out in ASCII readable code. The 
+    module is smart enough to recognize that it translated objects before. If this is the case it will not do the translation
+    again and it will use the file already generated. When loading data into matlab the objects that were already there with 
+    the same name will be overwritten. Subsequently the module will take the code the user entered in the GUI and wrap it in
+    a 'try/catch' environment and execute it in matlab. All output generated on the stdout will be displayed in the module.
+    It will write a tag of when the code starts executing as well one on when the code finished executing. These are markers
+    for the module to keep track of when matlab finishes executing code. Please make sure that your progam does NOT generate
+    output that resembles these markers as it will confuse the Matlab Interface. Once the end marker is encountered, the module
+    will instruct matlab to save the variables in the workspace so they can be read in by SCIRun.
+    </p>
+
+    <p>
+    The third window on the bottom will show the current status of the matlab engine. Note: when session 0 is requested a new 
+    session number will be assigned to the matlab process, which has not been used before. The new session number will appear
+    in this status window. This option can be used to give each MatlabInterface Module its own matlab process running in the background. 
+    </p>  
+    </section>
+
+    <section>
+    <title>Local configuration</title>
+
+    <p>
+    Before the module can be used, SCIRun needs to know how to run matlab on the local machine. This is accomplished by the
+    configuration file 'matlabengine.rc', which will be created in the SCIRun/services directory in your local HOME directory.
+    This file is copied out of the src tree the first time SCIRun is run. This file configures how matlab should be run. Edit
+    the line 'startmatlab=' to instruct SCIRun how matlab should be started from an 'sh'-compatible shell. If matlab can already be
+    found using the PATH settings in the shell launching SCIRun, this line probably does not need to be altered. All other fields
+    in this file refer to running matlab on a remote machine. In case SCIRun will not be able to launch matlab a message will be 
+    displayed asking to check the configuration file.
+    </p>
+
+    <p>
+    To open a matlab process on the local machine the 'MATLAB ENIGNE ADDRESS' in the GUI needs to have an empty Address and does not require
+    a port. SCIRun will in this case automatically launch matlab locally. In the latter case no password checks are done. The local manager
+    does support multiple sessions. To clarify the word session: a session is a matlab process. When multiple Matlab modules make use of the
+    same session the workspace in matlab is shared. Hence one module can be used to load a large matrix into matlab, whereas another one can
+    be used to iterate over a process with small matrices, while using the big matrix stored by the first one. This will allow for some 
+    efficiency improvements.
+    </p>    
+
+    </section>
+
+    <section>
+    <title>Remote configuration</title>
+    
+    <p>  
+    In order to run matlab on a different machine then SCIRun, a small server program needs to be run on the remote machine. The
+    latter is called 'scirunremote', this program sets up a socket for listening and launches matlab when a request is made on its
+    socket. This program uses the same 'matlabengine.rc' file as the module (though it will look in the local HOME directory of the 
+    remote machine). This configuration file can be used to set a password, restrict login to only certain machines in a certain domain.
+    Currently the communication is over an open socket in the future an openssl implementation will be used for secure connections.
+    In order to launch the scirunremote program, type 'scirunremote -port 5678', or which ever port you want to use. The latter program
+    must be run on the remote system and serves as a daemon for starting all kinds of external programs. When launching this application
+    a list of services will be displayed. For the matlab engine to work properly two services need to be switched on: matlabengine and 
+    matlabenginefiletransfer. The currently implementation requires the last one even if there is a shared home directory. In the latter
+    case no files are transfered, and only the names of the directories in which temporary files are stored are exchanged. The latter
+    mechanism will reduce the amount of network traffic and hopefully speed up the function of this module.
+    </p>
+    </section>
+
+    <section>
+    <title>Configuration file</title>	
+    <p>
+    This section shortly lists the different options that can be set in the configuration file 'SCIRun/services/matlabengine.rc'
+    </p>
+    <p>
+    START MATLAB: This line describes how a sh-shell should start matlab. This instruction is executed to launch matlab
+    </p>
+    <p>
+    DISABLE: This will disable the matlabengine in scirunremote. The service cannot be launched and any request for starting
+    the matlabengine will be denied.
+    </p>
+    <p>
+    PASSWORD: A simple password, as a first line of defense. Better ways will follow.
+    </p>
+    <p>
+    RHOSTS: A list of machines that are allowed to log into scirunremote to request the matlabengine service. This list should contain
+    all the machines you want to use for running SCIRun. Any machine not on the list will be denied access. If no machine is listed
+    all machines are welcome to log in.
+    </p>
+    <p>
+    MATLABTIMEOUT: How long should we wait before giving up. Note that matlab often needs a couple of minutes to startup. The time
+    entered here is in seconds.
+    </p>
+    </section>
+
+    <section>
+    <title>How to use the GUI</title>
+
+    <figure id="fig1">
+    <img>GUIpic1.png</img>
+    <caption>The three main panels of the GUI and what they represent</caption>
+    </figure>
+
+    <p>
+    The GUI is subdivided into three mainparts. The top panel controls the translation from SCIRun objects into matlab objects and vice versa.
+    The middle panel controls where the matlab engine is started and whether a matlab engine is shared with another Matlab module. The lower
+    panel displays the matlab code that needs to be executed and the output from matlab. The subdivision is shown in figure <xref target="fig1"/>. 
+    </p>
+
+    <figure id="fig2">
+    <img>GUIpic2.png</img>
+    <caption>The SCIRun to matlab translation panel</caption>
+    </figure>
+
+    <p>
+    The first panel configures the matlabconverter which is used to translate SCIRun objects into matlab objects and vice versa. This matlabconverter
+    is the same as used by the modules 	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsWriter" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabMatricesWriter" />,
+	<modref package="MatlabInterface" name="MatlabMatricesWriter" />. The SCIRun objects are translated into matlab files which are stored in a temparory 
+    directory that is automatically generated and are subsequently read by matlab. For the translation back into SCIRun a similar mechanism is used which
+    tells matlab to write out the results in matlab files and these files are subsequently loaded into SCIRun. The input options are the same as for the
+    other modules: the first field on the left controls the name that an object has in matlab. This name has to be alphanumeric and needs to adhere to
+    Matlab's naming convention. When writing matlab code this name can be used to access the object. The second parameter in the list controls the data
+    format used for the matlab objects, i.e. whether the data is written as doubles, floats, or ints; the third parameter controls what kind of object
+    is created. For matrices and nrrd the most logical translation is a multi dimensional matrix, which is thence the default. All the properties and 
+    axis settings are lost in such a translation. Hence the option is offered to translate the SCIRun object into a structured array in which each field
+    represents one of the dataelements stored in that SCIRun object. The documentation on which fieldnames are used and how the object is translated, can
+    be found in the documentation of the individual modules doing this translation. A summary of how geometrical data is represented is given below.
+    Concerning the output variables, only the name needs to be known. If the object is not compatible an error message will be generated in the error
+    message GUI of module. This message will also explain why the object could not be translated.
+    </p>
+
+    <figure id="fig3">
+    <img>GUIpic3.png</img>
+    <caption>GUI for determining where MATLAB should be run</caption>
+    </figure>
+    
+    <p>
+    The second panel tells SCIRun where to launch MATLAB. For a matlab engine on the local machine leave the Address field empty. For a remote
+    engine enter the DNS or IP address of the remote server. The engine should support IPv6 addresses, although the support has not fully been
+    tested. The second field is the port number for a remote matlab process. Currently the program scirunremote needs to be run on the remote
+    side. This program will allow SCIRun to connect to this machine and run all kinds of remote applications. The program scirunremote needs to
+    be run with a port number, this is the number that needs to be entered here. Optionally a password protection can be added. Currently the
+    implementation of the password is a weak protection and will need some more adjustments in the future.  
+    </p>
+    
+    <p>
+    The fourth entry is a session number. Each matlabengine on a certain host is identified by a unique number. This number is stored by
+    the program launching matlab (scirun on  the local machine and scirunremote on the remote machine) and is used to see whether a session
+    is already open. If multiple Matlab modules refer to the same session, no new matlab engine will be opened in stead these modules will
+    share the use of the matlab engine. If session '0' is used a new non existing session number will be assigned by the matlab engine. 
+    </p>
+    
+    <figure id="fig4">
+    <img>GUIpic4.png</img>
+    <caption>The panel for running code in matlab</caption>
+    </figure>    
+    
+    <p>
+    The lower panel contains there parts: the first for setting the code matlab needs to execute, the second for displaying matlab's output and the
+    third for displaying the current status of the matlab engine. The code to be entered should assume that the matrices that have been created 
+    out of SCIRun objects already reside in the work space of matlab. In the code that maintains this absolute paths are used to ensure that
+    the matrices can be found. The code will also be embedded in a try-catch statement to make sure that an end marker is generated even if the
+    code crashes. All these measures to run code are hidden in the engine and the user should not worry about them for simple code. The code in
+    that needs to be execute can be loaded and saved as well. So for more complex tasks the matlab code can be written in a different more userfriendly
+    text editor. The extension of the filenames need to .m and are similar to matlab scripts. Please do not confuse these with functions. The latter
+    will not work as functions need the input to be parsed to them. If a function call is desired, put the instruction that calls the function in the
+    matlab code field and not the function code itself.
+    </p>
+    
+    <p>
+    The second part of the lower panel contains the matlab output. It will display all the output generated by matlab. Currently, it can parse input
+    as well, though that is limited to normal keystrokes. Simple commands may be given, but still the full functionality as found in a shell is not
+    present yet. This latter feature is still experimental and will be expanded in future versions.
+    </p>
+    
+    <p>
+    The third part of the lower panel, displays the current status of the matlab engine. The information stored here can be used for debugging and to
+    see whether the matlab engine is running properly. The connection to matlab engine can be closed here as well and new connections can be made without 
+    the need of executing the module.
+    </p>
+    </section>
+
+    <section>	
+    <title>Translation of FIELDS</title>
+    <p>
+    The following is an incomplete overview of the translation between SCIRun and MATLAB field objects. The following describes how
+    fields are to be prepared in matlab for it to be used in SCIRun. The opposite process will be done for the input ports.
+    Note that there one can specify whether one ones a structured or numerical matlab array. In case of numerical array only the data from the
+    field is taken and the rest is thrown away. In case of a structured matlab array the data is fitted into a structure with the same fields
+    as described below. 
+    </p>
+
+	<p>
+	The following sections describe the fields of the structure matrix can be defined and are recognized by the module.
+	</p>
+		
+	<section> 
+	<title>Unstructured Meshes </title>
+	
+	<desclist>
+		<desclistitem>
+			<desclistterm> FIELDNAME .node </desclistterm>
+			<desclistdef> 
+			This field is required for unstructured meshes and defines the position of the nodes within the mesh. 
+			This matrix should be a dense 3 by M matrix, where M is the number of nodes.
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+			<desclistterm> FIELDNAME .edge </desclistterm>
+			<desclistdef> 
+			This field is required for curve meshes and defines the line elements in the mesh. This matrix should be
+			a dense 2 by N matrix, where N is the number of line segments. The numbers in this mesh refer to the node
+			positions in the NODE matrix. By default it is assumed that the numbering of nodes starts at one. However if
+			one of the indices in this EDGE matrix is zero, a zero base is assumed. 
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+			<desclistterm> FIELDNAME .face </desclistterm>
+			<desclistdef> 
+			This field is required for surfaces meshes and defines the surface elements in the mesh. This matrix should be
+			a dense 3 by N matrix for triangulated meshes and a 4 by N matrix for quadsurf meshes. Here N is the number of 
+			surface elements. The numbers in this mesh refer to the node
+			positions in the NODE matrix. By default it is assumed that the numbering of nodes starts at one. However if
+			one of the indices in this FACE matrix is zero, a zero base is assumed.
+			</desclistdef>
+		</desclistitem>		
+		<desclistitem>
+			<desclistterm> FIELDNAME .cell </desclistterm>
+			<desclistdef> 
+			This field is required for volume meshes and defines the volume elements in the mesh. This matrix should be
+			a dense 4 by N matrix for tetrahedral meshes, or a 6 by N matrix for prism shaped volume elements, or a 8 by N matrix
+			for hexahedral elements. Here N is the number of volume elements. The numbers in this mesh refer to the node
+			positions in the NODE matrix. By default it is assumed that the numbering of nodes starts at one. However if
+			one of the indices in this CELL matrix is zero, a zero base is assumed.
+			</desclistdef>
+		</desclistitem>		
+	</desclist>
+	</section>
+
+	
+	<section>
+	<title>Structured Meshes</title> 
+	  
+	<desclist>
+		<desclistitem>
+			<desclistterm> FIELDNAMES x , y , AND z</desclistterm>
+			<desclistdef> 
+			The fields X, Y, and Z form the description of a structured mesh. These fields are 1D, 2D, or 3D matrices defining
+			the structured line, surface, or volume data. The connectivity of these meshes is defined by the position of the 
+			matrix, neighboring elements are connected. In this definition matrix X defines the x cartesian co-ordinate of each node,
+			matrix Y the y cartesian co-ordinate and matrix Z the z cartesian co-ordinate. This kind of definition is compatible
+			with MATLAB functions such as ndmesh() and sphere(). 
+			</desclistdef> 
+		</desclistitem>
+	</desclist>
+	</section>  
+	
+	<section>
+	<title>Structured regular Meshes</title>
+	
+	<p>
+	As structured matlab arrays:
+	</p>
+	<p>
+	<desclist>
+		<desclistitem>
+			<desclistterm> FIELDNAME .dims </desclistterm>
+			<desclistdef>
+			This field describes the dimensions of the regular grid and is required for making a regular structured mesh. This field
+			is a vector with 1, 2, or 3 elements describing the dimensions in each direction. Hence depending on this field the 
+			module creates a line, a surface, or a volume. This field is required for structured regular meshes.
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+		<desclistterm> FIELDNAME .transform </desclistterm>
+			<desclistdef>
+			This field describes a 4x4 matrix which defines an affine transformation, which is applied to the mesh. This matrix describes
+			rotation, translation and scaling of each node in the regular mesh. This field is optional and does not need to be supplied.
+			In case on transform matrix is defined a regular grid with spacing of 1 in each direction will be generated.
+			[NEED TO ADD MORE DETAILS]
+			</desclistdef>
+		</desclistitem>
+	</desclist>	
+	</p>
+	
+	<p>
+	As regular dense matrices:
+	</p>
+	<p>
+	ImageFields and LatVolFields can be entered as well as dense matrices. A 2D matrix will be translated into an ImageField, and a 3D matrix will
+	be translated into a LatVolField. When entering data as regular matrices, the data is assumed to be on the nodes and to be a scalar double field.
+	</p>
+	<p>
+	Note: The displaying dimensions between matlab and SCIRun are flipped, in matlab the first dimension is along the vertical axis, whereas in
+	SCIRun it is along the horizontal axis. Depending on the application the data may need to be transposed, in order to make to obtain the proper vertical
+	alignment.
+	</p>
+	</section>		
+	
+	
+	<section>
+	<title>Field Data</title>
+	
+	<desclist>
+		<desclistitem>
+			<desclistterm> FIELDNAME .field </desclistterm>
+			<desclistdef>
+			A matrix specifying scalar/vector/tensor data for each node/element in the mesh. Each subsequent element in this vector is added to the
+			next node/element in the field. Use the field FIELDLOCATION to specify where the data should be located. The module detects
+			the type of data. The tensor and respectively the vector dimension is assumed to be the first one.
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>		
+			<desclistterm> FIELDNAME .fieldtype </desclistterm>
+			<desclistdef>
+			A string specifying the type of data stored in field. Currently three value are accepted: 'scalar', 'vector', and 'tensor'. If this type
+			information is omitted it defaults to 'scalar'
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+			<desclistterm> FIELDNAME .fieldat </desclistterm>
+			<desclistdef>
+			The location of the data. This field is a string describing where the data should be located.
+			The default field location is assumed to be the nodes, meaning each node has a scalar, vector, or tensor value. 
+			In case the data is at the nodes, this field does not to be specified.
+			This field is a string with the following options: "node", "edge", "face", or "cell".
+			This field can be a number as well, which will describe the basis order of the element.
+			</desclistdef>
+		</desclistitem>
+	</desclist>
+	</section>
+	<note>
+	The way of specifying a field was different in version 1.22 of SCIRun. The modules still support input through the fields 'vectorfield', 'tensorfield',
+	and 'scalarfield'. However to be compatible with future additions this has been changed to a combination of 'field' and 'fieldtype'. The new fieldwriters
+	will use this convention instead of the old one.
+	</note>	
+	<note>
+	The module will try to reconstruct data, for instance if a matrix is transposed, it will detect this and read the data properly.
+	Most of the fields mentioned are optional and are not necessary. Only choose those fields from the list that are needed to 
+	describe your data. Currently not every field type supported by SCIRun is implemented in this module. Hopefully future versions
+	will support more data types and have even less restrictive converters.
+	</note>
+	</section>
+	
+	<section>
+	<title> Example 1: preparing MATLAB file </title>
+	
+	<p> The following lines of MATLAB code demonstrate how to structure a matrix for the use in SCIRun: </p>
+	
+	<p>Assuming that the nodes are specified in nodematrix and the connectivity of these nodes is specified in facematrix </p>
+	
+	<p> >> geom.node = nodematrix </p>
+	<p> >> geom.face = facematrix </p>
+	
+	<p> Opening the file with the MatlabFieldsReader module will show that there is one data matrix called "geom" whose contents
+	is a TRISURFMESH with no data on any of the node points </p>
+	
+	<note>
+	In case MATLAB is not available to structure the data, use the <modref package="MatlabInterface" name="MatlabNrrdsReader"/> module to read a MATLAB matrix data directly and
+	use the <modref package="Teem" name="NrrdToField"/> module to construct a Field out of the Nrrd object. 
+	</note>
+	</section>
+	  
+	<section>
+	<title> Example 2: Creating a structured mesh </title>
+	 
+	<p> The following lines of MATLAB code demonstrate the creation of a matlab file with the matlab logo on a structured mesh: </p>
+	
+	<p> >> [X,Y,DATA] = peaks(100); </p>
+	<p> >> field.x = X; </p>
+	<p> >> field.y = Y; </p>
+	<p> >> field.z = DATA; </p>
+	<p> >> field.scalarfield = DATA; </p>
+	
+	<p> This will create a surface mesh in the shape of the peaks logo and uses the z value as its data values. Be sure to specify
+	all the three cartensian coordinates, omitting one will result in the module not to recognise the mesh and it will not display
+	the object in its selection box.</p>
+	
+	</section>  
+	
+	<section>
+	<title> Exampe 3: Creating an unstructured mesh </title>
+	
+	<p> The following lines of MATLAB code demonstrate the creation of a matlab fiel with an unstructured tesselated surface: </p>
+	
+	<p> >> [X,Y,Z] = ndmesh(1:10,1:10,0); </p>
+	<p> >> field.node = [X(:)'; Y(:)'; Z(:)']; </p>
+	<p> >> field.face = delauney(X,Y); </p>
+	<p> >> field.scalarfield = X(:).^2; </p>
+
+    </section>
+    
+	<section>
+	<title>See Also </title>
+	<p>
+	<modref package="MatlabInterface" name="Matlab" />,	
+	<modref package="MatlabInterface" name="MatlabBundleReader" />,	
+	<modref package="MatlabInterface" name="MatlabBundleWriter" />,	
+	<modref package="MatlabInterface" name="MatlabDataReader" />,	
+	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
+	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsWriter" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabMatricesWriter" />,
+	<modref package="MatlabInterface" name="MatlabMatricesWriter" />	
+	</p>
+	</section>  
+
+
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>i1</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i2</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i3</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i4</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i5</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>fieldi1</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>fieldi2</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>fieldi3</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>nnrdi1</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>nrrdi2</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>nrrdi3</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>o1</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o2</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o3</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o4</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o5</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+     <port>
+        <name>fieldo1</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>fieldo2</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>fieldo3</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>nnrdo1</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>nrrdo2</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>nrrdo3</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,49 @@
+#!/bin/csh
+
+# copy originals to orgs/
+set firstTime = false                          # copy original movie.ppm        
+set size = "700x512"
+set title0 = "06/30/05"                        #north                           
+set title1 = "Steve's Solver"                  # northwest                      
+set title2 = "Hypre 1.7.7b"                    # northeast                      
+set title3 = "CH4 blob, 100x100x1, BC: walls"  # south                          
+#__________________________________
+if( $firstTime == "true" ) then
+  mkdir orgs
+  echo "copying data "
+  cp *.ppm orgs/.
+
+  echo "Now converting ppm names"
+  cat *.ppm movie2.*.ppm | pnmsplit - %d.ppm
+
+  /bin/rm -f movie.*.ppm
+endif
+
+#__________________________________
+#  Add labels to the existing plots
+/bin/rm *.a.ppm
+convert -font helvetica -pointsize 14 -fill white -background black label:"$title0" Label0.ppm
+convert -font helvetica -pointsize 14 -fill white -background black label:"$title1" Label1.ppm
+convert -font helvetica -pointsize 14 -fill white -background black label:"$title2" Label2.ppm
+convert -font helvetica -pointsize 14 -fill white -background black label:"$title3" Label3.ppm
+
+#__________________________________
+# resize all the ppm files
+foreach T (*.ppm)
+  
+ echo "resizing "$T "& adding labels"
+ set num = `basename $T .ppm`
+ convert -resize $size\! $T $num.ppm
+#__________________________________
+# add the titles
+ composite -gravity north     -geometry +0+20   Label0.ppm $num.ppm $num.0.ppm
+ composite -gravity northwest -geometry +15+20  Label1.ppm $num.0.ppm $num.1.ppm
+ composite -gravity northeast -geometry +15+20  Label2.ppm $num.1.ppm $num.2.ppm
+ composite -gravity south     -geometry +0+20   Label3.ppm $num.2.ppm $num.a.ppm
+ /bin/rm $num.[0-3].ppm
+end 
+#__________________________________
+# make the movies mpg
+echo "now making the movie"
+/bin/rm movie.mpeg
+ffmpeg -qscale 1 -s $size -r 5 -i %d.a.ppm -r 30 movie.mpeg

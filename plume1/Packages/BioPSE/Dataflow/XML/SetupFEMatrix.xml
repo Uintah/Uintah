@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="SetupFEMatrix" category="Forward">
+  <overview>
+    <authors>
+      <author>Alexei Samsonov</author>
+      <author>Ruth Nicholson Klepfer</author>
+    </authors>
+    
+    <summary>The module sets up a mesh with conductivity tensors for
+      bioelectric field problems.
+    </summary>
+    
+    <description>
+      <p>Version Date: March 2001</p><p>Version: 1.0</p>
+
+      <p>The module provides basic means for construction of the FE
+      matrix with linear elements for bioelectric field problems
+      (discretization of Poisson equation for volume conductor
+      problem). The input field should be a Field (TriSurf,
+      HexVol, or TetVol) of either Tensors or integers, with the data
+      values defined at the elements (constant over each element).  If
+      it is a Field of Tensors, each Tensor indicates the local
+      conductivity tensor at that location in the mesh.  If it is a
+      Field of Integers, then each integer is an index into a lookup
+      table, where the table contains a set of conductivity tensors.
+      When using the index/table approach, a "conductivity_table"
+      Property must be stored with the Field, where the conductivity
+      table is of type pair&lt;string,Tensor> (i.e. the individual
+      material types can have descriptive names).  The
+      BioPSE::Modeling::ModifyConductivities module can be used to
+      generate (as well as to modify) the conductivity_table
+      property.  The BioPSE::Forward::IndicesToTensors and
+      BioPSE::Forward::TensorsToIndices modules are useful for
+      converting between the index/table (Field of integer with a
+      conductivity_table Propert) and the full Tensor (Field of
+      Tensors) representations.</p>
+      
+      <note>
+	<p>BioPSE::Algorithm::BuildFEMatrix::build_FEMatrix() performs
+	the actual computation of the matrix. Other modules or any
+	other code may use the algorithm for other kinds of problems
+	involving discretization of the Poisson equation by
+	linear finite elements.</p>
+      </note>
+      
+      <developer>
+	<p>The discretization of the Poisson equation on the supplied
+	mesh is performed by linear finite elements using Galerkin
+	approach.</p>
+      </developer>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Mesh</name>
+	<description>
+	  <p>Takes a Field of integers or Tensors, as described in the
+	  Overview section.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Stiffness Matrix</name>
+	<description>
+	  <p>Sends a handle to the sparse matrix obtained from
+	  discretization of the problem by finite elements.</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>The SetupFEMatrix GUI contains three elements.  </p>
+    </description>
+    <parameter>
+      <widget>Entry</widget>
+      <datatype>Integer</datatype>
+      <label>Number of Threads</label>
+      <description>
+	<p></p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Check Button</widget>
+      <datatype>N/A</datatype>
+      <label>Use Conductivities</label>
+      <description>
+	<p>
+          The "Use Conductivities" box tells the module to look up the
+          conductivity for each element and to use that information
+          when constructing the stiffness matrix.  If it is not
+          checked, the module will use the identity matrix for each
+          element instead (i.e. what was div(sigma x grad(phi)) turns
+          into div(grad(phi))).  This is useful for demonstrating the
+          effects of volumetric inhomogeneities on the electric field.
+          And in practice, it's also a useful debugging tools -- you
+          can immediately see if a solution that isn't converging or
+          is giving strange results is getting screwed up because of
+          bad conductivity values or because of something else
+          (e.g. something is wrong with the mesh).
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Check Button</widget>
+      <datatype>N/A</datatype>
+      <label>Use Conductivity Basis Matrices</label>
+      <description>
+	<p>
+          The "Use Conductivity Basis Matrices" is just an efficiency
+          option for the case where the user wants to experiment with
+          varying the conductivity for some of the materials.  Note:
+          it only works with isotropic materials, and when we have an
+          indexed table of Tensors (i.e. a Field&lt;int> with a
+          conductivity_table Property, rather than a Field&lt;Tensor>
+          where each element has a unique Tensor).  This option will
+          precompute a decomposition of A into:
+	</p><p>
+          A = sigma_1 x A'_1 + sigma_2 x A'_2 + ... sigma_N x A'_N 
+	</p><p>
+          where the A'_n matrices are the same size and structure (in
+          the sparse matrix sense) as A, but just contain
+          contributions from elements of material type n.  The sigma_n
+          values are just the isotropic conductivities of the
+          different materials.  If this box is checked, we build this
+          decomposition.  Then, when a new Field comes in, the module
+          will check to make sure that only the conductivity_table has
+          changed, and will regenerate A by adding together weighted
+          contributions from the basis matrices, A'_n.  In practice
+          this approach is extremely useful for the parameterized
+          conductivity search application that's implement in
+          Packages/BioPSE/nets/conductivity-search.net
+        </p>
+      </description>
+    </parameter>
+  </gui>
+</component>
+

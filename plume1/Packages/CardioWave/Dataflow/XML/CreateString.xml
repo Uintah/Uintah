@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="CreateString" category="Tools">
+  <summary>
+  This module lets the user create a string in the form of a nrrd. String can be used
+  for creating dynamic file names etc.
+  </summary>  
+  <description>
+  This module lets the user create a string in the form of a nrrd. String can be used
+  for creating dynamic file names etc. The Nrrd that is created is of the type char and
+  hence can be used as a string.
+  </description>
+  <overview>
+    <authors>
+    Jeroen Stinstra
+    </authors>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>string</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

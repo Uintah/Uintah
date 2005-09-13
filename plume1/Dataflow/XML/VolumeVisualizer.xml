@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="VolumeVisualizer" category="Visualization" optional="true">
+  <overview>
+    <authors>
+      <author>Kurt Zimmerman</author>
+      <author>Milan Ikits</author>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>This module implements a volume renderer using 3D texture hardware.
+    </summary>
+    <description>
+        <p>The VolumeViewer module implements a volume renderer for
+        SCIRun using 3D texture hardware.</p>
+
+        <p> The Basic frame allows the selection of standard
+        (Over Operator) or maximum intensity projection (MIP)
+        rendering styles.  It also allows for selection of 16 or 32 bit
+        blending modes, however in the future this option will be moved to the
+        visual selection in the <modref package="SCIRun" name="Viewer"/>.
+        There is also a selection for
+        Trilinear or Nearest interpolation and a slider for changing the
+        opacity of the volume.  Software ColorMap2 Rasterization can be forced
+        on in the unusual event that the default rendering mode does not
+        work.</p>
+
+        <p> The Sampling frame allows the user to change the sampling
+        rate for interactive and non-interactive use.  The number is a
+        multiplier and the formula used to compute the actual number of slices
+        is "rate * sqrt(nx * nx + ny * ny + nz * nz) / sqrt(3.0)", or
+        approximately Sampling Rate slices per texture element.  Adaptive
+        sampling refers to the rate at which the volume is sampled while the
+        viewer is being interacted with. </p>
+
+        <p> The Shading frame is used to control the lighting
+        properties of the volume visualization.  The Shading button toggles
+        lighting of the volume's drawn elements and the material is used to
+        modulate the lighting color.  This option requires that the texture be
+        built with normals.  It also requires a graphics card with
+        fragment shader support.</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Texture</name>
+	<datatype>SCIRun::Texture</datatype>
+      </port>
+      <port>
+        <name>ColorMap</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+      <port>
+        <name>ColorMap2</name>
+	<datatype>SCIRun::ColorMap2</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Geometry</name>
+        <datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+        <name>ColorMap</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

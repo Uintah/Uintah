@@ -1,0 +1,86 @@
+#!/usr/local/bin/python
+
+from os import symlink,environ,chdir,getcwd,mkdir,system
+from sys import argv,exit,platform
+from string import upper
+from helpers.runSusTests import runSusTests, inputs_root
+from helpers.modUPS import modUPS
+
+# last 6 args are start patches x,y,z and start res x,y,z
+# The 4th argument is the number of times to double the processor count
+TESTS = [ ("ice_scale_test", "scalabilityTest.ups", "", 8, "ALL","","ice",1,1,1,10,10,10)]
+
+def chemfile (test):
+    return test[5]
+
+def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
+
+  # if the cfile exists, then we can assume that there's an input.dtd as well
+  cfile = chemfile(test)
+  if cfile != "":    
+    if platform[0:5] == "linux":
+      cfile = cfile + ".linux.bin"
+    else:
+      cfile = cfile + ".bin"
+    symlink("%s/%s" % (inputsdir, cfile), "chem.bin")
+    symlink("%s/input.dtd" % (inputsdir), "input.dtd")
+
+
+for test in TESTS:
+  iterations = test[3]
+  
+  # Starting resolution.  Double each iteration
+  xpatches = test[7]
+  ypatches = test[8]
+  zpatches = test[9]
+
+  xres = test[10]
+  yres = test[11]
+  zres = test[12]
+
+  scale_tests = []
+  max_parallelism = float(argv[5])
+
+  # do tests n times, double the procs each time, and double res and patches
+  for i in range(0, iterations):
+    procs = 2**i
+    if procs > max_parallelism:
+      iterations=i  
+      break
+
+    # substitute the new resolution and patch configuration in the UPS file.
+    newUPS = modUPS("%s/%s" % (inputs_root(), upper(test[6])), test[1], \
+                    ["<patches>[%d,%d,%d]</patches>" % (xpatches, ypatches, zpatches), "<resolution>[%d,%d,%d]</resolution>" % (xres,yres,zres)])
+    scale_tests.append(("%s-%dproc" % (test[0],procs), newUPS, test[2], procs, test[4], test[5], test[6]))
+
+    # double the patches and resolution for the next run.
+    if xpatches <= ypatches and xpatches <= zpatches:
+      xpatches = xpatches*2
+    elif ypatches <= xpatches and ypatches <= zpatches:
+      ypatches = ypatches*2
+    else:
+      zpatches = zpatches*2
+
+    if xres <= yres and xres <= zres:
+      xres = xres*2
+    elif yres <= xres and yres <= zres:
+      yres = yres*2
+    else:
+      zres = zres*2
+
+  # Run al the tests.  Exit if it skips them (because of debug mode)
+  retval = runSusTests(argv, scale_tests, "scalability", chemfileCallback)
+  if retval == 3:
+    exit(3)
+    
+  # This dir should exist now, and each tests' subdir should be underneath
+  chdir("%s/SCALABILITY-results" % getcwd())
+  mkdir(test[0])
+
+  # Gather results into the log file
+  system("echo Scalability results for %s >> %s/scalability.log.txt" % (test[0], test[0]))
+  for i in range(0, iterations):
+    procs = 2**i
+    # Find the last average time/timestep and append it along it with its numprocs to a log file
+    system("echo %d `grep Time %s-%dproc/sus.log.txt | tail -n1 | awk '{print $10}'` >> %s/scalability.log.txt" % (procs, test[0], procs, test[0]))
+  system("cat %s/scalability.log.txt" % test[0])

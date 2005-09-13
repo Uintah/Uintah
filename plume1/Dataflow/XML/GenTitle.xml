@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="GenTitle" category="Visualization">
+  <overview>
+    <authors>
+      <author>Allen R. Sanderson</author>
+    </authors>
+    <summary>
+      <p>
+        Generates a title for rendering animations.
+      </p>
+    </summary>
+    <description>
+	<p>This module adds a title to the view. It is most useful
+      when rendering animations. It has a single input which is matrix
+      containing one value. The output is geometry. </p> <p>The title
+      style sets the border and color. If a value is displayed the
+      format can be set using a C style format.</p> <p>The title size
+      sets size.</p> <p>The title location set the location to be in
+      one of the viewer corners.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+     <port>
+       <name>Time Matrix</name>
+       <datatype>SCIRun::Matrix</datatype>
+     </port>
+    </inputs>
+    <outputs>
+     <port>
+       <name>Title</name>
+       <datatype>SCIRun::Geometry</datatype>
+     </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>

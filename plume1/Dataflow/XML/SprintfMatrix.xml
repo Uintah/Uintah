@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<component name="SprintfMatrix" category="String">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module does a sprintf with input matrices into a new string.
+    </summary>
+    <description>
+      This module module takes in a formatted string (a string with %01d, %4.5f,
+      %g etc) and takes the numbers of the input matrix and puts these formatted
+      numbers into the string. The input matrix can be a scalar but can as well
+      be a full dense matrix. The module takes each number out of the matrix and
+      puts it in the formatted number string. For example in order to plot the 
+      contents of a 1 by 3 vector one may choose a formatstring of '%f %f %f\n',
+      which will put all three value in the matrix in the formatted string. If
+      there are more numbers in the matrix then in the format string then the current
+      format string will be reused. Hence to get the contents of a 4 by 4 matrix in
+      a comma seperated list one can choose a format string of '%5.5f, '. This
+      will apply this format string to each number in the matrix. In case multiple
+      matrices are supplied, first all the values of the first matrix will be used,
+      then all the numbers of the next matrix etc. When there are more positions
+      in the matrix where one can fill out a number then the rest will be padded
+      with the value 0.0.
+      Note the formatstring may contain '%s', which will remain in the format string
+      and is not touched by this module. To insert strings use SprintfString
+      instead.
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>format string</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+      <port>
+        <name>input matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>output</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+    </description>
+    <parameter>
+      <widget>Place Widget Name Here</widget>
+      <label>Place Label Name Here</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

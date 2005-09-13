@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="NrrdTextureBuilder" category="Visualization" optional="true">
+  <overview>
+    <authors>
+      <author>Kurt Zimmerman</author>
+    </authors>
+    <summary> This module builds a 3D Texture for use with an
+              OpenGL volume renderer.
+    </summary>
+    <description>
+      <p>The NrrdTextureBuilder module is used to create 3D volume textures for use by the <modref package="SCIRun" name="VolumeVisualizer"/> and <modref package="SCIRun" name="VolumeSlicer"/> modules.  The incoming data is bricked up into textures based upon how much video memory is available. </p>
+
+      <p>There are two input ports to this module.  The first one can
+      contain a Nrrd in one of two formats.  Either it should contain a 3
+      dimensional nrrd of scalar values or it should contain a 4 dimensional
+      nrrd where the fastest axis is a quadruple of the scalar values and
+      the normal(gradient) associated with the data at that point.  The
+      second port is optional and should contain the gradient
+      magnitude of the gradients in the first port.  It is only
+      required if normals are present in first nrrd and the data is to be
+      viewed using ColorMap2 transfer functions.</p>
+
+      <p> Both input
+      nrrds must already be of type UNSIGNED CHARACTER and can be
+      converted to that type using the <modref package="Teem"
+      name="UnuQuantize"/> module.</p>
+
+      <p>See also the <modref package="SCIRun" name="TextureBuilder"/> module.</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Value / Normal-Value Nrrd</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Gradmag Nrrd</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Texture</name>
+	<datatype>SCIRun::Texture</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

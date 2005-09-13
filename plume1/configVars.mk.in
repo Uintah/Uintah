@@ -1,0 +1,615 @@
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+
+# configVars.mk.in holds all of the variables needed by the make 
+# system to create makefiles. Various Makefiles can include this central
+# copy of the vars. This file has all of the variables and rules common to 
+# all generated makefiles.
+
+TAU_MAKEFILE := @TAU_MAKEFILE@
+ifneq ($(TAU_MAKEFILE),)
+  include $(TAU_MAKEFILE)
+  PDTPARSE = $(PDTDIR)/$(PDTARCHDIR)/bin/cxxparse
+  TAUINSTR = $(TAUROOT)/$(CONFIG_ARCH)/bin/tau_instrumentor
+endif
+
+# 'a' if archives, 'so' if shared libs.
+SO_OR_A_FILE := @SO_OR_ARCHIVE_EXTENSION@
+
+# Blow away a bunch of makes internal rules to improve the performance
+# of make
+.SUFFIXES:
+% :: RCS/%,v
+% :: RCS/%
+% :: %,v
+% :: s.%
+% :: SCCS/s.%
+%.out :: %
+%.c :: %
+%.tex :: %
+
+# If a sidl-generated file uses templates, it's possible that the MIPSPro
+# CC will decide to recompile the .cc file at link time to get the template
+# instantiation. If make has already removed the _sidl.cc file since it's an
+# intermediate file, the compilation will fail. This prevents make from 
+# deleting these files.
+.PRECIOUS: %_sidl.h %_sidl.cc
+
+
+ifeq ($(OBJTOP),.)
+LIBDIR := lib
+else
+LIBDIR := $(OBJTOP_ABS)/lib
+endif
+
+# squash any output from noisy environments, we just want the pwd output
+LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR) > /dev/null; cd $(LIBDIR)\
+	           > /dev/null; pwd) 
+
+SCIRUN_LIBDIR := $(LIBDIR)
+
+# squash any output from noisy environments, we just want the pwd output
+SCIRUN_LIBDIR_ABS := $(shell cd $(SCIRUN_LIBDIR) > /dev/null; pwd)
+
+VPATH := $(SRCTOP)
+
+# Optional pieces
+
+PACKAGE_DIRS := @PACKAGE_DIRS@
+LOAD_PACKAGE := @LOAD_PACKAGE@
+BUILD_DATAFLOW := @BUILD_DATAFLOW@
+BUILD_SCIRUN2 := @BUILD_SCIRUN2@
+BUILD_PLUME := @BUILD_PLUME@
+
+#DEF_BUILD_DATAFLOW := @DEF_BUILD_DATAFLOW@
+
+# These cannot be :=
+THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
+TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
+
+# Subdirectories
+SUBDIRS := Core 
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += Dataflow
+endif
+
+SUBDIRS += StandAlone $(COMPONENT_DIRS)
+
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += main 
+endif
+
+SUBDIRS += testprograms $(PACKAGE_DIRS)
+
+IS_OSX := @IS_OSX@
+IS_WIN := @IS_WIN@
+
+NEED_OSX_HACK := @NEED_OSX_HACK@
+ifeq ($(NEED_OSX_HACK),yes)
+  SUBDIRS := osx $(SUBDIRS)
+endif
+
+LDRUN_PREFIX      := @LDRUN_PREFIX@
+
+ifeq ($(SCIRUN_APP_NAME),)
+  SCIRUN_APP_NAME := SCIRun
+endif
+
+# Libraries and other flags
+ifeq ($(SCIRUN_THIRDPARTY_DIR),)
+  SCIRUN_THIRDPARTY_DIR=@SCI_THIRDPARTY_DIR@
+endif
+SCI_THIRDPARTY_LIBRARY = @SCI_THIRDPARTY_LIB_DIR_FLAG@
+
+M_LIBRARY := @M_LIB_DIR_FLAG@ @M_LIB_FLAG@
+
+TCL_INIT_DIR   := @LIB_DIR_TCL@/tcl
+TK_VERSION   := @TK_VERSION@
+
+ITCL_INIT_DIR  := @LIB_DIR_ITCL@/itcl
+ITCL_WIDGETS   := @LIB_DIR_ITCL@/iwidgets/scripts
+
+BLT_INLCUDE := @INC_BLT_H@
+
+HAVE_TEEM    := @HAVE_TEEM@
+TEEM_LIBRARY := @TEEM_LIB_DIR_FLAG@ @TEEM_LIB_FLAG@
+TEEM_INCLUDE := @INC_TEEM_H@
+
+FREETYPE_LIBRARY := @FREETYPE_LIB_DIR_FLAG@ @FREETYPE_LIB_FLAG@
+FREETYPE_INCLUDE := @INC_FREETYPE_H@
+
+FTGL_LIBRARY := @FREETYPE_LIB_DIR_FLAG@ @FREETYPE_LIB_FLAG@ @FTGL_LIB_DIR_FLAG@ @FTGL_LIB_FLAG@
+FTGL_INCLUDE := @INC_FREETYPE_H@ @INC_FTGL_H@
+
+SCISOCK_LIBRARY := @SCISOCK_LIB_DIR_FLAG@ @SCISOCK_LIB_FLAG@
+SCISOCK_INCLUDE := @INC_SCISOCK_H@
+
+MPEG_LIBRARY := @MPEGE_LIB_DIR_FLAG@ @MPEGE_LIB_FLAG@
+
+# Plume libs
+LOKI_LIBRARY := @LOKI_LIB_DIR_FLAG@ @LOKI_LIB_FLAG@
+LOKI_INCLUDE := @INC_LOKI_H@
+
+BOOST_LIBRARY := @BOOST_LIB_DIR_FLAG@ @BOOST_LIB_FLAG@
+BOOST_INCLUDE := @INC_BOOST_H@
+
+# TENA
+TENA_LIBRARY := @TENA_LIB_DIR_FLAG@ @TENA_LIB_DIR@
+TENA_INCLUDE := @INC_TENA_H@
+TENA_VERSION := @TENA_VERSION@
+TENA_PLATFOM := @TENA_PLATFORM@
+TENA_ARCH    := $(TENA_PLATFORM)-v$(TENA_VERSION)
+TENA_OMC_VERSION := @TENA_OMC_VERSION@
+TENA_DEFINES := @TENA_DEFINES@
+
+TENA_OM_DEF_DIR := @TENA_OM_DEF_DIR@
+TENA_OM_IMPL_DIR := @TENA_OM_IMPL_DIR@
+
+# Sandia library.
+HAVE_CAMAL    := @HAVE_CAMAL@
+CAMAL_LIBRARY := @CAMAL_LIB_DIR_FLAG@ @CAMAL_LIB_FLAG@
+CAMAL_INCLUDE := @INC_CAMAL_H@
+
+PERFEX_LIBRARY := @PERFEX_LIB_DIR_FLAG@ @PERFEX_LIB_FLAG@
+
+HAVE_BLAS      := @HAVE_BLAS@
+HAVE_CBLAS     := @HAVE_CBLAS@
+BLAS_LIBRARY   := @BLAS_LIB_DIR_FLAG@ @BLAS_LIB_FLAG@
+BLAS_INCLUDE   := @INC_BLAS_H@
+
+# Note: If we are not on an SGI, then LAPACKMP will be the same as
+# LAPACK!
+HAVE_LAPACK    := @HAVE_LAPACK@
+HAVE_LAPACKMP  := @HAVE_LAPACKMP@
+LAPACK_LIBRARY := @LAPACK_LIB_DIR_FLAG@ @LAPACK_LIB_FLAG@
+LAPACKMP_LIBRARY := @LAPACKMP_LIB_DIR_FLAG@ @LAPACKMP_LIB_FLAG@
+
+ifneq ($(TAU_MAKEFILE),)
+  TAU_LIB_DIR       := $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
+  TAU_LIB_FLAG      := $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+
+  CFLAGS := $(CFLAGS) -DUSE_TAU_PROFILING $(TAU_DEFS)
+  CXXFLAGS := $(CXXFLAGS) -DUSE_TAU_PROFILING $(TAU_DEFS)
+  TAU_LIBRARY := $(LDRUN_PREFIX)$(TAU_LIB_DIR) -L$(TAU_LIB_DIR) $(TAU_LIB_FLAG)
+else
+  TAU_LIBRARY :=
+endif
+
+# Always put $(TAU_LIBRARY) in front of $(MPI_LIBRARY) for the TAU_MPI wrapper
+
+MPI_LIBRARY := $(TAU_LIBRARY) @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
+
+# not blank.  Its "value" is not useful.
+HAVE_MPI := @HAVE_MPI@
+
+MDSPLUS_LIBRARY := @MDSPLUS_LIB_DIR_FLAG@ @MDSPLUS_LIB_FLAG@
+MDSPLUS_INCLUDE := @INC_MDSPLUS_H@
+
+HDF5_LIBRARY := @HDF5_LIB_DIR_FLAG@ @HDF5_LIB_FLAG@
+HDF5_INCLUDE := @INC_HDF5_H@
+
+HAVE_COLLAB_VIS := @HAVE_COLLAB_VIS@
+
+X_LIBRARY := @X_LIB_DIR_FLAG@ @X_LIB_FLAG@ 
+
+XALAN_PATH := @XALAN_PATH@
+
+UNP_LIBRARY := @UNP_LIB_DIR_FLAG@ @UNP_LIB_FLAG@
+UNP_INCLUDE := @INC_UNP_H@
+
+THREAD_LIBRARY := @THREAD_LIB_FLAG@
+SEMAPHORE_LIB := @SEMAPHORE_LIB_FLAG@
+SOCKET_LIBRARY := @SOCKET_LIB_FLAG@
+
+GL_INCLUDE := @INC_GL_H@ @INC_GLEW_H@
+GL_LIBRARY := @GLEW_LIB_DIR_FLAG@ @GLEW_LIB_FLAG@ @GL_LIB_DIR_FLAG@ @GL_LIB_FLAG@ $(X_LIBRARY)
+
+AVR_COMPILE := @COMPILE_AVR@
+
+PROGRAM_PSE   := @EXENAME@
+
+TRACEBACK_LIB := @EXC_LIB_DIR_FLAG@ @EXC_LIB_FLAG@
+
+LEX := @LEX@
+LEX_LIBRARY := @LEX_LIB_FLAG@
+YACC := @YACC@ -d -v
+PERL := @PERL@
+SED := sed
+
+MAKE_PARALLELISM := @MAKE_PARALLELISM@
+
+LARGESOS := @LARGESOS@
+
+ifeq ($(LARGESOS),yes)
+  MALLOCLIB := Core
+else
+  MALLOCLIB := Core/Malloc
+endif
+
+# Convenience variables - compounded from above definitions
+BLT_LIBRARY  :=  @BLT_LIB_DIR_FLAG@  @BLT_LIB_FLAG@
+TCL_LIBRARY  :=  @TCL_LIB_DIR_FLAG@  @TCL_LIB_FLAG@
+TK_LIBRARY   :=   @TK_LIB_DIR_FLAG@   @TK_LIB_FLAG@
+ITCL_LIBRARY := @ITCL_LIB_DIR_FLAG@ @ITCL_LIB_FLAG@
+ITK_LIBRARY  :=  @ITK_LIB_DIR_FLAG@  @ITK_LIB_FLAG@
+
+DL_LIBRARY := @DL_LIB_DIR_FLAG@ @DL_LIB_FLAG@
+Z_LIBRARY := @Z_LIB_DIR_FLAG@ @Z_LIB_FLAG@ 
+
+GLUT_LIBRARY := @GLUT_LIB_DIR_FLAG@ @GLUT_LIB_FLAG@ 
+GLUI_LIBRARY := @GLUI_LIB_DIR_FLAG@ @GLUI_LIB_FLAG@ 
+OOGL_LIBRARY := @OOGL_LIB_DIR_FLAG@ @OOGL_LIB_FLAG@ 
+
+SOUND_LIBRARY := @AUDIO_LIB_DIR_FLAG@ @AUDIO_LIB_FLAG@
+HAVE_AUDIO := @HAVE_AUDIO@
+
+XML_LIBRARY := @XERCES_C_LIB_DIR_FLAG@ @XERCES_C_LIB_FLAG@
+XML_INCLUDE := @INC_XERCESC_H@
+
+NETSOLVE_LIBRARY := @NETSOLVE_LIB_FLAG@ @NETSOLVE_LIB_DIR_FLAG@
+
+JPEG_LIBRARY := @JPEG_LIB_FLAG@ @JPEG_LIB_DIR_FLAG@
+TIFF_LIBRARY := @TIFF_LIB_FLAG@ @TIFF_LIB_DIR_FLAG@
+
+PNG_INCLUDE := @INC_PNG_H@
+PNG_LIBRARY := @PNG_LIB_DIR_FLAG@ @PNG_LIB_FLAG@
+
+HAVE_INSIGHT := @HAVE_INSIGHT@
+INSIGHT_LIBRARY := @INSIGHT_LIB_DIR_FLAG@ @INSIGHT_LIB_FLAG@ 
+INSIGHT_INCLUDE := @INC_INSIGHT_H@
+
+HAVE_PTOLEMY := @HAVE_PTOLEMY@
+JAVA_PATH := @JAVA_PATH@
+PTOLEMY_PATH := @PTOLEMY_PATH@
+PTOLEMY_CLASSPATH := @PTOLEMY_CLASSPATH@
+
+ifeq ($(BUILD_SCIRUN2),yes)
+  HAVE_UUID := @HAVE_UUID@
+  ifeq ($(HAVE_UUID),yes)
+    UUID_LIB := @UUID_LIB_FLAG@
+  endif
+  SUBDIRS := $(SUBDIRS) SCIRun CCA
+  HAVE_BABEL := @HAVE_BABEL@
+  ifeq ($(HAVE_BABEL),yes)
+#    SUBDIRS += Babel
+    CCASIDL := Core/Babel/cca.sidl
+    BABEL_REPOSITORY:= Core/Babel/repository
+    BABEL_INCLUDE := @INC_SIDL_H@
+    BABEL := @BABEL_BIN@
+    CCASIDL := Core/Babel/cca.sidl
+    SIDL_LIBRARY := @SIDL_LIB_DIR_FLAG@ @SIDL_LIB_FLAG@
+    BABEL_REPOSITORY:= Core/Babel/repository
+  endif
+
+  GLOBUS_LIBRARY := @GLOBUS_LIB_DIR_FLAG@ @GLOBUS_LIB_FLAG@ 
+  GLOBUS_INCLUDE := @INC_GLOBUS_H@
+  HAVE_GLOBUS := @HAVE_GLOBUS@
+
+  HAVE_QT := @HAVE_QT@
+  QT_LIBRARY := @QT_MT_LIB_DIR_FLAG@ @QT_MT_LIB_FLAG@
+  QT_INCLUDE := @INC_QT_MT_H@
+
+  QT_DEFS := -DQT_THREAD_SUPPORT -DQT_NO_XIM
+  QT_MOC_BIN := @QT_MOC_BIN@
+
+  HAVE_RUBY := @HAVE_RUBY@
+  RUBY_LIBRARY := @RUBY_LIB_DIR_FLAG@ @RUBY_LIB_FLAG@
+  RUBY_INCLUDE := @INC_RUBY_H@
+
+  HAVE_TAO := @HAVE_TAO@
+  TAO_LIBRARY := @TAO_LIB_DIR_FLAG@ @TAO_LIB_FLAG@
+  TAO_INCLUDE := @INC_TAO_H@
+
+  HAVE_VTK := @HAVE_VTK@
+  VTK_LIBRARY := @VTK_LIB_DIR_FLAG@ @VTK_LIB_FLAG@
+  VTK_INCLUDE := @INC_VTK_H@
+
+endif
+
+#ifeq ($(BUILD_PLUME),yes)
+#endif
+
+VDT_INCLUDE := @INC_VDT_H@
+VDT_LIBRARY := @VDT_LIB_DIR_FLAG@ @VDT_LIB_FLAG@
+
+MAGICK_INCLUDE := @INC_MAGICK_H@
+MAGICK_LIBRARY := @MAGICK_LIB_DIR_FLAG@ @MAGICK_LIB_FLAG@
+
+HAVE_HYPRE     := @HAVE_HYPRE@
+HAVE_HYPRE_1_9 := @HAVE_HYPRE_1_9@
+HYPRE_LIBRARY  := @HYPRE_LIB_DIR_FLAG@ @HYPRE_LIB_FLAG@
+
+HAVE_PETSC     := @HAVE_PETSC@
+HAVE_PETSC_UNI := @HAVE_PETSC_UNI@
+PETSC_INCLUDE  := @INC_PETSC_H@
+PETSC_LIBRARY  := @PETSC_LIB_DIR_FLAG@ @PETSC_LIB_FLAG@ 
+
+PETSC_UNI_LIBRARY := @PETSC_UNI_LIB_DIR_FLAG@ @PETSC_UNI_LIB_FLAG@ @MPI_UNI_LIB_DIR_FLAG@ @MPI_UNI_LIB_FLAG@
+
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include -I$(SRCTOP)/Packages @INC_SCI_THIRDPARTY_H@ @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_ITK_H@ @INC_BLT_H@ @INC_GLOBUS_H@ $(QT_INCLUDE) @INC_XERCESC_H@ @INC_PETSC_H@ @INC_MPI_H@ @INC_MPI_UNI_H@ @INC_PETSC_UNI_H@ @INC_GLUI_H@ @INC_GLUT_H@ @INC_GL_H@ @INC_GLEW_H@ @INC_OOGL_H@ @INC_Z_H@ @INC_HYPRE_H@ @INC_SIDL_H@ @INC_CAMAL_H@ $(TAUINC) 
+FINCLUDES += -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include
+
+
+SSTREAM_COMPAT := @SSTREAM_COMPAT@
+ifeq ($(SSTREAM_COMPAT),yes)
+  INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
+endif
+
+# variables and suffix rules for module transformation
+#------------------------------------------------------------------------------
+
+CC              := @CC@
+CXX             := @CXX@
+AS              := @AS@
+LD              := @LD@
+CFLAGS          := @CFLAGS@ $(CFLAGS) $(QT_DEFS) @WOFF_STRING@
+CXXFLAGS        := @CXXFLAGS@ $(CXXFLAGS) $(QT_DEFS) @WOFF_STRING@
+SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) $(CFLAGS)
+LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CXXFLAGS)
+ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
+F77		:= @F77@
+FFLAGS		:= @FFLAGS@ $(FFLAGS)
+F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@
+REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
+
+################################################################
+# Auto dependency generation flags
+#
+
+CC_DEPEND_MODE	    := @CC_DEPEND_MODE@
+CC_DEPEND_REGEN      = @CC_DEPEND_REGEN@
+CC_DEPEND_EXT       := @CC_DEPEND_EXT@
+F77_DEPEND_MODE      = @F77_DEPEND_MODE@
+F77_DEPEND_REGEN     = @F77_DEPEND_REGEN@
+F77_DEPEND_EXT	    := @F77_DEPEND_EXT@
+
+NEED_SONAME	:= @NEED_SONAME@
+ECHO :=		echo @ECHO_N@
+
+ifeq ($(REPOSITORY_FLAGS),)
+  repository = 
+else
+  repository = $(REPOSITORY_FLAGS) $(patsubst %:$(1),%,$(filter %:$(1),$(ALL_LIB_ASSOCIATIONS)))
+endif
+
+ifeq ($(NEED_SONAME),yes)
+  SONAMEFLAG = -Wl,-soname,$(notdir $@)
+else
+  SONAMEFLAG = 
+endif
+
+.SUFFIXES: .cc .c .o .s .F .f .cpp
+
+.cc.o: $<
+	-rm -f $@
+ifeq ($(CC_DEPEND_MODE),normal)
+ifneq ($(TAU_MAKEFILE),)
+ifneq ($(PDTDIR),)
+	-echo "Building $*.o ..." ; \
+	$(PDTPARSE) $< $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -DSCI_Hash_Map_h -DSCI_HASH_SET_H -DPDT_PARSER; \
+	pdbfile=`basename $< .cc`.pdb ; \
+	$(TAUINSTR) $$pdbfile $< -o $*.inst.cc -f $(SRCTOP)/tau/select.dat ; \
+        $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $*.inst.cc -o $@ ; \
+	if [ -f $@ ] ; then  \
+	echo "Instrumented $*.o successfully  " ; \
+	else \
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; \
+	ls -l $@; \
+	fi ; \
+	rm -f $$pdbfile ; 
+else
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; 
+endif
+else
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
+endif
+else
+ifeq ($(CC_DEPEND_MODE),modify)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+else
+ifeq ($(CC_DEPEND_MODE),move)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+else
+ifeq ($(CC_DEPEND_MODE),stdout)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Prepend that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+else
+	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
+	exit 1
+endif
+endif
+endif
+endif
+
+.cpp.o: $<
+	-rm -f $@
+ifeq ($(CC_DEPEND_MODE),normal)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
+else
+ifeq ($(CC_DEPEND_MODE),modify)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+else
+ifeq ($(CC_DEPEND_MODE),move)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+else
+ifeq ($(CC_DEPEND_MODE),stdout)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Awk that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+else
+	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
+	exit 1
+endif
+endif
+endif
+endif
+
+.F.o: $<
+	-rm -f $@
+ifeq ($(F77_DEPEND_MODE),normal)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+else
+ifeq ($(F77_DEPEND_MODE),modify)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@ && if test -f $(basename $@).$(CC_DEPEND_EXT); then $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT); fi
+else
+ifeq ($(F77_DEPEND_MODE),move)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(F77_DEPEND_EXT)
+else
+ifeq ($(F77_DEPEND_MODE),stdout)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Awk that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+else
+	$(ECHO) Unknown F77_DEPEND_MODE: $(F77_DEPEND_MODE)
+	exit 1
+endif
+endif
+endif
+endif
+
+.f.o: $<
+	-rm -f $@
+ifeq ($(F77_DEPEND_MODE),normal)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+else
+ifeq ($(F77_DEPEND_MODE),modify)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@ && if test -f $(basename $@).$(CC_DEPEND_EXT); then $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT); fi
+else
+ifeq ($(F77_DEPEND_MODE),move)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(F77_DEPEND_EXT)
+else
+ifeq ($(F77_DEPEND_MODE),stdout)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Awk that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+else
+	$(ECHO) Unknown F77_DEPEND_MODE: $(F77_DEPEND_MODE)
+	exit 1
+endif
+endif
+endif
+endif
+
+.c.o: $<
+	-rm -f $@
+ifeq ($(CC_DEPEND_MODE),normal)
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ -c $< -o $@
+else
+ifeq ($(CC_DEPEND_MODE),modify)
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+else
+ifeq ($(CC_DEPEND_MODE),move)
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+else
+ifeq ($(CC_DEPEND_MODE),stdout)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Awk that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
+	@rm -f $(basename $@).depend
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+else
+	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
+	exit 1
+endif
+endif
+endif
+endif
+
+.s.o: $<
+	$(AS) $(ASFLAGS) -o $@ $< -o $@
+
+ifeq ($(BUILD_SCIRUN2),yes)
+moc_%.cpp: %.h
+	$(QT_MOC_BIN) $< -o $@
+endif
