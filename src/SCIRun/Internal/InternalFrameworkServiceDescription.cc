@@ -58,15 +58,16 @@ namespace SCIRun {
   
   InternalFrameworkServiceDescription::~InternalFrameworkServiceDescription()
   {
-    std::cerr << "What if singleton_instance is refcounted?" << std::endl;
-    if(singleton_instance) {
-      delete singleton_instance;
-    }
+    // yarden: removed as we use smart pointer
+//     std::cerr << "What if singleton_instance is refcounted?" << std::endl;
+//     if(singleton_instance) {
+//       delete singleton_instance;
+//     }
   }
 
-  InternalFrameworkServiceInstance *InternalFrameworkServiceDescription::get(SCIRunFramework *fwk) 
+  InternalFrameworkServiceInstance::pointer InternalFrameworkServiceDescription::get(SCIRunFramework *fwk) 
   {
-    if ( singleton_instance == 0 ) {
+    if ( singleton_instance.isNull() ) {
       singleton_instance = create(fwk);
       fwk->registerComponent(singleton_instance, singleton_instance->getInstanceName());
     }
@@ -75,7 +76,7 @@ namespace SCIRun {
 
   void InternalFrameworkServiceDescription::release(SCIRunFramework *fwk)
   {
-    if ( singleton_instance == 0 ) return;
+    if ( singleton_instance.isNull() ) return;
 
     singleton_instance->decrementUseCount();
 //     if ( singleton_instance->decrementUseCount() ) 

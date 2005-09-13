@@ -96,6 +96,15 @@ package sci {
     } // package ports
 
 
+//       interface Test1 {
+//       }
+
+//       interface Test2 {
+// 	}
+
+//       interface Test3 extends Test1, Test2 {
+//       }
+
     package internal {
       
       enum PortType {
@@ -103,7 +112,7 @@ package sci {
 	To   = 1,
       }
 
-      class PortInstance {
+      interface PortInstance {
 	bool connect(in PortInstance portInstance);
 	bool disconnect(in PortInstance portInstance);
 	bool available();
@@ -118,12 +127,19 @@ package sci {
 	string getModel();
       };
       
-    
+      class PortInstanceIterator {
+	PortInstance get();
+	bool done();
+	void next();
+      }
+
       class ComponentInstance {
 	DistributedFramework getFramework();
 	
 	PortInstance getPortInstance(in string portName);
 	
+	PortInstanceIterator getPorts();
+	string getInstanceName();
 	string getClassName();
 	TypeMap getProperties();
 	void setProperties( in TypeMap properties);
@@ -135,7 +151,8 @@ package sci {
 	  Provides = 1,
 	}
 
-	class CCAPortInstance extends PortInstance {
+	interface CCAPortInstance extends PortInstance {
+
 
 	  string getName();
 	  int numOfConnections();
@@ -145,7 +162,10 @@ package sci {
 	  bool decrementUseCount();
 	}
 
- 	class CCAComponentServices extends ComponentInstance implements Services {
+        class CCAComponentServices extends ComponentInstance 
+	  implements Services 
+        {
+	  PortInstanceIterator getPorts();
  	}
 
       } // package cca

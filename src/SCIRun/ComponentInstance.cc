@@ -56,13 +56,30 @@ ComponentInstance::~ComponentInstance()
 {
 }
 
+sci::cca::DistributedFramework::pointer ComponentInstance::getFramework()
+{ 
+  // FIXME: until SCIRunFramework will derive from DistributedFramework return 0;
+  return sci::cca::DistributedFramework::pointer(0); 
+}
+
 void
 ComponentInstance::setComponentProperties(const sci::cca::TypeMap::pointer &tm)
+{
+  // depreciated
+  setProperties(tm);
+}
+
+void
+ComponentInstance::setProperties(const sci::cca::TypeMap::pointer &tm)
 {
     // TODO: check properties - do not allow cca.className to be changed
     comProperties = tm;
 }
 
-
+sci::cca::TypeMap::pointer
+ComponentInstance::getProperties()
+{
+  return comProperties;
+}
 
 } // end namespace SCIRun

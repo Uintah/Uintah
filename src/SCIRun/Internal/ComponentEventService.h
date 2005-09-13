@@ -89,6 +89,17 @@ class ComponentEvent;
     
     virtual void moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y);
     
+    // quite down the compile
+    virtual void getException();
+    virtual const TypeInfo* _virtual_getTypeInfo() const;
+    virtual void addRef();
+    virtual void deleteRef();
+    virtual bool isSame(const BaseInterface::pointer& iobj);
+    virtual BaseInterface::pointer queryInt(const ::std::string& name);
+    virtual bool isType(const ::std::string& name);
+    virtual void createSubset(int localsize, int remotesize);
+    virtual void setRankAndSize(int rank, int size);
+    virtual void resetRankAndSize();
   private:
     friend void SCIRunFramework::emitComponentEvent(ComponentEvent* event);
     struct Listener

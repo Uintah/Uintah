@@ -75,8 +75,9 @@ class ConnectionEvent;
  * \sa SCIRunFramework
  * \sa InternalComponentModel
  */
-class BuilderService : public sci::cca::ports::BridgeBuilderService,
-                       public InternalFrameworkServiceInstance
+class BuilderService :
+    virtual public sci::cca::ports::BridgeBuilderService,
+    public InternalFrameworkServiceInstance
 {
   public:
   virtual ~BuilderService();
@@ -229,6 +230,19 @@ class BuilderService : public sci::cca::ports::BridgeBuilderService,
   /** */
   int removeComponentClasses(const std::string &loaderName);
 
+  // quite down the compiler
+  virtual void getException();
+  virtual const TypeInfo* _virtual_getTypeInfo() const;
+  virtual void addRef();
+  virtual void deleteRef();
+  virtual bool isSame(const BaseInterface::pointer& iobj);
+  virtual BaseInterface::pointer queryInt(const ::std::string& name);
+  virtual bool isType(const ::std::string& name);
+  virtual void createSubset(int localsize, int remotesize);
+  virtual void setRankAndSize(int rank, int size);
+  virtual void resetRankAndSize();
+  virtual CCALib::SmartPointer< SSIDL::ClassInfo > getClassInfo();
+    
   private:
     friend class ConnectionEventService;
     BuilderService(SCIRunFramework* fwk);

@@ -88,6 +88,19 @@ public:
     virtual void removeConnectionEventListener(sci::cca::ports::EventType et,
         const sci::cca::ports::ConnectionEventListener::pointer& cel);
 
+  // quite down the compiler
+  virtual void getException();
+  virtual const TypeInfo* _virtual_getTypeInfo() const;
+  virtual void addRef();
+  virtual void deleteRef();
+  virtual bool isSame(const BaseInterface::pointer& iobj);
+  virtual BaseInterface::pointer queryInt(const ::std::string& name);
+  virtual bool isType(const ::std::string& name);
+  virtual void createSubset(int localsize, int remotesize);
+  virtual void setRankAndSize(int rank, int size);
+  virtual void resetRankAndSize();
+  virtual CCALib::SmartPointer< SSIDL::ClassInfo > getClassInfo();
+    
 private:
     friend void BuilderService::emitConnectionEvent(ConnectionEvent* event);
     struct Listener
