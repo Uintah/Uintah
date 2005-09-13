@@ -68,19 +68,27 @@ extern "C" Tcl_Interp* the_interp;
 
 using namespace std;
 
-void wait(void* p);
 
-void
+static void
+wait(void* p)
+{
+  TCLThread* thr = (TCLThread*) p;
+  thr->startNetworkEditor();
+}
+
+
+static void
 do_lock2()
 {
   TCLTask::lock();
 }
 
-void
+static void
 do_unlock2()
 {
   TCLTask::unlock();
 }
+
 
 static
 int
@@ -109,6 +117,7 @@ TCLThread::TCLThread(int argc, char* argv[], Network* net, int startnetno) :
 #endif
 }
 
+
 void
 TCLThread::run()
 {
@@ -118,39 +127,50 @@ TCLThread::run()
   tkMain(1, argv, wait, this);
 }
 
+
 // show_licence_and_copy_sciunrc is not in Core/Util/Environment.h because it
 // depends on GuiInterface to present the user with the license dialog.
-void
-show_license_and_copy_scirunrc(GuiInterface *gui) {
+static void
+show_license_and_copy_scirunrc(GuiInterface *gui)
+{
   const string tclresult = gui->eval("licenseDialog 1");
-  if (tclresult == "cancel") {
+  if (tclresult == "cancel")
+  {
     Thread::exitAll(1);
   }
-  // check to make sure home directory is there
+
+  // Check to make sure home directory is there.
   const char* HOME = sci_getenv("HOME");
   const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
   const char* temp_rcfile_version = sci_getenv("SCIRUN_RCFILE_VERSION");
   string SCIRUN_RCFILE_VERSION;
 
-  // If the .scirunrc file does not have a SCIRUN_RCFILE_VERSION variable...
-  if( temp_rcfile_version == NULL ) {
+  // If the .scirunrc file does not have a SCIRUN_RCFILE_VERSION variable.
+  if( temp_rcfile_version == NULL )
+  {
     SCIRUN_RCFILE_VERSION = "bak";
-  } else {
+  }
+  else
+  {
     SCIRUN_RCFILE_VERSION = temp_rcfile_version;
   }
 
   ASSERT(HOME);
   ASSERT(srcdir);
   if (!HOME) return;
-  // If the user accepted the license then create a .scirunrc for them
-  if (tclresult == "accept") {
+
+  // If the user accepted the license then create a .scirunrc for them.
+  if (tclresult == "accept")
+  {
     string homerc = string(HOME)+"/.scirunrc";
     string cmd;
-    if (gui->eval("validFile "+homerc) == "1") {
+    if (gui->eval("validFile "+homerc) == "1")
+    {
       string backuprc = homerc + "." + SCIRUN_RCFILE_VERSION;
       cmd = string("cp -f ")+homerc+" "+backuprc;
       std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
-      if (sci_system(cmd.c_str())) {
+      if (sci_system(cmd.c_str()))
+      {
         std::cerr << "Error executing: " << cmd << std::endl;
       }
     }
@@ -158,14 +178,18 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
     cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
     std::cout << "Copying " << srcdir << "/scirunrc to " <<
       homerc << "...\n";
-    if (sci_system(cmd.c_str())) {
+    if (sci_system(cmd.c_str()))
+    {
       std::cerr << "Error executing: " << cmd << std::endl;
-    } else { 
-      // if the scirunrc file was copied, then parse it
+    }
+    else
+    { 
+      // If the scirunrc file was copied, then parse it.
       parse_scirunrc(homerc);
     }
   }
 }
+
 
 void
 TCLThread::startNetworkEditor()
@@ -173,9 +197,12 @@ TCLThread::startNetworkEditor()
   gui = new TCLInterface;
 
   // If the user doesnt have a .scirunrc file, provide them with a default one
-  if (!find_and_parse_scirunrc()) 
+  if (!find_and_parse_scirunrc())
+  { 
     show_license_and_copy_scirunrc(gui);
-  else {
+  }
+  else
+  {
     const char *rcversion = sci_getenv("SCIRUN_RCFILE_VERSION");
     const string ver = 
       string(SCIRUN_VERSION)+"."+string(SCIRUN_RCFILE_SUBVERSION);
@@ -202,41 +229,51 @@ TCLThread::startNetworkEditor()
 
   // Determine if we are loading an app.
   const bool powerapp_p = (startnetno && ends_with(argv[startnetno],".app"));
-  if (!powerapp_p) {
+  if (!powerapp_p)
+  {
     gui->eval("set PowerApp 0");
     // Wait for the main window to display before continuing the startup.
     gui->eval("wm deiconify .");
     gui->eval("tkwait visibility $minicanvas");
     gui->eval("showProgress 1 0 1");
-  } else { // If loading an app, don't wait.
+  }
+  else
+  { // If loading an app, don't wait.
     gui->eval("set PowerApp 1");
-    if (argv[startnetno+1]) {
+    if (argv[startnetno+1])
+    {
       gui->eval("set PowerAppSession {"+string(argv[startnetno+1])+"}");
     }
     // Determine which standalone and set splash.
-    if(strstr(argv[startnetno], "BioTensor")) {
+    if(strstr(argv[startnetno], "BioTensor"))
+    {
       gui->eval("set splashImageFile $bioTensorSplashImageFile");
       gui->eval("showProgress 1 2575 1");
-    } else if(strstr(argv[startnetno], "BioFEM")) {
+    }
+    else if(strstr(argv[startnetno], "BioFEM"))
+    {
       gui->eval("set splashImageFile $bioFEMSplashImageFile");
       gui->eval("showProgress 1 465 1");
-    } else if(strstr(argv[startnetno], "BioImage")) {
+    }
+    else if(strstr(argv[startnetno], "BioImage"))
+    {
       // Need to make a BioImage splash screen.
       gui->eval("set splashImageFile $bioImageSplashImageFile");
       gui->eval("showProgress 1 660 1");
-    } else if(strstr(argv[startnetno], "FusionViewer")) {
+    }
+    else if(strstr(argv[startnetno], "FusionViewer"))
+    {
       // Need to make a FusionViewer splash screen.
       gui->eval("set splashImageFile $fusionViewerSplashImageFile");
       gui->eval("showProgress 1 310 1");
     }
-
   }
-
 
   packageDB = new PackageDB(gui);
   packageDB->loadPackage();  // load the packages
 
-  if (!powerapp_p) {
+  if (!powerapp_p)
+  {
     gui->eval("hideProgress");
   }
   
@@ -250,7 +287,8 @@ TCLThread::startNetworkEditor()
   mainloop_wait();
 
   // Load the Network file specified from the command line
-  if (startnetno) {
+  if (startnetno)
+  {
     gui->eval("loadnet {"+string(argv[startnetno])+"}");
     if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || 
         sci_getenv_p("SCI_REGRESSION_TESTING"))
@@ -260,6 +298,7 @@ TCLThread::startNetworkEditor()
   }
 }
 
+
 static
 int
 exitproc(ClientData, Tcl_Interp*, int, TCLCONST char* [])
@@ -267,6 +306,7 @@ exitproc(ClientData, Tcl_Interp*, int, TCLCONST char* [])
   Thread::exitAll(0);
   return TCL_OK; // not reached
 }
+
 
 void
 TCLThread::mainloop_wait()
@@ -292,12 +332,13 @@ TCLThread::mainloop_wait()
 #endif
 }
 
+
 void
 TCLThread::mainloop_waitstart()
 {
   start.down();
-
 }
+
 
 void
 TCLThread::release_mainloop()
@@ -305,9 +346,4 @@ TCLThread::release_mainloop()
   cont.up();
 }
 
-void
-wait(void* p)
-{
-  TCLThread* thr = (TCLThread*) p;
-  thr->startNetworkEditor();
-}
+
