@@ -277,7 +277,8 @@ TCLThread::startNetworkEditor()
   }
 
   packageDB = new PackageDB(gui);
-  packageDB->loadPackage();  // load the packages
+  // load the packages
+  packageDB->loadPackage(sci_getenv_p("SCIRUN_LOAD_MODULES_ON_STARTUP"));  
 
   if (!powerapp_p)
   {
