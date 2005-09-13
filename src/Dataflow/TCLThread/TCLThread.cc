@@ -196,8 +196,29 @@ TCLThread::startNetworkEditor()
 {
   gui = new TCLInterface;
 
+  // We parse the scirunrc file here before creating the network
+  // editor.  Note that this may fail, but we need the network editor
+  // up before we can prompt the user what to do.  This means that the
+  // environment variables used by the network editor are assumed to
+  // be in the same state as the default ones in the srcdir/scirunrc
+  // file.  For now only SCIRUN_NOGUI is affected.
+  const bool scirunrc_parsed = find_and_parse_scirunrc();
+
+  // Create the network editor here.  For now we just dangle it and
+  // let exitAll destroy it with everything else at the end.
+  if (sci_getenv_p("SCIRUN_NOGUI"))
+  {
+    gui->eval(string("rename unknown _old_unknown"));
+    gui->eval(string("proc unknown args {\n") +
+              string("    catch \"[uplevel 1 _old_unknown $args]\" result\n") +
+              string("    return 0\n") +
+              //string("    return $result\n") +
+              string("}"));
+  }
+  new NetworkEditor(net, gui);
+
   // If the user doesnt have a .scirunrc file, provide them with a default one
-  if (!find_and_parse_scirunrc())
+  if (scirunrc_parsed)
   { 
     show_license_and_copy_scirunrc(gui);
   }
@@ -212,20 +233,6 @@ TCLThread::startNetworkEditor()
       if (gui->eval("promptUserToCopySCIRunrc") == "1")
         show_license_and_copy_scirunrc(gui);
   }
-
-  if (sci_getenv_p("SCIRUN_NOGUI"))
-  {
-    gui->eval(string("rename unknown _old_unknown"));
-    gui->eval(string("proc unknown args {\n") +
-              string("    catch \"[uplevel 1 _old_unknown $args]\" result\n") +
-              string("    return 0\n") +
-              //string("    return $result\n") +
-              string("}"));
-  }
-
-  // Create the network editor here.  For now we just dangle it and
-  // let exitAll destroy it with everything else at the end.
-  new NetworkEditor(net, gui);
 
   // Determine if we are loading an app.
   const bool powerapp_p = (startnetno && ends_with(argv[startnetno],".app"));
