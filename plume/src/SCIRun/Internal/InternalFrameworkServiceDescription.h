@@ -42,12 +42,12 @@
 #define SCIRun_Internal_InternalFrameworkServiceDescription_h
 
 #include <SCIRun/Internal/InternalServiceDescription.h>
+#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 #include <string>
 
 namespace SCIRun {
 
   class InternalComponentModel;
-  class InternalFrameworkServiceInstance;
   
   /** \class InternalFrameworkServiceDescription
    *
@@ -64,12 +64,12 @@ namespace SCIRun {
     
     virtual ~InternalFrameworkServiceDescription();
     
-    virtual InternalFrameworkServiceInstance *get(SCIRunFramework *);
+    virtual InternalFrameworkServiceInstance::pointer get(SCIRunFramework *);
     virtual void release(SCIRunFramework *);
 
   private:
     InternalFrameworkServiceInstance* (*create)(SCIRunFramework*);
-    InternalFrameworkServiceInstance* singleton_instance;
+    InternalFrameworkServiceInstance::pointer singleton_instance;
 
     InternalFrameworkServiceDescription(const InternalFrameworkServiceDescription&);
     InternalFrameworkServiceDescription& operator=(const InternalFrameworkServiceDescription&);

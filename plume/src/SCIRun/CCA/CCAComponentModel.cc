@@ -249,7 +249,7 @@ CCAComponentModel::createServices(const std::string& instanceName,
 
 bool CCAComponentModel::destroyServices(const sci::cca::Services::pointer& svc)
 {
-  CCAComponentInstance::pointer ci = pidl_cast<CCAComponentInstance::pointer>(svc.getPointer());
+  CCAComponentInstance::pointer ci = pidl_cast<CCAComponentInstance::pointer>(svc);
     if (ci.isNull()) {
       return false;
     }
@@ -291,7 +291,7 @@ CCAComponentModel::createInstance(const std::string& name,
     componentDB_type::iterator iter = components.find(type);
     if (iter == components.end()) {
       std::cerr << "Error: could not locate any cca components.  Make sure the paths set in environment variable \"SIDL_DLL_PATH\" are correct." << std::endl;
-      return 0;
+      return ComponentInstance::pointer(0);
     }
     lock_components.unlock();
  
@@ -310,7 +310,7 @@ CCAComponentModel::createInstance(const std::string& name,
     if(!handle) {
       std::cerr << "Cannot load component " << type << std::endl;
       std::cerr << SOError() << std::endl;
-      return 0;
+      return ComponentInstance::pointer(0);
     }
     
     std::string makername = "make_"+type;
@@ -323,7 +323,7 @@ CCAComponentModel::createInstance(const std::string& name,
     if(!maker_v) {
       std::cerr <<"Cannot load component " << type << std::endl;
       std::cerr << SOError() << std::endl;
-      return 0;
+      return ComponentInstance::pointer(0);
     }
     sci::cca::Component::pointer (*maker)() =
         (sci::cca::Component::pointer (*)())(maker_v);

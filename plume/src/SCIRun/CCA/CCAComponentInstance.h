@@ -48,14 +48,13 @@
 #include <Core/CCA/spec/sci_sidl.h>
 #include <Core/CCA/PIDL/Object.h>
 #include <Core/Thread/ConditionVariable.h>
+#include <SCIRun/CCA/CCAPortInstance.h>
 #include <map>
 #include <string>
 
-namespace cci = sci::cca::internal::cca;
-
 namespace SCIRun
 {
-class CCAPortInstance;
+  //class CCAPortInstance;
 class Services;
 class Mutex;
 
@@ -66,9 +65,13 @@ class Mutex;
  * This class is a container for information about the CCA component
  * instantiation that is used by the framework.
  */
-  class CCAComponentInstance : virtual public sci::cca::internal::cca::CCAComponentServices,
-			       virtual public ComponentInstance
+ class CCAComponentInstance :
+    virtual public sci::cca::internal::cca::CCAComponentServices,
+    virtual public ComponentInstance
 {
+private:
+  typedef std::map<std::string, CCAPortInstance::pointer> PortMap;
+  typedef PortMap::const_iterator PortIterator;
 public:
   typedef sci::cca::internal::cca::CCAComponentServices::pointer pointer;
 
@@ -145,25 +148,56 @@ sci::cca::Port::pointer getPort(const std::string& name);
   
   // Methods from ComponentInstance
   virtual sci::cca::internal::PortInstance::pointer getPortInstance(const std::string& name);
-  virtual PortInstanceIterator* getPorts();
+  virtual PortInstanceIterator::pointer getPorts();
   virtual void registerForRelease(const sci::cca::ComponentRelease::pointer &compRel);
 
+  //virtual std::string getClassName() { return ComponentInstance::getClassName(); }
+  // virtual sci::cca::DistributedFramework::pointer getFramework();
+
+  // delgate these functions to the implementation in ComponentInstance
+  //    from sci::cca::internal::ComponentInstance
+  virtual sci::cca::DistributedFramework::pointer getFramework() { return SCIRun::ComponentInstance::getFramework(); }
+  virtual std::string getInstanceName() { return SCIRun::ComponentInstance::getInstanceName(); }
+  virtual std::string getClassName() { return SCIRun::ComponentInstance::getClassName(); }
+  virtual sci::cca::TypeMap::pointer getProperties() { return SCIRun::ComponentInstance::getProperties(); }
+  virtual void setProperties(const sci::cca::TypeMap::pointer &properties ) { SCIRun::ComponentInstance::setProperties(properties); }
+
+
+  // quite down the compiler
+  virtual void getException();
+  virtual const TypeInfo* _virtual_getTypeInfo() const;
+  virtual void addRef();
+  virtual void deleteRef();
+  virtual bool isSame(const BaseInterface::pointer& iobj);
+  virtual BaseInterface::pointer queryInt(const ::std::string& name);
+  virtual bool isType(const ::std::string& name);
+  virtual void createSubset(int localsize, int remotesize);
+  virtual void setRankAndSize(int rank, int size);
+  virtual void resetRankAndSize();
+  virtual CCALib::SmartPointer< SSIDL::ClassInfo > getClassInfo();
+    
 private:
+
+  // internal port iterator
+  // note: it must be internal to the ComponetInstance (local address space)
+  // and it will take only a * to it, not a ::pointer
   class Iterator : public PortInstanceIterator
   {
-    std::map<std::string, cci::CCAPortInstance::pointer>::iterator iter;
-    CCAComponentInstance* comp;
+    PortIterator iter;
+    const CCAComponentInstance*  comp;
   public:
-    Iterator(const CCAComponentInstance::pointer &);
+    Iterator(const CCAComponentInstance *);
     virtual ~Iterator();
-    virtual sci::cca::internal::PortInstance::pointer get();
+    virtual /*sci::cca::intrnal::*/PortInstance::pointer get();
     virtual bool done();
     virtual void next();
   private:
     Iterator(const Iterator&);
     Iterator& operator=(const Iterator&);
   };
-  std::map<std::string, cci::CCAPortInstance::pointer> ports;
+
+  // private variables
+  PortMap ports;
   SCIRun::Mutex lock_ports;
 
   std::map<std::string, std::vector<Object::pointer> > preports;

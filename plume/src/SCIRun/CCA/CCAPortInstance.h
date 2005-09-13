@@ -55,9 +55,12 @@ namespace SCIRun {
  * \class CCAPortInstance
  *
  */
-class CCAPortInstance : virtual public sci::cca::internal::cca::CCAPortInstance, public PortInstance
+class CCAPortInstance : 
+    virtual public sci::cca::internal::cca::CCAPortInstance, 
+    virtual public PortInstance
 {
 public:
+  typedef sci::cca::internal::cca::CCAPortInstance::pointer pointer;
   typedef sci::cca::internal::cca::PortUsage PortUsage;
 
   //enum PortType { Uses=0, Provides=1 };
@@ -101,6 +104,19 @@ public:
   virtual int numOfConnections();
   /** */
   virtual sci::cca::Port::pointer getPort();
+
+  virtual void getException();
+  virtual const TypeInfo* _virtual_getTypeInfo() const;
+  virtual void addRef();
+  virtual void deleteRef();
+  virtual bool isSame(const BaseInterface::pointer& iobj);
+  virtual BaseInterface::pointer queryInt(const ::std::string& name);
+  virtual bool isType(const ::std::string& name);
+  virtual void createSubset(int localsize, int remotesize);
+  virtual void setRankAndSize(int rank, int size);
+  virtual void resetRankAndSize();
+  // one more
+  virtual CCALib::SmartPointer< SSIDL::ClassInfo > getClassInfo();
 
 private:
   //friend class CCAComponentInstance;

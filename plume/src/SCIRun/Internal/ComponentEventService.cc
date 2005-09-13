@@ -110,7 +110,7 @@ void
 ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y)
 {
     ComponentInstance::pointer ci = framework->lookupComponent(id->getInstanceName());
-    if (ci) {
+    if (!ci.isNull()) {
         std::string cn = ci->getClassName();
         unsigned int firstColon = cn.find(':');
         std::string modelName;

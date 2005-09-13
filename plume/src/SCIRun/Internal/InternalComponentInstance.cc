@@ -65,11 +65,11 @@ InternalComponentInstance::getPortInstance(const std::string& /*name*/)
   return PortInstance::pointer(0);
 }
 
-PortInstanceIterator* InternalComponentInstance::getPorts()
+PortInstanceIterator::pointer InternalComponentInstance::getPorts()
 {
   std::cerr << "SCIRunComponentInstance::getPorts not finished!"
             << std::endl;
-  return 0;
+  return PortInstanceIterator::pointer(0);
 }
 
 void InternalComponentInstance::incrementUseCount()

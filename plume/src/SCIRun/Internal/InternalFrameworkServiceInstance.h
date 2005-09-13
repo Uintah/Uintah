@@ -42,6 +42,7 @@
 #define SCIRun_Internal_InternalFrameworkServiceInstance_h
 
 #include <SCIRun/Internal/InternalServiceInstance.h>
+#include <Core/CCA/SmartPointer.h>
 
 namespace SCIRun
 {
@@ -53,6 +54,8 @@ namespace SCIRun
   class InternalFrameworkServiceInstance : public InternalServiceInstance
   {
   public:
+    typedef CCALib::SmartPointer<InternalFrameworkServiceInstance> pointer;
+
     InternalFrameworkServiceInstance(SCIRunFramework* framework,
 				     const std::string& className);
     

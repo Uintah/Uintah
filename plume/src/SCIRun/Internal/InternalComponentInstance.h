@@ -60,7 +60,7 @@ public:
   virtual sci::cca::internal::PortInstance::pointer getPortInstance(const std::string& name);
   virtual ~InternalComponentInstance();
   
-  virtual PortInstanceIterator* getPorts();
+  virtual PortInstanceIterator::pointer getPorts();
   
   void incrementUseCount();
   bool decrementUseCount();

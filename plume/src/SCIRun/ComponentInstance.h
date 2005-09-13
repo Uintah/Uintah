@@ -43,15 +43,15 @@
 
 #include <SCIRun/CCA/ComponentID.h>
 #include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/PortInstanceIterator.h>
 #include <string>
 
-class sci::cca::internal::PortInstance;
+//class sci::cca::internal::PortInstance;
 
 namespace SCIRun
 {
 
 class SCIRunFramework;
-class PortInstanceIterator;
 
 /**
  * \class ComponentInstance
@@ -80,19 +80,21 @@ class PortInstanceIterator;
     virtual sci::cca::internal::PortInstance::pointer getPortInstance(const std::string& name) = 0;
     
     /** Returns the list of ports associated with this component. */
-    virtual PortInstanceIterator* getPorts() = 0;
+    virtual PortInstanceIterator::pointer getPorts() = 0;
+    virtual void setInstanceName(const std::string &name) { instanceName = name; }
     
-    inline void setInstanceName(const std::string &name) { instanceName = name; }
+    // from sci::cca::internal::ComponentInstance
+    virtual sci::cca::DistributedFramework::pointer getFramework();
+
+    virtual std::string getClassName() { return className; }
+    virtual sci::cca::TypeMap::pointer getProperties();
+    virtual void setProperties(const sci::cca::TypeMap::pointer &tm);
+
+/*     virtual std::string getClassName() { return className; } */
+    virtual std::string getInstanceName() { return instanceName; }
+    virtual sci::cca::TypeMap::pointer getComponentProperties() { return comProperties; }
+    virtual void setComponentProperties(const sci::cca::TypeMap::pointer &tm);
     
-    inline std::string getInstanceName() const { return instanceName; }
-    
-    inline std::string getClassName() const { return className; }
-    
-    inline sci::cca::TypeMap::pointer getComponentProperties() { return comProperties; }
-    
-    void setComponentProperties(const sci::cca::TypeMap::pointer &tm);
-    
-    DistributedFramework::pointer getFramework() { return DistributedFramework::pointer(0); }
 
     SCIRunFramework *getSCIRunFramework() { return framework; }
     
