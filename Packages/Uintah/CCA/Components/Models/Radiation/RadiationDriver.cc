@@ -545,18 +545,18 @@ RadiationDriver::set_cellType(const ProcessorGroup*,
     // and only on the first patch of level 0
     d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
     
-    if (levelIndex == 0 && patch->getID() == 0) { 
-      d_doRadCalc = false;
-      if (d_radCounter%d_radCalcFreq == 0) {
+    d_doRadCalc = false;
+    if (d_radCalcFreq > 0){
+      if (d_radCounter%d_radCalcFreq == 0 ) {
         d_doRadCalc = true;
       }
-      double time= d_dataArchiver->getCurrentTime() + 1E-100;
-      
-      if (time >= d_radCalc_nextTime) {
-        d_doRadCalc  = true;
-        d_radCalc_nextTime = d_radCalc_interval 
-                          * ceil(time/d_radCalc_interval + 1E-100); 
-      }
+    }
+    double time= d_dataArchiver->getCurrentTime() + 1E-100;
+
+    if (time >= d_radCalc_nextTime) {
+      d_doRadCalc  = true;
+      d_radCalc_nextTime = d_radCalc_interval 
+                        * ceil(time/d_radCalc_interval + 1E-100); 
     }
                
     int indx0 = d_matl_G->getDWIndex();
@@ -1149,7 +1149,7 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
 
       d_DORadiation->intensitysolve(pc, patch, cellinfo, &radVars, &constRadVars);
     }
-    
+
     // TODO:  we might want to incorporate vol_frac_gas.  We don't want to be radiating
     // in the middle of the solid.
     
