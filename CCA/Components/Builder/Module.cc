@@ -225,14 +225,13 @@ Module::makePorts() {
             } else {
                 std::string model;
                 std::string type;
-                ComponentInstance *ci =
-                    fwk->lookupComponent(instanceName);
-                if (ci) {
-                    PortInstance::pointer pi = ci->getPortInstance(pp[i]);
-                    if (!pi.isNull()) {
-                        model = pi->getModel();
-                        type = pi->getType();
-                    }
+                ComponentInstance::pointer ci =fwk->lookupComponent(instanceName);
+                if (!ci.isNull()) {
+		  PortInstance::pointer pi = ci->getPortInstance(pp[i]);
+		  if (!pi.isNull()) {
+		    model = pi->getModel();
+		    type = pi->getType();
+		  }
                 }
                 ports.push_back(
                     port(connectable_ports++, model, type, pp[i],
@@ -341,8 +340,8 @@ Module::makePorts() {
         for (unsigned int i = 0; i < up.size(); i++) {
             std::string model;
             std::string type;
-            ComponentInstance *ci = fwk->lookupComponent(instanceName);
-            if (ci) {
+            ComponentInstance::pointer ci = fwk->lookupComponent(instanceName);
+            if (!ci.isNull()) {
                 PortInstance::pointer pi = ci->getPortInstance(up[i]);
                 if (!pi.isNull()) {
                     model = pi->getModel();
@@ -625,9 +624,8 @@ Module::updatePorts() {
                 std::string model;
                 std::string type;
 
-                ComponentInstance *ci =
-                    fwk->lookupComponent(instanceName);
-                if (ci) {
+                ComponentInstance::pointer ci = fwk->lookupComponent(instanceName);
+                if (!ci.isNull()) {
                     PortInstance::pointer pi = ci->getPortInstance(pp[i]);
                     if (!pi.isNull()) {
                         model = pi->getModel();
@@ -667,9 +665,9 @@ Module::updatePorts() {
         for (unsigned int i = 0; i < up.size(); i++) {
             std::string model;
             std::string type;
-            ComponentInstance *ci = fwk->lookupComponent(cid->getInstanceName());
-            if (ci) {
-                PortInstance::pointer pi = ci->getPortInstance(up[i]);
+            ComponentInstance::pointer ci = fwk->lookupComponent(cid->getInstanceName());
+            if (!ci.isNull()) {
+	      PortInstance::pointer pi = ci->getPortInstance(up[i]);
                 if (!pi.isNull()) {
                     model = pi->getModel();
                     type = pi->getType();

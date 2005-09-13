@@ -56,8 +56,10 @@ namespace SCIRun
   class PortInstance : virtual public sci::cca::internal::PortInstance 
   {
   public:
-    typedef sci::cca::internal::From From;
-    typedef sci::cca::internal::To To;
+    typedef sci::cca::internal::PortType PortType;
+    static const PortType From =  sci::cca::internal::From;
+    static const PortType To = sci::cca::internal::To;
+
     typedef sci::cca::internal::PortInstance::pointer pointer;
     typedef sci::cca::internal::PortType PortType;
 

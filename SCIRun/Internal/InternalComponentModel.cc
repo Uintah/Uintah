@@ -95,16 +95,19 @@ sci::cca::Port::pointer
 InternalComponentModel::getFrameworkService(const std::string& type,
 					    const std::string& componentName)
 {
-  InternalServiceInstance *service = 0;
+  InternalFrameworkServiceInstance::pointer service;
   sci::cca::Port::pointer port(0);
 
   lock_frameworkServices.lock();
-  FrameworkServicesMap::const_iterator fwkServiceDesc = frameworkServices.find(type);
+
+    FrameworkServicesMap::const_iterator fwkServiceDesc = frameworkServices.find(type);
+    
   lock_frameworkServices.unlock();
+
   if ( fwkServiceDesc != frameworkServices.end() )
     service = fwkServiceDesc->second->get(framework);
 
-  if ( service ) {
+  if ( !service.isNull() ) {
     service->incrementUseCount();
     port = service->getService(type);
     port->addReference();
@@ -157,7 +160,7 @@ void InternalComponentModel::buildComponentList()
 ComponentInstance::pointer InternalComponentModel::createInstance(const std::string&,
                                                           const std::string&)
 {
-    return 0;
+    return ComponentInstance::pointer(0);
 }
 
 bool InternalComponentModel::destroyInstance(const ComponentInstance::pointer &ic)

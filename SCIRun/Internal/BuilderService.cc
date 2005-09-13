@@ -97,10 +97,10 @@ BuilderService::connect(const sci::cca::ComponentID::pointer &user,
   }
   ComponentInstance::pointer uCI =
     framework->lookupComponent(user->getInstanceName());
-  if (! uCI) {
+  if (uCI.isNull()) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown ComponentInstance " + user->getInstanceName()));
   }
-  sci::cca::TypeMap::pointer uProps = uCI->getComponentProperties();
+  sci::cca::TypeMap::pointer uProps = uCI->getProperties();
   
   PortInstance::pointer usesPort = uCI->getPortInstance(usesPortName);
   if (usesPort.isNull()) {
@@ -109,10 +109,10 @@ BuilderService::connect(const sci::cca::ComponentID::pointer &user,
   
   ComponentInstance::pointer pCI =
     framework->lookupComponent(provider->getInstanceName());
-  if (! pCI) {
+  if (pCI.isNull()) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown ComponentInstance " + provider->getInstanceName()));
   }
-  sci::cca::TypeMap::pointer pProps = pCI->getComponentProperties();
+  sci::cca::TypeMap::pointer pProps = pCI->getProperties();
   PortInstance::pointer providesPort = pCI->getPortInstance(providesPortName);
   if (providesPort.isNull()) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown port " + providesPortName));
@@ -169,11 +169,11 @@ BuilderService::getComponentProperties(const sci::cca::ComponentID::pointer &cid
         throw sci::cca::CCAException::pointer(new CCAException("Invalid ComponentID"));
     }
 
-    ComponentInstance *ci = framework->lookupComponent(cid->getInstanceName());
-    if (! ci) {
+    ComponentInstance::pointer ci = framework->lookupComponent(cid->getInstanceName());
+    if (ci.isNull()) {
         throw sci::cca::CCAException::pointer(new CCAException("Framework could not locate component " + cid->getInstanceName()));
     }
-    return ci->getComponentProperties();
+    return ci->getProperties();
 }
 
 void
@@ -187,11 +187,11 @@ BuilderService::setComponentProperties(const sci::cca::ComponentID::pointer &cid
         throw sci::cca::CCAException::pointer(new CCAException("Invalid TypeMap"));
     }
 
-    ComponentInstance *ci = framework->lookupComponent(cid->getInstanceName());
-    if (! ci) {
+    ComponentInstance::pointer ci = framework->lookupComponent(cid->getInstanceName());
+    if (ci.isNull()) {
         throw sci::cca::CCAException::pointer(new CCAException("Framework could not locate component " + cid->getInstanceName()));
     }
-    ci->setComponentProperties(map);
+    ci->setProperties(map);
 }
 
 sci::cca::ComponentID::pointer
@@ -224,18 +224,16 @@ SSIDL::array1<std::string>
 BuilderService::getProvidedPortNames(const sci::cca::ComponentID::pointer &cid)
 {
     SSIDL::array1<std::string> result;
-    ComponentInstance *ci =
-        framework->lookupComponent(cid->getInstanceName());
-    if (! ci) {
+    ComponentInstance::pointer ci = framework->lookupComponent(cid->getInstanceName());
+    if (ci.isNull()) {
         throw sci::cca::CCAException::pointer(new CCAException("Invalid component " + cid->getInstanceName()));
     }
 
-    for (PortInstanceIterator* iter = ci->getPorts();
-            !iter->done(); iter->next()) {
-        PortInstance::pointer port = iter->get();
-        if (port->portType() == To) {
-            result.push_back(port->getUniqueName());
-        }
+    for (PortInstanceIterator::pointer iter = ci->getPorts(); !iter->done(); iter->next()) {
+      PortInstance::pointer port = iter->get();
+      if (port->portType() == To) {
+	result.push_back(port->getUniqueName());
+      }
     }
     return result;
 }
@@ -244,14 +242,12 @@ SSIDL::array1<std::string>
 BuilderService::getUsedPortNames(const sci::cca::ComponentID::pointer &cid)
 {
     SSIDL::array1<std::string> result;
-    ComponentInstance *ci =
-        framework->lookupComponent(cid->getInstanceName());
-    if (! ci) {
-        throw sci::cca::CCAException::pointer(new CCAException("Invalid component " + cid->getInstanceName()));
+    ComponentInstance::pointer ci = framework->lookupComponent(cid->getInstanceName());
+    if (ci.isNull()) {
+      throw sci::cca::CCAException::pointer(new CCAException("Invalid component " + cid->getInstanceName()));
     }
 
-    for (PortInstanceIterator* iter = ci->getPorts();
-            !iter->done(); iter->next()) {
+    for (PortInstanceIterator::pointer iter = ci->getPorts(); !iter->done(); iter->next()) {
         PortInstance::pointer port = iter->get();
         if (port->portType() == From) {
             result.push_back(port->getUniqueName());
@@ -266,11 +262,11 @@ sci::cca::TypeMap::pointer
 BuilderService::getPortProperties(const sci::cca::ComponentID::pointer &cid, const std::string &portname)
 {
     ComponentInstance::pointer comp = framework->lookupComponent(cid->getInstanceName());
-    if (! comp) {
+    if (comp.isNull()) {
         return framework->createTypeMap();
     }
-    CCAComponentInstance::pointer ccaComp = dynamic_cast<CCAComponentInstance::pointer>(comp);
-    if (! ccaComp) {
+    CCAComponentInstance::pointer ccaComp = pidl_cast<CCAComponentInstance::pointer>(comp);
+    if (ccaComp.isNull()) {
         return framework->createTypeMap();
     }
     return ccaComp->getPortProperties(portname);
@@ -395,12 +391,11 @@ BuilderService::getCompatiblePortList(
     if (uCID == pCID) { // same component
         return availablePorts;
     }
-    for (PortInstanceIterator* iter = pCI->getPorts();
-            !iter->done(); iter->next()) {
-        PortInstance::pointer providesPort = iter->get();
-        if (usesPort->canConnectTo(providesPort)) {
-            availablePorts.push_back(providesPort->getUniqueName());
-        }
+    for (PortInstanceIterator::pointer iter = pCI->getPorts(); !iter->done(); iter->next()) {
+      PortInstance::pointer providesPort = iter->get();
+      if (usesPort->canConnectTo(providesPort)) {
+	availablePorts.push_back(providesPort->getUniqueName());
+      }
     }  
 
     return availablePorts;

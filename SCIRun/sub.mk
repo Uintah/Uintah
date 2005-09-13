@@ -49,6 +49,7 @@ SRCS     += \
             $(SRCDIR)/resourceReference.cc \
             $(SRCDIR)/TypeMap.cc \
             $(SRCDIR)/SCIRunLoader.cc
+#            $(SRCDIR)/test.cc \
 
 
 SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Internal 

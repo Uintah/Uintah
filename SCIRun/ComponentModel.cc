@@ -68,7 +68,7 @@ ComponentModel::createInstance(const std::string& name,
 {
   std::cerr << "Error: this component model does not implement createInstance"
             << std::endl;
-  return 0;
+  return ComponentInstance::pointer(0);
 }
 
 bool ComponentModel::destroyInstance(const ComponentInstance::pointer &ic)
