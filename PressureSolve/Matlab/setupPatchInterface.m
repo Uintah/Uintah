@@ -241,6 +241,7 @@ for d = 1:grid.dim,
         % Summing by parts and using sum(b) = 0, we obtain
         % u_g - u_i ~ c1 (u1-uc) + c2 (u2-u1) + ... c_{n-1} (u_{n} -
         % u_{n-1}) as the interpolation stencil.
+        param.fluxInterpOrder = 2;
         if (param.fluxInterpOrder == 1)            
             aa = 1 / (sqrt(sum((r-1).^2) - (r(d)-1).^2 + (r(d)+1).^2)/2);
             if (D == 0)
