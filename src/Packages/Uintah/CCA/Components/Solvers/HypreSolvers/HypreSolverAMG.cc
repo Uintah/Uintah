@@ -43,7 +43,7 @@ HypreSolverAMG::solve(void)
   //___________________________________________________________________
 {
   cout_doing << "HypreSolverAMG::solve() BEGIN" << "\n";
-  //  const HypreSolverParams* params = _driver->getParams();
+  const HypreSolverParams* params = _driver->getParams();
 
   if (_driver->getInterface() == HypreSStruct) {
     // AMG parameters setup and setup phase
@@ -53,7 +53,7 @@ HypreSolverAMG::solve(void)
     HYPRE_BoomerAMGSetStrongThreshold(parSolver, 0.);
     HYPRE_BoomerAMGSetTruncFactor(parSolver, 0.3);
     //HYPRE_BoomerAMGSetMaxLevels(parSolver, 4);
-    HYPRE_BoomerAMGSetTol(parSolver, 1.0e-06);
+    HYPRE_BoomerAMGSetTol(parSolver, params->tolerance);
 #if HAVE_HYPRE_1_9
     HYPRE_BoomerAMGSetPrintLevel(parSolver, 0);
     HYPRE_BoomerAMGSetPrintFileName(parSolver, "sstruct.out.log");
@@ -63,7 +63,7 @@ HypreSolverAMG::solve(void)
          << "to files, proceeding without them" << "\n";
 #endif // #if HAVE_HYPRE_1_9
 
-    HYPRE_BoomerAMGSetMaxIter(parSolver, 200);
+    HYPRE_BoomerAMGSetMaxIter(parSolver, params->maxIterations);
     HYPRE_BoomerAMGSetup(parSolver, _driver->getAPar(), _driver->getBPar(),
                          _driver->getXPar());
     
