@@ -14,7 +14,7 @@ globalParams;
 param                       = [];
 
 % Problem type, title, streams
-param.problemType           = 'linear'; %'jump_quad'; %'diffusion_quad_quad'; %'GaussianSource'; %'sinsin'; % %'jump_quad'; %'diffusion_quad'; %
+param.problemType           = 'GaussianSource'; %'linear'; %'jump_quad'; %'diffusion_quad_quad';  %'sinsin'; % %'jump_quad'; %'diffusion_quad'; %
 param.outputDir             = 'test'; %'sinsin_1level';
 param.logFile               = 'testDisc.log';
 param.outputType            = 'screen';
@@ -26,7 +26,7 @@ param.domainSize            = repmat(1.0,[1 param.dim]);        % Domain is from
 % AMR hierarchy control
 param.maxLevels             = 5;
 param.maxPatches            = 5;
-param.twoLevel              = 1;
+param.twoLevel              = 0;
 param.twoLevelType          = 'centralHalf';
 param.threeLevel            = 0;
 param.threeLevelType        = 'leftHalf';
@@ -41,4 +41,4 @@ param.verboseLevel          = 1;
 param.catchException        = 1;
 
 % For testDisc: experiments are parameterized by the resolution.
-param.numCellsRange         = 8; %2.^[2:1:5]; %2.^[2:1:12];
+param.numCellsRange         = 64; %2.^[2:1:5]; %2.^[2:1:12];
