@@ -98,6 +98,7 @@ if (param.setupGrid & param.solveSystem)
     out(2,' Compute exact solution, error norms, plot results\n');
     out(2,'-------------------------------------------------------------------------\n');
     uExact      = exactSolutionAMR(grid,T,TI);
+    surf(uExact{1}{1});
     [y,err,tau]   = computeError(grid,A,b,T,TI,u,x,uExact);
     % Save error norms to latex tables
     if (param.saveResults)

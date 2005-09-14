@@ -13,7 +13,6 @@ function u = exactSolution(x)
 globalParams;
 
 switch (param.problemType)
-
     case 'linear',
         % u is a linear function (d-D)        
         u = ones(size(x{1}));
