@@ -45,7 +45,7 @@
 
 #include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalComponentInstance.h>
+//#include <SCIRun/Internal/InternalComponentInstance.h>
 
 namespace SCIRun {
 

@@ -79,7 +79,7 @@ const std::string CCAComponentModel::DEFAULT_PATH =
     std::string("/CCA/Components/xml");
 
 
-CCAComponentModel::CCAComponentModel(SCIRunFramework* framework)
+CCAComponentModel::CCAComponentModel(sci::cca::SCIRunFramework::pointer framework)
   : ComponentModel("cca"), framework(framework),
     lock_components("CCAComponentModel::components lock"),
     lock_loaderList("CCAComponentModel::loaderList lock")
@@ -238,10 +238,11 @@ CCAComponentModel::createServices(const std::string& instanceName,
                   const std::string& className,
                   const sci::cca::TypeMap::pointer& properties)
 {
-  CCAComponentInstance::pointer ci = CCAComponentInstance::pointer(new CCAComponentInstance(framework, 
-											    instanceName, 
-											    className, 
-											    properties, sci::cca::Component::pointer(0)));
+  CCAComponentInstance::pointer ci = 
+    CCAComponentInstance::pointer(new CCAComponentInstance(framework, 
+							   instanceName, 
+							   className, 
+							   properties, sci::cca::Component::pointer(0)));
   framework->registerComponent(ci, instanceName);
   ci->addReference();
   return sci::cca::Services::pointer(ci);

@@ -42,7 +42,6 @@
 #define SCIRun_Framework_SCIRunFramework_h
 
 #include <include/sci_defs/dataflow_defs.h>
-#include <SCIRun/DistributedComponentModelFramework.h>
 
 #ifdef BUILD_DATAFLOW
   #include <SCIRun/Dataflow/SCIRunComponentModel.h>
@@ -105,9 +104,11 @@ class ComponentEventService;
  * \todo implement shutdownComponent?
  * \todo createEmptyFramework is not fully implemented
  * \todo register a creation event for component (in registerComponent)  */
-class SCIRunFramework : public DistributedComponentModelFramework
+class SCIRunFramework : public sci::cca::SCIRunFramework
 {
 public:
+  typedef sci::cca::SCIRunFramework::pointer pointer;
+  typedef sci::cca::Port Port;
   typedef std::map<std::string, ComponentInstance::pointer> ComponentInstanceMap;
 
     SCIRunFramework();
@@ -185,8 +186,7 @@ public:
 
     /** ? */
     bool
-    releaseFrameworkService(const std::string& type,
-                            const std::string& componentName);
+    releaseFrameworkService(const std::string& type, const std::string& componentName);
 
     /** Adds a description of a component instance (class ComponentInstance) to
         the list of active components.  The component instance description
@@ -249,12 +249,14 @@ public:
     SCIRunComponentModel* dflow; 
 #endif
 
+  void addConnection( const sci::cca::ConnectionID::pointer & );
+
 protected:
-    friend class Services;
-    friend class BuilderService;
-    friend class ComponentEventService;
-    friend class FrameworkProxyService;
-    friend class ServiceRegistry;
+  //friend class Services;
+  //friend class BuilderService;
+  //friend class ComponentEventService;
+  //friend class FrameworkProxyService;
+  //friend class ServiceRegistry;
 
     /** Creates an instance of the component defined by the string ``type'',
         which must uniquely define the type of the component.  The component
@@ -268,8 +270,8 @@ protected:
         the createInstance method on the appropriate ComponentModel object. */
     sci::cca::ComponentID::pointer
     createComponentInstance(const std::string& name,
-                            const std::string& className,
-                            const sci::cca::TypeMap::pointer &tm);
+			    const std::string& className,
+			    const sci::cca::TypeMap::pointer &tm);
 
     /** ? */
     void

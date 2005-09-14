@@ -60,7 +60,7 @@
 
 namespace SCIRun {
 
-InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
+InternalComponentModel::InternalComponentModel(sci::cca::SCIRunFramework::pointer framework)
   : ComponentModel("internal"), framework(framework),
     lock_frameworkServices("InternalComponentModel::frameworkServices lock")
 {

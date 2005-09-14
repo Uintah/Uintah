@@ -44,38 +44,12 @@
 #include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
-class SCIRunFramework;
-
-/**
- * \class ComponentID
- *
- * This class is an implementation of the CCA ComponentID interface for SCIRun.
- * The ComponentID is a reference to a component instance.  It includes the
- * unique component name and a framework-specific serialization.  In this
- * implementation, the ComponentID also maintains a pointer to the containing
- * framework and the type name of the component. */
-class ComponentID : public sci::cca::ComponentID
-{
-public:
-  ComponentID(SCIRunFramework* framework, const std::string& name);
-  virtual ~ComponentID();
-
-  /** Returns the unique name for the referenced component. */
-  virtual std::string getInstanceName();
-
-  /** Returns a SCIRunFramework-specific serialization of the ComponentID */
-  virtual std::string getSerialization();
-
-  /** A pointer to the framework in which the referenced component was
-      instantiated. */
-  SCIRunFramework* framework;
   
-  /** The type name of the referenced component. */
-  const std::string name;
-private:
-  ComponentID(const ComponentID&);
-  ComponentID& operator=(const ComponentID&);
-};
+  namespace ComponentID {
+
+    typedef sci::cca::ComponentID::pointer pointer;
+
+  }
 }
 
 #endif

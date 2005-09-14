@@ -45,211 +45,233 @@
 
 #include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+//#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 
 #ifdef HAVE_RUBY
   #include <SCIRun/Bridge/AutoBridge.h>
 #endif
 
 namespace SCIRun {
-
-class SCIRunFramework;
-class ConnectionEvent;
-
-/**
- * \class BuilderService
- *
- * \brief The BuilderService class is a CCA interface used to instantiate and
- * connect components in a framework.
- *
- * A BuilderService port's interface is standard for any CCA-compliant
- * AbstractFramework.  This implementation of the BuilderService port is
- * specific for SCIRun2 and relies on much of the functionality in the
- * SCIRunFramework class and the various SCIRun component model classes.
- *
- *
- * \todo getDeserialization is not finished?
- * \todo addComponentClasses not implemented
- * \todo removeComponentClasses not implemented
- *
- * \sa SCIRunFramework
- * \sa InternalComponentModel
- */
-class BuilderService :
-    virtual public sci::cca::ports::BridgeBuilderService,
-    public InternalFrameworkServiceInstance
-{
+  
+  class SCIRunFramework;
+  class ConnectionEvent;
+  
+  /**
+   * \class BuilderService
+   *
+   * \brief The BuilderService class is a CCA interface used to instantiate and
+   * connect components in a framework.
+   *
+   * A BuilderService port's interface is standard for any CCA-compliant
+   * AbstractFramework.  This implementation of the BuilderService port is
+   * specific for SCIRun2 and relies on much of the functionality in the
+   * SCIRunFramework class and the various SCIRun component model classes.
+   *
+   *
+   * \todo getDeserialization is not finished?
+   * \todo addComponentClasses not implemented
+   * \todo removeComponentClasses not implemented
+   *
+   * \sa SCIRunFramework
+   * \sa InternalComponentModel
+   */
+  class BuilderService : public sci::cca::internal::InternalBuilderService
+  {
   public:
-  virtual ~BuilderService();
+    virtual ~BuilderService();
   
-  /** Factory method for creating an instance of a BuilderService class.
-      Returns a reference counted pointer to a newly-allocated BuilderService
-      port.  The \em framework parameter is a pointer to the relevent framework
-      and the \em name parameter will become the unique name for the new port.*/
-  static InternalFrameworkServiceInstance *create(SCIRunFramework* framework);
+    /** Factory method for creating an instance of a BuilderService class.
+	Returns a reference counted pointer to a newly-allocated BuilderService
+	port.  The \em framework parameter is a pointer to the relevent framework
+	and the \em name parameter will become the unique name for the new port.*/
+    static sci::cca::internal::InternalFrameworkService::pointer 
+    create(sci::cca::SCIRunFramework::pointer &framework);
   
-  /** Creates an instance of the component of type \em className.  The
-      parameter \em instanceName is the unique name of the newly created
-      instance. This method is implemented through a createComponentInstance
-      call to the SCIRunFramework. */
-  virtual sci::cca::ComponentID::pointer
-  createInstance(const std::string& instanceName,
-                 const std::string& className,
-                 const sci::cca::TypeMap::pointer &properties);
+    /* ******
+     * implements BridgeBuilderService
+     */
 
-  /** Returns a list (array) of CCA ComponentIDs that exist in the
-      BuilderService's framework. */
-  virtual SSIDL::array1<sci::cca::ComponentID::pointer> getComponentIDs();
+    /** */
+    virtual SSIDL::array1<std::string>
+    getBridgablePortList(const sci::cca::ComponentID::pointer &c1,
+			 const std::string &port1,
+			 const sci::cca::ComponentID::pointer &c2);
 
-  /** Returns a CCA TypeMap (i.e. a map) that represents any properties
-      associated with component \em cid.
-      key                    value          meaning
-      cca.className          string         component type (standard key)
-      x                      int            component x position
-      y                      int            component y position
-      LOADER NAME            string         loader name
-      np                     int            number of nodes
-      bridge                 bool           is a bridge
+    /** */
+    virtual std::string
+    generateBridge(const sci::cca::ComponentID::pointer &c1,
+		   const std::string &port1,
+		   const sci::cca::ComponentID::pointer &c2,
+		   const std::string &port2);
+
+    /* ****
+     * implements ExtendedBuilderService
+     */
+
+    /** */
+    virtual SSIDL::array1<std::string>
+    getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
+			  const std::string &usesPortName,
+			  const sci::cca::ComponentID::pointer &provider);
+
+  
+    /* *****
+     * implements BuilderService
+     */
+
+
+    /** Creates an instance of the component of type \em className.  The
+	parameter \em instanceName is the unique name of the newly created
+	instance. This method is implemented through a createComponentInstance
+	call to the SCIRunFramework. */
+    virtual sci::cca::ComponentID::pointer
+    createInstance(const std::string& instanceName,
+		   const std::string& className,
+		   const sci::cca::TypeMap::pointer &properties);
+
+    /** Returns a list (array) of CCA ComponentIDs that exist in the
+	BuilderService's framework. */
+    virtual SSIDL::array1<sci::cca::ComponentID::pointer> getComponentIDs();
+
+    /** Returns a CCA TypeMap (i.e. a map) that represents any properties
+	associated with component \em cid.
+	key                    value          meaning
+	cca.className          string         component type (standard key)
+	x                      int            component x position
+	y                      int            component y position
+	LOADER NAME            string         loader name
+	np                     int            number of nodes
+	bridge                 bool           is a bridge
     */
-  virtual sci::cca::TypeMap::pointer
-  getComponentProperties(const sci::cca::ComponentID::pointer &cid);
+    virtual sci::cca::TypeMap::pointer
+    getComponentProperties(const sci::cca::ComponentID::pointer &cid);
 
-  /** Associates the properties specified in \em map with an existing framework
-      component \em cid.
-      Null TypeMaps are not allowed. */
-  virtual void
-  setComponentProperties(const sci::cca::ComponentID::pointer &cid,
-                         const sci::cca::TypeMap::pointer &map);
+    /** Associates the properties specified in \em map with an existing framework
+	component \em cid.
+	Null TypeMaps are not allowed. */
+    virtual void
+    setComponentProperties(const sci::cca::ComponentID::pointer &cid,
+			   const sci::cca::TypeMap::pointer &map);
 
-  /** Returns the Component ID (opaque reference to a component instantiation)
-      for the serialized component reference \em s. */
-  virtual sci::cca::ComponentID::pointer
-  getDeserialization(const std::string &s);
+    /** Returns the Component ID (opaque reference to a component instantiation)
+	for the serialized component reference \em s. */
+    virtual sci::cca::ComponentID::pointer
+    getDeserialization(const std::string &s);
 
-  /** Returns the Component ID (opaque reference to a component instantiation)
-      for the component instance named \em componentInstanceName. */
-  virtual sci::cca::ComponentID::pointer
-  getComponentID(const std::string &componentInstanceName);
+    /** Returns the Component ID (opaque reference to a component instantiation)
+	for the component instance named \em componentInstanceName. */
+    virtual sci::cca::ComponentID::pointer
+    getComponentID(const std::string &componentInstanceName);
 
-  /** Removed the component instance \em toDie from the scope of the framework.
-       The \em timeout parameter gives the maximum allowable wait (in seconds)
-       for the operation to be completed.  An exception is thrown if the \em
-       toDie component does not  exist, or cannot be destroyed in the given \em
-       timeout period. */
-  virtual void
-  destroyInstance(const sci::cca::ComponentID::pointer &toDie, float timeout);
+    /** Removed the component instance \em toDie from the scope of the framework.
+	The \em timeout parameter gives the maximum allowable wait (in seconds)
+	for the operation to be completed.  An exception is thrown if the \em
+	toDie component does not  exist, or cannot be destroyed in the given \em
+	timeout period. */
+    virtual void
+    destroyInstance(const sci::cca::ComponentID::pointer &toDie, float timeout);
 
-  /** Returns a list of \em provides ports for the given component instance \em
-      cid.*/
-  virtual SSIDL::array1<std::string>
-  getProvidedPortNames(const sci::cca::ComponentID::pointer &cid);
+    /** Returns a list of \em provides ports for the given component instance \em
+	cid.*/
+    virtual SSIDL::array1<std::string>
+    getProvidedPortNames(const sci::cca::ComponentID::pointer &cid);
 
-  /** Returns a list of \em uses ports for the component instance \em cid */
-  virtual SSIDL::array1<std::string>
-  getUsedPortNames(const sci::cca::ComponentID::pointer &cid);
+    /** Returns a list of \em uses ports for the component instance \em cid */
+    virtual SSIDL::array1<std::string>
+    getUsedPortNames(const sci::cca::ComponentID::pointer &cid);
 
-  /** Returns a map of port properties exposed by the framework. */
-  virtual sci::cca::TypeMap::pointer
-  getPortProperties(const sci::cca::ComponentID::pointer &cid,
-                    const std::string& portname);
+    /** Returns a map of port properties exposed by the framework. */
+    virtual sci::cca::TypeMap::pointer
+    getPortProperties(const sci::cca::ComponentID::pointer &cid,
+		      const std::string& portname);
   
-  /** */
-  virtual void
-  setPortProperties(const sci::cca::ComponentID::pointer &cid,
-                    const std::string &portname,
-                    const sci::cca::TypeMap::pointer &map);
+    /** */
+    virtual void
+    setPortProperties(const sci::cca::ComponentID::pointer &cid,
+		      const std::string &portname,
+		      const sci::cca::TypeMap::pointer &map);
 
-  /** */
-  virtual sci::cca::ConnectionID::pointer
-  connect(const sci::cca::ComponentID::pointer &user,
-          const std::string &usesPortName,
-          const sci::cca::ComponentID::pointer &provider,
-          const ::std::string &providesPortName);
+    /** */
+    virtual sci::cca::ConnectionID::pointer
+    connect(const sci::cca::ComponentID::pointer &user,
+	    const std::string &usesPortName,
+	    const sci::cca::ComponentID::pointer &provider,
+	    const ::std::string &providesPortName);
 
-  /** */
-  virtual SSIDL::array1<sci::cca::ConnectionID::pointer>
-  getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer>
-                       &componentList);
+    /** */
+    virtual SSIDL::array1<sci::cca::ConnectionID::pointer>
+    getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer>
+		     &componentList);
 
 
-  /** Returns a CCA TypeMap that represents any properties associated
-      with \em connID.
-      key                    value          meaning
-      user                   string         unique uses component name
-      provider               string         unique provides component name
-      uses port              string         uses port name
-      provides port          string         provides port name
-      bridge                 bool           is a bridge
+    /** Returns a CCA TypeMap that represents any properties associated
+	with \em connID.
+	key                    value          meaning
+	user                   string         unique uses component name
+	provider               string         unique provides component name
+	uses port              string         uses port name
+	provides port          string         provides port name
+	bridge                 bool           is a bridge
     */
-  virtual sci::cca::TypeMap::pointer
-  getConnectionProperties(const sci::cca::ConnectionID::pointer &connID);
+    virtual sci::cca::TypeMap::pointer
+    getConnectionProperties(const sci::cca::ConnectionID::pointer &connID);
 
-  /** */
-  virtual void
-  setConnectionProperties(const sci::cca::ConnectionID::pointer &connID,
-                          const sci::cca::TypeMap::pointer &map);
+    /** */
+    virtual void
+    setConnectionProperties(const sci::cca::ConnectionID::pointer &connID,
+			    const sci::cca::TypeMap::pointer &map);
 
-  /** */
-  virtual void
-  disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout);
+    /** */
+    virtual void
+    disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout);
 
-  /** */
-  virtual void
-  disconnectAll(const sci::cca::ComponentID::pointer &id1,
-                const sci::cca::ComponentID::pointer &id2,
-                float timeout);
-
-  /** */
-  virtual SSIDL::array1<std::string>
-  getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
-                        const std::string &usesPortName,
-                        const sci::cca::ComponentID::pointer &provider);
+    /** */
+    virtual void
+    disconnectAll(const sci::cca::ComponentID::pointer &id1,
+		  const sci::cca::ComponentID::pointer &id2,
+		  float timeout);
 
 
-  // Bridge methods 
-  /** */
-  virtual SSIDL::array1<std::string>
-  getBridgablePortList(const sci::cca::ComponentID::pointer &c1,
-                       const std::string &port1,
-                       const sci::cca::ComponentID::pointer &c2);
+    /* *****
+     * implements InternalFrameworkService 
+     */
 
-  /** */
-  virtual std::string
-  generateBridge(const sci::cca::ComponentID::pointer &c1,
-                 const std::string &port1,
-                 const sci::cca::ComponentID::pointer &c2,
-                 const std::string &port2);
-  // END Bridge methods
+    /** */
+
+    sci::cca::Port::pointer getService(const std::string &);
   
-  /** */
-  sci::cca::Port::pointer getService(const std::string &);
 
-  /** */
-  int addComponentClasses(const std::string &loaderName);
+    /* *****
+     * implements ComponentInstance
+     */
+    sci::cca::DistributedFramework::pointer getFramework();
 
-  /** */
-  int removeComponentClasses(const std::string &loaderName);
 
-  // quite down the compiler
-  virtual void getException();
-  virtual const TypeInfo* _virtual_getTypeInfo() const;
-  virtual void addRef();
-  virtual void deleteRef();
-  virtual bool isSame(const BaseInterface::pointer& iobj);
-  virtual BaseInterface::pointer queryInt(const ::std::string& name);
-  virtual bool isType(const ::std::string& name);
-  virtual void createSubset(int localsize, int remotesize);
-  virtual void setRankAndSize(int rank, int size);
-  virtual void resetRankAndSize();
-  virtual CCALib::SmartPointer< SSIDL::ClassInfo > getClassInfo();
-    
+    /* *****
+     * implements internal.BuilderService
+     */
+
+    /** ? */
+    void emitConnectionEvent(sci::cca::ports::ConnectionEvent::pointer event);
+
+    /* *****
+     * Internal functions ?
+     */
+
+    /** */
+    int addComponentClasses(const std::string &loaderName);
+
+    /** */
+    int removeComponentClasses(const std::string &loaderName);
+
   private:
-    friend class ConnectionEventService;
-    BuilderService(SCIRunFramework* fwk);
+    sci::cca::SCIRunFramework::pointer framework;
+
+    //friend class ConnectionEventService;
+    BuilderService(sci::cca::SCIRunFramework::pointer fwk);
     /** Returns the URL of this BuilderService component's framework. */
     std::string getFrameworkURL();
-    /** ? */
-    void emitConnectionEvent(ConnectionEvent* event);
+
 
 #ifdef HAVE_RUBY
     AutoBridge autobr;

@@ -38,6 +38,7 @@
  *
  */
 
+#include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Internal/ComponentEventService.h>
 #include <SCIRun/Internal/ComponentEvent.h>
 #include <SCIRun/CCA/CCAComponentInstance.h>
@@ -47,8 +48,8 @@
 
 namespace SCIRun {
 
-  ComponentEventService::ComponentEventService(SCIRunFramework* framework)
-  : InternalFrameworkServiceInstance(framework, "internal:ComponentEventService"),
+  ComponentEventService::ComponentEventService(SCIRunFramework::pointer framework)
+  :  framework(framework)
     lock_listeners("ComponentEventService::listeners lock"),
     lock_events("ComponentEventService::events lock")
 {
@@ -59,11 +60,11 @@ ComponentEventService::~ComponentEventService()
   std::cerr << "EventService destroyed..." << std::endl;
 }
 
-InternalFrameworkServiceInstance* ComponentEventService::create(SCIRunFramework* framework)
+InternalFrameworkService::pointer ComponentEventService::create(SCIRunFramework::pointer framework)
 {
-    ComponentEventService* n = new ComponentEventService(framework);
-    n->addReference();
-    return n;
+  ComponentEventService::pointer service(new ComponentEventService(framework));
+  service->addReference();
+  return service;
 }
 
 sci::cca::Port::pointer ComponentEventService::getService(const std::string&)

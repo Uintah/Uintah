@@ -61,7 +61,7 @@ class SCIRunFramework;
 class InternalComponentModel : public ComponentModel
 {
 public:
-    InternalComponentModel(SCIRunFramework* framework);
+    InternalComponentModel(sci::cca::SCIRunFramework::pointer framework);
     virtual ~InternalComponentModel();
 
   /** */
@@ -98,7 +98,7 @@ public:
 private:
   typedef std::map<std::string, InternalFrameworkServiceDescription*> FrameworkServicesMap;
 
-  SCIRunFramework* framework;
+  sci::cca::SCIRunFramework::pointer framework;
 
   FrameworkServicesMap frameworkServices;
   SCIRun::Mutex lock_frameworkServices;

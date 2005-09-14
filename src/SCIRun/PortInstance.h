@@ -53,7 +53,7 @@ namespace SCIRun
  *
  *
  */
-  class PortInstance : virtual public sci::cca::internal::PortInstance 
+  class PortInstance : public sci::cca::internal::PortInstance 
   {
   public:
     typedef sci::cca::internal::PortType PortType;

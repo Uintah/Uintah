@@ -89,28 +89,39 @@ namespace SCIRun {
    :lock_compIDs("SCIRunFramework::compIDs lock"),
     lock_activeInstances("SCIRunFramework::activeInstances lock")
   {
-    models.push_back(internalServices = new InternalComponentModel(this));
-    models.push_back(cca = new CCAComponentModel(this));
+    pointer self(this);
+    
+    internalServices = new InternalComponentModel(self);
+    cca = new CCAComponentModel(self);
+
+    models.push_back(internalServices);
+    models.push_back(cca);
 
 #ifdef BUILD_DATAFLOW
-    models.push_back(dflow = new SCIRunComponentModel(this));
+    dflow = new SCIRunComponentModel(self);
+    models.push_back(dflow)
 #endif
 
 #if HAVE_RUBY
-    models.push_back(new BridgeComponentModel(this));
+    models.push_back(new BridgeComponentModel(self));
 #endif
 
 #if HAVE_BABEL 
-    models.push_back(babel = new BabelComponentModel(this));
+    babel = new BabelComponentModel(self);
+    models.push_back(babel);
 #endif
 
 #if HAVE_VTK
-    models.push_back(vtk = new VtkComponentModel(this));
+    vtk = new VtkComponentModel(self);
+    models.push_back(vtk);
 #endif
 
 #if HAVE_TAO
-    models.push_back(corba = new CorbaComponentModel(this));
-    models.push_back(tao = new TaoComponentModel(this));
+    corba = new CorbaComponentModel(self);
+    tao = new TaoComponentModel(self);
+
+    models.push_back(corba);
+    models.push_back(tao);
 #endif
   }
   
@@ -298,9 +309,9 @@ namespace SCIRun {
   }
 
 
+  // FIXME: naem should be already in ci
   sci::cca::ComponentID::pointer
-  SCIRunFramework::registerComponent(const ComponentInstance::pointer &ci,
-				     const std::string& name)
+  SCIRunFramework::registerComponent(const ComponentInstance::pointer &ci, const std::string& name)
   { 
     lock_activeInstances.lock();   
     if ( activeInstances.find(name) != activeInstances.end()) {
@@ -309,16 +320,14 @@ namespace SCIRun {
     }
     lock_activeInstances.unlock();  
 
-    sci::cca::ComponentID::pointer cid = ComponentID::pointer(new ComponentID(this, name));
+#if 0
+    // yarden: no need for this anymore
+    sci::cca::ComponentID::pointer cid(new sci::cca::ComponentID(this, name));
 
     lock_compIDs.lock();
     compIDs.push_back(cid);
     lock_compIDs.unlock();
-
-    // TODO: get some properties
-    emitComponentEvent( new ComponentEvent(sci::cca::ports::InstantiatePending,
-					   cid, 
-					   sci::cca::TypeMap::pointer(0)));
+#endif
 
     // fixme: [yarden] why do we set the framework ? it should be set when the CI was created.
     //ci->framework = this;
@@ -328,7 +337,12 @@ namespace SCIRun {
     activeInstances[name] = ci;
     lock_activeInstances.unlock(); 
 
-    return cid;
+    // TODO: get some properties
+    emitComponentEvent( new ComponentEvent(sci::cca::ports::InstantiatePending,
+					   ci, 
+					   sci::cca::TypeMap::pointer(0)));
+
+    return ci;
   }
 
   ComponentInstance::pointer
@@ -471,19 +485,29 @@ namespace SCIRun {
   void
   SCIRunFramework::emitComponentEvent(ComponentEvent* event)
   {
-    sci::cca::ports::ComponentEventService::pointer service =
-      pidl_cast<sci::cca::ports::ComponentEventService::pointer>(
-								 getFrameworkService("cca.ComponentEventService", "")
-								 );
-    if (service.isNull()) {
+    Port::pointer port = getFrameworkService("cca.ComponentEventService", "");
+    if ( port.isNull() ) {
+      // FIXME: throw exception ?
       std::cerr << "Error: could not find ComponentEventService" << std::endl;
-    } else {
-      ComponentEventService* ces =
-        dynamic_cast<ComponentEventService*>(service.getPointer());
-      sci::cca::ports::ComponentEvent::pointer ce = ComponentEvent::pointer(event);
-      ces->emitComponentEvent(ce);
-      releaseFrameworkService("cca.ComponentEventService", "");
+      return;
     }
+
+    ComponentEventService::pointer service = pidl_cast<ComponentEventService::pointer>(port);
+    if (service.isNull()) {
+      // throw exception ?
+      std::cerr << "Error: could not find ComponentEventService" << std::endl;
+      return;
+    } 
+
+    sci::cca::ports::ComponentEvent::pointer ce = ComponentEvent::pointer(event);
+    service->emitComponentEvent(ce);
+    releaseFrameworkService("cca.ComponentEventService", "");
+  }
+
+  void
+  SCIRunFramework::addConnection( const sci::cca::ConnectionID::pointer &connection )
+  {
+    connIDs.push_back(connection);
   }
 
 #if 0
