@@ -37,9 +37,10 @@ SRCS     += \
 	$(SRCDIR)/CCAComponentInstance.cc \
 	$(SRCDIR)/CCAPortDescription.cc \
 	$(SRCDIR)/CCAPortInstance.cc \
-	$(SRCDIR)/ComponentID.cc \
 	$(SRCDIR)/CCAException.cc \
 	$(SRCDIR)/ConnectionID.cc
+#	$(SRCDIR)/ComponentID.cc \
+
 $(SRCDIR)/CCAComponentModel.o: Core/CCA/spec/sci_sidl.h
 $(SRCDIR)/CCAComponentDescription.o: Core/CCA/spec/sci_sidl.h
 $(SRCDIR)/CCAComponentInstance.o: Core/CCA/spec/sci_sidl.h

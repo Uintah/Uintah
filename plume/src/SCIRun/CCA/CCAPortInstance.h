@@ -50,91 +50,89 @@
 #include <vector>
 
 namespace SCIRun {
-
-/**
- * \class CCAPortInstance
- *
- */
-class CCAPortInstance : 
-    virtual public sci::cca::internal::cca::CCAPortInstance, 
-    virtual public PortInstance
-{
-public:
-  typedef sci::cca::internal::cca::CCAPortInstance::pointer pointer;
-  typedef sci::cca::internal::cca::PortUsage PortUsage;
-
-  //enum PortType { Uses=0, Provides=1 };
-
-  CCAPortInstance(const std::string& portname, const std::string& classname,
-                  const sci::cca::TypeMap::pointer& properties,
-                  PortUsage porttype);
-
-  CCAPortInstance(const std::string& portname, const std::string& classname,
-                  const sci::cca::TypeMap::pointer& properties,
-                  const sci::cca::Port::pointer& port,
-                  PortUsage porttype);
-  ~CCAPortInstance();
-  /** */
-  virtual bool connect(const sci::cca::internal::PortInstance::pointer &);;
-  /** */
-  virtual PortInstance::PortType portType();
-  /** */
-  virtual std::string getType();
-  /** */
-  virtual std::string getModel();
-  /** */
-  virtual std::string getUniqueName();
-  /** */
-  virtual bool disconnect(const sci::cca::internal::PortInstance::pointer &);
-  /** */
-  virtual bool canConnectTo(const sci::cca::internal::PortInstance::pointer &);
-  /** */
-  virtual bool available();
-  /** */
-  virtual sci::cca::internal::PortInstance::pointer getPeer();
-  /** */
-  virtual PortUsage portUsage();
-  /** */
-  virtual std::string getName();
-  /** */
-  virtual void incrementUseCount();
-  /** */
-  virtual bool decrementUseCount();
-  /** */
-  virtual int numOfConnections();
-  /** */
-  virtual sci::cca::Port::pointer getPort();
-
-  virtual void getException();
-  virtual const TypeInfo* _virtual_getTypeInfo() const;
-  virtual void addRef();
-  virtual void deleteRef();
-  virtual bool isSame(const BaseInterface::pointer& iobj);
-  virtual BaseInterface::pointer queryInt(const ::std::string& name);
-  virtual bool isType(const ::std::string& name);
-  virtual void createSubset(int localsize, int remotesize);
-  virtual void setRankAndSize(int rank, int size);
-  virtual void resetRankAndSize();
-  // one more
-  virtual CCALib::SmartPointer< SSIDL::ClassInfo > getClassInfo();
-
-private:
-  //friend class CCAComponentInstance;
-  //friend class BridgeComponentInstance;
-
-  std::string name;
-  std::string type;
-  sci::cca::TypeMap::pointer properties;
-  std::vector<sci::cca::internal::PortInstance::pointer> connections;
-  SCIRun::Mutex lock_connections;
-
-  sci::cca::Port::pointer port;
-  PortUsage port_usage;
-  int useCount;
   
-  CCAPortInstance(const CCAPortInstance&);
-  CCAPortInstance& operator=(const CCAPortInstance&);
-};
+  /**
+   * \class CCAPortInstance
+   *
+   */
+  class CCAPortInstance :  public sci::cca::internal::cca::CCAPortInstance 
+  {
+  public:
+    typedef sci::cca::internal::cca::CCAPortInstance::pointer pointer;
+    typedef sci::cca::internal::cca::PortUsage PortUsage;
+    
+    //enum PortType { Uses=0, Provides=1 };
+    
+    CCAPortInstance(const std::string& portname, const std::string& classname,
+		    const sci::cca::TypeMap::pointer& properties,
+		    PortUsage porttype);
+    
+    CCAPortInstance(const std::string& portname, const std::string& classname,
+		    const sci::cca::TypeMap::pointer& properties,
+		    const sci::cca::Port::pointer& port,
+		    PortUsage porttype);
+    ~CCAPortInstance();
+    
+    /* 
+     *  Implementation of sci::cca::internal::CCAPortInstance interface
+     */
+    
+    /** */
+    virtual std::string getName();
+    
+    /** */
+    virtual int numOfConnections();
+    
+    /** */
+    virtual PortUsage portUsage();
+    
+    /** */
+    virtual void incrementUseCount();
+    
+    /** */
+    virtual bool decrementUseCount();
+    
+    /*
+     * PortInstance interface implementation
+     */
+    
+    /** */
+    virtual bool connect(const sci::cca::internal::PortInstance::pointer &);;
+    /** */
+    virtual bool disconnect(const sci::cca::internal::PortInstance::pointer &);
+    /** */
+    virtual bool available();
+    /** */
+    virtual bool canConnectTo(const sci::cca::internal::PortInstance::pointer &);
+    
+    /** */
+    virtual sci::cca::Port::pointer getPort();
+    /** */
+    virtual sci::cca::internal::PortInstance::pointer getPeer();
+    /** */
+    virtual sci::cca::internal::PortType portType();
+    
+    /** */
+    virtual std::string getUniqueName();
+    /** */
+    virtual std::string getType();
+    /** */
+    virtual std::string getModel();
+    
+  private:
+    std::string name;
+    std::string type;
+    sci::cca::TypeMap::pointer properties;
+    std::vector<sci::cca::internal::PortInstance::pointer> connections;
+    SCIRun::Mutex lock_connections;
+    
+    sci::cca::Port::pointer port;
+    PortUsage port_usage;
+    int useCount;
+    
+    CCAPortInstance(const CCAPortInstance&);
+    CCAPortInstance& operator=(const CCAPortInstance&);
+  };
 
 } // end namespace SCIRun
 

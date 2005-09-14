@@ -85,7 +85,7 @@ class BuilderService : public sci::cca::ports::BridgeBuilderService,
       Returns a reference counted pointer to a newly-allocated BuilderService
       port.  The \em framework parameter is a pointer to the relevent framework
       and the \em name parameter will become the unique name for the new port.*/
-  static InternalFrameworkServiceInstance *create(SCIRunFramework* framework);
+  static sci::cca::InternalFrameworkService::pointer create(SCIRunFramework* framework);
   
   /** Creates an instance of the component of type \em className.  The
       parameter \em instanceName is the unique name of the newly created
@@ -205,7 +205,9 @@ class BuilderService : public sci::cca::ports::BridgeBuilderService,
                         const sci::cca::ComponentID::pointer &provider);
 
 
-  // Bridge methods 
+  /*
+   * Bridge methods 
+   */
   /** */
   virtual SSIDL::array1<std::string>
   getBridgablePortList(const sci::cca::ComponentID::pointer &c1,
@@ -218,7 +220,6 @@ class BuilderService : public sci::cca::ports::BridgeBuilderService,
                  const std::string &port1,
                  const sci::cca::ComponentID::pointer &c2,
                  const std::string &port2);
-  // END Bridge methods
   
   /** */
   sci::cca::Port::pointer getService(const std::string &);

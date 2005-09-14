@@ -72,6 +72,44 @@ CCAPortInstance::~CCAPortInstance()
 {
 }
 
+/*
+ * implementations of sidl CCAPortInstance interface
+ */
+
+
+std::string CCAPortInstance::getName()
+{
+    return name;
+}
+
+int CCAPortInstance::numOfConnections()
+{
+  return connections.size();
+}
+
+PortUsage CCAPortInstance::portUsage()
+{
+    return port_usage;
+}
+
+void CCAPortInstance::incrementUseCount()
+{
+    useCount++;
+}
+
+bool CCAPortInstance::decrementUseCount()
+{
+    if (useCount <= 0) {
+        return false;
+    }
+    useCount--;
+    return true;
+}
+
+/*
+ * implementation that override PortInstance
+ */
+
 bool CCAPortInstance::connect(const PortInstance::pointer &to)
 {
   if (!canConnectTo(to)) {
@@ -91,29 +129,6 @@ bool CCAPortInstance::connect(const PortInstance::pointer &to)
       p2->connect(PortInstance::pointer(this));
   }
   return true;
-}
-
-PortInstance::PortType CCAPortInstance::portType()
-{
-  return port_usage == cca::Uses ? From : To;
-}
-
-
-std::string CCAPortInstance::getType()
-{
-    return type;
-}
-
-std::string CCAPortInstance::getModel()
-{
-    return "cca";
-}
-
-
-std::string CCAPortInstance::getUniqueName()
-{
-    // CCA names are already guaranteed to be unique
-    return name;
 }
 
 bool CCAPortInstance::disconnect(const PortInstance::pointer &to)
@@ -140,6 +155,15 @@ bool CCAPortInstance::disconnect(const PortInstance::pointer &to)
 }
 
 /**
+ * Available either if this is a PROVIDES port or
+ * a USES port that isn't connected.
+ */
+bool CCAPortInstance::available()
+{
+  return portType() == To || connections.size() == 0;
+}
+
+/**
  * Allowing (according to the CCA spec) n PROVIDES (To) : 1 USES (From)
  * connections is framework-implementation dependent;
  * this is \em not allowed by SCIRun2.
@@ -162,13 +186,9 @@ bool CCAPortInstance::canConnectTo(const PortInstance::pointer &to)
   return false;
 }
 
-/**
- * Available either if this is a PROVIDES port or
- * a USES port that isn't connected.
- */
-bool CCAPortInstance::available()
+sci::cca::Port::pointer CCAPortInstance::getPort()
 {
-  return portType() == To || connections.size() == 0;
+  return port;
 }
 
 // return a PortInstance on the other side of the connection
@@ -179,38 +199,28 @@ PortInstance::pointer CCAPortInstance::getPeer()
     return connections[0];
 }
 
-int CCAPortInstance::numOfConnections()
+PortInstance::PortType CCAPortInstance::portType()
 {
-  return connections.size();
+  return port_usage == cca::Uses ? From : To;
 }
 
-PortUsage CCAPortInstance::portUsage()
-{
-    return port_usage;
-}
 
-sci::cca::Port::pointer CCAPortInstance::getPort()
+std::string CCAPortInstance::getUniqueName()
 {
-  return port;
-}
-
-std::string CCAPortInstance::getName()
-{
+    // CCA names are already guaranteed to be unique
     return name;
 }
 
-void CCAPortInstance::incrementUseCount()
+std::string CCAPortInstance::getType()
 {
-    useCount++;
+    return type;
 }
 
-bool CCAPortInstance::decrementUseCount()
+std::string CCAPortInstance::getModel()
 {
-    if (useCount <= 0) {
-        return false;
-    }
-    useCount--;
-    return true;
+    return "cca";
 }
+
+
 
 } // end namespace SCIRun

@@ -36,10 +36,8 @@ SRCDIR   := SCIRun
 SRCS     += \
             $(SRCDIR)/DistributedFramework.cc \
             $(SRCDIR)/LocalFramework.cc \
-            $(SRCDIR)/DistributedComponentModelFramework.cc \
             $(SRCDIR)/SCIRunFramework.cc \
             $(SRCDIR)/ComponentDescription.cc \
-            $(SRCDIR)/ComponentInstance.cc \
             $(SRCDIR)/ComponentModel.cc \
             $(SRCDIR)/PortDescription.cc \
             $(SRCDIR)/SCIRunErrorHandler.cc \
@@ -49,6 +47,7 @@ SRCS     += \
             $(SRCDIR)/resourceReference.cc \
             $(SRCDIR)/TypeMap.cc \
             $(SRCDIR)/SCIRunLoader.cc
+#            $(SRCDIR)/ComponentInstance.cc \
 #            $(SRCDIR)/test.cc \
 
 

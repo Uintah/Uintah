@@ -69,7 +69,7 @@ class CCAComponentInstance;
 class CCAComponentModel : public ComponentModel
 {
 public:
-  CCAComponentModel(SCIRunFramework* framework);
+  CCAComponentModel(sci::cca::SCIRunFramework::pointer framework);
   virtual ~CCAComponentModel();
 
   /** ? */
@@ -126,7 +126,7 @@ public:
   static const std::string DEFAULT_PATH;
   
 private:
-  SCIRunFramework* framework;
+  sci::cca::SCIRunFramework::pointer framework;
   typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
   componentDB_type components;
   SCIRun::Mutex lock_components;   

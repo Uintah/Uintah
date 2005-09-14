@@ -48,13 +48,10 @@
 #include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Internal/BuilderService.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+//#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 #include <vector>
 
 namespace SCIRun {
-
-class BuilderService;
-class ConnectionEvent;
 
 /**
  * \class ConnectionEventService
@@ -65,9 +62,7 @@ class ConnectionEvent;
  * ConnectionEventListener interface.
  */
 
-class ConnectionEventService
-    : public sci::cca::ports::ConnectionEventService,
-      public InternalFrameworkServiceInstance
+class ConnectionEventService : public sci::cca::ports::ConnectionEventService
 {
 public:
     virtual ~ConnectionEventService();
@@ -75,10 +70,11 @@ public:
     /** Factory method for allocating new ConnectionEventService objects.
     Returns a smart pointer to the newly allocated object registered in
     the framework \em fwk with the instance name \em name. */
-  static InternalFrameworkServiceInstance* create(SCIRunFramework* fwk);
+  static sci::cca::internal::InternalFrameworkService::pointer create(sci::cca::SCIRunFramework::pointer fwk);
 
-    /** Returns this service. */
-    virtual sci::cca::Port::pointer getService(const std::string& name);
+  /*
+   * ports.ConnectionEventService
+   */
 
     /** Sign up to be told about connection activity of a given \em EventType. */
     virtual void addConnectionEventListener(sci::cca::ports::EventType et,
@@ -88,34 +84,28 @@ public:
     virtual void removeConnectionEventListener(sci::cca::ports::EventType et,
         const sci::cca::ports::ConnectionEventListener::pointer& cel);
 
-  // quite down the compiler
-  virtual void getException();
-  virtual const TypeInfo* _virtual_getTypeInfo() const;
-  virtual void addRef();
-  virtual void deleteRef();
-  virtual bool isSame(const BaseInterface::pointer& iobj);
-  virtual BaseInterface::pointer queryInt(const ::std::string& name);
-  virtual bool isType(const ::std::string& name);
-  virtual void createSubset(int localsize, int remotesize);
-  virtual void setRankAndSize(int rank, int size);
-  virtual void resetRankAndSize();
-  virtual CCALib::SmartPointer< SSIDL::ClassInfo > getClassInfo();
-    
-private:
-    friend void BuilderService::emitConnectionEvent(ConnectionEvent* event);
-    struct Listener
-    {
-        sci::cca::ports::EventType type;
-        sci::cca::ports::ConnectionEventListener::pointer l;
-        Listener(sci::cca::ports::EventType type,
-                const sci::cca::ports::ConnectionEventListener::pointer& l) :
-                type(type), l(l) {}
-    };
-    std::vector<Listener*> listeners;
-    SCIRun::Mutex lock_listeners;
+  /*
+   * internal.InternalFrameworkService
+   */
 
-    ConnectionEventService(SCIRunFramework* framework);
-    void emitConnectionEvent(const sci::cca::ports::ConnectionEvent::pointer &event);
+    /** Returns this service. */
+    virtual sci::cca::Port::pointer getService(const std::string& name);
+
+private:
+  //friend void BuilderService::emitConnectionEvent(ConnectionEvent* event);
+  struct Listener
+  {
+    sci::cca::ports::EventType type;
+    sci::cca::ports::ConnectionEventListener::pointer l;
+    Listener(sci::cca::ports::EventType type,
+	     const sci::cca::ports::ConnectionEventListener::pointer& l) :
+      type(type), l(l) {}
+  };
+  std::vector<Listener*> listeners;
+  SCIRun::Mutex lock_listeners;
+  
+  ConnectionEventService(SCIRunFramework* framework);
+  void emitConnectionEvent(const sci::cca::ports::ConnectionEvent::pointer &event);
 };
 
 }

@@ -46,24 +46,23 @@
 #include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+//#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 #include <vector>
 
 namespace SCIRun {
 
-class SCIRunFramework;
-class ComponentEvent;
-
-/**
- * \class ComponentEventService
- *
- * The component event service is a CCA port that is used to register
- * command objects (analogous to callback methods) with events broadcast
- * from the framework (?)
- *
- */
-  class ComponentEventService : public InternalFrameworkServiceInstance,
-				virtual public sci::cca::ports::ComponentEventService
+  class SCIRunFramework;
+  class ComponentEvent;
+  
+  /**
+   * \class ComponentEventService
+   *
+   * The component event service is a CCA port that is used to register
+   * command objects (analogous to callback methods) with events broadcast
+   * from the framework (?)
+   *
+   */
+  class ComponentEventService : public sci::cca::internal::InternalComponentEventService
   {
   public:
     virtual ~ComponentEventService();
@@ -71,7 +70,7 @@ class ComponentEvent;
     /** Factory method for allocating new ComponentEventService objects.  Returns
 	a smart pointer to the newly allocated object registered in the framework
 	\em fwk with the instance name \em name. */
-    static InternalFrameworkServiceInstance* create(SCIRunFramework* fwk);
+    static InternalFrameworkService::pointer create(sci::cca::SCIRunFramework::pointer fwk);
     
     /** ? */
     sci::cca::Port::pointer getService(const std::string&);
@@ -89,19 +88,12 @@ class ComponentEvent;
     
     virtual void moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y);
     
-    // quite down the compile
-    virtual void getException();
-    virtual const TypeInfo* _virtual_getTypeInfo() const;
-    virtual void addRef();
-    virtual void deleteRef();
-    virtual bool isSame(const BaseInterface::pointer& iobj);
-    virtual BaseInterface::pointer queryInt(const ::std::string& name);
-    virtual bool isType(const ::std::string& name);
-    virtual void createSubset(int localsize, int remotesize);
-    virtual void setRankAndSize(int rank, int size);
-    virtual void resetRankAndSize();
   private:
-    friend void SCIRunFramework::emitComponentEvent(ComponentEvent* event);
+    sci::cca::SCIRunFramework::pointer framework;
+    
+    //friend void SCIRunFramework::emitComponentEvent(const sci::cca::ports::ComponentEvent::pointer &event);
+    friend class SCIRunFramework;
+    
     struct Listener
     {
       sci::cca::ports::ComponentEventType type;
@@ -118,7 +110,7 @@ class ComponentEvent;
     std::vector<sci::cca::ports::ComponentEvent::pointer> events;
     SCIRun::Mutex lock_events;
     
-    ComponentEventService(SCIRunFramework* fwk);
+    ComponentEventService(sci::cca::SCIRunFramework::pointer fwk);
     void emitComponentEvent(const sci::cca::ports::ComponentEvent::pointer& event);
   };
 
