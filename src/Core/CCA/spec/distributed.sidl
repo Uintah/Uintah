@@ -36,6 +36,18 @@ package sci {
       DistributedFramework getParent();
       array<DistributedFramework,1> getChildren();
 
+      // FIXME: need to change from componentName to ComponentInstnace 
+      Port getFrameworkService(in string service, in string componentName); 
+      bool releaseFrameworkService(in string serviceName, in string componentName);
+    }
+    
+    interface LocalFramework extends DistributedFramework {
+    }
+
+    interface GlobalFramework extends DistributedFramework {
+    }
+
+    interface MPIFramework extends LocalFramework {
       /*
        * For Kemming MPIFramework
        */
@@ -52,17 +64,17 @@ package sci {
       int registerLoader(in string slaveName, in array<string,1> slaveURLs);
       int unregisterLoader(in string slaveName);
     }
-    
-    interface LocalFramework extends DistributedFramework {
-    }
 
-    interface GlobalFramework extends DistributedFramework {
-    }
+    interface SCIRunFramework extends LocalFramework {
+      ComponentID registerComponent( in internal.ComponentInstance, in string componentName);
+      internal.ComponentInstance unregisterComponent( in string componentName);
 
-    interface MPIFramework extends LocalFramework {
-    }
+      array<ComponentID> getComponentIDs();
 
-    interface DistributedComponentModelFramework extends LocalFramework {
+      ComponentID createComponentInstance(in string, in string, in TypeMap);
+      void destroyComponentInstance(in ComponentID, in float timeout);
+
+      void addConnection( in ConnectionID );
     }
 
     package ports {
@@ -96,15 +108,6 @@ package sci {
     } // package ports
 
 
-//       interface Test1 {
-//       }
-
-//       interface Test2 {
-// 	}
-
-//       interface Test3 extends Test1, Test2 {
-//       }
-
     package internal {
       
       enum PortType {
@@ -127,22 +130,52 @@ package sci {
 	string getModel();
       };
       
-      class PortInstanceIterator {
+      interface PortInstanceIterator {
 	PortInstance get();
 	bool done();
 	void next();
       }
 
-      class ComponentInstance {
+      interface ComponentInstance  extends ComponentID {
 	DistributedFramework getFramework();
 	
 	PortInstance getPortInstance(in string portName);
 	
 	PortInstanceIterator getPorts();
-	string getInstanceName();
 	string getClassName();
 	TypeMap getProperties();
 	void setProperties( in TypeMap properties);
+      }
+
+      interface InternalService { //extends ComponentInstance {
+	Port getService(in string name);
+	DistributedFramework getFramework();
+      }
+
+      interface InternalFrameworkService extends InternalService {
+	InternalFrameworkService create( in SCIRunFramework );
+      }
+
+      interface InternalComponentService extends InternalService {
+      }
+
+      
+      // various framework services
+
+      interface  InternalBuilderService 
+	extends ports.BridgeBuilderService, InternalFrameworkService {
+
+	void emitConnectionEvent( in ports.ConnectionEvent );
+      }
+
+      interface InternalConnectionEventService 
+	extends ports.ConnectionEventService, InternalFrameworkService {
+      }
+
+      interface InternalComponentEventService
+	extends ports.ComponentEventService, InternalFrameworkService {
+
+	void emitComponentEvent(in ports.ComponentEvent);
       }
 
       package cca {
@@ -162,9 +195,7 @@ package sci {
 	  bool decrementUseCount();
 	}
 
-        class CCAComponentServices extends ComponentInstance 
-	  implements Services 
-        {
+        interface CCAComponentServices extends ComponentInstance, Services {
 	  PortInstanceIterator getPorts();
  	}
 
