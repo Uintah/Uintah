@@ -115,8 +115,8 @@ WARNING
     
     Steady_Burn(const Steady_Burn&);
     Steady_Burn& operator=(const Steady_Burn&);
-    
-    const VarLabel* PartFlagLabel; /* for indicating cells containing particles */  
+
+    const VarLabel* SomeScalarLabel;
     
     ProblemSpecP params;
     const Material* matl0;
@@ -147,7 +147,7 @@ WARNING
     double CC5; /* CC5 = Qg/Cp                */
     
     /* C's, L's & R's, Tmin & Tmax, T_ignition are updated in UpdateConstants function  */
-    double C1; /* C1 = CC1 / Vc   */
+    double C1; /* C1 = CC1 / Vc, (Vc = Condensed Phase Specific Volume) */
     double C2; /* C2 = To + CC2   */
     double C3; /* C3 = CC3 * P * P  */
     double C4; /* C4 = To + CC4   */
