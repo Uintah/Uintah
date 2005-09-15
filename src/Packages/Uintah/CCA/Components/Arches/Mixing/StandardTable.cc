@@ -85,7 +85,7 @@ StandardTable::problemSetup(const ProblemSpecP& params)
     tv->label = 0;
     tablevalues.push_back(tv);
   }
-  table->setup();
+  table->setup(false);
 }
 
       
