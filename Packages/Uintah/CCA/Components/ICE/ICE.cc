@@ -389,12 +389,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   //__________________________________
   // WARNINGS
   SimulationTime timeinfo(prob_spec); 
-  if ( d_impICE && 
-       (timeinfo.max_delt_increase  > 10  || d_delT_scheme != "conservative" )){
+  if ( d_impICE &&  timeinfo.max_delt_increase  > 10 && d_myworld->myrank() == 0){
     cout <<"\n \n W A R N I N G: " << endl;
     cout << " When running implicit ICE you should specify "<<endl;
     cout <<" \t \t <max_delt_increase>    2.0ish  "<<endl;
-    cout << "\t \t <Scheme_for_delT_calc> conservative " << endl;
     cout << " to a) prevent rapid fluctuations in the timestep and "<< endl;
     cout << "    b) to prevent outflux Vol > cell volume \n \n" <<endl;
   } 
