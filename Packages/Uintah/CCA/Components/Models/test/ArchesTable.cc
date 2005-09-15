@@ -6,6 +6,7 @@
 #include <Core/Thread/Time.h>
 #include <iostream>
 #include <fstream>
+#include <Core/Util/DebugStream.h>
 
 #define MAXINDEPENDENTS 100
 
@@ -13,6 +14,7 @@
 // TODO: parentheses in expressions, other ops in expressions
 using namespace std;
 using namespace Uintah;
+static DebugStream cerr_dbg("ARCHES_TABLE", true);
 
 ArchesTable::ArchesTable(ProblemSpecP& params)
 {
@@ -237,8 +239,10 @@ void ArchesTable::addIndependentVariable(const string& name)
   inds.push_back(ind);
 }
 
-void ArchesTable::setup()
+void ArchesTable::setup(const bool cerrSwitch)
 {
+
+  cerr_dbg.setActive(cerrSwitch);
   double start = Time::currentSeconds();
   // Read the index...
   ifstream in(filename.c_str());
@@ -247,9 +251,9 @@ void ArchesTable::setup()
     throw ProblemSetupException("file not found: "+filename, __FILE__, __LINE__);
   
 
-  cerr << "Reading table\n";
+  cerr_dbg << "Reading table\n";
   int nvars = getInt(in);
-  cerr << "Reading " << nvars << " variables : ";
+  cerr_dbg << "Reading " << nvars << " variables : ";
 
   vector<Ind*> in_inds(nvars);
   vector<int> axis_sizes(nvars);
@@ -270,8 +274,8 @@ void ArchesTable::setup()
   }
 
   for(int i=0;i<nvars;i++)
-    cerr << axis_sizes[i] << " ";
-  cerr << '\n';
+    cerr_dbg << axis_sizes[i] << " ";
+  cerr_dbg << '\n';
 
   // Set up the axes.
   // The first variable may have different weights for each dependent
@@ -329,10 +333,10 @@ void ArchesTable::setup()
   // Make sure that we are at the end of the file
   skipComments(in);
   if(in){
-    cerr << "Rest of file:\n";
+    cerr_dbg << "Rest of file:\n";
     while(in)
-      cerr << (char)in.get();
-    cerr << '\n';
+      cerr_dbg << (char)in.get();
+    cerr_dbg << '\n';
     throw InternalError("Data remaining in file after read\n", __FILE__, __LINE__);
   }
 
@@ -396,7 +400,7 @@ void ArchesTable::setup()
     }
     if(!inputdep)
       throw InternalError(string("Dependent variable: ")+dep->name+" not found", __FILE__, __LINE__);
-    cerr << "Downslicing: " << dep->name << '\n';
+    cerr_dbg << "Downslicing: " << dep->name << '\n';
     dep->data = new double[newsize];
 
     // Build the axes
@@ -532,7 +536,7 @@ void ArchesTable::setup()
     if(dep->type != Dep::DerivedValue)
       continue;
 
-    cerr << "Evaluating: " << dep->name << '\n';
+    cerr_dbg << "Evaluating: " << dep->name << '\n';
     dep->data = new double[newsize];
     vector<InterpAxis*> axes;
     evaluate(dep->expression, axes, dep->data, newsize);
@@ -541,7 +545,7 @@ void ArchesTable::setup()
   }
   file_read = true;
   double dt = Time::currentSeconds()-start;
-  cerr << "Read and interpolated table in " << dt << " seconds\n";
+  cerr_dbg << "Read and interpolated table in " << dt << " seconds\n";
 }
 
 void ArchesTable::checkAxes(const vector<InterpAxis*>& a,
