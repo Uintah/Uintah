@@ -148,7 +148,9 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_ref_gamma_index = table->addDependentVariable("reference_gamma");
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
 //  d_MW_index        = table->addDependentVariable("mix_mol_wt");
-  table->setup();
+  
+  bool cerrSwitch = (d_myworld->myrank() == 0); 
+  table->setup(cerrSwitch);
 
   //__________________________________
   // - create Label names

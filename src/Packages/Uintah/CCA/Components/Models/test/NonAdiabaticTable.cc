@@ -141,7 +141,9 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_ref_cv_index    = table->addDependentVariable("reference_heat_capac_Cv");
   d_ref_gamma_index = table->addDependentVariable("reference_gamma");
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
-  table->setup();
+  
+  bool cerrSwitch = (d_myworld->myrank() == 0); 
+  table->setup(cerrSwitch);
 
 #if 0
   ofstream out("graph.dat");

@@ -43,7 +43,7 @@ WARNING
     virtual void addIndependentVariable(const string&) = 0;
     virtual int addDependentVariable(const string&) = 0;
     
-    virtual void setup() = 0;
+    virtual void setup(const bool cerrSwitch) = 0;
     
     virtual void interpolate(int index, CCVariable<double>& result,
 			     const CellIterator&,
