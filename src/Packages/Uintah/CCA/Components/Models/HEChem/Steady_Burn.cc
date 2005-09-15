@@ -17,7 +17,11 @@
 #include <iostream>
 
 #undef DEBUG_SCALAR
-//#define DEBUG_SCALAR
+#define DEBUG_SCALAR
+
+#undef TOTALS
+//#define TOTALS    
+
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -296,8 +300,6 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
  
     Vector  dx = patch->dCell();
 
-#undef TOTALS
-    //#define TOTALS    
 #ifdef TOTALS
     double totalSurfArea=0.0, totalBurnedMass=0.0;
     int totalNumBurningCells=0;
@@ -329,16 +331,23 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 #endif
 
 
-      if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && MaxMass>d_TINY_RHO && PartFlag[c]>0 ){ 
+      /*if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && PartFlag[c]>0 ){ */
+      if( MinMass/MaxMass<0.7 && PartFlag[c]>0 ){ 
 	/* near interface and containing particles */
-	burning = 0;
 	for(int i = -1; i<=1; i++){
 	  for(int j = -1; j<=1; j++){
 	    for(int k = -1; k<=1; k++){
 	      IntVector cell = c + IntVector(i,j,k);
-	      if( 3.0 > PartFlag[cell] ){
+
+#if 0
+	      cout<<"cell="<<cell<<"  PF ="<<PartFlag[cell]
+		  <<"  vf_0="<<vol_frac_CC[0][cell] <<"  vf_1="<<vol_frac_CC[1][cell]<<"  vf_2="<<vol_frac_CC[2][cell]
+		  <<"  t_0="<<temp_CC[0][cell]<<"  t_1="<<temp_CC[1][cell]<<"  t_2="<<temp_CC[2][cell]<<endl;
+#endif     
+ 
+	      if( PartFlag[cell] <= 3.0){
 		for (int m = 0; m < numAllMatls; m++){
-		  if(vol_frac_CC[m][cell] > 0.3 && temp_CC[m][cell] > ignitionTemp){
+		  if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
 		    burning = 1;
 		    break;
 		  }
@@ -408,10 +417,26 @@ double Steady_Burn::computeSurfaceArea(Vector &rhoGradVector, Vector &dx){
   double delX = dx.x();
   double delY = dx.y();
   double delZ = dx.z();
-  double TmpX = fabs(delX*rhoGradVector.x());
+  double rgvX = fabs(rhoGradVector.x());
+  double rgvY = fabs(rhoGradVector.y());
+  double rgvZ = fabs(rhoGradVector.z());
+  
+  
+  double max = rgvX;
+  if(rgvY > max)   max = rgvY;
+  if(rgvZ > max)   max = rgvZ;
+  
+  double coeff = pow(1.0/max, 1.0/3.0);
+  
+  /* double TmpX = fabs(delX*rhoGradVector.x());
   double TmpY = fabs(delY*rhoGradVector.y());
-  double TmpZ = fabs(delZ*rhoGradVector.z());
-  return delX*delY*delZ / (TmpX+TmpY+TmpZ); 
+  double TmpZ = fabs(delZ*rhoGradVector.z());*/
+ 
+  double TmpX = delX*rgvX;
+  double TmpY = delY*rgvY;
+  double TmpZ = delZ*rgvZ;
+    
+  return delX*delY*delZ / (TmpX+TmpY+TmpZ) * coeff; 
 }
 
 
@@ -473,7 +498,12 @@ void Steady_Burn::setMPMLabel(MPMLabel* MLB){
 }
 
 
+
+/****************************************************************************/
 /******************* Bisection Secant Solver ********************************/
+/****************************************************************************/
+
+
 double Steady_Burn::computeBurnedMass(double To, double P, double Vc, double surfArea, double delT, double solidMass){  
   UpdateConstants(To, P, Vc);
   double Ts = Tmin + (Tmax - Tmin) * BisectionSecant();
@@ -486,12 +516,12 @@ double Steady_Burn::computeBurnedMass(double To, double P, double Vc, double sur
 
 
 void Steady_Burn::UpdateConstants(double To, double P, double Vc){
-  /* CC1 = Ac*R*Kc*Ec/Cp        */
+  /* CC1 = Ac*R*Kc/Ec/Cp        */
   /* CC2 = Qc/Cp/2              */
   /* CC3 = 4*Kg*Bg*W*W/Cp/R/R;  */
   /* CC4 = Qc/Cp                */
   /* CC5 = Qg/Cp                */
-  C1 = CC1 / Vc;
+  C1 = CC1 / Vc; /* Vc = Condensed Phase Specific Volume */
   C2 = To + CC2; 
   C3 = CC3 * P*P;
   C4 = To + CC4; 
@@ -504,7 +534,7 @@ void Steady_Burn::UpdateConstants(double To, double P, double Vc){
   
   T_ignition = C2;
   Tmin = Ts_max();
-  Tmax = Fxn_Ts(Ts_max());
+  Tmax = Fxn_Ts(Tmin);
 }
 
 
