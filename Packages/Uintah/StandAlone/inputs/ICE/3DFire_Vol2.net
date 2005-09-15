@@ -1,13 +1,14 @@
-# SCIRun Network v1.23.0
+# SCIRun Network v1.25.0
 
 
 set name {Main}
 set bbox {0 7 432 476}
-set creationDate {Fri Oct 01 2004}
-set creationTime {10:50:58}
+set creationDate {Thu Sep 15 2005}
+set creationTime {10:25:42}
 set runDate {}
 set runTime {}
 set notes {}
+set geometry {800x800+0+0}
 
 # Create a Uintah->DataIO->ArchiveReader Module
 set m1 [addModuleAtPosition "Uintah" "DataIO" "ArchiveReader" 1 7]
@@ -24,33 +25,29 @@ set m4 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 8 92]
 # Create a SCIRun->Render->Viewer Module
 set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 220 432]
 
-# Create a SCIRun->Render->SynchronizeGeometry Module
-set m6 [addModuleAtPosition "SCIRun" "Render" "SynchronizeGeometry" 220 348]
-
 # Create a SCIRun->FieldsData->MoveElemToNode Module
-set m7 [addModuleAtPosition "SCIRun" "FieldsData" "MoveElemToNode" 0 281]
+set m6 [addModuleAtPosition "SCIRun" "FieldsData" "MoveElemToNode" 0 281]
 
-# Create a SCIRun->Visualization->GLTextureBuilder Module
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 220 94]
+# Create a SCIRun->Visualization->TextureBuilder Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "TextureBuilder" 220 94]
 
-# Create a SCIRun->Visualization->TextureVolVis Module
-set m9 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 220 171]
+# Create a SCIRun->Visualization->VolumeVisualizer Module
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 220 171]
 
 # Create a SCIRun->Visualization->ShowColorMap Module
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 238 251]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 238 251]
 
 # Create the Connections between Modules
-set c1 [addConnection $m7 0 $m8 0]
-set c2 [addConnection $m6 0 $m5 0]
-set c3 [addConnection $m8 0 $m9 0]
-set c4 [addConnection $m9 0 $m6 0]
-set c5 [addConnection $m9 1 $m10 0]
-set c6 [addConnection $m1 0 $m4 0]
-set c7 [addConnection $m3 0 $m7 0]
-set c8 [addConnection $m4 0 $m3 0]
-set c9 [addConnection $m2 0 $m9 1]
-set c10 [addConnection $m10 0 $m6 1]
-set c11 [addConnection $m4 1 $m6 2]
+set c1 [addConnection $m6 0 $m7 0]
+set c2 [addConnection $m9 0 $m5 0]
+set c3 [addConnection $m7 0 $m8 0]
+set c4 [addConnection $m8 1 $m9 0]
+set c5 [addConnection $m1 0 $m4 0]
+set c6 [addConnection $m3 0 $m6 0]
+set c7 [addConnection $m4 0 $m3 0]
+set c8 [addConnection $m2 0 $m8 1]
+set c9 [addConnection $m8 0 $m5 1]
+set c10 [addConnection $m4 1 $m5 2]
 
 # Set GUI variables for the Uintah->DataIO->ArchiveReader Module
 set $m1-tcl_status {Executing}
@@ -72,14 +69,13 @@ set $m3-sVar {temp_CC}
 set $m4-tcl_status {Calling TimestepSelector!}
 set $m4-max_time {344}
 set $m4-timeval {1e-07}
-set $m4-anisleep {1}
 set $m4-def-color-a {0.0}
 
 # Open the Uintah->Selectors->TimestepSelector UI
 $m4 initialize_ui
 
 $m5 addViewer
-set $m5-ViewWindow_0-geometry 414x772+861+46
+set $m5-ViewWindow_0-geometry 414x771+865+69
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m5-ViewWindow_0-view-eyep-x {8.58987428865}
@@ -113,6 +109,13 @@ set $m5-ViewWindow_0-sbase {0.4}
 set $m5-ViewWindow_0-bgcolor-r {0.0}
 set $m5-ViewWindow_0-bgcolor-g {0.0}
 set $m5-ViewWindow_0-bgcolor-b {0.0}
+set $m5-ViewWindow_0-fogusebg {1}
+set $m5-ViewWindow_0-fogcolor-r {0.0}
+set $m5-ViewWindow_0-fogcolor-g {0.0}
+set $m5-ViewWindow_0-fogcolor-b {1.0}
+set $m5-ViewWindow_0-fog-start {0.0}
+set $m5-ViewWindow_0-fog-end {0.714265}
+set $m5-ViewWindow_0-fog-visibleonly {1}
 set $m5-ViewWindow_0-currentvisual {0}
 set $m5-ViewWindow_0-caxes {0}
 set $m5-ViewWindow_0-pos {z1_y1}
@@ -163,19 +166,14 @@ set $m5-ViewWindow_0-global-cull {0}
 set $m5-ViewWindow_0-global-dl {0}
 set $m5-ViewWindow_0-global-type {Gouraud}
 
-# Set GUI variables for the SCIRun->Visualization->GLTextureBuilder Module
-set $m8-is_fixed {1}
-set $m8-max_brick_dim {128}
-set $m8-sel_brick_dim {128}
-set $m8-min {300}
-set $m8-max {2100}
-
-# Set GUI variables for the SCIRun->Visualization->TextureVolVis Module
-set $m9-num_slices {254}
+# Set GUI variables for the SCIRun->Visualization->TextureBuilder Module
+set $m7-vmin {300}
+set $m7-vmax {2100}
+set $m7-is_fixed {1}
 
 # Set GUI variables for the SCIRun->Visualization->ShowColorMap Module
-set $m10-numsigdigits {4}
-set $m10-units {K}
+set $m9-numsigdigits {4}
+set $m9-units {K}
 
 
 ::netedit scheduleok
