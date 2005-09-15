@@ -3311,7 +3311,7 @@ case $host in
     fi
     ;;
   *-aix*)
-    PETSC_ARCH=rs6000_sp
+    PETSC_ARCH=aix5.1.0.0
     ;;
   *-darwin*)
     PETSC_ARCH=ppc
@@ -3398,7 +3398,7 @@ fi
 # Make sure we have either mpi or mpi-uni, blas, and lapack
 # It seems that under AIX and OSF, the libs that cover blas also cover lapack
 if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
-   (test "$PETSC_ARCH" = "rs6000_sp" || test "$PETSC_ARCH" = "dec" ||
+   (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
     test "$HAVE_LAPACK" = "yes"); then
 
   _sci_lib_dir=
