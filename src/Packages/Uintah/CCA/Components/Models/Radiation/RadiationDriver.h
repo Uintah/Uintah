@@ -125,10 +125,12 @@ class RadiationDriver : public ModelInterface {
                                  const MaterialSet* matls);
 
   virtual void scheduleIntensitySolve(const LevelP& level,
-                              SchedulerP& sched,
-                              const PatchSet* patches,
-                              const MaterialSet* matls,
-                              const ModelInfo* mi);
+                                      SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSubset* mss_G,
+                                      const MaterialSubset* mss_S,
+                                      const MaterialSet* matls_set_GS,
+                                      const ModelInfo* mi);
 
   virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                        const LevelP&,
