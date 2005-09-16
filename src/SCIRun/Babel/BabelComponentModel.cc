@@ -237,16 +237,16 @@ BabelComponentModel::createServices(const std::string& instanceName,
   */
   // is this supposed to be called by AbstractFramework.getServices???
   gov::cca::Services svc;
-  std::cerr << "BabelComponentModel::createServices() is not implemented !"
-            << std::endl;
+ // std::cout << "BabelComponentModel::createServices() is not implemented !"
+ //           << std::endl;
   return svc;
 }
 
 bool BabelComponentModel::haveComponent(const std::string& type)
 {
   SCIRun::Guard g1(&lock_components);
-  std::cerr << "CCA(Babel) looking for babel component of type: " << type
-            << std::endl;
+  //std::cout << "CCA(Babel) looking for babel component of type: " << type
+  //          << std::endl;
   return components.find(type) != components.end();
 }
 
@@ -308,7 +308,7 @@ std::cerr << "BabelComponentModel::createInstance: attempt to create " << name <
                   sidl::Scope_SCLSCOPE, sidl::Resolve_SCLRESOLVE);
     std::cout << "sidl::Loader::getSearchPath=" << sidl::Loader::getSearchPath() << std::endl;
     if (library._not_nil()) {
-      std::cerr << "Found library for class " << type << std::endl;
+      //std::cout << "Found library for class " << type << std::endl;
     } else {
       std::cerr << "Could not find library for type " << type
                 << std::endl;
@@ -352,16 +352,13 @@ std::cerr << "BabelComponentModel::createInstance: attempt to create " << name <
     */
   }
 
-  std::cerr << "about to create services" << std::endl;
-  framework::Services svc = framework::Services::_create();
-  std::cerr << "services created !" << std::endl;
+
+  framework::Services svc=framework::Services::_create();
   component.setServices(svc);
-  std::cerr << "component.setService done!" << std::endl;
   gov::cca::Component nullMap;
 
   BabelComponentInstance* ci =
     new BabelComponentInstance(framework, name, type, nullMap, component, svc);
-  std::cerr<<"comopnent instance ci is created!"<<std::endl;
   //ci->addReference();
   return ci;
 }
