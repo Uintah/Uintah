@@ -453,8 +453,8 @@ void ImpMPM::scheduleProjectCCHeatSourceToNodes(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::projectCCHeatSourceToNodes",
                         this,&ImpMPM::projectCCHeatSourceToNodes);
 
-  t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,1);
-  t->requires(Task::NewDW,lb->gVolumeLabel,             Ghost::None);
+  t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,2);
+  t->requires(Task::NewDW,lb->gVolumeLabel,             Ghost::AroundCells,2);
   t->requires(Task::OldDW,lb->heatFlux_CCLabel,         Ghost::AroundCells,1);
 
   t->computes(lb->heatFlux_CCLabel);
@@ -1194,12 +1194,11 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
                  << patch->getID() <<"\t\t IMPM"<< "\n" << "\n";
     }
       
-    Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     constNCVariable<double> NC_CCweight;
     NCVariable<double> NC_CCweight_copy;
-    old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0, patch,gac,1);
+    old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0, patch,gac,2);
     new_dw->allocateAndPut(NC_CCweight_copy, lb->NC_CCweightLabel, 0,patch);
     // carry forward interpolation weight
     IntVector low = patch->getNodeLowIndex();
@@ -1217,7 +1216,7 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
       constCCVariable<double> CCheatrate;
       CCVariable<double> CCheatrate_copy;
 
-      new_dw->get(gvolume,         lb->gVolumeLabel,          dwi, patch,gn, 0);
+      new_dw->get(gvolume,         lb->gVolumeLabel,          dwi, patch,gac,2);
       old_dw->get(CCheatrate,      lb->heatFlux_CCLabel,      dwi, patch,gac,1);
       new_dw->getModifiable(gextHR,lb->gExternalHeatRateLabel,dwi, patch);
       new_dw->allocateAndPut(CCheatrate_copy,  lb->heatFlux_CCLabel, dwi,patch);
@@ -1225,7 +1224,7 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
       // carry forward heat rate.
       CCheatrate_copy.copyData(CCheatrate);
 
-      for(CellIterator iter =patch->getCellIterator();!iter.done(); iter++){
+      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         double solid_vol=1.e-200;
         IntVector nodeIdx[8];
@@ -1233,11 +1232,11 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
         for (int in=0;in<8;in++){
           solid_vol += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
         }
-        // Add in the heat from ICE.
-        //        double CCheatrate_j = 1.e0;
         for (int in=0;in<8;in++){
+         if(patch->containsNode(nodeIdx[in])){
           gextHR[nodeIdx[in]] += CCheatrate[c] *
             (NC_CCweight[nodeIdx[in]]*gvolume[nodeIdx[in]])/solid_vol;
+         }
         }
       }
     }
