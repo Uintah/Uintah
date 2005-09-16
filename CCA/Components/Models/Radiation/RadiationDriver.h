@@ -191,6 +191,7 @@ class RadiationDriver : public ModelInterface {
   int d_radCalcFreq;
   double d_radCalc_interval;
   double d_radCalc_nextTime;
+  double d_sigma;
   bool d_doRadCalc;
   bool d_useTableValues;
   bool d_computeCO2_H2O_from_f;
@@ -256,6 +257,19 @@ class RadiationDriver : public ModelInterface {
                       DataWarehouse* ,
                       DataWarehouse* new_dw,
                       const ModelInfo* mi);
+
+  void renameMe1(CCVariable<double>& energySrc_solid,
+                const double delT,
+                const Patch* patch,                        
+                DataWarehouse* new_dw);
+                
+  template<class T> 
+  void renameMe2(CellIterator iter,
+                 IntVector adj_offset, 
+                 const double cellFaceArea, 
+                 const double delT,                             
+                 T& Temp_FC,                                         
+                 CCVariable<double>& energySrc_solid);
 
   void modifyThermoTransportProperties(const ProcessorGroup*, 
                                        const PatchSubset* patches,        
