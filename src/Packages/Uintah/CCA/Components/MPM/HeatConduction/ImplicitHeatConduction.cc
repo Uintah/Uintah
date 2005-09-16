@@ -507,6 +507,7 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
         }  // node iterator
       }
     }    // matls
+    delete interpolator;
   }
   for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++)
     d_HC_solver[m]->finalizeMatrix();
