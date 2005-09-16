@@ -12,6 +12,7 @@ itcl_class SCIRun_Math_CreateMatrix {
         global $this-ccols
         global $this-data
         global $this-update-data
+        global $this-loaddata
         
         set $this-rows 1
         set $this-cols 1
@@ -19,12 +20,15 @@ itcl_class SCIRun_Math_CreateMatrix {
         set $this-ccols 0
         set $this-data { {0.0} } 
         set $this-update-data "$this update_matrixdata"
+        set $this-loaddata 1
     }
 
     method ui {} {
         global $this-rows
         global $this-cols
         global $this-data
+        global $this-update-data 
+        global $this-loaddata
 
         set $this-update-data "$this update_matrixdata"
             
@@ -40,14 +44,12 @@ itcl_class SCIRun_Math_CreateMatrix {
         iwidgets::entryfield $dimensions.rf \
           -labeltext "# Rows" \
           -validate numeric \
-          -invalid {showMsg "Use numbers only!"} \
           -textvariable $this-rows \
           -command "$this update_contents"
 
         iwidgets::entryfield $dimensions.cf \
           -labeltext "# Cols" \
           -validate numeric \
-          -invalid {showMsg "Use numbers only!"} \
           -textvariable $this-cols \
           -command "$this update_contents"
 
@@ -79,7 +81,10 @@ itcl_class SCIRun_Math_CreateMatrix {
         global $this-data   
         global $this-rows
         global $this-cols    
-    
+        global $this-update-data 
+
+        set $this-update-data "$this update_matrixdata"
+          
         set nrows [set $this-rows]
         set ncols [set $this-cols]
         
@@ -113,18 +118,26 @@ itcl_class SCIRun_Math_CreateMatrix {
         global $this-rows
         global $this-cols    
         global $this-crows
-        global $this-ccols    
+        global $this-ccols 
+        global $this-update-data 
+        global $this-loaddata
+
+        set $this-update-data "$this update_matrixdata"           
        
-        if {[set $this-rows] == [set $this-crows] && [set $this-cols] == [set $this-ccols]} {
+        if {[set $this-rows] == [set $this-crows] && [set $this-cols] == [set $this-ccols] && [set $this-loaddata] == 0} {
           return
         }
-       
-        update_matrixdata
-       
+        
+        if {[set $this-loaddata] == 0} {
+          $this update_matrixdata
+        }
+
+        set [set $this-loaddata] 0
+    
         set $this-crows [set $this-rows]
         set $this-ccols [set $this-cols]
-       
-        resize_data
+
+        $this resize_data
        
         set w .ui[modname]
         set contents [$w.contents childsite]     
