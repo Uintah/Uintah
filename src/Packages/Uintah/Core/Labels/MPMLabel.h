@@ -109,6 +109,7 @@ using std::vector;
       const VarLabel* gStressLabel;
       const VarLabel* gStressForSavingLabel;
       const VarLabel* gVolumeLabel;
+      const VarLabel* cVolumeLabel;
       const VarLabel* gWeightLabel; //for who knows what?
       const VarLabel* gradPAccNCLabel;
       const VarLabel* dTdt_NCLabel; //for heat conduction

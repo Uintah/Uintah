@@ -264,6 +264,9 @@ MPMLabel::MPMLabel()
   gVolumeLabel     = VarLabel::create("g.volume",
 			NCVariable<double>::getTypeDescription());
 
+  cVolumeLabel  = VarLabel::create( "c.volume",
+                     CCVariable<double>::getTypeDescription() );
+
   TotalVolumeDeformedLabel = VarLabel::create( "TotalVolumeDeformed",
 				 sum_vartype::getTypeDescription() );
   
@@ -649,6 +652,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gThermalContactHeatExchangeRateLabel);
   VarLabel::destroy(gStressForSavingLabel);
   VarLabel::destroy(gVolumeLabel);
+  VarLabel::destroy(cVolumeLabel);
   VarLabel::destroy(gradPAccNCLabel);
   VarLabel::destroy(dTdt_NCLabel);
   VarLabel::destroy(massBurnFractionLabel);
