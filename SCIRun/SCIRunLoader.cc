@@ -366,7 +366,7 @@ void SCIRunLoader::readComponentDescription(const std::string& file)
     CCAComponentDescription* cd = new CCAComponentDescription(0); //TODO: assign null as CCA component model
     DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("name"));
     if (name==0) {
-      std::cout << "ERROR: Component has no name." << std::endl;
+      std::cerr << "ERROR: Component has no name." << std::endl;
       cd->type = "unknown type";
     } else {
       cd->type = to_char_ptr(name->getNodeValue());
@@ -377,7 +377,7 @@ void SCIRunLoader::readComponentDescription(const std::string& file)
     if(iter != components.end()){
       std::cerr << "WARNING: Component multiply defined: " << cd->type << std::endl;
     } else {
-      std::cerr << "Added CCA component of type: " << cd->type << std::endl;
+      //std::cout << "Added CCA component of type: " << cd->type << std::endl;
       components[cd->type]=cd;
     }
     lock_components.unlock();
