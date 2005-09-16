@@ -1,6 +1,5 @@
 
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Scheduler3/DetailedTasks3.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
@@ -284,8 +283,13 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
         // add amr stuff - so the patch will know about coarsening and refining
         if (l > 0) {
           const LevelP& coarseLevel = level->getCoarserLevel();
-          coarseLevel->selectPatches(level->mapCellToCoarser(lowIndex), 
-                                     level->mapCellToCoarser(highIndex), n);
+          IntVector ratio = level->getRefinementRatio();
+          
+          // we can require up to 1 ghost cell from a coarse patch
+          int ngc = 1 * Max(Max(ratio.x(), ratio.y()), ratio.z());
+          IntVector ghost(ngc,ngc,ngc);
+          coarseLevel->selectPatches(level->mapCellToCoarser(lowIndex) - ghost, 
+                                     level->mapCellToCoarser(highIndex) + ghost, n);
         }
         if (l < grid->numLevels()-1) {
           const LevelP& fineLevel = level->getFinerLevel();
@@ -316,7 +320,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
       
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
-        const Patch* patch = *iter;
+        //const Patch* patch = *iter;
         //clusterDebug << " Patch " << patch->getID() - low_patch << ": proc " <<getPatchwiseProcessorAssignment(patch) << endl;
       }
     }
@@ -354,25 +358,9 @@ LoadBalancerCommon::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
   d_sharedState = state;
   d_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
-  string dynamicAlgo;
-  double interval = 0;
-  double cellFactor = .1;
-  int timestepInterval = 0;
   d_outputNthProc = 1;
-  double threshold = 0.0;
-  bool spaceCurve = false;
   
   if (p != 0) {
     p->getWithDefault("outputNthProc", d_outputNthProc, 1);
-    if(!p->get("timestepInterval", timestepInterval))
-      timestepInterval = 0;
-    if (timestepInterval != 0 && !p->get("interval", interval))
-      interval = 0.0; // default
-    p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "static");
-    p->getWithDefault("cellFactor", cellFactor, .1);
-    p->getWithDefault("gainThreshold", threshold, 0.0);
-    p->getWithDefault("doSpaceCurve", spaceCurve, false);
   }
-
-  setDynamicAlgorithm(dynamicAlgo, interval, timestepInterval, cellFactor, spaceCurve, threshold);
 }
