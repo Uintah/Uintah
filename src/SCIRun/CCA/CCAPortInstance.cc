@@ -158,7 +158,6 @@ bool CCAPortInstance::canConnectTo(PortInstance* to)
   if (p2 && getType() == p2->getType() && portType() != p2->portType()) {
       if (available() && p2->available()) { return true; }
   }
-  std::cerr << "CCAPortInstance::canConnectTo: can't connect" << std::endl;
   return false;
 }
 
