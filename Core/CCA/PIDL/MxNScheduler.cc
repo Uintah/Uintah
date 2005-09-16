@@ -50,6 +50,7 @@
 #include <Core/Util/Assert.h>
 
 using namespace SCIRun;   
+using namespace std;
 
 MxNScheduler::MxNScheduler(sched_t sch)
   :s_mutex("ArrSynch access mutex"),sch_type(sch)
@@ -172,7 +173,7 @@ void MxNScheduler::setArray(std::string distname, ProxyID uuid, int callid, void
   //size=0 is dummy size. meta synch should already exist.
   getMetaSynch(distname, uuid, 0)->waitForCompletion();
 
-  ::std::cerr << "MxNSched UUID='" << uuid.str() << "' -- '" << callid << "\n";
+  //cout << "MxNSched UUID='" << uuid.str() << "' -- '" << callid << "\n";
   ::std::ostringstream index;
 
   schedList::iterator sch_iter = entries.find(distname+uuid.str());
@@ -242,7 +243,7 @@ MxNArrSynch* MxNScheduler::getArrSynch(::std::string distname, ::ProxyID uuid, i
   //size=0 is dummy size. meta synch should already exist.
   getMetaSynch(distname, uuid, 0)->waitForCompletion();
 
-  //  ::std::cerr << "MxNSched UUID='" << uuid << "' -- '" << callid << "\n";
+  //  //cout << "MxNSched UUID='" << uuid << "' -- '" << callid << "\n";
   schedList::iterator sch_iter = entries.find(distname+uuid.str());
   if (sch_iter != entries.end()) {
     s_mutex.lock();
@@ -323,18 +324,18 @@ void MxNScheduler::clear(std::string distname, ProxyID uuid, sched_t sch)
 
 void MxNScheduler::print()
 {
-  std::cerr << "entries.size = " << entries.size() << "\n";
+  cout << "entries.size = " << entries.size() << "\n";
   for(schedList::iterator iter = entries.begin(); iter!= entries.end(); iter++) {
-    std::cerr << "!!!!! Printing '" << ((*iter).first) << "'";
+    cout<<"!!!!! Printing '" << ((*iter).first) << "'";
     if (sch_type == caller )
-      std::cerr << " Caller\n"; 
+      cout << " Caller\n"; 
     else
-      std::cerr << " Callee\n"; 
-    ((*iter).second)->print(std::cerr);
+      cout << " Callee\n"; 
+      ((*iter).second)->print(cout);
   }
-  std::cerr << "myreps.size = " << myreps.size() << "\n";
+  //cout<< "myreps.size = " << myreps.size() << "\n";
   for(arrRepList::iterator iter = myreps.begin(); iter!= myreps.end(); iter++) {
-    iter->second->print(std::cerr);
+    iter->second->print(cout);
   }
 }
 

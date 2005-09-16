@@ -65,7 +65,7 @@ SocketThread::run()
   //create and add data structure for the thread
   PRMI::addStat(new PRMI::states);
 
-  //cerr<<"calling handler #"<<id<<"\n";
+  //cout<<"calling handler #"<<id<<"\n";
   ep->handler_table[id](msg);
   //handler will call destroyMessage
 
