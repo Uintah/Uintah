@@ -66,8 +66,8 @@ InternalComponentInstance::getPortInstance(const std::string& /*name*/)
 
 PortInstanceIterator* InternalComponentInstance::getPorts()
 {
-  std::cerr << "SCIRunComponentInstance::getPorts not finished!"
-            << std::endl;
+//  std::cerr << "SCIRunComponentInstance::getPorts not finished!"
+//            << std::endl;
   return 0;
 }
 

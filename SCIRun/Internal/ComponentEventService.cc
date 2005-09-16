@@ -56,7 +56,7 @@ namespace SCIRun {
 
 ComponentEventService::~ComponentEventService()
 {
-  std::cerr << "EventService destroyed..." << std::endl;
+  //  std::cout << "EventService destroyed..." << std::endl;
 }
 
 InternalFrameworkServiceInstance* ComponentEventService::create(SCIRunFramework* framework)
