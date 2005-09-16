@@ -12,6 +12,9 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -34,6 +37,8 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   d_DORadiation = 0;
   d_radCounter = -1; //to decide how often radiation calc is done
   d_radCalcFreq = 0; 
+  d_sigma = 5.670e-8;  //Boltzmann constant   W/(M^2 K^4)
+  
   Ilb  = scinew ICELabel();
   
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
@@ -984,6 +989,9 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
   
   if(d_hasAbsorbingSolid){
     t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,mss_S, gn, 0);
+    t->requires(Task::NewDW, Ilb->TempX_FCLabel,   mss_S, gac, 1);
+    t->requires(Task::NewDW, Ilb->TempY_FCLabel,   mss_S, gac, 1);
+    t->requires(Task::NewDW, Ilb->TempZ_FCLabel,   mss_S, gac, 1);
     t->modifies(mi->energy_source_CCLabel,mss_S);
   }
 
@@ -1073,21 +1081,86 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     // solid Phase   
     // This assumes that the solids absorptivity = 1.0
     // TODO:  generate a composite temperature field that is used in the radiation calc.
-    //        Add sigma * T_FC ^4 to the source below
     // 
     if(d_hasAbsorbingSolid){
       int indx_S = d_matl_S->getDWIndex();
       constCCVariable<double> vol_frac_solid;
       CCVariable<double> energySrc_solid;
-      new_dw->get(vol_frac_solid,            Ilb->vol_frac_CCLabel,     indx_S, patch,gn,0);
+      new_dw->get(vol_frac_solid,             Ilb->vol_frac_CCLabel,    indx_S, patch,gn,0);
       new_dw->getModifiable(energySrc_solid, mi->energy_source_CCLabel, indx_S, patch);
-      
+       
       for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         energySrc_solid[c] += delT * cell_vol * vol_frac_solid[c] * radVars.src[c];
       }
+      
+/*`==========TESTING==========*/
+//      renameMe1(energySrc_solid,delT, patch,new_dw); 
+/*===========TESTING==========`*/
+      
     }  // absorbing solid 
   }  // patches loop
+}
+
+//______________________________________________________________________                      
+void RadiationDriver::renameMe1(CCVariable<double>& energySrc_solid,
+                                const double delT,
+                                const Patch* patch,                        
+                                DataWarehouse* new_dw)                          
+{   
+    cout_doing << " renameMe1 " << endl;
+            
+    Ghost::GhostType  gac = Ghost::AroundCells; 
+    int indx_S = d_matl_S->getDWIndex();  
+    constSFCXVariable<double> TempX_FC_solid;
+    constSFCYVariable<double> TempY_FC_solid;
+    constSFCZVariable<double> TempZ_FC_solid;
+
+    new_dw->get(TempX_FC_solid, Ilb->TempX_FCLabel,    indx_S, patch,gac,1);
+    new_dw->get(TempY_FC_solid, Ilb->TempY_FCLabel,    indx_S, patch,gac,1);
+    new_dw->get(TempZ_FC_solid, Ilb->TempZ_FCLabel,    indx_S, patch,gac,1);  
+      
+    vector<IntVector> offset(3);
+    offset[0] = IntVector(-1, 0, 0);    // X faces
+    offset[1] = IntVector(0, -1, 0);    // Y faces
+    offset[2] = IntVector(0,  0, -1);   // Z faces     
+
+    CellIterator XFC_iterator = patch->getSFCXIterator(0);
+    CellIterator YFC_iterator = patch->getSFCYIterator(0);
+    CellIterator ZFC_iterator = patch->getSFCZIterator(0);
+    
+    Vector dx = patch->dCell();
+    double areaYZ = dx.y() * dx.z();
+    double areaXZ = dx.x() * dx.z();
+    double areaXY = dx.x() * dx.y();
+     
+    //__________________________________
+    //  do something
+    renameMe2<constSFCXVariable<double> >(XFC_iterator,offset[0], areaYZ, delT, TempX_FC_solid, energySrc_solid);
+
+    renameMe2<constSFCYVariable<double> >(YFC_iterator,offset[1], areaXZ, delT, TempY_FC_solid, energySrc_solid);
+
+    renameMe2<constSFCZVariable<double> >(ZFC_iterator,offset[2], areaXY, delT, TempZ_FC_solid, energySrc_solid);
+}
+
+/* _____________________________________________________________________
+ Function~  absorbingSolidEmittance--
+ Purpose~   
+_____________________________________________________________________*/
+template<class T> 
+void RadiationDriver::renameMe2(CellIterator iter,
+                                  IntVector adj_offset,
+                                  const double cellFaceArea,
+                                  const double delt,
+                                  T& Temp_FC,
+                                  CCVariable<double>& energySrc_solid)
+{
+  double coeff = d_sigma * cellFaceArea * delt;
+  for(;!iter.done(); iter++){
+    IntVector R = *iter;
+    IntVector L = R + adj_offset;
+    //energySrc_solid[R] -= coeff * (Temp_FC[R] * Temp_FC[R] * Temp_FC[R] * Temp_FC[R]); //Joules
+  } 
 }
 //______________________________________________________________________
 // not applicable
