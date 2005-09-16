@@ -106,7 +106,7 @@ ComponentRegistry::ComponentRegistry(SCIRunFramework* framework)
 
 ComponentRegistry::~ComponentRegistry()
 {
-  std::cerr << "Registry destroyed..." << std::endl;
+  //std::cout << "Registry destroyed..." << std::endl;
 }
 
 InternalFrameworkServiceInstance* ComponentRegistry::create(SCIRunFramework* framework)

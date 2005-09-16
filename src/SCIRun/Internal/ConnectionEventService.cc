@@ -40,7 +40,7 @@ namespace SCIRun {
   
   ConnectionEventService::~ConnectionEventService()
   {
-    std::cerr << "ConnectionEventService destroyed..." << std::endl;
+  //std::cout << "ConnectionEventService destroyed..." << std::endl;
   }
   
   InternalFrameworkServiceInstance* ConnectionEventService::create(SCIRunFramework* framework)
@@ -60,8 +60,8 @@ void ConnectionEventService::addConnectionEventListener(
         const sci::cca::ports::ConnectionEventListener::pointer& cel)
 {
     SCIRun::Guard g1(&lock_listeners);
-    std::cerr << "ConnectionEventService::addConnectionEventListener" << std::endl;
-    listeners.push_back(new Listener(et, cel));
+  //std::cout << "ConnectionEventService::addConnectionEventListener" << std::endl;
+  listeners.push_back(new Listener(et, cel));
 }
 
 void ConnectionEventService::removeConnectionEventListener(

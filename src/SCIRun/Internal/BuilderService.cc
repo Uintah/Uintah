@@ -393,7 +393,7 @@ BuilderService::getCompatiblePortList(
         return availablePorts;
     }
     for (PortInstanceIterator* iter = pCI->getPorts();
-            !iter->done(); iter->next()) {
+            iter!=NULL&&!iter->done(); iter->next()) {
         PortInstance* providesPort = iter->get();
         if (usesPort->canConnectTo(providesPort)) {
             availablePorts.push_back(providesPort->getUniqueName());
@@ -422,7 +422,7 @@ BuilderService::getBridgablePortList(
   ComponentInstance* comp1=framework->lookupComponent(cid1->name);
   ComponentInstance* comp2=framework->lookupComponent(cid2->name);
 
-  std::cerr<<"Component: "<<cid2->getInstanceName()<<std::endl;
+  //  std::cout<<"Component: "<<cid2->getInstanceName()<<std::endl;
   PortInstance* pr1=comp1->getPortInstance(port1);
   if (!pr1)
     throw sci::cca::CCAException::pointer(new CCAException("Unknown port"));

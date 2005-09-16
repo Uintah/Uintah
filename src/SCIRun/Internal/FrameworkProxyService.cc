@@ -39,11 +39,9 @@ int FrameworkProxyService::addLoader(const std::string &loaderName,
                               const std::string &loaderPath)
 {
     std::string sp = " ";
-    std::cerr << "FrameworkProxyService::addLoader() not implemented" << std::endl;
     std::string cmd = "xterm -e ssh ";
     cmd+=user+"@"+domain+sp+loaderPath+sp+loaderName+sp+framework->getURL().getString() +"&";
-
-    std::cout << cmd << std::endl;
+    //std::cout << cmd << std::endl;
     system(cmd.c_str());
     return 0;
 }
@@ -84,7 +82,6 @@ void FrameworkProxyService::registerFramework(const std::string &frameworkURL)
   sci::cca::Services::pointer bs = remoteFramework->getServices("external builder", 
                                 "builder main", 
                                 sci::cca::TypeMap::pointer(0));
-  std::cerr << "got bs\n";
   sci::cca::ports::ComponentRepository::pointer reg =
     pidl_cast<sci::cca::ports::ComponentRepository::pointer>
     (bs->getPort("cca.ComponentRepository"));
@@ -106,11 +103,8 @@ void FrameworkProxyService::registerFramework(const std::string &frameworkURL)
     } 
     
     sci::cca::ComponentID::pointer cid=servicesList[i]->getComponentID();
-    std::cerr<<"try to connect..."<<std::endl;
     sci::cca::ConnectionID::pointer connID=builder->connect(cid, "builderPort",
                                 cid, "builder");
-    std::cerr<<"connection done"<<std::endl;
-  
 
     sci::cca::Port::pointer p = servicesList[i]->getPort("builder");
     sci::cca::ports::BuilderPort::pointer bp = 
