@@ -77,14 +77,14 @@ descriptorList* MxNScheduleEntry::makeSchedule(MxNArrayRep* this_rep)
 
   //Create the schedule 
   MxNArrayRep* i_rep;
-  std::cerr<<"rep.size()="<<rep.size()<<"\n";
+  //std::cout<<"rep.size()="<<rep.size()<<"\n";
 
   for(unsigned int i=0; i < rep.size() ;i++)  {
     i_rep = rep[i];
     assert(i_rep->getDimNum() == this_rep->getDimNum());
     //Determine an intersect
     if(this_rep->isIntersect(i_rep)){
-      std::cerr<<"sched.push_back "<<i<<"\n";
+      //std::cout<<"sched.push_back "<<i<<"\n";
       sched.push_back(this_rep->Intersect(i_rep));
     }
 

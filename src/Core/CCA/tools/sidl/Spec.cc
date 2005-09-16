@@ -35,8 +35,8 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+using namespace std;
 
-using std::cerr;
 using std::endl;
 using std::find;
 using std::map;

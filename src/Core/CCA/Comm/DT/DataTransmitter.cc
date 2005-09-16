@@ -134,7 +134,7 @@ DataTransmitter::putMessage(DTMessage *msg){
   
   DTMessageTag newTag=currentTag.nextTag();
 
-  //  cerr<<"===DT putMessage: "<<newTag.lo<<" Destination="; msg->getDestination().display();
+  //  cout<<"===DT putMessage: "<<newTag.lo<<" Destination="; msg->getDestination().display();
 
   msg->tag=newTag;
   /////////////////////////////////
@@ -168,7 +168,7 @@ DataTransmitter::putMessage(DTMessage *msg){
 
 void 
 DataTransmitter::putMsg(DTMessage *msg){
-  //cerr<<"===DT putMsg: "<<msg->tag.lo<<" Destination="; msg->getDestination().display();
+  //cout<<"===DT putMsg: "<<msg->tag.lo<<" Destination="; msg->getDestination().display();
   msg->fr_addr=addr;
   
   DTMessageTag newTag=currentTag.defaultTag();
@@ -196,7 +196,7 @@ DataTransmitter::putMsg(DTMessage *msg){
 
 void
 DataTransmitter::putReplyMessage(DTMessage *msg){
-  //  cerr<<"===DT putReplyMessage: "<<msg->tag.lo<<" Destination="; msg->getDestination().display();
+  //  cout<<"===DT putReplyMessage: "<<msg->tag.lo<<" Destination="; msg->getDestination().display();
   msg->fr_addr=addr;
 
   /////////////////////////////////
@@ -287,7 +287,7 @@ DataTransmitter::run(){
   if (listen(sockfd, 10) == -1){ 
     throw CommError("listen", errno);
   }
-  //cerr<<"DataTransmitter is Listening: URL="<<getUrl()<<endl;
+  //cout<<"DataTransmitter is Listening: URL="<<getUrl()<<endl;
 
   Thread *sending_thread = new Thread(new DTThread(this, 1), "Data Transmitter Sending Thread", 0, Thread::NotActivated);
   sending_thread->setStackSize(1024*256);
@@ -303,7 +303,7 @@ DataTransmitter::run(){
 
 void 
 DataTransmitter::runSendingThread(){
-  //cerr<<"DataTransmitter is Sending"<<endl;
+  //cout<<"DataTransmitter is Sending"<<endl;
   DTDestination sentRecver;
   sentRecver.unset();
   //iterator of Round Robin queue, indicating next message.
@@ -314,7 +314,7 @@ DataTransmitter::runSendingThread(){
     if(sentRecver.isSet()){
       //one complete message has been sent
       //sendQ_mutex->lock();
-      //cerr<<"sentRecver!=NULL and send_msgQ.size="<<send_msgQ.size()<<endl;
+      //cout<<"sentRecver!=NULL and send_msgQ.size="<<send_msgQ.size()<<endl;
       for(unsigned int i=0; i<send_msgQ.size(); i++){
 	if(send_msgQ[i]->getDestination()==sentRecver){
 	  send_msgMap[sentRecver]=send_msgQ[i];
@@ -325,29 +325,29 @@ DataTransmitter::runSendingThread(){
 	    newMsgCnt--;
 	  }
 	  send_msgQ.erase(send_msgQ.begin()+i);
-	  //cerr<<"retrive one sentRecver from sendQ send_msgQ.size="<<send_msgQ.size()<<endl;
+	  //cout<<"retrive one sentRecver from sendQ send_msgQ.size="<<send_msgQ.size()<<endl;
 	  break;
 	}
       }
-      //cerr<<"when quiting sentRecver!=NULL send_msgQ.size="<<send_msgQ.size()<<endl;
+      //cout<<"when quiting sentRecver!=NULL send_msgQ.size="<<send_msgQ.size()<<endl;
       //sendQ_mutex->unlock();
       sentRecver.unset();
     }
     
     //sendQ_mutex->lock();
     while(newMsgCnt>0){
-      //cerr<<"newMsgCnt="<<newMsgCnt<<endl;
+      //cout<<"newMsgCnt="<<newMsgCnt<<endl;
       //some new messages have entered the send queue    
       std::vector<DTMessage*>::iterator newMsg=send_msgQ.end()-newMsgCnt;
       if(send_msgMap.find( (*newMsg)->getDestination())==send_msgMap.end()){
 	//the new message is sent to a new receiver, too.
 	send_msgMap[(*newMsg)->getDestination()]=*newMsg;
 	rrIter=send_msgMap.begin();
-	//cerr<<"BEFORE move one newMsg into rrQ send_msgQ.size="<<send_msgQ.size()<<endl;
+	//cout<<"BEFORE move one newMsg into rrQ send_msgQ.size="<<send_msgQ.size()<<endl;
 	send_msgQ.erase(newMsg);
-	//cerr<<"move one newMsg into rrQ send_msgQ.size="<<send_msgQ.size()<<endl;
+	//cout<<"move one newMsg into rrQ send_msgQ.size="<<send_msgQ.size()<<endl;
       }
-      //else     cerr<<"keep one newMsg in sendQ"<<endl;
+      //else     cout<<"keep one newMsg in sendQ"<<endl;
       newMsgCnt--;
       //break;
     }
@@ -356,7 +356,7 @@ DataTransmitter::runSendingThread(){
     if(send_msgMap.empty()){
       sendQ_mutex->lock();
       while(send_msgQ.empty()){
-	//cerr<<"send_msgQ is empty()"<<endl;
+	//cout<<"send_msgQ is empty()"<<endl;
 	if(quit){
 	  sendQ_mutex->unlock();
 	  //sending sockets and recving sockets are different, so we can close the 
@@ -396,8 +396,8 @@ DataTransmitter::runSendingThread(){
 	if((int)(msg->buf[0])==3) id=" ADD_HAN4 ";
 	if((int)(msg->buf[0])==4) id=" DEL_HAN5 ";
 	//if(id!="") 
-	//cerr<<"===DT Send Message: "<<msg->tag.lo<<id<<" Destination="; msg->getDestination().display();
-	//	cerr<<"Send Message:";
+	//cout<<"===DT Send Message: "<<msg->tag.lo<<id<<" Destination="; msg->getDestination().display();
+	//	cout<<"Send Message:";
 	//msg->display();
 	delete msg;
       }
@@ -466,7 +466,7 @@ DataTransmitter::runRecvingThread(){
 	      if((int)(msg->buf[0])==4) id=" DEL_HAN5 ";
 	    }
 	    //if(id!="") 
-	    //	      cerr<<"===DT Recv Message: "<<msg->tag.lo<<id<<" Destination="; msg->getDestination().display();
+	    //	      cout<<"===DT Recv Message: "<<msg->tag.lo<<id<<" Destination="; msg->getDestination().display();
 
 	    if(pt->service!=NULL){
 	      pt->service(msg);
@@ -539,7 +539,7 @@ DataTransmitter::runRecvingThread(){
       newAddr.ip=their_addr.sin_addr.s_addr;
       newAddr.port=ntohs(their_addr.sin_port);
       recvall(new_fd, &(newAddr.port), sizeof(short));
-      //cerr<<"Done register port "<<newAddr.port<<endl;
+      //cout<<"Done register port "<<newAddr.port<<endl;
       recv_sockmap_mutex->lock();
       recv_sockmap[newAddr]=new_fd;
       recv_sockmap_mutex->unlock();
@@ -606,7 +606,7 @@ DataTransmitter::sendPacket(DTMessage *msg, int packetLen){
       throw CommError("connect", errno);
     }
     //immediate register the listening port
-    //cerr<<"register port "<<addr.port<<endl;
+    //cout<<"register port "<<addr.port<<endl;
     sendall(new_fd, &addr.port, sizeof(short));
     send_sockmap_mutex->lock();
     send_sockmap[msg->to_addr]=new_fd;

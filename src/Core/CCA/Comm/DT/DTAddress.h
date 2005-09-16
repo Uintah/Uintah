@@ -58,7 +58,7 @@ namespace SCIRun {
     }
 
     void display(){
-      std::cerr<<"ip/port="<<ip<<"/"<<port<<std::endl;
+      //std::cout<<"ip/port="<<ip<<"/"<<port<<std::endl;
     }
   };
 
@@ -92,7 +92,7 @@ namespace SCIRun {
     }
 
     void display(){
-      std::cerr<<"ip/port/recver="<<to_addr.ip<<"/"<<to_addr.port<<"/"<<recver<<std::endl;
+      //std::cout<<"ip/port/recver="<<to_addr.ip<<"/"<<to_addr.port<<"/"<<recver<<std::endl;
     }
   };
 

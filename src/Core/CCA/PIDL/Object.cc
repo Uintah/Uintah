@@ -273,17 +273,17 @@ void Object::setCalleeDistribution(std::string distname,
 
 void Object::createSubset(int localsize, int remotesize)
 {
-  ::std::cerr << "createSubset(int,int) has no effect on this object\n";
+  ::std::cout << "createSubset(int,int) has no effect on this object\n";
 }
 
 void Object::setRankAndSize(int rank, int size)
 {
-  ::std::cerr << "setRankAndSize(int,int) has no effect on this object\n";
+  ::std::cout << "setRankAndSize(int,int) has no effect on this object\n";
 }
 
 void Object::resetRankAndSize()
 {
-  ::std::cerr << "resetRankAndSize() has no effect on this object\n";
+  ::std::cout << "resetRankAndSize() has no effect on this object\n";
 }
 
 void Object::getException() {}

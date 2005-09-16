@@ -50,7 +50,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
 using namespace SCIRun;
-using std::cerr;
 
 TypeInfo::TypeInfo(TypeInfo_internal* priv)
   : d_priv(priv)
@@ -140,7 +139,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
       save_callnoret_msg.push_back(message);
     }
 
-    for (unsigned int i = 0; i < save_callnoret_msg.size(); i++) {
+    for(unsigned int i=0; i<save_callnoret_msg.size(); i++){
       int _x_flag;
       save_callnoret_msg[i]->waitReply();
       save_callnoret_msg[i]->unmarshalInt(&_x_flag);
