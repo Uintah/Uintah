@@ -34,51 +34,47 @@
  *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
- *   February 2003
+ *   September 2005
  *
  */
 
-#ifndef SCIRun_Framework_TxtBuilder_h
-#define SCIRun_Framework_TxtBuilder_h
+#ifndef CCA_Components_TxtBuilder_TxtBuilder_h
+#define CCA_Components_TxtBuilder_TxtBuilder_h
 #include <Core/Thread/Runnable.h>
 #include <Core/CCA/spec/cca_sidl.h>
+#include <CCA/Components/TxtBuilder/TxtNetwork.h>
 
 using namespace std;
 namespace SCIRun {
-  //class BuilderWindow;
-  /*
-  class myBuilderPort : public virtual sci::cca::ports::BuilderPort {
-  public:
-    virtual ~myBuilderPort(){}
-    virtual void setServices(const sci::cca::Services::pointer& svc);
-    virtual void buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
-				    const string &frameworkURL);
-  protected:
-    sci::cca::Services::pointer services;
-    //BuilderWindow* builder;
-  };
-  */
+
+  class TxtMessage;
+
   class TxtBuilder : public sci::cca::Component, public Runnable{
   public:
     TxtBuilder();
     ~TxtBuilder();
     void setServices(const sci::cca::Services::pointer& svc);
+    static sci::cca::Services::pointer getService();
+    static sci::cca::ports::BuilderService::pointer getBuilderService();
+    static void displayMessage(const string &msg);
+    static string getString(string prompt);
   private:
+    WINDOW *win_menu;
+    WINDOW *win_main;
+    WINDOW *win_msg;
+    static WINDOW *win_cmd;
+
     TxtBuilder(const TxtBuilder&);
     TxtBuilder& operator=(const TxtBuilder&);
-    //myBuilderPort builderPort;
-    sci::cca::Services::pointer svc;
-    sci::cca::ports::BuilderService::pointer bs;
+    static TxtMessage *tm;
+    TxtNetwork network;
+    static sci::cca::Services::pointer svc;
+    static sci::cca::ports::BuilderService::pointer bs;
     sci::cca::ports::ComponentRepository::pointer cr;
     void run();
-    bool exec_command(char cmdline[]);
+    bool exec_command(const char *cmdline);
     int parse(string cmdline, string args[]);
     void use_cluster(string args[]);
-    void list_all(string args[]);
-    void list_components(string args[]);
-    void list_ports( string args[4] );
-    void list_compatible(string args[]);
-    void list_connections(string args[]);
     void create(string args[]);
     void connect(string args[]);
     void go(string args[]);
@@ -97,3 +93,4 @@ namespace SCIRun {
 } //namespace SCIRun
 
 #endif
+

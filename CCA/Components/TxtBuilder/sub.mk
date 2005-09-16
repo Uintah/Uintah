@@ -34,11 +34,18 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/TxtBuilder
 
 SRCS     += \
-	$(SRCDIR)/TxtBuilder.cc 
+	$(SRCDIR)/TxtBuilder.cc \
+	$(SRCDIR)/DropMenu.cc \
+	$(SRCDIR)/TxtModule.cc \
+	$(SRCDIR)/TxtMenu.cc \
+	$(SRCDIR)/TxtNetwork.cc \
+	$(SRCDIR)/PopMenu.cc \
+	$(SRCDIR)/TxtConnection.cc \
+	$(SRCDIR)/TxtMessage.cc
 
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL  Core/CCA/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
-LIBS := $(QT_LIBRARY)
+LIBS := $(QT_LIBRARY) -lncurses -lpanel -lmenu 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
