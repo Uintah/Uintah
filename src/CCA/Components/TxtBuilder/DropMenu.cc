@@ -184,12 +184,12 @@ DropMenu::exec(){
       }
       TxtBuilder::getService()->releasePort("cca.BuilderService");
     }
-    catch(CCAException e) {
+    //    catch(CCAException e) {
       //displayMsg(e.message());
-    }
-    catch(const Exception& e) {
+    //    }
+    //    catch(const Exception& e) {
       //displayMsg(e.message());
-    }
+    //    }
     catch(...) {
       //  displayMsg("Caught unexpected exception while instantiating " +
       //	 cd->getComponentClassName());
