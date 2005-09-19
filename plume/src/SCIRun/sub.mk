@@ -34,24 +34,25 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := SCIRun
 
 SRCS     += \
-            $(SRCDIR)/DistributedFramework.cc \
-            $(SRCDIR)/LocalFramework.cc \
-            $(SRCDIR)/SCIRunFramework.cc \
-            $(SRCDIR)/ComponentDescription.cc \
-            $(SRCDIR)/ComponentModel.cc \
-            $(SRCDIR)/PortDescription.cc \
-            $(SRCDIR)/SCIRunErrorHandler.cc \
-            $(SRCDIR)/PortInstance.cc \
-            $(SRCDIR)/PortInstanceIterator.cc\
-            $(SRCDIR)/CCACommunicator.cc \
-            $(SRCDIR)/resourceReference.cc \
-            $(SRCDIR)/TypeMap.cc \
-            $(SRCDIR)/SCIRunLoader.cc
+#            $(SRCDIR)/DistributedFramework.cc \
+#            $(SRCDIR)/LocalFramework.cc \
+#            $(SRCDIR)/SCIRunFramework.cc \
+#            $(SRCDIR)/ComponentDescription.cc \
+#            $(SRCDIR)/ComponentModel.cc \
+#            $(SRCDIR)/PortDescription.cc \
+#            $(SRCDIR)/SCIRunErrorHandler.cc \
+#            $(SRCDIR)/PortInstance.cc \
+#            $(SRCDIR)/PortInstanceIterator.cc\
+#            $(SRCDIR)/CCACommunicator.cc \
+#            $(SRCDIR)/resourceReference.cc \
+#            $(SRCDIR)/TypeMap.cc \
+#            $(SRCDIR)/SCIRunLoader.cc
 #            $(SRCDIR)/ComponentInstance.cc \
 #            $(SRCDIR)/test.cc \
 
 
-SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Internal 
+#SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Internal 
+SUBDIRS := $(SRCDIR)/Distributed
 
 ifeq ($(HAVE_CORBA),yes)
 SUBDIRS += $(SRCDIR)/Corba 
