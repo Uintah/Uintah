@@ -706,9 +706,9 @@ package sci {
       string getComponentClassName() throws CCAException ;
 
       // non-official interfaces
-      string getComponentModelName() throws CCAException; 
+      //string getComponentModelName() throws CCAException; 
 
-      string getLoaderName() throws CCAException;
+      //string getLoaderName() throws CCAException;
 
     }  // end interface ComponentClassDescription
 
@@ -1079,8 +1079,8 @@ package sci {
          * @param componentClassName The name of a component.
          * @throws CCAException in the event of error.
          */
-        void addComponentClass(in string componentClassName)
-          throws cca.CCAException;
+        //void addComponentClass(in string componentClassName)
+	//throws cca.CCAException;
       } // end of cca.ports.ComponentRepository
     
       /**

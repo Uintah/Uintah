@@ -65,10 +65,6 @@ namespace SCIRun {
   public:
     virtual ~ConnectionEventServiceImpl();
     
-    /** Factory method for allocating new ConnectionEventService objects.  Returns
-	a smart pointer to the newly allocated object registered in the framework
-	\em fwk with the instance name \em name. */
-    
     /** ? */
     sci::cca::Port::pointer getService(const std::string& ); 
     

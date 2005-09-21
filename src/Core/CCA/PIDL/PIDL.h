@@ -53,6 +53,8 @@ namespace SCIRun {
 
   class SpChannel;
   class URL;
+  class Warehouse;
+  
 /**************************************
  
 CLASS

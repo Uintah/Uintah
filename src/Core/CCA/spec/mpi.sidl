@@ -26,12 +26,31 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-version sci 0.2;
+package sci {
+  
+  package cca {
 
-#include "cca.sidl"
-#include "distributed.sidl"
-#include "scirun.sidl"
-#include "SCIRun2Classes.sidl"
-#include "SCIRun2Ports.sidl"
+    package distributed {
 
+      interface MPIFramework extends LocalFramework 
+      {
+	/*
+	 * For Kemming MPIFramework
+	 */
+	
+	/**
+	 * Registers the slave framework with the master framework. Intended to be called 
+	 * only by the representative slave framework process. 
+	 * @param size Total number of parallel slave frameworks.
+	 * @param slaveURLs Urls of the slave framework.
+	 * @param slaveName Name of the slave resource.
+	 * @return A positive number or zero if framework was registered 
+	 *   successfully, negative number on error.
+	 */
+	int registerLoader(in string slaveName, in array<string,1> slaveURLs);
+	int unregisterLoader(in string slaveName);
+      }
 
+    } // distributed
+  } // cca
+} // sci

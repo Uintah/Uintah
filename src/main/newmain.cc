@@ -43,7 +43,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/CCA/spec/sci_sidl.h>
 #include <Core/Thread/Thread.h>
-#include <SCIRun/SCIRunFramework.h>
+//#include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
 
 #include <sci_defs/mpi_defs.h>
@@ -136,7 +136,8 @@ main(int argc, char *argv[]) {
     std::cerr << "Caught unexpected exception!\n";
     abort();
   }
-  
+  // FIXME [yarden]: remove until new framework code is available
+#if 0  
   // Create a new framework
   try {
     sci::cca::DistributedComponentModelFramework::pointer sr;
@@ -222,5 +223,6 @@ main(int argc, char *argv[]) {
     std::cerr << "Caught unexpected exception!\n";
     abort();
   }
+#endif
   return 0;
 }
