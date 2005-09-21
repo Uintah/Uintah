@@ -220,6 +220,16 @@ ParticleCreator* MPMMaterial::getParticleCreator()
   return  d_particle_creator;
 }
 
+double MPMMaterial::getThermalConductivity() const
+{
+  return d_thermalConductivity;
+}
+
+double MPMMaterial::getSpecificHeat() const
+{
+  return d_specificHeat;
+}
+
 double MPMMaterial::getInitialDensity() const
 {
   return d_density;

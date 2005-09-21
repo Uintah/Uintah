@@ -152,7 +152,8 @@ void TestModel::computeModelSources(const ProcessorGroup*,
       dw->get(cmass,   MIlb->cMassLabel,    m0, patch, gn, 0); 
       mass_0.copyData(cmass);
    
-      cv.initialize(d_matl->getSpecificHeat());
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(d_matl);
+      cv.initialize(mpm_matl->getSpecificHeat());
     } else {
       dw = old_dw;            // ICE   (compute it from the density)
       constCCVariable<double> rho_tmp, cv_ice;

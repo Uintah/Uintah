@@ -46,6 +46,8 @@ WARNING
     CanteraMixtureFraction(ProblemSpecP& ps, ModelSetup* setup, ICEMaterial* ice_matl);
     virtual ~CanteraMixtureFraction();
 
+    virtual bool doThermalConduction();
+
     virtual void scheduleInitializeThermo(SchedulerP& sched,
                                           const PatchSet* patches);
     virtual void scheduleReactions(SchedulerP& sched,

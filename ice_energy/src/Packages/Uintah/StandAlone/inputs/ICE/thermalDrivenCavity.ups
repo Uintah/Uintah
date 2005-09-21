@@ -127,7 +127,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>thermalDrivenCavity.uda</filebase>
-      <outputInterval>0.1</outputInterval>
+      <outputInterval>0.005</outputInterval>
       <save label = "press_equil_CC"/>
       <save label = "delP_Dilatate"/>
       <save label = "uvel_FCME"/>

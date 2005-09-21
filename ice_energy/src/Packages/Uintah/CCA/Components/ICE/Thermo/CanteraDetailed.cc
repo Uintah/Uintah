@@ -101,6 +101,12 @@ CanteraDetailed::~CanteraDetailed()
   delete d_gas;
 }
 
+bool CanteraDetailed::doThermalConduction()
+{
+  // Do thermal conduction only if conducitivity is nonzero
+  return d_thermalConductivity != 0;
+}
+
 void CanteraDetailed::scheduleInitializeThermo(SchedulerP& sched,
                                                const PatchSet* patches)
 {

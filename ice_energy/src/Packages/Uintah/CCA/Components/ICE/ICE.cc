@@ -2164,9 +2164,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       //__________________________________
       // stability constraint due to heat conduction
       //  I C E  O N L Y
-      double thermalCond_test = ice_matl->getThermalConductivity();
-      if (thermalCond_test !=0) {
-
+      if (ice_matl->getThermo()->doThermalConduction()) {
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
           double A = d_CFL * 0.5 * inv_sum_invDelx_sqr / thermalDiffusivity[c];
@@ -4146,8 +4144,8 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       //__________________________________
       //  Source due to conduction ICE only
       if(ice_matl){
-        double thermalCond_test = ice_matl->getThermalConductivity();
-        if(thermalCond_test != 0.0 ){
+        if(ice_matl->getThermo()->doThermalConduction()) {
+
           if(numMatls > 1){
             cout <<"ICE:Compute heat diffusion:  currently the heat diffusion" 
             " calculation doesn't work for multiple materials. Set the ICE: thermal conductivity to 0.0 --Todd"<< endl;
