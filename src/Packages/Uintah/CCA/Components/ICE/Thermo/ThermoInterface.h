@@ -45,6 +45,8 @@ WARNING
       OldState, IntermediateState, NewState
     };
 
+    virtual bool doThermalConduction() = 0;
+
     virtual void scheduleInitializeThermo(SchedulerP& sched,
                                           const PatchSet* patches) = 0;
     virtual void scheduleReactions(SchedulerP& sched,

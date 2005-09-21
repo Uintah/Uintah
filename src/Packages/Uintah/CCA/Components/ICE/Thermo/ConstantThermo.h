@@ -41,6 +41,8 @@ WARNING
     ConstantThermo(ProblemSpecP& ps, ModelSetup* setup, ICEMaterial* ice_matl);
     virtual ~ConstantThermo();
 
+    virtual bool doThermalConduction();
+
     virtual void scheduleInitializeThermo(SchedulerP& sched,
                                           const PatchSet* patches);
     virtual void scheduleReactions(SchedulerP& sched,

@@ -16,6 +16,12 @@ ConstantThermo::~ConstantThermo()
 {
 }
 
+bool ConstantThermo::doThermalConduction()
+{
+  // Do thermal conduction only if conducitivity is nonzero
+  return d_thermalConductivity != 0;
+}
+
 void ConstantThermo::scheduleInitializeThermo(SchedulerP& sched,
                                               const PatchSet* patches)
 {

@@ -65,8 +65,6 @@ WARNING
        return thismatl;
      }
 
-     double getThermalConductivity() const;
-     double getSpecificHeat() const;
      double getHeatTransferCoefficient() const;
      bool getIncludeFlowWork() const;
      bool hasName() const {
@@ -82,8 +80,6 @@ WARNING
       // Index associated with this material's velocity field
       int d_vfindex;
       MaterialSubset* thismatl;
-      double d_thermalConductivity;
-      double d_specificHeat;
       double d_heatTransferCoefficient;
       bool d_includeFlowWork;
 

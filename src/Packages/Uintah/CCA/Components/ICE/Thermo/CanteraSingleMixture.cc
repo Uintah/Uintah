@@ -31,6 +31,12 @@ CanteraSingleMixture::CanteraSingleMixture(ProblemSpecP& ps, ModelSetup*, ICEMat
   }
 }
 
+bool CanteraSingleMixture::doThermalConduction()
+{
+  // Do thermal conduction only if conducitivity is nonzero
+  return d_thermalConductivity != 0;
+}
+
 CanteraSingleMixture::~CanteraSingleMixture()
 {
   delete d_gas;

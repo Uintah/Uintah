@@ -91,6 +91,12 @@ CanteraMixtureFraction::~CanteraMixtureFraction()
   delete d_gas;
 }
 
+bool CanteraMixtureFraction::doThermalConduction()
+{
+  // Do thermal conduction only if conducitivity is nonzero
+  return d_thermalConductivity != 0;
+}
+
 void CanteraMixtureFraction::scheduleInitializeThermo(SchedulerP& sched,
                                                const PatchSet* patches)
 {
