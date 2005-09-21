@@ -179,10 +179,9 @@ class RadiationDriver : public ModelInterface {
   VarLabel* sootVFCopy_CCLabel;
 
   VarLabel* scalar_CCLabel;
-  
-  // Need to change the label below to a public source term for
-  // use in ICE
   VarLabel* radiationSrc_CCLabel;
+  VarLabel* solidEmissionLabel;
+  VarLabel* isGasSolidInterfaceLabel;
 
  private:
 
@@ -258,16 +257,21 @@ class RadiationDriver : public ModelInterface {
                       DataWarehouse* new_dw,
                       const ModelInfo* mi);
 
-  void renameMe1(CCVariable<double>& energySrc_solid,
-                const double delT,
-                const Patch* patch,                        
-                DataWarehouse* new_dw);
+  void solidEmission(CCVariable<double>& energySrc_solid,
+                     constCCVariable<double>& vol_frac_solid,
+                     CCVariable<double>& solidEmission,
+                     const double delT,
+                     const Patch* patch,                        
+                     DataWarehouse* new_dw);
                 
   template<class T> 
-  void renameMe2(CellIterator iter,
+  void emmission(CellIterator iter,
                  IntVector adj_offset, 
                  const double cellFaceArea, 
-                 const double delT,                             
+                 const double delT,
+                 CCVariable<double>& solidEmission,
+                 constCCVariable<double>& isGasSolidInterface,
+                 constCCVariable<double>& vol_frac_solid,                         
                  T& Temp_FC,                                         
                  CCVariable<double>& energySrc_solid);
 
