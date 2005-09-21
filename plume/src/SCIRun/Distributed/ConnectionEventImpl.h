@@ -28,44 +28,49 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  ConnectionEventImpl.h: Implementation of the SCI CCA Extension
+ *                    ComponentEvent interface for SCIRun
  *
  *  Written by:
- *   Yarden Livnat
- *   SCI Institute
+ *   Ayla Khan
+ *   Scientific Computing and Imaging Institute
  *   University of Utah
- *   Sept 2005
+ *   October 2004
+ *
+ *  Copyright (C) 2004 SCI Institute
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
+#ifndef SCIRun_ConnectionEventImpl_h
+#define SCIRun_ConnectionEventImpl_h
 
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
-  
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
 
-  /**
-   * \class ComponentInfo
-   *
-   */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  namespace Ports = sci::cca::ports;
+
+  template<class Base>
+  class ConnectionEventImpl : public Base 
   {
   public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    ConnectionEventImpl(sci::cca::ports::EventType type,
+		       const sci::cca::TypeMap::pointer& properties);
+    virtual ~ConnectionEventImpl();
+    
+    /** ? */
+    virtual Ports::EventType getType();
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
+    /** ? */
+    virtual sci::cca::TypeMap::pointer getPortInfo();
+
+  private:
+    Ports::EventType type;
+    sci::cca::TypeMap::pointer properties;
   };
-
   
-} // end namespace SCIRun
+} // namespace SCIRun
 
-#endif // SCIRun_Distributed_ComponentInfo_h
+#include <SCIRun/Distributed/ConnectionEventImpl.code>
+
+#endif

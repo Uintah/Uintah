@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  ServiceImpl.h: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,34 +38,56 @@
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
+#ifndef SCIRun_Distributed_ServiceImpl_h
+#define SCIRun_Distributed_ServiceImpl_h
 
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <SCIRun/Distributed/DistributedFramework.h>
 
 namespace SCIRun {
   
-  class DistributedFramework;
   namespace Distributed = sci::cca::distributed;
 
   /**
-   * \class ComponentInfo
+   * \class Service
    *
    */
   
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  template<class Base>
+  class ServiceImpl : public ComponentInfoImpl<Base>
   {
   public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    typedef Distributed::internal::Service::pointer pointer;
+    
+    ServiceImpl(DistributedFramework *framework,
+		const std::string& name,
+		const sci::cca::TypeMap::pointer& properties )
+      : ComponentInfoImpl<Base>(Distributed::DistributedFramework::pointer(framework), 
+				name, 
+				name, 
+				properties,
+				sci::cca::Component::pointer(0))
+    {}
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
+    ServiceImpl(DistributedFramework *framework, const std::string& name )
+      : ComponentInfoImpl<Base>(Distributed::DistributedFramework::pointer(framework), 
+				name, 
+				name, 
+				sci::cca::TypeMap::pointer(0),
+				sci::cca::Component::pointer(0))
+    {}
+
+
+    virtual ~ServiceImpl() {}
+
+  private:
+    ServiceImpl(const ServiceImpl&);
+    ServiceImpl& operator=(const ServiceImpl&);
   };
-
   
 } // end namespace SCIRun
 
-#endif // SCIRun_Distributed_ComponentInfo_h
+
+
+#endif

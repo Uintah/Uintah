@@ -1,0 +1,199 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+/*
+ *  PortInfoImpl.cc:
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2001
+ *
+ */
+
+#include <SCIRun/Distributed/PortInfoImpl.h>
+#include <SCIRun/TypeMap.h>
+#include <iostream>
+
+namespace SCIRun {
+
+  template<class Base> 
+  PortInfoImpl<Base>::PortInfoImpl(const std::string& name,
+				   const std::string& type,
+				   const sci::cca::TypeMap::pointer& properties,
+				   Distributed::PortType portType)
+    : name(name), type(type), properties(properties), 
+      portType(portType), useCount(0), 
+      lock("PortInfoImpl::connections lock")
+  {
+  }
+  
+  template<class Base> 
+  PortInfoImpl<Base>::PortInfoImpl(const std::string& name,
+				   const std::string& type,
+				   const sci::cca::TypeMap::pointer& properties,
+				   const sci::cca::Port::pointer& port,
+				   Distributed::PortType portType)
+    : name(name), type(type), properties(properties), 
+      portType(portType), port(port), useCount(0),
+      lock("PortInfoImpl::connections lock")
+  {
+  }
+  
+  template<class Base> 
+  PortInfoImpl<Base>::~PortInfoImpl()
+  {
+  }
+  
+  /*
+   * implementations of sidl PortInfoImpl interface
+   */
+  
+  
+  template<class Base> 
+  std::string  PortInfoImpl<Base>::getName()
+  {
+    return name;
+  }
+  
+  template<class Base> 
+  int PortInfoImpl<Base>::numOfConnections()
+  {
+    return connections.size();
+  }
+  
+  template<class Base> 
+  Distributed::PortType PortInfoImpl<Base>::getPortType()
+  {
+    return portType;
+  }
+  
+  
+
+  template<class Base> 
+  bool PortInfoImpl<Base>::connect(const Distributed::PortInfo::pointer &to)
+  {
+    if ( to.isNull() ) return false;
+    if (!canConnectTo(to)) return false;
+    
+    if (getPortType() == Distributed::UsePort && to->getPortType() == Distributed::ProvidePort) {
+      Guard guard(&lock);
+      connections.push_back(to);
+    } else {
+      return to->connect(Distributed::PortInfo::pointer(this));
+    }
+    return true;
+  }
+  
+  template<class Base> 
+  bool PortInfoImpl<Base>::disconnect(const Distributed::PortInfo::pointer &other)
+  {
+    if (other.isNull()) return false;
+    
+    if (portType != Distributed::UsePort) {
+      std::cerr<<"disconnect can be called only by user"<<std::endl; 
+      return false;
+    } 
+
+    Guard guard(&lock);
+
+    std::vector<Distributed::PortInfo::pointer>::iterator iter;
+    for (iter=connections.begin(); iter<connections.end();iter++) {
+      if (other==(*iter)) {
+	connections.erase(iter);
+	return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Available either if this is a PROVIDES port or
+   * a USES port that isn't connected.
+   */
+  template<class Base> 
+  bool PortInfoImpl<Base>::available()
+  {
+    return getPortType() == Distributed::ProvidePort || connections.size() == 0;
+  }
+  
+  /**
+   * Allowing (according to the CCA spec) n PROVIDES (ProvidePort) : 1 USES (UsePort)
+   * connections is framework-implementation dependent;
+   * this is \em not allowed by SCIRun2.
+   * The SCIRun2 framework allows 1 PROVIDES (ProvidePort) : 1 USES (UsePort) and
+   * 1 PROVIDES (ProvidePort) : n USES (UsePort) connections.
+   */
+  
+  // connections: vector of PortInfos...
+  // connect should fail for invalid components,
+  //   nonexistent ports
+  //   other???
+
+  template<class Base> 
+  bool PortInfoImpl<Base>::canConnectTo(const Distributed::PortInfo::pointer &to)
+  {
+    return !to.isNull() 
+      && getType() == to->getType() 
+      && getPortType() != to->getPortType()
+      && available() 
+      && to->available();
+  }
+  
+  template<class Base> 
+  sci::cca::Port::pointer  PortInfoImpl<Base>::getPort()
+  {
+    return port;
+  }
+  
+  // return a PortInfo on the other side of the connection
+  // -- the USES (USePort) port
+  // called by: CCAComponentInfo::getPortNonblocking, framework::Services_impl::getPortNonblocking
+  template<class Base> 
+  Distributed::PortInfo::pointer PortInfoImpl<Base>::getPeer()
+  {
+    // FIXME: should we check and throw exception if the above is not met ?
+    //     if ( getPortType == ProvidePort || connections.size() == 0 ) 
+    //       throw DistributedFrameworkException("invalid getPeer request");
+    return connections[0];
+  }
+
+
+  template<class Base>
+  void PortInfoImpl<Base>::incrementUseCount() {
+    useCount++;
+  }
+  
+  template<class Base>
+  bool PortInfoImpl<Base>::decrementUseCount() {
+    useCount--;
+    return useCount > 0;
+  }
+} // end namespace SCIRun

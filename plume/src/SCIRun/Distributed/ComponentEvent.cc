@@ -28,44 +28,32 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  ComponentEvent.cc: Implementation of the SCI CCA extension
+ *                     ComponentEvent interface for SCIRun
  *
  *  Written by:
- *   Yarden Livnat
- *   SCI Institute
+ *   Ayla Khan
+ *   Scientific Computing and Imaging Institute
  *   University of Utah
- *   Sept 2005
+ *   October 2004
+ *
+ *  Copyright (C) 2004 SCI Institute
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
-
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <SCIRun/Distributed/ComponentEvent.h>
 
 namespace SCIRun {
   
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
-
-  /**
-   * \class ComponentInfo
-   *
-   */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  ComponentEvent::ComponentEvent(sci::cca::ports::ComponentEventType type,
+				 const sci::cca::ComponentID::pointer& id,
+				 const sci::cca::TypeMap::pointer& properties)
+    : ComponentEventImpl<Distributed::ComponentEvent>(type, id, properties)
   {
-  public:
-    typedef Distributed::ComponentInfo::pointer pointer;
-
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
-  };
-
+  }
   
-} // end namespace SCIRun
-
-#endif // SCIRun_Distributed_ComponentInfo_h
+  ComponentEvent::~ComponentEvent()
+  {
+  }
+  
+}

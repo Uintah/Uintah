@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  FrameworkID.cc:
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,34 +38,19 @@
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
-
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <SCIRun/Distributed/FrameworkID.h>
 
 namespace SCIRun {
-  
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
 
-  /**
-   * \class ComponentInfo
-   *
-   */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
-  {
-  public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+  FrameworkID::FrameworkID( const std::string &url ) 
+    : FrameworkIDImpl<Distributed::FrameworkID>(url) 
+  {}
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
-  };
 
-  
-} // end namespace SCIRun
+  FrameworkID::FrameworkID( const URL &url ) 
+    : FrameworkIDImpl<Distributed::FrameworkID>(url) 
+  {}
+    
+  FrameworkID::~FrameworkID() {}
 
-#endif // SCIRun_Distributed_ComponentInfo_h
+}

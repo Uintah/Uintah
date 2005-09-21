@@ -28,79 +28,32 @@
 
 
 /*
- *  ComponentInfo.cc:
+ *  ComponentInfo.cc
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   October 2001
+ *   Sept 2005
  *
  */
 
-#include <SCIRun/TypeMap.h>
-//#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/CCA/CCAException.h>
-#include <iostream>
-
 #include <SCIRun/Distributed/ComponentInfo.h>
-#include <SCIRun/Distributed/PortInfo.h>
 
 namespace SCIRun {
   
-  ComponentInfoImpl::ComponentInfoImpl(Distributed::DistributedFramework::pointer framework,
-				       const std::string &instanceName,
-				       const std::string &className,
-				       const sci::cca::TypeMap::pointer &properties,
-				       const sci::cca::Component::pointer &component)
-    : lock_ports("DistributedComponentInfo::ports lock"),
-      component(component), 
-      className(className), properties(properties), framework(framework), instanceName(instanceName)
+  //class DistributedFramework;
+  //namespace Distributed = sci::cca::distributed;
+  
+  ComponentInfo::ComponentInfo(Distributed::DistributedFramework::pointer &framework,
+			       const std::string& instanceName,
+			       const std::string& className,
+			       const sci::cca::TypeMap::pointer& typemap,
+			       const sci::cca::Component::pointer& component)
+    : ComponentInfoImpl<Distributed::ComponentInfo>(framework, instanceName, className, typemap, component)
   {
-    mutex = new Mutex("getPort mutex");
   }
   
-  ComponentInfoImpl::~ComponentInfoImpl()
-  {
-    delete mutex;
-  }
-  
-  
-  SSIDL::array1<PortInfo::pointer> ComponentInfoImpl::getPorts()
-  {
-    return PortInstanceIterator::pointer(new Iterator(this));
-  }
-  
-  Distributed::DistributedFramework::pointer ComponentInfoImpl::getFramework() 
-  { 
-    return framework; 
-  }
-  
-  std::string  ComponentInfo::getClassName() 
-  { 
-    return className; 
-  }
-  
-  sci::cca::TypeMap::pointer  ComponentInfo::getProperties() 
-  { 
-    return properties; 
-  }
-  
-  void  ComponentInfo::setProperties(const sci::cca::TypeMap::pointer &properties) 
-  { 
-    this->properties = properties; 
-  }
-  
-  /*
-   * cca.ComponentID interface
-   */
-  
-  std::string  ComponentInfo::getInstanceName() 
-  { return instanceName; }
-  
-  std::string ComponentInfo::getSerialization()
-  {
-    return framework->getURL().getString()+"/"+instanceName;
-  }
-
+   
 } // end namespace SCIRun
+

@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  PortInfo.h: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,34 +38,34 @@
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
+#ifndef SCIRun_CCA_PortInfo_h
+#define SCIRun_CCA_PortInfo_h
 
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <SCIRun/Distributed/PortInfoImpl.h>
 
 namespace SCIRun {
   
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
-
   /**
-   * \class ComponentInfo
+   * \class PortInfo
    *
    */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  class PortInfo : public  PortInfoImpl<Distributed::PortInfo>
   {
   public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    typedef Distributed::PortInfo::pointer pointer;
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
+    PortInfo(const std::string& portname, 
+	     const std::string& classname,
+	     const sci::cca::TypeMap::pointer& properties,
+	     Distributed::PortType porttype);
+    
+    PortInfo(const std::string& portname, 
+	     const std::string& classname,
+	     const sci::cca::TypeMap::pointer& properties,
+	     const sci::cca::Port::pointer& port,
+	     Distributed::PortType porttype);
   };
 
-  
 } // end namespace SCIRun
 
-#endif // SCIRun_Distributed_ComponentInfo_h
+#endif

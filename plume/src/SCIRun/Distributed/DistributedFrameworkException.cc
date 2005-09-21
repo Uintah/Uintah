@@ -28,44 +28,42 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  DistributedFrameworkException.cc:
  *
  *  Written by:
  *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
- *   Sept 2005
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
-
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <SCIRun/Distributed/DistributedFrameworkException.h>
 
 namespace SCIRun {
-  
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
 
-  /**
-   * \class ComponentInfo
-   *
-   */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  DistributedFrameworkException::DistributedFrameworkException(const std::string& description)
+    : description(description)
   {
-  public:
-    typedef Distributed::ComponentInfo::pointer pointer;
-
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
-  };
-
+  }
+  
+  DistributedFrameworkException::DistributedFrameworkException(const DistributedFrameworkException& copy)
+    : description(copy.description)
+  {
+  }
+  
+  DistributedFrameworkException::~DistributedFrameworkException()
+  {
+  }
+  
+  const char* DistributedFrameworkException::message() const
+  {
+    return description.c_str();
+  }
+  
+  const char* DistributedFrameworkException::type() const
+  {
+    return "DistributedFrameworkException";
+  }
   
 } // end namespace SCIRun
-
-#endif // SCIRun_Distributed_ComponentInfo_h

@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  FrameworkService.h: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,34 +38,43 @@
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
+#ifndef SCIRun_FrameworkService_h
+#define SCIRun_FrameworkService_h
 
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
-  
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
 
-  /**
-   * \class ComponentInfo
-   *
-   */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  namespace Distributed = sci::cca::distributed;
+  class DistributedFramework;
+
+  class FrameworkServiceDescription
   {
   public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    typedef Distributed::internal::Service::pointer pointer;
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
+    FrameworkServiceDescription() : singleton(0) {}
+    virtual ~FrameworkServiceDescription() {}
+
+    pointer get( DistributedFramework *);
+    void release();
+
+  protected:
+    virtual pointer create(DistributedFramework *) = 0;
+
+  private:
+    pointer singleton;
   };
 
-  
-} // end namespace SCIRun
+  template<class Service>
+  class FrameworkServiceDescriptionFactory : public FrameworkServiceDescription  {
+  public:
+    FrameworkServiceDescriptionFactory(const std::string &name) : FrameworkServiceDescription(name) {}
+    virtual ~FrameworkServiceDescriptionFactory() {}
 
-#endif // SCIRun_Distributed_ComponentInfo_h
+    FrameworkServiceDescription::pointer create(DistributedFramework *framework) { return Service::create(framework); }
+  };
+
+}
+
+#endif
