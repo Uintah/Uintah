@@ -45,7 +45,7 @@
 
 namespace SCIRun {
   
-  ComponentEvent::ComponentEvent(sci::cca::ports::ComponentEventType type,
+  ComponentEvent::ComponentEvent(Distributed::ComponentEventType type,
 				 const sci::cca::ComponentID::pointer& id,
 				 const sci::cca::TypeMap::pointer& properties)
     : ComponentEventImpl<Distributed::ComponentEvent>(type, id, properties)

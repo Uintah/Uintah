@@ -76,6 +76,9 @@ package sci {
       }
 
       package ports {
+	
+	interface FrameworkProperties extends sci.cca.Port {
+	}
 
 	interface ComponentEventService extends Port, internal.Service {
 	  /** Sign up to be told about component activity.
@@ -114,9 +117,17 @@ package sci {
 	}
 	
 	interface FrameworkPropertiesService 
-	  extends sci.cca.ports.FrameworkProperties, internal.Service
+	  extends sci.cca.Port, internal.Service
+	{
+	  TypeMap getProperties();
+	  void setProperties(in TypeMap properties);
+	}
+
+	interface BuilderService
+	  extends sci.cca.ports.BuilderService, internal.Service
 	{
 	}
+
       }
 
       // Distributed Ports

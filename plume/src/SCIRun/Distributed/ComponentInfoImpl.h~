@@ -45,7 +45,6 @@
 #include <Core/Thread/Guard.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Distributed/ComponentIDImpl.h>
 #include <map>
 #include <string>
 
@@ -60,7 +59,7 @@ namespace SCIRun {
    */
   
   template<class Base>
-  class ComponentInfoImpl : public ComponentIDImpl<Base>
+  class ComponentInfoImpl : public Base
   {
   private:
     typedef std::map<std::string, Distributed::PortInfo::pointer> PortMap;
@@ -80,11 +79,18 @@ namespace SCIRun {
      * sci.cca.distributed.ComponentInfo interface
      */
     
+    virtual Distributed::DistributedFramework::pointer getFramework();
     virtual SSIDL::array1<Distributed::PortInfo::pointer> getPorts();
     virtual Distributed::PortInfo::pointer getPortInfo(const std::string& name);
     virtual std::string getClassName();
     virtual sci::cca::TypeMap::pointer getProperties();
     virtual void setProperties(const sci::cca::TypeMap::pointer &);
+    
+    /*
+     * cca::ComponentID interface
+     */
+    virtual std::string getInstanceName();
+    virtual std::string getSerialization();
     
   private:
     PortMap ports;
@@ -94,7 +100,11 @@ namespace SCIRun {
     
     std::string className;
     sci::cca::TypeMap::pointer properties;
-        
+    
+    // from ComponentID
+    Distributed::DistributedFramework::pointer framework;
+    std::string instanceName;
+    
     // prevent using these directly
     ComponentInfoImpl(const ComponentInfoImpl&);
     ComponentInfoImpl& operator=(const ComponentInfoImpl&);

@@ -28,54 +28,42 @@
 
 
 /*
- *  ComponentEventImpl.h: Implementation of the SCI CCA Extension
- *                    ComponentEvent interface for SCIRun
+ *  BuilderService.h: Implementation of the CCA BuilderService interface for SCIRun
  *
  *  Written by:
- *   Ayla Khan
- *   Scientific Computing and Imaging Institute
+ *   Steven G. Parker
+ *   Department of Computer Science
  *   University of Utah
- *   October 2004
- *
- *  Copyright (C) 2004 SCI Institute
+ *   October 2001
  *
  */
 
-#ifndef SCIRun_ComponentEventImpl_h
-#define SCIRun_ComponentEventImpl_h
+#ifndef SCIRun_BuilderService_h
+#define SCIRun_BuilderService_h
 
 #include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/Distributed/BuilderServiceImpl.h>
+
 
 namespace SCIRun {
-
-  namespace Distributed = sci::cca::distributed;
-
-  template<class Base>
-  class ComponentEventImpl : public Base 
+  
+  /**
+   * \class BuilderService
+   */
+  class BuilderService : public BuilderServiceImpl<Distributed::BuilderService>
   {
   public:
-    ComponentEventImpl(Distributed::ComponentEventType type,
-		       const sci::cca::ComponentID::pointer& id,
-		       const sci::cca::TypeMap::pointer& properties);
-    virtual ~ComponentEventImpl();
-    
-    /** ? */
-    virtual Distributed::ComponentEventType getEventType();
+    typedef Distributed::internal::Service::pointer pointer;
 
-    /** ? */
-    virtual sci::cca::ComponentID::pointer getComponentID();
-    
-    /** ? */
-    virtual sci::cca::TypeMap::pointer getComponentProperties();
+    BuilderService(DistributedFramework *framework) 
+      : BuilderServiceImpl<Distributed::BuilderServive>(framework)
+    {
+    }
 
-  private:
-    Distributed::ComponentEventType type;
-    sci::cca::ComponentID::pointer id;
-    sci::cca::TypeMap::pointer properties;
-  };
+    virtual ~BuilderService();
   
-} // namespace SCIRun
+    static pointer create(DistributedFramework *framework);
+  };
 
-#include <SCIRun/Distributed/ComponentEventImpl.code>
 
 #endif

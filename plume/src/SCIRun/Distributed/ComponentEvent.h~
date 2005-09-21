@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentEventImpl.h: Implementation of the SCI CCA Extension
+ *  ComponentEvent.h: Implementation of the SCI CCA Extension
  *                    ComponentEvent interface for SCIRun
  *
  *  Written by:
@@ -41,41 +41,24 @@
  *
  */
 
-#ifndef SCIRun_ComponentEventImpl_h
-#define SCIRun_ComponentEventImpl_h
+#ifndef SCIRun_ComponentEvent_h
+#define SCIRun_ComponentEvent_h
 
-#include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/Distributed/ComponentEventImpl.h>
 
 namespace SCIRun {
-
-  namespace Distributed = sci::cca::distributed;
-
-  template<class Base>
-  class ComponentEventImpl : public Base 
+  
+  class ComponentEvent : public ComponentEventImpl<Distributed::ComponentEvent>
   {
   public:
-    ComponentEventImpl(Distributed::ComponentEventType type,
-		       const sci::cca::ComponentID::pointer& id,
-		       const sci::cca::TypeMap::pointer& properties);
-    virtual ~ComponentEventImpl();
-    
-    /** ? */
-    virtual Distributed::ComponentEventType getEventType();
+    typedef Distributed::ComponentEvent::pointer pointer;
 
-    /** ? */
-    virtual sci::cca::ComponentID::pointer getComponentID();
-    
-    /** ? */
-    virtual sci::cca::TypeMap::pointer getComponentProperties();
-
-  private:
-    Distributed::ComponentEventType type;
-    sci::cca::ComponentID::pointer id;
-    sci::cca::TypeMap::pointer properties;
+    ComponentEvent(sci::cca::ports::ComponentEventType type,
+		   const sci::cca::ComponentID::pointer& id,
+		   const sci::cca::TypeMap::pointer& properties);
+    virtual ~ComponentEvent();
   };
   
-} // namespace SCIRun
-
-#include <SCIRun/Distributed/ComponentEventImpl.code>
+}
 
 #endif

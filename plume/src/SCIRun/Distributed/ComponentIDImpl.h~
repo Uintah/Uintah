@@ -28,54 +28,59 @@
 
 
 /*
- *  ComponentEventImpl.h: Implementation of the SCI CCA Extension
- *                    ComponentEvent interface for SCIRun
+ *  ConnectionIDImpl.h: Implementation of the SCI CCA Extension
+ *                    ComponentID interface for SCIRun
  *
  *  Written by:
- *   Ayla Khan
+ *   Yarden Livnat
  *   Scientific Computing and Imaging Institute
  *   University of Utah
- *   October 2004
+ *   Sept 2005
  *
- *  Copyright (C) 2004 SCI Institute
+ *  Copyright (C) 2005 SCI Institute
  *
  */
 
-#ifndef SCIRun_ComponentEventImpl_h
-#define SCIRun_ComponentEventImpl_h
+#ifndef SCIRun_ConnectionIDImpl_h
+#define SCIRun_ConnectionIDImpl_h
 
 #include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
 
-  namespace Distributed = sci::cca::distributed;
-
   template<class Base>
-  class ComponentEventImpl : public Base 
+  class ConnectionIDImpl : public Base 
   {
   public:
-    ComponentEventImpl(Distributed::ComponentEventType type,
-		       const sci::cca::ComponentID::pointer& id,
-		       const sci::cca::TypeMap::pointer& properties);
-    virtual ~ComponentEventImpl();
+    typedef sci::cca::ConnectionID::pointer pointer;
+
+    ConnectionIDImpl( const pointer &provider, const pointer &user, 
+		      const std::string &providerPortName,
+		      const std::string &userPortName)
+      : provider(provider), user(user), providerPortName(providerPortName), userPortName(userPortName)
+    {}
+
+    virtual ~ConnectionIDImpl() {}
     
     /** ? */
-    virtual Distributed::ComponentEventType getEventType();
+    virtual pointer getProvider() { return provider; }
 
     /** ? */
-    virtual sci::cca::ComponentID::pointer getComponentID();
-    
+    virtual pointer getUser() { return user; }
+
     /** ? */
-    virtual sci::cca::TypeMap::pointer getComponentProperties();
+    virtual std::string getProviderPortName() { return providerPortName; }
+
+    /** ? */
+    virtual std::string getUserPortName() { return userPortName; }
 
   private:
-    Distributed::ComponentEventType type;
-    sci::cca::ComponentID::pointer id;
-    sci::cca::TypeMap::pointer properties;
+    pointer provider;
+    pointer user;
+    std::string providerPortName;
+    std::string userPortName;
   };
   
 } // namespace SCIRun
-
-#include <SCIRun/Distributed/ComponentEventImpl.code>
 
 #endif

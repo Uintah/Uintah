@@ -32,12 +32,11 @@
 SRCDIR   := SCIRun/Distributed
 
 SRCS     += \
-	     $(SRCDIR)/ConnectionID.cc\
-	     $(SRCDIR)/FrameworkID.cc \
              $(SRCDIR)/ComponentInfo.cc \
              $(SRCDIR)/PortInfo.cc \
 	     $(SRCDIR)/DistributedFramework.cc \
              $(SRCDIR)/DistributedFrameworkException.cc \
+	     $(SRCDIR)/FrameworkID.cc \
              $(SRCDIR)/ComponentEvent.cc \
              $(SRCDIR)/ConnectionEvent.cc \
              $(SRCDIR)/FrameworkServiceDescription.cc \
@@ -47,7 +46,8 @@ SRCS     += \
              $(SRCDIR)/ConnectionEventService.cc \
              $(SRCDIR)/ComponentRepositoryService.cc \
              $(SRCDIR)/FrameworkPropertiesService.cc \
-	     $(SRCDIR)/BuilderService.cc \
+
+#             $(SRCDIR)/BuilderService.cc \
 
 #             $(SRCDIR)/FrameworkProxyService.cc \
 

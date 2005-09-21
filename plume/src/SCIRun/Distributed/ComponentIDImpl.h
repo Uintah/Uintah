@@ -28,54 +28,65 @@
 
 
 /*
- *  ComponentEventImpl.h: Implementation of the SCI CCA Extension
- *                    ComponentEvent interface for SCIRun
+ *  ComponentIDImpl.h: Implementation of the SCI CCA Extension
+ *                    ComponentID interface for SCIRun
  *
  *  Written by:
- *   Ayla Khan
+ *   Yarden Livnat
  *   Scientific Computing and Imaging Institute
  *   University of Utah
- *   October 2004
+ *   Sept 2005
  *
- *  Copyright (C) 2004 SCI Institute
+ *  Copyright (C) 2005 SCI Institute
  *
  */
 
-#ifndef SCIRun_ComponentEventImpl_h
-#define SCIRun_ComponentEventImpl_h
+#ifndef SCIRun_ComponentIDImpl_h
+#define SCIRun_ComponentIDImpl_h
 
 #include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/Distributed/DistributedFramework.h>
 
 namespace SCIRun {
 
   namespace Distributed = sci::cca::distributed;
 
   template<class Base>
-  class ComponentEventImpl : public Base 
+  class ComponentIDImpl : public Base 
   {
   public:
-    ComponentEventImpl(Distributed::ComponentEventType type,
-		       const sci::cca::ComponentID::pointer& id,
-		       const sci::cca::TypeMap::pointer& properties);
-    virtual ~ComponentEventImpl();
-    
-    /** ? */
-    virtual Distributed::ComponentEventType getEventType();
+    typedef sci::cca::ComponentID::pointer pointer;
 
-    /** ? */
-    virtual sci::cca::ComponentID::pointer getComponentID();
+    ComponentIDImpl( const Distributed::DistributedFramework::pointer &framework,
+		     const std::string &instanceName)
+      : framework(framework), instanceName(instanceName)
+    {}
+
+    virtual ~ComponentIDImpl() {}
     
-    /** ? */
-    virtual sci::cca::TypeMap::pointer getComponentProperties();
+    /*
+     * cca::ComponentID interface
+     */
+    virtual std::string getInstanceName() { return instanceName; }
+    virtual std::string getSerialization() { return framework->getFrameworkID()->getString()+"/"+instanceName; }
+
+    /* 
+     * internal function
+     */
+
+    virtual Distributed::DistributedFramework::pointer getFramework() { return framework;}
+
+  protected:
+    Distributed::DistributedFramework::pointer framework;
+    std::string instanceName;
 
   private:
-    Distributed::ComponentEventType type;
-    sci::cca::ComponentID::pointer id;
-    sci::cca::TypeMap::pointer properties;
+    // prevent using these directly
+    ComponentIDImpl(const ComponentIDImpl&);
+    ComponentIDImpl& operator=(const ComponentIDImpl&);
+
   };
   
 } // namespace SCIRun
-
-#include <SCIRun/Distributed/ComponentEventImpl.code>
 
 #endif

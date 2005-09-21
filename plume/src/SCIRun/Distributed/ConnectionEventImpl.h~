@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentEventImpl.h: Implementation of the SCI CCA Extension
+ *  ConnectionEventImpl.h: Implementation of the SCI CCA Extension
  *                    ComponentEvent interface for SCIRun
  *
  *  Written by:
@@ -41,41 +41,36 @@
  *
  */
 
-#ifndef SCIRun_ComponentEventImpl_h
-#define SCIRun_ComponentEventImpl_h
+#ifndef SCIRun_ConnectionEventImpl_h
+#define SCIRun_ConnectionEventImpl_h
 
 #include <Core/CCA/spec/sci_sidl.h>
 
 namespace SCIRun {
 
-  namespace Distributed = sci::cca::distributed;
+  namespace Ports = sci::cca::ports;
 
   template<class Base>
-  class ComponentEventImpl : public Base 
+  class ConnectionEventImpl : public Base 
   {
   public:
-    ComponentEventImpl(Distributed::ComponentEventType type,
-		       const sci::cca::ComponentID::pointer& id,
+    ConnectionEventImpl(sci::cca::ports::EventType type,
 		       const sci::cca::TypeMap::pointer& properties);
-    virtual ~ComponentEventImpl();
+    virtual ~ConnectionEventImpl();
     
     /** ? */
-    virtual Distributed::ComponentEventType getEventType();
+    virtual Ports::EventType getType();
 
     /** ? */
-    virtual sci::cca::ComponentID::pointer getComponentID();
-    
-    /** ? */
-    virtual sci::cca::TypeMap::pointer getComponentProperties();
+    virtual sci::cca::TypeMap::pointer getPortInfo();
 
   private:
-    Distributed::ComponentEventType type;
-    sci::cca::ComponentID::pointer id;
+    Ports::EventType type;
     sci::cca::TypeMap::pointer properties;
   };
   
 } // namespace SCIRun
 
-#include <SCIRun/Distributed/ComponentEventImpl.code>
+#include <SCIRun/Distributed/ConnectionEventImpl.code>
 
 #endif

@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2005 Scientific Computing and Imaging Institute,
    University of Utah.
 
    License for the specific language governing rights and limitations under
@@ -28,54 +28,42 @@
 
 
 /*
- *  ComponentEventImpl.h: Implementation of the SCI CCA Extension
- *                    ComponentEvent interface for SCIRun
+ *  DistributedFramework.h: 
  *
  *  Written by:
- *   Ayla Khan
- *   Scientific Computing and Imaging Institute
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   October 2004
- *
- *  Copyright (C) 2004 SCI Institute
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_ComponentEventImpl_h
-#define SCIRun_ComponentEventImpl_h
+#ifndef SCIRun_Framework_DistributedFramework_h
+#define SCIRun_Framework_DistributedFramework_h
 
-#include <Core/CCA/spec/sci_sidl.h>
+
+#include <SCIRun/Distributed/DistributedFrameworkImpl.h>
+#include <SCIRun/Distributed/ComponentDescription.h>
 
 namespace SCIRun {
 
-  namespace Distributed = sci::cca::distributed;
-
-  template<class Base>
-  class ComponentEventImpl : public Base 
+  /**
+   * \class DistributedFramework
+   * 
+   * \brief An implementation of a DistributedFramework 
+   */
+  
+  class DistributedFramework : public DistributedFrameworkImpl<Distributed::DistributedFramework>
   {
   public:
-    ComponentEventImpl(Distributed::ComponentEventType type,
-		       const sci::cca::ComponentID::pointer& id,
-		       const sci::cca::TypeMap::pointer& properties);
-    virtual ~ComponentEventImpl();
+    typedef DistributedFrameworkImpl<Distributed::DistributedFramework>::pointer pointer;
     
-    /** ? */
-    virtual Distributed::ComponentEventType getEventType();
+    DistributedFramework( pointer parent = 0);
+    virtual ~DistributedFramework();
 
-    /** ? */
-    virtual sci::cca::ComponentID::pointer getComponentID();
-    
-    /** ? */
-    virtual sci::cca::TypeMap::pointer getComponentProperties();
-
-  private:
-    Distributed::ComponentEventType type;
-    sci::cca::ComponentID::pointer id;
-    sci::cca::TypeMap::pointer properties;
+    void listAllComponentTypes(std::vector<ComponentDescription*> &, bool );
   };
   
-} // namespace SCIRun
-
-#include <SCIRun/Distributed/ComponentEventImpl.code>
+} // end namespace SCIRun
 
 #endif

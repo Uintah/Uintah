@@ -46,7 +46,7 @@
 namespace SCIRun {
   
   template<class Base>
-  ComponentEventImpl<Base>::ComponentEventImpl(sci::cca::ports::ComponentEventType type,
+  ComponentEventImpl<Base>::ComponentEventImpl(Distributed::ComponentEventType type,
 					 const sci::cca::ComponentID::pointer& id,
 					 const sci::cca::TypeMap::pointer& properties)
     : type(type), id(id), properties(properties)
@@ -59,7 +59,7 @@ namespace SCIRun {
   }
   
   template<class Base>
-  sci::cca::ports::ComponentEventType
+  Distributed::ComponentEventType
   ComponentEventImpl<Base>::getEventType()
   {
     return type;
