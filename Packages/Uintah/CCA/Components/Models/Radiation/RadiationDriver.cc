@@ -137,6 +137,12 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
   // the radiation calculation to the energy transport.
   radiationSrc_CCLabel = VarLabel::create("radiationSrc", td_CCdouble);
   scalar_CCLabel = VarLabel::create("scalar-f", td_CCdouble);
+  
+  // diagnostic variable
+  solidEmissionLabel = VarLabel::create("solidEmission", td_CCdouble);
+  
+  // defines what cells are on the solid surface
+  isGasSolidInterfaceLabel = VarLabel::create("isGasSolidInterface", td_CCdouble);
 }
 
 //****************************************************************************
@@ -181,6 +187,8 @@ RadiationDriver::~RadiationDriver()
 
   VarLabel::destroy(radiationSrc_CCLabel);
   VarLabel::destroy(scalar_CCLabel);
+  VarLabel::destroy(solidEmissionLabel);
+  VarLabel::destroy(isGasSolidInterfaceLabel);
   
   delete Ilb;
 }
@@ -522,12 +530,13 @@ RadiationDriver::scheduleSet_cellType(const LevelP&         level,
   Ghost::GhostType  gn = Ghost::None;
 
   if(d_hasAbsorbingSolid){
-    t->requires(Task::NewDW,Ilb->vol_frac_CCLabel, mss_S, gn,0);              
+    t->requires(Task::NewDW,Ilb->vol_frac_CCLabel, mss_S, gn,0);
+    t->computes(isGasSolidInterfaceLabel, mss_S);       
   }
 
   t->requires(Task::OldDW, abskg_CCLabel,  mss_G, gn,0);
 
-  t->computes(cellType_CCLabel, mss_G);  
+  t->computes(cellType_CCLabel, mss_G);
   sched->addTask(t, patches, matls);
 }
 //______________________________________________________________________
@@ -566,29 +575,43 @@ RadiationDriver::set_cellType(const ProcessorGroup*,
                         * ceil(time/d_radCalc_interval + 1E-100); 
     }
                
-    int indx0 = d_matl_G->getDWIndex();
+    int indx_G = d_matl_G->getDWIndex();
     //__________________________________
     //default value
     RadiationVariables vars;
     Ghost::GhostType gn = Ghost::None;
     
     int flowField = -1;
-    new_dw->allocateAndPut(vars.cellType,cellType_CCLabel,indx0,patch);
+    new_dw->allocateAndPut(vars.cellType,cellType_CCLabel,indx_G,patch);
     vars.cellType.initialize(flowField);
 
     //__________________________________
     //if there's an absorbing solid
     // set cellType = 1
+    // find the gas-solid interface
     if(d_hasAbsorbingSolid){
       
-      constCCVariable<double> vol_frac_solid;
-      int indx1 = d_matl_S->getDWIndex();
-      new_dw->get(vol_frac_solid,Ilb->vol_frac_CCLabel,indx1,patch,gn,0);
+      constCCVariable<double> vol_frac_solid, vol_frac_gas;
+      CCVariable<double> isGasSolidInterface;
+      int indx_S = d_matl_S->getDWIndex();
+      
+      new_dw->get(vol_frac_solid,Ilb->vol_frac_CCLabel,indx_S,patch,gn,0);
+      new_dw->get(vol_frac_gas,  Ilb->vol_frac_CCLabel,indx_G,patch,gn,0);
+      new_dw->allocateAndPut(isGasSolidInterface,isGasSolidInterfaceLabel,indx_S,patch);
+      isGasSolidInterface.initialize(0.0);
       
       for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter; 
         if(vol_frac_solid[c] > 0.5){
           vars.cellType[c] = 1;
+        }
+        
+        // gas-solid interface  THIS COULD USE SOME WORK
+        if( (vol_frac_solid[c] + vol_frac_gas[c]) > 0.99 &&
+             vol_frac_gas[c]   > 0.1 &&
+             vol_frac_solid[c] > 0.1){
+
+          isGasSolidInterface[c] = 1;
         }
       }
     }    
@@ -988,11 +1011,13 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
   t->modifies(mi->energy_source_CCLabel,mss_G);
   
   if(d_hasAbsorbingSolid){
-    t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,mss_S, gn, 0);
-    t->requires(Task::NewDW, Ilb->TempX_FCLabel,   mss_S, gac, 1);
-    t->requires(Task::NewDW, Ilb->TempY_FCLabel,   mss_S, gac, 1);
-    t->requires(Task::NewDW, Ilb->TempZ_FCLabel,   mss_S, gac, 1);
+    t->requires(Task::NewDW, isGasSolidInterfaceLabel,mss_S, gn, 0);
+    t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  mss_S, gn, 0);
+    t->requires(Task::NewDW, Ilb->TempX_FCLabel,     mss_S, gac, 1);
+    t->requires(Task::NewDW, Ilb->TempY_FCLabel,     mss_S, gac, 1);
+    t->requires(Task::NewDW, Ilb->TempZ_FCLabel,     mss_S, gac, 1);
     t->modifies(mi->energy_source_CCLabel,mss_S);
+    t->computes(solidEmissionLabel,       mss_S);
   }
 
   sched->addTask(t, patches, matls_set_GS);
@@ -1085,40 +1110,48 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     if(d_hasAbsorbingSolid){
       int indx_S = d_matl_S->getDWIndex();
       constCCVariable<double> vol_frac_solid;
-      CCVariable<double> energySrc_solid;
-      new_dw->get(vol_frac_solid,             Ilb->vol_frac_CCLabel,    indx_S, patch,gn,0);
+      CCVariable<double> energySrc_solid, emit_solid;
+
+      new_dw->get(vol_frac_solid, Ilb->vol_frac_CCLabel,    indx_S, patch,gn,0);
       new_dw->getModifiable(energySrc_solid, mi->energy_source_CCLabel, indx_S, patch);
+      new_dw->allocateAndPut(emit_solid,      solidEmissionLabel,       indx_S, patch);
+       
+      emit_solid.initialize(0.0); 
        
       for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         energySrc_solid[c] += delT * cell_vol * vol_frac_solid[c] * radVars.src[c];
       }
-      
-/*`==========TESTING==========*/
-//      renameMe1(energySrc_solid,delT, patch,new_dw); 
-/*===========TESTING==========`*/
+
+      solidEmission(energySrc_solid, vol_frac_solid, emit_solid, delT, patch,new_dw); 
       
     }  // absorbing solid 
   }  // patches loop
 }
 
 //______________________________________________________________________                      
-void RadiationDriver::renameMe1(CCVariable<double>& energySrc_solid,
-                                const double delT,
-                                const Patch* patch,                        
-                                DataWarehouse* new_dw)                          
+void RadiationDriver::solidEmission(CCVariable<double>& energySrc_solid,
+                                    constCCVariable<double>& vol_frac_solid,
+                                    CCVariable<double>& emit_solid,
+                                    const double delT,
+                                    const Patch* patch,                        
+                                    DataWarehouse* new_dw)                          
 {   
-    cout_doing << " renameMe1 " << endl;
+    cout_doing << "Doing solidEmission on patch "<<patch->getID()
+               << "\t\t\t\t Radiation" << endl;
             
-    Ghost::GhostType  gac = Ghost::AroundCells; 
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn  = Ghost::None; 
     int indx_S = d_matl_S->getDWIndex();  
     constSFCXVariable<double> TempX_FC_solid;
     constSFCYVariable<double> TempY_FC_solid;
     constSFCZVariable<double> TempZ_FC_solid;
+    constCCVariable<double> isGasSolidInterface;
 
     new_dw->get(TempX_FC_solid, Ilb->TempX_FCLabel,    indx_S, patch,gac,1);
     new_dw->get(TempY_FC_solid, Ilb->TempY_FCLabel,    indx_S, patch,gac,1);
     new_dw->get(TempZ_FC_solid, Ilb->TempZ_FCLabel,    indx_S, patch,gac,1);  
+    new_dw->get(isGasSolidInterface, isGasSolidInterfaceLabel, indx_S, patch, gn,0);
       
     vector<IntVector> offset(3);
     offset[0] = IntVector(-1, 0, 0);    // X faces
@@ -1135,31 +1168,46 @@ void RadiationDriver::renameMe1(CCVariable<double>& energySrc_solid,
     double areaXY = dx.x() * dx.y();
      
     //__________________________________
-    //  do something
-    renameMe2<constSFCXVariable<double> >(XFC_iterator,offset[0], areaYZ, delT, TempX_FC_solid, energySrc_solid);
-
-    renameMe2<constSFCYVariable<double> >(YFC_iterator,offset[1], areaXZ, delT, TempY_FC_solid, energySrc_solid);
-
-    renameMe2<constSFCZVariable<double> >(ZFC_iterator,offset[2], areaXY, delT, TempZ_FC_solid, energySrc_solid);
+    emmission<constSFCXVariable<double> >(XFC_iterator,offset[0], areaYZ, delT, emit_solid,
+                                          isGasSolidInterface, 
+                                          vol_frac_solid, TempX_FC_solid, energySrc_solid);
+                                          
+    emmission<constSFCYVariable<double> >(YFC_iterator,offset[1], areaXZ, delT, emit_solid,
+                                          isGasSolidInterface,
+                                          vol_frac_solid, TempY_FC_solid, energySrc_solid);
+                                          
+    emmission<constSFCZVariable<double> >(ZFC_iterator,offset[2], areaXY, delT, emit_solid,
+                                          isGasSolidInterface,
+                                          vol_frac_solid, TempZ_FC_solid, energySrc_solid);
 }
-
 /* _____________________________________________________________________
- Function~  absorbingSolidEmittance--
- Purpose~   
+ Function~  emmission--
+ Purpose~   compute solid emission in cells that are at a gas-solid interface
 _____________________________________________________________________*/
 template<class T> 
-void RadiationDriver::renameMe2(CellIterator iter,
-                                  IntVector adj_offset,
-                                  const double cellFaceArea,
-                                  const double delt,
-                                  T& Temp_FC,
-                                  CCVariable<double>& energySrc_solid)
+void RadiationDriver::emmission(CellIterator iter,
+                                IntVector adj_offset,
+                                const double cellFaceArea,
+                                const double delt,
+                                CCVariable<double>& emit_solid,
+                                constCCVariable<double>& isGasSolidInterface,
+                                constCCVariable<double>& vol_frac_solid,
+                                T& Temp_FC,
+                                CCVariable<double>& energySrc_solid)
 {
   double coeff = d_sigma * cellFaceArea * delt;
   for(;!iter.done(); iter++){
     IntVector R = *iter;
     IntVector L = R + adj_offset;
-    //energySrc_solid[R] -= coeff * (Temp_FC[R] * Temp_FC[R] * Temp_FC[R] * Temp_FC[R]); //Joules
+    
+    double vol_frac_solid_FC = (vol_frac_solid[R] + vol_frac_solid[L]) /2;
+    
+    double emit = isGasSolidInterface[R] * coeff * vol_frac_solid_FC *
+                  (Temp_FC[R] * Temp_FC[R] * Temp_FC[R] * Temp_FC[R]); //Joules
+                  
+    emit_solid[R] -= emit;
+    
+    energySrc_solid[R] -= emit;
   } 
 }
 //______________________________________________________________________
