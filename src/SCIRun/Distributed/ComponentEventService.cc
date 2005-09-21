@@ -28,44 +28,50 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  ComponentEventService.cc: Implementation of CCA ComponentEventService for SCIRun
  *
  *  Written by:
- *   Yarden Livnat
- *   SCI Institute
+ *   Steven G. Parker
+ *   Department of Computer Science
  *   University of Utah
- *   Sept 2005
+ *   October 2001
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
-
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <SCIRun/Distributed/ComponentEventService.h>
+#include <iostream>
 
 namespace SCIRun {
-  
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
 
-  /**
-   * \class ComponentInfo
-   *
-   */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  ComponentEventService::~ComponentEventService()
   {
-  public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    std::cerr << "EventService destroyed..." << std::endl;
+  }
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
-  };
+  ComponentEventService::pointer ComponentEventService::create(DistributedFramework *framework)
+  {
+    return pointer(new ComponentEventService(framework));
+  }
 
+  void ComponentEventService::emitComponentEvent(const Distributed::ComponentEvent::pointer& event)
+  {
+    // iterate through listeners and call connectionActivity
+    // should the event type to be emitted be ALL?
+    if (event->getType() == Distributed::AllComponentEvents) {
+      return;
+    }
+
+    {
+      SCIRun::Guard lock(&listeners_lock);
+
+      for (std::vector<Listener*>::iterator iter=listeners.begin();
+	   iter != listeners.end(); iter++) {
+        if ((*iter)->type == Distributed::AllComponentEvents ||
+	    (*iter)->type == event->getType()) {
+	  (*iter)->listener->componentActivity(event);
+        }
+      }
+    }
+  }
   
 } // end namespace SCIRun
-
-#endif // SCIRun_Distributed_ComponentInfo_h

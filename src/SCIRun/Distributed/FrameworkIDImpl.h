@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  FrameworkIDImpl.h: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,34 +38,25 @@
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
+#ifndef SCIRun_Distributed_FrameworkIDImpl_h
+#define SCIRun_Distributed_FrameworkIDImpl_h
 
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <Core/CCA/spec/sci_sidl.h>
+#include <Core/CCA/PIDL/URL.h>
+#include <string>
 
 namespace SCIRun {
-  
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
 
-  /**
-   * \class ComponentInfo
-   *
-   */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  template<class Base>
+  class FrameworkIDImpl : public Base, public URL 
   {
   public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    FrameworkIDImpl( const std::string &url ) : URL(url) {}
+    FrameworkIDImpl ( const URL &url ) : URL(url) {}
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
+    virtual std::string getString() { return URL::getString(); }
+
+    virtual ~FrameworkIDImpl() {}
   };
-
-  
-} // end namespace SCIRun
-
-#endif // SCIRun_Distributed_ComponentInfo_h
+}
+#endif

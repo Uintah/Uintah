@@ -1,0 +1,125 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+/*
+ *  ComponentInfoImpl.cc:
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2001
+ *
+ */
+
+#include <SCIRun/TypeMap.h>
+//#include <SCIRun/Distributed/DistributedFramework.h>
+#include <SCIRun/CCA/CCAException.h>
+#include <iostream>
+
+#include <SCIRun/Distributed/ComponentInfo.h>
+#include <SCIRun/Distributed/PortInfo.h>
+
+namespace SCIRun {
+
+  template<class Base>
+  ComponentInfoImpl<Base>::ComponentInfoImpl(const Distributed::DistributedFramework::pointer &framework,
+					     const std::string &instanceName,
+					     const std::string &className,
+					     const sci::cca::TypeMap::pointer &properties,
+					     const sci::cca::Component::pointer &component)
+    : component(component), 
+      className(className), properties(properties), framework(framework), instanceName(instanceName)
+  {
+    mutex = new Mutex("getPort mutex");
+  }
+  
+  template<class Base>
+  ComponentInfoImpl<Base>::~ComponentInfoImpl()
+  {
+    delete mutex;
+  }
+  
+  
+  template<class Base>
+  SSIDL::array1<PortInfo::pointer> ComponentInfoImpl<Base>::getPorts()
+  {
+    SSIDL::array1<PortInfo::pointer> array;
+    for (PortMap::const_iterator i=ports.begin(); i!=ports.end(); ++i)
+      array.push_back((*i).second);
+    return array;
+  }
+  
+  template<class Base>
+  PortInfo::pointer ComponentInfoImpl<Base>::getPortInfo( const std::string &name )
+  {
+    PortMap::const_iterator info = ports.find(name);
+    if ( info == ports.end() ) return PortInfo::pointer(0);
+    return (*info).second;
+  }
+
+  template<class Base>
+  Distributed::DistributedFramework::pointer ComponentInfoImpl<Base>::getFramework() 
+  { 
+    return framework; 
+  }
+  
+  template<class Base>
+  std::string  ComponentInfoImpl<Base>::getClassName() 
+  { 
+    return className; 
+  }
+  
+  template<class Base>
+  sci::cca::TypeMap::pointer  ComponentInfoImpl<Base>::getProperties() 
+  { 
+    return properties; 
+  }
+  
+  template<class Base>
+  void  ComponentInfoImpl<Base>::setProperties(const sci::cca::TypeMap::pointer &properties) 
+  { 
+    this->properties = properties; 
+  }
+  
+  /*
+   * cca.ComponentID interface
+   */
+  
+  template<class Base>
+  std::string  ComponentInfoImpl<Base>::getInstanceName() 
+  { return instanceName; }
+  
+  template<class Base>
+  std::string ComponentInfoImpl<Base>::getSerialization()
+  {
+    return framework->getFrameworkID()->getString()+"/"+instanceName;
+  }
+
+} // end namespace SCIRun

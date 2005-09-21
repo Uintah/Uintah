@@ -34,6 +34,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := SCIRun
 
 SRCS     += \
+            $(SRCDIR)/TypeMap.cc \
+
 #            $(SRCDIR)/DistributedFramework.cc \
 #            $(SRCDIR)/LocalFramework.cc \
 #            $(SRCDIR)/SCIRunFramework.cc \
@@ -45,7 +47,6 @@ SRCS     += \
 #            $(SRCDIR)/PortInstanceIterator.cc\
 #            $(SRCDIR)/CCACommunicator.cc \
 #            $(SRCDIR)/resourceReference.cc \
-#            $(SRCDIR)/TypeMap.cc \
 #            $(SRCDIR)/SCIRunLoader.cc
 #            $(SRCDIR)/ComponentInstance.cc \
 #            $(SRCDIR)/test.cc \

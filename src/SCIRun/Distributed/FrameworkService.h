@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  FrameworkService.h: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,34 +38,30 @@
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
-
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#ifndef SCIRun_FrameworkService_h
+#define SCIRun_FrameworkService_h
 
 namespace SCIRun {
-  
-  class DistributedFramework;
+
   namespace Distributed = sci::cca::distributed;
 
-  /**
-   * \class ComponentInfo
-   *
-   */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  class FrameworkServiceDescription
   {
   public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    typedef Distributed::internal::Service::pointer pointer;
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
+    FrameworkServiceDescription() {}
+    virtual ~FrameworkServiceDescription() {}
+    virtual pointer get( DistributedFramework *);
   };
 
   
-} // end namespace SCIRun
+  template<class Service>
+  class FrameworkServiceDescriptionImpl : public Service
+  {
+  public:
+    FramewrokServiceDesctiptionImpl(const string &name) : name(name) {}
+    virtual ~Framework
+}
 
-#endif // SCIRun_Distributed_ComponentInfo_h
+#endif

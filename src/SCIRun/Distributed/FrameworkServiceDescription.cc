@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  FrameworkServiceDescription.cc: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,34 +38,27 @@
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
-
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <SCIRun/Distributed/FrameworkServiceDescription.h>
 
 namespace SCIRun {
-  
-  class DistributedFramework;
+
   namespace Distributed = sci::cca::distributed;
 
-  /**
-   * \class ComponentInfo
-   *
-   */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  FrameworkServiceDescription::pointer FrameworkServiceDescription::get( DistributedFramework *framework )
   {
-  public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    if ( singleton.isNull() ) {
+      singleton = create(framework);
+      //fwk->registerService(singleton_instance, singleton_instance->getInstanceName());
+    }
+    // FIXME [yarden]: why do we need this ?
+    //singleton->incrementUseCount();
+    return singleton;
+  }
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
-  };
+  void FrameworkServiceDescription::release()
+  {
+    // FIXME [yarden]: why do we need this ?
+    // if ( !singleton.isNull() ) singleton->decrementUseCount();
+  }
+}
 
-  
-} // end namespace SCIRun
-
-#endif // SCIRun_Distributed_ComponentInfo_h

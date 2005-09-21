@@ -28,44 +28,63 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  ComponentEventService.h: Implementation of the CCA ComponentEventService interface for SCIRun
  *
  *  Written by:
- *   Yarden Livnat
- *   SCI Institute
+ *   Steven G. Parker
+ *   Department of Computer Science
  *   University of Utah
- *   Sept 2005
+ *   October 2001
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
+#ifndef SCIRun_ComponentEventService_h
+#define SCIRun_ComponentEventService_h
 
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
+#include <SCIRun/Distributed/ComponentEventServiceImpl.h>
+#include <vector>
 
 namespace SCIRun {
-  
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
 
+  class DistributedFramework;
+  class ComponentEvent;
+  
   /**
-   * \class ComponentInfo
+   * \class ComponentEventService
+   *
+   * The component event service is a CCA port that is used to register
+   * command objects (analogous to callback methods) with events broadcast
+   * from the framework (?)
    *
    */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  class ComponentEventService : public ComponentEventServiceImpl<Distributed::ComponentEventService>
   {
   public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    typedef Distributed::internal::Service::pointer pointer;
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
+    ComponentEventService(DistributedFramework *framework)
+      : ComponentEventServiceImpl<Distributed::ComponentEventService>(framework)
+    {}
+
+    virtual ~ComponentEventService();
+    
+    /** Factory method for allocating new ComponentEventService objects.  Returns
+	a smart pointer to the newly allocated object registered in the framework
+	\em fwk with the instance name \em name. */
+
+    static pointer create(DistributedFramework *framework);
+    
+    /** ? */
+    void emitComponentEvent(const Distributed::ComponentEvent::pointer& event);
+
+  private:
+    DistributedFramework *framework;
+
   };
 
-  
+
 } // end namespace SCIRun
 
-#endif // SCIRun_Distributed_ComponentInfo_h
+#endif

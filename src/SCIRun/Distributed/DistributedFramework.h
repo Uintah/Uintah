@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2005 Scientific Computing and Imaging Institute,
    University of Utah.
 
    License for the specific language governing rights and limitations under
@@ -28,44 +28,42 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  DistributedFramework.h: 
  *
  *  Written by:
  *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
- *   Sept 2005
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
+#ifndef SCIRun_Framework_DistributedFramework_h
+#define SCIRun_Framework_DistributedFramework_h
 
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+
+#include <SCIRun/Distributed/DistributedFrameworkImpl.h>
+//#include <Core/CCA/spec/sci_sidl.h>
+//#include <string>
+
 
 namespace SCIRun {
-  
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
 
   /**
-   * \class ComponentInfo
-   *
+   * \class DistributedFramework
+   * 
+   * \brief An implementation of a DistributedFramework 
    */
   
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  class DistributedFramework : public DistributedFrameworkImpl<Distributed::DistributedFramework>
   {
   public:
-    typedef Distributed::ComponentInfo::pointer pointer;
-
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
+    typedef DistributedFrameworkImpl<Distributed::DistributedFramework>::pointer pointer;
+    
+    DistributedFramework( pointer parent = 0);
+    virtual ~DistributedFramework();
   };
-
   
 } // end namespace SCIRun
 
-#endif // SCIRun_Distributed_ComponentInfo_h
+#endif

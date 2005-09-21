@@ -306,8 +306,9 @@ namespace SCIRun {
   BuilderService::setConnectionProperties(const sci::cca::ConnectionID::pointer &connID,
 					  const sci::cca::TypeMap::pointer &map)
   {
+    SCIRunFramework *scirun = framework.getPointer();
     for (unsigned i = 0; i < framework->connIDs.size(); i++) {
-      if (connID == framework->connIDs[i]) {
+      if (connID == scirun->connIDs[i]) {
 	ConnectionID *connIDPtr = dynamic_cast<ConnectionID*>(connID.getPointer());
 	if (connIDPtr) {
 	  return connIDPtr->setProperties(map);
@@ -319,8 +320,7 @@ namespace SCIRun {
   // TODO: timeout never used
   // TODO: disconnect event
   void
-  BuilderService::disconnect(const sci::cca::ConnectionID::pointer& connID,
-			     float /*timeout*/)
+  BuilderService::disconnect(const sci::cca::ConnectionID::pointer& connID, float /*timeout*/)
   {
     //ComponentID* userID=dynamic_cast<ComponentID*>(connID->getUser().getPointer());
     //ComponentID* providerID=dynamic_cast<ComponentID*>(connID->getProvider().getPointer());
@@ -331,9 +331,11 @@ namespace SCIRun {
     PortInstance::pointer userPort=user->getPortInstance(connID->getUserPortName());
     PortInstance::pointer providerPort=provider->getPortInstance(connID->getProviderPortName());
     userPort->disconnect(providerPort);
+
+    SCIRunFramework *scirun = framework.getPointer();
     for(unsigned i=0; i<framework->connIDs.size();i++) {
-      if (framework->connIDs[i]==connID) {
-	framework->connIDs.erase(framework->connIDs.begin()+i);
+      if (scirun->connIDs[i]==connID) {
+	scirun->connIDs.erase(scirun->connIDs.begin()+i);
 	break;
       }
     }

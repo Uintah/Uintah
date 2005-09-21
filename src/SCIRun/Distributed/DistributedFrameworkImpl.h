@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2005 Scientific Computing and Imaging Institute,
    University of Utah.
 
    License for the specific language governing rights and limitations under
@@ -28,44 +28,57 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  DistributedFrameworkImpl.h: 
  *
  *  Written by:
  *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
- *   Sept 2005
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
+#ifndef SCIRun_Framework_DistributedFrameworkImpl_h
+#define SCIRun_Framework_DistributedFrameworkImpl_h
 
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+
+#include <Core/CCA/spec/sci_sidl.h>
+#include <string>
+
 
 namespace SCIRun {
-  
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
 
   /**
-   * \class ComponentInfo
-   *
+   * \class DistributedFrameworkImpl
+   * 
+   * \brief An implementation of a DistributedFrameworkImpl 
    */
   
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  namespace Distributed = sci::cca::distributed;
+
+  template<class Base>
+  class DistributedFrameworkImpl : public Base
   {
   public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    typedef Distributed::DistributedFramework::pointer pointer;
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
+    DistributedFrameworkImpl( pointer parent = 0);
+    virtual ~DistributedFrameworkImpl();
+    
+    virtual Distributed::FrameworkID::pointer getFrameworkID();
+    virtual bool isRoot() { return !parent.isNull(); }
+    
+    virtual pointer getParent() { return parent; }
+    virtual SSIDL::array1<pointer> getChildren() { return public_children; }
+    
+  private:
+    pointer parent;
+    SSIDL::array1<pointer> public_children;
+    SSIDL::array1<pointer> private_children;
   };
-
   
 } // end namespace SCIRun
 
-#endif // SCIRun_Distributed_ComponentInfo_h
+#include <SCIRun/Distributed/DistributedFrameworkImpl.code>
+
+#endif

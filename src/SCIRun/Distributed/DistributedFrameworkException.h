@@ -28,44 +28,48 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  DistributedFrameworkException.h: 
  *
  *  Written by:
  *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
- *   Sept 2005
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
+#ifndef SCIRun_Framework_DistributedFrameworkException_h
+#define SCIRun_Framework_DistributedFrameworkException_h
 
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <Core/Exceptions/Exception.h>
+#include <string>
 
-namespace SCIRun {
+namespace SCIRun
+{
+
+/**
+ * \class DistributedFrameworkException
+ *
+ * An exception object for the FrameworkInternal Component model.
+ */
+class DistributedFrameworkException : public Exception
+{
+public:
+  DistributedFrameworkException(const std::string& description);
+  DistributedFrameworkException(const DistributedFrameworkException&);
+  virtual ~DistributedFrameworkException();
+
+  /** Returns the description associated with this exception. */
+  virtual const char* message() const;
   
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
-
-  /**
-   * \class ComponentInfo
-   *
-   */
+  /** Returns a string that identifies the unique type of this exception. */
+  virtual const char* type() const;
+private:
+  std::string description;
   
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
-  {
-  public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+  DistributedFrameworkException& operator=(const DistributedFrameworkException&);
+};
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
-  };
-
-  
 } // end namespace SCIRun
 
-#endif // SCIRun_Distributed_ComponentInfo_h
+#endif

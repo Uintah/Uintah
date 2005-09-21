@@ -28,44 +28,50 @@
 
 
 /*
- *  ComponentInfo.h: 
+ *  ConnectionEventService.cc: Implementation of CCA ConnectionEventService for SCIRun
  *
  *  Written by:
- *   Yarden Livnat
- *   SCI Institute
+ *   Steven G. Parker
+ *   Department of Computer Science
  *   University of Utah
- *   Sept 2005
+ *   October 2001
  *
  */
 
-#ifndef SCIRun_Distributed_ComponentInfo_h
-#define SCIRun_Distributed_ComponentInfo_h
-
-#include <SCIRun/Distributed/ComponentInfoImpl.h>
+#include <SCIRun/Distributed/ConnectionEventService.h>
+#include <iostream>
 
 namespace SCIRun {
-  
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
 
-  /**
-   * \class ComponentInfo
-   *
-   */
-  
-  class ComponentInfo : public ComponentInfoImpl<Distributed::ComponentInfo>
+  ConnectionEventService::~ConnectionEventService()
   {
-  public:
-    typedef Distributed::ComponentInfo::pointer pointer;
+    std::cerr << "EventService destroyed..." << std::endl;
+  }
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
-		  const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
-		  const sci::cca::Component::pointer& component);
-  };
+  ConnectionEventService::pointer ConnectionEventService::create(DistributedFramework *framework)
+  {
+    return pointer(new ConnectionEventService(framework));
+  }
 
+  void ConnectionEventService::emitConnectionEvent(const Ports::ConnectionEvent::pointer& event)
+  {
+    // iterate through listeners and call connectionActivity
+    // should the event type to be emitted be ALL?
+    if (event->getEventType() == Ports::ALL) {
+      return;
+    }
+
+    {
+      SCIRun::Guard lock(&listeners_lock);
+
+      for (std::vector<Listener*>::iterator iter=listeners.begin();
+	   iter != listeners.end(); iter++) {
+        if ((*iter)->type == Ports::ALL ||
+	    (*iter)->type == event->getEventType()) {
+	  (*iter)->listener->connectionActivity(event);
+        }
+      }
+    }
+  }
   
 } // end namespace SCIRun
-
-#endif // SCIRun_Distributed_ComponentInfo_h
