@@ -54,8 +54,8 @@ namespace SCIRun {
 					     const std::string &className,
 					     const sci::cca::TypeMap::pointer &properties,
 					     const sci::cca::Component::pointer &component)
-    : ComponentIDImpl<Base>(framework, instanceName),
-      component(component), className(className), properties(properties)
+    : component(component), 
+      className(className), properties(properties), framework(framework), instanceName(instanceName)
   {
     mutex = new Mutex("getPort mutex");
   }
@@ -85,6 +85,12 @@ namespace SCIRun {
   }
 
   template<class Base>
+  Distributed::DistributedFramework::pointer ComponentInfoImpl<Base>::getFramework() 
+  { 
+    return framework; 
+  }
+  
+  template<class Base>
   std::string  ComponentInfoImpl<Base>::getClassName() 
   { 
     return className; 
@@ -102,4 +108,18 @@ namespace SCIRun {
     this->properties = properties; 
   }
   
+  /*
+   * cca.ComponentID interface
+   */
+  
+  template<class Base>
+  std::string  ComponentInfoImpl<Base>::getInstanceName() 
+  { return instanceName; }
+  
+  template<class Base>
+  std::string ComponentInfoImpl<Base>::getSerialization()
+  {
+    return framework->getFrameworkID()->getString()+"/"+instanceName;
+  }
+
 } // end namespace SCIRun

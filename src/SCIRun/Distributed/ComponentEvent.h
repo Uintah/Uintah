@@ -53,7 +53,7 @@ namespace SCIRun {
   public:
     typedef Distributed::ComponentEvent::pointer pointer;
 
-    ComponentEvent(sci::cca::ports::ComponentEventType type,
+    ComponentEvent(Distributed::ComponentEventType type,
 		   const sci::cca::ComponentID::pointer& id,
 		   const sci::cca::TypeMap::pointer& properties);
     virtual ~ComponentEvent();

@@ -45,7 +45,6 @@ namespace SCIRun {
 
   ComponentEventService::~ComponentEventService()
   {
-    std::cerr << "EventService destroyed..." << std::endl;
   }
 
   ComponentEventService::pointer ComponentEventService::create(DistributedFramework *framework)

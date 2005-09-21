@@ -62,6 +62,9 @@ namespace SCIRun {
     virtual ~DistributedFramework();
 
     void listAllComponentTypes(std::vector<ComponentDescription*> &, bool );
+    sci::cca::ComponentID::pointer createComponentInfo(const std::string &, const std::string &, const sci::cca::TypeMap::pointer &);
+    void addConnection(sci::cca::ConnectionID::pointer);
+
   };
   
 } // end namespace SCIRun

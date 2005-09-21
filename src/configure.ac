@@ -4753,12 +4753,12 @@ if test "$sci_required_loki" = "yes"; then
     _sci_lib=/usr/local/lib/
     _sci_inc="/usr/local/include"
   else 
-  if test "$with_boost" = "yes"; then
+  if test "$with_loki" = "yes"; then
     # --with-loki has been specified without a parameter.
     _sci_lib=/usr/local/lib/
     _sci_inc=/usr/local/include
   else 
-   if test "$with_boost"; then
+   if test "$with_loki"; then
      #if --with-loki has been specified with a parameter, then use that parameter
     _sci_lib="$with_loki"
     _sci_inc="$with_loki"

@@ -76,6 +76,10 @@ namespace SCIRun {
     /** Set CCA framework properties from a TypeMap. */
     virtual void setProperties(const sci::cca::TypeMap::pointer& properties);
 
+    static std::string CONFIG_DIR;
+    static std::string CONFIG_FILE;
+    static std::string CACHE_FILE;
+    
   private:
 
     /** Gets user logged in on the controlling terminal of the process
@@ -101,7 +105,7 @@ namespace SCIRun {
     /** Persistent framework properties from file. */
     bool writePropertiesToFile();
 
-    sci::cca::TypeMap::pointer properties;
+    sci::cca::TypeMap::pointer Properties;
   };
   
 }

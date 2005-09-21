@@ -28,54 +28,40 @@
 
 
 /*
- *  ComponentEventImpl.h: Implementation of the SCI CCA Extension
- *                    ComponentEvent interface for SCIRun
+ *  BuilderService.cc: Implementation of CCA BuilderService for SCIRun
  *
  *  Written by:
- *   Ayla Khan
- *   Scientific Computing and Imaging Institute
+ *   Steven G. Parker
+ *   Department of Computer Science
  *   University of Utah
- *   October 2004
- *
- *  Copyright (C) 2004 SCI Institute
+ *   October 2001
  *
  */
 
-#ifndef SCIRun_ComponentEventImpl_h
-#define SCIRun_ComponentEventImpl_h
+#include <SCIRun/Distributed/BuilderService.h>
+#include <iostream>
+#include <string>
 
-#include <Core/CCA/spec/sci_sidl.h>
+using namespace std;
 
 namespace SCIRun {
-
-  namespace Distributed = sci::cca::distributed;
-
-  template<class Base>
-  class ComponentEventImpl : public Base 
-  {
-  public:
-    ComponentEventImpl(Distributed::ComponentEventType type,
-		       const sci::cca::ComponentID::pointer& id,
-		       const sci::cca::TypeMap::pointer& properties);
-    virtual ~ComponentEventImpl();
-    
-    /** ? */
-    virtual Distributed::ComponentEventType getEventType();
-
-    /** ? */
-    virtual sci::cca::ComponentID::pointer getComponentID();
-    
-    /** ? */
-    virtual sci::cca::TypeMap::pointer getComponentProperties();
-
-  private:
-    Distributed::ComponentEventType type;
-    sci::cca::ComponentID::pointer id;
-    sci::cca::TypeMap::pointer properties;
-  };
   
-} // namespace SCIRun
+  BuilderService::~BuilderService()
+  {
+  }
+  
+  sci::cca::ComponentID::pointer
+  BuilderService::createInstance(const std::string& instanceName,
+				 const std::string& className,
+				 const sci::cca::TypeMap::pointer& properties)
+  {
+    return framework->createComponentInstance(instanceName, className, properties);
+  }
+  
+  BuilderService::pointer BuilderService::create(DistributedFramework *framework)
+  {
+    return pointer(new BuilderService(framework));
+  }
 
-#include <SCIRun/Distributed/ComponentEventImpl.code>
+} // end namespace SCIRun
 
-#endif

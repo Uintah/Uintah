@@ -28,54 +28,31 @@
 
 
 /*
- *  ComponentEventImpl.h: Implementation of the SCI CCA Extension
- *                    ComponentEvent interface for SCIRun
+ *  ConnectionID.cc
  *
  *  Written by:
- *   Ayla Khan
- *   Scientific Computing and Imaging Institute
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   October 2004
- *
- *  Copyright (C) 2004 SCI Institute
+ *   Sept 2005
  *
  */
 
-#ifndef SCIRun_ComponentEventImpl_h
-#define SCIRun_ComponentEventImpl_h
-
-#include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/Distributed/ConnectionID.h>
 
 namespace SCIRun {
-
-  namespace Distributed = sci::cca::distributed;
-
-  template<class Base>
-  class ComponentEventImpl : public Base 
-  {
-  public:
-    ComponentEventImpl(Distributed::ComponentEventType type,
-		       const sci::cca::ComponentID::pointer& id,
-		       const sci::cca::TypeMap::pointer& properties);
-    virtual ~ComponentEventImpl();
-    
-    /** ? */
-    virtual Distributed::ComponentEventType getEventType();
-
-    /** ? */
-    virtual sci::cca::ComponentID::pointer getComponentID();
-    
-    /** ? */
-    virtual sci::cca::TypeMap::pointer getComponentProperties();
-
-  private:
-    Distributed::ComponentEventType type;
-    sci::cca::ComponentID::pointer id;
-    sci::cca::TypeMap::pointer properties;
-  };
   
-} // namespace SCIRun
+  //class DistributedFramework;
+  //namespace Distributed = sci::cca::distributed;
+  
+  ConnectionID::ConnectionID(const pointer &provider, 
+			     const pointer &user, 
+			     const std::string &providerPortName,
+			     const std::string &userPortName)
+    : ConnectionIDImpl<sci::cca::ConnectionID>(provider, usr, providerPortName, userPortName)
+  {
+  }
+  
+   
+} // end namespace SCIRun
 
-#include <SCIRun/Distributed/ComponentEventImpl.code>
-
-#endif
