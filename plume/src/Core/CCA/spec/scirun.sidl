@@ -1,0 +1,51 @@
+
+package sci {
+  
+  package cca {
+
+    package distributed {
+
+      package scirun {
+	
+	interface SCIRunPortInfo extends PortInfo {
+	  string getModel();
+	}
+
+	package ports {
+	  
+
+	  interface BridgeBuilderService extends BuilderService 
+	  {
+	    array<string> getCompatiblePortList(in sci.cca.ComponentID c1, in string port1,
+						in sci.cca.ComponentID c2);
+	    array<string> getBridgablePortList(in sci.cca.ComponentID c1, in string port1,
+					       in sci.cca.ComponentID c2);
+	    
+	    string generateBridge(in cca.ComponentID uses,     in string usesPortName,   
+				  in cca.ComponentID provider, in string providerPortName);
+	    
+	  }
+	  
+	} // package ports
+	
+	package cca {
+	  
+	  interface CCAPortInfo extends SCIRunPortInfo 
+	  {
+	    void incrementUseCount();
+	    bool decrementUseCount();
+	  }
+	  
+	  interface CCAComponentServices extends ComponentInfo, Services {
+	  }
+	
+	} // package cca
+
+      } // scirun
+      
+    } // distributed
+
+  } // cca
+
+} // sci
+	  

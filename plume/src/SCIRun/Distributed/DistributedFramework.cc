@@ -51,4 +51,9 @@ namespace SCIRun {
   {
   }
   
+  void DistributedFramework::listAllComponentTypes(std::vector<ComponentDescription*> &, bool )
+  {
+    // FIXME: [yarden] need to copy this function
+  }
+
 } // SCIRun namespace

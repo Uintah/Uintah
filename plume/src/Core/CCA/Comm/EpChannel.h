@@ -59,6 +59,8 @@ namespace SCIRun {
   class EpChannel {
   public:
 
+    virtual ~EpChannel() {}
+
     //Handler function type
     typedef void (*HPF)(Message* ); 
 

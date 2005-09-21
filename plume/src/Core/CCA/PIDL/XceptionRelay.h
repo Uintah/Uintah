@@ -52,6 +52,10 @@
 #define MAX_X_MSG_LENGTH 300
 
 namespace SCIRun {
+
+  class ProxyBase;
+  class Warehouse;
+
 /**************************************
  
 CLASS

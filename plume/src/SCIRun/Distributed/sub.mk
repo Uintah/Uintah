@@ -33,27 +33,23 @@ SRCDIR   := SCIRun/Distributed
 
 SRCS     += \
              $(SRCDIR)/ComponentInfo.cc \
+             $(SRCDIR)/PortInfo.cc \
 	     $(SRCDIR)/DistributedFramework.cc \
              $(SRCDIR)/DistributedFrameworkException.cc \
 	     $(SRCDIR)/FrameworkID.cc \
-             $(SRCDIR)/PortInfo.cc \
              $(SRCDIR)/ComponentEvent.cc \
-             $(SRCDIR)/ComponentEventService.cc \
-             $(SRCDIR)/FrameworkServiceDescription.cc \
              $(SRCDIR)/ConnectionEvent.cc \
+             $(SRCDIR)/FrameworkServiceDescription.cc \
+             $(SRCDIR)/ComponentDescription.cc \
+             $(SRCDIR)/ComponentClassDescription.cc \
+             $(SRCDIR)/ComponentEventService.cc \
              $(SRCDIR)/ConnectionEventService.cc \
+             $(SRCDIR)/ComponentRepositoryService.cc \
+             $(SRCDIR)/FrameworkPropertiesService.cc \
 
 #             $(SRCDIR)/BuilderService.cc \
-#             $(SRCDIR)/ComponentRegistry.cc \
-#             $(SRCDIR)/InternalComponentModel.cc \
-#             $(SRCDIR)/FrameworkProperties.cc \
+
 #             $(SRCDIR)/FrameworkProxyService.cc \
-#             $(SRCDIR)/FrameworkInternalException.cc \
-#             $(SRCDIR)/InternalServiceDescription.cc \
-#             $(SRCDIR)/InternalFrameworkServiceDescription.cc
-#             $(SRCDIR)/InternalServiceInstance.cc \
-#             $(SRCDIR)/InternalFrameworkServiceInstance.cc \
-#             $(SRCDIR)/InternalComponentInstance.cc \
 
 #$(SRCDIR)/ComponentRegistry.o: Core/CCA/spec/sci_sidl.h
 #$(SRCDIR)/ComponentEvent.o: Core/CCA/spec/sci_sidl.h

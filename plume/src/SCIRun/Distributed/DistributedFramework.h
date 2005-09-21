@@ -43,9 +43,7 @@
 
 
 #include <SCIRun/Distributed/DistributedFrameworkImpl.h>
-//#include <Core/CCA/spec/sci_sidl.h>
-//#include <string>
-
+#include <SCIRun/Distributed/ComponentDescription.h>
 
 namespace SCIRun {
 
@@ -62,6 +60,8 @@ namespace SCIRun {
     
     DistributedFramework( pointer parent = 0);
     virtual ~DistributedFramework();
+
+    void listAllComponentTypes(std::vector<ComponentDescription*> &, bool );
   };
   
 } // end namespace SCIRun
