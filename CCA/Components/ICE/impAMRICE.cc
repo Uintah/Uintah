@@ -302,12 +302,14 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
   const PatchSet* perproc_patches =  
                         loadBal->createPerProcessorPatchSet(grid);
   sched->addTask(t, perproc_patches, all_matls);
+
+  cout << d_myworld->myrank() << " the perproc_patches are " << *perproc_patches << "\n";
 }
 /*___________________________________________________________________ 
  Function~  ICE::multiLevelPressureSolve-- 
 _____________________________________________________________________*/
 void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
-                                  const PatchSubset*, 
+                                  const PatchSubset* patches, 
                                   const MaterialSubset*,       
                                   DataWarehouse* ParentOldDW,    
                                   DataWarehouse* ParentNewDW,    
@@ -317,9 +319,6 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                                   const MaterialSubset* mpm_matls)
 {
   cout_doing<<"Doing multiLevelPressureSolve "<<"\t\t\t\t ICE " << endl;
-
-  //const PatchSet* perProcPatches = 
-  //  sched->getLoadBalancer()->createPerProcessorPatchSet(grid);
 
   SchedulerP schedulerP(sched);
   //__________________________________
@@ -365,15 +364,9 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   max_vartype max_RHS_old;
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);
   subNewDW->put(   max_RHS_old, lb->max_RHSLabel);
-  
-  for(int L = 0; L<maxLevel; L++){
-    const LevelP level = grid->getLevel(L);
-    const PatchSet* patch_set = level->eachPatch();
-    const PatchSubset*  patch_sub = patch_set->getUnion();
      
-    subNewDW->transferFrom(ParentNewDW,lb->press_CCLabel,  patch_sub, d_press_matl); 
-    subNewDW->transferFrom(ParentNewDW,lb->rhsLabel,       patch_sub, one_matl);
-  }
+  subNewDW->transferFrom(ParentNewDW,lb->press_CCLabel,  patches, d_press_matl); 
+  subNewDW->transferFrom(ParentNewDW,lb->rhsLabel,       patches, one_matl);
   //subNewDW->transferFrom(ParentOldDW,lb->initialGuessLabel, patch_sub, one_matl);  
   //__________________________________
   //  Iteration Loop
@@ -384,8 +377,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   bool recursion = true;
   bool firstIter = true;
   //const VarLabel* whichInitialGuess = lb->initialGuessLabel;
-  //  const VarLabel* whichInitialGuess = NULL;
-  
+
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
     //__________________________________
     // schedule the tasks
@@ -412,7 +404,6 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     // Level argument is not really used in this version of scheduleSolve(),
     // so just pass in the coarsest level as it always exists.
     const VarLabel* whichInitialGuess = NULL; // Taken from impICE.cc
-    // I hope the following is correct:
     MaterialSet* press_matlSet  = scinew MaterialSet();
     press_matlSet->add(0);
     press_matlSet->addReference(); 
@@ -425,6 +416,9 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                           Task::NewDW, // Guess doesn't exist yet
 			  solver_parameters);
 #else
+    const PatchSet* perProcPatches = 
+      sched->getLoadBalancer()->createPerProcessorPatchSet(grid);
+    const VarLabel* whichInitialGuess = NULL;
     schedule_bogus_imp_delP(subsched,  perProcPatches,        d_press_matl,
                             all_matls);   
 #endif
@@ -467,8 +461,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     subNewDW->setScrubbing(DataWarehouse::ScrubNone);
     
     subsched->execute();
-
-
+    // Allow for re-scheduling (different) tasks on the next iteration...
+    subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
     
     counter ++;
     firstIter = false;
@@ -534,35 +528,28 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 
   //__________________________________
   // Move products of iteration (only) from sub_new_dw -> parent_new_dw
-  // on all levels
-  for(int L = 0; L<maxLevel; L++){
-    const LevelP level = grid->getLevel(L);
-    const PatchSet* patch_set = level->eachPatch();
-    const PatchSubset*  patch_sub = patch_set->getUnion();
     
-    subNewDW  = subsched->get_dw(3);
-    bool replace = true;
-    const MaterialSubset* all_matls_sub = all_matls->getUnion();
-    ParentNewDW->transferFrom(subNewDW,         // press
-                      lb->press_CCLabel,       patch_sub,  d_press_matl, replace); 
-    ParentNewDW->transferFrom(subNewDW,         // term2
-                      lb->term2Label,          patch_sub,  one_matl,     replace);    
-    ParentNewDW->transferFrom(subNewDW,         // uvel_FC
-                      lb->uvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
-    ParentNewDW->transferFrom(subNewDW,         // vvel_FC
-                      lb->vvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
-    ParentNewDW->transferFrom(subNewDW,         // wvel_FC
-                      lb->wvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
-    ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
-                              lb->vol_fracX_FCLabel,   patch_sub, all_matls_sub,replace); 
-    ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
-                      lb->vol_fracY_FCLabel,   patch_sub, all_matls_sub,replace); 
-    ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
-                      lb->vol_fracZ_FCLabel,   patch_sub, all_matls_sub,replace);
-    ParentNewDW->transferFrom(subNewDW,         // imp_delP
-                      lb->imp_delPLabel,       patch_sub, d_press_matl,replace);
-
-  }               
+  subNewDW  = subsched->get_dw(3);
+  bool replace = true;
+  const MaterialSubset* all_matls_sub = all_matls->getUnion();
+  ParentNewDW->transferFrom(subNewDW,         // press
+                    lb->press_CCLabel,       patches,  d_press_matl, replace); 
+  ParentNewDW->transferFrom(subNewDW,         // term2
+                    lb->term2Label,          patches,  one_matl,     replace);    
+  ParentNewDW->transferFrom(subNewDW,         // uvel_FC
+                    lb->uvel_FCMELabel,      patches,  all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // vvel_FC
+                    lb->vvel_FCMELabel,      patches,  all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // wvel_FC
+                    lb->wvel_FCMELabel,      patches,  all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
+                    lb->vol_fracX_FCLabel,   patches, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
+                    lb->vol_fracY_FCLabel,   patches, all_matls_sub,replace); 
+  ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
+                    lb->vol_fracZ_FCLabel,   patches, all_matls_sub,replace);
+  ParentNewDW->transferFrom(subNewDW,         // imp_delP
+                    lb->imp_delPLabel,       patches, d_press_matl,replace);           
     
   //__________________________________
   //  Turn scrubbing back on
@@ -574,7 +561,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   if(press_matlSet->removeReference()){
     delete press_matlSet;
   }
-}
+} // end multiLevelPressureSolve()
 
 
 
@@ -678,7 +665,14 @@ void ICE::coarsen_imp_delP(const ProcessorGroup*,
         imp_delP[c] =imp_delP_tmp / coarseCellVol;
       }
     }
-  }
+
+    if (switchDebug_updatePressure) {
+      ostringstream desc;
+      desc << "BOT_coarsen_imp_delP" << coarsePatch->getID();
+      printData( 0, coarsePatch, 0,desc.str(), "imp_delP",imp_delP);
+    }  
+
+  } // for patches
 }
 /*______________________________________________________________________
  Function~  ICE::scheduleZeroMatrix_RHS_UnderFinePatches--
@@ -780,7 +774,19 @@ void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
         rhs[c] = 0;
       }
     }
-  }
+    //__________________________________
+    //  Print Data
+#if 1
+    if (switchDebug_setupMatrix) {    
+      ostringstream desc;
+      desc << "BOT_zeroMatrix_RHS_UnderFinePatches_coarse_patch_" << coarsePatch->getID()
+           <<  " L-" <<coarseLevel->getIndex()<< endl;
+      printStencil( 0, coarsePatch, 1, desc.str(), "A", A);
+      printData( 0, coarsePatch, 0,desc.str(), "rhs", rhs);
+    }
+#endif
+
+  } // for patches
 }
 
 /*___________________________________________________________________
