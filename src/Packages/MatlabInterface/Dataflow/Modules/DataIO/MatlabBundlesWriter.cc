@@ -148,9 +148,12 @@ void MatlabBundlesWriter::execute()
     StringHandle stringH;
     if (filenameport->get(stringH))
     {
-      std::string filename = stringH->get();
-      guifilename_.set(filename);
-      ctx->reset();
+      if (stringH.get_rep())
+      {
+        std::string filename = stringH->get();
+        guifilename_.set(filename);
+        ctx->reset();
+      }
     }
   }
 

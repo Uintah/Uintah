@@ -362,8 +362,8 @@
 
    // These need to be public for the dynamic compilation, but do not use these
 	
-   void uncompressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p);
-   void compressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p);	
+   inline void uncompressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p);
+   inline void compressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p);	
 	
 	
    // make sure the dynamic code has access
@@ -1019,6 +1019,14 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    tens.mat_[1][1] = fielddata[p+1];
    tens.mat_[1][2] = fielddata[p+5];
    tens.mat_[2][2] = fielddata[p+2];
+
+//   tens.mat_[0][0] = fielddata[p];
+//   tens.mat_[0][1] = fielddata[p+1];
+//   tens.mat_[0][2] = fielddata[p+2];
+//   tens.mat_[1][1] = fielddata[p+4];
+//   tens.mat_[1][2] = fielddata[p+5];
+//   tens.mat_[2][2] = fielddata[p+8];
+
  }
 
  inline void matlabconverter::uncompressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p)
