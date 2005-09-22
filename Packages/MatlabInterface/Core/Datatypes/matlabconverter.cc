@@ -3603,6 +3603,7 @@ bool matlabconverter::mladdfield(vector<Tensor> &fdata,matlabarray mlarray)
   matlabarray field;
   matlabarray fieldtype;
 
+  std::cout << "start mladdfield\n";
   fieldtype.createstringarray("tensor");
   field.createdensearray(9,static_cast<long>(fdata.size()),matlabarray::miDOUBLE);
         
@@ -3624,6 +3625,9 @@ bool matlabconverter::mladdfield(vector<Tensor> &fdata,matlabarray mlarray)
   field.setnumericarray(data);          
   mlarray.setfield(0,"field",field);
   mlarray.setfield(0,"fieldtype",fieldtype);
+
+  std::cout << "end mladdfield\n";
+
   return(true); 
 }
 

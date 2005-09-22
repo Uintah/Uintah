@@ -168,9 +168,12 @@ void MatlabDataReader::execute()
     StringHandle stringH;
     if (filenameport->get(stringH))
     {
+      if (stringH.get_rep())
+      {
         std::string filename = stringH->get();
         guifilename_.set(filename);
         ctx->reset();
+      }
     }
   }
 
