@@ -47,6 +47,14 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	global $this-tinc
         global $this-timeposition_x
         global $this-timeposition_y
+        # Clock variables
+        global $this-short_hand_res
+        global $this-long_hand_res
+        global $this-short_hand_ticks
+        global $this-long_hand_ticks
+        global $this-clock_position_x
+        global $this-clock_position_y
+        global $this-clock_radius
 	set $this-time 0
 	set $this-max_time 100
 	set $this-timeval 0
@@ -59,6 +67,14 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	set $this-def-color-b 1.0
 	set $this-font_size "*"
 	set exposed 0
+        # Clock variables
+        set $this-short_hand_res    0.001
+        set $this-long_hand_res     0.0001
+        set $this-short_hand_ticks  5
+        set $this-long_hand_ticks  10
+        set $this-clock_position_x  0.80
+        set $this-clock_position_y -0.3
+        set $this-clock_radius      0.25
     } 
     
     method close {} {

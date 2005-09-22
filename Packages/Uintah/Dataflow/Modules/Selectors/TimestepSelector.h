@@ -91,20 +91,39 @@ private:
 
 private:
   //! default color and material
-  GuiDouble                def_color_r_;
-  GuiDouble                def_color_g_;
-  GuiDouble                def_color_b_;
-  GuiDouble                def_color_a_;
-  MaterialHandle           def_mat_handle_;
+  GuiDouble         def_color_r_;
+  GuiDouble         def_color_g_;
+  GuiDouble         def_color_b_;
+  GuiDouble         def_color_a_;
+  MaterialHandle    def_mat_handle_;
   
-  GuiString                font_size_;
+  GuiString         font_size_;
 
-  GuiDouble                timeposition_x;
-  GuiDouble                timeposition_y;
+  GuiDouble         timeposition_x;
+  GuiDouble         timeposition_y;
 
-  GeomHandle               timestep_text;
+  GeomHandle        timestep_text;
+  int               timestep_geom_id;
   void update_timeposition();
+
+  //////////////////
+  //  Clock variables
+
+  int               clock_geom_id;
   
+  // Amount of time one revolution represents
+  GuiDouble         short_hand_res;
+  GuiDouble         long_hand_res;
+  // Number of ticks to display going around
+  GuiInt            short_hand_ticks;
+  GuiInt            long_hand_ticks;
+  // Position and size of the clock
+  GuiDouble         clock_position_x;
+  GuiDouble         clock_position_y;
+  GuiDouble         clock_radius;
+
+  // This will generate a clock given the number of seconds.
+  GeomHandle createClock(double num_seconds);
 }; //class 
 } // End namespace Uintah
 
