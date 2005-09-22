@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2005 Scientific Computing and Imaging Institute,
    University of Utah.
 
    License for the specific language governing rights and limitations under
@@ -26,33 +26,46 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SCIRun_Dataflow_SCIRunTCLThread
-#define SCIRun_Dataflow_SCIRunTCLThread 1
+
+/*
+ *  MPIFramework.h: 
+ *
+ *  Written by:
+ *   Yarden Livnat
+ *   SCI Institute
+ *   University of Utah
+ *   August 2005
+ *
+ */
+
+#ifndef SCIRun_Framework_MPIFramework_h
+#define SCIRun_Framework_MPIFramework_h
 
 
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Semaphore.h>
+#include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/DistributedFramework.>
+#include <string>
+
 
 namespace SCIRun {
-
-class Network;
-class TCLInterface;
-
-class SCIRunTCLThread : public Runnable {
-// This class is a simplified version of SCIRun::TCLThread...
-public:
-    SCIRunTCLThread(Network *net);
-    virtual void run();
-    void startTCL();
-    void tclWait();
-    inline TCLInterface* getTclInterface() { return gui;};
-
+  
+  /**
+   * \class MPIFramework
+   * 
+   * \brief An implementation of a MPIFramework 
+   */
+  
+  class MPIFramework : public sci::cca::MPIFramework, 
+		       public LocaldFramework
+  {
+  public:
+    
+    MPIFramework( const std::string &url, sci::cca::DistributedFramework::pointer parent = 0);
+    virtual ~MPIFramework();
+    
 private:
-    TCLInterface* gui;
-    Network* net;
-    Semaphore start;
 };
 
-}
+} // end namespace SCIRun
 
 #endif
