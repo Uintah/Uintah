@@ -59,7 +59,7 @@ namespace SCIRun {
     virtual ~ConnectionEventImpl();
     
     /** ? */
-    virtual Ports::EventType getType();
+    virtual Ports::EventType getEventType();
 
     /** ? */
     virtual sci::cca::TypeMap::pointer getPortInfo();

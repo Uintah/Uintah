@@ -46,10 +46,10 @@ namespace SCIRun {
   //namespace Distributed = sci::cca::distributed;
   
   ConnectionID::ConnectionID(const cid_pointer &provider, 
-			     const cid_pointer &user, 
 			     const std::string &providerPortName,
+			     const cid_pointer &user, 
 			     const std::string &userPortName)
-    : ConnectionIDImpl<sci::cca::ConnectionID>(provider, user, providerPortName, userPortName)
+    : ConnectionIDImpl<sci::cca::ConnectionID>(provider, providerPortName, user, userPortName)
   {
   }
   

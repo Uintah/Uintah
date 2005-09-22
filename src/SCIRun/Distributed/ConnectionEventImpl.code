@@ -59,7 +59,7 @@ namespace SCIRun {
   
   template<class Base>
   sci::cca::ports::EventType
-  ConnectionEventImpl<Base>::getType()
+  ConnectionEventImpl<Base>::getEventType()
   {
     return type;
   }

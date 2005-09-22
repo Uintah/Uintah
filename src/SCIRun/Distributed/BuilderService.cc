@@ -50,18 +50,10 @@ namespace SCIRun {
   {
   }
   
-  sci::cca::ComponentID::pointer
-  BuilderService::createInstance(const std::string& instanceName,
-				 const std::string& className,
-				 const sci::cca::TypeMap::pointer& properties)
-  {
-    return framework->createComponentInstance(instanceName, className, properties);
-  }
-  
   BuilderService::pointer BuilderService::create(DistributedFramework *framework)
   {
     return pointer(new BuilderService(framework));
   }
-
+  
 } // end namespace SCIRun
 

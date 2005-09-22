@@ -34,6 +34,7 @@ SRCDIR   := SCIRun/Distributed
 SRCS     += \
 	     $(SRCDIR)/ConnectionID.cc\
 	     $(SRCDIR)/FrameworkID.cc \
+             $(SRCDIR)/ConnectionInfo.cc \
              $(SRCDIR)/ComponentInfo.cc \
              $(SRCDIR)/PortInfo.cc \
 	     $(SRCDIR)/DistributedFramework.cc \

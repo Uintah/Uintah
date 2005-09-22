@@ -54,16 +54,17 @@ namespace SCIRun {
   {
   public:
     typedef Distributed::internal::Service::pointer pointer;
-
+    
     BuilderService(DistributedFramework *framework) 
-      : BuilderServiceImpl<Distributed::BuilderServive>(framework)
+      : BuilderServiceImpl<Distributed::BuilderService>(framework)
     {
     }
-
+    
     virtual ~BuilderService();
-  
+    
     static pointer create(DistributedFramework *framework);
   };
 
+} // namespace SCIRun
 
 #endif

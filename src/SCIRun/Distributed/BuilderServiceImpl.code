@@ -45,9 +45,9 @@
 #include <SCIRun//Distributed/DistributedFramework.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <SCIRun/Distributed/PortInfo.h>
-//#include <SCIRun/Distributed/ComponentID.h>
+#include <SCIRun/Distributed/ComponentID.h>
 #include <SCIRun/Distributed/ComponentInfo.h>
-//#include <SCIRun/Distributed/ConnectionID.h>
+#include <SCIRun/Distributed/ConnectionID.h>
 #include <SCIRun/Distributed/ConnectionEvent.h>
 #include <SCIRun/Distributed/ConnectionEventService.h>
 
@@ -138,7 +138,7 @@ namespace SCIRun {
     
     sci::cca::ConnectionID::pointer connection(new ConnectionID(userID, usesPortName, providerID, providesPortName));
     framework->addConnection(connection);
-    emitConnectionEvent(ConnectionEvent::pointer(new ConnectionEvent(sci::cca::ports::Connected, properties)));
+    emitConnectionEvent(new ConnectionEvent(sci::cca::ports::Connected, properties));
     return connection;
   }
   
@@ -150,7 +150,6 @@ namespace SCIRun {
     return framework->getComponentIDs();
   }
 
-#if 0  
   sci::cca::TypeMap::pointer
   BuilderServiceImpl<Base>::getComponentProperties(const sci::cca::ComponentID::pointer &cid)
   {
@@ -206,13 +205,15 @@ namespace SCIRun {
   {
     SSIDL::array1<std::string> result;
     ComponentInfo::pointer ci = pidl_cast<ComponentInfo::pointer>(cid);
-    if (ci.isNull()) {
+    if (ci.isNull()) 
       throw sci::cca::CCAException::pointer(new CCAException("Invalid component " + cid->getInstanceName()));
-    }
 
-    for (PortInfoIterator::pointer iter = ci->getPorts(); !iter->done(); iter->next()) {
-      PortInfo::pointer port = iter->get();
-      if (port->portType() == To) {
+    SSIDL::array1<Distributed::PortInfo::pointer> ports = ci->getPorts();
+
+    SSIDL::array1<PortInfo::pointer>::const_iterator port;
+    for (port=ports.begin(); port != ports.end(); ++port ) {
+      PortInfo::pointer port = port->get();
+      if (port->portType() == Distributed::ProvidePort) {
 	result.push_back(port->getUniqueName());
       }
     }
@@ -228,9 +229,12 @@ namespace SCIRun {
       throw sci::cca::CCAException::pointer(new CCAException("Invalid component " + cid->getInstanceName()));
     }
 
-    for (PortInfoIterator::pointer iter = ci->getPorts(); !iter->done(); iter->next()) {
-      PortInfo::pointer port = iter->get();
-      if (port->portType() == From) {
+    SSIDL::array1<PortInfo::pointer> ports = ci->getPorts();
+
+    SSIDL::array1<PortInfo::pointer>::const_iterator port;
+    for (port=ports.begin(); port != ports.end(); ++port ) {
+      PortInfo::pointer port = port->get();
+      if (port->portType() == Distributed::UsePort) {
 	result.push_back(port->getUniqueName());
       }
     }
@@ -264,78 +268,32 @@ namespace SCIRun {
   SSIDL::array1<sci::cca::ConnectionID::pointer>
   BuilderServiceImpl<Base>::getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer> &componentList)
   {
-    SCIRunFramework *scirun = framework.getPointer();
-    SSIDL::array1<sci::cca::ConnectionID::pointer> conns;
-    for (unsigned i = 0; i < framework->connIDs.size(); i++) {
-      for (unsigned j = 0; j < componentList.size(); j++) {
-	sci::cca::ComponentID::pointer userCID =
-	  scirun->connIDs[i]->getUser();
-	sci::cca::ComponentID::pointer provCID =
-	  scirun->connIDs[i]->getProvider();
-	if (userCID == componentList[j] || provCID == componentList[j]) {
-	  conns.push_back(scirun->connIDs[i]);
-	  break;
-	}
-      }
-    }
-    return conns;
+    return framework->getConnectionIDs(componnetList);
   }
 
   sci::cca::TypeMap::pointer
-  BuilderServiceImpl<Base>::getConnectionProperties(const sci::cca::ConnectionID::pointer& connID)
+  BuilderServiceImpl<Base>::getConnectionProperties(const ConnectionID::pointer& connection)
   {
-    SCIRunFramework *scirun = framework.getPointer();
-    for (unsigned i = 0; i < framework->connIDs.size(); i++) {
-      if (connID == scirun->connIDs[i]) {
-	ConnectionID *connIDPtr = dynamic_cast<ConnectionID*>(connID.getPointer());
-	if (connIDPtr) {
-	  return connIDPtr->getProperties();
-	}
-      }
-    }
-    return scirun->createTypeMap();
+    ConnectionInfo::pointer info = pidl_case<ConnectionInfo>(connection);
+    return info.notNull() ? info->getProperties() : sci::cca::TypeMap::pointer(0);
   }
 
   void
-  BuilderServiceImpl<Base>::setConnectionProperties(const sci::cca::ConnectionID::pointer &connID,
-					  const sci::cca::TypeMap::pointer &map)
+  BuilderServiceImpl<Base>::setConnectionProperties(const ConnectionID::pointer &connection,
+						    const sci::cca::TypeMap::pointer &properties)
   {
-    SCIRunFramework *scirun = framework.getPointer();
-    for (unsigned i = 0; i < framework->connIDs.size(); i++) {
-      if (connID == scirun->connIDs[i]) {
-	ConnectionID *connIDPtr = dynamic_cast<ConnectionID*>(connID.getPointer());
-	if (connIDPtr) {
-	  return connIDPtr->setProperties(map);
-	}
-      }
-    }
+    ConnectionInfo::pointer info = pidl_case<ConnectionInfo>(connection);
+    if ( info.notNull() )
+      info->setProperties(properties);
   }
 
-  // TODO: timeout never used
   // TODO: disconnect event
   void
-  BuilderServiceImpl<Base>::disconnect(const sci::cca::ConnectionID::pointer& connID, float /*timeout*/)
+  BuilderServiceImpl<Base>::disconnect(const ConnectionID::pointer& connection, float timeout)
   {
-    //ComponentID* userID=dynamic_cast<ComponentID*>(connID->getUser().getPointer());
-    //ComponentID* providerID=dynamic_cast<ComponentID*>(connID->getProvider().getPointer());
-
-    ComponentInfo::pointer user=framework->lookupComponent(connID->getUser()->getName());
-    ComponentInfo::pointer provider=framework->lookupComponent(connID->getProvider()->getName());
-
-    PortInfo::pointer userPort=user->getPortInfo(connID->getUserPortName());
-    PortInfo::pointer providerPort=provider->getPortInfo(connID->getProviderPortName());
-    userPort->disconnect(providerPort);
-
-    SCIRunFramework *scirun = framework.getPointer();
-    for(unsigned i=0; i<framework->connIDs.size();i++) {
-      if (scirun->connIDs[i]==connID) {
-	scirun->connIDs.erase(scirun->connIDs.begin()+i);
-	break;
-      }
-    }
-    //std::cerr << "BuilderService::disconnect: timeout or safty check needed "<<std::endl;
+    framework->disconnect(connection, timeout);
   }
-
+  
   void
   BuilderServiceImpl<Base>::disconnectAll(const sci::cca::ComponentID::pointer& /*id1*/,
 				const sci::cca::ComponentID::pointer& /*id2*/,
@@ -352,22 +310,17 @@ namespace SCIRun {
   template<class Base>
   void BuilderServiceImpl<Base>::emitConnectionEvent(ConnectionEvent* event)
   {
-    sci::cca::ports::ConnectionEventService::pointer service =
-      pidl_cast<sci::cca::ports::ConnectionEventService::pointer>
-      ( framework->getFrameworkService("cca.ConnectionEventService", "") );
+    ConnectionEventService::pointer service = pidl_cast<ConnectionEventService::pointer>
+      ( framework->getFrameworkService("cca.ConnectionEventService") );
     if (service.isNull()) {
       std::cerr << "Error: could not find ConnectionEventService" << std::endl;
     } else {
-      ConnectionEventService* ces =
-	dynamic_cast<ConnectionEventService*>(service.getPointer());
-      sci::cca::ports::ConnectionEvent::pointer ce =
-	ConnectionEvent::pointer(event);
-      ces->emitConnectionEvent(ce);
-      framework->releaseFrameworkService("cca.ConnectionEventService", "");
+      ConnectionEventService *internal_service = dynamic_cast<ConnectionEventService *>(service->getPointer());
+      internal_service->emitConnectionEvent(ConnectionEvent::pointer(event));
+      framework->releaseFrameworkService("cca.ConnectionEventService");
     }
-
   }
-#endif
+
 
 } // end namespace SCIRun
 
