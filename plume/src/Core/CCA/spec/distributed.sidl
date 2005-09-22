@@ -33,6 +33,13 @@ package sci {
     
     package distributed {
 
+      // Distributed Connection
+      interface ConnectionInfo extends ConnectionID
+      {
+	TypeMap getProperties();
+	void setProperties( in TypeMap );
+      }
+	
       // Distributed Components
       interface ComponentInfo extends ComponentID
       {

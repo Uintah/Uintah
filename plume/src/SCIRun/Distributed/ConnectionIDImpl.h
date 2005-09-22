@@ -55,10 +55,11 @@ namespace SCIRun {
     typedef sci::cca::ConnectionID::pointer pointer;
     typedef sci::cca::ComponentID::pointer cid_pointer;
 
-    ConnectionIDImpl( const cid_pointer &provider, const cid_pointer &user, 
+    ConnectionIDImpl( const cid_pointer &provider, 
 		      const std::string &providerPortName,
+		      const cid_pointer &user,
 		      const std::string &userPortName)
-      : provider(provider), user(user), providerPortName(providerPortName), userPortName(userPortName)
+      : provider(provider), providerPortName(providerPortName), user(user), userPortName(userPortName)
     {}
 
     virtual ~ConnectionIDImpl() {}
@@ -77,8 +78,8 @@ namespace SCIRun {
 
   private:
     cid_pointer provider;
-    cid_pointer user;
     std::string providerPortName;
+    cid_pointer user;
     std::string userPortName;
   };
   

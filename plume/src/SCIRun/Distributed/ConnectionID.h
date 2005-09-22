@@ -45,9 +45,6 @@
 
 namespace SCIRun {
   
-  class DistributedFramework;
-  namespace Distributed = sci::cca::distributed;
-
   /**
    * \class ConnectionID
    *
@@ -56,9 +53,11 @@ namespace SCIRun {
   class ConnectionID : public ConnectionIDImpl<sci::cca::ConnectionID>
   {
   public:
+    typedef sci::cca::ConnectionID::pointer pointer;
+
     ConnectionID(const cid_pointer &provider, 
-		 const cid_pointer &user, 
 		 const std::string &providerPortName,
+		 const cid_pointer &user, 
 		 const std::string &userPortName);
   };
 

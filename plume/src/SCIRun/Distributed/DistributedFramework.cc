@@ -39,6 +39,10 @@
  */
 
 #include <SCIRun/Distributed/DistributedFramework.h>
+#include <SCIRun/Distributed/ConnectionID.h>
+#include <SCIRun/Distributed/ConnectionInfo.h>
+#include <SCIRun/Distributed/ComponentID.h>
+#include <SCIRun/Distributed/ComponentInfo.h>
 
 namespace SCIRun {
   
@@ -54,6 +58,50 @@ namespace SCIRun {
   void DistributedFramework::listAllComponentTypes(std::vector<ComponentDescription*> &, bool )
   {
     // FIXME: [yarden] need to copy this function
+  }
+
+  SSIDL::array1<ConnectionID::pointer>
+  DistributedFramework::getConnectionIDs(const SSIDL::array1<ComponentID::pointer> &componentList)
+  {
+    SSIDL::array1<ConnectionID::pointer> selected;
+
+    SCIRun::Guard guard(&connection_lock);
+
+    for (unsigned i = 0; i < connections.size(); i++) {
+      ConnectionID::pointer &connection = connections[i];
+      ComponentID::pointer user = connection->getUser();
+      ComponentID::pointer provider = connections->getProvider();
+      for (unsigned j = 0; j < componentList.size(); j++) {
+	const ComponentID::pointer &component = componentList[j];
+	if (user == component || proviver == component) {
+	  selected.push_back(connection]);
+	break;
+      }
+    }
+    return selected;
+  }
+
+  
+  // TODO: timeout never used
+  void DistribugedFramework::disconnect(const ConnectionID::pointer& connection, float/* timeout*/)
+  {
+    ComponentInfo::pointer user = connnetion->getUser();
+    ComponentInfo::pointer provider = connection->getProvider();
+    
+    PortInfo::pointer userPort = user->getPortInfo(connection->getUserPortName());
+    PortInfo::pointer providerPort = provider->getPortInfo(connection->getProviderPortName());
+    
+    SCIRun::Guard guard(&connection_lock);
+    
+    userPort->disconnect(providerPort);
+    
+    ConnectionList::iterator c = connections.find(connection);
+    if ( c != connections.end() )
+      connections.erase(c);
+    // TODO [yarden]: 
+    // else throw exception
+    
+    //std::cerr << "BuilderService::disconnect: timeout or safty check needed "<<std::endl;
   }
 
 } // SCIRun namespace
