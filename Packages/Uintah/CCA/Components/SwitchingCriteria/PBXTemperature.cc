@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Labels/MPMICELabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <string>
 #include <iostream>
 
@@ -20,8 +21,10 @@ PBXTemperature::PBXTemperature(ProblemSpecP& ps)
   ps->require("material",   d_material);
   ps->require("temperature",d_temperature);
 
-  cout << "material = " << d_material << endl;
-  cout << "temperature = " << d_temperature << endl;
+  if (Parallel::getMPIRank() == 0) {
+    cout << "material = " << d_material << endl;
+    cout << "temperature = " << d_temperature << endl;
+  }
 
   Mlb  = scinew MPMLabel();
   MIlb = scinew MPMICELabel();
