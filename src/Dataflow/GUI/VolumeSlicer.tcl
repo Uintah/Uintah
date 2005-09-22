@@ -59,6 +59,7 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	global $this-def-color-b
         global $this-colors
         global $this-color_changed
+        global $this-level_on
 	set $this-drawX 0
 	set $this-drawY 0
 	set $this-drawZ 0
@@ -77,6 +78,7 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	set $this-def-color-b 1.0 
         set $this-colors {}
         set $this-color_changed 1
+        set $this-level_on {}
    }
 
 
@@ -383,20 +385,37 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	    set selected 0
 	    for { set i 0 } { $i < [set $this-multi_level] } { incr i } {
 		checkbutton $w.main.f4.f.f2.f.b$i -text $i \
-		    -variable $this-l$i -command "$this-c needexecute" 
+		    -variable $this-l$i -command "$this set_level $i" 
 		pack $w.main.f4.f.f2.f.b$i -side left
+                if { $i < [llength [set $this-level_on]] } {
+                    if { [lindex [set $this-level_on] $i] == 1 } {
+                        $w.main.f4.f.f2.f.b$i select
+                        set selected 1
+                    }
+                } else  {
+                    set $this-level_on [linsert [set $this-level_on] $i 0]
+                }
                 addColorSelection $w.main.f4.f.f2.f $i \
                     $this-def-color "color_changed"
-		if { [isOn l$i] } {
-		    set selected 1
-		}
 	    }
 	    if { !$selected && [winfo exists $w.main.f4.f.f2.f.b0] } {  
 		$w.main.f4.f.f2.f.b0 select 
+                 set $this-level_on [linsert [set $this-level_on] 0 1]
 	    }
 	}
     }
-    
+    method set_level { i } {
+        if { $i < [llength [set $this-level_on]] } {
+            set on [lindex [set $this-level_on] $i]
+              if { $on == 0 } {
+                  set $this-level_on [lreplace [set $this-level_on] $i $i 1]
+              } else {
+                  set $this-level_on [lreplace [set $this-level_on] $i $i 0]
+              }
+          }
+        $this-c needexecute
+    }
+         
     method destroy_multi_level { } {
 	set w .ui[modname]
 	if {[winfo exists $w.main]} {
@@ -426,6 +445,12 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	     SciRaise $window.color
 	     return
 	 } else {
+             # first set the default color
+             set c [lindex [set $this-colors] $i]
+             set $color-r [lindex $c 0]
+             set $color-g [lindex $c 1]
+             set $color-b [lindex $c 2]
+
 	     # makeColorPicker now creates the $window.color toplevel.
 	     makeColorPicker $window.color $color \
 		     "$this setColor $col $i $color $colMsg" \
@@ -434,10 +459,11 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
     }
 
     method setColor {col i color colMsg} {
-	 global $color
-	 global $color-r
-	 global $color-g
-	 global $color-b
+        global $color
+        global $color-r
+        global $color-g
+        global $color-b
+
 	 set ir [expr int([set $color-r] * 65535)]
 	 set ig [expr int([set $color-g] * 65535)]
 	 set ib [expr int([set $color-b] * 65535)]
