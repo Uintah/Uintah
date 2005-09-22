@@ -155,6 +155,7 @@ SRCS := \
         $(SRCDIR)/ShowField.tcl \
         $(SRCDIR)/ShowMatrix.tcl \
         $(SRCDIR)/SolveMatrix.tcl \
+        $(SRCDIR)/StickyLocator.tcl \
         $(SRCDIR)/StreamLines.tcl \
         $(SRCDIR)/Submatrix.tcl \
         $(SRCDIR)/Subnet.tcl \

@@ -65,7 +65,7 @@ TimestepSelector::TimestepSelector(GuiContext* ctx) :
 
 TimestepSelector::~TimestepSelector() {
   // Remove the callback
-  sched->add_callback(network_finished, this);
+  sched->remove_callback(network_finished, this);
 } 
 
 //------------------------------------------------------------ 
