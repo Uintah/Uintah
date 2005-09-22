@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <string>
 #include <iostream>
 
@@ -18,8 +19,10 @@ SteadyState::SteadyState(ProblemSpecP& ps)
   ps->require("material", d_material);
   ps->require("num_steps", d_numSteps);
 
-  cout << "material = " << d_material << endl;
-  cout << "num_steps  = " << d_numSteps << endl;
+  if (Parallel::getMPIRank() == 0) {
+    cout << "material = " << d_material << endl;
+    cout << "num_steps  = " << d_numSteps << endl;
+  }
 
   heatFlux_CCLabel = 
     VarLabel::create("heatFlux_CC",CCVariable<double>::getTypeDescription());
@@ -64,7 +67,9 @@ void SteadyState::initialize(const ProcessorGroup*,
                              DataWarehouse*,
                              DataWarehouse* new_dw)
 {
-  cout << "Initializing heatFluxSum and heatFluxSumTimeDerivative" << endl;
+  if (Parallel::getMPIRank() == 0) {
+    cout << "Initializing heatFluxSum and heatFluxSumTimeDerivative" << endl;
+  }
   new_dw->put(max_vartype(0.0), heatFluxSumLabel);
   new_dw->put(max_vartype(0.0), heatFluxSumTimeDerivativeLabel);
   new_dw->put(max_vartype(0.0),d_sharedState->get_switch_label());
@@ -115,12 +120,16 @@ void SteadyState::switchTest(const ProcessorGroup* group,
   }
 
   new_dw->put(max_vartype(heatFluxSum),heatFluxSumLabel);
-  cout << "heatFluxSum = " << heatFluxSum << endl;
+  if (Parallel::getMPIRank() == 0) {
+    cout << "heatFluxSum = " << heatFluxSum << endl;
+  }
 
   max_vartype oldHeatFluxSum;
   old_dw->get(oldHeatFluxSum,heatFluxSumLabel);
 
-  cout << "oldHeatFluxSum = " << oldHeatFluxSum << endl;
+  if (Parallel::getMPIRank() == 0) {
+    cout << "oldHeatFluxSum = " << oldHeatFluxSum << endl;
+  }
 
   delt_vartype delT;
   old_dw->get(delT,d_sharedState->get_delt_label(),getLevel(patches));
@@ -128,7 +137,9 @@ void SteadyState::switchTest(const ProcessorGroup* group,
   double dH_dt = (heatFluxSum - oldHeatFluxSum)/delT;
   max_vartype heatFluxSumTimeDerivative(dH_dt);
 
-  cout << "heatFluxSumTimeDerivative = " << heatFluxSumTimeDerivative << endl;
+  if (Parallel::getMPIRank() == 0) {
+    cout << "heatFluxSumTimeDerivative = " << heatFluxSumTimeDerivative << endl;
+  }
 
   new_dw->put(heatFluxSumTimeDerivative,heatFluxSumTimeDerivativeLabel);
 
@@ -153,5 +164,7 @@ void SteadyState::dummy(const ProcessorGroup* group,
 {
   max_vartype old_sw(1.23);
   old_dw->get(old_sw,d_sharedState->get_switch_label());
-  cout << "old_sw = " << old_sw << endl;
+  if (Parallel::getMPIRank() == 0) {
+    cout << "old_sw = " << old_sw << endl;
+  }
 }
