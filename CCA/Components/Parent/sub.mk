@@ -19,8 +19,7 @@ PSELIBS := \
         Packages/Uintah/Core/Parallel    \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/Core/Util        \
-        Packages/Uintah/CCA/Components/Arches    \
-        Packages/Uintah/CCA/Components/MPMArches \
+        Packages/Uintah/CCA/Components/Dummy \
         Packages/Uintah/CCA/Components/Examples  \
         Packages/Uintah/CCA/Components/ICE       \
         Packages/Uintah/CCA/Components/MPM       \

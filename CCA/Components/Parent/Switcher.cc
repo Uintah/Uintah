@@ -498,7 +498,8 @@ void Switcher::readFromTimestepXML(const ProblemSpecP& spec)
   d_componentIndex = tmp; 
   ps->get("switcherState", tmp);
   d_switchState = (switchState) tmp;
-  cout << "  RESTART index = " << d_componentIndex << " STATE = " << d_switchState << endl;
+  if (d_myworld->myrank() == 0)
+    cout << "  Switcher RESTART: component index = " << d_componentIndex << endl;
 }
 
 void Switcher::addMaterial(const ProblemSpecP& params, GridP& grid,

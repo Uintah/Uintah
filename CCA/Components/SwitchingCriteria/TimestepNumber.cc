@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <string>
 #include <iostream>
 
@@ -13,7 +14,9 @@ using namespace Uintah;
 TimestepNumber::TimestepNumber(ProblemSpecP& ps)
 {
   ps->require("timestep",d_timestep);
-  cout << "timestep = " << d_timestep << endl;
+  if (Parallel::getMPIRank() == 0) {
+    cout << "timestep = " << d_timestep << endl;
+  }
 }
 
 TimestepNumber::~TimestepNumber()

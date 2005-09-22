@@ -16,6 +16,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
@@ -82,7 +83,7 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
         continue;    // restart loop to avoid accessing name of empty object
       
       } else {
-	if (ps->doWriteMessages())
+	if (ps->doWriteMessages() && Parallel::getMPIRank() == 0)
 	  cerr << "WARNING: Unknown Geometry Piece Type " << "(" << go_type << ")" 
 	       << endl;
         continue;    // restart loop to avoid accessing name of empty object
