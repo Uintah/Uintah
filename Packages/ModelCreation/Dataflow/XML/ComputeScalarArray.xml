@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="ComputeScalarArray" category="TensorVectorMath">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module computes a new Scalar based upon a combination of Scalars, Vectors, and Tensors. The module allows the user to specify a function of how the new Scalarneeds to be computed.
+    </summary>
+    <description>
+      This module computes a new Scalar based upon a combination of Scalars, Vectors, and Tensors. The module allows the user to specify a function of how the new Scalarr needs to be computed.
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>Size</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Array</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>ScalarArray</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      NEED TO FINISH THIS
+    </description>
+    <parameter>
+      <widget>Place Widget Name Here</widget>
+      <label>Place Label Name Here</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+
