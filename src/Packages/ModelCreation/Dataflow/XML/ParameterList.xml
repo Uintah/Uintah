@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="ParameterList" category="Script">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module allows for creation a bundle with strings, scalars, vectors, and tensors as components. Each component has a name and can be extracte out of the bundle.
+    </summary>
+    <description>
+      This module allows for creation a bundle with strings, scalars, vectors, and tensors as components. Each component has a name and can be extracte out of the bundle.
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>ParameterList</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      NEED COMPLETION
+    </description>
+    <parameter>
+      <widget>Place Widget Name Here</widget>
+      <label>Place Label Name Here</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

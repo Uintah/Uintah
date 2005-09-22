@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="ArrayInfo" category="DataInfo">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      Get information on a matrix used as a ScalarArray, VectorArray, or TensorArray.
+    </summary>
+    <description>
+      Get information on a matrix used as a ScalarArray, VectorArray, or TensorArray. The module also outputs the dimensions of the array.
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Array</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>NumElements</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      NEED TO FINISH THIS
+    </description>
+    <parameter>
+      <widget>Place Widget Name Here</widget>
+      <label>Place Label Name Here</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+
