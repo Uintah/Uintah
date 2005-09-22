@@ -28,7 +28,7 @@
 
 
 /*
- *  DistributedFramework.cc: An instance of the SCIRun framework
+ *  DistributedFramework.cc: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -43,11 +43,15 @@
 #include <SCIRun/Distributed/ConnectionInfo.h>
 #include <SCIRun/Distributed/ComponentID.h>
 #include <SCIRun/Distributed/ComponentInfo.h>
+#include <Core/Thread/Guard.h>
+#include <algorithm>
 
 namespace SCIRun {
   
   DistributedFramework::DistributedFramework(pointer parent )
-    : DistributedFrameworkImpl<Distributed::DistributedFramework>(parent)
+    : DistributedFrameworkImpl<Distributed::DistributedFramework>(parent),
+      connection_lock("DistributedFramework::connection_lock"),
+      component_lock("DistributedFramework::component_lock")
   {
   }
   
@@ -55,6 +59,36 @@ namespace SCIRun {
   {
   }
   
+
+  ComponentInfo::pointer DistributedFramework::createInstance( const std::string& instanceName,
+							       const std::string& className,
+							       const sci::cca::TypeMap::pointer& properties)
+  {
+    // call the virtual method that actually create a component
+    sci::cca::Component::pointer component = createComponent( instanceName, className, properties);
+
+    return ComponentInfo::pointer(new ComponentInfo(Distributed::DistributedFramework::pointer(this),
+						    instanceName,
+						    className,
+						    properties,
+						    component));
+  }
+
+  void DistributedFramework::destroyComponent( const ComponentID::pointer &component)
+  {
+  }
+
+  
+  ComponentID::pointer DistributedFramework::lookupComponentID(const std::string &name) 
+  {
+    SCIRun::Guard guard(&component_lock);
+
+    for (ComponentList::const_iterator c = components.begin(); c != components.end(); ++c)
+      if ( (*c)->getInstanceName() == name )
+	return (*c);
+    return ComponentID::pointer(0);
+  }
+
   void DistributedFramework::listAllComponentTypes(std::vector<ComponentDescription*> &, bool )
   {
     // FIXME: [yarden] need to copy this function
@@ -67,41 +101,66 @@ namespace SCIRun {
 
     SCIRun::Guard guard(&connection_lock);
 
-    for (unsigned i = 0; i < connections.size(); i++) {
-      ConnectionID::pointer &connection = connections[i];
+    for (ConnectionList::const_iterator iter = connections.begin(); iter != connections.end(); ++iter ) {
+      const ConnectionID::pointer &connection = (*iter);
+
       ComponentID::pointer user = connection->getUser();
-      ComponentID::pointer provider = connections->getProvider();
+      ComponentID::pointer provider = connection->getProvider();
+
       for (unsigned j = 0; j < componentList.size(); j++) {
 	const ComponentID::pointer &component = componentList[j];
-	if (user == component || proviver == component) {
-	  selected.push_back(connection]);
-	break;
+	if (user == component || provider == component) {
+	  selected.push_back(connection);
+	  break;
+	}
       }
     }
     return selected;
   }
 
   
-  // TODO: timeout never used
-  void DistribugedFramework::disconnect(const ConnectionID::pointer& connection, float/* timeout*/)
+  void DistributedFramework::disconnect(const ConnectionID::pointer &connection)
   {
-    ComponentInfo::pointer user = connnetion->getUser();
-    ComponentInfo::pointer provider = connection->getProvider();
-    
-    PortInfo::pointer userPort = user->getPortInfo(connection->getUserPortName());
-    PortInfo::pointer providerPort = provider->getPortInfo(connection->getProviderPortName());
-    
     SCIRun::Guard guard(&connection_lock);
     
-    userPort->disconnect(providerPort);
-    
-    ConnectionList::iterator c = connections.find(connection);
+    ConnectionList::iterator c = find( connections.begin(), connections.end(), pidl_cast<ConnectionInfo::pointer>(connection));
     if ( c != connections.end() )
       connections.erase(c);
     // TODO [yarden]: 
     // else throw exception
-    
-    //std::cerr << "BuilderService::disconnect: timeout or safty check needed "<<std::endl;
   }
+
+
+  void DistributedFramework::destroyComponentInfo( const ComponentID::pointer &component )
+  {
+    SCIRun::Guard guard(&component_lock);
+    
+    // call the virtual function that actually delete the component 
+    destroyComponent(component);
+    
+    ComponentList::iterator c = find( components.begin(), components.end(), pidl_cast<ComponentInfo::pointer>(component));
+    if ( c != components.end() ) {
+      // erase the last reference to the component info
+      components.erase(c);
+    }
+    else {
+      // TODO [yarden]: 
+      // throw exception ?
+    }
+  }
+
+  DistributedFramework::ServicePointer
+  DistributedFramework::getFrameworkService(const std::string &name)
+  {
+    ServiceMap::const_iterator service = services.find(name);
+    return service != services.end() ? (*service).second : ServicePointer(0);
+  }
+
+  void
+  DistributedFramework::releaseFrameworkService(const ServicePointer &service)
+  {
+    // for now we only have singleton services and we can forgo deleting them.
+  }
+
 
 } // SCIRun namespace

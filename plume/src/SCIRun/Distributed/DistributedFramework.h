@@ -41,11 +41,14 @@
 #ifndef SCIRun_Framework_DistributedFramework_h
 #define SCIRun_Framework_DistributedFramework_h
 
-
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Distributed/DistributedFrameworkImpl.h>
 #include <SCIRun/Distributed/ComponentDescription.h>
+#include <list>
 
 namespace SCIRun {
+
+  namespace Distributed = sci::cca::distributed;
 
   /**
    * \class DistributedFramework
@@ -57,22 +60,57 @@ namespace SCIRun {
   {
   public:
     typedef DistributedFrameworkImpl<Distributed::DistributedFramework>::pointer pointer;
-    
+    typedef Distributed::internal::Service::pointer ServicePointer;
+
     DistributedFramework( pointer parent = 0);
     virtual ~DistributedFramework();
 
+    /*
+     * Two pure virtual methods to create and destroy a component.
+     * These methods must be defined in the Framework that derives from this DistributedFramework base
+     */
+    virtual sci::cca::Component::pointer 
+    createComponent( const std::string &, const std::string &, const sci::cca::TypeMap::pointer& properties) = 0;
+
+    virtual void destroyComponent( const sci::cca::ComponentID::pointer &) = 0;
+
+    /*
+     * methods that implement the DistributedFramework 
+     */
+
+    virtual Distributed::ComponentInfo::pointer 
+    createInstance( const std::string &, const std::string &, const sci::cca::TypeMap::pointer& properties) ;
+
+    
     void listAllComponentTypes(std::vector<ComponentDescription*> &, bool );
     sci::cca::ComponentID::pointer createComponentInfo(const std::string &, 
 						       const std::string &, 
 						       const sci::cca::TypeMap::pointer &);
-    void addConnection(sci::cca::ConnectionID::pointer);
+
+    sci::cca::ComponentID::pointer lookupComponentID(const std::string &);
+
     SSIDL::array1<sci::cca::ComponentID::pointer> getComponentIDs();
-    SSIDL::array1<sci::cca::ComponentID::pointer> getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer> &componentList);
+    SSIDL::array1<sci::cca::ConnectionID::pointer> getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer> &componentList);
+
+    void addConnection(sci::cca::ConnectionID::pointer);
+    void disconnect(const sci::cca::ConnectionID::pointer& connection);
+
+    void destroyComponentInfo(const sci::cca::ComponentID::pointer &id);
+
+    ServicePointer getFrameworkService(const std::string &);
+    void releaseFrameworkService(const ServicePointer &service);
 
   private:
-    // connection list
-    // component list
+    typedef std::list<Distributed::ConnectionInfo::pointer> ConnectionList;
+    typedef std::list<Distributed::ComponentInfo::pointer> ComponentList;
+    typedef std::map<std::string, Distributed::internal::Service::pointer> ServiceMap;
 
+    ConnectionList connections;
+    ComponentList  components;
+    ServiceMap     services;
+
+    Mutex connection_lock;
+    Mutex component_lock;
   };
   
 } // end namespace SCIRun

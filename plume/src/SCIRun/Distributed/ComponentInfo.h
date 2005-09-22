@@ -58,10 +58,10 @@ namespace SCIRun {
   public:
     typedef Distributed::ComponentInfo::pointer pointer;
 
-    ComponentInfo(Distributed::DistributedFramework::pointer &framework,
+    ComponentInfo(const Distributed::DistributedFramework::pointer &framework,
 		  const std::string& instanceName,
 		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& typemap,
+		  const sci::cca::TypeMap::pointer& properties,
 		  const sci::cca::Component::pointer& component);
   };
 
