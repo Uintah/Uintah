@@ -47,7 +47,9 @@
 namespace SCIRun {
   
   namespace Distributed = sci::cca::distributed;
+
   class DistributedFramework;
+  class ConnectionEvent;
 
   /**
    * \class BuilderService
@@ -124,7 +126,7 @@ namespace SCIRun {
 	toDie component does not  exist, or cannot be destroyed in the given \em
 	timeout period. */
     virtual void
-    destroyInstance(const sci::cca::ComponentID::pointer &toDie, float timeout);
+    destroyInstance(const sci::cca::ComponentID::pointer &component, float timeout);
     
     /** Returns a list of \em provides ports for the given component instance \em
 	cid.*/
@@ -134,7 +136,7 @@ namespace SCIRun {
     /** Returns a list of \em uses ports for the component instance \em cid */
     virtual SSIDL::array1<std::string>
     getUsedPortNames(const sci::cca::ComponentID::pointer &cid);
-    
+
     /** Returns a map of port properties exposed by the framework. */
     virtual sci::cca::TypeMap::pointer
     getPortProperties(const sci::cca::ComponentID::pointer &cid,
@@ -187,21 +189,24 @@ namespace SCIRun {
 		  float timeout);
 
 
+    virtual void
+    destroyInstance(const sci::cca::ComponentID::pointer &component);
+
+
+    virtual std::string getFrameworkURL();
 
     /* *****
      * implements internal.BuilderService
      */
 
     /** ? */
-    void emitConnectionEvent(sci::cca::ports::ConnectionEvent::pointer event);
+    virtual void emitConnectionEvent(ConnectionEvent *event);
 
   protected:
     DistributedFramework* framework;
     
     BuilderServiceImpl(DistributedFramework *framework);
 
-    /** Returns the URL of this BuilderService component's framework. */
-    std::string getFrameworkURL();
   };
 }
 
