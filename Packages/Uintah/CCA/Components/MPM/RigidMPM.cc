@@ -63,7 +63,7 @@ void RigidMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
   SerialMPM::problemSetup(prob_spec, grid, sharedState);
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
-  if(cfd_ps){
+  if(cfd_ps && d_myworld->myrank() == 0){
     cout << "\n__________________________________"<< endl;
     cout << "  W A R N I N G :  " << endl;
     cout << "  You must use stiff MPM material properties" << endl;
