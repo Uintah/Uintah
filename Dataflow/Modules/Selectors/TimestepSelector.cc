@@ -8,6 +8,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomText.h>
+#include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomSticky.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomGroup.h>
@@ -49,7 +50,16 @@ TimestepSelector::TimestepSelector(GuiContext* ctx) :
   font_size_(ctx->subVar("font_size")),
   timeposition_x(ctx->subVar("timeposition_x")),
   timeposition_y(ctx->subVar("timeposition_y")),
-  timestep_text(0)
+  timestep_text(0),
+  timestep_geom_id(0),
+  // Clock variables
+  short_hand_res(ctx->subVar("short_hand_res")),
+  long_hand_res(ctx->subVar("long_hand_res")),
+  short_hand_ticks(ctx->subVar("short_hand_ticks")),
+  long_hand_ticks(ctx->subVar("long_hand_ticks")),
+  clock_position_x(ctx->subVar("clock_position_x")),
+  clock_position_y(ctx->subVar("clock_position_y")),
+  clock_radius(ctx->subVar("clock_radius"))
 { 
 } 
 
@@ -173,8 +183,10 @@ TimestepSelector::execute()
                                   def_mat_handle_->diffuse, 
                                   font_size_.get());
   GeomHandle sticky = scinew GeomSticky(timestep_text);
+  // These geom ids start at 1, so 0 is an unintialized value
   ogeom->delAll();
-  ogeom->addObj(sticky, "TimeStamp");
+  timestep_geom_id = ogeom->addObj(sticky, "TimeStamp Sticky");
+  //  clock_geom_id = ogeom->addObj(createClock(v), "Clock Sticky");
 
   tcl_status.set("Done");
   // DumpAllocator(default_allocator, "timedump.allocator");
@@ -209,10 +221,15 @@ TimestepSelector::update_timeposition() {
     // For some reason we have to delete the geometry and create a new
     // one for the changes to take effect.
     GeomHandle sticky = scinew GeomSticky(timestep_text);
+
     // Do we need to get the port?
     //    ogeom=(GeometryOPort *) get_oport("Geometry");
-    ogeom->delAll();
-    ogeom->addObj(sticky, "TimeStamp");
+
+    // These geom ids start at 1, so 0 is an unintialized value
+    if (timestep_geom_id != 0) {
+      ogeom->delObj(timestep_geom_id);
+    }
+    timestep_geom_id = ogeom->addObj(sticky, "TimeStamp Sticky");
     ogeom->flush();
   }
 }
@@ -236,4 +253,75 @@ void TimestepSelector::set_context(Network* network) {
   Module::set_context(network);
   // Set up a callback to call after we finish
   sched->add_callback(network_finished, this);
+}
+
+// This will generate a clock given the number of seconds.
+GeomHandle TimestepSelector::createClock(double num_seconds) {
+  GeomGroup* all = scinew GeomGroup();
+  reset_vars();
+  double radius = clock_radius.get();
+  Point center(clock_position_x.get(), clock_position_y.get(), 0);
+  double offset = radius * M_SQRT1_2;
+
+  GeomLines* outline = scinew GeomLines();
+  outline->add(center+Vector( offset,  offset, 0),
+               center+Vector( offset, -offset, 0));
+  outline->add(center+Vector( offset, -offset, 0),
+               center+Vector(-offset, -offset, 0));
+  outline->add(center+Vector(-offset, -offset, 0),
+               center+Vector(-offset,  offset, 0));
+  outline->add(center+Vector(-offset,  offset, 0),
+               center+Vector( offset,  offset, 0));
+  all->add(scinew GeomMaterial(outline,
+                               scinew Material(Color(0,0,0),
+                                               Color(1,1,1),
+                                               Color(.5,.5,.5), 20)));
+  GeomLines* sh_ticks = scinew GeomLines();
+  int num_sh_ticks = short_hand_ticks.get();
+  for(int i = 0; i < num_sh_ticks; ++i) {
+    double theta = M_PI*2*(double)i/num_sh_ticks;
+    Vector dir(sin(theta), cos(theta), 0);
+    sh_ticks->add(center+dir*offset*0.8,
+                  center+dir*offset*0.9);
+  }
+  all->add(scinew GeomMaterial(sh_ticks,
+                               scinew Material(Color(0,0,0),
+                                               Color(1,0,0),
+                                               Color(.5,.5,.5), 20)));
+
+  GeomLines* lh_ticks = scinew GeomLines();
+  int num_lh_ticks = long_hand_ticks.get();
+  for(int i = 0; i < num_lh_ticks; ++i) {
+    double theta = M_PI*2*(double)i/num_lh_ticks;
+    Vector dir(sin(theta), cos(theta), 0);
+    lh_ticks->add(center+dir*offset*0.9,
+                  center+dir*offset);
+  }
+  all->add(scinew GeomMaterial(lh_ticks,
+                               scinew Material(Color(0,0,0),
+                                               Color(1,1,1),
+                                               Color(.5,.5,.5), 20)));
+
+  double sh_theta = num_seconds/short_hand_res.get() * 2 * M_PI;
+  GeomLine* short_hand =
+    new GeomLine(center,
+                 center+Vector(sin(sh_theta), cos(sh_theta), 0)*0.4*offset);
+  short_hand->setLineWidth(3);
+  all->add(scinew GeomMaterial(short_hand,
+                               scinew Material(Color(0,0,0),
+                                               Color(0.8,0,0),
+                                               Color(.5,.5,.5), 20)));
+
+  double lh_theta = num_seconds/long_hand_res.get() * 2 * M_PI;
+  GeomLine* long_hand =
+    new GeomLine(center,
+                 center+Vector(sin(lh_theta), cos(lh_theta), 0)*0.7*offset);
+  long_hand->setLineWidth(2);
+  all->add(scinew GeomMaterial(long_hand,
+                               scinew Material(Color(0,0,0),
+                                               Color(0.8,0.8,0.8),
+                                               Color(.5,.5,.5), 20)));
+
+
+  return scinew GeomSticky(all);
 }
