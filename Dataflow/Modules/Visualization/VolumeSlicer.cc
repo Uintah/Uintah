@@ -93,6 +93,8 @@ private:
   GuiInt cyl_active_;
   GuiInt gui_multi_level_;
   GuiInt gui_color_changed_;
+  GuiString gui_colors_;
+  GuiString gui_level_on_;
   GuiInt gui_outline_levels_;
   GuiInt gui_use_stencil_;
 
@@ -140,6 +142,8 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     cyl_active_(ctx->subVar("cyl_active")),   
     gui_multi_level_(ctx->subVar("multi_level")),
     gui_color_changed_(ctx->subVar("color_changed")),
+    gui_colors_(ctx->subVar("colors")),
+    gui_level_on_(ctx->subVar("level_on")),
     gui_outline_levels_(ctx->subVar("outline_levels")),
     gui_use_stencil_(ctx->subVar("use_stencil")),
     old_tex_(0),
@@ -238,6 +242,7 @@ void VolumeSlicer::execute()
     gui->execute(id + " destroy_multi_level");
   }
 
+  if( !slice_ren_ && gui_multi_level_.get() >= 1 ) { gui_color_changed_.set(1);}
   if(!slice_ren_) {
     slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2,
 				   int(card_mem_*1024*1024*0.8));
