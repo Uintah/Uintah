@@ -168,19 +168,12 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	pack $w.timeVis.cs -side top -anchor w -fill x
 
         # This is the text position
-        frame $w.timeVis.position -relief flat -borderwidth 2
-        pack $w.timeVis.position -side left -fill x -expand yes
-
-        canvas $w.timeVis.position.canvas -bg "#ffffff" -height 70 -width 70
-        label $w.timeVis.position.l -text "Time Step Position"
-	pack $w.timeVis.position.l $w.timeVis.position.canvas \
-            -side top -anchor w -expand yes -fill x -fill y
-
-	bind $w.timeVis.position.canvas <Expose> "$this canvasExpose"
-	bind $w.timeVis.position.canvas <Button-1> "$this moveNode %x %y"
-	bind $w.timeVis.position.canvas <B1-Motion> "$this moveNode %x %y"
-	bind $w.timeVis.position.canvas <ButtonRelease> "$this-c update_timeposition"
-
+        set can [makeStickyLocator $w.timeVis.position \
+                     $this-timeposition_x $this-timeposition_y 100 100 \
+                     "Time Step Position"]
+        pack $w.timeVis.position -side left
+        $can bind movable <ButtonRelease> "$this-c update_timeposition"
+        
         # This is the clock
 #        frame $w.timeVis.clock -relief  -borderwidth 2
 #        pack $w.timeVis.clock -side left -fill x -expand yes
@@ -252,67 +245,4 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	pack $frame.colorFrame -side left
     }
 
-    method moveNode { x y } {
-	global $this-timeposition_x
-	global $this-timeposition_y
-	set w .ui[modname]
-	set c $w.timeVis.position.canvas
-	set cw [winfo width $c]
-	set ch [winfo height $c]
-
-        # Normalize the pixel locations to [-1, 1]
-        set $this-timeposition_x [expr $x/double($cw)*2 - 1]
-        set $this-timeposition_y [expr -$y/double($ch)*2 + 1]
-
-        drawTimePosition
-    }
-
-    method drawTimePosition { } {
-	global $this-timeposition_x
-	global $this-timeposition_y
-	set w .ui[modname]
-	set c $w.timeVis.position.canvas
-	set cw [winfo width $c]
-	set ch [winfo height $c]
-
-        # Clear the canvas
-        $c create rectangle 0 0 $cw $ch -fill white
-
-        # Denormalize the positions to screen locations
-        set x [expr $cw * (([set $this-timeposition_x] + 1) / 2)]
-        set y [expr $ch * ((-[set $this-timeposition_y] + 1) / 2)]
-#        puts "Time Position = ($x, $y)"
-        if { $x < 0 } {
-            set x 0
-        } elseif { $x > $cw } {
-            set x $cw 
-        }
-
-        if { $y < 0 } {
-            set y 0
-        } elseif { $y > $ch } {
-            set y $ch 
-        }
-	
-        $c create oval [expr $x - 5] [expr $y - 5] \
-            [expr $x+5] [expr $y+5] -outline black \
-            -fill red -tags node
-    }
-
-    method canvasExpose {} {
-	set w .ui[modname]
-	
-	if { [winfo viewable $w.timeVis.position.canvas] } { 
-	    if { $exposed } {
-		return
-	    } else {
-		set exposed 1
-		$this drawTimePosition
-	    } 
-	} else {
-	    return
-	}
-    }
-    
-        
 }
