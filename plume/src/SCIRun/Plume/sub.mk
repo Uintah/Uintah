@@ -31,11 +31,27 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := SCIRun
+SRCDIR   := SCIRun/Plume
 
-SUBDIRS := $(SRCDIR)/Distributed
-SUBDIRS += $(SRCDIR)/Plume
-#SUBDIRS += $(SRCDIR)/MPIFramework
-#SUBDIRS += $(SRCDIR)/SCIRun2
+SRCS := $(SRCDIR)/PlumeFramework.cc
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+PSELIBS := SCIRun/Distributed
+
+ifeq ($(HAVE_GLOBUS),yes)
+  PSELIBS += Core/OS Core/Containers Core/Util Core/XMLUtil \
+            Core/GuiInterface Core/CCA/spec \
+            Core/CCA/PIDL Core/CCA/SSIDL \
+            Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
+            Core/globus_threads Core/CCA/Comm
+else
+  PSELIBS += Core/OS Core/Containers Core/Util Core/XMLUtil \
+            Core/GuiInterface Core/CCA/spec \
+            Core/CCA/PIDL Core/CCA/SSIDL \
+            Core/Exceptions Core/Thread \
+            Core/TkExtensions Core/Init Core/CCA/Comm
+endif
+
+LIBS := $(LIBS) -lcrypt -ldl
+
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
