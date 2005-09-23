@@ -774,7 +774,7 @@ namespace Uintah {
       int d_iters_before_timestep_restart;
       double d_outer_iter_tolerance;
 
-      bool doICEOnLevel(int level);
+      bool doICEOnLevel(int level, int numLevels);
       int d_minGridLevel;
       int d_maxGridLevel;
       
