@@ -1013,6 +1013,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	      // data task
 	      DetailedTask* creator = 0;
 	      Task::Dependency* comp = 0;
+              //              cout << d_myworld->myrank() << "  asdf var: " << *req->var << " patch " << fromNeighbor->getID() << " DW " << req->whichdw << " " << req->mapDataWarehouse() << " ISOLD " << sc->isOldDW(req->mapDataWarehouse()) << endl;
 	      if(sc->isOldDW(req->mapDataWarehouse())){
 	        ASSERT(!modifies);
 	        int proc = findVariableLocation(lb, req, fromNeighbor, matl);
@@ -1130,7 +1131,14 @@ int TaskGraph::findVariableLocation(LoadBalancer* lb,
 {
   // This needs to be improved, especially for re-distribution on
   // restart from checkpoint.
-  int proc = lb->getOldProcessorAssignment(req->var, patch, matl);
+  int proc;
+  if (req->task->mapDataWarehouse(Task::ParentNewDW) != -1 && req->whichdw != Task::ParentOldDW) {
+    // provide some accomodation for Dynamic load balancers and sub schedulers.  We need to
+    // treat the requirement like a "old" dw req but it needs to be found on the current processor
+    proc = lb->getPatchwiseProcessorAssignment(patch);
+  }
+  else
+    proc = lb->getOldProcessorAssignment(req->var, patch, matl);
   return proc;
 }
 

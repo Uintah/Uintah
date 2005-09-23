@@ -1,5 +1,5 @@
-#ifndef UINTAH_HOMEBREW_ParticleLoadBalancer_H
-#define UINTAH_HOMEBREW_ParticleLoadBalancer_H
+#ifndef UINTAH_HOMEBREW_DynamicLoadBalancer_H
+#define UINTAH_HOMEBREW_DynamicLoadBalancer_H
 
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
@@ -11,13 +11,13 @@ namespace Uintah {
    /**************************************
      
      CLASS
-       ParticleLoadBalancer
+       DynamicLoadBalancer
       
        Short Description...
       
      GENERAL INFORMATION
       
-       ParticleLoadBalancer.h
+       DynamicLoadBalancer.h
       
        Steven G. Parker
        Department of Computer Science
@@ -28,7 +28,7 @@ namespace Uintah {
        Copyright (C) 2000 SCI Group
       
      KEYWORDS
-       ParticleLoadBalancer
+       DynamicLoadBalancer
       
      DESCRIPTION
        Long description...
@@ -37,13 +37,38 @@ namespace Uintah {
       
      ****************************************/
     
-  class ParticleLoadBalancer : public LoadBalancerCommon {
+  struct PatchInfo {
+    PatchInfo(int i, int n, int a) {id = i; numParticles = n; assigned = a;}
+    PatchInfo() {assigned = 0;}
+    
+    int id;
+    int numParticles;
+    int assigned;
+  };
+
+  class ParticleCompare {
   public:
-    ParticleLoadBalancer(const ProcessorGroup* myworld);
-    ~ParticleLoadBalancer();
+    inline bool operator()(const PatchInfo& p1, const PatchInfo& p2) const {
+      return p1.numParticles < p2.numParticles || 
+        ( p1.numParticles == p2.numParticles && p1.id < p2.id);
+    }
+  };
+
+  class PatchCompare {
+  public:
+    inline bool operator()(const PatchInfo& p1, const PatchInfo& p2) const {
+      return p1.id < p2.id;
+    }
+  };
+
+  class DynamicLoadBalancer : public LoadBalancerCommon {
+  public:
+    DynamicLoadBalancer(const ProcessorGroup* myworld);
+    ~DynamicLoadBalancer();
     virtual int getPatchwiseProcessorAssignment(const Patch* patch);
     virtual int getOldProcessorAssignment(const VarLabel* var,
 					  const Patch* patch, const int matl);
+    virtual void problemSetup(ProblemSpecP& pspec, SimulationStateP& state);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
 
     /// maintain lb state and call one of the assignPatches functions.
@@ -63,29 +88,28 @@ namespace Uintah {
     //! Asks the load balancer if it is dynamic.
     virtual bool isDynamic() { return true; }
 
-    //    virtual void doRegridTimestep() { d_state = regridLoadBalance;}
-
     //! Assigns the patches to the processors they ended up on in the previous
     //! Simulation.
     void restartInitialize(ProblemSpecP& pspec, XMLURL, const GridP& grid);
     
   private:
-    enum { static_lb, cyclic_lb, random_lb, particle_lb };
+    enum { static_lb, cyclic_lb, random_lb, patch_factor_lb };
 
-    ParticleLoadBalancer(const ParticleLoadBalancer&);
-    ParticleLoadBalancer& operator=(const ParticleLoadBalancer&);
+    DynamicLoadBalancer(const DynamicLoadBalancer&);
+    DynamicLoadBalancer& operator=(const DynamicLoadBalancer&);
 
     /// Helpers for possiblyDynamicallyRelocate.  These functions take care of setting 
     /// d_tempAssignment on all procs and dynamicReallocation takes care of maintaining 
     /// the state
-    bool assignPatchesParticle(const GridP& level);
-    bool assignPatchesRandom(const GridP& level);
-    bool assignPatchesCyclic(const GridP& level);
+    bool assignPatchesFactor(const GridP& grid, bool force);
+    bool assignPatchesRandom(const GridP& grid, bool force);
+    bool assignPatchesCyclic(const GridP& grid, bool force);
 
-    virtual void setDynamicAlgorithm(std::string algo, double interval, 
-                                     int timestepInterval, float cellFactor,
-                                     bool spaceCurve, double threshold);
-    
+    /// Helper for assignPatchesFactor.  Collects each patch's particles
+    void collectParticles(const GridP& grid, std::vector<PatchInfo>& allParticles);
+
+    bool thresholdExceeded(const std::vector<float>& patch_costs);
+
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
     std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
     std::vector<int> d_tempAssignment; ///< temp storage for checking to reallocate
@@ -100,14 +124,14 @@ namespace Uintah {
     ProblemSpecP d_pspec;
     
     enum {
-      idle = 0, postLoadBalance, checkLoadBalance, restartLoadBalance, regridLoadBalance
+      idle = 0, postLoadBalance, checkLoadBalance, restartLoadBalance
     };
     
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     float d_cellFactor;
     int d_dynamicAlgorithm;
     bool d_doSpaceCurve;
-    int d_particleAlgo;
+    bool d_collectParticles;
     int d_state; //< idle, postLB, checkLB, initLB
   };
 } // End namespace Uintah

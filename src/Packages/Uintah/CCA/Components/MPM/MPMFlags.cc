@@ -134,7 +134,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& /*grid*/)
 }
 
 bool
-MPMFlags::doMPMOnLevel(int level) const
+MPMFlags::doMPMOnLevel(int level, int numLevels) const
 {
-  return level >= d_minGridLevel && level <= d_maxGridLevel;
+  return (level >= d_minGridLevel && level <= d_maxGridLevel) ||
+          (d_minGridLevel < 0 && level == numLevels + d_minGridLevel);
 }

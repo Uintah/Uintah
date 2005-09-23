@@ -9,7 +9,7 @@ SRCS += \
 	$(SRCDIR)/LoadBalancerFactory.cc \
 	$(SRCDIR)/NirvanaLoadBalancer.cc \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
-	$(SRCDIR)/ParticleLoadBalancer.cc \
+	$(SRCDIR)/DynamicLoadBalancer.cc \
 	$(SRCDIR)/SimpleLoadBalancer.cc \
 	$(SRCDIR)/SingleProcessorLoadBalancer.cc
 

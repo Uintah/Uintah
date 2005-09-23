@@ -36,6 +36,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Util \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Parallel \
 	Packages/Uintah/Core/Exceptions \
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

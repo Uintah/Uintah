@@ -64,9 +64,6 @@ namespace Uintah {
      /// for entries such as outputNthProc, dynamicAlgorithm, and interval.
      virtual void problemSetup(ProblemSpecP& pspec, SimulationStateP& state);
 
-     /// determines the dynamic algorithm based on values received in problemSetup.
-     virtual void setDynamicAlgorithm(std::string, double, int, float, bool, double /*threshold*/) {}
-
      /// Creates a patchset of all patches that have work done on each processor.
      //    - There are two versions of this function.  The first works on a per level
      //      basis.  The second works on the entire grid and will provide a PatchSet
