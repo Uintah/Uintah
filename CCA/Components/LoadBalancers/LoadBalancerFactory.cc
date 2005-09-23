@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/NirvanaLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
@@ -51,9 +51,9 @@ LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps,
   } else if( (loadbalancer == "NirvanaLoadBalancer") ||
              (loadbalancer == "NLB") ) {
     bal = scinew NirvanaLoadBalancer(world, layout);
-  } else if( (loadbalancer == "ParticleLoadBalancer") ||
-             (loadbalancer == "PLB") ) {
-    bal = scinew ParticleLoadBalancer(world);
+  } else if( (loadbalancer == "DLB") ||
+             (loadbalancer == "PLB") /* backward-compatibility*/) {
+    bal = scinew DynamicLoadBalancer(world);
   } else {
     bal = 0;   
     throw ProblemSetupException("Unknown load balancer", __FILE__, __LINE__);

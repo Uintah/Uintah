@@ -554,7 +554,8 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
                                            const MaterialSubset* press_matl,
                                            const MaterialSet* matls)
 {
-  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                                 getLevel(patches)->getGrid()->numLevels()))
     return;
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleInterpolatePressCCToPressNC" << endl;
@@ -594,7 +595,8 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
                                      const MaterialSubset* mpm_matl,
                                      const MaterialSet* all_matls)
 {
-  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                                 getLevel(patches)->getGrid()->numLevels()))
     return;
 
   if (cout_doing.active())
@@ -625,7 +627,8 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
                                     const MaterialSubset* one_matl,
                                     const MaterialSet* mpm_matls)
 {
-  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex())){
+  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                                getLevel(patches)->getGrid()->numLevels())){
     if (cout_doing.active()){
       cout_doing << "MPMICE::scheduleInterpolateNCToCC_0" << endl;
     }
@@ -642,6 +645,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
                                                     Ghost::AroundCells, 1);
     t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,   Ghost::None, 0); 
+    t->requires(Task::OldDW,MIlb->cVolumeLabel, Ghost::AroundCells, 1);
     t->requires(Task::OldDW, MIlb->temp_CCLabel,    Ghost::None, 0);
     t->requires(Task::OldDW, MIlb->vel_CCLabel,     Ghost::None, 0);
     
@@ -697,7 +701,8 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
                                    const MaterialSubset* one_matl,
                                    const MaterialSet* mpm_matls)
 {
-  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex())){
+  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                                getLevel(patches)->getGrid()->numLevels())){
     if (cout_doing.active())
       cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
 
@@ -764,7 +769,8 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* mpm_matls)
 {
-//  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+//  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+//                                getLevel(patches)->getGrid()->numLevels()))
 //    return;
 
   if (cout_doing.active())
@@ -796,7 +802,8 @@ void MPMICE::scheduleRefineCC(SchedulerP& sched,
                               const PatchSet* patches,
                               const MaterialSet* mpm_matls)
 {
-  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                                 getLevel(patches)->getGrid()->numLevels()))
     return;
 
   if (cout_doing.active())
@@ -812,7 +819,8 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
                                        const PatchSet* patches,
                                        const MaterialSet* mpm_matls)
 {
-  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                                 getLevel(patches)->getGrid()->numLevels()))
     return;
                                                                                 
   if (cout_doing.active())
@@ -846,7 +854,8 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                                      const MaterialSubset* press_matl,
                                      const MaterialSet* all_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex()))
+  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
+                          getLevel(patches)->getGrid()->numLevels()))
     return;
   Task* t = NULL;
   if (d_ice->d_RateForm) {     // R A T E   F O R M
@@ -930,7 +939,8 @@ void MPMICE::scheduleSolveEquationsMotion(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
-  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                                 getLevel(patches)->getGrid()->numLevels()))
     return;
   
   d_mpm->scheduleSolveEquationsMotion(sched,patches,matls);
@@ -2601,7 +2611,6 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
  {
    ostringstream taskName;
    taskName << "MPMICE::coarsenVariable(" << variable->getName() << (modifies?" modified":"") << ")";
-   cerr << "adding " << taskName.str() << " on patches " << *patches << '\n';
 
    // The SGI compiler does't like accepting a templated function over
    // a function call for some reason...  We use this hack to force it
@@ -2725,6 +2734,7 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
       new_dw->allocateAndPut(fine_q_CC, variable, indx, finePatch);
       
       constCCVariable<T> coarse_q_CC;
+
       new_dw->getRegion(coarse_q_CC, variable, indx, coarseLevel, cl, ch);
     
       // Only interpolate over the intersection of the fine and coarse patches
