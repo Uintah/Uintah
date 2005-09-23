@@ -6,7 +6,8 @@
 <component name="TimestepSelector" category="Selectors">
   <overview>
     <authors>
-      <author>Packages/Kurt Zimmerman</author>
+      <author>James Bigler</author>
+      <author>Kurt Zimmerman</author>
     </authors>
     <summary>Summary not available yet.</summary>
     <description>
@@ -28,6 +29,10 @@
       <port>
 	<name>Geometry</name>
 	<datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+	<name>Timestep</name>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
    </outputs>
   </io>
