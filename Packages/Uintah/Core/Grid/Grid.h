@@ -100,15 +100,26 @@ WARNING
     // For automatic patch layout.  run_partition() will initialize the values of
     // af_, bf_, cf_, and nf_, then start the recursive call.  You should never
     // explicitly call partition(), only run_partition().
-    IntVector run_partition(std::list<int> primes);
-    void partition(std::list<int> primes, int a, int b, int c);
+    IntVector run_partition3D(std::list<int> primes);
+    void partition3D(std::list<int> primes, int a, int b, int c);
     
+    IntVector run_partition2D(std::list<int> primes);
+    void partition2D(std::list<int> primes, int a, int b);
+
     // The current (final) values of a,b,c, and norm for the partitian function.
     // Used to hold data between recursive calls.
     int af_;
     int bf_;
     int cf_;
     double nf_;
+
+    // Temporary storage of the resolution values for use in the norm functions
+    // In the 3D case, (a,b,c) corresponds to (x,y,z).  However in the 2D case
+    // we do not know which dimensions (a,b) are, so the calling method will
+    // place the results into the correct dimensions.
+    int ares_;
+    int bres_;
+    int cres_;
 
     // Arbitrary desired maxium value for the norm.  If the norm of the best possible
     // patch layout exceeds this number, a warning message will be printed suggestion

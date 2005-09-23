@@ -18,8 +18,15 @@ using namespace std;
 
 
 Grid::Grid()
-  : af_(0), bf_(0), cf_(0)
 {
+  // Initialize values that may be uses for the autoPatching calculations
+  af_ = 0;
+  bf_ = 0;
+  cf_ = 0;
+  nf_ = -1;
+  ares_ = 0;
+  bres_ = 0;
+  cres_ = 0;
 }
 
 Grid::~Grid()
@@ -314,61 +321,77 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           throw ProblemSetupException("Degenerate patch", __FILE__, __LINE__);
         }
         
-        IntVector patches;
-
         // Check if autoPatch is enabled, if it is ignore the values in the
         // patches tag and compute them based on the number or processors
-        std::string autoPatch = std::string("autoPatch");
-        std::string autoPatchValue = std::string("true");
-        if(box_ps->get(autoPatch, autoPatchValue)) {
+
+        IntVector patches;          // Will store the partition dimensions returned by the
+                                    // run_partition3D function
+        IntVector tempPatches;      // For 2D case, stores the results returned by run_partition2D
+                                    // before they are sorted into the proper dimensions in
+                                    // the patches variable.
+        double autoPatchValue = 0;  // This value represents the ideal ratio of patches per
+                                    // processor.  Often this is one, but for some load balancing
+                                    // schemes it will be around 1.5.  When in doubt, use 1.
+        map<string, string> patchAttributes;  // Hash for parsing out the XML attributes
+
+
+        if(box_ps->get("autoPatch", autoPatchValue)) {
+          // autoPatchValue must be >= 1, else it will generate fewer patches than processors, and fail
+          if( autoPatchValue < 1 )
+            throw ProblemSetupException("autoPatch value must be greater than 1", __FILE__, __LINE__);
+
+          patchAttributes.clear();
+          box_ps->getAttributes(patchAttributes);
           if(pg->myrank() == 0) {
             cout << "Automatically performing patch layout.\n";
           }
           
           int numProcs = pg->size();
+          int targetPatches = (int)(numProcs * autoPatchValue);
           
           Primes::FactorType factors;
-          int numFactors = Primes::factorize(numProcs, factors);
-          
-          if(numFactors == 1) {
-            patches = IntVector(factors[0],1,1);
-            af_ = factors[0];
-            bf_ = 1;
-            cf_ = 1;
-            nf_ = sqrt( 2.0*af_*af_ + 1 ); 
+          int numFactors = Primes::factorize(targetPatches, factors);
+          list<int> primeList;
+          for(int i=0; i<numFactors; ++i) {
+            primeList.push_back(factors[i]);
           }
-          else if(numFactors == 2) {
-            if( factors[1] > factors[0] ) {
-              patches = IntVector(factors[1],factors[0],1);
-              af_ = factors[1];
-              bf_ = factors[0];
-              cf_ = 1;
-            }
-            else {
-              patches = IntVector(factors[0],factors[1],1);
-              af_ = factors[0];
-              bf_ = factors[1];
-              cf_ = 1; 
-            }
 
-            nf_ = sqrt( double(af_)*af_/(bf_*bf_) +
-                        bf_*bf_ + af_*af_ );
+          // First check all possible values for a 2D partition.  If no valid value
+          // is found, perform a normal 3D partition.
+          if( patchAttributes["flatten"] == "x" || resolution.x() == 1 )
+          {
+            ares_ = resolution.y();
+            bres_ = resolution.z();
+            tempPatches = run_partition2D(primeList);
+            patches = IntVector(1,tempPatches.x(), tempPatches.y());
+          } 
+          else if ( patchAttributes["flatten"] == "y" || resolution.y() == 1 )
+          {
+            ares_ = resolution.x();
+            bres_ = resolution.z();
+            tempPatches = run_partition2D(primeList);
+            patches = IntVector(tempPatches.x(),1,tempPatches.y());
           }
-          else {
-            // Brute force determine the ideal patch arrangement.  Try every possible
-            // combination (a,b,c) where a,b, and c are products of the primes 
-            // s.t. a >= b >= c.  The best arrangement will minimize the function
-            // sqrt( (a/b)^2 + (b/c)^2 + (a/c)^2 ).
-            list<int> primeList;
-            for(int i=0; i<numFactors; ++i) {
-              primeList.push_back(factors[i]);
-            }
-              
-            patches = run_partition(primeList);
+          else if ( patchAttributes["flatten"] == "z" || resolution.z() == 1 )
+          {
+            ares_ = resolution.x();
+            bres_ = resolution.y();
+            tempPatches = run_partition2D(primeList);
+            patches = IntVector(tempPatches.x(),tempPatches.y(),1);
+          }
+          else 
+          {
+            // 3D case
+            // Store the resolution in member variables
+            ares_ = resolution.x();
+            bres_ = resolution.y();
+            cres_ = resolution.z();
+
+            patches = run_partition3D(primeList);
           }
         } 
-        else {
-          box_ps->getWithDefault("patches", patches,IntVector(1,1,1));
+        else { // autoPatching is not enabled, get the patch field 
+          box_ps->getWithDefault("patches", patches, IntVector(1,1,1));
           nf_ = 0;
         }
 
@@ -378,44 +401,42 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         cout << "\n********************\n";
         cout << "*\n";
         cout << "* WARNING:\n";
-        cout << "* The number of processors you are running on\n";
+        cout << "* The patch to processor ratio you chose\n";
         cout << "* does not factor well into patches.  Consider\n";
         cout << "* using a differnt number of processors.\n";
         cout << "*\n";
         cout << "********************\n\n";
       }
-
-
-        
-        
-        if(pg->myrank() == 0) {
-          cout << "Using patch layout: (" << patches.x() << ","
-               << patches.y() << "," << patches.z() << ")\n";
-        }
-
-        level->setPatchDistributionHint(patches);
-        for(int i=0;i<patches.x();i++){
-          for(int j=0;j<patches.y();j++){
-            for(int k=0;k<patches.z();k++){
-              IntVector startcell = resolution*IntVector(i,j,k)/patches+lowCell;
-              IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches+lowCell;
-              IntVector inStartCell(startcell);
-              IntVector inEndCell(endcell);
-              startcell -= IntVector(startcell.x() == anchorCell.x() ? extraCells.x():0,
-                                     startcell.y() == anchorCell.y() ? extraCells.y():0,
-                                     startcell.z() == anchorCell.z() ? extraCells.z():0);
-              endcell += IntVector(endcell.x() == highPointCell.x() ? extraCells.x():0,
-                                   endcell.y() == highPointCell.y() ? extraCells.y():0,
-                                   endcell.z() == highPointCell.z() ? extraCells.z():0);
-              
-              Patch* p = level->addPatch(startcell, endcell,
-                                         inStartCell, inEndCell);
-              p->setLayoutHint(IntVector(i,j,k));
-            }
+  
+      if(pg->myrank() == 0) {
+        cout << "Using patch layout: (" << patches.x() << ","
+             << patches.y() << "," << patches.z() << ")\n";
+      }
+      
+      level->setPatchDistributionHint(patches);
+      for(int i=0;i<patches.x();i++){
+        for(int j=0;j<patches.y();j++){
+          for(int k=0;k<patches.z();k++){
+            IntVector startcell = resolution*IntVector(i,j,k)/patches+lowCell;
+            IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches+lowCell;
+            IntVector inStartCell(startcell);
+            IntVector inEndCell(endcell);
+            startcell -= IntVector(startcell.x() == anchorCell.x() ? extraCells.x():0,
+                                   startcell.y() == anchorCell.y() ? extraCells.y():0,
+                                   startcell.z() == anchorCell.z() ? extraCells.z():0);
+            endcell += IntVector(endcell.x() == highPointCell.x() ? extraCells.x():0,
+                                 endcell.y() == highPointCell.y() ? extraCells.y():0,
+                                 endcell.z() == highPointCell.z() ? extraCells.z():0);
+            
+            Patch* p = level->addPatch(startcell, endcell,
+                                       inStartCell, inEndCell);
+            p->setLayoutHint(IntVector(i,j,k));
           }
         }
       }
-
+      
+      }
+      
       if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr) {
         throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
                                     __FILE__, __LINE__);
@@ -434,7 +455,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       levelIndex++;
    }
    if(numLevels() >1 && !do_amr) {  // bullet proofing
-    throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR grid",
+     throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR grid",
                                 __FILE__, __LINE__);
    }
 } // end problemSetup()
@@ -484,39 +505,27 @@ bool Grid::operator==(const Grid& othergrid) const
 
 }
 
-IntVector Grid::run_partition(list<int> primes)
+IntVector Grid::run_partition3D(list<int> primes)
 {
-  nf_ = 0;
-  partition(primes, 1, 1, 1);
+  partition3D(primes, 1, 1, 1);
   return IntVector(af_, bf_, cf_);
 }
 
-void Grid::partition(list<int> primes, int a, int b, int c)
+void Grid::partition3D(list<int> primes, int a, int b, int c)
 {
   // base case: no primes left, compute the norm and store values
   // of a,b,c if they are the best so far.
   if( primes.size() == 0 ) {
-    int large, medium, small;  // for sorting a,b,c in order
-    large = max(a,b);
-    large = max(large,c);
-    if(large == a) {
-      medium = max(b,c);
-      small = min(b,c);
-    }
-    else if(large == b) {
-      medium = max(a,c);
-      small = min(a,c);
-    }
-    else {
-      medium = max(a,b);
-      small = min(a,b);
-    }
-    
-    double new_norm = sqrt( double(large)*large/(medium*medium) +
-                            double(medium)*medium/(small*small) +
-                            double(large)*large/(small*small) );
+    double new_norm = sqrt( (double)(max(a,b)/min(a,b) - max(ares_,bres_)/min(ares_,bres_)) *
+                            (max(a,b)/min(a,b) - max(ares_,bres_)/min(ares_,bres_)) + 
+                            (max(b,c)/min(b,c) - max(bres_,cres_)/min(bres_,cres_)) *
+                            (max(b,c)/min(b,c) - max(bres_,cres_)/min(bres_,cres_)) +
+                            (max(a,c)/min(a,c) - max(ares_,cres_)/min(ares_,cres_)) *
+                            (max(a,c)/min(a,c) - max(ares_,cres_)/min(ares_,cres_))
+                          );
 
-    if( new_norm < nf_ || nf_ == 0 ) {
+    if( new_norm < nf_ || nf_ == -1 ) { // negative 1 flags initial trash value of nf_, 
+                                       // should always be overwritten
       nf_ = new_norm;
       af_ = a;
       bf_ = b;
@@ -528,9 +537,40 @@ void Grid::partition(list<int> primes, int a, int b, int c)
 
   int head = primes.front();
   primes.pop_front();
-  partition(primes, a*head, b, c);
-  partition(primes, a, b*head, c);
-  partition(primes, a, b, c*head);
+  partition3D(primes, a*head, b, c);
+  partition3D(primes, a, b*head, c);
+  partition3D(primes, a, b, c*head);
+
+  return;
+}
+
+IntVector Grid::run_partition2D(std::list<int> primes)
+{
+  partition2D(primes, 1, 1);
+  return IntVector(af_, bf_, cf_);
+}
+
+void Grid::partition2D(std::list<int> primes, int a, int b)
+{
+  // base case: no primes left, compute the norm and store values
+  // of a,b if they are the best so far.
+  if( primes.size() == 0 ) {
+    double new_norm = (double)max(a,b)/min(a,b) - max(ares_,bres_)/min(ares_,bres_);
+
+    if( new_norm < nf_ || nf_ == -1 ) { // negative 1 flags initial trash value of nf_, 
+                                       // should always be overwritten
+      nf_ = new_norm;
+      af_ = a;
+      bf_ = b;
+    }
+    
+    return;
+  }
+
+  int head = primes.front();
+  primes.pop_front();
+  partition2D(primes, a*head, b);
+  partition2D(primes, a, b*head);
 
   return;
 }
