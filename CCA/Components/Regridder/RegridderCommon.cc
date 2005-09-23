@@ -589,8 +589,8 @@ void RegridderCommon::Dilate2(const ProcessorGroup*,
 
   rdbg << "G\n";
     if (dilate_dbg.active()) {
-      IntVector low  = flaggedCells.getLowIndex();
-      IntVector high = flaggedCells.getHighIndex();
+      IntVector low  = patch->getInteriorCellLowIndex();
+      IntVector high = patch->getInteriorCellHighIndex();
       
       dilate_dbg << "----------------------------------------------------------------" << endl;
       dilate_dbg << "FLAGGED CELLS " << low << " " << high << endl;
