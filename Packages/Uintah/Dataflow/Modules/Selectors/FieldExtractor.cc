@@ -72,6 +72,7 @@ FieldExtractor::FieldExtractor(const string& name,
   tcl_status(ctx->subVar("tcl_status")), 
   sVar(ctx->subVar("sVar")),
   sMatNum(ctx->subVar("sMatNum")),
+  remove_boundary_cells(ctx->subVar("remove_boundary_cells")),
   type(0)
 { 
 } 
@@ -266,16 +267,26 @@ FieldExtractor::execute()
     level = grid->getLevel( level_.get() );
   }
   IntVector hi, low, range;
-  level->findIndexRange(low, hi);
-  range = hi - low;
   BBox box;
-  level->getSpatialRange(box);
+
+  if( remove_boundary_cells.get() == 1 ){
+    level->findInteriorIndexRange(low, hi);
+    level->getInteriorSpatialRange(box);
+    // ***** This seems like a hack *****
+    range = hi - low;// + IntVector(1,1,1); 
+    // **********************************
+  } else {
+    level->findIndexRange(low, hi);
+    level->getSpatialRange(box);
+    range = hi - low;
+  }
   
 //   IntVector cellHi, cellLo;
 //   level->findCellIndexRange(cellLo, cellHi);
   
 //   cerr<<"before anything data range is:  "<<range.x()<<"x"<<range.y()<<"x"<<
-//     range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+//      range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+//   cerr<<"and hi index is "<<hi<<", and low index is "<<low<<"\n";
   
   update_mesh_handle( level, hi, range, box, type->getType(), mesh_handle_);
 
@@ -381,8 +392,13 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
   case TypeDescription::CCVariable:
     {
       IntVector cellHi, cellLo, levelHi, levelLo;
-      level->findCellIndexRange(cellLo, cellHi);
-      level->findIndexRange( levelLo, levelHi);
+      if( remove_boundary_cells.get() == 1){
+        level->findInteriorCellIndexRange(cellLo, cellHi);
+        level->findInteriorIndexRange( levelLo, levelHi);
+      } else {
+        level->findCellIndexRange(cellLo, cellHi);
+        level->findIndexRange( levelLo, levelHi);
+      }
       if( mesh_handle.get_rep() == 0 ){
         if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
           IntVector newrange(0,0,0);
@@ -520,21 +536,28 @@ FieldExtractor::build_multi_level_field( QueryInfo& qinfo, int basis_order)
         patch_it != level->patchesEnd(); ++patch_it){
       
       IntVector patch_low, patch_high, range;
-      patch_low = (*patch_it)->getLowIndex();
-      patch_high = (*patch_it)->getHighIndex(); 
-
+      BBox pbox;
+      if( remove_boundary_cells.get() ==1 ){
+        patch_low = (*patch_it)->getInteriorNodeLowIndex();
+        patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
+        pbox.extend((*patch_it)->getInteriorBox().lower());
+        pbox.extend((*patch_it)->getInteriorBox().upper());
+      } else {
+        patch_low = (*patch_it)->getLowIndex();
+        patch_high = (*patch_it)->getHighIndex(); 
+        pbox.extend((*patch_it)->getBox().lower());
+        pbox.extend((*patch_it)->getBox().upper());
+      }
       // ***** This seems like a hack *****
       range = patch_high - patch_low + IntVector(1,1,1); 
       // **********************************
 
-      BBox pbox;
-      pbox.extend((*patch_it)->getBox().lower());
-      pbox.extend((*patch_it)->getBox().upper());
+
       
-      //       cerr<<"before mesh update: range is "<<range.x()<<"x"<<
-      //      range.y()<<"x"<< range.z()<<",  low index is "<<low<<
-      //      "high index is "<<hi<<" , size is  "<<
-      //      pbox.min()<<", "<<pbox.max()<<"\n";
+//      cerr<<"before mesh update: range is "<<range.x()<<"x"<<
+//      range.y()<<"x"<< range.z()<<",  low index is "<<patch_low<<
+//      "high index is "<<patch_high<<" , size is  "<<
+//      pbox.min()<<", "<<pbox.max()<<"\n";
       
       LatVolMeshHandle mh = 0;
       update_mesh_handle(qinfo.level, patch_high, range, pbox,
@@ -571,43 +594,91 @@ FieldExtractor::getPatchData(QueryInfo& qinfo, IntVector& offset,
     cerr << e.message()<<"\n";
     return;
   }
-  
+
   int vartype;
-  if( sfield->basis_order() == 0) {
-    patch_low = patch->getCellLowIndex();
-    patch_high = patch->getCellHighIndex();
+  if( remove_boundary_cells.get() == 1 ){
+    if(sfield->basis_order() == 0){
+      patch_low = patch->getInteriorCellLowIndex();
+      patch_high = patch->getInteriorCellHighIndex();
 #if 0
-    cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
-    cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
-    cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
-    cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
-    cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
-    cerr<<"getInteriorCellHighIndex() = "<< patch->getInteriorCellHighIndex()<<"\n";
-    cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()<<"\n";
-    cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
-    cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
-    cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
+      cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
+      cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
+      cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
+      cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
+      cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
+      cerr<<"getInteriorCellHighIndex() = "<< patch->getInteriorCellHighIndex()<<"\n";
+      cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()<<"\n";
+      cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
+      cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
+      cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
 #endif
-  } else if(sfield->get_property("vartype", vartype)){
-    patch_low = patch->getNodeLowIndex();
-    switch (vartype) {
-    case TypeDescription::SFCXVariable:
-      patch_high = patch->getSFCXHighIndex();
-      break;
-    case TypeDescription::SFCYVariable:
-      patch_high = patch->getSFCYHighIndex();
-      break;
-    case TypeDescription::SFCZVariable:
-      patch_high = patch->getSFCZHighIndex();
-      break;
-    default:
-      patch_high = patch->getNodeHighIndex();   
-    } 
+    } else if(sfield->get_property("vartype", vartype)){
+      patch_low = patch->getInteriorNodeLowIndex();
+      switch (vartype) {
+      case TypeDescription::SFCXVariable:
+        patch_high = patch->getInteriorHighIndex(Patch::XFaceBased);
+        break;
+      case TypeDescription::SFCYVariable:
+        patch_high = patch->getInteriorHighIndex(Patch::YFaceBased);
+        break;
+      case TypeDescription::SFCZVariable:
+        patch_high = patch->getInteriorHighIndex(Patch::ZFaceBased);
+        break;
+      default:
+        patch_high = patch->getInteriorNodeHighIndex();   
+      } 
+    } else {
+      error("getPatchData::Problem with getting vartype from field");
+      return;
+    }
+    if( !patch_data.rewindow( patch_low, patch_high ) ) {
+      warning("patch data thinks it needs reallocation, this will fail.");
+    }
   } else {
-    error("getPatchData::Problem with getting vartype from field");
-    return;
+    if( sfield->basis_order() == 0) {
+      patch_low = patch->getCellLowIndex();
+      patch_high = patch->getCellHighIndex();
+#if 0
+      cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
+      cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
+      cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
+      cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
+      cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
+      cerr<<"getInteriorCellHighIndex() = "<< patch->getInteriorCellHighIndex()<<"\n";
+      cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()<<"\n";
+      cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
+      cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
+      cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
+#endif
+    } else if(sfield->get_property("vartype", vartype)){
+      patch_low = patch->getNodeLowIndex();
+      switch (vartype) {
+      case TypeDescription::SFCXVariable:
+        patch_high = patch->getSFCXHighIndex();
+        break;
+      case TypeDescription::SFCYVariable:
+        patch_high = patch->getSFCYHighIndex();
+        break;
+      case TypeDescription::SFCZVariable:
+        patch_high = patch->getSFCZHighIndex();
+        break;
+      default:
+        patch_high = patch->getNodeHighIndex();   
+      } 
+    } else {
+      error("getPatchData::Problem with getting vartype from field");
+      return;
+    }
   }
 
+#if 0
+  LatVolMesh* lm = sfield->get_typed_mesh().get_rep();
+
+  cerr<<"patch_low = "<<patch_low<<", patch_high = "<<patch_high<<"\n";
+  cerr<<"mesh size is "<<lm->get_ni()<<"x"<<lm->get_nj()
+      <<"x"<<lm->get_nk()<<"\n";
+  cerr<<"offset = "<<offset<<"\n";
+#endif
   PatchToFieldThread<Var, T> *ptft = 
     scinew PatchToFieldThread<Var, T>(sfield, patch_data, offset,
                                       patch_low, patch_high);
