@@ -1518,6 +1518,10 @@ Box Patch::getBox() const {
   return d_level->getBox(d_lowIndex, d_highIndex);
 }
 
+Box Patch::getInteriorBox() const {
+  return d_level->getBox(d_inLowIndex, d_inHighIndex);
+}
+
 IntVector Patch::neighborsLow() const
 {
   return IntVector(d_bctypes[xminus] == Neighbor? 0:1,

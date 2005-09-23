@@ -37,10 +37,12 @@ itcl_class Uintah_Selectors_FieldExtractor {
 	global $this-sVar;
 	global $this-sMatNum;
 	global $this-level
+        global $this-remove_boundary_cells
 	set $this-sVar ""
 	set $this-sMatNum 0
 	set $this-level 0
 	set $this-tcl_status "Idle"
+        set $this-remove_boundary_cells 0
     } 
     
     method ui {} { 
@@ -66,7 +68,7 @@ itcl_class Uintah_Selectors_FieldExtractor {
  	pack $w.f -side top -expand yes -fill both
 
 	makeFrames $w.f
-
+       
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
@@ -104,6 +106,11 @@ itcl_class Uintah_Selectors_FieldExtractor {
 	frame $parent.f0.1 -relief flat -borderwidth 2
 	pack $parent.f0.1 -side top -expand yes -fill both -padx 2
 	buildControlFrame $parent.f0.1
+
+        checkbutton $parent.f0.cb -text "Remove Boundary Cells" \
+            -variable $this-remove_boundary_cells \
+            -command "$this-c needexecute"
+        pack $parent.f0.cb -side bottom
 	    
 	set gf $parent.f0
     }
