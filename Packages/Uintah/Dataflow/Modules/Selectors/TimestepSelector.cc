@@ -7,6 +7,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomSticky.h>
@@ -77,6 +78,7 @@ TimestepSelector::execute()
   in = (ArchiveIPort *) get_iport("Data Archive");
   out = (ArchiveOPort *) get_oport("Archive Timestep");
   ogeom=(GeometryOPort *) get_oport("Geometry");
+  time_port = (MatrixOPort *) get_oport("Timestep");
   
   ArchiveHandle handle;
 
@@ -156,6 +158,18 @@ TimestepSelector::execute()
   handle->SetTimestep( idx );
   out->send(handle);
 
+  // Stuff the goodies down the timestep port
+  MatrixHandle time_matrix = scinew DenseMatrix(times.size()+2,1);
+  // Stuff the current time into the first location
+  time_matrix->put(0,0, times[idx]);
+  // Stuff the current timestep index
+  time_matrix->put(1,0, idx);
+  // Stuff the rest of the timesteps in
+  for (size_t i = 0; i < times.size(); ++i)
+    time_matrix->put(i+2,0, times[i]);
+
+  // Now send it down
+  time_port->send(time_matrix);
 
   // Generate the timestep geometry for the viewer
   Point text_pos(timeposition_x.get(), timeposition_y.get(), 0.0);

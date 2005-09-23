@@ -31,6 +31,7 @@ LOG
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Dataflow/Network/Module.h> 
 #include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h> 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -85,6 +86,7 @@ private:
   ArchiveIPort *in;
   ArchiveOPort *out;
   GeometryOPort *ogeom;
+  MatrixOPort  *time_port;
   
   ArchiveHandle archiveH;
   void setVars(ArchiveHandle ar);
