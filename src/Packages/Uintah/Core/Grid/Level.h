@@ -126,11 +126,18 @@ public:
   long totalCells() const;
 
   void getSpatialRange(BBox& b) const;
-
+  void getInteriorSpatialRange(BBox& b) const;
   void findIndexRange(IntVector& lowIndex, IntVector& highIndex) const
   { findNodeIndexRange(lowIndex, highIndex); }
   void findNodeIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
   void findCellIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
+
+  void findInteriorIndexRange(IntVector& lowIndex, IntVector& highIndex) const
+  { findInteriorNodeIndexRange(lowIndex, highIndex);}
+  void findInteriorNodeIndexRange(IntVector& lowIndex,
+                                  IntVector& highIndex) const;
+  void findInteriorCellIndexRange(IntVector& lowIndex,
+                                  IntVector& highIndex) const;
       
   void performConsistencyCheck() const;
   GridP getGrid() const;

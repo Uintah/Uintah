@@ -312,6 +312,7 @@ WARNING
      }
      
      Box getBox() const;
+     Box getInteriorBox() const;
      
      inline IntVector getNFaces() const {
        // NOT CORRECT

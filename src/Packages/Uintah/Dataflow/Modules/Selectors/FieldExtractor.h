@@ -185,7 +185,7 @@ protected:
 
   GuiString sVar;
   GuiInt sMatNum;
-
+  GuiInt remove_boundary_cells;
   const TypeDescription *type;
 
   map<const Patch*, list<const Patch*> > new2OldPatchMap_;

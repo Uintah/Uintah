@@ -208,6 +208,7 @@ void Level::performConsistencyCheck() const
 
 }
 
+
 void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
   lowIndex = d_realPatches[0]->getNodeLowIndex();
@@ -242,12 +243,55 @@ void Level::findCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
   }
 }
 
+void Level::findInteriorCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
+{
+  lowIndex = d_realPatches[0]->getInteriorCellLowIndex();
+  highIndex = d_realPatches[0]->getInteriorCellHighIndex();
+  
+  for(int p=1;p<(int)d_realPatches.size();p++)
+  {
+    Patch* patch = d_realPatches[p];
+    IntVector l( patch->getInteriorCellLowIndex() );
+    IntVector u( patch->getInteriorCellHighIndex() );
+    for(int i=0;i<3;i++) {
+      if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
+      if( u(i) > highIndex(i) ) highIndex(i) = u(i);
+    }
+  }
+}
+
+void Level::findInteriorNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
+{
+  lowIndex = d_realPatches[0]->getInteriorNodeLowIndex();
+  highIndex = d_realPatches[0]->getInteriorNodeHighIndex();
+  
+  for(int p=1;p<(int)d_realPatches.size();p++)
+  {
+    Patch* patch = d_realPatches[p];
+    IntVector l( patch->getInteriorNodeLowIndex() );
+    IntVector u( patch->getInteriorNodeHighIndex() );
+    for(int i=0;i<3;i++) {
+      if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
+      if( u(i) > highIndex(i) ) highIndex(i) = u(i);
+    }
+  }
+}
+
 void Level::getSpatialRange(BBox& b) const
 {
   for(int i=0;i<(int)d_realPatches.size();i++){
     Patch* r = d_realPatches[i];
     b.extend(r->getBox().lower());
     b.extend(r->getBox().upper());
+  }
+}
+
+void Level::getInteriorSpatialRange(BBox& b) const
+{
+  for(int i=0;i<(int)d_realPatches.size();i++){
+    Patch* r = d_realPatches[i];
+    b.extend(r->getInteriorBox().lower());
+    b.extend(r->getInteriorBox().upper());
   }
 }
 
