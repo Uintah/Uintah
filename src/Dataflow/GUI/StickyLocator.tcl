@@ -63,16 +63,15 @@
 
 # $can bind movable <ButtonRelease> {$this-c needexecute}
 
-proc makeStickyLocator { c pos_x_var pos_y_var width height labeltext args } {
-    frame $c -relief ridge -borderwidth 2
+proc makeStickyLocator { c pos_x_var pos_y_var width height args } {
+    frame $c 
 
     # BTW, if you change the borderwidth or other similar things you
     # will need to update the code in StickyLocatorDrag or be more
     # clever and discover it there.  Currently it is hard coded.
     eval {canvas $c.canvas -bg "#ffffff" -height $height -width $width \
           -borderwidth 1 -relief solid} $args
-    label $c.l -text $labeltext
-    pack $c.l $c.canvas -side top -anchor c -expand no
+    pack $c.canvas -side top -anchor c -expand no
 
     # These are the global variables that we will keep track of.  We
     # will do this by creating a copy of the variable name that we can
