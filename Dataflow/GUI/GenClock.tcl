@@ -41,7 +41,7 @@ itcl_class SCIRun_Visualization_GenClock {
     inherit Module
    
     constructor {config} {
-        set name genClock
+        set name GenClock
         set_defaults
     }
 
@@ -245,7 +245,7 @@ itcl_class SCIRun_Visualization_GenClock {
 
 	set locator [makeStickyLocator $location.gui \
 			 $this-location-x $this-location-y \
-			 100 100 ""]
+			 100 100]
 
 	$locator bind movable <ButtonRelease> "$this-c needexecute"
 

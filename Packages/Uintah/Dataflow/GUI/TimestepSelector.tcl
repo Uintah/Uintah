@@ -168,11 +168,17 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	pack $w.timeVis.cs -side top -anchor w -fill x
 
         # This is the text position
-        set can [makeStickyLocator $w.timeVis.position \
-                     $this-timeposition_x $this-timeposition_y 100 100 \
-                     "Time Step Position"]
-        pack $w.timeVis.position -side left
+        
+	iwidgets::labeledframe $w.timeVis.position \
+            -labeltext "Time Step Position"
+	set location [$w.timeVis.position childsite]
+
+        set can [makeStickyLocator $location.sl \
+                     $this-timeposition_x $this-timeposition_y 100 100]
         $can bind movable <ButtonRelease> "$this-c update_timeposition"
+
+        pack $location.sl -fill x -expand yes -side left
+        pack $w.timeVis.position -fill x -expand yes -side top
         
         # This is the clock
 #        frame $w.timeVis.clock -relief  -borderwidth 2
