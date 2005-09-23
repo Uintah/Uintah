@@ -31,12 +31,72 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := SCIRun
+SRCDIR   := SCIRun/SCIRun2
 
-SUBDIRS := $(SRCDIR)/Distributed
 
-#SUBDIRS += Plume
-#SUBDIRS += MPIFramework
-#SUBDIRS += SCIRun2
+SUBDIRS := $(SRCDIR)/CCA 
+
+ifeq ($(HAVE_CORBA),yes)
+SUBDIRS += $(SRCDIR)/Corba 
+endif
+
+ifeq ($(HAVE_TAO),yes)
+SUBDIRS += $(SRCDIR)/Tao
+endif
+
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += $(SRCDIR)/Dataflow 
+endif
+
+ifeq ($(HAVE_VTK),yes)
+ SUBDIRS += $(SRCDIR)/Vtk
+endif
+
+ifeq ($(HAVE_BABEL),yes)
+ ifeq ($(HAVE_RUBY),yes)
+  SUBDIRS += $(SRCDIR)/Bridge
+ endif
+ SUBDIRS += $(SRCDIR)/Babel
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
+
+PSELIBS := SCIRun/Distributed
+
+ifeq ($(HAVE_GLOBUS),yes)
+  PSELIBS += Core/OS Core/Containers Core/Util Core/XMLUtil \
+            Core/GuiInterface Core/CCA/spec \
+            Core/CCA/PIDL Core/CCA/SSIDL \
+            Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
+            Core/globus_threads Core/CCA/Comm
+else
+  PSELIBS += Core/OS Core/Containers Core/Util Core/XMLUtil \
+            Core/GuiInterface Core/CCA/spec \
+            Core/CCA/PIDL Core/CCA/SSIDL \
+            Core/Exceptions Core/Thread \
+            Core/TkExtensions Core/Init Core/CCA/Comm
+endif
+
+ifeq ($(BUILD_DATAFLOW),yes)
+ PSELIBS += Dataflow/Network
+endif
+
+LIBS := $(XML_LIBRARY)
+
+ifeq ($(HAVE_RUBY),yes)
+ PSELIBS := $(PSELIBS) Core/CCA/tools/strauss
+ INCLUDES := $(RUBY_INCLUDE) $(INCLUDES) 
+ LIBS := $(RUBY_LIBRARY) $(LIBS)
+endif
+
+ifeq ($(HAVE_MPI),yes)
+ LIBS := $(LIBS) $(MPI_LIBRARY)
+endif
+
+LIBS := $(LIBS) -lcrypt -ldl
+
+ifeq ($(HAVE_BABEL),yes)
+  LIBS := $(LIBS) $(SIDL_LIBRARY)
+endif
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

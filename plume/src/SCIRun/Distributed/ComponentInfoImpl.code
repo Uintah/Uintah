@@ -38,9 +38,8 @@
  *
  */
 
-#include <SCIRun/TypeMap.h>
-//#include <SCIRun/Distributed/DistributedFramework.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <SCIRun/Distributed/TypeMap.h>
+#include <SCIRun/Distributed/CCAException.h>
 #include <iostream>
 
 #include <SCIRun/Distributed/ComponentInfo.h>
