@@ -33,7 +33,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := SCIRun/Plume
 
-SRCS := $(SRCDIR)/PlumeFramework.cc
+SRCS := \
+	$(SRCDIR)/CCAComponentModel.cc \
+	$(SRCDIR)/PlumeFramework.cc
 
 PSELIBS := SCIRun/Distributed
 

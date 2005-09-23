@@ -3,21 +3,23 @@
 namespace SCIRun {
 
   PlumeFramework::PlumeFramework( DistributedFramework::pointer &parent )
-    : DistributedFramework(parent)
+    : DistributedFramework(parent), cca(this)
   {}
 
   PlumeFramework::~PlumeFramework() {}
 
-  sci::cca::Component::pointer 
+  ComponentInfo * 
   PlumeFramework::createComponent( const std::string &instanceName, 
 				   const std::string &className, 
 				   const sci::cca::TypeMap::pointer& properties)
   {
-    return sci::cca::Component::pointer(0);
+    return cca.createComponent( instanceName, className, properties );
   }
 
-  void PlumeFramework::destroyComponent( const sci::cca::ComponentID::pointer &)
+  void PlumeFramework::destroyComponent( const sci::cca::ComponentID::pointer &id)
   {
+    ComponentInfo::pointer info = pidl_cast<ComponentInfo::pointer>(id);
+    cca.destroyComponent(info.getPointer());
   }
 
 } // namespace SCIRun

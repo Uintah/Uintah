@@ -65,20 +65,9 @@ namespace SCIRun {
 							       const sci::cca::TypeMap::pointer& properties)
   {
     // call the virtual method that actually create a component
-    sci::cca::Component::pointer component = createComponent( instanceName, className, properties);
-
-    return ComponentInfo::pointer(new ComponentInfo(Distributed::DistributedFramework::pointer(this),
-						    instanceName,
-						    className,
-						    properties,
-						    component));
+    return ComponentInfo::pointer( createComponent( instanceName, className, properties) );
   }
 
-  void DistributedFramework::destroyComponent( const ComponentID::pointer &component)
-  {
-  }
-
-  
   ComponentID::pointer DistributedFramework::lookupComponentID(const std::string &name) 
   {
     SCIRun::Guard guard(&component_lock);
@@ -136,7 +125,8 @@ namespace SCIRun {
     SCIRun::Guard guard(&component_lock);
     
     // call the virtual function that actually delete the component 
-    destroyComponent(component);
+    ComponentInfo::pointer info = pidl_cast<ComponentInfo::pointer>(component);
+    destroyComponent(info);
     
     ComponentList::iterator c = find( components.begin(), components.end(), pidl_cast<ComponentInfo::pointer>(component));
     if ( c != components.end() ) {

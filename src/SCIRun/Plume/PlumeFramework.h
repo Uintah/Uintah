@@ -11,13 +11,14 @@ namespace SCIRun {
     PlumeFramework(DistributedFramework::pointer &parent = 0);
     virtual ~PlumeFramework();
 
+    CCAComponentModel cca;
     /*
      * Two pure virtual methods to create and destroy a component.
      */
-    virtual sci::cca::Component::pointer 
+    virtual ComponentInfo*
     createComponent( const std::string &, const std::string &, const sci::cca::TypeMap::pointer& properties);
 
-    virtual void destroyComponent( const sci::cca::ComponentID::pointer &);
+    virtual void destroyComponent( const sci::cca::ComponentId::pointer &id);
   };
 
 } // SCIRun namespace

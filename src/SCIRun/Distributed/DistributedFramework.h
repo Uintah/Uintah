@@ -50,6 +50,8 @@ namespace SCIRun {
 
   namespace Distributed = sci::cca::distributed;
 
+  class ComponentInfo;
+
   /**
    * \class DistributedFramework
    * 
@@ -69,10 +71,10 @@ namespace SCIRun {
      * Two pure virtual methods to create and destroy a component.
      * These methods must be defined in the Framework that derives from this DistributedFramework base
      */
-    virtual sci::cca::Component::pointer 
+    virtual ComponentInfo * 
     createComponent( const std::string &, const std::string &, const sci::cca::TypeMap::pointer& properties) = 0;
 
-    virtual void destroyComponent( const sci::cca::ComponentID::pointer &) = 0;
+    virtual void destroyComponent( const Distributed::ComponentInfo::pointer & ) = 0;
 
     /*
      * methods that implement the DistributedFramework 

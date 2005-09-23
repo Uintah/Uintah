@@ -84,9 +84,6 @@ package sci {
 
       package ports {
 	
-	interface FrameworkProperties extends sci.cca.Port {
-	}
-
 	interface ComponentEventService extends Port, internal.Service {
 	  /** Sign up to be told about component activity.
 	      @param ComponentEventType must be one of the integer values 
