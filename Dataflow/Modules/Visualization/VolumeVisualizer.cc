@@ -104,7 +104,8 @@ private:
   GuiInt gui_invert_opacity_;
   GuiInt gui_level_flag_;
   GuiInt gui_num_slices_;  // unused except for backwards compatability
-
+  GuiString gui_level_on_; // used for saving to net
+  GuiString gui_level_vals_; // used for saving to net
   VolumeRenderer* volren_;
 };
 
@@ -142,6 +143,8 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_invert_opacity_(ctx->subVar("invert_opacity")),
     gui_level_flag_(ctx->subVar("show_level_flag", false)),
     gui_num_slices_(ctx->subVar("num_slices", false)), // don't save
+    gui_level_on_(ctx->subVar("level_on")),
+    gui_level_vals_(ctx->subVar("level_vals")),
     volren_(0)
 {}
 
