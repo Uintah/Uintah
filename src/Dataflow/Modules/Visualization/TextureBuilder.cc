@@ -126,7 +126,22 @@ TextureBuilder::execute()
       
     error( "Only availible for regular topology with uniformly gridded data." );
     return;
+  } else {
+    // We are using something that has regular topology, 
+    // but it must currently be 3 dimensional
+    LatVolMesh *mesh = (LatVolMesh * )vHandle->mesh().get_rep();
+    int nx = mesh->get_ni();
+    int ny = mesh->get_nj();
+    int nz = mesh->get_nk();
+    if(vHandle->basis_order() == 0) {
+      --nx; --ny; --nz;
+    }
+    if (nx <= 1 || ny <=1 || nz <=1){
+      error( "TextureBuilder requires 3D data. The received data is not 3D.");
+      return;
+    }
   }
+
 
   // The input field must contain scalar data.
   ScalarFieldInterfaceHandle sfi = vHandle->query_scalar_interface(this);
@@ -216,8 +231,7 @@ TextureBuilder::execute()
     
 	error( "Only availible for regular topology with uniformly gridded data." );
 	return;
-      }
- 
+      } 
       VectorFieldInterfaceHandle vfi = gHandle->query_vector_interface(this);
       if (!vfi.get_rep()) {
 	error("Input gradient field does not contain vector data.");
