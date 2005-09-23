@@ -39,7 +39,7 @@
  */
 
 #include <SCIRun/Distributed/PortInfoImpl.h>
-#include <SCIRun/TypeMap.h>
+#include <SCIRun/Distributed/TypeMap.h>
 #include <iostream>
 
 namespace SCIRun {

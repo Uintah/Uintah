@@ -38,12 +38,10 @@
  *
  */
 
-#include <SCIRun/Internal/BuilderService.h>
 #include <Core/CCA/spec/sci_sidl.h>
-
 #include <Core/CCA/PIDL/PIDL.h>
-#include <SCIRun//Distributed/DistributedFramework.h>
-#include <SCIRun/CCA/CCAException.h>
+
+#include <SCIRun/Distributed/CCAException.h>
 #include <SCIRun/Distributed/PortInfo.h>
 #include <SCIRun/Distributed/ComponentID.h>
 #include <SCIRun/Distributed/ComponentInfo.h>

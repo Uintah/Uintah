@@ -39,7 +39,7 @@
  */
 
 #include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/TypeMap.h>
+#include <SCIRun/Distributed/TypeMap.h>
 #include <map>
 #include <string>
 

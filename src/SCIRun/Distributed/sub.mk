@@ -32,7 +32,9 @@
 SRCDIR   := SCIRun/Distributed
 
 SRCS     += \
-	     $(SRCDIR)/ConnectionID.cc\
+	     $(SRCDIR)/CCAException.cc \
+	     $(SRCDIR)/TypeMap.cc \
+	     $(SRCDIR)/ConnectionID.cc \
 	     $(SRCDIR)/FrameworkID.cc \
              $(SRCDIR)/ConnectionInfo.cc \
              $(SRCDIR)/ComponentInfo.cc \
@@ -50,19 +52,32 @@ SRCS     += \
              $(SRCDIR)/FrameworkPropertiesService.cc \
 	     $(SRCDIR)/BuilderService.cc \
 
-#             $(SRCDIR)/FrameworkProxyService.cc \
+$(SRCDIR)/TypeMap.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/ConnectionID.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/FrameworkID.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/ConnectionInfo.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/ComponentInfo.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/PortInfo.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/DistributedFramework.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/DistributedFrameworkException.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/ComponentEvent.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/ConnectionEvent.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/FrameworkServiceDescription.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/ComponentDescription.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/ComponentClassDescription.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/ComponentEventService.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/ConnectionEventService.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/ComponentRepositoryService.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/FrameworkPropertiesService.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/BuilderService.o: Core/CCA/spec/sci_sidl.h \
 
-#$(SRCDIR)/ComponentRegistry.o: Core/CCA/spec/sci_sidl.h
-#$(SRCDIR)/ComponentEvent.o: Core/CCA/spec/sci_sidl.h
-#$(SRCDIR)/ComponentEventService.o: Core/CCA/spec/sci_sidl.h
-#$(SRCDIR)/ConnectionEvent.o: Core/CCA/spec/sci_sidl.h
-#$(SRCDIR)/ConnectionEventService.o: Core/CCA/spec/sci_sidl.h
-#$(SRCDIR)/BuilderService.o: Core/CCA/spec/sci_sidl.h
-##$(SRCDIR)/InternalComponentInstance.o: Core/CCA/spec/sci_sidl.h
-#$(SRCDIR)/InternalComponentModel.o: Core/CCA/spec/sci_sidl.h
-#$(SRCDIR)/FrameworkProperties.o: Core/CCA/spec/sci_sidl.h
-#$(SRCDIR)/FrameworkProxyService.o: Core/CCA/spec/sci_sidl.h
-##$(SRCDIR)/InternalServiceInstance.o : Core/CCA/spec/sci_sidl.h
-##$(SRCDIR)/InternalFrameworkServiceInstance.o : Core/CCA/spec/sci_sidl.h
-#$(SRCDIR)/InternalServiceDescription.o : Core/CCA/spec/sci_sidl.h
-#$(SRCDIR)/InternalFrameworkServiceDescription.o : Core/CCA/spec/sci_sidl.h
+
+ PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
+	    Core/GuiInterface Core/CCA/spec \
+            Core/CCA/PIDL Core/CCA/SSIDL \
+            Core/Exceptions Core/Thread \
+            Core/TkExtensions Core/Init Core/CCA/Comm
+
+LIBS := $(XML_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
