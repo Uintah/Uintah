@@ -10,6 +10,10 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -207,8 +211,15 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
     if (trackingTasks_[t] == dt->getTask()->getName())
       break;
   }
-  if (t == trackingTasks_.size())
+
+  // print for all tasks unless one is specified (but disclude DataArchiver tasks)
+  if ((t == trackingTasks_.size() && trackingTasks_.size() != 0) || 
+      ((string(dt->getTask()->getName())).substr(0,12) == "DataArchiver"))
     return;
+
+  if (d_sharedState && (trackingStartTime_ > d_sharedState->getElapsedTime() || trackingEndTime_ < d_sharedState->getElapsedTime()))
+    return;
+
   for (int i = 0; i < (int) trackingVars_.size(); i++) {
     bool printedVarName = false;
 
@@ -268,15 +279,21 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
           continue;
         if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z()))
           continue;        
-        if (td->getType() != TypeDescription::CCVariable || 
-            (td->getSubType()->getType() != TypeDescription::double_type &&
-             td->getSubType()->getType() != TypeDescription::Vector))
-          // only allow CCVariable<double> and CCVariable<Vector> for now
+        if (td->getSubType()->getType() != TypeDescription::double_type &&
+            td->getSubType()->getType() != TypeDescription::Vector)
+          // only allow *Variable<double> and *Variable<Vector> for now
           continue;
 
         // pending the task that allocates the var, we may not have allocated it yet
-        CCVariableBase* v = dw->d_ccDB.get(label, m, patch);
-
+        GridVariable* v;
+        switch (td->getType()) {
+        case TypeDescription::CCVariable: v = dw->d_ccDB.get(label, m, patch); break;
+        case TypeDescription::NCVariable: v = dw->d_ncDB.get(label, m, patch); break;
+        case TypeDescription::SFCXVariable: v = dw->d_sfcxDB.get(label, m, patch); break;
+        case TypeDescription::SFCYVariable: v = dw->d_sfcyDB.get(label, m, patch); break;
+        case TypeDescription::SFCZVariable: v = dw->d_sfczDB.get(label, m, patch); break;
+        default: throw InternalError("Cannot track var type of non-grid-type",__FILE__,__LINE__); break;
+        }
         start = Max(start, v->getLow());
         end = Min(end, v->getHigh());
         if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z())) 
@@ -285,28 +302,131 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
         // now get it the way a normal task would get it
         switch (td->getSubType()->getType()) {
         case TypeDescription::double_type: {
-          constCCVariable<double> var;
-          dw->get(var, label, m, patch, Ghost::None, 0);
-          
-          if (!printedHeader) {
-            cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
-                 << *dt << endl;
-            printedHeader = true;
-          }
-          if (!printedVarName) {
-            cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
-          }
-          
-          for (int z = start.z(); z < end.z(); z++) {
-            for (int y = start.y(); y < end.y(); y++) {
-              cout << d_myworld->myrank() << "  ";
-              for (int x = start.x(); x < end.x(); x++) {
-                IntVector c(x,y,z);
-                cout << " " << c << ": " << var[c];
+          if (td->getType() == TypeDescription::CCVariable) {
+            constCCVariable<double> var;
+            dw->get(var, label, m, patch, Ghost::None, 0);
+            
+            if (!printedHeader) {
+              cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
+                   << *dt << endl;
+              printedHeader = true;
+            }
+            if (!printedVarName) {
+              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
+            }
+            
+            for (int z = start.z(); z < end.z(); z++) {
+              for (int y = start.y(); y < end.y(); y++) {
+                cout << d_myworld->myrank() << "  ";
+                for (int x = start.x(); x < end.x(); x++) {
+                  IntVector c(x,y,z);
+                  cout << " " << c << ": " << var[c];
+                }
+                cout << endl;
               }
               cout << endl;
             }
-            cout << endl;
+          }
+          else if (td->getType() == TypeDescription::NCVariable) {
+            constNCVariable<double> var;
+            dw->get(var, label, m, patch, Ghost::None, 0);
+            
+            if (!printedHeader) {
+              cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
+                   << *dt << endl;
+              printedHeader = true;
+            }
+            if (!printedVarName) {
+              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
+            }
+            
+            for (int z = start.z(); z < end.z(); z++) {
+              for (int y = start.y(); y < end.y(); y++) {
+                cout << d_myworld->myrank() << "  ";
+                for (int x = start.x(); x < end.x(); x++) {
+                  IntVector c(x,y,z);
+                  cout << " " << c << ": " << var[c];
+                }
+                cout << endl;
+              }
+              cout << endl;
+            }
+          }
+          
+          else if (td->getType() == TypeDescription::SFCXVariable) {
+            constSFCXVariable<double> var;
+            dw->get(var, label, m, patch, Ghost::None, 0);
+            
+            if (!printedHeader) {
+              cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
+                   << *dt << endl;
+              printedHeader = true;
+            }
+            if (!printedVarName) {
+              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
+            }
+            
+            for (int z = start.z(); z < end.z(); z++) {
+              for (int y = start.y(); y < end.y(); y++) {
+                cout << d_myworld->myrank() << "  ";
+                for (int x = start.x(); x < end.x(); x++) {
+                  IntVector c(x,y,z);
+                  cout << " " << c << ": " << var[c];
+                }
+                cout << endl;
+              }
+              cout << endl;
+            }
+          }
+          else if (td->getType() == TypeDescription::SFCYVariable) {
+            constSFCYVariable<double> var;
+            dw->get(var, label, m, patch, Ghost::None, 0);
+            
+            if (!printedHeader) {
+              cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
+                   << *dt << endl;
+              printedHeader = true;
+            }
+            if (!printedVarName) {
+              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
+            }
+            
+            for (int z = start.z(); z < end.z(); z++) {
+              for (int y = start.y(); y < end.y(); y++) {
+                cout << d_myworld->myrank() << "  ";
+                for (int x = start.x(); x < end.x(); x++) {
+                  IntVector c(x,y,z);
+                  cout << " " << c << ": " << var[c];
+                }
+                cout << endl;
+              }
+              cout << endl;
+            }
+          }
+          else if (td->getType() == TypeDescription::SFCZVariable) {
+            constSFCZVariable<double> var;
+            dw->get(var, label, m, patch, Ghost::None, 0);
+            
+            if (!printedHeader) {
+              cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
+                   << *dt << endl;
+              printedHeader = true;
+            }
+            if (!printedVarName) {
+              cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
+            }
+            
+            for (int z = start.z(); z < end.z(); z++) {
+              for (int y = start.y(); y < end.y(); y++) {
+                cout << d_myworld->myrank() << "  ";
+                for (int x = start.x(); x < end.x(); x++) {
+                  IntVector c(x,y,z);
+                  cout << " " << c << ": " << var[c];
+                }
+                cout << endl;
+              }
+              cout << endl;
+            }
           }
         }
           break;

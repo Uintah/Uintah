@@ -1198,6 +1198,101 @@ IntVector Patch::getGhostCellHighIndex(int numGC) const
 				 d_bctypes[zplus] == Neighbor?numGC:0);
 }
 
+void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
+                             IntVector& region_low, IntVector& region_high) const
+{
+  // on certain AMR grid configurations, with extra cells, patches can overlap
+  // such that the extra cell of one patch overlaps a normal cell of another
+  // in such conditions, we shall exclude that extra cell from MPI communication
+  // Also disclude overlapping extra cells just to be safe
+  IntVector patch_low = getLowIndex(basis, bl);
+  IntVector patch_high = getHighIndex(basis, bl);
+  
+  // intersection of patch's interior with the other patch's send buffer
+  IntVector int_low = Max(patch_low, region_low);
+  IntVector int_high = Min(patch_high, region_high);
+  
+  if (int_high.x() > int_low.x() && int_high.y() > int_low.y() && int_high.z() > int_low.z()) {
+    // exclude the overlapped com by not sending this patch's extra cells.  Because of the nature
+    // of the overlapping, an extra cell that would be sent is already an extra cell on the other patch
+    // (and so would any other cell)
+    if (int_low == region_low && int_high == region_high) {
+      // if the intersected region is the same as the dependency, return
+      region_low = region_high;
+      return;
+    }
+
+    IntVector old_l(region_low), old_h(region_high);
+
+    //region_low = Max(neighbor->getInteriorLowIndex(basis), region_low);
+    //region_high = Min(neighbor->getInteriorHighIndex(basis), region_high);
+    if (basis == YFaceBased) {
+      //cout << "     Yfaced : " << getID() << " (neighbor " << neighbor->getID() << ") " << old_l << " " << old_h << "  new  " << region_low << " " << region_high << endl;
+    }
+    return;
+
+    // the intersection should be the same in 2 dimensions as the region_low and region_high range
+    // adjust the third dimension
+    int dim;
+    for (dim = 0; dim < 3; dim++) {
+      if (int_low[dim] != region_low[dim] || int_high[dim] != region_high[dim]) {
+        int otherdim1 = (dim+1)%3;
+        int otherdim2 = (dim+2)%3;
+        bool two_diff = false;
+        int other_diff_dim = -1;
+
+        if (!(int_low[otherdim1] == region_low[otherdim1] && int_high[otherdim1] == region_high[otherdim1])) {
+          two_diff = true;
+          other_diff_dim = otherdim1;
+        }
+        if (!(int_low[otherdim2] == region_low[otherdim2] && int_high[otherdim2] == region_high[otherdim2])) {
+          if (two_diff) {
+            throw InternalError("Patches overlap, but not correctly", __FILE__, __LINE__);
+          }
+          two_diff = true;
+          other_diff_dim = otherdim2;
+        }
+
+        if (two_diff) {
+          return;
+          // if there are two different dimensions, then (I believe) we can safely assume that it 
+          // is because on of the patches has extra cells in one direction that the other doesn't have,
+          // and can be safely discaraded, since it can be acquired from another patch.
+          int dimsize = region_high[dim] - region_low[dim];
+          int otherdimsize = region_high[other_diff_dim] - region_low[other_diff_dim];
+          if (dimsize > otherdimsize) {
+            region_low[dim] = int_low[dim];
+            region_high[dim] = int_high[dim];
+            // have the normal pruning done when we get to otherdim
+            //cout <<  "     BAD INTERSECTION:  " << int_low << " " << int_high << " region: " << region_low << " " << region_high << " old: " << old_l << " " << old_h << endl;
+        
+            continue;
+          }
+          else {
+            region_low[other_diff_dim] = int_low[other_diff_dim];
+            region_high[other_diff_dim] = int_high[other_diff_dim];
+            //cout <<  "     BAD INTERSECTION:  " << int_low << " " << int_high << " region: " << region_low << " " << region_high << " old: " << old_l << " " << old_h << endl;
+            // do normal pruning now
+          }
+        }
+          
+        if (int_low[dim] == region_low[dim] && int_high[dim] < region_high[dim]) {
+          region_low[dim] = int_high[dim];
+        }
+        else if (int_low[dim] > region_low[dim] && int_high[dim] == region_high[dim]) {
+          region_high[dim] = int_low[dim];
+        }
+        else {
+          throw InternalError("Patches overlap, but not correctly", __FILE__, __LINE__);
+        }
+        
+        break;
+      }
+    }
+    ASSERT(dim != 3);    
+  }
+}
+
 void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
 			    int numGhostCells,
 			    IntVector& lowOffset, IntVector& highOffset)

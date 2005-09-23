@@ -114,7 +114,7 @@ MPIScheduler::verifyChecksum()
   //  - make a flag to turn this off
   //  - make the checksum more sophisticated
   int checksum = (int)graph.getTasks().size();
-  dbg << "Checking checksum of " << checksum << '\n';
+  mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
   int result_checksum;
   MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
 		d_myworld->getComm());
@@ -125,7 +125,7 @@ MPIScheduler::verifyChecksum()
 	 << " and global is " << result_checksum << '\n';
     MPI_Abort(d_myworld->getComm(), 1);
   }
-  dbg << "Checksum succeeded\n";
+  mpidbg << d_myworld->myrank() << " (Allreduce) Check succeeded\n";
 }
 
 void

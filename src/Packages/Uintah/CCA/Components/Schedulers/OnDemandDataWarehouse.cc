@@ -2075,20 +2075,31 @@ getGridVar(VariableBase& var, DWDatabase& db,
         if (rw.invoke()) {
           // print out this message if the ProgressiveWarning does
           ostringstream errmsg;
-          errmsg << d_myworld->myrank() << " This occurrence for " << label->getName(); 
+          /*          errmsg << d_myworld->myrank() << " This occurrence for " << label->getName(); 
           if (patch)
             errmsg << " on patch " << patch->getID();
           errmsg << " for material " << matlIndex;
 
           errmsg << "You may ignore this under normal circumstances";
           warn << errmsg.str() << '\n';
+          */
         }
       }
     }
-    
+
     for(int i=0;i<(int)neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       if(neighbor && (neighbor != patch)){
+        IntVector low = Max(neighbor->getLowIndex(basis, label->getBoundaryLayer()), lowIndex);
+        IntVector high = Min(neighbor->getHighIndex(basis, label->getBoundaryLayer()), highIndex);
+
+        if (patch->getLevel()->getIndex() > 0 && patch != neighbor) {
+          patch->cullIntersection(basis, label->getBoundaryLayer(), neighbor, low, high);
+        }
+        if (low == high) {
+          continue;
+        }
+
 	if(!db.exists(label, matlIndex, neighbor)) {
 	  SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor,
 				    matlIndex, neighbor == patch?
@@ -2100,9 +2111,9 @@ getGridVar(VariableBase& var, DWDatabase& db,
 	if(neighbor->isVirtual())
 	  srcvar->offsetGrid(neighbor->getVirtualOffset());
 	
-	IntVector low = Max(lowIndex, srcvar->getLow());
-	IntVector high= Min(highIndex, srcvar->getHigh());
-	
+	//IntVector low = Max(lowIndex, srcvar->getLow());
+	//IntVector high= Min(highIndex, srcvar->getHigh());
+
 	if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
 	    || ( high.z() < low.z() ) ) {
 	  //SCI_THROW(InternalError("Patch doesn't overlap?", __FILE__, __LINE__));

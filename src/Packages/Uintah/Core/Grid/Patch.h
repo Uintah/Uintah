@@ -275,6 +275,12 @@ WARNING
      // returns ghost cell index
      IntVector getGhostCellLowIndex(int numGC) const;
      IntVector getGhostCellHighIndex(int numGC) const;
+
+     // For AMR.  When there are weird patch configurations, sometimes patches can overlap.
+     // Find the intersection betwen the patch and the desired dependency, and then remove the intersection.
+     // If the overlap IS the intersection, set the low to be equal to the high.
+     void cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
+                           IntVector& region_low, IntVector& region_high) const;
      /*
      IntVector getGhostSFCXLowIndex(const int numGC) const
      {  return d_lowIndex-getGhostSFCXLowOffset(numGC, d_bctypes); }
