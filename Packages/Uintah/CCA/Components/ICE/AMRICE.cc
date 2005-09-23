@@ -120,7 +120,7 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      int step, 
                                      int nsteps)
 {
-  if(fineLevel->getIndex() > 0  && doICEOnLevel(fineLevel->getIndex())){
+  if(fineLevel->getIndex() > 0  && doICEOnLevel(fineLevel->getIndex(), fineLevel->getGrid()->numLevels())){
     cout_doing << d_myworld->myrank() << " AMRICE::scheduleRefineInterface \t\t\tL-" 
                << fineLevel->getIndex() << " progressVar "<< (double)step/(double)nsteps <<'\n';
                
@@ -526,7 +526,9 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
       TransportedVariable* tvar = *iter;
       task->requires(Task::NewDW, tvar->var,
                   0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
-      task->computes(tvar->var);
+      if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
+        task->computes(tvar->var);
+      }
     }
   }
   
@@ -798,7 +800,7 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
                                SchedulerP& sched)
 {
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  if(!doICEOnLevel(fineLevel->getIndex()))
+  if(!doICEOnLevel(fineLevel->getIndex(), fineLevel->getGrid()->numLevels()))
     return;
     
   Ghost::GhostType  gn = Ghost::None; 
@@ -1884,7 +1886,7 @@ ______________________________________________________________________*/
 void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                    SchedulerP& sched)
 {
-  if(!doICEOnLevel(coarseLevel->getIndex()+1))
+  if(!doICEOnLevel(coarseLevel->getIndex()+1, coarseLevel->getGrid()->numLevels()))
     return;
   cout_doing << d_myworld->myrank() 
              << " AMRICE::scheduleErrorEstimate \t\t\tL-" 

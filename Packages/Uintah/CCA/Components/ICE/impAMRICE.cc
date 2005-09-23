@@ -50,7 +50,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     LevelP level = grid->getLevel(L);
     const PatchSet* patches = level->eachPatch();
     
-    if(!doICEOnLevel(level->getIndex())){
+    if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels())){
       return;
     }
 
@@ -130,7 +130,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     LevelP level = grid->getLevel(L);
     const PatchSet* patches = level->eachPatch();
     
-    if(!doICEOnLevel(level->getIndex())){
+    if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels())){
       continue;
     }    
     if(!d_impICE){         //  E X P L I C I T

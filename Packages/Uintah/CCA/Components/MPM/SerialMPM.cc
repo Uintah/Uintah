@@ -398,7 +398,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                SchedulerP   & sched,
                                int, int ) // AMR Parameters
 {
-  if (!flags->doMPMOnLevel(level))
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
 
   const PatchSet* patches = level->eachPatch();
@@ -444,7 +444,8 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
  /*
   * applyExternalLoads
@@ -471,7 +472,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                    const PatchSet* patches,
                                                    const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   /* interpolateParticlesToGrid
@@ -522,7 +524,8 @@ void SerialMPM::scheduleComputeHeatExchange(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
   /* computeHeatExchange
    *   in(G.MASS, G.TEMPERATURE, G.EXTERNAL_HEAT_RATE)
@@ -546,7 +549,8 @@ void SerialMPM::scheduleExMomInterpolated(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
   contactModel->addComputesAndRequiresInterpolated(sched, patches, matls);
 }
@@ -560,7 +564,8 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   // for thermal stress analysis
@@ -610,7 +615,8 @@ void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
                                                const PatchSet* patches,
                                                const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   Task* t = scinew Task("MPM::updateErosionParameter",
@@ -631,7 +637,8 @@ void SerialMPM::scheduleComputeAccStrainEnergy(SchedulerP& sched,
                                                const PatchSet* patches,
                                                const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   Task* t = scinew Task("MPM::computeAccStrainEnergy",
@@ -646,7 +653,8 @@ void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
                                                    const PatchSet* patches,
                                                    const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   Task* t = scinew Task("MPM::computeArtificialViscosity",
@@ -668,7 +676,8 @@ void SerialMPM::scheduleComputeContactArea(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   /*
@@ -692,7 +701,8 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   /*
@@ -751,7 +761,8 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
 {  
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   heatConductionModel->scheduleComputeInternalHeatRate(sched,patches,matls);
@@ -761,7 +772,8 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   /* solveEquationsMotion
@@ -792,7 +804,8 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   heatConductionModel->scheduleSolveHeatEquations(sched,patches,matls);
@@ -802,7 +815,8 @@ void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   /* integrateAcceleration
@@ -827,7 +841,8 @@ void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
                                                  const PatchSet* patches,
                                                  const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   heatConductionModel->scheduleIntegrateTemperatureRate(sched,patches,matls);
@@ -837,7 +852,8 @@ void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   /* exMomIntegrated
@@ -855,7 +871,8 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                                                   const MaterialSet* matls)
 
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   Task* t=scinew Task("MPM::setGridBoundaryConditions",
@@ -875,7 +892,8 @@ void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   /*
@@ -901,7 +919,8 @@ void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
 //if  manual_new_material==false, DON't do this task OR
@@ -932,7 +951,8 @@ void SerialMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
 //if  create_new_particles==false, DON't do this task OR
@@ -984,7 +1004,8 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                         const MaterialSet* matls)
 
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
   /*
@@ -1065,7 +1086,6 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
 {
   Task* task = scinew Task("SerialMPM::refine", this, &SerialMPM::refine);
   sched->addTask(task, patches, d_sharedState->allMPMMaterials());
-  // do nothing for now
 }
 
 void SerialMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/, 
@@ -2912,6 +2932,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       if(d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
         new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
+//        NCVariable<double> massBurnFrac_create;
 //        new_dw->allocateTemporary(massBurnFrac_create,         patch,gac,NGP);
 //        massBurnFrac_create.initialize(0.);
 //        massBurnFrac = massBurnFrac_create;         // reference created data
@@ -3220,13 +3241,13 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw)
 {
-  // coarsen the errorflag.
   const Level* level = getLevel(patches);
   if (level->getIndex() == level->getGrid()->numLevels()-1) {
     // on finest level, we do the same thing as initialErrorEstimate, so call it
     initialErrorEstimate(group, patches, matls, old_dw, new_dw);
   }
   else {
+    // coarsen the errorflag.
     const Level* fineLevel = level->getFinerLevel().get_rep();
   
     for(int p=0;p<patches->size();p++){  
@@ -3303,6 +3324,7 @@ SerialMPM::refine(const ProcessorGroup*,
   // just create a particle subset if one doesn't exist
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
+    cout << "   doing MPM::refine on patch " << patch->getID() << "\n";
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){

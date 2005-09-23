@@ -50,7 +50,7 @@ namespace Uintah {
 
     int         d_minGridLevel; // Only do MPM on this grid level
     int         d_maxGridLevel; // Only do MPM on this grid level
-    bool        doMPMOnLevel(int level) const;
+    bool        doMPMOnLevel(int level, int numLevels) const;
     
     std::string d_erosionAlgorithm; // Algorithm to erode material points
 

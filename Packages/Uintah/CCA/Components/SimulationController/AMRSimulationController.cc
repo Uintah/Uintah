@@ -393,7 +393,7 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
     d_sim->restartInitialize();
   } else {
     // for dynamic lb's, set up initial patch config
-    d_lb->possiblyDynamicallyReallocate(grid, false); 
+    d_lb->possiblyDynamicallyReallocate(grid, true); 
 
     d_sharedState->setCurrentTopLevelTimeStep( 0 );
     t = d_timeinfo->initTime;
@@ -455,7 +455,7 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   d_scheduler->advanceDataWarehouse(currentGrid);
   
   // for dynamic lb's, set up patch config after changing grid
-  d_lb->possiblyDynamicallyReallocate(currentGrid, false); 
+  d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
   
   for(int i=0;i<currentGrid->numLevels();i++) {
     d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
@@ -500,7 +500,7 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
     //for(int i=1;i<oldGrid->numLevels();i++)
     //numDWs *= oldGrid->getLevel(i)->timeRefinementRatio();
 
-    d_lb->possiblyDynamicallyReallocate(currentGrid, false); 
+    d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
     double scheduleTime = Time::currentSeconds();
     d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sim);
     scheduleTime = Time::currentSeconds() - scheduleTime;

@@ -60,11 +60,18 @@ extern DebugStream mixedDebug;
 
 static DebugStream dbg( "OnDemandDataWarehouse", false );
 static DebugStream warn( "OnDemandDataWarehouse_warn", true );
+static DebugStream particles("DWParticles", false);
 extern DebugStream mpidbg;
 
 static Mutex ssLock( "send state lock" );
 
-#define PARTICLESET_TAG		0x4000
+// we want a particle message to have a unique tag per patch/matl/batch/dest.
+// we only have 32K message tags, so this will have to do.
+//   We need this because the possibility exists (particularly with DLB) of 
+//   two messages with the same tag being sent from the same processor.  Even
+//   if these messages are sent to different processors, they can get crossed in the mail
+//   or one can overwrite the other.
+#define PARTICLESET_TAG	0x4000|batch->messageTag
 #define DAV_DEBUG 0
 
 OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
@@ -312,7 +319,8 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
       // in a case where there is a sendset with a different ghost configuration
       // than we want, there can be problems with dynamic load balancing, when patch
       // used to be on this processor and now we only want ghost data from patch.  So
-      // check if dest previously sent us this entire patch, if so, just use that sendset
+      // check if dest previously sent us (during this timestep) this entire patch, 
+      // if so, just use that sendset
       ParticleSubset* sendset = rs.find_sendset(dest, patch, matlIndex, patch->getLowIndex(), patch->getHighIndex(),
                                                 old_dw->d_generation);
       if (sendset) {
@@ -348,20 +356,21 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
         }
         ssLock.lock();  // Dd: ??
         int numParticles = sendset->numParticles();
+        MPI_Request request;
         ssLock.unlock();  // Dd: ??
 #if SCI_ASSERTION_LEVEL >= 1
 	int* maxtag, found;
 	MPI_Attr_get(d_myworld->getComm(), MPI_TAG_UB, &maxtag, &found);
 	ASSERT(found);
-	ASSERT((PARTICLESET_TAG|batch->messageTag) <= (*maxtag));
+	ASSERT((PARTICLESET_TAG) <= (*maxtag));
 #endif
         ASSERT(batch->messageTag >= 0);
         
-        mpidbg << d_myworld->myrank() << " Sending PARTICLE message " << (PARTICLESET_TAG|batch->messageTag) << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
 
-        MPI_Bsend(&numParticles, 1, MPI_INT, dest,
-                  PARTICLESET_TAG|batch->messageTag, d_myworld->getComm());
-        mpidbg << d_myworld->myrank() << " Done Sending PARTICLE message " << (PARTICLESET_TAG|batch->messageTag) << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
+        int tag = PARTICLESET_TAG;
+        particles << d_myworld->myrank() << " " << getID() << " Sending PARTICLE message " << tag << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ") " << sendset->getLow() << " " << sendset->getHigh() << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << endl; cerrLock.unlock();
+        MPI_Bsend(&numParticles, 1, MPI_INT, dest, tag, d_myworld->getComm());
+        mpidbg << d_myworld->myrank() << " Done Sending PARTICLE message " << tag << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
         ssLock.lock();  // Dd: ??       
         ss.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
         ssLock.unlock();  // Dd: ??
@@ -475,17 +484,17 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
       }
       else
         recvset = rs.find_sendset(from, patch, matlIndex, low, high, old_dw->d_generation);
-      
+
       if(!recvset){
         int numParticles;
         MPI_Status status;
         ASSERT(batch->messageTag >= 0);
 	ASSERTRANGE(from, 0, d_myworld->size());
-        mpidbg << d_myworld->myrank() << " Posting PARTICLES receive for message " << (PARTICLESET_TAG|batch->messageTag) << " from " << from << ", patch " << patch->getID() << ", matl " << matlIndex << ", length=" << 1 << "\n";      
-        MPI_Recv(&numParticles, 1, MPI_INT, from,
-                 PARTICLESET_TAG|batch->messageTag, d_myworld->getComm(),
-                 &status);
-        mpidbg << d_myworld->myrank() << "   recved " << numParticles << "particles\n";
+        int tag = PARTICLESET_TAG;
+
+        particles << d_myworld->myrank() << " " << getID() << " Posting PARTICLES receive for message " << tag << " from " << from << ", patch " << patch->getID() << ", matl " << matlIndex << ", length=" << 1 << " " << low << " " << high << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << "\n";      
+        MPI_Recv(&numParticles, 1, MPI_INT, from, tag, d_myworld->getComm(), &status);
+        particles << d_myworld->myrank() << "   recved " << numParticles << " particles " << endl;
         
         // sometime we have to force a receive to match a send.
         // in these cases just ignore this new subset
@@ -494,9 +503,12 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
           psubset = old_dw->createParticleSubset(numParticles, matlIndex, patch, low, high);
         }
         else {
-          //old_dw->printParticleSubsets();
           psubset = old_dw->getParticleSubset(matlIndex,patch,low,high);
-          ASSERTEQ(numParticles, psubset->numParticles());
+          if (numParticles != psubset->numParticles()) {
+            cout << d_myworld->myrank() << " BAD: pset " << psubset->getLow() << " " << psubset->getHigh() << " " << psubset->numParticles() << " particles, src: " << from << " range: " << low << " " << high << " " << numParticles << " particles " << " patch " << patch->getLowIndex() << " " << patch->getHighIndex() << " " << matlIndex << endl;
+            //old_dw->printParticleSubsets();
+            ASSERTEQ(numParticles, psubset->numParticles());
+          }
         }
         ParticleSubset* recvset = new ParticleSubset(psubset->getParticleSet(),
                                                      true, matlIndex, patch, 
@@ -505,8 +517,6 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
       }
       ParticleSubset* pset = old_dw->getParticleSubset(matlIndex,patch,low, high);
 
-
-      //brydbg << d_myworld->myrank() << " RECVset has" << pset->numParticles() << " particles - patch " << patch << ' ' << "M: " << matlIndex << "GT: (" << gt << ',' << ngc << ")\n";
       Variable* v = label->typeDescription()->createInstance();
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(v);
       ASSERT(var != 0);
@@ -682,7 +692,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
   int error = MPI_Allreduce(&sendbuf[0], &recvbuf[0], count, datatype, op,
 			    d_myworld->getComm());
 
-  mpidbg << d_myworld->myrank() << " allreduce, name " << label->getName() << " level " << (level?level->getID():-1) << endl;
+  mpidbg << d_myworld->myrank() << " allreduce, done " << label->getName() << " level " << (level?level->getID():-1) << endl;
   if( mixedDebug.active() ) {
     cerrLock.lock(); mixedDebug << "done with MPI_Allreduce\n";
     cerrLock.unlock();
