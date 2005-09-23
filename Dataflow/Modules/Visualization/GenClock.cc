@@ -74,7 +74,6 @@ public:
 protected:
 
   GuiInt    iType_;
-  GuiInt    iShowTime_;
   GuiInt    iBbox_;
   GuiString sFormat_;
   GuiDouble dMin_;
@@ -82,12 +81,13 @@ protected:
   GuiDouble dCurrent_;
   GuiInt    dSize_;
   GuiString sLocation_;
+  GuiDouble gLocation_x_;
+  GuiDouble gLocation_y_;
   GuiDouble color_r_;
   GuiDouble color_g_;
   GuiDouble color_b_;
 
   int    type_;
-  int    showTime_;
   int    bbox_;
   string format_;
   double min_;
@@ -95,6 +95,8 @@ protected:
   double current_;
   int    size_;
   string location_;
+  double location_x_;
+  double location_y_;
 
   MaterialHandle material_;
 
@@ -108,7 +110,6 @@ DECLARE_MAKER(GenClock)
 GenClock::GenClock(GuiContext *context)
   : Module("GenClock", context, Source, "Visualization", "SCIRun"),
     iType_(context->subVar("type")),
-    iShowTime_(context->subVar("showtime")),
     iBbox_(context->subVar("bbox")),
     sFormat_(context->subVar("format")),
     dMin_(context->subVar("min")),
@@ -116,6 +117,8 @@ GenClock::GenClock(GuiContext *context)
     dCurrent_(context->subVar("current")),
     dSize_(context->subVar("size")),
     sLocation_(context->subVar("location")),
+    gLocation_x_(context->subVar("location-x")),
+    gLocation_y_(context->subVar("location-y")),
     color_r_(ctx->subVar("color-r")),
     color_g_(ctx->subVar("color-g")),
     color_b_(ctx->subVar("color-b")),
@@ -149,13 +152,14 @@ void GenClock::execute(){
 
       current_  != dCurrent_.get() ||
       type_     != iType_.get() ||
-      showTime_ != iShowTime_.get() ||
       bbox_     != iBbox_.get() ||
       min_      != dMin_.get() ||
       max_      != dMax_.get() ||
       format_   != sFormat_.get() ||
       size_     != dSize_.get() ||
-      location_ != sLocation_.get() ) {
+      location_ != sLocation_.get() ||
+      location_x_ != gLocation_x_.get() ||
+      location_y_ != gLocation_y_.get() ) {
 
     update_ = false;
 
@@ -163,23 +167,24 @@ void GenClock::execute(){
     dCurrent_.reset();
 
     type_     = iType_.get();
-    showTime_ = iShowTime_.get();
     bbox_     = iBbox_.get();
     min_      = dMin_.get();
     max_      = dMax_.get();
     format_   = sFormat_.get();
     size_     = dSize_.get();
     location_ = sLocation_.get();
+    location_x_ = gLocation_x_.get();
+    location_y_ = gLocation_y_.get();
 
     material_->diffuse = Color(color_r_.get(), color_g_.get(), color_b_.get());
 
     ogeom_port->delAll();
 
-    if( type_ == 0 )           // Analog
-      ogeom_port->addObj(generateAnalog(), string("Clock"));
+    if( type_ % 2 == 0 )       // Analog or Analog/Digial
+      ogeom_port->addObj(generateAnalog(), string("Clock Sticky"));
 
     else if( type_ == 1 )      // Digital
-      ogeom_port->addObj(generateDigital(), string("Clock"));
+      ogeom_port->addObj(generateDigital(), string("Clock Sticky"));
   }
 
   // Send the data downstream
@@ -220,7 +225,7 @@ GeomHandle GenClock::generateAnalog()
   cx = radius;
   cy = radius;
 
-  if( showTime_ ) {    
+  if( type_ == 2 ) {    
     int nchars = 0;
 
     GeomHandle time = generateTime( nchars );
@@ -258,16 +263,17 @@ GeomHandle GenClock::generateAnalog()
     group->add( scinew GeomMaterial(box, material_) );
   }
 
-  Vector refVec;
+  // Use an offset so the border of the clock is visable.
+  Vector refVec = 31.0/32.0 * Vector( location_x_, location_y_, 0.0 );
 
-  if( location_ == "Top Left" )
-    refVec = Vector(-31.0/32.0, 31.0/32.0, 0 ) + Vector(  cx, -radius, 0 );
-  else if( location_ == "Top Right" )
-    refVec = Vector( 31.0/32.0, 31.0/32.0, 0 ) + Vector( -cx, -radius, 0 );
-  else if( location_ == "Bottom Left" )
-    refVec = Vector(-31.0/32.0,-31.0/32.0, 0 ) + Vector(  cx, cy, 0 ) ;
-  else if( location_ == "Bottom Right" )
-    refVec = Vector( 31.0/32.0,-31.0/32.0, 0 ) + Vector( -cx, cy, 0 );
+  if( location_x_ <= 0 && location_y_ >= 0 )       // Top Left
+    refVec += Vector(  cx, -radius, 0 );
+  else if( location_x_ >= 0 && location_y_ >= 0 )  // Top Right
+    refVec += Vector( -cx, -radius, 0 );
+  else if( location_x_ <= 0 && location_y_ <= 0 )  // Bottom Left
+    refVec += Vector(  cx, cy, 0 ) ;
+  else if( location_x_ >= 0 && location_y_ <= 0 )  // Bottom Right
+    refVec += Vector( -cx, cy, 0 );
 
   Transform trans;
   trans.pre_translate( refVec );
@@ -307,16 +313,17 @@ GeomHandle GenClock::generateDigital()
     group->add( scinew GeomMaterial(box, material_) );
   }
 
-  Vector refVec;
+  // Use an offset so the border of the clock is visable.
+  Vector refVec = 31.0/32.0 * Vector( location_x_, location_y_, 0.0 );
 
-  if( location_ == "Top Left" )
-    refVec = Vector(-31.0/32.0, 31.0/32.0, 0 ) - Vector( 0, dy, 0 );
-  else if( location_ == "Top Right" )
-    refVec = Vector( 31.0/32.0, 31.0/32.0, 0 ) - Vector( dx, dy, 0 );
-  else if( location_ == "Bottom Left" )
-    refVec = Vector(-31.0/32.0,-31.0/32.0, 0 );
-  else if( location_ == "Bottom Right" )
-    refVec = Vector( 31.0/32.0,-31.0/32.0, 0 ) - Vector( dx, 0, 0 );
+  if( location_x_ <= 0 && location_y_ >= 0 )       // Top Left
+    refVec += Vector(  0, -dy, 0 );
+  else if( location_x_ >= 0 && location_y_ >= 0 )  // Top Right
+    refVec += Vector( -dx, -dy, 0 );
+  else if( location_x_ <= 0 && location_y_ <= 0 )  // Bottom Left
+    {}
+  else if( location_x_ >= 0 && location_y_ <= 0 )  // Bottom Right
+    refVec += Vector( -dx, 0, 0 );
 
   Transform trans;
   trans.pre_translate( refVec );
