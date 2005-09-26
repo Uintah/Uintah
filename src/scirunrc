@@ -274,7 +274,7 @@ SCIRUN_SERV_TMP_DIR = /tmp
 
 
 ### SCIRUN_LOAD_MODULES_ON_STARTUP = [boolean]
-#   Forces the dynamic libraries containing the moudles to be 
+#   Forces the dynamic libraries containing the modules to be 
 #   loaded at startup. This will use more memory, but module 
 #   creation will be faster.
 # SCIRUN_LOAD_MODULES_ON_STARTUP = false
