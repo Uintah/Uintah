@@ -269,8 +269,8 @@ TxtModule::show_ports(){
     if(sel_compitable>0){
       int i=sel_compitable-1;
       ostringstream os;
-      os<<"i="<<i<<" "<<selport<<" "<<port_list[i];
-      SCIRun::TxtBuilder::displayMessage(os.str());
+      //      os<<"i="<<i<<" "<<selport<<" "<<port_list[i];
+      //      SCIRun::TxtBuilder::displayMessage(os.str());
       if(sel<n_uport){
 	bs->connect(cid,selport,cid_list[i], port_list[i]);
       }else{
