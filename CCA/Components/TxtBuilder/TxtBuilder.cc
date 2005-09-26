@@ -221,7 +221,7 @@ void TxtBuilder::run()
   TxtMenu menu(svc);
   menu.setup(win_menu);
   network.setup(win_main);
-
+  mvwprintw(win_cmd,0,0,"F10 - Menu  F5 - Network Window  : - Command Window  r - Refresh Windows");
   // Update the stacking order
   update_panels();
 
@@ -531,6 +531,7 @@ string
 TxtBuilder::getString(string prompt){
   string s=prompt;
   int c;
+  werase(win_cmd);
   mvwprintw(win_cmd,0,0,s.c_str());
   wrefresh(win_cmd);
   while(true){
@@ -546,10 +547,12 @@ TxtBuilder::getString(string prompt){
     case 0xa: //ENTER
       werase(win_cmd);
       wrefresh(win_cmd);
+      mvwprintw(win_cmd,0,0,"F10 - Menu  F5 - Network Window  : - Command Window  r - Refresh Windows");
       return s.substr(prompt.size(), s.size()-prompt.size());
     case 0x1b: //ESC
       werase(win_cmd);
       wrefresh(win_cmd);
+      mvwprintw(win_cmd,0,0,"F10 - Menu  F5 - Network Window  : - Command Window  r - Refresh Windows");
       return "";
     default:
       s=s+(char)c;
