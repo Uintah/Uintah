@@ -117,8 +117,7 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
           }
 
   db->getWithDefault("max_iter", d_maxSweeps, 75);
-  db->getWithDefault("underrelax", d_underrelax, 1.0);
-  db->getWithDefault("res_tol", d_residual, 1.0e-8);
+  db->getWithDefault("tolerance", d_tolerance, 1.0e-8);
 
 }
 // ****************************************************************************
@@ -452,7 +451,7 @@ Models_HypreSolver::radLinearSolve()
     HYPRE_StructSMGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_StructSMGSetMemoryUse(solver, 0);
     HYPRE_StructSMGSetMaxIter(solver, d_maxSweeps);
-    HYPRE_StructSMGSetTol(solver, d_residual);
+    HYPRE_StructSMGSetTol(solver, d_tolerance);
     HYPRE_StructSMGSetRelChange(solver, 0);
     HYPRE_StructSMGSetNumPreRelax(solver, n_pre);
     HYPRE_StructSMGSetNumPostRelax(solver, n_post);
@@ -469,7 +468,7 @@ Models_HypreSolver::radLinearSolve()
     /*Solve the system using PFMG*/
     HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_StructPFMGSetMaxIter(solver, d_maxSweeps);
-    HYPRE_StructPFMGSetTol(solver, d_residual);
+    HYPRE_StructPFMGSetTol(solver, d_tolerance);
     HYPRE_StructPFMGSetRelChange(solver, 0);
     /* weighted Jacobi = 1; red-black GS = 2 */
     HYPRE_StructPFMGSetRelaxType(solver, 1);
@@ -489,7 +488,7 @@ Models_HypreSolver::radLinearSolve()
   else if (d_kspFix == "gmres") {
     HYPRE_StructGMRESCreate(MPI_COMM_WORLD, &solver);
     HYPRE_GMRESSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
-    HYPRE_GMRESSetTol( (HYPRE_Solver)solver, d_residual);
+    HYPRE_GMRESSetTol( (HYPRE_Solver)solver, d_tolerance);
     //    HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
     //    HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
     HYPRE_GMRESSetLogging( (HYPRE_Solver)solver, 1 );
@@ -499,7 +498,7 @@ Models_HypreSolver::radLinearSolve()
       HYPRE_StructSMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructSMGSetMemoryUse(precond, 0);
       HYPRE_StructSMGSetMaxIter(precond, 1);
-      HYPRE_StructSMGSetTol(precond, d_residual);
+      HYPRE_StructSMGSetTol(precond, d_tolerance);
       HYPRE_StructSMGSetZeroGuess(precond);
       HYPRE_StructSMGSetNumPreRelax(precond, n_pre);
       HYPRE_StructSMGSetNumPostRelax(precond, n_post);
@@ -515,7 +514,7 @@ Models_HypreSolver::radLinearSolve()
       /* use symmetric PFMG as preconditioner */
       HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
-      HYPRE_StructPFMGSetTol(precond, d_residual);
+      HYPRE_StructPFMGSetTol(precond, d_tolerance);
       HYPRE_StructPFMGSetZeroGuess(precond);
       /* weighted Jacobi = 1; red-black GS = 2 */
       HYPRE_StructPFMGSetRelaxType(precond, 1);
@@ -535,7 +534,7 @@ Models_HypreSolver::radLinearSolve()
       /* use two-step Jacobi as preconditioner */
       HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
-      HYPRE_StructJacobiSetTol(precond, d_residual);
+      HYPRE_StructJacobiSetTol(precond, d_tolerance);
       HYPRE_StructJacobiSetZeroGuess(precond);
       HYPRE_GMRESSetPrecond( (HYPRE_Solver) solver,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
@@ -570,7 +569,7 @@ Models_HypreSolver::radLinearSolve()
   else if (d_kspFix == "cg") {
     HYPRE_StructPCGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
-    HYPRE_PCGSetTol( (HYPRE_Solver)solver, d_residual);
+    HYPRE_PCGSetTol( (HYPRE_Solver)solver, d_tolerance);
     HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
     HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
     HYPRE_PCGSetLogging( (HYPRE_Solver)solver, 1 );
@@ -580,7 +579,7 @@ Models_HypreSolver::radLinearSolve()
       HYPRE_StructSMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructSMGSetMemoryUse(precond, 0);
       HYPRE_StructSMGSetMaxIter(precond, 1);
-      HYPRE_StructSMGSetTol(precond, d_residual);
+      HYPRE_StructSMGSetTol(precond, d_tolerance);
       HYPRE_StructSMGSetZeroGuess(precond);
       HYPRE_StructSMGSetNumPreRelax(precond, n_pre);
       HYPRE_StructSMGSetNumPostRelax(precond, n_post);
@@ -596,7 +595,7 @@ Models_HypreSolver::radLinearSolve()
       /* use symmetric PFMG as preconditioner */
       HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
-      HYPRE_StructPFMGSetTol(precond, d_residual);
+      HYPRE_StructPFMGSetTol(precond, d_tolerance);
       HYPRE_StructPFMGSetZeroGuess(precond);
       /* weighted Jacobi = 1; red-black GS = 2 */
       HYPRE_StructPFMGSetRelaxType(precond, 1);
@@ -616,7 +615,7 @@ Models_HypreSolver::radLinearSolve()
       /* use two-step Jacobi as preconditioner */
       HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
-      HYPRE_StructJacobiSetTol(precond, d_residual);
+      HYPRE_StructJacobiSetTol(precond, d_tolerance);
       HYPRE_StructJacobiSetZeroGuess(precond);
       HYPRE_PCGSetPrecond( (HYPRE_Solver) solver,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
@@ -657,7 +656,7 @@ Models_HypreSolver::radLinearSolve()
     cerr << "Sum of RHS vector: " << sum_b << endl;
   }
   if (((final_res_norm/(init_norm+1.0e-20) < 1.0) && (final_res_norm < 2.0))||
-     ((final_res_norm<d_residual)&&(init_norm<d_residual)))
+     ((final_res_norm<d_tolerance)&&(init_norm<d_tolerance)))
     return true;
   else
     return false;
