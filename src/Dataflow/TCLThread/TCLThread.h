@@ -48,6 +48,7 @@ public:
   void mainloop_wait();
   void startNetworkEditor();
 private:
+  bool check_for_newer_scirunrc();
   int argc;
   char** argv;
   Network* net;
