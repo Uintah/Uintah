@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <Core/Util/FileUtils.h>
 
 namespace SCIRun {
@@ -156,6 +158,37 @@ std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
 
   return newmap;
 }
+
+
+bool
+validFile(std::string filename) 
+{
+  struct stat buf;
+  if (stat(filename.c_str(), &buf) == 0)
+  {
+    mode_t &m = buf.st_mode;
+    return (m & S_IRUSR && S_ISREG(m) && !S_ISDIR(m));
+  }
+  return false;
+}
+
+
+
+bool
+validDir(std::string dirname) 
+{
+  struct stat buf;
+  if (stat(dirname.c_str(), &buf) == 0)
+  {
+    mode_t &m = buf.st_mode;
+    return (m & S_IRUSR && !S_ISREG(m) && S_ISDIR(m));
+  }
+  return false;
+}
+    
+
+  
+
 
 } // End namespace SCIRun
 
