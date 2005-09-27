@@ -58,11 +58,8 @@ namespace Uintah {
     const VarLabel* pFailureLabel;  // fail_label
     const VarLabel* pFailureLabel_preReloc;
     
-    const VarLabel* pViscoStressLabel;
-    const VarLabel* pViscoStressLabel_preReloc;//visco stress
-
-    const VarLabel* pPrevStressLabel;
-    const VarLabel* pPrevStressLabel_preReloc;
+    const VarLabel* pElasticStressLabel;
+    const VarLabel* pElasticStressLabel_preReloc;//visco stress
 
     const VarLabel* pHistory1Label;
     const VarLabel* pHistory1Label_preReloc;
