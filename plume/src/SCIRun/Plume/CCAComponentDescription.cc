@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentRepositoryServiceImpl.h: Implementation of the CCA ComponentRegistry interface for SCIRun
+ *  CCAComponentDescription.cc:
  *
  *  Written by:
  *   Steven G. Parker
@@ -38,46 +38,17 @@
  *
  */
 
-#ifndef SCIRun_ComponentRepositoryServiceImpl_h
-#define SCIRun_ComponentRepositoryServiceImpl_h
+#include <SCIRun/Plume/CCAComponentDescription.h>
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Distributed/ServiceImpl.h>
-
-namespace SCIRun
-{
-
-  /**
-   * \class ComponentRepositoryServiceImplService
-   *
-   * An implementation of a CCA ComponentRepositoryServiceImpl for SCIRun.  The
-   * ComponentRepositoryServiceImpl handles 
-   *
-   */
-
-  template<class Base>
-  class ComponentRepositoryServiceImpl : public ServiceImpl<Base>
+namespace SCIRun {
+  
+  CCAComponentDescription::CCAComponentDescription(const std::string &type, const std::string &library)
+    : type(type), library(library)
   {
-  public:
-    ComponentRepositoryServiceImpl(DistributedFramework*);
-    virtual ~ComponentRepositoryServiceImpl();
-
-    /** ? */
-    sci::cca::Port::pointer getService(const std::string&);
-    
-    /** Returns a list of ComponentClassDescriptions that represents all of the
-	component class types that may be instantiated in this framework.  In
-	other words, calling getComponentClassName on each element in this list
-	gives all of the components that the framework knows how to create. */
-
-    virtual SSIDL::array1<sci::cca::ComponentClassDescription::pointer>  getAvailableComponentClasses();
-    
-  private:
-    DistributedFramework *framework;
-  };
+  }
+  
+  CCAComponentDescription::~CCAComponentDescription()
+  {
+  }
   
 } // end namespace SCIRun
-
-//#include <SCIRun/Distributed/ComponentRepositoryServiceImpl.code>
-
-#endif

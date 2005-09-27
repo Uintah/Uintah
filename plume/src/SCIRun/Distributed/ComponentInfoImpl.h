@@ -85,8 +85,10 @@ namespace SCIRun {
     virtual std::string getClassName();
     virtual sci::cca::TypeMap::pointer getProperties();
     virtual void setProperties(const sci::cca::TypeMap::pointer &);
+
+    virtual sci::cca::Component::pointer getComponent() { return component; }
     
-  private:
+  protected:
     PortMap ports;
     
     sci::cca::Component::pointer component;
@@ -102,6 +104,6 @@ namespace SCIRun {
   
 } // end namespace SCIRun
 
-#include <SCIRun/Distributed/ComponentInfoImpl.code>
+//#include <SCIRun/Distributed/ComponentInfoImpl.code>
 
 #endif

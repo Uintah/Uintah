@@ -28,40 +28,44 @@
 
 
 /*
- *  FrameworkService.h: 
+ *  CCAComponentDescription.h: 
  *
  *  Written by:
- *   Yarden Livnat
- *   SCI Institute
+ *   Steven G. Parker
+ *   Department of Computer Science
  *   University of Utah
- *   Sept 2005
+ *   October 2001
  *
  */
 
-#ifndef SCIRun_FrameworkService_h
-#define SCIRun_FrameworkService_h
+#ifndef SCIRun_CCAComponentDescription_h
+#define SCIRun_CCAComponentDescription_h
 
-namespace SCIRun {
+#include <string>
 
-  namespace Distributed = sci::cca::distributed;
+namespace SCIRun
+{
 
-  class FrameworkServiceDescription
+  /** \class CCAComponentDescription
+   *
+   */
+  class CCAComponentDescription : public ComponentDescription
   {
   public:
-    typedef Distributed::internal::Service::pointer pointer;
+    CCAComponentDescription( const std::string &type, const std::string &library);
+    virtual ~CCAComponentDescription();
 
-    FrameworkServiceDescription() {}
-    virtual ~FrameworkServiceDescription() {}
-    virtual pointer get( DistributedFramework *);
+    std::string getType() const { return type;}
+    std::string getLibrary() const { return library; }
+
+  private:
+    std::string type;
+    std::string library;
+
+    CCAComponentDescription(const CCAComponentDescription&);
+    CCAComponentDescription& operator=(const CCAComponentDescription&);
   };
-
   
-  template<class Service>
-  class FrameworkServiceDescriptionImpl : public Service
-  {
-  public:
-    FramewrokServiceDesctiptionImpl(const string &name) : name(name) {}
-    virtual ~Framework
-}
+} // end namespace SCIRun
 
 #endif

@@ -58,7 +58,7 @@ namespace SCIRun {
   {
   public:
     typedef Distributed::ports::FrameworkPropertiesService Interface;
-    typedef Interface::pointer pointer;
+    typedef Distributed::ports::FrameworkPropertiesService::pointer pointer;
     
     FrameworkPropertiesService(DistributedFramework *framework)
       : FrameworkPropertiesServiceImpl<Interface>(framework)

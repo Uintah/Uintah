@@ -39,6 +39,7 @@
  */
 
 #include <SCIRun/Distributed/BuilderService.h>
+#include <SCIRun/Distributed/BuilderServiceImpl.code>
 #include <iostream>
 #include <string>
 

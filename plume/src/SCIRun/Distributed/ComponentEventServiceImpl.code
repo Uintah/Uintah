@@ -38,7 +38,10 @@
  *
  */
 
-#include <SCIRun/Distributed/ComponentEventServiceImpl.h>
+#ifndef SCIRun_ComponnetEventServiceImpl_code
+#define SCIRun_ComponnetEventServiceImpl_code
+
+//#include <SCIRun/Distributed/ComponentEventServiceImpl.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -103,3 +106,5 @@ namespace SCIRun {
 #endif
   
 } // end namespace SCIRun
+
+#endif // SCIRun_ComponnetEventServiceImpl_code

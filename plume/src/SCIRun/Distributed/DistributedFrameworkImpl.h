@@ -79,6 +79,6 @@ namespace SCIRun {
   
 } // end namespace SCIRun
 
-#include <SCIRun/Distributed/DistributedFrameworkImpl.code>
+//#include <SCIRun/Distributed/DistributedFrameworkImpl.code>
 
 #endif

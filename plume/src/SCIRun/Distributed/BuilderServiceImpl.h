@@ -211,6 +211,6 @@ namespace SCIRun {
 }
 
 
-#include <SCIRun/Distributed/BuilderServiceImpl.code>
+//#include <SCIRun/Distributed/BuilderServiceImpl.code>
 
 #endif

@@ -38,6 +38,9 @@
  *   Copyright (C) 2004 SCI Institute
  */
 
+#ifndef SCIRun_FrameworkPropertiesServiceImpl_code
+#define SCIRun_FrameworkPropertiesServiceImpl_code
+
 #include <SCIRun/Distributed/FrameworkPropertiesServiceImpl.h>
 #include <SCIRun/Distributed/DistributedFramework.h>
 #include <SCIRun/Distributed/PortInfo.h>
@@ -180,3 +183,5 @@ namespace SCIRun {
   }
   
 }
+
+#endif // 

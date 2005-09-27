@@ -41,7 +41,10 @@
  *
  */
 
-#include <SCIRun/Distributed/ConnectionEventImpl.h>
+#ifndef SCIRun_ConnectionEventImpl_code
+#define SCIRun_ConnectionEventImpl_code
+
+//#include <SCIRun/Distributed/ConnectionEventImpl.h>
 
 namespace SCIRun {
   
@@ -72,3 +75,5 @@ namespace SCIRun {
   }
 
 }
+
+#endif //  SCIRun_ConnectionEventImpl_code

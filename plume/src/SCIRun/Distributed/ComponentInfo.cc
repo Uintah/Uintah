@@ -39,6 +39,7 @@
  */
 
 #include <SCIRun/Distributed/ComponentInfo.h>
+#include <SCIRun/Distributed/ComponentInfoImpl.code>
 
 namespace SCIRun {
   

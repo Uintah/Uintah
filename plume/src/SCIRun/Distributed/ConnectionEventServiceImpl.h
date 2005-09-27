@@ -100,6 +100,6 @@ namespace SCIRun {
 } // end namespace SCIRun
 
 
-#include <SCIRun/Distributed/ConnectionEventServiceImpl.code>
+//#include <SCIRun/Distributed/ConnectionEventServiceImpl.code>
 
 #endif
