@@ -396,6 +396,8 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method update_type_callback { name1 name2 op } {
+        set tmp [set $this-update_type]
+        if { $tmp == "on release" } { set $this-update_type "On Release" }
 	set window .ui[modname]
 	if {[winfo exists $window]} {
 	    set opt [$window.f.opt childsite]
