@@ -218,7 +218,7 @@ TCLThread::startNetworkEditor()
   new NetworkEditor(net, gui);
 
   // If the user doesnt have a .scirunrc file, provide them with a default one
-  if (scirunrc_parsed)
+  if (!scirunrc_parsed)
   { 
     show_license_and_copy_scirunrc(gui);
   }
