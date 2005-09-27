@@ -12,8 +12,8 @@ C      IMPLICIT NONE
       double precision b(4),c(3,4,4),d(4,4)
 
       Integer I,J,K
-
-      DATA PI/3.141593D0/,SIG/5.67E-08/
+      PI =dacos(-1.0D0)
+      DATA SIG/5.67E-08/
 
       DATA c(1,1,1)/0.59324d0/,c(1,1,2)/-0.61741d-03/,
      &c(1,1,3)/0.29248d-06/,c(1,1,4)/-0.45823d-10/,
