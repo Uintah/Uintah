@@ -28,7 +28,7 @@
 
 
 /*
- *  ConnectionEventService.cc: Implementation of CCA ConnectionEventService for SCIRun
+ *  ConnectionEventServiceImpl.code: Implementation of CCA ConnectionEventService for SCIRun
  *
  *  Written by:
  *   Steven G. Parker
@@ -37,6 +37,9 @@
  *   October 2001
  *
  */
+
+#ifndef SCIRun_ConnectionEventServiceImpl_code
+#define SCIRun_ConnectionEventServiceImpl_code
 
 #include <SCIRun/Distributed/ConnectionEventServiceImpl.h>
 #include <iostream>
@@ -102,3 +105,5 @@ namespace SCIRun {
 #endif
   
 } // end namespace SCIRun
+
+#endif // SCIRun_ConnectionEventServiceImpl_code

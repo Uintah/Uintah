@@ -38,6 +38,9 @@
  *
  */
 
+#ifndef SCIRun_BuilderServiceImpl_code
+#define SCIRun_BuilderServiceImpl_code
+
 #include <Core/CCA/spec/sci_sidl.h>
 #include <Core/CCA/PIDL/PIDL.h>
 
@@ -346,3 +349,4 @@ namespace SCIRun {
 
 } // end namespace SCIRun
 
+#endif // SCIRun_BuilderServiceImpl_code

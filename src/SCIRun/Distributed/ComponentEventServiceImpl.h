@@ -107,6 +107,6 @@ namespace SCIRun {
 } // end namespace SCIRun
 
 
-#include <SCIRun/Distributed/ComponentEventServiceImpl.code>
+//#include <SCIRun/Distributed/ComponentEventServiceImpl.code>
 
 #endif

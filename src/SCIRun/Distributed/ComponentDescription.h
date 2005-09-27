@@ -43,8 +43,8 @@
 
 #include <string>
 
-namespace SCIRun
-{
+namespace SCIRun {
+
 
   /** \class ComponentDescription
    *
@@ -73,6 +73,21 @@ namespace SCIRun
     ComponentDescription& operator=(const ComponentDescription&);
   };
   
+  class DistributedFramework;
+
+  template<class Component>
+  class ComponentDescriptionFactory : public ComponentDescription  {
+  public:
+    ComponentDescriptionFactory(const std::string &name) : ComponentDescription(name) {}
+    virtual ~ComponentDescriptionFactory() {}
+
+    typename Component::pointer create(DistributedFramework *framework, const std::string &name) 
+    {
+      return Component::create(framework, name );
+    }
+  };
+
+
 } // end namespace SCIRun
 
 #endif

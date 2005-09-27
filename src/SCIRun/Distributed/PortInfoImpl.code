@@ -38,7 +38,10 @@
  *
  */
 
-#include <SCIRun/Distributed/PortInfoImpl.h>
+#ifndef SCIRun_PortInfoImpl_code
+#define SCIRun_PortInfoImpl_code
+
+//#include <SCIRun/Distributed/PortInfoImpl.h>
 #include <SCIRun/Distributed/TypeMap.h>
 #include <iostream>
 
@@ -197,3 +200,5 @@ namespace SCIRun {
     return useCount > 0;
   }
 } // end namespace SCIRun
+
+#endif // SCIRun_PortInfoImpl_code

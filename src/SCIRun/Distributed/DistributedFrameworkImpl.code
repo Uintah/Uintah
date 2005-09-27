@@ -38,6 +38,9 @@
  *
  */
 
+#ifndef SCIRun_DistributedFrameworkImpl_code
+#define SCIRun_DistributedFrameworkImpl_code
+
 namespace SCIRun {
   
   template<class Base>
@@ -52,3 +55,5 @@ namespace SCIRun {
   }
   
 } // SCIRun namespace
+
+#endif // CIRun_DistributedFrameworkImpl_code

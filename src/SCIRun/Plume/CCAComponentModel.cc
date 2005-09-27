@@ -42,8 +42,10 @@
 #include <SCIRun/Distributed/DistributedFramework.h>
 
 #include <SCIRun/Distributed/ComponentDescription.h>
-#include <SCIRun/Distributed/ComponentInfo.h>
-//#include <SCIRun/SCIRunErrorHandler.h>
+#include <SCIRun/Distributed/FrameworkPropertiesService.h>
+//#include <SCIRun/Distributed//ComponentInfoImpl.code>
+#include <SCIRun/Plume/CCAComponentInfo.h>
+#include <SCIRun/Plume/SCIRunErrorHandler.h>
 
 #include <Core/Thread/Guard.h>
 #include <Core/Containers/StringUtil.h>
@@ -83,7 +85,7 @@ namespace SCIRun {
   
   CCAComponentModel::CCAComponentModel(DistributedFramework* framework)
     : framework(framework),
-      lock_components("CCAComponentModel::components lock")
+      components_lock("CCAComponentModel::components lock")
   {
     // move to framework properties
     // Record the path containing DLLs for components.
@@ -104,7 +106,7 @@ namespace SCIRun {
   
   void CCAComponentModel::destroyComponentList()
   {
-    SCIRun::Guard g1(&lock_components);
+    SCIRun::Guard g1(&components_lock);
     for(componentDB_type::iterator iter=components.begin();
 	iter != components.end(); iter++) {
       delete iter->second;
@@ -127,31 +129,31 @@ namespace SCIRun {
     destroyComponentList();
     
     SSIDL::array1<std::string> sArray;
-    sci::cca::TypeMap::pointer tm;
-    sci::cca::ports::FrameworkProperties::pointer fwkProperties =
-      pidl_cast<sci::cca::ports::FrameworkProperties::pointer>
-      (framework->getFrameworkService("cca.FrameworkProperties", ""));
+    sci::cca::TypeMap::pointer properties;
 
-    if (fwkProperties.isNull()) {
+    FrameworkPropertiesService::pointer service =
+      pidl_cast<FrameworkPropertiesService::pointer>(framework->getFrameworkService("cca.FrameworkProperties"));
+
+    if (service.isNull()) {
       std::cerr << "Error: Cannot find framework properties" ;
       //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
     } else {
-      tm = fwkProperties->getProperties();
-      sArray = tm->getStringArray("sidl_xml_path", sArray);
+      properties = service->getProperties();
+      sArray = properties->getStringArray("sidl_xml_path", sArray);
     }
-    framework->releaseFrameworkService("cca.FrameworkProperties", "");
+    framework->releaseFrameworkService(service);
   
-    for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
-      Dir d(*it);
-      //std::cout << "CCA Component Model: Looking at directory: " << *it << std::endl;
+    for (SSIDL::array1<std::string>::iterator item = sArray.begin(); item != sArray.end(); item++) {
+      Dir dir(*item);
+      //std::cout << "CCA Component Model: Looking at directory: " << *item << std::endl;
       std::vector<std::string> files;
-      d.getFilenamesBySuffix(".xml", files);
+      dir.getFilenamesBySuffix(".xml", files);
       
       for(std::vector<std::string>::iterator iter = files.begin();
 	  iter != files.end(); iter++) {
 	std::string& file = *iter;
 	//std::cout << "CCA Component Model: Looking at file" << file << std::endl;
-	readComponentDescription(*it+"/"+file);
+	readComponentDescription(*item+"/"+file);
       }
     }
   }
@@ -191,11 +193,6 @@ namespace SCIRun {
     
     std::string compModelName =
       to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
-    //std::cout << "Component model name = " << compModelName << std::endl;
-    
-    if ( compModelName != std::string(this->prefixName) ) {
-      return;
-    }
     
     // Get a list of the library nodes.  Traverse the list and read component
     // elements at each list node.
@@ -219,19 +216,17 @@ namespace SCIRun {
 	//std::cout << "Component name = ->" << component_name << "<-" << std::endl;
 	
 	// Register this component
-	CCAComponentDescription* cd = new CCAComponentDescription(this);
-	cd->type = component_name;
-	cd->setLibrary(library_name.c_str()); // record the DLL name
+	CCAComponentDescription* cd = new CCAComponentDescription(component_name, library_name );
 	
-	lock_components.lock();
-	this->components[cd->type] = cd;
-	lock_components.unlock();
+	components_lock.lock();
+	this->components[cd->getType()] = cd;
+	components_lock.unlock();
       }
     }
   }
   
 
-  ComponentInfo*
+  ComponentInfo *
   CCAComponentModel::createComponent(const std::string& name,
 				     const std::string& type,
 				     const sci::cca::TypeMap::pointer& properties)
@@ -250,7 +245,7 @@ namespace SCIRun {
     }
     
     // Get the list of DLL paths to search for the appropriate component library
-    std::vector<std::string> possible_paths = splitPathString(this->getSidlDLLPath());
+    std::vector<std::string> possible_paths = splitPathString(getSidlDLLPath());
     LIBRARY_HANDLE handle;
       
     for (std::vector<std::string>::iterator it = possible_paths.begin();
@@ -284,7 +279,7 @@ namespace SCIRun {
     component = (*maker)();
 
     // create ComponentInfo. this must be a class the derives from Distributed/ComponentInfo
-    ComponentInfo *info =  new ComponentInfo(framework, name, type, properties, component);
+    CCAComponentInfo *info =  new CCAComponentInfo(DistributedFramework::pointer(framework), name, type, properties, component);
 
     // CCA initialization of the component
     component->setServices(sci::cca::Services::pointer(info));
@@ -301,15 +296,38 @@ namespace SCIRun {
   }
   
   
+  std::vector<std::string>
+  CCAComponentModel::splitPathString(const std::string &path)
+  {
+    std::vector<std::string> ans;
+    if (path == "" ) {
+      return ans;
+    }
+    
+    // Split the PATH string into a list of paths.  Key on ';' token.
+    std::string::size_type start = 0;
+    std::string::size_type end = path.find(';', start);
+    while (end != path.npos) {
+      std::string substring = path.substr(start, end - start);
+      ans.push_back(substring);
+      start = end + 1;
+      end = path.find(';', start);
+    }
+    // grab the remaining path
+    std::string substring = path.substr(start, end - start);
+    ans.push_back(substring);
+    
+    return ans;  
+  }
 #if 0
   void CCAComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)
   {
-    lock_components.lock();
+    components_lock.lock();
     for (componentDB_type::iterator iter = components.begin();
 	 iter != components.end(); iter++) {
       list.push_back(iter->second);
     }
-    lock_components.unlock();
+    components_lock.unlock();
     
     lock_loaderList.lock(); 
     for (unsigned int i = 0; i < loaderList.size(); i++) {

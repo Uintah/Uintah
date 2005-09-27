@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentRepositoryServiceImpl.h: Implementation of the CCA ComponentRegistry interface for SCIRun
+ *  SCIRunErrorHandler.h: 
  *
  *  Written by:
  *   Steven G. Parker
@@ -38,46 +38,43 @@
  *
  */
 
-#ifndef SCIRun_ComponentRepositoryServiceImpl_h
-#define SCIRun_ComponentRepositoryServiceImpl_h
+#ifndef SCIRun_Framework_SCIRunErrorHandler_h
+#define SCIRun_Framework_SCIRunErrorHandler_h
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Distributed/ServiceImpl.h>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#define IRIX
+#pragma set woff 1375
+#endif
+#include <xercesc/sax/ErrorHandler.hpp>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1375
+#endif
+#include <string>
 
 namespace SCIRun
 {
-
-  /**
-   * \class ComponentRepositoryServiceImplService
-   *
-   * An implementation of a CCA ComponentRepositoryServiceImpl for SCIRun.  The
-   * ComponentRepositoryServiceImpl handles 
-   *
-   */
-
-  template<class Base>
-  class ComponentRepositoryServiceImpl : public ServiceImpl<Base>
-  {
-  public:
-    ComponentRepositoryServiceImpl(DistributedFramework*);
-    virtual ~ComponentRepositoryServiceImpl();
-
-    /** ? */
-    sci::cca::Port::pointer getService(const std::string&);
-    
-    /** Returns a list of ComponentClassDescriptions that represents all of the
-	component class types that may be instantiated in this framework.  In
-	other words, calling getComponentClassName on each element in this list
-	gives all of the components that the framework knows how to create. */
-
-    virtual SSIDL::array1<sci::cca::ComponentClassDescription::pointer>  getAvailableComponentClasses();
-    
-  private:
-    DistributedFramework *framework;
-  };
+/**
+ * \class SCIRunErrorHandler
+ *
+ */
+class SCIRunErrorHandler : public ErrorHandler {
+public:
+  bool foundError;
   
-} // end namespace SCIRun
+  SCIRunErrorHandler();
+  ~SCIRunErrorHandler();
+  
+  void warning(const SAXParseException& e);
+  void error(const SAXParseException& e);
+  void fatalError(const SAXParseException& e);
+  void resetErrors();
+  
+private:
+  void postMessage(const std::string& message);
+  SCIRunErrorHandler(const SCIRunErrorHandler&);
+  void operator=(const SCIRunErrorHandler&);
+};
 
-//#include <SCIRun/Distributed/ComponentRepositoryServiceImpl.code>
+} // end namespace SCIRun
 
 #endif

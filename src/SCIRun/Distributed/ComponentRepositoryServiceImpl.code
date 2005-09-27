@@ -38,6 +38,9 @@
  *
  */
 
+#ifndef SCIRun_ComponentRepositoryServiceImpl_code
+#define SCIRun_ComponentRepositoryServiceImpl_code
+
 #include <SCIRun/Distributed/ComponentRepositoryServiceImpl.h>
 #include <SCIRun/Distributed/DistributedFramework.h>
 #include <SCIRun/Distributed/ComponentClassDescription.h>
@@ -80,3 +83,5 @@ namespace SCIRun {
     return ccalist;
   }
 }  // end namespace SCIRun
+
+#endif // SCIRun_ComponentRepositoryServiceImpl_code

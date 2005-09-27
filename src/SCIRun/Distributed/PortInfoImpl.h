@@ -125,6 +125,6 @@ namespace SCIRun {
 
 } // end namespace SCIRun
 
-#include <SCIRun/Distributed/PortInfoImpl.code>
+//#include <SCIRun/Distributed/PortInfoImpl.code>
 
 #endif
