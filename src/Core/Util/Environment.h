@@ -49,6 +49,7 @@ namespace SCIRun {
   void create_sci_environment(char **env, char *execname);
   bool find_and_parse_scirunrc();
   void copy_and_parse_scirunrc();
+  bool parse_scirunrc(const std::string &);
 
   // Use the following functions to get/put environment variables.
   void sci_putenv( const std::string & key, const std::string & val );

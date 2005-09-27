@@ -208,7 +208,7 @@ emptyOrComment( const char * line )
 // It uses sci_putenv to set variables in the environment. 
 // Returns true if the file was opened and parsed.  False otherwise.
 bool
-parse_scirunrc( const string &rcfile )
+SCIRun::parse_scirunrc( const string &rcfile )
 {
   FILE* filein = fopen(rcfile.c_str(),"r");
   if (!filein) return false;
