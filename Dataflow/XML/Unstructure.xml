@@ -65,6 +65,8 @@
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
   <testing>
   </testing>
 <nets>
