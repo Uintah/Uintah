@@ -56,17 +56,17 @@
 namespace itk
 {
 
-const char *const ANALYZE_ScanNumber = "ANALYZE_ScanNumber";
-const char *const ANALYZE_O_MAX = "ANALYZE_O_MAX";
-const char *const ANALYZE_O_MIN = "ANALYZE_O_MIN";
-const char *const ANALYZE_S_MAX = "ANALYZE_S_MAX";
-const char *const ANALYZE_S_MIN = "ANALYZE_S_MIN";
-const char *const ANALYZE_CAL_MAX = "ANALYZE_CAL_MAX";
-const char *const ANALYZE_CAL_MIN = "ANALYZE_CAL_MIN";
-const char *const ANALYZE_GLMAX = "ANALYZE_GLMAX";
-const char *const ANALYZE_GLMIN = "ANALYZE_GLMIN";
-const char *const ANALYZE_AUX_FILE_NAME = "ANALYZE_AUX_FILE_NAME";
-const char *const ANALYZE_CALIBRATIONUNITS = "ANALYZE_CALIBRATIONUNITS";
+const char *const ANALYZESLICE_ScanNumber = "ANALYZE_ScanNumber";
+const char *const ANALYZESLICE_O_MAX = "ANALYZE_O_MAX";
+const char *const ANALYZESLICE_O_MIN = "ANALYZE_O_MIN";
+const char *const ANALYZESLICE_S_MAX = "ANALYZE_S_MAX";
+const char *const ANALYZESLICE_S_MIN = "ANALYZE_S_MIN";
+const char *const ANALYZESLICE_CAL_MAX = "ANALYZE_CAL_MAX";
+const char *const ANALYZESLICE_CAL_MIN = "ANALYZE_CAL_MIN";
+const char *const ANALYZESLICE_GLMAX = "ANALYZE_GLMAX";
+const char *const ANALYZESLICE_GLMIN = "ANALYZE_GLMIN";
+const char *const ANALYZESLICE_AUX_FILE_NAME = "ANALYZE_AUX_FILE_NAME";
+const char *const ANALYZESLICE_CALIBRATIONUNITS = "ANALYZE_CALIBRATIONUNITS";
 //An array of the Analyze v7.5 known DataTypes
 const char DataTypes[12][10]=  {
   "UNKNOWN","BINARY","CHAR","SHORT", "INT","FLOAT",
@@ -942,13 +942,13 @@ void AnalyzeSliceImageIO::ReadImageInformation()
 
   //Important dime fields
   itk::EncapsulateMetaData<std::string>(thisDic,ITK_VoxelUnits,std::string(this->m_hdr.dime.vox_units,4));
-  itk::EncapsulateMetaData<std::string>(thisDic,ANALYZE_CALIBRATIONUNITS,std::string(this->m_hdr.dime.cal_units,8));
+  itk::EncapsulateMetaData<std::string>(thisDic,ANALYZESLICE_CALIBRATIONUNITS,std::string(this->m_hdr.dime.cal_units,8));
   itk::EncapsulateMetaData<short int>(thisDic,ITK_OnDiskBitPerPixel,this->m_hdr.dime.bitpix);
   itk::EncapsulateMetaData<float>(thisDic,SPM_ROI_SCALE,this->m_hdr.dime.roi_scale);
-  itk::EncapsulateMetaData<float>(thisDic,ANALYZE_CAL_MAX,this->m_hdr.dime.cal_max);
-  itk::EncapsulateMetaData<float>(thisDic,ANALYZE_CAL_MIN,this->m_hdr.dime.cal_min);
-  itk::EncapsulateMetaData<int>(thisDic,ANALYZE_GLMAX,this->m_hdr.dime.glmax);
-  itk::EncapsulateMetaData<int>(thisDic,ANALYZE_GLMIN,this->m_hdr.dime.glmin);
+  itk::EncapsulateMetaData<float>(thisDic,ANALYZESLICE_CAL_MAX,this->m_hdr.dime.cal_max);
+  itk::EncapsulateMetaData<float>(thisDic,ANALYZESLICE_CAL_MIN,this->m_hdr.dime.cal_min);
+  itk::EncapsulateMetaData<int>(thisDic,ANALYZESLICE_GLMAX,this->m_hdr.dime.glmax);
+  itk::EncapsulateMetaData<int>(thisDic,ANALYZESLICE_GLMIN,this->m_hdr.dime.glmin);
 
   for (dim=this->GetNumberOfDimensions(); dim>0; dim--)
   {
@@ -993,7 +993,7 @@ void AnalyzeSliceImageIO::ReadImageInformation()
 
   //Important hist fields
   itk::EncapsulateMetaData<std::string>(thisDic,ITK_FileNotes,std::string(this->m_hdr.hist.descrip,80));
-  itk::EncapsulateMetaData<std::string>(thisDic,ANALYZE_AUX_FILE_NAME,std::string(this->m_hdr.hist.aux_file,24));
+  itk::EncapsulateMetaData<std::string>(thisDic,ANALYZESLICE_AUX_FILE_NAME,std::string(this->m_hdr.hist.aux_file,24));
 
   {
     itk::AnalyzeSliceImageIO::ValidAnalyzeOrientationFlags temporient= static_cast<itk::AnalyzeSliceImageIO::ValidAnalyzeOrientationFlags>(this->m_hdr.hist.orient);
@@ -1016,15 +1016,15 @@ void AnalyzeSliceImageIO::ReadImageInformation()
   }
   itk::EncapsulateMetaData<std::string>(thisDic,ITK_FileOriginator,std::string(this->m_hdr.hist.originator,10));
   itk::EncapsulateMetaData<std::string>(thisDic,ITK_OriginationDate,std::string(this->m_hdr.hist.generated,10));
-  itk::EncapsulateMetaData<std::string>(thisDic,ANALYZE_ScanNumber,std::string(this->m_hdr.hist.scannum,10));
+  itk::EncapsulateMetaData<std::string>(thisDic,ANALYZESLICE_ScanNumber,std::string(this->m_hdr.hist.scannum,10));
   itk::EncapsulateMetaData<std::string>(thisDic,ITK_PatientID,std::string(this->m_hdr.hist.patient_id,10));
   itk::EncapsulateMetaData<std::string>(thisDic,ITK_ExperimentDate,std::string(this->m_hdr.hist.exp_date,10));
   itk::EncapsulateMetaData<std::string>(thisDic,ITK_ExperimentTime,std::string(this->m_hdr.hist.exp_date,10));
 
-  itk::EncapsulateMetaData<int>(thisDic,ANALYZE_O_MAX,this->m_hdr.hist.omax);
-  itk::EncapsulateMetaData<int>(thisDic,ANALYZE_O_MIN,this->m_hdr.hist.omin);
-  itk::EncapsulateMetaData<int>(thisDic,ANALYZE_S_MAX,this->m_hdr.hist.smax);
-  itk::EncapsulateMetaData<int>(thisDic,ANALYZE_S_MIN,this->m_hdr.hist.smin);
+  itk::EncapsulateMetaData<int>(thisDic,ANALYZESLICE_O_MAX,this->m_hdr.hist.omax);
+  itk::EncapsulateMetaData<int>(thisDic,ANALYZESLICE_O_MIN,this->m_hdr.hist.omin);
+  itk::EncapsulateMetaData<int>(thisDic,ANALYZESLICE_S_MAX,this->m_hdr.hist.smax);
+  itk::EncapsulateMetaData<int>(thisDic,ANALYZESLICE_S_MIN,this->m_hdr.hist.smin);
   }
   return;
 }
@@ -1149,24 +1149,24 @@ AnalyzeSliceImageIO
     strncpy(this->m_hdr.dime.vox_units,temp.c_str(),4);//Note this is necessary because the array is not necessarily null terminated.
     }
 
-  if(itk::ExposeMetaData<std::string>(thisDic,ANALYZE_CALIBRATIONUNITS,temp))
+  if(itk::ExposeMetaData<std::string>(thisDic,ANALYZESLICE_CALIBRATIONUNITS,temp))
     {
     strncpy(this->m_hdr.dime.cal_units,temp.c_str(),8);//Note this is necessary because the array is not necessarily null terminated.
     }
 
   itk::ExposeMetaData<short int>(thisDic,ITK_OnDiskBitPerPixel,this->m_hdr.dime.bitpix);
   itk::ExposeMetaData<float>(thisDic,SPM_ROI_SCALE,this->m_hdr.dime.roi_scale);
-  itk::ExposeMetaData<float>(thisDic,ANALYZE_CAL_MAX,this->m_hdr.dime.cal_max);
-  itk::ExposeMetaData<float>(thisDic,ANALYZE_CAL_MIN,this->m_hdr.dime.cal_min);
-  itk::ExposeMetaData<int>(thisDic,ANALYZE_GLMAX,this->m_hdr.dime.glmax);
-  itk::ExposeMetaData<int>(thisDic,ANALYZE_GLMIN,this->m_hdr.dime.glmin);
+  itk::ExposeMetaData<float>(thisDic,ANALYZESLICE_CAL_MAX,this->m_hdr.dime.cal_max);
+  itk::ExposeMetaData<float>(thisDic,ANALYZESLICE_CAL_MIN,this->m_hdr.dime.cal_min);
+  itk::ExposeMetaData<int>(thisDic,ANALYZESLICE_GLMAX,this->m_hdr.dime.glmax);
+  itk::ExposeMetaData<int>(thisDic,ANALYZESLICE_GLMIN,this->m_hdr.dime.glmin);
   //Important hist fields
   if(itk::ExposeMetaData<std::string>(thisDic,ITK_FileNotes,temp))
     {
     strncpy(this->m_hdr.hist.descrip,temp.c_str(),80);//Note this is necessary because the array is not necessarily null terminated.
     }
 
-  if(itk::ExposeMetaData<std::string>(thisDic,ANALYZE_AUX_FILE_NAME,temp))
+  if(itk::ExposeMetaData<std::string>(thisDic,ANALYZESLICE_AUX_FILE_NAME,temp))
     {
     strncpy(this->m_hdr.hist.aux_file,temp.c_str(),24);//Note this is necessary because the array is not necessarily null terminated.
     }
@@ -1202,7 +1202,7 @@ AnalyzeSliceImageIO
     strncpy(this->m_hdr.hist.generated,temp.c_str(),10);//Note this is necessary because the array is not necessarily null terminated.
     }
 
-  if(itk::ExposeMetaData<std::string>(thisDic,ANALYZE_ScanNumber,temp))
+  if(itk::ExposeMetaData<std::string>(thisDic,ANALYZESLICE_ScanNumber,temp))
     {
     strncpy(this->m_hdr.hist.scannum,temp.c_str(),10);//Note this is necessary because the array is not necessarily null terminated.
     }
@@ -1222,10 +1222,10 @@ AnalyzeSliceImageIO
     strncpy(this->m_hdr.hist.exp_date,temp.c_str(),10);//Note this is necessary because the array is not necessarily null terminated.
     }
 
-  itk::ExposeMetaData<int>(thisDic,ANALYZE_O_MAX,this->m_hdr.hist.omax);
-  itk::ExposeMetaData<int>(thisDic,ANALYZE_O_MIN,this->m_hdr.hist.omin);
-  itk::ExposeMetaData<int>(thisDic,ANALYZE_S_MAX,this->m_hdr.hist.smax);
-  itk::ExposeMetaData<int>(thisDic,ANALYZE_S_MIN,this->m_hdr.hist.smin);
+  itk::ExposeMetaData<int>(thisDic,ANALYZESLICE_O_MAX,this->m_hdr.hist.omax);
+  itk::ExposeMetaData<int>(thisDic,ANALYZESLICE_O_MIN,this->m_hdr.hist.omin);
+  itk::ExposeMetaData<int>(thisDic,ANALYZESLICE_S_MAX,this->m_hdr.hist.smax);
+  itk::ExposeMetaData<int>(thisDic,ANALYZESLICE_S_MIN,this->m_hdr.hist.smin);
   }
   for( dim=0; dim< this->GetNumberOfDimensions(); dim++ )
     {
