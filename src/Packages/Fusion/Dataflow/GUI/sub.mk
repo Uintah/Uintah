@@ -41,6 +41,7 @@ SRCDIR := Packages/Fusion/Dataflow/GUI
 SRCS := \
 	$(SRCDIR)/IsoValueController.tcl \
 	$(SRCDIR)/NIMRODConverter.tcl \
+	$(SRCDIR)/StreamlineAnalyzer.tcl \
 	$(SRCDIR)/VULCANConverter.tcl \
 	$(SRCDIR)/VULCANDataReader.tcl \
 #[INSERT NEW TCL FILE HERE]
