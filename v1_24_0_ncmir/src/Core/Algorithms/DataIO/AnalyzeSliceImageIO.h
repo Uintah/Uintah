@@ -248,17 +248,17 @@ private:
   struct dsr m_hdr;
   ImageIOBase::ByteOrder m_MachineByteOrder;
 };
-extern const char *const ANALYZE_ScanNumber;
-extern const char *const ANALYZE_O_MAX;
-extern const char *const ANALYZE_O_MIN;
-extern const char *const ANALYZE_S_MAX;
-extern const char *const ANALYZE_S_MIN;
-extern const char *const ANALYZE_CAL_MAX;
-extern const char *const ANALYZE_CAL_MIN;
-extern const char *const ANALYZE_GLMAX;
-extern const char *const ANALYZE_GLMIN;
-extern const char *const ANALYZE_AUX_FILE_NAME;
-extern const char *const ANALYZE_CALIBRATIONUNITS;
+extern const char *const ANALYZESLICE_ScanNumber;
+extern const char *const ANALYZESLICE_O_MAX;
+extern const char *const ANALYZESLICE_O_MIN;
+extern const char *const ANALYZESLICE_S_MAX;
+extern const char *const ANALYZESLICE_S_MIN;
+extern const char *const ANALYZESLICE_CAL_MAX;
+extern const char *const ANALYZESLICE_CAL_MIN;
+extern const char *const ANALYZESLICE_GLMAX;
+extern const char *const ANALYZESLICE_GLMIN;
+extern const char *const ANALYZESLICE_AUX_FILE_NAME;
+extern const char *const ANALYZESLICE_CALIBRATIONUNITS;
 
 } // end namespace itk
 
