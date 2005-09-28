@@ -57,6 +57,7 @@ struct FieldIteratorBase {
   //! Field Iterators need to be able to increment.
   inline 
   T operator ++() { return ++index_; }
+  T operator --() { return --index_; }
   
   bool operator ==(const FieldIteratorBase &a) const 
   { return index_ == a.index_; }
@@ -73,7 +74,10 @@ public:
 private:
 #endif
   //! Hide this in private to prevent it from being called.
-  FieldIteratorBase<T> operator ++(int) { FieldIteratorBase<T> tmp(*this); ++index_; return tmp; }
+  FieldIteratorBase<T> operator ++(int) {
+    FieldIteratorBase<T> tmp(*this); ++index_; return tmp; }
+  FieldIteratorBase<T> operator --(int) {
+    FieldIteratorBase<T> tmp(*this); --index_; return tmp; }
 };
 
 //! Distinct type for node FieldIterator.
