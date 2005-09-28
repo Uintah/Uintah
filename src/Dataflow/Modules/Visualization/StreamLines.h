@@ -43,8 +43,11 @@
 #include <Core/Util/DynamicLoader.h>
 
 #include <algorithm>
+#include <sstream>
 
 namespace SCIRun {
+
+using namespace std;
 
 typedef struct _SLData {
   CurveField<double> *cf;
@@ -170,7 +173,7 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
 		d->vfi, d->rcp, d->met);
       if ( d->direction == 1 )
       {
-	std::reverse(nodes.begin(), nodes.end());
+	reverse(nodes.begin(), nodes.end());
 	cc = nodes.size();
 	cc = -(cc - 1);
       }
@@ -205,6 +208,10 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
       d->lock.lock();
       n1 = d->cf->get_typed_mesh()->add_node(*node_iter);
       p1 = *node_iter;
+
+      std::ostringstream str;
+      str << "Streamline " << count << " Node Index";      
+      d->cf->set_property( str.str(), n1, false );
 
       d->cf->resize_fdata();
 
@@ -247,6 +254,8 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
     ++seed_iter;
     ++count;
   }
+
+  d->cf->set_property( "Streamline Count", count, false );
 }
 
 
@@ -483,6 +492,11 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
     {
       lock.lock();
       n1 = cf->get_typed_mesh()->add_node(*node_iter);
+
+      ostringstream str;
+      str << "Streamline " << count << " Node Index";      
+      cf->set_property( str.str(), n1, false );
+
       cf->resize_fdata();
       if( color )
 	cf->set_value((double)abs(cc), n1);
@@ -516,6 +530,8 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
     ++seed_iter;
     ++count;
   }
+
+  cf->set_property( "Streamline Count", count, false );
 
   cf->freeze();
 
