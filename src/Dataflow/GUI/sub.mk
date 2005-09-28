@@ -38,6 +38,7 @@
 SRCDIR := Dataflow/GUI
 
 SRCS := \
+        $(SRCDIR)/Ren2Tex.tcl \
         $(SRCDIR)/AddLight.tcl \
         $(SRCDIR)/AppendMatrix.tcl \
         $(SRCDIR)/ArrowWidget.tcl \
@@ -100,6 +101,7 @@ SRCS := \
         $(SRCDIR)/FieldInfo.tcl\
         $(SRCDIR)/FieldMeasures.tcl \
         $(SRCDIR)/FieldReader.tcl \
+	$(SRCDIR)/FieldSetProperty.tcl\
         $(SRCDIR)/FieldSlicer.tcl\
         $(SRCDIR)/FieldSubSample.tcl\
         $(SRCDIR)/FieldWriter.tcl \
@@ -168,6 +170,7 @@ SRCS := \
         $(SRCDIR)/TransformData3.tcl \
         $(SRCDIR)/TransformMesh.tcl \
         $(SRCDIR)/UIvar.tcl \
+        $(SRCDIR)/Unstructure.tcl \
         $(SRCDIR)/Viewer.tcl \
         $(SRCDIR)/ViewSlices.tcl \
         $(SRCDIR)/ViewWidget.tcl \

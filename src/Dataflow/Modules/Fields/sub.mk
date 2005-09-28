@@ -65,6 +65,7 @@ SRCS     += \
 	$(SRCDIR)/FieldFrenet.cc\
 	$(SRCDIR)/FieldInfo.cc\
 	$(SRCDIR)/FieldMeasures.cc\
+	$(SRCDIR)/FieldSetProperty.cc\
 	$(SRCDIR)/FieldSlicer.cc\
 	$(SRCDIR)/FieldSubSample.cc\
 	$(SRCDIR)/GatherFields.cc\
