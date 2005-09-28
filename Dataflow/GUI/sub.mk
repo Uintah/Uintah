@@ -38,7 +38,6 @@
 SRCDIR := Dataflow/GUI
 
 SRCS := \
-        $(SRCDIR)/Ren2Tex.tcl \
         $(SRCDIR)/AddLight.tcl \
         $(SRCDIR)/AppendMatrix.tcl \
         $(SRCDIR)/ArrowWidget.tcl \
