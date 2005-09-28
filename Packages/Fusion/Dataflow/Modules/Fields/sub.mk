@@ -42,6 +42,7 @@ SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 
 SRCS     += \
 	$(SRCDIR)/IsoValueController.cc\
+	$(SRCDIR)/StreamlineAnalyzer.cc\
 	$(SRCDIR)/NIMRODConverter.cc\
 	$(SRCDIR)/VULCANConverter.cc\
 #[INSERT NEW CODE FILE HERE]
