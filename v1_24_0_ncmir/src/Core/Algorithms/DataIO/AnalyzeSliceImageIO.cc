@@ -78,7 +78,7 @@ const char DataTypes[12][10]=  {
 const short int DataTypeSizes[12]={0,1,8,16,32,32,64,64,24,0,16,32};
 
 //An array with Data type key sizes
-const short int DataTypeKey[12]={
+const short int SCIDataTypeKey[12]={
   ANALYZE_DT_UNKNOWN,
   ANALYZE_DT_BINARY,
   ANALYZE_DT_UNSIGNED_CHAR,
@@ -647,7 +647,7 @@ void  AnalyzeSliceImageIO::DefineHeaderObjectDataType()
       exception.SetDescription("Pixel Type Unknown");
       throw exception;
     }
-  m_hdr.dime.datatype=DataTypeKey[eNewType];
+  m_hdr.dime.datatype=SCIDataTypeKey[eNewType];
   m_hdr.dime.bitpix=DataTypeSizes[eNewType];
   strcpy(m_hdr.hk.data_type,DataTypes[eNewType]);
   switch(m_hdr.dime.datatype)
