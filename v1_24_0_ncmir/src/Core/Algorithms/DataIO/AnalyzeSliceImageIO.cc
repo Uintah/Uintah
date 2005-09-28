@@ -68,14 +68,14 @@ const char *const ANALYZESLICE_GLMIN = "ANALYZE_GLMIN";
 const char *const ANALYZESLICE_AUX_FILE_NAME = "ANALYZE_AUX_FILE_NAME";
 const char *const ANALYZESLICE_CALIBRATIONUNITS = "ANALYZE_CALIBRATIONUNITS";
 //An array of the Analyze v7.5 known DataTypes
-const char DataTypes[12][10]=  {
+const char SCIDataTypes[12][10]=  {
   "UNKNOWN","BINARY","CHAR","SHORT", "INT","FLOAT",
   "COMPLEX", "DOUBLE","RGB","ALL","USHORT","UINT"
 };
 
 //An array with the corresponding number of bits for each image type.
 //NOTE: the following two line should be equivalent.
-const short int DataTypeSizes[12]={0,1,8,16,32,32,64,64,24,0,16,32};
+const short int SCIDataTypeSizes[12]={0,1,8,16,32,32,64,64,24,0,16,32};
 
 //An array with Data type key sizes
 const short int SCIDataTypeKey[12]={
@@ -648,8 +648,8 @@ void  AnalyzeSliceImageIO::DefineHeaderObjectDataType()
       throw exception;
     }
   m_hdr.dime.datatype=SCIDataTypeKey[eNewType];
-  m_hdr.dime.bitpix=DataTypeSizes[eNewType];
-  strcpy(m_hdr.hk.data_type,DataTypes[eNewType]);
+  m_hdr.dime.bitpix=SCIDataTypeSizes[eNewType];
+  strcpy(m_hdr.hk.data_type,SCIDataTypes[eNewType]);
   switch(m_hdr.dime.datatype)
     {
     case ANALYZE_DT_INDEX_BINARY:
