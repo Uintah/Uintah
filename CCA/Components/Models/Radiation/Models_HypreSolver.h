@@ -105,9 +105,8 @@ public:
 protected:
 
 private:
-  string d_pcType;
-  string d_kspType;
-  string d_kspFix;
+  string d_precondType;
+  string d_solverType;
   int d_overlap;
   int d_fill;
   int d_maxSweeps;
