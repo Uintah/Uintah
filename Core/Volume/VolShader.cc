@@ -280,7 +280,7 @@ VolShader::emit(string& s)
   z << VOL_TAIL;
 
   s = z.str();
-  std::cerr << s << std::endl;
+  //  std::cerr << s << std::endl;
   return false;
 }
 
