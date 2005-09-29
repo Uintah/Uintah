@@ -64,57 +64,68 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
   d_shrad = shradiation;
   ProblemSpecP db = params->findBlock("LinearSolver");
 
-  if (d_shrad)
-    db->getWithDefault("ksptype", d_kspType, "cg");
-  else
-    db->getWithDefault("ksptype", d_kspType, "gmres");
+  db->get("solver", d_solverType);
+  db->getWithDefault("preconditioner", d_precondType, "none");
 
-  if (!d_shrad && ((d_kspType == "cg") || (d_kspType == "smg") ||(d_kspType == "pfmg")))
-    throw ProblemSetupException("Models_Radiation_HypreSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg/smg/pfmg cannot be used; Use gmres as the ksptype",
+  
+  //__________________________________
+  //  Bulletproofing
+  // - Test if there's a valid solver
+  // - test if the preconditoner is valid for that solver
+  bool validSolver = false;
+  ostringstream warn0, warn1;
+  warn0<< "\n ERROR:Models_Radiation_HypreSolver: cannot use preconditioner " << d_solverType;
+  warn1<<"none"<<endl;
+  
+  if (d_solverType == "smg" || d_solverType == "SMG") {
+    validSolver = true;
+    if(d_precondType != "none"){
+      warn1 << warn0.str() << " ("<<d_precondType<<") with smg solver";
+      throw ProblemSetupException(warn1.str(),__FILE__, __LINE__);
+    }
+  }
+  if (d_solverType == "pfmg" || d_solverType == "PFMG") {
+    validSolver = true;
+    if(d_precondType != "none"){
+      warn1 << warn0.str() << " ("<<d_precondType<<") with pfmg solver";
+      throw ProblemSetupException(warn1.str(),__FILE__, __LINE__);
+    }
+  }
+  if (d_solverType == "gmres" || d_solverType == "GMRES") {
+    validSolver = true;
+    if(d_precondType == "none" ||
+       d_precondType != "smg"     && d_precondType != "SMG" &&
+       d_precondType != "pfmg"    && d_precondType != "PFMG" &&
+       d_precondType != "jacobi"  && d_precondType != "JACOBI"){
+      warn1 << warn0.str() << " ("<<d_precondType<<") with gmres solver";
+      throw ProblemSetupException(warn1.str(),__FILE__, __LINE__);
+    }
+  }
+  if (d_solverType == "cg" || d_solverType == "CG"){
+    validSolver = true;
+    if(d_precondType == "none" ||
+       d_precondType != "smg"     && d_precondType != "SMG" &&
+       d_precondType != "pfmg"    && d_precondType != "PFMG" &&
+       d_precondType != "jacobi"  && d_precondType != "JACOBI"){
+      warn1 << warn0.str() << " ("<<d_precondType<<") with gmres solver";
+      throw ProblemSetupException(warn1.str(),__FILE__, __LINE__);
+    }
+  }
+  
+  if (validSolver == false){
+    ostringstream warn;
+    warn<< "\n ERROR:Models_Radiation_HypreSolver: invalid hyper solver selected " << d_solverType;
+    throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
+  }
+  
+  // Only certain solver can be used with certain radiation methods
+  if (!d_shrad && ((d_solverType == "cg") || (d_solverType == "smg") ||(d_solverType == "pfmg")))
+    throw ProblemSetupException("Models_Radiation_HypreSolver:Discrete Ordinates generates a nonsymmetric matrix, so the solver cg/smg/pfmg cannot be used; Use gmres instead",
                                 __FILE__, __LINE__);
 
-  if (d_shrad && (d_kspType == "gmres")) {
-    cerr<< "WARNING: HypreSolver:Spherical Harmonics generates a symmetric matrix; use cg as the ksptype for spherical harmonics; using gmres really slows things down" << endl;
-  }
-
-  if (d_kspType == "smg")
-    d_kspType = "1";
-  else
-    if (d_kspType == "pfmg")
-      d_kspType = "2";
-    else
-      if (d_kspType == "gmres")
-        {
-          d_kspFix = "gmres";
-          db->getWithDefault("pctype", d_pcType, "jacobi");
-          if (!d_shrad && ((d_pcType == "smg") ||(d_pcType == "pfmg")))
-            throw ProblemSetupException("Discrete Ordinates generates a nonsymmetric Matrix, so smg/pfmg cannot be used as the pctype; use jacobi",
-                                        __FILE__, __LINE__);
-
-          if (d_pcType == "smg")
-            d_kspType = "3";
-          else
-            if (d_pcType == "pfmg")
-              d_kspType = "4";
-            else
-              if (d_pcType == "jacobi")
-                d_kspType = "5";
-        }
-      else
-        if (d_kspType == "cg")
-          {
-            d_kspFix = "cg";
-            db->getWithDefault("pctype", d_pcType, "pfmg");
-
-            if (d_pcType == "smg")
-              d_kspType = "6";
-            else
-              if (d_pcType == "pfmg")
-                d_kspType = "7";
-              else
-                if (d_pcType == "jacobi")
-                  d_kspType = "8";
-          }
+  if (d_shrad && (d_solverType == "gmres")) {
+    cerr<< "WARNING: HypreSolver:Spherical Harmonics generates a symmetric matrix; use cg as the solver; using gmres really slows things down" << endl;
+  }  
 
   db->getWithDefault("max_iter", d_maxSweeps, 75);
   db->getWithDefault("tolerance", d_tolerance, 1.0e-8);
@@ -409,16 +420,6 @@ Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
 bool
 Models_HypreSolver::radLinearSolve()
 {
-  /*-----------------------------------------------------------
-   * Solve the system using CG
-   *-----------------------------------------------------------*/
-  /* I have set this up so you can change to use different
-     solvers and preconditioners without re-compiling.  Just
-     change the ksptype in the ups files to different numbers:
-
-     10 = SMG as the preconditoner and GMRES as the solver
-     11 = PFMG as the preconditioner and GMRES as the solver (default)
-  */
      
   HYPRE_StructVector tmp;  
   int num_iterations;
@@ -443,10 +444,10 @@ Models_HypreSolver::radLinearSolve()
   skip = 1;
   HYPRE_StructSolver solver, precond;
   
-  int me = d_myworld->myrank();
   double start_time = Time::currentSeconds();
-
-  if (d_kspType == "1") {
+  //__________________________________
+  //  SMG SOLVER
+  if (d_solverType == "smg" || d_solverType == "SMG") {
     /*Solve the system using SMG*/
     HYPRE_StructSMGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_StructSMGSetMemoryUse(solver, 0);
@@ -464,7 +465,9 @@ Models_HypreSolver::radLinearSolve()
     HYPRE_StructSMGDestroy(solver);
     //    cerr << "SMG Solve time = " << Time::currentSeconds()-start_time << endl;
   }
-  else if (d_kspType == "2") {
+  //__________________________________
+  //  PFMG SOLVER
+  if (d_solverType == "pfmg" || d_solverType == "PFMG") {
     /*Solve the system using PFMG*/
     HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_StructPFMGSetMaxIter(solver, d_maxSweeps);
@@ -485,7 +488,9 @@ Models_HypreSolver::radLinearSolve()
     HYPRE_StructPFMGDestroy(solver);
     //    cerr << "PFMG Solve time = " << Time::currentSeconds()-start_time << endl;
   }
-  else if (d_kspFix == "gmres") {
+  //__________________________________
+  //  GMRES
+  if (d_solverType == "gmres" || d_solverType == "GMRES") {
     HYPRE_StructGMRESCreate(MPI_COMM_WORLD, &solver);
     HYPRE_GMRESSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
     HYPRE_GMRESSetTol( (HYPRE_Solver)solver, d_tolerance);
@@ -493,7 +498,7 @@ Models_HypreSolver::radLinearSolve()
     //    HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
     HYPRE_GMRESSetLogging( (HYPRE_Solver)solver, 1 );
 
-    if (d_kspType == "3") {
+    if (d_precondType == "smg" || d_precondType == "SMG") {
       /* use symmetric SMG as preconditioner */
       HYPRE_StructSMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructSMGSetMemoryUse(precond, 0);
@@ -510,7 +515,7 @@ Models_HypreSolver::radLinearSolve()
       //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
 
-    else if (d_kspType == "4") {  
+    if (d_precondType == "pfmg" || d_precondType == "PFMG") {  
       /* use symmetric PFMG as preconditioner */
       HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
@@ -530,7 +535,7 @@ Models_HypreSolver::radLinearSolve()
       //      cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
 
-    else if (d_kspType == "5") {
+    if ((d_precondType == "jacobi" ||d_precondType == "JACOBI")) {
       /* use two-step Jacobi as preconditioner */
       HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
@@ -545,28 +550,30 @@ Models_HypreSolver::radLinearSolve()
     //    double dummy_start = Time::currentSeconds();
     HYPRE_GMRESSetup
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
-    //    cerr << "PCG Setup time = " << Time::currentSeconds()-dummy_start << endl;
-    //    dummy_start = Time::currentSeconds();
+    //    cerr << "GMRES Setup time = " << Time::currentSeconds()-dummy_start << endl;
+    double    dummy_start = Time::currentSeconds();
 
     HYPRE_GMRESSolve
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
-    //    cerr << "PCG Solve time = " << Time::currentSeconds()-dummy_start << endl;
+        cerr << "GMRES Solve time = " << Time::currentSeconds()-dummy_start << endl;
     
     HYPRE_GMRESGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
     HYPRE_GMRESGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
     HYPRE_StructGMRESDestroy(solver);
 
-    if (d_kspType == "3") {
+    if (d_precondType == "smg" || d_precondType == "SMG") {
       HYPRE_StructSMGDestroy(precond);
     }
-    else if (d_kspType == "4") {
+    if (d_precondType == "pfmg" || d_precondType == "PFMG") {
       HYPRE_StructPFMGDestroy(precond);
     }
-    else if (d_kspType == "5") {
+    if (d_precondType == "jacobi" ||d_precondType == "JACOBI") {
       HYPRE_StructJacobiDestroy(precond);
     }
- }
-  else if (d_kspFix == "cg") {
+  }
+  //__________________________________
+  //  CG SOLVER
+  if (d_solverType == "cg" || d_solverType == "CG") {
     HYPRE_StructPCGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
     HYPRE_PCGSetTol( (HYPRE_Solver)solver, d_tolerance);
@@ -574,7 +581,7 @@ Models_HypreSolver::radLinearSolve()
     HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
     HYPRE_PCGSetLogging( (HYPRE_Solver)solver, 1 );
     
-    if (d_kspType == "6") {
+    if (d_precondType == "smg" || d_precondType == "SMG") {
       /* use symmetric SMG as preconditioner */
       HYPRE_StructSMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructSMGSetMemoryUse(precond, 0);
@@ -591,7 +598,7 @@ Models_HypreSolver::radLinearSolve()
       //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
   
-    else if (d_kspType == "7") {  
+    if (d_precondType == "pfmg" || d_precondType == "PFMG") {  
       /* use symmetric PFMG as preconditioner */
       HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
@@ -611,7 +618,7 @@ Models_HypreSolver::radLinearSolve()
       //      cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
 
-    else if (d_kspType == "8") {
+    if (d_precondType == "jacobi" ||d_precondType == "JACOBI") {
       /* use two-step Jacobi as preconditioner */
       HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
@@ -638,30 +645,31 @@ Models_HypreSolver::radLinearSolve()
     HYPRE_PCGGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
     HYPRE_StructPCGDestroy(solver);
 
-    if (d_kspType == "6") {
+    if (d_precondType == "smg" || d_precondType == "SMG") {
       HYPRE_StructSMGDestroy(precond);
     }
-    else if (d_kspType == "7") {
+    if (d_precondType == "pfmg" || d_precondType == "PFMG") {
       HYPRE_StructPFMGDestroy(precond);
     }
-    else if (d_kspType == "8") {
+    if ((d_precondType == "jacobi" ||d_precondType == "JACOBI")) {
       HYPRE_StructJacobiDestroy(precond);
     }
 
   }
 
-  if(me == 0) {
+  if(d_myworld->myrank() == 0) {
     cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
     cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
   }
   if (((final_res_norm/(init_norm+1.0e-20) < 1.0) && (final_res_norm < 2.0))||
-     ((final_res_norm<d_tolerance)&&(init_norm<d_tolerance)))
+     ((final_res_norm<d_tolerance)&&(init_norm<d_tolerance))) {
     return true;
-  else
+  }else{
     return false;
+  }
 }
-
+//______________________________________________________________________
 void
 Models_HypreSolver::copyRadSoln(const Patch* patch, RadiationVariables* vars)
 {
