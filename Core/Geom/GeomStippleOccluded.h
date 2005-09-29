@@ -29,70 +29,41 @@
 
 
 /*
- *  ArrowWidget.h
+ *  GeomStippleOccluded: 
+ *    Shows geometry w/ a stipple patter where it would
+ *    normally be occluded because of the depth test
+ *    Useful for widgets
  *
  *  Written by:
- *   James Purciful
- *   Department of Computer Science
+ *   McKay Davis
+ *   SCI Institue
  *   University of Utah
- *   Aug. 1994
+ *   September 2005
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2005 SCI Group
  */
 
+#ifndef SCIRun_src_Core_Geom_GeomStippleOccluded_h
+#define SCIRun_src_Core_Geom_GeomStippleOccluded_h 1
 
-#ifndef SCI_project_Arrow_Widget_h
-#define SCI_project_Arrow_Widget_h 1
-
-#include <Dataflow/Widgets/BaseWidget.h>
+#include <Core/Geom/GeomSwitch.h>
 
 namespace SCIRun {
 
-class ArrowWidget : public BaseWidget {
+class GeomStippleOccluded : public GeomSwitch {
+    GeomStippleOccluded(const GeomStippleOccluded&);
+
 public:
-  ArrowWidget( Module* module, CrowdMonitor* lock, 
-	       double widget_scale, bool stipple_occluded = false);
-  ArrowWidget( const ArrowWidget& );
-  virtual ~ArrowWidget();
+    GeomStippleOccluded(GeomHandle, int state=1);
+    virtual GeomObj* clone();
 
-  virtual void redraw();
-  virtual void geom_pick(GeomPickHandle, ViewWindow*, int, const BState& bs);
-  virtual void geom_moved(GeomPickHandle, int, double,
-			  const Vector&, int, const BState&,
-			  const Vector &pick_offset);
+    // For OpenGL
+#ifdef SCI_OPENGL
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
 
-  virtual void MoveDelta( const Vector& delta );
-  virtual Point ReferencePoint() const;
-
-  void SetPosition( const Point& );
-  Point GetPosition() const;
-   
-  void SetLength( double );
-  double GetLength();
-   
-  void SetDirection( const Vector& v );
-  const Vector& GetDirection();
-
-  virtual void widget_tcl( GuiArgs& );
-
-  // Variable indexs         
-  enum { PointVar, HeadVar, DistVar };
-
-  // Material indexs
-  enum { PointMatl, ShaftMatl, HeadMatl, ResizeMatl };
-
-protected:
-  virtual string GetMaterialName( const Index mindex ) const;   
-   
-private:
-  Vector direction;
-  double length;
-
-  Point pick_pointvar_;
-  Point pick_headvar_;
-  double pick_scale_;
-  double pick_length_;
-  Vector pick_dir_;
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 } // End namespace SCIRun

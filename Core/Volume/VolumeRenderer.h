@@ -35,6 +35,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
+#include <Core/Geometry/Plane.h>
 
 #include <Core/Volume/Texture.h>
 #include <Core/Volume/TextureRenderer.h>
@@ -46,7 +47,10 @@ class VolShaderFactory;
 class VolumeRenderer : public TextureRenderer
 {
 public:
-  VolumeRenderer(TextureHandle tex, ColorMapHandle cmap1, ColorMap2Handle cmap2,
+  VolumeRenderer(TextureHandle tex, 
+		 ColorMapHandle cmap1, 
+		 vector<ColorMap2Handle> &cmap2,
+		 vector<Plane> &planes,
                  int tex_mem);
   VolumeRenderer(const VolumeRenderer&);
   ~VolumeRenderer();
@@ -83,6 +87,7 @@ protected:
   bool adaptive_;
   vector< bool > draw_level_;
   vector< double > level_alpha_;
+  vector<Plane> &planes_;
 
 };
 

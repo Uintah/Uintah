@@ -78,8 +78,10 @@ enum { ConstDist };
  *      includes some consistency checking to ensure full initialization.
  */
 
-ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-  : BaseWidget(module, lock, "ArrowWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, 
+			  double widget_scale,
+			  bool stipple_occluded)
+  : BaseWidget(module, lock, "ArrowWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale, stipple_occluded),
     direction(1, 0, 0)
 {
   length = 1;

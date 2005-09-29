@@ -46,7 +46,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	setGlobal $this-gradient_min 0.0
 	setGlobal $this-gradient_max 0.0
         setGlobal $this-adaptive 1
-        setGlobal $this-cmap_size 7
+        setGlobal $this-cmap_size 8run
         setGlobal $this-sw_raster 0
 	setGlobal $this-alpha_scale 0
 	setGlobal $this-render_style 0
@@ -60,6 +60,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	setGlobal $this-num_slices -1
         setGlobal $this-shading-button-state 1
         setGlobal $this-show_level_flag 1
+        setGlobal $this-show_clipping_widgets 1
         setGlobal $this-level_on {}
         setGlobal $this-level_vals {}
     }
@@ -181,6 +182,13 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
  	pack $tab.interp.l $tab.interp.f -side top -fill x -padx 4
 	pack $tab.interp.f.interp $tab.interp.f.near -side left -fill x \
 	    -padx 10 -expand y
+
+	frame $tab.clipping -relief solid
+	checkbutton $tab.clipping.clip -text "Show Clipping Plane Widgets" \
+	    -relief flat -variable $this-show_clipping_widgets -onvalue 1 \
+	    -offvalue 0 -anchor w -command $n
+	pack $tab.clipping -side top -fill x
+	pack $tab.clipping.clip -side top -fill x
 
         
         #-----------------------------------------------------------

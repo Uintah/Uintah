@@ -42,7 +42,7 @@ class FragmentProgramARB;
 class VolShader
 {
 public:
-  VolShader(int dim, int vsize, bool shading, bool frag, bool fog, int blend);
+  VolShader(int dim, int vsize, bool shading, bool frag, bool fog, int blend, int cmaps);
   ~VolShader();
 
   bool create();
@@ -53,10 +53,19 @@ public:
   inline bool fog() { return fog_; }
   inline int blend() { return blend_; }
   inline bool frag() { return frag_; }
+  inline int num_cmaps() { return num_cmaps_; }
 
-  inline bool match(int dim, int vsize, bool shading, bool frag, bool fog, int blend)
-  { return dim_ == dim && vsize_ == vsize && shading_ == shading && frag_ == frag
-      && fog_ == fog && blend_ == blend; }
+  inline bool match(int dim, int vsize, bool shading, 
+		    bool frag, bool fog, int blend, int cmaps)
+  { 
+    return (dim_ == dim && 
+	    vsize_ == vsize && 
+	    shading_ == shading && 
+	    frag_ == frag && 
+	    fog_ == fog && 
+	    blend_ == blend && 
+	    num_cmaps_ == cmaps); 
+  }
 
   inline FragmentProgramARB* program() { return program_; }
   
@@ -69,6 +78,7 @@ protected:
   bool fog_;
   int blend_;
   bool frag_;
+  int num_cmaps_;
   FragmentProgramARB* program_;
 };
 
@@ -78,8 +88,8 @@ public:
   VolShaderFactory();
   ~VolShaderFactory();
   
-  FragmentProgramARB* shader(int dim, int vsize, bool shading, bool frag,
-                             bool fog, int blend);
+  FragmentProgramARB* shader(int dim, int vsize, bool shading, 
+			     bool frag, bool fog, int blend, int num_cmaps);
 
 protected:
   std::vector<VolShader*> shader_;
