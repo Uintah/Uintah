@@ -338,8 +338,10 @@
            <spherical_harmonics> false   </spherical_harmonics>
            <linear_solver>       hypre   </linear_solver>
            <LinearSolver>
-             <max_iter>    1000    </max_iter>
-             <tolerance>   1.0e-8  </tolerance>
+             <solver>         gmres     </solver>
+             <preconditioner> jacobi    </preconditioner>
+             <max_iter>       1000      </max_iter>
+             <tolerance>      1.0e-8    </tolerance>
            </LinearSolver>
         </DORadiationModel>
         </RadiationModel>
