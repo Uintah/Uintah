@@ -373,6 +373,8 @@
           <test_problem_number> 1         </test_problem_number>
           <linear_solver>       hypre     </linear_solver>
           <LinearSolver>
+            <solver>            gmres     </solver>
+            <preconditioner>    jacobi    </preconditioner>
             <max_iter>          1000      </max_iter>
            <tolerance>          1.0e-8    </tolerance>
           </LinearSolver>
