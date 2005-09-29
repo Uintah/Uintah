@@ -64,8 +64,18 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
     nb_[c] = nb[c];
   }
 
+  compute_edge_rays(bbox_, edge_);
+  compute_edge_rays(tbox_, tex_edge_);
+
+}
+
+TextureBrick::~TextureBrick()
+{}
+
   /* The cube is numbered in the following way 
      
+Corners:
+
        2________6        y
       /|        |        |  
      / |       /|        |
@@ -76,13 +86,29 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
   | /       | /         /
   |/        |/         /
   1_________5         /
-  z  
+                     z  
+
+Edges:
+
+       ,____1___,        y
+      /|        |        |  
+     / 0       /|        |
+    9  |     10 2        |
+   /   |__3__/__|        |
+  /_____5___/   /        |_________ x
+  |  /      | 11         /
+  4 8       6 /         /
+  |/        |/         /
+  |____7____/         /
+                     z
   */
 
+void
+TextureBrick::compute_edge_rays(BBox &bbox, vector<Ray> &edges) const {
   // set up vertices
   Point corner[8];
-  const Point &pmin(bbox_.min());
-  const Point &pmax(bbox_.max());
+  const Point &pmin(bbox.min());
+  const Point &pmax(bbox.max());
   corner[0] = pmin;
   corner[1] = Point(pmin.x(), pmin.y(), pmax.z());
   corner[2] = Point(pmin.x(), pmax.y(), pmin.z());
@@ -92,50 +118,21 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
   corner[6] = Point(pmax.x(), pmax.y(), pmin.z());
   corner[7] = pmax;
 
-  // set up texture coordinates
-  Point texture[8];
-  const Point &tmin(tbox_.min());
-  const Point &tmax(tbox_.max());
-  texture[0] = Point(tmin.x(), tmin.y(), tmin.z());
-  texture[1] = Point(tmin.x(), tmin.y(), tmax.z());
-  texture[2] = Point(tmin.x(), tmax.y(), tmin.z());
-  texture[3] = Point(tmin.x(), tmax.y(), tmax.z());
-  texture[4] = Point(tmax.x(), tmin.y(), tmin.z());
-  texture[5] = Point(tmax.x(), tmin.y(), tmax.z());
-  texture[6] = Point(tmax.x(), tmax.y(), tmin.z());
-  texture[7] = Point(tmax.x(), tmax.y(), tmax.z());
-
+  edges.resize(12);
   // set up edges
-  edge_[0] = Ray(corner[0], corner[2] - corner[0]);
-  edge_[1] = Ray(corner[2], corner[6] - corner[2]);
-  edge_[2] = Ray(corner[4], corner[6] - corner[4]);
-  edge_[3] = Ray(corner[0], corner[4] - corner[0]);
-  edge_[4] = Ray(corner[1], corner[3] - corner[1]);
-  edge_[5] = Ray(corner[3], corner[7] - corner[3]);
-  edge_[6] = Ray(corner[5], corner[7] - corner[5]);
-  edge_[7] = Ray(corner[1], corner[5] - corner[1]);
-  edge_[8] = Ray(corner[0], corner[1] - corner[0]);
-  edge_[9] = Ray(corner[2], corner[3] - corner[2]);
-  edge_[10] = Ray(corner[6], corner[7] - corner[6]);
-  edge_[11] = Ray(corner[4], corner[5] - corner[4]);
-
-  // set up texture coordinate edges
-  tex_edge_[0] = Ray(texture[0], texture[2] - texture[0]);
-  tex_edge_[1] = Ray(texture[2], texture[6] - texture[2]);
-  tex_edge_[2] = Ray(texture[4], texture[6] - texture[4]);
-  tex_edge_[3] = Ray(texture[0], texture[4] - texture[0]);
-  tex_edge_[4] = Ray(texture[1], texture[3] - texture[1]);
-  tex_edge_[5] = Ray(texture[3], texture[7] - texture[3]);
-  tex_edge_[6] = Ray(texture[5], texture[7] - texture[5]);
-  tex_edge_[7] = Ray(texture[1], texture[5] - texture[1]);
-  tex_edge_[8] = Ray(texture[0], texture[1] - texture[0]);
-  tex_edge_[9] = Ray(texture[2], texture[3] - texture[2]);
-  tex_edge_[10] = Ray(texture[6], texture[7] - texture[6]);
-  tex_edge_[11] = Ray(texture[4], texture[5] - texture[4]);
+  edges[0] = Ray(corner[0], corner[2] - corner[0]);
+  edges[1] = Ray(corner[2], corner[6] - corner[2]);
+  edges[2] = Ray(corner[4], corner[6] - corner[4]);
+  edges[3] = Ray(corner[0], corner[4] - corner[0]);
+  edges[4] = Ray(corner[1], corner[3] - corner[1]);
+  edges[5] = Ray(corner[3], corner[7] - corner[3]);
+  edges[6] = Ray(corner[5], corner[7] - corner[5]);
+  edges[7] = Ray(corner[1], corner[5] - corner[1]);
+  edges[8] = Ray(corner[0], corner[1] - corner[0]);
+  edges[9] = Ray(corner[2], corner[3] - corner[2]);
+  edges[10] = Ray(corner[6], corner[7] - corner[6]);
+  edges[11] = Ray(corner[4], corner[5] - corner[4]);
 }
-
-TextureBrick::~TextureBrick()
-{}
 
 
 // compute polygon of edge plane intersections
@@ -165,14 +162,16 @@ TextureBrick::compute_polygons(const Ray& view, double dt,
   corner[6] = Point(pmax.x(), pmax.y(), pmin.z());
   corner[7] = pmax;
 
-  double t[8];
-  for (int i=0; i<8; i++)
+  double tmin = Dot(corner[0]-view.origin(), view.direction());;
+  double tmax = tmin;
+  for (int i=1; i<8; i++)
   {
-    t[i] = Dot(corner[i]-view.origin(), view.direction());
+    double t = Dot(corner[i]-view.origin(), view.direction());
+    tmin = Min(t, tmin);
+    tmax = Max(t, tmax);
   }
-  Sort(t, 8);
-  double tmin = (floor(t[0]/dt) + 1)*dt;
-  double tmax = floor(t[7]/dt)*dt;
+  //  tmin = (floor(tmin/dt) + 1)*dt;
+  //  tmax = floor(tmax/dt)*dt;
   compute_polygons(view, tmin, tmax, dt, vertex, texcoord, size);
 }
 
@@ -189,86 +188,111 @@ TextureBrick::compute_polygons(const Ray& view,
 			       vector<float>& vertex, vector<float>& texcoord,
 			       vector<int>& size) const
 {
-  Vector vv[6], tt[6]; // temp storage for vertices and texcoords
-  double t = tmax; // start at tmax
-  int k = 0, degree = 0;
 
+  Vector vv[6], tt[6]; // temp storage for vertices and texcoords
+
+  int k = 0, degree = 0;
   
   // find up and right vectors
   Vector vdir = view.direction();
   Vector up;
   Vector right;
   switch(MinIndex(fabs(vdir.x()),
-                  fabs(vdir.y()),
-                  fabs(vdir.z())))
-  {
-  case 0:
-    up.x(0.0); up.y(-vdir.z()); up.z(vdir.y());
-    break;
-  case 1:
-    up.x(-vdir.z()); up.y(0.0); up.z(vdir.x());
-    break;
-  case 2:
-    up.x(-vdir.y()); up.y(vdir.x()); up.z(0.0);
-    break;
-  }
+		  fabs(vdir.y()),
+		  fabs(vdir.z())))
+    {
+    case 0:
+      up.x(0.0); up.y(-vdir.z()); up.z(vdir.y());
+      break;
+    case 1:
+      up.x(-vdir.z()); up.y(0.0); up.z(vdir.x());
+      break;
+    case 2:
+      up.x(-vdir.y()); up.y(vdir.x()); up.z(0.0);
+      break;
+    }
   up.normalize();
   right = Cross(vdir, up);
-  // we compute polys back to front
+  double t = tmax; // start at tmax
   while (t >= tmin)
   {
+    
+#if 0 // not needed with mask_polygons code below
+    Vector min, max;    
+    BBox tbox, bbox = (*mask)[m];    
+    min = (bbox.min() - bbox_.min()) / bbox_.diagonal();
+    max = (bbox.max() - bbox_.min()) / bbox_.diagonal();
+    for (int i = 0; i < 3; i++) {
+      min[i] = Clamp(min[i], 0.0, 1.0);
+      max[i] = Clamp(max[i], 0.0, 1.0);
+    }
+    
+    bbox = BBox(Point(bbox_.min()+bbox_.diagonal()*min),
+		Point(bbox_.min()+bbox_.diagonal()*max));
+    tbox = BBox(Point(tbox_.min()+tbox_.diagonal()*min),
+		Point(tbox_.min()+tbox_.diagonal()*max));
+    
+    vector<Ray> edges, tedges;
+    compute_edge_rays(bbox, edges);
+    compute_edge_rays(tbox, tedges);
+#endif
+    const vector<Ray> &edges = edge_;
+    const vector<Ray> &tedges = tex_edge_;
+    
+    // we compute polys back to front      
     // find intersections
     degree = 0;
     for (int j=0; j<12; j++)
     {
       double u;
-      const bool isec =
-        edge_[j].planeIntersectParameter(-view.direction(),
-					 view.parameter(t), u);
-      if (isec && u >= 0.0 && u <= 1.0)
+      const bool intersects = edges[j].planeIntersectParameter
+	(-view.direction(), view.parameter(t), u);
+      if (intersects && u >= 0.0 && u <= 1.0)
       {
-        vv[degree] = (Vector)(edge_[j].parameter(u));
-        tt[degree] = (Vector)(tex_edge_[j].parameter(u));
-        degree++;
+	vv[degree] = (Vector)(edges[j].parameter(u));
+	tt[degree] = (Vector)(tedges[j].parameter(u));
+	degree++;
       }
     }
-
+    
+    if (degree < 3) continue;
+    
     if (degree > 3)
     {
-      // compute centroids
+	// compute centroids
       Vector vc(0.0, 0.0, 0.0), tc(0.0, 0.0, 0.0);
       for (int j=0; j<degree; j++)
       {
-        vc += vv[j]; tc += tt[j];
+	vc += vv[j]; tc += tt[j];
       }
       vc /= (double)degree; tc /= (double)degree;
-
+      
       // sort vertices
       int idx[6];
       double pa[6];
       for (int i=0; i<degree; i++)
       {
-        double vx = Dot(vv[i] - vc, right);
-        double vy = Dot(vv[i] - vc, up);
-
-        // compute pseudo-angle
-        pa[i] = vy / (fabs(vx) + fabs(vy));
-        if (vx < 0.0) pa[i] = 2.0 - pa[i];
-        else if (vy < 0.0) pa[i] = 4.0 + pa[i];
-        // init idx
-        idx[i] = i;
+	double vx = Dot(vv[i] - vc, right);
+	double vy = Dot(vv[i] - vc, up);
+	
+	// compute pseudo-angle
+	pa[i] = vy / (fabs(vx) + fabs(vy));
+	if (vx < 0.0) pa[i] = 2.0 - pa[i];
+	else if (vy < 0.0) pa[i] = 4.0 + pa[i];
+	// init idx
+	idx[i] = i;
       }
       Sort(pa, idx, degree);
-
+      
       // output polygon
       for (int j=0; j<degree; j++)
       {
-        vertex.push_back(vv[idx[j]].x());
-        vertex.push_back(vv[idx[j]].y());
-        vertex.push_back(vv[idx[j]].z());
-        texcoord.push_back(tt[idx[j]].x());
-        texcoord.push_back(tt[idx[j]].y());
-        texcoord.push_back(tt[idx[j]].z());
+	vertex.push_back(vv[idx[j]].x());
+	vertex.push_back(vv[idx[j]].y());
+	vertex.push_back(vv[idx[j]].z());
+	texcoord.push_back(tt[idx[j]].x());
+	texcoord.push_back(tt[idx[j]].y());
+	texcoord.push_back(tt[idx[j]].z());
       }
     }
     else if (degree == 3)
@@ -276,27 +300,174 @@ TextureBrick::compute_polygons(const Ray& view,
       // output a single triangle
       for (int j=0; j<degree; j++)
       {
-        vertex.push_back(vv[j].x());
-        vertex.push_back(vv[j].y());
-        vertex.push_back(vv[j].z());
-        texcoord.push_back(tt[j].x());
-        texcoord.push_back(tt[j].y());
-        texcoord.push_back(tt[j].z());
+	vertex.push_back(vv[j].x());
+	vertex.push_back(vv[j].y());
+	vertex.push_back(vv[j].z());
+	texcoord.push_back(tt[j].x());
+	texcoord.push_back(tt[j].y());
+	texcoord.push_back(tt[j].z());
       }
     }
-    // else we don't care
-
-    // Add our poly count to the sizes.
-    if(degree >= 3)
-    {
-      k += degree;
-      size.push_back(degree);
-    }
+    k += degree;
+    size.push_back(degree);
 
     // decrement ray parameter
     t -= dt;
   }
 }
+
+
+bool
+TextureBrick::mask_polygons(vector<int> & size, 
+			    vector<float> &vertex,
+			    vector<float> &texcoord,
+			    vector<int> &mask,
+			    vector<Plane> &planes)
+{
+
+  mask = vector<int>(size.size(), 0);
+
+  // Iterate through all the cutting planes
+  for (unsigned p = 0; p < planes.size(); p++)
+  {
+    const Plane &clipplane = planes[p];
+    //    cerr << "Plane: " << b1 << b2 << b3 << std::endl;
+    // Some cutting planes can share a bit pattern to create convex hulls
+    const int clipmask = 1 << p;
+
+    // New vertices, tex coords, bitmasks, and poly sizes created when clipping
+    vector<float>  newvertex(0);
+    vector<float>  newtexcoord(0);
+    vector<int>    newmask(0);
+    vector<int>    newsize(0);    
+    int idx = 0;
+    for (unsigned int s = 0; s < size.size(); ++s) 
+    {
+      // Arrays to store points that are unclipped and clipped
+      vector<int>    unclipped_index(0);
+      vector<int>    isclipped_index(0);
+
+      // An array to store paramaters of the intersections between the
+      // poly and clipping plane occurs, for vertex and texture coordinate
+      // reconstruciton in step two
+      vector<pair<double,pair<int,int> > > intersections(0);
+
+      // Step 1
+      // Now iterate through every point in the poly, looking at all edges
+      // Start at first point, meaning the first edge tested 
+      // starts at the last point and connects to the first point
+      for (int i = 0; i < size[s]; ++i) {
+
+	// p1 starts at the last point in the poly
+	int p1_index = idx+i;
+	Point p1(vertex[p1_index*3],vertex[p1_index*3+1],vertex[p1_index*3+2]);
+	double p1_dist = clipplane.eval_point(p1);
+	// last point is clipped if distance to plane is negative
+	bool p1_clipped = p1_dist < 0.0;
+
+	if (p1_clipped)
+	  isclipped_index.push_back(p1_index);
+	else 
+	  unclipped_index.push_back(p1_index);
+	
+	int p2_index = idx+(i+1)%size[s];
+	Point p2(vertex[p2_index*3],vertex[p2_index*3+1],vertex[p2_index*3+2]);
+	double p2_dist = clipplane.eval_point(p2);
+	// determine if p2 is clipped or not
+	bool p2_clipped = p2_dist < 0.0;
+
+	// If p1 is clipped and p2 isnt, or vice versa, then this edge
+	// crosses the clipping plane
+	if (p1_clipped != p2_clipped) { 
+	  // find the intersection parameter along the edge where it crossed
+	  // the clipping plane
+	  double t = 42.0;
+	  //	  const bool intersects = 
+	  clipplane.Intersect(p1, p2-p1, t);
+
+	  // store the edge origin index and parameter for later
+	  // reconstruction of the clipped and unclipped polygons
+	  intersections.push_back(make_pair(t, make_pair(p1_index,p2_index)));
+
+	  // Now push this intersection point onto both unclipped and clipped
+	  // polygon arrays since the point is shared between the two.
+	  // Use a negative index to indicate the point is a newly created
+	  // intersection parameter and needs to be computed for texture
+	  // coordinates as well
+	  isclipped_index.push_back(-intersections.size());
+	  unclipped_index.push_back(-intersections.size());
+	}
+      }
+
+      // Step 2, reconstruct polygon into clipped and unclippd polygons
+      // Make two passes to reconstruct the data arrays, unclipped then clipped
+      for (int clipped = 0; clipped < 2; ++clipped) {
+	// Point to unclipped on first pass, then unclipped on second pass
+	vector<int> &index = clipped ? isclipped_index : unclipped_index;
+
+	// If this pass produced no polygons, then do nothing
+	if (index.size() < 3) continue;
+	
+	// Number of points in this new polygon
+	newsize.push_back(index.size());
+
+	// mask[s] is the clipped state of the current polygon
+	// Only turn on clipping plane mask bits if poly was not clipped
+	newmask.push_back(mask[s] | (clipped ? 0 : clipmask));
+	  
+	// Iterate through the indicies and create the new polygon
+	for (unsigned int i = 0; i < index.size(); ++i) {
+	  int index1 = index[i];
+
+	  // If positive, then it was an original index
+	  if (index1 >= 0) {
+	    ASSERT(index1 >= idx && index1 <= idx+size[s]);
+	    // Just copy the original x,y,z vertex and texture coordinates
+	    for (int j = index1*3; j < index1*3 + 3; ++j) {
+	      newvertex.push_back(vertex[j]);
+	      newtexcoord.push_back(texcoord[j]);
+	    }
+	  } else {
+	    // If index is negative, then it was an intersection point and 
+	    // a new vertex and texture coordinate needs to be created
+
+	    // Get the parameter along the edge where the intersection was 
+	    double t = intersections[-index1-1].first;
+	    // Get the index of the edge origin
+	    int index2 = intersections[-index1-1].second.second;
+	    index1 = intersections[-index1-1].second.first;
+	    // Get the index of the edge terminaiton
+
+	    ASSERT(index1 >= idx && index1 <= idx+size[s]);
+	    ASSERT(index2 >= idx && index2 <= idx+size[s]);
+	    index1 *= 3; index2 *=3;
+	    for (int j = 0; j < 3; ++j) {
+	      // calculate new vertex coordinate along edge using t parameter
+	      newvertex.push_back(vertex[index1+j]+
+				  t*(vertex[index2+j]-vertex[index1+j]));
+	      // calculate new texture coordinate along edge using t parameter
+	      newtexcoord.push_back(texcoord[index1+j]+
+				    t*(texcoord[index2+j]-texcoord[index1+j]));
+	    }
+	  }
+	}
+      }
+      // continue to next polygon to test it for intersections
+      idx += size[s];
+    }
+    // After clipping all polygons against a clipping plane,
+    // set the data structures to the new state for next iteration and 
+    // clippping plane
+    vertex = newvertex;
+    texcoord = newtexcoord;
+    size = newsize;
+    mask = newmask;
+  }
+
+  // Done!
+  return true;
+}
+	
 
 
 const string

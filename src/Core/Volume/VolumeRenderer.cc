@@ -69,7 +69,9 @@ static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
 //static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
 VolumeRenderer::VolumeRenderer(TextureHandle tex,
-                               ColorMapHandle cmap1, ColorMap2Handle cmap2,
+                               ColorMapHandle cmap1, 
+			       vector<ColorMap2Handle> &cmap2,
+			       vector<Plane> &planes,
                                int tex_mem):
   TextureRenderer(tex, cmap1, cmap2, tex_mem),
   grange_(1.0),
@@ -82,7 +84,8 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex,
   light_(0),
   adaptive_(true),
   draw_level_(20),
-  level_alpha_(20)
+  level_alpha_(20),
+  planes_(planes)
 {
   mode_ = MODE_OVER;
   vector<bool>::iterator it = draw_level_.begin();
@@ -111,7 +114,8 @@ VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
   light_(copy.light_),
   adaptive_(copy.adaptive_),
   draw_level_(copy.draw_level_),
-  level_alpha_(copy.level_alpha_)
+  level_alpha_(copy.level_alpha_),
+  planes_(copy.planes_)
 {
 #ifdef _WIN32
   glBlendEquation = (PFNGLBLENDEQUATIONPROC)wglGetProcAddress("glBlendEquation");
@@ -203,10 +207,14 @@ VolumeRenderer::draw_volume()
   tex_->get_sorted_bricks(bricks, view_ray);
   if(bricks.size() == 0) return;
 
-  if(adaptive_ && ((cmap2_.get_rep() && cmap2_->updating()) || di_->mouse_action))
-    set_interactive_mode(true);
-  else
-    set_interactive_mode(false);
+  bool cmap2_updating = false;
+  for (unsigned int c = 0; c < cmap2_.size(); ++c)
+    if (cmap2_[c]->updating()) {
+      cmap2_updating = true;
+      break;
+    }
+  
+  set_interactive_mode(adaptive_ && (cmap2_updating || di_->mouse_action));
 
   const double rate = imode_ ? irate_ : sampling_rate_;
   const Vector diag = tex_->bbox().diagonal();
@@ -219,9 +227,11 @@ VolumeRenderer::draw_volume()
   vector<float> vertex;
   vector<float> texcoord;
   vector<int> size;
+  vector<int> mask;
   vertex.reserve(num_slices*6);
   texcoord.reserve(num_slices*6);
   size.reserve(num_slices*6);
+  mask.reserve(num_slices*6);
 
   //--------------------------------------------------------------------------
 
@@ -229,7 +239,7 @@ VolumeRenderer::draw_volume()
   const int nb0 = bricks[0]->nb(0);
   const bool use_cmap1 = cmap1_.get_rep();
   const bool use_cmap2 =
-    cmap2_.get_rep() && nc == 2 && ShaderProgramARB::shaders_supported();
+    cmap2_.size() && nc == 2 && ShaderProgramARB::shaders_supported();
   if(!use_cmap1 && !use_cmap2)
   {
     tex_->unlock_bricks();
@@ -248,13 +258,30 @@ VolumeRenderer::draw_volume()
 
   //--------------------------------------------------------------------------
   // set up blending
-
-  int psize[2];
-  psize[0] = NextPowerOf2(vp[2]);
-  psize[1] = NextPowerOf2(vp[3]);
-    
-  if(blend_num_bits_ != 8)
-  {
+  if(blend_num_bits_ == 8) {
+    glEnable(GL_BLEND);
+#ifndef _WIN32
+    switch(mode_) {
+    case MODE_OVER:
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS))) 
+	glBlendEquation(GL_FUNC_ADD);
+      
+      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      break;
+    case MODE_MIP:
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
+	glBlendEquation(GL_MAX);
+      
+      glBlendFunc(GL_ONE, GL_ONE);
+      break;
+    default:
+      break;
+    }
+#endif
+  } else {
+    int psize[2];
+    psize[0] = Pow2(vp[2]);
+    psize[1] = Pow2(vp[3]);
     if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
        || psize[0] != blend_buffer_->width()
        || psize[1] != blend_buffer_->height())
@@ -276,29 +303,7 @@ VolumeRenderer::draw_volume()
         blend_buffer_->set_use_texture_matrix(false);
       }
     }
-  }
-  
-  if(blend_num_bits_ == 8) {
-    glEnable(GL_BLEND);
-#ifndef _WIN32
-    switch(mode_) {
-    case MODE_OVER:
-      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS))) 
-	glBlendEquation(GL_FUNC_ADD);
 
-      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-      break;
-    case MODE_MIP:
-      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
-	glBlendEquation(GL_MAX);
-
-      glBlendFunc(GL_ONE, GL_ONE);
-      break;
-    default:
-      break;
-    }
-#endif
-  } else {
     double mv[16], pr[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, mv);
     glGetDoublev(GL_PROJECTION_MATRIX, pr);
@@ -355,7 +360,7 @@ VolumeRenderer::draw_volume()
 #endif
 
   //--------------------------------------------------------------------------
-  // load colormap texture
+  // load colormap texture into texture unit 2
   if(use_cmap2) {
     // rebuild if needed
     build_colormap2();
@@ -397,9 +402,13 @@ VolumeRenderer::draw_volume()
       }
     }
   }
-  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0,
-				       use_shading, false,
-                                       use_fog, blend_mode);
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1,  // dimension
+				       nb0, // vsize
+				       use_shading, // shading
+				       false, // frag
+                                       use_fog, // use fog
+				       blend_mode, // blend,
+				       cmap2_.size());
   if(shader) {
     if(!shader->valid()) {
       shader->create();
@@ -420,8 +429,28 @@ VolumeRenderer::draw_volume()
     l.safe_normalize();
     shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
     shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
-    shader->setLocalParam(2, grange_, goffset_, 0.0, 0.0);
   }
+
+
+
+#if 0
+  const Transform &field_trans = tex_->transform();
+  double mvmat[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
+  // index space view direction
+  Vector v = field_trans.unproject(Vector(-mvmat[2], -mvmat[6], -mvmat[10]));
+  Vector up = field_trans.unproject(Vector(-mvmat[1], -mvmat[5], -mvmat[9]));
+  Vector right = field_trans.unproject(Vector(-mvmat[0], -mvmat[4], -mvmat[8]));
+  v.safe_normalize();
+  up.safe_normalize();
+  right.safe_normalize();
+  Transform mv;
+  mv.set_trans(mvmat);
+  Point p = field_trans.unproject(mv.unproject(Point(0,0,0)));
+  vector<pair<Plane, int> > planes;
+  planes.push_back(make_pair(Plane(p, p+v+up, p+v), 2));
+  //  cerr << "Plane: " << p << p+v << p+v+up << std::endl;
+#endif
   
   //--------------------------------------------------------------------------
   // render bricks
@@ -432,16 +461,22 @@ VolumeRenderer::draw_volume()
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixd(mvmat);
-  
+
+  float cm2scale = 1.0 / Pow2(cmap2_.size());
+  shader->setLocalParam(2, grange_, goffset_, cm2scale, cm2scale);
+
   for(unsigned int i=0; i<bricks.size(); i++) {
     TextureBrickHandle b = bricks[i];
     load_brick(bricks, i, use_cmap2);
     vertex.clear();
     texcoord.clear();
+    mask.clear();
     size.clear();
     b->compute_polygons(view_ray, dt, vertex, texcoord, size);
+    b->mask_polygons(size, vertex, texcoord, mask, planes_);
     draw_polygons(vertex, texcoord, size, false, use_fog,
-                  blend_num_bits_ > 8 ? blend_buffer_ : 0);
+                  blend_num_bits_ > 8 ? blend_buffer_ : 0,
+		  &mask, shader);
   }
 
   glPopMatrix();
@@ -471,7 +506,6 @@ VolumeRenderer::draw_volume()
   glBindTexture(GL_TEXTURE_3D, 0);
 
   //--------------------------------------------------------------------------
-
   if(blend_num_bits_ == 8) {
     glDisable(GL_BLEND);
   } else {
@@ -556,11 +590,14 @@ VolumeRenderer::multi_level_draw()
   int levels = tex_->nlevels();
 
   // set interactive mode
-  if(adaptive_ &&
-     ((cmap2_.get_rep() && cmap2_->updating()) || di_->mouse_action))
-    set_interactive_mode(true);
-  else
-    set_interactive_mode(false);
+  bool cmap2_updating = false;
+  for (unsigned int c = 0; c < cmap2_.size(); ++c)
+    if (cmap2_[c]->updating()) {
+      cmap2_updating = true;
+      break;
+    }
+  
+  set_interactive_mode(adaptive_ && (cmap2_updating || di_->mouse_action));
   
   // set sampling rate based on interaction.
   double rate = imode_ ? irate_ : sampling_rate_;
@@ -585,7 +622,7 @@ VolumeRenderer::multi_level_draw()
   const int nb0 = bricks[0]->nb(0);
   const bool use_cmap1 = cmap1_.get_rep();
   const bool use_cmap2 =
-    cmap2_.get_rep() && nc == 2 && ShaderProgramARB::shaders_supported();
+    cmap2_.size() && nc == 2 && ShaderProgramARB::shaders_supported();
   if(!use_cmap1 && !use_cmap2)
   {
     tex_->unlock_bricks();
@@ -606,8 +643,8 @@ VolumeRenderer::multi_level_draw()
   // set up blending
   
   int psize[2];
-  psize[0] = NextPowerOf2(vp[2]);
-  psize[1] = NextPowerOf2(vp[3]);
+  psize[0] = Pow2(vp[2]);
+  psize[1] = Pow2(vp[3]);
   
   if(blend_num_bits_ != 8)
   {
@@ -746,7 +783,7 @@ VolumeRenderer::multi_level_draw()
   }
   shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0,
 				       use_shading, false,
-				       use_fog, blend_mode);
+				       use_fog, blend_mode, cmap2_.size());
   if(shader) {
     if(!shader->valid()) {
       shader->create();
@@ -1075,7 +1112,10 @@ VolumeRenderer::draw_wireframe()
 
     // Scale out dt such that the slices are artificially further apart.
     b->compute_polygons(view_ray, dt * 10, vertex, texcoord, size);
-    draw_polygons_wireframe(vertex, texcoord, size, false, false, 0);
+    vector<int> mask;
+    b->mask_polygons(size, vertex, texcoord, mask, planes_);
+
+    draw_polygons_wireframe(vertex, texcoord, size, false, false, 0, &mask);
   }
   if(lighting) glEnable(GL_LIGHTING);
   glMatrixMode(GL_MODELVIEW);

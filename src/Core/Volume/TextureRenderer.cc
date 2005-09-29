@@ -32,6 +32,7 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Volume/TextureRenderer.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Util/Environment.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Color.h>
 
@@ -103,7 +104,8 @@ namespace SCIRun {
   "END";
 
   TextureRenderer::TextureRenderer(TextureHandle tex,
-                                   ColorMapHandle cmap1, ColorMap2Handle cmap2,
+                                   ColorMapHandle cmap1, 
+				   vector<ColorMap2Handle> &cmap2,
                                    int tex_mem) :
     GeomObj(),
     tex_(tex),
@@ -119,14 +121,13 @@ namespace SCIRun {
     irate_(0.5),
     imode_(false),
     slice_alpha_(0.5),
-    sw_raster_(false),
-    cmap2_size_(128),
+    hardware_raster_(false),
+    cmap2_size_(256),
     cmap1_tex_(0),
     cmap2_tex_(0),
-    use_pbuffer_(true),
-    raster_buffer_(0),
+    raster_pbuffer_(0),
     shader_factory_(0),
-    cmap2_buffer_(0),
+    cmap2_pbuffer_(0),
     cmap2_shader_nv_(new FragmentProgramARB(Cmap2ShaderStringNV)),
     cmap2_shader_ati_(new FragmentProgramARB(Cmap2ShaderStringATI)),
     vol_shader_factory_(new VolShaderFactory()),
@@ -162,14 +163,13 @@ namespace SCIRun {
     irate_(copy.irate_),
     imode_(copy.imode_),
     slice_alpha_(copy.slice_alpha_),
-    sw_raster_(copy.sw_raster_),
+    hardware_raster_(copy.hardware_raster_),
     cmap2_size_(copy.cmap2_size_),
     cmap1_tex_(copy.cmap1_tex_),
     cmap2_tex_(copy.cmap2_tex_),
-    use_pbuffer_(copy.use_pbuffer_),
-    raster_buffer_(copy.raster_buffer_),
+    raster_pbuffer_(copy.raster_pbuffer_),
     shader_factory_(copy.shader_factory_),
-    cmap2_buffer_(copy.cmap2_buffer_),
+    cmap2_pbuffer_(copy.cmap2_pbuffer_),
     cmap2_shader_nv_(copy.cmap2_shader_nv_),
     cmap2_shader_ati_(copy.cmap2_shader_ati_),
     vol_shader_factory_(copy.vol_shader_factory_),
@@ -212,7 +212,7 @@ namespace SCIRun {
   }
 
   void
-  TextureRenderer::set_colormap2(ColorMap2Handle cmap2)
+  TextureRenderer::set_colormap2(vector<ColorMap2Handle> &cmap2)
   {
     mutex_.lock();
     cmap2_ = cmap2;
@@ -234,7 +234,7 @@ namespace SCIRun {
   void
   TextureRenderer::set_slice_alpha(double alpha)
   {
-    if(slice_alpha_ != alpha) {
+    if(fabs(slice_alpha_ - alpha) > 0.0001) {
       mutex_.lock();
       slice_alpha_ = alpha;
       alpha_dirty_ = true;
@@ -245,9 +245,9 @@ namespace SCIRun {
   void
   TextureRenderer::set_sw_raster(bool b)
   {
-    if(sw_raster_ != b) {
+    if(hardware_raster_ == b) {
       mutex_.lock();
-      sw_raster_ = b;
+      hardware_raster_ = !b;
       cmap2_dirty_ = true;
       mutex_.unlock();
     }
@@ -535,7 +535,9 @@ namespace SCIRun {
   void
   TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
                                  vector<int>& poly, bool normal, bool fog,
-                                 Pbuffer* buffer)
+                                 Pbuffer* buffer,
+				 vector<int> *mask, FragmentProgramARB* shader)
+
   {
     di_->polycount += poly.size();
     float mvmat[16];
@@ -552,6 +554,10 @@ namespace SCIRun {
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     }
     for(unsigned int i=0, k=0; i<poly.size(); i++) {
+      if (mask && shader) {
+	float v = float(((*mask)[i] << 1) + 1);
+	shader->setLocalParam(3, v,v,v,v);
+      }
       if(buffer) {
         buffer->bind(GL_FRONT);
       }
@@ -613,7 +619,8 @@ namespace SCIRun {
                                            vector<float>& texcoord,
                                            vector<int>& poly,
                                            bool normal, bool fog,
-                                           Pbuffer* buffer)
+                                           Pbuffer* buffer,
+					   vector<int> *mask)
   {
     di_->polycount += poly.size();
     float mvmat[16];
@@ -622,6 +629,13 @@ namespace SCIRun {
     }
     for(unsigned int i=0, k=0; i<poly.size(); i++)
       {
+	if (mask) {
+	  int v = (*mask)[i] ? 2:1;
+	  glColor4d(v & 1 ? 1.0 : 0.0, 
+		    v & 2 ? 1.0 : 0.0, 
+		    v & 4 ? 1.0 : 0.0, 1.0);
+	}
+		  
         glBegin(GL_LINE_LOOP);
         {
           for(int j=0; j<poly[i]; j++)
@@ -727,217 +741,278 @@ namespace SCIRun {
     }
   }
 
+
+  void
+  TextureRenderer::colormap2_hardware_rasterize() 
+  {
+    if(cmap2_dirty_) {
+      raster_pbuffer_->activate();
+      raster_pbuffer_->set_use_texture_matrix(false);
+      glDrawBuffer(GL_FRONT);
+
+      glClearColor(0.0, 0.0, 0.0, 0.0);
+      glClear(GL_COLOR_BUFFER_BIT);
+      raster_pbuffer_->swapBuffers();
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glTranslatef(-1.0, -1.0, 0.0);
+      glScalef(2.0/Pow2(cmap2_.size()), 2.0, 2.0);
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_LIGHTING);
+      glDisable(GL_CULL_FACE);
+      glDisable(GL_BLEND);
+#if defined(GL_ARB_fragment_program)
+#  ifdef _WIN32
+      if (glActiveTexture)
+#  endif
+	glActiveTexture(GL_TEXTURE0);
+#endif
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+      // rasterize widgets
+      glViewport(0,0,raster_pbuffer_->width(), raster_pbuffer_->height());
+      //cmap2_size_*c, 0,
+      //	 cmap2_size_*(c+1), raster_pbuffer_->height());
+
+      for (int c = 0; c < cmap2_.size(); ++c) {
+	vector<CM2WidgetHandle> widgets = cmap2_[c]->widgets();
+	for (unsigned int i=0; i<widgets.size(); i++) {
+	  raster_pbuffer_->bind(GL_FRONT);
+	  widgets[i]->rasterize(*shader_factory_, raster_pbuffer_);
+	  raster_pbuffer_->release(GL_FRONT);
+	  raster_pbuffer_->swapBuffers();
+	}
+	glTranslatef(1.0, 0.0, 0.0);
+      }
+      raster_pbuffer_->deactivate();
+      raster_pbuffer_->set_use_texture_matrix(true);
+      alpha_dirty_ = 1;
+    }
+
+    if (alpha_dirty_) {
+      //--------------------------------------------------------------
+      // opacity correction and quantization
+      cmap2_pbuffer_->activate();
+      glDrawBuffer(GL_FRONT);
+      glViewport(0, 0, cmap2_pbuffer_->width(), cmap2_pbuffer_->height());
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glTranslatef(-1.0, -1.0, 0.0);
+      glScalef(2.0, 2.0, 2.0);
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_LIGHTING);
+      glDisable(GL_CULL_FACE);
+      FragmentProgramARB* shader =
+	raster_pbuffer_->need_shader() ? cmap2_shader_nv_ : cmap2_shader_ati_;
+      shader->bind();
+      double bp = mode_ == MODE_MIP ? 1.0 : 
+	tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+      shader->setLocalParam(0, bp, imode_ ? 1.0/irate_ : 1.0/sampling_rate_, 
+			    0.0, 0.0);
+#if defined(GL_ARB_fragment_program)
+#  ifdef _WIN32
+      if (glActiveTexture)
+#  endif // _WIN32
+	glActiveTexture(GL_TEXTURE0);
+#endif
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+      raster_pbuffer_->bind(GL_FRONT);
+      glBegin(GL_QUADS);
+      {
+	glTexCoord2f( 0.0,  0.0);
+	glVertex2f( 0.0,  0.0);
+	glTexCoord2f(1.0,  0.0);
+	glVertex2f( 1.0,  0.0);
+	glTexCoord2f(1.0,  1.0);
+	glVertex2f( 1.0,  1.0);
+	glTexCoord2f( 0.0,  1.0);
+	glVertex2f( 0.0,  1.0);
+      }
+      glEnd();
+      raster_pbuffer_->release(GL_FRONT);
+      shader->release();
+      cmap2_pbuffer_->swapBuffers();
+      cmap2_pbuffer_->deactivate();
+    }
+  }
+    
+
+
+  void
+  TextureRenderer::colormap2_software_rasterize() 
+  {
+    cerr << "NOT FINISHED!\n";
+    return;
+#if 0
+    //--------------------------------------------------------------
+    // software rasterization
+    bool size_dirty = (cmap2_size_ != raster_array_.dim2() || 
+		       cmap2_size_/4 != raster_array_.dim1());
+
+    if(cmap2_dirty_ || size_dirty) {
+      if(size_dirty) {
+	raster_array_.resize(cmap2_size_/4, cmap2_size_, 4);
+	cmap2_array_.resize(cmap2_size_/4, cmap2_size_, 4);
+      }
+      // clear cmap
+      for(int i=0; i<raster_array_.dim1(); i++) {
+	for(int j=0; j<raster_array_.dim2(); j++) {
+	  raster_array_(i,j,0) = 0.0;
+	  raster_array_(i,j,1) = 0.0;
+	  raster_array_(i,j,2) = 0.0;
+	  raster_array_(i,j,3) = 0.0;
+	}
+      }
+      vector<CM2WidgetHandle>& widget = cmap2_->widgets();
+      // rasterize widgets
+      for(unsigned int i=0; i<widget.size(); i++) {
+	widget[i]->rasterize(raster_array_);
+      }
+      for(int i=0; i<raster_array_.dim1(); i++) {
+	for(int j=0; j<raster_array_.dim2(); j++) {
+	  raster_array_(i,j,0) = Clamp(raster_array_(i,j,0), 0.0f, 1.0f);
+	  raster_array_(i,j,1) = Clamp(raster_array_(i,j,1), 0.0f, 1.0f);
+	  raster_array_(i,j,2) = Clamp(raster_array_(i,j,2), 0.0f, 1.0f);
+	  raster_array_(i,j,3) = Clamp(raster_array_(i,j,3), 0.0f, 1.0f);
+	}
+      }
+    }
+    //--------------------------------------------------------------
+    // opacity correction
+    switch(mode_) {
+    case MODE_MIP:
+    case MODE_SLICE: {
+      for(int i=0; i<raster_array_.dim1(); i++) {
+	for(int j=0; j<raster_array_.dim2(); j++) {
+	  double alpha = raster_array_(i,j,3);
+	  cmap2_array_(i,j,0) = (unsigned char)(raster_array_(i,j,0)*alpha*255);
+	  cmap2_array_(i,j,1) = (unsigned char)(raster_array_(i,j,1)*alpha*255);
+	  cmap2_array_(i,j,2) = (unsigned char)(raster_array_(i,j,2)*alpha*255);
+	  cmap2_array_(i,j,3) = (unsigned char)(alpha*255);
+	}
+      }
+    } break;
+    case MODE_OVER: {
+      double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+      for(int i=0; i<raster_array_.dim1(); i++) {
+	for(int j=0; j<raster_array_.dim2(); j++) {
+	  double alpha = raster_array_(i,j,3);
+	  alpha = pow(alpha, bp);
+	  alpha = 1.0-pow(1.0-alpha, imode_ ? 1.0/irate_ : 1.0/sampling_rate_);
+	  cmap2_array_(i,j,0) = (unsigned char)(raster_array_(i,j,0)*alpha*255);
+	  cmap2_array_(i,j,1) = (unsigned char)(raster_array_(i,j,1)*alpha*255);
+	  cmap2_array_(i,j,2) = (unsigned char)(raster_array_(i,j,2)*alpha*255);
+	  cmap2_array_(i,j,3) = (unsigned char)(alpha*255);
+	}
+      }
+    } break;
+    default:
+      break;
+    }
+    //--------------------------------------------------------------
+    // update texture
+    if(!cmap2_tex_ || size_dirty) {
+      if(glIsTexture(cmap2_tex_)) {
+	glDeleteTextures(1, &cmap2_tex_);
+      }
+      glGenTextures(1, &cmap2_tex_);
+      glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap2_array_.dim2(), cmap2_array_.dim1(),
+		   0, GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
+      glBindTexture(GL_TEXTURE_2D, 0);
+    } else {
+      glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cmap2_array_.dim2(), cmap2_array_.dim1(),
+		      GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
+      glBindTexture(GL_TEXTURE_2D, 0);
+    }      
+#endif
+  }
+    
+
+  void
+  TextureRenderer::colormap2_hardware_destroy_buffers()
+  {
+    if (raster_pbuffer_) {
+      raster_pbuffer_->destroy();
+      delete raster_pbuffer_;
+      raster_pbuffer_ = 0;
+    }
+    if (cmap2_pbuffer_) {
+      cmap2_pbuffer_->destroy();
+      delete cmap2_pbuffer_;
+      cmap2_pbuffer_ = 0;
+    }
+  }
+
+  
+
+  void
+  TextureRenderer::colormap2_hardware_rasterize_setup()
+  {
+    int width = cmap2_size_ * Pow2(cmap2_.size());
+    if (raster_pbuffer_ && raster_pbuffer_->width() == width) 
+      return;
+    else
+      colormap2_hardware_destroy_buffers();
+
+    if (!raster_pbuffer_) {
+      raster_pbuffer_ = new Pbuffer(width, 64, GL_FLOAT, 32, true, GL_FALSE);
+    }
+
+    if (!cmap2_pbuffer_)
+      cmap2_pbuffer_ = new Pbuffer(width, 64, GL_INT, 8, true, GL_FALSE);
+
+    if (!raster_pbuffer_->create() || !cmap2_pbuffer_->create()) {
+      colormap2_hardware_destroy_buffers();
+      return;
+    }
+
+    if (!shader_factory_) {
+      shader_factory_ = new CM2ShaderFactory();
+      if (cmap2_shader_nv_->create() || // True shader::create, means it failed
+	  cmap2_shader_ati_->create())  // ...its backwards, I know.... MD
+      {
+	cmap2_pbuffer_->destroy();
+	cmap2_shader_nv_->destroy();
+	cmap2_shader_ati_->destroy();
+	delete shader_factory_;
+	shader_factory_ = 0;
+	colormap2_hardware_destroy_buffers();
+	return;
+      }
+    }
+
+    raster_pbuffer_->set_use_default_shader(false);
+    cmap2_pbuffer_->set_use_default_shader(false);
+  }
+  
+  
+
   void
   TextureRenderer::build_colormap2()
   {
-    if (!ShaderProgramARB::shaders_supported())
-      return;
+    if (!ShaderProgramARB::shaders_supported()) return;
+    if (!cmap2_dirty_ && !alpha_dirty_) return;
+    if(hardware_raster_)
+      colormap2_hardware_rasterize_setup();
+    else
+      colormap2_hardware_destroy_buffers();
 
-    if (cmap2_dirty_ || alpha_dirty_)
-      {
-        if(!sw_raster_ && use_pbuffer_ && !raster_buffer_)
-          {
-            raster_buffer_ = new Pbuffer(256, 64, GL_FLOAT, 32, true, GL_FALSE);
-            cmap2_buffer_ = new Pbuffer(256, 64, GL_INT, 8, true, GL_FALSE);
-            shader_factory_ = new CM2ShaderFactory();
-            if (!raster_buffer_->create() || !cmap2_buffer_->create()
-                || cmap2_shader_nv_->create() || cmap2_shader_ati_->create())
-              {
-                raster_buffer_->destroy();
-                cmap2_buffer_->destroy();
-                cmap2_shader_nv_->destroy();
-                cmap2_shader_ati_->destroy();
-                delete raster_buffer_;
-                delete cmap2_buffer_;
-                delete shader_factory_;
-                raster_buffer_ = 0;
-                cmap2_buffer_ = 0;
-                shader_factory_ = 0;
-                use_pbuffer_ = false;
-              }
-            else
-              {
-                raster_buffer_->set_use_default_shader(false);
-                cmap2_buffer_->set_use_default_shader(false);
-              }
-          }
+    if(cmap2_pbuffer_)
+      colormap2_hardware_rasterize();
+    else 
+      colormap2_software_rasterize();
 
-        if(!sw_raster_ && use_pbuffer_) {
-          //--------------------------------------------------------------
-          // hardware rasterization
-          if(cmap2_dirty_) {
-            raster_buffer_->activate();
-            raster_buffer_->set_use_texture_matrix(false);
-            glDrawBuffer(GL_FRONT);
-            glViewport(0, 0, raster_buffer_->width(), raster_buffer_->height());
-            glClearColor(0.0, 0.0, 0.0, 0.0);
-            glClear(GL_COLOR_BUFFER_BIT);
-            raster_buffer_->swapBuffers();
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-            glTranslatef(-1.0, -1.0, 0.0);
-            glScalef(2.0, 2.0, 2.0);
-            glDisable(GL_DEPTH_TEST);
-            glDisable(GL_LIGHTING);
-            glDisable(GL_CULL_FACE);
-            glDisable(GL_BLEND);
-#if defined(GL_ARB_fragment_program)
-#  ifdef _WIN32
-            if (glActiveTexture)
-#  endif
-              glActiveTexture(GL_TEXTURE0);
-#endif
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-            // rasterize widgets
-            vector<CM2WidgetHandle> widgets = cmap2_->widgets();
-            for (unsigned int i=0; i<widgets.size(); i++) {
-              raster_buffer_->bind(GL_FRONT);
-              widgets[i]->rasterize(*shader_factory_, raster_buffer_);
-              raster_buffer_->release(GL_FRONT);
-              raster_buffer_->swapBuffers();
-            }
-            raster_buffer_->deactivate();
-            raster_buffer_->set_use_texture_matrix(true);
-          }
-          //--------------------------------------------------------------
-          // opacity correction and quantization
-          cmap2_buffer_->activate();
-          glDrawBuffer(GL_FRONT);
-          glViewport(0, 0, cmap2_buffer_->width(), cmap2_buffer_->height());
-          glMatrixMode(GL_PROJECTION);
-          glLoadIdentity();
-          glMatrixMode(GL_MODELVIEW);
-          glLoadIdentity();
-          glTranslatef(-1.0, -1.0, 0.0);
-          glScalef(2.0, 2.0, 2.0);
-          glDisable(GL_DEPTH_TEST);
-          glDisable(GL_LIGHTING);
-          glDisable(GL_CULL_FACE);
-          FragmentProgramARB* shader =
-            raster_buffer_->need_shader() ? cmap2_shader_nv_ : cmap2_shader_ati_;
-          shader->bind();
-          double bp = mode_ == MODE_MIP ? 1.0 : 
-            tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
-          shader->setLocalParam(0, bp, imode_ ? 1.0/irate_ : 1.0/sampling_rate_,
-                                0.0, 0.0);
-#if defined(GL_ARB_fragment_program)
-#  ifdef _WIN32
-          if (glActiveTexture)
-#  endif // _WIN32
-            glActiveTexture(GL_TEXTURE0);
-#endif
-          glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-          raster_buffer_->bind(GL_FRONT);
-          glBegin(GL_QUADS);
-          {
-            glTexCoord2f( 0.0,  0.0);
-            glVertex2f( 0.0,  0.0);
-            glTexCoord2f(1.0,  0.0);
-            glVertex2f( 1.0,  0.0);
-            glTexCoord2f(1.0,  1.0);
-            glVertex2f( 1.0,  1.0);
-            glTexCoord2f( 0.0,  1.0);
-            glVertex2f( 0.0,  1.0);
-          }
-          glEnd();
-          raster_buffer_->release(GL_FRONT);
-          shader->release();
-          cmap2_buffer_->swapBuffers();
-          cmap2_buffer_->deactivate();
-        } else {
-          //--------------------------------------------------------------
-          // software rasterization
-          bool size_dirty =
-            cmap2_size_ != raster_array_.dim2()
-            || cmap2_size_/4 != raster_array_.dim1();
-          if(cmap2_dirty_ || size_dirty) {
-            if(size_dirty) {
-              raster_array_.resize(cmap2_size_/4, cmap2_size_, 4);
-              cmap2_array_.resize(cmap2_size_/4, cmap2_size_, 4);
-            }
-            // clear cmap
-            for(int i=0; i<raster_array_.dim1(); i++) {
-              for(int j=0; j<raster_array_.dim2(); j++) {
-                raster_array_(i,j,0) = 0.0;
-                raster_array_(i,j,1) = 0.0;
-                raster_array_(i,j,2) = 0.0;
-                raster_array_(i,j,3) = 0.0;
-              }
-            }
-            vector<CM2WidgetHandle>& widget = cmap2_->widgets();
-            // rasterize widgets
-            for(unsigned int i=0; i<widget.size(); i++) {
-              widget[i]->rasterize(raster_array_);
-            }
-            for(int i=0; i<raster_array_.dim1(); i++) {
-              for(int j=0; j<raster_array_.dim2(); j++) {
-                raster_array_(i,j,0) = Clamp(raster_array_(i,j,0), 0.0f, 1.0f);
-                raster_array_(i,j,1) = Clamp(raster_array_(i,j,1), 0.0f, 1.0f);
-                raster_array_(i,j,2) = Clamp(raster_array_(i,j,2), 0.0f, 1.0f);
-                raster_array_(i,j,3) = Clamp(raster_array_(i,j,3), 0.0f, 1.0f);
-              }
-            }
-          }
-          //--------------------------------------------------------------
-          // opacity correction
-          switch(mode_) {
-          case MODE_MIP:
-          case MODE_SLICE: {
-            for(int i=0; i<raster_array_.dim1(); i++) {
-              for(int j=0; j<raster_array_.dim2(); j++) {
-                double alpha = raster_array_(i,j,3);
-                cmap2_array_(i,j,0) = (unsigned char)(raster_array_(i,j,0)*alpha*255);
-                cmap2_array_(i,j,1) = (unsigned char)(raster_array_(i,j,1)*alpha*255);
-                cmap2_array_(i,j,2) = (unsigned char)(raster_array_(i,j,2)*alpha*255);
-                cmap2_array_(i,j,3) = (unsigned char)(alpha*255);
-              }
-            }
-          } break;
-          case MODE_OVER: {
-            double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
-            for(int i=0; i<raster_array_.dim1(); i++) {
-              for(int j=0; j<raster_array_.dim2(); j++) {
-                double alpha = raster_array_(i,j,3);
-                alpha = pow(alpha, bp);
-                alpha = 1.0-pow(1.0-alpha, imode_ ? 1.0/irate_ : 1.0/sampling_rate_);
-                cmap2_array_(i,j,0) = (unsigned char)(raster_array_(i,j,0)*alpha*255);
-                cmap2_array_(i,j,1) = (unsigned char)(raster_array_(i,j,1)*alpha*255);
-                cmap2_array_(i,j,2) = (unsigned char)(raster_array_(i,j,2)*alpha*255);
-                cmap2_array_(i,j,3) = (unsigned char)(alpha*255);
-              }
-            }
-          } break;
-          default:
-            break;
-          }
-          //--------------------------------------------------------------
-          // update texture
-          if(!cmap2_tex_ || size_dirty) {
-            if(glIsTexture(cmap2_tex_)) {
-              glDeleteTextures(1, &cmap2_tex_);
-            }
-            glGenTextures(1, &cmap2_tex_);
-            glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap2_array_.dim2(), cmap2_array_.dim1(),
-                         0, GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
-            glBindTexture(GL_TEXTURE_2D, 0);
-          } else {
-            glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cmap2_array_.dim2(), cmap2_array_.dim1(),
-                            GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
-            glBindTexture(GL_TEXTURE_2D, 0);
-          }      
-        }
-      }
-
-    CHECK_OPENGL_ERROR("");
-
+    CHECK_OPENGL_ERROR("TextureRenderer::build_colormap2()");
+    
     cmap2_dirty_ = false;
     alpha_dirty_ = false;
   }
@@ -998,12 +1073,12 @@ namespace SCIRun {
   {
 #if defined(GL_ARB_fragment_program)
     if (ShaderProgramARB::shaders_supported() && glActiveTexture)
-      {
+     {
         // bind texture to unit 2
         glActiveTexture(GL_TEXTURE2_ARB);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        if(!sw_raster_ && use_pbuffer_) {
-          cmap2_buffer_->bind(GL_FRONT);
+        if(cmap2_pbuffer_) {
+          cmap2_pbuffer_->bind(GL_FRONT);
         } else {
           glEnable(GL_TEXTURE_2D);
           glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
@@ -1061,15 +1136,12 @@ namespace SCIRun {
     if (ShaderProgramARB::shaders_supported() && glActiveTexture)
       {
         glActiveTexture(GL_TEXTURE2_ARB);
-        if (!sw_raster_ && use_pbuffer_)
-          {
-            cmap2_buffer_->release(GL_FRONT);
-          }
-        else
-          {
-            glDisable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, 0);
-          }
+        if (cmap2_pbuffer_) {
+	  cmap2_pbuffer_->release(GL_FRONT);
+	} else {
+	  glDisable(GL_TEXTURE_2D);
+	  glBindTexture(GL_TEXTURE_2D, 0);
+	}
         glActiveTexture(GL_TEXTURE1_ARB);
         glDisable(GL_TEXTURE_3D);
         glBindTexture(GL_TEXTURE_3D, 0);

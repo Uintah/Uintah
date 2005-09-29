@@ -29,51 +29,58 @@
 
 
 /*
- *  Plane.h: Directed plane
+ *  GeomStippleOccluded: 
+ *    Shows geometry w/ a stipple patter where it would
+ *    normally be occluded because of the depth test
+ *    Useful for widgets
  *
  *  Written by:
- *   David Weinstein
- *   Department of Computer Science
+ *   McKay Davis
+ *   SCI Institue
  *   University of Utah
- *   October 1994
+ *   September 2005
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2005 SCI Group
  */
-
-#ifndef SCI_project_Plane_h
-#define SCI_project_Plane_h 1
-
-#include <Core/Geometry/Vector.h>
+#include <Core/Geom/GeomStippleOccluded.h>
+#include <Core/Malloc/Allocator.h>
+#include <iostream>
 
 namespace SCIRun {
-  class Point;
-class Plane {
-   Vector n;
-   double d;
-public:
-    Plane(const Plane &copy);
-    Plane(const Point &p1, const Point &p2, const Point &p3);
-    Plane();
-    Plane(double a, double b, double c, double d);
-    ~Plane();
-    double eval_point(const Point &p) const;
-    void flip();
-    Point project(const Point& p) const;
-    Vector project(const Vector& v) const;
-    Vector normal() const;
 
-   // changes the plane ( n and d )
-   
-   void ChangePlane( const Point &p1, const Point &p2, const Point &p3 );
-   void ChangePlane( const Point &p1, const Vector &v); 
+Persistent* make_GeomStippleOccluded()
+{
+    return scinew GeomStippleOccluded(0,0);
+}
 
-   // returns true if the line  v*t+s  for -inf < t < inf intersects
-   // the plane.  if so, hit contains the point of intersection.
+PersistentTypeID GeomStippleOccluded::type_id("GeomStippleOccluded", "GeomSwitch", make_GeomStippleOccluded);
 
-   int Intersect( Point s, Vector v, Point& hit );
-   int Intersect( Point s, Vector v, double &t ) const;
-};
+GeomStippleOccluded::GeomStippleOccluded(GeomHandle obj, int state)
+: GeomSwitch(obj, state)
+{
+}
+
+GeomStippleOccluded::GeomStippleOccluded(const GeomStippleOccluded& copy)
+: GeomSwitch(copy.child_, copy.state)
+{
+}
+
+GeomObj* GeomStippleOccluded::clone()
+{
+    return scinew GeomStippleOccluded(*this);
+}
+
+
+#define GEOMSTIPPLEOCCLUDED_VERSION 1
+
+void GeomStippleOccluded::io(Piostream& stream)
+{
+    stream.begin_class("GeomStippleOccluded", GEOMSTIPPLEOCCLUDED_VERSION);
+    GeomContainer::io(stream);
+    Pio(stream, state);
+    stream.end_class();
+}
+
 
 } // End namespace SCIRun
 
-#endif

@@ -67,6 +67,25 @@ namespace SCIRun {
 "TEX c, v.w, texture[2], 1D; \n"
 #define VOL_TFLUP_2_1 \
 "TEX c, v, texture[2], 2D; \n"
+
+
+#define VOL_TFLUP_MASK_HEAD \
+"PARAM mask = program.local[3];\n" \
+"TEMP f; \n" \
+"TEMP m; \n" \
+"TEMP b; \n" \
+"MOV c, 0.0; \n" \
+"MUL v.x, v.w, g.w; \n" \
+"MOV m, mask; \n"
+
+#define VOL_TFLUP_2_1_MASK \
+"TEX b, v, texture[2], 2D; \n" \
+"MUL m, m, 0.5; \n" \
+"FRC f, m; \n" \
+"SGE f, f, 0.5; \n" \
+"MAD_SAT c, b, f, c; \n" \
+"ADD v.x, v.x, g.w; \n"
+
 #define VOL_TFLUP_2_4 \
 "TEX c, v.wxyz, texture[2], 2D; \n"
 
@@ -103,16 +122,16 @@ namespace SCIRun {
 "ABS_SAT n.w, n.w;		# two-sided lighting, n.w = abs(cos(angle))  \n" \
 "TEX w.x, t, texture[1], 3D;	# get the gradient magnitude \n" \
 "MAD_SAT w.xyzw, w.x, g.x, g.y;	# compute saturated weight based on current gradient \n" \
-"MUL w, w, k;       # w.x = weight*ka, w.y = weight*kd, w.z = weight*ks \n " \
-"SUB w.x, k.x, w.y; # w.x = ka - kd*weight \n " \
-"ADD w.x, w.x, k.y; # w.x = ka + kd - kd*weight \n " \
+"MUL w, w, k;       # w.x = weight*ka, w.y = weight*kd, w.z = weight*ks \n" \
+"SUB w.x, k.x, w.y; # w.x = ka - kd*weight \n" \
+"ADD w.x, w.x, k.y; # w.x = ka + kd - kd*weight \n" \
 "POW n.z, n.w, k.w;   # n.z = abs(cos(angle))^ns \n" \
 "MAD n.w, n.w, w.y, w.x; # n.w = abs(cos(angle))*kd+ka\n" \
 "MUL n.z, w.z, n.z; # n.z = weight*ks*abs(cos(angle))^ns \n"
 
 #define VOL_LIT_END \
-"MUL n.z, n.z, c.w;" \
-"MAD c.xyz, c.xyzz, n.w, n.z; \n"
+"MUL n.z, n.z, c.w;\n" \
+"MAD c.xyz, c.xyzz, n.w, n.z;\n"
 
 /*
 // "MAD n.w, n.z, k.z, n.w; \n"
@@ -144,9 +163,17 @@ namespace SCIRun {
 #define VOL_RASTER_BLEND \
 "MOV result.color, c; \n"
 
-VolShader::VolShader(int dim, int vsize, bool shading, bool frag, bool fog, int blend)
-  : dim_(dim), vsize_(vsize), shading_(shading), fog_(fog), blend_(blend),
-    frag_(frag), program_(0)
+
+VolShader::VolShader(int dim, int vsize, bool shading, 
+		     bool frag, bool fog, int blend, int cmaps)
+  : dim_(dim), 
+    vsize_(vsize), 
+    shading_(shading),
+    fog_(fog),
+    blend_(blend),
+    frag_(frag),
+    num_cmaps_(cmaps),
+    program_(0)
 {}
 
 VolShader::~VolShader()
@@ -170,6 +197,7 @@ VolShader::emit(string& s)
   if(vsize_!=1 && vsize_!=4) return true;
   if(blend_!=0 && blend_!=1 && blend_!=2) return true;
   ostringstream z;
+
   z << VOL_HEAD;
 
   // dim, vsize, and shading
@@ -204,8 +232,15 @@ VolShader::emit(string& s)
     if(shading_) {
       z << VOL_VLUP_2_1;
       z << VOL_LIT_BODY;
-      z << VOL_GLUP_2_4;
-      z << VOL_TFLUP_2_4;
+      if (num_cmaps_ > 1) {
+	z << VOL_GLUP_2_1;
+	z << VOL_TFLUP_MASK_HEAD;
+	for (int n = 0; n < num_cmaps_; ++n)
+	  z << VOL_TFLUP_2_1_MASK;
+      } else {
+	z << VOL_GLUP_2_4;
+	z << VOL_TFLUP_2_4;
+      }
       z << VOL_LIT_END;
     } else { // !shading_
       if(blend_) {
@@ -245,6 +280,7 @@ VolShader::emit(string& s)
   z << VOL_TAIL;
 
   s = z.str();
+  std::cerr << s << std::endl;
   return false;
 }
 
@@ -261,21 +297,21 @@ VolShaderFactory::~VolShaderFactory()
 }
 
 FragmentProgramARB*
-VolShaderFactory::shader(int dim, int vsize, bool shading, bool frag, bool fog,
-                         int blend)
+VolShaderFactory::shader(int dim, int vsize, bool shading, 
+			 bool frag, bool fog, int blend, int cmaps)
 {
   if(prev_shader_ >= 0) {
-    if(shader_[prev_shader_]->match(dim, vsize, shading, frag, fog, blend)) {
+    if(shader_[prev_shader_]->match(dim, vsize, shading, frag, fog, blend, cmaps)) {
       return shader_[prev_shader_]->program();
     }
   }
   for(unsigned int i=0; i<shader_.size(); i++) {
-    if(shader_[i]->match(dim, vsize, shading, frag, fog, blend)) {
+    if(shader_[i]->match(dim, vsize, shading, frag, fog, blend, cmaps)) {
       prev_shader_ = i;
       return shader_[i]->program();
     }
   }
-  VolShader* s = new VolShader(dim, vsize, shading, frag, fog, blend);
+  VolShader* s = new VolShader(dim, vsize, shading, frag, fog, blend, cmaps);
   if(s->create()) {
     delete s;
     return 0;

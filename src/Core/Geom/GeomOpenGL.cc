@@ -91,6 +91,7 @@
 #include <Core/Geom/GeomTexRectangle.h>
 #include <Core/Geom/ColorMapTex.h>
 #include <Core/Geom/HistogramTex.h>
+#include <Core/Geom/GeomStippleOccluded.h>
 #include <Core/Geom/GeomTorus.h>
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geom/GeomTri.h>
@@ -3716,6 +3717,29 @@ GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
     child_->draw(di, matl, time);
   }
 }
+
+
+void
+GeomStippleOccluded::draw(DrawInfoOpenGL* di, Material* matl, double time)
+{
+  if (state && child_.get_rep()) {
+    GLubyte pattern[33*4];
+    for (int y = 0; y < 33; ++y)
+      for (int x = 0; x < 4; ++x)
+	//    	pattern[y*4+x] = (y%2) ? 0xAA : 0x55;
+    	pattern[y*4+x] = (y%2) ? 0x22 : 0x88;
+    //pattern[y*4+x] = (y%4==0) ? 0x88 : ((y%4 == 2) ? 0x22 : 0);
+    
+    child_->draw(di, matl, time);
+    glDepthRange(0.05, 0.08);
+    glEnable(GL_POLYGON_STIPPLE);
+    glPolygonStipple(pattern);
+    child_->draw(di, matl, time);
+    glDepthRange(0.0, 1.0);
+    glDisable(GL_POLYGON_STIPPLE);
+  }
+}
+
 
 
 void

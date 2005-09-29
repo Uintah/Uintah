@@ -195,6 +195,11 @@ void VolumeSlicer::execute()
       }
     }
   }
+  vector<ColorMap2Handle> cmap2_array;
+  if (c2)
+    cmap2_array.push_back(cmap2);
+    
+    
 
   if (!c1 && !c2)
   {
@@ -244,7 +249,7 @@ void VolumeSlicer::execute()
 
   if( !slice_ren_ && gui_multi_level_.get() >= 1 ) { gui_color_changed_.set(1);}
   if(!slice_ren_) {
-    slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2,
+    slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2_array,
 				   int(card_mem_*1024*1024*0.8));
     slice_ren_->
       set_control_point(tex_->transform().unproject(control_widget_->
@@ -302,7 +307,7 @@ void VolumeSlicer::execute()
     }
     if (cmap2 != old_cmap2_)
     {
-      slice_ren_->set_colormap2(cmap2);
+      slice_ren_->set_colormap2(cmap2_array);
       old_cmap2_ = cmap2;
     }
   }

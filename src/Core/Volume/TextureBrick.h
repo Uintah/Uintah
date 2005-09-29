@@ -36,6 +36,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Ray.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Plane.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Volume/GLinfo.h>
 #include <Core/Thread/Mutex.h>
@@ -90,18 +91,26 @@ public:
                        vector<float>& vertex, vector<float>& texcoord,
                        vector<int>& size) const;
 
+  bool mask_polygons(vector<int> &size,
+		     vector<float> &vertex,
+		     vector<float> &texcoord,
+		     vector<int> &masks,
+		     vector<Plane> &planes);
+		     
+
   static const string type_name(int n = -1);
   virtual const TypeDescription* get_type_description(int n = -1) const;
 
 protected:
+  void compute_edge_rays(BBox &bbox, vector<Ray> &edges) const;
   int nx_, ny_, nz_; // axis sizes (pow2)
   int nc_; // number of components (1 or 2)
   int nb_[2]; // number of bytes per component
   int ox_, oy_, oz_; // offset into volume texture
   int mx_, my_, mz_; // data axis sizes (not necessarily pow2)
   BBox bbox_, tbox_; // bounding box and texcoord box
-  Ray edge_[12]; // bbox edges
-  Ray tex_edge_[12]; // tbox edges
+  vector<Ray> edge_; // bbox edges
+  vector<Ray> tex_edge_; // tbox edges
   bool dirty_;
 
 public:

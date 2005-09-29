@@ -62,7 +62,8 @@ static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
 #endif
 
 SliceRenderer::SliceRenderer(TextureHandle tex,
-                             ColorMapHandle cmap1, ColorMap2Handle cmap2,
+                             ColorMapHandle cmap1, 
+			     vector<ColorMap2Handle> &cmap2,
                              int tex_mem)
   : TextureRenderer(tex, cmap1, cmap2, tex_mem),
     control_point_(Point(0,0,0)),
@@ -124,7 +125,7 @@ SliceRenderer::set_outline_colors( vector< Color >& colors )
     outline_colors_.clear();
   }
 
-  for(int i = 0; i < colors.size(); i++){
+  for(unsigned int i = 0; i < colors.size(); i++){
     //reverse them
     outline_colors_[i] = colors[(colors.size() - 1) - i];
   }
@@ -169,7 +170,7 @@ SliceRenderer::draw_slice()
   const int nb0 = tex_->nb(0);
   const bool use_cmap1 = cmap1_.get_rep();
   const bool use_cmap2 =
-    cmap2_.get_rep() && nc == 2 && ShaderProgramARB::shaders_supported();
+    cmap2_.size() && nc == 2 && ShaderProgramARB::shaders_supported();
   if (!use_cmap1 && !use_cmap2)
   {
     tex_->unlock_bricks();
@@ -215,7 +216,7 @@ SliceRenderer::draw_slice()
   FragmentProgramARB* shader = 0;
   int blend_mode = 0;
   shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, false, true,
-                                       use_fog, blend_mode);
+                                       use_fog, blend_mode, cmap2_.size());
 
   if(shader) {
     if(!shader->valid()) {
@@ -379,7 +380,7 @@ SliceRenderer::multi_level_draw()
   const int nb0 = tex_->nb(0);
   const bool use_cmap1 = cmap1_.get_rep();
   const bool use_cmap2 =
-    cmap2_.get_rep() && nc == 2 && ShaderProgramARB::shaders_supported();
+    cmap2_.size() && nc == 2 && ShaderProgramARB::shaders_supported();
   if (!use_cmap1 && !use_cmap2)
   {
     tex_->unlock_bricks();
@@ -423,7 +424,7 @@ SliceRenderer::multi_level_draw()
   FragmentProgramARB* shader = 0;
   int blend_mode = 0;
   shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, false, true,
-                                       use_fog, blend_mode);
+                                       use_fog, blend_mode, cmap2_.size());
 
   if(shader) {
     if(!shader->valid()) {
