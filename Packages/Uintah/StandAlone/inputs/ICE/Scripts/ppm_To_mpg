@@ -21,7 +21,7 @@ endif
 
 #__________________________________
 #  Add labels to the existing plots
-/bin/rm *.a.ppm
+/bin/rm *.a.jpg
 convert -font helvetica -pointsize 14 -fill white -background black label:"$title0" Label0.ppm
 convert -font helvetica -pointsize 14 -fill white -background black label:"$title1" Label1.ppm
 convert -font helvetica -pointsize 14 -fill white -background black label:"$title2" Label2.ppm
@@ -41,9 +41,12 @@ foreach T (*.ppm)
  composite -gravity northeast -geometry +15+20  Label2.ppm $num.1.ppm $num.2.ppm
  composite -gravity south     -geometry +0+20   Label3.ppm $num.2.ppm $num.a.ppm
  /bin/rm $num.[0-3].ppm
+ convert $num.a.ppm $num.a.jpg      # ppms are huge compared to jpgs
 end 
+
+/bin/rm Label*.ppm
 #__________________________________
 # make the movies mpg
 echo "now making the movie"
 /bin/rm movie.mpeg
-ffmpeg -qscale 1 -s $size -r 5 -i %d.a.ppm -r 30 movie.mpeg
+ffmpeg -qscale 1 -s $size -r 5 -i %d.a.jpg -r 30 movie.mpeg
