@@ -305,12 +305,12 @@ namespace SCIRun {
   {
     TextureBrickHandle brick = bricks[bindex];
     int nc = use_cmap2?brick->nc():1;
-#if !defined(GL_ARB_fragment_program)
+#if !defined(GL_ARB_fragment_program) && !defined(GL_ATI_fragment_shader)
     nc = 1;
 #endif
     int idx[2];
     for(int c=0; c<nc; c++) {
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #  ifdef _WIN32
       if (glActiveTexture)
 #  endif
@@ -449,7 +449,7 @@ namespace SCIRun {
                             nx, ny, nz, 0, GL_RED,
                             brick->tex_type(), brick->tex_data(c));
           }
-#elif defined(GL_ARB_fragment_program)
+#elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
         if (ShaderProgramARB::shaders_supported())
           {
             unsigned int format = (nb == 1 ? GL_LUMINANCE : GL_RGBA);
@@ -523,7 +523,7 @@ namespace SCIRun {
       }
     }
     brick->set_dirty(false);
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #  ifdef _WIN32
     if (glActiveTexture)
 #  endif
@@ -545,7 +545,7 @@ namespace SCIRun {
       glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
     }
     if(buffer) {
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #  ifdef _WIN32
       if (glActiveTexture)
 #  endif
@@ -576,7 +576,7 @@ namespace SCIRun {
         for(int j=0; j<poly[i]; j++) {
           float* t = &texcoord[(k+j)*3];
           float* v = &vertex[(k+j)*3];
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #  ifdef _WIN32
           if (glMultiTexCoord3f) {
 #  endif // _WIN32
@@ -604,7 +604,7 @@ namespace SCIRun {
       k += poly[i];
     }
     if(buffer) {
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #  ifdef _WIN32
       if (glActiveTexture)
 #  endif // _WIN32
@@ -711,7 +711,7 @@ namespace SCIRun {
       default:
         break;
       }
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
       // This texture is not used if there is no shaders.
       // glColorTable is used instead.
       if (ShaderProgramARB::shaders_supported())
@@ -763,7 +763,7 @@ namespace SCIRun {
       glDisable(GL_LIGHTING);
       glDisable(GL_CULL_FACE);
       glDisable(GL_BLEND);
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #  ifdef _WIN32
       if (glActiveTexture)
 #  endif
@@ -812,7 +812,7 @@ namespace SCIRun {
 	tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
       shader->setLocalParam(0, bp, imode_ ? 1.0/irate_ : 1.0/sampling_rate_, 
 			    0.0, 0.0);
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #  ifdef _WIN32
       if (glActiveTexture)
 #  endif // _WIN32
@@ -1028,7 +1028,7 @@ namespace SCIRun {
                  GL_RGBA,
                  GL_FLOAT,
                  &(cmap1_array_(0, 0)));
-#elif defined(GL_ARB_fragment_program)
+#elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
     if (ShaderProgramARB::shaders_supported() && glActiveTexture)
       {
         glActiveTexture(GL_TEXTURE2_ARB);
@@ -1071,7 +1071,7 @@ namespace SCIRun {
   void
   TextureRenderer::bind_colormap2()
   {
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
     if (ShaderProgramARB::shaders_supported() && glActiveTexture)
      {
         // bind texture to unit 2
@@ -1098,7 +1098,7 @@ namespace SCIRun {
   {
 #if defined(GL_TEXTURE_COLOR_TABLE_SGI) && defined(__sgi)
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
-#elif defined(GL_ARB_fragment_program)
+#elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
     if (ShaderProgramARB::shaders_supported() && glActiveTexture)
       {
         // bind texture to unit 2
@@ -1132,7 +1132,7 @@ namespace SCIRun {
   void
   TextureRenderer::release_colormap2()
   {
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
     if (ShaderProgramARB::shaders_supported() && glActiveTexture)
       {
         glActiveTexture(GL_TEXTURE2_ARB);
