@@ -93,6 +93,15 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	moveToCursor $w
     }
 
+    method make_entry {w text v c} {
+	frame $w
+	label $w.l -text "$text"
+	pack $w.l -side left
+	entry $w.e -textvariable $v
+	bind $w.e <Return> $c
+	pack $w.e -side right
+    }
+    
     method buildTopLevel {} {
         set w .ui[modname]
 
@@ -178,7 +187,35 @@ itcl_class Uintah_Selectors_TimestepSelector {
         $can bind movable <ButtonRelease> "$this-c update_timeposition"
 
         pack $location.sl -fill x -expand yes -side left
-        pack $w.timeVis.position -fill x -expand yes -side top
+
+	iwidgets::labeledframe $w.timeVis.clock_pos \
+            -labeltext "Clock Position"
+	set location [$w.timeVis.clock_pos childsite]
+
+        set can [makeStickyLocator $location.sl \
+                     $this-clock_position_x $this-clock_position_y 100 100]
+        $can bind movable <ButtonRelease> "$this-c update_clock"
+
+        pack $location.sl -fill x -expand yes -side left
+
+        frame $w.timeVis.clock_vals
+        make_entry $w.timeVis.clock_vals.shr "Short Hand Res" \
+            $this-short_hand_res "$this-c update_clock"
+        make_entry $w.timeVis.clock_vals.lhr "Long Hand Res" \
+            $this-long_hand_res "$this-c update_clock"
+        make_entry $w.timeVis.clock_vals.sht "Short Hand Ticks" \
+            $this-short_hand_ticks "$this-c update_clock"
+        make_entry $w.timeVis.clock_vals.lht "Long Hand Ticks" \
+            $this-long_hand_ticks "$this-c update_clock"
+        make_entry $w.timeVis.clock_vals.cr "Clock Radius" \
+            $this-clock_radius "$this-c update_clock"
+        pack $w.timeVis.clock_vals.shr $w.timeVis.clock_vals.lhr \
+             $w.timeVis.clock_vals.sht $w.timeVis.clock_vals.lht \
+             $w.timeVis.clock_vals.cr \
+            -fill x -expand yes -side top
+
+        pack $w.timeVis.position $w.timeVis.clock_pos $w.timeVis.clock_vals \
+            -fill x -expand yes -side left
         
         # This is the clock
 #        frame $w.timeVis.clock -relief  -borderwidth 2

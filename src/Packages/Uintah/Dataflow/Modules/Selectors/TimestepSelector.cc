@@ -42,6 +42,7 @@ TimestepSelector::TimestepSelector(GuiContext* ctx) :
   timeval(ctx->subVar("timeval")),
   animate(ctx->subVar("animate")),
   tinc(ctx->subVar("tinc")),
+  in(0), out(0), ogeom(0), time_port(0),
   archiveH(0),
   def_color_r_(ctx->subVar("def-color-r")),
   def_color_g_(ctx->subVar("def-color-g")),
@@ -53,6 +54,7 @@ TimestepSelector::TimestepSelector(GuiContext* ctx) :
   timeposition_y(ctx->subVar("timeposition_y")),
   timestep_text(0),
   timestep_geom_id(0),
+  clock_geom_id(0),
   // Clock variables
   short_hand_res(ctx->subVar("short_hand_res")),
   long_hand_res(ctx->subVar("long_hand_res")),
@@ -173,13 +175,13 @@ TimestepSelector::execute()
 
   // Generate the timestep geometry for the viewer
   Point text_pos(timeposition_x.get(), timeposition_y.get(), 0.0);
-  double v, hour, min, sec, microseconds;
+  double hour, min, sec, microseconds;
 
-  v =  times[idx];
-  hour = trunc( v/3600.0);
-  min = trunc( v/60.0 - (hour * 60));
-  sec = trunc( v - (hour * 3600) - (min * 60));
-  microseconds = (v - sec - (hour * 3600) - (min * 60))*(1e3);
+  current_time =  times[idx];
+  hour = trunc( current_time/3600.0);
+  min = trunc( current_time/60.0 - (hour * 60));
+  sec = trunc( current_time - (hour * 3600) - (min * 60));
+  microseconds = (current_time - sec - (hour * 3600) - (min * 60))*(1e3);
   ostringstream oss;
   if(hour > 0 || min > 0 || sec > 0 ){
     oss.width(2);
@@ -200,7 +202,7 @@ TimestepSelector::execute()
   // These geom ids start at 1, so 0 is an unintialized value
   ogeom->delAll();
   timestep_geom_id = ogeom->addObj(sticky, "TimeStamp Sticky");
-  //  clock_geom_id = ogeom->addObj(createClock(v), "Clock Sticky");
+  clock_geom_id = ogeom->addObj(createClock(current_time), "Clock Sticky");
 
   tcl_status.set("Done");
   // DumpAllocator(default_allocator, "timedump.allocator");
@@ -215,6 +217,9 @@ TimestepSelector::tcl_command(GuiArgs& args, void* userdata) {
   }
   if(args[1] == "update_timeposition") {
     update_timeposition();
+  }
+  else if(args[1] == "update_clock") {
+    update_clock();
   }
   else {
     Module::tcl_command(args, userdata);
@@ -247,6 +252,19 @@ TimestepSelector::update_timeposition() {
     ogeom->flush();
   }
 }
+
+void
+TimestepSelector::update_clock() {
+  if (clock_geom_id != 0 && ogeom != 0) {
+    // These geom ids start at 1, so 0 is an unintialized value
+    if (timestep_geom_id != 0) {
+      ogeom->delObj(clock_geom_id);
+    }
+    clock_geom_id = ogeom->addObj(createClock(current_time), "Clock Sticky");
+    ogeom->flush();
+  }
+}
+
 
 // This is a callback made by the scheduler when the network finishes.
 // It should ask for a reexecute if the module and increment the

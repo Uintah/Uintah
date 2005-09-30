@@ -112,6 +112,7 @@ private:
   //  Clock variables
 
   int               clock_geom_id;
+  double            current_time;
   
   // Amount of time one revolution represents
   GuiDouble         short_hand_res;
@@ -126,6 +127,7 @@ private:
 
   // This will generate a clock given the number of seconds.
   GeomHandle createClock(double num_seconds);
+  void update_clock();
 }; //class 
 } // End namespace Uintah
 
