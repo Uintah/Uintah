@@ -195,7 +195,7 @@ SliceRenderer::draw_slice()
   
   //--------------------------------------------------------------------------
   // enable data texture unit 0
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -350,7 +350,7 @@ SliceRenderer::draw_slice()
   } else {
     release_colormap1();
   }
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -403,7 +403,7 @@ SliceRenderer::multi_level_draw()
   
   //--------------------------------------------------------------------------
   // enable data texture unit 0
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -721,7 +721,7 @@ SliceRenderer::multi_level_draw()
   } else {
     release_colormap1();
   }
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -935,7 +935,7 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
 #endif
 
 
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #ifdef _WIN32
     if (glActiveTexture) {
 #endif
@@ -967,7 +967,7 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
     //    glColor4f(0.8,0.8,0.8,1.0);
     draw_polygons_wireframe(vertex, texcoord, poly, true, use_fog, 0);
 
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #ifdef _WIN32
     if (glActiveTexture) {
 #endif
