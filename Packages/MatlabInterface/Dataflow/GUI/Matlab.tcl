@@ -57,11 +57,14 @@ itcl_class MatlabInterface_DataIO_Matlab {
         global $this-input-nrrd-type
         global $this-input-nrrd-array
 
+        global $this-input-string-name
+        
         # output matrix names
 
         global $this-output-matrix-name
         global $this-output-field-name
         global $this-output-nrrd-name
+        global $this-output-string-name
 
         # internet connection parameters
 
@@ -82,6 +85,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
         global $this-matrix-menu
         global $this-field-menu
         global $this-nrrd-menu
+        global $this-string-menu
 
         global $this-matlab-code-menu 
         global $this-matlab-output-menu 
@@ -96,6 +100,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
         set $this-numport-matrix 5
         set $this-numport-field 3
         set $this-numport-nrrd 3
+        set $this-numport-string 2
 
         # Setup the default translation options
         
@@ -114,6 +119,9 @@ itcl_class MatlabInterface_DataIO_Matlab {
         set $this-input-nrrd-array ""
         set $this-output-nrrd-name ""
         
+        set $this-input-string-name ""
+        set $this-output-string-name ""
+
         for {set x 0} {$x < [set $this-numport-matrix]} {incr x} {
             lappend $this-input-matrix-name [format "i%d" [expr $x+1]]
             lappend $this-input-matrix-type {same as data}
@@ -135,6 +143,11 @@ itcl_class MatlabInterface_DataIO_Matlab {
             lappend $this-output-nrrd-name [format "nrrd%d" [expr $x+1]]
         }
 
+        for {set x 0} {$x < [set $this-numport-string]} {incr x} {
+            lappend $this-input-string-name [format "string%d" [expr $x+1]]
+            lappend $this-output-string-name [format "string%d" [expr $x+1]]
+        }
+        
         # internet default settings
         
         set $this-inet-address ""
@@ -157,19 +170,19 @@ itcl_class MatlabInterface_DataIO_Matlab {
     }
 
     method backcompat_cmdTCL {a b c} {
-	global $this-cmdTCL
-	global $this-matlab-code
-	set $this-matlab-code [set $this-cmdTCL]
+        global $this-cmdTCL
+        global $this-matlab-code
+        set $this-matlab-code [set $this-cmdTCL]
     }
 
     method backcompat_hpTCL {a b c} {
-	global $this-hpTCL
-	global $this-inet-address
-	global $this-inet-port
-	set sp [lindex [split [set $this-hpTCL]] 0]
-	set spl [split $sp ":"]
-	set $this-inet-address [lindex $spl 0]
-	set $this-inet-port [lindex $spl 1]
+        global $this-hpTCL
+        global $this-inet-address
+        global $this-inet-port
+        set sp [lindex [split [set $this-hpTCL]] 0]
+        set spl [split $sp ":"]
+        set $this-inet-address [lindex $spl 0]
+        set $this-inet-port [lindex $spl 1]
     }
 
     method ui {} {
@@ -177,6 +190,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
         global $this-numport-matrix
         global $this-numport-field
         global $this-numport-nrrd
+        global $this-numport-string
 
         # input matrix names
 
@@ -191,15 +205,19 @@ itcl_class MatlabInterface_DataIO_Matlab {
         global $this-input-nrrd-type
         global $this-input-nrrd-array
 
+        global $this-input-string-name
+
         # output matrix names
 
         global $this-output-matrix-name
         global $this-output-field-name
         global $this-output-nrrd-name
+        global $this-output-string-name
 
         global $this-matrix-menu
         global $this-field-menu
         global $this-nrrd-menu
+        global $this-string-menu
         
         global $this-matlab-code-menu 
         global $this-matlab-output-menu 
@@ -243,6 +261,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
         $childframe.pw add -label "Matrices"
         $childframe.pw add -label "Fields" 
         $childframe.pw add -label "Nrrds" 
+        $childframe.pw add -label "Strings" 
         $childframe.pw select 0
 
         pack $childframe.pw -fill x -expand yes
@@ -250,10 +269,12 @@ itcl_class MatlabInterface_DataIO_Matlab {
         set matrix [$childframe.pw childsite 0]
         set field [$childframe.pw childsite 1]
         set nrrd [$childframe.pw childsite 2]
+        set string [$childframe.pw childsite 3]
 
         set $this-matrix-menu $matrix
         set $this-field-menu $field
         set $this-nrrd-menu $nrrd
+        set $this-string-menu $string
         
 
         frame $matrix.in
@@ -397,7 +418,39 @@ itcl_class MatlabInterface_DataIO_Matlab {
         }
 
 
-	iwidgets::labeledframe $w.inetframe -labeltext "MATLAB ENGINE ADDRESS"
+        frame $string.in
+        frame $string.out
+        pack  $string.in $string.out -side left -padx 5p -anchor n 
+
+        label $string.in.t -text "INPUT STRINGS"
+        pack  $string.in.t -side top -anchor n	
+	
+        label $string.out.t -text "OUTPUT STRINGS"
+        pack  $string.out.t -side top -anchor n	
+	
+        for {set x 0} {$x < [set $this-numport-string]} {incr x} {
+            
+            frame $string.in.m-$x
+            pack $string.in.m-$x -side top -fill x -expand yes -pady 4p
+
+            label $string.in.m-$x.label -text [format "string %d" [expr $x+1]]
+            entry $string.in.m-$x.name 
+            
+            $string.in.m-$x.name insert 0 [lindex [set $this-input-string-name] $x] 
+            
+            pack $string.in.m-$x.label $string.in.m-$x.name -side left
+
+            frame $string.out.m-$x
+            pack $string.out.m-$x -side top -fill x -expand yes -pady 4p
+            
+            label $string.out.m-$x.label -text [format "string %d" [expr $x+1]]
+            entry $string.out.m-$x.name 
+
+            $string.out.m-$x.name insert 0 [lindex [set $this-output-string-name] $x] 
+            pack $string.out.m-$x.label $string.out.m-$x.name -side left
+        }
+
+        iwidgets::labeledframe $w.inetframe -labeltext "MATLAB ENGINE ADDRESS"
         set childframe [$w.inetframe childsite]
         pack $w.inetframe -fill x
         frame $childframe.f1
@@ -434,7 +487,6 @@ itcl_class MatlabInterface_DataIO_Matlab {
         pack $childframe.f3.passwd -side left -padx 3p -pady 2p -anchor e
         pack $childframe.f4.sessionlabel -side left -padx 3p -pady 2p -anchor e
         pack $childframe.f4.session -side left -padx 3p -pady 2p -anchor e
-
 
 
         iwidgets::labeledframe $w.matlabframe -labeltext "MATLAB"
@@ -742,6 +794,9 @@ itcl_class MatlabInterface_DataIO_Matlab {
             set menu [set $this-matlab-output-menu]
             $menu.f1.display insert end $text
             set textwidget [$menu.f1.display component text]
+            if {[$textwidget compare 1000.end < end]} {
+               $textwidget delete 1.0 2.0
+            }
             $textwidget index end
             $menu.f1.display yview moveto 1
         }
@@ -783,6 +838,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
             set matrix [set $this-matrix-menu]
             set field [set $this-field-menu]
             set nrrd [set $this-nrrd-menu]
+            set string [set $this-string-menu]
             
             for {set x 0} {$x < [set $this-numport-matrix]} {incr x} {
                 lappend $this-input-matrix-name [$matrix.in.m-$x.name get] 
@@ -813,12 +869,19 @@ itcl_class MatlabInterface_DataIO_Matlab {
                 lappend $this-output-nrrd-name [$nrrd.out.m-$x.name get] 
             }
 
+            set $this-input-string-name ""
+            set $this-output-string-name ""
+            
+            for {set x 0} {$x < [set $this-numport-string]} {incr x} {
+                lappend $this-input-string-name [$string.in.m-$x.name get] 
+                lappend $this-output-string-name [$string.out.m-$x.name get] 
+            }
             
         }
     }
 
     method update_text {} {
-	set w .ui[modname]
+        set w .ui[modname]
         if {[winfo exists $w]} {
             global $this-matlab-code-menu
             set code [set $this-matlab-code-menu]
