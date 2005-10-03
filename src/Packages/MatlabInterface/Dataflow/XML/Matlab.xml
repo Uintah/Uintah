@@ -514,28 +514,36 @@
         <datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>fieldi1</name>
+        <name>field1</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>fieldi2</name>
+        <name>field2</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>fieldi3</name>
+        <name>field3</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>nnrdi1</name>
+        <name>nnrd1</name>
         <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
-        <name>nrrdi2</name>
+        <name>nrrd2</name>
         <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
-        <name>nrrdi3</name>
+        <name>nrrd3</name>
         <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>string1</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+      <port>
+        <name>string2</name>
+        <datatype>SCIRun::String</datatype>
       </port>
     </inputs>
     <outputs>
@@ -560,29 +568,37 @@
         <datatype>SCIRun::Matrix</datatype>
       </port>
      <port>
-        <name>fieldo1</name>
+        <name>field1</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>fieldo2</name>
+        <name>field2</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>fieldo3</name>
+        <name>field3</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>nnrdo1</name>
+        <name>nnrd1</name>
         <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
-        <name>nrrdo2</name>
+        <name>nrrd2</name>
         <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
-        <name>nrrdo3</name>
+        <name>nrrd3</name>
         <datatype>SCIRun::Nrrd</datatype>
       </port>
+      <port>
+        <name>string1</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+      <port>
+        <name>string2</name>
+        <datatype>SCIRun::String</datatype>
+      </port>      
     </outputs>
   </io>
   <gui>
