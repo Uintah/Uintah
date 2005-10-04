@@ -232,7 +232,7 @@ VolumeVisualizer::execute()
   }
 
     
-  bool c2 = !cmap2_.empty();
+  bool c2 = !cmap2.empty();
 
   if (c2)
   {
