@@ -72,13 +72,6 @@ public:
     grad[0] = T(0);
   }
 
-//   //! get second derivative at parametric coordinate
-//   template <class CellData>
-//   T derivate2(const vector<double> &coords, const CellData &cd) const
-//   {
-//     return (T)0;
-//   }
-
   //! get parametric coordinate for value within the element
   //! iterative solution...
   template <class CellData>
