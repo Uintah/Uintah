@@ -529,7 +529,7 @@ execute(FieldHandle seed_field_h,
 
       cf->resize_fdata();
 
-      if( d->value == 0 )
+      if( value == 0 )
 	cf->set_value((*data_iter), n1);
       else if( value == 1)
 	cf->set_value((double)abs(cc), n1);
