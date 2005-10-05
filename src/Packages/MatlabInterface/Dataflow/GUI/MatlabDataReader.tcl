@@ -127,8 +127,11 @@ itcl_class MatlabInterface_DataIO_MatlabDataReader {
 		}
 		[set $this-port].[set $this-portsel] configure -fg #FFFFFF
 
-		iwidgets::scrolledlistbox $childframe.listbox  -selectioncommand [format "%s ChooseMatrix" $this] -width 500p -height 300p
-		set $this-matriceslistbox $childframe.listbox
+    iwidgets::scrolledlistbox $childframe.listbox -selectmode single \
+          -selectioncommand "$this ChooseMatrix" \
+          -width 500p -height 300p \
+          -selectbackground #ffc0c0
+    set $this-matriceslistbox $childframe.listbox
 		set $this-matrixinfotexts [lindex [set $this-matrixinfotextslist] 0]
 		set $this-matrixnames [lindex [set $this-matrixnameslist] 0]
 		$childframe.listbox component listbox configure -listvariable $this-matrixinfotexts -selectmode browse
@@ -224,7 +227,14 @@ itcl_class MatlabInterface_DataIO_MatlabDataReader {
 	    		set initdir $env(PSE_DATA)
 		}
 	
-
+    if {[expr [file exists [set $this-filename-set]] == 0]} { 
+      set pathname [file dirname [set $this-filename-set]]
+      if {[expr [file exists $pathname] == 0]} {
+        set pathname $initdir
+      }
+      set $this-filename-set $pathname
+    }
+          
 		makeOpenFilebox \
 			-parent $w \
 			-filevar $this-filename-set \

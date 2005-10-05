@@ -117,8 +117,10 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 		}
 		[set $this-port].[set $this-portsel] configure -fg #FFFFFF
 
-		iwidgets::scrolledlistbox $childframe.listbox -selectmode single -selectioncommand "$this ChooseMatrix" -width 500p -height 300p
-		set $this-matriceslistbox $childframe.listbox
+    iwidgets::scrolledlistbox $childframe.listbox -selectmode single \
+          -selectioncommand "$this ChooseMatrix" \
+          -width 500p -height 300p \
+          -selectbackground #ffc0c0		set $this-matriceslistbox $childframe.listbox
 		$childframe.listbox component listbox configure -listvariable $this-matrixinfotexts
 		pack $childframe.listbox -fill both -expand yes
 
@@ -208,7 +210,14 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 	    		set initdir $env(PSE_DATA)
 		}
 	
-
+    if {[expr [file exists [set $this-filename-set]] == 0]} { 
+      set pathname [file dirname [set $this-filename-set]]
+      if {[expr [file exists $pathname] == 0]} {
+        set pathname $initdir
+      }
+      set $this-filename-set $pathname
+    }
+          
 		makeOpenFilebox \
 			-parent $w \
 			-filevar $this-filename-set \

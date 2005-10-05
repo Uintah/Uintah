@@ -67,32 +67,18 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/PointCloudMesh.h>
-#include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/CurveMesh.h>
-#include <Core/Datatypes/StructCurveField.h>
+#include <Core/Datatypes/ImageMesh.h>
 #include <Core/Datatypes/StructCurveMesh.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/MaskedTriSurfField.h>
 #include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Datatypes/QuadSurfField.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
-#include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/MaskedTetVolField.h>
 #include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/PrismVolField.h>
 #include <Core/Datatypes/PrismVolMesh.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/StructHexVolField.h>
 #include <Core/Datatypes/StructHexVolMesh.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/MaskedHexVolField.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/Bundle/Bundle.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
@@ -102,13 +88,27 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Util/ProgressReporter.h>
 
-#include <Dataflow/Ports/NrrdPort.h>
-
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 
+// The fields are needed here as we need them in the dynamically
+// compiled code. As no Fields are loaded yet, no typedescription
+// is available, so fill_compile_info does not work. Hence the functions
+// are explicitly included here.
 
- 
+#include <Core/Datatypes/ScanlineField.h>
+#include <Core/Datatypes/ImageField.h>
+#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/StructCurveField.h>
+#include <Core/Datatypes/HexVolField.h>
+#include <Core/Datatypes/StructHexVolField.h>
+#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/PrismVolField.h>
+#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/StructQuadSurfField.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/TriSurfField.h> 
 /*
  * CLASS DESCRIPTION
  * Class for dealing with the conversion of "matlab" objects into
@@ -132,414 +132,434 @@
  *
  */ 
 
+namespace MatlabIO {
 
- namespace MatlabIO {
- 
- class matlabconverter : public matfilebase {
- 
- public:
- 
-   // Exception class indicating an error in the converter
-   // class itself.
-   class matlabconverter_error : public matfileerror {};
- 
- public:
+class matlabconverter : public matfilebase {
 
-   // Functions for converting back and forward of 
-   // Compatible function:
-   // indicates whether a matrix can be converted, for this purpose only
-   // the header of the matlabmatrix is read into memory. The function also
-   // returns a inforamation string describing the object for use in the GUI
-   // This function returns a value 0 if the object cannot be converted and
-   // a positive number if it is compatible. The higher the number the more
-   // likely it is the users wants to read this matlab array. 
-   // The latter classification is based on some simple rules, like matrices
-   // are probably of the double format etc.
-   //
-   // mlArrayTO.... function:
-   // Convert a matlab array into a SCIRun object. If the object is compatible 
-   // this function should deal with the conversion. Depending on the information
-   // inthe object, fields like the property manager will be filled out.
-   //
-   // ....TOmlMatrix function:
-   // Convert a SCIRun object into a matlabarray. This version will produce a 
-   // pure numeric array, with only the numeric values, every other field will
-   // be stripped and does not reappear in matlab.
-   //
-   // ....TOmlArray function:
-   // Try to convert a SCIRun object as complete as possible into a matlab field
-   // properties are stored and as well axis names, units etc. This function will
-   // create a matlab structured arrazy, with each field representing different
-   // parts of the original SCIRun object.
-   //
-   // Limitations:
-   // PropertyManager:
-   // Current implementation only allows for translation of strings. Any numeric
-   // property like vectors and scalars are still ignored. (Limitation is partly
-   // due to inavailablity of type information in the property manager)
-   // Complex numbers:
-   // Currently only the real parts of complex numbers are taken. SCIRun does not
-   // support complex numbers!
-   // Nrrd key value pairs:
-   // These key value pairs are not supported yet, like in the rest of SCIRun
+  public:
 
-   // Constructor
-   matlabconverter();
+  // Exception class indicating an error in the converter
+  // class itself.
+  class matlabconverter_error : public matfileerror {};
 
-   // SET CONVERTER OPTIONS:
-   // Data type sets the export type of the data
-   void setdatatype(matlabarray::mitype dataformat);
-   // Index base sets the index base used for indices in for example geometries
-   void setindexbase(long indexbase);
-   // In a numericmatrix all data will be stripped and the data will be saved as
-   // a plain dense or sparse matrix.
-   void setdisabletranspose(bool dt);
-   void converttonumericmatrix();
-   void converttostructmatrix();
+
+  // Functions for converting back and forward of 
+  // Compatible function:
+  // indicates whether a matrix can be converted, for this purpose only
+  // the header of the matlabmatrix is read into memory. The function also
+  // returns a inforamation string describing the object for use in the GUI
+  // This function returns a value 0 if the object cannot be converted and
+  // a positive number if it is compatible. The higher the number the more
+  // likely it is the users wants to read this matlab array. 
+  // The latter classification is based on some simple rules, like matrices
+  // are probably of the double format etc.
+  //
+  // mlArrayTO.... function:
+  // Convert a matlab array into a SCIRun object. If the object is compatible 
+  // this function should deal with the conversion. Depending on the information
+  // inthe object, fields like the property manager will be filled out.
+  //
+  // ....TOmlMatrix function:
+  // Convert a SCIRun object into a matlabarray. This version will produce a 
+  // pure numeric array, with only the numeric values, every other field will
+  // be stripped and does not reappear in matlab.
+  //
+  // ....TOmlArray function:
+  // Try to convert a SCIRun object as complete as possible into a matlab field
+  // properties are stored and as well axis names, units etc. This function will
+  // create a matlab structured arrazy, with each field representing different
+  // parts of the original SCIRun object.
+  //
+  // Limitations:
+  // PropertyManager:
+  // Current implementation only allows for translation of strings. Any numeric
+  // property like vectors and scalars are still ignored. (Limitation is partly
+  // due to inavailablity of type information in the property manager)
+  // Complex numbers:
+  // Currently only the real parts of complex numbers are taken. SCIRun does not
+  // support complex numbers!
+  // Nrrd key value pairs:
+  // These key value pairs are not supported yet, like in the rest of SCIRun
+
+  // Constructor
+  matlabconverter();
+
+  // SET CONVERTER OPTIONS:
+  // Data type sets the export type of the data
+  inline void setdatatype(matlabarray::mitype dataformat);
+  // Index base sets the index base used for indices in for example geometries
+  inline void setindexbase(long indexbase);
+  // In a numericmatrix all data will be stripped and the data will be saved as
+  // a plain dense or sparse matrix.
+  inline void setdisabletranspose(bool dt);
+  // Set old tensor compatibility mode
+  inline void setoldcompressedtensor(bool oct);
+  inline void converttonumericmatrix();
+  inline void converttostructmatrix();
+
+  // The following options are for controlling the conversion to bundles
+  // In case prefernrrds is set, numerical data is converted into nrrds
+  // only sparse matrices become matrices. If prefermatrices is set, the
+  // behavior is opposite and only ND (N>2) matrices become nrrds.
+
+  inline void prefernrrds();
+  inline void prefermatrices();
+
+  // Since Bundles can be bundled, a choice needs to be made whether structured
+  // matlab matrices should become bundles or if possible should be converted into
+  // matrices/nrrds or fields. In case prefer bundles is set, a matlab structure will
+  // be decomposed into bundles of sub bundles and of nrrds and matrices. In case
+  // prefersciobjects is set each structure is read and if it can be translated into
+  // a sciobject it will be come a field, nrrd or matrix and only at the last
+  // resort it will be a bundle. Note that the comparison is done to see whether the
+  // required number of fields is there if so other fields are ignored.
+  inline void preferbundles();
+  inline void prefersciobjects();
+
+  // SCIRun STRINGS
+  long sciStringCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+  void mlArrayTOsciString(matlabarray &mlmat,SCIRun::StringHandle &scistr, SCIRun::ProgressReporter* pr);
+  void sciStringTOmlArray(SCIRun::StringHandle &scistr,matlabarray &mlmat, SCIRun::ProgressReporter* pr);
+
+  // SCIRun MATRICES
+  long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+  void mlArrayTOsciMatrix(matlabarray &mlmat,SCIRun::MatrixHandle &scimat, SCIRun::ProgressReporter* pr);
+  void sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat, SCIRun::ProgressReporter* pr);
+
+  // SCIRun NRRDS
+  long sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+  void mlArrayTOsciNrrdData(matlabarray &mlmat,SCIRun::NrrdDataHandle &scinrrd, SCIRun::ProgressReporter* pr);
+  void sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat, SCIRun::ProgressReporter* pr);
+
+  // SCIRun BUNDLES 
+  long sciBundleCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+  void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle, SCIRun::ProgressReporter* pr);
+  void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::ProgressReporter* pr);
+
+  // Reading of Matlab colormaps
+  long sciColorMapCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+  void mlArrayTOsciColorMap(matlabarray &mlmat,SCIRun::ColorMapHandle &scinrrd, SCIRun::ProgressReporter* pr);
+
+
+  // The reference status of the reader/compatible prs has been changed.
+  // So I can change the contents without affecting the matrices at the input
+  // This is a cleaner solution. 
+
+  // SCIRun Fields/Meshes
+  long sciFieldCompatible(matlabarray mlarray,std::string &infostring, SCIRun::ProgressReporter* pr);
+
+  // DYNAMICALLY COMPILING CONVERTERS
+  // Note: add the pointer from the Module which makes the call, so the user sees
+  // the ouput of the dynamic compilation phase, for example
+  //   matlabconverter translate;
+  //   translate.sciFieldTOmlArray(scifield,mlarray,this);
+  // ALL the dynamic code is in the matlabconverter class it just needs a pointer to the pr
+  // class.
+
+  void mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle &scifield,SCIRun::ProgressReporter* pr);
+  void sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarray &mlarray,SCIRun::ProgressReporter* pr);
+
+  // SUPPORT FUNCTIONS
+  // Test whether the proposed name of a matlab matrix is valid.
+
+  bool	isvalidmatrixname(std::string name);
+  void	setpostmsg(bool val);
+
+  private:
+  // FUNCTIONS FOR COMMUNICATING WITH THE USER
+  void	postmsg(SCIRun::ProgressReporter* pr, std::string msg);
+  bool	postmsg_;
+
+  // THE REST OF THE FUNCTIONS ARE PRIVATE
+  private:
+  // FUNCTION FOR TRANSLATING THE CONTENTS OF A MATRIX (THE NUMERIC PART OF THE DATA)
+  void sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarray &mlmat);
+
+  // FUNCTIONS FOR TRANSLATING THE PROPERTY MANAGER
+  // add the field "property" in a matlabarray to a scirun property manager
+  void mlPropertyTOsciProperty(matlabarray &ma,SCIRun::PropertyManager *handle);
+  // the other way around
+  void sciPropertyTOmlProperty(SCIRun::PropertyManager *handle,matlabarray &ma);
+
+
+  // FUNCTIONS FOR TRANSLATING THE CONTENTS OF A NRRD (THE NUMERIC PART OF THE DATA)
+  void sciNrrdDataTOmlMatrix(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat);
+  unsigned int convertmitype(matlabarray::mitype type);
+  matlabarray::mitype convertnrrdtype(int type);
+
+  // ALTHOUGH FIELDSTRUCT IS PUBLIC DO NOT USE IT, 
+  // IT NEEDS TO BE PUBLIC FOR THE DYNAMIC COMPILER
+  // FRIENDS STATEMENTS WITH TEMPLATED CLASSES SEEM 
+  // TO COMPLAIN LOT, HENCE I MADE THEM JUST PUBLIC
+  public:
+
+  struct fieldstruct
+  {
+    // unstructured mesh submatrices
+    matlabarray node; 
+    matlabarray edge;
+    matlabarray face;
+    matlabarray cell;
+
+    // structured mesh submatrices
+    matlabarray x;
+    matlabarray y;
+    matlabarray z;
+
+    // structured regular meshes
+
+    matlabarray dims;
+    matlabarray transform;
+
+    // field information
+    matlabarray scalarfield;
+    matlabarray vectorfield;
+    matlabarray tensorfield;
+
+    matlabarray field;
+    matlabarray fieldlocation;
+    matlabarray fieldtype;
+
+    // element definition (to be extended for more mesh classes)
+    matlabarray meshclass;
+
+    // In SCIRun field can have a name, so this is a simple way to add that
+    matlabarray name;
+
+    // Property matrix to set properties
+    matlabarray property;
+
+    // Interpolation matrices as used in CVRTI
+    matlabarray interp;
+    matlabarray mask;
+
+    int  basis_order;
+  };
+
+  private:
+
+  // CONVERTER OPTIONS:
+
+  // Matrix should be translated as a numeric matrix directly
+  bool numericarray_;
+  // Specify the indexbase for the output
+  long indexbase_;
+  // Specify the data of output data
+  matlabarray::mitype datatype_;
+  // Disable transposing matrices from Fortran format to C++ format
+  bool disable_transpose_;
+  // Old Compressed Tensor: previously we used a different ordering of 
+  // the tensor, the new ordering is inline with the rest of SCIRun
+  bool old_compressed_tensor_;
+
+  // Options for translation of structures into bundled objects
+  bool prefer_nrrds;
+  bool prefer_bundles;
    
-   // The following options are for controlling the conversion to bundles
-   // In case prefernrrds is set, numerical data is converted into nrrds
-   // only sparse matrices become matrices. If prefermatrices is set, the
-   // behavior is opposite and only ND (N>2) matrices become nrrds.
-   
-   void prefernrrds();
-   void prefermatrices();
-   
-   // Since Bundles can be bundled, a choice needs to be made whether structured
-   // matlab matrices should become bundles or if possible should be converted into
-   // matrices/nrrds or fields. In case prefer bundles is set, a matlab structure will
-   // be decomposed into bundles of sub bundles and of nrrds and matrices. In case
-   // prefersciobjects is set each structure is read and if it can be translated into
-   // a sciobject it will be come a field, nrrd or matrix and only at the last
-   // resort it will be a bundle. Note that the comparison is done to see whether the
-   // required number of fields is there if so other fields are ignored.
-   void preferbundles();
-   void prefersciobjects();
+  // FUNCTIONS FOR CONVERTING FIELDS:
 
-   // SCIRun STRINGS
-   long sciStringCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
-   void mlArrayTOsciString(matlabarray &mlmat,SCIRun::StringHandle &scistr, SCIRun::ProgressReporter* pr);
-   void sciStringTOmlArray(SCIRun::StringHandle &scistr,matlabarray &mlmat, SCIRun::ProgressReporter* pr);
+  // analyse a matlab matrix and sort out all the different fieldname
+  // combinations
+  fieldstruct analyzefieldstruct(matlabarray &ma);
 
-   // SCIRun MATRICES
-   long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
-   void mlArrayTOsciMatrix(matlabarray &mlmat,SCIRun::MatrixHandle &scimat, SCIRun::ProgressReporter* pr);
-   void sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat, SCIRun::ProgressReporter* pr);
+  // These need to be public for the dynamic compilation, but do not use these
 
-   // SCIRun NRRDS
-   long sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
-   void mlArrayTOsciNrrdData(matlabarray &mlmat,SCIRun::NrrdDataHandle &scinrrd, SCIRun::ProgressReporter* pr);
-   void sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat, SCIRun::ProgressReporter* pr);
-
-   // SCIRun Bundles (Currently contained in the CardioWave Package)
-   long sciBundleCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
-   void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle, SCIRun::ProgressReporter* pr);
-   void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::ProgressReporter* pr);
-
-    // Reading of Matlab colormaps
-   long sciColorMapCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
-   void mlArrayTOsciColorMap(matlabarray &mlmat,SCIRun::ColorMapHandle &scinrrd, SCIRun::ProgressReporter* pr);
+  inline void uncompressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p);
+  inline void compressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p);	
 
 
-   // The reference status of the reader/compatible prs has been changed.
-   // So I can change the contents without affecting the matrices at the input
-   // This is a cleaner solution. 
+  // make sure the dynamic code has access
+  // Do NOT use any of the folowing functions, they are for dynamic compiled code only
 
-   // SCIRun Fields/Meshes
-   long sciFieldCompatible(matlabarray mlarray,std::string &infostring, SCIRun::ProgressReporter* pr);
+  public:
 
-   // DYNAMICALLY COMPILING CONVERTERS
-   // Note: add the pointer from the Module which makes the call, so the user sees
-   // the ouput of the dynamic compilation phase, for example
-   //   matlabconverter translate;
-   //   translate.sciFieldTOmlArray(scifield,mlarray,this);
-   // ALL the dynamic code is in the matlabconverter class it just needs a pointer to the pr
-   // class.
-	
-   void mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle &scifield,SCIRun::ProgressReporter* pr);
-   void sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarray &mlarray,SCIRun::ProgressReporter* pr);
+  template <class T>		
+  bool addfield(T &fdata,matlabarray mlarray);
+  template <class T>		
+  bool addfield(std::vector<T> &fdata,matlabarray mlarray);
+  template <class T>		
+  bool addfield(SCIRun::FData2d<T> &fdata,matlabarray mlarray);
+  template <class T>		
+  bool addfield(SCIRun::FData3d<T> &fdata,matlabarray mlarray);
 
+  bool addfield(std::vector<SCIRun::Vector> &fdata,matlabarray mlarray);
+  bool addfield(SCIRun::FData2d<SCIRun::Vector> &fdata,matlabarray mlarray);
+  bool addfield(SCIRun::FData3d<SCIRun::Vector> &fdata,matlabarray mlarray);
+  bool addfield(std::vector<SCIRun::Tensor> &fdata,matlabarray mlarray);
+  bool addfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarray mlarray);
+  bool addfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarray mlarray);
 
-   // SUPPORT FUNCTIONS
-   // Test whether the proposed name of a matlab matrix is valid.
+  template<class MESH>	
+  bool createmesh(SCIRun::LockingHandle<MESH> &meshH,fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::PointCloudMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::CurveMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::TriSurfMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::QuadSurfMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::TetVolMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::HexVolMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::PrismVolMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::ScanlineMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::ImageMesh> &mesH, fieldstruct &fs);
+  bool createmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh> &mesH, fieldstruct &fs);
 
-   bool	isvalidmatrixname(std::string name);
-   void	setpostmsg(bool val);
+  template<class MESH>	
+  void addnodes(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
+  template<class MESH>	
+  void addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
+  template<class MESH>	
+  void addfaces(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
+  template<class MESH>	
+  void addcells(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
 
- private:
-   // FUNCTIONS FOR COMMUNICATING WITH THE USER
-   void	postmsg(SCIRun::ProgressReporter* pr, std::string msg);
-   bool	postmsg_;
+  // Functions for dynamic translation on the WRITER
+  // At least as far as you can call it dynamic compilation ....
+  // The difference between the meshes is to big to have one polymorphic class
+  // dealing with them all. 
 
-   // THE REST OF THE FUNCTIONS ARE PRIVATE
- private:
-   // FUNCTION FOR TRANSLATING THE CONTENTS OF A MATRIX (THE NUMERIC PART OF THE DATA)
-   void sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarray &mlmat);
-
-   // FUNCTIONS FOR TRANSLATING THE PROPERTY MANAGER
-   // add the field "property" in a matlabarray to a scirun property manager
-   void mlPropertyTOsciProperty(matlabarray &ma,SCIRun::PropertyManager *handle);
-   // the other way around
-   void sciPropertyTOmlProperty(SCIRun::PropertyManager *handle,matlabarray &ma);
-
-
-   // FUNCTIONS FOR TRANSLATING THE CONTENTS OF A NRRD (THE NUMERIC PART OF THE DATA)
-   void sciNrrdDataTOmlMatrix(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat);
-   unsigned int convertmitype(matlabarray::mitype type);
-   matlabarray::mitype convertnrrdtype(int type);
-
-   // ALTHOUGH FIELDSTRUCT IS PUBLIC DO NOT USE IT, IT NEEDS TO BE PUBLIC FOR THE DYNAMIC COMPILER
-   // FRIENDS STATEMENTS WITH TEMPLATED CLASSES SEEM TO COMPLAIN LOT, HENCE I MADE THEM JUST PUBLIC
- public:
-
-   struct fieldstruct
-   {
-     // unstructured mesh submatrices
-     matlabarray node; 
-     matlabarray edge;
-     matlabarray face;
-     matlabarray cell;
-		
-     // structured mesh submatrices
-     matlabarray x;
-     matlabarray y;
-     matlabarray z;
-		
-     // structured regular meshes
-		
-     matlabarray dims;
-     matlabarray transform;
-		
-     // field information
-     matlabarray scalarfield;
-     matlabarray vectorfield;
-     matlabarray tensorfield;
-
-     matlabarray field;
-     matlabarray fieldlocation;
-     matlabarray fieldtype;
-		
-     // element definition (to be extended for more mesh classes)
-     matlabarray meshclass;
-		
-     // In SCIRun field can have a name, so this is a simple way to add that
-     matlabarray name;
-		
-     // Property matrix to set properties
-     matlabarray property;
-		
-     // Interpolation matrices as used in CVRTI
-     matlabarray interp;
-     matlabarray mask;
-    
-     int  basis_order;
-   };
+  void mladdmeshclass(std::string meshclass,matlabarray mlarray);	
+  template<class FIELD>	
+  void mladdfieldat(FIELD *scifield,matlabarray mlarray);
 
 
+  // Converters for each mesh class. These converters are precompiled as they all need different
+  // functions for conversion. As soon as a function is not a template it will be precompiled
+  // Since geometry converters are individually tuned, they cannot be templated. The current
+  // dynamic compilation model does not account for this
 
- private:
+  template<class MESH>    
+  bool mladdmesh(SCIRun::LockingHandle<MESH> meshH, matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::PointCloudMesh> meshH,matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::CurveMesh> meshH,matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::TriSurfMesh> meshH,matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::QuadSurfMesh> meshH,matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::TetVolMesh>meshH,matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::HexVolMesh> meshH,matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::PrismVolMesh>meshH,matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh> meshH,matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> meshH,matlabarray mlarray);							
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh> meshH,matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::ScanlineMesh> meshH,matlabarray mlarray);
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::ImageMesh> meshH,matlabarray mlarray);							
+  bool mladdmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh> meshH,matlabarray mlarray);	
 
-   // CONVERTER OPTIONS:
-	
-   // Matrix should be translated as a numeric matrix directly
-   bool numericarray_;
-   // Specify the indexbase for the output
-   long indexbase_;
-   // Specify the data of output data
-   matlabarray::mitype datatype_;
-   // Disable transposing matrices from Fortran format to C++ format
-   bool disable_transpose_;
-	
-   // Options for translation of structures into bundled objects
-   bool prefer_nrrds;
-   bool prefer_bundles;
-     
-   // FUNCTIONS FOR CONVERTING FIELDS:
-	
-   // analyse a matlab matrix and sort out all the different fieldname
-   // combinations
-   fieldstruct analyzefieldstruct(matlabarray &ma);
+  // Templates for the mesh generation																
+  template<class MESH>    
+  void mladdnodesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
+  template<class MESH>    
+  void mladdedgesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
+  template<class MESH>    
+  void mladdfacesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
+  template<class MESH>    
+  void mladdcellsfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
+  template<class MESH>    
+  void mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
 
-   // These need to be public for the dynamic compilation, but do not use these
-	
-   inline void uncompressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p);
-   inline void compressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p);	
-	
-	
-   // make sure the dynamic code has access
-   // Do NOT use any of the folowing functions, they are for dynamic compiled code only
+  void mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructCurveMesh> meshH,matlabarray mlarray);
+  void mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> meshH,matlabarray mlarray);
+  void mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructHexVolMesh> meshH,matlabarray mlarray);							
 
- public:
+  // Converters for the different field classes in SCIRun
+  // Some are precompiled, others are compiled on the fly
+  // The Tensor and Vector ones are precompiled and are currently not templated						
+  template<class T>		
+  bool mladdfield(std::vector<T> &fdata,matlabarray mlarray);
+  bool mladdfield(std::vector<SCIRun::Vector> &fdata,matlabarray mlarray);
+  bool mladdfield(std::vector<SCIRun::Tensor> &fdata,matlabarray mlarray);
+  template<class T>		
+  bool mladdfield(SCIRun::FData2d<T> &fdata,matlabarray mlarray);		
+  bool mladdfield(SCIRun::FData2d<SCIRun::Vector> &fdata,matlabarray mlarray);	
+  bool mladdfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarray mlarray);	
+  template<class T>		
+  bool mladdfield(SCIRun::FData3d<T> &fdata,matlabarray mlarray);							
+  bool mladdfield(SCIRun::FData3d<SCIRun::Vector> &fdata,matlabarray mlarray);	
+  bool mladdfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarray mlarray);	
 
-   template <class T>		bool addfield(T &fdata,matlabarray mlarray);
-   template <class T>		bool addfield(std::vector<T> &fdata,matlabarray mlarray);
-   template <class T>		bool addfield(SCIRun::FData2d<T> &fdata,matlabarray mlarray);
-   template <class T>		bool addfield(SCIRun::FData3d<T> &fdata,matlabarray mlarray);
-
-   bool addfield(std::vector<SCIRun::Vector> &fdata,matlabarray mlarray);
-   bool addfield(SCIRun::FData2d<SCIRun::Vector> &fdata,matlabarray mlarray);
-   bool addfield(SCIRun::FData3d<SCIRun::Vector> &fdata,matlabarray mlarray);
-   bool addfield(std::vector<SCIRun::Tensor> &fdata,matlabarray mlarray);
-   bool addfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarray mlarray);
-   bool addfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarray mlarray);
-
-   template <class FIELD>       bool addmask(FIELD* scifield,fieldstruct &fs);
-   template <class T>           bool addmask(SCIRun::MaskedHexVolField<T>* field, fieldstruct &fs);
-   template <class T>           bool addmask(SCIRun::MaskedTetVolField<T>* field, fieldstruct &fs);
-   template <class T>           bool addmask(SCIRun::MaskedLatVolField<T>* field, fieldstruct &fs);
-   template <class T>           bool addmask(SCIRun::MaskedTriSurfField<T>* field, fieldstruct &fs);
-
-   template<class MESH>	bool createmesh(SCIRun::LockingHandle<MESH> &meshH,fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::PointCloudMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::CurveMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::TriSurfMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::QuadSurfMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::TetVolMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::HexVolMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::PrismVolMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::ScanlineMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::ImageMesh> &mesH, fieldstruct &fs);
-   bool createmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh> &mesH, fieldstruct &fs);
-
-   template<class MESH>	void addnodes(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
-   template<class MESH>	void addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
-   template<class MESH>	void addfaces(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
-   template<class MESH>	void addcells(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
-  
-							
-
-   // Functions for dynamic translation on the WRITER
-   // At least as far as you can call it dynamic compilation ....
-   // The difference between the meshes is to big to have one polymorphic class
-   // dealing with them all. 
-	
-   void mladdmeshclass(std::string meshclass,matlabarray mlarray);	
-   template<class FIELD>	void mladdfieldat(FIELD *scifield,matlabarray mlarray);
-
-   template<class FIELD>        void mladdmask(FIELD *scifield, matlabarray mlarray);
-   template<class T>            void mladdmask(SCIRun::MaskedHexVolField<T>* scifield,  matlabarray mlarray);
-   template<class T>            void mladdmask(SCIRun::MaskedTetVolField<T>* scifield,  matlabarray mlarray);
-   template<class T>            void mladdmask(SCIRun::MaskedLatVolField<T>* scifield,  matlabarray mlarray);
-   template<class T>            void mladdmask(SCIRun::MaskedTriSurfField<T>* scifield, matlabarray mlarray);
-
-   // Converters for each mesh class. These converters are precompiled as they all need different
-   // functions for conversion. As soon as a function is not a template it will be precompiled
-   // Since geometry converters are individually tuned, they cannot be templated. The current
-   // dynamic compilation model does not account for this
-	
-   template<class MESH>    bool mladdmesh(SCIRun::LockingHandle<MESH> meshH, matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::PointCloudMesh> meshH,matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::CurveMesh> meshH,matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::TriSurfMesh> meshH,matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::QuadSurfMesh> meshH,matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::TetVolMesh>meshH,matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::HexVolMesh> meshH,matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::PrismVolMesh>meshH,matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh> meshH,matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> meshH,matlabarray mlarray);							
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh> meshH,matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::ScanlineMesh> meshH,matlabarray mlarray);
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::ImageMesh> meshH,matlabarray mlarray);							
-   bool mladdmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh> meshH,matlabarray mlarray);	
-	
-   // Templates for the mesh generation																
-   template<class MESH>    void mladdnodesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
-   template<class MESH>    void mladdedgesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
-   template<class MESH>    void mladdfacesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
-   template<class MESH>    void mladdcellsfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
-   template<class MESH>    void mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
-	
-   void mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructCurveMesh> meshH,matlabarray mlarray);
-   void mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> meshH,matlabarray mlarray);
-   void mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructHexVolMesh> meshH,matlabarray mlarray);							
-	
-   // Converters for the different field classes in SCIRun
-   // Some are precompiled, others are compiled on the fly
-   // The Tensor and Vector ones are precompiled and are currently not templated						
-   template<class T>		bool mladdfield(std::vector<T> &fdata,matlabarray mlarray);
-   bool mladdfield(std::vector<SCIRun::Vector> &fdata,matlabarray mlarray);
-   bool mladdfield(std::vector<SCIRun::Tensor> &fdata,matlabarray mlarray);
-   template<class T>		bool mladdfield(SCIRun::FData2d<T> &fdata,matlabarray mlarray);		
-   bool mladdfield(SCIRun::FData2d<SCIRun::Vector> &fdata,matlabarray mlarray);	
-   bool mladdfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarray mlarray);	
-   template<class T>		bool mladdfield(SCIRun::FData3d<T> &fdata,matlabarray mlarray);							
-   bool mladdfield(SCIRun::FData3d<SCIRun::Vector> &fdata,matlabarray mlarray);	
-   bool mladdfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarray mlarray);	
-
- };
+};
  
- ////////////// HERE CODE FOR DYNAMIC FIELDWRITER STARTS ///////////////
+
+inline void matlabconverter::setdatatype(matlabarray::mitype dataformat)
+{
+  datatype_ = dataformat;
+}
+
+inline void matlabconverter::setindexbase(long indexbase)
+{
+  indexbase_ = indexbase;
+}
+
+inline void matlabconverter::converttonumericmatrix()
+{
+  numericarray_ = true;
+}
+
+inline void matlabconverter::converttostructmatrix()
+{
+  numericarray_ = false;
+}
+
+inline void matlabconverter::setdisabletranspose(bool dt)
+{
+  disable_transpose_ = dt;
+}
+
+inline void matlabconverter::setoldcompressedtensor(bool oct)
+{
+  old_compressed_tensor_ = oct;
+}
+
+inline void matlabconverter::prefernrrds()
+{
+  prefer_nrrds = true;
+}
+
+inline void matlabconverter::prefermatrices()
+{
+  prefer_nrrds = false;
+}
+
+inline void matlabconverter::preferbundles()
+{
+  prefer_bundles = true;
+}
+
+inline void matlabconverter::prefersciobjects()
+{
+  prefer_bundles = false;
+}
+ 
+////////////// HERE CODE FOR DYNAMIC FIELDWRITER STARTS ///////////////
 
 // Default function for mladdmesh, in case no suitable converter is found,
 // this one will inform the code that none is available. The return(false) will return in an
 // error message for the user
-template<class MESH>   bool matlabconverter::mladdmesh(SCIRun::LockingHandle<MESH> meshH, matlabarray mlarray)
+template<class MESH>   
+bool matlabconverter::mladdmesh(SCIRun::LockingHandle<MESH> meshH, matlabarray mlarray)
 {
 	return(false);
 }
  
 // Check all possible positions of the field data
-template<class FIELD> void matlabconverter::mladdfieldat(FIELD *scifield,matlabarray mlarray)
+template<class FIELD> 
+void matlabconverter::mladdfieldat(FIELD *scifield,matlabarray mlarray)
 {
-    matlabarray fieldat;
-    if (scifield->basis_order() == 1) fieldat.createstringarray("node");
-    if (scifield->basis_order() == 0) fieldat.createstringarray("cell");
-    if (scifield->basis_order() == -1) fieldat.createstringarray("none");
-    if (scifield->basis_order() > 1) fieldat.createstringarray("higher order");
-    mlarray.setfield(0,"fieldat",fieldat);
-    
-    matlabarray basisorder;
-    basisorder.createdoublescalar(static_cast<double>(scifield->basis_order()));
-    mlarray.setfield(0,"basisorder",basisorder);
+  matlabarray fieldat;
+  if (scifield->basis_order() == 1) fieldat.createstringarray("node");
+  if (scifield->basis_order() == 0) fieldat.createstringarray("cell");
+  if (scifield->basis_order() == -1) fieldat.createstringarray("none");
+  if (scifield->basis_order() > 1) fieldat.createstringarray("higher order");
+  mlarray.setfield(0,"fieldat",fieldat);
+  
+  matlabarray basisorder;
+  basisorder.createdoublescalar(static_cast<double>(scifield->basis_order()));
+  mlarray.setfield(0,"basisorder",basisorder);
 }
-
-template<class FIELD>        void matlabconverter::mladdmask(FIELD *scifield,matlabarray mlarray)
-{
-  // do nothing by default, i.e. when there is no mask
-}
-
-template<class T>            void matlabconverter::mladdmask(SCIRun::MaskedHexVolField<T>* scifield, matlabarray mlarray)
-{
-    matlabarray mask;
-    std::vector<char>& maskvec = scifield->mask();
-    mask.createdensearray(1,maskvec.size(),matlabarray::miDOUBLE);
-    mask.setnumericarray(maskvec);
-    mlarray.setfield(0,"mask",mask);
-}
-
-template<class T>            void matlabconverter::mladdmask(SCIRun::MaskedTetVolField<T>* scifield, matlabarray mlarray)
-{
-    matlabarray mask;
-    std::vector<char>& maskvec = scifield->mask();
-    mask.createdensearray(1,maskvec.size(),matlabarray::miDOUBLE);
-    mask.setnumericarray(maskvec);
-    mlarray.setfield(0,"mask",mask);
-}
-
-template<class T>            void matlabconverter::mladdmask(SCIRun::MaskedLatVolField<T>* scifield, matlabarray mlarray)
-{
-    matlabarray mask;
-    std::vector<char>& maskvec = scifield->mask();
-    mask.createdensearray(1,maskvec.size(),matlabarray::miDOUBLE);
-    mask.setnumericarray(maskvec);
-    mlarray.setfield(0,"mask",mask);
-}
-
-template<class T>            void matlabconverter::mladdmask(SCIRun::MaskedTriSurfField<T>* scifield, matlabarray mlarray)
-{
-    matlabarray mask;
-    std::vector<char>& maskvec = scifield->mask();
-    mask.createdensearray(1,maskvec.size(),matlabarray::miDOUBLE);
-    mask.setnumericarray(maskvec);
-    mlarray.setfield(0,"mask",mask);
-}
-
 
  
-template <class MESH> void matlabconverter::mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
+template <class MESH> 
+void matlabconverter::mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
 {
 	matlabarray dim;
 	matlabarray transform;
@@ -571,7 +591,8 @@ template <class MESH> void matlabconverter::mladdtransform(SCIRun::LockingHandle
 	
 } 
  
-template <class MESH> void matlabconverter::mladdnodesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
+template <class MESH> 
+void matlabconverter::mladdnodesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
 {
 	// A lot of pointless casting, but that is the way SCIRun was setup .....
 	// Iterators and Index classes to make the code really complicated 
@@ -773,56 +794,6 @@ bool matlabconverter::mladdfield(SCIRun::FData3d<T> &fdata,matlabarray mlarray)
 
 //////// CLASSES FOR DYNAMIC READER ////////////////
 
-
-
-template <class FIELD>       bool matlabconverter::addmask(FIELD* scifield,fieldstruct &fs)
-{
-  return(true);
-}
-
-template <class T>           bool matlabconverter::addmask(SCIRun::MaskedHexVolField<T>* scifield,fieldstruct &fs)
-{
-  std::vector<char>& maskvec = scifield->mask();
-  if (!fs.mask.isempty())
-  {
-    fs.mask.getnumericarray(maskvec);
-  }
-  return(true);
-}
-   
-template <class T>           bool matlabconverter::addmask(SCIRun::MaskedTetVolField<T>* scifield,fieldstruct &fs)
-{
-  std::vector<char>& maskvec = scifield->mask();
-  if (!fs.mask.isempty())
-  {
-    fs.mask.getnumericarray(maskvec);
-  }
-  return(true);
-}
-   
-template <class T>           bool matlabconverter::addmask(SCIRun::MaskedLatVolField<T>* scifield,fieldstruct &fs)
-{
-  std::vector<char>& maskvec = scifield->mask();
-  if (!fs.mask.isempty())
-  {
-    fs.mask.getnumericarray(maskvec);
-  }
-  return(true);
-}
-   
-template <class T>           bool matlabconverter::addmask(SCIRun::MaskedTriSurfField<T>* scifield,fieldstruct &fs)
-{
-  std::vector<char>& maskvec = scifield->mask();
-  if (!fs.mask.isempty())
-  {
-    fs.mask.getnumericarray(maskvec);
-  }
-  return(true);
-}
-   
-
-
-
 template<class MESH>
 bool matlabconverter::createmesh(SCIRun::LockingHandle<MESH> &meshH,fieldstruct &fs)
 {
@@ -980,108 +951,113 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
  }
 
 
- template<class T>
- bool matlabconverter::addfield(T &fdata,matlabarray mlarray)
- {
-   return(false);
- }
+template<class T>
+bool matlabconverter::addfield(T &fdata,matlabarray mlarray)
+{
+  return(false);
+}
 
 
- template <class T> 
- bool matlabconverter::addfield(std::vector<T> &fdata,matlabarray mlarray)
- {
-   mlarray.getnumericarray(fdata);
-   return(true);
- }
+template <class T> 
+bool matlabconverter::addfield(std::vector<T> &fdata,matlabarray mlarray)
+{
+  mlarray.getnumericarray(fdata);
+  return(true);
+}
 
 
- template <class T> 
- bool matlabconverter::addfield(SCIRun::FData2d<T> &fdata,matlabarray mlarray)
- {
-   mlarray.getnumericarray(fdata.get_dataptr(),fdata.dim2(),fdata.dim1());
-   return(true);
- }
+template <class T> 
+bool matlabconverter::addfield(SCIRun::FData2d<T> &fdata,matlabarray mlarray)
+{
+  mlarray.getnumericarray(fdata.get_dataptr(),fdata.dim2(),fdata.dim1());
+  return(true);
+}
 
 
- template <class T> 
- bool matlabconverter::addfield(SCIRun::FData3d<T> &fdata,matlabarray mlarray)
- {
-   mlarray.getnumericarray(fdata.get_dataptr(),fdata.dim3(),fdata.dim2(),fdata.dim1());
-   return(true);
- }
+template <class T> 
+bool matlabconverter::addfield(SCIRun::FData3d<T> &fdata,matlabarray mlarray)
+{
+  mlarray.getnumericarray(fdata.get_dataptr(),fdata.dim3(),fdata.dim2(),fdata.dim1());
+  return(true);
+}
 
 
- inline void matlabconverter::compressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p)
- {
-   tens.mat_[0][0] = fielddata[p];
-   tens.mat_[0][1] = fielddata[p+3];
-   tens.mat_[0][2] = fielddata[p+4];
-   tens.mat_[1][1] = fielddata[p+1];
-   tens.mat_[1][2] = fielddata[p+5];
-   tens.mat_[2][2] = fielddata[p+2];
-
-//   tens.mat_[0][0] = fielddata[p];
-//   tens.mat_[0][1] = fielddata[p+1];
-//   tens.mat_[0][2] = fielddata[p+2];
-//   tens.mat_[1][1] = fielddata[p+4];
-//   tens.mat_[1][2] = fielddata[p+5];
-//   tens.mat_[2][2] = fielddata[p+8];
-
- }
-
- inline void matlabconverter::uncompressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p)
- {
+inline void matlabconverter::compressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p)
+{
+  // Old compatiblity mode
+  if (old_compressed_tensor_)
+  {
+    tens.mat_[0][0] = fielddata[p];
+    tens.mat_[0][1] = fielddata[p+3];
+    tens.mat_[0][2] = fielddata[p+4];
+    tens.mat_[1][1] = fielddata[p+1];
+    tens.mat_[1][2] = fielddata[p+5];
+    tens.mat_[2][2] = fielddata[p+2];
+  }
+  else
+  {
    tens.mat_[0][0] = fielddata[p];
    tens.mat_[0][1] = fielddata[p+1];
    tens.mat_[0][2] = fielddata[p+2];
-   tens.mat_[1][0] = fielddata[p+3];
    tens.mat_[1][1] = fielddata[p+4];
    tens.mat_[1][2] = fielddata[p+5];
-   tens.mat_[2][0] = fielddata[p+6];
-   tens.mat_[2][1] = fielddata[p+7];
    tens.mat_[2][2] = fielddata[p+8];
- }
+  }
+}
+
+inline void matlabconverter::uncompressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p)
+{
+  tens.mat_[0][0] = fielddata[p];
+  tens.mat_[0][1] = fielddata[p+1];
+  tens.mat_[0][2] = fielddata[p+2];
+  tens.mat_[1][0] = fielddata[p+3];
+  tens.mat_[1][1] = fielddata[p+4];
+  tens.mat_[1][2] = fielddata[p+5];
+  tens.mat_[2][0] = fielddata[p+6];
+  tens.mat_[2][1] = fielddata[p+7];
+  tens.mat_[2][2] = fielddata[p+8];
+}
 
 
 
- // Dynamic compilation classes
- // vvvvvvvvvvvvvvvvvvvvvvvvvvv 
+// Dynamic compilation classes
+// vvvvvvvvvvvvvvvvvvvvvvvvvvv 
+
+class MatlabFieldReaderAlgo : public SCIRun::DynamicAlgoBase
+{
+  public:
+  // Place holder for the dynamically compiled code 
+  virtual bool execute(SCIRun::FieldHandle &scifield, matlabconverter::fieldstruct &fs, matlabconverter &translate) =0;
+
+  static SCIRun::CompileInfoHandle get_compile_info(std::string fieldname);
+
+ // The maker of this class will be used to create the templated class
+};
  
- class MatlabFieldReaderAlgo : public SCIRun::DynamicAlgoBase
- {
- public:
-   // Place holder for the dynamically compiled code 
-   virtual bool execute(SCIRun::FieldHandle &scifield, matlabconverter::fieldstruct &fs, matlabconverter &translate) =0;
-	
-   // support the dynamically compiled algorithm concept
-   static SCIRun::CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *fieldTD);
-	
-   // The maker of this class will be used to create the templated class
- };
- 
- template <class FIELD> class MatlabFieldReaderAlgoT : public MatlabFieldReaderAlgo
- {
- public:
-   // The actual dynamic code definitiongoes in here -> 
-   virtual bool execute(SCIRun::FieldHandle &scifield,  matlabconverter::fieldstruct &fs, matlabconverter &translate);
- };
+template <class FIELD> class MatlabFieldReaderAlgoT : public MatlabFieldReaderAlgo
+{
+  public:
+  // The actual dynamic code definitiongoes in here -> 
+  virtual bool execute(SCIRun::FieldHandle &scifield,  matlabconverter::fieldstruct &fs, matlabconverter &translate);
+};
 
 
- // Dynamically defined function starts here -> 
- template <class FIELD>  bool MatlabFieldReaderAlgoT<FIELD>::execute(SCIRun::FieldHandle &scifield, matlabconverter::fieldstruct &fs, matlabconverter &translate)
- {
+// Dynamically defined function starts here -> 
+template <class FIELD>  
+bool MatlabFieldReaderAlgoT<FIELD>::execute(SCIRun::FieldHandle &scifield, matlabconverter::fieldstruct &fs, matlabconverter &translate)
+{
    typename FIELD::mesh_handle_type meshH;
-	
+
    if (!(translate.createmesh(meshH,fs)))
    {
      // Somehow my dymanic compilation for a meshgenerator failed
      return(false);
    }
-	
+
    // Here we finally create the field
    FIELD *fieldptr = scinew FIELD(meshH,fs.basis_order);
    scifield = static_cast<SCIRun::Field *>(fieldptr);
-	
+
    fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
    if (fs.field.isempty()) return(true);	// NEED TO CHECK THIS NOW AS data_at changed into basis_order
    typename FIELD::fdata_type& fdata = fieldptr->fdata();
@@ -1090,85 +1066,79 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
      return(false);
    }
    
-   if (!(translate.addmask(fieldptr,fs)))
-   {
-      return(false);
-   }
    // everything went ok, so report this to the function doing the actual implementation
    return(true);
- } 
+} 
  
- 
- 
- 
- class MatlabFieldWriterAlgo : public SCIRun::DynamicAlgoBase
- {
- public:
-   // Place holder for the dynamically compiled code 
-   virtual bool execute(SCIRun::FieldHandle fieldH, matlabarray &mlarray, matlabconverter &translate) =0;
-	
-   // support the dynamically compiled algorithm concept
-   static SCIRun::CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *fieldTD);
-	
-   // The maker of this class will be used to create the templated class
- };
 
- template <class FIELD> class MatlabFieldWriterAlgoT : public MatlabFieldWriterAlgo
- {
- public:
-   // The actual dynamic code definitiongoes in here -> 
-   virtual bool execute(SCIRun::LockingHandle<SCIRun::Field> fieldH, matlabarray &mlarray, matlabconverter &translate);
- };
+class MatlabFieldWriterAlgo : public SCIRun::DynamicAlgoBase
+{
+  public:
+  // Place holder for the dynamically compiled code 
+  virtual bool execute(SCIRun::FieldHandle fieldH, matlabarray &mlarray, matlabconverter &translate) =0;
 
- // Dynamically defined function starts here -> 
- template <class FIELD>  bool MatlabFieldWriterAlgoT<FIELD>::execute(SCIRun::FieldHandle scifield, matlabarray &mlarray, matlabconverter &translate)
- {
-	
-   // input is a general FieldHandle, cast this to the specific one
-   FIELD *field = dynamic_cast<FIELD *>(scifield.get_rep());
-	
-   // get the specific mesh class as well
-   typename FIELD::mesh_handle_type meshH;
-	
-   // Start translation with adding where the field is located
-   // Thhe next function is templated and will be inserted for every dynamic version of the code
-   translate.mladdfieldat(field,mlarray);
+  // support the dynamically compiled algorithm concept
+  static SCIRun::CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *fieldTD);
 
-   // Get the meshHandle, mesh() will only give a non-specific MeshHandle and canot be used
-   meshH = field->get_typed_mesh();
-	
-   // Dynamically translate the mesh class
-   // mladdmesh is both a templated class as well a collection of specifically written functions
-   // for a certain mesh class. The precompiled version that overload the dynamix ones are already
-   // in the matlabconverter class. The latter were needed as SCIRun's mesh classes are not as polymorphic
-   // as they should be. Hence to deal with local details often a speciliased function is better
-   if (translate.mladdmesh(meshH,mlarray) == false)
-   {   // could not translate mesh
-     // Currently the templated function return a false and tells this function that not a proper
-     // converter could be found.
+  // The maker of this class will be used to create the templated class
+};
+
+template <class FIELD> 
+class MatlabFieldWriterAlgoT : public MatlabFieldWriterAlgo
+{
+  public:
+  // The actual dynamic code definitiongoes in here -> 
+  virtual bool execute(SCIRun::LockingHandle<SCIRun::Field> fieldH, matlabarray &mlarray, matlabconverter &translate);
+};
+
+// Dynamically defined function starts here -> 
+template <class FIELD>  
+bool MatlabFieldWriterAlgoT<FIELD>::execute(SCIRun::FieldHandle scifield, matlabarray &mlarray, matlabconverter &translate)
+{
+
+  // input is a general FieldHandle, cast this to the specific one
+  FIELD *field = dynamic_cast<FIELD *>(scifield.get_rep());
+
+  // get the specific mesh class as well
+  typename FIELD::mesh_handle_type meshH;
+
+  // Start translation with adding where the field is located
+  // Thhe next function is templated and will be inserted for every dynamic version of the code
+  translate.mladdfieldat(field,mlarray);
+
+  // Get the meshHandle, mesh() will only give a non-specific MeshHandle and canot be used
+  meshH = field->get_typed_mesh();
+
+  // Dynamically translate the mesh class
+  // mladdmesh is both a templated class as well a collection of specifically written functions
+  // for a certain mesh class. The precompiled version that overload the dynamix ones are already
+  // in the matlabconverter class. The latter were needed as SCIRun's mesh classes are not as polymorphic
+  // as they should be. Hence to deal with local details often a speciliased function is better
+  if (translate.mladdmesh(meshH,mlarray) == false)
+  {   // could not translate mesh
+   // Currently the templated function return a false and tells this function that not a proper
+   // converter could be found.
+   return(false);
+  }
+
+  // Dynamically do the field contents. Luckily this is better templated and hence a couple
+  // of templated functions do the tricks
+
+  if (field->basis_order() > -1)
+  {
+   typename FIELD::fdata_type fdata = field->fdata();
+   if (translate.mladdfield(fdata,mlarray) == false)
+   {
+     // Could not translate field but continuing anyway
      return(false);
    }
 
-   // Dynamically do the field contents. Luckily this is better templated and hence a couple
-   // of templated functions do the tricks
+  }
+  // everything went ok, so report this to the function doing the actual implementation
+  return(true);
+} 
 
-   if (field->basis_order() > -1)
-   {
-     typename FIELD::fdata_type fdata = field->fdata();
-     if (translate.mladdfield(fdata,mlarray) == false)
-     {
-       // Could not translate field but continuing anyway
-       return(false);
-     }
-     // If needed add mask, this function is templated and overloaded as well, hence the dynamic
-     // compiler should find the proper function.
-     translate.mladdmask(field,mlarray);
-   }
-   // everything went ok, so report this to the function doing the actual implementation
-   return(true);
- } 
- 
- 
- } // end namespace
+
+} // end namespace
 
 #endif
