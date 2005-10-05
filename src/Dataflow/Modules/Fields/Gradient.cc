@@ -43,7 +43,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Handle.h>
-
+#include <Core/Basis/Constant.h>
 #include <Dataflow/Modules/Fields/Gradient.h>
 
 namespace SCIRun {
@@ -141,7 +141,10 @@ GradientAlgo::get_compile_info(const TypeDescription *ftd,
   static const string base_class_name("GradientAlgo");
 
   const string oname = otd ->get_name("", "");
-
+  TypeDescription *ctd = 0;
+  ctd = (TypeDescription *) 
+    SCIRun::get_type_description((ConstantBasis<double>*) 0 );
+  
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
 		       ftd->get_filename() + "." +
@@ -151,13 +154,16 @@ GradientAlgo::get_compile_info(const TypeDescription *ftd,
                        ftd->get_name() + "<" + mtd->get_name() + ", " +
 		       btd->get_name() + ", " + dtd->get_name() + ">, " +
                        ftd->get_name() + "<" + mtd->get_name() + ", " +
-		       btd->get_similar_name(oname, 0) + ", " + 
+		       ctd->get_similar_name(oname, 0) + ", " + 
 		       dtd->get_similar_name(oname, 0) + "> ");
   
   // Add in the include path to compile this obj
+
+
   rval->add_include(include_path);
   ftd->fill_compile_info(rval);
   mtd->fill_compile_info(rval);
+  ctd->fill_compile_info(rval);
   return rval;
 }
 

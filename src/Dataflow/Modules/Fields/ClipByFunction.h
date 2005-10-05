@@ -112,9 +112,10 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
 
   vector<typename FIELD::mesh_type::Elem::index_type> elemmap;
 
+  typedef typename FIELD::mesh_type msh_type;
   const bool elemdata_valid =
-    field->order_type_description()->get_name() ==
-    get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name();
+    field->order_type_description()->get_name() == 
+    msh_type::elem_type_description()->get_name();
 
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
@@ -229,7 +230,7 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
+  FIELD *ofield = scinew FIELD(clipped);
   ofield->copy_properties(fieldh.get_rep());
 
   if (fieldh->basis_order() == 1)
@@ -242,6 +243,8 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
     int *rr = scinew int[nrows+1];
     int *cc = scinew int[nrows];
     double *d = scinew double[nrows];
+
+    typedef typename FIELD::mesh_type msh_type;
 
     while (hitr != nodemap.end())
     {
@@ -265,7 +268,7 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
     interpolant = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
   }
   else if (fieldh->order_type_description()->get_name() ==
-	   get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name())
+	   msh_type::elem_type_description()->get_name())
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
 

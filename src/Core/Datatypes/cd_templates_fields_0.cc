@@ -29,11 +29,11 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Containers/FData.h>
-#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/MaskedLatVolMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/MRLatVolField.h>
 
 //#include <Core/Datatypes/MaskedLatVolField.h>
@@ -64,6 +64,8 @@ typedef HexTrilinearLgn<unsigned int>       FDuintBasis;
 typedef HexTrilinearLgn<unsigned short>     FDushortBasis;
 typedef HexTrilinearLgn<unsigned char>      FDucharBasis;
 typedef HexTrilinearLgn<unsigned long>      FDulongBasis;
+
+
 
 template class GenericField<LVMesh, FDTensorBasis,  FData3d<Tensor, LVMesh> >;
 template class GenericField<LVMesh, FDVectorBasis,  FData3d<Vector, LVMesh> >;

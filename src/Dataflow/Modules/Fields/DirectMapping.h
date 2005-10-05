@@ -184,7 +184,7 @@ DirectMappingAlgoT<FSRC, LSRC,
   d.np=np;
   typename FOUT::mesh_type *dst_mesh = 
     dynamic_cast<typename FOUT::mesh_type *>(dst_meshH.get_rep());
-  FOUT *out_field = scinew FOUT(dst_mesh, basis_order);  
+  FOUT *out_field = scinew FOUT(dst_mesh);  
   d.out_fieldH = out_field;
 
   Thread::parallel(this, 

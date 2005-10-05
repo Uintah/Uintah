@@ -92,50 +92,50 @@ public:
   }
 
   //! get the child elements of the given index
-  void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
-  void get_nodes(typename Node::array_type &, 
-		 const typename Face::index_type &) const;
-  void get_nodes(typename Node::array_type &, 
-		 typename Cell::index_type) const {}
-  void get_edges(typename Edge::array_type &, 
-		 const typename Face::index_type &) const;
-  void get_edges(typename Edge::array_type &, 
-		 typename Cell::index_type) const {}
-  void get_faces(typename Face::array_type &, 
-		 typename Cell::index_type) const {}
+  void get_nodes(typename ImageMesh<Basis>::Node::array_type &, typename ImageMesh<Basis>::Edge::index_type) const;
+  void get_nodes(typename ImageMesh<Basis>::Node::array_type &, 
+		 const typename ImageMesh<Basis>::Face::index_type &) const;
+  void get_nodes(typename ImageMesh<Basis>::Node::array_type &, 
+		 typename ImageMesh<Basis>::Cell::index_type) const {}
+  void get_edges(typename ImageMesh<Basis>::Edge::array_type &, 
+		 const typename ImageMesh<Basis>::Face::index_type &) const;
+  void get_edges(typename ImageMesh<Basis>::Edge::array_type &, 
+		 typename ImageMesh<Basis>::Cell::index_type) const {}
+  void get_faces(typename ImageMesh<Basis>::Face::array_type &, 
+		 typename ImageMesh<Basis>::Cell::index_type) const {}
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(typename Edge::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, 
-		     typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Node::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, 
-		     typename Face::index_type) const { return 0; }
+  unsigned get_edges(typename ImageMesh<Basis>::Edge::array_type &, 
+		     typename ImageMesh<Basis>::Node::index_type) const { return 0; }
+  unsigned get_faces(typename ImageMesh<Basis>::Face::array_type &, 
+		     typename ImageMesh<Basis>::Node::index_type) const { return 0; }
+  unsigned get_faces(typename ImageMesh<Basis>::Face::array_type &, 
+		     typename ImageMesh<Basis>::Edge::index_type) const { return 0; }
+  unsigned get_cells(typename ImageMesh<Basis>::Cell::array_type &, 
+		     typename ImageMesh<Basis>::Node::index_type) const { return 0; }
+  unsigned get_cells(typename ImageMesh<Basis>::Cell::array_type &, 
+		     typename ImageMesh<Basis>::Edge::index_type) const { return 0; }
+  unsigned get_cells(typename ImageMesh<Basis>::Cell::array_type &, 
+		     typename ImageMesh<Basis>::Face::index_type) const { return 0; }
 
   //! return all face_indecies that overlap the BBox in arr.
-  void get_faces(typename Face::array_type &, const BBox &)
+  void get_faces(typename ImageMesh<Basis>::Face::array_type &, const BBox &)
   { ASSERTFAIL("ScanlineMesh::get_faces for BBox is not implemented."); }
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(const typename Node::index_type &) const { return 0.0; }
-  double get_size(typename Edge::index_type idx) const 
+  double get_size(const typename ImageMesh<Basis>::Node::index_type &) const { return 0.0; }
+  double get_size(typename ImageMesh<Basis>::Edge::index_type idx) const 
   {
-    typename Node::array_type arr;
+    typename ImageMesh<Basis>::Node::array_type arr;
     get_nodes(arr, idx);
     Point p0, p1;
     get_center(p0, arr[0]);
     get_center(p1, arr[1]);
     return (p1.asVector() - p0.asVector()).length();
   }
-  double get_size(const typename Face::index_type &idx) const
+  double get_size(const typename ImageMesh<Basis>::Face::index_type &idx) const
   {
-    typename Node::array_type ra;
+    typename ImageMesh<Basis>::Node::array_type ra;
     get_nodes(ra,idx);
     Point p0,p1,p2;
     get_point(p0,ra[0]);
@@ -144,32 +144,32 @@ public:
     return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
 
-  double get_size(typename Cell::index_type) const { return 0.0; }
-  double get_length(typename Edge::index_type idx) const 
+  double get_size(typename ImageMesh<Basis>::Cell::index_type) const { return 0.0; }
+  double get_length(typename ImageMesh<Basis>::Edge::index_type idx) const 
   { return get_size(idx); }
-  double get_area(const typename Face::index_type &idx) const 
+  double get_area(const typename ImageMesh<Basis>::Face::index_type &idx) const 
   { return get_size(idx); }
-  double get_volume(typename Cell::index_type idx) const 
+  double get_volume(typename ImageMesh<Basis>::Cell::index_type idx) const 
   { return get_size(idx); }
 
-  void get_normal(Vector &, const typename Node::index_type &) const;
+  void get_normal(Vector &, const typename ImageMesh<Basis>::Node::index_type &) const;
 
   //! get the center point (in object space) of an element
-  void get_center(Point &, const typename Node::index_type &) const;
-  void get_center(Point &, typename Edge::index_type) const;
-  void get_center(Point &, const typename Face::index_type &) const;
-  void get_center(Point &, typename Cell::index_type) const {}
+  void get_center(Point &, const typename ImageMesh<Basis>::Node::index_type &) const;
+  void get_center(Point &, typename ImageMesh<Basis>::Edge::index_type) const;
+  void get_center(Point &, const typename ImageMesh<Basis>::Face::index_type &) const;
+  void get_center(Point &, typename ImageMesh<Basis>::Cell::index_type) const {}
 
-  bool locate(typename Node::index_type &, const Point &) const;
-  bool locate(typename Edge::index_type &, const Point &) const;
-  bool locate(typename Face::index_type &, const Point &) const;
-  bool locate(typename Cell::index_type &, const Point &) const;
+  bool locate(typename ImageMesh<Basis>::Node::index_type &, const Point &) const;
+  bool locate(typename ImageMesh<Basis>::Edge::index_type &, const Point &) const;
+  bool locate(typename ImageMesh<Basis>::Face::index_type &, const Point &) const;
+  bool locate(typename ImageMesh<Basis>::Cell::index_type &, const Point &) const;
 
-  void get_point(Point &point, const typename Node::index_type &index) const
+  void get_point(Point &point, const typename ImageMesh<Basis>::Node::index_type &index) const
   { get_center(point, index); }
-  void set_point(const Point &point, const typename Node::index_type &index);
+  void set_point(const Point &point, const typename ImageMesh<Basis>::Node::index_type &index);
 
-  void get_random_point(Point &, const typename Elem::index_type &, int) const
+  void get_random_point(Point &, const typename ImageMesh<Basis>::Elem::index_type &, int) const
   { ASSERTFAIL("not implemented") }
 
   virtual bool is_editable() const { return false; }
@@ -193,7 +193,7 @@ protected:
   void compute_normals();
   void compute_edge_neighbors(double err = 1.0e-8);
 
-  const Point &point(const typename Node::index_type &idx)
+  const Point &point(const typename ImageMesh<Basis>::Node::index_type &idx)
   { return points_(idx.i_, idx.j_); }
 
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
@@ -213,7 +213,7 @@ StructQuadSurfMesh<Basis>::type_id(StructQuadSurfMesh<Basis>::type_name(-1),
 template <class Basis>
 StructQuadSurfMesh<Basis>::StructQuadSurfMesh()
   : normal_lock_("StructQuadSurfMesh Normals Lock"),
-    synchronized_(ALL_ELEMENTS_E)
+    synchronized_(ImageMesh<Basis>::ALL_ELEMENTS_E)
 {
 }
 
@@ -223,7 +223,7 @@ StructQuadSurfMesh<Basis>::StructQuadSurfMesh(unsigned int x, unsigned int y)
     points_(x, y),
     normals_(x,y),
     normal_lock_("StructQuadSurfMesh Normals Lock"),
-    synchronized_(ALL_ELEMENTS_E)
+    synchronized_(ImageMesh<Basis>::ALL_ELEMENTS_E)
 {
 }
 
@@ -244,8 +244,8 @@ StructQuadSurfMesh<Basis>::get_dim(vector<unsigned int> &array) const
   array.resize(2);
   array.clear();
 
-  array.push_back(ni_);
-  array.push_back(nj_);
+  array.push_back(this->ni_);
+  array.push_back(this->nj_);
 
   return true;
 }
@@ -256,7 +256,7 @@ StructQuadSurfMesh<Basis>::get_bounding_box() const
 {
   BBox result;
 
-  typename Node::iterator ni, nie;
+  typename ImageMesh<Basis>::Node::iterator ni, nie;
   begin(ni);
   end(nie);
   while (ni != nie)
@@ -273,7 +273,7 @@ template <class Basis>
 void
 StructQuadSurfMesh<Basis>::transform(const Transform &t)
 {
-  typename Node::iterator i, ie;
+  typename ImageMesh<Basis>::Node::iterator i, ie;
   begin(i);
   end(ie);
 
@@ -286,32 +286,32 @@ StructQuadSurfMesh<Basis>::transform(const Transform &t)
 
 template <class Basis>
 void
-StructQuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array, 
-				     typename Edge::index_type idx) const
+StructQuadSurfMesh<Basis>::get_nodes(typename ImageMesh<Basis>::Node::array_type &array, 
+				     typename ImageMesh<Basis>::Edge::index_type idx) const
 {
   array.resize(2);
 
-  const int yidx = idx - (ni_-1) * nj_;
+  const int yidx = idx - (this->ni_-1) * this->nj_;
   if (yidx >= 0)
   {
-    const int i = yidx / (nj_ - 1);
-    const int j = yidx % (nj_ - 1);
-    array[0] = typename Node::index_type(this, i, j);
-    array[1] = typename Node::index_type(this, i, j+1);
+    const int i = yidx / (this->nj_ - 1);
+    const int j = yidx % (this->nj_ - 1);
+    array[0] = typename ImageMesh<Basis>::Node::index_type(this, i, j);
+    array[1] = typename ImageMesh<Basis>::Node::index_type(this, i, j+1);
   }
   else
   {
-    const int i = idx % (ni_ - 1);
-    const int j = idx / (ni_ - 1);
-    array[0] = typename Node::index_type(this, i, j);
-    array[1] = typename Node::index_type(this, i+1, j);
+    const int i = idx % (this->ni_ - 1);
+    const int j = idx / (this->ni_ - 1);
+    array[0] = typename ImageMesh<Basis>::Node::index_type(this, i, j);
+    array[1] = typename ImageMesh<Basis>::Node::index_type(this, i+1, j);
   }
 }
 
 template <class Basis>
 void
-StructQuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array, 
-				   const typename Face::index_type &idx) const
+StructQuadSurfMesh<Basis>::get_nodes(typename ImageMesh<Basis>::Node::array_type &array, 
+				   const typename ImageMesh<Basis>::Face::index_type &idx) const
 {
   const int arr_size = 4;
   array.resize(arr_size);
@@ -327,8 +327,8 @@ StructQuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
 
 template <class Basis>
 void
-StructQuadSurfMesh<Basis>::get_edges(typename Edge::array_type &array,
-				   const typename Face::index_type &idx) const
+StructQuadSurfMesh<Basis>::get_edges(typename ImageMesh<Basis>::Edge::array_type &array,
+				   const typename ImageMesh<Basis>::Face::index_type &idx) const
 {
   array.clear();
   array.push_back(idx * 4 + 0);
@@ -340,7 +340,7 @@ StructQuadSurfMesh<Basis>::get_edges(typename Edge::array_type &array,
 template <class Basis>
 void
 StructQuadSurfMesh<Basis>::get_normal(Vector &result,
-				  const typename Node::index_type &idx ) const
+				  const typename ImageMesh<Basis>::Node::index_type &idx ) const
 {
   result = normals_(idx.i_, idx.j_);
 }
@@ -348,7 +348,7 @@ StructQuadSurfMesh<Basis>::get_normal(Vector &result,
 template <class Basis>
 void
 StructQuadSurfMesh<Basis>::get_center(Point &result,
-				    const typename Node::index_type &idx) const
+				    const typename ImageMesh<Basis>::Node::index_type &idx) const
 {
   result = points_(idx.i_, idx.j_);
 }
@@ -356,9 +356,9 @@ StructQuadSurfMesh<Basis>::get_center(Point &result,
 template <class Basis>
 void
 StructQuadSurfMesh<Basis>::get_center(Point &result, 
-				      typename Edge::index_type idx) const
+				      typename ImageMesh<Basis>::Edge::index_type idx) const
 {
-  typename Node::array_type arr;
+  typename ImageMesh<Basis>::Node::array_type arr;
   get_nodes(arr, idx);
   Point p1;
   get_center(result, arr[0]);
@@ -372,12 +372,12 @@ StructQuadSurfMesh<Basis>::get_center(Point &result,
 template <class Basis>
 void
 StructQuadSurfMesh<Basis>::get_center(Point &p,
-				    const typename Face::index_type &idx) const
+				    const typename ImageMesh<Basis>::Face::index_type &idx) const
 {
-  typename Node::array_type nodes;
+  typename ImageMesh<Basis>::Node::array_type nodes;
   get_nodes(nodes, idx);
   ASSERT(nodes.size() == 4);
-  typename Node::array_type::iterator nai = nodes.begin();
+  typename ImageMesh<Basis>::Node::array_type::iterator nai = nodes.begin();
   get_point(p, *nai);
   ++nai;
   Point pp;
@@ -393,13 +393,13 @@ StructQuadSurfMesh<Basis>::get_center(Point &p,
 
 template <class Basis>
 bool
-StructQuadSurfMesh<Basis>::locate(typename Node::index_type &node, 
+StructQuadSurfMesh<Basis>::locate(typename ImageMesh<Basis>::Node::index_type &node, 
 				  const Point &p) const
 {
   node.mesh_ = this;
-  typename Face::index_type fi;
+  typename ImageMesh<Basis>::Face::index_type fi;
   if (locate(fi, p)) { // first try the fast way.
-    typename Node::array_type nodes;
+    typename ImageMesh<Basis>::Node::array_type nodes;
     get_nodes(nodes, fi);
 
     double dmin = (p-points_(nodes[0].i_, nodes[0].j_)).length2();
@@ -417,7 +417,7 @@ StructQuadSurfMesh<Basis>::locate(typename Node::index_type &node,
   }
   else
   {  // do exhaustive search.
-    typename Node::iterator ni, nie;
+    typename ImageMesh<Basis>::Node::iterator ni, nie;
     begin(ni);
     end(nie);
     if (ni == nie) { return false; }
@@ -442,7 +442,7 @@ StructQuadSurfMesh<Basis>::locate(typename Node::index_type &node,
 
 template <class Basis>
 bool
-StructQuadSurfMesh<Basis>::locate(typename Edge::index_type &node, 
+StructQuadSurfMesh<Basis>::locate(typename ImageMesh<Basis>::Edge::index_type &node, 
 				  const Point &) const
 {
   ASSERTFAIL("Locate Edge not implemented in StructQuadSurfMesh");
@@ -452,7 +452,7 @@ StructQuadSurfMesh<Basis>::locate(typename Edge::index_type &node,
 
 template <class Basis>
 bool
-StructQuadSurfMesh<Basis>::locate(typename Face::index_type &loc, 
+StructQuadSurfMesh<Basis>::locate(typename ImageMesh<Basis>::Face::index_type &loc, 
 				  const Point &) const
 {
   ASSERTFAIL("Locate Face not implemented in StructQuadSurfMesh");
@@ -462,7 +462,7 @@ StructQuadSurfMesh<Basis>::locate(typename Face::index_type &loc,
 
 template <class Basis>
 bool
-StructQuadSurfMesh<Basis>::locate(typename Cell::index_type &loc, 
+StructQuadSurfMesh<Basis>::locate(typename ImageMesh<Basis>::Cell::index_type &loc, 
 				  const Point &) const
 {
   ASSERTFAIL("Locate Cell not implemented in StructQuadSurfMesh");
@@ -473,7 +473,7 @@ StructQuadSurfMesh<Basis>::locate(typename Cell::index_type &loc,
 template <class Basis>
 void
 StructQuadSurfMesh<Basis>::set_point(const Point &point, 
-				     const typename Node::index_type &index)
+				     const typename ImageMesh<Basis>::Node::index_type &index)
 {
   points_(index.i_, index.j_) = point;
 }
@@ -482,7 +482,7 @@ template <class Basis>
 bool
 StructQuadSurfMesh<Basis>::synchronize(unsigned int tosync)
 {
-  if (tosync & NORMALS_E && !(synchronized_ & NORMALS_E))
+  if (tosync & Mesh::NORMALS_E && !(synchronized_ & Mesh::NORMALS_E))
     compute_normals();
   return true;
 }
@@ -492,22 +492,22 @@ void
 StructQuadSurfMesh<Basis>::compute_normals()
 {
   normal_lock_.lock();
-  if (synchronized_ & NORMALS_E) {
+  if (synchronized_ & Mesh::NORMALS_E) {
     normal_lock_.unlock();
     return;
   }
   normals_.resize(points_.dim1(), points_.dim2()); // 1 per node
 
   // build table of faces that touch each node
-  Array2< vector<typename Face::index_type> >
+  Array2< vector<typename ImageMesh<Basis>::Face::index_type> >
     node_in_faces(points_.dim1(), points_.dim2());
 
   //! face normals (not normalized) so that magnitude is also the area.
   Array2<Vector> face_normals((points_.dim1()-1),(points_.dim2()-1));
 
   // Computing normal per face.
-  typename Node::array_type nodes(4);
-  typename Face::iterator iter, iter_end;
+  typename ImageMesh<Basis>::Node::array_type nodes(4);
+  typename ImageMesh<Basis>::Face::iterator iter, iter_end;
   begin(iter);
   end(iter_end);
   while (iter != iter_end)
@@ -535,14 +535,14 @@ StructQuadSurfMesh<Basis>::compute_normals()
   }
 
   //Averaging the normals.
-  typename Node::iterator nif_iter, nif_iter_end;
+  typename ImageMesh<Basis>::Node::iterator nif_iter, nif_iter_end;
   begin( nif_iter );
   end( nif_iter_end );
 
   while (nif_iter != nif_iter_end) {
-    vector<typename Face::index_type> v = node_in_faces((*nif_iter).i_, 
+    vector<typename ImageMesh<Basis>::Face::index_type> v = node_in_faces((*nif_iter).i_, 
 							(*nif_iter).j_);
-    typename vector<typename Face::index_type>::const_iterator fiter = 
+    typename vector<typename ImageMesh<Basis>::Face::index_type>::const_iterator fiter = 
       v.begin();
     Vector ave(0.L,0.L,0.L);
     while(fiter != v.end()) {
@@ -553,7 +553,7 @@ StructQuadSurfMesh<Basis>::compute_normals()
     normals_((*nif_iter).i_, (*nif_iter).j_) = ave;
     ++nif_iter;
   }
-  synchronized_ |= NORMALS_E;
+  synchronized_ |= Mesh::NORMALS_E;
   normal_lock_.unlock();
 }
 

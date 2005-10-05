@@ -94,13 +94,14 @@ public:
       : LatIndex(m, i,j,k) {}
 
     operator unsigned() const { 
-      ASSERT(mesh_);
-      return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;
+      ASSERT(this->mesh_);
+      return (this->i_ + (this->ni()-1)*this->j_ + 
+	      (this->ni()-1)*(this->nj()-1)*this->k_);
     }
 
-    friend void Pio<Basis>(Piostream&, CellIndex&);
+    //friend void Pio<Basis>(Piostream&, CellIndex&);
     //friend const TypeDescription* get_type_description<Basis>(CellIndex *);
-    friend const string find_type_name<Basis>(CellIndex *);
+    //friend const string find_type_name<Basis>(CellIndex *);
   };
 
   struct NodeIndex : public LatIndex
@@ -112,9 +113,9 @@ public:
       ASSERT(i < 1); 
       return LatVolMesh<Basis>::type_name(-1) + "::NodeIndex"; 
     }
-    friend void Pio<Basis>(Piostream&, NodeIndex&);
+    //friend void Pio<Basis>(Piostream&, NodeIndex&);
     //friend const TypeDescription* get_type_description<Basis>(NodeIndex *);
-    friend const string find_type_name<Basis>(NodeIndex *);
+    //friend const string find_type_name<Basis>(LatVolMesh<Basis>::NodeIndex *);
   };
 
 
@@ -152,7 +153,8 @@ public:
 
     bool operator ==(const LatIter &a) const
     {
-      return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
+      return (this->i_ == a.i_ && this->j_ == a.j_ && 
+	      this->k_ == a.k_ && this->mesh_ == a.mesh_);
     }
 
     bool operator !=(const LatIter &a) const
@@ -172,13 +174,13 @@ public:
 
     NodeIter &operator++()
     {
-      i_++;
-      if (i_ >= mesh_->min_i_+mesh_->get_ni())	{
-	i_ = mesh_->min_i_;
-	j_++;
-	if (j_ >=  mesh_->min_j_+mesh_->get_nj()) {
-	  j_ = mesh_->min_j_;
-	  k_++;
+      this->i_++;
+      if (this->i_ >= this->mesh_->min_i_+this->mesh_->get_ni())	{
+	this->i_ = this->mesh_->min_i_;
+	this->j_++;
+	if (this->j_ >=  this->mesh_->min_j_+this->mesh_->get_nj()) {
+	  this->j_ = this->mesh_->min_j_;
+	  this->k_++;
 	}
       }
       return *this;
@@ -204,19 +206,19 @@ public:
     const CellIndex &operator *() const { return (const CellIndex&)(*this); }
 
     operator unsigned() const { 
-      ASSERT(mesh_);
-      return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
+      ASSERT(this->mesh_);
+      return this->i_ + (this->ni()-1)*this->j_ + (this->ni()-1)*(this->nj()-1)*this->k_;;
     }
 
     CellIter &operator++()
     {
-      i_++;
-      if (i_ >= mesh_->min_i_+ni()-1) {
-	i_ = mesh_->min_i_;
-	j_++;
-	if (j_ >= mesh_->min_j_+nj()-1) {
-	  j_ = mesh_->min_j_;
-	  k_++;
+      this->i_++;
+      if (this->i_ >= this->mesh_->min_i_+this->ni()-1) {
+	this->i_ = this->mesh_->min_i_;
+	this->j_++;
+	if (this->j_ >= this->mesh_->min_j_+this->nj()-1) {
+	  this->j_ = this->mesh_->min_j_;
+	  this->k_++;
 	}
       }
       return *this;
@@ -253,22 +255,22 @@ public:
 
     RangeNodeIter &operator++()
     {
-      i_++;
+      this->i_++;
       // Did i_ loop over the line
       // mesh_->min_x is the starting point of the x range for the mesh
       // min_i_ is the starting point of the range on x
       // max_i_ is the ending point of the range on x
-      if (i_ >= mesh_->min_i_ + max_i_) {
+      if (this->i_ >= this->mesh_->min_i_ + max_i_) {
 	// set i_ to the beginning of the range
-	i_ = min_i_;
-	j_++;
+	this->i_ = min_i_;
+	this->j_++;
 	// Did j_ loop over the face
 	// mesh_->min_j_ is the starting point of the y range for the mesh
 	// min_j is the starting point of the range on y
 	// max_j is the ending point of the range on y
-	if (j_ >= mesh_->min_j_ + max_j_) {
-	  j_ = min_j_;
-	  k_++;
+	if (this->j_ >= this->mesh_->min_j_ + max_j_) {
+	  this->j_ = min_j_;
+	  this->k_++;
 	}
       }
       return *this;
@@ -279,16 +281,16 @@ public:
       // is equal then you have this condition.  When this happens you
       // need to increment k so that you will iterate over the xy values.
       if (min_k_ != max_k_)
-	end_iter = NodeIter(mesh_, min_i_, min_j_, max_k_);
+	end_iter = NodeIter(this->mesh_, min_i_, min_j_, max_k_);
       else {
 	// We need to check to see if the min and max extents are the same.
 	// If they are then set the end iterator such that it will be equal
 	// to the beginning.  When they are the same anj for() loop using
 	// these iterators [for(;iter != end_iter; iter++)] will never enter.
 	if (min_i_ != max_i_ || min_j_ != max_j_)
-	  end_iter = NodeIter(mesh_, min_i_, min_j_, max_k_ + 1);
+	  end_iter = NodeIter(this->mesh_, min_i_, min_j_, max_k_ + 1);
 	else
-	  end_iter = NodeIter(mesh_, min_i_, min_j_, max_k_);
+	  end_iter = NodeIter(this->mesh_, min_i_, min_j_, max_k_);
       }
     }
     
@@ -321,22 +323,22 @@ public:
 
     RangeCellIter &operator++()
     {
-      i_++;
+      this->i_++;
       // Did i_ loop over the line
       // mesh_->min_x is the starting point of the x range for the mesh
       // min_i_ is the starting point of the range on x
       // max_i_ is the ending point of the range on x
-      if (i_ >= mesh_->min_i_ + max_i_) {
+      if (this->i_ >= this->mesh_->min_i_ + max_i_) {
 	// set i_ to the beginning of the range
-	i_ = min_i_;
-	j_++;
+	this->i_ = min_i_;
+	this->j_++;
 	// Did j_ loop over the face
 	// mesh_->min_j_ is the starting point of the y range for the mesh
 	// min_j is the starting point of the range on y
 	// max_j is the ending point of the range on y
-	if (j_ >= mesh_->min_j_ + max_j_) {
-	  j_ = min_j_;
-	  k_++;
+	if (this->j_ >= this->mesh_->min_j_ + max_j_) {
+	  this->j_ = min_j_;
+	  this->k_++;
 	}
       }
       return *this;
@@ -347,16 +349,16 @@ public:
       // is equal then you have this condition.  When this happens you
       // need to increment k so that you will iterate over the xy values.
       if (min_k_ != max_k_)
-	end_iter = CellIter(mesh_, min_i_, min_j_, max_k_);
+	end_iter = CellIter(this->mesh_, min_i_, min_j_, max_k_);
       else {
 	// We need to check to see if the min and max extents are the same.
 	// If they are then set the end iterator such that it will be equal
 	// to the beginning.  When they are the same anj for() loop using
 	// these iterators [for(;iter != end_iter; iter++)] will never enter.
 	if (min_i_ != max_i_ || min_j_ != max_j_)
-	  end_iter = CellIter(mesh_, min_i_, min_j_, max_k_ + 1);
+	  end_iter = CellIter(this->mesh_, min_i_, min_j_, max_k_ + 1);
 	else
-	  end_iter = CellIter(mesh_, min_i_, min_j_, max_k_);
+	  end_iter = CellIter(this->mesh_, min_i_, min_j_, max_k_);
       }
     }
 
@@ -732,14 +734,6 @@ protected:
 };
 
 template <class Basis>
-const TypeDescription*
-LatVolMesh<Basis>::get_type_description() const
-{
-  return SCIRun::get_type_description((LatVolMesh<Basis> *)0);
-}
-
-
-template <class Basis>
 const TypeDescription* get_type_description(LatVolMesh<Basis> *)
 {
   static TypeDescription *td = 0;
@@ -753,6 +747,13 @@ const TypeDescription* get_type_description(LatVolMesh<Basis> *)
 				"SCIRun");
   }
   return td;
+}
+
+template <class Basis>
+const TypeDescription*
+LatVolMesh<Basis>::get_type_description() const
+{
+  return SCIRun::get_type_description((LatVolMesh<Basis> *)0);
 }
 
 template <class Basis>
@@ -864,7 +865,7 @@ std::ostream& operator<<(std::ostream& os,
 
 template <class Basis>
 std::ostream& operator<<(std::ostream& os, 
-			 const typename LatVolMesh<Basis>::LatSize& s)
+			 const typename LatVolMesh<Basis>::LatSize& n)
 {
   os << (int)n << " (" << n.i_ << " x " << n.j_ << " x " << n.k_ << ")";
   return os;
@@ -1462,7 +1463,7 @@ LatVolMesh<Basis>::get_nodes(typename Node::index_type &begin, typename Node::in
     BBox box;
     box.extend(min);
     box.extend(max);
-    if ( box.Overlaps(mesh_boundary) ){
+    if ( box.overlaps(mesh_boundary) ){
       Point r = transform_.unproject(min);
       double rx = floor(r.x());
       double ry = floor(r.y());

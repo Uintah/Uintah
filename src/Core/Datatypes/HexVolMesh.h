@@ -45,6 +45,7 @@
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Datatypes/Mesh.h>
+#include <Core/Geometry/Plane.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Containers/StackVector.h>

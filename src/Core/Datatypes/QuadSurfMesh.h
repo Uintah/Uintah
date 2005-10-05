@@ -1055,13 +1055,6 @@ QuadSurfMesh<Basis>::size(typename QuadSurfMesh::Cell::size_type &s) const
 
 template <class Basis>
 const TypeDescription*
-QuadSurfMesh<Basis>::get_type_description() const
-{
-  return SCIRun::get_type_description((QuadSurfMesh<Basis> *)0);
-}
-
-template <class Basis>
-const TypeDescription*
 get_type_description(QuadSurfMesh<Basis> *)
 {
   static TypeDescription *td = 0;
@@ -1075,6 +1068,13 @@ get_type_description(QuadSurfMesh<Basis> *)
 				"SCIRun");
   }
   return td;
+}
+
+template <class Basis>
+const TypeDescription*
+QuadSurfMesh<Basis>::get_type_description() const
+{
+  return SCIRun::get_type_description((QuadSurfMesh<Basis> *)0);
 }
 
 template <class Basis>

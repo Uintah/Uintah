@@ -47,6 +47,7 @@
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/BBox.h>
 #include <Core/Containers/StackVector.h>
 
 namespace SCIRun {
@@ -534,13 +535,6 @@ ScanlineMesh<Basis>::size(typename ScanlineMesh::Cell::size_type &s) const
 }
 
 
-template <class Basis>
-const TypeDescription*
-ScanlineMesh<Basis>::get_type_description() const
-{
-  return SCIRun::get_type_description((ScanlineMesh *)0);
-}
-
 
 template <class Basis>
 const TypeDescription*
@@ -557,6 +551,13 @@ get_type_description(ScanlineMesh<Basis> *)
 				"SCIRun");
   }
   return td;
+}
+
+template <class Basis>
+const TypeDescription*
+ScanlineMesh<Basis>::get_type_description() const
+{
+  return SCIRun::get_type_description((ScanlineMesh *)0);
 }
 
 template <class Basis>

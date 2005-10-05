@@ -37,6 +37,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/TypeName.h>
 #include <Core/Geometry/Transform.h>
 #include <float.h>
 

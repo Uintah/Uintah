@@ -36,12 +36,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Volume/Texture.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/FData.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-//FIX_ME MC
-//#include <Core/Datatypes/MRLatVolField.h>
+#include <Core/Datatypes/MRLatVolField.h>
 #include <Core/Volume/TextureBrick.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -118,8 +113,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
                                      int card_mem)
 {
   //FIX_ME MC
-#define MRLATVOL_NEEDS_BASIS_STILL 1
-#if MRLATVOL_NEEDS_BASIS_STILL
+#if 0
   LVMesh::handle_type mesh = (LVMesh*)(vfield->mesh().get_rep());
   int nx = mesh->get_ni();
   int ny = mesh->get_nj();
@@ -146,162 +140,9 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
     build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
     texture->set_size(nx, ny, nz, nc, nb);
     texture->set_card_mem(card_mem);
-#else
-  if(   MRLatVolField<value_type>* vmrfield =
-      dynamic_cast< MRLatVolField< value_type >* > (vfield.get_rep()) ) {
-
-    // temporary
-    int nc = 1;
-    int nb[2] = { 1, 0 };
-    MRLatVolField<Vector>* gmrfield = 0;
-    if( gfield.get_rep() ){
-      if( gmrfield = 
-	  dynamic_cast< MRLatVolField<Vector>* > (gfield.get_rep()) ){
-	// In order to use the gradient field, it have the exact structure
-	// as the value field.
-	bool same = true;
-	// Same number of levels?
-	if( vmrfield->nlevels() == gmrfield->nlevels() ) {
-	  for(int i = 0; i < vmrfield->nlevels(); ++i){
-	    const MultiResLevel<value_type>* lev = vmrfield->level( i );
-	    const MultiResLevel<Vector> * glev = gmrfield->level(i);
-	    // Does each level have the same number of patches?
-	    if( lev->patches.size() == glev->patches.size() ){
-	      for(unsigned int j = 0; j < lev->patches.size(); j++ ){
-		LatVolField<value_type>* vmr = lev->patches[j].get_rep(); 
-		LatVolField< Vector >* gmr = glev->patches[j].get_rep();
-	
-		LatVolMeshHandle mesh = vmr->get_typed_mesh();
-		LatVolMeshHandle gmesh = gmr->get_typed_mesh();
-		// Is each patch the same size?
-		if( mesh->get_ni() != gmesh->get_ni() ||
-		    mesh->get_nj() != gmesh->get_nj() ||
-		    mesh->get_nk() != gmesh->get_nk()) {
-		  same = false;
-		  break;
-		}
-	      }
-	      if (!same) {
-		break;
-	      }
-	    } else {
-	      same = false;
-	      break;
-	    }
-	  }
-	} else {
-	  same = false;
-	}
-	// If same is still true, we can use the gradient field
-	if( same ) {
-	  nc = 2;
-	  nb[0] = 4;
-	  nb[1] = 1;
-	}
-      }
-    }
-
-    
-    if( texture->nlevels() > 1 ){
-      texture->lock_bricks();
-      texture->clear();
-      texture->unlock_bricks();
-    }
-    
-    // Grab the transform from the lowest resolution field
-    Transform tform;
-      vmrfield->level(0)->patches[0].get_rep()->get_typed_mesh()->
-	get_canonical_transform(tform);
-
-    for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
-      const MultiResLevel<value_type>* lev = vmrfield->level( i );
-      const MultiResLevel<Vector> * glev =
-	( gmrfield ? gmrfield->level( i ) : 0 );
-      vector<TextureBrickHandle> new_level;
-      if( i == texture->nlevels() ) {
-	texture->add_level(new_level);
-      }
-      vector<TextureBrickHandle>& bricks = texture->bricks(i);
-      unsigned int k = 0;
-      for(unsigned int j = 0; j < lev->patches.size(); j++ ){
-	LatVolField<value_type>* vmr = lev->patches[j].get_rep(); 
-	LatVolField< Vector >* gmr = ( glev ? glev->patches[j].get_rep() : 0 );
-	LatVolMeshHandle mesh = vmr->get_typed_mesh();
-
-	int nx = mesh->get_ni();
-	int ny = mesh->get_nj();
-	int nz = mesh->get_nk();
-	 if(vfield->basis_order() == 0) {
-	  --nx; --ny; --nz;
-	}
-	
-	// make sure each sub level has a corrected bounding box
-	BBox bbox(tform.unproject( mesh->get_bounding_box().min() ),
-		  tform.unproject( mesh->get_bounding_box().max() ));
-
-       	vector<TextureBrickHandle> patch_bricks;
-  	texture_build_bricks(patch_bricks, nx, ny, nz, nc, nb, bbox,
-                             card_mem, false);
-	
-	if( i == 0 ){
-	  texture->set_size(nx, ny, nz, nc, nb);
-	  texture->set_card_mem(card_mem);
-	  texture->set_bbox(bbox);
-	  texture->set_minmax(vmin, vmax, gmin, gmax);
-	  texture->set_transform(tform);
-	}
-
-	texture->lock_bricks();
-	for(k = 0; k < patch_bricks.size(); k++){
-	  fill_brick(patch_bricks[k], vmr, vmin, vmax, gmr, gmin, gmax);
-	  patch_bricks[k]->set_dirty(true);
-	  bricks.push_back( patch_bricks[k] );
-	}
-
-	texture->unlock_bricks();
-      }
-    }
-  } else {
-    
-    LatVolMeshHandle mesh = (LatVolMesh*)(vfield->mesh().get_rep());
-    int nx = mesh->get_ni();
-    int ny = mesh->get_nj();
-    int nz = mesh->get_nk();
-    if(vfield->basis_order() == 0) {
-      --nx; --ny; --nz;
-    }
-    int nc = gfield.get_rep() ? 2 : 1;
-    int nb[2];
-    nb[0] = gfield.get_rep() ? 4 : 1;
-    nb[1] = gfield.get_rep() ? 1 : 0;
-    Transform tform;
-    mesh->get_canonical_transform(tform);
-
-    texture->lock_bricks();
-    texture->clear();
-    vector<TextureBrickHandle>& bricks = texture->bricks();
-    const BBox bbox(Point(0,0,0), Point(1,1,1)); 
-    if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
-       || nc != texture->nc() || card_mem != texture->card_mem() ||
-       bbox.min() != texture->bbox().min())
-    {
-      texture_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem, false);
-      texture->set_size(nx, ny, nz, nc, nb);
-      texture->set_card_mem(card_mem);
-    }
-    texture->set_bbox(bbox);
-    texture->set_minmax(vmin, vmax, gmin, gmax);
-    texture->set_transform(tform);
-    for(unsigned int i=0; i<bricks.size(); i++) {
-      fill_brick(bricks[i], vfield, vmin, vmax, gfield, gmin, gmax);
-      bricks[i]->set_dirty(true);
-    }
-    texture->unlock_bricks();
-#endif
   }
+#endif
 }
-
-
 template <class FieldType>
 void 
 TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,

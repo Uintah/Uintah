@@ -91,45 +91,52 @@ public:
   bool get_dim(vector<unsigned int>&) const;
 
   //! get the child elements of the given index
-  void get_nodes(typename Node::array_type &, 
-		 typename Edge::index_type) const;
-  void get_nodes(typename Node::array_type &, 
-		 typename Face::index_type) const {}
-  void get_nodes(typename Node::array_type &, 
-		 typename Cell::index_type) const {}
-  void get_edges(typename Edge::array_type &, 
-		 typename Face::index_type) const {}
-  void get_edges(typename Edge::array_type &, 
-		 typename Cell::index_type) const {}
-  void get_edges(typename Edge::array_type &a, 
-		 typename Edge::index_type idx) const
+  void get_nodes(typename ScanlineMesh<Basis>::Node::array_type &, 
+		 typename ScanlineMesh<Basis>::Edge::index_type) const;
+  void get_nodes(typename ScanlineMesh<Basis>::Node::array_type &, 
+		 typename ScanlineMesh<Basis>::Face::index_type) const {}
+  void get_nodes(typename ScanlineMesh<Basis>::Node::array_type &, 
+		 typename ScanlineMesh<Basis>::Cell::index_type) const {}
+  void get_edges(typename ScanlineMesh<Basis>::Edge::array_type &, 
+		 typename ScanlineMesh<Basis>::Face::index_type) const {}
+  void get_edges(typename ScanlineMesh<Basis>::Edge::array_type &, 
+		 typename ScanlineMesh<Basis>::Cell::index_type) const {}
+  void get_edges(typename ScanlineMesh<Basis>::Edge::array_type &a, 
+		 typename ScanlineMesh<Basis>::Edge::index_type idx) const
   { a.push_back(idx);}
   //void get_faces(typename Face::array_type &, typename Cell::index_type) const {}
 
   //! get the parent element(s) of the given index
-  void get_edges(typename Edge::array_type &a, 
-		 typename Node::index_type idx) const
-  { a.push_back(typename Edge::index_type(idx));}
-  bool get_faces(typename Face::array_type &, 
-		 typename Node::index_type) const { return 0; }
-  bool get_faces(typename Face::array_type &, 
-		 typename Edge::index_type) const { return 0; }
-  bool get_cells(typename Cell::array_type &, 
-		 typename Node::index_type) const { return 0; }
-  bool get_cells(typename Cell::array_type &, 
-		 typename Edge::index_type) const { return 0; }
-  bool get_cells(typename Cell::array_type &, 
-		 typename Face::index_type) const { return 0; }
+  void get_edges(typename ScanlineMesh<Basis>::Edge::array_type &a, 
+		 typename ScanlineMesh<Basis>::Node::index_type idx) const
+  { a.push_back(typename ScanlineMesh<Basis>::Edge::index_type(idx));}
+  bool get_faces(typename ScanlineMesh<Basis>::Face::array_type &, 
+		 typename ScanlineMesh<Basis>::Node::index_type) const 
+  { return 0; }
+  bool get_faces(typename ScanlineMesh<Basis>::Face::array_type &, 
+		 typename ScanlineMesh<Basis>::Edge::index_type) const 
+  { return 0; }
+  bool get_cells(typename ScanlineMesh<Basis>::Cell::array_type &, 
+		 typename ScanlineMesh<Basis>::Node::index_type) const 
+  { return 0; }
+  bool get_cells(typename ScanlineMesh<Basis>::Cell::array_type &, 
+		 typename ScanlineMesh<Basis>::Edge::index_type) const 
+  { return 0; }
+  bool get_cells(typename ScanlineMesh<Basis>::Cell::array_type &, 
+		 typename ScanlineMesh<Basis>::Face::index_type) const 
+  { return 0; }
 
   //! return all edge_indecies that overlap the BBox in arr.
-  void get_edges(typename Edge::array_type &, const BBox &) const
+  void get_edges(typename ScanlineMesh<Basis>::Edge::array_type &, 
+		 const BBox &) const
   { ASSERTFAIL("ScanlineMesh::get_edges for BBox is not implemented."); }
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(typename Node::index_type) const { return 0.0; }
-  double get_size(typename Edge::index_type idx) const 
+  double get_size(typename ScanlineMesh<Basis>::Node::index_type) const 
+  { return 0.0; }
+  double get_size(typename ScanlineMesh<Basis>::Edge::index_type idx) const 
   {
-    typename Node::array_type arr;
+    typename ScanlineMesh<Basis>::Node::array_type arr;
     get_nodes(arr, idx);
     Point p0, p1;
     get_center(p0, arr[0]);
@@ -137,42 +144,47 @@ public:
     return (p1.asVector() - p0.asVector()).length();
   }  
 
-  double get_size(typename Face::index_type) const { return 0.0; }
-  double get_size(typename Cell::index_type) const { return 0.0; }
-  double get_length(typename Edge::index_type idx) const 
+  double get_size(typename ScanlineMesh<Basis>::Face::index_type) const 
+  { return 0.0; }
+  double get_size(typename ScanlineMesh<Basis>::Cell::index_type) const 
+  { return 0.0; }
+  double get_length(typename ScanlineMesh<Basis>::Edge::index_type idx) const 
   { return get_size(idx); }
-  double get_area(typename Face::index_type idx) const 
+  double get_area(typename ScanlineMesh<Basis>::Face::index_type idx) const 
   { return get_size(idx); }
-  double get_volume(typename Cell::index_type idx) const 
+  double get_volume(typename ScanlineMesh<Basis>::Cell::index_type idx) const 
   { return get_size(idx); }
 
-  int get_valence(typename Node::index_type idx) const 
+  int get_valence(typename ScanlineMesh<Basis>::Node::index_type idx) const 
   { return (idx == (unsigned int) 0 ||
 	    idx == (unsigned int) (points_.size()-1)) ? 1 : 2; }
 
-  int get_valence(typename Edge::index_type) const { return 0; }
-  int get_valence(typename Face::index_type) const { return 0; }
-  int get_valence(typename Cell::index_type) const { return 0; }
+  int get_valence(typename ScanlineMesh<Basis>::Edge::index_type) const 
+  { return 0; }
+  int get_valence(typename ScanlineMesh<Basis>::Face::index_type) const 
+  { return 0; }
+  int get_valence(typename ScanlineMesh<Basis>::Cell::index_type) const 
+  { return 0; }
 
   //! get the center point (in object space) of an element
-  void get_center(Point &, const typename Node::index_type &) const;
-  void get_center(Point &, const typename Edge::index_type &) const;
-  void get_center(Point &, const typename Face::index_type &) const {}
-  void get_center(Point &, const typename Cell::index_type &) const {}
+  void get_center(Point &, const typename ScanlineMesh<Basis>::Node::index_type&) const;
+  void get_center(Point &, const typename ScanlineMesh<Basis>::Edge::index_type &) const;
+  void get_center(Point &, const typename ScanlineMesh<Basis>::Face::index_type &) const {}
+  void get_center(Point &, const typename ScanlineMesh<Basis>::Cell::index_type &) const {}
 
-  bool locate(typename Node::index_type &, const Point &) const;
-  bool locate(typename Edge::index_type &, const Point &) const;
-  bool locate(typename Face::index_type &, const Point &) const 
+  bool locate(typename ScanlineMesh<Basis>::Node::index_type &, const Point &) const;
+  bool locate(typename ScanlineMesh<Basis>::Edge::index_type &, const Point &) const;
+  bool locate(typename ScanlineMesh<Basis>::Face::index_type &, const Point &) const 
   { return false; }
-  bool locate(typename Cell::index_type &, const Point &) const 
+  bool locate(typename ScanlineMesh<Basis>::Cell::index_type &, const Point &) const 
   { return false; }
 
-  void get_point(Point &p, typename Node::index_type i) const 
+  void get_point(Point &p, typename ScanlineMesh<Basis>::Node::index_type i) const 
   { get_center(p,i); }
-  void set_point(const Point &p, typename Node::index_type i) 
+  void set_point(const Point &p, typename ScanlineMesh<Basis>::Node::index_type i) 
   { points_[i] = p; }
 
-  void get_random_point(Point &, const typename Elem::index_type &, 
+  void get_random_point(Point &, const typename ScanlineMesh<Basis>::Elem::index_type &, 
 			int) const
   { ASSERTFAIL("not implemented") }
 
@@ -222,7 +234,7 @@ StructCurveMesh<Basis>::get_dim(vector<unsigned int> &array) const
   array.resize(1);
   array.clear();
 
-  array.push_back(ni_);
+  array.push_back(this->ni_);
 
   return true;
 }
@@ -233,7 +245,7 @@ StructCurveMesh<Basis>::get_bounding_box() const
 {
   BBox result;
   
-  typename Node::iterator i, ie;
+  typename ScanlineMesh<Basis>::Node::iterator i, ie;
   begin(i);
   end(ie);
 
@@ -249,7 +261,7 @@ template <class Basis>
 void
 StructCurveMesh<Basis>::transform(const Transform &t)
 {
-  typename Node::iterator i, ie;
+  typename ScanlineMesh<Basis>::Node::iterator i, ie;
   begin(i);
   end(ie);
 
@@ -266,7 +278,7 @@ StructCurveMesh<Basis>::get_cord_length() const
 {
   double result = 0.0;
   
-  typename Node::iterator i, i1, ie;
+  typename ScanlineMesh<Basis>::Node::iterator i, i1, ie;
   begin(i);
   begin(i1);
   end(ie);
@@ -283,35 +295,35 @@ StructCurveMesh<Basis>::get_cord_length() const
 
 template <class Basis>
 void
-StructCurveMesh<Basis>::get_nodes(typename Node::array_type &array, typename Edge::index_type idx) const
+StructCurveMesh<Basis>::get_nodes(typename ScanlineMesh<Basis>::Node::array_type &array, typename ScanlineMesh<Basis>::Edge::index_type idx) const
 {
   array.resize(2);
-  array[0] = typename Node::index_type(idx);
-  array[1] = typename Node::index_type(idx + 1);
+  array[0] = typename ScanlineMesh<Basis>::Node::index_type(idx);
+  array[1] = typename ScanlineMesh<Basis>::Node::index_type(idx + 1);
 }
 
 template <class Basis>
 void
-StructCurveMesh<Basis>::get_center(Point &result, const typename Node::index_type &idx) const
+StructCurveMesh<Basis>::get_center(Point &result, const typename ScanlineMesh<Basis>::Node::index_type &idx) const
 {
   result = points_[idx];
 }
 
 template <class Basis>
 void
-StructCurveMesh<Basis>::get_center(Point &result, const typename Edge::index_type &idx) const
+StructCurveMesh<Basis>::get_center(Point &result, const typename ScanlineMesh<Basis>::Edge::index_type &idx) const
 {
-  Point p0 = points_[typename Node::index_type(idx)];
-  Point p1 = points_[typename Node::index_type(idx+1)];
+  Point p0 = points_[typename ScanlineMesh<Basis>::Node::index_type(idx)];
+  Point p1 = points_[typename ScanlineMesh<Basis>::Node::index_type(idx+1)];
 
   result = Point(p0+p1)/2.0;
 }
 
 template <class Basis>
 bool
-StructCurveMesh<Basis>::locate(typename Node::index_type &idx, const Point &p) const
+StructCurveMesh<Basis>::locate(typename ScanlineMesh<Basis>::Node::index_type &idx, const Point &p) const
 {
-  typename Node::iterator ni, nie;
+  typename ScanlineMesh<Basis>::Node::iterator ni, nie;
   begin(ni);
   end(nie);
 
@@ -339,12 +351,12 @@ StructCurveMesh<Basis>::locate(typename Node::index_type &idx, const Point &p) c
 
 template <class Basis>
 bool
-StructCurveMesh<Basis>::locate(typename Edge::index_type &idx, const Point &p) const
+StructCurveMesh<Basis>::locate(typename ScanlineMesh<Basis>::Edge::index_type &idx, const Point &p) const
 {
-  typename Edge::iterator ei;
-  typename Edge::iterator eie;
+  typename ScanlineMesh<Basis>::Edge::iterator ei;
+  typename ScanlineMesh<Basis>::Edge::iterator eie;
   double cosa, closest=DBL_MAX;
-  typename Node::array_type nra;
+  typename ScanlineMesh<Basis>::Node::array_type nra;
   double dist1, dist2, dist3, dist4;
   Point n1,n2,q;
 

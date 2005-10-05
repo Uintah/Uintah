@@ -618,8 +618,8 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
 				 FieldHandle &boundary, MatrixHandle &interp,
 				 int basis_order)
 {
-  if (get_type_description((typename Msh::Elem *)0)->get_name() ==
-      get_type_description((typename Msh::Cell *)0)->get_name())
+  if (Msh::elem_type_description()->get_name() ==
+      Msh::cell_type_description()->get_name())
   {
     string algoname = "Tri";
 
@@ -651,8 +651,8 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
       algo->execute(mesh, boundary, interp, basis_order);
     }
   }
-  else if (get_type_description((typename Msh::Elem *)0)->get_name() ==
-	   get_type_description((typename Msh::Face *)0)->get_name())
+  else if (Msh::elem_type_description()->get_name() ==
+	   Msh::face_type_description()->get_name())
   {
     const TypeDescription *mtd = get_type_description((Msh *)0);
     CompileInfoHandle ci =
