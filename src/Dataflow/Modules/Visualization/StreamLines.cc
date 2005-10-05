@@ -65,7 +65,7 @@ private:
   GuiDouble                     gTolerance_;
   GuiInt                        gMaxsteps_;
   GuiInt                        gDirection_;
-  GuiInt                        gColor_;
+  GuiInt                        gValue_;
   GuiInt                        gRemove_Colinear_;
   GuiInt                        gMethod_;
   GuiInt                        gNp_;
@@ -74,7 +74,7 @@ private:
   double stepsize_;
   int maxsteps_;
   int direction_;
-  int color_;
+  int value_;
   int remove_colinear_;
   int method_;
   int np_;
@@ -95,7 +95,7 @@ StreamLines::StreamLines(GuiContext* ctx) :
   gTolerance_(ctx->subVar("tolerance")),
   gMaxsteps_(ctx->subVar("maxsteps")),
   gDirection_(ctx->subVar("direction")),
-  gColor_(ctx->subVar("color")),
+  gValue_(ctx->subVar("value")),
   gRemove_Colinear_(ctx->subVar("remove-colinear")),
   gMethod_(ctx->subVar("method")),
   gNp_(ctx->subVar("np")),
@@ -171,11 +171,17 @@ StreamLines::execute()
     update = true;
   }
 
+  if (gValue_.get() == 0 &&
+      !sfHandle->query_scalar_interface(this).get_rep()) {
+    error("Usage of Seed data is only available for Scalar data.");
+    return;
+  }
+
   double tolerance = gTolerance_.get();
   double stepsize = gStepsize_.get();
   int maxsteps = gMaxsteps_.get();
   int direction = gDirection_.get();
-  int color = gColor_.get();
+  int value = gValue_.get();
   int remove_colinear = gRemove_Colinear_.get();
   int method = gMethod_.get();
   int np = gNp_.get();
@@ -184,7 +190,7 @@ StreamLines::execute()
       stepsize_  != stepsize  ||
       maxsteps_  != maxsteps  ||
       direction_ != direction ||
-      color_     != color ||
+      value_     != value ||
       remove_colinear_ != remove_colinear  ||
       method_    != method  ||
       np_        != np ) {
@@ -193,7 +199,7 @@ StreamLines::execute()
     stepsize_  = stepsize;
     maxsteps_  = maxsteps;
     direction_ = direction;
-    color_     = color;
+    value_     = value;
     remove_colinear_ = remove_colinear;
     method_    = method;
     np_        = np;
@@ -207,10 +213,14 @@ StreamLines::execute()
 
     update_state(JustStarted);
 
-    error_ = false;
+     error_ = false;
 
-    const TypeDescription *smtd = sField->mesh()->get_type_description();
+    const TypeDescription *sftd = sField->get_type_description();
+    const TypeDescription *sfdtd = sField->get_type_description(1);
     const TypeDescription *sltd = sField->order_type_description();
+
+    vField->mesh()->synchronize(Mesh::LOCATE_E);
+    vField->mesh()->synchronize(Mesh::EDGES_E);
 
     if (method_ == 5 ) {
 
@@ -222,25 +232,22 @@ StreamLines::execute()
 
       const TypeDescription *vtd = vfHandle->get_type_description();
       CompileInfoHandle aci =
-	StreamLinesAccAlgo::get_compile_info(smtd, sltd, vtd);
+	StreamLinesAccAlgo::get_compile_info(sftd, sfdtd, sltd, vtd, value);
       Handle<StreamLinesAccAlgo> accalgo;
       if (!module_dynamic_compile(aci, accalgo)) return;
-      vField->mesh()->synchronize(Mesh::LOCATE_E);
-      vField->mesh()->synchronize(Mesh::EDGES_E);
       
-      fHandle_ = accalgo->execute(sField->mesh(), vfHandle, maxsteps,
-				  direction, color,
+      fHandle_ = accalgo->execute(sField, vfHandle, maxsteps,
+				  direction, value,
 				  remove_colinear);
     } else {
-      CompileInfoHandle ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
+      CompileInfoHandle ci =
+	StreamLinesAlgo::get_compile_info(sftd, sfdtd, sltd, value);
       Handle<StreamLinesAlgo> algo;
       if (!module_dynamic_compile(ci, algo)) return;
-      vField->mesh()->synchronize(Mesh::LOCATE_E);
-      vField->mesh()->synchronize(Mesh::EDGES_E);
       
-      fHandle_ = algo->execute(sField->mesh(), vfi,
+      fHandle_ = algo->execute(sField, vfi,
 			       tolerance, stepsize, maxsteps,
-			       direction, color,
+			       direction, value,
 			       remove_colinear,
 			       method, CLAMP(np, 1, 256));
     }
@@ -548,8 +555,10 @@ StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
 
 
 CompileInfoHandle
-StreamLinesAlgo::get_compile_info(const TypeDescription *msrc,
-				  const TypeDescription *sloc)
+StreamLinesAlgo::get_compile_info(const TypeDescription *fsrc,
+				  const TypeDescription *dsrc,
+				  const TypeDescription *sloc,
+				  int value)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -558,24 +567,28 @@ StreamLinesAlgo::get_compile_info(const TypeDescription *msrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       msrc->get_filename() + "." +
+		       fsrc->get_filename() + "." +
+		       (value ? dsrc->get_filename() : "double") + "." +
 		       sloc->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-		       msrc->get_name() + ", " +
+		       fsrc->get_name() + ", " +
+		       (value ? dsrc->get_name() : "double") + ", " +
 		       sloc->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  msrc->fill_compile_info(rval);
+  fsrc->fill_compile_info(rval);
   return rval;
 }
 
 
 CompileInfoHandle
-StreamLinesAccAlgo::get_compile_info(const TypeDescription *msrc,
+StreamLinesAccAlgo::get_compile_info(const TypeDescription *fsrc,
+				     const TypeDescription *dsrc,
 				     const TypeDescription *sloc,
-				     const TypeDescription *vfld)
+				     const TypeDescription *vfld,
+				     int value)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -584,23 +597,23 @@ StreamLinesAccAlgo::get_compile_info(const TypeDescription *msrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       msrc->get_filename() + "." +
+		       fsrc->get_filename() + "." +
+		       (value ? dsrc->get_filename() : "double") + "." +
 		       sloc->get_filename() + "." +
 		       vfld->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-		       msrc->get_name() + ", " +
+		       fsrc->get_name() + ", " +
+		       (value ? dsrc->get_name() : "double") + ", " +
 		       sloc->get_name() + ", " +
 		       vfld->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  msrc->fill_compile_info(rval);
+  fsrc->fill_compile_info(rval);
   vfld->fill_compile_info(rval);
   return rval;
 }
 
 
 } // End namespace SCIRun
-
-

@@ -36,7 +36,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	global $this-tolerance
 	global $this-maxsteps
 	global $this-direction
-	global $this-color
+	global $this-value
 	global $this-remove-colinear
 	global $this-method
 	global $this-np
@@ -49,7 +49,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	set $this-stepsize 0.01
 	set $this-maxsteps 2000
 	set $this-direction 1
-	set $this-color 1
+	set $this-value 1
 	set $this-remove-colinear 1
 	set $this-method 4
 	set $this-np 1
@@ -94,24 +94,29 @@ itcl_class SCIRun_Visualization_StreamLines {
 	    -side left -fill both
 
 
-	frame $w.color -relief groove -borderwidth 2
-	label $w.color.label -text "Color Style"
-	frame $w.color.left
-	frame $w.color.right
-	radiobutton $w.color.left.const -text   "Seed Number" \
-	    -variable $this-color -value 0
-	radiobutton $w.color.left.incr -text "Integration Step" \
-	    -variable $this-color -value 1
-	radiobutton $w.color.right.delta -text "Distance from Seed" \
-	    -variable $this-color -value 2
-	radiobutton $w.color.right.total -text "Streamline Length" \
-	    -variable $this-color -value 3
+	frame $w.value -relief groove -borderwidth 2
+	label $w.value.label -text "Streamline Value"
+	frame $w.value.left
+	frame $w.value.middle
+	frame $w.value.right
+	radiobutton $w.value.left.value -text   "Seed Value" \
+	    -variable $this-value -value 0
+	label $w.value.left.blank -text ""
+	radiobutton $w.value.middle.index -text "Seed Index" \
+	    -variable $this-value -value 1
+	radiobutton $w.value.middle.incr -text  "Integration Step" \
+	    -variable $this-value -value 2
+	radiobutton $w.value.right.delta -text  "Distance from Seed" \
+	    -variable $this-value -value 3
+	radiobutton $w.value.right.total -text  "Streamline Length" \
+	    -variable $this-value -value 4
 
-	pack $w.color.left.const $w.color.left.incr -side top -anchor w
-	pack $w.color.right.delta $w.color.right.total -side top -anchor w
+	pack $w.value.left.value $w.value.left.blank -side top -anchor w
+	pack $w.value.middle.index $w.value.middle.incr -side top -anchor w
+	pack $w.value.right.delta $w.value.right.total -side top -anchor w
 
-	pack $w.color.label -side top -fill both
-	pack $w.color.left $w.color.right -side left -anchor w
+	pack $w.value.label -side top -fill both
+	pack $w.value.left $w.value.middle $w.value.right -side left -anchor w
 
 
 	frame $w.meth -relief groove -borderwidth 2
@@ -120,8 +125,9 @@ itcl_class SCIRun_Visualization_StreamLines {
 	    -variable $this-method -value 5
 	radiobutton $w.meth.ab -text "Adams-Bashforth Multi-Step" \
 	    -variable $this-method -value 0
-	#radiobutton $w.meth.o2 -text "Adams Moulton Multi Step" -variable $this-method \
-        #	    -value 1
+	#radiobutton $w.meth.o2 -text "Adams Moulton Multi Step" \
+	    -variable $this-method \
+#	    -value 1
 	radiobutton $w.meth.heun -text "Heun Method" \
 	    -variable $this-method -value 2
 	radiobutton $w.meth.rk4 -text "Classic 4th Order Runge-Kutta" \
@@ -137,8 +143,8 @@ itcl_class SCIRun_Visualization_StreamLines {
 	checkbutton $w.filter -text "Filter Colinear Points" \
 		-variable $this-remove-colinear -justify left
 
-	pack $w.meth $w.e $w.direction $w.color $w.filter -side top -e y -f both \
-		-padx 5 -pady 5
+	pack $w.meth $w.e $w.direction $w.value $w.filter \
+	    -side top -e y -f both -padx 5 -pady 5
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
