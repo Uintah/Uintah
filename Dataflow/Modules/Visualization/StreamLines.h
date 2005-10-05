@@ -50,15 +50,15 @@ namespace SCIRun {
 using namespace std;
 
 typedef struct _SLData {
-  CurveField<double> *cf;
+  FieldHandle fh;
   Mutex lock;
-  MeshHandle seed_mesh_h;
+  FieldHandle seed_field_h;
   VectorFieldInterfaceHandle vfi;
   double tolerance;
   double stepsize;
   int maxsteps;
   int direction;
-  int color;
+  int value;
   bool rcp;
   int met;
   int np;
@@ -73,20 +73,22 @@ StreamLinesCleanupPoints(vector<Point> &input, double e2);
 class StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(MeshHandle seed_mesh_h,
+  virtual FieldHandle execute(FieldHandle seed_field_h,
 			      VectorFieldInterfaceHandle vfi,
 			      double tolerance,
 			      double stepsize,
 			      int maxsteps,
 			      int direction,
-			      int color,
+			      int value,
 			      bool remove_colinear_p,
 			      int method, 
 			      int np) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *smesh,
-					    const TypeDescription *sloc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const TypeDescription *dsrc,
+					    const TypeDescription *sloc,
+					    int value);
 protected:
 
   //! This particular implementation uses Runge-Kutta-Fehlberg.
@@ -96,32 +98,35 @@ protected:
 };
 
 
-template <class SFLD, class SLOC>
+template <class SFLD, class STYPE, class SLOC>
 class StreamLinesAlgoT : public StreamLinesAlgo
 {
 public:
   //! virtual interface. 
   void parallel_generate(int proc, SLData *d);
 
-  virtual FieldHandle execute(MeshHandle seed_mesh_h,
+  virtual FieldHandle execute(FieldHandle seed_field_h,
 			      VectorFieldInterfaceHandle vfi,
 			      double tolerance,
 			      double stepsize,
 			      int maxsteps,
 			      int direction,
-			      int color,
+			      int value,
 			      bool remove_colinear_p,
 			      int method,
 			      int np);
 };
 
 
-template <class SMESH, class SLOC>
+template <class SFIELD, class STYPE, class SLOC>
 void
-StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
-						  
+StreamLinesAlgoT<SFIELD, STYPE, SLOC>::
+parallel_generate( int proc, SLData *d)
 {
-  SMESH *smesh = dynamic_cast<SMESH *>(d->seed_mesh_h.get_rep());
+  SFIELD *sfield = (SFIELD *) d->seed_field_h.get_rep();
+  typename SFIELD::mesh_handle_type smesh = sfield->get_typed_mesh();
+
+  CurveField< STYPE > *cfield = (CurveField< STYPE > *) d->fh.get_rep();
 
   const double tolerance2 = d->tolerance * d->tolerance;
 
@@ -140,13 +145,18 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
   typename SLOC::iterator seed_iter, seed_iter_end;
   smesh->begin(seed_iter);
   smesh->end(seed_iter_end);
+
+  typename SFIELD::fdata_type::iterator data_iter = sfield->fdata().begin();
+
   int count = 0;
+
   while (seed_iter != seed_iter_end)
   {
     // If this seed doesn't "belong" to this parallel thread,
     // ignore it and continue on the next seed.
     if (count%d->np != proc) {
       ++seed_iter;
+      ++data_iter;
       ++count;
       continue;
     }
@@ -157,6 +167,7 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
     if (!d->vfi->interpolate(test, seed))
     {
       ++seed_iter;
+      ++data_iter;
       ++count;
       continue;
     }
@@ -188,7 +199,7 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
 
     Point p1;
 
-    if( d->color == 3) {
+    if( d->value == 4 ) {
       node_iter = nodes.begin();
       if (node_iter != nodes.end()) {
 	p1 = *node_iter;	
@@ -206,42 +217,48 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
 
     if (node_iter != nodes.end()) {
       d->lock.lock();
-      n1 = d->cf->get_typed_mesh()->add_node(*node_iter);
+      n1 = cfield->get_typed_mesh()->add_node(*node_iter);
       p1 = *node_iter;
 
       std::ostringstream str;
       str << "Streamline " << count << " Node Index";      
-      d->cf->set_property( str.str(), n1, false );
+      d->fh->set_property( str.str(), n1, false );
 
-      d->cf->resize_fdata();
+      cfield->resize_fdata();
 
-      if( d->color == 0 )
-	d->cf->set_value((double)(*seed_iter), n1);
-      else if( d->color == 1)
-	d->cf->set_value((double)abs(cc), n1);
-      else
-	d->cf->set_value( length, n1);
+      if( d->value == 0 )
+	cfield->set_value((*data_iter), n1);
+      else if( d->value == 1 )
+	cfield->set_value((double)(*seed_iter), n1);
+      else if( d->value == 2)
+	cfield->set_value((double)abs(cc), n1);
+      else if( d->value == 3)
+	cfield->set_value( length, n1);
+      else if( d->value == 4)
+	cfield->set_value( length, n1);
 
       ++node_iter;
 
       cc++;
 
       while (node_iter != nodes.end()) {
-	n2 = d->cf->get_typed_mesh()->add_node(*node_iter);
-	d->cf->resize_fdata();
+	n2 = cfield->get_typed_mesh()->add_node(*node_iter);
+	cfield->resize_fdata();
 
-	if( d->color == 0 )
-	  d->cf->set_value((double)(*seed_iter), n2);
-	else if( d->color == 1)
-	  d->cf->set_value((double)abs(cc), n2);
-	else if( d->color == 2) {
+	if( d->value == 0 )
+	  cfield->set_value((*data_iter), n2);
+	else if( d->value == 1 )
+	  cfield->set_value((double)(*seed_iter), n2);
+	else if( d->value == 2)
+	  cfield->set_value((double)abs(cc), n2);
+	else if( d->value == 3) {
 	  length += Vector( *node_iter-p1 ).length();
-	  d->cf->set_value( length, n2);
+	  cfield->set_value( length, n2);
 	  p1 = *node_iter;
-	} else if( d->color == 3)
-	  d->cf->set_value( length, n2);
+	} else if( d->value == 4)
+	  cfield->set_value( length, n2);
 
-	d->cf->get_typed_mesh()->add_edge(n1, n2);
+	cfield->get_typed_mesh()->add_edge(n1, n2);
 
 	n1 = n2;
 	++node_iter;
@@ -252,34 +269,36 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
     }
 
     ++seed_iter;
+    ++data_iter;
     ++count;
   }
 
-  d->cf->set_property( "Streamline Count", count, false );
+  d->fh->set_property( "Streamline Count", count, false );
 }
 
 
-template <class SMESH, class SLOC>
+template <class SFIELD, class STYPE, class SLOC>
 FieldHandle
-StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
-				       VectorFieldInterfaceHandle vfi,
-				       double tolerance,
-				       double stepsize,
-				       int maxsteps,
-				       int direction,
-				       int color,
-				       bool rcp,
-				       int met,
-				       int np)
+StreamLinesAlgoT<SFIELD, STYPE, SLOC>::
+execute(FieldHandle seed_field_h,
+	VectorFieldInterfaceHandle vfi,
+	double tolerance,
+	double stepsize,
+	int maxsteps,
+	int direction,
+	int value,
+	bool rcp,
+	int met,
+	int np)
 {
   SLData d;
-  d.seed_mesh_h=seed_mesh_h;
+  d.seed_field_h=seed_field_h;
   d.vfi=vfi;
   d.tolerance=tolerance;
   d.stepsize=stepsize;
   d.maxsteps=maxsteps;
   d.direction=direction;
-  d.color=color;
+  d.value=value;
   d.rcp=rcp;
   d.met=met;
   d.np=np;
@@ -287,10 +306,10 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   CurveMeshHandle cmesh = scinew CurveMesh();
   CurveField<double> *cf = scinew CurveField<double>(cmesh, 1);
   
-  d.cf = cf;
+  d.fh = FieldHandle(cf);
 
   Thread::parallel(this,
-                   &StreamLinesAlgoT<SMESH, SLOC>::parallel_generate,
+                   &StreamLinesAlgoT<SFIELD, STYPE, SLOC>::parallel_generate,
                    np, &d);
 
   cf->freeze();
@@ -316,31 +335,33 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
 class StreamLinesAccAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(MeshHandle seed_mesh_h,
+  virtual FieldHandle execute(FieldHandle seed_field_h,
 			      FieldHandle vfield_h,
 			      int maxsteps,
 			      int direction,
-			      int color,
+			      int value,
 			      bool remove_colinear_p) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *smesh,
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const TypeDescription *dsrc,
 					    const TypeDescription *sloc,
-					    const TypeDescription *vfld);
+					    const TypeDescription *vfld,
+					    int value);
 
 };
 
 
-template <class SMESH, class SLOC, class VFLD>
+template <class SFIELD, class STYPE, class SLOC, class VFLD>
 class StreamLinesAccAlgoT : public StreamLinesAccAlgo
 {
 public:
 
-  virtual FieldHandle execute(MeshHandle seed_mesh_h,
+  virtual FieldHandle execute(FieldHandle seed_field_h,
 			      FieldHandle vfield_h,
 			      int maxsteps,
 			      int direction,
-			      int color,
+			      int value,
 			      bool remove_colinear_p);
 
   void FindNodes(vector<Point>& nodes, Point seed, int maxsteps, 
@@ -348,14 +369,15 @@ public:
 };
 
 
-template <class SMESH, class SLOC, class VFLD>
+template <class SFIELD, class STYPE, class SLOC, class VFLD>
 void
-StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::FindNodes(vector<Point> &v,
-						  Point seed,
-						  int maxsteps,
-						  VFLD *vfield,
-						  bool remove_colinear_p,
-						  bool back)
+StreamLinesAccAlgoT<SFIELD, STYPE, SLOC, VFLD>::
+FindNodes(vector<Point> &v,
+	  Point seed,
+	  int maxsteps,
+	  VFLD *vfield,
+	  bool remove_colinear_p,
+	  bool back)
 {
   typename VFLD::mesh_handle_type vmesh = vfield->get_typed_mesh();
 
@@ -422,17 +444,20 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::FindNodes(vector<Point> &v,
 						  
 
 
-template <class SMESH, class SLOC, class VFLD>
+template <class SFIELD, class STYPE, class SLOC, class VFLD>
 FieldHandle
-StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
-						FieldHandle vfield_h,
-						int maxsteps,
-						int direction,
-						int color,
-						bool remove_colinear_p)
+StreamLinesAccAlgoT<SFIELD, STYPE, SLOC, VFLD>::
+execute(FieldHandle seed_field_h,
+	FieldHandle vfield_h,
+	int maxsteps,
+	int direction,
+	int value,
+	bool remove_colinear_p)
 {
-  SMESH *smesh = dynamic_cast<SMESH *>(seed_mesh_h.get_rep());
-  VFLD *vfield = dynamic_cast<VFLD *>(vfield_h.get_rep());
+  SFIELD *sfield = (SFIELD *) seed_field_h.get_rep();
+  typename SFIELD::mesh_handle_type smesh = sfield->get_typed_mesh();
+
+  VFLD *vfield = (VFLD *) vfield_h.get_rep();
 
   vfield->mesh()->synchronize(Mesh::FACE_NEIGHBORS_E);
 
@@ -451,7 +476,11 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
   typename SLOC::iterator seed_iter, seed_iter_end;
   smesh->begin(seed_iter);
   smesh->end(seed_iter_end);
+
+  typename SFIELD::fdata_type::iterator data_iter = sfield->fdata().begin();
+
   int count = 0;
+
   while (seed_iter != seed_iter_end)
   {
     smesh->get_point(seed, *seed_iter);
@@ -460,6 +489,7 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
     if (!vfield->get_typed_mesh()->locate(elem, seed))
     {
       ++seed_iter;
+      ++data_iter;
       ++count;
       continue;
     }
@@ -498,7 +528,10 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
       cf->set_property( str.str(), n1, false );
 
       cf->resize_fdata();
-      if( color )
+
+      if( d->value == 0 )
+	cf->set_value((*data_iter), n1);
+      else if( value == 1)
 	cf->set_value((double)abs(cc), n1);
       else
 	cf->set_value((double)(*seed_iter), n1);
@@ -512,7 +545,9 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
 	n2 = cf->get_typed_mesh()->add_node(*node_iter);
 	cf->resize_fdata();
 
-	if( color )
+	if( value == 0 )
+	  cf->set_value((*data_iter), n2);
+	else if( value == 1)
 	  cf->set_value((double)abs(cc), n2);
 	else
 	  cf->set_value((double)(*seed_iter), n2);
@@ -528,6 +563,7 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
     }
 
     ++seed_iter;
+    ++data_iter;
     ++count;
   }
 
