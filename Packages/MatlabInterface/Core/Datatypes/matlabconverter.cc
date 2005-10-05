@@ -83,54 +83,17 @@ using namespace SCIRun;
 
 // Set defaults in the constructor
 matlabconverter::matlabconverter()
-  : numericarray_(false), indexbase_(1), datatype_(matlabarray::miSAMEASDATA), disable_transpose_(false), prefer_nrrds(false), prefer_bundles(false)
+  : numericarray_(false), 
+    indexbase_(1), 
+    datatype_(matlabarray::miSAMEASDATA), 
+    disable_transpose_(false), 
+    old_compressed_tensor_(false),
+    prefer_nrrds(false), 
+    prefer_bundles(false)
 {
 }
 
-void matlabconverter::setdatatype(matlabarray::mitype dataformat)
-{
-  datatype_ = dataformat;
-}
 
-void matlabconverter::setindexbase(long indexbase)
-{
-  indexbase_ = indexbase;
-}
-
-void matlabconverter::converttonumericmatrix()
-{
-  numericarray_ = true;
-}
-
-void matlabconverter::converttostructmatrix()
-{
-  numericarray_ = false;
-}
-
-void matlabconverter::setdisabletranspose(bool dt)
-{
-  disable_transpose_ = dt;
-}
-
-void matlabconverter::prefernrrds()
-{
-  prefer_nrrds = true;
-}
-
-void matlabconverter::prefermatrices()
-{
-  prefer_nrrds = false;
-}
-
-void matlabconverter::preferbundles()
-{
-  prefer_bundles = true;
-}
-
-void matlabconverter::prefersciobjects()
-{
-  prefer_bundles = false;
-}
 
 
 
@@ -1666,7 +1629,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
         }
     }
         
-  if (fs.scalarfield.isdense()) fieldtype = "FIELD";
+  if (fs.scalarfield.isdense()) fieldtype = "SCALAR FIELD";
   if (fs.vectorfield.isdense()) fieldtype = "VECTOR FIELD";
   if (fs.tensorfield.isdense()) fieldtype = "TENSOR FIELD";
         
@@ -2271,7 +2234,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
       matlabarray::mitype type = fs.scalarfield.gettype();
       switch (type)
         {
-        case matlabarray::miUINT8:  valuetype = "unsigned char"; break;
+        case matlabarray::miUINT8:      valuetype = "unsigned char"; break;
         case matlabarray::miINT8:       valuetype = "signed char"; break;
         case matlabarray::miINT16:      valuetype = "short"; break;
         case matlabarray::miUINT16:     valuetype = "unsigned short"; break;
@@ -2585,7 +2548,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
         {
           if (fs.face.getm() == 3) 
           {
-            if (fs.mask.isempty()) fieldtype = "TriSurfField"; else fieldtype = "MaskedTriSurfField";
+            fieldtype = "TriSurfField";
           }
           if (fs.face.getm() == 4) fieldtype = "QuadSurfField";
         }
@@ -2593,12 +2556,12 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
         {
           if (fs.cell.getm() == 4) 
           {
-            if (fs.mask.isempty()) fieldtype = "TetVolField"; else fieldtype = "MaskedTetVolField";
+            fieldtype = "TetVolField";
           }
           if (fs.cell.getm() == 6) fieldtype = "PrismVolField";
           if (fs.cell.getm() == 8) 
           {
-            if (fs.mask.isempty()) fieldtype = "HexVolField"; else fieldtype = "MaskedHexVolField";
+            fieldtype = "HexVolField";
           }
         }           
     }
@@ -2643,32 +2606,11 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
   // the object we want. This piece is a hack into the SCIRun system
   // for managing this. It's ugly.... 
 
-
-  string fielddesc = fieldtype +"<" + valuetype + "> ";
-  string fieldname = DynamicAlgoBase::to_filename(fielddesc);
-        
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("MatlabFieldReaderAlgoT");
-  static const string base_class_name("MatlabFieldReaderAlgo");
-
+  std::string fielddesc = fieldtype +"<" + valuetype + "> ";
   
-  // Everything we did is in the MatlabIO namespace so we need to add this
-  // Otherwise the dynamically code generator will not generate a "using namespace ...."
-  static const string name_space_name("MatlabIO");
-  static const string name_space_name2("SCIRun");
-
-  string filename = template_class_name + "." + fieldname + ".";
-  // Supply the dynamic compiler with enough information to build a file in the
-  // on-the-fly libs which will have the templated function in there
-  CompileInfoHandle cinfo = 
-    scinew CompileInfo(filename,base_class_name, template_class_name, fielddesc);
-  cinfo->add_namespace(name_space_name2);
-  cinfo->add_namespace(name_space_name);
-  cinfo->add_include(include_path);
+  CompileInfoHandle cinfo = MatlabFieldReaderAlgo::get_compile_info(fielddesc);
 
   Handle<MatlabFieldReaderAlgo> algo;
-        
-  // A placeholder for the dynamic code
         
   // Do the magic, internally algo will now refer to the proper dynamic class, which will be
   // loaded by this function as well
@@ -2724,11 +2666,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
         }
     }
     
-    
-//  if (fs.interp.isnumeric())
-//  {
-//    addinterp(scifield,fs.interp);
-//  }
+
   return;
 }
         
@@ -3238,42 +3176,6 @@ bool matlabconverter::createmesh(LockingHandle<StructHexVolMesh> &meshH,fieldstr
         
   return(true);
 }
-
-
-// This function generates a structure, so SCIRun can generate a temporaly file
-// containing a call to the dynamic call, which can subsequently be compiled
-// See the on-the-fly-libs directory for the files it generated
-CompileInfoHandle
-MatlabFieldReaderAlgo::get_compile_info(const TypeDescription *fieldTD)
-{
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("MatlabFieldReaderAlgoT");
-  static const string base_class_name("MatlabFieldReaderAlgo");
-  
-  // Everything we did is in the MatlabIO namespace so we need to add this
-  // Otherwise the dynamically code generator will not generate a "using namespace ...."
-  static const string name_space_name("MatlabIO");
-
-  // Supply the dynamic compiler with enough information to build a file in the
-  // on-the-fly libs which will have the templated function in there
-  CompileInfoHandle cinfo = 
-    scinew CompileInfo(template_class_name + "." +
-                       fieldTD->get_filename() + ".",
-                       base_class_name, 
-                       template_class_name, 
-                       fieldTD->get_name());
-
-  // Add in the include path to compile this obj
-  // rval->add_include(include_path); // Added this through other means
-  // Add the MatlabIO namespace
-  cinfo->add_namespace(name_space_name);
-  // Fill out any other default values
-  // fieldTD->fill_compile_info(cinfo); This function does not serve any purpose in this case
-  return(cinfo);
-}
-
-
 
 
 ////////////// HERE CODE FOR DYNAMIC FIELDWRITER STARTS ///////////////
@@ -3797,6 +3699,35 @@ bool matlabconverter::mladdfield(FData3d<Tensor> &fdata,matlabarray mlarray)
 }
 
 
+SCIRun::CompileInfoHandle
+MatlabFieldReaderAlgo::get_compile_info(std::string fielddesc)
+{
+  CompileInfoHandle cinfo;
+  
+  static const std::string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const std::string algo_name("MatlabFieldReaderAlgoT");
+  static const std::string base_name("MatlabFieldReaderAlgo");
+  static const std::string name_space("MatlabIO");
+  static const std::string name_space2("SCIRun");
+
+  std::string fieldname = DynamicAlgoBase::to_filename(fielddesc);
+  std::string filename = algo_name + "." + fieldname + ".";
+  
+  // Supply the dynamic compiler with enough information to build a file in the
+  // on-the-fly libs which will have the templated function in there
+  
+  cinfo = scinew CompileInfo(filename,base_name, algo_name, fielddesc);
+  cinfo->add_namespace(name_space);
+  cinfo->add_namespace(name_space2);
+  cinfo->add_include(include_path);
+  
+  // We do not have a field so we rely on the actual name to figure out
+  // what files to include
+
+  return(cinfo);
+}
+
+
 // This function generates a structure, so SCIRun can generate a temporaly file
 // containing a call to the dynamic call, which can subsequently be compiled
 // See the on-the-fly-libs directory for the files it generated
@@ -3809,7 +3740,7 @@ MatlabFieldWriterAlgo::get_compile_info(const TypeDescription *fieldTD)
   static const string base_class_name("MatlabFieldWriterAlgo");
   
   // Everything we did is in the MatlabIO namespace so we need to add this
-  // Otherwise the dynamically code generator will not generate a "using namespace ...."
+  // Otherwise the dynamically code generator will not sgenerate a "using namespace ...."
   static const string name_space_name("MatlabIO");
 
   // Supply the dynamic compiler with enough information to build a file in the
@@ -3919,11 +3850,13 @@ long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostri
   int nummatrices = 0;
   int numnrrds = 0;
   int numbundles = 0;
+  int numstrings = 0;
   
   matlabarray subarray;
   for (long p = 0; p < nfields; p++)
     {
       subarray = mlarray.getfield(0,p);
+      if (sciStringCompatible(subarray,dummyinfo,pr)) { numstrings++; continue; }
       if (prefer_bundles)  {if (sciBundleCompatible(subarray,dummyinfo,pr)) { numbundles++; continue; } }
       int score = sciFieldCompatible(subarray,dummyinfo,pr);
       if (score > 1)  { numfields++; continue; }
@@ -3934,14 +3867,14 @@ long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostri
       if (sciBundleCompatible(subarray,dummyinfo,pr)) { numbundles++; continue; }
     }
   
-  if (numfields+nummatrices+numnrrds+numbundles == 0) 
+  if (numfields+nummatrices+numnrrds+numbundles+numstrings == 0) 
     {
       postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Bundle (none of the fields matches a SCIRun object)"));
       return(0);
     }
   
   std::ostringstream oss;
-  oss << mlarray.getname() << " BUNDLE [ " << nummatrices << " MATRICES, " << numnrrds << " NRRDS, " << numfields << " FIELDS, " << numbundles << " BUNDLES]";
+  oss << mlarray.getname() << " BUNDLE [ " << nummatrices << " MATRICES, " << numnrrds << " NRRDS, " << numfields << " FIELDS, " << numstrings << "STRINGS, "<< numbundles << " BUNDLES]";
   infostring = oss.str();
   return(1);
 }
