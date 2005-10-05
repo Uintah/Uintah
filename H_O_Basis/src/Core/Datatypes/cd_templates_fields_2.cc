@@ -29,12 +29,12 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/Constant.h>
+#include <Core/Basis/NoData.h>
 #include <Core/Datatypes/ScanlineMesh.h>
 #include <Core/Datatypes/PointCloudMesh.h>
-#include <Core/Basis/NoData.h>
+#include <Core/Datatypes/GenericField.h>
 
 using namespace SCIRun;
 

@@ -35,6 +35,7 @@
 #include <vector>
 #include <string>
 #include <Core/Geometry/Point.h>
+#include <Core/Datatypes/TypeName.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Geometry/Transform.h>
@@ -207,7 +208,7 @@ eval_guess(vector<double> &cur, vector<double> &last, double &dist,
 {
   T dif = i_val - value; 
   cur[0] += dif / grad[0];
-  dist = (last - cur).length();
+  dist = last[0] - cur[0];
 }
 
 

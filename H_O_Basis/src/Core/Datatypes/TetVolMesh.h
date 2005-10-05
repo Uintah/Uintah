@@ -60,6 +60,7 @@
 #include <set>
 #include <sgi_stl_warnings_on.h>
 #include <Core/Datatypes/SearchGrid.h>
+#include <float.h> // for DBL_MAX
 
 namespace SCIRun {
 
@@ -833,6 +834,8 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return cell_type_description(); }
   static Persistent* maker() { return scinew TetVolMesh(); }
 
 protected:
@@ -3520,13 +3523,6 @@ TetVolMesh<Basis>::io(Piostream &stream)
 
 template <class Basis>
 const TypeDescription*
-TetVolMesh<Basis>::get_type_description() const
-{
-  return SCIRun::get_type_description((TetVolMesh *)0);
-}
-
-template <class Basis>
-const TypeDescription*
 get_type_description(TetVolMesh<Basis> *)
 {
   static TypeDescription *td = 0;
@@ -3540,6 +3536,13 @@ get_type_description(TetVolMesh<Basis> *)
 				"SCIRun");
   }
   return td;
+}
+
+template <class Basis>
+const TypeDescription*
+TetVolMesh<Basis>::get_type_description() const
+{
+  return SCIRun::get_type_description((TetVolMesh *)0);
 }
 
 template <class Basis>

@@ -43,6 +43,7 @@
 #ifndef SCI_project_ImageMesh_h
 #define SCI_project_ImageMesh_h 1
 
+#include <Core/Geometry/BBox.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Transform.h>
@@ -87,11 +88,11 @@ public:
       : ImageIndex(m, i, j) {}
 
     operator unsigned() const { 
-      ASSERT(mesh_);
-      return i_ + j_ * (mesh_->ni_-1);
+      ASSERT(this->mesh_);
+      return this->i_ + this->j_ * (this->mesh_->ni_-1);
     }
     
-    friend void Pio<Basis>(Piostream&, IFaceIndex&);
+    //friend void Pio<Basis>(Piostream&, IFaceIndex&);
     //friend const TypeDescription* get_type_description(IFaceIndex *);
   };
 
@@ -101,8 +102,7 @@ public:
     INodeIndex(const ImageMesh *m, unsigned i, unsigned j) 
       : ImageIndex(m, i, j) {}
     
-    friend 
-    void Pio<Basis>(Piostream&, INodeIndex&);
+    //friend void Pio<Basis>(Piostream&, INodeIndex&);
     //friend const TypeDescription* get_type_description(INodeIndex *);
   };
 
@@ -116,7 +116,7 @@ public:
 
     bool operator ==(const ImageIter &a) const
     {
-      return i_ == a.i_ && j_ == a.j_ && mesh_ == a.mesh_;
+      return this->i_ == a.i_ && this->j_ == a.j_ && this->mesh_ == a.mesh_;
     }
 
     bool operator !=(const ImageIter &a) const
@@ -135,10 +135,10 @@ public:
 
     INodeIter &operator++()
     {
-      i_++;
-      if (i_ >= mesh_->min_i_ + mesh_->ni_) {
-	i_ = mesh_->min_i_;
-	j_++;
+      this->i_++;
+      if (this->i_ >= this->mesh_->min_i_ + this->mesh_->ni_) {
+	this->i_ = this->mesh_->min_i_;
+	this->j_++;
       }
       return *this;
     }
@@ -164,10 +164,10 @@ public:
 
     IFaceIter &operator++()
     {
-      i_++;
-      if (i_ >= mesh_->min_i_+mesh_->ni_-1) {
-	i_ = mesh_->min_i_;
-	j_++;
+      this->i_++;
+      if (this->i_ >= this->mesh_->min_i_+this->mesh_->ni_-1) {
+	this->i_ = this->mesh_->min_i_;
+	this->j_++;
       }
       return *this;
     }
@@ -427,8 +427,8 @@ ImageMesh<Basis>::type_id(type_name(-1),"Mesh", maker);
 //std::ostream& operator<<(std::ostream& os, const ImageMesh::ImageSize& s);
 
 template<class Basis>
-ImageMesh<Basis>::ImageMesh<Basis>(unsigned i, unsigned j,
-				   const Point &min, const Point &max) : 
+ImageMesh<Basis>::ImageMesh(unsigned i, unsigned j,
+			    const Point &min, const Point &max) : 
   min_i_(0), min_j_(0), ni_(i), nj_(j)
 {
   transform_.pre_scale(Vector(1.0 / (i-1.0), 1.0 / (j-1.0), 1.0));
@@ -1013,6 +1013,23 @@ ImageMesh<Basis>::size(typename ImageMesh::Cell::size_type &s) const
 
 template<class Basis>
 const TypeDescription*
+get_type_description(ImageMesh<Basis> *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    const TypeDescription *sub = SCIRun::get_type_description((Basis*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(ImageMesh<Basis>::type_name(0), subs,
+				string(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+template<class Basis>
+const TypeDescription*
 ImageMesh<Basis>::get_type_description() const
 {
   return SCIRun::get_type_description((ImageMesh *)0);
@@ -1028,23 +1045,6 @@ ImageMesh<Basis>::node_type_description()
     const TypeDescription *me = 
       SCIRun::get_type_description((ImageMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
-				string(__FILE__),
-				"SCIRun");
-  }
-  return td;
-}
-
-template<class Basis>
-const TypeDescription*
-get_type_description(ImageMesh<Basis> *)
-{
-  static TypeDescription *td = 0;
-  if (!td)
-  {
-    const TypeDescription *sub = SCIRun::get_type_description((Basis*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription(ImageMesh<Basis>::type_name(0), subs,
 				string(__FILE__),
 				"SCIRun");
   }

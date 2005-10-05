@@ -46,9 +46,9 @@ public:
   typedef const Data * const_iterator;
 
   iterator begin() { return &(*this)(0,0,0); } 
-  iterator end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  iterator end() { return &((*this)(this->dim1()-1,this->dim2()-1,this->dim3()-1))+1; }
   const_iterator begin() const { return &(*this)(0,0,0); } 
-  const_iterator end() const { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  const_iterator end() const { return &((*this)(this->dim1()-1,this->dim2()-1,this->dim3()-1))+1; }
 
     
   FData3d() : Array3<Data>() {}
@@ -83,7 +83,7 @@ public:
   void resize(const typename Msh::Cell::size_type &size)
   { Array3<Data>::resize(size.k_, size.j_, size.i_); }
 
-  unsigned int size() const { return dim1() * dim2() * dim3(); }
+  unsigned int size() const { return this->dim1() * this->dim2() * this->dim3(); }
 
   static const string type_name(int n = -1);
   const TypeDescription* get_type_description(int n) const;
@@ -185,9 +185,9 @@ public:
   typedef Data const * const_iterator;
 
   iterator begin() { return &(*this)(0,0); }
-  iterator end() { return &((*this)(dim1()-1,dim2()-1))+1; }
+  iterator end() { return &((*this)(this->dim1()-1,this->dim2()-1))+1; }
   const_iterator begin() const { return &(*this)(0,0); }
-  const_iterator end() const { return &((*this)(dim1()-1,dim2()-1))+1; }
+  const_iterator end() const { return &((*this)(this->dim1()-1,this->dim2()-1))+1; }
 
   FData2d() : Array2<Data>() {}
   FData2d(int) : Array2<Data>() {} //default var sgi bug workaround.
@@ -221,7 +221,7 @@ public:
   void resize(const typename Msh::Cell::size_type &size)
   { Array2<Data>::resize(1, size); }
 
-  unsigned int size() const { return dim1() * dim2(); }
+  unsigned int size() const { return this->dim1() * this->dim2(); }
 
   static const string type_name(int n = -1);
 };

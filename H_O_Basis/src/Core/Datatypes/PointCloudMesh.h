@@ -433,14 +433,6 @@ PointCloudMesh<Basis>::size(typename PointCloudMesh::Cell::size_type &s) const
 }
 
 
-
-template <class Basis>
-const TypeDescription*
-PointCloudMesh<Basis>::get_type_description() const
-{
-  return SCIRun::get_type_description((PointCloudMesh<Basis> *)0);
-}
-
 template <class Basis>
 const TypeDescription*
 get_type_description(PointCloudMesh<Basis> *)
@@ -456,6 +448,13 @@ get_type_description(PointCloudMesh<Basis> *)
 				"SCIRun");
   }
   return td;
+}
+
+template <class Basis>
+const TypeDescription*
+PointCloudMesh<Basis>::get_type_description() const
+{
+  return SCIRun::get_type_description((PointCloudMesh<Basis> *)0);
 }
 
 template <class Basis>

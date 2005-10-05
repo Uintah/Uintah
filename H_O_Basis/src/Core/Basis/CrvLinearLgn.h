@@ -36,6 +36,7 @@
 #include <string>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/TypeName.h>
 #include <Core/Geometry/Transform.h>
 #include <float.h>
 
@@ -102,7 +103,7 @@ public:
     //!         on the domain and use the closest as our starting point for 
     //!         Newton iteration.
       
-    vector<double>  cur, last;
+    T  cur, last;
     initial_guess(pCrv, value, cd, cur);
      
     //! Now cur has our initialization param for Newton iteration.
@@ -124,7 +125,7 @@ protected:
   template <class CellData>
   void initial_guess(CrvBasis *pCrv, const T &val, const CellData &cd, vector<double> cur) const
   {
-    double dist = HUGE;
+    double dist = DBL_MAX;
 	
     int end = 4;
     vector<double> guess(1,0.L);

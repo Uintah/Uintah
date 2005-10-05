@@ -52,14 +52,14 @@ using namespace SCIRun;
 
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
-#include <Core/Containers/FData.h>
 #include <Core/Datatypes/StructCurveMesh.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <Core/Datatypes/StructHexVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 
 typedef CrvLinearLgn<Tensor>                CFDTensorBasis;
 typedef CrvLinearLgn<Vector>                CFDVectorBasis;

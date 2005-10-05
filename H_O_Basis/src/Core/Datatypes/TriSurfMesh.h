@@ -1757,15 +1757,6 @@ TriSurfMesh<Basis>::size(typename TriSurfMesh::Cell::size_type &s) const
   s = *itr;
 }
 
-
-
-template <class Basis>
-const TypeDescription*
-TriSurfMesh<Basis>::get_type_description() const
-{
-  return SCIRun::get_type_description((TriSurfMesh<Basis> *)0);
-}
-
 template <class Basis>
 const TypeDescription*
 get_type_description(TriSurfMesh<Basis> *)
@@ -1781,6 +1772,13 @@ get_type_description(TriSurfMesh<Basis> *)
 				"SCIRun");
   }
   return td;
+}
+
+template <class Basis>
+const TypeDescription*
+TriSurfMesh<Basis>::get_type_description() const
+{
+  return SCIRun::get_type_description((TriSurfMesh<Basis> *)0);
 }
 
 template <class Basis>

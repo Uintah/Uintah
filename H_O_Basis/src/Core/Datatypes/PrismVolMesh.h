@@ -833,7 +833,7 @@ PrismVolMesh<Basis>::fill_points(Iter begin, Iter end, Functor fill_ftor) {
     ++piter; ++iter;
   }
   points_lock_.unlock();
-  dirty_ = true;
+  this->dirty_ = true;
 }
 
 template <class Basis>
@@ -854,7 +854,7 @@ PrismVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
     ++iter;
   }
   cells_lock_.unlock();
-  dirty_ = true;
+  this->dirty_ = true;
 }
 
 template <class Basis>
@@ -2347,13 +2347,6 @@ PrismVolMesh<Basis>::io(Piostream &stream)
 
 template <class Basis>
 const TypeDescription*
-PrismVolMesh<Basis>::get_type_description() const
-{
-  return SCIRun::get_type_description((PrismVolMesh<Basis> *)0);
-}
-
-template <class Basis>
-const TypeDescription*
 get_type_description(PrismVolMesh<Basis> *)
 {
   static TypeDescription *td = 0;
@@ -2367,6 +2360,13 @@ get_type_description(PrismVolMesh<Basis> *)
   }
 
   return td;
+}
+
+template <class Basis>
+const TypeDescription*
+PrismVolMesh<Basis>::get_type_description() const
+{
+  return SCIRun::get_type_description((PrismVolMesh<Basis> *)0);
 }
 
 template <class Basis>
