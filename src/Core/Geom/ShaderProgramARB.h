@@ -39,7 +39,7 @@ namespace SCIRun {
 class ShaderProgramARB
 {
 public:
-  ShaderProgramARB(const std::string& program);
+  ShaderProgramARB(const std::string& program, bool isFile = false);
   virtual ~ShaderProgramARB();
   
   bool create();
@@ -64,6 +64,8 @@ public:
 protected:
   unsigned int mType;
   unsigned int mId;
+  bool mFile;
+  std::string mString;
   std::string mProgram;
 
   static bool mInit;
@@ -71,19 +73,21 @@ protected:
   static bool mNon2Textures;
   static int max_texture_size_1_;
   static int max_texture_size_4_;
+
+  std::string read_from_file(const std::string& program_file);
 };
 
 class VertexProgramARB : public ShaderProgramARB
 {
 public:
-  VertexProgramARB(const std::string& program);
+  VertexProgramARB(const std::string& program, bool is_file = false);
   ~VertexProgramARB();
 };
 
 class FragmentProgramARB : public ShaderProgramARB
 {
 public:
-  FragmentProgramARB(const std::string& program);
+  FragmentProgramARB(const std::string& program, bool is_file = false);
   ~FragmentProgramARB();
 };
 
