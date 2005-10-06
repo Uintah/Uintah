@@ -1,5 +1,5 @@
 /*
- *  ArrayInfo.cc:
+ *  DataArrayInfo.cc:
  *
  *  Written by:
  *   jeroen
@@ -23,11 +23,11 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class ArrayInfo : public Module {
+class DataArrayInfo : public Module {
 public:
-  ArrayInfo(GuiContext*);
+  DataArrayInfo(GuiContext*);
 
-  virtual ~ArrayInfo();
+  virtual ~DataArrayInfo();
 
   virtual void execute();
 
@@ -47,9 +47,9 @@ private:
 };
 
 
-DECLARE_MAKER(ArrayInfo)
-ArrayInfo::ArrayInfo(GuiContext* ctx)
-  : Module("ArrayInfo", ctx, Source, "DataInfo", "ModelCreation"),
+DECLARE_MAKER(DataArrayInfo)
+DataArrayInfo::DataArrayInfo(GuiContext* ctx)
+  : Module("DataArrayInfo", ctx, Source, "DataInfo", "ModelCreation"),
     gui_matrixname_(ctx->subVar("matrixname", false)),
     gui_generation_(ctx->subVar("generation", false)),
     gui_typename_(ctx->subVar("typename", false)),
@@ -62,13 +62,13 @@ ArrayInfo::ArrayInfo(GuiContext* ctx)
   gui_elements_.set("---");
 }
 
-ArrayInfo::~ArrayInfo(){
+DataArrayInfo::~DataArrayInfo(){
 }
 
-void ArrayInfo::execute()
+void DataArrayInfo::execute()
 {
   // The input port (with data) is required.
-  MatrixIPort *iport = (MatrixIPort*)get_iport("Array");
+  MatrixIPort *iport = (MatrixIPort*)get_iport("DataArray");
   MatrixHandle mh;
   if (!iport->get(mh) || !mh.get_rep())
   {
@@ -105,13 +105,13 @@ void ArrayInfo::execute()
 }
 
 void
- ArrayInfo::tcl_command(GuiArgs& args, void* userdata)
+ DataArrayInfo::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
 
 
-void ArrayInfo::clear_vals()
+void DataArrayInfo::clear_vals()
 {
   gui_matrixname_.set("---");
   gui_generation_.set("---");
@@ -119,7 +119,7 @@ void ArrayInfo::clear_vals()
   gui_elements_.set("---");
 }
 
-void ArrayInfo::update_input_attributes(MatrixHandle m)
+void DataArrayInfo::update_input_attributes(MatrixHandle m)
 {
   string matrixname;
   if (m->get_property("name", matrixname))
@@ -155,8 +155,6 @@ void ArrayInfo::update_input_attributes(MatrixHandle m)
     gui_elements_.set(to_string(m->nrows()));  
   }
 }
-
-
 
 } // End namespace ModelCreation
 

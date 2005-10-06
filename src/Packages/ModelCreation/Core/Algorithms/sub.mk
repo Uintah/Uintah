@@ -14,6 +14,9 @@ SRCDIR   := Packages/ModelCreation/Core/Algorithms
 
 SRCS     += $(SRCDIR)/TVMEngine.cc\
             $(SRCDIR)/TVMHelp.cc\
+            $(SRCDIR)/ArrayObject.cc\
+            $(SRCDIR)/ArrayEngine.cc\
+            $(SRCDIR)/ArrayObjectFieldAlgo.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Util Core/Containers \

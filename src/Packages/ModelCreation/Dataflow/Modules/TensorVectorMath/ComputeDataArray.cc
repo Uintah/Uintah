@@ -26,34 +26,49 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 /*
- *  ComputeTensorArray.cc:
+ *  ComputeDataArray.cc:
  *
  *  Written by:
  *   Jeroen Stinstra
  *
  */
 
-#include <Packages/ModelCreation/Core/Algorithms/TVMEngine.h>
+// Include all code for the dynamic engine
+#include <Packages/ModelCreation/Core/Algorithms/ArrayObject.h>
+#include <Packages/ModelCreation/Core/Algorithms/ArrayEngine.h>
+
+// TensorVectorMath (TVM) is my namespace in which all Scalar, Vector, and Tensor math is defined.
+// The classes in this namespace have a definition which is more in line with
+// how functions are written in Algebra or Matlab than the native SCIRun Tensor
+// and Vector classes. Hence all calculations are performed in this specially
+// constructed namespace, to enhance the usability of SCIRun. 
+// The TVMHelp system contains an almost complete list of functions that are
+// defined in the TensorVectorMath, so when new functions are added, one does 
+// not need to update the GUI, but the module dynamically looks up the available
+// functions when it is created.
+
 #include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
 #include <Packages/ModelCreation/Core/Algorithms/TVMMath.h>
 
+
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/String.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/StringPort.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class ComputeTensorArray : public Module {
+class ComputeDataArray : public Module {
 public:
-  ComputeTensorArray(GuiContext*);
+  ComputeDataArray(GuiContext*);
 
-  virtual ~ComputeTensorArray();
+  virtual ~ComputeDataArray();
 
   virtual void execute();
 
@@ -61,26 +76,46 @@ public:
   
 private:
     GuiString guifunction_;
-    GuiString guihelp_;
+    GuiString guiformat_;
 };
 
 
-DECLARE_MAKER(ComputeTensorArray)
-ComputeTensorArray::ComputeTensorArray(GuiContext* ctx)
-  : Module("ComputeTensorArray", ctx, Source, "TensorVectorMath", "ModelCreation"),
+DECLARE_MAKER(ComputeDataArray)
+ComputeDataArray::ComputeDataArray(GuiContext* ctx)
+  : Module("ComputeDataArray", ctx, Source, "TensorVectorMath", "ModelCreation"),
   guifunction_(ctx->subVar("function")),
-  guihelp_(ctx->subVar("help"))
+  guiformat_(ctx->subVar("format"))
 {
 }
 
-ComputeTensorArray::~ComputeTensorArray(){
+ComputeDataArray::~ComputeDataArray(){
 }
 
-void ComputeTensorArray::execute()
+void ComputeDataArray::execute()
 {
-  size_t numinputs = (numIPorts()-2);
-  TensorVectorMath::TVMArrayList input(numinputs);
+  size_t numinputs = (numIPorts()-3);
   
+  ArrayObjectList inputlist(numinputs+1,ArrayObject(this));
+  ArrayObjectList outputlist(1,ArrayObject(this));
+  
+  StringIPort* function_iport = dynamic_cast<StringIPort *>(getIPort(1));
+  if(function_iport == 0)
+  {
+    error("Could not locate function input port");
+    return;
+  }
+
+  StringHandle func;
+  
+  if (function_iport->get(func))
+  {
+    if (func.get_rep())
+    {
+      guifunction_.set(func->get());
+      ctx->reset();
+    }
+  }
+
   if (numinputs > 26)
   {
     error("This module cannot handle more than 26 input matrices");
@@ -91,7 +126,6 @@ void ComputeTensorArray::execute()
   std::string matrixname("A");
   
   int n = 1;
-
 
   MatrixIPort *size_iport = dynamic_cast<MatrixIPort *>(getIPort(0));
   MatrixHandle size;
@@ -104,13 +138,19 @@ void ComputeTensorArray::execute()
       return;
     }
     n = static_cast<int>(size->get(0,0));
-    if (n < 1) n = 1;
+    if (n == 0) n = 1;
   }
   
+  // Add an object for getting the index and size of the array.
+  if(!(inputlist[0].create_inputindex("INDEX","SIZE")))
+  {
+    error("Internal error in module");
+    return;
+  } 
+   
   for (size_t p = 0; p < numinputs; p++)
   {
-
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+1));
+    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(getIPort(p+2));
     MatrixHandle handle;
     iport->get(handle);
     
@@ -119,8 +159,7 @@ void ComputeTensorArray::execute()
       if ((handle->ncols()==1)||(handle->ncols()==3)||(handle->ncols()==6)||(handle->ncols()==9))
       {
         matrixname[0] = mname++;
-        TensorVectorMath::TVMArray Array(handle,matrixname);
-        input[p] = Array;
+        inputlist[p+1].create_inputdata(handle,matrixname);
       }
       else
       {
@@ -147,23 +186,19 @@ void ComputeTensorArray::execute()
     }
   }
   
-  MatrixHandle omatrix = dynamic_cast<Matrix *>(scinew DenseMatrix(n,9));
-  if (omatrix.get_rep() == 0)
-  {
-    error("Could not allocate output matrix");
-    return;
-  }
-  TensorVectorMath::TVMArrayList output(1);
-  output[0] = TensorVectorMath::TVMArray(omatrix,"RESULT");
-  
+  std::string format = guiformat_.get();
+    
+  MatrixHandle omatrix;  
+  outputlist[0].create_outputdata(n,format,"RESULT",omatrix);
+    
   gui->lock();
   gui->eval(getID()+" update_text");
   gui->unlock();
   
   std::string function = guifunction_.get();
   
-  TensorVectorMath::TVMEngine engine(this);
-  if (!engine.engine(input,output,function,n))
+  ArrayEngine engine(this);
+  if (!engine.engine(inputlist,outputlist,function))
   {
     error("An error occured while executing function");
     return;
@@ -177,19 +212,21 @@ void ComputeTensorArray::execute()
   
 }
 
-void ComputeTensorArray::tcl_command(GuiArgs& args, void* userdata)
+void ComputeDataArray::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
-    args.error("ComputeTensorArray needs a minor command");
+    args.error("ComputeScalarArray needs a minor command");
     return;
   }
 
   if( args[1] == "gethelp" )
   {
     TensorVectorMath::TVMHelp Help;
-    guihelp_.set(Help.gethelp());
-    ctx->reset();
+    gui->lock();
+    gui->eval("global " + getID() +"-help");
+    gui->eval("set " + getID() + "-help {" + Help.gethelp() +"}");
+    gui->unlock();
   }
 
   else

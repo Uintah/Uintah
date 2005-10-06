@@ -86,7 +86,7 @@ FieldInfo::FieldInfo(GuiContext* ctx)
     gui_datamax_(ctx->subVar("datamax", false)),
     gui_numnodes_(ctx->subVar("numnodes", false)),
     gui_numelems_(ctx->subVar("numelems", false)),
-    gui_numdata_(ctx->subVar("numelems", false)),
+    gui_numdata_(ctx->subVar("numdata", false)),
     gui_dataat_(ctx->subVar("dataat", false)),
     gui_cx_(ctx->subVar("cx", false)),
     gui_cy_(ctx->subVar("cy", false)),

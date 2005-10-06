@@ -13,14 +13,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/TensorVectorMath
 
 SRCS     += \
-  $(SRCDIR)/ComposeTensorArray.cc\
+        $(SRCDIR)/ComputeDataArray.cc\
+        $(SRCDIR)/ComposeTensorArray.cc\
 	$(SRCDIR)/ComposeVectorArray.cc\
-	$(SRCDIR)/ComputeTensorArray.cc\
-	$(SRCDIR)/ComputeVectorArray.cc\
-	$(SRCDIR)/ComputeScalarArray.cc\
-  $(SRCDIR)/DecomposeTensorArray.cc\
+        $(SRCDIR)/DecomposeTensorArray.cc\
 	$(SRCDIR)/DecomposeVectorArray.cc\
-	$(SRCDIR)/ReplicateArray.cc\
+	$(SRCDIR)/IndicesToDataArray.cc\
+	$(SRCDIR)/ReplicateDataArray.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \

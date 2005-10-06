@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="SignedDistanceToField" category="FieldsData">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This function needs an object field that is a volume or a closed surface. 
+      When inside the object the distance field is positive, when outside it is 
+      negative. The module will fail for not close surfaces as one cannot 
+      define inside and outside. Similarly this function will not work for 
+      objects that are lines or points. Use the DistanceToField module for these
+      objects.
+    </summary>
+    <description>
+      This function needs an object field that is a volume or a closed surface. 
+      When inside the object the distance field is positive, when outside it is 
+      negative. The module will fail for not close surfaces as one cannot 
+      define inside and outside. Similarly this function will not work for 
+      objects that are lines or points. Use the DistanceToField module for these
+      objects.
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Object</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>SignedDistanceField</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>SignedDistanceMap</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

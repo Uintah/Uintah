@@ -10,12 +10,11 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/ModelCreation/Dataflow/Modules/DataInfo
+SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FieldsCreate
 
 SRCS     += \
-	$(SRCDIR)/DataArrayInfo.cc\
-	$(SRCDIR)/MatrixInfo.cc\
-	$(SRCDIR)/FieldInfo.cc\
+	$(SRCDIR)/ClipFieldBySelectionMask.cc\
+	$(SRCDIR)/ClipFieldByFunction.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
@@ -23,8 +22,9 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Core/Algorithms/Fields
-        
+        Packages/ModelCreation/Core/Algorithms \
+        Packages/ModelCreation/Core/Fields 
+                
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

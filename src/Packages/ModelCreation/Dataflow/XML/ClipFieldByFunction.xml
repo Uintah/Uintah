@@ -1,21 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="ArrayInfo" category="DataInfo">
+<component name="ClipFieldByFunction" category="FieldsCreate">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      Get information on a matrix used as a ScalarArray, VectorArray, or TensorArray.
+      This function can be used to clip of parts of a mesh, using a function which defines which parts are inside and which parts are outside.
     </summary>
     <description>
-      Get information on a matrix used as a ScalarArray, VectorArray, or TensorArray. The module also outputs the dimensions of the array.
+      BLA
     </description>
   </overview>
   <implementation>
   </implementation>
   <io>
-    <inputs lastportdynamic="no">
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Function</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
       <port>
         <name>Array</name>
         <datatype>SCIRun::Matrix</datatype>
@@ -23,19 +31,16 @@
     </inputs>
     <outputs>
       <port>
-        <name>NumElements</name>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Mapping</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>
   <gui>
-    <description>
-      NEED TO FINISH THIS
-    </description>
-    <parameter>
-      <widget>Place Widget Name Here</widget>
-      <label>Place Label Name Here</label>
-    </parameter>
   </gui>
   <testing>
   </testing>

@@ -167,19 +167,19 @@ inline void TVMArray::getnexttensor(Tensor& t)
   if (ncols_ == 6)
   {
     if (idx_ != -1) { t = Tensor(data_[idx_],data_[idx_+1],data_[idx_+2],data_[idx_+3],data_[idx_+4],data_[idx_+5]); idx_+=6; } 
-    else { t = Tensor(data_[idx_],data_[idx_+1],data_[idx_+2],data_[idx_+3],data_[idx_+4],data_[idx_+5]); }
+    else { t = Tensor(data_[0],data_[1],data_[2],data_[3],data_[4],data_[5]); }
   }
   else
   {
     if (idx_ != -1) { t = Tensor(data_[idx_],data_[idx_+1],data_[idx_+2],data_[idx_+4],data_[idx_+5],data_[idx_+8]); idx_+=9; } 
-    else { t = Tensor(data_[idx_],data_[idx_+1],data_[idx_+2],data_[idx_+4],data_[idx_+5],data_[idx_+8]); }  
+    else { t = Tensor(data_[0],data_[1],data_[2],data_[4],data_[5],data_[8]); }  
   }
 }
 
 inline void TVMArray::getnextvector(Vector& t)
 {
   if (idx_ != -1) { t = Vector(data_[idx_],data_[idx_+1],data_[idx_+2]); idx_+=3; } 
-  else { t = Vector(data_[idx_],data_[idx_+1],data_[idx_+2]); }
+  else { t = Vector(data_[0],data_[1],data_[2]); }
 }
 
 inline void TVMArray::setnextscalar(double& d)
