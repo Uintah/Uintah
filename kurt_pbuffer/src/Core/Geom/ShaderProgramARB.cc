@@ -40,6 +40,8 @@
 #include <Core/Util/Environment.h>
 
 #include <iostream>
+#include <sstream>
+#include <fstream>
 using std::cerr;
 using std::endl;
 using std::string;
@@ -203,8 +205,8 @@ int ShaderProgramARB::max_texture_size_1_ = 64;
 int ShaderProgramARB::max_texture_size_4_ = 64;
 static Mutex ShaderProgramARB_mInitMutex("ShaderProgramARB Init Lock");  
 
-ShaderProgramARB::ShaderProgramARB(const string& program)
-  : mType(0), mId(0), mProgram(program)
+ShaderProgramARB::ShaderProgramARB(const string& program, bool is_file)
+  : mType(0), mId(0), mFile(is_file), mString(program)
 {}
 
 ShaderProgramARB::~ShaderProgramARB ()
@@ -373,11 +375,17 @@ ShaderProgramARB::texture_non_power_of_two()
   return mNon2Textures;
 }
 
+
 bool
 ShaderProgramARB::create()
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if(shaders_supported()) {
+    if( mFile ) {
+      mProgram = read_from_file( mString );
+    } else {
+      mProgram = mString;
+    }
     glGenProgramsARB_SCI(1, &mId);
     glBindProgramARB_SCI(mType, mId);
     glProgramStringARB_SCI(mType, GL_PROGRAM_FORMAT_ASCII_ARB,
@@ -497,8 +505,28 @@ ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
 #endif
 }
 
-VertexProgramARB::VertexProgramARB(const string& program)
-  : ShaderProgramARB(program)
+string 
+ShaderProgramARB::read_from_file(const std::string& program_file)
+{
+  std::ifstream in( program_file.c_str() );
+  if( !in ){
+    cerr<<"Cannot open file "<< program_file.c_str()<<"\n";
+    in.close();
+    return string("");
+  }
+
+  std::ostringstream program;
+  char c;
+  while( in ){
+    in.get(c);
+    program.put(c);
+  }
+  in.close();
+  return program.str();
+}
+
+VertexProgramARB::VertexProgramARB(const string& program, bool is_file)
+  : ShaderProgramARB(program, is_file)
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   mType = GL_VERTEX_PROGRAM_ARB;
@@ -508,8 +536,8 @@ VertexProgramARB::VertexProgramARB(const string& program)
 VertexProgramARB::~VertexProgramARB()
 {}
 
-FragmentProgramARB::FragmentProgramARB(const string& program)
-  : ShaderProgramARB(program)
+FragmentProgramARB::FragmentProgramARB(const string& program, bool is_file)
+  : ShaderProgramARB(program, is_file)
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   mType = GL_FRAGMENT_PROGRAM_ARB;
