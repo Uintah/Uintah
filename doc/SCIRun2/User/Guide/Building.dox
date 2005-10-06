@@ -44,7 +44,7 @@ Be sure to carefully check the build instructions for each thirdparty dependency
     <tr>
      <td>SCIRun2 framework</td>
      <td>
-         %SCIRun Thirdparty, Babel, Flex, Bison, Gawk
+         %SCIRun Thirdparty, Babel, Flex, Bison, Gawk, ncurses
      </td>
      <td>--with-thirdparty=/path/to/thirdparty --with-babel=/path/to/babel</td>
     </tr>
@@ -125,6 +125,11 @@ Alternatively, source downloads are available from the
 <a href="http://www.gnu.org/">GNU</a> site.
 
 \subsection depend_gawk Gawk
+
+\subsection depend_ncurses ncurses
+
+Ncurses libraries and development headers need to be available to compile
+the text-based builder component (TxtBuilder). 
 
 \subsection depend_qt Qt
 
