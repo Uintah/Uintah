@@ -9,11 +9,12 @@ itcl_class ModelCreation_Script_ParameterList {
         global $this-data
         global $this-new_field_count
         global $this-update_all
+        global $this-use-global
         
-        set $this-data {{0 "example field" string "example"} {0 "example scalar" scalar 1.0} }    
+        set $this-data {{0 "example field" string "example" ""} {0 "example scalar" scalar 1.0 ""} }    
         set $this-new_field_count 1
         set $this-update_all "$this update_all_data"
-
+        set $this-use-global 0
     }
 
     method ui {} {
@@ -93,14 +94,19 @@ itcl_class ModelCreation_Script_ParameterList {
         label $d.h.f.check -width 4 -text "  " -background $header_color
         grid  $d.h.f.check -row 0 -column 0 
 
+        if {[expr [set $this-use-global] == 1]} {
+          label $d.h.f.arg -width 10 -text "GLOBAL" -background $header_color
+          grid  $d.h.f.arg -row 0 -column 1 
+        }
+       
         label $d.h.f.type -width 10 -text "FIELDTYPE" -background $header_color
-        grid  $d.h.f.type -row 0 -column 1 
+        grid  $d.h.f.type -row 0 -column 2 
 
         label $d.h.f.name -width 25 -text "FIELDNAME" -background $header_color
-        grid  $d.h.f.name -row 0 -column 2 
+        grid  $d.h.f.name -row 0 -column 3 
 
         label $d.h.f.data -width 20 -text "FIELDDATA" -background $header_color
-        grid  $d.h.f.data -row 0 -column 3 
+        grid  $d.h.f.data -row 0 -column 4 
         
 
         for {set p 0} {$p < $len} {incr p} {
@@ -110,6 +116,7 @@ itcl_class ModelCreation_Script_ParameterList {
           set parname  [lindex $data 1]
           set partype  [lindex $data 2]
           set pardata  [lindex $data 3]
+          set parscript [lindex $data 4]
           
           if {[string equal $partype "boolean"]} {
 
@@ -128,23 +135,28 @@ itcl_class ModelCreation_Script_ParameterList {
             }
             
             iwidgets::entryfield $d.$p.f.name -width 25 -command "$this update_data $p" -background $boolean_color -textbackground $boolean_color -textfont paramlist_font
-            grid $d.$p.f.name -row 0 -column 2 -sticky snew
+            grid $d.$p.f.name -row 0 -column 3 -sticky snew
             $d.$p.f.name insert 0 $parname
             
             iwidgets::optionmenu $d.$p.f.type -command "$this update_type $p" -foreground black -background $boolean_color
             foreach q $partypes {
               $d.$p.f.type insert end $q
             }
-            grid $d.$p.f.type -row 0 -column 1 -sticky snew
+            grid $d.$p.f.type -row 0 -column 2 -sticky snew
             $d.$p.f.type select $partype
             
             iwidgets::optionmenu $d.$p.f.data -command "$this update_data $p"  -background $boolean_color 
-            grid $d.$p.f.data -row 0 -column 3 -sticky snew            
+            grid $d.$p.f.data -row 0 -column 4 -sticky snew            
             foreach q {true false} {
               $d.$p.f.data insert 0 $q
             }
             $d.$p.f.data select $pardata
-            
+
+            if {[expr [set $this-use-global] == 1]} {
+              iwidgets::entryfield $d.$p.f.script -width 12 -command "$this update_data $p" -background $boolean_color -textbackground $boolean_color -textfont paramlist_font
+              grid $d.$p.f.script -row 0 -column 1 -sticky snew
+              $d.$p.f.script insert 0 $parscript            
+            }
           }
 
           if {[string equal $partype "string"]} {
@@ -164,20 +176,25 @@ itcl_class ModelCreation_Script_ParameterList {
             }
             
             iwidgets::entryfield $d.$p.f.name -width 25 -command "$this update_data $p" -background $string_color -textbackground $string_color -textfont paramlist_font
-            grid $d.$p.f.name -row 0 -column 2 -sticky snew
+            grid $d.$p.f.name -row 0 -column 3 -sticky snew
             $d.$p.f.name insert 0 $parname
             
             iwidgets::optionmenu $d.$p.f.type -command "$this update_type $p" -foreground black -background $string_color
             foreach q $partypes {
               $d.$p.f.type insert end $q
             }
-            grid $d.$p.f.type -row 0 -column 1 -sticky snew
+            grid $d.$p.f.type -row 0 -column 2 -sticky snew
             $d.$p.f.type select $partype
             
             iwidgets::entryfield $d.$p.f.data -width 50 -command "$this update_data $p" -foreground black -background $string_color -textbackground $string_color  -textfont paramlist_font
-            grid $d.$p.f.data -row 0 -column 3 -sticky snew            
+            grid $d.$p.f.data -row 0 -column 4 -sticky snew            
             $d.$p.f.data insert 0 $pardata
 
+            if {[expr [set $this-use-global] == 1]} {
+              iwidgets::entryfield $d.$p.f.script -width 12 -command "$this update_data $p" -background $string_color -textbackground $string_color -textfont paramlist_font
+              grid $d.$p.f.script -row 0 -column 1 -sticky snew
+              $d.$p.f.script insert 0 $parscript            
+            }
           }
 
           if {[string equal $partype "filename"]} {
@@ -197,18 +214,18 @@ itcl_class ModelCreation_Script_ParameterList {
             }
             
             iwidgets::entryfield $d.$p.f.name -width 25 -command "$this update_data $p" -background $filename_color -textbackground $filename_color -textfont paramlist_font
-            grid $d.$p.f.name -row 0 -column 2 -sticky snew
+            grid $d.$p.f.name -row 0 -column 3 -sticky snew
             $d.$p.f.name insert 0 $parname
             
             iwidgets::optionmenu $d.$p.f.type -command "$this update_type $p" -foreground black -background $filename_color
             foreach q $partypes {
               $d.$p.f.type insert end $q
             }
-            grid $d.$p.f.type -row 0 -column 1 -sticky snew
+            grid $d.$p.f.type -row 0 -column 2 -sticky snew
             $d.$p.f.type select $partype
             
             frame $d.$p.f.data -width 30 -background $filename_color -bd 0
-            grid $d.$p.f.data -row 0 -column 3 -sticky snew   
+            grid $d.$p.f.data -row 0 -column 4 -sticky snew   
 
             button $d.$p.f.data.browse -text "Browse" -command "$this browse_filename $p" -background $filename_color 
             grid $d.$p.f.data.browse -row 0 -column 1 -sticky snew            
@@ -217,6 +234,11 @@ itcl_class ModelCreation_Script_ParameterList {
             grid $d.$p.f.data.filename -row 0 -column 0 -sticky snew            
             $d.$p.f.data.filename insert 0 $pardata
 
+            if {[expr [set $this-use-global] == 1]} {
+              iwidgets::entryfield $d.$p.f.script -width 12 -command "$this update_data $p" -background $filename_color -textbackground $filename_color -textfont paramlist_font
+              grid $d.$p.f.script -row 0 -column 1 -sticky snew
+              $d.$p.f.script insert 0 $parscript            
+            }
           }
 
           if {[string equal $partype "scalar"]} {
@@ -236,19 +258,25 @@ itcl_class ModelCreation_Script_ParameterList {
             }
                       
             iwidgets::entryfield $d.$p.f.name -width 25 -command "$this update_data $p" -foreground black -background $scalar_color -textbackground $scalar_color  -textfont paramlist_font
-            grid $d.$p.f.name -row 0 -column 2 -sticky snew
+            grid $d.$p.f.name -row 0 -column 3 -sticky snew
             $d.$p.f.name insert 0 $parname
             
             iwidgets::optionmenu $d.$p.f.type -command "$this update_type $p" -foreground black -background $scalar_color
             foreach q $partypes {
               $d.$p.f.type insert end $q
             }
-            grid $d.$p.f.type -row 0 -column 1 -sticky snew
+            grid $d.$p.f.type -row 0 -column 2 -sticky snew
             $d.$p.f.type select $partype
             
             iwidgets::entryfield $d.$p.f.data -width 10 -command "$this update_data $p" -validate real -foreground black -background $scalar_color   -textbackground $scalar_color  -textfont paramlist_font
-            grid $d.$p.f.data -row 0 -column 3 -sticky snew          
+            grid $d.$p.f.data -row 0 -column 4 -sticky snew          
             $d.$p.f.data insert 0 $pardata
+
+            if {[expr [set $this-use-global] == 1]} {
+              iwidgets::entryfield $d.$p.f.script -width 12 -command "$this update_data $p" -background $scalar_color -textbackground $scalar_color -textfont paramlist_font
+              grid $d.$p.f.script -row 0 -column 1 -sticky snew
+              $d.$p.f.script insert 0 $parscript            
+            }
           }
         
           if {[string equal $partype "vector"]} {
@@ -268,18 +296,18 @@ itcl_class ModelCreation_Script_ParameterList {
             }
             
             iwidgets::entryfield $d.$p.f.name -width 25 -command "$this update_data $p" -foreground black -background $vector_color -textbackground $vector_color  -textfont paramlist_font
-            grid $d.$p.f.name -row 0 -column 2 -sticky snew
+            grid $d.$p.f.name -row 0 -column 3 -sticky snew
             $d.$p.f.name insert 0 $parname
             
             iwidgets::optionmenu $d.$p.f.type -command "$this update_type $p" -foreground black -background $vector_color 
             foreach q $partypes {
               $d.$p.f.type insert end $q
             }
-            grid $d.$p.f.type -row 0 -column 1 -sticky snew
+            grid $d.$p.f.type -row 0 -column 2 -sticky snew
             $d.$p.f.type select $partype
             
             frame $d.$p.f.data -width 30 -background $vector_color -bd 0
-            grid $d.$p.f.data -row 0 -column 3 -sticky snew   
+            grid $d.$p.f.data -row 0 -column 4 -sticky snew   
             
             for {set r 0} {$r < 3} {incr r} {
               iwidgets::entryfield $d.$p.f.data.$r -command "$this update_data $p" -width 10 -foreground black -background $vector_color -textbackground $vector_color  -textfont paramlist_font
@@ -287,7 +315,12 @@ itcl_class ModelCreation_Script_ParameterList {
               
               set subdata [lindex $pardata $r]
               $d.$p.f.data.$r insert 0 $subdata
+            }
 
+            if {[expr [set $this-use-global] == 1]} {
+              iwidgets::entryfield $d.$p.f.script -width 12 -command "$this update_data $p" -background $vector_color -textbackground $vector_color -textfont paramlist_font
+              grid $d.$p.f.script -row 0 -column 1 -sticky snew
+              $d.$p.f.script insert 0 $parscript            
             }
           }
         
@@ -308,18 +341,18 @@ itcl_class ModelCreation_Script_ParameterList {
             }
             
             iwidgets::entryfield $d.$p.f.name -width 25 -command "$this update_data $p" -foreground black -background $tensor_color -textbackground $tensor_color  -textfont paramlist_font
-            grid $d.$p.f.name -row 0 -column 2 -sticky snew
+            grid $d.$p.f.name -row 0 -column 1 -sticky snew
             $d.$p.f.name insert 0 $parname
             
             iwidgets::optionmenu $d.$p.f.type -command "$this update_type $p" -foreground black -background $tensor_color 
             foreach q $partypes {
               $d.$p.f.type insert end $q
             }
-            grid $d.$p.f.type -row 0 -column 1 -sticky snew
+            grid $d.$p.f.type -row 0 -column 2 -sticky snew
             $d.$p.f.type select $partype
             
             frame $d.$p.f.data -width 30 -background $tensor_color -bd 0
-            grid $d.$p.f.data -row 0 -column 3 -sticky snew   
+            grid $d.$p.f.data -row 0 -column 4 -sticky snew   
             
             for {set r 0} {$r < 6} {incr r} {
               iwidgets::entryfield $d.$p.f.data.$r -command "$this update_data $p" -width 10 -foreground black -background $tensor_color -textbackground $tensor_color  -textfont paramlist_font
@@ -327,7 +360,12 @@ itcl_class ModelCreation_Script_ParameterList {
               
               set subdata [lindex $pardata $r]
               $d.$p.f.data.$r insert 0 $subdata
+            }
 
+            if {[expr [set $this-use-global] == 1]} {
+              iwidgets::entryfield $d.$p.f.script -width 12 -command "$this update_data $p" -background $tensor_color -textbackground $tensor_color -textfont paramlist_font
+              grid $d.$p.f.script -row 0 -column 1 -sticky snew
+              $d.$p.f.script insert 0 $parscript                        
             }
           }
 
@@ -348,18 +386,18 @@ itcl_class ModelCreation_Script_ParameterList {
             }
             
             iwidgets::entryfield $d.$p.f.name -width 25 -command "$this update_data $p" -foreground black -background $array_color -textbackground $array_color  -textfont paramlist_font
-            grid $d.$p.f.name -row 0 -column 2 -sticky snew
+            grid $d.$p.f.name -row 0 -column 3 -sticky snew
             $d.$p.f.name insert 0 $parname
             
             iwidgets::optionmenu $d.$p.f.type -command "$this update_type $p" -foreground black -background $array_color 
             foreach q $partypes {
               $d.$p.f.type insert end $q
             }
-            grid $d.$p.f.type -row 0 -column 1 -sticky snew
+            grid $d.$p.f.type -row 0 -column 2 -sticky snew
             $d.$p.f.type select $partype
             
             frame $d.$p.f.data -width 30 -background $array_color -bd 0
-            grid $d.$p.f.data -row 0 -column 3 -sticky snew   
+            grid $d.$p.f.data -row 0 -column 4 -sticky snew   
             
             set alen [llength $pardata]
             iwidgets::entryfield $d.$p.f.data.len -command "$this update_data $p" -labeltext "#" -width 3 -foreground black -background $array_color -textbackground $array_color  -textfont paramlist_font -labelfont paramlist_font
@@ -373,9 +411,13 @@ itcl_class ModelCreation_Script_ParameterList {
               set subdata [lindex $pardata $r]
               $d.$p.f.data.$r insert 0 $subdata
             }
+
+            if {[expr [set $this-use-global] == 1]} {
+              iwidgets::entryfield $d.$p.f.script -width 12 -command "$this update_data $p" -background $array_color -textbackground $array_color -textfont paramlist_font
+              grid $d.$p.f.script -row 0 -column 1 -sticky snew
+              $d.$p.f.script insert 0 $parscript                        
+            }
           }
-
-
        }   
        font delete paramlist_font    
     }
@@ -456,6 +498,11 @@ itcl_class ModelCreation_Script_ParameterList {
             }
           }
 
+          if {[expr [set $this-use-global] == 1]} {
+            lappend newdata [$d.$p.f.script get]
+          } else {
+            lappend newdata ""
+          }
           lappend datalist $newdata
         }
         
@@ -533,14 +580,25 @@ itcl_class ModelCreation_Script_ParameterList {
           }
         
           if {[expr $newlen != $oldlen]} {
+            if {[expr [set $this-use-global] == 1]} {
+              lappend newdata [$d.$p.f.script get]
+            }
+            else
+            {
+              lappend newdata ""
+            }
             set $this-data [lreplace [set $this-data] $p $p $newdata]
             update_gui
             return
           }
         }
+        if {[expr [set $this-use-global] == 1]} {
+          lappend newdata [$d.$p.f.script get]
+        } else {
+          lappend newdata ""
+        }
         set $this-data [lreplace [set $this-data] $p $p $newdata]            
       }
-      
     }
     
     method update_type {p} {
@@ -555,6 +613,7 @@ itcl_class ModelCreation_Script_ParameterList {
         set parcheck [lindex $data 0]
         set parname  [lindex $data 1]
         set partype  [lindex $data 2]
+        set parscript  [lindex $data 4]
     
         set newpartype [$d.$p.f.type get]
         
@@ -602,6 +661,8 @@ itcl_class ModelCreation_Script_ParameterList {
             }          
           lappend newdata $subdata
         }
+        
+        lappend newdata $parscript
         set $this-data [lreplace [set $this-data] $p $p $newdata]         
         update_gui
       }
@@ -616,19 +677,20 @@ itcl_class ModelCreation_Script_ParameterList {
       for {set p 0} {$p < $len} {incr p} {
           set data [lindex [set $this-data] $p]
           
-          set parcheck [lindex $data 0]
-          set parname  [lindex $data 1]
-          set partype  [lindex $data 2]
-          set pardata  [lindex $data 3]
+          set parcheck  [lindex $data 0]
+          set parname   [lindex $data 1]
+          set partype   [lindex $data 2]
+          set pardata   [lindex $data 3]
+          set parscript [lindex $data 4]
           
-      
           if {[expr $parcheck == 0]} {
               set newdata ""
               lappend newdata $parcheck
               lappend newdata $parname
               lappend newdata $partype
               lappend newdata $pardata
-             
+              lappend newdata $parscript
+              
               lappend newlist $newdata
           }
       }
@@ -646,6 +708,7 @@ itcl_class ModelCreation_Script_ParameterList {
       lappend newentry 0
       lappend newentry [format "new_datafield_%d" [set $this-new_field_count]]
       lappend newentry string
+      lappend newentry ""
       lappend newentry ""
       incr $this-new_field_count
       

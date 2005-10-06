@@ -13,27 +13,30 @@ SRCDIR := Packages/ModelCreation/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/ComputeTensorArray.tcl\
-	$(SRCDIR)/ComputeVectorArray.tcl\
-	$(SRCDIR)/ComputeScalarArray.tcl\
-	$(SRCDIR)/ArrayInfo.tcl\
-	$(SRCDIR)/MatrixInfo.tcl\
-	$(SRCDIR)/FieldInfo.tcl\
-	$(SRCDIR)/ParameterList.tcl\
-	$(SRCDIR)/ParameterListMatrix.tcl\
-	$(SRCDIR)/ParameterListString.tcl\
 	$(SRCDIR)/BundleReader.tcl\
 	$(SRCDIR)/BundleWriter.tcl\
+	$(SRCDIR)/ClipFieldByFunction.tcl\
 	$(SRCDIR)/ColorMapReader.tcl\
 	$(SRCDIR)/ColorMapWriter.tcl\
 	$(SRCDIR)/ColorMap2Reader.tcl\
 	$(SRCDIR)/ColorMap2Writer.tcl\
+        $(SRCDIR)/ComputeDataArray.tcl\
+	$(SRCDIR)/ComputeFieldData.tcl\
+	$(SRCDIR)/DataArrayInfo.tcl\
+	$(SRCDIR)/FieldDataElemToNode.tcl\
+	$(SRCDIR)/FieldDataNodeToElem.tcl\
+	$(SRCDIR)/FieldInfo.tcl\
 	$(SRCDIR)/FieldReader.tcl\
 	$(SRCDIR)/FieldWriter.tcl\
+	$(SRCDIR)/MatrixInfo.tcl\
 	$(SRCDIR)/MatrixReader.tcl\
 	$(SRCDIR)/MatrixWriter.tcl\
+	$(SRCDIR)/ParameterList.tcl\
+	$(SRCDIR)/ParameterListMatrix.tcl\
+	$(SRCDIR)/ParameterListString.tcl\
 	$(SRCDIR)/PathReader.tcl\
 	$(SRCDIR)/PathWriter.tcl\
+	$(SRCDIR)/ReplicateDataArray.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

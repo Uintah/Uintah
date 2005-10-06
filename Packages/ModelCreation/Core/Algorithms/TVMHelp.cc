@@ -187,7 +187,21 @@ void TVMHelp::createhelplist()
     add("OR()","SCALAR = OR(SCALAR/VECOR/TENSOR,SCALAR/VECOR/TENSOR)","Boolean 'or' operation");
     add("XOR()","SCALAR = XOR(SCALAR/VECOR/TENSOR,SCALAR/VECOR/TENSOR)","Boolean 'xor' operation");
     add("NOT()","SCALAR = NOT(SCALAR/VECOR/TENSOR)","Boolean 'not' operation");
+  
+    add("inv()","TENSOR = inv(TENSOR)","Compute the inverse of the tensor");
+    add("inv()","SCALAR = inv(SCALAR)","Compute 1/SCALAR");
 
+}
+
+
+void TVMHelp::createhelplist_element()
+{
+    add("dimension()","SCALAR = dimension(ELEMENT)","This function returns 0 for data at a node, 1 for data at a line, 2 for data at a surface, 3 for data in a volume");
+    add("center()","VECTOR = center(ELEMENT)","Compute the center of the current element");
+    add("size()","SCALAR = size(ELEMENT)","Compute the size of the element. Depending on the dimension of the element it computes the length, area, or volume");
+    add("length()","SCALAR = length(ELEMENT)","Compute the length of the element");
+    add("area()","SCALAR = area(ELEMENT)","Compute the volume of the element");
+    add("volume()","SCALAR = volume(ELEMENT)","Compute the volume of the element");
 }
 
 } //end namespace

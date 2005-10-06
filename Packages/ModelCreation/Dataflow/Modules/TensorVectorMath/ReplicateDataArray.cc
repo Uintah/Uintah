@@ -27,7 +27,7 @@
 */
 
 /*
- *  ReplicateArray.cc:
+ *  ReplicateDataArray.cc:
  *
  *  Written by:
  *   jeroen
@@ -46,35 +46,39 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class ReplicateArray : public Module {
-public:
-  ReplicateArray(GuiContext*);
+class ReplicateDataArray : public Module {
+  public:
+    ReplicateDataArray(GuiContext*);
 
-  virtual ~ReplicateArray();
+    virtual ~ReplicateDataArray();
 
-  virtual void execute();
+    virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
+    virtual void tcl_command(GuiArgs&, void*);
+  
+  private:
+    GuiInt  guisize_;
 };
 
 
-DECLARE_MAKER(ReplicateArray)
-ReplicateArray::ReplicateArray(GuiContext* ctx)
-  : Module("ReplicateArray", ctx, Source, "TensorVectorMath", "ModelCreation")
+DECLARE_MAKER(ReplicateDataArray)
+ReplicateDataArray::ReplicateDataArray(GuiContext* ctx)
+  : Module("ReplicateDataArray", ctx, Source, "TensorVectorMath", "ModelCreation"),
+    guisize_(ctx->subVar("size"))
 {
 }
 
-ReplicateArray::~ReplicateArray(){
+ReplicateDataArray::~ReplicateDataArray(){
 }
 
 void
- ReplicateArray::execute()
+ ReplicateDataArray::execute()
 {
   MatrixHandle Input,Size,Output;
   MatrixIPort* iport;
   MatrixOPort* oport;
   
-  if (!(iport = dynamic_cast<MatrixIPort *>(get_iport("Array"))))
+  if (!(iport = dynamic_cast<MatrixIPort *>(get_iport("DataArray"))))
   {
     error("Could not locate input port 'Array'");
     return;
@@ -92,22 +96,33 @@ void
     return;
   }
   iport->get(Size);
+  
+  
+  int n = 0;  
   if(Size.get_rep() == 0)
   {
-    error("No matrix was found on input port 'Size'");
-    return;
+    // this widget has trouble updating properly
+    // hence force it to update
+    gui->lock();
+    gui->eval(getID()+" update_size");
+    gui->unlock();
+    n = guisize_.get();
   }
-  
-  int n = 0;
+  else
+  {
+    if((Size->ncols() != 1)||(Size->ncols() != 1))
+    {
+      error("Size needs to be a scalar (1 by 1 matrix)");
+      return;
+    }
+    n = static_cast<int>(Size->get(0,0));
+   
+    guisize_.set(n);
+    ctx->reset(); 
+  }
+
   int rows = 0;
   int cols = 0;
-  if((Size->ncols() != 1)||(Size->ncols() != 1))
-  {
-    error("Size needs to be a scalar (1 by 1 matrix)");
-    return;
-  }
-  
-  n = static_cast<int>(Size->get(0,0));
   
   if (n<1)
   {
@@ -161,7 +176,7 @@ void
 
 
 void
- ReplicateArray::tcl_command(GuiArgs& args, void* userdata)
+ ReplicateDataArray::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

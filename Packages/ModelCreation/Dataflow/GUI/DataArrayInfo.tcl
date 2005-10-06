@@ -1,7 +1,7 @@
-itcl_class ModelCreation_DataInfo_ArrayInfo {
+itcl_class ModelCreation_DataInfo_DataArrayInfo {
     inherit Module
     constructor {config} {
-        set name ArrayInfo
+        set name DataArrayInfo
         set_defaults
     }
 
@@ -31,7 +31,7 @@ itcl_class ModelCreation_DataInfo_ArrayInfo {
         toplevel $w
 
         iwidgets::Labeledframe $w.att -labelpos nw \
-                         -labeltext "Input Array Attributes" 
+                         -labeltext "Input DataArray Attributes" 
                    
         pack $w.att -fill x
         set att [$w.att childsite]

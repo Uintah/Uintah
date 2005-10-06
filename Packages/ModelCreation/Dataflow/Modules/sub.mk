@@ -16,6 +16,8 @@ SUBDIRS := \
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Script\
         $(SRCDIR)/SelectionMask\
+	$(SRCDIR)/FieldsData\
+	$(SRCDIR)/FieldsCreate\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

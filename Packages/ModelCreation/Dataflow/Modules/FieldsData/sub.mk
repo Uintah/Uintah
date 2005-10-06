@@ -10,12 +10,16 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/ModelCreation/Dataflow/Modules/DataInfo
+SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FieldsData
 
 SRCS     += \
-	$(SRCDIR)/DataArrayInfo.cc\
-	$(SRCDIR)/MatrixInfo.cc\
-	$(SRCDIR)/FieldInfo.cc\
+	$(SRCDIR)/DistanceToField.cc\
+	$(SRCDIR)/DistanceToBoundary.cc\
+	$(SRCDIR)/ComputeFieldData.cc\
+	$(SRCDIR)/FieldDataElemToNode.cc\
+	$(SRCDIR)/FieldDataNodeToElem.cc\
+	$(SRCDIR)/IsInsideField.cc\
+	$(SRCDIR)/SignedDistanceToField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
@@ -23,7 +27,8 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Core/Algorithms/Fields
+        Packages/ModelCreation/Core/Algorithms \
+        Packages/ModelCreation/Core/Fields 
         
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

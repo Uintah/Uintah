@@ -37,7 +37,7 @@ itcl_class ModelCreation_DataInfo_FieldInfo {
     method set_defaults {} {
 	# the width of the first column of the data display
 	global $this-firstwidth
-	set $this-firstwidth 12
+	set $this-firstwidth 14
 
 	# these won't be saved 
 	global $this-fldname
@@ -49,12 +49,12 @@ itcl_class ModelCreation_DataInfo_FieldInfo {
 	global $this-numelems
   global $this-numdata
 	global $this-dataat
-        global $this-cx
-        global $this-cy
-        global $this-cz
-        global $this-sizex
-        global $this-sizey
-        global $this-sizez
+  global $this-cx
+  global $this-cy
+  global $this-cz
+  global $this-sizex
+  global $this-sizey
+  global $this-sizez
 	set $this-fldname "---"
 	set $this-generation "---"
 	set $this-typename "---"

@@ -150,7 +150,8 @@ class Vector {
     inline Vector operator&(const double) const;
     inline Vector& operator&=(const double);
 
-    inline double boolean() const;
+    inline double  boolean() const;
+    inline double* getdataptr();
     
   private:
     double d_[3];
@@ -272,6 +273,8 @@ class Tensor {
     inline Tensor round() const;
     inline Tensor normalize() const;
 
+    inline Tensor inv();
+
     inline double isnan() const;
     inline double isinf() const;
     inline double isfinite() const;
@@ -280,6 +283,7 @@ class Tensor {
     inline Tensor& operator&=(const double);
 
     inline double boolean() const;
+    inline double* getdataptr();
 
   private:
     double d_[6];
@@ -347,6 +351,11 @@ const double pi = 3.14159265358979323846;
 const double e = 2.71828182845904523536;
 
 // SCALAR OPERATIONS
+
+inline double inv(double s)
+{
+  return(1.0/s);
+}
 
 inline double boolean(double s)
 {
@@ -975,6 +984,11 @@ inline double min(const Tensor& ten)
   return(ten.min());
 }
 
+inline Tensor inv(Tensor& ten)
+{
+  return(ten.inv());
+}
+
 inline Tensor sin(const Tensor& ten)
 {
   return(ten.sin());
@@ -1581,6 +1595,11 @@ inline double Vector::boolean() const
 {
   if ((d_[0])||(d_[1])||(d_[2])) return(1.0);
   return(0.0);
+}
+
+inline double* Vector::getdataptr()
+{
+  return(d_);
 }
 
 inline Tensor::Tensor() :
@@ -2263,6 +2282,12 @@ inline Tensor Tensor::normalize() const
   return(Tensor(0.0,0.0,0.0,0.0,0.0,0.0));
 }
 
+inline Tensor Tensor::inv()
+{
+ if (!has_eigs_) compute_eigs();
+ return(Tensor(eigvec1_,eigvec2_,eigvec3_,1.0/eigval1_,1.0/eigval2_,1.0/eigval3_));
+}
+
 inline double Tensor::isnan() const
 {
   if ((TensorVectorMath::isnan(d_[0]))||(TensorVectorMath::isnan(d_[1]))||
@@ -2350,6 +2375,12 @@ inline void Tensor::compute_tensor()
   d_[4] = (eigval1_*eigvec1_[1]*eigvec1_[2]+eigval2_*eigvec2_[1]*eigvec2_[2]+eigval3_*eigvec3_[1]*eigvec3_[2]);
   d_[5] = (eigval1_*eigvec1_[2]*eigvec1_[2]+eigval2_*eigvec2_[2]*eigvec2_[2]+eigval3_*eigvec3_[2]*eigvec3_[2]);  
 }
+
+inline double* Tensor::getdataptr()
+{
+  return(d_);
+}
+
 
 
 } // end namespace
