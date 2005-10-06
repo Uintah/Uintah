@@ -40,6 +40,8 @@
 #include <Core/Util/Environment.h>
 
 #include <iostream>
+#include <sstream>
+#include <fstream>
 using std::cerr;
 using std::endl;
 using std::string;
@@ -203,8 +205,8 @@ int ShaderProgramARB::max_texture_size_1_ = 64;
 int ShaderProgramARB::max_texture_size_4_ = 64;
 static Mutex ShaderProgramARB_init_Mutex("ShaderProgramARB Init Lock");  
 
-ShaderProgramARB::ShaderProgramARB(const string& program)
-  : type_(0), id_(0), program_(program)
+ShaderProgramARB::ShaderProgramARB(const string& program, bool isFile)
+  : type_(0), id_(0), program_(program), is_file_(isFile)
 {}
 
 ShaderProgramARB::~ShaderProgramARB ()
@@ -381,26 +383,32 @@ bool
 ShaderProgramARB::create()
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+  string program;
   if(shaders_supported()) {
+    if( is_file_ ) {
+      program = read_from_file( program_ );
+    } else {
+      program = program_;
+    }
     glEnable(type_);
     glGenProgramsARB_SCI(1, &id_);
     glBindProgramARB_SCI(type_, id_);
     glProgramStringARB_SCI(type_, GL_PROGRAM_FORMAT_ASCII_ARB,
-                           program_.length(), program_.c_str());
+                           program.length(), program.c_str());
     if (glGetError() != GL_NO_ERROR)
     {
       int position;
       glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &position);
       int start = position;
-      for (; start > 0 && program_[start] != '\n'; start--);
-      if (program_[start] == '\n') start++;
+      for (; start > 0 && program[start] != '\n'; start--);
+      if (program[start] == '\n') start++;
       uint end = position;
-      for (; end < program_.length()-1 && program_[end] != '\n'; end++);
-      if (program_[end] == '\n') end--;
+      for (; end < program.length()-1 && program[end] != '\n'; end++);
+      if (program[end] == '\n') end--;
       int ss = start;
       int l = 1;
-      for (; ss >= 0; ss--) { if (program_[ss] == '\n') l++; }
-      string line((char*)(program_.c_str()+start), end-start+1);
+      for (; ss >= 0; ss--) { if (program[ss] == '\n') l++; }
+      string line((char*)(program.c_str()+start), end-start+1);
       string underline = line;
       for (uint i=0; i<end-start+1; i++) underline[i] = '-';
       underline[position-start] = '#';
@@ -418,7 +426,7 @@ ShaderProgramARB::create()
       cerr << "Program error at line " << l << ", character "
            << position-start << ":" << endl << line << endl
            << underline << endl << endl
-	   << "Entire Program Listing:\n" << program_ << endl;
+	   << "Entire Program Listing:\n" << program << endl;
       return true;
     }
     return false;
@@ -428,6 +436,25 @@ ShaderProgramARB::create()
   return true;
 }
 
+string 
+ShaderProgramARB::read_from_file(const std::string& program_file)
+{
+  std::ifstream in( program_file.c_str() );
+  if( !in ){
+    cerr<<"Cannot open file "<< program_file.c_str()<<"\n";
+    in.close();
+    return string("");
+  }
+
+  std::ostringstream program;
+  char c;
+  while( in ){
+    in.get(c);
+    program.put(c);
+  }
+  in.close();
+  return program.str();
+}
 
 void
 ShaderProgramARB::destroy ()
@@ -472,8 +499,8 @@ ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
 #endif
 }
 
-VertexProgramARB::VertexProgramARB(const string& program)
-  : ShaderProgramARB(program)
+VertexProgramARB::VertexProgramARB(const string& program, bool isFile)
+  : ShaderProgramARB(program, isFile)
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   type_ = GL_VERTEX_PROGRAM_ARB;
@@ -483,8 +510,8 @@ VertexProgramARB::VertexProgramARB(const string& program)
 VertexProgramARB::~VertexProgramARB()
 {}
 
-FragmentProgramARB::FragmentProgramARB(const string& program)
-  : ShaderProgramARB(program)
+FragmentProgramARB::FragmentProgramARB(const string& program, bool isFile)
+  : ShaderProgramARB(program, isFile)
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   type_ = GL_FRAGMENT_PROGRAM_ARB;
