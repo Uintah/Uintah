@@ -708,6 +708,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
         set w .ui[modname]
         if {[winfo exists $w]} {
             set menu [set $this-matlab-code-menu]
+            $menu.f1.cmd clear
             $menu.f1.cmd import [set $this-matlab-code-file]
         }
     }
