@@ -39,6 +39,7 @@
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/HexVolMesh.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 
