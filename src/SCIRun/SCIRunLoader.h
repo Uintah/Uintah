@@ -41,6 +41,7 @@
 #ifndef SCIRun_SCIRunLoader_h
 #define SCIRun_SCIRunLoader_h
 
+#include <Core/Thread/Mutex.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <vector>
 #include <map>
@@ -94,8 +95,10 @@ private:
   void readComponentDescription(const std::string& file);
   void destroyComponentList();
   std::string masterFrameworkURL;
+
   typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
   componentDB_type components;
+  SCIRun::Mutex lock_components;
 };
 
 } // end namespace SCIRun

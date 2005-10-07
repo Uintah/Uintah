@@ -41,6 +41,8 @@
 #ifndef SCIRun_Babel_BabelComponentModel_h
 #define SCIRun_Babel_BabelComponentModel_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentModel.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/Babel/gov_cca.hh>
@@ -114,7 +116,8 @@ private:
   SCIRunFramework* framework;
   typedef std::map<std::string, BabelComponentDescription*> componentDB_type;
   componentDB_type components;
-  
+  SCIRun::Mutex lock_components;
+ 
   void readComponentDescription(const std::string& file);
 
   BabelComponentModel(const BabelComponentModel&);

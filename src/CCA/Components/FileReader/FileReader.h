@@ -51,10 +51,18 @@
 class FileReader;
 class myUIPort : public virtual sci::cca::ports::UIPort {
 public:
+<<<<<<< .working
    virtual ~myUIPort(){}
    virtual int ui();
    void setParent(FileReader *com){this->com=com;}
    FileReader *com;
+=======
+   virtual ~myPDEdescriptionPort() {}
+   virtual int getPDEdescription(SSIDL::array1<double> &nodes, 
+				 SSIDL::array1<int> &boundaries,
+				 SSIDL::array1<int> &dirichletNodes,
+				 SSIDL::array1<double> &dirichletValues);
+>>>>>>> .merge-right.r32054
 };
 
 class myPDEDescriptionPort : public virtual sci::cca::ports::PDEDescriptionPort {
@@ -68,27 +76,39 @@ public:
    FileReader *com;
 };
 
+<<<<<<< .working
 
 class FileReader : public sci::cca::Component{
                 
   public:
+=======
+class FileReader : public sci::cca::Component {
+public:
+>>>>>>> .merge-right.r32054
     FileReader();
     virtual ~FileReader();
 
     virtual void setServices(const sci::cca::Services::pointer& svc);
+<<<<<<< .working
     
     SSIDL::array1<double> nodes;
     SSIDL::array1<int> boundaries;
     SSIDL::array1<int> dirichletNodes;
     SSIDL::array1<double> dirichletValues;
   private:
+=======
+private:
+>>>>>>> .merge-right.r32054
 
     FileReader(const FileReader&);
     FileReader& operator=(const FileReader&);
+<<<<<<< .working
     myUIPort uiPort;
     myPDEDescriptionPort pdePort;
+=======
+>>>>>>> .merge-right.r32054
     sci::cca::Services::pointer services;
-  };
+};
 //}
 
 

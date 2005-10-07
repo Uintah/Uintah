@@ -34,7 +34,7 @@
  *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
- *   February 2003
+ *   September 2005
  *
  */
 
@@ -45,11 +45,25 @@
 #include <Core/Thread/Thread.h>
 #include <iostream>
 #include <stdlib.h>
+#include <curses.h>
+#include <panel.h>
+#include <menu.h>
+#include <stdlib.h>
+#include <iostream>
+#include <CCA/Components/TxtBuilder/DropMenu.h>
+#include <CCA/Components/TxtBuilder/TxtModule.h>
+#include <CCA/Components/TxtBuilder/TxtMenu.h>
+#include <CCA/Components/TxtBuilder/TxtNetwork.h>
+#include <CCA/Components/TxtBuilder/TxtConnection.h>
+#include <CCA/Components/TxtBuilder/TxtMessage.h>
+#include <SCIRun/TypeMap.h>
+
 using namespace std;
 using namespace SCIRun;
 using namespace sci::cca;
 
 static Semaphore* startup;
+
 
 extern "C" sci::cca::Component::pointer make_SCIRun_TxtBuilder()
 {
@@ -63,6 +77,18 @@ TxtBuilder::TxtBuilder()
 TxtBuilder::~TxtBuilder()
 {
 }
+
+TxtMessage *
+TxtBuilder::tm=NULL;
+
+sci::cca::Services::pointer
+TxtBuilder::svc(0);
+
+sci::cca::ports::BuilderService::pointer
+TxtBuilder::bs(0);
+
+WINDOW*
+TxtBuilder::win_cmd;
 
 void TxtBuilder::setServices(const sci::cca::Services::pointer& services)
 {
@@ -82,7 +108,7 @@ void TxtBuilder::setServices(const sci::cca::Services::pointer& services)
 
   cr=pidl_cast<sci::cca::ports::ComponentRepository::pointer>
     (svc->getPort("cca.ComponentRepository"));
-  if(bs.isNull()){
+  if(cr.isNull()){
     cerr << "Fatal Error: cannot get ComponentRepository port\n";
     return;
   }
@@ -97,12 +123,7 @@ void TxtBuilder::setServices(const sci::cca::Services::pointer& services)
 }
 
 enum TxtCmd{ 
-  USE_CLUSTER,
-  LIST_ALL, 
-  LIST_COMPONENTS, 
-  LIST_PORTS, 
-  LIST_COMPATIBLE,
-  LIST_CONNECTIONS,
+  USE_CLUSTER, 
   CREATE,
   CONNECT,
   GO,
@@ -121,13 +142,8 @@ enum TxtCmd{
 
 char *cmddesc[]={
   "use cluster <user> <domain>: create slave framework on user@domain",
-  "list all:                    list all available components",
-  "list components:             list all active components",
-  "list ports <comp>:           list ports of component <comp>",
-  "list compatible <comp>:      list compatible ports for component <comp>",
-  "list connections <comp>:     list connections of component <comp>",
   "create <comp>:               create component <comp>",		
-  "connect <c1> <p1> <c2> <p2>: connect port <p1> (of component <c1>) \n\t\t\tand port <p2> (of component <c2>)",
+  "connect <c1> <p1> <c2> <p2>: connect port <p1> (of component <c1>) and port <p2> (of component <c2>)",
   "go <comp>:                   start component <comp>",		
   "disconnect <comp><port>:     disconnect connection from <port> of component <comp>",
   "destroy <comp>:              destroy component <comp>",		
@@ -149,6 +165,109 @@ void TxtBuilder::run()
   cout<<"\n\n\nTxtBuilder starts...\n";
   cout<<"Type help for commands usage\n";
 
+
+  PANEL  *pan_menu;
+  PANEL  *pan_main;
+  PANEL  *pan_msg;
+  PANEL  *pan_cmd;
+
+  initscr();
+  keypad(stdscr, TRUE);
+  cbreak();
+  noecho();
+
+  int lines_menu=1;
+  int cols_menu=COLS;
+
+
+  int lines_cmd=1;
+  int cols_cmd=COLS;
+
+
+  int lines_msg=10;
+  int cols_msg=COLS;
+
+  int lines_main=LINES-lines_menu-lines_msg-lines_cmd;
+  int cols_main=COLS;
+
+  int y_menu=0;
+  int y_main=y_menu+lines_menu;
+  int y_msg=y_main+lines_main;
+  int y_cmd=y_msg+lines_msg;
+  
+
+
+  /* Create windows for the panels */
+  win_menu = newwin(lines_menu, cols_menu, y_menu, 0);
+  win_main = newwin(lines_main, cols_main, y_main, 0);
+  win_msg  = newwin(lines_msg, cols_msg, y_msg, 0);
+  win_cmd  = newwin(lines_cmd, cols_cmd, y_cmd, 0);
+  WINDOW *swin_msg = derwin(win_msg,lines_msg-2, cols_msg-2, 1, 1);
+  tm=new TxtMessage(swin_msg);
+  
+  // Create borders around the windows so that you can see the effect of panels
+  box(win_main, 0, 0);
+  box(win_msg,  0, 0);
+
+  //  cerr<<"y="<<y_menu<<" "<<y_main<<" "<<y_msg<<" "<<y_cmd<<endl;
+
+  //Attach a panel to each window, order: newest on top
+  pan_menu = new_panel(win_menu); 	
+  pan_main = new_panel(win_main);
+  pan_msg = new_panel(win_msg);
+  pan_cmd = new_panel(win_cmd);
+
+  TxtMenu menu(svc);
+  menu.setup(win_menu);
+  network.setup(win_main);
+  mvwprintw(win_cmd,0,0,"F10 - Menu  F5 - Network Window  : - Command Window  r - Refresh Windows");
+  // Update the stacking order
+  update_panels();
+
+  // Show it on the screen 
+  doupdate();
+
+  displayMessage("SCIRun2 Started");
+
+  //the main event loop
+  int c;
+  while(true){
+    switch(c=wgetch(stdscr)){	
+    case KEY_F(10):
+      menu.enter(win_menu);
+      break;
+    case KEY_F(5):
+      network.enter();
+      break;
+    case KEY_UP:
+      tm->print(-(lines_msg-2-1)*2, (lines_msg-2) );
+      break;
+    case KEY_DOWN: 
+      tm->print(  0, lines_msg-2);
+      break;
+    case ':': 
+      {
+	string cmdline=getString(":");
+	exec_command(cmdline.c_str());
+      }
+      break;
+    case 'r': 
+      TxtNetwork::drawConnections();
+      update_panels();
+      doupdate();
+      break;
+    default:
+      //Command::process
+      //printf("you just typed 0x%x\n",c);
+      break;
+    }
+  }
+
+  /////////////////////////
+  refresh();
+  endwin();
+
+  /*
   while(true){
     const int n=256;
     char cmdline[n];
@@ -156,18 +275,14 @@ void TxtBuilder::run()
     cin.getline(cmdline,n);
     if(exec_command(cmdline))break;
   }
+  */
 }
 
-bool TxtBuilder::exec_command(char cmdline[])
+bool TxtBuilder::exec_command(const char* cmdline)
 {
    string args[4];
    int cmd=parse(cmdline,args);
    if (cmd==USE_CLUSTER) use_cluster(args);
-   else if (cmd==LIST_ALL) list_all(args);
-   else if(cmd==LIST_COMPONENTS) list_components(args);
-   else if(cmd==LIST_PORTS) list_ports(args);
-   else if(cmd==LIST_COMPATIBLE) list_compatible(args);
-   else if(cmd==LIST_CONNECTIONS) list_connections(args);
    else if(cmd==CREATE) create(args);
    else if(cmd==CONNECT) connect(args);
    else if(cmd==GO) go(args);
@@ -233,24 +348,18 @@ void TxtBuilder::use_cluster(string args[])
   system(cmd.c_str());
 }
 
-void TxtBuilder::list_all(string args[])
+void TxtBuilder::create(string args[])
 {
-  SSIDL::array1<ComponentClassDescription::pointer> cds=cr->getAvailableComponentClasses();
-  cout<<"Available Component Classes:\n";
-  for(unsigned i=0; i<cds.size();i++){
-    cout<<"#"<<i<<":\t"<<cds[i]->getComponentClassName()<<endl;
-  }
+  sci::cca::TypeMap *tm = new SCIRun::TypeMap;
+  //  tm->putString("LOADER NAME", "");
+  //  tm->putString("cca.className", "CCA"); // component type
+  //  displayMessage(args[0]);
+  sci::cca::ComponentID::pointer cid=bs->createInstance(args[0],args[0],TypeMap::pointer(tm));
+  TxtNetwork::addModule(new TxtModule(cid,args[0]));
+
 }
 
-void TxtBuilder::list_components(string args[])
-{
-  SSIDL::array1<ComponentID::pointer> comps=bs->getComponentIDs();
-  cout<<"Active Components:\n";
-  for(unsigned i=0; i<comps.size();i++){
-    cout<<"#"<<i<<":\t"<<comps[i]->getInstanceName()<<endl;
-  }
-}
-
+<<<<<<< .working
 void TxtBuilder::list_ports(string args[])
 {
   ComponentID::pointer cid=bs->getComponentID(args[0]);
@@ -317,6 +426,8 @@ void TxtBuilder::create(string args[])
   bs->createInstance(args[0],args[0],TypeMap::pointer(0));
 }
 
+=======
+>>>>>>> .merge-right.r32054
 void TxtBuilder::connect(string args[])
 {
   ComponentID::pointer cid1=bs->getComponentID(args[0]);
@@ -324,6 +435,7 @@ void TxtBuilder::connect(string args[])
   ComponentID::pointer cid2=bs->getComponentID(args[2]);
   string &p2=args[3];
   bs->connect(cid1,p1,cid2,p2);
+  TxtNetwork::drawConnections();
 }
 
 void TxtBuilder::go(string args[])
@@ -345,16 +457,16 @@ void TxtBuilder::go(string args[])
     string instanceName = cid->getInstanceName();
     string goPortName = instanceName+" goPort";
     svc->registerUsesPort(goPortName, "sci.cca.ports.GoPort",
-			  sci::cca::TypeMap::pointer(0));
+  			  sci::cca::TypeMap::pointer(0));
     ConnectionID::pointer connID=bs->connect(svc->getComponentID(), goPortName, cid, isSciPort?"sci.go":"go");
     Port::pointer p = svc->getPort(goPortName);
     ports::GoPort::pointer goPort = pidl_cast<ports::GoPort::pointer>(p);
     if(goPort.isNull()){
-      cerr << "goPort is not connected, cannot bring up Go!\n";
+      displayMessage("goPort is not connected, cannot bring up Go");
     } 
     else{
-      int status=goPort->go();
-      cout<<"Done! return value="<<status<<endl;
+      /*int status=*/goPort->go();
+      //cout<<"Done! return value="<<status<<endl;
     }
     svc->releasePort(goPortName);
     bs->disconnect(connID,0);
@@ -371,14 +483,11 @@ void TxtBuilder::disconnect(string args[])
   for(unsigned i=0; i<connIDs.size();i++){
     if( (connIDs[i]->getProvider()==cids[0] && port==connIDs[i]->getProviderPortName())
 	||(connIDs[i]->getUser()==cids[0] && port==connIDs[i]->getUserPortName())){
-      cout<<"\t"<<connIDs[i]->getUserPortName()
-	  <<"("<<connIDs[i]->getUser()->getInstanceName() <<")"
-	  <<"-X->"<<connIDs[i]->getProviderPortName()
-	  <<" ("<<connIDs[i]->getProvider()->getInstanceName()<<")\n";
       bs->disconnect(connIDs[i],0);
-      
+      break;
     }
   }
+  TxtNetwork::drawConnections();
 }
 
 void TxtBuilder::destroy(string args[])
@@ -389,6 +498,7 @@ void TxtBuilder::destroy(string args[])
   for(unsigned i=0; i<connIDs.size();i++){
     bs->disconnect(connIDs[i],0);
   }
+  TxtNetwork::delModule(cids[0]);
   bs->destroyInstance(cids[0],0);
 }
 
@@ -396,7 +506,7 @@ void TxtBuilder::execute(string args[])
 {
   ifstream file(args[0].c_str());
   if(!file.is_open()){
-    cerr<<"Fail to open file "<<args[0]<<endl;
+    displayMessage("Fail to open file ");//<<args[0]<<endl;
     return;
   }
   while(!file.eof()){
@@ -404,40 +514,48 @@ void TxtBuilder::execute(string args[])
     char cmdline[n];
     file.getline(cmdline,n);
     if(string(cmdline).find("EOF",0)==0) break;
-    cout<<endl<<"Executing: "<<cmdline<<endl;
+    displayMessage("Executing: ");//<<cmdline<<endl;
     exec_command(cmdline);
   }
 }
 
 void TxtBuilder::load(string args[])
 {
-  cerr<<"args="<<args[0]<<"$"<<args[1]<<"$"<<args[2]<<"$"<<args[3]<<"$"<<endl;
+  TxtNetwork::setFilename(args[0]);
+  TxtNetwork::loadFile();
 }
 
 void TxtBuilder::save_as(string args[])
 {
-  cerr<<"args="<<args[0]<<"$"<<args[1]<<"$"<<args[2]<<"$"<<args[3]<<"$"<<endl;
+  TxtNetwork::setFilename(args[0]);
+  if (TxtNetwork::getFilename().size()>0) {
+    TxtNetwork::writeFile();
+  }
 }
 
 void TxtBuilder::save(string args[])
 {
-  cerr<<"args="<<args[0]<<"$"<<args[1]<<"$"<<args[2]<<"$"<<args[3]<<"$"<<endl;
+  if (TxtNetwork::getFilename().size()==0) {
+    TxtNetwork::setFilename(SCIRun::TxtBuilder::getString("Save As:"));
+  }
+  if (TxtNetwork::getFilename().size()>0) {
+    TxtNetwork::writeFile();
+  } 
 }
 
 void TxtBuilder::insert(string args[])
 {
-  cerr<<"args="<<args[0]<<"$"<<args[1]<<"$"<<args[2]<<"$"<<args[3]<<"$"<<endl;
+  displayMessage("insert <network> is not implemented!");
 }
 
 void TxtBuilder::clear(string args[])
 {
-  cerr<<"args="<<args[0]<<"$"<<args[1]<<"$"<<args[2]<<"$"<<args[3]<<"$"<<endl;
+  TxtNetwork::clear();
 }
 
 void TxtBuilder::quit(string args[])
 {
   svc->releasePort("cca.BuilderService"); 
-  cout<<"TxtBuilder quits!\n";
   exit(0);
 }
 
@@ -445,15 +563,24 @@ void TxtBuilder::help(string args[])
 {
   int num_cmds=sizeof(cmddesc)/sizeof(char *);
   for(int i=0; i<num_cmds;i++){
-    cout<<cmddesc[i]<<endl;
+    displayMessage(cmddesc[i]);
   }
 }
 
 void TxtBuilder::bad_command(string args[])
 {
-  cout<<"Bad command!\n";
+  displayMessage("Bad command!");
 }
 
+sci::cca::Services::pointer 
+TxtBuilder::getService(){
+  return svc;
+}
+
+sci::cca::ports::BuilderService::pointer 
+TxtBuilder::getBuilderService(){
+  return bs;
+}
 
 /*
 void myBuilderPort::buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
@@ -463,6 +590,44 @@ void myBuilderPort::buildRemotePackageMenus(const  sci::cca::ports::ComponentRep
 }
 */
 
+void
+TxtBuilder::displayMessage(const string &msg){
+  tm->add(msg);
+}
 
-
-
+string 
+TxtBuilder::getString(string prompt){
+  string s=prompt;
+  int c;
+  werase(win_cmd);
+  mvwprintw(win_cmd,0,0,s.c_str());
+  wrefresh(win_cmd);
+  while(true){
+    switch(c=wgetch(stdscr)){	
+    case 0x107: //BACKSPACE
+      if(s.size()>prompt.size()){
+	werase(win_cmd);
+	s=s.substr(0, s.size()-1);
+	mvwprintw(win_cmd,0,0,s.c_str());
+	wrefresh(win_cmd);
+      }
+      break;
+    case 0xa: //ENTER
+      werase(win_cmd);
+      wrefresh(win_cmd);
+      mvwprintw(win_cmd,0,0,"F10 - Menu  F5 - Network Window  : - Command Window  r - Refresh Windows");
+      return s.substr(prompt.size(), s.size()-prompt.size());
+    case 0x1b: //ESC
+      werase(win_cmd);
+      wrefresh(win_cmd);
+      mvwprintw(win_cmd,0,0,"F10 - Menu  F5 - Network Window  : - Command Window  r - Refresh Windows");
+      return "";
+    default:
+      s=s+(char)c;
+      werase(win_cmd);
+      mvwprintw(win_cmd, 0,0, s.c_str());
+      wrefresh(win_cmd);
+      break;
+    }
+  }
+}

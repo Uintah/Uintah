@@ -208,6 +208,11 @@ main(int argc, char *argv[]) {
     PIDL::finalize();
     
   }
+  catch(const sci::cca::CCAException::pointer &pe) {
+    std::cerr << "Caught exception:\n";
+    std::cerr << pe->getNote() << std::endl;
+    abort();
+  }
   catch(const Exception& e) {
     std::cerr << "Caught exception:\n";
     std::cerr << e.message() << std::endl;

@@ -24,6 +24,7 @@
 #define Containers_FData_h
 
 #include <Core/Util/TypeDescription.h>
+#include <Core/Datatypes/TypeName.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Math/MiscMath.h>

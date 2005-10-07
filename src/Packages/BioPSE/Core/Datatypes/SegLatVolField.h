@@ -41,23 +41,31 @@
 #ifndef Datatypes_SegLatVolField_h
 #define Datatypes_SegLatVolField_h
 
-#include <Core/Containers/FData.h>
+#include <Core/Geometry/Point.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/FData.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Persistent/Persistent.h>
 #include <Core/Persistent/PersistentSTL.h>
-#include <Core/Containers/Array1.h>
 #include <vector>
 
+namespace SCIRun {
+void Pio(Piostream &stream, 
+	 LatVolMesh<HexTrilinearLgn<Point> >::CellIndex &n);
+
+}
 namespace BioPSE {
 
 using namespace SCIRun;
 
 typedef LatVolMesh<HexTrilinearLgn<Point> >  SegLVMesh;
 typedef ConstantBasis<int>                 SegDatBasis;
-typedef GenericField<SegLVMesh,SegDatBasis,FData3d<int,SegLVMesh> > SegLVField;
+typedef GenericField<SegLVMesh, SegDatBasis,
+		     FData3d<int, SegLVMesh> > SegLVField;
 
 class SegLatVolField : public SegLVField {
 private:

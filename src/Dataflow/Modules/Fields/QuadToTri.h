@@ -52,8 +52,8 @@
 
 namespace SCIRun {
 
-typedef TriSurfMesh<TriLinearLgn<Point> >     QSMesh;
-typedef QuadSurfMesh<QuadBilinearLgn<Point> > TSMesh;
+typedef TriSurfMesh<TriLinearLgn<Point> >     TSMesh;
+typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
 class QuadToTriAlgo : public DynamicAlgoBase
 {
 public:
@@ -207,19 +207,19 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
     TSField *tvfield = scinew TSField(tsmesh);
     dstH = tvfield;
-  } else {
+    typename FSRC::value_type val;
+    for (unsigned int i = 0; i < elemmap.size(); i++)
+    {
+      qsfield->value(val, elemmap[i]);
+      tvfield->set_value(val, (TSMesh::Elem::index_type)(i*2+0));
+      tvfield->set_value(val, (TSMesh::Elem::index_type)(i*2+1));
+    }
+  } else if (qsfield->basis_order() == 1) {
     typedef TriLinearLgn<val_t>                            DatBasis;
     typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
     TSField *tvfield = scinew TSField(tsmesh);
     dstH = tvfield;
-  }
-
-  dstH->copy_properties(qsfield);
-
-  typename FSRC::value_type val;
-
-  if (qsfield->basis_order() == 1) {
-
+    typename FSRC::value_type val;
     unsigned int i = 0;
     typename FSRC::fdata_type dat = qsfield->fdata();
     typename FSRC::fdata_type::iterator iter = dat.begin();
@@ -228,16 +228,12 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       tvfield->set_value(val, (TSMesh::Node::index_type)(i));
       ++iter; ++i;
     }
-  } else if (qsfield->basis_order() == 0) {
-    for (unsigned int i = 0; i < elemmap.size(); i++)
-    {
-      qsfield->value(val, elemmap[i]);
-      tvfield->set_value(val, (TSMesh::Elem::index_type)(i*2+0));
-      tvfield->set_value(val, (TSMesh::Elem::index_type)(i*2+1));
-    }
   } else {
     mod->warning("Could not load data values, use DirectInterp if needed.");
   }
+
+  dstH->copy_properties(qsfield);
+
   return true;
 }
 
@@ -325,39 +321,19 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   
   typedef typename FSRC::value_type val_t;
 
-  if (qsfield->basis_order() == -1) {
+  if (ifield->basis_order() == -1) {
     typedef NoDataBasis<val_t>                             DatBasis;
     typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
-    TSField *tvfield = scinew TSField(tsmesh);
-    dstH = tvfield;
-  } else if (qsfield->basis_order() == 0) {
+    TSField *tfield = scinew TSField(tmesh);
+    dstH = tfield;
+    tfield->copy_properties(ifield);
+  } else if (ifield->basis_order() == 0) {
     typedef ConstantBasis<val_t>                           DatBasis;
     typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
-    TSField *tvfield = scinew TSField(tsmesh);
-    dstH = tvfield;
-  } else {
-    typedef TriLinearLgn<val_t>                            DatBasis;
-    typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
-    TSField *tvfield = scinew TSField(tsmesh);
-    dstH = tvfield;
-  }
-
-  dstH->copy_properties(qsfield);
-
-  typename FSRC::value_type val;
-
-  if (ifield->basis_order() == 1)
-  {
-    imesh->begin(nbi); imesh->end(nei);
-    while (nbi != nei)
-    {
-      ifield->value(val, *nbi);
-      tfield->set_value(val, (TSMesh::Node::index_type)(unsigned int)(*nbi));
-      ++nbi;
-    }
-  }
-  else if (ifield->basis_order() == 0)
-  {
+    TSField *tfield = scinew TSField(tmesh);
+    dstH = tfield;
+    tfield->copy_properties(ifield);
+    typename FSRC::value_type val;
     typename FSRC::mesh_type::Cell::iterator cbi, cei;    
     imesh->begin(cbi); imesh->end(cei);
     while (cbi != cei)
@@ -368,11 +344,25 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       tfield->set_value(val, (TSMesh::Cell::index_type)(i*2+1));
       ++cbi;
     }
-  }
-  else
-  {
+
+  } else if (ifield->basis_order() == 1) {
+    typedef TriLinearLgn<val_t>                            DatBasis;
+    typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
+    TSField *tfield = scinew TSField(tmesh);
+    dstH = tfield;
+    tfield->copy_properties(ifield);
+    typename FSRC::value_type val;
+    imesh->begin(nbi); imesh->end(nei);
+    while (nbi != nei)
+    {
+      ifield->value(val, *nbi);
+      tfield->set_value(val, (TSMesh::Node::index_type)(unsigned int)(*nbi));
+      ++nbi;
+    }
+  } else {
     mod->warning("Could not load data values, use DirectInterp if needed.");
   }
+  
   return true;
 }
 

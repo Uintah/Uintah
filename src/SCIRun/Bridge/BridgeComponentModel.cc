@@ -78,7 +78,8 @@ const std::string BridgeComponentModel::DEFAULT_PATH =
 int BridgeComponent::bridgeID(0);
 
 BridgeComponentModel::BridgeComponentModel(SCIRunFramework* framework)
-  : ComponentModel("bridge"), framework(framework)
+  : ComponentModel("bridge"), framework(framework),
+    lock_components("BridgeComponentModel::components lock")
 {
     buildComponentList();
 }
@@ -90,6 +91,8 @@ BridgeComponentModel::~BridgeComponentModel()
 
 void BridgeComponentModel::destroyComponentList()
 {
+  SCIRun::Guard g1(&lock_components);
+
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++){
     delete iter->second;
@@ -167,7 +170,8 @@ void BridgeComponentModel::readComponentDescription(const std::string& file)
     } else {
       cd->type = to_char_ptr(name->getNodeValue());
     }
-  
+ 
+    lock_components.lock(); 
     componentDB_type::iterator iter = components.find(cd->type);
     if(iter != components.end()){
       cerr << "WARNING: Component multiply defined: " << cd->type << '\n';
@@ -175,6 +179,7 @@ void BridgeComponentModel::readComponentDescription(const std::string& file)
       cerr << "Added Bridge component of type: " << cd->type << '\n';
       components[cd->type]=cd;
     }
+    lock_components.unlock();
   }
 }
 
@@ -190,6 +195,7 @@ BridgeComponentModel::createServices(const std::string& instanceName,
 
 bool BridgeComponentModel::haveComponent(const std::string& type)
 {
+  SCIRun::Guard g1(&lock_components);
   cerr << "Bridge looking for component of type: " << type << '\n';
   return components.find(type) != components.end();
 }
@@ -207,7 +213,9 @@ BridgeComponentModel::createInstance(const std::string& name,
   cerr<<"creating component <"<<name<<","<<type<<"> with loader:"<<loaderName<<"\n";
   BridgeComponent* component;
   if(loaderName==""){  //local component
+    lock_components.lock();  
     componentDB_type::iterator iter = components.find(type);
+    lock_components.unlock();
     string so_name;
     if(iter == components.end()) {
       //on the fly building of bridges (don't have specific .cca files)      
@@ -242,13 +250,6 @@ BridgeComponentModel::createInstance(const std::string& name,
   else{     
     //No way to remotely load bridge components for now
     return NULL;
-    /*//use loader to load the component
-    resourceReference* loader=getLoader(loaderName);
-    std::vector<int> nodes;
-    nodes.push_back(0);
-    Object::pointer comObj=loader->createInstance(name, type, nodes);
-    component=pidl_cast<sci::cca::Component::pointer>(comObj);
-    */
   }
   BridgeComponentInstance* ci = new BridgeComponentInstance(framework, name, type, tm, component);
   component->setServices(ci);
@@ -273,53 +274,10 @@ string BridgeComponentModel::getName() const
 void BridgeComponentModel::listAllComponentTypes(vector<ComponentDescription*>& list,
 					      bool /*listInternal*/)
 {
+  SCIRun::Guard g1(&lock_components);
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++){
     list.push_back(iter->second);
   }
-
-  for(unsigned int i=0; i<loaderList.size(); i++){
-    ::SSIDL::array1<std::string> typeList;
-    loaderList[i]->listAllComponentTypes(typeList);
-    //convert typeList to component description list
-    //by attaching a loader (resourceReferenece) to it.
-    for(unsigned int j=0; j<typeList.size(); j++){
-      BridgeComponentDescription* cd = new BridgeComponentDescription(this);
-      cd->type=typeList[j];
-      cd->setLoaderName(loaderList[i]->getName());
-      list.push_back(cd);
-    }
-  }
-
 }
 
-int BridgeComponentModel::addLoader(resourceReference *rr){
-  loaderList.push_back(rr);
-  cerr<<"Loader "<<rr->getName()<<" is added into cca component model"<<std::endl;
-  return 0;
-}
-
-int BridgeComponentModel::removeLoader(const std::string &loaderName)
-{
-  resourceReference *rr=getLoader(loaderName);
-  if(rr!=0){
-    cerr<<"loader "<<rr->getName()<<" is removed from cca component model\n";
-    delete rr;
-  }
-  else{
-    cerr<<"loader "<<loaderName<<" not found in cca component model\n";
-  }
-  return 0;
-}
-
-resourceReference *
-BridgeComponentModel::getLoader(std::string loaderName){
-  resourceReference *rr=0;
-  for(unsigned int i=0; i<loaderList.size(); i++){
-    if(loaderList[i]->getName()==loaderName){
-      rr=loaderList[i];
-      break;
-    }
-  }
-  return rr;
-}

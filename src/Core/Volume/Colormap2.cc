@@ -89,13 +89,13 @@ ColorMap2::ColorMap2(const ColorMap2 &copy)
 {}
 
 ColorMap2::ColorMap2(const vector<CM2WidgetHandle>& widgets,
-		     bool updating,
-		     bool selected,
-		     pair<float, float> value_range)
+                     bool updating,
+                     bool selected,
+                     pair<float, float> value_range)
   : updating_(updating),
     widgets_(widgets),
     selected_(selected),
-    value_range_(value_range_)
+    value_range_(value_range)
 {}
 
 ColorMap2::~ColorMap2()

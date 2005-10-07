@@ -45,20 +45,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <sstream>
 
 namespace SCIRun {
 
 DimensionMismatch::DimensionMismatch(long value, long expected, const char* file, int line)
     : value(value), expected(expected)
 {
-    // Format the message now...
-    char buf[120];
-    sprintf(buf, "Dimension mismatch, got %ld, expeced %ld", value, expected);
-    msg=strdup(buf);
+  std::ostringstream s;
+  s << "A DimensionMismatch exception was thrown\n"
+    << file << ":" << line << "\n"
+    << "Dimension mismatch, got " << value << ", expected " << expected;
+  msg = (char*)(s.str().c_str());
     
 #ifdef EXCEPTIONS_CRASH
-    std::cout << "A DimensionMismatch exception was thrown\n";
-    std::cout << file << ":" << line << "\n";
     std::cout << msg << "\n";
 #endif
 }

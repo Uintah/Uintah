@@ -28,51 +28,33 @@
 
 
 /*
- *  InternalComponentDescription.cc:
+ *  InternalServiceInstance.cc:
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   October 2001
+ *   AUgust 2005
  *
  */
 
-#include <SCIRun/Internal/InternalComponentDescription.h>
-#include <SCIRun/Internal/InternalComponentInstance.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
+#include <SCIRun/Internal/InternalServiceInstance.h>
+
 #include <iostream>
 
 namespace SCIRun {
-
-InternalComponentDescription
-::InternalComponentDescription(InternalComponentModel* model,
-                               const std::string& serviceType,
-                               InternalComponentInstance* (*create)(SCIRunFramework*,
-                                                                    const std::string&),
-                               bool isSingleton)
-  : model(model), serviceType(serviceType), create(create), isSingleton(isSingleton)
-{
-  singleton_instance=0;
-}
-
-InternalComponentDescription::~InternalComponentDescription()
-{
-  std::cerr << "What if singleton_instance is refcounted?" << std::endl;
-  if(singleton_instance)
-    {
-    delete singleton_instance;
-    }
-}
-
-std::string InternalComponentDescription::getType() const
-{
-  return serviceType;
-}
-
-const ComponentModel* InternalComponentDescription::getModel() const
-{
-  return model;
-}
+  
+  InternalServiceInstance::InternalServiceInstance(
+       SCIRunFramework* framework,
+       const std::string& instanceName,
+       const std::string& className)
+    : InternalComponentInstance(framework, instanceName, className )
+  {
+  }
+  
+  InternalServiceInstance::~InternalServiceInstance()
+  {
+  }
+  
 
 } // end namespace SCIRun

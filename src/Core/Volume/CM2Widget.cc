@@ -41,14 +41,16 @@
 #include <sci_gl.h>
 #include <GL/glu.h>
 
+#include <sci_comp_warn_fixes.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
 
 // This constant should be migrated to Math something...
 #define SCI_FLOAT_EPSILON 0.000001
 
-#include <sgi_stl_warnings_on.h>
 
 #include <math.h>
 #include <stdlib.h>
@@ -85,8 +87,8 @@ CM2Widget::CM2Widget()
 {
   // Generates a bright random color
   while (fabs(color_[0] - color_[1]) + 
-	 fabs(color_[0] - color_[2]) + 
-	 fabs(color_[1] - color_[2]) < 1.0) {
+         fabs(color_[0] - color_[2]) + 
+         fabs(color_[1] - color_[2]) < 1.0) {
     color_[0] = 1.0 - sqrt(1.0 - drand48());
     color_[1] = 1.0 - sqrt(1.0 - drand48());
     color_[2] = 1.0 - sqrt(1.0 - drand48());
@@ -118,7 +120,7 @@ CM2Widget::set_value_range(range_t range) {
 
 void
 CM2Widget::draw_thick_gl_line(double x1, double y1, double x2, double y2,
-			      double r, double g, double b)
+                              double r, double g, double b)
 {
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_BLEND);
@@ -152,7 +154,7 @@ CM2Widget::draw_thick_gl_line(double x1, double y1, double x2, double y2,
 
 void
 CM2Widget::draw_thick_gl_point(double x1, double y1,
-			       double r, double g, double b)
+                               double r, double g, double b)
 {
   glEnable(GL_POINT_SMOOTH);
   glEnable(GL_BLEND);
@@ -190,7 +192,7 @@ static Persistent* RectangleCM2Widget_maker()
 }
 
 PersistentTypeID RectangleCM2Widget::type_id("RectangleCM2Widget", "CM2Widget",
-					     RectangleCM2Widget_maker);
+                                             RectangleCM2Widget_maker);
 
 #define RECTANGLECM2WIDGET_VERSION 3
 
@@ -259,8 +261,8 @@ RectangleCM2Widget::RectangleCM2Widget() :
 }
 
 RectangleCM2Widget::RectangleCM2Widget(CM2RectangleType type, float left_x, 
-				       float left_y, float width, float height,
-				       float offset) : 
+                                       float left_y, float width, float height,
+                                       float offset) : 
   CM2Widget(),
   type_(type), 
   left_x_(left_x), 
@@ -302,7 +304,7 @@ RectangleCM2Widget::clone()
 
 void
 RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, 
-			      Pbuffer* pbuffer)
+                              Pbuffer* pbuffer)
 {
   if (!onState_) return;
  
@@ -354,7 +356,7 @@ RectangleCM2Widget::rasterize(CM2ShaderFactory& factory,
   shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
   if(pbuffer)
     shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
-			  0.0, 0.0);
+                          0.0, 0.0);
   
   
   glBegin(GL_QUADS);
@@ -467,13 +469,13 @@ RectangleCM2Widget::rasterize(Array3<float>& array)
         for(int j=jra-1; j>=jrb; j--, a-=da) {
           for(int i=ilb; i<=ile; i++) {
             array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + 
-				 (float)color_.r(), 0.0f, 1.0f);
+                                 (float)color_.r(), 0.0f, 1.0f);
             array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + 
-				 (float)color_.g(), 0.0f, 1.0f);
+                                 (float)color_.g(), 0.0f, 1.0f);
             array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + 
-				 (float)color_.b(), 0.0f, 1.0f);
+                                 (float)color_.b(), 0.0f, 1.0f);
             array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + 
-				 a, 0.0f, 1.0f);
+                                 a, 0.0f, 1.0f);
           }
         }
         da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
@@ -481,13 +483,13 @@ RectangleCM2Widget::rasterize(Array3<float>& array)
         for(int j=jra; j<=jre; j++, a-=da) {
           for(int i=ilb; i<=ile; i++) {
             array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + 
-				 (float)color_.r(), 0.0f, 1.0f);
+                                 (float)color_.r(), 0.0f, 1.0f);
             array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + 
-				 (float)color_.g(), 0.0f, 1.0f);
+                                 (float)color_.g(), 0.0f, 1.0f);
             array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + 
-				 (float)color_.b(), 0.0f, 1.0f);
+                                 (float)color_.b(), 0.0f, 1.0f);
             array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + 
-				 a, 0.0f, 1.0f);
+                                 a, 0.0f, 1.0f);
           }
         }
       }  // end !faux
@@ -511,11 +513,11 @@ RectangleCM2Widget::draw()
   normalize();
   draw_thick_gl_line(left_x_, left_y_, left_x_+width_, left_y_, r,g,b);
   draw_thick_gl_line(left_x_, left_y_+height_, left_x_+width_, left_y_+height_,
-		     r,g,b);
+                     r,g,b);
 
   draw_thick_gl_line(left_x_, left_y_, left_x_, left_y_+height_, r,g,b);
   draw_thick_gl_line(left_x_+width_, left_y_, left_x_+width_, left_y_+height_, 
-		     r,g,b);
+                     r,g,b);
 
   if (selected_) {
     r = 0.9; g = 0.6; b = 0.4;
@@ -535,18 +537,18 @@ string
 RectangleCM2Widget::tk_cursorname(int obj)
 {
   switch (obj) {
-  case 0: return string("left_ptr"); break;
-  case 1: return string("fleur"); break;
-  case 2: return string("bottom_left_corner"); break;
-  case 3: return string("bottom_right_corner"); break;
-  case 4: return string("top_right_corner"); break;
-  case 5: return string("top_left_corner"); break;
-  case 6: return string("sb_h_double_arrow"); break;
-  case 7: return string("fleur"); break;
-  case 8: return string("sb_h_double_arrow"); break;
-  case 9: return string("sb_h_double_arrow"); break;
-  case 10: return string("sb_v_double_arrow"); break;
-  case 11: return string("sb_v_double_arrow"); break;
+  case 0: return string("left_ptr"); BREAK;
+  case 1: return string("fleur"); BREAK;
+  case 2: return string("bottom_left_corner"); BREAK;
+  case 3: return string("bottom_right_corner"); BREAK;
+  case 4: return string("top_right_corner"); BREAK;
+  case 5: return string("top_left_corner"); BREAK;
+  case 6: return string("sb_h_double_arrow"); BREAK;
+  case 7: return string("fleur"); BREAK;
+  case 8: return string("sb_h_double_arrow"); BREAK;
+  case 9: return string("sb_h_double_arrow"); BREAK;
+  case 10: return string("sb_v_double_arrow"); BREAK;
+  case 11: return string("sb_v_double_arrow"); BREAK;
   default: break;
   }
   return string("left_ptr");
@@ -579,7 +581,7 @@ RectangleCM2Widget::pick1 (int ix, int iy, int w, int h)
   else if (right < xeps && top < yeps) ret_val = 4;
   else if (left < xeps && top < yeps) ret_val = 5;
   else if (fabs(x - left_x_ - offset_ * width_) < xeps &&
-	   fabs(y - left_y_ - height_ * 0.5) < yeps) ret_val = 6;
+           fabs(y - left_y_ - height_ * 0.5) < yeps) ret_val = 6;
   else if (left < xeps && y > left_y_ && y < (left_y_+height_)) ret_val = 8;
   else if (right < xeps && y > left_y_ && y < (left_y_+height_)) ret_val = 9;
   else if (x > left_x_ && x < (left_x_+width_) && bottom < yeps) ret_val = 10;
@@ -806,7 +808,7 @@ static Persistent* TriangleCM2Widget_maker()
 }
 
 PersistentTypeID TriangleCM2Widget::type_id("TriangleCM2Widget", "CM2Widget",
-					    TriangleCM2Widget_maker);
+                                            TriangleCM2Widget_maker);
 
 #define TRIANGLECM2WIDGET_VERSION 3
 
@@ -895,7 +897,7 @@ TriangleCM2Widget::clone()
 
 void
 TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, 
-			     Pbuffer* pbuffer)
+                             Pbuffer* pbuffer)
 {
   if(!onState_) return;
 
@@ -924,8 +926,8 @@ TriangleCM2Widget::rasterize(CM2ShaderFactory& factory,
   shader->bind();
   shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
   shader->setLocalParam(1, base_*scalex+panx, 
-			scalex*(base_+top_x_)+panx,
-			top_y_*scaley+pany, pany);
+                        scalex*(base_+top_x_)+panx,
+                        top_y_*scaley+pany, pany);
   shader->setLocalParam(2, width_*scalex, bottom_, pany, 0.0);
   
   GLint vp[4];
@@ -933,7 +935,7 @@ TriangleCM2Widget::rasterize(CM2ShaderFactory& factory,
   shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], pany, pany);
   if(pbuffer)
     shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
-			  0.0, 0.0);
+                          0.0, 0.0);
   
   glBegin(GL_TRIANGLES);
   {
@@ -1036,11 +1038,11 @@ TriangleCM2Widget::rasterize(Array3<float>& array)
       float a = alpha_ - abs(rm-jrm+1)*da;
       for(int j=jrm-1; j>=jrb; j--, a-=da) {
         array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 
-			     0.0f, 1.0f);
+                             0.0f, 1.0f);
         array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 
-			     0.0f, 1.0f);
+                             0.0f, 1.0f);
         array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 
-			     0.0f, 1.0f);
+                             0.0f, 1.0f);
         array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
       }
       da = alpha_/(re-rm);
@@ -1048,11 +1050,11 @@ TriangleCM2Widget::rasterize(Array3<float>& array)
       for (int j=jrm; j<=jre; j++, a-=da)
       {
         array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 
-			     0.0f, 1.0f);
+                             0.0f, 1.0f);
         array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 
-			     0.0f, 1.0f);
+                             0.0f, 1.0f);
         array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 
-			     0.0f, 1.0f);
+                             0.0f, 1.0f);
         array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
       }
     }
@@ -1076,7 +1078,7 @@ TriangleCM2Widget::draw()
   }
   draw_thick_gl_line(b_x-w/2, b_y, b_x+w/2, b_y, r,g,b);
   draw_thick_gl_line(base_+top_x_-width_/2, top_y_,
-		     base_+top_x_+width_/2, top_y_,  r, g, b);
+                     base_+top_x_+width_/2, top_y_,  r, g, b);
   draw_thick_gl_line(base_, 0.0, base_+top_x_-width_/2, top_y_, r,g,b);
   draw_thick_gl_line(base_, 0.0, base_+top_x_+width_/2, top_y_, r,g,b);
 
@@ -1131,10 +1133,10 @@ TriangleCM2Widget::pick1 (int ix, int iy, int sw, int sh)
   else if (fabs(x - bot_right_x) < xeps && fabs(y - b_y) < yeps) ret_val = 8; 
   // top bar
   else if (fabs(y - top_y_) < yleps && x > Min(top_right_x, top_left_x) && 
-	   x < Max(top_right_x, top_left_x)) ret_val = 4; 
+           x < Max(top_right_x, top_left_x)) ret_val = 4; 
   // bottom bar
   else if (fabs(y - b_y) < yleps && x > Min(bot_left_x, bot_right_x) && 
-	   x < Max(bot_left_x, bot_right_x)) ret_val = 7;
+           x < Max(bot_left_x, bot_right_x)) ret_val = 7;
   un_normalize();
   return ret_val;
 }
@@ -1168,15 +1170,15 @@ string
 TriangleCM2Widget::tk_cursorname(int obj)
 {
   switch (obj) {
-  case 0: return string("left_ptr"); break;
-  case 1: return string("sb_h_double_arrow"); break;
-  case 2: return string("fleur"); break;
-  case 3: return string("sb_v_double_arrow"); break;
-  case 4: return string("fleur"); break;
-  case 5: return string("left_ptr"); break;
-  case 6: return string("fleur"); break;
-  case 7: return string("sb_v_double_arrow"); break;
-  case 8: return string("sb_v_double_arrow"); break;
+  case 0: return string("left_ptr"); BREAK;
+  case 1: return string("sb_h_double_arrow"); BREAK;
+  case 2: return string("fleur"); BREAK;
+  case 3: return string("sb_v_double_arrow"); BREAK;
+  case 4: return string("fleur"); BREAK;
+  case 5: return string("left_ptr"); BREAK;
+  case 6: return string("fleur"); BREAK;
+  case 7: return string("sb_v_double_arrow"); BREAK;
+  case 8: return string("sb_v_double_arrow"); BREAK;
   default: break;
   }
   return string("left_ptr");
@@ -1322,7 +1324,7 @@ static Persistent* ImageCM2Widget_maker()
 }
 
 PersistentTypeID ImageCM2Widget::type_id("ImageCM2Widget", "CM2Widget",
-					 ImageCM2Widget_maker);
+                                         ImageCM2Widget_maker);
 
 void
 ImageCM2Widget::io(Piostream &stream)
@@ -1360,7 +1362,7 @@ ImageCM2Widget::clone()
 const float trans = 1.0/255.0;
 
 void
-ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* pbuffer)
+ImageCM2Widget::rasterize(CM2ShaderFactory& /*factory*/, Pbuffer* /*pbuffer*/)
 {
   CHECK_OPENGL_ERROR("ImageCM2Widget::rasterize - - start");
   //assume images draw first.
@@ -1425,16 +1427,16 @@ ImageCM2Widget::resize(int width, int height)
 
     if (nrrdKindSize(nin->axis[a].kind) > 1) {
       std::cerr << "Trying to resample along axis " << a 
-		<< " which is not of nrrdKindDomain or nrrdKindUnknown." 
-		<< std::endl;
+                << " which is not of nrrdKindDomain or nrrdKindUnknown." 
+                << std::endl;
     }
 
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (info->kernel[a] && 
-	(!(airExists(nin->axis[a].min) && 
-	   airExists(nin->axis[a].max)))) {
+        (!(airExists(nin->axis[a].min) && 
+           airExists(nin->axis[a].max)))) {
       nrrdAxisInfoMinMaxSet(nin, a, nin->axis[a].center ? 
-			    nin->axis[a].center : nrrdDefCenter);
+                            nin->axis[a].center : nrrdDefCenter);
     }
     info->min[a] = nin->axis[a].min;
     info->max[a] = nin->axis[a].max;
@@ -1449,7 +1451,7 @@ ImageCM2Widget::resize(int width, int height)
   if (nrrdSpatialResample(nrrd_resamp, nin, info)) {
     char *err = biffGetDone(NRRD);
     std::cerr << "Resample Failed in Core/Volume/CM2Widget.cc: " 
-	      << err << std::endl;
+              << err << std::endl;
     free(err);
     fail = true;
   }
@@ -1510,7 +1512,7 @@ static Persistent* PaintCM2Widget_maker()
 }
 
 PersistentTypeID PaintCM2Widget::type_id("PaintCM2Widget", "CM2Widget",
-					 PaintCM2Widget_maker);
+                                         PaintCM2Widget_maker);
 
 void
 PaintCM2Widget::io(Piostream &stream)
@@ -1589,7 +1591,7 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
   shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], pany, pany);
   if(pbuffer)
     shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
-			  0.0, 0.0);
+                          0.0, 0.0);
   
   GLdouble mid[4] = { color_.r(), color_.g(), color_.b(), alpha_ };
   GLdouble edg[4] = { color_.r(), color_.g(), color_.b(), 0 };
@@ -1631,9 +1633,9 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, Pbuffer* pbuffer)
       glVertex2d(stroke[c].first, stroke[c].second);
       glEnd();
       if (pbuffer && (s < strokes_.size()-1)) {
-	pbuffer->release();
-	pbuffer->swapBuffers();
-	pbuffer->bind();
+        pbuffer->release();
+        pbuffer->swapBuffers();
+        pbuffer->bind();
       }
     }
   }
@@ -1659,24 +1661,24 @@ PaintCM2Widget::splat(Array3<float> &data, double width, int x0, int y0) {
   for (int y = y0-wid; y <= y0+wid; ++y)
     if (y >= 0 && y < data.dim2())
       if (flat) {
-	data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r, 0.0, 1.0);
-	data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g, 0.0, 1.0);
-	data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b, 0.0, 1.0);
-	data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 0.0, 1.0);
+        data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r, 0.0, 1.0);
+        data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g, 0.0, 1.0);
+        data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b, 0.0, 1.0);
+        data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 0.0, 1.0);
       } else {
-	a = float(alpha_*(wid-fabs(float(y-y0)))/wid);
-	oma = 1.0 - a;
-	data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r*a, 0.0, 1.0);
-	data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g*a, 0.0, 1.0);
-	data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b*a, 0.0, 1.0);
-	data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 0.0, 1.0);
+        a = float(alpha_*(wid-fabs(float(y-y0)))/wid);
+        oma = 1.0 - a;
+        data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r*a, 0.0, 1.0);
+        data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g*a, 0.0, 1.0);
+        data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b*a, 0.0, 1.0);
+        data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 0.0, 1.0);
       }  
 }
 
 // Bressenhams line algorithm modified to only draw when the x pos changes
 void 
 PaintCM2Widget::line(Array3<float> &data, double width,
-		     int x0, int y0, int x1, int y1, bool first)
+                     int x0, int y0, int x1, int y1, bool first)
 {
   if (x0 < 0 || x0 >= data.dim1() || 
       x1 < 0 || x1 >= data.dim1() || 
@@ -1703,8 +1705,8 @@ PaintCM2Widget::line(Array3<float> &data, double width,
     frac = dy - (dx >> 1);
     while (x0 != x1) {
       if (frac >= 0) {
-	y0 += sy;
-	frac -= dx;
+        y0 += sy;
+        frac -= dx;
       }
       x0 += sx;
       frac += dy;
@@ -1714,15 +1716,15 @@ PaintCM2Widget::line(Array3<float> &data, double width,
     frac = dx - (dy >> 1);
     while (y0 != y1) {
       if (frac >= 0) {
-	x0 += sx;
-	frac -= dy;
-	do_splat = true;
+        x0 += sx;
+        frac -= dy;
+        do_splat = true;
       }
       y0 += sy;
       frac += dx;
       if (do_splat) {
-	splat(data, width, x0, y0);
-	do_splat = false;
+        splat(data, width, x0, y0);
+        do_splat = false;
       }
     }
   }
@@ -1742,16 +1744,16 @@ PaintCM2Widget::rasterize(Array3<float>& array)
     const unsigned int coordinates = stroke.size();
     if (coordinates == 1)
       splat(array, width,
-	    Floor(stroke[0].second* array.dim1()), 
-	    Floor((stroke[0].first+offset)*scale));
+            Floor(stroke[0].second* array.dim1()), 
+            Floor((stroke[0].first+offset)*scale));
     else
       for (unsigned c = 1; c < coordinates; ++c)
-	line(array, width,
-	     Floor(stroke[c-1].second * array.dim1()), 
-	     Floor((stroke[c-1].first+offset)*scale),
-	     Floor(stroke[c].second   * array.dim1()), 
-	     Floor((stroke[c].first+offset)*scale),
-	     (c == 1));
+        line(array, width,
+             Floor(stroke[c-1].second * array.dim1()), 
+             Floor((stroke[c-1].first+offset)*scale),
+             Floor(stroke[c].second   * array.dim1()), 
+             Floor((stroke[c].first+offset)*scale),
+             (c == 1));
   }
 }
 
@@ -1803,7 +1805,7 @@ PaintCM2Widget::normalize()
   for (unsigned int s = 0; s < strokes_.size(); ++s)
     for (unsigned int c = 0; c < strokes_[s].second.size(); ++c)
       strokes_[s].second[c].first = 
-	(strokes_[s].second[c].first + offset) * scale;
+        (strokes_[s].second[c].first + offset) * scale;
 }
 
 void
@@ -1814,4 +1816,447 @@ PaintCM2Widget::un_normalize()
   for (unsigned int s = 0; s < strokes_.size(); ++s)
     for (unsigned int c = 0; c < strokes_[s].second.size(); ++c)
       strokes_[s].second[c].first = strokes_[s].second[c].first/scale - offset;
+}
+
+
+static Persistent* ColorMapCM2Widget_maker()
+{
+  return scinew ColorMapCM2Widget;
+}
+
+PersistentTypeID ColorMapCM2Widget::type_id("ColorMapCM2Widget", 
+                                            "RectangleCM2Widget",
+                                            ColorMapCM2Widget_maker);
+
+#define COLORMAPCM2WIDGET_VERSION 1
+
+void
+ColorMapCM2Widget::io(Piostream &stream)
+{
+  //  const int version = 
+  stream.begin_class("ColorMapCM2Widget", COLORMAPCM2WIDGET_VERSION);
+
+  // Originally used "Pio(stream, (int)type_);", but this did not
+  // compile on the SGI, so needed to do it this way.
+  int tmp = (int)type_;
+  Pio(stream, tmp);
+  if (stream.reading())
+  {
+    type_ = (CM2RectangleType)tmp;
+  }
+
+  Pio(stream, left_x_);
+  Pio(stream, left_y_);
+  Pio(stream, width_);
+  Pio(stream, height_);
+  Pio(stream, offset_);
+  Pio(stream, shadeType_);
+  Pio(stream, onState_);
+  Pio(stream, color_);
+  Pio(stream, alpha_);
+
+  Pio(stream, name_);
+  Pio(stream, value_range_.first);
+  Pio(stream, value_range_.second);  
+  Pio(stream, colormap_);
+
+  stream.end_class();
+}
+
+ColorMapCM2Widget::ColorMapCM2Widget() : 
+  RectangleCM2Widget(),
+  colormap_(0)
+{
+  left_x_ = drand48()*0.9;
+  left_y_ = drand48()*0.9;
+  width_ = Clamp(0.1+(0.9-left_x_)*drand48(), 0.1, 0.5);
+  height_ = Clamp(0.1+(0.9-left_y_)*drand48(), 0.5*width_, 1.5*width_);
+  offset_ = 0.25+0.5*drand48();
+  name_ = "ColorMap";
+}
+
+ColorMapCM2Widget::ColorMapCM2Widget(CM2RectangleType type, float left_x, 
+                                     float left_y, float width, float height,
+                                     float offset) : 
+  RectangleCM2Widget(type, left_x, left_y, width, height, offset),
+  colormap_(0)
+{
+  name_ = "ColorMap";
+}
+
+ColorMapCM2Widget::~ColorMapCM2Widget()
+{}
+
+ColorMapCM2Widget::ColorMapCM2Widget(ColorMapCM2Widget& copy) : 
+  RectangleCM2Widget(copy),
+  colormap_(copy.colormap_)
+{}
+
+CM2Widget*
+ColorMapCM2Widget::clone()
+{
+  return new ColorMapCM2Widget(*this);
+}
+
+static GLuint cmap_tex_ = 0;
+
+
+void
+ColorMapCM2Widget::draw()
+{
+  if(!onState_) return;
+
+  double r = 0.5, g = 0.5, b = 0.5;
+  if (selected_) {
+    r = 0.9; g = 0.8; b = 0.1;
+  }
+  normalize();
+  draw_thick_gl_line(left_x_, left_y_, left_x_+width_, left_y_, r,g,b);
+  draw_thick_gl_line(left_x_, left_y_+height_, left_x_+width_, left_y_+height_,
+                     r,g,b);
+
+  draw_thick_gl_line(left_x_, left_y_, left_x_, left_y_+height_, r,g,b);
+  draw_thick_gl_line(left_x_+width_, left_y_, left_x_+width_, left_y_+height_, 
+                     r,g,b);
+
+  if (selected_) {
+    r = 0.9; g = 0.6; b = 0.4;
+  }
+
+  draw_thick_gl_point(left_x_, left_y_,r,g,b);
+  draw_thick_gl_point(left_x_+width_, left_y_,r,g,b);
+  draw_thick_gl_point(left_x_, left_y_+height_,r,g,b);
+  draw_thick_gl_point(left_x_+width_, left_y_+height_,r,g,b);
+  draw_thick_gl_point(left_x_+offset_*width_, left_y_+height_*0.5,r,g,b);
+  un_normalize();
+}
+
+
+void
+ColorMapCM2Widget::set_colormap(ColorMapHandle &cmap) {
+  colormap_ = cmap;
+}
+
+ColorMapHandle
+ColorMapCM2Widget::get_colormap() {
+  return colormap_;
+}
+
+
+void
+ColorMapCM2Widget::rasterize(CM2ShaderFactory& factory, 
+                             Pbuffer* pbuffer)
+{
+  if (!onState_) return;
+ 
+  CM2BlendType blend = CM2_BLEND_RASTER;
+  if (pbuffer) {
+    if(pbuffer->need_shader())
+      blend = CM2_BLEND_FRAGMENT_NV;
+    else
+      blend = CM2_BLEND_FRAGMENT_ATI;
+  }
+
+  FragmentProgramARB* shader =
+    factory.shader(CM2_SHADER_TEXTURE, shadeType_, true, blend);
+
+  if (!shader) return;
+  
+  if(!shader->valid()) {
+    shader->create();
+  }
+ 
+  normalize();
+    
+  GLdouble modelview[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+  double panx = (modelview[12]+1.0)/2.0;
+  double pany = (modelview[13]+1.0)/2.0;
+  double scalex = (modelview[0])/2.0;
+  double scaley = (modelview[5])/2.0;
+  double left_x = left_x_*scalex+panx;
+  double left_y = left_y_*scaley+pany;
+  double width = width_*scalex;
+  double height = height_*scaley;
+    
+#if defined(__sgi)
+#    define glActiveTexture(x) 
+#    define glMultiTexCoord1f(t,x) 
+#else
+#  ifndef GL_TEXTURE0
+#    define GL_TEXTURE0 GL_TEXTURE0_ARB
+#    define GL_TEXTURE1 GL_TEXTURE1_ARB
+#    define glActiveTexture(x) glActiveTextureARB(x)
+#    define glMultiTexCoord1f(t,x) glMultiTexCoord1fARB(t,x)
+#  endif
+#endif
+
+  
+  shader->bind();
+  shader->setLocalParam(1, left_x, left_y, width, height);
+
+  if(offset_ < SCI_FLOAT_EPSILON )
+    shader->setLocalParam(2, offset_, 0.0, 1.0, 0.0);
+  else if((1.0-offset_) < SCI_FLOAT_EPSILON )
+    shader->setLocalParam(2, offset_, 1.0, 0.0, 0.0);
+  else
+    shader->setLocalParam(2, offset_, 1/offset_, 1/(1-offset_), 0.0);
+  
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+  shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
+  if(pbuffer)
+    shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
+                          0.0, 0.0);
+  glColor4d(1.0, 1.0, 1.0, 1.0);
+  glActiveTexture(GL_TEXTURE1);
+  glEnable(GL_TEXTURE_1D);
+  glDeleteTextures(1, &cmap_tex_);
+  glGenTextures(1, &cmap_tex_);
+  glBindTexture(GL_TEXTURE_1D, cmap_tex_);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, colormap_->resolution(), 0,
+               GL_RGBA, GL_FLOAT, colormap_->get_rgba());
+  glBegin(GL_QUADS);
+  {
+    glMultiTexCoord1f(GL_TEXTURE1, 0.0);
+    glVertex2f(left_x_, left_y_);
+    glMultiTexCoord1f(GL_TEXTURE1, 0.5);
+    glVertex2f(left_x_+width_*offset_, left_y_);
+    glMultiTexCoord1f(GL_TEXTURE1, 0.5);
+    glVertex2f(left_x_+width_*offset_, left_y_+height_);
+    glMultiTexCoord1f(GL_TEXTURE1, 0.0);
+    glVertex2f(left_x_, left_y_+height_);
+
+    glMultiTexCoord1f(GL_TEXTURE1, 0.5);
+    glVertex2f(left_x_+width*offset_, left_y_);
+    glMultiTexCoord1f(GL_TEXTURE1, 1.0);
+    glVertex2f(left_x_+width_, left_y_);
+    glMultiTexCoord1f(GL_TEXTURE1, 1.0);
+    glVertex2f(left_x_+width_, left_y_+height_);
+    glMultiTexCoord1f(GL_TEXTURE1, 0.5);
+    glVertex2f(left_x_+width_*offset_, left_y_+height_);
+
+
+  }
+  glEnd();
+  glDisable(GL_TEXTURE_1D);
+  glActiveTexture(GL_TEXTURE0);
+  un_normalize();
+  shader->release();
+  //  if (pbuffer) pbuffer->bind(GL_FRONT);
+}
+
+void
+ColorMapCM2Widget::rasterize(Array3<float>& array)
+{
+  if(!onState_) return;
+  if(array.dim3() != 4) return;
+  normalize();
+  int size_x = array.dim2();
+  int size_y = array.dim1();
+  float left = left_x_;
+  float right = left_x_+width_;
+  float bottom = left_y_;
+  float top = left_y_+height_;
+
+  int lb = int(bottom*size_y);
+  int le = int(top*size_y);
+  int ilb = Clamp(lb, 0, size_y-1);
+  int ile = Clamp(le, 0, size_y-1);
+//  int la = int((mBall.y*mSize.y+bottom)*size.y);
+  int rb = int(left*size_x);
+  int re = int(right*size_x);
+  int ra = int((offset_*width_+left)*size_x);
+  int jrb = Clamp(rb, 0, size_x-1);
+  int jre = Clamp(re, 0, size_x-1);
+  int jra = Clamp(ra, 0, size_x-1);
+  switch(type_) {
+    case CM2_RECTANGLE_ELLIPSOID: {
+      for(int i=ilb; i<=ile; i++) {
+        for(int j=jrb; j<jre; j++) {
+          float x = j/(float)size_x;
+          float y = i/(float)size_y;
+          x -= (left+right)/2;
+          y -= (bottom+top)/2;
+          x *= height_/width_;
+          float w = 1-2*sqrt(x*x+y*y)/size_y;
+          if (w < 0) w = 0;
+          float a = alpha_*w;
+          float r = faux_ ? color_.r()*w : color_.r();
+          float g = faux_ ? color_.r()*w : color_.g();
+          float b = faux_ ? color_.r()*w : color_.b();
+          array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
+          array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
+          array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
+          array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+        }
+      }
+    } break;
+
+    case CM2_RECTANGLE_1D: {
+      if (shadeType_ == CM2_SHADE_FLAT) 
+      {
+        for(int i=ilb; i<=ile; i++) {
+          for(int j=jrb; j<jre; j++) {
+            array(i,j,0) = Clamp((float)color_.r(), 0.0f, 1.0f);
+            array(i,j,1) = Clamp((float)color_.g(), 0.0f, 1.0f);
+            array(i,j,2) = Clamp((float)color_.b(), 0.0f, 1.0f);
+            array(i,j,3) = Clamp(alpha_, 0.0f, 1.0f);
+          }
+        }
+      } else if (faux_) {
+        float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
+        float dr = ra <= rb+1 ? 0.0 : color_.r()/(ra-rb-1);
+        float dg = ra <= rb+1 ? 0.0 : color_.g()/(ra-rb-1);
+        float db = ra <= rb+1 ? 0.0 : color_.b()/(ra-rb-1);
+        float a = ra <= rb+1 ? alpha_ : alpha_ - abs(ra-jra)*da;
+        float r = ra <= rb+1 ? color_.r() : color_.r() - abs(ra-jra)*dr;
+        float g = ra <= rb+1 ? color_.g() : color_.g() - abs(ra-jra)*dg;
+        float b = ra <= rb+1 ? color_.b() : color_.b() - abs(ra-jra)*db;
+        for(int j=jra-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
+          for(int i=ilb; i<=ile; i++) {
+          
+            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
+            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
+            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
+            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+          }
+        }
+        da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
+        dr = ra < re-1 ? color_.r()/(re-ra-1) : 0.0;
+        dg = ra < re-1 ? color_.g()/(re-ra-1) : 0.0;
+        db = ra < re-1 ? color_.b()/(re-ra-1) : 0.0;
+        a = alpha_ - abs(ra-jra)*da;
+        r = color_.r() - abs(ra-jra)*dr;
+        g = color_.g() - abs(ra-jra)*dg;
+        b = color_.b() - abs(ra-jra)*db;
+        for(int j=jra; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg) {
+          for(int i=ilb; i<=ile; i++) {
+            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
+            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
+            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
+            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+          }
+        }
+      } else { // !faux
+        float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
+        float a = ra <= rb+1 ? alpha_ : alpha_ - abs(ra-jra)*da;
+        for(int j=jra-1; j>=jrb; j--, a-=da) {
+          for(int i=ilb; i<=ile; i++) {
+            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + 
+                                 (float)color_.r(), 0.0f, 1.0f);
+            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + 
+                                 (float)color_.g(), 0.0f, 1.0f);
+            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + 
+                                 (float)color_.b(), 0.0f, 1.0f);
+            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + 
+                                 a, 0.0f, 1.0f);
+          }
+        }
+        da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
+        a = alpha_ - abs(ra-jra)*da;
+        for(int j=jra; j<=jre; j++, a-=da) {
+          for(int i=ilb; i<=ile; i++) {
+            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + 
+                                 (float)color_.r(), 0.0f, 1.0f);
+            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + 
+                                 (float)color_.g(), 0.0f, 1.0f);
+            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + 
+                                 (float)color_.b(), 0.0f, 1.0f);
+            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + 
+                                 a, 0.0f, 1.0f);
+          }
+        }
+      }  // end !faux
+    } break;
+
+  default:
+    break;
+  }
+  un_normalize();
+}
+
+string
+ColorMapCM2Widget::tcl_pickle()
+{
+  normalize();
+  ostringstream s;
+  s << "r ";
+  s << (int)type_ << " ";
+  s << left_x_ << " ";
+  s << left_y_ << " ";
+  s << width_ << " ";
+  s << height_ << " ";
+  s << offset_;
+  un_normalize();
+  return s.str();
+}
+
+void
+ColorMapCM2Widget::tcl_unpickle(const string &p)
+{
+  istringstream s(p);
+  char c;
+  s >> c;
+  int t;
+  s >> t;
+  type_ = (CM2RectangleType)t;
+  s >> left_x_;
+  s >> left_y_;
+  s >> width_;
+  s >> height_;
+  s >> offset_;
+  value_range_.first = 0.0;
+  value_range_.second = -1.0;
+}
+
+
+
+
+static Persistent* ClippingCM2Widget_maker()
+{
+  return scinew ClippingCM2Widget;
+}
+
+PersistentTypeID ClippingCM2Widget::type_id("ClippingCM2Widget", "CM2Widget",
+                                            ClippingCM2Widget_maker);
+
+#define COLORMAPCM2WIDGET_VERSION 1
+
+void
+ClippingCM2Widget::io(Piostream &/*stream*/)
+{
+  printf("WARNING: ClippingCM2Widget::io() not implemented!!!\n");
+}
+
+ClippingCM2Widget::ClippingCM2Widget() : 
+  CM2Widget(),
+  bboxes_()
+{
+  name_ = "Clipping";
+}
+
+ClippingCM2Widget::ClippingCM2Widget(vector<BBox> &bboxes)
+  : CM2Widget(),
+    bboxes_(bboxes)
+{
+  name_ = "Clipping";
+}
+
+ClippingCM2Widget::~ClippingCM2Widget()
+{}
+
+ClippingCM2Widget::ClippingCM2Widget(ClippingCM2Widget& copy) : 
+  CM2Widget(copy),
+  bboxes_(copy.bboxes_)
+{}
+
+CM2Widget*
+ClippingCM2Widget::clone()
+{
+  return new ClippingCM2Widget(*this);
 }

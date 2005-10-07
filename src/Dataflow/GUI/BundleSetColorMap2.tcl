@@ -40,18 +40,12 @@ itcl_class SCIRun_Bundle_BundleSetColorMap2 {
         global $this-colormap21-name
         global $this-colormap22-name
         global $this-colormap23-name
-        global $this-colormap21-usename
-        global $this-colormap22-usename
-        global $this-colormap23-usename
         global $this-bundlename
         
 
         set $this-colormap21-name "colormap21"
         set $this-colormap22-name "colormap22"
         set $this-colormap23-name "colormap23"
-        set $this-colormap21-usename 0
-        set $this-colormap22-usename 0
-        set $this-colormap23-usename 0
         set $this-bundlename ""
 
     }
@@ -68,9 +62,6 @@ itcl_class SCIRun_Bundle_BundleSetColorMap2 {
         global $this-colormap21-name
         global $this-colormap22-name
         global $this-colormap23-name
-        global $this-colormap21-usename
-        global $this-colormap22-usename
-        global $this-colormap23-usename
         global $this-bundlename
 
         toplevel $w 
@@ -108,8 +99,6 @@ itcl_class SCIRun_Bundle_BundleSetColorMap2 {
         entry $colormap21.name.entry -textvariable $this-colormap21-name
         pack $colormap21.name.label -side left 
         pack $colormap21.name.entry -side left -fill x -expand yes
-        checkbutton $colormap21.options.usename -text "Use object name" -variable $this-colormap21-usename
-        pack $colormap21.options.usename -side top -fill x
         
         frame $colormap22.name
         frame $colormap22.options
@@ -119,8 +108,6 @@ itcl_class SCIRun_Bundle_BundleSetColorMap2 {
         entry $colormap22.name.entry -textvariable $this-colormap22-name
         pack $colormap22.name.label -side left 
         pack $colormap22.name.entry -side left -fill x -expand yes
-        checkbutton $colormap22.options.usename -text "Use object name" -variable $this-colormap22-usename
-        pack $colormap22.options.usename -side top -fill x
         
         frame $colormap23.name
         frame $colormap23.options
@@ -130,8 +117,6 @@ itcl_class SCIRun_Bundle_BundleSetColorMap2 {
         entry $colormap23.name.entry -textvariable $this-colormap23-name
         pack $colormap23.name.label -side left 
         pack $colormap23.name.entry -side left -fill x -expand yes
-        checkbutton $colormap23.options.usename -text "Use object name" -variable $this-colormap23-usename
-        pack $colormap23.options.usename -side top -fill x
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w

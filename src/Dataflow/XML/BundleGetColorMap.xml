@@ -54,21 +54,7 @@
       <port>
         <name>bundle</name>
         <datatype>SCIRun::Bundle</datatype>
-      </port>
-<!--      
-      <port>
-        <name>name1</name>
-        <datatype>SCIRun::Nrrd</datatype>
-      </port>
-      <port>
-        <name>name2</name>
-        <datatype>SCIRun::Nrrd</datatype>
-      </port>
-      <port>
-        <name>name3</name>
-        <datatype>SCIRun::Nrrd</datatype>
-      </port>
--->      
+      </port>    
     </inputs>
     <outputs>
       <port>

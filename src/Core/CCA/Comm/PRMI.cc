@@ -150,7 +150,7 @@ PRMI::internal_lock(){
 
   SocketSpChannel spc(orderSvc_ep, orderSvc_addr);
   SocketMessage msg(&spc); 
-  //  cerr<<"#### PRMI:lock sending message to orderservice lockid= "<<lid.str()<<" ####\n";
+  //  cout<<"#### PRMI:lock sending message to orderservice lockid= "<<lid.str()<<" ####\n";
   msg.createMessage();
   msg.marshalInt(&lid.invID.iid);
   msg.marshalInt(&lid.invID.pid);
@@ -165,7 +165,7 @@ PRMI::internal_lock(){
       lock_sema_map[lid]=new Semaphore("mpi lock semaphre",0);
     }
     lock_mutex->unlock();
-    //    cerr<<"PRMI::lock calls lock_sema_map[lid]->down()\n";
+    //    cout<<"PRMI::lock calls lock_sema_map[lid]->down()\n";
     lock_sema_map[lid]->down();
     //waiting for mpiunlock() or updatlock() to update the semaphore
   }else{
@@ -205,7 +205,7 @@ PRMI::internal_unlock(){
 
 void 
 PRMI::lock(){
-#ifdef HAVE_MPI
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
 #ifndef MPI_IS_THREADSAFE
   internal_lock();
 #endif
@@ -214,7 +214,7 @@ PRMI::lock(){
 
 void 
 PRMI::unlock(){
-#ifdef HAVE_MPI
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
 #ifndef MPI_IS_THREADSAFE
   internal_unlock();
 #endif
@@ -321,7 +321,7 @@ PRMI::peekProxyID(){
 
 void 
 PRMI::order_service(DTMessage *dtmsg){
-  //  cerr<<"#### PRMI:order_service called ####\n";
+  //  cout<<"#### PRMI:order_service called ####\n";
   SocketMessage msg(dtmsg);
   lockid lid;
   msg.unmarshalInt(&lid.invID.iid);
@@ -335,7 +335,7 @@ PRMI::order_service(DTMessage *dtmsg){
 
     //broadcast the order to lock services
     for(int i=0; i<mpi_size; i++){
-      //      cerr<<"#### PRMI:order_service sending message to lockservice at rank"<<i<<" lockid= "<<lid.str()<<" ####\n";
+      //      cout<<"#### PRMI:order_service sending message to lockservice at rank"<<i<<" lockid= "<<lid.str()<<" ####\n";
       SocketSpChannel spc(lockSvc_ep_list[i], lockSvc_addr_list[i]);
       SocketMessage msg(&spc); 
       msg.createMessage();
@@ -357,7 +357,7 @@ PRMI::order_service(DTMessage *dtmsg){
 
 void 
 PRMI::lock_service(DTMessage *dtmsg){
-  //  cerr<<"#### PRMI:lock_service called ####\n";
+  //  cout<<"#### PRMI:lock_service called ####\n";
   //first decode lockid
   SocketMessage msg(dtmsg);
   lockid lid;
@@ -377,7 +377,7 @@ PRMI::lock_service(DTMessage *dtmsg){
     }
     //raise the semaphore
     lock_sema_map[lid]->up();
-    //    cerr<<"PRMI::lock_service calls lock_sema_map[lid]->up()\n";
+    //    cout<<"PRMI::lock_service calls lock_sema_map[lid]->up()\n";
   }
   lock_mutex->unlock();
 }

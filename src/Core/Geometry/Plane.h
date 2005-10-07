@@ -65,11 +65,13 @@ public:
    // changes the plane ( n and d )
    
    void ChangePlane( const Point &p1, const Point &p2, const Point &p3 );
+   void ChangePlane( const Point &p1, const Vector &v); 
 
    // returns true if the line  v*t+s  for -inf < t < inf intersects
    // the plane.  if so, hit contains the point of intersection.
 
    int Intersect( Point s, Vector v, Point& hit );
+   int Intersect( Point s, Vector v, double &t ) const;
 };
 
 } // End namespace SCIRun

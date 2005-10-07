@@ -62,7 +62,7 @@ DTMessage::display(){
   //char *str=new char[length];
   //strncpy(str, buf+sizeof(int), length-sizeof(int));
   //str[length-sizeof(int)]='\0';
-  std::cerr<<"DTMessage:\n"
+  std::cout<<"DTMessage:\n"
 	   <<"\t recver="<<(long)recver<<"\n"
 	   <<"\t sender="<<(long)sender<<"\n"
 	   <<"\t fr_addr="<<fr_addr.ip<<"/"<<fr_addr.port<<"\n"

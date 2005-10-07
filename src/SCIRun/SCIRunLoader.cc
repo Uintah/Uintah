@@ -77,6 +77,7 @@ namespace SCIRun {
 
 SCIRunLoader::SCIRunLoader(const std::string &loaderName,
                            const std::string & frameworkURL)
+ :lock_components("SCIRunLoader::components lock")
 {
   create_sci_environment(0,0);
 }
@@ -226,10 +227,13 @@ int SCIRunLoader::getAllComponentTypes(::SSIDL::array1< ::std::string>& componen
 {
   std::cerr<<"listAllComponents() is called\n";
   buildComponentList();
+  
+  lock_components.lock();
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++){
     componentTypes.push_back(iter->second->getType());
   }
+  lock_components.unlock();
   return 0;
 }
 
@@ -362,29 +366,33 @@ void SCIRunLoader::readComponentDescription(const std::string& file)
     CCAComponentDescription* cd = new CCAComponentDescription(0); //TODO: assign null as CCA component model
     DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("name"));
     if (name==0) {
-      std::cout << "ERROR: Component has no name." << std::endl;
+      std::cerr << "ERROR: Component has no name." << std::endl;
       cd->type = "unknown type";
     } else {
       cd->type = to_char_ptr(name->getNodeValue());
     }
-  
+ 
+    lock_components.lock(); 
     componentDB_type::iterator iter = components.find(cd->type);
     if(iter != components.end()){
       std::cerr << "WARNING: Component multiply defined: " << cd->type << std::endl;
     } else {
-      std::cerr << "Added CCA component of type: " << cd->type << std::endl;
+      //std::cout << "Added CCA component of type: " << cd->type << std::endl;
       components[cd->type]=cd;
     }
+    lock_components.unlock();
   }
 }
 
 void SCIRunLoader::destroyComponentList()
 {
+  lock_components.lock();
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++){
     delete iter->second;
   }
   components.clear();
+  lock_components.unlock();
 }
 
 } // end namespace SCIRun

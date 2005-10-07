@@ -82,7 +82,8 @@ std::string("/CCA/Components/VTK/xml");
 
 
 VtkComponentModel::VtkComponentModel(SCIRunFramework* framework)
-  : ComponentModel("vtk"), framework(framework)
+  : ComponentModel("vtk"), framework(framework),
+    lock_components("VtkComponentModel::components lock")
 {
   // move to framework properties
   // Record the path containing DLLs for components.
@@ -106,6 +107,7 @@ VtkComponentModel::~VtkComponentModel()
 
 void VtkComponentModel::destroyComponentList()
 {
+  SCIRun::Guard g1(&lock_components);
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++)
     {
@@ -223,13 +225,16 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
       // Register this component
       VtkComponentDescription* cd = new VtkComponentDescription(this, component_name);
       cd->setLibrary(library_name.c_str()); // record the DLL name
+      lock_components.lock();  
       this->components[cd->type] = cd;
+      lock_components.unlock();
      }
   }
 }
 
 bool VtkComponentModel::haveComponent(const std::string& type)
 {
+  SCIRun::Guard g1(&lock_components);
   return components.find(type) != components.end();
 }
 
@@ -240,10 +245,12 @@ VtkComponentModel::createInstance(const std::string& name,
 {
   vtk::Component *component;
 
+  lock_components.lock();
   componentDB_type::iterator iter = components.find(type);
   if (iter == components.end()) { // could not find this component
     return 0;
   }
+  lock_components.unlock();
 
   // Get the list of DLL paths to search for the appropriate component library
   std::vector<std::string> possible_paths = splitPathString(this->getSidlDLLPath());
@@ -298,6 +305,7 @@ std::string VtkComponentModel::getName() const
 
 void VtkComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)
 {
+  SCIRun::Guard g1(&lock_components);
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++){
     list.push_back(iter->second);

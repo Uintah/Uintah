@@ -41,6 +41,8 @@
 #ifndef SCIRun_CCA_BridgeComponentModel_h
 #define SCIRun_CCA_BridgeComponentModel_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentModel.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/Bridge/BridgeServices.h>
@@ -77,9 +79,6 @@ namespace SCIRun {
     listAllComponentTypes(std::vector<ComponentDescription*>&,
 	                      bool);
 
-    int addLoader(resourceReference *rr);
-
-    int removeLoader(const std::string &loaderName);
 
     static const std::string DEFAULT_PATH;
 
@@ -87,11 +86,11 @@ namespace SCIRun {
     SCIRunFramework* framework;
     typedef std::map<std::string, BridgeComponentDescription*> componentDB_type;
     componentDB_type components;
+    SCIRun::Mutex lock_components;
 
     void destroyComponentList();
     void buildComponentList();
     void readComponentDescription(const std::string& file);
-    resourceReference *getLoader(std::string loaderName);
     BridgeComponentModel(const BridgeComponentModel&);
     BridgeComponentModel& operator=(const BridgeComponentModel&);
 

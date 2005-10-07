@@ -41,6 +41,8 @@
 #ifndef SCIRun_Corba_CorbaComponentModel_h
 #define SCIRun_Corba_CorbaComponentModel_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentModel.h>
 #include <vector>
 #include <string>
@@ -122,6 +124,7 @@ private:
   SCIRunFramework* framework;
   typedef std::map<std::string, CorbaComponentDescription*> componentDB_type;
   componentDB_type components;
+  SCIRun::Mutex lock_components;
 
   void readComponentDescription(const std::string& file);
 

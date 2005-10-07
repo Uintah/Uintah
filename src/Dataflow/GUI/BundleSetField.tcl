@@ -40,18 +40,11 @@ itcl_class SCIRun_Bundle_BundleSetField {
         global $this-field1-name
         global $this-field2-name
         global $this-field3-name
-        global $this-field1-usename
-        global $this-field2-usename
-        global $this-field3-usename
         global $this-bundlename
         
-
         set $this-field1-name "field1"
         set $this-field2-name "field2"
         set $this-field3-name "field3"
-        set $this-field1-usename 0
-        set $this-field2-usename 0
-        set $this-field3-usename 0
         set $this-bundlename ""
 
     }
@@ -68,15 +61,11 @@ itcl_class SCIRun_Bundle_BundleSetField {
         global $this-field1-name
         global $this-field2-name
         global $this-field3-name
-        global $this-field1-usename
-        global $this-field2-usename
-        global $this-field3-usename
         global $this-bundlename
 
         toplevel $w 
 
         wm minsize $w 100 150
-
         
         iwidgets::labeledframe $w.frame -labeltext "FIELD INPUTS"
         set childframe [$w.frame childsite]
@@ -108,8 +97,6 @@ itcl_class SCIRun_Bundle_BundleSetField {
         entry $field1.name.entry -textvariable $this-field1-name
         pack $field1.name.label -side left 
         pack $field1.name.entry -side left -fill x -expand yes
-        checkbutton $field1.options.usename -text "Use object name" -variable $this-field1-usename
-        pack $field1.options.usename -side top -fill x
         
         frame $field2.name
         frame $field2.options
@@ -119,8 +106,6 @@ itcl_class SCIRun_Bundle_BundleSetField {
         entry $field2.name.entry -textvariable $this-field2-name
         pack $field2.name.label -side left 
         pack $field2.name.entry -side left -fill x -expand yes
-        checkbutton $field2.options.usename -text "Use object name" -variable $this-field2-usename
-        pack $field2.options.usename -side top -fill x
         
         frame $field3.name
         frame $field3.options
@@ -130,8 +115,6 @@ itcl_class SCIRun_Bundle_BundleSetField {
         entry $field3.name.entry -textvariable $this-field3-name
         pack $field3.name.label -side left 
         pack $field3.name.entry -side left -fill x -expand yes
-        checkbutton $field3.options.usename -text "Use object name" -variable $this-field3-usename
-        pack $field3.options.usename -side top -fill x
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w

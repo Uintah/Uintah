@@ -28,57 +28,41 @@
 
 
 /*
- *  InternalComponentDescription.h: 
+ *  InternalFrameworkServiceInstance.h: 
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   October 2001
+ *   August 2005
  *
  */
 
-#ifndef SCIRun_Internal_InternalComponentDescription_h
-#define SCIRun_Internal_InternalComponentDescription_h
+#ifndef SCIRun_Internal_InternalFrameworkServiceInstance_h
+#define SCIRun_Internal_InternalFrameworkServiceInstance_h
 
-#include <SCIRun/ComponentDescription.h>
-#include <string>
+#include <SCIRun/Internal/InternalServiceInstance.h>
 
-namespace SCIRun {
-
-class InternalComponentInstance;
-class InternalComponentModel;
-
-/** \class InternalComponentDescription
- *
- *
- */
-class InternalComponentDescription : public ComponentDescription
+namespace SCIRun
 {
-public:
-  InternalComponentDescription(InternalComponentModel* model,
-                               const std::string& serviceType,
-                               InternalComponentInstance* (*create)(SCIRunFramework*,
-                                                                    const std::string&),
-                               bool isSingleton);
-  virtual ~InternalComponentDescription();
 
-  /** */
-  virtual std::string getType() const;
-  /** */
-  virtual const ComponentModel* getModel() const;
+/** \class InternalFrameworkServiceInstance
+ *
+ *
+ */
+  class InternalFrameworkServiceInstance : public InternalServiceInstance
+  {
+  public:
+    InternalFrameworkServiceInstance(SCIRunFramework* framework,
+				     const std::string& className);
+    
+    virtual ~InternalFrameworkServiceInstance();
+    
+  private:
+    InternalFrameworkServiceInstance(const InternalFrameworkServiceInstance&);
+    InternalFrameworkServiceInstance& operator=(const InternalFrameworkServiceInstance&);
+  };
   
-private:
-  friend class InternalComponentModel;
-  InternalComponentModel* model;
-  std::string serviceType;
-  InternalComponentInstance* (*create)(SCIRunFramework*, const std::string&);
-  InternalComponentInstance* singleton_instance;
-  bool isSingleton;
-  InternalComponentDescription(const InternalComponentDescription&);
-  InternalComponentDescription& operator=(const InternalComponentDescription&);
-};
-
 } // end namespace SCIRun
 
 #endif

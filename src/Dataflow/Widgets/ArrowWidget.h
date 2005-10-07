@@ -50,7 +50,8 @@ namespace SCIRun {
 
 class ArrowWidget : public BaseWidget {
 public:
-  ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+  ArrowWidget( Module* module, CrowdMonitor* lock, 
+	       double widget_scale, bool stipple_occluded = false);
   ArrowWidget( const ArrowWidget& );
   virtual ~ArrowWidget();
 

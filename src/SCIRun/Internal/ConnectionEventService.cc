@@ -28,29 +28,27 @@
 
 #include <SCIRun/Internal/ConnectionEventService.h>
 #include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/CCA/CCAException.h>
 
 
 namespace SCIRun {
 
-ConnectionEventService::ConnectionEventService(SCIRunFramework* framework,
-                        const std::string& name)
-    : InternalComponentInstance(framework, name, "internal:ConnectionEventService")
-{
-}
-
-ConnectionEventService::~ConnectionEventService()
-{
-    std::cerr << "ConnectionEventService destroyed..." << std::endl;
-}
-
-InternalComponentInstance* ConnectionEventService::create(SCIRunFramework* framework,
-                          const std::string& name)
-{
-  ConnectionEventService* n = new ConnectionEventService(framework, name);
-  n->addReference();
-  return n;
-}
+  ConnectionEventService::ConnectionEventService(SCIRunFramework* framework)
+    : InternalFrameworkServiceInstance(framework, "internal:ConnectionEventService"),
+      lock_listeners("ConnectionEventService::listeners lock")
+  {
+  }
+  
+  ConnectionEventService::~ConnectionEventService()
+  {
+  //std::cout << "ConnectionEventService destroyed..." << std::endl;
+  }
+  
+  InternalFrameworkServiceInstance* ConnectionEventService::create(SCIRunFramework* framework)
+  {
+    ConnectionEventService* n = new ConnectionEventService(framework);
+    n->addReference();
+    return n;
+  }
 
 sci::cca::Port::pointer ConnectionEventService::getService(const std::string&)
 {
@@ -61,14 +59,16 @@ void ConnectionEventService::addConnectionEventListener(
         sci::cca::ports::EventType et,
         const sci::cca::ports::ConnectionEventListener::pointer& cel)
 {
-    std::cerr << "ConnectionEventService::addConnectionEventListener" << std::endl;
-    listeners.push_back(new Listener(et, cel));
+    SCIRun::Guard g1(&lock_listeners);
+  //std::cout << "ConnectionEventService::addConnectionEventListener" << std::endl;
+  listeners.push_back(new Listener(et, cel));
 }
 
 void ConnectionEventService::removeConnectionEventListener(
         sci::cca::ports::EventType et,
         const sci::cca::ports::ConnectionEventListener::pointer& cel)
 {
+    SCIRun::Guard g1(&lock_listeners);
     for (std::vector<Listener*>::iterator iter = listeners.begin();
             iter != listeners.end(); iter++) {
         if ((*iter)->type == et && (*iter)->l == cel) {
@@ -86,6 +86,7 @@ ConnectionEventService::emitConnectionEvent(const sci::cca::ports::ConnectionEve
         return;
     }
 
+    lock_listeners.lock();
     for (std::vector<Listener*>::iterator iter=listeners.begin();
             iter != listeners.end(); iter++) {
         if ((*iter)->type == sci::cca::ports::ALL ||
@@ -93,6 +94,7 @@ ConnectionEventService::emitConnectionEvent(const sci::cca::ports::ConnectionEve
             (*iter)->l->connectionActivity(event);
         }
     }
+    lock_listeners.unlock();
 }
 
 

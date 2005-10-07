@@ -131,7 +131,7 @@ main(int argc, char *argv[] )
     }
     DTPoint* lockSvc_ep=PRMI::lockSvcEp.getEP();
 
-#ifdef HAVE_MPI
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
     //root broadcast order service ep and DT address
     MPI_Bcast(&PRMI::orderSvc_ep, 1, MPI_INT,0,MPI_COMM_WORLD);
     MPI_Bcast(&PRMI::orderSvc_addr.ip, 1, MPI_INT,0,MPI_COMM_WORLD);
@@ -175,7 +175,7 @@ main(int argc, char *argv[] )
     urlString s;
     std::strcpy(s, ploader->getURL().getString().c_str());
 
-#ifdef HAVE_MPI
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
     urlString *buf;
     if(sl->mpi_rank==0){
       buf=new urlString[sl->mpi_size];

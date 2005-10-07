@@ -57,12 +57,12 @@ ErrnoException::ErrnoException(const std::string& message, int err, const char* 
    const char* s = strerror(err);
    if(!s)
       s="(none)";
-   str << message << " (errno=" << err << ": " << s << ")";
+   str << "An ErrnoException was thrown.\n"
+       << file << ":" << line << "\n"
+       << message << " (errno=" << err << ": " << s << ")";
    message_ = str.str();
 
 #ifdef EXCEPTIONS_CRASH
-   std::cout << "An ErrnoException was thrown.\n";
-   std::cout << file << ":" << line << "\n";
    std::cout << message_ << "\n";
 #endif
 }

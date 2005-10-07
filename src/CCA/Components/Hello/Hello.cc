@@ -56,56 +56,70 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Hello()
 }
 
 
-Hello::Hello()
+Hello::Hello() : text("GO hasn't been called yet!")
 {
-    text = "GO hasn't been called yet!";
 }
 
 Hello::~Hello()
 {
+<<<<<<< .working
     services->unregisterUsesPort("stringport");
+=======
+>>>>>>> .merge-right.r32054
 }
 
 void Hello::setServices(const sci::cca::Services::pointer& svc)
 {
     services = svc;
-    std::cerr << "svc->createTypeMap...";
+    svc->registerForRelease(sci::cca::ComponentRelease::pointer(this));
     sci::cca::TypeMap::pointer props = svc->createTypeMap();
-    std::cerr << "Done\n";
 
-    uiPort = new myUIPort();
-    myUIPort::pointer uip(uiPort);
-    goPort = new myGoPort(svc);
-    myGoPort::pointer gop(goPort);
-    ciPort = new myComponentIcon();
-    myComponentIcon::pointer cip(ciPort);
-    uiPort->setParent(this);
-    goPort->setParent(this);
-    ciPort->setParent(this);
+    myUIPort *uip = new myUIPort();
+    uip->setParent(this);
+    myUIPort::pointer uiPortPtr = myUIPort::pointer(uip);
 
-    std::cerr << "svc->addProvidesPort(uip)...";  
-    svc->addProvidesPort(uip, "ui", "sci.cca.ports.UIPort",
+    svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort",
                          sci::cca::TypeMap::pointer(0));
-    std::cerr << "Done\n";
 
-    std::cerr << "svc->addProvidesPort(gop)...";  
-    svc->addProvidesPort(gop, "go", "sci.cca.ports.GoPort",
-                         sci::cca::TypeMap::pointer(0));
-    std::cerr << "Done\n";
+    myGoPort *gp = new myGoPort(svc);
+    gp->setParent(this);
+    myGoPort::pointer goPortPtr = myGoPort::pointer(gp);
 
-    std::cerr << "svc->addProvidesPort(ci)...";  
-    svc->addProvidesPort(cip, "icon", "sci.cca.ports.ComponentIcon",
+    svc->addProvidesPort(goPortPtr, "go", "sci.cca.ports.GoPort",
                          sci::cca::TypeMap::pointer(0));
-    std::cerr << "Done\n";
+
+    myComponentIcon::pointer ciPortPtr = myComponentIcon::pointer(new myComponentIcon);
+
+    svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon",
+                         sci::cca::TypeMap::pointer(0));
 
     props->putString("cca.portName", "stringport");
     props->putString("cca.portType", "sci.cca.ports.StringPort");
     svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
 }
 
+void Hello::releaseServices(const sci::cca::Services::pointer& svc)
+{
+std::cerr << "Hello::releaseServices" << std::endl;
+
+    svc->unregisterUsesPort("stringport");
+    svc->unregisterUsesPort("progress");
+
+    svc->removeProvidesPort("ui");
+    svc->removeProvidesPort("go");
+    svc->removeProvidesPort("icon");
+}
+
+
 int myUIPort::ui()
 {
     QMessageBox::information(0, "Hello", com->text);
+<<<<<<< .working
+=======
+#else
+    std::cerr << "UI not available." << std::endl;
+#endif
+>>>>>>> .merge-right.r32054
     return 0;
 }
 
@@ -123,12 +137,23 @@ int myGoPort::go()
     std::cerr << "Hello.go.getPort...";
     double st = SCIRun::Time::currentSeconds();
 
-    sci::cca::Port::pointer pp = services->getPort("stringport");	
-    if (pp.isNull()) {
-        std::cerr << "stringport is not available!\n";
+    sci::cca::Port::pointer pp;
+    sci::cca::Port::pointer progPort;
+    try {
+        pp = services->getPort("stringport");
+        progPort = services->getPort("progress");
+    }
+    catch (const sci::cca::CCAException::pointer &e) {
+        std::cerr << e->getNote() << std::endl;
         return 1;
-    }  
+    }
 
+<<<<<<< .working
+=======
+    sci::cca::ports::Progress::pointer pPtr =
+        pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
+
+>>>>>>> .merge-right.r32054
     sci::cca::ports::StringPort::pointer sp =
         pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
     std::string name = sp->getString();
@@ -164,9 +189,9 @@ int myComponentIcon::getProgressBar()
 {
     return steps;
 }
- 
+
 std::string myComponentIcon::getIconShape()
 {
     return std::string("RECT");
 }
- 
+

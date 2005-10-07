@@ -47,10 +47,10 @@
 using namespace SCIRun;   
 
 MxNMetaSynch::MxNMetaSynch(int size)
-  :metaCondition("setCallerDistribution Wait"), count_mutex("Receieved Flag lock")
+  : count_mutex("Receieved Flag lock"), metaCondition("setCallerDistribution Wait")
 {
   //initialize the receiving flags to false.
-  for(int i=0; i < size; i++){
+  for (int i=0; i < size; i++) {
     recv_flags.push_back(0);
   }
   //initially, no setCallerDistribution is called, so completed should be false.
@@ -91,10 +91,10 @@ void MxNMetaSynch::leave(int rank)
 {
   count_mutex.lock();
 
-  if(rank<0 || rank>recv_flags.size()){
+  if (rank < 0 || rank > recv_flags.size()){
     //TODO: throw an exception here
     ::std::cout << "Error: Unexpected meta distribution from rank=" << rank << "\n";
-  }else{
+  } else {
     //same rank cannot enter at the same time, so this is threadsafe.
     ::std::cout << "got meta distribution from rank=" << rank << "\n";
     recv_flags[rank]++;
@@ -102,8 +102,8 @@ void MxNMetaSynch::leave(int rank)
   
   bool allReceived=true;
 
-  for(int i=1; i<recv_flags.size(); i++){
-    if(recv_flags[0]!=recv_flags[i]){
+  for(unsigned int i = 1; i < recv_flags.size(); i++){
+    if (recv_flags[0] != recv_flags[i]) {
       allReceived=false;
       break;
     }

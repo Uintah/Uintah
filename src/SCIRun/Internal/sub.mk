@@ -38,11 +38,15 @@ SRCS     += \
              $(SRCDIR)/ConnectionEvent.cc \
              $(SRCDIR)/ConnectionEventService.cc \
              $(SRCDIR)/ComponentRegistry.cc \
-             $(SRCDIR)/InternalComponentDescription.cc \
              $(SRCDIR)/InternalComponentModel.cc \
              $(SRCDIR)/InternalComponentInstance.cc \
              $(SRCDIR)/FrameworkProperties.cc \
-             $(SRCDIR)/FrameworkProxyService.cc
+             $(SRCDIR)/FrameworkProxyService.cc \
+             $(SRCDIR)/FrameworkInternalException.cc \
+             $(SRCDIR)/InternalServiceInstance.cc \
+             $(SRCDIR)/InternalFrameworkServiceInstance.cc \
+             $(SRCDIR)/InternalServiceDescription.cc \
+             $(SRCDIR)/InternalFrameworkServiceDescription.cc
 
 $(SRCDIR)/ComponentRegistry.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ComponentEvent.o: Core/CCA/spec/cca_sidl.h
@@ -50,8 +54,11 @@ $(SRCDIR)/ComponentEventService.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ConnectionEvent.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ConnectionEventService.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/BuilderService.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/InternalComponentDescription.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/InternalComponentInstance.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/InternalComponentModel.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/FrameworkProperties.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/FrameworkProxyService.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/InternalServiceInstance.o : Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/InternalFrameworkServiceInstance.o : Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/InternalServiceDescription.o : Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/InternalFrameworkServiceDescription.o : Core/CCA/spec/cca_sidl.h

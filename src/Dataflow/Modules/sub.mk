@@ -46,6 +46,7 @@ SUBDIRS := \
 	$(SRCDIR)/Render\
 	$(SRCDIR)/Time\
         $(SRCDIR)/Visualization\
+	$(SRCDIR)/String\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

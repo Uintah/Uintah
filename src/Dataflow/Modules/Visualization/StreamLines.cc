@@ -41,6 +41,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/CurveMesh.h>
+#include <Core/Geometry/CompGeom.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Visualization/StreamLines.h>
 #include <Core/Containers/Handle.h>
@@ -64,7 +65,7 @@ private:
   GuiDouble                     gTolerance_;
   GuiInt                        gMaxsteps_;
   GuiInt                        gDirection_;
-  GuiInt                        gColor_;
+  GuiInt                        gValue_;
   GuiInt                        gRemove_Colinear_;
   GuiInt                        gMethod_;
   GuiInt                        gNp_;
@@ -73,7 +74,7 @@ private:
   double stepsize_;
   int maxsteps_;
   int direction_;
-  int color_;
+  int value_;
   int remove_colinear_;
   int method_;
   int np_;
@@ -94,7 +95,7 @@ StreamLines::StreamLines(GuiContext* ctx) :
   gTolerance_(ctx->subVar("tolerance")),
   gMaxsteps_(ctx->subVar("maxsteps")),
   gDirection_(ctx->subVar("direction")),
-  gColor_(ctx->subVar("color")),
+  gValue_(ctx->subVar("value")),
   gRemove_Colinear_(ctx->subVar("remove-colinear")),
   gMethod_(ctx->subVar("method")),
   gNp_(ctx->subVar("np")),
@@ -106,6 +107,160 @@ StreamLines::StreamLines(GuiContext* ctx) :
 
 StreamLines::~StreamLines()
 {
+}
+
+
+static inline int
+CLAMP(int a, int lower, int upper)
+{
+  if (a < lower) return lower;
+  else if (a > upper) return upper;
+  return a;
+}
+
+
+void
+StreamLines::execute()
+{
+  update_state(NeedData);
+ 
+  FieldIPort* vfport = (FieldIPort*)get_iport("Flow field");
+  FieldHandle vfHandle;
+  Field *vField;  // vector field
+  
+  // the vector field input is required
+  if (!vfport->get(vfHandle) || !(vField = vfHandle.get_rep())) {
+    error( "No Vector field handle or representation" );
+    return;
+  }
+  
+  // Check that the flow field input is a vector field.
+  VectorFieldInterfaceHandle vfi = vField->query_vector_interface(this);
+  if (!vfi.get_rep()) {
+    error("FlowField is not a Vector field.");
+    return;
+  }
+
+  // Works for surfaces and volume data only.
+  if (vField->mesh()->dimensionality() == 1) {
+    error("The StreamLines module does not works on 1D fields.");
+    return;
+  }
+
+  FieldIPort* sfport = (FieldIPort*)get_iport("Seeds");
+  FieldHandle sfHandle;
+  Field *sField;  // seed point field
+
+  // the seed field input is required
+  if (!sfport->get(sfHandle) || !(sField = sfHandle.get_rep())) {
+    error( "No Seed field handle or representation" );
+    return;
+  }
+
+  bool update = false;
+
+  // Check to see if the input field has changed.
+  if( vfGeneration_ != vfHandle->generation ) {
+    vfGeneration_ = vfHandle->generation;
+    update = true;
+  }
+
+  // Check to see if the input field has changed.
+  if( sfGeneration_ != sfHandle->generation ) {
+    sfGeneration_ = sfHandle->generation;
+    update = true;
+  }
+
+  if (gValue_.get() == 0 &&
+      !sfHandle->query_scalar_interface(this).get_rep()) {
+    error("Usage of Seed data is only available for Scalar data.");
+    return;
+  }
+
+  double tolerance = gTolerance_.get();
+  double stepsize = gStepsize_.get();
+  int maxsteps = gMaxsteps_.get();
+  int direction = gDirection_.get();
+  int value = gValue_.get();
+  int remove_colinear = gRemove_Colinear_.get();
+  int method = gMethod_.get();
+  int np = gNp_.get();
+  
+  if( tolerance_ != tolerance ||
+      stepsize_  != stepsize  ||
+      maxsteps_  != maxsteps  ||
+      direction_ != direction ||
+      value_     != value ||
+      remove_colinear_ != remove_colinear  ||
+      method_    != method  ||
+      np_        != np ) {
+
+    tolerance_ = tolerance;
+    stepsize_  = stepsize;
+    maxsteps_  = maxsteps;
+    direction_ = direction;
+    value_     = value;
+    remove_colinear_ = remove_colinear;
+    method_    = method;
+    np_        = np;
+
+    update = true;
+  }
+
+  if( !fHandle_.get_rep() ||
+      update ||
+      error_ ) {
+
+    update_state(JustStarted);
+
+     error_ = false;
+
+    const TypeDescription *sftd = sField->get_type_description();
+    const TypeDescription *sfdtd = sField->get_type_description(1);
+    const TypeDescription *sltd = sField->order_type_description();
+
+    vField->mesh()->synchronize(Mesh::LOCATE_E);
+    vField->mesh()->synchronize(Mesh::EDGES_E);
+
+    if (method_ == 5 ) {
+
+      if( vfHandle->basis_order() != 0) {
+	error("The Cell Walk method only works for cell centered FlowFields.");
+	error_ = true;
+	return;
+      }
+
+      const TypeDescription *vtd = vfHandle->get_type_description();
+      CompileInfoHandle aci =
+	StreamLinesAccAlgo::get_compile_info(sftd, sfdtd, sltd, vtd, value);
+      Handle<StreamLinesAccAlgo> accalgo;
+      if (!module_dynamic_compile(aci, accalgo)) return;
+      
+      fHandle_ = accalgo->execute(sField, vfHandle, maxsteps,
+				  direction, value,
+				  remove_colinear);
+    } else {
+      CompileInfoHandle ci =
+	StreamLinesAlgo::get_compile_info(sftd, sfdtd, sltd, value);
+      Handle<StreamLinesAlgo> algo;
+      if (!module_dynamic_compile(ci, algo)) return;
+      
+      fHandle_ = algo->execute(sField, vfi,
+			       tolerance, stepsize, maxsteps,
+			       direction, value,
+			       remove_colinear,
+			       method, CLAMP(np, 1, 256));
+    }
+
+    update_state(Completed);
+  }
+   
+  // Send the data downstream
+  if( fHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Streamlines");
+    ofield_port->send( fHandle_ );
+  }
 }
 
 
@@ -146,37 +301,32 @@ ComputeRKFTerms(Vector v[6],       // storage for terms
   v[0] *= s;
   
   if (!interpolate(vfi, p + v[0]*rkf_d[1][0], v[1]))
-  {
     return 0;
-  }
+
   v[1] *= s;
   
   if (!interpolate(vfi, p + v[0]*rkf_d[2][0] + v[1]*rkf_d[2][1], v[2]))
-  {
     return 1;
-  }
+
   v[2] *= s;
   
   if (!interpolate(vfi, p + v[0]*rkf_d[3][0] + v[1]*rkf_d[3][1] +
 		   v[2]*rkf_d[3][2], v[3]))
-  {
     return 2;
-  }
+
   v[3] *= s;
   
   if (!interpolate(vfi, p + v[0]*rkf_d[4][0] + v[1]*rkf_d[4][1] +
 		   v[2]*rkf_d[4][2] + v[3]*rkf_d[4][3], v[4]))
-  {
     return 3;
-  }
+
   v[4] *= s;
   
   if (!interpolate(vfi, p + v[0]*rkf_d[5][0] + v[1]*rkf_d[5][1] +
 		   v[2]*rkf_d[5][2] + v[3]*rkf_d[5][3] +
 		   v[4]*rkf_d[5][4], v[5]))
-  {
     return 4;
-  }
+
   v[5] *= s;
 
   return 5;
@@ -193,12 +343,12 @@ FindRKF(vector<Point> &v, // storage for points
 {
   Vector terms[6];
 
-  if (!interpolate(vfi, x, terms[0])) { return; }
-  for (int i=0; i<n; i++)
-  {
+  if (!interpolate(vfi, x, terms[0]))
+    return;
+
+  for (int i=0; i<n; i++) {
     // Compute the next set of terms.
-    if (ComputeRKFTerms(terms, x, s, vfi) < 5)
-    {
+    if (ComputeRKFTerms(terms, x, s, vfi) < 5) {
       s /= 1.5;
       continue;
     }
@@ -212,12 +362,10 @@ FindRKF(vector<Point> &v, // storage for points
     // Is the error tolerable?  Adjust the step size accordingly.  Too
     // small?  Grow it for next time but keep small-error result.  Too
     // big?  Recompute with smaller size.
-    if (err2 * 16384.0 < t2)
-    {
+    if (err2 * 16384.0 < t2) {
       s *= 2.0;
-    }
-    else if (err2 > t2)
-    {
+
+    } else if (err2 > t2) {
       s /= 2.0;
       continue;
     }
@@ -227,7 +375,9 @@ FindRKF(vector<Point> &v, // storage for points
       terms[3]*rkf_a[3] + terms[4]*rkf_a[4] + terms[5]*rkf_a[5];
 
     // If the new point is inside the field, add it.  Otherwise stop.
-    if (!interpolate(vfi, x, terms[0])) { break; }
+    if (!interpolate(vfi, x, terms[0]))
+      break;
+
     v.push_back(x);
   }
 }
@@ -244,15 +394,20 @@ FindHeun(vector<Point> &v, // storage for points
   int i;
   Vector v0, v1;
 
-  if (!interpolate(vfi, x, v0)) { return; }
-  for (i=0; i < n; i ++)
-  {
+  if (!interpolate(vfi, x, v0))
+    return;
+
+  for (i=0; i < n; i ++) {
     v0 *= s;
-    if (!interpolate(vfi, x + v0, v1)) { break; }
+    if (!interpolate(vfi, x + v0, v1))
+      break;
+
     v1 *= s;
     x += 0.5 * (v0 + v1);
 
-    if (!interpolate(vfi, x, v0)) { break; }
+    if (!interpolate(vfi, x, v0))
+      break;
+
     v.push_back(x);
   }
 }
@@ -269,21 +424,29 @@ FindRK4(vector<Point> &v,
   Vector f[4];
   int i;
 
-  if (!interpolate(vfi, x, f[0])) { return; }
-  for (i = 0; i < n; i++)
-  {
+  if (!interpolate(vfi, x, f[0]))
+    return;
+
+  for (i = 0; i < n; i++) {
     f[0] *= s;
-    if (!interpolate(vfi, x + f[0] * 0.5, f[1])) { break; }
+    if (!interpolate(vfi, x + f[0] * 0.5, f[1]))
+      break;
+
     f[1] *= s;
-    if (!interpolate(vfi, x + f[1] * 0.5, f[2])) { break; }
+    if (!interpolate(vfi, x + f[1] * 0.5, f[2]))
+      break;
+
     f[2] *= s;
-    if (!interpolate(vfi, x + f[2], f[3])) { break; }
+    if (!interpolate(vfi, x + f[2], f[3]))
+      break;
+
     f[3] *= s;
 
     x += (f[0] + 2.0 * f[1] + 2.0 * f[2] + f[3]) * (1.0 / 6.0);
 
     // If the new point is inside the field, add it.  Otherwise stop.
-    if (!interpolate(vfi, x, f[0])) { break; }
+    if (!interpolate(vfi, x, f[0]))
+      break;
     v.push_back(x);
   }
 }
@@ -298,6 +461,7 @@ FindAdamsBashforth(vector<Point> &v, // storage for points
 		   const VectorFieldInterfaceHandle &vfi) // the field
 {
   FindRK4(v, x, t2, s, Min(n, 5), vfi);
+
   if (v.size() < 5) {
     cerr << "Streamlines - FindAdamsBashforth: Ending early, less than 5 points.\n\n";
     return;
@@ -339,19 +503,23 @@ FindAdamsBashforth(vector<Point> &v, // storage for points
 vector<Point>::iterator
 StreamLinesCleanupPoints(vector<Point> &input, double e2)
 {
-  unsigned int i, j;
-  j = 0;
-  for (i=1; i < input.size()-1; i++)
-  {
+  unsigned int i, j = 0;
+
+  for (i=1; i < input.size()-1; i++) {
     const Vector v0 = input[i] - input[j];
     const Vector v1 = input[i] - input[i+1];
-    if (Cross(v0, v1).length2() > e2 && Dot(v0, v1) < 0.0)
-    {
+
+    if (Cross(v0, v1).length2() > e2 && Dot(v0, v1) < 0.0) {
       j++;
       if (i != j) { input[j] = input[i]; }
     }
   }
-  if (input.size() > 1) { j++; input[j] = input[input.size()-1]; }
+
+  if (input.size() > 1) {
+    j++;
+    input[j] = input[input.size()-1];
+  }
+
   return input.begin() + j + 1;
 }
 
@@ -367,203 +535,30 @@ StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
 			   int method)
 {
   if (method == 0)
-  {
     FindAdamsBashforth(v, x, t2, s, n, vfi);
-  }
-  else if (method == 1)
-  {
+
+//else if (method == 1)
     // TODO: Implement AdamsMoulton
-  }
+
   else if (method == 2)
-  {
     FindHeun(v, x, t2, s, n, vfi);
-  }
+
   else if (method == 3)
-  {
     FindRK4(v, x, t2, s, n, vfi);
-  }
+
   else if (method == 4)
-  {
     FindRKF(v, x, t2, s, n, vfi);
-  }
 
   if (remove_colinear_p)
-  {
     v.erase(StreamLinesCleanupPoints(v, t2), v.end());
-  }
 }
 
-
-static inline int
-CLAMP(int a, int lower, int upper)
-{
-  if (a < lower) return lower;
-  else if (a > upper) return upper;
-  return a;
-}
-
-
-
-double
-StreamLinesAccAlgo::RayPlaneIntersection(const Point &p, const Vector &dir,
-					 const Point &p0, const Vector &pn)
-{
-  // Compute divisor.
-  const double Vd = Dot(dir, pn);
-
-  // Return no intersection if parallel to plane or no cross product.
-  if (Vd < 1.0e-12) { return 1.0e24; }
-
-  const double D = - Dot(pn, p0);
-
-  const double V0 = - (Dot(pn, p) + D);
-    
-  return V0 / Vd;
-}
-
-
-
-void
-StreamLines::execute()
-{
-  update_state(NeedData);
- 
-  FieldIPort* vfport = (FieldIPort*)get_iport("Flow field");
-  FieldHandle vfHandle;
-  Field *vField;  // vector field
-  
-  // the vector field input is required
-  if (!vfport->get(vfHandle) || !(vField = vfHandle.get_rep())) {
-    error( "No Vector field handle or representation" );
-    return;
-  }
-  
-  // Check that the flow field input is a vector field.
-  VectorFieldInterfaceHandle vfi = vField->query_vector_interface(this);
-  if (!vfi.get_rep()) {
-    error("FlowField is not a Vector field.");
-    return;
-  }
-
-  // TODO:  Fix this for cell walking on surfaces.
-  if (vField->mesh()->dimensionality() != 3)
-  {
-    error("The StreamLines module currently only works for volume fields.");
-    return;
-  }
-
-  FieldIPort* sfport = (FieldIPort*)get_iport("Seeds");
-  FieldHandle sfHandle;
-  Field *sField;  // seed point field
-
-  // the seed field input is required
-  if (!sfport->get(sfHandle) || !(sField = sfHandle.get_rep())) {
-    error( "No Seed field handle or representation" );
-    return;
-  }
-
-  bool update = false;
-
-  // Check to see if the input field has changed.
-  if( vfGeneration_ != vfHandle->generation )
-  {
-    vfGeneration_ = vfHandle->generation;
-    update = true;
-  }
-
-  // Check to see if the input field has changed.
-  if( sfGeneration_ != sfHandle->generation )
-  {
-    sfGeneration_ = sfHandle->generation;
-    update = true;
-  }
-
-  double tolerance = gTolerance_.get();
-  double stepsize = gStepsize_.get();
-  int maxsteps = gMaxsteps_.get();
-  int direction = gDirection_.get();
-  int color = gColor_.get();
-  int remove_colinear = gRemove_Colinear_.get();
-  int method = gMethod_.get();
-  int np = gNp_.get();
-  
-  if( tolerance_ != tolerance ||
-      stepsize_  != stepsize  ||
-      maxsteps_  != maxsteps  ||
-      direction_ != direction ||
-      color_     != color ||
-      remove_colinear_ != remove_colinear  ||
-      method_    != method  ||
-      np_        != np ) {
-
-    tolerance_ = tolerance;
-    stepsize_  = stepsize;
-    maxsteps_  = maxsteps;
-    direction_ = direction;
-    color_     = color;
-    remove_colinear_ = remove_colinear;
-    method_    = method;
-    np_        = np;
-
-    update = true;
-  }
-
-  if( !fHandle_.get_rep() ||
-      update ||
-      error_ ) {
-
-    update_state(JustStarted);
-
-    error_ = false;
-
-    const TypeDescription *smtd = sField->mesh()->get_type_description();
-    const TypeDescription *sltd = sField->order_type_description();
-
-    if (method_ == 5 ) {
-
-      if( vfHandle->basis_order() != 0) {
-	error("The Cell Walk method only works for cell centered FlowFields.");
-	error_ = true;
-	return;
-      }
-
-      const TypeDescription *vtd = vfHandle->get_type_description();
-      CompileInfoHandle aci =
-	StreamLinesAccAlgo::get_compile_info(smtd, sltd, vtd);
-      Handle<StreamLinesAccAlgo> accalgo;
-      if (!module_dynamic_compile(aci, accalgo)) return;
-      vField->mesh()->synchronize(Mesh::LOCATE_E);
-      
-      fHandle_ = accalgo->execute(sField->mesh(), vfHandle, maxsteps,
-				  direction, color,
-				  remove_colinear);
-    } else {
-      CompileInfoHandle ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
-      Handle<StreamLinesAlgo> algo;
-      if (!module_dynamic_compile(ci, algo)) return;
-      vField->mesh()->synchronize(Mesh::LOCATE_E);
-      
-      fHandle_ = algo->execute(sField->mesh(), vfi,
-			       tolerance, stepsize, maxsteps,
-			       direction, color,
-			       remove_colinear,
-			       method, CLAMP(np, 1, 256));
-    }
-
-    update_state(Completed);
-  }
-   
-  // Send the data downstream
-  if( fHandle_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *) get_oport("Streamlines");
-    ofield_port->send( fHandle_ );
-  }
-}
 
 CompileInfoHandle
-StreamLinesAlgo::get_compile_info(const TypeDescription *msrc,
-				  const TypeDescription *sloc)
+StreamLinesAlgo::get_compile_info(const TypeDescription *fsrc,
+				  const TypeDescription *dsrc,
+				  const TypeDescription *sloc,
+				  int value)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -572,24 +567,28 @@ StreamLinesAlgo::get_compile_info(const TypeDescription *msrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       msrc->get_filename() + "." +
+		       fsrc->get_filename() + "." +
+		       (value ? dsrc->get_filename() : "double") + "." +
 		       sloc->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-		       msrc->get_name() + ", " +
+		       fsrc->get_name() + ", " +
+		       (value ? dsrc->get_name() : "double") + ", " +
 		       sloc->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  msrc->fill_compile_info(rval);
+  fsrc->fill_compile_info(rval);
   return rval;
 }
 
 
 CompileInfoHandle
-StreamLinesAccAlgo::get_compile_info(const TypeDescription *msrc,
+StreamLinesAccAlgo::get_compile_info(const TypeDescription *fsrc,
+				     const TypeDescription *dsrc,
 				     const TypeDescription *sloc,
-				     const TypeDescription *vfld)
+				     const TypeDescription *vfld,
+				     int value)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -598,23 +597,23 @@ StreamLinesAccAlgo::get_compile_info(const TypeDescription *msrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       msrc->get_filename() + "." +
+		       fsrc->get_filename() + "." +
+		       (value ? dsrc->get_filename() : "double") + "." +
 		       sloc->get_filename() + "." +
 		       vfld->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-		       msrc->get_name() + ", " +
+		       fsrc->get_name() + ", " +
+		       (value ? dsrc->get_name() : "double") + ", " +
 		       sloc->get_name() + ", " +
 		       vfld->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  msrc->fill_compile_info(rval);
+  fsrc->fill_compile_info(rval);
   vfld->fill_compile_info(rval);
   return rval;
 }
 
 
 } // End namespace SCIRun
-
-

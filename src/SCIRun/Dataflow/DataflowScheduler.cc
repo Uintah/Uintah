@@ -46,9 +46,8 @@
 namespace SCIRun {
 
 DataflowScheduler::DataflowScheduler(SCIRunFramework* framework,
-                                     const std::string& name,
                                      Scheduler* _sched)
-  : InternalComponentInstance(framework, name, "internal:DataflowScheduler"), 
+  : InternalFrameworkServiceInstance(framework, "internal:DataflowScheduler"), 
     sched(_sched)
 {
 }
@@ -57,10 +56,9 @@ DataflowScheduler::~DataflowScheduler()
 {
 }
 
-InternalComponentInstance* DataflowScheduler::create(SCIRunFramework* framework,
-                                                     const std::string& name)
+InternalFrameworkServiceInstance* DataflowScheduler::create(SCIRunFramework* framework)
 {
-  DataflowScheduler* n = new DataflowScheduler(framework, name,
+  DataflowScheduler* n = new DataflowScheduler(framework, 
                                                framework->dflow->net->get_scheduler());
   n->addReference();
   return n;

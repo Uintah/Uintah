@@ -31,6 +31,7 @@
 #define SCI_HYPRE_DEFS_H
 
 @DEF_HYPRE@
+@DEF_HYPRE_1_9@
 
 #endif
 

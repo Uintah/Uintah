@@ -1683,27 +1683,27 @@ LatVolMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
 }
 
 
-template <class Basis>
-void
-Pio(Piostream& stream, typename LatVolMesh<Basis>::NodeIndex& n)
-{
-    stream.begin_cheap_delim();
-    Pio(stream, n.i_);
-    Pio(stream, n.j_);
-    Pio(stream, n.k_);
-    stream.end_cheap_delim();
-}
+// template <class Basis>
+// void
+// Pio(Piostream& stream, typename LatVolMesh<Basis>::NodeIndex& n)
+// {
+//     stream.begin_cheap_delim();
+//     Pio(stream, n.i_);
+//     Pio(stream, n.j_);
+//     Pio(stream, n.k_);
+//     stream.end_cheap_delim();
+// }
 
-template <class Basis>
-void
-Pio(Piostream& stream, typename LatVolMesh<Basis>::CellIndex& n)
-{
-    stream.begin_cheap_delim();
-    Pio(stream, n.i_);
-    Pio(stream, n.j_);
-    Pio(stream, n.k_);
-    stream.end_cheap_delim();
-}
+// template <class Basis>
+// void
+// Pio(Piostream& stream, typename LatVolMesh<Basis>::CellIndex& n)
+// {
+//     stream.begin_cheap_delim();
+//     Pio(stream, n.i_);
+//     Pio(stream, n.j_);
+//     Pio(stream, n.k_);
+//     stream.end_cheap_delim();
+// }
 
 template <class Basis>
 const string 

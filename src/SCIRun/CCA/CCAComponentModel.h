@@ -41,6 +41,8 @@
 #ifndef SCIRun_CCA_CCAComponentModel_h
 #define SCIRun_CCA_CCAComponentModel_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentModel.h>
 #include <SCIRun/ComponentInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
@@ -127,7 +129,8 @@ private:
   SCIRunFramework* framework;
   typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
   componentDB_type components;
-    
+  SCIRun::Mutex lock_components;   
+   
   std::string sidlDLLPath;
 
   void readComponentDescription(const std::string& file);
@@ -137,6 +140,7 @@ private:
   CCAComponentModel& operator=(const CCAComponentModel&);
   
   std::vector<resourceReference*> loaderList;
+  SCIRun::Mutex lock_loaderList;
 };
 
 } // end namespace SCIRun

@@ -36,11 +36,12 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/HexVolMesh.h>
-#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Containers/Array3.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/Field.h>
+
 
 namespace SCIRun {
 

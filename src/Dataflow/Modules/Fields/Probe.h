@@ -34,15 +34,17 @@
 #if !defined(Probe_h)
 #define Probe_h
 
+#include <Core/Geometry/Tensor.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Basis/QuadBilinearLgn.h>
 #include <sstream>
 
 namespace SCIRun {

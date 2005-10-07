@@ -43,21 +43,15 @@
 
 #include <CCA/Components/TableTennis/TableTennis_sidl.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <Core/CCA/spec/cca_sidl.h>
 
-//namespace SCIRun {
   
-class myUIPort : public virtual sci::cca::ports::UIPort {
-public:
-   virtual ~myUIPort(){}
-   virtual int ui();
-};
-
-class myGoPort : public virtual sci::cca::ports::GoPort {
-public:
-   virtual ~myGoPort(){}
-   virtual int go();
-};
+#if 0
+// class myUIPort : public virtual sci::cca::ports::UIPort {
+// public:
+//    virtual ~myUIPort(){}
+//    virtual int ui();
+// };
+#endif
 
 class myTTPort : public virtual PP::PingPong {
 public:
@@ -65,25 +59,17 @@ public:
    virtual int pingpong(int test);
 };
 
-class TableTennis : public sci::cca::Component{
+class TableTennis : public sci::cca::Component {
                 
   public:
     TableTennis();
     virtual ~TableTennis();
-
     virtual void setServices(const sci::cca::Services::pointer& svc);
-  private:
 
+  private:
     TableTennis(const TableTennis&);
     TableTennis& operator=(const TableTennis&);
-    myUIPort uiPort;
-    myGoPort goPort;
-    myTTPort ttPort;
     sci::cca::Services::pointer services;
-  };
-//}
-
-
-
+};
 
 #endif

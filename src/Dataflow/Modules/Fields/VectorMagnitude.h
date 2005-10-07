@@ -82,7 +82,7 @@ VectorMagnitudeAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
 
   while (in != end)
   {
-    *out = in->length();;
+    *out = in->length();
     ++in; ++out;
   }
 

@@ -56,7 +56,8 @@ IntVector::get_h_file_path() {
   return path;
 }
 
-const TypeDescription* get_type_description(IntVector*)
+const TypeDescription*
+get_type_description(IntVector*)
 {
   static TypeDescription* td = 0;
   if(!td){
@@ -65,11 +66,12 @@ const TypeDescription* get_type_description(IntVector*)
   return td;
 }
 
-
-} //end namespace SCIRun
-
-ostream& operator<<(std::ostream& out, const SCIRun::IntVector& v)
+ostream&
+operator<<(std::ostream& out, const SCIRun::IntVector& v)
 {
   out << "[int " << v.x() << ", " << v.y() << ", " << v.z() << ']';
   return out;
 }
+
+} //end namespace SCIRun
+

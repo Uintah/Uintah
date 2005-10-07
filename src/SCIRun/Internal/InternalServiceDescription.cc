@@ -27,68 +27,41 @@
 */
 
 
-
 /*
- *  Object: Implementation of SSIDL.Object for PIDL
+ *  InternalServiceDescription.cc:
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livnat
+ *   SCI Institute
  *   University of Utah
- *   September 1999
+ *   August 2005
  *
- *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/CCA/SSIDL/sidl_sidl.h>
+#include <SCIRun/Internal/InternalServiceDescription.h>
+#include <SCIRun/Internal/InternalComponentModel.h>
+#include <iostream>
 
-//using SSIDL::Class;
-using SSIDL::BaseInterface;
-using SSIDL::Object;
+namespace SCIRun {
 
-/*
- * These are all implemented in SSIDL.interface, so these are just
- * up calls, since they will get generated from cia spec.
- */
-
-void Object::addReference()
-{
-  BaseInterface::addReference();
-}
-
-void Object::deleteReference()
-{
-  BaseInterface::deleteReference();
-}
-
-/*Class::pointer Object::getClass()
-{
-  return  BaseInterface::getClass();
-}*/
-
-bool Object::isSame(const BaseInterface::pointer& i)
-{
-  return BaseInterface::isSame(i);
-}
-/*
-bool Object::isInstanceOf(const Class::pointer& c)
-{
-  return BaseInterface::isInstanceOf(c);
-}
-
-bool Object::supportsInterface(const Class::pointer& c)
-{
-  return BaseInterface::supportsInterface(c);
-}*/
-/*
-BaseInterface::pointer Object::queryInterface(const Class::pointer& c)
-{
-  return BaseInterface::queryInterface(c);
-}
-*/
-
-BaseInterface::pointer Object::queryInterface(const std::string& c)
-{
-  return BaseInterface::queryInterface(c);
-}
-
+  InternalServiceDescription::InternalServiceDescription(InternalComponentModel* model,
+			       const std::string& serviceType)
+  : model(model), serviceType(serviceType)
+  {
+  }
+  
+  InternalServiceDescription::~InternalServiceDescription()
+  {
+  }
+  
+  std::string InternalServiceDescription::getType() const
+  {
+    return serviceType;
+  }
+  
+  ComponentModel* InternalServiceDescription::getModel() const
+  {
+    return model;
+  }
+  
+} // end namespace SCIRun

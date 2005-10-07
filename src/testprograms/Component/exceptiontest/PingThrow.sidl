@@ -28,19 +28,19 @@
 
 
 package PingThrow_ns {
-    class PPException extends SSIDL.BaseException { }
-    class PP2Exception extends SSIDL.BaseException { }
+    class PPException extends SSIDL.SIDLException { }
+    class PP2Exception extends SSIDL.SIDLException { }
 
-    class OtherX extends SSIDL.BaseException { }
+    class OtherX extends SSIDL.SIDLException { }
 
     interface OtherThrow {
-	collective int otherthrow() throws OtherX;
+        collective int otherthrow() throws OtherX;
     };
 
     interface PingThrow {
-	collective int pingthrow2(in int test) throws PP2Exception;
-	collective int pingthrow(in int test) throws PPException;
-	collective void getOX(out OtherThrow otptr);
-	collective void donone();
+        collective int pingthrow2(in int test) throws PP2Exception;
+        collective int pingthrow(in int test) throws PPException;
+        collective void getOX(out OtherThrow otptr);
+        collective void donone();
     };
 };

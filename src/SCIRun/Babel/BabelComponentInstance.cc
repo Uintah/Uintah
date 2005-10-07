@@ -105,7 +105,7 @@ BabelComponentInstance::BabelComponentInstance(SCIRunFramework* framework,
                                               uiPort,
                                               CCAPortInstance::Provides);
     pports->insert(std::make_pair("sci.ui", piUI));
-    }
+  }
 }
 
 BabelComponentInstance::~BabelComponentInstance()
@@ -120,14 +120,11 @@ BabelComponentInstance::getPortInstance(const std::string& portname)
     (std::map<std::string, PortInstance*>*)svc.getData();
   
   std::map<std::string, PortInstance*>::iterator iter = pports->find(portname);
-  if(iter == pports->end())
-    {
+  if (iter == pports->end()) {
     return 0;
-    }
-  else
-    {
+  } else {
     return iter->second;
-    }
+  }
 }
 
 gov::cca::Port BabelComponentInstance::getPort(const std::string& name)
@@ -194,8 +191,8 @@ PortInstanceIterator* BabelComponentInstance::getPorts()
 
 BabelComponentInstance::Iterator::Iterator(BabelComponentInstance* comp)
 {
-  ports= (std::map<std::string, PortInstance*>*) (comp->svc.getData());
-  iter=ports->begin();
+  ports = (std::map<std::string, PortInstance*>*) (comp->svc.getData());
+  iter = ports->begin();
 }
 
 BabelComponentInstance::Iterator::~Iterator()

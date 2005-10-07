@@ -40,6 +40,7 @@
 #define FILEUTILS_H 1
 
 #include <map>
+#include <string>
 
 namespace SCIRun {
 
@@ -58,6 +59,10 @@ void InsertStringInFile(char* filename, char* match, char* insert);
 // the directory named "dir"
 
 std::map<int,char*>* GetFilenamesEndingWith(char* dir, char* ext);
+
+
+bool validFile(std::string filename);
+bool validDir(std::string filename);
 
 } // End namespace SCIRun
 

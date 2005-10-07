@@ -41,13 +41,12 @@ itcl_class SCIRun_Visualization_GenClock {
     inherit Module
    
     constructor {config} {
-        set name genClock
+        set name GenClock
         set_defaults
     }
 
     method set_defaults {} {
 	global $this-type
-	global $this-showtime
 	global $this-bbox
 	global $this-format
 	global $this-min
@@ -55,12 +54,13 @@ itcl_class SCIRun_Visualization_GenClock {
 	global $this-current
 	global $this-size
 	global $this-location
+	global $this-location-x
+	global $this-location-y
 	global $this-color-r
 	global $this-color-g
 	global $this-color-b
 
 	set $this-type 0
-	set $this-showtime 0
 	set $this-bbox 1
 	set $this-format "%8.3f seconds"
 	set $this-min 0
@@ -69,6 +69,8 @@ itcl_class SCIRun_Visualization_GenClock {
 	set $this- 1.0
 	set $this-size 100
 	set $this-location "Top Left"
+	set $this-location-x [expr -31.0/32.0]
+	set $this-location-y [expr  31.0/32.0]
 	set $this-color-r 1.0
 	set $this-color-g 1.0
 	set $this-color-b 1.0
@@ -87,16 +89,6 @@ itcl_class SCIRun_Visualization_GenClock {
 	iwidgets::labeledframe $w.type -labeltext "Clock Type"
 	set type [$w.type childsite]
 
-# Type - digital
-	frame $type.digital
-
-	radiobutton $type.digital.button -variable $this-type -value 1 \
-	     -command "$this-c needexecute"
-	label $type.digital.label -text "Digital" -width 8 \
-	    -anchor w -just left
-	
-	pack $type.digital.button $type.digital.label -side left
-
 # Type - analog
 	frame $type.analog
 
@@ -107,37 +99,28 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $type.analog.button $type.analog.label -side left
 
-	label $type.timelabel -text "Time" -width 5 \
-	    -anchor w -just left
-	
+# Type - digital
+	frame $type.digital
 
-# Type - analog - time
-	frame $type.time
-
-# Type - analog - time - hide
-	frame $type.time.hide
-
-	radiobutton $type.time.hide.button -variable $this-showtime -value 0 \
+	radiobutton $type.digital.button -variable $this-type -value 1 \
 	     -command "$this-c needexecute"
-	label $type.time.hide.label -text "Hide" -width 6 \
+	label $type.digital.label -text "Digital" -width 8 \
 	    -anchor w -just left
 	
-	pack $type.time.hide.button $type.time.hide.label -side left
+	pack $type.digital.button $type.digital.label -side left
 
-# Type - analog - hide - show
-	frame $type.time.show
+# Type - analog/digital
+	frame $type.both
 
-	radiobutton $type.time.show.button -variable $this-showtime -value 1 \
+	radiobutton $type.both.button -variable $this-type -value 2 \
 	     -command "$this-c needexecute"
-	label $type.time.show.label -text "Show" -width 6 \
+	label $type.both.label -text "Both" -width 8 \
 	    -anchor w -just left
 	
-	pack $type.time.show.button $type.time.show.label -side left
+	pack $type.both.button $type.both.label -side left
 
 
-	pack $type.time.show $type.time.hide -side top
-
-	pack $type.digital $type.analog $type.timelabel $type.time -side left
+	pack $type.analog $type.digital $type.both -side left
 	pack $w.type -fill x -expand yes -side top
 
 
@@ -205,9 +188,13 @@ itcl_class SCIRun_Visualization_GenClock {
 
 	pack $w.range -fill x -expand yes -side top
 
+
+	frame $w.twocol
+# -relief groove -borderwidth 2
+	
 # Size
-	iwidgets::labeledframe $w.size -labeltext "Clock Size"
-	set size [$w.size childsite]
+	iwidgets::labeledframe $w.twocol.size -labeltext "Clock Size"
+	set size [$w.twocol.size childsite]
 
 # Size - small
 	frame $size.small
@@ -218,7 +205,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	    -anchor w -just left
 	
 	pack $size.small.button $size.small.label -side left
-	pack $size.small -side left -padx 5
+	pack $size.small -side top -padx 5
 
 # Size - medium
 	frame $size.medium
@@ -229,7 +216,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	    -anchor w -just left
 	
 	pack $size.medium.button $size.medium.label -side left
-	pack $size.medium -side left -padx 5
+	pack $size.medium -side top -padx 5
 
 # Size - large
 	frame $size.large
@@ -240,7 +227,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	    -anchor w -just left
 	
 	pack $size.large.button $size.large.label -side left
-	pack $size.large -side left -padx 5
+	pack $size.large -side top -padx 5
 
 # Size - custom
 	frame $size.custom
@@ -250,61 +237,24 @@ itcl_class SCIRun_Visualization_GenClock {
 
 	pack $size.custom.label $size.custom.entry $size.custom.percent \
 	    -side left
-	pack $size.custom -side left -padx 5
+	pack $size.custom -side top -padx 5
 	
-	pack $w.size -fill x -expand yes -side top
-
-
-
 # Location
-	iwidgets::labeledframe $w.location -labeltext "Clock Location"
-	set location [$w.location childsite]
+	iwidgets::labeledframe $w.twocol.location -labeltext "Clock Location"
+	set location [$w.twocol.location childsite]
 
-# Location - top left
-	frame $location.top_left
+	set locator [makeStickyLocator $location.gui \
+			 $this-location-x $this-location-y \
+			 100 100]
 
-	radiobutton $location.top_left.button -variable $this-location \
-	    -value "Top Left" -command "$this-c needexecute"
-	label $location.top_left.label -text "Top Left" -width 9 \
-	    -anchor w -just left
-	
-	pack $location.top_left.button $location.top_left.label -side left
+	$locator bind movable <ButtonRelease> "$this-c needexecute"
 
-# Location - top right
-	frame $location.top_right
-
-	radiobutton $location.top_right.button -variable $this-location \
-	    -value "Top Right" -command "$this-c needexecute"
-	label $location.top_right.label -text "Top Right" -width 10 \
-	    -anchor w -just left
-	
-	pack $location.top_right.button $location.top_right.label -side left
-
-# Location - bottom left
-	frame $location.bottom_left
-
-	radiobutton $location.bottom_left.button -variable $this-location \
-	    -value "Bottom Left" -command "$this-c needexecute"
-	label $location.bottom_left.label -text "Bottom Left" -width 12 \
-	    -anchor w -just left
-	
-	pack $location.bottom_left.button $location.bottom_left.label -side left
-
-# Location - bottom right
-	frame $location.bottom_right
-
-	radiobutton $location.bottom_right.button -variable $this-location \
-	    -value "Bottom Right" -command "$this-c needexecute"
-	label $location.bottom_right.label -text "Bottom Right" -width 13 \
-	    -anchor w -just right
-	
-	pack $location.bottom_right.button $location.bottom_right.label -side left
+	pack $location.gui -fill x -expand yes -side top
 
 
-	pack $location.top_left $location.top_right \
-	    $location.bottom_left $location.bottom_right -side left
-	
-	pack $w.location -fill x -expand yes -side top
+	pack $w.twocol.size $w.twocol.location -fill both -expand yes -side left
+
+	pack $w.twocol -fill x -expand yes -side top
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w

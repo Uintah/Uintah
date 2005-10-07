@@ -61,6 +61,8 @@
 #include <SCIRun/Bridge/BridgeServices.h>
 #include <SCIRun/Bridge/BridgeComponent.h>
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <Core/CCA/PIDL/Object.h>
 #include <map>
 #include <string>
@@ -121,7 +123,8 @@ namespace SCIRun {
     //EOF ITERATOR CLASS
 
     std::map<std::string, PortInstance*> ports;
- 
+    SCIRun::Mutex lock_ports;
+  
     BridgeComponent* component;
     Mutex *mutex;
 

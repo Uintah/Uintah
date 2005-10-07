@@ -48,8 +48,9 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
                                  const std::string& type,
                                  const sci::cca::TypeMap::pointer& properties,
                                  PortType porttype)
-  : name(name), type(type), properties(properties), porttype(porttype),
-    useCount(0)
+  : name(name), type(type), properties(properties), 
+    lock_connections("CCAPortInstance::connections lock"), 
+    porttype(porttype), useCount(0)
 {
 }
 
@@ -58,7 +59,8 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
                                  const sci::cca::TypeMap::pointer& properties,
                                  const sci::cca::Port::pointer& port,
                                  PortType porttype)
-  : name(name), type(type), properties(properties), port(port),
+  : name(name), type(type), properties(properties),
+    lock_connections("CCAPortInstance::connections lock"), port(port),
     porttype(porttype), useCount(0)
 {
 }
@@ -79,7 +81,9 @@ bool CCAPortInstance::connect(PortInstance* to)
   }
 
   if (portType() == From && p2->portType() == To) {
+    lock_connections.lock();
     connections.push_back(p2);
+    lock_connections.unlock();
   } else {
       p2->connect(this);
   }
@@ -121,12 +125,13 @@ bool CCAPortInstance::disconnect(PortInstance* to)
   }
 
   if (porttype != Uses) {
-    std::cerr<<"disconnect can be called only by user"<<std::endl; 
+    std::cerr << "disconnect can be called only by user" << std::endl; 
     return false;
   } 
   std::vector<PortInstance*>::iterator iter;
-  for (iter=connections.begin(); iter<connections.end();iter++) {
-    if (p2==(*iter)) {
+  SCIRun::Guard g1(&lock_connections);
+  for (iter = connections.begin(); iter < connections.end(); iter++) {
+    if (p2 == (*iter)) {
       connections.erase(iter);
       return true;
     }
@@ -134,8 +139,14 @@ bool CCAPortInstance::disconnect(PortInstance* to)
   return false;
 }
 
-// CCA spec:
-// n PROVIDES (To) : 1 USES (From)
+/**
+ * Allowing (according to the CCA spec) n PROVIDES (To) : 1 USES (From)
+ * connections is framework-implementation dependent;
+ * this is \em not allowed by SCIRun2.
+ * The SCIRun2 framework allows 1 PROVIDES (To) : 1 USES (From) and
+ * 1 PROVIDES (To) : n USES (From) connections.
+ */
+
 // connections: vector of PortInstances...
 // connect should fail for invalid components,
 //   nonexistent ports
@@ -147,10 +158,13 @@ bool CCAPortInstance::canConnectTo(PortInstance* to)
   if (p2 && getType() == p2->getType() && portType() != p2->portType()) {
       if (available() && p2->available()) { return true; }
   }
-  std::cerr << "CCAPortInstance::canConnectTo: can't connect" << std::endl;
   return false;
 }
 
+/**
+ * Available either if this is a PROVIDES port or
+ * a USES port that isn't connected.
+ */
 bool CCAPortInstance::available()
 {
     return portType() == To || connections.size() == 0;
@@ -181,6 +195,11 @@ bool CCAPortInstance::decrementUseCount()
     }
     useCount--;
     return true;
+}
+
+bool CCAPortInstance::portInUse()
+{
+    return useCount > 0;
 }
 
 } // end namespace SCIRun

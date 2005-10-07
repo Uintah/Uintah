@@ -41,13 +41,15 @@
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Dataflow/Ports/Colormap2Port.h>
+#include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/NrrdPort.h>
-
+#include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Util/Endian.h>
 #include <stdio.h>
 #include <stack>
+#include <set>
 #include <sstream>
 #include <iostream>
 #include <fstream>
@@ -83,6 +85,7 @@ public:
   virtual void			presave();
   
 private:
+  void				get_1D_colormaps();
   void				force_execute();
   void				add_triangle_widget();
   void				add_rectangle_widget();
@@ -141,6 +144,8 @@ private:
   int				height_;
   int				button_;
   vector<CM2WidgetHandle>	widgets_;
+  typedef map<ColorMapIPort *, ColorMapCM2Widget *> ColormapPortWidgetMap;
+  ColormapPortWidgetMap		colormap_widgets_;
   stack<UndoItem>		undo_stack_;
   CM2ShaderFactory*		shader_factory_;
   Array3<float>			colormap_texture_;
@@ -211,6 +216,7 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     height_(0),
     button_(0),
     widgets_(),
+    colormap_widgets_(),
     undo_stack_(),
     shader_factory_(0),
     colormap_texture_(256, 512, 4),
@@ -566,6 +572,7 @@ EditColorMap2D::load_file() {
   update_to_gui();
   select_widget(-1,0); 
   redraw(true);
+  colormap_widgets_.clear();
   force_execute();
 }
 
@@ -908,6 +915,64 @@ EditColorMap2D::release(int x, int y)
 }
 
 void
+EditColorMap2D::get_1D_colormaps() {
+  port_range_type range = get_iports("Colormap");
+  set<ColorMapIPort *> valid;
+  if (range.first != range.second) {
+    port_map_type::iterator pi = range.first;
+    while (pi != range.second) {
+      ColorMapIPort *iport = (ColorMapIPort *)get_iport(pi++->second);
+      ColormapPortWidgetMap::iterator pos = colormap_widgets_.find(iport);
+      ColorMapHandle cmap = 0;
+      if (iport)
+	iport->get(cmap);
+
+      if (cmap.get_rep()) {
+	valid.insert(iport);
+	if  (pos == colormap_widgets_.end()) {
+	  colormap_widgets_[iport] = scinew ColorMapCM2Widget();
+	  widgets_.push_back(colormap_widgets_[iport]);
+	  widgets_.back()->set_faux(gui_faux_.get());
+	  widgets_.back()->set_value_range(value_range_);
+	  if (force_execute_) 
+	    widgets_.back()->set_onState(0);
+	  update_to_gui();
+	}
+	if (colormap_widgets_[iport]->generation != cmap->generation) 
+	  cmap_dirty_ = true;
+	colormap_widgets_[iport]->set_colormap(cmap);
+      }
+    }
+  }
+
+  if (valid.size() != colormap_widgets_.size()) {
+    cmap_dirty_ = true;
+    ColormapPortWidgetMap newmap;
+    ColormapPortWidgetMap::iterator pos = colormap_widgets_.begin();
+    ColormapPortWidgetMap::iterator last = colormap_widgets_.end();
+    while (pos != last) {
+      if (valid.find(pos->first) == valid.end()) {
+	for (unsigned int w = 0; w < widgets_.size(); ++w)
+	  if (widgets_[w].get_rep() == pos->second) {
+	    widgets_.erase(widgets_.begin()+w);
+	    break;
+	  }
+	delete pos->second;
+	update_to_gui();
+      } else {
+	newmap[pos->first] = pos->second;
+      }
+      pos++;
+    }
+    colormap_widgets_ = newmap;
+  }
+}
+
+    
+
+
+
+void
 EditColorMap2D::execute()
 {
   update_from_gui();
@@ -917,6 +982,8 @@ EditColorMap2D::execute()
 
   cmap_iport_->get(icmap);
   hist_iport_->get(h);
+
+  get_1D_colormaps();
 
   if ((!icmap.get_rep() || icmap->generation == icmap_generation_) &&
       (!h.get_rep() || h->generation == hist_generation_) &&

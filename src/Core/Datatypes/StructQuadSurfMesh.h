@@ -28,7 +28,7 @@
 
 
 /*
- *  StructQuadSurfMesh.h: Templated Mesh defined on a 3D Structured Grid
+ *  StructQuadSurfMesh.h: Templated Mesh defined on a 2D Structured Grid
  *
  *  Written by:
  *   Allen R. Sanderson
@@ -160,10 +160,18 @@ public:
   void get_center(Point &, const typename ImageMesh<Basis>::Face::index_type &) const;
   void get_center(Point &, typename ImageMesh<Basis>::Cell::index_type) const {}
 
-  bool locate(typename ImageMesh<Basis>::Node::index_type &, const Point &) const;
-  bool locate(typename ImageMesh<Basis>::Edge::index_type &, const Point &) const;
-  bool locate(typename ImageMesh<Basis>::Face::index_type &, const Point &) const;
-  bool locate(typename ImageMesh<Basis>::Cell::index_type &, const Point &) const;
+  bool locate(typename ImageMesh<Basis>::Node::index_type &, 
+	      const Point &) const;
+  bool locate(typename ImageMesh<Basis>::Edge::index_type &, 
+	      const Point &) const;
+  bool locate(typename ImageMesh<Basis>::Face::index_type &, 
+	      const Point &) const;
+  bool locate(typename ImageMesh<Basis>::Cell::index_type &, 
+	      const Point &) const;
+
+  bool inside3_p(typename ImageMesh<Basis>::Face::index_type i, 
+		 const Point &p) const;
+
 
   void get_point(Point &point, const typename ImageMesh<Basis>::Node::index_type &index) const
   { get_center(point, index); }

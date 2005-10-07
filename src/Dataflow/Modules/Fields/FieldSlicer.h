@@ -37,6 +37,8 @@
 #if !defined(FieldSlicer_h)
 #define FieldSlicer_h
 
+#include <include/sci_defs/insight_defs.h>
+
 #include <Core/Containers/Handle.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -55,8 +57,16 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Math/Trig.h>
 
+#ifdef HAVE_INSIGHT
+#include "Packages/Insight/Core/Datatypes/ITKLatVolField.h"
+#include "Packages/Insight/Core/Datatypes/ITKImageField.h"
+#endif
 
 namespace SCIRun {
+
+#ifdef HAVE_INSIGHT
+using namespace Insight;
+#endif
 
 class FieldSlicerAlgo : public DynamicAlgoBase
 {
@@ -150,10 +160,9 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   }
 
   // Build the correct output field given the input field and and type.
+  string mesh_type = ifield->get_type_description(1)->get_name();
 
   // 3D LatVol to 2D Image
-
-  string mesh_type = fld_handle->get_type_description(1)->get_name();
   if( mesh_type.find("LatVolMesh") != string::npos ) 
   {  
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
@@ -184,6 +193,27 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield->copy_properties(ifield);
     ofield_h = ofield;
 
+    // 3D ITKLatVolField to 2D ITKImage
+#ifdef HAVE_INSIGHT
+  } else if( typeName == "ITKLatVolField" ) {
+    
+    // These really should be ITKImageFields but the conversion will
+    // not work so for now make the ImageFields instead.
+    typename ImageField<TYPE>::mesh_type *omesh =
+      scinew typename ImageField<TYPE>::mesh_type();
+    omesh->copy_properties(imesh.get_rep());
+
+    omesh->set_min_i( new_min_i );
+    omesh->set_min_j( new_min_j );
+    omesh->set_ni( new_i );
+    omesh->set_nj( new_j );
+
+    ImageField<TYPE> *ofield =
+      scinew ImageField<TYPE>(omesh, ifield->basis_order());
+    ofield->copy_properties(ifield);
+
+    ofield_h = ofield;
+#endif
     // 3D StructHexVol to 2D StructQuadSurf
   } else if( mesh_type.find("StructHexVolMesh") != string::npos ) {
 
@@ -239,6 +269,25 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield->copy_properties(ifield);
     ofield_h = ofield;
 
+    // 2D ITKImage to 1D Scanline
+#ifdef HAVE_INSIGHT
+  } else if( typeName == "ITKImageField" ) {
+
+    // These really should be ITKScanlineFields but the conversion will
+    // not work so for now make the ScanlineFields instead.
+    typename ScanlineField<TYPE>::mesh_type *omesh =
+      scinew typename ScanlineField<TYPE>::mesh_type();
+    omesh->copy_properties(imesh.get_rep());
+
+    omesh->set_min_i( new_min_i );
+    omesh->set_ni( new_i );
+
+    ScanlineField<TYPE> *ofield = 
+      scinew ScanlineField<TYPE>(omesh, ifield->basis_order());
+    ofield->copy_properties(ifield);
+
+    ofield_h = ofield;
+#endif
     // 2D StructQuadSurf to 1D StructCurve
   } else if( mesh_type.find("StructQuadSurfMesh") != string::npos ) {
     typedef StructCurveMesh<CrvLinearLgn<Point> > SCMesh;
@@ -273,13 +322,14 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     Field *ofield = 0;
     typedef vector<TYPE> FData;
     typedef GenericField<PCMesh, ConstantBasis<TYPE>, FData > OField;
-    ofield = scinew OField(omesh);
+    OField *ofld = scinew OField(omesh);
+    ofield = ofld;
  
     ofield->copy_properties(ifield);
     ofield_h = ofield;
 
     omesh->resize_nodes( new_i );
-    ofield->resize_fdata();
+    ofld->resize_fdata();
   }
 
   return ofield_h;
@@ -346,7 +396,7 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
 
 #ifndef SET_POINT_DEFINED
   // For structured geometery we need to set the correct plane.
-  string field_type = fld_handle->get_type_description(1)->get_name();
+  string field_type = ifield->get_type_description(1)->get_name();
   if( field_type.find("LatVolMesh") != string::npos ||
       field_type.find("ImageMesh") != string::npos ||
       field_type.find("ScanlineMesh") != string::npos )

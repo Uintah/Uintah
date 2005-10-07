@@ -48,7 +48,9 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <sgi_stl_warnings_on.h>
+
 #include <Core/Util/Assert.h>
 #include <Core/Exceptions/Exception.h>
 #include <Core/Containers/share.h>
@@ -89,10 +91,14 @@ class ConsecutiveRangeSetException : public Exception
 public:
   ConsecutiveRangeSetException(const std::string& msg, const char* file, int line)
     : msg_(msg) {
+
+    std::ostringstream s;
+    s << "A ConsecutiveRangeSetException exception was thrown\n"
+      << file << ":" << line << "\n" << msg_;
+    msg_ = (char*)(s.str().c_str());
+
 #ifdef EXCEPTIONS_CRASH
-    std::cout << "A ConsecutiveRangeSetException was thrown.\n";
-    std::cout << file << ":" << line << "\n";
-    std::cout << msg_;
+  std::cout << msg_ << "\n";
 #endif
  }
 

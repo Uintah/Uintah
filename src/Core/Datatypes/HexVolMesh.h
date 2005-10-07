@@ -28,7 +28,7 @@
 
 
 /*
- *  HexVolMesh.h: Templated Meshs defined on a 3D Regular Grid
+ *  HexVolMesh.h: Templated Mesh defined on a 3D Irregular Grid
  *
  *  Written by:
  *   Michael Callahan

@@ -78,7 +78,6 @@ class myPDEMatrixPort: public virtual sci::cca::ports::PDEMatrixPort{
 
 
 class FEM : public sci::cca::Component{
-                
   public:
     FEM();
     virtual ~FEM();

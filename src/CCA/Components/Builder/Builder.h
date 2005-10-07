@@ -57,7 +57,7 @@ class BuilderWindow;
 class myBuilderPort : public virtual sci::cca::ports::BuilderPort
 {
 public:
-  virtual ~myBuilderPort() {}
+  virtual ~myBuilderPort();
   /** Obtain Services handle, through which the component communicates with the
       framework. */
   virtual void setServices(const sci::cca::Services::pointer& svc);

@@ -49,6 +49,8 @@ class Network;
 class SCIRunComponentDescription;
 class SCIRunFramework;
 class TCLInterface;
+class DataflowScheduler;
+class BridgeModule;
 
 /**
  * \class SCIRunComponentModel
@@ -98,11 +100,15 @@ public:
 
     /** Initialize SCIRun GUI elements. */
     static void initGuiInterface();
-    static TCLInterface* gui;
-    static Network* net;
 
 private:
+    friend class DataflowScheduler;
+    friend class BridgeModule;
+
     SCIRunFramework* framework;
+
+    static TCLInterface* gui;
+    static Network* net;
 
     SCIRunComponentModel(const SCIRunComponentModel&);
     SCIRunComponentModel& operator=(const SCIRunComponentModel&);

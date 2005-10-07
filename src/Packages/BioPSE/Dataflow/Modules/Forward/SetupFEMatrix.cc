@@ -50,21 +50,15 @@
  *  Lorena Kreda, Northeastern University, November 2003
  */
 
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildHexFEMatrix.h>
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildTriFEMatrix.h>
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Matrix.h>
-
-#include <Core/Basis/TetLinearLgn.h>
-#include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Basis/TriLinearLgn.h>
-#include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/HexVolMesh.h>
-#include <Core/Datatypes/GenericField.h>
-
+#include <Core/Geometry/Point.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
@@ -73,9 +67,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
-#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildHexFEMatrix.h>
-#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildTriFEMatrix.h>
+
 
 #include <iostream>
 
@@ -86,21 +78,21 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class SetupFEMatrix : public Module {
-  typedef SCIRun::TriLinearLgn<Tensor>                             TSTBasis;
-  typedef SCIRun::TriLinearLgn<int>                                TSIBasis;
-  typedef SCIRun::TriSurfMesh<TriLinearLgn<Point> >                TSMesh;
-  typedef SCIRun::GenericField<TSMesh, TSTBasis, vector<Tensor> >  TSFieldT;
-  typedef SCIRun::GenericField<TSMesh, TSIBasis,    vector<int> >  TSFieldI;
-  typedef SCIRun::HexTrilinearLgn<Tensor>                          HVTBasis;
-  typedef SCIRun::HexTrilinearLgn<int>                             HVIBasis;
-  typedef SCIRun::HexVolMesh<HexTrilinearLgn<Point> >              HVMesh;
-  typedef SCIRun::GenericField<HVMesh, HVTBasis, vector<Tensor> >  HVFieldT;
-  typedef SCIRun::GenericField<HVMesh, HVIBasis, vector<int> >     HVFieldI;
-  typedef SCIRun::TetLinearLgn<Tensor>                             TVTBasis;
-  typedef SCIRun::TetLinearLgn<int>                                TVIBasis;
-  typedef SCIRun::TetVolMesh<TetLinearLgn<Point> >                 TVMesh;
-  typedef SCIRun::GenericField<TVMesh, TVTBasis, vector<Tensor> >  TVFieldT;
-  typedef SCIRun::GenericField<TVMesh, TVIBasis, vector<int> >     TVFieldI;
+//   typedef SCIRun::TriLinearLgn<Tensor>                             TSTBasis;
+//   typedef SCIRun::TriLinearLgn<int>                                TSIBasis;
+//   //typedef SCIRun::TriSurfMesh<TriLinearLgn<Point> >                TSMesh;
+//   typedef SCIRun::GenericField<TSMesh, TSTBasis, vector<Tensor> >  TSFieldT;
+//   typedef SCIRun::GenericField<TSMesh, TSIBasis,    vector<int> >  TSFieldI;
+//   typedef SCIRun::HexTrilinearLgn<Tensor>                          HVTBasis;
+//   typedef SCIRun::HexTrilinearLgn<int>                             HVIBasis;
+//   //typedef SCIRun::HexVolMesh<HexTrilinearLgn<Point> >              HVMesh;
+//   typedef SCIRun::GenericField<HVMesh, HVTBasis, vector<Tensor> >  HVFieldT;
+//   typedef SCIRun::GenericField<HVMesh, HVIBasis, vector<int> >     HVFieldI;
+//   typedef SCIRun::TetLinearLgn<Tensor>                             TVTBasis;
+//   typedef SCIRun::TetLinearLgn<int>                                TVIBasis;
+//   //typedef SCIRun::TetVolMesh<TetLinearLgn<Point> >                 TVMesh;
+//   typedef SCIRun::GenericField<TVMesh, TVTBasis, vector<Tensor> >  TVFieldT;
+//   typedef SCIRun::GenericField<TVMesh, TVIBasis, vector<int> >     TVFieldI;
 
   //! Private data
   FieldIPort*        iportField_;

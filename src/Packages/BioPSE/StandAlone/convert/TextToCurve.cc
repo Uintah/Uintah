@@ -39,6 +39,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Core/Geometry/Point.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/CurveMesh.h>

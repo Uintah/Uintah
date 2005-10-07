@@ -154,12 +154,18 @@ public:
 
 private:
   void compute_grid();
-  double inside8_p(typename LatVolMesh<Basis>::Cell::index_type i, const Point &p) const;
-  double polygon_area(const typename LatVolMesh<Basis>::Node::array_type &, const Vector) const;
-  double pyramid_volume(const typename LatVolMesh<Basis>::Node::array_type &, const Point &)const;
-  void get_face_weights(double *w, const typename LatVolMesh<Basis>::Node::array_type &nodes,
+
+  bool inside8_p(typename LatVolMesh<Basis>::Cell::index_type i, 
+		 const Point &p) const;
+  double polygon_area(const typename LatVolMesh<Basis>::Node::array_type &, 
+		      const Vector) const;
+  double pyramid_volume(const typename LatVolMesh<Basis>::Node::array_type &, 
+			const Point &)const;
+  void get_face_weights(double *w, 
+		   const typename LatVolMesh<Basis>::Node::array_type &nodes,
 			const Point &p, int i0, int i1, int i2, int i3);
-  const Point &point(const typename LatVolMesh<Basis>::Node::index_type &i) const 
+  const Point &point(
+		const typename LatVolMesh<Basis>::Node::index_type &i) const 
   { return points_(i.i_, i.j_, i.k_); }
   
 
@@ -335,7 +341,7 @@ StructHexVolMesh<Basis>::get_center(Point &result, const typename LatVolMesh<Bas
 
 
 template <class Basis>
-double
+bool
 StructHexVolMesh<Basis>::inside8_p(typename LatVolMesh<Basis>::Cell::index_type idx, const Point &p) const
 {
   static const int table[6][3][3] =
@@ -601,12 +607,10 @@ StructHexVolMesh<Basis>::pyramid_volume(const typename LatVolMesh<Basis>::Node::
   }
   return 0.0;
 }
-  
-static double
-tri_area(const Point &a, const Point &b, const Point &c)
-{
-  return Cross(b-a, c-a).length();
-}  
+
+extern   
+double
+tri_area(const Point &a, const Point &b, const Point &c);
 
 template <class Basis>
 void

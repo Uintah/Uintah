@@ -52,6 +52,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Math/Trig.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Containers/StackVector.h>

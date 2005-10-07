@@ -38,13 +38,9 @@
 #include <X11/Xproto.h>
 #include <X11/Xos.h>
 #include <X11/Xutil.h>
-#include <X11/extensions/XTest.h>
 #include <X11/extensions/sync.h>
 #include <X11/extensions/Xdbe.h>
-#include <X11/extensions/record.h>
 #include <X11/extensions/shape.h>
-#include <X11/extensions/xf86misc.h>
-#include <X11/extensions/xf86mscstr.h>
 #include <X11/extensions/XInput.h>
 
 /*

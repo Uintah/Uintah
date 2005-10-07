@@ -215,6 +215,7 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
     // version number?
     displayMsg("SCIRun2\n");
     displayMsg("Framework URL: ");
+<<<<<<< .working
     sci::cca::ports::FrameworkProperties::pointer fwkProperties =
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
         services->getPort("cca.FrameworkProperties")
@@ -223,12 +224,25 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
         QString msg("url not available");
         displayMsg(msg);
     } else {
+=======
+    try {
+        sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+            pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+                services->getPort("cca.FrameworkProperties"));
+>>>>>>> .merge-right.r32054
         sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
+        services->releasePort("cca.FrameworkProperties");
         std::string url = tm->getString("url", "");
         displayMsg(url);
-        services->releasePort("cca.FrameworkProperties");
     }
+<<<<<<< .working
     displayMsg("\n----------------------\n");
+=======
+    catch (const sci::cca::CCAException::pointer &e) {
+        displayMsg("Error: Framework URL is not available; " + e->getNote());
+    }
+    displayMsg("----------------------");
+>>>>>>> .merge-right.r32054
 
     networkCanvas = new QCanvas(2000, 2000);
     networkCanvas->setAdvancePeriod(30);
@@ -246,6 +260,7 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
     setupHelpActions();
     buildPackageMenus();
 
+<<<<<<< .working
     statusBar()->message("SCIRun2 ready");
 
     sci::cca::ports::ComponentEventService::pointer ces =
@@ -255,10 +270,18 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
     if (ces.isNull()) {
         displayMsg("Error: Cannot find component event service.\n");
     } else {
+=======
+    try {
+        sci::cca::ports::ComponentEventService::pointer ces =
+            pidl_cast<sci::cca::ports::ComponentEventService::pointer>(
+                services->getPort("cca.ComponentEventService"));
+>>>>>>> .merge-right.r32054
         sci::cca::ports::ComponentEventListener::pointer listener(this);
-        ces->addComponentEventListener(sci::cca::ports::AllComponentEvents,
-            listener, true);
+            ces->addComponentEventListener(sci::cca::ports::AllComponentEvents,
+                listener, true);
         services->releasePort("cca.ComponentEventService");
+    } catch (const sci::cca::CCAException::pointer &e) {
+        displayMsg("Error: event service not found; " + e->getNote());
     }
     updateMiniView();
     filename = QString::null;
@@ -266,6 +289,7 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
 
 BuilderWindow::~BuilderWindow()
 {
+    deleteReference();
 }
 
 void BuilderWindow::setupFileActions()
@@ -509,12 +533,22 @@ void BuilderWindow::buildPackageMenus()
     componentMenu->clear();
     menus.clear();
 
+<<<<<<< .working
     sci::cca::ports::ComponentRepository::pointer reg =
         pidl_cast<sci::cca::ports::ComponentRepository::pointer>(
             services->getPort("cca.ComponentRepository")
         );
     if (reg.isNull()) {
         displayMsg("Error: cannot find component registry, not building component menus.\n");
+=======
+    sci::cca::ports::ComponentRepository::pointer reg;
+    try {
+        reg = pidl_cast<sci::cca::ports::ComponentRepository::pointer>(
+            services->getPort("cca.ComponentRepository"));
+    }
+    catch (const sci::cca::CCAException::pointer &e){
+        displayMsg("Error: cannot build component menus; " + e->getNote());
+>>>>>>> .merge-right.r32054
         unsetCursor();
         statusBar()->clear();
         return;
@@ -690,12 +724,47 @@ void BuilderWindow::load()
     for (int i = 0; i < load_Modules_size; i++) {
         is >> tmp_moduleName >> tmp_moduleName_x >> tmp_moduleName_y;
 
+<<<<<<< .working
         sci::cca::ports::BuilderService::pointer builder =
             pidl_cast<sci::cca::ports::BuilderService::pointer>(
                 services->getPort("cca.BuilderService")
             );
         if (builder.isNull()) {
             displayMsg("Error: Cannot find builder service\n");
+=======
+    is >> numMod >> numConn;
+    std::cout << "numMod=" << numMod << std::endl;
+    std::cout << "numConn=" << numConn << std::endl;
+
+    // If there's a error creating a component, stop trying to load
+    // the network file until there are improvements to the
+    // network file format.
+    try {
+        sci::cca::ports::BuilderService::pointer builder =
+            pidl_cast<sci::cca::ports::BuilderService::pointer>(
+                services->getPort("cca.BuilderService"));
+        for (int i = 0; i < numMod; i++) {
+            is >> modName >> modName_x >> modName_y;
+
+            sci::cca::ComponentID::pointer cid;
+            TypeMap *tm = new TypeMap;
+            tm->putInt("x", modName_x);
+            tm->putInt("y", modName_y);
+
+            cid = builder->createInstance(modName,
+                modName, sci::cca::TypeMap::pointer(tm));
+
+            if (! cid.isNull()) {
+                if (modName != "SCIRun.Builder") {
+                    cidTable.push_back(cid);
+                }
+            }
+        }
+
+        if (cidTable.size() < 2) {
+            // report error
+            unsetCursor();
+>>>>>>> .merge-right.r32054
             return;
         }
         sci::cca::ComponentID::pointer cid =
@@ -712,6 +781,19 @@ void BuilderWindow::load()
         grab_latest_Modules = networkCanvasView->getModules();
         ptr_table.push_back( grab_latest_Modules[grab_latest_Modules.size()-1] );
     }
+<<<<<<< .working
+=======
+    catch(const sci::cca::CCAException::pointer &pe) {
+        displayMsg(pe->getNote());
+    }
+    // is this still needed? - for SCIRun Dataflow maybe?
+    catch(const Exception &e) {
+        displayMsg(e.message());
+    }
+    catch(...) {
+        displayMsg("Caught unexpected exception while loading network.");
+    }
+>>>>>>> .merge-right.r32054
 
     for (int i = 0; i < load_Connections_size; i++) {
         int iu, ip;
@@ -791,12 +873,14 @@ void BuilderWindow::instantiateComponent(
     statusBar()->message("Instantating component...");
     setCursor(Qt::WaitCursor);
 
-    sci::cca::ports::BuilderService::pointer builder =
-        pidl_cast<sci::cca::ports::BuilderService::pointer>(
+    sci::cca::ports::BuilderService::pointer builder;
+    try {
+        builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(
             services->getPort("cca.BuilderService")
         );
-    if (builder.isNull()) {
-        std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
+    }
+    catch(sci::cca::CCAException::pointer &pe) {
+        displayMsg("Error: BuilderService not found; " + pe->getNote());
         unsetCursor();
         return;
     }
@@ -815,6 +899,16 @@ void BuilderWindow::instantiateComponent(
     } else {
         statusBar()->clear();
     }
+<<<<<<< .working
+=======
+    catch(const sci::cca::CCAException::pointer &pe) {
+        displayMsg(pe->getNote());
+    }
+    catch(...) {
+        displayMsg("Caught unexpected exception while instantiating " +
+            cd->getComponentClassName());
+    }
+>>>>>>> .merge-right.r32054
     unsetCursor();
 }
 
@@ -828,8 +922,7 @@ Module* BuilderWindow::instantiateBridgeComponent(
 
     sci::cca::ports::BuilderService::pointer builder =
     pidl_cast<sci::cca::ports::BuilderService::pointer>(
-        services->getPort("cca.BuilderService")
-    );
+        services->getPort("cca.BuilderService"));
 
     if (builder.isNull()) {
         displayMsg("Error: Cannot find builder service");
@@ -848,8 +941,20 @@ Module* BuilderWindow::instantiateBridgeComponent(
         unsetCursor();
         return NULL;
     }
+<<<<<<< .working
     SSIDL::array1<std::string> usesPorts = builder->getUsedPortNames(cid);
     SSIDL::array1<std::string> providesPorts = builder->getProvidedPortNames(cid);
+=======
+    catch(const sci::cca::CCAException::pointer &pe) {
+        displayMsg(pe->getNote());
+    }
+    catch(const Exception& e) {
+        displayMsg(e.message());
+    }
+    catch(...) {
+        displayMsg("Caught unexpected exception while creating bridge.");
+    }
+>>>>>>> .merge-right.r32054
 
     services->releasePort("cca.BuilderService");
     statusBar()->clear();
@@ -879,6 +984,7 @@ void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::poi
     bool update = true;
     //std::cerr << "BuilderWindow::componentActivity: " << e->getComponentID()->getInstanceName() << " " << e->getEventType() << std::endl;
     if (e->getEventType() == sci::cca::ports::ComponentInstantiated) {
+<<<<<<< .working
         std::vector<Module*> modules = networkCanvasView->getModules();
         for (std::vector<Module*>::iterator iter = modules.begin();
             iter != modules.end(); iter++) {
@@ -886,6 +992,14 @@ void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::poi
                     e->getComponentID()->getInstanceName()) {
                 update = false;
                 break;
+=======
+        sci::cca::TypeMap::pointer tm = e->getComponentProperties();
+        if (! tm.isNull()) {
+            bool isBridge = tm->getBool("bridge", false);
+            // deal with Bridges later
+            if (isBridge) {
+                return;
+>>>>>>> .merge-right.r32054
             }
         }
 
@@ -984,6 +1098,7 @@ void BuilderWindow::updateMiniView()
 
 void BuilderWindow::addLoader()
 {
+<<<<<<< .working
 
     sci::cca::ports::BuilderService::pointer builder =
     pidl_cast<sci::cca::ports::BuilderService::pointer>(
@@ -991,9 +1106,19 @@ void BuilderWindow::addLoader()
     );
     if (builder.isNull()) {
         displayMsg("Error: Cannot find builder service\n");
+=======
+    sci::cca::ports::FrameworkProxyService::pointer proxy;
+    try {
+        proxy = pidl_cast<sci::cca::ports::FrameworkProxyService::pointer>(
+            services->getPort("cca.FrameworkProxyService"));
+    }
+    catch (const sci::cca::CCAException::pointer &pe) {
+        displayMsg("Error: framework proxy service not found; " + pe->getNote());
+>>>>>>> .merge-right.r32054
         return;
     }
 
+<<<<<<< .working
     sci::cca::ports::FrameworkProperties::pointer fwkProperties =
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
 
@@ -1008,13 +1133,43 @@ void BuilderWindow::addLoader()
             (tm->getString("default_login", "")).c_str(), this,
             "Add Loader", TRUE);
         services->releasePort("cca.FrameworkProperties");
+=======
+    sci::cca::ports::FrameworkProperties::pointer fwkProperties;
+    try {
+        fwkProperties = pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+            services->getPort("cca.FrameworkProperties"));
+>>>>>>> .merge-right.r32054
     }
+    catch (const sci::cca::CCAException::pointer &pe) {
+        displayMsg("Error: framework properties not found; " + pe->getNote());
+        return;
+    }
+    ClusterDialog *dialog = new ClusterDialog("localhost", "localhost",
+        "","/work/csr/SCIRun/debug", this, "Add Parallel Component Loader", TRUE);
+    sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
+    dialog = new ClusterDialog("localhost", "localhost",
+        (tm->getString("default_login", "")).c_str(),"/work/csr/SCIRun/debug", this,
+        "Add Loader", TRUE);
+    services->releasePort("cca.FrameworkProperties");
 
     if (dialog->exec() == QDialog::Accepted) {
         std::string loaderName = dialog->loader();
         std::string domainName = dialog->domain();
         std::string login = dialog->login();
+<<<<<<< .working
         std::string loaderPath="mpirun -np 3 ploader";
+=======
+        std::string path = dialog->path();
+        std::string copies = dialog->copies();
+
+    //this is based on the assumption that ploader & SCIrun2 Framework both have MPI or
+    //neither of them has it. In the long run, this is not the case, and it should be changed.
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
+    std::string loaderPath="'cd "+path+" && mpirun -np "+copies+" "+path+"/ploader'";
+#else
+    std::string loaderPath="'cd "+path+" && "+path+"/ploader'";
+#endif 
+>>>>>>> .merge-right.r32054
         //string password="****"; //not used;
 
         builder->addLoader(loaderName, login, domainName, loaderPath); // spawns xterm
@@ -1056,6 +1211,7 @@ void BuilderWindow::addLoader()
 
 void BuilderWindow::rmLoader()
 {
+<<<<<<< .working
     sci::cca::ports::BuilderService::pointer builder =
     pidl_cast<sci::cca::ports::BuilderService::pointer>(
         services->getPort("cca.BuilderService")
@@ -1063,9 +1219,27 @@ void BuilderWindow::rmLoader()
     if (builder.isNull()) {
         displayMsg("Error: Cannot find builder service\n");
         return;
+=======
+    try {
+        sci::cca::ports::FrameworkProxyService::pointer proxy =
+            pidl_cast<sci::cca::ports::FrameworkProxyService::pointer>(
+                services->getPort("cca.FrameworkProxyService"));
+        if (proxy.isNull()) {
+            displayMsg("Error: Cannot find framework proxy service.");
+            return;
+        }
+        proxy->removeLoader("buzz");
+        services->releasePort("cca.FrameworkProxyService");
+>>>>>>> .merge-right.r32054
     }
+<<<<<<< .working
     builder->removeLoader("buzz");
     services->releasePort("cca.BuilderService");
+=======
+    catch (const sci::cca::CCAException::pointer &pe) {
+        displayMsg("Error: framework proxy service not found; " + pe->getNote());
+    }
+>>>>>>> .merge-right.r32054
 }
 
 void BuilderWindow::refresh()
@@ -1089,6 +1263,7 @@ void BuilderWindow::addSidlXmlPath()
         return;
     }
 
+<<<<<<< .working
     // append directory to sidl path!
    sci::cca::ports::FrameworkProperties::pointer fwkProperties =
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
@@ -1097,6 +1272,16 @@ void BuilderWindow::addSidlXmlPath()
 
     if (fwkProperties.isNull()) {
         displayMsg("Error: cannot find framework properties, not adding new components.\n");
+=======
+    sci::cca::ports::FrameworkProperties::pointer fwkProperties;
+    try {
+        // append directory to sidl path!
+       fwkProperties =
+            pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+                services->getPort("cca.FrameworkProperties"));
+    } catch (const sci::cca::CCAException::pointer &pe) {
+        displayMsg("Error: framework properties not found; " + pe->getNote());
+>>>>>>> .merge-right.r32054
         return;
     }
     sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
@@ -1108,18 +1293,34 @@ void BuilderWindow::addSidlXmlPath()
 
     services->releasePort("cca.FrameworkProperties");
 
+<<<<<<< .working
     sci::cca::ports::ComponentRepository::pointer reg =
     pidl_cast<sci::cca::ports::ComponentRepository::pointer>(
         services->getPort("cca.ComponentRepository")
     );
     if (reg.isNull()) {
         std::cerr << "Error: cannot find component repository" << std::endl;
+=======
+    setCursor(Qt::WaitCursor);
+    statusBar()->message("Updating component classes.", 2000);
+    try {
+        sci::cca::ports::ComponentRepository::pointer reg =
+            pidl_cast<sci::cca::ports::ComponentRepository::pointer>(
+                services->getPort("cca.ComponentRepository"));
+
+        reg->addComponentClass(pd->selectedComponentModel());
+    }
+    catch(const sci::cca::CCAException::pointer &pe) {
+        displayMsg("Error: component repository not found; " + pe->getNote());
+        unsetCursor();
+>>>>>>> .merge-right.r32054
         return;
     }
+<<<<<<< .working
     statusBar()->message("Updating component classes.");
     setCursor(Qt::WaitCursor);
-
-    reg->addComponentClass(pd->selectedComponentModel());
+=======
+>>>>>>> .merge-right.r32054
 
     statusBar()->clear();
     unsetCursor();

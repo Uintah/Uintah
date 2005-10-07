@@ -64,14 +64,16 @@ public:
 class TextureRenderer : public GeomObj
 {
 public:
-  TextureRenderer(TextureHandle tex, ColorMapHandle cmap1, ColorMap2Handle cmap2,
+  TextureRenderer(TextureHandle tex, 
+		  ColorMapHandle cmap1, 
+		  vector<ColorMap2Handle> & cmap2,
                   int tex_mem);
   TextureRenderer(const TextureRenderer&);
   virtual ~TextureRenderer();
 
   void set_texture(TextureHandle tex);
   void set_colormap1(ColorMapHandle cmap1);
-  void set_colormap2(ColorMap2Handle cmap2);
+  void set_colormap2(vector<ColorMap2Handle> &cmap2);
   void set_colormap_size(int size);
   void set_slice_alpha(double alpha);
   void set_sw_raster(bool b);
@@ -98,7 +100,7 @@ protected:
   TextureHandle tex_;
   Mutex mutex_;
   ColorMapHandle cmap1_;
-  ColorMap2Handle cmap2_;
+  vector<ColorMap2Handle> &cmap2_;
   bool cmap1_dirty_;
   bool cmap2_dirty_;
   bool alpha_dirty_;
@@ -109,7 +111,7 @@ protected:
   double irate_;
   bool imode_;
   double slice_alpha_;
-  bool sw_raster_;
+  bool hardware_raster_;
   DrawInfoOpenGL* di_;
 
 #ifdef SCI_OPENGL  
@@ -120,9 +122,9 @@ protected:
   Array3<unsigned char> cmap2_array_;
   unsigned int cmap2_tex_;
   bool use_pbuffer_;
-  Pbuffer* raster_buffer_;
+  Pbuffer* raster_pbuffer_;
   CM2ShaderFactory* shader_factory_;
-  Pbuffer* cmap2_buffer_;
+  Pbuffer* cmap2_pbuffer_;
   FragmentProgramARB* cmap2_shader_nv_;
   FragmentProgramARB* cmap2_shader_ati_;
   VolShaderFactory* vol_shader_factory_;
@@ -149,21 +151,31 @@ protected:
   void load_brick(vector<TextureBrickHandle> &b, int i, bool use_cmap2);
   void draw_polygons(vector<float>& vertex, vector<float>& texcoord,
 		     vector<int>& poly,
-                     bool normal, bool fog, Pbuffer* buffer);
+                     bool normal, bool fog, Pbuffer* buffer,
+		     vector<int> *mask = 0, FragmentProgramARB *shader = 0);
   void draw_polygons_wireframe(vector<float>& vertex, vector<float>& texcoord,
 			       vector<int>& poly,
-			       bool normal, bool fog, Pbuffer* buffer);
+			       bool normal, bool fog, Pbuffer* buffer,
+			       vector<int> *mask=0);
 
   void build_colormap1(Array2<float>& cmap_array,
 		       unsigned int& cmap_tex, bool& cmap_dirty,
 		       bool& alpha_dirty,  double level_exponent = 0.0);
-//   void build_colormap1();
+
   void build_colormap2();
+  void colormap2_hardware_rasterize_setup();
+  void colormap2_hardware_destroy_buffers();
+  void colormap2_hardware_rasterize();
+  void colormap2_software_rasterize();
+
+
+
   void bind_colormap1(unsigned int cmap_tex );
-//   void bind_colormap1();
   void bind_colormap2();
+
   void release_colormap1();
   void release_colormap2();
+
 #endif
 };
 

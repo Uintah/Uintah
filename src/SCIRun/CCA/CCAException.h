@@ -41,33 +41,49 @@
 #ifndef SCIRun_Framework_CCAException_h
 #define SCIRun_Framework_CCAException_h
 
-#include <Core/Exceptions/Exception.h>
+#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/SSIDL/sidl_sidl.h>
 #include <string>
 
-namespace SCIRun
-{
+namespace SCIRun {
 
 /**
  * \class CCAException
  *
  * An exception object for the CCA Component model.
+ *
  */
-class CCAException : public Exception
+class CCAException : public sci::cca::CCAException
 {
 public:
-  CCAException(const std::string& description);
-  CCAException(const CCAException&);
-  virtual ~CCAException();
+    CCAException(const std::string &msg,
+                 sci::cca::CCAExceptionType type = sci::cca::Nonstandard);
+    virtual ~CCAException();
 
-  /** Returns the description associated with this exception. */
-  virtual const char* message() const;
-  
-  /** Returns a string that identifies the unique type of this exception. */
-  virtual const char* type() const;
+    // .sci.cca.CCAExceptionType .sci.cca.CCAException.getCCAExceptionType()
+    virtual inline sci::cca::CCAExceptionType
+    getCCAExceptionType() { return type; }
+
+    // string .SSIDL.BaseException.getNote()
+    virtual inline std::string
+    getNote() { return message; }
+
+    // void .SSIDL.BaseException.setNote(in string message)
+    virtual inline void
+    setNote(const std::string& message) { this->message = message; }
+
+    // string .SSIDL.BaseException.getTrace()
+    virtual std::string getTrace();
+
+    // void .SSIDL.BaseException.add(in string traceline)
+    virtual void add(const ::std::string &traceline);
+
+    // void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)
+    virtual void add(const std::string &filename, int lineno, const std::string &methodname);
+
 private:
-  std::string description;
-  
-  CCAException& operator=(const CCAException&);
+    mutable std::string message;
+    mutable sci::cca::CCAExceptionType type;
 };
 
 } // end namespace SCIRun

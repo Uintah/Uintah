@@ -38,10 +38,17 @@
  *
  *  Copyright (C) 2003 SCI Group
  */
-
+#include <Core/Geometry/Point.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Packages/BioPSE/Core/Datatypes/SegLatVolField.h>
 #include <Packages/BioPSE/Core/Datatypes/SepSurf.h>
 #include <Core/GuiInterface/GuiVar.h>

@@ -43,47 +43,44 @@
 
 #include <CCA/Components/TableTennis/TableTennis_sidl.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <Core/CCA/spec/cca_sidl.h>
 
-//namespace SCIRun {
 class TTClient;  
 
-class ttUIPort : public virtual sci::cca::ports::UIPort {
+class ttUIPort : public sci::cca::ports::UIPort {
 public:
    virtual ~ttUIPort(){}
    virtual int ui();
-   void setParent(TTClient *TTCl){this->TTCl=TTCl;}
+   void setParent(TTClient *TTCl) { this->TTCl = TTCl; }
    TTClient *TTCl;
 };
 
-class ttGoPort : public virtual sci::cca::ports::GoPort {
+class ttGoPort : public sci::cca::ports::GoPort {
 public:
    virtual ~ttGoPort(){}
    virtual int go();
-   void setParent(TTClient *TTCl){this->TTCl=TTCl;}
+   void setParent(TTClient *TTCl) { this->TTCl = TTCl; }
    TTClient *TTCl;
 };
 
 
-class TTClient : public sci::cca::Component{
+class TTClient : public sci::cca::Component {
                 
   public:
     TTClient();
     virtual ~TTClient();
-
     virtual void setServices(const sci::cca::Services::pointer& svc);
-    sci::cca::Services::pointer getServices(){return services;}
-  private:
+    sci::cca::Services::pointer& getServices() { return services; }
+    inline int getCount() { return count; }
+    inline void setCount(int i) { count = i; }
 
+  private:
     TTClient(const TTClient&);
     TTClient& operator=(const TTClient&);
-    ttUIPort uiPort;
-    ttGoPort goPort;
+    ttUIPort::pointer uiPortPtr;
+    ttGoPort::pointer goPortPtr;
     sci::cca::Services::pointer services;
-  };
-//}
-
-
+    int count;
+};
 
 
 #endif

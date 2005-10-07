@@ -34,10 +34,10 @@
 // Warning!: this converter is only partially implemented. It supports only 
 //           a subset of the vtk format. Please extend it as you need more
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <Core/Init/init.h>

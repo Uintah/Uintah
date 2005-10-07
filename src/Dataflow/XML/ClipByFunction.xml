@@ -98,6 +98,11 @@
 	<name>Mapping</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
+      <port>
+	<name>MaskVector</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+
     </outputs>
   </io>
   <testing>
