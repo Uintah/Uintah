@@ -1516,4 +1516,38 @@ HexVolMesh::compute_face_neighbors(double err)
 
 
 
+unsigned int
+HexVolMesh::get_cells(Cell::array_type &cells, 
+		      Node::index_type node) const 
+{
+  ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
+            "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+            "Must call synchronize EDGES_E on HexVolMesh first");
+
+  vector<Node::index_type> neighbors;
+  set<Cell::index_type> unique_cells;
+  // Get all the nodes that share an edge with this node
+  get_neighbors(neighbors, node);
+  // Iterate through all those edges
+  for (unsigned int n = 0; n < neighbors.size(); ++n) {
+    // Get the edge information for the current edge
+    edge_ht::const_iterator iter = edge_table_.find(PEdge(node,neighbors[n]));
+    ASSERTMSG(iter != edge_table_.end(),
+	      "Edge not found in HexVolMesh::edge_table_");
+    // Insert all cells that share this edge into
+    // the unique set of cell indices
+    for (unsigned int c = 0; c < (iter->first).cells_.size(); ++c) 
+      unique_cells.insert((iter->first).cells_[c]);
+  }
+
+  // Copy the unique set of cells to our Cells array return argument
+  cells.resize(unique_cells.size());
+  copy(unique_cells.begin(), unique_cells.end(), cells.begin());
+  return cells.size();
+}
+
+  
+
+
 } // namespace SCIRun
