@@ -1272,10 +1272,10 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 //  for( i = 0; i < 10; i++ )
   {
     typename FIELD::mesh_type::Node::index_type this_node = node_list[i];
-//    typename FIELD::mesh_type::Cell::array_type attached_cells;
+    typename FIELD::mesh_type::Cell::array_type attached_cells;
     vector<typename FIELD::mesh_type::Node::index_type> neighbors;
-    cout << "This node's id == " << this_node << endl;
-//    clipped->get_cells( attached_cells, this_node );
+//    cout << "This node's id == " << this_node << endl;
+    clipped->get_cells( attached_cells, this_node );
     clipped->get_neighbors( neighbors, this_node );
 
     Vector offset(0,0,0);
@@ -1283,34 +1283,59 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     clipped->get_center( n_p, this_node );
     Vector node_v( n_p );
 //    cout << "node_v.length() == " << node_v.length() << endl;
+
+//NOTE TO JS: May want to use the smallest length here...
     double ave_length = 0;
-//    for( j = 0; j < attached_cells.size(); j++ )
     for( j = 0; j < neighbors.size(); j++ )
     {
       Point p;
-//      clipped->get_center( p, attached_cells[j] );
-      clipped->get_center( p, neighbors[j] );
+      clipped->get_center( p, neighbors[j] );      
+      Vector center( p );
+      Vector add_v = node_v - center;
+      ave_length += add_v.length();
+    }    
+    ave_length /= (double)neighbors.size();
+
+    for( j = 0; j < attached_cells.size(); j++ )
+    {
+      Point p;
+      clipped->get_center( p, attached_cells[j] );
       
       Vector center( p );
       Vector add_v = node_v - center;
-//      cout << "add_v.length() == " << add_v.length() << endl; 
-      ave_length += add_v.length();
       add_v.safe_normalize();
       offset += add_v;
     }
-    
-    ave_length /= (double)neighbors.size();
-//    cout << "attached_cells.size() == " << attached_cells.size() << endl;
-    cout << "neighbors.size() == " << neighbors.size() << endl;
+  
+//    ave_length /= (double)attached_cells.size();
+//    ave_length /= (double)neighbors.size();
+    cout << "attached_cells.size() == " << attached_cells.size() << endl;
+//    cout << "neighbors.size() == " << neighbors.size() << endl;
 //    offset /= -1 * (double)attached_cells.size();
 //    offset /= 1 * (double)neighbors.size();
+
     offset.safe_normalize();
-    offset *= 2.*ave_length;
-    cout << "Average length = " << ave_length << endl;
-    cout << i << " Offset length = " << offset.length() << endl;
-    
-//    double multiplier = 1.0 / orig.length();
+    offset *= 0.5*ave_length;
+
+// //NOTE TO JS: Testing correct hex element creation on sphere example... 
+//     offset = node_v;
+//     offset.safe_normalize();
+//     double multiplier = (0.85 - node_v.length());
+//     offset *= multiplier;
+// //end NOTE TO JS...    
+
+//     cout << "Average length = " << ave_length << endl;
+//     cout << i << "Offset length = " << offset.length() << endl;
+
     offset += node_v;
+
+//interpolate to find the correct place to put the new point... use linear interpolation... 
+//     typename FIELD::value_type v(1);
+//     field->value(v[0], this_node );
+//     const double imv = isoval - v[perm[0]];
+//     const double dl1 = imv / (v[perm[1]] - v[perm[0]]);
+//     const Pointl1 = Interpolate(p[perm[0]], p[perm[1]], dl1);
+ 
     Point new_point( offset );
 //    cout << "New point = <" << offset.x() << ", " << offset.y() << " ," << offset.z() << ">" << endl;
     
