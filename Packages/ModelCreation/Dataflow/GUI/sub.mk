@@ -37,6 +37,12 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PathReader.tcl\
 	$(SRCDIR)/PathWriter.tcl\
 	$(SRCDIR)/ReplicateDataArray.tcl\
+	$(SRCDIR)/StringReader.tcl\
+	$(SRCDIR)/StringWriter.tcl\
+	$(SRCDIR)/FieldGetMatrixProperty.tcl\
+	$(SRCDIR)/FieldGetStringProperty.tcl\
+	$(SRCDIR)/FieldSetMatrixProperty.tcl\
+	$(SRCDIR)/FieldSetStringProperty.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

@@ -81,8 +81,10 @@ using namespace SCIRun;
 class FieldsMath {
 
   public:
-    FieldsMath(Module* module);
-    FieldsMath(ProgressReporter* pr);
+    FieldsMath(Module* module);       // if you want the module to pop up some
+                                      // error message of dynamically compiled 
+                                      // user supplied code
+    FieldsMath(ProgressReporter* pr); // normal case
     virtual ~FieldsMath();
 
     // Funtions borrow from Core of SCIRun
@@ -92,6 +94,7 @@ class FieldsMath {
     bool ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, int newbasis_order);
     
     // ManageFieldData split into two parts
+    // Need to upgrade code for these when we are done with HO integration
     bool SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data);
     bool GetFieldData(FieldHandle input, MatrixHandle& data);
 	
@@ -101,10 +104,18 @@ class FieldsMath {
     bool ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle SelectionMask,MatrixHandle &interpolant);
     bool DistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object);
     bool SignedDistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object);
+    
+    bool IsInsideSurfaceField(FieldHandle input, FieldHandle& output, FieldHandle object);
+    bool IsInsideVolumeField(FieldHandle input, FieldHandle& output, FieldHandle object);
 
     // Change where the data is located
     bool FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std::string method);
     bool FieldDataElemToNode(FieldHandle input, FieldHandle& output, std::string method);
+
+    // Check properties of surface field
+    bool IsClosedSurface(FieldHandle input);
+    bool IsClockWiseSurface(FieldHandle input);
+    bool IsCounterClockWiseSurface(FieldHandle input);
 
   private:
     Module* module_;

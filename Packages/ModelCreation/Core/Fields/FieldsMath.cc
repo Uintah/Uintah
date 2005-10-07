@@ -64,6 +64,8 @@ bool FieldsMath::DistanceToField(FieldHandle input, FieldHandle& output, FieldHa
   
   // If the object is a volume, just extract the outer boundary
   // This should speed up the calculation 
+  bool isvol = false;
+
   if (object->mesh()->dimensionality() == 3)
   {
     MatrixHandle dummy;
@@ -74,13 +76,22 @@ bool FieldsMath::DistanceToField(FieldHandle input, FieldHandle& output, FieldHa
       return(false);
     }
     object = objectsurf;
+    isvol = true;
   }
 
+  if (object->mesh()->dimensionality() > 2)
+  {
+    error("DistanceToField: This function has only been implemented for a surface mesh");
+    return(false);
+  }  
+
   if ((dynamic_cast<TriSurfMesh*>(object->mesh().get_rep())) ||
-      (dynamic_cast<QuadSurfMesh*>(object->mesh().get_rep())) ||  
+      (dynamic_cast<QuadSurfMesh*>(object->mesh().get_rep())) || 
+      (dynamic_cast<ImageMesh*>(object->mesh().get_rep())) ||       
       (dynamic_cast<StructQuadSurfMesh*>(object->mesh().get_rep())) || 
       (dynamic_cast<CurveMesh*>(object->mesh().get_rep())) ||  
       (dynamic_cast<StructCurveMesh*>(object->mesh().get_rep())) ||   
+      (dynamic_cast<ScanlineMesh*>(object->mesh().get_rep())) ||       
       (dynamic_cast<PointCloudMesh*>(object->mesh().get_rep())))   
   {
 
@@ -97,13 +108,23 @@ bool FieldsMath::DistanceToField(FieldHandle input, FieldHandle& output, FieldHa
       return(false);
     }
     
-    if(!(algo->execute(pr_, input, output, object)))
+    if (isvol)
     {
-      error("DistanceToField: The dynamically compiled function return error");
-      return(false);
+      if(!(algo->execute_unsigned(pr_, input, output, object)))
+      {
+        error("DistanceToField: The dynamically compiled function return error");
+        return(false);
+      }    
+    }
+    else
+    {
+      if(!(algo->execute(pr_, input, output, object)))
+      {
+        error("DistanceToField: The dynamically compiled function return error");
+        return(false);
+      }
     }
     
-
     return(true);    
   }
   else
@@ -112,6 +133,147 @@ bool FieldsMath::DistanceToField(FieldHandle input, FieldHandle& output, FieldHa
     return(false);  
   }
 }
+
+
+bool FieldsMath::SignedDistanceToField(FieldHandle input, FieldHandle& output, FieldHandle object)
+{
+
+  if (input.get_rep() == 0)
+  {
+    error("SignedDistanceToField: No input field");
+    return(false);
+  }
+  
+  if (object.get_rep() == 0)
+  {
+    error("SignedDistanceToField: No Object Field is given");
+    return(false);
+  }
+  
+  // If the object is a volume, just extract the outer boundary
+  // This should speed up the calculation 
+  if (object->mesh()->dimensionality() == 3)
+  {
+    MatrixHandle dummy;
+    FieldHandle  objectsurf;
+    if(!(FieldBoundary(object,objectsurf,dummy)))
+    {
+      error("SignedDistanceToField: Getting surface mesh of object failed");
+      return(false);
+    }
+    object = objectsurf;
+  }
+
+  if (object->mesh()->dimensionality() != 2)
+  {
+    error("SignedDistanceToField: This function has only been implemented for a surface mesh");
+    return(false);
+  }
+
+  if ((dynamic_cast<TriSurfMesh*>(object->mesh().get_rep())) ||
+      (dynamic_cast<QuadSurfMesh*>(object->mesh().get_rep())) ||  
+      (dynamic_cast<ImageMesh*>(object->mesh().get_rep())) ||
+      (dynamic_cast<StructQuadSurfMesh*>(object->mesh().get_rep())) || 
+      (dynamic_cast<CurveMesh*>(object->mesh().get_rep())))   
+  {  
+    Handle<DistanceToFieldAlgo> algo;
+    const TypeDescription *ftd = input->get_type_description();
+    const TypeDescription *oftd = object->get_type_description();
+    
+    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(ftd,oftd);
+    
+    if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
+    {
+      error("SignedDistanceToField: Could not dynamically compile algorithm");
+      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+      return(false);
+    }
+    
+    if(!(algo->execute_signed(pr_, input, output, object)))
+    {
+      error("SignedDistanceToField: The dynamically compiled function return error");
+      return(false);
+    }
+    
+    return(true);    
+  }
+  else
+  {
+    error("SignedDistanceToField: Algorithm for this type of field has not yet been implemented");
+    return(false);  
+  }
+}
+
+
+bool FieldsMath::IsInsideSurfaceField(FieldHandle input, FieldHandle& output, FieldHandle object)
+{
+
+  if (input.get_rep() == 0)
+  {
+    error("IsInsideSurfaceField: No input field");
+    return(false);
+  }
+  
+  if (object.get_rep() == 0)
+  {
+    error("IsInsideSurfaceField: No Object Field is given");
+    return(false);
+  }
+  
+  // If the object is a volume, just extract the outer boundary
+  // This should speed up the calculation 
+  if (object->mesh()->dimensionality() == 3)
+  {
+    MatrixHandle dummy;
+    FieldHandle  objectsurf;
+    if(!(FieldBoundary(object,objectsurf,dummy)))
+    {
+      error("IsInsideSurfaceField: Getting surface mesh of object failed");
+      return(false);
+    }
+    object = objectsurf;
+  }
+
+  if (object->mesh()->dimensionality() != 2)
+  {
+    error("IsInsideSurfaceField: This function has only been implemented for a surface mesh");
+    return(false);
+  }
+
+  if ((dynamic_cast<TriSurfMesh*>(object->mesh().get_rep())) ||
+      (dynamic_cast<QuadSurfMesh*>(object->mesh().get_rep())) ||  
+      (dynamic_cast<ImageMesh*>(object->mesh().get_rep())) ||
+      (dynamic_cast<StructQuadSurfMesh*>(object->mesh().get_rep())) || 
+      (dynamic_cast<CurveMesh*>(object->mesh().get_rep())))   
+  {  
+    Handle<DistanceToFieldAlgo> algo;
+    const TypeDescription *ftd = input->get_type_description();
+    const TypeDescription *oftd = object->get_type_description();
+    
+    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(ftd,oftd);
+    
+    if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
+    {
+      error("IsInsideSurfaceField: Could not dynamically compile algorithm");
+      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+      return(false);
+    }
+    
+    if(!(algo->execute_isinside(pr_, input, output, object)))
+    {
+      error("IsInsideSurfaceField: The dynamically compiled function return error");
+      return(false);
+    }
+    
+    return(true);    
+  }
+  else
+  {
+    error("IsInsideSurfaceField: Algorithm for this type of field has not yet been implemented");
+    return(false);  
+  }
+}
+
 
 bool FieldsMath::ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, int new_basis_order)
 {
@@ -650,6 +812,22 @@ bool FieldsMath::FieldDataElemToNode(FieldHandle input, FieldHandle& output, std
   }
 
   return(true);
+}
+
+
+bool FieldsMath::IsClosedSurface(FieldHandle input)
+{
+  return(true);
+}
+
+bool FieldsMath::IsClockWiseSurface(FieldHandle input)
+{
+  return(true);
+}
+
+bool FieldsMath::IsCounterClockWiseSurface(FieldHandle input)
+{
+  return(!(IsClockWiseSurface(input)));
 }
 
 
