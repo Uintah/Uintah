@@ -38,25 +38,39 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
+
+#include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
+#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+
 namespace ModelCreation {
 
 using namespace SCIRun;
 
 class IsInsideField : public Module {
-public:
-  IsInsideField(GuiContext*);
+  public:
+    IsInsideField(GuiContext*);
 
-  virtual ~IsInsideField();
+    virtual ~IsInsideField();
 
-  virtual void execute();
+    virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
+    virtual void tcl_command(GuiArgs&, void*);
+  private:
+    int fGeneration_;
+    int oGeneration_;    
 };
 
 
 DECLARE_MAKER(IsInsideField)
 IsInsideField::IsInsideField(GuiContext* ctx)
-  : Module("IsInsideField", ctx, Source, "FieldsData", "ModelCreation")
+  : Module("IsInsideField", ctx, Source, "FieldsData", "ModelCreation"),
+  fGeneration_(-1),
+  oGeneration_(-1)  
 {
 }
 
@@ -65,7 +79,79 @@ IsInsideField::~IsInsideField(){
 
 void IsInsideField::execute()
 {
-  error("This function is under development and not yet implemented");
+  FieldIPort *field_iport;
+  FieldIPort *object_iport;
+  
+  if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(0))))
+  {
+    error("Could not find Field input port");
+    return;
+  }
+  
+  if (!(object_iport = dynamic_cast<FieldIPort *>(getIPort(1))))
+  {
+    error("Could not find ObjectField input port");
+    return;
+  }
+  
+  FieldHandle input;
+  FieldHandle object;
+  
+  field_iport->get(input);
+  object_iport->get(object);
+  
+  if (input.get_rep() == 0)
+  {
+    warning("No Field was found on input port");
+    return;
+  }
+  
+  if (object.get_rep() == 0)
+  {
+    warning("No Object Field was found on the object port");
+    return;
+  }
+
+  bool update = false;
+
+  if ( (fGeneration_ != input->generation ) ||
+        (oGeneration_ != object->generation )) {
+    fGeneration_ = input->generation;
+    oGeneration_ = object->generation;
+    update = true;
+  }
+
+
+  if(update)
+  {
+    FieldsMath fieldmath(dynamic_cast<ProgressReporter *>(this));
+  
+    FieldHandle output;
+
+    if(!(fieldmath.IsInsideSurfaceField(input,output,object)))
+    {
+      error("Dynamically compile algorithm failed");
+      return;
+    }
+  
+    FieldOPort* output_oport = dynamic_cast<FieldOPort *>(getOPort(0));
+    if (output_oport) output_oport->send(output);
+
+    MatrixOPort* data_oport = dynamic_cast<MatrixOPort *>(getOPort(1));
+    if (data_oport) 
+    {
+      MatrixHandle data;
+      if(fieldmath.GetFieldData(output,data))
+      {
+        data_oport->send(data);
+      }
+      else
+      {
+        error("Could not retrieve data from field, so no data matrix is generated");
+        return;        
+      }
+    }
+  }
 }
 
 void

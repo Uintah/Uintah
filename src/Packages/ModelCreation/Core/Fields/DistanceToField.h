@@ -26,7 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 #ifndef MODELCREATION_CORE_FIELDS_DISTANCETOFIELD_H
 #define MODELCREATION_CORE_FIELDS_DISTANCETOFIELD_H 1
 
@@ -60,15 +59,35 @@ public:
                               FieldHandle& output,
                               FieldHandle objectfield) = 0;
 
+  virtual bool execute_signed(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              FieldHandle objectfield) = 0;
+
+  virtual bool execute_unsigned(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              FieldHandle objectfield) = 0;
+
+  virtual bool execute_isinside(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              FieldHandle objectfield) = 0;
+                              
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
                                             const TypeDescription *ofsrc);
 
-  inline double distance(Point c,Point t1,Point t2, Point t3, Point t4);                                            
-  inline double distance(Point c,Point t1,Point t2, Point t3);
-  inline double distance(Point c,Point t1,Point t2);
-  inline double distance(Point c,Point t1);                                            
-};
+  inline void distance(Point c, Point t1, Point t2, Point t3, Point t4, double& dist);                                            
+  inline void distance(Point c, Point t1, Point t2, Point t3, double& dist);
+  inline void distance(Point c, Point t1, Point t2, double& dist);
+  inline void distance(Point c, Point t1, double& dist);                                            
 
+  inline bool sdistance(Point c, Point t1, Point t2, Point t3, Point t4, double& dist);                                            
+  inline bool sdistance(Point c, Point t1, Point t2, Point t3, double& dist);
+  inline bool sdistance(Point c, Point t1, Point t2, double& dist);
+  inline bool sdistance(Point c, Point t1, double& dist);                                            
+
+};
 
 template<class FIELD, class OBJECTFIELD>
 class DistanceToFieldAlgoT : public DistanceToFieldAlgo
@@ -78,8 +97,23 @@ public:
                               FieldHandle input,
                               FieldHandle& output,
                               FieldHandle objectfield);                          
-};
 
+  virtual bool execute_signed(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              FieldHandle objectfield); 
+
+  virtual bool execute_unsigned(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              FieldHandle objectfield);
+
+  virtual bool execute_isinside(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              FieldHandle objectfield); 
+
+};
 
 template<class FIELD, class OBJECTFIELD>
 bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter,
@@ -107,6 +141,12 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
   typename OBJECTFIELD::mesh_type *objectmesh =
     dynamic_cast<typename OBJECTFIELD::mesh_type *>(objectfield->mesh().get_rep());  
 
+  if (objectmesh->dimensionality() == 3)
+  {
+    reporter->error("DistanceToField: This function has not been implemented for volume fields");
+    return(false);
+  }
+
   if (field->basis_order() == 0)
   {
     FIELD* ofield = scinew FIELD(mesh,0);
@@ -117,253 +157,1190 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
     mesh->begin(bi); mesh->end(ei);
 
     typename OBJECTFIELD::mesh_type::Elem::iterator bt, et;
-
+    typename OBJECTFIELD::mesh_type::Node::array_type nodes;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodestest;
+    
     Point p;
     Point p0,p1,p2,p3;    
-    while (bi != ei)
+    
+    objectmesh->begin(bt);
+    objectmesh->get_nodes(nodestest, *(bt));
+    
+    switch (nodestest.size())
     {
-      mesh->get_center(p,*(bi));
-
-      objectmesh->begin(bt); objectmesh->end(et);
-      typename OBJECTFIELD::mesh_type::Node::array_type nodes;
-      objectmesh->get_nodes(nodes, *(bt));
-      double dist = 0.0;
-      switch(nodes.size())
-      {
-        case 1: 
-          objectmesh->get_point(p0,nodes[0]);
-          dist = distance(p,p0);
-          break;
-        case 2: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);          
-          dist = distance(p,p0,p1);
-          break;
-        case 3: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);
-          objectmesh->get_point(p2,nodes[2]);                  
-          dist = distance(p,p0,p1,p2);
-          break;
-        case 4: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);
-          objectmesh->get_point(p2,nodes[2]);                  
-          objectmesh->get_point(p3,nodes[3]);          
-          dist = distance(p,p0,p1,p2,p3);  
-          break;
-      }
-      ++bt;
-      double d = 0.0;
-      while (bt != et)
-      {
-        objectmesh->get_nodes(nodes, *(bt));
-        switch(nodes.size())
+      case 1:
+        while (bi != ei)
         {
-        case 1: 
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double d = 0.0;
+
           objectmesh->get_point(p0,nodes[0]);
-          d = distance(p,p0);
-          break;
-        case 2: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);          
-          d = distance(p,p0,p1);
-          break;
-        case 3: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);
-          objectmesh->get_point(p2,nodes[2]);                  
-          d = distance(p,p0,p1,p2);
-          break;
-        case 4: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);
-          objectmesh->get_point(p2,nodes[2]);                  
-          objectmesh->get_point(p3,nodes[3]);          
-          d = distance(p,p0,p1,p2,p3);  
-          break; 
+          distance(p,p0,dist);
+
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            distance(p,p0,d);
+            if(d < dist ) dist = d;
+            ++bt;
+          }
+          ofield->set_value(sqrt(dist),*(bi));
+          ++bi;   
         }
-        if(d < dist ) dist = d;
-        ++bt;
-      }
-      ofield->set_value(sqrt(dist),*(bi));
-     ++bi;   
+        break;
+      case 2:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double d = 0.0;
+
+          objectmesh->get_point(p0,nodes[0]);
+          objectmesh->get_point(p1,nodes[1]);
+          distance(p,p0,p1,dist);
+
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            distance(p,p0,p1,d);
+            if(d < dist ) dist = d;
+            ++bt;
+          }
+          ofield->set_value(sqrt(dist),*(bi));
+          ++bi;   
+        }
+        break;
+      case 3:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double d = 0.0;
+
+          objectmesh->get_point(p0,nodes[0]);
+          objectmesh->get_point(p1,nodes[1]);
+          objectmesh->get_point(p2,nodes[2]);
+          distance(p,p0,p1,p2,dist);
+
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            distance(p,p0,p1,p2,d);
+            if(d < dist ) dist = d;
+            ++bt;
+          }
+          ofield->set_value(sqrt(dist),*(bi));
+          ++bi;   
+        }
+        break;
+      case 4:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double d = 0.0;
+
+          objectmesh->get_point(p0,nodes[0]);
+          objectmesh->get_point(p1,nodes[1]);
+          objectmesh->get_point(p2,nodes[2]);
+          objectmesh->get_point(p3,nodes[3]);
+          distance(p,p0,p1,p2,p3,dist);
+
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            distance(p,p0,p1,p2,p3,d);
+            if(d < dist ) dist = d;
+            ++bt;
+          }
+          ofield->set_value(sqrt(dist),*(bi));
+          ++bi;   
+        }
+        break;    
+      default:
+        reporter->error("DistanceToField: Expected a Quadrilateral, Triangular, Line or Point element");
+        return(false);              
     }
   }
-  else 
+  else
   {
     FIELD* ofield = scinew FIELD(mesh,1);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
-  
+
     typename FIELD::mesh_type::Node::iterator bi, ei;
     mesh->begin(bi); mesh->end(ei);
 
     typename OBJECTFIELD::mesh_type::Elem::iterator bt, et;
-
-    // Somehow someone did forget to program some simple functions to get access
-    // to the nodes of an element .........
+    typename OBJECTFIELD::mesh_type::Node::array_type nodes;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodestest;
+    
     Point p;
-    Point p0,p1,p2,p3;
-
-    while (bi != ei)
+    Point p0,p1,p2,p3;    
+    
+    objectmesh->begin(bt);
+    objectmesh->get_nodes(nodestest, *(bt));
+    
+    switch (nodestest.size())
     {
-      mesh->get_center(p,*(bi));
-
-      objectmesh->begin(bt); objectmesh->end(et);
-      typename OBJECTFIELD::mesh_type::Node::array_type nodes;
-      objectmesh->get_nodes(nodes, *(bt));
-      double dist = 0.0;
-      switch(nodes.size())
-      {
-        case 1: 
-          objectmesh->get_point(p0,nodes[0]);
-          dist = distance(p,p0);
-          break;
-        case 2: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);          
-          dist = distance(p,p0,p1);
-          break;
-        case 3: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);
-          objectmesh->get_point(p2,nodes[2]);                  
-          dist = distance(p,p0,p1,p2);
-          break;
-        case 4: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);
-          objectmesh->get_point(p2,nodes[2]);                  
-          objectmesh->get_point(p3,nodes[3]);          
-          dist = distance(p,p0,p1,p2,p3);  
-          break;
-      }      
-      ++bt;
-      double d = 0.0;
-      while (bt != et)
-      {
-        objectmesh->get_nodes(nodes, *(bt));
-        switch(nodes.size())
+      case 1:
+        while (bi != ei)
         {
-        case 1: 
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double d = 0.0;
+
           objectmesh->get_point(p0,nodes[0]);
-          d = distance(p,p0);
-          break;
-        case 2: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);          
-          d = distance(p,p0,p1);
-          break;
-        case 3: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);
-          objectmesh->get_point(p2,nodes[2]);                  
-          d = distance(p,p0,p1,p2);
-          break;
-        case 4: 
-          objectmesh->get_point(p0,nodes[0]);          
-          objectmesh->get_point(p1,nodes[1]);
-          objectmesh->get_point(p2,nodes[2]);                  
-          objectmesh->get_point(p3,nodes[3]);          
-          d = distance(p,p0,p1,p2,p3);  
-          break;  
+          distance(p,p0,dist);
+
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            distance(p,p0,d);
+            if(d < dist ) dist = d;
+            ++bt;
+          }
+          ofield->set_value(sqrt(dist),*(bi));
+          ++bi;   
         }
-        if(d < dist) dist = d;
-        ++bt;
-      }
-      ofield->set_value(sqrt(dist),*(bi));
-     ++bi;   
+        break;
+      case 2:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double d = 0.0;
+
+          objectmesh->get_point(p0,nodes[0]);
+          objectmesh->get_point(p1,nodes[1]);
+          distance(p,p0,p1,dist);
+
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            distance(p,p0,p1,d);
+            if(d < dist ) dist = d;
+            ++bt;
+          }
+          ofield->set_value(sqrt(dist),*(bi));
+          ++bi;   
+        }
+        break;
+      case 3:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double d = 0.0;
+
+          objectmesh->get_point(p0,nodes[0]);
+          objectmesh->get_point(p1,nodes[1]);
+          objectmesh->get_point(p2,nodes[2]);
+          distance(p,p0,p1,p2,dist);
+
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            distance(p,p0,p1,p2,d);
+            if(d < dist ) dist = d;
+            ++bt;
+          }
+          ofield->set_value(sqrt(dist),*(bi));
+          ++bi;   
+        }
+        break;
+      case 4:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double d = 0.0;
+
+          objectmesh->get_point(p0,nodes[0]);
+          objectmesh->get_point(p1,nodes[1]);
+          objectmesh->get_point(p2,nodes[2]);
+          objectmesh->get_point(p3,nodes[3]);
+          distance(p,p0,p1,p2,p3,dist);
+
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            distance(p,p0,p1,p2,p3,d);
+            if(d < dist ) dist = d;
+            ++bt;
+          }
+          ofield->set_value(sqrt(dist),*(bi));
+          ++bi;   
+        }
+        break;  
+      default:
+        reporter->error("DistanceToField: Expected a Quadrilateral, Triangular, Line or Point element");
+        return(false);          
     }
   }
 
   return(true);
 }
 
-// DUE TO SOME ODD REASON SOMEONE DECIDED TO HAVE A VECTOR AND POINT CLASS THAT
-// ARE ALMOST EQUAL BUT NOT FULLY. HENCE AS A RESULT ONE CANNOT ADD POINTS.
-// THE VECTOR CLASS AND POINT CLASS NEED TO BE MERGED, WHEN THE PIO SYSTEM IS UP
-// TO THIS THESE FUNCTIONS MAY BECOME OBSOLETE!!!
 
-inline Point add(Point p1, Point p2)
-{
-  Point p(p1.x()+p2.x(),p1.y()+p2.y(),p1.z()+p2.z());
-  return(p);
+
+template<class FIELD, class OBJECTFIELD>
+bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              FieldHandle objectfield)
+{              
+  OBJECTFIELD* tfield = dynamic_cast<OBJECTFIELD* >(objectfield.get_rep());
+  if (tfield == 0)
+  {
+    reporter->error("SignedDistanceToField: Object is not valid");
+    return(false);
+  }
+
+  FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
+  if (field == 0)
+  {
+    reporter->error("SignedDistanceToField: There is no input field");
+    return(false);
+  }
+
+  typename FIELD::mesh_type *mesh =
+    dynamic_cast<typename FIELD::mesh_type *>(field->mesh().get_rep());
+
+  typename OBJECTFIELD::mesh_type *objectmesh =
+    dynamic_cast<typename OBJECTFIELD::mesh_type *>(objectfield->mesh().get_rep());  
+
+  if (objectmesh->dimensionality() != 2)
+  {
+    reporter->error("SignedDistanceToField: This function has not been implemented for point clouds, line element fields, or volume fields,");
+    return(false);
+  }
+
+  if (field->basis_order() == 0)
+  {
+    FIELD* ofield = scinew FIELD(mesh,0);
+    ofield->resize_fdata();
+    output = dynamic_cast<SCIRun::Field* >(ofield);
+
+    typename FIELD::mesh_type::Elem::iterator bi, ei;
+    mesh->begin(bi); mesh->end(ei);
+
+    typename OBJECTFIELD::mesh_type::Elem::iterator bt, et;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodes;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodestest;
+    
+    Point p;
+    Point p0,p1,p2,p3;    
+    
+    objectmesh->begin(bt);
+    objectmesh->get_nodes(nodestest, *(bt));
+    
+    switch (nodestest.size())
+    {
+      case 3:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if(sdistance(p,p0,p1,p2,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = -1.0;
+          ofield->set_value(s*sqrt(absdist),*(bi));
+          ++bi;   
+        }
+        break;
+      case 4:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if(sdistance(p,p0,p1,p2,p3,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = -1.0;
+          ofield->set_value(s*sqrt(absdist),*(bi));
+          ++bi;   
+        }
+        break;
+      default:
+        reporter->error("SignedDistanceToField: Expected a Quadrilateral or Triangular element");
+        return(false);
+    }
+  }
+  else
+  {
+    FIELD* ofield = scinew FIELD(mesh,1);
+    ofield->resize_fdata();
+    output = dynamic_cast<SCIRun::Field* >(ofield);
+
+    typename FIELD::mesh_type::Node::iterator bi, ei;
+    mesh->begin(bi); mesh->end(ei);
+
+    typename OBJECTFIELD::mesh_type::Elem::iterator bt, et;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodes;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodestest;
+    
+    Point p;
+    Point p0,p1,p2,p3;    
+    
+    objectmesh->begin(bt);
+    objectmesh->get_nodes(nodestest, *(bt));
+    
+    switch (nodestest.size())
+    {
+      case 3:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if(sdistance(p,p0,p1,p2,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = -1.0;
+          ofield->set_value(s*sqrt(absdist),*(bi));
+          ++bi;   
+        }
+        break;
+      case 4:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if(sdistance(p,p0,p1,p2,p3,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = -1.0;
+          ofield->set_value(s*sqrt(absdist),*(bi));
+          ++bi;   
+        }
+        break;
+      default:
+        reporter->error("SignedDistanceToField: Expected a Quadrilateral or Triangular element");
+        return(false);
+    }
+  }
+
+  return(true);
 }
 
-inline Point sub(Point p1, Point p2)
-{
-  Point p(p1.x()-p2.x(),p1.y()-p2.y(),p1.z()-p2.z());
-  return(p);
+
+
+template<class FIELD, class OBJECTFIELD>
+bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              FieldHandle objectfield)
+{              
+  OBJECTFIELD* tfield = dynamic_cast<OBJECTFIELD* >(objectfield.get_rep());
+  if (tfield == 0)
+  {
+    reporter->error("SignedDistanceToField: Object is not valid");
+    return(false);
+  }
+
+  FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
+  if (field == 0)
+  {
+    reporter->error("SignedDistanceToField: There is no input field");
+    return(false);
+  }
+
+  typename FIELD::mesh_type *mesh =
+    dynamic_cast<typename FIELD::mesh_type *>(field->mesh().get_rep());
+
+  typename OBJECTFIELD::mesh_type *objectmesh =
+    dynamic_cast<typename OBJECTFIELD::mesh_type *>(objectfield->mesh().get_rep());  
+
+  if (objectmesh->dimensionality() != 2)
+  {
+    reporter->error("SignedDistanceToField: This function has not been implemented for point clouds, line element fields, or volume fields,");
+    return(false);
+  }
+
+  if (field->basis_order() == 0)
+  {
+    FIELD* ofield = scinew FIELD(mesh,0);
+    ofield->resize_fdata();
+    output = dynamic_cast<SCIRun::Field* >(ofield);
+
+    typename FIELD::mesh_type::Elem::iterator bi, ei;
+    mesh->begin(bi); mesh->end(ei);
+
+    typename OBJECTFIELD::mesh_type::Elem::iterator bt, et;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodes;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodestest;
+    
+    Point p;
+    Point p0,p1,p2,p3;    
+    
+    objectmesh->begin(bt);
+    objectmesh->get_nodes(nodestest, *(bt));
+    
+    switch (nodestest.size())
+    {
+      case 3:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if(sdistance(p,p0,p1,p2,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = 0.0;
+          ofield->set_value(s*sqrt(absdist),*(bi));
+          ++bi;   
+        }
+        break;
+      case 4:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if(sdistance(p,p0,p1,p2,p3,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = 0.0;
+          ofield->set_value(s*sqrt(absdist),*(bi));
+          ++bi;   
+        }
+        break;
+      default:
+        reporter->error("SignedDistanceToField: Expected a Quadrilateral or Triangular element");
+        return(false);
+    }
+  }
+  else
+  {
+    FIELD* ofield = scinew FIELD(mesh,1);
+    ofield->resize_fdata();
+    output = dynamic_cast<SCIRun::Field* >(ofield);
+
+    typename FIELD::mesh_type::Node::iterator bi, ei;
+    mesh->begin(bi); mesh->end(ei);
+
+    typename OBJECTFIELD::mesh_type::Elem::iterator bt, et;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodes;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodestest;
+    
+    Point p;
+    Point p0,p1,p2,p3;    
+    
+    objectmesh->begin(bt);
+    objectmesh->get_nodes(nodestest, *(bt));
+    
+    switch (nodestest.size())
+    {
+      case 3:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if(sdistance(p,p0,p1,p2,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = 0.0;
+          ofield->set_value(s*sqrt(absdist),*(bi));
+          ++bi;   
+        }
+        break;
+      case 4:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if(sdistance(p,p0,p1,p2,p3,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = 0.0;
+          ofield->set_value(s*sqrt(absdist),*(bi));
+          ++bi;   
+        }
+        break;
+      default:
+        reporter->error("SignedDistanceToField: Expected a Quadrilateral or Triangular element");
+        return(false);
+    }
+  }
+
+  return(true);
 }
 
-// Some one did not implement this obvious function hence we add it here
-inline Point cross(Point p1,Point p2)
-{
-  Point p(p1.y()*p2.z()-p1.z()*p2.y(),p1.z()*p2.x()-p1.x()*p2.z(),p1.x()*p2.y()-p1.y()*p2.x());
-  return(p);
+
+template<class FIELD, class OBJECTFIELD>
+bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              FieldHandle objectfield)
+{              
+  OBJECTFIELD* tfield = dynamic_cast<OBJECTFIELD* >(objectfield.get_rep());
+  if (tfield == 0)
+  {
+    reporter->error("SignedDistanceToField: Object is not valid");
+    return(false);
+  }
+
+  FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
+  if (field == 0)
+  {
+    reporter->error("SignedDistanceToField: There is no input field");
+    return(false);
+  }
+
+  typename FIELD::mesh_type *mesh =
+    dynamic_cast<typename FIELD::mesh_type *>(field->mesh().get_rep());
+
+  typename OBJECTFIELD::mesh_type *objectmesh =
+    dynamic_cast<typename OBJECTFIELD::mesh_type *>(objectfield->mesh().get_rep());  
+
+  if (objectmesh->dimensionality() != 2)
+  {
+    reporter->error("SignedDistanceToField: This function has not been implemented for point clouds, line element fields, or volume fields,");
+    return(false);
+  }
+
+  if (field->basis_order() == 0)
+  {
+    FIELD* ofield = scinew FIELD(mesh,0);
+    ofield->resize_fdata();
+    output = dynamic_cast<SCIRun::Field* >(ofield);
+
+    typename FIELD::mesh_type::Elem::iterator bi, ei;
+    mesh->begin(bi); mesh->end(ei);
+
+    typename OBJECTFIELD::mesh_type::Elem::iterator bt, et;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodes;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodestest;
+    
+    Point p;
+    Point p0,p1,p2,p3;    
+    
+    objectmesh->begin(bt);
+    objectmesh->get_nodes(nodestest, *(bt));
+    
+    switch (nodestest.size())
+    {
+      case 3:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if(sdistance(p,p0,p1,p2,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = 0.0;
+          ofield->set_value(s,*(bi));
+          ++bi;   
+        }
+        break;
+      case 4:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if(sdistance(p,p0,p1,p2,p3,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = 0.0;
+          ofield->set_value(s,*(bi));
+          ++bi;   
+        }
+        break;
+      default:
+        reporter->error("SignedDistanceToField: Expected a Quadrilateral or Triangular element");
+        return(false);
+    }
+  }
+  else
+  {
+    FIELD* ofield = scinew FIELD(mesh,1);
+    ofield->resize_fdata();
+    output = dynamic_cast<SCIRun::Field* >(ofield);
+
+    typename FIELD::mesh_type::Node::iterator bi, ei;
+    mesh->begin(bi); mesh->end(ei);
+
+    typename OBJECTFIELD::mesh_type::Elem::iterator bt, et;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodes;
+    typename OBJECTFIELD::mesh_type::Node::array_type nodestest;
+    
+    Point p;
+    Point p0,p1,p2,p3;    
+    
+    objectmesh->begin(bt);
+    objectmesh->get_nodes(nodestest, *(bt));
+    
+    switch (nodestest.size())
+    {
+      case 3:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if(sdistance(p,p0,p1,p2,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = 0.0;
+          ofield->set_value(s,*(bi));
+          ++bi;   
+        }
+        break;
+      case 4:
+        while (bi != ei)
+        {
+          mesh->get_center(p,*(bi));
+          objectmesh->begin(bt); objectmesh->end(et);
+          
+          objectmesh->get_nodes(nodes, *(bt));
+          double dist = 0.0;
+          double absdist = 0.0;
+          double d = 0.0;
+
+          while (bt != et)
+          {
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if(sdistance(p,p0,p1,p2,p3,dist)) 
+            {
+              absdist = abs(dist);
+              break;
+            }
+            ++bt;
+          }
+          
+          ++bt;
+          while (bt != et)
+          {
+            objectmesh->get_nodes(nodes, *(bt));
+            objectmesh->get_point(p0,nodes[0]);
+            objectmesh->get_point(p1,nodes[1]);
+            objectmesh->get_point(p2,nodes[2]);
+            objectmesh->get_point(p3,nodes[3]);
+            if (sdistance(p,p0,p1,p2,d))
+            {
+              if(abs(d) < absdist ) 
+              {
+                dist = d;
+                absdist = abs(d);
+              }
+            }
+            ++bt;
+          }
+          double s = 1.0; if (dist < 0) s = 0.0;
+          ofield->set_value(s,*(bi));
+          ++bi;   
+        }
+        break;
+      default:
+        reporter->error("SignedDistanceToField: Expected a Quadrilateral or Triangular element");
+        return(false);
+    }
+  }
+
+  return(true);
 }
 
-inline double DistanceToFieldAlgo::distance(Point c,Point t1,Point t2, Point t3)
-{
-  Point n = cross(sub(t2,t1),sub(t3,t2));
-  Point p, p1;
-  double d1 = Dot(sub(c,t1),cross(n,sub(t1,t3)));
-  double d2 = Dot(sub(c,t2),cross(n,sub(t2,t1)));
-  double d3 = Dot(sub(c,t3),cross(n,sub(t3,t2)));
 
+
+// Distance functions
+
+inline void DistanceToFieldAlgo::distance(Point c,Point t1,Point t2, Point t3, double& dist)
+{
+  Vector p,p1; 
+  Vector n = Cross(Vector(t2-t1),Vector(t3-t2));
+  
+  double d1 = Dot(Vector(c-t1),Cross(n,Vector(t1-t3)));
+  double d2 = Dot(Vector(c-t2),Cross(n,Vector(t2-t1)));
+  double d3 = Dot(Vector(c-t3),Cross(n,Vector(t3-t2)));
+  
   if (d1 >= 0)
   {
     if (d2 >= 0)
     {
       if (d3 >= 0)
       {
-        p = n*(Dot(sub(c,t1),n)/Dot(n,n));
-        return(Dot(p,p));
+        p = n*(Dot(Vector(c-t1),n)/Dot(n,n));
+        dist = Dot(p,p);
+        return;
       }
       else
       {
-        d1 = Dot(sub(c,t3),(t3,t2));
+        d1 = Dot(Vector(c-t3),Vector(t3-t2));
         if (d1 >= 0.0)
         {
-          p = sub(c,t3);
-          return(Dot(p,p));
+          p = Vector(c-t3);
+          dist = Dot(p,p);
+          return;
         }
-        d1 = Dot(sub(c,t2),(t2,t3));
+        d1 = Dot(Vector(c-t2),Vector(t2-t3));
         if (d1 >= 0.0)
         {
-          p = sub(c,t2);
-          return(Dot(p,p));
+          p = Vector(c-t2);
+          dist = Dot(p,p);
+          return;
         }
-        p1 = sub(t2,t3);
-        p = sub(sub(c,t3),p1*(Dot(sub(c,t3),p1)/Dot(p1,p1)));
-        return(Dot(p,p));
+        p1 = Vector(t2-t3);
+        p = Vector(c-t3)-p1*(Dot(Vector(c-t3),p1)/Dot(p1,p1));
+        dist = Dot(p,p);
+        return;
       }
     } 
     else
     {
       if (d3 >= 0)
       {
-        d1 = Dot(sub(c,t2),(t2,t1));
+        d1 = Dot(Vector(c-t2),Vector(t2-t1));
         if (d1 >= 0.0)
         {
-          p = sub(c,t2);
-          return(Dot(p,p));
+          p = Vector(c-t2);
+          dist  = Dot(p,p);
+          return;
         }
-        d1 = Dot(sub(c,t1),(t1,t2));
+        d1 = Dot(Vector(c-t1),Vector(t1-t2));
         if (d1 >= 0.0)
         {
-          p = sub(c,t1);
-          return(Dot(p,p));
+          p = Vector(c-t1);
+          dist = Dot(p,p);
+          return;
         }
-        p1 = sub(t1,t2);
-        p = sub(sub(c,t2),p1*(Dot(sub(c,t2),p1)/Dot(p1,p1)));
-        return(Dot(p,p));      
+        p1 = Vector(t1-t2);
+        p = Vector(c-t2)-p1*(Dot(Vector(c-t2),p1)/Dot(p1,p1));
+        dist = Dot(p,p);
+        return;      
       }
       else
       {
-        p = sub(c,t2);
-        return(Dot(p,p));
+        p = Vector(c-t2);
+        dist = Dot(p,p);
+        return;
       }
     }
   }
@@ -373,34 +1350,39 @@ inline double DistanceToFieldAlgo::distance(Point c,Point t1,Point t2, Point t3)
     {
       if (d3 >= 0)
       {
-         d1 = Dot(sub(c,t1),(t1,t3));
+         d1 = Dot(Vector(c-t1),Vector(t1-t3));
         if (d1 >= 0.0)
         {
-          p = sub(c,t1);
-          return(Dot(p,p));
+          p = Vector(c-t1);
+          dist = Dot(p,p);
+          return;
         }
-        d1 = Dot(sub(c,t3),(t3,t1));
+        d1 = Dot(Vector(c-t3),Vector(t3-t1));
         if (d1 >= 0.0)
         {
-          p = sub(c,t3);
-          return(Dot(p,p));
+          p = Vector(c-t3);
+          dist = Dot(p,p);
+          return;
         }
-        p1 = sub(t3,t1);
-        p = sub(sub(c,t1),p1*(Dot(sub(c,t1),p1)/Dot(p1,p1)));
-        return(Dot(p,p));         
+        p1 = Vector(t3-t1);
+        p = Vector(c-t1)-(p1*(Dot(Vector(c-t1),p1)/Dot(p1,p1)));
+        dist = Dot(p,p);
+        return;         
       }
       else
       {
-        p = sub(c,t3);
-        return(Dot(p,p));
+        p = Vector(c-t3);
+        dist = Dot(p,p);
+        return;
       }
     }
     else
     {
       if (d3 >= 0)
       {
-        p = sub(c,t1);
-        return(Dot(p,p));
+        p = Vector(c-t1);
+        dist = Dot(p,p);
+        return;
       }
       else
       {
@@ -410,26 +1392,216 @@ inline double DistanceToFieldAlgo::distance(Point c,Point t1,Point t2, Point t3)
   }
 }
 
-inline double DistanceToFieldAlgo::distance(Point c,Point t1,Point t2, Point t3, Point t4)
+inline void DistanceToFieldAlgo::distance(Point c,Point t1,Point t2, Point t3, Point t4, double& dist)
 {
-  double d1 = distance(c,t1,t2,t3);
-  double d2 = distance(c,t3,t4,t1);
-  return(d1<d2?d1:d2);
+  double d1, d2;
+  distance(c,t1,t2,t3,d1);
+  distance(c,t3,t4,t1,d2);
+  dist = d1<d2?d1:d2;
 }
 
-inline double DistanceToFieldAlgo::distance(Point c,Point t1,Point t2)
+inline void DistanceToFieldAlgo::distance(Point c,Point t1,Point t2, double& dist)
 {
-  double d = Dot(sub(c,t1),sub(t2,t1));
-  if (d < 0.0) return(Dot(sub(c,t1),sub(c,t1)));
-  if (d > 1.0) return(Dot(sub(c,t2),sub(c,t2)));
-  Point p = sub(c,add(t1,sub(t2,t1)*d));
-  return(Dot(p,p));
+  double d1;
+  Vector p,p1;
+  
+  d1 = Dot(Vector(c-t2),Vector(t2-t1));
+  if (d1 >= 0.0)
+  {
+    p = Vector(c-t2);
+    dist  = Dot(p,p);
+    return;
+  }
+  d1 = Dot(Vector(c-t1),Vector(t1-t2));
+  if (d1 >= 0.0)
+  {
+    p = Vector(c-t1);
+    dist = Dot(p,p);
+    return;
+  }
+  p1 = Vector(t1-t2);
+  p = Vector(c-t2)-p1*(Dot(Vector(c-t2),p1)/Dot(p1,p1));
+  dist = Dot(p,p);
+  return;    
 }
 
-inline double DistanceToFieldAlgo::distance(Point c,Point t1)
+inline void DistanceToFieldAlgo::distance(Point c,Point t1, double& dist)
 {
-  return(Dot(sub(c,t1),sub(c,t1)));
+  dist = (Dot(Vector(c-t1),Vector(c-t1)));
 }
+
+
+inline bool DistanceToFieldAlgo::sdistance(Point c,Point t1,Point t2, Point t3, double& dist)
+{
+  Vector p,p1; 
+  Vector n = Cross(Vector(t2-t1),Vector(t3-t2));
+  if (Dot(n,n) < 1e-12)
+  { // Element has no size, skip this one
+    return(false);
+  }
+  
+  double s = Dot(Vector(c-t1),n);
+  double d1 = Dot(Vector(c-t1),Cross(n,Vector(t1-t3)));
+  double d2 = Dot(Vector(c-t2),Cross(n,Vector(t2-t1)));
+  double d3 = Dot(Vector(c-t3),Cross(n,Vector(t3-t2)));
+  
+  if (s == 0.0)
+  {
+    // We are in the plane of the element
+    if ((d1 > -(1e-12))&&(d2 > -(1e-12))&&(d3 > -(1e-12)))
+    { // We are in the element itself
+      dist = 0.0;
+      return(true);
+    }
+    else
+    {
+      // We are in plane and not on the element, hence we cannot determine
+      // whether we are inside or outside of the volume
+      // Use an adjoining element to determine the sign
+      // The adjoining element must have a different inclination, or must be
+      // in plane as well.
+      return(false);
+    }
+  }
+  else
+  {
+    if (s > 0.0) { s = 1.0; } else  { s = -1.0; }
+  }
+  
+  if (d1 >= 0)
+  {
+    if (d2 >= 0)
+    {
+      if (d3 >= 0)
+      {
+        p = n*(Dot(Vector(c-t1),n)/Dot(n,n));
+        dist = s*Dot(p,p);
+        return(true);
+      }
+      else
+      {
+        d1 = Dot(Vector(c-t3),Vector(t3-t2));
+        if (d1 >= 0.0)
+        {
+          p = Vector(c-t3);
+          dist = s*Dot(p,p);
+          return(true);
+        }
+        d1 = Dot(Vector(c-t2),Vector(t2-t3));
+        if (d1 >= 0.0)
+        {
+          p = Vector(c-t2);
+          dist = s*Dot(p,p);
+          return(true);
+        }
+        p1 = Vector(t2-t3);
+        p = Vector(c-t3)-p1*(Dot(Vector(c-t3),p1)/Dot(p1,p1));
+        dist = s*Dot(p,p);
+        return(true);
+      }
+    } 
+    else
+    {
+      if (d3 >= 0)
+      {
+        d1 = Dot(Vector(c-t2),Vector(t2-t1));
+        if (d1 >= 0.0)
+        {
+          p = Vector(c-t2);
+          dist  = s*Dot(p,p);
+          return(true);
+        }
+        d1 = Dot(Vector(c-t1),Vector(t1-t2));
+        if (d1 >= 0.0)
+        {
+          p = Vector(c-t1);
+          dist = s*Dot(p,p);
+          return(true);
+        }
+        p1 = Vector(t1-t2);
+        p = Vector(c-t2)-p1*(Dot(Vector(c-t2),p1)/Dot(p1,p1));
+        dist = s*Dot(p,p);
+        return(true);      
+      }
+      else
+      {
+        p = Vector(c-t2);
+        dist = s*Dot(p,p);
+        return(true);
+      }
+    }
+  }
+  else
+  {
+    if (d2 >= 0)
+    {
+      if (d3 >= 0)
+      {
+         d1 = Dot(Vector(c-t1),Vector(t1-t3));
+        if (d1 >= 0.0)
+        {
+          p = Vector(c-t1);
+          dist = s*Dot(p,p);
+          return(true);
+        }
+        d1 = Dot(Vector(c-t3),Vector(t3-t1));
+        if (d1 >= 0.0)
+        {
+          p = Vector(c-t3);
+          dist = s*Dot(p,p);
+          return(true);
+        }
+        p1 = Vector(t3-t1);
+        p = Vector(c-t1)-(p1*(Dot(Vector(c-t1),p1)/Dot(p1,p1)));
+        dist = s*Dot(p,p);
+        return(true);   
+      }
+      else
+      {
+        p = Vector(c-t3);
+        dist = s*Dot(p,p);
+        return(true);
+      }
+    }
+    else
+    {
+      if (d3 >= 0)
+      {
+        p = Vector(c-t1);
+        dist = s*Dot(p,p);
+        return(true);
+      }
+      else
+      {
+        std::cout << "ERROR: Algorithm should not be able to get here\n"; 
+        return(false);
+      }      
+    }
+  }
+}
+
+
+inline bool DistanceToFieldAlgo::sdistance(Point c,Point t1,Point t2, Point t3, Point t4, double& dist)
+{
+  double d1, d2;
+  if(!(sdistance(c,t1,t2,t3,d1))) return(false);
+  if(!(sdistance(c,t3,t4,t1,d2))) return(false);
+  dist = abs(d1)<abs(d2)?d1:d2;
+  return(true);
+}
+
+inline bool DistanceToFieldAlgo::sdistance(Point c,Point t1,Point t2, double& dist)
+{
+  // Cannot determine inside/outside for line element in 3D space
+  return(false);
+}
+
+inline bool DistanceToFieldAlgo::sdistance(Point c,Point t1, double& dist)
+{
+  // Cannot determine inside/outside for point element in 3D space
+  return(false);
+}
+
 
 } // namespace ModelCreation
 

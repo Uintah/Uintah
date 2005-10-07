@@ -53,6 +53,8 @@ SRCS     += \
 	$(SRCDIR)/MatrixWriter.cc\
 	$(SRCDIR)/PathReader.cc\
 	$(SRCDIR)/PathWriter.cc\
+	$(SRCDIR)/StringReader.cc\
+	$(SRCDIR)/StringWriter.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes \

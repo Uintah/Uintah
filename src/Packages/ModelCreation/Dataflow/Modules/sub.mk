@@ -18,6 +18,7 @@ SUBDIRS := \
         $(SRCDIR)/SelectionMask\
 	$(SRCDIR)/FieldsData\
 	$(SRCDIR)/FieldsCreate\
+	$(SRCDIR)/FieldsProperty\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
