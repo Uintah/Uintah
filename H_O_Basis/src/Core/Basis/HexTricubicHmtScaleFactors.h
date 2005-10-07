@@ -33,12 +33,14 @@
 #define HexTricubicHmtScaleFactors_h
 
 #include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun {
 
 //! Class for handling of element of type hexahedron with tricubic hermitian interpolation with scale factors
 template <class T>
-class HexTricubicHmtScaleFactors : public HexApprox, public HexGaussian3<double>
+class HexTricubicHmtScaleFactors : public HexApprox, 
+				   public HexGaussian3<double>
 {
 public:
   typedef T value_type;
@@ -348,7 +350,7 @@ public:
 	+(-1 + x)*x2*(1 - 4*y + 3*y2)*z12*(1 + 2*z)*sdxy1
 	-(x2*(-3 + 2*x)*(1 - 4*y + 3*y2)*z12*z)*sdyz1
 	+6*(-1 + x)*x2*(-1 + y)*y*z12*z*sdxz1
-	(-1 + x)*x2*(1 - 4*y + 3*y2)*z12*z*sdxyz1
+	+(-1 + x)*x2*(1 - 4*y + 3*y2)*z12*z*sdxyz1
 	+6*x2*(-3 + 2*x)*(-1 + y)*y*z12*(1 + 2*z)*cd.node2()
 	-6*(-1 + x)*x2*(-1 + y)*y*z12*(1 + 2*z)*sdx2
 	-(x2*(-3 + 2*x)*y*(-2 + 3*y)*z12*(1 + 2*z))*sdy2
@@ -485,7 +487,7 @@ public:
 
 protected:
   //! support data
-  vector<vector<T> >          derivs_; 
+  vector<vector<T> >               derivs_; 
   vector<vector<double> >          scalefactors_; 
 };
 

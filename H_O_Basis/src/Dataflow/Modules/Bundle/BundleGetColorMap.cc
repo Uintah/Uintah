@@ -41,9 +41,6 @@
 #include <Core/Geom/ColorMap.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/NrrdData.h>
-#include <Dataflow/Ports/NrrdPort.h>
-#include <Core/Datatypes/NrrdString.h>
 
 using namespace SCIRun;
 using namespace std;
@@ -78,8 +75,7 @@ DECLARE_MAKER(BundleGetColorMap)
 BundleGetColorMap::~BundleGetColorMap(){
 }
 
-void
-BundleGetColorMap::execute()
+void BundleGetColorMap::execute()
 {
   string colormap1name = guicolormap1name_.get();
   string colormap2name = guicolormap2name_.get();
@@ -93,129 +89,76 @@ BundleGetColorMap::execute()
   ColorMapOPort *ofport;
         
   if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-    {
-      error("Could not find bundle input port");
-      return;
-    }
+  {
+    error("Could not find bundle input port");
+    return;
+  }
 
   if (!(iport->get(handle)))
-    {   
-      warning("No bundle connected to the input port");
-      return;
-    }
-
+  {   
+    warning("No bundle connected to the input port");
+    return;
+  }
 
   if (handle.get_rep() == 0)
-    {   
-      warning("Empty bundle connected to the input port");
-      return;
-    }
+  {   
+    warning("Empty bundle connected to the input port");
+    return;
+  }
 
 
   int numColormaps = handle->numColormaps();
   for (int p = 0; p < numColormaps; p++)
-    {
-      colormaplist += "{" + handle->getColormapName(p) + "} ";
-    }
+  {
+    colormaplist += "{" + handle->getColormapName(p) + "} ";
+  }
 
   guicolormaps_.set(colormaplist);
   ctx->reset();
 
- 
   if (!(ofport = static_cast<ColorMapOPort *>(get_oport("colormap1"))))
-    {
-      error("Could not find colormap 1 output port");
-      return; 
-    }
- 
-  NrrdIPort *niport = static_cast<NrrdIPort *>(getIPort("name1"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          colormap1name = nrrdstring.getstring();
-          guicolormap1name_.set(colormap1name);
-          ctx->reset();
-        }
-    }
+  {
+    error("Could not find colormap 1 output port");
+    return; 
+  }
  
   if (handle->isColormap(colormap1name))
-    {
-      fhandle = handle->getColormap(colormap1name);
-      ofport->send(fhandle);
-    }
-        
- 
+  {
+    fhandle = handle->getColormap(colormap1name);
+    ofport->send(fhandle);
+  }
+         
   if (!(ofport = static_cast<ColorMapOPort *>(get_oport("colormap2"))))
-    {
-      error("Could not find colormap 2 output port");
-      return; 
-    }
- 
-  niport = static_cast<NrrdIPort *>(getIPort("name2"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          colormap2name = nrrdstring.getstring();
-          guicolormap2name_.set(colormap2name);
-          ctx->reset();
-        }
-    }
-
- 
- 
+  {
+    error("Could not find colormap 2 output port");
+    return; 
+  }
+  
   if (handle->isColormap(colormap2name))
-    {
-      fhandle = handle->getColormap(colormap2name);
-      ofport->send(fhandle);
-    }
-        
- 
+  {
+    fhandle = handle->getColormap(colormap2name);
+    ofport->send(fhandle);
+  }
+      
   if (!(ofport = static_cast<ColorMapOPort *>(get_oport("colormap3"))))
-    {
-      error("Could not find colormap 3 output port");
-      return; 
-    }
-
-  niport = static_cast<NrrdIPort *>(getIPort("name3"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          colormap3name = nrrdstring.getstring();
-          guicolormap3name_.set(colormap3name);
-          ctx->reset();
-        }
-    }
+  {
+    error("Could not find colormap 3 output port");
+    return; 
+  }
 
   if (handle->isColormap(colormap3name))
-    {
-      fhandle = handle->getColormap(colormap3name);
-      ofport->send(fhandle);
-    }
+  {
+    fhandle = handle->getColormap(colormap3name);
+    ofport->send(fhandle);
+  }
         
   if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-    {
-      oport->send(handle);
-    }
-        
+  {
+    oport->send(handle);
+  }        
 }
 
-void
-BundleGetColorMap::tcl_command(GuiArgs& args, void* userdata)
+void BundleGetColorMap::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

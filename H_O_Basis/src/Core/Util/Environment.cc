@@ -30,6 +30,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/RWS.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/FileUtils.h>
+#include <Core/Util/sci_system.h>
 
 // STL Includes
 #include <sgi_stl_warnings_off.h>
@@ -303,6 +305,46 @@ SCIRun::find_and_parse_scirunrc()
   // return if found
   return foundrc;
 }
+
+
+void
+SCIRun::copy_and_parse_scirunrc()
+{
+  const char* home = sci_getenv("HOME");
+  const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
+  ASSERT(home && srcdir);  
+  if (!home || !srcdir) return;
+
+  string cmd;
+  string homerc = string(home)+"/.scirunrc";
+  if (validFile(homerc))
+  {
+    const char* env_rcfile_version = sci_getenv("SCIRUN_RCFILE_VERSION");
+    string backup_extension =(env_rcfile_version ? env_rcfile_version:"bak");
+    string backuprc = homerc + "." + backup_extension;
+    cmd = "cp -f "+homerc+" "+backuprc;
+    std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
+    if (sci_system(cmd.c_str()))
+    {
+      std::cerr << "Error executing: " << cmd << std::endl;
+    }
+  }
+  
+  cmd = string("cp -f ")+srcdir+"/scirunrc "+homerc;
+  std::cout << "Copying " << srcdir << "/scirunrc to " <<
+    homerc << "...\n";
+  if (sci_system(cmd.c_str()))
+  {
+    std::cerr << "Error executing: " << cmd << std::endl;
+  }
+  else
+  { 
+    // If the scirunrc file was copied, then parse it.
+    parse_scirunrc(homerc);
+  }
+}
+
+
 
 
 // sci_getenv_p will lookup the value of the environment variable 'key' and 

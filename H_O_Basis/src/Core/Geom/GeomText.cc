@@ -123,6 +123,13 @@ GeomText::io(Piostream& stream)
     stream.end_class();
 }
 
+void
+GeomText::moveTo(const Point& new_at) {
+  // Could this cause weird race conditions if someone is trying to
+  // draw to it at the same time?
+  at = new_at;
+}
+
 static Persistent* make_GeomTexts()
 {
     return scinew GeomTexts;

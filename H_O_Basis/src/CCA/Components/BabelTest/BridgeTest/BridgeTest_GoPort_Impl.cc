@@ -2,16 +2,12 @@
 // File:          BridgeTest_GoPort_Impl.cc
 // Symbol:        BridgeTest.GoPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040412 13:28:06 MST
-// Generated:     20040412 13:28:11 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for BridgeTest.GoPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 6
-// source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/BridgeTest/BridgeTest.sidl
+// babel-version = 0.10.2
 // 
 #include "BridgeTest_GoPort_Impl.hh"
 
@@ -20,34 +16,41 @@
 #include <iostream>
 // DO-NOT-DELETE splicer.end(BridgeTest.GoPort._includes)
 
-// user defined constructor
+// user-defined constructor.
 void BridgeTest::GoPort_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort._ctor)
-  // add construction details here
+  // Insert-Code-Here {BridgeTest.GoPort._ctor} (constructor)
   // DO-NOT-DELETE splicer.end(BridgeTest.GoPort._ctor)
 }
 
-// user defined destructor
+// user-defined destructor.
 void BridgeTest::GoPort_impl::_dtor() {
   // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort._dtor)
-  // add destruction details here
+  // Insert-Code-Here {BridgeTest.GoPort._dtor} (destructor)
   // DO-NOT-DELETE splicer.end(BridgeTest.GoPort._dtor)
 }
 
-// user defined static methods: (none)
+// static class initializer.
+void BridgeTest::GoPort_impl::_load() {
+  // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort._load)
+  // Insert-Code-Here {BridgeTest.GoPort._load} (class initialization)
+  // DO-NOT-DELETE splicer.end(BridgeTest.GoPort._load)
+}
 
-// user defined non-static methods:
+// user-defined static methods: (none)
+
+// user-defined non-static methods:
 /**
- * Method:  setService[]
+ * Method:  setServices[]
  */
 void
-BridgeTest::GoPort_impl::setService (
-  /*in*/ ::gov::cca::Services svc ) 
+BridgeTest::GoPort_impl::setServices (
+  /* in */ ::gov::cca::Services svc ) 
 throw () 
 {
-  // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort.setService)
-  this->svc=svc;
-  // DO-NOT-DELETE splicer.end(BridgeTest.GoPort.setService)
+  // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort.setServices)
+  this->svc = svc;
+  // DO-NOT-DELETE splicer.end(BridgeTest.GoPort.setServices)
 }
 
 /**
@@ -57,21 +60,24 @@ throw ()
  * be further used safely.
  */
 int32_t
-BridgeTest::GoPort_impl::go () 
+BridgeTest::GoPort_impl::go ()
 throw () 
 
 {
   // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort.go)
-  BridgeTest::BridgeTestPort s=svc.getPort("btport");
-  std::cerr << "Got the port\n";
-  if(!s._is_nil()) std::cerr<<"Sent ";//<< s.m2(13) <<"\n";
-  else std::cerr<<"getPort() returns null\n";
+  BridgeTest::BridgeTestPort s = svc.getPort("btport");
+  std::cerr << "Got the port" << std::endl;
+  if(!s._is_nil()) {
+    std::cerr << "Sent " << std::endl;//<< s.m2(13) <<"\n";
+  } else {
+    std::cerr << "getPort() returns null" << std::endl;
+  }
   return 0;
   // DO-NOT-DELETE splicer.end(BridgeTest.GoPort.go)
 }
 
 
 // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort._misc)
-// Put miscellaneous code here
+// Insert-Code-Here {BridgeTest.GoPort._misc} (miscellaneous code)
 // DO-NOT-DELETE splicer.end(BridgeTest.GoPort._misc)
 

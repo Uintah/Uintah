@@ -30,7 +30,7 @@
  *  BundleGetNrrd.cc:
  *
  *  Written by:
- *   jeroen
+ *   Jeroen Stinstra
  *
  */
 
@@ -40,7 +40,7 @@
 #include <Core/Datatypes/NrrdData.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/NrrdString.h>
+
 
 using namespace SCIRun;
 using namespace std;
@@ -101,133 +101,85 @@ BundleGetNrrd::execute()
   NrrdOPort *ofport;
         
   if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-    {
-      error("Could not find bundle input port");
-      return;
-    }
+  {
+    error("Could not find bundle input port");
+    return;
+  }
 
   if (!(iport->get(handle)))
-    {   
-      warning("No bundle connected to the input port");
-      return;
-    }
+  {   
+    warning("No bundle connected to the input port");
+    return;
+  }
 
   if (handle.get_rep() == 0)
-    {   
-      warning("Empty bundle connected to the input port");
-      return;
-    }
+  {   
+    warning("Empty bundle connected to the input port");
+    return;
+  }
 
 
   int numNrrds = handle->numNrrds();
   for (int p = 0; p < numNrrds; p++)
-    {
-      nrrdlist += "{" + handle->getNrrdName(p) + "} ";
-    }
+  {
+    nrrdlist += "{" + handle->getNrrdName(p) + "} ";
+  }
 
   guinrrds_.set(nrrdlist);
   ctx->reset();
-
  
   if (!(ofport = static_cast<NrrdOPort *>(get_oport("nrrd1"))))
-    {
-      error("Could not find nrrd 1 output port");
-      return; 
-    }
- 
-  NrrdIPort *niport = static_cast<NrrdIPort *>(getIPort("name1"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          nrrd1name = nrrdstring.getstring();
-          guinrrd1name_.set(nrrd1name);
-          ctx->reset();
-        }
-    } 
+  {
+    error("Could not find nrrd 1 output port");
+    return; 
+  }
  
   if (handle->isNrrd(nrrd1name))
-    {
-      handle->transposeNrrd(false);
-      if (transposenrrd1) handle->transposeNrrd(true);    
-      fhandle = handle->getNrrd(nrrd1name);
-      ofport->send(fhandle);
-    }
-        
- 
+  {
+    handle->transposeNrrd(false);
+    if (transposenrrd1) handle->transposeNrrd(true);    
+    fhandle = handle->getNrrd(nrrd1name);
+    ofport->send(fhandle);
+  }
+      
+
   if (!(ofport = static_cast<NrrdOPort *>(get_oport("nrrd2"))))
-    {
-      error("Could not find nrrd 2 output port");
-      return; 
-    }
-  
-  niport = static_cast<NrrdIPort *>(getIPort("name2"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          nrrd2name = nrrdstring.getstring();
-          guinrrd2name_.set(nrrd2name);
-          ctx->reset();
-        }
-    } 
+  {
+    error("Could not find nrrd 2 output port");
+    return; 
+  }
     
   if (handle->isNrrd(nrrd2name))
-    {
-      handle->transposeNrrd(false);
-      if (transposenrrd2) handle->transposeNrrd(true);
-      fhandle = handle->getNrrd(nrrd2name);
-      ofport->send(fhandle);
-    }
+  {
+    handle->transposeNrrd(false);
+    if (transposenrrd2) handle->transposeNrrd(true);
+    fhandle = handle->getNrrd(nrrd2name);
+    ofport->send(fhandle);
+  }
         
  
   if (!(ofport = static_cast<NrrdOPort *>(get_oport("nrrd3"))))
-    {
-      error("Could not find nrrd 3 output port");
-      return; 
-    }
- 
- 
-  niport = static_cast<NrrdIPort *>(getIPort("name3"));
-  if (niport)
-    {
-      NrrdDataHandle nrrdH;
-      niport->get(nrrdH);
-      if (nrrdH.get_rep() != 0)
-        {
-    
-          NrrdString nrrdstring(nrrdH); 
-          nrrd3name = nrrdstring.getstring();
-          guinrrd3name_.set(nrrd3name);
-          ctx->reset();
-        }
-    } 
+  {
+    error("Could not find nrrd 3 output port");
+    return; 
+  }
  
   if (handle->isNrrd(nrrd3name))
-    {
-      handle->transposeNrrd(false);
-      if (transposenrrd3) handle->transposeNrrd(true);    
-      fhandle = handle->getNrrd(nrrd3name);
-      ofport->send(fhandle);
-    }
+  {
+    handle->transposeNrrd(false);
+    if (transposenrrd3) handle->transposeNrrd(true);    
+    fhandle = handle->getNrrd(nrrd3name);
+    ofport->send(fhandle);
+  }
         
   if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-    {
-      oport->send(handle);
-    }
+  {
+    oport->send(handle);
+  }
         
 }
 
-void
-BundleGetNrrd::tcl_command(GuiArgs& args, void* userdata)
+void BundleGetNrrd::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

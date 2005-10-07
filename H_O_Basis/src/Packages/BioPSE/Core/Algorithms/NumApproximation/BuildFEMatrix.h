@@ -38,13 +38,9 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-//#include <Dataflow/Network/Module.h>
-#include <Core/Geometry/Tensor.h>
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/FEFields.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Basis/TetLinearLgn.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Parallel.h>
@@ -56,15 +52,10 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BuildFEMatrix;
+  
 
-typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
-typedef TetLinearLgn<int>                TVFBasisi;
-typedef TetLinearLgn<Tensor>                TVFBasist;
-typedef GenericField<TVMesh, TVFBasisi,    vector<int> >    TVFieldi;   
-typedef GenericField<TVMesh, TVFBasist,    vector<Tensor> > TVFieldt;   
-
-typedef LockingHandle<TVFieldi >   TetVolFieldIntHandle;
-typedef LockingHandle<TVFieldt>   TetVolFieldTensorHandle;
+typedef LockingHandle<TVFieldI>   TetVolFieldIntHandle;
+typedef LockingHandle<TVFieldT>   TetVolFieldTensorHandle;
 typedef LockingHandle<BuildFEMatrix>   BuildFEMatrixHandle;
 
 class BuildFEMatrix: public Datatype {

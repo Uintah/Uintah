@@ -32,7 +32,6 @@
  *
  */
 
-#include <Core/Bundle/Bundle.h>
 #include <Dataflow/Ports/BundlePort.h>
 #include <Core/Malloc/Allocator.h>
 

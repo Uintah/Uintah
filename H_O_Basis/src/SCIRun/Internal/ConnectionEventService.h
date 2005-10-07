@@ -43,10 +43,12 @@
 #ifndef SCIRun_ConnectionEventService_h
 #define SCIRun_ConnectionEventService_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/BuilderService.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalComponentInstance.h>
+#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 #include <vector>
 
 namespace SCIRun {
@@ -65,7 +67,7 @@ class ConnectionEvent;
 
 class ConnectionEventService
     : public sci::cca::ports::ConnectionEventService,
-      public InternalComponentInstance
+      public InternalFrameworkServiceInstance
 {
 public:
     virtual ~ConnectionEventService();
@@ -73,8 +75,7 @@ public:
     /** Factory method for allocating new ConnectionEventService objects.
     Returns a smart pointer to the newly allocated object registered in
     the framework \em fwk with the instance name \em name. */
-    static InternalComponentInstance* create(SCIRunFramework* fwk,
-                        const std::string& name);
+  static InternalFrameworkServiceInstance* create(SCIRunFramework* fwk);
 
     /** Returns this service. */
     virtual sci::cca::Port::pointer getService(const std::string& name);
@@ -98,7 +99,9 @@ private:
                 type(type), l(l) {}
     };
     std::vector<Listener*> listeners;
-    ConnectionEventService(SCIRunFramework* framework, const std::string& name);
+    SCIRun::Mutex lock_listeners;
+
+    ConnectionEventService(SCIRunFramework* framework);
     void emitConnectionEvent(const sci::cca::ports::ConnectionEvent::pointer &event);
 };
 

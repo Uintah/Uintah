@@ -99,21 +99,19 @@ std::string ComponentClassDescriptionAdapter::getLoaderName()
   return cd->getLoaderName();
 }
 
-ComponentRegistry::ComponentRegistry(SCIRunFramework* framework,
-                                     const std::string& name)
-  : InternalComponentInstance(framework, name, "internal:ComponentRegistry")
+ComponentRegistry::ComponentRegistry(SCIRunFramework* framework)
+  : InternalFrameworkServiceInstance(framework, "internal:ComponentRegistry")
 {
 }
 
 ComponentRegistry::~ComponentRegistry()
 {
-  std::cerr << "Registry destroyed..." << std::endl;
+  //std::cout << "Registry destroyed..." << std::endl;
 }
 
-InternalComponentInstance* ComponentRegistry::create(SCIRunFramework* framework,
-                                                     const std::string& name)
+InternalFrameworkServiceInstance* ComponentRegistry::create(SCIRunFramework* framework)
 {
-  ComponentRegistry* n = new ComponentRegistry(framework, name);
+  ComponentRegistry* n = new ComponentRegistry(framework);
   n->addReference();
   return n;
 }
@@ -142,7 +140,7 @@ void ComponentRegistry::addComponentClass(const std::string& componentClassName)
 {
     ComponentModel* cm = framework->lookupComponentModel(componentClassName);
     if (cm == 0) {
-        throw CCAException("Unknown component class");
+        throw sci::cca::CCAException::pointer(new CCAException("Unknown component class"));
     } else {
         cm->buildComponentList();
     }

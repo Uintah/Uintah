@@ -61,15 +61,19 @@ public:
   virtual ~Unstructure();
   virtual void execute();
 
-private:
+protected:
+  GuiInt gPointCloud_;
+  unsigned int pointCloud_;
+
   int last_generation_;
   FieldHandle ofieldhandle_;
 };
 
 
 DECLARE_MAKER(Unstructure)
-Unstructure::Unstructure(GuiContext* ctx)
-  : Module("Unstructure", ctx, Filter, "FieldsGeometry", "SCIRun"),
+Unstructure::Unstructure(GuiContext* context)
+  : Module("Unstructure", context, Filter, "FieldsGeometry", "SCIRun"),
+    gPointCloud_(context->subVar("point-cloud")),
     last_generation_(0),
     ofieldhandle_(0)
 {
@@ -86,61 +90,87 @@ Unstructure::~Unstructure()
 void
 Unstructure::execute()
 {
+  bool update = false;
+
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
 
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    error( "No handle or representation" );                                     
+  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep())) {
+    error( "No handle or representation" );
     return;
   }
 
-  if (ifieldhandle->generation != last_generation_)
-  {
+  if( pointCloud_ != (unsigned int) gPointCloud_.get() ) {
+    update = true;
+    pointCloud_ = gPointCloud_.get();
+  }
+
+  if (ifieldhandle->generation != last_generation_) {
+    update = true;
     last_generation_ = ifieldhandle->generation;
-    ofieldhandle_ = ifieldhandle;
-    string dstname = "";
+  }
+
+  if( update ) {
+    string dstname("");
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
     const string &mtdn = mtd->get_name();
+<<<<<<< .working
     if (mtdn == get_type_description((LVMesh *)0)->get_name() ||
 	mtdn == get_type_description((SHVolMesh *)0)->get_name())
     {
+=======
+
+    if( pointCloud_ )
+      dstname = "PointCloudField";
+    else if (mtdn == "LatVolMesh"   || mtdn == "StructHexVolMesh")
+>>>>>>> .merge-right.r32054
       dstname = "HexVolField";
+<<<<<<< .working
     }
     else if (mtdn == get_type_description((IMesh *)0)->get_name() ||
 	     mtdn == get_type_description((SQSMesh *)0)->get_name())
     {
+=======
+    else if (mtdn == "ImageMesh"    || mtdn == "StructQuadSurfMesh")
+>>>>>>> .merge-right.r32054
       dstname = "QuadSurfField";
+<<<<<<< .working
     }  
     else if (mtdn == get_type_description((SLMesh *)0)->get_name() ||
 	     mtdn == get_type_description((SCMesh *)0)->get_name())
     {
+=======
+    else if (mtdn == "ScanlineMesh" || mtdn == "StructCurveMesh" )
+>>>>>>> .merge-right.r32054
       dstname = "CurveField";
-    }
-
-    if (dstname == "")
-    {
+  
+    if (dstname == "") {
       warning("Do not know how to unstructure a " + mtdn + ".");
+
+      ofieldhandle_ = ifieldhandle;
     }
-    else
-    {
+    else {
       const TypeDescription *ftd = ifieldhandle->get_type_description();
       CompileInfoHandle ci = UnstructureAlgo::get_compile_info(ftd, dstname);
       Handle<UnstructureAlgo> algo;
+
       if (!module_dynamic_compile(ci, algo)) return;
 
       ofieldhandle_ = algo->execute(this, ifieldhandle);
 
       if (ofieldhandle_.get_rep())
-      {
 	ofieldhandle_->copy_properties(ifieldhandle.get_rep());
-      }
     }
   }
 
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-  ofield_port->send(ofieldhandle_);
+  // Get a handle to the output field port.
+  if ( ofieldhandle_.get_rep() ) {
+    FieldOPort* ofp = (FieldOPort *) get_oport("Output Field");
+
+    // Send the data downstream
+    ofp->send(ofieldhandle_);
+  }
 }
 
 

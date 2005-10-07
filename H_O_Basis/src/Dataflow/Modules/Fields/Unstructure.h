@@ -47,6 +47,7 @@
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/PointCloudField.h>
 
 namespace SCIRun {
 
@@ -163,6 +164,9 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
 
   typename FDST::mesh_handle_type outmesh = scinew typename FDST::mesh_type();
 
+  bool pointCloud =
+    (outmesh->get_type_description()->get_name() == "PointCloudMesh");
+
 #ifdef HAVE_HASH_MAP
   typedef hash_map<typename FSRC::mesh_type::Node::index_type,
     typename FDST::mesh_type::Node::index_type,
@@ -196,24 +200,25 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
     ++bn;
   }
 
+  // Point clouds do not have elements so skip.
+  if( !pointCloud ) {
+    typename FSRC::mesh_type::Elem::iterator bi, ei;
+    mesh->begin(bi); mesh->end(ei);
+    while (bi != ei) {
+      // Add this element to the new mesh.
+      typename FSRC::mesh_type::Node::array_type onodes;
+      mesh->get_nodes(onodes, *bi);
+      typename FDST::mesh_type::Node::array_type nnodes(onodes.size());
 
-  typename FSRC::mesh_type::Elem::iterator bi, ei;
-  mesh->begin(bi); mesh->end(ei);
-  while (bi != ei)
-  {
-    // Add this element to the new mesh.
-    typename FSRC::mesh_type::Node::array_type onodes;
-    mesh->get_nodes(onodes, *bi);
-    typename FDST::mesh_type::Node::array_type nnodes(onodes.size());
+      for (unsigned int i=0; i<onodes.size(); i++)
+	{
+	  ASSERT(nodemap.find(onodes[i]) != nodemap.end());
+	  nnodes[i] = nodemap[onodes[i]];
+	}
 
-    for (unsigned int i=0; i<onodes.size(); i++)
-    {
-      ASSERT(nodemap.find(onodes[i]) != nodemap.end());
-      nnodes[i] = nodemap[onodes[i]];
+      elemmap[*bi] = outmesh->add_elem(nnodes);
+      ++bi;
     }
-
-    elemmap[*bi] = outmesh->add_elem(nnodes);
-    ++bi;
   }
 
   // really should copy normals
@@ -234,7 +239,10 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
       ++hitr;
     }
   }
-  else if (field_h->order_type_description()->get_name() ==
+
+  // Point clouds do not have elements so skip.
+  else if (!pointCloud &&
+	   field_h->order_type_description()->get_name() ==
 	   get_type_description((typename FSRC::mesh_type::Elem *)0)->get_name())
   {
     typename elem_hash_type::iterator hitr = elemmap.begin();

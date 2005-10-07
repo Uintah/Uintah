@@ -25,28 +25,25 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
+// 
 
 // 
 // File:          framework_Port_Impl.hh
 // Symbol:        framework.Port-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040129 15:00:03 MST
-// Generated:     20040129 15:00:06 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for framework.Port
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 14
-// source-url    = file:/home/sci/damevski/SCIRun/ccadebug-RH8/../src/SCIRun/Babel/framework.sidl
+// babel-version = 0.10.2
 // 
 
 #ifndef included_framework_Port_Impl_hh
 #define included_framework_Port_Impl_hh
 
-#ifndef included_SIDL_cxx_hh
-#include "SIDL_cxx.hh"
+#ifndef included_sidl_cxx_hh
+#include "sidl_cxx.hh"
 #endif
 #ifndef included_framework_Port_IOR_h
 #include "framework_Port_IOR.h"
@@ -54,11 +51,14 @@
 // 
 // Includes for all method dependencies.
 // 
-#ifndef included_SIDL_BaseInterface_hh
-#include "SIDL_BaseInterface.hh"
-#endif
 #ifndef included_framework_Port_hh
 #include "framework_Port.hh"
+#endif
+#ifndef included_sidl_BaseInterface_hh
+#include "sidl_BaseInterface.hh"
+#endif
+#ifndef included_sidl_ClassInfo_hh
+#include "sidl_ClassInfo.hh"
 #endif
 
 
@@ -88,10 +88,11 @@ namespace framework {
 
   private:
     // private default constructor (required)
-    Port_impl() {} 
+    Port_impl() 
+    {} 
 
   public:
-    // SIDL constructor (required)
+    // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
     Port_impl( struct framework_Port__object * s ) : self(s,true) { _ctor(); }
@@ -104,6 +105,9 @@ namespace framework {
 
     // user defined destruction
     void _dtor();
+
+    // static class initializer
+    static void _load();
 
   public:
 

@@ -61,6 +61,8 @@ private:
   int card_mem_;
   GuiInt gui_vis_type_;
   GuiInt gui_clear_;
+  GuiInt gui_conv_accums_;
+  GuiInt gui_adv_accums_;
 
   FlowRenderer2D* flowren_;
 
@@ -76,6 +78,8 @@ FlowVis2D::FlowVis2D(GuiContext* ctx)
     card_mem_(video_card_memory_size()),
     gui_vis_type_(ctx->subVar("vis_type")),
     gui_clear_(ctx->subVar("clear")),
+    gui_adv_accums_(ctx->subVar("adv_accums")),
+    gui_conv_accums_(ctx->subVar("conv_accums")),
     flowren_(0)
 {}
 
@@ -174,6 +178,8 @@ FlowVis2D::execute()
     flowren_->set_colormap( cmap );
   }
 
+  flowren_->set_conv_accums( gui_conv_accums_.get() );
+  flowren_->set_adv_accums( gui_adv_accums_.get() );
 
   ogeom->flushViews();
 }

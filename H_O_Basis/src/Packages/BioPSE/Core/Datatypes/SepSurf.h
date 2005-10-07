@@ -42,11 +42,11 @@
 #ifndef SCI_BioPSE_SepSurf_h
 #define SCI_BioPSE_SepSurf_h
 
-#include <Core/Containers/FData.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Containers/Array1.h>

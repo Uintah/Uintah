@@ -49,7 +49,6 @@ public:
   BundleSetColorMap2(GuiContext*);
 
   virtual ~BundleSetColorMap2();
-
   virtual void execute();
 
   virtual void tcl_command(GuiArgs&, void*);
@@ -58,9 +57,6 @@ private:
   GuiString     guicolormap21name_;
   GuiString     guicolormap22name_;
   GuiString     guicolormap23name_;
-  GuiInt        guicolormap21usename_;
-  GuiInt        guicolormap22usename_;
-  GuiInt        guicolormap23usename_;
   GuiString     guibundlename_;
 };
 
@@ -71,9 +67,6 @@ DECLARE_MAKER(BundleSetColorMap2)
       guicolormap21name_(ctx->subVar("colormap21-name")),
       guicolormap22name_(ctx->subVar("colormap22-name")),
       guicolormap23name_(ctx->subVar("colormap23-name")),
-      guicolormap21usename_(ctx->subVar("colormap21-usename")),
-      guicolormap22usename_(ctx->subVar("colormap22-usename")),
-      guicolormap23usename_(ctx->subVar("colormap23-usename")),
       guibundlename_(ctx->subVar("bundlename"))
 {
 }
@@ -87,9 +80,6 @@ BundleSetColorMap2::execute()
   string colormap21name = guicolormap21name_.get();
   string colormap22name = guicolormap22name_.get();
   string colormap23name = guicolormap23name_.get();
-  //int colormap21usename = guicolormap21usename_.get();
-  //int colormap22usename = guicolormap22usename_.get();
-  //int colormap23usename = guicolormap23usename_.get();
   string bundlename = guibundlename_.get();
     
   BundleHandle handle, oldhandle;
@@ -108,111 +98,67 @@ BundleSetColorMap2::execute()
   // Since a bundle consists of only handles we can copy
   // it several times without too much memory overhead
   if (iport->get(oldhandle))
-    {   // Copy all the handles from the existing bundle
-      handle = oldhandle->clone();
-    }
+  {   // Copy all the handles from the existing bundle
+    handle = oldhandle->clone();
+  }
   else
-    {   // Create a brand new bundle
-      handle = scinew Bundle;
-    }
+  {   // Create a brand new bundle
+    handle = scinew Bundle;
+  }
         
   // Scan bundle input port 1
   if (!(ifport = static_cast<ColorMap2IPort *>(get_iport("colormap21"))))
-    {
-      error("Could not find colormap2 1 input port");
-      return;
-    }
+  {
+    error("Could not find colormap2 1 input port");
+    return;
+  }
         
   if (ifport->get(fhandle))
-    {
-      /*  COMMENTED OUT UNTIL ColorMap2 has an option to set a name
-
-          if (colormap21usename)
-          {
-          string name;
-          fhandle->get_property("name",name);
-          if (name != "") 
-          {
-          colormap21name = name;
-          guicolormap21name_.set(name);
-          ctx->reset();
-          }
-          }
-      */        
-      handle->setColormap2(colormap21name,fhandle);
-    }
+  {
+    handle->setColormap2(colormap21name,fhandle);
+  }
 
   // Scan colormap2 input port 2  
   if (!(ifport = static_cast<ColorMap2IPort *>(get_iport("colormap22"))))
-    {
-      error("Could not find colormap2 2 input port");
-      return;
-    }
+  {
+    error("Could not find colormap2 2 input port");
+    return;
+  }
         
   if (ifport->get(fhandle))
-    {
-      /*  COMMENTED OUT UNTIL ColorMap2 has an option to set a name
-
-          if (colormap22usename)
-          {
-          string name;
-          fhandle->get_property("name",name);
-          if (name != "") 
-          {    
-          colormap22name = name;
-          guicolormap22name_.set(name);
-          ctx->reset();
-          }    
-          }
-      */
-      handle->setColormap2(colormap22name,fhandle);
-    }
+  {
+    handle->setColormap2(colormap22name,fhandle);
+  }
 
   // Scan colormap2 input port 3  
   if (!(ifport = static_cast<ColorMap2IPort *>(get_iport("colormap23"))))
-    {
-      error("Could not find colormap2 3 input port");
-      return;
-    }
+  {
+    error("Could not find colormap2 3 input port");
+    return;
+  }
         
   if (ifport->get(fhandle))
-    {
-      /*  COMMENTED OUT UNTIL ColorMap2 has an option to set a name
-    
-          if (colormap23usename)
-          {
-          string name;
-          fhandle->get_property("name",name);
-          if (name != "") 
-          {
-          colormap23name = name;
-          guicolormap21name_.set(name);
-          ctx->reset();
-          }
-          }
-      */
-    
-      handle->setColormap2(colormap23name,fhandle);
-    }
+  {
+    handle->setColormap2(colormap23name,fhandle);
+  }
         
   // Now post the output
         
   if (!(oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-    {
-      error("Could not find bundle output port");
-      return;
-    }
+  {
+    error("Could not find bundle output port");
+    return;
+  }
     
   if (bundlename != "")
-    {
-      handle->set_property("name",bundlename,false);
-    }
+  {
+    handle->set_property("name",bundlename,false);
+  }
         
   oport->send(handle);
 }
 
-void
-BundleSetColorMap2::tcl_command(GuiArgs& args, void* userdata)
+void BundleSetColorMap2::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

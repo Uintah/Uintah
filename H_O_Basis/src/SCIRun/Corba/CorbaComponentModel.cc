@@ -89,7 +89,8 @@ const std::string CorbaComponentModel::DEFAULT_PATH =
 
 
 CorbaComponentModel::CorbaComponentModel(SCIRunFramework* framework)
-  : ComponentModel("corba"), framework(framework)
+  : ComponentModel("corba"), framework(framework),
+    lock_components("CorbaComponentModel::components lock")
 {
   // move to framework properties
   // Record the path containing DLLs for components.
@@ -113,6 +114,8 @@ CorbaComponentModel::~CorbaComponentModel()
 
 void CorbaComponentModel::destroyComponentList()
 {
+  SCIRun::Guard g1(&lock_components);
+
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++) {
     delete iter->second;
@@ -229,13 +232,16 @@ void CorbaComponentModel::readComponentDescription(const std::string& file)
       // Register this component
       CorbaComponentDescription* cd = new CorbaComponentDescription(this, component_name);
       cd->setExecPath(library_name.c_str()); // record the executable's full path
+      lock_components.lock();
       this->components[cd->type] = cd;
-     }
+      lock_components.unlock();
+    }
   }
 }
 
 bool CorbaComponentModel::haveComponent(const std::string& type)
 {
+  SCIRun::Guard g1(&lock_components);
   return components.find(type) != components.end();
 }
 
@@ -246,10 +252,12 @@ CorbaComponentModel::createInstance(const std::string& name,
 {
     corba::Component *component;
 
+    lock_components.lock();
     componentDB_type::iterator iter = components.find(type);
     if (iter == components.end()) { // could not find this component
         return 0;
     }
+    lock_components.unlock();
 
     std::string exec_name = iter->second->getExecPath();
 
@@ -312,6 +320,7 @@ std::string CorbaComponentModel::getName() const
 
 void CorbaComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)
 {
+  SCIRun::Guard g1(&lock_components);
   for (componentDB_type::iterator iter=components.begin(); iter != components.end(); iter++) {
     list.push_back(iter->second);
   }

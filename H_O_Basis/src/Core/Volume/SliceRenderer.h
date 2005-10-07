@@ -51,7 +51,9 @@ namespace SCIRun {
 class SliceRenderer : public TextureRenderer
 {
 public:
-  SliceRenderer(TextureHandle tex, ColorMapHandle cmap1, ColorMap2Handle cmap2,
+  SliceRenderer(TextureHandle tex, 
+		ColorMapHandle cmap1, 
+		vector<ColorMap2Handle> &cmap2,
                 int tex_mem);
   SliceRenderer(const SliceRenderer&);
   ~SliceRenderer();
@@ -68,6 +70,7 @@ public:
     draw_view_ = b;
   }
   inline void set_level_outline( bool b ) { draw_level_outline_ = b;}
+  void set_outline_colors( vector< Color >& colors );
 
   bool draw_x() const { return draw_x_; }
   bool draw_y() const { return draw_y_; }
@@ -100,6 +103,11 @@ public:
   void set_draw_level( int i, bool b){ draw_level_[i] = b; }
 
 protected:
+
+  void draw_level_outline(vector<float>& vertex, vector<int>& poly,
+                          bool use_fog, int color_index, 
+                          FragmentProgramARB* shader);
+  
   Point control_point_;
   bool draw_x_;
   bool draw_y_;
@@ -112,7 +120,7 @@ protected:
   bool draw_cyl_;
   bool draw_level_outline_;
   vector< bool > draw_level_;
-
+  vector< Color > outline_colors_;
 };
 
 } // end namespace SCIRun

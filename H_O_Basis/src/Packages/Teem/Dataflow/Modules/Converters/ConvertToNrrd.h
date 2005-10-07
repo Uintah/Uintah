@@ -33,6 +33,7 @@
 #if !defined(ConvertToNrrd_h)
 #define ConvertToNrrd_h
 
+#include <Core/Geometry/Transform.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/FData.h>
 #include <Core/Util/TypeDescription.h>

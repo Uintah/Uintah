@@ -68,7 +68,12 @@ public:
     LVF( *((levels[0])->patches[0].get_rep()) ), levels_(levels) {}
   int nlevels() { return levels_.size(); }
   MultiResLevel<Data>* level(int i) { return levels_[i]; }
-  virtual ~MRLatVolField(){}
+  virtual ~MRLatVolField(){
+   typename vector<MultiResLevel<Data>* >::iterator it = levels_.begin();
+   for(; it != levels_.end(); ++it){
+     delete *it;
+   }
+  }
   static const string type_name(int n = -1);
   virtual const TypeDescription* get_type_description(int n = -1) const;
 

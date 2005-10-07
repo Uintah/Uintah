@@ -2,23 +2,19 @@
 // File:          NewPort_Com_Impl.hh
 // Symbol:        NewPort.Com-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040301 18:38:02 MST
-// Generated:     20040301 18:38:04 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for NewPort.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 18
-// source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/NewPort/NewPort.sidl
+// babel-version = 0.10.2
 // 
 
 #ifndef included_NewPort_Com_Impl_hh
 #define included_NewPort_Com_Impl_hh
 
-#ifndef included_SIDL_cxx_hh
-#include "SIDL_cxx.hh"
+#ifndef included_sidl_cxx_hh
+#include "sidl_cxx.hh"
 #endif
 #ifndef included_NewPort_Com_IOR_h
 #include "NewPort_Com_IOR.h"
@@ -29,11 +25,14 @@
 #ifndef included_NewPort_Com_hh
 #include "NewPort_Com.hh"
 #endif
-#ifndef included_SIDL_BaseInterface_hh
-#include "SIDL_BaseInterface.hh"
-#endif
 #ifndef included_gov_cca_Services_hh
 #include "gov_cca_Services.hh"
+#endif
+#ifndef included_sidl_BaseInterface_hh
+#include "sidl_BaseInterface.hh"
+#endif
+#ifndef included_sidl_ClassInfo_hh
+#include "sidl_ClassInfo.hh"
 #endif
 
 
@@ -63,10 +62,11 @@ namespace NewPort {
 
   private:
     // private default constructor (required)
-    Com_impl() {} 
+    Com_impl() 
+    {} 
 
   public:
-    // SIDL constructor (required)
+    // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
     Com_impl( struct NewPort_Com__object * s ) : self(s,true) { _ctor(); }
@@ -80,18 +80,32 @@ namespace NewPort {
     // user defined destruction
     void _dtor();
 
+    // static class initializer
+    static void _load();
+
   public:
 
 
     /**
-     * Obtain Services handle, through which the 
-     * component communicates with the framework. 
-     * This is the one method that every CCA Component
-     * must implement. 
+     * Starts up a component presence in the calling framework.
+     * @param Svc the component instance's handle on the framework world.
+     * Contracts concerning Svc and setServices:
+     * 
+     * The component interaction with the CCA framework
+     * and Ports begins on the call to setServices by the framework.
+     * 
+     * This function is called exactly once for each instance created
+     * by the framework.
+     * 
+     * The argument Svc will never be nil/null.
+     * 
+     * Those uses ports which are automatically connected by the framework
+     * (so-called service-ports) may be obtained via getPort during
+     * setServices.
      */
     void
     setServices (
-      /*in*/ ::gov::cca::Services services
+      /* in */ ::gov::cca::Services services
     )
     throw () 
     ;

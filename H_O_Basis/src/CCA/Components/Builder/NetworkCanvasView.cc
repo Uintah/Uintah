@@ -42,6 +42,13 @@
 
 #include <CCA/Components/Builder/NetworkCanvasView.h>
 #include <CCA/Components/Builder/BuilderWindow.h>
+<<<<<<< .working
+=======
+#include <SCIRun/CCA/CCAException.h>
+#include <Core/Exceptions/InternalError.h>
+#include <SCIRun/CCA/ConnectionID.h>
+
+>>>>>>> .merge-right.r32054
 #include <qwmatrix.h>
 #include <qscrollview.h>
 #include <qevent.h>
@@ -67,8 +74,7 @@ NetworkCanvasView::NetworkCanvasView(BuilderWindow* p2BuilderWindow,
 
     sci::cca::ports::ConnectionEventService::pointer ces =
         pidl_cast<sci::cca::ports::ConnectionEventService::pointer>(
-            services->getPort("cca.ConnectionEventService")
-        );
+            services->getPort("cca.ConnectionEventService"));
     if (ces.isNull()) {
         p2BuilderWindow->displayMsg("Error: Cannot find connection event service.\n");
     } else {
@@ -367,7 +373,10 @@ void NetworkCanvasView::removeModule(Module *module)
             bs->destroyInstance(module->componentID(), 0);
         }
     }
-    catch (const Exception& e) {
+    catch (const sci::cca::CCAException::pointer &pe) {
+        p2BuilderWindow->displayMsg(pe->getNote());
+    }
+    catch (const InternalError &e) {
         p2BuilderWindow->displayMsg(e.message());
         p2BuilderWindow->displayMsg("\n");
     }
@@ -388,14 +397,78 @@ void NetworkCanvasView::addConnection(Module *m1, const std::string &portname1, 
         p2BuilderWindow->displayMsg("Error: cannot find builder service.\n");
         return;
     }
+<<<<<<< .working
     sci::cca::ConnectionID::pointer connID =
         bs->connect(m1->componentID(), portname1, m2->componentID(), portname2);
+=======
+
+    ModuleMap::iterator iter = modules.begin();
+    while (iter != modules.end()) {
+        Module *module = iter->second;
+        modules.erase(iter);
+        iter = modules.begin();
+
+        removeAllConnections(module);
+        std::string instanceName = module->componentID()->getInstanceName();
+
+        module->hide();
+        try {
+            sci::cca::ComponentID::pointer cid = bs->getComponentID(instanceName);
+            if (cid == module->componentID()) {
+                bs->destroyInstance(module->componentID(), 0);
+            }
+        }
+        catch (const sci::cca::CCAException::pointer &pe) {
+            p2BuilderWindow->displayMsg(pe->getNote());
+        }
+        catch (const InternalError &e) {
+            p2BuilderWindow->displayMsg(e.message());
+        }
+        delete module;
+    }
+
+>>>>>>> .merge-right.r32054
     services->releasePort("cca.BuilderService");
+<<<<<<< .working
   
   //Connection *con = new Connection(m1, portname1, m2, portname2, connID, this);
     PortIcon *pUses = m1->getPort(portname1, PortIcon::USES);
     if (pUses == 0) {
         std::cerr << "Error: could not locate port " << portname1 << std::endl;
+=======
+    p2BuilderWindow->updateMiniView();
+}
+
+void
+NetworkCanvasView::connectComponents(Module *mUses, const std::string &pUses,
+                                     Module *mProvides, const std::string &pProvides)
+{
+    try {
+        sci::cca::ports::BuilderService::pointer bs =
+            pidl_cast<sci::cca::ports::BuilderService::pointer>(
+                services->getPort("cca.BuilderService"));
+        if (bs.isNull()){
+            p2BuilderWindow->displayMsg("Error: cannot find builder service.");
+            return;
+        }
+        sci::cca::ConnectionID::pointer connID =
+            bs->connect(mUses->componentID(), pUses, mProvides->componentID(), pProvides);
+        services->releasePort("cca.BuilderService");
+    }
+    catch (const sci::cca::CCAException::pointer &pe) {
+        p2BuilderWindow->displayMsg(pe->getNote());
+    }
+}
+
+void
+NetworkCanvasView::addConnection(Module *mUses, const std::string &pUses,
+                                 Module *mProvides, const std::string &pProvides,
+                                 sci::cca::ConnectionID::pointer connID)
+{
+    PortIcon *pIconUses = mUses->getPort(pUses, PortIcon::USES);
+    if (pIconUses == 0) {
+        std::cerr << "Error: could not locate port " << pUses << std::endl;
+>>>>>>> .merge-right.r32054
         return;
     }
     PortIcon *pProvides = m2->getPort(portname2, PortIcon::PROVIDES);
@@ -449,8 +522,8 @@ void NetworkCanvasView::addBridgeConnection(Module *m1, const std::string &portn
     sci::cca::ConnectionID::pointer connID2 =
         bs->connect(bm->componentID(), usesPorts[0], m2->componentID(), portname2);
 
-  //Graphically connect to and from bridge
-  //Connection *con1 = new Connection(m1, portname1, bm, "pport", connID1, this);
+        // Graphically connect to and from bridge
+        //Connection *con1 = new Connection(m1, portname1, bm, "pport", connID1, this);
     PortIcon *pUses1 = m1->getPort(portname1, PortIcon::USES);
     if (pUses1 == 0) {
         std::cerr << "Error: could not locate port " << portname1 << std::endl;
@@ -465,16 +538,39 @@ void NetworkCanvasView::addBridgeConnection(Module *m1, const std::string &portn
     con1->show();
     connections.push_back(con1);
 
+<<<<<<< .working
     //Connection *con2 = new Connection(bm, "uport", m2, portname2, connID2, this);
     PortIcon *pUses2 = bm->getPort("uport", PortIcon::USES);
     if (pUses2 == 0) {
         std::cerr << "Error: could not locate port " << "uport" << std::endl;
         return;
+=======
+        //Connection *con2 = new Connection(bm, "uport", m2, portname2, connID2, this);
+        PortIcon *pUses2 = bm->getPort("uport", PortIcon::USES);
+        if (pUses2 == 0) {
+            std::cerr << "Error: could not locate port " << "uport" << std::endl;
+            return;
+        }
+        PortIcon *pProvides2 = m2->getPort(portname2, PortIcon::PROVIDES);
+        if (pProvides2 == 0) {
+            std::cerr << "Error: could not locate port " << portname2 << std::endl;
+            return;
+        }
+        Connection *con2 = new Connection(pUses2, pProvides2, connID2, this);
+        con2->show();
+        connections.push_back(con2);
+        canvas()->update();
+>>>>>>> .merge-right.r32054
     }
+<<<<<<< .working
     PortIcon *pProvides2 = m2->getPort(portname2, PortIcon::PROVIDES);
     if (pProvides2 == 0) {
         std::cerr << "Error: could not locate port " << portname2 << std::endl;
         return;
+=======
+    catch (const sci::cca::CCAException::pointer &pe) {
+        p2BuilderWindow->displayMsg(pe->getNote());
+>>>>>>> .merge-right.r32054
     }
     Connection *con2 = new Connection(pUses2, pProvides2, connID2, this);
     con2->show();
@@ -489,8 +585,6 @@ void NetworkCanvasView::removeConnection(QCanvasItem *c)
     for (std::vector<Connection *>::iterator iter = connections.begin();
             iter!=connections.end(); iter++){
         if ((QCanvasItem*) (*iter) == c) {
-            //std::cerr<<"connection.size()="<<connections.size()<<std::endl;
-            //std::cerr<<"all item.size before del="<<canvas()->allItems().size()<<std::endl;
             sci::cca::ports::BuilderService::pointer bs =
                 pidl_cast<sci::cca::ports::BuilderService::pointer>(
                     services->getPort("cca.BuilderService")
@@ -671,6 +765,86 @@ void NetworkCanvasView::highlightConnection(QCanvasItem *c)
 
 void NetworkCanvasView::connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e)
 {
+<<<<<<< .working
     std::cerr << "NetworkCanvasView::connectionActivity: got connection event " << e->getEventType() << std::endl;
+=======
+  std::cerr << "NetworkCanvasView::connectionActivity: got connection event " << e->getEventType() << std::endl;
+
+    bool isBridge = false;
+    sci::cca::TypeMap::pointer tm = e->getPortInfo();
+    if (tm.isNull()) {
+        // error message here
+        return;
+    }
+
+    isBridge = tm->getBool("bridge", false);
+    // deal with Bridges later
+    if (isBridge) {
+      return;
+    }
+    std::string userName = tm->getString("user", "");
+    if (userName.find("SCIRun.Builder") != std::string::npos) {
+        return;
+    }
+    std::string providerName = tm->getString("provider", "");
+    if (providerName.find("SCIRun.Builder") != std::string::npos) {
+        return;
+    }
+    std::string uPortName = tm->getString("uses port", "");
+    std::string pPortName = tm->getString("provides port", "");
+
+    sci::cca::ports::BuilderService::pointer bs =
+        pidl_cast<sci::cca::ports::BuilderService::pointer>(
+            services->getPort("cca.BuilderService"));
+    if (bs.isNull()) {
+        p2BuilderWindow->displayMsg("Error: cannot find builder service.");
+        return;
+    }
+
+    bool found = false;
+    Connection *connection = 0;
+    for (std::vector<Connection *>::iterator iter = connections.begin(); iter != connections.end(); iter++) {
+      if ((*iter)->getConnectionID()->getUser()->getInstanceName() == userName &&
+            (*iter)->getConnectionID()->getProvider()->getInstanceName() == providerName &&
+            (*iter)->usesPort()->name() == uPortName &&
+            (*iter)->providesPort()->name() == pPortName) {
+            found = true;
+            connection = *iter;
+            break;
+        }
+    }
+
+    // handle bridge connections???
+    if (e->getEventType() == sci::cca::ports::Connected) {
+        if (! found) {
+            SSIDL::array1<sci::cca::ComponentID::pointer> componentList;
+            ModuleMap::iterator usesIter = modules.find(userName);
+            if (usesIter == modules.end()) {
+                std::cerr << "Null uses component " << userName << std::endl;
+                return;
+            }
+            ModuleMap::iterator providesIter = modules.find(providerName);
+            if (providesIter == modules.end()) {
+                std::cerr << "Null provides component " << providerName << std::endl;
+                return;
+            }
+            componentList.push_back(modules[userName]->componentID());
+            SSIDL::array1<sci::cca::ConnectionID::pointer> connIDs =
+                bs->getConnectionIDs(componentList);
+            for (SSIDL::array1<sci::cca::ConnectionID::pointer>::iterator iter = connIDs.begin(); iter != connIDs.end(); iter++) {
+                if ((*iter)->getUser()->getInstanceName() == userName &&
+                        (*iter)->getProvider()->getInstanceName() == providerName &&
+                        (*iter)->getUserPortName() == uPortName &&
+                        (*iter)->getProviderPortName() == pPortName) {
+                    addConnection(usesIter->second, uPortName, providesIter->second, pPortName, *iter);
+                    break;
+                }
+            }
+        }
+    } else if (e->getEventType() == sci::cca::ports::Disconnected) {
+    }
+
+    services->releasePort("cca.BuilderService");
+>>>>>>> .merge-right.r32054
 }
 

@@ -32,6 +32,7 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Util/soloader.h>
+#include <Core/Util/Environment.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
@@ -107,6 +108,10 @@ SCIRunTCLThread::startTCL()
 {
     gui = new TCLInterface;
     new NetworkEditor(net, gui);
+    // TODO: scirunrc file handling
+
+    // Find and set the on-the-fly directory
+    sci_putenv("SCIRUN_ON_THE_FLY_LIBS_DIR",gui->eval("getOnTheFlyLibsDir"));
 
     packageDB->setGui(gui);
     gui->eval("set scirun2 1");

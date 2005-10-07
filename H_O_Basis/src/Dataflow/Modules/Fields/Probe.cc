@@ -40,21 +40,18 @@
  *  Copyright (C) 2001 SCI Group
  */
 
+#include <Dataflow/Modules/Fields/Probe.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Geometry/Tensor.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
-#include <Core/Datatypes/PointCloudMesh.h>
-#include <Core/Basis/Constant.h>
+
 #include <Core/Datatypes/GenericField.h>
 
 #include <Core/Datatypes/Clipper.h>
-#include <Dataflow/Modules/Fields/Probe.h>
 #include <iostream>
 #include <stack>
 

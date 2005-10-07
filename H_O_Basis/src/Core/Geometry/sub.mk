@@ -36,6 +36,7 @@ INCLUDES += $(TEEM_INCLUDE)
 SRCDIR   := Core/Geometry
 
 SRCS     += $(SRCDIR)/BBox.cc \
+	    $(SRCDIR)/CompGeom.cc \
 	    $(SRCDIR)/Grid.cc \
 	    $(SRCDIR)/IntVector.cc \
 	    $(SRCDIR)/Plane.cc \

@@ -226,7 +226,7 @@ SCI_ARG_WITH(fortran,
   [with_fortran=""])
 SCI_ARG_WITH(ptolemyII,
   AC_HELP_STRING(--with-ptolemyII=DIR, 
-                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemypa ckage only)),
+                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
   [with_ptolemyII="$withval"
    sci_required_ptolemyII=yes],
   [with_ptolemyII=""])
@@ -522,9 +522,14 @@ SCI_ARG_ENABLE(package,
   [package=""])
 SCI_ARG_ENABLE(dataflow,
   AC_HELP_STRING(--disable-dataflow,
-                 do not build Dataflow),
+                 Do not build Dataflow),
   [sci_required_dataflow=no],
   [sci_required_dataflow=yes])
+SCI_ARG_ENABLE(scirun,
+  AC_HELP_STRING(--disable-scirun,
+                 Do not require SCIRun components),
+  [sci_required_scirun=no],
+  [sci_required_scirun=yes])
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
                  Use name for executable name instead of the default: scirun),
@@ -569,6 +574,18 @@ SCI_ARG_ENABLE(plume,
    [SCI_SET_PACKAGE_CHECKS(Plume, $host)]
    ],
   [enable_plume=${enable_plume='no'}])
+SCI_ARG_WITH(tena,
+  AC_HELP_STRING(--with-tena=DIR,
+                 Use the TENA installation in DIR),
+  [with_tena="$withval"
+   sci_required_tena=yes],
+  [with_tena=""])
+SCI_ARG_WITH(om,
+  AC_HELP_STRING(--with-om=DIR,
+                 Use the TENA OM installation in DIR),
+  [with_tena_om="$withval"
+   sci_required_tena_om=yes],
+  [with_tena_om=""])
 SCI_ARG_ENABLE(rath,
   AC_HELP_STRING(--enable-rpath,
                  Use the default runtime library search path),
@@ -749,6 +766,7 @@ fi
 echo 
 IS_OSX="no"
 IS_WIN="no"
+IS_AIX="no"
 unset NUM_CPUS
 case $host in
   *-irix*)
@@ -771,6 +789,7 @@ case $host in
     ;;
   *-aix*)
     NUM_CPUS=4
+    IS_AIX="yes"
     ;;
   *-mingw*)
     NUM_CPUS=2
@@ -790,6 +809,7 @@ esac
 
 AC_SUBST(IS_OSX)
 AC_SUBST(IS_WIN)
+AC_SUBST(IS_AIX)
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
 
 AC_MSG_CHECKING(physical processor count)
@@ -2212,7 +2232,12 @@ echo
 AC_CHECKING(for required Tcl components...)
 echo
 
-_sci_optional=required
+if test "$sci_required_scirun" = "no"; then
+  _sci_optional=optional
+else
+  _sci_optional=required
+fi
+
 if test "$with_tcl"; then
   _sci_inc="$with_tcl/include"
   _sci_lib="$with_tcl/lib"
@@ -2264,7 +2289,7 @@ fi
 
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
 SCI_TRY_LINK(TK,tk library and headers, tk.h tk3d.h tkPort.h,
-      $_x_inc_dir $_sci_tk_inc,tk $TCL_LIB_FLAG,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG,,required)
+      $_x_inc_dir $_sci_tk_inc,tk $TCL_LIB_FLAG,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG,,$_sci_optional)
 
 SCI_SUBST_THIRDPARTY_DIR(TK_LIB_DIR_FLAG)
 SCI_SUBST_THIRDPARTY_DIR(INC_TK_H)
@@ -2275,7 +2300,7 @@ AC_SUBST(INC_TK_H)
 
 # -- itcl --
 SCI_TRY_LINK(ITCL,itcl library and headers, itcl.h,
-             $_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
+             $_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional)
 
 if test "$IS_WIN" = "yes"; then
   # change the unix-style dir to a windows-style dir for tclsh to read
@@ -2292,7 +2317,7 @@ AC_SUBST(ITCL_LIB_DIR_FLAG)
 AC_SUBST(INC_ITCL_H)
 
 # -- itk --
-SCI_TRY_LINK(ITK,itk library and headers, itk.h, $_x_inc_dir $_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
+SCI_TRY_LINK(ITK,itk library and headers, itk.h, $_x_inc_dir $_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional)
 
 SCI_SUBST_THIRDPARTY_DIR(ITK_LIB_DIR_FLAG_H)
 SCI_SUBST_THIRDPARTY_DIR(INC_ITK_H)
@@ -2302,7 +2327,7 @@ AC_SUBST(ITK_LIB_DIR_FLAG)
 AC_SUBST(INC_ITK_H)
 
 # -- blt --
-SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required) 
+SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional) 
 
 if test "$IS_WIN" = "yes"; then
   # Windows BLT needs these other libs
@@ -2356,12 +2381,12 @@ else
 fi
 
 _xer_lib="xerces-c"
-case $host in
-  *aix*)
+#case $host in
+#  *aix*)
       # Needed on blue pacific for stricmp
-      _xer_lib="xerces-c cfgdce"
-      ;;
-esac
+#      _xer_lib="xerces-c cfgdce"
+#      ;;
+#esac
 
 SCI_TRY_LINK(XERCES_C,xerces library and headers, xercesc/dom/DOMNamedNodeMap.hpp xercesc/util/PlatformUtils.hpp xercesc/parsers/XercesDOMParser.hpp xercesc/dom/DOMNode.hpp xercesc/util/XMLUni.hpp xercesc/sax/SAXException.hpp xercesc/sax/SAXParseException.hpp xercesc/sax/ErrorHandler.hpp,$_xer_inc,$_xer_lib,$_xer_lib_path,,[
   DOMNode *node = 0;
@@ -2617,7 +2642,8 @@ cat > conftest-exc.cc <<EOF
     }
 EOF
     $CXX -o conftest-exc conftest-exc.cc
-    exc_error=`./conftest-exc >& the_void`
+    ./conftest-exc 2>&1 /dev/null
+
     if test "$?" != "0"; then
        AC_MSG_RESULT(not found)
        enable_exceptions_crash=1
@@ -2626,7 +2652,7 @@ EOF
        enable_exceptions_crash=0
     fi
 
-    rm -r conftest-exc.cc conftest-exc the_void
+    rm -f conftest-exc.cc conftest-exc
 EXCEPTIONS_CRASH="$enable_exceptions_crash"
 AC_SUBST(EXCEPTIONS_CRASH)
 
@@ -2977,7 +3003,7 @@ if test "$HAVE_BLAS" != "yes"; then
                 DEF_CBLAS="#define HAVE_CBLAS 1"
                 AC_SUBST(DEF_CBLAS)
              else
-                SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,optional)
+                SCI_TRY_LINK(BLAS,blas library,,,blas g2c,$_sci_lib,$F_LIB_FLAG,,optional)
                 if test "$HAVE_BLAS" = "no"; then
 	           SCI_TRY_LINK(BLAS,optional fblas library,,,
 		   	     fblas,$_sci_lib,$F_LIB_FLAG,,optional)
@@ -3040,7 +3066,7 @@ case $host in
      fi
      ;;
    *)
-     SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+     SCI_TRY_LINK(LAPACK,lapack library,,,lapack g2c,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
      ;;
 esac
 
@@ -3266,7 +3292,7 @@ case $host in
     fi
     ;;
   *-aix*)
-    PETSC_ARCH=rs6000_sp
+    PETSC_ARCH=aix5.1.0.0
     ;;
   *-darwin*)
     PETSC_ARCH=ppc
@@ -3353,7 +3379,7 @@ fi
 # Make sure we have either mpi or mpi-uni, blas, and lapack
 # It seems that under AIX and OSF, the libs that cover blas also cover lapack
 if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
-   (test "$PETSC_ARCH" = "rs6000_sp" || test "$PETSC_ARCH" = "dec" ||
+   (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
     test "$HAVE_LAPACK" = "yes"); then
 
   _sci_lib_dir=
@@ -4409,11 +4435,12 @@ elif test "$with_qt"; then
   _sci_optional=specific
 fi
 
+qt_bin=$_sci_lib/../bin
 # Only looking for one .h file... assuming all the rest are in the same place.
-SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_sci_inc,qt-mt,$_sci_lib,,,optional)   
+SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_sci_inc,qt-mt Xxf86vm,$_sci_lib /usr/X11R6/lib,,,optional)   
 QT_MOC_BIN=""
-AS_MESSAGE(checking for moc in $LIB_DIR_QT_MT/../bin...)
-AC_CHECK_PROG(QT_MOC_BIN,moc,$LIB_DIR_QT_MT/../bin/moc,NOMOC,$LIB_DIR_QT_MT/../bin)
+AS_MESSAGE(checking for moc in $qt_bin...)
+AC_CHECK_PROG(QT_MOC_BIN,moc,$qt_bin/moc,NOMOC,)
   
 if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
    DEF_QT="#define HAVE_QT 1"
@@ -4616,12 +4643,31 @@ elif test "$with_hypre"; then
   _sci_optional=specific
 fi
 
+# We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
+# so we aren't going to check for it in any version.  If the other 3
+# libs exist, we will assume that HYPRE_blas is there if it is needed.
 SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI,
+                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI,
                          $_sci_lib,,,$_sci_optional)
 
 if test "$HAVE_HYPRE" = "yes" ; then
   DEF_HYPRE="#define HAVE_HYPRE 1"
+
+  if test -f $LIB_DIR_HYPRE/../include/HYPRE_config.h; then
+    # Determine the version of hypre.
+    found_it=`grep "PACKAGE_VERSION" $LIB_DIR_HYPRE/../include/HYPRE_config.h | grep 1.9`
+    DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 0"
+    HAVE_HYPRE_1_9="no"
+    if test -n "$found_it"; then
+       DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 1"
+       HAVE_HYPRE_1_9="yes"
+       # Hypre 1.9 added the 'superlu' lib... can't check for it above as 1.7 doesn't have it.
+       # Once we force an upgrade to 1.9 for everyone, then we will check for it, but for now
+       # I just hardcode it here.
+       HYPRE_LIB_FLAG="$HYPRE_LIB_FLAG -lHYPRE_superlu"
+    fi
+  fi
+
 fi
 
 if test "$with_hypre" && test ! "$DEF_HYPRE"; then
@@ -4630,6 +4676,8 @@ if test "$with_hypre" && test ! "$DEF_HYPRE"; then
 fi
 
 AC_SUBST(HAVE_HYPRE)
+AC_SUBST(HAVE_HYPRE_1_9)
+AC_SUBST(DEF_HYPRE_1_9)
 AC_SUBST(DEF_HYPRE)
 AC_SUBST(INC_HYPRE_H)
 AC_SUBST(HYPRE_LIB_FLAG)
@@ -4662,7 +4710,7 @@ if test "$sci_required_boost" = "yes"; then
   
   case $host in
     *linux*)
-       boost_ver=gcc_mt
+       boost_ver=gcc-mt
        ;;
     *-darwin*)
        boost_ver=1_32
@@ -4704,12 +4752,12 @@ if test "$sci_required_loki" = "yes"; then
     _sci_inc="/usr/local/include"
   else 
   if test "$with_boost" = "yes"; then
-    # --with-boost has been specified without a parameter.
+    # --with-loki has been specified without a parameter.
     _sci_lib=/usr/local/lib/
     _sci_inc=/usr/local/include
   else 
    if test "$with_boost"; then
-     #if --with-boost has been specified with a parameter, then use that parameter
+     #if --with-loki has been specified with a parameter, then use that parameter
     _sci_lib="$with_loki"
     _sci_inc="$with_loki"
     _sci_optional=specific
@@ -4738,6 +4786,99 @@ AC_SUBST(DEF_LOKI)
 AC_SUBST(INC_LOKI_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/loki_testdefs.h"
+
+
+##  --  search for TENA  ----------------------------------------------------
+
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+if test "$with_tena" = "yes"; then
+  _sci_optional=required
+elif test "$with_tena"; then
+  _sci_lib="$with_tena/lib"
+  _sci_inc="$with_tena/5.1/include"
+  TENA_HOME="$with_tena"
+  _sci_optional=specific
+fi
+
+# fixme
+HAVE_TENA="yes" 
+INC_TENA_H="-I$_sci_inc"
+TENA_LIB_DIR="-L$_sci_lib/"
+TENA_LIB_DIR_FLAG="-Wl,-rpath -Wl,$TENA_LIB_DIR"
+TENA_BIN_DIR="$with_tena/5.1/bin"
+
+#SCI_TRY_LINK(TENA,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,$_sci_optional)
+  
+AC_CHECKING(for TENA in $TENA_HOME)
+#AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
+
+
+if test "$HAVE_TENA" = "yes" ; then
+   DEF_TENA="#define HAVE_TENA 1"
+   HAVE_TENA="yes"
+fi
+
+TENA_VERSION="5.1"
+TENA_PLATFORM="fc3-gcc343"
+TENA_OMC_VERSION="0"
+
+PS_DEFINES="-D__EXTENSIONS__ -D_PTHREADS -D_POSIX_C_SOURCE=199506L -D_POSIX_PTHREAD_SEMANTICS -DTENA_PLATFORM=$TENA_PLATFORM"
+
+TENA_DEFINES="-D_REENTRANT $PS_DEFINES"
+
+AC_SUBST(HAVE_TENA)
+AC_SUBST(DEF_TENA)
+AC_SUBST(TENA_BIN_DIR)
+
+AC_SUBST(INC_TENA_H)
+AC_SUBST(TENA_LIB_DIR)
+AC_SUBST(TENA_LIB_DIR_FLAG)
+AC_SUBST(TENA_VERSION)
+AC_SUBST(TENA_PLATFORM)
+AC_SUBST(TENA_OMC_VERSION)
+AC_SUBST(TENA_DEFINES)
+
+sci_defs_files="$sci_defs_files include/sci_defs/tena_testdefs.h"
+
+
+##  --  search for TENA_OM  ----------------------------------------------------
+
+if test "$with_tena_om" = "yes"; then
+  _tena_om=$TENA_HOME
+  HAVE_TENA_OM="yes" 
+  _sci_optional=required
+elif test "$with_tena_om"; then
+  _tena_om="$with_tena_om"
+  HAVE_TENA_OM="yes" 
+  _sci_optional=specific
+fi
+
+
+
+if test "$HAVE_TENA_OM" = "yes" ; then
+   DEF_TENA_OM="#define HAVE_TENA_OM 1"
+   HAVE_TENA_OM="yes"
+
+   # fixme
+   TENA_OM_DEF_DIR="$_tena_om/$TENA_VERSION/include/OMs"
+   TENA_OM_IMPL_DIR="$_tena_om/$TENA_VERSION/src"
+
+fi
+  
+if test "$with_tena" && test ! "$DEF_TENA_OM"; then
+  echo
+  AC_MSG_ERROR(One or more of the TENA_OM components is missing.)
+fi 
+
+AC_SUBST(HAVE_TENA_OM)
+AC_SUBST(DEF_TENA_OM)
+
+AC_SUBST(TENA_OM_DEF_DIR)
+AC_SUBST(TENA_OM_IMPL_DIR)
+#sci_defs_files="$sci_defs_files include/sci_defs/tena_defs.h"
 
 
 ##  --  finis flags  ------------------------------------------------

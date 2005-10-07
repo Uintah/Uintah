@@ -79,6 +79,8 @@ public:
 #endif
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+
+  void moveTo(const Point& new_at);
 };
 
 

@@ -1,5 +1,5 @@
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Internal/InternalComponentInstance.h>
+#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 
 namespace SCIRun {
 
@@ -10,7 +10,7 @@ class SCIRunFramework;
  *
  */
 class FrameworkProxyService : public sci::cca::ports::FrameworkProxyService,
-                              public InternalComponentInstance {
+                              public InternalFrameworkServiceInstance {
 public:
     virtual ~FrameworkProxyService();
 
@@ -18,8 +18,7 @@ public:
         Returns a reference counted pointer to a newly-allocated BuilderService
         port.  The \em framework parameter is a pointer to the relevent framework
         and the \em name parameter will become the unique name for the new port.*/
-    static InternalComponentInstance*
-    create(SCIRunFramework* framework, const std::string& name);
+    static InternalFrameworkServiceInstance* create(SCIRunFramework* framework);
 
     virtual sci::cca::ComponentID::pointer
     createInstance(const std::string& instanceName,
@@ -48,7 +47,7 @@ public:
   //virtual void registerServices(const sci::cca::Services::pointer &svc);
 
 private:
-    FrameworkProxyService(SCIRunFramework* fwk, const std::string& name);
+    FrameworkProxyService(SCIRunFramework* fwk);
 
     // used by registerFramework & registerServices methods
     //std::vector<sci::cca::Services::pointer> servicesList;  

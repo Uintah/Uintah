@@ -41,10 +41,12 @@
 #ifndef SCIRun_ComponentEventService_h
 #define SCIRun_ComponentEventService_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalComponentInstance.h>
+#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 #include <vector>
 
 namespace SCIRun {
@@ -61,7 +63,7 @@ class ComponentEvent;
  *
  */
 class ComponentEventService : public sci::cca::ports::ComponentEventService,
-                              public InternalComponentInstance
+                              public InternalFrameworkServiceInstance
 {
 public:
   virtual ~ComponentEventService();
@@ -69,8 +71,7 @@ public:
   /** Factory method for allocating new ComponentEventService objects.  Returns
       a smart pointer to the newly allocated object registered in the framework
       \em fwk with the instance name \em name. */
-  static InternalComponentInstance* create(SCIRunFramework* fwk,
-                                           const std::string& name);
+  static InternalFrameworkServiceInstance* create(SCIRunFramework* fwk);
   
   /** ? */
   sci::cca::Port::pointer getService(const std::string&);
@@ -101,9 +102,12 @@ private:
   };
 
   std::vector<Listener*> listeners;
+  SCIRun::Mutex lock_listeners; 
+  
   std::vector<sci::cca::ports::ComponentEvent::pointer> events;
+  SCIRun::Mutex lock_events;
 
-  ComponentEventService(SCIRunFramework* fwk, const std::string& name);
+  ComponentEventService(SCIRunFramework* fwk);
   void emitComponentEvent(const sci::cca::ports::ComponentEvent::pointer& event);
 };
 

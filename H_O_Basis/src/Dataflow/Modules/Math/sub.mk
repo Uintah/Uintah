@@ -55,6 +55,9 @@ SRCS     += \
         $(SRCDIR)/MinNormLeastSq.cc\
 	$(SRCDIR)/SolveMatrix.cc\
 	$(SRCDIR)/Submatrix.cc\
+	$(SRCDIR)/MaskVectorToMappingMatrix.cc\
+	$(SRCDIR)/MappingMatrixToMaskVector.cc\
+	$(SRCDIR)/CreateMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports \
@@ -64,7 +67,7 @@ PSELIBS := Dataflow/Network Dataflow/Ports \
 	Core/Util Core/Geom Core/TkExtensions Core/GeomInterface \
 	Dataflow/Widgets Core/XMLUtil
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY) $(PETSC_UNI_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY) $(PETSC_UNI_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

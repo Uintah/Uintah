@@ -51,6 +51,7 @@
 
 class Tri;
   
+<<<<<<< .working
 class myUIPort : public virtual sci::cca::ports::UIPort {
 public:
    virtual ~myUIPort(){}
@@ -86,6 +87,20 @@ class Tri : public sci::cca::Component{
     Delaunay *mesh;
     sci::cca::Services::pointer getServices(){return services;}
   private:
+=======
+class myMeshPort: public virtual sci::cca::ports::MeshPort{
+public:
+  virtual ~myMeshPort() {}
+  virtual int triangulate(const SSIDL::array1<double> &nodes, const SSIDL::array1<int> &boundaries, SSIDL::array1<int> &triangles);
+};
+  
+class Tri : public sci::cca::Component {
+public:
+  Tri();
+  virtual ~Tri();
+  virtual void setServices(const sci::cca::Services::pointer& svc);
+private:
+>>>>>>> .merge-right.r32054
 
     Tri(const Tri&);
     Tri& operator=(const Tri&);
@@ -93,7 +108,7 @@ class Tri : public sci::cca::Component{
     myGoPort goPort;
     myMeshPort meshPort;
     sci::cca::Services::pointer services;
-  };
+};
 //}
 
 

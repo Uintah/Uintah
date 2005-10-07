@@ -46,10 +46,10 @@
 // And the SCIRun output file is written in ASCII, unless you specify 
 // -binOutput.
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/NoData.h>
 #include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>

@@ -2,23 +2,19 @@
 // File:          NewPort_StringPort_Impl.hh
 // Symbol:        NewPort.StringPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040301 18:38:02 MST
-// Generated:     20040301 18:38:04 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for NewPort.StringPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 15
-// source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/NewPort/NewPort.sidl
+// babel-version = 0.10.2
 // 
 
 #ifndef included_NewPort_StringPort_Impl_hh
 #define included_NewPort_StringPort_Impl_hh
 
-#ifndef included_SIDL_cxx_hh
-#include "SIDL_cxx.hh"
+#ifndef included_sidl_cxx_hh
+#include "sidl_cxx.hh"
 #endif
 #ifndef included_NewPort_StringPort_IOR_h
 #include "NewPort_StringPort_IOR.h"
@@ -29,8 +25,11 @@
 #ifndef included_NewPort_StringPort_hh
 #include "NewPort_StringPort.hh"
 #endif
-#ifndef included_SIDL_BaseInterface_hh
-#include "SIDL_BaseInterface.hh"
+#ifndef included_sidl_BaseInterface_hh
+#include "sidl_BaseInterface.hh"
+#endif
+#ifndef included_sidl_ClassInfo_hh
+#include "sidl_ClassInfo.hh"
 #endif
 
 
@@ -60,10 +59,11 @@ namespace NewPort {
 
   private:
     // private default constructor (required)
-    StringPort_impl() {} 
+    StringPort_impl() 
+    {} 
 
   public:
-    // SIDL constructor (required)
+    // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
     StringPort_impl( struct NewPort_StringPort__object * s ) : self(s,
@@ -77,6 +77,9 @@ namespace NewPort {
 
     // user defined destruction
     void _dtor();
+
+    // static class initializer
+    static void _load();
 
   public:
 

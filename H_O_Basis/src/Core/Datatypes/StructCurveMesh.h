@@ -62,6 +62,7 @@
 #include <Core/Math/MusilRNG.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <float.h>
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {

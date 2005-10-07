@@ -80,7 +80,8 @@ public:
 	      const Index NumMaterials,
 	      const Index NumModes,
 	      const Index NumSwitches,
-	      const double widget_scale );
+	      const double widget_scale,
+	      const bool stipple_occluded=false);
   BaseWidget( const BaseWidget& );
   virtual ~BaseWidget();
 
@@ -216,6 +217,8 @@ protected:
   GuiInterface* gui;
   GuiContext* ctx;
   GuiMaterial tclmat_;
+
+  bool stipple_occluded_;
 
   // These affect ALL widgets!!!
   static MaterialHandle DefaultPointMaterial;

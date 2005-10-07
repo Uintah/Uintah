@@ -30,9 +30,10 @@
 //    Author : Martin Cole
 //    Date   : Thu Feb 28 17:09:21 2002
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <Core/Persistent/Pstreams.h>
 
 #include <iostream>

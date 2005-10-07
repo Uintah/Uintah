@@ -48,7 +48,7 @@ ComponentInstance::ComponentInstance(SCIRunFramework* framework,
                                      const std::string &className,
                                      const sci::cca::TypeMap::pointer &tm)
     : framework(framework), instanceName(instanceName),
-      className(className), comProperties(tm)
+      className(className), comProperties(tm), releaseCallback(0)
 {
 }
 
@@ -59,10 +59,18 @@ ComponentInstance::~ComponentInstance()
 void
 ComponentInstance::setComponentProperties(const sci::cca::TypeMap::pointer &tm)
 {
-    // TODO: check properties - do not allow cca.className to be removed
+    // TODO: check properties - do not allow cca.className to be changed
     comProperties = tm;
 }
 
+bool
+ComponentInstance::releaseComponentCallback(const sci::cca::Services::pointer &svc)
+{
+  if (releaseCallback.isNull()) return false;
+
+    releaseCallback->releaseServices(svc);
+    return true;
+}
 
 
 } // end namespace SCIRun

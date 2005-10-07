@@ -41,6 +41,8 @@
 #ifndef SCIRun_CCA_CCAPortInstance_h
 #define SCIRun_CCA_CCAPortInstance_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/PortInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <map>
@@ -51,12 +53,12 @@ namespace SCIRun {
 
 /**
  * \class CCAPortInstance
- *
+ * Framework representation of a CCA Port.
  */
 class CCAPortInstance : public PortInstance
 {
 public:
-  enum PortType { Uses=0, Provides=1 };
+  enum PortType { Uses = 0, Provides = 1 };
   CCAPortInstance(const std::string& portname, const std::string& classname,
                   const sci::cca::TypeMap::pointer& properties,
                   PortType porttype);
@@ -64,9 +66,15 @@ public:
                   const sci::cca::TypeMap::pointer& properties,
                   const sci::cca::Port::pointer& port,
                   PortType porttype);
-  ~CCAPortInstance();
-  /** */
-  virtual bool connect(PortInstance*);
+  virtual ~CCAPortInstance();
+
+  /**
+   * Connect port represented by PortInstance *pi to this.
+   * @param pi pointer to connection peer
+   * @return true is ports have been successfully connected,
+   *         false otherwise
+   */
+  virtual bool connect(PortInstance *pi);
   /** */
   virtual PortInstance::PortType portType();
   /** */
@@ -85,10 +93,23 @@ public:
   virtual PortInstance *getPeer();
   /** */
   std::string getName();
-  /** */
+
+  /**
+   * Keep track of when a port is in use.
+   */
   void incrementUseCount();
-  /** */
+
+  /**
+   * Keep track of when a port is released by decrementing the use counter
+   * if the counter > 0.
+   * @return true if the use counter is > 0 and has been decremented,
+   *         false otherwise
+   */
   bool decrementUseCount();
+
+  /** Test use counter. */
+  bool portInUse();
+
 private:
   friend class CCAComponentInstance;
   friend class BridgeComponentInstance;
@@ -96,6 +117,8 @@ private:
   std::string type;
   sci::cca::TypeMap::pointer properties;
   std::vector<PortInstance*> connections;
+  SCIRun::Mutex lock_connections;
+
   sci::cca::Port::pointer port;
   PortType porttype;
   int useCount;

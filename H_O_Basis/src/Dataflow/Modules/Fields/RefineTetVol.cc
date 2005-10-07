@@ -30,12 +30,13 @@
 //    Author : Martin Cole
 //    Date   : Thu Nov  6 16:35:41 2003
 
+#include <Core/Geometry/Point.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
-#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>

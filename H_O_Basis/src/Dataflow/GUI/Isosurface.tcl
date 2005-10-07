@@ -85,7 +85,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-build_trisurf 1
 	set $this-build_geom 1
 	set $this-np 1
-	set $this-update_type "on release"
+	set $this-update_type "On Release"
 	set $this-color-r 0.4
 	set $this-color-g 0.2
 	set $this-color-b 0.9
@@ -307,7 +307,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	
 	iwidgets::optionmenu $opt.update -labeltext "Update:" \
 		-labelpos w -command "$this set_update_type $opt.update"
-	$opt.update insert end "on release" Manual Auto
+	$opt.update insert end "On Release" Manual Auto
 	$opt.update select [set $this-update_type]
 
 	global $this-update
@@ -365,7 +365,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-update
 
 	set type [[set $this-update] get]
-	if { $type == "on release" } {
+	if { $type == "On Release" } {
 	    eval "$this-c needexecute"
 	}
     }
@@ -396,6 +396,8 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method update_type_callback { name1 name2 op } {
+        set tmp [set $this-update_type]
+        if { $tmp == "on release" } { set $this-update_type "On Release" }
 	set window .ui[modname]
 	if {[winfo exists $window]} {
 	    set opt [$window.f.opt childsite]

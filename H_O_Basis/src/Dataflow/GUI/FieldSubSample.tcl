@@ -76,6 +76,7 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	    set $this-$index-stride    1
 	    set $this-$index-stride2  "1"
 	    set $this-$index-wrap    0
+
 	    trace variable $this-$index-dim w "$this update_setsize_callback"
 	}
 	
@@ -191,8 +192,8 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	    pack $w.main.l $w.main.i -side top -padx 10 -pady 5	    
 	}
 
-	pack $w.main -side top
-
+	pack $w.main -side top -fill x -expand 1
+	
 	global power_app_command
 
 	if { [in_power_app] } {

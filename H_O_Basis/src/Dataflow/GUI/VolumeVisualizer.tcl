@@ -46,7 +46,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	setGlobal $this-gradient_min 0.0
 	setGlobal $this-gradient_max 0.0
         setGlobal $this-adaptive 1
-        setGlobal $this-cmap_size 7
+        setGlobal $this-cmap_size 8run
         setGlobal $this-sw_raster 0
 	setGlobal $this-alpha_scale 0
 	setGlobal $this-render_style 0
@@ -60,6 +60,9 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	setGlobal $this-num_slices -1
         setGlobal $this-shading-button-state 1
         setGlobal $this-show_level_flag 1
+        setGlobal $this-show_clipping_widgets 1
+        setGlobal $this-level_on {}
+        setGlobal $this-level_vals {}
     }
 
 
@@ -179,6 +182,13 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
  	pack $tab.interp.l $tab.interp.f -side top -fill x -padx 4
 	pack $tab.interp.f.interp $tab.interp.f.near -side left -fill x \
 	    -padx 10 -expand y
+
+	frame $tab.clipping -relief solid
+	checkbutton $tab.clipping.clip -text "Show Clipping Plane Widgets" \
+	    -relief flat -variable $this-show_clipping_widgets -onvalue 1 \
+	    -offvalue 0 -anchor w -command $n
+	pack $tab.clipping -side top -fill x
+	pack $tab.clipping.clip -side top -fill x
 
         
         #-----------------------------------------------------------
@@ -436,20 +446,30 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 #		-variable $this-l$i -command "$this-c needexecute" 
 #	    scale $tab.f.f2.f.f$i.s -variable $this-s$i \
 #		-from -1.0 -to 1.0 -orient horizontal -resolution 0.01
+
 	    checkbutton $tab.f.f2.f1.f1.b$i -text $i -pady 9 \
-		-variable $this-l$i -command "$this change_flag" 
+		-variable $this-l$i -command "$this change_flag $i" 
 	    scale $tab.f.f2.f1.f2.s$i -variable $this-s$i \
-		-from -1.0 -to 1.0 -orient horizontal -resolution 0.01
+		-from -1.0 -to 1.0 -orient horizontal -resolution 0.01 \
+                -command "$this update_vals "
 	    if { [set $this-invert_opacity] } {
 		$tab.f.f2.f1.f2.s$i configure -fg "black" -state normal
 	    } else {
 		$tab.f.f2.f1.f2.s$i configure -fg "darkgrey" -state disabled
 	    }
+            if { $i < [llength [set $this-level_on]] } {
+                if { [lindex [set $this-level_on] $i] == 1 } {
+                    $tab.f.f2.f1.f1.b$i select
+                    set selected 1
+                    $tab.f.f2.f1.f2.s$i set [lindex [set $this-level_vals] $i]
+                }
+            } else {
+                set $this-level_on [linsert [set $this-level_on] $i 0]
+                set $this-level_vals [linsert [set $this-level_vals] $i 0.0]
+            }
 	    pack $tab.f.f2.f1.f1.b$i 
 	    pack $tab.f.f2.f1.f2.s$i -side top -expand yes -fill x
-	    if { [isOn l$i] } {
-		set selected 1
-	    }
+
 	    bind $tab.f.f2.f1.f2.s$i <ButtonRelease> $n
 	}
 	if { !$selected && [winfo exists $tab.f.f2.f1.f1.b0] } {  
@@ -457,12 +477,29 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	}
     }
 
-    method change_flag { } {
+    method update_vals { val } {
+        set w .ui[modname] 
+
+        if {![winfo exists $w]} { 
+            return
+        }
+        # can't tell who is calling this so I have to update all of them
+	set dof [$w.main.options.disp.frame_title childsite]
+        set tab [$dof.tabs childsite "Multires"]
+        
+        for { set i 0 } { $i < [set $this-multi_level] } { incr i } {
+            set $this-level_vals [lreplace [set $this-level_vals] $i $i \
+                                  [$tab.f.f2.f1.f2.s$i get]]
+        }
+    }
+    method change_flag { i } {
         if { [set $this-show_level_flag] == 0 } {
             set $this-show_level_flag 1
         } else {
             set $this-show_level_flag 0
         }
+        set $this-level_on [lreplace [set $this-level_on] $i $i \
+                            [set $this-l$i]]
         $this-c needexecute
     }
     method build_multi_level { } {

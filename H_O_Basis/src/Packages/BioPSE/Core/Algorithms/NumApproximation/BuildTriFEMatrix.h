@@ -40,14 +40,9 @@
  *  Modified (adapted from BuildTetFEMatrix.h):
  *   Lorena Kreda, Northeastern University, October 2003
  */
-
-//#include <Dataflow/Network/Module.h>
-#include <Core/Geometry/Tensor.h>
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/FEFields.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Basis/TriLinearLgn.h>
-#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Parallel.h>
@@ -59,15 +54,10 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BuildTriFEMatrix;
+ 
 
-typedef TriLinearLgn<int>                  btfeDatBasisi;
-typedef TriLinearLgn<Tensor>               btfeDatBasist;
-typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
-typedef GenericField<TSMesh, btfeDatBasisi,    vector<int> > TSFieldi;  
-typedef GenericField<TSMesh, btfeDatBasist, vector<Tensor> > TSFieldt;   
-
-typedef LockingHandle<TSFieldi>   TriSurfFieldIntHandle;
-typedef LockingHandle<TSFieldt>   TriSurfFieldTensorHandle;
+typedef LockingHandle<TSFieldI>   TriSurfFieldIntHandle;
+typedef LockingHandle<TSFieldT>   TriSurfFieldTensorHandle;
 typedef LockingHandle<BuildTriFEMatrix>   BuildTriFEMatrixHandle;
 
 class BuildTriFEMatrix: public Datatype {

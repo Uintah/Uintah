@@ -44,13 +44,34 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 
+<<<<<<< .working
 //namespace SCIRun {
   
-
-#define myGoPort LinSolverGoPort
-
+=======
+namespace SCIRun {
 class LinSolver;
+>>>>>>> .merge-right.r32054
 
+<<<<<<< .working
+#define myGoPort LinSolverGoPort
+=======
+class myLinSolverPort : public virtual sci::cca::ports::LinSolverPort {
+public:
+    virtual ~myLinSolverPort() {}
+    virtual int jacobi(const SSIDL::array2<double> &A, 
+		       const SSIDL::array1<double> &b,
+		       SSIDL::array1<double> &x);
+};
+>>>>>>> .merge-right.r32054
+
+<<<<<<< .working
+class LinSolver;
+=======
+class LSComponentIcon : public virtual sci::cca::ports::ComponentIcon {
+public:
+    virtual ~LSComponentIcon() {}
+>>>>>>> .merge-right.r32054
+<<<<<<< .working
 class myField2DPort : public virtual sci::cca::ports::Field2DPort {
 public:
    virtual ~myField2DPort(){}
@@ -75,18 +96,38 @@ class LinSolver: public sci::cca::Component{
     LinSolver();
     virtual ~LinSolver();
     sci::cca::Services::pointer getServices(){return services;}
+=======
+    virtual std::string getDisplayName();
+    virtual std::string getDescription();
+    virtual std::string getIconShape();
+    virtual int getProgressBar();
+};
+  
+class LinSolver: public sci::cca::Component {
+public:
+    LinSolver();
+    virtual ~LinSolver();
+>>>>>>> .merge-right.r32054
     virtual void setServices(const sci::cca::Services::pointer& svc);
+<<<<<<< .working
     bool jacobi(const SSIDL::array2<double> &A, 
 		const SSIDL::array1<double> &b);
     SSIDL::array1<double> solution;
  private:
 
+=======
+private:
+>>>>>>> .merge-right.r32054
     LinSolver(const LinSolver&);
     LinSolver& operator=(const LinSolver&);
     myGoPort goPort;
     myField2DPort fieldPort;
     sci::cca::Services::pointer services;
+<<<<<<< .working
   };
+=======
+};
+>>>>>>> .merge-right.r32054
 //}
 
 

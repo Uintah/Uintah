@@ -2,23 +2,19 @@
 // File:          BridgeTest_GoPort_Impl.hh
 // Symbol:        BridgeTest.GoPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040412 13:28:06 MST
-// Generated:     20040412 13:28:11 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for BridgeTest.GoPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 6
-// source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/BridgeTest/BridgeTest.sidl
+// babel-version = 0.10.2
 // 
 
 #ifndef included_BridgeTest_GoPort_Impl_hh
 #define included_BridgeTest_GoPort_Impl_hh
 
-#ifndef included_SIDL_cxx_hh
-#include "SIDL_cxx.hh"
+#ifndef included_sidl_cxx_hh
+#include "sidl_cxx.hh"
 #endif
 #ifndef included_BridgeTest_GoPort_IOR_h
 #include "BridgeTest_GoPort_IOR.h"
@@ -29,16 +25,19 @@
 #ifndef included_BridgeTest_GoPort_hh
 #include "BridgeTest_GoPort.hh"
 #endif
-#ifndef included_SIDL_BaseInterface_hh
-#include "SIDL_BaseInterface.hh"
-#endif
 #ifndef included_gov_cca_Services_hh
 #include "gov_cca_Services.hh"
+#endif
+#ifndef included_sidl_BaseInterface_hh
+#include "sidl_BaseInterface.hh"
+#endif
+#ifndef included_sidl_ClassInfo_hh
+#include "sidl_ClassInfo.hh"
 #endif
 
 
 // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort._includes)
-// Put additional includes or other arbitrary code here...
+// Insert-Code-Here {BridgeTest.GoPort._includes} (includes or arbitrary code)
 // DO-NOT-DELETE splicer.end(BridgeTest.GoPort._includes)
 
 namespace BridgeTest { 
@@ -48,7 +47,7 @@ namespace BridgeTest {
    */
   class GoPort_impl
   // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort._inherits)
-  // Put additional inheritance here...
+  // Insert-Code-Here {BridgeTest.GoPort._inherits} (optional inheritance here)
   // DO-NOT-DELETE splicer.end(BridgeTest.GoPort._inherits)
   {
 
@@ -63,10 +62,11 @@ namespace BridgeTest {
 
   private:
     // private default constructor (required)
-    GoPort_impl() {} 
+    GoPort_impl() 
+    {} 
 
   public:
-    // SIDL constructor (required)
+    // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
     GoPort_impl( struct BridgeTest_GoPort__object * s ) : self(s,
@@ -81,14 +81,17 @@ namespace BridgeTest {
     // user defined destruction
     void _dtor();
 
+    // static class initializer
+    static void _load();
+
   public:
 
     /**
      * user defined non-static method.
      */
     void
-    setService (
-      /*in*/ ::gov::cca::Services svc
+    setServices (
+      /* in */ ::gov::cca::Services svc
     )
     throw () 
     ;
@@ -108,7 +111,7 @@ namespace BridgeTest {
 } // end namespace BridgeTest
 
 // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort._misc)
-// Put miscellaneous things here...
+// Insert-Code-Here {BridgeTest.GoPort._misc} (miscellaneous things)
 // DO-NOT-DELETE splicer.end(BridgeTest.GoPort._misc)
 
 #endif

@@ -119,18 +119,18 @@ namespace SCIRun {
     Time::SysClock curtime = lastsend;
     
     while(!done)
-	{
+    {
         bool timeout = false;
         struct timeval tv;
         tv.tv_sec = 0;
         tv.tv_usec = 300000;
-    
-		FD_ZERO(&selectset);
-		if (dostderr) FD_SET(fd_stderr,&selectset);	// Read from the stderr channel
-		if (dostdout) FD_SET(fd_stdout,&selectset);	// Read from the stdout channel
-		if (doexit)   FD_SET(fd_exit,&selectset);	// Read from the stdout channel
+        
+        FD_ZERO(&selectset);
+        if (dostderr) FD_SET(fd_stderr,&selectset);	// Read from the stderr channel
+        if (dostdout) FD_SET(fd_stdout,&selectset);	// Read from the stdout channel
+        if (doexit)   FD_SET(fd_exit,&selectset);	// Read from the stdout channel
 
-		if ((!dostdout)&&(!dostderr)) break;
+        if ((!dostdout)&&(!dostderr)) break;
 		
         if (syscall_->use_timeout_)
         {
@@ -140,13 +140,12 @@ namespace SCIRun {
                 if (errno == EINTR) continue;
                 if (errno == EAGAIN) continue;
                 
-                // std::cerr << "SystemCall: Detected an error during select" << std::endl;
-                
                 syscall_->signal_exit();
                 syscall_->signal_eof();
                 return;
             }      
-            if (ret == 0) timeout = true;  
+            
+            if (ret == 0) timeout = true; else timeout = false; 
             curtime = Time::currentTicks();
         }
         else
@@ -171,158 +170,164 @@ namespace SCIRun {
          
             linestart = 0;
             buffersize = stdout_buffer.size();
-			while((linestart < buffersize)&&((stdout_buffer[linestart]=='\n')||(stdout_buffer[linestart]=='\r')||(stdout_buffer[linestart]=='\0'))) linestart++;			
+            while((linestart < buffersize)&&((stdout_buffer[linestart]=='\n')||(stdout_buffer[linestart]=='\r')||(stdout_buffer[linestart]=='\0'))) linestart++;			
             std::string newline = stdout_buffer.substr(linestart);
             stdout_buffer = "";
-            syscall_->insert_stdout_line(newline);
-            lastsend = curtime;                            
-        }
-
-        if (FD_ISSET(fd_exit,&selectset))
-          {
-             bytesread = read(fd_stdout,&(read_buffer[0]),read_buffer_length);
-             if (bytesread > 0) 
-             {
-                std::string exitcode = read_buffer.substr(0,bytesread);	
-                std::istringstream iss(exitcode);
-                iss >> syscall_->exitcode_;
-                syscall_->hasexitcode_ = true;
-             }
-             
-             
-             syscall_->signal_exit();
-             doexit = false;
-          }
-
-        if (FD_ISSET(fd_stdout,&selectset))
-          {
-            bytesread = read(fd_stdout,&(read_buffer[0]),read_buffer_length);
-
-            if (bytesread < 0)
-              {
-                // I need to add a better error handling routine here
-                if (errno == EAGAIN) continue;	// Unix requests that we try once more
-                if (errno == EINTR) continue;	// The process got interupted somehow, so we just need to try again
-                std::cerr << "SystemCall: Detected error while reading from STDOUT of a process running in an internal shell" << std::endl;
-                return;
-              }
-            if (bytesread > 0) stdout_buffer += read_buffer.substr(0,bytesread);	// add the newly read buffer to the buffer remaining from the previoud read operation
-		
-            need_new_read = false;
             
-            while (!need_new_read)
-              {
-                // figure out where the new line starts
-                // we discard any \n, \r and \0
-                linestart = 0;	
-                buffersize = stdout_buffer.size();
-                while((linestart < buffersize)&&((stdout_buffer[linestart]=='\n')||(stdout_buffer[linestart]=='\r')||(stdout_buffer[linestart]=='\0'))) linestart++;			
-				
-                // newline will contain the newly read line from the data
-                std::string newline;
-                // if bytesread is 0, it indicates an EOF, hence we just need to add the remainder
-                // of what is in the buffer. The program did not send us nicely terminated strings....
-                if (bytesread == 0)
-                  {	
-                    if(linestart < stdout_buffer.size()) newline = stdout_buffer.substr(linestart);
-                    syscall_->insert_stdout_line(newline);
-                    lastsend = curtime;
-                    dostdout = false;
-                    if(syscall_->signal_stdout_eof()) { done = true;  break; }
-                    break;   // Force exit out of lookp
-                  }
-                else
-                  {
-                    // Detect whether we already read the end of line. If the line is huge it will not fit in the buffer and hence we need to do a econd read
-                    // or it could be that the message was split into multiple messages.
-                    lineend = linestart;
-                    while((lineend < buffersize)&&(stdout_buffer[lineend]!='\n')&&(stdout_buffer[lineend]!='\r')&&(stdout_buffer[lineend]!='\0')) lineend++;
-                    if (lineend == buffersize)
-                      {	// end of line not yet read
-                        need_new_read = true;
-                      }
-                    else
-                      {	// split of the latest line read
-                        newline = stdout_buffer.substr(linestart,(lineend-linestart)) + std::string("\n");
-                        stdout_buffer = stdout_buffer.substr(lineend+1);
-                        need_new_read = false;
-                        lastsend = curtime;
-                        syscall_->insert_stdout_line(newline);
-                      }
-                  }
-              }
-              
-            if (lastsend + tickstowait > curtime)
+            syscall_->insert_stdout_line(newline);
+            
+            lastsend = Time::currentTicks();                           
+        }
+        
+        if (timeout == false)
+        {
+          if (FD_ISSET(fd_exit,&selectset))
             {
-                linestart = 0;
-                buffersize = stdout_buffer.size();
-                while((linestart < buffersize)&&((stdout_buffer[linestart]=='\n')||(stdout_buffer[linestart]=='\r')||(stdout_buffer[linestart]=='\0'))) linestart++;			
-                std::string newline = stdout_buffer.substr(linestart);
-                stdout_buffer = "";
-                syscall_->insert_stdout_line(newline);
-                lastsend = curtime;                        
+               bytesread = read(fd_stdout,&(read_buffer[0]),read_buffer_length);
+               if (bytesread > 0) 
+               {
+                  std::string exitcode = read_buffer.substr(0,bytesread);	
+                  std::istringstream iss(exitcode);
+                  iss >> syscall_->exitcode_;
+                  syscall_->hasexitcode_ = true;
+               }
+               
+               syscall_->signal_exit();
+               doexit = false;
             }
-			
-          }
-	
-        if (FD_ISSET(fd_stderr,&selectset))
-          {
-            bytesread = ::read(fd_stderr,&(read_buffer[0]),read_buffer_length);
 
-            if (bytesread < 0)
+          if (FD_ISSET(fd_stdout,&selectset))
+            {
+              bytesread = read(fd_stdout,&(read_buffer[0]),read_buffer_length);
+
+              if (bytesread < 0)
+                {
+                  // I need to add a better error handling routine here
+                  if (errno == EAGAIN) continue;	// Unix requests that we try once more
+                  if (errno == EINTR) continue;	// The process got interupted somehow, so we just need to try again
+                  std::cerr << "SystemCall: Detected error while reading from STDOUT of a process running in an internal shell" << std::endl;
+                  return;
+                }
+              if (bytesread > 0) stdout_buffer += read_buffer.substr(0,bytesread);	// add the newly read buffer to the buffer remaining from the previoud read operation
+      
+              need_new_read = false;
+              
+              while (!need_new_read)
+                {
+                  // figure out where the new line starts
+                  // we discard any \n, \r and \0
+                  linestart = 0;	
+                  buffersize = stdout_buffer.size();
+                  while((linestart < buffersize)&&((stdout_buffer[linestart]=='\n')||(stdout_buffer[linestart]=='\r')||(stdout_buffer[linestart]=='\0'))) linestart++;			
+          
+                  // newline will contain the newly read line from the data
+                  std::string newline;
+                  // if bytesread is 0, it indicates an EOF, hence we just need to add the remainder
+                  // of what is in the buffer. The program did not send us nicely terminated strings....
+                  if (bytesread == 0)
+                    {	
+                      if(linestart < stdout_buffer.size()) newline = stdout_buffer.substr(linestart);
+                      syscall_->insert_stdout_line(newline);
+                      lastsend = Time::currentTicks();
+                      dostdout = false;
+                      if(syscall_->signal_stdout_eof()) { done = true;  break; }
+                      break;   // Force exit out of lookp
+                    }
+                  else
+                    {
+                      // Detect whether we already read the end of line. If the line is huge it will not fit in the buffer and hence we need to do a econd read
+                      // or it could be that the message was split into multiple messages.
+                      lineend = linestart;
+                      while((lineend < buffersize)&&(stdout_buffer[lineend]!='\n')&&(stdout_buffer[lineend]!='\r')&&(stdout_buffer[lineend]!='\0')) lineend++;
+                      if (lineend == buffersize)
+                        {	// end of line not yet read
+                          need_new_read = true;
+                        }
+                      else
+                        {	// split of the latest line read
+                          newline = stdout_buffer.substr(linestart,(lineend-linestart)) + std::string("\n");
+                          stdout_buffer = stdout_buffer.substr(lineend+1);
+                          need_new_read = false;
+                          lastsend = Time::currentTicks();;
+                          
+                          syscall_->insert_stdout_line(newline);
+                        }
+                    }
+                }
+                
+                
+              if ((lastsend + tickstowait < curtime)&&(syscall_->use_timeout_ == true))
               {
-                // I need to add a better error handling routine here
-                if (errno == EAGAIN) continue;	// Unix requests that we try once more
-                if (errno == EINTR) continue;	// The process got interupted somehow, so we just need to try again
-                std::cerr << "Detected error while reading from STDERR of a process running in an internal shell" << std::endl;
-                return;
+                  linestart = 0;
+                  buffersize = stdout_buffer.size();
+                  while((linestart < buffersize)&&((stdout_buffer[linestart]=='\n')||(stdout_buffer[linestart]=='\r')||(stdout_buffer[linestart]=='\0'))) linestart++;			
+                  std::string newline = stdout_buffer.substr(linestart);
+                  stdout_buffer = "";
+                  
+                  syscall_->insert_stdout_line(newline);
+                  lastsend = curtime;                        
               }
-            if (bytesread > 0) stderr_buffer += read_buffer.substr(0,bytesread);	// add the newly read buffer to the buffer remaining from the previoud read operation
+        
+            }
+    
+          if (FD_ISSET(fd_stderr,&selectset))
+            {
+              bytesread = ::read(fd_stderr,&(read_buffer[0]),read_buffer_length);
 
-            need_new_read = false;
-            while (!need_new_read)
-              {
-                // figure out where the new line starts
-                // we discard any \n, \r and \0
-                linestart = 0;	
-                buffersize = stderr_buffer.size();
-                while((linestart < buffersize)&&((stderr_buffer[linestart]=='\n')||(stderr_buffer[linestart]=='\r')||(stderr_buffer[linestart]=='\0'))) linestart++;			
-				
-                // newline will contain the newly read line from the data
-                std::string newline;
-                // if bytesread is 0, it indicates an EOF, hence we just need to add the remainder
-                // of what is in the buffer. The program did not send us nicely terminated strings....
-                if (bytesread == 0)
-                  {	
-                    if(linestart < stderr_buffer.size()) newline = stderr_buffer.substr(linestart);
-                    syscall_->insert_stderr_line(newline);
-                    dostderr = false;
-                    if(syscall_->signal_stderr_eof()) { done = true; break; }
-                    break;
+              if (bytesread < 0)
+                {
+                  // I need to add a better error handling routine here
+                  if (errno == EAGAIN) continue;	// Unix requests that we try once more
+                  if (errno == EINTR) continue;	// The process got interupted somehow, so we just need to try again
+                  std::cerr << "Detected error while reading from STDERR of a process running in an internal shell" << std::endl;
+                  return;
+                }
+              if (bytesread > 0) stderr_buffer += read_buffer.substr(0,bytesread);	// add the newly read buffer to the buffer remaining from the previoud read operation
 
-                  }
-                else
-                  {
-                    // Detect whether we already read the end of line. If the line is huge it will not fit in the buffer and hence we need to do a econd read
-                    // or it could be that the message was split into multiple messages.
-                    lineend = linestart;
-                    while((lineend < buffersize)&&(stderr_buffer[lineend]!='\n')&&(stderr_buffer[lineend]!='\r')&&(stderr_buffer[lineend]!='\0')) lineend++;
-                    if (lineend == stderr_buffer.size())
-                      {	// end of line not yet read
-                        need_new_read = true;
-                      }
-                    else
-                      {	// split of the latest line read
-                        newline = stderr_buffer.substr(linestart,(lineend-linestart)) + std::string("\n");
-                        stderr_buffer = stderr_buffer.substr(lineend+1);
-                        need_new_read = false;
-                      }
-                    syscall_->insert_stderr_line(newline);
-                  }
-              }
-          }
-      }
-	
+              need_new_read = false;
+              while (!need_new_read)
+                {
+                  // figure out where the new line starts
+                  // we discard any \n, \r and \0
+                  linestart = 0;	
+                  buffersize = stderr_buffer.size();
+                  while((linestart < buffersize)&&((stderr_buffer[linestart]=='\n')||(stderr_buffer[linestart]=='\r')||(stderr_buffer[linestart]=='\0'))) linestart++;			
+          
+                  // newline will contain the newly read line from the data
+                  std::string newline;
+                  // if bytesread is 0, it indicates an EOF, hence we just need to add the remainder
+                  // of what is in the buffer. The program did not send us nicely terminated strings....
+                  if (bytesread == 0)
+                    {	
+                      if(linestart < stderr_buffer.size()) newline = stderr_buffer.substr(linestart);
+                      syscall_->insert_stderr_line(newline);
+                      dostderr = false;
+                      if(syscall_->signal_stderr_eof()) { done = true; break; }
+                      break;
+
+                    }
+                  else
+                    {
+                      // Detect whether we already read the end of line. If the line is huge it will not fit in the buffer and hence we need to do a econd read
+                      // or it could be that the message was split into multiple messages.
+                      lineend = linestart;
+                      while((lineend < buffersize)&&(stderr_buffer[lineend]!='\n')&&(stderr_buffer[lineend]!='\r')&&(stderr_buffer[lineend]!='\0')) lineend++;
+                      if (lineend == stderr_buffer.size())
+                        {	// end of line not yet read
+                          need_new_read = true;
+                        }
+                      else
+                        {	// split of the latest line read
+                          newline = stderr_buffer.substr(linestart,(lineend-linestart)) + std::string("\n");
+                          stderr_buffer = stderr_buffer.substr(lineend+1);
+                          need_new_read = false;
+                        }
+                      syscall_->insert_stderr_line(newline);
+                    }
+                }
+            }
+        }
+    }
     // Signal that we have an end-of-file
     // for both the stderr and stdout
 	

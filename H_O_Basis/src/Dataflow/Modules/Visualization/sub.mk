@@ -50,15 +50,16 @@ SRCS     += \
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTitle.cc\
 	$(SRCDIR)/Isosurface.cc\
+	$(SRCDIR)/NrrdTextureBuilder.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/ShowColorMap.cc\
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/ShowMatrix.cc\
 	$(SRCDIR)/StreamLines.cc\
-	$(SRCDIR)/NrrdTextureBuilder.cc\
 	$(SRCDIR)/TextureBuilder.cc\
 	$(SRCDIR)/VolumeSlicer.cc\
 	$(SRCDIR)/VolumeVisualizer.cc\
+	$(SRCDIR)/ShowString.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \

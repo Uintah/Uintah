@@ -54,6 +54,7 @@ extern "C" sci::cca::Component::pointer make_SCIRun_LinSolver()
   return sci::cca::Component::pointer(new LinSolver());
 }
 
+<<<<<<< .working
 LinSolver::LinSolver()
 {
   fieldPort.setParent(this);
@@ -65,12 +66,38 @@ LinSolver::~LinSolver()
 
 }
 
+=======
+LinSolver::LinSolver()
+{
+}
+
+LinSolver::~LinSolver()
+{
+  services->removeProvidesPort("linsolver");
+  services->removeProvidesPort("icon");
+}
+
+>>>>>>> .merge-right.r32054
 void LinSolver::setServices(const sci::cca::Services::pointer& svc)
 {
+<<<<<<< .working
+=======
+  services = svc;
+  myLinSolverPort::pointer lsp(new myLinSolverPort);
+>>>>>>> .merge-right.r32054
 
+<<<<<<< .working
   services=svc;
   //add provides ports here ...  
+=======
+  svc->addProvidesPort(lsp, "linsolver", "sci.cca.ports.LinSolverPort",
+    sci::cca::TypeMap::pointer(0));
 
+  LSComponentIcon::pointer ciPortPtr = LSComponentIcon::pointer(new LSComponentIcon);
+
+  svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon",
+    sci::cca::TypeMap::pointer(0));
+>>>>>>> .merge-right.r32054
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
   myGoPort::pointer gop(&goPort);
   myField2DPort::pointer fdp(&fieldPort);
@@ -82,47 +109,66 @@ void LinSolver::setServices(const sci::cca::Services::pointer& svc)
   // Actually - the ref counting will take care of that automatically - Steve
 }
 
+<<<<<<< .working
 bool LinSolver::jacobi(const SSIDL::array2<double> &A, 
 		       const SSIDL::array1<double> &b)
+=======
+int 
+myLinSolverPort::jacobi(const SSIDL::array2<double> &A, 
+            const SSIDL::array1<double> &b,
+                        SSIDL::array1< double>& x)
+>>>>>>> .merge-right.r32054
 {
   //we might set the accurracy by UI
-  double eps=1e-6;
-  int maxiter=1000;
+  double eps = 1e-6;
+  int maxiter = 1000;
   
+<<<<<<< .working
   SSIDL::array1<double> x;
   int N=b.size();
-  while(x.size()<b.size()) x.push_back(1.0);
+=======
+  int N = b.size();
+>>>>>>> .merge-right.r32054
+  while (x.size() < b.size()) x.push_back(1.0);
 
   int iter;
   
-  for(iter=0; iter<maxiter; iter++){
-    double norm=0;
-    for(int i=0; i<N; i++){
-      double res_i=0;
-      for(int k=0; k<N; k++){
-	res_i+=A[i][k]*x[k];
+  for (iter = 0; iter < maxiter; iter++) {
+    double norm = 0;
+    for (int i = 0; i < N; i++) {
+      double res_i = 0;
+      for (int k = 0; k < N; k++) {
+        res_i += A[i][k] * x[k];
       }
-      res_i-=b[i];
-      norm+=res_i*res_i;
+      res_i -= b[i];
+      norm += res_i * res_i;
     }
-    if(norm<eps*eps) break;
-    //cerr<<"iter="<<iter<<"  norm2="<<norm<<endl;
+    if (norm < eps * eps) break;
+    //cerr<<"iter = "<<iter<<"  norm2 = "<<norm<<endl;
     
-    SSIDL::array1<double> tempx=x;
-    for(int i=0; i<N; i++){
-      tempx[i]=b[i];
-      for(int k=0; k<N; k++){
-	if(i==k) continue;
-	tempx[i]-=A[i][k]*x[k];
+    SSIDL::array1<double> tempx = x;
+    for (int i = 0; i < N; i++) {
+      tempx[i] = b[i];
+      for (int k = 0; k < N; k++) {
+        if (i == k) continue;
+        tempx[i] -= A[i][k]*x[k];
       }
-      tempx[i]/=A[i][i];
+      tempx[i] /= A[i][i];
     }
-    x=tempx;
+    x = tempx;
   }
 
+<<<<<<< .working
   solution=x;
 
   return iter!=maxiter;
+=======
+  if (iter != maxiter) {
+    return 0;
+  } else {
+    return 1;
+  }
+>>>>>>> .merge-right.r32054
 }  
 
 SSIDL::array1<double> myField2DPort::getField() 

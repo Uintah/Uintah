@@ -48,11 +48,8 @@
 #ifndef BUILD_HEX_FE_MATRIX_H
 #define BUILD_HEX_FE_MATRIX_H
 
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/HexVolMesh.h>
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/FEFields.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Geometry/Tensor.h>
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/ReferenceElement.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
@@ -62,14 +59,10 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BuildHexFEMatrix;
-typedef HexTrilinearLgn<int>                      DatBasisi;
-typedef HexTrilinearLgn<Tensor>                   DatBasist;
-typedef HexVolMesh<HexTrilinearLgn<Point> >       HVMesh;
-typedef GenericField<HVMesh, DatBasisi,    vector<int> > HVFieldi;  
-typedef GenericField<HVMesh, DatBasist, vector<Tensor> > HVFieldt;  
+ 
 
-typedef LockingHandle<HVFieldi> HexVolFieldIntHandle;
-typedef LockingHandle<HVFieldt> HexVolFieldTensorHandle;
+typedef LockingHandle<HVFieldI> HexVolFieldIntHandle;
+typedef LockingHandle<HVFieldT> HexVolFieldTensorHandle;
 typedef LockingHandle<BuildHexFEMatrix> BuildHexFEMatrixHandle;
 
 class BuildHexFEMatrix {

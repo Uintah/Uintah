@@ -38,15 +38,16 @@
  *
  *  Copyright (C) 2001 SCI Group
  */
+
+#include <Core/Geometry/Vector.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Basis/NoData.h>
 #include <Core/Basis/Constant.h>
-#include <Core/Containers/FData.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/MaskedLatVolMesh.h>
+#include <Core/Containers/FData.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>

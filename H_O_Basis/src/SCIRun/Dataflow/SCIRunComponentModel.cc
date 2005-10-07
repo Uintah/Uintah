@@ -54,6 +54,7 @@
 #include <SCIRun/Dataflow/SCIRunComponentDescription.h>
 #include <SCIRun/Dataflow/SCIRunComponentInstance.h>
 #include <SCIRun/SCIRunErrorHandler.h>
+#include <SCIRun/SCIRunFramework.h>
 #include <iostream>
 
 //#include <Core/Util/sci_system.h>
@@ -74,20 +75,17 @@ split_name(const std::string &type,
            std::string &module)
 {
   unsigned int dot = type.find('.');
-  if (dot >= type.size()) {
-    return false;
-  }
+  if (dot >= type.size()) { return false; }
+
   package = type.substr(0, dot);
   std::string rest = type.substr(dot+1);
   dot = rest.find('.');
-  if (dot >= rest.size()) {
-    return false;
-  }
+  if (dot >= rest.size()) { return false; }
+
   category = rest.substr(0, dot);
   module = rest.substr(dot+1);
-  if (module.size() < 1) {
-    return false;
-  }
+  if (module.size() < 1) { return false; }
+
   return true;
 }
 
@@ -108,9 +106,8 @@ bool
 SCIRunComponentModel::haveComponent(const std::string& type)
 {
     std::string package, category, module;
-    if (! split_name(type, package, category, module) ) {
-        return false;
-    }
+    if (! split_name(type, package, category, module) ) { return false; }
+
     return packageDB->haveModule(package, category, module);
 }
 
@@ -119,17 +116,13 @@ SCIRunComponentModel::createInstance(const std::string& name,
                                      const std::string& type,
                                      const sci::cca::TypeMap::pointer& tm)
 {
+std::cerr << "SCIRunComponentModel::createInstance: type=" << type << std::endl;
     std::string package, category, module;
-    if (! split_name(type, package, category, module) ) {
-        return 0;
-    }
-    if (! gui) {
-        initGuiInterface();
-    }
+    if (! split_name(type, package, category, module) ) { return 0; }
 
-    std::cerr << "SCIRunComponentModel::createInstance: have gui" << std::endl;
-
+    initGuiInterface();
     Module* m = net->add_module2(package, category, module);
+    tm->putBool("dataflow", true);
     SCIRunComponentInstance* ci =
         new SCIRunComponentInstance(framework, name, type, tm, m);
     return ci;
@@ -138,6 +131,8 @@ SCIRunComponentModel::createInstance(const std::string& name,
 void
 SCIRunComponentModel::initGuiInterface()
 {
+  if (SCIRunComponentModel::gui) { return; }
+
 std::cerr << "SCIRunComponentModel::initGuiInterface" << std::endl;
 
   sci_putenv("SCIRUN_NOSPLASH", "1");
@@ -197,8 +192,7 @@ SCIRunComponentModel::buildComponentList()
 }
 
 void
-SCIRunComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
-                                            bool /*listInternal*/)
+SCIRunComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)
 {
     std::vector<std::string> packages = packageDB->packageNames();
     typedef std::vector<std::string>::iterator striter;

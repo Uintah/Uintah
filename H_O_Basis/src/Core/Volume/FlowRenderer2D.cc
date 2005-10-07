@@ -49,7 +49,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <stdlib.h>
-#include <values.h>
+#include <sci_values.h>
 using std::cerr;
 using std::endl;
 using std::string;
@@ -85,9 +85,11 @@ FlowRenderer2D::FlowRenderer2D(FieldHandle field,
   adv_tex_(0),
   adv_dirty_(true),
   adv_is_initialized_(false),
+  adv_accums_(10),
   conv_tex_(0),
   conv_dirty_(true),
   conv_is_initialized_(false),
+  conv_accums_(10),
   flow_tex_(0),
   flow_dirty_(true),
   re_accum_(true),
@@ -141,9 +143,11 @@ FlowRenderer2D::FlowRenderer2D(const FlowRenderer2D& copy):
   adv_tex_(copy.adv_tex_),
   adv_dirty_(copy.adv_dirty_),
   adv_is_initialized_(copy.adv_is_initialized_),
+  adv_accums_(copy.adv_accums_),
   conv_tex_(copy.conv_tex_),
   conv_dirty_(copy.conv_dirty_),
   conv_is_initialized_(copy.conv_is_initialized_),
+  conv_accums_(copy.conv_accums_),
   flow_tex_(copy.flow_tex_),
   flow_dirty_(copy.flow_dirty_),
   re_accum_(copy.re_accum_),
@@ -189,6 +193,7 @@ FlowRenderer2D::reset()
   is_initialized_ = false;
   adv_is_initialized_ = false;
   conv_is_initialized_ = false;
+  current_shift_ = 0;
 }
 
 void
@@ -273,24 +278,24 @@ FlowRenderer2D::draw()
 
 //     bind_noise();
   int c_shift = current_shift_;
+  current_shift_++;
+  if(current_shift_ >= shift_list_.size() ) current_shift_ = 0;
   build_adv( scale, shift_list_[c_shift] );
   //  load_adv();
   next_shift(&c_shift);
     
-
-  cerr<<"re_accum = "<<re_accum_<<"\n";
   if( re_accum_ ){
     //must be called after build_flow_tex()
-      float pixelx = 1.f/(float)w_;
-      float pixely = 1.f/(float)h_;
-      for(int i = 0; i < 10; i++){
+    float pixelx = 1.f/(float)w_;
+    float pixely = 1.f/(float)h_;
+      for(int i = 0; i < adv_accums_; i++){
         adv_accum( pixelx, pixely, scale, shift_list_[c_shift] );
         next_shift(&c_shift);
       }
       adv_rewire();
       
       build_conv(scale);
-      for(int i = 0; i < 10; i++){
+      for(int i = 0; i < conv_accums_; i++){
         conv_accum( pixelx, pixely, scale);
       }
       conv_rewire();
@@ -751,8 +756,10 @@ FlowRenderer2D::build_flow_tex()
           flow_array_(i,j, 0) = (val[vi] - min_x)/(max_x - min_x);
           flow_array_(i,j, 1) = (val[vj] - min_y)/(max_y - min_y);
 #endif
-          flow_array_(i,j, 0) = val[vi];
-          flow_array_(i,j, 1) = val[vj];
+          Vector v(val[vi], val[vj], 0.0);
+//           v.safe_normalize();
+          flow_array_(i,j, 0) = v.x();
+          flow_array_(i,j, 1) = v.y();
           ++iter;
         }
 
@@ -897,8 +904,8 @@ FlowRenderer2D::get_interpolated_value( Array3<float>& array, float x, float y )
   w[1] =  ir * (1 - jr);
   w[2] =  ir * jr; 
   w[3] =  (1 - ir) * jr;
-  return w[0] * array(i, j, 0) + w[1] * array(i+1, j, 0) +
-    w[2] * array(i+1, j+1, 0) + w[3] * array(i, j+1, 0);
+  return w[0] * array(i, j, 2) + w[1] * array(i+1, j, 2) +
+    w[2] * array(i+1, j+1, 2) + w[3] * array(i, j+1, 2);
 }
 
 void
@@ -924,8 +931,12 @@ FlowRenderer2D::build_adv(float scale, pair<float, float>& shift)
          r0[x] = get_interpolated_value(noise_array_,
                                         r0[y] * (noise_array_.dim1() - 2),
                                         r0[x] * (noise_array_.dim2() - 2));
-        adv_array_(i, j, x) = x_coord * 0.5 + 0.25;
-        adv_array_(i, j, y) = y_coord * 0.5 + 0.25;
+//          if( re_accum_ && adv_is_initialized_ ) {
+//            // do nothing, use stored location
+//          } else {
+           adv_array_(i, j, x) = x_coord * 0.5 + 0.25;
+           adv_array_(i, j, y) = y_coord * 0.5 + 0.25;
+//          }
         adv_array_(i, j, z) = r0[x] * scale;
         adv_array_(i, j, w) = scale;
       }
@@ -1030,8 +1041,8 @@ FlowRenderer2D::adv_rewire()
       r0[z] = adv_array_( i, j, z);
       r0[w] = adv_array_( i, j, w);
       r0[x] = 1.0/r0[w];
-      adv_array_(i, j, x) = r0[z] * r0[x];
-      adv_array_(i, j, y) = r0[z] * r0[x];
+//       adv_array_(i, j, x) = r0[z] * r0[x];
+//       adv_array_(i, j, y) = r0[z] * r0[x];
       adv_array_(i, j, z) = r0[z] * r0[x];
       adv_array_(i, j, w) = 1.0;
     }
@@ -1408,7 +1419,7 @@ FlowRenderer2D::create_pbuffers(int w, int h)
      noise_buffer_ = new Pbuffer( psize[0], psize[1], GL_FLOAT, 
                                   32, true, GL_FALSE);
     CHECK_OPENGL_ERROR("");    
-    if(!adv_buffer_->create() ) { //|| noise_buffer_->create() ) {
+    if(!adv_buffer_->create() || !noise_buffer_->create() ) {
       NOT_FINISHED("Something wrong with pbuffers"); 
       adv_buffer_->destroy();
       noise_buffer_->destroy();

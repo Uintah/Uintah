@@ -219,36 +219,33 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
     TVField *tvfield =  scinew TVField(tvmesh);
     dstH = tvfield;
-  } else {
+    typename FSRC::value_type val;
+    for (unsigned int i = 0; i < elemmap.size(); i++)
+    {
+      hvfield->value(val, elemmap[i]);
+      tvfield->set_value(val, (TVMesh::Elem::index_type)(i*5+0));
+      tvfield->set_value(val, (TVMesh::Elem::index_type)(i*5+1));
+      tvfield->set_value(val, (TVMesh::Elem::index_type)(i*5+2));
+      tvfield->set_value(val, (TVMesh::Elem::index_type)(i*5+3));
+      tvfield->set_value(val, (TVMesh::Elem::index_type)(i*5+4));
+    }
+
+  } else if (hvfield->basis_order() == 1) {
     typedef TetLinearLgn<typename FSRC::value_type>    DatBasis;
     typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
     TVField *tvfield =  scinew TVField(tvmesh);
     dstH = tvfield;
-  }
-
-  dstH->copy_properties(hvfield);
-
-  typename FSRC::value_type val;
-
-  if (hvfield->basis_order() == 1) {
+    typename FSRC::value_type val;
     for (unsigned int i = 0; i < hnsize; i++)
     {
       hvfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
       tvfield->set_value(val, (TVMesh::Node::index_type)(i));
     }
-  } else if (hvfield->basis_order() == 0) {
-    for (unsigned int i = 0; i < elemmap.size(); i++)
-    {
-      hvfield->value(val, elemmap[i]);
-      dstH->set_value(val, (TVMesh::Elem::index_type)(i*5+0));
-      dstH->set_value(val, (TVMesh::Elem::index_type)(i*5+1));
-      dstH->set_value(val, (TVMesh::Elem::index_type)(i*5+2));
-      dstH->set_value(val, (TVMesh::Elem::index_type)(i*5+3));
-      dstH->set_value(val, (TVMesh::Elem::index_type)(i*5+4));
-    }
   } else {
     mod->warning("Could not load data values, use DirectInterp if needed.");
   }
+
+  dstH->copy_properties(hvfield);
   return true;
 }
 
@@ -377,43 +374,38 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
     TVField *tvfield =  scinew TVField(tvmesh);
     dstH = tvfield;
-  } else {
-    typedef TetLinearLgn<typename FSRC::value_type>    DatBasis;
-    typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
-    TVField *tvfield =  scinew TVField(tvmesh);
-    dstH = tvfield;
-  }
-  dstH->copy_properties(hvfield);
-
-  typename FSRC::value_type val;
-
-  if (hvfield->basis_order() == 1) {
-    hvmesh->begin(nbi); hvmesh->end(nei);
-    while (nbi != nei)
-    {
-      hvfield->value(val, *nbi);
-      dstH->set_value(val, (TVMesh::Node::index_type)(unsigned int)(*nbi));
-      ++nbi;
-    }
-  }
-  else if (hvfield->basis_order() == 0)
-  {
+    typename FSRC::value_type val;
     typename FSRC::mesh_type::Cell::iterator cbi, cei;    
     hvmesh->begin(cbi); hvmesh->end(cei);
     while (cbi != cei)
     {
       hvfield->value(val, *cbi);
       unsigned int i = (unsigned int)*cbi;
-      dstH->set_value(val, (TVMesh::Cell::index_type)(i*5+0));
-      dstH->set_value(val, (TVMesh::Cell::index_type)(i*5+1));
-      dstH->set_value(val, (TVMesh::Cell::index_type)(i*5+2));
-      dstH->set_value(val, (TVMesh::Cell::index_type)(i*5+3));
-      dstH->set_value(val, (TVMesh::Cell::index_type)(i*5+4));
+      tvfield->set_value(val, (TVMesh::Cell::index_type)(i*5+0));
+      tvfield->set_value(val, (TVMesh::Cell::index_type)(i*5+1));
+      tvfield->set_value(val, (TVMesh::Cell::index_type)(i*5+2));
+      tvfield->set_value(val, (TVMesh::Cell::index_type)(i*5+3));
+      tvfield->set_value(val, (TVMesh::Cell::index_type)(i*5+4));
       ++cbi;
+    }
+  } else if (hvfield->basis_order() == 1) {
+    typedef TetLinearLgn<typename FSRC::value_type>    DatBasis;
+    typedef GenericField<TVMesh, DatBasis, FDat>       TVField;   
+    TVField *tvfield =  scinew TVField(tvmesh);
+    dstH = tvfield;
+    typename FSRC::value_type val;
+    hvmesh->begin(nbi); hvmesh->end(nei);
+    while (nbi != nei)
+    {
+      hvfield->value(val, *nbi);
+      tvfield->set_value(val, (TVMesh::Node::index_type)(unsigned int)(*nbi));
+      ++nbi;
     }
   } else {
     mod->warning("Could not load data values, use DirectInterp if needed.");
   }
+  
+  dstH->copy_properties(hvfield);
   return true;
 }
 

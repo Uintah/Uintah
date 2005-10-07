@@ -65,6 +65,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomSphere.cc		                \
 	$(SRCDIR)/GeomSticky.cc		                \
 	$(SRCDIR)/GeomSwitch.cc		                \
+	$(SRCDIR)/GeomStippleOccluded.cc		                \
 	$(SRCDIR)/GeomTetra.cc		                \
 	$(SRCDIR)/GeomTexSlices.cc	                \
 	$(SRCDIR)/GeomTexRectangle.cc	    		\

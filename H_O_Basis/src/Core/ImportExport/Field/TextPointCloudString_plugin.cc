@@ -49,9 +49,10 @@
 // 0.0 0.0 1.0 Positive Z Axis
 // 1.2 0.5 0.2 Point of Interest
 
-#include <Core/Datatypes/GenericField.h>
+
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 #include <iostream>
 #include <fstream>

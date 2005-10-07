@@ -41,7 +41,6 @@
  *   Lorena Kreda, Northeastern University, October 2003
  */
 
-#include <Core/Datatypes/Mesh.h>
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildTriFEMatrix.h>
 #include <iostream>
 #include <algorithm>

@@ -66,8 +66,8 @@ InternalComponentInstance::getPortInstance(const std::string& /*name*/)
 
 PortInstanceIterator* InternalComponentInstance::getPorts()
 {
-  std::cerr << "SCIRunComponentInstance::getPorts not finished!"
-            << std::endl;
+//  std::cerr << "SCIRunComponentInstance::getPorts not finished!"
+//            << std::endl;
   return 0;
 }
 
@@ -79,9 +79,8 @@ void InternalComponentInstance::incrementUseCount()
 bool InternalComponentInstance::decrementUseCount()
 {
   if(useCount<=0)
-    {
     return false;
-    }
+  
   useCount--;
   return true;
 }

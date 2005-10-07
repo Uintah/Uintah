@@ -40,18 +40,11 @@ itcl_class SCIRun_Bundle_BundleSetColorMap {
         global $this-colormap1-name
         global $this-colormap2-name
         global $this-colormap3-name
-        global $this-colormap1-usename
-        global $this-colormap2-usename
-        global $this-colormap3-usename
         global $this-bundlename
         
-
         set $this-colormap1-name "colormap1"
         set $this-colormap2-name "colormap2"
         set $this-colormap3-name "colormap3"
-        set $this-colormap1-usename 0
-        set $this-colormap2-usename 0
-        set $this-colormap3-usename 0
         set $this-bundlename ""
 
     }
@@ -68,9 +61,6 @@ itcl_class SCIRun_Bundle_BundleSetColorMap {
         global $this-colormap1-name
         global $this-colormap2-name
         global $this-colormap3-name
-        global $this-colormap1-usename
-        global $this-colormap2-usename
-        global $this-colormap3-usename
         global $this-bundlename
 
         toplevel $w 
@@ -108,8 +98,6 @@ itcl_class SCIRun_Bundle_BundleSetColorMap {
         entry $colormap1.name.entry -textvariable $this-colormap1-name
         pack $colormap1.name.label -side left 
         pack $colormap1.name.entry -side left -fill x -expand yes
-        checkbutton $colormap1.options.usename -text "Use object name" -variable $this-colormap1-usename
-        pack $colormap1.options.usename -side top -fill x
         
         frame $colormap2.name
         frame $colormap2.options
@@ -119,8 +107,6 @@ itcl_class SCIRun_Bundle_BundleSetColorMap {
         entry $colormap2.name.entry -textvariable $this-colormap2-name
         pack $colormap2.name.label -side left 
         pack $colormap2.name.entry -side left -fill x -expand yes
-        checkbutton $colormap2.options.usename -text "Use object name" -variable $this-colormap2-usename
-        pack $colormap2.options.usename -side top -fill x
         
         frame $colormap3.name
         frame $colormap3.options
@@ -130,8 +116,6 @@ itcl_class SCIRun_Bundle_BundleSetColorMap {
         entry $colormap3.name.entry -textvariable $this-colormap3-name
         pack $colormap3.name.label -side left 
         pack $colormap3.name.entry -side left -fill x -expand yes
-        checkbutton $colormap3.options.usename -text "Use object name" -variable $this-colormap3-usename
-        pack $colormap3.options.usename -side top -fill x
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w

@@ -1079,6 +1079,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_ruby=no
   sci_required_ssl=no
   sci_required_tau=no
+  sci_required_tcl=yes
   sci_required_teem=no
   sci_required_thirdparty=no
   sci_required_tiff=no
@@ -1137,7 +1138,8 @@ case $1 in
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt=no
+      sci_required_tena=yes  
+	#    sci_required_qt=no
       enable_scirun2=yes
       sci_required_uuid=yes
 	    

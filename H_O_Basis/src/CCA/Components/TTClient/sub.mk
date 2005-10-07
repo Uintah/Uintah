@@ -34,16 +34,17 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/TTClient
 
 SRCS     += \
-	$(SRCDIR)/TTClient.cc
+            $(SRCDIR)/TTClient.cc
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
-	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions CCA/Components/TableTennis
-#QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
-LIBS := $(QT_LIBRARY)
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
+           Core/CCA/spec Core/Thread Core/Containers \
+           Core/Exceptions CCA/Components/TableTennis
+
+ifeq ($(HAVE_QT),yes)
+ LIBS := $(QT_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-#include $(SCIRUN_SCRIPTS)/program.mk
-
-$(SRCDIR)/TTClient.o: CCA/Components/TableTennis/TableTennis_sidl.h
-$(SRCDIR)/TTClient.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/TTClient.o: CCA/Components/TableTennis/TableTennis_sidl.h Core/CCA/spec/cca_sidl.h
+#$(SRCDIR)/TTClient.o: Core/CCA/spec/cca_sidl.h

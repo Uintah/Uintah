@@ -77,7 +77,8 @@ const std::string TaoComponentModel::DEFAULT_PATH =
 
 
 TaoComponentModel::TaoComponentModel(SCIRunFramework* framework)
-  : ComponentModel("tao"), framework(framework)
+  : ComponentModel("tao"), framework(framework),
+    lock_components("TaoComponentModel::components lock")
 {
   // Record the path containing DLLs for components.
   const char *dll_path = getenv("SIDL_DLL_PATH");
@@ -97,6 +98,8 @@ TaoComponentModel::~TaoComponentModel()
 
 void TaoComponentModel::destroyComponentList()
 {
+  SCIRun::Guard g1(&lock_components);
+
   for (componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++) {
     delete iter->second;
@@ -211,7 +214,9 @@ void TaoComponentModel::readComponentDescription(const std::string& file)
       // Register this component
       TaoComponentDescription* cd = new TaoComponentDescription(this, component_name);
       cd->setLibrary(library_name.c_str()); // record the DLL name
+      lock_components.lock();
       this->components[cd->type] = cd;
+      lock_components.unlock();
     }
   }
 }
@@ -243,6 +248,7 @@ bool TaoComponentModel::destroyServices(const sci::cca::TaoServices::pointer& sv
 
 bool TaoComponentModel::haveComponent(const std::string& type)
 {
+  SCIRun::Guard g1(&lock_components);
   std::cerr << "Tao looking for component of type: " << type << std::endl;
   return components.find(type) != components.end();
 }
@@ -254,10 +260,13 @@ TaoComponentModel::createInstance(const std::string& name,
                                   const sci::cca::TypeMap::pointer &tm)
 {
   tao::Component *component;
+  lock_components.lock();
   componentDB_type::iterator iter = components.find(type);
   if (iter == components.end()) { // could not find this component
     return 0;
   }
+  lock_components.unlock();
+
   // Get the list of DLL paths to search for the appropriate component library
   std::vector<std::string> possible_paths = splitPathString(this->getSidlDLLPath());
   LIBRARY_HANDLE handle;
@@ -320,42 +329,11 @@ void
 TaoComponentModel::listAllComponentTypes(
     std::vector<ComponentDescription*>& list, bool /*listInternal*/)
 {
+  SCIRun::Guard g1(&lock_components);
   for (componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++) {
     list.push_back(iter->second);
   }
-}
-
-int TaoComponentModel::addLoader(resourceReference *rr)
-{
-  loaderList.push_back(rr);
-  std::cerr<<"Loader "<<rr->getName()<<" is added into cca component model"<<std::endl;
-  return 0;
-}
-
-int TaoComponentModel::removeLoader(const std::string &loaderName)
-{
-  resourceReference *rr=getLoader(loaderName);
-  if (rr!=0) {
-    std::cerr<<"loader "<<rr->getName()<<" is removed from cca component model\n";
-    delete rr;
-  } else {
-    std::cerr<<"loader "<<loaderName<<" not found in cca component model\n";
-  }
-  return 0;
-}
-
-resourceReference *
-TaoComponentModel::getLoader(std::string loaderName)
-{
-  resourceReference *rr=0;
-  for (unsigned int i=0; i<loaderList.size(); i++) {
-    if (loaderList[i]->getName()==loaderName) {
-      rr=loaderList[i];
-      break;
-    }
-  }
-  return rr;
 }
 
 } // end namespace SCIRun

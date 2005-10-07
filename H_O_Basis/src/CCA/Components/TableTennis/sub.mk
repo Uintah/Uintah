@@ -34,7 +34,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/TableTennis
 
 SRCS     += \
-	$(SRCDIR)/TableTennis_sidl.cc $(SRCDIR)/TableTennis.cc
+             $(SRCDIR)/TableTennis_sidl.cc \
+             $(SRCDIR)/TableTennis.cc
 
 # Hack until I get the guts to put this in Makefile.in  
 $(SRCDIR)/TableTennis_sidl.o: $(SRCDIR)/TableTennis_sidl.cc $(SRCDIR)/TableTennis_sidl.h
@@ -46,10 +47,12 @@ $(SRCDIR)/TableTennis_sidl.h: $(SRCDIR)/TableTennis.sidl $(SIDL_EXE)
 	$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/cca.sidl -h -o $@ $<
 
 GENHDRS := $(SRCDIR)/TableTennis_sidl.h
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
-	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
-QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
-LIBS := $(QT_LIBRARY)
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
+           Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+
+ifeq ($(HAVE_QT),yes)
+  LIBS := $(QT_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

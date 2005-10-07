@@ -124,8 +124,10 @@ public:
     
   static void test_rigorous(RigorousTest* __test);
 
+  friend std::ostream& operator<<(std::ostream& os, const Point& p);
+  friend std::istream& operator>>(std::istream& os, Point& p);
 
-};
+}; // end class Point
 
 inline 
 Point operator*(double d, const Point &p) {
@@ -138,7 +140,6 @@ Point operator+(const Vector &v, const Point &p) {
 
 std::ostream& operator<<(std::ostream& os, const Point& p);
 std::istream& operator>>(std::istream& os, Point& p);
-
 
 } // End namespace SCIRun
 

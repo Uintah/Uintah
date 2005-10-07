@@ -72,6 +72,12 @@ private:
   GuiInt jIndex_;
   GuiInt kIndex_;
 
+  //updateType_ must be declared after all gui vars because some are
+  //traced in the tcl code. If updateType_ is set to Auto having it
+  //last will prevent the net from executing when it is instantiated.
+
+  GuiString  updateType_;
+
   int axis_;
 
   int idim_;
@@ -106,6 +112,8 @@ FieldSlicer::FieldSlicer(GuiContext *context)
     iIndex_(context->subVar("i-index")),
     jIndex_(context->subVar("j-index")),
     kIndex_(context->subVar("k-index")),
+
+    updateType_(ctx->subVar("update_type")),
 
     axis_(2),
 
@@ -178,6 +186,8 @@ void FieldSlicer::execute(){
   // Get the dimensions of the mesh.
   // this should be part of the dynamic compilation....
   string mesh_type = fHandle->get_type_description(1)->get_name();
+
+  //FIX_ME MC how do i detect a "ITKLatVolField"
   if( mesh_type.find("LatVolField") != string::npos ||
       mesh_type.find("StructHexVolField") != string::npos ) {
     typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
@@ -193,7 +203,6 @@ void FieldSlicer::execute(){
 	     mesh_type.find("StructQuadSurfField") != string::npos ) {
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
     IMesh *imInput = (IMesh*) fHandle->mesh().get_rep();
-
     idim_ = imInput->get_ni();
     jdim_ = imInput->get_nj();
     kdim_ = 1;

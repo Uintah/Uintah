@@ -48,6 +48,7 @@
 namespace SCIRun {
 
 class GeomSwitch : public GeomContainer {
+protected:
     int state;
     GeomSwitch(const GeomSwitch&);
 

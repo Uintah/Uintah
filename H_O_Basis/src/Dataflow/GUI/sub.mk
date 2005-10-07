@@ -53,6 +53,7 @@ SRCS := \
         $(SRCDIR)/BundleSetMatrix.tcl \
         $(SRCDIR)/BundleSetNrrd.tcl \
         $(SRCDIR)/BundleSetPath.tcl \
+        $(SRCDIR)/BundleSetString.tcl \
         $(SRCDIR)/BundleInfo.tcl \
         $(SRCDIR)/BundleGetBundle.tcl \
         $(SRCDIR)/BundleGetColorMap.tcl \
@@ -61,6 +62,7 @@ SRCS := \
         $(SRCDIR)/BundleGetMatrix.tcl \
         $(SRCDIR)/BundleGetNrrd.tcl \
         $(SRCDIR)/BundleGetPath.tcl \
+        $(SRCDIR)/BundleGetString.tcl \
         $(SRCDIR)/BundleReader.tcl \
         $(SRCDIR)/BundleWriter.tcl \
         $(SRCDIR)/Camera.tcl \
@@ -98,6 +100,7 @@ SRCS := \
         $(SRCDIR)/FieldInfo.tcl\
         $(SRCDIR)/FieldMeasures.tcl \
         $(SRCDIR)/FieldReader.tcl \
+	$(SRCDIR)/FieldSetProperty.tcl\
         $(SRCDIR)/FieldSlicer.tcl\
         $(SRCDIR)/FieldSubSample.tcl\
         $(SRCDIR)/FieldWriter.tcl \
@@ -153,6 +156,7 @@ SRCS := \
         $(SRCDIR)/ShowField.tcl \
         $(SRCDIR)/ShowMatrix.tcl \
         $(SRCDIR)/SolveMatrix.tcl \
+        $(SRCDIR)/StickyLocator.tcl \
         $(SRCDIR)/StreamLines.tcl \
         $(SRCDIR)/Submatrix.tcl \
         $(SRCDIR)/Subnet.tcl \
@@ -165,11 +169,19 @@ SRCS := \
         $(SRCDIR)/TransformData3.tcl \
         $(SRCDIR)/TransformMesh.tcl \
         $(SRCDIR)/UIvar.tcl \
+        $(SRCDIR)/Unstructure.tcl \
         $(SRCDIR)/Viewer.tcl \
         $(SRCDIR)/ViewSlices.tcl \
         $(SRCDIR)/ViewWidget.tcl \
         $(SRCDIR)/VolumeSlicer.tcl \
         $(SRCDIR)/VolumeVisualizer.tcl \
+	$(SRCDIR)/CreateString.tcl\
+	$(SRCDIR)/StringInfo.tcl\
+	$(SRCDIR)/SprintfString.tcl\
+	$(SRCDIR)/SprintfMatrix.tcl\
+	$(SRCDIR)/ShowString.tcl\
+	$(SRCDIR)/CreateMatrix.tcl\
+	$(SRCDIR)/GetFileName.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

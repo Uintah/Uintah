@@ -42,6 +42,7 @@
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <iostream>
 
 namespace SCIRun {
 
@@ -107,14 +108,24 @@ Plane::ChangePlane(const Point &p1, const Point &p2, const Point &p3) {
     d=-Dot(p1, n);
 }
 
+
+void
+Plane::ChangePlane(const Point &P, const Vector &N) {
+  //  std::cerr << N << std::endl;
+  //  return;
+  n = N;
+  n.safe_normalize();
+  d = -Dot(P,n);
+}
+
+
+
 int
 Plane::Intersect( Point s, Vector v, Point& hit )
 {
-  double tmp;
   Point origin( 0., 0., 0. );
   Point ptOnPlane = origin - n * d;
-
-  tmp = Dot( n, v );
+  double tmp = Dot( n, v );
 
   if( tmp > -1.e-6 && tmp < 1.e-6 ) // Vector v is parallel to plane
   {
@@ -149,19 +160,90 @@ Plane::Intersect( Point s, Vector v, Point& hit )
 
   tmp = - ( ( d + Dot( s, n ) ) / Dot( v, n ) );
 
-#if 0  
-  // the starting point s virtually lies in the plane already
-  
-  if ( tmp > -1.e-6 && tmp < 1.e-6 )
-    hit = s;
-  else
-    hit = s + v * tmp;
-#endif
-
   hit = s + v * tmp;
 
   return 1;
 }
+
+
+#if 0
+int
+Plane::Intersect( Point s, Vector v, double &t ) const 
+{
+  Point origin( 0., 0., 0. );
+  Point ptOnPlane = origin - n * d;
+  double tmp = Dot( n, v );
+
+  if( tmp > -1.e-6 && tmp < 1.e-6 ) // Vector v is parallel to plane
+  {
+    // vector from origin of line to point on plane
+      
+    Vector temp = s - ptOnPlane;
+
+    if ( temp.length() < 1.e-5 )
+    {
+      // the origin of plane and the origin of line are almost
+      // the same
+	  
+      t = 0.0;
+      return 1;
+    }
+    else
+    {
+      // point s and d are not the same, but maybe s lies
+      // in the plane anyways
+	  
+      tmp = Dot( temp, n );
+
+      if(tmp > -1.e-6 && tmp < 1.e-6)
+      {
+	t = 0.0;
+	return 1;
+      }
+      else
+	return 0;
+    }
+  }
+
+  t = - ( ( d + Dot( s, n ) ) / Dot( v, n ) );
+
+  return 1;
+}
+
+#else
+int
+Plane::Intersect(Point s, Vector v, double &t) const
+{
+  double tmp = Dot( n, v );
+  if(tmp > -1.e-6 && tmp < 1.e-6) // Vector v is parallel to plane
+  {
+    // vector from origin of line to point on plane
+    Vector temp = (s + n*d).asVector();
+    if (temp.length() < 1.e-5)
+    {
+      // origin of plane and origin of line are almost the same
+      t = 0.0;
+      return 1;
+    }
+    else
+    {
+      // point s and d are not the same, but maybe s lies
+      // in the plane anyways
+      tmp = Dot(temp, n);
+      if (tmp > -1.e-6 && tmp < 1.e-6)
+      {
+	t = 0.0;
+	return 1;
+      }
+      else
+	return 0;
+    }
+  }
+  
+  t = -((d + Dot(s, n)) / Dot(v, n));
+  return 1;
+}
+#endif
 
 } // End namespace SCIRun
 

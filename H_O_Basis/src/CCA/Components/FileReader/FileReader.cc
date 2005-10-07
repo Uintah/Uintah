@@ -70,10 +70,11 @@ FileReader::~FileReader()
 
 void FileReader::setServices(const sci::cca::Services::pointer& svc)
 {
-  services=svc;
+  services = svc;
   //register provides ports here ...  
 
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
+<<<<<<< .working
   myUIPort::pointer uip(&uiPort);
   myPDEDescriptionPort::pointer pdep(&pdePort);
   svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
@@ -81,6 +82,10 @@ void FileReader::setServices(const sci::cca::Services::pointer& svc)
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
+=======
+  myPDEdescriptionPort::pointer pdep(new myPDEdescriptionPort);
+  svc->addProvidesPort(pdep,"pde","sci.cca.ports.PDEdescriptionPort", props);
+>>>>>>> .merge-right.r32054
 }
 
 int myUIPort::ui() 

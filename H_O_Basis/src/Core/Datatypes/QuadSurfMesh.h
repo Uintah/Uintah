@@ -28,7 +28,7 @@
 
 
 /*
- *  QuadSurfMesh.h: Templated Meshs defined on a 3D Regular Grid
+ *  QuadSurfMesh.h: Templated Mesh defined on an Irregular Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -48,6 +48,7 @@
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Containers/StackVector.h>
 #include <Core/Geometry/BBox.h>
@@ -182,6 +183,8 @@ public:
   bool locate(typename Edge::index_type &loc, const Point &p) const;
   bool locate(typename Face::index_type &loc, const Point &p) const;
   bool locate(typename Cell::index_type &loc, const Point &p) const;
+
+  bool inside3_p(typename Face::index_type i, const Point &p) const;
 
   void get_point(Point &p, typename Node::index_type i) const { p = points_[i]; }
   void get_normal(Vector &n, typename Node::index_type i) const { n = normals_[i]; }

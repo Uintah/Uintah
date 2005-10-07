@@ -49,6 +49,7 @@
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Containers/StackVector.h>
+#include <Core/Geometry/Transform.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
@@ -241,6 +242,14 @@ public:
   { return get_size(idx); };
   double get_volume(typename Cell::index_type idx) const 
   { return get_size(idx); };
+
+  bool get_neighbor(typename Edge::index_type &/*neighbor*/, 
+		    typename Edge::index_type /*edge*/,
+		    typename Node::index_type /*node*/) const
+  { ASSERTFAIL("CurveMesh::get_neighbor for edges needs to be implemented"); }
+  void get_neighbors(vector<typename Node::index_type> &/*array*/,
+                     typename Node::index_type /*idx*/) const
+  { ASSERTFAIL("CurveMesh::get_neighbor for nodes needs to be implemented"); }
 
   int get_valence(typename Node::index_type idx) const;
   int get_valence(typename Edge::index_type /*idx*/) const { return 0; }

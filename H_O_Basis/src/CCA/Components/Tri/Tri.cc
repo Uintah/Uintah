@@ -57,23 +57,41 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Tri()
 }
 
 
+<<<<<<< .working
 Tri::Tri()
 {
   uiPort.setParent(this);
   goPort.setParent(this);
   meshPort.setParent(this);
   mesh=0;
+=======
+Tri::Tri()
+{
+>>>>>>> .merge-right.r32054
 }
 
+<<<<<<< .working
 Tri::~Tri()
 {
   cerr << "called ~Tri()\n";
   if(mesh!=0) delete mesh;
+=======
+Tri::~Tri()
+{
+  services->removeProvidesPort("mesh");
+>>>>>>> .merge-right.r32054
 }
 
+<<<<<<< .working
 void Tri::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
+=======
+void Tri::setServices(const sci::cca::Services::pointer& svc)
+{
+  services = svc;
+>>>>>>> .merge-right.r32054
+<<<<<<< .working
   //register provides ports here ...  
 
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
@@ -87,15 +105,29 @@ void Tri::setServices(const sci::cca::Services::pointer& svc)
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
+=======
+  myMeshPort::pointer meshp(new myMeshPort);
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
+  svc->addProvidesPort(meshp, "mesh", "sci.cca.ports.MeshPort", props);
+>>>>>>> .merge-right.r32054
 }
 
+<<<<<<< .working
 int myUIPort::ui() 
 {
   if(com->mesh==0) return 1;
   (new MeshWindow(0, com->mesh ))->show();
   return 0;
 }
+=======
+int 
+myMeshPort::triangulate(const SSIDL::array1<double> &nodes, const SSIDL::array1<int> &boundaries, SSIDL::array1<int> &triangles)
+{
+  Delaunay* mesh = new Delaunay(nodes, boundaries);
+  mesh->triangulation();
+>>>>>>> .merge-right.r32054
 
+<<<<<<< .working
 
 int myGoPort::go() 
 {
@@ -117,6 +149,16 @@ int myGoPort::go()
 
   com->mesh->triangulation();
 
+=======
+  std::vector<Triangle> tri=mesh->getTriangles();
+  
+  for (unsigned int i=0; i<tri.size();i++) {
+    triangles.push_back(tri[i].index[0] - 4);
+    triangles.push_back(tri[i].index[1] - 4);
+    triangles.push_back(tri[i].index[2] - 4);
+  }
+  delete mesh;
+>>>>>>> .merge-right.r32054
   return 0;
 }
 

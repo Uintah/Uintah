@@ -41,6 +41,8 @@
 #ifndef SCIRun_Tao_TaoComponentModel_h
 #define SCIRun_Tao_TaoComponentModel_h
 
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 #include <SCIRun/ComponentModel.h>
 #include <SCIRun/ComponentInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
@@ -111,12 +113,6 @@ public:
   /** ? */
   virtual void buildComponentList();
 
-  /** ? */
-  int addLoader(resourceReference *rr);
-
-  /** ? */
-  int removeLoader(const std::string &loaderName);
-
   /** Get/set the directory path to component DLLs.  By default,
    * the sidlDLLPath is initialized to the environment variable
    * SIDL_DLL_PATH. */
@@ -129,16 +125,14 @@ private:
   SCIRunFramework* framework;
   typedef std::map<std::string, TaoComponentDescription*> componentDB_type;
   componentDB_type components;
+  SCIRun::Mutex lock_components;
     
   void readComponentDescription(const std::string& file);
-  resourceReference *getLoader(std::string loaderName);
 
   TaoComponentModel(const TaoComponentModel&);
   TaoComponentModel& operator=(const TaoComponentModel&);
  
   std::string sidlDLLPath;
- 
-  std::vector<resourceReference*> loaderList;
 };
 
 } // end namespace SCIRun

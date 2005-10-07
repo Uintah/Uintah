@@ -47,8 +47,8 @@ BabelPortInstance::BabelPortInstance(const std::string& name,
                                      const std::string& type,
                                      const gov::cca::TypeMap& properties,
                                      PortType porttype)
-  : porttype(porttype), name(name), type(type), properties(properties),
-    useCount(0)
+  : porttype(porttype), lock_connections("BabelPortInstance::connections lock"),
+    name(name), type(type), properties(properties), useCount(0)
 {
 }
 
@@ -57,7 +57,8 @@ BabelPortInstance::BabelPortInstance(const std::string& name,
                                      const gov::cca::TypeMap& properties,
                                      const gov::cca::Port& port,
                                      PortType porttype)
-  : porttype(porttype), name(name), type(type), properties(properties),
+  : porttype(porttype), lock_connections("BabelPortInstance::connections lock"), 
+    name(name), type(type), properties(properties),
     port(port), useCount(0)
 {
 }
@@ -79,7 +80,11 @@ bool BabelPortInstance::connect(PortInstance* to)
     return false;
     }
   if(portType() == From && p2->portType() == To)
-    {    connections.push_back(p2);    }
+    {
+    lock_connections.lock();    
+    connections.push_back(p2);    
+    lock_connections.unlock();
+    }
   else
     {    p2->connect(this);    }
   return true;
@@ -120,6 +125,7 @@ bool BabelPortInstance::disconnect(PortInstance* to)
     return false;
     } 
   std::vector<PortInstance*>::iterator iter;
+  SCIRun::Guard g1(&lock_connections);
   for(iter=connections.begin(); iter<connections.end();iter++)
     {
     if(p2==(*iter))

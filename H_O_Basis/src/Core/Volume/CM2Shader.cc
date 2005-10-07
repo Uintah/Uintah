@@ -97,6 +97,15 @@ namespace SCIRun {
 "MUL p.xy, fragment.position.xyyy, sz.xyyy; \n" \
 "MOV t.w, fragment.color.a; \n" \
 
+#define CM2_TEXTURE_BASE \
+"!!ARBfp1.0 \n" \
+"PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n" \
+"ATTRIB  cm_tc = fragment.texcoord[1]; \n" \
+"TEMP c, p, t, color; \n" \
+"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n" \
+"TEX color, cm_tc, texture[1], 1D; \n" \
+"MOV t, color; \n" \
+
 #define CM2_REGULAR \
 "MUL c.w, color.w, t.w; \n" \
 "MOV c.xyz, color.xyzz; \n"
@@ -165,6 +174,10 @@ CM2Shader::emit(string& s)
   case CM2_SHADER_PAINT:
     z << CM2_PAINT_BASE;
     break;
+  case CM2_SHADER_TEXTURE:
+    z << CM2_TEXTURE_BASE;
+    break;
+
   default:
     break;
   }
@@ -197,6 +210,7 @@ CM2Shader::emit(string& s)
   default:
     break;
   }
+
   
   s = z.str();
   return false;

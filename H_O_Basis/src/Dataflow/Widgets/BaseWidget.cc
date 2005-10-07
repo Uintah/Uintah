@@ -55,6 +55,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Geom/GeomStippleOccluded.h>
 #include <iostream>
 using std::cout;
 using std::ostream;
@@ -123,7 +124,8 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
 			const Index NumMaterials,
 			const Index NumModes,
 			const Index NumSwitches,
-			const double widget_scale )
+			const double widget_scale,
+			const bool stipple_occluded)
   : module_(module),
     lock_(lock),
     name_(name),
@@ -140,7 +142,8 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
     widget_scale_(widget_scale),
     epsilon_(1e-3),
     gui(module->getGui()),
-    tclmat_(ctx=module->getGui()->createContext(id_))
+    tclmat_(ctx=module->getGui()->createContext(id_)),
+    stipple_occluded_(stipple_occluded)
 {
   init_tcl();
 }
@@ -765,7 +768,11 @@ BaseWidget::FinishWidget()
     }
     sg->add(mode_switches[i]);
   }
-  widget_ = scinew GeomSwitch(sg);
+  if (stipple_occluded_) 
+    widget_ = scinew GeomStippleOccluded(sg);
+  else 
+    widget_ = scinew GeomSwitch(sg);
+
 
   // Init variables.
   for (Index vindex=0; vindex<variables.size(); vindex++)

@@ -70,6 +70,14 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    trace variable $this-$index-dim w "$this update_setsize_callback"
 	}
 
+	global $this-continuous
+	global $this-update_type
+
+	set $this-continuous 0
+	set $this-update_type "Manual"
+
+	trace variable $this-update_type w "$this update_type_callback"
+
 	trace variable $this-dims w "$this update_setsize_callback"
     }
 
@@ -131,8 +139,23 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    pack $w.main.l $w.main.i -side top -padx 10 -pady 5
 	}
 
-	pack $w.main -side top
+	#  Options
+
+	iwidgets::labeledframe $w.opt -labelpos nw -labeltext "Options"
+	set opt [$w.opt childsite]
 	
+	iwidgets::optionmenu $opt.update -labeltext "Update:" \
+		-labelpos w -command "$this set_update_type $opt.update"
+	$opt.update insert end "On Release" Manual Auto
+	$opt.update select [set $this-update_type]
+
+	global $this-update
+	set $this-update $opt.update
+
+	pack $opt.update -side top -anchor w
+
+	pack $w.main $w.opt -side top -fill x -expand 1
+
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
@@ -148,29 +171,92 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 
 	entry $win.e -width 4 -text $var2
 
-	bind $win.e <KeyRelease> "$this manualSliderEntry $start $stop $var1 $var2"
+	bind $win.s <ButtonRelease> "$this setNode"
+
+	bind $win.e <Return> "$this manualSliderEntryReturn \
+             $start $stop $var1 $var2"
+	bind $win.e <KeyRelease> "$this manualSliderEntry \
+             $start $stop $var1 $var2"
 
 	pack $win.s -side left
 	pack $win.e -side bottom -padx 5
     }
 
-    method updateSliderEntry {var1 var2 someUknownVar} {
-	set $var2 [set $var1]
+
+    method setNode {} {
+	global $this-update
+
+	set type [[set $this-update] get]
+	if { $type == "On Release" } {
+	    eval "$this-c needexecute"
+	}
     }
 
-    method manualSliderEntry { start stop var1 var2 } {
-
-	if { ![string is integer [set $var2]] } {
-	    set $var2 [set $var1] }
-
-	if { [set $var2] < $start } {
-	    set $var2 $start }
+    method updateSliderEntry {var_slider var_typed someUknownVar} {
+	global $this-continuous
+	set $var_typed [set $var_slider]
 	
-	if { [set $var2] > $stop } {
-	    set $var2 $stop }
-	
-	set $var1 [set $var2]
+	if { [set $this-continuous] == 1.0 } {
+	    eval "$this-c needexecute"
+	} elseif { [set $this-update_type] == "Auto" } {
+	    set $this-continuous 1
+	}
     }
+
+
+    method manualSliderEntryReturn { start stop var_slider var_typed } {
+	# Since the user has typed in a value and hit return, we know
+	# they are done and if their value is not valid or within range,
+	# we can change it to be either the old value, or the min or max
+	# depending on what is appropriate.
+  	if { ![string is integer [set $var_typed]] } {
+  	    set $var_typed [set $var_slider] 
+  	}
+
+	if {[set $var_typed] < $start} {
+	    set $var_typed $start
+	} elseif {[set $var_typed] > $stop} {
+	    set $var_typed $stop
+	}
+
+	# Force the update to be manual
+	global $this-continuous
+	set continuous [set $this-continuous]
+	
+	set $this-continuous 0
+	
+	set $var_slider [set $var_typed]
+	
+	set $this-continuous $continuous
+    }
+
+
+    method manualSliderEntry { start stop var_slider var_typed } {
+	# Evaluate as the user types in an isoval but never change the value
+	# they are typing in because they might not be done. Only update the
+	# actual isoval when user has typed in a double and it is within range.
+	
+ 	set var_new [set $var_slider]
+
+ 	# only update the value if it evaluates to a double 
+	# and is within range
+ 	if {[string is double [set $var_typed]] && 
+ 	    $start <= [set $var_typed] && 
+ 	    [set $var_typed] <= $stop} {
+ 	    set var_new [set $var_typed]
+ 	}
+	
+	# Force the update to be manual
+  	global $this-continuous
+  	set continuous [set $this-continuous]
+	
+  	set $this-continuous 0
+	
+  	set $var_slider $var_new
+	
+  	set $this-continuous $continuous
+    }
+
 
     method update_setsize_callback { name1 name2 op } {
 	global $this-dims
@@ -269,6 +355,27 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 
 	    # Update the text values.
 	    set $this-$index-index2 [set $this-$index-index]
+	}
+    }
+
+    method update_type_callback { name1 name2 op } {
+	set w .ui[modname]
+	if {[winfo exists $w]} {
+	    set opt [$w.opt childsite]
+	    $opt.update select [set $this-update_type]
+	}
+    }
+
+    method set_update_type { w } {
+	global $w
+	global $this-continuous
+	global $this-update_type
+
+	set $this-update_type [$w get]
+	if { [set $this-update_type] == "Auto" } {
+	    set $this-continuous 1
+	} else {
+	    set $this-continuous 0
 	}
     }
 }

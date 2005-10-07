@@ -34,14 +34,37 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/Hello
 
 SRCS     += \
+<<<<<<< .working
 	$(SRCDIR)/Hello.cc
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 #QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
 LIBS := $(QT_LIBRARY)
+=======
+            $(SRCDIR)/Hello_sidl.cc \
+            $(SRCDIR)/Hello.cc
+>>>>>>> .merge-right.r32054
 
+<<<<<<< .working
+=======
+$(SRCDIR)/Hello_sidl.o: $(SRCDIR)/Hello_sidl.cc $(SRCDIR)/Hello_sidl.h
+
+$(SRCDIR)/Hello_sidl.cc: $(SRCDIR)/Hello.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/cca.sidl -o $@ $<
+
+$(SRCDIR)/Hello_sidl.h: $(SRCDIR)/Hello.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/cca.sidl -h -o $@ $<
+
+GENHDRS := $(SRCDIR)/Hello_sidl.h
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
+           Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+
+ifeq ($(HAVE_QT),yes)
+ LIBS := $(QT_LIBRARY)
+endif
+
+>>>>>>> .merge-right.r32054
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-#include $(SCIRUN_SCRIPTS)/program.mk
 
 $(SRCDIR)/Hello.o: Core/CCA/spec/cca_sidl.h

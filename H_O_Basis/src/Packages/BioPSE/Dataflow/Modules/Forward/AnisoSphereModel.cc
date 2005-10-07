@@ -50,8 +50,8 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Basis/Constant.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Packages/BioPSE/Core/Algorithms/Forward/SphericalVolumeConductor.h>
 
 namespace BioPSE {

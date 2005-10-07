@@ -1,45 +1,42 @@
-/*
-   For more information, please see: http://software.sci.utah.edu
-
-   The MIT License
-
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
-
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
-*/
+//
+//  For more information, please see: http://software.sci.utah.edu
+// 
+//  The MIT License
+// 
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+// 
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+// 
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+// 
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//
+// 
 
 // 
 // File:          framework_Services_Impl.cc
 // Symbol:        framework.Services-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.4
-// SIDL Created:  20040129 15:00:00 MST
-// Generated:     20040129 15:00:06 MST
+// Babel Version: 0.10.2
 // Description:   Server-side implementation for framework.Services
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.7.4
-// source-line   = 7
-// source-url    = file:/home/sci/damevski/SCIRun/ccadebug-RH8/../src/SCIRun/Babel/framework.sidl
+// babel-version = 0.10.2
 // 
 #include "framework_Services_Impl.hh"
 
@@ -49,28 +46,35 @@
 using namespace std;
 // DO-NOT-DELETE splicer.end(framework.Services._includes)
 
-// user defined constructor
+// user-defined constructor.
 void framework::Services_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(framework.Services._ctor)
   // add construction details here
   // DO-NOT-DELETE splicer.end(framework.Services._ctor)
 }
 
-// user defined destructor
+// user-defined destructor.
 void framework::Services_impl::_dtor() {
   // DO-NOT-DELETE splicer.begin(framework.Services._dtor)
   // add destruction details here
   // DO-NOT-DELETE splicer.end(framework.Services._dtor)
 }
 
-// user defined static methods: (none)
+// static class initializer.
+void framework::Services_impl::_load() {
+  // DO-NOT-DELETE splicer.begin(framework.Services._load)
+  // Insert-Code-Here {framework.Services._load} (class initialization)
+  // DO-NOT-DELETE splicer.end(framework.Services._load)
+}
 
-// user defined non-static methods:
+// user-defined static methods: (none)
+
+// user-defined non-static methods:
 /**
  * Method:  getData[]
  */
 void*
-framework::Services_impl::getData () 
+framework::Services_impl::getData ()
 throw () 
 
 {
@@ -92,15 +96,15 @@ throw ()
  * Disconnect Event is successfully dispatched to the caller,
  * or a runtime exception (such as network failure) occurs during 
  * invocation of some function in the Port. 
- * &lt;p&gt;
+ * <p>
  * Subtle interpretation: If the Component is not listening for
  * Disconnect events, then the framework has no clean way to
  * break the connection until after the component calls releasePort.
- * &lt;/p&gt;
- * &lt;p&gt;The framework may go through some machinations to obtain
+ * </p>
+ * <p>The framework may go through some machinations to obtain
  *    the port, possibly involving an interactive user or network 
  *    queries, before giving up and throwing an exception.
- * &lt;/p&gt;
+ * </p>
  * 
  * @param portName The previously registered or provide port which
  * 	   the component now wants to use.
@@ -109,7 +113,7 @@ throw ()
  */
 ::gov::cca::Port
 framework::Services_impl::getPort (
-  /*in*/ const ::std::string& portName ) 
+  /* in */ const ::std::string& portName ) 
 throw ( 
   ::gov::cca::CCAException
 ){
@@ -135,7 +139,7 @@ throw (
  */
 ::gov::cca::Port
 framework::Services_impl::getPortNonblocking (
-  /*in*/ const ::std::string& portName ) 
+  /* in */ const ::std::string& portName ) 
 throw ( 
   ::gov::cca::CCAException
 ){
@@ -173,7 +177,7 @@ throw (
  */
 void
 framework::Services_impl::releasePort (
-  /*in*/ const ::std::string& portName ) 
+  /* in */ const ::std::string& portName ) 
 throw ( 
   ::gov::cca::CCAException
 ){
@@ -202,7 +206,7 @@ throw (
  * calls to describe a Port.  Initially, this map is empty.
  */
 ::gov::cca::TypeMap
-framework::Services_impl::createTypeMap () 
+framework::Services_impl::createTypeMap ()
 throw ( 
   ::gov::cca::CCAException
 )
@@ -228,12 +232,12 @@ throw (
  * associated with this port.
  * In these properties, all frameworks recognize at least the
  * following keys and values in implementing registerUsesPort:
- * &lt;pre&gt;
+ * <pre xml:space="preserve">
  * key:              standard values (in string form)     default
- * &quot;MAX_CONNECTIONS&quot; any nonnegative integer, &quot;unlimited&quot;.   1
- * &quot;MIN_CONNECTIONS&quot; any integer &gt; 0.                        0
- * &quot;ABLE_TO_PROXY&quot;   &quot;true&quot;, &quot;false&quot;                      &quot;false&quot;
- * &lt;/pre&gt;
+ * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
+ * "MIN_CONNECTIONS" any integer > 0.                        0
+ * "ABLE_TO_PROXY"   "true", "false"                      "false"
+ * </pre>
  * The component is not expected to work if the framework
  * has not satisfied the connection requirements.
  * The framework is allowed to return an error if it
@@ -246,9 +250,9 @@ throw (
  */
 void
 framework::Services_impl::registerUsesPort (
-  /*in*/ const ::std::string& portName,
-  /*in*/ const ::std::string& type,
-  /*in*/ ::gov::cca::TypeMap properties ) 
+  /* in */ const ::std::string& portName,
+  /* in */ const ::std::string& type,
+  /* in */ ::gov::cca::TypeMap properties ) 
 throw ( 
   ::gov::cca::CCAException
 ){
@@ -281,7 +285,7 @@ throw (
  */
 void
 framework::Services_impl::unregisterUsesPort (
-  /*in*/ const ::std::string& portName ) 
+  /* in */ const ::std::string& portName ) 
 throw ( 
   ::gov::cca::CCAException
 ){
@@ -312,12 +316,12 @@ throw (
  * associated with this port.
  * In these properties, all frameworks recognize at least the
  * following keys and values in implementing registerUsesPort:
- * &lt;pre&gt;
+ * <pre xml:space="preserve">
  * key:              standard values (in string form)     default
- * &quot;MAX_CONNECTIONS&quot; any nonnegative integer, &quot;unlimited&quot;.   1
- * &quot;MIN_CONNECTIONS&quot; any integer &gt; 0.                        0
- * &quot;ABLE_TO_PROXY&quot;   &quot;true&quot;, &quot;false&quot;                      &quot;false&quot;
- * &lt;/pre&gt;
+ * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
+ * "MIN_CONNECTIONS" any integer > 0.                        0
+ * "ABLE_TO_PROXY"   "true", "false"                      "false"
+ * </pre>
  * The component is not expected to work if the framework
  * has not satisfied the connection requirements.
  * The framework is allowed to return an error if it
@@ -330,10 +334,10 @@ throw (
  */
 void
 framework::Services_impl::addProvidesPort (
-  /*in*/ ::gov::cca::Port inPort,
-  /*in*/ const ::std::string& portName,
-  /*in*/ const ::std::string& type,
-  /*in*/ ::gov::cca::TypeMap properties ) 
+  /* in */ ::gov::cca::Port inPort,
+  /* in */ const ::std::string& portName,
+  /* in */ const ::std::string& type,
+  /* in */ ::gov::cca::TypeMap properties ) 
 throw ( 
   ::gov::cca::CCAException
 ){
@@ -358,15 +362,15 @@ throw (
  * Returns the complete list of the properties for a Port.  This
  * includes the properties defined when the port was registered
  * (these properties can be modified by the framework), two special
- * properties &quot;cca.portName&quot; and &quot;cca.portType&quot;, and any other
+ * properties "cca.portName" and "cca.portType", and any other
  * properties that the framework wishes to disclose to the component.
  * The framework may also choose to provide only the subset of input
  * properties (i.e. from addProvidesPort/registerUsesPort) that it
- * will honor.      
+ * will honor.
  */
 ::gov::cca::TypeMap
 framework::Services_impl::getPortProperties (
-  /*in*/ const ::std::string& name ) 
+  /* in */ const ::std::string& name ) 
 throw () 
 {
   // DO-NOT-DELETE splicer.begin(framework.Services.getPortProperties)
@@ -385,7 +389,7 @@ throw ()
  */
 void
 framework::Services_impl::removeProvidesPort (
-  /*in*/ const ::std::string& portName ) 
+  /* in */ const ::std::string& portName ) 
 throw ( 
   ::gov::cca::CCAException
 ){
@@ -399,7 +403,7 @@ throw (
  * Services object belongs. 
  */
 ::gov::cca::ComponentID
-framework::Services_impl::getComponentID () 
+framework::Services_impl::getComponentID ()
 throw () 
 
 {
@@ -407,6 +411,28 @@ throw ()
   // insert implementation here
   return 0;
   // DO-NOT-DELETE splicer.end(framework.Services.getComponentID)
+}
+
+/**
+ * Obtain a callback for component destruction.
+ * @param callback an object that implements the ComponentRelease
+ * interface that will be called when the component is to be destroyed.
+ * 
+ * Register a callback to be executed when the component is going
+ * to be destroyed.  During this callback, the Services object passed
+ * through setServices will still be valid, but after all such
+ * callbacks are made for a specific component, subsequent usage
+ * of the Services object is not allowed/is undefined.
+ */
+void
+framework::Services_impl::registerForRelease (
+  /* in */ ::gov::cca::ComponentRelease callback ) 
+throw ( 
+  ::gov::cca::CCAException
+){
+  // DO-NOT-DELETE splicer.begin(framework.Services.registerForRelease)
+  // Insert-Code-Here {framework.Services.registerForRelease} (registerForRelease method)
+  // DO-NOT-DELETE splicer.end(framework.Services.registerForRelease)
 }
 
 

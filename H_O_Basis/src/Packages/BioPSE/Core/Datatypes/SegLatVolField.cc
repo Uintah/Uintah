@@ -44,6 +44,18 @@
 #include <queue>
 using std::queue;
 
+namespace SCIRun {
+void Pio(Piostream &stream, 
+	 LatVolMesh<HexTrilinearLgn<Point> >::CellIndex &n)
+{
+  stream.begin_cheap_delim();
+  Pio(stream, n.i_);
+  Pio(stream, n.j_);
+  Pio(stream, n.k_);
+  stream.end_cheap_delim();
+}
+}
+
 namespace BioPSE {
 
 // Pio defs.

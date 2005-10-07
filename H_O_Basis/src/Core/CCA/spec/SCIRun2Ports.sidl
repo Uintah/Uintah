@@ -120,8 +120,7 @@ interface BuilderPort extends sci.cca.Port
      *  the BuilderService and the BuilderService will tranverse
      *  each Builder
      */
-    void buildRemotePackageMenus(in sci.cca.ports.ComponentRepository reg, in string frameworkURL);     
-
+    void buildRemotePackageMenus(in sci.cca.ports.ComponentRepository reg, in string frameworkURL);
 }
 
 
@@ -196,9 +195,10 @@ interface ComponentEventListener {
 interface ComponentEvent {
   ComponentEventType getEventType() ;
 
+   /** Get the ComponentID of the affected Component. */
   ComponentID getComponentID();
 
-   /** Get the Properties of the affected Port. */
+   /** Get the Properties of the affected Component. */
   TypeMap getComponentProperties() ;
 }
 

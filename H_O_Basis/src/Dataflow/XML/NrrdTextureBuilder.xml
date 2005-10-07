@@ -65,11 +65,11 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Value / Normal-Value Nrrd</name>
+	<name>Scalar Nrrd</name>
 	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
-	<name>Gradmag Nrrd</name>
+	<name>Gradient Nrrd</name>
 	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>

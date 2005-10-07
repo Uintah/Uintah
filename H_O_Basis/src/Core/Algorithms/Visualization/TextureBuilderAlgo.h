@@ -52,133 +52,247 @@ using std::vector;
 
 namespace SCIRun {
 
-void break_in_me();
-
-// Currently located in NrrdTextureBuilderAlgo.cc
+// Currently located in TextureBuilderAlgo.cc
 void texture_build_bricks(vector<TextureBrickHandle>& bricks,
                           int nx, int ny, int nz,
                           int nc, int* nb,
                           const BBox& bbox, int brick_mem,
                           bool use_nrrd_brick);
 
-class TextureBuilderAlgoBase : public SCIRun::DynamicAlgoBase
+
+class TextureBuilderAlgo : public SCIRun::DynamicAlgoBase
 {
 public:
-  TextureBuilderAlgoBase();
-  virtual ~TextureBuilderAlgoBase();
   virtual void build(TextureHandle texture,
-                     FieldHandle vfield, double vmin, double vmax,
-                     FieldHandle gfield, double gmin, double gmax,
+                     FieldHandle vHandle, double vmin, double vmax,
+                     FieldHandle gHandle, double gmin, double gmax,
                      int card_mem) = 0;
-  //! support the dynamically compiled algorithm concept
-  static const string& get_h_file_path();
-  static CompileInfoHandle get_compile_info(const TypeDescription* td);
 
 protected:
   virtual void fill_brick(TextureBrickHandle &brick,
-                          FieldHandle vfield, double vmin, double vmax,
-                          FieldHandle gfield, double gmin, double gmax) = 0;
+                          FieldHandle vHandle, double vmin, double vmax,
+                          FieldHandle gHandle, double gmin, double gmax) = 0;
 
-  typedef LatVolMesh<HexTrilinearLgn<Point> >                        LVMesh;
+public:
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription* vftd,
+					    const TypeDescription* gftd);
 };
 
 
-template <class FieldType>
-class TextureBuilderAlgo : public TextureBuilderAlgoBase
+template < class VFIELD, class GFIELD, class TEXTUREBRICK >
+class TextureBuilderAlgoT : public TextureBuilderAlgo
 {
 public:
-  typedef typename FieldType::value_type value_type;
+  typedef typename VFIELD::value_type value_type;
 
-  TextureBuilderAlgo() {}
-  virtual ~TextureBuilderAlgo() {}
-  
-  virtual void build(TextureHandle texture,
-                     FieldHandle vfield, double vmin, double vmax,
-                     FieldHandle gfield, double gmin, double gmax,
+  virtual void build(TextureHandle tHandle,
+                     FieldHandle vHandle, double vmin, double vmax,
+                     FieldHandle gHandle, double gmin, double gmax,
                      int card_mem);
   
 protected:
   virtual void fill_brick(TextureBrickHandle &brick,
-                          FieldHandle vfield, double vmin, double vmax,
-                          FieldHandle gfield, double gmin, double gmax);
+                          FieldHandle vHandle, double vmin, double vmax,
+                          FieldHandle gHandle, double gmin, double gmax);
 }; 
 
-template<typename FieldType>
+template< class VFIELD, class GFIELD, class TEXTUREBRICK >
 void
-TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
-                                     FieldHandle vfield,
-				     double vmin, double vmax,
-                                     FieldHandle gfield,
-				     double gmin, double gmax,
-                                     int card_mem)
+TextureBuilderAlgoT<VFIELD,
+		    GFIELD,
+		    TEXTUREBRICK>::build(TextureHandle tHandle,
+					 FieldHandle vHandle,
+					 double vmin, double vmax,
+					 FieldHandle gHandle,
+					 double gmin, double gmax,
+					 int card_mem)
 {
-  //FIX_ME MC
-#if 0
-  LVMesh::handle_type mesh = (LVMesh*)(vfield->mesh().get_rep());
-  int nx = mesh->get_ni();
-  int ny = mesh->get_nj();
-  int nz = mesh->get_nk();
-  if(vfield->basis_order() == 0) {
-    --nx; --ny; --nz;
-  }
-  int nc = gfield.get_rep() ? 2 : 1;
-  int nb[2];
-  nb[0] = gfield.get_rep() ? 4 : 1;
-  nb[1] = gfield.get_rep() ? 1 : 0;
-  Transform tform;
-  mesh->get_canonical_transform(tform);
+  VFIELD *vfld = (VFIELD *) vHandle.get_rep();
+  GFIELD *gfld = (GFIELD *) gHandle.get_rep();
 
-  texture->lock_bricks();
-  vector<TextureBrick*>& bricks = texture->bricks();
-  // bbox for the canonical_transform.
-  const BBox bbox(Point(0, 0, 0), Point(1, 1, 1));
-  if (nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
-      || nc != texture->nc() || card_mem != texture->card_mem() ||
-      bbox.min() != texture->bbox().min() ||
-      bbox.max() != texture->bbox().max())
-  {
-    build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
-    texture->set_size(nx, ny, nz, nc, nb);
-    texture->set_card_mem(card_mem);
+
+  MRLatVolField<value_type> *mrvfld = 0;
+  MRLatVolField<Vector>     *mrgfld = 0;
+
+  if( vHandle->get_type_description(0)->get_name() == "MRLatVolField" )
+    mrvfld = (MRLatVolField<value_type>*) vfld;
+
+  if( gfld && gHandle->get_type_description(0)->get_name() == "MRLatVolField" )
+    mrgfld = (MRLatVolField<Vector>*) gfld;
+
+  if( mrvfld ) {
+    // temporary
+    int nc = 1;
+    int nb[2] = { 1, 0 };
+
+    if( mrgfld ) {
+      // In order to use the gradient field, it must have the exact
+      // structure as the value field.
+      bool same = true;
+      // Same number of levels?
+      if( mrvfld->nlevels() == mrgfld->nlevels() ) {
+	for(int i = 0; i < mrvfld->nlevels(); i++){
+	  const MultiResLevel<value_type>*  lev = mrvfld->level(i);
+	  const MultiResLevel<Vector>    * glev = mrgfld->level(i);
+	  // Does each level have the same number of patches?
+	  if( lev->patches.size() == glev->patches.size() ){
+	    for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+	      value_type tmp;
+	      typename MRLatVolField<value_type>::LVF *vmr;
+	      vmr =lev->patches[j].get_rep(); 
+	      MRLatVolField<Vector>::LVF* gmr = glev->patches[j].get_rep();
+	      
+	      typename MRLatVolField<value_type>::LVF::mesh_handle_type mesh =
+		vmr->get_typed_mesh();
+	      typename MRLatVolField<Vector>::LVF::mesh_handle_type gmesh =
+		gmr->get_typed_mesh();
+	      
+	      // Is each patch the same size?
+	      if( mesh->get_ni() != gmesh->get_ni() ||
+		  mesh->get_nj() != gmesh->get_nj() ||
+		  mesh->get_nk() != gmesh->get_nk()) {
+		same = false;
+		break;
+	      }
+	    }
+	    if (!same) {
+	      break;
+	    }
+	  } else {
+	    same = false;
+	    break;
+	  }
+	}
+      } else {
+	same = false;
+      }
+      // If same is still true, we can use the gradient field
+      if( same ) {
+	nc = 2;
+	nb[0] = 4;
+	nb[1] = 1;
+      }
+    }
+
+    
+    if( tHandle->nlevels() > 1 ){
+      tHandle->lock_bricks();
+      tHandle->clear();
+      tHandle->unlock_bricks();
+    }
+    
+    // Grab the transform from the lowest resolution field
+    Transform tform;
+    mrvfld->level(0)->patches[0].get_rep()->get_typed_mesh()->
+      get_canonical_transform(tform);
+    
+    for(int i = 0 ; i < mrvfld->nlevels(); i++ ){
+      const MultiResLevel<value_type> *lev =  mrvfld->level(i);
+      const MultiResLevel<Vector>    *glev = (mrgfld ? mrgfld->level(i) : 0);
+      vector<TextureBrickHandle> new_level;
+      if( i == tHandle->nlevels() ) {
+	tHandle->add_level(new_level);
+      }
+      vector<TextureBrickHandle>& bricks = tHandle->bricks(i);
+      unsigned int k = 0;
+      for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+	typename MRLatVolField<value_type>::LVF* vmr =
+	                                           lev->patches[j].get_rep(); 
+	MRLatVolField<Vector>::LVF*     gmr = 
+	                              (glev ? glev->patches[j].get_rep() : 0);
+
+	typename MRLatVolField<value_type>::LVF::mesh_handle_type mesh = 
+	                                                vmr->get_typed_mesh();
+
+	int nx = mesh->get_ni();
+	int ny = mesh->get_nj();
+	int nz = mesh->get_nk();
+	 if(vHandle->basis_order() == 0) {
+	  --nx; --ny; --nz;
+	}
+	
+	// make sure each sub level has a corrected bounding box
+	BBox bbox(tform.unproject( mesh->get_bounding_box().min() ),
+		  tform.unproject( mesh->get_bounding_box().max() ));
+
+       	vector<TextureBrickHandle> patch_bricks;
+  	texture_build_bricks(patch_bricks, nx, ny, nz, nc, nb, bbox,
+                             card_mem, false);
+	
+	if( i == 0 ){
+	  tHandle->set_size(nx, ny, nz, nc, nb);
+	  tHandle->set_card_mem(card_mem);
+	  tHandle->set_bbox(bbox);
+	  tHandle->set_minmax(vmin, vmax, gmin, gmax);
+	  tHandle->set_transform(tform);
+	}
+
+	tHandle->lock_bricks();
+	for(k = 0; k < patch_bricks.size(); k++){
+	  fill_brick(patch_bricks[k], vmr, vmin, vmax, gmr, gmin, gmax);
+	  patch_bricks[k]->set_dirty(true);
+	  bricks.push_back( patch_bricks[k] );
+	}
+
+	tHandle->unlock_bricks();
+      }
+    }
+  } else {
+    
+    typename VFIELD::mesh_handle_type mesh = vfld->get_typed_mesh();
+    int nx = mesh->get_ni();
+    int ny = mesh->get_nj();
+    int nz = mesh->get_nk();
+    if(vHandle->basis_order() == 0) {
+      --nx; --ny; --nz;
+    }
+    int nc = gHandle.get_rep() ? 2 : 1;
+    int nb[2];
+    nb[0] = gHandle.get_rep() ? 4 : 1;
+    nb[1] = gHandle.get_rep() ? 1 : 0;
+    Transform tform;
+    mesh->get_canonical_transform(tform);
+
+    tHandle->lock_bricks();
+    tHandle->clear();
+    vector<TextureBrickHandle>& bricks = tHandle->bricks();
+    const BBox bbox(Point(0,0,0), Point(1,1,1)); 
+    if(nx != tHandle->nx() || ny != tHandle->ny() || nz != tHandle->nz()
+       || nc != tHandle->nc() || card_mem != tHandle->card_mem() ||
+       bbox.min() != tHandle->bbox().min())
+    {
+      texture_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem, false);
+      tHandle->set_size(nx, ny, nz, nc, nb);
+      tHandle->set_card_mem(card_mem);
+    }
+    tHandle->set_bbox(bbox);
+    tHandle->set_minmax(vmin, vmax, gmin, gmax);
+    tHandle->set_transform(tform);
+    for(unsigned int i=0; i<bricks.size(); i++) {
+      fill_brick(bricks[i], vHandle, vmin, vmax, gHandle, gmin, gmax);
+      bricks[i]->set_dirty(true);
+    }
+    tHandle->unlock_bricks();
   }
-#endif
 }
-template <class FieldType>
+
+
+template <class VFIELD, class GFIELD, class TEXTUREBRICK>
 void 
-TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
-                                          FieldHandle vfield,
-					  double vmin, double vmax,
-                                          FieldHandle gfield,
-					  double gmin, double gmax)
+TextureBuilderAlgoT<VFIELD,
+		    GFIELD,
+		    TEXTUREBRICK>::fill_brick(TextureBrickHandle &brick,
+					      FieldHandle vHandle,
+					      double vmin, double vmax,
+					      FieldHandle gHandle,
+					      double gmin, double gmax)
 {
-  typedef GenericField<LVMesh, HexTrilinearLgn<value_type>, 
-    FData3d<value_type, LVMesh> >  LVField;  
-  
-  typedef GenericField<LVMesh, HexTrilinearLgn<Vector>, 
-    FData3d<Vector, LVMesh> >  LVFieldV; 
-  
-  LVField* vfld = dynamic_cast<LVField*>(vfield.get_rep());
-  
-  if (! vfld) { 
-    cerr << "dynamic cast failed! : value field" << endl;
-    return;
-  }
-
-  LVFieldV* gfld = dynamic_cast<LVFieldV*>(gfield.get_rep());
-
-  if (gfield.get_rep() && !gfld) { 
-    cerr << "dynamic cast failed! : gradient field" << endl;
-    return;
-  }
+  VFIELD *vfld = (VFIELD *) vHandle.get_rep();
+  GFIELD *gfld = (GFIELD *) gHandle.get_rep();
+  TEXTUREBRICK *br = (TEXTUREBRICK*) brick.get_rep();
 
   int nc = brick->nc();
-  TextureBrickT<unsigned char>* br =
-    dynamic_cast<TextureBrickT<unsigned char>*>(brick.get_rep());
-
-  if (! br) { 
-    cerr << "dynamic cast failed! : brick" << endl;
-    return;
-  }
 
   int nx = brick->nx();
   int ny = brick->ny();
@@ -192,15 +306,16 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
 
   int i, j, k, ii, jj, kk;
     
-  if (br && vfld && ((gfld && nc == 2) || nc == 1))
-  {
-    typename FieldType::mesh_type* mesh = vfld->get_typed_mesh().get_rep();
+  if (nc == 1 || (nc == 2 && gfld)) {
+    typename VFIELD::mesh_type* mesh = vfld->get_typed_mesh().get_rep();
 
     if (!gfld) { // fill only values
+
       unsigned char* tex = br->data(0);
-      if(vfield->basis_order() == 0) {
-        typename FieldType::mesh_type::Cell::range_iter iter(mesh, x0, y0, z0,
-                                                             x1, y1, z1);
+      if(vHandle->basis_order() == 0) {
+        typename VFIELD::mesh_type::Cell::range_iter iter(mesh,
+							  x0, y0, z0,
+							  x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -227,8 +342,9 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
           }
         }
       } else {
-        typename FieldType::mesh_type::Node::range_iter iter(mesh, x0, y0, z0,
-                                                             x1, y1, z1);
+        typename VFIELD::mesh_type::Node::range_iter iter(mesh,
+							  x0, y0, z0,
+							  x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -259,9 +375,10 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
       unsigned char* tex0 = br->data(0);
       unsigned char* tex1 = br->data(1);
       
-      if(vfield->basis_order() == 0) {
-        typename FieldType::mesh_type::Cell::range_iter iter(mesh, x0, y0, z0,
-                                                             x1, y1, z1);
+      if(vHandle->basis_order() == 0) {
+        typename VFIELD::mesh_type::Cell::range_iter iter(mesh,
+							  x0, y0, z0,
+							  x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -313,8 +430,9 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
           }
         }
       } else {
-        typename FieldType::mesh_type::Node::range_iter iter(mesh, x0, y0, z0,
-                                                             x1, y1, z1);
+        typename VFIELD::mesh_type::Node::range_iter iter(mesh,
+							  x0, y0, z0,
+							  x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -367,10 +485,6 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
         }
       }
     }    
-  }
-  else
-  {
-    cerr<<"Not a Lattice type---should not be here\n";
   }
 }
 

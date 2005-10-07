@@ -37,6 +37,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Core/Geometry/Point.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Basis/CrvLinearLgn.h>
