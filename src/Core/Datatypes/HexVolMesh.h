@@ -142,7 +142,7 @@ public:
   unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
   unsigned get_faces(Face::array_type &, Node::index_type) const { return 0; }
   unsigned get_faces(Face::array_type &, Edge::index_type) const { return 0; }
-  unsigned get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  unsigned get_cells(Cell::array_type &, Node::index_type) const;
   unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
   unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
@@ -391,7 +391,7 @@ private:
       else
         return (snodes_[0] < f.snodes_[0]);
     }
-};
+  };
 
 
   //! Edge information.
