@@ -34,15 +34,15 @@
 %define distro  Mandrake 9.2
 %define debug   opt
 %undefine	__check_files
-%define thirdpartydotver 1
+%define thirdpartydotver 2
 %define thirdpartyversion 1.24.%{thirdpartydotver}
 %define hdf5    hdf5-1.6.2
 %define ftgl	ftgl-2.0.9
 
 
-Name:		%{defname}Fusion
-Version:	%{defver}.%{dotver}
-Serial:		8
+Name:		SCIRunFusion
+Version:	1.24.2
+Serial:		9
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
 Copyright:	University of Utah Limited

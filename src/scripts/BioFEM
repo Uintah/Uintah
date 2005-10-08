@@ -28,7 +28,7 @@
 #
 #!/bin/bash
 export SCIRUN_OBJDIR=`echo $0 | awk -F/ '{ for (i = 1; i < NF; i++) printf("%s/",$i); printf("\n") }'`
-export SCIRUN_OBJDIR=`cd ${SCIRUN_OBJDIR}/../../../SCIRun.app/Contents/MacOS; pwd`
+export SCIRUN_OBJDIR=`cd ${SCIRUN_OBJDIR}; pwd`
 export SCIRUN_SRCDIR=`cd ${SCIRUN_OBJDIR}/../src; pwd`
 export SCIRUN_THIRDPARTY_DIR=`cd ${SCIRUN_OBJDIR}/../Thirdparty; pwd`
 export SCIRUN_ITCL_WIDGETS=${SCIRUN_THIRDPARTY_DIR}/lib/iwidgets/scripts
