@@ -183,8 +183,6 @@ public:
   virtual void io (Piostream& str);
 
 protected:
-  double distance(const T&, const T&) const;
-
   //! support data (node data is elsewhere)
   vector<T[3]>          derivs_; 
 };

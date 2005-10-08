@@ -145,8 +145,6 @@ protected:
   //! Quadratic Lagrangian only needs additional nodes stored for each edge
   //! in the topology.
   vector<T>          nodes_; 
-
-  double distance(const T&, const T&) const;
 };
 
 
