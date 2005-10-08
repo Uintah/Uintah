@@ -233,9 +233,6 @@ public:
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);
-
-protected:
-  double distance(const T&, const T&) const;
 };
 
 
