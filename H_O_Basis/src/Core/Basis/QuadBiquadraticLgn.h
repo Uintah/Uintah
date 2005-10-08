@@ -108,9 +108,6 @@ public:
   virtual void io (Piostream& str);
   
 protected:
-
-  double distance(const T&, const T&) const;
-
   //! Additional support values.
 
   //! Quadratic Lagrangian only needs additional nodes stored for each edge
