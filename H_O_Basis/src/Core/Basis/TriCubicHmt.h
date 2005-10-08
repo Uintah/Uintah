@@ -116,9 +116,6 @@ public:
   virtual void io (Piostream& str);
 
 protected:
-
-  double distance(const T&, const T&) const;
-
   //! Additional support values.
 
   //! Cubic Hermitian needs additonal derivatives stored at each node

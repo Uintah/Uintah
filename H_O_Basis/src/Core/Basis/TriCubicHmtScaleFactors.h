@@ -142,8 +142,6 @@ public:
   virtual void io (Piostream& str);
 
 protected:
-  double distance(const T&, const T&) const;
-
   //! support data 
   vector<T[2]>          derivs_; 
   vector<T[3]>          scalefactors_; 
