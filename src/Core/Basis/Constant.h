@@ -1,7 +1,7 @@
 //  
 //  For more information, please see: http://software.sci.utah.edu
 //  
-//  The MIT License
+//  he MIT License
 //  
 //  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 //  University of Utah.
@@ -37,6 +37,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/TypeName.h>
 
 namespace SCIRun {
 
