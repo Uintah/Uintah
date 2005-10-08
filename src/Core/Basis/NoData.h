@@ -52,13 +52,13 @@ public:
   NoDataBasis() {}
   virtual ~NoDataBasis() {}
   
-  unsigned polynomial_order() const { return -1; }
+  int polynomial_order() const { return -1; }
   
   //! get value at parametric coordinate 
   template <class CellData>
   T interpolate(const vector<double> &coords, const CellData &cd) const
   {
-    ASSERTFAIL("There can be no data associated with this Basis");
+    ASSERTFAIL("Data associated with basis 'NoDataBasis'");
   }
   
   //! get first derivative at parametric coordinate
@@ -66,15 +66,8 @@ public:
   void derivate(const vector<double> &coords, const CellData &cd, 
 		vector<T> &grad) const
   {
-    ASSERTFAIL("There can be no data associated with this Basis");
+    ASSERTFAIL("Data associated with basis 'NoDataBasis'");
   }
-  
-//   //! get second derivative at parametric coordinate
-//   template <class CellData>
-//   T derivate2(const vector<double> &coords, const CellData &cd) const
-//   {
-//     ASSERTFAIL("There can be no data associated with this Basis");
-//   }
   
   //! get parametric coordinate for value within the element
   //! iterative solution...
@@ -82,7 +75,7 @@ public:
   void get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const
   {
-    ASSERTFAIL("There can be no data associated with this Basis");
+    ASSERTFAIL("Coordinates cannot be cassociated with basis 'NoDataBasis'");
   }
   
   static  const string type_name(int n = -1);
