@@ -54,7 +54,7 @@ namespace SCIRun {
     typedef typename ElemBasis::value_type T;
     static const double thresholdDist; //!< Thresholds for coordinates checks
     static const double thresholdDist1; //!< 1+thresholdDist
-    static const int maxsteps; //! maximal steps for Newton search
+    static const int maxsteps; //!< maximal steps for Newton search
 
     Dim3Locate() {}
     virtual ~Dim3Locate() {}
@@ -70,7 +70,7 @@ namespace SCIRun {
 	  xold = x;
 	  T y = pEB->interpolate(x, cd)-value;
 	  pEB->derivate(x, cd, yd);
-	  double dist=eval_guess(x, xold, y, yd);
+	  double dist=getnext(x, xold, y, yd);
 	  if (dist < thresholdDist) 
 	    return true;	  
 	}
@@ -105,8 +105,13 @@ namespace SCIRun {
       double getnextx(vector<double> &x, vector<double> &xold, const T& y, const vector<T>& yd)
       {
 	x[0] -= (yd[0] ? y/yd[0] : 0.);
+	x[1] -= (yd[1] ? y/yd[1] : 0.);
+	x[2] -= (yd[2] ? y/yd[2] : 0.);
+
 	const double dx=x[0]-xold[0];
-	return fabs(dx);
+	const double dy=x[1]-xold[1];
+	const double dz=x[2]-xold[2];
+	return sqrt(dx*dx+dy*dy+dz*dz);	
       }
  
     // locate for Point 
@@ -149,13 +154,13 @@ namespace SCIRun {
     typedef typename ElemBasis::value_type T;
     static const double thresholdDist; //!< Thresholds for coordinates checks
     static const double thresholdDist1; //!< 1+thresholdDist
-    static const int maxsteps; //! maximal steps for Newton search
+    static const int maxsteps; //!< maximal steps for Newton search
 
     Dim2Locate() {}
     virtual ~Dim2Locate() {}
  
     //! find value in interpolation for given value
-     template <class CellData>
+    template <class CellData>
       bool get_iterative(const ElemBasis *pEB, vector<double> &x, 
 			 const T& value, const CellData &cd) const  
       {       
@@ -165,7 +170,7 @@ namespace SCIRun {
 	  xold = x;
 	  T y = pEB->interpolate(x, cd)-value;
 	  pEB->derivate(x, cd, yd);
-	  double dist=eval_guess(x, xold, y, yd);
+	  double dist=getnext(x, xold, y, yd);
 	  if (dist < thresholdDist) 
 	    return true;	  
 	}
@@ -178,8 +183,10 @@ namespace SCIRun {
       double getnextx(vector<double> &x, vector<double> &xold, const T& y, const vector<T>& yd)
       {
 	x[0] -= (yd[0] ? y/yd[0] : 0.);
+	x[1] -= (yd[1] ? y/yd[1] : 0.);
 	const double dx=x[0]-xold[0];
-	return fabs(dx);
+	const double dy=x[1]-xold[1];
+	return sqrt(dx*dx+dy*dy);
       }
   };
 
@@ -199,7 +206,7 @@ namespace SCIRun {
     typedef typename ElemBasis::value_type T;
     static const double thresholdDist; //!< Thresholds for coordinates checks
     static const double thresholdDist1; //!< 1+thresholdDist
-    static const int maxsteps; //! maximal steps for Newton search
+    static const int maxsteps; //!< maximal steps for Newton search
 
     Dim1Locate() {}
     virtual ~Dim1Locate() {}
@@ -216,13 +223,19 @@ namespace SCIRun {
 	  xold = x;
 	  T y = pElem->interpolate(x, cd)-value; 
 	  pElem->derivate(x, cd, yd);
-	  x[0]-=(yd ? y/yd : 0.);   // this and next line will break for some data types
-	  double dx=x[0]-xold[0];
-	  if (fabs(dx) < thresholdDist)
+	  double dist=getnext(x, xold, y, yd);
+	  if (dist < thresholdDist)
 	    return true;
 	}
 	return false;
       };
+
+      double getnext(vector<double> &x, vector<double> &xold, const T& y, const vector<T>& yd)
+      {
+	x[0] -= (yd[0] ? y/yd[0] : 0.);
+	const double dx=x[0]-xold[0];
+	return sqrt(dx*dx);
+      }
   };
 
   template<class ElemBasis>
