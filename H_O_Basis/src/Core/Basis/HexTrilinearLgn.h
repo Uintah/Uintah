@@ -32,18 +32,18 @@
 #if !defined(HexTrilinearLgn_h)
 #define HexTrilinearLgn_h
 
-#include <vector>
+
 #include <string>
-#include <Core/Geometry/Point.h>
+#include <float.h>
+
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Geometry/Transform.h>
-#include <float.h>
+#include <Core/Basis/Locate.h>
+
 
 namespace SCIRun {
 
-  using std::vector;
   using std::string;
 
   //! Class for creating geometrical approximations of Hex meshes
@@ -124,7 +124,7 @@ namespace SCIRun {
   
   //! Class for searching of parametric coordinates related to a value in Hex meshes and fields
   template <class ElemBasis>
-    class HexLocate {
+    class HexLocate : public Dim3Locate<ElemBasis> {
   public:
     typedef typename ElemBasis::value_type T;
 
@@ -132,41 +132,29 @@ namespace SCIRun {
     virtual ~HexLocate() {}
  
     //! find value in interpolation for given value
-    //! Step 1: get a good guess on the domain, evaluate equally spaced points 
-    //!         on the domain and use the closest as our starting point for 
-    //!         Newton iteration. 
-    //! Step 2: Newton iteration.
-    //!         x_n+1 =x_n + y(x_n) * y'(x_n)^-1          
-      
     template <class CellData>
       bool get_coords(const ElemBasis *pEB, vector<double> &coords, 
 		      const T& value, const CellData &cd) const  
-      {       
-	vector<double> x(3), xold(3); 
-	vector<T> yd(3);
-	const double thresholdDist=1e-7, thresholdDist1=1.+thresholdDist;
-	const int maxsteps=100;
+      {      
+	initial_guess(pEB, value, cd, coords);
+	if (get_iterative(pEB, value, cd, coords))
+	  return check_coords(coords);
+	return false;
+      }
 
-	initial_guess(pEB, value, cd, x);
-       
-	for (int steps=0; steps<maxsteps; steps++) {
-	  xold = x;
-	  T y = pEB->interpolate(x, cd)-value;
-	  pEB->derivate(x, cd, yd);
-	  double dist=eval_guess(x, xold, y, yd);
-	  if (dist < thresholdDist)
-	    if (x[0]>=-thresholdDist && x[0]<=thresholdDist1)
-	      if (x[1]>=-thresholdDist && x[1]<=thresholdDist1)
-		if (x[2]>=-thresholdDist && x[2]<=thresholdDist1) {
-		  coords = x;
-		  return true;
-		}	  
-	}
+  protected:
+    template <class CellData>
+      inline bool check_coords(const vector<double> &x) const  
+      {  
+	if (x[0]>=-Dim3Locate<CellData>::thresholdDist && x[0]<=Dim3Locate<CellData>::thresholdDist1)
+	  if (x[1]>=-Dim3Locate<CellData>::thresholdDist && x[1]<=Dim3Locate<CellData>::thresholdDist1)
+	    if (x[2]>=-Dim3Locate<CellData>::thresholdDist && x[2]<=Dim3Locate<CellData>::thresholdDist1) 
+	      return true;
+
 	return false;
       };
   
-  protected:
-    //! find a reasonable initial guess for starting Newton iteration.
+    //! find a reasonable initial guess 
     template <class CellData>
       void initial_guess(const ElemBasis *pElem, const T &val, const CellData &cd, 
 			 vector<double> & guess) const
@@ -175,6 +163,7 @@ namespace SCIRun {
 	
 	int end = 4;
 	vector<double> coord(3);
+	guess.resize(3);
 	for (int x = 0; x <= end; x++) {
 	  coord[0] = x / (double) end;
 	  for (int y = 0; y <= end; y++) {
@@ -191,64 +180,7 @@ namespace SCIRun {
 	  }
 	}
       }
-
-    template<class T>
-      inline void InverseMatrix3x3(const T *p, T *q) 
-      {
-	const T a=p[0], b=p[1], c=p[2];
-	const T d=p[3], e=p[4], f=p[5];
-	const T g=p[6], h=p[7], i=p[8];
-      
-	const T detp=a*e*i-c*e*g+b*f*g+c*d*h-a*f*h-b*d*i;
-	const T detinvp=(detp ? 1.0/detp : 0);
-      
-	q[0]=(e*i-f*h)*detinvp;
-	q[1]=(c*h-b*i)*detinvp;
-	q[2]=(b*f-c*e)*detinvp;
-	q[3]=(f*g-d*i)*detinvp;
-	q[4]=(a*i-c*g)*detinvp;
-	q[5]=(c*d-a*f)*detinvp;
-	q[6]=(d*h-e*g)*detinvp;
-	q[7]=(b*g-a*h)*detinvp;
-	q[8]=(a*e-b*d)*detinvp;
-      }
-
-
-    // locate for scalar value 
-    template <class T>
-      double getnextx(vector<double> &x, vector<double> &xold, const T& y, const vector<T>& yd)
-      {
-	x[0] -= (yd[0] ? y/yd[0] : 0.);
-	const double dx=x[0]-xold[0];
-	return fabs(dx);
-      }
- 
-    // locate for Point 
-    double getnextx(vector<double> &x, vector<double> &xold, const Point& y, const vector<Point>& yd)
-    {
-      double J[9], JInv[9];
-      J[0]=yd[0].x();
-      J[1]=yd[0].y();
-      J[2]=yd[0].z();
-      J[3]=yd[1].x();
-      J[4]=yd[1].y();
-      J[5]=yd[1].z();
-      J[6]=yd[2].x();
-      J[7]=yd[2].y();
-      J[8]=yd[2].z();
-      InverseMatrix3x3(J, JInv);
-   
-      x[0] -= JInv[0]*y.x()+JInv[1]*y.y()+JInv[2]*y.z();
-      x[1] -= JInv[3]*y.x()+JInv[4]*y.y()+JInv[5]*y.z();
-      x[2] -= JInv[6]*y.x()+JInv[7]*y.y()+JInv[8]*y.z();
-   
-      const double dx=x[0]-xold[0];
-      const double dy=x[1]-xold[1];
-      const double dz=x[2]-xold[2];
-      return sqrt(dx*dx+dy*dy+dz*dz);    
-    }
- 
- };
+  };
 
 
 

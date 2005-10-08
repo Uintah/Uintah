@@ -33,13 +33,12 @@
 #define QuadBilinearLgn_h
 
 #include <vector>
-#include <string>
-#include <Core/Geometry/Point.h>
+#include <float.h>
+
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Geometry/Transform.h>
-#include <float.h>
+#include <Core/Basis/Locate.h>
 
 namespace SCIRun {
 
@@ -116,15 +115,49 @@ namespace SCIRun {
     virtual ~QuadLocate() {}
  
     //! find value in interpolation for given value
-    //! Step 1: get a good guess on the domain, evaluate equally spaced points 
-    //!         on the domain and use the closest as our starting point for 
-    //!         Newton iteration. 
-    //! Step 2: Newton iteration.
-    //!         x_n+1 =x_n + y(x_n) * y'(x_n)^-1          
     template <class CellData>
-      bool get_coords(ElemBasis *pElem, vector<double> &coords, const T& value, 
+      bool get_coords(const ElemBasis *pEB, vector<double> &coords, const T& value, 
 		      const CellData &cd) const  
       {          
+	initial_guess(pEB, value, cd, coords);
+	if (get_iterative(pEB, value, cd, coords))
+	  return check_coords(coords);
+	return false;
+      }
+
+  protected:
+    template <class CellData>
+      inline bool check_coords(const vector<double> &x) const  
+      {  
+	if (x[0]>=-Dim2Locate<CellData>::thresholdDist && x[0]<=Dim2Locate<CellData>::thresholdDist1)
+	  if (x[1]>=-Dim2Locate<CellData>::thresholdDist && x[1]<=Dim2Locate<CellData>::thresholdDist1)
+	    return true;
+
+	return false;
+      };
+  
+    //! find a reasonable initial guess 
+    template <class CellData>
+      void initial_guess(const ElemBasis *pElem, const T &val, const CellData &cd, 
+			 vector<double> & guess) const
+      {
+	double dist = DBL_MAX;
+	
+	int end = 4;
+	vector<double> coord(2);
+	guess.resize(2);
+	for (int x = 0; x <= end; x++) {
+	  coord[0] = x / (double) end;
+	  for (int y = 0; y <= end; y++) {
+	    coord[1] = x / (double) end;
+	    T dv = pElem->interpolate(coord, cd)-val;
+	    T cur_d = sqrt(dv*dv);
+	    if (cur_d < dist) {
+	      dist = cur_d;
+	      guess = coord;
+	    }
+	  }
+	}
       }
   };
 
