@@ -102,7 +102,7 @@ namespace SCIRun {
     //! Step 2: Newton iteration.
     //!         x_n+1 =x_n + y(x_n) * y'(x_n)^-1          
     template <class CellData>
-      void get_coords(ElemBasis *pElem, vector<double> &coords, const T& value, 
+      bool get_coords(ElemBasis *pElem, vector<double> &coords, const T& value, 
 		      const CellData &cd) const  
       {          
 	vector<double> x(1), xold(1); 

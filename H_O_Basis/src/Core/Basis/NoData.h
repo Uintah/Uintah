@@ -72,7 +72,7 @@ public:
   //! get parametric coordinate for value within the element
   //! iterative solution...
   template <class CellData>
-  void get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const
   {
     ASSERTFAIL("Coordinates cannot be cassociated with basis 'NoDataBasis'");
