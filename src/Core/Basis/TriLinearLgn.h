@@ -170,7 +170,7 @@ public:
   TriLinearLgn() {}
   virtual ~TriLinearLgn() {}
   
-  virtual int polynomial_order() const { return 1; }
+  int polynomial_order() const { return 1; }
 
   virtual void approx_edge(const unsigned edge, 
 			   const unsigned /* div_per_unit */,
@@ -230,10 +230,6 @@ public:
   static const string type_name(int n = -1);
 
   virtual void io (Piostream& str);
-
-protected:
-
-  double distance(const T&, const T&) const;
 };
 
 
