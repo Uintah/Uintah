@@ -80,7 +80,7 @@ write_MPM(FieldHandle& field_h, const string &outdir)
       fname << nm << "-"; 
       fname.fill('0');
       fname.width(4);
-      fname << right << 1;
+      fname << ios::right << 1;
       string nm1;
       fname >> nm1;
       files->push_back(new ofstream(nm1.c_str(), ios::out));
@@ -100,7 +100,7 @@ write_MPM(FieldHandle& field_h, const string &outdir)
     fname << nm << "-"; 
     fname.fill('0');
     fname.width(4);
-    fname << right << 1;
+    fname << ios::right << 1;
     string nm1;
     fname >> nm1;
     files->push_back(new ofstream(nm1.c_str(), ios::out));

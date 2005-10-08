@@ -477,6 +477,8 @@ itcl_class ViewWindow {
 	
 	initGlobal $this-geometry [wm geometry .ui[modname]]
 	trace variable $this-geometry w "$this traceGeom"
+	trace variable $this-inertia_x w "$this inertiaDraw"
+	trace variable $this-inertia_y w "$this inertiaDraw"
     }
 
     destructor {
@@ -645,7 +647,7 @@ itcl_class ViewWindow {
 	wm withdraw $w.detached
 	
 	# This is the frame for the geometry controls
-	iwidgets::scrolledframe $w.msframe -width 640 -height 240 \
+	iwidgets::scrolledframe $w.msframe -width 640 -height 290 \
 	    -vscrollmode dynamic -hscrollmode dynamic \
 	    -sbwidth 10 -relief groove
 
@@ -653,7 +655,7 @@ itcl_class ViewWindow {
 	set msframe [$w.msframe childsite]
 
 	frame $msframe.f -relief solid
-	pack $msframe.f -side top -fill x
+	pack $msframe.f -side top
 
 	set IsAttached 1
 	set IsDisplayed 0
@@ -907,6 +909,19 @@ itcl_class ViewWindow {
 	    "Specifies how far the left and right eye images are\n" \
 	    "offset when rendering in stereo mode."
 	pack $m.sbase -side top -anchor w
+
+	frame $m.inertia -relief groove -bd 2
+	pack $m.inertia -side top	
+	checkbutton $m.inertia.autorotate -text "Auto Rotate" \
+	    -variable $this-inertia_mode -command \
+	    "setGlobal $this-inertia_recalculate 1; $this-c redraw"
+	makeInertiaControl $m.inertia.control
+	scale $m.inertia.mag -from 0.0 -to 15.0 -showvalue 1 \
+	    -variable $this-inertia_mag -resolution 0.01 -orient horizontal \
+	    -command "setGlobal $this-inertia_recalculate 2;\#"
+	pack $m.inertia.autorotate $m.inertia.control $m.inertia.mag -side top
+
+
     }
 
     method resize {} {
@@ -1326,6 +1341,57 @@ itcl_class ViewWindow {
 	$c bind lname <B1-Motion> "$this moveLight $c $i %x %y"
 	$c bind lc <ButtonPress-1> "$this lightColor $w $c $i"
 	$this lightSwitch $i
+    }
+
+
+    method makeInertiaControl { w } {
+	upvar \#0 $this-inertia_canvases canvases
+	upvar \#0 $this-inertia_x inertia_x $this-inertia_y inertia_y
+	upvar \#0 $this-inertia_canvas_cx cx $this-inertia_canvas_cy cy
+	
+	lappend canvases $w
+	
+	set cx 25.0
+	set cy 25.0
+
+	canvas $w -bg "#BDBDBD" -width [expr $cx*2] -height [expr $cy*2]
+	$w create oval 0 0 [expr $cx*2-1] [expr $cy*2-1] \
+	    -outline black -fill white -tags lc
+	$w create line $cx $cy [expr $cx*2] $cy -arrow last -tags arrow
+
+	set inertia_x 1.0
+	set inertia_y 0
+
+	set script "$this inertiaCanvas %x %y"
+	$w bind lc <ButtonPress-1> $script
+	$w bind lc <B1-Motion> $script
+	$w bind arrow <ButtonPress-1> $script
+	$w bind arrow <B1-Motion> $script
+    }
+
+
+    method inertiaCanvas { x y } {
+	upvar $this-inertia_canvas_cx cx $this-inertia_canvas_cy cy
+	setGlobal $this-inertia_x [expr ($x-$cx)/$cx]
+	setGlobal $this-inertia_y [expr ($y-$cy)/(-$cy)]
+	setGlobal $this-inertia_recalculate 1
+    }	
+
+    method inertiaDraw { args } {
+	upvar \#0 $this-inertia_canvases canvases
+	upvar \#0 $this-inertia_x x $this-inertia_y y
+	upvar \#0 $this-inertia_canvas_cx cx $this-inertia_canvas_cy cy
+	set len [expr sqrt($x*$x+$y*$y)]
+
+	if { ![info exists canvases] || $len < 0.001 } return
+	
+	foreach c $canvases {
+	    if { [winfo exists $c] } {
+		set xx [expr ($x/$len)*$cx + $cx]
+		set yy [expr (($y/$len)*-($cy)) + $cy]
+		$c coords arrow $cx $cy $xx $yy
+	    }
+	}
     }
 
     method lightColor { w c i } {

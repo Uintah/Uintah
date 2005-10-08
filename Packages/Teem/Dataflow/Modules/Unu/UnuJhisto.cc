@@ -399,7 +399,7 @@ void
         return;
       }
     }
-
+    
     if (nrrdHistoJoint(nout, (const Nrrd**)&nrrds[0], 
 		       (const NrrdRange**)range,
 		       (int)nrrds.size(), weight, bin, get_type(type_.get()), 
@@ -409,7 +409,6 @@ void
       free(err);
       return;
     }
-
 
     NrrdData *nrrd = scinew NrrdData;
     nrrd->nrrd = nout;    
