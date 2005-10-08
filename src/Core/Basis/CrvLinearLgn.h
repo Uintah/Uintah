@@ -33,13 +33,12 @@
 #define CrvLinearLgn_h
 
 #include <vector>
-#include <string>
+#include <float.h>
+
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/TypeName.h>
-#include <Core/Geometry/Transform.h>
-#include <float.h>
-#include <math.h>
+#include <Core/Basis/Locate.h>
 
 namespace SCIRun {
 
@@ -87,55 +86,43 @@ namespace SCIRun {
 
   //! Class for searching of parametric coordinates related to a value in Crv meshes and fields
   template <class ElemBasis>
-    class CrvLocate {
+    class CrvLocate  : public Dim1Locate<ElemBasis> {
   public:
-
     typedef typename ElemBasis::value_type T;
 
     CrvLocate() {}
     virtual ~CrvLocate() {}
  
-    //! find value in interpolation for given value
-    //! Step 1: get a good guess on the domain, evaluate equally spaced points 
-    //!         on the domain and use the closest as our starting point for 
-    //!         Newton iteration. 
-    //! Step 2: Newton iteration.
-    //!         x_n+1 =x_n + y(x_n) * y'(x_n)^-1          
+    //! find coordinate in interpolation for given value         
     template <class CellData>
-      bool get_coords(ElemBasis *pElem, vector<double> &coords, const T& value, 
+      bool get_coords(const ElemBasis *pEB, vector<double> &coords, const T& value, 
 		      const CellData &cd) const  
       {          
-	vector<double> x(1), xold(1); 
-	vector<T> yd(1);
-	const double thresholdDist=1e-7, thresholdDist1=1.+thresholdDist;
-	const int maxsteps=100;
-	
-	initial_guess(pElem, value, cd, x);
-     
-	for (int steps=0; steps<maxsteps; steps++) {
-	  xold = x;
-	  T y = pElem->interpolate(x, cd)-value; 
-	  pElem->derivate(x, cd, yd);
-	  x[0]-=(yd ? y/yd : 0.);   // this and next line will break for some data types
-	  double dx=x[0]-xold[0];
-	  if (fabs(dx) < thresholdDist)
-	    if (x[0]>=-thresholdDist && x[0]<=thresholdDist1) {
-	      coords=x;
-	      return true;
-	    }
-	}
-	return false;
+	initial_guess(pEB, value, cd, coords);
+	if (get_iterative(pEB, value, cd, coords))
+	  return check_coords(coords);
+	return false; 
       };
  
   protected:
+    template <class CellData>
+      inline bool check_coords(const vector<double> &x) const  
+      {  
+	if (x[0]>=-Dim3Locate<CellData>::thresholdDist && x[0]<=Dim3Locate<CellData>::thresholdDist1)
+	  return true;
+
+	return false;
+      };
+
     //! find a reasonable initial guess for starting Newton iteration.
     template <class CellData>
-      void initial_guess(ElemBasis *pElem, const T &val, const CellData &cd, vector<double> guess) const
+      void initial_guess(const ElemBasis *pElem, const T &val, const CellData &cd, vector<double> guess) const
       {
 	double dist = DBL_MAX;
 	
 	int end = 4;
 	vector<double> coord(1);
+	guess.resize(1);
 	for (int x = 0; x <= end; x++) {
 	  coord[0] = x / (double) end;
 	  T dv = pElem->interpolate(coord, cd)-val;
