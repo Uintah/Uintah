@@ -31,7 +31,18 @@
 %define scirunver	1.25.0
 %define thirdpartyver	1.24.1
 
+%define defname SCIRun
+%define defver	%{scirunver}
+%define dotver  0
+%define gccver  3.2.2
+%define plat	rh9.0
+%define distro  Red Hat 9.0
+%define debug   opt
 %undefine	__check_files
+%define thirdpartydotver 2
+%define thirdpartyversion %{defver}.%{thirdpartydotver}
+%define insightver  2.2.0
+
 
 Name:		SCIRunBioPSE
 Version:	%{scirunver}
