@@ -33,14 +33,12 @@
 #define HexTricubicHmtScaleFactors_h
 
 #include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun {
 
 //! Class for handling of element of type hexahedron with tricubic hermitian interpolation with scale factors
 template <class T>
-class HexTricubicHmtScaleFactors : public HexApprox, 
-				   public HexGaussian3<double>
+class HexTricubicHmtScaleFactors : public HexApprox, public HexGaussian3<double>
 {
 public:
   typedef T value_type;
@@ -469,11 +467,11 @@ public:
 
   //! get parametric coordinate for value within the element
   template <class CellData>
-  void get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const  
   {
     HexLocate< HexTricubicHmtScaleFactors<T> > CL;
-    CL.get_coords(this, coords, value, cd);
+    return CL.get_coords(this, coords, value, cd);
   };
 
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
@@ -487,7 +485,7 @@ public:
 
 protected:
   //! support data
-  vector<vector<T> >               derivs_; 
+  vector<vector<T> >          derivs_; 
   vector<vector<double> >          scalefactors_; 
 };
 
