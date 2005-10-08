@@ -260,7 +260,8 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
   pan_x_.set(0.0);
   pan_y_.set(0.0);
   scale_.set(1.0);
-  widgets_.push_back(scinew TriangleCM2Widget());
+  //  widgets_.push_back(scinew TriangleCM2Widget());
+  widgets_.push_back(scinew RectangleCM2Widget());
   widgets_.push_back(scinew RectangleCM2Widget());
   resize_gui(2);
   update_to_gui(false);
@@ -1033,7 +1034,7 @@ EditColorMap2D::execute()
   faux_changed();
   redraw();
 
-  if (!just_resend_selection_)
+  if (!just_resend_selection_ || sent_cmap2_.get_rep() == 0)
     sent_cmap2_ = scinew ColorMap2(widgets_, updating_, 
 				   gui_selected_widget_.get(),
 				   value_range_);
@@ -1286,7 +1287,7 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
     gui->unlock(); 
     return; 
   }
-  CHECK_OPENGL_ERROR()
+  CHECK_OPENGL_ERROR("dummy")
   if (force_cmap_dirty) cmap_dirty_ = true;
   if (select_widget()) cmap_dirty_ = true;
 
@@ -1364,7 +1365,7 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   
   ctx_->swap();
   ctx_->release();
-  CHECK_OPENGL_ERROR()
+  CHECK_OPENGL_ERROR("dummy")
   gui->unlock();
 }
 
@@ -1387,6 +1388,7 @@ EditColorMap2D::gui_color_change(GuiArgs &args) {
 			      widgets_[n]->clone()));
     widgets_[n]->set_color(new_color);
     widgets_[n]->set_alpha(a);
+    just_resend_selection_ = false;
     redraw(true);
     force_execute();
   }
@@ -1400,6 +1402,7 @@ EditColorMap2D::gui_shade_change(GuiArgs &args) {
   // Toggle the shading type from flat to normal and vice-versa
   gui_sstate_[n]->reset();
   widgets_[n]->set_shadeType(gui_sstate_[n]->get());
+  just_resend_selection_ = false;
   redraw(true);
   force_execute();
 }
@@ -1411,6 +1414,7 @@ EditColorMap2D::gui_toggle_change(GuiArgs &args) {
   if (n < 0 || n >= gui_num_entries_.get()) return;
   gui_onstate_[n]->reset();
   widgets_[n]->set_onState(gui_onstate_[n]->get());  // toggle on/off state.
+  just_resend_selection_ = false;
   redraw(true);
   force_execute();
 }

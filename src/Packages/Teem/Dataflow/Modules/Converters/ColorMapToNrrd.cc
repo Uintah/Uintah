@@ -102,6 +102,11 @@ ColorMapToNrrd::execute()
     nd->nrrd->axis[0].spacing = AIR_NAN;
     nd->nrrd->axis[0].min = 0.0;
     nd->nrrd->axis[0].max = 1.0;
+    nd->nrrd->axis[0].label = airStrdup("Colors");
+    nd->nrrd->axis[0].center = nrrdCenterNode;
+    nd->nrrd->axis[0].spacing = AIR_NAN;
+    nd->nrrd->axis[0].min = 0.0;
+    nd->nrrd->axis[0].max = 1.0;
     nd->nrrd->axis[1].kind = nrrdKindDomain;
     nd->nrrd->axis[1].label = airStrdup("Data Value");
     nd->nrrd->axis[1].center = nrrdCenterUnknown;

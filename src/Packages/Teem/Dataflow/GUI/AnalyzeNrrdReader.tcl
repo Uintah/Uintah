@@ -52,7 +52,14 @@ itcl_class Teem_DataIO_AnalyzeNrrdReader {
     method ui {} {
 	global $this-have-insight
 	if {![set $this-have-insight]} {
-	    tk_dialog .needinsight "Error: Need Insight" "Error: This module relies upon functionality from the Insight package to read Analyze data; however, you do not have the Insight package enabled.  You can enable the Insight package by installing ITK, re-running configure, and re-compiling.  Please see the SCIRun installation guide for more information." "" 0 "OK"
+	    set parent .
+	    if { [winfo exists .standalone] } {
+		set parent .standalone
+	    }
+
+	    tk_messageBox -type ok -icon info -parent $parent \
+		-title "Error: Need Insight" \
+		-message "Error: Need Insight" "Error: This module relies upon functionality from the Insight package to read Analyze data; however, you do not have the Insight package enabled.  You can enable the Insight package by installing ITK, re-running configure, and re-compiling.  Please see the SCIRun installation guide for more information."
 	    return
 	}
 

@@ -1229,7 +1229,7 @@ bool Matlab::save_input_matrices()
 			if (handle.get_rep() == 0)  
 			{
 				// we do not need the old file any more so delete it
-				input_matrix_matfile_[p].clear();
+				input_matrix_matfile_[p] = "";
 				continue;
 			}
 			// if the data as the same before
@@ -1298,7 +1298,7 @@ bool Matlab::save_input_matrices()
 			if (handle.get_rep() == 0) 
 			{
 				// we do not need the old file any more so delete it
-				input_field_matfile_[p].clear();
+                                input_field_matfile_[p] = "";
 				continue;
 			}
 			// if the data as the same before
@@ -1364,7 +1364,7 @@ bool Matlab::save_input_matrices()
 			if (handle.get_rep() == 0) 
 			{
 				// we do not need the old file any more so delete it
-				input_nrrd_matfile_[p].clear();
+                                input_nrrd_matfile_[p] = "";
 				continue;
 			}
 			// if the data as the same before

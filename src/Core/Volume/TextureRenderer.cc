@@ -321,13 +321,33 @@ namespace SCIRun {
       int ny = brick->ny();
       int nz = brick->nz();
       idx[c] = -1;
-      for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++) {
+      for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++)
+      {
         if(tex_pool_[i].id != 0 && tex_pool_[i].brick == brick
            && !brick->dirty() && tex_pool_[i].comp == c
            && nx == tex_pool_[i].nx && ny == tex_pool_[i].ny
            && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb
-           && glIsTexture(tex_pool_[i].id)) {
-          idx[c] = i;
+           && glIsTexture(tex_pool_[i].id))
+        {
+          if (tex_pool_[i].brick == brick)
+          {
+            idx[c] = i;
+          }
+          else
+          {
+            bool found = false;
+            for (unsigned int j = 0; j < bricks.size(); j++)
+            {
+              if (bricks[j] == brick)
+              {
+                found = true;
+              }
+            }
+            if (!found)
+            {
+              idx[c] = i;
+            }
+          }
         }
       }
       if(idx[c] != -1) {
@@ -423,6 +443,7 @@ namespace SCIRun {
         tex_pool_[idx[c]].brick = brick;
         tex_pool_[idx[c]].comp = c;
         // bind texture object
+        glPixelStorei(GL_UNPACK_ALIGNMENT,nb);
         glBindTexture(GL_TEXTURE_3D, tex_pool_[idx[c]].id);
         // set border behavior
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -436,6 +457,7 @@ namespace SCIRun {
           glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
           glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
+
         // download texture data
 #if defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
         if (reuse)

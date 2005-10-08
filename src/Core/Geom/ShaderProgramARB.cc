@@ -244,10 +244,17 @@ ShaderProgramARB::init_shaders_supported()
 	  new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
 
 	context->make_current();
+
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
-	  fprintf(stderr,"GL error '%s'\n",gluErrorString(err));
+        {
+	  fprintf(stderr,"GL error '%s'\n", gluErrorString(err));
+        }
 
+	GLboolean stereo_supported;
+	glGetBooleanv(GL_STEREO, &stereo_supported);
+        sci_putenv("SCIRUN_OPENGL_STEREO_SUPPORTED", stereo_supported?"1":"0");
+	  
 #if defined(__sgi)
         max_texture_size_1_ = 256; // TODO: Just a guess, should verify this.
         max_texture_size_4_ = 256; // TODO: Just a guess, should verify this.
@@ -266,9 +273,13 @@ ShaderProgramARB::init_shaders_supported()
                        GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
 
           GLint width;
+
 	  err = glGetError();
 	  if (err != GL_NO_ERROR)
-	    fprintf(stderr,"After Tex3D call GL error '%s'\n",gluErrorString(err));
+          {
+	    fprintf(stderr,"After Tex3D call GL error '%s'\n",
+                    gluErrorString(err));
+          }
 
           glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0,
                                    GL_TEXTURE_WIDTH, &width);

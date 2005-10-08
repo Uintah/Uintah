@@ -264,8 +264,8 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
 #endif
 
   screen_number_ = Tk_ScreenNumber(mainwin_);
-  if (!mainwin_) throw scinew InternalError("Cannot find main Tk window", __FILE__, __LINE__);
-  if (!display_) throw scinew InternalError("Cannot find X Display", __FILE__, __LINE__);
+  if (!mainwin_) throw InternalError("Cannot find main Tk window", __FILE__, __LINE__);
+  if (!display_) throw InternalError("Cannot find X Display", __FILE__, __LINE__);
     
   geometry_ = 0;
   cursor_ = 0;
@@ -309,7 +309,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
 #endif
 
     if(!vi_ || n!=1) {
-      throw scinew InternalError("Cannot find Visual ID #"+to_string(visualid_), __FILE__, __LINE__);
+      throw InternalError("Cannot find Visual ID #"+to_string(visualid_), __FILE__, __LINE__);
     }
   } else {
 #ifndef _WIN32
@@ -405,7 +405,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
 #endif
 
   }
-  if (!vi_) throw scinew InternalError("Cannot find Visual", __FILE__, __LINE__);
+  if (!vi_) throw InternalError("Cannot find Visual", __FILE__, __LINE__);
   colormap_ = XCreateColormap(display_, Tk_WindowId(mainwin_), 
 			      vi_->visual, AllocNone);
 
@@ -413,12 +413,12 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
 				   ccast_unsafe(id),
 				   (char *) NULL);
 
-  if (!tkwin_) throw scinew InternalError("Cannot create Tk Window", __FILE__, __LINE__);
+  if (!tkwin_) throw InternalError("Cannot create Tk Window", __FILE__, __LINE__);
   Tk_GeometryRequest(tkwin_, width, height);
 
 
   int result = Tk_SetWindowVisual(tkwin_, vi_->visual, vi_->depth, colormap_);
-  if (result != 1) throw scinew InternalError("Cannot set Tk Window Visual", __FILE__, __LINE__);
+  if (result != 1) throw InternalError("Cannot set Tk Window Visual", __FILE__, __LINE__);
 
 #ifdef _WIN32
   TkClassProcs *procsPtr;
@@ -453,7 +453,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
 #endif
 
   x11_win_ = Tk_WindowId(tkwin_);
-  if (!x11_win_) throw scinew InternalError("Cannot get Tk X11 window ID", __FILE__, __LINE__);
+  if (!x11_win_) throw InternalError("Cannot get Tk X11 window ID", __FILE__, __LINE__);
 
   XSync(display_, False);
 
@@ -463,7 +463,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
     first_context = glXCreateContext(display_, vi_, 0, 1);
   }
   context_ = glXCreateContext(display_, vi_, first_context, 1);
-  if (!context_) throw scinew InternalError("Cannot create GLX Context", __FILE__, __LINE__);
+  if (!context_) throw InternalError("Cannot create GLX Context", __FILE__, __LINE__);
 #else // _WIN32
   if (!first_context) {
     first_context = wglCreateContext(hDC_);
@@ -474,7 +474,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
   wglShareLists(first_context,context_);
   PrintErr("wglShareLists");
 
-  if (!context_) throw scinew InternalError("Cannot create WGL Context", __FILE__, __LINE__);
+  if (!context_) throw InternalError("Cannot create WGL Context", __FILE__, __LINE__);
 
   release();
 
