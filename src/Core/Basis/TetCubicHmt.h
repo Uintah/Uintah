@@ -137,8 +137,6 @@ protected:
   //! Cubic Hermitian only needs additonal derivatives stored at each node
   //! in the topology.
   vector<T[3]>          derivs_; 
-
-  double distance(const T&, const T&) const;
 };
 
 
