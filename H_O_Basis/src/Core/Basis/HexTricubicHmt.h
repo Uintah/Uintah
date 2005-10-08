@@ -344,11 +344,11 @@ public:
 
   //! get parametric coordinate for value within the element
   template <class CellData>
-  void get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const  
   {
     HexLocate< HexTricubicHmt<T> > CL;
-    CL.get_coords(this, coords, value, cd);
+    return CL.get_coords(this, coords, value, cd);
   };
     
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
@@ -358,20 +358,8 @@ public:
   virtual void io (Piostream& str);
 
 protected:
-  //! Find a reasonably close starting set of parametric coordinates, 
-  //! to val.
-  template <class CellData>
-  void initial_guess(vector<double> &coords, const T &val, 
-		     const CellData &cd) const;
-
-  //! next_guess is the next Newton iteration step.
-  template <class CellData>
-  void next_guess(vector<double> &coords, const T &val, 
-		  const CellData &cd) const;
-
   //! support data (node data is elsewhere)
   vector<vector<T> >          derivs_; 
-
 };
 
 template <class T>

@@ -126,7 +126,6 @@ public:
 		-4*(-1 + x)*x*z*nodes_[cd.edge10_index()]
 		+4*(-1 + x)*(-1 + 2*y)*z*nodes_[cd.edge11_index()]);
     
-
     derivs[2]=T((-1 + x)*(-1 + y)*(-3 + 2*x + 2*y + 4*z)*cd.node0()
 		+x*(-1 + y)*(1 + 2*x - 2*y - 4*z)*cd.node1()
 		+x*y*(1 - 2*x - 2*y + 4*z)*cd.node2()
@@ -151,13 +150,12 @@ public:
   }
 
   //! get parametric coordinate for value within the element
-  //! iterative solution...
   template <class ElemData>
-  void get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
   {
     HexLocate< HexTriquadraticLgn<T> > CL;
-    CL.get_coords(this, coords, value, cd);
+    return CL.get_coords(this, coords, value, cd);
   };
     
   //! add a node value corresponding to edge
@@ -168,10 +166,7 @@ public:
   virtual void io (Piostream& str);
 
 protected:
-  double distance(const T&, const T&) const;
-
   //! Additional support values.
-
   //! Triquadratic Lagrangian only needs additional nodes stored for each edge
   //! in the topology.
   vector<T>          nodes_; 
