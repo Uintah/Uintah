@@ -109,10 +109,12 @@ public:
   
   //! get parametric coordinate for value within the element
   template <class CellData>
-  void get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const
   {
-  }  
+      QuadLocate< QuadBicubicHmt<T> > CL;
+      return CL.get_coords(this, coords, value, cd);
+   }  
 
   //! add derivative values (dx, dy) for nodes.
   void add_derivative(const T &p[2]) { derivs_.push_back(p); }

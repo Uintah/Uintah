@@ -119,11 +119,14 @@ public:
   }
   
   //! get parametric coordinate for value within the element
-  //! iterative solution...
   template <class ElemData>
-  void get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
-
+  bool get_coords(vector<double> &coords, const T& value, 
+		  const ElemData &cd) const  
+      {
+	TetLocate< TetCubicHmt<T> > CL;
+	return CL.get_coords(this, coords, value, cd);
+      };
+ 
   //! add derivative values (dx, dy, dz) for nodes.
   void add_derivative(const T &p[3]) { derivs_.push_back(p); }
 
@@ -174,14 +177,6 @@ TetCubicHmt<T>::type_name(int n)
   }
 }
 
-
-template <class T>
-template <class ElemData>
-void 
-TetCubicHmt<T>::get_coords(vector<double> &coords, const T& value, 
-			   const ElemData &cd) const
-{
-}
 
 const int TETCUBICHMT_VERSION = 1;
 template <class T>

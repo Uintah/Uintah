@@ -82,11 +82,14 @@ public:
   };
 
   //! get the parametric coordinate for value within the element
-  //! iterative solution...
   template <class ElemData>
-  void get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
-
+    bool get_coords(vector<double> &coords, const T& value, 
+		  const ElemData &cd) const  
+      {
+	TriLocate< TriQuadraticLgn<T> > CL;
+	return CL.get_coords(this, coords, value, cd);
+      };
+ 
   //! add a node value corresponding to edge
   void add_node_value(const T &p) { nodes_.push_back(p); }
 
@@ -137,14 +140,6 @@ TriQuadraticLgn<T>::type_name(int n)
   }
 }
 
-
-template <class T>
-template <class ElemData>
-void 
-TriQuadraticLgn<T>::get_coords(vector<double> &coords, const T& value, 
-			       const ElemData &cd) const
-{
-}
 
 const int TRIQUADRATICLGN_VERSION = 1;
 template <class T>

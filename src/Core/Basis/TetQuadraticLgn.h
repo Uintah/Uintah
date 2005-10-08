@@ -101,11 +101,14 @@ public:
   }
   
   //! get parametric coordinate for value within the element
-  //! iterative solution...
   template <class ElemData>
-  void get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
-
+  bool get_coords(vector<double> &coords, const T& value, 
+		  const ElemData &cd) const  
+      {
+	TetLocate< TetQuadraticLgn<T> > CL;
+	return CL.get_coords(this, coords, value, cd);
+      };
+ 
   //! add a node value corresponding to edge
   void add_node_value(const T &p) { nodes_.push_back(p); }
 
@@ -156,14 +159,6 @@ TetQuadraticLgn<T>::type_name(int n)
   }
 }
 
-
-template <class T>
-template <class ElemData>
-void 
-TetQuadraticLgn<T>::get_coords(vector<double> &coords, const T& value, 
-			       const ElemData &cd) const
-{
-}
 
 const int TETQUADRATICLGN_VERSION = 1;
 template <class T>

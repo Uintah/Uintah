@@ -100,10 +100,14 @@ public:
   }
   
   //! get the parametric coordinate for value within the element.
-  //! iterative solution...
   template <class ElemData>
-  void get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(vector<double> &coords, const T& value, 
 		  const ElemData &cd) const;  
+      {
+	TriLocate< TriCubicHmt<T> > CL;
+	return CL.get_coords(this, coords, value, cd);
+      };
+ 
 
   //! add derivative values (dx, dy) for nodes.
   void add_derivative(const T &p[2]) { derivs_.push_back(p); }
@@ -162,14 +166,6 @@ TriCubicHmt<T>::type_name(int n)
   }
 }
 
-
-template <class T>
-template <class ElemData>
-void 
-TriCubicHmt<T>::get_coords(vector<double> &coords, const T& value, 
-			   const ElemData &cd) const
-{
-}
 
 const int TRICUBICHMT_VERSION = 1;
 template <class T>
