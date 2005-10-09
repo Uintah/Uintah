@@ -17,6 +17,8 @@ SRCS     += $(SRCDIR)/ClipBySelectionMask.cc\
             $(SRCDIR)/FieldsMath.cc\
             $(SRCDIR)/FieldDataNodeToElem.cc\
             $(SRCDIR)/FieldDataElemToNode.cc\
+            $(SRCDIR)/SplitFieldByElementData.cc\
+            $(SRCDIR)/MappingMatrixToField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \

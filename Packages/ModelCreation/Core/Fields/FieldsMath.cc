@@ -28,6 +28,39 @@
 
 #include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
 
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/StructQuadSurfMesh.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/ScanlineMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/StructCurveMesh.h>
+#include <Core/Datatypes/StructHexVolMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+
+#include <Packages/ModelCreation/Core/Fields/ClipBySelectionMask.h>
+#include <Packages/ModelCreation/Core/Fields/DistanceToField.h>
+#include <Packages/ModelCreation/Core/Fields/FieldDataElemToNode.h>
+#include <Packages/ModelCreation/Core/Fields/FieldDataNodeToElem.h>
+#include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
+
+#include <Core/Algorithms/Fields/FieldCount.h>
+#include <Dataflow/Modules/Fields/Unstructure.h>
+#include <Dataflow/Modules/Fields/FieldBoundary.h>
+#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
+#include <Dataflow/Modules/Fields/ChangeFieldBasis.h>
+#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
+#include <Dataflow/Modules/Fields/ManageFieldData.h>
+
+
 namespace ModelCreation {
 
 using namespace SCIRun;
@@ -829,6 +862,87 @@ bool FieldsMath::IsCounterClockWiseSurface(FieldHandle input)
 {
   return(!(IsClockWiseSurface(input)));
 }
+
+
+bool FieldsMath::SplitFieldByElementData(FieldHandle input, FieldHandle& output)
+{
+  if (input.get_rep() == 0)
+  {
+    error("SplitFieldByElementData: No input field");
+    return(false);
+  }
+  
+  if (input->basis_order() != 0)
+  {
+    error("SplitFieldByElementData: This function only works for data located at the elements");
+    return(false);
+  }
+  
+  if (!input->mesh()->is_editable()) 
+  {
+    FieldHandle temp;
+    if(!Unstructure(input,temp))
+    {
+      error("SplitFieldByElementData: Could not make the mesh editable");
+      return(false);
+    }
+    input = temp;
+  }
+
+  Handle<SplitFieldByElementDataAlgo> algo;
+  const TypeDescription *ftd = input->get_type_description();
+    
+  CompileInfoHandle ci = SplitFieldByElementDataAlgo::get_compile_info(ftd);
+    
+  if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
+  {
+    error("SplitFieldByElementData: Could not dynamically compile algorithm");
+    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+    return(false);
+  }
+    
+  if(!(algo->execute(pr_, input, output)))
+  {
+    error("SplitFieldByElementData: The dynamically compiled function return error");
+    return(false);
+  }    
+  
+  return(true);
+}
+
+bool FieldsMath::MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix)
+{
+  if (input.get_rep() == 0)
+  {
+    error("MappingMatrixToField: No input field");
+    return(false);
+  }
+
+  if (mappingmatrix.get_rep() == 0)
+  {
+    error("MappingMatrixToField: No input mapping matrix");
+    return(false);
+  }    
+    
+  Handle<MappingMatrixToFieldAlgo> algo;
+  CompileInfoHandle ci = MappingMatrixToFieldAlgo::get_compile_info(input);
+    
+  if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
+  {
+    error("MappingMatrixToField: Could not dynamically compile algorithm");
+    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+    return(false);
+  }
+    
+  if(!(algo->execute(pr_, input, output, mappingmatrix)))
+  {
+    error("MappingMatrixToField: The dynamically compiled function return error");
+    return(false);
+  }    
+  
+  return(true);
+}
+
 
 
 } // ModelCreation

@@ -20,6 +20,7 @@ SRCS     += \
 	$(SRCDIR)/FieldDataNodeToElem.cc\
 	$(SRCDIR)/IsInsideField.cc\
 	$(SRCDIR)/SignedDistanceToField.cc\
+	$(SRCDIR)/MappingMatrixToField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \

@@ -37,37 +37,13 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/QuadSurfMesh.h>
-#include <Core/Datatypes/StructQuadSurfMesh.h>
-#include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/HexVolMesh.h>
-#include <Core/Datatypes/ImageMesh.h>
-#include <Core/Datatypes/ScanlineMesh.h>
-#include <Core/Datatypes/CurveMesh.h>
-#include <Core/Datatypes/StructCurveMesh.h>
-#include <Core/Datatypes/StructHexVolMesh.h>
-#include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Datatypes/QuadSurfMesh.h>
-#include <Core/Datatypes/PointCloudMesh.h>
+#include <Dataflow/Network/Module.h>
 
 // Dynamic code that already exist
 // We wrap it only by a function call
 // A more clean solution is to transfer all
 // dynamic code to Algorithms
 
-#include <Packages/ModelCreation/Core/Fields/ClipBySelectionMask.h>
-#include <Packages/ModelCreation/Core/Fields/DistanceToField.h>
-#include <Packages/ModelCreation/Core/Fields/FieldDataElemToNode.h>
-#include <Packages/ModelCreation/Core/Fields/FieldDataNodeToElem.h>
-
-#include <Core/Algorithms/Fields/FieldCount.h>
-#include <Dataflow/Modules/Fields/Unstructure.h>
-#include <Dataflow/Modules/Fields/FieldBoundary.h>
-#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
-#include <Dataflow/Modules/Fields/ChangeFieldBasis.h>
-#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
-#include <Dataflow/Modules/Fields/ManageFieldData.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -116,6 +92,11 @@ class FieldsMath {
     bool IsClosedSurface(FieldHandle input);
     bool IsClockWiseSurface(FieldHandle input);
     bool IsCounterClockWiseSurface(FieldHandle input);
+
+    // More specialized functions
+    // Function to split a field into different unconnected regions
+    bool SplitFieldByElementData(FieldHandle input, FieldHandle& output);
+    bool MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix);
 
   private:
     Module* module_;

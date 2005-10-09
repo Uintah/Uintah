@@ -168,6 +168,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
         ofield->set_value(val,*(it));
         ++it;
+        reporter->update_progress(*(it),*(eit));         
       }
     }
     
@@ -195,6 +196,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
+          reporter->update_progress(*(it),*(eit));         
         }
       }
       else
@@ -228,6 +230,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
+          reporter->update_progress(*(it),*(eit));         
         }    
       }
       else
@@ -251,6 +254,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         }
         ofield->set_value(val,*(it));
         ++it;
+        reporter->update_progress(*(it),*(eit));                 
       }
     }
 
@@ -272,6 +276,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           int idx = static_cast<int>((valarray.size()/2));
           ofield->set_value(valarray[idx],*(it));
           ++it;
+          reporter->update_progress(*(it),*(eit));                   
         }
       }
       else
@@ -306,6 +311,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
         ofield->set_value(val,*(it));
         ++it;
+        reporter->update_progress(*(it),*(eit));         
       }
     }
     
@@ -333,6 +339,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
+          reporter->update_progress(*(it),*(eit));         
         }
       }
       else
@@ -366,6 +373,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
+          reporter->update_progress(*(it),*(eit));         
         }    
       }
       else
@@ -389,6 +397,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         }
         ofield->set_value(val,*(it));
         ++it;
+        reporter->update_progress(*(it),*(eit));         
       }
     }
 
@@ -410,6 +419,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           int idx = static_cast<int>((valarray.size()/2));
           ofield->set_value(valarray[idx],*(it));
           ++it;
+          reporter->update_progress(*(it),*(eit));         
         }
       }
       else
@@ -446,6 +456,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
         ofield->set_value(val,*(it));
         ++it;
+        reporter->update_progress(*(it),*(eit));                 
       }
     }
     
@@ -473,6 +484,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
+          reporter->update_progress(*(it),*(eit));         
         }
       }
       else
@@ -506,6 +518,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
+          reporter->update_progress(*(it),*(eit));         
         }    
       }
       else
@@ -529,6 +542,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         }
         ofield->set_value(val,*(it));
         ++it;
+        reporter->update_progress(*(it),*(eit));                 
       }
     }
 
@@ -550,6 +564,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           int idx = static_cast<int>((valarray.size()/2));
           ofield->set_value(valarray[idx],*(it));
           ++it;
+          reporter->update_progress(*(it),*(eit));         
         }
       }
       else

@@ -20,6 +20,7 @@ SRCS     += \
 	$(SRCDIR)/DecomposeVectorArray.cc\
 	$(SRCDIR)/IndicesToDataArray.cc\
 	$(SRCDIR)/ReplicateDataArray.cc\
+	$(SRCDIR)/AppendDataArrays.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
