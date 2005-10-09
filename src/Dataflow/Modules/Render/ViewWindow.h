@@ -159,7 +159,7 @@ public:
 
   // Public Variables, (public for OpenGL class access)
   string		id_;
-  int			inertia_mode_;
+
   BallData *		ball_;		// this is the ball for arc ball stuff
   double		angular_v_;	// angular velocity for inertia
   View			rot_view_;	// pre-rotation view
@@ -189,6 +189,11 @@ public:
   GuiInt                gui_fog_visibleonly_;
   GuiInt		gui_total_frames_;
 
+  GuiDouble		gui_inertia_mag_;
+  GuiDouble		gui_inertia_x_;
+  GuiDouble		gui_inertia_y_;
+  GuiInt		gui_inertia_recalculate_;
+  GuiInt		gui_inertia_mode_;
 private:
   ViewWindow(const ViewWindow&); // Should not be called
   void			do_mouse(MouseHandler, GuiArgs&);

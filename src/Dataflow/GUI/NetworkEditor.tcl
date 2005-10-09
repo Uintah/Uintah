@@ -230,10 +230,9 @@ proc makeNetworkEditor {} {
     Tooltip .main_menu.file $ToolTipText(FileMenu)
     
     menubutton .main_menu.subnet -text "Sub-Networks" -underline 0 \
-	-menu .main_menu.subnet.menu -direction below
-    menu .main_menu.subnet.menu -tearoff false
+	-menu .main_menu.subnet.menu -direction below 
+    menu .main_menu.subnet.menu -tearoff false -postcommand createSubnetMenu
     pack .main_menu.subnet -side left
-    .main_menu.subnet configure -state disabled
 
 
     menubutton .main_menu.help -text "Help" -underline 0 \
@@ -346,7 +345,6 @@ proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
 # Activate the "File" menu items - called from C after all packages are loaded
 proc activate_file_submenus { } {
     global maincanvas minicanvas    
-    loadSubnetScriptsFromDisk
     
     .main_menu.file.menu entryconfig  0 -state active
     .main_menu.file.menu entryconfig  1 -state active
@@ -543,23 +541,32 @@ proc createModulesMenu { menu subnet } {
     update idletasks
 }
 
-proc createSubnetMenu { menu { subnet 0 } } {
+proc createSubnetMenu { { menu "" } { subnet 0 } } {
     global SubnetScripts
-    
-    $menu.subnet delete 0 end
+    loadSubnetScriptsFromDisk
+    generateSubnetScriptsFromNetwork
+
+    if { [winfo exists $menu ] } {
+	$menu.subnet delete 0 end
+    }
     .main_menu.subnet.menu delete 0 end
-    set names [array names SubnetScripts *]
+    set names [lsort -dictionary [array names SubnetScripts *]]
 
     if { ![llength $names] } {
-	$menu entryconfigure Sub-Networks -state disabled
-	.main_menu.subnet configure -state disabled
+	if { [winfo exists $menu ] } {
+	    $menu entryconfigure Sub-Networks -state disabled
+	}
+	.main_menu configure Sub-Netowrks configure -state disabled
     } else {
-	$menu entryconfigure Sub-Networks -state normal
+	if { [winfo exists $menu ] } {
+	    $menu entryconfigure Sub-Networks -state normal
+	}
 	.main_menu.subnet configure -state normal
 	foreach name $names {
-	    $menu.subnet add command -label "$name" \
-		-command "instanceSubnet \"$name\" 0 0 $subnet"
-	    
+	    if { [winfo exists $menu ] } {
+		$menu.subnet add command -label "$name" \
+		    -command "instanceSubnet \"$name\" 0 0 $subnet"
+	    }
 	    .main_menu.subnet.menu add command -label "$name" \
 		-command "instanceSubnet \"$name\" 0 0 $subnet"
 	}
@@ -1341,7 +1348,7 @@ proc hideProgress { args } {
     update idletasks
 }
 
-proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
+proc showProgress { { show_image 0 } { steps none } { okbutton 0 } { over . } } {
     if { [envBool SCIRUN_HIDE_PROGRESS] && ![winfo exists .standalone] } return
     update idletasks
     set w .splash
@@ -1432,7 +1439,7 @@ proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
 	pack $w.scaffold -side bottom
     }
 
-    centerWindow .splash .
+    centerWindow .splash $over
 }
 
 proc addProgressSteps { steps } {
@@ -1812,6 +1819,7 @@ proc initVarStates { var save substitute } {
 }
 
 proc setVarStates { var save substitute } {
+
     global ModuleSavedVars ModuleSubstitutedVars
     set var [string trimleft $var :]
     if { [string first msgStream $var] != -1 } return

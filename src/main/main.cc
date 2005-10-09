@@ -250,8 +250,8 @@ public:
       if (gui_->complete_command(buffer)) {
         buffer = gui_->eval(buffer);
         if (!buffer.empty()) buffer.append("\n");
-        transmitter_->putMessage(buffer+"scirun> ");
-        buffer.clear();
+        transmitter_->putMessage(buffer + "scirun> ");
+        buffer = "";
       } else {
         transmitter_->putMessage("scirun>> ");
       }
@@ -355,7 +355,16 @@ main(int argc, char *argv[], char **environment) {
 
   SCIRunInit();
 
-  const bool use_eai = sci_getenv_p("SCIRUN_EXTERNAL_APPLICATION_INTERFACE");
+  // Always switch on this option
+  // It is needed for running external applications
+  
+  // readline() is broken on OS 10.4, have to disable this to run.
+#if defined __APPLE__
+  bool use_eai = false;
+#else 
+  bool use_eai = true;
+#endif
+
   if (use_eai) {
     // Now split off a process for running external processes
     systemcallmanager_ = scinew SystemCallManager();
@@ -402,6 +411,44 @@ main(int argc, char *argv[], char **environment) {
   Thread* t2=new Thread(sched_task, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
+
+#if 0
+  // determine if we are loading an app
+  const bool loading_app_p = strstr(argv[startnetno],".app");
+  if (!loading_app_p) {
+    gui->eval("set PowerApp 0");
+    // wait for the main window to display before continuing the startup.
+    gui->eval("wm deiconify .");
+    gui->eval("tkwait visibility $minicanvas");
+    gui->eval("showProgress 1 0 1");
+  } else { // if loading an app, don't wait
+    gui->eval("set PowerApp 1");
+    if (argv[startnetno+1]) {
+      gui->eval("set PowerAppSession {"+string(argv[startnetno+1])+"}");
+    }
+    // determine which standalone and set splash
+    if(strstr(argv[startnetno], "BioTensor")) {
+      gui->eval("set splashImageFile $bioTensorSplashImageFile");
+      gui->eval("showProgress 1 2575 1");
+    } else if(strstr(argv[startnetno], "BioFEM")) {
+      gui->eval("set splashImageFile $bioFEMSplashImageFile");
+      gui->eval("showProgress 1 465 1");
+    } else if(strstr(argv[startnetno], "BioImage")) {
+      // need to make a BioImage splash screen
+      gui->eval("set splashImageFile $bioImageSplashImageFile");
+      gui->eval("showProgress 1 620 1");
+    } else if(strstr(argv[startnetno], "FusionViewer")) {
+      // need to make a FusionViewer splash screen
+      gui->eval("set splashImageFile $fusionViewerSplashImageFile");
+      gui->eval("showProgress 1 310 1");
+    }
+
+  }
+
+  if (!loading_app_p) {
+    gui->eval("hideProgress");
+  }
+#endif
   
   // Test for shaders.
   SCIRun::ShaderProgramARB::init_shaders_supported();
