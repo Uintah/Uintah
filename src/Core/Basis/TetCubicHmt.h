@@ -36,7 +36,8 @@
 
 namespace SCIRun {
 
-//! Class for handling of element of type tetrahedron with cubic hermitian interpolation
+//! Class for handling of element of type tetrahedron with 
+//! cubic hermitian interpolation
 template <class T>
 class TetCubicHmt : public TetApprox, public TetGaussian3<double> 
 {

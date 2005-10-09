@@ -36,7 +36,8 @@
 
 namespace SCIRun {
 
-//! Class for handling of element of type hexahedron with triquadratic lagrangian interpolation
+//! Class for handling of element of type hexahedron with 
+//! triquadratic lagrangian interpolation
 template <class T>
 class HexTriquadraticLgn : public HexApprox, public HexGaussian3<double>
 {

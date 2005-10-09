@@ -35,9 +35,9 @@
 #include <QuadBilinearLgn.h>
 
 namespace SCIRun {
-
   
-//! Class for handling of element of type quad with bicubic hermitian interpolation
+//! Class for handling of element of type quad with 
+//! bicubic hermitian interpolation
 template <class T>
 class QuadBicubicHmt : public QuadApprox, public QuadGaussian2<double>
 {
@@ -112,9 +112,9 @@ public:
   bool get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const
   {
-      QuadLocate< QuadBicubicHmt<T> > CL;
-      return CL.get_coords(this, coords, value, cd);
-   }  
+    QuadLocate< QuadBicubicHmt<T> > CL;
+    return CL.get_coords(this, coords, value, cd);
+  }  
 
   //! add derivative values (dx, dy) for nodes.
   void add_derivative(const T &p[2]) { derivs_.push_back(p); }

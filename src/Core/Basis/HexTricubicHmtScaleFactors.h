@@ -36,9 +36,11 @@
 
 namespace SCIRun {
 
-//! Class for handling of element of type hexahedron with tricubic hermitian interpolation with scale factors
+//! Class for handling of element of type hexahedron with 
+//! tricubic hermitian interpolation with scale factors
 template <class T>
-class HexTricubicHmtScaleFactors : public HexApprox, public HexGaussian3<double>
+class HexTricubicHmtScaleFactors : public HexApprox, 
+				   public HexGaussian3<double>
 {
 public:
   typedef T value_type;
@@ -517,7 +519,8 @@ get_type_description(HexTricubicHmtScaleFactors<T> *)
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription(HexTricubicHmtScaleFactors<T>::type_name(0), subs, 
+    td = scinew TypeDescription(HexTricubicHmtScaleFactors<T>::type_name(0), 
+				subs, 
 				string(__FILE__),
 				"SCIRun");
   }

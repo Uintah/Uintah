@@ -34,7 +34,7 @@
 // Warning!: this converter is only partially implemented. It supports only 
 //           a subset of the vtk format. Please extend it as you need more
 
-#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/TriLinearLgn.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/GenericField.h>
