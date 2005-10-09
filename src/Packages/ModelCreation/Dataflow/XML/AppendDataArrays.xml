@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="AppendDataArrays" category="TensorVectorMath">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module combines a several arrays into one.
+    </summary>
+    <description>
+      This module combines a several arrays into one.
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>Array</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Array</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

@@ -192,6 +192,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       case 2:
@@ -220,6 +221,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       case 3:
@@ -250,6 +252,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei)); 
         }
         break;
       case 4:
@@ -282,6 +285,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;    
       default:
@@ -334,6 +338,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       case 2:
@@ -362,6 +367,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       case 3:
@@ -392,6 +398,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       case 4:
@@ -424,6 +431,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
           }
           ofield->set_value(sqrt(dist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;  
       default:
@@ -496,13 +504,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -512,6 +520,12 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
               break;
             }
             ++bt;
+          }
+          
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
           }
           
           ++bt;
@@ -533,7 +547,8 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
           }
           double s = 1.0; if (dist < 0) s = -1.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
-          ++bi;   
+          ++bi; 
+          reporter->update_progress(*(bi),*(ei));  
         }
         break;
       case 4:
@@ -542,13 +557,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -561,6 +576,12 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
             ++bt;
           }
           
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
+          }
+          
           ++bt;
           while (bt != et)
           {
@@ -569,7 +590,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
             objectmesh->get_point(p3,nodes[3]);
-            if (sdistance(p,p0,p1,p2,d))
+            if (sdistance(p,p0,p1,p2,p3,d))
             {
               if(abs(d) < absdist ) 
               {
@@ -582,6 +603,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
           double s = 1.0; if (dist < 0) s = -1.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));  
         }
         break;
       default:
@@ -616,13 +638,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -633,7 +655,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
             }
             ++bt;
           }
-          
+
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
+          }
+                    
           ++bt;
           while (bt != et)
           {
@@ -653,7 +681,8 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
           }
           double s = 1.0; if (dist < 0) s = -1.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
-          ++bi;   
+          ++bi; 
+          reporter->update_progress(*(bi),*(ei));              
         }
         break;
       case 4:
@@ -662,13 +691,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -680,7 +709,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
             }
             ++bt;
           }
-          
+
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
+          }
+                    
           ++bt;
           while (bt != et)
           {
@@ -689,7 +724,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
             objectmesh->get_point(p3,nodes[3]);
-            if (sdistance(p,p0,p1,p2,d))
+            if (sdistance(p,p0,p1,p2,p3,d))
             {
               if(abs(d) < absdist ) 
               {
@@ -702,6 +737,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
           double s = 1.0; if (dist < 0) s = -1.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));            
         }
         break;
       default:
@@ -774,13 +810,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -790,6 +826,12 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
               break;
             }
             ++bt;
+          }
+
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
           }
           
           ++bt;
@@ -812,6 +854,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       case 4:
@@ -820,13 +863,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -838,7 +881,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
             }
             ++bt;
           }
-          
+
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
+          }
+                    
           ++bt;
           while (bt != et)
           {
@@ -847,7 +896,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
             objectmesh->get_point(p3,nodes[3]);
-            if (sdistance(p,p0,p1,p2,d))
+            if (sdistance(p,p0,p1,p2,p3,d))
             {
               if(abs(d) < absdist ) 
               {
@@ -860,6 +909,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       default:
@@ -894,13 +944,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -911,7 +961,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
             }
             ++bt;
           }
-          
+
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
+          }
+                    
           ++bt;
           while (bt != et)
           {
@@ -932,6 +988,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       case 4:
@@ -940,13 +997,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -958,7 +1015,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
             }
             ++bt;
           }
-          
+
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
+          }
+                    
           ++bt;
           while (bt != et)
           {
@@ -967,7 +1030,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
             objectmesh->get_point(p3,nodes[3]);
-            if (sdistance(p,p0,p1,p2,d))
+            if (sdistance(p,p0,p1,p2,p3,d))
             {
               if(abs(d) < absdist ) 
               {
@@ -980,6 +1043,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s*sqrt(absdist),*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei)); 
         }
         break;
       default:
@@ -1051,13 +1115,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -1068,6 +1132,12 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
             }
             ++bt;
           }
+          
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
+          }          
           
           ++bt;
           while (bt != et)
@@ -1089,6 +1159,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s,*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       case 4:
@@ -1097,13 +1168,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -1116,6 +1187,12 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
             ++bt;
           }
           
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
+          }          
+          
           ++bt;
           while (bt != et)
           {
@@ -1124,7 +1201,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
             objectmesh->get_point(p3,nodes[3]);
-            if (sdistance(p,p0,p1,p2,d))
+            if (sdistance(p,p0,p1,p2,p3,d))
             {
               if(abs(d) < absdist ) 
               {
@@ -1137,6 +1214,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s,*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       default:
@@ -1171,13 +1249,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -1188,6 +1266,12 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
             }
             ++bt;
           }
+          
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
+          }          
           
           ++bt;
           while (bt != et)
@@ -1209,6 +1293,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s,*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       case 4:
@@ -1217,13 +1302,13 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
           mesh->get_center(p,*(bi));
           objectmesh->begin(bt); objectmesh->end(et);
           
-          objectmesh->get_nodes(nodes, *(bt));
           double dist = 0.0;
           double absdist = 0.0;
           double d = 0.0;
 
           while (bt != et)
           {
+            objectmesh->get_nodes(nodes, *(bt));
             objectmesh->get_point(p0,nodes[0]);
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
@@ -1236,6 +1321,12 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
             ++bt;
           }
           
+          if (bt == et)
+          {
+            reporter->error("Algorithm failed, it seems object has no volume");
+            return(false);
+          }          
+          
           ++bt;
           while (bt != et)
           {
@@ -1244,7 +1335,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
             objectmesh->get_point(p1,nodes[1]);
             objectmesh->get_point(p2,nodes[2]);
             objectmesh->get_point(p3,nodes[3]);
-            if (sdistance(p,p0,p1,p2,d))
+            if (sdistance(p,p0,p1,p2,p3,d))
             {
               if(abs(d) < absdist ) 
               {
@@ -1257,6 +1348,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
           double s = 1.0; if (dist < 0) s = 0.0;
           ofield->set_value(s,*(bi));
           ++bi;   
+          reporter->update_progress(*(bi),*(ei));           
         }
         break;
       default:
@@ -1435,8 +1527,9 @@ inline bool DistanceToFieldAlgo::sdistance(Point c,Point t1,Point t2, Point t3, 
 {
   Vector p,p1; 
   Vector n = Cross(Vector(t2-t1),Vector(t3-t2));
-  if (Dot(n,n) < 1e-12)
+  if (Dot(n,n) < 1e-16)
   { // Element has no size, skip this one
+    std::cout << "dot(n,n) = 0\n"; 
     return(false);
   }
   

@@ -208,6 +208,7 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
       elemmap.push_back(*bi); // Assumes elements always added to end.
     }
     ++bi;
+    pr->update_progress(*(bi),*(ei));     
   }
 
   FIELD *ofield = scinew FIELD(clipped, field->basis_order());

@@ -27,7 +27,7 @@
 */
 
 /*
- *  DistanceToField.cc:
+ *  MappingMatrixToField.cc:
  *
  *  Written by:
  *   jeroen
@@ -35,102 +35,99 @@
  *
  */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-
+#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 
-#include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
-#include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class DistanceToField : public Module {
+class MappingMatrixToField : public Module {
 public:
-  DistanceToField(GuiContext*);
+  MappingMatrixToField(GuiContext*);
 
-  virtual ~DistanceToField();
+  virtual ~MappingMatrixToField();
 
   virtual void execute();
 
   virtual void tcl_command(GuiArgs&, void*);
-  
-  private:
-    int fGeneration_;
-    int oGeneration_;  
+
+private:
+  int fGeneration_;
+  int mGeneration_;
+
 };
 
 
-DECLARE_MAKER(DistanceToField)
-DistanceToField::DistanceToField(GuiContext* ctx)
-  : Module("DistanceToField", ctx, Source, "FieldsData", "ModelCreation"),
-    fGeneration_(-1),
-    oGeneration_(-1)
+DECLARE_MAKER(MappingMatrixToField)
+MappingMatrixToField::MappingMatrixToField(GuiContext* ctx)
+  : Module("MappingMatrixToField", ctx, Source, "FieldsData", "ModelCreation"),
+  fGeneration_(-1),
+  mGeneration_(-1)
 {
 }
 
-DistanceToField::~DistanceToField(){
+MappingMatrixToField::~MappingMatrixToField(){
 }
 
-void DistanceToField::execute()
+void MappingMatrixToField::execute()
 {
-
   FieldIPort *field_iport;
-  FieldIPort *object_iport;
   
   if (!(field_iport = dynamic_cast<FieldIPort *>(getIPort(0))))
   {
     error("Could not find Field input port");
     return;
   }
-  
-  if (!(object_iport = dynamic_cast<FieldIPort *>(getIPort(1))))
-  {
-    error("Could not find ObjectField input port");
-    return;
-  }
-  
+    
   FieldHandle input;
-  FieldHandle object;
   
   field_iport->get(input);
-  object_iport->get(object);
   
   if (input.get_rep() == 0)
   {
     warning("No Field was found on input port");
     return;
   }
+
+  MatrixIPort *matrix_iport;
   
-  if (object.get_rep() == 0)
+  if (!(matrix_iport = dynamic_cast<MatrixIPort *>(getIPort(1))))
   {
-    warning("No Object Field was found on the object port");
+    error("Could not find MappingMatrix input port");
+    return;
+  }
+    
+  MatrixHandle matrix;
+  
+  matrix_iport->get(matrix);
+  
+  if (matrix.get_rep() == 0)
+  {
+    warning("No MappingMatrix was found on input port");
     return;
   }
 
   bool update = false;
 
-  if ( (fGeneration_ != input->generation ) ||
-        (oGeneration_ != object->generation )) {
+  if ( ((fGeneration_ != input->generation )&&(mGeneration_ != matrix->generation))) {
     fGeneration_ = input->generation;
-    oGeneration_ = object->generation;
+    mGeneration_ = matrix->generation;
     update = true;
   }
 
-
   if(update)
   {
-    FieldsMath fieldmath(dynamic_cast<ProgressReporter *>(this));
-  
+    FieldsMath fieldmath(dynamic_cast<ProgressReporter *>(this));  
     FieldHandle output;
 
-    if(!(fieldmath.DistanceToField(input,output,object)))
+    if(!(fieldmath.MappingMatrixToField(input,output,matrix)))
     {
       error("Dynamically compile algorithm failed");
       return;
@@ -138,26 +135,10 @@ void DistanceToField::execute()
   
     FieldOPort* output_oport = dynamic_cast<FieldOPort *>(getOPort(0));
     if (output_oport) output_oport->send(output);
-
-    MatrixOPort* data_oport = dynamic_cast<MatrixOPort *>(getOPort(1));
-    if (data_oport) 
-    {
-      MatrixHandle data;
-      if(fieldmath.GetFieldData(output,data))
-      {
-        data_oport->send(data);
-      }
-      else
-      {
-        error("Could not retrieve data from field, so no data matrix is generated");
-        return;        
-      }
-    }
   }
 }
 
-void
- DistanceToField::tcl_command(GuiArgs& args, void* userdata)
+void MappingMatrixToField::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

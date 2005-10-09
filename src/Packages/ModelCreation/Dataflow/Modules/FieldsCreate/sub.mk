@@ -15,6 +15,7 @@ SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FieldsCreate
 SRCS     += \
 	$(SRCDIR)/ClipFieldBySelectionMask.cc\
 	$(SRCDIR)/ClipFieldByFunction.cc\
+	$(SRCDIR)/SplitFieldByElementData.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
