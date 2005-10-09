@@ -110,6 +110,7 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     Module* mod = net->add_module(args[2],args[3],args[4]);
     if(!mod)
       throw "netedit addmodule cannot add module "+args[2]+args[3]+args[4];
+    gui->add_command(mod->id+"-c", mod, 0);
     args.result(mod->id);
   } else if (args[1] == "deletemodule") {
     if(args.count() < 3)
@@ -131,19 +132,17 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "addconnection") {
     if(args.count() < 6)
       throw "netedit addconnection needs 4 args";
-    Module* omod=net->get_module_by_id(args[2]);
-    int owhich = args.get_int(3);
-    Module* imod=net->get_module_by_id(args[4]);
-    int iwhich = args.get_int(5);
-
+    Module* omod = net->get_module_by_id(args[2]);
     if(!omod)
       throw "netedit addconnection can't find output module";
+    int owhich = args.get_int(3);
+    Module* imod = net->get_module_by_id(args[4]);
     if(!imod)
       throw "netedit addconnection can't find input module";
+    int iwhich = args.get_int(5);
 
     if (imod->lastportdynamic && iwhich >= imod->iports.size())
       iwhich = imod->iports.size()-1;
-
     args.result(net->connect(omod, owhich, imod, iwhich));
   } else if(args[1] == "deleteconnection") {
     if (args.count() < 3)

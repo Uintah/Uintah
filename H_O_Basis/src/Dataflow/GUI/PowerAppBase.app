@@ -527,9 +527,13 @@ class PowerAppBase {
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
 	Tooltip $view_opts.eframe.b.cull $tips(ViewerCull)
 
+	set stereo_state \
+	    [expr [envBool SCIRUN_OPENGL_STEREO_SUPPORTED]?"normal":"disabled"]
 	checkbutton $view_opts.eframe.b.stereo -text "Stereo" \
 	    -variable $mods(Viewer)-ViewWindow_0-do_stereo \
-	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw" \
+	    -state $stereo_state
+	
 	Tooltip $view_opts.eframe.b.stereo $tips(ViewerStereo)
 
 	checkbutton $view_opts.eframe.b.orientation -text "Orientation" \

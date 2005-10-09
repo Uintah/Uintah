@@ -322,13 +322,33 @@ namespace SCIRun {
       int ny = brick->ny();
       int nz = brick->nz();
       idx[c] = -1;
-      for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++) {
+      for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++)
+      {
         if(tex_pool_[i].id != 0 && tex_pool_[i].brick == brick
            && !brick->dirty() && tex_pool_[i].comp == c
            && nx == tex_pool_[i].nx && ny == tex_pool_[i].ny
            && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb
-           && glIsTexture(tex_pool_[i].id)) {
-          idx[c] = i;
+           && glIsTexture(tex_pool_[i].id))
+        {
+          if (tex_pool_[i].brick == brick)
+          {
+            idx[c] = i;
+          }
+          else
+          {
+            bool found = false;
+            for (unsigned int j = 0; j < bricks.size(); j++)
+            {
+              if (bricks[j] == brick)
+              {
+                found = true;
+              }
+            }
+            if (!found)
+            {
+              idx[c] = i;
+            }
+          }
         }
       }
       if(idx[c] != -1) {
@@ -424,6 +444,7 @@ namespace SCIRun {
         tex_pool_[idx[c]].brick = brick;
         tex_pool_[idx[c]].comp = c;
         // bind texture object
+        glPixelStorei(GL_UNPACK_ALIGNMENT,nb);
         glBindTexture(GL_TEXTURE_3D, tex_pool_[idx[c]].id);
         // set border behavior
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -437,6 +458,7 @@ namespace SCIRun {
           glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
           glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
+
         // download texture data
 #if defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
         if (reuse)
@@ -845,74 +867,69 @@ namespace SCIRun {
   void
   TextureRenderer::colormap2_software_rasterize() 
   {
-    cerr << "NOT FINISHED!\n";
-    return;
-#if 0
     //--------------------------------------------------------------
     // software rasterization
-    bool size_dirty = (cmap2_size_ != raster_array_.dim2() || 
-		       cmap2_size_/4 != raster_array_.dim1());
+    const int width = cmap2_size_ * Pow2(cmap2_.size());
+    const bool size_dirty = (width != raster_array_.dim2());
 
-    if(cmap2_dirty_ || size_dirty) {
+    if (cmap2_dirty_ || size_dirty) {
       if(size_dirty) {
-	raster_array_.resize(cmap2_size_/4, cmap2_size_, 4);
-	cmap2_array_.resize(cmap2_size_/4, cmap2_size_, 4);
+	raster_array_.resize(64, cmap2_size_, 4);
+	cmap2_array_.resize(64, width, 4);
       }
-      // clear cmap
-      for(int i=0; i<raster_array_.dim1(); i++) {
-	for(int j=0; j<raster_array_.dim2(); j++) {
-	  raster_array_(i,j,0) = 0.0;
-	  raster_array_(i,j,1) = 0.0;
-	  raster_array_(i,j,2) = 0.0;
-	  raster_array_(i,j,3) = 0.0;
+      for (int c = 0; c < cmap2_.size(); ++c) 
+      {
+	raster_array_.initialize(0.0);
+	vector<CM2WidgetHandle>& widget = cmap2_[c]->widgets();
+	// rasterize widgets
+	for(unsigned int i=0; i<widget.size(); i++) {
+	  widget[i]->rasterize(raster_array_);
 	}
-      }
-      vector<CM2WidgetHandle>& widget = cmap2_->widgets();
-      // rasterize widgets
-      for(unsigned int i=0; i<widget.size(); i++) {
-	widget[i]->rasterize(raster_array_);
-      }
-      for(int i=0; i<raster_array_.dim1(); i++) {
-	for(int j=0; j<raster_array_.dim2(); j++) {
-	  raster_array_(i,j,0) = Clamp(raster_array_(i,j,0), 0.0f, 1.0f);
-	  raster_array_(i,j,1) = Clamp(raster_array_(i,j,1), 0.0f, 1.0f);
-	  raster_array_(i,j,2) = Clamp(raster_array_(i,j,2), 0.0f, 1.0f);
-	  raster_array_(i,j,3) = Clamp(raster_array_(i,j,3), 0.0f, 1.0f);
+
+	switch(mode_) {
+	case MODE_MIP:
+	case MODE_SLICE: {
+	  for(int i=0; i<raster_array_.dim1(); i++) {
+	    for(int j=0; j<raster_array_.dim2(); j++) {
+	      const int k = c*cmap2_size_+j;
+	      double alpha = Clamp(raster_array_(i,j,3), 0.0f, 1.0f)*255.0;
+	      cmap2_array_(i,k,0) = 
+		(unsigned char)(Clamp(raster_array_(i,j,0),0.0f,1.0f)*alpha);
+	      cmap2_array_(i,k,1) = 
+		(unsigned char)(Clamp(raster_array_(i,j,1),0.0f,1.0f)*alpha);
+	      cmap2_array_(i,k,2) = 
+		(unsigned char)(Clamp(raster_array_(i,j,2),0.0f,1.0f)*alpha);
+	      cmap2_array_(i,k,3) = (unsigned char)(alpha);
+	    }
+	  }
+	} break;
+	case MODE_OVER: {
+	  double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+	  for(int i=0; i<raster_array_.dim1(); i++) {
+	    for(int j=0; j<raster_array_.dim2(); j++) {
+	      const int k = c*cmap2_size_+j;
+	      double alpha = Clamp(raster_array_(i,j,3), 0.0f, 1.0f);
+	      alpha = pow(alpha, bp);
+	      alpha = 1.-pow(1.0-alpha,imode_ ? 1./irate_ : 1./sampling_rate_);
+	      alpha *= 255.0;
+
+	      cmap2_array_(i,k,0) =
+		(unsigned char)(Clamp(raster_array_(i,j,0),0.0f,1.0f)*alpha);
+	      cmap2_array_(i,k,1) =
+		(unsigned char)(Clamp(raster_array_(i,j,1),0.0f,1.0f)*alpha);
+	      cmap2_array_(i,k,2) =
+		(unsigned char)(Clamp(raster_array_(i,j,2),0.0f,1.0f)*alpha);
+	      cmap2_array_(i,k,3) = (unsigned char)(alpha);
+	    }
+	  }
+	} break;
+	default:
+	  break;
 	}
       }
     }
     //--------------------------------------------------------------
     // opacity correction
-    switch(mode_) {
-    case MODE_MIP:
-    case MODE_SLICE: {
-      for(int i=0; i<raster_array_.dim1(); i++) {
-	for(int j=0; j<raster_array_.dim2(); j++) {
-	  double alpha = raster_array_(i,j,3);
-	  cmap2_array_(i,j,0) = (unsigned char)(raster_array_(i,j,0)*alpha*255);
-	  cmap2_array_(i,j,1) = (unsigned char)(raster_array_(i,j,1)*alpha*255);
-	  cmap2_array_(i,j,2) = (unsigned char)(raster_array_(i,j,2)*alpha*255);
-	  cmap2_array_(i,j,3) = (unsigned char)(alpha*255);
-	}
-      }
-    } break;
-    case MODE_OVER: {
-      double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
-      for(int i=0; i<raster_array_.dim1(); i++) {
-	for(int j=0; j<raster_array_.dim2(); j++) {
-	  double alpha = raster_array_(i,j,3);
-	  alpha = pow(alpha, bp);
-	  alpha = 1.0-pow(1.0-alpha, imode_ ? 1.0/irate_ : 1.0/sampling_rate_);
-	  cmap2_array_(i,j,0) = (unsigned char)(raster_array_(i,j,0)*alpha*255);
-	  cmap2_array_(i,j,1) = (unsigned char)(raster_array_(i,j,1)*alpha*255);
-	  cmap2_array_(i,j,2) = (unsigned char)(raster_array_(i,j,2)*alpha*255);
-	  cmap2_array_(i,j,3) = (unsigned char)(alpha*255);
-	}
-      }
-    } break;
-    default:
-      break;
-    }
     //--------------------------------------------------------------
     // update texture
     if(!cmap2_tex_ || size_dirty) {
@@ -925,16 +942,17 @@ namespace SCIRun {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap2_array_.dim2(), cmap2_array_.dim1(),
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
+		   cmap2_array_.dim2(), cmap2_array_.dim1(),
 		   0, GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
       glBindTexture(GL_TEXTURE_2D, 0);
     } else {
       glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cmap2_array_.dim2(), cmap2_array_.dim1(),
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+		      cmap2_array_.dim2(), cmap2_array_.dim1(),
 		      GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
       glBindTexture(GL_TEXTURE_2D, 0);
     }      
-#endif
   }
     
 

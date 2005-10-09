@@ -319,6 +319,12 @@ SCIRUN_GUI_MoveGuiToMouse = on
 #   network editor.
 # SCIRUN_STRAIGHT_CONNECTIONS = off
 
+
+### SCIRUN_DISABLE_SUBNET_UI_BUTTON = [boolean]
+#   Dont create a button on the Subnetwork icons
+SCIRUN_DISABLE_SUBNET_UI_BUTTON = on
+
+
 #################
 # UNDOCUMENTED ##
 #################
