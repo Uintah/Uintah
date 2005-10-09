@@ -36,7 +36,8 @@
 
 namespace SCIRun {
 
-//! Class for handling of element of type triangle with linear quadratic interpolation
+//! Class for handling of element of type triangle with 
+//! linear quadratic interpolation
 template <class T>
 class TriQuadraticLgn : public TriApprox, public TriGaussian3<double> 
 {
@@ -83,12 +84,12 @@ public:
 
   //! get the parametric coordinate for value within the element
   template <class ElemData>
-    bool get_coords(vector<double> &coords, const T& value, 
+  bool get_coords(vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
-      {
-	TriLocate< TriQuadraticLgn<T> > CL;
-	return CL.get_coords(this, coords, value, cd);
-      };
+  {
+    TriLocate< TriQuadraticLgn<T> > CL;
+    return CL.get_coords(this, coords, value, cd);
+  };
  
   //! add a node value corresponding to edge
   void add_node_value(const T &p) { nodes_.push_back(p); }

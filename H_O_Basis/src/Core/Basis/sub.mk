@@ -25,6 +25,7 @@ SRCDIR   := Core/Basis
 
 SRCS     +=      $(SRCDIR)/CrvLinearLgn.cc             \
                  $(SRCDIR)/HexTrilinearLgn.cc          \
+                 $(SRCDIR)/Locate.cc                   \
                  $(SRCDIR)/PrismLinearLgn.cc           \
                  $(SRCDIR)/QuadBilinearLgn.cc          \
                  $(SRCDIR)/TetLinearLgn.cc             \

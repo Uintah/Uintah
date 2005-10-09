@@ -36,7 +36,8 @@
 
 namespace SCIRun {
 
-//! Class for handling of element of type prism with quadratic lagrangian interpolation
+//! Class for handling of element of type prism with 
+//! quadratic lagrangian interpolation
 template <class T>
 class PrismQuadraticLgn : public PrismApprox, public PrismGaussian2<T> 
 {

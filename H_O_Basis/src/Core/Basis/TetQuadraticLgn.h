@@ -36,7 +36,8 @@
 
 namespace SCIRun {
 
-//! Class for handling of element of type tetrahedron with quadratic lagrangian interpolation
+//! Class for handling of element of type tetrahedron with 
+//! quadratic lagrangian interpolation
 template <class T>
 class TetQuadraticLgn : public TetApprox, public TetGaussian3<double> 
 {

@@ -36,7 +36,8 @@
 
 namespace SCIRun {
  
-//! Class for handling of element of type quad with biquadratic lagrangian interpolation
+//! Class for handling of element of type quad with 
+//! biquadratic lagrangian interpolation
 template <class T>
 class QuadBiquadraticLgn : public QuadApprox, public QuadGaussian3<double>
 {
@@ -98,10 +99,10 @@ public:
   template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
 		  const ElemData &cd) const
-    {
-      QuadLocate< QuadBiquadraticLgn<T> > CL;
-      return CL.get_coords(this, coords, value, cd);
-    }  
+  {
+    QuadLocate< QuadBiquadraticLgn<T> > CL;
+    return CL.get_coords(this, coords, value, cd);
+  }  
 
   //! add a node value corresponding to edge
   void add_node(const T &p) { nodes_.push_back(p); }

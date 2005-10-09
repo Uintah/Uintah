@@ -36,7 +36,8 @@
 
 namespace SCIRun {
 
-//! Class for handling of element of type triangle with cubic hermitian interpolation
+//! Class for handling of element of type triangle with 
+//! cubic hermitian interpolation
 template <class T>
 class TriCubicHmt : public TriApprox, public TriGaussian3<double> 
 {
@@ -103,10 +104,10 @@ public:
   template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
 		  const ElemData &cd) const;  
-      {
-	TriLocate< TriCubicHmt<T> > CL;
-	return CL.get_coords(this, coords, value, cd);
-      };
+  {
+    TriLocate< TriCubicHmt<T> > CL;
+    return CL.get_coords(this, coords, value, cd);
+  };
  
 
   //! add derivative values (dx, dy) for nodes.
