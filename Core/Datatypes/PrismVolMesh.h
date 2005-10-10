@@ -60,7 +60,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <set>
 #include <sgi_stl_warnings_on.h>
-
+#include <float.h>
 
 namespace SCIRun {
 

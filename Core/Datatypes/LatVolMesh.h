@@ -724,10 +724,10 @@ public:
 protected:
 
   //! the min_Node::index_type ( incase this is a subLattice )
-  unsigned min_i_, min_j_, min_k_;
+  unsigned int min_i_, min_j_, min_k_;
   //! the Node::index_type space extents of a LatVolMesh
   //! (min=min_Node::index_type, max=min+extents-1)
-  unsigned ni_, nj_, nk_;
+  unsigned int ni_, nj_, nk_;
 
   Transform transform_;
   Basis     basis_;
@@ -1032,7 +1032,10 @@ LatVolMesh<Basis>::get_nodes(typename Node::array_type &array,
 			     typename Edge::index_type idx) const
 {
   array.resize(2);
-  const unsigned int xidx = idx;
+  // The (const unsigned int) on the next line is due
+  // to a bug in the OSX 10.4 compiler that gives xidx
+  // the wrong type
+  const unsigned int xidx = (const unsigned int)idx;
   if (xidx < (ni_ - 1) * nj_ * nk_)
   {
     const int i = xidx % (ni_ - 1);
@@ -1079,7 +1082,10 @@ LatVolMesh<Basis>::get_nodes(typename Node::array_type &array,
 			     typename Face::index_type idx) const
 {
   array.resize(4);
-  const unsigned int xidx = idx;
+  // The (const unsigned int) on the next line is due
+  // to a bug in the OSX 10.4 compiler that gives xidx
+  // the wrong type
+  const unsigned int xidx = (const unsigned int)idx;
   if (xidx < (ni_ - 1) * (nj_ - 1) * nk_)
   {
     const int i = xidx % (ni_ - 1);
@@ -1358,7 +1364,10 @@ LatVolMesh<Basis>::get_neighbor(typename Cell::index_type &neighbor,
 				const typename Cell::index_type &from,
 				typename Face::index_type face) const
 {
-  const unsigned int xidx = face;
+  // The (const unsigned int) on the next line is due
+  // to a bug in the OSX 10.4 compiler that gives xidx
+  // the wrong type
+  const unsigned int xidx = (const unsigned int)face;
   if (xidx < (ni_ - 1) * (nj_ - 1) * nk_)
   {
     //const unsigned int i = xidx % (ni_ - 1);

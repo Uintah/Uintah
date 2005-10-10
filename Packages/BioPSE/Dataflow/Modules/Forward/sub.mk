@@ -70,7 +70,8 @@ PSELIBS := Packages/BioPSE/Core/Datatypes \
 	Dataflow/Network Dataflow/Ports \
 	Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Geometry Core/GeomInterface Core/TkExtensions
+        Core/Geom Core/Geometry Core/GeomInterface Core/TkExtensions \
+	Core/Basis
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

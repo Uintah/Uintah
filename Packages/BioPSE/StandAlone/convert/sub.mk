@@ -44,7 +44,8 @@ PSELIBS := \
 	Core/Thread     \
 	Core/Geometry   \
 	Core/Math       \
-	Core/Util
+	Core/Util	\
+        Core/Basis
 endif
 LIBS := $(XML_LIBRARY) $(LAPACK_LIBRARY) $(M_LIBRARY)
 
