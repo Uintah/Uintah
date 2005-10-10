@@ -34,7 +34,12 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -169,20 +174,24 @@ bool TetMesher::read_tri_file(int &npoints, double *&points, int &ntris, int *&t
   }
   FieldHandle trisurfH;
   if (!trisurf->get(trisurfH)) return false;
-  TriSurfMesh *tsm = dynamic_cast<TriSurfMesh*>(trisurfH->mesh().get_rep());
-  if (!tsm) return false;
+  TriSurfMesh<TriLinearLgn<Point> > *tsm = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >* >(trisurfH->mesh().get_rep());
+  if (!tsm)
+  {
+    error("Currently only Linear TriSurf Meshes are supported.");
+    return(false);
+  }
   
-  TriSurfMesh::Node::iterator niter; 
-  TriSurfMesh::Node::iterator niter_end; 
-  TriSurfMesh::Node::size_type nsize; 
+  TriSurfMesh<TriLinearLgn<Point> >::Node::iterator niter; 
+  TriSurfMesh<TriLinearLgn<Point> >::Node::iterator niter_end; 
+  TriSurfMesh<TriLinearLgn<Point> >::Node::size_type nsize; 
   tsm->begin(niter);
   tsm->end(niter_end);
   tsm->size(nsize);
 
-  TriSurfMesh::Face::size_type fsize; 
-  TriSurfMesh::Face::iterator fiter; 
-  TriSurfMesh::Face::iterator fiter_end; 
-  TriSurfMesh::Node::array_type fac_nodes(3);
+  TriSurfMesh<TriLinearLgn<Point> >::Face::size_type fsize; 
+  TriSurfMesh<TriLinearLgn<Point> >::Face::iterator fiter; 
+  TriSurfMesh<TriLinearLgn<Point> >::Face::iterator fiter_end; 
+  TriSurfMesh<TriLinearLgn<Point> >::Node::array_type fac_nodes(3);
   tsm->size(fsize);
   tsm->begin(fiter);
   tsm->end(fiter_end);
@@ -228,8 +237,11 @@ bool TetMesher::read_tri_file(int &npoints, double *&points, int &ntris, int *&t
 bool TetMesher::write_tet_file(const int &npoints, double* const points, 
                     const int &ntets, int* const tets, const int &noldpoints, double* const oldpoints)
 {
+  typedef TetVolMesh<TetLinearLgn<Point> > my_tetvolmesh;
+  typedef GenericField<TetVolMesh<TetLinearLgn<Point> >, NoDataBasis<double>, vector<double> > my_tetvolfield;
+
   int i;
-  TetVolMesh *tvm = new TetVolMesh();
+  my_tetvolmesh *tvm = new my_tetvolmesh();
   // THis code should fix the following problems:
   // (1) The number of nodes in a mesh should be reserved before inserting them
   //       Can SOMEONE clean up the Field classes so it will become clear to people 
@@ -254,8 +266,9 @@ bool TetMesher::write_tet_file(const int &npoints, double* const points,
   {
     tvm->add_tet( tets[i*4], tets[i*4+1], tets[i*4+2], tets[i*4+3] );
   }
-  TetVolField<double> *tv = scinew TetVolField<double>(tvm, -1);
-  FieldHandle tvH(tv);
+  
+  my_tetvolfield* tvf = scinew my_tetvolfield();
+  FieldHandle tvH = dynamic_cast<Field*>(tvf);
   FieldOPort *ofld = (FieldOPort *)get_oport("TetVol");
   if (!ofld) return false;
   ofld->send(tvH);
