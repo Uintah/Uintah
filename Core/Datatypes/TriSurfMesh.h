@@ -53,6 +53,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Geometry/CompGeom.h>
 #include <Core/Math/Trig.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Containers/StackVector.h>
@@ -611,7 +612,8 @@ TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array, typename Face::i
 
 template <class Basis>
 void
-TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array, typename Cell::index_type cidx) const
+TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array, 
+			      typename Cell::index_type cidx) const
 {
   array.clear();
   array.push_back(faces_[cidx * 3 + 0]);
@@ -622,7 +624,8 @@ TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array, typename Cell::i
 
 template <class Basis>
 void
-TriSurfMesh<Basis>::get_edges(typename Edge::array_type &array, typename Face::index_type idx) const
+TriSurfMesh<Basis>::get_edges(typename Edge::array_type &array, 
+			      typename Face::index_type idx) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
 	    "Must call synchronize EDGES_E on TriSurfMesh first");
@@ -699,7 +702,8 @@ TriSurfMesh<Basis>::compute_node_neighbors()
 //! Returns all nodes that share an edge with this node 
 template <class Basis>
 void
-TriSurfMesh<Basis>::get_neighbors(typename Node::array_type &array, typename Node::index_type idx) const
+TriSurfMesh<Basis>::get_neighbors(typename Node::array_type &array, 
+				  typename Node::index_type idx) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first"); 
@@ -740,26 +744,6 @@ TriSurfMesh<Basis>::locate(typename Node::index_type &loc, const Point &p) const
   }
   return true;
 }
-
-
-static double
-distance_to_line2(const Point &p, const Point &a, const Point &b)
-{
-  Vector m = b - a;
-  Vector n = p - a;
-  if (m.length2() < 1e-6)
-  {
-    return n.length2();
-  }
-  else
-  {
-    const double t0 = Dot(m, n) / Dot(m, m);
-    if (t0 <= 0) return (n).length2();
-    else if (t0 >= 1.0) return (p - b).length2();
-    else return (n - m * t0).length2();
-  }
-}
-
 
 template <class Basis>
 bool
@@ -954,7 +938,11 @@ TriSurfMesh<Basis>::inside3_p(int i, const Point &p) const
   const double a1 = Cross(v2, v0).length();  // area opposite p1
   const double a2 = Cross(v0, v1).length();  // area opposite p2
   const double s = a0+a1+a2;
-  return fabs(s - a) < 1.0e-12 && a > 1.0e-12;
+
+  // For the point to be inside a triangle it must be inside one
+  // of the four triangles that can be formed by using three of the
+  // triangle vertices and the point in question.
+  return fabs(s - a) < MIN_ELEMENT_VAL && a > MIN_ELEMENT_VAL;
 }
 
 
@@ -1478,7 +1466,9 @@ TriSurfMesh<Basis>::remove_face(typename Face::index_type f)
 
 template <class Basis>
 void
-TriSurfMesh<Basis>::add_triangle(typename Node::index_type a, typename Node::index_type b, typename Node::index_type c)
+TriSurfMesh<Basis>::add_triangle(typename Node::index_type a, 
+				 typename Node::index_type b, 
+				 typename Node::index_type c)
 {
   face_lock_.lock();
   faces_.push_back(a);

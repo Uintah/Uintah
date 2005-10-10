@@ -769,8 +769,9 @@ ImageMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
 
 template<class Basis>
 void 
-ImageMesh<Basis>::get_random_point(Point &p, const typename Face::index_type &ci,
-			    int seed) const
+ImageMesh<Basis>::get_random_point(Point &p, 
+				   const typename Face::index_type &ci,
+				   int seed) const
 {
   static MusilRNG rng;
 

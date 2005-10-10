@@ -872,13 +872,12 @@ std::ostream& operator<<(std::ostream& os,
 }
 
 template <class Basis>
-
-LatVolMesh<Basis>::LatVolMesh(unsigned x, unsigned y, unsigned z,
+LatVolMesh<Basis>::LatVolMesh(unsigned i, unsigned j, unsigned k,
 			      const Point &min, const Point &max)
   : min_i_(0), min_j_(0), min_k_(0),
-    ni_(x), nj_(y), nk_(z)
+    ni_(i), nj_(j), nk_(k)
 {
-  transform_.pre_scale(Vector(1.0 / (x-1.0), 1.0 / (y-1.0), 1.0 / (z-1.0)));
+  transform_.pre_scale(Vector(1.0 / (i-1.0), 1.0 / (j-1.0), 1.0 / (k-1.0)));
   transform_.pre_scale(max - min);
 
   transform_.pre_translate(min.asVector());
