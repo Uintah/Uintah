@@ -37,8 +37,8 @@ SplitFieldByElementDataAlgo::get_compile_info(const TypeDescription *fsrc)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   std::string include_path(TypeDescription::cc_to_h(__FILE__));
-  std::string algo_name("SplitFieldByElementDataT");
-  std::string base_name("SplitFieldByElementData");
+  std::string algo_name("SplitFieldByElementDataAlgoT");
+  std::string base_name("SplitFieldByElementDataAlgo");
 
   CompileInfoHandle ci = 
     scinew CompileInfo(algo_name + "." +
