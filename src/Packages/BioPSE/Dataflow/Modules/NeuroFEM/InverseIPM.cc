@@ -46,10 +46,8 @@
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 #include <Core/ImportExport/ExecConverter.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
 #include <sys/stat.h>
@@ -494,9 +492,9 @@ InverseIPM::execute()
     warning("CondMesh field required to continue.");
     return;
   }
-
-  if (condmesh->mesh()->get_type_description()->get_name() != "TetVolMesh" &&
-      condmesh->mesh()->get_type_description()->get_name() != "HexVolMesh")
+  string mesh_type = condmesh->get_type_description(1)->get_name();
+  if (mesh_type.find("TetVolMesh") != string::npos &&
+      mesh_type.find("HexVolMesh") != string::npos)
   {
     error("CondMesh must contain a TetVolMesh or HexVolMesh.");
     return;

@@ -41,8 +41,8 @@
 #include <Core/Algorithms/Fields/FieldCount.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -53,14 +53,15 @@
 
 
 namespace SCIRun {
-vector<pair<TetVolMesh::Node::index_type, double> > 
-operator*(const vector<pair<TetVolMesh::Node::index_type, double> >&r, double &) {
+typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+vector<pair<TVMesh::Node::index_type, double> > 
+operator*(const vector<pair<TVMesh::Node::index_type, double> >&r, double &) {
   ASSERTFAIL("BuildElemLeadField.cc Bogus operator");
   return r;
 }
-vector<pair<TetVolMesh::Node::index_type, double> > 
-operator+=(const vector<pair<TetVolMesh::Node::index_type, double> >&r, 
-	   const vector<pair<TetVolMesh::Node::index_type, double> >&) {
+vector<pair<TVMesh::Node::index_type, double> > 
+operator+=(const vector<pair<TVMesh::Node::index_type, double> >&r, 
+	   const vector<pair<TVMesh::Node::index_type, double> >&) {
   ASSERTFAIL("BuildElemLeadField.cc Bogus operator");
   return r;
 }

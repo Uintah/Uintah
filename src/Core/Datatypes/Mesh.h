@@ -102,9 +102,6 @@ public:
   double MIN_ELEMENT_VAL;
 };
 
-
-
-
 } // end namespace SCIRun
 
 #endif // Datatypes_Mesh_h

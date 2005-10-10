@@ -51,6 +51,10 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/GenericField.h>
+
 
 #include <typeinfo>
 #include <iostream>
@@ -59,6 +63,7 @@ namespace SCIRun {
 
 class ShowField : public Module
 {
+  typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
   //! Private Data
 
   //! input ports
@@ -170,6 +175,7 @@ class ShowField : public Module
   GuiInt                   gui_node_resolution_;
   GuiInt                   gui_edge_resolution_;
   GuiInt                   gui_data_resolution_;
+  GuiInt                   approx_div_;
   int                      node_resolution_;
   int                      edge_resolution_;
   int                      data_resolution_;
@@ -288,6 +294,7 @@ ShowField::ShowField(GuiContext* ctx) :
   gui_node_resolution_(ctx->subVar("node-resolution")),
   gui_edge_resolution_(ctx->subVar("edge-resolution")),
   gui_data_resolution_(ctx->subVar("data-resolution")),
+  approx_div_(ctx->subVar("approx-div")),
   node_resolution_(0),
   edge_resolution_(0),
   data_resolution_(0),
@@ -679,7 +686,7 @@ ShowField::execute()
   data_resolution_ = gui_data_resolution_.get();
 
   if (color_map_changed && faces_usetexture_.get() &&
-      dynamic_cast<ImageMesh *>(fld_handle->mesh().get_rep())){
+      dynamic_cast<IMesh *>(fld_handle->mesh().get_rep())){
     faces_dirty_ = true;
   }
 
@@ -780,7 +787,7 @@ ShowField::execute()
 
   string fname = clean_fieldname(gui_field_name_.get());
   if (fname != "" && fname[fname.size()-1] != ' ') { fname = fname + " "; }
-
+  approx_div_.reset();
   normalize_vectors_.reset();
   if (renderer_.get_rep())
   {
@@ -797,6 +804,7 @@ ShowField::execute()
 		      nodes_usedefcolor_.get(),
 		      edges_usedefcolor_.get(),
 		      faces_usedefcolor_.get(),
+		      approx_div_.get(),
 		      faces_usetexture_.get());
   }
 
@@ -836,7 +844,7 @@ ShowField::execute()
 	scinew GeomMaterial(renderer_->face_switch_, def_material_);
       GeomHandle geom;
       if (faces_usetexture_.get() &&
-	  dynamic_cast<ImageMesh *>(fld_handle->mesh().get_rep()))
+	  dynamic_cast<IMesh *>(fld_handle->mesh().get_rep()))
       {
 	geom = scinew GeomSwitch(gmat);
       } else {
@@ -1002,6 +1010,9 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     data_dirty_ = true;
     maybe_execute(EDGE);
     maybe_execute(DATA);
+  } else if (args[1] == "approx") {
+    edges_dirty_ = true;
+    faces_dirty_ = true;
   } else if (args[1] == "data_scale") {
     data_dirty_ = true;
     maybe_execute(DATA);

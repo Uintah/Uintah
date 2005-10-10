@@ -64,28 +64,28 @@ MarchingCubesAlg::get_compile_info(const TypeDescription *td) {
   string sname = td->get_name("", "");
   
   //Test for LatVolField inheritance...
-  if (sname.find("LatVolField") != string::npos ||
-      sname.find("StructHexVolField") != string::npos) {
+  if (sname.find("LatVolMesh") != string::npos ||
+      sname.find("StructHexVolMesh") != string::npos) {
     // we are dealing with a lattice vol or inherited version
     subname.append("HexMC<" + td->get_name() + "> ");
     subinc.append(HexMCBase::get_h_file_path());
-  } else if (sname.find("TetVolField") != string::npos) {
+  } else if (sname.find("TetVolMesh") != string::npos) {
     subname.append("TetMC<" + td->get_name() + "> ");
     subinc.append(TetMCBase::get_h_file_path());
-  } else if (sname.find("PrismVolField") != string::npos) {
+  } else if (sname.find("PrismVolMesh") != string::npos) {
     subname.append("PrismMC<" + td->get_name() + "> ");
     subinc.append(PrismMCBase::get_h_file_path());
-  } else if (sname.find("HexVolField") != string::npos) {
+  } else if (sname.find("HexVolMesh") != string::npos) {
     subname.append("UHexMC<" + td->get_name() + "> ");
     subinc.append(UHexMCBase::get_h_file_path());
   } else if (sname.find("TriSurf") != string::npos) {
     subname.append("TriMC<" + td->get_name() + "> ");
     subinc.append(TriMCBase::get_h_file_path());
-  } else if (sname.find("QuadSurfField") != string::npos ||
-	     sname.find("ImageField") != string::npos) {
+  } else if (sname.find("QuadSurfMesh") != string::npos ||
+	     sname.find("ImageMesh") != string::npos) {
     subname.append("QuadMC<" + td->get_name() + "> ");
     subinc.append(QuadMCBase::get_h_file_path());
-  } else if (sname.find("CurveField") != string::npos) {
+  } else if (sname.find("CurveMesh") != string::npos) {
     subname.append("EdgeMC<" + td->get_name() + "> ");
     subinc.append(EdgeMCBase::get_h_file_path());
   } else {

@@ -43,7 +43,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SepSurf.h>
-#include <Core/Datatypes/QuadSurfField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <map>
 #include <queue>
@@ -56,6 +55,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ExtractSingleSurface : public Module {
+
   GuiInt surfid_;
   GuiString data_;
 public:
@@ -105,7 +105,7 @@ ExtractSingleSurface::execute()
   //    for (int i=0; i<st->bcIdx.size(); i++)
   //	 cerr <<"  "<<i<<"  "<<st->bcVal[i]<<"  "<<st->points[st->bcIdx[i]]<<"\n";
 
-  QuadSurfField<int> *qsf = ss->extractSingleComponent(comp, data_.get());
+  SSQSField *qsf = ss->extractSingleComponent(comp, data_.get());
 
   //    cerr << "surface11 "<<ts->name<<" has "<<ts->points.size()<<" points, "<<ts->elements.size()<<" elements and "<<ts->bcVal.size()<<" known vals.\n";
 

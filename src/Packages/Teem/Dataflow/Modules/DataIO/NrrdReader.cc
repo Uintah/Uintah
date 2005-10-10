@@ -46,7 +46,6 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/ImportExport/Nrrd/NrrdIEPlugin.h>
 #include <sys/stat.h>
 #include <sstream>
 #ifdef _WIN32
@@ -62,76 +61,37 @@ public:
   NrrdReader(SCIRun::GuiContext* ctx);
   virtual ~NrrdReader();
   virtual void execute();
-
+  virtual void tcl_command(GuiArgs& args, void* userdata);
 private:
   bool read_nrrd();
   bool read_file(string filename);
   bool write_tmpfile(string filename, string *tmpfilename, string conv_command);
-  bool call_importer(const string &filename);
 
   GuiFilename     filename_;
-  GuiString       gui_types_;
-  GuiString       gui_filetype_;
-  
+
   NrrdDataHandle  read_handle_;
 
   string          old_filename_;
   time_t          old_filemodification_;
   int             cached_label_generation_;
   char *          cached_label_;
-  bool            importing_;
 };
 
 } // end namespace SCITeem
-
 
 using namespace SCITeem;
 
 DECLARE_MAKER(NrrdReader)
 
-
 NrrdReader::NrrdReader(SCIRun::GuiContext* ctx) : 
   Module("NrrdReader", ctx, Filter, "DataIO", "Teem"),
   filename_(ctx->subVar("filename")),
-  gui_types_(ctx->subVar("types", false)),
-  gui_filetype_(ctx->subVar("filetype")),
   read_handle_(0),
   old_filemodification_(0),
   cached_label_generation_(0),
-  cached_label_(0),
-  importing_(false)
+  cached_label_(0)
 {
-  NrrdIEPluginManager mgr;
-  vector<string> importers;
-  mgr.get_importer_list(importers);
-  
-  string importtypes = "{";
-  importtypes += "{{Nrrd Files} {.nhdr .nrrd .nd .vff .pic .pict .vol .v} } ";
-  importtypes += "{{NrrdData File}     {.nd} } ";
-  importtypes += "{{VFF File}          {.vff} } ";
-  importtypes += "{{PICT File}         {.pic .pict} } ";
-  importtypes += "{{geovoxel VOL File} {.vol} } ";
-  importtypes += "{{Vista File}        {.v} } ";
-  importtypes += "{{All Files}         {.*} } ";
-
-  for (unsigned int i = 0; i < importers.size(); i++)
-  {
-    NrrdIEPlugin *pl = mgr.get_plugin(importers[i]);
-    if (pl->fileExtension_ != "")
-    {
-      importtypes += "{{" + importers[i] + "} {" + pl->fileExtension_ + "} } ";
-    }
-    else
-    {
-      importtypes += "{{" + importers[i] + "} {.*} } ";
-    }
-  }
-
-  importtypes += "}";
-
-  gui_types_.set(importtypes);
 }
-
 
 NrrdReader::~NrrdReader()
 {
@@ -147,30 +107,15 @@ NrrdReader::read_nrrd()
   filename_.reset();
   string fn(filename_.get());
   if (fn == "") { 
-    error("No file has been selected.  Please choose a file.");
+    error("Please specify nrrd filename");
     return false; 
   }
 
   // Read the status of this file so we can compare modification timestamps.
   struct stat buf;
-  if (stat(fn.c_str(), &buf) == - 1)
-  {
-    if (!importing_)
-    {
-      error("File '" + fn + "' not found.");
-      return false;
-    }
-    else
-    {
-      warning("File '" + fn + "' not found.  Maybe the plugin can find it.");
-
-      // This causes the item to cache.  Maybe a forced reread would be better?
-#ifdef __sgi
-      buf.st_mtim.tv_sec = 0;
-#else
-      buf.st_mtime = 0;
-#endif
-    }
+  if (stat(fn.c_str(), &buf) == - 1) {
+    error(string("FieldReader error - file not found: '")+fn+"'");
+    return false;
   }
 
   // If we haven't read yet, or if it's a new filename, 
@@ -180,24 +125,13 @@ NrrdReader::read_nrrd()
 #else
   time_t new_filemodification = buf.st_mtime;
 #endif
-
-  if (!read_handle_.get_rep() || 
-      fn != old_filename_ || 
-      new_filemodification != old_filemodification_)
+    if(!read_handle_.get_rep() || 
+  fn != old_filename_ || 
+  new_filemodification != old_filemodification_)
   {
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
     read_handle_ = 0;
-
-    if (importing_)
-    {
-      if (!call_importer(fn))
-      {
-        error("Import failed.");
-        return false;
-      }
-      return true;
-    }
 
     int len = fn.size();
     // Filename as string
@@ -213,9 +147,9 @@ NrrdReader::read_nrrd()
     const string vista_ext(".v");
     const string vista_conv_command("VistaToNrrd %f %t");
 
+
     // check that the last 3 chars are .nd for us to pio
-    if (fn.substr(len - ext.size(), ext.size()) == ext)
-    {
+    if (fn.substr(len - ext.size(), ext.size()) == ext) {
       Piostream *stream = auto_istream(fn, this);
       if (!stream)
       {
@@ -232,74 +166,58 @@ NrrdReader::read_nrrd()
 	return true;
       }
       delete stream;
-    }
-    else
-    { // assume it is just a nrrd
-      if (fn.substr(len - vff_ext.size(), vff_ext.size()) == vff_ext)
-      {
+    } else { // assume it is just a nrrd
+      if (fn.substr(len - vff_ext.size(), vff_ext.size()) == vff_ext){
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, vff_conv_command);
 	return read_file(tmpfilename);	
-      }
-      else if ((fn.substr(len - pic_ext.size(), pic_ext.size()) == pic_ext) ||
-               fn.substr(len - pic_ext2.size(), pic_ext2.size()) == pic_ext2)
-      {
+	
+      } else if ((fn.substr(len - pic_ext.size(), pic_ext.size()) == pic_ext) ||
+		  fn.substr(len - pic_ext2.size(), pic_ext2.size()) == pic_ext2){
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, pic_conv_command);
 	return read_file(tmpfilename);
-      }
-      else if (fn.substr(len - vol_ext.size(), vol_ext.size()) == vol_ext)
-      {
+	
+      } else if (fn.substr(len - vol_ext.size(), vol_ext.size()) == vol_ext){
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, vol_conv_command);
 	return read_file(tmpfilename);
-      }
-      else if (fn.substr(len - vista_ext.size(), vista_ext.size()) ==
-               vista_ext)
-      {
+	
+      } else if (fn.substr(len - vista_ext.size(), vista_ext.size()) == vista_ext){
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, vista_conv_command);
 	return read_file(tmpfilename);
-      }
-      else
-      {
+	
+      } else {
 	return read_file(fn);
+	
       }
     }
     return true;
   }
-  return false;
+    return false;
 }
 
 
-bool
-NrrdReader::read_file(string fn)
-{
+bool NrrdReader::read_file(string fn){
+
   NrrdData *n = scinew NrrdData;
-  if (nrrdLoad(n->nrrd = nrrdNew(), airStrdup(fn.c_str()), 0))
-  {
+  if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()), 0)) {
     char *err = biffGetDone(NRRD);
     error("Read error on '" + fn + "': " + err);
     free(err);
     return true;
   }
   read_handle_ = n;
-  for (int i = 0; i < read_handle_->nrrd->dim; i++)
-  {
+  for (int i = 0; i < read_handle_->nrrd->dim; i++) {
     if (!(airExists(read_handle_->nrrd->axis[i].min) && 
-	  airExists(read_handle_->nrrd->axis[i].max)) &&
-	!(airExists(read_handle_->nrrd->axis[i].spaceDirection[0])))
-
+	  airExists(read_handle_->nrrd->axis[i].max)))
       nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
   }
   return false;
 }
 
-
-bool
-NrrdReader::write_tmpfile(string filename, string* tmpfilename,
-                          string conv_command)
-{
+bool NrrdReader::write_tmpfile(string filename, string* tmpfilename, string conv_command){
   string::size_type loc = filename.find_last_of("/");
   const string basefilename =
     (loc==string::npos)?filename:filename.substr(loc+1);
@@ -322,12 +240,10 @@ NrrdReader::write_tmpfile(string filename, string* tmpfilename,
   string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     conv_command;
-  while ((loc = command.find("%f")) != string::npos)
-  {
+  while ((loc = command.find("%f")) != string::npos){
     command.replace(loc, 2, "'"+filename+"'");
   }
-  while ((loc = command.find("%t")) != string::npos)
-  {
+  while ((loc = command.find("%t")) != string::npos){
     command.replace(loc, 2, "'"+*tmpfilename+"'");
   }
   const int status = sci_system(command.c_str());
@@ -338,24 +254,10 @@ NrrdReader::write_tmpfile(string filename, string* tmpfilename,
   return true;
 }
 
-
 void
 NrrdReader::execute()
 {
   update_state(NeedData);
-
-  const string ftpre = gui_filetype_.get();
-  const string::size_type loc = ftpre.find(" (");
-  const string ft = ftpre.substr(0, loc);
-
-  importing_ = !(ft == "" ||
-                 ft == "Nrrd Files" ||
-                 ft == "NrrdData File" ||
-                 ft == "VFF File" ||
-                 ft == "PICT File" ||
-                 ft == "geovoxel VOL File" ||
-                 ft == "Vista File" ||
-                 ft == "All Files");
 
   read_nrrd();
 
@@ -372,22 +274,13 @@ NrrdReader::execute()
 }
 
 
-bool
-NrrdReader::call_importer(const string &filename)
+void 
+NrrdReader::tcl_command(GuiArgs& args, void* userdata)
 {
-  const string ftpre = gui_filetype_.get();
-  const string::size_type loc = ftpre.find(" (");
-  const string ft = ftpre.substr(0, loc);
-  
-  NrrdIEPluginManager mgr;
-  NrrdIEPlugin *pl = mgr.get_plugin(ft);
-  if (pl)
+  if(args.count() < 2)
   {
-    read_handle_ = pl->fileReader_(this, filename.c_str());
-    msgStream_flush();
-    return read_handle_.get_rep();
+    args.error("NrrdReader needs a minor command");
+    return;
   }
-  return false;
+  Module::tcl_command(args, userdata);
 }
-
-

@@ -138,12 +138,14 @@ TextureBuilderAlgoT<VFIELD,
 	  // Does each level have the same number of patches?
 	  if( lev->patches.size() == glev->patches.size() ){
 	    for(unsigned int j = 0; j < lev->patches.size(); j++ ){
-	      LatVolField<value_type>* vmr =  lev->patches[j].get_rep(); 
-	      LatVolField<Vector>*     gmr = glev->patches[j].get_rep();
+	      value_type tmp;
+	      typename MRLatVolField<value_type>::LVF *vmr;
+	      vmr =lev->patches[j].get_rep(); 
+	      MRLatVolField<Vector>::LVF* gmr = glev->patches[j].get_rep();
 	      
-	      typename LatVolField<value_type>::mesh_handle_type mesh =
+	      typename MRLatVolField<value_type>::LVF::mesh_handle_type mesh =
 		vmr->get_typed_mesh();
-	      typename LatVolField<Vector>::mesh_handle_type gmesh =
+	      typename MRLatVolField<Vector>::LVF::mesh_handle_type gmesh =
 		gmr->get_typed_mesh();
 	      
 	      // Is each patch the same size?
@@ -195,10 +197,13 @@ TextureBuilderAlgoT<VFIELD,
       vector<TextureBrickHandle>& bricks = tHandle->bricks(i);
       unsigned int k = 0;
       for(unsigned int j = 0; j < lev->patches.size(); j++ ){
-	LatVolField<value_type>* vmr =  lev->patches[j].get_rep(); 
-	LatVolField<Vector>*     gmr = (glev ? glev->patches[j].get_rep() : 0);
+	typename MRLatVolField<value_type>::LVF* vmr =
+	                                           lev->patches[j].get_rep(); 
+	MRLatVolField<Vector>::LVF*     gmr = 
+	                              (glev ? glev->patches[j].get_rep() : 0);
 
-	typename LatVolField<value_type>::mesh_handle_type mesh = vmr->get_typed_mesh();
+	typename MRLatVolField<value_type>::LVF::mesh_handle_type mesh = 
+	                                                vmr->get_typed_mesh();
 
 	int nx = mesh->get_ni();
 	int ny = mesh->get_nj();

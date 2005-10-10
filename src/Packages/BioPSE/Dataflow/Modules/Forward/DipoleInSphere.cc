@@ -47,9 +47,11 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -67,9 +69,19 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class DipoleInSphere : public Module {
+  typedef SCIRun::PointCloudMesh<ConstantBasis<Point> >           PCMesh;
+  typedef SCIRun::ConstantBasis<Vector>                           PCVBasis;
+  typedef SCIRun::GenericField<PCMesh, PCVBasis, vector<Vector> > PCField;  
+  typedef SCIRun::TriSurfMesh<TriLinearLgn<Point> >               TSMesh;
+  typedef SCIRun::TriLinearLgn<Vector>                            TSVBasis;
+  typedef SCIRun::TriLinearLgn<double>                            TSSBasis;
+  typedef SCIRun::GenericField<TSMesh, TSVBasis, vector<Vector> > TSFieldV;
+  typedef SCIRun::GenericField<TSMesh, TSSBasis, vector<double> > TSFieldS; 
+  
+
   //! Private Methods
   // -- fills in the surface with potentials for single sphere uniform model
-  void fillOneSphere(DenseMatrix&, TriSurfField<double>*, TriSurfField<Vector>*);
+  void fillOneSphere(DenseMatrix&, TSFieldS*, TSFieldV*);
 
 public:
   
@@ -109,26 +121,28 @@ void DipoleInSphere::execute() {
     return;
   }
  
-  if (field_handle->get_type_name(0) == "TriSurfField") {
-    TriSurfMeshHandle hMesh = 
-      dynamic_cast<TriSurfMesh*>(field_handle->mesh().get_rep());
-    TriSurfField<double>* hNewSurf = 
-      new TriSurfField<double>(hMesh, 1);
-    TriSurfField<Vector>* hBSurf = 
-      new TriSurfField<Vector>(hMesh, 1);
+  const TypeDescription *mtd = field_handle->mesh()->get_type_description();
+  const string &mtdn = mtd->get_name();
+  // Note: only matches TSMesh with linear basis...
+  if (mtdn == get_type_description((TSMesh*)0)->get_name()) {
+    TSMesh::handle_type hMesh = 
+      dynamic_cast<TSMesh*>(field_handle->mesh().get_rep());
+    TSFieldS* hNewSurf = new TSFieldS(hMesh);
+    TSFieldV* hBSurf =  new TSFieldV(hMesh);
     
     FieldHandle dip_handle;
+    const TypeDescription *dtd = dip_handle->get_type_description();
     
+    const string &dtdn = dtd->get_name();
     if (iportDip_->get(dip_handle) 
 	&& dip_handle.get_rep() &&
-	dip_handle->get_type_name(0) == "PointCloudField" 
-	&& dip_handle->get_type_name(1) == "Vector"){
+	dtdn == ((PCField*)0)->get_type_description()->get_name()) 
+    {  
+      PCField* pDips = dynamic_cast<PCField*>(dip_handle.get_rep());
+      PCMesh::handle_type hMesh = pDips->get_typed_mesh();
       
-      PointCloudField<Vector>*  pDips = dynamic_cast<PointCloudField<Vector>*>(dip_handle.get_rep());
-      PointCloudMeshHandle hMesh = pDips->get_typed_mesh();
-      
-      PointCloudMesh::Node::iterator ii;
-      PointCloudMesh::Node::iterator ii_end;
+      PCMesh::Node::iterator ii;
+      PCMesh::Node::iterator ii_end;
       Point p;
       Vector qdip;
       vector<Vector> dips;
@@ -169,12 +183,13 @@ void DipoleInSphere::execute() {
   }
 }
 
-void DipoleInSphere::fillOneSphere(DenseMatrix& dips, TriSurfField<double>* hSurf, TriSurfField<Vector>* hBSurf) {
-  
-  TriSurfMeshHandle hMesh = hSurf->get_typed_mesh();
+void DipoleInSphere::fillOneSphere(DenseMatrix& dips, TSFieldS* hSurf, 
+				   TSFieldV* hBSurf) 
+{  
+  TSMesh::handle_type hMesh = hSurf->get_typed_mesh();
   vector<double>& data = hSurf->fdata();
   vector<Vector>& bdata = hBSurf->fdata();
-  TriSurfMesh::Node::size_type nsize; hMesh->size(nsize);
+  TSMesh::Node::size_type nsize; hMesh->size(nsize);
 
   BBox bbox = hMesh->get_bounding_box();
   
@@ -190,8 +205,8 @@ void DipoleInSphere::fillOneSphere(DenseMatrix& dips, TriSurfField<double>* hSur
   msgStream_ << "Radius of the sphere is " << R << endl;
   Point p;
 
-  TriSurfMesh::Node::iterator niter; hMesh->begin(niter);
-  TriSurfMesh::Node::iterator niter_end; hMesh->end(niter_end);
+  TSMesh::Node::iterator niter; hMesh->begin(niter);
+  TSMesh::Node::iterator niter_end; hMesh->end(niter_end);
 
   // -- for every point
   while (niter != niter_end) {

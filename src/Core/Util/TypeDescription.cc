@@ -158,6 +158,42 @@ TypeDescription::get_name( const string & type_sep_start /* = "<"  */,
   }
 }
 
+// substitute one of the subtype names with the name provided.
+string 
+TypeDescription::get_similar_name(const string &substitute,
+				  const int pos,
+				  const string &type_sep_start, 
+				  const string &type_sep_end) const 
+{
+  const string comma(",");
+  bool do_end = true;
+  if(subtype_) {
+    string rval = name_ + type_sep_start;
+    td_vec::iterator iter = subtype_->begin();
+    int count = 0;
+    while (iter != subtype_->end()) {
+      if (pos == count) {
+	rval += substitute;
+      } else {
+	rval+=(*iter)->get_name(type_sep_start, type_sep_end);
+      }
+      ++iter;
+      if (iter != subtype_->end()) {
+	if (type_sep_start == type_sep_end) {
+	  do_end = false;
+	} else {
+	  rval += comma;
+	}
+      }
+      ++count;
+    }
+    if (do_end) rval += type_sep_end;
+    return rval;
+  } else {
+    return name_;
+  }
+}
+
 
 string 
 TypeDescription::get_filename() const

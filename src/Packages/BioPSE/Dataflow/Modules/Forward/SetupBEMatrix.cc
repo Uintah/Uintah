@@ -74,7 +74,7 @@ SetupBEMatrix::execute()
 
   // Gather up the surfaces from the input ports.
   vector<FieldHandle> fields;
-  vector<TriSurfMeshHandle> meshes;
+  vector<TSMesh::handle_type> meshes;
   vector<double> conductivities;
   vector<int> filed_generation_no_new;
   string condStr; double condVal;
@@ -95,8 +95,8 @@ SetupBEMatrix::execute()
       }
 
 
-      TriSurfMesh *mesh = 0;
-      if (!(mesh = dynamic_cast<TriSurfMesh *>(field->mesh().get_rep())))
+      TSMesh *mesh = 0;
+      if (!(mesh = dynamic_cast<TSMesh *>(field->mesh().get_rep())))
       {
 	error("Surface port '" + to_string(pi->second) +
 	      "' does not contain a TriSurfField");

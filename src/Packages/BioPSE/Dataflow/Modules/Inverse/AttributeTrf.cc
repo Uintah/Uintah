@@ -41,6 +41,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Basis/TriLinearLgn.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 
 #include <math.h>
@@ -51,7 +52,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class AttributeTrf : public Module {
-
+  typedef SCIRun::TriSurfMesh<TriLinearLgn<Point> > TSMesh;
 public:
 
   // CONSTRUCTOR
@@ -91,7 +92,7 @@ void AttributeTrf::execute()
     return;
   }
 
-  TriSurfMesh *tsm=dynamic_cast<TriSurfMesh *>(hFieldGeomF->mesh().get_rep());
+  TSMesh *tsm=dynamic_cast<TSMesh *>(hFieldGeomF->mesh().get_rep());
   if (!tsm) {
     error("Input field was not a TriSurfField.");
     return;

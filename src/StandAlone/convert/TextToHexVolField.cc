@@ -49,7 +49,10 @@
 // specify -oneBasedIndexing.  And the SCIRun output file is written in 
 // ASCII, unless you specify -binOutput.
 
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -127,8 +130,9 @@ main(int argc, char **argv) {
   }
   SCIRunInit();
   setDefaults();
+  typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
 
-  HexVolMesh *hvm = new HexVolMesh();
+  HVMesh *hvm = new HVMesh();
   char *ptsName = argv[1];
   char *hexesName = argv[2];
   char *fieldName = argv[3];
@@ -212,8 +216,10 @@ main(int argc, char **argv) {
       cerr << "Added hex #"<<i<<": ["<<n1<<" "<<n2<<" "<<n3<<" "<<n4<<" "<<n5<<" "<<n6<<" "<<n7<<" "<<n8<<"]\n";
   }
   cerr << "done adding elements.\n";
-
-  HexVolField<double> *hv = scinew HexVolField<double>(hvm, -1);
+  typedef NoDataBasis<char>                DatBasis;
+  typedef GenericField<HVMesh, DatBasis, vector<char> > HVField;
+    
+  HVField *hv = scinew HVField(hvm);
   FieldHandle hvH(hv);
   
   if (binOutput) {

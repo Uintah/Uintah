@@ -87,6 +87,7 @@ public:
   virtual double get(int, int) const;
   virtual void put(int row, int col, double val);
   virtual void add(int row, int col, double val);
+  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
   virtual void getRowNonzerosNoCopy(int r, int &size, int &stride,
                                     int *&cols, double *&vals);
 
@@ -97,6 +98,7 @@ public:
   virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs,
 			      int beg=-1, int end=-1, int spVec=0) const;
+  virtual void scalar_multiply(double s);
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
 

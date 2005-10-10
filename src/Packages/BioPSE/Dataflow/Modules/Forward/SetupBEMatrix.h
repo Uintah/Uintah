@@ -42,7 +42,8 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
@@ -59,15 +60,16 @@
 #include <fstream>
 
 #define epsilon 1e-12
-#define PI M_PI
 
- namespace BioPSE {
+namespace BioPSE {
 
 using namespace SCIRun;
 
 
 class SetupBEMatrix : public Module
 {
+  typedef SCIRun::TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+
   vector<Vector>           avInn_;
   MatrixHandle       hZoi_;
   typedef LockingHandle<DenseMatrix>     DenseMatrixHandle;
@@ -81,19 +83,19 @@ private:
 			      const Point &p1,
 			      const Point &p2) const;
   void compute_intersections(vector<pair<double, int> > &results,
-			     const TriSurfMeshHandle &mesh,
+			     const TSMesh::handle_type &mesh,
 			     const Point &p, const Vector &v,
 			     int marker) const;
 
 
-  int compute_parent(const vector<TriSurfMeshHandle> &meshes, int index);
+  int compute_parent(const vector<TSMesh::handle_type> &meshes, int index);
 
   bool compute_nesting(vector<int> &nesting,
-		       const vector<TriSurfMeshHandle> &meshes);
+		       const vector<TSMesh::handle_type> &meshes);
 
-  void calc_tri_area(TriSurfMeshHandle, vector<Vector>&);
+  void calc_tri_area(TSMesh::handle_type, vector<Vector>&);
 
-  void build_Zoi( const vector<TriSurfMeshHandle> &,
+  void build_Zoi( const vector<TSMesh::handle_type> &,
                                 vector<int> &,
                                 vector<double>&,
                                 int hs,
@@ -143,27 +145,27 @@ private:
                                 const Vector&,
                                 const Vector& );
 
-  inline void make_auto_P( TriSurfMeshHandle,
+  inline void make_auto_P( TSMesh::handle_type,
                            DenseMatrixHandle&,
                            double,
                            double,
                            double );
 
-  inline void make_cross_P( TriSurfMeshHandle,
-                            TriSurfMeshHandle,
+  inline void make_cross_P( TSMesh::handle_type,
+                            TSMesh::handle_type,
                             DenseMatrixHandle&,
                             double,
                             double,
                             double );
 
-  inline void make_cross_G( TriSurfMeshHandle,
-                            TriSurfMeshHandle,
+  inline void make_cross_G( TSMesh::handle_type,
+                            TSMesh::handle_type,
                             DenseMatrixHandle&,
                             double,
                             double,
                             double );
 
-  inline void make_auto_G( TriSurfMeshHandle,
+  inline void make_auto_G( TSMesh::handle_type,
                            DenseMatrixHandle&,
                            double,
                            double,
@@ -258,17 +260,17 @@ SetupBEMatrix::ray_triangle_intersect(double &t,
 void
 SetupBEMatrix::compute_intersections(vector<pair<double, int> >
 &results,
-				      const TriSurfMeshHandle &mesh,
+				      const TSMesh::handle_type &mesh,
 				      const Point &p, const Vector &v,
 				      int marker) const
 {
-  TriSurfMesh::Face::iterator itr, eitr;
+  TSMesh::Face::iterator itr, eitr;
   mesh->begin(itr);
   mesh->end(eitr);
   double t;
   while (itr != eitr)
   {
-    TriSurfMesh::Node::array_type nodes;
+    TSMesh::Node::array_type nodes;
     mesh->get_nodes(nodes, *itr);
     Point p0, p1, p2;
     mesh->get_center(p0, nodes[0]);
@@ -291,11 +293,11 @@ pair_less(const pair<double, int> &a,
 
 
 int
-SetupBEMatrix::compute_parent(const vector<TriSurfMeshHandle> &meshes,
+SetupBEMatrix::compute_parent(const vector<TSMesh::handle_type> &meshes,
                               int index)
 {
   Point point;
-  meshes[index]->get_center(point, TriSurfMesh::Node::index_type(0));
+  meshes[index]->get_center(point, TSMesh::Node::index_type(0));
   Vector dir(1.0, 1.0, 1.0);
   vector<pair<double, int> > intersections;
 
@@ -334,7 +336,7 @@ SetupBEMatrix::compute_parent(const vector<TriSurfMeshHandle> &meshes,
 
 bool
 SetupBEMatrix::compute_nesting(vector<int> &nesting,
-				const vector<TriSurfMeshHandle> &meshes)
+				const vector<TSMesh::handle_type> &meshes)
 {
   nesting.resize(meshes.size());
 
@@ -411,10 +413,10 @@ inline void  SetupBEMatrix::getOmega(
   double Nn=0 , Omega=0 ;
   Nn = Ny[0]*Ny[1]*Ny[2] + Ny[0]*Dot(y2,y3) + Ny[2]*Dot(y1,y2) + Ny[1]*Dot(y3,y1);
   if (Nn > 0)  Omega = 2 * atan( d / Nn );
-  if (Nn < 0)  Omega = 2 * atan( d / Nn ) + 2*PI ;
+  if (Nn < 0)  Omega = 2 * atan( d / Nn ) + 2*M_PI ;
   if (Nn == 0)
-        if ( d > 0 ) Omega = PI;
-    	        else  Omega = -PI;
+        if ( d > 0 ) Omega = M_PI;
+    	        else  Omega = -M_PI;
 
   Vector N = Cross(y21, -y13);
   double Zn1 = Dot(Cross(y2, y3) , N);
@@ -754,7 +756,7 @@ void SetupBEMatrix::concat_cols(DenseMatrixHandle m1H, DenseMatrixHandle m2H, De
     return;
 }
 
- void SetupBEMatrix::build_Zoi(const vector<TriSurfMeshHandle> &meshes,
+ void SetupBEMatrix::build_Zoi(const vector<TSMesh::handle_type> &meshes,
                         vector<int> &nesting,
                         vector<double> &conductivities,
                         int hs,
@@ -849,7 +851,7 @@ void SetupBEMatrix::concat_cols(DenseMatrixHandle m1H, DenseMatrixHandle m2H, De
   DenseMatrixHandle hPhm_ = PP[hs*no_of_fields+ms];
 
   DenseMatrix *omatrix = 0;
-  TriSurfMesh::Node::size_type nsize_hs, nsize_ms, nsize;
+  TSMesh::Node::size_type nsize_hs, nsize_ms, nsize;
   meshes[given_potentials_surface_index]->size(nsize_hs);
   meshes[ms]->size(nsize_ms);
 
@@ -1070,22 +1072,22 @@ void SetupBEMatrix::concat_cols(DenseMatrixHandle m1H, DenseMatrixHandle m2H, De
 }
 
 
-void SetupBEMatrix::make_auto_G(TriSurfMeshHandle hsurf, DenseMatrixHandle &h_GG_,
+void SetupBEMatrix::make_auto_G(TSMesh::handle_type hsurf, DenseMatrixHandle &h_GG_,
                                  double in_cond, double out_cond, double op_cond)
 {
-  TriSurfMesh::Node::size_type nsize; hsurf->size(nsize);
+  TSMesh::Node::size_type nsize; hsurf->size(nsize);
   unsigned int nnodes = nsize;
   DenseMatrix* tmp = new DenseMatrix(nnodes, nnodes);
   h_GG_ = tmp;
   DenseMatrix& auto_G = *tmp;
   auto_G.zero();
 
-  const double mult = 1/(2*PI)*((out_cond - in_cond)/op_cond);  // op_cond=out_cond for all the surfaces but the outermost surface which in op_cond=in_cond
+  const double mult = 1/(2*M_PI)*((out_cond - in_cond)/op_cond);  // op_cond=out_cond for all the surfaces but the outermost surface which in op_cond=in_cond
 
-  TriSurfMesh::Node::array_type nodes;
+  TSMesh::Node::array_type nodes;
 
-  TriSurfMesh::Node::iterator ni, nie;
-  TriSurfMesh::Face::iterator fi, fie;
+  TSMesh::Node::iterator ni, nie;
+  TSMesh::Face::iterator fi, fie;
   DenseMatrix cruse_weights(3, 7);
   DenseMatrix g_coef(1, 7);
   DenseMatrix R_W(1,7); // Radon Points Weights
@@ -1122,7 +1124,7 @@ void SetupBEMatrix::make_auto_G(TriSurfMeshHandle hsurf, DenseMatrixHandle &h_GG
     hsurf->begin(ni); hsurf->end(nie);
     for (; ni != nie; ++ni)
     { //! for every node
-      TriSurfMesh::Node::index_type ppi = *ni;
+      TSMesh::Node::index_type ppi = *ni;
       Vector op(hsurf->point(ppi));
 
           if (ppi == nodes[0])       get_auto_g(p1, p2, p3, 0, g_values, s, r, R_W);
@@ -1147,23 +1149,23 @@ void SetupBEMatrix::make_auto_G(TriSurfMeshHandle hsurf, DenseMatrixHandle &h_GG
 }
 
 
-void SetupBEMatrix::make_cross_G(TriSurfMeshHandle hsurf1, TriSurfMeshHandle hsurf2, DenseMatrixHandle &h_GG_,
+void SetupBEMatrix::make_cross_G(TSMesh::handle_type hsurf1, TSMesh::handle_type hsurf2, DenseMatrixHandle &h_GG_,
                                  double in_cond, double out_cond, double op_cond)
 {
-  TriSurfMesh::Node::size_type nsize1; hsurf1->size(nsize1);
-  TriSurfMesh::Node::size_type nsize2; hsurf2->size(nsize2);
+  TSMesh::Node::size_type nsize1; hsurf1->size(nsize1);
+  TSMesh::Node::size_type nsize2; hsurf2->size(nsize2);
   DenseMatrix* tmp = new DenseMatrix(nsize1, nsize2);
   h_GG_ = tmp;
   DenseMatrix& cross_G = *tmp;
   cross_G.zero();
 
-  const double mult = 1/(2*PI)*((out_cond - in_cond)/op_cond);
+  const double mult = 1/(2*M_PI)*((out_cond - in_cond)/op_cond);
 //   out_cond and in_cond belong to hsurf2 and op_cond is the out_cond of hsurf1 for all the surfaces but the outermost surface which in op_cond=in_cond
 
-  TriSurfMesh::Node::array_type nodes;
+  TSMesh::Node::array_type nodes;
 
-  TriSurfMesh::Node::iterator  ni, nie;
-  TriSurfMesh::Face::iterator  fi, fie;
+  TSMesh::Node::iterator  ni, nie;
+  TSMesh::Face::iterator  fi, fie;
 
   DenseMatrix cruse_weights(3, 7);
   DenseMatrix g_coef(1, 7);
@@ -1201,7 +1203,7 @@ void SetupBEMatrix::make_cross_G(TriSurfMeshHandle hsurf1, TriSurfMeshHandle hsu
     hsurf1->begin(ni); hsurf1->end(nie);
     for (; ni != nie; ++ni)
     { //! for every node
-      TriSurfMesh::Node::index_type ppi = *ni;
+      TSMesh::Node::index_type ppi = *ni;
       Vector op(hsurf1->point(ppi));
       get_g_coef(p1, p2, p3, op, s, r, centroid, g_coef);
 
@@ -1219,29 +1221,29 @@ void SetupBEMatrix::make_cross_G(TriSurfMeshHandle hsurf1, TriSurfMeshHandle hsu
 }
 
 
-void SetupBEMatrix::make_cross_P(TriSurfMeshHandle hsurf1, TriSurfMeshHandle hsurf2, DenseMatrixHandle &h_PP_,
+void SetupBEMatrix::make_cross_P(TSMesh::handle_type hsurf1, TSMesh::handle_type hsurf2, DenseMatrixHandle &h_PP_,
                                  double in_cond, double out_cond, double op_cond)
 {
 
-  TriSurfMesh::Node::size_type nsize1; hsurf1->size(nsize1);
-  TriSurfMesh::Node::size_type nsize2; hsurf2->size(nsize2);
+  TSMesh::Node::size_type nsize1; hsurf1->size(nsize1);
+  TSMesh::Node::size_type nsize2; hsurf2->size(nsize2);
   DenseMatrix* tmp = new DenseMatrix(nsize1, nsize2);
   h_PP_ = tmp;
   DenseMatrix& cross_P = *tmp;
   cross_P.zero();
 
-  const double mult = 1/(2*PI)*((out_cond - in_cond)/op_cond);
+  const double mult = 1/(2*M_PI)*((out_cond - in_cond)/op_cond);
 //   out_cond and in_cond belong to hsurf2 and op_cond is the out_cond of hsurf1 for all the surfaces but the outermost surface which in op_cond=in_cond
-  TriSurfMesh::Node::array_type nodes;
+  TSMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
   int i;
 
-  TriSurfMesh::Node::iterator  ni, nie;
-  TriSurfMesh::Face::iterator  fi, fie;
+  TSMesh::Node::iterator  ni, nie;
+  TSMesh::Face::iterator  fi, fie;
 
   hsurf1->begin(ni); hsurf1->end(nie);
   for (; ni != nie; ++ni){ //! for every node
-    TriSurfMesh::Node::index_type ppi = *ni;
+    TSMesh::Node::index_type ppi = *ni;
     Point pp = hsurf1->point(ppi);
 
     hsurf2->begin(fi); hsurf2->end(fie);
@@ -1263,31 +1265,31 @@ void SetupBEMatrix::make_cross_P(TriSurfMeshHandle hsurf1, TriSurfMeshHandle hsu
 }
 
 
-void SetupBEMatrix::make_auto_P(TriSurfMeshHandle hsurf, DenseMatrixHandle &h_PP_,
+void SetupBEMatrix::make_auto_P(TSMesh::handle_type hsurf, DenseMatrixHandle &h_PP_,
                                  double in_cond, double out_cond, double op_cond)
 {
 
-  TriSurfMesh::Node::size_type nsize; hsurf->size(nsize);
+  TSMesh::Node::size_type nsize; hsurf->size(nsize);
   unsigned int nnodes = nsize;
   DenseMatrix* tmp = new DenseMatrix(nnodes, nnodes);
   h_PP_ = tmp;
   DenseMatrix& auto_P = *tmp;
   auto_P.zero();
 
-  const double mult = 1/(2*PI)*((out_cond - in_cond)/op_cond);  // op_cond=out_cond for all the surfaces but the outermost surface which in op_cond=in_cond
+  const double mult = 1/(2*M_PI)*((out_cond - in_cond)/op_cond);  // op_cond=out_cond for all the surfaces but the outermost surface which in op_cond=in_cond
 
-  TriSurfMesh::Node::array_type nodes;
+  TSMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
 
-  TriSurfMesh::Node::iterator ni, nie;
-  TriSurfMesh::Face::iterator fi, fie;
+  TSMesh::Node::iterator ni, nie;
+  TSMesh::Face::iterator fi, fie;
 
   unsigned int i;
 
   hsurf->begin(ni); hsurf->end(nie);
 
   for (; ni != nie; ++ni){ //! for every node
-    TriSurfMesh::Node::index_type ppi = *ni;
+    TSMesh::Node::index_type ppi = *ni;
     Point pp = hsurf->point(ppi);
 
     hsurf->begin(fi); hsurf->end(fie);
@@ -1317,10 +1319,10 @@ void SetupBEMatrix::make_auto_P(TriSurfMeshHandle hsurf, DenseMatrixHandle &h_PP
 
 
 //! precalculate triangles area
-void SetupBEMatrix::calc_tri_area(TriSurfMeshHandle hsurf, vector<Vector>& areaV){
+void SetupBEMatrix::calc_tri_area(TSMesh::handle_type hsurf, vector<Vector>& areaV){
 
-  TriSurfMesh::Face::iterator  fi, fie;
-  TriSurfMesh::Node::array_type     nodes;
+  TSMesh::Face::iterator  fi, fie;
+  TSMesh::Node::array_type     nodes;
 
   hsurf->begin(fi); hsurf->end(fie);
   for (; fi != fie; ++fi) {

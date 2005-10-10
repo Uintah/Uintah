@@ -38,7 +38,15 @@
  *
  *  Copyright (C) 2003 SCI Group
  */
-
+#include <Core/Geometry/Point.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
@@ -216,7 +224,7 @@ int ExtractSepSurfs::getNode(int ii, int jj, int kk, int n,
 			     const Array1<int>& splI, simplex_hash_type& hash,
 			     SepSurf& surf) {
   int h;
-  LatVolMesh::Node::index_type nidx(field.get_typed_mesh().get_rep(),ii,jj,kk);
+  SegLVMesh::Node::index_type nidx(field.get_typed_mesh().get_rep(),ii,jj,kk);
   
 //  cerr << "Getting node ("<<ii<<","<<jj<<","<<kk<<") n="<<n;
   unsigned pidx = (unsigned)(nidx);
@@ -457,7 +465,7 @@ void ExtractSepSurfs::buildSurfs(SegLatVolField &field, SepSurf &surf) {
 //  v.y(v.y()/(field.fdata().dim2()-1));
 //  v.z(v.z()/(field.fdata().dim3()-1));
 
-  Array1<LatVolMesh::Node::index_type> splits;
+  Array1<SegLVMesh::Node::index_type> splits;
   Array1<int> splT;
   Array1<int> splI;
 
@@ -468,7 +476,7 @@ void ExtractSepSurfs::buildSurfs(SegLatVolField &field, SepSurf &surf) {
 
   // first add in all of the nodes that need to be split
   for (i=0; i<splits.size(); i++) {
-    LatVolMesh::Node::index_type idx=splits[i];
+    SegLVMesh::Node::index_type idx=splits[i];
     int ii=idx.x-1;
     int jj=idx.y-1;
     int kk=idx.z-1;
@@ -608,8 +616,7 @@ void ExtractSepSurfs::execute()
     error("Input field was not a SegLatVolField");
     return;
   }
-
-  QuadSurfMeshHandle qsmH = new QuadSurfMesh;
+  SSQSMesh::handle_type qsmH = new SSQSMesh;
   SepSurf *surf = new SepSurf(qsmH);
   buildSurfs(*slvf, *surf);
   FieldHandle fH(surf);

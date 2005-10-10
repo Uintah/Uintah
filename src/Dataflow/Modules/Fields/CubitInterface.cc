@@ -44,10 +44,14 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/ImportExport/ExecConverter.h>
@@ -63,6 +67,11 @@ namespace SCIRun {
 
 class CubitInterface : public Module
 {
+
+typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+
 private:
   FieldIPort *		iport1_;
   FieldIPort *		iport2_;
@@ -74,8 +83,8 @@ private:
   string		base_;
   
   void			cleanup(string error="");
-  bool			write_facet_file(string, TriSurfMeshHandle &);
-  bool			read_netcdf_file(string, TetVolMeshHandle &);
+  bool			write_facet_file(string, TSMesh::handle_type &);
+  bool			read_netcdf_file(string, TVMesh::handle_type &);
   bool			write_journal_file(string, string, string);
 public:
   CubitInterface(GuiContext* ctx);
@@ -115,7 +124,7 @@ CubitInterface::cleanup(string error) {
 
 
 bool
-CubitInterface::write_facet_file(string filename, TriSurfMeshHandle &tsm)
+CubitInterface::write_facet_file(string filename, TSMesh::handle_type &tsm)
 {
   FILE *f = fopen(filename.c_str(), "wt");
   if (f == NULL)
@@ -123,11 +132,11 @@ CubitInterface::write_facet_file(string filename, TriSurfMeshHandle &tsm)
     error("Unable to open file"+filename+" for writing.");
     return false;
   }
-  TriSurfMesh::Node::size_type tsmns;
-  TriSurfMesh::Face::size_type tsmfs;
-  TriSurfMesh::Node::iterator tsmn, tsmne;
-  TriSurfMesh::Face::iterator tsmf, tsmfe;
-  TriSurfMesh::Node::array_type face_nodes;
+  TSMesh::Node::size_type tsmns;
+  TSMesh::Face::size_type tsmfs;
+  TSMesh::Node::iterator tsmn, tsmne;
+  TSMesh::Face::iterator tsmf, tsmfe;
+  TSMesh::Node::array_type face_nodes;
   tsm->size(tsmns);
   tsm->size(tsmfs);
   tsm->begin(tsmn);
@@ -143,8 +152,8 @@ CubitInterface::write_facet_file(string filename, TriSurfMeshHandle &tsm)
     ++tsmn;
   }
 
-  TriSurfMesh::Edge::array_type tsmea;
-  TriSurfMesh::Face::index_type neigh;
+  TSMesh::Edge::array_type tsmea;
+  TSMesh::Face::index_type neigh;
   
   tsm->synchronize(Mesh::EDGES_E | Mesh:: EDGE_NEIGHBORS_E);
 		   
@@ -219,7 +228,7 @@ struct SimpleIter {
 
 
 bool
-CubitInterface::read_netcdf_file(string filename, TetVolMeshHandle &mesh)
+CubitInterface::read_netcdf_file(string filename, TVMesh::handle_type &mesh)
 {
   ifstream infile;
   infile.open(filename.c_str());
@@ -322,7 +331,7 @@ CubitInterface::read_netcdf_file(string filename, TetVolMeshHandle &mesh)
     }
   }
   
-  TetVolMesh *tvm = scinew TetVolMesh();
+  TVMesh *tvm = scinew TVMesh();
   SimpleIter beg(0), end(nelems);
   tvm->fill_points(nodes.begin(), nodes.end(), FillNodeFtor());
   tvm->fill_cells(beg, end, FillCellFtor(elems));
@@ -384,7 +393,7 @@ CubitInterface::execute()
   string netcdffile = base_+"netcdf";
   string logfile = base_+"log";
 
-  TriSurfMeshHandle tsm = (TriSurfMesh *)(field1->mesh().get_rep());
+  TSMesh::handle_type tsm = (TSMesh *)(field1->mesh().get_rep());
   if (!write_facet_file(facetfile, tsm)) {
     cleanup("Cannot write facet file: "+facetfile);
   }
@@ -411,14 +420,15 @@ CubitInterface::execute()
     cleanup("The ncdump program failed to run for some unknown reason.");
   }
 
-  TetVolMeshHandle mesh;
+  TVMesh::handle_type mesh;
   if (!read_netcdf_file(netcdffile, mesh)) {
     cleanup("Error read NetCDF file: "+netcdffile);
   }
 
   cleanup();
-
-  TetVolField<double> *f = scinew TetVolField<double>(mesh, 0);
+  typedef ConstantBasis<double> CBF;
+  typedef GenericField<TVMesh, CBF, vector<double> > TVField;
+  TVField *f = scinew TVField(mesh);
   oport_->send(f);
 }
 

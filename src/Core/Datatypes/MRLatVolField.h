@@ -26,11 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef Uintah_Datatypes_LatVolField_h
-#define Uintah_Datatypes_LatVolField_h
+#ifndef Core_Datatypes_LatVolField_h
+#define Core_Datatypes_LatVolField_h
 
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
 
-#include <Core/Datatypes/LatVolField.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -38,25 +41,31 @@
 namespace SCIRun {
 using std::vector;
 
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh_;
 
 template <class Data>
 struct MultiResLevel 
 {  
+  typedef HexTrilinearLgn<Data> LVBasis;
+  typedef GenericField<LVMesh_, LVBasis, FData3d<Data, LVMesh_> > LVF;
   MultiResLevel(){};
-  MultiResLevel( vector<LockingHandle<LatVolField<Data> > >p, int l):
+  MultiResLevel( vector<typename LVF::handle_type> p, int l):
     level(l), patches(p) {}
 
   int level;
-  vector<LockingHandle<LatVolField<Data> > > patches;
+  vector<typename LVF::handle_type> patches;
 };
 
 template <class Data> 
-class MRLatVolField : public LatVolField<Data>
+class MRLatVolField : 
+    public GenericField<LVMesh_, HexTrilinearLgn<Data>, FData3d<Data, LVMesh_> >
 {
 public:
+  typedef HexTrilinearLgn<Data> LVBasis;
+  typedef GenericField<LVMesh_, LVBasis, FData3d<Data, LVMesh_> > LVF;
   MRLatVolField(){}
   MRLatVolField(vector<MultiResLevel<Data>* >& levels):   
-    LatVolField<Data>( *((levels[0])->patches[0].get_rep()) ), levels_(levels) {}
+    LVF( *((levels[0])->patches[0].get_rep()) ), levels_(levels) {}
   int nlevels() { return levels_.size(); }
   MultiResLevel<Data>* level(int i) { return levels_[i]; }
   virtual ~MRLatVolField(){
@@ -72,21 +81,6 @@ private:
   vector<MultiResLevel<Data>* > levels_;
 };
 
-
-//  template <class Data>
-//  MRLatVolField<Data>::~MRLatVolField()
-//  {
-//    typename vector<MultiResLevel<Data>*>::iterator it = levels_.begin();
-//    typename vector<MultiResLevel<Data>*>::iterator it_end = levels_.end();
-
-//    for(; it != it_end; ++it ){
-//      typename vector<LockingHandle<LatVolField<Data> > >::iterator jt = (*it)->patches.begin();
-//      typename vector<LockingHandle<LatVolField<Data> > >::iterator jt_end = (*it)->patches.end();
-
-//      for(; jt != jt_end; ++jt )
-//        delete (*jt);
-//    }
-//  }
 
 template <class Data>
 const string

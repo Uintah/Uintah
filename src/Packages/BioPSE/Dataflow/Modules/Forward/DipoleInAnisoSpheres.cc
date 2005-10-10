@@ -46,12 +46,13 @@
 #include <Core/GuiInterface/GuiVar.h>    
 #include <Dataflow/Ports/FieldPort.h>   
 #include <Dataflow/Ports/MatrixPort.h> 
-#include <Core/Datatypes/PointCloudField.h>  
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>  
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/Field.h>
 #include <Packages/BioPSE/Core/Algorithms/Forward/SphericalVolumeConductor.h>
 
 namespace BioPSE {
@@ -59,7 +60,16 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class DipoleInAnisoSpheres : public Module { 
-	
+  typedef SCIRun::PointCloudMesh<ConstantBasis<Point> > PCMesh;
+  typedef SCIRun::ConstantBasis<Vector>                 FDCVectorBasis;
+  typedef SCIRun::ConstantBasis<double>                 FDCdoubleBasis;
+  typedef SCIRun::ConstantBasis<int>                    FDCintBasis;
+  typedef SCIRun::GenericField<PCMesh, FDCVectorBasis,
+			       vector<Vector> >         PCFieldV;
+  typedef SCIRun::GenericField<PCMesh, FDCdoubleBasis,
+			       vector<double> >         PCFieldD;
+  typedef SCIRun::GenericField<PCMesh, FDCintBasis,
+			       vector<int> >            PCFieldI;
   // input
   FieldIPort  *hInSource;          // dipole
   FieldIPort  *hInElectrodes;      // electrode positions 
@@ -78,11 +88,11 @@ class DipoleInAnisoSpheres : public Module {
   int numDipoles, numElectrodes;
   bool condMatrix, condOut, radiiOut;
 
-  PointCloudField<Vector> *pDipoles; 
-  PointCloudField<int> *pElectrodes;
-  PointCloudField<double> *nElectrodes;
+  PCFieldV *pDipoles; 
+  PCFieldI *pElectrodes;
+  PCFieldD *nElectrodes;
   SphericalVolumeConductor *svc;
-  PointCloudMesh *newElectrodeMesh;
+  PCMesh *newElectrodeMesh;
 
   GuiDouble accuracy;
   GuiDouble expTerms;
@@ -121,44 +131,58 @@ void DipoleInAnisoSpheres::execute() {
 
   // get dipole handle
   hInSource->get(hSource);
-  if(!hSource.get_rep() ||
-	 !(hSource->get_type_name(0) == "PointCloudField") ||
-	 !(hSource->get_type_name(1) == "Vector")) {
-	error("dipole field needed");
-	return;
+  if(!hSource.get_rep()) {
+    error("No input dipole field.");
+    return;
+  }
+  const TypeDescription *hstd = hSource->get_type_description();
+  const string &hstdn = hstd->get_name();
+
+  if(hstdn != ((PCFieldV*)0)->get_type_description()->get_name())
+  {
+    error("Must have dipole field, got: " + hstdn);
+    return;
   }  
 
   // get electrode handle
   hInElectrodes->get(hElectrodes);
-  if(!hElectrodes.get_rep() ||
-	 !(hElectrodes->get_type_name(0) == "PointCloudField") ||
-	 !(hElectrodes->get_type_name(1) == "int")) {
-	error("electrode field needed");
-	return;
+  if(!hElectrodes.get_rep()) {
+    error("No input electrode field.");
+    return;
+  }
+
+  const TypeDescription *hetd = hSource->get_type_description();
+  const string &hetdn = hetd->get_name();
+
+  if(hetdn != ((PCFieldI*)0)->get_type_description()->get_name())
+  {
+    error("Must have electrode field, got: " + hetdn);
+    return;
   }
 
   // get conductivity handle
-  if(!hInConductivities->get(hConductivities) || (!hConductivities.get_rep())) {
-	error("conductivity matrix needed");
-	return;
+  if(!hInConductivities->get(hConductivities) || (!hConductivities.get_rep())) 
+  {
+    error("No input conductivity matrix.");
+    return;
   }
 
   // get radii handle
   if(!hInRadii->get(hRadii) || (!hRadii.get_rep())) {
-	error("radii matrix needed");
-	return;
+    error("No input radii matrix.");
+    return;
   }
   
   
   // get dipole info from input port
-  pDipoles  = dynamic_cast<PointCloudField<Vector>*>(hSource.get_rep());
+  pDipoles  = dynamic_cast<PCFieldV*>(hSource.get_rep());
   if(!pDipoles) {
-	error("dipoles were not or type PointCloudField<Vector>");
-	return;
+    error("dipoles were not or type PointCloudField<Vector>");
+    return;
   }
-  PointCloudMeshHandle hMeshD = pDipoles->get_typed_mesh();
-  PointCloudMesh::Node::iterator iter;
-  PointCloudMesh::Node::iterator iter_end;
+  PCMesh::handle_type hMeshD = pDipoles->get_typed_mesh();
+  PCMesh::Node::iterator iter;
+  PCMesh::Node::iterator iter_end;
   hMeshD->begin(iter);
   hMeshD->end(iter_end);
   Point p; 
@@ -182,12 +206,12 @@ void DipoleInAnisoSpheres::execute() {
   }
 
   // get electrode position info from input port 
-  pElectrodes = dynamic_cast<PointCloudField<int>*>(hElectrodes.get_rep());
+  pElectrodes = dynamic_cast<PCFieldI*>(hElectrodes.get_rep());
   if(!pElectrodes) {
-	error("electrodes were not of type PointCloudField<double>");
+	error("electrodes were not of type PointCloudField<int>");
 	return;
   }
-  PointCloudMeshHandle hMeshE = pElectrodes->get_typed_mesh();
+  PCMesh::handle_type hMeshE = pElectrodes->get_typed_mesh();
   hMeshE->begin(iter);
   hMeshE->end(iter_end);
   vector<Point> electrodePositions;
@@ -236,9 +260,9 @@ void DipoleInAnisoSpheres::execute() {
   expTerms.set(svc->getNumberOfSeriesTerms());
 
   // create new output field containing the potential values
-  newElectrodeMesh = scinew PointCloudMesh(*hMeshE->clone());
-  PointCloudMeshHandle hNewMesh(newElectrodeMesh);
-  nElectrodes = scinew PointCloudField<double>(hNewMesh, 0);
+  newElectrodeMesh = scinew PCMesh(*hMeshE->clone());
+  PCMesh::handle_type hNewMesh(newElectrodeMesh);
+  nElectrodes = scinew PCFieldD(hNewMesh);
   
   // set new electrode values
   vector<double>& newElectrodeValues = nElectrodes->fdata();

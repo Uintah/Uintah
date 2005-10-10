@@ -47,11 +47,16 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/BoxWidget.h>
@@ -68,7 +73,21 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ApplyFEMCurrentSource : public Module {
-private:
+  typedef TetVolMesh<TetLinearLgn<Point> >               TVMesh;
+  typedef TriSurfMesh<TriLinearLgn<Point> >              TSMesh;
+  typedef TriLinearLgn<int>                              FDintBasis;
+  typedef GenericField<TSMesh, FDintBasis, vector<int> > TSField; 
+  typedef HexVolMesh<HexTrilinearLgn<Point> >            HVMesh;
+
+
+  typedef PointCloudMesh<ConstantBasis<Point> >                  PCMesh;
+  typedef ConstantBasis<double>                                  ConScaBasis;
+  typedef ConstantBasis<Vector>                                  ConVecBasis;
+  typedef GenericField<PCMesh, ConVecBasis, vector<Vector> >     PCVecField; 
+  typedef GenericField<PCMesh, ConScaBasis, vector<double> >     PCScaField;
+  typedef vector<pair<TVMesh::Node::index_type, double> >        PairData;
+  typedef ConstantBasis<PairData>                                PairDataBasis;
+  typedef GenericField<PCMesh, PairDataBasis, vector<PairData> > PCPairField;
 
   void execute_dipole();
 
@@ -88,6 +107,7 @@ public:
 };
 
 DECLARE_MAKER(ApplyFEMCurrentSource)
+
 
 
 ApplyFEMCurrentSource::ApplyFEMCurrentSource(GuiContext *context)
@@ -145,26 +165,25 @@ ApplyFEMCurrentSource::execute_dipole()
     error("Can't get handle to Source field.");
     return;
   }
-  PointCloudField<Vector> *hDipField = 
-    dynamic_cast<PointCloudField<Vector>*> (hSource.get_rep());
+  PCVecField *hDipField = dynamic_cast<PCVecField*> (hSource.get_rep());
   if (!hDipField)
   {
     error("Sources field is not of type PointCloudField<Vector>.");
     return;
   }
 	
-  TetVolMesh *hTetMesh = 0;
-  HexVolMesh *hHexMesh = 0;
-  TriSurfMesh *hTriMesh = 0;
-  if ((hTetMesh = dynamic_cast<TetVolMesh*>(hField->mesh().get_rep())))
+  TVMesh *hTetMesh = 0;
+  HVMesh *hHexMesh = 0;
+  TSMesh *hTriMesh = 0;
+  if ((hTetMesh = dynamic_cast<TVMesh*>(hField->mesh().get_rep())))
   {
     remark("Input is a 'TetVolField'");
   }
-  else if ((hHexMesh = dynamic_cast<HexVolMesh*>(hField->mesh().get_rep())))
+  else if ((hHexMesh = dynamic_cast<HVMesh*>(hField->mesh().get_rep())))
   {    
     remark("Input is a 'HexVolField'");
   }
-  else if ((hTriMesh = dynamic_cast<TriSurfMesh*> (hField->mesh().get_rep())))
+  else if ((hTriMesh = dynamic_cast<TSMesh*> (hField->mesh().get_rep())))
   {
     remark("Input is a 'TriSurfField'");
   }
@@ -177,17 +196,17 @@ ApplyFEMCurrentSource::execute_dipole()
   int nsize = 0;
   if (hTetMesh)
   {
-    TetVolMesh::Node::size_type nsizeTet; hTetMesh->size(nsizeTet);
+    TVMesh::Node::size_type nsizeTet; hTetMesh->size(nsizeTet);
     nsize = nsizeTet;
   }
   else if (hHexMesh)
   {
-    HexVolMesh::Node::size_type nsizeHex; hHexMesh->size(nsizeHex);
+    HVMesh::Node::size_type nsizeHex; hHexMesh->size(nsizeHex);
     nsize = nsizeHex;
   }
   else if (hTriMesh)
   {
-    TriSurfMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
+    TSMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
     nsize = nsizeTri;
   }
 
@@ -232,8 +251,8 @@ ApplyFEMCurrentSource::execute_dipole()
     hTetMesh->synchronize(Mesh::LOCATE_E);
 	
     //! Computing contributions of dipoles to RHS
-    PointCloudMesh::Node::iterator ii;
-    PointCloudMesh::Node::iterator ii_end;
+    PCMesh::Node::iterator ii;
+    PCMesh::Node::iterator ii_end;
     hDipField->get_typed_mesh()->begin(ii);
     hDipField->get_typed_mesh()->end(ii_end);
     vector<double> weights;
@@ -245,7 +264,7 @@ ApplyFEMCurrentSource::execute_dipole()
       // Correct unit of dipole moment -> should be checked.
       const Vector &dir = hDipField->value(*ii);
 
-      TetVolMesh::Cell::index_type loc;
+      TVMesh::Cell::index_type loc;
       if (hTetMesh->locate(loc, pos))
       {
         msgStream_ << "Source pos="<<pos<<" dir="<<dir<<
@@ -275,7 +294,7 @@ ApplyFEMCurrentSource::execute_dipole()
         const double s3 = Dot(g3, dir);
         const double s4 = Dot(g4, dir);
 		
-        TetVolMesh::Node::array_type cell_nodes;
+        TVMesh::Node::array_type cell_nodes;
         hTetMesh->get_nodes(cell_nodes, loc);
         (*rhs)[cell_nodes[0]] += s1;
         (*rhs)[cell_nodes[1]] += s2;
@@ -299,8 +318,8 @@ ApplyFEMCurrentSource::execute_dipole()
     hHexMesh->synchronize(Mesh::LOCATE_E);
 	
     //! Computing contributions of dipoles to RHS
-    PointCloudMesh::Node::iterator ii;
-    PointCloudMesh::Node::iterator ii_end;
+    PCMesh::Node::iterator ii;
+    PCMesh::Node::iterator ii_end;
     hDipField->get_typed_mesh()->begin(ii);
     hDipField->get_typed_mesh()->end(ii_end);
     //vector<double> weights;
@@ -313,7 +332,7 @@ ApplyFEMCurrentSource::execute_dipole()
       // Correct unit of dipole moment -> should be checked.
       const Vector &dir = hDipField->value(*ii);
 
-      HexVolMesh::Cell::index_type loc;
+      HVMesh::Cell::index_type loc;
       if (hHexMesh->locate(loc, pos))
       {
         msgStream_ << "Source p="<<pos<<" dir="<< dir <<
@@ -326,7 +345,7 @@ ApplyFEMCurrentSource::execute_dipole()
       }
 
       // Get dipole in reference element.
-      HexVolMesh::Node::array_type n_array;
+      HVMesh::Node::array_type n_array;
       hHexMesh->get_nodes(n_array, loc);
       Point a, b;
       hHexMesh->get_point(a, n_array[0]);
@@ -352,8 +371,8 @@ ApplyFEMCurrentSource::execute_dipole()
     hTriMesh->synchronize(Mesh::LOCATE_E);
 
     //! Computing contributions of dipoles to RHS.
-    PointCloudMesh::Node::iterator ii;
-    PointCloudMesh::Node::iterator ii_end;
+    PCMesh::Node::iterator ii;
+    PCMesh::Node::iterator ii_end;
     hDipField->get_typed_mesh()->begin(ii);
     hDipField->get_typed_mesh()->end(ii_end);
     vector<double> weights;
@@ -365,7 +384,7 @@ ApplyFEMCurrentSource::execute_dipole()
       // Correct unit of dipole moment -> should be checked.
       const Vector &dir = hDipField->value(*ii);
 
-      TriSurfMesh::Face::index_type loc;
+      TSMesh::Face::index_type loc;
       if (hTriMesh->locate(loc, pos))
       {
         msgStream_ << "Source pos="<<pos<<" dir="<<dir<<
@@ -394,7 +413,7 @@ ApplyFEMCurrentSource::execute_dipole()
         const double s2 = Dot(g2, dir);
         const double s3 = Dot(g3, dir);
 		
-        TriSurfMesh::Node::array_type face_nodes;
+        TSMesh::Node::array_type face_nodes;
         hTriMesh->get_nodes(face_nodes, loc);
         (*rhs)[face_nodes[0]] += s1;
         (*rhs)[face_nodes[1]] += s2;
@@ -432,18 +451,18 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
     return;
   }
 
-  TetVolMesh *hTetMesh = 0;
-  HexVolMesh *hHexMesh = 0;
-  TriSurfMesh *hTriMesh = 0;
-  if ((hTetMesh = dynamic_cast<TetVolMesh*>(hField->mesh().get_rep())))
+  TVMesh *hTetMesh = 0;
+  HVMesh *hHexMesh = 0;
+  TSMesh *hTriMesh = 0;
+  if ((hTetMesh = dynamic_cast<TVMesh*>(hField->mesh().get_rep())))
   {
     remark("Input is a 'TetVolField'");
   }
-  else if ((hHexMesh = dynamic_cast<HexVolMesh*> (hField->mesh().get_rep())))
+  else if ((hHexMesh = dynamic_cast<HVMesh*> (hField->mesh().get_rep())))
   {
     remark("Input is a 'HexVolField'");
   }
-  else if ((hTriMesh = dynamic_cast<TriSurfMesh*> (hField->mesh().get_rep())))
+  else if ((hTriMesh = dynamic_cast<TSMesh*> (hField->mesh().get_rep())))
   {
     remark("Input is a 'TriSurfField'");
   }
@@ -456,17 +475,17 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
   int nsize = 0;
   if (hTetMesh)
   {
-    TetVolMesh::Node::size_type nsizeTet; hTetMesh->size(nsizeTet);
+    TVMesh::Node::size_type nsizeTet; hTetMesh->size(nsizeTet);
     nsize = nsizeTet;
   }
   else if (hHexMesh)
   {
-    HexVolMesh::Node::size_type nsizeHex; hHexMesh->size(nsizeHex);
+    HVMesh::Node::size_type nsizeHex; hHexMesh->size(nsizeHex);
     nsize = nsizeHex;
   }
   else if (hTriMesh)
   {
-    TriSurfMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
+    TSMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
     nsize = nsizeTri;
   }
 
@@ -518,10 +537,10 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
 	
     // if we have an Mapping matrix and a Source field and all types are good,
     //  hCurField will be valid after this block
-    PointCloudField<double> *hCurField = 0;
+    PCScaField *hCurField = 0;
     if (hMapping.get_rep() && hSource.get_rep())
     {
-      hCurField = dynamic_cast<PointCloudField<double>*> (hSource.get_rep());
+      hCurField = dynamic_cast<PCScaField*> (hSource.get_rep());
       if (!hCurField)
       {
         error("Can only use a PointCloudField<double> as source when using an Mapping matrix and a Source field -- this mode is for specifying current densities");
@@ -590,8 +609,8 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
       return;
     }
 
-    PointCloudMesh::Node::iterator ii;
-    PointCloudMesh::Node::iterator ii_end;
+    PCMesh::Node::iterator ii;
+    PCMesh::Node::iterator ii_end;
     hCurField->get_typed_mesh()->begin(ii);
     hCurField->get_typed_mesh()->end(ii_end);
     for (; ii != ii_end; ++ii)
@@ -665,6 +684,5 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
     oportRhs->send(MatrixHandle(rhs));
   }
 }
-
 
 } // End namespace BioPSE

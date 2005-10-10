@@ -62,11 +62,8 @@ UnuAxinsert::UnuAxinsert(SCIRun::GuiContext *ctx) :
 {
 }
 
-
-UnuAxinsert::~UnuAxinsert()
-{
+UnuAxinsert::~UnuAxinsert() {
 }
-
 
 void 
 UnuAxinsert::execute()
@@ -79,8 +76,7 @@ UnuAxinsert::execute()
   if (!inrrd_->get(nrrd_handle))
     return;
 
-  if (!nrrd_handle.get_rep())
-  {
+  if (!nrrd_handle.get_rep()) {
     error("Empty input Nrrd.");
     return;
   }
@@ -88,9 +84,9 @@ UnuAxinsert::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
+
   int axis; 
-  if (!string_to_int(axis_.get(), axis))
-  {
+  if (!string_to_int(axis_.get(), axis)) {
     axis = nin->dim;
     warning(axis_.get()+" is not a valid axis number.");
     warning("Using axis number: "+to_string(axis));
@@ -98,20 +94,14 @@ UnuAxinsert::execute()
   axis = Clamp(axis, 0, nin->dim);
   axis_.set(to_string(axis));
   
-  if (nrrdAxesInsert(nout, nin, axis))
-  {
+  if (nrrdAxesInsert(nout, nin, axis)) {
     char *err = biffGetDone(NRRD);
     error(string("Error Axinserting nrrd: ") + err);
     free(err);
   }
   
-  if (label_.get() != "")
-  {
+  if (strlen(label_.get().c_str())) {
     nout->axis[axis].label = airStrdup(label_.get().c_str());
-  }
-  else
-  {
-    nout->axis[axis].label = 0;
   }
 
   NrrdData *nrrd = scinew NrrdData;
@@ -125,22 +115,18 @@ UnuAxinsert::execute()
   // set kind
   // Copy the axis kinds
   int offset = 0;
-  for (int i=0; i<nin->dim; i++)
-  {
-    if (i == axis)
-    {
+  for (int i=0; i<nin->dim; i++) {
+    if (i == axis) {
       offset = 1;
       nout->axis[i].kind = nrrdKindStub;
     }
     nout->axis[i+offset].kind = nin->axis[i].kind;
-    nout->axis[i+offset].label = 0;
   }
-  if (axis == nin->dim)
-  {
+  if (axis == nin->dim) 
     nout->axis[axis].kind = nrrdKindStub;
-  }
 
   onrrd_->send(out);
+
 }
 
 } // End namespace SCITeem

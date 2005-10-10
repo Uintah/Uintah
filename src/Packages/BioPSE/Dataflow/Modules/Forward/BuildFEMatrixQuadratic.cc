@@ -32,8 +32,8 @@
 
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/QuadraticTetVolField.h>
+#include <Core/Datatypes/TetVolMesh.h>
+
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -57,6 +57,11 @@ using namespace SCIRun;
 
 class BuildFEMatrixQuadratic : public Module {
 public:
+  typedef TetLinearLgn<Tensor>                TFDTensorBasis;
+  typedef TetLinearLgn<Tensor>                TFDTensorBasis;
+  typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+
+
   BuildFEMatrixQuadratic(GuiContext *context);
 
   virtual ~BuildFEMatrixQuadratic();

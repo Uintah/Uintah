@@ -42,10 +42,12 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/ArrowWidget.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomSwitch.h>
-#include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -59,6 +61,9 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ShowDipoles : public Module {
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+  typedef ConstantBasis<Vector>                FDCVectorBasis;
+  typedef GenericField<PCMesh, FDCVectorBasis, vector<Vector> > PCField;
 public:
   ShowDipoles(GuiContext *context);
   virtual ~ShowDipoles();
@@ -67,7 +72,7 @@ public:
   virtual void widget_moved(bool last, BaseWidget*);
   virtual void tcl_command(GuiArgs& args, void* userdata);
 private:
-  void new_input_data(PointCloudField<Vector> *in);
+  void new_input_data(PCField *in);
   void scale_changed();
   void scale_mode_changed();
   bool generate_output_field();
@@ -148,13 +153,13 @@ ShowDipoles::execute()
     been_executed_ = true;
   }
   FieldHandle fieldH;
-  PointCloudField<Vector> *field_pcv;
+  PCField *field_pcv;
   if (!ifield->get(fieldH) || 
-      !(field_pcv=dynamic_cast<PointCloudField<Vector>*>(fieldH.get_rep()))) {
+      !(field_pcv=dynamic_cast<PCField*>(fieldH.get_rep()))) {
     error("No vald input in ShowDipoles Field port.");
     return;
   }
-  PointCloudMeshHandle field_mesh = field_pcv->get_typed_mesh();
+  PCMesh::handle_type field_mesh = field_pcv->get_typed_mesh();
   
   int gen = fieldH->generation;
   
@@ -239,7 +244,7 @@ ShowDipoles::load_gui()
 }
 
 void 
-ShowDipoles::new_input_data(PointCloudField<Vector> *in)
+ShowDipoles::new_input_data(PCField *in)
 {
   num_dipoles_.reset();
   widgetSizeGui_.reset();
@@ -300,7 +305,7 @@ ShowDipoles::new_input_data(PointCloudField<Vector> *in)
   string scaleMode = scaleModeGui_.get();
   for (int i = 0; i < num_dipoles_.get(); i++) {
  
-    PointCloudMeshHandle field_mesh = in->get_typed_mesh();
+    PCMesh::handle_type field_mesh = in->get_typed_mesh();
     Point p;
     field_mesh->get_point(p,i);
     new_positions_[i]->set(p);
@@ -407,12 +412,12 @@ ShowDipoles::generate_output_field()
 {
   if (output_dirty_) {
     output_dirty_ = false;
-    PointCloudMesh *msh = new PointCloudMesh;
+    PCMesh *msh = new PCMesh;
     for (int i = 0; i < num_dipoles_.get(); i++) {      
       msh->add_node(new_positions_[i]->get());
     }
-    PointCloudMeshHandle mh(msh);
-    PointCloudField<Vector> *out = new PointCloudField<Vector>(mh, 1);
+    PCMesh::handle_type mh(msh);
+    PCField *out = new PCField(mh);
     scaleModeGui_.reset();
     string scaleMode = scaleModeGui_.get();
     double max = max_len_.get();

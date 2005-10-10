@@ -50,15 +50,15 @@
  *  Lorena Kreda, Northeastern University, November 2003
  */
 
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildHexFEMatrix.h>
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildTriFEMatrix.h>
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Geometry/Point.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
@@ -67,10 +67,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
-#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildHexFEMatrix.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildTriFEMatrix.h>
+
 
 #include <iostream>
 
@@ -79,18 +76,24 @@ using std::endl;
 namespace BioPSE {
 
 using namespace SCIRun;
-typedef LockingHandle<TetVolField<int> >    TetVolFieldIntHandle;
-typedef LockingHandle<TetVolField<Tensor> > TetVolFieldTensorHandle;
-
-typedef LockingHandle<HexVolField<int> >    HexVolFieldIntHandle;
-typedef LockingHandle<HexVolField<Tensor> > HexVolFieldTensorHandle;
-
-typedef LockingHandle<TriSurfField<int> >   TriSurfFieldIntHandle;
-typedef LockingHandle<TriSurfField<Tensor> > TriSurfFieldTensorHandle;
-
 
 class SetupFEMatrix : public Module {
-  
+//   typedef SCIRun::TriLinearLgn<Tensor>                             TSTBasis;
+//   typedef SCIRun::TriLinearLgn<int>                                TSIBasis;
+//   //typedef SCIRun::TriSurfMesh<TriLinearLgn<Point> >                TSMesh;
+//   typedef SCIRun::GenericField<TSMesh, TSTBasis, vector<Tensor> >  TSFieldT;
+//   typedef SCIRun::GenericField<TSMesh, TSIBasis,    vector<int> >  TSFieldI;
+//   typedef SCIRun::HexTrilinearLgn<Tensor>                          HVTBasis;
+//   typedef SCIRun::HexTrilinearLgn<int>                             HVIBasis;
+//   //typedef SCIRun::HexVolMesh<HexTrilinearLgn<Point> >              HVMesh;
+//   typedef SCIRun::GenericField<HVMesh, HVTBasis, vector<Tensor> >  HVFieldT;
+//   typedef SCIRun::GenericField<HVMesh, HVIBasis, vector<int> >     HVFieldI;
+//   typedef SCIRun::TetLinearLgn<Tensor>                             TVTBasis;
+//   typedef SCIRun::TetLinearLgn<int>                                TVIBasis;
+//   //typedef SCIRun::TetVolMesh<TetLinearLgn<Point> >                 TVMesh;
+//   typedef SCIRun::GenericField<TVMesh, TVTBasis, vector<Tensor> >  TVFieldT;
+//   typedef SCIRun::GenericField<TVMesh, TVIBasis, vector<int> >     TVFieldI;
+
   //! Private data
   FieldIPort*        iportField_;
   MatrixOPort*       oportMtrx_;
@@ -111,9 +114,9 @@ class SetupFEMatrix : public Module {
 
   GuiString          nprocessors_;
 
-  void build_basis_matrices(TetVolFieldIntHandle tviH, unsigned int nconds, 
+  void build_basis_matrices(TVFieldI::handle_type tviH, unsigned int nconds, 
 			    double unitsScale, int num_procs);
-  void build_TriBasis_matrices(TriSurfFieldIntHandle, unsigned int nconds, 
+  void build_TriBasis_matrices(TSFieldI::handle_type, unsigned int nconds, 
 			       double unitsScale, int num_procs);
   MatrixHandle build_composite_matrix(const vector<pair<string,Tensor> >&tens);
 
@@ -153,12 +156,12 @@ SetupFEMatrix::~SetupFEMatrix()
 
 
 void
-SetupFEMatrix::build_basis_matrices(TetVolFieldIntHandle tviH,
+SetupFEMatrix::build_basis_matrices(TVFieldI::handle_type tviH,
 				    unsigned int nconds,
 				    double unitsScale,
 				    int num_procs)
 {
-  TetVolFieldTensorHandle tvtH;
+  TVFieldT::handle_type tvtH;
   Tensor zero(0);
   Tensor identity(1);
 
@@ -183,12 +186,12 @@ SetupFEMatrix::build_basis_matrices(TetVolFieldIntHandle tviH,
   }
 }
 
-void SetupFEMatrix::build_TriBasis_matrices(TriSurfFieldIntHandle tsiH, 
+void SetupFEMatrix::build_TriBasis_matrices(TSFieldI::handle_type tsiH, 
 					    unsigned int nconds,
 					    double unitsScale,
 					    int num_procs) 
 {
-  TriSurfFieldTensorHandle tstH;
+  TSFieldT::handle_type tstH;
   Tensor zero(0);
   Tensor identity(1);
 
@@ -312,35 +315,35 @@ SetupFEMatrix::execute()
     return;
   }
 
-  TetVolFieldIntHandle tvfiH;
-  TetVolFieldTensorHandle tvftH;
+  TVFieldI::handle_type tvfiH;
+  TVFieldT::handle_type tvftH;
 
-  HexVolFieldIntHandle hvfiH;
-  HexVolFieldTensorHandle hvftH;
+  HVFieldI::handle_type hvfiH;
+  HVFieldT::handle_type hvftH;
 
-  TriSurfFieldIntHandle tsfiH;
-  TriSurfFieldTensorHandle tsftH;
+  TSFieldI::handle_type tsfiH;
+  TSFieldT::handle_type tsftH;
 
   if (tet) 
   {
     if (index_based)
-      tvfiH = dynamic_cast<TetVolField<int>* >(hField.get_rep());
+      tvfiH = dynamic_cast<TVFieldI* >(hField.get_rep());
     else
-      tvftH = dynamic_cast<TetVolField<Tensor>* >(hField.get_rep());
+      tvftH = dynamic_cast<TVFieldT* >(hField.get_rep());
   } 
   else if (hex)
   {
     if (index_based)
-      hvfiH = dynamic_cast<HexVolField<int>* >(hField.get_rep());
+      hvfiH = dynamic_cast<HVFieldI* >(hField.get_rep());
     else
-      hvftH = dynamic_cast<HexVolField<Tensor>* >(hField.get_rep());
+      hvftH = dynamic_cast<HVFieldT* >(hField.get_rep());
   }
   else if (tri)
   {
     if (index_based)
-      tsfiH = dynamic_cast<TriSurfField<int>* >(hField.get_rep());
+      tsfiH = dynamic_cast<TSFieldI* >(hField.get_rep());
     else
-      tsftH = dynamic_cast<TriSurfField<Tensor>* >(hField.get_rep());
+      tsftH = dynamic_cast<TSFieldT* >(hField.get_rep());
   } 
 
   if (hField->generation == gen_ 

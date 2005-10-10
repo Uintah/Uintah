@@ -49,13 +49,12 @@ typedef LockingHandle<TensorFieldInterface> TensorFieldInterfaceHandle;
 class SHARE Field: public PropertyManager
 {
 public:
+  Field();
 
-  Field(int);
   virtual ~Field();
   virtual Field *clone() const = 0;
   
- 
-  int basis_order() const { return order_; }
+  virtual int basis_order() const = 0;
   virtual const TypeDescription *order_type_description() const = 0;
 
   //! Required virtual functions
@@ -65,9 +64,12 @@ public:
   
 
   //! Required interfaces
-  virtual ScalarFieldInterfaceHandle query_scalar_interface(ProgressReporter * =0);
-  virtual VectorFieldInterfaceHandle query_vector_interface(ProgressReporter * =0);
-  virtual TensorFieldInterfaceHandle query_tensor_interface(ProgressReporter * =0);
+  virtual ScalarFieldInterfaceHandle query_scalar_interface(
+						      ProgressReporter* = 0);
+  virtual VectorFieldInterfaceHandle query_vector_interface(
+						      ProgressReporter* = 0);
+  virtual TensorFieldInterfaceHandle query_tensor_interface(
+						      ProgressReporter* = 0);
 
   //! Persistent I/O.
   static  PersistentTypeID type_id;
@@ -78,10 +80,6 @@ public:
   virtual bool is_scalar() const = 0;
 
   virtual unsigned int data_size() const = 0;
-
-protected:
-  //! Where data is associated.
-  int           order_;
 };
 
 typedef LockingHandle<Field> FieldHandle;
@@ -130,7 +128,7 @@ append_fields(vector<FIELD *> fields)
     offset += (unsigned int)size;
   }
 
-  FIELD *ofield = scinew FIELD(omesh, 1);
+  FIELD *ofield = scinew FIELD(omesh);
   offset = 0;
   for (i=0; i < fields.size(); i++)
   {

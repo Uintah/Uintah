@@ -271,6 +271,14 @@ double ColumnMatrix::sumOfCol(int c) {
   return sum;
 }
 
+void ColumnMatrix::getRowNonzeros(int r, Array1<int>& idx, 
+				  Array1<double>& val) { 
+  idx.resize(1);
+  val.resize(1);
+  idx[0]=0;
+  val[0]=data[r];
+}
+
 void
 ColumnMatrix::getRowNonzerosNoCopy(int r, int &size, int &stride,
                                    int *&cols, double *&vals)
@@ -486,6 +494,15 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
     for(int i=0; i<result.nrows_; i++)
 	result.data[i] = a.data[i]*s;
 }
+
+void ColumnMatrix::scalar_multiply(double s)
+{
+  for (int i=0; i<nrows_; i++)
+  {
+    data[i] *= s;
+  }
+}
+
 
 MatrixHandle
 ColumnMatrix::submatrix(int r1, int c1, int r2, int c2)

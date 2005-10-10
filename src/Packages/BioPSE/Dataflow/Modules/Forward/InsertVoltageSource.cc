@@ -42,9 +42,8 @@
 // check for same meshes as last time -- if so, reuse contrib array
 // fix have_some -- just need to know which TVM indices we've visited
 
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Packages/BioPSE/Dataflow/Modules/Forward/InsertVoltageSource.h>
@@ -56,6 +55,8 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class InsertVoltageSource : public Module {
+  typedef SCIRun::TetVolMesh<TetLinearLgn<Point> > TVMesh;
+
   GuiInt outside_;
   GuiInt groundfirst_;
 public:
@@ -93,7 +94,7 @@ void InsertVoltageSource::execute() {
   }
 
   MeshHandle tetVolH = imeshH->mesh();
-  TetVolMesh *tvm = dynamic_cast<TetVolMesh *>(tetVolH.get_rep());
+  TVMesh *tvm = dynamic_cast<TVMesh *>(tetVolH.get_rep());
   if (!tvm) {
     error("Input FEM wasn't a TetVolField.");
     return;
@@ -144,20 +145,20 @@ void InsertVoltageSource::execute() {
 
   int outside = outside_.get();
 
-  TetVolMesh::Node::size_type tvm_nnodes;
-  TetVolMesh::Cell::size_type tvm_ncells;
+  TVMesh::Node::size_type tvm_nnodes;
+  TVMesh::Cell::size_type tvm_ncells;
   tvm->size(tvm_nnodes);
   tvm->size(tvm_ncells);
   tvm->synchronize(Mesh::LOCATE_E);
 
-  TetVolMesh::Node::array_type nbrs;
+  TVMesh::Node::array_type nbrs;
 
   Array1<vector<pair<double, double> > > closest(tvm_nnodes); 
                                      // store the dist/val
                                      // to source nodes
   Array1<int> have_some(tvm_nnodes);
   have_some.initialize(0);
-  Array1<TetVolMesh::Node::index_type> bc_tet_nodes;
+  Array1<TVMesh::Node::index_type> bc_tet_nodes;
 
   for (unsigned int di=0; di<dirichlet.size(); di++) {
     int didx=dirichlet[di].first;
@@ -172,7 +173,7 @@ void InsertVoltageSource::execute() {
     double val=vals[s];
 
     // find the tet nodes (nbrs) that it's closest to
-    TetVolMesh::Cell::index_type tvm_cidx;
+    TVMesh::Cell::index_type tvm_cidx;
     if (tvm->locate(tvm_cidx, pt)) {
       tvm->get_nodes(nbrs, tvm_cidx);
     } else if (outside) {
@@ -184,11 +185,11 @@ void InsertVoltageSource::execute() {
     //   so far -- if so, store it
     unsigned int i;
     double dmin=-1;
-    TetVolMesh::Node::index_type nmin;
+    TVMesh::Node::index_type nmin;
 
     for (i=0; i<nbrs.size(); i++) {
       Point nbr_pt;
-      TetVolMesh::Node::index_type nidx = nbrs[i];
+      TVMesh::Node::index_type nidx = nbrs[i];
       tvm->get_center(nbr_pt, nidx);
       double d = (pt - nbr_pt).length();
       if (i==0 || d<dmin) {

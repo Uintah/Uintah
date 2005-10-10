@@ -129,6 +129,18 @@ public:
 
 }; // end class Point
 
+inline 
+Point operator*(double d, const Point &p) {
+  return p*d;
+}
+inline 
+Point operator+(const Vector &v, const Point &p) {
+  return p+v;
+}
+
+std::ostream& operator<<(std::ostream& os, const Point& p);
+std::istream& operator>>(std::istream& os, Point& p);
+
 } // End namespace SCIRun
 
 // This cannot be above due to circular dependencies

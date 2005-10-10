@@ -29,9 +29,15 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/MaskedLatVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/MaskedLatVolMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/MRLatVolField.h>
+
+//#include <Core/Datatypes/MaskedLatVolField.h>
+
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
@@ -43,76 +49,129 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 #endif
 
 using namespace SCIRun;
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+PersistentTypeID backwards_compat_LVM("LatVolMesh", "Mesh",
+				      LVMesh::maker, true);
 
-template class FData3d<Tensor>;
-template class FData3d<Vector>;
-template class FData3d<double>;
-template class FData3d<float>;
-template class FData3d<int>;
-template class FData3d<short>;
-template class FData3d<char>;
-template class FData3d<unsigned int>;
-template class FData3d<unsigned short>;
-template class FData3d<unsigned char>;
-template class FData3d<unsigned long>;
+typedef HexTrilinearLgn<Tensor>             FDTensorBasis;
+typedef HexTrilinearLgn<Vector>             FDVectorBasis;
+typedef HexTrilinearLgn<double>             FDdoubleBasis;
+typedef HexTrilinearLgn<float>              FDfloatBasis;
+typedef HexTrilinearLgn<int>                FDintBasis;
+typedef HexTrilinearLgn<short>              FDshortBasis;
+typedef HexTrilinearLgn<char>               FDcharBasis;
+typedef HexTrilinearLgn<unsigned int>       FDuintBasis;
+typedef HexTrilinearLgn<unsigned short>     FDushortBasis;
+typedef HexTrilinearLgn<unsigned char>      FDucharBasis;
+typedef HexTrilinearLgn<unsigned long>      FDulongBasis;
 
-template class GenericField<LatVolMesh, FData3d<Tensor> >;
-template class GenericField<LatVolMesh, FData3d<Vector> >;
-template class GenericField<LatVolMesh, FData3d<double> >;
-template class GenericField<LatVolMesh, FData3d<float> >;
-template class GenericField<LatVolMesh, FData3d<int> >;
-template class GenericField<LatVolMesh, FData3d<short> >;
-template class GenericField<LatVolMesh, FData3d<char> >;
-template class GenericField<LatVolMesh, FData3d<unsigned int> >;
-template class GenericField<LatVolMesh, FData3d<unsigned short> >;
-template class GenericField<LatVolMesh, FData3d<unsigned char> >;
-template class GenericField<LatVolMesh, FData3d<unsigned long> >;
 
-template class LatVolField<Tensor>;
-template class LatVolField<Vector>;
-template class LatVolField<double>;
-template class LatVolField<float>;
-template class LatVolField<int>;
-template class LatVolField<short>;
-template class LatVolField<char>;
-template class LatVolField<unsigned int>;
-template class LatVolField<unsigned short>;
-template class LatVolField<unsigned char>;
-template class LatVolField<unsigned long>;
 
-const TypeDescription* get_type_description(LatVolField<Tensor> *);
-const TypeDescription* get_type_description(LatVolField<Vector> *);
-const TypeDescription* get_type_description(LatVolField<double> *);
-const TypeDescription* get_type_description(LatVolField<float> *);
-const TypeDescription* get_type_description(LatVolField<int> *);
-const TypeDescription* get_type_description(LatVolField<short> *);
-const TypeDescription* get_type_description(LatVolField<char> *);
-const TypeDescription* get_type_description(LatVolField<unsigned int> *);
-const TypeDescription* get_type_description(LatVolField<unsigned short> *);
-const TypeDescription* get_type_description(LatVolField<unsigned char> *);
-const TypeDescription* get_type_description(LatVolField<unsigned long> *);
+template class GenericField<LVMesh, FDTensorBasis,  FData3d<Tensor, LVMesh> >;
+template class GenericField<LVMesh, FDVectorBasis,  FData3d<Vector, LVMesh> >;
+template class GenericField<LVMesh, FDdoubleBasis,  FData3d<double, LVMesh> >;
+template class GenericField<LVMesh, FDfloatBasis,   FData3d<float, LVMesh> >;
+template class GenericField<LVMesh, FDintBasis,     FData3d<int, LVMesh> >;
+template class GenericField<LVMesh, FDshortBasis,   FData3d<short, LVMesh> >;
+template class GenericField<LVMesh, FDcharBasis,    FData3d<char, LVMesh> >;
+template class GenericField<LVMesh, FDuintBasis,    
+			    FData3d<unsigned int, LVMesh> >;
+template class GenericField<LVMesh, FDushortBasis,  
+			    FData3d<unsigned short, LVMesh> >;
+template class GenericField<LVMesh, FDucharBasis,   
+			    FData3d<unsigned char, LVMesh> >;
+template class GenericField<LVMesh, FDulongBasis,   
+			    FData3d<unsigned long, LVMesh> >;
 
-template class MaskedLatVolField<Tensor>;
-template class MaskedLatVolField<Vector>;
-template class MaskedLatVolField<double>;
-template class MaskedLatVolField<float>;
-template class MaskedLatVolField<int>;
-template class MaskedLatVolField<short>;
-template class MaskedLatVolField<char>;
-template class MaskedLatVolField<unsigned int>;
-template class MaskedLatVolField<unsigned short>;
-template class MaskedLatVolField<unsigned char>;
+PersistentTypeID backwards_compat_LVFT("LatVolField<Tensor>", "Field",
+				       GenericField<LVMesh, FDTensorBasis, 
+				       FData3d<Tensor, LVMesh> >::maker, true);
+PersistentTypeID backwards_compat_LVFV("LatVolField<Vector>", "Field",
+				       GenericField<LVMesh, FDVectorBasis, 
+				       FData3d<Vector, LVMesh> >::maker, true);
+PersistentTypeID backwards_compat_LVFd("LatVolField<double>", "Field",
+				       GenericField<LVMesh, FDdoubleBasis, 
+				       FData3d<double, LVMesh> >::maker, true);
+PersistentTypeID backwards_compat_LVFf("LatVolField<float>", "Field",
+				       GenericField<LVMesh, FDfloatBasis, 
+				       FData3d<float, LVMesh> >::maker, true);
+PersistentTypeID backwards_compat_LVFi("LatVolField<int>", "Field",
+				       GenericField<LVMesh, FDintBasis, 
+				       FData3d<int, LVMesh> >::maker, true);
+PersistentTypeID backwards_compat_LVFs("LatVolField<short>", "Field",
+				       GenericField<LVMesh, FDshortBasis, 
+				       FData3d<short, LVMesh> >::maker, true);
+PersistentTypeID backwards_compat_LVFc("LatVolField<char>", "Field",
+				       GenericField<LVMesh, FDcharBasis, 
+				       FData3d<char, LVMesh> >::maker, true);
+PersistentTypeID backwards_compat_LVFui("LatVolField<unsigned_int>", "Field",
+				       GenericField<LVMesh, FDuintBasis, 
+				       FData3d<unsigned int, LVMesh> >::maker, true);
+PersistentTypeID backwards_compat_LVFus("LatVolField<unsigned_short>", "Field",
+				       GenericField<LVMesh, FDushortBasis, 
+				       FData3d<unsigned short, LVMesh> >::maker, true);
+PersistentTypeID backwards_compat_LVFuc("LatVolField<unsigned_char>", "Field",
+				       GenericField<LVMesh, FDucharBasis, 
+				       FData3d<unsigned char, LVMesh> >::maker, true);
+PersistentTypeID backwards_compat_LVFul("LatVolField<unsigned_long>", "Field",
+				       GenericField<LVMesh, FDulongBasis, 
+				       FData3d<unsigned long, LVMesh> >::maker, true);
 
-const TypeDescription* get_type_description(MaskedLatVolField<Tensor> *);
-const TypeDescription* get_type_description(MaskedLatVolField<Vector> *);
-const TypeDescription* get_type_description(MaskedLatVolField<double> *);
-const TypeDescription* get_type_description(MaskedLatVolField<float> *);
-const TypeDescription* get_type_description(MaskedLatVolField<int> *);
-const TypeDescription* get_type_description(MaskedLatVolField<short> *);
-const TypeDescription* get_type_description(MaskedLatVolField<char> *);
-const TypeDescription* get_type_description(MaskedLatVolField<unsigned int> *);
-const TypeDescription* get_type_description(MaskedLatVolField<unsigned short> *);
-const TypeDescription* get_type_description(MaskedLatVolField<unsigned char> *);
+
+typedef MaskedLatVolMesh<HexTrilinearLgn<Point> > MLVMesh;
+PersistentTypeID backwards_compat_MLVM("MaskedLatVolMesh", "Mesh",
+				      MLVMesh::maker, true);
+
+template class GenericField<MLVMesh, FDTensorBasis, FData3d<Tensor, MLVMesh> >;
+template class GenericField<MLVMesh, FDVectorBasis, FData3d<Vector, MLVMesh> >;
+template class GenericField<MLVMesh, FDdoubleBasis, FData3d<double, MLVMesh> >;
+template class GenericField<MLVMesh, FDfloatBasis,  FData3d<float, MLVMesh> >;
+template class GenericField<MLVMesh, FDintBasis,    FData3d<int, MLVMesh> >;
+template class GenericField<MLVMesh, FDshortBasis,  FData3d<short, MLVMesh> >;
+template class GenericField<MLVMesh, FDcharBasis,   FData3d<char, MLVMesh> >;
+template class GenericField<MLVMesh, FDuintBasis,   
+			    FData3d<unsigned int, MLVMesh> >;
+template class GenericField<MLVMesh, FDushortBasis,  
+			    FData3d<unsigned short, MLVMesh> >;
+template class GenericField<MLVMesh, FDucharBasis,   
+			    FData3d<unsigned char, MLVMesh> >;
+template class GenericField<MLVMesh, FDulongBasis,   
+			    FData3d<unsigned long, MLVMesh> >;
+
+PersistentTypeID backwards_compat_MLVFT("MaskedLatVolField<Tensor>", "Field",
+				       GenericField<MLVMesh, FDTensorBasis, 
+				       FData3d<Tensor, MLVMesh> >::maker, true);
+PersistentTypeID backwards_compat_MLVFV("MaskedLatVolField<Vector>", "Field",
+				       GenericField<MLVMesh, FDVectorBasis, 
+				       FData3d<Vector, MLVMesh> >::maker, true);
+PersistentTypeID backwards_compat_MLVFd("MaskedLatVolField<double>", "Field",
+				       GenericField<MLVMesh, FDdoubleBasis, 
+				       FData3d<double, MLVMesh> >::maker, true);
+PersistentTypeID backwards_compat_MLVFf("MaskedLatVolField<float>", "Field",
+				       GenericField<MLVMesh, FDfloatBasis, 
+				       FData3d<float, MLVMesh> >::maker, true);
+PersistentTypeID backwards_compat_MLVFi("MaskedLatVolField<int>", "Field",
+				       GenericField<MLVMesh, FDintBasis, 
+				       FData3d<int, MLVMesh> >::maker, true);
+PersistentTypeID backwards_compat_MLVFs("MaskedLatVolField<short>", "Field",
+				       GenericField<MLVMesh, FDshortBasis, 
+				       FData3d<short, MLVMesh> >::maker, true);
+PersistentTypeID backwards_compat_MLVFc("MaskedLatVolField<char>", "Field",
+				       GenericField<MLVMesh, FDcharBasis, 
+				       FData3d<char, MLVMesh> >::maker, true);
+PersistentTypeID backwards_compat_MLVFui("MaskedLatVolField<unsigned_int>", "Field",
+				       GenericField<MLVMesh, FDuintBasis, 
+				       FData3d<unsigned int, MLVMesh> >::maker, true);
+PersistentTypeID backwards_compat_MLVFus("MaskedLatVolField<unsigned_short>", "Field",
+				       GenericField<MLVMesh, FDushortBasis, 
+				       FData3d<unsigned short, MLVMesh> >::maker, true);
+PersistentTypeID backwards_compat_MLVFuc("MaskedLatVolField<unsigned_char>", "Field",
+				       GenericField<MLVMesh, FDucharBasis, 
+				       FData3d<unsigned char, MLVMesh> >::maker, true);
+PersistentTypeID backwards_compat_MLVFul("MaskedLatVolField<unsigned_long>", "Field",
+				       GenericField<MLVMesh, FDulongBasis, 
+				       FData3d<unsigned long, MLVMesh> >::maker, true);
+
 
 template class MRLatVolField<Tensor>;
 template class MRLatVolField<Vector>;
@@ -135,6 +194,8 @@ const TypeDescription* get_type_description(MRLatVolField<char> *);
 const TypeDescription* get_type_description(MRLatVolField<unsigned int> *);
 const TypeDescription* get_type_description(MRLatVolField<unsigned short> *);
 const TypeDescription* get_type_description(MRLatVolField<unsigned char> *);
+
+
 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

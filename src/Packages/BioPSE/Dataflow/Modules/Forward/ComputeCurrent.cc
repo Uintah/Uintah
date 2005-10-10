@@ -39,9 +39,11 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Core/Geometry/Vector.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -52,7 +54,15 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ComputeCurrent : public Module {
-
+typedef ConstantBasis<Vector>               ConVBasis;
+typedef TetLinearLgn<int>                   TFDintBasis;
+typedef TetLinearLgn<Tensor>                TFDTensorBasis;
+typedef TetLinearLgn<Vector>                TFDVectorBasis;
+typedef TetVolMesh<TetLinearLgn<Point> >    TVMesh;
+typedef GenericField<TVMesh, TFDTensorBasis, vector<Tensor> > TVFieldT;
+typedef GenericField<TVMesh, TFDVectorBasis, vector<Vector> > TVFieldV;
+typedef GenericField<TVMesh, ConVBasis, vector<Vector> >      TVFieldCV;
+typedef GenericField<TVMesh, TFDintBasis,    vector<int> >    TVFieldI;
 public:
   ComputeCurrent(GuiContext *context);
   virtual ~ComputeCurrent();
@@ -93,17 +103,14 @@ ComputeCurrent::execute()
     return;
   }
 
-  TetVolField<Vector> *efield = 
-    dynamic_cast<TetVolField<Vector>*>(efieldH.get_rep());
+  TVFieldV *efield = dynamic_cast<TVFieldV*>(efieldH.get_rep());
   if (!efield) {
     error("EField isn't a TetVolField<Vector>.");
     return;
   }
   bool index_based = true;
-  TetVolField<int> *sigmasInt = 
-    dynamic_cast<TetVolField<int>*>(sigmasH.get_rep());
-  TetVolField<Tensor> *sigmasTensor =
-    dynamic_cast<TetVolField<Tensor>*>(sigmasH.get_rep());
+  TVFieldI *sigmasInt =  dynamic_cast<TVFieldI*>(sigmasH.get_rep());
+  TVFieldT *sigmasTensor = dynamic_cast<TVFieldT*>(sigmasH.get_rep());
   if (!sigmasInt && !sigmasTensor) {
     error("Sigmas isn't a TetVolField<Tensor> or TetVolField<int>.");
     return;
@@ -135,12 +142,12 @@ ComputeCurrent::execute()
   // Create output mesh
   //  OFIELD *ofield = scinew OFIELD(imesh, 0);
   
-  TetVolMeshHandle mesh = efield->get_typed_mesh();
-  TetVolMesh::Cell::iterator fi, fe;
+  TVMesh::handle_type mesh = efield->get_typed_mesh();
+  TVMesh::Cell::iterator fi, fe;
   mesh->begin(fi);
   mesh->end(fe);
 
-  TetVolField<Vector> *ofield = new TetVolField<Vector>(mesh, 0);
+  TVFieldCV *ofield = new TVFieldCV(mesh);
 
   while (fi != fe) {
     Vector vec;

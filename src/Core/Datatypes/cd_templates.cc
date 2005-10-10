@@ -54,23 +54,9 @@ using namespace SCIRun;
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/NrrdData.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/QuadraticTetVolField.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/MaskedTetVolField.h>
-#include <Core/Datatypes/MaskedHexVolField.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/MaskedLatVolField.h>
-#include <Core/Datatypes/MaskedTriSurfField.h>
-#include <Core/Datatypes/PrismVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/PropertyManager.h>
+#include <Core/Datatypes/GenericField.h>
 
 #if !defined(__sgi)
 // Needed for optimized linux build only
@@ -122,98 +108,8 @@ template class Property<pair<unsigned char,unsigned char> >;
 template class Property<pair<char,char> >;
 template class Property<vector<pair<string,Tensor> > >;
 template class Property<vector<pair<int,double> > >;
-template class Property<vector<string> >;
 template class Property<LockingHandle<Matrix> >;
 template class Property<LockingHandle<NrrdData> >;
-
-
-//! Compute the gradient g in cell ci.
-template <>
-Vector PrismVolField<Vector>::cell_gradient(PrismVolMesh::Cell::index_type /*ci*/)
-{
-  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
-
-template <>
-Vector PrismVolField<Tensor>::cell_gradient(PrismVolMesh::Cell::index_type /*ci*/)
-{
-  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
-
-
-template <>
-Vector TetVolField<Vector>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
-{
-  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
-
-template <>
-Vector TetVolField<Tensor>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
-{
-  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
-
-
-template <>
-Vector QuadraticTetVolField<Vector>::cell_gradient(TetVolMesh::Cell::index_type)
-{
-  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
-
-template <>
-Vector QuadraticTetVolField<Tensor>::cell_gradient(TetVolMesh::Cell::index_type)
-{
-  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
-
-
-template <>
-Vector HexVolField<Vector>::cell_gradient(HexVolMesh::Cell::index_type /*ci*/)
-{
-  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
-
-template <>
-Vector HexVolField<Tensor>::cell_gradient(HexVolMesh::Cell::index_type /*ci*/)
-{
-  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
-
-
-template <> bool LatVolField<Vector>::get_gradient(Vector &, const Point &/*p*/)
-{
-  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
-  return false;
-}
-
-template <> bool LatVolField<Tensor>::get_gradient(Vector &, const Point &/*p*/)
-{
-  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
-  return false;
-}
-
-template <>
-Vector LatVolField<Vector>::cell_gradient(const LatVolMesh::Cell::index_type &/*ci*/) const
-{
-  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
-
-template <>
-Vector LatVolField<Tensor>::cell_gradient(const LatVolMesh::Cell::index_type &/*ci*/) const
-{
-  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
-  return Vector(0, 0, 0);
-}
-
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

@@ -38,11 +38,11 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
-#include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/QuadSurfField.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -52,6 +52,10 @@
 namespace BioPSE {
 
 using namespace SCIRun;
+typedef CurveMesh<CrvLinearLgn<Point> >            CMesh;
+typedef QuadSurfMesh<QuadBilinearLgn<Point> >      QSMesh;
+typedef QuadBilinearLgn<double>                    QFBasis;
+typedef GenericField<QSMesh, QFBasis, vector<double> > QSField; 
 
 class ConfigureWireElectrode : public Module {
   GuiDouble voltage_;
@@ -89,7 +93,7 @@ void ConfigureWireElectrode::execute() {
     return;
   }
   MeshHandle meshH = ielecH->mesh();
-  CurveMesh *mesh=dynamic_cast<CurveMesh *>(meshH.get_rep());
+  CMesh *mesh=dynamic_cast<CMesh *>(meshH.get_rep());
   if (!mesh) {
     error("Input electrode wasn't a CurveField.");
     return;
@@ -110,14 +114,14 @@ void ConfigureWireElectrode::execute() {
   double du=M_PI*2./nu;
 
 
-  CurveMesh::Node::iterator ni, ne;
-  CurveMesh::Node::size_type nn;
+  CMesh::Node::iterator ni, ne;
+  CMesh::Node::size_type nn;
   mesh->begin(ni);  
   mesh->end(ne);
   mesh->size(nn);
-  QuadSurfMeshHandle quadMesh = new QuadSurfMesh;
+  QSMesh::handle_type quadMesh = new QSMesh;
   Array1<Array1<Point> > pts(nn);
-  Array1<Array1<QuadSurfMesh::Node::index_type> > pts_idx(nn);
+  Array1<Array1<QSMesh::Node::index_type> > pts_idx(nn);
   if (nn < 2) {
     error("Need at least two points along Curve");
     return;
@@ -158,8 +162,8 @@ void ConfigureWireElectrode::execute() {
     }
     quadMesh->add_quad(pts[i][u], pts[i][0], pts[i+1][0], pts[i+1][u]);
   }
-  QuadSurfField<double>* quadFld = new QuadSurfField<double>(quadMesh, 1);
-  QuadSurfMesh::Node::iterator qni, qne;
+  QSField* quadFld = new QSField(quadMesh);
+  QSMesh::Node::iterator qni, qne;
   quadMesh->begin(qni);
   quadMesh->end(qne);
   while(qni != qne) {

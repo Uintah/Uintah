@@ -39,12 +39,15 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/MaskedLatVolMesh.h>
-#include <Core/Datatypes/HexVolMesh.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/MaskedLatVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -75,8 +78,8 @@ main(int argc, char **argv) {
     cerr << "Error reading LatVolField from file "<<argv[1]<<".  Exiting...\n";
     exit(0);
   }
-
-  LatVolMesh *lvm = dynamic_cast<LatVolMesh *>(lvfh->mesh().get_rep());
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  LVMesh *lvm = dynamic_cast<LVMesh *>(lvfh->mesh().get_rep());
   if (!lvm) {
     cerr << "Error - input field wasn't a LatVolField\n";
     exit(0);
@@ -84,9 +87,8 @@ main(int argc, char **argv) {
   Point z(0,0,0);
   Point o(0,0,0);
   
-
-  MaskedLatVolMesh *mlvm = new MaskedLatVolMesh(lvm->get_ni(), lvm->get_nj(), lvm->get_nk(),z,o); 
-
+  typedef MaskedLatVolMesh<HexTrilinearLgn<Point> > MLVMesh;
+  MLVMesh *mlvm = new MLVMesh(lvm->get_ni(), lvm->get_nj(), lvm->get_nk(),z,o);
   mlvm->set_transform(lvm->get_transform());
   
   cerr << "Reading HexVolField... ";
@@ -102,7 +104,8 @@ main(int argc, char **argv) {
     cerr << "Error reading HexVolField from file "<<argv[2]<<".  Exiting...\n";
     exit(0);
   }
-  HexVolMesh *hvm = dynamic_cast<HexVolMesh*>(hvfh->mesh().get_rep());
+  typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
+  HVMesh *hvm = dynamic_cast<HVMesh*>(hvfh->mesh().get_rep());
   if (!hvm) {
     cerr << "Error - input field wasn't a HexVolMesh\n";
     exit(0);
@@ -112,9 +115,9 @@ main(int argc, char **argv) {
   hvm->synchronize(Mesh::LOCATE_E);
   cerr << "done.\n";
 
-  LatVolMesh::Cell::iterator ci, cie;
-  MaskedLatVolMesh::Cell::iterator mci, mcie;
-  HexVolMesh::Cell::index_type c;
+  LVMesh::Cell::iterator ci, cie;
+  MLVMesh::Cell::iterator mci, mcie;
+  HVMesh::Cell::index_type c;
   lvm->begin(ci); lvm->end(cie);
   mlvm->begin(mci); mlvm->end(mcie);
   cerr << "Masking... ";
@@ -126,9 +129,21 @@ main(int argc, char **argv) {
     ++mci;
   }
   cerr << "done.\n";
+  FieldHandle mlvfH;
 
-  FieldHandle mlvfH = new MaskedLatVolField<double>(mlvm, lvfh->basis_order());
-//  FieldHandle mlvfH = new LatVolField<double>(mlvm, lvfh->basis_order());
+  if (lvfh->basis_order() == -1) {
+    typedef NoDataBasis<double>            Basis;
+    typedef GenericField<MLVMesh, Basis, FData3d<double, MLVMesh> > Field;
+    mlvfH = new Field(mlvm);
+  } else if (lvfh->basis_order() == 0) {
+    typedef ConstantBasis<double>            Basis;
+    typedef GenericField<MLVMesh, Basis, FData3d<double, MLVMesh> > Field;
+    mlvfH = new Field(mlvm);
+  } else {
+    typedef HexTrilinearLgn<double>            Basis;
+    typedef GenericField<MLVMesh, Basis, FData3d<double, MLVMesh> > Field;
+    mlvfH = new Field(mlvm);
+  }
   
   BinaryPiostream out_stream(argv[3], Piostream::Write);
   cerr << "Saving MaskedLatVolField... ";

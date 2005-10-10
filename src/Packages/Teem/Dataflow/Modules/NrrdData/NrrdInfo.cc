@@ -78,7 +78,6 @@ NrrdInfo::clear_vals()
 #if 0
   gui->execute(string("set ") + id + "-type \"---\"");
   gui->execute(string("set ") + id + "-dimension 0");
-  gui->execute(string("set ") + id + "-origin \"---\"");
   gui->execute(string("set ") + id + "-label0 \"---\"");
   gui->execute(string("set ") + id + "-kind0 \"---\"");
 
@@ -116,10 +115,6 @@ NrrdInfo::clear_vals()
     str.clear();
 
     str << "set " << id << "-max" << i 
-	<< " \"---\"";    
-    gui->execute(str.str());
-
-    str << "set " << id << "-spaceDir" << i 
 	<< " \"---\"";    
     gui->execute(str.str());
   }
@@ -173,24 +168,18 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 
   gui->execute(string("set ") + id + "-dimension " + to_string(nh->nrrd->dim));
 
+  // Tuple Axis
+//   gui->execute(string("set ") + id + "-label0 {" + 
+// 	       string(nh->nrrd->axis[0].label) + "}");
 
-  // set spaceOrigin if available
-  if (nh->nrrd->spaceDim > 0 &&
-      airExists(nh->nrrd->spaceOrigin[0])) {
-    string space_origin_string = "\"(";
-    for (int d=0; d<nh->nrrd->spaceDim; d++) {
-      space_origin_string += to_string(nh->nrrd->spaceOrigin[d]);
-      if (d < (nh->nrrd->spaceDim-1))
-	space_origin_string += ", ";
-    }
-    space_origin_string += ")\"";
-    gui->execute(string("set ") + id + "-origin " + space_origin_string);
-  } else {
-    gui->execute(string("set ") + id + "-origin " + "\"not available\"");
-  }
-  
+//   gui->execute(string("set ") + id + "-size0 " + 
+// 	       to_string(nh->nrrd->axis[0].size));
+
+//   gui->execute(id + " fill_tuple_tab");
+
+  //for (int i = 1; i < nh->nrrd->dim; i++) {
   for (int i = 0; i < nh->nrrd->dim; i++) {
-    ostringstream sz, cntr, lab, kind, spac, min, max, spaceDir;
+    ostringstream sz, cntr, lab, kind, spac, min, max;
     
     sz << "set " << id << "-size" << i 
 	<< " " << nh->nrrd->axis[i].size;
@@ -282,58 +271,17 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
       break;
     }
 
-    // use spaceDirection information
-    // if available, else use min/max and spacing
-    double spacing = 0;
-    double *vec = new double[NRRD_SPACE_DIM_MAX];
-    
-    int result = nrrdSpacingCalculate(nh->nrrd, i, &spacing, vec);
-    if (result ==  nrrdSpacingStatusDirection &&
-	airExists(nh->nrrd->axis[i].spaceDirection[0]))
-    {
-      spac << "set " << id << "-spacing" << i 
-	   << " " << spacing;
-      gui->execute(spac.str());
-      
-      min << "set " << id << "-min" << i 
-	  << " \"not available\"";
-      gui->execute(min.str());
-      
-      max << "set " << id << "-max" << i 
-	  << " \"not available\"";
-      gui->execute(max.str());
-      
-      string space_dir_string = "\"(";
-      for (int d=0; d<nh->nrrd->spaceDim; d++) {
-	space_dir_string += to_string(nh->nrrd->axis[i].spaceDirection[d]);
-	if (d < (nh->nrrd->spaceDim-1))
-	  space_dir_string += ", ";
-      }
-      space_dir_string += ")\"";
+    spac << "set " << id << "-spacing" << i 
+	 << " " << nh->nrrd->axis[i].spacing;
+    gui->execute(spac.str());
 
-      spaceDir << "set " << id << "-spaceDir" << i 
-	  << " " << space_dir_string;
-      gui->execute(spaceDir.str());
-    } else
-    {
-      spac << "set " << id << "-spacing" << i 
-	   << " " << nh->nrrd->axis[i].spacing;
-      gui->execute(spac.str());
-      
-      min << "set " << id << "-min" << i 
-	  << " " << nh->nrrd->axis[i].min;
-      gui->execute(min.str());
-      
-      max << "set " << id << "-max" << i 
-	  << " " << nh->nrrd->axis[i].max;
-      gui->execute(max.str());
+    min << "set " << id << "-min" << i 
+	<< " " << nh->nrrd->axis[i].min;
+    gui->execute(min.str());
 
-      spaceDir << "set " << id << "-spaceDir" << i 
-	       << " \"not available\"";
-      gui->execute(spaceDir.str());
-
-    }
-    delete vec;
+    max << "set " << id << "-max" << i 
+	<< " " << nh->nrrd->axis[i].max;
+    gui->execute(max.str());
   }
 
   gui->execute(id + " add_tabs");

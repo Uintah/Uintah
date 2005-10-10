@@ -45,10 +45,11 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/PointCloudMesh.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -57,10 +58,15 @@
 namespace BioPSE {
 
 using namespace SCIRun;
-typedef LockingHandle<TetVolField<int> >    CondTetFieldHandle;
-typedef LockingHandle<TriSurfField<int> >    CondTriFieldHandle;
 
 class EITAnalyticSolution : public Module {
+  typedef SCIRun::TriLinearLgn<int>                               FDintBasis;
+  typedef SCIRun::TriSurfMesh<TriLinearLgn<Point> >               TSMesh;
+  typedef SCIRun::GenericField<TSMesh, FDintBasis, vector<int> >  TSField;
+  typedef SCIRun::TetLinearLgn<int>                               TFDintBasis;
+  typedef SCIRun::TetVolMesh<TetLinearLgn<Point> >                TVMesh;
+  typedef SCIRun::GenericField<TVMesh, TFDintBasis, vector<int> > TVField;
+
   //! Private data
 
   //! Private methods
@@ -200,20 +206,23 @@ EITAnalyticSolution::execute(){
     return;
   }
 
-  CondTetFieldHandle hCondTetField;
-  CondTriFieldHandle hCondTriField;
+  TVField::handle_type hCondTetField;
+  TSField::handle_type hCondTriField;
 
-  TetVolMeshHandle hTetMesh;
-  TriSurfMeshHandle hTriMesh;
-
-  if (hField->get_type_name(0)=="TetVolField" && hField->get_type_name(1)=="int"){
+  TVMesh::handle_type hTetMesh;
+  TSMesh::handle_type hTriMesh;
+  const TypeDescription *tvtd = hField->get_type_description();
+  const string &tvtdn = tvtd->get_name();
+  if (tvtdn == ((TVField*)0)->get_type_description()->get_name()) 
+  {
     tet = true;
-    hCondTetField = dynamic_cast<TetVolField<int>*> (hField.get_rep());
+    hCondTetField = dynamic_cast<TVField*> (hField.get_rep());
     hTetMesh = hCondTetField->get_typed_mesh();
   }
-  else if (hField->get_type_name(0)=="TriSurfField" && hField->get_type_name(1)=="int"){
+  else if (tvtdn == ((TSField*)0)->get_type_description()->get_name())
+  {
     tet = false;
-    hCondTriField = dynamic_cast<TriSurfField<int>*> (hField.get_rep());
+    hCondTriField = dynamic_cast<TSField*> (hField.get_rep());
     hTriMesh = hCondTriField->get_typed_mesh();
   }
   else {
@@ -267,8 +276,8 @@ EITAnalyticSolution::execute(){
   vector<pair<string, Tensor> > tens;
 
   // Allocate space for the output vector of potentials
-  TetVolMesh::Node::size_type nsizeTet; 
-  TriSurfMesh::Node::size_type nsizeTri;
+  TVMesh::Node::size_type nsizeTet; 
+  TSMesh::Node::size_type nsizeTri;
   ColumnMatrix* potential;
   
   if (tet) {
@@ -305,8 +314,8 @@ EITAnalyticSolution::execute(){
     }
     string bodyGeom;
     bodyGeom = bodyGeomTCL_.get();
-    TetVolMesh::Node::iterator ii;
-    TetVolMesh::Node::iterator ii_end;
+    TVMesh::Node::iterator ii;
+    TVMesh::Node::iterator ii_end;
     hTetMesh->begin(ii);
     hTetMesh->end(ii_end);
     int i=0;
@@ -352,8 +361,8 @@ EITAnalyticSolution::execute(){
     }
     string bodyGeom;
     bodyGeom = bodyGeomTCL_.get();
-    TriSurfMesh::Node::iterator ii;
-    TriSurfMesh::Node::iterator ii_end;
+    TSMesh::Node::iterator ii;
+    TSMesh::Node::iterator ii_end;
     hTriMesh->begin(ii);
     hTriMesh->end(ii_end);
     int i=0;

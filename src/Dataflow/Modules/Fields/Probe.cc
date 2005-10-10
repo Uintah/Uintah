@@ -40,18 +40,18 @@
  *  Copyright (C) 2001 SCI Group
  */
 
+#include <Dataflow/Modules/Fields/Probe.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Geometry/Tensor.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
-#include <Core/Datatypes/PointCloudField.h>
+
+#include <Core/Datatypes/GenericField.h>
+
 #include <Core/Datatypes/Clipper.h>
-#include <Dataflow/Modules/Fields/Probe.h>
 #include <iostream>
 #include <stack>
 
@@ -90,6 +90,7 @@ private:
   double l2norm_;
 
 public:
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
   Probe(GuiContext* ctx);
   virtual ~Probe();
 
@@ -337,8 +338,8 @@ Probe::execute()
   }
 
   const Point location = widget_->GetPosition();
-  PointCloudMesh *mesh = scinew PointCloudMesh();
-  PointCloudMesh::Node::index_type pcindex = mesh->add_point(location);
+  PCMesh *mesh = scinew PCMesh();
+  PCMesh::Node::index_type pcindex = mesh->add_point(location);
   FieldHandle ofield;
 
   string nodestr, edgestr, facestr, cellstr;
@@ -360,6 +361,13 @@ Probe::execute()
     if (gui_show_face_.get()) { gui_face_.set(facestr); }
     if (gui_show_cell_.get()) { gui_cell_.set(cellstr); }
   }
+  typedef ConstantBasis<double>                             DatBasis;
+  typedef ConstantBasis<Tensor>                             DatTBasis;
+  typedef ConstantBasis<Vector>                             DatVBasis;
+  typedef GenericField<PCMesh, DatBasis, vector<double> >   PCField; 
+  typedef GenericField<PCMesh, DatTBasis, vector<Tensor> >  PCFieldT;
+  typedef GenericField<PCMesh, DatVBasis, vector<Vector> >  PCFieldV;
+
 
   std::ostringstream valstr;
   ScalarFieldInterfaceHandle sfi = 0;
@@ -370,8 +378,7 @@ Probe::execute()
       !gui_show_value_.get())
   {
     valstr << 0;
-    PointCloudField<double> *field =
-      scinew PointCloudField<double>(mesh, 0);
+    PCField *field = scinew PCField(mesh);
     field->set_value(0.0, pcindex);
     ofield = field;
   }
@@ -384,7 +391,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<double> *field = scinew PointCloudField<double>(mesh, 0);
+    PCField *field = scinew PCField(mesh);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -397,7 +404,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<Vector> *field = scinew PointCloudField<Vector>(mesh, 0);
+    PCFieldV *field = scinew PCFieldV(mesh);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -410,7 +417,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<Tensor> *field = scinew PointCloudField<Tensor>(mesh, 0);
+    PCFieldT *field = scinew PCFieldT(mesh);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -508,9 +515,9 @@ ProbeCenterAlgo::get_compile_info(const TypeDescription *msrc)
 
 template <>
 bool
-probe_center_compute_index(LatVolMesh::Node::index_type &index,
-			   LatVolMesh::Node::size_type &size,
-			   const LatVolMesh *mesh, const string &indexstr)
+probe_center_compute_index(LVMesh::Node::index_type &index,
+			   LVMesh::Node::size_type &size,
+			   const LVMesh *mesh, const string &indexstr)
 {
   string tempstr;
   for (unsigned int pos = 0; pos < indexstr.size(); pos++)
@@ -544,7 +551,7 @@ probe_center_compute_index(LatVolMesh::Node::index_type &index,
   mesh->size(size);
   if (idx[0] < size.i_ && idx[1] < size.j_ && idx[2] < size.k_)
   {
-    index = LatVolMesh::Node::index_type(mesh, idx[0], idx[1], idx[2]);
+    index = LVMesh::Node::index_type(mesh, idx[0], idx[1], idx[2]);
     return true;
   }
   return false;
@@ -552,9 +559,9 @@ probe_center_compute_index(LatVolMesh::Node::index_type &index,
 
 template <>
 bool
-probe_center_compute_index(LatVolMesh::Cell::index_type &index,
-			   LatVolMesh::Cell::size_type &size,
-			   const LatVolMesh *mesh, const string &indexstr)
+probe_center_compute_index(LVMesh::Cell::index_type &index,
+			   LVMesh::Cell::size_type &size,
+			   const LVMesh *mesh, const string &indexstr)
 {
   string tempstr;
   for (unsigned int pos = 0; pos < indexstr.size(); pos++)
@@ -588,7 +595,7 @@ probe_center_compute_index(LatVolMesh::Cell::index_type &index,
   mesh->size(size);
   if (idx[0] < size.i_ && idx[1] < size.j_ && idx[2] < size.k_)
   {
-    index = LatVolMesh::Cell::index_type(mesh, idx[0], idx[1], idx[2]);
+    index = LVMesh::Cell::index_type(mesh, idx[0], idx[1], idx[2]);
     return true;
   }
   return false;
@@ -597,9 +604,9 @@ probe_center_compute_index(LatVolMesh::Cell::index_type &index,
 
 template <>
 bool
-probe_center_compute_index(StructHexVolMesh::Node::index_type &index,
-			   StructHexVolMesh::Node::size_type &size,
-			   const StructHexVolMesh *mesh,
+probe_center_compute_index(SHVMesh::Node::index_type &index,
+			   SHVMesh::Node::size_type &size,
+			   const SHVMesh *mesh,
 			   const string &indexstr)
 {
   string tempstr;
@@ -635,7 +642,7 @@ probe_center_compute_index(StructHexVolMesh::Node::index_type &index,
   mesh->size(size);
   if (idx[0] < size.i_ && idx[1] < size.j_ && idx[2] < size.k_)
   {
-    index = StructHexVolMesh::Node::index_type(mesh, idx[0], idx[1], idx[2]);
+    index = SHVMesh::Node::index_type(mesh, idx[0], idx[1], idx[2]);
     return true;
   }
   return false;
@@ -644,9 +651,9 @@ probe_center_compute_index(StructHexVolMesh::Node::index_type &index,
 
 template <>
 bool
-probe_center_compute_index(StructHexVolMesh::Cell::index_type &index,
-			   StructHexVolMesh::Cell::size_type &size,
-			   const StructHexVolMesh *mesh,
+probe_center_compute_index(SHVMesh::Cell::index_type &index,
+			   SHVMesh::Cell::size_type &size,
+			   const SHVMesh *mesh,
 			   const string &indexstr)
 {
   string tempstr;
@@ -681,7 +688,7 @@ probe_center_compute_index(StructHexVolMesh::Cell::index_type &index,
   mesh->size(size);
   if (idx[0] < size.i_ && idx[1] < size.j_ && idx[2] < size.k_)
   {
-    index = StructHexVolMesh::Cell::index_type(mesh, idx[0], idx[1], idx[2]);
+    index = SHVMesh::Cell::index_type(mesh, idx[0], idx[1], idx[2]);
     return true;
   }
   return false;
@@ -691,9 +698,9 @@ probe_center_compute_index(StructHexVolMesh::Cell::index_type &index,
 
 template <>
 bool
-probe_center_compute_index(ImageMesh::Node::index_type &index,
-			   ImageMesh::Node::size_type &size,
-			   const ImageMesh *mesh, const string &indexstr)
+probe_center_compute_index(IMesh::Node::index_type &index,
+			   IMesh::Node::size_type &size,
+			   const IMesh *mesh, const string &indexstr)
 {
   string tempstr;
   for (unsigned int pos = 0; pos < indexstr.size(); pos++)
@@ -724,7 +731,7 @@ probe_center_compute_index(ImageMesh::Node::index_type &index,
   mesh->size(size);
   if (idx[0] < size.i_ && idx[1] < size.j_)
   {
-    index = ImageMesh::Node::index_type(mesh, idx[0], idx[1]);
+    index = IMesh::Node::index_type(mesh, idx[0], idx[1]);
     return true;
   }
   return false;
@@ -733,9 +740,9 @@ probe_center_compute_index(ImageMesh::Node::index_type &index,
 
 template <>
 bool
-probe_center_compute_index(ImageMesh::Face::index_type &index,
-			   ImageMesh::Face::size_type &size,
-			   const ImageMesh *mesh, const string &indexstr)
+probe_center_compute_index(IMesh::Face::index_type &index,
+			   IMesh::Face::size_type &size,
+			   const IMesh *mesh, const string &indexstr)
 {
   string tempstr;
   for (unsigned int pos = 0; pos < indexstr.size(); pos++)
@@ -766,7 +773,7 @@ probe_center_compute_index(ImageMesh::Face::index_type &index,
   mesh->size(size);
   if (idx[0] < size.i_ && idx[1] < size.j_)
   {
-    index = ImageMesh::Face::index_type(mesh, idx[0], idx[1]);
+    index = IMesh::Face::index_type(mesh, idx[0], idx[1]);
     return true;
   }
   return false;
@@ -775,9 +782,9 @@ probe_center_compute_index(ImageMesh::Face::index_type &index,
 
 template <>
 bool
-probe_center_compute_index(StructQuadSurfMesh::Node::index_type &index,
-			   StructQuadSurfMesh::Node::size_type &size,
-			   const StructQuadSurfMesh *mesh,
+probe_center_compute_index(SQSMesh::Node::index_type &index,
+			   SQSMesh::Node::size_type &size,
+			   const SQSMesh *mesh,
 			   const string &indexstr)
 {
   string tempstr;
@@ -809,7 +816,7 @@ probe_center_compute_index(StructQuadSurfMesh::Node::index_type &index,
   mesh->size(size);
   if (idx[0] < size.i_ && idx[1] < size.j_)
   {
-    index = StructQuadSurfMesh::Node::index_type(mesh, idx[0], idx[1]);
+    index = SQSMesh::Node::index_type(mesh, idx[0], idx[1]);
     return true;
   }
   return false;
@@ -818,9 +825,9 @@ probe_center_compute_index(StructQuadSurfMesh::Node::index_type &index,
 
 template <>
 bool
-probe_center_compute_index(StructQuadSurfMesh::Face::index_type &index,
-			   StructQuadSurfMesh::Face::size_type &size,
-			   const StructQuadSurfMesh *mesh,
+probe_center_compute_index(SQSMesh::Face::index_type &index,
+			   SQSMesh::Face::size_type &size,
+			   const SQSMesh *mesh,
 			   const string &indexstr)
 {
   string tempstr;
@@ -852,7 +859,7 @@ probe_center_compute_index(StructQuadSurfMesh::Face::index_type &index,
   mesh->size(size);
   if (idx[0] < size.i_ && idx[1] < size.j_)
   {
-    index = StructQuadSurfMesh::Face::index_type(mesh, idx[0], idx[1]);
+    index = SQSMesh::Face::index_type(mesh, idx[0], idx[1]);
     return true;
   }
   return false;

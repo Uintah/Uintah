@@ -40,12 +40,9 @@
  *  Modified (adapted from BuildTetFEMatrix.h):
  *   Lorena Kreda, Northeastern University, October 2003
  */
-
-//#include <Dataflow/Network/Module.h>
-#include <Core/Geometry/Tensor.h>
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/FEFields.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Parallel.h>
@@ -57,8 +54,10 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BuildTriFEMatrix;
-typedef LockingHandle<TriSurfField<int> >   TriSurfFieldIntHandle;
-typedef LockingHandle<TriSurfField<Tensor> >   TriSurfFieldTensorHandle;
+ 
+
+typedef LockingHandle<TSFieldI>   TriSurfFieldIntHandle;
+typedef LockingHandle<TSFieldT>   TriSurfFieldTensorHandle;
 typedef LockingHandle<BuildTriFEMatrix>   BuildTriFEMatrixHandle;
 
 class BuildTriFEMatrix: public Datatype {
@@ -67,7 +66,7 @@ class BuildTriFEMatrix: public Datatype {
   TriSurfFieldIntHandle           hFieldInt_;
   TriSurfFieldTensorHandle        hFieldTensor_;
   bool                            index_based_;
-  TriSurfMeshHandle               hMesh_;
+  TSMesh::handle_type             hMesh_;
   MatrixHandle&                   hA_;
   SparseRowMatrix*                pA_;
   int                             np_;
@@ -81,9 +80,10 @@ class BuildTriFEMatrix: public Datatype {
   //! Private methods
   void parallel(int);
   
-  void build_local_matrix(double lcl[3][3], TriSurfMesh::Face::index_type);
+  void build_local_matrix(double lcl[3][3], TSMesh::Face::index_type);
   
-  void add_lcl_gbl(double lcl[3][3], TriSurfMesh::Face::index_type, int, int, TriSurfMesh::Node::array_type&);
+  void add_lcl_gbl(double lcl[3][3], TSMesh::Face::index_type, int, int, 
+		   TSMesh::Node::array_type&);
   
  
 public:

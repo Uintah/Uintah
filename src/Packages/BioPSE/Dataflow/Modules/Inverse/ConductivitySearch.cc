@@ -40,19 +40,18 @@
  *
  */
 
+#include <BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Gaussian.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
-#include <BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
 #include <iostream>
 using std::endl;
 #include <stdio.h>
@@ -142,8 +141,8 @@ ConductivitySearch::~ConductivitySearch(){}
 
 
 void ConductivitySearch::build_basis_matrices() {
-  TetVolFieldIntHandle tviH;
-  tviH = dynamic_cast<TetVolField<int> *>(mesh_in_.get_rep());
+  TVFieldI::handle_type tviH;
+  tviH = dynamic_cast<TVFieldI *>(mesh_in_.get_rep());
   TetVolFieldTensorHandle tvtH;
   Tensor zero(0);
   Tensor identity(1);
@@ -464,7 +463,7 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
     warning("Didn't get a valid VolumeMesh.");
   }
 
-  TetVolField<int> *meshTV = dynamic_cast<TetVolField<int> *>(mesh.get_rep());
+  TVFieldI *meshTV = dynamic_cast<TVFieldI *>(mesh.get_rep());
   Array1<Tensor> tens;
   pair<int,int> minmax;
   minmax.second=1;

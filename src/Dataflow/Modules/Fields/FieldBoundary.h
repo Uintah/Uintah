@@ -39,9 +39,15 @@
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/QuadSurfField.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <algorithm>
 
 namespace SCIRun {
@@ -52,6 +58,26 @@ namespace SCIRun {
 class FieldBoundaryAlgoAux : public DynamicAlgoBase
 {
 public:
+  typedef TriSurfMesh<TriLinearLgn<Point> >                    TSMesh;
+  typedef ConstantBasis<double>                                ConBasis;
+  typedef NoDataBasis<double>                                  NoDataBasis;
+  typedef TriLinearLgn<double>                                 TLBasis;
+  typedef GenericField<TSMesh, TLBasis, vector<double> >       TSField;  
+  typedef GenericField<TSMesh, ConBasis, vector<double> >      TSFieldC; 
+  typedef GenericField<TSMesh, NoDataBasis, vector<double> >   TSFieldND;
+
+  typedef QuadSurfMesh<QuadBilinearLgn<Point> >                QSMesh;
+  typedef QuadBilinearLgn<double>                              QBasis;
+  typedef GenericField<QSMesh, QBasis, vector<double> >        QSField; 
+  typedef GenericField<QSMesh, ConBasis, vector<double> >      QSFieldC; 
+  typedef GenericField<QSMesh, NoDataBasis, vector<double> >   QSFieldND; 
+
+  typedef CurveMesh<CrvLinearLgn<Point> >                      CMesh;
+  typedef CrvLinearLgn<double>                                 CrvBasis;
+  typedef GenericField<CMesh, CrvBasis, vector<double> >       CField; 
+  typedef GenericField<CMesh, ConBasis, vector<double> >       CFieldC; 
+  typedef GenericField<CMesh, NoDataBasis, vector<double> >    CFieldND; 
+
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &bndry,
 		       MatrixHandle &intrp,
@@ -89,12 +115,13 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
 				    int basis_order)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
-  map<typename Msh::Node::index_type, TriSurfMesh::Node::index_type> vertex_map;
-  typename map<typename Msh::Node::index_type, TriSurfMesh::Node::index_type>::iterator node_iter;
+  map<typename Msh::Node::index_type, typename TSMesh::Node::index_type> vertex_map;
+  typename map<typename Msh::Node::index_type, typename TSMesh::Node::index_type>::iterator node_iter;
+
   vector<typename Msh::Node::index_type> reverse_map;
   vector<unsigned int> face_map;
 
-  TriSurfMeshHandle tmesh = scinew TriSurfMesh;
+  TSMesh::handle_type tmesh = scinew TSMesh;
 
   mesh->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
 
@@ -130,7 +157,7 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
 	mesh->get_nodes(nodes, fi);
 	// Creating triangles, so fan if more than 3 nodes.
 	vector<Point> p(nodes.size()); // cache points off
-	TriSurfMesh::Node::array_type node_idx(nodes.size());
+	TSMesh::Node::array_type node_idx(nodes.size());
 
 	typename Msh::Node::array_type::iterator niter = nodes.begin();
 
@@ -168,7 +195,7 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
 
   if (basis_order == 0)
   {
-    TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, 0);
+    TSFieldC *ts = scinew TSFieldC(tmesh);
     boundary_fh = ts;
 
     typename Msh::Elem::size_type elemsize;
@@ -196,7 +223,7 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else if (basis_order == 1)
   {
-    TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, 1);
+    TSField *ts = scinew TSField(tmesh);
     boundary_fh = ts;
 
     typename Msh::Node::size_type nodesize;
@@ -224,7 +251,7 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else
   {
-    TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, -1);
+    TSFieldND *ts = scinew TSFieldND(tmesh);
     boundary_fh = ts;
 
     interp = 0;
@@ -256,12 +283,14 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
 				     int basis_order)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
-  map<typename Msh::Node::index_type, QuadSurfMesh::Node::index_type> vertex_map;
-  typename map<typename Msh::Node::index_type, QuadSurfMesh::Node::index_type>::iterator node_iter;
+  map<typename Msh::Node::index_type, 
+      typename QSMesh::Node::index_type> vertex_map;
+  typename map<typename Msh::Node::index_type, 
+               typename QSMesh::Node::index_type>::iterator node_iter;
   vector<typename Msh::Node::index_type> reverse_map;
   vector<unsigned int> face_map;
 
-  QuadSurfMeshHandle tmesh = scinew QuadSurfMesh;
+  QSMesh::handle_type tmesh = scinew QSMesh;
 
   mesh->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
 
@@ -297,7 +326,7 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
 	mesh->get_nodes(nodes, fi);
 	// Creating triangles, so fan if more than 3 nodes.
 	vector<Point> p(nodes.size()); // cache points off
-	QuadSurfMesh::Node::array_type node_idx(nodes.size());
+	QSMesh::Node::array_type node_idx(nodes.size());
 
 	typename Msh::Node::array_type::iterator niter = nodes.begin();
 
@@ -334,8 +363,7 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
 
   if (basis_order == 0)
   {
-    QuadSurfField<double> *ts =
-      scinew QuadSurfField<double>(tmesh, 0);
+    QSFieldC *ts = scinew QSFieldC(tmesh);
     boundary_fh = ts;
     
     typename Msh::Elem::size_type nodesize;
@@ -363,8 +391,7 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else if (basis_order == 1)
   {
-    QuadSurfField<double> *ts =
-      scinew QuadSurfField<double>(tmesh, 1);
+    QSField *ts = scinew QSField(tmesh);
     boundary_fh = ts;
     
     typename Msh::Node::size_type nodesize;
@@ -392,8 +419,7 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else
   {
-    QuadSurfField<double> *ts =
-      scinew QuadSurfField<double>(tmesh, -1);
+    QSFieldND *ts = scinew QSFieldND(tmesh);
     boundary_fh = ts;
 
     interp = 0;
@@ -424,12 +450,14 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 				      int basis_order)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
-  map<typename Msh::Node::index_type, CurveMesh::Node::index_type> vertex_map;
-  typename map<typename Msh::Node::index_type, CurveMesh::Node::index_type>::iterator node_iter;
+  map<typename Msh::Node::index_type, 
+      typename CMesh::Node::index_type> vertex_map;
+  typename map<typename Msh::Node::index_type, 
+               typename CMesh::Node::index_type>::iterator node_iter;
   vector<typename Msh::Node::index_type> reverse_map;
   vector<unsigned int> edge_map;
 
-  CurveMeshHandle tmesh = scinew CurveMesh;
+  CMesh::handle_type tmesh = scinew CMesh;
 
   mesh->synchronize(Mesh::EDGE_NEIGHBORS_E | Mesh::EDGES_E);
 
@@ -465,7 +493,7 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 	mesh->get_nodes(nodes, fi);
 	// Creating triangles, so fan if more than 3 nodes.
 	vector<Point> p(nodes.size()); // cache points off
-	CurveMesh::Node::array_type node_idx(nodes.size());
+	CMesh::Node::array_type node_idx(nodes.size());
 
 	typename Msh::Node::array_type::iterator niter = nodes.begin();
 
@@ -494,7 +522,7 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 
   if (basis_order == 0)
   {
-    CurveField<double> *ts = scinew CurveField<double>(tmesh, 1);
+    CFieldC *ts = scinew CFieldC(tmesh);
     boundary_fh = ts;
 
     typename Msh::Elem::size_type nodesize;
@@ -522,7 +550,7 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else if (basis_order == 1)
   {
-    CurveField<double> *ts = scinew CurveField<double>(tmesh, 1);
+    CField *ts = scinew CField(tmesh);
     boundary_fh = ts;
 
     typename Msh::Node::size_type nodesize;
@@ -550,7 +578,7 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else
   {
-    CurveField<double> *ts = scinew CurveField<double>(tmesh, -1);
+    CFieldND *ts = scinew CFieldND(tmesh);
     boundary_fh = ts;
 
     interp = 0;
@@ -590,8 +618,8 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
 				 FieldHandle &boundary, MatrixHandle &interp,
 				 int basis_order)
 {
-  if (get_type_description((typename Msh::Elem *)0)->get_name() ==
-      get_type_description((typename Msh::Cell *)0)->get_name())
+  if (Msh::elem_type_description()->get_name() ==
+      Msh::cell_type_description()->get_name())
   {
     string algoname = "Tri";
 
@@ -623,8 +651,8 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
       algo->execute(mesh, boundary, interp, basis_order);
     }
   }
-  else if (get_type_description((typename Msh::Elem *)0)->get_name() ==
-	   get_type_description((typename Msh::Face *)0)->get_name())
+  else if (Msh::elem_type_description()->get_name() ==
+	   Msh::face_type_description()->get_name())
   {
     const TypeDescription *mtd = get_type_description((Msh *)0);
     CompileInfoHandle ci =

@@ -46,7 +46,10 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/BoxWidget.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Modules/Fields/ClipLattice.h>
 #include <iostream>
 
@@ -78,6 +81,7 @@ public:
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
   virtual void widget_moved(bool last, BaseWidget*);
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 };
 
 
@@ -158,9 +162,11 @@ ClipLattice::execute()
     return;
   }
   if (ifieldhandle->mesh()->get_type_description()->get_name() !=
-	"LatVolMesh")
+	LVMesh::type_name())
   {
-    error("Not a LatVolField field type.");
+    string msg("Input Field does not have a ");
+    msg += LVMesh::type_name();
+    error(msg);
     return;
   }
 

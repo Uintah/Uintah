@@ -36,9 +36,6 @@
  *   Department of Computer Science
  *   University of Utah
  *   August 1994
- * 
- *  Modified by Bryan Worthen to support Windows platform.
- *   July 2005
  *
  *  Copyright (C) 1994 SCI Group
  */
@@ -53,14 +50,11 @@
 namespace SCIRun {
 
 #if (TCL_MINOR_VERSION >= 4)
-#  define TCLCONST const
+#define TCLCONST const
 #else
-#  define TCLCONST
+#define TCLCONST
 #endif
 
-#ifdef _WIN32
-#  define EXPERIMENTAL_TCL_THREAD
-#endif
 
 class TCLTask : public Runnable {
     int argc;
@@ -80,9 +74,6 @@ public:
     static void unlock();
     void mainloop_waitstart();
     void release_mainloop();
-#ifdef EXPERIMENTAL_TCL_THREAD
-    static void setTCLEventCallback();
-#endif
 };
 
 } // End namespace SCIRun

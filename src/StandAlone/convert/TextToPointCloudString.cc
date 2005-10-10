@@ -46,8 +46,9 @@
 // associated with that point. The SCIRun output file is
 // written in ASCII unless -binOutput is specified.
 
-
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>

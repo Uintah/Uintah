@@ -49,7 +49,10 @@
 // specify -oneBasedIndexing.  And the SCIRun output file is written in 
 // ASCII, unless you specify -binOutput.
 
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -127,8 +130,9 @@ main(int argc, char **argv) {
   }
   SCIRunInit();
   setDefaults();
+  typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
 
-  CurveMesh *cm = new CurveMesh();
+  CMesh *cm = new CMesh();
   char *ptsName = argv[1];
   char *edgesName = argv[2];
   char *fieldName = argv[3];
@@ -184,7 +188,11 @@ main(int argc, char **argv) {
   }
   cerr << "done adding edges.\n";
 
-  CurveField<double> *cf = scinew CurveField<double>(cm, -1);
+  typedef NoDataBasis<double>                DatBasis;
+  typedef GenericField<CMesh, DatBasis, vector<double> > CField;
+     
+  CField *cf = scinew CField(cm);
+
   FieldHandle cfH(cf);
   
   if (binOutput) {

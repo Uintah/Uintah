@@ -68,6 +68,10 @@ public:
   //! default is "<" and "> "
   string get_name(const string & type_sep_start = "<", 
 		  const string & type_sep_end = "> ") const;
+  string get_similar_name(const string &substitute,
+			  const int pos,
+			  const string & type_sep_start = "<", 
+			  const string & type_sep_end = "> ") const;
 
   string get_filename() const;
 
