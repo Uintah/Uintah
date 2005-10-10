@@ -207,6 +207,8 @@ class Crack
     vector<vector<vector<Point> > > triangles;
     vector<vector<int> >            triNCells;
     vector<vector<vector<short> > > triCrackSidesAtFront;
+    vector<vector<int> >            triRepetition;
+    vector<vector<Vector> >         triOffset;    
     vector<vector<vector<Point> > > arcs;
     vector<vector<int> >            arcNCells;
     vector<vector<int> >            arcCrkFrtSegID;
@@ -216,7 +218,7 @@ class Crack
     vector<vector<vector<Point> > > pellipses;
     vector<vector<int> >            pellipseNCells;
     vector<vector<int> >            pellipseCrkFrtSegID;
-    vector<vector<string> >         pellipseExtent;
+    vector<vector<double> >         pellipseExtent;
     vector<Point>                   cmin,cmax;  
 
     // Crack data after mesh  
@@ -253,8 +255,10 @@ class Crack
     void   OutputInitialCrackPlane(const int&);
     void   DiscretizeQuadCracks(const int&,int&);
     void   DiscretizeCurvedQuadCracks(const int&,int&);
-    void   GetGlobalCoordinates(const int&, const int&,const int&, 
-	                const double&, const double&, Point&);
+    void   GetGlobalCoordinatesQuad(const int&, const int&,const int&, 
+	                            const double&, const double&, Point&);
+    void   GetGlobalCoordinatesTriangle(const int&, const int&,const int&,
+			                const double&, const double&, Point&);
     void   DiscretizeTriangularCracks(const int&,int&);
     void   DiscretizeArcCracks(const int&,int&);
     void   DiscretizeEllipticCracks(const int&,int&);
@@ -274,7 +278,6 @@ class Crack
     void   CalculateCrackFrontNormals(const int& m);
     void   FindSegsFromNode(const int&,const int&, int []);
     void   OutputInitialCrackMesh(const int&);    
-    short  TwoLinesCoincide(const Point&,const Point&,const Point&,const Point&);
     Vector TwoPtsDirCos(const Point&,const Point&);
     Vector TriangleNormal(const Point&,const Point&,const Point&);
     
