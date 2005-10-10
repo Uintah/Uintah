@@ -43,6 +43,7 @@
 #include <SCIRun/CCA/CCAComponentInstance.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/SCIRunErrorHandler.h>
+#include <SCIRun/resourceReference.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
 #include <Core/XMLUtil/StrX.h>
@@ -50,8 +51,8 @@
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <SCIRun/resourceReference.h>
-#include <string>
+#include <Core/Thread/Guard.h>
+
 
 #ifdef __sgi
 #define IRIX
@@ -104,7 +105,7 @@ CCAComponentModel::~CCAComponentModel()
 void CCAComponentModel::destroyComponentList()
 {
   SCIRun::Guard g1(&lock_components);
-  for(componentDB_type::iterator iter=components.begin();
+  for (componentDB_type::iterator iter = components.begin();
       iter != components.end(); iter++) {
     delete iter->second;
   }
@@ -129,8 +130,7 @@ void CCAComponentModel::buildComponentList()
   sci::cca::TypeMap::pointer tm;
   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
-        framework->getFrameworkService("cca.FrameworkProperties", "")
-    );
+        framework->getFrameworkService("cca.FrameworkProperties", ""));
   if (fwkProperties.isNull()) {
     std::cerr << "Error: Cannot find framework properties" ;
     //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
@@ -139,14 +139,14 @@ void CCAComponentModel::buildComponentList()
     sArray = tm->getStringArray("sidl_xml_path", sArray);
   }
   framework->releaseFrameworkService("cca.FrameworkProperties", "");
-  
+
   for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
     Dir d(*it);
     //std::cout << "CCA Component Model: Looking at directory: " << *it << std::endl;
     std::vector<std::string> files;
     d.getFilenamesBySuffix(".xml", files);
     
-    for(std::vector<std::string>::iterator iter = files.begin();
+    for (std::vector<std::string>::iterator iter = files.begin();
     iter != files.end(); iter++) {
       std::string& file = *iter;
       //std::cout << "CCA Component Model: Looking at file" << file << std::endl;
@@ -162,7 +162,7 @@ void CCAComponentModel::readComponentDescription(const std::string& file)
   XercesDOMParser parser;
   parser.setDoValidation(true);
   parser.setErrorHandler(&handler);
-  
+
   try {
     //std::cout << "Parsing file: " << file << std::endl;
     parser.parse(file.c_str());
@@ -171,52 +171,44 @@ void CCAComponentModel::readComponentDescription(const std::string& file)
     std::cerr << "Error during parsing: '" <<
       file << "' " << std::endl << "Exception message is:  " <<
       xmlto_string(toCatch.getMessage()) << std::endl;
-    handler.foundError=true;
+    handler.foundError = true;
     return;
   }
   catch ( ... ) {
     std::cerr << "Unknown error occurred during parsing: '" << file << "' "
               << std::endl;
-    handler.foundError=true;
+    handler.foundError = true;
     return;
   }
-  
+
   // Get all the top-level document node
   DOMDocument* document = parser.getDocument();
-  
+
   // Check that this document is actually describing CCA components
   DOMElement *metacomponentmodel = static_cast<DOMElement *>(
     document->getElementsByTagName(to_xml_ch_ptr("metacomponentmodel"))->item(0));
-                                                                                                                                                
-  std::string compModelName
-    = to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
-  //std::cout << "Component model name = " << compModelName << std::endl;
-                                                                                                                                                
+
+  std::string compModelName = to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
   if ( compModelName != std::string(this->prefixName) ) {
     return;
   }
-                                                                                                                                                
+
   // Get a list of the library nodes.  Traverse the list and read component
   // elements at each list node.
-  DOMNodeList* libraries
-    = document->getElementsByTagName(to_xml_ch_ptr("library"));
-                                                                                                                                                
+  DOMNodeList* libraries = document->getElementsByTagName(to_xml_ch_ptr("library"));
+
   for (unsigned int i = 0; i < libraries->getLength(); i++) {
     DOMElement *library = static_cast<DOMElement *>(libraries->item(i));
     // Read the library name
     std::string library_name(to_char_ptr(library->getAttribute(to_xml_ch_ptr("name"))));
-    //std::cout << "Library name = ->" << library_name << "<-" << std::endl;
 
     // Get the list of components.
-    DOMNodeList* comps
-      = library->getElementsByTagName(to_xml_ch_ptr("component"));
+    DOMNodeList* comps = library->getElementsByTagName(to_xml_ch_ptr("component"));
     for (unsigned int j = 0; j < comps->getLength(); j++) {
       // Read the component name
       DOMElement *component = static_cast<DOMElement *>(comps->item(j));
-      std::string
-        component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
-      //std::cout << "Component name = ->" << component_name << "<-" << std::endl;
-                                                                                                                                                
+      std::string component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
+
       // Register this component
       CCAComponentDescription* cd = new CCAComponentDescription(this);
       cd->type = component_name;
@@ -234,7 +226,9 @@ CCAComponentModel::createServices(const std::string& instanceName,
                   const std::string& className,
                   const sci::cca::TypeMap::pointer& properties)
 {
-//std::cout << "CCAComponentModel::createServices: " << instanceName << ", " << className << std::endl;
+#if DEBUG
+  std::cout << "CCAComponentModel::createServices: " << instanceName << ", " << className << std::endl;
+#endif
   CCAComponentInstance* ci = new CCAComponentInstance(framework, instanceName, className, properties, sci::cca::Component::pointer(0));
   framework->registerComponent(ci, instanceName);
   ci->addReference();
@@ -257,11 +251,10 @@ bool CCAComponentModel::haveComponent(const std::string& type)
 { 
   SCIRun::Guard g1(&lock_components);
 #if DEBUG
-  //std::cout << "CCA looking for component of type: " << type << std::endl;
+  std::cout << "CCA looking for component of type: " << type << std::endl;
 #endif
   return components.find(type) != components.end();
 }
-
 
 
 ComponentInstance*
@@ -276,19 +269,19 @@ CCAComponentModel::createInstance(const std::string& name,
     properties->addReference();
     loaderName = properties->getString("LOADER NAME", "");
   }
-  //std::cout<<"creating cca component <" <<
-  //    name << "," << type << "> with loader:"
-  //         << loaderName << std::endl;
+#if DEBUG
+  std::cout <<"creating cca component <" << name << "," << type << "> with loader:"
+            << loaderName << std::endl;
+#endif
   sci::cca::Component::pointer component;
   if (loaderName == "") {  //local component
-    lock_components.lock();
+     Guard g1(&lock_components);
     componentDB_type::iterator iter = components.find(type);
     if (iter == components.end()) {
       std::cerr << "Error: could not locate any cca components.  Make sure the paths set in environment variable \"SIDL_DLL_PATH\" are correct." << std::endl;
       return 0;
     }
-    lock_components.unlock();
- 
+
     // Get the list of DLL paths to search for the appropriate component library
     std::vector<std::string> possible_paths =
         splitPathString(this->getSidlDLLPath());
@@ -300,21 +293,21 @@ CCAComponentModel::createInstance(const std::string& name,
       handle = GetLibraryHandle(so_name.c_str());
       if (handle) { break; }
     }
-    
-    if(!handle) {
+
+    if (!handle) {
       std::cerr << "Cannot load component " << type << std::endl;
       std::cerr << SOError() << std::endl;
       return 0;
     }
-    
+
     std::string makername = "make_"+type;
     for (int i = 0; i < (int)makername.size(); i++) {
         if (makername[i] == '.') {
-            makername[i]='_';
+            makername[i] = '_';
         }
     }
     void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
-    if(!maker_v) {
+    if (!maker_v) {
       std::cerr <<"Cannot load component " << type << std::endl;
       std::cerr << SOError() << std::endl;
       return 0;
@@ -322,7 +315,7 @@ CCAComponentModel::createInstance(const std::string& name,
     sci::cca::Component::pointer (*maker)() =
         (sci::cca::Component::pointer (*)())(maker_v);
     component = (*maker)();
- } else { 
+ } else {
     //use loader to load the component
     resourceReference* loader = getLoader(loaderName);
     std::vector<int> nodes;
@@ -353,7 +346,8 @@ bool CCAComponentModel::destroyInstance(ComponentInstance *ci)
   // Object::deleteReference will delete itself if it's reference
   // count is 0.
   //
-  // TODO: using 'delete' here tends to be unstable (needs investigating).
+  // TODO: using 'delete' here tends to be unstable (needs investigating,
+  // possibly related to Bugzilla bug #2294).
   cca_ci->deleteReference();
   return true;
 }
@@ -367,17 +361,18 @@ void CCAComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>
 {
   lock_components.lock();
   for (componentDB_type::iterator iter = components.begin();
-      iter != components.end(); iter++) {
+       iter != components.end(); iter++) {
     list.push_back(iter->second);
   }
   lock_components.unlock();
 
-  lock_loaderList.lock(); 
+
+  Guard g2(&lock_loaderList); 
   for (unsigned int i = 0; i < loaderList.size(); i++) {
     SSIDL::array1<std::string> typeList;
     loaderList[i]->listAllComponentTypes(typeList);
     //convert typeList to component description list
-    //by attaching a loader (resourceReferenece) to it.
+    //by attaching a loader (resourceReference) to it.
     for (unsigned int j = 0; j < typeList.size(); j++) {
       CCAComponentDescription* cd = new CCAComponentDescription(this);
       cd->type = typeList[j];
@@ -385,7 +380,6 @@ void CCAComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>
       list.push_back(cd);
     }
   }
-  lock_loaderList.unlock();
 }
 
 int CCAComponentModel::addLoader(resourceReference *rr)
@@ -402,15 +396,15 @@ int CCAComponentModel::addLoader(resourceReference *rr)
 
 int CCAComponentModel::removeLoader(const std::string &loaderName)
 {
-  resourceReference *rr=getLoader(loaderName);
-  if (rr!=0) {
+  resourceReference *rr = getLoader(loaderName);
+  if (rr != 0) {
 #if DEBUG
-    std::cerr<<"loader "<<rr->getName()<<" is removed from cca component model\n";
+    std::cerr << "loader " << rr->getName() << " is removed from cca component model\n";
 #endif
     delete rr;
   } else {
 #if DEBUG
-    std::cerr<<"loader "<<loaderName<<" not found in cca component model\n";
+    std::cerr << "loader " << loaderName << " not found in cca component model\n";
 #endif
   }
   return 0;
@@ -419,16 +413,14 @@ int CCAComponentModel::removeLoader(const std::string &loaderName)
 resourceReference *
 CCAComponentModel::getLoader(std::string loaderName)
 {
-  resourceReference *rr=0;
+  resourceReference *rr = 0;
   lock_loaderList.lock();
-  for(unsigned int i=0; i<loaderList.size(); i++)
-    {
-    if(loaderList[i]->getName()==loaderName)
-      {
-      rr=loaderList[i];
+  for (unsigned int i = 0; i < loaderList.size(); i++) {
+    if (loaderList[i]->getName() == loaderName) {
+      rr = loaderList[i];
       break;
-      }
     }
+  }
   lock_loaderList.unlock();
   return rr;
 }
