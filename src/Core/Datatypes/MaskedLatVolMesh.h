@@ -307,7 +307,11 @@ public:
       return (const NodeIndex&)(*this); 
     }
 
-    operator unsigned() const;
+    operator unsigned()  const
+    {
+      ASSERT(this->mesh_);
+      return this->i_ + this->mesh_->ni_*this->j_ + this->mesh_->ni_*this->mesh_->nj_*this->k_;
+    }
 
     NodeIter &operator++() {
       do next(); while (!this->mesh_->check_valid(*this) && 

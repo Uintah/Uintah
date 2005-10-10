@@ -61,7 +61,8 @@ PSELIBS := \
         Core/Geometry \
         Core/GeomInterface \
         Core/TkExtensions \
-        Core/Math
+        Core/Math \
+        Core/Basis
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

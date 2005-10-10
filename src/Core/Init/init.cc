@@ -57,17 +57,13 @@ using std::string;
 #endif
 
 
+
 #if defined(__APPLE__)  
 
   namespace SCIRun {
     extern void macImportExportForceLoad();
   }
 
-#  include <Core/Datatypes/PointCloudField.h>
-#  include <Core/Datatypes/TriSurfField.h>
-#  include <Core/Datatypes/StructQuadSurfField.h>
-#  include <Core/Datatypes/TriSurfMesh.h>
-#  include <Core/Datatypes/StructHexVolField.h>
 #  include <iostream>
 
 
@@ -81,6 +77,7 @@ using std::string;
   void
   macForceLoad()
   {
+#if 0
     std::cout << "Forcing load of Core/Datatypes (for Macintosh)\n";
 
   PointCloudField<double> pcfd;
@@ -109,6 +106,7 @@ using std::string;
 
   StructHexVolField<double> shvfd;
   temp = shvfd.type_id;
+#endif
 }
 #endif
 
@@ -132,12 +130,13 @@ using std::string;
 
 void
 SCIRunInit(string packages) {
-#if defined(__APPLE__)  
+#if 0
+  // defined(__APPLE__)  
   macImportExportForceLoad(); // Attempting to force load (and thus
                               // instantiation of static constructors) 
   macForceLoad();             // of Core/Datatypes and Core/ImportExport.
-#endif
 
+#endif
   string package_list = packages;
 
   if( package_list.empty() ) {
@@ -160,5 +159,6 @@ SCIRunInit(string packages) {
       (*init)(0);
     }
   }
+
 }
 

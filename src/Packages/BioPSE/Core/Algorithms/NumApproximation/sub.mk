@@ -40,7 +40,7 @@ SRCS += \
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
-	Core/Math Core/Util 
+	Core/Math Core/Util Core/Basis 
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

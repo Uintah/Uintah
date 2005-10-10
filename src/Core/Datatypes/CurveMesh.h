@@ -53,7 +53,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
-#include <values.h>
+#include <float.h>
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {

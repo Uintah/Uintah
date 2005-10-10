@@ -46,7 +46,7 @@ SRCS     += $(SRCDIR)/NeumannBC.cc \
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
-	Core/Math Core/Util
+	Core/Math Core/Util Core/Basis
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
