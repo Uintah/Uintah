@@ -42,6 +42,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <map>
 #include <sgi_stl_warnings_on.h>
 
 #include <math.h>
@@ -65,6 +66,24 @@ static int depth = 2;
 static Point minPin;
 static Point maxPin;
 static bool use_global_minmax = false;
+
+struct VolumeVisCache {
+public:
+  VolumeVisCache(BrickArray3<float>& data_in,
+                 float data_min, float data_max,
+                 Point minP, Point maxP):
+    data_min(data_min), data_max(data_max), minP(minP), maxP(maxP)
+  {
+    data.share(data_in);
+  }
+
+  BrickArray3<float> data;
+  float data_min, data_max;
+  Point minP, maxP;
+};
+
+map<string, GridSpheres*>    loaded_spheres;
+map<string, VolumeVisCache*> loaded_volumes;
 
 void get_material(Array1<Color> &matls, Array1<AlphaPos> &alphas) {
 
@@ -263,111 +282,132 @@ HVolumeVis<float,VMCell<float> > *create_volume_from_nrrd(char *filename,
   float data_min = FLT_MAX;
   float data_max = -FLT_MAX;
   Point minP, maxP;
-  // Do the nrrd stuff
-  Nrrd *n = nrrdNew();
-  // load the nrrd in
-  if (nrrdLoad(n,filename,0)) {
-    char *err = biffGet(NRRD);
-    cerr << "Error reading nrrd "<< filename <<": "<<err<<"\n";
-    free(err);
-    biffDone(NRRD);
-    return 0;
-  }
-  // check to make sure the dimensions are good
-  if (n->dim != 3) {
-    cerr << "VolumeVisMod error: nrrd->dim="<<n->dim<<"\n";
-    cerr << "  Can only deal with 3-dimensional scalar fields... sorry.\n";
-    return 0;
-  }
-  // convert the type to floats if you need to
-  size_t num_elements = nrrdElementNumber(n);
-  cerr << "Number of data members = " << num_elements << endl;
-  if (n->type != nrrdTypeFloat) {
-    cerr << "Converting type from ";
-    switch(n->type) {
-    case nrrdTypeUnknown: cerr << "nrrdTypeUnknown"; break;
-    case nrrdTypeChar: cerr << "nrrdTypeChar"; break;
-    case nrrdTypeUChar: cerr << "nrrdTypeUChar"; break;
-    case nrrdTypeShort: cerr << "nrrdTypeShort"; break;
-    case nrrdTypeUShort: cerr << "nrrdTypeUShort"; break;
-    case nrrdTypeInt: cerr << "nrrdTypeInt"; break;
-    case nrrdTypeUInt: cerr << "nrrdTypeUInt"; break;
-    case nrrdTypeLLong: cerr << "nrrdTypeLLong"; break;
-    case nrrdTypeULLong: cerr << "nrrdTypeULLong"; break;
-    case nrrdTypeDouble: cerr << "nrrdTypeDouble"; break;
-    default: cerr << "Unknown!!";
+
+  // Check to see if we have already loaded in this data
+  map<string, VolumeVisCache*>::iterator lv_iter =
+    loaded_volumes.find(string(filename));
+  if (lv_iter == loaded_volumes.end()) {
+  
+    // Do the nrrd stuff
+    Nrrd *n = nrrdNew();
+    // load the nrrd in
+    if (nrrdLoad(n,filename,0)) {
+      char *err = biffGet(NRRD);
+      cerr << "Error reading nrrd "<< filename <<": "<<err<<"\n";
+      free(err);
+      biffDone(NRRD);
+      return 0;
     }
-    cerr << " to nrrdTypeFloat\n";
-    Nrrd *new_n = nrrdNew();
-    nrrdConvert(new_n, n, nrrdTypeFloat);
-    // since the data was copied blow away the memory for the old nrrd
-    nrrdNuke(n);
-    n = new_n;
+    // check to make sure the dimensions are good
+    if (n->dim != 3) {
+      cerr << "VolumeVisMod error: nrrd->dim="<<n->dim<<"\n";
+      cerr << "  Can only deal with 3-dimensional scalar fields... sorry.\n";
+      return 0;
+    }
+    // convert the type to floats if you need to
+    size_t num_elements = nrrdElementNumber(n);
     cerr << "Number of data members = " << num_elements << endl;
-  }
-  // get the dimensions
-  int nx, ny, nz;
-  nx = n->axis[0].size;
-  ny = n->axis[1].size;
-  nz = n->axis[2].size;
-  cout << "dim = (" << nx << ", " << ny << ", " << nz << ")\n";
-  cout << "total = " << nz * ny * nz << endl;
-  cout << "spacing = " << n->axis[0].spacing << " x "<<n->axis[1].spacing<< " x "<<n->axis[2].spacing<< endl;
-  for (int i = 0; i<n->dim; i++)
-    if (!(AIR_EXISTS_D(n->axis[i].spacing))) {
-      cout <<"spacing for axis "<<i<<" does not exist.  Setting to 1.\n";
-      n->axis[i].spacing = 1;
-    }
-  data.resize(nx,ny,nz); // resize the bricked data
-  if (!use_global_minmax) {
-    // get the physical bounds
-    minP = Point(0,0,0);
-    maxP = Point((nx - 1) * n->axis[0].spacing,
-		 (ny - 1) * n->axis[1].spacing,
-		 (nz - 1) * n->axis[2].spacing);
-    // lets normalize the dimensions to 1
-    Vector size = maxP - minP;
-    // find the biggest dimension
-    double max_dim = Max(Max(size.x(),size.y()),size.z());
-    maxP = ((maxP-minP)/max_dim).asPoint();
-    minP = Point(0,0,0);
-  } else {
-    minP = minPin;
-    maxP = maxPin;
-  }
-  // copy the data into the brickArray
-  cerr << "Number of data members = " << num_elements << endl;
-  float *p = (float*)n->data; // get the pointer to the raw data
-  for (int z = 0; z < nz; z++)
-    for (int y = 0; y < ny; y++)
-      for (int x = 0; x < nx; x++) {
-	float val = *p++;
-	data(x,y,z) = val;
-	// also find the min and max
-	if (val < data_min)
-	  data_min = val;
-	else if (val > data_max)
-	  data_max = val;
+    if (n->type != nrrdTypeFloat) {
+      cerr << "Converting type from ";
+      switch(n->type) {
+      case nrrdTypeUnknown: cerr << "nrrdTypeUnknown"; break;
+      case nrrdTypeChar: cerr << "nrrdTypeChar"; break;
+      case nrrdTypeUChar: cerr << "nrrdTypeUChar"; break;
+      case nrrdTypeShort: cerr << "nrrdTypeShort"; break;
+      case nrrdTypeUShort: cerr << "nrrdTypeUShort"; break;
+      case nrrdTypeInt: cerr << "nrrdTypeInt"; break;
+      case nrrdTypeUInt: cerr << "nrrdTypeUInt"; break;
+      case nrrdTypeLLong: cerr << "nrrdTypeLLong"; break;
+      case nrrdTypeULLong: cerr << "nrrdTypeULLong"; break;
+      case nrrdTypeDouble: cerr << "nrrdTypeDouble"; break;
+      default: cerr << "Unknown!!";
       }
+      cerr << " to nrrdTypeFloat\n";
+      Nrrd *new_n = nrrdNew();
+      nrrdConvert(new_n, n, nrrdTypeFloat);
+      // since the data was copied blow away the memory for the old nrrd
+      nrrdNuke(n);
+      n = new_n;
+      cerr << "Number of data members = " << num_elements << endl;
+    }
+    // get the dimensions
+    int nx, ny, nz;
+    nx = n->axis[0].size;
+    ny = n->axis[1].size;
+    nz = n->axis[2].size;
+    cout << "dim = (" << nx << ", " << ny << ", " << nz << ")\n";
+    cout << "total = " << nz * ny * nz << endl;
+    cout << "spacing = " << n->axis[0].spacing << " x "<<n->axis[1].spacing<< " x "<<n->axis[2].spacing<< endl;
+    for (int i = 0; i<n->dim; i++)
+      if (!(AIR_EXISTS_D(n->axis[i].spacing))) {
+        cout <<"spacing for axis "<<i<<" does not exist.  Setting to 1.\n";
+        n->axis[i].spacing = 1;
+      }
+    data.resize(nx,ny,nz); // resize the bricked data
+    if (!use_global_minmax) {
+      // get the physical bounds
+      minP = Point(0,0,0);
+      maxP = Point((nx - 1) * n->axis[0].spacing,
+                   (ny - 1) * n->axis[1].spacing,
+                   (nz - 1) * n->axis[2].spacing);
+      // lets normalize the dimensions to 1
+      Vector size = maxP - minP;
+      // find the biggest dimension
+      double max_dim = Max(Max(size.x(),size.y()),size.z());
+      maxP = ((maxP-minP)/max_dim).asPoint();
+      minP = Point(0,0,0);
+    } else {
+      minP = minPin;
+      maxP = maxPin;
+    }
+    // copy the data into the brickArray
+    cerr << "Number of data members = " << num_elements << endl;
+    float *p = (float*)n->data; // get the pointer to the raw data
+    for (int z = 0; z < nz; z++)
+      for (int y = 0; y < ny; y++)
+        for (int x = 0; x < nx; x++) {
+          float val = *p++;
+          data(x,y,z) = val;
+          // also find the min and max
+          if (val < data_min)
+            data_min = val;
+          else if (val > data_max)
+            data_max = val;
+        }
 #if 0
-  // compute the min and max of the data
-  double dmin,dmax;
-  nrrdMinMaxFind(&dmin,&dmax,n);
-  data_min = (float)dmin;
-  data_max = (float)dmax;
+    // compute the min and max of the data
+    double dmin,dmax;
+    nrrdMinMaxFind(&dmin,&dmax,n);
+    data_min = (float)dmin;
+    data_max = (float)dmax;
 #endif
-  // delete the memory that is no longer in use
-  nrrdNuke(n);
+    // delete the memory that is no longer in use
+    nrrdNuke(n);
 
 
-  // override the min and max if it was passed in
-  if (override_data_min)
-    data_min = data_min_in;
-  if (override_data_max)
-    data_max = data_max_in;
+    // override the min and max if it was passed in
+    if (override_data_min)
+      data_min = data_min_in;
+    if (override_data_max)
+      data_max = data_max_in;
 
-  cout << "minP = "<<minP<<", maxP = "<<maxP<<endl;
+    cout << "minP = "<<minP<<", maxP = "<<maxP<<endl;
 
+    // Stuff it in the cache
+    VolumeVisCache *vvc = new VolumeVisCache(data, data_min, data_max,
+                                             minP, maxP);
+    loaded_volumes.insert(make_pair(string(filename), vvc));
+  } else {
+    // It was in the cache
+    VolumeVisCache *vvc = lv_iter->second;
+    data.share(vvc->data);
+    data_min = vvc->data_min;
+    data_max = vvc->data_max;
+    minP     = vvc->minP;
+    maxP     = vvc->maxP;
+
+    cout << "Copying data from pervious timestep\n";
+  }
   return new HVolumeVis<float,VMCell<float> >(data, data_min, data_max,
                                               depth, minP, maxP, dpy,
                                               spec_coeff, ambient, diffuse,
@@ -894,9 +934,22 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
         // Add the GridSpheres
 	myfile = strdup(data_files[++i].c_str());
         if (strcmp(myfile, "") == 0) continue;
-        GridSpheres* gsphere = read_spheres(myfile, colordata, gridcellsize, griddepth, radius, radius_factor, numvars, cmap);
-        spheres.add(gsphere);
-        volume->set_child(gsphere);
+        // Check to see if the file is in the map.
+        map<string, GridSpheres*>::iterator gs_iter =
+          loaded_spheres.find(string(myfile));
+        if (gs_iter == loaded_spheres.end()) {
+          GridSpheres* gsphere = read_spheres(myfile, colordata, gridcellsize, griddepth, radius, radius_factor, numvars, cmap);
+          spheres.add(gsphere);
+          volume->set_child(gsphere);
+          // Insert it into the map.
+          loaded_spheres.insert(make_pair(string(myfile), gsphere));
+        } else {
+          // It was found, so grap it
+          GridSpheres* gsphere = gs_iter->second;
+          // Don't add it to the spheres list, as it has already been
+          // added once.
+          volume->set_child(gsphere);
+        }
         if (myfile) free(myfile);
       }
       // Repeat the last timestep if need be.
@@ -974,7 +1027,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->attach_display(display);
   scene->addGuiObject("Fire", obj);
   scene->select_shadow_mode( No_Shadows );
-  
+
+  // Clean up memory
+  for(map<string, VolumeVisCache*>::iterator lv_iter = loaded_volumes.begin();
+      lv_iter != loaded_volumes.end(); lv_iter++)
+    if (lv_iter->second) delete lv_iter->second;
+  loaded_volumes.clear();
+  loaded_spheres.clear();
+    
   return scene;
 }
 

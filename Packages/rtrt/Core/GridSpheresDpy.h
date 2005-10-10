@@ -83,6 +83,11 @@ class GridSpheresDpy : public DpyBase {
 
   // Gui control variables
   bool need_hist;
+
+  // These are for updating things when you add objects after the
+  // renderer starts.
+  bool update_vars_needed;
+  void update_vars();
 public:
   GridSpheresDpy(int colordata, char *in_file=0);
   //  GridSpheresDpy(GridSpheres* grid);

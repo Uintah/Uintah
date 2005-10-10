@@ -32,12 +32,13 @@ using SCIRun::Thread;
 
 GridSpheresDpy::GridSpheresDpy(int colordata, char *in_file) :
   DpyBase("GridSpheresDpy"),
-  hist(0), nhist(10000), scaled_hist(0), ndata(-1),
+  hist(0), nhist(10000), scaled_hist(0), var_names(0), ndata(-1),
   colordata(colordata), newcolordata(colordata),
   shade_method(1), new_shade_method(1),
   radius_index(-1), new_radius_index(-1),
   in_file(in_file),
-  need_hist(true)
+  need_hist(true),
+  update_vars_needed(true)
 {
   set_resolution(500,500);
 }
@@ -51,6 +52,7 @@ GridSpheresDpy::~GridSpheresDpy()
 void GridSpheresDpy::setup_vars() {
   cerr << "GridSpheresDpy:setup_vars:start\n";
   if (grids.size() > 0) {
+    update_vars_needed = false;
     histmax=new int[ndata];
 
     // determine min/max
@@ -151,6 +153,53 @@ void GridSpheresDpy::setup_vars() {
   cerr << "GridSpheresDpy:setup_vars:end\n";
 }
 
+void GridSpheresDpy::update_vars() {
+  cerr << "GridSpheresDpy:update_vars:start\n";
+  if (grids.size() > 0) {
+    update_vars_needed = false;
+
+    float* new_min = new float[ndata];
+    float* new_max = new float[ndata];
+    
+    // inialize values
+    for(int i = 0; i < ndata; i ++) {
+      new_min[i] = MAXFLOAT;
+      new_max[i] = -MAXFLOAT;
+    }
+    // go through all the grids and compute min/max
+    for(int g = 0; g < grids.size(); g++) {
+      for (int i = 0; i < ndata; i++) {
+	new_min[i]=Min(new_min[i], grids[g]->min[i]);
+	new_max[i]=Max(new_max[i], grids[g]->max[i]);
+      }
+    }
+
+    for(int i=0;i<ndata;i++){
+      // this takes into account of
+      // min/max equaling each other
+      if (new_min[i] == max[i]) {
+	if (max[i] > 0) {
+	  max[i] *= 1.1;
+	} else {
+	  if (max[i] < 0)
+	    max[i] *= 0.9;
+	  else
+	    max[i] = 1;
+	}
+      }
+      original_min[i] = new_min[i];
+      original_max[i] = max[i];
+    }
+
+    delete[] new_min;
+    delete[] new_max;
+
+    // Now create the original histogram
+    compute_hist(fontbase);
+  }
+  cerr << "GridSpheresDpy:setup_vars:end\n";
+}
+
 void GridSpheresDpy::init() {
   glShadeModel(GL_FLAT);
 
@@ -158,6 +207,9 @@ void GridSpheresDpy::init() {
 }
 
 void GridSpheresDpy::display() {
+  if (update_vars_needed) {
+    update_vars();
+  }
   if(need_hist){
     need_hist=false;
     compute_scaled_hist();
@@ -763,12 +815,15 @@ void GridSpheresDpy::attach(GridSpheres* g) {
       cerr << "Not adding this GridSpheres\n";
       g->dpy = 0;
     }
+    // If we have already started, set a flag so that we will compute
+    // the mins and maxes the next time we will animate.
+    update_vars_needed = true;
   } else {
     // This is the first GridSpheres being added.
     ndata = g->ndata;
     grids.add(g);
     g->dpy = this;
-    var_names = g->var_names;
+    if (var_names == 0) var_names = g->var_names;
   }
 }
 

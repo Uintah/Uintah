@@ -551,6 +551,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   float radius=0;
   // This is the index to use for the radius.  -1 means don't use it.
   int radius_index = -1;
+  string *var_names = 0;
+
   for(int i=1;i<argc;i++){
     if(strcmp(argv[i], "-gridcellsize")==0){
       i++;
@@ -591,6 +593,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     else if(strcmp(argv[i], "-radius_index")==0) {
       radius_index = atoi(argv[++i]);
     }
+    else if (strcmp(argv[i], "-varnames") == 0) {
+      int num_varnames = atoi(argv[++i]);
+      cerr << "Reading "<<num_varnames << " variable names\n";
+      var_names = new string[num_varnames];
+      for(int v = 0; v < num_varnames; v++)
+        var_names[v] = string(argv[++i]);
+    }
     else {
       if(file){
 	cerr << "Unknown option: " << argv[i] << '\n';
@@ -604,6 +613,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	cerr << " -radius_index [int]\n";
 	cerr << " -rate [float]\n";
 	cerr << " -numvars [int]\n";
+        cerr << " -varnames [number] vname1 \"v name 2\"\n";
 	return 0;
       }
       file=argv[i];
@@ -623,6 +633,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   // the value will be checked later and the program will abort
   // if the value is not correct.
   GridSpheresDpy* display = new GridSpheresDpy(colordata-1);
+  if (var_names) display->set_var_names(var_names);
   if (radius_index >= 0)
     display->set_radius_index(radius_index);
 

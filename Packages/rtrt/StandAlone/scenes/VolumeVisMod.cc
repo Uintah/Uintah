@@ -680,8 +680,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   (new Thread(dpy, "VolumeVis display thread"))->detach();
 
+  PlaneDpy* pd = 0;
   if(cut){
-    PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,0));
+    pd = new PlaneDpy(Vector(0,0,1), Point(0,0,0));
     obj=(Object*)new CutPlane(obj, pd);
     (new Thread(pd, "Cutting plane display thread"))->detach();
   }
@@ -700,6 +701,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   light0->name_ = "light 0";
   scene->add_light(light0);
   scene->attach_display(dpy);
+  scene->attach_display(pd);
   scene->addGuiObject("Volume 1", obj);
   
   return scene;

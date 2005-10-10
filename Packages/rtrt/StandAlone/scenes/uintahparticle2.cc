@@ -203,6 +203,7 @@ void writeData(float *spheres, int nspheres, int ndata, int tindex) {
   FILE *out = fopen(buf, "wb");
   if (!out) {
     cerr << "Could not open "<<buf<<" for writing.\n";
+    return;
   }
   int nvalues = nspheres * ndata;
   size_t wrote = fwrite(spheres, sizeof(float), nvalues, out);
@@ -210,6 +211,7 @@ void writeData(float *spheres, int nspheres, int ndata, int tindex) {
     cerr << "Only wrote out "<<wrote<<" floats instead of "<<nvalues<<"\n";
     return;
   }
+  fclose(out);
   
   cerr << "Done writing out dataset\n";
 }
@@ -889,6 +891,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     da->queryVariables(vars, types);
     ASSERTEQ(vars.size(), types.size());
     cout << "There are " << vars.size() << " variables:\n";
+    for(size_t vi = 0; vi < vars.size(); ++vi) {
+      if (types[vi]->getType() == Uintah::TypeDescription::ParticleVariable)
+        cout << "var["<<vi<<"] = "<<vars[vi]<<" (type="<<types[vi]->getName()<<")\n";
+    }
     
     vector<int> index;
     vector<double> times;
