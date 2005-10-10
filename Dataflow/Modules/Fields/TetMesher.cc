@@ -267,7 +267,7 @@ bool TetMesher::write_tet_file(const int &npoints, double* const points,
     tvm->add_tet( tets[i*4], tets[i*4+1], tets[i*4+2], tets[i*4+3] );
   }
   
-  my_tetvolfield* tvf = scinew my_tetvolfield();
+  my_tetvolfield* tvf = scinew my_tetvolfield(tvm);
   FieldHandle tvH = dynamic_cast<Field*>(tvf);
   FieldOPort *ofld = (FieldOPort *)get_oport("TetVol");
   if (!ofld) return false;
