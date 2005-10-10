@@ -32,6 +32,7 @@
 #if !defined(HexTricubicHmtScaleFactors_h)
 #define HexTricubicHmtScaleFactors_h
 
+#include <Core/Persistent/PersistentSTL.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 
 namespace SCIRun {
