@@ -18,11 +18,13 @@ namespace rtrt {
 class SelectableGroup : public Group {
   // Remember that child < 0 means that no child is selected
   int child; //which sub is currently showing
+  int gui_child; // which child the gui wants to see next
   
   bool autoswitch; //should animate automatically switch showing child?
   bool no_skip; // This ignores autoswitch_secs and does the next object
 public:
-  float autoswitch_secs; //how many second should autoswitch dwell on each child?
+  float autoswitch_secs; // Number of second autoswitch should dwell on
+                         // each child.
 
   SelectableGroup(float secs=1.0);
   virtual ~SelectableGroup();
@@ -65,16 +67,10 @@ public:
   inline void toggleNoSkip() {no_skip = !no_skip;}
 
   
-  inline int GetChild() { return child; }
+  inline int GetChild() { return gui_child; }
   // Remember that setting child less than 0 will not select any child.
-  inline void SetChild(int i) { if (i<objs.size()) child = i;}
-  inline void nextChild() { 
-    autoswitch = false; 
-    child++;
-    if (child == objs.size())
-      child = 0;
-  };
-
+  void SetChild(int i);
+  void nextChild();
 };
 
 } // end namespace rtrt
