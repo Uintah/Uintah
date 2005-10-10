@@ -39,6 +39,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Core/Geometry/Vector.h>
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/TetVolMesh.h>
