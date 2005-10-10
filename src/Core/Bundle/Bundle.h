@@ -59,6 +59,8 @@ class Bundle : public PropertyManager {
     //! Constructor
     Bundle();
     
+    Bundle(const Bundle& bundle);
+    
     //! Destructor
     virtual ~Bundle();
 
