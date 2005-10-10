@@ -38,14 +38,16 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 
 namespace SCIRun {
-
-
+typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
+typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
 class GuiInterface;
 
 class IsoClipAlgo : public DynamicAlgoBase
@@ -1263,10 +1265,11 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   
 //NOTE TO JS: Need to do this correctly based on it's position...
     //project a new node to the isoval for each node on the clipped boundary
-  map<typename FIELD::mesh_type::Node::index_type, QuadSurfMesh::Node::index_type> new_map;
+  map<typename FIELD::mesh_type::Node::index_type, 
+    QSMesh::Node::index_type> new_map;
   unsigned int i, j;  
 
-  HexVolMesh *new_mesh = clipped->clone();
+  HVMesh *new_mesh = clipped->clone();
 
   for( i = 0; i < node_list.size(); i++ )
 //  for( i = 0; i < 10; i++ )

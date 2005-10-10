@@ -31,7 +31,7 @@
 
 #include <sci_defs/ogl_defs.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/LatVolField.h>
+
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -43,11 +43,15 @@
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
 
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/MRLatVolField.h>
 
 namespace SCIRun {
 
-
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 
 class TextureBuilder : public Module
 {
@@ -129,7 +133,7 @@ TextureBuilder::execute()
   } else {
     // We are using something that has regular topology, 
     // but it must currently be 3 dimensional
-    LatVolMesh *mesh = (LatVolMesh * )vHandle->mesh().get_rep();
+    LVMesh *mesh = (LVMesh * )vHandle->mesh().get_rep();
     int nx = mesh->get_ni();
     int ny = mesh->get_nj();
     int nz = mesh->get_nk();
@@ -170,7 +174,7 @@ TextureBuilder::execute()
 	  for(unsigned int j = 0; j < lev->patches.size(); j++ ){
 	    // Each patch in a level corresponds to a LatVolField.
 	    // Grab the field.
-	    LatVolField<double>* vmr = lev->patches[j].get_rep(); 
+	    MRLatVolField<double>::LVF* vmr = lev->patches[j].get_rep(); 
 	    // Now, get the min_max for the scalar field.
 	    ScalarFieldInterfaceHandle sub_sfi =
 	      vmr->query_scalar_interface(this);

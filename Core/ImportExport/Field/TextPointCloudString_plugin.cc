@@ -50,7 +50,9 @@
 // 1.2 0.5 0.2 Point of Interest
 
 
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 #include <iostream>
 #include <fstream>
@@ -61,13 +63,16 @@ namespace SCIRun {
 
 using namespace std;
 
+typedef PointCloudMesh<ConstantBasis<Point> >                   PCMesh;
+typedef ConstantBasis<string>                                   DatBasis;
+typedef GenericField<PCMesh, DatBasis, vector<string> >         PCField;  
 
 FieldHandle
 TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
 {
   ifstream ptsstream(filename);
 
-  PointCloudMesh *pcm = scinew PointCloudMesh();
+  PCMesh *pcm = scinew PCMesh();
   vector<string> strings;
   char buffer[1024];
   double x, y, z;
@@ -115,11 +120,11 @@ TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
     pr->msgStream_flush();
   }
 
-  PointCloudField<string> *pc = 
-    scinew PointCloudField<string>(pcm, 0);
+  PCField *pc = scinew PCField(pcm);
+
   for (unsigned int i=0; i < strings.size(); i++)
   {
-    pc->set_value(strings[i], PointCloudMesh::Node::index_type(i));
+    pc->set_value(strings[i], PCMesh::Node::index_type(i));
   }
 
   return FieldHandle(pc);
@@ -132,16 +137,15 @@ TextPointCloudString_writer(ProgressReporter *pr,
 {
   ofstream ptsstream(filename);
 
-  PointCloudField<string> *pcfs =
-    dynamic_cast<PointCloudField<string> *>(field.get_rep());
+  PCField *pcfs = dynamic_cast<PCField*>(field.get_rep());
   if (pcfs == 0)
   {
     // Handle error checking somehow.
     return false;
   }
-  PointCloudMeshHandle mesh = pcfs->get_typed_mesh();
+  PCMesh::handle_type mesh = pcfs->get_typed_mesh();
   
-  PointCloudMesh::Node::iterator itr, eitr;
+  PCMesh::Node::iterator itr, eitr;
   mesh->begin(itr);
   mesh->end(eitr);
 

@@ -94,9 +94,9 @@ PythagorasConstraint::Satisfy( const Index index, const Scheme scheme,
 			       const double,
 			       BaseVariable*& var, VarCore& c )
 {
-   RealVariable& dist1 = *vars[0];
-   RealVariable& dist2 = *vars[1];
-   RealVariable& hypo = *vars[2];
+   double dist1 = (double)*vars[0];
+   double dist2 = (double)*vars[1];
+   double hypo = (double)*vars[2];
    double t;
 
    switch (ChooseChange(index, scheme)) {

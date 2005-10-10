@@ -69,10 +69,15 @@ namespace SCIRun {
 
 // BinaryPiostream -- portable
 BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
-                                 int v, ProgressReporter *pr)
+                                 const int& v, ProgressReporter *pr)
   : Piostream(dir, v, filename, pr),
     fp_(0)
 {
+  if (v == -1) // no version given so use PERSISTENT_VERSION
+    version_ = PERSISTENT_VERSION;
+  else
+    version_ = v;
+
   if (dir==Read)
   {
     fp_ = fopen (filename.c_str(), "rb");
@@ -144,11 +149,16 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
 }
 
 
-BinaryPiostream::BinaryPiostream(int fd, Direction dir, int v,
+BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
                                  ProgressReporter *pr)
   : Piostream(dir, v, "", pr),
     fp_(0)
 {
+  if (v == -1) // No version given so use PERSISTENT_VERSION.
+    version_ = PERSISTENT_VERSION;
+  else
+    version_ = v;
+
   if (dir == Read)
   {
     fp_ = fdopen (fd, "rb");
@@ -541,13 +551,13 @@ BinaryPiostream::block_io(void *data, size_t s, size_t nmemb)
 // BinarySwapPiostream -- portable
 // Piostream used when endianness of machine and file don't match
 BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
-                                         int v, ProgressReporter *pr)
+                                         const int& v, ProgressReporter *pr)
   : BinaryPiostream(filename, dir, v, pr)
 {
 }
 
 
-BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, int v,
+BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v,
                                          ProgressReporter *pr)
   : BinaryPiostream(fd, dir, v, pr)
 {
@@ -734,9 +744,9 @@ BinarySwapPiostream::io(float& data)
 
 
 
-TextPiostream::TextPiostream(const string& filename, Direction dir, int v,
+TextPiostream::TextPiostream(const string& filename, Direction dir,
                              ProgressReporter *pr)
-  : Piostream(dir, v, filename, pr),
+  : Piostream(dir, -1, filename, pr),
     ownstreams_p_(true)
 {
   if (dir==Read)
@@ -783,13 +793,14 @@ TextPiostream::TextPiostream(const string& filename, Direction dir, int v,
       err = true;
       return;
     }
-    out << "SCI\nASC\n" << version_ << "\n";
+    out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
+    version_ = PERSISTENT_VERSION;
   }
 }
 
 
-TextPiostream::TextPiostream(istream *strm, int v, ProgressReporter *pr)
-  : Piostream(Read, v, "", pr),
+TextPiostream::TextPiostream(istream *strm, ProgressReporter *pr)
+  : Piostream(Read, -1, "", pr),
     istr(strm),
     ostr(0),
     ownstreams_p_(false)
@@ -819,14 +830,15 @@ TextPiostream::TextPiostream(istream *strm, int v, ProgressReporter *pr)
 }
 
 
-TextPiostream::TextPiostream(ostream *strm, int v, ProgressReporter *pr)
-  : Piostream(Write, v, "", pr),
+TextPiostream::TextPiostream(ostream *strm, ProgressReporter *pr)
+  : Piostream(Write, -1, "", pr),
     istr(0),
     ostr(strm),
     ownstreams_p_(false)
 {
   ostream& out=*ostr;
-  out << "SCI\nASC\n" << version_ << "\n";
+  out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
+  version_ = PERSISTENT_VERSION;
 }
 
 
@@ -934,13 +946,13 @@ TextPiostream::begin_class(const string& classname, int current_version)
 
   if (dir==Read)
   {
-    if (classname != gname)
-    {
-      err = true;
-      reporter_->error("Expecting class: " + classname +
-                       ", got class: " + gname + ".");
-      return 0;
-    }
+//     if (classname != gname)
+//     {
+//       err = true;
+//       reporter_->error("Expecting class: " + classname +
+//                        ", got class: " + gname + ".");
+//       return 0;
+//     }
   }
   io(version);
 
@@ -1600,9 +1612,9 @@ TextPiostream::emit_pointer(int& have_data, int& pointer_id)
 
 
 // FastPiostream is a non portable binary output.
-FastPiostream::FastPiostream(const string& filename, Direction dir, int v,
+FastPiostream::FastPiostream(const string& filename, Direction dir,
                              ProgressReporter *pr)
-  : Piostream(dir, v, filename, pr),
+  : Piostream(dir, -1, filename, pr),
     fp_(0)
 {
   if (dir==Read)
@@ -1633,6 +1645,7 @@ FastPiostream::FastPiostream(const string& filename, Direction dir, int v,
       err = true;
       return;
     }
+    version_ = PERSISTENT_VERSION;
     if (version() > 1)
     {
       char hdr[16];
@@ -1666,9 +1679,8 @@ FastPiostream::FastPiostream(const string& filename, Direction dir, int v,
 }
 
 
-FastPiostream::FastPiostream(int fd, Direction dir, int v,
-                             ProgressReporter *pr)
-  : Piostream(dir, v, "", pr),
+FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
+  : Piostream(dir, -1, "", pr),
     fp_(0)
 {
   if (dir==Read)
@@ -1702,6 +1714,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, int v,
       err = true;
       return;
     }
+    version_ = PERSISTENT_VERSION;
     if (version() > 1)
     {
       char hdr[16];

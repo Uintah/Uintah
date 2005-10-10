@@ -37,7 +37,8 @@ else
 PSELIBS := \
 	Core/Datatypes Core/Util Core/Containers Core/Persistent \
 	Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom \
-	Core/Init
+	Core/Init Core/Basis
+
 endif
 LIBS := $(LAPACK_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
 
@@ -65,6 +66,10 @@ PROGRAM := $(SRCDIR)/RemoveFaces
 SRCS := $(SRCDIR)/RemoveFaces.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/FieldBin1Test
+SRCS := $(SRCDIR)/FieldBin1Test.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/FieldTextToBin
 SRCS := $(SRCDIR)/FieldTextToBin.cc
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -75,9 +80,5 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/OrientFaces
 SRCS := $(SRCDIR)/OrientFaces.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/sciconvert
-SRCS := $(SRCDIR)/sciconvert.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 

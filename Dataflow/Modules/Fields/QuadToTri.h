@@ -43,11 +43,17 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Util/Assert.h>
 
 namespace SCIRun {
 
+typedef TriSurfMesh<TriLinearLgn<Point> >     TSMesh;
+typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
 class QuadToTriAlgo : public DynamicAlgoBase
 {
 public:
@@ -75,7 +81,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   FSRC *qsfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
   typename FSRC::mesh_type *qsmesh = qsfield->get_typed_mesh().get_rep();
-  TriSurfMeshHandle tsmesh = scinew TriSurfMesh();
+  TSMesh::handle_type tsmesh = scinew TSMesh();
 
   typename FSRC::mesh_type::Node::size_type hnsize; 
   qsmesh->size(hnsize);
@@ -148,25 +154,25 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
           {
             nodeisdiagonal[qsnodes[0]] = true;
             nodeisdiagonal[qsnodes[2]] = true;
-            tsmesh->add_triangle((TriSurfMesh::Node::index_type)(qsnodes[0]),
-                                 (TriSurfMesh::Node::index_type)(qsnodes[1]),
-                                 (TriSurfMesh::Node::index_type)(qsnodes[2]));
+            tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[0]),
+                                 (TSMesh::Node::index_type)(qsnodes[1]),
+                                 (TSMesh::Node::index_type)(qsnodes[2]));
 
-            tsmesh->add_triangle((TriSurfMesh::Node::index_type)(qsnodes[0]),
-                                 (TriSurfMesh::Node::index_type)(qsnodes[2]),
-                                 (TriSurfMesh::Node::index_type)(qsnodes[3]));
+            tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[0]),
+                                 (TSMesh::Node::index_type)(qsnodes[2]),
+                                 (TSMesh::Node::index_type)(qsnodes[3]));
           }
           else
           {
             nodeisdiagonal[qsnodes[1]] = true;
             nodeisdiagonal[qsnodes[3]] = true;
-            tsmesh->add_triangle((TriSurfMesh::Node::index_type)(qsnodes[0]),
-                                 (TriSurfMesh::Node::index_type)(qsnodes[1]),
-                                 (TriSurfMesh::Node::index_type)(qsnodes[3]));
+            tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[0]),
+                                 (TSMesh::Node::index_type)(qsnodes[1]),
+                                 (TSMesh::Node::index_type)(qsnodes[3]));
 
-            tsmesh->add_triangle((TriSurfMesh::Node::index_type)(qsnodes[1]),
-                                 (TriSurfMesh::Node::index_type)(qsnodes[2]),
-                                 (TriSurfMesh::Node::index_type)(qsnodes[3]));
+            tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[1]),
+                                 (TSMesh::Node::index_type)(qsnodes[2]),
+                                 (TSMesh::Node::index_type)(qsnodes[3]));
           }
 
           elemmap.push_back(buffers[flipflop][i]);
@@ -188,34 +194,46 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     }
     ++bi;
   }
-  
-  TriSurfField<typename FSRC::value_type> *tvfield = 
-    scinew TriSurfField<typename FSRC::value_type>(tsmesh, qsfield->basis_order());
-  tvfield->copy_properties(qsfield);
-  dstH = tvfield;
 
-  typename FSRC::value_type val;
+  typedef typename FSRC::value_type val_t;
 
-  if (qsfield->basis_order() == 1) {
-
+  if (qsfield->basis_order() == -1) {
+    typedef NoDataBasis<val_t>                             DatBasis;
+    typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
+    TSField *tvfield = scinew TSField(tsmesh);
+    dstH = tvfield;
+  } else if (qsfield->basis_order() == 0) {
+    typedef ConstantBasis<val_t>                           DatBasis;
+    typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
+    TSField *tvfield = scinew TSField(tsmesh);
+    dstH = tvfield;
+    typename FSRC::value_type val;
+    for (unsigned int i = 0; i < elemmap.size(); i++)
+    {
+      qsfield->value(val, elemmap[i]);
+      tvfield->set_value(val, (TSMesh::Elem::index_type)(i*2+0));
+      tvfield->set_value(val, (TSMesh::Elem::index_type)(i*2+1));
+    }
+  } else if (qsfield->basis_order() == 1) {
+    typedef TriLinearLgn<val_t>                            DatBasis;
+    typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
+    TSField *tvfield = scinew TSField(tsmesh);
+    dstH = tvfield;
+    typename FSRC::value_type val;
     unsigned int i = 0;
     typename FSRC::fdata_type dat = qsfield->fdata();
     typename FSRC::fdata_type::iterator iter = dat.begin();
     while (iter != dat.end()) {
       val = *iter;
-      tvfield->set_value(val, (TriSurfMesh::Node::index_type)(i));
+      tvfield->set_value(val, (TSMesh::Node::index_type)(i));
       ++iter; ++i;
-    }
-  } else if (qsfield->basis_order() == 0) {
-    for (unsigned int i = 0; i < elemmap.size(); i++)
-    {
-      qsfield->value(val, elemmap[i]);
-      tvfield->set_value(val, (TriSurfMesh::Elem::index_type)(i*2+0));
-      tvfield->set_value(val, (TriSurfMesh::Elem::index_type)(i*2+1));
     }
   } else {
     mod->warning("Could not load data values, use DirectInterp if needed.");
   }
+
+  dstH->copy_properties(qsfield);
+
   return true;
 }
 
@@ -248,7 +266,7 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   FSRC *ifield = dynamic_cast<FSRC*>(srcH.get_rep());
 
   typename FSRC::mesh_type *imesh = ifield->get_typed_mesh().get_rep();
-  TriSurfMeshHandle tmesh = scinew TriSurfMesh();
+  TSMesh::handle_type tmesh = scinew TSMesh();
 
   typename FSRC::mesh_type::Node::size_type hnsize; 
   imesh->size(hnsize);
@@ -270,7 +288,7 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 
   tmesh->elem_reserve((unsigned int)hesize * 2);
 
-  typedef TriSurfMesh::Node::index_type nindex_type;
+  typedef TSMesh::Node::index_type nindex_type;
   
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   imesh->begin(bi); imesh->end(ei);
@@ -301,41 +319,50 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     ++bi;
   }
   
-  TriSurfField<typename FSRC::value_type> *tfield = 
-    scinew TriSurfField<typename FSRC::value_type>(tmesh, ifield->basis_order());
-  tfield->copy_properties(ifield);
-  dstH = tfield;
+  typedef typename FSRC::value_type val_t;
 
-  typename FSRC::value_type val;
-
-  if (ifield->basis_order() == 1)
-  {
-    imesh->begin(nbi); imesh->end(nei);
-    while (nbi != nei)
-    {
-      ifield->value(val, *nbi);
-      tfield->set_value(val,
-                        (TriSurfMesh::Node::index_type)(unsigned int)(*nbi));
-      ++nbi;
-    }
-  }
-  else if (ifield->basis_order() == 0)
-  {
+  if (ifield->basis_order() == -1) {
+    typedef NoDataBasis<val_t>                             DatBasis;
+    typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
+    TSField *tfield = scinew TSField(tmesh);
+    dstH = tfield;
+    tfield->copy_properties(ifield);
+  } else if (ifield->basis_order() == 0) {
+    typedef ConstantBasis<val_t>                           DatBasis;
+    typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
+    TSField *tfield = scinew TSField(tmesh);
+    dstH = tfield;
+    tfield->copy_properties(ifield);
+    typename FSRC::value_type val;
     typename FSRC::mesh_type::Cell::iterator cbi, cei;    
     imesh->begin(cbi); imesh->end(cei);
     while (cbi != cei)
     {
       ifield->value(val, *cbi);
       unsigned int i = (unsigned int)*cbi;
-      tfield->set_value(val, (TriSurfMesh::Cell::index_type)(i*2+0));
-      tfield->set_value(val, (TriSurfMesh::Cell::index_type)(i*2+1));
+      tfield->set_value(val, (TSMesh::Cell::index_type)(i*2+0));
+      tfield->set_value(val, (TSMesh::Cell::index_type)(i*2+1));
       ++cbi;
     }
-  }
-  else
-  {
+
+  } else if (ifield->basis_order() == 1) {
+    typedef TriLinearLgn<val_t>                            DatBasis;
+    typedef GenericField<TSMesh, DatBasis, vector<val_t> > TSField;   
+    TSField *tfield = scinew TSField(tmesh);
+    dstH = tfield;
+    tfield->copy_properties(ifield);
+    typename FSRC::value_type val;
+    imesh->begin(nbi); imesh->end(nei);
+    while (nbi != nei)
+    {
+      ifield->value(val, *nbi);
+      tfield->set_value(val, (TSMesh::Node::index_type)(unsigned int)(*nbi));
+      ++nbi;
+    }
+  } else {
     mod->warning("Could not load data values, use DirectInterp if needed.");
   }
+  
   return true;
 }
 

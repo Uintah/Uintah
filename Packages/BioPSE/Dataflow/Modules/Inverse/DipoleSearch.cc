@@ -47,9 +47,11 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <iostream>
@@ -61,7 +63,14 @@ using std::endl;
 namespace BioPSE {
 using namespace SCIRun;
 
-class DipoleSearch : public Module {    
+class DipoleSearch : public Module {   
+  typedef SCIRun::ConstantBasis<Vector>                           PCVBasis;
+  typedef SCIRun::ConstantBasis<double>                           PCDBasis;
+  typedef SCIRun::PointCloudMesh<ConstantBasis<Point> >           PCMesh;
+  typedef SCIRun::GenericField<PCMesh, PCVBasis, vector<Vector> > PCFieldV;
+  typedef SCIRun::GenericField<PCMesh, PCDBasis, vector<double> > PCFieldD;
+  typedef TetVolMesh<TetLinearLgn<Point> >                        TVMesh;
+  
   FieldIPort     *seeds_iport_;
   FieldIPort     *mesh_iport_;
   MatrixIPort    *misfit_iport_;
@@ -73,7 +82,7 @@ class DipoleSearch : public Module {
 
   FieldHandle seedsH_;
   FieldHandle meshH_;
-  TetVolMeshHandle vol_mesh_;
+  TVMesh::handle_type vol_mesh_;
 
   MatrixHandle leadfield_selectH_;
   FieldHandle simplexH_;
@@ -99,7 +108,7 @@ class DipoleSearch : public Module {
   static double OUT_OF_BOUNDS_MISFIT_;
 
   void initialize_search();
-  void send_and_get_data(int which_dipole, TetVolMesh::Cell::index_type ci);
+  void send_and_get_data(int which_dipole, TVMesh::Cell::index_type ci);
   int pre_search();
   Vector eval_test_dipole();
   double simplex_step(Array1<double>& sum, double factor, int worst);
@@ -146,13 +155,13 @@ DipoleSearch::~DipoleSearch(){}
 
 void DipoleSearch::initialize_search() {
   // cast the mesh based class up to a tetvolmesh
-  PointCloudMesh *seeds_mesh =
-    (PointCloudMesh*)dynamic_cast<PointCloudMesh*>(seedsH_->mesh().get_rep());
+  PCMesh *seeds_mesh =
+    (PCMesh*)dynamic_cast<PCMesh*>(seedsH_->mesh().get_rep());
 
   // iterate through the nodes and copy the positions into our 
   //  simplex search matrix (`dipoles')
-  PointCloudMesh::Node::iterator ni; seeds_mesh->begin(ni);
-  PointCloudMesh::Node::iterator nie; seeds_mesh->end(nie);
+  PCMesh::Node::iterator ni; seeds_mesh->begin(ni);
+  PCMesh::Node::iterator nie; seeds_mesh->end(nie);
   misfit_.resize(NDIPOLES_);
   dipoles_.resize(NDIPOLES_, NDIM_+3);
   for (int nc=0; ni != nie; ++ni, nc++) {
@@ -166,7 +175,7 @@ void DipoleSearch::initialize_search() {
   for (j=0; j<NDIM_+3; j++) 
     dipoles_(NSEEDS_,j)=0;
 
-  TetVolMesh::Cell::size_type csize;
+  TVMesh::Cell::size_type csize;
   vol_mesh_->size(csize);
   cell_visited_.resize(csize);
   cell_err_.resize(csize);
@@ -179,7 +188,7 @@ void DipoleSearch::initialize_search() {
 //! Find the misfit and optimal orientation for a single dipole
 
 void DipoleSearch::send_and_get_data(int which_dipole, 
-				     TetVolMesh::Cell::index_type ci) {
+				     TVMesh::Cell::index_type ci) {
   if (!mylock_.tryLock()) {
     msgStream_ << "Thread is paused\n";
     mylock_.lock();
@@ -200,17 +209,17 @@ void DipoleSearch::send_and_get_data(int which_dipole,
     (*leadfield_select_out)[1][j] = 1;
   }
   
-  PointCloudMeshHandle pcm = scinew PointCloudMesh;
+  PCMesh::handle_type pcm = scinew PCMesh;
   for (j=0; j<NSEEDS_; j++)
     pcm->add_point(Point(dipoles_(j,0), dipoles_(j,1), dipoles_(j,2)));
-  PointCloudField<Vector> *pcv = scinew PointCloudField<Vector>(pcm, 0);
+  PCFieldV *pcv = scinew PCFieldV(pcm);
   for (j=0; j<NSEEDS_; j++)
     pcv->fdata()[j] = Vector(dipoles_(j,3), dipoles_(j,4), dipoles_(j,5));
 
-  pcm = scinew PointCloudMesh;
+  pcm = scinew PCMesh;
   pcm->add_point(Point(dipoles_(which_dipole, 0), dipoles_(which_dipole, 1),
 		       dipoles_(which_dipole, 2)));
-  PointCloudField<Vector> *pcd = scinew PointCloudField<Vector>(pcm, 0);
+  PCFieldV *pcd = scinew PCFieldV(pcm);
   
   // send out data
   leadfield_selectH_ = leadfield_select_out;
@@ -250,7 +259,7 @@ int DipoleSearch::pre_search() {
   }
 
   // send out a seed dipole and get back the misfit and the optimal orientation
-  TetVolMesh::Cell::index_type ci;
+  TVMesh::Cell::index_type ci;
   if (!vol_mesh_->locate(ci, Point(dipoles_(seed_counter_,0), 
 				   dipoles_(seed_counter_,1), 
 				   dipoles_(seed_counter_,2)))) {
@@ -278,7 +287,7 @@ int DipoleSearch::pre_search() {
 //! Evaluate a test dipole.  Return the optimal orientation.
 
 Vector DipoleSearch::eval_test_dipole() {
-  TetVolMesh::Cell::index_type ci;
+  TVMesh::Cell::index_type ci;
   if (vol_mesh_->locate(ci, Point(dipoles_(NSEEDS_,0), 
 				  dipoles_(NSEEDS_,1), 
 				  dipoles_(NSEEDS_,2)))) {
@@ -300,9 +309,9 @@ Vector DipoleSearch::eval_test_dipole() {
 
 int DipoleSearch::find_better_neighbor(int best, Array1<double>& sum) {
   Point p(dipoles_(best, 0), dipoles_(best, 1), dipoles_(best, 2));
-  TetVolMesh::Cell::index_type ci;
+  TVMesh::Cell::index_type ci;
   vol_mesh_->locate(ci, p);
-  TetVolMesh::Cell::array_type ca;
+  TVMesh::Cell::array_type ca;
   vol_mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
   vol_mesh_->get_neighbors(ca, ci);
   for (unsigned int n=0; n<ca.size(); n++) {
@@ -448,14 +457,17 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   FieldHandle mesh;
   valid_data=1;
   new_data=0;
+  const TypeDescription *mtd = mesh->mesh()->get_type_description();
+  const string &mtdn = mtd->get_name();
   if (mesh_iport_->get(mesh) && mesh.get_rep() &&
-      (mesh->get_type_name(0) == "TetVolField")) {
+      mtdn == get_type_description((TVMesh*)0)->get_name())
+  {
     if (!meshH_.get_rep() || (meshH_->generation != mesh->generation)) {
       new_data=1;
       meshH_=mesh;
       // cast the mesh base class up to a tetvolmesh
       vol_mesh_=
-	(TetVolMesh*)dynamic_cast<TetVolMesh*>(mesh->mesh().get_rep());
+	(TVMesh*)dynamic_cast<TVMesh*>(mesh->mesh().get_rep());
     } else {
       remark("Same VolumeMesh as previous run.");
     }
@@ -465,18 +477,22 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   }
   
   FieldHandle seeds;    
+  const TypeDescription *std = seeds->get_type_description();  
+  const string &stdn = std->get_name();
+
   if (!seeds_iport_->get(seeds)) {
     warning("No input seeds.");
     valid_data=0;
   } else if (!seeds.get_rep()) {
     warning("Empty seeds handle.");
     valid_data=0;
-  } else if (seeds->get_type_name(-1) != "PointCloudField<double> ") {
+  } else if (stdn == ((PCFieldD*)0)->get_type_description()->get_name())
+  {
     warning("Seeds typename should have been PointCloudField<double>.");
     valid_data=0;
   } else {
-    PointCloudField<double> *d=dynamic_cast<PointCloudField<double> *>(seeds.get_rep());
-    PointCloudMesh::Node::size_type nsize; d->get_typed_mesh()->size(nsize);
+    PCFieldD *d=dynamic_cast<PCFieldD*>(seeds.get_rep());
+    PCMesh::Node::size_type nsize; d->get_typed_mesh()->size(nsize);
     if (nsize != (unsigned int)NSEEDS_){
       msgStream_ << "Got "<< nsize <<" seeds, instead of "<<NSEEDS_<<"\n";
       valid_data=0;
@@ -501,7 +517,7 @@ void DipoleSearch::organize_last_send() {
     }
 
   Point best_pt(dipoles_(bestIdx,0), dipoles_(bestIdx,1), dipoles_(bestIdx,2));
-  TetVolMesh::Cell::index_type best_cell_idx;
+  TVMesh::Cell::index_type best_cell_idx;
   vol_mesh_->locate(best_cell_idx, best_pt);
 
   msgStream_ << "DipoleSearch -- the dipole was found in cell " << best_cell_idx << "\n    at position " << best_pt << " with a misfit of " << bestMisfit << "\n";
@@ -512,9 +528,9 @@ void DipoleSearch::organize_last_send() {
     (*leadfield_select_out)[1][i] = 1;
   }
   leadfield_selectH_ = leadfield_select_out;
-  PointCloudMeshHandle pcm = scinew PointCloudMesh;
+  PCMesh::handle_type pcm = scinew PCMesh;
   pcm->add_point(best_pt);
-  PointCloudField<Vector> *pcd = scinew PointCloudField<Vector>(pcm, 0);
+  PCFieldV *pcd = scinew PCFieldV(pcm);
   pcd->fdata()[0]=Vector(dipoles_(bestIdx,3), dipoles_(bestIdx,4), dipoles_(bestIdx,5));
   dipoleH_ = pcd;
 }

@@ -36,7 +36,7 @@ PSELIBS := Core
 else
 PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent Core/Util \
            Core/Exceptions Core/Init Core/Thread Core/Geometry Core/Math Core/Geom \
-	   Core/ImportExport
+	   Core/ImportExport Core/Basis
 endif
 LIBS := $(XML_LIBRARY) $(M_LIBRARY)
 
@@ -113,6 +113,10 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToHexVolField
 SRCS := $(SRCDIR)/TextToHexVolField.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TextToHexTricubicHmt
+SRCS := $(SRCDIR)/TextToHexTricubicHmt.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToPointCloudField
@@ -218,3 +222,8 @@ PROGRAM := $(SRCDIR)/geoToPts
 SRCS := $(SRCDIR)/geoToPts.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 ####################################
+
+
+PROGRAM := $(SRCDIR)/SampleHexTricubicHmt
+SRCS := $(SRCDIR)/SampleHexTricubicHmt.cc
+include $(SCIRUN_SCRIPTS)/program.mk

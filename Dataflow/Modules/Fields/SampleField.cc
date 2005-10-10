@@ -65,6 +65,11 @@ namespace SCIRun {
 class SampleField : public Module
 {
 public:
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+  typedef ConstantBasis<double>                DatBasis;
+  typedef GenericField<PCMesh, DatBasis, vector<double> > PCField;  
+
+
   SampleField(GuiContext* ctx);
   virtual ~SampleField();
   virtual void execute();
@@ -325,15 +330,14 @@ SampleField::execute_rake(FieldHandle ifield)
     dir *= ratio;
   }
 
-  PointCloudMesh* mesh = scinew PointCloudMesh;
+  PCMesh* mesh = scinew PCMesh;
   int loop;
   for (loop=0; loop<=(num_seeds-0.99999); ++loop)
     mesh->add_node(min+dir*loop);
 
   mesh->freeze();
-  PointCloudField<double> *seeds =
-    scinew PointCloudField<double>(mesh, 0);
-  PointCloudField<double>::fdata_type &fdata = seeds->fdata();
+  PCField *seeds = scinew PCField(mesh);
+  PCField::fdata_type &fdata = seeds->fdata();
   
   for (loop=0;loop<(num_seeds-0.99999);++loop)
     fdata[loop]=loop;
@@ -425,7 +429,7 @@ SampleField::execute_ring(FieldHandle ifield)
   double num_seeds = Max(0.0, gui_maxSeeds_.get());
   remark("num_seeds = " + to_string(num_seeds));
 
-  PointCloudMesh* mesh = scinew PointCloudMesh;
+  PCMesh* mesh = scinew PCMesh;
 
   Point center;
   double r;
@@ -438,10 +442,9 @@ SampleField::execute_ring(FieldHandle ifield)
   }
 
   mesh->freeze();
-  PointCloudField<double> *seeds =
-    scinew PointCloudField<double>(mesh, 0);
-  PointCloudField<double>::fdata_type &fdata = seeds->fdata();
-  
+  PCField *seeds =  scinew PCField(mesh);
+  PCField::fdata_type &fdata = seeds->fdata();
+
   for (int loop=0; loop<num_seeds; ++loop) {
     fdata[loop]=loop;
   }
@@ -527,7 +530,7 @@ SampleField::execute_frame(FieldHandle ifield)
 
   remark("num_seeds = " + to_string(num_seeds));
 
-  PointCloudMesh* mesh = scinew PointCloudMesh;
+  PCMesh* mesh = scinew PCMesh;
 
   Point center, xloc, yloc;
   Point corner[4];
@@ -551,9 +554,8 @@ SampleField::execute_frame(FieldHandle ifield)
   }
 
   mesh->freeze();
-  PointCloudField<double> *seeds =
-    scinew PointCloudField<double>(mesh, 0);
-  PointCloudField<double>::fdata_type &fdata = seeds->fdata();
+  PCField *seeds = scinew PCField(mesh);
+  PCField::fdata_type &fdata = seeds->fdata();
   
   for (int loop=0; loop<num_seeds; ++loop)
     fdata[loop]=loop;

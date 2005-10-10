@@ -38,8 +38,10 @@
  *
  *  Copyright (C) 2004 SCI Group
  */
-
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Modules/Fields/GatherFields.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -111,8 +113,11 @@ GatherFields::execute()
     FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
 #if 1
     // Sending 0 does not clear caches.
-    FieldHandle empty =
-      scinew PointCloudField<double>(scinew PointCloudMesh(), 0);
+    typedef PointCloudMesh<ConstantBasis<double> > PCMesh; 
+    typedef NoDataBasis<double> NDBasis;
+    typedef GenericField<PCMesh, NDBasis, vector<double> > PCField;
+    FieldHandle empty = scinew PCField(scinew PCMesh());
+
     ofield_port->send(empty);
 #else
     ofield_port->send( fHandle_ );
@@ -247,22 +252,22 @@ GatherFields::execute()
 	if (!module_dynamic_compile(ci, algo)) return;
 	fHandle_ = algo->execute(fHandles, new_basis, copy_data, 
 				 precision_);
-      }
-      else
+	
+      } else 
       {
         if (!force_pointcloud_)
         {
-          if (same_field_kind || same_mesh_kind)
-          {
-            warning("Non-editable meshes detected, try Unstructuring first, outputting PointCloudField.");
-          }
-          else
-          {
-            warning("Different mesh types detected, outputting PointCloudField.");
-          }
-        }
-
-	PointCloudMeshHandle pc = scinew PointCloudMesh;
+	  if (same_field_kind || same_mesh_kind)
+	  {
+	    warning("Non-editable meshes detected, try Unstructuring first, outputting PointCloudField.");
+	  }
+	  else
+	  {
+	    warning("Different mesh types detected, outputting PointCloudField.");
+	  }
+	}
+	typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+	PCMesh::handle_type pc = scinew PCMesh;
 	
 	for (unsigned int i=0; i<fHandles.size(); i++)
         {
@@ -273,8 +278,10 @@ GatherFields::execute()
 	  if (!module_dynamic_compile(ci, algo)) return;
 	    algo->execute(fHandles[i]->mesh(), pc);
 	}
-	
-	fHandle_ = scinew PointCloudField<double>(pc, 0);
+
+	typedef ConstantBasis<double>                           DatBasis;
+	typedef GenericField<PCMesh, DatBasis, vector<double> > PCField;
+	fHandle_ = scinew PCField(pc);
       }
     }
   }

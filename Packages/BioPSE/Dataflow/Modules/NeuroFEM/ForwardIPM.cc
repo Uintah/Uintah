@@ -46,10 +46,13 @@
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 #include <Core/ImportExport/ExecConverter.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
 #include <sys/stat.h>
@@ -57,8 +60,16 @@
 #include <fstream>
 
 namespace SCIRun {
+typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
+typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
 
+typedef HexTrilinearLgn<Tensor>                HVTensorBasis;
+typedef TetLinearLgn<Tensor>                   TVTensorBasis;
+typedef GenericField<TVMesh, TVTensorBasis, vector<Tensor> > TVTField;
+typedef GenericField<HVMesh, HVTensorBasis, vector<Tensor> > HVTField;  
 class ForwardIPM : public Module {
+
 public:
 
   GuiString ipm_pathTCL_;
@@ -93,21 +104,21 @@ ForwardIPM::ForwardIPM(GuiContext* ctx)
 static bool
 write_geo_tet(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
-  TetVolMesh *mesh = dynamic_cast<TetVolMesh *>(field->mesh().get_rep());
+  TVMesh *mesh = dynamic_cast<TVMesh *>(field->mesh().get_rep());
   if (mesh == 0)
   {
-    pr->error("Field does not contain a TetVolMesh.");
+    pr->error("Field does not contain a TVMesh.");
     return false;
   }
  
-  TetVolMesh::Node::iterator nitr, neitr;
-  TetVolMesh::Node::size_type nsize; 
+  TVMesh::Node::iterator nitr, neitr;
+  TVMesh::Node::size_type nsize; 
   mesh->begin(nitr);
   mesh->end(neitr);
   mesh->size(nsize);
 
-  TetVolMesh::Cell::iterator citr, ceitr;
-  TetVolMesh::Cell::size_type csize; 
+  TVMesh::Cell::iterator citr, ceitr;
+  TVMesh::Cell::size_type csize; 
   mesh->begin(citr);
   mesh->end(ceitr);
   mesh->size(csize); 
@@ -159,7 +170,7 @@ write_geo_tet(ProgressReporter *pr, FieldHandle field, const char *filename)
 
   while (citr != ceitr)
   {
-    TetVolMesh::Node::array_type nodes; // 0 based
+    TVMesh::Node::array_type nodes; // 0 based
     mesh->get_nodes(nodes, *citr);
 
     // Write nodes - Please notice the indexing order differs.
@@ -184,22 +195,22 @@ write_geo_tet(ProgressReporter *pr, FieldHandle field, const char *filename)
 static bool
 write_geo_hex(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
-  HexVolMesh *mesh = dynamic_cast<HexVolMesh *>(field->mesh().get_rep());
+  HVMesh *mesh = dynamic_cast<HVMesh *>(field->mesh().get_rep());
   if (mesh == 0)
   {
-    pr->error("Field does not contain a HexVolMesh.");
+    pr->error("Field does not contain a HVMesh.");
     return false;
   }
 
   // TODO: WRITE HEX MESH
-  HexVolMesh::Node::iterator nitr, neitr;
-  HexVolMesh::Node::size_type nsize; 
+  HVMesh::Node::iterator nitr, neitr;
+  HVMesh::Node::size_type nsize; 
   mesh->begin(nitr);
   mesh->end(neitr);
   mesh->size(nsize);
 
-  HexVolMesh::Cell::iterator citr, ceitr;
-  HexVolMesh::Cell::size_type csize; 
+  HVMesh::Cell::iterator citr, ceitr;
+  HVMesh::Cell::size_type csize; 
   mesh->begin(citr);
   mesh->end(ceitr);
   mesh->size(csize); 
@@ -251,7 +262,7 @@ write_geo_hex(ProgressReporter *pr, FieldHandle field, const char *filename)
 
   while (citr != ceitr)
   {
-    HexVolMesh::Node::array_type nodes; // 0 based
+    HVMesh::Node::array_type nodes; // 0 based
     mesh->get_nodes(nodes, *citr);
 
     fprintf(f,  "  323: %6d%6d%6d%6d%6d%6d%6d%6d\n",
@@ -275,12 +286,11 @@ write_geo_hex(ProgressReporter *pr, FieldHandle field, const char *filename)
 static bool
 write_knw_tet(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
-  TetVolField<Tensor> *tfield =
-    dynamic_cast<TetVolField<Tensor> *>(field.get_rep());
-  TetVolMesh *mesh = dynamic_cast<TetVolMesh *>(field->mesh().get_rep());
+  TVTField *tfield = dynamic_cast<TVTField *>(field.get_rep());
+  TVMesh *mesh = dynamic_cast<TVMesh *>(field->mesh().get_rep());
   if (mesh == 0)
   {
-    pr->error("Field does not contain a TetVolMesh.");
+    pr->error("Field does not contain a TVMesh.");
     return false;
   }
 
@@ -298,7 +308,7 @@ write_knw_tet(ProgressReporter *pr, FieldHandle field, const char *filename)
   fprintf(f, "BOI - TENSOR\n");  
 
   // Write it out.
-  TetVolMesh::Cell::iterator itr, eitr;
+  TVMesh::Cell::iterator itr, eitr;
   mesh->begin(itr);
   mesh->end(eitr);
   
@@ -330,12 +340,11 @@ write_knw_tet(ProgressReporter *pr, FieldHandle field, const char *filename)
 static bool
 write_knw_hex(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
-  HexVolField<Tensor> *tfield =
-    dynamic_cast<HexVolField<Tensor> *>(field.get_rep());
-  HexVolMesh *mesh = dynamic_cast<HexVolMesh *>(field->mesh().get_rep());
+  HVTField *tfield = dynamic_cast<HVTField *>(field.get_rep());
+  HVMesh *mesh = dynamic_cast<HVMesh *>(field->mesh().get_rep());
   if (mesh == 0)
   {
-    pr->error("Field does not contain a HexVolMesh.");
+    pr->error("Field does not contain a HVMesh.");
     return false;
   }
 
@@ -353,7 +362,7 @@ write_knw_hex(ProgressReporter *pr, FieldHandle field, const char *filename)
   fprintf(f, "BOI - TENSOR\n");  
 
   // Write it out.
-  HexVolMesh::Cell::iterator itr, eitr;
+  HVMesh::Cell::iterator itr, eitr;
   mesh->begin(itr);
   mesh->end(eitr);
   
@@ -385,8 +394,8 @@ write_knw_hex(ProgressReporter *pr, FieldHandle field, const char *filename)
 bool
 write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
-  TetVolMesh *tmesh = dynamic_cast<TetVolMesh *>(field->mesh().get_rep());
-  HexVolMesh *hmesh = dynamic_cast<HexVolMesh *>(field->mesh().get_rep());
+  TVMesh *tmesh = dynamic_cast<TVMesh *>(field->mesh().get_rep());
+  HVMesh *hmesh = dynamic_cast<HVMesh *>(field->mesh().get_rep());
 
   if (tmesh != 0)
   {
@@ -398,7 +407,7 @@ write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
   }
   else
   {
-    pr->error("In write_geo_file, expected a TetVolMesh or HexVolMesh.");
+    pr->error("In write_geo_file, expected a TVMesh or HVMesh.");
     return false;
   }
 }
@@ -407,8 +416,8 @@ write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 bool
 write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
-  TetVolMesh *tmesh = dynamic_cast<TetVolMesh *>(field->mesh().get_rep());
-  HexVolMesh *hmesh = dynamic_cast<HexVolMesh *>(field->mesh().get_rep());
+  TVMesh *tmesh = dynamic_cast<TVMesh *>(field->mesh().get_rep());
+  HVMesh *hmesh = dynamic_cast<HVMesh *>(field->mesh().get_rep());
 
   if (tmesh != 0)
   {
@@ -420,7 +429,7 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
   }
   else
   {
-    pr->error("In write_knw_file, expected a TetVolMesh or HexVolMesh.");
+    pr->error("In write_knw_file, expected a TVMesh or HVMesh.");
     return false;
   }
 }
@@ -430,17 +439,17 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 bool
 write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
 {
-   PointCloudMesh *mesh = dynamic_cast<PointCloudMesh *>(fld->mesh().get_rep());
+   PCMesh *mesh = dynamic_cast<PCMesh *>(fld->mesh().get_rep());
 
     if (mesh == 0)
   {
-    pr->error("Field does not contain a PointCloudMesh.");
+    pr->error("Field does not contain a PCMesh.");
     return false;
   }
 
-  PointCloudMesh::Node::iterator niter; 
-  PointCloudMesh::Node::iterator niter_end; 
-  PointCloudMesh::Node::size_type nsize; 
+  PCMesh::Node::iterator niter; 
+  PCMesh::Node::iterator niter_end; 
+  PCMesh::Node::size_type nsize; 
   mesh->begin(niter);
   mesh->end(niter_end);
   mesh->size(nsize);
@@ -860,11 +869,12 @@ ForwardIPM::execute()
     warning("CondMesh field required to continue.");
     return;
   }
-
-  if (condmesh->mesh()->get_type_description()->get_name() != "TetVolMesh" &&
-      condmesh->mesh()->get_type_description()->get_name() != "HexVolMesh")
+  
+  string mesh_type = condmesh->get_type_description(1)->get_name();
+  if (mesh_type.find("TetVolMesh") != string::npos &&
+      mesh_type.find("HexVolMesh") != string::npos)
   {
-    error("CondMesh must contain a TetVolMesh or HexVolMesh.");
+    error("CondMesh must contain a TVMesh or HVMesh.");
     return;
   }
   if (condmesh->query_tensor_interface(this) == 0)

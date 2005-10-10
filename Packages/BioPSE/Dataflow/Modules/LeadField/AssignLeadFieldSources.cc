@@ -44,9 +44,11 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Basis/TetLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -56,6 +58,15 @@ using namespace SCIRun;
 
 class AssignLeadFieldSources : public Module
 {
+  typedef ConstantBasis<Vector>                           TVVBasis;
+  typedef TetLinearLgn<double>                            TVSBasis;
+  typedef TetVolMesh<TetLinearLgn<Point> >                TVMesh;
+  typedef GenericField<TVMesh, TVSBasis, vector<double> > TVFieldD;
+  typedef GenericField<TVMesh, TVVBasis, vector<Vector> > TVFieldV;
+  typedef PointCloudMesh<ConstantBasis<Point> >                 PCMesh;
+  typedef ConstantBasis<Vector>                                 FDCVectorBasis;
+  typedef GenericField<PCMesh, FDCVectorBasis, vector<Vector> > PCField;
+  
   FieldIPort *ifp; 
   MatrixIPort *imp;
   FieldOPort *ofp;
@@ -112,14 +123,14 @@ AssignLeadFieldSources::execute()
     return;
   }
   MeshHandle mbh = ifield->mesh();
-  TetVolMesh *tvm = dynamic_cast<TetVolMesh *>(mbh.get_rep());
+  TVMesh *tvm = dynamic_cast<TVMesh *>(mbh.get_rep());
   if (!tvm) {
     remark("Field was supposed to be a TetVolField.");
     return;
   }
-  TetVolMeshHandle tvmH(tvm);
+  TVMesh::handle_type tvmH(tvm);
 
-  TetVolMesh::Cell::size_type csize;  tvm->size(csize);
+  TVMesh::Cell::size_type csize;  tvm->size(csize);
 
   if ((unsigned)cm->nrows() != csize * 3) {
     remark("ColumnMatrix should be 3x as big as the number of mesh cells.");
@@ -128,10 +139,10 @@ AssignLeadFieldSources::execute()
 
   // data looks good
   // make a new vector field and copy the matrix data into it
-  TetVolField<Vector> *ofield = scinew TetVolField<Vector>(tvmH, 0);
-  TetVolField<double> *ofield2 = scinew TetVolField<double>(tvmH, 1);
+  TVFieldV *ofield = scinew TVFieldV(tvmH);
+  TVFieldD *ofield2 = scinew TVFieldD(tvmH);
 
-  TetVolMesh::Node::size_type nsize;  tvm->size(nsize);
+  TVMesh::Node::size_type nsize;  tvm->size(nsize);
 
   Array1<int> node_refs(nsize);
   Array1<double> node_sums(nsize);
@@ -150,9 +161,9 @@ AssignLeadFieldSources::execute()
     if (l>maxL) maxL=l;
     // get all of the nodes that are attached to this cell
     // for each one, increment its count and add this value to its sum
-    TetVolMesh::Node::array_type::iterator ni;
-    TetVolMesh::Node::array_type na;
-    tvm->get_nodes(na,TetVolMesh::Cell::index_type(i));
+    TVMesh::Node::array_type::iterator ni;
+    TVMesh::Node::array_type na;
+    tvm->get_nodes(na,TVMesh::Cell::index_type(i));
     for (ni = na.begin(); ni != na.end(); ++ni) {
       node_refs[*ni]++;
       node_sums[*ni]+=l;
@@ -161,13 +172,13 @@ AssignLeadFieldSources::execute()
 
   vector<Vector> vecs;
   vector<Vector> vecs2;
-  PointCloudMesh *pcm = scinew PointCloudMesh;
-  PointCloudMesh *pcm2 = scinew PointCloudMesh;
+  PCMesh *pcm = scinew PCMesh;
+  PCMesh *pcm2 = scinew PCMesh;
   msgStream_ << "\n\n\nFocusing ``spikes'':\n";
   double halfMax = maxL/2.;
   for (i=0; i<lengths.size(); i++) {
     Point p;
-    tvm->get_center(p, TetVolMesh::Cell::index_type(i));
+    tvm->get_center(p, TVMesh::Cell::index_type(i));
     if (lengths[i]>0.000001) {
       pcm->add_point(p);
       vecs.push_back(ofield->fdata()[i]);
@@ -179,12 +190,12 @@ AssignLeadFieldSources::execute()
     }
   }
   msgStream_ << "End of focusing spikes.\n";
-  PointCloudMeshHandle pcmH(pcm);
-  PointCloudField<Vector> *pc = scinew PointCloudField<Vector>(pcmH, 0);
+  PCMesh::handle_type pcmH(pcm);
+  PCField *pc = scinew PCField(pcmH);
   pc->fdata()=vecs;
 
-  PointCloudMeshHandle pcm2H(pcm2);
-  PointCloudField<Vector> *pc2 = scinew PointCloudField<Vector>(pcm2H, 0);
+  PCMesh::handle_type pcm2H(pcm2);
+  PCField *pc2 = scinew PCField(pcm2H);
   pc2->fdata()=vecs2;
 
   for (unsigned int ui=0; ui<nsize; ui++) 

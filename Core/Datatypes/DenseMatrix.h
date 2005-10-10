@@ -55,9 +55,8 @@ namespace SCIRun {
 using std::vector;
 
 class DenseMatrix : public Matrix {
+  double** data;
   double*  dataptr_;
-
-  void swap_rows(double *a, double *b);
 
 public:
   //! Constructors
@@ -85,6 +84,7 @@ public:
   virtual double  get(int r, int c) const;
   virtual void    put(int r, int c, double val);
   virtual void    add(int r, int c, double val);
+  virtual void    getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
   virtual void    getRowNonzerosNoCopy(int r, int &size, int &stride,
                                        int *&cols, double *&vals);
 
@@ -95,25 +95,26 @@ public:
   virtual void    mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				 int& flops, int& memrefs,
 				 int beg=-1, int end=-1, int spVec=0) const;
+  virtual void scalar_multiply(double s);
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
 
   double  sumOfCol(int);
   double  sumOfRow(int);
   
-  bool    solve(ColumnMatrix&, int overwrite=0);
-  bool    solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
+  int     solve(ColumnMatrix&, int overwrite=0);
+  int     solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 		int overwrite=0);
-  bool    solve(vector<double>& sol, int overwrite=0);
-  bool    solve(const vector<double>& rhs, vector<double>& lhs,
+  int     solve(vector<double>& sol, int overwrite=0);
+  int     solve(const vector<double>& rhs, vector<double>& lhs,
 		int overwrite=0);
 
   //! fast accessors
   inline double*  operator[](int r) {
-    return dataptr_ + r * ncols_;
+    return data[r];
   };
   inline double const*  operator[](int r) const{
-    return dataptr_ + r * ncols_;
+    return data[r];
   };
   
   inline double* getData() {
@@ -126,7 +127,7 @@ public:
   //! throws an assertion if not square
   double determinant();
 
-  void mult(double s) { scalar_multiply(s); }
+  void mult(double s);
   
   void svd(DenseMatrix&, SparseRowMatrix&, DenseMatrix&);
   void eigenvalues(ColumnMatrix&, ColumnMatrix&);

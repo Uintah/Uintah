@@ -49,7 +49,10 @@
 // specify -oneBasedIndexing.  And the SCIRun output file is written in 
 // ASCII, unless you specify -binOutput.
 
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <Core/Init/init.h>
@@ -130,8 +133,8 @@ main(int argc, char **argv) {
 
   SCIRunInit();
   setDefaults();
-
-  TetVolMesh *tvm = new TetVolMesh();
+  typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+  TVMesh *tvm = new TVMesh();
 
   char *ptsName = argv[1];
   char *tetsName = argv[2];
@@ -198,7 +201,10 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  TetVolField<double> *tv = scinew TetVolField<double>(tvm, -1);
+  typedef NoDataBasis<double>                DatBasis;
+  typedef GenericField<TVMesh, DatBasis, vector<double> > TVField; 
+
+  TVField *tv = scinew TVField(tvm);
   FieldHandle tvH(tv);
   
   if (binOutput) {

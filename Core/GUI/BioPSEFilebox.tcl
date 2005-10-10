@@ -723,22 +723,14 @@ proc biopseFDialog {argstring} {
 
     # 5. Initialize the file types menu
     if {$data(-filetypes) != {}} {
-        set filterloc 0
-        set counter 0
         $data(typeMenu) delete 0 end
         foreach type $data(-filetypes) {
             set title  [lindex $type 0]
             set filter [lindex $type 1]
             $data(typeMenu) add command -label $title \
                 -command [list biopseFDialog_SetFilter $w $type]
-            if {[info exists $data(-selectedfiletype)]} {
-                if {![string compare $title [set $data(-selectedfiletype)]]} {
-                    set filterloc $counter
-                }
-            }
-            set counter [expr $counter + 1]
         }
-        biopseFDialog_SetFilter $w [lindex $data(-filetypes) $filterloc]
+        biopseFDialog_SetFilter $w [lindex $data(-filetypes) 0]
         $data(typeMenuBtn) config -state normal
         $data(typeMenuLab) config -state normal
     } else {

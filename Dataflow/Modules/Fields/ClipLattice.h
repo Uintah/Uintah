@@ -46,6 +46,7 @@ namespace SCIRun {
 class ClipLatticeAlgo : public DynamicAlgoBase
 {
 public:
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
   virtual FieldHandle execute(FieldHandle fieldh,
 			      const Point &a, const Point &b,
 			      NrrdDataHandle nrrdh) = 0;
@@ -73,9 +74,9 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
 				 NrrdDataHandle nrrdh)
 {
   FIELD *lv = dynamic_cast<FIELD *>(fieldh.get_rep());
-  LatVolMesh *omesh = lv->get_typed_mesh().get_rep();
+  LVMesh *omesh = lv->get_typed_mesh().get_rep();
 
-  LatVolMesh::Node::index_type ns, ne;
+  LVMesh::Node::index_type ns, ne;
   omesh->locate(ns, a);
   omesh->locate(ne, b);
 
@@ -104,7 +105,7 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
   if (ej >= ony) { ej = ony - 1; } 
   if (ek >= onz) { ek = onz - 1; } 
 
-  LatVolMesh::Node::index_type s, e;
+  LVMesh::Node::index_type s, e;
 
   if (si < ei) { s.i_ = si; e.i_ = ei; }
   else         { s.i_ = ei; e.i_ = si; }
@@ -121,7 +122,7 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
 
   Point bmin(0.0, 0.0, 0.0);
   Point bmax(1.0, 1.0, 1.0);
-  LatVolMesh *mesh = scinew LatVolMesh(nx, ny, nz, bmin, bmax);
+  LVMesh *mesh = scinew LVMesh(nx, ny, nz, bmin, bmax);
 
   Transform trans = omesh->get_transform();
   trans.post_translate(Vector(s.i_, s.j_, s.k_));
@@ -134,9 +135,9 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
 
   if (lv->basis_order() == 1)
   {
-    LatVolMesh::Node::iterator si, ei;
+    LVMesh::Node::iterator si, ei;
     mesh->begin(si); mesh->end(ei);
-    LatVolMesh::Node::size_type ns;
+    LVMesh::Node::size_type ns;
     omesh->size(ns);
     unsigned int dim = (unsigned int)ns;
     nrrdAlloc(nrrdh->nrrd, nrrdTypeUChar, 1, dim);
@@ -144,7 +145,7 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
     memset(mask, 0, dim*sizeof(unsigned char));
     while (si != ei)
     {
-      LatVolMesh::Node::index_type idx = *si;
+      LVMesh::Node::index_type idx = *si;
       idx.i_ += s.i_;
       idx.j_ += s.j_;
       idx.k_ += s.k_;
@@ -159,9 +160,9 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
   }
   else if (lv->basis_order() == 0)
   {
-    LatVolMesh::Cell::iterator si, ei;
+    LVMesh::Cell::iterator si, ei;
     mesh->begin(si); mesh->end(ei);
-    LatVolMesh::Cell::size_type ns;
+    LVMesh::Cell::size_type ns;
     omesh->size(ns);
     unsigned int dim = (unsigned int)ns;
     nrrdAlloc(nrrdh->nrrd, nrrdTypeUChar, 1, dim);
@@ -169,7 +170,7 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
     memset(mask, 0, dim*sizeof(unsigned char));
     while (si != ei)
     {
-      LatVolMesh::Cell::index_type idx = *si;
+      LVMesh::Cell::index_type idx = *si;
       idx.i_ += s.i_;
       idx.j_ += s.j_;
       idx.k_ += s.k_;

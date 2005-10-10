@@ -36,7 +36,8 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/MaskedLatVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/MaskedLatVolMesh.h>
 
 namespace SCIRun {
 
@@ -74,13 +75,14 @@ template <class FDST, class LDST, class FSRC, class LSRC>
 FieldHandle
 MaskLatticeAlgoT<FDST, LDST, FSRC, LSRC>::execute(FieldHandle field_h)
 {
+  typedef MaskedLatVolMesh<HexTrilinearLgn<Point> > MLVMesh;
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+
   FSRC *ifield = dynamic_cast<FSRC *>(field_h.get_rep());
-  LatVolMeshHandle inmesh = ifield->get_typed_mesh();
-  MaskedLatVolMesh *mesh = scinew MaskedLatVolMesh(inmesh->get_ni(), 
-						   inmesh->get_nj(), 
-						   inmesh->get_nk(),
-						   Point(0.0, 0.0, 0.0),
-						   Point(1.0, 1.0, 1.0));
+  LVMesh::handle_type inmesh = ifield->get_typed_mesh();
+  MLVMesh *mesh = scinew MLVMesh(inmesh->get_ni(), inmesh->get_nj(), 
+				 inmesh->get_nk(), Point(0.0, 0.0, 0.0),
+				 Point(1.0, 1.0, 1.0));
 
   Transform trans = inmesh->get_transform();
   mesh->set_transform(trans);
@@ -102,8 +104,8 @@ MaskLatticeAlgoT<FDST, LDST, FSRC, LSRC>::execute(FieldHandle field_h)
 
     if (!vinside_p(p.x(), p.y(), p.z(), val))
     {
-      MaskedLatVolMesh::Cell::index_type 
-	idx((*iter).mesh_, (*iter).i_, (*iter).j_, (*iter).k_);
+      MLVMesh::Cell::index_type idx((*iter).mesh_, (*iter).i_, 
+				    (*iter).j_, (*iter).k_);
       mesh->mask_cell(idx);
     }
     ++iter;

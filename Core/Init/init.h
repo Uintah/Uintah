@@ -38,7 +38,10 @@
  *
  *  Copyright (C) 2005 U of U
  */
-
+#if !defined(Core_Init_h)
+#define Core_Init_h
 
 #include <string>
 void SCIRunInit(std::string packages = "");
+
+#endif

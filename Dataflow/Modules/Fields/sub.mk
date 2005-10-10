@@ -94,23 +94,24 @@ SRCS     += \
 	$(SRCDIR)/ScaleFieldData.cc\
 	$(SRCDIR)/SelectField.cc\
 	$(SRCDIR)/SetProperty.cc\
-	$(SRCDIR)/TetVol2QuadraticTetVol.cc\
-	$(SRCDIR)/ToStructured.cc\
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TransformData.cc\
 	$(SRCDIR)/TransformData2.cc\
 	$(SRCDIR)/TransformData3.cc\
 	$(SRCDIR)/TransformMesh.cc\
-	$(SRCDIR)/Unstructure.cc\
 	$(SRCDIR)/VectorMagnitude.cc\
 #[INSERT NEW CODE FILE HERE]
+
+#FIX_ME MC needs to be debuged as you compile
+#	$(SRCDIR)/ToStructured.cc\
+#	$(SRCDIR)/Unstructure.cc\
 
 
 PSELIBS := Dataflow/Network Dataflow/Ports  Dataflow/Widgets \
 	Core/Algorithms/Fields \
 	Core/Datatypes Core/Persistent Core/Exceptions Core/ImportExport \
 	Core/Thread Core/Containers Core/GuiInterface Core/Geom \
-	Core/Datatypes Core/Geometry Core/TkExtensions Core/ImportExport \
+	Core/Basis Core/Geometry Core/TkExtensions \
 	Core/Math Core/Util Core/Algorithms/Geometry Core/GeomInterface \
 	Core/XMLUtil
 

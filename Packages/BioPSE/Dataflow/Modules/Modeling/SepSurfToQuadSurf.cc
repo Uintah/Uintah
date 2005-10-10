@@ -43,7 +43,10 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SepSurf.h>
-#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <map>
 #include <queue>
@@ -56,6 +59,10 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class SepSurfToQuadSurf : public Module {
+  typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
+  typedef ConstantBasis<int>                FDintBasis;
+  typedef GenericField<QSMesh, FDintBasis, vector<int> > QSField;
+
   GuiString data_;
 public:
   SepSurfToQuadSurf(GuiContext *ctx);
@@ -92,19 +99,19 @@ void SepSurfToQuadSurf::execute() {
     return;
   }
 
-  QuadSurfMeshHandle mesh = new QuadSurfMesh;
+  QSMesh::handle_type mesh = new QSMesh;
   Array1<int> data;
-  QuadSurfField<int> *qsf;
+  QSField *qsf;
   int total_nnodes=0;
   Point p;
-  QuadSurfMesh::Node::array_type nodes;
+  QSMesh::Node::array_type nodes;
   
   for (int i=0; i<ss->ncomps(); i++) {
     qsf = ss->extractSingleComponent(i, data_.get());
-    QuadSurfMeshHandle qsm = qsf->get_typed_mesh();
-    QuadSurfMesh::Node::iterator nb, ne;
-    QuadSurfMesh::Face::iterator fb, fe;
-    QuadSurfMesh::Node::size_type nnodes;
+    QSMesh::handle_type qsm = qsf->get_typed_mesh();
+    QSMesh::Node::iterator nb, ne;
+    QSMesh::Face::iterator fb, fe;
+    QSMesh::Node::size_type nnodes;
     qsm->begin(nb);
     qsm->end(ne);
     while (nb != ne) {
@@ -125,8 +132,8 @@ void SepSurfToQuadSurf::execute() {
     delete qsf;
     total_nnodes+=nnodes;
   }
-  qsf = new QuadSurfField<int>(mesh, 0);
-  QuadSurfMesh::Face::iterator fb, fe;
+  qsf = new QSField(mesh);
+  QSMesh::Face::iterator fb, fe;
   int count=0;
   mesh->begin(fb);
   mesh->end(fe);

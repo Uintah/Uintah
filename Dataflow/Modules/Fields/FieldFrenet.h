@@ -39,13 +39,6 @@
 #include <Core/Containers/Handle.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/StructHexVolField.h>
-#include <Core/Datatypes/StructQuadSurfField.h>
-#include <Core/Datatypes/StructCurveField.h>
-#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Math/Trig.h>
 
 

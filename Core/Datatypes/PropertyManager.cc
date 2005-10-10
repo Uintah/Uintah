@@ -280,7 +280,6 @@ PropertyManager::io(Piostream &stream)
 {
   const int version =
     stream.begin_class("PropertyManager", PROPERTYMANAGER_VERSION);
-
   if ( stream.writing() )
   {
     lock.lock();
@@ -301,7 +300,6 @@ PropertyManager::io(Piostream &stream)
   {
     unsigned int size;
     Pio( stream, size );
-
     lock.lock();
 
     string name;

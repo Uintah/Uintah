@@ -37,9 +37,12 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Core/Geometry/Point.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -50,6 +53,9 @@ using std::ifstream;
 using std::endl;
 
 using namespace SCIRun;
+typedef CrvLinearLgn<double>                CFDdoubleBasis;
+typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
+typedef GenericField<CMesh, CFDdoubleBasis, vector<double> > CField;
 
 int
 main(int argc, char **argv) {
@@ -70,7 +76,7 @@ main(int argc, char **argv) {
     exit(0);
   }
   
-  CurveMeshHandle cm(scinew CurveMesh);
+  CMesh::handle_type cm(scinew CMesh);
   double x,y;
   if (fscanf(fin, "%lf %lf\n", &x, &y) != 2) {
     printf("Error reading input file.\n");
@@ -104,7 +110,7 @@ main(int argc, char **argv) {
   }
   cm->add_edge(i-1,(ninner+6));
 
-  CurveField<double> *cf = scinew CurveField<double>(cm, 1);
+  CField *cf = scinew CField(cm);
   for (i=0; i<(nnodes+6); i++) {
     if (i<6) {
       cf->fdata()[i]=1;

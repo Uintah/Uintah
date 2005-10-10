@@ -38,8 +38,9 @@
  *
  *  Copyright (C) 2001 SCI Group
  */
-
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -73,9 +74,9 @@ main(int argc, char **argv) {
     cerr << "Error -- input field wasn't a TriSurfField (type_name="<<inner_surf->get_type_description(0)->get_name()<<"\n";
     exit(0);
   }
-
+  typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
   MeshHandle mh = inner_surf->mesh();
-  TriSurfMesh *inner = dynamic_cast<TriSurfMesh *>(mh.get_rep());
+  TSMesh *inner = dynamic_cast<TSMesh *>(mh.get_rep());
 
   FieldHandle outer_surf;
   Piostream* stream2=auto_istream(argv[2]);
@@ -93,7 +94,7 @@ main(int argc, char **argv) {
     exit(0);
   }
   mh = outer_surf->mesh();
-  TriSurfMesh *outer = dynamic_cast<TriSurfMesh *>(mh.get_rep());
+  TSMesh *outer = dynamic_cast<TSMesh *>(mh.get_rep());
 
   char filename[1000];
   sprintf(filename, "%s.poly", argv[3]);
@@ -103,11 +104,11 @@ main(int argc, char **argv) {
     exit(0);
   }
 
-  TriSurfMesh::Node::iterator niter, niter_end;
-  TriSurfMesh::Node::size_type ninner; inner->size(ninner);
-  TriSurfMesh::Face::size_type finner; inner->size(finner);
-  TriSurfMesh::Node::size_type nouter; outer->size(nouter);
-  TriSurfMesh::Face::size_type fouter; outer->size(fouter);
+  TSMesh::Node::iterator niter, niter_end;
+  TSMesh::Node::size_type ninner; inner->size(ninner);
+  TSMesh::Face::size_type finner; inner->size(finner);
+  TSMesh::Node::size_type nouter; outer->size(nouter);
+  TSMesh::Face::size_type fouter; outer->size(fouter);
   
   fprintf(fout, "# Number of nodes, pts/tri, no holes, no boundary markers\n");
   fprintf(fout, "%d 3 0 0\n", ninner+nouter);
@@ -137,8 +138,8 @@ main(int argc, char **argv) {
   fprintf(fout, "%d 0\n\n", finner+fouter);
   Point mid_outer = AffineCombination(mid_inner, 0.5, p, 0.5);
 
-  TriSurfMesh::Face::iterator fiter, fiter_end;
-  TriSurfMesh::Node::array_type fac_nodes(3);
+  TSMesh::Face::iterator fiter, fiter_end;
+  TSMesh::Node::array_type fac_nodes(3);
   inner->begin(fiter);
   inner->end(fiter_end);
   fprintf(fout, "# Inner faces\n");

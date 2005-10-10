@@ -45,8 +45,12 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/GuiInterface/UIvar.h>
 #include <vector>
@@ -56,6 +60,10 @@ namespace SCIRun {
 
 class PointLatticeMap : public Module
 {
+
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+
 private:
   FieldIPort *		iport1_;
   FieldIPort *		iport2_;
@@ -134,24 +142,24 @@ PointLatticeMap::execute()
   epsilon_cache_ = epsilon_;
 
   // Get the meshes from the fields
-  PointCloudMeshHandle pcm = (PointCloudMesh *)(pcf->mesh().get_rep());
-  LatVolMeshHandle lvm = (LatVolMesh *)(lvf->mesh().get_rep());
+  PCMesh::handle_type pcm = (PCMesh *)(pcf->mesh().get_rep());
+  LVMesh::handle_type lvm = (LVMesh *)(lvf->mesh().get_rep());
 
-  // LatVolMesh Node Count
-  LatVolMesh::Node::size_type lvmns;
+  // LVMesh Node Count
+  LVMesh::Node::size_type lvmns;
   lvm->size(lvmns);
 
   // PointClouldMesh Node Count
-  PointCloudMesh::Node::size_type pcmns;
+  PCMesh::Node::size_type pcmns;
   pcm->size(pcmns);
   
-  // LatVolMesh Node Iterators
-  LatVolMesh::Node::iterator lvmn, lvmne;
+  // LVMesh Node Iterators
+  LVMesh::Node::iterator lvmn, lvmne;
   lvm->begin(lvmn);
   lvm->end(lvmne);
 
-  // PointCloudMesh Node Iterators
-  PointCloudMesh::Node::iterator pcmn, pcmne;
+  // PCMesh Node Iterators
+  PCMesh::Node::iterator pcmn, pcmne;
   pcm->end(pcmne);
 
   // Map point to distance, sorts by point index
@@ -166,31 +174,31 @@ PointLatticeMap::execute()
   vector<double> data;
   unsigned int i = 0, row = 0;
 
-  // Iterate through each point of the LatVolMesh
+  // Iterate through each point of the LVMesh
   while (lvmn != lvmne) {
-    // Get the location of this node of the LatVolMesh
+    // Get the location of this node of the LVMesh
     Point lvp;
     lvm->get_point(lvp, *lvmn);
-    // Map from PointCloudMesh node index to distance
+    // Map from PCMesh node index to distance
     point2dist_t point2dist;
     // Total holds the total distance calculation to all points for normalization
     double total = 0.0;
-    // Foreach node of LatVolMesh, iterate through each node of PointCloudMesh
+    // Foreach node of LVMesh, iterate through each node of PCMesh
     pcm->begin(pcmn);
     while (pcmn != pcmne) {
-      // Get the location of this node of the PointCloudMesh
+      // Get the location of this node of the PCMesh
       Point pcp;
       pcm->get_point(pcp, *pcmn);
       // Do the distance function calculation: 1/d - epsilon
       double d = 1.0/(pcp-lvp).length() - epsilon;
-      // If the function is positive, the PointCloudMesh node contributes
-      // to this node of the LatVolMesh
+      // If the function is positive, the PCMesh node contributes
+      // to this node of the LVMesh
       if (d > 0.0) {
 	// Insert it and increase the normalization total
 	point2dist.insert(make_pair((*pcmn).index_, d));
 	total += d;
       } 
-      // Next PointCloudMeshNode please
+      // Next PCMeshNode please
       ++pcmn;
     }
     
@@ -210,10 +218,10 @@ PointLatticeMap::execute()
 	cols.push_back(pb->first);
 	data.push_back(d);
       }
-      // Next PointCloudMeshNode/Distance pair please
+      // Next PCMeshNode/Distance pair please
       ++pb;
     }
-    // Next LatVolMeshNode please
+    // Next LVMeshNode please
     ++lvmn;
   }
   rows[row] = cols.size();

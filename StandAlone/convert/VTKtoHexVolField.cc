@@ -1,43 +1,46 @@
-/*
-   For more information, please see: http://software.sci.utah.edu
-
-   The MIT License
-
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
-
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
-*/
-
-//    File   : VTKtoTriSurfField.cc
+//  
+//  For more information, please see: http://software.sci.utah.edu
+//  
+//  The MIT License
+//  
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+//  
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//  
+//    File   : VTKtoHexVolField.cc<2>
 //    Author : Martin Cole
-//    Date   : Fri May  7 10:23:05 2004
+//    Date   : Fri May 20 08:38:33 2005
 
 
 // Warning!: this converter is only partially implemented. It supports only 
 //           a subset of the vtk format. Please extend it as you need more
 
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-#include <Core/Init/init.h>
+//#include <Core/Init/init.h>
 #include <StandAlone/convert/FileUtils.h>
 
 #include <iostream>
@@ -49,6 +52,13 @@ using std::ifstream;
 using std::endl;
 
 using namespace SCIRun;
+
+typedef HexTrilinearLgn<float>               LDatBasis;
+typedef ConstantBasis<float>              CDatBasis;
+typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
+typedef GenericField<HVMesh, LDatBasis,  vector<float> > HVFieldL;    
+typedef GenericField<HVMesh, CDatBasis,  vector<float> > HVFieldC;  
+
 
 #define check_error(str) \
   if (str.fail()) { \
@@ -114,7 +124,7 @@ void swap_endianess_4(unsigned *dw)
 
 template <class T>
 int
-read_n_points(HexVolMesh *hvm, int n, ifstream &str) {
+read_n_points(HVMesh *hvm, int n, ifstream &str) {
   T arr[3];
   check_error(str);
 
@@ -153,7 +163,7 @@ read_n_points(HexVolMesh *hvm, int n, ifstream &str) {
 
 template <class T>
 int
-read_n_cells(HexVolMesh *hvm, int n, ifstream &str) {
+read_n_cells(HVMesh *hvm, int n, ifstream &str) {
   T arr[8];
   check_error(str);
   for(int i = 0; i < n; i++) {
@@ -225,10 +235,10 @@ main(int argc, char **argv) {
     return 2;
   }
 
-  SCIRunInit();
+  //SCIRunInit();
   setDefaults();
 
-  HexVolMesh *hvm = scinew HexVolMesh();
+  HVMesh *hvm = scinew HVMesh();
   //exit(5);
   char *in = argv[1];
   char *out = argv[2];
@@ -316,25 +326,17 @@ main(int argc, char **argv) {
   }
   
   
-
-  HexVolField<float> *ts;
+  FieldHandle hv_handle;
   string data, name;
-//   vtk >> data;
-//   check_error(vtk);
-//   cout << data << endl;
-//   vtk >> name;
-//   check_error(vtk);
-//   cout << name << endl;
-//   vtk >> type;
-//   check_error(vtk);
-//   cout << type << endl;
 
   if (dat == "CELL_DATA") {
     if (type != "float") {
       cerr << "supporting float only atm..." << endl;
       return 1;
     }
-    ts = scinew HexVolField<float>(HexVolMeshHandle(hvm), 0);
+    HVFieldC *hvc = scinew HVFieldC(HVMesh::handle_type(hvm));
+    hvc->resize_fdata();
+    hv_handle = hvc;
     //cout << "putting data at faces" << endl;
   } else {
     // node centered data ...
@@ -342,22 +344,21 @@ main(int argc, char **argv) {
       cerr << "supporting float only atm..." << endl;
       return 1;
     }
-    ts = scinew HexVolField<float>(HexVolMeshHandle(hvm), 1);
+    HVFieldL *hvl = scinew HVFieldL(HVMesh::handle_type(hvm));
+    hvl->resize_fdata();
+    hv_handle = hvl;
   }
-  ts->resize_fdata();
     
   while (!vtk.eof()) {
     vtk.get();
   }
 
-  FieldHandle ts_handle(ts);
-  
   if (bin_out) {
     BinaryPiostream out_stream(out, Piostream::Write);
-    Pio(out_stream, ts_handle);
+    Pio(out_stream, hv_handle);
   } else {
     TextPiostream out_stream(out, Piostream::Write);
-    Pio(out_stream, ts_handle);
+    Pio(out_stream, hv_handle);
   }
 
   return status;  

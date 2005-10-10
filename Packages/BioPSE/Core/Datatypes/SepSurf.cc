@@ -55,11 +55,11 @@ SepSurf::maker()
 
 PersistentTypeID
 SepSurf::type_id(type_name(-1),
-		 QuadSurfField<int>::type_name(-1),
+		 SSQSField::type_name(-1),
 		 maker);
 
 SepSurf::SepSurf(const SepSurf& copy)
-  : QuadSurfField<int>(copy)
+  : SSQSField(copy)
 {
   faces=copy.faces;
 //  edges=copy.edges;
@@ -134,7 +134,7 @@ void SepSurf::printNbrInfo() {
   }
 }
 
-QuadSurfField<int> *SepSurf::extractSingleComponent(int comp, 
+SSQSField *SepSurf::extractSingleComponent(int comp, 
 						    const string &dataVals) {
   if (comp>surfI.size()) {
     cerr << "Error: bad surface idx "<<comp<<"\n";
@@ -145,7 +145,7 @@ QuadSurfField<int> *SepSurf::extractSingleComponent(int comp,
   map.initialize(-1);
   cerr << "Extracting component #"<<comp<<" with "<<surfI[comp].faces.size()<<" faces...\n";
   int i;
-  QuadSurfMesh::Node::array_type nodeArray;
+  SSQSMesh::Node::array_type nodeArray;
   for (i=0; i<surfI[comp].faces.size(); i++) {
     get_typed_mesh()->get_nodes(nodeArray, faces[surfI[comp].faces[i]]);
     map[(unsigned)(nodeArray[0])]=
@@ -157,7 +157,7 @@ QuadSurfField<int> *SepSurf::extractSingleComponent(int comp,
   //    ts->elements.resize(surfI[comp].faces.size());
   //    ts->points.resize(0);
 
-  QuadSurfMeshHandle qsm = new QuadSurfMesh;
+  SSQSMesh::handle_type qsm = new SSQSMesh;
 
   int currIdx=0;
   for (i=0; i<map.size(); i++) {
@@ -173,7 +173,7 @@ QuadSurfField<int> *SepSurf::extractSingleComponent(int comp,
   int nfaces = surfI[comp].faces.size();
   for (i=0; i<nfaces; i++) {
     //	cerr << "surfOrient["<<comp<<"]["<<i<<"]="<<surfOrient[comp][i]<<"\n";
-    QuadSurfMesh::Node::array_type nodeArray;
+    SSQSMesh::Node::array_type nodeArray;
     get_typed_mesh()->get_nodes(nodeArray, faces[surfI[comp].faces[i]]);
     if (surfI[comp].faceOrient.size()>i && !surfI[comp].faceOrient[i])
       qsm->add_quad(map[nodeArray[3]], map[nodeArray[2]],
@@ -183,7 +183,7 @@ QuadSurfField<int> *SepSurf::extractSingleComponent(int comp,
 		    map[nodeArray[2]], map[nodeArray[3]]);
   }
 
-  QuadSurfField<int> *qsf = new QuadSurfField<int>(qsm, 0);
+  SSQSField *qsf = new SSQSField(qsm);
 
   if (dataVals == "material") {
     for (i=0; i<nfaces; i++) qsf->fdata()[i]=surfI[comp].matl;
@@ -210,7 +210,7 @@ void SepSurf::bldNodeInfo() {
     nodeI[i].nbrs.resize(0);
   }
 
-  QuadSurfMesh::Node::array_type nodeArray;
+  SSQSMesh::Node::array_type nodeArray;
   int i1, i2, i3, i4;
 
   for (i=0; i<surfI.size(); i++) {
@@ -322,7 +322,7 @@ void SepSurf::bldNodeInfo() {
 void SepSurf::io(Piostream& stream) {
   /* int version=*/ stream.begin_class(type_name(-1),
 				       SEP_SURF_VERSION);
-  QuadSurfField<int>::io(stream);
+  SSQSField::io(stream);
   Pio(stream, nodes);
   Pio(stream, faces);
 //  Pio(stream, edges);

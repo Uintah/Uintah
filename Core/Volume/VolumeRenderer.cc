@@ -36,6 +36,7 @@
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Math/MiscMath.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>

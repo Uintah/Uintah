@@ -43,23 +43,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
 
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/QuadSurfField.h>
-
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/PrismVolField.h>
-#include <Core/Datatypes/HexVolField.h>
-
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ScanlineField.h>
-
-#include <Core/Datatypes/StructHexVolField.h>
-#include <Core/Datatypes/StructQuadSurfField.h>
-#include <Core/Datatypes/StructCurveField.h>
-
 #include <Core/Containers/StringUtil.h>
 
 #include <Core/Datatypes/NrrdData.h>
@@ -108,32 +91,32 @@ RegularNrrdToFieldMeshAlgoT< MESH, DNTYPE, CNTYPE>::
 execute(MeshHandle& mHandle, NrrdDataHandle dataH, int data_size)
 {
   Point minpt, maxpt;
-  
+
   DNTYPE *ptr = (DNTYPE *)(dataH->nrrd->data);
-  
+
   int rank = data_size;
-  
+
   float xVal = 0, yVal = 0, zVal = 0;
-  
+
   if( rank >= 1 ) xVal = ptr[0];
   if( rank >= 2 ) yVal = ptr[1];
   if( rank >= 3 ) zVal = ptr[2];
-  
+
   minpt = Point( xVal, yVal, zVal );
-  
+
   xVal = 0; yVal = 0; zVal = 0;
-  
+
   if( rank >= 1 ) xVal = ptr[rank + 0];
   if( rank >= 2 ) yVal = ptr[rank + 1];
   if( rank >= 3 ) zVal = ptr[rank + 2];
-  
+
   maxpt = Point( xVal, yVal, zVal );
-  
+
   MESH *imesh = (MESH *) mHandle.get_rep();
-  
+
   vector<unsigned int> array;
   imesh->get_dim(array);
-  
+
   Transform trans;
 
   if( array.size() == 1 )
@@ -485,8 +468,28 @@ execute(MeshHandle& mHandle,
       }
     }
 
+    // set transform if one of the nrrd properties
     fH = ifield;
-
+    const string meshstr =
+      fH->get_type_description(0)->get_name().substr(0, 6);
+    
+    if (!(imesh->is_editable() && meshstr != "Struct"))
+      {
+	string trans_string;
+	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
+	  double t[16];
+	  Transform trans;
+	  int old_index=0, new_index=0;
+	  for(int i=0; i<16; i++) {
+	    new_index = trans_string.find(" ", old_index);
+	    string temp = trans_string.substr(old_index, new_index-old_index);
+	    old_index = new_index+1;
+	    string_to_double(temp, t[i]);
+	  }
+	  trans.set(t);
+	  imesh->transform(trans);
+	} 
+      }	        
   } else {
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
     fH = ifield;
@@ -667,6 +670,26 @@ execute(MeshHandle& mHandle,
 
     // set transform if one of the nrrd properties
     fH = ifield;
+    const string meshstr =
+      fH->get_type_description(0)->get_name().substr(0, 6);
+    
+    if (!(imesh->is_editable() && meshstr != "Struct"))
+      {
+	string trans_string;
+	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
+	  double t[16];
+	  Transform trans;
+	  int old_index=0, new_index=0;
+	  for(int i=0; i<16; i++) {
+	    new_index = trans_string.find(" ", old_index);
+	    string temp = trans_string.substr(old_index, new_index-old_index);
+	    old_index = new_index+1;
+	    string_to_double(temp, t[i]);
+	  }
+	  trans.set(t);
+	  imesh->transform(trans);
+	} 
+      }	  
   } else {
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
     fH = ifield;
@@ -1489,6 +1512,26 @@ execute(MeshHandle& mHandle,
 
     // set transform if one of the nrrd properties
     fH = ifield;
+    const string meshstr =
+      fH->get_type_description(0)->get_name().substr(0, 6);
+    
+    if (!(imesh->is_editable() && meshstr != "Struct"))
+      {
+	string trans_string;
+	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
+	  double t[16];
+	  Transform trans;
+	  int old_index=0, new_index=0;
+	  for(int i=0; i<16; i++) {
+	    new_index = trans_string.find(" ", old_index);
+	    string temp = trans_string.substr(old_index, new_index-old_index);
+	    old_index = new_index+1;
+	    string_to_double(temp, t[i]);
+	  }
+	  trans.set(t);
+	  imesh->transform(trans);
+	} 
+      }	        
   } else {
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
     fH = ifield;

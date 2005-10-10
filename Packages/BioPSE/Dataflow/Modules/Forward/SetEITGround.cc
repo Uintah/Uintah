@@ -42,8 +42,6 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/PointCloudMesh.h>
 
 namespace BioPSE {
 

@@ -34,8 +34,10 @@
 #if !defined(Quadratic_ConvertTet_h)
 #define Quadratic_ConvertTet_h
 
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/QuadraticTetVolField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/TetQuadraticLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
@@ -85,8 +87,17 @@ ConvertTet<Fld>::convert_quadratic(FieldHandle ifh)
   Fld *fld = dynamic_cast<Fld*>(ifh.get_rep());
   ASSERT(fld != 0);
   
+  typedef TetVolMesh<TetQuadraticLgn<Point> > QTVMesh;
+  typedef TetVolMesh<TetLinearLgn<Point> >    TVMesh;
+
+  typename TVMesh::handle_type tvmh = fld->get_typed_mesh();
+  QTVMesh *qtvm = scinew QTVMesh(tvmh.get_rep());
+
   typedef typename Fld::value_type val_t;
-  FieldHandle fh(QuadraticTetVolField<val_t>::create_from(*fld));
+  typedef TetQuadraticLgn<val_t>                QTVFDBasis;
+  typedef GenericField<QTVMesh, QTVFDBasis, vector<val_t> > QTVField;   
+  typename QTVField::handle_type fh(scinew QTVField(
+				       typename QTVMesh::handle_type(qtvm)));
   return fh;
 }
 

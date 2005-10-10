@@ -42,12 +42,22 @@
 #define EdgeMC_h
 
 #include <Core/Geom/GeomPoint.h>
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <sci_hash_map.h>
 
 namespace SCIRun {
+typedef CurveMesh<CrvLinearLgn<Point> >        CMesh;
+
+typedef PointCloudMesh<ConstantBasis<Point> >  PCMesh;
+typedef ConstantBasis<double>                  PCBasis;
+typedef GenericField<PCMesh, PCBasis, vector<double> > PCField;   
+
+
 
 struct EdgeMCBase {
   virtual ~EdgeMCBase() {}
@@ -71,7 +81,7 @@ private:
   LockingHandle<Field> field_;
   mesh_handle_type mesh_;
   GeomPoints *points_;
-  PointCloudMeshHandle out_mesh_;
+  PCMesh::handle_type out_mesh_;
   int nnodes_;
 
   struct edgepair_t
@@ -100,7 +110,7 @@ private:
   };
 
   typedef hash_map<edgepair_t,
-		   CurveMesh::Node::index_type,
+		   CMesh::Node::index_type,
 		   edgepairhash,
 		   edgepairequal> edge_hash_type;
 #else
@@ -113,19 +123,19 @@ private:
   };
 
   typedef map<edgepair_t,
-	      CurveMesh::Node::index_type,
+	      CMesh::Node::index_type,
 	      edgepairless> edge_hash_type;
 #endif
 
   edge_hash_type   edge_map_;  // Unique edge cuts when surfacing node data
   vector<long int> node_map_;  // Unique nodes when surfacing cell data.
 
-  PointCloudMesh::Node::index_type find_or_add_edgepoint(unsigned int n0,
+  PCMesh::Node::index_type find_or_add_edgepoint(unsigned int n0,
 							 unsigned int n1,
 							 double d0,
 							 const Point &p);
 
-  PointCloudMesh::Node::index_type find_or_add_nodepoint(node_index_type &idx);
+  PCMesh::Node::index_type find_or_add_nodepoint(node_index_type &idx);
 
   void extract_n( edge_index_type, double );
   void extract_e( edge_index_type, double );
@@ -172,13 +182,13 @@ void EdgeMC<Field>::reset( int n, bool build_field, bool build_geom )
   out_mesh_ = 0;
   if (build_field)
   {
-    out_mesh_ = scinew PointCloudMesh;
+    out_mesh_ = scinew PCMesh;
   }
 }
 
 
 template<class Field>
-PointCloudMesh::Node::index_type
+PCMesh::Node::index_type
 EdgeMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
 				      double d0, const Point &p) 
 {
@@ -190,7 +200,7 @@ EdgeMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
   const typename edge_hash_type::iterator loc = edge_map_.find(np);
   if (loc == edge_map_.end())
   {
-    const CurveMesh::Node::index_type nodeindex = out_mesh_->add_point(p);
+    const CMesh::Node::index_type nodeindex = out_mesh_->add_point(p);
     edge_map_[np] = nodeindex;
     return nodeindex;
   }
@@ -202,12 +212,12 @@ EdgeMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
 
 
 template<class Field>
-PointCloudMesh::Node::index_type
+PCMesh::Node::index_type
 EdgeMC<Field>::find_or_add_nodepoint(node_index_type &curve_node_idx)
 {
-  PointCloudMesh::Node::index_type point_node_idx;
+  PCMesh::Node::index_type point_node_idx;
   long int i = node_map_[(long int)(curve_node_idx)];
-  if (i != -1) point_node_idx = (PointCloudMesh::Node::index_type) i;
+  if (i != -1) point_node_idx = (PCMesh::Node::index_type) i;
   else {
     Point p;
     mesh_->get_point(p, curve_node_idx);
@@ -247,7 +257,7 @@ void EdgeMC<Field>::extract_n( edge_index_type edge, double v )
 
     if (out_mesh_.get_rep())
     {
-      PointCloudMesh::Node::array_type cnode(1);
+      PCMesh::Node::array_type cnode(1);
       cnode[0] = find_or_add_edgepoint(node[0], node[1], d0, p0);
       out_mesh_->add_elem(cnode);
     }
@@ -265,7 +275,7 @@ void EdgeMC<Field>::extract_e( edge_index_type edge, double iso )
 
   edge_index_type nbr;
   Point p0;
-  PointCloudMesh::Node::array_type vertices(1);
+  PCMesh::Node::array_type vertices(1);
   unsigned int i;
 
   for (i = 0; i < nodes.size(); i++)
@@ -305,10 +315,10 @@ template<class Field>
 FieldHandle
 EdgeMC<Field>::get_field(double value)
 {
-  PointCloudField<double> *fld = 0;
+  PCField *fld = 0;
   if (out_mesh_.get_rep())
   {
-    fld = scinew PointCloudField<double>(out_mesh_, 0);
+    fld = scinew PCField(out_mesh_);
     vector<double>::iterator iter = fld->fdata().begin();
     while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
   }

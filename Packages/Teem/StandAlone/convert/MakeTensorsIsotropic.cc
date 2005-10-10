@@ -42,7 +42,7 @@
 
 #include <teem/ell.h>
 
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>

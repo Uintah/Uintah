@@ -29,8 +29,12 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
@@ -42,89 +46,119 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 #endif
 
 using namespace SCIRun;
+typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
+PersistentTypeID backwards_compat_IM("ImageMesh", "Mesh",
+				      IMesh::maker, true);
 
-template class FData2d<Tensor>;
-template class FData2d<Vector>;
-template class FData2d<double>;
-template class FData2d<float>;
-template class FData2d<int>;
-template class FData2d<short>;
-template class FData2d<char>;
-template class FData2d<unsigned int>;
-template class FData2d<unsigned short>;
-template class FData2d<unsigned char>;
-template class FData2d<unsigned long>;
+typedef QuadBilinearLgn<Tensor>             FDTensorBasis;
+typedef QuadBilinearLgn<Vector>             FDVectorBasis;
+typedef QuadBilinearLgn<double>             FDdoubleBasis;
+typedef QuadBilinearLgn<float>              FDfloatBasis;
+typedef QuadBilinearLgn<int>                FDintBasis;
+typedef QuadBilinearLgn<short>              FDshortBasis;
+typedef QuadBilinearLgn<char>               FDcharBasis;
+typedef QuadBilinearLgn<unsigned int>       FDuintBasis;
+typedef QuadBilinearLgn<unsigned short>     FDushortBasis;
+typedef QuadBilinearLgn<unsigned char>      FDucharBasis;
+typedef QuadBilinearLgn<unsigned long>      FDulongBasis;
 
-template class GenericField<ImageMesh, FData2d<Tensor> >;
-template class GenericField<ImageMesh, FData2d<Vector> >;
-template class GenericField<ImageMesh, FData2d<double> >;
-template class GenericField<ImageMesh, FData2d<float> >;
-template class GenericField<ImageMesh, FData2d<int> >;
-template class GenericField<ImageMesh, FData2d<short> >;
-template class GenericField<ImageMesh, FData2d<char> >;
-template class GenericField<ImageMesh, FData2d<unsigned int> >;
-template class GenericField<ImageMesh, FData2d<unsigned short> >;
-template class GenericField<ImageMesh, FData2d<unsigned char> >;
-template class GenericField<ImageMesh, FData2d<unsigned long> >;
+template class GenericField<IMesh, FDTensorBasis, FData2d<Tensor, IMesh> >;
+template class GenericField<IMesh, FDVectorBasis, FData2d<Vector, IMesh> >;
+template class GenericField<IMesh, FDdoubleBasis, FData2d<double, IMesh> >;
+template class GenericField<IMesh, FDfloatBasis,  FData2d<float, IMesh> >;
+template class GenericField<IMesh, FDintBasis,    FData2d<int, IMesh> >;
+template class GenericField<IMesh, FDshortBasis,  FData2d<short, IMesh> >;
+template class GenericField<IMesh, FDcharBasis,   FData2d<char, IMesh> >;
+template class GenericField<IMesh, FDuintBasis,   FData2d<unsigned int, IMesh> >;
+template class GenericField<IMesh, FDushortBasis, FData2d<unsigned short, IMesh> >;
+template class GenericField<IMesh, FDucharBasis,  FData2d<unsigned char, IMesh> >;
+template class GenericField<IMesh, FDulongBasis,  FData2d<unsigned long, IMesh> >;
 
-template class ImageField<Tensor>;
-template class ImageField<Vector>;
-template class ImageField<double>;
-template class ImageField<float>;
-template class ImageField<int>;
-template class ImageField<short>;
-template class ImageField<char>;
-template class ImageField<unsigned int>;
-template class ImageField<unsigned short>;
-template class ImageField<unsigned char>;
-template class ImageField<unsigned long>;
+PersistentTypeID backwards_compat_IFT("ImageField<Tensor>", "Field",
+				       GenericField<IMesh, FDTensorBasis, 
+				       FData2d<Tensor, IMesh> >::maker, true);
+PersistentTypeID backwards_compat_IFV("ImageField<Vector>", "Field",
+				       GenericField<IMesh, FDVectorBasis, 
+				       FData2d<Vector, IMesh> >::maker, true);
+PersistentTypeID backwards_compat_IFd("ImageField<double>", "Field",
+				       GenericField<IMesh, FDdoubleBasis, 
+				       FData2d<double, IMesh> >::maker, true);
+PersistentTypeID backwards_compat_IFf("ImageField<float>", "Field",
+				       GenericField<IMesh, FDfloatBasis, 
+				       FData2d<float, IMesh> >::maker, true);
+PersistentTypeID backwards_compat_IFi("ImageField<int>", "Field",
+				       GenericField<IMesh, FDintBasis, 
+				       FData2d<int, IMesh> >::maker, true);
+PersistentTypeID backwards_compat_IFs("ImageField<short>", "Field",
+				       GenericField<IMesh, FDshortBasis, 
+				       FData2d<short, IMesh> >::maker, true);
+PersistentTypeID backwards_compat_IFc("ImageField<char>", "Field",
+				       GenericField<IMesh, FDcharBasis, 
+				       FData2d<char, IMesh> >::maker, true);
+PersistentTypeID backwards_compat_IFui("ImageField<unsigned_int>", "Field",
+				       GenericField<IMesh, FDuintBasis, 
+				       FData2d<unsigned int, IMesh> >::maker, true);
+PersistentTypeID backwards_compat_IFus("ImageField<unsigned_short>", "Field",
+				       GenericField<IMesh, FDushortBasis, 
+				       FData2d<unsigned short, IMesh> >::maker, true);
+PersistentTypeID backwards_compat_IFuc("ImageField<unsigned_char>", "Field",
+				       GenericField<IMesh, FDucharBasis, 
+				       FData2d<unsigned char, IMesh> >::maker, true);
+PersistentTypeID backwards_compat_IFul("ImageField<unsigned_long>", "Field",
+				       GenericField<IMesh, FDulongBasis, 
+				       FData2d<unsigned long, IMesh> >::maker, true);
 
-const TypeDescription* get_type_description(ImageField<Tensor> *);
-const TypeDescription* get_type_description(ImageField<Vector> *);
-const TypeDescription* get_type_description(ImageField<double> *);
-const TypeDescription* get_type_description(ImageField<float> *);
-const TypeDescription* get_type_description(ImageField<int> *);
-const TypeDescription* get_type_description(ImageField<short> *);
-const TypeDescription* get_type_description(ImageField<char> *);
-const TypeDescription* get_type_description(ImageField<unsigned int> *);
-const TypeDescription* get_type_description(ImageField<unsigned short> *);
-const TypeDescription* get_type_description(ImageField<unsigned char> *);
-const TypeDescription* get_type_description(ImageField<unsigned long> *);
+
+typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
+PersistentTypeID backwards_compat_QSM("QuadSurfMesh", "Mesh",
+				      QSMesh::maker, true);
+
+template class GenericField<QSMesh, FDTensorBasis, vector<Tensor> >;       
+template class GenericField<QSMesh, FDVectorBasis, vector<Vector> >;       
+template class GenericField<QSMesh, FDdoubleBasis, vector<double> >;       
+template class GenericField<QSMesh, FDfloatBasis,  vector<float> >;        
+template class GenericField<QSMesh, FDintBasis,    vector<int> >;          
+template class GenericField<QSMesh, FDshortBasis,  vector<short> >;        
+template class GenericField<QSMesh, FDcharBasis,   vector<char> >;         
+template class GenericField<QSMesh, FDuintBasis,   vector<unsigned int> >; 
+template class GenericField<QSMesh, FDushortBasis, vector<unsigned short> >;
+template class GenericField<QSMesh, FDucharBasis,  vector<unsigned char> >;
+template class GenericField<QSMesh, FDulongBasis,  vector<unsigned long> >;
 
 
-template class GenericField<QuadSurfMesh, vector<Tensor> >;       
-template class GenericField<QuadSurfMesh, vector<Vector> >;       
-template class GenericField<QuadSurfMesh, vector<double> >;       
-template class GenericField<QuadSurfMesh, vector<float> >;        
-template class GenericField<QuadSurfMesh, vector<int> >;          
-template class GenericField<QuadSurfMesh, vector<short> >;        
-template class GenericField<QuadSurfMesh, vector<char> >;         
-template class GenericField<QuadSurfMesh, vector<unsigned int> >; 
-template class GenericField<QuadSurfMesh, vector<unsigned short> >;
-template class GenericField<QuadSurfMesh, vector<unsigned char> >;
-
-template class QuadSurfField<Tensor>;
-template class QuadSurfField<Vector>;
-template class QuadSurfField<double>;
-template class QuadSurfField<float>;
-template class QuadSurfField<int>;
-template class QuadSurfField<short>;
-template class QuadSurfField<char>;
-template class QuadSurfField<unsigned int>;
-template class QuadSurfField<unsigned short>;
-template class QuadSurfField<unsigned char>;
-
-const TypeDescription* get_type_description(QuadSurfField<Tensor> *);
-const TypeDescription* get_type_description(QuadSurfField<Vector> *);
-const TypeDescription* get_type_description(QuadSurfField<double> *);
-const TypeDescription* get_type_description(QuadSurfField<float> *);
-const TypeDescription* get_type_description(QuadSurfField<int> *);
-const TypeDescription* get_type_description(QuadSurfField<short> *);
-const TypeDescription* get_type_description(QuadSurfField<char> *);
-const TypeDescription* get_type_description(QuadSurfField<unsigned int> *);
-const TypeDescription* get_type_description(QuadSurfField<unsigned short> *);
-const TypeDescription* get_type_description(QuadSurfField<unsigned char> *);
-
+PersistentTypeID backwards_compat_QSFT("QuadSurfField<Tensor>", "Field",
+				       GenericField<QSMesh, FDTensorBasis, 
+				       vector<Tensor> >::maker, true);
+PersistentTypeID backwards_compat_QSFV("QuadSurfField<Vector>", "Field",
+				       GenericField<QSMesh, FDVectorBasis, 
+				       vector<Vector> >::maker, true);
+PersistentTypeID backwards_compat_QSFd("QuadSurfField<double>", "Field",
+				       GenericField<QSMesh, FDdoubleBasis, 
+				       vector<double> >::maker, true);
+PersistentTypeID backwards_compat_QSFf("QuadSurfField<float>", "Field",
+				       GenericField<QSMesh, FDfloatBasis, 
+				       vector<float> >::maker, true);
+PersistentTypeID backwards_compat_QSFi("QuadSurfField<int>", "Field",
+				       GenericField<QSMesh, FDintBasis, 
+				       vector<int> >::maker, true);
+PersistentTypeID backwards_compat_QSFs("QuadSurfField<short>", "Field",
+				       GenericField<QSMesh, FDshortBasis, 
+				       vector<short> >::maker, true);
+PersistentTypeID backwards_compat_QSFc("QuadSurfField<char>", "Field",
+				       GenericField<QSMesh, FDcharBasis, 
+				       vector<char> >::maker, true);
+PersistentTypeID backwards_compat_QSFui("QuadSurfField<unsigned_int>", "Field",
+				       GenericField<QSMesh, FDuintBasis, 
+				       vector<unsigned int> >::maker, true);
+PersistentTypeID backwards_compat_QSFus("QuadSurfField<unsigned_short>", "Field",
+				       GenericField<QSMesh, FDushortBasis, 
+				       vector<unsigned short> >::maker, true);
+PersistentTypeID backwards_compat_QSFuc("QuadSurfField<unsigned_char>", "Field",
+				       GenericField<QSMesh, FDucharBasis, 
+				       vector<unsigned char> >::maker, true);
+PersistentTypeID backwards_compat_QSFul("QuadSurfField<unsigned_long>", "Field",
+				       GenericField<QSMesh, FDulongBasis, 
+				       vector<unsigned long> >::maker, true);
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

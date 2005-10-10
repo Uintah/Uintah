@@ -40,12 +40,15 @@ SRCS    := $(SRCDIR)/main.cc
 ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
-  PSELIBS := Dataflow/Network Core/Containers Dataflow/TCLThread Core/GuiInterface \
-        Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-        Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Geom Core/Init
+  PSELIBS := Dataflow/Network Core/Containers Dataflow/TCLThread \
+	Core/GuiInterface Core/Thread Core/Exceptions Core/Util \
+	Core/TkExtensions Core/Comm Core/ICom Core/Services Core/XMLUtil \
+	Core/SystemCall Core/Geom Core/Init Core/Basis
+
   ifeq ($(HAVE_PTOLEMY), yes)   
         PSELIBS += Packages/Ptolemy/Core/Comm
   endif
+
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport Core/Persistent
   endif
@@ -158,4 +161,3 @@ endif
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ########################################################################
-

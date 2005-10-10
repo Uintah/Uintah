@@ -46,9 +46,14 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/TetLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <Core/Datatypes/Field.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/BBox.h>
@@ -59,6 +64,11 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class CreateDisAnisoSpheres : public Module {
+  typedef TetVolMesh<TetLinearLgn<Point> >                          TVMesh;
+  typedef GenericField<TVMesh, ConstantBasis<int>,    vector<int> > TVField;  
+
+  typedef HexVolMesh<HexTrilinearLgn<Point> >                       HVMesh;
+  typedef GenericField<HVMesh, ConstantBasis<int>,    vector<int> > HVField; 
 
   // ports
   FieldIPort  *hInField;
@@ -71,8 +81,8 @@ class CreateDisAnisoSpheres : public Module {
   DenseMatrix  *conductivity;
   ColumnMatrix *radius;
 
-  HexVolField<int> *newHexField;
-  TetVolField<int> *newTetField;
+  HVField *newHexField;
+  TVField *newTetField;
 
   bool tet;
   double max;
@@ -182,21 +192,21 @@ void CreateDisAnisoSpheres::execute() {
 }
 
 void CreateDisAnisoSpheres::processHexField() {
-  LockingHandle<HexVolField<int> > hexField = dynamic_cast<HexVolField<int>* >(field_.get_rep());
-  HexVolMeshHandle mesh_ = hexField->get_typed_mesh();
-  HexVolMesh *newMesh_   = scinew HexVolMesh(*mesh_->clone()); 
-  newHexField = scinew HexVolField<int>(newMesh_, 0); /* cell-wise conductivity
-							 tensors -> set data 
-							 location to cells */
-  newMesh_->synchronize(HexVolMesh::FACES_E);
-  HexVolMesh::Face::iterator fii;
+  LockingHandle<HVField > hexField = dynamic_cast<HVField* >(field_.get_rep());
+  HVMesh::handle_type mesh_ = hexField->get_typed_mesh();
+  HVMesh *newMesh_   = scinew HVMesh(*mesh_->clone()); 
+  newHexField = scinew HVField(newMesh_); /* cell-wise conductivity
+					     tensors -> set data 
+					     location to cells */
+  newMesh_->synchronize(HVMesh::FACES_E);
+  HVMesh::Face::iterator fii;
   newMesh_->begin(fii);
   double face_area   = newMesh_->get_area(*fii);
   double edge_length = sqrt(face_area);
   max += edge_length * radius->get(SCALP);
   //cout << "edge length: " << edge_length << endl;
   // set positions of the nodes and enumerate them
-  HexVolMesh::Node::iterator nii, nie;
+  HVMesh::Node::iterator nii, nie;
   newMesh_->begin(nii);
   newMesh_->end(nie);
   Point p;
@@ -208,11 +218,11 @@ void CreateDisAnisoSpheres::processHexField() {
 	newMesh_->set_point(p, *nii);
   }
   // assign conductivity tensors
-  HexVolMesh::Cell::iterator cii, cie;
+  HVMesh::Cell::iterator cii, cie;
   newMesh_->begin(cii);
   newMesh_->end(cie);
   vector<double> t(6);
-  HexVolMesh::Cell::size_type ncells;
+  HVMesh::Cell::size_type ncells;
   newMesh_->size(ncells);
   vector<pair<string, Tensor> > tensor;
   tensor.resize(ncells);
@@ -231,12 +241,12 @@ void CreateDisAnisoSpheres::processHexField() {
 }
 
 void CreateDisAnisoSpheres::processTetField() {
-  LockingHandle<TetVolField<int> > tetField = dynamic_cast<TetVolField<int>* >(field_.get_rep());
-  TetVolMeshHandle mesh_ = tetField->get_typed_mesh();
-  TetVolMesh *newMesh_   = scinew TetVolMesh(*mesh_->clone());
-  newTetField = scinew TetVolField<int>(newMesh_, 0);
+  LockingHandle<TVField > tetField = dynamic_cast<TVField* >(field_.get_rep());
+  TVMesh::handle_type mesh_ = tetField->get_typed_mesh();
+  TVMesh *newMesh_   = scinew TVMesh(*mesh_->clone());
+  newTetField = scinew TVField(newMesh_);
   // set positions of the nodes and enumerate them
-  TetVolMesh::Node::iterator nii, nie;
+  TVMesh::Node::iterator nii, nie;
   newMesh_->begin(nii);
   newMesh_->end(nie);
   Point p;
@@ -248,11 +258,11 @@ void CreateDisAnisoSpheres::processTetField() {
 	newMesh_->set_point(p, *nii);
   }
   // assign conductivity tensors
-  TetVolMesh::Cell::iterator cii, cie;
+  TVMesh::Cell::iterator cii, cie;
   newMesh_->begin(cii);
   newMesh_->end(cie);
   vector<double> t(6);
-  TetVolMesh::Cell::size_type ncells;
+  TVMesh::Cell::size_type ncells;
   newMesh_->size(ncells);
   vector<pair<string, Tensor> > tensor;
   tensor.resize(ncells);

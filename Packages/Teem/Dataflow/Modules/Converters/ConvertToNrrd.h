@@ -33,13 +33,9 @@
 #if !defined(ConvertToNrrd_h)
 #define ConvertToNrrd_h
 
+#include <Core/Geometry/Transform.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/QuadraticTetVolField.h>
-#include <Core/Math/MiscMath.h>
+#include <Core/Containers/FData.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/NrrdData.h>
@@ -110,113 +106,113 @@ void fill_data<Vector>(Vector &v, double *p);
 template <class Fdata>
 void* get_raw_data_ptr(Fdata &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<char> >(FData2d<char> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<char> >(FData2d<char> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<unsigned char> >(FData2d<unsigned char> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<unsigned char> >(FData2d<unsigned char> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<short> >(FData2d<short> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<short> >(FData2d<short> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<unsigned short> >(FData2d<unsigned short> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<unsigned short> >(FData2d<unsigned short> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<int> >(FData2d<int> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<int> >(FData2d<int> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<unsigned int> >(FData2d<unsigned int> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<unsigned int> >(FData2d<unsigned int> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<long long> >(FData2d<long long> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<long long> >(FData2d<long long> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<unsigned long long> >(FData2d<unsigned long long> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<unsigned long long> >(FData2d<unsigned long long> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<float> >(FData2d<float> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<float> >(FData2d<float> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<double> >(FData2d<double> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<double> >(FData2d<double> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<Vector> >(FData2d<Vector> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<Vector> >(FData2d<Vector> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<Tensor> >(FData2d<Tensor> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<Tensor> >(FData2d<Tensor> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<char> >(FData3d<char> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<char> >(FData3d<char> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<unsigned char> >(FData3d<unsigned char> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<unsigned char> >(FData3d<unsigned char> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<short> >(FData3d<short> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<short> >(FData3d<short> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<unsigned short> >(FData3d<unsigned short> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<unsigned short> >(FData3d<unsigned short> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<int> >(FData3d<int> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<int> >(FData3d<int> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<unsigned int> >(FData3d<unsigned int> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<unsigned int> >(FData3d<unsigned int> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<long long> >(FData3d<long long> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<long long> >(FData3d<long long> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<unsigned long long> >(FData3d<unsigned long long> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<unsigned long long> >(FData3d<unsigned long long> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<float> >(FData3d<float> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<float> >(FData3d<float> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<double> >(FData3d<double> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<double> >(FData3d<double> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<double> >(FData3d<double> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<double> >(FData3d<double> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<Vector> >(FData3d<Vector> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<Vector> >(FData3d<Vector> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<Tensor> >(FData3d<Tensor> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<Tensor> >(FData3d<Tensor> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<vector<Vector> >(vector<Vector> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<vector<Vector> >(vector<Vector> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<vector<Tensor> >(vector<Tensor> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<vector<Tensor> >(vector<Tensor> &, int);
 
 template <class Fdata>
 void* get_raw_data_ptr(Fdata &data, int pad) {
@@ -288,7 +284,6 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
     BBox bbox = m->get_bounding_box();
     minP = bbox.min();
     maxP = bbox.max();
-
     spc = maxP - minP;
     if (f->basis_order() == 0)
     {
@@ -484,7 +479,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
 			  nrrdCenterUnknown);
 	}
-	ndata->nrrd->axis[0].label = airStrdup("x");
+	ndata->nrrd->axis[0].label = strdup("x");
 	
 	if (with_spacing) {
 	  ndata->nrrd->axis[0].min=minP.x();
@@ -522,8 +517,8 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 
 	if (pad_data > 0) {
 	  // 1D nrrd with vector/tensor
-	  ndata->nrrd->axis[0].label = airStrdup(sink_label.c_str());
-	  ndata->nrrd->axis[1].label = airStrdup("x");
+	  ndata->nrrd->axis[0].label = strdup(sink_label.c_str());
+	  ndata->nrrd->axis[1].label = strdup("x");
 
 	  if (with_spacing) {
 	    ndata->nrrd->axis[1].min=minP.x();
@@ -532,8 +527,8 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	  }
 	} else {
 	  // 2D nrrd of scalars
-	  ndata->nrrd->axis[0].label = airStrdup("x");
-	  ndata->nrrd->axis[1].label = airStrdup("y");
+	  ndata->nrrd->axis[0].label = strdup("x");
+	  ndata->nrrd->axis[1].label = strdup("y");
 
 	  if (with_spacing) {
 	    ndata->nrrd->axis[0].min=minP.x();
@@ -588,13 +583,13 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 
 	// set labels
 	if (pad_data > 0) {
-	  ndata->nrrd->axis[0].label = airStrdup(sink_label.c_str());
-	  ndata->nrrd->axis[1].label = airStrdup("x");
-	  ndata->nrrd->axis[2].label = airStrdup("y");
+	  ndata->nrrd->axis[0].label = strdup(sink_label.c_str());
+	  ndata->nrrd->axis[1].label = strdup("x");
+	  ndata->nrrd->axis[2].label = strdup("y");
 	} else {
-	  ndata->nrrd->axis[0].label = airStrdup("x");
-	  ndata->nrrd->axis[1].label = airStrdup("y");
-	  ndata->nrrd->axis[2].label = airStrdup("z");
+	  ndata->nrrd->axis[0].label = strdup("x");
+	  ndata->nrrd->axis[1].label = strdup("y");
+	  ndata->nrrd->axis[2].label = strdup("z");
 	}
 
 	// set min, max, and spacing
@@ -656,10 +651,10 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	}
 
 	// set labels
-	ndata->nrrd->axis[0].label = airStrdup(sink_label.c_str());
-	ndata->nrrd->axis[1].label = airStrdup("x");
-	ndata->nrrd->axis[2].label = airStrdup("y");
-	ndata->nrrd->axis[3].label = airStrdup("z");
+	ndata->nrrd->axis[0].label = strdup(sink_label.c_str());
+	ndata->nrrd->axis[1].label = strdup("x");
+	ndata->nrrd->axis[2].label = strdup("y");
+	ndata->nrrd->axis[3].label = strdup("z");
       
 	if (with_spacing) {
 	  ndata->nrrd->axis[1].min=minP.x();
@@ -685,23 +680,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
     if (!(ifh->mesh()->is_editable() && meshstr != "Struct"))
     {
       Transform t;
-
-      // get the actual transform if possible for later use
-      LatVolMesh *lv_m = dynamic_cast<LatVolMesh *> (ifh->mesh().get_rep());
-      ImageMesh *i_m = dynamic_cast<ImageMesh *> (ifh->mesh().get_rep());
-      ScanlineMesh *s_m = dynamic_cast<ScanlineMesh *> (ifh->mesh().get_rep());
-      if(lv_m)
-	t = lv_m->get_transform();
-      else if (i_m)
-	t = i_m->get_transform();
-      else if (s_m)
-	t = s_m->get_transform();
-      else
-      {
-	cerr << "ERROR: Mesh type must be of type LatVol, Image, or Scanline to get correct transform information\n";
-	return false;
-      }
-
+      m->get_canonical_transform(t);
       double trans[16];
       t.get(trans);
       string trans_string = "";
@@ -709,91 +688,8 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	trans_string += to_string(trans[i]);
 	trans_string += " ";
       }
-
       dataH = ndata;
-
-      // set the spaceDirection vectors if the transform 
-      // matrix is not just a diagonal matrix
-      bool axis_aligned = true;
-      if( (Abs(trans[1] - 0.0) > 0.0001) ||
-	  (Abs(trans[2] - 0.0) > 0.0001) ||
-	  (Abs(trans[4] - 0.0) > 0.0001) ||
-	  (Abs(trans[6] - 0.0) > 0.0001) ||
-	  (Abs(trans[8] - 0.0) > 0.0001) ||
-	  (Abs(trans[9] - 0.0) > 0.0001) ||
-	  (Abs(trans[12] - 0.0) > 0.0001) ||
-	  (Abs(trans[13] - 0.0) > 0.0001) ||
-	  (Abs(trans[14] - 0.0) > 0.0001)) {
-	axis_aligned = false;
-      }
-
-      if (!axis_aligned) {
-	// Since we found a transform, set the appropriate
-	// space information.
-	Nrrd* n = dataH->nrrd;
-	
-	// set spaceDimension to always be 3
-	nrrdSpaceSet(n, nrrdSpaceUnknown);
-
-	// If axis aligned, set the space dimension
-	// to be that of the actual number of axes with
-	// domain information. But if there is the
-	// data is not axis aligned, assume a space
-	// of 3 (world space)
-	if (axis_aligned) {
-	  if (pad_data > 0)
-	    nrrdSpaceDimensionSet(n, dim-1);
-	  else
-	    nrrdSpaceDimensionSet(n, dim);
-	} else {
-	  nrrdSpaceDimensionSet(n, 3);
-	}
-	
-	// set the spaceOrigin which can be taken from the
-	// 4th column of the transform 
-	n->spaceOrigin[0] = trans[3];
-	n->spaceOrigin[1] = trans[7];
-	n->spaceOrigin[2] = trans[11];
-	
-	// set the spaceDirection to be the corresponding
-	// column of the transform matrix
-	double dir1[3], dir2[3], dir3[3];
-	dir1[0] = trans[0];
-	dir1[1] = trans[4];
-	dir1[2] = trans[8];
-	
-	dir2[0] = trans[1];
-	dir2[1] = trans[5];
-	dir2[2] = trans[9];
-	
-	dir3[0] = trans[2];
-	dir3[1] = trans[6];
-	dir3[2] = trans[10];
-	
-	// vector/tensor data has a vector of AIR_NANs
-	// for that axis
-	if (pad_data > 0) {
-	  double none[3];
-	  none[0] = AIR_NAN;
-	  none[1] = AIR_NAN;
-	  none[2] = AIR_NAN;
-	  nrrdAxisInfoSet(n, nrrdAxisInfoSpaceDirection,
-			  none, dir1, dir2, dir3);
-	}
-	else {
-	nrrdAxisInfoSet(n, nrrdAxisInfoSpaceDirection,
-			dir1, dir2, dir3);
-	}
-	
-	// set min/max and spacing and units to AIR_NAN now that 
-	// direction vectors are being used 
-	for(int a=0; a<dim; a++) {
-	  n->axis[a].min = AIR_NAN;
-	  n->axis[a].max = AIR_NAN;
-	  n->axis[a].spacing = AIR_NAN;
-	  n->axis[a].units = (char*)airFree(n->axis[a].units);
-	}
-      }
+      dataH->set_property("Transform", trans_string, false);
     } else {
       dataH = ndata;
     }

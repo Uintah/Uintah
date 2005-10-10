@@ -71,7 +71,6 @@ public:
   string          old_type_;
   int             weight_generation_;
   int             inrrd1_generation_;
-  map<NrrdIPort *, int> inrrd_generation_;
   int             num_inrrd2_;
   NrrdDataHandle  last_nrrdH_;
 
@@ -87,7 +86,7 @@ UnuJhisto::UnuJhisto(GuiContext* ctx)
     maxs_(ctx->subVar("maxs")), type_(ctx->subVar("type")),
     old_bins_(""), old_mins_(""), old_maxs_(""), old_type_(""),
     weight_generation_(-1), inrrd1_generation_(-1),
-    inrrd_generation_()
+    num_inrrd2_(-1)
 {
 }
 
@@ -149,21 +148,19 @@ void
   {
     NrrdIPort *inrrd = (NrrdIPort *)get_iport(pi->second);
     NrrdDataHandle nrrd;
-    const int gen = inrrd_generation_[inrrd];
     if (inrrd->get(nrrd) && nrrd.get_rep()) {
       if (nrrd->nrrd->dim > max_dim)
 	max_dim = nrrd->nrrd->dim;
       
       nrrds.push_back(nrrd->nrrd);
-      if (nrrd->generation != gen) {
-	inrrd_generation_[inrrd] = nrrd->generation;
-	need_execute = true;
-      }
     }
     ++pi; 
   }
 
-
+  if ((nrrds.size()-1) != (unsigned)num_inrrd2_) {
+    need_execute = true;
+    num_inrrd2_ = nrrds.size()-1; // minus 1 accounts for inrrd1
+  }
 
   reset_vars();
 
@@ -399,7 +396,7 @@ void
         return;
       }
     }
-    
+
     if (nrrdHistoJoint(nout, (const Nrrd**)&nrrds[0], 
 		       (const NrrdRange**)range,
 		       (int)nrrds.size(), weight, bin, get_type(type_.get()), 
@@ -409,6 +406,7 @@ void
       free(err);
       return;
     }
+
 
     NrrdData *nrrd = scinew NrrdData;
     nrrd->nrrd = nout;    

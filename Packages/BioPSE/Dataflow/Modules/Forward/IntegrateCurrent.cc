@@ -39,8 +39,11 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -51,6 +54,13 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class IntegrateCurrent : public Module {
+  typedef TetLinearLgn<Vector>                                  TFDVectorBasis;
+  typedef TetLinearLgn<int>                                     TFDintBasis;
+  typedef TetVolMesh<TetLinearLgn<Point> >                      TVMesh;
+  typedef GenericField<TVMesh, TFDVectorBasis, vector<Vector> > TVFieldV;
+  typedef GenericField<TVMesh, TFDintBasis,    vector<int> >    TVFieldI;
+  typedef TriSurfMesh<TriLinearLgn<Point> >                     TSMesh;
+
   GuiDouble current_;
 public:
   IntegrateCurrent(GuiContext *context);
@@ -97,19 +107,17 @@ IntegrateCurrent::execute()
     return;
   }
 
-  TetVolField<Vector> *efield = 
-    dynamic_cast<TetVolField<Vector>*>(efieldH.get_rep());
+  TVFieldV *efield = dynamic_cast<TVFieldV*>(efieldH.get_rep());
   if (!efield) {
     error("EField isn't a TetVolField<Vector>.");
     return;
   }
-  TetVolField<int> *sigmas = 
-    dynamic_cast<TetVolField<int>*>(sigmasH.get_rep());
+  TVFieldI *sigmas = dynamic_cast<TVFieldI*>(sigmasH.get_rep());
   if (!sigmas) {
     error("Sigmas isn't a TetVolField<int>.");
     return;
   }
-  TriSurfMesh *tris = dynamic_cast<TriSurfMesh*>(trisurfH->mesh().get_rep());
+  TSMesh *tris = dynamic_cast<TSMesh*>(trisurfH->mesh().get_rep());
   if (!tris) {
     error("Not a TriSurf.");
     return;
@@ -129,11 +137,11 @@ IntegrateCurrent::execute()
   // compute (sigma * efield * area) and dot it with the face normal
   // sum those up for all tris
 
-  TriSurfMesh::Face::iterator fi, fe;
+  TSMesh::Face::iterator fi, fe;
   tris->begin(fi);
   tris->end(fe);
   double current=0;
-  TriSurfMesh::Node::array_type nodes;
+  TSMesh::Node::array_type nodes;
   double total_area=0;
   while (fi != fe) {
     Point center;
@@ -147,7 +155,7 @@ IntegrateCurrent::execute()
     tris->get_center(p2, nodes[2]);
     Vector normal(Cross(p2-p1,p2-p0));
     normal.normalize();
-    TetVolMesh::Cell::index_type tet;
+    TVMesh::Cell::index_type tet;
     if (!efield->get_typed_mesh()->locate(tet, center)) {
       error("Trisurf centroid was not located in tetvolmesh.");
       return;

@@ -31,7 +31,6 @@
 
 #include <sci_defs/ogl_defs.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/LatVolField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 

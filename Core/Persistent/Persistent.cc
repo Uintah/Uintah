@@ -58,9 +58,8 @@ using namespace std;
 
 namespace SCIRun {
 
-#define PERSISTENT_VERSION 2
-
 static Piostream::MapStringPersistentTypeID* table = 0;  
+const int Piostream::PERSISTENT_VERSION = 2;
 
 #ifdef __APPLE__
   // On the Mac, this comes from Core/Util/DynamicLoader.cc because
@@ -78,8 +77,12 @@ static Piostream::MapStringPersistentTypeID* table = 0;
 //----------------------------------------------------------------------
 PersistentTypeID::PersistentTypeID(const string& typeName, 
 				   const string& parentName,
-				   Persistent* (*maker)())
-  :  type(typeName), parent(parentName), maker(maker)
+				   Persistent* (*maker)(),
+				   bool backwards_compat) :  
+  type(typeName),
+  parent(parentName), 
+  maker(maker),
+  backwards_compat_(backwards_compat)
 {
 #if DEBUG
   // Using printf as cerr causes a core dump (probably cerr has not
@@ -181,19 +184,13 @@ Piostream::Piostream(Direction dir, int version, const string &name,
     have_peekname_(false),
     reporter_(pr),
     own_reporter_(false),
-    file_name(name)
+    file_name(name),
+    backwards_compat_id_(false)
 {
   if (reporter_ == NULL)
   {
     reporter_ = scinew ProgressReporter();
     own_reporter_ = true;
-  }
-  if (version_ == -1) version_ = PERSISTENT_VERSION;
-  if (version_ <= 0 || version_ > PERSISTENT_VERSION)
-  {
-    pr->error("Tried to open file with unsupported version " +
-              to_string(version_) + ".");
-    err = true;
   }
 }
 
@@ -242,16 +239,16 @@ Piostream::begin_class(const string& classname, int current_version)
   }
   have_peekname_ = false;
 
-  if (dir == Read)
-  {
-    if (classname != gname)
-    {
-      err = true;
-      reporter_->error(string("Expecting class: ") + classname +
-                       ", got class: " + gname + ".");
-      return 0;
-    }
-  }
+//   if (dir == Read)
+//   {
+//     if (classname != gname)
+//     {
+//       err = true;
+//       reporter_->error(string("Expecting class: ") + classname +
+//                        ", got class: " + gname + ".");
+//       return 0;
+//     }
+//   }
 
   io(version);
 
@@ -373,7 +370,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 #endif
 
       Persistent* (*maker)() = 0;
-      if (in_name == want_name)
+      if (in_name == want_name || backwards_compat_id_)
       {
 	maker = pid.maker;
       }
@@ -384,6 +381,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	if (found_pid)
         {
 	  maker = found_pid->maker;
+	  if (found_pid->backwards_compat_) set_backwards_compat_id(true);
 	}
         else
         {
@@ -512,11 +510,11 @@ auto_istream(const string& filename, ProgressReporter *pr)
     else cerr << "ERROR - Cannot parse header of file: " << filename << endl;
     return 0;
   }
-  if (version > PERSISTENT_VERSION)
+  if (version > Piostream::PERSISTENT_VERSION)
   {
     const string errmsg = "File '" + filename + "' has version " +
       to_string(version) + ", this build only supports up to version " +
-      to_string(PERSISTENT_VERSION) + ".";
+      to_string(Piostream::PERSISTENT_VERSION) + ".";
     if (pr) pr->error(errmsg);
     else cerr << "ERROR - " + errmsg;
     return 0;
@@ -541,7 +539,7 @@ auto_istream(const string& filename, ProgressReporter *pr)
   }
   else if (m1 == 'A' && m2 == 'S' && m3 == 'C')
   {
-    return scinew TextPiostream(filename, Piostream::Read, version, pr);
+    return scinew TextPiostream(filename, Piostream::Read, pr);
   }
 
   if (pr) pr->error(filename + " is an unknown type!");
@@ -568,11 +566,11 @@ auto_ostream(const string& filename, const string& type, ProgressReporter *pr)
   }
   else if (type == "Text")
   {
-    stream = scinew TextPiostream(filename, Piostream::Write, -1, pr);
+    stream = scinew TextPiostream(filename, Piostream::Write, pr);
   }
   else if (type == "Fast")
   {
-    stream = scinew FastPiostream(filename, Piostream::Write, -1, pr);
+    stream = scinew FastPiostream(filename, Piostream::Write, pr);
   }
   else
   {

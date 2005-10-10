@@ -36,6 +36,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Color.h>
 
+#include <Core/Math/MiscMath.h>
 #include <Core/Volume/Utils.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Geom/ShaderProgramARB.h>

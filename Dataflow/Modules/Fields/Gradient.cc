@@ -43,7 +43,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Handle.h>
-
+#include <Core/Basis/Constant.h>
 #include <Dataflow/Modules/Fields/Gradient.h>
 
 namespace SCIRun {
@@ -108,10 +108,12 @@ Gradient::execute()
     fGeneration_ = fieldin->generation;
 
     const TypeDescription *ftd = fieldin->get_type_description(0);
-    const TypeDescription *ttd = fieldin->get_type_description(1);
+    const TypeDescription *mtd = fieldin->get_type_description(1);
+    const TypeDescription *btd = fieldin->get_type_description(2);
+    const TypeDescription *dtd = fieldin->get_type_description(3);
 
     CompileInfoHandle ci =
-      GradientAlgo::get_compile_info(ftd, ttd, otd);
+      GradientAlgo::get_compile_info(ftd, mtd, btd, dtd, otd);
     Handle<GradientAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
@@ -128,7 +130,9 @@ Gradient::execute()
 
 CompileInfoHandle
 GradientAlgo::get_compile_info(const TypeDescription *ftd,
-			       const TypeDescription *ttd,
+			       const TypeDescription *mtd,
+			       const TypeDescription *btd,
+			       const TypeDescription *dtd,
 			       const TypeDescription *otd )
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -136,18 +140,30 @@ GradientAlgo::get_compile_info(const TypeDescription *ftd,
   static const string template_class_name("GradientAlgoT");
   static const string base_class_name("GradientAlgo");
 
+  const string oname = otd ->get_name("", "");
+  TypeDescription *ctd = 0;
+  ctd = (TypeDescription *) 
+    SCIRun::get_type_description((ConstantBasis<double>*) 0 );
+  
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
 		       ftd->get_filename() + "." +
-		       ttd->get_filename() + ".",
+		       mtd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       ftd->get_name() + "<" + ttd->get_name() + "> " + ", " +
-                       ftd->get_name() + "<" + otd->get_name() + "> " );
+                       ftd->get_name() + "<" + mtd->get_name() + ", " +
+		       btd->get_name() + ", " + dtd->get_name() + ">, " +
+                       ftd->get_name() + "<" + mtd->get_name() + ", " +
+		       ctd->get_similar_name(oname, 0) + ", " + 
+		       dtd->get_similar_name(oname, 0) + "> ");
   
   // Add in the include path to compile this obj
+
+
   rval->add_include(include_path);
   ftd->fill_compile_info(rval);
+  mtd->fill_compile_info(rval);
+  ctd->fill_compile_info(rval);
   return rval;
 }
 
