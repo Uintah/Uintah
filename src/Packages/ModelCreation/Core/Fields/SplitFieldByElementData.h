@@ -85,42 +85,53 @@ bool SplitFieldByElementDataAlgoT<FIELD>::execute(ProgressReporter *reporter,
   typename FIELD::mesh_type *mesh = dynamic_cast<typename FIELD::mesh_type *>(field->mesh().get_rep());
 
   typename FIELD::mesh_type::Elem::iterator bei, eei;
+  typename FIELD::mesh_type::Elem::iterator bei2, eei2;
+
   typename FIELD::mesh_type::Node::iterator bni, eni;
-  typename FIELD::mesh_typ::Elem::size_type nelems;
-  typename FIELD::mesh_typ::Node::size_type nnodes;
+  typename FIELD::mesh_type::Elem::size_type nelems;
+  typename FIELD::mesh_type::Node::size_type nnodes;
   mesh->size(nelems);
   mesh->size(nnodes);
 
   mesh->begin(bni); mesh->end(eni);
 
-  typename FIELD::mesh_type::Node::under_type maxindex = 0;
+//  typename FIELD::mesh_type::under_type maxindex = 0;
+  unsigned int maxindex = 0;
+
   while(bni != eni)
   {
     if (*(bni) > maxindex) maxindex = *(bni);
     ++bni;
   }  
 
-  std::vector<typename FIELD::mesh_type::Node::index_type> idxarray(maxindex);
-  std::vector<bool> newidxarray(numnodes);
+  std::vector<typename FIELD::mesh_type::Node::index_type> idxarray(maxindex+1);
+  std::vector<bool> newidxarray(maxindex+1);
   typename FIELD::mesh_type::Node::array_type nodes;
   typename FIELD::mesh_type::Node::array_type newnodes;
     
   typename FIELD::value_type val;
   typename FIELD::value_type eval;
-  typename FIELD::mesh_type::Node::under_type idx;
+//  typename FIELD::mesh_type::Node::under_type idx;
+  unsigned int idx;
  
   typename FIELD::mesh_type *omesh = scinew typename FIELD::mesh_type();
   omesh->elem_reserve(nelems); // exact number
   omesh->node_reserve(nnodes); // minimum number of nodes
   
+  std::vector<typename FIELD::value_type> newdata(nelems);
+  
   FIELD* ofield = scinew FIELD(omesh,0);
   output = dynamic_cast<SCIRun::Field* >(ofield);
 
-  mesh->begin(bei);
-  val = field->value(*(bei));
+  mesh->begin(bei2);
+  mesh->end(eei2);
+  val = field->value(*(bei2));
+  
+  int k = 0;
+  
   while(1)
   {
-    for (size_t p =0; p<maxindex; p++) newidxarray[p] = true;
+    for (size_t p =0; p<(maxindex+1); p++) newidxarray[p] = true;
 
     mesh->begin(bei); mesh->end(eei);
     while (bei != eei)
@@ -128,31 +139,31 @@ bool SplitFieldByElementDataAlgoT<FIELD>::execute(ProgressReporter *reporter,
       eval = field->value(*(bei));
       if (eval == val)
       {
-        get_nodes(nodes,*(bei));
+        mesh->get_nodes(nodes,*(bei));
         for (size_t p=0; p< nodes.size(); p++)
         {
-          idx = *(nodes[p]);
+          idx = nodes[p];
           if (newidxarray[idx])
           {
             Point pt;
-            mesh->get_center(pt,*(nodes[p]));
+            mesh->get_center(pt,nodes[p]);
             idxarray[idx] = omesh->add_point(pt);
             newidxarray[idx] = false;
           }
           newnodes[p] = idxarray[idx];
         }
         omesh->add_elem(newnodes);
-        ++bei;
+        newdata[k++] = eval;
       }
+      ++bei;
     }
 
     eval = val;
-    mesh->begin(bei); mesh->end(eei);
-    while (bei != eei)
+    while (bei2 != eei2)
     {
-      eval = field->value(*(bei));
+      eval = field->value(*(bei2));
       if (eval > val) break;
-      ++bei;
+      ++bei2;
     }
 
     if (eval > val)
@@ -167,10 +178,10 @@ bool SplitFieldByElementDataAlgoT<FIELD>::execute(ProgressReporter *reporter,
   
   mesh->begin(bei); mesh->end(eei);
   ofield->resize_fdata();
+  k = 0;
   while (bei != eei)
   {
-    val = field->value(*(bei));
-    ofield->set_value(val,(*bei));
+    ofield->set_value(newdata[k++],(*bei));
     ++bei;
   }
   

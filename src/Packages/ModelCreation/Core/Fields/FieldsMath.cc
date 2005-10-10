@@ -51,6 +51,7 @@
 #include <Packages/ModelCreation/Core/Fields/FieldDataElemToNode.h>
 #include <Packages/ModelCreation/Core/Fields/FieldDataNodeToElem.h>
 #include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
+#include <Packages/ModelCreation/Core/Fields/MappingMatrixToField.h>
 
 #include <Core/Algorithms/Fields/FieldCount.h>
 #include <Dataflow/Modules/Fields/Unstructure.h>
@@ -897,7 +898,7 @@ bool FieldsMath::SplitFieldByElementData(FieldHandle input, FieldHandle& output)
   if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
   {
     error("SplitFieldByElementData: Could not dynamically compile algorithm");
-    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+//    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
     return(false);
   }
     
