@@ -1065,7 +1065,7 @@ void Crack::OutputCrackFrontResults(const int& m)
         else 
           outCrkFrt << setw(15) << "inf" << endl;
 
-        if(i==cfSegMaxIdx[m][i]) outCrkFrt << endl;
+        if(i==cfSegMaxIdx[m][i] && num>2) outCrkFrt << endl;
  /*       
 	if(i==2) {
           outCrkFrt0 << setw(5) << timestep
