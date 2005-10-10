@@ -1658,29 +1658,33 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
         
   // In case one of the components above is given and dims is not given,
   // derive this one from the size of the data 
-  if (((fs.transform.isdense())||(fs.meshclass.compareCI("scanline"))||(fs.meshclass.compareCI("image"))||(fs.meshclass.compareCI("latvol")))&&(fs.dims.isempty()))
+  if ((((fs.dims.isempty())&&(fs.node.isempty()&&(fs.x.isempty())))||(fs.transform.isdense())||(fs.meshclass.compareCI("scanline"))||(fs.meshclass.compareCI("image"))||(fs.meshclass.compareCI("latvol")))&&(fs.dims.isempty()))
     {
       if (fs.scalarfield.isdense()) 
-        {  vector<long> dims = fs.scalarfield.getdims();
-        fs.dims.createlongvector(dims);
-        }
+      {  vector<long> dims = fs.scalarfield.getdims();
+         fs.dims.createlongvector(dims);
+      }
       if (fs.vectorfield.isdense()) 
-        {  vector<long> dims = fs.vectorfield.getdims();
+      {  vector<long> dims = fs.vectorfield.getdims();
         // remove the vector dimension from the array
         fs.dims.createlongvector(static_cast<long>((dims.size()-1)),&(dims[1]));
-        }
+      }
       if (fs.tensorfield.isdense()) 
-        {  vector<long> dims = fs.tensorfield.getdims();
+      {  vector<long> dims = fs.tensorfield.getdims();
         // remove the tensor dimension from the array
         fs.dims.createlongvector(static_cast<long>((dims.size()-1)),&(dims[1]));
-        }
-      if (fs.basis_order == 0)
+      }
+        
+      if ((fs.scalarfield.isdense())||(fs.vectorfield.isdense())||(fs.tensorfield.isdense()))
+      { 
+        if (fs.basis_order == 0)
         {
           vector<long> dims = fs.scalarfield.getdims();
           // dimensions need to be one bigger
           for (long p = 0; p<static_cast<long>(dims.size()); p++) dims[p] = dims[p]+1;
           fs.dims.createlongvector(dims);
         }
+      }
     }
         
   // if dims is not present it is not a regular mesh
@@ -2174,7 +2178,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
   // structure and then the normal routine picks up the field and translates it
   // properly.
         
-  // This is a quick and not so pretty approach bu saves a lot of coding
+  // This is a quick and not so pretty approach but saves a lot of coding
   if (mlarray.isdense())
     {
       long numdims = mlarray.getnumdims();
@@ -2246,32 +2250,32 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
         }
       fs.field = fs.scalarfield;
     }
-
+    
   // A latvol/image can be created without specifying the dimensions. In the latter case the meshclass must be given or a transform
   // matrix. The next piece of code deals with this situation
         
-  if (((fs.transform.isdense())||(fs.meshclass.compareCI("scanline"))||(fs.meshclass.compareCI("image"))||(fs.meshclass.compareCI("latvol")))&&(fs.dims.isempty()))
-    {
-      vector<long> dims = fs.field.getdims();
-      if ((valuetype == "Vector")||(valuetype == "Tensor"))
-        {   
-          fs.dims.createlongvector(static_cast<long>((dims.size()-1)),&(dims[1])); 
-        }
-      else
-        {   
-          fs.dims.createlongvector(dims);   
-        }
-                
-      // THIS IS A CORRECTION FOR THE DIMENSIONS OF THE DATA
-      // WE PROBABLY NEED TO ADD STUFF HERE FOR HIGHER ORDER ELEMENTS 
-      if (fs.basis_order == 0)
-        {
-          vector<long> dims;
-          fs.dims.getnumericarray(dims);
-          for (long p = 0; p<static_cast<long>(dims.size()); p++) dims[p] = dims[p]+1;
-          fs.dims.setnumericarray(dims);
-        }
+  if (((fs.node.isempty())&&(fs.dims.isempty())&&(fs.x.isempty()))||((fs.transform.isdense())||(fs.meshclass.compareCI("scanline"))||(fs.meshclass.compareCI("image"))||(fs.meshclass.compareCI("latvol")))&&(fs.dims.isempty()))
+  {
+    vector<long> dims = fs.field.getdims();
+    if ((valuetype == "Vector")||(valuetype == "Tensor"))
+    {   
+      fs.dims.createlongvector(static_cast<long>((dims.size()-1)),&(dims[1])); 
     }
+    else
+    {   
+      fs.dims.createlongvector(dims);   
+    }
+              
+    // THIS IS A CORRECTION FOR THE DIMENSIONS OF THE DATA
+    // WE PROBABLY NEED TO ADD STUFF HERE FOR HIGHER ORDER ELEMENTS 
+    if (fs.basis_order == 0)
+    {
+      vector<long> dims;
+      fs.dims.getnumericarray(dims);
+      for (long p = 0; p<static_cast<long>(dims.size()); p++) dims[p] = dims[p]+1;
+      fs.dims.setnumericarray(dims);
+    }
+  }
         
   // Complete a structured mesh
         
@@ -2294,37 +2298,37 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
         
   // Reorder the node matrix if it exists
   if (fs.node.isdense())
-    {
-      m = fs.node.getm();
-      n = fs.node.getn();
-        
-      // This condition should have been checked by the compatibility algorithm
-      if ((m != 3)&&(n != 3)) throw matlabconverter_error();
-        
-      // In case the matrix is transposed, reorder it in the proper order for this converter
-      if (m != 3) fs.node.transpose();
-    }
-        
+  {
+    m = fs.node.getm();
+    n = fs.node.getn();
+      
+    // This condition should have been checked by the compatibility algorithm
+    if ((m != 3)&&(n != 3)) throw matlabconverter_error();
+      
+    // In case the matrix is transposed, reorder it in the proper order for this converter
+    if (m != 3) fs.node.transpose();
+  }
+      
   // Check and reorder the edge matrix
   if (fs.edge.isdense())
-    {
-      m = fs.node.getm();
-      n = fs.node.getn();
-        
-      if (fs.meshclass.isstring())
-        {   // explicitly stated type 
-          if (fs.meshclass.compareCI("curve"))
-            {
-              if ((n!=2)&&(m!=2)) throw matlabconverter_error();
-              if (m != 2) fs.edge.transpose();
-            }
-        }
-      else
-        {
-          if ((n!=2)&&(m!=2)) throw matlabconverter_error();
-          if (m != 2) fs.edge.transpose();
-        }
-    }
+  {
+    m = fs.node.getm();
+    n = fs.node.getn();
+      
+    if (fs.meshclass.isstring())
+      {   // explicitly stated type 
+        if (fs.meshclass.compareCI("curve"))
+          {
+            if ((n!=2)&&(m!=2)) throw matlabconverter_error();
+            if (m != 2) fs.edge.transpose();
+          }
+      }
+    else
+      {
+        if ((n!=2)&&(m!=2)) throw matlabconverter_error();
+        if (m != 2) fs.edge.transpose();
+      }
+  }
         
   // Check and reorder the face martix
   if (fs.face.isdense())
