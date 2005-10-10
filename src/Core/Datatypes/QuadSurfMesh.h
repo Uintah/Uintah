@@ -49,6 +49,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Geometry/CompGeom.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Containers/StackVector.h>
 #include <Core/Geometry/BBox.h>
@@ -240,7 +241,6 @@ private:
     return dx * dx + dy * dy + dz * dz;
   }
 
-  double distance_to_line2(const Point &p, const Point &a, const Point &b);
   const Point &point(typename Node::index_type i) const { return points_[i]; }
 
   void                  compute_edges();
@@ -587,25 +587,6 @@ QuadSurfMesh<Basis>::locate(typename Node::index_type &loc,
   return found;
 }
 
-template <class Basis>
-double
-QuadSurfMesh<Basis>::distance_to_line2(const Point &p, const Point &a, 
-				       const Point &b)
-{
-  Vector m = b - a;
-  Vector n = p - a;
-  if (m.length2() < 1e-6)
-  {
-    return n.length2();
-  }
-  else
-  {
-    const double t0 = Dot(m, n) / Dot(m, m);
-    if (t0 <= 0) return (n).length2();
-    else if (t0 >= 1.0) return (p - b).length2();
-    else return (n - m * t0).length2();
-  }
-}
 
 template <class Basis>
 bool
@@ -639,39 +620,82 @@ QuadSurfMesh<Basis>::locate(typename Edge::index_type &loc,
   return found;
 }
 
-
-// TODO: Nearest cell center is incorrect if the quads are not a
-// delanay triangulation of the cell centers which is most of the time.
 template <class Basis>
-bool
-QuadSurfMesh<Basis>::locate(typename Face::index_type &loc, const Point &p) const
-{  
-  typename Face::iterator bi, ei;
-  Point center;
-  begin(bi);
-  end(ei);
-  loc = 0;
+bool 
+QuadSurfMesh<Basis>::inside3_p(typename Face::index_type i, 
+			       const Point &p) const
+{
+  typename Node::array_type nodes;
+  get_nodes(nodes, i);
+
+  unsigned int n = nodes.size();
+
+  Point * pts = new Point[n];
   
-  bool found = false;
-  double mindist = 0.0;
-  while (bi != ei) 
-  {
-    get_center(center, *bi);
-    const double dist = (p - center).length2();
-    if (!found || dist < mindist) 
-    {      
-      loc = *bi;
-      mindist = dist;
-      found = true;
-    }
-    ++bi;
+  for (unsigned int i = 0; i < n; i++) {
+    get_center(pts[i], nodes[i]);
   }
-  return found;
+
+  for (unsigned int i = 0; i < n; i+=2) {
+    Point p0 = pts[(i+0)%n];
+    Point p1 = pts[(i+1)%n];
+    Point p2 = pts[(i+2)%n];
+
+    Vector v01(p0-p1);
+    Vector v02(p0-p2);
+    Vector v0(p0-p);
+    Vector v1(p1-p);
+    Vector v2(p2-p);
+    const double a = Cross(v01, v02).length(); // area of the whole triangle (2x)
+    const double a0 = Cross(v1, v2).length();  // area opposite p0
+    const double a1 = Cross(v2, v0).length();  // area opposite p1
+    const double a2 = Cross(v0, v1).length();  // area opposite p2
+    const double s = a0+a1+a2;
+
+    // If the area of any of the sub triangles is very small then the point
+    // is on the edge of the subtriangle.
+    // TODO : How small is small ???
+//     if( a0 < MIN_ELEMENT_VAL ||
+// 	a1 < MIN_ELEMENT_VAL ||
+// 	a2 < MIN_ELEMENT_VAL )
+//       return true;
+
+    // For the point to be inside a CONVEX quad it must be inside one
+    // of the four triangles that can be formed by using three of the
+    // quad vertices and the point in question.
+    if( fabs(s - a) < MIN_ELEMENT_VAL && a > MIN_ELEMENT_VAL ) {
+      delete [] pts;
+      return true;
+    }
+  }
+  delete [] pts;
+  return false;
 }
 
 template <class Basis>
 bool
-QuadSurfMesh<Basis>::locate(typename Cell::index_type &loc, const Point &) const
+QuadSurfMesh<Basis>::locate(typename Face::index_type &face, 
+			    const Point &p) const
+{  
+  typename Face::iterator bi, ei;
+  begin(bi);
+  end(ei);
+
+  while (bi != ei) {
+    if( inside3_p( *bi, p ) ) {
+      face = *bi;
+      return true;
+    }
+
+    ++bi;
+  }
+  return false;
+}
+
+template <class Basis>
+bool
+QuadSurfMesh<Basis>::locate(typename Cell::index_type &loc, 
+			    const Point &) const
 {
   loc = 0;
   return false;
@@ -679,7 +703,8 @@ QuadSurfMesh<Basis>::locate(typename Cell::index_type &loc, const Point &) const
 
 template <class Basis>
 void
-QuadSurfMesh<Basis>::get_center(Point &result, typename Edge::index_type idx) const
+QuadSurfMesh<Basis>::get_center(Point &result, 
+				typename Edge::index_type idx) const
 {
   typename Node::array_type arr;
   get_nodes(arr, idx);
@@ -707,6 +732,7 @@ QuadSurfMesh<Basis>::get_center(Point &p, typename Face::index_type idx) const
   }
   p.asVector() *= (1.0 / 4.0);
 }
+
 template <class Basis>
 bool
 QuadSurfMesh<Basis>::synchronize(unsigned int tosync)
@@ -719,6 +745,7 @@ QuadSurfMesh<Basis>::synchronize(unsigned int tosync)
     compute_edge_neighbors();
   return true;
 }
+
 template <class Basis>
 void
 QuadSurfMesh<Basis>::compute_normals()

@@ -1039,7 +1039,6 @@ template <class Basis>
 BBox
 PrismVolMesh<Basis>::get_bounding_box() const
 {
-  //! TODO: This could be included in the synchronize scheme
   BBox result;
   
   typename Node::iterator ni, nie;
@@ -1969,6 +1968,7 @@ PrismVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
       if (inside(typename Cell::index_type(*iter), p))
       {
 	cell = typename Cell::index_type(*iter);
+	locate_cache_ = cell;
 	return true;
       }
       ++iter;
@@ -2124,7 +2124,7 @@ PrismVolMesh<Basis>::orient(typename Cell::index_type idx) {
 
     double dotprod = Dot(off1, normal);
 
-    if( fabs( dotprod ) < 1.0e-8 ) {
+    if( fabs( dotprod ) <  MIN_ELEMENT_VAL ) {
       cerr << "Warning cell " << idx << " face " << i;
       cerr << " is malformed " << endl;
     }
@@ -2157,26 +2157,15 @@ PrismVolMesh<Basis>::inside(typename Cell::index_type idx, const Point &p)
     double dotprod = Dot(off0, normal);
 
     // Account for round off - the point may be on the plane!!
-    if( fabs( dotprod ) < 1.0e-8 )
+    if( fabs( dotprod ) < MIN_ELEMENT_VAL )
       continue;
-    /*
-    if( Dot(off1, normal) < 0.0) {
-      cerr << "Warning cell " << idx << " face " << i;
-      cerr << " is malformed " << endl;
-      cerr << "Negative Face Normal " << i << endl;
-      cerr << center << endl;
-      cerr << p  << endl;
-      cerr << p0 << endl;
-      cerr << p1 << endl;
-      cerr << p2 << endl;
-      cerr << normal << endl;
-    }
-    */
+
     // If orientated correctly the second dot product is not needed.
     // Only need to check to see if the sign is negitive.
     if (dotprod * Dot(off1, normal) < 0.0)
       return false;
   }
+
   return true;
 }
 

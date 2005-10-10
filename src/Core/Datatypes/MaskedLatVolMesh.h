@@ -1248,7 +1248,7 @@ template <class Basis>
 bool
 MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Node::index_type idx) const
 {
-  unsigned i = idx.i_, j = idx.j_, k = idx.k_;
+  unsigned int i = idx.i_, j = idx.j_, k = idx.k_;
   return (check_valid(i  ,j  ,k  ) ||
 	  check_valid(i-1,j  ,k  ) ||
 	  check_valid(i  ,j-1,k  ) ||
@@ -1262,7 +1262,8 @@ MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Node::ind
 
 template <class Basis>
 bool
-MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Edge::index_type idx) const
+MaskedLatVolMesh<Basis>::check_valid(
+		 typename MaskedLatVolMesh<Basis>::Edge::index_type idx) const
 {
   
   bool val = false;
@@ -1381,9 +1382,9 @@ MaskedLatVolMesh<Basis>::update_count(typename MaskedLatVolMesh<Basis>::Cell::in
   // These counts are the number of nodes, edges, faces that exist
   // ONLY from the presence of this cell, not because of the contribution 
   // of neighboring cells.
-  const unsigned faces = (i0?0:1)+(i1?0:1)+(j0?0:1)+(j1?0:1)+(k0?0:1)+(k1?0:1);
-  unsigned int   nodes = 0;
-  unsigned int   edges = 0;
+  const unsigned int faces = (i0?0:1)+(i1?0:1)+(j0?0:1)+(j1?0:1)+(k0?0:1)+(k1?0:1);
+  unsigned int       nodes = 0;
+  unsigned int       edges = 0;
 
   if (faces == 6) {  
     nodes = 8; 
@@ -1586,28 +1587,28 @@ MaskedLatVolMesh<Basis>::unmask_cell(typename Cell::index_type idx)
 
 
 template <class Basis>
-unsigned
+unsigned int
 MaskedLatVolMesh<Basis>::num_masked_nodes() const
 {
   return masked_nodes_count_;
 }
 
 template <class Basis>
-unsigned
+unsigned int
 MaskedLatVolMesh<Basis>::num_masked_edges() const
 {
   return masked_edges_count_;
 }
 
 template <class Basis>
-unsigned
+unsigned int
 MaskedLatVolMesh<Basis>::num_masked_faces() const
 {
   return masked_faces_count_;
 }
 
 template <class Basis>
-unsigned
+unsigned int
 MaskedLatVolMesh<Basis>::num_masked_cells() const
 {
   return masked_cells_.size();
@@ -1773,8 +1774,8 @@ MaskedLatVolMesh<Basis>::io(Piostream& stream)
   LatVolMesh<Basis>::io(stream);
 
   // IO data members, in order
-  vector<unsigned> masked_vec(masked_cells_.begin(), 
-			      masked_cells_.end());
+  vector<unsigned int > masked_vec(masked_cells_.begin(), 
+				   masked_cells_.end());
   Pio(stream, masked_vec);
   if (stream.reading())
   {

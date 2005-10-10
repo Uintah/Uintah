@@ -61,6 +61,7 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/CompGeom.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -364,7 +365,7 @@ StructQuadSurfMesh<Basis>::get_center(Point &result,
 template <class Basis>
 void
 StructQuadSurfMesh<Basis>::get_center(Point &result, 
-				      typename ImageMesh<Basis>::Edge::index_type idx) const
+		       typename ImageMesh<Basis>::Edge::index_type idx) const
 {
   typename ImageMesh<Basis>::Node::array_type arr;
   get_nodes(arr, idx);
@@ -380,7 +381,7 @@ StructQuadSurfMesh<Basis>::get_center(Point &result,
 template <class Basis>
 void
 StructQuadSurfMesh<Basis>::get_center(Point &p,
-				    const typename ImageMesh<Basis>::Face::index_type &idx) const
+		 const typename ImageMesh<Basis>::Face::index_type &idx) const
 {
   typename ImageMesh<Basis>::Node::array_type nodes;
   get_nodes(nodes, idx);
@@ -401,8 +402,9 @@ StructQuadSurfMesh<Basis>::get_center(Point &p,
 
 template <class Basis>
 bool
-StructQuadSurfMesh<Basis>::locate(typename ImageMesh<Basis>::Node::index_type &node, 
-				  const Point &p) const
+StructQuadSurfMesh<Basis>::locate(
+                            typename ImageMesh<Basis>::Node::index_type &node,
+			    const Point &p) const
 {
   node.mesh_ = this;
   typename ImageMesh<Basis>::Face::index_type fi;
@@ -450,30 +452,121 @@ StructQuadSurfMesh<Basis>::locate(typename ImageMesh<Basis>::Node::index_type &n
 
 template <class Basis>
 bool
-StructQuadSurfMesh<Basis>::locate(typename ImageMesh<Basis>::Edge::index_type &node, 
-				  const Point &) const
+StructQuadSurfMesh<Basis>::locate(
+			    typename ImageMesh<Basis>::Edge::index_type &loc, 
+			    const Point &p) const
 {
-  ASSERTFAIL("Locate Edge not implemented in StructQuadSurfMesh");
+  typename ImageMesh<Basis>::Edge::iterator bi, ei;
+  typename ImageMesh<Basis>::Node::array_type nodes;
+  begin(bi);
+  end(ei);
+  loc = 0;
+  
+  bool found = false;
+  double mindist = 0.0;
+  while (bi != ei)
+  {
+    get_nodes(nodes,*bi);
+
+    Point p0, p1;
+    get_center(p0, nodes[0]);
+    get_center(p1, nodes[1]);
+
+    const double dist = distance_to_line2(p, p0, p1);
+    if (!found || dist < mindist)
+    {
+      loc = *bi;
+      mindist = dist;
+      found = true;
+    }
+    ++bi;
+  }
+  return found;
+}
+
+template <class Basis>
+bool 
+StructQuadSurfMesh<Basis>::inside3_p(
+			     typename ImageMesh<Basis>::Face::index_type i, 
+			     const Point &p) const
+{
+  typename ImageMesh<Basis>::Node::array_type nodes;
+  get_nodes(nodes, i);
+
+  unsigned int n = nodes.size();
+
+  Point * pts = new Point[n];
+  
+  for (unsigned int i = 0; i < n; i++) {
+    get_center(pts[i], nodes[i]);
+  }
+
+  for (unsigned int i = 0; i < n; i+=2) {
+    Point p0 = pts[(i+0)%n];
+    Point p1 = pts[(i+1)%n];
+    Point p2 = pts[(i+2)%n];
+
+    Vector v01(p0-p1);
+    Vector v02(p0-p2);
+    Vector v0(p0-p);
+    Vector v1(p1-p);
+    Vector v2(p2-p);
+    const double a = Cross(v01, v02).length(); // area of the whole triangle (2x)
+    const double a0 = Cross(v1, v2).length();  // area opposite p0
+    const double a1 = Cross(v2, v0).length();  // area opposite p1
+    const double a2 = Cross(v0, v1).length();  // area opposite p2
+    const double s = a0+a1+a2;
+
+    // If the area of any of the sub triangles is very small then the point
+    // is on the edge of the subtriangle.
+    // TODO : How small is small ???
+//     if( a0 < MIN_ELEMENT_VAL ||
+// 	a1 < MIN_ELEMENT_VAL ||
+// 	a2 < MIN_ELEMENT_VAL )
+//       return true;
+
+    // For the point to be inside a CONVEX quad it must be inside one
+    // of the four triangles that can be formed by using three of the
+    // quad vertices and the point in question.
+    if( fabs(s - a) < ImageMesh<Basis>::MIN_ELEMENT_VAL && a > 
+	ImageMesh<Basis>::MIN_ELEMENT_VAL ) {
+      delete [] pts;
+      return true;
+    }
+  }
+  delete [] pts;
+  return false;
+}
+
+template <class Basis>
+bool
+StructQuadSurfMesh<Basis>::locate(
+			    typename ImageMesh<Basis>::Face::index_type &face, 
+			    const Point &p) const
+{
+  typename ImageMesh<Basis>::Face::iterator bi, ei;
+  begin(bi);
+  end(ei);
+
+  while (bi != ei) {
+    if( inside3_p( *bi, p ) ) {
+      face = *bi;
+      return true;
+    }
+
+    ++bi;
+  }
   return false;
 }
 
 
 template <class Basis>
 bool
-StructQuadSurfMesh<Basis>::locate(typename ImageMesh<Basis>::Face::index_type &loc, 
-				  const Point &) const
+StructQuadSurfMesh<Basis>::locate(
+			    typename ImageMesh<Basis>::Cell::index_type &loc, 
+			    const Point &) const
 {
-  ASSERTFAIL("Locate Face not implemented in StructQuadSurfMesh");
-  return false;
-}
-
-
-template <class Basis>
-bool
-StructQuadSurfMesh<Basis>::locate(typename ImageMesh<Basis>::Cell::index_type &loc, 
-				  const Point &) const
-{
-  ASSERTFAIL("Locate Cell not implemented in StructQuadSurfMesh");
+  loc = 0;
   return false;
 }
 

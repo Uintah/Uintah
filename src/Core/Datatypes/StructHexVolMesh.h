@@ -342,7 +342,9 @@ StructHexVolMesh<Basis>::get_center(Point &result, const typename LatVolMesh<Bas
 
 template <class Basis>
 bool
-StructHexVolMesh<Basis>::inside8_p(typename LatVolMesh<Basis>::Cell::index_type idx, const Point &p) const
+StructHexVolMesh<Basis>::inside8_p(
+		             typename LatVolMesh<Basis>::Cell::index_type idx, 
+			     const Point &p) const
 {
   static const int table[6][3][3] =
   {{{0, 0, 0},
@@ -372,7 +374,6 @@ StructHexVolMesh<Basis>::inside8_p(typename LatVolMesh<Basis>::Cell::index_type 
   Point center;
   get_center(center, idx);
 
-  double minval = 1.0e6;
   for (int i = 0; i < 6; i++)
   {
     typename LatVolMesh<Basis>::Node::index_type n0(this,
@@ -415,7 +416,9 @@ StructHexVolMesh<Basis>::inside8_p(typename LatVolMesh<Basis>::Cell::index_type 
 
 template <class Basis>
 bool
-StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Cell::index_type &cell, const Point &p)
+StructHexVolMesh<Basis>::locate(
+			    typename LatVolMesh<Basis>::Cell::index_type &cell,
+			    const Point &p)
 {
   // Check last cell found first.  Copy cache to cell first so that we
   // don't care about thread safeness, such that worst case on
@@ -437,35 +440,22 @@ StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Cell::index_type &ce
   cell.mesh_ = this;
 
   unsigned int *iter, *end;
-  double mindist = -1.0;
-  if (grid_->lookup(&iter, &end, p))
-  {
-    while (iter != end)
-    {
+  if (grid_->lookup(&iter, &end, p)) {
+    while (iter != end) {
       typename LatVolMesh<Basis>::Cell::index_type idx;
       to_index(idx, *iter);
-      const double tmp = inside8_p(idx, p);
-      if (tmp > mindist)
-      {
+
+      if( inside8_p(idx, p) ) {
 	cell = idx;
-	mindist = tmp;
+        locate_cache_ = cell;
+        return true;
       }
       ++iter;
     }
   }
 
-  if (mindist > -1.0e-12)
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+  return false;
 }
-
-
-
 
 
 template <class Basis>

@@ -1776,8 +1776,10 @@ tri_area(const Point &a, const Point &b, const Point &c)
 
 template <class Basis>
 void
-HexVolMesh<Basis>::get_face_weights(double *w, const typename Node::array_type &nodes,
-				    const Point &p, int i0, int i1, int i2, int i3)
+HexVolMesh<Basis>::get_face_weights(double *w, 
+				    const typename Node::array_type &nodes,
+				    const Point &p, int i0, int i1, 
+				    int i2, int i3)
 {
   for (unsigned int j = 0; j < 8; j++)
   {
@@ -1790,38 +1792,42 @@ HexVolMesh<Basis>::get_face_weights(double *w, const typename Node::array_type &
   const Point &p3 = point(nodes[i3]);
 
   const double a0 = tri_area(p, p0, p1);
-  if (a0 < 1.0e-6)
+  if (a0 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p0 - p1;
     const Vector v1 = p - p1;
-    w[i0] = Dot(v0, v1) / Dot(v0, v0);
+    const double l2 = Dot(v0, v0);
+    w[i0] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
     w[i1] = 1.0 - w[i0];
     return;
   }
   const double a1 = tri_area(p, p1, p2);
-  if (a1 < 1.0e-6)
+  if (a1 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p1 - p2;
     const Vector v1 = p - p2;
-    w[i1] = Dot(v0, v1) / Dot(v0, v0);
+    const double l2 = Dot(v0, v0);
+    w[i1] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
     w[i2] = 1.0 - w[i1];
     return;
   }
   const double a2 = tri_area(p, p2, p3);
-  if (a2 < 1.0e-6)
+  if (a2 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p2 - p3;
     const Vector v1 = p - p3;
-    w[i2] = Dot(v0, v1) / Dot(v0, v0);
+    const double l2 = Dot(v0, v0);
+    w[i2] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
     w[i3] = 1.0 - w[i2];
     return;
   }
   const double a3 = tri_area(p, p3, p0);
-  if (a3 < 1.0e-6)
+  if (a3 < MIN_ELEMENT_VAL)
   {
     const Vector v0 = p3 - p0;
     const Vector v1 = p - p0;
-    w[i3] = Dot(v0, v1) / Dot(v0, v0);
+    const double l2 = Dot(v0, v0);
+    w[i3] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
     w[i0] = 1.0 - w[i3];
     return;
   }
@@ -1901,12 +1907,11 @@ HexVolMesh<Basis>::inside8_p(typename Cell::index_type i, const Point &p) const
 {
   typename Face::array_type faces;
   get_faces(faces, i);
-  
+
   Point center;
   get_center(center, i);
 
-  for (unsigned int i = 0; i < faces.size(); i++)
-  {
+  for (unsigned int i = 0; i < faces.size(); i++) {
     typename Node::array_type nodes;
     get_nodes(nodes, faces[i]);
     Point p0, p1, p2;
@@ -1918,11 +1923,19 @@ HexVolMesh<Basis>::inside8_p(typename Cell::index_type i, const Point &p) const
     const Vector normal = Cross(v0, v1);
     const Vector off0(p - p0);
     const Vector off1(center - p0);
-    if (Dot(off0, normal) * Dot(off1, normal) < 0.0)
-    {
+
+    double dotprod = Dot(off0, normal);
+
+    // Account for round off - the point may be on the plane!!
+    if( fabs( dotprod ) < MIN_ELEMENT_VAL )
+      continue;
+
+    // If orientated correctly the second dot product is not needed.
+    // Only need to check to see if the sign is negative.
+    if (dotprod * Dot(off1, normal) < 0.0)
       return false;
-    }
   }
+
   return true;
 }
     
