@@ -44,6 +44,13 @@ Bundle::Bundle()
 {
 }
 
+Bundle::Bundle(const Bundle& bundle)
+{
+  bundleName_ = bundle.bundleName_;
+  bundle_ = bundle.bundle_;
+  transposeNrrd_ = bundle.transposeNrrd_;
+}
+
 Bundle::~Bundle() 
 {
 }
