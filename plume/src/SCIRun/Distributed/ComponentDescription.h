@@ -75,10 +75,10 @@ namespace SCIRun {
   
   class DistributedFramework;
 
-  template<class Component>
-  class ComponentDescriptionFactory : public ComponentDescription  {
+  template<class Component, class Description>
+  class ComponentDescriptionFactory : public Description  {
   public:
-    ComponentDescriptionFactory(const std::string &name) : ComponentDescription(name) {}
+    ComponentDescriptionFactory(const std::string &name) : Description(name) {}
     virtual ~ComponentDescriptionFactory() {}
 
     typename Component::pointer create(DistributedFramework *framework, const std::string &name) 

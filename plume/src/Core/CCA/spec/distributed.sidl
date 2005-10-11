@@ -51,6 +51,8 @@ package sci {
 	string getClassName();
 	TypeMap getProperties();
 	void setProperties( in TypeMap );
+
+	Component getComponent();
       }
 
       package internal {
@@ -110,7 +112,7 @@ package sci {
 	  
 	}
 
-	interface ConnectionEventService 
+ 	interface ConnectionEventService 
 	  extends sci.cca.ports.ConnectionEventService, internal.Service
 	{
 	}
@@ -127,12 +129,13 @@ package sci {
 	  void setProperties(in TypeMap properties);
 	}
 
-	interface BuilderService
-	  extends sci.cca.ports.BuilderService, internal.Service
-	{
-	}
+ 	interface BuilderService
+ 	  extends sci.cca.ports.BuilderService, internal.Service
+ 	{
+	  //void emitConnectionEvent(in ports.ConnectionEvent);
+ 	}
 
-      }
+      } // ports
 
       // Distributed Ports
 
@@ -146,7 +149,11 @@ package sci {
 	bool disconnect(in PortInfo );
 	bool available();
 	bool canConnectTo(in PortInfo);
-	
+	bool isConnected();
+	int  numOfConnections();
+
+	TypeMap getProperties();
+
 	Port getPort();
 	PortInfo getPeer();
 	PortType getPortType();
@@ -170,30 +177,61 @@ package sci {
 	DistributedFramework getParent();
 	array<DistributedFramework,1> getChildren();
 	
-	Port getFrameworkService( in string serviceName, in ComponentInfo);
-	bool releaseFrameworkService(in string serviceName, in ComponentInfo);
+	internal.Service getFrameworkService( in string serviceName);
+	void releaseFrameworkService(in internal.Service);
+
+	//internal.Service getFrameworkService( in string serviceName, in ComponentInfo);
+	//bool releaseFrameworkService(in internal.Service, in ComponentInfo);
       }
-      
+
+      package internal {
+
+	interface DistributedFrameworkInternal extends DistributedFramework 
+	{
+	  // info
+	  ComponentID lookupComponentID(in string);
+	  array<ComponentID,1> getComponentIDs();
+	  array<ConnectionID,1> getConnectionIDs( in array<ComponentID,1>);
+
+	  // abstract. to be implemenent by concrete frameworks that derive from Distributed
+	  ComponentInfo createComponent( in string name, in string type, in TypeMap properties);
+	  void destroyComponent( in ComponentInfo );
+	  
+	  // component manipulations
+	  ComponentInfo createInstance( in string name, in string type, in TypeMap properties);
+	  array<cca.ComponentClassDescription> listAllComponentTypes(in bool);
+	  void destroyInstance(in ComponentID);
+
+	  // connections
+	  void addConnection(in ConnectionID);
+	  void disconnect(in ConnectionID);
+
+	  // services
+	  Service getFrameworkService(in string);
+	  void releaseFrameworkService(in Service);
+	}
+      }
+
       // various framework services
       
-      interface  BuilderService 
-         extends ports.BuilderService, internal.Service 
-      {
+//       interface  BuilderService 
+//          extends ports.BuilderService, internal.Service 
+//       {
 	
-	//void emitConnectionEvent( in ports.ConnectionEvent );
-      }
+// 	//void emitConnectionEvent( in ports.ConnectionEvent );
+//       }
       
-      interface ConnectionEventService 
-         extends ports.ConnectionEventService, internal.Service 
-      {      
-	//void emitConnectionEvent(in ports.ConnectionEvent);
-      }
+//       interface ConnectionEventService 
+//          extends ports.ConnectionEventService, internal.Service 
+//       {      
+// 	//void emitConnectionEvent(in ports.ConnectionEvent);
+//       }
       
-      interface ComponentEventService
-         extends ports.ComponentEventService, internal.Service 
-      {
-	//void emitComponentEvent(in ports.ComponentEvent);
-      }
+//       interface ComponentEventService
+//          extends ports.ComponentEventService, internal.Service 
+//       {
+// 	//void emitComponentEvent(in ports.ComponentEvent);
+//       }
 
     } // distributed
 

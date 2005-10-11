@@ -59,7 +59,7 @@ namespace SCIRun
   class ComponentRepositoryServiceImpl : public ServiceImpl<Base>
   {
   public:
-    ComponentRepositoryServiceImpl(DistributedFramework*);
+    ComponentRepositoryServiceImpl(const DistributedFramework::internalPointer &);
     virtual ~ComponentRepositoryServiceImpl();
 
     /** ? */
@@ -73,7 +73,7 @@ namespace SCIRun
     virtual SSIDL::array1<sci::cca::ComponentClassDescription::pointer>  getAvailableComponentClasses();
     
   private:
-    DistributedFramework *framework;
+    DistributedFramework::internalPointer framework;
   };
   
 } // end namespace SCIRun

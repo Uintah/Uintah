@@ -39,16 +39,22 @@
  */
 
 #include <SCIRun/Distributed/ComponentRepositoryService.h>
+#include <SCIRun/Distributed/ComponentRepositoryServiceImpl.code>
+
 #include <iostream>
 
 namespace SCIRun {
+
+  ComponentRepositoryService::ComponentRepositoryService(const DistributedFramework::internalPointer &framework)
+    : ComponentRepositoryServiceImpl<Interface>(framework)
+  {}
 
   ComponentRepositoryService::~ComponentRepositoryService()
   {
     std::cerr << "RepositoryService destroyed..." << std::endl;
   }
 
-  ComponentRepositoryService::pointer ComponentRepositoryService::create(DistributedFramework *framework)
+  ComponentRepositoryService::pointer ComponentRepositoryService::create(const DistributedFramework::internalPointer &framework)
   {
     return pointer(new ComponentRepositoryService(framework));
   }

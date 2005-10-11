@@ -41,13 +41,15 @@
 #ifndef SCIRun_ConnectionEventServiceImpl_code
 #define SCIRun_ConnectionEventServiceImpl_code
 
-#include <SCIRun/Distributed/ConnectionEventServiceImpl.h>
+//#include <SCIRun/Distributed/ConnectionEventServiceImpl.h>
+#include <SCIRun/Distributed/ServiceImpl.code>
+
 #include <iostream>
 
 namespace SCIRun {
 
   template<class Base>
-  ConnectionEventServiceImpl<Base>::ConnectionEventServiceImpl(DistributedFramework *framework)
+  ConnectionEventServiceImpl<Base>::ConnectionEventServiceImpl(const DistributedFramework::internalPointer &framework)
     : ServiceImpl<Base>(framework, "ConnectionEventService"),
       listeners_lock("ConnectionEventService::listeners lock")
   {

@@ -47,7 +47,6 @@ namespace SCIRun {
   
   class DistributedFramework;
   namespace Distributed = sci::cca::distributed;
-
   /**
    * \class ComponentInfo
    *
@@ -58,7 +57,7 @@ namespace SCIRun {
   public:
     typedef Distributed::ComponentInfo::pointer pointer;
 
-    ComponentInfo(const Distributed::DistributedFramework::pointer &framework,
+    ComponentInfo(const Distributed::internal::DistributedFrameworkInternal::pointer &framework,
 		  const std::string& instanceName,
 		  const std::string& className,
 		  const sci::cca::TypeMap::pointer& properties,

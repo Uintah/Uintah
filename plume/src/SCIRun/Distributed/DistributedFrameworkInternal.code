@@ -47,13 +47,14 @@
 #include <SCIRun/Distributed/ComponentID.h>
 #include <SCIRun/Distributed/ComponentInfo.h>
 #include <Core/Thread/Guard.h>
+
 #include <SCIRun/Distributed/DistributedFrameworkImpl.code>
 #include <algorithm>
 
 namespace SCIRun {
   
   template<class Base>
-  DistributedFrameworkInternal<Base>::DistributedFrameworkInternal(pointer parent )
+  DistributedFrameworkInternal<Base>::DistributedFrameworkInternal(const pointer &parent )
     : DistributedFrameworkImpl<Base>(parent),
       connection_lock("DistributedFrameworkInternal::connection_lock"),
       component_lock("DistributedFrameworkInternal::component_lock")
@@ -72,7 +73,7 @@ namespace SCIRun {
 							       const sci::cca::TypeMap::pointer& properties)
   {
     // call the virtual method that actually create a component
-    return ComponentInfo::pointer( createComponent( instanceName, className, properties) );
+    return createComponent( instanceName, className, properties);
   }
 
   template<class Base>
@@ -86,11 +87,37 @@ namespace SCIRun {
     return ComponentID::pointer(0);
   }
 
+#if 0
+  // FIXME [yarden] moved to a pure function to be implemented by the derived framework
+
   template<class Base>
-  void DistributedFrameworkInternal<Base>::listAllComponentTypes(std::vector<ComponentDescription*> &, bool )
+  SSIDL::array1<sci::cca::ComponentClassDescription::pointer> listAllComponentTypes( bool );
   {
     // FIXME: [yarden] need to copy this function
+    SSIDL::array1<sci::cca::ComponentClassDescription::pointer> all;
+    
+    for(std::vector<ComponentDescription*>::iterator iter = list.begin();
+	iter != list.end(); iter++) {
+      ccalist.push_back(sci::cca::ComponentClassDescription::pointer(new ComponentClassDescription(*iter)));
+    }
+    return ccalist;
   }
+#endif
+
+  template<class Base>
+  SSIDL::array1<ComponentID::pointer>
+  DistributedFrameworkInternal<Base>::getComponentIDs()
+  {
+    SSIDL::array1<ComponentID::pointer> ids;
+
+    SCIRun::Guard guard(&component_lock);
+
+    for (ComponentList::const_iterator iter = components.begin(); iter != components.end(); ++iter ) 
+      ids.push_back(*iter);
+
+    return ids;
+  }
+
 
   template<class Base>
   SSIDL::array1<ConnectionID::pointer>
@@ -132,7 +159,7 @@ namespace SCIRun {
 
 
   template<class Base>
-  void DistributedFrameworkInternal<Base>::destroyComponentInfo( const ComponentID::pointer &component )
+  void DistributedFrameworkInternal<Base>::destroyInstance( const ComponentID::pointer &component )
   {
     SCIRun::Guard guard(&component_lock);
     

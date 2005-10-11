@@ -30,6 +30,8 @@ version sci 0.2;
 
 #include "cca.sidl"
 #include "distributed.sidl"
+#include "plume.sidl"
+
 //#include "scirun.sidl"
 //#include "SCIRun2Classes.sidl"
 //#include "SCIRun2Ports.sidl"

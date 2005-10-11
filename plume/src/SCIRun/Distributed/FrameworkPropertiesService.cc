@@ -39,6 +39,8 @@
  */
 
 #include <SCIRun/Distributed/FrameworkPropertiesService.h>
+#include <SCIRun/Distributed/FrameworkPropertiesServiceImpl.code>
+
 #include <iostream>
 
 namespace SCIRun {
@@ -47,7 +49,8 @@ namespace SCIRun {
   {
   }
 
-  FrameworkPropertiesService::pointer FrameworkPropertiesService::create(DistributedFramework *framework)
+  FrameworkPropertiesService::pointer 
+  FrameworkPropertiesService::create(const DistributedFramework::internalPointer &framework)
   {
     return pointer(new FrameworkPropertiesService(framework));
   }

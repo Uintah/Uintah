@@ -57,21 +57,22 @@ namespace SCIRun {
 					     const sci::cca::TypeMap::pointer &properties,
 					     const sci::cca::Component::pointer &component)
     : ComponentIDImpl<Base>(framework, instanceName),
-      component(component), className(className), properties(properties)
+      component(component), className(className), properties(properties),
+      ports_lock("ComponentInfo::ports_lock")
   {
-    mutex = new Mutex("getPort mutex");
   }
   
   template<class Base>
   ComponentInfoImpl<Base>::~ComponentInfoImpl()
   {
-    delete mutex;
   }
   
   
   template<class Base>
   SSIDL::array1<PortInfo::pointer> ComponentInfoImpl<Base>::getPorts()
   {
+    Guard guard(&ports_lock);
+
     SSIDL::array1<PortInfo::pointer> array;
     for (PortMap::const_iterator i=ports.begin(); i!=ports.end(); ++i)
       array.push_back((*i).second);
@@ -81,6 +82,8 @@ namespace SCIRun {
   template<class Base>
   PortInfo::pointer ComponentInfoImpl<Base>::getPortInfo( const std::string &name )
   {
+    Guard guard(&ports_lock);
+
     PortMap::const_iterator info = ports.find(name);
     if ( info == ports.end() ) return PortInfo::pointer(0);
     return (*info).second;

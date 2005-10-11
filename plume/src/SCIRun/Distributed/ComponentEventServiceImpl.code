@@ -42,12 +42,13 @@
 #define SCIRun_ComponnetEventServiceImpl_code
 
 //#include <SCIRun/Distributed/ComponentEventServiceImpl.h>
+#include <SCIRun/Distributed/ServiceImpl.code>
 #include <iostream>
 
 namespace SCIRun {
 
   template<class Base>
-  ComponentEventServiceImpl<Base>::ComponentEventServiceImpl(DistributedFramework *framework)
+  ComponentEventServiceImpl<Base>::ComponentEventServiceImpl(const Distributed::DistributedFramework::pointer &framework)
     : ServiceImpl<Base>(framework, "ComponentEventService"),
       listeners_lock("ComponentEventService::listeners lock")
   {

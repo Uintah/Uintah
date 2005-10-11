@@ -38,6 +38,7 @@
  *
  */
 #include <SCIRun/Distributed/PortInfo.h>
+#include <SCIRun/Distributed/PortInfoImpl.code>
 
 namespace SCIRun {
   

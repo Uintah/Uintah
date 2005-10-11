@@ -47,11 +47,16 @@ using namespace std;
 
 namespace SCIRun {
   
+  BuilderService::BuilderService(const DistributedFramework::internalPointer &framework) 
+    : BuilderServiceImpl<DistributedServices::BuilderService>(framework)
+  {
+  }
+
   BuilderService::~BuilderService()
   {
   }
   
-  BuilderService::pointer BuilderService::create(DistributedFramework *framework)
+  BuilderService::pointer BuilderService::create(const DistributedFramework::internalPointer &framework)
   {
     return pointer(new BuilderService(framework));
   }

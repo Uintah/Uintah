@@ -44,35 +44,41 @@
 
 namespace SCIRun {
 
-CCAException::CCAException(const std::string &msg, sci::cca::CCAExceptionType type)
-  : message(msg), type(type)
-{
+  CCAException::pointer CCAException::create(const std::string &msg, sci::cca::CCAExceptionType type)
+  {
+    return CCAException::pointer(new CCAException(msg, type));
+  }
+
+  CCAException::CCAException(const std::string &msg, sci::cca::CCAExceptionType type)
+    : message(msg), type(type)
+  {
+    // FIXME [yarden] from SCIRun:
     // Omitting this will cause the framework to
     // segfault when an exception is thrown.
     addReference();
-}
-
-CCAException::~CCAException()
-{
+  }
+  
+  CCAException::~CCAException()
+  {
     deleteReference();
-}
-
-// TODO: implement stack trace
-std::string CCAException::getTrace()
-{
+  }
+  
+  // TODO: implement stack trace
+  std::string CCAException::getTrace()
+  {
     NOT_FINISHED("string .SSIDL.BaseException.getTrace()");
     return std::string(0);
-}
-
-// TODO: implement add functions
-void CCAException::add(const std::string &traceline)
-{
+  }
+  
+  // TODO: implement add functions
+  void CCAException::add(const std::string &traceline)
+  {
     NOT_FINISHED("void .SSIDL.BaseException.add(in string traceline)");
-}
-
-void CCAException::add(const std::string &filename, int lineno, const std::string &methodname)
-{
+  }
+  
+  void CCAException::add(const std::string &filename, int lineno, const std::string &methodname)
+  {
     NOT_FINISHED("void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)");
-}
-
+  }
+  
 } // end namespace SCIRun

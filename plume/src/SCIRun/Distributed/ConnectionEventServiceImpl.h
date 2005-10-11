@@ -93,7 +93,7 @@ namespace SCIRun {
     std::vector<Listener*> listeners;
     SCIRun::Mutex listeners_lock; 
     
-    ConnectionEventServiceImpl(DistributedFramework*);
+    ConnectionEventServiceImpl(const DistributedFramework::internalPointer &);
   };
 
 

@@ -60,26 +60,13 @@ namespace SCIRun {
   public:
     typedef Distributed::internal::Service::pointer pointer;
     
-    ServiceImpl(DistributedFramework *framework,
+    ServiceImpl(const DistributedFramework::pointer &framework,
 		const std::string& name,
-		const sci::cca::TypeMap::pointer& properties )
-      : ComponentInfoImpl<Base>(Distributed::DistributedFramework::pointer(framework), 
-				name, 
-				name, 
-				properties,
-				sci::cca::Component::pointer(0))
-    {}
+		const sci::cca::TypeMap::pointer& properties );
 
-    ServiceImpl(DistributedFramework *framework, const std::string& name )
-      : ComponentInfoImpl<Base>(Distributed::DistributedFramework::pointer(framework), 
-				name, 
-				name, 
-				sci::cca::TypeMap::pointer(0),
-				sci::cca::Component::pointer(0))
-    {}
+    ServiceImpl(const DistributedFramework::pointer &framework, const std::string& name );
 
-
-    virtual ~ServiceImpl() {}
+    virtual ~ServiceImpl();
 
   private:
     ServiceImpl(const ServiceImpl&);

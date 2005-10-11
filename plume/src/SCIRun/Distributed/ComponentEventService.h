@@ -51,6 +51,8 @@ namespace SCIRun {
   class DistributedFramework;
   class ComponentEvent;
   
+  namespace DistributedServices = sci::cca::distributed::ports;
+
   /**
    * \class ComponentEventService
    *
@@ -59,13 +61,13 @@ namespace SCIRun {
    * from the framework (?)
    *
    */
-  class ComponentEventService : public ComponentEventServiceImpl<Distributed::ComponentEventService>
+  class ComponentEventService : public ComponentEventServiceImpl<DistributedServices::ComponentEventService>
   {
   public:
     typedef Distributed::internal::Service::pointer pointer;
 
-    ComponentEventService(DistributedFramework *framework)
-      : ComponentEventServiceImpl<Distributed::ComponentEventService>(framework)
+    ComponentEventService(const Distributed::DistributedFramework::pointer &framework)
+      : ComponentEventServiceImpl<DistributedServices::ComponentEventService>(framework)
     {}
 
     virtual ~ComponentEventService();
@@ -74,13 +76,13 @@ namespace SCIRun {
 	a smart pointer to the newly allocated object registered in the framework
 	\em fwk with the instance name \em name. */
 
-    static pointer create(DistributedFramework *framework);
+    static pointer create(const Distributed::DistributedFramework::pointer &framework);
     
     /** ? */
     void emitComponentEvent(const Distributed::ComponentEvent::pointer& event);
 
   private:
-    DistributedFramework *framework;
+    Distributed::DistributedFramework::pointer framework;
 
   };
 

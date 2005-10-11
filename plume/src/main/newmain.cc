@@ -43,8 +43,8 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/CCA/spec/sci_sidl.h>
 #include <Core/Thread/Thread.h>
-//#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/TypeMap.h>
+#include <SCIRun/Distributed/TypeMap.h>
+#include <SCIRun/Plume/PlumeFramework.h>
 
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/qt_defs.h>
@@ -116,7 +116,6 @@ int
 main(int argc, char *argv[]) {
   bool framework = true;
   
-  bool loadNet = parse_args( argc, argv);
   create_sci_environment(0,0);
   
   try {
@@ -136,32 +135,22 @@ main(int argc, char *argv[]) {
     std::cerr << "Caught unexpected exception!\n";
     abort();
   }
-  // FIXME [yarden]: remove until new framework code is available
-#if 0  
   // Create a new framework
   try {
-    sci::cca::DistributedComponentModelFramework::pointer sr;
+    PlumeFramework::pointer plume;
     if(framework) {
-      sr = sci::cca::DistributedComponentModelFramework::pointer(new SCIRunFramework());
-      std::cerr << "URL to framework:\n" << sr->getURL().getString() << std::endl;
+      plume = PlumeFramework::pointer(new PlumeFramework());
+      std::cerr << "URL to framework:\n" << plume->getURL().getString() << std::endl;
       //ofstream f("framework.url");
       //std::string s;
-      //f<<sr->getURL().getString();
+      //f<<plume->getURL().getString();
       //f.close();
     } else {
       std::cerr << "Not finished: pass url to existing framework\n";
     }
     
     sci::cca::Services::pointer main_services
-      = sr->getServices("SCIRun main", "main", sci::cca::TypeMap::pointer(0));
-
-    sci::cca::ports::FrameworkProperties::pointer fwkProperties =
-      pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
-			main_services->getPort("cca.FrameworkProperties"));
-    if (fwkProperties.isNull()) {
-      std::cerr << "Fatal Error: Cannot find framework properties service\n";
-      Thread::exitAll(1);
-    }
+      = plume->getServices("SCIRun main", "main", sci::cca::TypeMap::pointer(0));
 
     sci::cca::ports::BuilderService::pointer builder
       = pidl_cast<sci::cca::ports::BuilderService::pointer>(
@@ -169,12 +158,6 @@ main(int argc, char *argv[]) {
     if(builder.isNull()) {
       std::cerr << "Fatal Error: Cannot find builder service\n";
       Thread::exitAll(1);
-    }
-
-    if (loadNet) {
-        sci::cca::TypeMap::pointer map = fwkProperties->getProperties();
-        map->putString("network file", fileName);
-        //fwkProperties->setProperties(map);
     }
 
 #   if !defined(HAVE_QT)
@@ -202,7 +185,7 @@ main(int argc, char *argv[]) {
     std::cout << "SCIRun " << VERSION << " started..." << std::endl;
   
     //broadcast, listen to URL periodically
-    //sr->share(main_services);
+    //plume->share(main_services);
     
     PIDL::serveObjects();
     std::cout << "serveObjects done!\n";
@@ -223,6 +206,5 @@ main(int argc, char *argv[]) {
     std::cerr << "Caught unexpected exception!\n";
     abort();
   }
-#endif
   return 0;
 }

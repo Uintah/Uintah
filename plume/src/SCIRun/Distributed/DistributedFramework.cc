@@ -45,9 +45,9 @@ namespace SCIRun {
 
   // test of compilation of DistributedFramework
 
-  DistributedFramework::DistributedFramework(pointer parent)
-    :  DistributedFrameworkInternal<Distributed::DistributedFramework>(parent) 
-  {}
+//     DistributedFramework::DistributedFramework(const pointer &parent)
+//     :  DistributedFrameworkInternal<DistributedInternal::DistributedFrameworkInternal>(parent)
+//   {}
 
   DistributedFramework::~DistributedFramework() {}
   

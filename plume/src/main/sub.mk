@@ -32,40 +32,6 @@ SRCDIR   := main
 
 ########################################################################
 #
-# scirun (aka PROGRAM_PSE)
-#
-
-SRCS    := $(SRCDIR)/main.cc
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Dataflow Core
-else
-  PSELIBS := Dataflow/Network Core/Containers Dataflow/TCLThread Core/GuiInterface \
-        Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-        Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Geom Core/Init
-  ifeq ($(HAVE_PTOLEMY), yes)   
-        PSELIBS += Packages/Ptolemy/Core/Comm
-  endif
-  ifeq ($(OS_NAME),Darwin)
-    PSELIBS += Core/Datatypes Core/ImportExport Core/Persistent
-  endif
-endif
-
-LIBS :=  $(XML_LIBRARY)
-ifeq ($(NEED_SONAME),yes)
-  LIBS := $(LIBS) $(XML_LIBRARY) $(TK_LIBRARY) $(DL_LIBRARY) $(Z_LIBRARY) $(SCISOCK_LIBRARY)
-endif
-
-PROGRAM := $(PROGRAM_PSE)
-
-ifeq ($(OS_NAME),Darwin)
-  PROGRAM_LDFLAGS := $(PROGRAM_LDFLAGS) -bind_at_load
-endif
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-########################################################################
-#
 # SCIRun2 Stuff:
 #
 
@@ -80,9 +46,10 @@ ifeq ($(BUILD_SCIRUN2),yes)
   ifeq ($(LARGESOS),yes)
     PSELIBS := Core/CCA
   else
-    PSELIBS := Core/Exceptions Core/CCA/Comm    \
+    PSELIBS := SCIRun/Distributed SCIRun/Plume\
+	Core/Exceptions Core/CCA/Comm \
         Core/CCA/PIDL Core/CCA/spec Core/Util \
-        SCIRun Core/CCA/SSIDL Core/Thread
+        Core/CCA/SSIDL Core/Thread
     ifeq ($(HAVE_GLOBUS),yes)   
       PSELIBS += Core/globus_threads
     endif
@@ -98,64 +65,6 @@ ifeq ($(BUILD_SCIRUN2),yes)
 
   include $(SCIRUN_SCRIPTS)/program.mk
 
-  ########################################################################
-  #
-  # ploader
-  #
-
-  #build the SCIRun CCA Component Loader here
-  ifeq ($(LARGESOS),yes)
-    PSELIBS := Core/CCA/Component
-  else
-
-    ifeq ($(HAVE_GLOBUS),yes)
-      PSELIBS := Core/Exceptions Core/CCA/Comm Core/CCA/Comm/DT \
-        Core/CCA/PIDL Core/globus_threads Core/CCA/spec \
-        SCIRun Core/CCA/SSIDL Core/Thread 
-    else
-      PSELIBS := Core/Exceptions Core/CCA/Comm\
-        Core/CCA/PIDL Core/CCA/spec \
-        SCIRun Core/CCA/SSIDL Core/Thread 
-    endif
-  endif
-
-  ifeq ($(HAVE_MPI),yes)
-    LIBS := $(MPI_LIBRARY) 
-  endif
-
-  PROGRAM := ploader
-  SRCS      := $(SRCDIR)/ploader.cc
-  include $(SCIRUN_SCRIPTS)/program.mk
-
 endif # Build SCIRun2
 
-########################################################################
-#
-# scirunremote
-#
-
-SRCS     := $(SRCDIR)/scirunremote.cc
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Dataflow Core
-else
-  PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
-        Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-        Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Init
-  ifeq ($(OS_NAME),Darwin)
-    PSELIBS += Core/Datatypes Core/ImportExport
-  endif
-endif
-
-LIBS := $(LIBS) $(XML_LIBRARY)  $(DL_LIBRARY) $(Z_LIBRARY)
-
-PROGRAM := scirunremote
-
-ifeq ($(OS_NAME),Darwin)
-  PROGRAM_LDFLAGS := $(PROGRAM_LDFLAGS) -bind_at_load
-endif
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-########################################################################
 

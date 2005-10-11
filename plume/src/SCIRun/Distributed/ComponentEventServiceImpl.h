@@ -100,7 +100,7 @@ namespace SCIRun {
     std::vector<Listener*> listeners;
     SCIRun::Mutex listeners_lock; 
     
-    ComponentEventServiceImpl(DistributedFramework*);
+    ComponentEventServiceImpl(const Distributed::DistributedFramework::pointer &);
   };
 
 

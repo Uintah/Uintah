@@ -86,6 +86,8 @@ namespace SCIRun {
     virtual bool canConnectTo(const Distributed::PortInfo::pointer &);
     /** */
     virtual int numOfConnections();
+    /** */
+    virtual bool isConnected();
 
     /** */
     virtual sci::cca::Port::pointer getPort();
@@ -93,7 +95,10 @@ namespace SCIRun {
     virtual Distributed::PortInfo::pointer getPeer();
     /** */
     virtual Distributed::PortType getPortType();
-    
+
+    /** */
+    virtual sci::cca::TypeMap::pointer getProperties();
+
     /** */
     virtual std::string getName();
     /** */

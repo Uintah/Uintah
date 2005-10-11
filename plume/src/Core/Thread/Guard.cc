@@ -47,10 +47,10 @@ namespace SCIRun {
 
 //using Guard;
 
-Guard::Guard(Mutex* mutex)
+  Guard::Guard(Mutex* mutex, Locking lock)
     : mutex_(mutex), monitor_(0)
 {
-  mutex_->lock();
+  if ( lock == Lock )  mutex_->lock();
 }
 
 Guard::Guard(CrowdMonitor* crowd_monitor, Which action) 

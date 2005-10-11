@@ -42,9 +42,10 @@
 #define SCIRun_CCA_CCAComponentModel_h
 
 #include <Core/Thread/Mutex.h>
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Distributed/ComponentInfo.h>
 #include <SCIRun/Plume/CCAComponentDescription.h>
-#include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/Distributed/DistributedFramework.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -64,11 +65,11 @@ namespace SCIRun {
   class CCAComponentModel 
   {
   public:
-    CCAComponentModel(DistributedFramework *framework);
+    CCAComponentModel(const DistributedFramework::pointer &framework);
     virtual ~CCAComponentModel();
     
     
-    virtual ComponentInfo *createComponent(const std::string& name,
+    virtual Distributed::ComponentInfo::pointer createComponent(const std::string& name,
 					   const std::string& type,
 					   const sci::cca::TypeMap::pointer& properties);
     
@@ -89,10 +90,10 @@ namespace SCIRun {
     std::vector<std::string> splitPathString(const std::string &path);
 
   private:
-    DistributedFramework *framework;
-    typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
-    componentDB_type components;
-    SCIRun::Mutex components_lock;   
+    Distributed::DistributedFramework::pointer framework;
+    typedef std::map<std::string, CCAComponentDescription*> DescriptionMap;
+    DescriptionMap descriptions;
+    Mutex descriptions_lock;   
    
     std::string sidlDLLPath;
 

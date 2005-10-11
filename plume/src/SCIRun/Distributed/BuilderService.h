@@ -47,22 +47,22 @@
 
 namespace SCIRun {
   
+  namespace DistributedServices = Distributed::ports;
+  namespace DistributedInternal = Distributed::internal;
+
   /**
    * \class BuilderService
    */
-  class BuilderService : public BuilderServiceImpl<Distributed::BuilderService>
+  class BuilderService : public BuilderServiceImpl<DistributedServices::BuilderService>
   {
   public:
     typedef Distributed::internal::Service::pointer pointer;
     
-    BuilderService(DistributedFramework *framework) 
-      : BuilderServiceImpl<Distributed::BuilderService>(framework)
-    {
-    }
+    BuilderService(const DistributedFramework::internalPointer &framework); 
     
     virtual ~BuilderService();
     
-    static pointer create(DistributedFramework *framework);
+    static pointer create(const DistributedFramework::internalPointer &framework);
   };
 
 } // namespace SCIRun

@@ -41,16 +41,17 @@
 #ifndef SCIRun_ComponentRepositoryServiceImpl_code
 #define SCIRun_ComponentRepositoryServiceImpl_code
 
-#include <SCIRun/Distributed/ComponentRepositoryServiceImpl.h>
+//#include <SCIRun/Distributed/ComponentRepositoryServiceImpl.h>
 #include <SCIRun/Distributed/DistributedFramework.h>
 #include <SCIRun/Distributed/ComponentClassDescription.h>
+#include <SCIRun/Distributed/ServiceImpl.code>
 
 #include <iostream>
 
 namespace SCIRun {
   
   template<class Base>
-  ComponentRepositoryServiceImpl<Base>::ComponentRepositoryServiceImpl(DistributedFramework* framework)
+  ComponentRepositoryServiceImpl<Base>::ComponentRepositoryServiceImpl(const DistributedFramework::internalPointer &framework)
     : ServiceImpl<Base>(framework, "ComponentRepositoryService"),
       framework(framework)
   {
@@ -72,15 +73,7 @@ namespace SCIRun {
   SSIDL::array1<sci::cca::ComponentClassDescription::pointer>
   ComponentRepositoryServiceImpl<Base>::getAvailableComponentClasses()
   {
-    std::vector<ComponentDescription*> list;
-    framework->listAllComponentTypes(list, false);
-    SSIDL::array1<sci::cca::ComponentClassDescription::pointer> ccalist;
-    
-    for(std::vector<ComponentDescription*>::iterator iter = list.begin();
-	iter != list.end(); iter++) {
-      ccalist.push_back(sci::cca::ComponentClassDescription::pointer(new ComponentClassDescription(*iter)));
-    }
-    return ccalist;
+    return framework->listAllComponentTypes(false);
   }
 }  // end namespace SCIRun
 
