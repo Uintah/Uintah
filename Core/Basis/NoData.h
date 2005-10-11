@@ -36,7 +36,7 @@
 #include <string>
 #include <Core/Geometry/Point.h>
 #include <Core/Util/TypeDescription.h>
-#include <Core/Datatypes/Datatype.h>
+#include <Core/Persistent/Persistent.h>
 #include <Core/Datatypes/TypeName.h>
 
 namespace SCIRun {
@@ -46,7 +46,7 @@ using std::string;
 
 //! Class for handling of element without storage for field variables
 template <class T> //! for compilation consistency
-class NoDataBasis : public Datatype
+class NoDataBasis : public Persistent
 {
 public:
   NoDataBasis() {}

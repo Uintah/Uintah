@@ -36,7 +36,7 @@
 #include <string>
 #include <Core/Geometry/Point.h>
 #include <Core/Util/TypeDescription.h>
-#include <Core/Datatypes/Datatype.h>
+#include <Core/Persistent/Persistent.h>
 #include <Core/Datatypes/TypeName.h>
 
 namespace SCIRun {
@@ -47,7 +47,7 @@ using std::string;
 
 //! Class for handling of element with constant field variables
 template <class T>
-class ConstantBasis : public Datatype
+class ConstantBasis : public Persistent
 {
 public:
   ConstantBasis() {}
