@@ -37,7 +37,6 @@
 
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Util/TypeDescription.h>
-#include <Core/Datatypes/Datatype.h>
 #include <Core/Basis/Locate.h>
 
 namespace SCIRun {

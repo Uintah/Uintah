@@ -30,8 +30,6 @@
 //    Date   : Dec 04 2004
 
 #include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/ColumnMatrix.h>
 
 namespace SCIRun {
 
