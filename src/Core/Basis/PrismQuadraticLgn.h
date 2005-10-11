@@ -162,7 +162,8 @@ const TypeDescription* get_type_description(PrismQuadraticLgn<T> *)
     (*subs)[0] = sub;
     td = scinew TypeDescription(PrismQuadraticLgn<T>::type_name(0), subs, 
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::BASIS_E);
   }
   return td;
 }

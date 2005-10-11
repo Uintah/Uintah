@@ -1814,7 +1814,8 @@ get_type_description(MaskedLatVolMesh<Basis> *)
     (*subs)[0] = sub;
     td = scinew TypeDescription(MaskedLatVolMesh<Basis>::type_name(0), subs,
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1830,7 +1831,8 @@ MaskedLatVolMesh<Basis>::node_index_type_description()
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::NodeIndex",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1845,7 +1847,8 @@ MaskedLatVolMesh<Basis>::cell_index_type_description()
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::CellIndex",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1861,7 +1864,8 @@ MaskedLatVolMesh<Basis>::node_type_description()
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1877,7 +1881,8 @@ MaskedLatVolMesh<Basis>::edge_type_description()
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1893,7 +1898,8 @@ MaskedLatVolMesh<Basis>::face_type_description()
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1909,7 +1915,8 @@ MaskedLatVolMesh<Basis>::cell_type_description()
       SCIRun::get_type_description((MaskedLatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }

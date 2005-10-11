@@ -34,20 +34,20 @@
 #if !defined(_STREAMLINES_H_)
 #define _STREAMLINES_H_
 
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Geometry/CompGeom.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
+#include <Core/Geometry/Point.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/FieldInterface.h>
+//#include <Core/Geometry/CompGeom.h>
+//#include <Core/Thread/Thread.h>
+//#include <Core/Util/TypeDescription.h>
+//#include <Core/Util/DynamicLoader.h>
+//#include <Core/Datatypes/FieldInterface.h>
 #include <algorithm>
 #include <sstream>
 
 namespace SCIRun {
+
 typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
 typedef CrvLinearLgn<double>            DatBasis;
 typedef GenericField<CMesh, DatBasis, vector<double> > CField;

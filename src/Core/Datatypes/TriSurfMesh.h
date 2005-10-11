@@ -1760,7 +1760,8 @@ get_type_description(TriSurfMesh<Basis> *)
     (*subs)[0] = sub;
     td = scinew TypeDescription(TriSurfMesh<Basis>::type_name(0), subs,
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1783,7 +1784,8 @@ TriSurfMesh<Basis>::node_type_description()
       SCIRun::get_type_description((TriSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1799,7 +1801,8 @@ TriSurfMesh<Basis>::edge_type_description()
       SCIRun::get_type_description((TriSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1815,7 +1818,8 @@ TriSurfMesh<Basis>::face_type_description()
       SCIRun::get_type_description((TriSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1831,7 +1835,8 @@ TriSurfMesh<Basis>::cell_type_description()
       SCIRun::get_type_description((TriSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }

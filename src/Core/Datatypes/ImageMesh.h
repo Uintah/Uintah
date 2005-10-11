@@ -1024,7 +1024,8 @@ get_type_description(ImageMesh<Basis> *)
     (*subs)[0] = sub;
     td = scinew TypeDescription(ImageMesh<Basis>::type_name(0), subs,
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1047,7 +1048,8 @@ ImageMesh<Basis>::node_type_description()
       SCIRun::get_type_description((ImageMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1063,7 +1065,8 @@ ImageMesh<Basis>::edge_type_description()
       SCIRun::get_type_description((ImageMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1079,7 +1082,8 @@ ImageMesh<Basis>::face_type_description()
       SCIRun::get_type_description((ImageMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -1095,7 +1099,8 @@ ImageMesh<Basis>::cell_type_description()
       SCIRun::get_type_description((ImageMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }

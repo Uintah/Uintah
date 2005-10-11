@@ -3533,7 +3533,8 @@ get_type_description(TetVolMesh<Basis> *)
     (*subs)[0] = sub;
     td = scinew TypeDescription(TetVolMesh<Basis>::type_name(0), subs,
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -3556,7 +3557,8 @@ TetVolMesh<Basis>::node_type_description()
       SCIRun::get_type_description((TetVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -3572,7 +3574,8 @@ TetVolMesh<Basis>::edge_type_description()
       SCIRun::get_type_description((TetVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -3588,7 +3591,8 @@ TetVolMesh<Basis>::face_type_description()
       SCIRun::get_type_description((TetVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -3604,7 +3608,8 @@ TetVolMesh<Basis>::cell_type_description()
       SCIRun::get_type_description((TetVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
