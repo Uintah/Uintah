@@ -69,7 +69,7 @@ public:
                     const gov::cca::TypeMap& properties,
                     const gov::cca::Port& port,
                     PortType porttype);
-  ~BabelPortInstance();
+  virtual ~BabelPortInstance();
   virtual bool connect(PortInstance*);
   virtual PortInstance::PortType portType();
   virtual std::string getType();

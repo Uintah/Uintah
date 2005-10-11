@@ -82,10 +82,13 @@ public:
       knows how to instantiate component \em type. */
   virtual bool haveComponent(const std::string& type);
 
-  /** Allocates an instance of the component of type \em type.  The parameter
-      \em name is assigned as the unique name of the newly created instance.
-      Returns a smart pointer to the newly created instance, or a null pointer
-      on failure. */
+  /**
+   * Allocates an instance of the component of type \em type.
+   * The parameter \em name is assigned as the unique name of the newly
+   * created instance. Returns a smart pointer to the newly created
+   * instance, or a null pointer on failure.
+   * Remote components are currently NOT supported.
+   */
   virtual ComponentInstance* createInstance(const std::string& name,
                                             const std::string& type);
 
