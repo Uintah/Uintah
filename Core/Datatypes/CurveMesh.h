@@ -324,12 +324,13 @@ const TypeDescription* get_type_description(CurveMesh<Basis> *)
   static TypeDescription *td = 0;
   if (!td)
   {
-    const TypeDescription *sub = SCIRun::get_type_description((Basis*)0);
+    const TypeDescription *sub = get_type_description((Basis*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(CurveMesh<Basis>::type_name(0), subs,
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -352,7 +353,8 @@ CurveMesh<Basis>::node_type_description()
       SCIRun::get_type_description((CurveMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -368,7 +370,8 @@ CurveMesh<Basis>::edge_type_description()
       SCIRun::get_type_description((CurveMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -384,7 +387,8 @@ CurveMesh<Basis>::face_type_description()
       SCIRun::get_type_description((CurveMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -400,7 +404,8 @@ CurveMesh<Basis>::cell_type_description()
       SCIRun::get_type_description((CurveMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }

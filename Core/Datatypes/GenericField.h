@@ -677,14 +677,16 @@ GenericField<Mesh, Basis, FData>::get_type_description(int n) const
       (*subs)[0] = sub1;
       (*subs)[1] = sub2;
       (*subs)[2] = sub3;
-      tdn1 = scinew TypeDescription(name, subs, path, namesp);
+      tdn1 = scinew TypeDescription(name, subs, path, namesp, 
+				    TypeDescription::FIELD_E);
     } 
     return tdn1;
   }
   else if(n == 0) {
     static TypeDescription* tdn0 = 0;
     if (tdn0 == 0) {
-      tdn0 = scinew TypeDescription(name, 0, path, namesp);
+      tdn0 = scinew TypeDescription(name, 0, path, namesp, 
+				    TypeDescription::FIELD_E);
     }
     return tdn0;
   }

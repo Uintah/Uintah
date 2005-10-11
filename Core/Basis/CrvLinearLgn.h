@@ -255,7 +255,6 @@ public:
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);
-protected:
 };
 
 template <class T>
@@ -268,7 +267,8 @@ const TypeDescription* get_type_description(CrvLinearLgn<T> *)
     (*subs)[0] = sub;
     td = scinew TypeDescription(CrvLinearLgn<T>::type_name(0), subs, 
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::BASIS_E);
   }
   return td;
 }

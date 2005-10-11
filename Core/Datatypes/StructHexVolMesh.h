@@ -824,13 +824,6 @@ StructHexVolMesh<Basis>::type_name(int n)
 
 template <class Basis>
 const TypeDescription*
-StructHexVolMesh<Basis>::get_type_description() const
-{
-  return SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
-}
-
-template <class Basis>
-const TypeDescription*
 get_type_description(StructHexVolMesh<Basis> *)
 {
   static TypeDescription *td = 0;
@@ -841,9 +834,17 @@ get_type_description(StructHexVolMesh<Basis> *)
     (*subs)[0] = sub;
     td = scinew TypeDescription(StructHexVolMesh<Basis>::type_name(0), subs,
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
+}
+
+template <class Basis>
+const TypeDescription*
+StructHexVolMesh<Basis>::get_type_description() const
+{
+  return SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
 }
 
 template <class Basis>
@@ -857,7 +858,8 @@ StructHexVolMesh<Basis>::node_type_description()
       SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -873,7 +875,8 @@ StructHexVolMesh<Basis>::edge_type_description()
       SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -889,7 +892,8 @@ StructHexVolMesh<Basis>::face_type_description()
       SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }
@@ -905,7 +909,8 @@ StructHexVolMesh<Basis>::cell_type_description()
       SCIRun::get_type_description((StructHexVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::MESH_E);
   }
   return td;
 }

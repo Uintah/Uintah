@@ -104,12 +104,15 @@ TypeDescription::register_type()
 }
 
 
-TypeDescription::TypeDescription(const string &name, const string &path,
-				 const string &namesp) : 
+TypeDescription::TypeDescription(const string &name, 
+				 const string &path,
+				 const string &namesp, 
+				 category_e c) : 
   subtype_(0), 
   name_(name),
   h_file_path_(path),
-  namespace_(namesp)
+  namespace_(namesp),
+  category_(c)
 {
   register_type();
 }
@@ -117,11 +120,13 @@ TypeDescription::TypeDescription(const string &name, const string &path,
 TypeDescription::TypeDescription(const string &name, 
 				 td_vec* sub, 
 				 const string &path,
-				 const string &namesp) : 
+				 const string &namesp,
+				 category_e c) : 
   subtype_(sub),
   name_(name),
   h_file_path_(path),
-  namespace_(namesp)
+  namespace_(namesp),
+  category_(c)
 {
   register_type();
 }
@@ -214,7 +219,24 @@ TypeDescription::get_filename() const
 void 
 TypeDescription::fill_compile_info(CompileInfo *ci) const
 {
-  ci->add_include(get_h_file_path());
+  switch (category_) {
+  case DATA_E:
+    ci->add_data_include(get_h_file_path());
+    break;
+  case BASIS_E:
+    ci->add_basis_include(get_h_file_path());
+    break;
+  case MESH_E:
+    ci->add_mesh_include(get_h_file_path());
+    break;
+  case FIELD_E:
+    ci->add_field_include(get_h_file_path());
+    break;
+  default:
+    ci->add_include(get_h_file_path());
+  }
+
+
   ci->add_namespace(get_namespace());
   if(subtype_) {
     td_vec::iterator iter = subtype_->begin();

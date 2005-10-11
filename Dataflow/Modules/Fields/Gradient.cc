@@ -159,11 +159,11 @@ GradientAlgo::get_compile_info(const TypeDescription *ftd,
   
   // Add in the include path to compile this obj
 
-
   rval->add_include(include_path);
   ftd->fill_compile_info(rval);
   mtd->fill_compile_info(rval);
   ctd->fill_compile_info(rval);
+
   return rval;
 }
 

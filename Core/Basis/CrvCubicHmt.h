@@ -113,7 +113,8 @@ const TypeDescription* get_type_description(CrvCubicHmt<T> *)
     (*subs)[0] = sub;
     td = scinew TypeDescription(CrvCubicHmt<T>::type_name(0), subs, 
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::BASIS_E);
   }
   return td;
 }
@@ -125,7 +126,8 @@ const TypeDescription* get_type_description(BiCrvCubicHmt<T> *)
   if (!td)
   {
     td = scinew TypeDescription(BiCrvCubicHmt<T>::type_name(-1), 
-				string(__FILE__), "SCIRun");
+				string(__FILE__), "SCIRun", 
+				TypeDescription::BASIS_E);
   }
   return td;
 }
@@ -137,7 +139,8 @@ const TypeDescription* get_type_description(TriCrvCubicHmt<T> *)
   if (!td)
   {
     td = scinew TypeDescription(TriCrvCubicHmt<T>::type_name(-1), 
-				string(__FILE__), "SCIRun");
+				string(__FILE__), "SCIRun", 
+				TypeDescription::BASIS_E);
   }
   return td;
 }

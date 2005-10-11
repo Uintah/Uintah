@@ -139,14 +139,16 @@ FData3d<Data, Msh>::get_type_description(int n) const
       TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
       (*subs)[0] = sub1;
       (*subs)[1] = sub2;
-      tdn1 = scinew TypeDescription(name, subs, path, namesp);
+      tdn1 = scinew TypeDescription(name, subs, path, namesp,
+				    TypeDescription::DATA_E);
     } 
     return tdn1;
   }
   else if(n == 0) {
     static TypeDescription* tdn0 = 0;
     if (tdn0 == 0) {
-      tdn0 = scinew TypeDescription(name, 0, path, namesp);
+      tdn0 = scinew TypeDescription(name, 0, path, namesp,
+				    TypeDescription::DATA_E);
     }
     return tdn0;
   }
@@ -171,7 +173,8 @@ get_type_description(FData3d<Data, Msh>*)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
     (*subs)[0] = sub1;
     (*subs)[1] = sub2;
-    tdn1 = scinew TypeDescription(name, subs, path, namesp);
+    tdn1 = scinew TypeDescription(name, subs, path, namesp,
+				  TypeDescription::DATA_E);
   }
   return tdn1;
 }
@@ -273,7 +276,8 @@ get_type_description(FData2d<Data, Msh>*)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
     (*subs)[0] = sub1;
     (*subs)[1] = sub2;
-    tdn1 = scinew TypeDescription(name, subs, path, namesp);
+    tdn1 = scinew TypeDescription(name, subs, path, namesp,
+				  TypeDescription::DATA_E);
   }
   return tdn1;
 }

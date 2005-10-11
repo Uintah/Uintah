@@ -111,7 +111,8 @@ const TypeDescription* get_type_description(NoDataBasis<T> *)
   if (!td)
   {
     td = scinew TypeDescription(NoDataBasis<T>::type_name(-1), 
-				string(__FILE__), "SCIRun");
+				string(__FILE__), "SCIRun", 
+				TypeDescription::BASIS_E);
   }
   return td;
 }

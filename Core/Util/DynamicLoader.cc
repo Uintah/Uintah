@@ -106,6 +106,51 @@ CompileInfo::add_include(const string &inc)
   includes_.push_front(inc);
 }
 
+//! Only add unique include strings to the list, and
+//! preserve the push front behavior
+void
+CompileInfo::add_data_include(const string &inc)
+{
+  list<string>::iterator iter = data_includes_.begin();
+  while (iter != data_includes_.end()) {
+    if (*iter++ == inc) return;
+  }
+  data_includes_.push_front(inc);
+}
+//! Only add unique include strings to the list, and
+//! preserve the push front behavior
+void
+CompileInfo::add_basis_include(const string &inc)
+{
+  list<string>::iterator iter = basis_includes_.begin();
+  while (iter != basis_includes_.end()) {
+    if (*iter++ == inc) return;
+  }
+  basis_includes_.push_front(inc);
+}
+//! Only add unique include strings to the list, and
+//! preserve the push front behavior
+void
+CompileInfo::add_mesh_include(const string &inc)
+{
+  list<string>::iterator iter = mesh_includes_.begin();
+  while (iter != mesh_includes_.end()) {
+    if (*iter++ == inc) return;
+  }
+  mesh_includes_.push_front(inc);
+}
+//! Only add unique include strings to the list, and
+//! preserve the push front behavior
+void
+CompileInfo::add_field_include(const string &inc)
+{
+  list<string>::iterator iter = field_includes_.begin();
+  while (iter != field_includes_.end()) {
+    if (*iter++ == inc) return;
+  }
+  field_includes_.push_front(inc);
+}
+
 
 void
 CompileInfo::add_post_include(const string &post)
@@ -126,9 +171,22 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
 
   fstr << "// This is an automatically generated file, do not edit!" << endl;
 
+  list<string> incl;
+  list<string> oincl = list<string>(includes_);
+  list<string> fincl = list<string>(field_includes_);
+  list<string> dincl = list<string>(data_includes_);
+  list<string> mincl = list<string>(mesh_includes_);
+  list<string> bincl = list<string>(basis_includes_);
+
+  incl.splice(incl.begin(), oincl);
+  incl.splice(incl.begin(), fincl);
+  incl.splice(incl.begin(), dincl);
+  incl.splice(incl.begin(), mincl);
+  incl.splice(incl.begin(), bincl);
+
   // generate standard includes
-  list<string>::const_iterator iter = includes_.begin();
-  while (iter != includes_.end())
+  list<string>::const_iterator iter = incl.begin();
+  while (iter != incl.end())
   {
     const string &s = *iter;
     if (s.substr(0, 5) == STD_STR)
@@ -142,8 +200,8 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
   ASSERT(sci_getenv("SCIRUN_SRCDIR"));
   const std::string srcdir(sci_getenv("SCIRUN_SRCDIR"));
   // Generate other includes.
-  iter = includes_.begin();
-  while (iter != includes_.end())
+  iter = incl.begin();
+  while (iter != incl.end())
   {
     const string &s = *iter;
 

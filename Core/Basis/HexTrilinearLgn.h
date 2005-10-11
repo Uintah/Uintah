@@ -354,7 +354,8 @@ get_type_description(HexTrilinearLgn<T> *)
     (*subs)[0] = sub;
     td = scinew TypeDescription(HexTrilinearLgn<T>::type_name(0), subs, 
 				string(__FILE__),
-				"SCIRun");
+				"SCIRun", 
+				TypeDescription::BASIS_E);
   }
   return td;
 }

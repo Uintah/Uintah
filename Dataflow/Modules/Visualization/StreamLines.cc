@@ -613,6 +613,9 @@ StreamLinesAccAlgo::get_compile_info(const TypeDescription *fsrc,
   rval->add_include(include_path);
   fsrc->fill_compile_info(rval);
   vfld->fill_compile_info(rval);
+  CField cf;
+  const TypeDescription *crvf = cf.get_type_description();
+  crvf->fill_compile_info(rval);
   return rval;
 }
 

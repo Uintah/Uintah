@@ -60,12 +60,20 @@ public:
   
   //! add to the list of files to include.
   void add_include(const string &inc);
+  void add_data_include(const string &inc);
+  void add_basis_include(const string &inc);
+  void add_mesh_include(const string &inc);
+  void add_field_include(const string &inc);
   void add_namespace(const string &inc) { namespaces_[inc] = 1; }
   void add_post_include(const string &post);
   void create_cc(ostream &fstr, bool empty) const;
   
   string             filename_;
   list<string>       includes_;
+  list<string>       data_includes_;
+  list<string>       basis_includes_;
+  list<string>       mesh_includes_;
+  list<string>       field_includes_;
   ci_map_type        namespaces_;
   string             base_class_name_;
   string             template_class_name_;

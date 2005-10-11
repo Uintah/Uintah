@@ -50,15 +50,25 @@ struct CompileInfo;
 
 class TypeDescription {
 public:
+  enum category_e {
+    DATA_E,
+    BASIS_E,
+    MESH_E,
+    FIELD_E,
+    OTHER_E
+  }; 
+
   typedef vector<const TypeDescription*> td_vec;
 
   TypeDescription(const string& name,
 		  const string& path,
-		  const string& namesp);
+		  const string& namesp,
+		  category_e c = OTHER_E);
   TypeDescription(const string& name, 
 		  td_vec *sub, // this takes ownership of the memory. 
 		  const string& path,
-		  const string& namesp);
+		  const string& namesp,
+		  category_e c = OTHER_E);
   ~TypeDescription();
      
   td_vec* get_sub_type() const {
@@ -95,7 +105,7 @@ private:
   string                     name_;
   string                     h_file_path_;
   string                     namespace_;
-
+  category_e                 category_;
   // Hide these methods
   TypeDescription(const TypeDescription&);
   TypeDescription& operator=(const TypeDescription&);
@@ -125,7 +135,8 @@ const TypeDescription* get_type_description(vector<T>*)
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription("vector", subs, "std::vector", "std");
+    td = scinew TypeDescription("vector", subs, "std::vector", "std",
+				TypeDescription::DATA_E);
   }
   return td;
 }
@@ -140,7 +151,8 @@ const TypeDescription* get_type_description (pair<T1,T2> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
     (*subs)[0] = sub1;
     (*subs)[1] = sub2;
-    td = scinew TypeDescription("pair", subs, "std::utility", "std");
+    td = scinew TypeDescription("pair", subs, "std::utility", "std",
+				TypeDescription::DATA_E);
   }
   return td;
 
