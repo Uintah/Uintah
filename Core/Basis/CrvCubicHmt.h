@@ -59,8 +59,8 @@ public:
   {
     const double x=coords[0];  
     return T((x-1)*(x-1)*(1 + 2*x) * cd.node0() 
-	     +(x-1)*(x-1)*x * cd.node1()
-	     +(3 - 2*x)*x*x * derivs_[cd.node0_index()]  
+	     +(x-1)*(x-1)*x * derivs_[cd.node0_index()]
+	     +(3 - 2*x)*x*x * cd.node1()  
 	     +(-1+x)*x*x * derivs_[cd.node1_index()]);
   }
   
@@ -74,8 +74,8 @@ public:
     derivs.resize(1);
 
     derivs[0] = T(6*(-1 + x)*x * cd.node0() 
-		  +(1 - 4*x + 3*x*x) * cd.node1()
-		  -6*(-1 + x)*x * derivs_[cd.node0_index()]  
+		  +(1 - 4*x + 3*x*x) * derivs_[cd.node0_index()] 
+		  -6*(-1 + x)*x * cd.node1() 
 		  +x*(-2 + 3*x) * derivs_[cd.node1_index()]);
   }
   

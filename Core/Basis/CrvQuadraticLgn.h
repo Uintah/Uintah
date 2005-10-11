@@ -55,8 +55,8 @@ public:
   {
     const double x=coords[0];  
     return T((1 - 3*x + 2*x*x) * cd.node0() 
-	     -4*(-1 + x)*x* cd.node1()
-	     +x*(-1 + 2*x)* nodes_[cd.edge0_index()]);
+	     -4*(-1 + x)*x* nodes_[cd.edge0_index()]) 
+	     +x*(-1 + 2*x)* cd.node1();
   }
   
   //! get first derivative at parametric coordinate
@@ -69,8 +69,8 @@ public:
     derivs.resize(1);
 
     derivs[0] = T((-3 + 4*x) * cd.node0() 
-		  +(4 - 8*x)* cd.node1()
-		  +(-1 + 4*x)* nodes_[cd.edge0_index()]);
+		  +(4 - 8*x)* nodes_[cd.edge0_index()])
+		  +(-1 + 4*x)* cd.node1();
   }
   
   //! add a node value corresponding to edge
