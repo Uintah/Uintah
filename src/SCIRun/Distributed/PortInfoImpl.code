@@ -87,15 +87,34 @@ namespace SCIRun {
   }
   
   template<class Base> 
+  std::string  PortInfoImpl<Base>::getType()
+  {
+    return type;
+  }
+  
+  template<class Base> 
   int PortInfoImpl<Base>::numOfConnections()
   {
     return connections.size();
   }
   
+  template<class Base>
+  bool PortInfoImpl<Base>::isConnected()
+  {
+    return connections.size() > 0; 
+  }
+
   template<class Base> 
   Distributed::PortType PortInfoImpl<Base>::getPortType()
   {
     return portType;
+  }
+  
+  
+  template<class Base> 
+  TypeMap::pointer PortInfoImpl<Base>::getProperties()
+  {
+    return properties;
   }
   
   

@@ -42,6 +42,7 @@
 #define SCIRun_ComponentRepositoryService_h
 
 #include <SCIRun/Distributed/ComponentRepositoryServiceImpl.h>
+#include <SCIRun/Distributed/DistributedFramework.h>
 #include <vector>
 
 namespace SCIRun {
@@ -63,17 +64,15 @@ namespace SCIRun {
     typedef Distributed::ports::ComponentRepositoryService Interface;
     typedef Interface::pointer pointer;
 
-    ComponentRepositoryService(DistributedFramework *framework)
-      : ComponentRepositoryServiceImpl<Interface>(framework)
-    {}
-
+    ComponentRepositoryService(const DistributedFramework::internalPointer &framework);
+ 
     virtual ~ComponentRepositoryService();
     
     /** Factory method for allocating new ComponentRepositoryService objects.  Returns
 	a smart pointer to the newly allocated object registered in the framework
 	\em fwk with the instance name \em name. */
 
-    static pointer create(DistributedFramework *framework);
+    static pointer create(const DistributedFramework::internalPointer &framework);
     
   private:
     DistributedFramework *framework;

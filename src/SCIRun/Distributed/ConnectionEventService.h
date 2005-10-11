@@ -66,9 +66,7 @@ namespace SCIRun {
   public:
     typedef Distributed::internal::Service::pointer pointer;
     
-    ConnectionEventService(DistributedFramework *framework)
-      : ConnectionEventServiceImpl<DistributedPorts::ConnectionEventService>(framework)
-    {}
+    ConnectionEventService(const DistributedFramework::internalPointer &framework);
 
     virtual ~ConnectionEventService();
     
@@ -76,7 +74,7 @@ namespace SCIRun {
 	a smart pointer to the newly allocated object registered in the framework
 	\em fwk with the instance name \em name. */
 
-    static pointer create(DistributedFramework *framework);
+    static pointer create(const DistributedFramework::internalPointer &framework);
     
     /** ? */
     void emitConnectionEvent(const Ports::ConnectionEvent::pointer& event);

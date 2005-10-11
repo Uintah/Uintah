@@ -39,6 +39,7 @@
  */
 
 #include <SCIRun/Distributed/ConnectionInfo.h>
+#include <SCIRun/Distributed/ConnectionInfoImpl.code>
 
 namespace SCIRun {
   

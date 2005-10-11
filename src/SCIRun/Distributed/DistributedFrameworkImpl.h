@@ -62,7 +62,7 @@ namespace SCIRun {
   public:
     typedef Distributed::DistributedFramework::pointer pointer;
 
-    DistributedFrameworkImpl( pointer parent = 0);
+    DistributedFrameworkImpl( const pointer &parent = pointer(0));
     virtual ~DistributedFrameworkImpl();
     
     virtual Distributed::FrameworkID::pointer getFrameworkID();

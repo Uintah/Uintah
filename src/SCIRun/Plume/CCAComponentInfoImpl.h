@@ -58,7 +58,11 @@ namespace SCIRun {
   {
   public:
     typedef Plume::CCAComponentInfo::pointer pointer;
-    
+    typedef typename ComponentInfoImpl<Base>::PortMap PortMap;
+
+    using typename ComponentInfoImpl<Base>::ports_lock;
+    using typename ComponentInfoImpl<Base>::ports;
+
     CCAComponentInfoImpl(const Distributed::DistributedFramework::pointer &framework,
 			 const std::string& instanceName,
 			 const std::string& className,
@@ -71,7 +75,8 @@ namespace SCIRun {
     virtual void releasePort(const std::string&);
     virtual void registerUsesPort(const std::string&, const std::string&, const sci::cca::TypeMap::pointer &);
     virtual void unregisterUsesPort(const std::string&);
-    virtual void addProvidesPort(const std::string&, const std::string&, const sci::cca::TypeMap::pointer &);
+    virtual void addProvidesPort(const sci::cca::Port::pointer &, 
+				 const std::string&, const std::string&, const sci::cca::TypeMap::pointer &);
     virtual void registerForRelease( const sci::cca::ComponentRelease::pointer &);
     virtual void removeProvidesPort(const std::string&);
 

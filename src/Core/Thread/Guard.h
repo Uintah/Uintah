@@ -72,10 +72,11 @@ class CrowdMonitor;
 ****************************************/
 class Guard {
 public:
+  enum Locking {Lock, AlreadyLocked};
   //////////
   // Attach the <b>Guard</b> object to the <i>mutex</i>, and
   // acquire the mutex.
-  Guard(Mutex* mutex);
+  Guard(Mutex* mutex, Locking = Lock);
   enum Which {
     Read,
     Write

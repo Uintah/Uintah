@@ -53,6 +53,8 @@
 #include <SCIRun/Distributed/ConnectionEvent.h>
 #include <SCIRun/Distributed/ConnectionEventService.h>
 
+#include <SCIRun/Distributed/ServiceImpl.code>
+
 #include <iostream>
 #include <string>
 
@@ -61,7 +63,7 @@ using namespace std;
 namespace SCIRun {
   
   template<class Base>
-  BuilderServiceImpl<Base>::BuilderServiceImpl(DistributedFramework* framework)
+  BuilderServiceImpl<Base>::BuilderServiceImpl(const DistributedFramework::internalPointer &framework)
     : ServiceImpl<Base>(framework, "BuilderService"), framework(framework)
   {
   }
@@ -142,7 +144,7 @@ namespace SCIRun {
     framework->addConnection(connection);
 
     // TODO [yarden]: is this a race ?[emit event and return connection]
-    // what is someone acts on this event but the Builder did not get the information yet ... 
+    // what if someone acts on this event but the Builder did not get the information yet ... 
     emitConnectionEvent(new ConnectionEvent(sci::cca::ports::Connected, properties));
     return connection;
   }
@@ -212,7 +214,7 @@ namespace SCIRun {
     
     // inform framework there is no need for the component info anymore
     // the framework should then delete the component as well
-    framework->destroyComponentInfo(component);
+    framework->destroyInstance(component);
   }
   
   template<class Base>

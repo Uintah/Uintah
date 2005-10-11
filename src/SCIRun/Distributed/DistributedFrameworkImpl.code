@@ -41,10 +41,12 @@
 #ifndef SCIRun_DistributedFrameworkImpl_code
 #define SCIRun_DistributedFrameworkImpl_code
 
+#include <SCIRun/Distributed/FrameworkID.h>
+
 namespace SCIRun {
   
   template<class Base>
-  DistributedFrameworkImpl<Base>::DistributedFrameworkImpl(pointer parent )
+  DistributedFrameworkImpl<Base>::DistributedFrameworkImpl(const pointer &parent )
     : parent(parent)
   {
   }
@@ -53,7 +55,13 @@ namespace SCIRun {
   DistributedFrameworkImpl<Base>::~DistributedFrameworkImpl()
   {
   }
-  
+
+  template<class Base>
+  FrameworkID::pointer DistributedFrameworkImpl<Base>::getFrameworkID()
+  {
+    return FrameworkID::pointer( new FrameworkID(Base::getURL()) );
+  }
+
 } // SCIRun namespace
 
 #endif // CIRun_DistributedFrameworkImpl_code

@@ -43,6 +43,7 @@
 
 #include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Distributed/ServiceImpl.h>
+#include <SCIRun/Distributed/DistributedFramework.h>
 
 namespace SCIRun {
   
@@ -188,11 +189,6 @@ namespace SCIRun {
 		  const sci::cca::ComponentID::pointer &id2,
 		  float timeout);
 
-
-    virtual void
-    destroyInstance(const sci::cca::ComponentID::pointer &component);
-
-
     virtual std::string getFrameworkURL();
 
     /* *****
@@ -203,9 +199,9 @@ namespace SCIRun {
     virtual void emitConnectionEvent(ConnectionEvent *event);
 
   protected:
-    DistributedFramework* framework;
+    DistributedFramework::internalPointer framework;
     
-    BuilderServiceImpl(DistributedFramework *framework);
+    BuilderServiceImpl(const DistributedFramework::internalPointer &framework);
 
   };
 }

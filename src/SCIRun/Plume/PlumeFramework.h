@@ -1,24 +1,18 @@
 #ifndef SCIRun_PlumeFramework_h
 #define SCIRun_PlumeFramework_h
 
-#include <SCIRun/Distributed/DistributedFramework.h>
+#include <SCIRun/Plume/PlumeFrameworkImpl.h>
 
 namespace SCIRun {
 
-  class PlumeFramework : public DistributedFramework 
+  class PlumeFramework : public PlumeFrameworkImpl<Plume::PlumeFramework>
   {
   public:
-    PlumeFramework(DistributedFramework::pointer &parent = 0);
+    typedef Plume::PlumeFramework::pointer pointer;
+
+    PlumeFramework(const Distributed::internal::DistributedFrameworkInternal::pointer &parent
+		   = Distributed::internal::DistributedFrameworkInternal::pointer(0) );
     virtual ~PlumeFramework();
-
-    CCAComponentModel cca;
-    /*
-     * Two pure virtual methods to create and destroy a component.
-     */
-    virtual ComponentInfo*
-    createComponent( const std::string &, const std::string &, const sci::cca::TypeMap::pointer& properties);
-
-    virtual void destroyComponent( const sci::cca::ComponentId::pointer &id);
   };
 
 } // SCIRun namespace

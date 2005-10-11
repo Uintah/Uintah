@@ -62,7 +62,7 @@ namespace SCIRun {
   template<class Base>
   class ComponentInfoImpl : public ComponentIDImpl<Base>
   {
-  private:
+  protected:
     typedef std::map<std::string, Distributed::PortInfo::pointer> PortMap;
     
   public:
@@ -92,11 +92,11 @@ namespace SCIRun {
     PortMap ports;
     
     sci::cca::Component::pointer component;
-    Mutex *mutex;
     
     std::string className;
     sci::cca::TypeMap::pointer properties;
         
+    Mutex ports_lock;
     // prevent using these directly
     ComponentInfoImpl(const ComponentInfoImpl&);
     ComponentInfoImpl& operator=(const ComponentInfoImpl&);

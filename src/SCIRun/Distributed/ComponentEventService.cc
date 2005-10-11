@@ -39,6 +39,7 @@
  */
 
 #include <SCIRun/Distributed/ComponentEventService.h>
+#include <SCIRun/Distributed/ComponentEventServiceImpl.code>
 #include <iostream>
 
 namespace SCIRun {
@@ -47,7 +48,7 @@ namespace SCIRun {
   {
   }
 
-  ComponentEventService::pointer ComponentEventService::create(DistributedFramework *framework)
+  ComponentEventService::pointer ComponentEventService::create(const Distributed::DistributedFramework::pointer &framework)
   {
     return pointer(new ComponentEventService(framework));
   }

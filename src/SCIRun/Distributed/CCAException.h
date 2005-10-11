@@ -56,9 +56,13 @@ namespace SCIRun {
 class CCAException : public sci::cca::CCAException
 {
 public:
-    CCAException(const std::string &msg,
-                 sci::cca::CCAExceptionType type = sci::cca::Nonstandard);
-    virtual ~CCAException();
+  typedef sci::cca::CCAException::pointer pointer;
+
+  CCAException(const std::string &msg,
+	       sci::cca::CCAExceptionType type = sci::cca::Nonstandard);
+  virtual ~CCAException();
+
+  static pointer create(const std::string &msg, sci::cca::CCAExceptionType type = sci::cca::Nonstandard);
 
     // .sci.cca.CCAExceptionType .sci.cca.CCAException.getCCAExceptionType()
     virtual inline sci::cca::CCAExceptionType

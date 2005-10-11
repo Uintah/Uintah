@@ -42,6 +42,7 @@
 #define SCIRun_FrameworkPropertiesServiceImpl_code
 
 #include <SCIRun/Distributed/FrameworkPropertiesServiceImpl.h>
+#include <SCIRun/Distributed/ServiceImpl.code>
 #include <SCIRun/Distributed/DistributedFramework.h>
 #include <SCIRun/Distributed/PortInfo.h>
 #include <Core/OS/Dir.h>
@@ -59,7 +60,7 @@ namespace SCIRun {
   const std::string DEFAULT_PATH("/CCA/Components/xml");
 
   template<class Base>
-  FrameworkPropertiesServiceImpl<Base>::FrameworkPropertiesServiceImpl(DistributedFramework* framework)
+  FrameworkPropertiesServiceImpl<Base>::FrameworkPropertiesServiceImpl(const DistributedFramework::internalPointer &framework)
     : ServiceImpl<Base>(framework, "FrameworkPropertiesService")
   {
     properties = sci::cca::TypeMap::pointer(new TypeMap);

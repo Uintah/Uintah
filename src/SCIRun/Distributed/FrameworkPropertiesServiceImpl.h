@@ -46,6 +46,7 @@
 #include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Distributed/ServiceImpl.h>
 #include <SCIRun/Distributed/TypeMap.h>
+#include <SCIRun/Distributed/DistributedFramework.h>
 
 namespace SCIRun {
 
@@ -64,7 +65,7 @@ namespace SCIRun {
   class FrameworkPropertiesServiceImpl : public ServiceImpl<Base>
   {
   public:
-    FrameworkPropertiesServiceImpl(DistributedFramework *);
+    FrameworkPropertiesServiceImpl(const DistributedFramework::internalPointer &);
     virtual ~FrameworkPropertiesServiceImpl();
     
     /** */

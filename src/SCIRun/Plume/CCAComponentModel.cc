@@ -83,9 +83,9 @@ namespace SCIRun {
   const std::string CCAComponentModel::DEFAULT_PATH = std::string("/CCA/Components/xml");
   
   
-  CCAComponentModel::CCAComponentModel(DistributedFramework* framework)
+  CCAComponentModel::CCAComponentModel(const DistributedFramework::pointer &framework)
     : framework(framework),
-      components_lock("CCAComponentModel::components lock")
+      descriptions_lock("CCAComponentModel::components lock")
   {
     // move to framework properties
     // Record the path containing DLLs for components.
@@ -106,12 +106,12 @@ namespace SCIRun {
   
   void CCAComponentModel::destroyComponentList()
   {
-    SCIRun::Guard g1(&components_lock);
-    for(componentDB_type::iterator iter=components.begin();
-	iter != components.end(); iter++) {
+    SCIRun::Guard g1(&descriptions_lock);
+    for(DescriptionMap::iterator iter=descriptions.begin();
+	iter != descriptions.end(); iter++) {
       delete iter->second;
     }
-    components.clear();
+    descriptions.clear();
   }
   
   void CCAComponentModel::buildComponentList()
@@ -218,15 +218,15 @@ namespace SCIRun {
 	// Register this component
 	CCAComponentDescription* cd = new CCAComponentDescription(component_name, library_name );
 	
-	components_lock.lock();
-	this->components[cd->getType()] = cd;
-	components_lock.unlock();
+	descriptions_lock.lock();
+	this->descriptions[cd->getType()] = cd;
+	descriptions_lock.unlock();
       }
     }
   }
   
 
-  ComponentInfo *
+  ComponentInfo::pointer
   CCAComponentModel::createComponent(const std::string& name,
 				     const std::string& type,
 				     const sci::cca::TypeMap::pointer& properties)
@@ -234,14 +234,14 @@ namespace SCIRun {
   {
     sci::cca::Component::pointer component;
     
-    SCIRun::Guard guard(&components_lock);
+    SCIRun::Guard guard(&descriptions_lock);
     
-    componentDB_type::iterator iter = components.find(type);
-    if (iter == components.end()) {
+    DescriptionMap::iterator iter = descriptions.find(type);
+    if (iter == descriptions.end()) {
       std::cerr << "Error: could not locate any cca components.\n"
 		<< " Make sure the paths set in environment variable \"SIDL_DLL_PATH\" are correct." 
 		<< std::endl;
-      return 0;
+      return ComponentInfo::pointer(0);
     }
     
     // Get the list of DLL paths to search for the appropriate component library
@@ -258,7 +258,7 @@ namespace SCIRun {
     if(!handle) {
       std::cerr << "Cannot load component " << type << std::endl;
       std::cerr << SOError() << std::endl;
-      return 0;
+      return ComponentInfo::pointer(0);
     }
     
     std::string makername = "make_"+type;
@@ -271,7 +271,7 @@ namespace SCIRun {
     if(!maker_v) {
       std::cerr <<"Cannot load component " << type << std::endl;
       std::cerr << SOError() << std::endl;
-      return 0;
+      return ComponentInfo::pointer(0);
     }
     sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
 
@@ -279,13 +279,13 @@ namespace SCIRun {
     component = (*maker)();
 
     // create ComponentInfo. this must be a class the derives from Distributed/ComponentInfo
-    CCAComponentInfo *info =  new CCAComponentInfo(DistributedFramework::pointer(framework), name, type, properties, component);
+    CCAComponentInfo *info =  new CCAComponentInfo(framework, name, type, properties, component);
 
     // CCA initialization of the component
     component->setServices(sci::cca::Services::pointer(info));
 
     // done
-    return info;
+    return ComponentInfo::pointer(info);
   }
 
   void CCAComponentModel::destroyComponent(const ComponentInfo::pointer &info)
@@ -322,12 +322,12 @@ namespace SCIRun {
 #if 0
   void CCAComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)
   {
-    components_lock.lock();
-    for (componentDB_type::iterator iter = components.begin();
-	 iter != components.end(); iter++) {
+    descriptions_lock.lock();
+    for (DescriptionMap::iterator iter = descriptions.begin();
+	 iter != descriptions.end(); iter++) {
       list.push_back(iter->second);
     }
-    components_lock.unlock();
+    descriptions_lock.unlock();
     
     lock_loaderList.lock(); 
     for (unsigned int i = 0; i < loaderList.size(); i++) {

@@ -38,17 +38,24 @@
  *
  */
 
+#include <SCIRun/Distributed/DistributedFramework.h>
 #include <SCIRun/Distributed/ConnectionEventService.h>
+#include <SCIRun/Distributed/ConnectionEventServiceImpl.code>
+
 #include <iostream>
 
 namespace SCIRun {
+
+  ConnectionEventService::ConnectionEventService(const DistributedFramework::internalPointer &framework)
+    : ConnectionEventServiceImpl<DistributedPorts::ConnectionEventService>(framework)
+  {}
 
   ConnectionEventService::~ConnectionEventService()
   {
     std::cerr << "EventService destroyed..." << std::endl;
   }
 
-  ConnectionEventService::pointer ConnectionEventService::create(DistributedFramework *framework)
+  ConnectionEventService::pointer ConnectionEventService::create(const DistributedFramework::internalPointer &framework)
   {
     return pointer(new ConnectionEventService(framework));
   }

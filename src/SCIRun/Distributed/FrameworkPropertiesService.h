@@ -60,7 +60,7 @@ namespace SCIRun {
     typedef Distributed::ports::FrameworkPropertiesService Interface;
     typedef Distributed::ports::FrameworkPropertiesService::pointer pointer;
     
-    FrameworkPropertiesService(DistributedFramework *framework)
+    FrameworkPropertiesService(const DistributedFramework::internalPointer &framework)
       : FrameworkPropertiesServiceImpl<Interface>(framework)
     {}
     
@@ -70,7 +70,7 @@ namespace SCIRun {
 	a smart pointer to the newly allocated object registered in the framework
 	\em fwk with the instance name \em name. */
     
-    static pointer create(DistributedFramework *framework);
+    static pointer create(const DistributedFramework::internalPointer &framework);
     
   private:
     DistributedFramework *framework;
