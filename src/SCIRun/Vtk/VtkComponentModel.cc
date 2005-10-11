@@ -41,6 +41,8 @@
 #include <SCIRun/Vtk/VtkComponentModel.h>
 #include <SCIRun/Vtk/VtkComponentDescription.h>
 #include <SCIRun/Vtk/VtkComponentInstance.h>
+#include <SCIRun/Vtk/Port.h>
+#include <SCIRun/Vtk/Component.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <Core/Containers/StringUtil.h>
@@ -50,7 +52,6 @@
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <string>
 
 #ifdef __sgi
 #define IRIX
@@ -67,15 +68,16 @@
 #endif
 
 #include <iostream>
-#include <SCIRun/Vtk/Port.h>
-#include <SCIRun/Vtk/Component.h>
 
 extern "C" {
 #include <string.h>
 }
 
-namespace SCIRun {
+#ifndef DEBUG
+  #define DEBUG 0
+#endif
 
+namespace SCIRun {
 
 const std::string VtkComponentModel::DEFAULT_PATH =
 std::string("/CCA/Components/VTK/xml");
@@ -109,10 +111,9 @@ void VtkComponentModel::destroyComponentList()
 {
   SCIRun::Guard g1(&lock_components);
   for(componentDB_type::iterator iter=components.begin();
-      iter != components.end(); iter++)
-    {
+      iter != components.end(); iter++) {
     delete iter->second;
-    }
+  }
   components.clear();
 }
 
@@ -134,11 +135,9 @@ void VtkComponentModel::buildComponentList()
    sci::cca::TypeMap::pointer tm;
    sci::cca::ports::FrameworkProperties::pointer fwkProperties =
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
-        framework->getFrameworkService("cca.FrameworkProperties", "")
-    );
+        framework->getFrameworkService("cca.FrameworkProperties", ""));
     if (fwkProperties.isNull()) {
         std::cerr << "Error: Cannot find framework properties" << std::cerr;
-        //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
     } else {
         tm = fwkProperties->getProperties();
         sArray = tm->getStringArray("sidl_xml_path", sArray);
@@ -147,14 +146,18 @@ void VtkComponentModel::buildComponentList()
 
     for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
         Dir d(*it);
+#if DEBUG
         std::cerr << "VTK Component Model: Looking at directory: " << *it << std::endl;
+#endif
         std::vector<std::string> files;
         d.getFilenamesBySuffix(".xml", files);
 
         for(std::vector<std::string>::iterator iter = files.begin();
             iter != files.end(); iter++) {
           std::string& file = *iter;
+#if DEBUG
           std::cerr << "VTK Component Model: Looking at file" << file << std::endl;
+#endif
           readComponentDescription(*it+"/"+file);
         }
   }
@@ -169,7 +172,9 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
   parser.setErrorHandler(&handler);
   
   try {
-    std::cout << "Parsing file: " << file << std::endl;
+#if DEBUG
+    std::cerr << "Parsing file: " << file << std::endl;
+#endif
     parser.parse(file.c_str());
   }
   catch (const XMLException& toCatch) {
@@ -192,11 +197,7 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
   // Check that this document is actually describing VTK components
   DOMElement *metacomponentmodel = static_cast<DOMElement *>(
     document->getElementsByTagName(to_xml_ch_ptr("metacomponentmodel"))->item(0));
-
-  std::string compModelName
-    = to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
-  //std::cout << "Component model name = " << compModelName << std::endl;
-
+  std::string compModelName = to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
   if ( compModelName != std::string(this->prefixName) ) {
     return;
   }
@@ -210,25 +211,26 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
     DOMElement *library = static_cast<DOMElement *>(libraries->item(i));
     // Read the library name
     std::string library_name(to_char_ptr(library->getAttribute(to_xml_ch_ptr("name"))));
-    std::cout << "Library name = ->" << library_name << "<-" << std::endl;
-
+#if DEBUG
+    std::cerr << "Library name = ->" << library_name << "<-" << std::endl;
+#endif
     // Get the list of components.
-    DOMNodeList* comps
-      = library->getElementsByTagName(to_xml_ch_ptr("component"));
+    DOMNodeList* comps = library->getElementsByTagName(to_xml_ch_ptr("component"));
     for (unsigned int j = 0; j < comps->getLength(); j++) {
       // Read the component name
       DOMElement *component = static_cast<DOMElement *>(comps->item(j));
       std::string
         component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
-      //std::cout << "Component name = ->" << component_name << "<-" << std::endl;
-
+#if DEBUG
+      std::cerr << "Component name = ->" << component_name << "<-" << std::endl;
+#endif
       // Register this component
       VtkComponentDescription* cd = new VtkComponentDescription(this, component_name);
       cd->setLibrary(library_name.c_str()); // record the DLL name
-      lock_components.lock();  
+
+      Guard g1(&lock_components);
       this->components[cd->type] = cd;
-      lock_components.unlock();
-     }
+    }
   }
 }
 
@@ -245,12 +247,11 @@ VtkComponentModel::createInstance(const std::string& name,
 {
   vtk::Component *component;
 
-  lock_components.lock();
+  Guard g1(&lock_components);
   componentDB_type::iterator iter = components.find(type);
   if (iter == components.end()) { // could not find this component
     return 0;
   }
-  lock_components.unlock();
 
   // Get the list of DLL paths to search for the appropriate component library
   std::vector<std::string> possible_paths = splitPathString(this->getSidlDLLPath());
@@ -275,15 +276,16 @@ VtkComponentModel::createInstance(const std::string& name,
     if (makername[i] == '.') { makername[i]='_'; }
   }
   
-  //  std::cerr << "looking for symbol:" << makername << std::endl;
+#if DEBUG
+  std::cerr << "looking for symbol:" << makername << std::endl;
+#endif
   void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
   if(!maker_v) {
-    //    std::cerr <<"Cannot load component symbol " << type << std::endl;
+    std::cerr <<"Cannot load component symbol " << makername << std::endl;
     std::cerr << SOError() << std::endl;
     return 0;
   }
   vtk::Component* (*maker)() = (vtk::Component* (*)())(maker_v);
-  //  std::cerr << "about to create Vtk component" << std::endl;
   component = (*maker)();
   
   VtkComponentInstance* ci =

@@ -62,7 +62,7 @@ public:
     Output, Input
   };
   VtkPortInstance(VtkComponentInstance* ci, vtk::Port* port, PortType type);
-  ~VtkPortInstance();
+  virtual ~VtkPortInstance();
 
   /**? */
   virtual bool connect(PortInstance*);
