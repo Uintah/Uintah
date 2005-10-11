@@ -124,10 +124,10 @@ private:
   componentDB_type components;
   SCIRun::Mutex lock_components;
 
-  void readComponentDescription(const std::string& file);
-
   std::string sidlDLLPath;
-  //    std::string grammarFileName;
+  //std::string grammarFileName;
+
+  void readComponentDescription(const std::string& file);
   
   VtkComponentModel(const VtkComponentModel&);
   VtkComponentModel& operator=(const VtkComponentModel&);
