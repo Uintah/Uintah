@@ -94,10 +94,15 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
 }
 
 
+//! Only add unique include strings to the list, and
+//! preserve the push front behavior
 void
 CompileInfo::add_include(const string &inc)
 {
-  //std::remove(includes_.begin(), includes_.end(), inc);
+  list<string>::iterator iter = includes_.begin();
+  while (iter != includes_.end()) {
+    if (*iter++ == inc) return;
+  }
   includes_.push_front(inc);
 }
 
