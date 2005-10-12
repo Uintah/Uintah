@@ -44,8 +44,8 @@ namespace SCIRun {
 using std::vector;
 using std::string;
   
-//! Class for creating geometrical approximations of Tri meshes
-class TriApprox {  
+//! Class for describing unit geometry of TriLinearLgn 
+class TriLinearLgnUnitElement {
 public:
   //!< Parametric coordinates of vertices of unit edge
   static double UnitVertices[3][2];
@@ -53,7 +53,24 @@ public:
   static int UnitEdges[3][2]; 
   //!< References to vertices of unit face
   static int UnitFaces[1][3]; 
+  
+  TriLinearLgnUnitElement() {};
+  virtual ~TriLinearLgnUnitElement() {};
+  
+  static int DomainDimension() { return 2; }; //! return dimension of domain 
+  
+  static int NumberOfVertices() { return 3; }; //! return number of vertices
+  static int NumberOfEdges() { 3; }; //! return number of edges
+  
+  static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
 
+  static int FacesOfCell() { return 1; }; //! return number of faces per cell 
+};
+
+
+//! Class for creating geometrical approximations of Tri meshes
+class TriApprox {  
+public:
   TriApprox() {}
   virtual ~TriApprox() {}
   
@@ -65,8 +82,8 @@ public:
   {
     coords.resize(div_per_unit+1);
 
-    const double *v0 = UnitVertices[UnitEdges[edge][0]];
-    const double *v1 = UnitVertices[UnitEdges[edge][1]];
+    const double *v0 = TriLinearLgnUnitElement::UnitVertices[TriLinearLgnUnitElement::UnitEdges[edge][0]];
+    const double *v1 = TriLinearLgnUnitElement::UnitVertices[TriLinearLgnUnitElement::UnitEdges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -81,10 +98,7 @@ public:
     } 	
   } 
   
-  //! return number of vertices per face 
-  virtual int get_approx_face_elements() const { return 3; }
-  
-  //! Approximate faces for element by piecewise linear elements
+   //! Approximate faces for element by piecewise linear elements
   //! return: coords gives parametric coordinates at the approximation point.
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_face(const unsigned /* face */, 
@@ -221,7 +235,7 @@ T TriGaussian3<T>::GaussianWeights[7] =
 
 //! Class for handling of element of type triangle with linear lagrangian interpolation
 template <class T>
-class TriLinearLgn : public TriApprox, public TriGaussian2<double>  
+  class TriLinearLgn : public TriApprox, public TriGaussian2<double>, public TriLinearLgnUnitElement  
 { 
 public:
   typedef T value_type;
@@ -237,11 +251,11 @@ public:
   {
     coords.resize(2);
     vector<double> &tmp = coords[0];
-    tmp[0] = UnitVertices[UnitEdges[edge][0]][0];
-    tmp[1] = UnitVertices[UnitEdges[edge][0]][1];
+    tmp[0] = TriLinearLgnUnitElement::UnitVertices[TriLinearLgnUnitElement::UnitEdges[edge][0]][0];
+    tmp[1] = TriLinearLgnUnitElement::UnitVertices[TriLinearLgnUnitElement::UnitEdges[edge][0]][1];
     tmp = coords[1];
-    tmp[0] = UnitVertices[UnitEdges[edge][1]][0];
-    tmp[1] = UnitVertices[UnitEdges[edge][1]][1];
+    tmp[0] = TriLinearLgnUnitElement::UnitVertices[TriLinearLgnUnitElement::UnitEdges[edge][1]][0];
+    tmp[1] = TriLinearLgnUnitElement::UnitVertices[TriLinearLgnUnitElement::UnitEdges[edge][1]][1];
   }
 
   virtual void approx_face(const unsigned /* face */, 

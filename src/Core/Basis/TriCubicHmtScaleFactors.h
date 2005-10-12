@@ -36,11 +36,20 @@
 
 namespace SCIRun {
 
+  //! Class for describing unit geometry of TetCubicHmt
+  class TriCubicScaleFactorsHmtUnitElement : public TriLinearLgnUnitElement {
+  public:
+    TriCubicScaleFactorsHmtUnitElement() {};
+    virtual ~TriCubicScaleFactorsHmtUnitElement() {};
+  };
+
+
 //! Class for handling of element of type triangle with 
 //! cubic hermitian interpolation with scale factors
 template <class T>
 class TriCubicHmtScaleFactors : public TriApprox<T>, 
-				public TriGaussian3<double>  
+  public TriGaussian3<double>,
+  public TriCubicScaleFactorsHmtUnitElement
 {
 public:
   TriCubicHmtScaleFactors() {}

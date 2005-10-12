@@ -32,14 +32,35 @@
 #if !defined(QuadBiquadraticLgn_h)
 #define QuadBiquadraticLgn_h
 
-#include <QuadBilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
 
 namespace SCIRun {
  
+//! Class for describing unit geometry of QuadBiquadraticLgn 
+class QuadBiquadraticLgnUnitElement {
+public: 
+  static double UnitVertices[9][2]; //!< Parametric coordinates of vertices of unit edge
+  static int UnitEdges[12][2];  //!< References to vertices of unit edge 
+  static int UnitFaces[4][4]; //!< References to vertices of unit face
+  
+  QuadBiquadraticLgnUnitElement() {};
+  virtual ~QuadBiquadraticLgnUnitElement() {};
+  
+  static int DomainDimension() { return 2; }; //! return dimension of domain 
+  
+  static int NumberOfVertices() { return 9; }; //! return number of vertices
+  static int NumberOfEdges() { 12; }; //! return number of edges
+  
+  static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
+
+  static int FacesOfCell() { return 4; }; //! return number of faces per cell 
+};
+
+
 //! Class for handling of element of type quad with 
 //! biquadratic lagrangian interpolation
 template <class T>
-class QuadBiquadraticLgn : public QuadApprox, public QuadGaussian3<double>
+  class QuadBiquadraticLgn : public QuadApprox, public QuadGaussian3<double>, public QuadBiquadraticLgn
 {
 public:
   typedef T value_type;

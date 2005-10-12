@@ -32,9 +32,32 @@
 #if !defined(TriQuadraticLgn_h)
 #define TriQuadraticLgn_h
 
-#include <TriLinearLgn.h>
+#include <Core/Basis/TriLinearLgn.h>
 
 namespace SCIRun {
+
+//! Class for describing unit geometry of TriQuadraticLgn 
+class TriQuadraticLgnUnitElement {
+public:
+  //!< Parametric coordinates of vertices of unit edge
+  static double UnitVertices[6][2];
+  //!< References to vertices of unit edge 
+  static int UnitEdges[9][2]; 
+  //!< References to vertices of unit face
+  static int UnitFaces[4][3]; 
+  
+  TriQuadraticLgnUnitElement() {};
+  virtual ~TriQuadraticLgnUnitElement() {};
+  
+  static int DomainDimension() { return 2; }; //! return dimension of domain 
+  
+  static int NumberOfVertices() { return 6; }; //! return number of vertices
+  static int NumberOfEdges() { 9; }; //! return number of edges
+  
+  static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
+
+  static int FacesOfCell() { return 4; }; //! return number of faces per cell 
+};
 
 //! Class for handling of element of type triangle with 
 //! linear quadratic interpolation
@@ -57,7 +80,7 @@ public:
       +y*(-1+ 2*y)*cd.node2()
       -4*x*(-1 + x + y)*nodes_[cd.edge0_index()]
       +4*x*y*nodes_[cd.edge1_index()]
-      -4*y*(-1 + x + y)*nodes_[cd.edge2_index()]
+      -4*y*(-1 + x + y)*nodes_[cd.edge2_index()];
       };
   
   //! get first derivative at parametric coordinate
