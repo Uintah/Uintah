@@ -1078,12 +1078,11 @@ HexVolMesh<Basis>::hash_edge(typename Node::index_type n1,
   PEdge e(n1, n2);
   typename edge_ht::iterator iter = table.find(e);
   if (iter == table.end()) {
+    e.cells_.push_back(ci); // add this cell
     table[e] = 0; // insert for the first time
   } else {
     PEdge e = (*iter).first;
     e.cells_.push_back(ci); // add this cell
-    table.erase(iter);
-    table[e] = 0;
   }
 }
 
