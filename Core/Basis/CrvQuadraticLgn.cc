@@ -25,17 +25,16 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : TriLinearLgn.cc
+//    File   : CrvQuadraticLgn.cc
 //    Author : Martin Cole, Frank B. Sachse
 //    Date   : Dec 04 2004
 
-#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/CrvQuadraticLgn.h>
 
 namespace SCIRun {
 
-double TriLinearLgnUnitElement::UnitVertices[3][2] = {{0,0}, {1,0}, {0,1}};
-int TriLinearLgnUnitElement::UnitEdges[3][2] = {{0,1}, {1,2}, {2,0}};
-int TriLinearLgnUnitElement::UnitFaces[1][3] = {{0,1,2}};
-  
+double CrvQuadraticLgnUnitElement::UnitVertices[1][3] = {{0, 0.5, 1}};
+int CrvQuadraticLgnUnitElement::UnitEdges[2][2] = {{0, 1}, {1, 2}};
+
 } //namespace SCIRun
 

@@ -33,9 +33,9 @@
 
 namespace SCIRun {
 
-double QuadApprox::UnitVertices[4][2] = {{0,0}, {1,0}, {1,1}, {0,1}};
-int QuadApprox::UnitEdges[4][2] = {{0,1}, {1,2}, {2,3,}, {3,0}};
-int QuadApprox::UnitFaces[1][4] = {{0,1,2,3}};
+double QuadBilinearLgnUnitElement::UnitVertices[4][2] = {{0,0}, {1,0}, {1,1}, {0,1}};
+int QuadBilinearLgnUnitElement::UnitEdges[4][2] = {{0,1}, {1,2}, {2,3,}, {3,0}};
+int QuadBilinearLgnUnitElement::UnitFaces[1][4] = {{0,1,2,3}};
 
 } //namespace SCIRun
 

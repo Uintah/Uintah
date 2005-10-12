@@ -44,6 +44,27 @@ namespace SCIRun {
 using std::vector;
 using std::string;
 
+//! Class for describing unit geometry of QuadBilinearLgn 
+class QuadBilinearLgnUnitElement {
+public: 
+  static double UnitVertices[4][2]; //!< Parametric coordinates of vertices of unit edge
+  static int UnitEdges[4][2];  //!< References to vertices of unit edge 
+  static int UnitFaces[1][4]; //!< References to vertices of unit face
+  
+  QuadBilinearLgnUnitElement() {};
+  virtual ~QuadBilinearLgnUnitElement() {};
+  
+  static int DomainDimension() { return 2; }; //! return dimension of domain 
+  
+  static int NumberOfVertices() { return 4; }; //! return number of vertices
+  static int NumberOfEdges() { 4; }; //! return number of edges
+  
+  static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
+
+  static int FacesOfCell() { return 1; }; //! return number of faces per cell 
+};
+
+
 //! Class for creating geometrical approximations of Quad meshes
 class QuadApprox {  
 public:
@@ -66,10 +87,10 @@ public:
   {
     coords.resize(div_per_unit + 1);
       
-    const double p1x = UnitVertices[UnitEdges[edge][0]][0];
-    const double p1y = UnitVertices[UnitEdges[edge][0]][1];
-    const double dx = UnitVertices[UnitEdges[edge][1]][0] - p1x;
-    const double dy = UnitVertices[UnitEdges[edge][1]][1] - p1y;
+    const double p1x = QuadBilinearLgnUnitElement::UnitVertices[QuadBilinearLgnUnitElement::UnitEdges[edge][0]][0];
+    const double p1y = QuadBilinearLgnUnitElement::UnitVertices[QuadBilinearLgnUnitElement::UnitEdges[edge][0]][1];
+    const double dx = QuadBilinearLgnUnitElement::UnitVertices[QuadBilinearLgnUnitElement::UnitEdges[edge][1]][0] - p1x;
+    const double dy = QuadBilinearLgnUnitElement::UnitVertices[QuadBilinearLgnUnitElement::UnitEdges[edge][1]][1] - p1y;
       
     for(unsigned i = 0; i <= div_per_unit; i ++) {
       const double d = (double)div_per_unit / (double)i;
@@ -78,10 +99,7 @@ public:
       tmp[1] = p1y + d * dy;
     } 	      
   }
-  
-  //! return number of vertices per face 
-  virtual int get_approx_face_elements() const { return 4; }
-  
+   
   //! Approximate faces for element by piecewise linear elements
   //! return: coords gives parametric coordinates at the approximation point.
   //! Use interpolate with coordinates to get the world coordinates.
@@ -220,7 +238,7 @@ T QuadGaussian3<T>::GaussianWeights[9] = {
 //! Class for handling of element of type quad with 
 //! bilinear lagrangian interpolation
 template <class T>
-class QuadBilinearLgn : public QuadApprox, public QuadGaussian2<double> 
+  class QuadBilinearLgn : public QuadApprox, public QuadGaussian2<double>, public QuadBilinearLgnUnitElement 
 {
 public:
   typedef T value_type;
