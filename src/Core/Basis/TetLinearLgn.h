@@ -44,15 +44,30 @@ namespace SCIRun {
 using std::vector;
 using std::string;
 
+//! Class for describing unit geometry of TetLinearLgn 
+class TetLinearLgnUnitElement {
+public:
+  static double UnitVertices[4][3]; //!< Parametric coordinates of vertices of unit edge
+  static int UnitEdges[6][2]; //!< References to vertices of unit edge
+  static int UnitFaces[4][3];  //!< References to vertices of unit face
+  
+  TetLinearLgnUnitElement() {};
+  virtual ~TetLinearLgnUnitElement() {};
+  
+  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  
+  static int NumberOfVertices() { return 4; }; //! return number of vertices
+  static int NumberOfEdges() { 6; }; //! return number of edges
+  
+  static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
+
+  static int FacesOfCell() { return 4; }; //! return number of faces per cell 
+};
+
+
 //! Class for creating geometrical approximations of Tet meshes
 class TetApprox {  
 public:
-  //!< Parametric coordinates of vertices of unit edge
-  static double UnitVertices[4][3]; 
-  //!< References to vertices of unit edge
-  static int UnitEdges[6][2]; 
-  //!< References to vertices of unit face
-  static int UnitFaces[4][3]; 
 
   TetApprox() {}
   virtual ~TetApprox() {}
@@ -65,8 +80,8 @@ public:
   {
     coords.resize(div_per_unit + 1);
 
-    const double *v0 = UnitVertices[UnitEdges[edge][0]];
-    const double *v1 = UnitVertices[UnitEdges[edge][1]];
+    const double *v0 = TetLinearLgnUnitElement::UnitVertices[TetLinearLgnUnitElement::UnitEdges[edge][0]];
+    const double *v1 = TetLinearLgnUnitElement::UnitVertices[TetLinearLgnUnitElement::UnitEdges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -85,19 +100,16 @@ public:
     } 	
   }
   
-  //! return number of vertices per face 
-  virtual int get_approx_face_elements() const { return 3; }
-  
-  //! Approximate faces for element by piecewise linear elements
+   //! Approximate faces for element by piecewise linear elements
   //! return: coords gives parametric coordinates at the approximation point.
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_face(const unsigned face, 
 			   const unsigned div_per_unit, 
 			   vector<vector<vector<double> > > &coords) const
   {
-    const double *v0 = UnitVertices[UnitFaces[face][0]];
-    const double *v1 = UnitVertices[UnitFaces[face][1]];
-    const double *v2 = UnitVertices[UnitFaces[face][2]];
+    const double *v0 = TetLinearLgnUnitElement::UnitVertices[TetLinearLgnUnitElement::UnitFaces[face][0]];
+    const double *v1 = TetLinearLgnUnitElement::UnitVertices[TetLinearLgnUnitElement::UnitFaces[face][1]];
+    const double *v2 = TetLinearLgnUnitElement::UnitVertices[TetLinearLgnUnitElement::UnitFaces[face][2]];
     coords.resize(div_per_unit);
     const double d = 1. / div_per_unit;
     for(unsigned j = 0; j<div_per_unit; j++) {
@@ -262,7 +274,7 @@ T TetGaussian3<T>::GaussianWeights[11] = {
 //! Class for handling of element of type tetrahedron with 
 //! linear lagrangian interpolation
 template <class T>
-class TetLinearLgn : public TetApprox, public TetGaussian2<double> 
+  class TetLinearLgn : public TetApprox, public TetGaussian2<double>, public TetLinearLgnUnitElement 
 {
 public:
   typedef T value_type;

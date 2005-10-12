@@ -32,14 +32,22 @@
 #if !defined(CrvCubicHmt_h)
 #define CrvCubicHmt_h
 
-#include <CrvLinearLgn.h>
+#include <Core/Basis/CrvLinearLgn.h>
 
 namespace SCIRun {
+
+//! Class for describing unit geometry of CrvCubicHmt 
+class CrvCubicHmtUnitElement : public CrvLinearLgnUnitElement {
+  public:
+  CrvCubicHmtUnitElement() {};
+  virtual ~CrvCubicHmtUnitElement() {};
+}
+
 
 //! Class for handling of element of type curve with 
 //! cubic hermitian interpolation
 template <class T>
-class CrvCubicHmt : public CrvApprox, public CrvGaussian3<double>
+  class CrvCubicHmt : public CrvApprox, public CrvGaussian3<double>, public CrvCubicHmtUnitElement
 {
 public:
   typedef T value_type;

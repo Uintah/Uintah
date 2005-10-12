@@ -34,7 +34,7 @@
 
 #include <vector>
 #include <float.h>
-
+ 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Basis/Locate.h>
@@ -44,14 +44,29 @@ namespace SCIRun {
 using std::vector;
 using std::string;
 
+//! Class for describing unit geometry of CrvLinearLgn 
+class CrvLinearLgnUnitElement {
+public: 
+  static double UnitVertices[1][2]; //!< Parametric coordinates of vertices of unit edge
+  static int UnitEdges[1][2];    //!< References to vertices of unit edge 
+
+  CrvLinearLgnUnitElement() {};
+  virtual ~CrvLinearLgnUnitElement() {};
+  
+  static int DomainDimension() { return 1; }; //!< return dimension of domain 
+  
+  static int NumberOfVertices() { 2; }; //!< return number of vertices
+  static int NumberOfEdges() { 1; }; //!< return number of edges
+   
+  static int VerticesOfFace() { return 0; }; //!< return number of vertices per face 
+
+  static int FacesOfCell() { return 0; }; //!< return number of faces per cell 
+};
+
+
 //! Class for creating geometrical approximations of Crv meshes
 class CrvApprox {
-public:
-  //!< Parametric coordinates of vertices of unit edge
-  static double UnitVertices[1][2];
-  //!< References to vertices of unit edge 
-  static int UnitEdges[1][2]; 
-
+public:  
   CrvApprox() {}
   virtual ~CrvApprox() {}
   
@@ -70,9 +85,6 @@ public:
     }
   }
   
-  //! return number of vertices per face 
-  virtual int get_approx_face_elements() const { return 0; }
-  
   //! Approximate faces for element by piecewise linear elements
   //! return: coords gives parametric coordinates at the approximation point.
   //! Use interpolate with coordinates to get the world coordinates.
@@ -83,7 +95,7 @@ public:
     coords.resize(0);
   }
 };
- 
+
 
 //! Class for searching of parametric coordinates related to a 
 //! value in Crv meshes and fields
@@ -202,7 +214,7 @@ T CrvGaussian3<T>::GaussianWeights[3] =
 //! Class for handling of element of type curve with 
 //! linear lagrangian interpolation
 template <class T>
-class CrvLinearLgn : public CrvApprox, public CrvGaussian1<double>
+  class CrvLinearLgn : public CrvApprox, public CrvGaussian1<double>, public CrvLinearLgnUnitElement
 {
 public:
   typedef T value_type;

@@ -32,14 +32,34 @@
 #if !defined(CrvQuadraticLgn_h)
 #define CrvQuadraticLgn_h
 
-#include <CrvLinearLgn.h>
+#include <Core/Basis/CrvLinearLgn.h>
 
 namespace SCIRun {
+
+//! Class for describing unit geometry of CrvLinearLgn 
+class CrvQuadraticLgnUnitElement {
+public: 
+  static double UnitVertices[1][3]; //!< Parametric coordinates of vertices of unit edge
+  static int UnitEdges[2][2];    //!< References to vertices of unit edge 
+
+  CrvQuadraticLgnUnitElement() {};
+  virtual ~CrvQuadraticLgnUnitElement() {};
+  
+  static int DomainDimension() { return 1; }; //!< return dimension of domain 
+  
+  static int NumberOfVertices() { 3; }; //!< return number of vertices
+  static int NumberOfEdges() { 2; }; //!< return number of edges
+  
+  static int VerticesOfFace() { return 0; }; //!< return number of vertices per face 
+
+  static int FacesOfCell() { return 0; }; //!< return number of faces per cell 
+};
+
 
 //! Class for handling of element of type curve with 
 //! quadratic lagrangian interpolation
 template <class T>
-class CrvQuadraticLgn : public CrvApprox, public CrvGaussian2<double>
+  class CrvQuadraticLgn : public CrvApprox, public CrvGaussian2<double>, public CrvQuadraticLgnUnitElement
 {
 public:
   typedef T value_type;
