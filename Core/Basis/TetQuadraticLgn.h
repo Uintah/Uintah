@@ -36,6 +36,27 @@
 
 namespace SCIRun {
 
+//! Class for describing unit geometry of TetQuadraticLgn 
+class TetQuadraticLgnUnitElement {
+public:
+  static double UnitVertices[10][3]; //!< Parametric coordinates of vertices of unit edge
+  static int UnitEdges[6][2]; //!< References to vertices of unit edge
+  static int UnitFaces[4][3];  //!< References to vertices of unit face
+  
+  TetQuadraticLgnUnitElement() {};
+  virtual ~TetQuadraticLgnUnitElement() {};
+  
+  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  
+  static int NumberOfVertices() { return 10; }; //! return number of vertices
+  static int NumberOfEdges() { 6; }; //! return number of edges
+  
+  static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
+
+  static int FacesOfCell() { return 12; }; //! return number of faces per cell 
+};
+
+
 //! Class for handling of element of type tetrahedron with 
 //! quadratic lagrangian interpolation
 template <class T>
