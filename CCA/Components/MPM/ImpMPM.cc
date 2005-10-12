@@ -58,8 +58,6 @@
 #include <sgi_stl_warnings_on.h>
 #include <math.h>
 
-#define DO_MECH
-
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
@@ -86,6 +84,8 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   thermalContactModel = 0;
   d_perproc_patches = 0;
   d_switchCriteria = 0;
+  d_doMechanics = true;
+  d_projectHeatSource = false;
 }
 
 bool ImpMPM::restartableTimesteps()
@@ -127,6 +127,9 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      if (flags->d_integrator_type != "implicit")
        throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
 
+
+     mpm_ps->get("ProjectHeatSource", d_projectHeatSource);
+     mpm_ps->get("DoMechanics", d_doMechanics);
      mpm_ps->get("do_grid_reset",  d_doGridReset);
      mpm_ps->get("ForceBC_force_increment_factor",
                                     flags->d_forceIncrementFactor);
@@ -362,9 +365,10 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 
   scheduleApplyExternalLoads(             sched, d_perproc_patches,matls);
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
-#if 0
-  scheduleProjectCCHeatSourceToNodes(sched, d_perproc_patches,one_matl,matls);
-#endif
+  if (d_projectHeatSource) {
+    scheduleProjectCCHeatSourceToNodes(sched,d_perproc_patches,one_matl,matls);
+  }
+
   scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
   scheduleCreateMatrix(                   sched, d_perproc_patches,matls);
   scheduleDestroyHCMatrix(                sched, d_perproc_patches,matls);
@@ -913,13 +917,14 @@ void ImpMPM::iterate(const ProcessorGroup*,
   // This task only zeros out the stiffness matrix it doesn't free any memory.
   scheduleDestroyMatrix(           subsched,level->eachPatch(),matls,true);
 
-#ifdef DO_MECH
-  scheduleComputeStressTensor(     subsched,level->eachPatch(),matls,true);
-  scheduleFormStiffnessMatrix(     subsched,level->eachPatch(),matls);
-  scheduleComputeInternalForce(    subsched,level->eachPatch(),matls);
-  scheduleFormQ(                   subsched,level->eachPatch(),matls);
-  scheduleSolveForDuCG(            subsched,d_perproc_patches, matls);
-#endif
+  if (d_doMechanics) {
+    scheduleComputeStressTensor(     subsched,level->eachPatch(),matls,true);
+    scheduleFormStiffnessMatrix(     subsched,level->eachPatch(),matls);
+    scheduleComputeInternalForce(    subsched,level->eachPatch(),matls);
+    scheduleFormQ(                   subsched,level->eachPatch(),matls);
+    scheduleSolveForDuCG(            subsched,d_perproc_patches, matls);
+  }
+
   scheduleGetDisplacementIncrement(subsched,level->eachPatch(),matls);
   scheduleUpdateGridKinematics(    subsched,level->eachPatch(),matls);
   scheduleCheckConvergence(subsched,level,  level->eachPatch(),matls);
@@ -1049,10 +1054,10 @@ void ImpMPM::iterate(const ProcessorGroup*,
       constNCVariable<Vector> velocity, dispNew, internalForce;
       subsched->get_dw(2)->get(velocity, lb->gVelocityLabel,matl,patch,gnone,0);
       subsched->get_dw(2)->get(dispNew,  lb->dispNewLabel,  matl,patch,gnone,0);
-#ifdef DO_MECH
-      subsched->get_dw(2)->get(internalForce,
-                               lb->gInternalForceLabel,     matl,patch,gnone,0);
-#endif 
+      if (d_doMechanics) {
+        subsched->get_dw(2)->get(internalForce,
+                                 lb->gInternalForceLabel,matl,patch,gnone,0);
+      }
 
       NCVariable<Vector> velocity_new, dispNew_new, internalForce_new;
       new_dw->getModifiable(velocity_new,lb->gVelocityLabel,      matl,patch);
@@ -1061,9 +1066,9 @@ void ImpMPM::iterate(const ProcessorGroup*,
                             lb->gInternalForceLabel,              matl,patch);
       velocity_new.copyData(velocity);
       dispNew_new.copyData(dispNew);
-#ifdef DO_MECH
-      internalForce_new.copyData(internalForce);
-#endif
+      if (d_doMechanics) {
+        internalForce_new.copyData(internalForce);
+      }
     }
   }
   old_dw->setScrubbing(old_dw_scrubmode);
@@ -2059,17 +2064,18 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
       NCVariable<Vector> dispInc;
       new_dw->allocateAndPut(dispInc,lb->dispIncLabel,matlindex,patch);
       dispInc.initialize(Vector(0.));
-#ifdef DO_MECH
-      for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
-        IntVector n = *iter;
-        int dof[3];
-        int l2g_node_num = l2g[n] - begin;
-        dof[0] = l2g_node_num;
-        dof[1] = l2g_node_num+1;
-        dof[2] = l2g_node_num+2;
-        dispInc[n] = Vector(x[dof[0]],x[dof[1]],x[dof[2]]);
+
+      if (d_doMechanics) {
+        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+          IntVector n = *iter;
+          int dof[3];
+          int l2g_node_num = l2g[n] - begin;
+          dof[0] = l2g_node_num;
+          dof[1] = l2g_node_num+1;
+          dof[2] = l2g_node_num+2;
+          dispInc[n] = Vector(x[dof[0]],x[dof[1]],x[dof[2]]);
+        }
       }
-#endif
     }
   }
 }
