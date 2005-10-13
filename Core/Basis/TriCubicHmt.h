@@ -39,8 +39,8 @@ namespace SCIRun {
   //! Class for describing unit geometry of TriCubicHmt
   class TriCubicHmtUnitElement : public TriLinearLgnUnitElement {
   public:
-    TriLinearLgnUnitElement() {};
-    virtual ~TriLinearLgnUnitElement() {};
+    TriCubicHmtUnitElement() {};
+    virtual ~TriCubicHmtUnitElement() {};
   };
 
 
@@ -134,7 +134,7 @@ public:
   //! get the parametric coordinate for value within the element.
   template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
+		  const ElemData &cd) const  
   {
     TriLocate< TriCubicHmt<T> > CL;
     return CL.get_coords(this, coords, value, cd);
@@ -142,7 +142,7 @@ public:
  
 
   //! add derivative values (dx, dy) for nodes.
-  void add_derivative(const T &p[2]) { derivs_.push_back(p); }
+  void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
 
   //! add a node value. (must correspond to center of triangle)
   void add_node(const T &p) { nodes_.push_back(p); }
