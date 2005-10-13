@@ -49,7 +49,7 @@
 namespace SCIRun {
 
   namespace Distributed = sci::cca::distributed;
-  namespace DistributedInternal = sci::cca::distributed::internal;
+  namespace Internal = Distributed::internal;
   
   class ComponentInfo;
   
@@ -66,7 +66,7 @@ namespace SCIRun {
   public:
     typedef typename DistributedFrameworkImpl<Base>::pointer pointer;
     //typedef Distributed::internal::DistributedFrameworkInteral::pointer pointer;
-    typedef Distributed::internal::Service::pointer ServicePointer;
+    typedef Internal::Service::pointer ServicePointer;
 
     DistributedFrameworkInternal( const pointer &parent = pointer(0));
     virtual ~DistributedFrameworkInternal();
@@ -75,11 +75,6 @@ namespace SCIRun {
      * Three pure virtual methods to create and destroy a component.
      * These methods must be defined in the Framework that derives from this DistributedFramework base
      */
-    virtual Distributed::ComponentInfo::pointer
-    createComponent( const std::string &, const std::string &, const sci::cca::TypeMap::pointer& properties) = 0;
-
-    virtual void destroyComponent( const Distributed::ComponentInfo::pointer & ) = 0;
-df
     virtual SSIDL::array1<sci::cca::ComponentClassDescription::pointer> listAllComponentTypes( bool ) = 0;
 
     /*
@@ -105,18 +100,22 @@ df
     ServicePointer getFrameworkService(const std::string &);
     void releaseFrameworkService(const ServicePointer &service);
 
+    void addComponentClassFactory( const Internal::ComponentClassFactory::pointer &factory );
+
   private:
     typedef std::list<Distributed::ConnectionInfo::pointer> ConnectionList;
-    typedef std::list<Distributed::ComponentInfo::pointer> ComponentList;
-    typedef std::map<std::string, Distributed::internal::Service::pointer> ServiceMap;
-    typedef std:
+    typedef std::map<std::string, Distributed::ComponentInfo::pointer> ComponentMap;
+    typedef std::map<std::string, Internal::Service::pointer> ServiceMap;
+    typedef std::map<std::string, Internal::ComponentClassFactory::pointer> ComponentClassFactoryMap;
 
     ConnectionList connections;
-    ComponentList  components;
+    ComponentMap  components;
     ServiceMap     services;
+    ComponentClassFactoryMap factories;
 
     Mutex connection_lock;
     Mutex component_lock;
+    Mutex factory_lock;
   };
   
 } // end namespace SCIRun

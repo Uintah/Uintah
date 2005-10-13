@@ -39,11 +39,12 @@
  */
 
 #include <SCIRun/Distributed/ComponentClassDescription.h>
+#include <SCIRun/Distributed/ComponentClassDescriptionImpl.code>
 
 namespace SCIRun {
 
-  ComponentClassDescription::ComponentClassDescription(const ComponentDescription *desc )
-    : ComponentClassDescriptionImpl<Interface>(desc)
+  ComponentClassDescription::ComponentClassDescription(const std::string &type)
+    : ComponentClassDescriptionImpl<Interface>(type)
   {}
 
   ComponentClassDescription::~ComponentClassDescription() {}

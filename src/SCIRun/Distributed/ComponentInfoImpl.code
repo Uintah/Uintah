@@ -106,7 +106,8 @@ namespace SCIRun {
   { 
     this->properties = properties; 
   }
-  
+ 
+ 
 } // end namespace SCIRun
 
 #endif // #ifndef SCIRun_ComponentInfoImpl_code
