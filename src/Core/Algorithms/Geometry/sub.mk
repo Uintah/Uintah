@@ -37,8 +37,15 @@ SRCS     += \
         $(SRCDIR)/CoregPts.cc \
         $(SRCDIR)/SurfaceLaplacian.cc \
 
-PSELIBS := Core/Datatypes Core/Containers Core/Thread \
-	Core/Exceptions Core/Geometry Core/Util Core/Math
+PSELIBS := \
+	Core/Basis      \
+	Core/Containers \
+	Core/Datatypes  \
+	Core/Exceptions \
+	Core/Geometry   \
+	Core/Math       \
+	Core/Thread     \
+	Core/Util       
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

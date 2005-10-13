@@ -48,9 +48,19 @@ SRCS     += $(SRCDIR)/BundlePort.cc		  \
             $(SRCDIR)/templates.cc		  \
 
 
-PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
-	Core/Thread Core/Geom Core/Geometry Core/Exceptions Core/Util \
-	Core/Persistent Core/Datatypes Core/Volume
+PSELIBS := \
+	Core/Containers   \
+	Core/Datatypes    \
+	Core/Exceptions   \
+	Core/Geom         \
+	Core/Geometry     \
+	Core/GuiInterface \
+	Core/Persistent   \
+	Core/Thread       \
+	Core/Util         \
+	Core/Volume       \
+	Dataflow/Network  \
+	Dataflow/Comm    
 
 LIBS := 
 

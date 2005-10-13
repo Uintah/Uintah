@@ -49,11 +49,18 @@ SRCS     += \
 	$(SRCDIR)/TriMC.cc		\
 	$(SRCDIR)/UHexMC.cc		\
 
+PSELIBS := \
+	Core/Basis      \
+	Core/Containers \
+	Core/Datatypes  \
+	Core/Exceptions \
+	Core/Geom       \
+	Core/Geometry   \
+	Core/Persistent \
+	Core/Thread     \
+	Core/Util       \
+	Core/Volume
 
-
-PSELIBS := Core/Datatypes Core/Containers Core/Thread \
-	Core/Exceptions Core/Geom Core/Util Core/Geometry \
-	Core/Persistent Core/Volume
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
