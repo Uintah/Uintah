@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentDescription.h: 
+ *  ComponentClassFactory.h: 
  *
  *  Written by:
  *   Yarden Livant
@@ -38,26 +38,31 @@
  *
  */
 
-#ifndef SCIRun_ComponentClassDescription_h
-#define SCIRun_ComponentClassDescription_h
+#ifndef SCIRun_ComponentFactory_h
+#define SCIRun_ComponentFactory_h
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Distributed/ComponentClassDescriptionImpl.h>
-
+#include <SCIRun/Distributed/ComponentClassFactoryImpl.h>
 
 namespace SCIRun {
 
   namespace Distributed = sci::cca::distributed;
+  namespace Internal = Distributed::internal;
 
-  class ComponentClassDescription : public ComponentClassDescriptionImpl<sci::cca::ComponentClassDescription> 
+  template<class ComponentClass>
+  class ComponentClassFactoryType : public ComponentClassFactory
   {
   public:
-    typedef sci::cca::ComponentClassDescription Interface;
-    typedef Interface:: pointer pointer;
+    ComponentClassFactoryType(const sci::cca::ComponentClassDescription &desc) 
+      : ComponentClassFactory(desc)
+    {}
 
-    ComponentClassDescription(const std::string &type );
+    virtual ~ComponentClassFactoryType() {}
 
-    virtual ~ComponentClassDescription();
+    virtual Distributed::ComponentInfo::pointer create( const Distributed::DistributedFramework::pointer &framework,
+							const std::string &name) 
+    {
+      return ;
+    }
   };
 }
 

@@ -28,37 +28,36 @@
 
 
 /*
- *  ComponentDescription.h: 
+ *  ComponentClassDescriptionImpl.code: 
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
- *   Sept 2005
+ *   October 2005
  *
  */
 
-#ifndef SCIRun_ComponentClassDescription_h
-#define SCIRun_ComponentClassDescription_h
-
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Distributed/ComponentClassDescriptionImpl.h>
-
+#ifndef SCIRUN_ComponentClassDescriptionImpl_code
+#define SCIRUN_ComponentClassDescriptionImpl_code
 
 namespace SCIRun {
+  
+  template<class Base>
+  ComponentClassDescriptionImpl<Base>::ComponentClassDescriptionImpl(const std::string &type)
+    : type(type)
+  {}
 
-  namespace Distributed = sci::cca::distributed;
+  template<class Base>
+  ComponentClassDescriptionImpl<Base>::~ComponentClassDescriptionImpl()
+  {}
 
-  class ComponentClassDescription : public ComponentClassDescriptionImpl<sci::cca::ComponentClassDescription> 
-  {
-  public:
-    typedef sci::cca::ComponentClassDescription Interface;
-    typedef Interface:: pointer pointer;
-
-    ComponentClassDescription(const std::string &type );
-
-    virtual ~ComponentClassDescription();
-  };
+  template<class Base>
+  std::string
+  ComponentClassDescriptionImpl<Base>::getComponentClassName() 
+  { 
+    return type; 
+  }
 }
 
-#endif
+#endif 

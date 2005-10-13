@@ -87,7 +87,9 @@ namespace SCIRun {
     virtual void setProperties(const sci::cca::TypeMap::pointer &);
 
     virtual sci::cca::Component::pointer getComponent() { return component; }
-    
+
+    virtual void destroyComponent() = 0;
+
   protected:
     PortMap ports;
     

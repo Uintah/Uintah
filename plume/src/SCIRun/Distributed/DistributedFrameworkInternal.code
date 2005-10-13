@@ -41,7 +41,8 @@
 #ifndef SCIRun_DistributedFrameworkInternalImpl_code
 #define SCIRun_DistributedFrameworkInternalImpl_code
 
-//#include <SCIRun/Distributed/DistributedFrameworkInternal.h>
+#include <SCIRun/Distributed/CCAException.h>
+#include <SCIRun/Distributed/FrameworkInternalException.h>
 #include <SCIRun/Distributed/ConnectionID.h>
 #include <SCIRun/Distributed/ConnectionInfo.h>
 #include <SCIRun/Distributed/ComponentID.h>
@@ -57,7 +58,8 @@ namespace SCIRun {
   DistributedFrameworkInternal<Base>::DistributedFrameworkInternal(const pointer &parent )
     : DistributedFrameworkImpl<Base>(parent),
       connection_lock("DistributedFrameworkInternal::connection_lock"),
-      component_lock("DistributedFrameworkInternal::component_lock")
+      component_lock("DistributedFrameworkInternal::component_lock"),
+      factory_lock("DistributedFrameworkInternal::factory_lock")
   {
   }
   
@@ -72,8 +74,27 @@ namespace SCIRun {
 							       const std::string& className,
 							       const sci::cca::TypeMap::pointer& properties)
   {
-    // call the virtual method that actually create a component
-    return createComponent( instanceName, className, properties);
+    Guard guard(&component_lock);
+
+    if ( components.find(instanceName) != components.end() )
+      throw CCAException::create("can not create component ["+instanceName+"]: name in use");
+
+    ComponentInfo::pointer info(0);
+    {
+      Guard guard(&factory_lock);
+      
+      ComponentClassFactoryMap::iterator factory = factories.find(className);
+      if ( factory == factories.end() )
+	throw CCAException::create("Can not create a component of type ["+className+"]: no factory");
+      
+      // this may throw a cca exception.
+      // do not catch it. 
+      info = factory->second->create( pointer(this), instanceName, properties);
+    }
+    
+    components[instanceName] = info;
+
+    return info;
   }
 
   template<class Base>
@@ -81,10 +102,11 @@ namespace SCIRun {
   {
     SCIRun::Guard guard(&component_lock);
 
-    for (ComponentList::const_iterator c = components.begin(); c != components.end(); ++c)
-      if ( (*c)->getInstanceName() == name )
-	return (*c);
-    return ComponentID::pointer(0);
+    ComponentMap::iterator id = components.find(name);
+    if (id == components.end())
+      return ComponentID::pointer(0);
+    else 
+      return id->second;
   }
 
 #if 0
@@ -112,8 +134,8 @@ namespace SCIRun {
 
     SCIRun::Guard guard(&component_lock);
 
-    for (ComponentList::const_iterator iter = components.begin(); iter != components.end(); ++iter ) 
-      ids.push_back(*iter);
+    for (ComponentMap::iterator iter = components.begin(); iter != components.end(); ++iter ) 
+      ids.push_back(iter->second);
 
     return ids;
   }
@@ -165,9 +187,9 @@ namespace SCIRun {
     
     // call the virtual function that actually delete the component 
     ComponentInfo::pointer info = pidl_cast<ComponentInfo::pointer>(component);
-    destroyComponent(info);
+    info->destroyComponent();
     
-    ComponentList::iterator c = find( components.begin(), components.end(), pidl_cast<ComponentInfo::pointer>(component));
+    ComponentMap::iterator c = components.find( info->getInstanceName() );
     if ( c != components.end() ) {
       // erase the last reference to the component info
       components.erase(c);
@@ -194,6 +216,18 @@ namespace SCIRun {
   }
 
 
+  template<class Base>
+  void 
+  DistributedFrameworkInternal<Base>::addComponentClassFactory( const Internal::ComponentClassFactory::pointer &factory )
+  {
+    Guard guard(&factory_lock);
+
+    if ( factories.find(factory->getClassName()) != factories.end() )
+      throw new FrameworkInternalException("ComponentClassFactory ["+factory->getClassName()+"] registerd twice");
+
+    factories[factory->getClassName()] = factory;
+  }
+  
 } // SCIRun namespace
 
 #endif // 

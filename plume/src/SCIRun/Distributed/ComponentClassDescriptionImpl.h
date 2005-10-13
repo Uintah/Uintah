@@ -42,7 +42,6 @@
 #define SCIRUN_ComponentClassDescriptionImpl_h
 
 #include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Distributed/ComponentDescription.h>
 
 namespace SCIRun {
   
@@ -54,13 +53,13 @@ namespace SCIRun {
   public:
     typedef typename Base::pointer pointer;
     
-    ComponentClassDescriptionImpl(const ComponentDescription *) : desc(desc) {}
-    virtual ~ComponentClassDescriptionImpl() {}
+    ComponentClassDescriptionImpl(const std::string &type);
+    virtual ~ComponentClassDescriptionImpl();
     
-    virtual std::string getComponentClassName() { return desc->getType(); }
-    
-  private:
-    const ComponentDescription *desc;
+    virtual std::string getComponentClassName();
+
+  protected:
+    std::string type;
   };
   
 }
