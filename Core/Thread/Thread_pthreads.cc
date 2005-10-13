@@ -141,7 +141,7 @@ using SCIRun::Thread;
 using SCIRun::ThreadError;
 using SCIRun::ThreadGroup;
 
-bool exiting = false;
+static bool exiting = false;
 
 #define MAXBSTACK 10
 
@@ -396,7 +396,7 @@ Thread::numProcessors()
 }
 
 
-void
+static void
 Thread_run(Thread* t)
 {
   t->run_body();
@@ -641,7 +641,7 @@ Thread::print_threads()
   {
     Thread_private* p = active[i];
     const char* tname = p->thread?p->thread->getThreadName():"???";
-    fprintf(fp, " %ld: %s (", p->threadid, tname);
+    fprintf(fp, " %lu: %s (", p->threadid, tname);
     if (p->thread)
     {
       if (p->thread->isDaemon())
@@ -1447,7 +1447,7 @@ AtomicCounter::~AtomicCounter()
 
 AtomicCounter::operator int() const
 {
-  return priv_->amo_val;
+  return (int)(priv_->amo_val);
 }
 
 // Preincrement
