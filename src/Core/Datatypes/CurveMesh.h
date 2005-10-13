@@ -218,7 +218,7 @@ public:
   //! piecewise linear approximation of an edge.
   void pl_approx_edge(vector<Point> &approx, typename Edge::index_type, 
 		      double epsilon) const;
-  void get_coords(vector<double> &coords, 
+  bool get_coords(vector<double> &coords, 
 		  const Point &p,
 		  typename Edge::index_type idx) const;
   //! get the center point (in object space) of an element
@@ -262,6 +262,13 @@ public:
   { return false; }
   bool locate(typename Cell::index_type &, const Point &) const 
   { return false; }
+
+  int get_weights(const Point &p, typename Node::array_type &l, double *w);
+  int get_weights(const Point &p, typename Edge::array_type &l, double *w);
+  int get_weights(const Point & , typename Face::array_type & , double * )
+  {ASSERTFAIL("CurveMesh::get_weights for faces isn't supported"); }
+  int get_weights(const Point & , typename Cell::array_type & , double * )
+  {ASSERTFAIL("CurveMesh::get_weights for cells isn't supported"); }
 
   void get_point(Point &result, typename Node::index_type idx) const
   { get_center(result,idx); }
@@ -458,13 +465,13 @@ CurveMesh<Basis>::pl_approx_edge(vector<Point> &approx,
 }
 
 template <class Basis>
-void
+bool
 CurveMesh<Basis>::get_coords(vector<double> &coords, 
 			     const Point &p,
 			     typename Edge::index_type idx) const
 {
   CMCellData cmcd(*this, idx);
-  basis_.get_coords(coords, p, cmcd);
+  return basis_.get_coords(coords, p, cmcd);
 }
 
 template <class Basis>
@@ -588,6 +595,40 @@ CurveMesh<Basis>::locate(typename Edge::index_type &idx, const Point &p) const
 
   return true;
 }
+
+template <class Basis>
+int
+CurveMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l, 
+			      double *w)
+{
+  typename Edge::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(l,idx);
+    vector<double> coords(1);
+    if (get_coords(coords, p, idx)) {
+      return basis_.get_weights(coords, w);
+    }
+  }
+  return 0;
+}
+
+template <class Basis>
+int
+CurveMesh<Basis>::get_weights(const Point &p, typename Edge::array_type &l, 
+			      double *w)
+{
+  typename Edge::index_type idx;
+  if (locate(idx, p))
+  {
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
+  }
+  return 0;
+}
+
 
 #define CURVE_MESH_VERSION 2
 

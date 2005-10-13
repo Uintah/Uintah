@@ -168,18 +168,39 @@ public:
   { return 0; }
 
   //! get the center point (in object space) of an element
-  void get_center(Point &, const typename ScanlineMesh<Basis>::Node::index_type&) const;
-  void get_center(Point &, const typename ScanlineMesh<Basis>::Edge::index_type &) const;
-  void get_center(Point &, const typename ScanlineMesh<Basis>::Face::index_type &) const {}
-  void get_center(Point &, const typename ScanlineMesh<Basis>::Cell::index_type &) const {}
+  void get_center(Point &, 
+		  const typename ScanlineMesh<Basis>::Node::index_type&) const;
+  void get_center(Point &, 
+		  const typename ScanlineMesh<Basis>::Edge::index_type&) const;
+  void get_center(Point &, 
+		  const typename ScanlineMesh<Basis>::Face::index_type&) const 
+  {}
+  void get_center(Point &, 
+		  const typename ScanlineMesh<Basis>::Cell::index_type&) const
+  {}
 
-  bool locate(typename ScanlineMesh<Basis>::Node::index_type &, const Point &) const;
-  bool locate(typename ScanlineMesh<Basis>::Edge::index_type &, const Point &) const;
-  bool locate(typename ScanlineMesh<Basis>::Face::index_type &, const Point &) const 
+  bool locate(typename ScanlineMesh<Basis>::Node::index_type &, 
+	      const Point &) const;
+  bool locate(typename ScanlineMesh<Basis>::Edge::index_type &, 
+	      const Point &) const;
+  bool locate(typename ScanlineMesh<Basis>::Face::index_type &, 
+	      const Point &) const 
   { return false; }
-  bool locate(typename ScanlineMesh<Basis>::Cell::index_type &, const Point &) const 
+  bool locate(typename ScanlineMesh<Basis>::Cell::index_type &, 
+	      const Point &) const 
   { return false; }
 
+  int get_weights(const Point &, 
+		  typename ScanlineMesh<Basis>::Node::array_type &, double *w);
+  int get_weights(const Point &, 
+		  typename ScanlineMesh<Basis>::Edge::array_type &, double *w);
+  int get_weights(const Point &, 
+		  typename ScanlineMesh<Basis>::Face::array_type &, double *)
+  {ASSERTFAIL("StructCurveMesh::get_weights for faces isn't supported"); }
+  int get_weights(const Point &, 
+		  typename ScanlineMesh<Basis>::Cell::array_type &, double *)
+  {ASSERTFAIL("StructCurveMesh::get_weights for cells isn't supported"); }
+  
   void get_point(Point &p, typename ScanlineMesh<Basis>::Node::index_type i) const 
   { get_center(p,i); }
   void set_point(const Point &p, typename ScanlineMesh<Basis>::Node::index_type i) 
@@ -396,6 +417,41 @@ StructCurveMesh<Basis>::locate(typename ScanlineMesh<Basis>::Edge::index_type &i
   }
 
   return true;
+}
+
+template <class Basis>
+int
+StructCurveMesh<Basis>::get_weights(const Point &p, 
+			    typename ScanlineMesh<Basis>::Node::array_type &l, 
+				    double *w)
+{
+  typename ScanlineMesh<Basis>::Edge::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(l,idx);
+    vector<double> coords(1);
+    if (get_coords(coords, p, idx)) {
+      return this->basis_.get_weights(coords, w);
+    }
+  }
+  return 0;
+}
+
+template <class Basis>
+int
+StructCurveMesh<Basis>::get_weights(const Point &p, 
+			    typename ScanlineMesh<Basis>::Edge::array_type &l, 
+				    double *w)
+{
+  typename ScanlineMesh<Basis>::Edge::index_type idx;
+  if (locate(idx, p))
+  {
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
+  }
+  return 0;
 }
 
 

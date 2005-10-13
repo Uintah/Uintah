@@ -36,18 +36,20 @@
 
 namespace SCIRun {
   
-  //! Class for describing unit geometry of QuadBicubicHmt
-  class QuadBicubicHmtUnitElement : public QuadBilinearLgnUnitElement {
-  public:
-    QuadBicubicHmtUnitElement() {};
-    virtual ~QuadBicubicHmtUnitElement() {};
-  };
+//! Class for describing unit geometry of QuadBicubicHmt
+class QuadBicubicHmtUnitElement : public QuadBilinearLgnUnitElement {
+public:
+  QuadBicubicHmtUnitElement() {};
+  virtual ~QuadBicubicHmtUnitElement() {};
+};
 
 
 //! Class for handling of element of type quad with 
 //! bicubic hermitian interpolation
 template <class T>
-  class QuadBicubicHmt : public QuadApprox, public QuadGaussian2<double>, public QuadBicubicHmtUnitElement
+class QuadBicubicHmt : public QuadApprox, 
+		       public QuadGaussian2<double>, 
+		       public QuadBicubicHmtUnitElement
 {
 public:
   typedef T value_type;
@@ -57,24 +59,43 @@ public:
   
   int polynomial_order() const { return 3; }
 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  { 
+    const double x=coords[0], y=coords[1];  
+    w[0]  = -((-1 + x)*(-1 + y)*(-1 - x + 2*x*x - y + 2*y*y));
+    w[1]  = -((x-1)*(x-1)*x*(-1 + y));
+    w[2]  = -((-1 + x)*(y-1)*(y-1)*y);
+    w[3]  = +x*(-1 + y)*(-3*x + 2*x*x + y*(-1 + 2*y));
+    w[4]  = +x*x*(-1 + x + y - x*y);
+    w[5]  = +x*(y-1)*(y-1)*y;
+    w[6]  = +x*y*(-1 + 3*x - 2*x*x + 3*y - 2*y*y);
+    w[7]  = +(-1 + x)*x*x*y;
+    w[8]  = +x*(-1 + y)*y*y;
+    w[9]  = +(-1 + x)*y*(-x + 2*x*x + y*(-3 + 2*y));
+    w[10] = +(x-1)*(x-1)*x*y;
+    w[11] = +y*y*(-1 + x + y - x*y);
+
+    return 12;
+  }
   //! get value at parametric coordinate 
   template <class CellData>
   T interpolate(const vector<double> &coords, const CellData &cd) const
   {
-    const double x=coords[0], y=coords[1];  
-    return
-      -((-1 + x)*(-1 + y)*(-1 - x + 2*x*x - y + 2*y*y))*cd.node0()
-      -((x-1)*(x-1)*x*(-1 + y))*derivs_[cd.node0_index()][0]
-      -((-1 + x)*(y-1)*(y-1)*y)*derivs_[cd.node0_index()][1]
-      +x*(-1 + y)*(-3*x + 2*x*x + y*(-1 + 2*y))*cd.node1()
-      +x*x*(-1 + x + y - x*y)*derivs_[cd.node1_index()][0]
-      +x*(y-1)*(y-1)*y*derivs_[cd.node1_index()][1]
-      +x*y*(-1 + 3*x - 2*x*x + 3*y - 2*y*y)*cd.node2()
-      +(-1 + x)*x*x*y*derivs_[cd.node2_index()][0]
-      +x*(-1 + y)*y*y*derivs_[cd.node2_index()][1]
-      +(-1 + x)*y*(-x + 2*x*x + y*(-3 + 2*y))*cd.node3()
-      +(x-1)*(x-1)*x*y*derivs_[cd.node3_index()][0]
-      +y*y*(-1 + x + y - x*y)*derivs_[cd.node3_index()][1];
+    double w[12];
+    get_weights(coords, w); 
+    return (T)(w[0]  * cd.node0()                   +
+	       w[1]  * derivs_[cd.node0_index()][0] +
+	       w[2]  * derivs_[cd.node0_index()][1] +
+	       w[3]  * cd.node1()		    +
+	       w[4]  * derivs_[cd.node1_index()][0] +
+	       w[5]  * derivs_[cd.node1_index()][1] +
+	       w[6]  * cd.node2()		    +
+	       w[7]  * derivs_[cd.node2_index()][0] +
+	       w[8]  * derivs_[cd.node2_index()][1] +
+	       w[9]  * cd.node3()		    +
+	       w[10] * derivs_[cd.node3_index()][0] +
+	       w[11] * derivs_[cd.node3_index()][1]);
   }
   
   //! get first derivative at parametric coordinate
@@ -143,7 +164,7 @@ const TypeDescription* get_type_description(QuadBicubicHmt<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(QuadBicubicHmt<T>::type_name(0), subs, 

@@ -49,7 +49,7 @@ public:
   static int DomainDimension() { return 2; }; //! return dimension of domain 
   
   static int NumberOfVertices() { return 9; }; //! return number of vertices
-  static int NumberOfEdges() { 12; }; //! return number of edges
+  static int NumberOfEdges() { return 12; }; //! return number of edges
   
   static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
 
@@ -60,7 +60,9 @@ public:
 //! Class for handling of element of type quad with 
 //! biquadratic lagrangian interpolation
 template <class T>
-  class QuadBiquadraticLgn : public QuadApprox, public QuadGaussian3<double>, public QuadBiquadraticLgnUnitElement
+class QuadBiquadraticLgn : public QuadApprox, 
+			   public QuadGaussian3<double>, 
+			   public QuadBiquadraticLgnUnitElement
 {
 public:
   typedef T value_type;
@@ -70,19 +72,37 @@ public:
   
   int polynomial_order() const { return 2; }
 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  { 
+    const double x=coords[0], y=coords[1];  
+
+    w[0] = -((-1 + x)*(-1 + y)*(-1 + 2*x + 2*y));
+    w[1] = -(x*(-1 + 2*x - 2*y)*(-1 +y));
+    w[2] = +x*y*(-3 + 2*x + 2*y);
+    w[3] = +(-1 + x)*(1 + 2*x - 2*y)*y;
+    w[4] = +4*(-1 + x)*x*(-1 + y);
+    w[5] = -4*x*(-1 + y)*y;
+    w[6] = -4*(-1 + x)*x*y;
+    w[7] = +4*(-1 + x)*(-1 + y)*y;
+
+    return 8;
+  }
   //! get first derivative at parametric coordinate 
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const;
   {
-    const double x=coords[0], y=coords[1];  
-    return -((-1 + x)*(-1 + y)*(-1 + 2*x + 2*y))*cd.node0()
-      -(x*(-1 + 2*x - 2*y)*(-1 +y))*cd.node1()
-      +x*y*(-3 + 2*x + 2*y)*cd.node2()
-      +(-1 + x)*(1 + 2*x - 2*y)*y*cd.node3()
-      +4*(-1 + x)*x*(-1 + y)*nodes_[cd.edge0_index()]
-      -4*x*(-1 + y)*y*nodes_[cd.edge1_index()]
-      -4*(-1 + x)*x*y*nodes_[cd.edge2_index()]
-      +4*(-1 + x)*(-1 + y)*y*nodes_[cd.edge3_index()];
+    double w[8];
+    get_weights(coords, w); 
+
+    return (T)(w[0] * cd.node0() +
+	       w[1] * cd.node1() +
+	       w[2] * cd.node2() +
+	       w[3] * cd.node3() +
+	       w[4] * nodes_[cd.edge0_index()] +
+	       w[5] * nodes_[cd.edge1_index()] +
+	       w[6] * nodes_[cd.edge2_index()] +
+	       w[7] * nodes_[cd.edge3_index()]);
   };
   
   //! get first derivative at parametric coordinate
@@ -145,7 +165,7 @@ const TypeDescription* get_type_description(QuadBiquadraticLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(QuadBiquadraticLgn<T>::type_name(0), subs, 

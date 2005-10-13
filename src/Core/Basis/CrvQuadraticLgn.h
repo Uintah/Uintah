@@ -47,8 +47,8 @@ public:
   
   static int DomainDimension() { return 1; }; //!< return dimension of domain 
   
-  static int NumberOfVertices() { 3; }; //!< return number of vertices
-  static int NumberOfEdges() { 2; }; //!< return number of edges
+  static int NumberOfVertices() { return 3; }; //!< return number of vertices
+  static int NumberOfEdges() { return 2; }; //!< return number of edges
   
   static int VerticesOfFace() { return 0; }; //!< return number of vertices per face 
 
@@ -59,7 +59,9 @@ public:
 //! Class for handling of element of type curve with 
 //! quadratic lagrangian interpolation
 template <class T>
-  class CrvQuadraticLgn : public CrvApprox, public CrvGaussian2<double>, public CrvQuadraticLgnUnitElement
+  class CrvQuadraticLgn : public CrvApprox, 
+			  public CrvGaussian2<double>, 
+			  public CrvQuadraticLgnUnitElement
 {
 public:
   typedef T value_type;
@@ -69,16 +71,30 @@ public:
   
   int polynomial_order() const { return 2; }
 
+  //! get weight factors at parametric coordinate 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  {
+    const double x = coords[0];
+
+    w[0] = 1 - 3*x + 2*x*x;
+    w[1] = -4*(-1 + x)*x;
+    w[2] = x*(-1 + 2*x);
+
+    return 3;
+  }
+  
   //! get value at parametric coordinate
   template <class CellData>
   T interpolate(const vector<double> &coords, const CellData &cd) const
   {
-    const double x=coords[0];  
-    return T((1 - 3*x + 2*x*x) * cd.node0() 
-	     -4*(-1 + x)*x* nodes_[cd.edge0_index()]) 
-	     +x*(-1 + 2*x)* cd.node1();
+    double w[3];
+    get_weights(coords, w); 
+    return T(w[0] * cd.node0() +
+	     w[1] * nodes_[cd.edge0_index()] +
+	     w[2] * cd.node1());
   }
-  
+    
   //! get first derivative at parametric coordinate
   template <class CellData>
   void derivate(const vector<double> &coords, const CellData &cd, 
@@ -121,7 +137,7 @@ const TypeDescription* get_type_description(CrvQuadraticLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(CrvQuadraticLgn<T>::type_name(0), subs, 

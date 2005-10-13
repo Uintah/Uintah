@@ -47,7 +47,9 @@ namespace SCIRun {
 //! Class for handling of element of type triangle with 
 //! cubic hermitian interpolation
 template <class T>
-  class TriCubicHmt : public TriApprox, public TriGaussian3<double>, public TriCubicHmtUnitElement 
+  class TriCubicHmt : public TriApprox, 
+		      public TriGaussian3<double>, 
+		      public TriCubicHmtUnitElement 
 {
 public:
   typedef T value_type;
@@ -57,21 +59,42 @@ public:
     
   int polynomial_order() const { return 3; }
 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  {
+    const double x=coords[0], y=coords[1];  
+
+    w[0] = (-1 + x + y)*(-1 - x + 2*x*x - y + 11*x*y + 2*y*y);
+    w[1] = +x*(-1+ x + y)*(-1 + x + 2*y);
+    w[2] = +y*(-1 + x + y)*(-1 + 2*x + y);
+    w[3] = -(x*(-3*x +2*x*x + 7*y - 7*x*y - 7*y*y));
+    w[4] = +x*(-x + x*x + 2*y - 2*x*y- 2*y*y);
+    w[5] = +x*y*(-1 + 2*x + y);
+    w[6] = -(y*(7*x - 7*x*x - 3*y - 7*x*y+ 2*y*y));
+    w[7] = +x*y*(-1 + x + 2*y);
+    w[8] = +y*(2*x - 2*x*x - y - 2*x*y + y*y);
+    w[9] = -27*x*y*(-1 + x + y);
+
+    return 10;
+  }
+
   //! get value at parametric coordinate
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    const double x=coords[0], y=coords[1];  
-    return (-1 + x + y)*(-1 - x + 2*x*x - y + 11*x*y + 2*y*y)*cd.node0()
-      +x*(-1+ x + y)*(-1 + x + 2*y)*derivs_[cd.node0_index()][0]
-      +y*(-1 + x + y)*(-1 + 2*x + y)*derivs_[cd.node0_index()][1]
-      -(x*(-3*x +2*x*x + 7*y - 7*x*y - 7*y*y))*cd.node1()
-      +x*(-x + x*x + 2*y - 2*x*y- 2*y*y)*derivs_[cd.node1_index()][0]
-      +x*y*(-1 + 2*x + y)*derivs_[cd.node1_index()][1]
-      -(y*(7*x - 7*x*x - 3*y - 7*x*y+ 2*y*y))*cd.node2()
-      +x*y*(-1 + x + 2*y)*derivs_[cd.node2_index()][0]
-      +y*(2*x - 2*x*x - y - 2*x*y + y*y)*derivs_[cd.node2_index()][1]
-      -27*x*y*(-1 + x + y)*nodes_[cd.elem];    
+    double w[10];
+    get_weights(coords, w); 
+
+    return (T)(w[0] * cd.node0()                   +
+	       w[1] * derivs_[cd.node0_index()][0] +
+	       w[2] * derivs_[cd.node0_index()][1] +
+	       w[3] * cd.node1()		   +
+	       w[4] * derivs_[cd.node1_index()][0] +
+	       w[5] * derivs_[cd.node1_index()][1] +
+	       w[6] * cd.node2()		   +
+	       w[7] * derivs_[cd.node2_index()][0] +
+	       w[8] * derivs_[cd.node2_index()][1] +
+	       w[9] * nodes_[cd.elem]);    
   }
   
   //! get first derivative at parametric coordinate
@@ -137,7 +160,7 @@ protected:
 
   //! Cubic Lagrangian needs additional nodes stored for each edge
   //! in the topology.
-  vector<T>          nodes_; 
+  vector<T>             nodes_; 
 };
 
 
@@ -146,7 +169,7 @@ const TypeDescription* get_type_description(TriCubicHmt<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(TriCubicHmt<T>::type_name(0), subs, 

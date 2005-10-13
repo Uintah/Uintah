@@ -214,6 +214,13 @@ public:
   bool locate(typename Face::index_type &, const Point &) const { return false; }
   bool locate(typename Cell::index_type &, const Point &) const { return false; }
 
+  int get_weights(const Point &p, typename Node::array_type &l, double *w);
+  int get_weights(const Point &p, typename Edge::array_type &l, double *w);
+  int get_weights(const Point & , typename Face::array_type & , double * )
+  { ASSERTFAIL("ScanlineMesh::get_weights for faces isn't supported"); }
+  int get_weights(const Point & , typename Cell::array_type & , double * )
+  { ASSERTFAIL("ScanlineMesh::get_weights for cells isn't supported"); }
+
   void get_point(Point &p, typename Node::index_type i) const { get_center(p, i); }
   void get_normal(Vector &/*normal*/, typename Node::index_type /*index*/) const
   { ASSERTFAIL("not implemented") }
@@ -419,6 +426,38 @@ ScanlineMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
   }
 }
 
+template <class Basis>
+int
+ScanlineMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l, 
+				 double *w)
+{
+  typename Edge::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(l,idx);
+    vector<double> coords(1);
+    if (get_coords(coords, p, idx)) {
+      return basis_.get_weights(coords, w);
+    }
+  }
+  return 0;
+}
+
+template <class Basis>
+int
+ScanlineMesh<Basis>::get_weights(const Point &p, typename Edge::array_type &l, 
+				 double *w)
+{
+  typename Edge::index_type idx;
+  if (locate(idx, p))
+  {
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
+  }
+  return 0;
+}
 
 #define SCANLINEMESH_VERSION 2
 

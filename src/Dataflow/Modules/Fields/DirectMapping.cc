@@ -175,7 +175,8 @@ DirectMapping::execute()
       DirectMappingAlgo::get_compile_info(sfHandle->get_type_description(),
                                           sfHandle->order_type_description(),
                                           dfHandle->get_type_description(),
-                                          dfHandle->order_type_description());
+                                          dfHandle->order_type_description(),
+					  sfHandle->get_type_description(3));
 
     Handle<DirectMappingAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
@@ -206,17 +207,17 @@ CompileInfoHandle
 DirectMappingAlgo::get_compile_info(const TypeDescription *fsrc,
                                     const TypeDescription *lsrc,
                                     const TypeDescription *fdst,
-                                    const TypeDescription *ldst)
+                                    const TypeDescription *ldst,
+				    const TypeDescription *dsrc)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("DirectMappingAlgoT");
   static const string base_class_name("DirectMappingAlgo");
 
-  const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
-  const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
-  const string fout = fdst->get_name().substr(0, fdst_loc) +
-    fsrc->get_name().substr(fsrc_loc);
+  const string data_name = dsrc->get_name("", "");
+  const string fout = fdst->get_similar_name(data_name, 3);
+  cout << fout << std::endl;
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +

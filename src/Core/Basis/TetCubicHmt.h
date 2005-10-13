@@ -36,166 +36,195 @@
 
 namespace SCIRun {
 
-  //! Class for describing unit geometry of TetCubicHmt
-  class TetCubicHmtUnitElement : public TetLinearLgnUnitElement {
-  public:
-    TetLinearLgnUnitElement() {};
-    virtual ~TetLinearLgnUnitElement() {};
-  };
+//! Class for describing unit geometry of TetCubicHmt
+class TetCubicHmtUnitElement : public TetLinearLgnUnitElement {
+public:
+  TetLinearLgnUnitElement() {};
+  virtual ~TetLinearLgnUnitElement() {};
+};
 
-  //! Class for handling of element of type tetrahedron with 
-  //! cubic hermitian interpolation
-  template <class T>
-    class TetCubicHmt : public TetApprox, public TetGaussian3<double>, public TetCubicHmtUnitElement
+//! Class for handling of element of type tetrahedron with 
+//! cubic hermitian interpolation
+template <class T>
+class TetCubicHmt : public TetApprox, 
+		    public TetGaussian3<double>, 
+		    public TetCubicHmtUnitElement
+{
+public:
+  typedef T value_type;
+
+  TetCubicHmt() {}
+  virtual ~TetCubicHmt() {}
+
+  int polynomial_order() const { return 3; }
+
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  { 
+    const double x=coords[0], y=coords[1], z=coords[2];  
+
+    w[0]  = (-3*x*x + 2*x*x*x - 3*y*y + 2*y*y*y + (z-1)*(z-1)*(1 + 2*z));
+    w[1]  = +x*(1 + x*x + x*(-2 + y) - y - z*z);
+    w[2]  = +y*(-x*x + (-1 + y)*(-1 + y + z));
+    w[3]  = +(-y*y + x*(-1 + z) + (z-1)*(z-1))*z;
+    w[4]  = +(3 - 2*x)*x*x;
+    w[5]  = +(-1 + x)*x*x;
+    w[6]  = +x*x*y;
+    w[7]  = -(x*(-1 + z)*z);
+    w[8]  = +(3 - 2*y)*y*y;
+    w[9]  = -((-1 + x)*x*y);
+    w[10] = +(-1 + y)*y*y;
+    w[11] = +y*y*z;
+    w[12] = +(3 - 2*z)*z*z;
+    w[13] = +x*z*z;
+    w[14] = -((-1 + y)*y*z);
+    w[15] = +(-1 + z)*z*z;
+
+    return 16;
+  }
+
+  //! get value at parametric coordinate  
+  template <class ElemData>
+  T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-  public:
-    typedef T value_type;
+    double w[16];
+    get_weights(coords, w); 
 
-    TetCubicHmt() {}
-    virtual ~TetCubicHmt() {}
-
-    int polynomial_order() const { return 3; }
-
-    //! get value at parametric coordinate  
-    template <class ElemData>
-      T interpolate(const vector<double> &coords, const ElemData &cd) const
-    {
-      const double x=coords[0], y=coords[1], z=coords[2];  
-      return (-3*x*x + 2*x*x*x - 3*y*y + 2*y*y*y + 
-	      (z-1)*(z-1)*(1 + 2*z))*cd.node0()
-	+x*(1 + x*x + x*(-2 + y) - y - z*z)*derivs_[cd.node0_index()][0]
-	+y*(-x*x + (-1 + y)*(-1 + y + z))*derivs_[cd.node0_index()][1]
-	+(-y*y + x*(-1 + z) + (z-1)*(z-1))*z*derivs_[cd.node0_index()][2]
-	+(3 - 2*x)*x*x*cd.node1()
-	+(-1 + x)*x*x*derivs_[cd.node1_index()][0]
-	+x*x*y*derivs_[cd.node1_index()][1]
-	-(x*(-1 + z)*z)*derivs_[cd.node1_index()][2]
-	+(3 - 2*y)*y*y*cd.node2()
-	-((-1 + x)*x*y)*derivs_[cd.node2_index()][0]
-	+(-1 + y)*y*y*derivs_[cd.node2_index()][1]
-	+y*y*z*derivs_[cd.node2_index()][2]
-	+(3 - 2*z)*z*z*cd.node3()
-	+x*z*z*derivs_[cd.node3_index()][0]
-	-((-1 + y)*y*z)*derivs_[cd.node3_index()][1]
-	+(-1 + z)*z*z*derivs_[cd.node3_index()][2];
-    }
+    return (T)(w[0]  * cd.node0()                   +
+	       w[1]  * derivs_[cd.node0_index()][0] +
+	       w[2]  * derivs_[cd.node0_index()][1] +
+	       w[3]  * derivs_[cd.node0_index()][2] +
+	       w[4]  * cd.node1()		    +
+	       w[5]  * derivs_[cd.node1_index()][0] +
+	       w[6]  * derivs_[cd.node1_index()][1] +
+	       w[7]  * derivs_[cd.node1_index()][2] +
+	       w[8]  * cd.node2()		    +
+	       w[9]  * derivs_[cd.node2_index()][0] +
+	       w[10] * derivs_[cd.node2_index()][1] +
+	       w[11] * derivs_[cd.node2_index()][2] +
+	       w[12] * cd.node3()		    +
+	       w[13] * derivs_[cd.node3_index()][0] +
+	       w[14] * derivs_[cd.node3_index()][1] +
+	       w[15] * derivs_[cd.node3_index()][2]);
+  }
   
-    //! get first derivative at parametric coordinate
-    template <class ElemData>
-      void derivate(const vector<double> &coords, const ElemData &cd, 
-		    vector<T> &derivs) const
-    {
-      const double x=coords[0], y=coords[1], z=coords[2]; 
+  //! get first derivative at parametric coordinate
+  template <class ElemData>
+  void derivate(const vector<double> &coords, const ElemData &cd, 
+		vector<T> &derivs) const
+  {
+    const double x=coords[0], y=coords[1], z=coords[2]; 
  
-      derivs.resize(3);
+    derivs.resize(3);
 
-      derivs[0]=
-	T(6*(-1 + x)*x*cd.node0()
-	  +(1 + 3*x*x + 2*x*(-2 + y) - y - z*z)*derivs_[cd.node0_index()][0]
-	  -2*x*y*derivs_[cd.node0_index()][1]*derivs_[cd.node0_index()][1]
-	  +(-1 + z)*z*derivs_[cd.node0_index()][2]
-	  -6*(-1 + x)*x*cd.node1()
-	  +x*(-2 + 3*x)*derivs_[cd.node1_index()][0]
-	  +2*x*y*derivs_[cd.node1_index()][1]
-	  -((-1  z)*z)*derivs_[cd.node1_index()][2]
-	  +(y - 2*x*y)*derivs_[cd.node2_index()][0]
-	  +z*z*derivs_[cd.node3_index()][0]);
+    derivs[0]=
+      T(6*(-1 + x)*x*cd.node0()
+	+(1 + 3*x*x + 2*x*(-2 + y) - y - z*z)*derivs_[cd.node0_index()][0]
+	-2*x*y*derivs_[cd.node0_index()][1]*derivs_[cd.node0_index()][1]
+	+(-1 + z)*z*derivs_[cd.node0_index()][2]
+	-6*(-1 + x)*x*cd.node1()
+	+x*(-2 + 3*x)*derivs_[cd.node1_index()][0]
+	+2*x*y*derivs_[cd.node1_index()][1]
+	-((-1  z)*z)*derivs_[cd.node1_index()][2]
+	+(y - 2*x*y)*derivs_[cd.node2_index()][0]
+	+z*z*derivs_[cd.node3_index()][0]);
 
-      derivs[1]=
-	T(6*(-1 + y)*y*cd.node0()
-	  +(-1 + x)*x*derivs_[cd.node0_index()][0]
-	  +(1 - x*x + 3*y*y + 2*y*(-2 + z) - z)*derivs_[cd.node0_index()][1]
-	  -2*y*z*derivs_[cd.node0_index()][2]
-	  +x*x*derivs_[cd.node1_index()][1]
-	  -6*(-1 + y)*y*cd.node2()
-	  -((-1 + x)*x)*derivs_[cd.node2_index()][0]
-	  +y*(-2 + 3*y)*derivs_[cd.node2_index()][1]
-	  +2*y*z*derivs_[cd.node2_index()][2]
-	  +(z - 2*y*z)*derivs_[cd.node3_index()][1]);
+    derivs[1]=
+      T(6*(-1 + y)*y*cd.node0()
+	+(-1 + x)*x*derivs_[cd.node0_index()][0]
+	+(1 - x*x + 3*y*y + 2*y*(-2 + z) - z)*derivs_[cd.node0_index()][1]
+	-2*y*z*derivs_[cd.node0_index()][2]
+	+x*x*derivs_[cd.node1_index()][1]
+	-6*(-1 + y)*y*cd.node2()
+	-((-1 + x)*x)*derivs_[cd.node2_index()][0]
+	+y*(-2 + 3*y)*derivs_[cd.node2_index()][1]
+	+2*y*z*derivs_[cd.node2_index()][2]
+	+(z - 2*y*z)*derivs_[cd.node3_index()][1]);
 
-      derivs[2]=
-	T(6*(-1 + z)*z*cd.node0()
-	  -2*x*z*derivs_[cd.node0_index()][0]
-	  +(-1 + y)*y*derivs_[cd.node0_index()][1]
-	  +(1 - x - y*y - 4*z + 2*x*z + 3*z*z)*derivs_[cd.node0_index()][2]
-	  +(x - 2*x*z)*derivs_[cd.node1_index()][2]
-	  +y*y*derivs_[cd.node2_index()][2]
-	  -6*(-1 + z)*z*cd.node3()
-	  +2*x*z*derivs_[cd.node3_index()][0]
-	  -((-1 + y)*y)*derivs_[cd.node3_index()][1]
-	  +z*(-2 + 3*z)*derivs_[cd.node3_index()][2]);
-    }
+    derivs[2]=
+      T(6*(-1 + z)*z*cd.node0()
+	-2*x*z*derivs_[cd.node0_index()][0]
+	+(-1 + y)*y*derivs_[cd.node0_index()][1]
+	+(1 - x - y*y - 4*z + 2*x*z + 3*z*z)*derivs_[cd.node0_index()][2]
+	+(x - 2*x*z)*derivs_[cd.node1_index()][2]
+	+y*y*derivs_[cd.node2_index()][2]
+	-6*(-1 + z)*z*cd.node3()
+	+2*x*z*derivs_[cd.node3_index()][0]
+	-((-1 + y)*y)*derivs_[cd.node3_index()][1]
+	+z*(-2 + 3*z)*derivs_[cd.node3_index()][2]);
+  }
   
-    //! get parametric coordinate for value within the element
-    template <class ElemData>
-      bool get_coords(vector<double> &coords, const T& value, 
-		      const ElemData &cd) const  
-    {
-      TetLocate< TetCubicHmt<T> > CL;
-      return CL.get_coords(this, coords, value, cd);
-    };
- 
-    //! add derivative values (dx, dy, dz) for nodes.
-    void add_derivative(const T &p[3]) { derivs_.push_back(p); }
-
-    static  const string type_name(int n = -1);
-
-    virtual void io (Piostream& str);
-
-  protected:
-    //! support data (node data is elsewhere)
-
-    //! Cubic Hermitian only needs additonal derivatives stored at each node
-    //! in the topology.
-    vector<T[3]>          derivs_; 
+  //! get parametric coordinate for value within the element
+  template <class ElemData>
+  bool get_coords(vector<double> &coords, const T& value, 
+		  const ElemData &cd) const  
+  {
+    TetLocate< TetCubicHmt<T> > CL;
+    return CL.get_coords(this, coords, value, cd);
   };
+ 
+  //! add derivative values (dx, dy, dz) for nodes.
+  void add_derivative(const T &p[3]) { derivs_.push_back(p); }
+
+  static  const string type_name(int n = -1);
+
+  virtual void io (Piostream& str);
+
+protected:
+  //! support data (node data is elsewhere)
+
+  //! Cubic Hermitian only needs additonal derivatives stored at each node
+  //! in the topology.
+  vector<T[3]>          derivs_; 
+};
 
 
-  template <class T>
-    const TypeDescription* get_type_description(TetCubicHmt<T> *)
-  {
-    static TypeDescription* td = 0;
-    if(!td){
-      const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-      (*subs)[0] = sub;
-      td = scinew TypeDescription(TetCubicHmt<T>::type_name(0), subs, 
-				  string(__FILE__),
-				  "SCIRun", 
-				  TypeDescription::BASIS_E);
-    }
-    return td;
+
+template <class T>
+const TypeDescription* get_type_description(TetCubicHmt<T> *)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    const TypeDescription *sub = get_type_description((T*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(TetCubicHmt<T>::type_name(0), subs, 
+				string(__FILE__),
+				"SCIRun", 
+				TypeDescription::BASIS_E);
   }
+  return td;
+}
 
-  template <class T>
-    const string
-    TetCubicHmt<T>::type_name(int n)
+template <class T>
+const string
+TetCubicHmt<T>::type_name(int n)
+{
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
   {
-    ASSERT((n >= -1) && n <= 1);
-    if (n == -1)
-    {
-      static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
-      return name;
-    }
-    else if (n == 0)
-    {
-      static const string nm("TetCubicHmt");
-      return nm;
-    } else {
-      return find_type_name((T *)0);
-    }
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
   }
-
-
-  const int TETCUBICHMT_VERSION = 1;
-  template <class T>
-    void
-    TetCubicHmt<T>::io(Piostream &stream)
+  else if (n == 0)
   {
-    stream.begin_class(type_name(-1), TETCUBICHMT_VERSION);
-    Pio(stream, derivs_);
-    stream.end_class();
+    static const string nm("TetCubicHmt");
+    return nm;
+  } else {
+    return find_type_name((T *)0);
   }
+}
+
+
+const int TETCUBICHMT_VERSION = 1;
+template <class T>
+void
+TetCubicHmt<T>::io(Piostream &stream)
+{
+  stream.begin_class(type_name(-1), TETCUBICHMT_VERSION);
+  Pio(stream, derivs_);
+  stream.end_class();
+}
 
 } //namespace SCIRun
 

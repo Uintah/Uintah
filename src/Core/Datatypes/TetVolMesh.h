@@ -619,6 +619,14 @@ public:
   bool locate(typename Face::index_type &loc, const Point &p);
   bool locate(typename Cell::index_type &loc, const Point &p);
 
+  int get_weights(const Point &p, typename Node::array_type &l, double *w);
+  int get_weights(const Point & , typename Edge::array_type & , double * )
+  {ASSERTFAIL("TetVolMesh::get_weights for edges isn't supported"); }
+  int get_weights(const Point & , typename Face::array_type & , double * )
+  {ASSERTFAIL("TetVolMesh::get_weights for faces isn't supported"); }
+  int get_weights(const Point &p, typename Cell::array_type &l, double *w);
+
+
   void get_point(Point &result, typename Node::index_type index) const
   { result = points_[index]; }
 
@@ -815,12 +823,12 @@ public:
     basis_.approx_face(fi%4, div_per_unit, coords); 
   }
 
-  void get_coords(vector<double> &coords, 
-		  const Point &p,
-		  typename Cell::index_type idx) const
+  bool  get_coords(vector<double> &coords, 
+		   const Point &p,
+		   typename Cell::index_type idx) const
   {
     ElemData ed(*this, idx);
-    basis_.get_coords(coords, p, ed); 
+    return basis_.get_coords(coords, p, ed); 
   }
   
   void interpolate(Point &pt, const vector<double> &coords, 
@@ -2361,6 +2369,39 @@ TetVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
     }
   }
   return false;
+}
+
+template <class Basis>
+int
+TetVolMesh<Basis>::get_weights(const Point &p, typename Cell::array_type &l, 
+			       double *w)
+{
+  typename Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
+  }
+  return 0;
+}
+
+template <class Basis>
+int 
+TetVolMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l, 
+			       double *w)
+{
+  typename Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(l,idx);
+    vector<double> coords(3);
+    if (get_coords(coords, p, idx)) {
+      return basis_.get_weights(coords, w);
+    }
+  }
+  return 0;
 }
 
 

@@ -899,15 +899,18 @@ public:
   void get_faces(typename Face::array_type &, typename Cell::index_type) const;
 
   // returns 26 pairs in ijk order
-  void	get_neighbors_stencil(vector<pair<bool,typename Cell::index_type> > &nbrs, 
-			      typename Cell::index_type idx) const;
+  void	get_neighbors_stencil(
+			  vector<pair<bool,typename Cell::index_type> > &nbrs, 
+			  typename Cell::index_type idx) const;
   // return 26 pairs in ijk order
-  void	get_neighbors_stencil(vector<pair<bool,typename Node::index_type> > &nbrs, 
-			      typename Node::index_type idx) const;
+  void	get_neighbors_stencil(
+			  vector<pair<bool,typename Node::index_type> > &nbrs, 
+			  typename Node::index_type idx) const;
   
   // return 8 pairs in ijk order
-  void	get_neighbors_stencil(vector<pair<bool,typename Cell::index_type> > &nbrs, 
-			      typename Node::index_type idx) const;
+  void	get_neighbors_stencil(
+			  vector<pair<bool,typename Cell::index_type> > &nbrs, 
+			  typename Node::index_type idx) const;
 
 
   //! get the center point (in object space) of an element
@@ -920,28 +923,43 @@ public:
   double get_size(typename Edge::index_type idx) const;
   double get_size(typename Face::index_type idx) const;
   double get_size(typename Cell::index_type idx) const;
-  double get_length(typename Edge::index_type idx) const { return get_size(idx); };
-  double get_area(typename Face::index_type idx) const { return get_size(idx); };
-  double get_volume(typename Cell::index_type idx) const { return get_size(idx); };
+  double get_length(typename Edge::index_type idx) const 
+  { return get_size(idx); };
+  double get_area(typename Face::index_type idx) const 
+  { return get_size(idx); };
+  double get_volume(typename Cell::index_type idx) const 
+  { return get_size(idx); };
 
   bool locate(typename Node::index_type &, const Point &);
-  bool locate(typename Edge::index_type &, const Point &) const { return false; }
-  bool locate(typename Face::index_type &, const Point &) const { return false; }
+  bool locate(typename Edge::index_type &, const Point &) const 
+  { return false; }
+  bool locate(typename Face::index_type &, const Point &) const 
+  { return false; }
   bool locate(typename Cell::index_type &, const Point &);
+
+  int get_weights(const Point &p, typename Node::array_type &l, double *w);
+  int get_weights(const Point & , typename Edge::array_type & , double * )
+  {ASSERTFAIL("LatVolMesh::get_weights for edges isn't supported"); }
+  int get_weights(const Point & , typename Face::array_type & , double * )
+  {ASSERTFAIL("LatVolMesh::get_weights for faces isn't supported"); }
+  int get_weights(const Point &p, typename Cell::array_type &l, double *w);
 
   void get_point(Point &point, const typename Node::index_type &index) const
   { get_center(point, index); }
 
-  void get_random_point(Point &/*p*/, const typename Elem::index_type &/*ei*/, int /*seed=0*/) const
+  void get_random_point(Point &/*p*/, const typename Elem::index_type &/*ei*/, 
+			int /*seed=0*/) const
   { ASSERTFAIL("not implemented") }
 
   //! the double return val is the volume of the Hex.
-  double get_gradient_basis(typename Cell::index_type /*ci*/, Vector& /*g0*/, Vector& /*g1*/,
+  double get_gradient_basis(typename Cell::index_type /*ci*/, Vector& /*g0*/, 
+			    Vector& /*g1*/,
 			    Vector& /*g2*/, Vector& /*g3*/, Vector& /*g4*/,
 			    Vector& /*g5*/, Vector& /*g6*/, Vector& /*g7*/)
   { ASSERTFAIL("not implemented") }
 
-  void get_normal(Vector &/*normal*/, typename Node::index_type /*index*/) const
+  void get_normal(Vector &/*normal*/, 
+		  typename Node::index_type /*index*/) const
   { ASSERTFAIL("not implemented") }
 
 
@@ -1533,6 +1551,24 @@ MaskedLatVolMesh<Basis>::locate(typename Cell::index_type &idx, const Point &p)
     return true;
   }
   else return false;
+}
+
+template <class Basis>
+int
+MaskedLatVolMesh<Basis>::get_weights(const Point &p, 
+				     typename Node::array_type &l, 
+				     double *w)
+{
+  return LatVolMesh<Basis>::get_weights(p, l, w);
+}
+
+template <class Basis>
+int
+MaskedLatVolMesh<Basis>::get_weights(const Point &p, 
+				     typename Cell::array_type &l, 
+				     double *w)
+{
+  return LatVolMesh<Basis>::get_weights(p, l, w);
 }
 
 template <class Basis>

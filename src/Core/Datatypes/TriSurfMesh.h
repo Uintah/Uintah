@@ -185,10 +185,13 @@ public:
     get_point(p2,ra[2]);
     return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
-  double get_size(typename Cell::index_type /*idx*/) const { return 0.0; };
-  double get_length(typename Edge::index_type idx) const { return get_size(idx); };
-  double get_area(typename Face::index_type idx) const { return get_size(idx); };
-  double get_volume(typename Cell::index_type idx) const { return get_size(idx); };
+  double get_size(typename Cell::index_type /*idx*/) const { return 0.0; }
+  double get_length(typename Edge::index_type idx) const 
+  { return get_size(idx); }
+  double get_area(typename Face::index_type idx) const 
+  { return get_size(idx); }
+  double get_volume(typename Cell::index_type idx) const 
+  { return get_size(idx); }
 
   int get_valence(typename Node::index_type idx) const
   {
@@ -212,6 +215,13 @@ public:
   bool locate(typename Edge::index_type &loc, const Point &p) const;
   bool locate(typename Face::index_type &loc, const Point &p) const;
   bool locate(typename Cell::index_type &loc, const Point &p) const;
+
+  int get_weights(const Point &p, typename Node::array_type &l, double *w);
+  int get_weights(const Point & , typename Edge::array_type & , double */*w*/)
+  {ASSERTFAIL("TriSurfMesh::get_weights(Edges) not supported."); }
+  int get_weights(const Point &p, typename Face::array_type &l, double *w);
+  int get_weights(const Point & , typename Cell::array_type & , double */*w*/)
+  {ASSERTFAIL("TriSurfMesh::get_weights(Cells) not supported."); }
 
   void get_point(Point &result, typename Node::index_type index) const
     { result = points_[index]; }
@@ -811,6 +821,39 @@ TriSurfMesh<Basis>::locate(typename Cell::index_type &loc, const Point &) const
 {
   loc = 0;
   return false;
+}
+
+template <class Basis>
+int
+TriSurfMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l, 
+				 double *w)
+{
+  typename Face::index_type idx;
+  if (locate(idx, p))
+  {
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
+  }
+  return 0;
+}
+
+template <class Basis>
+int 
+TriSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l, 
+				 double *w)
+{
+  typename Face::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(l,idx);
+    vector<double> coords(2);
+    if (get_coords(coords, p, idx)) {
+      return basis_.get_weights(coords, w);
+    }
+  }
+  return 0;
 }
 
 //! return the area of the triangle.

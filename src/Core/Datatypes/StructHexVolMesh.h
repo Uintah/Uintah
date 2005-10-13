@@ -98,36 +98,56 @@ public:
   }
 
   //! get the center point (in object space) of an element
-  void get_center(Point &, const typename LatVolMesh<Basis>::Node::index_type &) const;
+  void get_center(Point &, 
+		  const typename LatVolMesh<Basis>::Node::index_type &) const;
   void get_center(Point &, typename LatVolMesh<Basis>::Edge::index_type) const;
   void get_center(Point &, typename LatVolMesh<Basis>::Face::index_type) const;
-  void get_center(Point &, const typename LatVolMesh<Basis>::Cell::index_type &) const;
+  void get_center(Point &, 
+		  const typename LatVolMesh<Basis>::Cell::index_type &) const;
 
   double get_size(const typename LatVolMesh<Basis>::Node::index_type &idx) const;
   double get_size(typename LatVolMesh<Basis>::Edge::index_type idx) const;
   double get_size(typename LatVolMesh<Basis>::Face::index_type idx) const;
-  double get_size(const typename LatVolMesh<Basis>::Cell::index_type &idx) const;
+  double get_size(
+	       const typename LatVolMesh<Basis>::Cell::index_type &idx) const;
   double get_length(typename LatVolMesh<Basis>::Edge::index_type idx) const 
   { return get_size(idx); };
   double get_area(typename LatVolMesh<Basis>::Face::index_type idx) const 
   { return get_size(idx); };
-  double get_volume(const typename LatVolMesh<Basis>::Cell::index_type &i) const 
+  double get_volume(const 
+		    typename LatVolMesh<Basis>::Cell::index_type &i) const 
   { return get_size(i); };
 
   bool locate(typename LatVolMesh<Basis>::Node::index_type &, const Point &);
-  bool locate(typename LatVolMesh<Basis>::Edge::index_type &, const Point &) const 
+  bool locate(typename LatVolMesh<Basis>::Edge::index_type &, 
+	      const Point &) const 
   { return false; }
-  bool locate(typename LatVolMesh<Basis>::Face::index_type &, const Point &) const 
+  bool locate(typename LatVolMesh<Basis>::Face::index_type &, 
+	      const Point &) const 
   { return false; }
   bool locate(typename LatVolMesh<Basis>::Cell::index_type &, const Point &);
 
 
-  void get_point(Point &point, const typename LatVolMesh<Basis>::Node::index_type &index) const
+  int get_weights(const Point &, 
+		  typename LatVolMesh<Basis>::Node::array_type &, double *);
+  int get_weights(const Point &, 
+		  typename LatVolMesh<Basis>::Edge::array_type &, double *)
+  { ASSERTFAIL("StructHexVolMesh::get_weights for edges isn't supported"); }
+  int get_weights(const Point &, 
+		  typename LatVolMesh<Basis>::Face::array_type &, double *)
+  { ASSERTFAIL("StructHexVolMesh::get_weights for faces isn't supported"); }
+  int get_weights(const Point &, 
+		  typename LatVolMesh<Basis>::Cell::array_type &, double *);
+
+  void get_point(Point &point, 
+	      const typename LatVolMesh<Basis>::Node::index_type &index) const
   { get_center(point, index); }
-  void set_point(const Point &point, const typename LatVolMesh<Basis>::Node::index_type &index);
+  void set_point(const Point &point, 
+		 const typename LatVolMesh<Basis>::Node::index_type &index);
 
 
-  void get_random_point(Point &, const typename LatVolMesh<Basis>::Elem::index_type &, 
+  void get_random_point(Point &, 
+			const typename LatVolMesh<Basis>::Elem::index_type &, 
 			int) const
   { ASSERTFAIL("not implemented") }
 
@@ -507,7 +527,40 @@ StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &no
   }
 }
 
+template <class Basis>
+int
+StructHexVolMesh<Basis>::get_weights(const Point &p, 
+			     typename LatVolMesh<Basis>::Node::array_type &l, 
+				     double *w)
+{
+  typename LatVolMesh<Basis>::Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(l,idx);
+    vector<double> coords(3);
+    if (get_coords(coords, p, idx)) {
+      return this->basis_.get_weights(coords, w);
+    }
+  }
+  return 0;
+}
 
+template <class Basis>
+int
+StructHexVolMesh<Basis>::get_weights(const Point &p, 
+			     typename LatVolMesh<Basis>::Cell::array_type &l, 
+				     double *w)
+{
+  typename LatVolMesh<Basis>::Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
+  }
+  return 0;
+}
 
 //===================================================================
 

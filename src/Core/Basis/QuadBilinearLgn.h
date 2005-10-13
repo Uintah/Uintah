@@ -57,7 +57,7 @@ public:
   static int DomainDimension() { return 2; }; //! return dimension of domain 
   
   static int NumberOfVertices() { return 4; }; //! return number of vertices
-  static int NumberOfEdges() { 4; }; //! return number of edges
+  static int NumberOfEdges() { return 4; }; //! return number of edges
   
   static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
 
@@ -238,7 +238,9 @@ T QuadGaussian3<T>::GaussianWeights[9] = {
 //! Class for handling of element of type quad with 
 //! bilinear lagrangian interpolation
 template <class T>
-  class QuadBilinearLgn : public QuadApprox, public QuadGaussian2<double>, public QuadBilinearLgnUnitElement 
+class QuadBilinearLgn : public QuadApprox, 
+			public QuadGaussian2<double>, 
+			public QuadBilinearLgnUnitElement 
 {
 public:
   typedef T value_type;
@@ -248,15 +250,30 @@ public:
   
   int polynomial_order() const { return 1; }
 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  { 
+    const double x = coords[0], y = coords[1];  
+
+    w[0] = (-1 + x) * (-1 + y);
+    w[1] = -(x * (-1 + y));
+    w[2] = +x * y;
+    w[3] = -((-1 + x) * y);
+
+    return 4;
+  }
+
   //! get value at parametric coordinate
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    const double x = coords[0], y = coords[1];  
-    return (T)((-1 + x) * (-1 + y) * cd.node0()
-	       -(x * (-1 + y)) * cd.node1()
-	       +x * y * cd.node2()
-	       -((-1 + x) * y) * cd.node3());
+    double w[4];
+    get_weights(coords, w); 
+
+    return (T)(w[0] * cd.node0() +
+	       w[1] * cd.node1() +
+	       w[2] * cd.node2() +
+	       w[3] * cd.node3());
   }
     
   //! get first derivative at parametric coordinate
@@ -297,7 +314,7 @@ const TypeDescription* get_type_description(QuadBilinearLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(QuadBilinearLgn<T>::type_name(0), subs, 

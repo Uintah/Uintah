@@ -57,7 +57,7 @@ public:
   static int DomainDimension() { return 3; }; //! return dimension of domain 
   
   static int NumberOfVertices() { return 6; }; //! return number of vertices
-  static int NumberOfEdges() { 9; }; //! return number of edges
+  static int NumberOfEdges() { return 9; }; //! return number of edges
   
   static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
 
@@ -238,7 +238,9 @@ T PrismGaussian2<T>::GaussianWeights[6] =
 
 //! Class for handling of element of type prism with linear lagrangian interpolation
 template <class T>
-  class PrismLinearLgn : public PrismApprox, public PrismGaussian2<double>, public  PrismLinearLgnUnitElement
+class PrismLinearLgn : public PrismApprox, 
+		       public PrismGaussian2<double>, 
+		       public  PrismLinearLgnUnitElement
 {
 public:
   typedef T value_type;
@@ -247,19 +249,36 @@ public:
   virtual ~PrismLinearLgn() {}
 
   int polynomial_order() const { return 1; }
+
+  //! get weight factors at parametric coordinate 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  { 
+    const double x = coords[0], y = coords[1], z = coords[2];  
+ 
+    w[0] = (-1 + x + y) * (-1 + z);
+    w[1] = - (x * (-1 + z));
+    w[2] = - (y * (-1 + z));
+    w[3] = - ((-1 + x + y) * z);
+    w[4] = +x * z;
+    w[5] = +y * z;
+
+    return 6;
+  }
   
   //! get value at parametric coordinate 
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    const double x = coords[0], y = coords[1], z = coords[2];  
+    double w[6];
+    get_weights(coords, w); 
  
-    return (T)((-1 + x + y) * (-1 + z) * cd.node0()
-	       - (x * (-1 + z)) * cd.node1()
-	       - (y * (-1 + z)) * cd.node2()
-	       - ((-1 + x + y) * z) * cd.node3()
-	       +x * z * cd.node4()
-	       +y * z * cd.node5());
+    return (T)(w[0] * cd.node0() +
+	       w[1] * cd.node1() +
+	       w[2] * cd.node2() +
+	       w[3] * cd.node3() +
+	       w[4] * cd.node4() +
+	       w[5] * cd.node5());
   }
   
   //! get first derivative at parametric coordinate
@@ -309,7 +328,7 @@ const TypeDescription* get_type_description(PrismLinearLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(PrismLinearLgn<T>::type_name(0), subs, 
