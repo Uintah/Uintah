@@ -30,6 +30,7 @@
 //    Date   : Oct 09 2005
 
 #include <Core/Basis/Locate.h>
+#include <Core/Util/NotFinished.h>
 
 namespace SCIRun {
 
@@ -74,14 +75,15 @@ double getnextx3(vector<double> &x, vector<double> &xold,
   const double dy=x[1]-xold[1];
   const double dz=x[2]-xold[2];
   return sqrt(dx*dx+dy*dy+dz*dz);    
-};
+}
 
 // locate for Point
 template <>
 double getnextx2(vector<double> &x, vector<double> &xold,
 		 const Point& y, const vector<Point>& yd)
 {
-  //FIX_ME F.S.
+  NOT_FINISHED("Locate.cc: getnextx2");
+  return -1;
 }
 
 
@@ -90,11 +92,13 @@ template <>
 double getnextx1(vector<double> &x, vector<double> &xold,
 		 const Point& y, const vector<Point>& yd)
 {
+  NOT_FINISHED("Locate.cc: getnextx1");
   //FIX_ME F.S.
 //   x[0] -= (yd.x() ? y.x()/yd.x() : 0.)+(yd.y() ? y.y()/yd.y() :
 // 					0.)+(yd.z() ? y.z()/yd.z() : 0.);
 //   const double dx=x[0]-xold[0];
 //   return sqrt(dx*dx);
+  return -1;
 }
 
 } //namespace SCIRun

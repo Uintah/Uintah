@@ -31,14 +31,17 @@
  *
  */
 
-#include <Core/Services/ServiceFrame.h>
 #include <exception>
-#include <Core/Thread/ThreadError.h>
+
+#include <Core/Services/ServiceFrame.h>
 #include <Core/SystemCall/SystemCallError.h>
+#include <Core/Thread/ThreadError.h>
+
+#include <sci_comp_warn_fixes.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424
-#pragma set woff 1209 
+#  pragma set woff 1424
+#  pragma set woff 1209 
 #endif
 
 namespace SCIRun { 
@@ -387,9 +390,9 @@ namespace SCIRun {
         std::cerr << str << std::endl;
         log_->putmsg(str);
         throw;
-        return(false);
+        RETURN_FALSE;
       }
-    return(false);
+    return false;
   }
 
 

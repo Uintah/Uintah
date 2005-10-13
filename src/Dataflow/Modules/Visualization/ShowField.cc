@@ -1219,6 +1219,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "execute_policy"){
   } else if (args[1] == "calcdefs") {
 
+#if 0
     if (false) { //if (bounding_vector_) {
       //0.00896657
       double fact = 0.01; // * bounding_vector_->length();
@@ -1232,8 +1233,11 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       data_dirty_ = true;
       maybe_execute(DATA_AT);
     } else {
+#endif
       warning("Cannot calculate defaults without a valid field input.");
+#if 0
     }
+#endif
 
   } else {
     Module::tcl_command(args, userdata);

@@ -110,7 +110,7 @@ MaskLattice::execute()
   while (maskfunc.size() && isspace(maskfunc[maskfunc.size()-1]))
     maskfunc.resize(maskfunc.size()-1);
 
-  while (1)
+  for( ;; )
   {
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     const TypeDescription *ltd = ifieldhandle->order_type_description();
