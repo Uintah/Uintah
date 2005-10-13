@@ -39,12 +39,10 @@ namespace SCIRun {
 //! Class for describing unit geometry of TriQuadraticLgn 
 class TriQuadraticLgnUnitElement {
 public:
-  //!< Parametric coordinates of vertices of unit edge
-  static double UnitVertices[6][2];
-  //!< References to vertices of unit edge 
-  static int UnitEdges[9][2]; 
-  //!< References to vertices of unit face
-  static int UnitFaces[4][3]; 
+  
+  static double UnitVertices[6][2]; //!< Parametric coordinates of vertices of unit edge
+  static int UnitEdges[3][2]; //!< References to vertices of unit edge 
+  static int UnitFaces[1][3]; //!< References to vertices of unit face
   
   TriQuadraticLgnUnitElement() {};
   virtual ~TriQuadraticLgnUnitElement() {};

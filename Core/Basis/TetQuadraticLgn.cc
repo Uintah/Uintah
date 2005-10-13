@@ -25,16 +25,17 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : CrvQuadraticLgn.cc
+//    File   : TriLinearLgn.cc
 //    Author : Martin Cole, Frank B. Sachse
 //    Date   : Dec 04 2004
 
-#include <Core/Basis/CrvQuadraticLgn.h>
+#include <Core/Basis/TetQuadraticLgn.h>
 
 namespace SCIRun {
 
-double CrvQuadraticLgnUnitElement::UnitVertices[1][3] = {{0, 0.5, 1}};
-int CrvQuadraticLgnUnitElement::UnitEdges[1][2] = {{0, 2}};
+double TetQuadraticLgnUnitElement::UnitVertices[10][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}, {0.5,0,0}, {0.5,0.5,0}, {0,0.5,0}, {0,0,0.5}, {0.5,0,0.5}, {0,0.5,0.5} };
+int TetQuadraticLgnUnitElement::UnitEdges[6][2] = {{0,1}, {1,2}, {2,0}, {0,3}, {1,3}, {2,3}};
+int TetQuadraticLgnUnitElement::UnitFaces[4][3] = {{3,2,1}, {0,2,3}, {3,1,0}, {0,1,2}};
 
 } //namespace SCIRun
 

@@ -40,7 +40,7 @@ namespace SCIRun {
 class CrvQuadraticLgnUnitElement {
 public: 
   static double UnitVertices[1][3]; //!< Parametric coordinates of vertices of unit edge
-  static int UnitEdges[2][2];    //!< References to vertices of unit edge 
+  static int UnitEdges[1][2];    //!< References to vertices of unit edge 
 
   CrvQuadraticLgnUnitElement() {};
   virtual ~CrvQuadraticLgnUnitElement() {};

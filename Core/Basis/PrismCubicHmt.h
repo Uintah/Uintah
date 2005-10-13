@@ -36,10 +36,18 @@
 
 namespace SCIRun {
 
+  //! Class for describing unit geometry of PrismCubicHmt
+  class PrismCubicHmtUnitElement : public PrismLinearLgnUnitElement {
+  public:
+    PrismCubicHmtUnitElement() {};
+    virtual ~PrismCubicHmtUnitElement() {};
+  };
+
+
 //! Class for handling of element of type prism with 
 //! cubic hermitian interpolation
 template <class T>
-class PrismCubicHmt : public PrismApprox, public PrismGaussian2<T> 
+  class PrismCubicHmt : public PrismApprox, public PrismGaussian2<T>, public PrismCubicHmtUnitElement 
 {
 public:
   typedef T value_type;

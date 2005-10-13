@@ -25,16 +25,17 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : CrvQuadraticLgn.cc
+//    File   : QuadBilinearLgn.cc
 //    Author : Martin Cole, Frank B. Sachse
 //    Date   : Dec 04 2004
 
-#include <Core/Basis/CrvQuadraticLgn.h>
+#include <Core/Basis/QuadBiquadraticLgn.h>
 
 namespace SCIRun {
 
-double CrvQuadraticLgnUnitElement::UnitVertices[1][3] = {{0, 0.5, 1}};
-int CrvQuadraticLgnUnitElement::UnitEdges[1][2] = {{0, 2}};
+double QuadBiquadraticLgnUnitElement::UnitVertices[8][2] = {{0,0}, {1,0}, {1,1}, {0,1}, {0.5,0}, {1,0.5}, {0.5,0}, {0, 0.5} };
+int QuadBiquadraticLgnUnitElement::UnitEdges[4][2] = {{0,1}, {1,2}, {2,3}, {4,0}};
+int QuadBiquadraticLgnUnitElement::UnitFaces[1][4] = {{0,1,2,3}};
 
 } //namespace SCIRun
 

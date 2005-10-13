@@ -39,9 +39,9 @@ namespace SCIRun {
 //! Class for describing unit geometry of QuadBiquadraticLgn 
 class QuadBiquadraticLgnUnitElement {
 public: 
-  static double UnitVertices[9][2]; //!< Parametric coordinates of vertices of unit edge
-  static int UnitEdges[12][2];  //!< References to vertices of unit edge 
-  static int UnitFaces[4][4]; //!< References to vertices of unit face
+  static double UnitVertices[8][2]; //!< Parametric coordinates of vertices of unit edge
+  static int UnitEdges[8][2];  //!< References to vertices of unit edge 
+  static int UnitFaces[1][4]; //!< References to vertices of unit face
   
   QuadBiquadraticLgnUnitElement() {};
   virtual ~QuadBiquadraticLgnUnitElement() {};
