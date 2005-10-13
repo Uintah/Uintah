@@ -52,14 +52,14 @@ using namespace SCIRun;
 // These stubs are needed when your code uses these functions but
 // DISABLE_SCI_MALLOC is set.
 namespace SCIRun {
-  const char* AllocatorSetDefaultTagNew(const char* tag) {
+  const char* AllocatorSetDefaultTagNew(const char* /*tag*/) {
     return
       "AllocatorSetDefaultTagNew::NOT IMPLEMENTED.  DISABLE_SCI_MALLOC is set";
   }
 
   void AllocatorResetDefaultTagNew() {}
 
-  const char* AllocatorSetDefaultTag(const char* tag) {
+  const char* AllocatorSetDefaultTag(const char* /*tag*/) {
     return
       "AllocatorSetDefaultTag::NOT IMPLEMENTED.  DISABLE_SCI_MALLOC is set";
   }
