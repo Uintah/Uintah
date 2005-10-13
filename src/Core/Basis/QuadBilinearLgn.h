@@ -128,7 +128,7 @@ public:
 //! value in Quad meshes and fields
 //! to do
 template <class ElemBasis>
-class QuadLocate {
+class QuadLocate : public Dim2Locate<ElemBasis> {
 public:
   typedef typename ElemBasis::value_type T;
 
