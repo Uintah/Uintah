@@ -107,6 +107,14 @@ namespace SCIRun {
     this->properties = properties; 
   }
  
+  template<class Base>
+  void  ComponentInfoImpl<Base>::destroyComponent()
+  {
+    // we can not delete the component here as we only have an interface to it 
+    // and the interface does not tell us how to delete it.
+    // this function should never be called.
+    // Rather, a derive class should have the knowledge how to delete it.
+  }
  
 } // end namespace SCIRun
 

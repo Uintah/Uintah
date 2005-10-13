@@ -227,22 +227,13 @@ namespace SCIRun {
   
 
   ComponentInfo::pointer
-  CCAComponentModel::createComponent(const std::string& name,
-				     const std::string& type,
-				     const sci::cca::TypeMap::pointer& properties)
+  CCAComponentModel::createComponent(const std::string &name,
+				     const std::string &type,
+				     const std::string &library,
+				     const sci::cca::TypeMap::pointer &properties)
     
   {
     sci::cca::Component::pointer component;
-    
-    SCIRun::Guard guard(&descriptions_lock);
-    
-    DescriptionMap::iterator iter = descriptions.find(type);
-    if (iter == descriptions.end()) {
-      std::cerr << "Error: could not locate any cca components.\n"
-		<< " Make sure the paths set in environment variable \"SIDL_DLL_PATH\" are correct." 
-		<< std::endl;
-      return ComponentInfo::pointer(0);
-    }
     
     // Get the list of DLL paths to search for the appropriate component library
     std::vector<std::string> possible_paths = splitPathString(getSidlDLLPath());
@@ -250,7 +241,7 @@ namespace SCIRun {
       
     for (std::vector<std::string>::iterator it = possible_paths.begin();
 	 it != possible_paths.end(); it++) {
-      std::string so_name = *it + "/" + iter->second->getLibrary();
+      std::string so_name = *it + "/" + library;
       handle = GetLibraryHandle(so_name.c_str());
       if (handle) break; 
     }

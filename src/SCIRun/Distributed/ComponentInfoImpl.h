@@ -88,7 +88,7 @@ namespace SCIRun {
 
     virtual sci::cca::Component::pointer getComponent() { return component; }
 
-    virtual void destroyComponent() = 0;
+    virtual void destroyComponent();
 
   protected:
     PortMap ports;

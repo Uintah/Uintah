@@ -28,40 +28,37 @@
 
 
 /*
- *  ComponentClassDescriptionImpl.h: Implementation of CCA ComponentRegistry for SCIRun
+ *  CCAComponentClassFactory.h: 
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livant
+ *   SCI Institute
  *   University of Utah
- *   October 2001
+ *   Sept 2005
  *
  */
 
-#ifndef SCIRUN_ComponentClassDescriptionImpl_h
-#define SCIRUN_ComponentClassDescriptionImpl_h
+#ifndef SCIRun_CCAComponentFactory_h
+#define SCIRun_CCAComponentFactory_h
 
-#include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/Distributed/ComponentClassFactory.h>
 
 namespace SCIRun {
-  
-  namespace Distributed = sci::cca::distributed;
 
-  template<class Base>
-  class ComponentClassDescriptionImpl : public Base 
+  class CCAComponentClassFactory : public ComponentClassFactory
   {
   public:
-    typedef typename Base::pointer pointer;
-    
-    ComponentClassDescriptionImpl(const std::string &type);
-    virtual ~ComponentClassDescriptionImpl();
-    
-    virtual std::string getComponentClassName() const;
+    CCAComponentClassFactory(const sci::cca::CCAComponentClassDescription::pointer &desc, CCAComponentModel *model);
 
-  protected:
-    std::string type;
+    virtual ~CCAComponentClassFactory();
+    
+    virtual Distributed::ComponentInfo::pointer create( const Distributed::DistributedFramework::pointer &framework,
+							const std::string &name,
+							const sci::cca::TypeMap::pointer &);
+  private:
+    CCAComponentModel *model;
   };
-  
+
 }
 
 #endif

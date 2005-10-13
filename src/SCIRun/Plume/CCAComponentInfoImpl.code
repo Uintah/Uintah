@@ -48,6 +48,7 @@
 #include <SCIRun/Distributed/CCAException.h>
 
 #include <SCIRun/Distributed/ComponentInfoImpl.code>
+#include <SCIRun/Plume/CCAComponentModel.h>
 
 #include <Core/Thread/Guard.h>
 
@@ -63,13 +64,18 @@ namespace SCIRun {
 						   const std::string& instanceName,
 						   const std::string& className,
 						   const sci::cca::TypeMap::pointer& properties,
-						   const sci::cca::Component::pointer& component)
-    : ComponentInfoImpl<Base>(framework, instanceName, className, properties, component )
+						   const sci::cca::Component::pointer& component,
+						   CCAComponentModel *model)
+    : ComponentInfoImpl<Base>(framework, instanceName, className, properties, component ),
+      model(model)
   {
   }
   
   template<class Base>
-  CCAComponentInfoImpl<Base>::~CCAComponentInfoImpl() {}
+  CCAComponentInfoImpl<Base>::~CCAComponentInfoImpl() 
+  {
+    return model->destroyComponent(pointer(this));
+ }
 
   // from cca.Services
   template<class Base>
@@ -232,7 +238,6 @@ namespace SCIRun {
   {
     return ComponentID::pointer(this);
   }
-  
   
 } // end namespace SCIRun
 

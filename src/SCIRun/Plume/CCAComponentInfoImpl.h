@@ -48,6 +48,7 @@ namespace SCIRun {
   
   namespace Plume = sci::cca::plume;
 
+  class CCAComponentModel;
   /**
    * \class CCAComponentInfo
    *
@@ -67,7 +68,8 @@ namespace SCIRun {
 			 const std::string& instanceName,
 			 const std::string& className,
 			 const sci::cca::TypeMap::pointer& properties,
-			 const sci::cca::Component::pointer& component);
+			 const sci::cca::Component::pointer& component,
+			 CCAComponentModel *model);
 
     virtual ~CCAComponentInfoImpl();
 
@@ -85,8 +87,12 @@ namespace SCIRun {
     virtual sci::cca::TypeMap::pointer createTypeMap();
     virtual sci::cca::TypeMap::pointer getPortProperties(const std::string &);
     virtual sci::cca::ComponentID::pointer getComponentID();
-    
+
+    virtual void destroyComponent();
+
   private:
+    CCAComponentModel *model;
+
     // prevent using these directly
     CCAComponentInfoImpl<Base>(const CCAComponentInfoImpl<Base>&);
     CCAComponentInfoImpl<Base>& operator=(const CCAComponentInfoImpl<Base>&);

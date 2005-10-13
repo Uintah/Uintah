@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentClassDescriptionImpl.h: Implementation of CCA ComponentRegistry for SCIRun
+ *  CCAComponentClassDescriptionImpl.h: 
  *
  *  Written by:
  *   Steven G. Parker
@@ -38,30 +38,38 @@
  *
  */
 
-#ifndef SCIRUN_ComponentClassDescriptionImpl_h
-#define SCIRUN_ComponentClassDescriptionImpl_h
+#ifndef SCIRun_CCAComponentClassDescriptionImpl_h
+#define SCIRun_CCAComponentClassDescriptionImpl_h
 
-#include <Core/CCA/spec/sci_sidl.h>
+#include <string>
 
-namespace SCIRun {
-  
-  namespace Distributed = sci::cca::distributed;
+namespace SCIRun
+{
 
+  namespace Plume = sci::cca::plume;
+
+  /** \class CCAComponentClassDescriptionImpl
+   *
+   */
   template<class Base>
-  class ComponentClassDescriptionImpl : public Base 
+  class CCAComponentClassDescriptionImpl : public ComponentClassDescriptionImpl<Base>
   {
   public:
-    typedef typename Base::pointer pointer;
-    
-    ComponentClassDescriptionImpl(const std::string &type);
-    virtual ~ComponentClassDescriptionImpl();
-    
-    virtual std::string getComponentClassName() const;
+    typedef Plume::CCAComponentClassDescription Interface;
+    typedef Interface::pointer pointer;
 
-  protected:
-    std::string type;
+    CCAComponentClassDescriptionImpl( const std::string &type, const std::string &library);
+    virtual ~CCAComponentClassDescriptionImpl();
+
+    std::string getLibrary() const;
+
+  private:
+    std::string library;
+
+    CCAComponentClassDescriptionImpl(const CCAComponentClassDescriptionImpl&);
+    CCAComponentClassDescriptionImpl& operator=(const CCAComponentClassDescriptionImpl&);
   };
   
-}
+} // end namespace SCIRun
 
 #endif
