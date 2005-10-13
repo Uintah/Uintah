@@ -132,7 +132,7 @@ public:
 //! value in Tri meshes and fields
 //! to do
 template <class ElemBasis>
-class TriLocate {
+class TriLocate : public Dim2Locate<ElemBasis> {
 public:
   typedef typename ElemBasis::value_type T;
 
