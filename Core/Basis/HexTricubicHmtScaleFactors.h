@@ -48,7 +48,7 @@ namespace SCIRun {
 //! Class for handling of element of type hexahedron with 
 //! tricubic hermitian interpolation with scale factors
 template <class T>
-class HexTricubicHmtScaleFactors : public HexApprox, public HexGaussian3<double>, public HexTricubicHmtUnitElementScaleFactors
+class HexTricubicHmtScaleFactors : public HexApprox, public HexGaussian3<double>, public HexTricubicHmtScaleFactorsUnitElement
 {
 public:
   typedef T value_type;

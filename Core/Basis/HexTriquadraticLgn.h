@@ -39,7 +39,7 @@ namespace SCIRun {
 //! Class for describing unit geometry of HexTriquadraticLgn 
 class HexTriquadraticLgnUnitElement {
 public:
-  static double UnitVertices[8][3]; //!< Parametric coordinates of vertices of unit edge 
+  static double UnitVertices[20][3]; //!< Parametric coordinates of vertices of unit edge 
   static int UnitEdges[12][2];  //!< References to vertices of unit edge  
   static int UnitFaces[6][4];  //!< References to vertices of unit face 
  
