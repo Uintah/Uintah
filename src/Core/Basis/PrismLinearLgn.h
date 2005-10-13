@@ -131,7 +131,7 @@ public:
 	tmp[2] = v0[2] + dj * (v2[2] - v0[2]);
 	for(unsigned i = 0; i < div_per_unit - j; i++) {
 	  const double di = (double)div_per_unit / (double)i;
-	  tmp = coords[j + f * div_per_unit][e++];
+	  tmp = coords[j + f * div_per_unit][e++]; 
 	  tmp[0] = v0[0] + (dj + d) * (v2[0] - v0[0]) + di * (v1[0] - v0[0]);
 	  tmp[1] = v0[1] + (dj + d) * (v2[1] - v0[1]) + di * (v1[1] - v0[1]);
 	  tmp[2] = v0[2] + (dj + d) * (v2[2] - v0[2]) + di * (v1[2] - v0[2]);

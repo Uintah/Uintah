@@ -40,7 +40,7 @@ namespace SCIRun {
 class QuadBiquadraticLgnUnitElement {
 public: 
   static double unit_vertices[8][2]; //!< Parametric coordinates of vertices of unit edge
-  static int unit_edges[8][2];  //!< References to vertices of unit edge 
+  static int unit_edges[4][2];  //!< References to vertices of unit edge 
   static int unit_faces[1][4]; //!< References to vertices of unit face
   
   QuadBiquadraticLgnUnitElement() {};
@@ -48,8 +48,8 @@ public:
   
   static int domain_dimension() { return 2; }; //! return dimension of domain 
   
-  static int number_of_vertices() { return 9; }; //! return number of vertices
-  static int number_of_edges() { return 12; }; //! return number of edges
+  static int number_of_vertices() { return 8; }; //! return number of vertices
+  static int number_of_edges() { return 4; }; //! return number of edges
   
   static int vertices_of_face() { return 4; }; //! return number of vertices per face 
 
@@ -71,12 +71,12 @@ public:
   virtual ~QuadBiquadraticLgn() {}
   
   int polynomial_order() const { return 2; }
-
+  
   inline
   int get_weights(const vector<double> &coords, double *w) const
   { 
     const double x=coords[0], y=coords[1];  
-
+    
     w[0] = -((-1 + x)*(-1 + y)*(-1 + 2*x + 2*y));
     w[1] = -(x*(-1 + 2*x - 2*y)*(-1 +y));
     w[2] = +x*y*(-3 + 2*x + 2*y);
@@ -85,12 +85,13 @@ public:
     w[5] = -4*x*(-1 + y)*y;
     w[6] = -4*(-1 + x)*x*y;
     w[7] = +4*(-1 + x)*(-1 + y)*y;
-
+    
     return 8;
-  }
+  };
+  
   //! get first derivative at parametric coordinate 
   template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const;
+  T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
     double w[8];
     get_weights(coords, w); 
@@ -108,7 +109,7 @@ public:
   //! get first derivative at parametric coordinate
   template <class ElemData>
   void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<T> &derivs) const;
+		vector<T> &derivs) const
   {
     const double x=coords[0], y=coords[1];  
 
@@ -136,7 +137,6 @@ public:
   };  
   
   //! get parametric coordinate for value within the element
-  //! iterative solution...
   template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
 		  const ElemData &cd) const
@@ -201,11 +201,10 @@ template <class T>
 void
 QuadBiquadraticLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), QUAD_BIQUADRATIC_LGN_VERSION);
+  stream.begin_class(type_name(-1), QUADBIQUADRATICLGN_VERSION );
   Pio(stream, nodes_);
   stream.end_class();
 }
-};
 
 
 } //namespace SCIRun
