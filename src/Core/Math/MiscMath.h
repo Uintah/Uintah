@@ -52,6 +52,11 @@ inline double Abs(double d)
   return d<0?-d:d;
 }
 
+inline float Abs(float d)
+{
+  return d<0?-d:d;
+}
+
 inline int Abs(int i)
 {
     return i<0?-i:i;
@@ -70,6 +75,11 @@ inline int Sign(int i)
 
 // Clamp a number to a specific range
 inline double Clamp(double d, double min, double max)
+{
+  return d<=min?min:d>=max?max:d;
+}
+
+inline float Clamp(float d, float min, float max)
 {
   return d<=min?min:d>=max?max:d;
 }
