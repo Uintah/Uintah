@@ -39,21 +39,21 @@ namespace SCIRun {
 //! Class for describing unit geometry of TetQuadraticLgn 
 class TetQuadraticLgnUnitElement {
 public:
-  static double UnitVertices[10][3]; //!< Parametric coordinates of vertices of unit edge
-  static int UnitEdges[6][2]; //!< References to vertices of unit edge
-  static int UnitFaces[4][3];  //!< References to vertices of unit face
+  static double unit_vertices[10][3]; //!< Parametric coordinates of vertices of unit edge
+  static int unit_edges[6][2]; //!< References to vertices of unit edge
+  static int unit_faces[4][3];  //!< References to vertices of unit face
   
   TetQuadraticLgnUnitElement() {};
   virtual ~TetQuadraticLgnUnitElement() {};
   
-  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; }; //! return dimension of domain 
   
-  static int NumberOfVertices() { return 10; }; //! return number of vertices
-  static int NumberOfEdges() { return 6; }; //! return number of edges
+  static int number_of_vertices() { return 10; }; //! return number of vertices
+  static int number_of_edges() { return 6; }; //! return number of edges
   
-  static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
 
-  static int FacesOfCell() { return 12; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 12; }; //! return number of faces per cell 
 };
 
 

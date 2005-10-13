@@ -33,7 +33,7 @@
 
 namespace SCIRun {
 
-double HexTriquadraticLgnUnitElement::UnitVertices[20][3] = {
+double HexTriquadraticLgnUnitElement::unit_vertices[20][3] = {
   {0,0,0}, {1,0,0}, {1,1,0}, {0,1,0}, 
   {0,0,1}, {1,0,1}, {1,1,1}, {0,1,1},
   {0.5,0,0}, {1,0.5,0}, {.5,1,0}, {0,.5,0}, 
@@ -41,10 +41,10 @@ double HexTriquadraticLgnUnitElement::UnitVertices[20][3] = {
   {0.5,0,1}, {1,0.5,1}, {.5,1,1}, {0,.5,1}, 
 
 };
-int HexTriquadraticLgnUnitElement::UnitEdges[12][2] = {{0,1}, {1,2}, {2,3}, {3,0},
+int HexTriquadraticLgnUnitElement::unit_edges[12][2] = {{0,1}, {1,2}, {2,3}, {3,0},
 				   {0,4}, {1,5}, {2,6}, {3,7},
 				   {4,5}, {5,6}, {6,7}, {7,4}};
-int HexTriquadraticLgnUnitElement::UnitFaces[6][4] = {{0,1,2,3}, {0,1,5,4}, {1,2,6,5},
+int HexTriquadraticLgnUnitElement::unit_faces[6][4] = {{0,1,2,3}, {0,1,5,4}, {1,2,6,5},
 				  {2,3,7,6}, {3,0,4,7}, {4,5,6,7}};
 
 // template <>

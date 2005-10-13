@@ -33,9 +33,9 @@
 
 namespace SCIRun {
 
-double TriLinearLgnUnitElement::UnitVertices[3][2] = {{0,0}, {1,0}, {0,1}};
-int TriLinearLgnUnitElement::UnitEdges[3][2] = {{0,1}, {1,2}, {2,0}};
-int TriLinearLgnUnitElement::UnitFaces[1][3] = {{0,1,2}};
+double TriLinearLgnUnitElement::unit_vertices[3][2] = {{0,0}, {1,0}, {0,1}};
+int TriLinearLgnUnitElement::unit_edges[3][2] = {{0,1}, {1,2}, {2,0}};
+int TriLinearLgnUnitElement::unit_faces[1][3] = {{0,1,2}};
   
 } //namespace SCIRun
 

@@ -47,21 +47,21 @@ using std::string;
 //! Class for describing unit geometry of TetLinearLgn 
 class TetLinearLgnUnitElement {
 public:
-  static double UnitVertices[4][3]; //!< Parametric coordinates of vertices of unit edge
-  static int UnitEdges[6][2]; //!< References to vertices of unit edge
-  static int UnitFaces[4][3];  //!< References to vertices of unit face
+  static double unit_vertices[4][3]; //!< Parametric coordinates of vertices of unit edge
+  static int unit_edges[6][2]; //!< References to vertices of unit edge
+  static int unit_faces[4][3];  //!< References to vertices of unit face
   
   TetLinearLgnUnitElement() {};
   virtual ~TetLinearLgnUnitElement() {};
   
-  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; }; //! return dimension of domain 
   
-  static int NumberOfVertices() { return 4; }; //! return number of vertices
-  static int NumberOfEdges() { return 6; }; //! return number of edges
+  static int number_of_vertices() { return 4; }; //! return number of vertices
+  static int number_of_edges() { return 6; }; //! return number of edges
   
-  static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
 
-  static int FacesOfCell() { return 4; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 4; }; //! return number of faces per cell 
 };
 
 
@@ -80,8 +80,8 @@ public:
   {
     coords.resize(div_per_unit + 1);
 
-    const double *v0 = TetLinearLgnUnitElement::UnitVertices[TetLinearLgnUnitElement::UnitEdges[edge][0]];
-    const double *v1 = TetLinearLgnUnitElement::UnitVertices[TetLinearLgnUnitElement::UnitEdges[edge][1]];
+    const double *v0 = TetLinearLgnUnitElement::unit_vertices[TetLinearLgnUnitElement::unit_edges[edge][0]];
+    const double *v1 = TetLinearLgnUnitElement::unit_vertices[TetLinearLgnUnitElement::unit_edges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -100,16 +100,21 @@ public:
     } 	
   }
   
-   //! Approximate faces for element by piecewise linear elements
+  //! Approximate faces for element by piecewise linear elements
+  //! return number of vertices per face
+  virtual int get_approx_face_elements() const { return 3; }
+
+
+  //! Approximate faces for element by piecewise linear elements
   //! return: coords gives parametric coordinates at the approximation point.
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_face(const unsigned face, 
 			   const unsigned div_per_unit, 
 			   vector<vector<vector<double> > > &coords) const
   {
-    const double *v0 = TetLinearLgnUnitElement::UnitVertices[TetLinearLgnUnitElement::UnitFaces[face][0]];
-    const double *v1 = TetLinearLgnUnitElement::UnitVertices[TetLinearLgnUnitElement::UnitFaces[face][1]];
-    const double *v2 = TetLinearLgnUnitElement::UnitVertices[TetLinearLgnUnitElement::UnitFaces[face][2]];
+    const double *v0 = TetLinearLgnUnitElement::unit_vertices[TetLinearLgnUnitElement::unit_faces[face][0]];
+    const double *v1 = TetLinearLgnUnitElement::unit_vertices[TetLinearLgnUnitElement::unit_faces[face][1]];
+    const double *v2 = TetLinearLgnUnitElement::unit_vertices[TetLinearLgnUnitElement::unit_faces[face][2]];
     coords.resize(div_per_unit);
     const double d = 1. / div_per_unit;
     for(unsigned j = 0; j<div_per_unit; j++) {

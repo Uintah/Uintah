@@ -39,21 +39,21 @@ namespace SCIRun {
 //! Class for describing unit geometry of HexTriquadraticLgn 
 class HexTriquadraticLgnUnitElement {
 public:
-  static double UnitVertices[20][3]; //!< Parametric coordinates of vertices of unit edge 
-  static int UnitEdges[12][2];  //!< References to vertices of unit edge  
-  static int UnitFaces[6][4];  //!< References to vertices of unit face 
+  static double unit_vertices[20][3]; //!< Parametric coordinates of vertices of unit edge 
+  static int unit_edges[12][2];  //!< References to vertices of unit edge  
+  static int unit_faces[6][4];  //!< References to vertices of unit face 
  
   HexTriquadraticLgnUnitElement() {};
   virtual ~HexTriquadraticLgnUnitElement() {};
   
-  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; }; //! return dimension of domain 
   
-  static int NumberOfVertices() { return 8; }; //! return number of vertices
-  static int NumberOfEdges() { return 12; }; //! return number of edges
+  static int number_of_vertices() { return 8; }; //! return number of vertices
+  static int number_of_edges() { return 12; }; //! return number of edges
   
-  static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 4; }; //! return number of vertices per face 
 
-  static int FacesOfCell() { return 6; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 6; }; //! return number of faces per cell 
 };
 
 
