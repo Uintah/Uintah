@@ -159,7 +159,7 @@ protected:
 	  return true;
 
     return false;
-  };
+  }
   
   //! find a reasonable initial guess 
   template <class CellData>
@@ -320,7 +320,7 @@ public:
   {
     TriLocate< TriLinearLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
  
   static const string type_name(int n = -1);
 

@@ -153,7 +153,7 @@ private:
     unsigned elem_index() const { return index_; }
     
     inline 
-    const typename FData::value_type elem() const {
+    typename FData::value_type elem() const {
       return fld_.fdata_[index_];
     }
 
@@ -240,35 +240,35 @@ private:
     }
 
     inline 
-    const typename FData::value_type node0() const {
+    typename FData::value_type node0() const {
       return fld_.fdata_[nodes_[0]];
     }
     inline 
-    const typename FData::value_type node1() const {
+    typename FData::value_type node1() const {
       return fld_.fdata_[nodes_[1]];
     }
     inline 
-    const typename FData::value_type node2() const {
+    typename FData::value_type node2() const {
       return fld_.fdata_[nodes_[2]];
     }
     inline 
-    const typename FData::value_type node3() const {
+    typename FData::value_type node3() const {
       return fld_.fdata_[nodes_[3]];
     }
     inline 
-    const typename FData::value_type node4() const {
+    typename FData::value_type node4() const {
       return fld_.fdata_[nodes_[4]];
     }
     inline 
-    const typename FData::value_type node5() const {
+    typename FData::value_type node5() const {
       return fld_.fdata_[nodes_[5]];
     }
     inline 
-    const typename FData::value_type node6() const {
+    typename FData::value_type node6() const {
       return fld_.fdata_[nodes_[6]];
     }
     inline 
-    const typename FData::value_type node7() const {
+    typename FData::value_type node7() const {
       return fld_.fdata_[nodes_[7]];
     }
 

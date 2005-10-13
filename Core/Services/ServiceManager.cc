@@ -113,12 +113,10 @@ void ServiceManager::run()
     return;
   }
   
-  while(1) 
+  for(;;)
   {
     // LOOP FOREVER...
 
-    
-    
     IComSocket clientsocket;
     clientsocket.close();
     log_->putmsg("ServiceManager: connection attempt made by remote host");

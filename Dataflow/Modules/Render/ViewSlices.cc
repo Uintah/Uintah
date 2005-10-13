@@ -82,6 +82,8 @@
 #include <Core/Util/Environment.h>
 #include <Core/Thread/Mutex.h>
 
+#include <sci_comp_warn_fixes.h>
+
 #include <typeinfo>
 #include <iostream>
 #include <map>
@@ -1327,6 +1329,7 @@ ViewSlices::compute_crop_pick_boxes(SliceWindow &window, BBox &bbox)
 void
 ViewSlices::update_crop_bbox_from_gui() 
 {
+#if 0
   if (0) {
     crop_min_x_ = Clamp(crop_min_x_(), 0, max_slice_[0]);
     crop_min_y_ = Clamp(crop_min_y_(), 0, max_slice_[1]);
@@ -1335,6 +1338,7 @@ ViewSlices::update_crop_bbox_from_gui()
     crop_max_y_ = Clamp(crop_max_y_(), 0, max_slice_[1]);
     crop_max_z_ = Clamp(crop_max_z_(), 0, max_slice_[2]);
   }
+#endif
 
   crop_draw_bbox_ = 
     BBox(Point(double(Min(crop_min_x_(), crop_max_x_())),
@@ -1895,52 +1899,52 @@ ViewSlices::get_value(const Nrrd *nrrd, int x, int y, int z) {
   case nrrdTypeChar: {
     char *slicedata = (char *)nrrd->data;
     return (double)slicedata[position];
-    break;
+    BREAK;
   }
   case nrrdTypeUChar: {
     unsigned char *slicedata = (unsigned char *)nrrd->data;
     return (double)slicedata[position];
-    break;
+    BREAK;
   }
   case nrrdTypeShort: {
     short *slicedata = (short *)nrrd->data;
     return (double)slicedata[position];
-    break;
+    BREAK;
   }
   case nrrdTypeUShort: {
     unsigned short *slicedata = (unsigned short *)nrrd->data;
     return (double)slicedata[position];
-    break;
+    BREAK;
   }
   case nrrdTypeInt: {
     int *slicedata = (int *)nrrd->data;
     return (double)slicedata[position];
-    break;
+    BREAK;
   }
   case nrrdTypeUInt: {
     unsigned int *slicedata = (unsigned int *)nrrd->data;
     return (double)slicedata[position];
-    break;
+    BREAK;
   }
   case nrrdTypeLLong: {
     signed long long *slicedata = (signed long long *)nrrd->data;
     return (double)slicedata[position];
-    break;
+    BREAK;
   }
   case nrrdTypeULLong: {
     unsigned long long *slicedata = (unsigned long long *)nrrd->data;
     return (double)slicedata[position];
-    break;
+    BREAK;
   }
   case nrrdTypeFloat: {
     float *slicedata = (float *)nrrd->data;
     return (double)slicedata[position];
-    break;
+    BREAK;
   }
   case nrrdTypeDouble: {
     double *slicedata = (double *)nrrd->data;
     return (double)slicedata[position];
-    break;
+    BREAK;
   }
   default: error("Unsupported data type: "+nrrd->type);
   }
@@ -1973,7 +1977,7 @@ ViewSlices::bind_nrrd(Nrrd &nrrd) {
   case nrrdTypeInt: type = GL_INT; break;
   case nrrdTypeUInt: type = GL_UNSIGNED_INT; break;
   case nrrdTypeFloat: type = GL_FLOAT; break;
-  default: error("Cant bind nrrd"); return false; break;
+  default: error("Cant bind nrrd"); return false; BREAK;
   }
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
 	       nrrd.axis[prim].size, nrrd.axis[prim+1].size, 
@@ -2309,9 +2313,8 @@ ViewSlices::extract_mip_slices(NrrdVolume *volume)
 
     NrrdDataHandle temp1 = scinew NrrdData;
     
-    int min[3], max[3];
+    int max[3];
     for (int i = 0; i < 3; i++) {
-      min[i] = 0;
       max[i] = max_slice_[i];
     }
     

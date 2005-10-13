@@ -45,17 +45,20 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/ModuleHelper.h>
 #include <Dataflow/Network/Scheduler.h>
-#include <Core/Geom/GeomObj.h>
 #include <Dataflow/Modules/Render/ViewGeom.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
-#include <Core/Geom/HeadLight.h>
-#include <Core/Geom/DirectionalLight.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Thread/FutureValue.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Util/Environment.h>
+#include <Core/Geom/DirectionalLight.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/HeadLight.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/CleanupManager.h>
+#include <Core/Thread/FutureValue.h>
+#include <Core/Util/Environment.h>
+
+#include <sci_comp_warn_fixes.h>
+
 #include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -354,7 +357,6 @@ Viewer::process_event()
       } else {
 	((*it).second)[gmsg->lserial] = lighting_.lights.size() - 1;
       }
-      break;
     }
     break;
 
@@ -494,7 +496,7 @@ Viewer::real_portno(int portno)
     }
   }
   ASSERTFAIL("PORTNO NOT FOUND");
-  return 0;
+  RETURN_0;
 }
 
 //----------------------------------------------------------------------

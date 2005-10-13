@@ -798,7 +798,7 @@ namespace SCIRun {
       //cmap2_size_*c, 0,
       //	 cmap2_size_*(c+1), raster_pbuffer_->height());
 
-      for (int c = 0; c < cmap2_.size(); ++c) {
+      for (unsigned int c = 0; c < cmap2_.size(); ++c) {
 	vector<CM2WidgetHandle> widgets = cmap2_[c]->widgets();
 	for (unsigned int i=0; i<widgets.size(); i++) {
 	  raster_pbuffer_->bind(GL_FRONT);
@@ -877,7 +877,7 @@ namespace SCIRun {
 	raster_array_.resize(64, cmap2_size_, 4);
 	cmap2_array_.resize(64, width, 4);
       }
-      for (int c = 0; c < cmap2_.size(); ++c) 
+      for (unsigned int c = 0; c < cmap2_.size(); ++c) 
       {
 	raster_array_.initialize(0.0);
 	vector<CM2WidgetHandle>& widget = cmap2_[c]->widgets();

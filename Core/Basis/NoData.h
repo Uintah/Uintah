@@ -39,6 +39,11 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Datatypes/TypeName.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn off 'implicit conversion... loss of accuracy' messages.
+#  pragma set woff 1506
+#endif
+
 namespace SCIRun {
 
 using std::vector;
@@ -126,5 +131,12 @@ NoDataBasis<T>::io(Piostream &stream)
   stream.begin_class(type_name(-1), NODATABASIS_VERSION);
   stream.end_class();
 }
-}
+
+} // end namespace SCIRun
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn back on 'implicit conversion... loss of accuracy' messages.
+#  pragma reset woff 1506
+#endif
+
 #endif // NoData_h
