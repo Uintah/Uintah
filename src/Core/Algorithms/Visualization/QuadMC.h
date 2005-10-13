@@ -42,9 +42,9 @@
 #define QuadMC_h
 
 #include <Core/Geom/GeomLine.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <sci_hash_map.h>
 
@@ -446,7 +446,7 @@ QuadMC<Field>::get_field(double value)
   CField *fld = 0;
   if (out_mesh_.get_rep())
   {
-    fld = scinew CField(out_mesh_, 1);
+    fld = scinew CField(out_mesh_);
     vector<double>::iterator iter = fld->fdata().begin();
     while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
   }

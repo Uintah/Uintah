@@ -44,9 +44,9 @@
 
 #include <Core/Algorithms/Visualization/mcube2.h>
 #include <Core/Geom/GeomTriangles.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <sci_hash_map.h>
 
@@ -375,7 +375,7 @@ PrismMC<Field>::get_field(double value)
   TSField *fld = 0;
   if (trisurf_.get_rep())
   {
-    fld = scinew TSField(trisurf_, 1);
+    fld = scinew TSField(trisurf_);
     vector<double>::iterator iter = fld->fdata().begin();
     while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
   }

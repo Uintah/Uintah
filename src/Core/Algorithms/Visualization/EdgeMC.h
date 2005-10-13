@@ -42,15 +42,16 @@
 #define EdgeMC_h
 
 #include <Core/Geom/GeomPoint.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Datatypes/CurveMesh.h>
-#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <sci_hash_map.h>
 
 namespace SCIRun {
+
 typedef CurveMesh<CrvLinearLgn<Point> >        CMesh;
 
 typedef PointCloudMesh<ConstantBasis<Point> >  PCMesh;
