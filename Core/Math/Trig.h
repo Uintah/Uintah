@@ -33,11 +33,11 @@
 
 #include <math.h>
 
-#ifndef PI
-#define PI 3.14159265358979323846
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
 #endif
 
-const double Pi=PI;
+const double Pi=M_PI;
 
 #ifdef _WIN32
 
@@ -83,19 +83,64 @@ inline double Atan(double d)
     return atan(d);
 }
 
+inline double Atan2(double y, double x)
+{
+  return atan2(y, x);
+}
+
 inline double DtoR(double d)
 {
-    return d*PI/180.;
+    return d*M_PI/180.;
 }
 
 inline double RtoD(double r)
 {
-    return r*180./PI;
+    return r*180./M_PI;
 }
 
 inline double ACosh(double x)
 {
     return acosh(x);
+}
+
+/////////////////////////////////////////////////////
+//
+// Float version
+//
+
+inline float Sin(float d)
+{
+  return sinf(d);
+}
+
+inline float Cos(float d)
+{
+  return cosf(d);
+}
+
+inline float Sqrt(float d)
+{
+  return sqrtf(d);
+}
+
+inline float Atan2(float y, float x)
+{
+  return atan2f(y, x);
+}
+
+inline float Acos(float d)
+{
+  return acosf(d);
+}
+
+inline float DtoR(float d)
+{
+    return d*(float)(M_PI/180.0f);
+}
+
+inline float RtoD(float r)
+{
+    return r*(float)(180.0f/M_PI);
 }
 
 #endif
