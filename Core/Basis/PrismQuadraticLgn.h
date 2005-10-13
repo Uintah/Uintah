@@ -138,7 +138,7 @@ public:
 	+z*(-3 + 4*x + 2*z)*cd.node4()
 	+4*(-1 + 2*x + y)*(-1 +z)*nodes_[cd.edge0_index()]
 	-4*y*(-1 + z)*nodes_[cd.edge1_index()]
-	4*y*(-1 + z)*nodes_[cd.edge2_index()]
+	+4*y*(-1 + z)*nodes_[cd.edge2_index()]
 	+4*(-1 + z)*z*nodes_[cd.edge3_index()]
 	-4*(-1 + z)*z*nodes_[cd.edge4_index()]
 	-4*(-1 + 2* + y)*z*nodes_[cd.edge6_index()]

@@ -29,7 +29,7 @@
 //    Author : Martin Cole, Frank B. Sachse
 //    Date   : Dec 04 2004
 
-#include <Core/Basis/HexTriquadaticLgn.h>
+#include <Core/Basis/HexTriquadraticLgn.h>
 
 namespace SCIRun {
 

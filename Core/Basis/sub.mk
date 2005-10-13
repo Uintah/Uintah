@@ -26,9 +26,12 @@ SRCDIR   := Core/Basis
 SRCS     +=      $(SRCDIR)/CrvLinearLgn.cc             \
                  $(SRCDIR)/CrvQuadraticLgn.cc          \
                  $(SRCDIR)/HexTrilinearLgn.cc          \
+                 $(SRCDIR)/HexTriquadraticLgn.cc          \
                  $(SRCDIR)/Locate.cc                   \
                  $(SRCDIR)/PrismLinearLgn.cc           \
+                 $(SRCDIR)/PrismQuadraticLgn.cc           \
                  $(SRCDIR)/QuadBilinearLgn.cc          \
+                 $(SRCDIR)/QuadBiquadraticLgn.cc          \
                  $(SRCDIR)/TetLinearLgn.cc             \
                  $(SRCDIR)/TetQuadraticLgn.cc          \
                  $(SRCDIR)/TriLinearLgn.cc             \
