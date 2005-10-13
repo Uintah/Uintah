@@ -44,12 +44,12 @@
 
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Algorithms/Visualization/mcube2.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/FData.h>
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <sci_hash_map.h>
 
@@ -391,7 +391,7 @@ HexMC<Field>::get_field(double value)
     QSField *fld = 0;
     if (quadsurf_.get_rep())
     {
-      fld = scinew QSField(quadsurf_, 1);
+      fld = scinew QSField(quadsurf_);
       vector<double>::iterator iter = fld->fdata().begin();
       while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
     }
@@ -402,7 +402,7 @@ HexMC<Field>::get_field(double value)
     TSField *fld = 0;
     if (trisurf_.get_rep())
     {
-      fld = scinew TSField(trisurf_, 1);
+      fld = scinew TSField(trisurf_);
       vector<double>::iterator iter = fld->fdata().begin();
       while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
     }
