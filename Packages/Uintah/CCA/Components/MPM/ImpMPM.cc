@@ -366,7 +366,8 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   scheduleApplyExternalLoads(             sched, d_perproc_patches,matls);
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
   if (d_projectHeatSource) {
-    scheduleProjectCCHeatSourceToNodes(sched,d_perproc_patches,one_matl,matls);
+    scheduleComputeCCVolume(           sched, d_perproc_patches,one_matl,matls);
+    scheduleProjectCCHeatSourceToNodes(sched, d_perproc_patches,one_matl,matls);
   }
 
   scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
@@ -459,13 +460,30 @@ void ImpMPM::scheduleProjectCCHeatSourceToNodes(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::projectCCHeatSourceToNodes",
                         this,&ImpMPM::projectCCHeatSourceToNodes);
 
-  t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,2);
-  t->requires(Task::NewDW,lb->gVolumeLabel,             Ghost::AroundCells,2);
+  t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,1);
+  t->requires(Task::NewDW,lb->gVolumeLabel,             Ghost::AroundCells,1);
+  t->requires(Task::NewDW,lb->cVolumeLabel,             Ghost::AroundCells,1);
   t->requires(Task::OldDW,lb->heatFlux_CCLabel,         Ghost::AroundCells,1);
 
   t->computes(lb->heatFlux_CCLabel);
   t->modifies(lb->gExternalHeatRateLabel);
   t->computes(lb->NC_CCweightLabel, one_matl);
+
+  sched->addTask(t, patches, matls);
+}
+
+void ImpMPM::scheduleComputeCCVolume(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSubset* one_matl,
+                                     const MaterialSet* matls)
+{
+  Task* t = scinew Task("ImpMPM::computeCCVolume",
+                        this,&ImpMPM::computeCCVolume);
+                                                                                
+  t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,1);
+  t->requires(Task::NewDW,lb->gVolumeLabel,             Ghost::AroundCells,1);
+
+  t->computes(lb->cVolumeLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -1211,7 +1229,7 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
 
     constNCVariable<double> NC_CCweight;
     NCVariable<double> NC_CCweight_copy;
-    old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0, patch,gac,2);
+    old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0, patch,gac,1);
     new_dw->allocateAndPut(NC_CCweight_copy, lb->NC_CCweightLabel, 0,patch);
     // carry forward interpolation weight
     IntVector low = patch->getNodeLowIndex();
@@ -1226,30 +1244,71 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
 
       constNCVariable<double> gvolume;
       NCVariable<double> gextHR;
-      constCCVariable<double> CCheatrate;
+      constCCVariable<double> CCheatrate,cvolume;
       CCVariable<double> CCheatrate_copy;
 
-      new_dw->get(gvolume,         lb->gVolumeLabel,          dwi, patch,gac,2);
+      new_dw->get(gvolume,         lb->gVolumeLabel,          dwi, patch,gac,1);
       old_dw->get(CCheatrate,      lb->heatFlux_CCLabel,      dwi, patch,gac,1);
+      new_dw->get(cvolume,         lb->cVolumeLabel,          dwi, patch,gac,1);
       new_dw->getModifiable(gextHR,lb->gExternalHeatRateLabel,dwi, patch);
       new_dw->allocateAndPut(CCheatrate_copy,  lb->heatFlux_CCLabel, dwi,patch);
 
       // carry forward heat rate.
       CCheatrate_copy.copyData(CCheatrate);
 
+      // Project  CC heat rate to nodes
+      for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+        IntVector n = *iter;
+        IntVector cIdx[8];
+        patch->findCellsFromNode(n, cIdx);
+        for (int ic=0;ic<8;ic++){
+          double solid_volume = cvolume[cIdx[ic]];
+          gextHR[n] += CCheatrate[cIdx[ic]]*(NC_CCweight[n]*gvolume[n])
+                       /solid_volume;
+        }
+      }
+
+    }
+  }
+}
+
+void ImpMPM::computeCCVolume(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* ,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    if (cout_doing.active()) {
+      cout_doing <<"Doing computeCCVolume on patch "
+                 << patch->getID() <<"\t\t IMPM"<< "\n" << "\n";
+    }
+      
+    Ghost::GhostType  gac = Ghost::AroundCells;
+
+    constNCVariable<double> NC_CCweight;
+    old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0, patch,gac,1);
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      constNCVariable<double> gvolume;
+      CCVariable<double> cvolume;
+
+      new_dw->get(gvolume,         lb->gVolumeLabel,          dwi, patch,gac,1);
+      new_dw->allocateAndPut(cvolume,      lb->cVolumeLabel, dwi,patch);
+      cvolume.initialize(1.e-20);
+
       for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-        double solid_vol=1.e-200;
         IntVector nodeIdx[8];
         patch->findNodesFromCell(c, nodeIdx);
         for (int in=0;in<8;in++){
-          solid_vol += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
-        }
-        for (int in=0;in<8;in++){
-         if(patch->containsNode(nodeIdx[in])){
-          gextHR[nodeIdx[in]] += CCheatrate[c] *
-            (NC_CCweight[nodeIdx[in]]*gvolume[nodeIdx[in]])/solid_vol;
-         }
+          cvolume[c] += NC_CCweight[nodeIdx[in]] * gvolume[nodeIdx[in]];
         }
       }
     }
