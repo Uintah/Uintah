@@ -60,7 +60,7 @@ public:
 //! Class for handling of element of type quad with 
 //! biquadratic lagrangian interpolation
 template <class T>
-  class QuadBiquadraticLgn : public QuadApprox, public QuadGaussian3<double>, public QuadBiquadraticLgn
+  class QuadBiquadraticLgn : public QuadApprox, public QuadGaussian3<double>, public QuadBiquadraticLgnUnitElement
 {
 public:
   typedef T value_type;

@@ -36,10 +36,18 @@
 
 namespace SCIRun {
   
+  //! Class for describing unit geometry of QuadBicubicHmt
+  class QuadBicubicHmtUnitElement : public QuadBilinearLgnUnitElement {
+  public:
+    QuadBicubicHmtUnitElement() {};
+    virtual ~QuadBicubicHmtUnitElement() {};
+  };
+
+
 //! Class for handling of element of type quad with 
 //! bicubic hermitian interpolation
 template <class T>
-class QuadBicubicHmt : public QuadApprox, public QuadGaussian2<double>
+  class QuadBicubicHmt : public QuadApprox, public QuadGaussian2<double>, public QuadBicubicHmtUnitElement
 {
 public:
   typedef T value_type;

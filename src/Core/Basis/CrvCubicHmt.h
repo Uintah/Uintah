@@ -36,6 +36,9 @@
 
 namespace SCIRun {
 
+using std::vector;
+using std::string;
+
 //! Class for describing unit geometry of CrvCubicHmt 
 class CrvCubicHmtUnitElement : public CrvLinearLgnUnitElement {
   public:
@@ -85,10 +88,10 @@ public:
 		  +(1 - 4*x + 3*x*x) * derivs_[cd.node0_index()] 
 		  -6*(-1 + x)*x * cd.node1() 
 		  +x*(-2 + 3*x) * derivs_[cd.node1_index()]);
-  }
+  };
   
   //! add a derivative value (dx) for nodes
-  void add_derivative(const T &p) { derivs_.push_back(p); }
+  void add_derivative(const T &p) { derivs_.push_back(p); };
 
   static  const string type_name(int n = -1);
 
