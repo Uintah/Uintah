@@ -33,18 +33,18 @@
 
 namespace SCIRun {
 
-double PrismQuadraticLgnUnitElement::UnitVertices[15][3] = {
+double PrismQuadraticLgnUnitElement::unit_vertices[15][3] = {
   {0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}, {1,0,1}, {0,1,1}
   {0.5,0,0}, {0.5,0.5,0}, {0,0.5,0}, 
   {0, 0, 0.5}, {1,0,0.5}, {0,1,0.5}, 
   {0.5,0,1}, {0.5,0.5,1}, {0,0.5,1}
 };
 
-int PrismQuadraticLgnUnitElement::UnitEdges[9][3] = {{0,1}, {1,2}, {2,0},
+int PrismQuadraticLgnUnitElement::unit_edges[9][3] = {{0,1}, {1,2}, {2,0},
 				    {0,3}, {1,4}, {2,5},
 				    {0,3}, {1,4}, {2,5}};
 
-int PrismQuadraticLgnUnitElement::UnitFaces[5][4] = {{0,1,2,-1}, {0,1,4,3}, {1,2,5,4}, {2,0,3,5}, {3,4,5,-1}};
+int PrismQuadraticLgnUnitElement::unit_faces[5][4] = {{0,1,2,-1}, {0,1,4,3}, {1,2,5,4}, {2,0,3,5}, {3,4,5,-1}};
 
 } //namespace SCIRun
 

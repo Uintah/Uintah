@@ -39,21 +39,21 @@ namespace SCIRun {
 //! Class for describing unit geometry of QuadBiquadraticLgn 
 class QuadBiquadraticLgnUnitElement {
 public: 
-  static double UnitVertices[8][2]; //!< Parametric coordinates of vertices of unit edge
-  static int UnitEdges[8][2];  //!< References to vertices of unit edge 
-  static int UnitFaces[1][4]; //!< References to vertices of unit face
+  static double unit_vertices[8][2]; //!< Parametric coordinates of vertices of unit edge
+  static int unit_edges[8][2];  //!< References to vertices of unit edge 
+  static int unit_faces[1][4]; //!< References to vertices of unit face
   
   QuadBiquadraticLgnUnitElement() {};
   virtual ~QuadBiquadraticLgnUnitElement() {};
   
-  static int DomainDimension() { return 2; }; //! return dimension of domain 
+  static int domain_dimension() { return 2; }; //! return dimension of domain 
   
-  static int NumberOfVertices() { return 9; }; //! return number of vertices
-  static int NumberOfEdges() { return 12; }; //! return number of edges
+  static int number_of_vertices() { return 9; }; //! return number of vertices
+  static int number_of_edges() { return 12; }; //! return number of edges
   
-  static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 4; }; //! return number of vertices per face 
 
-  static int FacesOfCell() { return 4; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 4; }; //! return number of faces per cell 
 };
 
 

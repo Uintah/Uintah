@@ -1019,7 +1019,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
       //coords organized as scanlines of quad/tri strips.
       vector<vector<vector<double> > > coords;
       mesh->pwl_approx_face(coords, *eiter, fidx, div);
-      const int face_sz = mesh->get_basis().get_approx_face_elements();
+      const int face_sz = mesh->get_basis().vertices_of_face();
 
       vector<vector<vector<double> > >::iterator coord_iter = coords.begin();
       while (coord_iter != coords.end()) {

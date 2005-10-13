@@ -39,21 +39,21 @@ namespace SCIRun {
 //! Class for describing unit geometry of PrismQuadraticLgn 
 class PrismQuadraticLgnUnitElement {
 public:
-  static double UnitVertices[15][3]; //!< Parametric coordinates of vertices of unit edge
-  static int UnitEdges[9][3]; //!< References to vertices of unit edge
-  static int UnitFaces[5][4]; //!< References to vertices of unit face
+  static double unit_vertices[15][3]; //!< Parametric coordinates of vertices of unit edge
+  static int unit_edges[9][3]; //!< References to vertices of unit edge
+  static int unit_faces[5][4]; //!< References to vertices of unit face
   
   PrismQuadraticLgnUnitElement() {};
   virtual ~PrismQuadraticLgnUnitElement() {};
   
-  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; }; //! return dimension of domain 
   
-  static int NumberOfVertices() { return 15; }; //! return number of vertices
-  static int NumberOfEdges() { return 9; }; //! return number of edges
+  static int number_of_vertices() { return 15; }; //! return number of vertices
+  static int number_of_edges() { return 9; }; //! return number of edges
   
-  static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
 
-  static int FacesOfCell() { return 5; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 5; }; //! return number of faces per cell 
 };
 
 

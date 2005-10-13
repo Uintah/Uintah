@@ -47,21 +47,21 @@ using std::string;
 //! Class for describing unit geometry of PrismLinearLgn 
 class PrismLinearLgnUnitElement {
 public:
-  static double UnitVertices[6][3]; //!< Parametric coordinates of vertices of unit edge
-  static int UnitEdges[9][3]; //!< References to vertices of unit edge
-  static int UnitFaces[5][4]; //!< References to vertices of unit face
+  static double unit_vertices[6][3]; //!< Parametric coordinates of vertices of unit edge
+  static int unit_edges[9][3]; //!< References to vertices of unit edge
+  static int unit_faces[5][4]; //!< References to vertices of unit face
  
   PrismLinearLgnUnitElement() {};
   virtual ~PrismLinearLgnUnitElement() {};
   
-  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; }; //! return dimension of domain 
   
-  static int NumberOfVertices() { return 6; }; //! return number of vertices
-  static int NumberOfEdges() { return 9; }; //! return number of edges
+  static int number_of_vertices() { return 6; }; //! return number of vertices
+  static int number_of_edges() { return 9; }; //! return number of edges
   
-  static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
 
-  static int FacesOfCell() { return 5; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 5; }; //! return number of faces per cell 
 };
 
 //! Class for creating geometrical approximations of Prism meshes
@@ -79,8 +79,8 @@ public:
   {
     coords.resize(div_per_unit + 1);
 
-    const double *v0 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitEdges[edge][0]];
-    const double *v1 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitEdges[edge][1]];
+    const double *v0 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_edges[edge][0]];
+    const double *v1 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_edges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -104,20 +104,20 @@ public:
   virtual void approx_face(const unsigned face, const unsigned div_per_unit, 
 			   vector<vector<vector<double> > > &coords) const
   {	
-    int fe = (PrismLinearLgnUnitElement::UnitFaces[face][4] != -1 ? 2 : 1);
+    int fe = (PrismLinearLgnUnitElement::unit_faces[face][4] != -1 ? 2 : 1);
     coords.resize(fe * div_per_unit);
 	
     for(int f = 0; f<2; f++) {
       double *v0, *v1, *v2;
 
       if (f==0) {
-	v0 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][0]];
-	v1 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][1]];
-	v2 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][3]];
+	v0 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][0]];
+	v1 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][1]];
+	v2 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][3]];
       } else {
-	v0 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][2]];
-	v1 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][3]];
-	v2 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][1]];
+	v0 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][2]];
+	v1 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][3]];
+	v2 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][1]];
       }
 
       const double d = 1. / div_per_unit;

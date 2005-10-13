@@ -47,21 +47,21 @@ using std::string;
 //! Class for describing unit geometry of QuadBilinearLgn 
 class QuadBilinearLgnUnitElement {
 public: 
-  static double UnitVertices[4][2]; //!< Parametric coordinates of vertices of unit edge
-  static int UnitEdges[4][2];  //!< References to vertices of unit edge 
-  static int UnitFaces[1][4]; //!< References to vertices of unit face
+  static double unit_vertices[4][2]; //!< Parametric coordinates of vertices of unit edge
+  static int unit_edges[4][2];  //!< References to vertices of unit edge 
+  static int unit_faces[1][4]; //!< References to vertices of unit face
   
   QuadBilinearLgnUnitElement() {};
   virtual ~QuadBilinearLgnUnitElement() {};
   
-  static int DomainDimension() { return 2; }; //! return dimension of domain 
+  static int domain_dimension() { return 2; }; //! return dimension of domain 
   
-  static int NumberOfVertices() { return 4; }; //! return number of vertices
-  static int NumberOfEdges() { return 4; }; //! return number of edges
+  static int number_of_vertices() { return 4; }; //! return number of vertices
+  static int number_of_edges() { return 4; }; //! return number of edges
   
-  static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 4; }; //! return number of vertices per face 
 
-  static int FacesOfCell() { return 1; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 1; }; //! return number of faces per cell 
 };
 
 
@@ -69,11 +69,11 @@ public:
 class QuadApprox {  
 public:
   //!< Parametric coordinates of vertices of unit edge
-  static double UnitVertices[4][2];
+  static double unit_vertices[4][2];
   //!< References to vertices of unit edge 
-  static int UnitEdges[4][2]; 
+  static int unit_edges[4][2]; 
   //!< References to vertices of unit face
-  static int UnitFaces[1][4]; 
+  static int unit_faces[1][4]; 
 
   QuadApprox() {}
   virtual ~QuadApprox() {}
@@ -87,10 +87,10 @@ public:
   {
     coords.resize(div_per_unit + 1);
       
-    const double p1x = QuadBilinearLgnUnitElement::UnitVertices[QuadBilinearLgnUnitElement::UnitEdges[edge][0]][0];
-    const double p1y = QuadBilinearLgnUnitElement::UnitVertices[QuadBilinearLgnUnitElement::UnitEdges[edge][0]][1];
-    const double dx = QuadBilinearLgnUnitElement::UnitVertices[QuadBilinearLgnUnitElement::UnitEdges[edge][1]][0] - p1x;
-    const double dy = QuadBilinearLgnUnitElement::UnitVertices[QuadBilinearLgnUnitElement::UnitEdges[edge][1]][1] - p1y;
+    const double p1x = QuadBilinearLgnUnitElement::unit_vertices[QuadBilinearLgnUnitElement::unit_edges[edge][0]][0];
+    const double p1y = QuadBilinearLgnUnitElement::unit_vertices[QuadBilinearLgnUnitElement::unit_edges[edge][0]][1];
+    const double dx = QuadBilinearLgnUnitElement::unit_vertices[QuadBilinearLgnUnitElement::unit_edges[edge][1]][0] - p1x;
+    const double dy = QuadBilinearLgnUnitElement::unit_vertices[QuadBilinearLgnUnitElement::unit_edges[edge][1]][1] - p1y;
       
     for(unsigned i = 0; i <= div_per_unit; i ++) {
       const double d = (double)div_per_unit / (double)i;

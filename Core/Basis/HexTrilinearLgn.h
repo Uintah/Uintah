@@ -49,21 +49,21 @@ using std::string;
 //! Class for describing unit geometry of HexTrilinearLgn 
 class HexTrilinearLgnUnitElement {
 public:
-  static double UnitVertices[8][3]; //!< Parametric coordinates of vertices of unit edge 
-  static int UnitEdges[12][2];  //!< References to vertices of unit edge  
-  static int UnitFaces[6][4];  //!< References to vertices of unit face 
+  static double unit_vertices[8][3]; //!< Parametric coordinates of vertices of unit edge 
+  static int unit_edges[12][2];  //!< References to vertices of unit edge  
+  static int unit_faces[6][4];  //!< References to vertices of unit face 
  
   HexTrilinearLgnUnitElement() {};
   virtual ~HexTrilinearLgnUnitElement() {};
   
-  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; }; //! return dimension of domain 
   
-  static int NumberOfVertices() { return 8; }; //! return number of vertices
-  static int NumberOfEdges() { return 12; }; //! return number of edges
+  static int number_of_vertices() { return 8; }; //! return number of vertices
+  static int number_of_edges() { return 12; }; //! return number of edges
   
-  static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 4; }; //! return number of vertices per face 
 
-  static int FacesOfCell() { return 6; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 6; }; //! return number of faces per cell 
 };
 
 
@@ -82,8 +82,8 @@ public:
   {
     coords.resize(div_per_unit + 1);
 
-    const double *v0 = HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitEdges[edge][0]];
-    const double *v1 = HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitEdges[edge][1]];
+    const double *v0 = HexTrilinearLgnUnitElement::unit_vertices[HexTrilinearLgnUnitElement::unit_edges[edge][0]];
+    const double *v1 = HexTrilinearLgnUnitElement::unit_vertices[HexTrilinearLgnUnitElement::unit_edges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -101,6 +101,10 @@ public:
       tmp[2] = p1z + d * dz;
     } 	
   }
+
+  //! return number of vertices per face
+  virtual int get_approx_face_elements() const { return 4; }
+
     
   //! Approximate faces for element by piecewise linear elements
   //! return: coords gives parametric coordinates at the approximation point.
@@ -109,10 +113,10 @@ public:
 			   const unsigned div_per_unit, 
 			   vector<vector<vector<double> > > &coords) const
   {
-    const double *v0 = HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitFaces[face][0]];
-    const double *v1 = HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitFaces[face][1]];
-    //	const double *v2=HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitFaces[face][2]];
-    const double *v3 = HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitFaces[face][3]];
+    const double *v0 = HexTrilinearLgnUnitElement::unit_vertices[HexTrilinearLgnUnitElement::unit_faces[face][0]];
+    const double *v1 = HexTrilinearLgnUnitElement::unit_vertices[HexTrilinearLgnUnitElement::unit_faces[face][1]];
+    //	const double *v2=HexTrilinearLgnUnitElement::unit_vertices[HexTrilinearLgnUnitElement::unit_faces[face][2]];
+    const double *v3 = HexTrilinearLgnUnitElement::unit_vertices[HexTrilinearLgnUnitElement::unit_faces[face][3]];
     const double d = 1. / (double)div_per_unit;
     coords.resize(div_per_unit);
     vector<vector<vector<double> > >::iterator citer = coords.begin();
