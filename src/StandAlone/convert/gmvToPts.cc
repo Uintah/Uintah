@@ -50,7 +50,7 @@ main(int argc, char* argv[])
     //  cout << tmp << endl << endl;
   }
 
-  char c;
+  //char c;
   long  node, mesh,elem;
 
   const char *fname=0;
@@ -110,6 +110,11 @@ main(int argc, char* argv[])
     elem=8;
     cout << " !! Hexagon element !! " << endl;
   }
+  else {
+    cout << "ERROR: Element type not specified!  Use -s, -h, or -t.\n\n";
+    exit(1);
+  }
+
 
   CompleteName=argv[3];
   CompleteName= argv[3]+ext;
