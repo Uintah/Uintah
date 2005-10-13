@@ -1524,16 +1524,6 @@ HexVolMesh<Basis>::get_center(Point &p, typename Cell::index_type idx) const
   p.asVector() *= (1.0 / 8.0);
 }
 
-static double
-distance2(const Point &p0, const Point &p1)
-{
-  const double dx = p0.x() - p1.x();
-  const double dy = p0.y() - p1.y();
-  const double dz = p0.z() - p1.z();
-  return dx * dx + dy * dy + dz * dz;
-}
-
-
 template <class Basis>
 bool
 HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
@@ -1804,13 +1794,6 @@ HexVolMesh<Basis>::pyramid_volume(const typename Node::array_type &face, const P
     return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
   }
   return 0.0;
-}
-
-
-static double
-tri_area(const Point &a, const Point &b, const Point &c)
-{
-  return Cross(b-a, c-a).length();
 }
 
 
