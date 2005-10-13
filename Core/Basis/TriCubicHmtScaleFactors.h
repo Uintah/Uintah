@@ -36,31 +36,53 @@
 
 namespace SCIRun {
 
-  //! Class for describing unit geometry of TetCubicHmt
-  class TriCubicScaleFactorsHmtUnitElement : public TriLinearLgnUnitElement {
-  public:
-    TriCubicScaleFactorsHmtUnitElement() {};
-    virtual ~TriCubicScaleFactorsHmtUnitElement() {};
-  };
+//! Class for describing unit geometry of TetCubicHmt
+class TriCubicScaleFactorsHmtUnitElement : public TriLinearLgnUnitElement {
+public:
+  TriCubicScaleFactorsHmtUnitElement() {};
+  virtual ~TriCubicScaleFactorsHmtUnitElement() {};
+};
 
 
 //! Class for handling of element of type triangle with 
 //! cubic hermitian interpolation with scale factors
 template <class T>
 class TriCubicHmtScaleFactors : public TriApprox<T>, 
-  public TriGaussian3<double>,
-  public TriCubicScaleFactorsHmtUnitElement
+				public TriGaussian3<double>,
+				public TriCubicScaleFactorsHmtUnitElement
 {
 public:
   TriCubicHmtScaleFactors() {}
   virtual ~TriCubicHmScaleFactorst() {}
 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  {
+    const double x=coords[0], y=coords[1];  
+    const double x2=x*x, y2=y*y;
+
+    w[0]  = (-1 + x + y)*(-1 - x + 2*x2 - y - 2*x*y + 2*y2);
+    w[1]  = +x*(1 - 2*x + x2 - 3*y2 + 2*y3);
+    w[2]  = +y*(1 - 3*x2 + 2*x3 - 2*y + y2);
+    w[3]  = +x*y*(1 - 2*x + x2 - 2*y + y2);
+    w[4]  = -(x2*(-3 + 2*x));
+    w[5]  = +(-1 + x)*x2;
+    w[6]  = -(x2*(-3 + 2*x)*y);
+    w[7]  = +(-1 + x)*x2*y;
+    w[8]  = -y2*(-3 + 2*y);
+    w[9]  = -(x*y2*(-3 + 2*y));
+    w[10] = +(-1 + y)*y2;
+    w[11] = +x*(-1 + y)*y2;
+    
+    return 12;
+  }
+
   //! get value at parametric coordinate 
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    const double x=coords[0], y=coords[1]; 
-    const double x2=x*x, y2=y*y;
+    double w[12];
+    get_weights(coords, w); 
 
     const double sdx0=derivs_[cd.node0_index()][0]*scalefactors_[cd.elem][0];
     const double sdx1=derivs_[cd.node1_index()][0]*scalefactors_[cd.elem][0];
@@ -74,18 +96,18 @@ public:
     const double sdxy1=derivs_[cd.node1_index()][2]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
     const double sdxy2=derivs_[cd.node2_index()][2]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
 
-    return (-1 + x + y)*(-1 - x + 2*x2 - y - 2*x*y + 2*y2)*cd.node0()
-      +x*(1 - 2*x + x2 - 3*y2 + 2*y3)*sdx0
-      +y*(1 - 3*x2 + 2*x3 - 2*y + y2)*sdy0
-      +x*y*(1 - 2*x + x2 - 2*y + y2)*sdxy0
-      -(x2*(-3 + 2*x))*cd.node1()
-      +(-1 + x)*x2*sdx1
-      -(x2*(-3 + 2*x)*y)*sdy1
-      +(-1 + x)*x2*y*sdxy1
-      -y2*(-3 + 2*y)*cd.node2()
-      -(x*y2*(-3 + 2*y))*sdx2
-      (-1 + y)*y2*sdy2
-      +x*(-1 + y)*y2*sdxy2;
+    return (T)(w[0]  * cd.node0()
+	       w[1]  * sdx0
+	       w[2]  * sdy0
+	       w[3]  * sdxy0
+	       w[4]  * cd.node1()
+	       w[5]  * sdx1
+	       w[6]  * sdy1
+	       w[7]  * sdxy1
+	       w[8]  * cd.node2()
+	       w[9]  * sdx2
+	       w[10] * sdy2
+	       w[11] * sdxy2);
   }
   
   //! get first derivative at parametric coordinate
@@ -165,7 +187,7 @@ const TypeDescription* get_type_description(TriCubicHmt<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(TriCubicHmt<T>::type_name(0), subs, 

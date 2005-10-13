@@ -50,7 +50,7 @@ public:
   static int DomainDimension() { return 2; }; //! return dimension of domain 
   
   static int NumberOfVertices() { return 6; }; //! return number of vertices
-  static int NumberOfEdges() { 9; }; //! return number of edges
+  static int NumberOfEdges() { return 9; }; //! return number of edges
   
   static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
 
@@ -60,7 +60,9 @@ public:
 //! Class for handling of element of type triangle with 
 //! linear quadratic interpolation
 template <class T>
-  class TriQuadraticLgn : public TriApprox, public TriGaussian3<double>, public TriQuadraticLgnUnitElement 
+class TriQuadraticLgn : public TriApprox, 
+			public TriGaussian3<double>, 
+			public TriQuadraticLgnUnitElement 
 {
 public:
   typedef T value_type;
@@ -68,18 +70,37 @@ public:
   TriQuadraticLgn() {}
   virtual ~TriQuadraticLgn() {}
 
+  int polynomial_order() const { return 2; }
+  
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  {
+    const double x=coords[0], y=coords[1];  
+
+    w[0] = (1 + 2*x*x - 3*y + 2*y*y + x*(-3 + 4*y));
+    w[1] = +x*(-1 + 2*x);
+    w[2] = +y*(-1+ 2*y);
+    w[3] = -4*x*(-1 + x + y);
+    w[4] = +4*x*y;
+    w[5] = -4*y*(-1 + x + y);
+    
+    return 6;
+  }
+  
   //! get value at parametric coordinate
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    const double x=coords[0], y=coords[1];  
-    return (1 + 2*x*x - 3*y + 2*y*y + x*(-3 + 4*y))*cd.node0()
-      +x*(-1 + 2*x)*cd.node1()
-      +y*(-1+ 2*y)*cd.node2()
-      -4*x*(-1 + x + y)*nodes_[cd.edge0_index()]
-      +4*x*y*nodes_[cd.edge1_index()]
-      -4*y*(-1 + x + y)*nodes_[cd.edge2_index()];
-      };
+    double w[6];
+    get_weights(coords, w); 
+
+    return (T)(w[0] * cd.node0() +
+	       w[1] * cd.node1() +
+	       w[2] * cd.node2() +
+	       w[3] * nodes_[cd.edge0_index()] +
+	       w[4] * nodes_[cd.edge1_index()] +
+	       w[5] * nodes_[cd.edge2_index()]);
+  }
   
   //! get first derivative at parametric coordinate
   template <class ElemData>
@@ -133,7 +154,7 @@ const TypeDescription* get_type_description(TriQuadraticLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(TriQuadraticLgn<T>::type_name(0), subs, 
@@ -162,7 +183,6 @@ TriQuadraticLgn<T>::type_name(int n)
     return find_type_name((T *)0);
   }
 }
-
 
 const int TRIQUADRATICLGN_VERSION = 1;
 template <class T>

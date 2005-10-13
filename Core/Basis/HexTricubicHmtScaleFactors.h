@@ -37,18 +37,21 @@
 
 namespace SCIRun {
 
-  //! Class for describing unit geometry of HexTricubicHmtScaleFactors
-  class HexTricubicHmtScaleFactorsUnitElement : public HexTrilinearLgnUnitElement {
-  public:
-    HexTricubicHmtScaleFactorsUnitElement() {};
-    virtual ~HexTricubicHmtScaleFactorsUnitElement() {};
-  };
+//! Class for describing unit geometry of HexTricubicHmtScaleFactors
+class HexTricubicHmtScaleFactorsUnitElement : 
+    public HexTrilinearLgnUnitElement {
+public:
+  HexTricubicHmtScaleFactorsUnitElement() {};
+  virtual ~HexTricubicHmtScaleFactorsUnitElement() {};
+};
 
 
 //! Class for handling of element of type hexahedron with 
 //! tricubic hermitian interpolation with scale factors
 template <class T>
-class HexTricubicHmtScaleFactors : public HexApprox, public HexGaussian3<double>, public HexTricubicHmtScaleFactorsUnitElement
+class HexTricubicHmtScaleFactors : public HexApprox, 
+				   public HexGaussian3<double>, 
+				   public HexTricubicHmtScaleFactorsUnitElement
 {
 public:
   typedef T value_type;
@@ -58,10 +61,10 @@ public:
   
   int polynomial_order() const { return 3; }
 
-  //! get value at parametric coordinate
-  template <class CellData>
-  T interpolate(const vector<double> &coords, const CellData &cd) const
-  {
+  //! get weight factors at parametric coordinate 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  {    
     const double x=coords[0], y=coords[1], z=coords[2];  
     const double x2=x*x;
     const double y2=y*y;
@@ -70,6 +73,80 @@ public:
     const double y12=(y-1)*(y-1);
     const double z12=(z-1)*(z-1);
 
+    w[0]  = x12*(1 + 2*x)*y12*(1 + 2*y)*z12*(1 + 2*z);
+    w[1]  = +x12*x*y12*(1 + 2*y)*z12*(1 + 2*z);
+    w[2]  = +x12*(1 + 2*x)*y12*y*z12*(1 + 2*z);
+    w[3]  = +x12*(1 + 2*x)*y12*(1 + 2*y)*z12*z;
+    w[4]  = +x12*x*y12*y*z12*(1 + 2*z);
+    w[5]  = +x12*(1 + 2*x)*y12*y*z12*z;
+    w[6]  = +x12*x*y12*(1 + 2*y)*z12*z;
+    w[7]  = +x12*x*y12*y*z12*z;
+    w[8]  = -(x2*(-3 + 2*x)*y12*(1 + 2*y)*z12*(1 + 2*z));
+    w[9]  = +(-1 + x)*x2*y12*(1 + 2*y)*z12*(1 + 2*z);
+    w[10] = -(x2*(-3 + 2*x)*y12*y*z12*(1 + 2*z));
+    w[11] = -(x2*(-3 + 2*x)*y12*(1 + 2*y)*z12*z);
+    w[12] = +(-1 + x)*x2*y12*y*z12*(1 + 2*z);
+    w[13] = -(x2*(-3 + 2*x)*y12*y*z12*z) ;
+    w[14] = +(-1 + x)*x2*y12*(1 + 2*y)*z12*z;
+    w[15] = +(-1 + x)*x2*y12*y*z12*z;
+    w[16] = +x2*(-3 + 2*x)*y2*(-3 + 2*y)*z12*(1 + 2*z);
+    w[17] = -((-1 + x)*x2*y2*(-3 + 2*y)*z12*(1 + 2*z));
+    w[18] = -(x2*(-3 + 2*x)*(-1 + y)*y2*z12*(1 + 2*z));
+    w[19] = +x2*(-3 + 2*x)*y2*(-3 + 2*y)*z12*z;
+    w[20] = +(-1 + x)*x2*(-1 + y)*y2*z12*(1 + 2*z);
+    w[21] = -(x2*(-3 + 2*x)*(-1 + y)*y2*z12*z);
+    w[22] = -((-1 + x)*x2*y2*(-3 + 2*y)*z12*z);
+    w[23] = +(-1 + x)*x2*(-1 + y)*y2*z12*z;
+    w[24] = -(x12*(1 + 2*x)*y2*(-3 + 2*y)*z12*(1 + 2*z));
+    w[25] = -(x12*x*y2*(-3 + 2*y)*z12*(1 + 2*z));
+    w[26] = +x12*(1 + 2*x)*(-1 + y)*y2*z12*(1 + 2*z);
+    w[27] = -(x12*(1 + 2*x)*y2*(-3 + 2*y)*z12*z);
+    w[28] = +x12*x*(-1 + y)*y2*z12*(1 + 2*z);
+    w[29] = +x12*(1 + 2*x)*(-1 + y)*y2*z12*z;
+    w[30] = -(x12*x*y2*(-3 + 2*y)*z12*z);
+    w[31] = +x12*x*(-1 + y)*y2*z12*z;
+    w[32] = -(x12*(1 + 2*x)*y12*(1 + 2*y)*z2*(-3 + 2*z));
+    w[33] = -(x12*x*y12*(1 + 2*y)*z2*(-3 + 2*z));
+    w[34] = -(x12*(1 + 2*x)*y12*y*z2*(-3 + 2*z));
+    w[35] = +x12*(1 + 2*x)*y12*(1 + 2*y)*(-1 + z)*z2;
+    w[36] = -(x12*x*y12*y*z2*(-3 + 2*z));
+    w[37] = +x12*(1 + 2*x)*y12*y*(-1 + z)*z2;
+    w[38] = +x12*x*y12*(1 + 2*y)*(-1 + z)*z2;
+    w[39] = +x12*x*y12*y*(-1 + z)*z2;
+    w[40] = +x2*(-3 + 2*x)*y12*(1 + 2*y)*z2*(-3 + 2*z);
+    w[41] = -((-1 + x)*x2*y12*(1 + 2*y)*z2*(-3 + 2*z));
+    w[42] = +x2*(-3 + 2*x)*y12*y*z2*(-3 + 2*z);
+    w[43] = -(x2*(-3 + 2*x)*y12*(1 + 2*y)*(-1 + z)*z2);
+    w[44] = -((-1 + x)*x2*y12*y*z2*(-3 + 2*z));
+    w[45] = -(x2*(-3 + 2*x)*y12*y*(-1 + z)*z2);
+    w[46] = +(-1 + x)*x2*y12*(1 + 2*y)*(-1 + z)*z2;
+    w[47] = +(-1 + x)*x2*y12*y*(-1 + z)*z2;
+    w[48] = -(x2*(-3 + 2*x)*y2*(-3 + 2*y)*z2*(-3 + 2*z));
+    w[49] = +(-1 + x)*x2*y2*(-3 + 2*y)*z2*(-3 + 2*z);
+    w[50] = +x2*(-3 + 2*x)*(-1 + y)*y2*z2*(-3 + 2*z);
+    w[51] = +x2*(-3 + 2*x)*y2*(-3 + 2*y)*(-1 + z)*z2;
+    w[52] = -((-1 + x)*x2*(-1 + y)*y2*z2*(-3 + 2*z));
+    w[53] = -(x2*(-3 + 2*x)*(-1 + y)*y2*(-1 + z)*z2);
+    w[54] = -((-1 + x)*x2*y2*(-3 + 2*y)*(-1 + z)*z2);
+    w[55] = +(-1 + x)*x2*(-1 + y)*y2*(-1 + z)*z2;
+    w[56] = +x12*(1 + 2*x)*y2*(-3 + 2*y)*z2*(-3 + 2*z);
+    w[57] = +x12*x*y2*(-3 + 2*y)*z2*(-3 + 2*z);
+    w[58] = -(x12*(1 + 2*x)*(-1 + y)*y2*z2*(-3 + 2*z));
+    w[59] = -(x12*(1 + 2*x)*y2*(-3 + 2*y)*(-1 + z)*z2);
+    w[60] = -(x12*x*(-1 + y)*y2*z2*(-3 + 2*z));
+    w[61] = +x12*(1 + 2*x)*(-1 + y)*y2*(-1 + z)*z2;
+    w[62] = -(x12*x*y2*(-3 + 2*y)*(-1 + z)*z2);
+    w[63] = +x12*x*(-1 + y)*y2*(-1 + z)*z2;
+    
+    return 64;
+  }
+
+  //! get value at parametric coordinate
+  template <class CellData>
+  T interpolate(const vector<double> &coords, const CellData &cd) const
+  {
+    double w[64];
+    get_weights(coords, w);
     const double sdx0=derivs_[cd.node0_index()][0]*scalefactors_[cd.node0_index()][0];
     const double sdx1=derivs_[cd.node1_index()][0]*scalefactors_[cd.node1_index()][0];
     const double sdx2=derivs_[cd.node2_index()][0]*scalefactors_[cd.node2_index()][0];
@@ -131,70 +208,70 @@ public:
     const double sdxyz6=derivs_[cd.node6_index()][6]*scalefactors_[cd.node6_index()][2]*scalefactors_[cd.node6_index()][1]*scalefactors_[cd.node6_index()][0];
     const double sdxyz7=derivs_[cd.node7_index()][6]*scalefactors_[cd.node7_index()][2]*scalefactors_[cd.node7_index()][1]*scalefactors_[cd.node7_index()][0];
 
-    return (T)(x12*(1 + 2*x)*y12*(1 + 2*y)*z12*(1 + 2*z)*cd.node0()
-	       +x12*x*y12*(1 + 2*y)*z12*(1 + 2*z)*sdx0
-	       +x12*(1 + 2*x)*y12*y*z12*(1 + 2*z)*sdy0
-	       +x12*(1 + 2*x)*y12*(1 + 2*y)*z12*z*sdz0
-	       +x12*x*y12*y*z12*(1 + 2*z)*sdxy0
-	       +x12*(1 + 2*x)*y12*y*z12*z*sdyz0
-	       +x12*x*y12*(1 + 2*y)*z12*z*sdxz0
-	       +x12*x*y12*y*z12*z*sdxyz0
-	       -(x2*(-3 + 2*x)*y12*(1 + 2*y)*z12*(1 + 2*z))*cd.node1()
-	       +(-1 + x)*x2*y12*(1 + 2*y)*z12*(1 + 2*z)*sdx1
-	       -(x2*(-3 + 2*x)*y12*y*z12*(1 + 2*z))*sdy1
-	       -(x2*(-3 + 2*x)*y12*(1 + 2*y)*z12*z)*sdz1
-	       +(-1 + x)*x2*y12*y*z12*(1 + 2*z)*sdxy1
-	       -(x2*(-3 + 2*x)*y12*y*z12*z) *sdyz1  
-	       +(-1 + x)*x2*y12*(1 + 2*y)*z12*z*sdxz1
-	       +(-1 + x)*x2*y12*y*z12*z*sdxyz1
-	       +x2*(-3 + 2*x)*y2*(-3 + 2*y)*z12*(1 + 2*z)*cd.node2()
-	       -((-1 + x)*x2*y2*(-3 + 2*y)*z12*(1 + 2*z))*sdx2
-	       -(x2*(-3 + 2*x)*(-1 + y)*y2*z12*(1 + 2*z))*sdy2
-	       +x2*(-3 + 2*x)*y2*(-3 + 2*y)*z12*z*sdz2
-	       +(-1 + x)*x2*(-1 + y)*y2*z12*(1 + 2*z)*sdxy2
-	       -(x2*(-3 + 2*x)*(-1 + y)*y2*z12*z)*sdyz2
-	       -((-1 + x)*x2*y2*(-3 + 2*y)*z12*z)*sdxz2
-	       +(-1 + x)*x2*(-1 + y)*y2*z12*z*sdxyz2 
-	       -(x12*(1 + 2*x)*y2*(-3 + 2*y)*z12*(1 + 2*z))*cd.node3()
-	       -(x12*x*y2*(-3 + 2*y)*z12*(1 + 2*z))*sdx3
-	       +x12*(1 + 2*x)*(-1 + y)*y2*z12*(1 + 2*z)*sdy3
-	       -(x12*(1 + 2*x)*y2*(-3 + 2*y)*z12*z)*sdz3
-	       +x12*x*(-1 + y)*y2*z12*(1 + 2*z)*sdxy3
-	       +x12*(1 + 2*x)*(-1 + y)*y2*z12*z*sdyz3
-	       -(x12*x*y2*(-3 + 2*y)*z12*z)*sdxz3
-	       +x12*x*(-1 + y)*y2*z12*z*sdxyz3
-	       -(x12*(1 + 2*x)*y12*(1 + 2*y)*z2*(-3 + 2*z))*cd.node4()
-	       -(x12*x*y12*(1 + 2*y)*z2*(-3 + 2*z))*sdx4
-	       -(x12*(1 + 2*x)*y12*y*z2*(-3 + 2*z))*sdy4
-	       +x12*(1 + 2*x)*y12*(1 + 2*y)*(-1 + z)*z2*sdz4
-	       -(x12*x*y12*y*z2*(-3 + 2*z))*sdxy4
-	       +x12*(1 + 2*x)*y12*y*(-1 + z)*z2*sdyz4
-	       +x12*x*y12*(1 + 2*y)*(-1 + z)*z2*sdxz4
-	       +x12*x*y12*y*(-1 + z)*z2*sdxyz4
-	       +x2*(-3 + 2*x)*y12*(1 + 2*y)*z2*(-3 + 2*z)*cd.node5()
-	       -((-1 + x)*x2*y12*(1 + 2*y)*z2*(-3 + 2*z))*sdx5
-	       +x2*(-3 + 2*x)*y12*y*z2*(-3 + 2*z)*sdy5
-	       -(x2*(-3 + 2*x)*y12*(1 + 2*y)*(-1 + z)*z2)*sdz5
-	       -((-1 + x)*x2*y12*y*z2*(-3 + 2*z))*sdxy5
-	       -(x2*(-3 + 2*x)*y12*y*(-1 + z)*z2)*sdyz5
-	       +(-1 + x)*x2*y12*(1 + 2*y)*(-1 + z)*z2*sdxz5
-	       +(-1 + x)*x2*y12*y*(-1 + z)*z2*sdxyz5
-	       -(x2*(-3 + 2*x)*y2*(-3 + 2*y)*z2*(-3 + 2*z))*cd.node6()
-	       +(-1 + x)*x2*y2*(-3 + 2*y)*z2*(-3 + 2*z)*sdx6
-	       +x2*(-3 + 2*x)*(-1 + y)*y2*z2*(-3 + 2*z)*sdy6
-	       +x2*(-3 + 2*x)*y2*(-3 + 2*y)*(-1 + z)*z2*sdz6
-	       -((-1 + x)*x2*(-1 + y)*y2*z2*(-3 + 2*z))*sdxy6
-	       -(x2*(-3 + 2*x)*(-1 + y)*y2*(-1 + z)*z2)*sdyz6
-	       -((-1 + x)*x2*y2*(-3 + 2*y)*(-1 + z)*z2)*sdxz6
-	       +(-1 + x)*x2*(-1 + y)*y2*(-1 + z)*z2*sdxyz6
-	       +x12*(1 + 2*x)*y2*(-3 + 2*y)*z2*(-3 + 2*z)*cd.node7()
-	       +x12*x*y2*(-3 + 2*y)*z2*(-3 + 2*z)*sdx7
-	       -(x12*(1 + 2*x)*(-1 + y)*y2*z2*(-3 + 2*z))*sdy7
-	       -(x12*(1 + 2*x)*y2*(-3 + 2*y)*(-1 + z)*z2)*sdz7
-	       -(x12*x*(-1 + y)*y2*z2*(-3 + 2*z))*sdxy7
-	       +x12*(1 + 2*x)*(-1 + y)*y2*(-1 + z)*z2*sdyz7
-	       -(x12*x*y2*(-3 + 2*y)*(-1 + z)*z2)*sdxz7
-	       +x12*x*(-1 + y)*y2*(-1 + z)*z2*sdxyz7);
+    return (T)(w[0]  * cd.node0()+
+	       w[1]  * sdx0	 +
+	       w[2]  * sdy0	 +
+	       w[3]  * sdz0	 +
+	       w[4]  * sdxy0	 +
+	       w[5]  * sdyz0	 +
+	       w[6]  * sdxz0	 +
+	       w[7]  * sdxyz0	 +
+	       w[8]  * cd.node1()+
+	       w[9]  * sdx1	 +
+	       w[10] * sdy1	 +
+	       w[11] * sdz1	 +
+	       w[12] * sdxy1	 +
+	       w[13] * sdyz1  	 +
+	       w[14] * sdxz1	 +
+	       w[15] * sdxyz1	 +
+	       w[16] * cd.node2()+
+	       w[17] * sdx2	 +
+	       w[18] * sdy2	 +
+	       w[19] * sdz2	 +
+	       w[20] * sdxy2	 +
+	       w[21] * sdyz2	 +
+	       w[22] * sdxz2	 +
+	       w[23] * sdxyz2 	 +
+	       w[24] * cd.node3()+
+	       w[25] * sdx3	 +
+	       w[26] * sdy3	 +
+	       w[27] * sdz3	 +
+	       w[28] * sdxy3	 +
+	       w[29] * sdyz3	 +
+	       w[30] * sdxz3	 +
+	       w[31] * sdxyz3	 +
+	       w[32] * cd.node4()+
+	       w[33] * sdx4	 +
+	       w[34] * sdy4	 +
+	       w[35] * sdz4	 +
+	       w[36] * sdxy4	 +
+	       w[37] * sdyz4	 +
+	       w[38] * sdxz4	 +
+	       w[39] * sdxyz4	 +
+	       w[40] * cd.node5()+
+	       w[41] * sdx5	 +
+	       w[42] * sdy5	 +
+	       w[43] * sdz5	 +
+	       w[44] * sdxy5	 +
+	       w[45] * sdyz5	 +
+	       w[46] * sdxz5	 +
+	       w[47] * sdxyz5	 +
+	       w[48] * cd.node6()+
+	       w[49] * sdx6	 +
+	       w[50] * sdy6	 +
+	       w[51] * sdz6	 +
+	       w[52] * sdxy6	 +
+	       w[53] * sdyz6	 +
+	       w[54] * sdxz6	 +
+	       w[55] * sdxyz6	 +
+	       w[56] * cd.node7()+
+	       w[57] * sdx7	 +
+	       w[58] * sdy7	 +
+	       w[59] * sdz7	 +
+	       w[60] * sdxy7	 +
+	       w[61] * sdyz7	 +
+	       w[62] * sdxz7	 +
+	       w[63] * sdxyz7);
   }
   
   //! get first derivative at parametric coordinate
@@ -524,7 +601,7 @@ get_type_description(HexTricubicHmtScaleFactors<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(HexTricubicHmtScaleFactors<T>::type_name(0), 

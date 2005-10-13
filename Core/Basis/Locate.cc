@@ -76,5 +76,26 @@ double getnextx3(vector<double> &x, vector<double> &xold,
   return sqrt(dx*dx+dy*dy+dz*dz);    
 };
 
+// locate for Point
+template <>
+double getnextx2(vector<double> &x, vector<double> &xold,
+		 const Point& y, const vector<Point>& yd)
+{
+  //FIX_ME F.S.
+}
+
+
+// locate for Point
+template <>
+double getnextx1(vector<double> &x, vector<double> &xold,
+		 const Point& y, const vector<Point>& yd)
+{
+  //FIX_ME F.S.
+//   x[0] -= (yd.x() ? y.x()/yd.x() : 0.)+(yd.y() ? y.y()/yd.y() :
+// 					0.)+(yd.z() ? y.z()/yd.z() : 0.);
+//   const double dx=x[0]-xold[0];
+//   return sqrt(dx*dx);
+}
+
 } //namespace SCIRun
 

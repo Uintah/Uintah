@@ -373,6 +373,13 @@ public:
   bool locate(typename Face::index_type &, const Point &);
   bool locate(typename Cell::index_type &, const Point &) const { return false; }
 
+  int get_weights(const Point &p, typename Node::array_type &l, double *w);
+  int get_weights(const Point & , typename Edge::array_type & , double * )
+  {ASSERTFAIL("ImageMesh::get_weights for edges isn't supported"); }
+  int get_weights(const Point &p, typename Face::array_type &l, double *w);
+  int get_weights(const Point & , typename Cell::array_type & , double * )
+  {ASSERTFAIL("ImageMesh::get_weights for cells isn't supported"); }
+
   void get_point(Point &p, const typename Node::index_type &i) const
   { get_center(p, i); }
 
@@ -762,6 +769,40 @@ ImageMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
 
   return true;
 }
+
+template <class Basis>
+int
+ImageMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l, 
+			      double *w)
+{
+  typename Face::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(l,idx);
+    vector<double> coords(2);
+    if (get_coords(coords, p, idx)) {
+      return basis_.get_weights(coords, w);
+    }
+  }
+  return 0;
+}
+
+template <class Basis>
+int
+ImageMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l, 
+			      double *w)
+{
+  typename Face::index_type idx;
+  if (locate(idx, p))
+  {
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
+  }
+  return 0;
+}
+
 
 /* To generate a random point inside of a triangle, we generate random
    barrycentric coordinates (independent random variables between 0 and

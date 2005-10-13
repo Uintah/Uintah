@@ -60,7 +60,7 @@ public:
   static int DomainDimension() { return 2; }; //! return dimension of domain 
   
   static int NumberOfVertices() { return 3; }; //! return number of vertices
-  static int NumberOfEdges() { 3; }; //! return number of edges
+  static int NumberOfEdges() { return 3; }; //! return number of edges
   
   static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
 
@@ -233,9 +233,12 @@ T TriGaussian3<T>::GaussianWeights[7] =
   {0.1259391805, 0.1259391805, 0.1259391805, 0.1323941527, 0.1323941527, 0.1323941527, 0.0225};
 
 
-//! Class for handling of element of type triangle with linear lagrangian interpolation
+//! Class for handling of element of type triangle with 
+//! linear lagrangian interpolation
 template <class T>
-  class TriLinearLgn : public TriApprox, public TriGaussian2<double>, public TriLinearLgnUnitElement  
+class TriLinearLgn : public TriApprox, 
+		     public TriGaussian2<double>, 
+		     public TriLinearLgnUnitElement  
 { 
 public:
   typedef T value_type;
@@ -275,12 +278,28 @@ public:
     tmp[1] = 1;
   }
 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  {
+    const double x = coords[0], y = coords[1];  
+
+    w[0] = (1 - x - y);
+    w[1] = x;
+    w[2] = y;
+
+    return 3;
+  }
+
   //! get value at parametric coordinate
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    const double x = coords[0], y = coords[1];  
-    return (T)((1 - x - y) * cd.node0() + x * cd.node1() + y * cd.node2());
+    double w[3];
+    get_weights(coords, w); 
+
+    return (T)(w[0] * cd.node0() +
+	       w[1] * cd.node1() +
+	       w[2] * cd.node2());
   }
   
   //! get first derivative at parametric coordinate
@@ -314,7 +333,7 @@ const TypeDescription* get_type_description(TriLinearLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(TriLinearLgn<T>::type_name(0), subs, 

@@ -56,7 +56,8 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
 					    const TypeDescription *lsrc,
 					    const TypeDescription *fdst,
-					    const TypeDescription *ldst);
+					    const TypeDescription *ldst,
+					    const TypeDescription *dsrc);
 };
 
 

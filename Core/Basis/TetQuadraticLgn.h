@@ -49,7 +49,7 @@ public:
   static int DomainDimension() { return 3; }; //! return dimension of domain 
   
   static int NumberOfVertices() { return 10; }; //! return number of vertices
-  static int NumberOfEdges() { 6; }; //! return number of edges
+  static int NumberOfEdges() { return 6; }; //! return number of edges
   
   static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
 
@@ -60,7 +60,9 @@ public:
 //! Class for handling of element of type tetrahedron with 
 //! quadratic lagrangian interpolation
 template <class T>
-  class TetQuadraticLgn : public TetApprox, public TetGaussian3<double>, public TetQuadraticLgnUnitElement  
+class TetQuadraticLgn : public TetApprox, 
+			public TetGaussian3<double>, 
+			public TetQuadraticLgnUnitElement  
 {
 public:
   typedef T value_type;
@@ -70,22 +72,41 @@ public:
 
   int polynomial_order() const { return 2; }
 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  {
+    const double x=coords[0], y=coords[1], z=coords[2];
+    w[0] = (1 + 2*x*x + 2*y*y - 3*z + 2*z*z + y*(-3 + 4*z) + x*(-3 + 4*y + 4*z));
+    w[1] = +x*(-1 + 2*x);
+    w[2] = +y*(-1 + 2*y);
+    w[3] = +z*(-1 + 2*z);
+    w[4] = -4*x*(-1 + x + y + z);
+    w[5] = +4*x*y;
+    w[6] = -4*y*(-1 + x + y + z);
+    w[7] = -4*z*(-1 + x + y + z);
+    w[8] = +4*x*z;
+    w[9] = +4*y*z;
+
+    return 10;
+  }
+
   //! get value at parametric coordinate 
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    const double x=coords[0], y=coords[1], z=coords[2];
-    return (T)((1 + 2*x*x + 2*y*y - 3*z + 2*z*z + y*(-3 + 4*z) + 
-		x*(-3 + 4*y + 4*z))*cd.node0()
-	       +x*(-1 + 2*x)*cd.node1()
-	       +y*(-1 + 2*y)*cd.node2()
-	       +z*(-1 + 2*z)*cd.node3()
-	       -4*x*(-1 + x + y + z)*nodes_[cd.edge0_index()]
-	       +4*x*y*nodes_[cd.edge1_index()]
-	       -4*y*(-1 + x + y + z)*nodes_[cd.edge2_index()]
-	       -4*z*(-1 + x + y + z)*nodes_[cd.edge3_index()]
-	       +4*x*z*nodes_[cd.edge4_index()]
-	       +4*y*z*nodes_[cd.edge5_index()]);
+    double w[10];
+    get_weights(coords, w); 
+
+    return (T)(w[0] * cd.node0() +
+	       w[1] * cd.node1() +
+	       w[2] * cd.node2() +
+	       w[3] * cd.node3() +
+	       w[4] * nodes_[cd.edge0_index()] +
+	       w[5] * nodes_[cd.edge1_index()] +
+	       w[6] * nodes_[cd.edge2_index()] +
+	       w[7] * nodes_[cd.edge3_index()] +
+	       w[8] * nodes_[cd.edge4_index()] +
+	       w[9] * nodes_[cd.edge5_index()]);
   }
  
   //! get first derivative at parametric coordinate
@@ -126,10 +147,10 @@ public:
   template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
-      {
-	TetLocate< TetQuadraticLgn<T> > CL;
-	return CL.get_coords(this, coords, value, cd);
-      };
+  {
+    TetLocate< TetQuadraticLgn<T> > CL;
+    return CL.get_coords(this, coords, value, cd);
+  };
  
   //! add a node value corresponding to edge
   void add_node_value(const T &p) { nodes_.push_back(p); }
@@ -152,7 +173,7 @@ const TypeDescription* get_type_description(TetQuadraticLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(TetQuadraticLgn<T>::type_name(0), subs, 

@@ -42,14 +42,14 @@ public:
   static double UnitVertices[15][3]; //!< Parametric coordinates of vertices of unit edge
   static int UnitEdges[9][3]; //!< References to vertices of unit edge
   static int UnitFaces[5][4]; //!< References to vertices of unit face
- 
+  
   PrismQuadraticLgnUnitElement() {};
   virtual ~PrismQuadraticLgnUnitElement() {};
   
   static int DomainDimension() { return 3; }; //! return dimension of domain 
   
   static int NumberOfVertices() { return 15; }; //! return number of vertices
-  static int NumberOfEdges() { 9; }; //! return number of edges
+  static int NumberOfEdges() { return 9; }; //! return number of edges
   
   static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
 
@@ -61,7 +61,9 @@ public:
 //! Class for handling of element of type prism with 
 //! quadratic lagrangian interpolation
 template <class T>
-  class PrismQuadraticLgn : public PrismApprox, public PrismGaussian2<T>, public PrismQuadraticLgnUnitElement
+class PrismQuadraticLgn : public PrismApprox, 
+			  public PrismGaussian2<T>, 
+			  public PrismQuadraticLgnUnitElement
 {
 public:
   typedef T value_type;
@@ -71,27 +73,53 @@ public:
 
   int polynomial_order() const { return 2; }
 
+  //! get weight factors at parametric coordinate 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  { 
+    const double x=coords[0], y=coords[1], z=coords[2];  
+      
+    w[0] = -((-1 + x + y)*(-1 + z)*(-1 + 2*x + 2*y + 2*z));
+    w[1] = -(x*(-1 + 2*x -2*z)*(-1 + z));
+    w[2] = -(y*(-1 + 2*y - 2*z)*(-1 + z));
+    w[3] = (-1 + x + y)*(1 + 2*x + 2*y - 2*z)*z;
+    w[4] = +x*z*(-3 + 2*x + 2*z);
+    w[5] = y*z*(-3 + 2*y + 2*z);
+    w[6] = +4*x*(-1 + x + y)*(-1 + z);
+    w[7] = -4*x*y*(-1 + z);
+    w[8] = +4*y*(-1 + x + y)*(-1 + z);
+    w[9] = +4*(-1 + x + y)*(-1 + z)*z;
+    w[10] = -4*x*(-1 + z)*z;
+    w[11] = -4*y*(-1 + z)*z;
+    w[12] = -4*x*(-1 + x +y)*z;
+    w[13] = +4*x*y*z;
+    w[14] = -4*y*(-1 + x + y)*z;
+
+    return 15;
+  }
+
   //! get value at parametric coordinate 
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    const double x=coords[0], y=coords[1], z=coords[2];  
-      
-    return -((-1 + x + y)*(-1 + z)*(-1 + 2*x + 2*y + 2*z))*cd.node0()
-      -(x*(-1 + 2*x -2*z)*(-1 + z))*cd.node1()
-      -(y*(-1 + 2*y - 2*z)*(-1 + z))*cd.node2()
-      (-1 + x + y)*(1 + 2*x + 2*y - 2*z)*z*cd.node3()
-      +x*z*(-3 + 2*x + 2*z)*cd.node4()
-      y*z*(-3 + 2*y + 2*z)*cd.node5()
-      +4*x*(-1 + x + y)*(-1 + z)*nodes_[cd.edge0_index()]
-      -4*x*y*(-1 + z)*nodes_[cd.edge1_index()]
-      +4*y*(-1 + x + y)*(-1 + z)*nodes_[cd.edge2_index()]
-      +4*(-1 + x + y)*(-1 + z)*z*nodes_[cd.edge3_index()]
-      -4*x*(-1 + z)*z*nodes_[cd.edge4_index()]
-      -4*y*(-1 + z)*z*nodes_[cd.edge5_index()]
-      -4*x*(-1 + x +y)*z*nodes_[cd.edge6_index()]
-      +4*x*y*z*nodes_[cd.edge7_index()]
-      -4*y*(-1 + x + y)*z*nodes_[cd.edge8_index()];
+    double w[15];
+    get_weights(coords, w); 
+    
+    return(T)(w[0]  * cd.node0() +
+	      w[1]  * cd.node1() +
+	      w[2]  * cd.node2() +
+	      w[3]  * cd.node3() +
+	      w[4]  * cd.node4() +
+	      w[5]  * cd.node5() +
+	      w[6]  * nodes_[cd.edge0_index()] +
+	      w[7]  * nodes_[cd.edge1_index()] +
+	      w[8]  * nodes_[cd.edge2_index()] +
+	      w[9]  * nodes_[cd.edge3_index()] +
+	      w[10] * nodes_[cd.edge4_index()] +
+	      w[11] * nodes_[cd.edge5_index()] +
+	      w[12] * nodes_[cd.edge6_index()] +
+	      w[13] * nodes_[cd.edge7_index()] +
+	      w[14] * nodes_[cd.edge8_index()]);
   }
   
   //! get first derivative at parametric coordinate
@@ -153,10 +181,10 @@ public:
   template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
-    {
-      PrismLocate< PrismQuadraticLgn<T> > CL;
-      return CL.get_coords(this, coords, value, cd);
-    }  
+  {
+    PrismLocate< PrismQuadraticLgn<T> > CL;
+    return CL.get_coords(this, coords, value, cd);
+  }  
   
   //! add a node value corresponding to edge
   void add_node_value(const T &p) { nodes_.push_back(p); }
@@ -179,7 +207,7 @@ const TypeDescription* get_type_description(PrismQuadraticLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(PrismQuadraticLgn<T>::type_name(0), subs, 

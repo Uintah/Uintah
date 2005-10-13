@@ -57,7 +57,7 @@ public:
   static int DomainDimension() { return 3; }; //! return dimension of domain 
   
   static int NumberOfVertices() { return 4; }; //! return number of vertices
-  static int NumberOfEdges() { 6; }; //! return number of edges
+  static int NumberOfEdges() { return 6; }; //! return number of edges
   
   static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
 
@@ -274,7 +274,9 @@ T TetGaussian3<T>::GaussianWeights[11] = {
 //! Class for handling of element of type tetrahedron with 
 //! linear lagrangian interpolation
 template <class T>
-  class TetLinearLgn : public TetApprox, public TetGaussian2<double>, public TetLinearLgnUnitElement 
+class TetLinearLgn : public TetApprox, 
+		     public TetGaussian2<double>, 
+		     public TetLinearLgnUnitElement 
 {
 public:
   typedef T value_type;
@@ -284,13 +286,30 @@ public:
 
   int polynomial_order() const { return 1; }
 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  { 
+    const double x = coords[0], y = coords[1], z = coords[2];  
+
+    w[0] = (1. - x - y - z);
+    w[1] = x;
+    w[2] = y;
+    w[3] = z;
+
+    return 4;
+  }
+
   //! get value at parametric coordinate 
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    const double x = coords[0], y = coords[1], z = coords[2];  
-    return (T)((1 - x - y - z) * cd.node0() + x * cd.node1() + 
-	       y * cd.node2() + z * cd.node3());
+    double w[4];
+    get_weights(coords, w); 
+
+    return (T)(w[0] * cd.node0() +
+	       w[1] * cd.node1() +
+	       w[2] * cd.node2() +
+	       w[3] * cd.node3());
   }
   
   //! get first derivative at parametric coordinate
@@ -304,7 +323,7 @@ public:
     derivs[1] = T(-1. * cd.node0() + cd.node2());
     derivs[2] = T(-1. * cd.node0() + cd.node3());
   }
-  
+
   //! get parametric coordinate for value within the element
   template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
@@ -325,7 +344,7 @@ const TypeDescription* get_type_description(TetLinearLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(TetLinearLgn<T>::type_name(0), subs, 

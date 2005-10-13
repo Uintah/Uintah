@@ -55,8 +55,8 @@ public:
   
   static int DomainDimension() { return 1; }; //!< return dimension of domain 
   
-  static int NumberOfVertices() { 2; }; //!< return number of vertices
-  static int NumberOfEdges() { 1; }; //!< return number of edges
+  static int NumberOfVertices() { return 2; }; //!< return number of vertices
+  static int NumberOfEdges() { return 1; }; //!< return number of edges
    
   static int VerticesOfFace() { return 0; }; //!< return number of vertices per face 
 
@@ -108,18 +108,17 @@ public:
   virtual ~CrvLocate() {}
  
   //! find coordinate in interpolation for given value         
-  template <class CellData>
+  template <class ElemData>
   bool get_coords(const ElemBasis *pEB, vector<double> &coords, 
-		  const T& value, const CellData &cd) const  
+		  const T& value, const ElemData &cd) const  
   {          
     initial_guess(pEB, value, cd, coords);
-    if (get_iterative(pEB, value, cd, coords))
+    if (get_iterative(pEB, coords, value, cd))
       return check_coords(coords);
     return false; 
   };
  
 protected:
-  template <class CellData>
   inline bool check_coords(const vector<double> &x) const  
   {  
     if (x[0]>=-Dim3Locate<ElemBasis>::thresholdDist && 
@@ -130,9 +129,9 @@ protected:
   };
 
   //! find a reasonable initial guess for starting Newton iteration.
-  template <class CellData>
+  template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, 
-		     const CellData &cd, vector<double> guess) const
+		     const ElemData &cd, vector<double> guess) const
   {
     double dist = DBL_MAX;
 	
@@ -141,9 +140,10 @@ protected:
     guess.resize(1);
     for (int x = 0; x <= end; x++) {
       coord[0] = x / (double) end;
-      T dv = pElem->interpolate(coord, cd)-val;
-      T cur_d = sqrt(dv*dv);
-      if (cur_d < dist) {
+      double cur_d;
+      if (compare_distance(pElem->interpolate(coord, cd), 
+			   val, cur_d, dist)) 
+      {
 	dist = cur_d;
 	guess = coord;
       }
@@ -214,7 +214,9 @@ T CrvGaussian3<T>::GaussianWeights[3] =
 //! Class for handling of element of type curve with 
 //! linear lagrangian interpolation
 template <class T>
-  class CrvLinearLgn : public CrvApprox, public CrvGaussian1<double>, public CrvLinearLgnUnitElement
+class CrvLinearLgn : public CrvApprox, 
+		     public CrvGaussian1<double>, 
+		     public CrvLinearLgnUnitElement
 {
 public:
   typedef T value_type;
@@ -237,17 +239,28 @@ public:
     tmp[0] = 1.0;
   }
 
-  //! get value at parametric coordinate
-  template <class CellData>
-  T interpolate(const vector<double> &coords, const CellData &cd) const
+  //! get weight factors at parametric coordinate 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
   {
-    const double x=coords[0];  
-    return (T)((1. - x) * cd.node0() + x * cd.node1());
+    const double x = coords[0];
+    w[0] = 1. - x;
+    w[1] = x;
+    return 2;
   }
-    
+
+  //! get value at parametric coordinate
+  template <class ElemData>
+  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  {
+    double w[2];
+    get_weights(coords, w); 
+    return (T)(w[0] * cd.node0() + w[1] * cd.node1());
+  }
+
   //! get first derivative at parametric coordinate
-  template <class CellData>
-  void derivate(const vector<double> &coords, const CellData &cd, 
+  template <class ElemData>
+  void derivate(const vector<double> &coords, const ElemData &cd, 
 		vector<T> &derivs) const
   {
     derivs.resize(1);
@@ -255,9 +268,9 @@ public:
   }
 
   //! get parametric coordinate for value within the element
-  template <class CellData>
+  template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
-		  const CellData &cd) const  
+		  const ElemData &cd) const  
   {
     CrvLocate< CrvLinearLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
@@ -266,14 +279,14 @@ public:
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);
-};
+  };
 
 template <class T>
 const TypeDescription* get_type_description(CrvLinearLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(CrvLinearLgn<T>::type_name(0), subs, 

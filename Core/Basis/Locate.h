@@ -73,6 +73,42 @@ inline void InverseMatrix3x3(const T *p, T *q)
   q[7]=(b*g-a*h)*detinvp;
   q[8]=(a*e-b*d)*detinvp;
 }
+template <class T>
+double getnextx1(vector<double> &x, vector<double> &xold, 
+		 const T& y, const vector<T>& yd);
+
+template <>
+double getnextx1(vector<double> &x, vector<double> &xold, 
+		 const Point& y, const vector<Point>& yd);
+
+template <class T>
+double getnextx1(vector<double> &x, vector<double> &xold, 
+		 const T& y, const vector<T>& yd)
+{
+  x[0] -= (yd[0] ? y/yd[0] : 0.);
+  const double dx=x[0]-xold[0];
+  return sqrt(dx*dx);
+}
+
+template <class T>
+double getnextx2(vector<double> &x, vector<double> &xold, 
+		 const T& y, const vector<T>& yd);
+
+template <>
+double getnextx2(vector<double> &x, vector<double> &xold, 
+		 const Point& y, const vector<Point>& yd);
+
+template <class T>
+double getnextx2(vector<double> &x, vector<double> &xold, 
+		 const T& y, const vector<T>& yd)
+{
+  x[0] -= (yd[0] ? y/yd[0] : 0.);
+  x[1] -= (yd[1] ? y/yd[1] : 0.);
+  const double dx=x[0]-xold[0];
+  const double dy=x[1]-xold[1];
+  return sqrt(dx*dx+dy*dy);
+
+}
 
 // locate for scalar value 
 template <class T>
@@ -98,6 +134,8 @@ double getnextx3(vector<double> &x, vector<double> &xold,
   const double dz=x[2]-xold[2];
   return sqrt(dx*dx+dy*dy+dz*dz);	
 }
+
+
 
 //! Class for searching of parametric coordinates related to a 
 //! value in 3d meshes and fields
@@ -135,10 +173,7 @@ public:
 	return true;	  
     }
     return false;
-  };
-  
-protected:
-
+  }
 };
 
 template<class ElemBasis>
@@ -173,24 +208,11 @@ public:
       xold = x;
       T y = differnce(pEB->interpolate(x, cd), value);
       pEB->derivate(x, cd, yd);
-      double dist=getnextx(x, xold, y, yd);
+      double dist=getnextx2(x, xold, y, yd);
       if (dist < thresholdDist) 
 	return true;	  
     }
     return false;
-  };
-  
-protected:
-  // locate for scalar value 
-  template <class T>
-  double getnextx(vector<double> &x, vector<double> &xold, 
-		  const T& y, const vector<T>& yd)
-  {
-    x[0] -= (yd[0] ? y/yd[0] : 0.);
-    x[1] -= (yd[1] ? y/yd[1] : 0.);
-    const double dx=x[0]-xold[0];
-    const double dy=x[1]-xold[1];
-    return sqrt(dx*dx+dy*dy);
   }
 };
 
@@ -229,19 +251,11 @@ public:
       xold = x;
       T y = difference(pElem->interpolate(x, cd), value); 
       pElem->derivate(x, cd, yd);
-      double dist=getnextx(x, xold, y, yd);
+      double dist=getnextx1(x, xold, y, yd);
       if (dist < thresholdDist)
 	return true;
     }
     return false;
-  };
-
-  double getnextx(vector<double> &x, vector<double> &xold, 
-		 const T& y, const vector<T>& yd)
-  {
-    x[0] -= (yd[0] ? y/yd[0] : 0.);
-    const double dx=x[0]-xold[0];
-    return sqrt(dx*dx);
   }
 };
 

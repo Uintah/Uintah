@@ -170,6 +170,18 @@ public:
   bool locate(typename ImageMesh<Basis>::Cell::index_type &, 
 	      const Point &) const;
 
+  int get_weights(const Point &p, 
+		  typename ImageMesh<Basis>::Node::array_type &l, double *w);
+  int get_weights(const Point & , 
+		  typename ImageMesh<Basis>::Edge::array_type & , double * )
+  { ASSERTFAIL("StructQuadSurfMesh::get_weights for edges isn't supported"); }
+  int get_weights(const Point &p, 
+		  typename ImageMesh<Basis>::Face::array_type &l, double *w);
+  int get_weights(const Point & , 
+		  typename ImageMesh<Basis>::Cell::array_type & , double * )
+  { ASSERTFAIL("StructQuadSurfMesh::get_weights for cells isn't supported"); }
+
+
   bool inside3_p(typename ImageMesh<Basis>::Face::index_type i, 
 		 const Point &p) const;
 
@@ -483,6 +495,42 @@ StructQuadSurfMesh<Basis>::locate(
   }
   return found;
 }
+
+template <class Basis>
+int
+StructQuadSurfMesh<Basis>::get_weights(const Point &p, 
+			       typename ImageMesh<Basis>::Face::array_type &l, 
+				       double *w)
+{
+  typename ImageMesh<Basis>::Face::index_type idx;
+  if (locate(idx, p))
+  {
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
+  }
+  return 0;
+}
+
+template <class Basis>
+int 
+StructQuadSurfMesh<Basis>::get_weights(const Point &p, 
+			       typename ImageMesh<Basis>::Node::array_type &l, 
+				       double *w)
+{
+  typename ImageMesh<Basis>::Face::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(l,idx);
+    vector<double> coords(2);
+    if (get_coords(coords, p, idx)) {
+      return this->basis_.get_weights(coords, w);
+    }
+  }
+  return 0;
+}
+
 
 template <class Basis>
 bool 

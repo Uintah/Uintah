@@ -59,7 +59,7 @@ public:
   static int DomainDimension() { return 3; }; //! return dimension of domain 
   
   static int NumberOfVertices() { return 8; }; //! return number of vertices
-  static int NumberOfEdges() { 12; }; //! return number of edges
+  static int NumberOfEdges() { return 12; }; //! return number of edges
   
   static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
 
@@ -275,9 +275,12 @@ T HexGaussian3<T>::GaussianWeights[27] =
   };
 
   
-//! Class for handling of element of type hexahedron with trilinear lagrangian interpolation
+//! Class for handling of element of type hexahedron with 
+//! trilinear lagrangian interpolation
 template <class T>
-class HexTrilinearLgn : public HexApprox, public HexGaussian2<double>, public HexTrilinearLgnUnitElement
+class HexTrilinearLgn : public HexApprox, 
+			public HexGaussian2<double>, 
+			public HexTrilinearLgnUnitElement
 {
 public:
   typedef T value_type;
@@ -287,20 +290,38 @@ public:
   
   int polynomial_order() const { return 1; }
 
+  //! get weight factors at parametric coordinate 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  {
+    const double x=coords[0], y=coords[1], z=coords[2];
+    
+    w[0] = -((-1 + x)*(-1 + y)*(-1 + z));
+    w[1] = +x*(-1 + y)*(-1 + z);
+    w[2] = -(x*y*(-1 + z));
+    w[3] = +(-1 + x)*y*(-1 + z);
+    w[4] = +(-1 + x)*(-1 + y)*z;
+    w[5] = -(x*(-1 + y)*z);
+    w[6] = +x*y*z;
+    w[7] = -((-1 + x)*y*z);
+    
+    return 8;
+  }
+
   //! get value at parametric coordinate 
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    const double x=coords[0], y=coords[1], z=coords[2];
-
-    return (T)( -((-1 + x)*(-1 + y)*(-1 + z)) * cd.node0() 
-		+x*(-1 + y)*(-1 + z) * cd.node1()
-		-(x*y*(-1 + z)) * cd.node2()
-		+(-1 + x)*y*(-1 + z) * cd.node3()
-		+(-1 + x)*(-1 + y)*z * cd.node4() 
-		-(x*(-1 + y)*z) * cd.node5() 
-		+x*y*z * cd.node6() 
-		-((-1 + x)*y*z) * cd.node7());
+    double w[8];
+    get_weights(coords, w); 
+    return (T)( w[0] * cd.node0() +
+		w[1] * cd.node1() +
+		w[2] * cd.node2() +
+		w[3] * cd.node3() +
+		w[4] * cd.node4() +
+		w[5] * cd.node5() +
+		w[6] * cd.node6() +
+		w[7] * cd.node7());
   }
   
   //! get first derivative at parametric coordinate
@@ -361,7 +382,7 @@ get_type_description(HexTrilinearLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(HexTrilinearLgn<T>::type_name(0), subs, 

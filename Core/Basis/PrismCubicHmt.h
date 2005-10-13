@@ -36,18 +36,20 @@
 
 namespace SCIRun {
 
-  //! Class for describing unit geometry of PrismCubicHmt
-  class PrismCubicHmtUnitElement : public PrismLinearLgnUnitElement {
-  public:
-    PrismCubicHmtUnitElement() {};
-    virtual ~PrismCubicHmtUnitElement() {};
-  };
+//! Class for describing unit geometry of PrismCubicHmt
+class PrismCubicHmtUnitElement : public PrismLinearLgnUnitElement {
+public:
+  PrismCubicHmtUnitElement() {};
+  virtual ~PrismCubicHmtUnitElement() {};
+};
 
 
 //! Class for handling of element of type prism with 
 //! cubic hermitian interpolation
 template <class T>
-  class PrismCubicHmt : public PrismApprox, public PrismGaussian2<T>, public PrismCubicHmtUnitElement 
+class PrismCubicHmt : public PrismApprox, 
+		      public PrismGaussian2<T>, 
+		      public PrismCubicHmtUnitElement 
 {
 public:
   typedef T value_type;
@@ -57,9 +59,9 @@ public:
 
   int polynomial_order() const { return 3; }
 
-  //! get value at parametric coordinate 
-  template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  //! get weight factors at parametric coordinate 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
   {
     const double x=coords[0], y=coords[1], z=coords[2];  
     const double x2=x*x;
@@ -69,31 +71,64 @@ public:
     const double y12=(y-1)*(y-1);
     const double z12=(z-1)*(z-1);
       
-    return -((-1 + x + y)*(-1 + z)*(-1 + 2*x2 - y + 2*y2 - x*(1 + 2*y) - 
-				    z + 2*z2))*cd.node0()
-      -(x*(1 - 2*x + x2 - y2)*(-1 + z))*derivs_[cd.node0_index()][0]
-      +(x2 - y12)*y*(-1 + z)*derivs_[cd.node0_index()][1]
-      -((-1 + x + y)*z12*z)*derivs_[cd.node0_index()][2]
-      +x*(-1 + z)*(-3*x + 2*x2 + z*(-1 + 2*z))*cd.node1()
-      +x2*(-1 + x + z - x*z)*derivs_[cd.node1_index()][0]
-      -(x2*y*(-1 + z))*derivs_[cd.node1_index()][1]
-      +x*z12*z*derivs_[cd.node1_index()][2]
-      +y*(-1 + z)*(-3*y + 2*y2 + z*(-1 + 2*z))*cd.node2()
-      -(x*y2*(-1 + z))*derivs_[cd.node2_index()][0]
-      +y2*(-1 + y + z - y*z)*derivs_[cd.node2_index()][1]
-      +y*z12*z*derivs_[cd.node2_index()][2]
-      +(-1 + x + y)*z*(2*x2 - y + 2*y2 - x*(1 + 2*y) + z*(-3 + 2*z))*cd.node3()
-      +x*(1 - 2*x + x2 - y2)*z*derivs_[cd.node3_index()][0]
-      +(-x2 + y12)*y*z*derivs_[cd.node3_index()][1]
-      -((-1 + x + y)*(-1 + z)*z2)*derivs_[cd.node3_index()][2]
-      +x*z*(-1 + 3*x - 2*x2 + 3*z - 2*z2)*cd.node4()
-      +(-1 + x)*x2*z*derivs_[cd.node4_index()][0]
-      +x2*y*z*derivs_[cd.node4_index()][1]
-      x*(-1 + z)*z2*derivs_[cd.node4_index()][2]
-      +y*z*(-1 + 3*y - 2*y2 + 3*z - 2*z2)*cd.node5()
-      +x*y2*z*derivs_[cd.node5_index()][0]
-      +(-1 + y)*y2*z*derivs_[cd.node5_index()][1]
-      +y*(-1 + z)*z2*derivs_[cd.node5_index()][2];
+    w[0]  = -((-1 + x + y)*(-1 + z)*(-1 + 2*x2 - y + 2*y2 - x*(1 + 2*y) - z + 2*z2));
+    w[1]  = -(x*(1 - 2*x + x2 - y2)*(-1 + z));
+    w[2]  = +(x2 - y12)*y*(-1 + z);
+    w[3]  = -((-1 + x + y)*z12*z);
+    w[4]  = +x*(-1 + z)*(-3*x + 2*x2 + z*(-1 + 2*z));
+    w[5]  = +x2*(-1 + x + z - x*z);
+    w[6]  = -(x2*y*(-1 + z));
+    w[7]  = +x*z12*z;
+    w[8]  = +y*(-1 + z)*(-3*y + 2*y2 + z*(-1 + 2*z));
+    w[9]  = -(x*y2*(-1 + z));
+    w[10] = +y2*(-1 + y + z - y*z);
+    w[11] = +y*z12*z;
+    w[12] = +(-1 + x + y)*z*(2*x2 - y + 2*y2 - x*(1 + 2*y) + z*(-3 + 2*z));
+    w[13] = +x*(1 - 2*x + x2 - y2)*z;
+    w[14] = +(-x2 + y12)*y*z;
+    w[15] = -((-1 + x + y)*(-1 + z)*z2);
+    w[16] = +x*z*(-1 + 3*x - 2*x2 + 3*z - 2*z2);
+    w[17] = +(-1 + x)*x2*z;
+    w[18] = +x2*y*z;
+    w[19] = x*(-1 + z)*z2;
+    w[20] = +y*z*(-1 + 3*y - 2*y2 + 3*z - 2*z2);
+    w[21] = +x*y2*z;
+    w[22] = +(-1 + y)*y2*z;
+    w[23] = +y*(-1 + z)*z2;
+
+    return 24;
+  }
+  //! get value at parametric coordinate 
+  template <class ElemData>
+  T interpolate(const vector<double> &coords, const ElemData &cd) const
+  {
+    double w[24];
+    get_weights(coords, w); 
+    
+    return (T)(w[0]  * cd.node0()                   +
+	       w[1]  * derivs_[cd.node0_index()][0] +
+	       w[2]  * derivs_[cd.node0_index()][1] +
+	       w[3]  * derivs_[cd.node0_index()][2] +
+	       w[4]  * cd.node1()		    +
+	       w[5]  * derivs_[cd.node1_index()][0] +
+	       w[6]  * derivs_[cd.node1_index()][1] +
+	       w[7]  * derivs_[cd.node1_index()][2] +
+	       w[8]  * cd.node2()		    +
+	       w[9]  * derivs_[cd.node2_index()][0] +
+	       w[10] * derivs_[cd.node2_index()][1] +
+	       w[11] * derivs_[cd.node2_index()][2] +
+	       w[12] * cd.node3()		    +
+	       w[13] * derivs_[cd.node3_index()][0] +
+	       w[14] * derivs_[cd.node3_index()][1] +
+	       w[15] * derivs_[cd.node3_index()][2] +
+	       w[16] * cd.node4()		    +
+	       w[17] * derivs_[cd.node4_index()][0] +
+	       w[18] * derivs_[cd.node4_index()][1] +
+	       w[19] * derivs_[cd.node4_index()][2] +
+	       w[20] * cd.node5()		    +
+	       w[21] * derivs_[cd.node5_index()][0] +
+	       w[22] * derivs_[cd.node5_index()][1] +
+	       w[23] * derivs_[cd.node5_index()][2]);
   };
   
   //! get first derivative at parametric coordinate
@@ -206,7 +241,7 @@ const TypeDescription* get_type_description(PrismCubicHmt<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(PrismCubicHmt<T>::type_name(0), subs, 

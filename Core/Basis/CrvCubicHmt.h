@@ -41,7 +41,7 @@ using std::string;
 
 //! Class for describing unit geometry of CrvCubicHmt 
 class CrvCubicHmtUnitElement : public CrvLinearLgnUnitElement {
-  public:
+public:
   CrvCubicHmtUnitElement() {};
   virtual ~CrvCubicHmtUnitElement() {};
 }
@@ -50,7 +50,9 @@ class CrvCubicHmtUnitElement : public CrvLinearLgnUnitElement {
 //! Class for handling of element of type curve with 
 //! cubic hermitian interpolation
 template <class T>
-  class CrvCubicHmt : public CrvApprox, public CrvGaussian3<double>, public CrvCubicHmtUnitElement
+class CrvCubicHmt : public CrvApprox, 
+		    public CrvGaussian3<double>, 
+		    public CrvCubicHmtUnitElement
 {
 public:
   typedef T value_type;
@@ -64,15 +66,29 @@ public:
   
   int polynomial_order() const { return 3; }
 
+  //! get weight factors at parametric coordinate 
+  inline
+  int get_weights(const vector<double> &coords, double *w) const
+  {
+    const double x = coords[0];
+    w[0] = (x-1)*(x-1)*(1 + 2*x);
+    w[1] = (x-1)*(x-1)*x;
+    w[2] = (3 - 2*x)*x*x;
+    w[3] = (-1+x)*x*x;
+
+    return 4;
+  }
+  
   //! get value at parametric coordinate
   template <class CellData>
   T interpolate(const vector<double> &coords, const CellData &cd) const
   {
-    const double x=coords[0];  
-    return T((x-1)*(x-1)*(1 + 2*x) * cd.node0() 
-	     +(x-1)*(x-1)*x * derivs_[cd.node0_index()]
-	     +(3 - 2*x)*x*x * cd.node1()  
-	     +(-1+x)*x*x * derivs_[cd.node1_index()]);
+    double w[4];
+    get_weights(coords, w); 
+    return T(w[0] * cd.node0() +
+	     w[1] * derivs_[cd.node0_index()] +
+	     w[2] * cd.node1() +
+	     w[3] * derivs_[cd.node1_index()]);
   }
   
   //! get first derivative at parametric coordinate
@@ -89,7 +105,7 @@ public:
 		  -6*(-1 + x)*x * cd.node1() 
 		  +x*(-2 + 3*x) * derivs_[cd.node1_index()]);
   };
-  
+
   //! add a derivative value (dx) for nodes
   void add_derivative(const T &p) { derivs_.push_back(p); };
 
@@ -119,7 +135,7 @@ const TypeDescription* get_type_description(CrvCubicHmt<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription(CrvCubicHmt<T>::type_name(0), subs, 
