@@ -431,7 +431,7 @@ int CoregPtsSimplexSearch::computeTrans() {
   origPtsCenter_/=origPtsA_.size();
 
   double t_scale=bbox.longest_edge()/20;
-  double r_scale=.03*2*PI;
+  double r_scale=.03*2*M_PI;
   double s_scale=0.03;
 
   if (!allowScale_) s_scale=0;
