@@ -36,10 +36,18 @@
 
 namespace SCIRun {
 
+  //! Class for describing unit geometry of HexTricubicHmt
+  class HexTricubicHmtUnitElement : public HexTrilinearLgnUnitElement {
+  public:
+    HexTricubicHmtUnitElement() {};
+    virtual ~HexTricubicHmtUnitElement() {};
+  };
+
+
 //! Class for handling of element of type hexahedron with 
 //! tricubic hermitian interpolation
 template <class T>
-class HexTricubicHmt : public HexApprox, public HexGaussian3<double>
+  class HexTricubicHmt : public HexApprox, public HexGaussian3<double>, public HexTricubicHmtUnitElement
 {
 public:
   typedef T value_type;

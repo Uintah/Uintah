@@ -44,12 +44,29 @@ namespace SCIRun {
 using std::vector;
 using std::string;
 
-//! Class for creating geometrical approximations of Prism meshes
-class PrismApprox {  
+//! Class for describing unit geometry of PrismLinearLgn 
+class PrismLinearLgnUnitElement {
 public:
   static double UnitVertices[6][3]; //!< Parametric coordinates of vertices of unit edge
   static int UnitEdges[9][3]; //!< References to vertices of unit edge
   static int UnitFaces[5][4]; //!< References to vertices of unit face
+ 
+  PrismLinearLgnUnitElement() {};
+  virtual ~PrismLinearLgnUnitElement() {};
+  
+  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  
+  static int NumberOfVertices() { return 6; }; //! return number of vertices
+  static int NumberOfEdges() { 9; }; //! return number of edges
+  
+  static int VerticesOfFace() { return 3; }; //! return number of vertices per face 
+
+  static int FacesOfCell() { return 5; }; //! return number of faces per cell 
+};
+
+//! Class for creating geometrical approximations of Prism meshes
+class PrismApprox {  
+public:
 
   PrismApprox() {}
   virtual ~PrismApprox() {}
@@ -62,8 +79,8 @@ public:
   {
     coords.resize(div_per_unit + 1);
 
-    const double *v0 = UnitVertices[UnitEdges[edge][0]];
-    const double *v1 = UnitVertices[UnitEdges[edge][1]];
+    const double *v0 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitEdges[edge][0]];
+    const double *v1 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitEdges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -80,30 +97,27 @@ public:
       tmp[2] = p1z + d * dz;
     } 	
   }
-  
-  //! return number of vertices per face 
-  virtual int get_approx_face_elements() const  { return 3; }
-  
+    
   //! Approximate faces for element by piecewise linear elements
   //! return: coords gives parametric coordinates at the approximation point.
   //! Use interpolate with coordinates to get the world coordinates.
   virtual void approx_face(const unsigned face, const unsigned div_per_unit, 
 			   vector<vector<vector<double> > > &coords) const
   {	
-    int fe = (UnitFaces[face][4] != -1 ? 2 : 1);
+    int fe = (PrismLinearLgnUnitElement::UnitFaces[face][4] != -1 ? 2 : 1);
     coords.resize(fe * div_per_unit);
 	
     for(int f = 0; f<2; f++) {
       double *v0, *v1, *v2;
 
       if (f==0) {
-	v0 = UnitVertices[UnitFaces[face][0]];
-	v1 = UnitVertices[UnitFaces[face][1]];
-	v2 = UnitVertices[UnitFaces[face][3]];
+	v0 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][0]];
+	v1 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][1]];
+	v2 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][3]];
       } else {
-	v0 = UnitVertices[UnitFaces[face][2]];
-	v1 = UnitVertices[UnitFaces[face][3]];
-	v2 = UnitVertices[UnitFaces[face][1]];
+	v0 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][2]];
+	v1 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][3]];
+	v2 = PrismLinearLgnUnitElement::UnitVertices[PrismLinearLgnUnitElement::UnitFaces[face][1]];
       }
 
       const double d = 1. / div_per_unit;
@@ -224,7 +238,7 @@ T PrismGaussian2<T>::GaussianWeights[6] =
 
 //! Class for handling of element of type prism with linear lagrangian interpolation
 template <class T>
-class PrismLinearLgn : public PrismApprox, public PrismGaussian2<double> 
+  class PrismLinearLgn : public PrismApprox, public PrismGaussian2<double>, public  PrismLinearLgnUnitElement
 {
 public:
   typedef T value_type;

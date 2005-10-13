@@ -36,6 +36,27 @@
 
 namespace SCIRun {
 
+//! Class for describing unit geometry of HexTriquadraticLgn 
+class HexTriquadraticLgnUnitElement {
+public:
+  static double UnitVertices[8][3]; //!< Parametric coordinates of vertices of unit edge 
+  static int UnitEdges[12][2];  //!< References to vertices of unit edge  
+  static int UnitFaces[6][4];  //!< References to vertices of unit face 
+ 
+  HexTriquadraticLgnUnitElement() {};
+  virtual ~HexTriquadraticLgnUnitElement() {};
+  
+  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  
+  static int NumberOfVertices() { return 8; }; //! return number of vertices
+  static int NumberOfEdges() { 12; }; //! return number of edges
+  
+  static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
+
+  static int FacesOfCell() { return 6; }; //! return number of faces per cell 
+};
+
+
 //! Class for handling of element of type hexahedron with 
 //! triquadratic lagrangian interpolation
 template <class T>

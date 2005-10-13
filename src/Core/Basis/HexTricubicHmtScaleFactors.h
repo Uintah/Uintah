@@ -37,11 +37,18 @@
 
 namespace SCIRun {
 
+  //! Class for describing unit geometry of HexTricubicHmtScaleFactors
+  class HexTricubicHmtScaleFactorsUnitElement : public HexTrilinearLgnUnitElement {
+  public:
+    HexTricubicHmtScaleFactorsUnitElement() {};
+    virtual ~HexTricubicHmtScaleFactorsUnitElement() {};
+  };
+
+
 //! Class for handling of element of type hexahedron with 
 //! tricubic hermitian interpolation with scale factors
 template <class T>
-class HexTricubicHmtScaleFactors : public HexApprox, 
-				   public HexGaussian3<double>
+class HexTricubicHmtScaleFactors : public HexApprox, public HexGaussian3<double>, public HexTricubicHmtUnitElementScaleFactors
 {
 public:
   typedef T value_type;

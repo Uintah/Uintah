@@ -33,14 +33,14 @@
 
 namespace SCIRun {
 
-double PrismApprox::UnitVertices[6][3] = {{0,0,0}, {1,0,0}, {0,1,0}, 
+double PrismLinearLgnUnitElement::UnitVertices[6][3] = {{0,0,0}, {1,0,0}, {0,1,0}, 
 					  {0,0,1}, {1,0,1}, {0,1,1}};
 
-int PrismApprox::UnitEdges[9][3] = {{0,1}, {1,2}, {2,0},
+int PrismLinearLgnUnitElement::UnitEdges[9][3] = {{0,1}, {1,2}, {2,0},
 				    {0,3}, {1,4}, {2,5},
 				    {0,3}, {1,4}, {2,5}};
 
-int PrismApprox::UnitFaces[5][4] = {{0,1,2,-1}, {0,1,4,3}, {1,2,5,4}, {2,0,3,5}, {3,4,5,-1}};
+int PrismLinearLgnUnitElement::UnitFaces[5][4] = {{0,1,2,-1}, {0,1,4,3}, {1,2,5,4}, {2,0,3,5}, {3,4,5,-1}};
 
 } //namespace SCIRun
 

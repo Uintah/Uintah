@@ -30,6 +30,7 @@ SRCS     +=      $(SRCDIR)/CrvLinearLgn.cc             \
                  $(SRCDIR)/PrismLinearLgn.cc           \
                  $(SRCDIR)/QuadBilinearLgn.cc          \
                  $(SRCDIR)/TetLinearLgn.cc             \
+                 $(SRCDIR)/TetQuadraticLgn.cc          \
                  $(SRCDIR)/TriLinearLgn.cc             \
                  $(SRCDIR)/TriQuadraticLgn.cc          \
 

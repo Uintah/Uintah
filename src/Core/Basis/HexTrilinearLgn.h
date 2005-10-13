@@ -43,18 +43,34 @@
 
 namespace SCIRun {
 
+using std::vector;
 using std::string;
+
+//! Class for describing unit geometry of HexTrilinearLgn 
+class HexTrilinearLgnUnitElement {
+public:
+  static double UnitVertices[8][3]; //!< Parametric coordinates of vertices of unit edge 
+  static int UnitEdges[12][2];  //!< References to vertices of unit edge  
+  static int UnitFaces[6][4];  //!< References to vertices of unit face 
+ 
+  HexTrilinearLgnUnitElement() {};
+  virtual ~HexTrilinearLgnUnitElement() {};
+  
+  static int DomainDimension() { return 3; }; //! return dimension of domain 
+  
+  static int NumberOfVertices() { return 8; }; //! return number of vertices
+  static int NumberOfEdges() { 12; }; //! return number of edges
+  
+  static int VerticesOfFace() { return 4; }; //! return number of vertices per face 
+
+  static int FacesOfCell() { return 6; }; //! return number of faces per cell 
+};
+
 
 //! Class for creating geometrical approximations of Hex meshes
 class HexApprox {  
 public:
-  //!< Parametric coordinates of vertices of unit edge
-  static double UnitVertices[8][3];
-  //!< References to vertices of unit edge 
-  static int UnitEdges[12][2];
-  //!< References to vertices of unit face 
-  static int UnitFaces[6][4]; 
-
+ 
   HexApprox() {}
   virtual ~HexApprox() {}
   
@@ -66,8 +82,8 @@ public:
   {
     coords.resize(div_per_unit + 1);
 
-    const double *v0 = UnitVertices[UnitEdges[edge][0]];
-    const double *v1 = UnitVertices[UnitEdges[edge][1]];
+    const double *v0 = HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitEdges[edge][0]];
+    const double *v1 = HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitEdges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -85,10 +101,7 @@ public:
       tmp[2] = p1z + d * dz;
     } 	
   }
-  
-  //! return number of vertices per face 
-  virtual int get_approx_face_elements() const { return 4; }
-  
+    
   //! Approximate faces for element by piecewise linear elements
   //! return: coords gives parametric coordinates at the approximation point.
   //! Use interpolate with coordinates to get the world coordinates.
@@ -96,10 +109,10 @@ public:
 			   const unsigned div_per_unit, 
 			   vector<vector<vector<double> > > &coords) const
   {
-    const double *v0 = UnitVertices[UnitFaces[face][0]];
-    const double *v1 = UnitVertices[UnitFaces[face][1]];
-    //	const double *v2=UnitVertices[UnitFaces[face][2]];
-    const double *v3 = UnitVertices[UnitFaces[face][3]];
+    const double *v0 = HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitFaces[face][0]];
+    const double *v1 = HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitFaces[face][1]];
+    //	const double *v2=HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitFaces[face][2]];
+    const double *v3 = HexTrilinearLgnUnitElement::UnitVertices[HexTrilinearLgnUnitElement::UnitFaces[face][3]];
     const double d = 1. / (double)div_per_unit;
     coords.resize(div_per_unit);
     vector<vector<vector<double> > >::iterator citer = coords.begin();
@@ -264,7 +277,7 @@ T HexGaussian3<T>::GaussianWeights[27] =
   
 //! Class for handling of element of type hexahedron with trilinear lagrangian interpolation
 template <class T>
-class HexTrilinearLgn : public HexApprox, public HexGaussian2<double>
+class HexTrilinearLgn : public HexApprox, public HexGaussian2<double>, public HexTrilinearLgnUnitElement
 {
 public:
   typedef T value_type;
