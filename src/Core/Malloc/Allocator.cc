@@ -269,10 +269,10 @@ shutdown()
 inline AllocBin* Allocator::get_bin(size_t size)
 {
   if(size <= SMALL_THRESHOLD){
-    int bin=(int)SMALL_BIN(size);
+    size_t bin=SMALL_BIN(size);
     return &small_bins[bin];
   } else if(size <= MEDIUM_THRESHOLD){
-    int bin=(int)MEDIUM_BIN(size);
+    size_t bin=MEDIUM_BIN(size);
     return &medium_bins[bin];
   } else {
     return &big_bin;
@@ -294,11 +294,11 @@ inline void Allocator::unlock()
 }
 
 
-void LockAllocator(Allocator *a)
+void LockAllocator(Allocator */*a*/)
 {
 }
 
-void UnLockAllocator(Allocator *a)
+void UnLockAllocator(Allocator */*a*/)
 {
 }
 #else 
