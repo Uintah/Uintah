@@ -60,7 +60,7 @@ public:
 //! Class for handling of element of type triangle with 
 //! linear quadratic interpolation
 template <class T>
-class TriQuadraticLgn : public TriApprox, public TriGaussian3<double> 
+  class TriQuadraticLgn : public TriApprox, public TriGaussian3<double>, public TriQuadraticLgnUnitElement 
 {
 public:
   typedef T value_type;

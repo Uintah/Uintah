@@ -60,7 +60,7 @@ public:
 //! Class for handling of element of type hexahedron with 
 //! triquadratic lagrangian interpolation
 template <class T>
-class HexTriquadraticLgn : public HexApprox, public HexGaussian3<double>
+  class HexTriquadraticLgn : public HexApprox, public HexGaussian3<double>, public HexTriquadraticLgnUnitElement
 {
 public:
   typedef T value_type;
