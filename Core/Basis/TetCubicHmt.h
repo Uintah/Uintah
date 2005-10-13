@@ -39,8 +39,8 @@ namespace SCIRun {
 //! Class for describing unit geometry of TetCubicHmt
 class TetCubicHmtUnitElement : public TetLinearLgnUnitElement {
 public:
-  TetLinearLgnUnitElement() {};
-  virtual ~TetLinearLgnUnitElement() {};
+  TetCubicHmtUnitElement() {};
+  virtual ~TetCubicHmtUnitElement() {};
 };
 
 //! Class for handling of element of type tetrahedron with 
@@ -117,15 +117,16 @@ public:
  
     derivs.resize(3);
 
+ 
     derivs[0]=
       T(6*(-1 + x)*x*cd.node0()
 	+(1 + 3*x*x + 2*x*(-2 + y) - y - z*z)*derivs_[cd.node0_index()][0]
-	-2*x*y*derivs_[cd.node0_index()][1]*derivs_[cd.node0_index()][1]
+	-2*x*y*derivs_[cd.node0_index()][1]
 	+(-1 + z)*z*derivs_[cd.node0_index()][2]
 	-6*(-1 + x)*x*cd.node1()
 	+x*(-2 + 3*x)*derivs_[cd.node1_index()][0]
 	+2*x*y*derivs_[cd.node1_index()][1]
-	-((-1  z)*z)*derivs_[cd.node1_index()][2]
+	-((-1 + z)*z)*derivs_[cd.node1_index()][2]
 	+(y - 2*x*y)*derivs_[cd.node2_index()][0]
 	+z*z*derivs_[cd.node3_index()][0]);
 
@@ -164,7 +165,7 @@ public:
   };
  
   //! add derivative values (dx, dy, dz) for nodes.
-  void add_derivative(const T &p[3]) { derivs_.push_back(p); }
+  void add_derivative(const vector<T>  &p) { derivs_.push_back(p); }
 
   static  const string type_name(int n = -1);
 

@@ -44,7 +44,7 @@ class CrvCubicHmtUnitElement : public CrvLinearLgnUnitElement {
 public:
   CrvCubicHmtUnitElement() {};
   virtual ~CrvCubicHmtUnitElement() {};
-}
+};
 
 
 //! Class for handling of element of type curve with 
@@ -146,31 +146,6 @@ const TypeDescription* get_type_description(CrvCubicHmt<T> *)
   return td;
 }
 
-template <class T>
-const TypeDescription* get_type_description(BiCrvCubicHmt<T> *)
-{
-  static TypeDescription *td = 0;
-  if (!td)
-  {
-    td = scinew TypeDescription(BiCrvCubicHmt<T>::type_name(-1), 
-				string(__FILE__), "SCIRun", 
-				TypeDescription::BASIS_E);
-  }
-  return td;
-}
-
-template <class T>
-const TypeDescription* get_type_description(TriCrvCubicHmt<T> *)
-{
-  static TypeDescription *td = 0;
-  if (!td)
-  {
-    td = scinew TypeDescription(TriCrvCubicHmt<T>::type_name(-1), 
-				string(__FILE__), "SCIRun", 
-				TypeDescription::BASIS_E);
-  }
-  return td;
-}
 
 template <class T>
 const string
@@ -196,7 +171,7 @@ template <class T>
 void
 CrvCubicHmt<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), CRVCUBICHMT_VERSION);
+  stream.begin_class(type_name(-1), CRVCUBICHMT_BASIS_VERSION);
   Pio(stream, derivs_);
   stream.end_class();
 }
