@@ -68,10 +68,10 @@ namespace SCIRun {
     /*
      * Two pure virtual methods to create and destroy a component.
      */
-    virtual Distributed::ComponentInfo::pointer
-    createComponent( const std::string &, const std::string &, const sci::cca::TypeMap::pointer &);
+//     virtual Distributed::ComponentInfo::pointer
+//     createComponent( const std::string &, const std::string &, const sci::cca::TypeMap::pointer &);
 
-    virtual void destroyComponent( const Distributed::ComponentInfo::pointer &info);
+//     virtual void destroyComponent( const Distributed::ComponentInfo::pointer &info);
 
     /*
      * from AbstractFramework

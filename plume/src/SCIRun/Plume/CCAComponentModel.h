@@ -71,6 +71,7 @@ namespace SCIRun {
     
     virtual Distributed::ComponentInfo::pointer createComponent(const std::string& name,
 					   const std::string& type,
+					   const std::string& library,
 					   const sci::cca::TypeMap::pointer& properties);
     
     /** Deallocates the component instance \em ci.  Returns \code true on success and
