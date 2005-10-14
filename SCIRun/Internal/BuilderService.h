@@ -101,15 +101,17 @@ class BuilderService : public sci::cca::ports::BuilderService,
   virtual SSIDL::array1<sci::cca::ComponentID::pointer> getComponentIDs();
 
   /** Returns a CCA TypeMap (i.e. a map) that represents any properties
-      associated with component \em cid.
-      key                    value          meaning
-      cca.className          string         component type (standard key)
-      x                      int            component x position
-      y                      int            component y position
-      LOADER NAME            string         loader name
-      np                     int            number of nodes
-      bridge                 bool           is a bridge
-    */
+   *  associated with component \em cid.
+   *  <pre>
+   *  key                    value          meaning
+   *  cca.className          string         component type (standard key)
+   *  x                      int            component x position
+   *  y                      int            component y position
+   *  LOADER NAME            string         loader name
+   *  np                     int            number of nodes
+   *  bridge                 bool           is a bridge
+   * </pre>
+   */
   virtual sci::cca::TypeMap::pointer
   getComponentProperties(const sci::cca::ComponentID::pointer &cid);
 
@@ -172,14 +174,16 @@ class BuilderService : public sci::cca::ports::BuilderService,
 
 
   /** Returns a CCA TypeMap that represents any properties associated
-      with \em connID.
-      key                    value          meaning
-      user                   string         unique uses component name
-      provider               string         unique provides component name
-      uses port              string         uses port name
-      provides port          string         provides port name
-      bridge                 bool           is a bridge
-    */
+   *  with \em connID.
+   * <pre>
+   *  key                    value          meaning
+   *  user                   string         unique uses component name
+   *  provider               string         unique provides component name
+   *  uses port              string         uses port name
+   *  provides port          string         provides port name
+   *  bridge                 bool           is a bridge
+   * </pre>
+   */
   virtual sci::cca::TypeMap::pointer
   getConnectionProperties(const sci::cca::ConnectionID::pointer &connID);
 
