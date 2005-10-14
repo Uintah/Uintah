@@ -90,12 +90,12 @@ inline double Atan2(double y, double x)
 
 inline double DtoR(double d)
 {
-    return d*M_PI/180.;
+    return d*(M_PI/180.);
 }
 
 inline double RtoD(double r)
 {
-    return r*180./M_PI;
+    return r*(180./M_PI);
 }
 
 inline double ACosh(double x)
@@ -145,12 +145,12 @@ inline float Acos(float d)
 
 inline float DtoR(float d)
 {
-    return d*((float)M_PI/180.0f);
+  return d*(float)(M_PI/180.0);
 }
 
 inline float RtoD(float r)
 {
-    return r*(180.0f/(float)M_PI);
+  return r*(float)(180.0/M_PI);
 }
 
 #endif
