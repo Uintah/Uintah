@@ -118,9 +118,19 @@ inline float Cos(float d)
   return cosf(d);
 }
 
+inline float Tan(float d)
+{
+  return tanf(d);
+}
+
 inline float Sqrt(float d)
 {
   return sqrtf(d);
+}
+
+inline float Atan(float d)
+{
+  return atanf(d);
 }
 
 inline float Atan2(float y, float x)
@@ -135,12 +145,12 @@ inline float Acos(float d)
 
 inline float DtoR(float d)
 {
-    return d*(float)(M_PI/180.0f);
+    return d*((float)M_PI/180.0f);
 }
 
 inline float RtoD(float r)
 {
-    return r*(float)(180.0f/M_PI);
+    return r*(180.0f/(float)M_PI);
 }
 
 #endif
