@@ -569,7 +569,7 @@ const typename GenericField<Mesh, Basis, FData>::value_type &
 GenericField<Mesh, Basis, FData>::
 value(typename mesh_type::Node::index_type i) const
 {
-  ASSERTL3(basis_order() == 1 && mesh_->dimensionality() == 0);
+  ASSERTL3(basis_order() >= 1 || mesh_->dimensionality() == 0);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
