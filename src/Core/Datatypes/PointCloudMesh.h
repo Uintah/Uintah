@@ -99,6 +99,33 @@ public:
 
   typedef Node Elem;
 
+  friend class ElemData;
+  
+  class ElemData 
+  {
+  public:
+    ElemData(const PointCloudMesh<Basis>& msh, 
+	     const typename Elem::index_type ind) :
+      mesh_(msh),
+      index_(ind)
+    {}
+    
+    // the following designed to coordinate with ::get_nodes
+    inline 
+    unsigned node0_index() const {
+      return index_;
+    }
+
+    inline 
+    const Point node0() const {
+      return mesh_.points_[index_];
+    }
+    
+  private:
+    const PointCloudMesh<Basis>          &mesh_;
+    const typename Elem::index_type       index_;
+  };
+
   PointCloudMesh() {}
   PointCloudMesh(const PointCloudMesh &copy)
     : points_(copy.points_) {}
@@ -220,11 +247,6 @@ public:
 
   Basis& get_basis() { return basis_; }
 
-  void interpolate(Point &pt, const vector<double> &coords, 
-		   typename Node::index_type idx) const
-  {
-    get_center(pt, idx);
-  }
   void pwl_approx_edge(vector<vector<double> > &coords, 
 		       typename Elem::index_type ci, 
 		       typename Edge::index_type ei, 
@@ -236,6 +258,20 @@ public:
 		       typename Face::index_type ei, 
 		       unsigned div_per_unit) const
   {}
+
+  bool get_coords(vector<double> &coords, 
+		  const Point &p,
+		  typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    return basis_.get_coords(coords, p, ed); 
+  }
+  
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename Node::index_type idx) const
+  {
+    get_center(pt, idx);
+  }
 
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();

@@ -92,6 +92,50 @@ public:
 
   typedef Edge Elem;
 
+  friend class ElemData;
+  
+  class ElemData 
+  {
+  public:
+    ElemData(const ScanlineMesh<Basis>& msh, 
+	     const typename Elem::index_type ind) :
+      mesh_(msh),
+      index_(ind)
+    {}
+    
+    // the following designed to coordinate with ::get_nodes
+    inline 
+    unsigned node0_index() const {
+      return (index_);
+    }
+    inline 
+    unsigned node1_index() const {
+      return (index_ + 1);
+    }
+
+
+    // the following designed to coordinate with ::get_edges
+    inline 
+    unsigned edge0_index() const {
+      return index_; 
+    }
+
+    inline 
+    const Point node0() const {
+      Point p(index_, 0.0, 0.0);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node1() const {
+      Point p(index_ + 1, 0.0, 0.0);
+      return mesh_.transform_.project(p);
+    }
+
+  private:
+    const ScanlineMesh<Basis>          &mesh_;
+    const typename Elem::index_type     index_;
+  };
+
   ScanlineMesh() : min_i_(0), ni_(0) {}
   ScanlineMesh(unsigned int nx, const Point &min, const Point &max);
   ScanlineMesh(ScanlineMesh* mh, unsigned int offset, unsigned int nx)
@@ -238,6 +282,54 @@ public:
   virtual int dimensionality() const { return 1; }
   Basis& get_basis() { return basis_; }
 
+ //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an edge.
+  void pwl_approx_edge(vector<vector<double> > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Edge::index_type ei, 
+		       unsigned div_per_unit) const
+  {    
+    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+    // compare get_nodes order to the basis order
+
+    //FIX_ME MC delete this comment when this is verified.
+
+    typename Edge::array_type edges;
+    get_edges(edges, ci);
+    unsigned count = 0;
+    typename Edge::array_type::iterator iter = edges.begin();
+    while (iter != edges.end()) {
+      if (ei == *iter++) break;
+      ++count;
+    }
+    basis_.approx_edge(count, div_per_unit, coords); 
+  }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an face.
+  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Face::index_type fi, 
+		       unsigned div_per_unit) const
+  {
+    ASSERTFAIL("ScanlineMesh has no faces");
+  }
+  
+  bool get_coords(vector<double> &coords, 
+		  const Point &p,
+		  typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    return basis_.get_coords(coords, p, ed); 
+  }
+  
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    pt = basis_.interpolate(coords, ed);
+  }
+
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
@@ -374,7 +466,8 @@ ScanlineMesh<Basis>::get_edges(typename Edge::array_type &/* arr */,
 
 template <class Basis>
 void
-ScanlineMesh<Basis>::get_center(Point &result, typename Node::index_type idx) const
+ScanlineMesh<Basis>::get_center(Point &result, 
+				typename Node::index_type idx) const
 {
   Point p(idx, 0.0, 0.0);
   result = transform_.project(p);
@@ -383,7 +476,8 @@ ScanlineMesh<Basis>::get_center(Point &result, typename Node::index_type idx) co
 
 template <class Basis>
 void
-ScanlineMesh<Basis>::get_center(Point &result, typename Edge::index_type idx) const
+ScanlineMesh<Basis>::get_center(Point &result, 
+				typename Edge::index_type idx) const
 {
   Point p(idx + 0.5, 0.0, 0.0);
   result = transform_.project(p);

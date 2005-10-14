@@ -242,6 +242,89 @@ public:
   friend class IFaceIter;
   friend class IFaceIndex;
 
+  friend class ElemData;
+  
+  class ElemData 
+  {
+  public:
+    ElemData(const ImageMesh<Basis>& msh, 
+	     const typename Elem::index_type ind) :
+      mesh_(msh),
+      index_(ind)
+    {}
+    
+    // the following designed to coordinate with ::get_nodes
+    inline 
+    unsigned node0_index() const {
+      return (index_.i_ + mesh_.get_ni()*index_.j_);
+    }
+    inline 
+    unsigned node1_index() const {
+      return (index_.i_+ 1 + mesh_.get_ni()*index_.j_);
+    }
+    inline 
+    unsigned node2_index() const {
+      return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1));
+      
+    }
+    inline 
+    unsigned node3_index() const {
+      return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1));
+    }
+
+    // the following designed to coordinate with ::get_edges
+    inline 
+    unsigned edge0_index() const {
+      return index_.i_ + index_.j_ * (mesh_.ni_- 1); 
+    }
+    inline 
+    unsigned edge1_index() const {
+      return index_.i_ + (index_.j_ + 1) * (mesh_.ni_ - 1);
+    }
+    inline 
+    unsigned edge2_index() const {
+      return index_.i_    *(mesh_.nj_ - 1) + index_.j_ + 
+	((mesh_.ni_ - 1) * mesh_.nj_);
+     }
+    inline 
+    unsigned edge3_index() const {
+      return (index_.i_ + 1) * (mesh_.nj_ - 1) + index_.j_ + 
+	((mesh_.ni_ - 1) * mesh_.nj_);
+    }
+
+
+    inline 
+    const Point node0() const {
+      Point p(index_.i_, index_.j_, 0.0);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node1() const {
+      Point p(index_.i_ + 1, index_.j_, 0.0);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node2() const {
+      Point p(index_.i_ + 1, index_.j_ + 1, 0.0);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node3() const {
+      Point p(index_.i_, index_.j_ + 1, 0.0);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node4() const {
+      Point p(index_.i_, index_.j_, 0.0);
+      return mesh_.transform_.project(p);
+    }
+
+  private:
+    const ImageMesh<Basis>          &mesh_;
+    const typename Elem::index_type  index_;
+  };
+
+
   ImageMesh()
     : min_i_(0), min_j_(0),
       ni_(1), nj_(1) {}
@@ -256,6 +339,67 @@ public:
   virtual ~ImageMesh() {}
 
   Basis& get_basis() { return basis_; }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an edge.
+  void pwl_approx_edge(vector<vector<double> > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Edge::index_type ei, 
+		       unsigned div_per_unit) const
+  {    
+    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+    // compare get_nodes order to the basis order
+
+    //FIX_ME MC delete this comment when this is verified.
+
+    typename Edge::array_type edges;
+    get_edges(edges, ci);
+    unsigned count = 0;
+    typename Edge::array_type::iterator iter = edges.begin();
+    while (iter != edges.end()) {
+      if (ei == *iter++) break;
+      ++count;
+    }
+    basis_.approx_edge(count, div_per_unit, coords); 
+  }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an face.
+  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Face::index_type fi, 
+		       unsigned div_per_unit) const
+  {
+    // Needs to match unit_faces in Basis/QuadBilinearLgn.cc 
+    // compare get_nodes order to the basis order
+
+    //FIX_ME MC delete this comment when this is verified.
+
+    typename Face::array_type faces;
+    get_faces(faces, ci);
+    unsigned count = 0;
+    typename Face::array_type::iterator iter = faces.begin();
+    while (iter != faces.end()) {
+      if (fi == *iter++) break;
+      ++count;
+    }
+    basis_.approx_face(count, div_per_unit, coords);
+  }
+  
+  bool get_coords(vector<double> &coords, 
+		  const Point &p,
+		  typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    return basis_.get_coords(coords, p, ed); 
+  }
+  
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    pt = basis_.interpolate(coords, ed);
+  }
 
   //! get the mesh statistics
   unsigned get_min_i() const { return min_i_; }
@@ -604,8 +748,8 @@ ImageMesh<Basis>::get_edges(typename Edge::array_type &array, typename Face::ind
 template<class Basis>
 bool
 ImageMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
-			typename Face::index_type from,
-			typename Edge::index_type edge) const
+			       typename Face::index_type from,
+			       typename Edge::index_type edge) const
 {
   neighbor.mesh_ = this;
   const int j_idx = edge - (ni_-1) * nj_;
@@ -874,20 +1018,20 @@ template<class Basis>
 void
 Pio(Piostream& stream, typename ImageMesh<Basis>::INodeIndex& n)
 {
-    stream.begin_cheap_delim();
-    Pio(stream, n.i_);
-    Pio(stream, n.j_);
-    stream.end_cheap_delim();
+  stream.begin_cheap_delim();
+  Pio(stream, n.i_);
+  Pio(stream, n.j_);
+  stream.end_cheap_delim();
 }
 
 template<class Basis>
 void
 Pio(Piostream& stream, typename ImageMesh<Basis>::IFaceIndex& n)
 {
-    stream.begin_cheap_delim();
-    Pio(stream, n.i_);
-    Pio(stream, n.j_);
-    stream.end_cheap_delim();
+  stream.begin_cheap_delim();
+  Pio(stream, n.i_);
+  Pio(stream, n.j_);
+  stream.end_cheap_delim();
 }
 
 

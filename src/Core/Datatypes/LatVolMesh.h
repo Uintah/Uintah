@@ -474,7 +474,7 @@ public:
 	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
     }
 
-//     inline 
+
 //     unsigned edge0_index() const {
 //       return idx.i_ + idx.j_*(ni_-1)     + idx.k_*(ni_-1)*(nj_);
 //     }
@@ -563,11 +563,64 @@ public:
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pwl_approx_edge(vector<Point> &approx, typename Edge::index_type, 
-		       double epsilon) const;
-  void get_coords(vector<double> &coords, 
+  void pwl_approx_edge(vector<vector<double> > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Edge::index_type ei, 
+		       unsigned div_per_unit) const
+  {    
+    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+    // compare get_nodes order to the basis order
+
+    //FIX_ME MC delete this comment when this is verified.
+
+    typename Edge::array_type edges;
+    get_edges(edges, ci);
+    unsigned count = 0;
+    typename Edge::array_type::iterator iter = edges.begin();
+    while (iter != edges.end()) {
+      if (ei == *iter++) break;
+      ++count;
+    }
+    basis_.approx_edge(count, div_per_unit, coords); 
+  }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an face.
+  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Face::index_type fi, 
+		       unsigned div_per_unit) const
+  {
+    // Needs to match unit_faces in Basis/QuadBilinearLgn.cc 
+    // compare get_nodes order to the basis order
+
+    //FIX_ME MC delete this comment when this is verified.
+
+    typename Face::array_type faces;
+    get_faces(faces, ci);
+    unsigned count = 0;
+    typename Face::array_type::iterator iter = faces.begin();
+    while (iter != faces.end()) {
+      if (fi == *iter++) break;
+      ++count;
+    }
+    basis_.approx_face(count, div_per_unit, coords);
+  }
+  
+  bool get_coords(vector<double> &coords, 
 		  const Point &p,
-		  typename Cell::index_type idx) const;
+		  typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    return basis_.get_coords(coords, p, ed); 
+  }
+  
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    pt = basis_.interpolate(coords, ed);
+  }
   
 
   //! get the mesh statistics
@@ -896,16 +949,6 @@ LatVolMesh<Basis>::LatVolMesh(unsigned i, unsigned j, unsigned k,
 
   transform_.pre_translate(min.asVector());
   transform_.compute_imat();
-}
-
-template <class Basis>
-void
-LatVolMesh<Basis>::get_coords(vector<double> &coords, 
-			      const Point &p,
-			      typename Cell::index_type idx) const
-{
-  ElemData cmcd(*this, idx);
-  basis_.get_coords(coords, p, cmcd);
 }
 
 
