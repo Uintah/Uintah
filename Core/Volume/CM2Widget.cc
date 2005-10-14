@@ -1661,17 +1661,25 @@ PaintCM2Widget::splat(Array3<float> &data, double width, int x0, int y0) {
   for (int y = y0-wid; y <= y0+wid; ++y)
     if (y >= 0 && y < data.dim2())
       if (flat) {
-        data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r, 0.0, 1.0);
-        data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g, 0.0, 1.0);
-        data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b, 0.0, 1.0);
-        data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 0.0, 1.0);
+        data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r, 
+			       (float)0.0, (float)1.0);
+        data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g, 
+			       (float)0.0, (float)1.0);
+        data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b, 
+			       (float)0.0, (float)1.0);
+        data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 
+			       (float)0.0, (float)1.0);
       } else {
         a = float(alpha_*(wid-fabs(float(y-y0)))/wid);
         oma = 1.0 - a;
-        data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r*a, 0.0, 1.0);
-        data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g*a, 0.0, 1.0);
-        data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b*a, 0.0, 1.0);
-        data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 0.0, 1.0);
+        data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r*a, 
+			       (float)0.0, (float)1.0);
+        data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g*a, 
+			       (float)0.0, (float)1.0);
+        data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b*a, 
+			       (float)0.0, (float)1.0);
+        data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a,   
+			       (float)0.0, (float)1.0);
       }  
 }
 
