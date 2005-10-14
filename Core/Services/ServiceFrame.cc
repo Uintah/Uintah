@@ -390,7 +390,7 @@ namespace SCIRun {
         std::cerr << str << std::endl;
         log_->putmsg(str);
         throw;
-        RETURN_FALSE;
+        return false;
       }
     return false;
   }
