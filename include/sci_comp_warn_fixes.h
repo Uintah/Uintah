@@ -43,7 +43,10 @@
    // function, and thus the SGI compiler warns that you have a
    // 'unreachable' statement.  However, if you don't have it under gnu,
    // then you get a 'this function must return a value' warning.
+#  define RETURN_FALSE
+#  define RETURN_NULL
 #  define RETURN_0
+#  define RETURN
 
    // This removes compiler warnings about unreachable statements.
    // Only use BREAK after lines that will kill the program.  Otherwise
@@ -52,8 +55,11 @@
 
 #else
 
+#  define RETURN_FALSE return false
+#  define RETURN_NULL return NULL
 #  define RETURN_0 return 0
-#  define BREAK break
+#  define RETURN   return
 
+#  define BREAK break
 #endif
 
