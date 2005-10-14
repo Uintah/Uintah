@@ -110,17 +110,49 @@ sci::cca::Port::pointer getPort(const std::string& name);
       SCIRunFramework::Services. */
   sci::cca::TypeMap::pointer createTypeMap();
 
-  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */
-  void registerUsesPort(const std::string& name, const std::string& type,
+
+  /**
+   * Register a Port request that will be retrieved subsequently with
+   * a call to getPort() (from CCA spec).
+   * All frameworks recognize at least the following property keys and values:
+   * <pre>
+   *      key           standard values (in string form)    default
+   * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
+   * "MIN_CONNECTIONS" any integer > 0.                        0
+   * "ABLE_TO_PROXY"   "true", "false"                      "false"
+   * </pre>
+   * ABLE_TO_PROXY (depends on framework-implementation): try to tell
+   *   framework not to use network proxy for for this port
+   */
+  void registerUsesPort(const std::string& name,
+                        const std::string& type,
                         const sci::cca::TypeMap::pointer& properties);
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void unregisterUsesPort(const std::string& name);
 
-  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */
+  /**
+   * A proxy method for gov::cca::Services.
+   * Calls the corresponding method in SCIRunFramework::Services (see cca.sidl).
+   * @param port port instance that the framework will make available to
+   * other componnents
+   * @param name port name (must be unique within the component)
+   * @param type port class type
+   * @param properties port properties set by the providing component.
+   * The properties may be empty or undefined, in which case the framework will
+   * set defaults for the following property keys and values:
+   * <pre>
+   *      key           standard values (in string form)    default
+   * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
+   * "MIN_CONNECTIONS" any integer > 0.                        0
+   * "ABLE_TO_PROXY"   "true", "false"                      "false"
+   * </pre>
+   * ABLE_TO_PROXY (depends on framework-implementation): try to tell
+   *   framework not to use network proxy for for this port
+   * @throws CCAException with the following types: PortAlreadyDefined,
+   * OutOfMemory, Nonstandard (null port argument)
+   */
   void addProvidesPort(const sci::cca::Port::pointer& port,
                        const std::string& name,
                        const std::string& type,
@@ -131,11 +163,14 @@ sci::cca::Port::pointer getPort(const std::string& name);
   void removeProvidesPort(const std::string& name);
 
   /** Returns the complete list of the properties for a Port.
-   *
-   * Keys:
-   * cca.portName
-   * cca.portType
-   * Properties from addProvidesPort/registerUsesPort...
+   * These may include properties set when the port is registered and
+   * properties set by the framework.
+   * Properties will include the following:
+   * <pre>
+   *     key             standard values
+   * cca.portName      port registration name (string)
+   * cca.portType      port registration type (string)
+   * </pre>
    */
   sci::cca::TypeMap::pointer getPortProperties(const std::string& portName);
 
@@ -163,17 +198,18 @@ private:
     Iterator(const Iterator&);
     Iterator& operator=(const Iterator&);
   };
-  std::map<std::string, CCAPortInstance*> ports;
+  typedef std::map<std::string, CCAPortInstance*> PortInstanceMap;
+  typedef std::map<std::string, std::vector<Object::pointer> > PreportMap;
+  PortInstanceMap ports;
+  PreportMap preports;
   SCIRun::Mutex lock_ports;
-
-  std::map<std::string, std::vector<Object::pointer> > preports;
   SCIRun::Mutex lock_preports;
+  SCIRun::Mutex lock_instance;
 
-  std::map<std::string, int > precnt;
+  std::map<std::string, int> precnt;
   std::map<std::string, ConditionVariable*> precond;
 
   sci::cca::Component::pointer component;
-  Mutex *mutex;
   int size;
   int rank;
   
