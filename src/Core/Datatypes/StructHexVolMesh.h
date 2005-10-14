@@ -196,14 +196,6 @@ private:
   typename LatVolMesh<Basis>::Cell::index_type           locate_cache_;
 
 
-  static double
-  distance2(const Point &p0, const Point &p1)
-  {
-    const double dx = p0.x() - p1.x();
-    const double dy = p0.y() - p1.y();
-    const double dz = p0.z() - p1.z();
-    return dx * dx + dy * dy + dz * dz;
-  }
 };
 
 
@@ -488,12 +480,13 @@ StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &no
     typename LatVolMesh<Basis>::Node::array_type nodes;
     get_nodes(nodes, ci);
 
-    double dmin = distance2(p, points_(nodes[0].i_, nodes[0].j_, nodes[0].k_));
+    double dmin = 
+      (p - points_(nodes[0].i_, nodes[0].j_, nodes[0].k_)).length2();
     node = nodes[0];
     for (unsigned int i = 1; i < nodes.size(); i++)
     {
       const double d =
-	distance2(p, points_(nodes[i].i_, nodes[i].j_, nodes[i].k_));
+	(p - points_(nodes[i].i_, nodes[i].j_, nodes[i].k_)).length2();
       if (d < dmin)
       {
 	dmin = d;
@@ -509,13 +502,14 @@ StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &no
     end(nie);
     if (ni == nie) { return false; }
 
-    double min_dist = distance2(p, points_((*ni).i_, (*ni).j_, (*ni).k_));
+    double min_dist = (p - points_((*ni).i_, (*ni).j_, (*ni).k_)).length2();
     node = *ni;
     ++ni;
 
     while (ni != nie)
     {
-      const double dist = distance2(p, points_((*ni).i_, (*ni).j_, (*ni).k_));
+      const double dist = 
+	(p - points_((*ni).i_, (*ni).j_, (*ni).k_)).length2();
       if (dist < min_dist)
       {
 	node = *ni;

@@ -555,8 +555,6 @@ private:
   void compute_faces();
   void compute_node_neighbors();
   void compute_grid();
-  void get_face_weights(double *w, const typename Node::array_type &nodes,
-			const Point &p, int i0, int i1, int i2, int i3);
   const Point &point(typename Node::index_type i) { return points_[i]; }
 
 
@@ -1533,11 +1531,11 @@ HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
     typename Node::array_type nodes;
     get_nodes(nodes, ci);
     
-    double dmin = distance2(p, points_[nodes[0]]);
+    double dmin = (p - points_[nodes[0]]).length2();
     loc = nodes[0];
     for (unsigned int i = 1; i < nodes.size(); i++)
     {
-      const double d = distance2(p, points_[nodes[i]]);
+      const double d = (p - points_[nodes[i]]).length2();
       if (d < dmin)
       {
 	dmin = d;
@@ -1553,13 +1551,13 @@ HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
     end(nie);
     if (ni == nie) { return false; }
 
-    double min_dist = distance2(p, points_[*ni]);
+    double min_dist = (p - points_[*ni]).length2();
     loc = *ni;
     ++ni;
 
     while (ni != nie)
     {
-      const double dist = distance2(p, points_[*ni]);
+      const double dist = (p - points_[*ni]).length2();
       if (dist < min_dist)
       {
 	loc = *ni;
@@ -1587,11 +1585,11 @@ HexVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p)
     edge = edges[0];
     Point loc;
     get_center(loc, edges[0]);
-    double mindist = distance2(p, loc);
+    double mindist = (p -loc).length2();
     for (unsigned int i = 0; i < edges.size(); i++)
     {
       get_center(loc, edges[i]);
-      const double dist = distance2(p, loc);
+      const double dist = (p -loc).length2();
       if (dist < mindist)
       {
 	edge = edges[i];
@@ -1619,11 +1617,11 @@ HexVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
     face = faces[0];
     Point loc;
     get_center(loc, faces[0]);
-    double mindist = distance2(p, loc);
+    double mindist = (p - loc).length2();
     for (unsigned int i = 0; i < faces.size(); i++)
     {
       get_center(loc, faces[i]);
-      const double dist = distance2(p, loc);
+      const double dist = (p - loc).length2();
       if (dist < mindist)
       {
 	face = faces[i];
@@ -1799,78 +1797,6 @@ HexVolMesh<Basis>::pyramid_volume(const typename Node::array_type &face, const P
 
 template <class Basis>
 void
-HexVolMesh<Basis>::get_face_weights(double *w, 
-				    const typename Node::array_type &nodes,
-				    const Point &p, int i0, int i1, 
-				    int i2, int i3)
-{
-  for (unsigned int j = 0; j < 8; j++)
-  {
-    w[j] = 0.0;
-  }
-
-  const Point &p0 = point(nodes[i0]);
-  const Point &p1 = point(nodes[i1]);
-  const Point &p2 = point(nodes[i2]);
-  const Point &p3 = point(nodes[i3]);
-
-  const double a0 = tri_area(p, p0, p1);
-  if (a0 < MIN_ELEMENT_VAL)
-  {
-    const Vector v0 = p0 - p1;
-    const Vector v1 = p - p1;
-    const double l2 = Dot(v0, v0);
-    w[i0] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
-    w[i1] = 1.0 - w[i0];
-    return;
-  }
-  const double a1 = tri_area(p, p1, p2);
-  if (a1 < MIN_ELEMENT_VAL)
-  {
-    const Vector v0 = p1 - p2;
-    const Vector v1 = p - p2;
-    const double l2 = Dot(v0, v0);
-    w[i1] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
-    w[i2] = 1.0 - w[i1];
-    return;
-  }
-  const double a2 = tri_area(p, p2, p3);
-  if (a2 < MIN_ELEMENT_VAL)
-  {
-    const Vector v0 = p2 - p3;
-    const Vector v1 = p - p3;
-    const double l2 = Dot(v0, v0);
-    w[i2] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
-    w[i3] = 1.0 - w[i2];
-    return;
-  }
-  const double a3 = tri_area(p, p3, p0);
-  if (a3 < MIN_ELEMENT_VAL)
-  {
-    const Vector v0 = p3 - p0;
-    const Vector v1 = p - p0;
-    const double l2 = Dot(v0, v0);
-    w[i3] = (l2 < MIN_ELEMENT_VAL) ? 0.5 : Dot(v0, v1) / l2;
-    w[i0] = 1.0 - w[i3];
-    return;
-  }
-
-  w[i0] = tri_area(p0, p1, p2) / (a0 * a3);
-  w[i1] = tri_area(p1, p2, p0) / (a1 * a0);
-  w[i2] = tri_area(p2, p3, p1) / (a2 * a1);
-  w[i3] = tri_area(p3, p0, p2) / (a3 * a2);
-
-  const double suminv = 1.0 / (w[i0] + w[i1] + w[i2] + w[i3]);
-  w[i0] *= suminv;
-  w[i1] *= suminv;
-  w[i2] *= suminv;
-  w[i3] *= suminv;
-}
-  
-
-
-template <class Basis>
-void
 HexVolMesh<Basis>::compute_grid()
 {
   grid_lock_.lock();
@@ -1981,7 +1907,7 @@ typename HexVolMesh<Basis>::Node::index_type
 HexVolMesh<Basis>::add_find_point(const Point &p, double err)
 {
   typename Node::index_type i;
-  if (locate(i, p) && distance2(points_[i], p) < err)
+  if (locate(i, p) && ((points_[i] - p).length2() < err))
   {
     return i;
   }
