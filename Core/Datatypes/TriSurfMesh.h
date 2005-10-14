@@ -106,6 +106,63 @@ public:
 
   typedef Face Elem;
 
+  friend class ElemData;
+  
+  class ElemData 
+  {
+  public:
+    ElemData(const TriSurfMesh<Basis>& msh, 
+	     const typename Elem::index_type ind) :
+      mesh_(msh),
+      index_(ind)
+    {}
+    
+    // the following designed to coordinate with ::get_nodes
+    inline 
+    unsigned node0_index() const {
+      return mesh_.cells_[index_ * 3];
+    }
+    inline 
+    unsigned node1_index() const {
+      return mesh_.cells_[index_ * 3 + 1];
+    }
+    inline 
+    unsigned node2_index() const {
+      return mesh_.cells_[index_ * 3 + 2];
+    }
+
+    // the following designed to coordinate with ::get_edges
+    inline 
+    unsigned edge0_index() const {
+      return index_ * 3;
+    }
+    inline 
+    unsigned edge1_index() const {
+      return index_ * 3 + 1;
+    }
+    inline 
+    unsigned edge2_index() const {
+      return index_ * 3 + 2;
+    }
+
+    inline 
+    const Point node0() const {
+      return mesh_.points_[node0_index()];
+    }
+    inline 
+    const Point node1() const {
+      return mesh_.points_[node1_index()];
+    }
+    inline 
+    const Point node2() const {
+      return mesh_.points_[node2_index()];
+    }
+
+  private:
+    const TriSurfMesh<Basis>          &mesh_;
+    const typename Elem::index_type    index_;
+   };
+
   TriSurfMesh();
   TriSurfMesh(const TriSurfMesh &copy);
   virtual TriSurfMesh *clone() { return new TriSurfMesh(*this); }
@@ -289,6 +346,68 @@ public:
 
   const Point &point(typename Node::index_type i) { return points_[i]; }
   Basis& get_basis() { return basis_; }
+
+ //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an edge.
+  void pwl_approx_edge(vector<vector<double> > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Edge::index_type ei, 
+		       unsigned div_per_unit) const
+  {    
+    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+    // compare get_nodes order to the basis order
+
+    //FIX_ME MC delete this comment when this is verified.
+
+    typename Edge::array_type edges;
+    get_edges(edges, ci);
+    unsigned count = 0;
+    typename Edge::array_type::iterator iter = edges.begin();
+    while (iter != edges.end()) {
+      if (ei == *iter++) break;
+      ++count;
+    }
+    basis_.approx_edge(count, div_per_unit, coords); 
+  }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an face.
+  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Face::index_type fi, 
+		       unsigned div_per_unit) const
+  {
+    // Needs to match unit_faces in Basis/QuadBilinearLgn.cc 
+    // compare get_nodes order to the basis order
+
+    //FIX_ME MC delete this comment when this is verified.
+
+    typename Face::array_type faces;
+    get_faces(faces, ci);
+    unsigned count = 0;
+    typename Face::array_type::iterator iter = faces.begin();
+    while (iter != faces.end()) {
+      if (fi == *iter++) break;
+      ++count;
+    }
+    basis_.approx_face(count, div_per_unit, coords);
+  }
+  
+  bool get_coords(vector<double> &coords, 
+		  const Point &p,
+		  typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    return basis_.get_coords(coords, p, ed); 
+  }
+  
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    pt = basis_.interpolate(coords, ed);
+  }
+
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
@@ -600,7 +719,8 @@ TriSurfMesh<Basis>::end(typename TriSurfMesh::Cell::iterator &itr) const
 
 template <class Basis>
 void
-TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array, typename Edge::index_type idx) const
+TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array, 
+			      typename Edge::index_type idx) const
 {
   int a = edges_[idx];
   int b = a - a % 3 + (a+1) % 3;
@@ -612,7 +732,8 @@ TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array, typename Edge::i
 
 template <class Basis>
 void
-TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array, typename Face::index_type idx) const
+TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array, 
+			      typename Face::index_type idx) const
 {
   array.clear();
   array.push_back(faces_[idx * 3 + 0]);

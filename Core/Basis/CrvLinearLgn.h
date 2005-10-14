@@ -81,7 +81,7 @@ public:
     for(unsigned i = 0; i <= div_per_unit; i++) {
       vector<double> &tmp = coords[i];
       tmp.resize(1);
-      tmp[0] = (double)div_per_unit / (double)i;
+      tmp[0] = (double)i / (double)div_per_unit; 
     }
   }
   
@@ -234,8 +234,8 @@ public:
     vector<double> &tmp = coords[0];
     tmp.resize(1);
     tmp[0] = 0.0;
-    tmp = coords[1];
-    tmp.resize(1);
+    vector<double> &tmp1 = coords[1];
+    tmp1.resize(1);
     tmp[0] = 1.0;
   }
 

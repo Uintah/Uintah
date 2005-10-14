@@ -105,12 +105,12 @@ public:
 	       typename Node::index_type> index_pair_type;
 
 
-  friend class CMCellData;
+  friend class ElemData;
   
-  class CMCellData 
+  class ElemData 
   {
   public:
-    CMCellData(const CurveMesh<Basis>& msh, unsigned idx) :
+    ElemData(const CurveMesh<Basis>& msh, unsigned idx) :
       mesh_(msh),
       index_(idx)
     {}
@@ -216,11 +216,37 @@ public:
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pl_approx_edge(vector<Point> &approx, typename Edge::index_type, 
-		      double epsilon) const;
+  void pwl_approx_edge(vector<vector<double> > &coords, 
+		       typename Elem::index_type, 
+		       typename Edge::index_type, 
+		       unsigned div_per_unit) const
+  {
+    // only one edge in the unit edge.
+    return basis_.approx_edge(0, div_per_unit, coords); 
+  }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an face.
+  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Face::index_type fi, 
+		       unsigned div_per_unit) const
+  {
+    ASSERTFAIL("CurveMesh cannot approximiate faces");
+  }
+
   bool get_coords(vector<double> &coords, 
 		  const Point &p,
 		  typename Edge::index_type idx) const;
+
+
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    pt = basis_.interpolate(coords, ed);
+  }
+
   //! get the center point (in object space) of an element
   void get_center(Point &result, typename Node::index_type idx) const
   { result = nodes_[idx]; }
@@ -454,23 +480,12 @@ CurveMesh<Basis>::transform(const Transform &t)
 }
 
 template <class Basis>
-void
-CurveMesh<Basis>::pl_approx_edge(vector<Point> &approx, 
-				 typename Edge::index_type idx, 
-				 double epsilon) const
-{
-  typename Node::array_type arr;
-  get_nodes(arr, idx);
-  //  basis_.pl_approx(approx, arr[0], arr[1], epsilon);
-}
-
-template <class Basis>
 bool
 CurveMesh<Basis>::get_coords(vector<double> &coords, 
 			     const Point &p,
 			     typename Edge::index_type idx) const
 {
-  CMCellData cmcd(*this, idx);
+  ElemData cmcd(*this, idx);
   return basis_.get_coords(coords, p, cmcd);
 }
 
@@ -478,16 +493,20 @@ template <class Basis>
 double
 CurveMesh<Basis>::get_size(typename Edge::index_type idx) const
 {
+  ElemData ed(*this, idx);
   vector<Point> pledge;
-  // Perhaps there is a better choice for epsilon.
-  pl_approx_edge(pledge, idx, 0.001);
+  vector<vector<double> > coords;
+  // Perhaps there is a better choice for the number of divisions.
+  pwl_approx_edge(coords, idx, idx, 5);
   
   double total = 0.0L;
-  vector<Point>::iterator iter = pledge.begin();
-  vector<Point>::iterator last = iter++;
-  while (iter != pledge.end()) {
-    Point &p0 = *iter++;
-    Point &p1 = *last++;
+  vector<vector<double> >::iterator iter = coords.begin();
+  vector<vector<double> >::iterator last = coords.begin() + 1;
+  while (last != coords.end()) {
+    vector<double> &c0 = *iter++;
+    vector<double> &c1 = *last++;
+    Point p0 = basis_.interpolate(c0, ed);
+    Point p1 = basis_.interpolate(c1, ed);
     total += (p1.asVector() - p0.asVector()).length();
   }  
   return total;
@@ -498,10 +517,7 @@ void
 CurveMesh<Basis>::get_center(Point &result, 
 			     typename Edge::index_type idx) const
 {
-  //typename Node::array_type arr;
-  //get_nodes(arr, idx);
-  //  result =  basis_->interpolate(0.5L, arr[0], arr[1]);
-  CMCellData cmcd(*this, idx);
+  ElemData cmcd(*this, idx);
   vector<double> coord(1,0.5L);
   result =  basis_.interpolate(coord, cmcd);
 }

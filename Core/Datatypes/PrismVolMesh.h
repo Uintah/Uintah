@@ -479,9 +479,127 @@ public:
     typedef vector<index_type>                  array_type;
   };					
   
-
   typedef Cell Elem;
   enum { ELEMENTS_E = CELLS_E };
+
+
+  friend class ElemData;
+  
+  class ElemData 
+  {
+  public:
+    ElemData(const PrismVolMesh<Basis>& msh, 
+	     const typename Cell::index_type ind) :
+      mesh_(msh),
+      index_(ind)
+    {}
+    
+    // the following designed to coordinate with ::get_nodes
+    inline 
+    unsigned node0_index() const {
+      return mesh_.cells_[index_ * 6];
+    }
+    inline 
+    unsigned node1_index() const {
+      return mesh_.cells_[index_ * 6 + 1];
+    }
+    inline 
+    unsigned node2_index() const {
+      return mesh_.cells_[index_ * 6 + 2];
+    }
+    inline 
+    unsigned node3_index() const {
+      return mesh_.cells_[index_ * 6 + 3];
+    }
+    inline 
+    unsigned node4_index() const {
+      return mesh_.cells_[index_ * 6 + 4];
+    }
+    inline 
+    unsigned node5_index() const {
+      return mesh_.cells_[index_ * 6 + 5];
+    }
+
+    // the following designed to coordinate with ::get_edges
+    inline 
+    unsigned edge0_index() const {
+      return index_ * 6;
+    }
+    inline 
+    unsigned edge1_index() const {
+      return index_ * 6 + 1;
+    }
+    inline 
+    unsigned edge2_index() const {
+      return index_ * 6 + 2;
+    }
+    inline 
+    unsigned edge3_index() const {
+      return index_ * 6 + 3;
+    }
+    inline 
+    unsigned edge4_index() const {
+      return index_ * 6 + 4;
+    }
+    inline 
+    unsigned edge5_index() const {
+      return index_ * 6 + 5;
+    }
+    inline 
+    unsigned edge6_index() const {
+      return index_ * 6 + 6;
+    }
+    inline 
+    unsigned edge7_index() const {
+      return index_ * 6 + 7;
+    }
+    inline 
+    unsigned edge8_index() const {
+      return index_ * 6 + 8;
+    }
+    inline 
+    unsigned edge9_index() const {
+      return index_ * 6 + 9;
+    }
+    inline 
+    unsigned edge10_index() const {
+      return index_ * 6 + 10;
+    }
+    inline 
+    unsigned edge11_index() const {
+      return index_ * 6 + 11;
+    }
+
+
+    inline 
+    const Point node0() const {
+      return mesh_.points_[node0_index()];
+    }
+    inline 
+    const Point node1() const {
+      return mesh_.points_[node1_index()];
+    }
+    inline 
+    const Point node2() const {
+      return mesh_.points_[node2_index()];
+    }
+    inline 
+    const Point node3() const {
+      return mesh_.points_[node3_index()];
+    }
+    inline 
+    const Point node4() const {
+      return mesh_.points_[node4_index()];
+    }
+    inline 
+    const Point node5() const {
+      return mesh_.points_[node5_index()];
+    }
+
+  private:
+    const PrismVolMesh<Basis>          &mesh_;
+    const typename Cell::index_type    index_;
+   };
 
   PrismVolMesh();
   PrismVolMesh(const PrismVolMesh &copy);
@@ -730,6 +848,69 @@ public:
   virtual bool		is_editable() const { return true; }
   virtual int           dimensionality() const { return 3; }
   Basis&                get_basis() { return basis_; }
+
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an edge.
+  void pwl_approx_edge(vector<vector<double> > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Edge::index_type ei, 
+		       unsigned div_per_unit) const
+  {    
+    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+    // compare get_nodes order to the basis order
+
+    //FIX_ME MC delete this comment when this is verified.
+
+    typename Edge::array_type edges;
+    get_edges(edges, ci);
+    unsigned count = 0;
+    typename Edge::array_type::iterator iter = edges.begin();
+    while (iter != edges.end()) {
+      if (ei == *iter++) break;
+      ++count;
+    }
+    basis_.approx_edge(count, div_per_unit, coords); 
+  }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an face.
+  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Face::index_type fi, 
+		       unsigned div_per_unit) const
+  {
+    // Needs to match unit_faces in Basis/QuadBilinearLgn.cc 
+    // compare get_nodes order to the basis order
+
+    //FIX_ME MC delete this comment when this is verified.
+
+    typename Face::array_type faces;
+    get_faces(faces, ci);
+    unsigned count = 0;
+    typename Face::array_type::iterator iter = faces.begin();
+    while (iter != faces.end()) {
+      if (fi == *iter++) break;
+      ++count;
+    }
+    basis_.approx_face(count, div_per_unit, coords);
+  }
+  
+  bool get_coords(vector<double> &coords, 
+		  const Point &p,
+		  typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    return basis_.get_coords(coords, p, ed); 
+  }
+  
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    pt = basis_.interpolate(coords, ed);
+  }
+
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
@@ -1558,7 +1739,8 @@ PrismVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Edge::
 // Always returns nodes in counter-clockwise order
 template <class Basis>
 void
-PrismVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Face::index_type idx) const
+PrismVolMesh<Basis>::get_nodes(typename Node::array_type &array, 
+			       typename Face::index_type idx) const
 {
   // Get the base cell index and the face offset
   const unsigned int offset = idx%PRISM_NFACES;
@@ -1580,7 +1762,8 @@ PrismVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Face::
 
 template <class Basis>
 void
-PrismVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Cell::index_type idx) const
+PrismVolMesh<Basis>::get_nodes(typename Node::array_type &array, 
+			       typename Cell::index_type idx) const
 {
   array.resize(PRISM_NNODES);
   const unsigned int base = idx*PRISM_NNODES;
@@ -1590,7 +1773,8 @@ PrismVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Cell::
 
 template <class Basis>
 void
-PrismVolMesh<Basis>::set_nodes(typename Node::array_type &array, typename Cell::index_type idx)
+PrismVolMesh<Basis>::set_nodes(typename Node::array_type &array, 
+			       typename Cell::index_type idx)
 {
   ASSERT(array.size() == PRISM_NNODES);
   

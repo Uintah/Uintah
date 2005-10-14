@@ -760,7 +760,6 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 	  sfld->interpolate(val1, c1, *eiter);
 	}
 	// add the geom_obj for this part....
-	  
 	add_edge_geom(lines, cylinders, p0, p1, val0, val1,
 		      def_color, vec_color, cyl, vcol0, vcol1);
 	
@@ -903,9 +902,7 @@ void add_face_geom(GeomFastTriangles *faces, GeomFastQuads *qfaces,
   }
 }
 
-template <class Fld, class Loc>      //      cerr << " - render - ";
-
-
+template <class Fld, class Loc>
 GeomHandle
 RenderField<Fld, Loc>::render_texture_face(Fld *sfld,
                                            ColorMapHandle color_handle,
@@ -1035,7 +1032,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	    vector<double> &c1 = !i%2 ? sl[i+1] : sl[i];
 	    vector<double> &c2 = sl[i+2];
 
-	    const int face_sz = mesh->get_basis().get_approx_face_elements();
+	    const int face_sz = mesh->get_basis().vertices_of_face();
 	    vector<Point> pnts(face_sz);
 	    vector<Vector> norms(face_sz);
 	    vector<typename Fld::value_type> vals(face_sz);
