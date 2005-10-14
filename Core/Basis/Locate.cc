@@ -92,13 +92,11 @@ template <>
 double getnextx1(vector<double> &x, vector<double> &xold,
 		 const Point& y, const vector<Point>& yd)
 {
-  NOT_FINISHED("Locate.cc: getnextx1");
-  //FIX_ME F.S.
-//   x[0] -= (yd.x() ? y.x()/yd.x() : 0.)+(yd.y() ? y.y()/yd.y() :
-// 					0.)+(yd.z() ? y.z()/yd.z() : 0.);
-//   const double dx=x[0]-xold[0];
-//   return sqrt(dx*dx);
-  return -1;
+  Point yd0=yd[0];
+  
+  x[0] -= (yd0.x() ? y.x()/yd0.x() : 0.)+(yd0.y() ? y.y()/yd0.y() : 0.)+(yd0.z() ? y.z()/yd0.z() : 0.);
+  const double dx=x[0]-xold[0];
+  return sqrt(dx*dx);
 }
 
 } //namespace SCIRun
