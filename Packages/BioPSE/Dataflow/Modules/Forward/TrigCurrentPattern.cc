@@ -145,12 +145,12 @@ void
   {
     if (k<((L/2)+1))
     {
-      (*currentPattern)[i] = currentMagnitude * cos(k*2*PI*i/L);
+      (*currentPattern)[i] = currentMagnitude * cos(k*2*M_PI*i/L);
     }
     else
     {
       int kNew = k-(L/2);
-      (*currentPattern)[i] = currentMagnitude * sin(kNew*2*PI*i/L);
+      (*currentPattern)[i] = currentMagnitude * sin(kNew*2*M_PI*i/L);
     }
   }
 
