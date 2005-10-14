@@ -847,17 +847,17 @@ ApplyFEMElectrodeSource::ComputeTheta(Point p)
 
   if ((p.x() <= 0) && (p.y() >= 0))
   {
-    theta = Atan(p.y()/(p.x() + 0.0000000001)) + PI;
+    theta = Atan(p.y()/(p.x() + 0.0000000001)) + M_PI;
   }
 
   if ((p.x() <= 0) && (p.y() <= 0))
   {
-    theta = Atan(p.y()/(p.x() + 0.0000000001)) + PI;
+    theta = Atan(p.y()/(p.x() + 0.0000000001)) + M_PI;
   }
 
   if ((p.x() >= 0) && (p.y() <= 0))
   {
-    theta = Atan(p.y()/(p.x() + 0.0000000001)) + 2*PI;
+    theta = Atan(p.y()/(p.x() + 0.0000000001)) + 2*M_PI;
   }
 
   if ((p.x() >= 0) && (p.y() >= 0))
