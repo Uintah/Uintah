@@ -99,10 +99,14 @@ public:
   /** Returns the name (as a string) of this component model. */
   virtual std::string getName() const;
   
-  /** Creates a list of all the available components (as ComponentDescriptions)
-      registered in this ComponentModel. */
-  virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-                                     bool);
+  /**
+   * Creates a list of all the available components (as ComponentDescriptions)
+   * registered in this ComponentModel.
+   * @param list
+   * @param listInternal currently not used
+   */
+  virtual void listAllComponentTypes(std::vector<ComponentDescription*>& list,
+                                     bool listInternal);
 
   /** ? */
   virtual void destroyComponentList();
