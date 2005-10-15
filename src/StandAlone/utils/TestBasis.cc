@@ -72,6 +72,7 @@ void TestCrvLinearLgn()
 
   CrvLinearLgn<Point> u;
   MESH::Node::array_type n;
+  n.resize(u.number_of_vertices());
   cerr<<"!\n";
 
   for(int i=0; i<u.number_of_vertices(); i++) {
@@ -126,6 +127,7 @@ void TestTetLinearLgn()
 
   TetLinearLgn<Point> u;
   MESH::Node::array_type n;
+  n.resize(u.number_of_vertices());
   cerr<<"!\n";
 
   for(int i=0; i<u.number_of_vertices(); i++) {
