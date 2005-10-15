@@ -47,7 +47,7 @@ using std::string;
 //! Class for describing unit geometry of CrvLinearLgn 
 class CrvLinearLgnUnitElement {
 public: 
-  static double unit_vertices[1][2]; //!< Parametric coordinates of vertices of unit edge
+  static double unit_vertices[2][1]; //!< Parametric coordinates of vertices 
   static int unit_edges[1][2];    //!< References to vertices of unit edge 
 
   CrvLinearLgnUnitElement() {};
