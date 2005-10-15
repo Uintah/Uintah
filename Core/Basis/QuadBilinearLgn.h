@@ -73,13 +73,6 @@ public:
 //! Class for creating geometrical approximations of Quad meshes
 class QuadApprox {  
 public:
-  //!< Parametric coordinates of vertices of unit edge
-  static double unit_vertices[4][2];
-  //!< References to vertices of unit edge 
-  static int unit_edges[4][2]; 
-  //!< References to vertices of unit face
-  static int unit_faces[1][4]; 
-
   QuadApprox() {}
   virtual ~QuadApprox() {}
    
@@ -118,12 +111,12 @@ public:
       coords[j].resize(2 * (div_per_unit + 1));
       unsigned e = 0;
       for(unsigned i = 0; i <= div_per_unit; i++) {
-	vector<double> &tmp = coords[j][e++];
-	tmp[0] = (double)div_per_unit / (double)i;
-	tmp[1] = (double)div_per_unit / (double)j;
-	tmp = coords[j][e++];
-	// tmp[0] = (double)div_per_unit/(double)i;
-	tmp[1] = (double)div_per_unit / (double)j + d;
+	vector<double> &e1 = coords[j][e++];
+	e1[0] = (double)div_per_unit / (double)i;
+	e1[1] = (double)div_per_unit / (double)j;
+	vector<double> &e2 = coords[j][e++];
+	e2[0] = e1[0];
+	e2[1] = (double)div_per_unit / (double)j + d;
       }
     }
   }
@@ -261,9 +254,9 @@ public:
     const double x = coords[0], y = coords[1];  
 
     w[0] = (-1 + x) * (-1 + y);
-    w[1] = -(x * (-1 + y));
-    w[2] = +x * y;
-    w[3] = -((-1 + x) * y);
+    w[1] = -x * (-1 + y);
+    w[2] = x * y;
+    w[3] = -(-1 + x) * y;
 
     return 4;
   }

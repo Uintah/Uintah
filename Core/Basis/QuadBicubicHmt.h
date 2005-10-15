@@ -32,7 +32,7 @@
 #if !defined(QuadBicubicHmt_h)
 #define QuadBicubicHmt_h
 
-#include <QuadBilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
 
 namespace SCIRun {
   
@@ -146,7 +146,7 @@ public:
   }  
 
   //! add derivative values (dx, dy) for nodes.
-  void add_derivative(const T &p[2]) { derivs_.push_back(p); }
+  void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
 
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);

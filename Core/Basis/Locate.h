@@ -34,11 +34,17 @@
 
 #include <vector>
 #include <math.h>
+
+#include <iostream>
+#include <fstream>
+
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
 
 using std::vector;
+using std::cerr;
+using std::endl;
 
 template <class T>
 T difference(const T& interp, const T& value);
@@ -73,6 +79,7 @@ inline void InverseMatrix3x3(const T *p, T *q)
   q[7]=(b*g-a*h)*detinvp;
   q[8]=(a*e-b*d)*detinvp;
 }
+
 template <class T>
 double getnextx1(vector<double> &x, vector<double> &xold, 
 		 const T& y, const vector<T>& yd);
@@ -179,8 +186,7 @@ public:
 template<class ElemBasis>
 const double Dim3Locate<ElemBasis>::thresholdDist=1e-7;
 template<class ElemBasis>
-const double Dim3Locate<ElemBasis>::thresholdDist1=
-1.+Dim3Locate::thresholdDist;
+const double Dim3Locate<ElemBasis>::thresholdDist1=1.+Dim3Locate::thresholdDist;
 template<class ElemBasis>
 const int Dim3Locate<ElemBasis>::maxsteps=100;
   
@@ -206,7 +212,7 @@ public:
     vector<T> yd(2);
     for (int steps=0; steps<maxsteps; steps++) {
       xold = x;
-      T y = differnce(pEB->interpolate(x, cd), value);
+      T y = difference(pEB->interpolate(x, cd), value);
       pEB->derivate(x, cd, yd);
       double dist=getnextx2(x, xold, y, yd);
       if (dist < thresholdDist) 
@@ -246,7 +252,7 @@ public:
   {          
     vector<double> xold(1); 
     vector<T> yd(1);
-	
+ 	
     for (int steps=0; steps<maxsteps; steps++) {
       xold = x;
       T y = difference(pElem->interpolate(x, cd), value); 
@@ -262,8 +268,7 @@ public:
 template<class ElemBasis>
 const double Dim1Locate<ElemBasis>::thresholdDist=1e-7;
 template<class ElemBasis>
-const double Dim1Locate<ElemBasis>::thresholdDist1=
-1.+Dim1Locate::thresholdDist;
+const double Dim1Locate<ElemBasis>::thresholdDist1=1.+Dim1Locate::thresholdDist;
 template<class ElemBasis>
 const int Dim1Locate<ElemBasis>::maxsteps=100;
 
