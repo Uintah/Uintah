@@ -131,7 +131,7 @@ protected:
   //! find a reasonable initial guess for starting Newton iteration.
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, 
-		     const ElemData &cd, vector<double> guess) const
+		     const ElemData &cd, vector<double> &guess) const
   {
     double dist = DBL_MAX;
 	
