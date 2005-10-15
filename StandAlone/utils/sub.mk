@@ -82,3 +82,8 @@ PROGRAM := $(SRCDIR)/OrientFaces
 SRCS := $(SRCDIR)/OrientFaces.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/TestBasis
+SRCS := $(SRCDIR)/TestBasis.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+
