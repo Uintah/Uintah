@@ -37,6 +37,9 @@
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/CrvQuadraticLgn.h>
 #include <Core/Basis/CrvCubicHmt.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/QuadBiquadraticLgn.h>
+#include <Core/Basis/QuadBicubicHmt.h>
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Basis/TriQuadraticLgn.h>
 #include <Core/Basis/TriCubicHmt.h>
@@ -50,8 +53,9 @@
 #include <Core/Basis/HexTricubicHmtScaleFactors.h>
 
 
-#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 
 
@@ -66,10 +70,11 @@ void TestCrvLinearLgn()
 {
   cerr<<"TestCrvMeshLinearLgn\n";
 
-  typedef CurveMesh<CrvLinearLgn<Point> > MESH;
+  typedef CrvLinearLgn<Point> MBASIS;
+  typedef CurveMesh<MBASIS > MESH;
   MESH *mesh = new MESH();
 
-  CrvLinearLgn<Point> u;
+  MBASIS u;
   MESH::Node::array_type n;
   n.resize(u.number_of_vertices());
 
@@ -99,27 +104,77 @@ void TestCrvLinearLgn()
   else
     cerr << " not found" << endl;
   
-  typedef TetLinearLgn<double>  DatBasis;
-  typedef GenericField<MESH, DatBasis, vector<double> > TVField;
-  TVField *field = scinew TVField(mesh);
+  typedef CrvLinearLgn<double>  FBASIS;
+  typedef GenericField<MESH, FBASIS, vector<double> > FIELD;
+  FIELD *field = scinew FIELD(mesh);
   field->resize_fdata();
 
-  TVField::fdata_type &d = field->fdata();
+  FIELD::fdata_type &d = field->fdata();
+  d[0] = 1;
+  d[1] = 1;
+}
+
+
+void TestQuadBilinearLgn()
+{
+  cerr<<"TestQuadBilinearLgn\n";
+
+  typedef QuadBilinearLgn<Point> MBASIS;
+  typedef QuadSurfMesh<QuadBilinearLgn<Point> > MESH;
+  MESH *mesh = new MESH();
+
+  MBASIS u;
+  MESH::Node::array_type n;
+  n.resize(u.number_of_vertices());
+ 
+  for(int i=0; i<u.number_of_vertices(); i++) {
+    Point p(u.unit_vertices[i][0]+1, u.unit_vertices[i][1]+2, 3);
+    mesh->add_point(p);
+    n[i]=i;
+  }
+  MESH::Elem::index_type ei=mesh->add_elem(n); 
+
+  cerr<<"Element index: " << ei << "\n"; 
+  
+  vector<double> coords;
+  coords.push_back(.2);
+  coords.push_back(.2);
+  Point p;
+
+  mesh->interpolate(p, coords, 0);
+
+  cerr << "Transform L->G " << coords[0] <<", " << coords[1] << " => " << p << endl;
+
+  vector<double> lc(u.domain_dimension());
+  
+  bool rc=mesh->get_coords(lc, p, 0);
+  cerr << "Transform G->L " << p << " => ";
+  if (rc) 
+    cerr << lc[0] <<", " << lc[1] << endl;
+  else
+    cerr << " not found" << endl;
+    
+  typedef QuadBilinearLgn<double>  FBASIS;
+  typedef GenericField<MESH, FBASIS, vector<double> > FIELD;
+  FIELD *field = scinew FIELD(mesh);
+  field->resize_fdata();
+
+  FIELD::fdata_type &d = field->fdata();
   d[0] = 1;
   d[1] = 1;
   d[2] = 1;
   d[3] = 1;
 }
 
-
 void TestTetLinearLgn()
 {
   cerr<<"TestTetLinearLgn\n";
 
-  typedef TetVolMesh<TetLinearLgn<Point> > MESH;
+  typedef TetLinearLgn<Point> MBASIS;
+  typedef TetVolMesh<MBASIS > MESH;
   MESH *mesh = new MESH();
 
-  TetLinearLgn<Point> u;
+  MBASIS u;
   MESH::Node::array_type n;
   n.resize(u.number_of_vertices());
  
@@ -152,12 +207,12 @@ void TestTetLinearLgn()
   else
     cerr << " not found" << endl;
     
-  typedef TetLinearLgn<double>  DatBasis;
-  typedef GenericField<MESH, DatBasis, vector<double> > TVField;
-  TVField *field = scinew TVField(mesh);
+  typedef TetLinearLgn<double>  FBASIS;
+  typedef GenericField<MESH, FBASIS, vector<double> > FIELD;
+  FIELD *field = scinew FIELD(mesh);
   field->resize_fdata();
 
-  TVField::fdata_type &d = field->fdata();
+  FIELD::fdata_type &d = field->fdata();
   d[0] = 1;
   d[1] = 1;
   d[2] = 1;
@@ -167,8 +222,9 @@ void TestTetLinearLgn()
 int
 main(int argc, char **argv) 
 {
-  TestTetLinearLgn();
-  TestCrvLinearLgn();
-
+  //TestCrvLinearLgn();
+  TestQuadBilinearLgn();
+  //TestTetLinearLgn();
+ 
   return 0;  
 }    
