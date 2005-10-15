@@ -106,7 +106,7 @@ public:
   {
   public:
     ElemData(const QuadSurfMesh<Basis>& msh, 
-	     const typename Cell::index_type ind) :
+	     const typename Elem::index_type ind) :
       mesh_(msh),
       index_(ind)
     {}
@@ -114,19 +114,19 @@ public:
     // the following designed to coordinate with ::get_nodes
     inline 
     unsigned node0_index() const {
-      return mesh_.cells_[index_ * 4];
+      return mesh_.faces_[index_ * 4];
     }
     inline 
     unsigned node1_index() const {
-      return mesh_.cells_[index_ * 4 + 1];
+      return mesh_.faces_[index_ * 4 + 1];
     }
     inline 
     unsigned node2_index() const {
-      return mesh_.cells_[index_ * 4 + 2];
+      return mesh_.faces_[index_ * 4 + 2];
     }
     inline 
     unsigned node3_index() const {
-      return mesh_.cells_[index_ * 4 + 3];
+      return mesh_.faces_[index_ * 4 + 3];
     }
 
     // the following designed to coordinate with ::get_edges
