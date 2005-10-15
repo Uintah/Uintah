@@ -36,10 +36,9 @@ ifeq ($(HAVE_QT),yes)
              $(SRCDIR)/TxtBuilder \
              $(SRCDIR)/Hello  \
              $(SRCDIR)/World \
-             $(SRCDIR)/Builder \
-             $(SRCDIR)/FileReader \
+#             $(SRCDIR)/Builder \
+#             $(SRCDIR)/FileReader \
 
-else
  SUBDIRS := \
 	$(SRCDIR)/TxtBuilder \
 #	$(SRCDIR)/Hello \

@@ -101,9 +101,9 @@ endif
 
 SUBDIRS += StandAlone $(COMPONENT_DIRS)
 
-ifeq ($(BUILD_DATAFLOW),yes)
+#ifeq ($(BUILD_DATAFLOW),yes)
   SUBDIRS += main 
-endif
+#endif
 
 SUBDIRS += testprograms $(PACKAGE_DIRS)
 

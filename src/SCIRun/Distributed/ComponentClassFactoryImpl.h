@@ -59,6 +59,7 @@ namespace SCIRun {
     
 
     virtual std::string getClassName();
+    virtual sci::cca::ComponentClassDescription::pointer getClassDescription();
 
     virtual Distributed::ComponentInfo::pointer create( const Distributed::DistributedFramework::pointer &framework,
 							const std::string &name,

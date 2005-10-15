@@ -270,7 +270,7 @@ namespace SCIRun {
     component = (*maker)();
 
     // create ComponentInfo. this must be a class the derives from Distributed/ComponentInfo
-    CCAComponentInfo *info =  new CCAComponentInfo(framework, name, type, properties, component);
+    CCAComponentInfo *info =  new CCAComponentInfo(framework, name, type, properties, component, this);
 
     // CCA initialization of the component
     component->setServices(sci::cca::Services::pointer(info));
@@ -281,9 +281,8 @@ namespace SCIRun {
 
   void CCAComponentModel::destroyComponent(const ComponentInfo::pointer &info)
   {
+    // Note [yarden]: called by the ComponentInfo destructor. Thus do not delete or decrement the info counter
     // TODO [yarden]: need to release services on the component via a callback [is this sr2 specific?]
-
-    info->getComponent()->deleteReference();
   }
   
   

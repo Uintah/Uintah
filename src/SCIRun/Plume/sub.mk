@@ -34,6 +34,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := SCIRun/Plume
 
 SRCS := \
+	$(SRCDIR)/SCIRunErrorHandler.cc \
+	$(SRCDIR)/CCAComponentClassDescription.cc \
 	$(SRCDIR)/CCAComponentInfo.cc \
 	$(SRCDIR)/CCAComponentModel.cc \
 	$(SRCDIR)/PlumeFramework.cc

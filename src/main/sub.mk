@@ -41,7 +41,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
   #
   # sr
   #
-  SRCS      := $(SRCDIR)/newmain.cc
+  SRCS      := $(SRCDIR)/plume.cc
 
   ifeq ($(LARGESOS),yes)
     PSELIBS := Core/CCA
@@ -61,7 +61,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
     LIBS += $(MPI_LIBRARY) 
   endif
 
-  PROGRAM := sr
+  PROGRAM := plume
 
   include $(SCIRUN_SCRIPTS)/program.mk
 
