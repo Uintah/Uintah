@@ -317,12 +317,12 @@ public:
 				     typename Node::index_type i2)
   {
     edges_.push_back(index_pair_type(i1,i2));
-    return static_cast<under_type>(nodes_.size()-1);
+    return static_cast<under_type>(edges_.size()-1);
   }
   typename Elem::index_type add_elem(typename Node::array_type a)
   {
     edges_.push_back(index_pair_type(a[0],a[1]));
-    return static_cast<under_type>(nodes_.size()-1);
+    return static_cast<under_type>(edges_.size()-1);
   }
   void node_reserve(size_t s) { nodes_.reserve(s); }
   void elem_reserve(size_t s) { edges_.reserve(s*2); }
