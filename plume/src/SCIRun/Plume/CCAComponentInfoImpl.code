@@ -74,7 +74,11 @@ namespace SCIRun {
   template<class Base>
   CCAComponentInfoImpl<Base>::~CCAComponentInfoImpl() 
   {
-    return model->destroyComponent(pointer(this));
+    // first inform the model to remove the component
+    model->destroyComponent(pointer(this));
+
+    // now we can remove any additional resources we allocated
+    // note: none at this point in time.
  }
 
   // from cca.Services

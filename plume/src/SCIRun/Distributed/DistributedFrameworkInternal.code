@@ -47,6 +47,8 @@
 #include <SCIRun/Distributed/ConnectionInfo.h>
 #include <SCIRun/Distributed/ComponentID.h>
 #include <SCIRun/Distributed/ComponentInfo.h>
+#include <SCIRun/Distributed/TypeMap.h>
+
 #include <Core/Thread/Guard.h>
 
 #include <SCIRun/Distributed/DistributedFrameworkImpl.code>
@@ -96,6 +98,20 @@ namespace SCIRun {
 
     return info;
   }
+ 
+  template<class Base>
+  SSIDL::array1<sci::cca::ComponentClassDescription::pointer> 
+  DistributedFrameworkInternal<Base>::listAllComponentTypes( bool )
+  {
+    SSIDL::array1<sci::cca::ComponentClassDescription::pointer> types;
+
+    Guard guard(&factory_lock);
+    
+    for (ComponentClassFactoryMap::iterator factory = factories.begin(); factory != factories.end(); ++factory)
+      types.push_back(factory->second->getClassDescription());
+
+    return types;
+  }
 
   template<class Base>
   ComponentID::pointer DistributedFrameworkInternal<Base>::lookupComponentID(const std::string &name) 
@@ -109,22 +125,38 @@ namespace SCIRun {
       return id->second;
   }
 
-#if 0
-  // FIXME [yarden] moved to a pure function to be implemented by the derived framework
+  template<class Base>
+  sci::cca::TypeMap ::pointer
+  DistributedFrameworkInternal<Base>::createTypeMap()
+  {
+    return TypeMap::pointer( new TypeMap );
+  }
+    
+  template<class Base>
+  sci::cca::Services::pointer DistributedFrameworkInternal<Base>::getServices( const std::string &name, 
+									       const std::string &type, 
+									       const sci::cca::TypeMap::pointer &properties)
+  {
+    throw CCAException::create("getServices is not implemented by DistributedFramework.");
+  }
 
   template<class Base>
-  SSIDL::array1<sci::cca::ComponentClassDescription::pointer> listAllComponentTypes( bool );
+  void DistributedFrameworkInternal<Base>::releaseServices( const sci::cca::Services::pointer &services)
   {
-    // FIXME: [yarden] need to copy this function
-    SSIDL::array1<sci::cca::ComponentClassDescription::pointer> all;
-    
-    for(std::vector<ComponentDescription*>::iterator iter = list.begin();
-	iter != list.end(); iter++) {
-      ccalist.push_back(sci::cca::ComponentClassDescription::pointer(new ComponentClassDescription(*iter)));
-    }
-    return ccalist;
+    // same as regular destroyInstance
   }
-#endif
+    
+  template<class Base>
+  sci::cca::AbstractFramework::pointer DistributedFrameworkInternal<Base>::createEmptyFramework()
+  {
+    return pointer(new DistributedFramework(pointer(this)));
+  }
+
+  template<class Base>
+  void DistributedFrameworkInternal<Base>::shutdownFramework()
+  {
+    // Fixme [yarden]: is there anything to do here ?
+  }
 
   template<class Base>
   SSIDL::array1<ComponentID::pointer>
@@ -168,36 +200,50 @@ namespace SCIRun {
 
   
   template<class Base>
-  void DistributedFrameworkInternal<Base>::disconnect(const ConnectionID::pointer &connection)
+  void 
+  DistributedFrameworkInternal<Base>::addConnection( const sci::cca::ConnectionID::pointer &connection )
   {
     SCIRun::Guard guard(&connection_lock);
-    
-    ConnectionList::iterator c = find( connections.begin(), connections.end(), pidl_cast<ConnectionInfo::pointer>(connection));
-    if ( c != connections.end() )
-      connections.erase(c);
-    // TODO [yarden]: 
-    // else throw exception
+
+    ConnectionInfo::pointer connectionInfo = pidl_cast<ConnectionInfo::pointer>(connection);
+
+    if ( find( connections.begin(), connections.end(), connectionInfo ) != connections.end() )
+      throw CCAException::create("connection already exist ", sci::cca::Unexpected);
+
+    connections.push_back(connectionInfo);
+  }
+
+  template<class Base>
+  void 
+  DistributedFrameworkInternal<Base>::disconnect( const sci::cca::ConnectionID::pointer &connection )
+  {
+    SCIRun::Guard guard(&connection_lock);
+
+    ConnectionInfo::pointer connectionInfo = pidl_cast<ConnectionInfo::pointer>(connection);
+
+    ConnectionList::iterator c = find(connections.begin(), connections.end(), connectionInfo);
+    if ( c == connections.end() )
+      throw CCAException::create("connection does not exist ", sci::cca::Unexpected);
+
+    connections.erase(c);
   }
 
 
   template<class Base>
-  void DistributedFrameworkInternal<Base>::destroyInstance( const ComponentID::pointer &component )
+  void DistributedFrameworkInternal<Base>::destroyInstance( const ComponentID::pointer &componentID )
   {
     SCIRun::Guard guard(&component_lock);
     
-    // call the virtual function that actually delete the component 
-    ComponentInfo::pointer info = pidl_cast<ComponentInfo::pointer>(component);
-    info->destroyComponent();
-    
+    ComponentInfo::pointer info = pidl_cast<ComponentInfo::pointer>(componentID);
     ComponentMap::iterator c = components.find( info->getInstanceName() );
-    if ( c != components.end() ) {
-      // erase the last reference to the component info
-      components.erase(c);
+
+    if ( c == components.end() ) {
+      throw CCAException::create("request to desrtoy an instance that is not registered with the framework [" + 
+				 info->getInstanceName() + "]");
     }
-    else {
-      // TODO [yarden]: 
-      // throw exception ?
-    }
+
+    // reduce reference to the component info
+    components.erase(c);
   }
 
   template<class Base>
@@ -223,7 +269,7 @@ namespace SCIRun {
     Guard guard(&factory_lock);
 
     if ( factories.find(factory->getClassName()) != factories.end() )
-      throw new FrameworkInternalException("ComponentClassFactory ["+factory->getClassName()+"] registerd twice");
+      throw CCAException::create("ComponentClassFactory ["+factory->getClassName()+"] registerd twice");
 
     factories[factory->getClassName()] = factory;
   }

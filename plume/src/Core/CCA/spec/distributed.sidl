@@ -45,6 +45,8 @@ package sci {
       {
 	DistributedFramework getFramework();
 
+	Component getComponent();
+
 	array<PortInfo,1> getPorts();
 	PortInfo getPortInfo( in string portName );
 	
@@ -52,7 +54,7 @@ package sci {
 	TypeMap getProperties();
 	void setProperties( in TypeMap );
 
-	Component getComponent();
+	void destroyComponent();
       }
 
       package internal {
@@ -193,10 +195,6 @@ package sci {
 	  array<ComponentID,1> getComponentIDs();
 	  array<ConnectionID,1> getConnectionIDs( in array<ComponentID,1>);
 
-	  // abstract. to be implemenent by concrete frameworks that derive from Distributed
-	  ComponentInfo createComponent( in string name, in string type, in TypeMap properties);
-	  void destroyComponent( in ComponentInfo );
-	  
 	  // component manipulations
 	  ComponentInfo createInstance( in string name, in string type, in TypeMap properties);
 	  array<cca.ComponentClassDescription> listAllComponentTypes(in bool);
@@ -209,7 +207,18 @@ package sci {
 	  // services
 	  Service getFrameworkService(in string);
 	  void releaseFrameworkService(in Service);
+
+	  // factories
+	  void addComponentClassFactory( in ComponentClassFactory );
 	}
+	
+	interface ComponentClassFactory 
+	{
+	  string getClassName();
+	  ComponentClassDescription getClassDescription();
+	  ComponentInfo create(in DistributedFramework, in string name, in TypeMap);
+	}
+	
       }
 
       // various framework services

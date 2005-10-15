@@ -63,6 +63,12 @@ namespace SCIRun {
   {
     return desc->getComponentClassName();
   }
+
+  template<class Base>
+  sci::cca::ComponentClassDescription::pointer ComponentClassFactoryImpl<Base>::getClassDescription()
+  {
+    return desc;
+  }
 }
 
 #endif

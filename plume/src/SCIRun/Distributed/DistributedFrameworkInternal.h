@@ -71,11 +71,23 @@ namespace SCIRun {
     DistributedFrameworkInternal( const pointer &parent = pointer(0));
     virtual ~DistributedFrameworkInternal();
 
+    virtual SSIDL::array1<sci::cca::ComponentClassDescription::pointer> listAllComponentTypes( bool );
+
     /*
-     * Three pure virtual methods to create and destroy a component.
-     * These methods must be defined in the Framework that derives from this DistributedFramework base
+     * methods to implement AbstractFractory
      */
-    virtual SSIDL::array1<sci::cca::ComponentClassDescription::pointer> listAllComponentTypes( bool ) = 0;
+
+    virtual sci::cca::TypeMap::pointer createTypeMap();
+    
+    virtual sci::cca::Services::pointer getServices( const std::string &name, 
+						     const std::string &type, 
+						     const sci::cca::TypeMap::pointer &pointer);
+
+    virtual void releaseServices( const sci::cca::Services::pointer &services);
+    
+    virtual sci::cca::AbstractFramework::pointer createEmptyFramework();
+
+    virtual void shutdownFramework();
 
     /*
      * methods that implement the DistributedFramework 
@@ -93,8 +105,8 @@ namespace SCIRun {
 
     SSIDL::array1<sci::cca::ConnectionID::pointer> getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer> &componentList);
 
-    void addConnection(sci::cca::ConnectionID::pointer);
-    void disconnect(const sci::cca::ConnectionID::pointer& connection);
+    void addConnection(const sci::cca::ConnectionID::pointer &connection) ;
+    void disconnect(const sci::cca::ConnectionID::pointer &connection);
 
 
     ServicePointer getFrameworkService(const std::string &);

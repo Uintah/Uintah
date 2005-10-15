@@ -59,7 +59,8 @@ namespace SCIRun {
 		     const std::string& instanceName,
 		     const std::string& className,
 		     const sci::cca::TypeMap::pointer& properties,
-		     const sci::cca::Component::pointer& component);
+		     const sci::cca::Component::pointer& component,
+		     CCAComponentModel *model);
     virtual ~CCAComponentInfo();
   };
 

@@ -47,8 +47,9 @@ namespace SCIRun {
 				     const std::string& instanceName,
 				     const std::string& className,
 				     const sci::cca::TypeMap::pointer& properties,
-				     const sci::cca::Component::pointer& component)
-    : CCAComponentInfoImpl<Plume::CCAComponentInfo>(framework, instanceName, className, properties, component)
+				     const sci::cca::Component::pointer& component,
+				     CCAComponentModel *model)
+    : CCAComponentInfoImpl<Plume::CCAComponentInfo>(framework, instanceName, className, properties, component, model)
   {}
   
   CCAComponentInfo::~CCAComponentInfo() {}

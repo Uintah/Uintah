@@ -42,8 +42,10 @@
 #define SCIRun_Framework_PlumeFrameworkImpl_h
 
 
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Distributed/DistributedFrameworkInternal.h>
 #include <SCIRun/Plume/CCAComponentModel.h>
+#include <SCIRun/Plume/CCAComponentInfo.h>
 #include <SCIRun/Distributed/DistributedFramework.h>
 
 namespace SCIRun {
@@ -66,27 +68,8 @@ namespace SCIRun {
     virtual ~PlumeFrameworkImpl();
     
     /*
-     * Two pure virtual methods to create and destroy a component.
-     */
-//     virtual Distributed::ComponentInfo::pointer
-//     createComponent( const std::string &, const std::string &, const sci::cca::TypeMap::pointer &);
-
-//     virtual void destroyComponent( const Distributed::ComponentInfo::pointer &info);
-
-    /*
      * from AbstractFramework
      */
-
-    /** */
-    virtual sci::cca::TypeMap::pointer createTypeMap();
-
-    /** */
-    virtual sci::cca::Services::pointer getServices( const std::string &, 
-						     const std::string &, 
-						     const sci::cca::TypeMap::pointer &);
-    
-    /** */
-    virtual void releaseServices( const sci::cca::Services::pointer &);
 
     /** */
     virtual void shutdownFramework();

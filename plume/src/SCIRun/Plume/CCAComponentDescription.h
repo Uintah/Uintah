@@ -41,11 +41,12 @@
 #ifndef SCIRun_CCAComponentDescription_h
 #define SCIRun_CCAComponentDescription_h
 
+#include <SCIRun/Distributed/ComponentDescription.h>
 #include <string>
 
 namespace SCIRun
 {
-
+  
   /** \class CCAComponentDescription
    *
    */
