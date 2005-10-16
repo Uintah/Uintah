@@ -29,8 +29,9 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Basis/HexTricubicHmt.h>
 #include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTricubicHmt.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
@@ -46,6 +47,23 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 
 using namespace SCIRun;
 
+//NoData
+typedef NoDataBasis<double>                NDBasis;
+
+//Linear
+typedef ConstantBasis<Tensor>                CFDTensorBasis;
+typedef ConstantBasis<Vector>                CFDVectorBasis;
+typedef ConstantBasis<double>                CFDdoubleBasis;
+typedef ConstantBasis<float>                 CFDfloatBasis;
+typedef ConstantBasis<int>                   CFDintBasis;
+typedef ConstantBasis<short>                 CFDshortBasis;
+typedef ConstantBasis<char>                  CFDcharBasis;
+typedef ConstantBasis<unsigned int>          CFDuintBasis;
+typedef ConstantBasis<unsigned short>        CFDushortBasis;
+typedef ConstantBasis<unsigned char>         CFDucharBasis;
+typedef ConstantBasis<unsigned long>         CFDulongBasis;
+
+//Linear
 typedef HexTrilinearLgn<Tensor>                FDTensorBasis;
 typedef HexTrilinearLgn<Vector>                FDVectorBasis;
 typedef HexTrilinearLgn<double>                FDdoubleBasis;
@@ -60,8 +78,25 @@ typedef HexTrilinearLgn<unsigned long>         FDulongBasis;
 
 typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
 PersistentTypeID backwards_compat_HVM("HexVolMesh", "Mesh",
-				      HVMesh::maker, true);
+				      HVMesh::maker, HVMesh::maker);
 
+//NoData
+template class GenericField<HVMesh, NDBasis, vector<double> >;
+
+//Constant
+template class GenericField<HVMesh, CFDTensorBasis, vector<Tensor> >;       
+template class GenericField<HVMesh, CFDVectorBasis, vector<Vector> >;       
+template class GenericField<HVMesh, CFDdoubleBasis, vector<double> >;       
+template class GenericField<HVMesh, CFDfloatBasis,  vector<float> >;        
+template class GenericField<HVMesh, CFDintBasis,    vector<int> >;          
+template class GenericField<HVMesh, CFDshortBasis,  vector<short> >;        
+template class GenericField<HVMesh, CFDcharBasis,   vector<char> >;         
+template class GenericField<HVMesh, CFDuintBasis,   vector<unsigned int> >; 
+template class GenericField<HVMesh, CFDushortBasis, vector<unsigned short> >;
+template class GenericField<HVMesh, CFDucharBasis,  vector<unsigned char> >;
+template class GenericField<HVMesh, CFDulongBasis,  vector<unsigned long> >;
+
+//Linear
 template class GenericField<HVMesh, FDTensorBasis, vector<Tensor> >;       
 template class GenericField<HVMesh, FDVectorBasis, vector<Vector> >;       
 template class GenericField<HVMesh, FDdoubleBasis, vector<double> >;       
@@ -75,39 +110,74 @@ template class GenericField<HVMesh, FDucharBasis,  vector<unsigned char> >;
 template class GenericField<HVMesh, FDulongBasis,  vector<unsigned long> >;
 
 
-PersistentTypeID backwards_compat_HVFT("HexVolField<Tensor>", "Field",
-				       GenericField<HVMesh, FDTensorBasis, 
-				       vector<Tensor> >::maker, true);
-PersistentTypeID backwards_compat_HVFV("HexVolField<Vector>", "Field",
-				       GenericField<HVMesh, FDVectorBasis, 
-				       vector<Vector> >::maker, true);
-PersistentTypeID backwards_compat_HVFd("HexVolField<double>", "Field",
-				       GenericField<HVMesh, FDdoubleBasis, 
-				       vector<double> >::maker, true);
-PersistentTypeID backwards_compat_HVFf("HexVolField<float>", "Field",
-				       GenericField<HVMesh, FDfloatBasis, 
-				       vector<float> >::maker, true);
-PersistentTypeID backwards_compat_HVFi("HexVolField<int>", "Field",
-				       GenericField<HVMesh, FDintBasis, 
-				       vector<int> >::maker, true);
-PersistentTypeID backwards_compat_HVFs("HexVolField<short>", "Field",
-				       GenericField<HVMesh, FDshortBasis, 
-				       vector<short> >::maker, true);
-PersistentTypeID backwards_compat_HVFc("HexVolField<char>", "Field",
-				       GenericField<HVMesh, FDcharBasis, 
-				       vector<char> >::maker, true);
-PersistentTypeID backwards_compat_HVFui("HexVolField<unsigned_int>", "Field",
-				       GenericField<HVMesh, FDuintBasis, 
-				       vector<unsigned int> >::maker, true);
-PersistentTypeID backwards_compat_HVFus("HexVolField<unsigned_short>", "Field",
-				       GenericField<HVMesh, FDushortBasis, 
-				       vector<unsigned short> >::maker, true);
-PersistentTypeID backwards_compat_HVFuc("HexVolField<unsigned_char>", "Field",
-				       GenericField<HVMesh, FDucharBasis, 
-				       vector<unsigned char> >::maker, true);
-PersistentTypeID backwards_compat_HVFul("HexVolField<unsigned_long>", "Field",
-				       GenericField<HVMesh, FDulongBasis, 
-				       vector<unsigned long> >::maker, true);
+PersistentTypeID 
+backwards_compat_HVFT("HexVolField<Tensor>", "Field",
+		      GenericField<HVMesh, FDTensorBasis, 
+		      vector<Tensor> >::maker,
+		      GenericField<HVMesh, CFDTensorBasis, 
+		      vector<Tensor> >::maker);
+PersistentTypeID 
+backwards_compat_HVFV("HexVolField<Vector>", "Field",
+		      GenericField<HVMesh, FDVectorBasis, 
+		      vector<Vector> >::maker,
+		      GenericField<HVMesh, CFDVectorBasis, 
+		      vector<Vector> >::maker);
+PersistentTypeID 
+backwards_compat_HVFd("HexVolField<double>", "Field",
+		      GenericField<HVMesh, FDdoubleBasis, 
+		      vector<double> >::maker,
+		      GenericField<HVMesh, CFDdoubleBasis, 
+		      vector<double> >::maker,
+		      GenericField<HVMesh, NDBasis, 
+		      vector<double> >::maker);
+PersistentTypeID 
+backwards_compat_HVFf("HexVolField<float>", "Field",
+		      GenericField<HVMesh, FDfloatBasis, 
+		      vector<float> >::maker,
+		      GenericField<HVMesh, CFDfloatBasis, 
+		      vector<float> >::maker);
+PersistentTypeID 
+backwards_compat_HVFi("HexVolField<int>", "Field",
+		      GenericField<HVMesh, FDintBasis, 
+		      vector<int> >::maker,
+		      GenericField<HVMesh, CFDintBasis, 
+		      vector<int> >::maker);
+PersistentTypeID 
+backwards_compat_HVFs("HexVolField<short>", "Field",
+		      GenericField<HVMesh, FDshortBasis, 
+		      vector<short> >::maker,
+		      GenericField<HVMesh, CFDshortBasis, 
+		      vector<short> >::maker);
+PersistentTypeID 
+backwards_compat_HVFc("HexVolField<char>", "Field",
+		      GenericField<HVMesh, FDcharBasis, 
+		      vector<char> >::maker,
+		      GenericField<HVMesh, CFDcharBasis, 
+		      vector<char> >::maker);
+PersistentTypeID 
+backwards_compat_HVFui("HexVolField<unsigned_int>", "Field",
+		       GenericField<HVMesh, FDuintBasis, 
+		       vector<unsigned int> >::maker,
+		       GenericField<HVMesh, CFDuintBasis, 
+		       vector<unsigned int> >::maker);
+PersistentTypeID 
+backwards_compat_HVFus("HexVolField<unsigned_short>", "Field",
+		       GenericField<HVMesh, FDushortBasis, 
+		       vector<unsigned short> >::maker,
+		       GenericField<HVMesh, CFDushortBasis, 
+		       vector<unsigned short> >::maker);
+PersistentTypeID 
+backwards_compat_HVFuc("HexVolField<unsigned_char>", "Field",
+		       GenericField<HVMesh, FDucharBasis, 
+		       vector<unsigned char> >::maker,
+		       GenericField<HVMesh, CFDucharBasis, 
+		       vector<unsigned char> >::maker);
+PersistentTypeID 
+backwards_compat_HVFul("HexVolField<unsigned_long>", "Field",
+		       GenericField<HVMesh, FDulongBasis, 
+		       vector<unsigned long> >::maker,
+		       GenericField<HVMesh, CFDulongBasis, 
+		       vector<unsigned long> >::maker);
 
 
 typedef HexTricubicHmt<double>             HTCdoubleBasis;

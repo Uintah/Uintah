@@ -239,6 +239,29 @@ BinaryPiostream::~BinaryPiostream()
   if (fp_) fclose(fp_);
 }
 
+void
+BinaryPiostream::reset_post_header() 
+{
+  if (! reading()) return;
+
+  fseek(fp_, 0, SEEK_SET);
+
+  if (version() == 1)
+  {
+    // Old versions had headers of size 12.
+    char hdr[12];    
+    // read header
+    fread(hdr, 1, 12, fp_);
+  }
+  else
+  {
+    // Versions > 1 have size of 16 to account for endianness in
+    // header (LIT | BIG).
+    char hdr[16];    
+    // read header
+    fread(hdr, 1, 16, fp_);
+  }
+}
 
 const char *
 BinaryPiostream::endianness()
@@ -853,6 +876,23 @@ TextPiostream::~TextPiostream()
   }
 }
 
+void
+TextPiostream::reset_post_header() 
+{  
+  if (! reading()) return;
+  istr->seekg(0, ios::beg);
+
+  char hdr[12];
+  istr->read(hdr, 8);
+  int c=8;
+  while (*istr && c < 12)
+  {
+    hdr[c]=istr->get();
+    if (hdr[c] == '\n')
+      break;
+    c++;
+  }
+}
 
 void
 TextPiostream::io(int do_quotes, string& str)
@@ -1752,6 +1792,25 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
 FastPiostream::~FastPiostream()
 {
   if (fp_) fclose(fp_);
+}
+
+
+void
+FastPiostream::reset_post_header() 
+{
+  if (! reading()) return;
+
+  if (version() == 1)
+  {
+    // Old versions had headers of size 12.
+    fseek(fp_, 13, SEEK_SET);
+  }
+  else
+  {
+    // Versions > 1 have size of 16 to account for endianness in
+    // header (LIT | BIG).
+    fseek(fp_, 17, SEEK_SET);
+  }
 }
 
 

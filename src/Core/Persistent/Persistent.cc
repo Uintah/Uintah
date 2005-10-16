@@ -78,11 +78,13 @@ const int Piostream::PERSISTENT_VERSION = 2;
 PersistentTypeID::PersistentTypeID(const string& typeName, 
 				   const string& parentName,
 				   Persistent* (*maker)(),
-				   bool backwards_compat) :  
+				   Persistent* (*bc1)(),
+				   Persistent* (*bc2)()) :  
   type(typeName),
   parent(parentName), 
   maker(maker),
-  backwards_compat_(backwards_compat)
+  bc_maker1(bc1),
+  bc_maker2(bc2)
 {
 #if DEBUG
   // Using printf as cerr causes a core dump (probably cerr has not
@@ -184,8 +186,8 @@ Piostream::Piostream(Direction dir, int version, const string &name,
     have_peekname_(false),
     reporter_(pr),
     own_reporter_(false),
-    file_name(name),
-    backwards_compat_id_(false)
+    backwards_compat_id_(false),
+    file_name(name)
 {
   if (reporter_ == NULL)
   {
@@ -370,6 +372,8 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 #endif
 
       Persistent* (*maker)() = 0;
+      Persistent* (*bc_maker1)() = 0;
+      Persistent* (*bc_maker2)() = 0;
       if (in_name == want_name || backwards_compat_id_)
       {
 	maker = pid.maker;
@@ -381,7 +385,9 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	if (found_pid)
         {
 	  maker = found_pid->maker;
-	  if (found_pid->backwards_compat_) set_backwards_compat_id(true);
+	  bc_maker1 = found_pid->bc_maker1;
+	  bc_maker2 = found_pid->bc_maker2;
+	  if (bc_maker1) set_backwards_compat_id(true);
 	}
         else
         {
@@ -402,6 +408,35 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
       data = (*maker)();
       // Read it in.
       data->io(*this);
+      if (err && backwards_compat_id_) {
+	err = 0;
+	reset_post_header();
+	// replicate the io that has gone before this point.
+	begin_cheap_delim();
+	int hd;
+	int p_id;
+	data = 0;
+	emit_pointer(hd, p_id);
+	if (hd) peek_class();
+	data = (*bc_maker1)();
+	// Read it in.
+	data->io(*this);
+	if (err && bc_maker2) {
+	  err = 0;
+	  reset_post_header();
+	  // replicate the io that has gone before this point.
+	  begin_cheap_delim();
+	  int hd;
+	  int p_id;
+	  data = 0;
+	  emit_pointer(hd, p_id);
+	  if (hd) peek_class();
+	  data = (*bc_maker2)();
+	  // Read it in.
+	  data->io(*this);
+	}
+      }
+    
 
       // Insert this pointer in the database.
       if (!inpointers)

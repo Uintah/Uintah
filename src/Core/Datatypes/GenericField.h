@@ -110,7 +110,8 @@ public:
   }
 
   void cell_gradient(typename mesh_type::Elem::index_type ci,
-		     vector<value_type> &grad);
+		     vector<value_type> &grad) const;
+
   virtual void resize_fdata();
 
   fdata_type& fdata();
@@ -141,7 +142,7 @@ private:
     typedef typename FData::value_type value_type;
 
     ElemData(const FLD& fld, 
-		typename FLD::mesh_type::Elem::index_type idx) :
+	     typename FLD::mesh_type::Elem::index_type idx) :
       fld_(fld),
       index_(idx)
     {
@@ -277,7 +278,7 @@ private:
     const FLD                                   &fld_; //the field 
     typename FLD::mesh_type::Node::array_type    nodes_;
     typename FLD::mesh_type::Edge::array_type    edges_;
-    unsigned                                     index_;
+    typename FLD::mesh_type::Elem::index_type    index_;
   };
 
 
@@ -371,8 +372,9 @@ void GenericField<Mesh, Basis, FData>::io(Piostream& stream)
   if (stream.backwards_compat_id()) {
     version = stream.begin_class(type_name(-1), GENERICFIELD_VERSION);
   }
-
   Field::io(stream);
+  if (stream.error()) return;
+
   if (version < 2)
     mesh_->io(stream);
   else
@@ -703,7 +705,7 @@ template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::
 cell_gradient(typename mesh_type::Elem::index_type ci,
-	      vector<value_type> &grad)
+	      vector<value_type> &grad) const
 {
   // supported for linear, should be expanded to support higher order.
   ASSERT(this->basis_order() == 1);

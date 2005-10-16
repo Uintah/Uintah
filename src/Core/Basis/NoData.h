@@ -60,25 +60,25 @@ public:
   int polynomial_order() const { return -1; }
   
   //! get value at parametric coordinate 
-  template <class CellData>
-  T interpolate(const vector<double> &coords, const CellData &cd) const
+  template <class ElemData>
+  T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
     ASSERTFAIL("Data associated with basis 'NoDataBasis'");
   }
   
   //! get first derivative at parametric coordinate
-  template <class CellData>
-  void derivate(const vector<double> &coords, const CellData &cd, 
-		vector<T> &grad) const
+  template <class ElemData>
+  void derivate(const vector<double> &coords, const ElemData &cd, 
+		vector<T> &derivs) const
   {
     ASSERTFAIL("Data associated with basis 'NoDataBasis'");
   }
   
   //! get parametric coordinate for value within the element
   //! iterative solution...
-  template <class CellData>
+  template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
-		  const CellData &cd) const
+		  const ElemData &cd) const
   {
     ASSERTFAIL("Coordinates cannot be cassociated with basis 'NoDataBasis'");
   }

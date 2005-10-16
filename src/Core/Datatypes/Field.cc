@@ -53,11 +53,43 @@ Field::io(Piostream& stream)
 {
   int version = stream.begin_class("Field", FIELD_VERSION);
   if (version < 3) {
-    // used to be data_location, then order at this point.
-    unsigned tmp = 0;
+    // The following was FIELD_VERSION 1 data_at ordering
+    //     enum data_location{
+    //       NODE,
+    //       EDGE,
+    //       FACE,
+    //       CELL,
+    //       NONE
+    //     };
+
+    unsigned int tmp;
+    int order = 999;
     Pio(stream, tmp);
+    if (tmp == 0) {
+      // data_at_ was NODE
+      order = 1;
+      if (mesh()->dimensionality() == 0) order = 0;
+    } else if (tmp == 4) {
+      // data_at_ was NONE
+      order = -1;
+    } else {
+      // data_at_ was somewhere else
+      order = 0;
+    }
+    
+    if (order != basis_order()) {
+      // signal error in the stream and return;
+      stream.flag_error();
+      return;
+    }
+  }
+  bool bc = false;
+  if (stream.backwards_compat_id()) {
+    bc = true;
+    stream.set_backwards_compat_id(false);
   }
   PropertyManager::io(stream);
+  stream.set_backwards_compat_id(bc);
   stream.end_class();
 }
 
