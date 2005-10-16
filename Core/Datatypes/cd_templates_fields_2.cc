@@ -37,8 +37,23 @@
 #include <Core/Datatypes/GenericField.h>
 
 using namespace SCIRun;
+//NoData
+typedef NoDataBasis<double>                  NDBasis;
 
+//Constant
+typedef ConstantBasis<Tensor>                CFDTensorBasis;
+typedef ConstantBasis<Vector>                CFDVectorBasis;
+typedef ConstantBasis<double>                CFDdoubleBasis;
+typedef ConstantBasis<float>                 CFDfloatBasis;
+typedef ConstantBasis<int>                   CFDintBasis;
+typedef ConstantBasis<short>                 CFDshortBasis;
+typedef ConstantBasis<char>                  CFDcharBasis;
+typedef ConstantBasis<unsigned int>          CFDuintBasis;
+typedef ConstantBasis<unsigned short>        CFDushortBasis;
+typedef ConstantBasis<unsigned char>         CFDucharBasis;
+typedef ConstantBasis<unsigned long>         CFDulongBasis;
 
+//Linear
 typedef CrvLinearLgn<Tensor>                FDTensorBasis;
 typedef CrvLinearLgn<Vector>                FDVectorBasis;
 typedef CrvLinearLgn<double>                FDdoubleBasis;
@@ -53,7 +68,24 @@ typedef CrvLinearLgn<unsigned long>         FDulongBasis;
 
 typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
 PersistentTypeID backwards_compat_SLM("ScanlineMesh", "Mesh",
-				      SLMesh::maker, true);
+				      SLMesh::maker, SLMesh::maker);
+//NoData
+template class GenericField<SLMesh, NDBasis, vector<double> >;
+
+//Linear
+template class GenericField<SLMesh, CFDTensorBasis, vector<Tensor> >;       
+template class GenericField<SLMesh, CFDVectorBasis, vector<Vector> >;       
+template class GenericField<SLMesh, CFDdoubleBasis, vector<double> >;       
+template class GenericField<SLMesh, CFDfloatBasis,  vector<float> >;        
+template class GenericField<SLMesh, CFDintBasis,    vector<int> >;          
+template class GenericField<SLMesh, CFDshortBasis,  vector<short> >;        
+template class GenericField<SLMesh, CFDcharBasis,   vector<char> >;         
+template class GenericField<SLMesh, CFDuintBasis,   vector<unsigned int> >; 
+template class GenericField<SLMesh, CFDushortBasis, vector<unsigned short> >;
+template class GenericField<SLMesh, CFDucharBasis,  vector<unsigned char> >;
+template class GenericField<SLMesh, CFDulongBasis,  vector<unsigned long> >;
+
+//Linear
 template class GenericField<SLMesh, FDTensorBasis, vector<Tensor> >;       
 template class GenericField<SLMesh, FDVectorBasis, vector<Vector> >;       
 template class GenericField<SLMesh, FDdoubleBasis, vector<double> >;       
@@ -66,100 +98,157 @@ template class GenericField<SLMesh, FDushortBasis, vector<unsigned short> >;
 template class GenericField<SLMesh, FDucharBasis,  vector<unsigned char> >;
 template class GenericField<SLMesh, FDulongBasis,  vector<unsigned long> >;
 
-PersistentTypeID backwards_compat_SLFT("ScanlineField<Tensor>", "Field",
-				       GenericField<SLMesh, FDTensorBasis, 
-				       vector<Tensor> >::maker, true);
-PersistentTypeID backwards_compat_SLFV("ScanlineField<Vector>", "Field",
-				       GenericField<SLMesh, FDVectorBasis, 
-				       vector<Vector> >::maker, true);
-PersistentTypeID backwards_compat_SLFd("ScanlineField<double>", "Field",
-				       GenericField<SLMesh, FDdoubleBasis, 
-				       vector<double> >::maker, true);
-PersistentTypeID backwards_compat_SLFf("ScanlineField<float>", "Field",
-				       GenericField<SLMesh, FDfloatBasis, 
-				       vector<float> >::maker, true);
-PersistentTypeID backwards_compat_SLFi("ScanlineField<int>", "Field",
-				       GenericField<SLMesh, FDintBasis, 
-				       vector<int> >::maker, true);
-PersistentTypeID backwards_compat_SLFs("ScanlineField<short>", "Field",
-				       GenericField<SLMesh, FDshortBasis, 
-				       vector<short> >::maker, true);
-PersistentTypeID backwards_compat_SLFc("ScanlineField<char>", "Field",
-				       GenericField<SLMesh, FDcharBasis, 
-				       vector<char> >::maker, true);
-PersistentTypeID backwards_compat_SLFui("ScanlineField<unsigned_int>", "Field",
-				       GenericField<SLMesh, FDuintBasis, 
-				       vector<unsigned int> >::maker, true);
-PersistentTypeID backwards_compat_SLFus("ScanlineField<unsigned_short>", "Field",
-				       GenericField<SLMesh, FDushortBasis, 
-				       vector<unsigned short> >::maker, true);
-PersistentTypeID backwards_compat_SLFuc("ScanlineField<unsigned_char>", "Field",
-				       GenericField<SLMesh, FDucharBasis, 
-				       vector<unsigned char> >::maker, true);
-PersistentTypeID backwards_compat_SLFul("ScanlineField<unsigned_long>", "Field",
-				       GenericField<SLMesh, FDulongBasis, 
-				       vector<unsigned long> >::maker, true);
-
-
-typedef ConstantBasis<Tensor>                FDCTensorBasis;
-typedef ConstantBasis<Vector>                FDCVectorBasis;
-typedef ConstantBasis<double>                FDCdoubleBasis;
-typedef ConstantBasis<float>                 FDCfloatBasis;
-typedef ConstantBasis<int>                   FDCintBasis;
-typedef ConstantBasis<short>                 FDCshortBasis;
-typedef ConstantBasis<char>                  FDCcharBasis;
-typedef ConstantBasis<unsigned int>          FDCuintBasis;
-typedef ConstantBasis<unsigned short>        FDCushortBasis;
-typedef ConstantBasis<unsigned char>         FDCucharBasis;
-typedef ConstantBasis<unsigned long>         FDCulongBasis;
+PersistentTypeID 
+backwards_compat_SLFT("ScanlineField<Tensor>", "Field",
+		      GenericField<SLMesh, FDTensorBasis, 
+		      vector<Tensor> >::maker, 
+		      GenericField<SLMesh, CFDTensorBasis, 
+		      vector<Tensor> >::maker);
+PersistentTypeID 
+backwards_compat_SLFV("ScanlineField<Vector>", "Field",
+		      GenericField<SLMesh, FDVectorBasis, 
+		      vector<Vector> >::maker, 
+		      GenericField<SLMesh, CFDVectorBasis, 
+		      vector<Vector> >::maker);
+PersistentTypeID 
+backwards_compat_SLFd("ScanlineField<double>", "Field",
+		      GenericField<SLMesh, FDdoubleBasis, 
+		      vector<double> >::maker, 
+		      GenericField<SLMesh, CFDdoubleBasis, 
+		      vector<double> >::maker,
+		      GenericField<SLMesh, NDBasis, 
+		      vector<double> >::maker);
+PersistentTypeID 
+backwards_compat_SLFf("ScanlineField<float>", "Field",
+		      GenericField<SLMesh, FDfloatBasis, 
+		      vector<float> >::maker, 
+		      GenericField<SLMesh, CFDfloatBasis, 
+		      vector<float> >::maker);
+PersistentTypeID 
+backwards_compat_SLFi("ScanlineField<int>", "Field",
+		      GenericField<SLMesh, FDintBasis, 
+		      vector<int> >::maker, 
+		      GenericField<SLMesh, CFDintBasis, 
+		      vector<int> >::maker);
+PersistentTypeID 
+backwards_compat_SLFs("ScanlineField<short>", "Field",
+		      GenericField<SLMesh, FDshortBasis, 
+		      vector<short> >::maker, 
+		      GenericField<SLMesh, CFDshortBasis, 
+		      vector<short> >::maker);
+PersistentTypeID 
+backwards_compat_SLFc("ScanlineField<char>", "Field",
+		      GenericField<SLMesh, FDcharBasis, 
+		      vector<char> >::maker, 
+		      GenericField<SLMesh, CFDcharBasis, 
+		      vector<char> >::maker);
+PersistentTypeID 
+backwards_compat_SLFui("ScanlineField<unsigned_int>", "Field",
+		       GenericField<SLMesh, FDuintBasis, 
+		       vector<unsigned int> >::maker, 
+		       GenericField<SLMesh, CFDuintBasis, 
+		       vector<unsigned int> >::maker);
+PersistentTypeID 
+backwards_compat_SLFus("ScanlineField<unsigned_short>", "Field",
+		       GenericField<SLMesh, FDushortBasis, 
+		       vector<unsigned short> >::maker, 
+		       GenericField<SLMesh, CFDushortBasis, 
+		       vector<unsigned short> >::maker);
+PersistentTypeID 
+backwards_compat_SLFuc("ScanlineField<unsigned_char>", "Field",
+		       GenericField<SLMesh, FDucharBasis, 
+		       vector<unsigned char> >::maker, 
+		       GenericField<SLMesh, CFDucharBasis, 
+		       vector<unsigned char> >::maker);
+PersistentTypeID 
+backwards_compat_SLFul("ScanlineField<unsigned_long>", "Field",
+		       GenericField<SLMesh, FDulongBasis, 
+		       vector<unsigned long> >::maker, 
+		       GenericField<SLMesh, CFDulongBasis, 
+		       vector<unsigned long> >::maker);
 
 typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
 PersistentTypeID backwards_compat_PCM("PointCloudMesh", "Mesh",
-				      PCMesh::maker, true);
+				      PCMesh::maker, PCMesh::maker);
+//NoData
+template class GenericField<PCMesh, NDBasis, vector<double> >;  
 
-template class GenericField<PCMesh, FDCTensorBasis, vector<Tensor> >;       
-template class GenericField<PCMesh, FDCVectorBasis, vector<Vector> >;       
-template class GenericField<PCMesh, FDCdoubleBasis, vector<double> >;       
-template class GenericField<PCMesh, FDCfloatBasis,  vector<float> >;        
-template class GenericField<PCMesh, FDCintBasis,    vector<int> >;          
-template class GenericField<PCMesh, FDCshortBasis,  vector<short> >;        
-template class GenericField<PCMesh, FDCcharBasis,   vector<char> >;         
-template class GenericField<PCMesh, FDCuintBasis,   vector<unsigned int> >; 
-template class GenericField<PCMesh, FDCushortBasis, vector<unsigned short> >;
-template class GenericField<PCMesh, FDCucharBasis,  vector<unsigned char> >;
-template class GenericField<PCMesh, FDCulongBasis,  vector<unsigned long> >;
-template class GenericField<PCMesh, NoDataBasis<double>, vector<double> >; 
+//Constant
+template class GenericField<PCMesh, CFDTensorBasis, vector<Tensor> >;       
+template class GenericField<PCMesh, CFDVectorBasis, vector<Vector> >;       
+template class GenericField<PCMesh, CFDdoubleBasis, vector<double> >;       
+template class GenericField<PCMesh, CFDfloatBasis,  vector<float> >;        
+template class GenericField<PCMesh, CFDintBasis,    vector<int> >;          
+template class GenericField<PCMesh, CFDshortBasis,  vector<short> >;        
+template class GenericField<PCMesh, CFDcharBasis,   vector<char> >;         
+template class GenericField<PCMesh, CFDuintBasis,   vector<unsigned int> >; 
+template class GenericField<PCMesh, CFDushortBasis, vector<unsigned short> >;
+template class GenericField<PCMesh, CFDucharBasis,  vector<unsigned char> >;
+template class GenericField<PCMesh, CFDulongBasis,  vector<unsigned long> >;
 
-PersistentTypeID backwards_compat_PCFT("PointCloudField<Tensor>", "Field",
-				       GenericField<PCMesh, FDCTensorBasis, 
-				       vector<Tensor> >::maker, true);
-PersistentTypeID backwards_compat_PCFV("PointCloudField<Vector>", "Field",
-				       GenericField<PCMesh, FDCVectorBasis, 
-				       vector<Vector> >::maker, true);
-PersistentTypeID backwards_compat_PCFd("PointCloudField<double>", "Field",
-				       GenericField<PCMesh, FDCdoubleBasis, 
-				       vector<double> >::maker, true);
-PersistentTypeID backwards_compat_PCFf("PointCloudField<float>", "Field",
-				       GenericField<PCMesh, FDCfloatBasis, 
-				       vector<float> >::maker, true);
-PersistentTypeID backwards_compat_PCFi("PointCloudField<int>", "Field",
-				       GenericField<PCMesh, FDCintBasis, 
-				       vector<int> >::maker, true);
-PersistentTypeID backwards_compat_PCFs("PointCloudField<short>", "Field",
-				       GenericField<PCMesh, FDCshortBasis, 
-				       vector<short> >::maker, true);
-PersistentTypeID backwards_compat_PCFc("PointCloudField<char>", "Field",
-				       GenericField<PCMesh, FDCcharBasis, 
-				       vector<char> >::maker, true);
-PersistentTypeID backwards_compat_PCFui("PointCloudField<unsigned_int>", "Field",
-				       GenericField<PCMesh, FDCuintBasis, 
-				       vector<unsigned int> >::maker, true);
-PersistentTypeID backwards_compat_PCFus("PointCloudField<unsigned_short>", "Field",
-				       GenericField<PCMesh, FDCushortBasis, 
-				       vector<unsigned short> >::maker, true);
-PersistentTypeID backwards_compat_PCFuc("PointCloudField<unsigned_char>", "Field",
-				       GenericField<PCMesh, FDCucharBasis, 
-				       vector<unsigned char> >::maker, true);
-PersistentTypeID backwards_compat_PCFul("PointCloudField<unsigned_long>", "Field",
-				       GenericField<PCMesh, FDCulongBasis, 
-				       vector<unsigned long> >::maker, true);
+PersistentTypeID 
+backwards_compat_PCFT("PointCloudField<Tensor>", "Field",
+		      GenericField<PCMesh, CFDTensorBasis, 
+		      vector<Tensor> >::maker, 
+		      GenericField<PCMesh, CFDTensorBasis, 
+		      vector<Tensor> >::maker);
+PersistentTypeID 
+backwards_compat_PCFV("PointCloudField<Vector>", "Field",
+		      GenericField<PCMesh, CFDVectorBasis, 
+		      vector<Vector> >::maker, 
+		      GenericField<PCMesh, CFDVectorBasis, 
+		      vector<Vector> >::maker);
+PersistentTypeID 
+backwards_compat_PCFd("PointCloudField<double>", "Field",
+		      GenericField<PCMesh, CFDdoubleBasis, 
+		      vector<double> >::maker, 
+		      GenericField<PCMesh, NDBasis, 
+		      vector<double> >::maker);
+PersistentTypeID 
+backwards_compat_PCFf("PointCloudField<float>", "Field",
+		      GenericField<PCMesh, CFDfloatBasis, 
+		      vector<float> >::maker, 
+		      GenericField<PCMesh, CFDfloatBasis, 
+		      vector<float> >::maker);
+PersistentTypeID 
+backwards_compat_PCFi("PointCloudField<int>", "Field",
+		      GenericField<PCMesh, CFDintBasis, 
+		      vector<int> >::maker, 
+		      GenericField<PCMesh, CFDintBasis, 
+		      vector<int> >::maker);
+PersistentTypeID 
+backwards_compat_PCFs("PointCloudField<short>", "Field",
+		      GenericField<PCMesh, CFDshortBasis, 
+		      vector<short> >::maker, 
+		      GenericField<PCMesh, CFDshortBasis, 
+		      vector<short> >::maker);
+PersistentTypeID 
+backwards_compat_PCFc("PointCloudField<char>", "Field",
+		      GenericField<PCMesh, CFDcharBasis, 
+		      vector<char> >::maker, 
+		      GenericField<PCMesh, CFDcharBasis, 
+		      vector<char> >::maker);
+PersistentTypeID 
+backwards_compat_PCFui("PointCloudField<unsigned_int>", "Field",
+		       GenericField<PCMesh, CFDuintBasis, 
+		       vector<unsigned int> >::maker, 
+		       GenericField<PCMesh, CFDuintBasis, 
+		       vector<unsigned int> >::maker);
+PersistentTypeID 
+backwards_compat_PCFus("PointCloudField<unsigned_short>", "Field",
+		       GenericField<PCMesh, CFDushortBasis, 
+		       vector<unsigned short> >::maker, 
+		       GenericField<PCMesh, CFDushortBasis, 
+		       vector<unsigned short> >::maker);
+PersistentTypeID 
+backwards_compat_PCFuc("PointCloudField<unsigned_char>", "Field",
+		       GenericField<PCMesh, CFDucharBasis, 
+		       vector<unsigned char> >::maker, 
+		       GenericField<PCMesh, CFDucharBasis, 
+		       vector<unsigned char> >::maker);
+PersistentTypeID 
+backwards_compat_PCFul("PointCloudField<unsigned_long>", "Field",
+		       GenericField<PCMesh, CFDulongBasis, 
+		       vector<unsigned long> >::maker, 
+		       GenericField<PCMesh, CFDulongBasis, 
+		       vector<unsigned long> >::maker);

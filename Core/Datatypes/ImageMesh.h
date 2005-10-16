@@ -366,24 +366,12 @@ public:
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
   void pwl_approx_face(vector<vector<vector<double> > > &coords, 
-		       typename Elem::index_type ci, 
+		       typename Elem::index_type, 
 		       typename Face::index_type fi, 
 		       unsigned div_per_unit) const
   {
-    // Needs to match unit_faces in Basis/QuadBilinearLgn.cc 
-    // compare get_nodes order to the basis order
-
     //FIX_ME MC delete this comment when this is verified.
-
-    typename Face::array_type faces;
-    get_faces(faces, ci);
-    unsigned count = 0;
-    typename Face::array_type::iterator iter = faces.begin();
-    while (iter != faces.end()) {
-      if (fi == *iter++) break;
-      ++count;
-    }
-    basis_.approx_face(count, div_per_unit, coords);
+    basis_.approx_face(0, div_per_unit, coords);
   }
   
   bool get_coords(vector<double> &coords, 
@@ -449,6 +437,9 @@ public:
   void get_edges(typename Edge::array_type &, typename Face::index_type) const;
   void get_edges(typename Edge::array_type &, typename Cell::index_type) const {}
   void get_faces(typename Face::array_type &, typename Cell::index_type) const {}
+  void get_faces(typename Face::array_type &a, 
+		 typename Face::index_type f) const
+  { a.push_back(f); }
 
   //! get the parent element(s) of the given index
   unsigned get_edges(typename Edge::array_type &, typename Node::index_type) const { return 0; }

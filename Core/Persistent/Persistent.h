@@ -63,10 +63,14 @@ struct PersistentTypeID {
   string type;
   string parent;
   Persistent* (*maker)();
-  PersistentTypeID(const string& type, const string& parent,
-		   Persistent* (*maker)(), bool backward_compat = false);
+  PersistentTypeID(const string& type, 
+		   const string& parent,
+		   Persistent* (*maker)(), 
+		   Persistent* (*bc_maker1)() = 0, 
+		   Persistent* (*bc_maker2)() = 0);
   ~PersistentTypeID();
-  bool backwards_compat_;
+  Persistent* (*bc_maker1)();
+  Persistent* (*bc_maker2)();
 };
 
 //----------------------------------------------------------------------
@@ -89,6 +93,7 @@ public:
   };
 
   static const int PERSISTENT_VERSION;
+  void flag_error() { err = 1; }
   
 protected:
   Piostream(Direction, int, const string &, ProgressReporter *pr);
@@ -113,6 +118,8 @@ protected:
   static bool readHeader(ProgressReporter *pr,
                          const string& filename, char* hdr,
 			 const char* type, int& version, int& endian);
+
+  virtual void reset_post_header() = 0;
 public:
   string file_name;
 

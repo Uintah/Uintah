@@ -59,7 +59,7 @@ protected:
   FILE* fp_;
 
   virtual const char *endianness();
-
+  virtual void reset_post_header();
 private:
   template <class T> void gen_io(T&, const char *);
 
@@ -93,7 +93,6 @@ public:
 class BinarySwapPiostream : public BinaryPiostream {
 protected:
   virtual const char *endianness();
-
 private:
   template <class T> void gen_io(T&, const char *);
 
@@ -129,7 +128,8 @@ private:
   void expect(char);
   virtual void emit_pointer(int&, int&);
   void io(int, string& str);
-
+protected:
+  virtual void reset_post_header();
 public:
   TextPiostream(const string& filename, Direction dir,
                 ProgressReporter *pr = 0);
@@ -169,7 +169,8 @@ private:
 
   void report_error(const char *);
   template <class T> void gen_io(T&, const char *);
-
+protected:
+  virtual void reset_post_header();
 public:
   FastPiostream(const string& filename, Direction dir,
                 ProgressReporter *pr = 0);
