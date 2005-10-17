@@ -82,9 +82,74 @@ DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
 
 
+string
+remove_vowels(const string &s)
+{
+  // will never remove first character.
+  vector<size_t> rm_list;
+  size_t p = 0;
+  for(;;) {
+    p = s.find("a", p);
+    if (p  == string::npos)
+      break;
+    else {
+      rm_list.push_back(p);
+      ++p;
+    }
+  }
+  p = 0;
+  for(;;) {
+    p = s.find("e", p);
+    if (p  == string::npos)
+      break;
+    else {
+      rm_list.push_back(p);
+      ++p;
+    }
+  }
+  p = 0;
+  for(;;) {
+    p = s.find("i", p);
+    if (p  == string::npos)
+      break;
+    else {
+      rm_list.push_back(p);
+      ++p;
+    }
+  }
+  p = 0;
+  for(;;) {
+    p = s.find("o", p);
+    if (p  == string::npos)
+      break;
+    else {
+      rm_list.push_back(p);
+      ++p;
+    }
+  }
+  p = 0;
+  for(;;) {
+    p = s.find("u", p);
+    if (p  == string::npos)
+      break;
+    else {
+      rm_list.push_back(p);
+      ++p;
+    }
+  }
+
+  sort(rm_list.begin(), rm_list.end());
+  string rval = s;
+  vector<size_t>::reverse_iterator iter = rm_list.rbegin();
+  while (iter != rm_list.rend()) {
+    rval.erase(*iter++, 1);
+  }
+  return rval;
+}
+
 CompileInfo::CompileInfo(const string &fn, const string &bcn,
 			 const string &tcn, const string &tcdec) :
-  filename_(fn),
+  filename_(remove_vowels(fn)),
   base_class_name_(bcn),
   template_class_name_(tcn),
   template_arg_(tcdec),
