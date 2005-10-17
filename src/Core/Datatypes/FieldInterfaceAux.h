@@ -118,7 +118,9 @@ SFInterface<F, L>::finterpolate(double &result, const Point &p) const
   mh->locate(ei, p);
   vector<double> coords(3, .0L);
   mh->get_coords(coords, p, ei);
-  field_->interpolate(result, coords, ei);
+  typename F::value_type rval;
+  field_->interpolate(rval, coords, ei);
+  result = rval;
   return true;
 }
 
