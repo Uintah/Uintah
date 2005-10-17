@@ -84,8 +84,27 @@ template <>
 double getnextx2(vector<double> &x, vector<double> &xold,
 		 const Point& y, const vector<Point>& yd)
 {
-  NOT_FINISHED("Locate.cc: getnextx2");
-  return -1;
+  const double J00=yd[0].x();
+  const double J10=yd[0].y();
+  const double J20=yd[0].z();
+  const double J01=yd[1].x();
+  const double J11=yd[1].y();
+  const double J21=yd[1].z();
+  const double detJ=-J10*J01+J10*J21-J00*J21-J11*J20+J11*J00+J01*J20;
+  const double F1=y.x();
+  const double F2=y.y();
+  const double F3=y.z();
+  
+  if (detJ) {
+    double dx=(F2*J01-F2*J21+J21*F1-J11*F1+F3*J11-J01*F3)/detJ;
+    double dy=-(-J20*F2+J20*F1+J00*F2+F3*J10-F3*J00-F1*J10)/detJ;
+    
+    x[0]+=dx;
+    x[1]+=dy;
+    return  sqrt(dx*dx+dy*dy);
+  }
+  else
+    return 0;
 }
 
 
