@@ -77,7 +77,7 @@ class MatlabBundleEngineThread : public Runnable, public ServiceBase
 {
   public:
 	MatlabBundleEngineThread(ServiceClientHandle serv_handle,MatlabBundleEngineThreadInfoHandle info_handle);
-    virtual ~MatlabBundleEngineThread();
+  virtual ~MatlabBundleEngineThread();
 	void run();
 
   private:
@@ -97,9 +97,9 @@ class MatlabBundleEngineThreadInfo
   public:
 	Mutex         lock;
 	int           ref_cnt;
-	
-        std::string   output_cmd_;
-        GuiInterface* gui_;
+
+  std::string   output_cmd_;
+  GuiInterface* gui_;
 
 	ConditionVariable   wait_code_done_;
 	bool                code_done_;
@@ -205,9 +205,6 @@ class MatlabBundle : public Module, public ServiceBase
     // The tempfilemanager
     TempFileManager tfmanager_;
 
-    // MatlabBundle converter class
-    matlabconverter translate_;
-
     std::string mfile_;
 
     GuiString   matlab_code_;
@@ -232,7 +229,7 @@ class MatlabBundle : public Module, public ServiceBase
 MatlabBundleEngineThreadInfo::MatlabBundleEngineThreadInfo() :
 	lock("MatlabBundleEngineInfo lock"),
 	ref_cnt(0),
-        gui_(0),
+  gui_(0),
 	wait_code_done_("MatlabBundleEngineInfo condition variable code"),
 	code_done_(false),
 	code_success_(false),
@@ -270,6 +267,7 @@ void MatlabBundleEngineThread::run()
 {
   IComPacketHandle packet;
   bool done = false;
+  
   while(!done)
   {
     if(!(serv_handle_->recv(packet)))
@@ -296,31 +294,31 @@ void MatlabBundleEngineThread::run()
       continue;
     }
 
-  info_handle_->dolock();       
+    info_handle_->dolock();       
 
-  if (info_handle_->exit_ == true)
-  {
-    info_handle_->wait_exit_.conditionBroadcast();
-    info_handle_->unlock();
-    return;
-  } 
+    if (info_handle_->exit_ == true)
+    {
+      info_handle_->wait_exit_.conditionBroadcast();
+      info_handle_->unlock();
+      return;
+    } 
           
-  switch (packet->gettag())
-  {
-    case TAG_STDO:
+    switch (packet->gettag())
     {
-      std::string str;
-      if (packet->getparam1() < 0) str = "STDOUT END";
-      else str = packet->getstring();
-      std::string cmd = info_handle_->output_cmd_ + " \"" + MatlabBundle::totclstring(str) + "\""; 
-      info_handle_->unlock();       
-      info_handle_->gui_->lock();
-      info_handle_->gui_->execute(cmd);                     
-      info_handle_->gui_->unlock();
-    }
-    break;
-    case TAG_STDE:
-    {
+      case TAG_STDO:
+      {
+        std::string str;
+        if (packet->getparam1() < 0) str = "STDOUT END";
+        else str = packet->getstring();
+        std::string cmd = info_handle_->output_cmd_ + " \"" + MatlabBundle::totclstring(str) + "\""; 
+        info_handle_->unlock();       
+        info_handle_->gui_->lock();
+        info_handle_->gui_->execute(cmd);                     
+        info_handle_->gui_->unlock();
+      }
+      break;
+      case TAG_STDE:
+      {
         std::string str;
         if (packet->getparam1() < 0) str = "STDERR END";
         else str = packet->getstring();
@@ -329,33 +327,39 @@ void MatlabBundleEngineThread::run()
         info_handle_->gui_->lock();
         info_handle_->gui_->execute(cmd);                     
         info_handle_->gui_->unlock();
-    }
-    break;
-    case TAG_END_:
-    case TAG_EXIT:
-      info_handle_->code_done_ = true;
-      info_handle_->code_success_ = false;
-      info_handle_->wait_code_done_.conditionBroadcast();
-      info_handle_->exit_ = true;
-      info_handle_->wait_exit_.conditionBroadcast();
-      done = true;
-      info_handle_->unlock();       
-    break;
-    case TAG_MCODE_SUCCESS:
-      info_handle_->code_done_ = true;
-      info_handle_->code_success_ = true;
-      info_handle_->wait_code_done_.conditionBroadcast();				
-      info_handle_->unlock();       
-    break;
-    case TAG_MCODE_ERROR:
-      info_handle_->code_done_ = true;
-      info_handle_->code_success_ = false;
-      info_handle_->code_error_ = packet->getstring();
-      info_handle_->wait_code_done_.conditionBroadcast();				
-      info_handle_->unlock();       
-    break;
-    default:
-      info_handle_->unlock();       
+      }
+      break;
+      case TAG_END_:
+      case TAG_EXIT:
+      {
+        info_handle_->code_done_ = true;
+        info_handle_->code_success_ = false;
+        info_handle_->wait_code_done_.conditionBroadcast();
+        info_handle_->exit_ = true;
+        info_handle_->wait_exit_.conditionBroadcast();
+        done = true;
+        info_handle_->unlock();       
+      }
+      break;
+      case TAG_MCODE_SUCCESS:
+      {
+        info_handle_->code_done_ = true;
+        info_handle_->code_success_ = true;
+        info_handle_->wait_code_done_.conditionBroadcast();				
+        info_handle_->unlock();       
+      }
+      break;
+      case TAG_MCODE_ERROR:
+      {
+        info_handle_->code_done_ = true;
+        info_handle_->code_success_ = false;
+        info_handle_->code_error_ = packet->getstring();
+        info_handle_->wait_code_done_.conditionBroadcast();				
+        info_handle_->unlock();       
+      }
+      break;
+      default:
+        info_handle_->unlock();       
     }
   }
 }
@@ -726,30 +730,30 @@ bool MatlabBundle::open_matlab_engine()
     file_transfer_->get_remote_homedirid(remoteid);
     if (localid != remoteid)
     {
-        need_file_transfer_ = true;
-        if(!(file_transfer_->create_remote_tempdir("matlab-engine.XXXXXX",remote_tempdir_)))
-        {
-            matlab_engine_->close();
-            file_transfer_->close();
+      need_file_transfer_ = true;
+      if(!(file_transfer_->create_remote_tempdir("matlab-engine.XXXXXX",remote_tempdir_)))
+      {
+        matlab_engine_->close();
+        file_transfer_->close();
 
-            error(std::string("MatlabBundle: Could not create remote temporary directory"));
-            matlab_engine_ = 0;
-            file_transfer_ = 0;
-            return(false);		
-        }
-        file_transfer_->set_local_dir(temp_directory_);
-        file_transfer_->set_remote_dir(remote_tempdir_);
+        error(std::string("MatlabBundle: Could not create remote temporary directory"));
+        matlab_engine_ = 0;
+        file_transfer_ = 0;
+        return(false);		
+      }
+      file_transfer_->set_local_dir(temp_directory_);
+      file_transfer_->set_remote_dir(remote_tempdir_);
     }
     else
     {
-        // Although they might share a home directory
-        // This directory can be mounted at different trees
-        // Hence we translate between both. MatlabBundle does not like
-        // the use of $HOME
-        file_transfer_->set_local_dir(temp_directory_);
-        std::string tempdir = temp_directory_;
-        file_transfer_->translate_scirun_tempdir(tempdir);
-        file_transfer_->set_remote_dir(tempdir);
+      // Although they might share a home directory
+      // This directory can be mounted at different trees
+      // Hence we translate between both. MatlabBundle does not like
+      // the use of $HOME
+      file_transfer_->set_local_dir(temp_directory_);
+      std::string tempdir = temp_directory_;
+      file_transfer_->translate_scirun_tempdir(tempdir);
+      file_transfer_->set_remote_dir(tempdir);
     }
 
     
@@ -874,11 +878,12 @@ bool MatlabBundle::load_output_matrices()
       BundleHandle handle;
       std::string info;
       
-      translate_.prefersciobjects();
-      translate_.prefermatrices();
-      if (output_bundle_pnrrds_list_[p] == "prefer nrrds") translate_.prefernrrds();
-      if (output_bundle_pbundles_list_[p] == "prefer bundles") translate_.preferbundles();
-      if (translate_.sciBundleCompatible(ma,info,static_cast<SCIRun::Module *>(this))) translate_.mlArrayTOsciBundle(ma,handle,static_cast<SCIRun::Module *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+      translate.prefersciobjects();
+      translate.prefermatrices();
+      if (output_bundle_pnrrds_list_[p] == "prefer nrrds") translate.prefernrrds();
+      if (output_bundle_pbundles_list_[p] == "prefer bundles") translate.preferbundles();
+      if (translate.sciBundleCompatible(ma,info)) translate.mlArrayTOsciBundle(ma,handle);
       bundle_oport_[p]->send(handle);
     }
   }
@@ -919,7 +924,6 @@ bool MatlabBundle::generate_matlab_code()
 		
     m_file.close();
     if (need_file_transfer_) file_transfer_->put_file(file_transfer_->local_file(mfile_),file_transfer_->remote_file(mfile_));
-        
   }
   catch(...)
   {
@@ -936,7 +940,6 @@ bool MatlabBundle::save_input_matrices()
 
   try
   {
-
     std::ofstream m_file; 
     std::string loadcmd;
 
@@ -986,9 +989,10 @@ bool MatlabBundle::save_input_matrices()
       mf.open(file_transfer_->local_file(input_bundle_matfile_[p]),"w");
       mf.setheadertext("Matlab V5 compatible file generated by SCIRun [module MatlabBundle version 1.0]");
 
-      translate_.converttostructmatrix();
-      if (input_bundle_array_list_[p] == "numeric array") translate_.converttonumericmatrix();
-      translate_.sciBundleTOmlArray(handle,ma,static_cast<SCIRun::Module *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+      translate.converttostructmatrix();
+      if (input_bundle_array_list_[p] == "numeric array") translate.converttonumericmatrix();
+      translate.sciBundleTOmlArray(handle,ma);
       
       mf.putmatlabarray(ma,input_bundle_name_list_[p]);
       mf.close();
@@ -1135,8 +1139,7 @@ void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
             }
             inputstring_ = "";
           }
-        }    
-          
+        }      
       }
       return;
     }
@@ -1155,7 +1158,6 @@ void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
 
     if (args[1] == "connect")
     {
-      
       if(!(close_matlab_engine()))
       {
         error("MatlabBundle: Could not close matlab engine");

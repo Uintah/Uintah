@@ -76,11 +76,6 @@ class MatlabDataWriter : public Module
     
   private:
 
-    // functions for converting SCIRun matrices into matlab matrices
-    // This class contains a scope of functions for translating data
-    // structures.
-    matlabconverter translate_;
-
     // Support functions for converting between TCL and C++
     // converttcllist:
     // TCL lists are stings in which the elements are separated by {}.
@@ -144,6 +139,7 @@ MatlabDataWriter::~MatlabDataWriter()
 
 void MatlabDataWriter::execute()
 {
+  matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
 
   StringIPort *filenameport;
   if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
@@ -275,7 +271,7 @@ void MatlabDataWriter::execute()
   for (long p=0;p<matrixname.size();p++)
   {
     if (porthasdata[p] == false) continue; // Do not check not used ports
-    if (!translate_.isvalidmatrixname(matrixname[p]))
+    if (!translate.isvalidmatrixname(matrixname[p]))
     {
       error("MatlabDataWriter: The matrix name specified is invalid");
       return;
@@ -314,20 +310,20 @@ void MatlabDataWriter::execute()
       {   
         // translate the matrix into a matlab structured array, which
         // can also store some data from the property manager
-        translate_.setdatatype(convertdataformat(dataformat[p]));
-        translate_.converttostructmatrix();
+        translate.setdatatype(convertdataformat(dataformat[p]));
+        translate.converttostructmatrix();
       }
       
       if (matrixformat[p] == "numeric array")
       {
         // only store the numeric parts of the data
-        translate_.setdatatype(convertdataformat(dataformat[p]));
-        translate_.converttonumericmatrix();
+        translate.setdatatype(convertdataformat(dataformat[p]));
+        translate.converttonumericmatrix();
       }
 
-      if (p<3)			{ translate_.sciFieldTOmlArray(fieldhandle[p],ma,static_cast<SCIRun::Module *>(this)); }		
-      if ((p>2)&&(p<6))   { translate_.sciMatrixTOmlArray(matrixhandle[p-3],ma,static_cast<SCIRun::Module *>(this)); }
-      if (p>5)			{ translate_.sciNrrdDataTOmlArray(nrrdhandle[p-6],ma,static_cast<SCIRun::Module *>(this)); }
+      if (p<3)            { translate.sciFieldTOmlArray(fieldhandle[p],ma); }		
+      if ((p>2)&&(p<6))   { translate.sciMatrixTOmlArray(matrixhandle[p-3],ma); }
+      if (p>5)            { translate.sciNrrdDataTOmlArray(nrrdhandle[p-6],ma); }
       
       if (ma.isempty())
       {

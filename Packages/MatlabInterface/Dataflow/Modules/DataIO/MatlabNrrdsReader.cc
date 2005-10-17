@@ -115,10 +115,7 @@ class MatlabNrrdsReader : public Module
 
     // Ports (We only use one output port)
     SCIRun::NrrdOPort* omatrix_[NUMPORTS];
-    
-    // Class for translating matlab objects into SCIRun objects
-    matlabconverter translate_;
-  
+      
 };
 
 DECLARE_MAKER(MatlabNrrdsReader)
@@ -215,7 +212,8 @@ void MatlabNrrdsReader::execute()
       // creates a SCIRun matrix object
 
       SCIRun::NrrdDataHandle mh;
-      translate_.mlArrayTOsciNrrdData(ma,mh,static_cast<SCIRun::Module *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
+      translate.mlArrayTOsciNrrdData(ma,mh);
       
       // Put the SCIRun matrix in the hands of the scheduler
       omatrix_[p]->send(mh);
@@ -341,8 +339,9 @@ void MatlabNrrdsReader::indexmatlabfile(bool postmsg)
   guimatrixinfotexts_.set(matrixinfotexts);
   guimatrixnames_.set(matrixnames);
 
-  translate_.setpostmsg(postmsg);
-
+  SCIRun::ProgressReporter* pr = 0;
+  if (postmsg) pr = dynamic_cast<SCIRun::ProgressReporter* >(this);
+  matlabconverter translate(pr);
 
   filename = guifilename_.get();	
 
@@ -392,7 +391,7 @@ void MatlabNrrdsReader::indexmatlabfile(bool postmsg)
     for (long p=0;p<mfile.getnummatlabarrays();p++)
     {
       ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-      if ((cindex = translate_.sciNrrdDataCompatible(ma,infotext,static_cast<SCIRun::Module *>(this))))
+      if ((cindex = translate.sciNrrdDataCompatible(ma,infotext)))
       {
         // in case we need to propose a matrix to load, select
         // the one that is most compatible with the data

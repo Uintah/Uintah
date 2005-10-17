@@ -42,7 +42,7 @@ MatrixHandle
 MatlabMatrix_reader(ProgressReporter *pr, const char *filename)
 {
   matlabfile mf;
-  matlabconverter mc;
+  matlabconverter mc(pr);
   matlabarray ma;
   long numarrays;
   string dummytext;
@@ -57,10 +57,10 @@ MatlabMatrix_reader(ProgressReporter *pr, const char *filename)
       for (long p=0;p<numarrays;p++)
       {
         ma = mf.getmatlabarrayinfo(p);
-        if (mc.sciMatrixCompatible(ma,dummytext,pr)) 
+        if (mc.sciMatrixCompatible(ma,dummytext)) 
         { 
           ma = mf.getmatlabarray(p);
-          mc.mlArrayTOsciMatrix(ma,mh,pr); break; 
+          mc.mlArrayTOsciMatrix(ma,mh); break; 
         }
       }
       mf.close();
@@ -78,14 +78,14 @@ MatlabMatrix_writer(ProgressReporter *pr,
 			   MatrixHandle mh, const char *filename)
 {
   matlabfile mf;
-  matlabconverter mc;
+  matlabconverter mc(pr);
   matlabarray ma;
   string name;
  
   try
   {
       mc.converttonumericmatrix();
-      mc.sciMatrixTOmlArray(mh,ma,pr);
+      mc.sciMatrixTOmlArray(mh,ma);
       mh->get_property("name",name);
       if ((name=="")||(!mc.isvalidmatrixname(name))) name = "scirunmatrix";
       mf.open(std::string(filename),"w");
@@ -105,7 +105,7 @@ NrrdDataHandle
 MatlabNrrd_reader(ProgressReporter *pr, const char *filename)
 {
   matlabfile mf;
-  matlabconverter mc;
+  matlabconverter mc(pr);
   matlabarray ma;
   long numarrays;
   string dummytext;
@@ -120,10 +120,10 @@ MatlabNrrd_reader(ProgressReporter *pr, const char *filename)
       for (long p=0;p<numarrays;p++)
       {
         ma = mf.getmatlabarrayinfo(p);
-        if (mc.sciNrrdDataCompatible(ma,dummytext,pr)) 
+        if (mc.sciNrrdDataCompatible(ma,dummytext)) 
         { 
           ma = mf.getmatlabarray(p);
-          mc.mlArrayTOsciNrrdData(ma,mh,pr); break; 
+          mc.mlArrayTOsciNrrdData(ma,mh); break; 
         }
       }
       mf.close();
@@ -141,14 +141,14 @@ MatlabNrrd_writer(ProgressReporter *pr,
 			   NrrdDataHandle mh, const char *filename)
 {
   matlabfile mf;
-  matlabconverter mc;
+  matlabconverter mc(pr);
   matlabarray ma;
   string name;
  
   try
   {
       mc.converttonumericmatrix();
-      mc.sciNrrdDataTOmlArray(mh,ma,pr);
+      mc.sciNrrdDataTOmlArray(mh,ma);
       mh->get_property("name",name);
       if ((name=="")||(!mc.isvalidmatrixname(name))) name = "scirunnrrd";
       mf.open(std::string(filename),"w");
@@ -167,7 +167,7 @@ FieldHandle
 MatlabField_reader(ProgressReporter *pr, const char *filename)
 {
   matlabfile mf;
-  matlabconverter mc;
+  matlabconverter mc(pr);
   matlabarray ma;
   long numarrays;
   string dummytext;
@@ -182,10 +182,10 @@ MatlabField_reader(ProgressReporter *pr, const char *filename)
       for (long p=0;p<numarrays;p++)
       {
         ma = mf.getmatlabarrayinfo(p);
-        if (mc.sciFieldCompatible(ma,dummytext,pr)) 
+        if (mc.sciFieldCompatible(ma,dummytext)) 
         {
           ma = mf.getmatlabarray(p);
-          mc.mlArrayTOsciField(ma,mh,pr); break; 
+          mc.mlArrayTOsciField(ma,mh); break; 
         }
       }
       mf.close();
@@ -203,14 +203,14 @@ MatlabField_writer(ProgressReporter *pr,
 			   FieldHandle mh, const char *filename)
 {
   matlabfile mf;
-  matlabconverter mc;
+  matlabconverter mc(pr);
   matlabarray ma;
   string name;
  
   try
   {
       mc.converttostructmatrix();
-      mc.sciFieldTOmlArray(mh,ma,pr);
+      mc.sciFieldTOmlArray(mh,ma);
       mh->get_property("name",name);
       if ((name=="")||(!mc.isvalidmatrixname(name))) name = "scirunfield";
       mf.open(std::string(filename),"w");

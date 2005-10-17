@@ -113,13 +113,10 @@ class MatlabColorMapsReader : public Module
     GuiString				guicolormapinfotexts_;   	// A list of colormap-information strings of the contents of a .mat-file
     GuiString				guicolormapnames_;	// A list of colormap-names of the contents of a .mat-file 
     GuiString				guicolormapname_;		// the name of the colormap that has been selected
-    GuiInt				guidisabletranspose_; // Do not convert from Fortran ordering to C++ ordering
+    GuiInt  				guidisabletranspose_; // Do not convert from Fortran ordering to C++ ordering
     
     // Ports (We only use one output port)
     ColorMapOPort*			ocolormap_[NUMPORTS];
-    
-    // Class for translating matlab objects into SCIRun objects
-    matlabconverter		translate_;
     
 };
 
@@ -137,8 +134,8 @@ MatlabColorMapsReader::MatlabColorMapsReader(GuiContext* ctx)
     guifilenameset_(ctx->subVar("filename-set")),
     guicolormapinfotexts_(ctx->subVar("colormapinfotexts")),     
     guicolormapnames_(ctx->subVar("colormapnames")),    
-	guicolormapname_(ctx->subVar("colormapname")),
-	guidisabletranspose_(ctx->subVar("disable-transpose"))
+    guicolormapname_(ctx->subVar("colormapname")),
+    guidisabletranspose_(ctx->subVar("disable-transpose"))
 {
   indexmatlabfile(false);
 }
@@ -171,11 +168,11 @@ void MatlabColorMapsReader::execute()
   }
 
 
-
   // Get the filename from TCL.
   std::string filename = guifilename_.get();
   int disable_transpose = guidisabletranspose_.get();
-  translate_.setdisabletranspose(disable_transpose);
+  matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
+  translate.setdisabletranspose(disable_transpose);
   
   // If the filename is empty, launch an error
   if (filename == "")
@@ -221,7 +218,7 @@ void MatlabColorMapsReader::execute()
       // creates a SCIRun colormap object
 
       SCIRun::ColorMapHandle mh;
-      translate_.mlArrayTOsciColorMap(ma,mh,static_cast<SCIRun::Module *>(this));
+      translate.mlArrayTOsciColorMap(ma,mh);
       
       // Put the SCIRun colormap in the hands of the scheduler
       ocolormap_[p]->send(mh);
@@ -348,8 +345,10 @@ void MatlabColorMapsReader::indexmatlabfile(bool postmsg)
   guicolormapinfotexts_.set(colormapinfotexts);
   guicolormapnames_.set(colormapnames);
   
-  translate_.setpostmsg(postmsg);
-  
+  SCIRun::ProgressReporter* pr = 0;
+  if (postmsg) pr = dynamic_cast<SCIRun::ProgressReporter* >(this);
+  matlabconverter translate(pr);
+ 
   filename = guifilename_.get();	
 
   if (filename == "") 
@@ -398,7 +397,7 @@ void MatlabColorMapsReader::indexmatlabfile(bool postmsg)
     for (long p=0;p<mfile.getnummatlabarrays();p++)
     {
       ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-      if ((cindex = translate_.sciColorMapCompatible(ma,infotext,static_cast<SCIRun::Module *>(this))))
+      if ((cindex = translate.sciColorMapCompatible(ma,infotext)))
       {
         // in case we need to propose a colormap to load, select
         // the one that is most compatible with the data

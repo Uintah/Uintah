@@ -128,8 +128,6 @@ class MatlabDataReader : public Module
     SCIRun::FieldOPort*			ofield_[3];
     SCIRun::MatrixOPort*			omatrix_[3];
     SCIRun::NrrdOPort*			onrrd_[3];
-    // Class for translating matlab objects into SCIRun objects
-    matlabconverter		translate_;
 };
 
 DECLARE_MAKER(MatlabDataReader)
@@ -146,7 +144,7 @@ MatlabDataReader::MatlabDataReader(GuiContext* ctx)
     guifilenameset_(ctx->subVar("filename-set")),
     guimatrixinfotextslist_(ctx->subVar("matrixinfotextslist")),     
     guimatrixnameslist_(ctx->subVar("matrixnameslist")),    
-	guimatrixname_(ctx->subVar("matrixname"))
+    guimatrixname_(ctx->subVar("matrixname"))
 {
   indexmatlabfile(false);
 }
@@ -208,7 +206,9 @@ void MatlabDataReader::execute()
       }
 
       SCIRun::FieldHandle mh;
-      translate_.mlArrayTOsciField(ma,mh,static_cast<SCIRun::Module *>(this));
+
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
+      translate.mlArrayTOsciField(ma,mh);
       ofield_[p]->send(mh);
     }
 
@@ -231,7 +231,8 @@ void MatlabDataReader::execute()
       }
 
       SCIRun::MatrixHandle mh;
-      translate_.mlArrayTOsciMatrix(ma,mh,static_cast<SCIRun::Module *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
+      translate.mlArrayTOsciMatrix(ma,mh);
       omatrix_[p]->send(mh);
     }
 
@@ -254,7 +255,8 @@ void MatlabDataReader::execute()
       }
 
       SCIRun::NrrdDataHandle mh;
-      translate_.mlArrayTOsciNrrdData(ma,mh,static_cast<SCIRun::Module *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
+      translate.mlArrayTOsciNrrdData(ma,mh);
       onrrd_[p]->send(mh);
     }
   }
@@ -381,7 +383,9 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
   guimatrixinfotextslist_.set(matrixinfotextslist);
   guimatrixnameslist_.set(matrixnameslist);
   
-  translate_.setpostmsg(postmsg);
+  SCIRun::ProgressReporter* pr = 0;
+  if (postmsg) pr = dynamic_cast<SCIRun::ProgressReporter* >(this);
+  matlabconverter translate(pr);
   
   filename = guifilename_.get();	
 
@@ -435,9 +439,9 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
       ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
       for (long q=0;q<NUMPORTS;q++)
       {
-        if ((q==0)||(q==1)||(q==2)) cindex = translate_.sciFieldCompatible(ma,infotext,static_cast<SCIRun::Module *>(this));
-        if ((q==3)||(q==4)||(q==5)) cindex = translate_.sciMatrixCompatible(ma,infotext,static_cast<SCIRun::Module *>(this));
-        if ((q==6)||(q==7)||(q==8)) cindex = translate_.sciNrrdDataCompatible(ma,infotext,static_cast<SCIRun::Module *>(this));
+        if ((q==0)||(q==1)||(q==2)) cindex = translate.sciFieldCompatible(ma,infotext);
+        if ((q==3)||(q==4)||(q==5)) cindex = translate.sciMatrixCompatible(ma,infotext);
+        if ((q==6)||(q==7)||(q==8)) cindex = translate.sciNrrdDataCompatible(ma,infotext);
         
         if (cindex)
         {

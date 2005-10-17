@@ -408,17 +408,20 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
     // only the lowest 8bits are used for the class identifier
     // the rest is used for future expansions
     
-	// first element in this datasegment denotes the matrix class
-	
-	if (matrixclass.size() == 0) { closechild(); return; }
-	unsigned long classinfo =  matrixclass.getandcastvalue<unsigned long>(0);
-  mxtype matrixtype = static_cast<mxtype>((0x000000FF & classinfo));
+    // first element in this datasegment denotes the matrix class
     
+    if (matrixclass.size() == 0) { closechild(); return; }
+    unsigned long classinfo =  matrixclass.getandcastvalue<unsigned long>(0);
+    mxtype matrixtype = static_cast<mxtype>((0x000000FF & classinfo));
+      
 
-  std::vector<long> dims;
-	matrixdims.getandcastvector(dims);
-  std::string name = matrixname.getstring();
-       
+    std::vector<long> dims;
+    matrixdims.getandcastvector(dims);
+    std::string name = matrixname.getstring();
+
+    int numelems = 1;
+    for (size_t p = 0; p < dims.size(); p ++) numelems *= dims[p];
+         
     // All matrices contain the data pieces read so far
     // From here on it depends on the matrix class
 		 
@@ -435,9 +438,9 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
                 
             // read the real and imaginary (optional) parts of the data    
         if (nexttag()) 
-              { matfiledata preal = matrix.getpreal(); if (mode == 2) { readdat(preal); } else { readtag(preal); } }
-              if (nexttag()) 
-              { matfiledata pimag = matrix.getpimag(); if (mode == 2) { readdat(pimag); } else { readtag(pimag); } }
+        { matfiledata preal = matrix.getpreal(); if ((mode == 2)||(numelems < 10)) { readdat(preal); } else { readtag(preal); } }
+        if (nexttag()) 
+        { matfiledata pimag = matrix.getpimag(); if ((mode == 2)||(numelems < 10)) { readdat(pimag); } else { readtag(pimag); } }
       }
       break;
 

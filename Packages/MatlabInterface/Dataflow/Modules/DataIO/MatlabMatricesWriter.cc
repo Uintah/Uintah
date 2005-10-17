@@ -73,11 +73,6 @@ class MatlabMatricesWriter : public Module
     
   private:
 
-    // functions for converting SCIRun matrices into matlab matrices
-    // This class contains a scope of functions for translating data
-    // structures.
-    matlabconverter translate_;
-
     // Support functions for converting between TCL and C++
     // converttcllist:
     // TCL lists are stings in which the elements are separated by {}.
@@ -142,6 +137,7 @@ MatlabMatricesWriter::~MatlabMatricesWriter()
 
 void MatlabMatricesWriter::execute()
 {
+  matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
 
   StringIPort *filenameport;
   if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
@@ -228,7 +224,7 @@ void MatlabMatricesWriter::execute()
   for (long p=0;p<static_cast<long>(matrixname.size());p++)
   {
     if (porthasdata[p] == false) continue; // Do not check not used ports
-    if (!translate_.isvalidmatrixname(matrixname[p]))
+    if (!translate.isvalidmatrixname(matrixname[p]))
     {
       error("MatlabMatricesWriter: The matrix name specified is invalid");
       return;
@@ -267,18 +263,18 @@ void MatlabMatricesWriter::execute()
       {   
         // translate the matrix into a matlab structured array, which
         // can also store some data from the property manager
-        translate_.converttostructmatrix();
-        translate_.setdatatype(convertdataformat(dataformat[p]));
+        translate.converttostructmatrix();
+        translate.setdatatype(convertdataformat(dataformat[p]));
       }
 
       if (matrixformat[p] == "numeric array")
       {
         // only store the numeric parts of the data
-        translate_.converttonumericmatrix();
-        translate_.setdatatype(convertdataformat(dataformat[p]));
+        translate.converttonumericmatrix();
+        translate.setdatatype(convertdataformat(dataformat[p]));
       }
 
-      translate_.sciMatrixTOmlArray(matrixhandle[p],ma,static_cast<SCIRun::Module *>(this));	
+      translate.sciMatrixTOmlArray(matrixhandle[p],ma);	
       if (ma.isempty())
       {
         warning("One of the matrices is empty");

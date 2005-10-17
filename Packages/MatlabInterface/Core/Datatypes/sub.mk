@@ -45,6 +45,8 @@ SRCS     += \
 	$(SRCDIR)/matlabfile.cc \
 	$(SRCDIR)/matlabconverter.cc \
   $(SRCDIR)/matlabIEplugin.cc \
+  $(SRCDIR)/fieldtomatlab.cc \
+  $(SRCDIR)/matlabtofield.cc \
   $(SRCDIR)/Startup.cc \
 #[INSERT NEW CODE FILE HERE]
 

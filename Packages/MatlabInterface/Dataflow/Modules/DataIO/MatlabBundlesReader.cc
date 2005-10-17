@@ -122,9 +122,6 @@ private:
   // Ports (We only use one output port)
   SCIRun::BundleOPort*			omatrix_[NUMPORTS];
   
-  // Class for translating matlab objects into SCIRun objects
-  matlabconverter		translate_;
-  
 };
 
 DECLARE_MAKER(MatlabBundlesReader)
@@ -240,12 +237,13 @@ void MatlabBundlesReader::execute()
       // creates a SCIRun matrix object
 
       SCIRun::BundleHandle mh;
-      translate_.prefermatrices();
-      translate_.prefersciobjects();
-      if (pnrrd == "prefer nrrds") translate_.prefernrrds();
-      if (pbundle == "prefer bundles") translate_.preferbundles();
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+      translate.prefermatrices();
+      translate.prefersciobjects();
+      if (pnrrd == "prefer nrrds") translate.prefernrrds();
+      if (pbundle == "prefer bundles") translate.preferbundles();
       
-      translate_.mlArrayTOsciBundle(ma,mh,static_cast<SCIRun::Module *>(this));
+      translate.mlArrayTOsciBundle(ma,mh);
       
       // Put the SCIRun matrix in the hands of the scheduler
       omatrix_[p]->send(mh);
@@ -370,8 +368,9 @@ void MatlabBundlesReader::indexmatlabfile(bool postmsg)
   guimatrixinfotexts_.set(matrixinfotexts);
   guimatrixnames_.set(matrixnames);
 
-  translate_.setpostmsg(postmsg);
-
+  SCIRun::ProgressReporter* pr = 0;
+  if (postmsg) pr = dynamic_cast<SCIRun::ProgressReporter* >(this);
+  matlabconverter translate(pr);
   
   filename = guifilename_.get();	
 
@@ -421,7 +420,7 @@ void MatlabBundlesReader::indexmatlabfile(bool postmsg)
     for (long p=0;p<mfile.getnummatlabarrays();p++)
     {
       ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-      if ((cindex = translate_.sciBundleCompatible(ma,infotext,reinterpret_cast<SCIRun::ProgressReporter *>(this))))
+      if ((cindex = translate.sciBundleCompatible(ma,infotext)))
       {
         // in case we need to propose a matrix to load, select
         // the one that is most compatible with the data
