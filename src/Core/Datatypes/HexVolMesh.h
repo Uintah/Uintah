@@ -107,7 +107,8 @@ public:
       mesh_(msh),
       index_(ind)
     {
-      //      mesh_.get_edges(edges_, index_);
+      mesh_->synchronize(Mesh::FACES_E | Mesh::EDGES_E);
+      mesh_.get_edges(edges_, index_);
     }
     
     // the following designed to coordinate with ::get_nodes
