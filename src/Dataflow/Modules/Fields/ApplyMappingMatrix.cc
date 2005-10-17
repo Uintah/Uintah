@@ -119,15 +119,16 @@ ApplyMappingMatrix::execute()
 
     CompileInfoHandle ci =
       ApplyMappingMatrixAlgo::get_compile_info(sfield->get_type_description(),
-					      sfield->order_type_description(),
-					      dfield->get_type_description(),
-					      dfield->order_type_description(),
-					      accumtype, true);
+					    sfield->order_type_description(),
+					    dfield->get_type_description(),
+					    dfield->order_type_description(),
+					    sfield->get_type_description(3),
+					    accumtype, true);
     Handle<ApplyMappingMatrixAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
     fHandle_ = algo->execute(sfield, dfield->mesh(),
-			     imatrix, dfield->basis_order());
+			     imatrix);
 
 
     if (fHandle_.get_rep())
@@ -145,11 +146,12 @@ ApplyMappingMatrix::execute()
 
 CompileInfoHandle
 ApplyMappingMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
-					const TypeDescription *lsrc,
-					const TypeDescription *fdst,
-					const TypeDescription *ldst,
-					const string &accum,
-					bool fout_use_accum)
+					 const TypeDescription *lsrc,
+					 const TypeDescription *fdst,
+					 const TypeDescription *ldst,
+					 const TypeDescription *dsrc,
+					 const string &accum,
+					 bool fout_use_accum)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -159,17 +161,27 @@ ApplyMappingMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
   const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
   const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
   string fout;
+  cout << "ApplyMappingMatrixAlgo::get_compile_info: " << fout_use_accum 
+       << " fdst_loc:" << fdst_loc 
+       << " fsrc_loc:" << fsrc_loc << std::endl;
   if (fout_use_accum)
   {
-    fout = fdst->get_name().substr(0, fdst_loc) +
-      "<" + accum + "> ";
+    //    fout = fdst->get_name().substr(0, fdst_loc) +
+    //  "<" + accum + "> ";
+    cout << fout << std::endl;
+    cout << accum << std::endl;
+    fout = fdst->get_similar_name(accum, 3);
   }
   else
   {
-    fout = fdst->get_name().substr(0, fdst_loc) +
-      fsrc->get_name().substr(fsrc_loc);
+    //fout = fdst->get_name().substr(0, fdst_loc) +
+    //fsrc->get_name().substr(fsrc_loc);
+    cout << fdst->get_name() << std::endl;
+    cout << fsrc->get_name() << std::endl;
+    string data_name = dsrc->get_name("", "");
+    fout = fdst->get_similar_name(data_name, 3);
   }
-
+  
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
 		       fsrc->get_filename() + "." +

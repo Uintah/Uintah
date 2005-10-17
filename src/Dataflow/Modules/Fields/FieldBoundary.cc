@@ -118,18 +118,18 @@ FieldBoundary::execute()
       string actype = input->get_type_description(1)->get_name();
       if (input->query_scalar_interface(this) != NULL) { actype = "double"; }
       const TypeDescription *iftd = input->get_type_description();
+      const TypeDescription *idtd = input->get_type_description(3);
       const TypeDescription *iltd = input->order_type_description();
       const TypeDescription *oftd = tri_fh_->get_type_description();
       const TypeDescription *oltd = tri_fh_->order_type_description();
       CompileInfoHandle ci =
-	ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd,
-                                                 oftd, oltd,
+	ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd, oftd, oltd, idtd,
                                                  actype, false);
       Handle<ApplyMappingMatrixAlgo> algo;
       if (module_dynamic_compile(ci, algo))
       {
 	tri_fh_ = algo->execute(input, tri_fh_->mesh(),
-				interp_mh_, tri_fh_->basis_order());
+				interp_mh_);
       }
     }
   }

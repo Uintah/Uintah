@@ -206,6 +206,10 @@ public:
   void get_edges(typename Edge::array_type &array, typename Cell::index_type idx) const;
   void get_faces(typename Face::array_type &array, typename Cell::index_type idx) const;
 
+  void get_faces(typename Face::array_type &a, 
+		 typename Face::index_type f) const
+  { a.push_back(f); }
+  
   //! get the parent element(s) of the given index
   bool get_edges(typename Edge::array_type &, typename Node::index_type) const { return 0; }
   bool get_faces(typename Face::array_type &, typename Node::index_type) const { return 0; }
