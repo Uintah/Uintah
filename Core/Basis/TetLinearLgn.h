@@ -229,12 +229,12 @@ template <class T>
 int TetGaussian2<T>::GaussianNum = 4;
 
 template <class T>
-T TetGaussian2<T>::GaussianPoints[4][3] = {
+T TetGaussian2<T>::GaussianPoints[][3] = {
   {1./6., 1./6., 1./6.}, {2./3., 1./6., 1./6.}, 
   {1./6., 2./3., 1./6.}, {1./6., 1./6., 2./3.}};
 
 template <class T>
-T TetGaussian2<T>::GaussianWeights[4] = {.25, .25, 25., .25};
+T TetGaussian2<T>::GaussianWeights[] = {.25, .25, .25, .25};
 
 
 //! Class with weights and coordinates for 3rd order Gaussian integration
@@ -248,7 +248,7 @@ public:
 };
 
 template <class T>
-T TetGaussian3<T>::GaussianPoints[11][3] = {
+T TetGaussian3<T>::GaussianPoints[][3] = {
   {0.2500000,  0.2500000, 0.2500000},
   {0.7857143, 0.07142857, 0.07142857},
   {0.07142857, 0.7857143, 0.07142857},
@@ -262,7 +262,7 @@ T TetGaussian3<T>::GaussianPoints[11][3] = {
   {0.3994034, 0.3994034, 0.1005964}};
 
 template <class T>
-T TetGaussian3<T>::GaussianWeights[11] = {
+T TetGaussian3<T>::GaussianWeights[] = {
   -0.01315556,
   0.007622222,
   0.007622222,
@@ -275,6 +275,8 @@ T TetGaussian3<T>::GaussianWeights[11] = {
   0.02488889,
   0.02488889};
 
+template <class T>
+int TetGaussian3<T>::GaussianNum = 11;
 
 //! Class for handling of element of type tetrahedron with 
 //! linear lagrangian interpolation
