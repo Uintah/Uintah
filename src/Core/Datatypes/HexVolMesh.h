@@ -107,7 +107,7 @@ public:
       mesh_(msh),
       index_(ind)
     {
-      mesh_->synchronize(Mesh::FACES_E | Mesh::EDGES_E);
+      mesh_.synchronize(Mesh::FACES_E | Mesh::EDGES_E);
       mesh_.get_edges(edges_, index_);
     }
     
