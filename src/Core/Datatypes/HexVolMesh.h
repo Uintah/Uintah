@@ -525,12 +525,12 @@ public:
     basis_.approx_face(count, div_per_unit, coords); 
   }
 
-  void get_coords(vector<double> &coords, 
+  bool get_coords(vector<double> &coords, 
 		  const Point &p,
 		  typename Cell::index_type idx) const
   {
     ElemData ed(*this, idx);
-    basis_.get_coords(coords, p, ed); 
+    return basis_.get_coords(coords, p, ed); 
   }
   
   void interpolate(Point &pt, const vector<double> &coords, 
