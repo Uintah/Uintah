@@ -162,7 +162,7 @@ public:
 	-((-1 + z)*z2)*derivs_[cd.node3_index()][2]
 	+z*(-1 + 6*x - 6*x2 + 3*z - 2*z2)*cd.node4()
 	+x*(-2 + 3*x)*z*derivs_[cd.node4_index()][0]
-	2*x*y*z*derivs_[cd.node4_index()][1]
+	+2*x*y*z*derivs_[cd.node4_index()][1]
 	+(-1 + z)*z2*derivs_[cd.node4_index()][2]
 	+y2*z*derivs_[cd.node5_index()][0]);
 
@@ -181,7 +181,7 @@ public:
 	-((-1 + x2 + 4*y - 3*y2)*z)*derivs_[cd.node3_index()][1]
 	-((-1 + z)*z2)*derivs_[cd.node3_index()][2]
 	+x2*z*derivs_[cd.node4_index()][1]
-	+z*(-1 + 6*y - 6*y2 + 3*z  2*z2)*cd.node5()
+	+z*(-1 + 6*y - 6*y2 + 3*z - 2*z2)*cd.node5()
 	+2*x*y*z*derivs_[cd.node5_index()][0]
 	+y*(-2 + 3*y)*z*derivs_[cd.node5_index()][1]
 	+(-1 + z)*z2*derivs_[cd.node5_index()][2]);
@@ -204,7 +204,7 @@ public:
 	+(-x2 + y12)*y*derivs_[cd.node3_index()][1]
 	-((-1 + x + y)*z*(-2 + 3*z))*derivs_[cd.node3_index()][2]
 	+x*(-1 + 3*x - 2*x2 + 6*z - 6*z2)*cd.node4()
-	(-1 + x)*x2*derivs_[cd.node4_index()][0]
+	+(-1 + x)*x2*derivs_[cd.node4_index()][0]
 	+x2*y*derivs_[cd.node4_index()][1]
 	+x*z*(-2 + 3*z)*derivs_[cd.node4_index()][2]
 	+y*(-1 + 3*y - 2*y2 + 6*z - 6*z2)*cd.node5()
@@ -224,7 +224,7 @@ public:
   }  
  
   //! add derivative values (dx, dy, dz) for nodes.
-  void add_derivative(const T &p[3]) { derivs_.push_back(p); }
+  void add_derivative(const vector<T> p) { derivs_.push_back(p); }
 
   static  const string type_name(int n = -1);
 
@@ -232,7 +232,7 @@ public:
 
 protected:
   //! support data (node data is elsewhere)
-  vector<T[3]>          derivs_; 
+  vector<vector<T>[>          derivs_; 
 };
 
 
