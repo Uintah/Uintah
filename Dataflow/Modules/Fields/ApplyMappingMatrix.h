@@ -47,8 +47,7 @@ class ApplyMappingMatrixAlgo : public DynamicAlgoBase
 public:
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
-			      MatrixHandle mapping,
-			      int basis_order) = 0;
+			      MatrixHandle mapping) = 0;
 
   virtual void execute_aux(FieldHandle src, FieldHandle dst,
 			   MatrixHandle mapping) = 0;
@@ -58,6 +57,7 @@ public:
 					    const TypeDescription *lsrc,
 					    const TypeDescription *fdst,
 					    const TypeDescription *ldst,
+					    const TypeDescription *dsrc,
 					    const string &accum,
 					    bool fout_use_accum);
 };
@@ -70,7 +70,7 @@ public:
 
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
-			      MatrixHandle mapping, int basis_order);
+			      MatrixHandle mapping);
 
   virtual void execute_aux(FieldHandle src, FieldHandle dst,
 			   MatrixHandle mapping);
@@ -82,13 +82,12 @@ FieldHandle
 ApplyMappingMatrixAlgoT<FSRC, LSRC, 
 		       FDST, LDST, ACCUM>::execute(FieldHandle src_h,
 						   MeshHandle dst_h,
-						   MatrixHandle mapping,
-						   int basis_order)
+						   MatrixHandle mapping)
 {
   typename FDST::mesh_type *dstmesh =
     dynamic_cast<typename FDST::mesh_type *>(dst_h.get_rep());
 
-  FieldHandle ofield = scinew FDST(dstmesh, basis_order);
+  FieldHandle ofield = scinew FDST(dstmesh);
   execute_aux(src_h, ofield, mapping);
 
   return ofield;

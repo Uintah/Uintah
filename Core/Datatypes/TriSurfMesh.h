@@ -120,15 +120,15 @@ public:
     // the following designed to coordinate with ::get_nodes
     inline 
     unsigned node0_index() const {
-      return mesh_.cells_[index_ * 3];
+      return index_ * 3;
     }
     inline 
     unsigned node1_index() const {
-      return mesh_.cells_[index_ * 3 + 1];
+      return index_ * 3 + 1;
     }
     inline 
     unsigned node2_index() const {
-      return mesh_.cells_[index_ * 3 + 2];
+      return index_ * 3 + 2;
     }
 
     // the following designed to coordinate with ::get_edges
@@ -200,6 +200,9 @@ public:
   void get_edges(typename Edge::array_type &, typename Face::index_type) const;
   void get_edges(typename Edge::array_type &, typename Cell::index_type) const;
   void get_faces(typename Face::array_type &, typename Cell::index_type) const;
+  void get_faces(typename Face::array_type &a, 
+		 typename Face::index_type f) const
+  { a.push_back(f); }
 
   //! get the parent element(s) of the given index
   unsigned get_edges(typename Edge::array_type &, 

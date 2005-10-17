@@ -182,12 +182,12 @@ ChangeFieldBasis::execute()
     if (fh->query_scalar_interface(this) != NULL) { actype = "double"; }
     const TypeDescription *iftd = fh->get_type_description();
     const TypeDescription *iltd = fh->order_type_description();
+    const TypeDescription *idtd = fh->get_type_description(3);
     const TypeDescription *oftd = ef->get_type_description();
     const TypeDescription *oltd = ef->order_type_description();
     CompileInfoHandle ci =
-      ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd,
-					      oftd, oltd,
-					      actype, false);
+      ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd, oftd, oltd, idtd,
+					       actype, false);
     Handle<ApplyMappingMatrixAlgo> algo;
     if (module_dynamic_compile(ci, algo))
     {

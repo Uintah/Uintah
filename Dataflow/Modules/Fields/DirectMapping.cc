@@ -215,9 +215,8 @@ DirectMappingAlgo::get_compile_info(const TypeDescription *fsrc,
   static const string template_class_name("DirectMappingAlgoT");
   static const string base_class_name("DirectMappingAlgo");
 
-  const string data_name = dsrc->get_name("", "");
+  string data_name = dsrc->get_name("", "");
   const string fout = fdst->get_similar_name(data_name, 3);
-  cout << fout << std::endl;
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
