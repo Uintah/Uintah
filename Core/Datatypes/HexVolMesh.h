@@ -107,8 +107,7 @@ public:
       mesh_(msh),
       index_(ind)
     {
-      mesh_.get_edges(edges_, index_);
-
+      //      mesh_.get_edges(edges_, index_);
     }
     
     // the following designed to coordinate with ::get_nodes
@@ -1971,7 +1970,7 @@ HexVolMesh<Basis>::add_elem(typename Node::array_type a)
   cells_.push_back(a[5]);
   cells_.push_back(a[6]);
   cells_.push_back(a[7]);
-  return static_cast<typename Elem::index_type>((cells_.size() - 1) >> 3);
+  return static_cast<typename Elem::index_type>((cells_.size() >> 3)-1);
 }
 
 
