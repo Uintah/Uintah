@@ -107,7 +107,6 @@ public:
       mesh_(msh),
       index_(ind)
     {
-      mesh_.synchronize(Mesh::FACES_E | Mesh::EDGES_E);
       mesh_.get_edges(edges_, index_);
     }
     
@@ -527,15 +526,17 @@ public:
 
   bool get_coords(vector<double> &coords, 
 		  const Point &p,
-		  typename Cell::index_type idx) const
+		  typename Cell::index_type idx)
   {
+    synchronize(Mesh::FACES_E | Mesh::EDGES_E);
     ElemData ed(*this, idx);
     return basis_.get_coords(coords, p, ed); 
   }
   
   void interpolate(Point &pt, const vector<double> &coords, 
-		   typename Cell::index_type idx) const
+		   typename Cell::index_type idx)
   {
+    synchronize(Mesh::FACES_E | Mesh::EDGES_E);
     ElemData ed(*this, idx);
     pt = basis_.interpolate(coords, ed);
   }
