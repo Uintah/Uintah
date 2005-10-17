@@ -135,7 +135,6 @@ ApplyMappingMatrixAlgoT<FSRC, LSRC,
       accum += v * val[i*idxstride];
     }
     fdst->set_value((typename FDST::value_type)accum, *dbi);
-    
     ++counter;
     ++dbi;
   }
