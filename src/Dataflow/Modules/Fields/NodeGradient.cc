@@ -98,10 +98,11 @@ NodeGradient::execute()
     error("This module only works on fields containing data at nodes.");
     return;
   }
-
-  if (fieldin->get_type_description(0)->get_name() != "LatVolField")
+  
+  if (fieldin->get_type_description(1)->get_name().find("LatVolMesh", 0) == 
+      string::npos)
   {
-    error("This module only works on LatVolFields.");
+    error("This module only works on fields with based on LatVolMesh.");
   }
 
   // If no data or a changed recalcute.
