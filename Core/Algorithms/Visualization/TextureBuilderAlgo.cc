@@ -220,20 +220,26 @@ texture_build_bricks(vector<TextureBrickHandle>& bricks,
 
 CompileInfoHandle
 TextureBuilderAlgo::get_compile_info(const TypeDescription *vftd,
-				     const TypeDescription *gftd)
+				     const TypeDescription *gftd,
+				     const TypeDescription *gmtd,
+				     const TypeDescription *gbtd,
+				     const TypeDescription *gdtd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("TextureBuilderAlgoT");
   static const string base_class_name("TextureBuilderAlgo");
-
+  string vfield = "GenericField<" + gmtd->get_name() + ", " +
+    gbtd->get_similar_name("Vector", 0) + ", " + 
+    gdtd->get_similar_name("Vector", 0) + " >";
+    
   CompileInfo *rval = scinew CompileInfo(template_class_name + "." +
 					 vftd->get_filename() + "." +
 					 gftd->get_filename() + ".",
 					 base_class_name, 
 					 template_class_name, 
 					 vftd->get_name() + ", " +
-					 gftd->get_name() + "<Vector> " + ", " +
+					 vfield + ", " +
 					 "TextureBrickT< unsigned char > " );
   
   // Add in the include path to compile this obj

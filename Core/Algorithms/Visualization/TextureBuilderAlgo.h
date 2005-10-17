@@ -76,7 +76,10 @@ protected:
 public:
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription* vftd,
-					    const TypeDescription* gftd);
+					    const TypeDescription* gftd,
+					    const TypeDescription* gmtd,
+					    const TypeDescription* gbtd,
+					    const TypeDescription* gdtd);
 };
 
 
@@ -138,7 +141,6 @@ TextureBuilderAlgoT<VFIELD,
 	  // Does each level have the same number of patches?
 	  if( lev->patches.size() == glev->patches.size() ){
 	    for(unsigned int j = 0; j < lev->patches.size(); j++ ){
-	      value_type tmp;
 	      typename MRLatVolField<value_type>::LVF *vmr;
 	      vmr =lev->patches[j].get_rep(); 
 	      MRLatVolField<Vector>::LVF* gmr = glev->patches[j].get_rep();

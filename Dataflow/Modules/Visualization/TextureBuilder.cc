@@ -123,8 +123,8 @@ TextureBuilder::execute()
     error( "No scalar field handle or representation" );
     return;
   }
-
-  if( vHandle->get_type_description(0)->get_name() != "LatVolField" &&
+  string mesh_name = vHandle->get_type_description(1)->get_name();
+  if( mesh_name.find("LatVolMesh", 0) == string::npos &&
       vHandle->get_type_description(0)->get_name() != "MRLatVolField" &&
       vHandle->get_type_description(0)->get_name() != "ITKLatVolField" ) {
       
@@ -228,9 +228,9 @@ TextureBuilder::execute()
       gfield_last_generation_ = -1;
 
     } else {
-
-      if( gHandle->get_type_description(0)->get_name() != "LatVolField" &&
-	  gHandle->get_type_description(0)->get_name() != "MRLatVolField" &&
+      string mesh_name = gHandle->get_type_description(1)->get_name();
+      if( mesh_name.find("LatVolMesh", 0) == string::npos &&
+ 	  gHandle->get_type_description(0)->get_name() != "MRLatVolField" &&
 	  gHandle->get_type_description(0)->get_name() != "ITKLatVolField" ) {
     
 	error( "Only availible for regular topology with uniformly gridded data." );
@@ -287,8 +287,19 @@ TextureBuilder::execute()
     const TypeDescription* gftd = (gHandle.get_rep() ?
 				   gHandle->get_type_description(0) :
 				   vHandle->get_type_description(0));
+    const TypeDescription* gmtd = (gHandle.get_rep() ?
+				   gHandle->get_type_description(1) :
+				   vHandle->get_type_description(1));
+    const TypeDescription* gbtd = (gHandle.get_rep() ?
+				   gHandle->get_type_description(2) :
+				   vHandle->get_type_description(2));
+    const TypeDescription* gdtd = (gHandle.get_rep() ?
+				   gHandle->get_type_description(3) :
+				   vHandle->get_type_description(3));
 
-    CompileInfoHandle ci = TextureBuilderAlgo::get_compile_info(vftd, gftd);
+    CompileInfoHandle ci = TextureBuilderAlgo::get_compile_info(vftd, gftd,
+								gmtd, gbtd,
+								gdtd);
 
     Handle<TextureBuilderAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
