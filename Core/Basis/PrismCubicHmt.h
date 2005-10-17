@@ -217,7 +217,7 @@ public:
   //! iterative solution...
   template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
+		  const ElemData &cd) const  
   {
     PrismLocate< PrismCubicHmt<T> > CL;
     return CL.get_coords(this, coords, value, cd);
@@ -232,7 +232,7 @@ public:
 
 protected:
   //! support data (node data is elsewhere)
-  vector<vector<T>[>          derivs_; 
+  vector<vector<T> >          derivs_;  
 };
 
 
