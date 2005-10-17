@@ -78,36 +78,46 @@ NoiseAlg::get_compile_info(const TypeDescription *td,
   string subname;
   string subinc;
   string sname = td->get_name("", "");
+  string out_mesh_inc("");
+  string out_basis_inc("");
+  string out_mesh_inc2("");
+  string out_basis_inc2("");
 
   //Test for LatVolField inheritance...
-  if (sname.find("LatVolField") != string::npos ||
-      sname.find("StructHexVolField") != string::npos) {
+  if (sname.find("LatVolMesh") != string::npos ||
+      sname.find("StructHexVolMesh") != string::npos) {
     // we are dealing with a lattice vol or inherited version
     subname.append("HexMC<" + td->get_name() + "> ");
     subinc.append(HexMCBase::get_h_file_path());
-    face_centered_p = false;
-  } else if (sname.find("TetVolField") != string::npos) {
+    out_mesh_inc = "../src/Core/Datatypes/QuadSurfMesh.h";
+    out_basis_inc = "../src/Core/Basis/QuadBilinearLgn.h";
+    out_mesh_inc2 = "../src/Core/Datatypes/TriSurfMesh.h";
+    out_basis_inc2 = "../src/Core/Basis/TriLinearLgn.h";
+  } else if (sname.find("TetVolMesh") != string::npos) {
     subname.append("TetMC<" + td->get_name() + "> ");
     subinc.append(TetMCBase::get_h_file_path());
-    face_centered_p = false;
-  } else if (sname.find("HexVolField") != string::npos) {
+    out_mesh_inc = "../src/Core/Datatypes/TriSurfMesh.h";
+    out_basis_inc = "../src/Core/Basis/TriLinearLgn.h";
+  } else  if (sname.find("HexVolMesh") != string::npos) {
     subname.append("UHexMC<" + td->get_name() + "> ");
     subinc.append(UHexMCBase::get_h_file_path());
-    face_centered_p = false;
-  } else if (sname.find("TriSurfField") != string::npos) {
+    out_mesh_inc = "../src/Core/Datatypes/QuadSurfMesh.h";
+    out_basis_inc = "../src/Core/Basis/QuadBilinearLgn.h";
+    out_mesh_inc2 = "../src/Core/Datatypes/TriSurfMesh.h";
+    out_basis_inc2 = "../src/Core/Basis/TriLinearLgn.h";
+  } else if (sname.find("TriSurf") != string::npos) {
     subname.append("TriMC<" + td->get_name() + "> ");
     subinc.append(TriMCBase::get_h_file_path());
-    cell_centered_p = false;
-  } else if (sname.find("QuadSurfField") != string::npos) {
+    out_mesh_inc = "../src/Core/Datatypes/CurveMesh.h";
+    out_basis_inc = "../src/Core/Basis/CrvLinearLgn.h";
+  } else if (sname.find("QuadSurfMesh") != string::npos ||
+	     sname.find("ImageMesh") != string::npos) {
     subname.append("QuadMC<" + td->get_name() + "> ");
     subinc.append(QuadMCBase::get_h_file_path());
-    cell_centered_p = false;
-  } else if (sname.find("ImageField") != string::npos) {
-    subname.append("QuadMC<" + td->get_name() + "> ");
-    subinc.append(QuadMCBase::get_h_file_path());
-    cell_centered_p = false;
+    out_mesh_inc = "../src/Core/Datatypes/CurveMesh.h";
+    out_basis_inc = "../src/Core/Basis/CrvLinearLgn.h";
   } else {
-    cerr << "Unsupported Field, needs to be of Lattice or Tet type." << endl;
+    cerr << "Unsupported field type." << endl;
     subname.append("Cannot compile this unsupported type");
   }
 
@@ -119,8 +129,16 @@ NoiseAlg::get_compile_info(const TypeDescription *td,
   CompileInfo *rval = scinew CompileInfo(fname, "NoiseAlg", 
 					 "Noise" + dloc,
 					 subname);
+
   rval->add_include(get_h_file_path());
   rval->add_include(subinc);
+  // likely needed as these are the output field types
+  rval->add_mesh_include(out_mesh_inc);
+  if (out_mesh_inc2 != "") 
+    rval->add_mesh_include(out_mesh_inc2);
+  rval->add_basis_include(out_basis_inc);
+  if (out_basis_inc2 != "")
+    rval->add_basis_include(out_basis_inc2);
   td->fill_compile_info(rval);
   return rval;
 }

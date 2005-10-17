@@ -98,13 +98,13 @@ MarchingCubesAlg::get_compile_info(const TypeDescription *td) {
     subname.append("TriMC<" + td->get_name() + "> ");
     subinc.append(TriMCBase::get_h_file_path());
     out_mesh_inc = "../src/Core/Datatypes/CurveMesh.h";
-    out_basis_inc = "../src/Core/Basis/CurveLinearLgn.h";
+    out_basis_inc = "../src/Core/Basis/CrvLinearLgn.h";
   } else if (sname.find("QuadSurfMesh") != string::npos ||
 	     sname.find("ImageMesh") != string::npos) {
     subname.append("QuadMC<" + td->get_name() + "> ");
     subinc.append(QuadMCBase::get_h_file_path());
     out_mesh_inc = "../src/Core/Datatypes/CurveMesh.h";
-    out_basis_inc = "../src/Core/Basis/CurveLinearLgn.h";
+    out_basis_inc = "../src/Core/Basis/CrvLinearLgn.h";
   } else if (sname.find("CurveMesh") != string::npos) {
     subname.append("EdgeMC<" + td->get_name() + "> ");
     subinc.append(EdgeMCBase::get_h_file_path());
@@ -120,7 +120,7 @@ MarchingCubesAlg::get_compile_info(const TypeDescription *td) {
 					 "MarchingCubes", subname);
   rval->add_include(get_h_file_path());
   rval->add_include(subinc);
-  // likeley needed as these are the output field types
+  // likely needed as these are the output field types
   rval->add_mesh_include(out_mesh_inc);
   if (out_mesh_inc2 != "") 
     rval->add_mesh_include(out_mesh_inc2);
