@@ -161,23 +161,12 @@ ApplyMappingMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
   const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
   const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
   string fout;
-  cout << "ApplyMappingMatrixAlgo::get_compile_info: " << fout_use_accum 
-       << " fdst_loc:" << fdst_loc 
-       << " fsrc_loc:" << fsrc_loc << std::endl;
   if (fout_use_accum)
   {
-    //    fout = fdst->get_name().substr(0, fdst_loc) +
-    //  "<" + accum + "> ";
-    cout << fout << std::endl;
-    cout << accum << std::endl;
     fout = fdst->get_similar_name(accum, 3);
   }
   else
   {
-    //fout = fdst->get_name().substr(0, fdst_loc) +
-    //fsrc->get_name().substr(fsrc_loc);
-    cout << fdst->get_name() << std::endl;
-    cout << fsrc->get_name() << std::endl;
     string data_name = dsrc->get_name("", "");
     fout = fdst->get_similar_name(data_name, 3);
   }
