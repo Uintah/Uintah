@@ -120,9 +120,6 @@ class MatlabMatricesReader : public Module
     // Ports (We only use one output port)
     MatrixOPort* omatrix_[NUMPORTS];
     
-    // Class for translating matlab objects into SCIRun objects
-    matlabconverter translate_;
-    
 };
 
 DECLARE_MAKER(MatlabMatricesReader)
@@ -139,8 +136,8 @@ MatlabMatricesReader::MatlabMatricesReader(GuiContext* ctx)
     guifilenameset_(ctx->subVar("filename-set")),
     guimatrixinfotexts_(ctx->subVar("matrixinfotexts")),     
     guimatrixnames_(ctx->subVar("matrixnames")),    
-	guimatrixname_(ctx->subVar("matrixname")),
-	guidisabletranspose_(ctx->subVar("disable-transpose"))
+    guimatrixname_(ctx->subVar("matrixname")),
+    guidisabletranspose_(ctx->subVar("disable-transpose"))
 {
 	indexmatlabfile(false);
 }
@@ -175,7 +172,8 @@ void MatlabMatricesReader::execute()
   // Get the filename from TCL.
   std::string filename = guifilename_.get();
   int disable_transpose = guidisabletranspose_.get();
-  translate_.setdisabletranspose(disable_transpose);
+  matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+  translate.setdisabletranspose(disable_transpose);
   
   // If the filename is empty, launch an error
   if (filename == "")
@@ -221,7 +219,7 @@ void MatlabMatricesReader::execute()
       // creates a SCIRun matrix object
 
       SCIRun::MatrixHandle mh;
-      translate_.mlArrayTOsciMatrix(ma,mh,static_cast<SCIRun::Module *>(this));
+      translate.mlArrayTOsciMatrix(ma,mh);
       
       // Put the SCIRun matrix in the hands of the scheduler
       omatrix_[p]->send(mh);
@@ -347,8 +345,10 @@ void MatlabMatricesReader::indexmatlabfile(bool postmsg)
   guimatrixinfotexts_.set(matrixinfotexts);
   guimatrixnames_.set(matrixnames);
 
-  translate_.setpostmsg(postmsg);
-
+  SCIRun::ProgressReporter* pr = 0;
+  if (postmsg) pr = dynamic_cast<SCIRun::ProgressReporter* >(this);
+  matlabconverter translate(pr);
+  
   filename = guifilename_.get();	
 
   if (filename == "") 
@@ -397,7 +397,7 @@ void MatlabMatricesReader::indexmatlabfile(bool postmsg)
     for (long p=0;p<mfile.getnummatlabarrays();p++)
     {
       ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-      if ((cindex = translate_.sciMatrixCompatible(ma,infotext,static_cast<SCIRun::Module *>(this))))
+      if ((cindex = translate.sciMatrixCompatible(ma,infotext)))
       {
         // in case we need to propose a matrix to load, select
         // the one that is most compatible with the data

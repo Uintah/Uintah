@@ -73,11 +73,6 @@ class MatlabFieldsWriter : public Module
     
   private:
 
-    // functions for converting SCIRun matrices into matlab matrices
-    // This class contains a scope of functions for translating data
-    // structures.
-    matlabconverter translate_;
-
     // Support functions for converting between TCL and C++
     // converttcllist:
     // TCL lists are stings in which the elements are separated by {}.
@@ -124,7 +119,7 @@ MatlabFieldsWriter::MatlabFieldsWriter(GuiContext* ctx)
     guifilename_(ctx->subVar("filename")),
     guifilenameset_(ctx->subVar("filename-set")),
     guimatrixname_(ctx->subVar("matrixname")),     
-	guimatrixformat_(ctx->subVar("matrixformat"))
+    guimatrixformat_(ctx->subVar("matrixformat"))
 {
 }
 
@@ -140,6 +135,7 @@ MatlabFieldsWriter::~MatlabFieldsWriter()
 
 void MatlabFieldsWriter::execute()
 {
+  matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
 
   StringIPort *filenameport;
   if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
@@ -224,7 +220,7 @@ void MatlabFieldsWriter::execute()
   for (long p=0;p<static_cast<long>(matrixname.size());p++)
   {
     if (porthasdata[p] == false) continue; // Do not check not used ports
-    if (!translate_.isvalidmatrixname(matrixname[p]))
+    if (!translate.isvalidmatrixname(matrixname[p]))
     {
       error("MatlabFieldsWriter: The matrix name specified is invalid");
       return;
@@ -263,16 +259,16 @@ void MatlabFieldsWriter::execute()
       {   
         // translate the matrix into a matlab structured array, which
         // can also store some data from the property manager
-        translate_.converttostructmatrix();
+        translate.converttostructmatrix();
       }
       
       if (matrixformat[p] == "numeric array")
       {
         // only store the numeric parts of the data
-        translate_.converttonumericmatrix();
+        translate.converttonumericmatrix();
       }
 
-      translate_.sciFieldTOmlArray(matrixhandle[p],ma,static_cast<SCIRun::Module *>(this));	
+      translate.sciFieldTOmlArray(matrixhandle[p],ma);	
       
       if (ma.isempty())
       {

@@ -63,54 +63,54 @@ namespace MatlabIO {
 matfiledata::matfiledata()
     : m_(0), ptr_(0) 
 {
-    m_ = new mxdata;
-    m_->dataptr_ = 0; 
-	m_->owndata_ = false;
-    m_->bytesize_ = 0;
-    m_->type_ = miUNKNOWN;
-    m_->ref_ = 1; 
+  m_ = new mxdata;
+  m_->dataptr_ = 0; 
+  m_->owndata_ = false;
+  m_->bytesize_ = 0;
+  m_->type_ = miUNKNOWN;
+  m_->ref_ = 1; 
 }
  
 matfiledata::matfiledata(matfiledata::mitype type)
     : m_(0) , ptr_(0)
 {
-    m_ = new mxdata;
-    m_->dataptr_ = 0; 
-  	m_->owndata_ = false;
-    m_->bytesize_ = 0;
-    m_->type_ = type;
-    m_->ref_ = 1; 
+  m_ = new mxdata;
+  m_->dataptr_ = 0; 
+  m_->owndata_ = false;
+  m_->bytesize_ = 0;
+  m_->type_ = type;
+  m_->ref_ = 1; 
 }			 
 						 	 	 	 
 matfiledata::~matfiledata()
 {
-    if (m_ != 0)
-    {
-	clearptr();
-    }
+  if (m_ != 0)
+  {
+    clearptr();
+  }
 }
   	
 void matfiledata::clear()
 {
-   if (m_ == 0) throw internal_error();
-   if ((m_->dataptr_ != 0)&&(m_->owndata_ == true)) delete[] static_cast<char *>(m_->dataptr_);
-   m_->owndata_ = false;
-   m_->dataptr_ = 0;	
-   m_->bytesize_ = 0;	
-   m_->type_ = miUNKNOWN;
+ if (m_ == 0) throw internal_error();
+ if ((m_->dataptr_ != 0)&&(m_->owndata_ == true)) delete[] static_cast<char *>(m_->dataptr_);
+ m_->owndata_ = false;
+ m_->dataptr_ = 0;	
+ m_->bytesize_ = 0;	
+ m_->type_ = miUNKNOWN;
 }
 
 void matfiledata::clearptr()
 {
-    if (m_ == 0) return;
-    m_->ref_--;
-    if (m_->ref_ == 0)
-    {
-        clear();
-        delete m_;
-    }
-    m_ = 0;
-	ptr_ = 0;
+  if (m_ == 0) return;
+  m_->ref_--;
+  if (m_->ref_ == 0)
+  {
+    clear();
+    delete m_;
+  }
+  m_ = 0;
+  ptr_ = 0;
 }
 
 matfiledata::matfiledata(const matfiledata &mfd)
@@ -118,37 +118,37 @@ matfiledata::matfiledata(const matfiledata &mfd)
 	m_ = 0;
 	m_ = mfd.m_;
 	ptr_ = mfd.ptr_;
-    m_->ref_++;
+  m_->ref_++;
 }
         
 matfiledata& matfiledata::operator= (const matfiledata &mfd)
 {
-    if (this != &mfd)
-    {
-        clearptr();
-        m_ = mfd.m_;
-		ptr_ = mfd.ptr_;
-        m_->ref_++;
-    }
-    return *this;
+  if (this != &mfd)
+  {
+    clearptr();
+    m_ = mfd.m_;
+    ptr_ = mfd.ptr_;
+    m_->ref_++;
+  }
+  return *this;
 }
 
 
 void matfiledata::newdatabuffer(long bytesize,mitype type)
 {
-   if (m_ == 0) throw internal_error();
-   if (m_->dataptr_ != 0) clear();
-   if (m_->type_ != miMATRIX)
-   {
-	  if (bytesize > 0)
-	  {
-		m_->dataptr_ = static_cast<void *>(new char[bytesize]);
-		m_->bytesize_ = bytesize;
-	  } 
-   }
-   m_->type_ = type; 	
-   m_->owndata_ = true;
-   ptr_ = 0;   
+  if (m_ == 0) throw internal_error();
+  if (m_->dataptr_ != 0) clear();
+  if (m_->type_ != miMATRIX)
+  {
+    if (bytesize > 0)
+    {
+      m_->dataptr_ = static_cast<void *>(new char[bytesize]);
+      m_->bytesize_ = bytesize;
+    } 
+  }
+  m_->type_ = type; 	
+  m_->owndata_ = true;
+  ptr_ = 0;   
 }
 
 
@@ -164,29 +164,28 @@ matfiledata matfiledata::clone()
 
 void *matfiledata::databuffer()
 { 
-    if (m_ == 0) throw internal_error();
-	
+  if (m_ == 0) throw internal_error();
 	if (ptr_) return(ptr_);
 	return(m_->dataptr_); 
 }
 
 void matfiledata::type(mitype type)
 { 
-    if (m_ == 0) throw internal_error();
-    m_->type_ = type; 
+  if (m_ == 0) throw internal_error();
+  m_->type_ = type; 
 }
 
 long matfiledata::bytesize()
 { 
-    if (m_ == 0) throw internal_error();
+  if (m_ == 0) throw internal_error();
 	if(ptr_) return(m_->bytesize_ - static_cast<long>(static_cast<char *>(ptr_) - static_cast<char *>(m_->dataptr_)));
-    return(m_->bytesize_); 
+  return(m_->bytesize_); 
 }
 
 matfiledata::mitype matfiledata::type()
 { 
-    if (m_ == 0) throw internal_error();
-    return(m_->type_); 
+  if (m_ == 0) throw internal_error();
+  return(m_->type_); 
 }
 
 long matfiledata::elsize(matfiledata::mitype type)
@@ -194,16 +193,16 @@ long matfiledata::elsize(matfiledata::mitype type)
   long elsize = 1;
    switch (type)
    {
-   	case miINT8: case miUINT8: case miUTF8:
-   	   elsize = 1; break;
-   	case miINT16: case miUINT16: case miUTF16:
-   	   elsize = 2; break;
-   	case miINT32: case miUINT32: case miSINGLE: case miUTF32:
-   	   elsize = 4; break;
-   	case miUINT64: case miINT64: case miDOUBLE:
-   	   elsize = 8; break;
-	default:
-		elsize = 1; break;
+      case miINT8: case miUINT8: case miUTF8:
+         elsize = 1; break;
+      case miINT16: case miUINT16: case miUTF16:
+         elsize = 2; break;
+      case miINT32: case miUINT32: case miSINGLE: case miUTF32:
+         elsize = 4; break;
+      case miUINT64: case miINT64: case miDOUBLE:
+         elsize = 8; break;
+      default:
+        elsize = 1; break;
    }
    return(elsize);
 }
@@ -216,16 +215,16 @@ long matfiledata::elsize()
 
 long matfiledata::size()
 { 
-    if (m_ == 0) throw internal_error();
-    return(m_->bytesize_/elsize()); 
+  if (m_ == 0) throw internal_error();
+  return(m_->bytesize_/elsize()); 
 }
 
 
 std::string matfiledata::getstring()
 {
-    std::string str;
-	
-    if (size() > 0)
+  std::string str;
+
+  if (size() > 0)
 	{
 		str.resize(size());
 		getandcast<char>(&(str[0]),size());
@@ -237,11 +236,11 @@ std::string matfiledata::getstring()
 
 void matfiledata::putstring(std::string str)
 {
-    long dsize;
-    char *ptr;
-    
-    dsize = static_cast<long>(str.size());
-    clear();
+  long dsize;
+  char *ptr;
+  
+  dsize = static_cast<long>(str.size());
+  clear();
 	if (dsize > 0)
 	{
 		newdatabuffer(dsize,miUINT8);
@@ -251,14 +250,13 @@ void matfiledata::putstring(std::string str)
 	else
 	{
 		m_->type_ = miUINT8;
-	}
-	
+	}	
 }
 
 std::vector<std::string> matfiledata::getstringarray(long maxstrlen)
 {
-    char *ptr;
-    long numstrings;
+  char *ptr;
+  long numstrings;
     
 	if ((maxstrlen == 0)||(size() == 0))
 	{
@@ -266,45 +264,45 @@ std::vector<std::string> matfiledata::getstringarray(long maxstrlen)
 		return(emptyvec);
 	}
 		  
-    numstrings = bytesize()/maxstrlen;
-    std::vector<std::string> vec(numstrings);
-    
-    ptr = static_cast<char *>(databuffer());
+  numstrings = bytesize()/maxstrlen;
+  std::vector<std::string> vec(numstrings);
+  
+  ptr = static_cast<char *>(databuffer());
 	long q,s;
-    for (q=0, s=0; q < (numstrings*maxstrlen); q+=maxstrlen,s++)
-    {
-    	long p,r;
-		for (p=0; p<maxstrlen; p++) { if (ptr[q+p] == 0) break; }
-		std::string str(p,'\0');
-		for (r=0;r<p;r++) { str[r] = ptr[q+r];}
-		vec[s] = str;
-    }
+  for (q=0, s=0; q < (numstrings*maxstrlen); q+=maxstrlen,s++)
+  {
+    long p,r;
+    for (p=0; p<maxstrlen; p++) { if (ptr[q+p] == 0) break; }
+    std::string str(p,'\0');
+    for (r=0;r<p;r++) { str[r] = ptr[q+r];}
+    vec[s] = str;
+  }
     
-    return(vec);
+  return(vec);
 }
 
 long matfiledata::putstringarray(std::vector<std::string> vec)
 {
-    char *ptr;
-    long maxstrlen = 8;
+  char *ptr;
+  long maxstrlen = 8;
+  
+  for (long p=0;p<static_cast<long>(vec.size());p++) 
+  { std::string str = vec[p]; if (maxstrlen < static_cast<long>(str.size()+1)) maxstrlen = static_cast<long>(str.size()+1); }
     
-    for (long p=0;p<static_cast<long>(vec.size());p++) 
-    { std::string str = vec[p]; if (maxstrlen < static_cast<long>(str.size()+1)) maxstrlen = static_cast<long>(str.size()+1); }
-    	
 	maxstrlen = (((maxstrlen-1)/8)+1)*8;
 	
-    clear();
+  clear();
 	long dsize = static_cast<long>(vec.size()*maxstrlen);
-    newdatabuffer(dsize,miUINT8);
-    ptr = static_cast<char *>(databuffer());
-    
-    for (long q=0, r=0;q<dsize;q+=maxstrlen,r++) 
-    {
-    	long p;
-    	std::string str = vec[r];
-    	for (p=0;p<static_cast<long>(str.size());p++) { ptr[p+q] = str[p]; }
-    	for (;p<maxstrlen;p++) {ptr[p+q] = 0;}
-    }		
+  newdatabuffer(dsize,miUINT8);
+  ptr = static_cast<char *>(databuffer());
+  
+  for (long q=0, r=0;q<dsize;q+=maxstrlen,r++) 
+  {
+    long p;
+    std::string str = vec[r];
+    for (p=0;p<static_cast<long>(str.size());p++) { ptr[p+q] = str[p]; }
+    for (;p<maxstrlen;p++) {ptr[p+q] = 0;}
+  }		
 	
 	return(maxstrlen);
 }
@@ -314,11 +312,11 @@ long matfiledata::putstringarray(std::vector<std::string> vec)
 // in case of a void just copy the data (no conversion)
 void matfiledata::getdata(void *dataptr,long dbytesize)
 {
-   if (databuffer() == 0) return;
-    if (dataptr  == 0) return;
+  if (databuffer() == 0) return;
+  if (dataptr  == 0) return;
 	if (dbytesize == 0) return;
 	if (size() == 0) return;
-    if (dbytesize > bytesize()) dbytesize = bytesize();	// limit casting and copying to amount of data we have		
+  if (dbytesize > bytesize()) dbytesize = bytesize();	// limit casting and copying to amount of data we have		
 	memcpy(dataptr,databuffer(),dbytesize);
 }
 
@@ -544,7 +542,6 @@ matfiledata matfiledata::castdata(matfiledata::mitype type)
 			getandcast(ptr,newdata.bytesize());
 		}
 		break;
-#ifdef JGS_MATLABIO_USE_64INTS
 		case miUINT64:
 		{
 			uint64 *ptr = static_cast<uint64 *>(newdata.databuffer());
@@ -557,7 +554,6 @@ matfiledata matfiledata::castdata(matfiledata::mitype type)
 			getandcast(ptr,newdata.bytesize());
 		}
 		break;
-#endif		
 		case miSINGLE:
 		{
 			float *ptr = static_cast<float *>(newdata.databuffer());
@@ -570,8 +566,6 @@ matfiledata matfiledata::castdata(matfiledata::mitype type)
 			getandcast(ptr,newdata.bytesize());
 		}
 		break;	
-		
-		
 		
 		default:
 			throw internal_error();

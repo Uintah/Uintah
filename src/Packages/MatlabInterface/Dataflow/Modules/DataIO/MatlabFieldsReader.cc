@@ -121,10 +121,6 @@ class MatlabFieldsReader : public Module
 
     // Ports (We only use one output port)
     FieldOPort*			ofield_[NUMPORTS];
-    
-    // Class for translating matlab objects into SCIRun objects
-    matlabconverter		translate_;
-    
 };
 
 DECLARE_MAKER(MatlabFieldsReader)
@@ -141,7 +137,7 @@ MatlabFieldsReader::MatlabFieldsReader(GuiContext* ctx)
     guifilenameset_(ctx->subVar("filename-set")),
     guimatrixinfotexts_(ctx->subVar("matrixinfotexts")),     
     guimatrixnames_(ctx->subVar("matrixnames")),    
-	guimatrixname_(ctx->subVar("matrixname"))
+    guimatrixname_(ctx->subVar("matrixname"))
 {
   indexmatlabfile(false);
 }
@@ -219,7 +215,8 @@ void MatlabFieldsReader::execute()
       // creates a SCIRun matrix object
 
       SCIRun::FieldHandle mh;
-      translate_.mlArrayTOsciField(ma,mh,static_cast<SCIRun::Module *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+      translate.mlArrayTOsciField(ma,mh);
       
       // Put the SCIRun matrix in the hands of the scheduler
       ofield_[p]->send(mh);
@@ -347,8 +344,10 @@ void MatlabFieldsReader::indexmatlabfile(bool postmsg)
   guimatrixinfotexts_.set(matrixinfotexts);
   guimatrixnames_.set(matrixnames);
 
-  translate_.setpostmsg(postmsg);
-
+  SCIRun::ProgressReporter* pr = 0;
+  if (postmsg) pr = dynamic_cast<SCIRun::ProgressReporter* >(this);
+  matlabconverter translate(pr);
+  
   filename = guifilename_.get();	
 
   if (filename == "") 
@@ -397,7 +396,7 @@ void MatlabFieldsReader::indexmatlabfile(bool postmsg)
     for (long p=0;p<mfile.getnummatlabarrays();p++)
     {
       ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-      if ((cindex = translate_.sciFieldCompatible(ma,infotext,static_cast<SCIRun::Module *>(this))))
+      if ((cindex = translate.sciFieldCompatible(ma,infotext)))
       {
         // in case we need to propose a matrix to load, select
         // the one that is most compatible with the data

@@ -74,11 +74,6 @@ class MatlabBundlesWriter : public Module
     
   private:
 
-    // functions for converting SCIRun matrices into matlab matrices
-    // This class contains a scope of functions for translating data
-    // structures.
-    matlabconverter translate_;
-
     // Support functions for converting between TCL and C++
     // converttcllist:
     // TCL lists are stings in which the elements are separated by {}.
@@ -126,7 +121,7 @@ MatlabBundlesWriter::MatlabBundlesWriter(GuiContext* ctx)
     guifilenameset_(ctx->subVar("filename-set")),
     guimatrixname_(ctx->subVar("matrixname")),     
     guidataformat_(ctx->subVar("dataformat")),    
-	guimatrixformat_(ctx->subVar("matrixformat"))
+	  guimatrixformat_(ctx->subVar("matrixformat"))
 {
 }
 
@@ -142,6 +137,8 @@ MatlabBundlesWriter::~MatlabBundlesWriter()
 
 void MatlabBundlesWriter::execute()
 {
+  matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
+
   StringIPort *filenameport;
   if ((filenameport = static_cast<StringIPort *>(getIPort("filename"))))
   {
@@ -228,7 +225,7 @@ void MatlabBundlesWriter::execute()
   for (long p=0;p<static_cast<long>(matrixname.size());p++)
   {
     if (porthasdata[p] == false) continue; // Do not check not used ports
-    if (!translate_.isvalidmatrixname(matrixname[p]))
+    if (!translate.isvalidmatrixname(matrixname[p]))
     {
       error("MatlabBundlesWriter: The matrix name specified is invalid");
       return;
@@ -264,8 +261,8 @@ void MatlabBundlesWriter::execute()
       // Convert the SCIRun matrixobject to a matlab object
       
 
-      translate_.converttostructmatrix();
-      translate_.sciBundleTOmlArray(matrixhandle[p],ma,static_cast<SCIRun::Module *>(this));
+      translate.converttostructmatrix();
+      translate.sciBundleTOmlArray(matrixhandle[p],ma);
               
       if (ma.isempty())
       {

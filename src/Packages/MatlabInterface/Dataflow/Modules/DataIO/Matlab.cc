@@ -26,8 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-
 /*
  *  Matlab.cc:
  *
@@ -35,9 +33,6 @@
  *   Jeroen Stinstra
  *
  */
-
-
-
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -103,7 +98,7 @@ class MatlabEngineThreadInfo
 	
   public:
 	Mutex               lock;
-	int                  ref_cnt;
+	int                 ref_cnt;
 	
   std::string         output_cmd_;
   GuiInterface*       gui_;
@@ -125,165 +120,157 @@ class Matlab : public Module, public ServiceBase
   
   public:
     // Constructor
-	Matlab(GuiContext* ctx);
+    Matlab(GuiContext* ctx);
 
     // Destructor
-	virtual ~Matlab();
-	
-	// Std functions for each module
-	// execute():
-	//   Execute the module and put data on the output port
-	
-	virtual void execute();
-  virtual void presave();
-  virtual void tcl_command(GuiArgs& args, void* userdata);
-
+    virtual ~Matlab();
     
-	static matlabarray::mitype	convertdataformat(std::string dataformat);
-  static std::string totclstring(std::string &instring);
-	std::vector<std::string>	converttcllist(std::string str);
-	
-	void	update_status(std::string text);
+    // Std functions for each module
+    // execute():
+    //   Execute the module and put data on the output port
+    
+    virtual void execute();
+    virtual void presave();
+    virtual void tcl_command(GuiArgs& args, void* userdata);
+
+      
+    static matlabarray::mitype	convertdataformat(std::string dataformat);
+    static std::string totclstring(std::string &instring);
+    std::vector<std::string>	converttcllist(std::string str);
+    
+    void	update_status(std::string text);
   private:
-  
-  
-  bool	open_matlab_engine();
-	bool	close_matlab_engine();
-	
-	bool	create_temp_directory();
-	bool	delete_temp_directory();
-
-	bool	save_input_matrices();
-	bool	load_output_matrices();
-	
-	bool	generate_matlab_code();
-	bool	send_matlab_job();
-  bool  send_input(std::string str);
-
-	
-	bool	synchronise_input();
-	
-  private:
-  
-  enum { NUM_MATRIX_PORTS = 5 };
-  enum { NUM_FIELD_PORTS = 3 };
-	enum { NUM_NRRD_PORTS = 3 };
-	enum { NUM_STRING_PORTS = 2 };
-  
-	// Temp directory for writing files coming from the 
-	// the matlab engine
-	
-	std::string temp_directory_;
-	
-	// GUI variables
-	
-	// Names of matrices
-	GuiString   input_matrix_name_;
-	GuiString   input_field_name_;
-	GuiString   input_nrrd_name_;
-	GuiString   input_string_name_;
-	GuiString   input_matrix_type_;
-	GuiString   input_nrrd_type_;
-	GuiString   input_matrix_array_;
-	GuiString   input_field_array_;
-	GuiString   input_nrrd_array_;
-	GuiString   output_matrix_name_;
-	GuiString   output_field_name_;
-	GuiString   output_nrrd_name_;
-	GuiString   output_string_name_;
-  GuiString   configfile_;
-
-
-	// Fields per port
-	std::vector<std::string>   input_matrix_name_list_;
-	std::vector<std::string>   input_matrix_name_list_old_;
-	std::vector<std::string>   input_field_name_list_;
-	std::vector<std::string>   input_field_name_list_old_;
-	std::vector<std::string>   input_nrrd_name_list_;
-	std::vector<std::string>   input_string_name_list_old_;
-	std::vector<std::string>   input_string_name_list_;
-	std::vector<std::string>   input_nrrd_name_list_old_;
-	std::vector<std::string>   input_matrix_type_list_;
-	std::vector<std::string>   input_nrrd_type_list_;
-	std::vector<std::string>   input_matrix_array_list_;
-	std::vector<std::string>   input_field_array_list_;
-	std::vector<std::string>   input_nrrd_array_list_;
-	std::vector<std::string>   input_string_array_list_;
-	std::vector<std::string>   output_matrix_name_list_;
-	std::vector<std::string>   output_field_name_list_;
-	std::vector<std::string>   output_nrrd_name_list_;
-	std::vector<std::string>   output_string_name_list_;
-
-  std::vector<int> input_matrix_generation_old_;
-  std::vector<int> input_field_generation_old_;
-  std::vector<int> input_nrrd_generation_old_;
-  std::vector<int> input_string_generation_old_;
-
-	std::string	matlab_code_list_;
-	
-	// Ports for input and output
-	MatrixIPort*	matrix_iport_[NUM_MATRIX_PORTS];
-	MatrixOPort*	matrix_oport_[NUM_MATRIX_PORTS];
-	
-	FieldIPort*		field_iport_[NUM_FIELD_PORTS];
-	FieldOPort*		field_oport_[NUM_FIELD_PORTS];
-	
-	NrrdIPort*		nrrd_iport_[NUM_NRRD_PORTS];
-	NrrdOPort*		nrrd_oport_[NUM_NRRD_PORTS];
-
-	StringIPort*		string_iport_[NUM_STRING_PORTS];
-	StringOPort*		string_oport_[NUM_STRING_PORTS];
-
-	
-	MatrixHandle	  matrix_handle_[NUM_MATRIX_PORTS];
-	FieldHandle		  field_handle_[NUM_FIELD_PORTS];
-	NrrdDataHandle  nrrd_handle_[NUM_NRRD_PORTS];
-	StringHandle    string_handle_[NUM_STRING_PORTS];
-
-	std::string		input_matrix_matfile_[NUM_MATRIX_PORTS];
-	std::string		input_field_matfile_[NUM_FIELD_PORTS];
-	std::string		input_nrrd_matfile_[NUM_NRRD_PORTS];
-	std::string		input_string_matfile_[NUM_STRING_PORTS];
-	
-	std::string		output_matrix_matfile_[NUM_MATRIX_PORTS];
-	std::string		output_field_matfile_[NUM_FIELD_PORTS];
-	std::string		output_nrrd_matfile_[NUM_NRRD_PORTS];
-	std::string		output_string_matfile_[NUM_STRING_PORTS];
-	
-	// Internet connectivity stuff
-	GuiString   inet_address_;
-	GuiString   inet_port_;
-	GuiString   inet_passwd_;
-	GuiString   inet_session_;
-	
-	std::string inet_address_old_;
-	std::string inet_port_old_;
-	std::string inet_passwd_old_;
-	std::string inet_session_old_;
-    	
-	// The tempfilemanager
-	TempFileManager tfmanager_;
-	
-	// Matlab converter class
-	matlabconverter translate_;
-	
-	std::string		mfile_;
-	
-	GuiString		matlab_code_;
-  GuiString   matlab_code_file_;
-	GuiString		matlab_var_;
-	GuiString		matlab_add_output_;
-	GuiString		matlab_update_status_;
     
-	ServiceClientHandle           matlab_engine_;
-  FileTransferClientHandle      file_transfer_;
-	MatlabEngineThreadInfoHandle	thread_info_;
+    bool	open_matlab_engine();
+    bool	close_matlab_engine();
     
-  bool            need_file_transfer_;
-  std::string     remote_tempdir_;
+    bool	create_temp_directory();
+    bool	delete_temp_directory();
+
+    bool	save_input_matrices();
+    bool	load_output_matrices();
     
-  std::string     inputstring_;
-     
+    bool	generate_matlab_code();
+    bool	send_matlab_job();
+    bool  send_input(std::string str);
+
+    
+    bool	synchronise_input();
+    
+    enum { NUM_MATRIX_PORTS = 5 };
+    enum { NUM_FIELD_PORTS = 3 };
+    enum { NUM_NRRD_PORTS = 3 };
+    enum { NUM_STRING_PORTS = 2 };
+    
+    // Temp directory for writing files coming from the 
+    // the matlab engine
+    
+    std::string temp_directory_;
+    
+    // GUI variables
+    
+    // Names of matrices
+    GuiString   input_matrix_name_;
+    GuiString   input_field_name_;
+    GuiString   input_nrrd_name_;
+    GuiString   input_string_name_;
+    GuiString   input_matrix_type_;
+    GuiString   input_nrrd_type_;
+    GuiString   input_matrix_array_;
+    GuiString   input_field_array_;
+    GuiString   input_nrrd_array_;
+    GuiString   output_matrix_name_;
+    GuiString   output_field_name_;
+    GuiString   output_nrrd_name_;
+    GuiString   output_string_name_;
+    GuiString   configfile_;
+
+
+    // Fields per port
+    std::vector<std::string>   input_matrix_name_list_;
+    std::vector<std::string>   input_matrix_name_list_old_;
+    std::vector<std::string>   input_field_name_list_;
+    std::vector<std::string>   input_field_name_list_old_;
+    std::vector<std::string>   input_nrrd_name_list_;
+    std::vector<std::string>   input_string_name_list_old_;
+    std::vector<std::string>   input_string_name_list_;
+    std::vector<std::string>   input_nrrd_name_list_old_;
+    std::vector<std::string>   input_matrix_type_list_;
+    std::vector<std::string>   input_nrrd_type_list_;
+    std::vector<std::string>   input_matrix_array_list_;
+    std::vector<std::string>   input_field_array_list_;
+    std::vector<std::string>   input_nrrd_array_list_;
+    std::vector<std::string>   input_string_array_list_;
+    std::vector<std::string>   output_matrix_name_list_;
+    std::vector<std::string>   output_field_name_list_;
+    std::vector<std::string>   output_nrrd_name_list_;
+    std::vector<std::string>   output_string_name_list_;
+
+    std::vector<int> input_matrix_generation_old_;
+    std::vector<int> input_field_generation_old_;
+    std::vector<int> input_nrrd_generation_old_;
+    std::vector<int> input_string_generation_old_;
+
+    std::string	matlab_code_list_;
+    
+    // Ports for input and output
+    MatrixIPort*	matrix_iport_[NUM_MATRIX_PORTS];
+    MatrixOPort*	matrix_oport_[NUM_MATRIX_PORTS];
+    
+    FieldIPort*		field_iport_[NUM_FIELD_PORTS];
+    FieldOPort*		field_oport_[NUM_FIELD_PORTS];
+    
+    NrrdIPort*		nrrd_iport_[NUM_NRRD_PORTS];
+    NrrdOPort*		nrrd_oport_[NUM_NRRD_PORTS];
+
+    StringIPort*		string_iport_[NUM_STRING_PORTS];
+    StringOPort*		string_oport_[NUM_STRING_PORTS];
+
+    MatrixHandle	  matrix_handle_[NUM_MATRIX_PORTS];
+    FieldHandle		  field_handle_[NUM_FIELD_PORTS];
+    NrrdDataHandle  nrrd_handle_[NUM_NRRD_PORTS];
+    StringHandle    string_handle_[NUM_STRING_PORTS];
+
+    std::string		input_matrix_matfile_[NUM_MATRIX_PORTS];
+    std::string		input_field_matfile_[NUM_FIELD_PORTS];
+    std::string		input_nrrd_matfile_[NUM_NRRD_PORTS];
+    std::string		input_string_matfile_[NUM_STRING_PORTS];
+    
+    std::string		output_matrix_matfile_[NUM_MATRIX_PORTS];
+    std::string		output_field_matfile_[NUM_FIELD_PORTS];
+    std::string		output_nrrd_matfile_[NUM_NRRD_PORTS];
+    std::string		output_string_matfile_[NUM_STRING_PORTS];
+    
+    // Internet connectivity stuff
+    GuiString   inet_address_;
+    GuiString   inet_port_;
+    GuiString   inet_passwd_;
+    GuiString   inet_session_;
+    
+    std::string inet_address_old_;
+    std::string inet_port_old_;
+    std::string inet_passwd_old_;
+    std::string inet_session_old_;
+        
+    // The tempfilemanager
+    TempFileManager tfmanager_;
+    std::string		mfile_;
+    
+    GuiString		matlab_code_;
+    GuiString   matlab_code_file_;
+    GuiString		matlab_var_;
+    GuiString		matlab_add_output_;
+    GuiString		matlab_update_status_;
+      
+    ServiceClientHandle           matlab_engine_;
+    FileTransferClientHandle      file_transfer_;
+    MatlabEngineThreadInfoHandle	thread_info_;
+      
+    bool            need_file_transfer_;
+    std::string     remote_tempdir_;
+      
+    std::string     inputstring_;
+       
   public:
     static void cleanup_callback(void *data);
 };
@@ -356,70 +343,75 @@ void MatlabEngineThread::run()
 			continue;
 		}
 
-        info_handle_->dolock();       
+    info_handle_->dolock();       
 
-        if (info_handle_->exit_ == true)
-        {
-			info_handle_->wait_exit_.conditionBroadcast();
-            info_handle_->unlock();
-            return;
-        } 
-		
+    if (info_handle_->exit_ == true)
+    {
+      info_handle_->wait_exit_.conditionBroadcast();
+      info_handle_->unlock();
+      return;
+    } 
+
 		switch (packet->gettag())
 		{
-			case TAG_STDO:
-                {
-                    std::string str;
-                    if (packet->getparam1() < 0) str = "STDOUT END";
-                    else str = packet->getstring();
-                    std::string cmd = info_handle_->output_cmd_ + " \"" + Matlab::totclstring(str) + "\""; 
-                    info_handle_->unlock();       
-                    info_handle_->gui_->lock();
-                    info_handle_->gui_->execute(cmd);                     
-                    info_handle_->gui_->unlock();
-                }
+      case TAG_STDO:
+        {
+          std::string str;
+          if (packet->getparam1() < 0) str = "STDOUT END";
+          else str = packet->getstring();
+          std::string cmd = info_handle_->output_cmd_ + " \"" + Matlab::totclstring(str) + "\""; 
+          info_handle_->unlock();       
+          info_handle_->gui_->lock();
+          info_handle_->gui_->execute(cmd);                     
+          info_handle_->gui_->unlock();
+        }
 				break;
 			case TAG_STDE:
-                {
-                    std::string str;
-                    if (packet->getparam1() < 0) str = "STDERR END";
-                    else str = packet->getstring();
-                    std::string cmd = info_handle_->output_cmd_ + " \"STDERR: " + Matlab::totclstring(str) + "\""; 
-                    info_handle_->unlock();       
-                    info_handle_->gui_->lock();
-                    info_handle_->gui_->execute(cmd);                     
-                    info_handle_->gui_->unlock();
-                }
+        {
+          std::string str;
+          if (packet->getparam1() < 0) str = "STDERR END";
+          else str = packet->getstring();
+          std::string cmd = info_handle_->output_cmd_ + " \"STDERR: " + Matlab::totclstring(str) + "\""; 
+          info_handle_->unlock();       
+          info_handle_->gui_->lock();
+          info_handle_->gui_->execute(cmd);                     
+          info_handle_->gui_->unlock();
+        }
 				break;
 			case TAG_END_:
 			case TAG_EXIT:
-				info_handle_->code_done_ = true;
-				info_handle_->code_success_ = false;
-				info_handle_->wait_code_done_.conditionBroadcast();
-				info_handle_->exit_ = true;
-				info_handle_->wait_exit_.conditionBroadcast();
-				done = true;
-        info_handle_->unlock();       
-			break;
+        {
+          info_handle_->code_done_ = true;
+          info_handle_->code_success_ = false;
+          info_handle_->wait_code_done_.conditionBroadcast();
+          info_handle_->exit_ = true;
+          info_handle_->wait_exit_.conditionBroadcast();
+          done = true;
+          info_handle_->unlock();       
+        }
+        break;
 			case TAG_MCODE_SUCCESS:
-				info_handle_->code_done_ = true;
-				info_handle_->code_success_ = true;
-				info_handle_->wait_code_done_.conditionBroadcast();				
-                info_handle_->unlock();       
-			break;
+        {
+          info_handle_->code_done_ = true;
+          info_handle_->code_success_ = true;
+          info_handle_->wait_code_done_.conditionBroadcast();				
+          info_handle_->unlock();       
+        }
+        break;
 			case TAG_MCODE_ERROR:
-				info_handle_->code_done_ = true;
-				info_handle_->code_success_ = false;
-				info_handle_->code_error_ = packet->getstring();
-				info_handle_->wait_code_done_.conditionBroadcast();				
-        info_handle_->unlock();       
-			break;
+				{
+          info_handle_->code_done_ = true;
+          info_handle_->code_success_ = false;
+          info_handle_->code_error_ = packet->getstring();
+          info_handle_->wait_code_done_.conditionBroadcast();				
+          info_handle_->unlock();       
+        }
+        break;
       default:
         info_handle_->unlock();       
 		}
 	}
 }
-
 
 DECLARE_MAKER(Matlab)
 
@@ -484,21 +476,18 @@ Matlab::Matlab(GuiContext *context) :
   for (int p = 0; p<NUM_STRING_PORTS; p++)  input_string_generation_old_[p] = -1;
 
   CleanupManager::add_callback(Matlab::cleanup_callback,reinterpret_cast<void *>(this));
-
 }
 
 
 // Function for cleaning up
 // matlab modules
 void Matlab::cleanup_callback(void *data)
-{
- 
+{ 
     Matlab* ptr = reinterpret_cast<Matlab *>(data);
     // We just want to make sure that the matlab engine is released and 
     // any temp dirs are cleaned up
     ptr->close_matlab_engine();
     ptr->delete_temp_directory();
-    
 }
 
 Matlab::~Matlab()
@@ -567,7 +556,6 @@ std::vector<std::string> Matlab::converttcllist(std::string str)
 	return(list);
 }
 
-
 bool Matlab::synchronise_input()
 {
 
@@ -634,7 +622,6 @@ void Matlab::execute()
 		return;
 	}	
 
-	
 	if (!send_matlab_job())
 	{
 	   error("Matlab: Matlab returned an error or Matlab could not be launched");
@@ -647,7 +634,6 @@ void Matlab::execute()
 		return;
 	}
 }
-
 
 void Matlab::presave()
 {
@@ -707,8 +693,6 @@ bool Matlab::send_matlab_job()
 	return(success);
 }
 
-
-
 bool Matlab::send_input(std::string str)
 {
 	IComPacketHandle packet = scinew IComPacket;
@@ -727,8 +711,6 @@ bool Matlab::send_input(std::string str)
 	
 	return(true);
 }
-
-
 
 
 bool Matlab::open_matlab_engine()
@@ -791,10 +773,10 @@ bool Matlab::open_matlab_engine()
 			error(std::string("Matlab: Check remote address information, or leave all fields except 'session' blank to connect to local matlab engine"));
 			error(std::string("Matlab: If using matlab engine on local machine start engine with '-eai' option"));
 			
-            matlab_engine_ = 0;
+      matlab_engine_ = 0;
 			file_transfer_ = 0;
 			return(false);
-        }
+    }
         
 		IComPacketHandle packet;
 		if(!(matlab_engine_->recv(packet)))
@@ -848,32 +830,31 @@ bool Matlab::open_matlab_engine()
     file_transfer_->get_remote_homedirid(remoteid);
     if (localid != remoteid)
     {
-        need_file_transfer_ = true;
-        if(!(file_transfer_->create_remote_tempdir("matlab-engine.XXXXXX",remote_tempdir_)))
-        {
-            matlab_engine_->close();
-            file_transfer_->close();
+      need_file_transfer_ = true;
+      if(!(file_transfer_->create_remote_tempdir("matlab-engine.XXXXXX",remote_tempdir_)))
+      {
+        matlab_engine_->close();
+        file_transfer_->close();
 
-            error(std::string("Matlab: Could not create remote temporary directory"));
-            matlab_engine_ = 0;
-            file_transfer_ = 0;
-            return(false);		
-        }
-        file_transfer_->set_local_dir(temp_directory_);
-        file_transfer_->set_remote_dir(remote_tempdir_);
+        error(std::string("Matlab: Could not create remote temporary directory"));
+        matlab_engine_ = 0;
+        file_transfer_ = 0;
+        return(false);		
+      }
+      file_transfer_->set_local_dir(temp_directory_);
+      file_transfer_->set_remote_dir(remote_tempdir_);
     }
     else
     {
-        // Although they might share a home directory
-        // This directory can be mounted at different trees
-        // Hence we translate between both. Matlab does not like
-        // the use of $HOME
-        file_transfer_->set_local_dir(temp_directory_);
-        std::string tempdir = temp_directory_;
-        file_transfer_->translate_scirun_tempdir(tempdir);
-        file_transfer_->set_remote_dir(tempdir);
+      // Although they might share a home directory
+      // This directory can be mounted at different trees
+      // Hence we translate between both. Matlab does not like
+      // the use of $HOME
+      file_transfer_->set_local_dir(temp_directory_);
+      std::string tempdir = temp_directory_;
+      file_transfer_->translate_scirun_tempdir(tempdir);
+      file_transfer_->set_remote_dir(tempdir);
     }
-
 		
 		thread_info_->gui_ = gui;
 		thread_info_->output_cmd_ = matlab_add_output_.get(); 
@@ -920,8 +901,8 @@ bool Matlab::open_matlab_engine()
                
 		std::string status = "Matlab engine running\n\nmatlabengine version: " + matlab_engine_->getversion() + "\nmatlabengine address: " +
 			matlab_engine_->getremoteaddress() + "\nmatlabengine session: " + matlab_engine_->getsession() + "\nmatlabengine filetransfer version :" +
-            file_transfer_->getversion() + "\nshared home directory: " + sharehomedir + "\nlocal temp directory: " + file_transfer_->local_file("") +
-            "\nremote temp directory: " + file_transfer_->remote_file("") + "\n";
+      file_transfer_->getversion() + "\nshared home directory: " + sharehomedir + "\nlocal temp directory: " + file_transfer_->local_file("") +
+      "\nremote temp directory: " + file_transfer_->remote_file("") + "\n";
 		update_status(status);
 	}
 
@@ -998,7 +979,8 @@ bool Matlab::load_output_matrices()
 			
 			MatrixHandle handle;
       std::string info;
-			if (translate_.sciMatrixCompatible(ma,info,dynamic_cast<SCIRun::ProgressReporter *>(this))) translate_.mlArrayTOsciMatrix(ma,handle,dynamic_cast<SCIRun::ProgressReporter *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+			if (translate.sciMatrixCompatible(ma,info)) translate.mlArrayTOsciMatrix(ma,handle);
 			matrix_oport_[p]->send(handle);
 		}
 
@@ -1035,7 +1017,8 @@ bool Matlab::load_output_matrices()
 			
 			FieldHandle handle;
       std::string info;
-			if (translate_.sciFieldCompatible(ma,info,dynamic_cast<SCIRun::ProgressReporter *>(this))) translate_.mlArrayTOsciField(ma,handle,dynamic_cast<SCIRun::ProgressReporter *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+			if (translate.sciFieldCompatible(ma,info)) translate.mlArrayTOsciField(ma,handle);
 			field_oport_[p]->send(handle);
 		}
 
@@ -1071,7 +1054,8 @@ bool Matlab::load_output_matrices()
 			
 			NrrdDataHandle handle;
       std::string info;
-			if (translate_.sciNrrdDataCompatible(ma,info,dynamic_cast<SCIRun::ProgressReporter *>(this))) translate_.mlArrayTOsciNrrdData(ma,handle,dynamic_cast<SCIRun::ProgressReporter *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));      
+			if (translate.sciNrrdDataCompatible(ma,info)) translate.mlArrayTOsciNrrdData(ma,handle);
 			nrrd_oport_[p]->send(handle);
 		}
 
@@ -1107,7 +1091,8 @@ bool Matlab::load_output_matrices()
 			
 			StringHandle handle;
       std::string info;
-			if (translate_.sciStringCompatible(ma,info,dynamic_cast<SCIRun::ProgressReporter *>(this))) translate_.mlArrayTOsciString(ma,handle,dynamic_cast<SCIRun::ProgressReporter *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+			if (translate.sciStringCompatible(ma,info)) translate.mlArrayTOsciString(ma,handle);
 			string_oport_[p]->send(handle);
 		}
 	}
@@ -1125,7 +1110,7 @@ bool Matlab::generate_matlab_code()
 		std::ofstream m_file;
 		
 		mfile_ = std::string("scirun_code.m");
-        std::string filename = file_transfer_->local_file(mfile_);
+    std::string filename = file_transfer_->local_file(mfile_);
 		m_file.open(filename.c_str(),std::ios::app);
 
 		m_file << matlab_code_list_ << "\n";
@@ -1255,13 +1240,14 @@ bool Matlab::save_input_matrices()
 			matlabfile mf;
 			matlabarray ma;
 
-     		mf.open(file_transfer_->local_file(input_matrix_matfile_[p]),"w");
+      mf.open(file_transfer_->local_file(input_matrix_matfile_[p]),"w");
 			mf.setheadertext("Matlab V5 compatible file generated by SCIRun [module Matlab version 1.1]");
 
-			translate_.converttostructmatrix();
-			if (input_matrix_array_list_[p] == "numeric array") translate_.converttonumericmatrix();
-			translate_.setdatatype(convertdataformat(input_matrix_type_list_[p]));
-			translate_.sciMatrixTOmlArray(handle,ma,dynamic_cast<SCIRun::ProgressReporter *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+			translate.converttostructmatrix();
+			if (input_matrix_array_list_[p] == "numeric array") translate.converttonumericmatrix();
+			translate.setdatatype(convertdataformat(input_matrix_type_list_[p]));
+			translate.sciMatrixTOmlArray(handle,ma);
 
 			mf.putmatlabarray(ma,input_matrix_name_list_[p]);
 			mf.close();
@@ -1272,13 +1258,13 @@ bool Matlab::save_input_matrices()
             
       if (need_file_transfer_) 
       {
-          if(!(file_transfer_->put_file(file_transfer_->local_file(input_matrix_matfile_[p]),file_transfer_->remote_file(input_matrix_matfile_[p]))))
-          {
-              error("Matlab: Could not transfer file");
-              std::string err = "Error :" + file_transfer_->geterror();
-              error(err);
-              return(false);
-          }
+        if(!(file_transfer_->put_file(file_transfer_->local_file(input_matrix_matfile_[p]),file_transfer_->remote_file(input_matrix_matfile_[p]))))
+        {
+            error("Matlab: Could not transfer file");
+            std::string err = "Error :" + file_transfer_->geterror();
+            error(err);
+            return(false);
+        }
           
       }
       input_matrix_name_list_old_[p] = input_matrix_name_list_[p];
@@ -1327,9 +1313,10 @@ bool Matlab::save_input_matrices()
 			mf.open(file_transfer_->local_file(input_field_matfile_[p]),"w");
 			mf.setheadertext("Matlab V5 compatible file generated by SCIRun [module Matlab version 1.1]");
 
-			translate_.converttostructmatrix();
-			if (input_field_array_list_[p] == "numeric array") translate_.converttonumericmatrix();
-			translate_.sciFieldTOmlArray(handle,ma,dynamic_cast<SCIRun::ProgressReporter *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+			translate.converttostructmatrix();
+			if (input_field_array_list_[p] == "numeric array") translate.converttonumericmatrix();
+			translate.sciFieldTOmlArray(handle,ma);
 			
 			mf.putmatlabarray(ma,input_field_name_list_[p]);
 			mf.close();
@@ -1339,14 +1326,13 @@ bool Matlab::save_input_matrices()
             
       if (need_file_transfer_) 
       {
-          if(!(file_transfer_->put_file(file_transfer_->local_file(input_field_matfile_[p]),file_transfer_->remote_file(input_field_matfile_[p]))))
-          {
-              error("Matlab: Could not transfer file");
-              std::string err = "Error :" + file_transfer_->geterror();
-              error(err);
-              return(false);
-          }
-          
+        if(!(file_transfer_->put_file(file_transfer_->local_file(input_field_matfile_[p]),file_transfer_->remote_file(input_field_matfile_[p]))))
+        {
+          error("Matlab: Could not transfer file");
+          std::string err = "Error :" + file_transfer_->geterror();
+          error(err);
+          return(false);
+        }
       }
       input_field_name_list_old_[p] = input_field_name_list_[p];
       input_field_generation_old_[p] = handle->generation;            
@@ -1393,10 +1379,11 @@ bool Matlab::save_input_matrices()
 			mf.open(file_transfer_->local_file(input_nrrd_matfile_[p]),"w");
 			mf.setheadertext("Matlab V5 compatible file generated by SCIRun [module Matlab version 1.1]");
 		
-			translate_.converttostructmatrix();
-			if (input_nrrd_array_list_[p] == "numeric array") translate_.converttonumericmatrix();
-			translate_.setdatatype(convertdataformat(input_nrrd_type_list_[p]));	
-			translate_.sciNrrdDataTOmlArray(handle,ma,dynamic_cast<SCIRun::ProgressReporter *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+			translate.converttostructmatrix();
+			if (input_nrrd_array_list_[p] == "numeric array") translate.converttonumericmatrix();
+			translate.setdatatype(convertdataformat(input_nrrd_type_list_[p]));	
+			translate.sciNrrdDataTOmlArray(handle,ma);
 			mf.putmatlabarray(ma,input_nrrd_name_list_[p]);
 			mf.close();
 
@@ -1405,14 +1392,13 @@ bool Matlab::save_input_matrices()
             
       if (need_file_transfer_) 
       {
-          if(!(file_transfer_->put_file(file_transfer_->local_file(input_nrrd_matfile_[p]),file_transfer_->remote_file(input_nrrd_matfile_[p]))))
-          {
-              error("Matlab: Could not transfer file");
-              std::string err = "Error :" + file_transfer_->geterror();
-              error(err);
-              return(false);
-          }
-          
+        if(!(file_transfer_->put_file(file_transfer_->local_file(input_nrrd_matfile_[p]),file_transfer_->remote_file(input_nrrd_matfile_[p]))))
+        {
+            error("Matlab: Could not transfer file");
+            std::string err = "Error :" + file_transfer_->geterror();
+            error(err);
+            return(false);
+        }
       }  
       input_nrrd_name_list_old_[p] = input_nrrd_name_list_[p];       
       input_nrrd_generation_old_[p] = handle->generation;       
@@ -1459,7 +1445,8 @@ bool Matlab::save_input_matrices()
 			mf.open(file_transfer_->local_file(input_string_matfile_[p]),"w");
 			mf.setheadertext("Matlab V5 compatible file generated by SCIRun [module Matlab version 1.1]");
 		
-			translate_.sciStringTOmlArray(handle,ma,dynamic_cast<SCIRun::ProgressReporter *>(this));
+      matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
+			translate.sciStringTOmlArray(handle,ma);
 			mf.putmatlabarray(ma,input_string_name_list_[p]);
 			mf.close();
 
@@ -1468,14 +1455,14 @@ bool Matlab::save_input_matrices()
             
       if (need_file_transfer_) 
       {
-          if(!(file_transfer_->put_file(file_transfer_->local_file(input_string_matfile_[p]),file_transfer_->remote_file(input_string_matfile_[p]))))
-          {
-              error("Matlab: Could not transfer file");
-              std::string err = "Error :" + file_transfer_->geterror();
-              error(err);
-              return(false);
-          }
-          
+        if(!(file_transfer_->put_file(file_transfer_->local_file(input_string_matfile_[p]),file_transfer_->remote_file(input_string_matfile_[p]))))
+        {
+          error("Matlab: Could not transfer file");
+          std::string err = "Error :" + file_transfer_->geterror();
+          error(err);
+          return(false);
+        }
+        
       }  
       input_string_name_list_old_[p] = input_string_name_list_[p];       
       input_string_generation_old_[p] = handle->generation;       
@@ -1557,106 +1544,106 @@ void Matlab::tcl_command(GuiArgs& args, void* userdata)
   {
     if (args[1] == "keystroke")
     {
-        std::string str = args[2];
-        if (str.size() == 1)
+      std::string str = args[2];
+      if (str.size() == 1)
+      {
+        if (str[0] == '\r') str[0] = '\n';
+        
+        if (str[0] == '\b')
         {
-            if (str[0] == '\r') str[0] = '\n';
-            
-            if (str[0] == '\b')
-            {
-              inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));            
-            }
-            else
-            {
-              inputstring_ += str;
-            }
-            
-            if (str[0] == '\n')
-            {
-              if(!(send_input(inputstring_)))
-              {
-                  error("Matlab: Could not close matlab engine");
-                  return;
-              }
-              inputstring_ = "";
-            }
+          inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));            
         }
         else
         {
-            std::string key = args[3];
-            if (key == "Enter") 
-            {
-              str = "\n";
-              inputstring_ += str;
-            }
-            else if (key == "BackSpace") 
-            {
-              inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));
-            }
-            else if (key == "Tab") str = "\t";
-            else if (key == "Return") str ="\r";
-            
-            if (str.size() == 1)
-            {
-                if (str[0] == '\n')
-                {
-                  if(!(send_input(inputstring_)))
-                  {
-                      error("Matlab: Could not close matlab engine");
-                      return;
-                  }
-                  inputstring_ = "";
-                }
-            }    
-            
+          inputstring_ += str;
         }
-        return;
+        
+        if (str[0] == '\n')
+        {
+          if(!(send_input(inputstring_)))
+          {
+              error("Matlab: Could not close matlab engine");
+              return;
+          }
+          inputstring_ = "";
+        }
+      }
+      else
+      {
+        std::string key = args[3];
+        if (key == "Enter") 
+        {
+          str = "\n";
+          inputstring_ += str;
+        }
+        else if (key == "BackSpace") 
+        {
+          inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));
+        }
+        else if (key == "Tab") str = "\t";
+        else if (key == "Return") str ="\r";
+        
+        if (str.size() == 1)
+        {
+          if (str[0] == '\n')
+          {
+            if(!(send_input(inputstring_)))
+            {
+                error("Matlab: Could not close matlab engine");
+                return;
+            }
+            inputstring_ = "";
+          }
+        }    
+          
+      }
+      return;
     }
     if (args[1] == "disconnect")
     {
-        ctx->reset();
-        if(!(close_matlab_engine()))
-        {
-            error("Matlab: Could not close matlab engine");
-            return;
-        }
-        update_status("Matlab engine not running\n");
+      ctx->reset();
+      if(!(close_matlab_engine()))
+      {
+        error("Matlab: Could not close matlab engine");
         return;
+      }
+      update_status("Matlab engine not running\n");
+      return;
     }
 
 
     if (args[1] == "connect")
     {
         
-        if(!(close_matlab_engine()))
-        {
-            error("Matlab: Could not close matlab engine");
-            return;
-        }
-
-        update_status("Matlab engine not running\n");
-
-        // Synchronise input: translate TCL lists into C++ STL lists
-        if (!(synchronise_input()))
-        {
-            error("Matlab: Could not retreive GUI input");
-            return;
-        }
-
-        // If we haven't created a temporary directory yet
-        // we open one to store all temp files in
-        if (!(create_temp_directory()))
-        {
-            error("Matlab: Could not create temporary directory");
-            return;
-        }
-
-        if (!(open_matlab_engine()))
-        {
-            error("Matlab: Could not open matlab engine");
-            return;
-        }
+      if(!(close_matlab_engine()))
+      {
+        error("Matlab: Could not close matlab engine");
         return;
+      }
+
+      update_status("Matlab engine not running\n");
+
+      // Synchronise input: translate TCL lists into C++ STL lists
+      if (!(synchronise_input()))
+      {
+        error("Matlab: Could not retreive GUI input");
+        return;
+      }
+
+      // If we haven't created a temporary directory yet
+      // we open one to store all temp files in
+      if (!(create_temp_directory()))
+      {
+        error("Matlab: Could not create temporary directory");
+        return;
+      }
+
+      if (!(open_matlab_engine()))
+      {
+        error("Matlab: Could not open matlab engine");
+        return;
+      }
+      return;
     }
 
     if (args[1] == "configfile")
