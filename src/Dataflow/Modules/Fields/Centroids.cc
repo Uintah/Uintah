@@ -111,6 +111,8 @@ CentroidsAlgo::get_compile_info(const TypeDescription *field_td)
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
   field_td->fill_compile_info(rval);
   return rval;
 }

@@ -52,21 +52,25 @@ using std::string;
 //! Class for describing unit geometry of QuadBilinearLgn 
 class QuadBilinearLgnUnitElement {
 public: 
-  static double unit_vertices[4][2]; //!< Parametric coordinates of vertices of unit edge
-  static int unit_edges[4][2];  //!< References to vertices of unit edge 
-  static int unit_faces[1][4]; //!< References to vertices of unit face
+  //!< Parametric coordinates of vertices of unit edge
+  static double unit_vertices[4][2];
+  //!< References to vertices of unit edge  
+  static int unit_edges[4][2]; 
+  //!< References to vertices of unit face 
+  static int unit_faces[1][4]; 
   
-  QuadBilinearLgnUnitElement() {};
-  virtual ~QuadBilinearLgnUnitElement() {};
-  
-  static int domain_dimension() { return 2; }; //! return dimension of domain 
-  
-  static int number_of_vertices() { return 4; }; //! return number of vertices
-  static int number_of_edges() { return 4; }; //! return number of edges
-  
-  static int vertices_of_face() { return 4; }; //! return number of vertices per face 
-
-  static int faces_of_cell() { return 1; }; //! return number of faces per cell 
+  QuadBilinearLgnUnitElement() {}
+  virtual ~QuadBilinearLgnUnitElement() {}
+  //! return dimension of domain 
+  static int domain_dimension() { return 2; }
+  //! return number of vertices
+  static int number_of_vertices() { return 4; }
+  //! return number of edges
+  static int number_of_edges() { return 4; }
+  //! return number of vertices per face 
+  static int vertices_of_face() { return 4; }
+  //! return number of faces per cell 
+  static int faces_of_cell() { return 1; }
 };
 
 
@@ -91,8 +95,9 @@ public:
     const double dy = QuadBilinearLgnUnitElement::unit_vertices[QuadBilinearLgnUnitElement::unit_edges[edge][1]][1] - p1y;
       
     for(unsigned i = 0; i <= div_per_unit; i ++) {
-      const double d = (double)div_per_unit / (double)i;
+      const double d = (double)i / (double)div_per_unit;
       vector<double> &tmp = coords[i];
+      tmp.resize(2);
       tmp[0] = p1x + d * dx;
       tmp[1] = p1y + d * dy;
     } 	      
@@ -112,11 +117,13 @@ public:
       unsigned e = 0;
       for(unsigned i = 0; i <= div_per_unit; i++) {
 	vector<double> &e1 = coords[j][e++];
-	e1[0] = (double)div_per_unit / (double)i;
-	e1[1] = (double)div_per_unit / (double)j;
+	e1.resize(2);
+	e1[0] = (double)i / (double)div_per_unit;
+	e1[1] = (double)j / (double)div_per_unit;
 	vector<double> &e2 = coords[j][e++];
+	e2.resize(2);
 	e2[0] = e1[0];
-	e2[1] = (double)div_per_unit / (double)j + d;
+	e2[1] = (double)j / (double)div_per_unit + d;
       }
     }
   }

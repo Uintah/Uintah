@@ -675,6 +675,21 @@ void add_edge_geom(GeomLines *lines, GeomCylinders *cylinders,
   }
 }
 
+//#define DEBUG_PRINT
+#if defined(DEBUG_PRINT)
+inline
+void
+print_coords(const char *pre, vector<double> &c0)
+{
+  cout << pre;
+  vector<double>::iterator dbg_iter = c0.begin();
+  while (dbg_iter != c0.end()) {
+    cout << *dbg_iter++ << " ";
+  }
+  cout << endl;
+}
+#endif
+
 template <class Fld, class Loc>
 GeomHandle
 RenderField<Fld, Loc>::render_edges(Fld *sfld,
@@ -727,7 +742,9 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
     vcol1 = scinew Material();
     vcol1->transparency = 1.0;
   }
-
+#if defined(DEBUG_PRINT)
+  cout << endl << "-- edges --" << endl;
+#endif
   // Second pass: over the edges
   mesh->synchronize(Mesh::EDGES_E | Mesh::FACES_E | Mesh::CELLS_E);
   typename Fld::mesh_type::Elem::iterator eiter; mesh->begin(eiter);  
@@ -749,7 +766,10 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 	vector<double> &c1 = *coord_iter;
 	Point p0, p1;      
 	typename Fld::value_type val0, val1;
-	
+#if defined(DEBUG_PRINT)
+	print_coords("c0: ", c0);
+	print_coords("c1: ", c1);
+#endif
 	// get the geometry at the approx.
 	mesh->interpolate(p0, c0, *eiter);
 	mesh->interpolate(p1, c1, *eiter);
@@ -982,7 +1002,9 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
     }
   }
 
-
+#if defined(DEBUG_PRINT)
+  cout << endl << "-- faces --" << endl;
+#endif
   typedef typename Fld::mesh_type::Node::array_type fc_t;
   typedef hash_set<fc_t, hash_nds<fc_t>, eqfc<fc_t> > face_ht_t;
   face_ht_t rendered_faces; 
@@ -1032,6 +1054,12 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	    vector<double> &c1 = !i%2 ? sl[i+1] : sl[i];
 	    vector<double> &c2 = sl[i+2];
 
+#if defined(DEBUG_PRINT)
+	    print_coords("c0: ", c0);
+	    print_coords("c1: ", c1);
+	    print_coords("c2: ", c2);
+#endif
+
 	    vector<Point> pnts(face_sz);
 	    vector<Vector> norms(face_sz);
 	    vector<typename Fld::value_type> vals(face_sz);
@@ -1076,6 +1104,12 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	    mesh->interpolate(pnts[2], c1, *eiter);
 	    mesh->interpolate(pnts[3], c0, *eiter);
 
+#if defined(DEBUG_PRINT)
+	    print_coords("c0: ", c0);
+	    print_coords("c1: ", c1);
+	    print_coords("c2: ", c2);
+	    print_coords("c3: ", c3);
+#endif
 	    //FIX_ME need to interp normals in meshes that have normals
 
 	    // get the field variables values at the approx (if they exist)
