@@ -229,7 +229,7 @@ void* get_raw_data_ptr(Fdata &data, int pad) {
     }
     return new_data;
   }
-  return &(data[0]); // no copy just wrap this pointer
+  return &(*data.begin()); // no copy just wrap this pointer
 }
 
 
