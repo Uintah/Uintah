@@ -141,9 +141,9 @@ TransformData::execute()
       fHandle->get_type_description(0)->get_name() + "<" +
       fHandle->get_type_description(1)->get_name() + ", " +
       fHandle->get_type_description(2)->get_similar_name(outputDataType, 
-							 0, "<", ">, ") +
+							 0, "<", " >, ") +
       fHandle->get_type_description(3)->get_similar_name(outputDataType,
-							 0, "<", ">") + " >";
+							 0, "<", " >") + " >";
     int hoffset = 0;
     Handle<TransformDataAlgo> algo;
     
