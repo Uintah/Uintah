@@ -1032,7 +1032,6 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	    vector<double> &c1 = !i%2 ? sl[i+1] : sl[i];
 	    vector<double> &c2 = sl[i+2];
 
-	    const int face_sz = mesh->get_basis().vertices_of_face();
 	    vector<Point> pnts(face_sz);
 	    vector<Vector> norms(face_sz);
 	    vector<typename Fld::value_type> vals(face_sz);

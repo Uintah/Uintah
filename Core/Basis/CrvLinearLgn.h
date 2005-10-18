@@ -50,17 +50,19 @@ public:
   static double unit_vertices[2][1]; //!< Parametric coordinates of vertices 
   static int unit_edges[1][2];    //!< References to vertices of unit edge 
 
-  CrvLinearLgnUnitElement() {};
-  virtual ~CrvLinearLgnUnitElement() {};
-  
-  static int domain_dimension() { return 1; }; //!< return dimension of domain 
-  
-  static int number_of_vertices() { return 2; }; //!< return number of vertices
-  static int number_of_edges() { return 1; }; //!< return number of edges
-   
-  static int vertices_of_face() { return 0; }; //!< return number of vertices per face 
+  CrvLinearLgnUnitElement() {}
+  virtual ~CrvLinearLgnUnitElement() {}
 
-  static int faces_of_cell() { return 0; }; //!< return number of faces per cell 
+  //!< return dimension of domain 
+  static int domain_dimension() { return 1; } 
+  //!< return number of vertices
+  static int number_of_vertices() { return 2; }
+  //!< return number of edges 
+  static int number_of_edges() { return 1; } 
+  //!< return number of vertices per face 
+  static int vertices_of_face() { return 0; } 
+  //!< return number of faces per cell 
+  static int faces_of_cell() { return 0; } 
 };
 
 
