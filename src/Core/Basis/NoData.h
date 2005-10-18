@@ -58,6 +58,16 @@ public:
   virtual ~NoDataBasis() {}
   
   int polynomial_order() const { return -1; }
+  //!< return dimension of domain 
+  static int domain_dimension() { return -1; }
+   //!< return number of vertices
+  static int number_of_vertices() { return 0; }
+  //!< return number of edges
+  static int number_of_edges() { return 0; } 
+  //!< return number of vertices per face 
+  static int vertices_of_face() { return 0; } 
+  //!< return number of faces per cell 
+  static int faces_of_cell() { return 0; } 
   
   //! get value at parametric coordinate 
   template <class ElemData>
