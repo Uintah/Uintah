@@ -44,10 +44,6 @@
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Datatypes/ScanlineMesh.h>
-#include <Core/Datatypes/HexVolMesh.h>
-#include <Core/Datatypes/QuadSurfMesh.h>
-#include <Core/Datatypes/CurveMesh.h>
-#include <Core/Datatypes/PointCloudMesh.h>
 
 namespace SCIRun {
 
@@ -62,7 +58,9 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    const string &partial_fdst);
+					    const string &mesh_dst,
+					    const string &basis_dst,
+					    const string &data_dst);
 };
 
 
@@ -164,7 +162,8 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   typename FDST::mesh_handle_type outmesh = scinew typename FDST::mesh_type();
 
   bool pointCloud =
-    (outmesh->get_type_description()->get_name() == "PointCloudMesh");
+    (outmesh->get_type_description()->get_name() == 
+     "PointCloudMesh<ConstantBasis<Point> >");
 
 #ifdef HAVE_HASH_MAP
   typedef hash_map<typename FSRC::mesh_type::Node::index_type,
@@ -223,7 +222,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   // really should copy normals
   outmesh->synchronize(Mesh::NORMALS_E);
 
-  FDST *ofield = scinew FDST(outmesh, field_h->basis_order());
+  FDST *ofield = scinew FDST(outmesh);
 
   if (field_h->basis_order() == 1)
   {
@@ -241,11 +240,11 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
 
   // Point clouds do not have elements so skip.
   else if (!pointCloud &&
-	   field_h->order_type_description()->get_name() ==
-	   get_type_description((typename FSRC::mesh_type::Elem *)0)->get_name())
+	   ifield->order_type_description()->get_name() ==
+	   ofield->order_type_description()->get_name())
   {
     typename elem_hash_type::iterator hitr = elemmap.begin();
-
+    
     while (hitr != elemmap.end())
     {
       typename FSRC::value_type val;
