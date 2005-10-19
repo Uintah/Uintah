@@ -64,7 +64,7 @@ private:
 
 DECLARE_MAKER(BundleGetPath)
   BundleGetPath::BundleGetPath(GuiContext* ctx)
-    : Module("BundleGetPath", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleGetPath", ctx, Filter, "Bundle", "SCIRun"),
       guipath1name_(ctx->subVar("path1-name")),
       guipath2name_(ctx->subVar("path2-name")),
       guipath3name_(ctx->subVar("path3-name")),
@@ -161,7 +161,7 @@ void BundleGetPath::execute()
   {
     oport->send(handle);
   }
-        
+  update_state(Completed);        
 }
 
 void BundleGetPath::tcl_command(GuiArgs& args, void* userdata)

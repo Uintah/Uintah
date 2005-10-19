@@ -64,7 +64,7 @@ private:
 
 DECLARE_MAKER(BundleSetColorMap)
   BundleSetColorMap::BundleSetColorMap(GuiContext* ctx)
-    : Module("BundleSetColorMap", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleSetColorMap", ctx, Filter, "Bundle", "SCIRun"),
       guicolormap1name_(ctx->subVar("colormap1-name")),
       guicolormap2name_(ctx->subVar("colormap2-name")),
       guicolormap3name_(ctx->subVar("colormap3-name")),
@@ -156,6 +156,8 @@ void BundleSetColorMap::execute()
   }
         
   oport->send(handle);
+  
+  update_state(Completed);  
 }
 
 void BundleSetColorMap::tcl_command(GuiArgs& args, void* userdata)

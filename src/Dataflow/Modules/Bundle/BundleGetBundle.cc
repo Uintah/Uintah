@@ -61,7 +61,7 @@ private:
 
 DECLARE_MAKER(BundleGetBundle)
   BundleGetBundle::BundleGetBundle(GuiContext* ctx)
-    : Module("BundleGetBundle", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleGetBundle", ctx, Filter, "Bundle", "SCIRun"),
       guibundle1name_(ctx->subVar("bundle1-name")),
       guibundle2name_(ctx->subVar("bundle2-name")),
       guibundle3name_(ctx->subVar("bundle3-name")),
@@ -160,7 +160,7 @@ void BundleGetBundle::execute()
   {
     oport->send(handle);
   }
-      
+  update_state(Completed);            
 }
 
 void BundleGetBundle::tcl_command(GuiArgs& args, void* userdata)

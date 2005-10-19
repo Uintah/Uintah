@@ -64,7 +64,7 @@ private:
 
 DECLARE_MAKER(BundleSetMatrix)
   BundleSetMatrix::BundleSetMatrix(GuiContext* ctx)
-    : Module("BundleSetMatrix", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleSetMatrix", ctx, Filter, "Bundle", "SCIRun"),
       guimatrix1name_(ctx->subVar("matrix1-name")),
       guimatrix2name_(ctx->subVar("matrix2-name")),
       guimatrix3name_(ctx->subVar("matrix3-name")),
@@ -156,6 +156,8 @@ void BundleSetMatrix::execute()
   }
         
   oport->send(handle);
+  
+  update_state(Completed);  
 }
 
 void BundleSetMatrix::tcl_command(GuiArgs& args, void* userdata)

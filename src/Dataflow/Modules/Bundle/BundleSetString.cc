@@ -62,7 +62,7 @@ private:
 
 DECLARE_MAKER(BundleSetString)
   BundleSetString::BundleSetString(GuiContext* ctx)
-    : Module("BundleSetString", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleSetString", ctx, Filter, "Bundle", "SCIRun"),
       guistring1name_(ctx->subVar("string1-name")),
       guistring2name_(ctx->subVar("string2-name")),
       guistring3name_(ctx->subVar("string3-name")),
@@ -155,6 +155,8 @@ BundleSetString::execute()
   }
         
   oport->send(handle);
+  
+  update_state(Completed);  
 }
 
 void
