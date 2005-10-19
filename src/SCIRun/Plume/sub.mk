@@ -38,6 +38,8 @@ SRCS := \
 	$(SRCDIR)/CCAComponentClassDescription.cc \
 	$(SRCDIR)/CCAComponentInfo.cc \
 	$(SRCDIR)/CCAComponentModel.cc \
+	$(SRCDIR)/CCAComponentClassFactory.cc \
+	$(SRCDIR)/UnknownCCAComponentClassFactory.cc \
 	$(SRCDIR)/PlumeFramework.cc
 
 PSELIBS := SCIRun/Distributed

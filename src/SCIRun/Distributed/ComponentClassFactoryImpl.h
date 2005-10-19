@@ -52,11 +52,12 @@ namespace SCIRun {
   class ComponentClassFactoryImpl : public Base 
   {
   public:
-    typedef typename Base::pointer pointer;
+    typedef Internal::ComponentClassFactory::pointer pointer;
     
     ComponentClassFactoryImpl(const sci::cca::ComponentClassDescription::pointer &desc);
     virtual ~ComponentClassFactoryImpl();
-    
+
+    pointer getPointer() { return pointer(this); }
 
     virtual std::string getClassName();
     virtual sci::cca::ComponentClassDescription::pointer getClassDescription();

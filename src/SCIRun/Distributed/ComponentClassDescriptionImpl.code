@@ -54,7 +54,7 @@ namespace SCIRun {
 
   template<class Base>
   std::string
-  ComponentClassDescriptionImpl<Base>::getComponentClassName() const
+  ComponentClassDescriptionImpl<Base>::getComponentClassName() 
   { 
     return type; 
   }

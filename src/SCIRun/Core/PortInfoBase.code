@@ -1,0 +1,224 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+/*
+ *  PortInfoBase.cc:
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2001
+ *
+ */
+
+#ifndef SCIRun_PortInfoBase_code
+#define SCIRun_PortInfoBase_code
+
+#include <SCIRun/Core/TypeMapImpl.h>
+#include <SCIRun/Core/CCAException.h>
+#include <iostream>
+
+namespace SCIRun {
+  
+  template<class Interface> 
+  PortInfoBase<Interface>::PortInfoBase(const std::string& name,
+					const std::string& type,
+					const TypeMap::pointer& properties,
+					PortType portType)
+    : name(name), type(type), properties(properties), 
+      portType(portType), useCount(0), 
+      lock("PortInfoBase::connections lock")
+  {
+  }
+  
+  template<class Interface> 
+  PortInfoBase<Interface>::PortInfoBase(const std::string& name,
+					const std::string& type,
+					const TypeMap::pointer& properties,
+					const Port::pointer& port,
+					PortType portType)
+    : name(name), type(type), properties(properties), 
+      portType(portType), port(port),  useCount(0),
+      lock("PortInfoBase::connections lock")
+  {
+  }
+  
+  template<class Interface> 
+  PortInfoBase<Interface>::~PortInfoBase()
+  {
+  }
+  
+  /*
+   * implementations of sidl PortInfoBase interface
+   */
+  
+  
+  template<class Interface> 
+  std::string  PortInfoBase<Interface>::getName()
+  {
+    return name;
+  }
+  
+  template<class Interface> 
+  std::string  PortInfoBase<Interface>::getType()
+  {
+    return type;
+  }
+  
+  template<class Interface> 
+  int PortInfoBase<Interface>::numOfConnections()
+  {
+    return connections.size();
+  }
+  
+  template<class Interface>
+  bool PortInfoBase<Interface>::isConnected()
+  {
+    return connections.size() > 0; 
+  }
+
+  template<class Interface> 
+  PortType PortInfoBase<Interface>::getPortType()
+  {
+    return portType;
+  }
+  
+  
+  template<class Interface> 
+  TypeMap::pointer PortInfoBase<Interface>::getProperties()
+  {
+    return properties;
+  }
+  
+  
+
+  template<class Interface> 
+  bool PortInfoBase<Interface>::connect(const PortInfo::pointer &to)
+  {
+    if ( to.isNull() ) return false;
+    if (!canConnectTo(to)) return false;
+    
+    if (getPortType() == UsePort && to->getPortType() == ProvidePort) {
+      Guard guard(&lock);
+      connections.push_back(to);
+    } else {
+      return to->connect(PortInfo::pointer(this));
+    }
+    return true;
+  }
+  
+  template<class Interface> 
+  bool PortInfoBase<Interface>::disconnect(const PortInfo::pointer &other)
+  {
+    if (other.isNull()) return false;
+    
+    if (portType != UsePort) {
+      std::cerr<<"disconnect can be called only by user"<<std::endl; 
+      return false;
+    } 
+
+    Guard guard(&lock);
+
+    std::vector<PortInfo::pointer>::iterator iter;
+    for (iter=connections.begin(); iter<connections.end();iter++) {
+      if (other==(*iter)) {
+	connections.erase(iter);
+	return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Available either if this is a PROVIDES port or
+   * a USES port that isn't connected.
+   */
+  template<class Interface> 
+  bool PortInfoBase<Interface>::available()
+  {
+    return getPortType() == ProvidePort || connections.size() == 0;
+  }
+  
+  /**
+   * Allowing (according to the CCA spec) n PROVIDES (ProvidePort) : 1 USES (UsePort)
+   * connections is framework-implementation dependent;
+   * this is \em not allowed by SCIRun2.
+   * The SCIRun2 framework allows 1 PROVIDES (ProvidePort) : 1 USES (UsePort) and
+   * 1 PROVIDES (ProvidePort) : n USES (UsePort) connections.
+   */
+  
+  // connections: vector of PortInfos...
+  // connect should fail for invalid components,
+  //   nonexistent ports
+  //   other???
+
+  template<class Interface> 
+  bool PortInfoBase<Interface>::canConnectTo(const PortInfo::pointer &to)
+  {
+    return !to.isNull() 
+      && getType() == to->getType() 
+      && getPortType() != to->getPortType()
+      && available() 
+      && to->available();
+  }
+  
+  template<class Interface> 
+  Port::pointer  PortInfoBase<Interface>::getPort()
+  {
+    return port;
+  }
+  
+  // return a PortInfo on the other side of the connection
+  // -- the USES (USePort) port
+  // called by: CCAComponentInfo::getPortNonblocking, framework::Services_impl::getPortNonblocking
+  template<class Interface> 
+  PortInfo::pointer PortInfoBase<Interface>::getPeer()
+  {
+    if ( getPortType() == ProvidePort || connections.size() == 0 ) 
+      throw CCAException::create("Port Not Connected");
+    return connections[0];
+  }
+
+
+  template<class Interface>
+  void PortInfoBase<Interface>::incrementUseCount() {
+    useCount++;
+  }
+  
+  template<class Interface>
+  bool PortInfoBase<Interface>::decrementUseCount() {
+    if ( useCount == 0 ) 
+      return false;
+    --useCount;
+    return true;
+  }
+} // end namespace SCIRun
+
+#endif // SCIRun_PortInfoBase_code

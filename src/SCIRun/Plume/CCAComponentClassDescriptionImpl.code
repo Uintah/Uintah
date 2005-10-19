@@ -47,17 +47,17 @@ namespace SCIRun
 {
 
   template<class Base>
-  CCAComponentClassDescriptionImpl::CCAComponentClassDescriptionImpl( const std::string &type, const std::string &library)
+  CCAComponentClassDescriptionImpl<Base>::CCAComponentClassDescriptionImpl( const std::string &type, const std::string &library)
     : ComponentClassDescriptionImpl<Base>(type), library(library)
   {}
 
   template<class Base>
-  CCAComponentClassDescriptionImpl::~CCAComponentClassDescriptionImpl()
+  CCAComponentClassDescriptionImpl<Base>::~CCAComponentClassDescriptionImpl()
   {}
 
   template<class Base>
   std::string 
-  CCAComponentClassDescriptionImpl::getLibrary() const
+  CCAComponentClassDescriptionImpl<Base>::getLibrary()
   {
     return library;
   }

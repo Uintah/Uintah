@@ -43,7 +43,7 @@ SRCS     += \
              $(SRCDIR)/DistributedFrameworkException.cc \
              $(SRCDIR)/ComponentEvent.cc \
              $(SRCDIR)/ConnectionEvent.cc \
-             $(SRCDIR)/FrameworkServiceDescription.cc \
+             $(SRCDIR)/FrameworkServiceFactory.cc \
              $(SRCDIR)/ComponentClassDescription.cc \
              $(SRCDIR)/ComponentClassFactory.cc \
              $(SRCDIR)/ComponentEventService.cc \
@@ -62,7 +62,7 @@ $(SRCDIR)/DistributedFramework.o: Core/CCA/spec/sci_sidl.h
 $(SRCDIR)/DistributedFrameworkException.o: Core/CCA/spec/sci_sidl.h 
 $(SRCDIR)/ComponentEvent.o: Core/CCA/spec/sci_sidl.h 
 $(SRCDIR)/ConnectionEvent.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/FrameworkServiceDescription.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/FrameworkServiceFactory.o: Core/CCA/spec/sci_sidl.h 
 $(SRCDIR)/ComponentClassDescription.o: Core/CCA/spec/sci_sidl.h 
 $(SRCDIR)/ComponentEventService.o: Core/CCA/spec/sci_sidl.h 
 $(SRCDIR)/ConnectionEventService.o: Core/CCA/spec/sci_sidl.h 

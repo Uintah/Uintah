@@ -40,8 +40,8 @@
  */
 
 
-#ifndef SCIRun_FrameworkPropertiesImpl_h
-#define SCIRun_FrameworkPropertiesImpl_h
+#ifndef SCIRun_FrameworkPropertiesServiceImpl_h
+#define SCIRun_FrameworkPropertiesServiceImpl_h
 
 #include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Distributed/ServiceImpl.h>
@@ -69,7 +69,7 @@ namespace SCIRun {
     virtual ~FrameworkPropertiesServiceImpl();
     
     /** */
-    virtual sci::cca::Port::pointer getService(const std::string& name);
+    virtual sci::cca::distributed::PortInfo::pointer getService(const std::string& name);
 
     /** Get a smart pointer to a TypeMap containing CCA framework properties. */
     virtual sci::cca::TypeMap::pointer getProperties();
@@ -103,9 +103,11 @@ namespace SCIRun {
     bool writePropertiesToFile();
 
     sci::cca::TypeMap::pointer properties;
+
+    sci::cca::distributed::PortInfo::pointer portInf0;
   };
   
 }
 
-#include <SCIRun/Distributed/FrameworkPropertiesServiceImpl.code>
+//#include <SCIRun/Distributed/FrameworkPropertiesServiceImpl.code>
 #endif

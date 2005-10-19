@@ -50,6 +50,8 @@ namespace SCIRun {
 
   class TypeMap : public sci::cca::TypeMap {
   public:
+    typedef sci::cca::TypeMap::pointer pointer;
+
     typedef std::map<std::string, std::string> StringMap;
     typedef std::map<std::string, int> IntMap;
     typedef std::map<std::string, long> LongMap;

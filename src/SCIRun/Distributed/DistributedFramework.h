@@ -50,13 +50,14 @@ namespace SCIRun {
   namespace DistributedInternal = sci::cca::distributed::internal;
 
   class DistributedFramework 
-    : public DistributedFrameworkInternal<DistributedInternal::DistributedFrameworkInternal>
+    : public DistributedFrameworkInternal<sci::cca::distributed::internal::DistributedFrameworkInternal>
   {
   public:
     typedef Distributed::DistributedFramework::pointer pointer;
     typedef DistributedInternal::DistributedFrameworkInternal::pointer internalPointer;
     
-    DistributedFramework(const pointer &parent = pointer(0));
+//     DistributedFramework(const pointer &parent = pointer(0));
+    DistributedFramework(const pointer &parent);
     virtual ~DistributedFramework();
   };
   

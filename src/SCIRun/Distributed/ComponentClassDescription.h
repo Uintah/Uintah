@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentDescription.h: 
+ *  ComponentClassDescription.h: 
  *
  *  Written by:
  *   Yarden Livant

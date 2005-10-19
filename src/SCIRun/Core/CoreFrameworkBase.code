@@ -1,0 +1,336 @@
+/*
+  For more information, please see: http://software.sci.utah.edu
+
+  The MIT License
+
+  Copyright (c) 2005 Scientific Computing and Imaging Institute,
+  University of Utah.
+
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
+*/
+
+
+/*
+ *  CoreFrameworkBase.code: 
+ *
+ *  Written by:
+ *   Yarden Livnat
+ *   SCI Institute
+ *   University of Utah
+ *   August 2005
+ *
+ */
+
+#ifndef SCIRun_CoreFrameworkBase_code
+#define SCIRun_CoreFrameworkBase_code
+
+#include <SCIRun/Core/CCAException.h>
+#include <SCIRun/Core/ConnectionIDImpl.h>
+#include <SCIRun/Core/ConnectionInfoImpl.h>
+#include <SCIRun/Core/ComponentIDImpl.h>
+#include <SCIRun/Core/ComponentInfoImpl.h>
+#include <SCIRun/Core/ServiceInfoImpl.h>
+#include <SCIRun/Core/TypeMapImpl.h>
+
+// Services
+//#include <SCIRun/Distributed/FrameworkPropertiesService.h>
+//#include <SCIRun/Distributed/BuilderService.h>
+
+#include <Core/Thread/Guard.h>
+
+#include <algorithm>
+
+namespace SCIRun {
+  
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+
+
+  template<class Interface>
+  CoreFrameworkBase<Interface>::CoreFrameworkBase()
+    : connection_lock("CoreFrameworkBase::connection_lock"),
+      component_lock("CoreFrameworkBase::component_lock"),
+      factory_lock("CoreFrameworkBase::factory_lock"),
+      service_lock("CoreFrameworkBase::service_lock")
+  {
+    //addServiceFactory(new StdFrameworkServiceFactory<FrameworkPropertiesService>("cca.FrameworkProperties"));
+    //addServiceFactory(new StdFrameworkServiceFactory<BuilderService>("cca.BuilderService"));
+  }
+  
+  template<class Interface>
+  CoreFrameworkBase<Interface>::~CoreFrameworkBase()
+  {
+  }
+  
+
+  template<class Interface>
+  ComponentInfo::pointer CoreFrameworkBase<Interface>::createInstance( const std::string& instanceName,
+								       const std::string& className,
+								       const TypeMap::pointer& properties)
+  {
+    Guard guard(&component_lock);
+    
+    if ( components.find(instanceName) != components.end() )
+      throw CCAException::create("can not create component ["+instanceName+"]: name in use");
+
+    ComponentInfo::pointer info(0);
+    {
+      Guard guard(&factory_lock);
+      
+      ComponentClassFactoryMap::iterator factory = factories.find(className);
+      if ( factory == factories.end() )
+	throw CCAException::create("Can not create a component of type ["+className+"]: no factory");
+      
+      // this may throw a cca exception.
+      // do not catch it. 
+      
+      info = factory->second->create( pointer(this), instanceName, properties);
+    }
+    
+    components[instanceName] = info;
+
+    return info;
+  }
+ 
+  template<class Interface>
+  SSIDL::array1<ComponentClassDescription::pointer> 
+  CoreFrameworkBase<Interface>::listAllComponentTypes( bool )
+  {
+    SSIDL::array1<ComponentClassDescription::pointer> types;
+
+    Guard guard(&factory_lock);
+    
+    for (ComponentClassFactoryMap::iterator factory = factories.begin(); factory != factories.end(); ++factory)
+      types.push_back(factory->second->getClassDescription());
+    
+    return types;
+  }
+
+  template<class Interface>
+  ComponentID::pointer CoreFrameworkBase<Interface>::lookupComponentID(const std::string &name) 
+  {
+    SCIRun::Guard guard(&component_lock);
+
+    ComponentMap::iterator id = components.find(name);
+    if (id == components.end())
+      return ComponentID::pointer(0);
+    else 
+      return id->second;
+  }
+
+  template<class Interface>
+  TypeMap ::pointer
+  CoreFrameworkBase<Interface>::createTypeMap()
+  {
+    return TypeMap::pointer( new TypeMapImpl );
+  }
+    
+  template<class Interface>
+  Services::pointer CoreFrameworkBase<Interface>::getServices( const std::string &name, 
+							       const std::string &type, 
+							       const TypeMap::pointer &properties)
+  {
+    throw CCAException::create("getServices is not implemented by CoreFramework");
+  }
+
+  template<class Interface>
+  void CoreFrameworkBase<Interface>::releaseServices(const Services::pointer &services)
+  {
+    // same as regular destroyInstance
+  }
+    
+  template<class Interface>
+  AbstractFramework::pointer CoreFrameworkBase<Interface>::createEmptyFramework()
+  {
+    return CoreFramework::pointer( new CoreFrameworkImpl );
+  }
+
+  template<class Interface>
+  void CoreFrameworkBase<Interface>::shutdownFramework()
+  {
+    // Fixme [yarden]: what should be done here ?
+  }
+
+  template<class Interface>
+  SSIDL::array1<ComponentID::pointer>
+  CoreFrameworkBase<Interface>::getComponentIDs()
+  {
+    SSIDL::array1<ComponentID::pointer> ids;
+
+    SCIRun::Guard guard(&component_lock);
+    
+    for (ComponentMap::iterator iter = components.begin(); iter != components.end(); ++iter ) 
+      ids.push_back(iter->second);
+    
+    return ids;
+  }
+
+
+  template<class Interface>
+  SSIDL::array1<ConnectionID::pointer>
+  CoreFrameworkBase<Interface>::getConnectionIDs(const SSIDL::array1<ComponentID::pointer> &componentList)
+  {
+    SSIDL::array1<ConnectionID::pointer> selected;
+
+    SCIRun::Guard guard(&connection_lock);
+
+    for (ConnectionList::const_iterator iter = connections.begin(); iter != connections.end(); ++iter ) {
+      const ConnectionID::pointer &connection = (*iter);
+
+      ComponentID::pointer user = connection->getUser();
+      ComponentID::pointer provider = connection->getProvider();
+
+      for (unsigned j = 0; j < componentList.size(); j++) {
+	const ComponentID::pointer &component = componentList[j];
+	if (user == component || provider == component) {
+	  selected.push_back(connection);
+	  break;
+	}
+      }
+    }
+    return selected;
+  }
+
+  
+  template<class Interface>
+  void 
+  CoreFrameworkBase<Interface>::addConnection( const ConnectionID::pointer &connection )
+  {
+    SCIRun::Guard guard(&connection_lock);
+
+    ConnectionInfo::pointer connectionInfo = pidl_cast<ConnectionInfo::pointer>(connection);
+
+    if ( find( connections.begin(), connections.end(), connectionInfo ) != connections.end() )
+      throw CCAException::create("connection already exist ", Unexpected);
+
+    connections.push_back(connectionInfo);
+  }
+
+  template<class Interface>
+  void 
+  CoreFrameworkBase<Interface>::disconnect( const ConnectionID::pointer &connection )
+  {
+    SCIRun::Guard guard(&connection_lock);
+
+    ConnectionInfo::pointer connectionInfo = pidl_cast<ConnectionInfo::pointer>(connection);
+
+    ConnectionList::iterator c = find(connections.begin(), connections.end(), connectionInfo);
+    if ( c == connections.end() )
+      throw CCAException::create("connection does not exist ", Unexpected);
+
+    // FIXME [yarden]: disconnect the ports ?
+    
+    // done
+    connections.erase(c);
+  }
+
+
+  template<class Interface>
+  void CoreFrameworkBase<Interface>::destroyInstance( const ComponentID::pointer &componentID )
+  {
+    SCIRun::Guard guard(&component_lock);
+    
+    ComponentInfo::pointer info = pidl_cast<ComponentInfo::pointer>(componentID);
+    ComponentMap::iterator c = components.find( info->getInstanceName() );
+
+    if ( c == components.end() ) {
+      throw CCAException::create("request to desrtoy an instance that is not registered with the framework [" + 
+				 info->getInstanceName() + "]");
+    }
+
+    // reduce reference to the component info
+    components.erase(c);
+  }
+
+  template<class Interface>
+  void                          
+  CoreFrameworkBase<Interface>::addFrameworkServiceFactory(const ServiceFactory::pointer &factory)
+  {
+    ServiceMap::const_iterator iter = services.find(factory->getName());
+    if (iter != services.end())
+      throw CCAException::create("Can not add service factory ["+factory->getName()+"]: already defined");
+    
+    services[factory->getName()] = factory;
+  }
+  
+
+  template<class Interface>
+  bool
+  CoreFrameworkBase<Interface>::isFrameworkService(const std::string &name)
+  {
+    return services.find(name) != services.end();
+  }
+
+
+  template<class Interface>
+  ServiceInfo::pointer 
+  CoreFrameworkBase<Interface>::getFrameworkService(const std::string &serviceName,
+						    const PortInfo::pointer &requesterPort,
+						    const ComponentInfo::pointer &requester)
+  {
+    Guard guard(&service_lock);
+
+    ServiceMap::const_iterator service = services.find(serviceName);
+    if ( service == services.end() )
+      return ServiceInfo::pointer(0);
+    
+    // get a port from the service
+    PortInfo::pointer servicePort = (*service).second->getService(serviceName);
+
+    // connect the requester port and the service port
+    requesterPort->connect(servicePort);
+
+    // do we need to maintain a reference to this connection ?
+    return ServiceInfo::pointer( new ServiceInfoImpl(serviceName, 
+						     servicePort, 
+						     requesterPort, 
+						     requester) );
+  }
+
+  template<class Interface>
+  void                          
+  CoreFrameworkBase<Interface>::releaseFrameworkService(const ServiceInfo::pointer &info)
+  {
+    Guard guard(&service_lock);
+
+    // disconnect 
+    info->getRequester()->disconnect(info->getRequesterPortName(), info->getServicePort());
+
+    // release service
+    ServiceMap::const_iterator service = services.find(info->getServiceName());
+    service->second->releaseService( info->getServicePortName() );
+  }
+
+
+  template<class Interface>
+  void 
+  CoreFrameworkBase<Interface>::addComponentClassFactory( const ComponentClassFactory::pointer &factory )
+  {
+    Guard guard(&factory_lock);
+
+    if ( factories.find(factory->getClassName()) != factories.end() )
+      throw CCAException::create("ComponentClassFactory ["+factory->getClassName()+"] registerd twice");
+
+    factories[factory->getClassName()] = factory;
+  }
+  
+} // SCIRun namespace
+
+#endif // 

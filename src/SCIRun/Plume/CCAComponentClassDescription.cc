@@ -43,7 +43,7 @@
 
 namespace SCIRun {
   
-  CCAomponentClassDescription::CCAComponentClassDescription(const std::string &type, const std::string &library)
+  CCAComponentClassDescription::CCAComponentClassDescription(const std::string &type, const std::string &library)
     : CCAComponentClassDescriptionImpl<Interface>(type, library)
   {}
 

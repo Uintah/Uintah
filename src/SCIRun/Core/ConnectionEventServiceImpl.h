@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentDescription.h: 
+ *  ConnectionEventService.h: Baseementation of the CCA ConnectionEventService interface for SCIRun
  *
  *  Written by:
  *   Steven G. Parker
@@ -38,53 +38,50 @@
  *
  */
 
-#ifndef SCIRun_ComponentDescription_h
-#define SCIRun_ComponentDescription_h
+#ifndef SCIRun_ConnectionEventService_h
+#define SCIRun_ConnectionEventService_h
 
-#include <string>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
+#include <SCIRun/Core/ConnectionEventServiceBase.h>
+#include <vector>
 
 namespace SCIRun {
 
+  namespace CorePorts = core::ports;
 
-  /** \class ComponentDescription
+  class CoreFramework;
+  class ConnectionEvent;
+  
+  /**
+   * \class ConnectionEventService
    *
-   * A container for information necessary to locate and instantiate a specific
-   * component type in the SCIRun framework.  This class holds the type name of
-   * the component and the component model to which it belongs.  Subclasses of
-   * ComponentDescription may contain additional information specific to
-   * a particular component model.  The SCIRun framework maintains a list of
-   * ComponentDescriptions that are used during component instantiation.
-   * ComponentDescriptions are usually created from information contained in XML
-   * files.
+   * The component event service is a CCA port that is used to register
+   * command objects (analogous to callback methods) with events broadcast
+   * from the framework (?)
    *
-   * \sa SCIRunFramework
    */
-  class ComponentDescription
+  class ConnectionEventService : public ConnectionEventServiceBase<CorePorts::ConnectionEventService>
   {
   public:
-    ComponentDescription();
-    virtual ~ComponentDescription();
+    typedef internal::Service::pointer pointer;
     
-    /** Returns the type name (a string) the component described by this class. */
-    virtual std::string getType() const = 0;
+    ConnectionEventService(const CoreFramework::internalPointer &framework);
+
+    virtual ~ConnectionEventService();
     
+    /** Factory method for allocating new ConnectionEventService objects.  Returns
+	a smart pointer to the newly allocated object registered in the framework
+	\em fwk with the instance name \em name. */
+
+    static pointer create(const CoreFramework::internalPointer &framework);
+    
+    /** ? */
+    void emitConnectionEvent(const Ports::ConnectionEvent::pointer& event);
+
   private:
-    ComponentDescription(const ComponentDescription&);
-    ComponentDescription& operator=(const ComponentDescription&);
-  };
-  
-  class DistributedFramework;
+    CoreFramework *framework;
 
-  template<class Component, class Description>
-  class ComponentDescriptionFactory : public Description  {
-  public:
-    ComponentDescriptionFactory(const std::string &name) : Description(name) {}
-    virtual ~ComponentDescriptionFactory() {}
-
-    typename Component::pointer create(DistributedFramework *framework, const std::string &name) 
-    {
-      return Component::create(framework, name );
-    }
   };
 
 

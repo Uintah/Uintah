@@ -88,10 +88,11 @@ namespace SCIRun {
     virtual sci::cca::TypeMap::pointer getPortProperties(const std::string &);
     virtual sci::cca::ComponentID::pointer getComponentID();
 
-    virtual void destroyComponent();
-
   private:
     CCAComponentModel *model;
+    
+    typedef sci::cca::distributed::internal::Service::pointer ServicePointer;
+    typedef std::map<std::string, ServicePointer> ServiceMap;
 
     // prevent using these directly
     CCAComponentInfoImpl<Base>(const CCAComponentInfoImpl<Base>&);

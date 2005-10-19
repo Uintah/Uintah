@@ -1,0 +1,134 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+/*
+ *  ComponentInfoBase.cc:
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2001
+ *
+ */
+
+#ifndef SCIRun_ComponentInfoBase_code
+#define SCIRun_ComponentInfoBase_code
+
+#include <SCIRun/Core/TypeMapImpl.h>
+#include <SCIRun/Core/CCAException.h>
+#include <iostream>
+
+#include <SCIRun/Core/ComponentInfoImpl.h>
+#include <SCIRun/Core/PortInfoImpl.h>
+
+namespace SCIRun {
+
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+
+  template<class Interface>
+  ComponentInfoBase<Interface>::ComponentInfoBase(const CoreFramework::pointer &framework,
+						  const std::string &instanceName,
+						  const std::string &className,
+						  const TypeMap::pointer &properties,
+						  const Component::pointer &component)
+    : ComponentIDBase<Interface>(framework, instanceName),
+      component(component), className(className), properties(properties),
+      ports_lock("ComponentInfo::ports_lock")
+  {
+  }
+  
+  template<class Interface>
+  ComponentInfoBase<Interface>::~ComponentInfoBase()
+  {
+  }
+  
+  
+  template<class Interface>
+  SSIDL::array1<PortInfo::pointer> ComponentInfoBase<Interface>::getPorts()
+  {
+    Guard guard(&ports_lock);
+
+    SSIDL::array1<PortInfo::pointer> array;
+    for (PortMap::const_iterator i=ports.begin(); i!=ports.end(); ++i)
+      array.push_back((*i).second);
+    return array;
+  }
+  
+  template<class Interface>
+  PortInfo::pointer ComponentInfoBase<Interface>::getPortInfo( const std::string &name )
+  {
+    Guard guard(&ports_lock);
+
+    PortMap::const_iterator info = ports.find(name);
+    if ( info == ports.end() ) return PortInfo::pointer(0);
+    return (*info).second;
+  }
+
+  template<class Interface>
+  void ComponentInfoBase<Interface>::disconnect(const std::string &portName, const PortInfo::pointer &from)
+  {
+    Guard guard(&ports_lock);
+
+    PortMap::const_iterator info = ports.find(portName);
+    if ( info == ports.end() ) return;
+
+    info->second->disconnect(from);
+  }
+  template<class Interface>
+  std::string  ComponentInfoBase<Interface>::getClassName() 
+  { 
+    return className; 
+  }
+  
+  template<class Interface>
+  TypeMap::pointer  ComponentInfoBase<Interface>::getProperties() 
+  { 
+    return properties; 
+  }
+  
+  template<class Interface>
+  void  ComponentInfoBase<Interface>::setProperties(const TypeMap::pointer &properties) 
+  { 
+    this->properties = properties; 
+  }
+ 
+  template<class Interface>
+  void  ComponentInfoBase<Interface>::destroyComponent()
+  {
+    // we can not delete the component here as we only have an interface to it 
+    // and the interface does not tell us how to delete it.
+    // this function should never be called.
+    // Rather, a derive class should have the knowledge how to delete it.
+  }
+ 
+} // end namespace SCIRun
+
+#endif // #ifndef SCIRun_ComponentInfoBase_code

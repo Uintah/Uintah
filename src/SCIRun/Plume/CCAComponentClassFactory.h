@@ -42,20 +42,27 @@
 #define SCIRun_CCAComponentFactory_h
 
 #include <SCIRun/Distributed/ComponentClassFactory.h>
+#include <SCIRun/Plume/CCAComponentClassDescription.h>
 
 namespace SCIRun {
+
+  namespace Plume = sci::cca::plume;
+
+  class CCAComponentModel;
 
   class CCAComponentClassFactory : public ComponentClassFactory
   {
   public:
-    CCAComponentClassFactory(const sci::cca::CCAComponentClassDescription::pointer &desc, CCAComponentModel *model);
+    typedef sci::cca::distributed::internal::ComponentClassFactory::pointer pointer;
+
+    CCAComponentClassFactory(const Plume::CCAComponentClassDescription::pointer &desc, CCAComponentModel *model);
 
     virtual ~CCAComponentClassFactory();
     
     virtual Distributed::ComponentInfo::pointer create( const Distributed::DistributedFramework::pointer &framework,
 							const std::string &name,
 							const sci::cca::TypeMap::pointer &);
-  private:
+  protected:
     CCAComponentModel *model;
   };
 

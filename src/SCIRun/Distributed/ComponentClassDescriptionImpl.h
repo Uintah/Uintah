@@ -56,7 +56,7 @@ namespace SCIRun {
     ComponentClassDescriptionImpl(const std::string &type);
     virtual ~ComponentClassDescriptionImpl();
     
-    virtual std::string getComponentClassName() const;
+    virtual std::string getComponentClassName();
 
   protected:
     std::string type;

@@ -66,7 +66,9 @@ namespace SCIRun {
     PlumeFrameworkImpl( const DistributedFramework::internalPointer &parent = 
 			DistributedFramework::internalPointer(0));
     virtual ~PlumeFrameworkImpl();
-    
+
+    virtual Distributed::DistributedFramework::pointer getPointer() { return pointer(this); }
+
     /*
      * from AbstractFramework
      */
@@ -77,6 +79,11 @@ namespace SCIRun {
     /** */
     virtual sci::cca::AbstractFramework::pointer createEmptyFramework();
 
+    /** */
+    virtual sci::cca::Services::pointer
+    getServices( const std::string &name, const std::string &type,  const sci::cca::TypeMap::pointer &properties);
+    /** */
+    void releaseServices( const sci::cca::Services::pointer &);
   protected:
     CCAComponentModel cca;
     
