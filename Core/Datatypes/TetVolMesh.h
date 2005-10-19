@@ -3572,7 +3572,7 @@ get_type_description(TetVolMesh<Basis> *)
     const TypeDescription *sub = SCIRun::get_type_description((Basis*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription(TetVolMesh<Basis>::type_name(0), subs,
+    td = scinew TypeDescription("TetVolMesh", subs,
 				string(__FILE__),
 				"SCIRun", 
 				TypeDescription::MESH_E);

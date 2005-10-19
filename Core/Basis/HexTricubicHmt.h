@@ -475,7 +475,7 @@ get_type_description(HexTricubicHmt<T> *)
     const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription(HexTricubicHmt<T>::type_name(0), subs, 
+    td = scinew TypeDescription("HexTricubicHmt", subs, 
 				string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);

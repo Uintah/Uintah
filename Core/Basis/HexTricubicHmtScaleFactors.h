@@ -604,7 +604,7 @@ get_type_description(HexTricubicHmtScaleFactors<T> *)
     const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription(HexTricubicHmtScaleFactors<T>::type_name(0), 
+    td = scinew TypeDescription("HexTricubicHmtScaleFactors", 
 				subs, 
 				string(__FILE__),
 				"SCIRun", 

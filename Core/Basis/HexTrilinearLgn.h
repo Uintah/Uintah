@@ -389,7 +389,7 @@ get_type_description(HexTrilinearLgn<T> *)
     const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription(HexTrilinearLgn<T>::type_name(0), subs, 
+    td = scinew TypeDescription("HexTrilinearLgn", subs, 
 				string(__FILE__),
 				"SCIRun", 
 				TypeDescription::BASIS_E);
