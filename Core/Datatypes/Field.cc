@@ -52,7 +52,7 @@ void
 Field::io(Piostream& stream)
 {
   int version = stream.begin_class("Field", FIELD_VERSION);
-  if (version < 3) {
+  if (version < 2) {
     // The following was FIELD_VERSION 1 data_at ordering
     //     enum data_location{
     //       NODE,
@@ -77,6 +77,14 @@ Field::io(Piostream& stream)
       order = 0;
     }
     
+    if (order != basis_order()) {
+      // signal error in the stream and return;
+      stream.flag_error();
+      return;
+    }
+  } else if (version < 3) {
+    int order;
+    Pio(stream, order);
     if (order != basis_order()) {
       // signal error in the stream and return;
       stream.flag_error();

@@ -54,17 +54,18 @@ public:
   //!< References to vertices of unit face
   static int unit_faces[1][3]; 
   
-  TriLinearLgnUnitElement() {};
-  virtual ~TriLinearLgnUnitElement() {};
-  
-  static int domain_dimension() { return 2; }; //! return dimension of domain 
-  
-  static int number_of_vertices() { return 3; }; //! return number of vertices
-  static int number_of_edges() { return 3; }; //! return number of edges
-  
-  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
-
-  static int faces_of_cell() { return 1; }; //! return number of faces per cell 
+  TriLinearLgnUnitElement() {}
+  virtual ~TriLinearLgnUnitElement() {}
+  //! return dimension of domain 
+  static int domain_dimension() { return 2; } 
+  //! return number of vertices
+  static int number_of_vertices() { return 3; }
+  //! return number of edges 
+  static int number_of_edges() { return 3; } 
+  //! return number of vertices per face 
+  static int vertices_of_face() { return 3; } 
+  //! return number of faces per cell 
+  static int faces_of_cell() { return 1; }
 };
 
 
@@ -91,8 +92,9 @@ public:
     const double dy = v1[1] - p1y;
 
     for(unsigned i = 0; i <= div_per_unit; i++) {
-      const double d = (double)div_per_unit / (double)i;
+      const double d = (double)i / (double)div_per_unit;
       vector<double> &tmp = coords[i];
+      tmp.resize(2);
       tmp[0] = p1x + d * dx;
       tmp[1] = p1y + d * dy;
     } 	
@@ -109,20 +111,23 @@ public:
     const double d = 1. / div_per_unit;
 
     for(unsigned j = 0; j < div_per_unit; j++) {
-      const double dj = (double)div_per_unit / (double)j;
+      const double dj = (double)j / (double)div_per_unit;
       unsigned e = 0;
       coords[j].resize((div_per_unit - j) * 2 + 1);
       vector<double> &tmp = coords[j][e++];
+      tmp.resize(2);
       tmp[0] = 0;
       tmp[1] = dj;
       for(unsigned i = 0; i<div_per_unit - j; i++) {
-	const double di = (double)div_per_unit / (double)i;
-	tmp = coords[j][e++];
-	tmp[0] = di;
-	tmp[1] = dj + d;
-	tmp = coords[j][e++];
-	tmp[0] = di + d;
-	tmp[1] = dj;
+	const double di = (double)i / (double)div_per_unit;
+	vector<double> &tmp1 = coords[j][e++];
+	tmp1.resize(2);
+	tmp1[0] = di;
+	tmp1[1] = dj + d;
+	vector<double> &tmp2 = coords[j][e++];
+	tmp2.resize(2);
+	tmp2[0] = di + d;
+	tmp2[1] = dj;
       }
     }
   }
@@ -254,11 +259,17 @@ public:
   {
     coords.resize(2);
     vector<double> &tmp = coords[0];
-    tmp[0] = TriLinearLgnUnitElement::unit_vertices[TriLinearLgnUnitElement::unit_edges[edge][0]][0];
-    tmp[1] = TriLinearLgnUnitElement::unit_vertices[TriLinearLgnUnitElement::unit_edges[edge][0]][1];
-    tmp = coords[1];
-    tmp[0] = TriLinearLgnUnitElement::unit_vertices[TriLinearLgnUnitElement::unit_edges[edge][1]][0];
-    tmp[1] = TriLinearLgnUnitElement::unit_vertices[TriLinearLgnUnitElement::unit_edges[edge][1]][1];
+    tmp.resize(2);
+    tmp[0] = TriLinearLgnUnitElement::unit_vertices[
+		       TriLinearLgnUnitElement::unit_edges[edge][0]][0];
+    tmp[1] = TriLinearLgnUnitElement::unit_vertices[
+                       TriLinearLgnUnitElement::unit_edges[edge][0]][1];
+    vector<double> &tmp1 = coords[1];
+    tmp1.resize(2);
+    tmp1[0] = TriLinearLgnUnitElement::unit_vertices[
+		       TriLinearLgnUnitElement::unit_edges[edge][1]][0];
+    tmp1[1] = TriLinearLgnUnitElement::unit_vertices[
+		       TriLinearLgnUnitElement::unit_edges[edge][1]][1];
   }
 
   virtual void approx_face(const unsigned /* face */, 
@@ -268,14 +279,17 @@ public:
     coords.resize(1);
     coords[0].resize(3);
     vector<double> &tmp = coords[0][0];
+    tmp.resize(2);
     tmp[0] = 0;
     tmp[1] = 0;
-    tmp = coords[0][1];
-    tmp[0] = 1;
-    tmp[1] = 0;
-    tmp = coords[0][2];
-    tmp[0] = 0;
-    tmp[1] = 1;
+    vector<double> &tmp1 = coords[0][1];
+    tmp1.resize(2);
+    tmp1[0] = 1;
+    tmp1[1] = 0;
+    vector<double> &tmp2 = coords[0][2];
+    tmp2.resize(2);
+    tmp2[0] = 0;
+    tmp2[1] = 1;
   }
 
   inline

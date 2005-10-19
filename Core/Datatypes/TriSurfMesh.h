@@ -115,34 +115,36 @@ public:
 	     const typename Elem::index_type ind) :
       mesh_(msh),
       index_(ind)
-    {}
+    {
+      mesh_.get_edges(edges_, ind);
+    }
     
     // the following designed to coordinate with ::get_nodes
     inline 
     unsigned node0_index() const {
-      return index_ * 3;
+      return mesh_.faces_[index_ * 3];
     }
     inline 
     unsigned node1_index() const {
-      return index_ * 3 + 1;
+      return mesh_.faces_[index_ * 3 + 1];
     }
     inline 
     unsigned node2_index() const {
-      return index_ * 3 + 2;
+      return mesh_.faces_[index_ * 3 + 2];
     }
 
     // the following designed to coordinate with ::get_edges
     inline 
     unsigned edge0_index() const {
-      return index_ * 3;
+      return edges_[0];
     }
     inline 
     unsigned edge1_index() const {
-      return index_ * 3 + 1;
+      return edges_[1];
     }
     inline 
     unsigned edge2_index() const {
-      return index_ * 3 + 2;
+      return edges_[2];
     }
 
     inline 
@@ -161,6 +163,7 @@ public:
   private:
     const TriSurfMesh<Basis>          &mesh_;
     const typename Elem::index_type    index_;
+    typename Edge::array_type          edges_;
    };
 
   TriSurfMesh();
@@ -357,11 +360,10 @@ public:
 		       typename Edge::index_type ei, 
 		       unsigned div_per_unit) const
   {    
-    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+    // Needs to match unit_edges in Basis/TriLinearLgn.cc 
     // compare get_nodes order to the basis order
-
-    //FIX_ME MC delete this comment when this is verified.
-
+    int basis_idx[] = {1, 2, 0};
+    
     typename Edge::array_type edges;
     get_edges(edges, ci);
     unsigned count = 0;
@@ -370,7 +372,7 @@ public:
       if (ei == *iter++) break;
       ++count;
     }
-    basis_.approx_edge(count, div_per_unit, coords); 
+    basis_.approx_edge(basis_idx[count], div_per_unit, coords); 
   }
 
   //! Generate the list of points that make up a sufficiently accurate
@@ -380,20 +382,7 @@ public:
 		       typename Face::index_type fi, 
 		       unsigned div_per_unit) const
   {
-    // Needs to match unit_faces in Basis/QuadBilinearLgn.cc 
-    // compare get_nodes order to the basis order
-
-    //FIX_ME MC delete this comment when this is verified.
-
-    typename Face::array_type faces;
-    get_faces(faces, ci);
-    unsigned count = 0;
-    typename Face::array_type::iterator iter = faces.begin();
-    while (iter != faces.end()) {
-      if (fi == *iter++) break;
-      ++count;
-    }
-    basis_.approx_face(count, div_per_unit, coords);
+    basis_.approx_face(0, div_per_unit, coords);
   }
   
   bool get_coords(vector<double> &coords, 
