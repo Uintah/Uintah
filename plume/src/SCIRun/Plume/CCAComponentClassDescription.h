@@ -28,7 +28,7 @@
 
 
 /*
- *  CCAComponentDescription.h: 
+ *  CCAComponentClassDescription.h: 
  *
  *  Written by:
  *   Yarden Livant
@@ -51,7 +51,7 @@ namespace SCIRun {
   {
   public:
     typedef Plume::CCAComponentClassDescription Interface;
-    typedef Interface:: pointer pointer;
+    typedef Interface::pointer pointer;
 
     CCAComponentClassDescription(const std::string &type, const std::string &library );
 

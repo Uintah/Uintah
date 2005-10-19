@@ -48,10 +48,17 @@
 #include <SCIRun/Distributed/ComponentID.h>
 #include <SCIRun/Distributed/ComponentInfo.h>
 #include <SCIRun/Distributed/TypeMap.h>
+#include <SCIRun/Distributed/FrameworkServiceFactory.h>
+
+// Impl.code
+#include <SCIRun/Distributed/DistributedFrameworkImpl.code>
+
+// Services
+#include <SCIRun/Distributed/FrameworkPropertiesService.h>
+#include <SCIRun/Distributed/BuilderService.h>
 
 #include <Core/Thread/Guard.h>
 
-#include <SCIRun/Distributed/DistributedFrameworkImpl.code>
 #include <algorithm>
 
 namespace SCIRun {
@@ -63,6 +70,8 @@ namespace SCIRun {
       component_lock("DistributedFrameworkInternal::component_lock"),
       factory_lock("DistributedFrameworkInternal::factory_lock")
   {
+    addServiceFactory(new StdFrameworkServiceFactory<FrameworkPropertiesService>("cca.FrameworkProperties"));
+    addServiceFactory(new StdFrameworkServiceFactory<BuilderService>("cca.BuilderService"));
   }
   
   template<class Base>
@@ -91,7 +100,10 @@ namespace SCIRun {
       
       // this may throw a cca exception.
       // do not catch it. 
-      info = factory->second->create( pointer(this), instanceName, properties);
+      
+      DistributedFramework::pointer self(this);
+      info = factory->second->create( self,
+				      instanceName, properties);
     }
     
     components[instanceName] = info;
@@ -149,7 +161,9 @@ namespace SCIRun {
   template<class Base>
   sci::cca::AbstractFramework::pointer DistributedFrameworkInternal<Base>::createEmptyFramework()
   {
-    return pointer(new DistributedFramework(pointer(this)));
+    DistributedFramework::pointer internal(this);
+    DistributedFramework *d = new DistributedFramework(internal);
+    return pointer(d);
   }
 
   template<class Base>
@@ -247,11 +261,31 @@ namespace SCIRun {
   }
 
   template<class Base>
-  Distributed::internal::Service::pointer // DistributedFrameworkInternal<Base>::ServicePointer
+  void
+  DistributedFrameworkInternal<Base>::addServiceFactory(FrameworkServiceFactory *factory)
+  {
+    ServiceMap::const_iterator iter = services.find(factory->getName());
+    if (iter != services.end())
+      throw CCAException::create("Can not add service factory ["+factory->getName()+"]: already defined");
+    
+    services[factory->getName()] = factory;
+  }
+  
+
+  template<class Base>
+  bool
+  DistributedFrameworkInternal<Base>::isFrameworkService(const std::string &name)
+  {
+    return services.find(name) != services.end();
+  }
+
+
+  template<class Base>
+  Distributed::internal::Service::pointer 
   DistributedFrameworkInternal<Base>::getFrameworkService(const std::string &name)
   {
     ServiceMap::const_iterator service = services.find(name);
-    return service != services.end() ? (*service).second : ServicePointer(0);
+    return service != services.end() ? (*service).second->getService(getPointer()) : ServicePointer(0);
   }
 
   template<class Base>

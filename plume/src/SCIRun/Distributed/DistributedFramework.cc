@@ -38,6 +38,7 @@
  *
  */
 
+#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Distributed/DistributedFramework.h>
 #include <SCIRun/Distributed/DistributedFrameworkInternal.code>
 
@@ -45,9 +46,11 @@ namespace SCIRun {
 
   // test of compilation of DistributedFramework
 
-//     DistributedFramework::DistributedFramework(const pointer &parent)
-//     :  DistributedFrameworkInternal<DistributedInternal::DistributedFrameworkInternal>(parent)
-//   {}
+//   DistributedFramework::DistributedFramework(const pointer &parent)
+  DistributedFramework::DistributedFramework(const pointer &) 
+    //    : DistributedFrameworkInternal<sci::cca::distributed::internal::DistributedFrameworkInternal>()
+//     :  DistributedFrameworkInternal<DistributedInternal::DistributedFrameworkInternal>(0)
+  {}
 
   DistributedFramework::~DistributedFramework() {}
   

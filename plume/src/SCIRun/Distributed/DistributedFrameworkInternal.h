@@ -41,18 +41,17 @@
 #ifndef SCIRun_Framework_DistributedFrameworkInternal_h
 #define SCIRun_Framework_DistributedFrameworkInternal_h
 
-#include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Distributed/DistributedFrameworkImpl.h>
-#include <SCIRun/Distributed/ComponentDescription.h>
+#include <SCIRun/Distributed/ComponentClassFactory.h>
 #include <list>
 
 namespace SCIRun {
 
   namespace Distributed = sci::cca::distributed;
   namespace Internal = Distributed::internal;
-  
-  class ComponentInfo;
-  
+
+  class FrameworkServiceFactory;
+
   /**
    * \class DistributedFrameworkInternal
    * 
@@ -64,13 +63,17 @@ namespace SCIRun {
   class DistributedFrameworkInternal : public DistributedFrameworkImpl<Base>
   {
   public:
-    typedef typename DistributedFrameworkImpl<Base>::pointer pointer;
-    //typedef Distributed::internal::DistributedFrameworkInteral::pointer pointer;
+    typedef Distributed::internal::DistributedFrameworkInternal::pointer pointer;
     typedef Internal::Service::pointer ServicePointer;
 
     DistributedFrameworkInternal( const pointer &parent = pointer(0));
     virtual ~DistributedFrameworkInternal();
 
+    Internal::DistributedFrameworkInternal::pointer getPointer() 
+    {
+      return Internal::DistributedFrameworkInternal::pointer(this); 
+    }
+    
     virtual SSIDL::array1<sci::cca::ComponentClassDescription::pointer> listAllComponentTypes( bool );
 
     /*
@@ -108,16 +111,18 @@ namespace SCIRun {
     void addConnection(const sci::cca::ConnectionID::pointer &connection) ;
     void disconnect(const sci::cca::ConnectionID::pointer &connection);
 
+    virtual void addServiceFactory(FrameworkServiceFactory *factory);
 
-    ServicePointer getFrameworkService(const std::string &);
-    void releaseFrameworkService(const ServicePointer &service);
+    virtual bool isFrameworkService(const std::string &);
+    virtual ServicePointer getFrameworkService(const std::string &);
+    virtual void releaseFrameworkService(const ServicePointer &service);
 
     void addComponentClassFactory( const Internal::ComponentClassFactory::pointer &factory );
 
   private:
     typedef std::list<Distributed::ConnectionInfo::pointer> ConnectionList;
     typedef std::map<std::string, Distributed::ComponentInfo::pointer> ComponentMap;
-    typedef std::map<std::string, Internal::Service::pointer> ServiceMap;
+    typedef std::map<std::string, FrameworkServiceFactory *> ServiceMap;
     typedef std::map<std::string, Internal::ComponentClassFactory::pointer> ComponentClassFactoryMap;
 
     ConnectionList connections;

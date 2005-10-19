@@ -28,26 +28,37 @@
 
 
 /*
- *  ComponentDescription.cc:
+ *  ComponentEvent.h: Baseementation of the SCI CCA Extension
+ *                    ComponentEvent interface for SCIRun
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Ayla Khan
+ *   Scientific Computing and Imaging Institute
  *   University of Utah
- *   October 2001
+ *   October 2004
+ *
+ *  Copyright (C) 2004 SCI Institute
  *
  */
 
-#include <SCIRun/Distributed/ComponentDescription.h>
+#ifndef SCIRun_ComponentEvent_h
+#define SCIRun_ComponentEvent_h
+
+#include <SCIRun/Core/ComponentEventBase.h>
 
 namespace SCIRun {
   
-  ComponentDescription::ComponentDescription()
+  class ComponentEvent : public ComponentEventBase<ComponentEvent>
   {
-  }
+  public:
+    typedef ComponentEvent::pointer pointer;
+
+    ComponentEvent(ComponentEventType type,
+		   const ComponentID::pointer& id,
+		   const TypeMap::pointer& properties);
+    virtual ~ComponentEvent();
+  };
   
-  ComponentDescription::~ComponentDescription()
-  {
-  }
-  
-} // end namespace SCIRun
+}
+
+#endif

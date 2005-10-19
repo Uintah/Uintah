@@ -44,7 +44,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/CCA/spec/sci_sidl.h>
 #include <SCIRun/Distributed/ComponentInfo.h>
-#include <SCIRun/Plume/CCAComponentDescription.h>
+#include <SCIRun/Plume/CCAComponentClassDescription.h>
 #include <SCIRun/Distributed/DistributedFramework.h>
 #include <vector>
 #include <string>
@@ -55,7 +55,7 @@ namespace SCIRun {
   namespace Distributed = sci::cca::distributed;
 
   class DitributedFramework;
-  class ComponentDescription;
+  class ComponentClassDescription;
   class ComponentInfo;
   
   /**
@@ -92,13 +92,13 @@ namespace SCIRun {
 
   private:
     Distributed::DistributedFramework::pointer framework;
-    typedef std::map<std::string, CCAComponentDescription*> DescriptionMap;
+    typedef std::map<std::string, CCAComponentClassDescription::pointer> DescriptionMap;
     DescriptionMap descriptions;
     Mutex descriptions_lock;   
    
     std::string sidlDLLPath;
 
-    void readComponentDescription(const std::string& file);
+    void readComponentClassDescription(const std::string& file);
 
     CCAComponentModel(const CCAComponentModel&);
     CCAComponentModel& operator=(const CCAComponentModel&);

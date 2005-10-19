@@ -39,11 +39,14 @@
  */
 
 #include <SCIRun/Plume/CCAComponentClassFactory.h>
+#include <SCIRun/Plume/CCAComponentModel.h>
 
 namespace SCIRun {
 
-  CCAComponentClassFactory::CCAComponentClassFactory(const sci::cca::CCAComponentClassDescription::pointer &desc,
-						     CCAComponnetModel *model)
+  namespace Plume = sci::cca::plume;
+
+  CCAComponentClassFactory::CCAComponentClassFactory(const Plume::CCAComponentClassDescription::pointer &desc,
+						     CCAComponentModel *model)
     : ComponentClassFactory(desc), model(model)
   {}
 
@@ -54,7 +57,10 @@ namespace SCIRun {
 				    const std::string &name,
 				    const sci::cca::TypeMap::pointer &properties)
   {
-    return model->createComponent( framework, name, properties, getLibrary() );
+    return model->createComponent( name,
+				   desc->getComponentClassName(),
+				   pidl_cast<Plume::CCAComponentClassDescription::pointer>(desc)->getLibrary(),
+				   properties);
   }
 
 }

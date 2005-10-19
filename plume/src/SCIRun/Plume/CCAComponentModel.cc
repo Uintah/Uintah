@@ -41,7 +41,7 @@
 #include <SCIRun/Plume/CCAComponentModel.h>
 #include <SCIRun/Distributed/DistributedFramework.h>
 
-#include <SCIRun/Distributed/ComponentDescription.h>
+#include <SCIRun/Distributed/ComponentClassDescription.h>
 #include <SCIRun/Distributed/FrameworkPropertiesService.h>
 //#include <SCIRun/Distributed//ComponentInfoImpl.code>
 #include <SCIRun/Plume/CCAComponentInfo.h>
@@ -107,10 +107,6 @@ namespace SCIRun {
   void CCAComponentModel::destroyComponentList()
   {
     SCIRun::Guard g1(&descriptions_lock);
-    for(DescriptionMap::iterator iter=descriptions.begin();
-	iter != descriptions.end(); iter++) {
-      delete iter->second;
-    }
     descriptions.clear();
   }
   
@@ -135,7 +131,7 @@ namespace SCIRun {
       pidl_cast<FrameworkPropertiesService::pointer>(framework->getFrameworkService("cca.FrameworkProperties"));
 
     if (service.isNull()) {
-      std::cerr << "Error: Cannot find framework properties" ;
+      std::cerr << "Error: Can not find framework properties\n" ;
       //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
     } else {
       properties = service->getProperties();
@@ -153,12 +149,12 @@ namespace SCIRun {
 	  iter != files.end(); iter++) {
 	std::string& file = *iter;
 	//std::cout << "CCA Component Model: Looking at file" << file << std::endl;
-	readComponentDescription(*item+"/"+file);
+	readComponentClassDescription(*item+"/"+file);
       }
     }
   }
   
-  void CCAComponentModel::readComponentDescription(const std::string& file)
+  void CCAComponentModel::readComponentClassDescription(const std::string& file)
   {
     // Instantiate the DOM parser.
     SCIRunErrorHandler handler;
@@ -216,10 +212,11 @@ namespace SCIRun {
 	//std::cout << "Component name = ->" << component_name << "<-" << std::endl;
 	
 	// Register this component
-	CCAComponentDescription* cd = new CCAComponentDescription(component_name, library_name );
+	CCAComponentClassDescription::pointer cd = 
+	  CCAComponentClassDescription::pointer(new CCAComponentClassDescription(component_name, library_name ));
 	
 	descriptions_lock.lock();
-	this->descriptions[cd->getType()] = cd;
+	this->descriptions[cd->getComponentClassName()] = cd;
 	descriptions_lock.unlock();
       }
     }
@@ -247,7 +244,7 @@ namespace SCIRun {
     }
     
     if(!handle) {
-      std::cerr << "Cannot load component " << type << std::endl;
+      std::cerr << "Can not load component " << type << std::endl;
       std::cerr << SOError() << std::endl;
       return ComponentInfo::pointer(0);
     }
@@ -260,7 +257,7 @@ namespace SCIRun {
     }
     void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
     if(!maker_v) {
-      std::cerr <<"Cannot load component " << type << std::endl;
+      std::cerr <<"Can not load component " << type << std::endl;
       std::cerr << SOError() << std::endl;
       return ComponentInfo::pointer(0);
     }

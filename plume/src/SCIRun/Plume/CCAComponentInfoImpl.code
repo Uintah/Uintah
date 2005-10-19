@@ -90,15 +90,24 @@ namespace SCIRun {
     
     typename PortMap::iterator iter = ports.find(name);
     if ( iter == ports.end() )
-      throw CCAException::create("Port already exist", sci::cca::PortNotDefined);
+      throw CCAException::create("Can not realease unknown port ["+name+"]");
     
-    // FIXME [yarden]: PortNotDefined is not an appropriate type here
     PortInfo::pointer port = (*iter).second;
     if ( port->getPortType() == Distributed::ProvidePort )
       throw CCAException::create("Cannot release a provides port", sci::cca::PortNotDefined);
 
     if ( !port->decrementUseCount())
-      throw CCAException::create("Port released without corresponding get", sci::cca::PortNotInUse);
+      throw CCAException::create("Port ["+name+"] released without corresponding get", sci::cca::PortNotInUse);
+
+    if ( !port->isConnected() ) {
+      // if it is a service then we can release the service
+      ServiceMap::iterator iter = services.find(name);
+      if ( iter != services.end() ) {
+	frameowork->releaseService(iter.second);
+	services.erase(iter);
+	services[name] = ServicePointer(0);
+      }
+    }
   }
 
   template<class Base>
@@ -114,6 +123,9 @@ namespace SCIRun {
 
     PortInfo *info = new PortInfo(name, type, properties, Distributed::UsePort);
     ports[name] = PortInfo::pointer(info);
+
+    if ( framework->isFrameworkService(type)) 
+      services[name] = ServicePointer(0);
   }
 
   template<class Base>
@@ -125,7 +137,18 @@ namespace SCIRun {
     typename PortMap::iterator port = ports.find(name);
     if ( port == ports.end() )
       throw CCAException::create("Port does not exist", sci::cca::PortNotDefined);
+
+    // FIXME [yarden]: is it enough to just disconnect ?
+    if (port->isConnected())
+      port->disconnect();
     ports.erase(port);
+
+    ServiceMap::iterator service = services.find(name);
+    if ( service != services.find(name) ) {
+      if ( !service.second.isNull() )
+	framework->releaseService( service.second );
+      services.erase(service);
+    }
   }
 
   template<class Base>
@@ -158,7 +181,7 @@ namespace SCIRun {
     
     typename PortMap::iterator port = ports.find(name);
     if ( port == ports.end() )
-      throw CCAException::create("Port does not exist", sci::cca::PortAlreadyDefined);
+      throw CCAException::create("Port ["+name+"] does not exist ", sci::cca::PortNotDefined);
     ports.erase(port);
   }
   
@@ -169,16 +192,38 @@ namespace SCIRun {
     Guard guard(&ports_lock);
     
     typename PortMap::iterator iter = ports.find(name);
-    if ( iter == ports.end() )
-      throw CCAException::create("Port does not exist", sci::cca::PortNotDefined);
+    if ( iter == ports.end() ) {
+      throw CCAException::create("Port ["+name+"] does not exist", sci::cca::PortNotDefined);
 
     PortInfo::pointer port = (*iter).second;
     if ( port->getPortType() == Distributed::ProvidePort)
       throw CCAException::create("Canot call getPort on a Provides port", sci::cca::BadPortName);
     
-    if ( !!port->isConnected()  )
-      throw CCAException::create("Port not connected", sci::cca::PortNotConnected);
+    if ( !port->isConnected() ) {
+      // check if this is a service
+      Guard guard(&service_lock);
+      SeriveMap::iterator iter = services.find(name);
 
+      if ( iter == services.end() ) {
+	// nope. it is not a service.
+	throw CCAException::create("Port ["+name+"] not connected", sci::cca::PortNotConnected);
+      }
+
+      // it is a service. 
+      
+      // if we did not ask for this service yet then get one
+      ServicePointer service = iter.second;
+      if (service->isNull()) {
+	service = framework->getFrameworkService(name);
+	services[name] = service;
+      }
+      
+      // get a port and connect it
+      PortInfo servicePort = service->getService();
+      port->connect(serviceInfo);
+    }
+
+    // port is connected
     port->incrementUseCount();
     return port->getPeer()->getPort();
   }
@@ -187,6 +232,7 @@ namespace SCIRun {
   sci::cca::Port::pointer 
   CCAComponentInfoImpl<Base>::getPortNonblocking(const std::string &name)
   {
+    // FIXME [yarden]: copy service treatment from above.
     sci::cca::Port::pointer Null(0);
 
     if ( !ports_lock.tryLock() ) return Null;
@@ -195,14 +241,14 @@ namespace SCIRun {
     
     typename PortMap::iterator iter = ports.find(name);
     if ( iter == ports.end() )
-      throw CCAException::create("Port does not exist", sci::cca::PortNotDefined);
+      throw CCAException::create("Port ["+name+"] does not exist", sci::cca::PortNotDefined);
 
     PortInfo::pointer port = iter->second;
     if ( port->getPortType() == Distributed::ProvidePort)
       throw CCAException::create("Canot call getPort on a Provides port", sci::cca::BadPortName);
     
     if ( !port->isConnected() )
-      throw CCAException::create("Canot call getPort on a Provides port", sci::cca::PortNotConnected);
+      throw CCAException::create("Port ["+name+"] not connection", sci::cca::PortNotConnected);
 
     port->incrementUseCount();
     return port->getPeer()->getPort();
@@ -231,7 +277,7 @@ namespace SCIRun {
     
     typename PortMap::iterator port = ports.find(name);
     if ( port == ports.end() )
-      throw CCAException::create("Port does not exist", sci::cca::PortNotDefined);
+      throw CCAException::create("Port ["+name+"] does not exist", sci::cca::PortNotDefined);
 
     return port->second->getProperties();
   }

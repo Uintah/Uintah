@@ -43,6 +43,7 @@
 
 #include <SCIRun/Distributed/DistributedFrameworkInternal.code>
 #include <SCIRun/Plume/CCAComponentInfoImpl.code>
+#include <SCIRun/Plume/UnknownCCAComponentClassFactory.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -52,6 +53,8 @@ namespace SCIRun {
     : DistributedFrameworkInternal<Base>(parent),
       cca(DistributedFramework::pointer(this))
   {
+    // register Unknown Component Factory
+    this->addComponentClassFactory( (new UnknownCCAComponentClassFactory(&cca))->getPointer() );
   }
   
   template<class Base>
@@ -71,15 +74,15 @@ namespace SCIRun {
 					 const std::string &type, 
 					 const sci::cca::TypeMap::pointer &properties)
   {
-    const std::string modelName = type.substr(0, type.find_last_of("."));
+    //const std::string modelName = type.substr(0, type.find_last_of("."));
     ComponentInfo::pointer info(0);
     try {
-      info = this->createInstance( name, modelName+".null", properties);
+      info = this->createInstance( name, type, properties);
     }
-    catch( const CCAException & ) {
+    catch( const CCAException::pointer & ) {
       // model does not exist or did not proivide a null factory. 
       // create a null one
-      info = this->createInstance( name, "sci.cca.NullComponennt", properties );
+      info = this->createInstance( name, "sci.cca.unknown", properties );
     }
     
     CCAComponentInfo::pointer ccaInfo = pidl_cast<CCAComponentInfo::pointer>(info);
@@ -95,6 +98,14 @@ namespace SCIRun {
   }
 
 
+  template<class Base>
+  sci::cca::AbstractFramework::pointer
+  PlumeFrameworkImpl<Base>::createEmptyFramework()
+  {
+    sci::cca::plume::PlumeFramework::pointer self(this);
+    PlumeFrameworkImpl<Base> *clone = new PlumeFrameworkImpl<Base>(self);
+    return sci::cca::plume::PlumeFramework::pointer(clone);
+  }
 } // SCIRun namespace
 
 #endif // CIRun_PlumeFrameworkImpl_code

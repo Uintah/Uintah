@@ -67,6 +67,11 @@ namespace SCIRun {
     properties->putString("url", framework->getURL().getString());
     getLogin();
     getSidlPaths();
+    portInfo = PortInfo::pointer( new PortInfo("properties", 
+					       "cca.FrameworkProperties", 
+					       framework->createTypeMap(),
+					       sci::cca::Port::pointer(this),
+					       Distributed::ProvidePort) );
   }
 
   template<class Base>
@@ -89,9 +94,9 @@ namespace SCIRun {
   }
   
   template<class Base>
-  sci::cca::Port::pointer FrameworkPropertiesServiceImpl<Base>::getService(const std::string& name)
+  PortInfo::pointer FrameworkPropertiesServiceImpl<Base>::getService(const std::string&)
   {
-    return sci::cca::Port::pointer(this);
+    return portInfo;
   }
 
   template<class Base>

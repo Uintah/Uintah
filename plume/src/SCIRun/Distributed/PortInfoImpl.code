@@ -41,8 +41,8 @@
 #ifndef SCIRun_PortInfoImpl_code
 #define SCIRun_PortInfoImpl_code
 
-//#include <SCIRun/Distributed/PortInfoImpl.h>
 #include <SCIRun/Distributed/TypeMap.h>
+#include <SCIRun/Distributed/CCAException.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -65,7 +65,7 @@ namespace SCIRun {
 				   const sci::cca::Port::pointer& port,
 				   Distributed::PortType portType)
     : name(name), type(type), properties(properties), 
-      portType(portType), port(port), useCount(0),
+      portType(portType), port(port),  useCount(0),
       lock("PortInfoImpl::connections lock")
   {
   }
@@ -201,9 +201,8 @@ namespace SCIRun {
   template<class Base> 
   Distributed::PortInfo::pointer PortInfoImpl<Base>::getPeer()
   {
-    // FIXME: should we check and throw exception if the above is not met ?
-    //     if ( getPortType == ProvidePort || connections.size() == 0 ) 
-    //       throw DistributedFrameworkException("invalid getPeer request");
+    if ( getPortType() == Distributed::ProvidePort || connections.size() == 0 ) 
+      throw CCAException::create("Port Not Connected");
     return connections[0];
   }
 
@@ -215,8 +214,10 @@ namespace SCIRun {
   
   template<class Base>
   bool PortInfoImpl<Base>::decrementUseCount() {
-    useCount--;
-    return useCount > 0;
+    if ( useCount == 0 ) 
+      return false;
+    --useCount;
+    return true;
   }
 } // end namespace SCIRun
 

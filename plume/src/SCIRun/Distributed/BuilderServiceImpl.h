@@ -71,7 +71,7 @@ namespace SCIRun {
     virtual ~BuilderServiceImpl();
   
     /** ? */
-    sci::cca::Port::pointer getService(const std::string& ); 
+    sci::cca::distributed::PortInfo::pointer getService(const std::string& ); 
 
     /* *****
      * implements BuilderService
@@ -200,7 +200,8 @@ namespace SCIRun {
 
   protected:
     DistributedFramework::internalPointer framework;
-    
+    sci::cca::distributed::PortInfo::pointer portInfo;
+
     BuilderServiceImpl(const DistributedFramework::internalPointer &framework);
 
   };

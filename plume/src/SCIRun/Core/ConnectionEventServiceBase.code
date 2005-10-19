@@ -1,0 +1,111 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+/*
+ *  ConnectionEventServiceBase.code: Baseementation of CCA ConnectionEventService for SCIRun
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2001
+ *
+ */
+
+#ifndef SCIRun_ConnectionEventServiceBase_code
+#define SCIRun_ConnectionEventServiceBase_code
+
+//#include <SCIRun/Core/ConnectionEventServiceBase.h>
+#include <SCIRun/Core/ServiceBase.code>
+
+#include <iostream>
+
+namespace SCIRun {
+
+  template<class Interface>
+  ConnectionEventServiceBase<Interface>::ConnectionEventServiceBase(const CoreFramework::internalPointer &framework)
+    : ServiceBase<Interface>(framework, "ConnectionEventService"),
+      listeners_lock("ConnectionEventService::listeners lock")
+  {
+  }
+  
+  template<class Interface>
+  ConnectionEventServiceBase<Interface>::~ConnectionEventServiceBase()
+  {
+    std::cerr << "EventService destroyed..." << std::endl;
+  }
+
+
+  template<class Interface>
+  Port::pointer 
+  ConnectionEventServiceBase<Interface>::getService(const std::string&) 
+  {
+    return Port::pointer(this);
+  }
+
+  template<class Interface>
+  void
+  ConnectionEventServiceBase<Interface>::addConnectionEventListener(Ports::EventType type,
+							       const Ports::ConnectionEventListener::pointer& eventListener)
+  {
+    Listener *listener = new Listener(type, eventListener);
+    {
+      SCIRun::Guard lock(&listeners_lock);
+      listeners.push_back(listener);
+    }
+  }
+  
+  template<class Interface>
+  void
+  ConnectionEventServiceBase<Interface>::removeConnectionEventListener(Ports::EventType type,
+								  const Ports::ConnectionEventListener::pointer& listener)
+  {
+    SCIRun::Guard lock(&listeners_lock);
+    for (unsigned i=0; i<listeners.size(); i++)
+      if ( listeners[i]->type == type && listeners[i]->listener == listener) {
+	for (i++; i<listeners.size(); i++)
+	  listeners[i-1] = listeners[i];
+	listeners.resize(i-1);
+      }
+  }
+#if 0
+  // FIXME: [yarden] why does this code not compiled ?
+  std::vector<Listener*>::iterator iter = listeners.begin();
+  for (std::vector<Listener*>::iterator iter = listeners.begin();
+       iter != listeners.end(); ++iter) {
+    if ((*iter)->type == type && (*iter)->listener == listener) {
+      delete *iter;
+    }
+    }
+  }
+#endif
+  
+} // end namespace SCIRun
+
+#endif // SCIRun_ConnectionEventServiceBase_code

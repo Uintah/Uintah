@@ -42,6 +42,7 @@
 #define SCIRun_CCAComponentClassDescriptionImpl_h
 
 #include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/Distributed/ComponentClassDescriptionImpl.h>
 #include <string>
 
 namespace SCIRun
@@ -62,7 +63,7 @@ namespace SCIRun
     CCAComponentClassDescriptionImpl( const std::string &type, const std::string &library);
     virtual ~CCAComponentClassDescriptionImpl();
 
-    std::string getLibrary() const;
+    virtual std::string getLibrary();
 
   private:
     std::string library;
