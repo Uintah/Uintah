@@ -9,12 +9,14 @@
 // #include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
-//using namespace std;
+// using namespace std;
 
 SelectableGroup::SelectableGroup(float secs)
   : Group(),
-    child(0), gui_child(0),
-    autoswitch(true), no_skip(false), autoswitch_secs(secs)
+    child(0), gui_child(0), internal_child(0),
+    autoswitch(true), no_skip(false),
+    repeat_last(1), min_child(0), max_child(0),
+    autoswitch_secs(secs)
 {
 }
 
@@ -67,7 +69,10 @@ void
 SelectableGroup::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
   Group::preprocess(maxradius, pp_offset, scratchsize);
-  if (objs.size() == 0) {
+  if (objs.size() != 0) {
+    // Set the max_child to be the last one
+    max_child = objs.size() - 1;
+  } else {
     gui_child = child = -1;
   }
 }
@@ -78,7 +83,8 @@ SelectableGroup::animate(double t, bool& changed)
   // This is the state when there are not objects to animate.
   if (objs.size() < 0 || child < 0) return;
 
-  //  cerr << "SelectableGroup::animate: gui_child = "<<gui_child<<", child = "<<child;
+//   cerr << "SelectableGroup::animate: gui_child = "<<gui_child<<", child = "<<child<<", internal_child = "<<internal_child;
+
   // If gui_child doesn't match child, take that and return.
   if (gui_child != child) {
     child = gui_child;
@@ -92,27 +98,39 @@ SelectableGroup::animate(double t, bool& changed)
   // it several times, we don't want inconsistencies.  Therefore we
   // will use child.  We will then overwrite whatever is in gui_child
   // with child, so any changes made during this block of code to
-  // gui_chage will be ignored.
+  // gui_child will be ignored.
 
   // Automatic cycling of child based on the clock passed in with t
   if (autoswitch) {
-    int old_child = child;
     int sec = (int)(t/autoswitch_secs);
-    int new_child = sec%objs.size();
-    // Should probably watch for changes and then pass back changed
-    if (new_child != old_child) {
+    int num_frames = max_child-min_child + repeat_last;
+    int new_internal_child = sec%num_frames + min_child;
+//     cerr << ", num_frames = "<<num_frames<<", new_internal_child = "<<new_internal_child;
+    if (new_internal_child != internal_child) {
       changed = true;
-      // child has changed, force it to be the next child
+      // child has changed, force it to be the next child in need be.
       if (no_skip) {
-	gui_child = child = (old_child+1)%objs.size();
+        internal_child++;
       } else {
-        gui_child = child = new_child;
+        internal_child = new_internal_child;
+      }
+      // Now update gui_child and child
+      if (internal_child > max_child) {
+        // We are repeating, but should we loop yet
+        if (internal_child >= max_child+repeat_last) {
+          gui_child = child = internal_child = min_child;
+        } else {
+          gui_child = child = max_child;
+        }
+      } else {
+        // else do nothing, because we are fine.
+        gui_child = child = internal_child;
       }
     }
   }
 
   objs[child]->animate(t, changed);
-  //  cerr << " --> "<<gui_child << ", "<<child<<"\n";
+//   cerr << " --> "<<gui_child << ", "<<child<<", "<<internal_child<<"\n";
 }
 
 void
@@ -136,15 +154,42 @@ SelectableGroup::getCurrentChild()
 
 void
 SelectableGroup::SetChild(int i) {
-  //  cerr << "SelectableGroup::SetChild: gui_child = "<<gui_child;
-  if (i < objs.size() && i >= 0)
-    gui_child = i;
-  //  cerr << " --> "<<gui_child << "\n";
+//   cerr << "SelectableGroup::SetChild: i = "<<i<<", gui_child = "<<gui_child<<", internal_child = "<<internal_child;
+  if (i < min_child) {
+    gui_child = internal_child = min_child;
+  } else if (i > max_child) {
+    // In the repeating phase.  Figure out where.
+    if (i >= max_child+repeat_last) {
+      // Past repeating phase, so clamp
+      internal_child = max_child+repeat_last-1;
+    } else {
+      // Still in repeating phase
+      internal_child = i;
+    }
+    gui_child = max_child;
+  } else {
+    // Simple assignment
+    gui_child = internal_child = i;
+  }
+//   cerr << " --> "<<gui_child <<", "<<internal_child<<"\n";
 }
 
 void
 SelectableGroup::nextChild() {
-  //  cerr << "SelectableGroup::nextChild: gui_child = "<<gui_child;
-  gui_child = (gui_child+1) % objs.size();
-  //  cerr << " --> "<<gui_child << "\n";
+//   cerr << "SelectableGroup::nextChild: gui_child = "<<gui_child<<", internal_child = "<<internal_child;
+  // Increment internal_child.
+  internal_child++;
+  // Now check to see where internal_child ended up.
+  if (internal_child > max_child) {
+    // We are repeating, but should we loop yet
+    if (internal_child >= max_child+repeat_last) {
+      gui_child = internal_child = min_child;
+    } else {
+      gui_child = max_child;
+    }
+  } else {
+    // else just assign, because we are fine.
+    gui_child = internal_child;
+  }
+//   cerr << " --> "<<gui_child <<", "<<internal_child<<"\n";
 }

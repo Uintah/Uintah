@@ -396,6 +396,9 @@ private:
   static void SGNoSkipCB( int id );
   static void SGNextItemCB( int id );
   static void SGCurrentFrameCB( int id );
+  static void SGMinChildCB( int id );
+  static void SGMaxChildCB( int id );
+  static void SGRepeatLastCB( int id );
   static void SISpinCB( int id );
   static void SIIncMagCB( int id );
   static void SIDecMagCB( int id );
