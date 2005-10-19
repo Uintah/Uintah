@@ -652,17 +652,14 @@ template <class Basis>
 void
 CurveMesh<Basis>::io(Piostream& stream)
 {
-  /*int version=*/stream.begin_class(type_name(), CURVE_MESH_VERSION);
+  int version = stream.begin_class(type_name(), CURVE_MESH_VERSION);
 
   Mesh::io(stream);
 
   // IO data members, in order
   Pio(stream, nodes_);
   Pio(stream, edges_);
-  if (CURVE_MESH_VERSION < 2) {
-    // assume linear basis...
-    // has been default constructed already.
-  } else {
+  if (version >= 2) {
     basis_.io(stream);
   }
   stream.end_class();

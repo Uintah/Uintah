@@ -1067,7 +1067,12 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	    mesh->interpolate(pnts[0], c0, *eiter);
 	    mesh->interpolate(pnts[1], c1, *eiter);
 	    mesh->interpolate(pnts[2], c2, *eiter);
-	  
+
+#if defined(DEBUG_PRINT)
+	    cout << "p0: " << pnts[0] << std::endl;
+	    cout << "p1: " << pnts[1] << std::endl;
+	    cout << "p2: " << pnts[2] << std::endl;
+#endif	  
 	    //FIX_ME need to interp normals in meshes that have normals
 	  
 	    // get the field variables values at the approx (if they exist)
