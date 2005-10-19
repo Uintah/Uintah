@@ -278,6 +278,9 @@ PropertyManager::clear_transient()
 void
 PropertyManager::io(Piostream &stream)
 {
+  bool bc = stream.backwards_compat_id();
+  stream.set_backwards_compat_id(false);
+
   const int version =
     stream.begin_class("PropertyManager", PROPERTYMANAGER_VERSION);
   if ( stream.writing() )
@@ -318,6 +321,7 @@ PropertyManager::io(Piostream &stream)
   }
 
   stream.end_class();
+  stream.set_backwards_compat_id(bc);
 }
 
 

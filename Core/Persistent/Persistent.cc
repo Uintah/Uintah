@@ -415,6 +415,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	begin_cheap_delim();
 	int hd;
 	int p_id;
+	delete data;
 	data = 0;
 	emit_pointer(hd, p_id);
 	if (hd) peek_class();
@@ -428,6 +429,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	  begin_cheap_delim();
 	  int hd;
 	  int p_id;
+	  delete data;
 	  data = 0;
 	  emit_pointer(hd, p_id);
 	  if (hd) peek_class();
