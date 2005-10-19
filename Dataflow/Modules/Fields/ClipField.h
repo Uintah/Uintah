@@ -134,7 +134,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
+  FIELD *ofield = scinew FIELD(clipped);
   ofield->copy_properties(fieldh.get_rep());
 
   if (fieldh->basis_order() == 1)
@@ -152,7 +152,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
     }
   }
   else if (fieldh->order_type_description()->get_name() ==
-	   get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name())
+	   ofield->order_type_description()->get_name())
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
     for (unsigned int i=0; i < elemmap.size(); i++)
@@ -258,7 +258,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
+  FIELD *ofield = scinew FIELD(clipped);
   ofield->copy_properties(fieldh.get_rep());
 
   if (fieldh->basis_order() == 1)
@@ -276,7 +276,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
     }
   }
   else if (fieldh->order_type_description()->get_name() ==
-	   get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name())
+	   ofield->order_type_description()->get_name())
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
     for (unsigned int i=0; i < elemmap.size(); i++)
