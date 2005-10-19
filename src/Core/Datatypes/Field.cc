@@ -83,13 +83,8 @@ Field::io(Piostream& stream)
       return;
     }
   }
-  bool bc = false;
-  if (stream.backwards_compat_id()) {
-    bc = true;
-    stream.set_backwards_compat_id(false);
-  }
+
   PropertyManager::io(stream);
-  stream.set_backwards_compat_id(bc);
   stream.end_class();
 }
 
