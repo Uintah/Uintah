@@ -368,6 +368,8 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return face_type_description(); }
 
   // returns a QuadSurfMesh
   static Persistent *maker() { return new QuadSurfMesh<Basis>(); }
@@ -1206,7 +1208,7 @@ QuadSurfMesh<Basis>::add_quad(const Point &p0, const Point &p1,
 }
 
 
-#define QUADSURFMESH_VERSION 2
+#define QUADSURFMESH_VERSION 3
 template <class Basis>
 void
 QuadSurfMesh<Basis>::io(Piostream &stream)
@@ -1220,6 +1222,10 @@ QuadSurfMesh<Basis>::io(Piostream &stream)
   if (version == 1)
   {
     Pio(stream, edge_neighbors_);
+  }
+
+  if (version >= 3) {
+    basis_.io(stream);
   }
 
   stream.end_class();

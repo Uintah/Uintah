@@ -3511,7 +3511,7 @@ TetVolMesh<Basis>::mod_tet(typename Cell::index_type cell,
 }
 
 
-#define TETVOLMESH_VERSION 2
+#define TETVOLMESH_VERSION 3
 
 template <class Basis>
 void
@@ -3535,6 +3535,9 @@ TetVolMesh<Basis>::io(Piostream &stream)
   while(iter != endit) {
     orient(*iter);
     ++iter;
+  }
+  if (version >= 3) {
+    basis_.io(stream);
   }
 
   stream.end_class();

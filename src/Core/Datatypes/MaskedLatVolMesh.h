@@ -972,6 +972,8 @@ public:
   static const TypeDescription* face_type_description();
   static const TypeDescription* edge_type_description();
   static const TypeDescription* node_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return cell_type_description(); }
   static const TypeDescription* cell_index_type_description();
   static const TypeDescription* node_index_type_description();
 

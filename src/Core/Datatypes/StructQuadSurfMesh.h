@@ -206,6 +206,8 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return face_type_description(); }
 
   // returns a StructQuadSurfMesh
   static Persistent *maker() { return new StructQuadSurfMesh<Basis>(); }

@@ -277,6 +277,8 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return node_type_description(); }
 
   // returns a PointCloudMesh
   static Persistent *maker() { return new PointCloudMesh(); }
@@ -384,18 +386,22 @@ PointCloudMesh<Basis>::add_point(const Point &p)
   return points_.size() - 1;
 }
 
-#define PointCloudFieldMESH_VERSION 1
+#define PointCloudFieldMESH_VERSION 2
 
 template <class Basis>
 void
 PointCloudMesh<Basis>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), PointCloudFieldMESH_VERSION);
+  int version = stream.begin_class(type_name(-1), PointCloudFieldMESH_VERSION);
 
   Mesh::io(stream);
 
   // IO data members, in order
   Pio(stream,points_);
+
+  if (version >= 2) {
+    basis_.io(stream);
+  }
 
   stream.end_class();
 }

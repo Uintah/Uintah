@@ -768,6 +768,8 @@ public:
   static const TypeDescription* face_type_description();
   static const TypeDescription* edge_type_description();
   static const TypeDescription* node_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return cell_type_description(); }
   static const TypeDescription* cell_index_type_description();
   static const TypeDescription* node_index_type_description();
 
@@ -1819,7 +1821,7 @@ find_type_name(typename LatVolMesh<Basis>::CellIndex *)
   return name;
 }
 
-#define LATVOLMESH_VERSION 3
+#define LATVOLMESH_VERSION 4
 
 template <class Basis>
 void
@@ -1851,6 +1853,10 @@ LatVolMesh<Basis>::io(Piostream& stream)
   else
   {
     Pio(stream, transform_);
+  }
+  
+  if (version >= 4) {
+    basis_.io(stream);
   }
 
   stream.end_class();

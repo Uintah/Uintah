@@ -404,6 +404,8 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return face_type_description(); }
 
   // returns a TriSurfMesh
   static Persistent *maker() { return new TriSurfMesh<Basis>(); }
@@ -1846,19 +1848,23 @@ TriSurfMesh<Basis>::add_triangle(const Point &p0, const Point &p1, const Point &
 }
 
 
-#define TRISURFMESH_VERSION 1
+#define TRISURFMESH_VERSION 2
 
 template <class Basis>
 void
 TriSurfMesh<Basis>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), TRISURFMESH_VERSION);
+  int version = stream.begin_class(type_name(-1), TRISURFMESH_VERSION);
   
   Mesh::io(stream);
 
   Pio(stream, points_);
   Pio(stream, faces_);
   Pio(stream, edge_neighbors_);
+
+  if (version >= 2) {
+    basis_.io(stream);
+  }
 
   stream.end_class();
 
