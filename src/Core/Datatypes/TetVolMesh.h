@@ -784,31 +784,9 @@ public:
     // Needs to match UnitEdges in Basis/TetLinearLgn.cc 
     // compare get_nodes order to the basis order
     // map mesh order to basis order
-    int basis_idx = 0;
-    switch (ei % 6)
-    {
-    case 0: //0,1
-      basis_idx = 0;
-      break;
-    case 1: //0,2
-      basis_idx = 2;
-      break;
-    case 2: //0,3
-      basis_idx = 3;
-      break;
-    case 3: //1,2
-      basis_idx = 1;
-      break;
-    case 4: //2,3
-      basis_idx = 5;
-      break;
-    default:
-    case 5: //1,3
-      basis_idx = 4;
-    }
-    coords.resize(3);
-    coords.clear();
-    basis_.approx_edge(basis_idx, div_per_unit, coords); 
+    
+    int basis_idx[] = {0, 2, 3, 1, 5, 4};
+    basis_.approx_edge(basis_idx[ei%6], div_per_unit, coords); 
   }
 
   //! Generate the list of points that make up a sufficiently accurate
