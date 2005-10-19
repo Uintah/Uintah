@@ -205,7 +205,8 @@ template <class T>
 void
 TriCubicHmt<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), TRICUBICHMT_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     TRICUBICHMT_VERSION);
   Pio(stream, derivs_);
   Pio(stream, nodes_);
   stream.end_class();

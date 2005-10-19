@@ -209,7 +209,8 @@ template <class T>
 void
 TetQuadraticLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), TETQUADRATICLGN_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     TETQUADRATICLGN_VERSION);
   Pio(stream, nodes_);
   stream.end_class();
 }

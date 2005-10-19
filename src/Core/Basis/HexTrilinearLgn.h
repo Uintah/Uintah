@@ -422,7 +422,8 @@ template <class T>
 void
 HexTrilinearLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), HEX_TRILINEAR_LGN_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     HEX_TRILINEAR_LGN_VERSION);
   stream.end_class();
 }
     

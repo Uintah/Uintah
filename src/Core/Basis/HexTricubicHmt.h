@@ -488,7 +488,8 @@ template <class T>
 void
 HexTricubicHmt<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), HEXTRICUBICHMT_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     HEXTRICUBICHMT_VERSION);
   Pio(stream, derivs_);
   stream.end_class();
 }

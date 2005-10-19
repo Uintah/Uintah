@@ -356,7 +356,8 @@ template <class T>
 void
 QuadBilinearLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), QUADBILINEARLGN_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     QUADBILINEARLGN_VERSION);
   stream.end_class();
 }
 

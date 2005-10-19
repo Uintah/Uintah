@@ -243,7 +243,8 @@ template <class T>
 void
 PrismQuadraticLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), PRISMQUADRATICLGN_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     PRISMQUADRATICLGN_VERSION);
   Pio(stream, nodes_);
   stream.end_class();
 }

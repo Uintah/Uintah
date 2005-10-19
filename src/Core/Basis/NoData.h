@@ -138,7 +138,8 @@ template <class T>
 void
 NoDataBasis<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), NODATABASIS_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     NODATABASIS_VERSION);
   stream.end_class();
 }
 
