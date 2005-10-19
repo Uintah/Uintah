@@ -2566,7 +2566,7 @@ get_type_description(PrismVolMesh<Basis> *)
     const TypeDescription *sub = SCIRun::get_type_description((Basis*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription(PrismVolMesh<Basis>::type_name(0), subs,
+    td = scinew TypeDescription("PrismVolMesh", subs,
 				string(__FILE__),
 				"SCIRun", 
 				TypeDescription::MESH_E);
