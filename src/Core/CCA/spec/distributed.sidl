@@ -58,8 +58,8 @@ package sci {
       }
 
       package internal {
-	interface Service extends ComponentInfo {
-	  Port getService(in string name);
+	interface ServiceInfo extends ComponentInfo {
+	  PortInfo getService(in string name);
 	}
       }
       
@@ -205,6 +205,7 @@ package sci {
 	  void disconnect(in ConnectionID);
 
 	  // services
+	  bool isFrameworkService(in string);
 	  Service getFrameworkService(in string);
 	  void releaseFrameworkService(in Service);
 

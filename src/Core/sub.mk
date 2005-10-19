@@ -33,9 +33,10 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Core
 
+
 SUBDIRS := \
-	$(SRCDIR)/Algorithms \
 	$(SRCDIR)/Bundle \
+	$(SRCDIR)/Algorithms \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Exceptions \

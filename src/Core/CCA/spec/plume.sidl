@@ -38,9 +38,15 @@ package sci {
 	extends distributed.ComponentInfo, Services
       {
       }
-	
+
+      interface CCAComponentClassDescription
+	extends ComponentClassDescription
+      {
+	string getLibrary();
+      }
+
       interface PlumeFramework 
-	extends distributed.DistributedFramework
+	extends distributed.internal.DistributedFrameworkInternal
       {
       }
 
