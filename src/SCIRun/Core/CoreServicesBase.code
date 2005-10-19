@@ -1,0 +1,261 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+/*
+ *  CoreServicesBase.code: 
+ *
+ *  Written by:
+ *   Yarden Livnat
+ *   SCI Institute
+ *   University of Utah
+ *   Sept 2005
+ *
+ */
+
+#ifndef SCIRun_CoreServicesBase_code
+#define SCIRun_CoreServicesBase_code
+
+#include <SCIRun/Core/CCAException.h>
+#include <SCIRun/Core/TypeMapImpl.h>
+#include <SCIRun/Core/PortInfoImpl.h>
+#include <SCIRun/Core/ComponentIDImpl.h>
+
+#include <SCIRun/Core/ComponentInfoBase.code>
+#include <Core/Thread/Guard.h>
+
+
+namespace SCIRun {
+  
+  /**
+   * \class CCAComponentInfo
+   *
+   */ 
+  template<class Interface>
+  CoreServicesBase<Interface>::CoreServicesBase(const CoreFramework::pointer &framework,
+						const std::string& instanceName,
+						const std::string& className,
+						const TypeMap::pointer& properties,
+						const Component::pointer& component)
+    : ComponentInfoBase<Interface>(framework, instanceName, className, properties, component )
+  {
+  }
+  
+  template<class Interface>
+  CoreServicesBase<Interface>::~CoreServicesBase() 
+  {
+  }
+
+  // from cca.Services
+  template<class Interface>
+  void CoreServicesBase<Interface>::releasePort(const std::string &name)
+  {
+    Guard guard(&ports_lock);
+    
+    typename PortMap::iterator iter = ports.find(name);
+    if ( iter == ports.end() )
+      throw CCAException::create("Can not realease unknown port ["+name+"]");
+    
+    PortInfo::pointer port = (*iter).second;
+    if ( port->getPortType() == ProvidePort )
+      throw CCAException::create("Cannot release a provides port", PortNotDefined);
+
+    if ( !port->decrementUseCount())
+      throw CCAException::create("Port ["+name+"] released without corresponding get", PortNotInUse);
+
+    if ( !port->isConnected() ) {
+      ServicePortMap::iterator iter = servicePorts.find(name);
+      if ( iter != servicePorts.end() ) {
+	this->framework->releaseFrameworkService(iter->second);
+	servicePorts.erase(iter);
+      }
+    }
+  }
+
+  template<class Interface>
+  void
+  CoreServicesBase<Interface>::registerUsesPort(const std::string &name, 
+						const std::string &type, 
+						const TypeMap::pointer &properties)
+  {
+    Guard guard(&ports_lock);
+    
+    if ( ports.find(name) != ports.end() )
+      throw CCAException::create("Port already exist", PortAlreadyDefined);
+
+    ports[name] = PortInfo::pointer(  new PortInfoImpl(name, type, properties, UsePort) );
+  }
+
+  template<class Interface>
+  void
+  CoreServicesBase<Interface>::unregisterUsesPort(const std::string &name)
+  {
+    Guard guard(&ports_lock);
+    
+    typename PortMap::iterator iter = ports.find(name);
+    if ( iter == ports.end() )
+      throw CCAException::create("Port does not exist", PortNotDefined);
+
+    if (iter->second->isConnected())
+      throw CCAException::create("Can not release port ["+name+"]: port in use");
+
+    ports.erase(iter);
+  }
+
+  template<class Interface>
+  void
+  CoreServicesBase<Interface>::addProvidesPort(const Port::pointer &port, 
+					       const std::string &name, 
+					       const std::string &type, 
+					       const TypeMap::pointer &propertied)
+  {
+    Guard guard(&ports_lock);
+
+    if ( ports.find(name) != ports.end() )
+      throw CCAException::create("Port already exist", PortAlreadyDefined);
+
+    ports[name] = PortInfo::pointer( new PortInfoImpl(name, type, propertied, port, ProvidePort) );
+  }
+
+  template<class Interface>
+  void
+  CoreServicesBase<Interface>::removeProvidesPort(const std::string &name)
+  {
+    Guard guard(&ports_lock);
+    
+    typename PortMap::iterator port = ports.find(name);
+    if ( port == ports.end() )
+      throw CCAException::create("Port ["+name+"] does not exist ", PortNotDefined);
+
+    // FIXME [yarden]: we should have a notion of a provided port connection!
+    ports.erase(port);
+  }
+
+  template<class Interface>
+  void
+  CoreServicesBase<Interface>::registerForRelease( const ComponentRelease::pointer &)
+  {
+    throw CCAException::create("registerForRelase::not implemented");
+  }
+
+  
+  template<class Interface>
+  Port::pointer   
+  CoreServicesBase<Interface>::getPort(const std::string &name)
+  {
+    Guard guard(&ports_lock);
+    
+    typename PortMap::iterator iter = ports.find(name);
+    if ( iter == ports.end() ) 
+      throw CCAException::create("Port ["+name+"] does not exist", PortNotDefined);
+
+    PortInfo::pointer port = (*iter).second;
+    if ( port->getPortType() == ProvidePort)
+      throw CCAException::create("Canot call getPort on a Provides port", BadPortName);
+    
+    if ( !port->isConnected() ) {
+      // check if this is a service
+      if (!this->framework->isFrameworkService(name)) 
+	throw CCAException::create("Port ["+name+"] not connected", PortNotConnected);
+
+      // ask for the service: the framework will also make the connection
+      ServiceInfo::pointer service = this->framework->getFrameworkService(name, port, ComponentInfo::pointer(this) );
+      servicePorts[name] = service;
+    }
+
+    // port is connected
+    port->incrementUseCount();
+    return port->getPeer()->getPort();
+  }
+
+  template<class Interface>
+  Port::pointer 
+  CoreServicesBase<Interface>::getPortNonblocking(const std::string &name)
+  {
+    // FIXME [yarden]: copy service treatment from above.
+    throw CCAException::create("need to update based on getPort()");
+
+    Port::pointer Null(0);
+
+    if ( !ports_lock.tryLock() ) return Null;
+    
+    Guard guard(&ports_lock, Guard::AlreadyLocked);
+    
+    typename PortMap::iterator iter = ports.find(name);
+    if ( iter == ports.end() )
+      throw CCAException::create("Port ["+name+"] does not exist", PortNotDefined);
+
+    PortInfo::pointer port = iter->second;
+    if ( port->getPortType() == ProvidePort)
+      throw CCAException::create("Canot call getPort on a Provides port", BadPortName);
+    
+    if ( !port->isConnected() )
+      throw CCAException::create("Port ["+name+"] not connection", PortNotConnected);
+
+    port->incrementUseCount();
+    return port->getPeer()->getPort();
+  }
+
+  template<class Interface>
+  TypeMap::pointer 
+  CoreServicesBase<Interface>::createTypeMap()
+  {
+    TypeMap::pointer properties(new TypeMapImpl);
+    // FIXME [yarden] from SCIRUn code:
+    // It is not clear why we need addReference here.
+    // But removing it can cause random crash
+    // when creating remote parallel components
+    // TODO: possible memory leak?
+    //properties->addReference();
+    
+    return properties;
+  }
+
+  template<class Interface>
+  TypeMap::pointer
+  CoreServicesBase<Interface>::getPortProperties(const std::string &name)
+  {
+    Guard guard(&ports_lock);
+    
+    typename PortMap::iterator port = ports.find(name);
+    if ( port == ports.end() )
+      throw CCAException::create("Port ["+name+"] does not exist", PortNotDefined);
+
+    return port->second->getProperties();
+  }
+
+  template<class Interface>
+  ComponentID::pointer 
+  CoreServicesBase<Interface>::getComponentID()
+  {
+    return ComponentID::pointer(this);
+  }
+  
+} // end namespace SCIRun
+
+#endif

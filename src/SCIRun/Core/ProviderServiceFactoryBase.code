@@ -28,7 +28,7 @@
 
 
 /*
- *  SingletonServiceInfoBase.h: 
+ *  ProviderServiceFactoryBase.code: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,51 +38,53 @@
  *
  */
 
-#ifndef SCIRun_Core_SingletonServiceFactoryBase_h
-#define SCIRun_Core_SingletonServiceFactoryBase_h
-
-#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
+#include <SCIRun/Core/PortInfoImpl.h>
 
 namespace SCIRun {
   
   using namespace sci::cca;
   using namespace sci::cca::core;
   
-  /**
-   * \class SingletonServiceFactoryBase
-   *
-   */
-  
-  template<class Service, class Interface>
-  class SingletonServiceFactoryBase : public Interface
-  {
-  public:
-    typedef ServiceFactory::pointer pointer;
-    
-    SingletonServiceFactoryBase(const CoreFramework::pointer &framework,
-				const std::string& serviceName);
-    virtual ~SingletonServiceFactoryBase();
+  template<class Interface>
+  ProviderServiceFactoryBase<Interface>::ProviderServiceFactoryBase(const CoreFramework::pointer &framework,
+								    const std::string &serviceName,
+								    const ServiceProvider::pointer &serviceProvider,
+								    const ComponentInfo::pointer &providerComponentInfo)
+    : serviceProvider(serviceProvider),
+      name(serviceName),
+      providerComponentInfo(providerComponentInfo)
+  {}
+
+  template<class Interface>
+  ProviderServiceFactoryBase<Interface>::~ProviderServiceFactoryBase()
+  {}
     
     /*
-     * sci.cca.core.SingletonServiceFactory interface
+     * sci.cca.core.ProviderServiceFactory interface
      */
-    
-    virtual std::string getName() { return serviceName; }
-    virtual PortInfo::pointer getService(const std::string &serviceName);
-    virtual void releaseService(const std::string &portName);
+  
 
-  protected:
-    CoreFramework::pointer framework;
-    std::string serviceName;
-    PortInfo::pointer service;
-    int uses;
-    Mutex lock;
+  template<class Interface>
+  PortInfo::pointer ProviderServiceFactoryBase<Interface>::getService(const std::string &portType, const ComponentInfo::pointer &)
+  {
+    // ask the provider to create the service
+    // the provider create a new 'providedPort', which in turns is added to its ComponentInfo
+    // the provider returns the name of that new port.
+    std::string servicePortName = serviceProvider->createService(portType);
 
-    // prevent using these directly
-    SingletonServiceFactoryBase(const SingletonServiceFactoryBase&);
-    SingletonServiceFactoryBase& operator=(const SingletonServiceFactoryBase&);
-  };
+    // get the PortInfo from the provider ComponentInfo
+    PortInfo::pointer servicePort = providerComponentInfo->getPortInfo(servicePortName);
+
+    return servicePort;
+  }
+
+
+  template<class Interface>
+  void ProviderServiceFactoryBase<Interface>::releaseService(const std::string &servicePortName)
+  {
+    serviceProvider->destroyService(servicePortName);
+  }
   
 } // end namespace SCIRun
 
-#endif

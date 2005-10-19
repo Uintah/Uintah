@@ -53,7 +53,7 @@ namespace SCIRun {
     typedef ComponentClassFactory::pointer pointer;
     
     ComponentClassFactoryBase(const ComponentClassDescription::pointer &desc) : desc(desc) {}
-    virtual ~ComponentClassFactoryBase();
+    virtual ~ComponentClassFactoryBase() {}
 
     virtual std::string getClassName() { return desc->getComponentClassName(); }
 

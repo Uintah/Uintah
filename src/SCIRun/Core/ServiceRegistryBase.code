@@ -28,25 +28,57 @@
 
 
 /*
- *  ComponentDescription.cc: 
+ *  ServiceRegistryBase.code
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
  *   Sept 2005
  *
  */
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-//#include <SCIRun/Core/ComponentClassDescriptionBase.code>
+#ifndef SCIRun_Core_ServiceRegistryBase_code
+#define SCIRun_Core_ServiceRegistryBase_code
+
+#include <SCIRun/Core/ProviderServiceFactoryImpl.h>
+#include <SCIRun/Core/FixedPortServiceFactoryImpl.h>
 
 namespace SCIRun {
   
-  ComponentClassDescriptionImpl::ComponentClassDescriptionImpl(const std::string &type)
-    : ComponentClassDescriptionBase<ComponentClassDescription>(type)
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+  
+  /**
+   * \class ServiceRegistryBase
+   *
+   */
+  
+  template<class Interface>
+  ServiceRegistryBase<Interface>::ServiceRegistryBase(const CoreFramework::pointer &framework )
+    : framework(framework)
+  {}
+  
+  template<class Interface>
+  ServiceRegistryBase<Interface>::~ServiceRegistryBase()
   {}
 
-  ComponentClassDescriptionImpl::~ComponentClassDescriptionImpl() {}
-}
+  
+  template<class Interface>
+  bool
+  ServiceRegistryBase<Interface>::addService(const std::string &serviceType, const ServiceProvider::pointer &portProvider)
+  {
+    ServiceFactory::pointer factory( new ProviderServiceFactoryImpl( framework, serviceType, portProvider));
+    return framework->addFrameworkServiceFactory(factory);
+  }
+
+  template<class Interface>
+  bool
+  ServiceRegistryBase<Interface>::addSingletonService( const std::string &serviceType, const Port::pointer &server)
+  {
+    ServiceFactory::pointer factory( new FixedPortServiceFactoryImpl( framework, serviceType, server));
+    return framework->addFrameworkServiceFactory(factory);
+  }
+  
+} // end namespace SCIRun
+

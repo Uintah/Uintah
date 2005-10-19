@@ -28,25 +28,37 @@
 
 
 /*
- *  ComponentDescription.cc: 
+ *  UnknownCCAClassFactory.h: 
  *
  *  Written by:
  *   Yarden Livant
  *   SCI Institute
  *   University of Utah
- *   Sept 2005
+ *   Oct 2005
  *
  */
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-//#include <SCIRun/Core/ComponentClassDescriptionBase.code>
+#ifndef SCIRun_UnknownComponentClassFactory_h
+#define SCIRun_UnknownComponentClassFactory_h
+
+#include <SCIRun/Core/ComponentClassFactoryBase.h>
 
 namespace SCIRun {
-  
-  ComponentClassDescriptionImpl::ComponentClassDescriptionImpl(const std::string &type)
-    : ComponentClassDescriptionBase<ComponentClassDescription>(type)
-  {}
 
-  ComponentClassDescriptionImpl::~ComponentClassDescriptionImpl() {}
+  class UnknownComponentClassFactory : public ComponentClassFactoryBase<ComponentClassFactory> 
+  {
+  public:
+    typedef ComponentClassFactory::pointer pointer;
+
+    UnknownComponentClassFactory();
+
+    virtual ~UnknownComponentClassFactory();
+    
+    virtual ComponentInfo::pointer create( const CoreFramework::pointer &framework,
+					   const std::string &name,
+					   const sci::cca::TypeMap::pointer &);
+  };
+
 }
+
+#endif

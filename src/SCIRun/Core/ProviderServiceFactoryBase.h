@@ -28,25 +28,56 @@
 
 
 /*
- *  ComponentDescription.cc: 
+ *  ProviderServiceInfoBase.h: 
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
  *   Sept 2005
  *
  */
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-//#include <SCIRun/Core/ComponentClassDescriptionBase.code>
+#ifndef SCIRun_Core_ProviderServiceFactoryBase_h
+#define SCIRun_Core_ProviderServiceFactoryBase_h
 
 namespace SCIRun {
   
-  ComponentClassDescriptionImpl::ComponentClassDescriptionImpl(const std::string &type)
-    : ComponentClassDescriptionBase<ComponentClassDescription>(type)
-  {}
+  using namespace sci::cca;
+  using namespace sci::cca::ports;
+  using namespace sci::cca::core;
+  
+  /**
+   * \class ProviderServiceFactoryBase
+   *
+   */
+  
+  template<class Interface>
+  class ProviderServiceFactoryBase : public Interface
+  {
+  public:
+    typedef ServiceFactory::pointer pointer;
+    
+    ProviderServiceFactoryBase(const CoreFramework::pointer &framework,
+			       const std::string& serviceName,
+			       const ServiceProvider::pointer &portProvider,
+			       const ComponentInfo::pointer &providerComponentInfo);
+    virtual ~ProviderServiceFactoryBase();
+    
+    /*
+     * sci.cca.core.ProviderServiceFactory interface
+     */
+    
+    virtual std::string getName() { return name; }
+    virtual PortInfo::pointer getService(const std::string &serviceName, const ComponentInfo::pointer &requester);
+    virtual void releaseService(const std::string &portName);
 
-  ComponentClassDescriptionImpl::~ComponentClassDescriptionImpl() {}
-}
+  protected:
+    ServiceProvider::pointer serviceProvider;
+    std::string name;
+    ComponentInfo::pointer providerComponentInfo;
+  };
+  
+} // end namespace SCIRun
+
+#endif

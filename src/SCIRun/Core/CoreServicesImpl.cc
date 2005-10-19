@@ -28,10 +28,10 @@
 
 
 /*
- *  ComponentDescription.cc: 
+ *  CoreServicesImpl.cc: 
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
  *   Sept 2005
@@ -39,14 +39,23 @@
  */
 
 #include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-//#include <SCIRun/Core/ComponentClassDescriptionBase.code>
+#include <SCIRun/Core/CoreServicesImpl.h>
+#include <SCIRun/Core/CoreServicesBase.code>
 
 namespace SCIRun {
   
-  ComponentClassDescriptionImpl::ComponentClassDescriptionImpl(const std::string &type)
-    : ComponentClassDescriptionBase<ComponentClassDescription>(type)
-  {}
+  using namespace sci::cca;
+  using namespace sci::cca::core;
 
-  ComponentClassDescriptionImpl::~ComponentClassDescriptionImpl() {}
-}
+  CoreServicesImpl::CoreServicesImpl(const CoreFramework::pointer &framework,
+				     const std::string& instanceName,
+				     const std::string& className,
+				     const TypeMap::pointer& properties,
+				     const Component::pointer& component)
+    : CoreServicesBase<CoreServices>(framework, instanceName, className, properties, component)
+  {}
+  
+  CoreServicesImpl::~CoreServicesImpl() {}
+  
+} // end namespace SCIRun
+

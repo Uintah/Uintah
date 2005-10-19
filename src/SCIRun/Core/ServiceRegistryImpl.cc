@@ -28,25 +28,31 @@
 
 
 /*
- *  ComponentDescription.cc: 
+ *  ServiceRegistryImpl.cc: 
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
  *   Sept 2005
  *
  */
 
+
 #include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-//#include <SCIRun/Core/ComponentClassDescriptionBase.code>
+#include <SCIRun/Core/ServiceRegistryImpl.h>
+#include <SCIRun/Core/ServiceRegistryBase.code>
 
 namespace SCIRun {
   
-  ComponentClassDescriptionImpl::ComponentClassDescriptionImpl(const std::string &type)
-    : ComponentClassDescriptionBase<ComponentClassDescription>(type)
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+  
+  ServiceRegistryImpl::ServiceRegistryImpl(const CoreFramework::pointer &framework )
+    : ServiceRegistryBase<ServiceRegistry>(framework)
   {}
+    
+  ServiceRegistryImpl::~ServiceRegistryImpl() {}
+  
+} // end namespace SCIRun
 
-  ComponentClassDescriptionImpl::~ComponentClassDescriptionImpl() {}
-}
