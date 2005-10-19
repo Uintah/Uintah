@@ -37,6 +37,12 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/ScanlineMesh.h>
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <Core/Datatypes/StructCurveMesh.h>
@@ -80,7 +86,7 @@ ToStructuredAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   mesh->get_dim(dims);
   outmesh->set_dim(dims);
 
-  FDST *ofield = scinew FDST(outmesh, field_h->basis_order());
+  FDST *ofield = scinew FDST(outmesh);
 
   typename FSRC::mesh_type::Node::iterator bn, en;
   mesh->begin(bn); mesh->end(en);

@@ -115,34 +115,14 @@ Unstructure::execute()
     string dstname("");
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
     const string &mtdn = mtd->get_name();
-<<<<<<< .working
-    if (mtdn == get_type_description((LVMesh *)0)->get_name() ||
-	mtdn == get_type_description((SHVolMesh *)0)->get_name())
-    {
-=======
 
     if( pointCloud_ )
       dstname = "PointCloudField";
     else if (mtdn == "LatVolMesh"   || mtdn == "StructHexVolMesh")
->>>>>>> .merge-right.r32054
       dstname = "HexVolField";
-<<<<<<< .working
-    }
-    else if (mtdn == get_type_description((IMesh *)0)->get_name() ||
-	     mtdn == get_type_description((SQSMesh *)0)->get_name())
-    {
-=======
     else if (mtdn == "ImageMesh"    || mtdn == "StructQuadSurfMesh")
->>>>>>> .merge-right.r32054
       dstname = "QuadSurfField";
-<<<<<<< .working
-    }  
-    else if (mtdn == get_type_description((SLMesh *)0)->get_name() ||
-	     mtdn == get_type_description((SCMesh *)0)->get_name())
-    {
-=======
     else if (mtdn == "ScanlineMesh" || mtdn == "StructCurveMesh" )
->>>>>>> .merge-right.r32054
       dstname = "CurveField";
   
     if (dstname == "") {

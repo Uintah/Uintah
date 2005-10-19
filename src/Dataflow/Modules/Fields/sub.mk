@@ -94,17 +94,15 @@ SRCS     += \
 	$(SRCDIR)/ScaleFieldData.cc\
 	$(SRCDIR)/SelectField.cc\
 	$(SRCDIR)/SetProperty.cc\
+	$(SRCDIR)/ToStructured.cc\
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TransformData.cc\
 	$(SRCDIR)/TransformData2.cc\
 	$(SRCDIR)/TransformData3.cc\
 	$(SRCDIR)/TransformMesh.cc\
+	$(SRCDIR)/Unstructure.cc\
 	$(SRCDIR)/VectorMagnitude.cc\
 #[INSERT NEW CODE FILE HERE]
-
-#FIX_ME MC needs to be debuged as you compile
-#	$(SRCDIR)/ToStructured.cc\
-#	$(SRCDIR)/Unstructure.cc\
 
 
 PSELIBS := Dataflow/Network Dataflow/Ports  Dataflow/Widgets \

@@ -37,25 +37,23 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
-#include <Core/Containers/FData.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Datatypes/ScanlineMesh.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/CurveMesh.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 
 namespace SCIRun {
 
-
-typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
-typedef ImageMesh<QuadBilinearLgn<Point> >  IMesh;
-typedef ScanlineMesh<CrvLinearLgn<Point> >  SLMesh;
+typedef LatVolMesh<HexTrilinearLgn<Point> >               LVMesh;
+typedef ImageMesh<QuadBilinearLgn<Point> >                IMesh;
+typedef ScanlineMesh<CrvLinearLgn<Point> >                SMesh;
 
 class UnstructureAlgo : public DynamicAlgoBase
 {
@@ -85,7 +83,7 @@ struct SpecialUnstructuredHash
   size_t operator()(const IMesh::Node::index_type &n) const
   { return n.i_ * ((1 << 10) - 1) + n.j_; }
 
-  size_t operator()(const SLMesh::Node::index_type &n) const
+  size_t operator()(const SMesh::Node::index_type &n) const
   { return n; }
 
   size_t operator()(const LVMesh::Elem::index_type &n) const
@@ -94,7 +92,7 @@ struct SpecialUnstructuredHash
   size_t operator()(const IMesh::Elem::index_type &n) const
   { return n.i_ * ((1 << 10) - 1) + n.j_; }
 
-  size_t operator()(const SLMesh::Elem::index_type &n) const
+  size_t operator()(const SMesh::Elem::index_type &n) const
   { return n; }
 };
 
@@ -109,8 +107,8 @@ struct SpecialUnstructuredEqual
 		  const IMesh::Node::index_type &b) const
   { return a.i_ == b.i_ && a.j_ == b.j_; }
 
-  bool operator()(const SLMesh::Node::index_type &a,
-		  const SLMesh::Node::index_type &b) const
+  bool operator()(const SMesh::Node::index_type &a,
+		  const SMesh::Node::index_type &b) const
   { return a == b; }
 
   bool operator()(const LVMesh::Elem::index_type &a,
@@ -121,8 +119,8 @@ struct SpecialUnstructuredEqual
 		  const IMesh::Elem::index_type &b) const
   { return a.i_ == b.i_ && a.j_ == b.j_; }
 
-  bool operator()(const SLMesh::Elem::index_type &a,
-		  const SLMesh::Elem::index_type &b) const
+  bool operator()(const SMesh::Elem::index_type &a,
+		  const SMesh::Elem::index_type &b) const
   { return a == b; }
 };
 #else
@@ -136,8 +134,8 @@ struct SpecialUnstructuredLess
 		  const IMesh::Node::index_type &b) const
   { return a.i_ < b.i_ || a.i_ == b.i_ && a.j_ < b.j_; }
 
-  bool operator()(const SLMesh::Node::index_type &a,
-		  const SLMesh::Node::index_type &b) const
+  bool operator()(const SMesh::Node::index_type &a,
+		  const SMesh::Node::index_type &b) const
   { return a < b; }
 
   bool operator()(const LVMesh::Elem::index_type &a,
@@ -148,8 +146,8 @@ struct SpecialUnstructuredLess
 		  const IMesh::Elem::index_type &b) const
   { return a.i_ < b.i_ || a.i_ == b.i_ && a.j_ < b.j_; }
 
-  bool operator()(const SLMesh::Elem::index_type &a,
-		  const SLMesh::Elem::index_type &b) const
+  bool operator()(const SMesh::Elem::index_type &a,
+		  const SMesh::Elem::index_type &b) const
   { return a < b; }
 };
 #endif
