@@ -65,7 +65,7 @@ private:
 
 DECLARE_MAKER(BundleGetField)
   BundleGetField::BundleGetField(GuiContext* ctx)
-    : Module("BundleGetField", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleGetField", ctx, Filter, "Bundle", "SCIRun"),
       guifield1name_(ctx->subVar("field1-name")),
       guifield2name_(ctx->subVar("field2-name")),
       guifield3name_(ctx->subVar("field3-name")),
@@ -161,7 +161,7 @@ void BundleGetField::execute()
   {
     oport->send(handle);
   }
-        
+  update_state(Completed);
 }
 
 void BundleGetField::tcl_command(GuiArgs& args, void* userdata)

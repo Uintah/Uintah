@@ -66,7 +66,7 @@ private:
 
 DECLARE_MAKER(BundleGetMatrix)
   BundleGetMatrix::BundleGetMatrix(GuiContext* ctx)
-    : Module("BundleGetMatrix", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleGetMatrix", ctx, Filter, "Bundle", "SCIRun"),
       guimatrix1name_(ctx->subVar("matrix1-name")),
       guimatrix2name_(ctx->subVar("matrix2-name")),
       guimatrix3name_(ctx->subVar("matrix3-name")),
@@ -170,7 +170,7 @@ void BundleGetMatrix::execute()
   {
     oport->send(handle);
   }
-        
+  update_state(Completed);        
 }
 
 void

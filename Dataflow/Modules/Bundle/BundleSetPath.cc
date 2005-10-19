@@ -62,7 +62,7 @@ private:
 
 DECLARE_MAKER(BundleSetPath)
   BundleSetPath::BundleSetPath(GuiContext* ctx)
-    : Module("BundleSetPath", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleSetPath", ctx, Filter, "Bundle", "SCIRun"),
       guipath1name_(ctx->subVar("path1-name")),
       guipath2name_(ctx->subVar("path2-name")),
       guipath3name_(ctx->subVar("path3-name")),
@@ -155,6 +155,8 @@ BundleSetPath::execute()
   }
         
   oport->send(handle);
+  
+  update_state(Completed);  
 }
 
 void

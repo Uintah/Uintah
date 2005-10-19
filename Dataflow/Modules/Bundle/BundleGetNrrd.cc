@@ -67,7 +67,7 @@ private:
 
 DECLARE_MAKER(BundleGetNrrd)
   BundleGetNrrd::BundleGetNrrd(GuiContext* ctx)
-    : Module("BundleGetNrrd", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleGetNrrd", ctx, Filter, "Bundle", "SCIRun"),
       guinrrd1name_(ctx->subVar("nrrd1-name")),
       guinrrd2name_(ctx->subVar("nrrd2-name")),
       guinrrd3name_(ctx->subVar("nrrd3-name")),
@@ -176,7 +176,7 @@ BundleGetNrrd::execute()
   {
     oport->send(handle);
   }
-        
+  update_state(Completed);        
 }
 
 void BundleGetNrrd::tcl_command(GuiArgs& args, void* userdata)

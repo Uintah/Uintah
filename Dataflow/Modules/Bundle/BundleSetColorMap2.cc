@@ -63,7 +63,7 @@ private:
 
 DECLARE_MAKER(BundleSetColorMap2)
   BundleSetColorMap2::BundleSetColorMap2(GuiContext* ctx)
-    : Module("BundleSetColorMap2", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleSetColorMap2", ctx, Filter, "Bundle", "SCIRun"),
       guicolormap21name_(ctx->subVar("colormap21-name")),
       guicolormap22name_(ctx->subVar("colormap22-name")),
       guicolormap23name_(ctx->subVar("colormap23-name")),
@@ -156,6 +156,8 @@ BundleSetColorMap2::execute()
   }
         
   oport->send(handle);
+  
+  update_state(Completed);  
 }
 
 void BundleSetColorMap2::tcl_command(GuiArgs& args, void* userdata)

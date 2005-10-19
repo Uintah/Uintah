@@ -60,7 +60,7 @@ private:
 
 DECLARE_MAKER(BundleInfo)
   BundleInfo::BundleInfo(GuiContext* ctx)
-    : Module("BundleInfo", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleInfo", ctx, Sink, "Bundle", "SCIRun"),
       tclInfoString_(ctx->subVar("tclinfostring"))
 {
 }
@@ -101,6 +101,8 @@ BundleInfo::execute()
     }
     
   tclInfoString_.set(tclinfostring);
+  
+  update_state(Completed);  
 }
 
 void

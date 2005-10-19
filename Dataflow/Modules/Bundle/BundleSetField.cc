@@ -64,7 +64,7 @@ private:
 
 DECLARE_MAKER(BundleSetField)
   BundleSetField::BundleSetField(GuiContext* ctx)
-    : Module("BundleSetField", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleSetField", ctx, Filter, "Bundle", "SCIRun"),
       guifield1name_(ctx->subVar("field1-name")),
       guifield2name_(ctx->subVar("field2-name")),
       guifield3name_(ctx->subVar("field3-name")),
@@ -156,6 +156,8 @@ void BundleSetField::execute()
   }
         
   oport->send(handle);
+  
+  update_state(Completed);  
 }
 
 void

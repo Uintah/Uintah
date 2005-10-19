@@ -61,7 +61,7 @@ private:
 
 DECLARE_MAKER(BundleSetBundle)
   BundleSetBundle::BundleSetBundle(GuiContext* ctx)
-    : Module("BundleSetBundle", ctx, Source, "Bundle", "SCIRun"),
+    : Module("BundleSetBundle", ctx, Filter, "Bundle", "SCIRun"),
       guiBundle1Name_(ctx->subVar("bundle1-name")),
       guiBundle2Name_(ctx->subVar("bundle2-name")),
       guiBundle3Name_(ctx->subVar("bundle3-name")),
@@ -153,6 +153,8 @@ void BundleSetBundle::execute()
   }
         
   oport->send(handle);
+  
+  update_state(Completed);
 }
 
 void BundleSetBundle::tcl_command(GuiArgs& args, void* userdata)
