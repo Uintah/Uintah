@@ -113,18 +113,36 @@ Unstructure::execute()
 
   if( update ) {
     string dstname("");
+    string dst_basis_name("NoDataBasis");
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
     const string &mtdn = mtd->get_name();
 
-    if( pointCloud_ )
-      dstname = "PointCloudField";
-    else if (mtdn == "LatVolMesh"   || mtdn == "StructHexVolMesh")
-      dstname = "HexVolField";
-    else if (mtdn == "ImageMesh"    || mtdn == "StructQuadSurfMesh")
-      dstname = "QuadSurfField";
-    else if (mtdn == "ScanlineMesh" || mtdn == "StructCurveMesh" )
-      dstname = "CurveField";
-  
+    if( pointCloud_ ) {
+      dstname = "PointCloudMesh<ConstantBasis<Point> >";
+      dst_basis_name = "ConstantBasis";
+    } else if ((mtdn.find("LatVolMesh") != string::npos) ||
+	       (mtdn.find("StructHexVolMesh") != string::npos)) {
+      dstname = "HexVolMesh<HexTrilinearLgn<Point> >";
+      if (ifieldhandle->basis_order() == 0)
+	dst_basis_name = "ConstantBasis";
+      else if (ifieldhandle->basis_order() == 1)
+	dst_basis_name = "HexTrilinearLgn";
+    } else if ((mtdn.find("ImageMesh") != string::npos) ||
+	       (mtdn.find("StructQuadSurfMesh") != string::npos)) {
+      dstname = "QuadSurfMesh<QuadBilinearLgn<Point> >";
+      if (ifieldhandle->basis_order() == 0)
+	dst_basis_name = "ConstantBasis";
+      else if (ifieldhandle->basis_order() == 1)
+	dst_basis_name = "QuadBilinearLgn";
+    } else if ((mtdn.find("ScanlineMesh") != string::npos) ||
+	       (mtdn.find("StructCurveMesh") != string::npos)) {
+      dstname = "CurveMesh<CrvLinearLgn<Point>";
+      if (ifieldhandle->basis_order() == 0)
+	dst_basis_name = "ConstantBasis";
+      else if (ifieldhandle->basis_order() == 1)
+	dst_basis_name = "CrvLinearLgn";
+    }
+
     if (dstname == "") {
       warning("Do not know how to unstructure a " + mtdn + ".");
 
@@ -132,7 +150,13 @@ Unstructure::execute()
     }
     else {
       const TypeDescription *ftd = ifieldhandle->get_type_description();
-      CompileInfoHandle ci = UnstructureAlgo::get_compile_info(ftd, dstname);
+      TypeDescription::td_vec *tdv = 
+	ifieldhandle->get_type_description(3)->get_sub_type();
+      string data_name = (*tdv)[0]->get_name();
+      
+      CompileInfoHandle ci = UnstructureAlgo::get_compile_info(ftd, dstname, 
+							       dst_basis_name,
+							       data_name);
       Handle<UnstructureAlgo> algo;
 
       if (!module_dynamic_compile(ci, algo)) return;
@@ -157,15 +181,17 @@ Unstructure::execute()
 
 CompileInfoHandle
 UnstructureAlgo::get_compile_info(const TypeDescription *fsrc,
-				  const string &partial_fdst)
+				  const string &mesh_dst,
+				  const string &basis_dst,
+				  const string &data_dst)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("UnstructureAlgoT");
   static const string base_class_name("UnstructureAlgo");
 
-  const string::size_type loc = fsrc->get_name().find_first_of('<');
-  const string fdstname = partial_fdst + fsrc->get_name().substr(loc);
+  const string fdstname = "GenericField<" + mesh_dst + ", " + 
+    basis_dst + "<" + data_dst + ">, vector<" + data_dst + "> > ";
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
@@ -177,6 +203,11 @@ UnstructureAlgo::get_compile_info(const TypeDescription *fsrc,
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
+
   fsrc->fill_compile_info(rval);
   return rval;
 }
