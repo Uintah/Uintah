@@ -54,6 +54,15 @@ namespace SCIRun {
 class ToStructured : public Module
 {
 public:
+
+  typedef LatVolMesh<HexTrilinearLgn<Point> >               LVMesh;
+  typedef StructHexVolMesh<HexTrilinearLgn<Point> >         SHVMesh;
+  typedef ImageMesh<QuadBilinearLgn<Point> >                IMesh;
+  typedef StructQuadSurfMesh<QuadBilinearLgn<Point> >       SQSMesh;
+  typedef ScanlineMesh<CrvLinearLgn<Point> >                SMesh;
+  typedef StructCurveMesh<CrvLinearLgn<Point> >             SCMesh;
+
+
   ToStructured(GuiContext* ctx);
   virtual ~ToStructured();
   virtual void execute();
@@ -98,18 +107,20 @@ ToStructured::execute()
     string dstname = "";
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
     const string &mtdn = mtd->get_name();
-    if (mtdn == get_type_description((LatVolMesh *)0)->get_name() ||
-	mtdn == get_type_description((StructHexVolMesh *)0)->get_name())
+
+
+    if (mtdn == get_type_description((LVMesh *)0)->get_name() ||
+	mtdn == get_type_description((SHVMesh *)0)->get_name())
     {
       dstname = "StructHexVolField";
     }
-    else if (mtdn == get_type_description((ImageMesh *)0)->get_name() ||
-	     mtdn == get_type_description((StructQuadSurfMesh *)0)->get_name())
+    else if (mtdn == get_type_description((IMesh *)0)->get_name() ||
+	     mtdn == get_type_description((SQSMesh *)0)->get_name())
     {
       dstname = "StructQuadSurfField";
     }  
-    else if (mtdn == get_type_description((ScanlineMesh *)0)->get_name() ||
-	     mtdn == get_type_description((StructCurveMesh *)0)->get_name())
+    else if (mtdn == get_type_description((SMesh *)0)->get_name() ||
+	     mtdn == get_type_description((SCMesh *)0)->get_name())
     {
       dstname = "StructCurveField";
     }
