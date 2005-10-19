@@ -39,26 +39,19 @@ ifeq ($(BUILD_SCIRUN2),yes)
 
   ########################################################################
   #
-  # sr
+  # Plume
   #
-  SRCS      := $(SRCDIR)/plume.cc
+  SRCS      := $(SRCDIR)/core.cc
+
+#SCIRun/Distributed SCIRun/Plume\
 
   ifeq ($(LARGESOS),yes)
     PSELIBS := Core/CCA
   else
-    PSELIBS := SCIRun/Distributed SCIRun/Plume\
+    PSELIBS := SCIRun/Core \
 	Core/Exceptions Core/CCA/Comm \
         Core/CCA/PIDL Core/CCA/spec Core/Util \
         Core/CCA/SSIDL Core/Thread
-    ifeq ($(HAVE_GLOBUS),yes)   
-      PSELIBS += Core/globus_threads
-    endif
-  endif
-
-  LIBS := $(GLOBUS_LIBRARY)
-
-  ifeq ($(HAVE_MPI),yes)
-    LIBS += $(MPI_LIBRARY) 
   endif
 
   PROGRAM := plume

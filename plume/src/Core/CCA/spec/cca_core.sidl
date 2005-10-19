@@ -65,10 +65,10 @@ package sci {
 	void destroyComponent();
       }
 
-      // services
+      // framework services
       interface ServiceFactory {
 	string getName();
-	PortInfo getService(in string serviceName);
+	PortInfo getService(in string serviceName, in ComponentInfo requester);
 	void releaseService(in string portName);
       }
       
@@ -79,6 +79,11 @@ package sci {
 
 	string getRequesterPortName();
 	ComponentInfo getRequester();
+      }
+
+      interface CoreServices 
+	extends Services, ComponentInfo
+      {
       }
 
       // Ports
@@ -134,7 +139,7 @@ package sci {
 
 	// factories
 	void addComponentClassFactory( in ComponentClassFactory );
-	void addFrameworkServiceFactory(in ServiceFactory);
+	bool addFrameworkServiceFactory(in ServiceFactory);
       }
       
     } // core
