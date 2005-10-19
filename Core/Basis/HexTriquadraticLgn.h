@@ -266,7 +266,8 @@ template <class T>
 void
 HexTriquadraticLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), HEXTRIQUADRATICLGN_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     HEXTRIQUADRATICLGN_VERSION);
   Pio(stream, nodes_);
   stream.end_class();
 }

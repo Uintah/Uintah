@@ -387,7 +387,8 @@ template <class T>
 void
 TetLinearLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), TETLINEARLGN_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     TETLINEARLGN_VERSION);
   stream.end_class();
 }
 

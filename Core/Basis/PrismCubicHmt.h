@@ -277,7 +277,8 @@ template <class T>
 void
 PrismCubicHmt<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), PRISMCUBICHMT_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     PRISMCUBICHMT_VERSION);
   Pio(stream, derivs_);
   stream.end_class();
 }

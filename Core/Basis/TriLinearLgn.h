@@ -382,7 +382,8 @@ template <class T>
 void 
 TriLinearLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), TRILINEARLGN_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     TRILINEARLGN_VERSION);
   stream.end_class();
 }
 

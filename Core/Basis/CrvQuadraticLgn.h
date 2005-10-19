@@ -172,7 +172,8 @@ template <class T>
 void
 CrvQuadraticLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), CRVQUADRATICLGN_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     CRVQUADRATICLGN_VERSION);
   Pio(stream, nodes_);
   stream.end_class();
 }

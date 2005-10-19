@@ -223,7 +223,8 @@ template <class T>
 void
   TriCubicHmtScaleFactors<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), TRICUBICHMTSCALEFACTORS_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     TRICUBICHMTSCALEFACTORS_VERSION);
   Pio(stream, derivs_);
   Pio(stream, scalefactors_);
   stream.end_class();

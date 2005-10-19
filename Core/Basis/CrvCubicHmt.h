@@ -171,7 +171,8 @@ template <class T>
 void
 CrvCubicHmt<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), CRVCUBICHMT_BASIS_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     CRVCUBICHMT_BASIS_VERSION);
   Pio(stream, derivs_);
   stream.end_class();
 }

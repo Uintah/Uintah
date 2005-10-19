@@ -201,7 +201,8 @@ template <class T>
 void
 QuadBiquadraticLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), QUADBIQUADRATICLGN_VERSION );
+  stream.begin_class(get_type_description(this)->get_name(),
+                     QUADBIQUADRATICLGN_VERSION );
   Pio(stream, nodes_);
   stream.end_class();
 }

@@ -58,7 +58,8 @@ const int NO_DATA_BASIS_VERSION = 1;
 void 
 NoDataBasis::io (Piostream& str)
 {
-  stream.begin_class(type_name(-1), NO_DATA_BASIS_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     NO_DATA_BASIS_VERSION);
   stream.end_class();
 };
 

@@ -200,7 +200,8 @@ template <class T>
 void
 QuadBicubicHmt<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), QUADBICUBICHMT_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     QUADBICUBICHMT_VERSION);
   Pio(stream, derivs_);
   stream.end_class();
 }

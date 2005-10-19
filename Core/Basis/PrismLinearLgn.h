@@ -364,7 +364,8 @@ template <class T>
 void
 PrismLinearLgn<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), PRISMLINEARLGN_VERSION);
+  stream.begin_class(get_type_description(this)->get_name(),
+                     PRISMLINEARLGN_VERSION);
   stream.end_class();
 }
 
