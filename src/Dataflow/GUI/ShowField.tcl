@@ -159,7 +159,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-field-name-override 0
 	set $this-field-name-update 1
 	set $this-tensors-emphasis 0.825
-	set $this-approx-div 5
+	set $this-approx-div 1
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vector_data w "$this vector_tab_changed"
 	trace variable $this-has_tensor_data w "$this tensor_tab_changed"
