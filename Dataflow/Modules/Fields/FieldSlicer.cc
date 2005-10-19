@@ -188,8 +188,8 @@ void FieldSlicer::execute(){
   string mesh_type = fHandle->get_type_description(1)->get_name();
 
   //FIX_ME MC how do i detect a "ITKLatVolField"
-  if( mesh_type.find("LatVolField") != string::npos ||
-      mesh_type.find("StructHexVolField") != string::npos ) {
+  if( mesh_type.find("LatVolMesh") != string::npos ||
+      mesh_type.find("StructHexVolMesh") != string::npos ) {
     typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
     LVMesh *lvmInput = (LVMesh*) fHandle->mesh().get_rep();
 
@@ -199,8 +199,8 @@ void FieldSlicer::execute(){
 
     dims = 3;
 
-  } else if( mesh_type.find("ImageField") != string::npos ||
-	     mesh_type.find("StructQuadSurfField") != string::npos ) {
+  } else if( mesh_type.find("ImageMesh") != string::npos ||
+	     mesh_type.find("StructQuadSurfMesh") != string::npos ) {
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
     IMesh *imInput = (IMesh*) fHandle->mesh().get_rep();
     idim_ = imInput->get_ni();
@@ -209,8 +209,8 @@ void FieldSlicer::execute(){
 
     dims = 2;
 
-  } else if( mesh_type.find("ScanlineField") != string::npos ||
-	     mesh_type.find("StructCurveField") != string::npos ) {
+  } else if( mesh_type.find("ScanlineMesh") != string::npos ||
+	     mesh_type.find("StructCurveMesh") != string::npos ) {
     typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
     SLMesh *slmInput = (SLMesh*) fHandle->mesh().get_rep();
     
@@ -315,7 +315,7 @@ void FieldSlicer::execute(){
   if( !fHandle_.get_rep() || updateAll || updateField || updateMatrix )
   {
     const TypeDescription *ftd = fHandle->get_type_description();
-    const TypeDescription *ttd = fHandle->get_type_description(1);
+    const TypeDescription *ttd = fHandle->get_type_description(3);
 
     CompileInfoHandle ci = FieldSlicerAlgo::get_compile_info(ftd,ttd);
     Handle<FieldSlicerAlgo> algo;
@@ -380,6 +380,8 @@ FieldSlicerAlgo::get_compile_info(const TypeDescription *ftd,
   static const string template_class_name("FieldSlicerAlgoT");
   static const string base_class_name("FieldSlicerAlgo");
 
+  TypeDescription::td_vec *tdv = ttd->get_sub_type();
+  string odat = (*tdv)[0]->get_name();
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
 		       ftd->get_filename() + "." +
@@ -387,10 +389,19 @@ FieldSlicerAlgo::get_compile_info(const TypeDescription *ftd,
                        base_class_name, 
                        template_class_name, 
                        ftd->get_name() + ", " +
-		       ttd->get_name() );
+		       odat );
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_basis_include("../src/Core/Basis/NoData.h");
+
+  rval->add_mesh_include("../src/Core/Datatypes/StructCurveMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructQuadSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
+
   ftd->fill_compile_info(rval);
   return rval;
 }
@@ -419,10 +430,10 @@ FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
   // Structured meshs have a set_point method which is needed. However, it is not
   // defined for gridded meshes. As such, the include file defined below contains a
   // compiler flag so that when needed in FieldSlicer.h it is compiled.
-  if( iftd->get_name().find("StructHexVolField"  ) == 0 ||
-      iftd->get_name().find("StructQuadSurfField") == 0 ||
-      iftd->get_name().find("StructCurveField"   ) == 0 ||
-      iftd->get_name().find("PointCloudField"    ) == 0 ) {
+  if( iftd->get_name().find("StructHexVolMesh"  ) == 0 ||
+      iftd->get_name().find("StructQuadSurfMesh") == 0 ||
+      iftd->get_name().find("StructCurveMesh"   ) == 0 ||
+      iftd->get_name().find("PointCloudMesh"    ) == 0 ) {
 
     string header_path(include_path);  // Get the right path 
 

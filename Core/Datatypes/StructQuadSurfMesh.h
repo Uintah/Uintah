@@ -105,6 +105,10 @@ public:
   void get_faces(typename ImageMesh<Basis>::Face::array_type &, 
 		 typename ImageMesh<Basis>::Cell::index_type) const {}
 
+  void get_faces(typename ImageMesh<Basis>::Face::array_type &a, 
+		 typename ImageMesh<Basis>::Face::index_type f) const
+  { a.push_back(f); }
+
   //! get the parent element(s) of the given index
   unsigned get_edges(typename ImageMesh<Basis>::Edge::array_type &, 
 		     typename ImageMesh<Basis>::Node::index_type) const { return 0; }

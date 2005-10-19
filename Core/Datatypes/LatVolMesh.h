@@ -1993,7 +1993,7 @@ LatVolMesh<Basis>::to_index(typename LatVolMesh<Basis>::Cell::index_type &idx,
   const unsigned int jk = a / (ni_-1);
   const unsigned int j = jk % (nj_-1);
   const unsigned int k = jk / (nj_-1);
-  idx = Cell::index_type(this, i, j, k);
+  idx = typename Cell::index_type(this, i, j, k);
 }
 
 
