@@ -64,7 +64,7 @@ static std::string fileName;
 void
 usage()
 {
-  std::cout << "Usage: scirun [args] [network file]\n";
+  std::cout << "Usage: plume [args] [network file]\n";
   std::cout << "       [-]-v[ersion]          : prints out version information\n";
   std::cout << "       [-]-h[elp]             : prints usage information\n";
   std::cout << "       [-]-b[uilder] gui/txt  : selects GUI or Textual builder\n";
@@ -72,12 +72,10 @@ usage()
   exit( 0 );
 }
 
-// Apparently some args are passed through to TCL where they are parsed...
-// Probably need to check to make sure they are at least valid here???
 bool
 parse_args( int argc, char *argv[])
 {
-  bool load = false;
+  bool ok = false;
   for( int cnt = 0; cnt < argc; cnt++ ) {
     std::string arg( argv[ cnt ] );
     if( ( arg == "--version" ) || ( arg == "-version" )
@@ -104,12 +102,12 @@ parse_args( int argc, char *argv[])
       } else {
           if (ends_with(arg, ".net")) {
               fileName = arg;
-              load = true;
+              ok = true;
           }
       }
     }
   }
-  return load;
+  return ok;
 }
 
 int
@@ -149,16 +147,12 @@ main(int argc, char *argv[]) {
       std::cerr << "Not finished: pass url to existing framework\n";
     }
     
-    sci::cca::Services::pointer main_services
-      = plume->getServices("SCIRun main", "main", sci::cca::TypeMap::pointer(0));
-
+    sci::cca::Services::pointer main_services = plume->getServices("main", "cca.unknown", plume->createTypeMap());
+    main_services->registerUsesPort("builder", "cca.BuilderService", plume->createTypeMap());
+    main_services->registerUsesPort("properties", "cca.FrameworkProperties", plume->createTypeMap());
+    
     sci::cca::ports::BuilderService::pointer builder
-      = pidl_cast<sci::cca::ports::BuilderService::pointer>(
-                          main_services->getPort("cca.BuilderService"));
-    if(builder.isNull()) {
-      std::cerr << "Fatal Error: Cannot find builder service\n";
-      Thread::exitAll(1);
-    }
+      = pidl_cast<sci::cca::ports::BuilderService::pointer>( main_services->getPort("builder"));
 
 #   if !defined(HAVE_QT)
     defaultBuilder="txt";
@@ -166,15 +160,14 @@ main(int argc, char *argv[]) {
     
     if (defaultBuilder=="gui") {
       ComponentID::pointer gui_id =
-          builder->createInstance("SCIRun.Builder", "cca:SCIRun.Builder", sci::cca::TypeMap::pointer(0));
+          builder->createInstance("SCIRun.Builder", "cca:SCIRun.Builder", plume->createTypeMap());
       if (gui_id.isNull()) {
         std::cerr << "Cannot create component: cca:SCIRun.Builder\n";
         Thread::exitAll(1);
       }
     } else {
       ComponentID::pointer gui_id =
-        builder->createInstance("TxtBuilder", "cca:SCIRun.TxtBuilder",
-                                sci::cca::TypeMap::pointer(0));
+        builder->createInstance("TxtBuilder", "cca:SCIRun.TxtBuilder", plume->createTypeMap());
       if(gui_id.isNull()) {
         std::cerr << "Cannot create component: cca:SCIRun.TxtBuilder\n";
         Thread::exitAll(1);

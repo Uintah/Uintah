@@ -1,0 +1,145 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OT79
+HER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+package sci {
+  	
+  package cca {
+    
+    package core {
+
+      // Connection
+      interface ConnectionInfo extends ConnectionID
+      {
+	TypeMap getProperties();
+	void setProperties( in TypeMap );
+      }
+	
+      // Components
+      interface ComponentClassFactory 
+      {
+	string getClassName();
+	ComponentClassDescription getClassDescription();
+	ComponentInfo create(in CoreFramework, in string name, in TypeMap);
+      }
+	
+      interface ComponentInfo extends ComponentID
+      {
+	CoreFramework getFramework();
+
+	Component getComponent();
+
+	array<PortInfo,1> getPorts();
+	PortInfo getPortInfo( in string portName );
+	void disconnect( in string portName, in PortInfo from );
+	
+	string getClassName();
+	TypeMap getProperties();
+	void setProperties( in TypeMap );
+
+	void destroyComponent();
+      }
+
+      // services
+      interface ServiceFactory {
+	string getName();
+	PortInfo getService(in string serviceName);
+	void releaseService(in string portName);
+      }
+      
+      interface ServiceInfo {
+	string getServiceName();
+	string getServicePortName();
+	PortInfo getServicePort();
+
+	string getRequesterPortName();
+	ComponentInfo getRequester();
+      }
+
+      // Ports
+
+      enum PortType {
+	ProvidePort = 0,
+	UsePort     = 1,
+      }
+
+      interface PortInfo {
+	bool connect(in PortInfo);
+	bool disconnect(in PortInfo );
+	bool available();
+	bool canConnectTo(in PortInfo);
+	bool isConnected();
+	int  numOfConnections();
+
+	TypeMap getProperties();
+
+	Port getPort();
+	PortInfo getPeer();
+	PortType getPortType();
+
+	string getName();
+	string getType();
+
+	void incrementUseCount();
+	bool decrementUseCount();
+      };
+      
+      interface CoreFramework extends AbstractFramework 
+      {
+	// info
+	ComponentID lookupComponentID(in string);
+	array<ComponentID,1> getComponentIDs();
+	array<ConnectionID,1> getConnectionIDs( in array<ComponentID,1>);
+	
+	// component manipulations
+	ComponentInfo createInstance( in string name, in string type, in TypeMap properties);
+	array<cca.ComponentClassDescription> listAllComponentTypes(in bool);
+	void destroyInstance(in ComponentID);
+	
+	// connections
+	void addConnection(in ConnectionID);
+	void disconnect(in ConnectionID);
+
+	// services
+	bool isFrameworkService(in string serviceName);
+	ServiceInfo getFrameworkService(in string serviceName, 
+					in PortInfo requesterPort, 
+					in ComponentInfo requester);
+	void releaseFrameworkService(in ServiceInfo);
+
+	// factories
+	void addComponentClassFactory( in ComponentClassFactory );
+	void addFrameworkServiceFactory(in ServiceFactory);
+      }
+      
+    } // core
+
+  } // cca
+
+} //sci
+

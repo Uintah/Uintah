@@ -31,18 +31,16 @@
 
 SRCDIR   := CCA/Plume
 
+SUBDIRS := \
+	$(SRCDIR)/TxtBuilder \
+	$(SRCDIR)/Hello \
+	$(SRCDIR)/World \
+
 ifeq ($(HAVE_QT),yes)
   SUBDIRS := \
-             $(SRCDIR)/TxtBuilder \
-             $(SRCDIR)/Hello  \
-             $(SRCDIR)/World \
 #             $(SRCDIR)/Builder \
 #             $(SRCDIR)/FileReader \
-
- SUBDIRS := \
-	$(SRCDIR)/TxtBuilder \
-#	$(SRCDIR)/Hello \
-#	$(SRCDIR)/World \
+else
 
 endif
 
