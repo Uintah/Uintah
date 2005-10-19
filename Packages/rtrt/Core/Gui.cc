@@ -183,6 +183,12 @@ public:
   SelectableGroup *sg;
   int current_frame;
   GLUI_Spinner *current_frame_spinner;
+  int min_child;
+  GLUI_Spinner *min_child_spinner;
+  int max_child;
+  GLUI_Spinner *max_child_spinner;
+  int repeat_last;
+  GLUI_Spinner *repeat_last_spinner;
 };
 
 } // end namespace rtrt
@@ -1757,69 +1763,92 @@ GGT::createObjectWindow( GLUI * window )
       SelectableGroup *sg = dynamic_cast<SelectableGroup*>(objects[num]);
       if (sg) {
 
-	window->add_separator_to_panel( panel );
+        window->add_separator_to_panel( panel );
 
-	window->add_statictext_to_panel( panel, name );
+        window->add_statictext_to_panel( panel, name );
 
-	SGCallbackInfo *cbi1 = new SGCallbackInfo();
-	callback_info_list.push_back(cbi1);
-	cbi1->sg = sg;
-	int callback_info_id = static_cast<int>(callback_info_list.size() - 1);
-	
-	(window->add_checkbox_to_panel( panel, "Cycle Objects", NULL,
-					callback_info_id,
-					SGAutoCycleCB ))->
-	  set_int_val(sg->GetAutoswitch());
+        SGCallbackInfo *cbi1 = new SGCallbackInfo();
+        callback_info_list.push_back(cbi1);
+        cbi1->sg = sg;
+        cbi1->min_child = sg->GetMinChild();
+        cbi1->max_child = sg->GetMaxChild();
+        cbi1->repeat_last = sg->GetRepeatLast();
+        int callback_info_id = static_cast<int>(callback_info_list.size() - 1);
 
-	(window->add_checkbox_to_panel( panel, "Display Every Frame", NULL,
-				       callback_info_id,
-				       SGNoSkipCB ))->
-	  set_int_val(sg->GetNoSkip());
+        (window->add_checkbox_to_panel( panel, "Cycle Objects", NULL,
+                                        callback_info_id,
+                                        SGAutoCycleCB ))->
+          set_int_val(sg->GetAutoswitch());
 
-	GLUI_Spinner *sg_frame_rate =
-	  window->add_spinner_to_panel( panel, "Seconds Per Frame",
-					GLUI_SPINNER_FLOAT,
-					&(sg->autoswitch_secs));
-	sg_frame_rate->set_float_limits(0, 100);
-	sg_frame_rate->set_speed(0.1);
+        (window->add_checkbox_to_panel( panel, "Display Every Frame", NULL,
+                                        callback_info_id,
+                                        SGNoSkipCB ))->
+          set_int_val(sg->GetNoSkip());
 
-	cbi1->current_frame_spinner = 
-	  window->add_spinner_to_panel( panel, "Current Frame",
-					GLUI_SPINNER_INT,
-					&(cbi1->current_frame),
-					callback_info_id, SGCurrentFrameCB);
-	cbi1->current_frame_spinner->set_int_limits(0, sg->numObjects(),
-						    GLUI_LIMIT_WRAP);
-	cbi1->current_frame_spinner->set_speed(0.1);
-	cbi1->current_frame_spinner->set_int_val(sg->GetChild());
+        GLUI_Spinner *sg_frame_rate =
+          window->add_spinner_to_panel( panel, "Seconds Per Frame",
+                                        GLUI_SPINNER_FLOAT,
+                                        &(sg->autoswitch_secs));
+        sg_frame_rate->set_float_limits(0, 100);
+        sg_frame_rate->set_speed(0.1);
 
-	window->add_button_to_panel( panel, "Next Item",
-				     callback_info_id,
-				     SGNextItemCB );	
+        cbi1->current_frame_spinner =
+          window->add_spinner_to_panel( panel, "Current Frame",
+                                        GLUI_SPINNER_INT,
+                                        &(cbi1->current_frame),
+                                        callback_info_id, SGCurrentFrameCB);
+        cbi1->current_frame_spinner->set_int_limits(0, sg->numObjects(),
+                                                    GLUI_LIMIT_WRAP);
+        cbi1->current_frame_spinner->set_speed(0.1);
+        cbi1->current_frame_spinner->set_int_val(sg->GetChild());
+
+        window->add_button_to_panel( panel, "Next Item",
+                                     callback_info_id,
+                                     SGNextItemCB );
+        cbi1->min_child_spinner =
+          window->add_spinner_to_panel( panel, "Min Timestep",
+                                      GLUI_SPINNER_INT,
+                                      &(cbi1->min_child),
+                                      callback_info_id, SGMinChildCB);
+        cbi1->min_child_spinner->set_speed(0.1);
+
+        cbi1->max_child_spinner =
+          window->add_spinner_to_panel( panel, "Max Timestep",
+                                      GLUI_SPINNER_INT,
+                                      &(cbi1->max_child),
+                                      callback_info_id, SGMaxChildCB);
+        cbi1->max_child_spinner->set_speed(0.1);
+
+        cbi1->repeat_last_spinner =
+          window->add_spinner_to_panel( panel, "Repeat Last",
+                                      GLUI_SPINNER_INT,
+                                      &(cbi1->repeat_last),
+                                      callback_info_id, SGRepeatLastCB);
+        cbi1->repeat_last_spinner->set_speed(0.1);
       }
 
       SpinningInstance *si = dynamic_cast<SpinningInstance*>(objects[num]);
-      if (si) {    
-	window->add_separator_to_panel( panel );
+      if (si) {
+        window->add_separator_to_panel( panel );
 
-	window->add_statictext_to_panel( panel, name );
+        window->add_statictext_to_panel( panel, name );
 
-	window->add_checkbox_to_panel( panel, "Spin/Freeze", NULL,
-				       num,
-				       SISpinCB );
-	window->add_button_to_panel( panel, "Inc Magnify",
-				     num,
-				     SIIncMagCB );
-	window->add_button_to_panel( panel, "Dec Magnify",
-				     num,
-				     SIDecMagCB );
-	
-	window->add_button_to_panel( panel, "Slide Up",
-				     num,
-				     SISlideUpCB );
-	window->add_button_to_panel( panel, "Slide Down",
-				     num,
-				     SISlideDownCB );		
+        window->add_checkbox_to_panel( panel, "Spin/Freeze", NULL,
+                                       num,
+                                       SISpinCB );
+        window->add_button_to_panel( panel, "Inc Magnify",
+                                     num,
+                                     SIIncMagCB );
+        window->add_button_to_panel( panel, "Dec Magnify",
+                                     num,
+                                     SIDecMagCB );
+
+        window->add_button_to_panel( panel, "Slide Up",
+                                     num,
+                                     SISlideUpCB );
+        window->add_button_to_panel( panel, "Slide Down",
+                                     num,
+                                     SISlideDownCB );
       }
 
       CutGroup * cut = dynamic_cast<CutGroup*>( objects[num] );
@@ -2069,45 +2098,48 @@ void GGT::SGNoSkipCB( int id ) {
 void GGT::SGNextItemCB( int id )
 {
   SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
+  int gui_val = sgcbi->current_frame_spinner->get_int_val();
   sgcbi->sg->nextChild();
   // Now get the current timestep and then display it
-  sgcbi->current_frame_spinner->set_int_val(sgcbi->sg->GetChild());
-
-  Object * newObj = sgcbi->sg->getCurrentChild();
-  if( Names::hasName( newObj ) ) {
-    Trigger * trig = NULL;
-
-    if( Names::getName(newObj) == "Visible Female Volume" ) {
-      trig = activeGGT->visWomanTrig_;
-    } else if( Names::getName(newObj) == "Brain Volume" ) {
-      trig = NULL;
-    } else if( Names::getName(newObj) == "CSAFE Fire Volume" ) {
-      trig = activeGGT->csafeTrig_;
-    } else if( Names::getName(newObj) == "Geological Volume" ) {
-      trig = activeGGT->geophysicsTrig_;
-    } else if( Names::getName(newObj) == "Sheep Heart Volume" ) {
-      trig = NULL;
-    }
-
-    if( trig ) {
-      trig->setPriority( Trigger::HighTriggerPriority );
-      if( activeGGT->activeMTT_ ) // If a trigger is already running...
-	{
-	  activeGGT->activeMTT_->deactivate(); // then tell it to stop.
-	  activeGGT->queuedMTT_ = trig;        // and queue up the new trigger.
-	}
-      else // just start this trigger
-	{
-	  activeGGT->activeMTT_ = trig;
-	  activeGGT->activeMTT_->activate();
-	}
-    }
-  }
+  int child_val = sgcbi->sg->GetChild();
+  if (gui_val != child_val)
+    sgcbi->current_frame_spinner->set_int_val(child_val);
 }
 
 void GGT::SGCurrentFrameCB( int id ) {
   SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
-  sgcbi->sg->SetChild(sgcbi->current_frame_spinner->get_int_val());
+  int spinner_val = sgcbi->current_frame_spinner->get_int_val();
+  sgcbi->sg->SetChild(spinner_val);
+  int child_val = sgcbi->sg->GetChild();
+  if (spinner_val != child_val)
+    sgcbi->current_frame_spinner->set_int_val(child_val);
+}
+
+void GGT::SGMinChildCB( int id ) {
+  SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
+  int spinner_val = sgcbi->min_child_spinner->get_int_val();
+  sgcbi->sg->SetMinChild(spinner_val);
+  int min_child = sgcbi->sg->GetMinChild();
+  if (spinner_val != min_child)
+    sgcbi->min_child_spinner->set_int_val(min_child);
+}
+
+void GGT::SGMaxChildCB( int id ) {
+  SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
+  int spinner_val = sgcbi->max_child_spinner->get_int_val();
+  sgcbi->sg->SetMaxChild(spinner_val);
+  int max_child = sgcbi->sg->GetMaxChild();
+  if (spinner_val != max_child)
+    sgcbi->max_child_spinner->set_int_val(max_child);
+}
+
+void GGT::SGRepeatLastCB( int id ) {
+  SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
+  int spinner_val = sgcbi->repeat_last_spinner->get_int_val();
+  sgcbi->sg->SetRepeatLast(spinner_val);
+  int repeat_last = sgcbi->sg->GetRepeatLast();
+  if (spinner_val != repeat_last)
+    sgcbi->repeat_last_spinner->set_int_val(repeat_last);
 }
 
 void GGT::SISpinCB( int id ) {
