@@ -220,6 +220,8 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return edge_type_description(); }
 
   // returns a StructCurveMesh
   static Persistent *maker() { return new StructCurveMesh<Basis>(); }
@@ -466,6 +468,7 @@ StructCurveMesh<Basis>::io(Piostream& stream)
   
   // IO data members, in order
   Pio(stream, points_);
+
   stream.end_class();
 }
 

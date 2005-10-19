@@ -915,6 +915,9 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return cell_type_description(); }
+
   static Persistent* maker() { return scinew PrismVolMesh<Basis>; }
 protected:
   const Point &point(typename Node::index_type idx) const { return points_[idx]; }
@@ -2537,7 +2540,7 @@ PrismVolMesh<Basis>::mod_prism(typename Cell::index_type idx,
 }
 
 
-#define PRISM_VOL_MESH_VERSION 1
+#define PRISM_VOL_MESH_VERSION 2
 
 template <class Basis>
 void
@@ -2553,7 +2556,9 @@ PrismVolMesh<Basis>::io(Piostream &stream)
     vector<int> neighbors;
     SCIRun::Pio(stream, neighbors);
   }
-
+  if (version >= 2) {
+    basis_.io(stream);
+  }
   stream.end_class();
 }
 

@@ -340,7 +340,9 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
- 
+  static const TypeDescription* elem_type_description() 
+  { return edge_type_description(); }
+
   // returns a CurveMesh
   static Persistent *maker() { return new CurveMesh<Basis>(); }
 

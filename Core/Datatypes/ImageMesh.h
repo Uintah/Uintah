@@ -532,6 +532,8 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return face_type_description(); }
   static const TypeDescription* node_index_type_description();
   static const TypeDescription* face_index_type_description();
 
@@ -1024,19 +1026,23 @@ Pio(Piostream& stream, typename ImageMesh<Basis>::IFaceIndex& n)
 
 
 
-#define IMAGEMESH_VERSION 1
+#define IMAGEMESH_VERSION 2
 
 template<class Basis>
 void
 ImageMesh<Basis>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), IMAGEMESH_VERSION);
+  int version = stream.begin_class(type_name(-1), IMAGEMESH_VERSION);
 
   Mesh::io(stream);
 
   // IO data members, in order
   Pio(stream, ni_);
   Pio(stream, nj_);
+
+  if (version >= 2) {
+    basis_.io(stream);
+  }
 
   stream.end_class();
 }

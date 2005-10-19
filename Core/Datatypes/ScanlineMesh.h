@@ -334,6 +334,8 @@ public:
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
+  static const TypeDescription* elem_type_description() 
+  { return edge_type_description(); }
 
   // returns a ScanlineMesh
   static Persistent *maker() { return new ScanlineMesh(); }
@@ -553,7 +555,7 @@ ScanlineMesh<Basis>::get_weights(const Point &p, typename Edge::array_type &l,
   return 0;
 }
 
-#define SCANLINEMESH_VERSION 2
+#define SCANLINEMESH_VERSION 3
 
 template <class Basis>
 void
@@ -569,6 +571,9 @@ ScanlineMesh<Basis>::io(Piostream& stream)
     Pio_old(stream, transform_);
   } else {
     Pio(stream, transform_);
+  }
+  if (version >= 3) {
+    basis_.io(stream);
   }
   stream.end_class();
 }
