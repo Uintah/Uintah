@@ -28,47 +28,44 @@
 
 
 /*
- *  ComponentClassFactoryBase.code: 
+ *  ServiceRegistryImpl.h: 
  *
  *  Written by:
  *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
- *   October 2005
+ *   Sept 2005
  *
  */
 
-#ifndef SCIRUN_ComponentClassFactoryBase_code
-#define SCIRUN_ComponentClassFactoryBase_code
-
-#include <Core/CCA/spec/sci_sidl.h>
+#ifndef SCIRun_Core_ServiceRegistryImpl_h
+#define SCIRun_Core_ServiceRegistryImpl_h
 
 namespace SCIRun {
   
-  namespace Core = core;
-  namespace Internal = internal;
-
-  template<class Interface>
-  ComponentClassFactoryBase<Interface>::ComponentClassFactoryBase(const ComponentClassDescription::pointer &desc)
-    : desc(desc)
-  {}
-
-  template<class Interface>
-  ComponentClassFactoryBase<Interface>::~ComponentClassFactoryBase() {}
-    
+  using namespace sci::cca;
+  using namespace sci::cca::core;
   
-  template<class Interface>
-  std::string 
-  ComponentClassFactoryBase<Interface>::getClassName()
+  /**
+   * \class ServiceRegistryImpl
+   *
+   */
+  
+  class ServiceRegistryImpl : public ServiceRegistryBase<ServiceRegistry>
   {
-    return desc->getComponentClassName();
-  }
+  public:
+    typedef ServiceRegistry::pointer pointer;
+    
+    ServiceRegistryImpl(const CoreFramework::pointer &framework );
+    virtual ~ServiceRegistryImpl();
+    
 
-  template<class Interface>
-  ComponentClassDescription::pointer ComponentClassFactoryBase<Interface>::getClassDescription()
-  {
-    return desc;
-  }
-}
+  protected:
+    // prevent using these directly
+    ServiceRegistryImpl(const ServiceRegistryImpl&);
+    ServiceRegistryImpl& operator=(const ServiceRegistryImpl&);
+  };
+  
+} // end namespace SCIRun
 
 #endif

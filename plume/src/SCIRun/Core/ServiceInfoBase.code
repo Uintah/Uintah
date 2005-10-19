@@ -53,5 +53,9 @@ namespace SCIRun {
       requesterPort(requesterPort), requester(requester)
   {}
   
+  template<class Interface>
+  ServiceInfoBase<Interface>::~ServiceInfoBase()
+  {}
+
 } // end namespace SCIRun
 

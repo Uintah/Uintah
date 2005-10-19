@@ -28,10 +28,10 @@
 
 
 /*
- *  ComponentDescription.cc: 
+ *  ProviderServiceFactoryImpl.cc: 
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
  *   Sept 2005
@@ -39,14 +39,27 @@
  */
 
 #include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-//#include <SCIRun/Core/ComponentClassDescriptionBase.code>
+#include <SCIRun/Core/ProviderServiceFactoryImpl.h>
+#include <SCIRun/Core/ProviderServiceFactoryBase.code>
 
 namespace SCIRun {
   
-  ComponentClassDescriptionImpl::ComponentClassDescriptionImpl(const std::string &type)
-    : ComponentClassDescriptionBase<ComponentClassDescription>(type)
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+  
+  /**
+   * \class ProviderServiceFactoryImpl
+   *
+   */
+  
+  ProviderServiceFactoryImpl::ProviderServiceFactoryImpl(const CoreFramework::pointer &framework,
+							 const std::string& serviceName,
+							 const ServiceProvider::pointer &portProvider,
+							 const ComponentInfo::pointer &providerComponentInfo)
+    : ProviderServiceFactoryBase<ServiceFactory>(framework, serviceName, portProvider, providerComponentInfo)
   {}
 
-  ComponentClassDescriptionImpl::~ComponentClassDescriptionImpl() {}
-}
+  ProviderServiceFactoryImpl::~ProviderServiceFactoryImpl() {}
+  
+} // end namespace SCIRun
+

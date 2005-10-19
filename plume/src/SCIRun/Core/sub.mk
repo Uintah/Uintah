@@ -39,9 +39,12 @@ SRCS     += \
              $(SRCDIR)/PortInfoImpl.cc \
              $(SRCDIR)/ComponentInfoImpl.cc \
 	     $(SRCDIR)/FixedPortServiceFactoryImpl.cc \
+	     $(SRCDIR)/ProviderServiceFactoryImpl.cc \
 	     $(SRCDIR)/ServiceInfoImpl.cc \
              $(SRCDIR)/ComponentClassDescriptionImpl.cc \
              $(SRCDIR)/ComponentClassFactoryImpl.cc \
+             $(SRCDIR)/UnknownComponentClassFactory.cc \
+	     $(SRCDIR)/CoreServicesImpl.cc \
 	     $(SRCDIR)/CoreFrameworkImpl.cc \
 #             $(SRCDIR)/CoreFrameworkException.cc \
 #             $(SRCDIR)/ComponentEvent.cc \

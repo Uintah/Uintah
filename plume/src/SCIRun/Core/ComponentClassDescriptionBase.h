@@ -51,8 +51,8 @@ namespace SCIRun {
   public:
     typedef ComponentClassDescription::pointer pointer;
     
-    ComponentClassDescriptionBase(const std::string &type);
-    virtual ~ComponentClassDescriptionBase();
+    ComponentClassDescriptionBase(const std::string &type) : type(type) {}
+    virtual ~ComponentClassDescriptionBase() {}
     
     virtual std::string getComponentClassName() { return type; }
 

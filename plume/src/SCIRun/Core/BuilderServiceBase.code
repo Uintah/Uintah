@@ -61,38 +61,41 @@
 using namespace std;
 
 namespace SCIRun {
-  
-  template<class Base>
-  BuilderServiceImpl<Base>::BuilderServiceImpl(const DistributedFramework::internalPointer &framework)
-    : ServiceImpl<Base>(framework, "BuilderService"), framework(framework)
+   
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+
+  template<class Interface>
+  BuilderServiceBase<Interface>::BuilderServiceBase(const CoreFramework::pointer &framework)
+    : ServiceBase<Interface>(framework, "BuilderService"), framework(framework)
   {
   }
   
-  template<class Base>
-  BuilderServiceImpl<Base>::~BuilderServiceImpl()
+  template<class Interface>
+  BuilderServiceBase<Interface>::~BuilderServiceImpl()
   {
   }
   
-  template<class Base>
+  template<class Interface>
   PortInfo::pointer 
-  BuilderServiceImpl<Base>::getService(const std::string&) 
+  BuilderServiceBase<Interface>::getService(const std::string&) 
   {
     return portInfo;
   }
 
 
-  template<class Base>
+  template<class Interface>
   sci::cca::ComponentID::pointer
-  BuilderServiceImpl<Base>::createInstance(const std::string& instanceName,
+  BuilderServiceBase<Interface>::createInstance(const std::string& instanceName,
 					   const std::string& className,
 					   const sci::cca::TypeMap::pointer& properties)
   {
     return framework->createInstance(instanceName, className, properties);
   }
   
-  template<class Base>
+  template<class Interface>
   sci::cca::ConnectionID::pointer
-  BuilderServiceImpl<Base>::connect(const sci::cca::ComponentID::pointer &userID,
+  BuilderServiceBase<Interface>::connect(const sci::cca::ComponentID::pointer &userID,
 				    const std::string &usesPortName,
 				    const sci::cca::ComponentID::pointer &providerID,
 				    const ::std::string &providesPortName)
@@ -130,7 +133,7 @@ namespace SCIRun {
     }
     
     if ( !usesPort->connect(providesPort)) {
-      std::cerr << "BuilderServiceImpl<Base>::connect: attempt to connect " << usesPortName << " with " << providesPortName << " failed." << std::endl;
+      std::cerr << "BuilderServiceBase<Interface>::connect: attempt to connect " << usesPortName << " with " << providesPortName << " failed." << std::endl;
       throw sci::cca::CCAException::pointer(new CCAException("Cannot connect " + usesPortName + " with " + providesPortName));
     }
     
@@ -150,16 +153,16 @@ namespace SCIRun {
   }
   
 
-  template<class Base>
+  template<class Interface>
   SSIDL::array1<sci::cca::ComponentID::pointer>
-  BuilderServiceImpl<Base>::getComponentIDs()
+  BuilderServiceBase<Interface>::getComponentIDs()
   {
     return framework->getComponentIDs();
   }
 
-  template<class Base>
+  template<class Interface>
   sci::cca::TypeMap::pointer
-  BuilderServiceImpl<Base>::getComponentProperties(const sci::cca::ComponentID::pointer &cid)
+  BuilderServiceBase<Interface>::getComponentProperties(const sci::cca::ComponentID::pointer &cid)
   {
     if (cid.isNull()) {
       throw sci::cca::CCAException::pointer(new CCAException("Invalid ComponentID"));
@@ -169,9 +172,9 @@ namespace SCIRun {
     return ci->getProperties();
   }
   
-  template<class Base>
+  template<class Interface>
   void
-  BuilderServiceImpl<Base>::setComponentProperties(const sci::cca::ComponentID::pointer &cid,
+  BuilderServiceBase<Interface>::setComponentProperties(const sci::cca::ComponentID::pointer &cid,
 					 const sci::cca::TypeMap::pointer &map)
   {
     if (cid.isNull()) {
@@ -185,18 +188,18 @@ namespace SCIRun {
     ci->setProperties(map);
   }
   
-  template<class Base>
+  template<class Interface>
   sci::cca::ComponentID::pointer
-  BuilderServiceImpl<Base>::getDeserialization(const std::string& /*s*/)
+  BuilderServiceBase<Interface>::getDeserialization(const std::string& /*s*/)
   {
     // TODO: finish this!
     std::cerr << "BuilderService::getDeserialization not finished\n";
     return sci::cca::ComponentID::pointer(0);
   }
   
-  template<class Base>
+  template<class Interface>
   sci::cca::ComponentID::pointer
-  BuilderServiceImpl<Base>::getComponentID(const std::string &componentInstanceName)
+  BuilderServiceBase<Interface>::getComponentID(const std::string &componentInstanceName)
   {
     sci::cca::ComponentID::pointer cid = framework->lookupComponentID(componentInstanceName);
     if (cid.isNull()) {
@@ -205,9 +208,9 @@ namespace SCIRun {
     return cid;
   }
   
-  template<class Base>
+  template<class Interface>
   void
-  BuilderServiceImpl<Base>::destroyInstance(const ComponentID::pointer &component, float /*timeout*/)
+  BuilderServiceBase<Interface>::destroyInstance(const ComponentID::pointer &component, float /*timeout*/)
   {
 
     // TODO [yarden]: use timeout
@@ -217,9 +220,9 @@ namespace SCIRun {
     framework->destroyInstance(component);
   }
   
-  template<class Base>
+  template<class Interface>
   SSIDL::array1<std::string>
-  BuilderServiceImpl<Base>::getProvidedPortNames(const ComponentID::pointer &cid)
+  BuilderServiceBase<Interface>::getProvidedPortNames(const ComponentID::pointer &cid)
   {
     SSIDL::array1<std::string> result;
     ComponentInfo::pointer ci = pidl_cast<ComponentInfo::pointer>(cid);
@@ -237,9 +240,9 @@ namespace SCIRun {
     return result;
   }
   
-  template<class Base>
+  template<class Interface>
   SSIDL::array1<std::string>
-  BuilderServiceImpl<Base>::getUsedPortNames(const ComponentID::pointer &cid)
+  BuilderServiceBase<Interface>::getUsedPortNames(const ComponentID::pointer &cid)
   {
     SSIDL::array1<std::string> result;
     ComponentInfo::pointer ci = pidl_cast<ComponentInfo::pointer>(cid);
@@ -259,16 +262,16 @@ namespace SCIRun {
   }
 
   // TODO: make sure that port properties are actually created
-  template<class Base>
+  template<class Interface>
   sci::cca::TypeMap::pointer
-  BuilderServiceImpl<Base>::getPortProperties(const sci::cca::ComponentID::pointer &cid, const std::string &portname)
+  BuilderServiceBase<Interface>::getPortProperties(const sci::cca::ComponentID::pointer &cid, const std::string &portname)
   {
     ComponentInfo::pointer info = pidl_cast<ComponentInfo::pointer>(cid);
     return info.isNull() ? framework->createTypeMap() : info->getProperties();
   }
 
-  template<class Base>
-  void BuilderServiceImpl<Base>::setPortProperties(const sci::cca::ComponentID::pointer& /*cid*/,
+  template<class Interface>
+  void BuilderServiceBase<Interface>::setPortProperties(const sci::cca::ComponentID::pointer& /*cid*/,
 					 const std::string& /*portname*/,
 					 const sci::cca::TypeMap::pointer& /*map*/)
   {
@@ -276,24 +279,24 @@ namespace SCIRun {
     std::cerr << "BuilderService::setPortProperties not finished\n";
   }
 
-  template<class Base>
+  template<class Interface>
   SSIDL::array1<sci::cca::ConnectionID::pointer>
-  BuilderServiceImpl<Base>::getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer> &componentList)
+  BuilderServiceBase<Interface>::getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer> &componentList)
   {
     return framework->getConnectionIDs(componentList);
   }
 
-  template<class Base>
+  template<class Interface>
   sci::cca::TypeMap::pointer
-  BuilderServiceImpl<Base>::getConnectionProperties(const ConnectionID::pointer& connection)
+  BuilderServiceBase<Interface>::getConnectionProperties(const ConnectionID::pointer& connection)
   {
     ConnectionInfo::pointer info = pidl_cast<ConnectionInfo::pointer>(connection);
     return info.isNull() ? sci::cca::TypeMap::pointer(0) : info->getProperties();
   }
 
-  template<class Base>
+  template<class Interface>
   void
-  BuilderServiceImpl<Base>::setConnectionProperties(const ConnectionID::pointer &connection,
+  BuilderServiceBase<Interface>::setConnectionProperties(const ConnectionID::pointer &connection,
 						    const sci::cca::TypeMap::pointer &properties)
   {
     ConnectionInfo::pointer info = pidl_cast<ConnectionInfo::pointer>(connection);
@@ -303,9 +306,9 @@ namespace SCIRun {
 
   // TODO: disconnect event
   // TODO: timeout never used
-  template<class Base>
+  template<class Interface>
   void
-  BuilderServiceImpl<Base>::disconnect(const ConnectionID::pointer& connection, float timeout)
+  BuilderServiceBase<Interface>::disconnect(const ConnectionID::pointer& connection, float timeout)
   {
     ComponentInfo::pointer user = pidl_cast<ComponentInfo::pointer>(connection->getUser());
     ComponentInfo::pointer provider = pidl_cast<ComponentInfo::pointer>(connection->getProvider());
@@ -319,23 +322,23 @@ namespace SCIRun {
     framework->disconnect(connection);
   }
   
-  template<class Base>
+  template<class Interface>
   void
-  BuilderServiceImpl<Base>::disconnectAll(const sci::cca::ComponentID::pointer& /*id1*/,
+  BuilderServiceBase<Interface>::disconnectAll(const sci::cca::ComponentID::pointer& /*id1*/,
 					  const sci::cca::ComponentID::pointer& /*id2*/,
 					  float /*timeout*/)
   {
     std::cerr << "BuilderService::disconnectAll not finished\n";
   }
 
-  template<class Base>
+  template<class Interface>
   std::string
-  BuilderServiceImpl<Base>::getFrameworkURL() {
+  BuilderServiceBase<Interface>::getFrameworkURL() {
     return framework->getURL().getString();
   }
 
-  template<class Base>
-  void BuilderServiceImpl<Base>::emitConnectionEvent(ConnectionEvent* event)
+  template<class Interface>
+  void BuilderServiceBase<Interface>::emitConnectionEvent(ConnectionEvent* event)
   {
     ConnectionEventService::pointer service = pidl_cast<ConnectionEventService::pointer>
       ( framework->getFrameworkService("cca.ConnectionEventService") );

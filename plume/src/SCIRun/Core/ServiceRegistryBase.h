@@ -28,25 +28,53 @@
 
 
 /*
- *  ComponentDescription.cc: 
+ *  ServiceRegistryBase.h: 
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
  *   Sept 2005
  *
  */
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-//#include <SCIRun/Core/ComponentClassDescriptionBase.code>
+#ifndef SCIRun_Core_ServiceRegistryBase_h
+#define SCIRun_Core_ServiceRegistryBase_h
 
 namespace SCIRun {
   
-  ComponentClassDescriptionImpl::ComponentClassDescriptionImpl(const std::string &type)
-    : ComponentClassDescriptionBase<ComponentClassDescription>(type)
-  {}
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+  
+  /**
+   * \class ServiceRegistryBase
+   *
+   */
+  
+  template<class Interface>
+  class ServiceRegistryBase : public Interface
+  {
+  public:
+    typedef ServiceRegistry::pointer pointer;
+    
+    ServiceRegistryBase(const CoreFramework::pointer &framework );
+    virtual ~ServiceRegistryBase();
+    
+    /*
+     * sci.cca.core.ServiceRegistry interface
+     */
+    
+    virtual bool addService(const std::string &serviceType, const ServiceProvider::pointer &portProvider);
+    virtual bool adSingletonService( const std::string &serviceType, const Port::pointer &server);
 
-  ComponentClassDescriptionImpl::~ComponentClassDescriptionImpl() {}
-}
+  protected:
+    CoreFramework::pointer framework;
+
+    // prevent using these directly
+    ServiceRegistryBase(const ServiceRegistryBase&);
+    ServiceRegistryBase& operator=(const ServiceRegistryBase&);
+  };
+  
+} // end namespace SCIRun
+
+#endif

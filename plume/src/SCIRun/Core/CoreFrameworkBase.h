@@ -108,7 +108,7 @@ namespace SCIRun {
 
     // factories
     virtual void addComponentClassFactory( const ComponentClassFactory::pointer &factory );
-    virtual void addFrameworkServiceFactory( const ServiceFactory::pointer &factory );
+    virtual bool addFrameworkServiceFactory( const ServiceFactory::pointer &factory );
 
   private:
     typedef std::list<ConnectionInfo::pointer> ConnectionList;

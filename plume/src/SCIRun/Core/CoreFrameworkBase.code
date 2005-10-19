@@ -49,6 +49,9 @@
 #include <SCIRun/Core/ServiceInfoImpl.h>
 #include <SCIRun/Core/TypeMapImpl.h>
 
+// default factories
+#include <SCIRun/Core/UnknownComponentClassFactory.h>
+
 // Services
 //#include <SCIRun/Distributed/FrameworkPropertiesService.h>
 //#include <SCIRun/Distributed/BuilderService.h>
@@ -70,6 +73,7 @@ namespace SCIRun {
       factory_lock("CoreFrameworkBase::factory_lock"),
       service_lock("CoreFrameworkBase::service_lock")
   {
+    addComponentClassFactory( ComponentClassFactory::pointer( new UnknownComponentClassFactory ));
     //addServiceFactory(new StdFrameworkServiceFactory<FrameworkPropertiesService>("cca.FrameworkProperties"));
     //addServiceFactory(new StdFrameworkServiceFactory<BuilderService>("cca.BuilderService"));
   }
@@ -136,10 +140,10 @@ namespace SCIRun {
   }
 
   template<class Interface>
-  TypeMap ::pointer
+  TypeMap::pointer
   CoreFrameworkBase<Interface>::createTypeMap()
   {
-    return TypeMap::pointer( new TypeMapImpl );
+    return TypeMap::pointer( new TypeMapImpl ); 
   }
     
   template<class Interface>
@@ -147,7 +151,21 @@ namespace SCIRun {
 							       const std::string &type, 
 							       const TypeMap::pointer &properties)
   {
-    throw CCAException::create("getServices is not implemented by CoreFramework");
+    ComponentInfo::pointer info(0);
+    try {
+      info = createInstance( name, type, properties);
+    }
+    catch( const CCAException::pointer & ) {
+      // model does not exist or did not proivide a null factory. 
+      // create a null one
+      info = createInstance( name, "sci.cca.unknown", properties );
+    }
+    
+    Services::pointer services = pidl_cast<Services::pointer>(info);
+    if (services.isNull())
+      throw CCAException::create("getServices unavailable");
+
+    return services;
   }
 
   template<class Interface>
@@ -260,14 +278,15 @@ namespace SCIRun {
   }
 
   template<class Interface>
-  void                          
+  bool                      
   CoreFrameworkBase<Interface>::addFrameworkServiceFactory(const ServiceFactory::pointer &factory)
   {
     ServiceMap::const_iterator iter = services.find(factory->getName());
     if (iter != services.end())
-      throw CCAException::create("Can not add service factory ["+factory->getName()+"]: already defined");
+      return false;
     
     services[factory->getName()] = factory;
+    return true;
   }
   
 
@@ -292,7 +311,7 @@ namespace SCIRun {
       return ServiceInfo::pointer(0);
     
     // get a port from the service
-    PortInfo::pointer servicePort = (*service).second->getService(serviceName);
+    PortInfo::pointer servicePort = (*service).second->getService(serviceName, requester);
 
     // connect the requester port and the service port
     requesterPort->connect(servicePort);

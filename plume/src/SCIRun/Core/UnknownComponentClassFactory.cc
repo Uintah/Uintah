@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentDescription.cc: 
+ *  UnknownComponentClassFactory.cc: 
  *
  *  Written by:
  *   Yarden Livant
@@ -39,14 +39,34 @@
  */
 
 #include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/Core/UnknownComponentClassFactory.h>
 #include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-//#include <SCIRun/Core/ComponentClassDescriptionBase.code>
+#include <SCIRun/Core/CoreServicesImpl.h>
 
 namespace SCIRun {
-  
-  ComponentClassDescriptionImpl::ComponentClassDescriptionImpl(const std::string &type)
-    : ComponentClassDescriptionBase<ComponentClassDescription>(type)
-  {}
 
-  ComponentClassDescriptionImpl::~ComponentClassDescriptionImpl() {}
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+
+  ComponentClassDescriptionImpl factory("cca.unknown");
+  ComponentClassDescription::pointer unknown( &factory);
+
+  UnknownComponentClassFactory::UnknownComponentClassFactory()
+    : ComponentClassFactoryBase<ComponentClassFactory>( unknown )
+  {}
+  
+  UnknownComponentClassFactory::~UnknownComponentClassFactory() {}
+  
+  ComponentInfo::pointer 
+  UnknownComponentClassFactory::create( const CoreFramework::pointer &framework,
+					const std::string &name,
+					const sci::cca::TypeMap::pointer &properties)
+  {
+    return CoreServices::pointer( new CoreServicesImpl(framework, 
+						       name, 
+						       "cca.Unknown", 
+						       properties, 
+						       Component::pointer(0)));
+  }
 }
+
