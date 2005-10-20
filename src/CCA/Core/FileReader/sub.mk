@@ -31,18 +31,17 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Core/CCA/spec
+SRCDIR   := CCA/Components/FileReader
 
-$(SRCDIR)/sci_sidl.h: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
-
-
-$(SRCDIR)/sci_sidl.cc: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
-
-SRCS := $(SRCS) $(SRCDIR)/sci.sidl $(SRCDIR)/sci_sidl.cc
-GENHDRS := $(GENHDRS) $(SRCDIR)/sci_sidl.h
-
-PSELIBS := Core/CCA/SSIDL Core/CCA/Comm Core/CCA/PIDL
-LIBS := 
+SRCS     += \
+	$(SRCDIR)/FileReader.cc
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
+	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+#QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
+LIBS := $(QT_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+#include $(SCIRUN_SCRIPTS)/program.mk
+
+$(SRCDIR)/FileReader.o: Core/CCA/spec/sci_sidl.h

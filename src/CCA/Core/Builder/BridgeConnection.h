@@ -12,7 +12,7 @@
    to deal in the Software without restriction, including without limitation
    the rights to use, copy, modify, merge, publish, distribute, sublicense,
    and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to Che following conditions:
+   Software is furnished to do so, subject to the following conditions:
 
    The above copyright notice and this permission notice shall be included
    in all copies or substantial portions of the Software.
@@ -26,17 +26,35 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-version sci 0.2;
 
-#include "cca.sidl"
-#include "cca_core.sidl"
-#include "core_example.sidl"
 
-//#include "distributed.sidl"
-//#include "plume.sidl"
 
-//#include "scirun.sidl"
-//#include "SCIRun2Classes.sidl"
-//#include "SCIRun2Ports.sidl"
+#ifndef BRIDGE_CONNECTION_H
+#define BRIDGE_CONNECTION_H
+
+#include <CCA/Components/Builder/Connection.h>
+
+using namespace SCIRun;
+
+class BridgeConnection : public Connection 
+{
+public:
+  BridgeConnection(PortIcon* p1, PortIcon* p2, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cv)
+  : Connection(p1, p2, connID, cv) { }
+  using Connection::resetPoints;
+  using Connection::isConnectedTo;
+  using Connection::getConnectionID;
+  using Connection::highlight;
+  using Connection::setDefault;
+  using Connection::usesPort;
+  using Connection::providesPort;
+  virtual std::string getConnectionType();
+
+protected:
+  void drawShape(QPainter& );
+};
+
+#endif
+
 
 

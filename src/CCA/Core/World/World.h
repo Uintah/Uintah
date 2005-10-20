@@ -12,7 +12,7 @@
    to deal in the Software without restriction, including without limitation
    the rights to use, copy, modify, merge, publish, distribute, sublicense,
    and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to Che following conditions:
+   Software is furnished to do so, subject to the following conditions:
 
    The above copyright notice and this permission notice shall be included
    in all copies or substantial portions of the Software.
@@ -26,17 +26,55 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-version sci 0.2;
 
-#include "cca.sidl"
-#include "cca_core.sidl"
-#include "core_example.sidl"
+/*
+ *  World.h
+ *
+ *  Written by:
+ *   Keming Zhang 
+ *   Department of Computer Science
+ *   University of Utah
+ *   May 2003
+ *
+ */
 
-//#include "distributed.sidl"
-//#include "plume.sidl"
+#ifndef SCIRun_CCA_Core_World_h
+#define SCIRun_CCA_Core_World_h
 
-//#include "scirun.sidl"
-//#include "SCIRun2Classes.sidl"
-//#include "SCIRun2Ports.sidl"
+#include <Core/CCA/spec/sci_sidl.h>
+
+namespace SCIRun {
+  
+  using namespace sci::cca;
+
+  
+  class World : public Component {
+  public:
+    World();
+    virtual ~World();
+    void setServices(const Services::pointer& svc);
+
+    const std::string &getMessage() { return text; }
+
+  private:
+    std::string text;
+    Services::pointer services;
+
+    World(const World&);
+    World& operator=(const World&);
+  };
+  
+  class MessagePort : public ports::MessagePort {
+  public:
+    MessagePort( World *world ) : world(world) {}
+    std::string getString() { return world->getMessage(); }
+  private:
+    World *world;
+  };
+  
+  
+  
+} //namepace SCIRun
 
 
+#endif

@@ -28,7 +28,7 @@
 
 
 /*
- *  SingletonServiceFactory.h: 
+ *  SingletonServiceFactoryImpl.h: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -49,14 +49,22 @@ namespace SCIRun {
   using namespace sci::cca;
   using namespace sci::cca::core;
   
+  /**
+   * \class SingletonServiceFactory
+   *
+   */
+  
   template<class Service>
   class SingletonServiceFactory : public SingletonServiceFactoryBase<Service, ServiceFactory>
   {
-  public:
+  public: 
     typedef ServiceFactory::pointer pointer;
     
     SingletonServiceFactory(const CoreFramework::pointer &framework, const std::string& serviceName)
-    virtual ~SingletonServiceFactory();
+      : SingletonServiceFactoryBase<Service, ServiceFactory>(framework, serviceName)
+    {}
+      
+    virtual ~SingletonServiceFactory() {}
     
     pointer getPointer() { return pointer(this); }
 

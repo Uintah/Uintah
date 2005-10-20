@@ -26,46 +26,72 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 /*
- *  SingletonServiceFactory.h: 
+ * PathDialog.h
  *
- *  Written by:
- *   Yarden Livnat
- *   SCI Institute
- *   University of Utah
- *   Sept 2005
+ * Written by:
+ *  Ayla Khan
+ *  SCI
+ *  University of Utah
+ *  November 2004
  *
  */
 
-#ifndef SCIRun_Core_SingletonServiceFactory_h
-#define SCIRun_Core_SingletonServiceFactory_h
 
-#include <SCIRun/Core/SingletonServiceFactoryBase.h>
-#include <SCIRun/Core/SingletonServiceFactoryBase.code>
+#ifndef PathDialog_h
+#define PathDialog_h
 
-namespace SCIRun {
-  
-  using namespace sci::cca;
-  using namespace sci::cca::core;
-  
-  template<class Service>
-  class SingletonServiceFactory : public SingletonServiceFactoryBase<Service, ServiceFactory>
-  {
-  public:
-    typedef ServiceFactory::pointer pointer;
-    
-    SingletonServiceFactory(const CoreFramework::pointer &framework, const std::string& serviceName)
-    virtual ~SingletonServiceFactory();
-    
-    pointer getPointer() { return pointer(this); }
+#include <qvariant.h>
+#include <qdialog.h>
 
-  protected:
-    // prevent using these directly
-    SingletonServiceFactory(const SingletonServiceFactory<Service>&);
-    SingletonServiceFactory& operator=(const SingletonServiceFactory<Service>&);
-  };
-  
-} // end namespace SCIRun
+#include <vector>
 
-#endif
+class QVBoxLayout;
+class QHBoxLayout;
+class QSpacerItem;
+class QComboBox;
+class QGridLayout;
+class QLabel;
+class QLineEdit;
+class QPushButton;
+class QString;
+
+class PathDialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+    PathDialog(QWidget* parent = 0, const char* name = 0, bool modal = TRUE, WFlags fl = 0);
+    ~PathDialog();
+
+    QString selectedDirectory() const;
+    QString selectedComponentModel() const;
+    //void insertComponentModels(std::vector<std::string> &models);
+    void insertComponentModels();
+
+protected:
+    QVBoxLayout* layoutDialog;
+    QSpacerItem* verticalSpacing;
+    QHBoxLayout* layoutName;
+    QHBoxLayout* layoutPath;
+    QHBoxLayout* layoutButtons;
+    QSpacerItem* horizontalSpacing;
+
+protected slots:
+    virtual void languageChange();
+
+private:
+    QLabel* textLabelComponents;
+    QComboBox* comboBoxName;
+    QPushButton* buttonPath;
+    QLineEdit* lineEditPath;
+    QPushButton* buttonHelp;
+    QPushButton* buttonOk;
+    QPushButton* buttonCancel;
+    QString workingDir;
+
+private slots:
+    void fileDialog();
+};
+
+#endif // PathDialog_h

@@ -29,20 +29,12 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+SRCDIR   := CCA/Core
 
-SRCDIR := Core/CCA/spec
+SUBDIRS := \
+	$(SRCDIR)/Hello \
+	$(SRCDIR)/World \
+#	$(SRCDIR)/TxtBuilder \
 
-$(SRCDIR)/sci_sidl.h: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
 
-
-$(SRCDIR)/sci_sidl.cc: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
-
-SRCS := $(SRCS) $(SRCDIR)/sci.sidl $(SRCDIR)/sci_sidl.cc
-GENHDRS := $(GENHDRS) $(SRCDIR)/sci_sidl.h
-
-PSELIBS := Core/CCA/SSIDL Core/CCA/Comm Core/CCA/PIDL
-LIBS := 
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
+include $(SCIRUN_SCRIPTS)/recurse.mk
