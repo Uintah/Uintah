@@ -645,7 +645,6 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
                                                     Ghost::AroundCells, 1);
     t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,   Ghost::None, 0); 
-    t->requires(Task::OldDW,MIlb->cVolumeLabel, Ghost::AroundCells, 1);
     t->requires(Task::OldDW, MIlb->temp_CCLabel,    Ghost::None, 0);
     t->requires(Task::OldDW, MIlb->vel_CCLabel,     Ghost::None, 0);
     
