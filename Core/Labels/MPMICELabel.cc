@@ -18,13 +18,11 @@ using namespace Uintah;
 MPMICELabel::MPMICELabel()
 {
   // Cell centered variables
-  cMassLabel    = VarLabel::create( "c.mass",
+  cMassLabel         = VarLabel::create( "c.mass",
                      CCVariable<double>::getTypeDescription() );
-  cVolumeLabel  = VarLabel::create( "c.volume",
-                     CCVariable<double>::getTypeDescription() );
-  vel_CCLabel   = VarLabel::create( "vel_CC",
+  vel_CCLabel        = VarLabel::create( "vel_CC",
                      CCVariable<Vector>::getTypeDescription() );
-  temp_CCLabel     = VarLabel::create("temp_CC",
+  temp_CCLabel       = VarLabel::create("temp_CC",
                      CCVariable<double>::getTypeDescription() );
   press_NCLabel      = VarLabel::create("pressureNC",
                      NCVariable<double>::getTypeDescription());
@@ -63,7 +61,6 @@ MPMICELabel::~MPMICELabel()
 {
   
   VarLabel::destroy(cMassLabel);
-  VarLabel::destroy(cVolumeLabel);
   VarLabel::destroy(vel_CCLabel);
   VarLabel::destroy(temp_CCLabel);
   VarLabel::destroy(press_NCLabel);
