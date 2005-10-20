@@ -649,8 +649,6 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->requires(Task::OldDW, MIlb->vel_CCLabel,     Ghost::None, 0);
     
     t->computes(MIlb->cMassLabel);
-    t->computes(MIlb->cVolumeLabel);
-
     t->computes(MIlb->vel_CCLabel);
     t->computes(MIlb->temp_CCLabel);
     t->computes(Ilb->sp_vol_CCLabel, mss);
@@ -673,13 +671,10 @@ void MPMICE::scheduleCoarsenCC_0(SchedulerP& sched,
   double rho_orig = mpm_matl->getInitialDensity();
   double very_small_mass = d_TINY_RHO * cell_vol;
   cmass.initialize(very_small_mass);
-  cvolume.initialize( very_small_mass/rho_orig);
 #endif
 
   scheduleCoarsenSumVariableCC(sched, patches, mpm_matls, MIlb->cMassLabel,
                                1.9531e-15);
-  scheduleCoarsenSumVariableCC(sched, patches, mpm_matls, MIlb->cVolumeLabel,
-                               1.6562e-15);
   scheduleMassWeightedCoarsenVariableCC(
                               sched, patches, mpm_matls, MIlb->temp_CCLabel,0.);
 
@@ -1277,13 +1272,12 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       // Create arrays for the grid data
       constNCVariable<double> gmass, gvolume, gtemperature, gSp_vol;
       constNCVariable<Vector> gvelocity;
-      CCVariable<double> cmass, cvolume,Temp_CC, sp_vol_CC, rho_CC;
+      CCVariable<double> cmass,Temp_CC, sp_vol_CC, rho_CC;
       CCVariable<Vector> vel_CC;
       constCCVariable<double> Temp_CC_ice, sp_vol_CC_ice;
       constCCVariable<Vector> vel_CC_ice;
 
       new_dw->allocateAndPut(cmass,    MIlb->cMassLabel,     indx, patch);  
-      new_dw->allocateAndPut(cvolume,  MIlb->cVolumeLabel,   indx, patch);  
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx, patch);  
       new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx, patch);  
       new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch); 
@@ -1292,7 +1286,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       double rho_orig = mpm_matl->getInitialDensity();
       double very_small_mass = d_TINY_RHO * cell_vol;
       cmass.initialize(very_small_mass);
-      cvolume.initialize( very_small_mass/rho_orig);
          
       new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
       new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
@@ -1329,7 +1322,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         for (int in=0;in<8;in++){
           double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
           cmass[c]    += NC_CCw_mass;
-          cvolume[c]  += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
           sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
           vel_CC_mpm  += gvelocity[nodeIdx[in]]    * NC_CCw_mass;
           Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
@@ -1362,7 +1354,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       setBC(vel_CC,  "Velocity",   patch, d_sharedState, indx, new_dw);
       //  Set if symmetric Boundary conditions
       setBC(cmass,    "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
-      setBC(cvolume,  "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
       setBC(sp_vol_CC,"set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
       
      //---- P R I N T   D A T A ------
@@ -1372,7 +1363,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
             <<  patch->getID();
         d_ice->printData(   indx, patch, 1,desc.str(), "sp_vol",    sp_vol_CC); 
         d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
-        d_ice->printData(   indx, patch, 1,desc.str(), "cvolume",   cvolume);
         d_ice->printData(   indx, patch, 1,desc.str(), "Temp_CC",   Temp_CC);
         d_ice->printData(   indx, patch, 1,desc.str(), "rho_CC",    rho_CC);
         d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0, vel_CC);

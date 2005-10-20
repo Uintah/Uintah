@@ -91,7 +91,6 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       }
       if(mpm_matl){                    // M P M    
         new_dw->get(Temp[m],     MIlb->temp_CCLabel,  indx,patch,gn,0); 
-        new_dw->get(mat_vol[m],  MIlb->cVolumeLabel,  indx,patch,gn,0); 
         new_dw->get(mass_CC[m],  MIlb->cMassLabel,    indx,patch,gn,0); 
       }
        new_dw->allocateTemporary(kappa[m],         patch);
@@ -134,10 +133,10 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
            total_ice_vol+=mat_volume[m];
           }
           if(mpm_matl){                //  M P M
-            rho_micro[m][c]  = mass_CC[m][c]/mat_vol[m][c];
-            sp_vol_new[m][c] = 1/rho_micro[m][c];
+            rho_micro[m][c]  = 1.0/sp_vol_CC[m][c];
+            sp_vol_new[m][c] = 1/sp_vol_CC[m][c];
             mat_mass[m]      = mass_CC[m][c];
-            mat_volume[m] = mat_vol[m][c];
+            mat_volume[m]    = mat_mass[m] * sp_vol_CC[m][c];
           }
           total_mat_vol += mat_volume[m];
         }
