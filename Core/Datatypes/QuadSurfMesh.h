@@ -335,18 +335,7 @@ public:
   {
     // Needs to match unit_faces in Basis/QuadBilinearLgn.cc 
     // compare get_nodes order to the basis order
-
-    //FIX_ME MC delete this comment when this is verified.
-
-    typename Face::array_type faces;
-    get_faces(faces, ci);
-    unsigned count = 0;
-    typename Face::array_type::iterator iter = faces.begin();
-    while (iter != faces.end()) {
-      if (fi == *iter++) break;
-      ++count;
-    }
-    basis_.approx_face(count, div_per_unit, coords);
+    basis_.approx_face(0, div_per_unit, coords);
   }
   
   bool get_coords(vector<double> &coords, 
