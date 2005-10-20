@@ -711,6 +711,8 @@ SampleFieldRandomAlgo::get_compile_info(const TypeDescription *mesh_td)
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
   mesh_td->fill_compile_info(rval);
   return rval;
 }

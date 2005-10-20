@@ -45,6 +45,9 @@ ConvertTetBase::get_compile_info(const TypeDescription *td) {
 					 template_class_name(), 
 					 td->get_name());
   rval->add_include(get_h_file_path());
+  rval->add_basis_include("../src/Core/Basis/TetLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/TetQuadraticLgn.h");
+  rval->add_mesh_include("../src/Core/Datatypes/TetVolMesh.h");
   td->fill_compile_info(rval);
   return rval;
 }

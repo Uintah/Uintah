@@ -45,8 +45,8 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
-#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Containers/FData.h>
 #include <Core/Datatypes/GenericField.h>
 
