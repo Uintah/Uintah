@@ -211,7 +211,7 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
     imesh->size(size);
   }
 
-  FIELD *ofield = scinew FIELD(omesh, out_basis);
+  FIELD *ofield = scinew FIELD(omesh);
   if (cdata)
   {
     if (out_basis == 0)
