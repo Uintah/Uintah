@@ -28,7 +28,7 @@
 
 
 /*
- *  SingletonServiceInfoBase.code: 
+ *  ServiceFactoryBase.code: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,7 +38,6 @@
  *
  */
 
-#include <Core/Thread/Guard.h>
 #include <SCIRun/Core/PortInfoImpl.h>
 
 namespace SCIRun {
@@ -47,9 +46,9 @@ namespace SCIRun {
   using namespace sci::cca::core;
   
   template<class Interface>
-  SingletonServiceFactoryBase<Interface>::SingletonServiceFactoryBase(const CoreFramework::pointer &framework,
-								      const std::string &serviceName,
-								      const Port::pointer &server)
+  ServiceFactoryBase<Interface>::ServiceFactoryBase(const CoreFramework::pointer &framework,
+						    const std::string &serviceName,
+						    const Port::pointer &server)
     : service( new PortInfoImpl("singleton", 
 				serviceName, 
 				TypeMap::pointer(0), 
@@ -57,20 +56,20 @@ namespace SCIRun {
 				ProvidePort )),
       name(serviceName),
       uses(0),
-      lock("SingletoneServiceFactory")
+      lock("eServiceFactory")
   {}
 
   template<class Interface>
-  SingletonServiceFactoryBase<Interface>::~SingletonServiceFactoryBase()
+  ServiceFactoryBase<Interface>::~ServiceFactoryBase()
   {}
     
     /*
-     * sci.cca.core.SingletonServiceFactory interface
+     * sci.cca.core.ServiceFactory interface
      */
   
 
   template<class Interface>
-  PortInfo::pointer SingletonServiceFactoryBase<Interface>::getService(const std::string &)
+  PortInfo::pointer ServiceFactoryBase<Interface>::getService(const std::string &)
   {
     Guard gurd(&lock);
 
@@ -80,7 +79,7 @@ namespace SCIRun {
 
 
   template<class Interface>
-  void SingletonServiceFactoryBase<Interface>::releaseService(const std::string &)
+  void ServiceFactoryBase<Interface>::releaseService(const std::string &)
   {
     Guard guard(&lock);
     uses--;

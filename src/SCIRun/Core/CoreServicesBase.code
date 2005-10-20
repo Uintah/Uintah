@@ -49,6 +49,7 @@
 #include <SCIRun/Core/ComponentInfoBase.code>
 #include <Core/Thread/Guard.h>
 
+#include <iostream>
 
 namespace SCIRun {
   
@@ -62,39 +63,14 @@ namespace SCIRun {
 						const std::string& className,
 						const TypeMap::pointer& properties,
 						const Component::pointer& component)
-    : ComponentInfoBase<Interface>(framework, instanceName, className, properties, component )
+    : ComponentInfoBase<Interface>(framework, instanceName, className, properties, component ),
+      service_lock("ComponentInfo service_lock")
   {
   }
   
   template<class Interface>
   CoreServicesBase<Interface>::~CoreServicesBase() 
   {
-  }
-
-  // from cca.Services
-  template<class Interface>
-  void CoreServicesBase<Interface>::releasePort(const std::string &name)
-  {
-    Guard guard(&ports_lock);
-    
-    typename PortMap::iterator iter = ports.find(name);
-    if ( iter == ports.end() )
-      throw CCAException::create("Can not realease unknown port ["+name+"]");
-    
-    PortInfo::pointer port = (*iter).second;
-    if ( port->getPortType() == ProvidePort )
-      throw CCAException::create("Cannot release a provides port", PortNotDefined);
-
-    if ( !port->decrementUseCount())
-      throw CCAException::create("Port ["+name+"] released without corresponding get", PortNotInUse);
-
-    if ( !port->isConnected() ) {
-      ServicePortMap::iterator iter = servicePorts.find(name);
-      if ( iter != servicePorts.end() ) {
-	this->framework->releaseFrameworkService(iter->second);
-	servicePorts.erase(iter);
-      }
-    }
   }
 
   template<class Interface>
@@ -180,14 +156,16 @@ namespace SCIRun {
     
     if ( !port->isConnected() ) {
       // check if this is a service
-      if (!this->framework->isFrameworkService(name)) 
+      if (!this->framework->isFrameworkService(port->getClass())) 
 	throw CCAException::create("Port ["+name+"] not connected", PortNotConnected);
 
       // ask for the service: the framework will also make the connection
-      ServiceInfo::pointer service = this->framework->getFrameworkService(name, port, ComponentInfo::pointer(this) );
+      ServiceInfo::pointer service = this->framework->getFrameworkService(port->getClass(), port, ComponentInfo::pointer(this) );
+      
+      Guard guard(&service_lock);
+      
       servicePorts[name] = service;
     }
-
     // port is connected
     port->incrementUseCount();
     return port->getPeer()->getPort();
@@ -219,6 +197,41 @@ namespace SCIRun {
 
     port->incrementUseCount();
     return port->getPeer()->getPort();
+  }
+
+  // from cca.Services
+  template<class Interface>
+  void CoreServicesBase<Interface>::releasePort(const std::string &name)
+  {
+    PortInfo::pointer port;
+    {
+      Guard guard(&ports_lock);
+    
+      typename PortMap::iterator iter = ports.find(name);
+      if ( iter == ports.end() )
+	throw CCAException::create("Can not realease unknown port ["+name+"]");
+      
+      port = (*iter).second;
+      if ( port->getPortType() == ProvidePort )
+	throw CCAException::create("Cannot release a provides port", PortNotDefined);
+      
+      if ( !port->decrementUseCount())
+	throw CCAException::create("Port ["+name+"] released without corresponding get", PortNotInUse);
+    }
+    // release the ports_lock as we may need it if we
+    // also release a framework service
+    {
+      Guard guard(&service_lock);
+
+      if ( !port->inUse() ) {
+	ServicePortMap::iterator iter = servicePorts.find(name);
+	if ( iter != servicePorts.end() ) {
+	  ServiceInfo::pointer serviceInfo = iter->second;
+	  servicePorts.erase(iter);
+	  this->framework->releaseFrameworkService(serviceInfo);
+	}
+      }
+    }
   }
 
   template<class Interface>

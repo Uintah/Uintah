@@ -87,6 +87,8 @@ namespace SCIRun {
     virtual void add(const std::string &filename, int lineno, const std::string &methodname);
     
   private:
+    //mutable void *stack_addresses[1024];
+    //mutable int stack_depth;
     mutable std::string message;
     mutable CCAExceptionType type;
   };

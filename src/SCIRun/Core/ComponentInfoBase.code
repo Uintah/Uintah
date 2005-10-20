@@ -93,7 +93,7 @@ namespace SCIRun {
   }
 
   template<class Interface>
-  void ComponentInfoBase<Interface>::disconnect(const std::string &portName, const PortInfo::pointer &from)
+  void ComponentInfoBase<Interface>::disconnectPort(const std::string &portName, const PortInfo::pointer &from)
   {
     Guard guard(&ports_lock);
 

@@ -49,24 +49,25 @@ namespace SCIRun {
   using namespace sci::cca::core;
   
   /**
-   * \class SingletonServiceFactoryImpl
+   * \class SingletonServiceFactory
    *
    */
   
-  class SingletonServiceFactoryImpl : public SingletonServiceFactoryBase<ServiceFactory>
+  template<class Service>
+  class SingletonServiceFactory : public SingletonServiceFactoryBase<Service, ServiceFactory>
   {
   public:
     typedef ServiceFactory::pointer pointer;
     
-    SingletonServiceFactoryImpl(const CoreFramework::pointer &framework,
-				const std::string& serviceName)
-    virtual ~SingletonServiceFactoryImpl();
+    SingletonServiceFactory(const CoreFramework::pointer &framework, const std::string& serviceName)
+    virtual ~SingletonServiceFactory();
     
-    
+    pointer getPointer() { return pointer(this); }
+
   protected:
     // prevent using these directly
-    SingletonServiceFactoryImpl(const SingletonServiceFactoryImpl&);
-    SingletonServiceFactoryImpl& operator=(const SingletonServiceFactoryImpl&);
+    SingletonServiceFactory(const SingletonServiceFactory<Service>&);
+    SingletonServiceFactory& operator=(const SingletonServiceFactory<Service>&);
   };
   
 } // end namespace SCIRun

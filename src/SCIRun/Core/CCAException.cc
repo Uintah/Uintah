@@ -52,6 +52,7 @@ namespace SCIRun {
   CCAException::CCAException(const std::string &msg, CCAExceptionType type)
     : message(msg), type(type)
   {
+    //stack_depth = backtrace(stack_addresses, 1024);
     // FIXME [yarden] from SCIRun:
     // Omitting this will cause the framework to
     // segfault when an exception is thrown.

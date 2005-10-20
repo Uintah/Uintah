@@ -28,7 +28,7 @@
 
 
 /*
- *  BuilderService.h: Implementation of the CCA BuilderService interface for SCIRun
+ *  BuilderServiceIm.h: Implementation of the CCA BuilderService interface for SCIRun
  *
  *  Written by:
  *   Steven G. Parker
@@ -38,31 +38,30 @@
  *
  */
 
-#ifndef SCIRun_BuilderService_h
-#define SCIRun_BuilderService_h
+#ifndef SCIRun_BuilderServiceImpl_h
+#define SCIRun_BuilderServiceImpl_h
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Distributed/BuilderServiceImpl.h>
-
+#include <SCIRun/Core/BuilderServiceBase.h>
 
 namespace SCIRun {
   
-  namespace DistributedServices = Distributed::ports;
-  namespace DistributedInternal = Distributed::internal;
+  using namespace sci::cca;
+  using namespace sci::cca::ports;
+  using namespace sci::cca::core;
 
   /**
    * \class BuilderService
    */
-  class BuilderService : public BuilderServiceImpl<DistributedServices::BuilderService>
+  class BuilderServiceImpl : public BuilderServiceBase<BuilderService>
   {
   public:
-    typedef Distributed::internal::Service::pointer pointer;
+    typedef BuilderService::pointer pointer;
     
-    BuilderService(const DistributedFramework::internalPointer &framework); 
+    BuilderServiceImpl(const CoreFramework::pointer &);
     
-    virtual ~BuilderService();
+    virtual ~BuilderServiceImpl();
     
-    static pointer create(const DistributedFramework::internalPointer &framework);
+    static pointer create(const CoreFramework::pointer &framework);
   };
 
 } // namespace SCIRun

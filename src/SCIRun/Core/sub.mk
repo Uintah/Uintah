@@ -46,6 +46,7 @@ SRCS     += \
              $(SRCDIR)/UnknownComponentClassFactory.cc \
 	     $(SRCDIR)/CoreServicesImpl.cc \
 	     $(SRCDIR)/CoreFrameworkImpl.cc \
+	     $(SRCDIR)/BuilderServiceImpl.cc \
 #             $(SRCDIR)/CoreFrameworkException.cc \
 #             $(SRCDIR)/ComponentEvent.cc \
 #             $(SRCDIR)/ConnectionEvent.cc \
@@ -54,7 +55,6 @@ SRCS     += \
 #             $(SRCDIR)/ConnectionEventService.cc \
 #             $(SRCDIR)/ComponentRepositoryService.cc \
 #             $(SRCDIR)/FrameworkPropertiesService.cc \
-#	     $(SRCDIR)/BuilderService.cc \
 
 $(SRCDIR)/TypeMap.o: Core/CCA/spec/sci_sidl.h
 $(SRCDIR)/ConnectionID.o: Core/CCA/spec/sci_sidl.h

@@ -83,30 +83,13 @@ main(int argc, char *argv[]) {
     
     Services::pointer main_services = core->getServices("main", "cca.unknown", core->createTypeMap());
     main_services->registerUsesPort("builder", "cca.BuilderService", core->createTypeMap());
-    main_services->registerUsesPort("properties", "cca.FrameworkProperties", core->createTypeMap());
     
     BuilderService::pointer builder = pidl_cast<BuilderService::pointer>( main_services->getPort("builder"));
 
-    defaultBuilder="txt";
-    
-    if (defaultBuilder=="gui") {
-      ComponentID::pointer gui_id =
-          builder->createInstance("SCIRun.Builder", "cca:SCIRun.Builder", core->createTypeMap());
-      if (gui_id.isNull()) {
-        std::cerr << "Cannot create component: cca:SCIRun.Builder\n";
-        Thread::exitAll(1);
-      }
-    } else {
-      ComponentID::pointer gui_id =
-        builder->createInstance("TxtBuilder", "cca:SCIRun.TxtBuilder", core->createTypeMap());
-      if(gui_id.isNull()) {
-        std::cerr << "Cannot create component: cca:SCIRun.TxtBuilder\n";
-        Thread::exitAll(1);
-      }
-    }
-    main_services->releasePort("cca.FrameworkProperties");
-    main_services->releasePort("cca.BuilderService");
-    std::cout << "SCIRun " << VERSION << " started..." << std::endl;
+    main_services->releasePort("builder");
+
+    main_services->unregisterUsesPort("builder");
+    std::cout << "Core " << VERSION << " started..." << std::endl;
   
     //broadcast, listen to URL periodically
     

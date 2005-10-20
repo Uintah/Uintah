@@ -47,17 +47,19 @@ namespace SCIRun {
   using namespace sci::cca::core;
   
   template<class Service, class Interface>
-  SingletonServiceFactoryBase<Interface>::SingletonServiceFactoryBase(const CoreFramework::pointer &framework,
-								      const std::string &serviceName)
+  SingletonServiceFactoryBase<Service, Interface>::SingletonServiceFactoryBase(const CoreFramework::pointer &framework,
+									       const std::string &serviceName)
     : framework(framework), serviceName(serviceName), uses(0), lock("SingletoneServiceFactory")
   {}
 
   template<class Service, class Interface>
-  SingletonServiceFactoryBase<Interface>::~SingletonServiceFactoryBase()
+  SingletonServiceFactoryBase<Service, Interface>::~SingletonServiceFactoryBase()
   {}
   
   template<class Service, class Interface>
-  PortInfo::pointer SingletonServiceFactoryBase<Interface>::getService(const std::string &)
+  PortInfo::pointer 
+  SingletonServiceFactoryBase<Service, Interface>::getService(const std::string &, 
+							      const ComponentInfo::pointer &)
   {
     Guard gurd(&lock);
     if ( service.isNull() )
@@ -65,14 +67,14 @@ namespace SCIRun {
 						     serviceName, 
 						     TypeMap::pointer(0),
 						     Service::create(framework),
-						     ProvidesPort));
+						     ProvidePort));
     uses++;
     return service;
   }
-
+  
 
   template<class Service, class Interface>
-  void SingletonServiceFactoryBase<Interface>::releaseService(const std::string &)
+  void SingletonServiceFactoryBase<Service, Interface>::releaseService(const std::string &)
   {
     Guard guard(&lock);
     uses--;

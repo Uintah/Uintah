@@ -59,7 +59,7 @@ namespace SCIRun {
     
     ServiceInfoBase(const std::string &serviceName,
 		    const PortInfo::pointer &servicePort,
-		    const PortInfo::pointer &requester,
+		    const PortInfo::pointer &requesterPort,
 		    const ComponentInfo::pointer &requester);
     virtual ~ServiceInfoBase();
     
