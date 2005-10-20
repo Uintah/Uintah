@@ -31,8 +31,9 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/Field.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/Field.h>
 #include <sstream>
 #include <iomanip>
 #include <sci_hash_map.h>
