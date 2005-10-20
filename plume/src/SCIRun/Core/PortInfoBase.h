@@ -104,12 +104,14 @@ namespace SCIRun {
     /** */
     virtual std::string getName();
     /** */
-    virtual std::string getType();
+    virtual std::string getClass();
 
     /** */
     virtual void incrementUseCount();
     /** */
     virtual bool decrementUseCount();
+
+    virtual bool inUse();
 
   protected:
     void setPort( const Port::pointer &port);

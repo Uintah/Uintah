@@ -70,7 +70,7 @@ namespace SCIRun {
   }
   
   template<class Interface>
-  BuilderServiceBase<Interface>::~BuilderServiceImpl()
+  BuilderServiceBase<Interface>::~BuilderServiceBase()
   {
   }
   
@@ -87,7 +87,7 @@ namespace SCIRun {
   ConnectionID::pointer
   BuilderServiceBase<Interface>::connect(const ComponentID::pointer &usesID,
 					 const std::string &usesPortName,
-					 const ComponentID::pointrs &providesID,
+					 const ComponentID::pointer &providesID,
 					 const ::std::string &providesPortName)
   {
     // sanity check
@@ -118,12 +118,12 @@ namespace SCIRun {
     }
     
     TypeMap::pointer properties = framework->createTypeMap();
-    properties->putString("user", user->getInstanceName());
-    properties->putString("provider", provider->getInstanceName());
+    properties->putString("user", uses->getInstanceName());
+    properties->putString("provider", provides->getInstanceName());
     properties->putString("uses port", usesPortName);
     properties->putString("provides port", providesPortName);
     
-    ConnectionID::pointer connection(new ConnectionInfoImpl(userID, usesPortName, providerID, providesPortName));
+    ConnectionID::pointer connection(new ConnectionInfoImpl(usesID, usesPortName, providesID, providesPortName));
     framework->addConnection(connection);
     
     return connection;
@@ -217,8 +217,8 @@ namespace SCIRun {
   {
     SSIDL::array1<std::string> result;
     ComponentInfo::pointer info = pidl_cast<ComponentInfo::pointer>(id);
-    if (ci.isNull()) 
-      throw CCAException::pointer("Invalid component " + id->getInstanceName());
+    if (info.isNull()) 
+      throw CCAException::create("Invalid component " + id->getInstanceName());
 
     SSIDL::array1<PortInfo::pointer> ports = info->getPorts();
 
@@ -297,7 +297,7 @@ namespace SCIRun {
 					       const ComponentID::pointer& /*id2*/,
 					       float /*timeout*/)
   {
-    throw CCAException::Create("BuilderService::disconnectAll not finished");
+    throw CCAException::create("BuilderService::disconnectAll not finished");
   }
   
 } // end namespace SCIRun

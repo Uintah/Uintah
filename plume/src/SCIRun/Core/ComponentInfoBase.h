@@ -83,7 +83,7 @@ namespace SCIRun {
     
     virtual SSIDL::array1<PortInfo::pointer> getPorts();
     virtual PortInfo::pointer getPortInfo(const std::string& name);
-    virtual void disconnect(const std::string &portName, const PortInfo::pointer &from);
+    virtual void disconnectPort(const std::string &portName, const PortInfo::pointer &from);
     virtual std::string getClassName();
     virtual TypeMap::pointer getProperties();
     virtual void setProperties(const TypeMap::pointer &);

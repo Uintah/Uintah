@@ -87,7 +87,7 @@ namespace SCIRun {
   }
   
   template<class Interface> 
-  std::string  PortInfoBase<Interface>::getType()
+  std::string  PortInfoBase<Interface>::getClass()
   {
     return type;
   }
@@ -183,7 +183,7 @@ namespace SCIRun {
   bool PortInfoBase<Interface>::canConnectTo(const PortInfo::pointer &to)
   {
     return !to.isNull() 
-      && getType() == to->getType() 
+      && getClass() == to->getClass() 
       && getPortType() != to->getPortType()
       && available() 
       && to->available();
@@ -202,7 +202,7 @@ namespace SCIRun {
   PortInfo::pointer PortInfoBase<Interface>::getPeer()
   {
     if ( getPortType() == ProvidePort || connections.size() == 0 ) 
-      throw CCAException::create("Port Not Connected");
+      throw CCAException::create("Port ["+name+"] Not Connected");
     return connections[0];
   }
 
@@ -218,6 +218,11 @@ namespace SCIRun {
       return false;
     --useCount;
     return true;
+  }
+
+  template<class Interface>
+  bool PortInfoBase<Interface>::inUse() {
+    return useCount > 0;
   }
 } // end namespace SCIRun
 

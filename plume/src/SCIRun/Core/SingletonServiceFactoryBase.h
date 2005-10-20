@@ -68,7 +68,7 @@ namespace SCIRun {
      */
     
     virtual std::string getName() { return serviceName; }
-    virtual PortInfo::pointer getService(const std::string &serviceName);
+    virtual PortInfo::pointer getService(const std::string &serviceName, const ComponentInfo::pointer &requester);
     virtual void releaseService(const std::string &portName);
 
   protected:
@@ -82,7 +82,8 @@ namespace SCIRun {
     SingletonServiceFactoryBase(const SingletonServiceFactoryBase&);
     SingletonServiceFactoryBase& operator=(const SingletonServiceFactoryBase&);
   };
-  
+ 
+
 } // end namespace SCIRun
 
 #endif

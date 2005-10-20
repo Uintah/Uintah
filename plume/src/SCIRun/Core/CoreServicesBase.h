@@ -91,6 +91,7 @@ namespace SCIRun {
   protected:
     typedef std::map<std::string, ServiceInfo::pointer> ServicePortMap;
     ServicePortMap servicePorts;
+    Mutex service_lock;
 
     // prevent using these directly
     CoreServicesBase<Interface>(const CoreServicesBase<Interface>&);

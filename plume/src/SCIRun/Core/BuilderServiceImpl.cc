@@ -28,7 +28,7 @@
 
 
 /*
- *  BuilderService.cc: Implementation of CCA BuilderService for SCIRun
+ *  BuilderServiceImpl.cc: Implementation of CCA BuilderService for SCIRun
  *
  *  Written by:
  *   Steven G. Parker
@@ -38,27 +38,28 @@
  *
  */
 
-#include <SCIRun/Distributed/BuilderService.h>
-#include <SCIRun/Distributed/BuilderServiceImpl.code>
-#include <iostream>
-#include <string>
-
-using namespace std;
+#include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/Core/BuilderServiceImpl.h>
+#include <SCIRun/Core/BuilderServiceBase.code>
 
 namespace SCIRun {
   
-  BuilderService::BuilderService(const DistributedFramework::internalPointer &framework) 
-    : BuilderServiceImpl<DistributedServices::BuilderService>(framework)
+  using namespace sci::cca;
+  using namespace sci::cca::ports;
+  using namespace sci::cca::core;
+
+  BuilderServiceImpl::BuilderServiceImpl(const CoreFramework::pointer &framework) 
+    : BuilderServiceBase<BuilderService>(framework)
   {
   }
 
-  BuilderService::~BuilderService()
+  BuilderServiceImpl::~BuilderServiceImpl()
   {
   }
   
-  BuilderService::pointer BuilderService::create(const DistributedFramework::internalPointer &framework)
+  BuilderService::pointer BuilderServiceImpl::create(const CoreFramework::pointer &framework)
   {
-    return pointer(new BuilderService(framework));
+    return pointer(new BuilderServiceImpl(framework));
   }
   
 } // end namespace SCIRun

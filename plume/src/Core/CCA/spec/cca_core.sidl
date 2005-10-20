@@ -56,7 +56,7 @@ package sci {
 
 	array<PortInfo,1> getPorts();
 	PortInfo getPortInfo( in string portName );
-	void disconnect( in string portName, in PortInfo from );
+	void disconnectPort( in string portName, in PortInfo from );
 	
 	string getClassName();
 	TypeMap getProperties();
@@ -99,6 +99,7 @@ package sci {
 	bool available();
 	bool canConnectTo(in PortInfo);
 	bool isConnected();
+	bool inUse();
 	int  numOfConnections();
 
 	TypeMap getProperties();
@@ -108,7 +109,7 @@ package sci {
 	PortType getPortType();
 
 	string getName();
-	string getType();
+	string getClass();
 
 	void incrementUseCount();
 	bool decrementUseCount();

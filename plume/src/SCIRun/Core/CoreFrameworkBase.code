@@ -51,10 +51,11 @@
 
 // default factories
 #include <SCIRun/Core/UnknownComponentClassFactory.h>
+#include <SCIRun/Core/SingletonServiceFactory.h>
 
 // Services
 //#include <SCIRun/Distributed/FrameworkPropertiesService.h>
-//#include <SCIRun/Distributed/BuilderService.h>
+#include <SCIRun/Core/BuilderServiceImpl.h>
 
 #include <Core/Thread/Guard.h>
 
@@ -75,7 +76,9 @@ namespace SCIRun {
   {
     addComponentClassFactory( ComponentClassFactory::pointer( new UnknownComponentClassFactory ));
     //addServiceFactory(new StdFrameworkServiceFactory<FrameworkPropertiesService>("cca.FrameworkProperties"));
-    //addServiceFactory(new StdFrameworkServiceFactory<BuilderService>("cca.BuilderService"));
+    addFrameworkServiceFactory( ServiceFactory::pointer
+				( new SingletonServiceFactory<BuilderServiceImpl>(pointer(this), 
+										 "cca.BuilderService")));
   }
   
   template<class Interface>
@@ -330,7 +333,11 @@ namespace SCIRun {
     Guard guard(&service_lock);
 
     // disconnect 
-    info->getRequester()->disconnect(info->getRequesterPortName(), info->getServicePort());
+    ComponentInfo::pointer requester = info->getRequester();
+    std::string name = info->getRequesterPortName();
+    PortInfo::pointer port = info->getServicePort();
+    requester->disconnectPort(name, port);
+  //info->getRequester()->disconnect(info->getRequesterPortName(), info->getServicePort());
 
     // release service
     ServiceMap::const_iterator service = services.find(info->getServiceName());
