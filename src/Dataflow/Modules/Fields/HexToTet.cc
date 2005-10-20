@@ -156,7 +156,7 @@ HexToTetAlgo::get_compile_info(const TypeDescription *src_td)
   rval->add_basis_include("../src/Core/Basis/NoData.h");
   rval->add_basis_include("../src/Core/Basis/Constant.h");
   rval->add_basis_include("../src/Core/Basis/TetLinearLgn.h");
-  rval->add_mesh_include("../src/Core/Datatype/TetVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/TetVolMesh.h");
   src_td->fill_compile_info(rval);
   return rval;
 }
