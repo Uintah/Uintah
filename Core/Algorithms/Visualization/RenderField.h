@@ -1009,7 +1009,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
   typedef hash_set<fc_t, hash_nds<fc_t>, eqfc<fc_t> > face_ht_t;
   face_ht_t rendered_faces; 
   
-  mesh->synchronize(Mesh::FACES_E | Mesh::CELLS_E);
+  mesh->synchronize(Mesh::FACES_E | Mesh::EDGES_E | Mesh::CELLS_E);
   typename Fld::mesh_type::Elem::iterator eiter; mesh->begin(eiter);  
   typename Fld::mesh_type::Elem::iterator eiter_end; mesh->end(eiter_end);  
   int count = 0;
