@@ -190,7 +190,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
   omesh->set_dim( dim );
 
   // Now after the mesh has been created, create the field.
-  FIELD *ofield = scinew FIELD(omesh, ifield->basis_order());
+  FIELD *ofield = scinew FIELD(omesh);
 
   ofield->copy_properties(ifield);
 
@@ -213,12 +213,12 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
   imesh->begin( icellItr );
   omesh->begin( ocellItr );
-
+  string mesh_name = ifield->get_type_description(1)->get_name();
   // For structured geometery we need to set the correct location.
-  if( ifield->get_type_description(0)->get_name() == "LatVolField" ||
-      ifield->get_type_description(0)->get_name() == "ImageField" ||
-      ifield->get_type_description(0)->get_name() == "ScanlineField" ) {
-
+  if(mesh_name.find("LatVolMesh") != string::npos ||
+     mesh_name.find("ImageMesh") != string::npos  ||
+     mesh_name.find("ScanlineMesh") != string::npos ) 
+  {
     vector< unsigned int > min;
     imesh->get_min( min );
     omesh->set_min( min );
