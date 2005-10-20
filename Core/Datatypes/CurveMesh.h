@@ -133,6 +133,12 @@ public:
       return mesh_.nodes_[mesh_.edges_[index_].second];
     }
 
+    // the following designed to coordinate with ::get_edges
+    inline 
+    unsigned edge0_index() const {
+      return index_;
+    }
+
   private:
     const CurveMesh<Basis>   &mesh_;
     unsigned                  index_;
