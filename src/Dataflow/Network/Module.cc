@@ -859,8 +859,8 @@ void Module::do_execute()
   }
   catch (const Exception &e)
   {
-    error("Module crashed with the following exception:");
-    error(e.message());
+    error(string("Module crashed with the following exception:\n  ")+
+	  e.message());
     if (e.stackTrace())
       {
 	error("Thread Stacktrace:");

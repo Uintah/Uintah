@@ -41,31 +41,27 @@
  */
 
 #include <Core/Exceptions/AssertionFailed.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <iostream>
 #include <sstream>
 
 namespace SCIRun {
 
 AssertionFailed::AssertionFailed(const char* message,
 				 const char* file,
-				 int line)
-{
+				 int line) : 
+  Exception()
+{ 
   std::ostringstream s;
-  
-  s << "An AssertionFailed exception was thrown.\n"
-    << file << ":" << line << "\n" << message;
-  message_ = (char*)(s.str().c_str());
-    
+  s << "An AssertionFailed exception was thrown from file:\n  "
+    << file << ":" << line << "\n  " << message;
+  message_ = s.str();
+
 #ifdef EXCEPTIONS_CRASH
-    std::cout << message_ << "\n";
+  std::cout << message_ << "\n";
 #endif
 }
 
 AssertionFailed::AssertionFailed(const AssertionFailed& copy)
-    : message_(strdup(copy.message_))
+    : message_(copy.message_)
 {
 }
 
@@ -75,7 +71,7 @@ AssertionFailed::~AssertionFailed()
 
 const char* AssertionFailed::message() const
 {
-    return message_;
+    return message_.c_str();
 }
 
 const char* AssertionFailed::type() const
