@@ -611,6 +611,8 @@ StreamLinesAccAlgo::get_compile_info(const TypeDescription *fsrc,
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+  rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
   fsrc->fill_compile_info(rval);
   vfld->fill_compile_info(rval);
   CField cf;
