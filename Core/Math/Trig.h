@@ -103,6 +103,11 @@ inline double ACosh(double x)
     return acosh(x);
 }
 
+inline double Sqrt(double d)
+{
+  return sqrt(d);
+}
+
 /////////////////////////////////////////////////////
 //
 // Float version
@@ -121,11 +126,6 @@ inline float Cos(float d)
 inline float Tan(float d)
 {
   return tanf(d);
-}
-
-inline float Sqrt(float d)
-{
-  return sqrtf(d);
 }
 
 inline float Atan(float d)
@@ -151,6 +151,11 @@ inline float DtoR(float d)
 inline float RtoD(float r)
 {
   return r*(float)(180.0/M_PI);
+}
+
+inline float Sqrt(float d)
+{
+  return sqrtf(d);
 }
 
 #endif
