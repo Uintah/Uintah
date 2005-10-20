@@ -78,8 +78,8 @@ public:
     const double x = coords[0];
 
     w[0] = 1 - 3*x + 2*x*x;
-    w[1] = -4*(-1 + x)*x;
-    w[2] = x*(-1 + 2*x);
+    w[1] = x*(-1 + 2*x);
+    w[2] = -4*(-1 + x)*x;
 
     return 3;
   }
@@ -91,8 +91,8 @@ public:
     double w[3];
     get_weights(coords, w); 
     return T(w[0] * cd.node0() +
-	     w[1] * nodes_[cd.edge0_index()] +
-	     w[2] * cd.node1());
+	     w[1] * cd.node1()) +
+	     w[2] * nodes_[cd.edge0_index()];
   }
     
   //! get first derivative at parametric coordinate
@@ -105,8 +105,8 @@ public:
     derivs.resize(1);
 
     derivs[0] = T((-3 + 4*x) * cd.node0() 
-		  +(4 - 8*x)* nodes_[cd.edge0_index()]
-		  +(-1 + 4*x)* cd.node1());
+		  +(-1 + 4*x)* cd.node1()
+		  +(4 - 8*x)* nodes_[cd.edge0_index()]);
   }
   
   //! add a node value corresponding to edge
