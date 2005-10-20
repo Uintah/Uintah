@@ -183,6 +183,14 @@ FieldBoundaryAlgo::get_compile_info(const TypeDescription *mesh_td)
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/NoData.h");
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
   mesh_td->fill_compile_info(rval);
   return rval;
 }
@@ -206,6 +214,14 @@ FieldBoundaryAlgoAux::get_compile_info(const TypeDescription *mesh_td,
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/NoData.h");
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
   mesh_td->fill_compile_info(rval);
   return rval;
 }

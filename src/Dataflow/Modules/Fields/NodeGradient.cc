@@ -146,6 +146,8 @@ NodeGradientAlgo::get_compile_info(const TypeDescription *ftd)
   
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/HexTrilinearLgn.h");
+  rval->add_mesh_include("../src/Core/Datatypes/LatVolMesh.h");
   ftd->fill_compile_info(rval);
   return rval;
 }
