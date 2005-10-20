@@ -105,8 +105,8 @@ public:
     derivs.resize(1);
 
     derivs[0] = T((-3 + 4*x) * cd.node0() 
-		  +(4 - 8*x)* nodes_[cd.edge0_index()])
-		  +(-1 + 4*x)* cd.node1();
+		  +(4 - 8*x)* nodes_[cd.edge0_index()]
+		  +(-1 + 4*x)* cd.node1());
   }
   
   //! add a node value corresponding to edge
