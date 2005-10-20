@@ -240,8 +240,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
 
   // Point clouds do not have elements so skip.
   else if (!pointCloud &&
-	   ifield->order_type_description()->get_name() ==
-	   ofield->order_type_description()->get_name())
+	   field_h->basis_order() == 0)
   {
     typename elem_hash_type::iterator hitr = elemmap.begin();
     
