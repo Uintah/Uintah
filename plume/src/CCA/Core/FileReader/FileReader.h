@@ -12,7 +12,7 @@
    to deal in the Software without restriction, including without limitation
    the rights to use, copy, modify, merge, publish, distribute, sublicense,
    and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to Che following conditions:
+   Software is furnished to do so, subject to the following conditions:
 
    The above copyright notice and this permission notice shall be included
    in all copies or substantial portions of the Software.
@@ -26,17 +26,47 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-version sci 0.2;
 
-#include "cca.sidl"
-#include "cca_core.sidl"
-#include "core_example.sidl"
+/*
+ *  FileReader.h
+ *
+ *  Written by:
+ *   Keming Zhang 
+ *   Department of Computer Science
+ *   University of Utah
+ *   May 2002
+ *
+ */
 
-//#include "distributed.sidl"
-//#include "plume.sidl"
+#ifndef CCA_Components_FileReader_h
+#define CCA_Components_FileReader_h
 
-//#include "scirun.sidl"
-//#include "SCIRun2Classes.sidl"
-//#include "SCIRun2Ports.sidl"
+#include <Core/CCA/spec/sci_sidl.h>
+
+namespace SCIRun {
+
+class myPDEdescriptionPort : public virtual sci::cca::ports::PDEdescriptionPort {
+public:
+   virtual ~myPDEdescriptionPort(){}
+   virtual int getPDEdescription(SSIDL::array1<double> &nodes, 
+				 SSIDL::array1<int> &boundaries,
+				 SSIDL::array1<int> &dirichletNodes,
+				 SSIDL::array1<double> &dirichletValues);
+};
 
 
+class FileReader : public sci::cca::Component{
+                
+  public:
+    FileReader();
+    virtual ~FileReader();
+    virtual void setServices(const sci::cca::Services::pointer& svc);
+  private:
+    FileReader(const FileReader&);
+    FileReader& operator=(const FileReader&);
+    myPDEdescriptionPort pdePort;
+    sci::cca::Services::pointer services;
+  };
+}
+
+#endif

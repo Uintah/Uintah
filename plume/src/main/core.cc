@@ -47,6 +47,9 @@
 #include <SCIRun/Core/TypeMapImpl.h>
 #include <SCIRun/Core/CoreFrameworkImpl.h>
 
+#include <CCA/Core/Hello/Hello.h>
+#include <SCIRun/Core/SimpleComponentClassFactory.h>
+
 #include <sci_defs/qt_defs.h>
 #include <iostream>
 
@@ -80,7 +83,10 @@ main(int argc, char *argv[]) {
     } else {
       std::cerr << "Not finished: pass url to existing framework\n";
     }
-    
+
+    ComponentClassFactory::pointer hello( new SimpleComponentClassFactory<Hello>("core.example.hello") ); 
+    core->addComponentClassFactory( hello );
+	     
     Services::pointer main_services = core->getServices("main", "cca.unknown", core->createTypeMap());
     main_services->registerUsesPort("builder", "cca.BuilderService", core->createTypeMap());
     
@@ -97,7 +103,7 @@ main(int argc, char *argv[]) {
     std::cout << "serveObjects done!\n";
     PIDL::finalize();
     
-    }
+  }
   catch(const sci::cca::CCAException::pointer &pe) {
     std::cerr << "Caught exception:\n";
     std::cerr << pe->getNote() << std::endl;

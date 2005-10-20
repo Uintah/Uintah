@@ -31,7 +31,8 @@
 
 SRCDIR   := CCA
 
-SUBDIRS := $(SRCDIR)/Plume \
+SUBDIRS := $(SRCDIR)/Core \
+#$(SRCDIR)/Plume \
 #$(SRCDIR)/Components
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

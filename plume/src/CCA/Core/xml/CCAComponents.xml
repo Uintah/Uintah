@@ -1,4 +1,6 @@
-/*
+<?xml version="1.0" ?>
+<!DOCTYPE metacomponentmodel SYSTEM "metacomponentmodel.dtd">
+<!--
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -12,7 +14,7 @@
    to deal in the Software without restriction, including without limitation
    the rights to use, copy, modify, merge, publish, distribute, sublicense,
    and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to Che following conditions:
+   Software is furnished to do so, subject to the following conditions:
 
    The above copyright notice and this permission notice shall be included
    in all copies or substantial portions of the Software.
@@ -24,19 +26,18 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
-*/
-
-version sci 0.2;
-
-#include "cca.sidl"
-#include "cca_core.sidl"
-#include "core_example.sidl"
-
-//#include "distributed.sidl"
-//#include "plume.sidl"
-
-//#include "scirun.sidl"
-//#include "SCIRun2Classes.sidl"
-//#include "SCIRun2Ports.sidl"
+-->
 
 
+<metacomponentmodel name = "cca">
+  <library name="libCCA_Core_Hello.so">
+    <component name="SCIRun.Hello">
+      <interface file="CCA/Components/Hello/StringPort.sidl" />
+    </component>
+  </library>
+  <library name="libCCA_Core_World.so">
+    <component name="SCIRun.World">
+      <interface file="CCA/Components/World/StringPort.sidl" />
+    </component>
+  </library>
+</metacomponentmodel>

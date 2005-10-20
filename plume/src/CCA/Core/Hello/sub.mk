@@ -31,18 +31,16 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Core/CCA/spec
+SRCDIR   := CCA/Core/Hello
 
-$(SRCDIR)/sci_sidl.h: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
+SRCS     += $(SRCDIR)/Hello.cc
 
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
+           Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 
-$(SRCDIR)/sci_sidl.cc: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
-
-SRCS := $(SRCS) $(SRCDIR)/sci.sidl $(SRCDIR)/sci_sidl.cc
-GENHDRS := $(GENHDRS) $(SRCDIR)/sci_sidl.h
-
-PSELIBS := Core/CCA/SSIDL Core/CCA/Comm Core/CCA/PIDL
-LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+#include $(SCIRUN_SCRIPTS)/program.mk
+
+$(SRCDIR)/Hello.o: Core/CCA/spec/sci_sidl.h

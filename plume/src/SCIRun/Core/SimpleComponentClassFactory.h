@@ -12,7 +12,7 @@
    to deal in the Software without restriction, including without limitation
    the rights to use, copy, modify, merge, publish, distribute, sublicense,
    and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to Che following conditions:
+   Software is furnished to do so, subject to the following conditions:
 
    The above copyright notice and this permission notice shall be included
    in all copies or substantial portions of the Software.
@@ -26,17 +26,44 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-version sci 0.2;
 
-#include "cca.sidl"
-#include "cca_core.sidl"
-#include "core_example.sidl"
+/*
+ *  SimpleComponentClassFactory.h: 
+ *
+ *  Written by:
+ *   Yarden Livant
+ *   SCI Institute
+ *   University of Utah
+ *   Sept 2005
+ *
+ */
 
-//#include "distributed.sidl"
-//#include "plume.sidl"
+#ifndef SCIRun_SimpleComponentFactory_h
+#define SCIRun_SompleComponentFactory_h
 
-//#include "scirun.sidl"
-//#include "SCIRun2Classes.sidl"
-//#include "SCIRun2Ports.sidl"
+#include <SCIRun/Core/ComponentClassFactoryBase.h>
+#include <SCIRun/COre/ComponentClassDescriptionImpl.h>
 
+namespace SCIRun {
 
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+  
+  template<class Product>
+  class SimpleComponentClassFactory : public ComponentClassFactoryBase<ComponentClassFactory> 
+  {
+  public:
+    typedef ComponentClassFactory::pointer pointer;
+
+    SimpleComponentClassFactory(const std::string &type) 
+      : ComponentClassFactoryBase<ComponentClassFactory>
+           ( ComponentClassDescription::pointer( new ComponentClassDescriptionImpl(type) ) )
+    {}
+      
+
+    ~ComponentClassFactoryImpl() {}
+  };
+
+}
+
+#endif

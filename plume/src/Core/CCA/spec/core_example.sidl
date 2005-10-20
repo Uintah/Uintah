@@ -1,0 +1,16 @@
+
+
+package sci {
+
+  package cca {
+ 
+    package ports {
+      
+      interface MessagePort extends Port
+      {
+	collective string getString();
+      }
+
+    }
+  }
+}

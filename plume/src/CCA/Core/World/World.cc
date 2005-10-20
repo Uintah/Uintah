@@ -12,7 +12,7 @@
    to deal in the Software without restriction, including without limitation
    the rights to use, copy, modify, merge, publish, distribute, sublicense,
    and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to Che following conditions:
+   Software is furnished to do so, subject to the following conditions:
 
    The above copyright notice and this permission notice shall be included
    in all copies or substantial portions of the Software.
@@ -26,17 +26,45 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-version sci 0.2;
 
-#include "cca.sidl"
-#include "cca_core.sidl"
-#include "core_example.sidl"
+/*
+ *  World.cc:
+ *
+ *  Written by:
+ *   Keming Zhang
+ *   Department of Computer Science
+ *   University of Utah
+ *   May 2003
+ *
+ */
 
-//#include "distributed.sidl"
-//#include "plume.sidl"
+#include <CCA/Core/World/World.h>
 
-//#include "scirun.sidl"
-//#include "SCIRun2Classes.sidl"
-//#include "SCIRun2Ports.sidl"
 
+using namespace SCIRun;
+using namespace sci::cca;
+
+extern "C" Component::pointer make_SCIRun_World()
+{
+  return Component::pointer(new World());
+}
+
+
+World::World()
+{
+  text = "World";
+}
+
+World::~World()
+{
+}
+
+void World::setServices(const Services::pointer& svc)
+{
+  services = svc;
+
+  MessagePort::pointer message(new MessagePort(this));
+  
+  svc->addProvidesPort(message, "message","sci.cca.ports.MessaagePort", services->createTypeMap());
+}
 

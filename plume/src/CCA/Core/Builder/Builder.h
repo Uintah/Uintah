@@ -28,44 +28,77 @@
 
 
 /*
- *  SingletonServiceFactory.h: 
+ *  Builder.h: 
  *
  *  Written by:
- *   Yarden Livnat
- *   SCI Institute
+ *   Steven G. Parker
+ *   Department of Computer Science
  *   University of Utah
- *   Sept 2005
+ *   October 2001
  *
  */
 
-#ifndef SCIRun_Core_SingletonServiceFactory_h
-#define SCIRun_Core_SingletonServiceFactory_h
+#ifndef SCIRun_Framework_Builder_h
+#define SCIRun_Framework_Builder_h
 
-#include <SCIRun/Core/SingletonServiceFactoryBase.h>
-#include <SCIRun/Core/SingletonServiceFactoryBase.code>
+#include <Core/CCA/spec/sci_sidl.h>
 
-namespace SCIRun {
-  
-  using namespace sci::cca;
-  using namespace sci::cca::core;
-  
-  template<class Service>
-  class SingletonServiceFactory : public SingletonServiceFactoryBase<Service, ServiceFactory>
-  {
-  public:
-    typedef ServiceFactory::pointer pointer;
-    
-    SingletonServiceFactory(const CoreFramework::pointer &framework, const std::string& serviceName)
-    virtual ~SingletonServiceFactory();
-    
-    pointer getPointer() { return pointer(this); }
+#include <string>
 
-  protected:
-    // prevent using these directly
-    SingletonServiceFactory(const SingletonServiceFactory<Service>&);
-    SingletonServiceFactory& operator=(const SingletonServiceFactory<Service>&);
-  };
+
+namespace SCIRun{
+
+class BuilderWindow;
+class Builder;
+
+/**
+ * \class myBuilderPort
+ *
+ * An extension and implementation of sci::cca::ports::BuilderPort. 
+ */
+class myBuilderPort : public virtual sci::cca::ports::BuilderPort
+{
+public:
+  virtual ~myBuilderPort();
+  /** Obtain Services handle, through which the component communicates with the
+      framework. */
+  virtual void setServices(const sci::cca::Services::pointer& svc);
   
-} // end namespace SCIRun
+    /** ? */
+    virtual void buildRemotePackageMenus(
+    const sci::cca::ports::ComponentRepository::pointer &reg,
+    const std::string &frameworkURL);
+
+protected:
+  friend class Builder;
+  sci::cca::Services::pointer services;
+  BuilderWindow* builder;
+};
+
+
+/**
+ * \class Builder
+ *
+ * ?
+ */
+class Builder : public sci::cca::Component
+{
+public:
+  Builder();
+  virtual ~Builder();
+  
+  /** Obtain Services handle, through which the component communicates with the
+      framework. */
+  virtual void setServices(const sci::cca::Services::pointer& svc);
+
+  virtual void setCommunicator(int comm) {  };
+
+private:
+  Builder(const Builder&);
+  Builder& operator=(const Builder&);
+  myBuilderPort builderPort;
+};
+
+} //namespace SCIRun
 
 #endif

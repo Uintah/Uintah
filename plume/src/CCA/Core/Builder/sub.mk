@@ -31,18 +31,35 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Core/CCA/spec
+SRCDIR   := CCA/Components/Builder
 
-$(SRCDIR)/sci_sidl.h: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
+SRCS     += \
+	$(SRCDIR)/Builder.cc $(SRCDIR)/BuilderWindow.cc \
+	$(SRCDIR)/QtUtils.cc $(SRCDIR)/NetworkCanvasView.cc \
+	$(SRCDIR)/Module.cc $(SRCDIR)/PortIcon.cc \
+	$(SRCDIR)/ClusterDialog.cc $(SRCDIR)/PathDialog.cc \
+	$(SRCDIR)/Connection.cc $(SRCDIR)/BridgeConnection.cc\
+	$(SRCDIR)/moc_BuilderWindow.cc $(SRCDIR)/moc_NetworkCanvasView.cc \
+	$(SRCDIR)/moc_Module.cc $(SRCDIR)/moc_ClusterDialog.cc \
+	$(SRCDIR)/moc_PathDialog.cc
 
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm Core/CCA/spec \
+			Core/Thread Core/Containers Core/Exceptions Core/Util
 
-$(SRCDIR)/sci_sidl.cc: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
-
-SRCS := $(SRCS) $(SRCDIR)/sci.sidl $(SRCDIR)/sci_sidl.cc
-GENHDRS := $(GENHDRS) $(SRCDIR)/sci_sidl.h
-
-PSELIBS := Core/CCA/SSIDL Core/CCA/Comm Core/CCA/PIDL
-LIBS := 
+LIBS := $(QT_LIBRARY) $(LIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+PROGRAM := builder_main
+SRCS := $(SRCDIR)/builder_main.cc
+PSELIBS := CCA/Components/Builder Core/CCA/SSIDL \
+	Core/CCA/PIDL Core/Exceptions Core/CCA/spec SCIRun
+
+LIBS := $(QT_LIBRARY) $(LIBS)
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+$(SRCDIR)/Builder.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/BuilderWindow.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/moc_BuilderWindow.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/builder_main.o: Core/CCA/spec/sci_sidl.h

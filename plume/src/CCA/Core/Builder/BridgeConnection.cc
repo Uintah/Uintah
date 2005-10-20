@@ -12,7 +12,7 @@
    to deal in the Software without restriction, including without limitation
    the rights to use, copy, modify, merge, publish, distribute, sublicense,
    and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to Che following conditions:
+   Software is furnished to do so, subject to the following conditions:
 
    The above copyright notice and this permission notice shall be included
    in all copies or substantial portions of the Software.
@@ -26,17 +26,23 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-version sci 0.2;
+#include <CCA/Components/Builder/BridgeConnection.h>
 
-#include "cca.sidl"
-#include "cca_core.sidl"
-#include "core_example.sidl"
+void BridgeConnection::drawShape(QPainter& p)
+{
+  QPointArray par(Connection::NUM_DRAW_POINTS);
+  Connection::drawConnection(p, points(), par);
 
-//#include "distributed.sidl"
-//#include "plume.sidl"
+  QPen pen(color,4);
+  pen.setStyle(DotLine);
+  p.setPen(pen);
+  p.setBrush(blue);
+  p.drawPolyline(par);
+}
 
-//#include "scirun.sidl"
-//#include "SCIRun2Classes.sidl"
-//#include "SCIRun2Ports.sidl"
+std::string BridgeConnection::getConnectionType()
+{
+  return "BridgeConnection";
+}
 
 

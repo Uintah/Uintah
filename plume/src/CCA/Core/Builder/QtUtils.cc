@@ -28,44 +28,63 @@
 
 
 /*
- *  SingletonServiceFactory.h: 
+ *  QtUtils.cc:
  *
  *  Written by:
- *   Yarden Livnat
- *   SCI Institute
+ *   Steven G. Parker
+ *   Department of Computer Science
  *   University of Utah
- *   Sept 2005
+ *   October 2001
  *
  */
 
-#ifndef SCIRun_Core_SingletonServiceFactory_h
-#define SCIRun_Core_SingletonServiceFactory_h
+#include <CCA/Components/Builder/QtUtils.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Thread.h>
+#include <iostream>
 
-#include <SCIRun/Core/SingletonServiceFactoryBase.h>
-#include <SCIRun/Core/SingletonServiceFactoryBase.code>
+#include <qapplication.h>
 
-namespace SCIRun {
-  
-  using namespace sci::cca;
-  using namespace sci::cca::core;
-  
-  template<class Service>
-  class SingletonServiceFactory : public SingletonServiceFactoryBase<Service, ServiceFactory>
-  {
-  public:
-    typedef ServiceFactory::pointer pointer;
-    
-    SingletonServiceFactory(const CoreFramework::pointer &framework, const std::string& serviceName)
-    virtual ~SingletonServiceFactory();
-    
-    pointer getPointer() { return pointer(this); }
 
-  protected:
-    // prevent using these directly
-    SingletonServiceFactory(const SingletonServiceFactory<Service>&);
-    SingletonServiceFactory& operator=(const SingletonServiceFactory<Service>&);
-  };
-  
-} // end namespace SCIRun
+using namespace SCIRun;
 
-#endif
+static QApplication* theApp;
+static Semaphore* startup;
+
+class QtThread : public Runnable {
+public:
+    QtThread() {}
+    ~QtThread() {}
+    void run();
+};
+
+
+QApplication* QtUtils::getApplication()
+{
+    if ( !theApp ) {
+        startup = new Semaphore("Qt Thread startup wait", 0);
+        Thread* t = new Thread(new QtThread(), "SCIRun Builder",
+                               0, Thread::NotActivated);
+        t->setStackSize(8*256*1024);
+        t->activate(false);
+        t->detach();
+        startup->down();
+    }
+    return theApp;
+}
+
+void QtThread::run()
+{
+    std::cerr << "******************QtThread::run()**********************" << std::endl;
+    int argc = 3;
+    char* argv[3];
+    argv[0] = "SCIRun2";
+    argv[1] = "-im";
+    argv[2] = "-iconic";
+
+    theApp = new QApplication(argc, argv);
+    startup->up();
+
+    theApp->exec();
+}
