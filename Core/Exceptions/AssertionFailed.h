@@ -48,6 +48,7 @@
 #define Core_Exceptions_AssertionFailed_h
 
 #include <Core/Exceptions/Exception.h>
+#include <string>
 
 namespace SCIRun {
 class AssertionFailed : public Exception {
@@ -61,7 +62,7 @@ public:
   virtual const char* type() const;
 protected:
 private:
-  char* message_;
+  std::string message_;
   AssertionFailed& operator=(const AssertionFailed&);
 };
 } // End namespace SCIRun
