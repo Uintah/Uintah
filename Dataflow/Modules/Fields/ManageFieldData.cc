@@ -203,9 +203,30 @@ ManageFieldData::execute()
     {
       remark("Input matrix is 3x3.  Using rows/columns for vectors is ambiguous.");
     }
+    string outtypestring;
+    if (matrix_svt_flag == 3 || matrix_svt_flag == 2)
+    {
+      outtypestring = "Tensor";
+    }
+    else if (matrix_svt_flag == 1)
+    {
+      outtypestring = "Vector";
+    }
+    else
+    {
+      outtypestring = "double";
+    }
+    const string oftn =
+      ifieldhandle->get_type_description(0)->get_name() + "<" +
+      ifieldhandle->get_type_description(1)->get_name() + "," +
+      ifieldhandle->get_type_description(2)->get_similar_name(outtypestring, 0,
+                                                              "<", " >, ") +
+      ifieldhandle->get_type_description(3)->get_similar_name(outtypestring, 0,
+                                                              "<", " >") +
+      " > ";
     CompileInfoHandle ci_mesh =
       ManageFieldDataAlgoMesh::
-      get_compile_info(ifieldhandle->get_type_description(),
+      get_compile_info(ifieldhandle->get_type_description(), oftn,
 		       matrix_svt_flag,
 		       gui_preserve_scalar_type_.get()?svt_flag:-1);
     Handle<ManageFieldDataAlgoMesh> algo_mesh;
@@ -277,6 +298,7 @@ ManageFieldDataAlgoField::get_compile_info(const TypeDescription *fsrc,
 
 CompileInfoHandle
 ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *fsrc,
+                                          const string &fout_substituted,
 					  int svt_flag, int svt2)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -308,12 +330,15 @@ ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *fsrc,
     break;
   }
 
-  string::size_type loc = fsrc->get_name().find_first_of("<");
-  string fout = fsrc->get_name().substr(0, loc) + "<" + extension2 + "> ";
+  string fout;
   if (svt_flag == 0 && svt2 == 0)
   {
     // Preserve file type if is scalar field.
     fout = fsrc->get_name();
+  }
+  else
+  {
+    fout = fout_substituted;
   }
 
   CompileInfo *rval = 
