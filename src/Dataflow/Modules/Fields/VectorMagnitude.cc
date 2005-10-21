@@ -98,9 +98,15 @@ VectorMagnitude::execute()
   {
     fGeneration_ = fieldin->generation;
 
-    const TypeDescription *ftd = fieldin->get_type_description(0);
-    const TypeDescription *ttd = fieldin->get_type_description(-1);
-    CompileInfoHandle ci = VectorMagnitudeAlgo::get_compile_info(ftd, ttd);
+    const TypeDescription *vftd = fieldin->get_type_description();
+    const string oftn = 
+      fieldin->get_type_description(0)->get_name() + "<" +
+      fieldin->get_type_description(1)->get_name() + ", " +
+      fieldin->get_type_description(2)->get_similar_name("double",
+                                                         0, "<", " >, ") +
+      fieldin->get_type_description(3)->get_similar_name("double",
+							 0, "<", " >") + " > ";
+    CompileInfoHandle ci = VectorMagnitudeAlgo::get_compile_info(vftd, oftn);
 
     Handle<VectorMagnitudeAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
@@ -120,8 +126,8 @@ VectorMagnitude::execute()
 
 
 CompileInfoHandle
-VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd,
-				      const TypeDescription *ttd)
+VectorMagnitudeAlgo::get_compile_info(const TypeDescription *vftd,
+				      const string &sftd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -130,15 +136,14 @@ VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       ttd->get_filename() + ".",
+		       vftd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       ttd->get_name() + "," +
-                       ftd->get_name() + "<double> ");
+                       vftd->get_name() + "," + sftd);
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  ftd->fill_compile_info(rval);
+  vftd->fill_compile_info(rval);
   return rval;
 }
 
