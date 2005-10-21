@@ -207,6 +207,17 @@ CompileInfo::add_mesh_include(const string &inc)
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
+CompileInfo::add_container_include(const string &inc)
+{
+  list<string>::iterator iter = container_includes_.begin();
+  while (iter != container_includes_.end()) {
+    if (*iter++ == inc) return;
+  }
+  container_includes_.push_front(inc);
+}
+//! Only add unique include strings to the list, and
+//! preserve the push front behavior
+void
 CompileInfo::add_field_include(const string &inc)
 {
   list<string>::iterator iter = field_includes_.begin();
@@ -239,15 +250,17 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
   list<string> incl;
   list<string> oincl = list<string>(includes_);
   list<string> fincl = list<string>(field_includes_);
-  list<string> dincl = list<string>(data_includes_);
+  list<string> cincl = list<string>(container_includes_);
   list<string> mincl = list<string>(mesh_includes_);
   list<string> bincl = list<string>(basis_includes_);
+  list<string> dincl = list<string>(data_includes_);
 
   incl.splice(incl.begin(), oincl);
   incl.splice(incl.begin(), fincl);
-  incl.splice(incl.begin(), dincl);
+  incl.splice(incl.begin(), cincl);
   incl.splice(incl.begin(), mincl);
   incl.splice(incl.begin(), bincl);
+  incl.splice(incl.begin(), dincl);
 
   // generate standard includes
   list<string>::const_iterator iter = incl.begin();

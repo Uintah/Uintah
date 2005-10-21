@@ -63,6 +63,7 @@ public:
   void add_data_include(const string &inc);
   void add_basis_include(const string &inc);
   void add_mesh_include(const string &inc);
+  void add_container_include(const string &inc);
   void add_field_include(const string &inc);
   void add_namespace(const string &inc) { namespaces_[inc] = 1; }
   void add_post_include(const string &post);
@@ -73,6 +74,7 @@ public:
   list<string>       data_includes_;
   list<string>       basis_includes_;
   list<string>       mesh_includes_;
+  list<string>       container_includes_;
   list<string>       field_includes_;
   ci_map_type        namespaces_;
   string             base_class_name_;

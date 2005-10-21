@@ -229,6 +229,9 @@ TypeDescription::fill_compile_info(CompileInfo *ci) const
   case MESH_E:
     ci->add_mesh_include(get_h_file_path());
     break;
+  case CONTAINER_E:
+    ci->add_container_include(get_h_file_path());
+    break;
   case FIELD_E:
     ci->add_field_include(get_h_file_path());
     break;
