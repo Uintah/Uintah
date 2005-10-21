@@ -217,7 +217,9 @@ StreamLines::execute()
      error_ = false;
 
     const TypeDescription *sftd = sField->get_type_description();
-    const TypeDescription *sfdtd = sField->get_type_description(1);
+    
+    const TypeDescription *sfdtd = 
+      (*sField->get_type_description(3)->get_sub_type())[0];
     const TypeDescription *sltd = sField->order_type_description();
 
     vField->mesh()->synchronize(Mesh::LOCATE_E);
@@ -579,6 +581,8 @@ StreamLinesAlgo::get_compile_info(const TypeDescription *fsrc,
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+  rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
   fsrc->fill_compile_info(rval);
   return rval;
 }
