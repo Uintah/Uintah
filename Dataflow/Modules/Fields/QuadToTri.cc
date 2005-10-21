@@ -107,7 +107,8 @@ QuadToTri::execute()
 
   const string iname =
     ifieldhandle->mesh()->get_type_description()->get_name();
-  if (iname == "ImageMesh" || iname == "StructQuadSurfMesh")
+  if (iname.find("ImageMesh") != string::npos || 
+      iname.find("StructQuadSurfMesh") != string::npos)
   {
     CompileInfoHandle ici = ImgToTriAlgo::get_compile_info(src_td);
     Handle<ImgToTriAlgo> ialgo;
@@ -166,7 +167,9 @@ QuadToTriAlgo::get_compile_info(const TypeDescription *src_td)
   rval->add_basis_include("../src/Core/Basis/NoData.h");
   rval->add_basis_include("../src/Core/Basis/Constant.h");
   rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
   rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
   src_td->fill_compile_info(rval);
   return rval;
 }
@@ -192,7 +195,9 @@ ImgToTriAlgo::get_compile_info(const TypeDescription *src_td)
   rval->add_basis_include("../src/Core/Basis/NoData.h");
   rval->add_basis_include("../src/Core/Basis/Constant.h");
   rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
   rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
   src_td->fill_compile_info(rval);
   return rval;
 }
