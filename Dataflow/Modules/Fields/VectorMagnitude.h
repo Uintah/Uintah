@@ -54,7 +54,7 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *iftd,
-					    const TypeDescription *oftd);
+					    const string &oftn);
 };
 
 
@@ -73,8 +73,7 @@ VectorMagnitudeAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
 {
   IFIELD *ifield = (IFIELD *) field_h.get_rep();
 
-  OFIELD *ofield = 
-    scinew OFIELD(ifield->get_typed_mesh(), ifield->basis_order());
+  OFIELD *ofield = scinew OFIELD(ifield->get_typed_mesh());
 
   typename IFIELD::fdata_type::iterator in  = ifield->fdata().begin();
   typename IFIELD::fdata_type::iterator end = ifield->fdata().end();
