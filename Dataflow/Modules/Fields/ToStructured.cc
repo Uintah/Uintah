@@ -54,15 +54,6 @@ namespace SCIRun {
 class ToStructured : public Module
 {
 public:
-
-  typedef LatVolMesh<HexTrilinearLgn<Point> >               LVMesh;
-  typedef StructHexVolMesh<HexTrilinearLgn<Point> >         SHVMesh;
-  typedef ImageMesh<QuadBilinearLgn<Point> >                IMesh;
-  typedef StructQuadSurfMesh<QuadBilinearLgn<Point> >       SQSMesh;
-  typedef ScanlineMesh<CrvLinearLgn<Point> >                SMesh;
-  typedef StructCurveMesh<CrvLinearLgn<Point> >             SCMesh;
-
-
   ToStructured(GuiContext* ctx);
   virtual ~ToStructured();
   virtual void execute();
@@ -105,33 +96,34 @@ ToStructured::execute()
     last_generation_ = ifieldhandle->generation;
     ofieldhandle_ = ifieldhandle;
     string dstname = "";
+    const TypeDescription *ftd = ifieldhandle->get_type_description();
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
     const string &mtdn = mtd->get_name();
 
-
-    if (mtdn == get_type_description((LVMesh *)0)->get_name() ||
-	mtdn == get_type_description((SHVMesh *)0)->get_name())
+    if (mtdn.substr(0, 10) == "LatVolMesh")
     {
-      dstname = "StructHexVolField";
+      string dmeshname = "StructHexVolMesh" + mtdn.substr(10);
+      dstname = ftd->get_similar_name(dmeshname, 0);
     }
-    else if (mtdn == get_type_description((IMesh *)0)->get_name() ||
-	     mtdn == get_type_description((SQSMesh *)0)->get_name())
+    else if (mtdn.substr(0, 9) == "ImageMesh")
     {
-      dstname = "StructQuadSurfField";
+      string dmeshname = "StructQuadSurfMesh" + mtdn.substr(9);
+      dstname = ftd->get_similar_name(dmeshname, 0);
     }  
-    else if (mtdn == get_type_description((SMesh *)0)->get_name() ||
-	     mtdn == get_type_description((SCMesh *)0)->get_name())
+    else if (mtdn.substr(0, 12) == "ScanlineMesh")
     {
-      dstname = "StructCurveField";
+      string dmeshname = "StructCurveMesh" + mtdn.substr(12);
+      dstname = ftd->get_similar_name(dmeshname, 0);
     }
-
-    if (dstname == "")
+    if (dstname == "" &&
+        !(mtdn.substr(0, 16) == "StructHexVolMesh" ||
+          mtdn.substr(0, 18) == "StructQuadSurfMesh" ||
+          mtdn.substr(0, 15) == "StructCurveMesh"))
     {
       warning("Do not know how to structure a " + mtdn + ".");
     }
     else
     {
-      const TypeDescription *ftd = ifieldhandle->get_type_description();
       CompileInfoHandle ci = ToStructuredAlgo::get_compile_info(ftd, dstname);
       Handle<ToStructuredAlgo> algo;
       if (!module_dynamic_compile(ci, algo)) return;
@@ -160,19 +152,25 @@ ToStructuredAlgo::get_compile_info(const TypeDescription *fsrc,
   static const string template_class_name("ToStructuredAlgoT");
   static const string base_class_name("ToStructuredAlgo");
 
-  const string::size_type loc = fsrc->get_name().find_first_of('<');
-  const string fdstname = partial_fdst + fsrc->get_name().substr(loc);
-
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
 		       fsrc->get_filename() + "." +
-		       to_filename(fdstname) + ".",
+		       to_filename(partial_fdst) + ".",
                        base_class_name, 
                        template_class_name, 
-                       fsrc->get_name() + "," + fdstname);
+                       fsrc->get_name() + "," + partial_fdst);
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/HexTrilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+  rval->add_mesh_include("../src/Core/Datatypes/LatVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/ImageMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/ScanlineMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructHexVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructQuadSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructCurveMesh.h");
   fsrc->fill_compile_info(rval);
   return rval;
 }
