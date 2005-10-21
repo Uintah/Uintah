@@ -28,42 +28,33 @@
 
 
 /*
- *  UnknownComponentClassFactory.cc: 
+ *  FrameworkIDBase.h: 
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
  *   Sept 2005
  *
  */
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/UnknownComponentClassFactory.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-#include <SCIRun/Core/CoreServicesImpl.h>
+#ifndef SCIRun_Distributed_FrameworkIDBase_h
+#define SCIRun_Distributed_FrameworkIDBase_h
+
+#include <Core/CCA/PIDL/URL.h>
 
 namespace SCIRun {
 
-  using namespace sci::cca;
-  using namespace sci::cca::core;
-
-  UnknownComponentClassFactory::UnknownComponentClassFactory()
-    : ComponentClassFactoryBase<ComponentClassFactory>( new ComponentClassDescriptionImpl("cca.unknown") ) 
-  {}
-  
-  UnknownComponentClassFactory::~UnknownComponentClassFactory() {}
-  
-  ComponentInfo::pointer 
-  UnknownComponentClassFactory::create( const CoreFramework::pointer &framework,
-					const std::string &name,
-					const sci::cca::TypeMap::pointer &properties)
+  template<class Interface>
+  class FrameworkIDBase : public Interface, public URL 
   {
-    return CoreServices::pointer( new CoreServicesImpl(framework, 
-						       name, 
-						       "cca.Unknown", 
-						       properties, 
-						       Component::pointer(0)));
-  }
-}
+  public:
+    FrameworkIDBase( const std::string &url ) : URL(url) {}
+    FrameworkIDBase ( const URL &url ) : URL(url) {}
 
+    virtual std::string getString() { return URL::getString(); }
+
+    virtual ~FrameworkIDBase() {}
+  };
+}
+#endif

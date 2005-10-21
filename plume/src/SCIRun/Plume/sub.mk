@@ -35,28 +35,17 @@ SRCDIR   := SCIRun/Plume
 
 SRCS := \
 	$(SRCDIR)/SCIRunErrorHandler.cc \
-	$(SRCDIR)/CCAComponentClassDescription.cc \
-	$(SRCDIR)/CCAComponentInfo.cc \
+	$(SRCDIR)/CCAComponentClassDescriptionImpl.cc \
+	$(SRCDIR)/CCAComponentClassFactoryImpl.cc \
 	$(SRCDIR)/CCAComponentModel.cc \
-	$(SRCDIR)/CCAComponentClassFactory.cc \
-	$(SRCDIR)/UnknownCCAComponentClassFactory.cc \
-	$(SRCDIR)/PlumeFramework.cc
+	$(SRCDIR)/PlumeFrameworkImpl.cc
 
-PSELIBS := SCIRun/Distributed
-
-ifeq ($(HAVE_GLOBUS),yes)
-  PSELIBS += Core/OS Core/Containers Core/Util Core/XMLUtil \
-            Core/GuiInterface Core/CCA/spec \
-            Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
-            Core/globus_threads Core/CCA/Comm
-else
-  PSELIBS += Core/OS Core/Containers Core/Util Core/XMLUtil \
-            Core/GuiInterface Core/CCA/spec \
-            Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions Core/Thread \
-            Core/TkExtensions Core/Init Core/CCA/Comm
-endif
+PSELIBS := SCIRun/Distributed SCIRun/Core \
+	Core/OS Core/Containers Core/Util Core/XMLUtil \
+	Core/GuiInterface Core/CCA/spec \
+	Core/CCA/PIDL Core/CCA/SSIDL \
+	Core/Exceptions Core/Thread \
+	Core/TkExtensions Core/Init Core/CCA/Comm
 
 LIBS := $(LIBS) -lcrypt -ldl
 

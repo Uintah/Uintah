@@ -41,17 +41,16 @@ ifeq ($(BUILD_SCIRUN2),yes)
   #
   # Plume
   #
-  SRCS      := $(SRCDIR)/core.cc
-
-#SCIRun/Distributed SCIRun/Plume\
+  SRCS      := $(SRCDIR)/plume.cc
 
   ifeq ($(LARGESOS),yes)
     PSELIBS := Core/CCA
   else
-    PSELIBS := SCIRun/Core \
+    PSELIBS := SCIRun/Distributed SCIRun/Core \
 	Core/Exceptions Core/CCA/Comm \
         Core/CCA/PIDL Core/CCA/spec Core/Util \
-        Core/CCA/SSIDL Core/Thread
+        Core/CCA/SSIDL Core/Thread \
+	CCA/Core/Hello CCA/Core/World
   endif
 
   PROGRAM := plume

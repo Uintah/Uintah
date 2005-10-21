@@ -64,7 +64,7 @@ namespace SCIRun {
     World& operator=(const World&);
   };
   
-  class MessagePort : public ports::MessagePort {
+  class MessagePort : public sci::cca::ports::StringPort {
   public:
     MessagePort( World *world ) : world(world) {}
     std::string getString() { return world->getMessage(); }

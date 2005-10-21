@@ -29,54 +29,24 @@
 
 # Makefile fragment for this subdirectory
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+
 SRCDIR   := SCIRun/Distributed
 
 SRCS     += \
-	     $(SRCDIR)/CCAException.cc \
-	     $(SRCDIR)/TypeMap.cc \
-	     $(SRCDIR)/ConnectionID.cc \
-	     $(SRCDIR)/FrameworkID.cc \
-             $(SRCDIR)/ConnectionInfo.cc \
-             $(SRCDIR)/ComponentInfo.cc \
-             $(SRCDIR)/PortInfo.cc \
-	     $(SRCDIR)/DistributedFramework.cc \
-             $(SRCDIR)/DistributedFrameworkException.cc \
-             $(SRCDIR)/ComponentEvent.cc \
-             $(SRCDIR)/ConnectionEvent.cc \
-             $(SRCDIR)/FrameworkServiceFactory.cc \
-             $(SRCDIR)/ComponentClassDescription.cc \
-             $(SRCDIR)/ComponentClassFactory.cc \
-             $(SRCDIR)/ComponentEventService.cc \
-             $(SRCDIR)/ConnectionEventService.cc \
-             $(SRCDIR)/ComponentRepositoryService.cc \
-             $(SRCDIR)/FrameworkPropertiesService.cc \
-	     $(SRCDIR)/BuilderService.cc \
+	$(SRCDIR)/FrameworkIDImpl.cc \
+	$(SRCDIR)/DistributedFrameworkImpl.cc \
 
-$(SRCDIR)/TypeMap.o: Core/CCA/spec/sci_sidl.h
-$(SRCDIR)/ConnectionID.o: Core/CCA/spec/sci_sidl.h
-$(SRCDIR)/FrameworkID.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/ConnectionInfo.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/ComponentInfo.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/PortInfo.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/DistributedFramework.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/DistributedFrameworkException.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/ComponentEvent.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/ConnectionEvent.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/FrameworkServiceFactory.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/ComponentClassDescription.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/ComponentEventService.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/ConnectionEventService.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/ComponentRepositoryService.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/FrameworkPropertiesService.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/BuilderService.o: Core/CCA/spec/sci_sidl.h \
+$(SRCDIR)/FrameworkIDImpl.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/DistributedFrameworkImpl.o: Core/CCA/spec/sci_sidl.h 
 
+ PSELIBS := SCIRun/Core \
+	Core/OS Core/Containers Core/Util Core/XMLUtil \
+	Core/GuiInterface Core/CCA/spec \
+        Core/CCA/PIDL Core/CCA/SSIDL \
+        Core/Exceptions Core/Thread \
+        Core/TkExtensions Core/Init Core/CCA/Comm
 
- PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
-	    Core/GuiInterface Core/CCA/spec \
-            Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions Core/Thread \
-            Core/TkExtensions Core/Init Core/CCA/Comm
-
-LIBS := $(XML_LIBRARY)
+LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

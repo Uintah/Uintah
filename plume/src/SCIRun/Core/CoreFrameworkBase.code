@@ -178,12 +178,6 @@ namespace SCIRun {
   }
     
   template<class Interface>
-  AbstractFramework::pointer CoreFrameworkBase<Interface>::createEmptyFramework()
-  {
-    return CoreFramework::pointer( new CoreFrameworkImpl );
-  }
-
-  template<class Interface>
   void CoreFrameworkBase<Interface>::shutdownFramework()
   {
     // Fixme [yarden]: what should be done here ?

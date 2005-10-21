@@ -33,20 +33,13 @@ package sci {
     
     package plume {
 
-      // Distributed Connection
-      interface CCAComponentInfo 
-	extends distributed.ComponentInfo, Services
-      {
-      }
-
       interface CCAComponentClassDescription
 	extends ComponentClassDescription
       {
 	string getLibrary();
       }
 
-      interface PlumeFramework 
-	extends distributed.internal.DistributedFrameworkInternal
+      interface PlumeFramework extends distributed.DistributedFramework
       {
       }
 

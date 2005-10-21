@@ -28,7 +28,7 @@
 
 
 /*
- *  UnknownComponentClassFactory.cc: 
+ *  CCAComponentClassFactory.h: 
  *
  *  Written by:
  *   Yarden Livant
@@ -38,32 +38,34 @@
  *
  */
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/UnknownComponentClassFactory.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-#include <SCIRun/Core/CoreServicesImpl.h>
+#ifndef SCIRun_CCAComponentFactoryImpl_h
+#define SCIRun_CCAComponentFactoryImpl_h
+
+#include <SCIRun/Core/ComponentClassFactoryImpl.h>
 
 namespace SCIRun {
 
   using namespace sci::cca;
-  using namespace sci::cca::core;
+  using namespace sci::cca::plume;
 
-  UnknownComponentClassFactory::UnknownComponentClassFactory()
-    : ComponentClassFactoryBase<ComponentClassFactory>( new ComponentClassDescriptionImpl("cca.unknown") ) 
-  {}
-  
-  UnknownComponentClassFactory::~UnknownComponentClassFactory() {}
-  
-  ComponentInfo::pointer 
-  UnknownComponentClassFactory::create( const CoreFramework::pointer &framework,
-					const std::string &name,
-					const sci::cca::TypeMap::pointer &properties)
+  class CCAComponentModel;
+
+  class CCAComponentClassFactoryImpl : public ComponentClassFactoryImpl
   {
-    return CoreServices::pointer( new CoreServicesImpl(framework, 
-						       name, 
-						       "cca.Unknown", 
-						       properties, 
-						       Component::pointer(0)));
-  }
+  public:
+    typedef ComponentClassFactory::pointer pointer;
+
+    CCAComponentClassFactoryImpl(const CCAComponentClassDescription::pointer &desc, CCAComponentModel *model);
+
+    virtual ~CCAComponentClassFactoryImpl();
+    
+    virtual ComponentInfo::pointer create( const CoreFramework::pointer &framework,
+					   const std::string &name,
+					   const TypeMap::pointer &);
+  protected:
+    CCAComponentModel *model;
+  };
+
 }
 
+#endif

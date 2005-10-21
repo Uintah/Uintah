@@ -28,10 +28,10 @@
 
 
 /*
- *  UnknownComponentClassFactory.cc: 
+ *  FrameworkIDImpl.cc:
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
  *   Sept 2005
@@ -39,31 +39,18 @@
  */
 
 #include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/UnknownComponentClassFactory.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-#include <SCIRun/Core/CoreServicesImpl.h>
+#include <SCIRun/Distributed/FrameworkIDImpl.h>
 
 namespace SCIRun {
 
-  using namespace sci::cca;
-  using namespace sci::cca::core;
-
-  UnknownComponentClassFactory::UnknownComponentClassFactory()
-    : ComponentClassFactoryBase<ComponentClassFactory>( new ComponentClassDescriptionImpl("cca.unknown") ) 
+  FrameworkIDImpl::FrameworkIDImpl( const std::string &url ) 
+    : FrameworkIDBase<FrameworkID>(url) 
   {}
-  
-  UnknownComponentClassFactory::~UnknownComponentClassFactory() {}
-  
-  ComponentInfo::pointer 
-  UnknownComponentClassFactory::create( const CoreFramework::pointer &framework,
-					const std::string &name,
-					const sci::cca::TypeMap::pointer &properties)
-  {
-    return CoreServices::pointer( new CoreServicesImpl(framework, 
-						       name, 
-						       "cca.Unknown", 
-						       properties, 
-						       Component::pointer(0)));
-  }
-}
 
+
+  FrameworkIDImpl::FrameworkIDImpl( const URL &url ) 
+    : FrameworkIDBase<FrameworkID>(url) 
+  {}
+    
+  FrameworkIDImpl::~FrameworkIDImpl() {}
+}

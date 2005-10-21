@@ -6,7 +6,7 @@ package sci {
  
     package ports {
       
-      interface MessagePort extends Port
+      interface StringPort extends Port
       {
 	collective string getString();
       }

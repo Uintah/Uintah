@@ -33,10 +33,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Core/CCA/spec
 
-$(SRCDIR)/sci_sidl.h: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
+$(SRCDIR)/sci_sidl.h: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/distributed.sidl  $(SRCDIR)/core_example.sidl
 
 
-$(SRCDIR)/sci_sidl.cc: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
+$(SRCDIR)/sci_sidl.cc: $(SRCDIR)/sci.sidl $(SRCDIR)/cca.sidl $(SRCDIR)/distributed.sidl $(SRCDIR)/cca_core.sidl $(SRCDIR)/core_example.sidl
 
 SRCS := $(SRCS) $(SRCDIR)/sci.sidl $(SRCDIR)/sci_sidl.cc
 GENHDRS := $(GENHDRS) $(SRCDIR)/sci_sidl.h

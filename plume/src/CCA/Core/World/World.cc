@@ -44,7 +44,7 @@
 using namespace SCIRun;
 using namespace sci::cca;
 
-extern "C" Component::pointer make_SCIRun_World()
+extern "C" Component::pointer make_Core_World()
 {
   return Component::pointer(new World());
 }
@@ -65,6 +65,6 @@ void World::setServices(const Services::pointer& svc)
 
   MessagePort::pointer message(new MessagePort(this));
   
-  svc->addProvidesPort(message, "message","sci.cca.ports.MessaagePort", services->createTypeMap());
+  svc->addProvidesPort(message, "message","sci.cca.StringPort", services->createTypeMap());
 }
 

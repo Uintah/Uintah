@@ -78,8 +78,6 @@ namespace SCIRun {
     
     virtual void releaseServices( const Services::pointer &services);
     
-    virtual AbstractFramework::pointer createEmptyFramework();
-    
     virtual void shutdownFramework();
 
     /*

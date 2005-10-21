@@ -38,45 +38,42 @@
  *
  */
 
-#ifndef SCIRun_CCA_CCAComponentModel_h
-#define SCIRun_CCA_CCAComponentModel_h
+#ifndef SCIRun_Plume_CCAComponentModel_h
+#define SCIRun_Plume_CCAComponentModel_h
 
-#include <Core/Thread/Mutex.h>
 #include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Distributed/ComponentInfo.h>
-#include <SCIRun/Plume/CCAComponentClassDescription.h>
-#include <SCIRun/Distributed/DistributedFramework.h>
+#include <Core/Thread/Mutex.h>
+
 #include <vector>
-#include <string>
 #include <map>
 
 namespace SCIRun {
 
-  namespace Distributed = sci::cca::distributed;
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+  using namespace sci::cca::plume;
 
-  class DitributedFramework;
-  class ComponentClassDescription;
-  class ComponentInfo;
   
   /**
    * \class CCAComponentModel
    *
    */
+
   class CCAComponentModel 
   {
   public:
-    CCAComponentModel(const DistributedFramework::pointer &framework);
+    CCAComponentModel(const CoreFramework::pointer &framework);
     virtual ~CCAComponentModel();
     
     
-    virtual Distributed::ComponentInfo::pointer createComponent(const std::string& name,
-					   const std::string& type,
-					   const std::string& library,
-					   const sci::cca::TypeMap::pointer& properties);
+    virtual ComponentInfo::pointer createComponent(const std::string& name,
+						   const std::string& type,
+						   const std::string& library,
+						   const sci::cca::TypeMap::pointer& properties);
     
     /** Deallocates the component instance \em ci.  Returns \code true on success and
 	\code false on failure. */
-    virtual void destroyComponent(const Distributed::ComponentInfo::pointer &info);
+    virtual void destroyComponent(const ComponentInfo::pointer &info);
     
     /** Get/set the directory path to component DLLs.  By default,
      * the sidlDLLPath is initialized to the environment variable
@@ -91,7 +88,8 @@ namespace SCIRun {
     std::vector<std::string> splitPathString(const std::string &path);
 
   private:
-    Distributed::DistributedFramework::pointer framework;
+    CoreFramework::pointer framework;
+
     typedef std::map<std::string, CCAComponentClassDescription::pointer> DescriptionMap;
     DescriptionMap descriptions;
     Mutex descriptions_lock;   

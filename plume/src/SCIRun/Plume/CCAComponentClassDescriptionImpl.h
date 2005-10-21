@@ -31,47 +31,33 @@
  *  CCAComponentClassDescriptionImpl.h: 
  *
  *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
+ *   Yarden Livant
+ *   SCI Institute
  *   University of Utah
- *   October 2001
+ *   Sept 2005
  *
  */
 
-#ifndef SCIRun_CCAComponentClassDescriptionImpl_h
-#define SCIRun_CCAComponentClassDescriptionImpl_h
+#ifndef SCIRun_Plume_CCAComponentClassDescriptionImpl_h
+#define SCIRun_Plume_CCAComponentClassDescriptionImpl_h
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Distributed/ComponentClassDescriptionImpl.h>
-#include <string>
+#include <SCIRun/Plume/CCAComponentClassDescriptionBase.h>
 
-namespace SCIRun
-{
 
-  namespace Plume = sci::cca::plume;
+namespace SCIRun {
 
-  /** \class CCAComponentClassDescriptionImpl
-   *
-   */
-  template<class Base>
-  class CCAComponentClassDescriptionImpl : public ComponentClassDescriptionImpl<Base>
+  using namespace sci::cca;
+  using namespace sci::cca::plume;
+
+  class CCAComponentClassDescriptionImpl : public CCAComponentClassDescriptionBase<CCAComponentClassDescription> 
   {
   public:
-    typedef Plume::CCAComponentClassDescription Interface;
-    typedef Interface::pointer pointer;
+    typedef CCAComponentClassDescription::pointer pointer;
 
-    CCAComponentClassDescriptionImpl( const std::string &type, const std::string &library);
+    CCAComponentClassDescriptionImpl(const std::string &type, const std::string &library );
+
     virtual ~CCAComponentClassDescriptionImpl();
-
-    virtual std::string getLibrary();
-
-  private:
-    std::string library;
-
-    CCAComponentClassDescriptionImpl(const CCAComponentClassDescriptionImpl&);
-    CCAComponentClassDescriptionImpl& operator=(const CCAComponentClassDescriptionImpl&);
   };
-  
-} // end namespace SCIRun
+}
 
 #endif

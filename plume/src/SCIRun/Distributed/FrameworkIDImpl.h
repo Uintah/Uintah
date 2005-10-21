@@ -41,22 +41,19 @@
 #ifndef SCIRun_Distributed_FrameworkIDImpl_h
 #define SCIRun_Distributed_FrameworkIDImpl_h
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <Core/CCA/PIDL/URL.h>
-#include <string>
+#include <SCIRun/Distributed/FrameworkIDBase.h>
 
 namespace SCIRun {
 
-  template<class Base>
-  class FrameworkIDImpl : public Base, public URL 
+  using namespace sci::cca::distributed;
+
+  class FrameworkIDImpl : public FrameworkIDBase<FrameworkID>
   {
   public:
-    FrameworkIDImpl( const std::string &url ) : URL(url) {}
-    FrameworkIDImpl ( const URL &url ) : URL(url) {}
-
-    virtual std::string getString() { return URL::getString(); }
-
-    virtual ~FrameworkIDImpl() {}
+    FrameworkIDImpl ( const std::string &url );
+    FrameworkIDImpl ( const URL &url );
+    
+    virtual ~FrameworkIDImpl();
   };
 }
 #endif

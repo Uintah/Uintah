@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2005 Scientific Computing and Imaging Institute,
    University of Utah.
 
    License for the specific language governing rights and limitations under
@@ -28,42 +28,47 @@
 
 
 /*
- *  UnknownComponentClassFactory.cc: 
+ *  PlumeFrameworkBase.h: 
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
- *   Sept 2005
+ *   August 2005
  *
  */
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/UnknownComponentClassFactory.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-#include <SCIRun/Core/CoreServicesImpl.h>
+#ifndef SCIRun_Framework_PlumeFrameworkBase_h
+#define SCIRun_Framework_PlumeFrameworkBase_h
+
+
+#include <SCIRun/Distributed/DistributedFrameworkBase.h>
+#include <SCIRun/Plume/CCAComponentModel.h>
 
 namespace SCIRun {
 
   using namespace sci::cca;
-  using namespace sci::cca::core;
+  using namespace sci::cca::plume;
 
-  UnknownComponentClassFactory::UnknownComponentClassFactory()
-    : ComponentClassFactoryBase<ComponentClassFactory>( new ComponentClassDescriptionImpl("cca.unknown") ) 
-  {}
+  /**
+   * \class PlumeFrameworkBase
+   * 
+   */
   
-  UnknownComponentClassFactory::~UnknownComponentClassFactory() {}
-  
-  ComponentInfo::pointer 
-  UnknownComponentClassFactory::create( const CoreFramework::pointer &framework,
-					const std::string &name,
-					const sci::cca::TypeMap::pointer &properties)
+  template<class Internal>
+  class PlumeFrameworkBase : public DistributedFrameworkBase<Internal>
   {
-    return CoreServices::pointer( new CoreServicesImpl(framework, 
-						       name, 
-						       "cca.Unknown", 
-						       properties, 
-						       Component::pointer(0)));
-  }
-}
+  public:
+    typedef PlumeFramework::pointer pointer;
+    
+    PlumeFrameworkBase( const DistributedFramework::pointer &parent = 0 );
+    virtual ~PlumeFrameworkBase();
+    
+  protected:
+    CCAComponentModel cca;
+    
+  };
+  
+} // end namespace SCIRun
 
+#endif
