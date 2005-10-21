@@ -590,7 +590,7 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
+  FIELD *ofield = scinew FIELD(clipped);
   ofield->copy_properties(fieldh.get_rep());
 
   // Add the data values from the old field to the new field.
@@ -965,7 +965,7 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
+  FIELD *ofield = scinew FIELD(clipped);
   ofield->copy_properties(fieldh.get_rep());
 
   // Add the data values from the old field to the new field.
@@ -1375,7 +1375,7 @@ IsoClipAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   new_mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 //  clipped->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
 //  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
-  FIELD *ofield = scinew FIELD(new_mesh, fieldh->basis_order());
+  FIELD *ofield = scinew FIELD(new_mesh);
   ofield->copy_properties(fieldh.get_rep());
   
 //NOTE TO JS: We'll worry about the interpolation matrix when we've finished the other part of the coding...

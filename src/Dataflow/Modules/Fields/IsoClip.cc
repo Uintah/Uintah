@@ -153,30 +153,30 @@ IsoClip::execute()
 
   string ext = "";
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
-  if (mtd->get_name() == "TetVolMesh")
+  if (mtd->get_name().find("TetVolMesh") != string::npos)
   {
     ext = "Tet";
   }
-  else if (mtd->get_name() == "TriSurfMesh")
+  else if (mtd->get_name().find("TriSurfMesh") != string::npos)
   {
     ext = "Tri";
   }
-  else if (mtd->get_name() == "HexVolMesh")
+  else if (mtd->get_name().find("HexVolMesh") != string::npos)
   {
     error("HexVolFields are not directly supported in this module.  Please first convert it into a TetVolField by inserting a SCIRun::FieldsGeometry::HexToTet module upstream.");
     return;
   }
-  else if (mtd->get_name() == "QuadSurfMesh")
+  else if (mtd->get_name().find("QuadSurfMesh") != string::npos)
   {
     error("QuadSurfFields are not directly supported in this module.  Please first convert it into a TriSurfField by inserting a SCIRun::FieldsGeometry::QuadToTri module upstream.");
     return;
   }
-  else if (mtd->get_name() == "LatVolMesh")
+  else if (mtd->get_name().find("LatVolMesh") != string::npos)
   {
     error("LatVolFields are not directly supported in this module.  Please first convert it into a TetVolField by inserting an upstream SCIRun::FieldsGeometry::Unstructure module, followed by a SCIRun::FieldsGeometry::HexToTet module.");
     return;
   }
-  else if (mtd->get_name() == "ImageMesh")
+  else if (mtd->get_name().find("ImageMesh") != string::npos)
   {
     error("ImageFields are not supported in this module.  Please first convert it into a TriSurfField by inserting an upstream SCIRun::FieldsGeometry::Unstructure module, followed by a SCIRun::FieldsGeometry::QuadToTri module.");
     return;
