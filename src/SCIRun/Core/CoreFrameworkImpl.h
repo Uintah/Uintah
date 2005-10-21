@@ -64,6 +64,8 @@ namespace SCIRun {
     CoreFrameworkImpl();
     virtual ~CoreFrameworkImpl();
 
+    virtual AbstractFramework::pointer createEmptyFramework();
+    
   private:
     CoreFrameworkImpl(const CoreFrameworkImpl &);
     CoreFrameworkImpl &operator=(const CoreFrameworkImpl &);

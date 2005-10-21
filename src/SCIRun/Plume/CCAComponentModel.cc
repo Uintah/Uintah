@@ -39,12 +39,11 @@
  */
 
 #include <SCIRun/Plume/CCAComponentModel.h>
-#include <SCIRun/Distributed/DistributedFramework.h>
+#include <SCIRun/Core/CoreFrameworkImpl.h>
 
-#include <SCIRun/Distributed/ComponentClassDescription.h>
-#include <SCIRun/Distributed/FrameworkPropertiesService.h>
-//#include <SCIRun/Distributed//ComponentInfoImpl.code>
-#include <SCIRun/Plume/CCAComponentInfo.h>
+#include <SCIRun/Plume/CCAComponentClassDescriptionImpl.h>
+//#include <SCIRun/Core/FrameworkPropertiesService.h>
+#include <SCIRun/Core/CoreServicesImpl.h>
 #include <SCIRun/Plume/SCIRunErrorHandler.h>
 
 #include <Core/Thread/Guard.h>
@@ -55,7 +54,6 @@
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
-//#include <SCIRun/resourceReference.h>
 #include <string>
 
 #ifdef __sgi
@@ -79,11 +77,13 @@
 #endif
 
 namespace SCIRun {
+
+  using namespace sci::cca;
   
   const std::string CCAComponentModel::DEFAULT_PATH = std::string("/CCA/Components/xml");
   
   
-  CCAComponentModel::CCAComponentModel(const DistributedFramework::pointer &framework)
+  CCAComponentModel::CCAComponentModel(const CoreFramework::pointer &framework)
     : framework(framework),
       descriptions_lock("CCAComponentModel::components lock")
   {
@@ -127,6 +127,7 @@ namespace SCIRun {
     SSIDL::array1<std::string> sArray;
     sci::cca::TypeMap::pointer properties;
 
+#if 0
     FrameworkPropertiesService::pointer service =
       pidl_cast<FrameworkPropertiesService::pointer>(framework->getFrameworkService("cca.FrameworkProperties"));
 
@@ -138,7 +139,10 @@ namespace SCIRun {
       sArray = properties->getStringArray("sidl_xml_path", sArray);
     }
     framework->releaseFrameworkService(service);
-  
+#endif
+
+    throw CCAException::create("Need to set Default PATH in ComponentModel");
+
     for (SSIDL::array1<std::string>::iterator item = sArray.begin(); item != sArray.end(); item++) {
       Dir dir(*item);
       //std::cout << "CCA Component Model: Looking at directory: " << *item << std::endl;
@@ -174,8 +178,7 @@ namespace SCIRun {
       return;
     }
     catch ( ... ) {
-      std::cerr << "Unknown error occurred during parsing: '" << file << "' "
-		<< std::endl;
+      std::cerr << "Unknown error occurred during parsing: '" << file << "'\n";
       handler.foundError=true;
       return;
     }
@@ -212,8 +215,7 @@ namespace SCIRun {
 	//std::cout << "Component name = ->" << component_name << "<-" << std::endl;
 	
 	// Register this component
-	CCAComponentClassDescription::pointer cd = 
-	  CCAComponentClassDescription::pointer(new CCAComponentClassDescription(component_name, library_name ));
+	CCAComponentClassDescription::pointer cd = new CCAComponentClassDescriptionImpl(component_name, library_name );
 	
 	descriptions_lock.lock();
 	this->descriptions[cd->getComponentClassName()] = cd;
@@ -222,7 +224,7 @@ namespace SCIRun {
     }
   }
   
-
+  
   ComponentInfo::pointer
   CCAComponentModel::createComponent(const std::string &name,
 				     const std::string &type,
@@ -230,7 +232,7 @@ namespace SCIRun {
 				     const sci::cca::TypeMap::pointer &properties)
     
   {
-    sci::cca::Component::pointer component;
+    Component::pointer component;
     
     // Get the list of DLL paths to search for the appropriate component library
     std::vector<std::string> possible_paths = splitPathString(getSidlDLLPath());
@@ -267,13 +269,13 @@ namespace SCIRun {
     component = (*maker)();
 
     // create ComponentInfo. this must be a class the derives from Distributed/ComponentInfo
-    CCAComponentInfo *info =  new CCAComponentInfo(framework, name, type, properties, component, this);
+    CoreServices::pointer services =  new CoreServicesImpl(framework, name, type, properties, component);
 
     // CCA initialization of the component
-    component->setServices(sci::cca::Services::pointer(info));
+    component->setServices(services);
 
     // done
-    return ComponentInfo::pointer(info);
+    return services;
   }
 
   void CCAComponentModel::destroyComponent(const ComponentInfo::pointer &info)
@@ -306,31 +308,5 @@ namespace SCIRun {
     
     return ans;  
   }
-#if 0
-  void CCAComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)
-  {
-    descriptions_lock.lock();
-    for (DescriptionMap::iterator iter = descriptions.begin();
-	 iter != descriptions.end(); iter++) {
-      list.push_back(iter->second);
-    }
-    descriptions_lock.unlock();
-    
-    lock_loaderList.lock(); 
-    for (unsigned int i = 0; i < loaderList.size(); i++) {
-      SSIDL::array1<std::string> typeList;
-      loaderList[i]->listAllComponentTypes(typeList);
-      //convert typeList to component description list
-      //by attaching a loader (resourceReferenece) to it.
-      for (unsigned int j = 0; j < typeList.size(); j++) {
-	CCAComponentDescription* cd = new CCAComponentDescription(this);
-	cd->type = typeList[j];
-	cd->setLoaderName(loaderList[i]->getName());
-	list.push_back(cd);
-      }
-    }
-    lock_loaderList.unlock();
-  }
-#endif  
 
 } // end namespace SCIRun

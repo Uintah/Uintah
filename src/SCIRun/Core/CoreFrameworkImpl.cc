@@ -50,5 +50,10 @@ namespace SCIRun {
   CoreFrameworkImpl::CoreFrameworkImpl() {}
   CoreFrameworkImpl::~CoreFrameworkImpl() {}
   
+  AbstractFramework::pointer CoreFrameworkImpl::createEmptyFramework()
+  {
+    return new CoreFrameworkImpl;
+  }
+
 } // end namespace SCIRun
 

@@ -29,6 +29,8 @@
 
 # Makefile fragment for this subdirectory
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+
 SRCDIR   := SCIRun/Core
 
 SRCS     += \
@@ -81,6 +83,6 @@ $(SRCDIR)/BuilderService.o: Core/CCA/spec/sci_sidl.h \
             Core/Exceptions Core/Thread \
             Core/TkExtensions Core/Init Core/CCA/Comm
 
-LIBS := $(XML_LIBRARY)
+LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

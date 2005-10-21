@@ -42,7 +42,8 @@
 #define SCIRun_SompleComponentFactory_h
 
 #include <SCIRun/Core/ComponentClassFactoryBase.h>
-#include <SCIRun/COre/ComponentClassDescriptionImpl.h>
+#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
+#include <SCIRun/Core/ComponentInfoImpl.h>
 
 namespace SCIRun {
 
@@ -61,7 +62,15 @@ namespace SCIRun {
     {}
       
 
-    ~ComponentClassFactoryImpl() {}
+    ~SimpleComponentClassFactory() {}
+
+    virtual ComponentInfo::pointer create( const CoreFramework::pointer &framework,
+					   const std::string &name,
+					   const TypeMap::pointer &properties) 
+    {
+      return new ComponentInfoImpl(framework, name, getClassName(), properties, new Product);
+    }
+
   };
 
 }

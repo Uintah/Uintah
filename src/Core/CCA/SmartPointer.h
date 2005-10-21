@@ -59,7 +59,7 @@ namespace CCALib {
   public:
     typedef T element_type;
 
-    explicit SmartPointer(T* ptr=0)
+    SmartPointer(T* ptr=0)
       : ptr(ptr) {
       reference();
     }

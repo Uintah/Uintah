@@ -29,13 +29,10 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
-
 SRCDIR   := SCIRun
 
-SUBDIRS := $(SRCDIR)/Core
-#SUBDIRS := $(SRCDIR)/Distributed
-#SUBDIRS += $(SRCDIR)/Plume
+SUBDIRS := $(SRCDIR)/Core $(SRCDIR)/Distributed $(SRCDIR)/Plume
+
 #SUBDIRS += $(SRCDIR)/MPIFramework
 #SUBDIRS += $(SRCDIR)/SCIRun2
 

@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2005 Scientific Computing and Imaging Institute,
    University of Utah.
 
    License for the specific language governing rights and limitations under
@@ -28,42 +28,65 @@
 
 
 /*
- *  UnknownComponentClassFactory.cc: 
+ *  DistributedFrameworkBase.h: 
  *
  *  Written by:
- *   Yarden Livant
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
- *   Sept 2005
+ *   August 2005
  *
  */
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/UnknownComponentClassFactory.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-#include <SCIRun/Core/CoreServicesImpl.h>
+#ifndef SCIRun_Distributed_DistributedFrameworkBase_h
+#define SCIRun_Distributed_DistributedFrameworkBase_h
+
+#include <list>
+#include <Core/Thread/Mutex.h>
+#include <SCIRun/Core/CoreFrameworkBase.h>
 
 namespace SCIRun {
 
   using namespace sci::cca;
   using namespace sci::cca::core;
+  using namespace sci::cca::distributed;
 
-  UnknownComponentClassFactory::UnknownComponentClassFactory()
-    : ComponentClassFactoryBase<ComponentClassFactory>( new ComponentClassDescriptionImpl("cca.unknown") ) 
-  {}
-  
-  UnknownComponentClassFactory::~UnknownComponentClassFactory() {}
-  
-  ComponentInfo::pointer 
-  UnknownComponentClassFactory::create( const CoreFramework::pointer &framework,
-					const std::string &name,
-					const sci::cca::TypeMap::pointer &properties)
+  /**
+   * \class DistributedFramework
+   * 
+   * \brief An implementation of a DistributedFramework 
+   */
+
+
+  template<class Interface>
+  class DistributedFrameworkBase : public CoreFrameworkBase<Interface>
   {
-    return CoreServices::pointer( new CoreServicesImpl(framework, 
-						       name, 
-						       "cca.Unknown", 
-						       properties, 
-						       Component::pointer(0)));
-  }
-}
+  public:
+    typedef DistributedFramework::pointer pointer;
 
+    DistributedFrameworkBase( const DistributedFramework::pointer &parent = 0);
+    virtual ~DistributedFrameworkBase();
+
+    /*
+     * methods that implement the DistributedFramework 
+     */
+
+    virtual bool isRoot() { return parent.isNull(); }
+    virtual DistributedFramework::pointer getParent() { return parent; }
+
+    virtual FrameworkID::pointer getFrameworkID();
+    virtual SSIDL::array1<DistributedFramework::pointer> getChildren();
+
+  private:
+    typedef std::list<DistributedFramework::pointer> ChildrenList;
+
+    DistributedFramework::pointer parent;
+    ChildrenList children;
+
+    Mutex children_lock;
+  };
+  
+} // end namespace SCIRun
+
+
+#endif

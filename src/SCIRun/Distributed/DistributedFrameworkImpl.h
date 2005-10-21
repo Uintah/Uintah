@@ -38,47 +38,39 @@
  *
  */
 
-#ifndef SCIRun_Framework_DistributedFrameworkImpl_h
-#define SCIRun_Framework_DistributedFrameworkImpl_h
+#ifndef SCIRun_DistributedFrameworkImpl_h
+#define SCIRun_DistributedFrameworkImpl_h
 
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <string>
-
+#include <SCIRun/Distributed/DistributedFrameworkBase.h>
 
 namespace SCIRun {
+
+  using namespace sci::cca;
+  using namespace sci::cca::distributed;
 
   /**
    * \class DistributedFrameworkImpl
    * 
-   * \brief An implementation of a DistributedFrameworkImpl 
+   * \brief An implementation of a DistributedFramework 
    */
-  
-  namespace Distributed = sci::cca::distributed;
 
-  template<class Base>
-  class DistributedFrameworkImpl : public Base
+
+  class DistributedFrameworkImpl : public DistributedFrameworkBase<DistributedFramework>
   {
   public:
-    typedef Distributed::DistributedFramework::pointer pointer;
+    typedef DistributedFramework::pointer pointer;
 
-    DistributedFrameworkImpl( const pointer &parent = pointer(0));
+    DistributedFrameworkImpl(const DistributedFramework::pointer &parent = 0);
     virtual ~DistributedFrameworkImpl();
-    
-    virtual Distributed::FrameworkID::pointer getFrameworkID();
-    virtual bool isRoot() { return !parent.isNull(); }
-    
-    virtual pointer getParent() { return parent; }
-    virtual SSIDL::array1<pointer> getChildren() { return public_children; }
+
+    virtual AbstractFramework::pointer createEmptyFramework();
     
   private:
-    pointer parent;
-    SSIDL::array1<pointer> public_children;
-    SSIDL::array1<pointer> private_children;
+    DistributedFrameworkImpl(const DistributedFrameworkImpl &);
+    DistributedFrameworkImpl &operator=(const DistributedFrameworkImpl &);
   };
   
 } // end namespace SCIRun
-
-//#include <SCIRun/Distributed/DistributedFrameworkImpl.code>
 
 #endif

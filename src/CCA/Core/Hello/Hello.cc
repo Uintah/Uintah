@@ -49,8 +49,9 @@
 
 using namespace SCIRun;
 using namespace sci::cca;
+using namespace sci::cca::ports;
 
-extern "C" Component::pointer make_SCIRun_Hello()
+extern "C" Component::pointer make_Core_Hello()
 {
     return Component::pointer(new Hello());
 }
@@ -79,10 +80,10 @@ void Hello::setServices(const Services::pointer& svc)
   svc->addProvidesPort(goPort, "go", "sci.cca.ports.GoPort", TypeMap::pointer(0));
   std::cerr << "Done\n";
   
-  properties->putString("cca.portName", "message");
+  properties->putString("cca.portName", "say");
   properties->putString("cca.portType", "sci.cca.ports.StringPort");
 
-  svc->registerUsesPort("message","sci.cca.ports.MessagePort", properties);
+  svc->registerUsesPort("say","sci.cca.ports.StringPort", properties);
   
 }
 
@@ -95,8 +96,8 @@ int Hello::go()
   std::cerr << "Hello.go.getPort...";
   double st = SCIRun::Time::currentSeconds();
   
-  Port::pointer port = services->getPort("message");	
-  ports::MessagePort::pointer message =  pidl_cast<ports::MessagePort::pointer>(port);
+  Port::pointer port = services->getPort("say");	
+  StringPort::pointer message =  pidl_cast<StringPort::pointer>(port);
   std::string name = message->getString();
   
   double t = Time::currentSeconds() - st;
@@ -105,7 +106,7 @@ int Hello::go()
   
   if (! name.empty()) text = name;
   
-  services->releasePort("message");
+  services->releasePort("say");
   
   return 0;
 }

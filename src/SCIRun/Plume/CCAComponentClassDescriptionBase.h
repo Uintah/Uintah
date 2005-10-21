@@ -28,42 +28,51 @@
 
 
 /*
- *  UnknownComponentClassFactory.cc: 
+ *  CCAComponentClassDescriptionBase.h: 
  *
  *  Written by:
- *   Yarden Livant
- *   SCI Institute
+ *   Steven G. Parker
+ *   Department of Computer Science
  *   University of Utah
- *   Sept 2005
+ *   October 2001
  *
  */
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/UnknownComponentClassFactory.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-#include <SCIRun/Core/CoreServicesImpl.h>
+#ifndef SCIRun_CCAComponentClassDescriptionBase_h
+#define SCIRun_CCAComponentClassDescriptionBase_h
 
-namespace SCIRun {
+#include <SCIRun/Core/ComponentClassDescriptionBase.h>
+
+namespace SCIRun
+{
 
   using namespace sci::cca;
-  using namespace sci::cca::core;
+  using namespace sci::cca::plume;
 
-  UnknownComponentClassFactory::UnknownComponentClassFactory()
-    : ComponentClassFactoryBase<ComponentClassFactory>( new ComponentClassDescriptionImpl("cca.unknown") ) 
-  {}
-  
-  UnknownComponentClassFactory::~UnknownComponentClassFactory() {}
-  
-  ComponentInfo::pointer 
-  UnknownComponentClassFactory::create( const CoreFramework::pointer &framework,
-					const std::string &name,
-					const sci::cca::TypeMap::pointer &properties)
+  /** \class CCAComponentClassDescriptionBase
+   *
+   */
+  template<class Interface>
+  class CCAComponentClassDescriptionBase : public ComponentClassDescriptionBase<Interface>
   {
-    return CoreServices::pointer( new CoreServicesImpl(framework, 
-						       name, 
-						       "cca.Unknown", 
-						       properties, 
-						       Component::pointer(0)));
-  }
-}
+  public:
+    typedef CCAComponentClassDescription::pointer pointer;
 
+    CCAComponentClassDescriptionBase( const std::string &type, const std::string &library)
+      : ComponentClassDescriptionBase<Interface>(type), library(library)
+    {}
+
+    virtual ~CCAComponentClassDescriptionBase() {}
+
+    virtual std::string getLibrary() { return library; }
+
+  private:
+    std::string library;
+
+    CCAComponentClassDescriptionBase(const CCAComponentClassDescriptionBase<Interface>&);
+    CCAComponentClassDescriptionBase& operator=(const CCAComponentClassDescriptionBase<Interface>&);
+  };
+  
+} // end namespace SCIRun
+
+#endif

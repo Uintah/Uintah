@@ -63,7 +63,7 @@ namespace SCIRun {
     Hello& operator=(const Hello&);
   };
 
-  class HelloGoPort : public  ports::GoPort {
+  class HelloGoPort : public  sci::cca::ports::GoPort {
   public:
     HelloGoPort(Hello *hello) : hello(hello) {}
     int go() { return hello->go(); }

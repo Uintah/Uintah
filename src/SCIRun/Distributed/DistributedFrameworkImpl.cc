@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2005 Scientific Computing and Imaging Institute,
    University of Utah.
 
    License for the specific language governing rights and limitations under
@@ -28,42 +28,35 @@
 
 
 /*
- *  UnknownComponentClassFactory.cc: 
+ *  DistributedFrameworkImpl.cc: 
  *
- *  Written by:
- *   Yarden Livant
+ *  Written by:  using namespace sci::cca::core;
+
+ *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
- *   Sept 2005
+ *   August 2005
  *
  */
 
 #include <Core/CCA/spec/sci_sidl.h>
-#include <SCIRun/Core/UnknownComponentClassFactory.h>
-#include <SCIRun/Core/ComponentClassDescriptionImpl.h>
-#include <SCIRun/Core/CoreServicesImpl.h>
+#include <SCIRun/Distributed/DistributedFrameworkImpl.h>
+#include <SCIRun/Distributed/DistributedFrameworkBase.code>
 
 namespace SCIRun {
 
   using namespace sci::cca;
-  using namespace sci::cca::core;
+  using namespace sci::cca::distributed;
 
-  UnknownComponentClassFactory::UnknownComponentClassFactory()
-    : ComponentClassFactoryBase<ComponentClassFactory>( new ComponentClassDescriptionImpl("cca.unknown") ) 
+  DistributedFrameworkImpl::DistributedFrameworkImpl(const DistributedFramework::pointer &parent)
+  : DistributedFrameworkBase<DistributedFramework>(parent)
   {}
+
+  DistributedFrameworkImpl::~DistributedFrameworkImpl() {}
   
-  UnknownComponentClassFactory::~UnknownComponentClassFactory() {}
-  
-  ComponentInfo::pointer 
-  UnknownComponentClassFactory::create( const CoreFramework::pointer &framework,
-					const std::string &name,
-					const sci::cca::TypeMap::pointer &properties)
-  {
-    return CoreServices::pointer( new CoreServicesImpl(framework, 
-						       name, 
-						       "cca.Unknown", 
-						       properties, 
-						       Component::pointer(0)));
+  AbstractFramework::pointer DistributedFrameworkImpl::createEmptyFramework()
+  { 
+    return new DistributedFrameworkImpl(this); 
   }
-}
+} // end namespace SCIRun
 

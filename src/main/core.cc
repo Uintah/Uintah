@@ -48,6 +48,7 @@
 #include <SCIRun/Core/CoreFrameworkImpl.h>
 
 #include <CCA/Core/Hello/Hello.h>
+#include <CCA/Core/World/World.h>
 #include <SCIRun/Core/SimpleComponentClassFactory.h>
 
 #include <sci_defs/qt_defs.h>
@@ -67,40 +68,24 @@ static std::string fileName;
 void init();
 void usage();
 bool parse_args( int argc, char *argv[]);
+void setup_test( const CoreFramework::pointer &framwork );
+void run_test( const CoreFramework::pointer &framwork );
 
 int
 main(int argc, char *argv[]) {
-  bool framework = true;
-  
+
   init();
   
   // Create a new framework
   try {
-    CoreFramework::pointer core;
-    if(framework) {
-      core = CoreFramework::pointer(new CoreFrameworkImpl());
-      //std::cerr << "URL to framework:\n" << core->getURL().getString() << std::endl;
-    } else {
-      std::cerr << "Not finished: pass url to existing framework\n";
-    }
+    CoreFramework::pointer coreFramework = new CoreFrameworkImpl();
+    //std::cerr << "URL to framework:\n" << core->getURL().getString() << std::endl;
 
-    ComponentClassFactory::pointer hello( new SimpleComponentClassFactory<Hello>("core.example.hello") ); 
-    core->addComponentClassFactory( hello );
-	     
-    Services::pointer main_services = core->getServices("main", "cca.unknown", core->createTypeMap());
-    main_services->registerUsesPort("builder", "cca.BuilderService", core->createTypeMap());
-    
-    BuilderService::pointer builder = pidl_cast<BuilderService::pointer>( main_services->getPort("builder"));
-
-    main_services->releasePort("builder");
-
-    main_services->unregisterUsesPort("builder");
-    std::cout << "Core " << VERSION << " started..." << std::endl;
+    setup_test(coreFramework);
+    run_test(coreFramework);
   
     //broadcast, listen to URL periodically
-    
     PIDL::serveObjects();
-    std::cout << "serveObjects done!\n";
     PIDL::finalize();
     
   }
@@ -120,6 +105,56 @@ main(int argc, char *argv[]) {
   }
   return 0;
 }
+
+
+void setup_test( const CoreFramework::pointer &framework )
+{
+  // tmp: add factories
+  ComponentClassFactory::pointer helloFactory( new SimpleComponentClassFactory<Hello>("core.example.hello") ); 
+  ComponentClassFactory::pointer worldFactory( new SimpleComponentClassFactory<World>("core.example.world") ); 
+
+  framework->addComponentClassFactory( helloFactory );
+  framework->addComponentClassFactory( worldFactory );
+}
+     
+void run_test( const CoreFramework::pointer &framework )
+{
+  std::cout << "get services.\n";
+  Services::pointer services = framework->getServices("test", "cca.unknown", framework->createTypeMap());
+
+  services->registerUsesPort("go", "sci.cca.ports.GoPort", 0);
+  services->registerUsesPort("builder", "cca.BuilderService", framework->createTypeMap());
+
+  std::cout << "get builder.\n";
+  BuilderService::pointer builder = pidl_cast<BuilderService::pointer>( services->getPort("builder"));
+  
+  // test
+  std::cout << "create components\n";
+  ComponentID::pointer hello = builder->createInstance("hello", "core.example.hello", 0);
+  ComponentID::pointer world  = builder->createInstance("world", "core.example.world", 0);
+
+  std::cout << "connect components\n";
+  ConnectionID::pointer connection = builder->connect( hello, "say", world, "message");
+  
+  std::cout << "get Hello::go\n";
+  ports::GoPort::pointer go = pidl_cast<ports::GoPort::pointer>(services->getPort("go"));
+
+  std::cout << "run\n";
+  go->go();
+
+  std::cout << "cleanup\n";
+  services->releasePort("go");
+
+  builder->disconnect( connection, 0 );
+  builder->destroyInstance(hello, 0);
+  builder->destroyInstance(world, 0);
+
+  services->releasePort("builder");
+  
+  services->unregisterUsesPort("go");
+  services->unregisterUsesPort("builder");
+}
+  
 
 void
 usage()
@@ -172,7 +207,7 @@ parse_args( int argc, char *argv[])
 
 void init()
 {
-  create_sci_environment(0,0);
+  // create_sci_environment(0,0);
   
   try {
     // TODO: Move this out of here???

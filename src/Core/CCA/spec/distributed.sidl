@@ -33,215 +33,28 @@ package sci {
     
     package distributed {
 
-      // Distributed Connection
-      interface ConnectionInfo extends ConnectionID
-      {
-	TypeMap getProperties();
-	void setProperties( in TypeMap );
-      }
-	
-      // Distributed Components
-      interface ComponentInfo extends ComponentID
-      {
-	DistributedFramework getFramework();
-
-	Component getComponent();
-
-	array<PortInfo,1> getPorts();
-	PortInfo getPortInfo( in string portName );
-	
-	string getClassName();
-	TypeMap getProperties();
-	void setProperties( in TypeMap );
-
-	void destroyComponent();
-      }
-
-      package internal {
-	interface ServiceInfo extends ComponentInfo {
-	  PortInfo getService(in string name);
-	}
-      }
-      
-
-
-      // Component Event
-
-      enum ComponentEventType {
-	AllComponentEvents = 0,
-	InstantiatePending=1,
-	ComponentInstantiated=2,
-	DestroyPending=3,
-	ComponentDestroyed=4,
-	ComponentMoved=5,
-      }
-
-      interface ComponentEvent {
-	ComponentEventType getType();
-	ComponentID getID();
-	TypeMap getComponentProperties();
-      }
-
-      interface ComponentEventListener {
-	void componentActivity(in ComponentEvent evt);
-      }
-
-      package ports {
-	
-	interface ComponentEventService extends Port, internal.Service {
-	  /** Sign up to be told about component activity.
-	      @param ComponentEventType must be one of the integer values 
-	      ALL, ConnectPending, Connected, DisconnectPending, Disconnected
-	      as defined in @see ContainerEventType. 
-	      ALL means listening to all of the other four listed here.
-	      @param l, an object (this component or its delegate) that listens
-	      by implementing the ConnectionEventListener callback.
-	      @param playInitialEvents, send events for components that have
-	      already been instantiated
-	  */
-	  void addComponentEventListener(in ComponentEventType type, 
-					 in ComponentEventListener listener, 
-					 in bool playInitialEvents);
-	  
-	  /** Ignore future ComponentEvents of the given type.
-	      Removing a non-added listener is not an error. 
-	      @param ComponentEventType must be one of the integer values defined in
-	      addConnectionEventListener.
-	      @param l, a previously added listener interface.
-	  */
-	  void removeComponentEventListener(in ComponentEventType type, 
-					    in ComponentEventListener listener) ;
-	  
-	}
-
- 	interface ConnectionEventService 
-	  extends sci.cca.ports.ConnectionEventService, internal.Service
-	{
-	}
-
-	interface ComponentRepositoryService 
-	  extends sci.cca.ports.ComponentRepository, internal.Service
-	{
-	}
-	
-	interface FrameworkPropertiesService 
-	  extends sci.cca.Port, internal.Service
-	{
-	  TypeMap getProperties();
-	  void setProperties(in TypeMap properties);
-	}
-
- 	interface BuilderService
- 	  extends sci.cca.ports.BuilderService, internal.Service
- 	{
-	  //void emitConnectionEvent(in ports.ConnectionEvent);
- 	}
-
-      } // ports
-
-      // Distributed Ports
-
-      enum PortType {
-	ProvidePort = 0,
-	UsePort     = 1,
-      }
-
-      interface PortInfo {
-	bool connect(in PortInfo);
-	bool disconnect(in PortInfo );
-	bool available();
-	bool canConnectTo(in PortInfo);
-	bool isConnected();
-	int  numOfConnections();
-
-	TypeMap getProperties();
-
-	Port getPort();
-	PortInfo getPeer();
-	PortType getPortType();
-
-	string getName();
-	string getType();
-
-	void incrementUseCount();
-	bool decrementUseCount();
-      };
       
       interface FrameworkID {
 	string getString();
       }
 
-      interface DistributedFramework extends AbstractFramework 
+      interface DistributedFramework extends core.CoreFramework 
       {
 	FrameworkID getFrameworkID();
 
 	bool isRoot();
 	DistributedFramework getParent();
 	array<DistributedFramework,1> getChildren();
-	
-	internal.Service getFrameworkService( in string serviceName);
-	void releaseFrameworkService(in internal.Service);
-
-	//internal.Service getFrameworkService( in string serviceName, in ComponentInfo);
-	//bool releaseFrameworkService(in internal.Service, in ComponentInfo);
       }
 
-      package internal {
 
-	interface DistributedFrameworkInternal extends DistributedFramework 
+      package ports {
+
+	interface DistributedBuilderService extends ports.BuilderService
 	{
-	  // info
-	  ComponentID lookupComponentID(in string);
-	  array<ComponentID,1> getComponentIDs();
-	  array<ConnectionID,1> getConnectionIDs( in array<ComponentID,1>);
-
-	  // component manipulations
-	  ComponentInfo createInstance( in string name, in string type, in TypeMap properties);
-	  array<cca.ComponentClassDescription> listAllComponentTypes(in bool);
-	  void destroyInstance(in ComponentID);
-
-	  // connections
-	  void addConnection(in ConnectionID);
-	  void disconnect(in ConnectionID);
-
-	  // services
-	  bool isFrameworkService(in string);
-	  Service getFrameworkService(in string);
-	  void releaseFrameworkService(in Service);
-
-	  // factories
-	  void addComponentClassFactory( in ComponentClassFactory );
 	}
-	
-	interface ComponentClassFactory 
-	{
-	  string getClassName();
-	  ComponentClassDescription getClassDescription();
-	  ComponentInfo create(in DistributedFramework, in string name, in TypeMap);
-	}
-	
+
       }
-
-      // various framework services
-      
-//       interface  BuilderService 
-//          extends ports.BuilderService, internal.Service 
-//       {
-	
-// 	//void emitConnectionEvent( in ports.ConnectionEvent );
-//       }
-      
-//       interface ConnectionEventService 
-//          extends ports.ConnectionEventService, internal.Service 
-//       {      
-// 	//void emitConnectionEvent(in ports.ConnectionEvent);
-//       }
-      
-//       interface ComponentEventService
-//          extends ports.ComponentEventService, internal.Service 
-//       {
-// 	//void emitComponentEvent(in ports.ComponentEvent);
-//       }
 
     } // distributed
 

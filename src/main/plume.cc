@@ -28,7 +28,7 @@
 
 
 /*
- *  newmain.cc: CCA-ified version of SCIRun
+ *  Core.cc: CCA-ified version of SCIRun
  *
  *  Written by:
  *   Steven G. Parker
@@ -41,18 +41,24 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Util/Environment.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/Thread/Thread.h>
-#include <SCIRun/Distributed/TypeMap.h>
-#include <SCIRun/Plume/PlumeFramework.h>
 
-#include <sci_defs/mpi_defs.h>
+#include <Core/CCA/spec/sci_sidl.h>
+
+#include <SCIRun/Core/SimpleComponentClassFactory.h>
+#include <SCIRun/Core/TypeMapImpl.h>
+
+#include <SCIRun/Distributed/DistributedFrameworkImpl.h>
+
+#include <CCA/Core/Hello/Hello.h>
+#include <CCA/Core/World/World.h>
+
 #include <sci_defs/qt_defs.h>
-#include <sci_mpi.h>
 #include <iostream>
 
 using namespace SCIRun;
 using namespace sci::cca;
+using namespace sci::cca::ports;
 
 #define VERSION "2.0.0" // this needs to be synced with the contents of
                         // SCIRun/doc/edition.xml
@@ -60,6 +66,97 @@ using namespace sci::cca;
 
 std::string defaultBuilder = "gui";
 static std::string fileName;
+
+void init();
+void usage();
+bool parse_args( int argc, char *argv[]);
+void setup_test( const CoreFramework::pointer &framwork );
+void run_test( const CoreFramework::pointer &framwork );
+
+int
+main(int argc, char *argv[]) {
+
+  init();
+  
+  // Create a new framework
+  try {
+    CoreFramework::pointer coreFramework = new DistributedFrameworkImpl();
+    //std::cerr << "URL to framework:\n" << core->getURL().getString() << std::endl;
+
+    setup_test(coreFramework);
+    run_test(coreFramework);
+  
+    //broadcast, listen to URL periodically
+    PIDL::serveObjects();
+    PIDL::finalize();
+    
+  }
+  catch(const sci::cca::CCAException::pointer &pe) {
+    std::cerr << "Caught exception:\n";
+    std::cerr << pe->getNote() << std::endl;
+    abort();
+  }
+  catch(const Exception& e) {
+    std::cerr << "Caught exception:\n";
+    std::cerr << e.message() << std::endl;
+    abort();
+  }
+  catch(...) {
+    std::cerr << "Caught unexpected exception!\n";
+    abort();
+  }
+  return 0;
+}
+
+
+void setup_test( const CoreFramework::pointer &framework )
+{
+  // tmp: add factories
+  ComponentClassFactory::pointer helloFactory( new SimpleComponentClassFactory<Hello>("core.example.hello") ); 
+  ComponentClassFactory::pointer worldFactory( new SimpleComponentClassFactory<World>("core.example.world") ); 
+
+  framework->addComponentClassFactory( helloFactory );
+  framework->addComponentClassFactory( worldFactory );
+}
+     
+void run_test( const CoreFramework::pointer &framework )
+{
+  std::cout << "get services.\n";
+  Services::pointer services = framework->getServices("test", "cca.unknown", framework->createTypeMap());
+
+  services->registerUsesPort("go", "sci.cca.ports.GoPort", 0);
+  services->registerUsesPort("builder", "cca.BuilderService", framework->createTypeMap());
+
+  std::cout << "get builder.\n";
+  BuilderService::pointer builder = pidl_cast<BuilderService::pointer>( services->getPort("builder"));
+  
+  // test
+  std::cout << "create components\n";
+  ComponentID::pointer hello = builder->createInstance("hello", "core.example.hello", 0);
+  ComponentID::pointer world  = builder->createInstance("world", "core.example.world", 0);
+
+  std::cout << "connect components\n";
+  ConnectionID::pointer connection = builder->connect( hello, "say", world, "message");
+  
+  std::cout << "get Hello::go\n";
+  GoPort::pointer go = pidl_cast<GoPort::pointer>(services->getPort("go"));
+
+  std::cout << "run\n";
+  go->go();
+
+  std::cout << "cleanup\n";
+  services->releasePort("go");
+
+  builder->disconnect( connection, 0 );
+  builder->destroyInstance(hello, 0);
+  builder->destroyInstance(world, 0);
+
+  services->releasePort("builder");
+  
+  services->unregisterUsesPort("go");
+  services->unregisterUsesPort("builder");
+}
+  
 
 void
 usage()
@@ -110,11 +207,9 @@ parse_args( int argc, char *argv[])
   return ok;
 }
 
-int
-main(int argc, char *argv[]) {
-  bool framework = true;
-  
-  create_sci_environment(0,0);
+void init()
+{
+  // create_sci_environment(0,0);
   
   try {
     // TODO: Move this out of here???
@@ -133,71 +228,4 @@ main(int argc, char *argv[]) {
     std::cerr << "Caught unexpected exception!\n";
     abort();
   }
-  // Create a new framework
-  try {
-    PlumeFramework::pointer plume;
-    if(framework) {
-      plume = PlumeFramework::pointer(new PlumeFramework());
-      std::cerr << "URL to framework:\n" << plume->getURL().getString() << std::endl;
-      //ofstream f("framework.url");
-      //std::string s;
-      //f<<plume->getURL().getString();
-      //f.close();
-    } else {
-      std::cerr << "Not finished: pass url to existing framework\n";
-    }
-    
-    sci::cca::Services::pointer main_services = plume->getServices("main", "cca.unknown", plume->createTypeMap());
-    main_services->registerUsesPort("builder", "cca.BuilderService", plume->createTypeMap());
-    main_services->registerUsesPort("properties", "cca.FrameworkProperties", plume->createTypeMap());
-    
-    sci::cca::ports::BuilderService::pointer builder
-      = pidl_cast<sci::cca::ports::BuilderService::pointer>( main_services->getPort("builder"));
-
-#   if !defined(HAVE_QT)
-    defaultBuilder="txt";
-#   endif
-    
-    if (defaultBuilder=="gui") {
-      ComponentID::pointer gui_id =
-          builder->createInstance("SCIRun.Builder", "cca:SCIRun.Builder", plume->createTypeMap());
-      if (gui_id.isNull()) {
-        std::cerr << "Cannot create component: cca:SCIRun.Builder\n";
-        Thread::exitAll(1);
-      }
-    } else {
-      ComponentID::pointer gui_id =
-        builder->createInstance("TxtBuilder", "cca:SCIRun.TxtBuilder", plume->createTypeMap());
-      if(gui_id.isNull()) {
-        std::cerr << "Cannot create component: cca:SCIRun.TxtBuilder\n";
-        Thread::exitAll(1);
-      }
-    }
-    main_services->releasePort("cca.FrameworkProperties");
-    main_services->releasePort("cca.BuilderService");
-    std::cout << "SCIRun " << VERSION << " started..." << std::endl;
-  
-    //broadcast, listen to URL periodically
-    //plume->share(main_services);
-    
-    PIDL::serveObjects();
-    std::cout << "serveObjects done!\n";
-    PIDL::finalize();
-    
-  }
-  catch(const sci::cca::CCAException::pointer &pe) {
-    std::cerr << "Caught exception:\n";
-    std::cerr << pe->getNote() << std::endl;
-    abort();
-  }
-  catch(const Exception& e) {
-    std::cerr << "Caught exception:\n";
-    std::cerr << e.message() << std::endl;
-    abort();
-  }
-  catch(...) {
-    std::cerr << "Caught unexpected exception!\n";
-    abort();
-  }
-  return 0;
 }
