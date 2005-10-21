@@ -32,9 +32,10 @@
 #if !defined(CrvLinearLgn_h)
 #define CrvLinearLgn_h
 
-#include <vector>
+
 #include <float.h>
- 
+
+#include <Core/Basis/Basis.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Basis/Locate.h>
@@ -216,7 +217,8 @@ T CrvGaussian3<T>::GaussianWeights[3] =
 //! Class for handling of element of type curve with 
 //! linear lagrangian interpolation
 template <class T>
-class CrvLinearLgn : public CrvApprox, 
+class CrvLinearLgn : public BasisSimple<T>, 
+                     public CrvApprox, 
 		     public CrvGaussian1<double>, 
 		     public CrvLinearLgnUnitElement
 {

@@ -50,7 +50,8 @@ public:
 //! Class for handling of element of type curve with 
 //! cubic hermitian interpolation
 template <class T>
-class CrvCubicHmt : public CrvApprox, 
+class CrvCubicHmt : public BasisSimple<T>, 
+                    public CrvApprox, 
 		    public CrvGaussian3<double>, 
 		    public CrvCubicHmtUnitElement
 {
@@ -107,7 +108,7 @@ public:
   };
 
   //! add a derivative value (dx) for nodes
-  void add_derivative(const T &p) { derivs_.push_back(p); };
+  void add_derivative(const vector<T> &p) { derivs_.push_back(p); };
 
   static  const string type_name(int n = -1);
 
