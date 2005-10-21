@@ -115,7 +115,17 @@ FieldBoundary::execute()
     // Automatically apply the interpolant matrix to the output field.
     if (tri_fh_.get_rep() && interp_mh_.get_rep())
     {
-      string actype = input->get_type_description(1)->get_name();
+      TypeDescription::td_vec *tdv = 
+        input->get_type_description(3)->get_sub_type();
+      string actype = (*tdv)[0]->get_name();
+      const string oftn = 
+        tri_fh_->get_type_description(0)->get_name() + "<" +
+        tri_fh_->get_type_description(1)->get_name() + ", " +
+        tri_fh_->get_type_description(2)->get_similar_name(actype,
+                                                           0, "<", " >, ") +
+        tri_fh_->get_type_description(3)->get_similar_name(actype,
+                                                           0, "<", " >") +
+        " >";
       if (input->query_scalar_interface(this) != NULL) { actype = "double"; }
       const TypeDescription *iftd = input->get_type_description();
       const TypeDescription *idtd = input->get_type_description(3);
@@ -123,8 +133,8 @@ FieldBoundary::execute()
       const TypeDescription *oftd = tri_fh_->get_type_description();
       const TypeDescription *oltd = tri_fh_->order_type_description();
       CompileInfoHandle ci =
-	ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd, oftd, oltd, idtd,
-                                                 actype, false);
+	ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd, oftd, oftn, oltd,
+                                                 idtd, actype);
       Handle<ApplyMappingMatrixAlgo> algo;
       if (module_dynamic_compile(ci, algo))
       {

@@ -109,21 +109,32 @@ ApplyMappingMatrix::execute()
   // Check to see if the source has changed.
   if( sfGeneration_ != sfield->generation ||
       dfGeneration_ != dfield->generation ||
-      mGeneration_  != imatrix->generation ) {
+      mGeneration_  != imatrix->generation )
+  {
     sfGeneration_ = sfield->generation;
     dfGeneration_ = dfield->generation;
     mGeneration_  = imatrix->generation;
 
-    string accumtype = sfield->get_type_description(1)->get_name();
+    TypeDescription::td_vec *tdv = 
+      sfield->get_type_description(3)->get_sub_type();
+    string accumtype = (*tdv)[0]->get_name();
     if (sfield->query_scalar_interface(this) != NULL) { accumtype = "double"; }
+    const string oftn = 
+      dfield->get_type_description(0)->get_name() + "<" +
+      dfield->get_type_description(1)->get_name() + ", " +
+      dfield->get_type_description(2)->get_similar_name(accumtype,
+                                                        0, "<", " >, ") +
+      dfield->get_type_description(3)->get_similar_name(accumtype,
+                                                        0, "<", " >") + " >";
 
     CompileInfoHandle ci =
       ApplyMappingMatrixAlgo::get_compile_info(sfield->get_type_description(),
 					    sfield->order_type_description(),
 					    dfield->get_type_description(),
+                                            oftn,
 					    dfield->order_type_description(),
 					    sfield->get_type_description(3),
-					    accumtype, true);
+					    accumtype);
     Handle<ApplyMappingMatrixAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
@@ -148,41 +159,28 @@ CompileInfoHandle
 ApplyMappingMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
 					 const TypeDescription *lsrc,
 					 const TypeDescription *fdst,
+					 const string &fdststr,
 					 const TypeDescription *ldst,
 					 const TypeDescription *dsrc,
-					 const string &accum,
-					 bool fout_use_accum)
+					 const string &accum)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("ApplyMappingMatrixAlgoT");
   static const string base_class_name("ApplyMappingMatrixAlgo");
 
-  const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
-  const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
-  string fout;
-  if (fout_use_accum)
-  {
-    fout = fdst->get_similar_name(accum, 3);
-  }
-  else
-  {
-    string data_name = dsrc->get_name("", "");
-    fout = fdst->get_similar_name(data_name, 3);
-  }
-  
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
 		       fsrc->get_filename() + "." +
 		       lsrc->get_filename() + "." +
-		       to_filename(fout) + "." +
+		       to_filename(fdststr) + "." +
 		       ldst->get_filename() + "." +
 		       to_filename(accum) + ".",
                        base_class_name, 
                        template_class_name, 
                        fsrc->get_name() + ", " +
                        lsrc->get_name() + ", " +
-                       fout + ", " +
+                       fdststr + ", " +
                        ldst->get_name() + ", " +
                        accum);
 
