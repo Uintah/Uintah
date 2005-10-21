@@ -190,7 +190,7 @@ public:
       return edges_[10];
     }
     inline 
-    unsigned edg11_index() const {
+    unsigned edge11_index() const {
       return edges_[11];
     }
 
