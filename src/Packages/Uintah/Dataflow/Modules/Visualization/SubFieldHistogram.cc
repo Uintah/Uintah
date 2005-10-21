@@ -43,8 +43,6 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/HistogramTex.h>
-#include <Core/Datatypes/LatVolField.h>
-
 #include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
 #ifdef __sgi
@@ -59,7 +57,6 @@ using std::dec;
 namespace Uintah {
 
 using SCIRun::Field;
-using SCIRun::LatVolField;
 using SCIRun::HistogramTex;
 using SCIRun::GeomGroup;
 using SCIRun::GeomText;
@@ -164,53 +161,61 @@ void SubFieldHistogram::execute(void)
   cerr<<"made it to dynamic cast\n";
   cerr<<field->get_type_name(0)<<" "<<field->get_type_name(1)<<"\n";
   cerr<<sub_field->get_type_name(0)<<" "<<sub_field->get_type_name(1)<<"\n";
-  if(LatVolField<double> *scalarField1 =
-     dynamic_cast<LatVolField<double>*>(field.get_rep())){
-    if(LatVolField<int> *scalarField2 =
-       dynamic_cast<LatVolField<int>*>(sub_field.get_rep())){
-      cerr<<"made it inside  dynamic cast if \n";
-      
-      histo_good = fill_histogram( scalarField1, scalarField2 );
-      cerr<<"histo is good\n";
-      if( histo_good ){
-	GeomGroup *all = new GeomGroup();
-	double xsize = 15./16.0;
-	double ysize = 0.6;
-	HistogramTex *histo = new HistogramTex( Point( 0, -0.92, 0),
-					     Point( xsize, -0.92, 0),
-					     Point( xsize, -0.92 + ysize, 0 ),
-					     Point( 0, -0.92 + ysize, 0 ));
-	histo->set_buckets( count_, 256, min_i, max_i );
-	histo->set_texture(cmap->get_rgba());
-	all->add(histo);
+
+  CDField *cdfld = dynamic_cast<CDField*>(field.get_rep());
+  CIField *cifld = dynamic_cast<CIField*>(sub_field.get_rep());
+  LDField *ldfld = 0;
+  LIField *lifld = 0;
   
-    
-	// some bases for positioning text
-	double xloc = xsize;
-	//	double yloc = -1 + 1.1 * ysize;
-	double yloc = -0.98;
-  
-	// create min and max numbers at the ends
-	char value[80];
-	sprintf(value, "%.2g", max_.get() );
-	all->add( new GeomMaterial( new GeomText(value, Point(xloc,yloc,0) ),
-				    white) );
-	sprintf(value, "%.2g", min_.get() );
-	all->add( new GeomMaterial( new GeomText(value,
-						 Point(0,yloc,0)), white));
-  
-	// fill in 3 other places
-	for(int i = 1; i < 4; i++ ) {
-	  sprintf( value, "%.2g", min_.get() + i*(max_.get()-min_.get())/4.0 );
-	  all->add( new GeomMaterial( new GeomText(value,
-						   Point(xloc*i/4.0,yloc,0)),
-				      white) );
-	}
-	GeomSticky *sticky = new GeomSticky(all);
-	ogeom->delAll();
-	ogeom->addObj(sticky, "HistogramTex Transparent" );
-      }
+  if( !cdfld || !cifld ){
+    ldfld = dynamic_cast<LDField*>(field.get_rep());
+    lifld = dynamic_cast<LIField*>(sub_field.get_rep());
+    if( !ldfld || !lifld ){
+      error("dynamic cast failed");
+      return;
+    } else {
+      histo_good = fill_histogram( ldfld, lifld );
     }
+  } else {
+    histo_good = fill_histogram( cdfld, cifld );
+  }
+  if( histo_good ){
+    GeomGroup *all = new GeomGroup();
+    double xsize = 15./16.0;
+    double ysize = 0.6;
+    HistogramTex *histo = new HistogramTex( Point( 0, -0.92, 0),
+                                            Point( xsize, -0.92, 0),
+                                            Point( xsize, -0.92 + ysize, 0 ),
+                                            Point( 0, -0.92 + ysize, 0 ));
+    histo->set_buckets( count_, 256, min_i, max_i );
+    histo->set_texture(cmap->get_rgba());
+    all->add(histo);
+    
+    
+    // some bases for positioning text
+    double xloc = xsize;
+    //	double yloc = -1 + 1.1 * ysize;
+    double yloc = -0.98;
+    
+	// create min and max numbers at the ends
+    char value[80];
+    sprintf(value, "%.2g", max_.get() );
+    all->add( new GeomMaterial( new GeomText(value, Point(xloc,yloc,0) ),
+                                white) );
+    sprintf(value, "%.2g", min_.get() );
+    all->add( new GeomMaterial( new GeomText(value,
+                                             Point(0,yloc,0)), white));
+    
+    // fill in 3 other places
+    for(int i = 1; i < 4; i++ ) {
+      sprintf( value, "%.2g", min_.get() + i*(max_.get()-min_.get())/4.0 );
+      all->add( new GeomMaterial( new GeomText(value,
+                                               Point(xloc*i/4.0,yloc,0)),
+                                  white) );
+    }
+    GeomSticky *sticky = new GeomSticky(all);
+    ogeom->delAll();
+    ogeom->addObj(sticky, "HistogramTex Transparent" );
   }
 }
 

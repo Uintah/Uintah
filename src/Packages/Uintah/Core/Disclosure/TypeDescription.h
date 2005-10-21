@@ -86,6 +86,7 @@ class Variable;
 	 return d_subtype;
       }
       string getName() const;
+      string getFileName() const;
 
       bool isFlat() const {
 	 return d_isFlat;

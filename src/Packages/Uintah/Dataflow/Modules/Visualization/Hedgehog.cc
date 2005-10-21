@@ -28,8 +28,11 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Widgets/FrameWidget.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
 #include <Core/Datatypes/FieldInterface.h>
 
 #include <iostream>
@@ -121,7 +124,12 @@ class Hedgehog : public Module {
   IntVector dim_;
   
 public:
- 
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef HexTrilinearLgn<Vector>             FDVectorBasis;
+  typedef ConstantBasis<Vector>               CFDVectorBasis;
+  typedef GenericField<LVMesh, CFDVectorBasis, FData3d<Vector, LVMesh> > CVField;
+  typedef GenericField<LVMesh, FDVectorBasis,  FData3d<Vector, LVMesh> > LVField;
+
   // GROUP:  Constructors:
   ///////////////////////////
   //
@@ -225,13 +233,20 @@ void Hedgehog::execute()
     cerr<<"Not a LatVolField\n";
   }
 
-  LatVolField<Vector> *fld =
-    dynamic_cast<LatVolField<Vector>*>(vfield.get_rep());
-  // if fld == NULL then the cast didn't work, so bail
-  if (!fld) {
-    cerr << "Cannot cast field into a LatVolField\n";
-    return;
+  LVMesh *mesh;
+  CVField* cfld = dynamic_cast<CVField *>(vfield.get_rep());
+  if( !cfld ){
+    LVField* lfld = dynamic_cast<LVField *>(vfield.get_rep());
+    if(!lfld){
+      error("Incoming field does not use a LatVolMesh");
+      return;
+    } else {
+      mesh = lfld->get_typed_mesh().get_rep();
+    }
+  } else {
+    mesh = cfld->get_typed_mesh().get_rep();
   }
+
 
   FieldHandle ssfield;
   int have_sfield=inscalarfield->get( ssfield );
@@ -295,14 +310,13 @@ void Hedgehog::execute()
   widget2d->SetState(!do_3d);
   widget3d->SetState(do_3d);
 
-  // if field size or location change we need to update the widgets
 
+  // if field size or location change we need to update the widgets
   BBox box;  Point min, max;
   box = vfield->mesh()->get_bounding_box();
   min = box.min(); max = box.max();
   int nx, ny, nz;
-  // get the mesh for the geometry
-  LatVolMesh *mesh = fld->get_typed_mesh().get_rep();
+  // use the mesh for the geometry
   nx = mesh->get_ni();
   ny = mesh->get_nj();
   nz = mesh->get_nk();
@@ -495,9 +509,8 @@ void Hedgehog::tcl_command(GuiArgs& args, void* userdata)
 bool  
 Hedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
 {
-  const string field_type = vfld->get_type_name(0);
   //const string type = vfld->get_type_name(1);
-  if( field_type == "LatVolField"){
+  if( vfld->mesh()->get_type_name(0) == "LatVolMesh"){
     // use virtual field interpolation
     VectorFieldInterfaceHandle vfi(vfld->query_vector_interface());
     if( vfi.get_rep() != 0 ){
@@ -513,7 +526,7 @@ Hedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
 {
   //const string field_type = sfld->get_type_name(0);
   //const string type = sfld->get_type_name(1);
-  if( sfld->get_type_name(0) == "LatVolField" ){
+  if( sfld->mesh()->get_type_name(0) == "LatVolMesh" ){
     // use virtual field interpolation
     ScalarFieldInterfaceHandle sfi(sfld->query_scalar_interface());
     if( sfi.get_rep() != 0){

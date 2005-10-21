@@ -27,7 +27,6 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Containers/StringUtil.h>
@@ -69,78 +68,74 @@ ScalarMinMaxAlgoCountT<FIELD>::execute(FieldHandle field,
 				       int& n_mins, double& max_val,
 				       IntVector& max_idx, int& n_maxs)
 {
-  if( LatVolField< value_type >* fld = 
-      dynamic_cast<LatVolField< value_type >* >(field.get_rep())){
-   
-    typename FIELD::mesh_type *m = fld->get_typed_mesh().get_rep();
+  FIELD *fld = field->get_rep();
+  typename FIELD::mesh_type *m = fld->get_typed_mesh().get_rep();
 
-    IntVector offset(0,0,0);
-    fld->get_property( "offset", offset);
+  IntVector offset(0,0,0);
+  fld->get_property( "offset", offset);
       
 
-    if( field->basis_order() == 0 ){
-      typename FIELD::mesh_type::Cell::iterator iter; m->begin( iter );
-      typename FIELD::mesh_type::Cell::iterator iter_end; m->end( iter_end );
+  if( field->basis_order() == 0 ){
+    typename FIELD::mesh_type::Cell::iterator iter; m->begin( iter );
+    typename FIELD::mesh_type::Cell::iterator iter_end; m->end( iter_end );
 
-      for( ; iter != iter_end; ++iter){
-	double value = fld->fdata()[*iter];
-	if( min_val >= value){
-	  if( min_val==value ){
-	    n_mins++;
-	  } else {
-	    min_val = value;
-	    n_mins = 1;
-	    min_idx.x(iter.i_ + offset.x());
-	    min_idx.y(iter.j_ + offset.y());
-	    min_idx.z(iter.k_ + offset.z());
-	  }
-	}
-	if( max_val <= value) {
-	  if( max_val == value ){
-	    n_maxs++;
-	  } else {
-	    max_val = value;
-	    n_maxs = 1;
-	    max_idx.x(iter.i_ + offset.x());
-	    max_idx.y(iter.j_ + offset.y());
-	    max_idx.z(iter.k_ + offset.z());
-	  }
-	}
+    for( ; iter != iter_end; ++iter){
+      double value = fld->fdata()[*iter];
+      if( min_val >= value){
+        if( min_val==value ){
+          n_mins++;
+        } else {
+          min_val = value;
+          n_mins = 1;
+          min_idx.x(iter.i_ + offset.x());
+          min_idx.y(iter.j_ + offset.y());
+          min_idx.z(iter.k_ + offset.z());
+        }
       }
-    } else {
-      typename FIELD::mesh_type::Node::iterator iter;  m->begin( iter );
-      typename FIELD::mesh_type::Node::iterator iter_end; m->end( iter_end );
-
-      for( ; iter != iter_end; ++iter){
-	double value  = fld->fdata()[*iter];
-	if( min_val >= value){
-	  if( min_val==value ){
-	    n_mins++;
-	  } else {
-	    min_val = value;
-	    n_mins = 1;
-	    min_idx.x(iter.i_ + offset.x());
-	    min_idx.y(iter.j_ + offset.y());
-	    min_idx.z(iter.k_ + offset.z());
-	  }
-	}
-	if( max_val <= value) {
-	  if( max_val == value ){
-	    n_maxs++;
-	  } else {
-	    max_val = value;
-	    n_maxs = 1;
-	    max_idx.x(iter.i_ + offset.x());
-	    max_idx.y(iter.j_ + offset.y());
-	    max_idx.z(iter.k_ + offset.z());
-	  }
-	}
+      if( max_val <= value) {
+        if( max_val == value ){
+          n_maxs++;
+        } else {
+          max_val = value;
+          n_maxs = 1;
+          max_idx.x(iter.i_ + offset.x());
+          max_idx.y(iter.j_ + offset.y());
+          max_idx.z(iter.k_ + offset.z());
+        }
       }
     }
   } else {
-  cerr<<"Not a Lattice type---should not be here\n";
+    typename FIELD::mesh_type::Node::iterator iter;  m->begin( iter );
+    typename FIELD::mesh_type::Node::iterator iter_end; m->end( iter_end );
+
+    for( ; iter != iter_end; ++iter){
+      double value  = fld->fdata()[*iter];
+      if( min_val >= value){
+        if( min_val==value ){
+          n_mins++;
+        } else {
+          min_val = value;
+          n_mins = 1;
+          min_idx.x(iter.i_ + offset.x());
+          min_idx.y(iter.j_ + offset.y());
+          min_idx.z(iter.k_ + offset.z());
+        }
+      }
+      if( max_val <= value) {
+        if( max_val == value ){
+          n_maxs++;
+        } else {
+          max_val = value;
+          n_maxs = 1;
+          max_idx.x(iter.i_ + offset.x());
+          max_idx.y(iter.j_ + offset.y());
+          max_idx.z(iter.k_ + offset.z());
+        }
+      }
+    }
   }
 }
+
 
 class ScalarMinMax : public Module {
 

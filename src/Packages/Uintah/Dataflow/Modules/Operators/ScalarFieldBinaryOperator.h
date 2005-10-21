@@ -39,14 +39,14 @@ WARNING
 #include "ScalarOperatorFunctors.h"
 #include "BinaryFieldOperator.h"
 #include "OperatorThread.h"
-#include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Network/Module.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Thread/Mutex.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
@@ -58,33 +58,51 @@ using std::cerr;
 using std::endl;
 using namespace SCIRun;
 
-  class ScalarFieldBinaryOperator: public Module, public BinaryFieldOperator {
-  public:
-    ScalarFieldBinaryOperator(GuiContext* ctx);
-    virtual ~ScalarFieldBinaryOperator() {}
-    
-    virtual void execute(void);
-    
-  protected:
+class ScalarFieldBinaryOperatorAlgo:  public DynamicAlgoBase, public BinaryFieldOperator 
+{
+public:
+  virtual FieldHandle execute( FieldHandle left,
+                               FieldHandle right, GuiInt op) = 0;
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *ftd);
+                               
+protected:
     template<class FieldLeft, class FieldRight, class ScalarField>      
     void performOperation(FieldLeft* left_field, FieldRight *right_field,
-			  ScalarField* scalarField);
-    
-  private:
-    //    TCLstring tcl_status;
-    GuiInt guiOperation;
+			  ScalarField* scalarField, GuiInt op );
+};
 
-    FieldIPort *in_left;
-    FieldIPort *in_right;
+template< class IFIELD >
+class ScalarFieldBinaryOperatorAlgoT : public ScalarFieldBinaryOperatorAlgo
+{
+  virtual FieldHandle execute( FieldHandle left,
+                               FieldHandle right, GuiInt op);
+};
 
-    FieldOPort *sfout;
-    //ScalarFieldOPort *vfout;
-  };
+template< class IFIELD >
+FieldHandle
+ScalarFieldBinaryOperatorAlgoT<IFIELD>::execute( FieldHandle left,
+                                                 FieldHandle right,
+                                                 GuiInt op)
+{
+  IFIELD *lf = (IFIELD*)(left.get_rep());
+  IFIELD *rf = (IFIELD*)(right.get_rep());
+  typename IFIELD::mesh_handle_type mh = left->get_typed_mesh();
+  mh.detach();
+  typename IFIELD::mesh_type *mesh = mh.get_rep();
+
+  IFIELD *sf = scinew IFIELD( mesh );
+  peformOperation( lf, rf, sf, op ); 
+  return sf;
+}
+
 
 template<class FieldLeft, class FieldRight, class ScalarField>
-void ScalarFieldBinaryOperator::performOperation(FieldLeft* left_field,
+void 
+ScalarFieldBinaryOperatorAlgo::performOperation(FieldLeft* left_field,
 					   FieldRight *right_field,
-					   ScalarField* scalarField)
+					   ScalarField* scalarField,
+                                           GuiInt op)
 {
   //  cout << "ScalarFieldBinaryOperator::performOperation:start\n";
   bool successful = initField(left_field, right_field, scalarField);
@@ -95,7 +113,7 @@ void ScalarFieldBinaryOperator::performOperation(FieldLeft* left_field,
 
   //  cout << "ScalarFieldBinaryOperator::performOperation:fields have been initialized.\n";
   
-  switch(guiOperation.get()) {
+  switch(op.get()) {
   case 0: // Add
     computeScalars(left_field, right_field, scalarField,
 		   AddOp());
@@ -118,7 +136,7 @@ void ScalarFieldBinaryOperator::performOperation(FieldLeft* left_field,
     break;
   default:
     std::cerr << "ScalarFieldBinaryOperator::performOperation: "
-	      << "Unexpected Operation Type #: " << guiOperation.get() << "\n";
+	      << "Unexpected Operation Type #: " << op.get() << "\n";
   }
   //  cout << "ScalarFieldBinaryOperator::performOperation:end\n";
 }

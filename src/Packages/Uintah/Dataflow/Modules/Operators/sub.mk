@@ -5,19 +5,19 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/Dataflow/Modules/Operators
 
 SRCS     += \
-	$(SRCDIR)/ScalarFieldOperator.cc \
-	$(SRCDIR)/ScalarFieldBinaryOperator.cc \
+	$(SRCDIR)/EigenEvaluator.cc \
+	$(SRCDIR)/ParticleEigenEvaluator.cc \
 	$(SRCDIR)/ScalarFieldAverage.cc \
-	$(SRCDIR)/ScalarMinMax.cc \
+	$(SRCDIR)/ScalarFieldBinaryOperator.cc \
 	$(SRCDIR)/ScalarFieldNormalize.cc \
+	$(SRCDIR)/ScalarFieldOperator.cc \
+	$(SRCDIR)/ScalarMinMax.cc \
 	$(SRCDIR)/Schlieren.cc \
 	$(SRCDIR)/TensorFieldOperator.cc \
 	$(SRCDIR)/TensorParticlesOperator.cc \
-	$(SRCDIR)/ParticleEigenEvaluator.cc \
-	$(SRCDIR)/EigenEvaluator.cc \
+	$(SRCDIR)/TensorToTensorConvertor.cc \
 	$(SRCDIR)/VectorFieldOperator.cc \
 	$(SRCDIR)/VectorParticlesOperator.cc \
-	$(SRCDIR)/TensorToTensorConvertor.cc \
 [INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

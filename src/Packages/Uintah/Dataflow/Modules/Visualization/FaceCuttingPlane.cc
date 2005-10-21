@@ -34,11 +34,9 @@
  * 
  */
 
-
+#include "FaceCuttingPlane.h"
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomTriangles.h>
@@ -76,16 +74,14 @@ const double EPS = 1e-6;
 class FaceCuttingPlane : public Module {
 
 public:
+
   FaceCuttingPlane( GuiContext* ctx);
 
   virtual ~FaceCuttingPlane();
   virtual void widget_moved(bool last, BaseWidget*);
   virtual void execute();
-  template <class MyField> void real_execute(MyField *lvf, ColorMapHandle cmh);
   void tcl_command( GuiArgs&, void* );
   void get_minmax(FieldHandle f);
-//   bool get_dimensions(FieldHandle f, int& nx, int& ny, int& nz);
-  template <class Mesh>  bool get_dimensions(Mesh*, int&, int&, int&);
 
 private:
   FieldIPort             *infield_;
@@ -105,15 +101,17 @@ private:
   Vector                  ddx_;
   Vector                  ddy_;
   Vector                  ddz_;
-  MaterialHandle outcolor;
+  Transform*              trans_;
+ MaterialHandle outcolor;
   double                  ddview_;
   pair<double, double> minmax_;
   int grid_id;
   string msg;
   Point control_;
-  LatVolMesh *mesh_;
 };
+} // End namespace Uintah
 
+using namespace Uintah;
 
 DECLARE_MAKER(FaceCuttingPlane)
 static string control_name("Control Widget");
@@ -130,7 +128,7 @@ FaceCuttingPlane::FaceCuttingPlane(GuiContext* ctx) :
   where(ctx->subVar("where")),
   face_name(ctx->subVar("face_name")), 
   line_size(ctx->subVar("line_size")),
-  mesh_(0)
+  trans_(0)
 {
     need_find.set(1);
     
@@ -140,6 +138,7 @@ FaceCuttingPlane::FaceCuttingPlane(GuiContext* ctx) :
 
 FaceCuttingPlane::~FaceCuttingPlane()
 {
+  if( trans_ != 0 ) delete trans_;
 }
 
 void FaceCuttingPlane::get_minmax(FieldHandle f)
@@ -210,11 +209,9 @@ void FaceCuttingPlane::tcl_command(GuiArgs& args, void* userdata)
 
 void FaceCuttingPlane::widget_moved(bool last, BaseWidget*)
 {
-  if( control_widget_ && mesh_ && last && !abort_flag)
+  if( control_widget_ && trans_ && last && !abort_flag)
   {
-    Transform t;
-    mesh_->transform(t);
-    control_ = t.unproject(control_widget_->ReferencePoint());
+    control_ = trans_->unproject(control_widget_->ReferencePoint());
     abort_flag=1;
     want_to_execute();
   }
@@ -232,13 +229,28 @@ void FaceCuttingPlane::execute(void)
   if (!infield_->get( field ))
     return;
 
-  if(field->get_type_name(0) != "LatVolField"){
-    error("This module only works with a LatVolField as input. No action!");
+  if (!(infield_->get( field ) && field.get_rep())) {
+    warning("No data on input pipe.");
+    return;
+  } else if( !field->query_scalar_interface(this).get_rep() ){
+    error("Input is not a Scalar field.");
     return;
   }
 
-  if(!field->is_scalar()){
-    error("Not a scalar field:  No action!");
+  int td;
+  field->get_property("vartype", td);
+  if( td != TypeDescription::SFCXVariable &&
+      td != TypeDescription::SFCYVariable &&
+      td != TypeDescription::SFCZVariable ){
+
+    warning("Did not receive a Uintah FaceVariable. No action!");
+    return;
+  }
+
+  MeshHandle mh = field->mesh();
+
+  if(mh->get_type_name(0) != "LatVolMesh"){
+    error("This module only works with a LatVolMesh based field as input. No action!");
     return;
   }
 
@@ -251,56 +263,35 @@ void FaceCuttingPlane::execute(void)
     return;
   }
   
+
+
   ColorMapHandle cmap;
   if( !icmap_->get(cmap)){
     return;
   }
 
+  const SCIRun::TypeDescription *ftd = field->get_type_description();
+  CompileInfoHandle ci = FaceCuttingPlaneAlgo::get_compile_info(ftd);
+  Handle<FaceCuttingPlaneAlgo> algo;
+  if( !module_dynamic_compile(ci, algo) ){
+    error("dynamic compile failed.");
+    return;
+  }
   
-  if(!(mesh_ = dynamic_cast<LatVolMesh *>(field->mesh().get_rep()))){
-    error("Mesh must be a LatVolMesh. No action!");
+  if( trans_ == 0 ) trans_ = scinew Transform();
+  algo->set_transform( field, *trans_ );
+
+  int nx, ny, nz;
+  BBox b;
+
+  if( !algo->get_bounds_and_dimensions(field, nx, ny, nz, b) ){
+    error("Something wrong with the mesh type");
     return;
   }
-
-
-  if(LatVolField<double> *lvf = 
-     dynamic_cast<LatVolField<double> *>(field.get_rep())){
-    real_execute( lvf, cmap );
-  } else if( LatVolField<int> *lvf =  
-	     dynamic_cast<LatVolField<int> *>(field.get_rep())){
-    real_execute( lvf, cmap );
-  } else if( LatVolField<float> *lvf =  
-	     dynamic_cast<LatVolField<float> *>(field.get_rep())){
-    real_execute( lvf, cmap );
-  } else if( LatVolField<long> *lvf =  
-	     dynamic_cast<LatVolField<long> *>(field.get_rep())){
-    real_execute( lvf, cmap );
-  } else {
-    error("Unknown field type line 239. No action!");
-  }
-}  
-template<class MyField> 
-void 
-FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
-{
-
-  int td;
-  lvf->get_property("vartype", td);
-  if( td != TypeDescription::SFCXVariable &&
-      td != TypeDescription::SFCYVariable &&
-      td != TypeDescription::SFCZVariable ){
-    warning("Did not receive a Uintah FaceVariable. No action!");
-    return;
-  }
-
+  Vector diagv(b.diagonal());
 
   int old_grid_id = grid_id;
   int cmapmin, cmapmax;
-
-  BBox b = mesh_->get_bounding_box();
-  Vector diagv(b.diagonal());
-  int nx, ny, nz, nf;
-  get_dimensions(mesh_, nx, ny, nz);
 //   cerr<<"nx, ny, nz = "<<nx<<", "<<ny<<", "<<nz<<endl;
   if(!control_widget_){
     control_widget_=scinew PointWidget(this, &control_lock_, 0.2);
@@ -336,10 +327,9 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
     face_name.set(string("Z faces"));
     gui->execute(id + " update_control");
   }
-    
   int u_num, v_num;
   Point corner(b.min());
-  nf = need_find.get();
+  int nf = need_find.get();
   Vector u,v;
   bool horiz = false; // false if vert, true if horiz.
 
@@ -389,7 +379,7 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
 
   double sval;
   MaterialHandle matl;
-  typename MyField::mesh_type::Node::index_type node;
+
   int i, j, u_, v_;
   u_ = u_num; v_ = v_num;
 
@@ -408,8 +398,7 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
 	  v * (j+1);
       }
       GeomLine *line = 0;
-      if( mesh_->locate(node, p0 + (p1 - p0) * 0.5)){
-	sval = lvf->fdata()[node];
+      if(algo->get_value(field, p0 + (p1 - p0) * 0.5, sval)) {
  	matl = cmap->lookup( sval);
 	line = new GeomLine(p0,p1);
 	line->setLineWidth((float)line_size.get());
@@ -430,27 +419,29 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
   }
   grid_id = ogeom_->addObj(faces,  "Face Cutting Plane");
   old_grid_id = grid_id;
+
+}  
+
+CompileInfoHandle
+FaceCuttingPlaneAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("CuttingPlaneAlgoT");
+  static const string base_class_name("CuttingPlaneAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftd->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftd->fill_compile_info(rval);
+  return rval;
 }
 
-template <class Mesh>
-bool 
-FaceCuttingPlane::get_dimensions(Mesh*, int&, int&, int&)
-  {
-    return false;
-  }
-
-template<> 
-bool FaceCuttingPlane::get_dimensions(LatVolMesh* m,
-				 int& nx, int& ny, int& nz)
-  {
-    nx = m->get_ni();
-    ny = m->get_nj();
-    nz = m->get_nk();
-    return true;
-  }
-
-
-
-} // End namespace Uintah
 
 
