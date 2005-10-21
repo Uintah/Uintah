@@ -1,10 +1,10 @@
 #include "TensorFieldOperator.h"
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Containers/StringUtil.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/FieldPort.h>
 
 //#include <SCICore/Math/Mat.h>
 #include <iostream>
@@ -14,8 +14,47 @@ using std::endl;
 using namespace SCIRun;
 
 namespace Uintah {
- 
-  DECLARE_MAKER(TensorFieldOperator)
+ class TensorFieldOperator: public Module
+{
+public:
+
+  TensorFieldOperator(GuiContext* ctx);
+  virtual ~TensorFieldOperator() {}
+    
+  virtual void execute(void);
+    
+private:
+
+  //    TCLstring tcl_status;
+  GuiInt guiOperation;
+
+  // element extractor operation
+  GuiInt guiRow;
+  GuiInt guiColumn;
+    
+    // eigen value/vector operation
+    //GuiInt guiEigenSelect;
+
+    // eigen 2D operation
+  GuiInt guiPlaneSelect;
+  GuiDouble guiDelta;
+  GuiInt guiEigen2DCalcType;
+    
+  // n . sigma . t operation
+  GuiDouble guiNx, guiNy, guiNz;
+  GuiDouble guiTx, guiTy, guiTz;
+
+  FieldIPort *in;
+
+  FieldOPort *sfout;
+  //VectorFieldOPort *vfout;
+    
+};
+} // end namespace Uintah
+
+using namespace Uintah;
+
+DECLARE_MAKER(TensorFieldOperator)
 
 
 TensorFieldOperator::TensorFieldOperator(GuiContext* ctx)
@@ -46,88 +85,55 @@ void TensorFieldOperator::execute(void)
   FieldHandle hTF;
   
   if(!in->get(hTF)){
-    std::cerr<<"TensorFieldOperator::execute(void) Didn't get a handle\n";
+    error("TensorFieldOperator::execute(void) Didn't get a handle");
     return;
   } else if ( hTF->get_type_name(1) != "Matrix3" ){
-    std::cerr<<"Input is not a Tensor field\n";
+    error("Input is not a Tensor field");
     return;
   }
 
+  //##################################################################
 
-    
-  LatVolField<double>  *scalarField = 0;  
-  if( LatVolField<Matrix3> *tensorField =
-      dynamic_cast<LatVolField<Matrix3>*>(hTF.get_rep())) {
 
-    scalarField = scinew LatVolField<double>(hTF->basis_order());
-
-    performOperation( tensorField, scalarField );
-    for(unsigned int i = 0; i < tensorField->nproperties(); i++){
-      string prop_name(tensorField->get_property_name( i ));
-      if(prop_name == "varname"){
-        string prop_component;
-        tensorField->get_property( prop_name, prop_component);
-        switch(guiOperation.get()) {
-        case 0: // extract element i,j
-          scalarField->set_property("varname",
-                                    string(prop_component + ":" +
-                                           to_string( guiRow.get ()) + 
-                                           "," + to_string( guiColumn.get ())),
-                                    true);
-          break;
-        case 1: // extract eigen value
-          scalarField->set_property("varname", 
-                                    string(prop_component +":eigen"), true);
-          break;
-        case 2: // extract pressure
-          scalarField->set_property("varname", 
-                                    string(prop_component +":pressure"), true);
-          break;
-        case 3: // tensor stress
-          scalarField->set_property("varname", 
-                                    string(prop_component +":equiv_stress"), true);
-          break;
-        case 4: // tensor stress
-          scalarField->set_property("varname",
-                           string(prop_component +":sheer_stress"), true);
-          break;
-        case 5: // tensor stress
-          scalarField->set_property("varname",
-                           string(prop_component +"NdotSigmadotT"), true);
-          break;
-        default:
-          scalarField->set_property("varname",
-                                    string(prop_component.c_str()), true);
-        }
-      } else if( prop_name == "generation") {
-        int generation;
-        tensorField->get_property( prop_name, generation);
-        scalarField->set_property(prop_name.c_str(), generation , true);
-      } else if( prop_name == "timestep" ) {
-        int timestep;
-        tensorField->get_property( prop_name, timestep);
-        scalarField->set_property(prop_name.c_str(), timestep , true);
-      } else if( prop_name == "offset" ){
-        IntVector offset(0,0,0);        
-        tensorField->get_property( prop_name, offset);
-        scalarField->set_property(prop_name.c_str(), IntVector(offset) , true);
-      } else if( prop_name == "delta_t" ){
-        double dt;
-        tensorField->get_property( prop_name, dt);
-        scalarField->set_property(prop_name.c_str(), dt , true);
-      } else if( prop_name == "vartype" ){
-        int vartype;
-        tensorField->get_property( prop_name, vartype);
-        scalarField->set_property(prop_name.c_str(), vartype , true);
-      } else {
-        warning( "Unknown field property, not transferred.");
-      }
+  const SCIRun::TypeDescription *tftd = hTF->get_type_description();
+  CompileInfoHandle ci = TensorFieldOperatorAlgo::get_compile_info(tftd);
+  Handle<TensorFieldOperatorAlgo> algo;
+  if( !module_dynamic_compile(ci, algo) ){
+    error("dynamic compile failed.");
+    return;
   }
-    sfout->send(scalarField);
+
+  //##################################################################    
+
+  FieldHandle fh =  algo->execute( hTF, guiOperation );
+  if( fh.get_rep() != 0 ){
+    sfout->send(fh);
   }
+
+
 }
 
-} // end namespace Uintah
+CompileInfoHandle
+TensorFieldOperatorAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("TensorFieldOperatorAlgoT");
+  static const string base_class_name("TensorFieldOperatorAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftd->get_name() );
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftd->fill_compile_info(rval);
+  return rval;
+}
+
 
 
 

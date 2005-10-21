@@ -1,11 +1,13 @@
 #ifndef __OPERATORS_SCALARFIELDAVERAGE_H__
 #define __OPERATORS_SCALARFIELDAVERAGE_H__
 
-#include "OperatorThread.h"
+
+#include "ScalarOperatorFunctors.h"
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -14,48 +16,67 @@ namespace Uintah {
 using std::string;
 using namespace SCIRun;
 
-  
-class ScalarFieldAverage: public Module {
+class ScalarFieldAverageAlgo: public DynamicAlgoBase
+{
 public:
-  ScalarFieldAverage(GuiContext* ctx);
-  virtual ~ScalarFieldAverage() {}
-    
-  virtual void execute(void);
-private:
-    
-  GuiDouble t0_;
-  GuiDouble t1_;
-  GuiInt tsteps_;
-    
-  FieldIPort *in;
-  FieldOPort *sfout;
-    
-  LatVolField<double> *aveField;
-  FieldHandle aveFieldH;
-  string varname;
-  double time;
-  //ScalarFieldOPort *vfout;
 
-  void fillField( FieldHandle f );
-  void averageField( FieldHandle f );
+  virtual FieldHandle fillField(FieldHandle sfh, FieldHandle afh) = 0;
+  virtual FieldHandle averageField(FieldHandle sfh, FieldHandle afh) = 0;
 
-  template<class ScalarField1, class ScalarField2>
-    void initField(ScalarField1* scalarField1,
-		   ScalarField2* scalarField2);
-  
-  template<class ScalarField1, class ScalarField2, class ScalarOp>
-    void computeScalars(ScalarField1* scalarField1,
-			ScalarField2* scalarField2,
-			ScalarOp op);
-  
-  template<class ScalarField1, class ScalarField2>
-    void computeAverages(ScalarField1* scalarField1,
-			 ScalarField2* scalarField2);
+  static CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *td1,
+                                            const SCIRun::TypeDescription *td2);
 };
 
+template <class ScalarField1, class ScalarField2>
+class ScalarFieldAverageAlgoT: public ScalarFieldAverageAlgo
+{
+public:
+  virtual FieldHandle fillField(FieldHandle fh, FieldHandle afh) = 0;
+  virtual FieldHandle averageField(FieldHandle fh, FieldHandle afh) = 0;
+
+private:
+  void initField(ScalarField1* scalarField1,
+                 ScalarField2* scalarField2);
+  
+  template<class ScalarOp>
+  void computeScalars(ScalarField1* scalarField1,
+                      ScalarField2* scalarField2,
+                      ScalarOp op);
+  void computeAverages(ScalarField1* scalarField1,
+                       ScalarField2* scalarField2);
+  
+};
+
+    
+
 template<class ScalarField1, class ScalarField2>
-void ScalarFieldAverage::initField(ScalarField1* scalarField1,
-				    ScalarField2* scalarField2)
+FieldHandle
+ScalarFieldAverageAlgoT<ScalarField1,
+                        ScalarField2>::fillField(FieldHandle sfh, 
+                                                 FieldHandle afh)
+{
+  ScalarField1 *inField = (ScalarField1 *)sfh.get_rep();
+  ScalarField2 *aveField = (ScalarField1 *)afh.get_rep();
+  initField( inField, aveField);
+  computeScalars( inField, aveField, NoOp() ); 
+  computeAverages( inField, aveField); 
+}
+template<class ScalarField1, class ScalarField2>
+FieldHandle
+ScalarFieldAverageAlgoT<ScalarField1,
+                        ScalarField2>::averageField(FieldHandle sfh, 
+                                                    FieldHandle afh)
+{
+  ScalarField1 *inField = (ScalarField1 *)sfh.get_rep();
+  ScalarField2 *aveField = (ScalarField1 *)afh.get_rep();
+  computeAverages( inField, aveField); 
+}
+
+template<class ScalarField1, class ScalarField2>
+void 
+ScalarFieldAverageAlgoT<ScalarField1,
+                        ScalarField2>::initField(ScalarField1* scalarField1,
+                                                 ScalarField2* scalarField2)
 {
   ASSERT( scalarField1->basis_order() == 0 ||
 	  scalarField1->basis_order() == 1 );
@@ -75,10 +96,13 @@ void ScalarFieldAverage::initField(ScalarField1* scalarField1,
 }
 
 
-template<class ScalarField1, class ScalarField2, class ScalarOp>
-void ScalarFieldAverage::computeScalars(ScalarField1* scalarField1,
-					 ScalarField2* scalarField2,
-					 ScalarOp op)
+template<class ScalarField1, class ScalarField2>
+    template<class ScalarOp>
+void 
+ScalarFieldAverageAlgoT<ScalarField1,ScalarField2>::computeScalars(
+                                             ScalarField1* scalarField1,
+                                             ScalarField2* scalarField2,
+                                             ScalarOp op)
 {
   // so far only node and cell centered data
   ASSERT( scalarField1->basis_order() == 0 ||
@@ -109,7 +133,9 @@ void ScalarFieldAverage::computeScalars(ScalarField1* scalarField1,
 }
  
 template<class ScalarField1, class ScalarField2>       
-void ScalarFieldAverage::computeAverages(ScalarField1* scalarField1,
+void 
+ScalarFieldAverageAlgoT<ScalarField1,ScalarField2>::computeAverages(
+                                          ScalarField1* scalarField1,
 					  ScalarField2* scalarField2)
 {
   // so far only node and cell centered data

@@ -9,8 +9,8 @@
 #include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
+using namespace SCIRun;
 
-  using namespace SCIRun;
 
   class TensorToTensorConvertor : public Module {
   public:

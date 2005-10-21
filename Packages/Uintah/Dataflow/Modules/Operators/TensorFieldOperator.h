@@ -4,13 +4,17 @@
 #include "TensorOperatorFunctors.h"
 #include "UnaryFieldOperator.h"
 #include "OperatorThread.h"
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Semaphore.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
+
+
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
@@ -39,54 +43,129 @@
  *    in the user interface what operation you are calculating.
  */
 namespace Uintah {
-  using std::string;
-  using std::cerr;
-  using std::endl;
-  using namespace SCIRun;
-class TensorFieldOperator: public Module, public UnaryFieldOperator {
+using std::string;
+using std::cerr;
+using std::endl;
+using namespace SCIRun;
+
+class TensorFieldOperatorAlgo: 
+    public DynamicAlgoBase, public UnaryFieldOperator 
+{
 public:
-  TensorFieldOperator(GuiContext* ctx);
-  virtual ~TensorFieldOperator() {}
-    
-  virtual void execute(void);
-    
-private:
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef LVMesh::handle_type                 LVMeshHandle;
+  typedef HexTrilinearLgn<double>             FDdoubleBasis;
+  typedef ConstantBasis<double>               CFDdoubleBasis;
+
+  typedef GenericField<LVMesh, CFDdoubleBasis, FData3d<double, LVMesh> > CDField;
+  typedef GenericField<LVMesh, FDdoubleBasis,  FData3d<double, LVMesh> > LDField;
+  virtual FieldHandle execute(FieldHandle tensorfh, GuiInt op) = 0;
+  static CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *ftd);
+protected:
   template<class TensorField, class ScalarField>
-    void performOperation(TensorField* tensorField, ScalarField* scalarField);
-
-  //    TCLstring tcl_status;
-  GuiInt guiOperation;
-
-  // element extractor operation
-  GuiInt guiRow;
-  GuiInt guiColumn;
-    
-    // eigen value/vector operation
-    //GuiInt guiEigenSelect;
-
-    // eigen 2D operation
-  GuiInt guiPlaneSelect;
-  GuiDouble guiDelta;
-  GuiInt guiEigen2DCalcType;
-    
-  // n . sigma . t operation
-  GuiDouble guiNx, guiNy, guiNz;
-  GuiDouble guiTx, guiTy, guiTz;
-
-  FieldIPort *in;
-
-  FieldOPort *sfout;
-  //VectorFieldOPort *vfout;
-    
+    void performOperation(TensorField* tensorField, 
+                          ScalarField* scalarField, GuiInt op);
 };
 
+template<class TensorField>
+class TensorFieldOperatorAlgoT: public TensorFieldOperatorAlgo
+{
+public:
+  virtual FieldHandle execute(FieldHandle tensorfh, GuiInt op);
+};
+
+template<class TensorField>
+FieldHandle
+TensorFieldOperatorAlgoT<TensorField>::execute(FieldHandle tensorfh, GuiInt op)
+{
+  TensorField *tensorField = (TensorField *)(tensorfh.get_rep());
+  typename TensorField::mesh_handle_type mh = tensorfield->get_typed_mesh();
+  mh.detach();
+  typename TensorField::mesh_type *mesh = mh.get_rep();
+
+  FieldHandle scalarField;
+  if( tensorField->basis_order == 0 ){
+    CDField *sf = scinew CDField( mesh );
+    performOperation( tensorField, sf, op );
+    scalarField = sf;
+  } else {
+    LDField *sf = scinew LDField( mesh );
+    performOperation( tensorField, sf, op );
+    scalarField = sf;
+  }
+
+  for(unsigned int i = 0; i < tensorField->nproperties(); i++){
+    string prop_name(tensorField->get_property_name( i ));
+    if(prop_name == "varname"){
+      string prop_component;
+      tensorField->get_property( prop_name, prop_component);
+      switch(op.get()) {
+      case 0: // extract element i,j
+        scalarField->set_property("varname",
+                                  string(prop_component + ":" +
+                                         to_string( guiRow.get ()) + 
+                                         "," + to_string( guiColumn.get ())),
+                                  true);
+        break;
+      case 1: // extract eigen value
+        scalarField->set_property("varname", 
+                                  string(prop_component +":eigen"), true);
+        break;
+      case 2: // extract pressure
+        scalarField->set_property("varname", 
+                                  string(prop_component +":pressure"), true);
+        break;
+      case 3: // tensor stress
+        scalarField->set_property("varname", 
+                                  string(prop_component +":equiv_stress"), true);
+        break;
+      case 4: // tensor stress
+        scalarField->set_property("varname",
+                                  string(prop_component +":sheer_stress"), true);
+        break;
+      case 5: // tensor stress
+        scalarField->set_property("varname",
+                                  string(prop_component +"NdotSigmadotT"), true);
+        break;
+      default:
+        scalarField->set_property("varname",
+                                  string(prop_component.c_str()), true);
+      }
+    } else if( prop_name == "generation") {
+      int generation;
+      tensorField->get_property( prop_name, generation);
+      scalarField->set_property(prop_name.c_str(), generation , true);
+    } else if( prop_name == "timestep" ) {
+      int timestep;
+      tensorField->get_property( prop_name, timestep);
+      scalarField->set_property(prop_name.c_str(), timestep , true);
+    } else if( prop_name == "offset" ){
+      IntVector offset(0,0,0);        
+      tensorField->get_property( prop_name, offset);
+      scalarField->set_property(prop_name.c_str(), IntVector(offset) , true);
+    } else if( prop_name == "delta_t" ){
+      double dt;
+      tensorField->get_property( prop_name, dt);
+      scalarField->set_property(prop_name.c_str(), dt , true);
+    } else if( prop_name == "vartype" ){
+      int vartype;
+      tensorField->get_property( prop_name, vartype);
+      scalarField->set_property(prop_name.c_str(), vartype , true);
+    } else {
+      warning( "Unknown field property, not transferred.");
+    }
+  }
+  return scalarField;
+}
+
 template<class TensorField, class ScalarField>
-void TensorFieldOperator::performOperation(TensorField* tensorField,
-					   ScalarField* scalarField)
+void TensorFieldOperatorAlgo::performOperation(TensorField* tensorField,
+                                               ScalarField* scalarField,
+                                               GuiInt op)
 {
   initField(tensorField, scalarField);
 
-  switch(guiOperation.get()) {
+  switch(op.get()) {
   case 0: // extract element
     computeScalars(tensorField, scalarField,
 		   TensorElementExtractionOp(guiRow.get(), guiColumn.get()));
@@ -133,7 +212,7 @@ void TensorFieldOperator::performOperation(TensorField* tensorField,
     break;
   default:
     std::cerr << "TensorFieldOperator::performOperation: "
-	      << "Unexpected Operation Type #: " << guiOperation.get() << "\n";
+	      << "Unexpected Operation Type #: " << op.get() << "\n";
   }
 }
 

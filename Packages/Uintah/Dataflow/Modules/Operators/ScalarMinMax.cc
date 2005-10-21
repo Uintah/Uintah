@@ -23,7 +23,6 @@
 
 #include <Packages/Uintah/Dataflow/Modules/Operators/ScalarMinMax.h>
 
-#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>

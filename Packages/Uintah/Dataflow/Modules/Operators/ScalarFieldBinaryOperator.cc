@@ -1,11 +1,10 @@
-#include <Packages/Uintah/Dataflow/Modules/Operators/ScalarFieldBinaryOperator.h>
+#include "ScalarFieldBinaryOperator.h"
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
-#include <iostream>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
 using namespace std;
 
@@ -16,6 +15,31 @@ using namespace std;
 using namespace SCIRun;
 
 namespace Uintah {
+class ScalarFieldBinaryOperator: public Module
+{
+public:
+
+  ScalarFieldBinaryOperator(GuiContext* ctx);
+  virtual ~ScalarFieldBinaryOperator() {}
+    
+  virtual void execute(void);
+    
+protected:
+    
+private:
+    //    TCLstring tcl_status;
+  GuiInt guiOperation;
+  
+  FieldIPort *in_left;
+  FieldIPort *in_right;
+  
+  FieldOPort *sfout;
+  //ScalarFieldOPort *vfout;
+};
+
+}// end namespace Uintah
+
+using namespace Uintah;
  
 DECLARE_MAKER(ScalarFieldBinaryOperator)
 
@@ -25,7 +49,8 @@ ScalarFieldBinaryOperator::ScalarFieldBinaryOperator(GuiContext* ctx)
 {
 }
   
-void ScalarFieldBinaryOperator::execute(void) {
+void ScalarFieldBinaryOperator::execute(void) 
+{
   //  cout << "ScalarFieldBinaryOperator::execute:start"<<endl;
   
   in_left = (FieldIPort *) get_iport("Scalar Field Left Operand");
@@ -36,202 +61,54 @@ void ScalarFieldBinaryOperator::execute(void) {
   FieldHandle right_FH;
   
   if(!in_left->get(left_FH)){
-    cerr<<"Didn't get a handle to left field\n";
+    error("Didn't get a handle to left field");
     return;
-  } else if ( left_FH->get_type_name(1) != "double" &&
-	      left_FH->get_type_name(1) != "float" &&
-	      left_FH->get_type_name(1) != "long64"){
-    cerr<<"Left operand is not a Scalar field\n";
-    return;
+  } else if( left_FH->query_scalar_interface(this).get_rep() ){
+    error("Left input is not a Scalar field");
   }
 
   if(!in_right->get(right_FH)){
-    cerr<<"Didn't get a handle to right field\n";
+    error("Didn't get a handle to right field");
     return;
-  } else if ( right_FH->get_type_name(1) != "double" &&
-	      right_FH->get_type_name(1) != "float" &&
-	      right_FH->get_type_name(1) != "long64"){
-    cerr<<"Right operand is not a Scalar field\n";
+  } else if( right_FH->query_scalar_interface(this).get_rep() ){
+    error("Right input is not a Scalar field");
+  }
+
+  const SCIRun::TypeDescription *ftd = left_FH->get_type_description();
+  CompileInfoHandle ci = 
+     ScalarFieldBinaryOperatorAlgo::get_compile_info(ftd);
+  Handle<ScalarFieldBinaryOperatorAlgo> algo;
+  if( !module_dynamic_compile(ci, algo) ){
+    error("dynamic compile failed.");
     return;
   }
 
-#ifdef TYPES_MUST_MATCH
-  cout << "ScalarFieldBinaryOperator::execute:entering field setup.  Types must match.\n";
-  
-  if (left_FH->get_type_name(1) != right_FH->get_type_name(1)) {
-    cerr <<"Types do not match!\n";
-    cerr <<"type of left operand is "<<left_FH->get_type_name(1)<<"\n";
-    cerr <<"type of right operand is "<<right_FH->get_type_name(1)<<"\n";
-  }
-
-  FieldHandle fh = 0;
-  if( LatVolField<double> *scalarField_left =
-      dynamic_cast<LatVolField<double>*>(left_FH.get_rep())) {
-    
-    // since it passed one of the types above it should get cast properly
-    if ( LatVolField<double> *scalarField_right =
-	 dynamic_cast<LatVolField<double>*>(right_FH.get_rep())) {
-
-      LatVolField<double>  *scalarField_result =
-	scinew LatVolField<double>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else {
-      cerr <<"ScalarFieldBinaryOperator::execute: Error - right operand did not cast properly\n";
-    }
-
-  } else if( LatVolField<float> *scalarField_left =
-	     dynamic_cast<LatVolField<float>*>(left_FH.get_rep())) {
-
-    if ( LatVolField<float> *scalarField_right =
-	 dynamic_cast<LatVolField<float>*>(right_FH.get_rep())) {
-
-      LatVolField<float>  *scalarField_result =
-	scinew LatVolField<float>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else {
-      cerr <<"ScalarFieldBinaryOperator::execute: Error - right operand did not cast properly\n";
-    }
-
-  } else if( LatVolField<long64> *scalarField_left =
-	     dynamic_cast<LatVolField<long64>*>(left_FH.get_rep())) {
-
-    if ( LatVolField<long64> *scalarField_right =
-	 dynamic_cast<LatVolField<long64>*>(right_FH.get_rep())) {
-
-      LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else {
-      cerr <<"ScalarFieldBinaryOperator::execute: Error - right operand did not cast properly\n";
-    }
-  }
-
-#else // ifdef TYPES_MUST_MATCH
-  //cout << "ScalarFieldBinaryOperator::execute:entering field setup.  Types do not have to match.\n";
-  
-  FieldHandle fh = 0;
-  if( LatVolField<double> *scalarField_left =
-      dynamic_cast<LatVolField<double>*>(left_FH.get_rep())) {
-    
-    // since it passed one of the types above it should get cast properly
-    if ( LatVolField<double> *scalarField_right =
-	 dynamic_cast<LatVolField<double>*>(right_FH.get_rep())) {
-
-      LatVolField<double>  *scalarField_result =
-	scinew LatVolField<double>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else if ( LatVolField<long64> *scalarField_right =
-		dynamic_cast<LatVolField<long64>*>(right_FH.get_rep())) {
-
-      LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else if ( LatVolField<float> *scalarField_right =
-		dynamic_cast<LatVolField<float>*>(right_FH.get_rep())) {
-
-      LatVolField<double>  *scalarField_result =
-	scinew LatVolField<double>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else {
-      cerr <<"ScalarFieldBinaryOperator::execute: Error - right operand did not cast properly\n";
-    }
-
-  } else if( LatVolField<float> *scalarField_left =
-	     dynamic_cast<LatVolField<float>*>(left_FH.get_rep())) {
-
-    // since it passed one of the types above it should get cast properly
-    if ( LatVolField<double> *scalarField_right =
-	 dynamic_cast<LatVolField<double>*>(right_FH.get_rep())) {
-
-      LatVolField<double>  *scalarField_result =
-	scinew LatVolField<double>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else if ( LatVolField<long64> *scalarField_right =
-		dynamic_cast<LatVolField<long64>*>(right_FH.get_rep())) {
-
-      LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else if ( LatVolField<float> *scalarField_right =
-		dynamic_cast<LatVolField<float>*>(right_FH.get_rep())) {
-
-      LatVolField<float>  *scalarField_result =
-	scinew LatVolField<float>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else {
-      cerr <<"ScalarFieldBinaryOperator::execute: Error - right operand did not cast properly\n";
-    }
-
-  } else if( LatVolField<long64> *scalarField_left =
-	     dynamic_cast<LatVolField<long64>*>(left_FH.get_rep())) {
-
-    // since it passed one of the types above it should get cast properly
-    if ( LatVolField<double> *scalarField_right =
-	 dynamic_cast<LatVolField<double>*>(right_FH.get_rep())) {
-
-      LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else if ( LatVolField<long64> *scalarField_right =
-		dynamic_cast<LatVolField<long64>*>(right_FH.get_rep())) {
-
-      LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else if ( LatVolField<float> *scalarField_right =
-		dynamic_cast<LatVolField<float>*>(right_FH.get_rep())) {
-
-      LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->basis_order());
-      performOperation(scalarField_left, scalarField_right,
-		       scalarField_result);
-      fh = scalarField_result;
-
-    } else {
-      cerr <<"ScalarFieldBinaryOperator::execute: Error - right operand did not cast properly\n";
-    }
-  }
-#endif // ifdef TYPES_MUST_MATCH
-  
+  FieldHandle fh =  algo->execute( left_FH, right_FH, guiOperation );
+      
   if( fh.get_rep() != 0 )
     sfout->send(fh);
   //  cout << "ScalarFieldBinaryOperator::execute:end\n";
 }
 
-} // end namespace Uintah
+CompileInfoHandle 
+ScalarFieldBinaryOperatorAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ScalarFieldBinaryOperatorAlgoT");
+  static const string base_class_name("ScalarFieldBinaryOperatorAlgo");
 
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftd->get_name() );
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftd->fill_compile_info(rval);
+  return rval;
+}
 
 

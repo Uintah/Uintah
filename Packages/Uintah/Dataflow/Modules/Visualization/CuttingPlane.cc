@@ -12,6 +12,7 @@
  *  Copyright (C) 1995 SCI Group
  */
 
+#include "CuttingPlane.h"
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -22,7 +23,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/FieldAlgo.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Geom/GeomGrid.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
@@ -138,12 +139,8 @@ public:
   // execute() - execution scheduled by scheduler
   virtual void execute();
   
-  bool get_gradient(FieldHandle f, const Point& p, Vector& g);
-
   void get_minmax(FieldHandle f);
 
-  bool get_dimensions(FieldHandle f, int& nx, int& ny, int& nz);
-  template <class Mesh>  bool get_dimensions(Mesh, int&, int&, int&);
   //////////////////////////
   //
   // tcl_commands - overides tcl_command in base class Module, takes:
@@ -159,6 +156,10 @@ private:
   IntVector dim_;
   pair<double, double> minmax_;
 };
+
+} // End namespace Uintah
+
+using namespace Uintah;
 
 DECLARE_MAKER(CuttingPlane)
 
@@ -229,13 +230,13 @@ CuttingPlane::execute()
   if (!(infield->get( field ) && field.get_rep())) {
     warning("No data on input pipe.");
     return;
-  }
-
-  if(!field->is_scalar()){
-    cerr<<"Not a scalar field\n ";
+  } else if( !field->query_scalar_interface(this).get_rep() ){
+    error("Input is not a Scalar field.");
     return;
   }
-      
+
+  MeshHandle mh = field->mesh();
+
   ColorMapHandle cmap;
   if (!inColorMap->get( cmap ))
     return;
@@ -268,12 +269,21 @@ CuttingPlane::execute()
   IntVector idx_offset(0,0,0);
   field->get_property( "offset", idx_offset);
 
+  const SCIRun::TypeDescription *ftd = field->get_type_description();
+  CompileInfoHandle ci = CuttingPlaneAlgo::get_compile_info(ftd);
+  Handle<CuttingPlaneAlgo> algo;
+  if( !module_dynamic_compile(ci, algo) ){
+    error("dynamic compile failed.");
+    return;
+  }
+
+
   BBox box;
   Point min, max, c_min, c_max;
   box = field->mesh()->get_bounding_box();
   min = box.min(); max = box.max();
   int nx, ny, nz;
-  get_dimensions(field, nx,ny,nz);
+  algo->get_dimensions(field, nx,ny,nz);
 
   if(field->basis_order() == 0){ nx--; ny--; nz--;}
   
@@ -370,7 +380,7 @@ CuttingPlane::execute()
 
   // advance or decrement along x, y, or z
   if (msg != "" &&
-      (field->get_type_name(0) == "LatVolField")){
+      (field->get_type_name(0) == "GenericField")){
     Point center, right, down;
     widget->GetPosition(center, right, down);
     if (msg=="plusx") {
@@ -444,11 +454,11 @@ CuttingPlane::execute()
 
 
   if (fullRezGUI.get()) {
-    if(field->get_type_name(0) != "LatVolField"){
+    if(mh->get_type_name(0) != "LatVolMesh"){
       cerr << "Error - not a regular grid... can't use Full Resolution!\n";
     }
     int nx, ny, nz;
-    get_dimensions(field, nx,ny,nz);
+    algo->get_dimensions(field, nx,ny,nz);
     int most=Max(Max(nx, ny), nz);
     u_num=v_num=most;
   }
@@ -459,7 +469,7 @@ CuttingPlane::execute()
 
 
   ScalarFieldInterfaceHandle sfi = 0;
-  if( field->get_type_name(0) == "LatVolField")
+  if( mh->get_type_name(0) == "LatVolMesh")
     sfi = field->query_scalar_interface();
   
 
@@ -539,7 +549,7 @@ CuttingPlane::execute()
 
           // put the color into the cutting plane (grid) at i, j
           Vector G;
-          if (cptype == CP_SURFACE && get_gradient(field, p, G))
+          if (cptype == CP_SURFACE && algo->get_gradient(field, p, G))
             {
               double h = sval;
               double umag=Dot(unorm, G)*scale_fac;
@@ -806,86 +816,57 @@ CuttingPlane::tcl_command(GuiArgs& args, void* userdata)
     }
 }
 
-template <class Mesh>
-bool 
-CuttingPlane::get_dimensions(Mesh, int&, int&, int&)
+// ***************** LatVolField no longer exists *******************
+
+// bool  
+// CuttingPlane::get_gradient(FieldHandle texfld_, const Point& p, Vector& g)
+// {
+//   //const string field_type = texfld_->get_type_name(0);
+//   const string type = texfld_->get_type_name(1);
+//   if(texfld_->get_type_name(0) == "LatVolField"){
+//     if (type == "double") {
+//       LatVolField<double> *fld =
+//         dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
+//       return fld->get_gradient(g,p);
+//     } else if (type == "float") {
+//       LatVolField<float> *fld =
+//         dynamic_cast<LatVolField<float>*>(texfld_.get_rep());
+//       return fld->get_gradient(g,p);   
+//     } else if (type == "long") {
+//       LatVolField<long> *fld =
+//         dynamic_cast<LatVolField<long>*>(texfld_.get_rep());
+//       return fld->get_gradient(g,p);    
+//     } else if (type == "int") {
+//       LatVolField<int> *fld =
+//         dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
+//       return fld->get_gradient(g,p);    
+//     } else {
+//       cerr << "CuttingPlane::get_gradient:: error - unimplemented Field type: " << type << endl;
+//       return false;
+//     }
+//   } else {
+//     return false;
+//   }
+// }
+
+CompileInfoHandle
+CuttingPlaneAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
 {
-  return false;
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("CuttingPlaneAlgoT");
+  static const string base_class_name("CuttingPlaneAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftd->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftd->fill_compile_info(rval);
+  return rval;
 }
 
-template<> 
-bool
-CuttingPlane::get_dimensions(LatVolMeshHandle m,
-                             int& nx, int& ny, int& nz)
-{
-  nx = m->get_ni();
-  ny = m->get_nj();
-  nz = m->get_nk();
-  return true;
-}
-
-bool
-CuttingPlane::get_dimensions(FieldHandle texfld_,  int& nx, int& ny, int& nz)
-{
-  const string type = texfld_->get_type_name(1);
-  if(texfld_->get_type_name(0) == "LatVolField"){
-    LatVolMeshHandle mesh_;
-    if (type == "double") {
-      LatVolField<double> *fld =
-        dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
-      mesh_ = fld->get_typed_mesh();
-    } else if (type == "float") {
-      LatVolField<float> *fld =
-        dynamic_cast<LatVolField<float>*>(texfld_.get_rep());
-      mesh_ = fld->get_typed_mesh();
-    } else if (type == "long") {
-      LatVolField<long> *fld =
-        dynamic_cast<LatVolField<long>*>(texfld_.get_rep());
-      mesh_ = fld->get_typed_mesh();
-    } else if (type == "int") {
-      LatVolField<int> *fld =
-        dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
-      mesh_ = fld->get_typed_mesh();
-    } else {
-      cerr << "CuttingPlane error - unknown LatVolField type: " << type << endl;
-      return false;
-    }
-    return get_dimensions( mesh_, nx, ny, nz );
-  } else {
-    return false;
-  }
-}
-
-
-bool  
-CuttingPlane::get_gradient(FieldHandle texfld_, const Point& p, Vector& g)
-{
-  //const string field_type = texfld_->get_type_name(0);
-  const string type = texfld_->get_type_name(1);
-  if(texfld_->get_type_name(0) == "LatVolField"){
-    if (type == "double") {
-      LatVolField<double> *fld =
-        dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
-      return fld->get_gradient(g,p);
-    } else if (type == "float") {
-      LatVolField<float> *fld =
-        dynamic_cast<LatVolField<float>*>(texfld_.get_rep());
-      return fld->get_gradient(g,p);   
-    } else if (type == "long") {
-      LatVolField<long> *fld =
-        dynamic_cast<LatVolField<long>*>(texfld_.get_rep());
-      return fld->get_gradient(g,p);    
-    } else if (type == "int") {
-      LatVolField<int> *fld =
-        dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
-      return fld->get_gradient(g,p);    
-    } else {
-      cerr << "CuttingPlane::get_gradient:: error - unimplemented Field type: " << type << endl;
-      return false;
-    }
-  } else {
-    return false;
-  }
-}
-
-} // End namespace Uintah

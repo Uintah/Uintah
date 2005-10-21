@@ -1,9 +1,9 @@
 #include "VectorFieldOperator.h"
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/FieldPort.h>
 
 #include <iostream>
 
@@ -14,7 +14,26 @@ using namespace SCIRun;
 using std::cerr;
 
 namespace Uintah {
- 
+class VectorFieldOperator: public Module {
+public:
+  VectorFieldOperator(GuiContext* ctx);
+  virtual ~VectorFieldOperator() {}
+    
+  virtual void execute(void);
+    
+private:
+  //    TCLstring tcl_status;
+  GuiInt guiOperation;
+
+  FieldIPort *in;
+
+  FieldOPort *sfout;
+  //VectorFieldOPort *vfout;
+};
+
+} // end namespace Uintah
+
+using namespace Uintah; 
   DECLARE_MAKER(VectorFieldOperator)
 
 VectorFieldOperator::VectorFieldOperator(GuiContext* ctx)
@@ -47,76 +66,48 @@ VectorFieldOperator::execute(void)
 
   // WARNING: will not yet work on a Mult-level Dataset!!!!
 
-  LatVolField<double>  *scalarField = 0;  
-  if( LatVolField<Vector> *vectorField =
-      dynamic_cast<LatVolField<Vector>*>(hTF.get_rep())) {
+  //##################################################################
 
-    scalarField = scinew LatVolField<double>(hTF->basis_order());
 
-    performOperation( vectorField, scalarField );
-    
-    for(unsigned int i = 0; i < vectorField->nproperties(); i++){
-      string prop_name(vectorField->get_property_name( i ));
-      if(prop_name == "varname"){
-        string prop_component;
-        vectorField->get_property( prop_name, prop_component);
-        switch(guiOperation.get()) {
-        case 0: // extract element 1
-          scalarField->set_property("varname",
-                                    string(prop_component +":1"), true);
-          break;
-        case 1: // extract element 2
-          scalarField->set_property("varname", 
-                                    string(prop_component +":2"), true);
-          break;
-        case 2: // extract element 3
-          scalarField->set_property("varname", 
-                                    string(prop_component +":3"), true);
-          break;
-        case 3: // Vector length
-          scalarField->set_property("varname", 
-                                    string(prop_component +":length"), true);
-          break;
-        case 4: // Vector curvature
-          scalarField->set_property("varname",
-                           string(prop_component +":vorticity"), true);
-          break;
-        default:
-          scalarField->set_property("varname",
-                                    string(prop_component.c_str()), true);
-        }
-      } else if( prop_name == "generation") {
-        int generation;
-        vectorField->get_property( prop_name, generation);
-        scalarField->set_property(prop_name.c_str(), generation , true);
-      } else if( prop_name == "timestep" ) {
-        int timestep;
-        vectorField->get_property( prop_name, timestep);
-        scalarField->set_property(prop_name.c_str(), timestep , true);
-      } else if( prop_name == "offset" ){
-        IntVector offset(0,0,0);        
-        vectorField->get_property( prop_name, offset);
-        scalarField->set_property(prop_name.c_str(), IntVector(offset) , true);
-        cerr<<"vector offset is "<< offset <<"n";
-      } else if( prop_name == "delta_t" ){
-        double dt;
-        vectorField->get_property( prop_name, dt);
-        scalarField->set_property(prop_name.c_str(), dt , true);
-      } else if( prop_name == "vartype" ){
-        int vartype;
-        vectorField->get_property( prop_name, vartype);
-        scalarField->set_property(prop_name.c_str(), vartype , true);
-      } else {
-        warning( "Unknown field property, not transferred.");
-      }
-    }
-  }   
+  const SCIRun::TypeDescription *tftd = hTF->get_type_description();
+  CompileInfoHandle ci = VectorFieldOperatorAlgo::get_compile_info(tftd);
+  Handle<VectorFieldOperatorAlgo> algo;
+  if( !module_dynamic_compile(ci, algo) ){
+    error("dynamic compile failed.");
+    return;
+  }
 
-  if( scalarField )
-    sfout->send(scalarField);
+  //##################################################################    
+
+  FieldHandle fh =  algo->execute( hTF, guiOperation );
+  if( fh.get_rep() != 0 ){
+    sfout->send(fh);
+  }
+
+
 }
 
-} // end namespace Uintah
+CompileInfoHandle
+VectorFieldOperatorAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("VectorFieldOperatorAlgoT");
+  static const string base_class_name("VectorFieldOperatorAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftd->get_name() );
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftd->fill_compile_info(rval);
+  return rval;
+}
+
 
 
 
