@@ -48,7 +48,7 @@
 #include <SCIRun/Core/SimpleComponentClassFactory.h>
 #include <SCIRun/Core/TypeMapImpl.h>
 
-#include <SCIRun/Distributed/DistributedFrameworkImpl.h>
+//#include <SCIRun/Plume/PlumeFrameworkImpl.h>
 
 #include <CCA/Core/Hello/Hello.h>
 #include <CCA/Core/World/World.h>
@@ -80,11 +80,13 @@ main(int argc, char *argv[]) {
   
   // Create a new framework
   try {
-    CoreFramework::pointer coreFramework = new DistributedFrameworkImpl();
-    //std::cerr << "URL to framework:\n" << core->getURL().getString() << std::endl;
+#if 0
+    PlumeFramework::pointer framework = new PlumeFrameworkImpl();
+    std::cerr << "URL to framework:\n" << framework->getURL().getString() << std::endl;
 
-    setup_test(coreFramework);
-    run_test(coreFramework);
+    setup_test(framework);
+    run_test(framework);
+#endif
   
     //broadcast, listen to URL periodically
     PIDL::serveObjects();
@@ -121,10 +123,12 @@ void setup_test( const CoreFramework::pointer &framework )
      
 void run_test( const CoreFramework::pointer &framework )
 {
+#if 0
   std::cout << "get services.\n";
+
   Services::pointer services = framework->getServices("test", "cca.unknown", framework->createTypeMap());
 
-  services->registerUsesPort("go", "sci.cca.ports.GoPort", 0);
+  services->registerUsesPort("test", "sci.cca.ports.GoPort", 0);
   services->registerUsesPort("builder", "cca.BuilderService", framework->createTypeMap());
 
   std::cout << "get builder.\n";
@@ -132,29 +136,33 @@ void run_test( const CoreFramework::pointer &framework )
   
   // test
   std::cout << "create components\n";
-  ComponentID::pointer hello = builder->createInstance("hello", "core.example.hello", 0);
-  ComponentID::pointer world  = builder->createInstance("world", "core.example.world", 0);
+  ComponentID::pointer hello = builder->createInstance("hello", "cca.core.Hello", 0);
+  ComponentID::pointer world  = builder->createInstance("world", "cca.core.World", 0);
 
   std::cout << "connect components\n";
-  ConnectionID::pointer connection = builder->connect( hello, "say", world, "message");
-  
+  ConnectionID::pointer connection = builder->connect( hello, "hello", world, "message");
+
   std::cout << "get Hello::go\n";
-  GoPort::pointer go = pidl_cast<GoPort::pointer>(services->getPort("go"));
+  ConnectionID::pointer goConnection = builder->connect(services->getComponentID(), "test", hello, "go");
+  GoPort::pointer test = pidl_cast<GoPort::pointer>(services->getPort("test"));
 
-  std::cout << "run\n";
-  go->go();
+  std::cout << "run\n\n";
+  test->go();
 
-  std::cout << "cleanup\n";
-  services->releasePort("go");
+  std::cout << "\ncleanup\n";
+  services->releasePort("test");
 
   builder->disconnect( connection, 0 );
   builder->destroyInstance(hello, 0);
   builder->destroyInstance(world, 0);
 
+  builder->disconnect(goConnection, 0);
+
   services->releasePort("builder");
-  
-  services->unregisterUsesPort("go");
+  services->unregisterUsesPort("test");
   services->unregisterUsesPort("builder");
+  framework->releaseServices(services);
+#endif
 }
   
 

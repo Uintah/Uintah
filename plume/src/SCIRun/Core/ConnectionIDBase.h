@@ -55,10 +55,10 @@ namespace SCIRun {
     typedef ConnectionID::pointer pointer;
     typedef ComponentID::pointer cid_pointer;
     
-    ConnectionIDBase( const cid_pointer &provider, 
-		      const std::string &providerPortName,
-		      const cid_pointer &user,
-		      const std::string &userPortName)
+    ConnectionIDBase( const cid_pointer &user,
+		      const std::string &userPortName,
+		      const cid_pointer &provider, 
+		      const std::string &providerPortName )
       : provider(provider), providerPortName(providerPortName), user(user), userPortName(userPortName)
     {}
 

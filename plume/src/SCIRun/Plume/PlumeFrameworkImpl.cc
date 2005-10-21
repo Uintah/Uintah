@@ -9,7 +9,7 @@ namespace SCIRun {
     : PlumeFrameworkBase<PlumeFramework>(parent)
   {}
 
-  PlumeFramework::~PlumeFramework() {}
+  PlumeFrameworkImpl::~PlumeFrameworkImpl() {}
 
   AbstractFramework::pointer PlumeFrameworkImpl::createEmptyFramework()
   { 
