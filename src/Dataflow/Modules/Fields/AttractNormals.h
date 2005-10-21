@@ -62,6 +62,7 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
 					    const TypeDescription *floc,
 					    const TypeDescription *msrc,
+                                            const string &fdst,
 					    bool scale_p);
 };
 
@@ -125,7 +126,7 @@ AttractNormalsScaleAlgoT<FSRC, FLOC, FDST>::execute(FieldHandle field_h,
 {
   FSRC *fsrc = static_cast<FSRC *>(field_h.get_rep());
   typename FSRC::mesh_handle_type mesh = fsrc->get_typed_mesh();
-  FDST *fdst = scinew FDST(mesh, field_h->basis_order());
+  FDST *fdst = scinew FDST(mesh);
 
   typename FLOC::iterator bi, ei;
   mesh->begin(bi);

@@ -165,8 +165,17 @@ AttractNormals::execute()
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->order_type_description();
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
+  const string oftn = 
+    ifieldhandle->get_type_description(0)->get_name() + "<" +
+    ifieldhandle->get_type_description(1)->get_name() + ", " +
+    ifieldhandle->get_type_description(2)->get_similar_name("Vector",
+                                                            0, "<", " >, ") +
+    ifieldhandle->get_type_description(3)->get_similar_name("Vector",
+                                                            0, "<", " >") +
+    " > ";
+
   CompileInfoHandle ci =
-    AttractNormalsAlgo::get_compile_info(ftd, ltd, mtd, scale_p);
+    AttractNormalsAlgo::get_compile_info(ftd, ltd, mtd, oftn, scale_p);
   Handle<AttractNormalsAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
@@ -214,6 +223,7 @@ CompileInfoHandle
 AttractNormalsAlgo::get_compile_info(const TypeDescription *fsrc_td,
 				     const TypeDescription *floc_td,
 				     const TypeDescription *msrc_td,
+                                     const string &fdst,
 				     bool scale_p)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -221,8 +231,6 @@ AttractNormalsAlgo::get_compile_info(const TypeDescription *fsrc_td,
   static const string template_class_name("AttractNormalsAlgoT");
   static const string scale_template_class_name("AttractNormalsScaleAlgoT");
   static const string base_class_name("AttractNormalsAlgo");
-  const string::size_type fsrc_loc = fsrc_td->get_name().find_first_of('<');
-  const string fdst = fsrc_td->get_name().substr(0, fsrc_loc) + "<Vector> ";
 
   CompileInfo *rval;
 
