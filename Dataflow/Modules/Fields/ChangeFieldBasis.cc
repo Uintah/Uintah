@@ -178,7 +178,15 @@ ChangeFieldBasis::execute()
   // Automatically apply the interpolant matrix to the output field.
   if (ef.get_rep() && interpolant.get_rep())
   {
-    string actype = fh->get_type_description(1)->get_name();
+    TypeDescription::td_vec *tdv = 
+      fh->get_type_description(3)->get_sub_type();
+    string actype = (*tdv)[0]->get_name();
+    const string oftn = 
+      ef->get_type_description(0)->get_name() + "<" +
+      ef->get_type_description(1)->get_name() + ", " +
+      ef->get_type_description(2)->get_similar_name(actype, 0, "<", " >, ") +
+      ef->get_type_description(3)->get_similar_name(actype, 0, "<", " >") +
+      " >";
     if (fh->query_scalar_interface(this) != NULL) { actype = "double"; }
     const TypeDescription *iftd = fh->get_type_description();
     const TypeDescription *iltd = fh->order_type_description();
@@ -186,8 +194,8 @@ ChangeFieldBasis::execute()
     const TypeDescription *oftd = ef->get_type_description();
     const TypeDescription *oltd = ef->order_type_description();
     CompileInfoHandle ci =
-      ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd, oftd, oltd, idtd,
-					       actype, false);
+      ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd, oftd, oftn, oltd,
+                                               idtd, actype);
     Handle<ApplyMappingMatrixAlgo> algo;
     if (module_dynamic_compile(ci, algo))
     {

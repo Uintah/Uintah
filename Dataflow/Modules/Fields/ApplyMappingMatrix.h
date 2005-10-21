@@ -56,10 +56,10 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
 					    const TypeDescription *lsrc,
 					    const TypeDescription *fdst,
+					    const string &fdststr,
 					    const TypeDescription *ldst,
 					    const TypeDescription *dsrc,
-					    const string &accum,
-					    bool fout_use_accum);
+					    const string &accum);
 };
 
 
