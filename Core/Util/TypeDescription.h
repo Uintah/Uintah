@@ -54,6 +54,7 @@ public:
     DATA_E,
     BASIS_E,
     MESH_E,
+    CONTAINER_E,
     FIELD_E,
     OTHER_E
   }; 
@@ -136,7 +137,7 @@ const TypeDescription* get_type_description(vector<T>*)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("vector", subs, "std::vector", "std",
-				TypeDescription::DATA_E);
+				TypeDescription::CONTAINER_E);
   }
   return td;
 }
@@ -152,7 +153,7 @@ const TypeDescription* get_type_description (pair<T1,T2> *)
     (*subs)[0] = sub1;
     (*subs)[1] = sub2;
     td = scinew TypeDescription("pair", subs, "std::utility", "std",
-				TypeDescription::DATA_E);
+				TypeDescription::CONTAINER_E);
   }
   return td;
 

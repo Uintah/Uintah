@@ -187,7 +187,7 @@ const TypeDescription* get_type_description(Point*)
   static TypeDescription* td = 0;
   if(!td){
     td = scinew TypeDescription("Point", Point::get_h_file_path(), 
-				"SCIRun");
+				"SCIRun", TypeDescription::DATA_E);
   }
   return td;
 }
