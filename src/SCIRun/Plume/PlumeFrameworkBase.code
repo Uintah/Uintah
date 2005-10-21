@@ -52,8 +52,6 @@ namespace SCIRun {
   PlumeFrameworkBase<Interface>::PlumeFrameworkBase(const DistributedFramework::pointer &parent )
     : DistributedFrameworkBase<Interface>(parent), cca(this)
   {
-    // register Unknown Component Factory
-    //this->addComponentClassFactory( (new UnknownCCAComponentClassFactory(&cca))->getPointer() );
   }
   
   template<class Interface>

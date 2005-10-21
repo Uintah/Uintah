@@ -75,7 +75,7 @@ void Hello::setServices(const Services::pointer& svc)
 
   TypeMap::pointer properties = services->createTypeMap();
 
-  properties->putString("cca.portName", "say");
+  properties->putString("cca.portName", "hello");
   properties->putString("cca.portType", "sci.cca.ports.StringPort");
 
   services->registerUsesPort("hello","sci.cca.ports.StringPort", properties);
