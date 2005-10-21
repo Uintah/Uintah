@@ -511,7 +511,7 @@ Isosurface::execute()
 
       // Multiple fields.
       else {
-	const TypeDescription *ftd = fields[0]->get_type_description(0);
+	const TypeDescription *ftd = fields[0]->get_type_description();
 	CompileInfoHandle ci = IsosurfaceAlgo::get_compile_info(ftd);
 	
 	Handle<IsosurfaceAlgo> algo;
@@ -611,7 +611,7 @@ IsosurfaceAlgo::get_compile_info(const TypeDescription *ftd)
 		       ftd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       ftd->get_name() + "<double> ");
+                       ftd->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
