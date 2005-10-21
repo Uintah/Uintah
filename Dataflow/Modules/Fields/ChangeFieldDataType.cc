@@ -62,7 +62,7 @@ public:
   GuiString		inputdatatype_;    // the input field type
   GuiString		fldname_;          // the input field name
   int			generation_;
-  string                last_data_type_;
+  string                last_data_str_;
   FieldHandle           outputfield_;
 };
 
@@ -111,10 +111,8 @@ ChangeFieldDataType::execute()
   // The output port is required.
   FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
 
-  const string old_data_type = fh->get_type_description(1)->get_name();
-  const string new_data_type = outputdatatype_.get();
-  const string new_field_type =
-    fh->get_type_description(0)->get_name() + "<" + new_data_type + "> ";
+  const string old_data_str = fh->get_type_description(1)->get_name();
+  const string new_data_str = outputdatatype_.get();
 
   if (generation_ != fh.get_rep()->generation) 
   {
@@ -132,14 +130,14 @@ ChangeFieldDataType::execute()
       fldname_.set("--- No Name ---");
     }
   }
-  else if (new_data_type == last_data_type_)
+  else if (new_data_str == last_data_str_)
   {
     oport->send(outputfield_);
     return;
   }
-  last_data_type_ = new_data_type;
+  last_data_str_ = new_data_str;
 
-  if (old_data_type == new_data_type)
+  if (old_data_str == new_data_str)
   {
     // No changes, just send the original through.
     outputfield_ = fh;
@@ -150,8 +148,16 @@ ChangeFieldDataType::execute()
 
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrc_td = fh->get_type_description();
+    const string oftn = 
+      fh->get_type_description(0)->get_name() + "<" +
+      fh->get_type_description(1)->get_name() + ", " +
+      fh->get_type_description(2)->get_similar_name(new_data_str,
+							 0, "<", " >, ") +
+      fh->get_type_description(3)->get_similar_name(new_data_str,
+							 0, "<", " >") + " >";
+
   CompileInfoHandle create_ci =
-    ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td, new_field_type);
+    ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td, oftn);
   Handle<ChangeFieldDataTypeAlgoCreate> create_algo;
   if (!DynamicCompilation::compile(create_ci, create_algo, this))
   {
@@ -168,16 +174,16 @@ ChangeFieldDataType::execute()
       ChangeFieldDataTypeAlgoCopy::get_compile_info(fsrc_td, fdst_td);
     Handle<ChangeFieldDataTypeAlgoCopy> copy_algo;
     
-    if (new_data_type == "Vector" && 
+    if (new_data_str == "Vector" && 
 	fh->query_scalar_interface(this).get_rep() ||
 	!DynamicCompilation::compile(copy_ci, copy_algo, true, this))
     {
-      warning("Unable to convert the old data from " + old_data_type +
-	      " to " + new_data_type + ", no data transfered.");
+      warning("Unable to convert the old data from " + old_data_str +
+	      " to " + new_data_str + ", no data transfered.");
     }
     else
     {
-      remark("Copying " + old_data_type + " data into " + new_data_type +
+      remark("Copying " + old_data_str + " data into " + new_data_str +
 	     " may result in a loss of precision.");
       update_state(Executing);
       copy_algo->execute(fh, outputfield_);
@@ -209,8 +215,8 @@ ChangeFieldDataType::tcl_command(GuiArgs& args, void* userdata)
 
 
 CompileInfoHandle
-ChangeFieldDataTypeAlgoCreate::get_compile_info(const TypeDescription *field_td,
-				    const string &fdstname)
+ChangeFieldDataTypeAlgoCreate::get_compile_info(const TypeDescription *ftd,
+                                                const string &fdstname)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -219,22 +225,22 @@ ChangeFieldDataTypeAlgoCreate::get_compile_info(const TypeDescription *field_td,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class + "." +
-		       field_td->get_filename() + "." +
+		       ftd->get_filename() + "." +
 		       to_filename(fdstname) + ".",
 		       base_class_name, 
 		       template_class,
-                       field_td->get_name() + "," + fdstname + " ");
+                       ftd->get_name() + "," + fdstname + " ");
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  field_td->fill_compile_info(rval);
+  ftd->fill_compile_info(rval);
   return rval;
 }
 
 
 CompileInfoHandle
 ChangeFieldDataTypeAlgoCopy::get_compile_info(const TypeDescription *fsrctd,
-				    const TypeDescription *fdsttd)
+                                              const TypeDescription *fdsttd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
