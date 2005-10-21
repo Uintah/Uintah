@@ -59,7 +59,8 @@ public:
 //! Class for handling of element of type curve with 
 //! quadratic lagrangian interpolation
 template <class T>
-  class CrvQuadraticLgn : public CrvApprox, 
+  class CrvQuadraticLgn : public BasisSimple<T>, 
+                          public CrvApprox, 
 			  public CrvGaussian2<double>, 
 			  public CrvQuadraticLgnUnitElement
 {
@@ -91,8 +92,8 @@ public:
     double w[3];
     get_weights(coords, w); 
     return T(w[0] * cd.node0() +
-	     w[1] * cd.node1()) +
-	     w[2] * nodes_[cd.edge0_index()];
+	     w[1] * cd.node1() +
+	     w[2] * nodes_[cd.edge0_index()]);
   }
     
   //! get first derivative at parametric coordinate
