@@ -32,16 +32,13 @@
 #if !defined(TetLinearLgn_h)
 #define TetLinearLgn_h
 
-#include <vector>
-#include <float.h>
-
+#include <Core/Basis/Basis.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Basis/Locate.h>
 
 namespace SCIRun {
 
-using std::vector;
 using std::string;
 
 //! Class for describing unit geometry of TetLinearLgn 
@@ -281,7 +278,8 @@ int TetGaussian3<T>::GaussianNum = 11;
 //! Class for handling of element of type tetrahedron with 
 //! linear lagrangian interpolation
 template <class T>
-class TetLinearLgn : public TetApprox, 
+class TetLinearLgn : public BasisSimple<T>, 
+                     public TetApprox, 
 		     public TetGaussian2<double>, 
 		     public TetLinearLgnUnitElement 
 {

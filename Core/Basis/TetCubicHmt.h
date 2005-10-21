@@ -46,7 +46,8 @@ public:
 //! Class for handling of element of type tetrahedron with 
 //! cubic hermitian interpolation
 template <class T>
-class TetCubicHmt : public TetApprox, 
+class TetCubicHmt : public BasisSimple<T>, 
+                    public TetApprox, 
 		    public TetGaussian3<double>, 
 		    public TetCubicHmtUnitElement
 {

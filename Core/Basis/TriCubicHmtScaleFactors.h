@@ -47,7 +47,8 @@ public:
 //! Class for handling of element of type triangle with 
 //! cubic hermitian interpolation with scale factors
 template <class T>
-class TriCubicHmtScaleFactors : public TriApprox, 
+class TriCubicHmtScaleFactors : public BasisSimple<T>, 
+                                public TriApprox, 
 				public TriGaussian3<double>,
 				public TriCubicScaleFactorsHmtUnitElement
 {

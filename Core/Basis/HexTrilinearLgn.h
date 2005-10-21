@@ -32,10 +32,7 @@
 #if !defined(HexTrilinearLgn_h)
 #define HexTrilinearLgn_h
 
-
-#include <string>
-#include <float.h>
-
+#include <Core/Basis/Basis.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Basis/Locate.h>
@@ -43,7 +40,6 @@
 
 namespace SCIRun {
 
-using std::vector;
 using std::string;
 
 //! Class for describing unit geometry of HexTrilinearLgn 
@@ -282,7 +278,8 @@ T HexGaussian3<T>::GaussianWeights[27] =
 //! Class for handling of element of type hexahedron with 
 //! trilinear lagrangian interpolation
 template <class T>
-class HexTrilinearLgn : public HexApprox, 
+class HexTrilinearLgn : public BasisSimple<T>, 
+                        public HexApprox, 
 			public HexGaussian2<double>, 
 			public HexTrilinearLgnUnitElement
 {

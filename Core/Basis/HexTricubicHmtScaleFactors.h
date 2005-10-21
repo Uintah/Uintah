@@ -49,7 +49,8 @@ public:
 //! Class for handling of element of type hexahedron with 
 //! tricubic hermitian interpolation with scale factors
 template <class T>
-class HexTricubicHmtScaleFactors : public HexApprox, 
+class HexTricubicHmtScaleFactors : public BasisSimple<T>, 
+                                   public HexApprox, 
 				   public HexGaussian3<double>, 
 				   public HexTricubicHmtScaleFactorsUnitElement
 {

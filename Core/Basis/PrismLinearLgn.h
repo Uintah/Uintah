@@ -32,17 +32,12 @@
 #if !defined(PrismLinearLgn_h)
 #define PrismLinearLgn_h
 
-#include <vector>
-#include <float.h>
-
+#include <Core/Basis/Basis.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Basis/Locate.h>
 
 namespace SCIRun {
-
-using std::vector;
-using std::string;
 
 //! Class for describing unit geometry of PrismLinearLgn 
 class PrismLinearLgnUnitElement {
@@ -238,7 +233,8 @@ T PrismGaussian2<T>::GaussianWeights[6] =
 
 //! Class for handling of element of type prism with linear lagrangian interpolation
 template <class T>
-class PrismLinearLgn : public PrismApprox, 
+class PrismLinearLgn : public BasisSimple<T>, 
+                       public PrismApprox, 
 		       public PrismGaussian2<double>, 
 		       public  PrismLinearLgnUnitElement
 {

@@ -36,9 +36,6 @@
 
 namespace SCIRun {
 
-using std::vector;
-using std::string;
-
 //! Class for describing unit geometry of CrvCubicHmt 
 class CrvCubicHmtUnitElement : public CrvLinearLgnUnitElement {
 public:

@@ -32,26 +32,19 @@
 #if !defined(NoData_h)
 #define NoData_h
 
-#include <vector>
-#include <string>
-#include <Core/Geometry/Point.h>
+#include <Core/Basis/Basis.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Datatypes/TypeName.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn off 'implicit conversion... loss of accuracy' messages.
-#  pragma set woff 1506
-#endif
-
 namespace SCIRun {
 
-using std::vector;
 using std::string;
 
 //! Class for handling of element without storage for field variables
 template <class T> //! for compilation consistency
-class NoDataBasis : public Persistent
+class NoDataBasis : public BasisSimple<T>, 
+                    public Persistent
 {
 public:
   NoDataBasis() {}
@@ -69,33 +62,8 @@ public:
   //!< return number of faces per cell 
   static int faces_of_cell() { return 0; } 
   
-  //! get value at parametric coordinate 
-  template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
-  {
-    ASSERTFAIL("Data associated with basis 'NoDataBasis'");
-  }
-  
-  //! get first derivative at parametric coordinate
-  template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<T> &derivs) const
-  {
-    ASSERTFAIL("Data associated with basis 'NoDataBasis'");
-  }
-  
-  //! get parametric coordinate for value within the element
-  //! iterative solution...
-  template <class ElemData>
-  bool get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const
-  {
-    ASSERTFAIL("Coordinates cannot be cassociated with basis 'NoDataBasis'");
-  }
-  
   static  const string type_name(int n = -1);
-  virtual void io (Piostream& str);
-  
+  virtual void io (Piostream& str); 
 };
 
 template <class T>
@@ -144,10 +112,5 @@ NoDataBasis<T>::io(Piostream &stream)
 }
 
 } // end namespace SCIRun
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn back on 'implicit conversion... loss of accuracy' messages.
-#  pragma reset woff 1506
-#endif
 
 #endif // NoData_h
