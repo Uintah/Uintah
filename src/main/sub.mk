@@ -46,7 +46,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
   ifeq ($(LARGESOS),yes)
     PSELIBS := Core/CCA
   else
-    PSELIBS := SCIRun/Distributed SCIRun/Core \
+    PSELIBS := SCIRun/Plume SCIRun/Distributed SCIRun/Core \
 	Core/Exceptions Core/CCA/Comm \
         Core/CCA/PIDL Core/CCA/spec Core/Util \
         Core/CCA/SSIDL Core/Thread \

@@ -104,17 +104,17 @@ namespace SCIRun {
     TypeMap::pointer uProps = uses->getProperties();
     PortInfo::pointer usesPort = uses->getPortInfo(usesPortName);
     if (usesPort.isNull()) 
-      throw CCAException::pointer(new CCAException("Unknown port " + usesPortName, BadPortName));
+      throw CCAException::pointer(new CCAException("Unknown port [" + usesPortName+"]", BadPortName));
     
     // provides
     TypeMap::pointer pProps = provides->getProperties();
     PortInfo::pointer providesPort = provides->getPortInfo(providesPortName);
     if (providesPort.isNull()) 
-      throw CCAException::pointer(new CCAException("Unknown port " + providesPortName));
+      throw CCAException::pointer(new CCAException("Unknown port [" + providesPortName+"]"));
     
     if ( !usesPort->connect(providesPort)) {
-      std::cerr << "BuilderServiceBase<Interface>::connect: attempt to connect " << usesPortName << " with " << providesPortName << " failed." << std::endl;
-      throw CCAException::create("Cannot connect " + usesPortName + " with " + providesPortName);
+      std::cerr << "BuilderServiceBase::connect: attempt to connect port [" << usesPortName << "] with port [" << providesPortName << "] failed." << std::endl;
+      throw CCAException::create("Cannot connect [" + usesPortName + "] with [" + providesPortName+"]");
     }
     
     TypeMap::pointer properties = framework->createTypeMap();

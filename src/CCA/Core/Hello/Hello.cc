@@ -51,7 +51,7 @@ using namespace SCIRun;
 using namespace sci::cca;
 using namespace sci::cca::ports;
 
-extern "C" Component::pointer make_Core_Hello()
+extern "C" Component::pointer make_cca_core_Hello()
 {
     return Component::pointer(new Hello());
 }
@@ -70,43 +70,39 @@ Hello::~Hello()
 void Hello::setServices(const Services::pointer& svc)
 {
   services = svc;
-  std::cerr << "svc->createTypeMap...";
-  TypeMap::pointer properties = svc->createTypeMap();
-  std::cerr << "Done\n";
   
-  HelloGoPort::pointer goPort( new HelloGoPort(this) );
-  
-  std::cerr << "svc->addProvidesPort(gop)...";  
-  svc->addProvidesPort(goPort, "go", "sci.cca.ports.GoPort", TypeMap::pointer(0));
-  std::cerr << "Done\n";
-  
+  services->addProvidesPort( new HelloGoPort(this), "go", "sci.cca.ports.GoPort", TypeMap::pointer(0));
+
+  TypeMap::pointer properties = services->createTypeMap();
+
   properties->putString("cca.portName", "say");
   properties->putString("cca.portType", "sci.cca.ports.StringPort");
 
-  svc->registerUsesPort("say","sci.cca.ports.StringPort", properties);
+  services->registerUsesPort("hello","sci.cca.ports.StringPort", properties);
   
 }
 
 int Hello::go()
 {
   if (services.isNull()) {
-    std::cerr << "Null services!\n";
+    std::cerr << "services no set. go request ignored\n";
     return 1;
   }
-  std::cerr << "Hello.go.getPort...";
-  double st = SCIRun::Time::currentSeconds();
-  
-  Port::pointer port = services->getPort("say");	
+
+  std::cerr << "Hello ";
+
+  double start = SCIRun::Time::currentSeconds();
+
+  Port::pointer port = services->getPort("hello");	
   StringPort::pointer message =  pidl_cast<StringPort::pointer>(port);
-  std::string name = message->getString();
+  std::string answer = message->getString();
+
+  double sec = Time::currentSeconds() - start;
+
+  std::cerr << answer <<"\n\n";
+  std::cerr << "Done in " << sec << "secs\n";
   
-  double t = Time::currentSeconds() - st;
-  std::cerr << "Done in " << t << "secs\n";
-  std::cerr << t*1000*1000 << " us/rep\n";
-  
-  if (! name.empty()) text = name;
-  
-  services->releasePort("say");
+  services->releasePort("hello");
   
   return 0;
 }

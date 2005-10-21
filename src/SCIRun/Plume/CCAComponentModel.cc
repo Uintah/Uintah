@@ -42,6 +42,7 @@
 #include <SCIRun/Core/CoreFrameworkImpl.h>
 
 #include <SCIRun/Plume/CCAComponentClassDescriptionImpl.h>
+#include <SCIRun/Plume/CCAComponentClassFactoryImpl.h>
 //#include <SCIRun/Core/FrameworkPropertiesService.h>
 #include <SCIRun/Core/CoreServicesImpl.h>
 #include <SCIRun/Plume/SCIRunErrorHandler.h>
@@ -139,9 +140,9 @@ namespace SCIRun {
       sArray = properties->getStringArray("sidl_xml_path", sArray);
     }
     framework->releaseFrameworkService(service);
+#else
+    sArray.push_back("/home/yarden/projects/plume/src/CCA/Core/xml");
 #endif
-
-    throw CCAException::create("Need to set Default PATH in ComponentModel");
 
     for (SSIDL::array1<std::string>::iterator item = sArray.begin(); item != sArray.end(); item++) {
       Dir dir(*item);
@@ -202,17 +203,15 @@ namespace SCIRun {
       DOMElement *library = static_cast<DOMElement *>(libraries->item(i));
       // Read the library name
       std::string library_name(to_char_ptr(library->getAttribute(to_xml_ch_ptr("name"))));
-      //std::cout << "Library name = ->" << library_name << "<-" << std::endl;
+      std::cout << "Library [" << library_name << "]\n";
       
       // Get the list of components.
-      DOMNodeList* comps
-	= library->getElementsByTagName(to_xml_ch_ptr("component"));
+      DOMNodeList* comps = library->getElementsByTagName(to_xml_ch_ptr("component"));
       for (unsigned int j = 0; j < comps->getLength(); j++) {
 	// Read the component name
 	DOMElement *component = static_cast<DOMElement *>(comps->item(j));
-	std::string
-	  component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
-	//std::cout << "Component name = ->" << component_name << "<-" << std::endl;
+	std::string component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
+	std::cout << "\tComponent [" << component_name << "]\n";
 	
 	// Register this component
 	CCAComponentClassDescription::pointer cd = new CCAComponentClassDescriptionImpl(component_name, library_name );
@@ -220,6 +219,9 @@ namespace SCIRun {
 	descriptions_lock.lock();
 	this->descriptions[cd->getComponentClassName()] = cd;
 	descriptions_lock.unlock();
+
+	// add a factory 
+	framework->addComponentClassFactory( new CCAComponentClassFactoryImpl(cd, this) );
       }
     }
   }
