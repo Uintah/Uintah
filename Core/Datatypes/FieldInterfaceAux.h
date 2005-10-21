@@ -117,11 +117,13 @@ SFInterface<F, L>::finterpolate(double &result, const Point &p) const
   typename Msh::Elem::index_type ei;
   mh->locate(ei, p);
   vector<double> coords(3, .0L);
-  mh->get_coords(coords, p, ei);
-  typename F::value_type rval;
-  field_->interpolate(rval, coords, ei);
-  result = rval;
-  return true;
+  if (mh->get_coords(coords, p, ei)) {
+    typename F::value_type rval;
+    field_->interpolate(rval, coords, ei);
+    result = rval;
+    return true;
+  }
+  return false;
 }
 
 
@@ -317,11 +319,12 @@ VFInterface<F, L>::finterpolate(Vector &result, const Point &p) const
   typename Msh::Elem::index_type ei;
   mh->locate(ei, p);
   vector<double> coords(3, .0L);
-  mh->get_coords(coords, p, ei);
-  field_->interpolate(result, coords, ei);
-  return true;
+  if (mh->get_coords(coords, p, ei)) {
+    field_->interpolate(result, coords, ei);
+    return true;
+  }
+  return false;
 }
-
 
 template <class F, class L>
 bool
@@ -581,9 +584,11 @@ TFInterface<F, L>::finterpolate(Tensor &result, const Point &p) const
   typename Msh::Elem::index_type ei;
   mh->locate(ei, p);
   vector<double> coords(3, .0L);
-  mh->get_coords(coords, p, ei);
-  field_->interpolate(result, coords, ei);
-  return true;
+  if (mh->get_coords(coords, p, ei)) {
+    field_->interpolate(result, coords, ei);
+    return true;
+  }
+  return false;
 }
 
 
