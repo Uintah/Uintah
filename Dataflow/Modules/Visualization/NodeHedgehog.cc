@@ -33,8 +33,12 @@
 
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Widgets/FrameWidget.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
+
 
 #include <iostream>
 #include <vector>
@@ -162,6 +166,11 @@ class NodeHedgehog : public Module {
 
   bool node_debug;
 public:
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef HexTrilinearLgn<Vector>             FDVectorBasis;
+  typedef ConstantBasis<Vector>               CFDVectorBasis;
+  typedef GenericField<LVMesh, CFDVectorBasis, FData3d<Vector, LVMesh> > CVField;
+  typedef GenericField<LVMesh, FDVectorBasis,  FData3d<Vector, LVMesh> > LVField;
  
   // GROUP:  Constructors:
   ///////////////////////////
@@ -436,17 +445,24 @@ void NodeHedgehog::execute()
     return;
   }
   
-  if(vfield->get_type_name(0) != "LatVolField") {
-    error("First field is not a LatVolField.");
+  if(vfield->mesh()->get_type_name(0) != "LatVolMesh") {
+    error("First field is not a LatVolMesh based field.");
     return;
   }
 
-  LatVolField<Vector> *fld =
-    dynamic_cast<LatVolField<Vector>*>(vfield.get_rep());
-  // if fld == NULL then the cast didn't work, so bail
-  if (!fld) {
-    error("Cannot cast field into a LatVolField.");
-    return;
+  LVMesh *mesh;
+  CVField* cfld = dynamic_cast<CVField *>(vfield.get_rep());
+  LVField* lfld = 0;
+  if( !cfld ){
+    lfld = dynamic_cast<LVField *>(vfield.get_rep());
+    if(!lfld){
+      error("Incoming field does not use a LatVolMesh");
+      return;
+    } else {
+      mesh = lfld->get_typed_mesh().get_rep();
+    }
+  } else {
+    mesh = cfld->get_typed_mesh().get_rep();
   }
   
   // Get the scalar field and ColorMap...if you can
@@ -518,8 +534,7 @@ void NodeHedgehog::execute()
   mesh_boundary = vfield->mesh()->get_bounding_box();
   min = mesh_boundary.min(); max = mesh_boundary.max();
   int nx, ny, nz;
-  // get the mesh for the geometry
-  LatVolMesh *mesh = fld->get_typed_mesh().get_rep();
+  // use the mesh for the geometry
   nx = mesh->get_ni();
   ny = mesh->get_nj();
   nz = mesh->get_nk();
@@ -666,9 +681,9 @@ void NodeHedgehog::execute()
   // break up the volume into smaller pieces and then loop over each piece
 #else
   // Make a switch based on the data location
-  if( fld->basis_order() == 0) {
+  if( cfld && cfld->basis_order() == 0 ) {
     // Create the sub-mesh that represents where the widget is
-    LatVolMesh::Cell::index_type min_index, max_index;
+    LVMesh::Cell::index_type min_index, max_index;
     mesh->get_cells(min_index, max_index, BBox(lower, upper));
     if (node_debug) cout << "NodeHedgehog::min_index = "<<min_index<<", max_index = "<<max_index<<endl;
 
@@ -691,18 +706,18 @@ void NodeHedgehog::execute()
     for (unsigned int i = min_index.i_; i <= max_index.i_; i += skip_x) {
       for (unsigned int j = min_index.j_; j <= max_index.j_; j += skip_y) {
         for (unsigned int k = min_index.k_; k <= max_index.k_; k += skip_z) {
-          LatVolMesh::Cell::index_type  idx(mesh, i, j, k); 
+          LVMesh::Cell::index_type  idx(mesh, i, j, k); 
                            
           Point v_origin;
           mesh->get_center(v_origin, idx);
           
-          Vector vf_value = fld->fdata()[ idx ];
+          Vector vf_value = cfld->fdata()[ idx ];
           add_arrow(v_origin, vf_value, arrows, info);
          }
        }
      }
-  } else if( fld->basis_order() == 1) {
-    LatVolMesh::Node::index_type min_index, max_index;
+  } else if( lfld && lfld->basis_order() == 1) {
+    LVMesh::Node::index_type min_index, max_index;
     mesh->get_nodes(min_index, max_index, BBox(lower, upper));
     
 
@@ -725,12 +740,12 @@ void NodeHedgehog::execute()
     for (unsigned int i = min_index.i_; i <= max_index.i_; i += skip_x) {
       for (unsigned int j = min_index.j_; j <= max_index.j_; j += skip_y) {
         for (unsigned int k = min_index.k_; k <= max_index.k_; k += skip_z) {
-          LatVolMesh::Node::index_type  idx(mesh, i, j, k); 
+          LVMesh::Node::index_type  idx(mesh, i, j, k); 
                            
           Point v_origin;
           mesh->get_center(v_origin, idx);
           
-          Vector vf_value = fld->fdata()[ idx ];
+          Vector vf_value = lfld->fdata()[ idx ];
           add_arrow(v_origin, vf_value, arrows, info);
          }
        }

@@ -1,12 +1,57 @@
-#include "EigenEvaluator.h"
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/LatVolField.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
 
+#include <sgi_stl_warnings_off.h>
+#include <string>
+#include <sgi_stl_warnings_on.h>
+
+using namespace SCIRun;
 namespace Uintah {
+using std::string;
+
+class EigenEvaluator: public Module {
+public:
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef LVMesh::handle_type                 LVMeshHandle;
+  typedef HexTrilinearLgn<double>             FDdoubleBasis;
+  typedef ConstantBasis<double>               CFDdoubleBasis; 
+  typedef HexTrilinearLgn<Vector>             FDVectorBasis;
+  typedef ConstantBasis<Vector>               CFDVectorBasis;
+  typedef HexTrilinearLgn<Matrix3>             FDMatrix3Basis;
+  typedef ConstantBasis<Matrix3>               CFDMatrix3Basis;
+
+  typedef GenericField<LVMesh, CFDdoubleBasis, FData3d<double, LVMesh> > CDField;
+  typedef GenericField<LVMesh, FDdoubleBasis,  FData3d<double, LVMesh> > LDField;
+  typedef GenericField<LVMesh, CFDVectorBasis, FData3d<Vector, LVMesh> > CVField;
+  typedef GenericField<LVMesh, FDVectorBasis,  FData3d<Vector, LVMesh> > LVField;
+  typedef GenericField<LVMesh, CFDMatrix3Basis, FData3d<Matrix3, LVMesh> > CMField;
+  typedef GenericField<LVMesh, FDMatrix3Basis,  FData3d<Matrix3, LVMesh> > LMField;
+  EigenEvaluator(GuiContext* ctx);
+  virtual ~EigenEvaluator() {}
+    
+  virtual void execute(void);
+    
+private:
+  //    TCLstring tcl_status;
+  GuiInt guiEigenSelect;
+  FieldIPort *in;
+
+  FieldOPort *sfout; // for eigen values
+  FieldOPort *vfout; // for eigen vectors
+};
+
+} // end namespace Uintah
+
+using namespace Uintah;
 
   DECLARE_MAKER(EigenEvaluator)
 
@@ -41,22 +86,36 @@ void EigenEvaluator::execute(void) {
     return;
   }
 
-  LatVolField<double> *eValueField = 0;
-  LatVolField<Vector> *eVectorField = 0;
+  CDField *cdefield = 0;
+  LDField *ldefield = 0;
+  CVField *cvefield = 0;
+  LVField *lvefield = 0;
 
-  if( LatVolField<Matrix3> *tensorField =
-      dynamic_cast<LatVolField<Matrix3>*>(hTF.get_rep())) {
-
-    eValueField = scinew LatVolField<double>(hTF->basis_order());
-    eVectorField = scinew LatVolField<Vector>(hTF->basis_order());
-    computeGridEigens(tensorField, eValueField,
-		      eVectorField, guiEigenSelect.get());
+  if( CMField *tensorField = 
+      dynamic_cast<CMField *>(hTF.get_rep())){
+    LVMeshHandle mh = tensorField->get_typed_mesh();
+    mh.detach();
+    cdefield = scinew CDField( mh );
+    mh.detach();
+    cvefield = scinew CVField( mh );
+    computeGridEigens( tensorField, cdefield, cvefield, guiEigenSelect.get());
+  } else if(LMField *tensorField = 
+      dynamic_cast<LMField *>(hTF.get_rep())){
+    LVMeshHandle mh = tensorField->get_typed_mesh();
+    mh.detach();
+    ldefield = scinew LDField( mh );
+    mh.detach();
+    lvefield = scinew LVField( mh );
+    computeGridEigens( tensorField, ldefield, lvefield, guiEigenSelect.get());
   }
-
-  if( eValueField )
-    sfout->send(eValueField);
-  if( eVectorField )
-    vfout->send(eVectorField);  
+  
+  if( cdefield && cvefield ){
+    sfout->send(cdefield);
+    vfout->send(cvefield);
+  } else if( ldefield && lvefield){
+    sfout->send(ldefield);
+    vfout->send(lvefield);
+  }
 }
 
 template<class TensorField, class VectorField, class ScalarField>
@@ -139,7 +198,7 @@ void computeGridEigens(TensorField* tensorField,
   }    
 }
   
-}
+
 
 
 

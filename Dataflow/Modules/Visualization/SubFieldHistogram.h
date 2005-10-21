@@ -30,6 +30,11 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Geom/Material.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
 #include <iostream>
 
 namespace Uintah {
@@ -40,6 +45,17 @@ using namespace SCIRun;
 class SubFieldHistogram : public Module {
 
 public:
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef HexTrilinearLgn<double>             FDDoubleBasis;
+  typedef ConstantBasis<double>               CFDDoubleBasis;
+  typedef HexTrilinearLgn<int>             FDIntBasis;
+  typedef ConstantBasis<int>               CFDIntBasis;
+
+  typedef GenericField<LVMesh, CFDDoubleBasis, FData3d<double, LVMesh> > CDField;
+  typedef GenericField<LVMesh, FDDoubleBasis,  FData3d<double, LVMesh> > LDField;
+  typedef GenericField<LVMesh, CFDIntBasis, FData3d<int, LVMesh> > CIField;
+  typedef GenericField<LVMesh, FDIntBasis,  FData3d<int, LVMesh> > LIField;
+
   SubFieldHistogram(GuiContext* ctx);
 
   virtual ~SubFieldHistogram();

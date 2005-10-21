@@ -1,18 +1,40 @@
 #include "ScalarFieldOperator.h"
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
-//#include <SCICore/Math/Mat.h>
 
 
 using namespace SCIRun;
 
 namespace Uintah {
  
+class ScalarFieldOperator: public Module
+{
+public:
+  
+  ScalarFieldOperator(GuiContext* ctx);
+  virtual ~ScalarFieldOperator() {}
+    
+  virtual void execute(void);
+    
+private:
+  //    TCLstring tcl_status;
+  GuiInt guiOperation;
+
+  FieldIPort *in;
+
+  FieldOPort *sfout;
+  //ScalarFieldOPort *vfout;
+};
+
+} // end namespace Uintah
+
+using namespace Uintah;
+
 DECLARE_MAKER(ScalarFieldOperator)
 
 ScalarFieldOperator::ScalarFieldOperator(GuiContext* ctx)
@@ -23,7 +45,7 @@ ScalarFieldOperator::ScalarFieldOperator(GuiContext* ctx)
 
 template<class T1, class T2> 
 void
-ScalarFieldOperator::set_properties( T1* sf1, T2* sf2)
+ScalarFieldOperatorAlgo::set_properties( T1* sf1, T2* sf2)
 {
   for(size_t i = 0; i < sf1->nproperties(); i++){
     string prop_name(sf1->get_property_name( i ));
@@ -76,50 +98,53 @@ void ScalarFieldOperator::execute(void)
   sfout =  (FieldOPort *) get_oport("Scalar Field");
 
   FieldHandle hTF;
+  if(!in->get(hTF) ){
+    error("execute(void) Didn't get a handle.");
+    return;
+  } else if ( !hTF->query_scalar_interface(this).get_rep() ){
+    error("Input is not a Scalar field.");
+    return;
+  }
+
   
-  if(!in->get(hTF)){
-    std::cerr<<"ScalarFieldOperator::execute(void) Didn't get a handle\n";
-    return;
-  } else if ( hTF->get_type_name(1) != "double" &&
-	      hTF->get_type_name(1) != "float" &&
-	      hTF->get_type_name(1) != "long64"){
-    std::cerr<<"Input is not a Scalar field\n";
+  const SCIRun::TypeDescription *ftd = hTF->get_type_description();
+  CompileInfoHandle ci = ScalarFieldOperatorAlgo::get_compile_info(ftd);
+  Handle<ScalarFieldOperatorAlgo> algo;
+  if( !module_dynamic_compile(ci, algo) ){
+    error("dynamic compile failed.");
     return;
   }
 
-  FieldHandle fh = 0;
-  if( LatVolField<double> *scalarField1 =
-      dynamic_cast<LatVolField<double>*>(hTF.get_rep())) {
-    LatVolField<double>  *scalarField2 = 0;  
 
-    scalarField2 = scinew LatVolField<double>(hTF->basis_order());
-    performOperation( scalarField1, scalarField2 );
-    set_properties(scalarField1, scalarField2 );
-    fh = scalarField2;
-  } else if( LatVolField<float> *scalarField1 =
-	     dynamic_cast<LatVolField<float>*>(hTF.get_rep())) {
-    LatVolField<float>  *scalarField2 = 0;  
 
-    scalarField2 = scinew LatVolField<float>(hTF->basis_order());
-    performOperation( scalarField1, scalarField2 );
-    set_properties(scalarField1, scalarField2 );
-    fh = scalarField2;
-  } else if( LatVolField<long64> *scalarField1 =
-	     dynamic_cast<LatVolField<long64>*>(hTF.get_rep())) {
-    LatVolField<long64>  *scalarField2 = 0;  
-
-    scalarField2 = scinew LatVolField<long64>(hTF->basis_order());
-    performOperation( scalarField1, scalarField2 );
-    set_properties(scalarField1, scalarField2 );
-    fh = scalarField2;
-  }
+  FieldHandle fh =  algo->execute( hTF, guiOperation );
   if( fh.get_rep() != 0 ){
-
+    sfout->send(fh);
   }
 }
 
 
-} // end namespace Uintah
+CompileInfoHandle
+ScalarFieldOperatorAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ScalarFieldOperatorAlgoT");
+  static const string base_class_name("ScalarFieldOperatorAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftd->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftd->fill_compile_info(rval);
+  return rval;
+}
+
 
 
 

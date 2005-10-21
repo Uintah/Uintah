@@ -5,8 +5,9 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Runnable.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Packages/Uintah/Core/Grid/Variables/Variable.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -27,10 +28,12 @@ using SCIRun::Runnable;
 using SCIRun::LatVolField;
 using SCIRun::LatVolMesh;
 
-template <class Var, class Data>
+template <class Var, class Data, class FIELD>
 class PatchToFieldThread : public Runnable {
 public:
-  PatchToFieldThread(LatVolField<Data> *fld,
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+
+  PatchToFieldThread(FIELD *fld,
                      Var& patchData,
                      IntVector offset,
                      IntVector min_i,
@@ -46,18 +49,18 @@ public:
   }
   void run()
     {
-      LatVolMesh *mesh = fld_->get_typed_mesh().get_rep();
+      LVMesh *mesh = fld_->get_typed_mesh().get_rep();
       
       if( fld_->basis_order() == 0){
         IntVector lo(min_ - offset_);
         IntVector hi(max_ - offset_);
 #if 1
         // Get an iterator over a subgrid of the mesh
-        LatVolMesh::Cell::range_iter it(mesh,
+        LVMesh::Cell::range_iter it(mesh,
 					lo.x(), lo.y(), lo.z(),
                                         hi.x(), hi.y(), hi.z());
         // The end iterator is just a cell iterator
-        LatVolMesh::Cell::iterator it_end; it.end(it_end);
+        LVMesh::Cell::iterator it_end; it.end(it_end);
 
         typename Array3<Data>::iterator vit(&var_, min_);
 
@@ -72,7 +75,7 @@ public:
 	  for (int j = lo.j_; j <= hi.j_; j++)
 	    for (int i = lo.i_; i <= hi.i_; i++)
 	      {
-		LatVolMesh::Cell::index_type  idx(m, i, j, k); 
+		LVMesh::Cell::index_type  idx(m, i, j, k); 
 		
 		fld_->fdata()[idx] = *vit;
 		++vit;
@@ -83,11 +86,11 @@ public:
         IntVector lo(min_ - offset_);
         IntVector hi(max_ - offset_);
         // Get an iterator over a subgrid of the mesh
-        LatVolMesh::Node::range_iter it(mesh,
+        LVMesh::Node::range_iter it(mesh,
 					lo.x(), lo.y(), lo.z(),
                                         hi.x(), hi.y(), hi.z());
         // The end iterator is just a node iterator
-        LatVolMesh::Node::iterator it_end; it.end(it_end);
+        LVMesh::Node::iterator it_end; it.end(it_end);
         typename Array3<Data>::iterator vit(&var_, min_);
 	for(;it != it_end; ++it){
 	  fld_->fdata()[*it] = *vit;
@@ -99,7 +102,7 @@ public:
 private:
   PatchToFieldThread(){}
 
-  LatVolField<Data> *fld_;
+  FIELD *fld_;
   Var var_;
   IntVector offset_;
   IntVector min_;

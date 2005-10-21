@@ -89,6 +89,14 @@ string TypeDescription::getName() const
       return d_name;
   }
 }
+string TypeDescription::getFileName() const
+{
+  if(d_subtype) {
+    return d_name + d_subtype->getFileName();
+  } else {
+    return d_name;
+  }
+}
 
 const TypeDescription* TypeDescription::lookupType(const std::string& t)
 {
