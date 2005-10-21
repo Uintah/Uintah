@@ -79,9 +79,9 @@ public:
   typedef TriLinearLgn<double>                              TDatBasis;
   typedef GenericField<TSMesh, TDatBasis, vector<double> >  TSField;  
 
-  typedef QuadSurfMesh<QuadBilinearLgn<Point> >                     QSMesh;
-  typedef QuadBilinearLgn<double>                                   QDatBasis;
-  typedef GenericField<QSMesh, QDatBasis, FData2d<double, QSMesh> > QSField; 
+  typedef QuadSurfMesh<QuadBilinearLgn<Point> >             QSMesh;
+  typedef QuadBilinearLgn<double>                           QDatBasis;
+  typedef GenericField<QSMesh, QDatBasis, vector<double> >  QSField; 
 private:
   LockingHandle<Field> field_;
   mesh_handle_type mesh_;
