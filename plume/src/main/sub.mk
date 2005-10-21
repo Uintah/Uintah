@@ -41,7 +41,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
   #
   # Plume
   #
-  SRCS      := $(SRCDIR)/plume.cc
+  SRCS      := $(SRCDIR)/plume.cc $(SRCDIR)/PlumeTest.cc
 
   ifeq ($(LARGESOS),yes)
     PSELIBS := Core/CCA

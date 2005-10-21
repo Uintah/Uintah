@@ -141,7 +141,7 @@ namespace SCIRun {
     }
     framework->releaseFrameworkService(service);
 #else
-    sArray.push_back("/home/yarden/projects/plume/src/CCA/Core/xml");
+    sArray.push_back("/local/home/yarden/projects/plume/src/CCA/Core/xml");
 #endif
 
     for (SSIDL::array1<std::string>::iterator item = sArray.begin(); item != sArray.end(); item++) {
