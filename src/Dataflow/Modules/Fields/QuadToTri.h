@@ -45,8 +45,10 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Basis/NoData.h>
 #include <Core/Basis/Constant.h>
+#include <Core/Basis/TriLinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Util/Assert.h>
 
