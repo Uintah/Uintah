@@ -33,12 +33,17 @@
 #define Basis_h
 
 #include <vector>
+#include <float.h>
 #include <Core/Util/Assert.h>
 
 namespace SCIRun {
 
 using std::vector;
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn off 'implicit conversion... loss of accuracy' messages.
+#  pragma set woff 1506
+#endif
 
 //! Class for handling of element with constant field variables
 template <class T>

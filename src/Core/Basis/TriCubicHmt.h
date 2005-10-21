@@ -47,7 +47,8 @@ namespace SCIRun {
 //! Class for handling of element of type triangle with 
 //! cubic hermitian interpolation
 template <class T>
-  class TriCubicHmt : public TriApprox, 
+  class TriCubicHmt : public BasisSimple<T>, 
+                      public TriApprox, 
 		      public TriGaussian3<double>, 
 		      public TriCubicHmtUnitElement 
 {

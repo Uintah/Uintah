@@ -32,16 +32,13 @@
 #if !defined(TriLinearLgn_h)
 #define TriLinearLgn_h
 
-#include <vector>
-#include <float.h>
-
+#include <Core/Basis/Basis.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Basis/Locate.h>
 
 namespace SCIRun {
 
-using std::vector;
 using std::string;
   
 //! Class for describing unit geometry of TriLinearLgn 
@@ -241,7 +238,8 @@ T TriGaussian3<T>::GaussianWeights[7] =
 //! Class for handling of element of type triangle with 
 //! linear lagrangian interpolation
 template <class T>
-class TriLinearLgn : public TriApprox, 
+class TriLinearLgn : public BasisSimple<T>, 
+                     public TriApprox, 
 		     public TriGaussian2<double>, 
 		     public TriLinearLgnUnitElement  
 { 

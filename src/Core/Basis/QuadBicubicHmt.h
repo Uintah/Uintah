@@ -47,7 +47,8 @@ public:
 //! Class for handling of element of type quad with 
 //! bicubic hermitian interpolation
 template <class T>
-class QuadBicubicHmt : public QuadApprox, 
+class QuadBicubicHmt : public BasisSimple<T>, 
+                       public QuadApprox, 
 		       public QuadGaussian2<double>, 
 		       public QuadBicubicHmtUnitElement
 {

@@ -61,7 +61,8 @@ public:
 //! Class for handling of element of type prism with 
 //! quadratic lagrangian interpolation
 template <class T>
-class PrismQuadraticLgn : public PrismApprox, 
+class PrismQuadraticLgn : public BasisSimple<T>, 
+                          public PrismApprox, 
 			  public PrismGaussian2<T>, 
 			  public PrismQuadraticLgnUnitElement
 {

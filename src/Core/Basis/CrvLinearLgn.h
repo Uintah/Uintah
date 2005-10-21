@@ -32,9 +32,6 @@
 #if !defined(CrvLinearLgn_h)
 #define CrvLinearLgn_h
 
-
-#include <float.h>
-
 #include <Core/Basis/Basis.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/TypeName.h>
@@ -42,7 +39,6 @@
 
 namespace SCIRun {
 
-using std::vector;
 using std::string;
 
 //! Class for describing unit geometry of CrvLinearLgn 

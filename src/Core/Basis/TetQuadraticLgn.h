@@ -60,7 +60,8 @@ public:
 //! Class for handling of element of type tetrahedron with 
 //! quadratic lagrangian interpolation
 template <class T>
-class TetQuadraticLgn : public TetApprox, 
+class TetQuadraticLgn : public BasisSimple<T>, 
+                        public TetApprox, 
 			public TetGaussian3<double>, 
 			public TetQuadraticLgnUnitElement  
 {

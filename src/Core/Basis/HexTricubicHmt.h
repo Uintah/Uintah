@@ -47,7 +47,8 @@ public:
 //! Class for handling of element of type hexahedron with 
 //! tricubic hermitian interpolation
 template <class T>
-class HexTricubicHmt : public HexApprox, 
+class HexTricubicHmt : public BasisSimple<T>, 
+                       public HexApprox, 
 		       public HexGaussian3<double>, 
 		       public HexTricubicHmtUnitElement
 {

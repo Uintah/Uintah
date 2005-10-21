@@ -32,21 +32,13 @@
 #if !defined(QuadBilinearLgn_h)
 #define QuadBilinearLgn_h
 
-#include <vector>
-#include <float.h>
-
+#include <Core/Basis/Basis.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Basis/Locate.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn off 'implicit conversion... loss of accuracy' messages.
-#  pragma set woff 1506
-#endif
-
 namespace SCIRun {
 
-using std::vector;
 using std::string;
 
 //! Class for describing unit geometry of QuadBilinearLgn 
@@ -243,7 +235,8 @@ T QuadGaussian3<T>::GaussianWeights[9] = {
 //! Class for handling of element of type quad with 
 //! bilinear lagrangian interpolation
 template <class T>
-class QuadBilinearLgn : public QuadApprox, 
+class QuadBilinearLgn : public BasisSimple<T>, 
+                        public QuadApprox, 
 			public QuadGaussian2<double>, 
 			public QuadBilinearLgnUnitElement 
 {

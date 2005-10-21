@@ -47,7 +47,8 @@ public:
 //! Class for handling of element of type prism with 
 //! cubic hermitian interpolation
 template <class T>
-class PrismCubicHmt : public PrismApprox, 
+class PrismCubicHmt : public BasisSimple<T>, 
+                      public PrismApprox, 
 		      public PrismGaussian2<T>, 
 		      public PrismCubicHmtUnitElement 
 {

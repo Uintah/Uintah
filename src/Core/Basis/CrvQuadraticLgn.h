@@ -39,7 +39,7 @@ namespace SCIRun {
 //! Class for describing unit geometry of CrvLinearLgn 
 class CrvQuadraticLgnUnitElement {
 public: 
-  static double unit_vertices[1][3]; //!< Parametric coordinates of vertices of unit edge
+  static double unit_vertices[3][1]; //!< Parametric coordinates of vertices of unit edge
   static int unit_edges[1][2];    //!< References to vertices of unit edge 
 
   CrvQuadraticLgnUnitElement() {};
@@ -77,7 +77,6 @@ public:
   int get_weights(const vector<double> &coords, double *w) const
   {
     const double x = coords[0];
-
     w[0] = 1 - 3*x + 2*x*x;
     w[1] = x*(-1 + 2*x);
     w[2] = -4*(-1 + x)*x;
@@ -91,6 +90,8 @@ public:
   {
     double w[3];
     get_weights(coords, w); 
+    //    cerr << "?" << w[0] << '\t' << w[1] << '\t'<< w[2] << '\t' << endl;
+    //    cerr << "?" << cd.node0() << '\t' << cd.node1() << '\t'<< nodes_[cd.edge0_index()] << '\t' << endl;
     return T(w[0] * cd.node0() +
 	     w[1] * cd.node1() +
 	     w[2] * nodes_[cd.edge0_index()]);
