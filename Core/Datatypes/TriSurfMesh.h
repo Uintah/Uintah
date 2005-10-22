@@ -148,6 +148,11 @@ public:
     }
 
     inline 
+    unsigned elem_index() const {
+      return index_;
+    }
+
+    inline 
     const Point node0() const {
       return mesh_.points_[node0_index()];
     }
