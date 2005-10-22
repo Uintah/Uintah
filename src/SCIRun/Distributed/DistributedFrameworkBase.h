@@ -77,7 +77,10 @@ namespace SCIRun {
     virtual FrameworkID::pointer getFrameworkID();
     virtual SSIDL::array1<DistributedFramework::pointer> getChildren();
 
-  private:
+  protected:
+    void addChild( const DistributedFramework::pointer &child);
+    void removeChild( const DistributedFramework::pointer &child);
+
     typedef std::list<DistributedFramework::pointer> ChildrenList;
 
     DistributedFramework::pointer parent;

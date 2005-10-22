@@ -307,6 +307,9 @@ Thread_shutdown(Thread* thread)
   unlock_scheduler();
 
   bool wait_main = priv->ismain;
+  if (wait_main && !done) {
+    main_sema.down();
+  }
   delete thread;
   if (pthread_setspecific(thread_key, 0) != 0)
     fprintf(stderr, "Warning: pthread_setspecific failed");
@@ -314,9 +317,6 @@ Thread_shutdown(Thread* thread)
   delete priv;
   if (done)
     Thread::exitAll(0);
-  if (wait_main) {
-    main_sema.down();
-  }
   pthread_exit(0);
 }
 
@@ -1183,6 +1183,7 @@ Semaphore::Semaphore(const char* name, int value)
 
 Semaphore::~Semaphore()
 {
+  //fprintf(stderr, "~Semaphore: %s\n",name_);
 #if !defined(_AIX)
   // Dd: Don't know exactly what to do about this for AIX...
   int val;

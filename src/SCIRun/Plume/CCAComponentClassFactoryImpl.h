@@ -59,9 +59,9 @@ namespace SCIRun {
 
     virtual ~CCAComponentClassFactoryImpl();
     
-    virtual ComponentInfo::pointer create( const CoreFramework::pointer &framework,
-					   const std::string &name,
-					   const TypeMap::pointer &);
+    virtual CoreServices::pointer create( const CoreFramework::pointer &framework,
+					  const std::string &name,
+					  const TypeMap::pointer &);
   protected:
     CCAComponentModel *model;
   };

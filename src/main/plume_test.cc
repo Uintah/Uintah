@@ -28,7 +28,7 @@
 
 
 /*
- *  Core.cc: CCA-ified version of SCIRun
+ *  Plume.cc: CCA-ified version of SCIRun
  *
  *  Written by:
  *   Steven G. Parker
@@ -62,6 +62,8 @@ using namespace sci::cca::ports;
 void init();
 void usage();
 bool parse_args( int argc, char *argv[]);
+void setup_test( const CoreFramework::pointer &framwork );
+void run_test( const CoreFramework::pointer &framwork );
 
 int
 main(int argc, char *argv[]) 
@@ -70,33 +72,32 @@ main(int argc, char *argv[])
   init();
   
   // Create a new framework
+  try {
+     PlumeFramework::pointer framework = new PlumeFrameworkImpl();
+     std::cerr << "URL to framework:\n" << framework->getURL().getString() << std::endl;
 
-//   try {
-//      PlumeFramework::pointer framework = new PlumeFrameworkImpl();
-//      std::cerr << "URL to framework:\n" << framework->getURL().getString() << std::endl;
+     Thread *test_thread = new Thread( new PlumeTest(framework), "plume test");
+     test_thread->detach();
 
-//      Thread *test_thread = new Thread( new PlumeTest(framework), "plume test");
-//      test_thread->detach();
-
-//     //broadcast, listen to URL periodically
-//      PIDL::serveObjects();
-//      PIDL::finalize();
+    //broadcast, listen to URL periodically
+     PIDL::serveObjects();
+     PIDL::finalize();
     
-//   }
-//   catch(const sci::cca::CCAException::pointer &pe) {
-//     std::cerr << "Caught exception:\n";
-//     std::cerr << pe->getNote() << std::endl;
-//     abort();
-//   }
-//   catch(const Exception& e) {
-//     std::cerr << "Caught exception:\n";
-//     std::cerr << e.message() << std::endl;
-//     abort();
-//   }
-//   catch(...) {
-//     std::cerr << "Caught unexpected exception!\n";
-//     abort();
-//   }
+  }
+  catch(const sci::cca::CCAException::pointer &pe) {
+    std::cerr << "Caught exception:\n";
+    std::cerr << pe->getNote() << std::endl;
+    abort();
+  }
+  catch(const Exception& e) {
+    std::cerr << "Caught exception:\n";
+    std::cerr << e.message() << std::endl;
+    abort();
+  }
+  catch(...) {
+    std::cerr << "Caught unexpected exception!\n";
+    abort();
+  }
   return 0;
 }
 
@@ -135,7 +136,7 @@ void init()
   create_sci_environment(0,0);
   
   PIDL::initialize();
-//   PIDL::isfrwk = true;
-//   //all threads in the framework share the same invocation id
-//   PRMI::setInvID(ProxyID(1,0));
+  PIDL::isfrwk = true;
+  //all threads in the framework share the same invocation id
+  PRMI::setInvID(ProxyID(1,0));
 }

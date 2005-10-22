@@ -45,6 +45,10 @@ package sci {
 	bool isRoot();
 	DistributedFramework getParent();
 	array<DistributedFramework,1> getChildren();
+
+	// protected:
+	void addChild(in DistributedFramework child);
+	void removeChild(in DistributedFramework child);
       }
 
 

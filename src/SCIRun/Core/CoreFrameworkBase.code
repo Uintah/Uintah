@@ -92,28 +92,43 @@ namespace SCIRun {
 								       const std::string& className,
 								       const TypeMap::pointer& properties)
   {
-    Guard guard(&component_lock);
-    
-    if ( components.find(instanceName) != components.end() )
-      throw CCAException::create("can not create component ["+instanceName+"]: name in use");
-
-    ComponentInfo::pointer info(0);
+    CoreServices::pointer services(0);
     {
-      Guard guard(&factory_lock);
+      Guard guard(&component_lock);
       
-      ComponentClassFactoryMap::iterator factory = factories.find(className);
-      if ( factory == factories.end() )
-	throw CCAException::create("Can not create a component of type ["+className+"]: no factory");
+      if ( components.find(instanceName) != components.end() )
+	throw CCAException::create("can not create component ["+instanceName+"]: name in use");
       
-      // this may throw a cca exception.
-      // do not catch it. 
+      {
+	Guard guard(&factory_lock);
+	
+	ComponentClassFactoryMap::iterator factory = factories.find(className);
+	if ( factory == factories.end() )
+	  throw CCAException::create("Can not create a component of type ["+className+"]: no factory");
+	
+	// this may throw a cca exception.
+	// do not catch it. 
+	
+	services = factory->second->create( pointer(this), instanceName, properties);
+      }
       
-      info = factory->second->create( pointer(this), instanceName, properties);
+      if ( !services.isNull() )
+	components[instanceName] = services;
     }
-    
-    components[instanceName] = info;
 
-    return info;
+    // we should not init the component until the CoreServices is in the component array
+    // otherwise we might get a race condition.
+    try {
+      services->getComponent()->setServices(services);
+    } catch (...) {
+      std::cerr << "component crashed during set services\n";
+      Guard guard(&component_lock);
+      ComponentMap::iter = components.find(instanceName);
+      components.erase(iter);
+      services = 0;
+    }
+      
+    return services;
   }
  
   template<class Interface>
