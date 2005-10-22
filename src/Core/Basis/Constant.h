@@ -43,8 +43,7 @@ using std::string;
 
 //! Class for handling of element with constant field variables
 template <class T>
-class ConstantBasis : public BasisSimple<T>, 
-                     public Persistent
+class ConstantBasis : public BasisSimple<T>
 {
 public:
   ConstantBasis() {}
