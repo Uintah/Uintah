@@ -57,6 +57,29 @@ ifeq ($(BUILD_SCIRUN2),yes)
 
   include $(SCIRUN_SCRIPTS)/program.mk
 
+
+
+  ########################################################################
+  #
+  # PlumeFramework
+  #
+  SRCS      := $(SRCDIR)/PlumeFramework.cc $(SRCDIR)/SimpleManager.cc
+
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Core/CCA
+  else
+    PSELIBS := SCIRun/Plume SCIRun/Distributed SCIRun/Core \
+	Core/Exceptions Core/CCA/Comm \
+        Core/CCA/PIDL Core/CCA/spec Core/Util \
+        Core/CCA/SSIDL Core/Thread \
+	CCA/Core/Hello CCA/Core/World
+  endif
+
+  PROGRAM := PlumeFramework
+
+  include $(SCIRUN_SCRIPTS)/program.mk
+
+
 endif # Build SCIRun2
 
 

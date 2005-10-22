@@ -227,7 +227,7 @@ namespace SCIRun {
   }
   
   
-  ComponentInfo::pointer
+  CoreServies::pointer
   CCAComponentModel::createComponent(const std::string &name,
 				     const std::string &type,
 				     const std::string &library,
@@ -263,18 +263,21 @@ namespace SCIRun {
     if(!maker_v) {
       std::cerr <<"Can not load component " << type << std::endl;
       std::cerr << SOError() << std::endl;
-      return ComponentInfo::pointer(0);
+      return CoreServices::pointer(0);
     }
-    sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
+    sci::cca::Component::pointer (*maker)() = (Component::pointer (*)())(maker_v);
 
     // create the component
     component = (*maker)();
 
     // create ComponentInfo. this must be a class the derives from Distributed/ComponentInfo
-    CoreServices::pointer services =  new CoreServicesImpl(framework, name, type, properties, component);
-
-    // CCA initialization of the component
-    component->setServices(services);
+    CoreServices::pointer services;
+    try {
+       services =  new CoreServicesImpl(framework, name, type, properties, component);
+    } catch (...) {
+      std::cerr << "component crashed in constructor\n";
+      services = 0;
+    }
 
     // done
     return services;

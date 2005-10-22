@@ -55,13 +55,44 @@ namespace SCIRun {
     : parent(parent),
       children_lock("DistributedFrameworkBase::children_lock")
   {
+    // inform the parent child is ready
+    if ( !parent.isNull() )
+      parent->addChild(this);
   }
   
   template<class Interface>
   DistributedFrameworkBase<Interface>::~DistributedFrameworkBase()
   {
+    if ( !parent.isNull() )
+      parent->removeChild(this);
   }
   
+  template<class Interface>
+  void DistributedFrameworkBase<Interface>::addChild( const DistributedFramework::pointer &child)
+  {
+    Guard guard(&children_lock);
+    
+    children.push_back(child);
+
+    std::cerr << "Framework ["<<getFrameworkID()->getString()<<"]: add child [" << child->getFrameworkID()->getString() <<"]\n";
+  }
+
+  template<class Interface>
+  void DistributedFrameworkBase<Interface>::removeChild( const DistributedFramework::pointer &child)
+  {
+    Guard guard(&children_lock);
+    
+    for (ChildrenList::iterator iter = children.begin(); iter != children.end(); ++iter)
+      if ( (*iter) != child ) {
+	children.erase(iter);
+	std::cerr << "Framework ["<<getFrameworkID()->getString()<<"]: remove child [" 
+		  << child->getFrameworkID()->getString() <<"]\n";
+	return;
+      }
+    std::cerr << "Framework ["<<getFrameworkID()->getString()<<"]: can not remove unknown child [" 
+	      << child->getFrameworkID()->getString() <<"]: \n";
+    
+  }
 
   template<class Interface>
   FrameworkID::pointer DistributedFrameworkBase<Interface>::getFrameworkID()

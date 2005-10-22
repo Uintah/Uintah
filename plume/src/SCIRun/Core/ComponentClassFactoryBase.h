@@ -59,7 +59,7 @@ namespace SCIRun {
 
     virtual ComponentClassDescription::pointer getClassDescription() { return desc; }
     
-    virtual ComponentInfo::pointer create( const CoreFramework::pointer &framework,
+    virtual CoreServices::pointer create( const CoreFramework::pointer &framework,
 					   const std::string &name,
 					   const TypeMap::pointer &) = 0;
   protected:

@@ -54,7 +54,7 @@ namespace SCIRun {
 
   CCAComponentClassFactoryImpl::~CCAComponentClassFactoryImpl() {}
   
-  ComponentInfo::pointer 
+  CoreServices::pointer 
   CCAComponentClassFactoryImpl::create( const CoreFramework::pointer &framework,
 					const std::string &name,
 					const TypeMap::pointer &properties)
