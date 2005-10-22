@@ -32,6 +32,7 @@
 #if !defined(TriCubicHmtScaleFactors_h)
 #define TriCubicHmtScaleFactors_h
 
+#include <Core/Persistent/PersistentSTL.h>
 #include <Core/Basis/TriLinearLgn.h>
 
 namespace SCIRun {
@@ -53,6 +54,8 @@ class TriCubicHmtScaleFactors : public BasisSimple<T>,
 				public TriCubicScaleFactorsHmtUnitElement
 {
 public:
+  typedef T value_type;
+
   TriCubicHmtScaleFactors() {}
   virtual ~TriCubicHmtScaleFactors() {}
 
@@ -85,17 +88,18 @@ public:
     double w[12];
     get_weights(coords, w); 
 
-    const double sdx0=derivs_[cd.node0_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx1=derivs_[cd.node1_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx2=derivs_[cd.node2_index()][0]*scalefactors_[cd.elem][0];
+    unsigned elem=cd.elem_index();
+    const T sdx0=derivs_[cd.node0_index()][0]*scalefactors_[elem][0];
+    const T sdx1=derivs_[cd.node1_index()][0]*scalefactors_[elem][0];
+    const T sdx2=derivs_[cd.node2_index()][0]*scalefactors_[elem][0];
 
-    const double sdy0=derivs_[cd.node0_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy1=derivs_[cd.node1_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy2=derivs_[cd.node2_index()][1]*scalefactors_[cd.elem][1];
+    const T sdy0=derivs_[cd.node0_index()][1]*scalefactors_[elem][1];
+    const T sdy1=derivs_[cd.node1_index()][1]*scalefactors_[elem][1];
+    const T sdy2=derivs_[cd.node2_index()][1]*scalefactors_[elem][1];
 
-    const double sdxy0=derivs_[cd.node0_index()][2]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy1=derivs_[cd.node1_index()][2]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy2=derivs_[cd.node2_index()][2]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
+    const T sdxy0=derivs_[cd.node0_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
+    const T sdxy1=derivs_[cd.node1_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
+    const T sdxy2=derivs_[cd.node2_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
 
     return (T)(w[0]  * cd.node0()
 	       +w[1]  * sdx0
@@ -120,19 +124,21 @@ public:
     const double x2=x*x, x3=x2*x, y2=y*y;
     const double y12=(y-1)*(y-1);
 
+    unsigned elem=cd.elem_index();
+
+    const T sdx0=derivs_[cd.node0_index()][0]*scalefactors_[elem][0];
+    const T sdx1=derivs_[cd.node1_index()][0]*scalefactors_[elem][0];
+    const T sdx2=derivs_[cd.node2_index()][0]*scalefactors_[elem][0];
+
+    const T sdy0=derivs_[cd.node0_index()][1]*scalefactors_[elem][1];
+    const T sdy1=derivs_[cd.node1_index()][1]*scalefactors_[elem][1];
+    const T sdy2=derivs_[cd.node2_index()][1]*scalefactors_[elem][1];
+
+    const T sdxy0=derivs_[cd.node0_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
+    const T sdxy1=derivs_[cd.node1_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
+    const T sdxy2=derivs_[cd.node2_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
+
     derivs.resize(2);
-
-    const double sdx0=derivs_[cd.node0_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx1=derivs_[cd.node1_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx2=derivs_[cd.node2_index()][0]*scalefactors_[cd.elem][0];
-
-    const double sdy0=derivs_[cd.node0_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy1=derivs_[cd.node1_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy2=derivs_[cd.node2_index()][1]*scalefactors_[cd.elem][1];
-
-    const double sdxy0=derivs_[cd.node0_index()][2]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy1=derivs_[cd.node1_index()][2]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy2=derivs_[cd.node2_index()][2]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
 
     derivs[0]=T(6*(-1 + x)*x*cd.node0()
 		+(-4*x + 3*x2 + y12*(1 + 2*y))*sdx0
@@ -178,8 +184,8 @@ public:
 
 protected:
   //! support data 
-  vector<T[2]>          derivs_; 
-  vector<T[3]>          scalefactors_; 
+  vector<vector<T> > derivs_; 
+  vector<vector<double> > scalefactors_; 
 };
 
 

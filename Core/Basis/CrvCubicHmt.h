@@ -105,7 +105,7 @@ public:
   };
 
   //! add a derivative value (dx) for nodes
-  void add_derivative(const vector<T> &p) { derivs_.push_back(p); };
+  void add_derivative(const vector<T> &p) { derivs_.push_back(p[0]); };
 
   static  const string type_name(int n = -1);
 

@@ -95,7 +95,7 @@ public:
 	       w[6] * cd.node2()		   +
 	       w[7] * derivs_[cd.node2_index()][0] +
 	       w[8] * derivs_[cd.node2_index()][1] +
-	       w[9] * nodes_[cd.elem]);    
+	       w[9] * nodes_[cd.elem_index()]);    
   }
   
   //! get first derivative at parametric coordinate
@@ -117,7 +117,7 @@ public:
 	+7*y*(-1 + 2*x + y)*cd.node2()
 	+y*(-1 + 2*x + 2*y)*derivs_[cd.node2_index()][0]
 	-2*y*(-1 + 2*x + y)*derivs_[cd.node2_index()][1]
-	-27*y*(-1 + 2*x + y)*nodes_[cd.elem]);
+	-27*y*(-1 + 2*x + y)*nodes_[cd.elem_index()]);
     
     derivs[1]=
       T((13*x*x + 6*(-1+ y)*y + 13*x*(-1 + 2*y))*cd.node0()
@@ -129,7 +129,7 @@ public:
 	+(7*x*x - 6*(-1 + y)*y + 7*x*(-1 + 2*y))*cd.node2()
 	+x*(-1 + x + 4*y)*derivs_[cd.node2_index()][0]
 	+(-2*x*x + x*(2 - 4*y) + y*(-2 + 3*y))*derivs_[cd.node2_index()][1]
-	-27*x*(-1 + x + 2*y)*nodes_[cd.elem]);
+	-27*x*(-1 + x + 2*y)*nodes_[cd.elem_index()]);
   }
   
   //! get the parametric coordinate for value within the element.
@@ -146,7 +146,7 @@ public:
   void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
 
   //! add a node value. (must correspond to center of triangle)
-  void add_node(const T &p) { nodes_.push_back(p); }
+  void add_node_value(const T &p) { nodes_.push_back(p); }
 
   static const string type_name(int n = -1);
 
@@ -157,11 +157,11 @@ protected:
 
   //! Cubic Hermitian needs additonal derivatives stored at each node
   //! in the topology.
-  vector<T[2]>          derivs_; 
+  vector<vector<T> > derivs_; 
 
   //! Cubic Lagrangian needs additional nodes stored for each edge
   //! in the topology.
-  vector<T>             nodes_; 
+  vector<T> nodes_; 
 };
 
 

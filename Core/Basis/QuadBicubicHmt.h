@@ -157,7 +157,7 @@ protected:
 
   //! Cubic Hermitian only needs additonal derivatives stored at each node
   //! in the topology.
-  vector<T[2]>          derivs_; 
+  vector<vector<T> >          derivs_; 
 };
 
 template <class T>

@@ -78,17 +78,24 @@ public:
     ASSERTFAIL("get_coords not supported by basis");
   }
 
-  //! add a node value corresponding to edge
+  //! add a node value 
   void add_node_value(const T &p) 
   {
     ASSERTFAIL("add_node_value not supported by basis");
   }
 
-  //! add a derivative value for nodes
+  //! add a derivative value 
   void add_derivative(const vector<T> &p) 
   {
     ASSERTFAIL("add_derivative not supported by basis");
   }
+
+  //! add scale factors 
+  void add_scalefactors(const vector<T> &p) 
+  {
+    ASSERTFAIL("add_scalefactors not supported by basis");
+  }
+
 };
 
 

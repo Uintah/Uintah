@@ -147,7 +147,7 @@ public:
   }  
 
   //! add a node value corresponding to edge
-  void add_node(const T &p) { nodes_.push_back(p); }
+  void add_node_value(const T &p) { nodes_.push_back(p); }
 
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);

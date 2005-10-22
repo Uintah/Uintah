@@ -43,8 +43,7 @@ using std::string;
 
 //! Class for handling of element without storage for field variables
 template <class T> //! for compilation consistency
-class NoDataBasis : public BasisSimple<T>, 
-                    public Persistent
+class NoDataBasis : public BasisSimple<T>
 {
 public:
   NoDataBasis() {}
