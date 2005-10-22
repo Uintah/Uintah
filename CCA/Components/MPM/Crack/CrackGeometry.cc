@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/Crack/CrackGeometry.h>
 #include <Core/Geometry/Vector.h>
-#include <cmath>
+#include <math.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -28,7 +28,7 @@ bool CrackGeometry::twoLinesCoincide(Point& p1, Point& p2, Point& p3,
   double l41 = (p4.asVector() - p1.asVector()).length();
   double l42 = (p4.asVector() - p2.asVector()).length();
 
-  if (abs(l31+l32-l12)/l12 < 1.e-6 && abs(l41+l42-l12)/l12 < 1.e-6 && l41>l31)
+  if (fabs(l31+l32-l12)/l12 < 1.e-6 && fabs(l41+l42-l12)/l12 < 1.e-6 && l41>l31)
     return true;
   else
     return false;
