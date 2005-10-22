@@ -20,6 +20,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
+#include <Packages/Uintah/CCA/Components/MPM/Crack/CrackGeometry.h>
 
 namespace Uintah {
    using namespace SCIRun;
@@ -190,6 +191,8 @@ class Crack
     // Physical parameters of cracks
     vector<string> crackType;      // Crack contact type
     vector<double> cmu;            // Crack surface frcition coefficients
+
+    vector<CrackGeometry*> d_crackGeometry;
 
     // Geometrical parameters of crack segments
     vector<vector<vector<Point> > > quads;

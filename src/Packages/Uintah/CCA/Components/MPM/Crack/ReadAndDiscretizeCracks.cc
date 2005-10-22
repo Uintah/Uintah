@@ -21,6 +21,8 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/CCA/Components/MPM/Crack/CrackGeometry.h>
+#include <Packages/Uintah/CCA/Components/MPM/Crack/CrackGeometryFactory.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
 #include <sgi_stl_warnings_off.h>
@@ -134,8 +136,8 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   // Physical properties of cracks
   crackType.resize(numMPMMatls);
   cmu.resize(numMPMMatls);
-  
-  // General quad crack segments
+
+    // General quad crack segments
   quads.resize(numMPMMatls);
   quadN12.resize(numMPMMatls);
   quadN23.resize(numMPMMatls);
@@ -199,6 +201,11 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
 
        // Read in crack segments. Presently seven kinds of basic shapes are available.
        // More complicated crack plane can be input by combining the basic shapes.
+#if 0
+       CrackGeometry* cg = CrackGeometryFactory::create(crk_ps);
+       d_crackGeometry.push_back(cg);
+#endif
+
        ProblemSpecP geom_ps=crk_ps->findBlock("crack_segments");
        ReadQuadCracks(m,geom_ps);
        ReadCurvedQuadCracks(m,geom_ps); 
