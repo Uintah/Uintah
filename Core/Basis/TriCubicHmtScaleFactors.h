@@ -217,7 +217,7 @@ TriCubicHmtScaleFactors<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    static const string nm("TriCubicHmt");
+    static const string nm("TriCubicHmtScaleFactors");
     return nm;
   } else {
     return find_type_name((T *)0);
