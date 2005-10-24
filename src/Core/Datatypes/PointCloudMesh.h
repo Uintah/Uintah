@@ -265,6 +265,7 @@ public:
   {
     coords.resize(1);
     coords[0] = 0.0L;
+    return true;
   }
   
   void interpolate(Point &pt, const vector<double> &coords, 
