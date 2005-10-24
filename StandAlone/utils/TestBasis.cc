@@ -147,13 +147,19 @@ void Test1D()
 
   typename MESH::Node::array_type n;
   n.resize(nnode);
-  typename MESH::basis_type u;
+  typedef typename MESH::basis_type basis_type;
+  basis_type u;
 
   for(int i=0; i<u.number_of_vertices(); i++) {
     Point p(u.unit_vertices[i][0]+1, u.unit_vertices[i][0]+2, u.unit_vertices[i][0]+3);
     if (i<n.size()) {
       mesh->add_point(p);
       n[i]=i;
+      if (u.polynomial_order()==3) {
+	vector<Point> dx(1);
+	dx[0]=Point(0,0,0);
+	mesh->get_basis().add_derivative(dx);
+      }
     }
     else
       mesh->get_basis().add_node_value(p);
@@ -334,6 +340,7 @@ main(int argc, char **argv)
     srand48(0);
     Test3D<TetVolMesh<TetCubicHmt<Point> >, TetLinearLgn<double>, 4 >(); 
   }
+
   {
     cerr<<"TestPrismVolMesh\n";
     
