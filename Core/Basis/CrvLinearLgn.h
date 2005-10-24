@@ -37,6 +37,11 @@
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Basis/Locate.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn off 'implicit conversion... loss of accuracy' messages.
+#  pragma set woff 1506
+#endif
+
 namespace SCIRun {
 
 using std::string;
@@ -115,7 +120,7 @@ public:
     if (get_iterative(pEB, coords, value, cd))
       return check_coords(coords);
     return false; 
-  };
+  }
  
 protected:
   inline bool check_coords(const vector<double> &x) const  
@@ -125,7 +130,7 @@ protected:
       return true;
 
     return false;
-  };
+  }
 
   //! find a reasonable initial guess for starting Newton iteration.
   //! Reasonable means near and with a derivative!=0 
@@ -332,5 +337,10 @@ CrvLinearLgn<T>::io(Piostream &stream)
 }
 
 } //namespace SCIRun
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn back on 'implicit conversion... loss of accuracy' messages.
+#  pragma reset woff 1506
+#endif
 
 #endif // CrvLinearLgn_h

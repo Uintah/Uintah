@@ -123,7 +123,7 @@ public:
   {
     CrvLocate< CrvQuadraticLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
      
   virtual void io (Piostream& str);
 protected:

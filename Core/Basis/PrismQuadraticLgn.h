@@ -176,7 +176,7 @@ public:
 	-4*x*(-1 + x + y)*nodes_[cd.edge6_index()]
 	+4*x*y*nodes_[cd.edge7_index()]
 	-4*y*(-1 + x + y)*nodes_[cd.edge8_index()]);
-  };  
+  }
 
   //! get parametric coordinate for value within the element
   template <class ElemData>
@@ -202,9 +202,9 @@ protected:
   vector<T>          nodes_; 
 };
 
-
 template <class T>
-const TypeDescription* get_type_description(PrismQuadraticLgn<T> *)
+const TypeDescription*
+get_type_description(PrismQuadraticLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
