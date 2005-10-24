@@ -37,6 +37,11 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Basis/Locate.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn off 'implicit conversion... loss of accuracy' messages.
+#  pragma set woff 1506
+#endif
+
 namespace SCIRun {
 
 using std::string;
@@ -48,17 +53,17 @@ public:
   static int unit_edges[6][2]; //!< References to vertices of unit edge
   static int unit_faces[4][3];  //!< References to vertices of unit face
   
-  TetLinearLgnUnitElement() {};
-  virtual ~TetLinearLgnUnitElement() {};
+  TetLinearLgnUnitElement() {}
+  virtual ~TetLinearLgnUnitElement() {}
   
-  static int domain_dimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; } //! return dimension of domain 
   
-  static int number_of_vertices() { return 4; }; //! return number of vertices
-  static int number_of_edges() { return 6; }; //! return number of edges
+  static int number_of_vertices() { return 4; } //! return number of vertices
+  static int number_of_edges() { return 6; } //! return number of edges
   
-  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 3; } //! return number of vertices per face 
 
-  static int faces_of_cell() { return 4; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 4; } //! return number of faces per cell 
 };
 
 
@@ -140,7 +145,7 @@ public:
       }
     }
   }
-};
+}; // end class TetApprox
 
 //! Class for searching of parametric coordinates related to a 
 //! value in Tet meshes and fields
@@ -174,7 +179,7 @@ protected:
 	    return true;
 
     return false;
-  };
+  }
   
 
 
@@ -214,7 +219,7 @@ protected:
       }
     }
   }
-};
+}; // end class TetLocate
 
 //! Class with weights and coordinates for 2nd order Gaussian integration
 template <class T>
@@ -340,7 +345,7 @@ public:
   {
     TetLocate< TetLinearLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
  
   static  const string type_name(int n = -1);
 
@@ -394,7 +399,11 @@ TetLinearLgn<T>::io(Piostream &stream)
   stream.end_class();
 }
 
-
 } //namespace SCIRun
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn back on 'implicit conversion... loss of accuracy' messages.
+#  pragma reset woff 1506
+#endif
 
 #endif // TetLinearLgn_h

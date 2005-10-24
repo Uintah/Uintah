@@ -32,11 +32,18 @@
 #if !defined(HexTrilinearLgn_h)
 #define HexTrilinearLgn_h
 
+#include <string>
+//#include <float.h>
+
 #include <Core/Basis/Basis.h>
+#include <Core/Basis/Locate.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Util/TypeDescription.h>
-#include <Core/Basis/Locate.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn off 'implicit conversion... loss of accuracy' messages.
+#  pragma set woff 1506
+#endif
 
 namespace SCIRun {
 
@@ -49,17 +56,17 @@ public:
   static int unit_edges[12][2];  //!< References to vertices of unit edge  
   static int unit_faces[6][4];  //!< References to vertices of unit face 
  
-  HexTrilinearLgnUnitElement() {};
-  virtual ~HexTrilinearLgnUnitElement() {};
+  HexTrilinearLgnUnitElement() {}
+  virtual ~HexTrilinearLgnUnitElement() {}
   
-  static int domain_dimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; } //! return dimension of domain 
   
-  static int number_of_vertices() { return 8; }; //! return number of vertices
-  static int number_of_edges() { return 12; }; //! return number of edges
+  static int number_of_vertices() { return 8; } //! return number of vertices
+  static int number_of_edges() { return 12; } //! return number of edges
   
-  static int vertices_of_face() { return 4; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 4; } //! return number of vertices per face 
 
-  static int faces_of_cell() { return 6; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 6; } //! return number of faces per cell 
 };
 
 
@@ -170,7 +177,7 @@ protected:
 	  return true;
 
     return false;
-  };
+  }
   
   //! find a reasonable initial guess 
   template <class CellData>
@@ -372,7 +379,7 @@ public:
   {
     HexLocate< HexTrilinearLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
     
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);
@@ -429,5 +436,10 @@ HexTrilinearLgn<T>::io(Piostream &stream)
 }
     
 } //namespace SCIRun
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn back on 'implicit conversion... loss of accuracy' messages.
+#  pragma reset woff 1506
+#endif
 
 #endif // HexTrilinear_h

@@ -39,8 +39,8 @@ namespace SCIRun {
 //! Class for describing unit geometry of CrvCubicHmt 
 class CrvCubicHmtUnitElement : public CrvLinearLgnUnitElement {
 public:
-  CrvCubicHmtUnitElement() {};
-  virtual ~CrvCubicHmtUnitElement() {};
+  CrvCubicHmtUnitElement() {}
+  virtual ~CrvCubicHmtUnitElement() {}
 };
 
 
@@ -102,10 +102,10 @@ public:
 		  +(1 - 4*x + 3*x*x) * derivs_[cd.node0_index()] 
 		  -6*(-1 + x)*x * cd.node1() 
 		  +x*(-2 + 3*x) * derivs_[cd.node1_index()]);
-  };
+  }
 
   //! add a derivative value (dx) for nodes
-  void add_derivative(const vector<T> &p) { derivs_.push_back(p[0]); };
+  void add_derivative(const vector<T> &p) { derivs_.push_back(p[0]); }
 
   static  const string type_name(int n = -1);
 
@@ -116,7 +116,7 @@ public:
   {
     CrvLocate< CrvCubicHmt<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
      
   virtual void io (Piostream& str);
 protected:

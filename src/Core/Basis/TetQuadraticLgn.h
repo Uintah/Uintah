@@ -34,6 +34,11 @@
 
 #include <Core/Basis/TetLinearLgn.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn off 'implicit conversion... loss of accuracy' messages.
+#  pragma set woff 1506
+#endif
+
 namespace SCIRun {
 
 //! Class for describing unit geometry of TetQuadraticLgn 
@@ -43,17 +48,17 @@ public:
   static int unit_edges[6][2]; //!< References to vertices of unit edge
   static int unit_faces[4][3];  //!< References to vertices of unit face
   
-  TetQuadraticLgnUnitElement() {};
-  virtual ~TetQuadraticLgnUnitElement() {};
+  TetQuadraticLgnUnitElement() {}
+  virtual ~TetQuadraticLgnUnitElement() {}
   
-  static int domain_dimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; } //! return dimension of domain 
   
-  static int number_of_vertices() { return 10; }; //! return number of vertices
-  static int number_of_edges() { return 6; }; //! return number of edges
+  static int number_of_vertices() { return 10; } //! return number of vertices
+  static int number_of_edges() { return 6; } //! return number of edges
   
-  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 3; } //! return number of vertices per face 
 
-  static int faces_of_cell() { return 12; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 12; } //! return number of faces per cell 
 };
 
 
@@ -151,7 +156,7 @@ public:
   {
     TetLocate< TetQuadraticLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
  
   //! add a node value corresponding to edge
   void add_node_value(const T &p) { nodes_.push_back(p); }
@@ -217,5 +222,10 @@ TetQuadraticLgn<T>::io(Piostream &stream)
 }
 
 } //namespace SCIRun
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn back on 'implicit conversion... loss of accuracy' messages.
+#  pragma reset woff 1506
+#endif
 
 #endif // TetQuadraticLgn_h
