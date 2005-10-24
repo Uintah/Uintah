@@ -156,26 +156,16 @@ class FieldExtractorAlgo: public DynamicAlgoBase
 public:
   virtual FieldHandle  execute(QueryInfo& quinfo, IntVector& offset,
                                LVMeshHandle mh) = 0;
-//   static CompileInfoHandle get_compile_info( const Uintah::TypeDescription *vt,
-//                                              const Uintah::typeDescription *t);
-// protected:
-//   // Sets all sorts of properties using the PropertyManager facility
-//   // of the Field.  This is called for all types of Fields.
-//   void set_field_properties(Field* field, QueryInfo& qinfo,
-//                             IntVector& offset);
-//   // Calls query for a single-level data set.
-//   template <class Var, class T, class FIELD>
-//   void build_field(QueryInfo& qinfo, IntVector& offset, FIELD* field);
-
+  static CompileInfoHandle get_compile_info( const Uintah::TypeDescription *vt,
+                                             const Uintah::TypeDescription *t);
+protected:
+  // Sets all sorts of properties using the PropertyManager facility
+  // of the Field.  This is called for all types of Fields.
+  void set_field_properties(Field* field, QueryInfo& qinfo,
+                            IntVector& offset);
 //   // Creates a MRLatVolField.
 //   //   template <class Var, class T>
 //   //   FieldHandle build_multi_level_field( QueryInfo& qinfo, int basis_order);
-//   // This does the actuall work of getting the data from the
-//   // DataArchive for a single patch and filling the field.  This is
-//   // called by both build_field and build_patch_field.
-//   template <class Var, class T, class FIELD>
-//   void getPatchData(QueryInfo& qinfo, IntVector& offset,
-//                     FIELD* sfield, const Patch* patch);
   
 //   // Similar to build_field, but is called from build_multi_level_field.
 //   template <class Var, class T>
@@ -189,165 +179,176 @@ public:
 
 };
 
-// template< class VarT, class T >
-// class FieldExtractorAlgoT: public FieldExtractorAlgo
-// {
-// public:
-//    virtual FieldHandle
-//    execute(FieldExtractor::QueryInfo& quinfo, IntVector& offset,
-//            LVMeshHandel mh);
-// protected:
-//   // This function makes a switch between building multi-level data or
-//   // single-level data.  Makes a call to either build_field or or
-//   // build_multi_level_field.  The basis_order pertains to whether the
-//   // data is node or cell centerd.  Type Var should look something
-//   // like CCVariable<T> or NCVariable<T>.
-//   //  template<class Var, class T>
-//   FieldHandle getData(QueryInfo& qinfo, IntVector& offset,
-//                       LVMeshHandle mesh_handle,
-//                       int basis_order);
+template< class VarT, class T >
+class FieldExtractorAlgoT: public FieldExtractorAlgo
+{
+public:
+   virtual FieldHandle
+   execute(QueryInfo& quinfo, IntVector& offset,
+           LVMeshHandle mh);
+protected:
+  // This function makes a switch between building multi-level data or
+  // single-level data.  Makes a call to either build_field or or
+  // build_multi_level_field.  The basis_order pertains to whether the
+  // data is node or cell centerd.  Type Var should look something
+  // like CCVariable<T> or NCVariable<T>.
+  //  template<class Var, class T>
+  FieldHandle getData(QueryInfo& qinfo, IntVector& offset,
+                      LVMeshHandle mesh_handle,
+                      int basis_order);
+  // Calls query for a single-level data set.
+  template <class FIELD>
+  void build_field(QueryInfo& qinfo, IntVector& offset, FIELD* field);
+  // This does the actuall work of getting the data from the
+  // DataArchive for a single patch and filling the field.  This is
+  // called by both build_field and build_patch_field.
+  template <class FIELD>
+  void getPatchData(QueryInfo& qinfo, IntVector& offset,
+                    FIELD* sfield, const Patch* patch);
+
   
-//  };
+};
 
-// template< class VarT, class T>
-// FieldHandle
-// FieldExtractorAlgoT<VarT>::execute(FieldExtractor::QueryInfo& quinfo,
-//                                    IntVector& offset,
-//                                    LVMeshHandle mh)
-// {
-//   FieldHandle f = 0;
+template< class VarT, class T>
+FieldHandle
+FieldExtractorAlgoT<VarT, T>::execute(QueryInfo& quinfo,
+                                   IntVector& offset,
+                                   LVMeshHandle mh)
+{
+  FieldHandle f = 0;
 
-//   if( qinfo.type->getType() == Uintah::TypeDescription::CCVariable ){
-//     new2OldPatchMap_.clear();
-//     //    return getData< VarT, T>(quinfo, offset, mesh, 0);
-//   } else {
-//     new2OldPatchMap_.clear();
-//     //    return getData< VarT, T>(quinfo, offset, mesh, 1);
-//   }
-//   return f;
-// }
+  if( qinfo.type->getType() == Uintah::TypeDescription::CCVariable ){
+    new2OldPatchMap_.clear();
+    return getData(quinfo, offset, mesh, 0);
+  } else {
+    new2OldPatchMap_.clear();
+    return getData(quinfo, offset, mesh, 1);
+  }
+  return f;
+}
 
 
 // This does the actuall work of getting the data from the
 // DataArchive for a single patch and filling the field.  This is
-// called by both build_field and build_patch_field.
+//  called by both build_field and build_patch_field.
+template <class Var, class T>
+ template<class FIELD>
+void
+FieldExtractorAlgoT<Var, T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
+                                         FIELD* sfield, const Patch* patch)
+{
+  IntVector patch_low, patch_high;
+  Var patch_data;
 
-// template <class Var, class T, class FIELD>
-// void
-// FieldExtractorAlgo::getPatchData(QueryInfo& qinfo, IntVector& offset,
-//                              FIELD* sfield, const Patch* patch)
-// {
-//   IntVector patch_low, patch_high;
-//   Var patch_data;
+  try {
+    qinfo.archive->query(patch_data, qinfo.varname, qinfo.mat, patch,
+                         qinfo.time);
+  } catch (Exception& e) {
+    error("query caused an exception: " + string(e.message()));
+    cerr << "getPatchData::error in query function\n";
+    cerr << e.message()<<"\n";
+    return;
+  }
 
-//   try {
-//     qinfo.archive->query(patch_data, qinfo.varname, qinfo.mat, patch,
-//                          qinfo.time);
-//   } catch (Exception& e) {
-//     error("query caused an exception: " + string(e.message()));
-//     cerr << "getPatchData::error in query function\n";
-//     cerr << e.message()<<"\n";
-//     return;
-//   }
+  int vartype;
+  if( remove_boundary_cells.get() == 1 ){
+    if(sfield->basis_order() == 0){
+      patch_low = patch->getInteriorCellLowIndex();
+      patch_high = patch->getInteriorCellHighIndex();
+#if 0
+      cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
+      cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
+      cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
+      cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
+      cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
+      cerr<<"getInteriorCellHighIndex() = "<< patch->getInteriorCellHighIndex()<<"\n";
+      cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()<<"\n";
+      cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
+      cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
+      cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
+#endif
+    } else if(sfield->get_property("vartype", vartype)){
+      patch_low = patch->getInteriorNodeLowIndex();
+      switch (vartype) {
+      case TypeDescription::SFCXVariable:
+        patch_high = patch->getInteriorHighIndex(Patch::XFaceBased);
+        break;
+      case TypeDescription::SFCYVariable:
+        patch_high = patch->getInteriorHighIndex(Patch::YFaceBased);
+        break;
+      case TypeDescription::SFCZVariable:
+        patch_high = patch->getInteriorHighIndex(Patch::ZFaceBased);
+        break;
+      default:
+        patch_high = patch->getInteriorNodeHighIndex();   
+      } 
+    } else {
+      error("getPatchData::Problem with getting vartype from field");
+      return;
+    }
+    if( !patch_data.rewindow( patch_low, patch_high ) ) {
+      warning("patch data thinks it needs reallocation, this will fail.");
+    }
+  } else {
+    if( sfield->basis_order() == 0) {
+      patch_low = patch->getCellLowIndex();
+      patch_high = patch->getCellHighIndex();
+#if 0
+      cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
+      cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
+      cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
+      cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
+      cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
+      cerr<<"getInteriorCellHighIndex() = "<< patch->getInteriorCellHighIndex()<<"\n";
+      cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()<<"\n";
+      cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
+      cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
+      cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
+#endif
+    } else if(sfield->get_property("vartype", vartype)){
+      patch_low = patch->getNodeLowIndex();
+      switch (vartype) {
+      case TypeDescription::SFCXVariable:
+        patch_high = patch->getSFCXHighIndex();
+        break;
+      case TypeDescription::SFCYVariable:
+        patch_high = patch->getSFCYHighIndex();
+        break;
+      case TypeDescription::SFCZVariable:
+        patch_high = patch->getSFCZHighIndex();
+        break;
+      default:
+        patch_high = patch->getNodeHighIndex();   
+      } 
+    } else {
+      error("getPatchData::Problem with getting vartype from field");
+      return;
+    }
+  }
 
-//   int vartype;
-//   if( remove_boundary_cells.get() == 1 ){
-//     if(sfield->basis_order() == 0){
-//       patch_low = patch->getInteriorCellLowIndex();
-//       patch_high = patch->getInteriorCellHighIndex();
-// #if 0
-//       cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
-//       cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
-//       cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
-//       cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
-//       cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
-//       cerr<<"getInteriorCellHighIndex() = "<< patch->getInteriorCellHighIndex()<<"\n";
-//       cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()<<"\n";
-//       cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
-//       cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
-//       cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
-// #endif
-//     } else if(sfield->get_property("vartype", vartype)){
-//       patch_low = patch->getInteriorNodeLowIndex();
-//       switch (vartype) {
-//       case TypeDescription::SFCXVariable:
-//         patch_high = patch->getInteriorHighIndex(Patch::XFaceBased);
-//         break;
-//       case TypeDescription::SFCYVariable:
-//         patch_high = patch->getInteriorHighIndex(Patch::YFaceBased);
-//         break;
-//       case TypeDescription::SFCZVariable:
-//         patch_high = patch->getInteriorHighIndex(Patch::ZFaceBased);
-//         break;
-//       default:
-//         patch_high = patch->getInteriorNodeHighIndex();   
-//       } 
-//     } else {
-//       error("getPatchData::Problem with getting vartype from field");
-//       return;
-//     }
-//     if( !patch_data.rewindow( patch_low, patch_high ) ) {
-//       warning("patch data thinks it needs reallocation, this will fail.");
-//     }
-//   } else {
-//     if( sfield->basis_order() == 0) {
-//       patch_low = patch->getCellLowIndex();
-//       patch_high = patch->getCellHighIndex();
-// #if 0
-//       cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
-//       cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
-//       cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
-//       cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
-//       cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
-//       cerr<<"getInteriorCellHighIndex() = "<< patch->getInteriorCellHighIndex()<<"\n";
-//       cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()<<"\n";
-//       cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
-//       cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
-//       cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
-// #endif
-//     } else if(sfield->get_property("vartype", vartype)){
-//       patch_low = patch->getNodeLowIndex();
-//       switch (vartype) {
-//       case TypeDescription::SFCXVariable:
-//         patch_high = patch->getSFCXHighIndex();
-//         break;
-//       case TypeDescription::SFCYVariable:
-//         patch_high = patch->getSFCYHighIndex();
-//         break;
-//       case TypeDescription::SFCZVariable:
-//         patch_high = patch->getSFCZHighIndex();
-//         break;
-//       default:
-//         patch_high = patch->getNodeHighIndex();   
-//       } 
-//     } else {
-//       error("getPatchData::Problem with getting vartype from field");
-//       return;
-//     }
-//   }
+#if 0
+  LVMesh* lm = sfield->get_typed_mesh().get_rep();
 
-// #if 0
-//   LVMesh* lm = sfield->get_typed_mesh().get_rep();
-
-//   cerr<<"patch_low = "<<patch_low<<", patch_high = "<<patch_high<<"\n";
-//   cerr<<"mesh size is "<<lm->get_ni()<<"x"<<lm->get_nj()
-//       <<"x"<<lm->get_nk()<<"\n";
-//   cerr<<"offset = "<<offset<<"\n";
-// #endif
-// //  PatchToFieldThread<Var, T, FIELD> *ptft;// = 
-// //     scinew PatchToFieldThread<Var, T, FIELD>(sfield, patch_data, offset,
-// //                                       patch_low, patch_high);
-// //   ptft->run();
-// //   delete ptft;
-// }
+  cerr<<"patch_low = "<<patch_low<<", patch_high = "<<patch_high<<"\n";
+  cerr<<"mesh size is "<<lm->get_ni()<<"x"<<lm->get_nj()
+      <<"x"<<lm->get_nk()<<"\n";
+  cerr<<"offset = "<<offset<<"\n";
+#endif
+//   PatchToFieldThread<Var, T, FIELD> *ptft;// =
+//     scinew PatchToFieldThread<Var, T, FIELD>(sfield, patch_data, offset,
+//                                       patch_low, patch_high);
+//   ptft->run();
+//   delete ptft;
+}
 
 // // Similar to build_field, but is called from build_multi_level_field.
-// template <class Var, class T, class FIELD>
+// template <class Var, class T>
+//    template<class FIELD>
 // void
-// FieldExtractorAlgo::build_patch_field(QueryInfo& qinfo,
-//                                   const Patch* patch,
-//                                   IntVector& offset,
-//                                   FIELD* field)
+// FieldExtractorAlgoT<Var, T>::build_patch_field(QueryInfo& qinfo,
+//                                                const Patch* patch,
+//                                                IntVector& offset,
+//                                                FIELD* field)
 // {
 //   // Initialize the data
 //   field->fdata().initialize(T(0));
@@ -362,31 +363,32 @@ public:
 //   list<const Patch*> oldPatches = (*oldPatch_it).second;
 //   for(list<const Patch*>::iterator patch_it = oldPatches.begin();
 //       patch_it != oldPatches.end(); ++patch_it){
-//     getPatchData<Var, T>(qinfo, offset, field, *patch_it);
+//     //    getPatchData<Var, T>(qinfo, offset, field, *patch_it);
 //   }
 // }
 
-// // Calls query for a single-level data set.
-// template <class Var, class T, class FIELD>
-// void
-// FieldExtractorAlgo::build_field(QueryInfo& qinfo, IntVector& offset,
-//                             FIELD* field)
-// {
-//   // Initialize the data
-//   field->fdata().initialize(T(0));
+// Calls query for a single-level data set.
+template <class Var, class T>
+ template<class FIELD>
+void
+FieldExtractorAlgoT<Var, T>::build_field(QueryInfo& qinfo, IntVector& offset,
+                                        FIELD* field)
+{
+  // Initialize the data
+  field->fdata().initialize(T(0));
 
-//   //  WallClockTimer my_timer;
-//   //  my_timer.start();
+  //  WallClockTimer my_timer;
+  //  my_timer.start();
   
-//   for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
-//        patch_it != qinfo.level->patchesEnd(); ++patch_it){
-//     getPatchData<Var, T, FIELD>(qinfo, offset, field, *patch_it);
-//   //      update_progress(somepercentage, my_timer);
-//   }
+  for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
+       patch_it != qinfo.level->patchesEnd(); ++patch_it){
+    getPatchData<Var, T, FIELD>(qinfo, offset, field, *patch_it);
+  //      update_progress(somepercentage, my_timer);
+  }
 
-//   //  timer.add( my_timer.time());
-//   //  my_timer.stop();
-// }
+  //  timer.add( my_timer.time());
+  //  my_timer.stop();
+}
 
 
 // // Creates an MRLatVolField.
@@ -450,38 +452,38 @@ public:
 // }
 
 
-// // This function makes a switch between building multi-level data or
-// // single-level data.  Makes a call to either build_field or or
-// // build_multi_level_field.  The basis_order pertains to whether the
-// // data is node or cell centerd.  Type Var should look something
-// // like CCVariable<T> or NCVariable<T>.
-// template<class Var, class T>
-// FieldHandle
-// FieldExtractorAlgoT<Var, T>::getData(QueryInfo& qinfo, IntVector& offset,
-//                                      LVMeshHandle mesh_handle,
-//                                      int basis_order)
-// {
-// //   if (qinfo.get_all_levels) {
-// //     return build_multi_level_field<Var, T>(qinfo, basis_order);
-// //   } else {
-//     typedef GenericField<LVMesh, ConstantBasis<T>, 
-//                          FData3d<T, LVMesh> > LVFieldCB;
-//     typedef GenericField<LVMesh, HexTrilinearLgn<T>, 
-//                          FData3d<T, LVMesh> > LVFieldLB;
+// This function makes a switch between building multi-level data or
+// single-level data.  Makes a call to either build_field or or
+// build_multi_level_field.  The basis_order pertains to whether the
+// data is node or cell centerd.  Type Var should look something
+// like CCVariable<T> or NCVariable<T>.
+template<class Var, class T>
+FieldHandle
+FieldExtractorAlgoT<Var, T>::getData(QueryInfo& qinfo, IntVector& offset,
+                                     LVMeshHandle mesh_handle,
+                                     int basis_order)
+{
+//   if (qinfo.get_all_levels) {
+//     return build_multi_level_field<Var, T>(qinfo, basis_order);
+//   } else {
+    typedef GenericField<LVMesh, ConstantBasis<T>, 
+                         FData3d<T, LVMesh> > LVFieldCB;
+    typedef GenericField<LVMesh, HexTrilinearLgn<T>, 
+                         FData3d<T, LVMesh> > LVFieldLB;
 
-//     if( basis_order == 0 ){
-//       LVFieldCB* sf = scinew LVFieldCB(mesh_handle);
-//       set_field_properties(sf, qinfo, offset);
-// //       build_field<Var, T, LVFieldCB>(qinfo, offset, sf);
-//       return sf;
-//     } else {
-//       LVFieldLB* sf = scinew LVFieldLB(mesh_handle);
-//       set_field_properties(sf, qinfo, offset);
-// //       build_field<Var, T, LVFieldLB>(qinfo, offset, sf);
-//       return sf;
-//     }
-// //   }
-// }
+    if( basis_order == 0 ){
+      LVFieldCB* sf = scinew LVFieldCB(mesh_handle);
+      set_field_properties(sf, qinfo, offset);
+      build_field<Var, T, LVFieldCB>(qinfo, offset, sf);
+      return sf;
+    } else {
+      LVFieldLB* sf = scinew LVFieldLB(mesh_handle);
+      set_field_properties(sf, qinfo, offset);
+      build_field<Var, T, LVFieldLB>(qinfo, offset, sf);
+      return sf;
+    }
+//   }
+}
 
 
 } // End namespace Uintah

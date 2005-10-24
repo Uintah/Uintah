@@ -345,29 +345,29 @@ FieldExtractor::execute()
   fout->send(fHandle_);
 }
 
-// CompileInfoHandle
-// FieldExtractorAlgo::get_compile_info( const Uintah::TypeDescription *vt,
-//                                       const Uintah::TypeDescription *t )
-// {
-//   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-//   static const string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
-//   static const string template_class_name("FieldExtractorAlgoT");
-//   static const string base_class_name("FieldExtractorAlgo");
+CompileInfoHandle
+FieldExtractorAlgo::get_compile_info( const Uintah::TypeDescription *vt,
+                                      const Uintah::TypeDescription *t )
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("FieldExtractorAlgoT");
+  static const string base_class_name("FieldExtractorAlgo");
 
-//   CompileInfo *rval = 
-//     scinew CompileInfo(template_class_name + "." +
-// 		       vt->getFileName() + ".",
-//                        base_class_name, 
-//                        template_class_name, 
-//                        vt->getName() + ", " +
-//                        t->getName() );
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       vt->getFileName() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       vt->getName() + ", " +
+                       t->getName() );
 
-//   // Add in the include path to compile this obj
-//   rval->add_include(include_path);
-// //   vt->fill_compile_info(rval);
-// //   t->fill_compile_info(rval);
-//   return rval;
-// }
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+//   vt->fill_compile_info(rval);
+//   t->fill_compile_info(rval);
+  return rval;
+}
 
 
 // GridP 
