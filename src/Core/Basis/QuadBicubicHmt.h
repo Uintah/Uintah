@@ -111,7 +111,7 @@ public:
     derivs[0]=
       T(-((-1 + y)*(-6*x + 6*x*x + y*(-1 + 2*y)))*cd.node0()
 	-((1 - 4*x + 3*x*x)*(-1 + y))*derivs_[cd.node0_index()][0]
-	-((y-1)*(y-1)*y)*derivs_[cd.node0_index()][1]*derivs_[cd.node0_index()][1]
+	-((y-1)*(y-1)*y)*derivs_[cd.node0_index()][1]
 	+(-1 + y)*(-6*x + 6*x*x + y*(-1 + 2*y))*cd.node1()
 	-(x*(-2 + 3*x)*(-1 + y))*derivs_[cd.node1_index()][0]
 	+(y-1)*(y-1)*y*derivs_[cd.node1_index()][1]
@@ -122,7 +122,7 @@ public:
 	+(1 - 4*x + 3*x*x)*y*derivs_[cd.node3_index()][0]
 	-((-1 + y)*y*y)*derivs_[cd.node3_index()][1]);
 	
-    derivs[1]=
+    derivs[1]= 
       T(-((-1 + x)*(-x + 2*x*x + 6*(-1 + y)*y))*cd.node0()
 	-((x-1)*(x-1)*x)*derivs_[cd.node0_index()][0]
 	-((-1 + x)*(1 - 4*y + 3*y*y))*derivs_[cd.node0_index()][1]
@@ -130,9 +130,9 @@ public:
 	-((-1 + x)*x*x)*derivs_[cd.node1_index()][0]
 	+x*(1 - 4*y + 3*y*y)*derivs_[cd.node1_index()][1]
 	+x*(-1 + 3*x - 2*x*x + 6*y - 6*y*y)*cd.node2()
-	(-1 + x)*x*x*derivs_[cd.node2_index()][0]
+	+(-1 + x)*x*x*derivs_[cd.node2_index()][0]
 	+x*y*(-2 + 3*y)*derivs_[cd.node2_index()][1]
-	(-1 + x)*(-x + 2*x*x + 6*(-1 + y)*y)*cd.node3()
+	+(-1 + x)*(-x + 2*x*x + 6*(-1 + y)*y)*cd.node3()
 	+(x-1)*(x-1)*x*derivs_[cd.node3_index()][0]
 	-((-1 + x)*y*(-2 + 3*y))*derivs_[cd.node3_index()][1]);
   };
