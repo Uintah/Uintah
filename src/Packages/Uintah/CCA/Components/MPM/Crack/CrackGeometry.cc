@@ -4,7 +4,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using std::abs;
+
 
 CrackGeometry::CrackGeometry()
 {
