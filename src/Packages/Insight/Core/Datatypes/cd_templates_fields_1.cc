@@ -29,8 +29,10 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Packages/Insight/Core/Datatypes/ITKImageField.h>
+#include <Core/Datatypes/ImageMesh.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
@@ -44,6 +46,20 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 using namespace SCIRun;
 using namespace Insight;
 
+typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
+
+typedef QuadBilinearLgn<Tensor>             FDTensorBasis;
+typedef QuadBilinearLgn<Vector>             FDVectorBasis;
+typedef QuadBilinearLgn<double>             FDdoubleBasis;
+typedef QuadBilinearLgn<float>              FDfloatBasis;
+typedef QuadBilinearLgn<int>                FDintBasis;
+typedef QuadBilinearLgn<short>              FDshortBasis;
+typedef QuadBilinearLgn<char>               FDcharBasis;
+typedef QuadBilinearLgn<unsigned int>       FDuintBasis;
+typedef QuadBilinearLgn<unsigned short>     FDushortBasis;
+typedef QuadBilinearLgn<unsigned char>      FDucharBasis;
+typedef QuadBilinearLgn<unsigned long>      FDulongBasis;
+
 template class ITKFData2d<Tensor>;
 template class ITKFData2d<Vector>;
 template class ITKFData2d<double>;
@@ -56,17 +72,17 @@ template class ITKFData2d<unsigned short>;
 template class ITKFData2d<unsigned char>;
 template class ITKFData2d<unsigned long>;
 
-template class GenericField<ImageMesh, ITKFData2d<Tensor> >;
-template class GenericField<ImageMesh, ITKFData2d<Vector> >;
-template class GenericField<ImageMesh, ITKFData2d<double> >;
-template class GenericField<ImageMesh, ITKFData2d<float> >;
-template class GenericField<ImageMesh, ITKFData2d<int> >;
-template class GenericField<ImageMesh, ITKFData2d<short> >;
-template class GenericField<ImageMesh, ITKFData2d<char> >;
-template class GenericField<ImageMesh, ITKFData2d<unsigned int> >;
-template class GenericField<ImageMesh, ITKFData2d<unsigned short> >;
-template class GenericField<ImageMesh, ITKFData2d<unsigned char> >;
-template class GenericField<ImageMesh, ITKFData2d<unsigned long> >;
+template class GenericField<IMesh, FDTensorBasis, ITKFData2d<Tensor> >;
+template class GenericField<IMesh, FDVectorBasis, ITKFData2d<Vector> >;
+template class GenericField<IMesh, FDdoubleBasis, ITKFData2d<double> >;
+template class GenericField<IMesh, FDfloatBasis,  ITKFData2d<float> >;
+template class GenericField<IMesh, FDintBasis,    ITKFData2d<int> >;
+template class GenericField<IMesh, FDshortBasis,  ITKFData2d<short> >;
+template class GenericField<IMesh, FDcharBasis,   ITKFData2d<char> >;
+template class GenericField<IMesh, FDuintBasis,   ITKFData2d<unsigned int> >;
+template class GenericField<IMesh, FDushortBasis, ITKFData2d<unsigned short> >;
+template class GenericField<IMesh, FDucharBasis,  ITKFData2d<unsigned char> >;
+template class GenericField<IMesh, FDulongBasis,  ITKFData2d<unsigned long> >;
 
 template class ITKImageField<Tensor>;
 template class ITKImageField<Vector>;
@@ -80,6 +96,8 @@ template class ITKImageField<unsigned short>;
 template class ITKImageField<unsigned char>;
 template class ITKImageField<unsigned long>;
 
+
+
 const TypeDescription* get_type_description(ITKImageField<Tensor> *);
 const TypeDescription* get_type_description(ITKImageField<Vector> *);
 const TypeDescription* get_type_description(ITKImageField<double> *);
@@ -91,6 +109,77 @@ const TypeDescription* get_type_description(ITKImageField<unsigned int> *);
 const TypeDescription* get_type_description(ITKImageField<unsigned short> *);
 const TypeDescription* get_type_description(ITKImageField<unsigned char> *);
 const TypeDescription* get_type_description(ITKImageField<unsigned long> *);
+
+namespace SCIRun {
+  using namespace Insight;
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<SCIRun::Tensor>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<SCIRun::Vector>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<SCIRun::Vector>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<double>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<double>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<float>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<float>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<int>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<int>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<short>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<short>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<char>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<char>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<unsigned int>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<unsigned int>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<unsigned short>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<unsigned short>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<unsigned char>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<unsigned char>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<unsigned long>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData2d<unsigned long>*)0);
+  }
+
+} // end of namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

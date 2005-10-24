@@ -29,8 +29,11 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
+
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
@@ -44,6 +47,20 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 using namespace SCIRun;
 using namespace Insight;
 
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+
+typedef HexTrilinearLgn<Tensor>             FDTensorBasis;
+typedef HexTrilinearLgn<Vector>             FDVectorBasis;
+typedef HexTrilinearLgn<double>             FDdoubleBasis;
+typedef HexTrilinearLgn<float>              FDfloatBasis;
+typedef HexTrilinearLgn<int>                FDintBasis;
+typedef HexTrilinearLgn<short>              FDshortBasis;
+typedef HexTrilinearLgn<char>               FDcharBasis;
+typedef HexTrilinearLgn<unsigned int>       FDuintBasis;
+typedef HexTrilinearLgn<unsigned short>     FDushortBasis;
+typedef HexTrilinearLgn<unsigned char>      FDucharBasis;
+typedef HexTrilinearLgn<unsigned long>      FDulongBasis;
+
 template class ITKFData3d<Tensor>;
 template class ITKFData3d<Vector>;
 template class ITKFData3d<double>;
@@ -56,17 +73,20 @@ template class ITKFData3d<unsigned short>;
 template class ITKFData3d<unsigned char>;
 template class ITKFData3d<unsigned long>;
 
-template class GenericField<LatVolMesh, ITKFData3d<Tensor> >;
-template class GenericField<LatVolMesh, ITKFData3d<Vector> >;
-template class GenericField<LatVolMesh, ITKFData3d<double> >;
-template class GenericField<LatVolMesh, ITKFData3d<float> >;
-template class GenericField<LatVolMesh, ITKFData3d<int> >;
-template class GenericField<LatVolMesh, ITKFData3d<short> >;
-template class GenericField<LatVolMesh, ITKFData3d<char> >;
-template class GenericField<LatVolMesh, ITKFData3d<unsigned int> >;
-template class GenericField<LatVolMesh, ITKFData3d<unsigned short> >;
-template class GenericField<LatVolMesh, ITKFData3d<unsigned char> >;
-template class GenericField<LatVolMesh, ITKFData3d<unsigned long> >;
+template class GenericField<LVMesh, FDTensorBasis, ITKFData3d<Tensor> >;
+template class GenericField<LVMesh, FDVectorBasis, ITKFData3d<Vector> >;
+template class GenericField<LVMesh, FDdoubleBasis, ITKFData3d<double> >;
+template class GenericField<LVMesh, FDfloatBasis,  ITKFData3d<float> >;
+template class GenericField<LVMesh, FDintBasis,    ITKFData3d<int> >;
+template class GenericField<LVMesh, FDshortBasis,  ITKFData3d<short> >;
+template class GenericField<LVMesh, FDcharBasis,   ITKFData3d<char> >;
+template class GenericField<LVMesh, FDuintBasis,   ITKFData3d<unsigned int> >;
+template class GenericField<LVMesh, FDushortBasis,  
+			    ITKFData3d<unsigned short> >;
+template class GenericField<LVMesh, FDucharBasis, 
+			    ITKFData3d<unsigned char> >;
+template class GenericField<LVMesh, FDulongBasis,  
+			    ITKFData3d<unsigned long> >;
 
 template class ITKLatVolField<Tensor>;
 template class ITKLatVolField<Vector>;
@@ -80,6 +100,7 @@ template class ITKLatVolField<unsigned short>;
 template class ITKLatVolField<unsigned char>;
 template class ITKLatVolField<unsigned long>;
 
+
 const TypeDescription* get_type_description(ITKLatVolField<Tensor> *);
 const TypeDescription* get_type_description(ITKLatVolField<Vector> *);
 const TypeDescription* get_type_description(ITKLatVolField<double> *);
@@ -91,6 +112,79 @@ const TypeDescription* get_type_description(ITKLatVolField<unsigned int> *);
 const TypeDescription* get_type_description(ITKLatVolField<unsigned short> *);
 const TypeDescription* get_type_description(ITKLatVolField<unsigned char> *);
 const TypeDescription* get_type_description(ITKLatVolField<unsigned long> *);
+const TypeDescription* get_type_description(ITKLatVolField<unsigned long> *);
+
+
+namespace SCIRun {
+using namespace Insight;
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<SCIRun::Tensor>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<SCIRun::Vector>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<SCIRun::Vector>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<double>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<double>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<float>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<float>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<int>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<int>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<short>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<short>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<char>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<char>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<unsigned int>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<unsigned int>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<unsigned short>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<unsigned short>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<unsigned char>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<unsigned char>*)0);
+  }
+
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<unsigned long>*) {
+    return 
+      Insight::get_type_description((Insight::ITKFData3d<unsigned long>*)0);
+  }
+
+} // end of namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

@@ -44,10 +44,12 @@
 #include <Packages/Insight/Core/Datatypes/ITKImageField.h>
 #include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
 
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/LatVolField.h>
-
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Containers/FData.h>
 
 #include "itkVector.h"
 #include "itkRGBPixel.h"
@@ -57,6 +59,10 @@ namespace Insight {
 using namespace SCIRun;
   
 class ImageToField : public Module {  
+
+typedef LatVolMesh<HexTrilinearLgn<Point> >         LVMesh;
+typedef ImageMesh<QuadBilinearLgn<Point> >          IMesh;
+
 public:
   ITKDatatypeIPort* inport1_;
   ITKDatatypeHandle inhandle1_;
@@ -120,9 +126,9 @@ ImageToField::~ImageToField(){
 template<class InputImageType>
 FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
   InputImageType *n = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
-  
-  typedef ITKImageField<typename InputImageType::PixelType> ITKImageFieldType;
-  typedef ImageField<typename InputImageType::PixelType> ImageFieldType;
+  typedef typename InputImageType::PixelType pType;
+  typedef ITKImageField<pType> ITKIF;
+  typedef GenericField<IMesh, QuadBilinearLgn<pType>, FData2d<pType, IMesh> > IF;
   
   double origin_x = n->GetOrigin()[0];
   double origin_y = n->GetOrigin()[1];
@@ -137,34 +143,34 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
   
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
   
-  Point min(origin_x - spread_x, origin_y - spread_y, 0.0);
+  Point min(origin_x, origin_y, 0.0);
   Point max(origin_x + spread_x, origin_y + spread_y, 0.0);
   
-  ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
+  IMesh* m = scinew IMesh(size_x, size_y, min, max);
   
-  ImageMeshHandle mh(m);
+  IF::mesh_handle_type mh(m);
   
   FieldHandle fh;
   
   if(gui_copy_.get() == 0) {
     // simply point to the itk image
-    fh = new ITKImageFieldType(mh, 1, n); 
+    fh = scinew ITKIF(mh, n); 
   }
   else if(gui_copy_.get() == 1) {
     // copy the data into a SCIRun ImageField
-    fh = new ImageFieldType(mh, 1);
-    ImageMesh::Node::iterator iter, end;
+    fh = scinew IF(mh);
+    IMesh::Node::iterator iter, end;
     mh->begin(iter);
     mh->end(end);
     
     // fill data
     typename InputImageType::IndexType pixelIndex;
-    typedef typename ImageFieldType::value_type val_t;
+    typedef typename IF::value_type val_t;
     val_t tmp;
-    ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
+    IF* fld = (IF* )fh.get_rep();
     
     for(int row=0; row < (int)size_y; row++) {
       for(int col=0; col < (int)size_x; col++) {
@@ -189,8 +195,9 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
 template<class InputImageType>
 FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
   
-  typedef ITKLatVolField<typename InputImageType::PixelType> ITKLatVolFieldType;
-  typedef LatVolField<typename InputImageType::PixelType> LatVolFieldType;
+  typedef typename InputImageType::PixelType pType;
+  typedef ITKLatVolField<pType> ITKLVF;
+  typedef GenericField<LVMesh, HexTrilinearLgn<pType>, FData3d<pType, LVMesh> > LVF;
   
   InputImageType *n = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   
@@ -212,35 +219,35 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
   
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
-  double spread_z = (space_z * size_z)/2;
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
+  double spread_z = (space_z * (size_z-1));
   
-  Point min(origin_x - spread_x, origin_y - spread_y, origin_z - spread_z);
+  Point min(origin_x, origin_y, origin_z);
   Point max(origin_x + spread_x, origin_y + spread_y, origin_z + spread_z);
   
-  LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
+  LVMesh* m = scinew LVMesh(size_x, size_y, size_z, min, max);
   
-  LatVolMeshHandle mh(m);
+  LVF::mesh_handle_type mh(m);
   
   FieldHandle fh;
   
   if(gui_copy_.get() == 0) {
-    // simply referenc itk image
-    fh = new ITKLatVolFieldType(mh, 1, n); 
+    // simply reference itk image
+    fh = scinew ITKLVF(mh, n);
   }
   else if(gui_copy_.get() == 1) {
     // copy the data into a SCIRun LatVolField
-    fh = new LatVolFieldType(mh, 1); 
-    LatVolMesh::Node::iterator iter, end;
+    fh = scinew LVF(mh); 
+    LVMesh::Node::iterator iter, end;
     mh->begin(iter);
     mh->end(end);
     
     // fill data
     typename InputImageType::IndexType pixelIndex;
-    typedef typename LatVolFieldType::value_type val_t;
+    typedef typename LVF::value_type val_t;
     val_t tmp;
-    LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
+    LVF* fld = (LVF* )fh.get_rep();
     
     for(int z=0; z < (int)size_z; z++) {
       for(int row=0; row < (int)size_y; row++) {
@@ -269,8 +276,7 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
 
 template<class Type, unsigned int length>
 FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
-  typedef ITKImageField< Vector > ITKImageFieldType;
-  typedef ImageField< Vector > ImageFieldType;
+  typedef GenericField<IMesh, QuadBilinearLgn<Vector>, FData2d<Vector, IMesh> > IF;
   typedef itk::Image<itk::Vector<Type, length>,2> InputImageType;
   
   InputImageType *n = dynamic_cast<InputImageType *>( img.get_rep()->data_.GetPointer());
@@ -289,15 +295,15 @@ FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
   
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
   
-  Point min(origin_x - spread_x, origin_y - spread_y, 0.0);
+  Point min(origin_x, origin_y, 0.0);
   Point max(origin_x + spread_x, origin_y + spread_y, 0.0);
   
-  ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
+  IMesh* m = scinew IMesh(size_x, size_y, min, max);
   
-  ImageMeshHandle mh(m);
+  IF::mesh_handle_type mh(m);
   
   FieldHandle fh;
   
@@ -307,8 +313,8 @@ FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
   }
   
   // copy the data into a SCIRun ImageField
-  fh = new ImageFieldType(mh, 1);
-  ImageMesh::Node::iterator iter, end;
+  fh = scinew IF(mh);
+  IMesh::Node::iterator iter, end;
   mh->begin(iter);
   mh->end(end);
   
@@ -316,7 +322,7 @@ FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
   typename InputImageType::IndexType pixelIndex;
   typedef typename InputImageType::PixelType PixelType;
   PixelType pixel;
-  ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
+  IF* fld = (IF* )fh.get_rep();
   
   for(int row=0; row < (int)size_y; row++) {
     for(int col=0; col < (int)size_x; col++) {
@@ -342,8 +348,7 @@ FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
 
 template<class Type, unsigned int length>
 FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
-  typedef ITKLatVolField< Vector > ITKLatVolFieldType;
-  typedef LatVolField< Vector > LatVolFieldType;
+  typedef GenericField<LVMesh, HexTrilinearLgn<Vector>, FData3d<Vector, LVMesh> > LVF;
   typedef itk::Image<itk::Vector<Type, length>,3> InputImageType;
   
   InputImageType *n = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
@@ -366,16 +371,16 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
   
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
-  double spread_z = (space_z * size_z)/2;
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
+  double spread_z = (space_z * (size_z-1));
   
-  Point min(origin_x - spread_x, origin_y - spread_y, origin_z - spread_z);
+  Point min(origin_x, origin_y, origin_z);
   Point max(origin_x + spread_x, origin_y + spread_y, origin_z + spread_z);
   
-  LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
+  LVMesh* m = scinew LVMesh(size_x, size_y, size_z, min, max);
   
-  LatVolMeshHandle mh(m);
+  LVF::mesh_handle_type mh(m);
   
   FieldHandle fh;
   
@@ -385,8 +390,8 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
   }
   
   // copy the data into a SCIRun LatVolField
-  fh = new LatVolFieldType(mh, 1); 
-  LatVolMesh::Node::iterator iter, end;
+  fh = scinew LVF(mh); 
+  LVMesh::Node::iterator iter, end;
   mh->begin(iter);
   mh->end(end);
   
@@ -394,7 +399,7 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
   typename InputImageType::IndexType pixelIndex;
   typedef typename InputImageType::PixelType PixelType;
   PixelType pixel;
-  LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
+  LVF* fld = (LVF* )fh.get_rep();
   
   for(int z=0; z < (int)size_z; z++) {
     for(int row=0; row < (int)size_y; row++) {
@@ -428,8 +433,7 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
 template<class Type>
 FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
 
-  typedef ITKImageField< Vector > ITKImageFieldType;
-  typedef ImageField< Vector > ImageFieldType;
+  typedef GenericField<IMesh, QuadBilinearLgn<Vector>, FData2d<Vector, IMesh> > IF;
   typedef itk::Image<itk::RGBPixel<Type>,2> InputImageType;
   
   InputImageType *n = dynamic_cast<InputImageType *>( img.get_rep()->data_.GetPointer());
@@ -448,15 +452,15 @@ FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
   
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
   
-  Point min(origin_x - spread_x, origin_y - spread_y, 0.0);
+  Point min(origin_x, origin_y, 0.0);
   Point max(origin_x + spread_x, origin_y + spread_y, 0.0);
   
-  ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
+  IMesh* m = scinew IMesh(size_x, size_y, min, max);
   
-  ImageMeshHandle mh(m);
+  IF::mesh_handle_type mh(m);
   
   FieldHandle fh;
   
@@ -466,8 +470,8 @@ FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
   }
   
   // copy the data into a SCIRun ImageField
-  fh = new ImageFieldType(mh, 1);
-  ImageMesh::Node::iterator iter, end;
+  fh = scinew IF(mh);
+  IMesh::Node::iterator iter, end;
   mh->begin(iter);
   mh->end(end);
   
@@ -475,7 +479,7 @@ FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
   typename InputImageType::IndexType pixelIndex;
   typedef typename InputImageType::PixelType PixelType;
   PixelType pixel;
-  ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
+  IF* fld = (IF* )fh.get_rep();
   
   for(int row=0; row < (int)size_y; row++) {
     for(int col=0; col < (int)size_x; col++) {
@@ -498,8 +502,7 @@ FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
 
 template<class Type>
 FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
-  typedef ITKLatVolField< Vector > ITKLatVolFieldType;
-  typedef LatVolField< Vector > LatVolFieldType;
+  typedef GenericField<LVMesh, HexTrilinearLgn<Vector>, FData3d<Vector, LVMesh> > LVF;
   typedef itk::Image<itk::RGBPixel<Type>,3> InputImageType;
   
   InputImageType *n = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
@@ -522,16 +525,16 @@ FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
   
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
-  double spread_z = (space_z * size_z)/2;
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
+  double spread_z = (space_z * (size_z-1));
   
   Point min(origin_x - spread_x, origin_y - spread_y, origin_z - spread_z);
   Point max(origin_x + spread_x, origin_y + spread_y, origin_z + spread_z);
   
-  LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
+  LVMesh* m = scinew LVMesh(size_x, size_y, size_z, min, max);
   
-  LatVolMeshHandle mh(m);
+  LVF::mesh_handle_type mh(m);
   
   FieldHandle fh;
   
@@ -541,8 +544,8 @@ FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
   }
   
   // copy the data into a SCIRun LatVolField
-  fh = new LatVolFieldType(mh, 1); 
-  LatVolMesh::Node::iterator iter, end;
+  fh = scinew LVF(mh); 
+  LVMesh::Node::iterator iter, end;
   mh->begin(iter);
   mh->end(end);
   
@@ -550,7 +553,7 @@ FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
   typename InputImageType::IndexType pixelIndex;
   typedef typename InputImageType::PixelType PixelType;
   PixelType pixel;
-  LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
+  LVF* fld = (LVF* )fh.get_rep();
   
   for(int z=0; z < (int)size_z; z++) {
     for(int row=0; row < (int)size_y; row++) {
