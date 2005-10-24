@@ -180,9 +180,11 @@ protected:
   {
     double dist = DBL_MAX;
 	
-    int end = 4;
     vector<double> coord(3);
+    vector<T> derivs(3);
     guess.resize(3);
+
+    const int end = 2;
     for (int x = 0; x <= end; x++) {
       coord[0] = x / (double) end;
       for (int y = 0; y <= end; y++) {
@@ -193,10 +195,12 @@ protected:
 	  coord[2] = x / (double) end;
 	  double cur_d;
 	  if (compare_distance(pElem->interpolate(coord, cd), 
-			       val, cur_d, dist)) 
-	  {
-	    dist = cur_d;
-	    guess = coord;
+			       val, cur_d, dist)) {
+	    pElem->derivate(coord, cd, derivs);
+	    if (!check_zero(derivs)) {
+	      dist = cur_d;
+	      guess = coord;
+	    }
 	  }
 	}
       }

@@ -179,7 +179,6 @@ protected:
   {
     double dist = DBL_MAX;
 	
-
     vector<double> coord(3);
     vector<T> derivs(3);
     guess.resize(3);
