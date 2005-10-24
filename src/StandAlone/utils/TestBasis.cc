@@ -143,7 +143,6 @@ template<typename MESH, typename FBASIS, const int nnode>
 void Test1D()
 {   
   MESH *mesh = new MESH();
-  mesh->synchronize(MESH::EDGES_E);
 
   typename MESH::Node::array_type n;
   n.resize(nnode);
@@ -156,9 +155,9 @@ void Test1D()
       mesh->add_point(p);
       n[i]=i;
       if (u.polynomial_order()==3) {
-	vector<Point> dx(1);
-	dx[0]=Point(0,0,0);
-	mesh->get_basis().add_derivative(dx);
+	vector<Point> d(1);
+	d[0]=Point(0,0,0);
+	mesh->get_basis().add_derivative(d);
       }
     }
     else
@@ -167,6 +166,7 @@ void Test1D()
 
   typename MESH::Elem::index_type ei=mesh->add_elem(n); 
   cerr<<"Element index: " << ei << "\n"; 
+  mesh->synchronize(MESH::EDGES_E);
 
   vector<double> coords(1);
   coords[0]=drand48();
@@ -196,10 +196,9 @@ template<typename MESH, typename FBASIS, const int nnode>
 void Test2D()
 {
   MESH *mesh = new MESH();
-  mesh->synchronize(MESH::EDGES_E);
 
   typename MESH::Node::array_type n;
-  n.resize(3);
+  n.resize(nnode);
   typename MESH::basis_type u;
  
   for(int i=0; i<u.number_of_vertices(); i++) {
@@ -207,6 +206,11 @@ void Test2D()
     if (i<n.size()) {
       mesh->add_point(p);
       n[i]=i;
+      if (u.polynomial_order()==3) {
+	vector<Point> d(2);
+	d[0]=d[1]=Point(0,0,0);
+	mesh->get_basis().add_derivative(d);
+      }
     }
     else
       mesh->get_basis().add_node_value(p);
@@ -214,6 +218,7 @@ void Test2D()
 
   typename MESH::Elem::index_type ei=mesh->add_elem(n); 
   cerr<<"Element index: " << ei << "\n"; 
+  mesh->synchronize(MESH::EDGES_E);
   
   vector<double> coords(2);
   coords[0]=drand48();
@@ -245,10 +250,9 @@ template<typename MESH, typename FBASIS, const int nnode>
 void Test3D()
 {
   MESH *mesh = new MESH();
-  mesh->synchronize(MESH::EDGES_E);
 
   typename MESH::Node::array_type n;
-  n.resize(4);
+  n.resize(nnode);
   typename MESH::basis_type u;
  
   for(int i=0; i<u.number_of_vertices(); i++) {
@@ -256,13 +260,18 @@ void Test3D()
     if (i<n.size()) {
       mesh->add_point(p);
       n[i]=i;
+      if (u.polynomial_order()==3) {
+	vector<Point> d(3);
+	d[0]=d[1]=d[2]=Point(0,0,0);
+	mesh->get_basis().add_derivative(d);
+      }
     }
     else
       mesh->get_basis().add_node_value(p);
   }
   typename  MESH::Elem::index_type ei=mesh->add_elem(n); 
-
   cerr<<"Element index: " << ei << "\n"; 
+  mesh->synchronize(MESH::EDGES_E);
   
   vector<double> coords(3);
   coords[0]=drand48();
@@ -316,7 +325,7 @@ main(int argc, char **argv)
     srand48(0);
     Test2D<TriSurfMesh<TriCubicHmt<Point> >, TriLinearLgn<double>, 3 >();
     srand48(0);
-    Test2D<TriSurfMesh<TriCubicHmtScaleFactors<Point> >, TriLinearLgn<double>, 3 >();
+    //    Test2D<TriSurfMesh<TriCubicHmtScaleFactors<Point> >, TriLinearLgn<double>, 3 >();
   }
 
   {
@@ -325,9 +334,9 @@ main(int argc, char **argv)
     srand48(0);
     Test2D<QuadSurfMesh<QuadBilinearLgn<Point> >, QuadBilinearLgn<double>, 4 >();
     srand48(0);
-    Test2D<QuadSurfMesh<QuadBilinearLgn<Point> >, QuadBilinearLgn<double>, 4 >();
+    Test2D<QuadSurfMesh<QuadBiquadraticLgn<Point> >, QuadBilinearLgn<double>, 4 >();
     srand48(0);
-    Test2D<QuadSurfMesh<QuadBilinearLgn<Point> >, QuadBilinearLgn<double>, 4 >();
+    Test2D<QuadSurfMesh<QuadBicubicHmt<Point> >, QuadBilinearLgn<double>, 4 >();
   }
 
   {
@@ -341,7 +350,7 @@ main(int argc, char **argv)
     Test3D<TetVolMesh<TetCubicHmt<Point> >, TetLinearLgn<double>, 4 >(); 
   }
 
-  {
+  if (0) {
     cerr<<"TestPrismVolMesh\n";
     
     srand48(0);
@@ -362,7 +371,7 @@ main(int argc, char **argv)
     srand48(0);
     Test3D<HexVolMesh<HexTricubicHmt<Point> >, HexTrilinearLgn<double>, 8 >();  
     srand48(0);
-    Test3D<HexVolMesh<HexTricubicHmtScaleFactors<Point> >, HexTrilinearLgn<double>, 8 >();    
+    //Test3D<HexVolMesh<HexTricubicHmtScaleFactors<Point> >, HexTrilinearLgn<double>, 8 >();    
   }
 
   return 0;  
