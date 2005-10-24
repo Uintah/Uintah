@@ -1590,11 +1590,12 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
     throw matlabconverter_error();
   }
   
+  Handle<MatlabToFieldAlgo> dalgo; 
   CompileInfoHandle cinfo = MatlabToFieldAlgo::get_compile_info(fielddesc);
           
   if (pr_)
   {
-    if (!(SCIRun::DynamicCompilation::compile(cinfo, algo, pr_))) 
+    if (!(SCIRun::DynamicCompilation::compile(cinfo, dalgo, pr_))) 
     {
       // Dynamic compilation failed
       scifield = 0;
@@ -1604,7 +1605,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
   }
   else
   {
-    if (!(SCIRun::DynamicCompilation::compile(cinfo, algo))) 
+    if (!(SCIRun::DynamicCompilation::compile(cinfo, dalgo))) 
     {
       // Dynamic compilation failed
       scifield = 0;
@@ -1612,15 +1613,16 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
     }
   }      
   
-  algo->setreporter(pr_);
-  
+  dalgo->setreporter(pr_);
+  dalgo->analyze_fieldtype(mlarray,fielddesc);
+    
   // The function takes the matlabconverter pointer again, which we need to re-enter the object, which we will
   // leave in the dynamic compilation. The later was done to assure small filenames in the on-the-fly libs
   // Filenames over 31 chars will cause problems on certain systems
   // Since the matlabconverter holds all our converter settings, we don't want to lose it, hence it is added
   // here. The only disadvantage is that some of the functions in the matlabconverter class nedd to be public
 
-  if (!(algo->execute(scifield,mlarray)))
+  if (!(dalgo->execute(scifield,mlarray)))
   {
     // The algorithm has an builtin sanity check. If a specific converter cannot be built
     // it will create an algorithm that returns a false. Hence instead of failing at the
@@ -1630,37 +1632,53 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
     throw matlabconverter_error();
   }
 
-  if (mlarray.isfieldCI("property"))
+  if (scifield.get_rep() == 0)
   {
-    matlabarray mlproperty = mlarray.getfieldCI(0,"property");
-    if (mlproperty.isstruct())
+    error("mlArrayTOsciField: The dynamically compiled matlabconverter does not function properly\n");
+    throw matlabconverter_error();
+  }
+
+  if (mlarray.isstruct())
+  {
+    if (mlarray.isfieldCI("property"))
     {
-      if (scifield != 0)
+      matlabarray mlproperty = mlarray.getfieldCI(0,"property");
+      if (mlproperty.isstruct())
       {
-        mlPropertyTOsciProperty(mlarray,static_cast<PropertyManager *>(scifield.get_rep()));
+        if (scifield.get_rep() != 0)
+        {
+          mlPropertyTOsciProperty(mlarray,static_cast<PropertyManager *>(scifield.get_rep()));
+        }
       }
     }
-  }
-  
-  if (mlarray.isfieldCI("name"))
-  {
-    matlabarray mlname = mlarray.getfieldCI(0,"name");
-    if (mlname.isstring())
+
+    if (mlarray.isfieldCI("name"))
     {
-      if (scifield != 0)
+      matlabarray mlname = mlarray.getfieldCI(0,"name");
+      if (mlname.isstring())
       {
-        scifield->set_property("name",mlname.getstring(),false);
+        if (scifield.get_rep() != 0)
+        {
+          scifield->set_property("name",mlname.getstring(),false);
+        }
+      }
+    }
+    else
+    {
+      if (scifield.get_rep() != 0)
+      {
+        scifield->set_property("name",mlarray.getname(),false);
       }
     }
   }
   else
   {
-    if (scifield != 0)
+    if (scifield.get_rep() != 0)
     {
       scifield->set_property("name",mlarray.getname(),false);
     }
-  }
-
+  }  
+  
   return;
 }
    

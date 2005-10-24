@@ -160,7 +160,7 @@ class Matlab : public Module, public ServiceBase
     enum { NUM_MATRIX_PORTS = 5 };
     enum { NUM_FIELD_PORTS = 3 };
     enum { NUM_NRRD_PORTS = 3 };
-    enum { NUM_STRING_PORTS = 2 };
+    enum { NUM_STRING_PORTS = 3 };
     
     // Temp directory for writing files coming from the 
     // the matlab engine

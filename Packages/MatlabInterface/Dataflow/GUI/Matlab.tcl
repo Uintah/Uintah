@@ -100,7 +100,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
         set $this-numport-matrix 5
         set $this-numport-field 3
         set $this-numport-nrrd 3
-        set $this-numport-string 2
+        set $this-numport-string 3
 
         # Setup the default translation options
         

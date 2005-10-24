@@ -545,6 +545,10 @@
         <name>string2</name>
         <datatype>SCIRun::String</datatype>
       </port>
+      <port>
+        <name>string3</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
@@ -599,6 +603,10 @@
         <name>string2</name>
         <datatype>SCIRun::String</datatype>
       </port>      
+      <port>
+        <name>string3</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
     </outputs>
   </io>
   <gui>
