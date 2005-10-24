@@ -11,7 +11,7 @@
 	<maxTime>12e-6</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0</delt_min>
-	<delt_max>0.5e-6</delt_max>
+	<delt_max>1.e-6</delt_max>
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
@@ -48,8 +48,8 @@
                 <burn type = "null" />
 		<density>7833</density>
 		<constitutive_model type="hypo_elastic"> 
-		   <G>81.395e9 </G>
-		   <K>166.667e9</K>
+		   <G>81.395e8 </G>
+		   <K>166.667e8</K>
                    <fracture_toughness_curve>
                      <crack_propagation_criterion>empirical_criterion</crack_propagation_criterion>
                      <p>2.</p>
@@ -57,7 +57,7 @@
                      <r>0.817</r>
                      <point>
                        <Vc>0.</Vc>
-                       <KIc>10e6</KIc>
+                       <KIc>1e6</KIc>
                      </point>
                    </fracture_toughness_curve>
 	        </constitutive_model>
