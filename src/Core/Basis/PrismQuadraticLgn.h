@@ -63,7 +63,7 @@ public:
 template <class T>
 class PrismQuadraticLgn : public BasisSimple<T>, 
                           public PrismApprox, 
-			  public PrismGaussian2<T>, 
+			  public PrismGaussian2<double>, 
 			  public PrismQuadraticLgnUnitElement
 {
 public:
