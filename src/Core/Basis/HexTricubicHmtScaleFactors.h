@@ -563,7 +563,7 @@ public:
   };
 
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
-  void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }
+  void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
 
   //! add scale factors (sdx, sdy, sdz) for nodes.
   void add_scalefactors(const vector<double> &p) { scalefactors_.push_back(p); }
