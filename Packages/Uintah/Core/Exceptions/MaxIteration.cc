@@ -15,15 +15,17 @@ MaxIteration::MaxIteration(IntVector c,
                            const int count, 
                            const int n_passes,
                            const int L_indx, 
-                           const string mes,
+                           const string message,
                            const char* file,
                            int line)
 {
   ostringstream s;
   s << "A MaxIteration exception was thrown.\n"
-    << file << ":" << line << "\n" << mes
+    << file << ":" << line << "\n" << message
     << " cell"<< c << ", Level " << L_indx
-    << ", iter " << count << ", n_passes " << n_passes;
+    << ", iter " << count << ", Timestep " << n_passes 
+    << "\n\n This usually means that something much deeper has gone wrong with the simulation."
+    << "\n Compute equilibration pressure task is rarely the problem";
 
   d_msg = s.str();
   
