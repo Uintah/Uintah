@@ -66,9 +66,10 @@ SCIRun::CompileInfoHandle MatlabToFieldAlgo::get_compile_info(std::string fieldd
   return(cinfo);
 }
 
-bool MatlabToFieldAlgo::execute(SCIRun::FieldHandle fieldH, matlabarray mlarray)
+bool MatlabToFieldAlgo::execute(SCIRun::FieldHandle& fieldH, matlabarray& mlarray)
 {
-  return (true);
+  error("Failed to execute dynamic algorithm");
+  return (false);
 }
 
 long MatlabToFieldAlgo::analyze_iscompatible(matlabarray mlarray, std::string& infotext, bool postremark)
@@ -90,7 +91,11 @@ long MatlabToFieldAlgo::analyze_iscompatible(matlabarray mlarray, std::string& i
     if (fieldtype == "Vector") fieldtypestr = "Vector";
     if (fieldtype == "Tensor") fieldtypestr = "Tensor";
     oss << fieldtypestr << "<" << fieldbasis << "> - ";
-  }              
+  } 
+  else
+  {
+    oss << "NoData - ";
+  }
     
   if (numnodesvec.size() > 0)
   {
@@ -118,14 +123,14 @@ long MatlabToFieldAlgo::analyze_fieldtype(matlabarray mlarray, std::string& fiel
   if (fieldtype == "") fieldtype = "double";
   if (fieldtype == "nodata") fieldtype = "double";  
 
-  fielddesc = "GenericField<"+meshtype+"<"+meshbasis+"<Point> >,"+fieldbasis+
-              "<"+fieldbasis+"<"+fieldtype+"> >,"+fdatatype+"<"+fieldtype;
+  fielddesc = "GenericField<"+meshtype+"<"+meshbasis+"<Point> >,"+
+              fieldbasis+"<"+fieldtype+">,"+fdatatype+"<"+fieldtype;
 
   // DEAL WITH SOME MORE SCIRUN INCONSISTENCIES 
   if (fdatatype == "FData2d") fielddesc += "," + meshtype + "<" + meshbasis + "<Point> > ";
   if (fdatatype == "FData3d") fielddesc += "," + meshtype + "<" + meshbasis + "<Point> > ";
    
-  fielddesc += "> >";
+  fielddesc += "> > ";
   return(1);
 }
 
@@ -193,11 +198,52 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       ml.setname(mlarray.getname());                    
       mlarray = ml;
     }
+    else if (numdims == 4)
+    {
+      matlabarray ml;
+      matlabarray dimsarray;
+      matlabarray mltype;
+      std::vector<long> d = mlarray.getdims();    
+    
+      if ((d[0] == 1)||(d[0] == 3)||(d[0] == 6)||(d[0] == 9))
+      {
+        std::vector<long> dm(3);
+        for (size_t p = 0; p < 3; p++) dm[p] = d[p+1];
+        dimsarray.createlongvector(dm);
+        if (d[0] == 1) mltype.createstringarray("double");
+        if (d[0] == 3) mltype.createstringarray("Vector");
+        if ((d[0] == 6)||(d[0] == 9)) mltype.createstringarray("Tensor");
+        ml.createstructarray();
+        ml.setfield(0,"dims",dimsarray);
+        ml.setfield(0,"field",mlarray);
+        ml.setfield(0,"fieldtype",mltype);
+        ml.setname(mlarray.getname());                    
+        mlarray = ml;      
+      }
+      else if ((d[3] == 1)||(d[3] == 3)||(d[3] == 6)||(d[3] == 9))
+      {
+        std::vector<long> dm(3);
+        for (size_t p = 0; p < 3; p++) dm[p] = d[p];
+        dimsarray.createlongvector(dm);
+        if (d[3] == 1) mltype.createstringarray("double");
+        if (d[3] == 3) mltype.createstringarray("Vector");
+        if ((d[3] == 6)||(d[3] == 9)) mltype.createstringarray("Tensor");
+        ml.createstructarray();
+        ml.setfield(0,"dims",dimsarray);
+        ml.setfield(0,"field",mlarray);
+        ml.setfield(0,"fieldtype",mltype);
+        ml.setname(mlarray.getname());                    
+        mlarray = ml;              
+      }      
+    }
+
     // If the matrix is dense, we score less as we could translate it into a
     // matrix as well. This help for bundle convertions, by which we can 
     // automatically determine how to translate objects.
     ret = 0;
   }
+  
+
 
   // Check whether we have a structured matrix
   if (!(mlarray.isstruct())) 
@@ -224,7 +270,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
   
   mlmeshtype =       findfield(mlarray,"elemtype;meshclass;meshtype;");
   mlmeshbasis =      findfield(mlarray,"meshbasis;basis;");
-  mlmeshbasisorder = findfield(mlarray,"meshbasisorder;basisorder;meshat;meshlocation;");
+  mlmeshbasisorder = findfield(mlarray,"meshbasisorder;meshat;meshlocation;");
 
   // Get all the matrices that specify the field
   
@@ -359,10 +405,9 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
 
   // Figure out the fieldtype
 
-  fieldtype = "double";
+  fieldtype = "";
   if (mlfield.isdense())
   {
-    fieldtype = "nodata";
     if (mlfieldtype.isstring())
     {
       if (mlfieldtype.compareCI("nodata"))             fieldtype = "nodata";
@@ -385,7 +430,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
   
   if ((fieldtype == "nodata")||(mlfield.isempty()))
   {
-    fieldbasis = "NoData";
+    fieldbasis = "NoDataBasis";
     fieldbasistype = "nodata";
     fieldtype = "double";
   }
@@ -456,8 +501,14 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
   {
     if (mlfield.isdense())
     {
-
       std::vector<long> dims = mlfield.getdims();
+
+      if ((fieldtype == "")&&(dims.size() > 3))
+      {
+        if (dims[0] == 3) fieldtype = "Vector";
+        if ((dims[0] == 6)||(dims[0] == 9)) fieldtype = "Tensor";
+      }
+
       if ((fieldtype == "Vector")||(fieldtype == "Tensor"))
       {
         if (fieldbasistype == "quadratic")
@@ -491,7 +542,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
     }
   }
 
-  // CHECK WHETHER WE HAVE A FIELD  
+  // CHECK WHETHER WE HAVE A REGULAR FIELD  
 
   if ((mldims.isempty())&&(mlx.isempty())&&(mlnode.isempty()))
   {
@@ -550,7 +601,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       return(0);      
     }
     
-    if (meshtype == "ScanlineMesh") { meshbasis = "CrvLinearLgn";   fdatatype = "vector"; }
+    if (meshtype == "ScanlineMesh") { meshbasis = "CrvLinearLgn";    fdatatype = "vector"; }
     if (meshtype == "ImageMesh")    { meshbasis = "QuadBilinearLgn"; fdatatype = "FData2d"; }
     if (meshtype == "LatVolMesh")   { meshbasis = "HexTrilinearLgn"; fdatatype = "FData3d"; }
     
@@ -567,9 +618,12 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       if (mlfield.isempty())
       {
         fieldbasistype = "nodata";
+        fieldtype = "";
       }
       else
       { 
+        if (fieldtype == "") fieldtype = "double";
+        
         std::vector<long> fdims = mlfield.getdims();
         if (fieldtype == "Vector")
         {
@@ -594,19 +648,19 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
           fdims = temp;
         }
         
-        if ((size == 1)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0])) fieldbasis = "linear";
-        if ((size == 2)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])) fieldbasis = "linear";
-        if ((size == 3)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = numnodesvec[2])) fieldbasis = "linear";
+        if ((size == 1)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0])) fieldbasistype = "linear";
+        if ((size == 2)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])) fieldbasistype = "linear";
+        if ((size == 3)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == numnodesvec[2])) fieldbasistype = "linear";
 
-        if ((size == 1)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = 2)) fieldbasis = "quadratic";
-        if ((size == 2)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = 3)) fieldbasis = "quadratic";
-        if ((size == 3)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = numnodesvec[2])&&(fdims[3] = 4)) fieldbasis = "quadratic";
+        if ((size == 1)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == 2)) fieldbasistype = "quadratic";
+        if ((size == 2)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == 3)) fieldbasistype = "quadratic";
+        if ((size == 3)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == numnodesvec[2])&&(fdims[3] == 4)) fieldbasistype = "quadratic";
 
-        if ((size == 1)&&(size == fdims.size())&&(fdims[0] = numelementsvec[0])) fieldbasis = "constant";
-        if ((size == 2)&&(size == fdims.size())&&(fdims[0] = numelementsvec[0])&&(fdims[1] = numelementsvec[1])) fieldbasis = "constant";
-        if ((size == 3)&&(size == fdims.size())&&(fdims[0] = numelementsvec[0])&&(fdims[1] = numelementsvec[1])&&(fdims[2] = numelementsvec[2])) fieldbasis = "constant";
+        if ((size == 1)&&(size == fdims.size())&&(fdims[0] == numelementsvec[0])) fieldbasistype == "constant";
+        if ((size == 2)&&(size == fdims.size())&&(fdims[0] == numelementsvec[0])&&(fdims[1] == numelementsvec[1])) fieldbasistype = "constant";
+        if ((size == 3)&&(size == fdims.size())&&(fdims[0] == numelementsvec[0])&&(fdims[1] == numelementsvec[1])&&(fdims[2] == numelementsvec[2])) fieldbasistype = "constant";
 
-        if ((mlfieldderivatives.isdense())&&(fieldbasis == "linear")) fieldbasis = "cubic";
+        if ((mlfieldderivatives.isdense())&&(fieldbasis == "linear")) fieldbasistype = "cubic";
       }
     }
     //by now we should know what kind of basis we would like
@@ -617,8 +671,9 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       return(0);    
     }
 
-    if (fieldbasistype == "nodata") fieldbasis = "NoData";
-    if (fieldbasistype == "constant") fieldbasis = "Constant";
+    
+    if (fieldbasistype == "nodata") fieldbasis = "NoDataBasis";
+    if (fieldbasistype == "constant") fieldbasis = "ConstantBasis";
 
     if (fieldbasistype == "linear") 
     {
@@ -648,9 +703,9 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         datasize = fdims[0];
       }      
       
-      if ((!((size == 1)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0]))) &&
-          (!((size == 2)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1]))) &&
-          (!((size == 3)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = numnodesvec[2]))))
+      if ((!((size == 1)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0]))) &&
+          (!((size == 2)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1]))) &&
+          (!((size == 3)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == numnodesvec[2]))))
       {
         if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (dimensions of field do not match dimensions of mesh"));
         return(0);          
@@ -688,9 +743,9 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         datasize = fdims[0];        
       }          
    
-      if ((!((size == 1)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = 2))) &&
-          (!((size == 2)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = 3))) &&
-          (!((size == 3)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = numnodesvec[2])&&(fdims[3] = 4))))
+      if ((!((size == 1)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == 2))) &&
+          (!((size == 2)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == 3))) &&
+          (!((size == 3)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == numnodesvec[2])&&(fdims[3] == 4))))
       {
         if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (dimensions of field do not match dimensions of mesh"));
         return(0);          
@@ -909,9 +964,12 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       if (mlfield.isempty())
       {
         fieldbasistype = "nodata";
+        fieldtype = "";
       }
       else
       { 
+        if (fieldtype == "") fieldtype = "double";
+      
         std::vector<long> fdims = mlfield.getdims();
         if (fieldtype == "Vector")
         {
@@ -936,19 +994,19 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
           fdims = temp;
         }
         
-        if ((size == 1)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0])) fieldbasis = "linear";
-        if ((size == 2)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])) fieldbasis = "linear";
-        if ((size == 3)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = numnodesvec[2])) fieldbasis = "linear";
+        if ((size == 1)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0])) fieldbasistype = "linear";
+        if ((size == 2)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])) fieldbasistype = "linear";
+        if ((size == 3)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == numnodesvec[2])) fieldbasistype = "linear";
 
-        if ((size == 1)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = 2)) fieldbasis = "quadratic";
-        if ((size == 2)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = 3)) fieldbasis = "quadratic";
-        if ((size == 3)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = numnodesvec[2])&&(fdims[3] = 4)) fieldbasis = "quadratic";
+        if ((size == 1)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == 2)) fieldbasistype = "quadratic";
+        if ((size == 2)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == 3)) fieldbasistype = "quadratic";
+        if ((size == 3)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == numnodesvec[2])&&(fdims[3] == 4)) fieldbasistype = "quadratic";
 
-        if ((size == 1)&&(size == fdims.size())&&(fdims[0] = numelementsvec[0])) fieldbasis = "constant";
-        if ((size == 2)&&(size == fdims.size())&&(fdims[0] = numelementsvec[0])&&(fdims[1] = numelementsvec[1])) fieldbasis = "constant";
-        if ((size == 3)&&(size == fdims.size())&&(fdims[0] = numelementsvec[0])&&(fdims[1] = numelementsvec[1])&&(fdims[2] = numelementsvec[2])) fieldbasis = "constant";
+        if ((size == 1)&&(size == fdims.size())&&(fdims[0] == numelementsvec[0])) fieldbasistype = "constant";
+        if ((size == 2)&&(size == fdims.size())&&(fdims[0] == numelementsvec[0])&&(fdims[1] == numelementsvec[1])) fieldbasistype = "constant";
+        if ((size == 3)&&(size == fdims.size())&&(fdims[0] == numelementsvec[0])&&(fdims[1] == numelementsvec[1])&&(fdims[2] == numelementsvec[2])) fieldbasistype = "constant";
 
-        if ((mlfieldderivatives.isdense())&&(fieldbasis == "linear")) fieldbasis = "cubic";
+        if ((mlfieldderivatives.isdense())&&(fieldbasistype == "linear")) fieldbasistype = "cubic";
       }
     }
     //by now we should know what kind of basis we would like
@@ -959,8 +1017,8 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       return(0);    
     }
 
-    if (fieldbasistype == "nodata") fieldbasis = "NoData";
-    if (fieldbasistype == "constant") fieldbasis = "Constant";
+    if (fieldbasistype == "nodata") fieldbasis = "NoDataBasis";
+    if (fieldbasistype == "constant") fieldbasis = "ConstantBasis";
 
     if (fieldbasistype == "linear") 
     {
@@ -990,9 +1048,9 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         datasize = fdims[0];
       }      
       
-      if ((!((size == 1)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0]))) &&
-          (!((size == 2)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1]))) &&
-          (!((size == 3)&&(size == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = numnodesvec[2]))))
+      if ((!((size == 1)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0]))) &&
+          (!((size == 2)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1]))) &&
+          (!((size == 3)&&(size == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == numnodesvec[2]))))
       {
         if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (dimensions of field do not match dimensions of mesh"));
         return(0);          
@@ -1030,9 +1088,9 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         datasize = fdims[0];        
       }          
    
-      if ((!((size == 1)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = 2))) &&
-          (!((size == 2)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = 3))) &&
-          (!((size == 3)&&(size+1 == fdims.size())&&(fdims[0] = numnodesvec[0])&&(fdims[1] = numnodesvec[1])&&(fdims[2] = numnodesvec[2])&&(fdims[3] = 4))))
+      if ((!((size == 1)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == 2))) &&
+          (!((size == 2)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == 3))) &&
+          (!((size == 3)&&(size+1 == fdims.size())&&(fdims[0] == numnodesvec[0])&&(fdims[1] == numnodesvec[1])&&(fdims[2] == numnodesvec[2])&&(fdims[3] == 4))))
       {
         if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (dimensions of field do not match dimensions of mesh"));
         return(0);          
@@ -1255,7 +1313,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (nodata field basis should not have field data)"));
       return (0);      
     }
-    fieldbasis = "NoData";
+    fieldbasis = "NoDataBasis";
   }
   else if ((fieldbasistype == "linear")||(fieldbasistype == "cubic"))
   {
@@ -1273,7 +1331,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
   {
     if (numfield == 0)
     {
-      fieldbasis = "NoData";
+      fieldbasis = "NoDataBasis";
       fieldbasistype = "nodata";
     }
   }
@@ -1308,7 +1366,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       return (0);      
     }
   
-    meshbasis = "Constant";
+    meshbasis = "ConstantBasis";
                                                                           
     if ((fieldbasistype != "nodata")&&(fieldbasistype != "constant"))
     {
@@ -1318,10 +1376,10 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
     
     numelements = numnodes;    
 
-    if (fieldbasistype == "nodata")    fieldbasis = "NoData";
+    if (fieldbasistype == "nodata")    fieldbasis = "NoDataBasis";
     if (fieldbasistype == "constant")
     {
-      fieldbasis = "Constant";
+      fieldbasis = "ConstantBasis";
       if (numfield != numelements)
       {
         if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of elements does not match number of field entries)"));
@@ -1408,15 +1466,15 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
     else
     {
       m = mledge.getm(); n = mledge.getn();
-      if (((n!=2)&&(m!=2))||((n!=3)&&(m!=3)))
+      if (((n!=2)&&(m!=2))&&((n!=3)&&(m!=3)))
       {
         if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of edge needs to be of size 2 or 3)"));
         return(0);                
       }     
       numelements = n; 
-      if (((m!=2)&&(m!=3))&&((n==2)||(n==3))) { numelements = m; mledge.transpose(); }     
-      if (numelements == 2) { meshbasistype = "linear"; meshbasis = "CrvLinearLgn"; }
-      if (numelements == 3) { meshbasistype = "quadratic"; meshbasis = "CrvQuadraticLgn"; }
+      if (((m!=2)&&(m!=3))&&((n==2)||(n==3))) { numelements = m; m = n; mledge.transpose(); }     
+      if (m == 2) { meshbasistype = "linear"; meshbasis = "CrvLinearLgn"; }
+      if (m == 3) { meshbasistype = "quadratic"; meshbasis = "CrvQuadraticLgn"; }
     }
     
     // established meshbasis
@@ -1488,7 +1546,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of elements in field does not match mesh)"));
         return(0);                 
       }
-      fieldbasis = "Constant";
+      fieldbasis = "ConstantBasis";
     }
     
     if ((fieldbasistype == "linear")||(fieldbasistype == "cubic"))
@@ -1644,15 +1702,15 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       else
       {
         m = mlface.getm(); n = mlface.getn();
-        if (((n!=3)&&(m!=3))||((n!=6)&&(m!=6)))
+        if (((n!=3)&&(m!=3))&&((n!=6)&&(m!=6)))
         {
           if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of face needs to be of size 3 or 6)"));
           return(0);                
         }     
         numelements = n; 
-        if (((m!=3)&&(m!=6))&&((n==3)||(n==6))) { numelements = m; mlface.transpose(); }     
-        if (numelements == 3) { meshbasistype = "linear"; meshbasis = "TriLinearLgn"; }
-        if (numelements == 6) { meshbasistype = "quadratic"; meshbasis = "TriQuadraticLgn"; }
+        if (((m!=3)&&(m!=6))&&((n==3)||(n==6))) { numelements = m; m = n; mlface.transpose(); }     
+        if (m == 3) { meshbasistype = "linear"; meshbasis = "TriLinearLgn"; }
+        if (m == 6) { meshbasistype = "quadratic"; meshbasis = "TriQuadraticLgn"; }
       }
     }
     else
@@ -1684,15 +1742,15 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       else
       {
         m = mlface.getm(); n = mlface.getn();
-        if (((n!=4)&&(m!=4))||((n!=8)&&(m!=8)))
+        if (((n!=4)&&(m!=4))&&((n!=8)&&(m!=8)))
         {
           if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of face needs to be of size 4 or 8)"));
           return(0);                
         }     
         numelements = n; 
-        if (((m!=4)&&(m!=8))&&((n==4)||(n==8))) { numelements = m; mlface.transpose(); }     
-        if (numelements == 4) { meshbasistype = "linear"; meshbasis = "QuadBilinearLgn"; }
-        if (numelements == 8) { meshbasistype = "quadratic"; meshbasis = "QuadBiquadraticLgn"; }
+        if (((m!=4)&&(m!=8))&&((n==4)||(n==8))) { numelements = m; m = n; mlface.transpose(); }     
+        if (m == 4) { meshbasistype = "linear"; meshbasis = "QuadBilinearLgn"; }
+        if (m == 8) { meshbasistype = "quadratic"; meshbasis = "QuadBiquadraticLgn"; }
       }    
     }
     
@@ -1776,7 +1834,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of elements in field does not match mesh)"));
         return(0);                 
       }
-      fieldbasis = "Constant";
+      fieldbasis = "ConstantBasis";
     }
     
     if ((fieldbasistype == "linear")||(fieldbasistype == "cubic"))
@@ -1973,15 +2031,15 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       else
       {
         m = mlcell.getm(); n = mlcell.getn();
-        if (((n!=4)&&(m!=4))||((n!=10)&&(m!=10)))
+        if (((n!=4)&&(m!=4))&&((n!=10)&&(m!=10)))
         {
           if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of edge needs to be of size 4 or 10)"));
           return(0);                
         }     
         numelements = n; 
-        if (((m!=4)&&(m!=10))&&((n==4)||(n==10))) { numelements = m; mlcell.transpose(); }
-        if (numelements == 4) { meshbasistype = "linear"; meshbasis = "TetLinearLgn"; }
-        if (numelements == 10) { meshbasistype = "quadratic"; meshbasis = "TetQuadraticLgn"; }
+        if (((m!=4)&&(m!=10))&&((n==4)||(n==10))) { numelements = m; m = n; mlcell.transpose(); }
+        if (m == 4) { meshbasistype = "linear"; meshbasis = "TetLinearLgn"; }
+        if (m == 10) { meshbasistype = "quadratic"; meshbasis = "TetQuadraticLgn"; }
       }
     }
     else if (meshtype == "PrismVolMesh")
@@ -2013,15 +2071,15 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       else
       {
         m = mlcell.getm(); n = mlcell.getn();
-        if (((n!=6)&&(m!=6))||((n!=15)&&(m!=15)))
+        if (((n!=6)&&(m!=6))&&((n!=15)&&(m!=15)))
         {
           if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of cell needs to be of size 6 or 15)"));
           return(0);                
         }     
         numelements = n; 
-        if (((m!=6)&&(m!=15))&&((n==6)||(n==15))) { numelements = m; mlcell.transpose(); }
-        if (numelements == 6) { meshbasistype = "linear"; meshbasis = "PrismLinearLgn"; }
-        if (numelements == 15) { meshbasistype = "quadratic"; meshbasis = "PrismQuadraticLgn"; }
+        if (((m!=6)&&(m!=15))&&((n==6)||(n==15))) { numelements = m; m = n; mlcell.transpose(); }
+        if (m == 6) { meshbasistype = "linear"; meshbasis = "PrismLinearLgn"; }
+        if (m == 15) { meshbasistype = "quadratic"; meshbasis = "PrismQuadraticLgn"; }
       }    
     }
     else
@@ -2053,15 +2111,15 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       else
       {
         m = mlcell.getm(); n = mlcell.getn();
-        if (((n!=8)&&(m!=8))||((n!=20)&&(m!=20)))
+        if (((n!=8)&&(m!=8))&&((n!=20)&&(m!=20)))
         {
           if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of cell needs to be of size 8 or 20)"));
           return(0);                
         }     
         numelements = n; 
-        if (((m!=8)&&(m!=20))&&((n==8)||(n==20))) { numelements = m; mlcell.transpose(); }
-        if (numelements == 8) { meshbasistype = "linear"; meshbasis = "HexTrilinearLgn"; }
-        if (numelements == 20) { meshbasistype = "quadratic"; meshbasis = "HexTriquadraticLgn"; }
+        if (((m!=8)&&(m!=20))&&((n==8)||(n==20))) { numelements = m; m = n; mlcell.transpose(); }
+        if (m == 8) { meshbasistype = "linear"; meshbasis = "HexTrilinearLgn"; }
+        if (m == 20) { meshbasistype = "quadratic"; meshbasis = "HexTriquadraticLgn"; }
       }    
     }
     
@@ -2153,7 +2211,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of elements in field does not match mesh)"));
         return(0);                 
       }
-      fieldbasis = "Constant";
+      fieldbasis = "ConstantBasis";
     }
     
     if ((fieldbasistype == "linear")||(fieldbasistype == "cubic"))
@@ -2313,6 +2371,54 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
   if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (cannot match the matlab structure with any of the supported mesh classes)"));
   return(0);
 }        
+
+
+bool MatlabToFieldAlgo::addfield(std::vector<SCIRun::Vector> &fdata)
+{
+  std::vector<double> fielddata;
+  mlfield.getnumericarray(fielddata); // cast and copy the real part of the data
+        
+  unsigned int numdata = fielddata.size();
+  if (numdata > (3*fdata.size())) numdata = (3*fdata.size()); // make sure we do not copy more data than there are elements
+        
+  unsigned int p,q;
+  for (p=0,q=0; p < numdata; q++) 
+  { 
+    fdata[q][0] = fielddata[p++];
+    fdata[q][1] = fielddata[p++];
+    fdata[q][2] = fielddata[p++];
+  }
+  
+  return(true);
+}
+
+
+bool MatlabToFieldAlgo::addfield(std::vector<SCIRun::Tensor> &fdata)
+{
+  std::vector<double> fielddata;
+  mlfield.getnumericarray(fielddata); // cast and copy the real part of the data
+
+  unsigned int numdata = fielddata.size();
+  SCIRun::Tensor tensor;
+
+  if (mlfield.getm() == 6)
+  { // Compressed tensor data : xx,yy,zz,xy,xz,yz
+    if (numdata > (6*fdata.size())) numdata = (6*fdata.size()); // make sure we do not copy more data than there are elements
+    unsigned int p,q;
+    for (p = 0, q = 0; p < numdata; p +=6, q++) { compressedtensor(fielddata,tensor,p); fdata[q] =  tensor; }
+  }
+  else
+  {  // UnCompressed tensor data : xx,xy,xz,yx,yy,yz,zx,zy,zz 
+    if (numdata > (9*fdata.size())) numdata = (9*fdata.size()); // make sure we do not copy more data than there are elements
+    unsigned int p,q;
+    for (p = 0, q = 0; p < numdata; p +=9, q++) { uncompressedtensor(fielddata,tensor,p); fdata[q] =  tensor; }
+  }
+
+  return(true);
+}
+
+
+
 
 
 } // end namespace

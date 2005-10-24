@@ -62,6 +62,9 @@
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 
+// FData classes
+#include <Core/Containers/FData.h>
+
 // Field class files
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/GenericField.h>
@@ -88,6 +91,7 @@
 #include <Core/Basis/TriQuadraticLgn.h>
 
 // MeshClasses
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/ImageMesh.h>
@@ -121,7 +125,7 @@ class MatlabToFieldAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
 
     //////// DYNAMIC ALGO ENTRY POINT /////////////////////
 
-    virtual bool execute(SCIRun::FieldHandle fieldH, matlabarray mlarray);
+    virtual bool execute(SCIRun::FieldHandle& fieldhandle, matlabarray& mlarray);
     static SCIRun::CompileInfoHandle get_compile_info(std::string fielddesc);
 
     //////// ANALYZE INPUT FUNCTIONS //////////////////////
@@ -130,7 +134,6 @@ class MatlabToFieldAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
     long analyze_fieldtype(matlabarray mlarray, std::string& fielddesc);
 
     inline void setreporter(SCIRun::ProgressReporter* pr);
-
     
   protected:
 
@@ -186,6 +189,48 @@ class MatlabToFieldAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
     long              numfield;
     long              datasize;
 
+    //////// FUNCTIONS FOR BUIDLIGN THE MESH //////////////
+
+  protected:
+
+    template <class MESH>  bool createmesh(SCIRun::LockingHandle<MESH>& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::PointCloudMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::CurveMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::TriSurfMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::QuadSurfMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::TetVolMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::PrismVolMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::HexVolMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::ScanlineMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::ImageMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh<BASIS> >& handle);
+    template <class BASIS> bool createmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh<BASIS> >& handle);
+
+    template <class MESH> bool addtransform(SCIRun::LockingHandle<MESH>& handle);
+    template <class MESH> bool addderivatives(SCIRun::LockingHandle<MESH>& handle);
+    template <class MESH> bool addscalefactors(SCIRun::LockingHandle<MESH>& handle);    
+    template <class MESH> bool addnodes(SCIRun::LockingHandle<MESH>& handle);
+    template <class MESH> bool addedges(SCIRun::LockingHandle<MESH>& handle);
+    template <class MESH> bool addfaces(SCIRun::LockingHandle<MESH>& handle);
+    template <class MESH> bool addcells(SCIRun::LockingHandle<MESH>& handle);
+
+    template <class T> bool addfield(T &fdata);
+    template <class T> bool addfield(std::vector<T> &fdata);
+    template <class T, class MESH> bool addfield(SCIRun::FData2d<T,MESH> &fdata);
+    template <class T, class MESH> bool addfield(SCIRun::FData3d<T,MESH> &fdata);
+
+    bool addfield(std::vector<SCIRun::Vector> &fdata);
+    template <class MESH> bool addfield(SCIRun::FData2d<SCIRun::Vector,MESH> &fdata);
+    template <class MESH> bool addfield(SCIRun::FData3d<SCIRun::Vector,MESH> &fdata);
+    bool addfield(std::vector<SCIRun::Tensor> &fdata);
+    template <class MESH> bool addfield(SCIRun::FData2d<SCIRun::Tensor,MESH> &fdata);
+    template <class MESH> bool addfield(SCIRun::FData3d<SCIRun::Tensor,MESH> &fdata);
+
+    inline void uncompressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p);
+    inline void compressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p);	
+
     //////// ERROR REPORTERING MECHANISM /////////////////
 
   protected:
@@ -231,18 +276,758 @@ class MatlabToFieldAlgoT : public MatlabToFieldAlgo
 {
   public:
     //////// DYNAMIC ALGO ENTRY POINT /////////////////////
-    virtual bool execute(SCIRun::FieldHandle fieldH, matlabarray &mlarray);
+    virtual bool execute(SCIRun::FieldHandle& fieldhandle, matlabarray &mlarray);
 };
 
 template <class FIELD>  
-bool MatlabToFieldAlgoT<FIELD>::execute(SCIRun::FieldHandle fieldH, matlabarray &mlarray)
+bool MatlabToFieldAlgoT<FIELD>::execute(SCIRun::FieldHandle& fieldhandle, matlabarray &mlarray)
 {
-  error("This functionality has disabled for now, new code coming soon");
+  // Create the type of mesh that needs to be generated
+  SCIRun::LockingHandle<typename FIELD::mesh_type> meshhandle;
+
+  if (!(createmesh(meshhandle)))
+  {
+    error("Error occured while generating mesh");
+    return (false);
+  }
+
+  FIELD *field = scinew FIELD(meshhandle);
+  
+  if (field == 0)
+  {
+    error("Error occured while generating field");
+    return (false);  
+  }
+  
+  fieldhandle = dynamic_cast<SCIRun::Field *>(field);
+
+  if (fieldhandle.get_rep() == 0)
+  {
+    error("Error occured while generating field");
+    return (false);  
+  }
+
+  if (fieldbasistype == "constant")
+  {
+    field->resize_fdata();
+    typename FIELD::fdata_type& fdata = field->fdata();
+    if (!(addfield(fdata)))
+    {
+      error("The conversion of the field data failed");
+      return (false);    
+    }    
+  }
+
+  if (fieldbasistype == "linear")
+  {
+    field->resize_fdata();
+    typename FIELD::fdata_type& fdata = field->fdata();
+    if (!(addfield(fdata)))
+    {
+      error("The conversion of the field data failed");
+      return (false);    
+    }
+  }
+
+  if (fieldbasistype == "quadratic")
+  {
+    error("There is no converter available for quadratic field data");
+    return (false);
+  }
+
+  if (fieldbasistype == "cubic")
+  {
+    error("There is no converter available for cubic field data");
+    return (false);
+  }
+
+  return (true);
+}
+
+
+template <class MESH>
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<MESH>& handle)
+{
+  error("There is no converter available for this kind of mesh");
   return (false);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::PointCloudMesh<BASIS> >& handle)
+{
+  handle = dynamic_cast<SCIRun::PointCloudMesh<BASIS>* >(scinew SCIRun::PointCloudMesh<BASIS>);
+  if(!(addnodes(handle))) return (false);
+  if(!(addderivatives(handle))) return (false);
+  if(!(addscalefactors(handle))) return (false);
+  
+  return (true);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::CurveMesh<BASIS> >& handle)
+{
+  handle = dynamic_cast<SCIRun::CurveMesh<BASIS>* >(scinew SCIRun::CurveMesh<BASIS>);
+  if(!(addnodes(handle))) return (false);
+  if(!(addedges(handle))) return (false);
+  if(!(addderivatives(handle))) return (false);
+  if(!(addscalefactors(handle))) return (false);
+
+  return (true);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::TriSurfMesh<BASIS> >& handle)
+{
+  handle = dynamic_cast<SCIRun::TriSurfMesh<BASIS>* >(scinew SCIRun::TriSurfMesh<BASIS>);
+  if(!(addnodes(handle))) return (false);
+  if(!(addfaces(handle))) return (false);
+  if(!(addderivatives(handle))) return (false);
+  if(!(addscalefactors(handle))) return (false);
+  
+  return (true);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::QuadSurfMesh<BASIS> >& handle)
+{
+  handle = dynamic_cast<SCIRun::QuadSurfMesh<BASIS>* >(scinew SCIRun::QuadSurfMesh<BASIS>);
+  if(!(addnodes(handle))) return (false);
+  if(!(addfaces(handle))) return (false);
+  if(!(addderivatives(handle))) return (false);
+  if(!(addscalefactors(handle))) return (false);
+  
+  return (true);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::TetVolMesh<BASIS> >& handle)
+{
+  handle = dynamic_cast<SCIRun::TetVolMesh<BASIS>* >(scinew SCIRun::TetVolMesh<BASIS>);
+  if(!(addnodes(handle))) return (false);
+  if(!(addcells(handle))) return (false);
+  if(!(addderivatives(handle))) return (false);
+  if(!(addscalefactors(handle))) return (false);  
+  return (true);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::PrismVolMesh<BASIS> >& handle)
+{
+  handle = dynamic_cast<SCIRun::PrismVolMesh<BASIS>* >(scinew SCIRun::PrismVolMesh<BASIS>);
+  if(!(addnodes(handle))) return (false);
+  if(!(addcells(handle))) return (false);
+  if(!(addderivatives(handle))) return (false);
+  if(!(addscalefactors(handle))) return (false);  
+  return (true);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::HexVolMesh<BASIS> >& handle)
+{
+  handle = dynamic_cast<SCIRun::HexVolMesh<BASIS>* >(scinew SCIRun::HexVolMesh<BASIS>);
+  if(!(addnodes(handle))) return (false);
+  if(!(addcells(handle))) return (false);
+  if(!(addderivatives(handle))) return (false);
+  if(!(addscalefactors(handle))) return (false);  
+  return (true);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::ScanlineMesh<BASIS> >& handle)
+{
+  if (!(mldims.isdense()))
+  {
+    return (false);
+  }
+  
+  if (mldims.getnumelements() != 1)
+  {
+    return (false);
+  }
+  
+  std::vector<long> dims; 
+  mldims.getnumericarray(dims);
+
+  SCIRun::Point PointO(0.0,0.0,0.0);
+  SCIRun::Point PointP(static_cast<double>(dims[0]),0.0,0.0);
+
+  handle = dynamic_cast<SCIRun::ScanlineMesh<BASIS>* >(scinew SCIRun::ScanlineMesh<BASIS>(static_cast<unsigned int>(dims[0]),PointO,PointP));
+  addtransform(handle);
+
+  return(true);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::ImageMesh<BASIS> >& handle)
+{
+  if (!(mldims.isdense()))
+  {
+    return (false);
+  }
+
+  if (mldims.getnumelements() != 2)
+  {
+    return (false);
+  }
+
+  std::vector<long> dims; 
+  mldims.getnumericarray(dims);
+
+  SCIRun::Point PointO(0.0,0.0,0.0);
+  SCIRun::Point PointP(static_cast<double>(dims[0]),static_cast<double>(dims[1]),0.0);
+  handle = dynamic_cast<SCIRun::ImageMesh<BASIS>* >(scinew SCIRun::ImageMesh<BASIS>(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),PointO,PointP));
+  addtransform(handle);
+
+  return(true);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh<BASIS> >& handle)
+{
+  if (!(mldims.isdense()))
+  {
+    return (false);
+  }
+
+  if (mldims.getnumelements() != 3)
+  {
+    return (false);
+  }
+
+  std::vector<long> dims; 
+  mldims.getnumericarray(dims);
+
+  SCIRun::Point PointO(0.0,0.0,0.0);
+  SCIRun::Point PointP(static_cast<double>(dims[0]),static_cast<double>(dims[1]),static_cast<double>(dims[2]));
+  handle = dynamic_cast<SCIRun::LatVolMesh<BASIS>* >(scinew SCIRun::LatVolMesh<BASIS>(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),static_cast<unsigned int>(dims[2]),PointO,PointP));
+  addtransform(handle);
+
+  return(true);
+}
+
+template <class BASIS> bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh<BASIS> >& handle)
+{
+  std::vector<long> dims;
+  std::vector<unsigned int> mdims;
+  long numdim = mlx.getnumdims();
+  dims = mlx.getdims();
+        
+  mdims.resize(numdim); 
+  for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
+        
+  if ((numdim == 2)&&(mlx.getn() == 1))
+  {
+    numdim = 1;
+    mdims.resize(1);
+    mdims[0] = mlx.getm();
+  }
+
+  handle = dynamic_cast<SCIRun::StructCurveMesh<BASIS>* >(scinew SCIRun::StructCurveMesh<BASIS>);
+  long numnodes = mlx.getnumelements();
+        
+  std::vector<double> X;
+  std::vector<double> Y;
+  std::vector<double> Z;
+  mlx.getnumericarray(X);
+  mly.getnumericarray(Y);
+  mlz.getnumericarray(Z);
+        
+  handle->set_dim(mdims);
+  long p;
+  for (p = 0; p < numnodes; p++)
+  {
+    handle->set_point(SCIRun::Point(X[p],Y[p],Z[p]),static_cast<typename SCIRun::StructCurveMesh<BASIS>::Node::index_type>(p));
+  }
+                                        
+  return(true);
+}
+
+template <class BASIS> 
+bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh<BASIS> >& handle)
+{
+  std::vector<long> dims;
+  std::vector<unsigned int> mdims;
+  long numdim = mlx.getnumdims();
+  dims = mlx.getdims();
+        
+  mdims.resize(numdim); 
+  for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
+
+  handle = dynamic_cast<SCIRun::StructQuadSurfMesh<BASIS>* >(scinew SCIRun::StructQuadSurfMesh<BASIS>);
+        
+  std::vector<double> X;
+  std::vector<double> Y;
+  std::vector<double> Z;
+  mlx.getnumericarray(X);
+  mly.getnumericarray(Y);
+  mlz.getnumericarray(Z);
+        
+  handle->set_dim(mdims);
+
+  unsigned p,r,q;
+  q = 0;
+  for (r = 0; r < mdims[1]; r++)
+    for (p = 0; p < mdims[0]; p++)
+    {
+      handle->set_point(SCIRun::Point(X[q],Y[q],Z[q]),typename SCIRun::StructQuadSurfMesh<BASIS>::Node::index_type(handle.get_rep(),p,r));
+      q++;
+    }
+                                        
+  return(true);
+}
+
+template <class BASIS> bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh<BASIS> >& handle)
+{
+  std::vector<long> dims;
+  std::vector<unsigned int> mdims;
+  long numdim = mlx.getnumdims();
+  dims = mlx.getdims();
+        
+  mdims.resize(numdim); 
+  for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
+
+  handle = dynamic_cast<SCIRun::StructHexVolMesh<BASIS>* >(scinew SCIRun::StructHexVolMesh<BASIS>);
+        
+  std::vector<double> X;
+  std::vector<double> Y;
+  std::vector<double> Z;
+  mlx.getnumericarray(X);
+  mly.getnumericarray(Y);
+  mlz.getnumericarray(Z);
+        
+  handle->set_dim(mdims);
+
+  unsigned p,r,s,q;
+  q= 0;
+  for (s = 0; s < mdims[2]; s++)
+    for (r = 0; r < mdims[1]; r++)
+      for (p = 0; p < mdims[0]; p++)
+      {
+        handle->set_point(SCIRun::Point(X[q],Y[q],Z[q]),typename SCIRun::StructHexVolMesh<BASIS>::Node::index_type(handle.get_rep(),p,r,s));
+        q++;
+      }
+        
+  return(true);
+}
+
+
+template <class MESH> bool MatlabToFieldAlgo::addtransform(SCIRun::LockingHandle<MESH>& handle)
+{
+  if (mltransform.isdense())
+  {
+    SCIRun::Transform T;
+    double trans[16];
+    mltransform.getnumericarray(trans,16);
+    T.set_trans(trans);
+    handle->transform(T);
+  }
+  return(true);  
+}
+
+
+template <class MESH>
+bool MatlabToFieldAlgo::addnodes(SCIRun::LockingHandle<MESH>& handle)
+{
+	// Get the data from the matlab file, which has been buffered
+	// but whose format can be anything. The next piece of code
+	// copies and casts the data
+	
+  if (meshbasistype == "quadratic")
+  {
+    error("The converter misses code to add quadratic nodes to mesh");
+    return (false);
+  }
+  
+	std::vector<double> mldata;
+	mlnode.getnumericarray(mldata);
+		
+	// Again the data is copied but now reorganised into
+	// a vector of Point objects
+	
+	long numnodes = mlnode.getn();	
+	handle->node_reserve(numnodes);
+	
+	long p,q;
+	for (p = 0, q = 0; p < numnodes; p++, q+=3)
+	{ 
+    handle->add_point(SCIRun::Point(mldata[q],mldata[q+1],mldata[q+2]));
+  }
+  
+  return (true);
+}
+
+template <class MESH>
+bool MatlabToFieldAlgo::addedges(SCIRun::LockingHandle<MESH>& handle)
+{
+	// Get the data from the matlab file, which has been buffered
+	// but whose format can be anything. The next piece of code
+	// copies and casts the data
+	
+  if (meshbasistype == "quadratic")
+  {
+    error("The converter misses code to add quadratic edges to mesh");
+    return (false);
+  }
+
+	std::vector<unsigned int> mldata;
+	mledge.getnumericarray(mldata);		
+	
+	// check whether it is zero based indexing 
+	// In short if there is a zero it must be zero
+	// based numbering right ??
+	// If not we assume one based numbering
+	
+	long p,q;
+	
+	bool zerobased = false;  
+	long size = static_cast<long>(mldata.size());
+	for (p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
+	
+	if (zerobased == false)
+	{   // renumber to go from matlab indexing to C++ indexing
+		for (p = 0; p < size; p++) { mldata[p]--;}
+	}
+	
+  long m,n;
+   m = mledge.getm();
+   n = mledge.getn();
+  
+	handle->elem_reserve(n);
+	
+  typename MESH::Node::array_type edge(m); 
+  
+  long r;
+  r = 0;
+     
+	for (p = 0, q = 0; p < n; p++)
+	{
+     for (long q = 0 ; q < m; q++)
+     {
+       edge[q] = mldata[r]; r++; 
+     }
+     
+		handle->add_edge(edge);
+	}
+		  
+ }
+
+template <class MESH>
+bool MatlabToFieldAlgo::addfaces(SCIRun::LockingHandle<MESH>& handle)
+{
+   // Get the data from the matlab file, which has been buffered
+   // but whose format can be anything. The next piece of code
+   // copies and casts the data
+
+  if (meshbasistype == "quadratic")
+  {
+    error("The converter misses code to add quadratic edges to mesh");
+    return (false);
+  }
+	
+  std::vector<unsigned int> mldata;
+  mlface.getnumericarray(mldata);		
+
+  // check whether it is zero based indexing 
+  // In short if there is a zero it must be zero
+  // based numbering right ??
+  // If not we assume one based numbering
+
+  bool zerobased = false;  
+  long size = static_cast<long>(mldata.size());
+  for (long p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
+
+  if (zerobased == false)
+  {   // renumber to go from matlab indexing to C++ indexing
+    for (long p = 0; p < size; p++) { mldata[p]--;}
+  }
+
+  long m,n;
+  m = mlface.getm();
+  n = mlface.getn();
+
+  handle->elem_reserve(n);	  
+          
+  typename MESH::Node::array_type face(m);  
+
+  long r;
+  r = 0;
+
+  for (long p = 0; p < n; p++)
+  {
+    for (long q = 0 ; q < m; q++)
+    {
+      face[q] = mldata[r]; r++; 
+    }
+    handle->add_elem(face);
+  }
+}
+
+template <class MESH>
+bool MatlabToFieldAlgo::addcells(SCIRun::LockingHandle<MESH>& handle)
+{
+  // Get the data from the matlab file, which has been buffered
+  // but whose format can be anything. The next piece of code
+  // copies and casts the data
+
+  if (meshbasistype == "quadratic")
+  {
+    error("The converter misses code to add quadratic edges to mesh");
+    return (false);
+  }
+  
+  std::vector<unsigned int> mldata;
+  mlcell.getnumericarray(mldata);		
+
+  // check whether it is zero based indexing 
+  // In short if there is a zero it must be zero
+  // based numbering right ??
+  // If not we assume one based numbering
+
+  bool zerobased = false;  
+  long size = static_cast<long>(mldata.size());
+  for (long p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
+
+  if (zerobased == false)
+  {   // renumber to go from matlab indexing to C++ indexing
+    for (long p = 0; p < size; p++) { mldata[p]--;}
+  }
+
+  long m,n;
+  m = mlcell.getm();
+  n = mlcell.getn();
+
+  handle->elem_reserve(n);	  
+          
+  typename MESH::Node::array_type cell(m);  
+
+  long r;
+  r = 0;
+
+  for (long p = 0; p < n; p++)
+  {
+    for (long q = 0 ; q < m; q++)
+    {
+      cell[q] = mldata[r]; r++; 
+    }
+    handle->add_elem(cell);
+  }
+
+  return (true);
+}
+
+template <class MESH> 
+bool MatlabToFieldAlgo::addderivatives(SCIRun::LockingHandle<MESH>& handle)
+{
+  if (meshbasistype == "cubic")
+  {
+    error("The converter misses code to add cubic hermitian derivatives edges to mesh");
+    return (false);
+  }
+  return (true);
+}
+    
+template <class MESH> 
+bool MatlabToFieldAlgo::addscalefactors(SCIRun::LockingHandle<MESH>& handle)
+{
+  if (meshbasistype == "cubic")
+  {
+    error("The converter misses code to add cubic hermitian scalefactors edges to mesh");
+    return (false);
+  }
+  return (true);
+}
+
+
+template<class FDATA>
+bool MatlabToFieldAlgo::addfield(FDATA &fdata)
+{
+  return(false);
+}
+
+
+template <class T> 
+bool MatlabToFieldAlgo::addfield(std::vector<T> &fdata)
+{
+  mlfield.getnumericarray(fdata);
+  return(true);
+}
+
+template <class T, class MESH> 
+bool MatlabToFieldAlgo::addfield(SCIRun::FData2d<T,MESH> &fdata)
+{
+  mlfield.getnumericarray(fdata.get_dataptr(),fdata.dim2(),fdata.dim1());
+  return(true);
+}
+
+template <class T,class MESH> 
+bool MatlabToFieldAlgo::addfield(SCIRun::FData3d<T,MESH> &fdata)
+{
+  mlfield.getnumericarray(fdata.get_dataptr(),fdata.dim3(),fdata.dim2(),fdata.dim1());
+  return(true);
+}
+
+template <class MESH>
+bool MatlabToFieldAlgo::addfield(SCIRun::FData2d<SCIRun::Vector,MESH> &fdata)
+{
+  std::vector<double> fielddata;
+  mlfield.getnumericarray(fielddata); // cast and copy the real part of the data
+
+  unsigned int numdata = fielddata.size();
+  if (numdata > (3*fdata.size())) numdata = (3*fdata.size()); // make sure we do not copy more data than there are elements
+        
+  SCIRun::Vector **data = fdata.get_dataptr();
+  unsigned int dim1 = fdata.dim1();
+  unsigned int dim2 = fdata.dim2();
+        
+  unsigned int q,r,p;
+  for (p=0,q=0;(q<dim1)&&(p < numdata);q++)
+    for (r=0;(r<dim2)&&(p < numdata);r++)
+    {
+      data[q][r][0] = fielddata[p++];
+      data[q][r][1] = fielddata[p++];
+      data[q][r][2] = fielddata[p++];
+    }
+  
+  return(true);
+}
+
+
+template <class MESH>
+bool MatlabToFieldAlgo::addfield(SCIRun::FData3d<SCIRun::Vector,MESH> &fdata)
+{
+  std::vector<double> fielddata;
+  mlfield.getnumericarray(fielddata); // cast and copy the real part of the data
+        
+  unsigned int numdata = fielddata.size();
+  if (numdata > (3*fdata.size())) numdata = (3*fdata.size()); // make sure we do not copy more data than there are elements
+        
+  SCIRun::Vector ***data = fdata.get_dataptr();
+  unsigned int dim1 = fdata.dim1();
+  unsigned int dim2 = fdata.dim2();
+  unsigned int dim3 = fdata.dim3();
+        
+  unsigned int q,r,s,p;
+  for (p=0,q=0;(q<dim1)&&(p < numdata);q++)
+    for (r=0;(r<dim2)&&(p < numdata);r++)
+      for (s=0;(s<dim3)&&(p <numdata);s++)
+      {
+        data[q][r][s][0] = fielddata[p++];
+        data[q][r][s][1] = fielddata[p++];
+        data[q][r][s][2] = fielddata[p++];
+      }
+  
+  return(true);
+}
+
+
+template <class MESH>
+bool MatlabToFieldAlgo::addfield(SCIRun::FData2d<SCIRun::Tensor,MESH> &fdata)
+{
+  std::vector<double> fielddata;
+  mlfield.getnumericarray(fielddata); // cast and copy the real part of the data
+        
+  unsigned int numdata = fielddata.size();
+
+  SCIRun::Tensor tens;
+  SCIRun::Tensor **data = fdata.get_dataptr();
+  unsigned int dim1 = fdata.dim1();
+  unsigned int dim2 = fdata.dim2();
+
+  if (mlarray.getm() == 6)
+  { // Compressed tensor data : xx,yy,zz,xy,xz,yz
+    if (numdata > (6*fdata.size())) numdata = (6*fdata.size()); // make sure we do not copy more data than there are elements
+    unsigned int q,r,p;
+    for (p=0,q=0;(q<dim1)&&(p < numdata);q++)
+      for (r=0;(r<dim2)&&(p < numdata);r++, p+=6)
+      {   
+        compressedtensor(fielddata,tens,p);
+        data[q][r] = tens; 
+      }
+  }
+  else
+  {  // UnCompressed tensor data : xx,xy,xz,yx,yy,yz,zx,zy,zz 
+    if (numdata > (9*fdata.size())) numdata = (9*fdata.size()); // make sure we do not copy more data than there are elements
+    unsigned int q,r,p;
+    for (p=0,q=0;(q<dim1)&&(p < numdata);q++)
+      for (r=0;(r<dim2)&&(p < numdata);r++, p+=9)
+      {   
+        uncompressedtensor(fielddata,tens,p); 
+        data[q][r] = tens; 
+      }
+  }
+  return(true);
+}
+
+template <class MESH>
+bool MatlabToFieldAlgo::addfield(SCIRun::FData3d<SCIRun::Tensor,MESH> &fdata)
+{
+  std::vector<double> fielddata;
+  mlfield.getnumericarray(fielddata); // cast and copy the real part of the data
+
+  SCIRun::Tensor tens;
+  SCIRun::Tensor ***data = fdata.get_dataptr();
+  unsigned int dim1 = fdata.dim1();
+  unsigned int dim2 = fdata.dim2();
+  unsigned int dim3 = fdata.dim3();
+        
+  unsigned int numdata = fielddata.size();
+  if (mlarray.getm() == 6)
+  { // Compressed tensor data : xx,yy,zz,xy,xz,yz
+    if (numdata > (6*fdata.size())) numdata = (6*fdata.size()); // make sure we do not copy more data than there are elements
+    unsigned int q,r,s,p;
+    for (p=0,q=0;(q<dim1)&&(p < numdata);q++)
+      for (r=0;(r<dim2)&&(p < numdata);r++)
+        for (s=0;(s<dim3)&&(p < numdata);s++,p +=6)
+        {   
+          compressedtensor(fielddata,tens,p); 
+          data[q][r][s] = tens; 
+        }
+  }
+  else
+  {  // UnCompressed tensor data : xx,xy,xz,yx,yy,yz,zx,zy,zz 
+    if (numdata > (9*fdata.size())) numdata = (9*fdata.size()); // make sure we do not copy more data than there are elements
+    unsigned int q,r,s,p;
+    for (p=0,q=0;(q<dim1)&&(p < numdata);q++)
+      for (r=0;(r<dim2)&&(p < numdata);r++)
+        for (s=0; (s<dim3)&&(p <numdata); s++, p+= 9)
+        {   
+          uncompressedtensor(fielddata,tens,p); 
+          data[q][r][s] = tens; 
+        }
+  }
+  return(true);
+}
+
+
+inline void MatlabToFieldAlgo::compressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p)
+{
+   tens.mat_[0][0] = fielddata[p+0];
+   tens.mat_[0][1] = fielddata[p+1];
+   tens.mat_[0][2] = fielddata[p+2];
+   tens.mat_[1][0] = fielddata[p+1];
+   tens.mat_[1][1] = fielddata[p+3];
+   tens.mat_[1][2] = fielddata[p+4];
+   tens.mat_[2][0] = fielddata[p+2];
+   tens.mat_[2][1] = fielddata[p+4];
+   tens.mat_[2][2] = fielddata[p+5];
+}
+
+inline void MatlabToFieldAlgo::uncompressedtensor(std::vector<double> &fielddata,SCIRun::Tensor &tens, unsigned int p)
+{
+  tens.mat_[0][0] = fielddata[p];
+  tens.mat_[0][1] = fielddata[p+1];
+  tens.mat_[0][2] = fielddata[p+2];
+  tens.mat_[1][0] = fielddata[p+3];
+  tens.mat_[1][1] = fielddata[p+4];
+  tens.mat_[1][2] = fielddata[p+5];
+  tens.mat_[2][0] = fielddata[p+6];
+  tens.mat_[2][1] = fielddata[p+7];
+  tens.mat_[2][2] = fielddata[p+8];
 }
 
 
 } // end namespace
+
 
 #endif
 

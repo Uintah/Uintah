@@ -560,16 +560,16 @@ template <class BASIS>
 bool FieldToMatlabAlgo::ishermitian(BASIS& basis)
 { 
   if (basis.polynomial_order() < 2) return(false);
-  std::vector<int> test(basis.number_of_vertices);
+  std::vector<int> test(basis.number_of_vertices());
   for (size_t p=0; p<test.size(); p++) test[p] = 0;
   for (size_t p=0; p<2; p++)
-    for (size_t q=0; q<basis.number_of_edges; q++)
+    for (size_t q=0; q<basis.number_of_edges(); q++)
       test[basis.unit_edges[q][p]] = 1;
   
   size_t q = 0;
   for (size_t p=0; p<test.size(); p++) if(test[p]) q++;
  
-  if (q == basis.number_of_vertices) return(true);
+  if (q == basis.number_of_vertices()) return(true);
   return(false);
 }
 
@@ -577,16 +577,16 @@ template <class BASIS>
 bool FieldToMatlabAlgo::islagrangian(BASIS& basis)
 { 
   if (basis.polynomial_order() < 2) return(false);
-  std::vector<int> test(basis.number_of_vertices);
+  std::vector<int> test(basis.number_of_vertices());
   for (size_t p=0; p<test.size(); p++) test[p] = 0;
   for (size_t p=0; p<2; p++)
-    for (size_t q=0; q<basis.number_of_edges; q++)
+    for (size_t q=0; q<basis.number_of_edges(); q++)
       test[basis.unit_edges[q][p]] = 1;
   
   size_t q = 0;
   for (size_t p=0; p<test.size(); p++) if(test[p]) q++;
  
-  if (q == basis.number_of_vertices) return(false);
+  if (q == basis.number_of_vertices()) return(false);
   return(true);
 }
 
