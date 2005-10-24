@@ -46,18 +46,18 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-template <class T>
-T difference(const T& interp, const T& value);
-      
-template <>
-Point difference(const Point& interp, const Point& value);
- 
+
+
 //default case
 template <class T>
 T difference(const T& interp, const T& value)
 {
   return interp - value;
 }
+
+template <>
+Point difference(const Point& interp, const Point& value);
+ 
 
 template<class T>
 inline void InverseMatrix3x3(const T *p, T *q) 
@@ -273,12 +273,7 @@ template<class ElemBasis>
 const int Dim1Locate<ElemBasis>::maxsteps=100;
 
 
-template <class T>
-bool compare_distance(const T &interp, const T &val, 
-		      double &cur_d, double dist);
-template <>
-bool compare_distance(const Point &interp, const Point &val, 
-		      double &cur_d, double dist);
+
 
 // default case compiles for scalar types
 template <class T>
@@ -289,6 +284,25 @@ bool compare_distance(const T &interp, const T &val,
   cur_d = sqrt(dv*dv);
   return  cur_d < dist;
 }
+
+template <>
+bool compare_distance(const Point &interp, const Point &val, 
+		      double &cur_d, double dist);
+
+template <class T>
+bool check_zero(const vector<T> &val) 
+{
+  typename vector<T>::const_iterator iter = val.begin();
+  while(iter != val.end()) {
+    const T &v=*iter++;
+    if (fabs(v)>1e-7)
+      return false;
+  }
+  return true;
+}
+
+template <>
+bool check_zero(const vector<Point> &val); 
 
 }
 #endif
