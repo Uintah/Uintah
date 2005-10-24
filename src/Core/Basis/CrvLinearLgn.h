@@ -128,28 +128,33 @@ protected:
   };
 
   //! find a reasonable initial guess for starting Newton iteration.
+  //! Reasonable means near and with a derivative!=0 
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, 
 		     const ElemData &cd, vector<double> &guess) const
   {
     double dist = DBL_MAX;
 	
-    int end = 4;
     vector<double> coord(1);
+    vector<T> derivs(1);
     guess.resize(1);
+    
+    const int end = 2;
     for (int x = 0; x <= end; x++) {
       coord[0] = x / (double) end;
       double cur_d;
       if (compare_distance(pElem->interpolate(coord, cd), 
-			   val, cur_d, dist)) 
-      {
-	dist = cur_d;
-	guess = coord;
+			   val, cur_d, dist)) {
+	pElem->derivate(coord, cd, derivs);
+	if (!check_zero(derivs)) {
+	  dist = cur_d;
+	  guess = coord;
+	}
       }
     }
   }
 };
-
+  
 //! Class with weights and coordinates for 1st order Gaussian integration
 template <class T>
 class CrvGaussian1 
