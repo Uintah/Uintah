@@ -220,7 +220,7 @@ main(int argc, char **argv) {
     arr[6].x(xdxyz[0]);
     arr[6].y(xdxyz[1]);
     arr[6].z(xdxyz[2]);
-    hvm->get_basis().add_derivatives(arr);
+    hvm->get_basis().add_derivative(arr);
 
     if (debugOn) 
       cerr << "Added point #" << i << ": (" << x[0] << ", " << x[1] 
@@ -370,7 +370,7 @@ main(int argc, char **argv) {
       arr[6]=xdxyz;
       arr[6]=xdxyz;
       arr[6]=xdxyz;
-      hvf->get_basis().add_derivatives(arr);
+      hvf->get_basis().add_derivative(arr);
     }
     hvf->resize_fdata();
     hvf->fdata() = data_values;
