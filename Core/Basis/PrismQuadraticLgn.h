@@ -133,8 +133,8 @@ public:
     derivs.resize(3);
 
     derivs[0]=
-      T(-((-1 + z)*(-3 + 4*x + 4*y + 2*z))*cd.node0()
-	-((-1 + 4*x - 2*z)*(-1 + z))*cd.node1()
+      T(-(-1 + z)*(-3 + 4*x + 4*y + 2*z)*cd.node0()
+	-(-1 + 4*x - 2*z)*(-1 + z)*cd.node1()
 	+(-1 + 4*x + 4*y - 2*z)*z*cd.node3()
 	+z*(-3 + 4*x + 2*z)*cd.node4()
 	+4*(-1 + 2*x + y)*(-1 +z)*nodes_[cd.edge0_index()]
@@ -142,7 +142,7 @@ public:
 	+4*y*(-1 + z)*nodes_[cd.edge2_index()]
 	+4*(-1 + z)*z*nodes_[cd.edge3_index()]
 	-4*(-1 + z)*z*nodes_[cd.edge4_index()]
-	-4*(-1 + 2* + y)*z*nodes_[cd.edge6_index()]
+	-4*(-1 + 2*x + y)*z*nodes_[cd.edge6_index()]
 	+4*y*z*nodes_[cd.edge7_index()]
 	-4*y*z*nodes_[cd.edge8_index()]);
       
