@@ -330,6 +330,15 @@ public:
     pt = basis_.interpolate(coords, ed);
   }
 
+  // get the Jacobian matrix
+  void derivate(const vector<double> &coords, 
+		typename Elem::index_type idx, 
+		vector<Point> &J) const
+  {
+    ElemData ed(*this, idx);
+    basis_.derivate(coords, ed, J);
+  }
+
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();

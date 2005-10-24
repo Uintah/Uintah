@@ -41,6 +41,7 @@
 #ifndef Datatypes_GenericField_h
 #define Datatypes_GenericField_h
 
+#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TypeName.h>
@@ -109,8 +110,9 @@ public:
     val = basis_.interpolate(coords, fcd);
   }
 
+  //! creates the matrix grad, you must delete it when finished.
   void cell_gradient(typename mesh_type::Elem::index_type ci,
-		     vector<value_type> &grad) const;
+		     DenseMatrix *&grad) const;
 
   virtual void resize_fdata();
 
@@ -701,11 +703,55 @@ GenericField<Mesh, Basis, FData>::get_type_description(int n) const
   return sub3;
 }
 
+template <class T>
+unsigned int get_vsize(T*);
+
+template <>
+unsigned int get_vsize(Vector*);
+
+template <>
+unsigned int get_vsize(Tensor*);
+
+//size for scalars
+template <class T>
+unsigned int get_vsize(T*)
+{
+  return 1;
+}
+
+template <class T>
+void
+load_partials(const vector<T> &grad, DenseMatrix &m);
+
+template <>
+void
+load_partials(const vector<Vector> &grad, DenseMatrix &m);
+
+template <>
+void
+load_partials(const vector<Tensor> &grad, DenseMatrix &m);
+
+
+//scalar version
+template <class T>
+void
+load_partials(const vector<T> &grad, DenseMatrix &m)
+{
+  int i = 0;
+  typename vector<T>::const_iterator iter = grad.begin();
+  while(iter != grad.end()) {
+    const T &v = *iter++;
+    m.put(i, 0, (double)v);
+    ++i;
+  }
+}
+
+
 template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::
 cell_gradient(typename mesh_type::Elem::index_type ci,
-	      vector<value_type> &grad) const
+	      DenseMatrix *&grad) const
 {
   // supported for linear, should be expanded to support higher order.
   ASSERT(this->basis_order() == 1);
@@ -713,10 +759,34 @@ cell_gradient(typename mesh_type::Elem::index_type ci,
   ElemData<field_type> fcd(*this, ci);
   // derivative is constant anywhere in the linear cell
   vector<double> coords(3);
-  coords[0] = 0.5;
-  coords[1] = 0.5;
-  coords[2] = 0.5;
-  basis_.derivate(coords, fcd, grad);
+  coords[0] = 0.0;
+  coords[1] = 0.0;
+  coords[2] = 0.0;
+  
+  // get the mesh Jacobian for the element.
+  vector<Point> Jv;
+  mesh_->derivate(coords, ci, Jv);
+
+  // load the matrix with the Jacobian
+  DenseMatrix J(3, Jv.size());
+  int i = 0;
+  vector<Point>::iterator iter = Jv.begin();
+  while(iter != Jv.end()) {
+    Point &p = *iter++;
+    J.put(0, i, p.x());
+    J.put(1, i, p.y());
+    J.put(2, i, p.z());
+    ++i;
+  }
+  vector<value_type> g;
+  basis_.derivate(coords, fcd, g);
+  unsigned int n = g.size();
+  unsigned int m = get_vsize((value_type *)0);
+  DenseMatrix local(n, m);
+  grad = scinew DenseMatrix(n, m);
+  load_partials(g, local);
+
+  Mult(*grad, J, local);
 }
 
 template <class Mesh, class Basis, class FData>

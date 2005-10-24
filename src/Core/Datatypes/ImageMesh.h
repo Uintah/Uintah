@@ -386,6 +386,15 @@ public:
     pt = basis_.interpolate(coords, ed);
   }
 
+  // get the Jacobian matrix
+  void derivate(const vector<double> &coords, 
+		typename Elem::index_type idx, 
+		vector<Point> &J) const
+  {
+    ElemData ed(*this, idx);
+    basis_.derivate(coords, ed, J);
+  }
+
   //! get the mesh statistics
   unsigned get_min_i() const { return min_i_; }
   unsigned get_min_j() const { return min_j_; }

@@ -333,18 +333,18 @@ typedef HexTriquadraticLgn<unsigned short>        QHFDushortBasis;
 typedef HexTriquadraticLgn<unsigned char>         QHFDucharBasis;
 typedef HexTriquadraticLgn<unsigned long>         QHFDulongBasis;
 
-typedef LatVolMesh<HexTriquadraticLgn<Point> > HQVMesh;
-template class GenericField<HQVMesh, QHFDTensorBasis, vector<Tensor> >;
-template class GenericField<HQVMesh, QHFDVectorBasis, vector<Vector> >;
-template class GenericField<HQVMesh, QHFDdoubleBasis, vector<double> >;
-template class GenericField<HQVMesh, QHFDfloatBasis,  vector<float> >;
-template class GenericField<HQVMesh, QHFDintBasis,    vector<int> >;
-template class GenericField<HQVMesh, QHFDshortBasis,  vector<short> >;
-template class GenericField<HQVMesh, QHFDcharBasis,   vector<char> >;
-template class GenericField<HQVMesh, QHFDuintBasis,   vector<unsigned int> >;
-template class GenericField<HQVMesh, QHFDushortBasis, vector<unsigned short> >;
-template class GenericField<HQVMesh, QHFDucharBasis,  vector<unsigned char> >;
-template class GenericField<HQVMesh, QHFDulongBasis,  vector<unsigned long> >;
+// typedef LatVolMesh<HexTriquadraticLgn<Point> > HQVMesh;
+// template class GenericField<HQVMesh, QHFDTensorBasis, vector<Tensor> >;
+// template class GenericField<HQVMesh, QHFDVectorBasis, vector<Vector> >;
+// template class GenericField<HQVMesh, QHFDdoubleBasis, vector<double> >;
+// template class GenericField<HQVMesh, QHFDfloatBasis,  vector<float> >;
+// template class GenericField<HQVMesh, QHFDintBasis,    vector<int> >;
+// template class GenericField<HQVMesh, QHFDshortBasis,  vector<short> >;
+// template class GenericField<HQVMesh, QHFDcharBasis,   vector<char> >;
+// template class GenericField<HQVMesh, QHFDuintBasis,   vector<unsigned int> >;
+// template class GenericField<HQVMesh, QHFDushortBasis, vector<unsigned short> >;
+// template class GenericField<HQVMesh, QHFDucharBasis,  vector<unsigned char> >;
+// template class GenericField<HQVMesh, QHFDulongBasis,  vector<unsigned long> >;
 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

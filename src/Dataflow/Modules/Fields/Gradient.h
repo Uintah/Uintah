@@ -96,12 +96,14 @@ GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
   ofield->get_typed_mesh()->begin( out );
 
   typename OFIELD::value_type gradient;
-  vector<typename IFIELD::value_type> grad;
   while (in != end) {
+    DenseMatrix *grad = 0;
     ifield->cell_gradient(*in, grad);
-    gradient.x(grad[0]);
-    gradient.y(grad[1]);
-    gradient.z(grad[2]);
+    gradient.x(grad->get(0, 0));
+    gradient.y(grad->get(1, 0));
+    gradient.z(grad->get(2, 0));
+    delete grad;
+    grad = 0;
     ofield->set_value(gradient, *out);
     ++in; ++out;
   }
