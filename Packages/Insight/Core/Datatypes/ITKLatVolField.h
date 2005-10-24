@@ -36,11 +36,11 @@
 #ifndef Datatypes_ITKLatVolField_h
 #define Datatypes_ITKLatVolField_h
 
+#include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Containers/Array3.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
@@ -58,8 +58,11 @@ namespace Insight {
 using std::string;
 using namespace SCIRun;
 
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh_;
+
 template<class T> class ITKFData3d;
 template<class T> void Pio(Piostream& stream, ITKFData3d<T>& array);
+
 
 template <class Data>
 class ITKConstIterator : public itk::ImageRegionConstIterator<itk::Image<Data,3> > {
@@ -136,7 +139,7 @@ public:
   ITKFData3d(const ITKFData3d& data);
   virtual ~ITKFData3d();
   
-  const value_type &operator[](typename LatVolMesh::Cell::index_type idx) const
+  const value_type &operator[](typename LVMesh_::Cell::index_type idx) const
   { 
     if(image_set_) {
       typename image_type::IndexType pixel;
@@ -149,7 +152,7 @@ public:
       ASSERTFAIL("ITKFData3D image not set");
     }
   } 
-  const value_type &operator[](typename LatVolMesh::Face::index_type idx) const
+  const value_type &operator[](typename LVMesh_::Face::index_type idx) const
   { 
     ASSERTFAIL("const operator[] not defined for ITKLatVolField for Faces");
     if(image_set_) {
@@ -163,7 +166,7 @@ public:
       ASSERTFAIL("ITKFData3d image not set");
     }
   }
-  const value_type &operator[](typename LatVolMesh::Edge::index_type idx) const
+  const value_type &operator[](typename LVMesh_::Edge::index_type idx) const
   { 
     ASSERTFAIL("const operator[] not defined for ITKLatVolField for Edges");
     if(image_set_) {
@@ -177,7 +180,7 @@ public:
       ASSERTFAIL("ITKFData3d image not set");
     }
   }
-  const value_type &operator[](typename LatVolMesh::Node::index_type idx) const
+  const value_type &operator[](typename LVMesh_::Node::index_type idx) const
   { 
     if(image_set_) {
       typename image_type::IndexType pixel;
@@ -191,7 +194,7 @@ public:
     } 
   }
 
-  value_type &operator[](typename LatVolMesh::Cell::index_type idx)
+  value_type &operator[](typename LVMesh_::Cell::index_type idx)
   { 
     if(image_set_) {
       typename image_type::IndexType pixel;
@@ -204,7 +207,7 @@ public:
       ASSERTFAIL("ITKFData3d image not set");
     }
   }
-  value_type &operator[](typename LatVolMesh::Face::index_type idx)
+  value_type &operator[](typename LVMesh_::Face::index_type idx)
   {
     ASSERTFAIL("operator[] not defined for ITKLatVolField for Faces");
     if(image_set_) {
@@ -218,7 +221,7 @@ public:
       ASSERTFAIL("ITKFData3d image not set");
     }
   }
-  value_type &operator[](typename LatVolMesh::Edge::index_type idx)
+  value_type &operator[](typename LVMesh_::Edge::index_type idx)
   {
     ASSERTFAIL("operator[] not defined for ITKLatVolField for Edges");
     if(image_set_) {
@@ -232,7 +235,7 @@ public:
       ASSERTFAIL("ITKFData3d image not set");
     }
   }
-  value_type &operator[](typename LatVolMesh::Node::index_type idx)
+  value_type &operator[](typename LVMesh_::Node::index_type idx)
   {
     if(image_set_) {
       typename image_type::IndexType pixel;
@@ -248,16 +251,16 @@ public:
 
   // These do not do anything because and itk::Image takes care of
   // allocation.  This field merely points to an itk::Image.
-  void resize(const LatVolMesh::Node::size_type &size)
+  void resize(const typename LVMesh_::Node::size_type &size)
   { 
   }
-  void resize(const LatVolMesh::Edge::size_type &size)
+  void resize(const typename LVMesh_::Edge::size_type &size)
   { 
   }
-  void resize(const LatVolMesh::Face::size_type &size)
+  void resize(const typename LVMesh_::Face::size_type &size)
   {
   }
-  void resize(const LatVolMesh::Cell::size_type &size)
+  void resize(const typename LVMesh_::Cell::size_type &size)
   { 
   }
   
@@ -409,21 +412,35 @@ unsigned int ITKFData3d<Data>::dim3() const
 
 ///////////////////////////////////////////////////
 template <class Data>
-class ITKLatVolField : public GenericField< LatVolMesh, ITKFData3d<Data> >
+class ITKLatVolField : public GenericField<LVMesh_, HexTrilinearLgn<Data>, ITKFData3d<Data> >
 {
+
 public:
   // Avoids a warning with g++ 3.1
   // ../src/Core/Datatypes/QuadraticTetVolField.h:95: warning: `typename 
   // SCIRun::QuadraticTetVolField<T>::mesh_handle_type' is implicitly a typename
   // ../src/Core/Datatypes/QuadraticTetVolField.h:95: warning: implicit typename is 
   // deprecated, please see the documentation for details
-  typedef typename GenericField<LatVolMesh, ITKFData3d<Data> >::mesh_handle_type mesh_handle_type;
-  typedef LatVolMesh mesh_type;
 
-  ITKLatVolField();
-  ITKLatVolField(int order);
-  ITKLatVolField(LatVolMeshHandle mesh, int order);
-  ITKLatVolField(LatVolMeshHandle mesh, int order, itk::Object* img);
+
+  typedef HexTrilinearLgn<Data> ITKLVBasis;
+  typedef GenericField<LVMesh_, ITKLVBasis, ITKFData3d<Data> > ITKLVF;
+
+  ITKLatVolField() :
+    GenericField<LVMesh_, HexTrilinearLgn<Data>, ITKFData3d<Data> >() {
+    image_set_ = false;
+  }
+
+  ITKLatVolField(typename ITKLVF::mesh_handle_type mesh)  :
+    GenericField<LVMesh_, HexTrilinearLgn<Data>, ITKFData3d<Data> >(mesh) {
+    image_set_ = false;
+  }
+
+  ITKLatVolField(typename ITKLVF::mesh_handle_type mesh, itk::Object* img) :
+        GenericField<LVMesh_, HexTrilinearLgn<Data>, ITKFData3d<Data> >(mesh) {
+    this->SetImage(img);
+  }
+  
   virtual ITKLatVolField<Data> *clone() const;
   virtual ~ITKLatVolField();
 
@@ -447,41 +464,6 @@ private:
 };
 
 
-
-template <class Data>
-ITKLatVolField<Data>::ITKLatVolField()
-  : GenericField<LatVolMesh, ITKFData3d<Data> >()
-{
-  // need to set image
-  image_set_ = false;
-}
-
-
-template <class Data>
-ITKLatVolField<Data>::ITKLatVolField(int order)
-  : GenericField<LatVolMesh, ITKFData3d<Data> >(order)
-{
-  // need to set image
-  image_set_ = false;
-}
-
-
-template <class Data>
-ITKLatVolField<Data>::ITKLatVolField(LatVolMeshHandle mesh,
-			     int order)
-  : GenericField<LatVolMesh, ITKFData3d<Data> >(mesh, order)
-{
-  // need to set image
-  image_set_ = false;
-}
-
-template <class Data>
-ITKLatVolField<Data>::ITKLatVolField(LatVolMeshHandle mesh,
-			     int order, itk::Object* img)
-  : GenericField<LatVolMesh, ITKFData3d<Data> >(mesh, order)
-{
-  this->SetImage(img);
-}
 
 template <class Data>
 void ITKLatVolField<Data>::SetImage(itk::Object* img)
@@ -572,7 +554,7 @@ ITKLatVolField<Data>::maker()
 template <class Data>
 PersistentTypeID
 ITKLatVolField<Data>::type_id(type_name(-1),
-		GenericField<LatVolMesh, ITKFData3d<Data> >::type_name(-1),
+		GenericField<LVMesh_, HexTrilinearLgn<Data>, ITKFData3d<Data> >::type_name(-1),
                 maker); 
 
 template <class Data>
@@ -582,7 +564,7 @@ ITKLatVolField<Data>::io(Piostream &stream)
   int version = stream.begin_class(type_name(-1), ITK_LAT_VOL_FIELD_VERSION);
   if(version) {
     if(stream.reading()) {
-      GenericField<LatVolMesh, ITKFData3d<Data> >::io(stream);
+      GenericField<LVMesh_, HexTrilinearLgn<Data>, ITKFData3d<Data> >::io(stream);
       stream.end_class();
       
       // set spacing
@@ -616,7 +598,7 @@ ITKLatVolField<Data>::io(Piostream &stream)
       
       return;
     } else {
-      GenericField<LatVolMesh, ITKFData3d<Data> >::io(stream);
+      GenericField<LVMesh_, HexTrilinearLgn<Data>, ITKFData3d<Data> >::io(stream);
       stream.end_class();
       return;
     }
@@ -637,74 +619,57 @@ bool ITKLatVolField<Data>::get_gradient(Vector &g, const Point &p)
     // for now we only know how to do this for fields with scalars at the nodes
     if (this->query_scalar_interface().get_rep())
     {
-      if( this->basis_order() == 1)
-      {
-	mesh_handle_type mesh = this->get_typed_mesh();
-	const Point r = mesh->get_transform().unproject(p);
-	double x = r.x();
-	double y = r.y();
-	double z = r.z();
-	
-#if 0
-	Vector pn=p-mesh->get_min();
-	Vector diagonal = mesh->diagonal();
-	int ni=mesh->get_ni();
-	int nj=mesh->get_nj();
-	int nk=mesh->get_nk();
-	double diagx=diagonal.x();
-	double diagy=diagonal.y();
-	double diagz=diagonal.z();
-	double x=pn.x()*(ni-1)/diagx;
-	double y=pn.y()*(nj-1)/diagy;
-	double z=pn.z()*(nk-1)/diagz;
-#endif
-	
-	int ni=mesh->get_ni();
-	int nj=mesh->get_nj();
-	int nk=mesh->get_nk();
-	int ix0 = (int)x;
-	int iy0 = (int)y;
-	int iz0 = (int)z;
-	int ix1 = ix0+1;
-	int iy1 = iy0+1;
-	int iz1 = iz0+1;
-	if(ix0<0 || ix1>=ni)return false;
-	if(iy0<0 || iy1>=nj)return false;
-	if(iz0<0 || iz1>=nk)return false;
-	double fx = x-ix0;
-	double fy = y-iy0;
-	double fz = z-iz0;
-	LatVolMesh *mp = mesh.get_rep();
-	double d000 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
-	double d100 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
-	double d010 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
-	double d110 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz0));
-	double d001 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz1));
-	double d101 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz1));
-	double d011 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz1));
-	double d111 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz1));
-	double z00 = Interpolate(d000, d001, fz);
-	double z01 = Interpolate(d010, d011, fz);
-	double z10 = Interpolate(d100, d101, fz);
-	double z11 = Interpolate(d110, d111, fz);
-	double yy0 = Interpolate(z00, z01, fy);
-	double yy1 = Interpolate(z10, z11, fy);
-	double dx = (yy1-yy0);
-	double x00 = Interpolate(d000, d100, fx);
-	double x01 = Interpolate(d001, d101, fx);
-	double x10 = Interpolate(d010, d110, fx);
-	double x11 = Interpolate(d011, d111, fx);
-	double y0 = Interpolate(x00, x10, fy);
-	double y1 = Interpolate(x01, x11, fy);
-	double dz = (y1-y0);
-	double z0 = Interpolate(x00, x01, fz);
-	double z1 = Interpolate(x10, x11, fz);
-	double dy = (z1-z0);
-	g = mesh->get_transform().unproject(Vector(dx, dy, dz));
-	return true;
-      }
+      typename GenericField<LVMesh_, HexTrilinearLgn<Data>, ITKFData3d<Data> >::mesh_handle_type mesh = this->get_typed_mesh();
+      const Point r = mesh->get_transform().unproject(p);
+      double x = r.x();
+      double y = r.y();
+      double z = r.z();
+      
+      int ni=mesh->get_ni();
+      int nj=mesh->get_nj();
+      int nk=mesh->get_nk();
+      int ix0 = (int)x;
+      int iy0 = (int)y;
+      int iz0 = (int)z;
+      int ix1 = ix0+1;
+      int iy1 = iy0+1;
+      int iz1 = iz0+1;
+      if(ix0<0 || ix1>=ni)return false;
+      if(iy0<0 || iy1>=nj)return false;
+      if(iz0<0 || iz1>=nk)return false;
+      double fx = x-ix0;
+      double fy = y-iy0;
+      double fz = z-iz0;
+      LVMesh_ *mp = mesh.get_rep();
+      double d000 = (double)this->value(LVMesh_::Node::index_type(mp,ix0,iy0,iz0));
+      double d100 = (double)this->value(LVMesh_::Node::index_type(mp,ix1,iy0,iz0));
+      double d010 = (double)this->value(LVMesh_::Node::index_type(mp,ix0,iy1,iz0));
+      double d110 = (double)this->value(LVMesh_::Node::index_type(mp,ix1,iy1,iz0));
+      double d001 = (double)this->value(LVMesh_::Node::index_type(mp,ix0,iy0,iz1));
+      double d101 = (double)this->value(LVMesh_::Node::index_type(mp,ix1,iy0,iz1));
+      double d011 = (double)this->value(LVMesh_::Node::index_type(mp,ix0,iy1,iz1));
+      double d111 = (double)this->value(LVMesh_::Node::index_type(mp,ix1,iy1,iz1));
+      double z00 = Interpolate(d000, d001, fz);
+      double z01 = Interpolate(d010, d011, fz);
+      double z10 = Interpolate(d100, d101, fz);
+      double z11 = Interpolate(d110, d111, fz);
+      double yy0 = Interpolate(z00, z01, fy);
+      double yy1 = Interpolate(z10, z11, fy);
+      double dx = (yy1-yy0);
+      double x00 = Interpolate(d000, d100, fx);
+      double x01 = Interpolate(d001, d101, fx);
+      double x10 = Interpolate(d010, d110, fx);
+      double x11 = Interpolate(d011, d111, fx);
+      double y0 = Interpolate(x00, x10, fy);
+      double y1 = Interpolate(x01, x11, fy);
+      double dz = (y1-y0);
+      double z0 = Interpolate(x00, x01, fz);
+      double z1 = Interpolate(x10, x11, fz);
+      double dy = (z1-z0);
+      g = mesh->get_transform().unproject(Vector(dx, dy, dz));
+      return true;
     }
-  return false;
+    return false;
   }
   ASSERTFAIL("ITKLatVolField Image not set");
   return false;
@@ -769,5 +734,42 @@ void Pio(Piostream& stream, ITKFData3d<T>& data)
 }
 
 } // end namespace Insight
+
+namespace SCIRun {
+  using namespace Insight;
+  
+  const TypeDescription* 
+  get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<SCIRun::Vector>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<double>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<float>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<int>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<short>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<char>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<unsigned int>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<unsigned short>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<unsigned char>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData3d<unsigned long>*);
+}
 
 #endif // Datatypes_ITKLatVolField_h

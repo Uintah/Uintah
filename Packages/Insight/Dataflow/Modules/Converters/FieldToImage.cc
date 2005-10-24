@@ -38,16 +38,19 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-
+#include <Core/Util/TypeDescription.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Geometry/BBox.h>
 #include <Packages/Insight/Core/Datatypes/ITKImageField.h>
 #include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/LatVolField.h>
 
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Containers/FData.h>
 
 #include "itkVector.h"
 
@@ -58,6 +61,10 @@ using namespace SCIRun;
 enum FieldType {LATVOLFIELD, ITKLATVOLFIELD, IMAGEFIELD, ITKIMAGEFIELD};
 
 class FieldToImage : public Module {
+
+typedef LatVolMesh<HexTrilinearLgn<Point> >         LVMesh;
+typedef ImageMesh<QuadBilinearLgn<Point> >          IMesh;
+
 public:
   FieldIPort* infield_;
   FieldHandle infield_handle_;
@@ -104,26 +111,39 @@ bool FieldToImage::run( const FieldHandle &fh)
 {
   FieldType current_type;
 
-  if(dynamic_cast<LatVolField< data >*>(fh.get_rep())) {
-    current_type = LATVOLFIELD;
-  }
-  else if(dynamic_cast<ITKLatVolField< data >*>(fh.get_rep())) {
+  typedef HexTrilinearLgn<data> LVBasis;
+  typedef GenericField<LVMesh, LVBasis, FData3d<data, LVMesh> > LVF;
+
+  typedef ITKLatVolField<data > ITKLVF;
+
+  typedef QuadBilinearLgn<data> IBasis;
+  typedef GenericField<IMesh, IBasis, FData2d<data, IMesh> > IF;
+  typedef ITKImageField<data> ITKIF;
+
+  string mesh_type = fh->get_type_description(1)->get_name();
+
+  // try to dynamically cast to the itk types first, then use
+  // get_type_description to see if they are regular latvols or images
+  if(dynamic_cast<ITKLVF*>(fh.get_rep())) {
     current_type = ITKLATVOLFIELD;
   }
-  else if(dynamic_cast<ImageField< data >*>(fh.get_rep())) {
-    current_type = IMAGEFIELD;
-  }
-  else if(dynamic_cast<ITKImageField< data >*>(fh.get_rep())) {
+  else if(dynamic_cast<ITKIF*>(fh.get_rep())) {
     current_type = ITKIMAGEFIELD;
+  }
+  else if( mesh_type.find("LatVolMesh") != string::npos) {
+    current_type = LATVOLFIELD;
+  }
+  if( mesh_type.find("ImageMesh") != string::npos) {
+    current_type = IMAGEFIELD;
   }
   else {
     return false;
   }
 
   if(current_type == LATVOLFIELD) {
-    typedef LatVolField< data > LatVolFieldType;
-    typedef typename itk::Image<typename LatVolFieldType::value_type, 3> ImageType;
-    LatVolFieldType* f = dynamic_cast< LatVolFieldType* >(fh.get_rep());
+
+    typedef typename itk::Image<typename LVF::value_type, 3> ImageType;
+    LVF* f = dynamic_cast< LVF* >(fh.get_rep());
 
     // create a new itk image
     typename ImageType::Pointer img = ImageType::New(); 
@@ -161,7 +181,7 @@ bool FieldToImage::run( const FieldHandle &fh)
     img->SetSpacing( spacing );
 
     // set new data container
-    typename LatVolFieldType::value_type* imageData = &f->fdata()(0,0,0);
+    typename LVF::value_type* imageData = &f->fdata()(0,0,0);
     unsigned long size = (unsigned long)f->fdata().size();
 
     
@@ -174,12 +194,11 @@ bool FieldToImage::run( const FieldHandle &fh)
   }
   else if(current_type == ITKLATVOLFIELD) {
     // unwrap it
-    img_->data_ = dynamic_cast<ITKLatVolField< data >*>(fh.get_rep())->get_image();
+    img_->data_ = dynamic_cast<ITKLVF*>(fh.get_rep())->get_image();
   }
   else if(current_type == IMAGEFIELD) {
-    typedef ImageField< data > ImageFieldType;
-    typedef typename itk::Image<typename ImageFieldType::value_type, 2> ImageType;
-    ImageFieldType* f = dynamic_cast< ImageFieldType* >(fh.get_rep());
+    typedef typename itk::Image<typename IF::value_type, 2> ImageType;
+    IF* f = dynamic_cast< IF* >(fh.get_rep());
 
     // create a new itk image
     typename ImageType::Pointer img = ImageType::New(); 
@@ -215,7 +234,7 @@ bool FieldToImage::run( const FieldHandle &fh)
     img->SetSpacing( spacing );
 
     // set new data container
-    typename ImageFieldType::value_type* imageData = &f->fdata()(0,0);
+    typename IF::value_type* imageData = &f->fdata()(0,0);
     unsigned long size = (unsigned long)f->fdata().size();
 
     
@@ -228,36 +247,50 @@ bool FieldToImage::run( const FieldHandle &fh)
   }
   else if(current_type == ITKIMAGEFIELD) {
     // unwrap it
-    img_->data_ = dynamic_cast<ITKImageField< data >*>(fh.get_rep())->get_image();
+    img_->data_ = dynamic_cast<ITKIF*>(fh.get_rep())->get_image();
   }
   return true;
 }
 
 bool FieldToImage::run_vector( const FieldHandle &fh) 
 {
+  typedef HexTrilinearLgn<Vector> LVBasis;
+  typedef GenericField<LVMesh, LVBasis, FData3d<Vector, LVMesh> > LVF;
+
+  typedef ITKLatVolField<Vector > ITKLVF;
+
+  typedef QuadBilinearLgn<Vector> IBasis;
+  typedef GenericField<IMesh, IBasis, FData2d<Vector, IMesh> > IF;
+  typedef ITKImageField<Vector> ITKIF;
+
   FieldType current_type;
 
-  if(dynamic_cast<LatVolField< Vector >*>(fh.get_rep())) {
-    current_type = LATVOLFIELD;
-  }
-  else if(dynamic_cast<ITKLatVolField< Vector >*>(fh.get_rep())) {
+  string mesh_type = fh->get_type_description(1)->get_name();
+
+  // try to dynamically cast to the itk types first, then use
+  // get_type_description to see if they are regular latvols or images
+
+  if(dynamic_cast<ITKLVF*>(fh.get_rep())) {
     current_type = ITKLATVOLFIELD;
   }
-  else if(dynamic_cast<ImageField< Vector >*>(fh.get_rep())) {
-    current_type = IMAGEFIELD;
-  }
-  else if(dynamic_cast<ITKImageField< Vector >*>(fh.get_rep())) {
+  else if(dynamic_cast<ITKIF*>(fh.get_rep())) {
     current_type = ITKIMAGEFIELD;
   }
+  else if(mesh_type.find("LatVolMesh") != string::npos) { 
+    current_type = LATVOLFIELD;
+  }
+  else if(mesh_type.find("ImageMesh") != string::npos) { 
+    current_type = IMAGEFIELD;
+  }
+
   else {
     return false;
   }
 
   if(current_type == LATVOLFIELD) {
-    typedef LatVolField< Vector > LatVolFieldType;
     typedef itk::Image<itk::Vector<double>, 3> ImageType;
     typedef itk::ImageRegionIterator< ImageType > IteratorType;
-    LatVolFieldType* f = dynamic_cast< LatVolFieldType* >(fh.get_rep());
+    LVF* f = dynamic_cast< LVF* >(fh.get_rep());
 
     // create a new itk image
     ImageType::Pointer img = ImageType::New(); 
@@ -308,15 +341,15 @@ bool FieldToImage::run_vector( const FieldHandle &fh)
     img->SetSpacing( spacing );
 
     // copy the data
-    LatVolMesh::Node::iterator iter, end;
-    LatVolMeshHandle mh((LatVolMesh*)(f->mesh().get_rep()));
+    LVMesh::Node::iterator iter, end;
+    LVF::mesh_handle_type mh = f->get_typed_mesh(); 
+    //LVF::handle_type mh((LVMesh*)(f->mesh().get_rep()));
     mh->begin(iter);
     mh->end(end);
 
-    ImageType::IndexType pixelIndex;
     typedef ImageType::PixelType PixelType;
     PixelType pixel;
-    LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
+    LVF* fld = (LVF* )fh.get_rep();
 
     IteratorType img_iter(img, img->GetRequestedRegion());
     img_iter.GoToBegin();
@@ -342,13 +375,12 @@ bool FieldToImage::run_vector( const FieldHandle &fh)
   }
   else if(current_type == ITKLATVOLFIELD) {
     // unwrap it
-    img_->data_ = dynamic_cast<ITKLatVolField< Vector >*>(fh.get_rep())->get_image();
+    img_->data_ = dynamic_cast<ITKLVF*>(fh.get_rep())->get_image();
   }
   else if(current_type == IMAGEFIELD) {
-    typedef ImageField< Vector > ImageFieldType;
     typedef itk::Image< itk::Vector<double>, 2> ImageType;
     typedef itk::ImageRegionIterator< ImageType > IteratorType;
-    ImageFieldType* f = dynamic_cast< ImageFieldType* >(fh.get_rep());
+    IF* f = dynamic_cast< IF* >(fh.get_rep());
 
     // create a new itk image
     ImageType::Pointer img = ImageType::New(); 
@@ -397,15 +429,14 @@ bool FieldToImage::run_vector( const FieldHandle &fh)
     img->SetSpacing( spacing );
 
      // copy the data
-    ImageMesh::Node::iterator iter, end;
-    ImageMeshHandle mh((ImageMesh*)(f->mesh().get_rep()));
+    IMesh::Node::iterator iter, end;
+    IMesh::handle_type mh((IMesh*)(f->mesh().get_rep()));
     mh->begin(iter);
     mh->end(end);
 
-    ImageType::IndexType pixelIndex;
     typedef ImageType::PixelType PixelType;
     PixelType pixel;
-    ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
+    IF* fld = (IF* )fh.get_rep();
 
     IteratorType img_iter(img, img->GetRequestedRegion());
     img_iter.GoToBegin();
@@ -430,7 +461,7 @@ bool FieldToImage::run_vector( const FieldHandle &fh)
   }
   else if(current_type == ITKIMAGEFIELD) {
     // unwrap it
-    img_->data_ = dynamic_cast<ITKImageField< Vector >*>(fh.get_rep())->get_image();
+    img_->data_ = dynamic_cast<ITKIF*>(fh.get_rep())->get_image();
   }
   return true;
 }

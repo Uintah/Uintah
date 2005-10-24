@@ -36,11 +36,11 @@
 #ifndef Datatypes_ITKImageField_h
 #define Datatypes_ITKImageField_h
 
+#include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Containers/Array2.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
@@ -57,6 +57,8 @@ namespace Insight {
 
 using std::string;
 using namespace SCIRun;
+
+typedef ImageMesh<QuadBilinearLgn<Point> > IMesh_;
 
 template<class T> class ITKFData2d;
 template<class T> void Pio(Piostream& stream, ITKFData2d<T>& array);
@@ -93,6 +95,7 @@ public:
   typedef itk::Image<Data,2> image_type;
   typedef ITKIterator2d<Data> iterator;
   typedef ITKConstIterator2d<Data> const_iterator;
+  //  typedef ImageMesh<QuadBilinearLgn<Data> > IMesh_;
 
   iterator *begin_;
   iterator *end_;
@@ -131,12 +134,12 @@ public:
   ITKFData2d(const ITKFData2d& data);
   virtual ~ITKFData2d();
   
-  const value_type &operator[](ImageMesh::Cell::index_type idx) const
+  const value_type &operator[](typename IMesh_::Cell::index_type idx) const
   { 
     ASSERTFAIL("No const operator[] for ITKImageField at Cells");
     // check if image is set
   }
-  const value_type &operator[](ImageMesh::Face::index_type idx) const
+  const value_type &operator[](typename IMesh_::Face::index_type idx) const
   { 
     if(image_set_) {
       typename image_type::IndexType index;
@@ -147,12 +150,12 @@ public:
     else
       ASSERTFAIL("ITKFData2d image not set");
   }
-  const value_type &operator[](ImageMesh::Edge::index_type idx) const
+  const value_type &operator[](typename IMesh_::Edge::index_type idx) const
   { 
     ASSERTFAIL("No const operator[] for ITKImageField at Edges");
     // check if image is set
   }
-  const value_type &operator[](ImageMesh::Node::index_type idx) const
+  const value_type &operator[](typename IMesh_::Node::index_type idx) const
   { 
     if(image_set_) {
       typename image_type::IndexType index;
@@ -164,12 +167,12 @@ public:
       ASSERTFAIL("ITKFData2d image not set");
   }
   
-  value_type &operator[](ImageMesh::Cell::index_type idx)
+  value_type &operator[](typename IMesh_::Cell::index_type idx)
   { 
     ASSERTFAIL("No operator[] for ITKImageField at Cells");
     // check if image is set
   }
-  value_type &operator[](ImageMesh::Face::index_type idx)
+  value_type &operator[](typename IMesh_::Face::index_type idx)
   {
     if(image_set_) {
       typename image_type::IndexType index;
@@ -180,12 +183,12 @@ public:
     else
       ASSERTFAIL("ITKFData2d image not set");      
   }
-  value_type &operator[](ImageMesh::Edge::index_type idx)
+  value_type &operator[](typename IMesh_::Edge::index_type idx)
   { 
     ASSERTFAIL("No operator[] for ITKImageField at Edges");
     // check if image is set
   }
-  value_type &operator[](ImageMesh::Node::index_type idx)
+  value_type &operator[](typename IMesh_::Node::index_type idx)
   {
     if(image_set_) {
       typename image_type::IndexType index;
@@ -199,16 +202,16 @@ public:
 
   // These do not do anything because and itk::Image takes care of
   // allocation.  This field merely points to an itk::Image.
-  void resize(const ImageMesh::Node::size_type &size)
+  void resize(const typename IMesh_::Node::size_type &size)
   { 
   }
-  void resize(const ImageMesh::Edge::size_type &size)
+  void resize(const typename IMesh_::Edge::size_type &size)
   { 
   }
-  void resize(const ImageMesh::Face::size_type &size)
+  void resize(const typename IMesh_::Face::size_type &size)
   { 
   }
-  void resize(const ImageMesh::Cell::size_type &size)
+  void resize(const typename IMesh_::Cell::size_type &size)
   { 
   }
 
@@ -342,13 +345,25 @@ unsigned int ITKFData2d<Data>::dim2() const
 
 ///////////////////////////////////////////////////////
 template <class Data>
-class ITKImageField : public GenericField< ImageMesh, ITKFData2d<Data> >
+class ITKImageField : public GenericField<IMesh_, QuadBilinearLgn<Data>, ITKFData2d<Data> >
 {
 public:
-  ITKImageField();
-  ITKImageField(int order);
-  ITKImageField(ImageMeshHandle mesh, int order);
-  ITKImageField(ImageMeshHandle mesh, int order, itk::Object* img);
+  typedef QuadBilinearLgn<Data> ITKIBasis;
+  typedef GenericField<IMesh_, ITKIBasis, ITKFData2d<Data> > ITKIF;
+
+  ITKImageField() :
+    GenericField<IMesh_, QuadBilinearLgn<Data>, ITKFData2d<Data> >() {
+    image_set_ = false;
+  } 
+  ITKImageField(typename ITKIF::mesh_handle_type mesh) :
+    GenericField<IMesh_, QuadBilinearLgn<Data>, ITKFData2d<Data> >(mesh) {
+    image_set_ = false;
+  } 
+
+  ITKImageField(typename ITKIF::mesh_handle_type mesh, itk::Object* img)  :
+    GenericField<IMesh_, QuadBilinearLgn<Data>, ITKFData2d<Data> >(mesh) {
+    this->SetImage(img);
+  } 
   virtual ITKImageField<Data> *clone() const;
   virtual ~ITKImageField();
 
@@ -370,41 +385,6 @@ private:
 };
 
 
-
-template <class Data>
-ITKImageField<Data>::ITKImageField()
-  : GenericField<ImageMesh, ITKFData2d<Data> >()
-{
-  // need to set image
-  image_set_ = false;
-}
-
-
-template <class Data>
-ITKImageField<Data>::ITKImageField(int order)
-  : GenericField<ImageMesh, ITKFData2d<Data> >(order)
-{
-  // need to set image
-  image_set_ = false;
-}
-
-
-template <class Data>
-ITKImageField<Data>::ITKImageField(ImageMeshHandle mesh,
-			     int order)
-  : GenericField<ImageMesh, ITKFData2d<Data> >(mesh, order)
-{
-  // need to set image
-  image_set_ = false;
-}
-
-template <class Data>
-ITKImageField<Data>::ITKImageField(ImageMeshHandle mesh,
-			     int order, itk::Object* img)
-  : GenericField<ImageMesh, ITKFData2d<Data> >(mesh, order)
-{
-  this->SetImage(img);
-}
 
 template <class Data>
 void ITKImageField<Data>::SetImage(itk::Object* img)
@@ -445,7 +425,8 @@ ITKImageField<Data>::maker()
 template <class Data>
 PersistentTypeID
 ITKImageField<Data>::type_id(type_name(-1),
-		GenericField<ImageMesh, ITKFData2d<Data> >::type_name(-1),
+			     GenericField<IMesh_, QuadBilinearLgn<Data>, 
+			     ITKFData2d<Data> >::type_name(-1),
                 maker); 
 
 template <class Data>
@@ -456,7 +437,7 @@ ITKImageField<Data>::io(Piostream &stream)
   int version = stream.begin_class(type_name(-1), ITK_IMAGE_FIELD_VERSION);
   if (version) {
     if(stream.reading()) {
-      GenericField<ImageMesh, ITKFData2d<Data> >::io(stream);
+      GenericField<IMesh_, QuadBilinearLgn<Data>, ITKFData2d<Data> >::io(stream);
       stream.end_class();
       
       // set spacing
@@ -488,7 +469,7 @@ ITKImageField<Data>::io(Piostream &stream)
       
       return;
     } else {
-      GenericField<ImageMesh, ITKFData2d<Data> >::io(stream);
+      GenericField<IMesh_, QuadBilinearLgn<Data>, ITKFData2d<Data> >::io(stream);
       stream.end_class();
       return;
     }
@@ -598,5 +579,43 @@ void Pio(Piostream& stream, ITKFData2d<T>& data)
 }
 
 } // end namespace Insight
+
+
+namespace SCIRun {
+  using namespace Insight;
+  
+  const TypeDescription* 
+  get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<SCIRun::Vector>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<double>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<float>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<int>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<short>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<char>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<unsigned int>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<unsigned short>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<unsigned char>*);
+  
+  const TypeDescription*
+  get_type_description(Insight::ITKFData2d<unsigned long>*);
+}
 
 #endif // Datatypes_ITKImageField_h
