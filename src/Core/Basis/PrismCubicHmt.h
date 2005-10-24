@@ -49,7 +49,7 @@ public:
 template <class T>
 class PrismCubicHmt : public BasisSimple<T>, 
                       public PrismApprox, 
-		      public PrismGaussian2<T>, 
+		      public PrismGaussian2<double>, 
 		      public PrismCubicHmtUnitElement 
 {
 public:

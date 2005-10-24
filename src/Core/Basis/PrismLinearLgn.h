@@ -188,11 +188,11 @@ protected:
     for (int x = 0; x <= end; x++) {
       coord[0] = x / (double) end;
       for (int y = 0; y <= end; y++) {
-	coord[1] = x / (double) end;
+	coord[1] = y / (double) end;
 	if (coord[0]+coord[1]>Dim3Locate<ElemBasis>::thresholdDist1)
 	  break;
 	for (int z = 0; z <= end; z++) {
-	  coord[2] = x / (double) end;
+	  coord[2] = z / (double) end;
 	  double cur_d;
 	  if (compare_distance(pElem->interpolate(coord, cd), 
 			       val, cur_d, dist)) {
