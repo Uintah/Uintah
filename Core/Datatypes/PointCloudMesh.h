@@ -263,8 +263,8 @@ public:
 		  const Point &p,
 		  typename Elem::index_type idx) const
   {
-    ElemData ed(*this, idx);
-    return basis_.get_coords(coords, p, ed); 
+    coords.resize(1);
+    coords[0] = 0.0L;
   }
   
   void interpolate(Point &pt, const vector<double> &coords, 
@@ -272,6 +272,18 @@ public:
   {
     get_center(pt, idx);
   }
+
+  // get the Jacobian matrix
+  void derivate(const vector<double> &coords, 
+		typename Elem::index_type idx, 
+		vector<Point> &J) const
+  {
+    J.resize(1);
+    J[0].x(0.0L);
+    J[0].y(0.0L);
+    J[0].z(0.0L);
+  }
+
 
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();

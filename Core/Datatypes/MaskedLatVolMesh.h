@@ -850,6 +850,55 @@ public:
   virtual MaskedLatVolMesh *clone() { return new MaskedLatVolMesh(*this); }
   virtual ~MaskedLatVolMesh() {}
 
+  Basis &get_basis() { return  LatVolMesh<Basis>::get_basis; }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an edge.
+  void pwl_approx_edge(vector<vector<double> > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Edge::index_type ei, 
+		       unsigned div_per_unit) const
+  {    
+    LatVolMesh<Basis>::pwl_approx_edge(coords, ci, ei, div_per_unit);
+  }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an face.
+  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+		       typename Elem::index_type ci, 
+		       typename Face::index_type fi, 
+		       unsigned div_per_unit) const
+  {
+    LatVolMesh<Basis>::pwl_approx_face(coords, ci, fi, div_per_unit);
+  }
+  
+  bool get_coords(vector<double> &coords, 
+		  const Point &p,
+		  typename Elem::index_type idx) const
+  {
+    typename LatVolMesh<Basis>::Elem::index_type i(this, idx.i_, 
+						   idx.j_, idx.k_);
+    return LatVolMesh<Basis>::get_coords(coords, p, i);
+  }
+  
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename Elem::index_type idx) const
+  {
+    typename LatVolMesh<Basis>::Elem::index_type i(this, idx.i_, 
+						   idx.j_, idx.k_);
+    LatVolMesh<Basis>::interpolate(pt, coords, i);
+  }
+
+  // get the Jacobian matrix
+  void derivate(const vector<double> &coords, 
+		typename Elem::index_type idx, 
+		vector<Point> &J) const
+  {
+    typename LatVolMesh<Basis>::Elem::index_type i(this, idx.i_, 
+						   idx.j_, idx.k_);
+    LatVolMesh<Basis>::derivate(coords, i, J);
+  }
+
   //! get the mesh statistics
   virtual BBox get_bounding_box() const;
 
@@ -900,17 +949,17 @@ public:
 
   // returns 26 pairs in ijk order
   void	get_neighbors_stencil(
-			  vector<pair<bool,typename Cell::index_type> > &nbrs, 
-			  typename Cell::index_type idx) const;
+			      vector<pair<bool,typename Cell::index_type> > &nbrs, 
+			      typename Cell::index_type idx) const;
   // return 26 pairs in ijk order
   void	get_neighbors_stencil(
-			  vector<pair<bool,typename Node::index_type> > &nbrs, 
-			  typename Node::index_type idx) const;
+			      vector<pair<bool,typename Node::index_type> > &nbrs, 
+			      typename Node::index_type idx) const;
   
   // return 8 pairs in ijk order
   void	get_neighbors_stencil(
-			  vector<pair<bool,typename Cell::index_type> > &nbrs, 
-			  typename Node::index_type idx) const;
+			      vector<pair<bool,typename Cell::index_type> > &nbrs, 
+			      typename Node::index_type idx) const;
 
 
   //! get the center point (in object space) of an element
@@ -1283,7 +1332,7 @@ MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Node::ind
 template <class Basis>
 bool
 MaskedLatVolMesh<Basis>::check_valid(
-		 typename MaskedLatVolMesh<Basis>::Edge::index_type idx) const
+				     typename MaskedLatVolMesh<Basis>::Edge::index_type idx) const
 {
   
   bool val = false;

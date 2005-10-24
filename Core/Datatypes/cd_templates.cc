@@ -57,6 +57,7 @@ using namespace SCIRun;
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Datatypes/GenericField.h>
+#include <vector>
 
 #if !defined(__sgi)
 // Needed for optimized linux build only
@@ -110,6 +111,45 @@ template class Property<vector<pair<string,Tensor> > >;
 template class Property<vector<pair<int,double> > >;
 template class Property<LockingHandle<Matrix> >;
 template class Property<LockingHandle<NrrdData> >;
+
+
+//Specializations from GenericField
+template <>
+void
+load_partials<Vector>(const vector<Vector> &grad, DenseMatrix &m)
+{
+  int i = 0;
+  vector<Vector>::const_iterator iter = grad.begin();
+  while(iter != grad.end()) {
+    const Vector &v = *iter++;
+    m.put(i, 0, v.x());
+    m.put(i, 1, v.y());
+    m.put(i, 2, v.z());
+    ++i;
+  }
+}
+
+template <>
+void
+load_partials<Tensor>(const vector<Tensor> &grad, DenseMatrix &m)
+{
+  ASSERTFAIL("unimplimented");
+}
+
+
+template <>
+unsigned int get_vsize<Vector>(Vector*)
+{
+  return 3;
+}
+
+template <>
+unsigned int get_vsize<Tensor>(Tensor*)
+{
+  ASSERTFAIL("unimplimented");
+}
+
+
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

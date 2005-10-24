@@ -91,13 +91,9 @@ Gradient::execute()
   {
     otd = (TypeDescription *) SCIRun::get_type_description( (Vector*) 0 );
   }
-  else if (fieldin->query_vector_interface(this).get_rep())
-  {
-    otd = (TypeDescription *) SCIRun::get_type_description( (Tensor*) 0 );
-  }
   else
   {
-    error( "This module only works on fields of scalar or vector data.");
+    error( "This module only works on fields of scalar or data.");
     return;
   }
 

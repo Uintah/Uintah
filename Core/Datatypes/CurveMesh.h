@@ -253,6 +253,15 @@ public:
     pt = basis_.interpolate(coords, ed);
   }
 
+  // get the Jacobian matrix
+  void derivate(const vector<double> &coords, 
+		typename Elem::index_type idx, 
+		vector<Point> &J) const
+  {
+    ElemData ed(*this, idx);
+    basis_.derivate(coords, ed, J);
+  }
+
   //! get the center point (in object space) of an element
   void get_center(Point &result, typename Node::index_type idx) const
   { result = nodes_[idx]; }
