@@ -36,6 +36,7 @@ SRCS     +=      $(SRCDIR)/CrvLinearLgn.cc             \
                  $(SRCDIR)/TetQuadraticLgn.cc          \
                  $(SRCDIR)/TriLinearLgn.cc             \
                  $(SRCDIR)/TriQuadraticLgn.cc          \
+                 $(SRCDIR)/TriCubicHmt.cc          \
 
 
 PSELIBS :=

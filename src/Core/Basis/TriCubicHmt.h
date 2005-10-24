@@ -27,7 +27,7 @@
 //  
 //    File   : TriCubicHmt.h
 //    Author : Martin Cole, Frank B. Sachse
-//    Date   : Dec 04 2004
+//    Date   : Oct 24 2005
 
 #if !defined(TriCubicHmt_h)
 #define TriCubicHmt_h
@@ -36,12 +36,29 @@
 
 namespace SCIRun {
 
-  //! Class for describing unit geometry of TriCubicHmt
-  class TriCubicHmtUnitElement : public TriLinearLgnUnitElement {
+//! Class for describing unit geometry of TriCubicHmt
+class TriCubicHmtUnitElement  {
   public:
-    TriCubicHmtUnitElement() {};
-    virtual ~TriCubicHmtUnitElement() {};
-  };
+  //!< Parametric coordinates of vertices of unit edge
+  static double unit_vertices[4][2];
+  //!< References to vertices of unit edge 
+  static int unit_edges[3][2]; 
+  //!< References to vertices of unit face
+  static int unit_faces[1][3]; 
+  
+  TriCubicHmtUnitElement() {}
+  virtual ~TriCubicHmtUnitElement() {}
+  //! return dimension of domain 
+  static int domain_dimension() { return 2; } 
+  //! return number of vertices
+  static int number_of_vertices() { return 4; }
+  //! return number of edges 
+  static int number_of_edges() { return 3; } 
+  //! return number of vertices per face 
+  static int vertices_of_face() { return 3; } 
+  //! return number of faces per cell 
+  static int faces_of_cell() { return 1; } 
+};
 
 
 //! Class for handling of element of type triangle with 
