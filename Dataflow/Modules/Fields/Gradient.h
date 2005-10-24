@@ -44,7 +44,7 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-
+#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/Mesh.h>
 
 #include <Core/Geometry/Point.h>
