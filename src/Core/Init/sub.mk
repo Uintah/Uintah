@@ -36,13 +36,14 @@ SRCDIR   := Core/Init
 SRCS     += $(SRCDIR)/init.cc
 
 PSELIBS := \
-	Core/Containers \
-	Core/Datatypes  \
-	Core/Exceptions \
-	Core/Geometry   \
+	Core/Containers   \
+	Core/Datatypes    \
+	Core/Exceptions   \
+	Core/Geometry     \
+	Core/GuiInterface \
 	Core/ImportExport \
-	Core/Persistent \
-	Core/Thread     \
+	Core/Persistent   \
+	Core/Thread       \
 	Core/Util 
 LIBS :=
 
