@@ -25,7 +25,6 @@ using SCIRun::Thread;
 using SCIRun::ThreadGroup;
 using SCIRun::Semaphore;
 using SCIRun::Runnable;
-using SCIRun::LatVolField;
 using SCIRun::LatVolMesh;
 
 template <class Var, class Data, class FIELD>
