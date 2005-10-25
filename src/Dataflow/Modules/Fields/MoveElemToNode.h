@@ -74,7 +74,7 @@ public:
 template <class FSRC, class FDST>
 FieldHandle
 MoveElemToNodeAlgoLat<FSRC, FDST>::execute(ProgressReporter *mod,
-				      FieldHandle fieldh)
+                                           FieldHandle fieldh)
 {
   FSRC *ifield = dynamic_cast<FSRC*>(fieldh.get_rep());
   typename FSRC::mesh_type *imesh =
@@ -135,7 +135,7 @@ public:
 template <class FSRC, class FDST>
 FieldHandle
 MoveElemToNodeAlgoSHex<FSRC, FDST>::execute(ProgressReporter *mod,
-				       FieldHandle fieldh)
+                                            FieldHandle fieldh)
 {
   FSRC *ifield = dynamic_cast<FSRC*>(fieldh.get_rep());
   typename FSRC::mesh_type *imesh =
@@ -177,9 +177,9 @@ MoveElemToNodeAlgoSHex<FSRC, FDST>::execute(ProgressReporter *mod,
     ifield->value(v, *iter);
 
     typename FDST::mesh_type::Node::index_type oi(omesh,
-						   (*iter).i_,
-						   (*iter).j_,
-						   (*iter).k_);
+                                                  (*iter).i_,
+                                                  (*iter).j_,
+                                                  (*iter).k_);
 
     ofield->set_value(v, oi);
 
@@ -204,7 +204,7 @@ public:
 template <class FSRC, class FDST>
 FieldHandle
 MoveElemToNodeAlgoImg<FSRC, FDST>::execute(ProgressReporter *mod,
-				      FieldHandle fieldh)
+                                           FieldHandle fieldh)
 {
   FSRC *ifield = dynamic_cast<FSRC*>(fieldh.get_rep());
   typename FSRC::mesh_type *imesh =
@@ -238,8 +238,8 @@ MoveElemToNodeAlgoImg<FSRC, FDST>::execute(ProgressReporter *mod,
     ifield->value(v, *iter);
 
     typename FDST::mesh_type::Node::index_type oi(omesh,
-						   (*iter).i_,
-						   (*iter).j_);
+                                                  (*iter).i_,
+                                                  (*iter).j_);
 
     ofield->set_value(v, oi);
 
@@ -302,8 +302,8 @@ MoveElemToNodeAlgoSQuad<FSRC, FDST>::execute(ProgressReporter *mod,
     ifield->value(v, *iter);
 
     typename FDST::mesh_type::Node::index_type oi(omesh,
-						   (*iter).i_,
-						   (*iter).j_);
+                                                  (*iter).i_,
+                                                  (*iter).j_);
 
     ofield->set_value(v, oi);
 
