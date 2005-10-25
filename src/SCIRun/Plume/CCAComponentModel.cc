@@ -103,6 +103,7 @@ namespace SCIRun {
   CCAComponentModel::~CCAComponentModel()
   {
     destroyComponentList();
+    framework = 0;
   }
   
   void CCAComponentModel::destroyComponentList()
@@ -141,7 +142,13 @@ namespace SCIRun {
     }
     framework->releaseFrameworkService(service);
 #else
-    sArray.push_back("/local/home/yarden/projects/plume/src/CCA/Core/xml");
+    const char *path_c = getenv("SIDL_XML_PATH");
+    if ( path_c ) {
+      std::string path (path_c);
+      parseEnvVariable( path, ':', sArray);
+    }
+    else 
+      std::cerr << "SIDL_XML_PATH not set\n";
 #endif
 
     for (SSIDL::array1<std::string>::iterator item = sArray.begin(); item != sArray.end(); item++) {
@@ -159,6 +166,22 @@ namespace SCIRun {
     }
   }
   
+  void CCAComponentModel::parseEnvVariable(std::string& input,
+                                           const char token,
+                                           SSIDL::array1<std::string>& stringArray)
+  {
+    std::string::size_type i = 0;
+    while ( i != std::string::npos ) {
+      i = input.find(token);
+      if (i < input.size()) {
+	stringArray.push_back(input.substr(0, i));
+	input = input.substr(i + 1, input.size());
+      } else {
+	stringArray.push_back(input);
+      }
+    }
+  }
+
   void CCAComponentModel::readComponentClassDescription(const std::string& file)
   {
     // Instantiate the DOM parser.
@@ -203,7 +226,7 @@ namespace SCIRun {
       DOMElement *library = static_cast<DOMElement *>(libraries->item(i));
       // Read the library name
       std::string library_name(to_char_ptr(library->getAttribute(to_xml_ch_ptr("name"))));
-      std::cout << "Library [" << library_name << "]\n";
+      //std::cout << "Library [" << library_name << "]\n";
       
       // Get the list of components.
       DOMNodeList* comps = library->getElementsByTagName(to_xml_ch_ptr("component"));
@@ -211,7 +234,7 @@ namespace SCIRun {
 	// Read the component name
 	DOMElement *component = static_cast<DOMElement *>(comps->item(j));
 	std::string component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
-	std::cout << "\tComponent [" << component_name << "]\n";
+	//std::cout << "\tComponent [" << component_name << "]\n";
 	
 	// Register this component
 	CCAComponentClassDescription::pointer cd = new CCAComponentClassDescriptionImpl(component_name, library_name );
@@ -227,7 +250,7 @@ namespace SCIRun {
   }
   
   
-  CoreServies::pointer
+  CoreServices::pointer
   CCAComponentModel::createComponent(const std::string &name,
 				     const std::string &type,
 				     const std::string &library,
@@ -250,7 +273,7 @@ namespace SCIRun {
     if(!handle) {
       std::cerr << "Can not load component " << type << std::endl;
       std::cerr << SOError() << std::endl;
-      return ComponentInfo::pointer(0);
+      return 0;
     }
     
     std::string makername = "make_"+type;

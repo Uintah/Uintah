@@ -45,6 +45,8 @@
 #include <Core/CCA/SSIDL/sidl_sidl.h>
 #include <string>
 
+#include <execinfo.h>
+
 namespace SCIRun {
 
   using namespace sci::cca;
@@ -86,9 +88,11 @@ namespace SCIRun {
     // void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)
     virtual void add(const std::string &filename, int lineno, const std::string &methodname);
     
+    virtual void show_stack();
+
   private:
-    //mutable void *stack_addresses[1024];
-    //mutable int stack_depth;
+    mutable void *stack_addresses[1024];
+    mutable int stack_depth;
     mutable std::string message;
     mutable CCAExceptionType type;
   };

@@ -50,11 +50,15 @@ namespace SCIRun {
   SingletonServiceFactoryBase<Service, Interface>::SingletonServiceFactoryBase(const CoreFramework::pointer &framework,
 									       const std::string &serviceName)
     : framework(framework), serviceName(serviceName), uses(0), lock("SingletoneServiceFactory")
-  {}
+  {
+  }
 
   template<class Service, class Interface>
   SingletonServiceFactoryBase<Service, Interface>::~SingletonServiceFactoryBase()
-  {}
+  {
+    framework = 0;
+    service = 0;
+  }
   
   template<class Service, class Interface>
   PortInfo::pointer 

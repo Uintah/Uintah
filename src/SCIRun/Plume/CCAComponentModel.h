@@ -66,7 +66,7 @@ namespace SCIRun {
     virtual ~CCAComponentModel();
     
     
-    virtual CoreServies::pointer createComponent(const std::string& name,
+    virtual CoreServices::pointer createComponent(const std::string& name,
 						 const std::string& type,
 						 const std::string& library,
 						 const sci::cca::TypeMap::pointer& properties);
@@ -86,6 +86,8 @@ namespace SCIRun {
     void buildComponentList();
     void destroyComponentList();
     std::vector<std::string> splitPathString(const std::string &path);
+    void parseEnvVariable(std::string& input, const char token, SSIDL::array1<std::string>&);
+
 
   private:
     CoreFramework::pointer framework;

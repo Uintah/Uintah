@@ -71,32 +71,32 @@ main(int argc, char *argv[])
   
   // Create a new framework
 
-//   try {
-//      PlumeFramework::pointer framework = new PlumeFrameworkImpl();
-//      std::cerr << "URL to framework:\n" << framework->getURL().getString() << std::endl;
+  try {
+     PlumeFramework::pointer framework = new PlumeFrameworkImpl();
+     std::cerr << "URL to framework:\n" << framework->getURL().getString() << std::endl;
 
-//      Thread *test_thread = new Thread( new PlumeTest(framework), "plume test");
-//      test_thread->detach();
+     Thread *test_thread = new Thread( new PlumeTest(framework), "plume test");
+     test_thread->detach();
 
-//     //broadcast, listen to URL periodically
-//      PIDL::serveObjects();
-//      PIDL::finalize();
+    //broadcast, listen to URL periodically
+     PIDL::serveObjects();
+     PIDL::finalize();
     
-//   }
-//   catch(const sci::cca::CCAException::pointer &pe) {
-//     std::cerr << "Caught exception:\n";
-//     std::cerr << pe->getNote() << std::endl;
-//     abort();
-//   }
-//   catch(const Exception& e) {
-//     std::cerr << "Caught exception:\n";
-//     std::cerr << e.message() << std::endl;
-//     abort();
-//   }
-//   catch(...) {
-//     std::cerr << "Caught unexpected exception!\n";
-//     abort();
-//   }
+  }
+  catch(const CCAException::pointer &pe) {
+    std::cerr << "Caught exception:\n";
+    std::cerr << pe->getNote() << std::endl;
+    abort();
+  }
+  catch(const Exception& e) {
+    std::cerr << "Caught exception:\n";
+    std::cerr << e.message() << std::endl;
+    abort();
+  }
+  catch(...) {
+    std::cerr << "Caught unexpected exception!\n";
+    abort();
+  }
   return 0;
 }
 

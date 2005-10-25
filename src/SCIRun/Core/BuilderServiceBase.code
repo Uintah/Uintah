@@ -72,6 +72,8 @@ namespace SCIRun {
   template<class Interface>
   BuilderServiceBase<Interface>::~BuilderServiceBase()
   {
+    framework = 0;
+    portInfo = 0;
   }
   
   template<class Interface>

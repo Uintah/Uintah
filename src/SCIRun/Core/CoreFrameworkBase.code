@@ -84,6 +84,10 @@ namespace SCIRun {
   template<class Interface>
   CoreFrameworkBase<Interface>::~CoreFrameworkBase()
   {
+    connections.clear();
+    components.clear();
+    factories.clear();
+    components.clear();
   }
   
 
@@ -109,6 +113,7 @@ namespace SCIRun {
 	// this may throw a cca exception.
 	// do not catch it. 
 	
+	
 	services = factory->second->create( pointer(this), instanceName, properties);
       }
       
@@ -119,11 +124,12 @@ namespace SCIRun {
     // we should not init the component until the CoreServices is in the component array
     // otherwise we might get a race condition.
     try {
-      services->getComponent()->setServices(services);
+      if ( !services->getComponent().isNull() )
+	services->getComponent()->setServices(services);
     } catch (...) {
       std::cerr << "component crashed during set services\n";
       Guard guard(&component_lock);
-      ComponentMap::iter = components.find(instanceName);
+      ComponentMap::iterator iter = components.find(instanceName);
       components.erase(iter);
       services = 0;
     }
@@ -195,7 +201,13 @@ namespace SCIRun {
   template<class Interface>
   void CoreFrameworkBase<Interface>::shutdownFramework()
   {
-    // Fixme [yarden]: what should be done here ?
+    services.clear();
+    factories.clear();
+    components.clear();
+    connections.clear();
+      
+    // For PIDL: reduce Reference
+    //this->deleteReference();
   }
 
   template<class Interface>

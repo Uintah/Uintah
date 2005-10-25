@@ -73,6 +73,7 @@ namespace SCIRun {
   template<class Interface> 
   PortInfoBase<Interface>::~PortInfoBase()
   {
+    connections.clear();
   }
   
   /*

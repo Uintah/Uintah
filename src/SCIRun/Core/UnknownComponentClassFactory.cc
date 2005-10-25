@@ -54,7 +54,7 @@ namespace SCIRun {
   
   UnknownComponentClassFactory::~UnknownComponentClassFactory() {}
   
-  ComponentInfo::pointer 
+  CoreServices::pointer 
   UnknownComponentClassFactory::create( const CoreFramework::pointer &framework,
 					const std::string &name,
 					const sci::cca::TypeMap::pointer &properties)

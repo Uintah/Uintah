@@ -62,7 +62,9 @@ namespace SCIRun {
 
   template<class Interface>
   FixedPortServiceFactoryBase<Interface>::~FixedPortServiceFactoryBase()
-  {}
+  {
+    service = 0;
+  }
     
     /*
      * sci.cca.core.FixedPortServiceFactory interface

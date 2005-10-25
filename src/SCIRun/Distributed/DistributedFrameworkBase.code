@@ -47,6 +47,7 @@
 namespace SCIRun {
   
   using namespace sci::cca;
+  using namespace sci::cca::core;
   using namespace sci::cca::distributed;
 
 
@@ -114,6 +115,12 @@ namespace SCIRun {
     return copy;
   }
 
+
+  template<class Interface>
+  void DistributedFrameworkBase<Interface>::shutdownFramework()
+  {
+    CoreFrameworkBase<Interface>::shutdownFramework();
+  }
   
 } // SCIRun namespace
 

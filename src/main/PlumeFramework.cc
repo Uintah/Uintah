@@ -66,6 +66,7 @@ void parse_args( int argc, char *argv[]);
 static std::string attach_url = "";
 static std::string parent_url = "";
 static std::string app_class = "";
+static bool server = false;
 
 int
 main(int argc, char *argv[]) 
@@ -91,12 +92,16 @@ main(int argc, char *argv[])
     }
 
     std::cerr << "Framework id: " << framework->getFrameworkID()->getString() << "\n";
+
     if ( app_class != "") new SimpleManager(framework, app_class);
+    if ( !server ) {
+      framework->shutdownFramework();
+      framework = 0;
+    }
 
     //broadcast, listen to URL periodically
      PIDL::serveObjects();
 
-     std::cerr << "shutdown PIDL\n";
      PIDL::finalize();
     
   }
@@ -163,6 +168,9 @@ parse_args( int argc, char *argv[])
 	exit(0);
       }
       app_class = argv[cnt];
+    }
+    else if ( arg == "--server" ) {
+      server = true;
     }
   }
 }

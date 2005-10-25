@@ -34,6 +34,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := SCIRun/Core
 
 SRCS     += \
+	     $(SRCDIR)/backtrace.cc \
 	     $(SRCDIR)/CCAException.cc \
 	     $(SRCDIR)/TypeMapImpl.cc \
 	     $(SRCDIR)/ConnectionIDImpl.cc \
@@ -83,6 +84,6 @@ $(SRCDIR)/BuilderService.o: Core/CCA/spec/sci_sidl.h \
             Core/Exceptions Core/Thread \
             Core/TkExtensions Core/Init Core/CCA/Comm
 
-LIBS := 
+LIBS :=  -L/usr/local/lib -lbfd -liberty
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
