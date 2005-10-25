@@ -152,7 +152,7 @@ void Test1D()
 
   for(int i=0; i<u.number_of_vertices(); i++) {
     Point p(u.unit_vertices[i][0]+1, u.unit_vertices[i][0]+2, u.unit_vertices[i][0]+3);
-    if (i<n.size()) {
+    if ((unsigned)i<n.size()) {
       mesh->add_point(p);
       n[i]=i;
       if (u.polynomial_order()==3) {
@@ -204,7 +204,7 @@ void Test2D()
  
   for(int i=0; i<u.number_of_vertices(); i++) {
     Point p(u.unit_vertices[i][0]+1, u.unit_vertices[i][1]+2, 3);
-    if (i<n.size()) {
+    if ((unsigned)i<n.size()) {
       mesh->add_point(p);
       n[i]=i;
       if (u.polynomial_order()==3) {
@@ -258,7 +258,7 @@ void Test3D()
  
   for(int i=0; i<u.number_of_vertices(); i++) {
     Point p(u.unit_vertices[i][0]+1, u.unit_vertices[i][1]+2, u.unit_vertices[i][2]+3);
-    if (i<n.size()) {
+    if ((unsigned)i<n.size()) {
       mesh->add_point(p);
       n[i]=i;
       if (u.polynomial_order()==3) {
