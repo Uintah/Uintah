@@ -65,6 +65,11 @@ struct FieldIndexBase {
 
   //! Required interface for an Index.
   operator T const &() const { return index_; }
+
+  std::ostream& str_render(std::ostream& os) const {
+    os << index_;
+    return os;
+  }
   
   T index_;
 };

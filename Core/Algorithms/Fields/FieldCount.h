@@ -90,7 +90,7 @@ FieldCountAlgorithmT<MESH>::execute_node(MeshHandle mesh_h)
   typename MESH::Node::size_type nnodes;
   mesh->size(nnodes);
   std::ostringstream nodestr;
-  nodestr << nnodes;
+  nnodes.str_render(nodestr);
   return nodestr.str();
 }
 
@@ -105,7 +105,7 @@ FieldCountAlgorithmT<MESH>::execute_elem(MeshHandle mesh_h)
   typename MESH::Elem::size_type nelems;  
   mesh->size(nelems);
   std::ostringstream elemstr;
-  elemstr << nelems;
+  nelems.str_render(elemstr);
   return elemstr.str();
 }
 

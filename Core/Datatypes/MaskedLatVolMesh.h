@@ -74,6 +74,13 @@ public:
     MaskedLatIndex() : i_(0), j_(0), k_(0), mesh_(0) {}
     MaskedLatIndex(const MaskedLatVolMesh *m, unsigned int i, unsigned int j, 
 		   unsigned int k) : i_(i), j_(j), k_(k), mesh_(m) {}
+
+
+    std::ostream& str_render(std::ostream& os) const
+    {
+      os << "[" << i_ << "," << j_ << "," << k_ << "]";
+      return os;
+    }
     
     unsigned int i_, j_, k_;
     
