@@ -89,7 +89,7 @@ Exec_setup_command(const char *cfilename, const string &precommand,
 
   // Filename with first extension removed.
   loc = filename.find_last_of(".");
-  const string filenoext = filename.substr(0, loc);
+  //const string filenoext = filename.substr(0, loc);
 
   // Replace all of the variables in the reader command.
   command = precommand;
