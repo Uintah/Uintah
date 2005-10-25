@@ -39,8 +39,8 @@ namespace SCIRun {
 //! Class for describing unit geometry of TetCubicHmt
 class TetCubicHmtUnitElement : public TetLinearLgnUnitElement {
 public:
-  TetCubicHmtUnitElement() {};
-  virtual ~TetCubicHmtUnitElement() {};
+  TetCubicHmtUnitElement() {}
+  virtual ~TetCubicHmtUnitElement() {}
 };
 
 //! Class for handling of element of type tetrahedron with 
@@ -163,7 +163,7 @@ public:
   {
     TetLocate< TetCubicHmt<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
  
   //! add derivative values (dx, dy, dz) for nodes.
   void add_derivative(const vector<T>  &p) { derivs_.push_back(p); }
