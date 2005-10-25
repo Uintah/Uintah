@@ -166,9 +166,32 @@ ChangeFieldBasis::execute()
 
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrctd = fh->get_type_description();
+  TypeDescription::td_vec *tdv = 
+    fh->get_type_description(3)->get_sub_type();
+  string actype = (*tdv)[0]->get_name();
+  string btype = "NoDataBasis<double> ";
+  if (basis_order == 0)
+  {
+    btype = "ConstantBasis<" + actype + "> ";
+  }
+  else if (basis_order == 1)
+  {
+    // TODO: This is a hack, we assume that the mesh points are
+    // distributed linearly and use that as our type.  This should be
+    // replaced with a table indicating what type is linear for each
+    // mesh type.
+    TypeDescription::td_vec *bdv = fh->get_type_description(1)->get_sub_type();
+    string linear = (*bdv)[0]->get_name();
+    btype = linear.substr(0, linear.find_first_of('<')) + "<" + actype + "> ";
+  }
+  const string fdsts =
+    fh->get_type_description(0)->get_name() + "<" +
+    fh->get_type_description(1)->get_name() + "," +
+    btype + "," +
+    fh->get_type_description(3)->get_name() + "> ";
   CompileInfoHandle ci =
-    ChangeFieldBasisAlgoCreate::get_compile_info(fsrctd);
-  Handle<ChangeFieldBasisAlgoCreate> algo;
+    ChangeFieldBasisAlgo::get_compile_info(fsrctd, fdsts);
+  Handle<ChangeFieldBasisAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
   update_state(Executing);
@@ -178,9 +201,6 @@ ChangeFieldBasis::execute()
   // Automatically apply the interpolant matrix to the output field.
   if (ef.get_rep() && interpolant.get_rep())
   {
-    TypeDescription::td_vec *tdv = 
-      fh->get_type_description(3)->get_sub_type();
-    string actype = (*tdv)[0]->get_name();
     const string oftn = 
       ef->get_type_description(0)->get_name() + "<" +
       ef->get_type_description(1)->get_name() + ", " +
@@ -222,23 +242,28 @@ ChangeFieldBasis::execute()
     
 
 CompileInfoHandle
-ChangeFieldBasisAlgoCreate::get_compile_info(const TypeDescription *field_td)
+ChangeFieldBasisAlgo::get_compile_info(const TypeDescription *fsrc,
+                                       const string &fdst)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class("ChangeFieldBasisAlgoCreateT");
-  static const string base_class_name("ChangeFieldBasisAlgoCreate");
+  static const string template_class("ChangeFieldBasisAlgoT");
+  static const string base_class_name("ChangeFieldBasisAlgo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class + "." +
-		       field_td->get_filename() + ".",
+		       fsrc->get_filename() + "." +
+                       to_filename(fdst) + ".",
 		       base_class_name, 
 		       template_class,
-                       field_td->get_name());
+                       fsrc->get_name() + ", " +
+                       fdst);
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  field_td->fill_compile_info(rval);
+  rval->add_basis_include("../src/Core/Basis/NoData.h");
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  fsrc->fill_compile_info(rval);
   return rval;
 }
 
