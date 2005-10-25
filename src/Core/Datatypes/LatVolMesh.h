@@ -1350,7 +1350,7 @@ LatVolMesh<Basis>::get_cells(typename Cell::array_type &array,
   for (k = k0; k < k1; k++)
     for (j = j0; j < j1; j++)
       for (i = i0; i < i1; i++)
-	array.push_back(Cell::index_type(this, i, j, k));
+	array.push_back(typename Cell::index_type(this, i, j, k));
 
   return array.size();
 }
