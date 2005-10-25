@@ -18,6 +18,8 @@ namespace SCIRun {
   
   SimpleManager::~SimpleManager()
   {
+    framework = 0;
+    std::cerr << "SimpleManager done\n";
   }
   
   void SimpleManager::run()
@@ -40,13 +42,14 @@ namespace SCIRun {
 	services->releasePort("run");
 	builder->disconnect(connection, 0);
 
+	//builder->destroyInstance(app, 0);
+
       }
       catch (const CCAException::pointer &e) {
 	std::cerr << e->getNote() << "\n";
 	// cleanup
 	//if ( !connection.isNull() ) 
       }
-      
       
       services->releasePort("builder");
       services->unregisterUsesPort("builder");

@@ -93,7 +93,9 @@ main(int argc, char *argv[])
 
     std::cerr << "Framework id: " << framework->getFrameworkID()->getString() << "\n";
 
-    if ( app_class != "") new SimpleManager(framework, app_class);
+    if ( app_class != "") {
+      SimpleManager(framework, app_class);
+    }
     if ( !server ) {
       framework->shutdownFramework();
       framework = 0;
