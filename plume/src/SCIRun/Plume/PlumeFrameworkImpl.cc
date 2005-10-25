@@ -5,6 +5,11 @@
 
 namespace SCIRun {
 
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+  using namespace sci::cca::distributed;
+  using namespace sci::cca::plume;
+
   PlumeFrameworkImpl::PlumeFrameworkImpl( const DistributedFramework::pointer &parent )
     : PlumeFrameworkBase<PlumeFramework>(parent)
   {}

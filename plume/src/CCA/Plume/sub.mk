@@ -32,17 +32,6 @@
 SRCDIR   := CCA/Plume
 
 SUBDIRS := \
-	$(SRCDIR)/TxtBuilder \
-	$(SRCDIR)/Hello \
-	$(SRCDIR)/World \
-
-ifeq ($(HAVE_QT),yes)
-  SUBDIRS := \
-#             $(SRCDIR)/Builder \
-#             $(SRCDIR)/FileReader \
-else
-
-endif
-
+	$(SRCDIR)/PlumeTest \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

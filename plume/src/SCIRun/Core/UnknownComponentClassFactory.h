@@ -54,9 +54,9 @@ namespace SCIRun {
 
     virtual ~UnknownComponentClassFactory();
     
-    virtual ComponentInfo::pointer create( const CoreFramework::pointer &framework,
-					   const std::string &name,
-					   const sci::cca::TypeMap::pointer &);
+    virtual CoreServices::pointer create( const CoreFramework::pointer &framework,
+					  const std::string &name,
+					  const sci::cca::TypeMap::pointer &);
   };
 
 }

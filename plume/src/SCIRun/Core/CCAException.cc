@@ -42,6 +42,10 @@
 #include <SCIRun/Core/CCAException.h>
 #include <Core/Util/NotFinished.h>
 
+extern "C" {
+  extern void backtrace_linux( int stack_depth, void *stack_addresses[] );
+}
+
 namespace SCIRun {
 
   CCAException::pointer CCAException::create(const std::string &msg, CCAExceptionType type)
@@ -52,16 +56,17 @@ namespace SCIRun {
   CCAException::CCAException(const std::string &msg, CCAExceptionType type)
     : message(msg), type(type)
   {
-    //stack_depth = backtrace(stack_addresses, 1024);
+    stack_depth = backtrace(stack_addresses, 1024);
     // FIXME [yarden] from SCIRun:
     // Omitting this will cause the framework to
     // segfault when an exception is thrown.
-    addReference();
+    //addReference();
   }
   
   CCAException::~CCAException()
   {
-    deleteReference();
+    show_stack();
+    //deleteReference();
   }
   
   // TODO: implement stack trace
@@ -82,4 +87,10 @@ namespace SCIRun {
     NOT_FINISHED("void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)");
   }
   
+
+  void CCAException::show_stack()
+  {
+    backtrace_linux( stack_depth, stack_addresses );
+  }
+
 } // end namespace SCIRun

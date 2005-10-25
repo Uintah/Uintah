@@ -306,10 +306,10 @@ Thread_shutdown(Thread* thread)
   }
   unlock_scheduler();
 
-  bool wait_main = priv->ismain;
-  if (wait_main && !done) {
-    main_sema.down();
-  }
+//   bool wait_main = priv->ismain;
+//   if (wait_main && !done) 
+//     main_sema.down();
+
   delete thread;
   if (pthread_setspecific(thread_key, 0) != 0)
     fprintf(stderr, "Warning: pthread_setspecific failed");

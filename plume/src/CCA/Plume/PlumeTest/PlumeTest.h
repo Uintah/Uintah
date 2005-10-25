@@ -1,6 +1,4 @@
-<?xml version="1.0" ?>
-<!DOCTYPE metacomponentmodel SYSTEM "metacomponentmodel.dtd">
-<!--
+/*
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -26,12 +24,52 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
--->
+*/
 
 
-<metacomponentmodel name = "cca">
-  <library name="libCCA_Plume_PlumeTest.so">
-    <component name="cca.plume.PlumeTest">
-    </component>
-  </library>
-</metacomponentmodel>
+/*
+ *  PlumeTest.h
+ *
+ *  Written by:
+ *   Yarden Livnat
+ *   SCI Institute
+ *   University of Utah
+ *   October 2005
+ *
+ */
+
+#ifndef SCIRun_CCA_Plume_PlumeTest_h
+#define SCIRun_CCA_Plume_PlumeTest_h
+
+#include <Core/CCA/spec/sci_sidl.h>
+
+namespace SCIRun {
+
+  using namespace sci::cca;
+  
+  class PlumeTest : public  Component 
+  {
+  public:
+    PlumeTest();
+    virtual ~PlumeTest();
+    
+    void setServices(const Services::pointer&);
+    int go();
+    
+  protected:
+    Services::pointer services;
+    Port::pointer goPort;
+  };
+
+
+  class PlumeTestPort : public ports::GoPort
+  {
+  public:
+    PlumeTestPort( PlumeTest *test ) : test(test) {}
+    int go() { return test->go(); }
+  private:
+    PlumeTest *test;
+  };
+  
+}
+#endif // SCIRun_CCA_Plume_PlumeTest_h

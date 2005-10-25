@@ -58,7 +58,10 @@ namespace SCIRun {
 
   template<class Interface>
   ProviderServiceFactoryBase<Interface>::~ProviderServiceFactoryBase()
-  {}
+  {
+    serviceProvider = 0;
+    providerComponentInfo = 0;
+  }
     
     /*
      * sci.cca.core.ProviderServiceFactory interface

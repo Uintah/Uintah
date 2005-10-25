@@ -79,6 +79,7 @@ namespace SCIRun {
     virtual void releaseServices( const Services::pointer &services);
     
     virtual void shutdownFramework();
+    virtual AbstractFramework::pointer  createEmptyFramework() { return 0; }
 
     /*
      * methods that implement the CoreFramework 
@@ -110,7 +111,7 @@ namespace SCIRun {
 
   private:
     typedef std::list<ConnectionInfo::pointer> ConnectionList;
-    typedef std::map<std::string, ComponentInfo::pointer> ComponentMap;
+    typedef std::map<std::string, CoreServices::pointer> ComponentMap;
     typedef std::map<std::string, ComponentClassFactory::pointer> ComponentClassFactoryMap;
     typedef std::map<std::string, ServiceFactory::pointer> ServiceMap;
 

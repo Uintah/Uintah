@@ -53,6 +53,8 @@ ifeq ($(BUILD_SCIRUN2),yes)
 	CCA/Core/Hello CCA/Core/World
   endif
 
+  LIBS :=  -L/usr/local/lib -lbfd /usr/local/lib/libiberty.a
+
   PROGRAM := plume
 
   include $(SCIRUN_SCRIPTS)/program.mk
@@ -73,6 +75,9 @@ ifeq ($(BUILD_SCIRUN2),yes)
         Core/CCA/PIDL Core/CCA/spec Core/Util \
         Core/CCA/SSIDL Core/Thread \
 	CCA/Core/Hello CCA/Core/World
+
+#   LIBS :=  -L/usr/local/lib -lbfd -liberty
+
   endif
 
   PROGRAM := PlumeFramework

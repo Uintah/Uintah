@@ -332,8 +332,6 @@ package sci {
        */
       collective
       void setServices(in Services services) throws CCAException;
-
-      //void setCommunicator(in int communicator);
     }
 
     /**

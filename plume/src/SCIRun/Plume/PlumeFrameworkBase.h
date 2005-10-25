@@ -48,6 +48,8 @@
 namespace SCIRun {
 
   using namespace sci::cca;
+  using namespace sci::cca::core;
+  using namespace sci::cca::distributed;
   using namespace sci::cca::plume;
 
   /**
@@ -64,8 +66,10 @@ namespace SCIRun {
     PlumeFrameworkBase( const DistributedFramework::pointer &parent = 0 );
     virtual ~PlumeFrameworkBase();
     
+    virtual void shutdownFramework();
+
   protected:
-    CCAComponentModel cca;
+    CCAComponentModel *cca;
     
   };
   

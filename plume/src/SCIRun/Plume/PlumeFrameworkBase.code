@@ -50,8 +50,9 @@ namespace SCIRun {
 
   template<class Interface>
   PlumeFrameworkBase<Interface>::PlumeFrameworkBase(const DistributedFramework::pointer &parent )
-    : DistributedFrameworkBase<Interface>(parent), cca(this)
+    : DistributedFrameworkBase<Interface>(parent)
   {
+    cca = new CCAComponentModel(this);
   }
   
   template<class Interface>
@@ -59,6 +60,13 @@ namespace SCIRun {
   {
   }
   
+  template<class Interface>
+  void PlumeFrameworkBase<Interface>::shutdownFramework()
+  {
+    // For PIDL: reduce Reference
+    delete cca;
+    DistributedFrameworkBase<Interface>::shutdownFramework();
+  }
 } // SCIRun namespace
 
 #endif // CIRun_PlumeFrameworkBase_code

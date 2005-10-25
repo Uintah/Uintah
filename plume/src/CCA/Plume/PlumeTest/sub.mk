@@ -29,11 +29,18 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SUBDIRS := $(SRCDIR)/Core \
-	$(SRCDIR)/Plume \
+SRCDIR   := CCA/Plume/PlumeTest
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+SRCS     += $(SRCDIR)/PlumeTest.cc
+
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
+           Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 
 
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+#include $(SCIRUN_SCRIPTS)/program.mk
+
+$(SRCDIR)/PlumeTest.o: Core/CCA/spec/sci_sidl.h

@@ -33,6 +33,10 @@ package sci {
     
     package core {
 
+//        interface PortComponent  extends Component, ports.GoPort
+//        {
+//        }
+
       // Connection
       interface ConnectionInfo extends ConnectionID
       {
@@ -45,7 +49,7 @@ package sci {
       {
 	string getClassName();
 	ComponentClassDescription getClassDescription();
-	ComponentInfo create(in CoreFramework, in string name, in TypeMap);
+	CoreServices create(in CoreFramework, in string name, in TypeMap);
       }
 	
       interface ComponentInfo extends ComponentID
