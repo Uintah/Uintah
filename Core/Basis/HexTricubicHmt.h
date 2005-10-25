@@ -226,7 +226,6 @@ public:
     const double z12=(z-1)*(z-1);
 
     derivs.resize(3);
-    derivs.clear();
 
     derivs[0]=
       T(6*(-1 + x)*x*y12*(1 + 2*y)*z12*(1 + 2*z)*cd.node0()
@@ -435,7 +434,7 @@ public:
   {
     HexLocate< HexTricubicHmt<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  }
+  };
     
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
   void add_derivative(const vector<T> &p) { derivs_.push_back(p); }

@@ -37,11 +37,6 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Basis/Locate.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn off 'implicit conversion... loss of accuracy' messages.
-#  pragma set woff 1506
-#endif
-
 namespace SCIRun {
 
 using std::string;
@@ -53,17 +48,17 @@ public:
   static int unit_edges[6][2]; //!< References to vertices of unit edge
   static int unit_faces[4][3];  //!< References to vertices of unit face
   
-  TetLinearLgnUnitElement() {}
-  virtual ~TetLinearLgnUnitElement() {}
+  TetLinearLgnUnitElement() {};
+  virtual ~TetLinearLgnUnitElement() {};
   
-  static int domain_dimension() { return 3; } //! return dimension of domain 
+  static int domain_dimension() { return 3; }; //! return dimension of domain 
   
-  static int number_of_vertices() { return 4; } //! return number of vertices
-  static int number_of_edges() { return 6; } //! return number of edges
+  static int number_of_vertices() { return 4; }; //! return number of vertices
+  static int number_of_edges() { return 6; }; //! return number of edges
   
-  static int vertices_of_face() { return 3; } //! return number of vertices per face 
+  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
 
-  static int faces_of_cell() { return 4; } //! return number of faces per cell 
+  static int faces_of_cell() { return 4; }; //! return number of faces per cell 
 };
 
 
@@ -145,7 +140,7 @@ public:
       }
     }
   }
-}; // end class TetApprox
+};
 
 //! Class for searching of parametric coordinates related to a 
 //! value in Tet meshes and fields
@@ -179,7 +174,7 @@ protected:
 	    return true;
 
     return false;
-  }
+  };
   
 
 
@@ -194,15 +189,15 @@ protected:
     vector<T> derivs(3);
     guess.resize(3);
 
-    const int end = 2;
-    for (int x = 0; x <= end; x++) {
+    const int end = 3;
+    for (int x = 1; x < end; x++) {
       coord[0] = x / (double) end;
-      for (int y = 0; y <= end; y++) {
-	coord[1] = x / (double) end;
+      for (int y = 1; y < end; y++) {
+	coord[1] = y / (double) end;
 	if (coord[0]+coord[1]>Dim3Locate<ElemBasis>::thresholdDist1)
 	  break;
-	for (int z = 0; z <= end; z++) {
-	  coord[2] = x / (double) end;
+	for (int z = 1; z < end; z++) {
+	  coord[2] = z / (double) end;
 	  if (coord[0]+coord[1]+coord[2]>Dim3Locate<ElemBasis>::thresholdDist1)
 	    break;
 	  
@@ -219,7 +214,7 @@ protected:
       }
     }
   }
-}; // end class TetLocate
+};
 
 //! Class with weights and coordinates for 2nd order Gaussian integration
 template <class T>
@@ -345,7 +340,7 @@ public:
   {
     TetLocate< TetLinearLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  }
+  };
  
   static  const string type_name(int n = -1);
 
@@ -399,11 +394,7 @@ TetLinearLgn<T>::io(Piostream &stream)
   stream.end_class();
 }
 
-} //namespace SCIRun
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn back on 'implicit conversion... loss of accuracy' messages.
-#  pragma reset woff 1506
-#endif
+} //namespace SCIRun
 
 #endif // TetLinearLgn_h

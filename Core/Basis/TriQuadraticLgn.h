@@ -44,17 +44,17 @@ public:
   static int unit_edges[3][2]; //!< References to vertices of unit edge 
   static int unit_faces[1][3]; //!< References to vertices of unit face
   
-  TriQuadraticLgnUnitElement() {}
-  virtual ~TriQuadraticLgnUnitElement() {}
+  TriQuadraticLgnUnitElement() {};
+  virtual ~TriQuadraticLgnUnitElement() {};
   
-  static int domain_dimension() { return 2; } //! return dimension of domain 
+  static int domain_dimension() { return 2; }; //! return dimension of domain 
   
-  static int number_of_vertices() { return 6; } //! return number of vertices
-  static int number_of_edges() { return 9; } //! return number of edges
+  static int number_of_vertices() { return 6; }; //! return number of vertices
+  static int number_of_edges() { return 9; }; //! return number of edges
   
-  static int vertices_of_face() { return 3; } //! return number of vertices per face 
+  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
 
-  static int faces_of_cell() { return 4; } //! return number of faces per cell 
+  static int faces_of_cell() { return 4; }; //! return number of faces per cell 
 };
 
 //! Class for handling of element of type triangle with 
@@ -123,7 +123,7 @@ public:
 		-4*x*nodes_[cd.edge0_index()]
 		+4*x*nodes_[cd.edge1_index()]
 		-4*(-1 + x +2*y)*nodes_[cd.edge2_index()]);
-  }
+  };
 
   //! get the parametric coordinate for value within the element
   template <class ElemData>
@@ -132,7 +132,7 @@ public:
   {
     TriLocate< TriQuadraticLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  }
+  };
  
   //! add a node value corresponding to edge
   void add_node_value(const T &p) { nodes_.push_back(p); }

@@ -35,11 +35,6 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn off 'implicit conversion... loss of accuracy' messages.
-#  pragma set woff 1506
-#endif
-
 namespace SCIRun {
 
 //! Class for describing unit geometry of HexTricubicHmtScaleFactors
@@ -294,7 +289,6 @@ public:
     const double z12=(z-1)*(z-1);
 
     derivs.resize(3);
-    derivs.clear();
 
     const T sdx0=derivs_[cd.node0_index()][0]*scalefactors_[cd.node0_index()][0];
     const T sdx1=derivs_[cd.node1_index()][0]*scalefactors_[cd.node1_index()][0];
@@ -565,7 +559,7 @@ public:
   {
     HexLocate< HexTricubicHmtScaleFactors<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  }
+  };
 
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
   void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
@@ -633,10 +627,5 @@ HexTricubicHmtScaleFactors<T>::io(Piostream &stream)
 }
 
 } //namespace SCIRun
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn back on 'implicit conversion... loss of accuracy' messages.
-#  pragma reset woff 1506
-#endif
 
 #endif // HexTricubicHmtScaleFactors_h
