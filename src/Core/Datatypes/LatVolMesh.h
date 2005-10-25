@@ -75,6 +75,12 @@ public:
       ASSERT(mesh_);
       return i_ + ni()*j_ + ni()*nj()*k_;
     }
+
+    std::ostream& str_render(std::ostream& os) const
+    {
+      os << "[" << i_ << "," << j_ << "," << k_ << "]";
+      return os;
+    }
     
     // Make sure mesh_ is valid before calling these convience accessors
     unsigned ni() const { ASSERT(mesh_); return mesh_->get_ni(); }
@@ -126,7 +132,12 @@ public:
     LatSize(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
 
     operator unsigned() const { return i_*j_*k_; }
-
+    
+    std::ostream& str_render(std::ostream& os) const {
+      os << i_*j_*k_ << " (" << i_ << " x " << j_ << " x " << k_ << ")";
+      return os;
+    }
+    
     unsigned i_, j_, k_;
   };
 
@@ -932,21 +943,7 @@ template <class Basis>
 PersistentTypeID 
 LatVolMesh<Basis>::type_id(type_name(-1), "Mesh", LatVolMesh<Basis>::maker);
 
-template <class Basis>
-std::ostream& operator<<(std::ostream& os, 
-			 const typename LatVolMesh<Basis>::LatIndex& n)
-{
-  os << "[" << n.i_ << "," << n.j_ << "," << n.k_ << "]";
-  return os;
-}
 
-template <class Basis>
-std::ostream& operator<<(std::ostream& os, 
-			 const typename LatVolMesh<Basis>::LatSize& n)
-{
-  os << (int)n << " (" << n.i_ << " x " << n.j_ << " x " << n.k_ << ")";
-  return os;
-}
 
 template <class Basis>
 LatVolMesh<Basis>::LatVolMesh(unsigned i, unsigned j, unsigned k,

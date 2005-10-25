@@ -1475,7 +1475,7 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
     }
     else
     {
-      buffer << (*iter);
+      (*iter).str_render(buffer);
     }
 
     if (use_default_material)
@@ -1668,7 +1668,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
     }
     else
     {
-      buffer << (*iter);
+      (*iter).str_render(buffer);
     }
 
     if (use_default_material)
@@ -1753,7 +1753,7 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
     }
     else
     {
-      buffer << (*iter);
+      (*iter).str_render(buffer);
     }
 
     if (use_default_material)

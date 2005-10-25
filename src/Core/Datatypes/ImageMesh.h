@@ -75,6 +75,11 @@ public:
       ASSERT(mesh_);
       return i_ + j_*mesh_->ni_;
     }
+    
+    std::ostream& str_render(std::ostream& os) const {
+      os << "[" << i_ << "," << j_ << "]";
+      return os;
+    }
 
     unsigned i_, j_;
 
@@ -189,6 +194,12 @@ public:
     ImageSize(unsigned i, unsigned j) : i_(i), j_(j) {}
 
     operator unsigned() const { return i_*j_; }
+
+    std::ostream& str_render(std::ostream& os) const {
+      os << i_*j_ << " (" << i_ << " x " << j_ << ")";
+      return os;
+    }
+
 
     unsigned i_, j_;
   };
@@ -1185,19 +1196,6 @@ ImageMesh<Basis>::size(typename ImageMesh::Cell::size_type &s) const
 {
   s = typename Cell::size_type(0);
 }
-
-
-// std::ostream& 
-// operator<<(std::ostream& os, const ImageMesh::ImageIndex& n) {
-//   os << "[" << n.i_ << "," << n.j_ << "]";
-//   return os;
-// }
-
-// std::ostream& 
-// operator<<(std::ostream& os, const ImageMesh::ImageSize& s) {
-//   os << (int)s << " (" << s.i_ << " x " << s.j_ << ")";
-//   return os;
-// }
 
 
 template<class Basis>
