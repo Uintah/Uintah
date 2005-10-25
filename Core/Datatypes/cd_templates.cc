@@ -61,7 +61,7 @@ using namespace SCIRun;
 
 #if !defined(__sgi)
 // Needed for optimized linux build only
-#if 0
+#  if 0
 template void Pio<char, char>(Piostream&, pair<char, char>&);
 template void Pio<int, int>(Piostream&, pair<int, int>&);
 template void Pio<float, float>(Piostream&, pair<float, float>&);
@@ -74,7 +74,7 @@ template void Pio<unsigned int, unsigned int>(Piostream&, pair<unsigned int,
 		  unsigned int>&);
 template void Pio<unsigned short, unsigned short>(Piostream&, pair<unsigned short,
 		  unsigned short>&);
-#endif
+#  endif
 #endif
 
 template class LockingHandle<ColumnMatrix>;
@@ -112,11 +112,12 @@ template class Property<vector<pair<int,double> > >;
 template class Property<LockingHandle<Matrix> >;
 template class Property<LockingHandle<NrrdData> >;
 
+namespace SCIRun {
 
 //Specializations from GenericField
-template <>
+template<>
 void
-load_partials<Vector>(const vector<Vector> &grad, DenseMatrix &m)
+load_partials(const vector<Vector> &grad, DenseMatrix &m)
 {
   int i = 0;
   vector<Vector>::const_iterator iter = grad.begin();
@@ -131,26 +132,28 @@ load_partials<Vector>(const vector<Vector> &grad, DenseMatrix &m)
 
 template <>
 void
-load_partials<Tensor>(const vector<Tensor> &grad, DenseMatrix &m)
+load_partials(const vector<Tensor> &grad, DenseMatrix &m)
 {
-  ASSERTFAIL("unimplimented");
+  ASSERTFAIL("unimplemented");
 }
 
 
 template <>
-unsigned int get_vsize<Vector>(Vector*)
+unsigned int
+get_vsize(Vector*)
 {
   return 3;
 }
 
 template <>
-unsigned int get_vsize<Tensor>(Tensor*)
+unsigned int
+get_vsize(Tensor*)
 {
-  ASSERTFAIL("unimplimented");
+  ASSERTFAIL("unimplemented");
 }
 
-
+} // end namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1468
+#  pragma reset woff 1468
 #endif

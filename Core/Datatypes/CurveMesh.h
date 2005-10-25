@@ -228,7 +228,7 @@ public:
 		       unsigned div_per_unit) const
   {
     // only one edge in the unit edge.
-    return basis_.approx_edge(0, div_per_unit, coords); 
+    basis_.approx_edge(0, div_per_unit, coords); 
   }
 
   //! Generate the list of points that make up a sufficiently accurate

@@ -49,15 +49,13 @@
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Containers/StackVector.h>
 #include <Core/Math/MusilRNG.h>
-#include <sgi_stl_warnings_off.h>
-#include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Math/MinMax.h>
 #include <sci_hash_set.h>
 #include <sci_hash_map.h>
 #include <sgi_stl_warnings_off.h>
-#include <set>
+#include   <vector>
+#include   <set>
 #include <sgi_stl_warnings_on.h>
 #include <Core/Datatypes/SearchGrid.h>
 #include <float.h> // for DBL_MAX
