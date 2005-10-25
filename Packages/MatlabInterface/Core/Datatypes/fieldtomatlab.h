@@ -176,17 +176,17 @@ class FieldToMatlabAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
 
     template <class FIELD> bool mladdfieldheader(FIELD* field, matlabarray mlarray);                          
 
-    template <class MESH, class BASIS, class T> bool mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<T> >* field,MESH* mesh,matlabarray mlaray);
-    template <class MESH, class BASIS> bool mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<SCIRun::Vector> >* field,MESH* mesh,matlabarray mlaray);
-    template <class MESH, class BASIS> bool mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<SCIRun::Tensor> >* field,MESH* mesh,matlabarray mlaray);
+    template <class MESH, class BASIS, class T> bool mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<T> >* field,MESH* mesh,matlabarray mlarray);
+    template <class MESH, class BASIS> bool mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<SCIRun::Vector> >* field,MESH* mesh,matlabarray mlarray);
+    template <class MESH, class BASIS> bool mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<SCIRun::Tensor> >* field,MESH* mesh,matlabarray mlarray);
 
-    template <class MESH, class BASIS, class T> bool mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<T,MESH> >* field,MESH* mesh,matlabarray mlaray);
-    template <class MESH, class BASIS> bool mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<SCIRun::Vector,MESH> >* field,MESH* mesh,matlabarray mlaray);
-    template <class MESH, class BASIS> bool mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<SCIRun::Tensor,MESH> >* field,MESH* mesh,matlabarray mlaray);
+    template <class MESH, class BASIS, class T> bool mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<T,MESH> >* field,MESH* mesh,matlabarray mlarray);
+    template <class MESH, class BASIS> bool mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<SCIRun::Vector,MESH> >* field,MESH* mesh,matlabarray mlarray);
+    template <class MESH, class BASIS> bool mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<SCIRun::Tensor,MESH> >* field,MESH* mesh,matlabarray mlarray);
 
-    template <class MESH, class BASIS, class T> bool mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<T,MESH> >* field,MESH* mesh,matlabarray mlaray);
-    template <class MESH, class BASIS> bool mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<SCIRun::Vector,MESH> >* field,MESH* mesh,matlabarray mlaray);
-    template <class MESH, class BASIS> bool mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<SCIRun::Tensor,MESH> >* field,MESH* mesh,matlabarray mlaray);
+    template <class MESH, class BASIS, class T> bool mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<T,MESH> >* field,MESH* mesh,matlabarray mlarray);
+    template <class MESH, class BASIS> bool mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<SCIRun::Vector,MESH> >* field,MESH* mesh,matlabarray mlarray);
+    template <class MESH, class BASIS> bool mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<SCIRun::Tensor,MESH> >* field,MESH* mesh,matlabarray mlarray);
 
     template <class FIELD, class MESH> bool mladdfieldedges(FIELD *field,MESH *mesh,matlabarray mlarray);
     template <class FIELD, class MESH> bool mladdfieldfaces(FIELD *field,MESH *mesh,matlabarray mlarray);
@@ -296,7 +296,7 @@ bool FieldToMatlabAlgoT<FIELD>::execute(SCIRun::FieldHandle fieldH, matlabarray 
   }
 
   // input is a general FieldHandle, cast this to the specific one
-  FIELD *field = dynamic_cast<FIELD *>(scifield.get_rep());
+  FIELD *field = dynamic_cast<FIELD *>(fieldH.get_rep());
   if (field == 0)
   {
     error("FieldToMatlab: This algorithm cannot handle this kind of field.");
@@ -465,14 +465,14 @@ bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::StructHexVolMesh<BASIS>
 template <class FIELD, class BASIS>
 bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::PointCloudMesh<BASIS>* mesh,matlabarray mlarray)
 {
-  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlaray) &&
+  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlarray) &&
            mladdmeshheader(mesh,mlarray) && mladdnodes(mesh,mlarray) );
 }
 
 template <class FIELD, class BASIS>
 bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::CurveMesh<BASIS>* mesh,matlabarray mlarray)
 {
-  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlaray) &&
+  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlarray) &&
            mladdfieldedges(field,mesh,mlarray) && mladdfieldedgederivatives(field,mesh,mlarray) &&
            mladdmeshheader(mesh,mlarray) && mladdnodes(mesh,mlarray) &&
            mladdedges(mesh,mlarray) && mladdmeshderivatives(mesh,mlarray) );
@@ -481,7 +481,7 @@ bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::CurveMesh<BASIS>* mesh,
 template <class FIELD, class BASIS>
 bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::TriSurfMesh<BASIS>* mesh,matlabarray mlarray)
 {
-  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlaray) &&
+  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlarray) &&
            mladdfieldfaces(field,mesh,mlarray) && mladdfieldfacederivatives(field,mesh,mlarray) &&
            mladdmeshheader(mesh,mlarray) && mladdnodes(mesh,mlarray) &&
            mladdfaces(mesh,mlarray) && mladdmeshderivatives(mesh,mlarray) );
@@ -490,7 +490,7 @@ bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::TriSurfMesh<BASIS>* mes
 template <class FIELD, class BASIS>
 bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::QuadSurfMesh<BASIS>* mesh,matlabarray mlarray)
 {
-  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlaray) &&
+  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlarray) &&
            mladdfieldfaces(field,mesh,mlarray) && mladdfieldfacederivatives(field,mesh,mlarray) &&
            mladdmeshheader(mesh,mlarray) && mladdnodes(mesh,mlarray) &&
            mladdfaces(mesh,mlarray) && mladdmeshderivatives(mesh,mlarray) );
@@ -499,7 +499,7 @@ bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::QuadSurfMesh<BASIS>* me
 template <class FIELD, class BASIS>
 bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::TetVolMesh<BASIS>* mesh,matlabarray mlarray)
 {
-  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlaray) &&
+  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlarray) &&
            mladdfieldcells(field,mesh,mlarray) && mladdfieldcellderivatives(field,mesh,mlarray) &&
            mladdmeshheader(mesh,mlarray) && mladdnodes(mesh,mlarray) &&
            mladdcells(mesh,mlarray) && mladdmeshderivatives(mesh,mlarray) );
@@ -508,7 +508,7 @@ bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::TetVolMesh<BASIS>* mesh
 template <class FIELD, class BASIS>
 bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::PrismVolMesh<BASIS>* mesh,matlabarray mlarray)
 {
-  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlaray) &&
+  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlarray) &&
            mladdfieldcells(field,mesh,mlarray) && mladdfieldcellderivatives(field,mesh,mlarray) &&
            mladdmeshheader(mesh,mlarray) && mladdnodes(mesh,mlarray) &&
            mladdcells(mesh,mlarray) && mladdmeshderivatives(mesh,mlarray) );
@@ -517,7 +517,7 @@ bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::PrismVolMesh<BASIS>* me
 template <class FIELD, class BASIS>
 bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::HexVolMesh<BASIS>* mesh ,matlabarray mlarray)
 {
-  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlaray) &&
+  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlarray) &&
            mladdfieldcells(field,mesh,mlarray) && mladdfieldcellderivatives(field,mesh,mlarray) &&
            mladdmeshheader(mesh,mlarray) && mladdnodes(mesh,mlarray) &&
            mladdcells(mesh,mlarray) && mladdmeshderivatives(mesh,mlarray) );
@@ -596,7 +596,7 @@ bool FieldToMatlabAlgo::islagrangian(BASIS& basis)
 template <class BASIS>
 std::string FieldToMatlabAlgo::get_basis_name(BASIS& basis)
 {
-  return(basis.get_name(0));
+  return(basis.type_name(0));
 }
 
 template <class FDATA>
@@ -625,7 +625,7 @@ std::string FieldToMatlabAlgo::get_fdata_name(FDATA& fdata)
 template <class MESH>
 std::string FieldToMatlabAlgo::get_mesh_name(MESH* mesh)
 {
-  std::string type = mesh->get_name(0); 
+  std::string type = mesh->get_type_description()->get_name(); 
   if (type.find("StructCurve") < type.size()) return("StructCurveMesh");  
   if (type.find("StructQuadSurf") < type.size()) return("StructQuadsurfMesh");  
   if (type.find("StructHexVol") < type.size()) return("StructHexVolMesh");  
@@ -652,14 +652,14 @@ bool FieldToMatlabAlgo::mladdmeshheader(MESH* mesh, matlabarray mlarray)
   
   std::string meshbasis_name = get_basis_name(meshbasis);
   std::string meshtype_name  = get_mesh_name(mesh);
-  int         meshbasisorder = mesh->basis_order();
+  int         meshbasisorder = mesh->get_basis().polynomial_order();
     
   matlabarray mlmeshbasis;
   mlmeshbasis.createstringarray(meshbasis_name);
   mlarray.setfield(0,"meshbasis",mlmeshbasis);
 
   matlabarray mlmeshbasisorder;
-  mlmeshbasisorder.createdoublescalar(static_cast<double>(mesh->basis_order()));
+  mlmeshbasisorder.createdoublescalar(static_cast<double>(mesh->get_basis().polynomial_order()));
   mlarray.setfield(0,"meshbasisorder",mlmeshbasisorder);
 
   matlabarray mlmeshtype;
@@ -1206,7 +1206,7 @@ bool FieldToMatlabAlgo::mladdfieldheader(FIELD* field, matlabarray mlarray)
 ////////////////////////////////////////
 
 template <class MESH, class BASIS, class T> 
-bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<T> >* field,MESH* mesh,matlabarray mlaray)
+bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<T> >* field,MESH* mesh,matlabarray mlarray)
 {
   BASIS basis = field->get_basis();
   matlabarray mlfield;
@@ -1244,7 +1244,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
 
 
 template <class MESH, class BASIS> 
-bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<SCIRun::Vector> >* field,MESH* mesh,matlabarray mlaray)
+bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<SCIRun::Vector> >* field,MESH* mesh,matlabarray mlarray)
 {
   BASIS basis = field->get_basis();
   matlabarray mlfield;
@@ -1284,7 +1284,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
 }
 
 template <class MESH, class BASIS> 
-bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<SCIRun::Tensor> >* field,MESH* mesh,matlabarray mlaray)
+bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vector<SCIRun::Tensor> >* field,MESH* mesh,matlabarray mlarray)
 {
   BASIS basis = field->get_basis();
   matlabarray mlfield;
@@ -1331,7 +1331,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
 
 
 template <class MESH, class BASIS, class T> 
-bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<T,MESH> >* field,MESH* mesh,matlabarray mlaray)
+bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<T,MESH> >* field,MESH* mesh,matlabarray mlarray)
 {
   BASIS basis = field->get_basis();
   matlabarray mlfield;
@@ -1387,7 +1387,7 @@ bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun:
 
 
 template <class MESH, class BASIS> 
-bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<SCIRun::Vector,MESH> >* field,MESH* mesh,matlabarray mlaray)
+bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<SCIRun::Vector,MESH> >* field,MESH* mesh,matlabarray mlarray)
 {
   BASIS basis = field->get_basis();
   matlabarray mlfield;
@@ -1437,7 +1437,7 @@ bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun:
 }
 
 template <class MESH, class BASIS> 
-bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<SCIRun::Tensor,MESH> >* field,MESH* mesh,matlabarray mlaray)
+bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData2d<SCIRun::Tensor,MESH> >* field,MESH* mesh,matlabarray mlarray)
 {
   BASIS basis = field->get_basis();
   matlabarray mlfield;
@@ -1495,7 +1495,7 @@ bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun:
 
 
 template <class MESH, class BASIS, class T> 
-bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<T,MESH> >* field,MESH* mesh,matlabarray mlaray)
+bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<T,MESH> >* field,MESH* mesh,matlabarray mlarray)
 {
   BASIS basis = field->get_basis();
   matlabarray mlfield;
@@ -1554,7 +1554,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
 
 
 template <class MESH, class BASIS> 
-bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<SCIRun::Vector,MESH> >* field,MESH* mesh,matlabarray mlaray)
+bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<SCIRun::Vector,MESH> >* field,MESH* mesh,matlabarray mlarray)
 {
   BASIS basis = field->get_basis();
   matlabarray mlfield;
@@ -1574,7 +1574,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
     dims[0] = 3; dims[1] = fdata.dim3(); dims[2] = fdata.dim2(); dims[3] = fdata.dim1();
     mlfield.createdensearray(dims,matlabarray::miDOUBLE);
                 
-    unsigned int p,q,r;
+    unsigned int p,q,r,s;
     unsigned int dim1 = fdata.dim1();
     unsigned int dim2 = fdata.dim2();
     unsigned int dim3 = fdata.dim3();
@@ -1607,7 +1607,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
 }
 
 template <class MESH, class BASIS> 
-bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<SCIRun::Tensor,MESH> >* field,MESH* mesh,matlabarray mlaray)
+bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun::FData3d<SCIRun::Tensor,MESH> >* field,MESH* mesh,matlabarray mlarray)
 {
   BASIS basis = field->get_basis();
   matlabarray mlfield;
