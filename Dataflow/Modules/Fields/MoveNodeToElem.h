@@ -55,12 +55,13 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    string ext);
+                                            const string &fdst,
+					    const string &ext);
 };
 
 
 
-template <class FIELD>
+template <class FSRC, class FDST>
 class MoveNodeToElemAlgoLat : public MoveNodeToElemAlgo
 {
 public:
@@ -70,14 +71,14 @@ public:
 };
 
 
-template <class FIELD>
+template <class FSRC, class FDST>
 FieldHandle
-MoveNodeToElemAlgoLat<FIELD>::execute(ProgressReporter *mod,
-				      FieldHandle fieldh)
+MoveNodeToElemAlgoLat<FSRC, FDST>::execute(ProgressReporter *mod,
+                                           FieldHandle fieldh)
 {
-  FIELD *ifield = dynamic_cast<FIELD*>(fieldh.get_rep());
-  typename FIELD::mesh_type *imesh =
-    dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
+  FSRC *ifield = dynamic_cast<FSRC*>(fieldh.get_rep());
+  typename FSRC::mesh_type *imesh =
+    dynamic_cast<typename FSRC::mesh_type *>(fieldh->mesh().get_rep());
 
   const int ni = imesh->get_ni();
   const int nj = imesh->get_nj();
@@ -90,28 +91,28 @@ MoveNodeToElemAlgoLat<FIELD>::execute(ProgressReporter *mod,
   const Point minp(ioff, joff, koff);
   const Point maxp(1.0-ioff, 1.0-joff, 1.0-koff);
 
-  typename FIELD::mesh_type *omesh =
-    scinew typename FIELD::mesh_type(ni+1, nj+1, nk+1, minp, maxp);
+  typename FDST::mesh_type *omesh =
+    scinew typename FDST::mesh_type(ni+1, nj+1, nk+1, minp, maxp);
 
   Transform trans;
   imesh->get_canonical_transform(trans);
   omesh->transform(trans);
 
-  FIELD *ofield = scinew FIELD(omesh, 0);
+  FDST *ofield = scinew FDST(omesh);
 
   // Copy data from ifield to ofield.
-  typename FIELD::mesh_type::Node::iterator iter, eiter;
+  typename FSRC::mesh_type::Node::iterator iter, eiter;
   imesh->begin(iter);
   imesh->end(eiter);
   while (iter != eiter)
   {
-    typename FIELD::value_type v;
+    typename FSRC::value_type v;
     ifield->value(v, *iter);
 
-    typename FIELD::mesh_type::Elem::index_type oi(omesh,
-						   (*iter).i_,
-						   (*iter).j_,
-						   (*iter).k_);
+    typename FDST::mesh_type::Elem::index_type oi(omesh,
+                                                  (*iter).i_,
+                                                  (*iter).j_,
+                                                  (*iter).k_);
 
     ofield->set_value(v, oi);
 
@@ -122,7 +123,7 @@ MoveNodeToElemAlgoLat<FIELD>::execute(ProgressReporter *mod,
 }
 
 
-template <class FIELD>
+template <class FSRC, class FDST>
 class MoveNodeToElemAlgoImg : public MoveNodeToElemAlgo
 {
 public:
@@ -132,14 +133,14 @@ public:
 };
 
 
-template <class FIELD>
+template <class FSRC, class FDST>
 FieldHandle
-MoveNodeToElemAlgoImg<FIELD>::execute(ProgressReporter *mod,
-				      FieldHandle fieldh)
+MoveNodeToElemAlgoImg<FSRC, FDST>::execute(ProgressReporter *mod,
+                                           FieldHandle fieldh)
 {
-  FIELD *ifield = dynamic_cast<FIELD*>(fieldh.get_rep());
-  typename FIELD::mesh_type *imesh =
-    dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
+  FSRC *ifield = dynamic_cast<FSRC*>(fieldh.get_rep());
+  typename FSRC::mesh_type *imesh =
+    dynamic_cast<typename FSRC::mesh_type *>(fieldh->mesh().get_rep());
 
   const int ni = imesh->get_ni();
   const int nj = imesh->get_nj();
@@ -150,27 +151,27 @@ MoveNodeToElemAlgoImg<FIELD>::execute(ProgressReporter *mod,
   const Point minp(ioff, joff, 0.0);
   const Point maxp(1.0-ioff, 1.0-joff, 1.0);
 
-  typename FIELD::mesh_type *omesh =
-    scinew typename FIELD::mesh_type(ni+1, nj+1, minp, maxp);
+  typename FDST::mesh_type *omesh =
+    scinew typename FDST::mesh_type(ni+1, nj+1, minp, maxp);
 
   Transform trans;
   imesh->get_canonical_transform(trans);
   omesh->transform(trans);
 
-  FIELD *ofield = scinew FIELD(omesh, 0);
+  FDST *ofield = scinew FDST(omesh);
 
   // Copy data from ifield to ofield.
-  typename FIELD::mesh_type::Node::iterator iter, eiter;
+  typename FSRC::mesh_type::Node::iterator iter, eiter;
   imesh->begin(iter);
   imesh->end(eiter);
   while (iter != eiter)
   {
-    typename FIELD::value_type v;
+    typename FSRC::value_type v;
     ifield->value(v, *iter);
 
-    typename FIELD::mesh_type::Elem::index_type oi(omesh,
-						   (*iter).i_,
-						   (*iter).j_);
+    typename FDST::mesh_type::Elem::index_type oi(omesh,
+                                                  (*iter).i_,
+                                                  (*iter).j_);
 
     ofield->set_value(v, oi);
 
