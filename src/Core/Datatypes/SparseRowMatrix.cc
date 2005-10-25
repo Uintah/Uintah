@@ -48,11 +48,13 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
-#include <sci_comp_warn_fixes.h>
+
+#include <sgi_stl_warnings_off.h>  // Turned back on at end of file. 
 
 #include <iostream>
 using std::cerr;
 using std::endl;
+
 #include <stdio.h>
 #include <memory.h>
 
@@ -869,5 +871,6 @@ SparseRowMatrix::identity(int size)
   return scinew SparseRowMatrix(size, size, r, c, size, d);
 }
 
-
 } // End namespace SCIRun
+
+#include <sgi_stl_warnings_on.h>  // Turned back on at end of file.
