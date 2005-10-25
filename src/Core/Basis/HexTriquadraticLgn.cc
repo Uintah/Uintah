@@ -30,14 +30,14 @@
 //    Date   : Dec 04 2004
 
 #include <Core/Basis/HexTriquadraticLgn.h>
-
+ 
 namespace SCIRun {
 
 double HexTriquadraticLgnUnitElement::unit_vertices[20][3] = {
   {0,0,0}, {1,0,0}, {1,1,0}, {0,1,0}, 
   {0,0,1}, {1,0,1}, {1,1,1}, {0,1,1},
   {0.5,0,0}, {1,0.5,0}, {.5,1,0}, {0,.5,0}, 
-  {0,0,0.5}, {1,0,.5}, {0,1,0.5}, {1,1,.5}, 
+  {0,0,0.5}, {1,0,.5}, {0,1,.5}, {1,1,.5}, 
   {0.5,0,1}, {1,0.5,1}, {.5,1,1}, {0,.5,1}, 
 
 };
@@ -47,76 +47,6 @@ int HexTriquadraticLgnUnitElement::unit_edges[12][2] = {{0,1}, {1,2}, {2,3}, {3,
 int HexTriquadraticLgnUnitElement::unit_faces[6][4] = {{0,1,2,3}, {0,1,5,4}, {1,2,6,5},
 				  {2,3,7,6}, {3,0,4,7}, {4,5,6,7}};
 
-// template <>
-// void 
-// eval_guess<Point>(vector<double> &cur, vector<double> &last, double &dist,
-// 		  const Point &i_val, const Point& value, 
-// 		  const vector<Point> &grad)
-// {
-//   DenseMatrix Jinv;
-//   Jinv.put(0, 0, grad[0].x());
-//   Jinv.put(1, 0, grad[0].y());
-//   Jinv.put(2, 0, grad[0].z());
-//   Jinv.put(3, 0, 0.0);
-
-//   Jinv.put(0, 1, grad[1].x());
-//   Jinv.put(1, 1, grad[1].y());
-//   Jinv.put(2, 1, grad[1].z());
-//   Jinv.put(3, 1, 0.0);
-
-//   Jinv.put(0, 2, grad[2].x());
-//   Jinv.put(1, 2, grad[2].y());
-//   Jinv.put(2, 2, grad[2].z());
-//   Jinv.put(3, 2, 0.0);
-
-//   Jinv.put(0, 3, 0.0);
-//   Jinv.put(1, 3, 0.0);
-//   Jinv.put(2, 3, 0.0);
-//   Jinv.put(3, 3, 0.0);
-
-//   ASSERT(Jinv.invert());
-
-//   ColumnMatrix F(4);
-//   ColumnMatrix cor(4);
-//   ColumnMatrix x_old(4);
-//   ColumnMatrix x_new(4);
-
-//   F.put(0, i_val.x());
-//   F.put(1, i_val.y());
-//   F.put(2, i_val.z());
-//   F.put(3, 0.0);
-
-//   x_old.put(0, cur[0]);
-//   x_old.put(1, cur[1]);
-//   x_old.put(2, cur[2]);
-//   x_old.put(3, 0.0);
-
-
-//   int flops, mem;
-//   Jinv.mult(F, cor, flops, mem);
-  
-//   Sub(x_old, cor, x_new);
-//   Sub(x_old, x_new, cor);
-
-//   cur[0] = x_new.get(0);
-//   cur[1] = x_new.get(1);
-//   cur[2] = x_new.get(2);
-
-//   dist = cor.vector_norm();
-// }
-
-// template <>
-// Point val_type_difference<Point>(const Point& t0, const Point& t1)
-// {
-//   Vector v = t0 - t1;
-//   return Point(v.x(), v.y(), v.z());
-// }
-
-// template <>
-// double val_type_length(const Point& t)
-// {
-//   return t.asVector().length();
-// }
 
 } //namespace SCIRun
 

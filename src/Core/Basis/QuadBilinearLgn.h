@@ -166,11 +166,11 @@ protected:
     vector<T> derivs(2);
     guess.resize(2);
 
-    const int end = 2;
-    for (int x = 0; x <= end; x++) {
+    const int end = 3;
+    for (int x = 1; x < end; x++) {
       coord[0] = x / (double) end;
-      for (int y = 0; y <= end; y++) {
-	coord[1] = x / (double) end;
+      for (int y = 1; y < end; y++) {
+	coord[1] = y / (double) end;
 	double cur_d;
 	if (compare_distance(pElem->interpolate(coord, cd), 
 			     val, cur_d, dist)) {

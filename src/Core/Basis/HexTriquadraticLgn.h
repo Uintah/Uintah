@@ -34,11 +34,6 @@
 
 #include <Core/Basis/HexTrilinearLgn.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn off 'implicit conversion... loss of accuracy' messages.
-#  pragma set woff 1506
-#endif
-
 namespace SCIRun {
 
 //! Class for describing unit geometry of HexTriquadraticLgn 
@@ -48,17 +43,17 @@ public:
   static int unit_edges[12][2];  //!< References to vertices of unit edge  
   static int unit_faces[6][4];  //!< References to vertices of unit face 
  
-  HexTriquadraticLgnUnitElement() {}
-  virtual ~HexTriquadraticLgnUnitElement() {}
+  HexTriquadraticLgnUnitElement() {};
+  virtual ~HexTriquadraticLgnUnitElement() {};
   
-  static int domain_dimension() { return 3; } //! return dimension of domain 
+  static int domain_dimension() { return 3; }; //! return dimension of domain 
   
-  static int number_of_vertices() { return 20; } //! return number of vertices
-  static int number_of_edges() { return 12; } //! return number of edges
+  static int number_of_vertices() { return 20; }; //! return number of vertices
+  static int number_of_edges() { return 12; }; //! return number of edges
   
-  static int vertices_of_face() { return 4; } //! return number of vertices per face 
+  static int vertices_of_face() { return 4; }; //! return number of vertices per face 
 
-  static int faces_of_cell() { return 6; } //! return number of faces per cell 
+  static int faces_of_cell() { return 6; }; //! return number of faces per cell 
 };
 
 
@@ -85,9 +80,9 @@ public:
     const double x=coords[0], y=coords[1], z=coords[2];
     w[0]  = (-1 + x)*(-1 + y)*(-1 + z)*(-1 + 2*x + 2*y + 2*z);
     w[1]  = +x*(-1 + y)*(-1 + 2*x - 2*y - 2*z)*(-1 + z);
-    w[2]  = -(x*y*(-3 + 2*x + 2*y - 2*z)*(-1 + z));
-    w[3]  = -((-1 + x)*y*(-1 + z)*(1 + 2*x - 2*y + 2*z));
-    w[4]  = -((-1 + x)*(-1 + y)*(1 + 2*x + 2*y - 2*z)*z);
+    w[2]  = -x*y*(-3 + 2*x + 2*y - 2*z)*(-1 + z);
+    w[3]  = -(-1 + x)*y*(-1 + z)*(1 + 2*x - 2*y + 2*z);
+    w[4]  = -(-1 + x)*(-1 + y)*(1 + 2*x + 2*y - 2*z)*z;
     w[5]  = +x*(-1 + y)*(3 - 2*x + 2*y - 2*z)*z;
     w[6]  = +x*y*z*(-5 + 2*x + 2*y + 2*z);
     w[7]  = +(-1 + x)*y*(3 + 2*x - 2*y - 2*z)*z;
@@ -109,7 +104,8 @@ public:
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
-    double w[20];
+    double w[20]; 
+
     get_weights(coords, w); 
     return (T)(w[0]  * cd.node0() +
 	       w[1]  * cd.node1() +
@@ -214,7 +210,7 @@ public:
   {
     HexLocate< HexTriquadraticLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  }
+  };
     
   //! add a node value corresponding to edge
   void add_node_value(const T &p) { nodes_.push_back(p); }
@@ -279,10 +275,5 @@ HexTriquadraticLgn<T>::io(Piostream &stream)
 }
 
 } //namespace SCIRun
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn back on 'implicit conversion... loss of accuracy' messages.
-#  pragma reset woff 1506
-#endif
 
 #endif // HexTriquadraticLgn_h

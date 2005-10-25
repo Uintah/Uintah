@@ -43,17 +43,17 @@ public:
   static int unit_edges[4][2];  //!< References to vertices of unit edge 
   static int unit_faces[1][4]; //!< References to vertices of unit face
   
-  QuadBiquadraticLgnUnitElement() {}
-  virtual ~QuadBiquadraticLgnUnitElement() {}
+  QuadBiquadraticLgnUnitElement() {};
+  virtual ~QuadBiquadraticLgnUnitElement() {};
   
-  static int domain_dimension() { return 2; } //! return dimension of domain 
+  static int domain_dimension() { return 2; }; //! return dimension of domain 
   
-  static int number_of_vertices() { return 8; } //! return number of vertices
-  static int number_of_edges() { return 4; } //! return number of edges
+  static int number_of_vertices() { return 8; }; //! return number of vertices
+  static int number_of_edges() { return 4; }; //! return number of edges
   
-  static int vertices_of_face() { return 4; } //! return number of vertices per face 
+  static int vertices_of_face() { return 4; }; //! return number of vertices per face 
 
-  static int faces_of_cell() { return 4; } //! return number of faces per cell 
+  static int faces_of_cell() { return 4; }; //! return number of faces per cell 
 };
 
 
@@ -88,7 +88,7 @@ public:
     w[7] = +4*(-1 + x)*(-1 + y)*y;
     
     return 8;
-  }
+  };
   
   //! get first derivative at parametric coordinate 
   template <class ElemData>
@@ -105,7 +105,7 @@ public:
 	       w[5] * nodes_[cd.edge1_index()] +
 	       w[6] * nodes_[cd.edge2_index()] +
 	       w[7] * nodes_[cd.edge3_index()]);
-  }
+  };
   
   //! get first derivative at parametric coordinate
   template <class ElemData>
@@ -135,7 +135,7 @@ public:
 	+x*(4 -8*y)*nodes_[cd.edge1_index()]
 	-4*(-1 + x)*x*nodes_[cd.edge2_index()]
 	+4*(-1 + x)*(-1 +2*y)*nodes_[cd.edge3_index()]);
-  }
+  };  
   
   //! get parametric coordinate for value within the element
   template <class ElemData>

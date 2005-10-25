@@ -70,6 +70,10 @@ template <>
 double getnextx3(vector<double> &x, vector<double> &xold, 
 		 const Point& y, const vector<Point>& yd)
 {
+  //  cerr << x[0] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[0].x() << "\t" << yd[0].y() << "\t" << yd[0].z() << "\n" ;
+  //  cerr << x[1] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[1].x() << "\t" << yd[1].y() << "\t" << yd[1].z() << "\n" ;
+  //  cerr << x[2] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[2].x() << "\t" << yd[2].y() << "\t" << yd[2].z() << "\n" ;
+
   double J[9], JInv[9];
   J[0]=yd[0].x();
   J[1]=yd[0].y();
@@ -107,6 +111,9 @@ double getnextx2(vector<double> &x, vector<double> &xold,
   const double F1=y.x();
   const double F2=y.y();
   const double F3=y.z();
+ 
+  //  cerr << x[0] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[0].x() << "\t" << yd[0].y() << "\t" << yd[0].z() << "\n" ;
+  //  cerr << x[1] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[1].x() << "\t" << yd[1].y() << "\t" << yd[1].z() << "\n" ;
   
   if (detJ) {
     double dx=(F2*J01-F2*J21+J21*F1-J11*F1+F3*J11-J01*F3)/detJ;

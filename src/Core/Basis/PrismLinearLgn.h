@@ -37,11 +37,6 @@
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Basis/Locate.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn off 'implicit conversion... loss of accuracy' messages.
-#  pragma set woff 1506
-#endif
-
 namespace SCIRun {
 
 //! Class for describing unit geometry of PrismLinearLgn 
@@ -189,14 +184,14 @@ protected:
     vector<T> derivs(3);
     guess.resize(3);
 
-    const int end = 2;
-    for (int x = 0; x <= end; x++) {
+    const int end = 3;
+    for (int x = 1; x < end; x++) {
       coord[0] = x / (double) end;
-      for (int y = 0; y <= end; y++) {
+      for (int y = 1; y < end; y++) {
 	coord[1] = y / (double) end;
 	if (coord[0]+coord[1]>Dim3Locate<ElemBasis>::thresholdDist1)
 	  break;
-	for (int z = 0; z <= end; z++) {
+	for (int z = 1; z < end; z++) {
 	  coord[2] = z / (double) end;
 	  double cur_d;
 	  if (compare_distance(pElem->interpolate(coord, cd), 
@@ -375,10 +370,5 @@ PrismLinearLgn<T>::io(Piostream &stream)
 }
 
 } //namespace SCIRun
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn back on 'implicit conversion... loss of accuracy' messages.
-#  pragma reset woff 1506
-#endif
 
 #endif // PrismLinearLgn_h

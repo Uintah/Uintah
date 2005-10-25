@@ -39,8 +39,8 @@ namespace SCIRun {
 //! Class for describing unit geometry of QuadBicubicHmt
 class QuadBicubicHmtUnitElement : public QuadBilinearLgnUnitElement {
 public:
-  QuadBicubicHmtUnitElement() {}
-  virtual ~QuadBicubicHmtUnitElement() {}
+  QuadBicubicHmtUnitElement() {};
+  virtual ~QuadBicubicHmtUnitElement() {};
 };
 
 
@@ -135,7 +135,7 @@ public:
 	+(-1 + x)*(-x + 2*x*x + 6*(-1 + y)*y)*cd.node3()
 	+(x-1)*(x-1)*x*derivs_[cd.node3_index()][0]
 	-((-1 + x)*y*(-2 + 3*y))*derivs_[cd.node3_index()][1]);
-  }
+  };
   
   //! get parametric coordinate for value within the element
   template <class CellData>
