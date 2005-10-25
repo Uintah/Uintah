@@ -160,7 +160,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   }
 
   // Build the correct output field given the input field and and type.
-  string mesh_type = ifield->get_type_description(1)->get_name();
+  string mesh_type = ifield->get_type_description(1)->get_name(); // FIX_ME DVU
 
   // 3D LatVol to 2D Image
   if( mesh_type.find("LatVolMesh") != string::npos ) 
@@ -199,19 +199,30 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     
     // These really should be ITKImageFields but the conversion will
     // not work so for now make the ImageFields instead.
-    typename ImageField<TYPE>::mesh_type *omesh =
-      scinew typename ImageField<TYPE>::mesh_type();
+    typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
+    IMesh *omesh = scinew IMesh();
     omesh->copy_properties(imesh.get_rep());
 
     omesh->set_min_i( new_min_i );
     omesh->set_min_j( new_min_j );
     omesh->set_ni( new_i );
     omesh->set_nj( new_j );
+    
+    Field *ofield = 0;
+    typedef FData2d<TYPE, IMesh> FData;
+    if (ifield->basis_order() == -1) {
+      typedef GenericField<IMesh, NoDataBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else if (ifield->basis_order() == 0) {
+      typedef GenericField<IMesh, ConstantBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else {
+      typedef QuadBilinearLgn<TYPE>                LinBasis;
+      typedef GenericField<IMesh, LinBasis, FData> OField;
+      ofield = scinew OField(omesh);
+    }
 
-    ImageField<TYPE> *ofield =
-      scinew ImageField<TYPE>(omesh, ifield->basis_order());
     ofield->copy_properties(ifield);
-
     ofield_h = ofield;
 #endif
     // 3D StructHexVol to 2D StructQuadSurf
@@ -275,17 +286,29 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     // These really should be ITKScanlineFields but the conversion will
     // not work so for now make the ScanlineFields instead.
-    typename ScanlineField<TYPE>::mesh_type *omesh =
-      scinew typename ScanlineField<TYPE>::mesh_type();
+    typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
+
+    SLMesh *omesh = scinew SLMesh();
     omesh->copy_properties(imesh.get_rep());
 
     omesh->set_min_i( new_min_i );
     omesh->set_ni( new_i );
 
-    ScanlineField<TYPE> *ofield = 
-      scinew ScanlineField<TYPE>(omesh, ifield->basis_order());
-    ofield->copy_properties(ifield);
+    Field *ofield = 0;
+    typedef vector<TYPE> FData;
+    if (ifield->basis_order() == -1) {
+      typedef GenericField<SLMesh, NoDataBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else if (ifield->basis_order() == 0) {
+      typedef GenericField<SLMesh, ConstantBasis<TYPE>, FData > OField;
+      ofield = scinew OField(omesh);
+    } else {
+      typedef CrvLinearLgn<TYPE>                    LinBasis;
+      typedef GenericField<SLMesh, LinBasis, FData> OField;
+      ofield = scinew OField(omesh);
+    }
 
+    ofield->copy_properties(ifield);
     ofield_h = ofield;
 #endif
     // 2D StructQuadSurf to 1D StructCurve
