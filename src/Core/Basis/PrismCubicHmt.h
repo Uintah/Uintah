@@ -45,8 +45,8 @@ namespace SCIRun {
 //! Class for describing unit geometry of PrismCubicHmt
 class PrismCubicHmtUnitElement : public PrismLinearLgnUnitElement {
 public:
-  PrismCubicHmtUnitElement() {};
-  virtual ~PrismCubicHmtUnitElement() {};
+  PrismCubicHmtUnitElement() {}
+  virtual ~PrismCubicHmtUnitElement() {}
 };
 
 
@@ -136,7 +136,7 @@ public:
 	       w[21] * derivs_[cd.node5_index()][0] +
 	       w[22] * derivs_[cd.node5_index()][1] +
 	       w[23] * derivs_[cd.node5_index()][2]);
-  };
+  }
   
   //! get first derivative at parametric coordinate
   template <class ElemData>
@@ -218,7 +218,7 @@ public:
 	+x*y2*derivs_[cd.node5_index()][0]
 	+(-1 + y)*y2*derivs_[cd.node5_index()][1]
 	+y*z*(-2 + 3*z)*derivs_[cd.node5_index()][2]);
-  };  
+  }  
 
   //! get parametric coordinate for value within the element
   //! iterative solution...

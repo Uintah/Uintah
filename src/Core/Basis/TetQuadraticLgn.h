@@ -48,17 +48,17 @@ public:
   static int unit_edges[6][2]; //!< References to vertices of unit edge
   static int unit_faces[4][3];  //!< References to vertices of unit face
   
-  TetQuadraticLgnUnitElement() {};
-  virtual ~TetQuadraticLgnUnitElement() {};
+  TetQuadraticLgnUnitElement() {}
+  virtual ~TetQuadraticLgnUnitElement() {}
   
-  static int domain_dimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; } //! return dimension of domain 
   
-  static int number_of_vertices() { return 10; }; //! return number of vertices
-  static int number_of_edges() { return 6; }; //! return number of edges
+  static int number_of_vertices() { return 10; } //! return number of vertices
+  static int number_of_edges() { return 6; } //! return number of edges
   
-  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 3; } //! return number of vertices per face 
 
-  static int faces_of_cell() { return 12; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 12; } //! return number of faces per cell 
 };
 
 

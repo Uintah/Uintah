@@ -48,17 +48,17 @@ public:
   static int unit_edges[9][3]; //!< References to vertices of unit edge
   static int unit_faces[5][4]; //!< References to vertices of unit face
   
-  PrismQuadraticLgnUnitElement() {};
-  virtual ~PrismQuadraticLgnUnitElement() {};
+  PrismQuadraticLgnUnitElement() {}
+  virtual ~PrismQuadraticLgnUnitElement() {}
   
-  static int domain_dimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; } //! return dimension of domain 
   
-  static int number_of_vertices() { return 15; }; //! return number of vertices
-  static int number_of_edges() { return 9; }; //! return number of edges
+  static int number_of_vertices() { return 15; } //! return number of vertices
+  static int number_of_edges() { return 9; } //! return number of edges
   
-  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 3; } //! return number of vertices per face 
 
-  static int faces_of_cell() { return 5; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 5; } //! return number of faces per cell 
 };
 
 
@@ -181,7 +181,7 @@ public:
 	-4*x*(-1 + x + y)*nodes_[cd.edge6_index()]
 	+4*x*y*nodes_[cd.edge7_index()]
 	-4*y*(-1 + x + y)*nodes_[cd.edge8_index()]);
-  };  
+  }  
 
   //! get parametric coordinate for value within the element
   template <class ElemData>

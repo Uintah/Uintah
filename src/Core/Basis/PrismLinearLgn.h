@@ -52,16 +52,16 @@ public:
   static int unit_faces[5][4]; //!< References to vertices of unit face
  
   PrismLinearLgnUnitElement() {};
-  virtual ~PrismLinearLgnUnitElement() {};
+  virtual ~PrismLinearLgnUnitElement() {}
   
-  static int domain_dimension() { return 3; }; //! return dimension of domain 
+  static int domain_dimension() { return 3; } //! return dimension of domain 
   
-  static int number_of_vertices() { return 6; }; //! return number of vertices
-  static int number_of_edges() { return 9; }; //! return number of edges
+  static int number_of_vertices() { return 6; } //! return number of vertices
+  static int number_of_edges() { return 9; } //! return number of edges
   
-  static int vertices_of_face() { return 3; }; //! return number of vertices per face 
+  static int vertices_of_face() { return 3; } //! return number of vertices per face 
 
-  static int faces_of_cell() { return 5; }; //! return number of faces per cell 
+  static int faces_of_cell() { return 5; } //! return number of faces per cell 
 };
 
 //! Class for creating geometrical approximations of Prism meshes

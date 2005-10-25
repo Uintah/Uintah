@@ -48,17 +48,17 @@ public:
   static double unit_vertices[3][1]; //!< Parametric coordinates of vertices of unit edge
   static int unit_edges[1][2];    //!< References to vertices of unit edge 
 
-  CrvQuadraticLgnUnitElement() {};
-  virtual ~CrvQuadraticLgnUnitElement() {};
+  CrvQuadraticLgnUnitElement() {}
+  virtual ~CrvQuadraticLgnUnitElement() {}
   
-  static int domain_dimension() { return 1; }; //!< return dimension of domain 
+  static int domain_dimension() { return 1; } //!< return dimension of domain 
   
-  static int number_of_vertices() { return 3; }; //!< return number of vertices
-  static int number_of_edges() { return 2; }; //!< return number of edges
+  static int number_of_vertices() { return 3; } //!< return number of vertices
+  static int number_of_edges() { return 2; } //!< return number of edges
   
-  static int vertices_of_face() { return 0; }; //!< return number of vertices per face 
+  static int vertices_of_face() { return 0; } //!< return number of vertices per face 
 
-  static int faces_of_cell() { return 0; }; //!< return number of faces per cell 
+  static int faces_of_cell() { return 0; } //!< return number of faces per cell 
 };
 
 
@@ -129,7 +129,7 @@ public:
   {
     CrvLocate< CrvQuadraticLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
      
   virtual void io (Piostream& str);
 protected:
