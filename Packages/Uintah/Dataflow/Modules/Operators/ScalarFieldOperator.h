@@ -17,7 +17,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-namespace SCIRun {
+namespace Uintah {
 using std::string;
 using std::cerr;
 using std::endl;
