@@ -55,6 +55,7 @@
 #include <Core/Basis/HexTricubicHmt.h>
 #include <Core/Basis/HexTricubicHmtScaleFactors.h>
 
+#include <Core/Geometry/Point.h>
 
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
