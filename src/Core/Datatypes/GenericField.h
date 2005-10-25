@@ -61,6 +61,7 @@ public:
   typedef typename FData::value_type                       value_type;
   typedef Mesh                                             mesh_type;
   typedef LockingHandle<mesh_type>                         mesh_handle_type;
+  typedef Basis                                            basis_type;
   typedef FData                                            fdata_type;
   typedef LockingHandle<GenericField<Mesh, Basis, FData> > handle_type;
 
