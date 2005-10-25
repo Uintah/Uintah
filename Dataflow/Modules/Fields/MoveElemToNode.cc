@@ -92,7 +92,7 @@ MoveElemToNode::execute()
 
   string ext = "";
   const TypeDescription *mtd = ifield->mesh()->get_type_description();
-  if (mtd->get_name() == "LatVolMesh")
+  if (mtd->get_name().find("LatVolMesh") != string::npos)
   {
     if (ifield->basis_order() != 0)
     {
@@ -102,7 +102,7 @@ MoveElemToNode::execute()
     }
     ext = "Lat";
   }
-  else if (mtd->get_name() == "StructHexVolMesh")
+  else if (mtd->get_name().find("StructHexVolMesh") != string::npos)
   {
     if (ifield->basis_order() != 0)
     {
@@ -112,11 +112,11 @@ MoveElemToNode::execute()
     }
     ext = "SHex";
   }
-  else if (mtd->get_name() == "ImageMesh")
+  else if (mtd->get_name().find("ImageMesh") != string::npos)
   {
     ext = "Img";
   }
-  else if (mtd->get_name() == "StructQuadSurfMesh")
+  else if (mtd->get_name().find("StructQuadSurfMesh") != string::npos)
   {
     ext = "SQuad";
   }
@@ -129,7 +129,21 @@ MoveElemToNode::execute()
   if (ifield_generation_ != ifield->generation)
   {
     const TypeDescription *ftd = ifield->get_type_description();
-    CompileInfoHandle ci = MoveElemToNodeAlgo::get_compile_info(ftd, ext);
+    TypeDescription::td_vec *tdv = 
+      ifield->get_type_description(3)->get_sub_type();
+    const string actype = (*tdv)[0]->get_name();
+    TypeDescription::td_vec *bdv =
+      ifield->get_type_description(1)->get_sub_type();
+    const string linear = (*bdv)[0]->get_name();
+    const string btype =
+      linear.substr(0, linear.find_first_of('<')) + "<" + actype + "> ";
+    const string fts =
+      ifield->get_type_description(0)->get_name() + "<" +
+      ifield->get_type_description(1)->get_name() + "," +
+      btype + "," +
+      ifield->get_type_description(3)->get_name() + "> ";
+
+    CompileInfoHandle ci = MoveElemToNodeAlgo::get_compile_info(ftd, fts, ext);
     Handle<MoveElemToNodeAlgo> algo;
     if (!DynamicCompilation::compile(ci, algo, false, this))
     {
@@ -145,7 +159,9 @@ MoveElemToNode::execute()
 
 
 CompileInfoHandle
-MoveElemToNodeAlgo::get_compile_info(const TypeDescription *fsrc, string ext)
+MoveElemToNodeAlgo::get_compile_info(const TypeDescription *fsrc,
+                                     const string &fdst,
+                                     const string &ext)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -154,10 +170,11 @@ MoveElemToNodeAlgo::get_compile_info(const TypeDescription *fsrc, string ext)
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       fsrc->get_filename() + ".",
+		       fsrc->get_filename() + "." +
+                       to_filename(fdst) + ".",
                        base_class_name, 
                        template_class_name, 
-                       fsrc->get_name());
+                       fsrc->get_name() + ", " + fdst);
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
