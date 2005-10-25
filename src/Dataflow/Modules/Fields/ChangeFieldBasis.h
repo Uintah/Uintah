@@ -46,7 +46,7 @@
 namespace SCIRun {
 
 
-class ChangeFieldBasisAlgoCreate : public DynamicAlgoBase
+class ChangeFieldBasisAlgo : public DynamicAlgoBase
 {
 public:
 
@@ -56,12 +56,13 @@ public:
 			      MatrixHandle &interp) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+                                            const string &fdst);
 };
 
 
-template <class FSRC>
-class ChangeFieldBasisAlgoCreateT : public ChangeFieldBasisAlgoCreate
+template <class FSRC, class FDST>
+class ChangeFieldBasisAlgoT : public ChangeFieldBasisAlgo
 {
 public:
 
@@ -72,18 +73,18 @@ public:
 };
 
 
-template <class FSRC>
+template <class FSRC, class FDST>
 FieldHandle
-ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
-					    FieldHandle fsrc_h,
-					    int basis_order,
-					    MatrixHandle &interp)
+ChangeFieldBasisAlgoT<FSRC, FDST>::execute(ProgressReporter *mod,
+                                           FieldHandle fsrc_h,
+                                           int basis_order,
+                                           MatrixHandle &interp)
 {
   FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
   typename FSRC::mesh_handle_type mesh = fsrc->get_typed_mesh();
 
   // Create the field with the new mesh and data location.
-  FSRC *fout = scinew FSRC(fsrc->get_typed_mesh(), basis_order);
+  FDST *fout = scinew FDST(fsrc->get_typed_mesh());
   fout->resize_fdata();
 
   if (fsrc->basis_order() > 0)
@@ -92,7 +93,7 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
     mesh->size(nodesize);
     const int ncols = nodesize;
 
-    int nrows;
+    int nrows = 0;
     int *rr = 0;
     int nnz = 0;
     int *cc = 0;
