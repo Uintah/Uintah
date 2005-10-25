@@ -36,25 +36,28 @@
 #if !defined SCI_HASH_SET_H
 #define SCI_HASH_SET_H
 
+#include <sci_defs/hashmap_defs.h>
+
 #define HAVE_HASH_SET
+
 #ifdef HAVE_STD_HASHMAP
-#include <hash_set>
-using std::hash_set;
-using std::hash_multiset;
+#  include <hash_set>
+   using std::hash_set;
+   using std::hash_multiset;
 #else
-#ifdef HAVE_EXT_HASHMAP
-#include <ext/hash_set>
-using std::hash_set;
-using std::hash_multiset;
-#else
-#ifdef HAVE_GNU_HASHMAP
-#include <ext/hash_set>
-using __gnu_cxx::hash_set;
-using __gnu_cxx::hash_multiset;
-#else
-#undef HAVE_HASH_SET
-#endif
-#endif
+#  ifdef HAVE_EXT_HASHMAP
+#    include <ext/hash_set>
+     using std::hash_set;
+     using std::hash_multiset;
+#  else
+#    ifdef HAVE_GNU_HASHMAP
+#      include <ext/hash_set>
+       using __gnu_cxx::hash_set;
+       using __gnu_cxx::hash_multiset;
+#    else
+#      undef HAVE_HASH_SET
+#    endif
+#  endif
 #endif
 
-#endif // SCI_Hash_set_h
+#endif // SCI_HASH_SET_H

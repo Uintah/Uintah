@@ -40,26 +40,26 @@
 
 #define HAVE_HASH_MAP
 #if defined(HAVE_STD_HASHMAP)
-#include <hash_map>
-using std::hash_map;
-using std::hash_multimap;
-using std::hash;
+#  include <hash_map>
+   using std::hash_map;
+   using std::hash_multimap;
+   using std::hash;
 #else
-#ifdef HAVE_EXT_HASHMAP
-#include <ext/hash_map>
-using std::hash_map;
-using std::hash_multimap;
-using std::hash;
-#else
-#ifdef HAVE_GNU_HASHMAP
-#include <ext/hash_map>
-using __gnu_cxx::hash_map;
-using __gnu_cxx::hash_multimap;
-using __gnu_cxx::hash;
-#else
-#undef HAVE_HASH_MAP
-#endif
-#endif
+#  ifdef HAVE_EXT_HASHMAP
+#    include <ext/hash_map>
+     using std::hash_map;
+     using std::hash_multimap;
+     using std::hash;
+#  else
+#    ifdef HAVE_GNU_HASHMAP
+#      include <ext/hash_map>
+       using __gnu_cxx::hash_map;
+       using __gnu_cxx::hash_multimap;
+       using __gnu_cxx::hash;
+#    else
+#      undef HAVE_HASH_MAP
+#    endif
+#  endif
 #endif
 
 #endif // SCI_Hash_Map_h
