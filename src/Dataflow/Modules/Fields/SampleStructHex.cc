@@ -256,6 +256,7 @@ SampleStructHex::execute()
     mesh->set_point(p, *mitr);
     ++mitr;
   }
+  mesh->set_transform(trans);
 
   int basis_order;
   if (data_at_.get() == "Nodes") basis_order = 1;
