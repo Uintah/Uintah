@@ -33,11 +33,8 @@ LOG
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Transform.h>
-#include <Core/GuiInterface/GuiVar.h> 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Timer.h>
-#include <Dataflow/Network/Module.h> 
-#include <Dataflow/Ports/FieldPort.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
@@ -295,52 +292,27 @@ FieldExtractor::execute()
 //      range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
 //   cerr<<"and hi index is "<<hi<<", and low index is "<<low<<"\n";
   
-  update_mesh_handle( level, hi, range, box, type->getType(), mesh_handle_);
+  if( !update_mesh_handle( level, hi, range, box, 
+                           type->getType(), mesh_handle_, 
+                           remove_boundary_cells.get()) ) {
+        error("in update_mesh_handle:: Not a Uintah type.");
+        return;
+  }
 
-//   QueryInfo qinfo(archiveH->getDataArchive(),
-//                   generation, grid, level, var, mat, type,
-//                   get_all_levels, time, timestep, dt);
 
-//   CompileInfoHandle ci = FieldExtractorAlgo->::get_compile_info(type, subtype);
-//   Handle<FieldExtractorAlgo> algo;
-//   if( !module_dynamic_compile(ci, algo) ){
-//     error("dynamic compile failed.");
-//     return;
-//   }
+  QueryInfo qinfo(archiveH->getDataArchive(),
+                  generation, grid, level, var, mat, type,
+                  get_all_levels, time, timestep, dt);
 
-  FieldHandle fHandle_ = 0; //algo->execute(qinfo, low, mesh_handle_);
+  CompileInfoHandle ci = FieldExtractorAlgo::get_compile_info(type, subtype);
+  SCIRun::Handle<FieldExtractorAlgo> algo;
+  if( !module_dynamic_compile(ci, algo) ){
+    error("dynamic compile failed.");
+    return;
+  }
 
-  
-
-//   switch( subtype->getType() ) {
-//   case TypeDescription::double_type:
-//     fHandle_ = getVariable<double>(qinfo, low, mesh_handle_);
-//     break;
-//   case TypeDescription::float_type:
-//     fHandle_ = getVariable<float>(qinfo, low, mesh_handle_);
-//     break;
-//   case TypeDescription::int_type:
-//     fHandle_ = getVariable<int>(qinfo, low, mesh_handle_);
-//     break;
-//   case TypeDescription::bool_type:
-//     fHandle_ = getVariable<unsigned char>(qinfo, low, mesh_handle_);
-//     break;
-//   case Uintah::TypeDescription::long_type:
-//   case Uintah::TypeDescription::long64_type:
-//     fHandle_ = getVariable<long64>(qinfo, low, mesh_handle_);
-//     break;
-//   case TypeDescription::Vector:
-//     fHandle_ = getVariable<Vector>(qinfo, low, mesh_handle_);
-//     break;
-//   case TypeDescription::Matrix3:
-//     fHandle_ = getVariable<Matrix3>(qinfo, low, mesh_handle_);
-//     break;
-//   case Uintah::TypeDescription::short_int_type:
-//   default:
-//     error("Subtype " + subtype->getName() + " is not implemented\n");
-//     return;
-//   }
-//   new2OldPatchMap_.clear();
+  FieldHandle fHandle_ = algo->execute(qinfo, low, mesh_handle_,
+                                       remove_boundary_cells.get());
 
   fout->send(fHandle_);
 }
@@ -354,6 +326,8 @@ FieldExtractorAlgo::get_compile_info( const Uintah::TypeDescription *vt,
   static const string template_class_name("FieldExtractorAlgoT");
   static const string base_class_name("FieldExtractorAlgo");
 
+  cerr<<"include path is: "<<include_path<<"\n";
+
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
 		       vt->getFileName() + ".",
@@ -362,71 +336,75 @@ FieldExtractorAlgo::get_compile_info( const Uintah::TypeDescription *vt,
                        vt->getName() + ", " +
                        t->getName() );
 
+  
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  // Add namespace
+  rval->add_namespace("Uintah");
 //   vt->fill_compile_info(rval);
 //   t->fill_compile_info(rval);
   return rval;
 }
 
 
-// GridP 
-// FieldExtractorAlgo::build_minimal_patch_grid( GridP oldGrid )
-// {
-//   int nlevels = oldGrid->numLevels();
-//   GridP newGrid = scinew Grid();
-//   const SuperPatchContainer* superPatches;
+GridP 
+FieldExtractorAlgo::build_minimal_patch_grid( GridP oldGrid )
+{
+  int nlevels = oldGrid->numLevels();
+  GridP newGrid = scinew Grid();
+  const SuperPatchContainer* superPatches;
 
-//   for( int i = 0; i < nlevels; i++ ){
-//     LevelP level = oldGrid->getLevel(i);
-//     LocallyComputedPatchVarMap patchGrouper;
-//     const PatchSubset* patches = level->allPatches()->getUnion();
-//     patchGrouper.addComputedPatchSet(0, patches);
-//     patchGrouper.makeGroups();
-//     superPatches = patchGrouper.getSuperPatches(0, level.get_rep());
-//     ASSERT(superPatches != 0);
+  for( int i = 0; i < nlevels; i++ ){
+    LevelP level = oldGrid->getLevel(i);
+    LocallyComputedPatchVarMap patchGrouper;
+    const PatchSubset* patches = level->allPatches()->getUnion();
+    patchGrouper.addComputedPatchSet(0, patches);
+    patchGrouper.makeGroups();
+    superPatches = patchGrouper.getSuperPatches(0, level.get_rep());
+    ASSERT(superPatches != 0);
 
-//     LevelP newLevel =
-//       newGrid->addLevel(level->getAnchor(), level->dCell());
+    LevelP newLevel =
+      newGrid->addLevel(level->getAnchor(), level->dCell());
 
-// //     cerr<<"Level "<<i<<":\n";
-// //    int count = 0;
-//     SuperPatchContainer::const_iterator superIter;
-//     for (superIter = superPatches->begin();
-//          superIter != superPatches->end(); superIter++) {
-//       IntVector low = (*superIter)->getLow();
-//       IntVector high = (*superIter)->getHigh();
-//       IntVector inLow = high; // taking min values starting at high
-//       IntVector inHigh = low; // taking max values starting at low
+//     cerr<<"Level "<<i<<":\n";
+//    int count = 0;
+    SuperPatchContainer::const_iterator superIter;
+    for (superIter = superPatches->begin();
+         superIter != superPatches->end(); superIter++) {
+      IntVector low = (*superIter)->getLow();
+      IntVector high = (*superIter)->getHigh();
+      IntVector inLow = high; // taking min values starting at high
+      IntVector inHigh = low; // taking max values starting at low
 
-// //       cerr<<"\tcombined patch "<<count++<<" is "<<low<<", "<<high<<"\n";
+//       cerr<<"\tcombined patch "<<count++<<" is "<<low<<", "<<high<<"\n";
 
-//       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
-//         const Patch* patch = (*superIter)->getBoxes()[p];
-//         inLow = Min(inLow, patch->getInteriorCellLowIndex());
-//         inHigh = Max(inHigh, patch->getInteriorCellHighIndex());
-//       }
+      for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
+        const Patch* patch = (*superIter)->getBoxes()[p];
+        inLow = Min(inLow, patch->getInteriorCellLowIndex());
+        inHigh = Max(inHigh, patch->getInteriorCellHighIndex());
+      }
       
-//       Patch* newPatch =
-//         newLevel->addPatch(low, high, inLow, inHigh);
-//       list<const Patch*> oldPatches; 
-//       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
-//         const Patch* patch = (*superIter)->getBoxes()[p];
-//         oldPatches.push_back(patch);
-//       }
-//       new2OldPatchMap_[newPatch] = oldPatches;
-//     }
-//     newLevel->finalizeLevel();
-//   }
-//   return newGrid;
-// }
+      Patch* newPatch =
+        newLevel->addPatch(low, high, inLow, inHigh);
+      list<const Patch*> oldPatches; 
+      for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
+        const Patch* patch = (*superIter)->getBoxes()[p];
+        oldPatches.push_back(patch);
+      }
+      new2OldPatchMap_[newPatch] = oldPatches;
+    }
+    newLevel->finalizeLevel();
+  }
+  return newGrid;
+}
 
-void FieldExtractor::update_mesh_handle( LevelP& level,
+bool FieldExtractor::update_mesh_handle( LevelP& level,
                                          IntVector& hi,
                                          IntVector& range,
                                          BBox& box,
                                          TypeDescription::Type type,
-                                         LVMeshHandle& mesh_handle)
+                                         LVMeshHandle& mesh_handle,
+                                         int remove_boundary)
 {
   //   cerr<<"In update_mesh_handled: type = "<<type<<"\n";
   
@@ -434,7 +412,7 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
   case TypeDescription::CCVariable:
     {
       IntVector cellHi, cellLo, levelHi, levelLo;
-      if( remove_boundary_cells.get() == 1){
+      if( remove_boundary == 1){
         level->findInteriorCellIndexRange(cellLo, cellHi);
         level->findInteriorIndexRange( levelLo, levelHi);
       } else {
@@ -472,7 +450,7 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
           //        range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
         }
       } 
-      return;
+      return true;
     }
   case TypeDescription::NCVariable:
     {
@@ -491,7 +469,7 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
         //      cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
         //        range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
       }
-      return;
+      return true;
     }
   case TypeDescription::SFCXVariable:
     {
@@ -506,7 +484,7 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
                                         range.z()-1, box.min(),
                                         box.max());
       }
-      return;
+      return true;
     }
   case TypeDescription::SFCYVariable:
     {
@@ -521,7 +499,7 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
                                         range.z()-1, box.min(),
                                         box.max());
       }
-      return;
+      return true;
     }
   case TypeDescription::SFCZVariable:
     {
@@ -536,53 +514,24 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
                                         range.z(), box.min(),
                                         box.max());
       }     
-      return;
+      return true;
     }
   default:
-    error("in update_mesh_handle:: Not a Uintah type.");
+    return false;
   }
 }
 
-// // Sets all sorts of properties using the PropertyManager facility
-// // of the Field.  This is called for all types of Fields.
-// void
-// FieldExtractorAlgo::set_field_properties(Field* field, QueryInfo& qinfo,
-//                                      IntVector& offset) {
-//   field->set_property( "varname",    string(qinfo.varname), true);
-//   field->set_property( "generation", qinfo.generation, true);
-//   field->set_property( "timestep",   qinfo.timestep, true);
-//   field->set_property( "offset",     IntVector(offset), true);
-//   field->set_property( "delta_t",    qinfo.dt, true);
-//   field->set_property( "vartype",    int(qinfo.type->getType()),true);
-// }
-
-
-
-// // This is the first function on your way to getting a field.  This
-// // makes a template switch on the type of variable (CCVariable,
-// // NCVariable, etc.).  It then calls getData.  The type of T is
-// // double, int, Vector, etc.
-// template<class T>
-// FieldHandle
-// FieldExtractor::getVariable(QueryInfo& qinfo, IntVector& offset,
-//                             LVMeshHandle mesh_handle)
-// {
-//   switch( qinfo.type->getType() ) {
-//   case TypeDescription::CCVariable:
-//     return getData<CCVariable<T>, T>(qinfo, offset, mesh_handle, 0);
-//   case TypeDescription::NCVariable:
-//     return getData<NCVariable<T>, T>(qinfo, offset, mesh_handle, 1);
-//   case TypeDescription::SFCXVariable:
-//     return getData<SFCXVariable<T>, T>(qinfo, offset, mesh_handle, 1);
-//   case TypeDescription::SFCYVariable:
-//     return getData<SFCYVariable<T>, T>(qinfo, offset, mesh_handle, 1);
-//   case TypeDescription::SFCZVariable:
-//     return getData<SFCZVariable<T>, T>(qinfo, offset, mesh_handle, 1);
-//   default:
-//     cerr << "Type is unknown.\n";
-//     return 0;
-//   }
-// }
-
+// Sets all sorts of properties using the PropertyManager facility
+// of the Field.  This is called for all types of Fields.
+void
+FieldExtractorAlgo::set_field_properties(Field* field, QueryInfo& qinfo,
+                                     IntVector& offset) {
+  field->set_property( "varname",    string(qinfo.varname), true);
+  field->set_property( "generation", qinfo.generation, true);
+  field->set_property( "timestep",   qinfo.timestep, true);
+  field->set_property( "offset",     IntVector(offset), true);
+  field->set_property( "delta_t",    qinfo.dt, true);
+  field->set_property( "vartype",    int(qinfo.type->getType()),true);
+}
 
 
