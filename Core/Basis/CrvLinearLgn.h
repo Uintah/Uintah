@@ -290,7 +290,7 @@ public:
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);
-  };
+};
 
 template <class T>
 const TypeDescription* get_type_description(CrvLinearLgn<T> *)

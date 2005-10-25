@@ -439,7 +439,7 @@ public:
   {
     HexLocate< HexTricubicHmt<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
     
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
   void add_derivative(const vector<T> &p) { derivs_.push_back(p); }

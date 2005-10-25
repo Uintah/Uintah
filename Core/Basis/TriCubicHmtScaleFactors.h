@@ -45,8 +45,8 @@ namespace SCIRun {
 //! Class for describing unit geometry of TetCubicHmt
 class TriCubicScaleFactorsHmtUnitElement : public TriLinearLgnUnitElement {
 public:
-  TriCubicScaleFactorsHmtUnitElement() {};
-  virtual ~TriCubicScaleFactorsHmtUnitElement() {};
+  TriCubicScaleFactorsHmtUnitElement() {}
+  virtual ~TriCubicScaleFactorsHmtUnitElement() {}
 };
 
 
