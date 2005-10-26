@@ -74,7 +74,6 @@ public:
     const double x2=x*x;
     const double y2=y*y;
     const double z2=z*z;
-    const double x12=(x-1)*(x-1);
     const double y12=(y-1)*(y-1);
     const double z12=(z-1)*(z-1);
       
@@ -147,7 +146,6 @@ public:
     const double x2=x*x;
     const double y2=y*y;
     const double z2=z*z;
-    const double x12=(x-1)*(x-1);
     const double y12=(y-1)*(y-1);
     const double z12=(z-1)*(z-1);
 
