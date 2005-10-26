@@ -55,6 +55,16 @@ Packages/Insight/Dataflow/GUI/%.tcl:  Packages/Insight/Dataflow/Modules/Filters/
 
 SRCS := \
 	$(INSIGHT_TCL_GEN) \
+	$(SRCDIR)/BinaryDilateImageFilter.tcl\
+	$(SRCDIR)/BinaryErodeImageFilter.tcl\
+	$(SRCDIR)/ChooseImage.tcl\
+	$(SRCDIR)/ColorImageReaderUChar2D.tcl\
+	$(SRCDIR)/ColorImageReaderFloat2D.tcl\
+	$(SRCDIR)/ColorImageReaderUChar3D.tcl\
+	$(SRCDIR)/ColorImageReaderFloat3D.tcl\
+	$(SRCDIR)/ExtractImageFilter.tcl\
+	$(SRCDIR)/GrayscaleDilateImageFilter.tcl\
+	$(SRCDIR)/GrayscaleErodeImageFilter.tcl\
 	$(SRCDIR)/ImageFileWriter.tcl \
 	$(SRCDIR)/ImageReaderFloat2D.tcl \
 	$(SRCDIR)/ImageReaderFloat3D.tcl \
@@ -63,12 +73,6 @@ SRCS := \
 	$(SRCDIR)/ImageReaderUShort2D.tcl \
 	$(SRCDIR)/ImageReaderUShort3D.tcl \
 	$(SRCDIR)/ImageToField.tcl \
-	$(SRCDIR)/ColorImageReaderUChar2D.tcl\
-	$(SRCDIR)/ColorImageReaderFloat2D.tcl\
-	$(SRCDIR)/ColorImageReaderUChar3D.tcl\
-	$(SRCDIR)/ColorImageReaderFloat3D.tcl\
-	$(SRCDIR)/ChooseImage.tcl\
-	$(SRCDIR)/ExtractImageFilter.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
