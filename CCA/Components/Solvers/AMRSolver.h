@@ -68,6 +68,8 @@ namespace Uintah {
                                const VarLabel* guess,
                                Task::WhichDW guess_dw,
                                const SolverParameters* params);
+                               
+    virtual string getName();
     
     //========================== PRIVATE SECTION ==========================
     private:

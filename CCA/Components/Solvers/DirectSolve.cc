@@ -306,4 +306,8 @@ void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
   sched->addTask(task, level->eachPatch(), matls);
 }
 
+string DirectSolve::getName(){
+  return "DirectSolve";
+}
+
 } // end namespace Uintah
