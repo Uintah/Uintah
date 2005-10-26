@@ -18,6 +18,7 @@ SRCS     += \
 	$(SRCDIR)/TransIsoHyper.cc              \
 	$(SRCDIR)/TransIsoHyperImplicit.cc 	\
 	$(SRCDIR)/ViscoTransIsoHyper.cc         \
+	$(SRCDIR)/ViscoTransIsoHyperImplicit.cc \
 	$(SRCDIR)/CompNeoHookPlas.cc          	\
 	$(SRCDIR)/ViscoScram.cc               	\
 	$(SRCDIR)/ViscoSCRAMHotSpot.cc        	\
