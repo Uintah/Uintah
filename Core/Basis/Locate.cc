@@ -70,20 +70,22 @@ template <>
 double getnextx3(vector<double> &x, vector<double> &xold, 
 		 const Point& y, const vector<Point>& yd)
 {
-  //  cerr << x[0] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[0].x() << "\t" << yd[0].y() << "\t" << yd[0].z() << "\n" ;
-  //  cerr << x[1] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[1].x() << "\t" << yd[1].y() << "\t" << yd[1].z() << "\n" ;
-  //  cerr << x[2] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[2].x() << "\t" << yd[2].y() << "\t" << yd[2].z() << "\n" ;
+  cerr << x[0] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[0].x() << "\t" << yd[0].y() << "\t" << yd[0].z() << "\n" ;
+  cerr << x[1] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[1].x() << "\t" << yd[1].y() << "\t" << yd[1].z() << "\n" ;
+  cerr << x[2] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[2].x() << "\t" << yd[2].y() << "\t" << yd[2].z() << "\n" ;
 
   double J[9], JInv[9];
+
   J[0]=yd[0].x();
-  J[1]=yd[0].y();
-  J[2]=yd[0].z();
-  J[3]=yd[1].x();
+  J[3]=yd[0].y();
+  J[6]=yd[0].z();
+  J[1]=yd[1].x(); 
   J[4]=yd[1].y();
-  J[5]=yd[1].z();
-  J[6]=yd[2].x();
-  J[7]=yd[2].y();
+  J[7]=yd[1].z();
+  J[2]=yd[2].x();
+  J[5]=yd[2].y();
   J[8]=yd[2].z();
+
   InverseMatrix3x3(J, JInv);
    
   x[0] -= JInv[0]*y.x()+JInv[1]*y.y()+JInv[2]*y.z();
