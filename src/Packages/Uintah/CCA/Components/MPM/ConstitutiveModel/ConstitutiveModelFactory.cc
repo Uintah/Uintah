@@ -86,7 +86,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
         flags->d_integrator_type == "fracture")
       return(scinew ViscoTransIsoHyper(child,lb,flags));
     else if (flags->d_integrator_type == "implicit")
-    return(scinew ViscoTransIsoHyper(child,lb,flags));
+    return(scinew ViscoTransIsoHyperImplicit(child,lb,flags));
   }
   
   else if (mat_type ==  "ideal_gas")
