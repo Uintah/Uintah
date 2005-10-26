@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyper.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyper.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyperImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
@@ -73,16 +74,21 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew CNHPDamage(child,lb,flags));
 
   else if (mat_type ==  "trans_iso_hyper") {
-    if (flags->d_integrator_type == "explicit" || 
+    if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
       return(scinew TransIsoHyper(child,lb,flags));
     else if (flags->d_integrator_type == "implicit")
       return(scinew TransIsoHyperImplicit(child,lb,flags));
   }
   
-  else if (mat_type ==  "visco_trans_iso_hyper")
+  else if (mat_type ==  "visco_trans_iso_hyper") {
+    if (flags->d_integrator_type == "explicit" ||
+        flags->d_integrator_type == "fracture")
+      return(scinew ViscoTransIsoHyper(child,lb,flags));
+    else if (flags->d_integrator_type == "implicit")
     return(scinew ViscoTransIsoHyper(child,lb,flags));
-
+  }
+  
   else if (mat_type ==  "ideal_gas")
     return(scinew IdealGasMP(child,lb,flags));
 
