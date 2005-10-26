@@ -64,7 +64,7 @@ enum ArgContext {
 enum storageT {
   noneStorage,
   doStore,
-  doRetreive
+  doRetrieve
 };
 
 /** Base class for SIDL interface definitions. */
@@ -578,12 +578,16 @@ public:
   virtual void emit_rettype(EmitState& e, const std::string& name) const;
   virtual void emit_prototype(SState& s, ArgContext ctx,
 			      SymbolTable* localScope) const;
-  virtual bool array_use_pointer() const ;
+  virtual bool array_use_pointer() const;
   virtual bool uniformsize() const;
   virtual bool matches(const Type*) const;
   virtual std::string fullname() const;
   virtual std::string cppfullname(SymbolTable* localScope) const;
   virtual bool isvoid() const;
+
+  static const std::string COMPLEX_FLOAT_NAME;
+  static const std::string COMPLEX_DOUBLE_NAME;
+
 protected:
   friend class Type;
   BuiltinType(const std::string& cname, const std::string& nexusname);
