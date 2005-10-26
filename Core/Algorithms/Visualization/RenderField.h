@@ -745,6 +745,11 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 #if defined(DEBUG_PRINT)
   cout << endl << "-- edges --" << endl;
 #endif
+
+  typedef typename Fld::mesh_type::Node::array_type ec_t;
+  typedef hash_set<ec_t, hash_nds<ec_t>, eqfc<ec_t> > edge_ht_t;
+  edge_ht_t rendered_edges; 
+
   // Second pass: over the edges
   mesh->synchronize(Mesh::EDGES_E | Mesh::FACES_E | Mesh::CELLS_E);
   typename Fld::mesh_type::Elem::iterator eiter; mesh->begin(eiter);  
@@ -752,13 +757,27 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
   while (eiter != eiter_end) {  
     typename Fld::mesh_type::Edge::array_type edges;
     mesh->get_edges(edges, *eiter);
-    // render all the edges FIX_ME has the edges, render each only once.
+
     typename Fld::mesh_type::Edge::array_type::iterator edge_iter;
     edge_iter = edges.begin();
     while (edge_iter != edges.end()) {
+
+      typename Fld::mesh_type::Node::array_type nodes;
+      typename Fld::mesh_type::Edge::index_type eidx = *edge_iter++;
+
+      mesh->get_nodes(nodes, eidx);
+      sort(nodes.begin(), nodes.end());
+      
+      typename edge_ht_t::const_iterator it = rendered_edges.find(nodes);
+
+      if (it != rendered_edges.end()) {
+	continue;
+      } else {
+	rendered_edges.insert(nodes);
+      }
     
       vector<vector<double> > coords;
-      mesh->pwl_approx_edge(coords, *eiter, *edge_iter++, div);
+      mesh->pwl_approx_edge(coords, *eiter, eidx, div);
       vector<vector<double> >::iterator coord_iter = coords.begin();
       do {
 	vector<double> &c0 = *coord_iter++;
@@ -1012,11 +1031,10 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
   mesh->synchronize(Mesh::FACES_E | Mesh::EDGES_E | Mesh::CELLS_E);
   typename Fld::mesh_type::Elem::iterator eiter; mesh->begin(eiter);  
   typename Fld::mesh_type::Elem::iterator eiter_end; mesh->end(eiter_end);  
-  int count = 0;
   while (eiter != eiter_end) {  
     typename Fld::mesh_type::Face::array_type face_indecies;
     mesh->get_faces(face_indecies, *eiter);
-    // render all the edges FIX_ME has the edges, render each only once.
+
     typename Fld::mesh_type::Face::array_type::iterator face_iter;
     face_iter = face_indecies.begin();
     while (face_iter != face_indecies.end()) {
@@ -1033,7 +1051,6 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
       } else {
 	rendered_faces.insert(nodes);
       }
-      count++;
 
       //coords organized as scanlines of quad/tri strips.
       vector<vector<vector<double> > > coords;
