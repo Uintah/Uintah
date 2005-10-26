@@ -794,5 +794,9 @@ namespace Uintah {
     LoadBalancer* lb = sched->getLoadBalancer();
     sched->addTask(task, lb->createPerProcessorPatchSet(level), matls);
   }
+  
+string HypreSolver2::getName(){
+  return "hypre";
+}
 
 } // end namespace Uintah

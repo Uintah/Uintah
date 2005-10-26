@@ -46,8 +46,8 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
 #endif
   } else {
     ostringstream msg;
-    msg << "Unknown solver " << solver
-        << "Valid Solvers: CGSolver, DirectSolver, HypreSolver, AMGSolver";
+    msg << "\nERROR: Unknown solver (" << solver
+        << ") Valid Solvers: CGSolver, DirectSolver, HypreSolver, AMRSolver, hypreamr \n";
     throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
 

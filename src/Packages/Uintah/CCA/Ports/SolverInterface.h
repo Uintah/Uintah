@@ -27,6 +27,7 @@ namespace Uintah {
   private:
     bool solveOnExtraCells;
   };
+  
   class SolverInterface : public UintahParallelPort {
   public:
     SolverInterface();
@@ -46,7 +47,10 @@ namespace Uintah {
                                const VarLabel* guess,
                                Task::WhichDW guess_dw,
 			          const SolverParameters* params) = 0;
-  private:
+                               
+  virtual string getName()=0;
+  
+  private: 
     SolverInterface(const SolverInterface&);
     SolverInterface& operator=(const SolverInterface&);
   };
