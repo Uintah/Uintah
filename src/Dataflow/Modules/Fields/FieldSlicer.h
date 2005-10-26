@@ -195,7 +195,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     // 3D ITKLatVolField to 2D ITKImage
 #ifdef HAVE_INSIGHT
-  } else if( typeName == "ITKLatVolField" ) {
+  } else if( mesh_type.find("ITKLatVolField") != string::npos ) {
     
     // These really should be ITKImageFields but the conversion will
     // not work so for now make the ImageFields instead.
@@ -282,7 +282,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     // 2D ITKImage to 1D Scanline
 #ifdef HAVE_INSIGHT
-  } else if( typeName == "ITKImageField" ) {
+  } else if( mesh_type.find("ITKImageField") != string::npos ) {
 
     // These really should be ITKScanlineFields but the conversion will
     // not work so for now make the ScanlineFields instead.
