@@ -1377,4 +1377,8 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   sched->addTask(task, perproc_patches, matls);
 }
 
+string CGSolver::getName(){
+  return "CGSolver";
+}
+
 } // end namespace Uintah

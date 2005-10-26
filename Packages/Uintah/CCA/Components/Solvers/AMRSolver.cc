@@ -244,3 +244,9 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
 
   cout_doing << "AMRSolver::scheduleSolve() END" << "\n";
 } // end scheduleSolve()
+
+
+string AMRSolver::getName(){
+  return "hypreamr";
+}
+
