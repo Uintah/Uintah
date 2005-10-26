@@ -81,6 +81,16 @@ public:
   virtual bool available();
   /** */
   virtual PortInstance* getPeer();
+
+protected:
+  // default keys
+  static const std::string MAX_C;
+  static const std::string MIN_C;
+  static const std::string PROXY;
+  static const std::string NAME;
+  static const std::string TYPE;
+
+
 private:
   PortInstance(const PortInstance&);
   PortInstance& operator=(const PortInstance&);
