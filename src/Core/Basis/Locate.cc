@@ -70,9 +70,9 @@ template <>
 double getnextx3(vector<double> &x, vector<double> &xold, 
 		 const Point& y, const vector<Point>& yd)
 {
-  cerr << x[0] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[0].x() << "\t" << yd[0].y() << "\t" << yd[0].z() << "\n" ;
-  cerr << x[1] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[1].x() << "\t" << yd[1].y() << "\t" << yd[1].z() << "\n" ;
-  cerr << x[2] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[2].x() << "\t" << yd[2].y() << "\t" << yd[2].z() << "\n" ;
+  //cerr << x[0] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[0].x() << "\t" << yd[0].y() << "\t" << yd[0].z() << "\n" ;
+  //cerr << x[1] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[1].x() << "\t" << yd[1].y() << "\t" << yd[1].z() << "\n" ;
+  //cerr << x[2] << "\t" << y.x() << "\t" << y.y() << "\t" << y.z() << "\t" << yd[2].x() << "\t" << yd[2].y() << "\t" << yd[2].z() << "\n" ;
 
   double J[9], JInv[9];
 
