@@ -747,7 +747,6 @@ load_partials(const vector<T> &grad, DenseMatrix &m)
   }
 }
 
-
 template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::
@@ -768,17 +767,20 @@ cell_gradient(typename mesh_type::Elem::index_type ci,
   vector<Point> Jv;
   mesh_->derivate(coords, ci, Jv);
 
+
   // load the matrix with the Jacobian
   DenseMatrix J(3, Jv.size());
   int i = 0;
   vector<Point>::iterator iter = Jv.begin();
   while(iter != Jv.end()) {
     Point &p = *iter++;
-    J.put(0, i, p.x());
-    J.put(1, i, p.y());
-    J.put(2, i, p.z());
+    J.put(i, 0, p.x());
+    J.put(i, 1, p.y());
+    J.put(i, 2, p.z());
     ++i;
   }
+  J.invert();
+
   vector<value_type> g;
   basis_.derivate(coords, fcd, g);
   unsigned int n = g.size();
