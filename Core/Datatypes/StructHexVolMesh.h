@@ -86,6 +86,102 @@ public:
   { return new StructHexVolMesh<Basis>(*this); }
   virtual ~StructHexVolMesh() {}
 
+
+  //  friend class StructHextVolMesh::ElemData;
+  
+  class ElemData 
+  {
+  public:
+    ElemData(const StructHexVolMesh<Basis>& msh, 
+	     const typename Cell::index_type ind) :
+      mesh_(msh),
+      index_(ind)
+    {}
+    
+    // the following designed to coordinate with ::get_nodes
+    inline 
+    unsigned node0_index() const {
+      return (index_.i_ + mesh_.get_ni()*index_.j_ + 
+	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+    }
+    inline 
+    unsigned node1_index() const {
+      return (index_.i_+ 1 + mesh_.get_ni()*index_.j_ + 
+	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+    }
+    inline 
+    unsigned node2_index() const {
+      return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1) + 
+	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+      
+    }
+    inline 
+    unsigned node3_index() const {
+      return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1) + 
+	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+    }
+    inline 
+    unsigned node4_index() const {
+      return (index_.i_ + mesh_.get_ni()*index_.j_ + 
+	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+    }
+    inline 
+    unsigned node5_index() const {
+      return (index_.i_ + 1 + mesh_.get_ni()*index_.j_ + 
+	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+    }
+
+    inline 
+    unsigned node6_index() const {
+      return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1) + 
+	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+    }
+    inline 
+    unsigned node7_index() const {
+      return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1) + 
+	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+    }
+
+    inline 
+    const Point node0() const {
+      return mesh_.points_(index_.i_, index_.j_, index_.k_);
+    }
+    inline 
+    const Point node1() const {
+      return mesh_.points_(index_.i_+1, index_.j_, index_.k_);
+    }
+    inline 
+    const Point node2() const {
+      return mesh_.points_(index_.i_+1, index_.j_+1, index_.k_);
+    }
+    inline 
+    const Point node3() const {
+      return mesh_.points_(index_.i_, index_.j_+1, index_.k_);
+    }
+    inline 
+    const Point node4() const {
+      return mesh_.points_(index_.i_, index_.j_, index_.k_+1);
+    }
+    inline 
+    const Point node5() const {
+      return mesh_.points_(index_.i_+1, index_.j_, index_.k_+1);
+    }
+    inline 
+    const Point node6() const {
+      return mesh_.points_(index_.i_+1, index_.j_+1, index_.k_+1);
+    }
+    inline 
+    const Point node7() const {
+      return mesh_.points_(index_.i_, index_.j_+1, index_.k_+1);
+    }
+
+  private:
+    const StructHexVolMesh<Basis>          &mesh_;
+    const typename Cell::index_type  index_;
+  };
+
+  friend class ElemData;
+
   //! get the mesh statistics
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
@@ -157,6 +253,33 @@ public:
 			    Vector&, Vector&, Vector&,
 			    Vector&, Vector&, Vector&)
   { ASSERTFAIL("not implemented") }
+
+
+
+  bool get_coords(vector<double> &coords, 
+		  const Point &p,
+		  typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    return basis_.get_coords(coords, p, ed); 
+  }
+  
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    pt = basis_.interpolate(coords, ed);
+  }
+
+  // get the Jacobian matrix
+  void derivate(const vector<double> &coords, 
+		typename Cell::index_type idx, 
+		vector<Point> &J) const
+  {
+    ElemData ed(*this, idx);
+    basis_.derivate(coords, ed, J);
+  }
+
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
