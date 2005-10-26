@@ -31,47 +31,47 @@
 
 using SSIDL::io::Serializer;
 
-void Serializer::packBool(const ::std::string& key, bool value)
+void Serializer::packBool(const std::string& key, bool value)
 {
     NOT_FINISHED("void .SSIDL.io.Serializer.packBool(in string key, in bool value)throws .SSIDL.io.IOException");
 }
 
-void Serializer::packChar(const ::std::string& key, char value)
+void Serializer::packChar(const std::string& key, char value)
 {
     NOT_FINISHED("void .SSIDL.io.Serializer.packChar(in string key, in char value)throws .SSIDL.io.IOException");
 }
 
-void Serializer::packInt(const ::std::string& key, int value)
+void Serializer::packInt(const std::string& key, int value)
 {
     NOT_FINISHED("void .SSIDL.io.Serializer.packInt(in string key, in int value)throws .SSIDL.io.IOException");
 }
 
-void Serializer::packLong(const ::std::string& key, long value)
+void Serializer::packLong(const std::string& key, long value)
 {
     NOT_FINISHED("void .SSIDL.io.Serializer.packLong(in string key, in long value)throws .SSIDL.io.IOException");
 }
 
-void Serializer::packFloat(const ::std::string& key, float value)
+void Serializer::packFloat(const std::string& key, float value)
 {
     NOT_FINISHED("void .SSIDL.io.Serializer.packFloat(in string key, in float value)throws .SSIDL.io.IOException");
 }
 
-void Serializer::packDouble(const ::std::string& key, double value)
+void Serializer::packDouble(const std::string& key, double value)
 {
     NOT_FINISHED("void .SSIDL.io.Serializer.packDouble(in string key, in double value)throws .SSIDL.io.IOException");
 }
 
-void Serializer::packFcomplex(const ::std::string& key, ::std::complex<float>  value)
+void Serializer::packFcomplex(const std::string& key, const std::complex<float>&  value)
 {
-    NOT_FINISHED("void .SSIDL.io.Serializer.packFcomplex(in string key, in ::std::complex<float>  value)throws .SSIDL.io.IOException");
+    NOT_FINISHED("void .SSIDL.io.Serializer.packFcomplex(in string key, in complex<float>  value)throws .SSIDL.io.IOException");
 }
 
-void Serializer::packDcomplex(const ::std::string& key, ::std::complex<double>  value)
+void Serializer::packDcomplex(const std::string& key, const std::complex<double>&  value)
 {
-    NOT_FINISHED("void .SSIDL.io.Serializer.packDcomplex(in string key, in ::std::complex<double>  value)throws .SSIDL.io.IOException");
+    NOT_FINISHED("void .SSIDL.io.Serializer.packDcomplex(in string key, in complex<double>  value)throws .SSIDL.io.IOException");
 }
 
-void Serializer::packString(const ::std::string& key, const ::std::string& value)
+void Serializer::packString(const std::string& key, const std::string& value)
 {
     NOT_FINISHED("void .SSIDL.io.Serializer.packString(in string key, in string value)throws .SSIDL.io.IOException");
 }
