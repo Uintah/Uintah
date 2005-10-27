@@ -43,21 +43,24 @@
 #ifndef SCI_project_TetVolMesh_h
 #define SCI_project_TetVolMesh_h 1
 
-#include <Core/Thread/Mutex.h>
-#include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/FieldIterator.h>
 #include <Core/Containers/StackVector.h>
+#include <Core/Datatypes/FieldIterator.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/SearchGrid.h>
 #include <Core/Math/MusilRNG.h>
-#include <Core/Persistent/PersistentSTL.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Persistent/PersistentSTL.h>
+#include <Core/Thread/Mutex.h>
+
 #include <sci_hash_set.h>
 #include <sci_hash_map.h>
+
 #include <sgi_stl_warnings_off.h>
 #include   <vector>
 #include   <set>
 #include <sgi_stl_warnings_on.h>
-#include <Core/Datatypes/SearchGrid.h>
+
 #include <float.h> // for DBL_MAX
 
 namespace SCIRun {
@@ -140,8 +143,8 @@ public:
       }      
     }
 
-    //! A fucntor that returns a boolean indicating weather two
-    //! edges indices share the same nodes, and thus the same edge in space
+    //! A functor that returns a boolean indicating whether two
+    //! edges' indices share the same nodes, and thus the same edge in space
     //! Used as a template parameter to STL containers typedef'd below
     struct eqEdge : public binary_function<index_type, index_type, bool>
     {
@@ -1002,14 +1005,14 @@ TetVolMesh<Basis>::TetVolMesh() :
   //! Unique Edges
 #ifdef HAVE_HASH_SET
   edge_hasher_(cells_),
-#ifdef __ECC
+#  ifdef __ECC
   all_edges_(edge_hasher_),
   edges_(edge_hasher_),
-#else
+#  else
   edge_comp_(cells_),
-  all_edges_(100,edge_hasher_,edge_comp_),
+  all_edges_((int)100,edge_hasher_,edge_comp_),
   edges_(100,edge_hasher_,edge_comp_),
-#endif // ifdef __ECC
+#  endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_edges_(edge_comp_),
   edges_(edge_comp_),
