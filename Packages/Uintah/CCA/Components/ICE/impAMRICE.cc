@@ -223,7 +223,7 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
                                           const MaterialSet* all_matls)
 {
   cout_doing << d_myworld->myrank() <<
-                "ICE::scheduleMultiLevelPressureSolve" << endl;
+                " ICE::scheduleMultiLevelPressureSolve" << endl;
   
   Task* t = scinew Task("ICE::multiLevelPressureSolve", 
                    this, &ICE::multiLevelPressureSolve,
@@ -249,7 +249,6 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     //  t->requires( Task::OldDW, lb->delTLabel);    AMR
     t->requires( Task::NewDW, lb->vol_frac_CCLabel,     patches,  gac,2); 
     t->requires( Task::NewDW, lb->sp_vol_CCLabel,       patches,  gac,1);
-    t->requires( Task::NewDW, lb->press_equil_CCLabel,  patches, nd, press_matl, oims,gac,1);
     t->requires( Task::NewDW, lb->rhsLabel,             patches, nd, one_matl,   oims,gn,0);
     //t->requires( Task::OldDW, lb->initialGuessLabel, patches, nd, one_matl,   oims,gn,0);
     //__________________________________
@@ -272,8 +271,8 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
         
     //__________________________________
     // Update Pressure
-    t->requires( Task::NewDW, lb->rho_CCLabel,   patches,                       gac,1);            
-    t->requires( Task::NewDW, lb->press_CCLabel, patches, nd, press_matl, oims, gac,1);  
+    t->requires( Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gac,1);  
+    t->requires( Task::NewDW, lb->sum_imp_delPLabel,   press_matl, oims, gac,1);  
     
 #if 0 // fix me
     computesRequires_CustomBCs(t, "implicitPressureSolve", lb, ice_matls,
@@ -287,8 +286,9 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     
     //__________________________________
     //  what's produced from this task
-    t->modifies(lb->press_CCLabel, patches, nd, press_matl,oims);  
-    t->modifies(lb->term2Label,    patches, nd,    one_matl,  oims);   
+    t->computes(lb->press_CCLabel,    patches, nd, press_matl,oims);
+    t->modifies(lb->sum_imp_delPLabel,patches,  nd, press_matl,oims);
+    t->modifies(lb->term2Label,       patches, nd, one_matl,  oims);   
     
     t->modifies(lb->uvel_FCMELabel, patches);
     t->modifies(lb->vvel_FCMELabel, patches);
@@ -365,8 +365,14 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);
   subNewDW->put(   max_RHS_old, lb->max_RHSLabel);
      
-  subNewDW->transferFrom(ParentNewDW,lb->press_CCLabel,  patches, d_press_matl); 
-  subNewDW->transferFrom(ParentNewDW,lb->rhsLabel,       patches, one_matl);
+  subNewDW->transferFrom(ParentNewDW,lb->sum_imp_delPLabel, patches, d_press_matl); 
+  subNewDW->transferFrom(ParentNewDW,lb->rhsLabel,          patches, one_matl);
+  
+  const MaterialSubset* all_matls_s = all_matls->getUnion();
+  subNewDW->transferFrom(ParentNewDW,lb->uvel_FCLabel,      patches, all_matls_s); 
+  subNewDW->transferFrom(ParentNewDW,lb->vvel_FCLabel,      patches, all_matls_s); 
+  subNewDW->transferFrom(ParentNewDW,lb->wvel_FCLabel,      patches, all_matls_s);
+  
   //subNewDW->transferFrom(ParentOldDW,lb->initialGuessLabel, patch_sub, one_matl);  
   //__________________________________
   //  Iteration Loop
@@ -407,14 +413,15 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     MaterialSet* press_matlSet  = scinew MaterialSet();
     press_matlSet->add(0);
     press_matlSet->addReference(); 
-  
+
     solver->scheduleSolve(grid->getLevel(0), subsched, press_matlSet,
                           lb->matrixLabel,   Task::NewDW,
                           lb->imp_delPLabel, false,
                           lb->rhsLabel,      Task::NewDW,
                           whichInitialGuess, 
                           Task::NewDW, // Guess doesn't exist yet
-			  solver_parameters);
+			     solver_parameters);
+
 #else
     const PatchSet* perProcPatches = 
       sched->getLoadBalancer()->createPerProcessorPatchSet(grid);
@@ -437,7 +444,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                                                             d_press_matl, 
                                                             all_matls);   
       
-      scheduleImplicitVel_FC( subsched,         patch_set,  ice_matls,
+      scheduleRecomputeVel_FC(subsched,         patch_set,  ice_matls,
                                                             mpm_matls,    
                                                             d_press_matl,  
                                                             all_matls,    
@@ -533,7 +540,9 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   bool replace = true;
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   ParentNewDW->transferFrom(subNewDW,         // press
-                    lb->press_CCLabel,       patches,  d_press_matl, replace); 
+                    lb->press_CCLabel,       patches,  d_press_matl, replace);
+  ParentNewDW->transferFrom(subNewDW,
+                    lb->sum_imp_delPLabel,   patches,  d_press_matl, replace); 
   ParentNewDW->transferFrom(subNewDW,         // term2
                     lb->term2Label,          patches,  one_matl,     replace);    
   ParentNewDW->transferFrom(subNewDW,         // uvel_FC
@@ -547,9 +556,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
                     lb->vol_fracY_FCLabel,   patches, all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
-                    lb->vol_fracZ_FCLabel,   patches, all_matls_sub,replace);
-  ParentNewDW->transferFrom(subNewDW,         // imp_delP
-                    lb->imp_delPLabel,       patches, d_press_matl,replace);           
+                    lb->vol_fracZ_FCLabel,   patches, all_matls_sub,replace);           
     
   //__________________________________
   //  Turn scrubbing back on

@@ -142,6 +142,62 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
     } // child loop
   }  // face loop
 }
+
+
+/* --------------------------------------------------------------------- 
+ Function~  set_imp_DelP_BC--      
+ Purpose~  set the boundary condition for the change in pressure (imp_del_P_
+ computed by the semi-implicit pressure solve.  Only set the BC on coarsest
+ level.  On the finer levels imp_delP is coarsen
+ ---------------------------------------------------------------------  */
+void set_imp_DelP_BC( CCVariable<double>& imp_delP, 
+                      const Patch* patch)        
+{ 
+  vector<Patch::FaceType>::const_iterator itr;
+  for (itr  = patch->getBoundaryFaces()->begin(); 
+       itr != patch->getBoundaryFaces()->end(); ++itr){
+    Patch::FaceType face = *itr;
+    
+    int mat_id = 0; // hard coded for pressure
+    IntVector oneCell = patch->faceDirection(face);
+    
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      string bc_kind  = "NotSet";
+      vector<IntVector> bound;  
+      
+      bool foundIterator =       
+        getIteratorBCValueBCKind<double>( patch, face, child, "Pressure", 
+                                         mat_id, bc_value, bound,bc_kind);
+                                    
+      // don't set BCs unless we've found the iterator                                   
+      if (foundIterator) {
+        //__________________________________
+        //  Neumann or Dirichlet Press_BC;
+        double one_or_zero = -999;
+        if(bc_kind == "zeroNeumann" || bc_kind == "Neumann" ||
+           bc_kind == "symmetric"){
+          one_or_zero = 1.0;     
+        }
+        if(bc_kind == "Dirichlet" || bc_kind == "Custom" || 
+           bc_kind == "MMS_1"){
+          one_or_zero = 0.0;
+        }                                 
+        //__________________________________
+        //  Set the BC  
+        vector<IntVector>::const_iterator iter;
+        for (iter=bound.begin(); iter != bound.end(); iter++) {
+          IntVector c = *iter;
+          IntVector adj = c - oneCell;
+          imp_delP[c] = one_or_zero * imp_delP[adj];
+        }
+      } // if(foundIterator)
+    } // child loop
+  }  // face loop
+}
+
+
 /* --------------------------------------------------------------------- 
  Function~  get_rho_micro--
  Purpose~  This handles all the logic of getting rho_micro on the faces
