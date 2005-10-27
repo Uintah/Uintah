@@ -161,7 +161,7 @@ public:
   {
     TriLocate< TriCubicHmt<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
  
 
   //! add derivative values (dx, dy) for nodes.
