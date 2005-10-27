@@ -121,7 +121,7 @@ public:
     if (get_iterative(pEB, coords, value, cd))
       return check_coords(coords);
     return false; 
-  };
+  }
  
 protected:
   inline bool check_coords(const vector<double> &x) const  
@@ -131,7 +131,7 @@ protected:
       return true;
 
     return false;
-  };
+  }
 
   //! find a reasonable initial guess for starting Newton iteration.
   //! Reasonable means near and with a derivative!=0 
