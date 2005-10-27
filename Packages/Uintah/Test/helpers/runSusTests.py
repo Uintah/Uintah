@@ -551,6 +551,6 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
         return_code = 2;
     if return_code != 0:
       # as the file is only created if a certain test fails, change the permissions here as we are certain the file exists
-      system("chmod gu+rw,a+r %s/%s-short.log > /dev/null 2>&1" % (startpath, upper(ALGO)))
+      system("chmod gu+rw,a+r %s/%s-short.log > /dev/null 2>&1" % (startpath, upper(algo)))
           
   return return_code
