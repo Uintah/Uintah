@@ -28,18 +28,18 @@
 
 
 /*
- *  FixedPortServiceInfoBase.h: 
+ *  ServiceRegistryFactoryBase.h: 
  *
  *  Written by:
  *   Yarden Livnat
  *   SCI Institute
  *   University of Utah
- *   Sept 2005
+ *   Oct 2005
  *
  */
 
-#ifndef SCIRun_Core_FixedPortServiceFactoryBase_h
-#define SCIRun_Core_FixedPortServiceFactoryBase_h
+#ifndef SCIRun_Core_ServiceRegistryFactoryBase_h
+#define SCIRun_Core_ServiceRegistryFactoryBase_h
 
 #include <Core/Thread/Mutex.h>
 
@@ -47,42 +47,45 @@ namespace SCIRun {
   
   using namespace sci::cca;
   using namespace sci::cca::core;
+
+  class ServiceRegistry;
   
   /**
-   * \class FixedPortServiceFactoryBase
+   * \class ServiceRegistryFactoryBase
    *
    */
   
   template<class Interface>
-  class FixedPortServiceFactoryBase : public Interface
+  class ServiceRegistryFactoryBase : public Interface
   {
   public:
     typedef ServiceFactory::pointer pointer;
     
-    FixedPortServiceFactoryBase(const CoreFramework::pointer &framework,
-				const std::string& serviceName,
-				const Port::pointer &server);
-    virtual ~FixedPortServiceFactoryBase();
+    ServiceRegistryFactoryBase(const CoreFramework::pointer &framework,
+				const std::string& serviceName);
+    virtual ~ServiceRegistryFactoryBase();
     
     /*
-     * sci.cca.core.FixedPortServiceFactory interface
+     * sci.cca.core.ServiceRegistryFactory interface
      */
     
-    virtual std::string getName() { return name; }
+    virtual std::string getName() { return serviceName; }
     virtual PortInfo::pointer getService(const std::string &serviceName, const ComponentInfo::pointer &requester);
     virtual void releaseService(const std::string &portName);
 
   protected:
-    PortInfo::pointer service;
-    std::string name;
+    CoreFramework::pointer framework;
+    std::string serviceName;
+    ServiceRegistry* registry;
     int uses;
     Mutex lock;
 
     // prevent using these directly
-    FixedPortServiceFactoryBase(const FixedPortServiceFactoryBase&);
-    FixedPortServiceFactoryBase& operator=(const FixedPortServiceFactoryBase&);
+    ServiceRegistryFactoryBase(const ServiceRegistryFactoryBase&);
+    ServiceRegistryFactoryBase& operator=(const ServiceRegistryFactoryBase&);
   };
-  
+ 
+
 } // end namespace SCIRun
 
 #endif

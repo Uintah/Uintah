@@ -62,8 +62,11 @@ namespace SCIRun {
     typedef CoreServices::pointer pointer;
     typedef typename ComponentInfoBase<Interface>::PortMap PortMap;
 
-    using typename ComponentInfoBase<Interface>::ports_lock;
-    using typename ComponentInfoBase<Interface>::ports;
+    using ComponentInfoBase<Interface>::ports_lock;
+    using ComponentInfoBase<Interface>::ports;
+
+    //using typename ComponentInfoBase<Interface>::ports_lock;
+    //using typename ComponentInfoBase<Interface>::ports;
 
     CoreServicesBase(const CoreFramework::pointer &framework,
 		     const std::string& instanceName,

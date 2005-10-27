@@ -28,7 +28,7 @@
 
 
 /*
- *  FixedPortServiceInfoBase.h: 
+ *  ServiceRegistryFactoryBase.code: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,51 +38,60 @@
  *
  */
 
-#ifndef SCIRun_Core_FixedPortServiceFactoryBase_h
-#define SCIRun_Core_FixedPortServiceFactoryBase_h
-
-#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
+#include <SCIRun/Core/PortInfoImpl.h>
+#include <SCIRun/Core/ServiceRegistryFactoryBase.h>
+#include <SCIRun/Core/ServiceRegistryPortBase.h>
+#include <SCIRun/Core/ServiceRegistry.h>
 
 namespace SCIRun {
   
   using namespace sci::cca;
   using namespace sci::cca::core;
   
-  /**
-   * \class FixedPortServiceFactoryBase
-   *
-   */
+  template<class Interface>
+  ServiceRegistryFactoryBase<Interface>::ServiceRegistryFactoryBase(const CoreFramework::pointer &framework,
+									       const std::string &serviceName)
+    : framework(framework), serviceName(serviceName), registry(0), uses(0),  lock("ServiceRegistryFactory")
+  {
+  }
+
+  template<class Interface>
+  ServiceRegistryFactoryBase<Interface>::~ServiceRegistryFactoryBase()
+  {
+    Guard guard(&lock);
+
+    delete registry;
+    framework = 0;
+  }
   
   template<class Interface>
-  class FixedPortServiceFactoryBase : public Interface
+  PortInfo::pointer 
+  ServiceRegistryFactoryBase<Interface>::getService(const std::string &serviceName, 
+							      const ComponentInfo::pointer &requestor)
   {
-  public:
-    typedef ServiceFactory::pointer pointer;
-    
-    FixedPortServiceFactoryBase(const CoreFramework::pointer &framework,
-				const std::string& serviceName,
-				const Port::pointer &server);
-    virtual ~FixedPortServiceFactoryBase();
-    
-    /*
-     * sci.cca.core.FixedPortServiceFactory interface
-     */
-    
-    virtual std::string getName() { return name; }
-    virtual PortInfo::pointer getService(const std::string &serviceName, const ComponentInfo::pointer &requester);
-    virtual void releaseService(const std::string &portName);
+    Guard gurd(&lock);
+    if ( !registry )
+      registry = new ServiceRegistry(framework);
 
-  protected:
-    PortInfo::pointer service;
-    std::string name;
-    int uses;
-    Mutex lock;
+    uses++;
+    return new PortInfoImpl( "ServiceRegistryPort",
+			     "ServiceRegistry",
+			     0,
+			     ServiceRegistryPortBase<ServiceRegistry>( registry, requestor),
+			     ProvidePort);
+  }
+  
 
-    // prevent using these directly
-    FixedPortServiceFactoryBase(const FixedPortServiceFactoryBase&);
-    FixedPortServiceFactoryBase& operator=(const FixedPortServiceFactoryBase&);
-  };
+  template<class Interface>
+  void 
+  ServiceRegistryFactoryBase<Interface>::releaseService(const std::string &servicePortName)
+  {
+    Guard guard(&lock);
+    uses--;
+    // there is no need to clean up in this case
+    
+  }
   
 } // end namespace SCIRun
 
-#endif

@@ -41,6 +41,8 @@
 #ifndef SCIRun_Core_ServiceRegistryImpl_h
 #define SCIRun_Core_ServiceRegistryImpl_h
 
+#include <SCIRun/Core/ServiceRegistryBase.h>
+
 namespace SCIRun {
   
   using namespace sci::cca;

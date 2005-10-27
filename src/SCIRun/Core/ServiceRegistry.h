@@ -28,7 +28,7 @@
 
 
 /*
- *  FixedPortServiceInfoBase.h: 
+ *  ServiceRegistry.h: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,49 +38,50 @@
  *
  */
 
-#ifndef SCIRun_Core_FixedPortServiceFactoryBase_h
-#define SCIRun_Core_FixedPortServiceFactoryBase_h
+#ifndef SCIRun_Core_ServiceRegistry_h
+#define SCIRun_Core_ServiceRegistry_h
 
 #include <Core/Thread/Mutex.h>
 
 namespace SCIRun {
   
   using namespace sci::cca;
+  using namespace sci::cca::ports;
   using namespace sci::cca::core;
   
   /**
-   * \class FixedPortServiceFactoryBase
+   * \class ServiceRegistryBase
    *
    */
   
-  template<class Interface>
-  class FixedPortServiceFactoryBase : public Interface
+  class ServiceRegistry
   {
   public:
-    typedef ServiceFactory::pointer pointer;
+    typedef ServiceRegistry * pointer;
     
-    FixedPortServiceFactoryBase(const CoreFramework::pointer &framework,
-				const std::string& serviceName,
-				const Port::pointer &server);
-    virtual ~FixedPortServiceFactoryBase();
+    ServiceRegistry(const CoreFramework::pointer &framework);
+    virtual ~ServiceRegistry();
     
     /*
-     * sci.cca.core.FixedPortServiceFactory interface
+     * sci.cca.core.ServiceRegistry interface
      */
     
-    virtual std::string getName() { return name; }
-    virtual PortInfo::pointer getService(const std::string &serviceName, const ComponentInfo::pointer &requester);
-    virtual void releaseService(const std::string &portName);
+    virtual bool addService(const std::string &serviceType, 
+			    const ServiceProvider::pointer &portProvider,
+			    const ComponentInfo::pointer &requester);
+    virtual bool addSingletonService( const std::string &serviceType, const Port::pointer &server, const ComponentInfo::pointer &requester);
+    virtual void removeService( const std::string &serviceType, const ComponentInfo::pointer &requester);
 
   protected:
-    PortInfo::pointer service;
-    std::string name;
-    int uses;
-    Mutex lock;
+    CoreFramework::pointer framework;
+    
+    typedef std::map<std::string, ComponentInfo::pointer> ProvidedMap;
+    ProvidedMap providedServices;
 
+    Mutex lock;
     // prevent using these directly
-    FixedPortServiceFactoryBase(const FixedPortServiceFactoryBase&);
-    FixedPortServiceFactoryBase& operator=(const FixedPortServiceFactoryBase&);
+    ServiceRegistry(const ServiceRegistry&);
+    ServiceRegistry& operator=(const ServiceRegistry&);
   };
   
 } // end namespace SCIRun
