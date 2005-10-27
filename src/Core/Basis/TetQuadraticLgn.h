@@ -156,7 +156,7 @@ public:
   {
     TetLocate< TetQuadraticLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
-  };
+  }
  
   //! add a node value corresponding to edge
   void add_node_value(const T &p) { nodes_.push_back(p); }
