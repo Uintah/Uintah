@@ -50,16 +50,16 @@
 #include <Core/Datatypes/SearchGrid.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Geometry/BBox.h>
-#include <sgi_stl_warnings_off.h>
-#include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Math/MinMax.h>
 #include <sci_hash_set.h>
 #include <sci_hash_map.h>
+
 #include <sgi_stl_warnings_off.h>
+#include <vector>
 #include <set>
 #include <sgi_stl_warnings_on.h>
+
 #include <float.h>
 
 namespace SCIRun {
