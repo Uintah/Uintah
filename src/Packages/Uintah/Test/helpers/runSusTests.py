@@ -433,13 +433,14 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
     restart_text = ""
 
+  return_code = 0
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
     if restart == "yes":
 	print "\t\tMake sure the problem makes checkpoints before finishing"
     print sus_log_msg
     system("echo '  -- %s%s test failed to complete' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
-    return 1
+    return_code = 1
   else:
     # Sus completed successfully - now do comp, mem, and perf tests
 
@@ -536,16 +537,20 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     if cu_rc == 5*256 or cu_rc == 1*256:
         system("echo '  -- %s%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
         # debug
-        return 2;
+        return_code = 2;
     if pf_rc == 2*256:
         # For the present, hard code the PERFORMANCE as the algo, as
         # performance is a test set and not an algorithm.  This follows the
         # current model of performance tests (all in one test file), but will
         # need to change if the model changes
         system("echo '  -- %s%s test failed performance tests' >> %s/PERFORMANCE-short.log" % (testname,restart_text,startpath))
-        return 2;
+        return_code = 2;
     if mem_rc == 1*256 or mem_rc == 2*256:
         # debug
         system("echo '  -- %s%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
-        return 2;
-  return 0
+        return_code = 2;
+    if return_code != 0:
+      # as the file is only created if a certain test fails, change the permissions here as we are certain the file exists
+      system("chmod gu+rw,a+r %s/%s-short.log > /dev/null 2>&1" % (startpath, upper(ALGO)))
+          
+  return return_code
