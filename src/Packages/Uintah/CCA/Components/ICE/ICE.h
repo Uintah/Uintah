@@ -212,13 +212,13 @@ namespace Uintah {
                                    const MaterialSubset*,
                                    const MaterialSet*);
                                    
-      void scheduleImplicitVel_FC(SchedulerP& sched,
-                                  const PatchSet* patches,                 
-                                  const MaterialSubset*,         
-                                  const MaterialSubset*,         
-                                  const MaterialSubset*,        
-                                  const MaterialSet*,           
-                                  const bool);  
+      void scheduleRecomputeVel_FC(SchedulerP& sched,
+                                   const PatchSet* patches,                 
+                                   const MaterialSubset*,         
+                                   const MaterialSubset*,         
+                                   const MaterialSubset*,        
+                                   const MaterialSet*,           
+                                   const bool);  
                                                   
      void scheduleComputeDel_P(  SchedulerP& sched,
                                  const LevelP& level,               
@@ -344,7 +344,14 @@ namespace Uintah {
                          const MaterialSubset*,                
                          DataWarehouse*,                             
                          DataWarehouse*,                   
-                         const bool);                      
+                         const bool);  
+                         
+      void updateVel_FC(const ProcessorGroup*, 
+                        const PatchSubset*,                   
+                        const MaterialSubset*,                
+                        DataWarehouse*,                             
+                        DataWarehouse*,                   
+                        const bool);                    
 
       void computeTempFC(const ProcessorGroup*,  
                          const PatchSubset* patches,                    
@@ -364,6 +371,13 @@ namespace Uintah {
                                        constCCVariable<double>& rho_CC,
                                        constCCVariable<double>& sp_vol_CC,
                                        constCCVariable<Vector>& vel_CC,
+                                       constCCVariable<double>& press_CC,
+                                       T& vel_FC);
+                                       
+      template<class T> void updateVelFace(int dir, CellIterator it,
+                                       IntVector adj_offset,double dx,
+                                       double delT,
+                                       constCCVariable<double>& sp_vol_CC,
                                        constCCVariable<double>& press_CC,
                                        T& vel_FC);
                                        

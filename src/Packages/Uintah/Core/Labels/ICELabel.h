@@ -64,6 +64,7 @@ namespace Uintah {
     const VarLabel* initialGuessLabel;
     const VarLabel* betaLabel;
     const VarLabel* imp_delPLabel;
+    const VarLabel* sum_imp_delPLabel;
     const VarLabel* sp_volX_FCLabel;
     const VarLabel* sp_volY_FCLabel;    
     const VarLabel* sp_volZ_FCLabel;
