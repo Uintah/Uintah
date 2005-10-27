@@ -2956,6 +2956,7 @@ void FractureMPM::computeParticleTempFromGrid(const ProcessorGroup*,
 	pTempCur[idx]=pTemp;
       } // End of loop over iter        
     } // End of loop over m
+    delete interpolator;
   } // End of loop over p 
 }	
 	
