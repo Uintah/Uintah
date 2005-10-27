@@ -898,8 +898,8 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(Ilb->vol_frac_CCLabel);
   t->computes(Ilb->sumKappaLabel,       press_matl);
-  t->computes(Ilb->press_equil_CCLabel, press_matl);  // diagnostic variable
-  t->computes(Ilb->press_CCLabel,       press_matl);  // needed by implicit ICE
+  t->computes(Ilb->press_equil_CCLabel, press_matl);  
+  t->computes(Ilb->sum_imp_delPLabel,   press_matl);  // needed by implicit ICE
   t->modifies(Ilb->sp_vol_CCLabel,      mpm_matls);
   t->modifies(Ilb->rho_CCLabel,         mpm_matls); 
   t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
@@ -1788,15 +1788,17 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
     constCCVariable<double> press;    
-    CCVariable<double> press_new, delPress_tmp, press_copy,sumKappa;    
+    CCVariable<double> press_new, delPress_tmp,sumKappa;
+    CCVariable<double> sum_imp_delP;    
     Ghost::GhostType  gn = Ghost::None;
     //__________________________________
-    //  Implicit press calc. needs two copies of the pressure
-    old_dw->get(press,                Ilb->press_CCLabel, 0,patch,gn, 0); 
-    new_dw->allocateAndPut(press_new, Ilb->press_equil_CCLabel, 0,patch);
-    new_dw->allocateAndPut(press_copy,Ilb->press_CCLabel,       0,patch);
-    new_dw->allocateAndPut(sumKappa,  Ilb->sumKappaLabel,       0,patch);
+    old_dw->get(press,                  Ilb->press_CCLabel, 0,patch,gn, 0); 
+    new_dw->allocateAndPut(press_new,   Ilb->press_equil_CCLabel, 0,patch);
+    new_dw->allocateAndPut(sumKappa,    Ilb->sumKappaLabel,       0,patch);
+    new_dw->allocateAndPut(sum_imp_delP,Ilb->sum_imp_delPLabel, 0,patch);
     new_dw->allocateTemporary(delPress_tmp, patch); 
+    
+    sum_imp_delP.initialize(0.0);
 
     StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
     StaticArray<ICEMaterial*> ice_matl(numALLMatls);
@@ -2046,9 +2048,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           d_ice->d_customBC_var_basket);
     
     delete_CustomBCs(d_ice->d_customBC_var_basket);
-    
-    // Is this necessary?  - Steve
-    press_copy.copyData(press_new);
+
      
     //__________________________________
     // compute sp_vol_CC

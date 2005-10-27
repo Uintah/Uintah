@@ -111,6 +111,8 @@ ICELabel::ICELabel()
     VarLabel::create("initialGuess",CCVariable<double>::getTypeDescription());     
   imp_delPLabel = 
     VarLabel::create("imp_delP",    CCVariable<double>::getTypeDescription());       
+  sum_imp_delPLabel = 
+    VarLabel::create("sum_imp_delP",CCVariable<double>::getTypeDescription());       
   betaLabel = 
     VarLabel::create("beta",        CCVariable<double>::getTypeDescription());
   sp_volX_FCLabel  = 
@@ -325,6 +327,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(initialGuessLabel);
     VarLabel::destroy(betaLabel);
     VarLabel::destroy(imp_delPLabel);  
+    VarLabel::destroy(sum_imp_delPLabel);  
     VarLabel::destroy(sp_volX_FCLabel); 
     VarLabel::destroy(sp_volY_FCLabel);
     VarLabel::destroy(sp_volZ_FCLabel);

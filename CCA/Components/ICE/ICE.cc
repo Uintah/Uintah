@@ -276,6 +276,15 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     impSolver->getWithDefault("iters_before_timestep_restart",    
                                d_iters_before_timestep_restart, 5);
     d_impICE = true; 
+#if 1
+    if(d_doAMR  && solver->getName() != "hypreamr"){
+      ostringstream msg;
+      msg << "\n ERROR: " << solver->getName()
+          << " cannot be used with an AMR grid \n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
+#endif
+
   }
 
   //__________________________________
@@ -858,10 +867,10 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 
 
   scheduleComputeVel_FC(                   sched, patches,ice_matls_sub, 
-                                                         mpm_matls_sub, 
-                                                         d_press_matl,    
-                                                         all_matls,     
-                                                         false);        
+                                                          mpm_matls_sub, 
+                                                          d_press_matl,    
+                                                          all_matls,     
+                                                          false);        
 
   scheduleAddExchangeContributionToFCVel( sched, patches,ice_matls_sub,
                                                          all_matls,
@@ -1025,9 +1034,9 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(lb->sp_vol_CCLabel);
   t->computes(lb->rho_CCLabel);
   t->computes(lb->compressiblityLabel);
-  t->computes(lb->sumKappaLabel,       press_matl, oims);
-  t->computes(lb->press_equil_CCLabel, press_matl, oims);
-  t->computes(lb->press_CCLabel,       press_matl, oims);  // needed by implicit
+  t->computes(lb->sumKappaLabel,        press_matl, oims);
+  t->computes(lb->press_equil_CCLabel,  press_matl, oims);
+  t->computes(lb->sum_imp_delPLabel,    press_matl, oims);  //  initialized for implicit
  
   if (d_RateForm) {     // RATE FORM
     t->computes(lb->matl_press_CCLabel, press_matl,oims);
@@ -1103,7 +1112,7 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  t->requires(Task::OldDW, lb->delTLabel);    For AMR
-  t->requires(Task::NewDW,lb->press_CCLabel,       press_matl, oims, gac,1);
+  t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gac,1);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,    /*all_matls*/ gac,1);
   t->requires(Task::NewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
   t->requires(Task::OldDW,lb->vel_CCLabel,         ice_matls,  gac,1);
@@ -1272,7 +1281,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   computesRequires_CustomBCs(task, "update_press_CC", lb, ice_matls,
                              d_customBC_var_basket);
   
-  task->modifies(lb->press_CCLabel,        press_matl, oims);
+  task->computes(lb->press_CCLabel,        press_matl, oims);
   task->computes(lb->delP_DilatateLabel,   press_matl, oims);
   task->computes(lb->delP_MassXLabel,      press_matl, oims);
   task->computes(lb->term2Label,           press_matl, oims);
@@ -2389,15 +2398,16 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     CCVariable<int> n_iters_equil_press;
     constCCVariable<double> press;
-    CCVariable<double> press_new, press_copy, sumKappa;
+    CCVariable<double> press_new, sumKappa, sum_imp_delP;
     Ghost::GhostType  gn = Ghost::None;
     
-    //__________________________________
-    //  Implicit press needs two copies of press 
-    old_dw->get(press,                lb->press_CCLabel, 0,patch,gn, 0); 
-    new_dw->allocateAndPut(press_new, lb->press_equil_CCLabel, 0,patch);
-    new_dw->allocateAndPut(press_copy,lb->press_CCLabel,       0,patch);
-    new_dw->allocateAndPut(sumKappa,  lb->sumKappaLabel,       0,patch);
+    //__________________________________ 
+    old_dw->get(press,                   lb->press_CCLabel,       0,patch,gn, 0);  
+    new_dw->allocateAndPut(press_new,    lb->press_equil_CCLabel, 0,patch);
+    new_dw->allocateAndPut(sumKappa,     lb->sumKappaLabel,       0,patch);  
+    new_dw->allocateAndPut(sum_imp_delP, lb->sum_imp_delPLabel,   0,patch);
+       
+    sum_imp_delP.initialize(0.0); //-- initialize for implicit pressure
        
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
@@ -2573,7 +2583,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     //__________________________________
     // - update Boundary conditions
-    // - make copy of press for implicit calc.
     preprocess_CustomBCs("EqPress",old_dw, new_dw, lb,  patch, 
                           999,d_customBC_var_basket);
     
@@ -2583,7 +2592,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
           
     delete_CustomBCs(d_customBC_var_basket);      
    
-    press_copy.copyData(press_new);
     
     //__________________________________
     // compute sp_vol_CC
@@ -2636,46 +2644,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
   }  // patch loop
 }
  
-/* _____________________________________________________________________
- Function~  ICE::computeFaceCenteredVelocities--
- Purpose~   compute the face centered velocities minus the exchange
-            contribution.
-_____________________________________________________________________*/
-template<class T> void ICE::computeVelFace(int dir, CellIterator it,
-                                       IntVector adj_offset,double dx,
-                                       double delT, double gravity,
-                                       constCCVariable<double>& rho_CC,
-                                       constCCVariable<double>& sp_vol_CC,
-                                       constCCVariable<Vector>& vel_CC,
-                                       constCCVariable<double>& press_CC,
-                                       T& vel_FC)
-{
-  for(;!it.done(); it++){
-    IntVector R = *it;
-    IntVector L = R + adj_offset; 
-
-    double rho_FC = rho_CC[L] + rho_CC[R];
-    ASSERT(rho_FC > 0.0);
-    //__________________________________
-    // interpolation to the face
-    double term1 = (rho_CC[L] * vel_CC[L][dir] +
-                    rho_CC[R] * vel_CC[R][dir])/(rho_FC);            
-    //__________________________________
-    // pressure term           
-    double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
-                             (sp_vol_CC[L] + sp_vol_CC[R]); 
-    
-    double term2 = delT * sp_vol_brack * (press_CC[R] - press_CC[L])/dx;
-    
-    //__________________________________
-    // gravity term
-    double term3 =  delT * gravity;
-    
-    vel_FC[R] = term1- term2 + term3;
-  } 
-}
-
-
 /* _____________________________________________________________________
  Function~  ICE::computeTempFace--
  Purpose~   compute the face centered Temperatures.  This is used by
@@ -2790,15 +2758,56 @@ void ICE::computeTempFC(const ProcessorGroup*,
       }
     } // matls loop
   }  // patch loop
-}                       
+}    
+
+/* _____________________________________________________________________
+ Function~  ICE::computeFaceCenteredVelocities--
+ Purpose~   compute the face centered velocities minus the exchange
+            contribution.
+_____________________________________________________________________*/
+template<class T> void ICE::computeVelFace(int dir, 
+                                           CellIterator it,
+                                           IntVector adj_offset,double dx,
+                                           double delT, double gravity,
+                                           constCCVariable<double>& rho_CC,
+                                           constCCVariable<double>& sp_vol_CC,
+                                           constCCVariable<Vector>& vel_CC,
+                                           constCCVariable<double>& press_CC,
+                                           T& vel_FC)
+{
+  for(;!it.done(); it++){
+    IntVector R = *it;
+    IntVector L = R + adj_offset; 
+
+    double rho_FC = rho_CC[L] + rho_CC[R];
+    ASSERT(rho_FC > 0.0);
+    //__________________________________
+    // interpolation to the face
+    double term1 = (rho_CC[L] * vel_CC[L][dir] +
+                    rho_CC[R] * vel_CC[R][dir])/(rho_FC);            
+    //__________________________________
+    // pressure term           
+    double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
+                             (sp_vol_CC[L] + sp_vol_CC[R]); 
+    
+    double term2 = delT * sp_vol_brack * (press_CC[R] - press_CC[L])/dx;
+    
+    //__________________________________
+    // gravity term
+    double term3 =  delT * gravity;
+    
+    vel_FC[R] = term1- term2 + term3;
+  } 
+}
+                  
 //______________________________________________________________________
 //                       
 void ICE::computeVel_FC(const ProcessorGroup*,  
-                             const PatchSubset* patches,                
-                             const MaterialSubset* /*matls*/,           
-                             DataWarehouse* old_dw,                     
-                             DataWarehouse* new_dw,
-                             bool recursion)                     
+                        const PatchSubset* patches,                
+                        const MaterialSubset* /*matls*/,           
+                        DataWarehouse* old_dw,                     
+                        DataWarehouse* new_dw,
+                        bool recursion)                     
 {
   const Level* level = getLevel(patches);
   
@@ -2816,7 +2825,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     constCCVariable<double> press_CC;
     Ghost::GhostType  gac = Ghost::AroundCells; 
     //__________________________________
-    //  Implicit
+    // define parent DW -- not used but keep this around
     DataWarehouse* pNewDW;
     DataWarehouse* pOldDW;
 
@@ -2828,7 +2837,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       pOldDW  = old_dw;
     }
      
-    new_dw->get(press_CC,lb->press_CCLabel, 0, patch,gac, 1);
+    new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch,gac, 1);
     
     delt_vartype delT;
     pOldDW->get(delT, d_sharedState->get_delt_label(),level);   
@@ -2910,6 +2919,140 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       if (switchDebug_vel_FC ) {
         ostringstream desc;
         desc <<"BOT_computeVel_FC_Mat_" << indx << "_patch_"<< patch->getID();
+        printData_FC( indx, patch,1, desc.str(), "uvel_FC",  uvel_FC);
+        printData_FC( indx, patch,1, desc.str(), "vvel_FC",  vvel_FC);
+        printData_FC( indx, patch,1, desc.str(), "wvel_FC",  wvel_FC); 
+      }
+    } // matls loop
+  }  // patch loop
+}
+/* _____________________________________________________________________
+ Function~  ICE::updateVelFace--
+ - tack on delP to the face centered velocity
+_____________________________________________________________________*/
+template<class T> void ICE::updateVelFace(int dir, CellIterator it,
+                                          IntVector adj_offset,double dx,
+                                          double delT,
+                                          constCCVariable<double>& sp_vol_CC,
+                                          constCCVariable<double>& imp_delP,
+                                          T& vel_FC)
+{
+  for(;!it.done(); it++){
+    IntVector R = *it;
+    IntVector L = R + adj_offset; 
+
+    //__________________________________
+    // pressure term           
+    double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
+                             (sp_vol_CC[L] + sp_vol_CC[R]); 
+    
+    double term2 = delT * sp_vol_brack * (imp_delP[R] - imp_delP[L])/dx;
+    
+    vel_FC[R] -= term2;
+  } 
+} 
+//______________________________________________________________________
+//                       
+void ICE::updateVel_FC(const ProcessorGroup*,  
+                        const PatchSubset* patches,                
+                        const MaterialSubset* /*matls*/,           
+                        DataWarehouse* old_dw,                     
+                        DataWarehouse* new_dw,
+                        bool recursion)                     
+{
+  const Level* level = getLevel(patches);
+  
+  for(int p = 0; p<patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    
+    cout_doing << d_myworld->myrank() << " Doing updateVel_FC on patch " 
+           << patch->getID() << "\t\t\t\tICE \tL-"<<level->getIndex()<< endl;
+
+    int numMatls = d_sharedState->getNumMatls();
+    
+    Vector dx      = patch->dCell();
+    Ghost::GhostType  gac = Ghost::AroundCells; 
+    Ghost::GhostType  gn = Ghost::None; 
+    DataWarehouse* pNewDW;
+    DataWarehouse* pOldDW;
+    
+    //__________________________________
+    // define parent data warehouse -- not used but keep this around
+    if(recursion) {
+      pNewDW  = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+      pOldDW  = new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
+    } else {
+      pNewDW  = new_dw;
+      pOldDW  = old_dw;
+    }
+ 
+    delt_vartype delT;
+    pOldDW->get(delT, d_sharedState->get_delt_label(),level);   
+     
+    constCCVariable<double> imp_delP; 
+    new_dw->get(imp_delP, lb->imp_delPLabel, 0,   patch,gac, 1);
+ 
+    for(int m = 0; m < numMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex(); 
+      constCCVariable<double> sp_vol_CC;         
+      pNewDW->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
+              
+      SFCXVariable<double> uvel_FC;
+      SFCYVariable<double> vvel_FC;
+      SFCZVariable<double> wvel_FC;
+      
+      constSFCXVariable<double> uvel_FC_old;
+      constSFCYVariable<double> vvel_FC_old;
+      constSFCZVariable<double> wvel_FC_old;
+
+      old_dw->get(uvel_FC_old,  lb->uvel_FCLabel, indx, patch, gn, 0);
+      old_dw->get(vvel_FC_old,  lb->vvel_FCLabel, indx, patch, gn, 0);
+      old_dw->get(wvel_FC_old,  lb->wvel_FCLabel, indx, patch, gn, 0);
+      
+      new_dw->allocateAndPut(uvel_FC, lb->uvel_FCLabel, indx, patch);
+      new_dw->allocateAndPut(vvel_FC, lb->vvel_FCLabel, indx, patch);
+      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch);   
+      
+      uvel_FC.copy(uvel_FC_old);
+      vvel_FC.copy(vvel_FC_old);
+      wvel_FC.copy(wvel_FC_old);
+      
+      vector<IntVector> adj_offset(3);
+      adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+      adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+      adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
+
+      int offset=0;    // 0=Compute all faces in computational domain
+                       // 1=Skip the faces at the border between interior and gc
+
+      CellIterator XFC_iterator = patch->getSFCXIterator(offset);
+      CellIterator YFC_iterator = patch->getSFCYIterator(offset);
+      CellIterator ZFC_iterator = patch->getSFCZIterator(offset);
+
+      updateVelFace<SFCXVariable<double> >(0, XFC_iterator,
+                                     adj_offset[0],dx[0],delT,
+                                     sp_vol_CC,imp_delP,
+                                     uvel_FC);
+
+      updateVelFace<SFCYVariable<double> >(1, YFC_iterator,
+                                     adj_offset[1],dx[1],delT,
+                                     sp_vol_CC,imp_delP,
+                                     vvel_FC);
+
+      updateVelFace<SFCZVariable<double> >(2, ZFC_iterator,
+                                     adj_offset[2],dx[2],delT,
+                                     sp_vol_CC,imp_delP,
+                                     wvel_FC);
+
+      //__________________________________
+      // (*)vel_FC BC are updated in 
+      // ICE::addExchangeContributionToFCVel()
+
+      //---- P R I N T   D A T A ------ 
+      if (switchDebug_vel_FC ) {
+        ostringstream desc;
+        desc <<"BOT_updateVel_FC_Mat_" << indx << "_patch_"<< patch->getID();
         printData_FC( indx, patch,1, desc.str(), "uvel_FC",  uvel_FC);
         printData_FC( indx, patch,1, desc.str(), "vvel_FC",  vvel_FC);
         printData_FC( indx, patch,1, desc.str(), "wvel_FC",  wvel_FC); 
@@ -3184,7 +3327,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> sum_rho_CC;
     CCVariable<double> press_CC;
     CCVariable<double> term1, term2;
-    constCCVariable<double>sumKappa;
+    constCCVariable<double>sumKappa, press_equil;
     StaticArray<CCVariable<double> > placeHolder(0);
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
    
@@ -3192,7 +3335,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(sumKappa,                lb->sumKappaLabel,      0,patch,gn,0);
-    new_dw->getModifiable( press_CC,     lb->press_CCLabel,      0, patch);   
+    new_dw->get(press_equil,             lb->press_equil_CCLabel,0,patch,gn,0);
+    new_dw->allocateAndPut( press_CC,    lb->press_CCLabel,      0, patch);   
     new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel, 0, patch);   
     new_dw->allocateAndPut(delP_MassX,   lb->delP_MassXLabel,    0, patch);
     new_dw->allocateAndPut(term2,        lb->term2Label,         0, patch);
@@ -3296,17 +3440,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       IntVector c = *iter;
       delP_MassX[c]    =  term1[c]/sumKappa[c];
       delP_Dilatate[c] = -term2[c]/sumKappa[c];
-      press_CC[c]     +=  delP_MassX[c] + delP_Dilatate[c];
-    }
-    //____ B U L L E T   P R O O F I N G----
-    // This was done to help robustify the equilibration
-    // pressure calculation in MPMICE.  Also, in rate form, negative
-    // mean pressures are allowed.
-    if(d_EqForm){
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
-        IntVector c = *iter;
-        press_CC[c] = max(1.0e-12, press_CC[c]);  
-      }
+      press_CC[c]      =  press_equil[c] + delP_MassX[c] + delP_Dilatate[c];
+      press_CC[c]      = max(1.0e-12, press_CC[c]);  // CLAMP
     }
 
     //__________________________________
