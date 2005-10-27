@@ -65,6 +65,7 @@
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Plane.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -93,7 +94,7 @@ public:
   {
   public:
     ElemData(const StructHexVolMesh<Basis>& msh, 
-	     const typename Cell::index_type ind) :
+	     const typename LatVolMesh<Basis>::Cell::index_type ind) :
       mesh_(msh),
       index_(ind)
     {}
@@ -177,7 +178,7 @@ public:
 
   private:
     const StructHexVolMesh<Basis>          &mesh_;
-    const typename Cell::index_type  index_;
+    const typename LatVolMesh<Basis>::Cell::index_type  index_;
   };
 
   friend class ElemData;
@@ -258,14 +259,14 @@ public:
 
   bool get_coords(vector<double> &coords, 
 		  const Point &p,
-		  typename Elem::index_type idx) const
+		  typename LatVolMesh<Basis>::Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
     return basis_.get_coords(coords, p, ed); 
   }
   
   void interpolate(Point &pt, const vector<double> &coords, 
-		   typename Elem::index_type idx) const
+		   typename LatVolMesh<Basis>::Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
     pt = basis_.interpolate(coords, ed);
@@ -273,7 +274,7 @@ public:
 
   // get the Jacobian matrix
   void derivate(const vector<double> &coords, 
-		typename Cell::index_type idx, 
+		typename LatVolMesh<Basis>::Cell::index_type idx, 
 		vector<Point> &J) const
   {
     ElemData ed(*this, idx);
