@@ -41,7 +41,6 @@
 #ifndef SCIRun_ComponentRepositoryServiceBase_code
 #define SCIRun_ComponentRepositoryServiceBase_code
 
-//#include <SCIRun/Core/ComponentRepositoryServiceBase.h>
 #include <SCIRun/Core/CoreFramework.h>
 #include <SCIRun/Core/ComponentClassDescription.h>
 #include <SCIRun/Core/ServiceBase.code>

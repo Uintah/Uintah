@@ -56,6 +56,7 @@
 // Services
 //#include <SCIRun/Distributed/FrameworkPropertiesService.h>
 #include <SCIRun/Core/BuilderServiceImpl.h>
+#include <SCIRun/Core/ServiceRegistryFactoryBase.code>
 
 #include <Core/Thread/Guard.h>
 
@@ -79,6 +80,9 @@ namespace SCIRun {
     addFrameworkServiceFactory( ServiceFactory::pointer
 				( new SingletonServiceFactory<BuilderServiceImpl>(pointer(this), 
 										 "cca.BuilderService")));
+    addFrameworkServiceFactory( ServiceFactory::pointer
+				( new ServiceRegistryFactoryBase<ServiceFactory>(pointer(this), 
+									     "cca.ServiceRegistry")));
   }
   
   template<class Interface>
@@ -315,6 +319,16 @@ namespace SCIRun {
   
 
   template<class Interface>
+  void                      
+  CoreFrameworkBase<Interface>::removeFrameworkServiceFactory(const std::string &factoryName)
+  {
+    ServiceMap::iterator iter = services.find(factoryName);
+    if (iter != services.end())
+      services.erase(iter);
+  }
+  
+
+  template<class Interface>
   bool
   CoreFrameworkBase<Interface>::isFrameworkService(const std::string &name)
   {
@@ -337,7 +351,7 @@ namespace SCIRun {
     // get a port from the service
     PortInfo::pointer servicePort = (*service).second->getService(serviceName, requester);
 
-    // connect the requester port and the service port
+    // connect the requester port and the service portls
     requesterPort->connect(servicePort);
 
     // do we need to maintain a reference to this connection ?

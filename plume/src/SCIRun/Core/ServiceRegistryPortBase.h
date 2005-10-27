@@ -28,7 +28,7 @@
 
 
 /*
- *  FixedPortServiceInfoBase.h: 
+ *  ServiceRegistryPortBase.h: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,49 +38,60 @@
  *
  */
 
-#ifndef SCIRun_Core_FixedPortServiceFactoryBase_h
-#define SCIRun_Core_FixedPortServiceFactoryBase_h
+#ifndef SCIRun_Core_ServiceRegistryPortBase_h
+#define SCIRun_Core_ServiceRegistryPortBase_h
 
-#include <Core/Thread/Mutex.h>
+#include <SCIRun/Core/ServiceRegistry.h>
 
 namespace SCIRun {
   
   using namespace sci::cca;
+  using namespace sci::cca::ports;
   using namespace sci::cca::core;
-  
+
   /**
-   * \class FixedPortServiceFactoryBase
+   * \class ServiceRegistryPortBase
    *
    */
   
   template<class Interface>
-  class FixedPortServiceFactoryBase : public Interface
+  class ServiceRegistryPortBase : public Interface
   {
   public:
-    typedef ServiceFactory::pointer pointer;
+    typedef ServiceRegistry::pointer pointer;
     
-    FixedPortServiceFactoryBase(const CoreFramework::pointer &framework,
-				const std::string& serviceName,
-				const Port::pointer &server);
-    virtual ~FixedPortServiceFactoryBase();
+    ServiceRegistryPortBase(const ServiceRegistry *registry, const ComponentInfo::pointer &requester )
+      : registry(registry), requester(requester)
+    {}
+
+    virtual ~ServiceRegistryPortBase() {}
     
     /*
-     * sci.cca.core.FixedPortServiceFactory interface
+     * sci.cca.core.ServiceRegistry interface
      */
     
-    virtual std::string getName() { return name; }
-    virtual PortInfo::pointer getService(const std::string &serviceName, const ComponentInfo::pointer &requester);
-    virtual void releaseService(const std::string &portName);
+    virtual bool addService(const std::string &serviceType, const ServiceProvider::pointer portProvider)
+    {
+      return registry->addService( serviceType, portProvider, requester );
+    }
 
+    virtual bool addSingletonService( const std::string &serviceType, const Port::pointer &server) 
+    {
+      return registry->addSingletonService( serviceType, server, requester );
+    }
+
+    virtual void removeService( const std::string &serviceType )
+    {
+      registry->removeService( serviceType, requester );
+    }
+      
   protected:
-    PortInfo::pointer service;
-    std::string name;
-    int uses;
-    Mutex lock;
+    ServiceRegistry *registry;
+    ComponentInfo::pointer requester;
 
     // prevent using these directly
-    FixedPortServiceFactoryBase(const FixedPortServiceFactoryBase&);
-    FixedPortServiceFactoryBase& operator=(const FixedPortServiceFactoryBase&);
+    ServiceRegistryPortBase(const ServiceRegistryPortBase&);
+    ServiceRegistryPortBase& operator=(const ServiceRegistryPortBase&);
   };
   
 } // end namespace SCIRun

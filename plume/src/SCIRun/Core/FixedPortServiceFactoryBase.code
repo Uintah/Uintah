@@ -72,7 +72,7 @@ namespace SCIRun {
   
 
   template<class Interface>
-  PortInfo::pointer FixedPortServiceFactoryBase<Interface>::getService(const std::string &)
+  PortInfo::pointer FixedPortServiceFactoryBase<Interface>::getService(const std::string &, const ComponentInfo::pointer &)
   {
     Guard gurd(&lock);
 

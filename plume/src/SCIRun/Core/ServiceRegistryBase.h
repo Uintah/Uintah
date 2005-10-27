@@ -44,6 +44,7 @@
 namespace SCIRun {
   
   using namespace sci::cca;
+  using namespace sci::cca::ports;
   using namespace sci::cca::core;
   
   /**
@@ -57,7 +58,7 @@ namespace SCIRun {
   public:
     typedef ServiceRegistry::pointer pointer;
     
-    ServiceRegistryBase(const CoreFramework::pointer &framework );
+    ServiceRegistryBase(const CoreFramework::pointer &framework, const ComponentInfo::pointer &requester );
     virtual ~ServiceRegistryBase();
     
     /*
@@ -65,10 +66,11 @@ namespace SCIRun {
      */
     
     virtual bool addService(const std::string &serviceType, const ServiceProvider::pointer &portProvider);
-    virtual bool adSingletonService( const std::string &serviceType, const Port::pointer &server);
+    virtual bool addSingletonService( const std::string &serviceType, const Port::pointer &server);
 
   protected:
     CoreFramework::pointer framework;
+    ComponentInfo::pointer requester;
 
     // prevent using these directly
     ServiceRegistryBase(const ServiceRegistryBase&);
