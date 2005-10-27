@@ -103,7 +103,10 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
                         const Patch* patch,
                         SimulationStateP& sharedState,
                         const int mat_id);
+  
 
+  void set_imp_DelP_BC( CCVariable<double>& imp_delP, 
+                        const Patch* patch);  
 template<class T> 
   void setBC(T& variable, 
              const  string& kind,
