@@ -2,7 +2,6 @@
 \usepackage{amsmath}
 \usepackage{doublespace}
 \usepackage{algorithmic}
-\usepackage{color}
 \usepackage[dvips]{graphicx}
 \usepackage{vmargin}
 %\setpapersize{USletter}
@@ -41,13 +40,13 @@
 \begin{document}
 \setlength{\abovedisplayskip}{0.1in}
 \setlength{\mathindent}{0.0in}
-\section{\underline{Overview of implicit ICE\hspace{ 0.5in}07/7/05}  }
+\section{\underline{Overview of implicit ICE\hspace{ 0.5in}10/27/05}  }
 
 \begin{algorithmic}
 \STATE --Compute $ \velFC$ (add Exchange contribution, set boundary
              conditions on $\velFC$ )
              
-\STATE --Form RHS $B = -\SUM{m} \theta_m \kappa_m (P^{ \iter} - P^{old}) - \SUM{m}$ \text{Advection} $(\theta_m \velFC)$
+\STATE --Form RHS $B = -$\text{Advection} $(\theta_m \velFC)$
     
 \WHILE{ $| \text{outer residual} | <$ convergence criteria}
 
@@ -61,16 +60,15 @@
       $A_{p} =\SUM{m} \theta_m \kappa_m +( A_r + A_l + A_t + A_b + A_f + A_ {bk})$
       
     \STATE --Solve for $\delta{P}$
-    \STATE --Update pressure $P^{\iter} = P^{\iter -1 } + \delta{P}$, set boundary condition on $P^{\iter}$
-    \STATE --Compute $ \velFC$ (add Exchange contribution, set boundary
+    \STATE --Update pressure $\Delta{P} = \sum \limits_{n=1}^{iter} \delta{P}, \quad P = P^{Old} + \Delta{P}$, set boundary condition on $P$ and $\delta{P}$
+    \STATE --Recompute $ \velFC$ (using $\delta {p}$ ), add Exchange contribution, set boundary
              conditions on $\velFC$, compute $ \rhoMFC $)
              
-    \STATE --Form RHS $B = -\SUM{m} \theta_m \kappa_m (P^{ \iter} - P^{old}) - \SUM{m}$ \text{Advection} $(\theta_m \velFC)$,\\ \quad
+    \STATE --Form RHS $B = -\SUM{m} \theta_m \kappa_m \Delta{P} - \SUM{m}$ \text{Advection} $(\theta_m \velFC)$,\\ \quad
              where outer residual = $Max(RHS), \kappa_m = \frac{v^o_m}{c_m^2}$
     
 \ENDWHILE
 
-\STATE --Compute $\Delta{P} = P^{\iter} - P^{Old}$
 \end{algorithmic}
 %______________________________________________________________________
 \newpage
