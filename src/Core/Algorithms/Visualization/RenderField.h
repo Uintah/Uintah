@@ -62,6 +62,7 @@
 #include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Datatypes/ImageMesh.h>
 #include <sstream>
+#include <iomanip>
 #include <iostream>
 
 using std::cerr;
@@ -109,6 +110,22 @@ inline unsigned int NextPowerOf2( unsigned int n)
 class RenderFieldBase : public DynamicAlgoBase
 {
 public:
+  struct equal_str
+  {
+    bool operator()(const string &s1, const string &s2) const
+    {
+      return s1 == s2;
+    }
+  };
+  
+  struct str_hasher
+  {
+    size_t operator()(const string s) const
+    {
+      hash<const char*> H;
+      return H(s.c_str());
+    }
+  };
   virtual void render(FieldHandle f,
 		      bool nodes, bool edges, bool faces,
 		      ColorMapHandle color_handle, MaterialHandle def_mat,
@@ -593,37 +610,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
   return display_list;
 }
 
-template <class fc_t>
-struct eqfc
-{
-  bool operator()(const fc_t &s1, const fc_t &s2) const
-  {
-    for(unsigned i = 0; i < s1.size(); ++i) {
-      if (s1[i] != s2[i]) return false;
-    }
-    return true;
-  }
-};
 
-template <class fc_t>
-struct hash_nds
-{
-  size_t operator()(const fc_t &f) const {
-    //const unsigned spc = sizeof(size_t);
-    //const unsigned div = f.size();
-    //const unsigned spc_div = spc / div;
-    size_t val = 0;
-//     for (unsigned i = 0; i < div; ++i) {
-//       val = val | (f[i] << ((div - i - 1) * spc_div));
-//       cerr << "hash[" << i << "]: "<< val;
-//     }
-
-    val = (f[0] << 24) | (f[1] << 16) | (f[2] << 8) | f[3];
-    //    cerr << "hard hash: " << val;
-    //    cerr << endl;
-    return val;
-  }
-};
 
 template <class Val_t>
 void add_edge_geom(GeomLines *lines, GeomCylinders *cylinders,
@@ -746,8 +733,7 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
   cout << endl << "-- edges --" << endl;
 #endif
 
-  typedef typename Fld::mesh_type::Node::array_type ec_t;
-  typedef hash_set<ec_t, hash_nds<ec_t>, eqfc<ec_t> > edge_ht_t;
+  typedef hash_set<string, str_hasher, equal_str> edge_ht_t;
   edge_ht_t rendered_edges; 
 
   // Second pass: over the edges
@@ -765,15 +751,19 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
       typename Fld::mesh_type::Node::array_type nodes;
       typename Fld::mesh_type::Edge::index_type eidx = *edge_iter++;
 
-      mesh->get_nodes(nodes, eidx);
-      sort(nodes.begin(), nodes.end());
+      Point cntr;
+      mesh->get_center(cntr, eidx);
+      ostringstream pstr;  
+      pstr << setiosflags(ios::scientific);
+      pstr << setprecision(7); 
+      pstr << cntr.x() << cntr.y() << cntr.z();
       
-      typename edge_ht_t::const_iterator it = rendered_edges.find(nodes);
+      typename edge_ht_t::const_iterator it = rendered_edges.find(pstr.str());
 
       if (it != rendered_edges.end()) {
 	continue;
       } else {
-	rendered_edges.insert(nodes);
+	rendered_edges.insert(pstr.str());
       }
     
       vector<vector<double> > coords;
@@ -1024,8 +1014,8 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 #if defined(DEBUG_PRINT)
   cout << endl << "-- faces --" << endl;
 #endif
-  typedef typename Fld::mesh_type::Node::array_type fc_t;
-  typedef hash_set<fc_t, hash_nds<fc_t>, eqfc<fc_t> > face_ht_t;
+
+  typedef hash_set<string, str_hasher, equal_str> face_ht_t;
   face_ht_t rendered_faces; 
   
   mesh->synchronize(Mesh::FACES_E | Mesh::EDGES_E | Mesh::CELLS_E);
@@ -1041,16 +1031,21 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
       typename Fld::mesh_type::Node::array_type nodes;
       typename Fld::mesh_type::Face::index_type fidx = *face_iter++;
 
-      mesh->get_nodes(nodes, fidx);
-      sort(nodes.begin(), nodes.end());
+      Point cntr;
+      mesh->get_center(cntr, fidx);
+      ostringstream pstr;
+      pstr << setiosflags(ios::scientific);
+      pstr << setprecision(7); 
+      pstr << cntr.x() << cntr.y() << cntr.z();
       
-      typename face_ht_t::const_iterator it = rendered_faces.find(nodes);
+      typename face_ht_t::const_iterator it = rendered_faces.find(pstr.str());
 
       if (it != rendered_faces.end()) {
 	continue;
       } else {
-	rendered_faces.insert(nodes);
+	rendered_faces.insert(pstr.str());
       }
+
 
       //coords organized as scanlines of quad/tri strips.
       vector<vector<vector<double> > > coords;
