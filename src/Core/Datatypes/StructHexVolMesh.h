@@ -262,14 +262,14 @@ public:
 		  typename LatVolMesh<Basis>::Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
-    return basis_.get_coords(coords, p, ed); 
+    return this->basis_.get_coords(coords, p, ed); 
   }
   
   void interpolate(Point &pt, const vector<double> &coords, 
 		   typename LatVolMesh<Basis>::Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
-    pt = basis_.interpolate(coords, ed);
+    pt = this->basis_.interpolate(coords, ed);
   }
 
   // get the Jacobian matrix
@@ -278,7 +278,7 @@ public:
 		vector<Point> &J) const
   {
     ElemData ed(*this, idx);
-    basis_.derivate(coords, ed, J);
+    this->basis_.derivate(coords, ed, J);
   }
 
 
