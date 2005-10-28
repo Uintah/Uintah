@@ -21,6 +21,8 @@ def inputs_root ():
 def date ():
     return asctime(localtime(time()))
 def get_algo (test):
+    return test[-2]
+def which_tests (test):
     return test[-1]
 def nullCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
     pass
@@ -77,9 +79,6 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   if mode == "opt":
     do_memory = 0
-    
-  tests_to_do = [do_comparisons, do_memory, do_performance]
-
 
   startpath = getcwd()
 
@@ -193,8 +192,25 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     except Exception:
       chdir(compare_root)
       mkdir(testname)
-    
-    
+
+    # allow the user to change the defaults for individual tests
+    test_comparisons = do_comparisons
+    test_memory = do_memory
+    test_restart = do_restart
+
+    non_default_tests = which_tests(test)
+
+    for ndt in non_default_tests:
+      if ndt == "no_comp":
+        test_comparisons = 0
+      if ndt == "no_mem":
+        test_memory = 0
+      if ndt == "no_restart":
+        test_restart = 0
+          
+
+    tests_to_do = [test_comparisons, test_memory, do_performance]
+
     # in certain cases (like when algo was performance or ucf), need to make it
     # something usable by sus (MPM, ARCHES, etc.), but we will also need to
     # have the original ALGO name, i.e., to save in PERFORMANCE-results
@@ -241,7 +257,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
 
     # call the callback function before running each test
-    callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism)
+    list = callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism)
 
     inputxml = path.basename(input(test))
     system("cp %s/%s %s" % (inputsdir, input(test), inputxml))
@@ -263,7 +279,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
       # Run restart test
-      if do_restart == 1:
+      if test_restart == 1:
         symlink(inputpath, "inputs")
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
         rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, "yes", newalgo)

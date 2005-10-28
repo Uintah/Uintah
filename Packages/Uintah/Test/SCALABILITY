@@ -51,7 +51,7 @@ for test in TESTS:
     # substitute the new resolution and patch configuration in the UPS file.
     newUPS = modUPS("%s/%s" % (inputs_root(), upper(test[6])), test[1], \
                     ["<patches>[%d,%d,%d]</patches>" % (xpatches, ypatches, zpatches), "<resolution>[%d,%d,%d]</resolution>" % (xres,yres,zres)])
-    scale_tests.append(("%s-%dproc" % (test[0],procs), newUPS, test[2], procs, test[4], test[5], test[6]))
+    scale_tests.append(("%s-%dproc" % (test[0],procs), newUPS, test[2], procs, test[4], test[5], test[6], []))
 
     # double the patches and resolution for the next run.
     if xpatches <= ypatches and xpatches <= zpatches:
