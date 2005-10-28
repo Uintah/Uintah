@@ -177,7 +177,7 @@ public:
   {
   public:
     ElemData(const StructQuadSurfMesh<Basis>& msh, 
-	     const typename Elem::index_type ind) :
+	     const typename ImageMesh<Basis>::Elem::index_type ind) :
       mesh_(msh),
       index_(ind)
     {}
@@ -253,36 +253,36 @@ public:
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords, 
-		       typename Elem::index_type ci, 
-		       typename Edge::index_type ei, 
+		       typename ImageMesh<Basis>::Elem::index_type ci, 
+		       typename ImageMesh<Basis>::Edge::index_type ei, 
 		       unsigned div_per_unit) const
   {    
     // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
     // compare get_nodes order to the basis order
     int basis_emap[] = {0, 2, 3, 1}; 
-    typename Edge::array_type edges;
+    typename ImageMesh<Basis>::Edge::array_type edges;
     get_edges(edges, ci);
     unsigned count = 0;
-    typename Edge::array_type::iterator iter = edges.begin();
+    typename ImageMesh<Basis>::Edge::array_type::iterator iter = edges.begin();
     while (iter != edges.end()) {
       if (ei == *iter++) break;
       ++count;
     }
 
-    basis_.approx_edge(basis_emap[count], div_per_unit, coords); 
+    this->basis_.approx_edge(basis_emap[count], div_per_unit, coords); 
   }
 
 
   bool get_coords(vector<double> &coords, 
 		  const Point &p,
-		  typename Elem::index_type idx) const
+		  typename ImageMesh<Basis>::Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
     return this->basis_.get_coords(coords, p, ed); 
   }
   
   void interpolate(Point &pt, const vector<double> &coords, 
-		   typename Elem::index_type idx) const
+		   typename ImageMesh<Basis>::Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
     pt = this->basis_.interpolate(coords, ed);
@@ -290,7 +290,7 @@ public:
 
   // get the Jacobian matrix
   void derivate(const vector<double> &coords, 
-		typename Elem::index_type idx, 
+		typename ImageMesh<Basis>::Elem::index_type idx, 
 		vector<Point> &J) const
   {
     ElemData ed(*this, idx);
