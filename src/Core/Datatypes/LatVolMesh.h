@@ -579,11 +579,8 @@ public:
 		       typename Edge::index_type ei, 
 		       unsigned div_per_unit) const
   {    
-    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+    // Needs to match unit_edges in Basis/HexTrilinearLgn.cc
     // compare get_nodes order to the basis order
-
-    //FIX_ME MC delete this comment when this is verified.
-
     typename Edge::array_type edges;
     get_edges(edges, ci);
     unsigned count = 0;
@@ -592,7 +589,8 @@ public:
       if (ei == *iter++) break;
       ++count;
     }
-    basis_.approx_edge(count, div_per_unit, coords); 
+    int emap[] = {0,2,8,10,3,1,11,9,4,5,7,6};
+    basis_.approx_edge(emap[count], div_per_unit, coords);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
@@ -602,10 +600,8 @@ public:
 		       typename Face::index_type fi, 
 		       unsigned div_per_unit) const
   {
-    // Needs to match unit_faces in Basis/QuadBilinearLgn.cc 
+    // Needs to match unit_edges in Basis/HexTrilinearLgn.cc
     // compare get_nodes order to the basis order
-
-    //FIX_ME MC delete this comment when this is verified.
 
     typename Face::array_type faces;
     get_faces(faces, ci);
@@ -615,7 +611,8 @@ public:
       if (fi == *iter++) break;
       ++count;
     }
-    basis_.approx_face(count, div_per_unit, coords);
+    int fmap[] = {0,5,4,2,1,3};
+    basis_.approx_face(fmap[count], div_per_unit, coords);
   }
   
   bool get_coords(vector<double> &coords, 
