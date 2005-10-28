@@ -412,62 +412,6 @@ StructQuadSurfMesh<Basis>::transform(const Transform &t)
   }
 }
 
-#if 0
-template <class Basis>
-void
-StructQuadSurfMesh<Basis>::get_nodes(typename ImageMesh<Basis>::Node::array_type &array, 
-				     typename ImageMesh<Basis>::Edge::index_type idx) const
-{
-  array.resize(2);
-
-  const int yidx = idx - (this->ni_-1) * this->nj_;
-  if (yidx >= 0)
-  {
-    const int i = yidx / (this->nj_ - 1);
-    const int j = yidx % (this->nj_ - 1);
-    array[0] = typename ImageMesh<Basis>::Node::index_type(this, i, j);
-    array[1] = typename ImageMesh<Basis>::Node::index_type(this, i, j+1);
-  }
-  else
-  {
-    const int i = idx % (this->ni_ - 1);
-    const int j = idx / (this->ni_ - 1);
-    array[0] = typename ImageMesh<Basis>::Node::index_type(this, i, j);
-    array[1] = typename ImageMesh<Basis>::Node::index_type(this, i+1, j);
-  }
-}
-
-template <class Basis>
-void
-StructQuadSurfMesh<Basis>::get_nodes(typename ImageMesh<Basis>::Node::array_type &array, 
-				   const typename ImageMesh<Basis>::Face::index_type &idx) const
-{
-  const int arr_size = 4;
-  array.resize(arr_size);
-
-  for (int i = 0; i < arr_size; i++)
-    array[i].mesh_ = idx.mesh_;
-
-  array[0].i_ = idx.i_;   array[0].j_ = idx.j_;
-  array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;
-  array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1;
-  array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1;
-}
-
-template <class Basis>
-void
-StructQuadSurfMesh<Basis>::get_edges(typename ImageMesh<Basis>::Edge::array_type &array,
-				   const typename ImageMesh<Basis>::Face::index_type &idx) const
-{
-  array.clear();
-  array.push_back(idx * 4 + 0);
-  array.push_back(idx * 4 + 1);
-  array.push_back(idx * 4 + 2);
-  array.push_back(idx * 4 + 3);
-}
-
-#endif
-
 template <class Basis>
 void
 StructQuadSurfMesh<Basis>::get_normal(Vector &result,
