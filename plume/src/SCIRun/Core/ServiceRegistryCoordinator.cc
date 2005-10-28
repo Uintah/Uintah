@@ -28,7 +28,7 @@
 
 
 /*
- *  ServiceRegistry.cc
+ *  ServiceRegistryCoordinator.cc
  *
  *  Written by:
  *   Yarden Livnat
@@ -41,7 +41,7 @@
 #include <Core/CCA/spec/sci_sidl.h>
 #include <Core/Thread/Guard.h>
 #include <SCIRun/Core/CCAException.h>
-#include <SCIRun/Core/ServiceRegistry.h>
+#include <SCIRun/Core/ServiceRegistryCoordinator.h>
 #include <SCIRun/Core/ProviderServiceFactoryImpl.h>
 #include <SCIRun/Core/FixedPortServiceFactoryImpl.h>
 
@@ -51,20 +51,20 @@ namespace SCIRun {
   using namespace sci::cca::core;
   
   /**
-   * \class ServiceRegistry
+   * \class ServiceRegistryCoordinator
    *
    */
   
-  ServiceRegistry::ServiceRegistry(const CoreFramework::pointer &framework )
-    : framework(framework), lock("ServiceRegistry lock")
+  ServiceRegistryCoordinator::ServiceRegistryCoordinator(const CoreFramework::pointer &framework )
+    : framework(framework), lock("ServiceRegistryCoordinator lock")
   {}
   
-  ServiceRegistry::~ServiceRegistry()
+  ServiceRegistryCoordinator::~ServiceRegistryCoordinator()
   {}
 
   
   bool
-  ServiceRegistry::addService(const std::string &serviceType, 
+  ServiceRegistryCoordinator::addService(const std::string &serviceType, 
 			      const ServiceProvider::pointer &portProvider, 
 			      const ComponentInfo::pointer &requester)
   {
@@ -83,7 +83,7 @@ namespace SCIRun {
   }
 
   bool
-  ServiceRegistry::addSingletonService( const std::string &serviceType, 
+  ServiceRegistryCoordinator::addSingletonService( const std::string &serviceType, 
 					const Port::pointer &server,
 					const ComponentInfo::pointer &requester)
   {
@@ -98,7 +98,7 @@ namespace SCIRun {
   }
   
   void
-  ServiceRegistry::removeService( const std::string &serviceType, const ComponentInfo::pointer &requester)
+  ServiceRegistryCoordinator::removeService( const std::string &serviceType, const ComponentInfo::pointer &requester)
   {
     Guard guard(&lock);
 
