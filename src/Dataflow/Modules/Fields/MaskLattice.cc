@@ -149,13 +149,19 @@ MaskLatticeAlgo::get_compile_info(const TypeDescription *field_td,
   const string template_name("MaskLatticeInstance" + to_string(hashval));
   static const string base_class_name("MaskLatticeAlgo");
 
+  string maskedfieldname = field_td->get_name();
+  const string::size_type loc1 = maskedfieldname.find("LatVolMesh");
+  maskedfieldname.insert(loc1, "Masked");
+  const string::size_type loc2 = maskedfieldname.find("LatVolMesh", loc1+16);
+  maskedfieldname.insert(loc2, "Masked");
+
   CompileInfo *rval = 
     scinew CompileInfo(template_name + "." +
 		       field_td->get_filename() + "." +
 		       loc_td->get_filename() + ".",
                        base_class_name, 
                        template_name, 
-                       "Masked" + field_td->get_name() + ", " +
+                       maskedfieldname + ", " +
 		       "Masked" + loc_td->get_name() + ", " + 
 		       field_td->get_name() + ", " +
 		       loc_td->get_name());
@@ -177,6 +183,8 @@ MaskLatticeAlgo::get_compile_info(const TypeDescription *field_td,
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/HexTrilinearLgn.h");
+  rval->add_mesh_include("../src/Core/Datatypes/MaskedLatVolMesh.h");
   rval->add_post_include(class_declaration);
   field_td->fill_compile_info(rval);
   return rval;
