@@ -80,9 +80,10 @@ namespace SCIRun {
     addFrameworkServiceFactory( ServiceFactory::pointer
 				( new SingletonServiceFactory<BuilderServiceImpl>(pointer(this), 
 										 "cca.BuilderService")));
-    addFrameworkServiceFactory( ServiceFactory::pointer
-				( new ServiceRegistryFactoryBase<ServiceFactory>(pointer(this), 
-									     "cca.ServiceRegistry")));
+//     addFrameworkServiceFactory( ServiceFactory::pointer
+// 				( new ServiceRegistryFactoryBase<ServiceFactory>(pointer(this), 
+// 									     "cca.ports.ServiceRegistry")));
+    addFrameworkServiceFactory( new ServiceRegistryFactoryBase<ServiceFactory>(this, "cca.ports.ServiceRegistry"));
   }
   
   template<class Interface>
@@ -332,6 +333,9 @@ namespace SCIRun {
   bool
   CoreFrameworkBase<Interface>::isFrameworkService(const std::string &name)
   {
+    std::cerr << "FrameworkServices: \n";
+    for (ServiceMap::iterator i = services.begin(); i!=services.end(); ++i)
+      std::cerr <<"\t" << i->second->getName() << "\n";
     return services.find(name) != services.end();
   }
 

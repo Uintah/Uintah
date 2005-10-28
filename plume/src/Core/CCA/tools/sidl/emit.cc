@@ -34,21 +34,21 @@
 #include <Core/CCA/tools/sidl/SymbolTable.h>
 #include <Core/CCA/tools/sidl/uuid_wrapper.h>
 
+#include <map>
 #include <algorithm>
 #include <iostream>
-#include <map>
 #include <sstream>
 
 #include <ctype.h>
 #include <stdio.h>
-using namespace std;
+
 extern bool doing_cia;
 
 //Uncomment line below should debugging files of data transfer be created
 //#define MxNDEBUG
 
 #ifdef OLD_STUFF
-static string handle_class = "\
+static std::string handle_class = "\
 class @ {\n\
   @_interface* ptr;\n\
 public:\n\
@@ -122,6 +122,7 @@ std::string produceLegalVar(std::string illegalVar)
 
 struct Leader {
 };
+
 static Leader leader2;
 
 struct SState : public std::ostringstream {
@@ -137,16 +138,15 @@ struct SState : public std::ostringstream {
   void recursive_begin_namespace(SymbolTable*);
 
   std::string push_leader() {
-    string oldleader=leader;
-    leader+="  ";
+    std::string oldleader=leader;
+    leader += "  ";
     return oldleader;
   }
   void pop_leader(const std::string& oldleader) {
-    leader=oldleader;
+    leader = oldleader;
   }
 
-  friend std::ostream& operator<<( ostream& out, const Leader& );
-
+  friend std::ostream& operator<<( std::ostream& out, const Leader& );
 };
 
 std::ostream& operator<<( SState& out, const Leader& ) {
@@ -206,7 +206,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   hdr << " * do not edit directly!\n";
   hdr << " */\n";
   hdr << "\n";
-  string ifname(hname);
+  std::string ifname(hname);
   replace(ifname.begin(), ifname.end(), '/', '_');
   replace(ifname.begin(), ifname.end(), '.', '_');
   hdr << "#ifndef _sidl_generated_" << ifname << '\n';
@@ -223,11 +223,11 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   hdr << std::endl;
 
   //Include imported file headers *HACK*
-  vector<Specification*>::const_iterator iter;
+  std::vector<Specification*>::const_iterator iter;
   for (iter = specs.begin(); iter != specs.end(); iter++) {
     if ((*iter)->isImport) {
-      Definition* def = (*iter)->packages->list.front();
-      string fname = def->curfile;
+      Definition* def = (*iter)->packages->list.back();
+      std::string fname = def->curfile;
       int start_pos = fname.find("src");
       start_pos += 4;
       int end_pos = fname.find(".sidl");
@@ -272,8 +272,6 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <sci_mpi.h> //Debugging purposes\n";
 #endif
   out << "\n"; 
-  out << "using namespace std;\n";
-  out << "\n"; 
   out << "\n//cast exceptions\n";
   out << "static void _castException(int _xid, SCIRun::Message** _xMsg);\n" << std::endl;
 
@@ -283,7 +281,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
 
 void SymbolTable::emit(EmitState& e) const
 {
-  for (map<string, Symbol*>::const_iterator iter = symbols.begin();
+  for (std::map<std::string, Symbol*>::const_iterator iter = symbols.begin();
       iter != symbols.end();iter++) {
     iter->second->emit(e);
   }
@@ -306,7 +304,7 @@ void Symbol::emit(EmitState& e)
     definition->emit(e);
     break;
   case MethodType:
-    cerr << "Symbol::emit called for a method!\n";
+    std::cerr << "Symbol::emit called for a method!\n";
     exit(1);
   case EnumeratorType:
   case DistArrayType:
@@ -326,7 +324,7 @@ void Symbol::emit_forward(EmitState& e)
   }
   switch(type) {
   case PackageType:
-    cerr << "Why is emit forward being called for a package?\n";
+    std::cerr << "Why is emit forward being called for a package?\n";
     exit(1);
   case InterfaceType:
   case ClassType:
@@ -345,21 +343,21 @@ void Symbol::emit_forward(EmitState& e)
     definition->emit(e);
     break;
   case MethodType:
-    cerr << "Symbol::emit_forward called for a method!\n";
+    std::cerr << "Symbol::emit_forward called for a method!\n";
     exit(1);
   case EnumeratorType:
-    cerr << "Symbol::emit_forward called for an enumerator!\n";
+    std::cerr << "Symbol::emit_forward called for an enumerator!\n";
     exit(1);
   case DistArrayType:
-    cerr << "Symbol::emit_forward called for an distributed array type!\n";
+    std::cerr << "Symbol::emit_forward called for an distributed array type!\n";
     exit(1);
   }
-  emitted_forward=true;
+  emitted_forward = true;
 }
 
 void Package::emit(EmitState&)
 {
-  cerr << "Package::emit should not be called...\n";
+  std::cerr << "Package::emit should not be called...\n";
   exit(1);
 }
 
@@ -469,7 +467,7 @@ void CI::emit_typeinfo(EmitState& e)
   if (parentclass) {
     e.out << "    tii->add_parentclass(" << parentclass->cppfullname(localScope) << "::_static_getTypeInfo(), " << parentclass->vtable_base << ");\n";
   }
-  for (vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
+  for (std::vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++) {
     e.out << "    tii->add_parentiface(" << (*iter)->cppfullname(localScope) << "::_static_getTypeInfo(), " << (*iter)->vtable_base << ");\n";
   }
@@ -536,7 +534,7 @@ void CI::emit_handlers(EmitState& e)
   std::vector<Method*> vtab;
   gatherVtable(vtab, false);
   int handlerOff = 0;
-  for (vector<Method*>::const_iterator iter=vtab.begin();
+  for (std::vector<Method*>::const_iterator iter=vtab.begin();
       iter != vtab.end();iter++) {
     Method* m=*iter;
     e.handlerNum++;
@@ -563,7 +561,7 @@ void CI::emit_handlers(EmitState& e)
     e.out << "  std::string dname(name);\n";
     e.out << "  delete[] name;\n";
     e.out << "  //Unmarshal sessionID\n";
-    //    e.out << "  ::std::string _sessionID(36, ' ');\n";
+    //    e.out << "  std::string _sessionID(36, ' ');\n";
     //    e.out << "  message->unmarshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << "  int iid, pid;\n";
     e.out << "  message->unmarshalInt(&iid);\n";
@@ -622,7 +620,7 @@ void CI::emit_recursive_vtable_comment(EmitState& e, bool top)
     parentclass->emit_recursive_vtable_comment(e, false);
   }
   
-  for (vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin();
+  for (std::vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++) {
     (*iter)->emit_recursive_vtable_comment(e, false);
   }
@@ -651,7 +649,7 @@ bool CI::singly_inherited() const
 
 void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
 {
-  bool single=singly_inherited();
+  bool single = singly_inherited();
   if (single)
     emit_recursive_vtable_comment(e, true);
   else
@@ -660,12 +658,12 @@ void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
   std::vector<Method*> vtab;
   gatherVtable(vtab, false);
   int i = vtable_base;
-  for (vector<Method*>::const_iterator iter=vtab.begin();
+  for (std::vector<Method*>::const_iterator iter=vtab.begin();
       iter != vtab.end();iter++) {
     if (iter != vtab.begin()) {
       e.out << "\n";
     }
-    Method* m=*iter;
+    Method* m = *iter;
     m->emit_comment(e, "  ", false);
     i++;
     e.out << "  epc->registerHandler(" << i <<",(void*)_handler" << m->handlerNum << ");";
@@ -685,7 +683,7 @@ void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
       if (parentclass) {
         parentclass->vtable_base=vtable_base;
       }
-      for (vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
+      for (std::vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++) {
         (*iter)->vtable_base=vtable_base;
       }
@@ -712,7 +710,7 @@ void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
     }
     parentclass->emit_handler_table_body(e, vtable_base, false);
   }
-  for (vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
+  for (std::vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++) {
     if (top) {
       (*iter)->vtable_base=vtable_base;
@@ -752,15 +750,15 @@ bool Method::reply_required() const
   }
 }
 
-string Method::get_classname() const
+std::string Method::get_classname() const
 {
-  string n;
+  std::string n;
   if (myclass) {
     n=myclass->cppfullname(0);
   } else if (myinterface) {
     n=myinterface->cppfullname(0);
   } else {
-    cerr << "ERROR: Method does not have an associated class or interface\n";
+    std::cerr << "ERROR: Method does not have an associated class or interface\n";
     exit(1);
   }
   return n;
@@ -784,7 +782,7 @@ void Method::emit_prototype(SState& out, Context ctx,
   out << " " << name << "(";
   std::vector<Argument*>& list=args->getList();
   int c = 0;
-  for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+  for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
     if (c++>0) {
       out << ", ";
     }
@@ -806,7 +804,7 @@ void Method::emit_prototype_defin(EmitState& e, const std::string& prefix,
   e.out << " " << prefix << name << "(";
   std::vector<Argument*>& list=args->getList();
   int c = 0;
-  for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+  for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
     if (c++>0) {
       e.out << ", ";
     }
@@ -824,9 +822,9 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   emit_comment(e, "", true);
   e.out << "static void _handler" << e.handlerNum << "(::SCIRun::Message* message)\n";
   e.out << "{\n";
-  string oldleader=e.out.push_leader();
+  std::string oldleader=e.out.push_leader();
   e.out << leader2 << "void* _v=message->getLocalObj();\n";
-  string myclass = emit_class->cppfullname(0);
+  std::string myclass = emit_class->cppfullname(0);
   e.out << leader2 << "::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_v);\n";
   e.out << leader2 << myclass << "* _obj=static_cast< " << myclass << "*>(_sc->d_ptr);\n";
   e.out << "\n";
@@ -845,7 +843,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "message->unmarshalInt((int*)&_flag);\n";
 //#ifdef HAVE_MPI
     e.out << leader2 << "//Unmarshal sessionID and number of calls\n";
-    //    e.out << leader2 << "::std::string _sessionID(36, ' ');\n";
+    //    e.out << leader2 << "std::string _sessionID(36, ' ');\n";
     //    e.out << leader2 << "message->unmarshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     // unmarshal UUIDs
     e.out << leader2 << "int iid, pid;\n";
@@ -868,8 +866,8 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   /***********************************/
   /*CALLONLY||CALLNORET              */
   /***********************************/
-  string f_leader;
-  string a_leader;
+  std::string f_leader;
+  std::string a_leader;
   if (isCollective) {
     e.out << leader2 << "if ((_flag == ::SCIRun::CALLONLY)||(_flag == ::SCIRun::CALLNORET)) {  /*CALLONLY || CALLNORET*/ \n";
     e.out << leader2 << "  SCIRun::PRMI::setInvID(SCIRun::PRMI::getProxyID());\n";
@@ -878,7 +876,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 
   std::vector<Argument*>& list=args->getList();
   int argNum = 0;
-  for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+  for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
     argNum++;
     Argument* arg=*iter;
     if (arg->getMode() != Argument::Out) {
@@ -890,7 +888,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 
   // Declare out arguments...
   argNum = 0;
-  for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+  for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
     argNum++;
     Argument* arg=*iter;
     if (arg->getMode() == Argument::Out) {
@@ -903,7 +901,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   // Unmarshal the reply  
   e.out << leader2 << "message->unmarshalReply();\n";
 
-  string x_leader;
+  std::string x_leader;
   if (throws_clause) {
     e.out << leader2 << "try {\n";
     x_leader=e.out.push_leader();
@@ -918,7 +916,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   }
   e.out << "_obj->" << name << "(";
   argNum = 0;
-  for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+  for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
     if (argNum > 0) {
       e.out << ", ";
     }
@@ -930,13 +928,13 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out.pop_leader(x_leader);
     int cnt = -1;
     const std::vector<ScopedName*>& thlist=throws_clause->getList();
-    for (vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++) {
-      ::std::string name = (*iter)->cppfullname();
+    for (std::vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++) {
+      std::string name = (*iter)->cppfullname();
       Definition* def = (*iter)->getSymbol()->getDefinition();           
       CI* xci = dynamic_cast< CI*>(def);            
       if (xci) cnt = xci->exceptionID;  
       e.out << leader2 << "} catch(" << name << "* _e_ptr) {\n";
-      e.out << leader2 << "  ::std::cerr << \"Throwing " << name << "\\n\";\n";
+      e.out << leader2 << "  std::cerr << \"Throwing " << name << "\\n\";\n";
       e.out << leader2 << "  _marshal_exception< " << name << ">(message,_e_ptr," << cnt << ");\n";
       e.out << leader2 << "  return;\n";
     }
@@ -967,7 +965,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       e.out << leader2 << "// Marshal arguments\n";
     }
     argNum = 0;
-    for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+    for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
       argNum++;
       Argument* arg=*iter;
       if (arg->getMode() != Argument::In) {
@@ -1044,7 +1042,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
         if (!return_type->isvoid()) {
           e.out << leader2 << "// Marshal return value\n";
           if (isCollective) {
-            return_type->emit_marshal(e, "_ret", "1", 0 , true, ReturnType, false, doRetreive);
+            return_type->emit_marshal(e, "_ret", "1", 0 , true, ReturnType, false, doRetrieve);
           } else {
             return_type->emit_marshal(e, "_ret", "1", 0 , true, ArgOut, false, noneStorage);
           }
@@ -1055,14 +1053,14 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
         e.out << leader2 << "// Marshal arguments\n";
       }
       argNum = 0;
-      for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+      for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
         argNum++;
         Argument* arg=*iter;
         if (arg->getMode() != Argument::In) {
           std::ostringstream argname;
           argname << "_arg" << argNum;
           if (isCollective) {
-            arg->emit_marshal(e, argname.str(), "1", 0 , true, ArgOut, false, doRetreive);
+            arg->emit_marshal(e, argname.str(), "1", 0 , true, ArgOut, false, doRetrieve);
           } else {
             arg->emit_marshal(e, argname.str(), "1", 0 , true, ArgOut, false, noneStorage);
           }
@@ -1091,7 +1089,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   if (doRedistribution) {
     //undefs for the arg_ptrs we defined so that no copies are made
     argNum = 0;
-    for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+    for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
       argNum++;
       e.out << leader2 << "#undef _arg" << argNum << "\n";
     }
@@ -1109,7 +1107,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "delete[] name;\n";
     
     argNum = 0;
-    for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+    for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
       argNum++;
       Argument* arg=*iter;
       std::ostringstream argname;
@@ -1173,7 +1171,7 @@ void CI::emit_proxyclass(EmitState& e)
   std::vector<Method*> vtab;
   gatherVtable(vtab, false);
 
-  for (vector<Method*>::const_iterator iter=vtab.begin();
+  for (std::vector<Method*>::const_iterator iter=vtab.begin();
       iter != vtab.end();iter++) {
     e.proxy << '\n';
     Method* m = *iter;
@@ -1223,7 +1221,7 @@ void CI::emit_header(EmitState& e)
     haveone = true;
   }
 
-  for (vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
+  for (std::vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++) {
     if (!haveone) {
       haveone = true;
@@ -1245,7 +1243,7 @@ void CI::emit_header(EmitState& e)
   e.decl << leader2 << "  virtual ~" << name << "();\n";
   std::string oldleader = e.decl.push_leader();
 
-  for (vector<Method*>::const_iterator iter = mymethods.begin();
+  for (std::vector<Method*>::const_iterator iter = mymethods.begin();
       iter != mymethods.end();iter++) {
     e.decl << '\n';
     Method* m = *iter;
@@ -1286,7 +1284,7 @@ void CI::emit_header(EmitState& e)
   for_each(handle_class.begin(), handle_class.end(), output_sub(e.decl, name));
   e.decl << "  // Conversion operations\n";
   // Emit an operator() for each parent class and interface...
-  vector<CI*> parents;
+  std::vector<CI*> parents;
   gatherParents(parents);
   for (std::vector<CI*>::iterator iter=parents.begin();
       iter != parents.end(); iter++) {
@@ -1326,7 +1324,7 @@ void CI::emit_interface(EmitState& e)
   e.out << "// retreive all exceptions method\n";
   e.out << "void " << fn << "::getException()\n";
   e.out << "{\n";
-  e.out << "  ::std::cout << \"This method should only be called on proxies\\n\";\n";
+  e.out << "  std::cout << \"This method should only be called on proxies\\n\";\n";
   e.out << "}\n\n";
 
   e.out << fn << "::" << cn << "(bool initServer)\n";
@@ -1338,9 +1336,9 @@ void CI::emit_interface(EmitState& e)
     e.out << parentclass->cppfullname(localScope) << "(false)";
   }
   if (parent_ifaces.size() > 0) {
-    vector<BaseInterface*> parents;
+    std::vector<BaseInterface*> parents;
     gatherParentInterfaces(parents);
-    for (vector<BaseInterface*>::iterator iter=parents.begin();
+    for (std::vector<BaseInterface*>::iterator iter=parents.begin();
         iter != parents.end(); iter++) {
       if (*iter != this) {
         if (parentclass || iter != parents.begin()) {
@@ -1378,10 +1376,10 @@ void CI::emit_proxy(EmitState& e)
   e.out << fn << "::" << cn << "(const ::SCIRun::ReferenceMgr& _ref) :\n";
   SymbolTable* localScope=symbols->getParent();
   
-  vector<BaseInterface*> parents;
+  std::vector<BaseInterface*> parents;
   gatherParentInterfaces(parents);
 
-  for (vector<BaseInterface*>::iterator iter=parents.begin();
+  for (std::vector<BaseInterface*>::iterator iter=parents.begin();
       iter != parents.end(); iter++) {
     e.out  << "   "<< (*iter)->cppfullname(localScope) << "(false),";
   }
@@ -1400,7 +1398,7 @@ void CI::emit_proxy(EmitState& e)
   localScope=symbols->getParent();
   gatherParentInterfaces(parents);
 
-  for (vector<BaseInterface*>::iterator iter=parents.begin();
+  for (std::vector<BaseInterface*>::iterator iter=parents.begin();
       iter != parents.end(); iter++) {
     e.out  << "   "<< (*iter)->cppfullname(localScope) << "(false),";
   }
@@ -1434,7 +1432,7 @@ void CI::emit_proxy(EmitState& e)
   std::vector<Method*> vtab;
   gatherVtable(vtab, false);
 
-  for (vector<Method*>::const_iterator iter=vtab.begin();
+  for (std::vector<Method*>::const_iterator iter=vtab.begin();
       iter != vtab.end();iter++) {
     e.out << '\n';
     Method* m=*iter;
@@ -1524,7 +1522,7 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    message->marshalChar((char*)distname.c_str(),distname_s);\n";
 
     e.out << "    //Marshal uuid\n";
-    //    e.out << "    ::std::string _sessionID = getProxyUUID();\n";
+    //    e.out << "    std::string _sessionID = getProxyUUID();\n";
     e.out << "    SCIRun::ProxyID _sessionID = getProxyUUID();\n";
     //    e.out << "    message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << "    message->marshalInt(&_sessionID.iid);\n";
@@ -1572,56 +1570,64 @@ void CI::emit_proxy(EmitState& e)
   }  
 }
 
-void Method::emit_proxy(EmitState& e, const string& fn,
+void CI::emit_exceptionCast(EmitState &e, Symbol *sym)
+{
+    std::string xceptName = sym->cppfullname();
+
+    e.xcept << leader2 << "  case " << exceptionID << ": {\n";
+    e.xcept << leader2 << "    " << xceptName << "* _e_ptr = _unmarshal_exception<" << xceptName << ", " << xceptName << "_proxy>(*_xMsg);\n";
+    e.xcept << leader2 << "    throw _e_ptr;\n";
+    e.xcept << leader2 << "    break;\n";
+    e.xcept << leader2 << "  }\n";
+    castException_emitted = true;
+}
+
+void Method::emit_proxy(EmitState& e, const std::string& fn,
             SymbolTable* localScope) const
 {
   std::vector<Argument*>& list=args->getList();
   emit_prototype_defin(e, fn+"::", localScope);
   e.out << "\n{\n";
-  string oldleader=e.out.push_leader();  
+  std::string oldleader = e.out.push_leader();  
   e.out << leader2 << "::SCIRun::ReferenceMgr* _rm = _proxyGetReferenceMgr();\n";
-  if (isCollective) { 
-    e.out << leader2 << "::std::vector< ::SCIRun::Reference*> _ref;\n";
+  if (isCollective) {
+    e.out << leader2 << "std::vector< ::SCIRun::Reference*> _ref;\n";
     e.out << leader2 << "::SCIRun::callType _flag;\n";
     e.out << leader2 << "::SCIRun::Message* save_callonly_msg = NULL;\n";
-    e.out << leader2 << "::std::vector < ::SCIRun::Message*> save_callnoret_msg;\n";
+    e.out << leader2 << "std::vector < ::SCIRun::Message*> save_callnoret_msg;\n";
     e.out << leader2 << "//Imprecise exception check if someone caught an exception\n";
     e.out << leader2 << "::SCIRun::Message* _xMsg;\n";
-    //#ifdef HAVE_MPI
+//#ifdef HAVE_MPI
     e.out << leader2 << "int _xid = xr->checkException(&_xMsg);\n";
     e.out << leader2 << "if (_xid != 0) {\n";
     e.out << leader2 << "  _castException(_xid,&_xMsg);\n";
     e.out << leader2 << "}\n";
-    //#endif
+//#endif
 
     if (throws_clause) {
       //Write things for the castException method
-      int cnt = -1;
-      const std::vector<ScopedName*>& thlist=throws_clause->getList();
-      for (vector<ScopedName*>::const_iterator iter = thlist.begin(); iter != thlist.end(); iter++) {
-        ::std::string name = (*iter)->cppfullname();
+      const std::vector<ScopedName*>& thlist = throws_clause->getList();
+      for (std::vector<ScopedName*>::const_iterator iter = thlist.begin();
+         iter != thlist.end(); iter++) {
         //STEST
         Definition* def = (*iter)->getSymbol()->getDefinition();
         CI* xci = dynamic_cast< CI*>(def);
-        if (xci) cnt = xci->exceptionID;
-        e.xcept << leader2 << "  case " << cnt << ": {\n";
-        e.xcept << leader2 << "    " << name << "* _e_ptr = _unmarshal_exception<" << name << ", " << name << "_proxy>(*_xMsg);\n";
-        e.xcept << leader2 << "    throw _e_ptr;\n";
-        e.xcept << leader2 << "    break;\n";
-        e.xcept << leader2 << "  }\n";
+        if (xci && ! xci->castException_isEmitted()) {
+            xci->emit_exceptionCast(e, (*iter)->getSymbol());
+        }
       }
       //EOF write things for the castException method
     }
  
     e.out << leader2 << "int remoteSize = _rm->getRemoteSize();\n";
-    //#ifdef HAVE_MPI
-    //    e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
+//#ifdef HAVE_MPI
+    //    e.out << leader2 << "std::string _sessionID = getProxyUUID();\n";
     e.out << leader2 << "SCIRun::ProxyID _sessionID = getProxyUUID();\n";
-    //    e.out << leader2 << "//::std::cout << \" sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
-    e.out << leader2 << "//::std::cout << \" sending _sessionID = '\" << _sessionID.iid <<'|'<<_sessionID.pid << \"'\\n\";\n";
+    //    e.out << leader2 << "//std::cout << \" sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
+    e.out << leader2 << "//std::cout << \" sending _sessionID = '\" << _sessionID.iid <<'|'<<_sessionID.pid << \"'\\n\";\n";
     e.out << leader2 << "int _numCalls = (_rm->getSize() / remoteSize);\n";
     e.out << leader2 << "((_rm->getSize() % remoteSize) > _rm->getRank()) ?_numCalls++ :0;\n\n";
-    //#endif
+//#endif
   }
 
   if (reply_required()) {
@@ -1635,7 +1641,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   //emit special redistribution code here for IN args:
   if (doRedistribution) {
     int argNum = 0;
-    for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+    for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
       argNum++;
       Argument* arg=*iter;
       if (arg->getMode() != Argument::Out) {
@@ -1659,7 +1665,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   if (isCollective) {
     e.out << leader2 << "if (_rm->getRank() >= remoteSize) {\n";
     e.out << leader2 << "  /*NOCALLRET*/\n";
-    string nocallret_ldr=e.out.push_leader();
+    std::string nocallret_ldr=e.out.push_leader();
 
     e.out << leader2 << "_ref = _rm->getCollectiveReference(SCIRun::NOCALLRET);\n";
     e.out << leader2 << "if (_ref.size() <= 0) goto exitmethod;\n";
@@ -1704,7 +1710,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
         e.out << leader2 << "// Unmarshal the return arguments\n";
       }
       int argNum = 0;
-      for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+      for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
         argNum++;
         Argument* arg=*iter;
         if (arg->getMode() != Argument::In) {
@@ -1731,17 +1737,17 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   /***********************************/
   /*CALLNORET                        */
   /***********************************/
-  string call_ldr;
+  std::string call_ldr;
   if (isCollective) {
     e.out << leader2 << "else {\n";
 
     call_ldr=e.out.push_leader();
     
     e.out << leader2 << "_ref = _rm->getCollectiveReference(SCIRun::CALLNORET);\n";
-    e.out << leader2 << "::std::vector< ::SCIRun::Reference*>::iterator iter = _ref.begin();\n";
+    e.out << leader2 << "std::vector< ::SCIRun::Reference*>::iterator iter = _ref.begin();\n";
     e.out << leader2 << "for (unsigned int i=0; i < _ref.size(); i++, iter++) {\n";
     e.out << leader2 << "  /*CALLNORET*/\n";
-    string loop_leader1 = e.out.push_leader();
+    std::string loop_leader1 = e.out.push_leader();
     e.out << leader2 << "::SCIRun::Message* message = (*iter)->chan->getMessage();\n";
     e.out << leader2 << "message->createMessage();\n";
     e.out << leader2 << "//Marshal flag which informs handler that\n";
@@ -1765,7 +1771,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     if (list.size() != 0)
       e.out << leader2 << "// Marshal the arguments\n";
     int argNum = 0;
-    for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+    for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
       argNum++;
       Argument* arg=*iter;
       if (arg->getMode() != Argument::Out) {
@@ -1837,7 +1843,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "_rm->createSubset(1,0);\n";
   } 
   argNum = 0;
-  for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+  for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
     argNum++;
     Argument* arg=*iter;
     if (arg->getMode() != Argument::Out) {
@@ -1871,7 +1877,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   // OUT args Redistribution code emitted here:
   if (doRedistribution) {
     int argNum = 0;
-    for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+    for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
       argNum++;
       Argument* arg=*iter;
       if (arg->getMode() != Argument::In) {
@@ -1917,7 +1923,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       e.out << leader2 << "// Unmarshal the return arguments\n";
     }
     argNum = 0;
-    for (vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
+    for (std::vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++) {
       argNum++;
       Argument* arg=*iter;
       if (arg->getMode() != Argument::In) {
@@ -1959,7 +1965,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       e.out << "\n";
       e.out << leader2 << "//CALLNORET ADDENDUM FOR EXCEPTIONS\n";
       e.out << leader2 << "if (save_callnoret_msg.size() > 0) {\n";      
-      e.out << leader2 << "  ::std::vector< ::SCIRun::Message*>::iterator iter = save_callnoret_msg.begin();\n";
+      e.out << leader2 << "  std::vector< ::SCIRun::Message*>::iterator iter = save_callnoret_msg.begin();\n";
       e.out << leader2 << "  for (unsigned int i=0; i < save_callnoret_msg.size(); i++, iter++) {\n";
       e.out << leader2 << "    (*iter)->waitReply();\n";
       e.out << leader2 << "    int _x_flag;\n";
@@ -1998,8 +2004,8 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   e.out << "}\n";
 }
 
-void Argument::emit_unmarshal(EmitState& e, const string& arg,
-                  const string& qty, const int handler,
+void Argument::emit_unmarshal(EmitState& e, const std::string& arg,
+                  const std::string& qty, const int handler,
                   ArgContext ctx, const bool specialRedis,
                   bool declare) const
 {
@@ -2007,20 +2013,20 @@ void Argument::emit_unmarshal(EmitState& e, const string& arg,
   type->emit_unmarshal(e, arg, qty, handler, ctx, specialRedis, declare);
 }
 
-void Argument::emit_marshalsize(EmitState& e, const string& arg,
-                const string& sizevar,
-                const string& qty) const
+void Argument::emit_marshalsize(EmitState& e, const std::string& arg,
+                const std::string& sizevar,
+                const std::string& qty) const
 {
   type->emit_marshalsize(e, arg, sizevar, qty);
 }
 
-void Argument::emit_declaration(EmitState& e, const string& arg) const
+void Argument::emit_declaration(EmitState& e, const std::string& arg) const
 {
   type->emit_declaration(e, arg);
 }
 
-void Argument::emit_marshal(EmitState& e, const string& arg,
-                const string& qty, const int handler, 
+void Argument::emit_marshal(EmitState& e, const std::string& arg,
+                const std::string& qty, const int handler, 
                 bool top, ArgContext ctx, bool specialRedis,
                 storageT bufferStore) const
 {
@@ -2066,15 +2072,15 @@ void Argument::emit_prototype_defin(SState& out, const std::string& arg,
   out << " " << arg;
 }
 
-void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
-                   const string& qty, const int handler, 
+void ArrayType::emit_unmarshal(EmitState& e, const std::string& arg,
+                   const std::string& qty, const int handler, 
                    ArgContext ctx, const bool specialRedis,
                    bool declare) const
 {
   if (specialRedis) return;
 
   if (qty != "1") {
-    cerr << "ArrayType::emit_unmarshall, qty != 1: " << qty << '\n';
+    std::cerr << "ArrayType::emit_unmarshall, qty != 1: " << qty << '\n';
     exit(1);
   }
   e.out << leader2 << "int " << arg << "_dim[" << dim << "];\n";
@@ -2092,8 +2098,8 @@ void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
   }
   e.out << ");\n";
   if (subtype->array_use_pointer()) {
-    string pname=arg+"_uptr";
-    string sizename=arg+"_totalsize";
+    std::string pname=arg+"_uptr";
+    std::string sizename=arg+"_totalsize";
     e.out << leader2 << "int " << sizename << "=";
     for (int i = 0; i < dim; i++) {
       if (i != 0) {
@@ -2107,10 +2113,10 @@ void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(" << arg << ".buffer());\n";
     subtype->emit_unmarshal(e, pname, sizename, handler, ctx, false, false);
   } else {
-    string pname=arg+"_iter";
+    std::string pname=arg+"_iter";
     e.out << leader2 << "for (" << cppfullname(0) << "::iterator " << pname << "=" << arg << ".begin();";
     e.out << pname << " != " << arg << ".end(); " << pname << "++) {\n";
-    string oldleader=e.out.push_leader();
+    std::string oldleader=e.out.push_leader();
     e.out << leader2 << cppfullname(0) << "::reference " << arg << "_el = *" << pname << ";\n";
     subtype->emit_unmarshal(e, arg+"_el", "1", handler, ctx, false, false);
     e.out.pop_leader(oldleader);
@@ -2118,16 +2124,16 @@ void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
   }
 }
 
-void ArrayType::emit_marshalsize(EmitState& e, const string& arg,
-                 const string& /*sizevar*/,
-                 const string& /* qty */) const
+void ArrayType::emit_marshalsize(EmitState& e, const std::string& arg,
+                 const std::string& /*sizevar*/,
+                 const std::string& /* qty */) const
 {
   if (subtype->uniformsize()) {
-    string sizename=arg+"_mtotalsize";
+    std::string sizename=arg+"_mtotalsize";
     if (dim == 1) {
       e.out << leader2 << "int " << sizename << "=" << arg << ".size();\n";
     } else {
-      string dimname=arg+"_mdim";
+      std::string dimname=arg+"_mdim";
       e.out << leader2 << "int " << dimname << "[" << dim << "];\n";
       for (int i = 0; i < dim; i++) {
         e.out << leader2 << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
@@ -2141,7 +2147,7 @@ void ArrayType::emit_marshalsize(EmitState& e, const string& arg,
   } 
 }
 
-void ArrayType::emit_declaration(EmitState& e, const string& arg) const
+void ArrayType::emit_declaration(EmitState& e, const std::string& arg) const
 {
   e.out << leader2 << cppfullname(0) << " " << arg << ";\n";
 }
@@ -2156,15 +2162,15 @@ bool ArrayType::uniformsize() const
   return false;
 }
 
-void ArrayType::emit_marshal(EmitState& e, const string& arg,
-                 const string& /*qty*/, const int handler, 
+void ArrayType::emit_marshal(EmitState& e, const std::string& arg,
+                 const std::string& /*qty*/, const int handler, 
                  bool /*top*/, ArgContext ctx, bool specialRedis,
                  storageT bufferStore) const
 {
 
   if (specialRedis) return;
 
-  if (bufferStore == doRetreive) {
+  if (bufferStore == doRetrieve) {
     if (ctx == ReturnType) {
       e.out << leader2 << arg << " = *((" << cppfullname(0) << "*)(_sc->storage->get(" << e.handlerNum << ",0,_sessionID,_callID"
         << ")));\n";
@@ -2177,7 +2183,7 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
 
   this->emit_marshalsize(e, arg, "_rsize", "1");
 
-  string pname;
+  std::string pname;
   if (subtype->array_use_pointer()) {
     pname = arg + "_mptr";
     //This is wrong if the array dimension>=2 
@@ -2186,8 +2192,8 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
   } else {
     pname = arg + "_iter";
   }
-  string sizename = arg + "_mtotalsize";
-  string dimname = arg + "_mdim";
+  std::string sizename = arg + "_mtotalsize";
+  std::string dimname = arg + "_mdim";
   
   if (!subtype->uniformsize()) {
     if (dim == 1) {
@@ -2219,7 +2225,7 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
     e.out << leader2 << "for (" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
     e.out << pname << " != " << arg << ".end(); " << pname << "++) {\n";
     e.out << leader2 << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
-    string oldleader=e.out.push_leader();
+    std::string oldleader=e.out.push_leader();
     subtype->emit_marshal(e, arg+"_el", "1", handler, false, ctx, false, noneStorage);
     e.out.pop_leader(oldleader);
     e.out << leader2 << "}\n";
@@ -2237,7 +2243,7 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
   }
 }
 
-void ArrayType::emit_rettype(EmitState& e, const string& /*arg*/) const
+void ArrayType::emit_rettype(EmitState& e, const std::string& /*arg*/) const
 {
   e.out << cppfullname(0) << " _ret";
 }
@@ -2254,8 +2260,8 @@ void ArrayType::emit_prototype(SState& out, ArgContext ctx,
   }
 }
 
-void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
-                 const string& qty, const int /*handler*/,
+void BuiltinType::emit_unmarshal(EmitState& e, const std::string& arg,
+                 const std::string& qty, const int /*handler*/,
                  ArgContext /*ctx*/, const bool specialRedis,
                  bool declare) const
 {
@@ -2263,11 +2269,11 @@ void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
 
   if (cname == "void") {
     // What?
-    cerr << "Trying to unmarshal a void!\n";
+    std::cerr << "Trying to unmarshal a void!\n";
     exit(1);
   } else if (cname == "bool") {
     if (qty != "1") {
-      cerr << "emit_unmarshal called for bool with qty != 1:" << qty << "\n";
+      std::cerr << "emit_unmarshal called for bool with qty != 1:" << qty << "\n";
       exit(1);
     }
     e.out << leader2 << "char " << arg << "_tmp;\n";
@@ -2278,60 +2284,60 @@ void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << arg << "=(bool)" << arg << "_tmp;\n";
   } else if (cname == "string") {
     if (qty != "1") {
-      cerr << "emit_unmarshal call for string with qty != 1:" << qty << "\n";
+      std::cerr << "emit_unmarshal call for std::string with qty != 1:" << qty << "\n";
       exit(1);
     }
-    string arglen = produceLegalVar(arg) + "_length";
+    std::string arglen = produceLegalVar(arg) + "_length";
     e.out << leader2 << "int " << arglen << ";\n";
     e.out << leader2 << "message->unmarshalInt(&" << arglen << ");\n";
     if (declare) {
-      e.out << leader2 << "::std::string " << arg << "(" << arglen << ", ' ');\n";
+      e.out << leader2 << "std::string " << arg << "(" << arglen << ", ' ');\n";
     } else {
       e.out << leader2 << arg << ".resize(" << arglen << ");\n";
     }
     e.out << leader2 << "message->unmarshalChar(const_cast<char*>(" << arg << ".c_str()), " << arglen << ");\n";
-  } else if (cname == "::std::complex<float> ") {
+  } else if (cname == BuiltinType::COMPLEX_FLOAT_NAME) {
     if (qty != "1") {
       e.out << leader2 << "float* " << arg << "_in = new float[2*" << qty << "];\n";
       e.out << leader2 << "message->unmarshalFloat(" << arg << "_in, 2*" << qty << ");\n";
       if (declare) {
-        cerr << "Shouldn't declare arrays!\n";
+        std::cerr << "Shouldn't declare arrays!\n";
         exit(1);
       }
       e.out << leader2 << "for (int _i=0;_i<" << qty << ";_i++)\n";
-      e.out << leader2 << "  " << arg << "[_i]=" << cname << "(" << arg << "_in[2*_i], " << arg << "_in[2*_i+1]);\n";
+      e.out << leader2 << "  " << arg << "[_i]= std::complex<float>(" << arg << "_in[2*_i], " << arg << "_in[2*_i+1]);\n";
       e.out << leader2 << "delete[] " << arg << "_in;\n";
     } else {
       e.out << leader2 << "float " << arg << "_in[2];\n";
       e.out << leader2 << "message->unmarshalFloat(" << arg << "_in, 2);\n";
       if (declare) {
-        e.out << leader2 << cname << " " << arg << "(" << arg << "_in[0], " << arg << "_in[1]);\n";
+        e.out << leader2 << "std::complex<float> " << arg << "(" << arg << "_in[0], " << arg << "_in[1]);\n";
       } else {
-        e.out << leader2 << arg << "=::std::complex<float>(" << arg << "_in[0], " << arg << "_in[1]);\n";
+        e.out << leader2 << arg << "= std::complex<float>(" << arg << "_in[0], " << arg << "_in[1]);\n";
       }
     }
-  } else if (cname == "::std::complex<double> ") {
+  } else if (cname == BuiltinType::COMPLEX_DOUBLE_NAME) {
     if (qty != "1") {
       e.out << leader2 << "double* " << arg << "_in = new double[2*" << qty << "];\n";
       e.out << leader2 << "message->unmarshalDouble(" << arg << "_in, 2*" << qty << ");\n";
       if (declare) {
-    cerr << "Shouldn't declare arrays!\n";
+    std::cerr << "Shouldn't declare arrays!\n";
     exit(1);
       }
       e.out << leader2 << "for (int _i=0;_i<" << qty << ";_i++)\n";
-      e.out << leader2 << "  " << arg << "[_i]=" << cname << "(" << arg << "_in[2*_i], " << arg << "_in[2*_i+1]);\n";
+      e.out << leader2 << "  " << arg << "[_i]= std::complex<double>(" << arg << "_in[2*_i], " << arg << "_in[2*_i+1]);\n";
       e.out << leader2 << "delete[] " << arg << "_in;\n";
     } else {
       e.out << leader2 << "double " << arg << "_in[2];\n";
       e.out << leader2 << "message->unmarshalDouble(" << arg << "_in, 2);\n";
       if (declare) {
-        e.out << leader2 << cname << " " << arg << "(" << arg << "_in[0], " << arg << "_in[1]);\n";
+        e.out << leader2 << "std::complex<double>" << " " << arg << "(" << arg << "_in[0], " << arg << "_in[1]);\n";
       } else {
-        e.out << leader2 << arg << "=::std::complex<double>(" << arg << "_in[0], " << arg << "_in[1]);\n";
+        e.out << leader2 << arg << "= std::complex<double>(" << arg << "_in[0], " << arg << "_in[1]);\n";
       }
     }
   } else {
-    string type_name(nexusname);
+    std::string type_name(nexusname);
     if (declare) {
       e.out << leader2 << cname << " " << arg << ";\n";
     }
@@ -2344,20 +2350,20 @@ void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
   }
 }
 
-void BuiltinType::emit_marshalsize(EmitState& /*e*/, const string& /*arg*/,
-                   const string& /*sizevar*/,
-                   const string& /*qty*/) const
+void BuiltinType::emit_marshalsize(EmitState& /*e*/, const std::string& /*arg*/,
+                   const std::string& /*sizevar*/,
+                   const std::string& /*qty*/) const
 {
 }
 
-void BuiltinType::emit_declaration(EmitState& e, const string& arg) const
+void BuiltinType::emit_declaration(EmitState& e, const std::string& arg) const
 {
   if (cname == "void") {
     // What?
-    cerr << "Trying to declare a void!\n";
+    std::cerr << "Trying to declare a void!\n";
     exit(1);
-  } else if (cname == "string") {
-    e.out << leader2 << "::std::string " << arg << ";\n";
+  } else if (nexusname == "special") { // string, complex<float>, complex<double>
+    e.out << leader2 << "std::" << cname << " " << arg << ";\n";
   } else if (cname == "bool") {
     e.out << leader2 << cname << " " << arg << " = false;\n";  
   } else {
@@ -2366,44 +2372,50 @@ void BuiltinType::emit_declaration(EmitState& e, const string& arg) const
 }
     
 
-void BuiltinType::emit_marshal(EmitState& e, const string& arg,
-                   const string& qty, const int /*handler*/, bool/* top*/,
-                   ArgContext ctx, bool specialRedis, 
-                   storageT bufferStore) const
+void BuiltinType::emit_marshal(EmitState& e, const std::string& arg,
+                               const std::string& qty, const int /*handler*/, bool/* top*/,
+                               ArgContext ctx, bool specialRedis, 
+                               storageT bufferStore) const
 {
   if (specialRedis) return;
 
-  if (bufferStore == doRetreive) {
+  std::string emitName;
+  if (nexusname == "special") {
+    emitName = "std::" + cname;
+  } else {
+    emitName = cname;
+  }
+  if (bufferStore == doRetrieve) {
     if (ctx == ReturnType) {
-      e.out << leader2 << arg << " = *((" << cname << "*)(_sc->storage->get(" << e.handlerNum << ",0,_sessionID,_callID"
+      e.out << leader2 << arg << " = *((" << emitName << "*)(_sc->storage->get(" << e.handlerNum << ",0,_sessionID,_callID"
         << ")));\n";
     }
     else {
-      e.out << leader2 << cname << " " << arg << " = *((" << cname << "*)(_sc->storage->get(" << e.handlerNum 
+      e.out << leader2 << emitName << " " << arg << " = *((" << emitName << "*)(_sc->storage->get(" << e.handlerNum
         << "," << arg[arg.size()-1] << "),_sessionID,_callID));\n";      
     }
   }
 
   if (cname == "void") {
     // What?
-    cerr << "Trying to unmarshal a void!\n";
+    std::cerr << "Trying to unmarshal a void!\n";
     exit(1);
   } else if (cname == "bool") {
     if (qty != "1") {
-      cerr << "marshal bool called with qty != 1: " << qty << '\n';
+      std::cerr << "marshal bool called with qty != 1: " << qty << '\n';
       exit(1);
     }
     e.out << leader2 << "message->marshalByte((char*) &" << arg << ");\n";
   } else if (cname == "string") {
     if (qty != "1") {
-      cerr << "marshal string called with qty != 1: " << qty << '\n';
+      std::cerr << "marshal string called with qty != 1: " << qty << '\n';
       exit(1);
     }
     std::string arglen = produceLegalVar(arg) + "_len";
     e.out << leader2 << "int " << arglen << "=" << arg << ".length();\n";
     e.out << leader2 << "message->marshalInt(&" << arglen << ");\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(" << arg << ".c_str()), " << arglen << ");\n";
-  } else if (cname == "::std::complex<float> ") {
+  } else if (cname == BuiltinType::COMPLEX_FLOAT_NAME) {
     if (qty != "1") {
       e.out << leader2 << "float* " << arg << "_out = new float[2*" << qty << "];\n";
       e.out << leader2 << "for (int _i=0;_i<" << qty << ";_i++) {\n";
@@ -2418,7 +2430,7 @@ void BuiltinType::emit_marshal(EmitState& e, const string& arg,
       e.out << leader2 << arg << "_out[1]=" << arg << ".imag();\n";
       e.out << leader2 << "message->marshalFloat(" << arg << "_out, 2);\n";
     }
-  } else if (cname == "::std::complex<double> ") {
+  } else if (cname == BuiltinType::COMPLEX_DOUBLE_NAME) {
     if (qty != "1") {
       e.out << leader2 << "double* " << arg << "_out = new double[2*" << qty << "];\n";
       e.out << leader2 << "for (int _i=0;_i<" << qty << ";_i++) {\n";
@@ -2434,7 +2446,7 @@ void BuiltinType::emit_marshal(EmitState& e, const string& arg,
       e.out << leader2 << "message->marshalDouble(" << arg << "_out, 2);\n";
     }
   } else {
-    string type_name(nexusname);
+    std::string type_name(nexusname);
     type_name[0] += ('A' - 'a');
     e.out << leader2 << "message->marshal" << type_name << "(";
     if (qty == "1") {
@@ -2445,51 +2457,49 @@ void BuiltinType::emit_marshal(EmitState& e, const string& arg,
 
   if (bufferStore == doStore) {
     if (ctx == ReturnType) {
-      e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  
-        <<",0, (void*)(new " << cname << "(" << arg << ")),_sessionID,_callID,_numCalls);\n";
-    }
-    else {
-      e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
-        <<", (void*)(new " << cname << "(" << arg << ")),_sessionID,_callID,_numCalls);\n";
+      e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum
+        <<",0, (void*)(new " << emitName << "(" << arg << ")),_sessionID,_callID,_numCalls);\n";
+    } else {
+      e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  << "," << arg[arg.size()-1]
+        <<", (void*)(new " << emitName << "(" << arg << ")),_sessionID,_callID,_numCalls);\n";
     }
   }
 }
 
-void BuiltinType::emit_rettype(EmitState& e, const string& arg) const
+void BuiltinType::emit_rettype(EmitState& e, const std::string& arg) const
 {
   if (cname == "void") {
     // Nothing
     return;
-  } else if (cname == "string") {
-    e.out << "::std::string " << arg;
+  } else if (nexusname == "special") { // string, complex<double>, complex<float>
+    e.out << "std::" << cname << " " << arg;
   } else {
     e.out << cname << " " << arg;
   }
 }
 
-void BuiltinType::emit_prototype(SState& out, ArgContext ctx,
-                 SymbolTable*) const
+void BuiltinType::emit_prototype(SState& out, ArgContext ctx, SymbolTable*) const
 {
   if (cname == "void") {
     // Nothing
     if (ctx == ReturnType) {
       out << "void";
     } else {
-      cerr << "Illegal void type in argument list\n";
+      std::cerr << "Illegal void type in argument list\n";
       exit(1);
     }
-  } else if (cname == "string") {
+  } else if (nexusname == "special") { // string, complex<double>, complex<float>
     switch(ctx) {
     case ReturnType:
     case ArrayTemplate:
-      out << "::std::string";
+      out << "std::" << cname;
       break;
     case ArgIn:
-      out << "const ::std::string&";
+      out << "const std::" << cname << "&";
       break;
     case ArgOut:
     case ArgInOut:
-      out << "::std::string&";
+      out << "std::" << cname << "&";
       break;
     }
   } else {
@@ -2525,8 +2535,8 @@ bool BuiltinType::uniformsize() const
   }
 }
 
-void NamedType::emit_unmarshal(EmitState& e, const string& arg,
-                   const string& qty, const int handler, 
+void NamedType::emit_unmarshal(EmitState& e, const std::string& arg,
+                   const std::string& qty, const int handler, 
                    ArgContext ctx, const bool specialRedis,
                    bool declare) const
 {
@@ -2534,7 +2544,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
   if (symtype == Symbol::EnumType) {
     if (specialRedis) return;
     if (qty != "1") {
-      cerr << "NamedType::emit_unmarshal called with qty != 1: " << qty << '\n';
+      std::cerr << "NamedType::emit_unmarshal called with qty != 1: " << qty << '\n';
       exit(1);
     }
     e.out << leader2 << "int " << arg << "_unmarshal;\n";
@@ -2547,7 +2557,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
   } else if (symtype == Symbol::ClassType || symtype == Symbol::InterfaceType) {
     if (specialRedis) return;
     if (qty != "1") {
-      cerr << "NamedType::emit_unmarshal called with qty != 1: " << qty << '\n';
+      std::cerr << "NamedType::emit_unmarshal called with qty != 1: " << qty << '\n';
       exit(1);
     }    
     e.out << leader2 << "int " << arg << "_vtable_base;\n";
@@ -2614,7 +2624,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
         e.out << leader2 << "  message->unmarshalInt(_meta_rep_uptr, _meta_rep_totalsize);\n";
         e.out << leader2 << "  //Unmarshal received distribution\n";
 
-        string templeader = e.out.leader;
+        std::string templeader = e.out.leader;
         for (int i = arr_t->dim - 1; i >= 0; i--) {
             e.out << leader2 << "  for (int adj" << i << "=_this_rep->getFirst(" << i+1  
                   << "), str" << i << "=_this_rep->getStride(" << i+1 << "), " 
@@ -2624,7 +2634,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
             e.out.push_leader();
         }
         e.out << leader2 << "{\n";
-        string ttleader = e.out.leader;
+        std::string ttleader = e.out.leader;
         e.out.push_leader(); 
         std::ostringstream var2unmarshal2;
         var2unmarshal2 << "(*_arr_ptr)";
@@ -2654,7 +2664,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
         e.out << ");\n";
         e.out << leader2 << "for (int i = 0; i < (int)_rl_out->size(); i++) {\n";
         e.out << leader2 << "  SCIRun::Message* message = (*_rl_out)[i]->getReference()->chan->getMessage();\n";
-        //string dimname=arg+"_mdim";
+        //std::string dimname=arg+"_mdim";
         e.out << leader2 << "  message->createMessage();\n";
         e.out << leader2 << "  //Marshal the redistribution call flag\n";
         e.out << leader2 << "  ::SCIRun::callType _r_flag = ::SCIRun::REDIS;\n";
@@ -2693,7 +2703,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
         e.out << leader2 << "  int _handler=(*_rl_out)[i]->getReference()->getVtableBase()+" << handler << ";\n";
         e.out << leader2 << "  message->sendMessage(_handler);\n";
         e.out << leader2 << "  message->waitReply();\n";
-        string templeader = e.out.leader;
+        std::string templeader = e.out.leader;
         for (int i=arr_t->dim-1; i >= 0; i--) {
           e.out << leader2 << "  for (int adj" << i << "=_this_rep->getFirst(" << i+1  
                 << "), str" << i << "=_this_rep->getStride(" << i+1 << "), " 
@@ -2703,7 +2713,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
           e.out.push_leader();
         }
         e.out << leader2 << "{\n";
-        string ttleader = e.out.leader;
+        std::string ttleader = e.out.leader;
         e.out.push_leader(); 
         std::ostringstream var2unmarshal2;
         var2unmarshal2 << "(" << arg;
@@ -2722,7 +2732,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
         //TEMPORARY TEST:
         e.out << leader2 << "//Test\n";
         e.out << leader2 << "if (1) {\n";
-        string testleader = e.out.push_leader();
+        std::string testleader = e.out.push_leader();
         e.out << leader2 << "std::ostringstream fname;\n";
         e.out << leader2 << "fname << \"" << distarr->getName() << "\" << \"_\" << rm.getRank() << \".caller.out\";\n";
         e.out << leader2 << "d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
@@ -2748,8 +2758,8 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     } else {
       if (ctx == ArgIn) {
         // *********** IN arg -- No Special Redis ****************************
-        string Dname = distarr->getName();
-        string arr_ptr_name = arg + "_ptr";
+        std::string Dname = distarr->getName();
+        std::string arr_ptr_name = arg + "_ptr";
         e.out << leader2 << arr_t->cppfullname(0) << "* " << arr_ptr_name << ";\n";
         e.out << leader2 << arr_ptr_name << " = static_cast< " << arr_t->cppfullname(0) 
           << "*>(_sc->d_sched->waitCompleteInArray(\"" << Dname << "\",_sessionID,_callID));\n";
@@ -2783,7 +2793,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
       } else if (ctx == ArgOut) {
         // *********** OUT arg -- No Special Redis ********************************
         /*
-        string Dname = distarr->getName();
+        std::string Dname = distarr->getName();
         e.out << leader2 << "//OUT redistribution array detected. Get it afterwards\n";
         e.out << leader2 << "//Resize array \n";
         e.out << leader2 << "SCIRun::MxNArrayRep* _d_rep_" << Dname << " = d_sched->callerGetCallerRep(\"" 
@@ -2803,13 +2813,13 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 }
 
 void
-NamedType::emit_marshalsize( EmitState& /*e*/, const string& /*arg*/,
-                             const string& /*sizevar*/,
-                 const string& /*qty*/) const
+NamedType::emit_marshalsize( EmitState& /*e*/, const std::string& /*arg*/,
+                             const std::string& /*sizevar*/,
+                 const std::string& /*qty*/) const
 {
 }
 
-void NamedType::emit_declaration(EmitState& e, const string& arg) const
+void NamedType::emit_declaration(EmitState& e, const std::string& arg) const
 {
   Symbol::Type symtype = name->getSymbol()->getType();
   if (symtype == Symbol::DistArrayType) {
@@ -2824,8 +2834,8 @@ void NamedType::emit_declaration(EmitState& e, const string& arg) const
   }
 }
 
-void NamedType::emit_marshal(EmitState& e, const string& arg,
-                 const string& qty, const int handler, 
+void NamedType::emit_marshal(EmitState& e, const std::string& arg,
+                 const std::string& qty, const int handler, 
                  bool top, ArgContext ctx, bool specialRedis,
                  storageT bufferStore) const
 {
@@ -2833,10 +2843,10 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
   if (symtype == Symbol::EnumType) {
     if (specialRedis) return;
     if (qty != "1") {
-      cerr << "NamedType::emit_marshal called with qty != 1: " << qty << '\n';
+      std::cerr << "NamedType::emit_marshal called with qty != 1: " << qty << '\n';
       exit(1);
     }
-    if (bufferStore == doRetreive) {
+    if (bufferStore == doRetrieve) {
       if (ctx == ReturnType) {
         e.out << leader2 << arg << " = *((" << name->cppfullname(0) << "*)(_sc->storage->get(" 
           << e.handlerNum << ",0" << ")));\n";
@@ -2859,10 +2869,10 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
   } else if (symtype == Symbol::ClassType || symtype == Symbol::InterfaceType) {
     if (specialRedis) return;
     if (qty != "1") {
-      cerr << "NamedType::emit_marshal called with qty != 1: " << qty << '\n';
+      std::cerr << "NamedType::emit_marshal called with qty != 1: " << qty << '\n';
       exit(1);
     }
-    if (bufferStore == doRetreive) {
+    if (bufferStore == doRetrieve) {
       if (ctx == ReturnType) {
         e.out << leader2 << arg << " = *((" << name->cppfullname(0) << "::pointer*)(_sc->storage->get(" 
           << e.handlerNum << ",0,_sessionID,_callID)));\n";
@@ -2912,14 +2922,14 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
         e.out << "\n";
         e.out << leader2 << "//Redistribute the array:\n";
         e.out << leader2 << "if (1) { //Hack to prevent varable shadowing on rl & this_rep\n";
-        string ifone = e.out.push_leader(); 
+        std::string ifone = e.out.push_leader(); 
         e.out << leader2 << "SCIRun::descriptorList* rl = d_sched->getRedistributionReps(\"" 
               << distarr->getName() << "\",getProxyUUID() );\n";
         e.out << leader2 << "SCIRun::MxNArrayRep* this_rep = d_sched->callerGetCallerRep(\"" 
               << distarr->getName() << "\",getProxyUUID() );\n";
         e.out << leader2 << "for (int i = 0; i < (int)rl->size(); i++) {\n";
         e.out << leader2 << "  SCIRun::Message* message = (*rl)[i]->getReference()->chan->getMessage();\n";
-        //string dimname=arg+"_mdim";
+        //std::string dimname=arg+"_mdim";
         e.out << leader2 << "  message->createMessage();\n";
         e.out << leader2 << "  //Marshal the distribution flag\n";
         e.out << leader2 << "  ::SCIRun::callType _r_flag = ::SCIRun::REDIS;\n";
@@ -2955,7 +2965,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
         e.out << leader2 << "  message->marshalInt(&_rep_mdim[0], 2);\n";
         e.out << leader2 << "  message->marshalInt(_rep_mptr, _rep_mtotalsize);\n";
         e.out << leader2 << "  //Marshal the data:\n";
-        string templeader = e.out.leader;
+        std::string templeader = e.out.leader;
         for (int i=arr_t->dim-1; i >= 0; i--) {
           e.out << leader2 << "  for (int adj" << i << "=this_rep->getFirst(" << i+1  
                 << "), str" << i << "=this_rep->getStride(" << i+1 << "), " 
@@ -2965,7 +2975,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
           e.out.push_leader();
         }
         e.out << leader2 << "{\n"; 
-        string ttleader = e.out.leader;
+        std::string ttleader = e.out.leader;
         e.out.push_leader(); 
         std::ostringstream var2marshal;
         var2marshal << arg;
@@ -3003,7 +3013,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
         e.out << leader2 << "  message->unmarshalReply();\n";
         e.out << leader2 << "  message->createMessage();\n";
         e.out << leader2 << "  //Marshal the data:\n";
-        string templeader = e.out.leader;
+        std::string templeader = e.out.leader;
         for (int i=arr_t->dim-1; i >= 0; i--) {
           e.out << leader2 << "  for (int adj" << i << "=_this_rep->getFirst(" << i+1  
                 << "), str" << i << "=_this_rep->getStride(" << i+1 << "), " 
@@ -3013,7 +3023,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
           e.out.push_leader();
         }
         e.out << leader2 << "{\n";
-        string ttleader = e.out.leader;
+        std::string ttleader = e.out.leader;
         e.out.push_leader(); 
         std::ostringstream var2marshal;
         var2marshal << "((*_arr_ptr)";
@@ -3034,7 +3044,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
         // *********** END OF OUT arg -- Special Redis ******************************
       }
     } else {
-      if ((ctx == ArgOut)&&(bufferStore != doRetreive)) {
+      if ((ctx == ArgOut)&&(bufferStore != doRetrieve)) {
       // *********** OUT arg -- No Special Redis ******************************
     e.out << leader2 << "_sc->d_sched->setArray(\"" <<  distarr->getName() << "\",_sessionID, _callID, (void**)(&" << arg << "_ptr));\n";
     e.out << leader2 << "_sc->d_sched->waitCompleteOutArray(\"" << distarr->getName() << "\",_sessionID, _callID);\n";  
@@ -3042,12 +3052,12 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
       }
     }
   } else {
-    cerr << "Emit marshal shouldn't be called for packages/methods\n";
+    std::cerr << "Emit marshal shouldn't be called for packages/methods\n";
     exit(1);
   }
 }
 
-void NamedType::emit_rettype(EmitState& e, const string& arg) const
+void NamedType::emit_rettype(EmitState& e, const std::string& arg) const
 {
   Symbol::Type symtype = name->getSymbol()->getType();
   if (symtype == Symbol::EnumType) {

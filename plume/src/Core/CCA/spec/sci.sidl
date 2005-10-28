@@ -33,6 +33,7 @@ version sci 0.2;
 #include "distributed.sidl"
 #include "plume.sidl"
 #include "core_example.sidl"
+#include "tena.sidl"
 
 
 //#include "scirun.sidl"
