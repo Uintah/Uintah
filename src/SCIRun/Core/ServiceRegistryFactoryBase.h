@@ -48,8 +48,8 @@ namespace SCIRun {
   using namespace sci::cca;
   using namespace sci::cca::core;
 
-  class ServiceRegistry;
-  
+  class ServiceRegistryCoordinator;
+
   /**
    * \class ServiceRegistryFactoryBase
    *
@@ -76,7 +76,7 @@ namespace SCIRun {
   protected:
     CoreFramework::pointer framework;
     std::string serviceName;
-    ServiceRegistry* registry;
+    ServiceRegistryCoordinator* registry;
     int uses;
     Mutex lock;
 

@@ -50,7 +50,7 @@ SRCS     += \
 	     $(SRCDIR)/CoreServicesImpl.cc \
 	     $(SRCDIR)/CoreFrameworkImpl.cc \
 	     $(SRCDIR)/BuilderServiceImpl.cc \
-	     $(SRCDIR)/ServiceRegistry.cc \
+	     $(SRCDIR)/ServiceRegistryCoordinator.cc \
 #             $(SRCDIR)/CoreFrameworkException.cc \
 #             $(SRCDIR)/ComponentEvent.cc \
 #             $(SRCDIR)/ConnectionEvent.cc \

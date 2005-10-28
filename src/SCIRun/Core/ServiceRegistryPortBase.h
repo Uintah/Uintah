@@ -41,7 +41,7 @@
 #ifndef SCIRun_Core_ServiceRegistryPortBase_h
 #define SCIRun_Core_ServiceRegistryPortBase_h
 
-#include <SCIRun/Core/ServiceRegistry.h>
+#include <SCIRun/Core/ServiceRegistryCoordinator.h>
 
 namespace SCIRun {
   
@@ -58,9 +58,9 @@ namespace SCIRun {
   class ServiceRegistryPortBase : public Interface
   {
   public:
-    typedef ServiceRegistry::pointer pointer;
+    typedef sci::cca::ports::ServiceRegistry::pointer pointer;
     
-    ServiceRegistryPortBase(const ServiceRegistry *registry, const ComponentInfo::pointer &requester )
+    ServiceRegistryPortBase(ServiceRegistryCoordinator *registry, const ComponentInfo::pointer &requester )
       : registry(registry), requester(requester)
     {}
 
@@ -70,7 +70,7 @@ namespace SCIRun {
      * sci.cca.core.ServiceRegistry interface
      */
     
-    virtual bool addService(const std::string &serviceType, const ServiceProvider::pointer portProvider)
+    virtual bool addService(const std::string &serviceType, const ServiceProvider::pointer &portProvider)
     {
       return registry->addService( serviceType, portProvider, requester );
     }
@@ -86,7 +86,7 @@ namespace SCIRun {
     }
       
   protected:
-    ServiceRegistry *registry;
+    ServiceRegistryCoordinator *registry;
     ComponentInfo::pointer requester;
 
     // prevent using these directly

@@ -42,7 +42,7 @@
 #include <SCIRun/Core/PortInfoImpl.h>
 #include <SCIRun/Core/ServiceRegistryFactoryBase.h>
 #include <SCIRun/Core/ServiceRegistryPortBase.h>
-#include <SCIRun/Core/ServiceRegistry.h>
+#include <SCIRun/Core/ServiceRegistryCoordinator.h>
 
 namespace SCIRun {
   
@@ -51,7 +51,7 @@ namespace SCIRun {
   
   template<class Interface>
   ServiceRegistryFactoryBase<Interface>::ServiceRegistryFactoryBase(const CoreFramework::pointer &framework,
-									       const std::string &serviceName)
+								    const std::string &serviceName)
     : framework(framework), serviceName(serviceName), registry(0), uses(0),  lock("ServiceRegistryFactory")
   {
   }
@@ -68,17 +68,17 @@ namespace SCIRun {
   template<class Interface>
   PortInfo::pointer 
   ServiceRegistryFactoryBase<Interface>::getService(const std::string &serviceName, 
-							      const ComponentInfo::pointer &requestor)
+						    const ComponentInfo::pointer &requestor)
   {
     Guard gurd(&lock);
     if ( !registry )
-      registry = new ServiceRegistry(framework);
-
+      registry = new ServiceRegistryCoordinator(framework);
+    
     uses++;
     return new PortInfoImpl( "ServiceRegistryPort",
 			     "ServiceRegistry",
 			     0,
-			     ServiceRegistryPortBase<ServiceRegistry>( registry, requestor),
+			     new ServiceRegistryPortBase<ServiceRegistry>( registry, requestor),
 			     ProvidePort);
   }
   

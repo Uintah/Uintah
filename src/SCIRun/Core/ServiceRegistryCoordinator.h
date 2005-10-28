@@ -28,7 +28,7 @@
 
 
 /*
- *  ServiceRegistryBase.code
+ *  ServiceRegistryCoordinator.h: 
  *
  *  Written by:
  *   Yarden Livnat
@@ -38,47 +38,51 @@
  *
  */
 
-#ifndef SCIRun_Core_ServiceRegistryBase_code
-#define SCIRun_Core_ServiceRegistryBase_code
+#ifndef SCIRun_Core_ServiceRegistryCoordinator_h
+#define SCIRun_Core_ServiceRegistryCoordinator_h
 
-#include <SCIRun/Core/ProviderServiceFactoryImpl.h>
-#include <SCIRun/Core/FixedPortServiceFactoryImpl.h>
+#include <Core/Thread/Mutex.h>
 
 namespace SCIRun {
   
   using namespace sci::cca;
+  using namespace sci::cca::ports;
   using namespace sci::cca::core;
   
   /**
-   * \class ServiceRegistryBase
+   * \class ServiceRegistryCoordinatorBase
    *
    */
   
-  template<class Interface>
-  ServiceRegistryBase<Interface>::ServiceRegistryBase(const CoreFramework::pointer &framework )
-    : framework(framework)
-  {}
-  
-  template<class Interface>
-  ServiceRegistryBase<Interface>::~ServiceRegistryBase()
-  {}
-
-  
-  template<class Interface>
-  bool
-  ServiceRegistryBase<Interface>::addService(const std::string &serviceType, const ServiceProvider::pointer &portProvider)
+  class ServiceRegistryCoordinator
   {
-    ServiceFactory::pointer factory( new ProviderServiceFactoryImpl( framework, serviceType, portProvider));
-    return framework->addFrameworkServiceFactory(factory);
-  }
+  public:
+    typedef ServiceRegistryCoordinator * pointer;
+    
+    ServiceRegistryCoordinator(const CoreFramework::pointer &framework);
+    virtual ~ServiceRegistryCoordinator();
+    
+    /*
+     * sci.cca.core.ServiceRegistryCoordinator interface
+     */
+    
+    virtual bool addService(const std::string &serviceType, 
+			    const ServiceProvider::pointer &portProvider,
+			    const ComponentInfo::pointer &requester);
+    virtual bool addSingletonService( const std::string &serviceType, const Port::pointer &server, const ComponentInfo::pointer &requester);
+    virtual void removeService( const std::string &serviceType, const ComponentInfo::pointer &requester);
 
-  template<class Interface>
-  bool
-  ServiceRegistryBase<Interface>::addSingletonService( const std::string &serviceType, const Port::pointer &server)
-  {
-    ServiceFactory::pointer factory( new FixedPortServiceFactoryImpl( framework, serviceType, server));
-    return framework->addFrameworkServiceFactory(factory);
-  }
+  protected:
+    CoreFramework::pointer framework;
+    
+    typedef std::map<std::string, ComponentInfo::pointer> ProvidedMap;
+    ProvidedMap providedServices;
+
+    Mutex lock;
+    // prevent using these directly
+    ServiceRegistryCoordinator(const ServiceRegistryCoordinator&);
+    ServiceRegistryCoordinator& operator=(const ServiceRegistryCoordinator&);
+  };
   
 } // end namespace SCIRun
 
