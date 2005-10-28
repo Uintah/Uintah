@@ -360,7 +360,7 @@ public:
   {    
     // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
     // compare get_nodes order to the basis order
-    int basis_emap[] = {3, 2, 0, 1}; 
+    int basis_emap[] = {0, 2, 3, 1}; 
     typename Edge::array_type edges;
     get_edges(edges, ci);
     unsigned count = 0;
