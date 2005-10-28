@@ -74,7 +74,7 @@
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <Core/Datatypes/StructCurveMesh.h>
-
+#include <Core/Math/MiscMath.h>
 
 #include <iostream>
 
@@ -86,19 +86,19 @@ using namespace SCIRun;
 
 class NrrdToField : public Module {
 
-typedef CurveMesh<CrvLinearLgn<Point> >             CMesh;
-typedef TriSurfMesh<TriLinearLgn<Point> >           TSMesh;
-typedef LatVolMesh<HexTrilinearLgn<Point> >         LVMesh;
-typedef ImageMesh<QuadBilinearLgn<Point> >          IMesh;
-typedef QuadSurfMesh<QuadBilinearLgn<Point> >       QSMesh;
-typedef ScanlineMesh<CrvLinearLgn<Point> >          SLMesh;
-typedef PointCloudMesh<ConstantBasis<Point> >       PCMesh;
-typedef PrismVolMesh<PrismLinearLgn<Point> >        PVMesh;
-typedef TetVolMesh<TetLinearLgn<Point> >            TVMesh;
-typedef HexVolMesh<HexTrilinearLgn<Point> >         HVMesh;
-typedef StructCurveMesh<CrvLinearLgn<Point> >       SCMesh;
-typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQSMesh;
-typedef StructHexVolMesh<HexTrilinearLgn<Point> >   SHVMesh;
+  typedef CurveMesh<CrvLinearLgn<Point> >             CMesh;
+  typedef TriSurfMesh<TriLinearLgn<Point> >           TSMesh;
+  typedef LatVolMesh<HexTrilinearLgn<Point> >         LVMesh;
+  typedef ImageMesh<QuadBilinearLgn<Point> >          IMesh;
+  typedef QuadSurfMesh<QuadBilinearLgn<Point> >       QSMesh;
+  typedef ScanlineMesh<CrvLinearLgn<Point> >          SLMesh;
+  typedef PointCloudMesh<ConstantBasis<Point> >       PCMesh;
+  typedef PrismVolMesh<PrismLinearLgn<Point> >        PVMesh;
+  typedef TetVolMesh<TetLinearLgn<Point> >            TVMesh;
+  typedef HexVolMesh<HexTrilinearLgn<Point> >         HVMesh;
+  typedef StructCurveMesh<CrvLinearLgn<Point> >       SCMesh;
+  typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQSMesh;
+  typedef StructHexVolMesh<HexTrilinearLgn<Point> >   SHVMesh;
 
 public:
   enum {UNKNOWN=0,UNSTRUCTURED=1,STRUCTURED=2,IRREGULAR=4,REGULAR=8};
@@ -191,7 +191,7 @@ NrrdToField::~NrrdToField(){
 
 
 void
- NrrdToField::execute(){
+NrrdToField::execute(){
   // Get ports
   ndata_ = (NrrdIPort *)get_iport("Data");
   npoints_ = (NrrdIPort *)get_iport("Points");
@@ -419,7 +419,9 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   if (has_origfield_) {
     // Attempt to use the mesh provided
     mHandle = origfieldH->mesh();
-
+    const TypeDescription *mtd = mHandle->get_type_description();
+    const TypeDescription *btd = origfieldH->get_type_description(2);
+    const TypeDescription *dtd = origfieldH->get_type_description(3);
     // verify the data will "fit" into the mesh passed in
     if (has_data_) {
       const TypeDescription *td = origfieldH->get_type_description();
@@ -430,16 +432,9 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	remark("Creating a field from original mesh in input nrrd");
 	  
 	// Now create field based on the mesh created above and send it
-	const TypeDescription *mtd = mHandle->get_type_description();
-	  
-	string fname = mtd->get_name();
-	string::size_type pos = fname.find( "Mesh" );
-	fname.replace( pos, 4, "Field" );
-	  
 	CompileInfoHandle ci;
 	  
-	ci = NrrdToFieldFieldAlgo::get_compile_info(mtd,
-						    fname,
+	ci = NrrdToFieldFieldAlgo::get_compile_info(mtd, btd, dtd,
 						    dataH->nrrd->type, 
 						    data_rank);
 	  
@@ -458,16 +453,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       }
     } else if (has_points_) {
       // Now create field based on the mesh created above and send it
-      const TypeDescription *mtd = mHandle->get_type_description();
-      
-      string fname = mtd->get_name();
-      string::size_type pos = fname.find( "Mesh" );
-      fname.replace( pos, 4, "Field" );
-      
       CompileInfoHandle ci;
-      
-      ci = NrrdToFieldFieldAlgo::get_compile_info(mtd,
-						  fname,
+      ci = NrrdToFieldFieldAlgo::get_compile_info(mtd, btd, dtd,
 						  pointsH->nrrd->type, 
 						  data_rank);
       
@@ -487,6 +474,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   
 
   /////////////////// DETERMINE MESH BASED ON INPUTS AND GUI INFO ///////////////////
+  const TypeDescription *btd = 0;
 
   // No field given, does it have points and connections and possibly data?
   if (has_points_ && has_connect_) {
@@ -614,26 +602,32 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     case 2:
       // 2 -> curve
       mHandle = scinew CMesh();
+      btd = get_type_description((CrvLinearLgn<double>*)0);
       connectivity = 2;
       break;
     case 3:
       // 3 -> tri
       mHandle = scinew TSMesh();
+      btd = get_type_description((TriLinearLgn<double>*)0);
       connectivity = 3;
       break;
     case 4:
       // 4 -> quad/tet (ask which if this case)
       if (quad_or_tet == "Quad") {
 	mHandle = scinew QSMesh();
+	btd = get_type_description((QuadBilinearLgn<double>*)0);
 	connectivity = 4;
       } else  if (quad_or_tet == "Tet") {
 	mHandle = scinew TVMesh();
+	btd = get_type_description((TetLinearLgn<double>*)0);
 	connectivity = 4;
       } else if (elem_type == "Tet") {
 	mHandle = scinew TVMesh();
+	btd = get_type_description((TetLinearLgn<double>*)0);
 	connectivity = 4;	    
       } else if (elem_type == "Quad") {
 	mHandle = scinew QSMesh();
+	btd = get_type_description((QuadBilinearLgn<double>*)0);
 	connectivity = 4;
       } else {
 	error("Auto detection of Elem Type using properties failed.");
@@ -645,11 +639,13 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     case 6:
       // 6 -> prism
       mHandle = scinew PVMesh();
+      btd = get_type_description((PrismLinearLgn<double>*)0);
       connectivity = 6;
       break;
     case 8:
       // 8 -> hex
       mHandle = scinew HVMesh();
+      btd = get_type_description((HexTrilinearLgn<double>*)0);
       connectivity = 8;
       break;
     default:
@@ -688,6 +684,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     switch (pointsH->nrrd->dim) {
     case 1:
       mHandle = scinew PCMesh();
+      btd = get_type_description((ConstantBasis<double>*)0);
       topology_ = UNSTRUCTURED;
       break;
 
@@ -695,10 +692,12 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       // data 1D ask if point cloud or structcurvemesh
       if (struct_unstruct == "PointCloud") {
 	mHandle = scinew PCMesh();
+	btd = get_type_description((ConstantBasis<double>*)0);
 	topology_ = UNSTRUCTURED;
       } else if (struct_unstruct == "StructCurve") {
 	topology_ = STRUCTURED;
 	mHandle = scinew SCMesh( points->axis[1].size );
+	btd = get_type_description((CrvLinearLgn<double>*)0);
 	idim = points->axis[1].size;
       } else {
 	// Try to figure out based on properties of the points
@@ -706,9 +705,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	  if( property.find( "Unstructured" ) != string::npos ) {
 	    topology_ = UNSTRUCTURED;
 	    mHandle = scinew PCMesh();
+	    btd = get_type_description((ConstantBasis<double>*)0);
 	  } else if( property.find( "Structured" ) != string::npos ) {
 	    topology_ = STRUCTURED;
 	    mHandle = scinew SCMesh( points->axis[1].size );
+	    btd = get_type_description((CrvLinearLgn<double>*)0);
 	    idim = points->axis[1].size;
 	  }
 	}
@@ -718,9 +719,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	    if ( property.find( "Curve") != string::npos ) {
 	      topology_ = UNSTRUCTURED;
 	      mHandle = scinew PCMesh();
+	      btd = get_type_description((ConstantBasis<double>*)0);
 	    } else if ( property.find( "Curve") != string::npos ) {
 	      topology_ = STRUCTURED;
 	      mHandle = scinew SCMesh( points->axis[1].size );
+	      btd = get_type_description((CrvLinearLgn<double>*)0);
 	      idim = points->axis[1].size;
 	    }
 	  }
@@ -732,9 +735,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	    if( property.find( "Unstructured" ) != string::npos ) {
 	      topology_ = UNSTRUCTURED;
 	      mHandle = scinew PCMesh();
+	      btd = get_type_description((ConstantBasis<double>*)0);
 	    } else if( property.find( "Structured" ) != string::npos ) {
 	      topology_ = STRUCTURED;
 	      mHandle = scinew SCMesh( points->axis[1].size );
+	      btd = get_type_description((CrvLinearLgn<double>*)0);
 	      idim = points->axis[1].size;
 	    }
 	  }
@@ -744,9 +749,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	      if ( property.find( "Curve") != string::npos ) {
 		topology_ = UNSTRUCTURED;
 		mHandle = scinew PCMesh();
+		btd = get_type_description((ConstantBasis<double>*)0);
 	      } else if ( property.find( "Curve") != string::npos ) {
 		topology_ = STRUCTURED;
 		mHandle = scinew SCMesh( points->axis[1].size );
+		btd = get_type_description((CrvLinearLgn<double>*)0);
 		idim = points->axis[1].size;
 	      }
 	    }
@@ -756,6 +763,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	if( topology_ == UNKNOWN ) {
 	  warning("Unable to determine if creating Point Cloud or Struct Curve. Defaulting to Point Cloud");
 	  mHandle = scinew PCMesh();
+	  btd = get_type_description((ConstantBasis<double>*)0);
 	  topology_ = UNSTRUCTURED;
 	}
       }
@@ -766,6 +774,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       // data 2D -> structquad
       mHandle = scinew SQSMesh(points->axis[1].size,
 			       points->axis[2].size);
+      btd = get_type_description((QuadBilinearLgn<double>*)0);
       idim = points->axis[1].size;
       jdim = points->axis[2].size;
       //kdim = 1
@@ -777,6 +786,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       mHandle = scinew SHVMesh(points->axis[1].size,
 			       points->axis[2].size,
 			       points->axis[3].size);
+      btd = get_type_description((HexTrilinearLgn<double>*)0);
       idim = points->axis[1].size;
       jdim = points->axis[2].size;
       kdim = points->axis[3].size;
@@ -798,14 +808,14 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       CompileInfoHandle ci_mesh = 0;
       if (has_data_) {
 	ci_mesh = NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
-					      mtd,
-					      pointsH->nrrd->type,
-					      dataH->nrrd->type);
+							mtd,
+							pointsH->nrrd->type,
+							dataH->nrrd->type);
       } else {
 	ci_mesh = NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
-					      mtd,
-					      pointsH->nrrd->type,
-					      pointsH->nrrd->type);
+							mtd,
+							pointsH->nrrd->type,
+							pointsH->nrrd->type);
       }
 	  
       Handle<UnstructuredNrrdToFieldMeshAlgo> algo_mesh;
@@ -839,31 +849,156 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   } else if( has_data_ ) { // No points just data.
     Nrrd* data = dataH->nrrd;
 
-    bool has_min_pt = true;
+    vector<double> min_pt;
     vector<double> sp;
     int data_center = nrrdCenterUnknown;
-
+    int domain_axis = 0;
     int data_off;
+
+    // must have at 3 points for a point and
+    // the min defaults to (0,0,0)
+    min_pt.push_back(0.0);
+    min_pt.push_back(0.0);
+    min_pt.push_back(0.0);
 
     if( data_rank == 1 )
       data_off = 0;
     else 
       data_off = 1;
 
-    for (int i=data_off; i<dataH->nrrd->dim; i++) {
-      if (!(airExists(data->axis[i].min) && airExists(data->axis[i].max))) {
-	has_min_pt = false;
-	nrrdAxisInfoMinMaxSet(data, i, nrrdCenterNode);
+    // since there is a mutual exclusion between using
+    // the min, max and spacing and the spaceDirection vectors
+    // verify that this is a valid nrrd
+    if (nrrdCheck(data)) {
+      error("Error: Invalid NRRD.  Cannot compute transform.");
+      return false;
+    }
+
+    // initialize the transform to the identity matrix
+    double trans[16];
+    trans[0] = 1;  trans[1] = 0;  trans[2] = 0;  trans[3] = 0;
+    trans[4] = 0;  trans[5] = 1;  trans[6] = 0;  trans[7] = 0;
+    trans[8] = 0;  trans[9] = 0;  trans[10] = 1;  trans[11] = 0;
+    trans[12] = 0;  trans[13] = 0;  trans[14] = 0;  trans[15] = 1;
+
+    // handle the spaceOrigin first because it might contain
+    // more elements than the nrrd dimension
+    for (int i=0; i<dataH->nrrd->spaceDim; i++) {
+      double min = 0.0;
+
+      if (airExists(data->spaceOrigin[i])) 
+	min = data->spaceOrigin[i];
+
+      if ((int)min_pt.size() == i)
+	min_pt.push_back( min );
+      else
+	min_pt[i] = min;
+    }
+
+    // for each axis, determine the min/max/spacing or 
+    // spaceDirection vector
+    for (int i=data_off; i<dataH->nrrd->dim; i++, domain_axis++) {
+      // the origin may have all ready been set if it was coming
+      // from the spaceOrigin, otherwise use the min points
+      // we are guaranteed that both the spaceOrigin and min
+      // will not be set because we did a nrrdCheck
+      if (airExists(data->axis[i].min)) {
+	if ((int)min_pt.size() == domain_axis)
+	  min_pt.push_back( data->axis[i].min );
+	else
+	  min_pt[ domain_axis ] = data->axis[i].min;
       }
 
-      if (airExists(data->axis[i].spacing))
+      // get the spacing either from the spaceDirection vector
+      // via the nrrdSpacingCalculate call or the axis
+      // spacing field -- NOTE that only one of these
+      // should be set for each axis in order to have a valid nrrd
+      double spac = 0;
+      double *space_vec = new double[NRRD_SPACE_DIM_MAX];
+
+      int result = nrrdSpacingCalculate(data, i, &spac, space_vec);
+
+      if (result == nrrdSpacingStatusDirection && airExists(spac)) {
+	sp.push_back(spac);
+
+	// set rotation as columns in transform
+	if (domain_axis < 3) {
+	  trans[domain_axis] = data->axis[i].spaceDirection[0];
+	  
+	  if (data->spaceDim > 1) 
+	    trans[domain_axis+4] = data->axis[i].spaceDirection[1];
+	  
+	  if (data->spaceDim > 2) 
+	    trans[domain_axis+8] = data->axis[i].spaceDirection[2];
+	}
+      }
+      else if (airExists(data->axis[i].spacing)) {
 	sp.push_back(data->axis[i].spacing);
-      else
+      }
+      else 
 	sp.push_back(1.0);
 
       if (data->axis[i].center != nrrdCenterUnknown) 
 	data_center = data->axis[i].center;
+
+      delete space_vec;
     }
+
+    // Set origin/min to be the 4th column of the transform 
+    trans[3]  = min_pt[0];
+    trans[7]  = min_pt[1];
+    trans[11] = min_pt[2];
+
+    // we have axis aligned data if all values are 0 
+    // except on the diagonal
+    bool axis_aligned = true;
+    if( (Abs(trans[1] - 0.0) > 0.0001) ||
+	(Abs(trans[2] - 0.0) > 0.0001) ||
+	(Abs(trans[4] - 0.0) > 0.0001) ||
+	(Abs(trans[6] - 0.0) > 0.0001) ||
+	(Abs(trans[8] - 0.0) > 0.0001) ||
+	(Abs(trans[9] - 0.0) > 0.0001) ||
+	(Abs(trans[12] - 0.0) > 0.0001) ||
+	(Abs(trans[13] - 0.0) > 0.0001) ||
+	(Abs(trans[14] - 0.0) > 0.0001)) {
+      axis_aligned = false;
+    }
+    
+    // create the transform
+    Transform t1, t2;
+    string trans_string = "";
+
+    for(int i=0; i<16; i++) {
+      trans_string += to_string(trans[i]);
+      trans_string += " ";
+    }
+    
+    // If the nrrd had a transform as a property, and is 
+    // axis_aligned data, apply that transform to the field.
+    // Else if the data nrrd's transform property is different from what
+    // we just calculated, then issue a warning to the user.
+    string nrrd_trans_string;
+    bool has_nrrd_transform = false;
+    if (dataH->get_property("Transform", nrrd_trans_string) && 
+	nrrd_trans_string != "Unknown" &&
+	axis_aligned) {
+      has_nrrd_transform = true;
+      double t[16];
+      int old_index=0, new_index=0;
+      for(int i=0; i<16; i++) {
+	new_index = nrrd_trans_string.find(" ", old_index);
+	string temp = nrrd_trans_string.substr(old_index, new_index-old_index);
+	old_index = new_index+1;
+	string_to_double(temp, t[i]);
+      }
+      t2.set(t);
+    } else if (dataH->get_property("Transform", nrrd_trans_string) &&
+	       nrrd_trans_string != "Unknown" &&
+	       nrrd_trans_string != trans_string) {
+      warning("Data NRRD all ready has a transform property which is different from transform based on the Data NRRD's spaceDirections.  Using the transform based on the spaceDirection vectors.");
+    }
+
+    t1.set(trans);
 
     int mesh_off, pt_off;
 
@@ -878,61 +1013,104 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     topology_ = STRUCTURED;
     geometry_ = REGULAR;
 
+    // Use these as defaults for the min and max
+    // point.  They will be calculated later.  If the data
+    // is not axis aligned, it won't matter what they are 
+    // set to because the transform will overwrite them.
     Point minpt(0,0,0), maxpt(1,1,1);
-    string trans_str;
-    const bool has_transform = dataH->get_property("Transform", trans_str) &&
-      trans_str != "Unknown";
 
     switch (dataH->nrrd->dim-data_off) {
     case 1:
-      if (!has_transform)
       {
-        //get data from x axis and stuff into a Scanline
-        if (has_min_pt)
-        {
-          minpt = Point (data->axis[data_off].min, 0, 0);
-        }
-        maxpt = Point ((data->axis[data_off].size - pt_off) * sp[0] + minpt.x(), 0, 0);
+	//get data from x axis and stuff into a Scanline
+	if (!has_nrrd_transform) {
+	  minpt = Point (min_pt[0], 0, 0);
+	  maxpt = Point ((data->axis[data_off].size - pt_off) * 
+			 sp[0] + minpt.x(), 0, 0);
+	}
+
+	SLMesh *mesh = scinew SLMesh(data->axis[data_off].size + 
+				     mesh_off, minpt, maxpt );
+	btd = get_type_description((CrvLinearLgn<double>*)0);
+
+
+	// If not axis aligned, set the transform which
+	// contains the origin point and the axes spaceDirection vectors
+	// Otherwise, if it is axis aligned, but had a transform as a
+	// property of the nrrd, apply the transform
+	if (!axis_aligned)
+	  mesh->set_transform(t1);
+	else if (has_nrrd_transform)
+	  mesh->transform(t2);
+
+	mHandle = mesh;
       }
-      mHandle = scinew SLMesh( data->axis[data_off].size + mesh_off,
-			       minpt, maxpt );
       break;
 
     case 2:
-      if (!has_transform)
       {
-        //get data from x,y axes and stuff into an Image
-        if (has_min_pt)
-        {
-          minpt = Point ( data->axis[data_off].min, data->axis[data_off+1].min, 0);
-        }
-        maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
-                       (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 0);
+	//get data from x,y axes and stuff into an Image
+	if (!has_nrrd_transform) {
+	  minpt = Point ( min_pt[0], min_pt[1], 0);
+	  maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + 
+			 minpt.x(), 
+			 (data->axis[data_off+1].size - pt_off) * sp[1] + 
+			 minpt.y(), 0);
+	}
+
+	IMesh *mesh = scinew IMesh(data->axis[data_off  ].size + 
+				   mesh_off, 
+				   data->axis[data_off+1].size + 
+				   mesh_off, minpt, maxpt);
+	btd = get_type_description((QuadBilinearLgn<double>*)0);
+
+	// If not axis aligned, set the transform which
+	// contains the origin point and the axes spaceDirection vectors
+	// Otherwise, if it is axis aligned, but had a transform as a
+	// property of the nrrd, apply the transform
+	if (!axis_aligned)
+	  mesh->set_transform(t1);
+	else if (has_nrrd_transform)
+	  mesh->transform(t2);
+
+	mHandle = mesh;
       }
-      mHandle = scinew IMesh( data->axis[data_off  ].size + mesh_off, 
-			      data->axis[data_off+1].size + mesh_off, 
-			      minpt, maxpt);
       break;
 
     case 3:
-      if (!has_transform)
       {
-        //get data from x,y,z axes and stuff into a LatVol
-        if (has_min_pt)
-        {
-          minpt = Point ( data->axis[data_off  ].min,
-                          data->axis[data_off+1].min,
-                          data->axis[data_off+2].min);
-        }
-        maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
-                       (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 
-                       (data->axis[data_off+2].size - pt_off) * sp[2] + minpt.z());
-      }
+	//get data from x,y,z axes and stuff into a LatVol	
+	if (!has_nrrd_transform) {
+	  minpt = Point ( min_pt[0], min_pt[1], min_pt[2]);
+	  maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + 
+			 minpt.x(), 
+			 (data->axis[data_off+1].size - pt_off) * sp[1] + 
+			 minpt.y(), 
+			 (data->axis[data_off+2].size - pt_off) * sp[2] + 
+			 minpt.z());
+	}
 
-      mHandle = scinew LVMesh( data->axis[data_off  ].size + mesh_off, 
-			       data->axis[data_off+1].size + mesh_off, 
-			       data->axis[data_off+2].size + mesh_off, 
-			       minpt, maxpt );
+	
+	LVMesh *mesh = scinew LVMesh(data->axis[data_off  ].size + 
+				     mesh_off, 
+				     data->axis[data_off+1].size + 
+				     mesh_off, 
+				     data->axis[data_off+2].size + 
+				     mesh_off, 
+				     minpt, maxpt );
+	btd = get_type_description((HexTrilinearLgn<double>*)0);
+
+	// If not axis aligned, set the transform which
+	// contains the origin point and the axes spaceDirection vectors
+	// Otherwise, if it is axis aligned, but had a transform as a
+	// property of the nrrd, apply the transform
+	if (!axis_aligned)
+	  mesh->set_transform(t1);	
+	else if (has_nrrd_transform)
+	  mesh->transform(t2);
+
+	mHandle = mesh;
+      }			   
       break;
       
     default:
@@ -947,26 +1125,28 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     has_error_ = true;
     return 0;
   }
-  
-  
-  
-// Now create field based on the mesh created above and send it
+
+  const TypeDescription *dtd = 0;
+  //determine the basis type.
+  int data_center = nrrdCenterUnknown;
+  for (int a = 0; a<dataH->nrrd->dim; a++) {
+    if (dataH->nrrd->axis[a].center != nrrdCenterUnknown)
+      data_center = dataH->nrrd->axis[a].center;
+  }
+  if (data_center == nrrdCenterCell) {
+    btd = get_type_description((ConstantBasis<double>*) 0);
+  } 
+  // Now create field based on the mesh created above and send it
   const TypeDescription *mtd = mHandle->get_type_description();
-  
-  string fname = mtd->get_name();
-  string::size_type pos = fname.find( "Mesh" );
-  fname.replace( pos, 4, "Field" );
-  
   CompileInfoHandle ci;
+  ASSERTMSG(btd != 0, "Basis Type Description not valid");
 
   if (has_data_) {
-    ci = NrrdToFieldFieldAlgo::get_compile_info(mtd,
-						fname,
+    ci = NrrdToFieldFieldAlgo::get_compile_info(mtd, btd, dtd, 
 						dataH->nrrd->type, 
 						data_rank);
   } else {
-    ci = NrrdToFieldFieldAlgo::get_compile_info(mtd,
-						fname,
+    ci = NrrdToFieldFieldAlgo::get_compile_info(mtd, btd, dtd, 
 						pointsH->nrrd->type, 
 						data_rank);
   }
@@ -992,67 +1172,17 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 }
 
 void
- NrrdToField::tcl_command(GuiArgs& args, void* userdata)
+NrrdToField::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
 
-void get_nrrd_compile_type( const unsigned int type,
-			    string & typeStr,
-			    string & typeName )
-{
-  switch (type) {
-  case nrrdTypeChar :  
-    typeStr = string("char");
-    typeName = string("char");
-    break;
-  case nrrdTypeUChar : 
-    typeStr = string("unsigned char");
-    typeName = string("unsigned_char");
-    break;
-  case nrrdTypeShort : 
-    typeStr = string("short");
-    typeName = string("short");
-    break;
-  case nrrdTypeUShort :
-    typeStr = string("unsigned short");
-    typeName = string("unsigned_short");
-    break;
-  case nrrdTypeInt : 
-    typeStr = string("int");
-    typeName = string("int");
-    break;
-  case nrrdTypeUInt :  
-    typeStr = string("unsigned int");
-    typeName = string("unsigned_int");
-    break;
-  case nrrdTypeLLong : 
-    typeStr = string("long long");
-    typeName = string("long_long");
-    break;
-  case nrrdTypeULLong :
-    typeStr = string("unsigned long long");
-    typeName = string("unsigned_long_long");
-    break;
-  case nrrdTypeFloat :
-    typeStr = string("float");
-    typeName = string("float");
-    break;
-  case nrrdTypeDouble :
-    typeStr = string("double");
-    typeName = string("double");
-    break;
-  default:
-    typeStr = string("float");
-    typeName = string("float");
-  }
-}
 
 CompileInfoHandle
 NrrdToFieldMeshAlgo::get_compile_info( const string topoStr,
-					      const TypeDescription *mtd,
-					      const unsigned int ptype,
-					      const unsigned int ctype)
+				       const TypeDescription *mtd,
+				       const unsigned int ptype,
+				       const unsigned int ctype)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -1082,9 +1212,10 @@ NrrdToFieldMeshAlgo::get_compile_info( const string topoStr,
 
 CompileInfoHandle
 NrrdToFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
-					      const string fname,
-					      const unsigned int type,
-					      int rank)
+				       const TypeDescription *btd,
+				       const TypeDescription *dtd,
+				       const unsigned int type,
+				       int rank)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -1096,25 +1227,30 @@ NrrdToFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
   
   string extension;
   switch (rank)
-    {
-    case 6:
-      extension = "Tensor";
-      break;
-    case 7:
-      extension = "Tensor";
-      break;
-    case 9:
-      extension = "Tensor";
-      break;
+  {
+  case 6:
+    extension = "Tensor";
+    break;
+  case 7:
+    extension = "Tensor";
+    break;
+  case 9:
+    extension = "Tensor";
+    break;
       
-    case 3:
-      extension = "Vector";
-      break;
+  case 3:
+    extension = "Vector";
+    break;
       
-    default:
-      extension = "Scalar";
-      break;
-    }
+  default:
+    extension = "Scalar";
+    break;
+  }
+
+  string dtype_str = rank == 1 ? typeStr : extension;
+  string fname = "GenericField<" + mtd->get_name() + ", " + 
+    btd->get_similar_name(dtype_str, 0) + ", " + 
+    dtd->get_similar_name(dtype_str, 0) + " >";
   
   CompileInfo *rval = 
     scinew CompileInfo(base_class_name + extension + "." +
@@ -1122,14 +1258,38 @@ NrrdToFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
 		       typeName + ".",
                        base_class_name,
                        base_class_name + extension, 
-		       fname +
-		       "< " + (rank==1 ? typeStr : extension) + " >" + ", " + 
+		       fname + ", " + 
 		       mtd->get_name() + ", " + 
 		       typeStr );
   
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   rval->add_namespace("SCITeem");
+
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/TetLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/PrismLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/HexTrilinearLgn.h");
+
+  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/TetVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/PrismVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/LatVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/ImageMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/ScanlineMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructHexVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructQuadSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructCurveMesh.h");
+  rval->add_container_include("../src/Core/Containers/FData.h");
+  rval->add_field_include("../src/Core/Datatypes/GenericField.h");
+
   mtd->fill_compile_info(rval);
   return rval;
 }

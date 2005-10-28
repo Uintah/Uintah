@@ -310,7 +310,8 @@ public:
   
    //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mtd,
-					    const std::string fname,
+					    const TypeDescription *btd,
+					    const TypeDescription *dtd,
 					    const unsigned int ntype,
 					    int rank);
 };
@@ -350,7 +351,7 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell) {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
       typename FIELD::mesh_type::Elem::iterator ielemItr;
       
       imesh->begin( ielemItr );
@@ -377,7 +378,7 @@ execute(MeshHandle& mHandle,
       }    
     }
     else {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
       typename FIELD::mesh_type::Node::iterator inodeItr;
       
       imesh->begin( inodeItr );
@@ -405,7 +406,7 @@ execute(MeshHandle& mHandle,
 
     }
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh);
   }
   
   return FieldHandle( ifield );
@@ -434,7 +435,7 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell) {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
 
       typename FIELD::mesh_type::Elem::iterator ielemItr, end;
       
@@ -451,7 +452,7 @@ execute(MeshHandle& mHandle,
       }
     }
     else {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
 
       typename FIELD::mesh_type::Node::iterator inodeItr, end;
       
@@ -468,30 +469,10 @@ execute(MeshHandle& mHandle,
       }
     }
 
-    // set transform if one of the nrrd properties
     fH = ifield;
-    const string meshstr =
-      fH->get_type_description(0)->get_name().substr(0, 6);
-    
-    if (!(imesh->is_editable() && meshstr != "Struct"))
-      {
-	string trans_string;
-	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
-	  double t[16];
-	  Transform trans;
-	  int old_index=0, new_index=0;
-	  for(int i=0; i<16; i++) {
-	    new_index = trans_string.find(" ", old_index);
-	    string temp = trans_string.substr(old_index, new_index-old_index);
-	    old_index = new_index+1;
-	    string_to_double(temp, t[i]);
-	  }
-	  trans.set(t);
-	  imesh->transform(trans);
-	} 
-      }	        
+
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh);
     fH = ifield;
   }
   
@@ -536,7 +517,7 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell) {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
 
       typename FIELD::mesh_type::Elem::iterator ielemItr;
       
@@ -565,7 +546,7 @@ execute(MeshHandle& mHandle,
       }
     }
     else {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
 
       typename FIELD::mesh_type::Node::iterator inodeItr;
       
@@ -594,7 +575,7 @@ execute(MeshHandle& mHandle,
       }
     }
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh);
   }
 
   return FieldHandle( ifield );
@@ -621,7 +602,7 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell) {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
 
       typename FIELD::mesh_type::Elem::iterator ielemItr, end;
       
@@ -645,7 +626,7 @@ execute(MeshHandle& mHandle,
 
     }
     else {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
 
       typename FIELD::mesh_type::Node::iterator inodeItr, end;
       
@@ -670,28 +651,8 @@ execute(MeshHandle& mHandle,
 
     // set transform if one of the nrrd properties
     fH = ifield;
-    const string meshstr =
-      fH->get_type_description(0)->get_name().substr(0, 6);
-    
-    if (!(imesh->is_editable() && meshstr != "Struct"))
-      {
-	string trans_string;
-	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
-	  double t[16];
-	  Transform trans;
-	  int old_index=0, new_index=0;
-	  for(int i=0; i<16; i++) {
-	    new_index = trans_string.find(" ", old_index);
-	    string temp = trans_string.substr(old_index, new_index-old_index);
-	    old_index = new_index+1;
-	    string_to_double(temp, t[i]);
-	  }
-	  trans.set(t);
-	  imesh->transform(trans);
-	} 
-      }	  
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh);
     fH = ifield;
   }
 
@@ -736,7 +697,7 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell) {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
 
       typename FIELD::mesh_type::Elem::iterator iter, end;
       
@@ -936,7 +897,7 @@ execute(MeshHandle& mHandle,
       }
     }
     else {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
       
       typename FIELD::mesh_type::Node::iterator iter, end;
       
@@ -1136,7 +1097,7 @@ execute(MeshHandle& mHandle,
       }
     }
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh);
   }
   return FieldHandle( ifield );
 }
@@ -1160,7 +1121,7 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell) {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
 
       typename FIELD::mesh_type::Elem::iterator iter, end;
       
@@ -1335,7 +1296,7 @@ execute(MeshHandle& mHandle,
       }    
     }
     else {
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh);
       
       typename FIELD::mesh_type::Node::iterator iter, end;
       
@@ -1512,28 +1473,8 @@ execute(MeshHandle& mHandle,
 
     // set transform if one of the nrrd properties
     fH = ifield;
-    const string meshstr =
-      fH->get_type_description(0)->get_name().substr(0, 6);
-    
-    if (!(imesh->is_editable() && meshstr != "Struct"))
-      {
-	string trans_string;
-	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
-	  double t[16];
-	  Transform trans;
-	  int old_index=0, new_index=0;
-	  for(int i=0; i<16; i++) {
-	    new_index = trans_string.find(" ", old_index);
-	    string temp = trans_string.substr(old_index, new_index-old_index);
-	    old_index = new_index+1;
-	    string_to_double(temp, t[i]);
-	  }
-	  trans.set(t);
-	  imesh->transform(trans);
-	} 
-      }	        
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh);
     fH = ifield;
   }
   return fH;
