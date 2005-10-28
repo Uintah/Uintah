@@ -1272,6 +1272,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->rho_CCLabel,        gn);    
   task->requires( Task::NewDW, lb->speedSound_CCLabel, gn);
   task->requires( Task::NewDW, lb->sumKappaLabel,      press_matl,oims,gn);
+  task->requires( Task::NewDW, lb->press_equil_CCLabel,press_matl,oims,gn);
   //__________________________________
   if(d_models.size() > 0){
     task->requires(Task::NewDW, lb->modelVol_srcLabel,  gn);
