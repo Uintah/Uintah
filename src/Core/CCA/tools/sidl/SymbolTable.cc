@@ -32,18 +32,15 @@
 #include <Core/CCA/tools/sidl/SymbolTable.h>
 #include <iostream>
 
-using std::string;
-using std::map;
-using std::cerr;
 
-SymbolTable::SymbolTable(SymbolTable* parent, const string& name)
+SymbolTable::SymbolTable(SymbolTable* parent, const std::string& name)
   : parent(parent), name(name)
 {
 }
 
 SymbolTable::~SymbolTable()
 {
-    map<string, Symbol*>::iterator iter = symbols.begin();
+    std::map<std::string, Symbol*>::iterator iter = symbols.begin();
     while (iter != symbols.end()) {
         delete iter->second;
         symbols.erase(iter);
@@ -51,9 +48,9 @@ SymbolTable::~SymbolTable()
     }
 }
 
-Symbol* SymbolTable::lookup(const string& name, bool recurse) const
+Symbol* SymbolTable::lookup(const std::string& name, bool recurse) const
 {
-  map<string, Symbol*>::const_iterator iter=symbols.find(name);
+  std::map<std::string, Symbol*>::const_iterator iter=symbols.find(name);
   if(iter == symbols.end()) {
     if(recurse && parent) {
       return parent->lookup(name, true);
@@ -76,7 +73,7 @@ void Symbol::setType(Symbol::Type typ)
   type=typ;
 }
 
-Symbol::Symbol(const string& name)
+Symbol::Symbol(const std::string& name)
   : name(name), symtab(0)
 {
   definition=0;
@@ -88,7 +85,7 @@ Symbol::~Symbol()
 {
 }
 
-const string& Symbol::getName() const
+const std::string& Symbol::getName() const
 {
   return name;
 }
@@ -171,7 +168,7 @@ Enumerator* Symbol::getEnumerator() const
   return enumerator;
 }
 
-string SymbolTable::fullname() const
+std::string SymbolTable::fullname() const
 {
   if (parent) {
     return parent->fullname()+"."+name;
@@ -180,10 +177,10 @@ string SymbolTable::fullname() const
   }
 }
 
-string SymbolTable::cppfullname() const
+std::string SymbolTable::cppfullname() const
 {
     if (parent) {
-        string parent_name = parent->cppfullname();
+        std::string parent_name = parent->cppfullname();
         if ( parent_name == "" ) {
             return name;
         } else {
@@ -194,12 +191,12 @@ string SymbolTable::cppfullname() const
     }
 }
 
-string Symbol::fullname() const
+std::string Symbol::fullname() const
 {
   return symtab->fullname()+"."+name;
 }
 
-string Symbol::cppfullname(SymbolTable* forstab) const
+std::string Symbol::cppfullname(SymbolTable* forstab) const
 {
   if (forstab == symtab) {
     return name;
@@ -211,7 +208,7 @@ string Symbol::cppfullname(SymbolTable* forstab) const
 void Symbol::setSymbolTable(SymbolTable* stab)
 {
   if (symtab) {
-    cerr << "Error: SymbolTable set twice for symbol!\n";
+    std::cerr << "Error: SymbolTable set twice for symbol!\n";
     exit(1);
   }
   symtab=stab;

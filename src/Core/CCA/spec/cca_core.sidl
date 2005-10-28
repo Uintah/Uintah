@@ -145,6 +145,7 @@ package sci {
 	// factories
 	void addComponentClassFactory( in ComponentClassFactory );
 	bool addFrameworkServiceFactory(in ServiceFactory);
+	void removeFrameworkServiceFactory(in string serviceName);
       }
       
     } // core

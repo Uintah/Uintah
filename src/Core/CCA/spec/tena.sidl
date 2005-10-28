@@ -20,8 +20,7 @@
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OT79
-HER
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
@@ -31,24 +30,17 @@ package sci {
   	
   package cca {
     
-    package plume {
+    package tena {
 
-      interface PortComponent extends Port, Component
+      class Execution {}
+
+      interface TENAService extends Port 
       {
+	Execution joinExecution( in string name );
       }
-
-
-      interface CCAComponentClassDescription
-	extends ComponentClassDescription
-      {
-	string getLibrary();
-      }
-
-      interface PlumeFramework extends distributed.DistributedFramework
-      {
-      }
-
-    } // plume
+      
+      
+    } // tena
 
   } // cca
 

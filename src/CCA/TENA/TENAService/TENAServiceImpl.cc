@@ -28,69 +28,71 @@
 
 
 /*
- *  ServiceRegistryFactoryBase.code: 
+ *  TENAServiceImpl.cc: 
  *
  *  Written by:
  *   Yarden Livnat
- *   SCI Institute
+ *   SCI Institue
  *   University of Utah
- *   Sept 2005
+ *   October 2005
  *
  */
 
+#include <Core/CCA/spec/sci_sidl.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/Core/PortInfoImpl.h>
-#include <SCIRun/Core/ServiceRegistryFactoryBase.h>
-#include <SCIRun/Core/ServiceRegistryPortBase.h>
-#include <SCIRun/Core/ServiceRegistryCoordinator.h>
+
+#include <TENA/Middleware/config.h>
+#include <CCA/TENA/TENAService/TENAServiceImpl.h>
+#include <CCA/TENA/TENAService/ExecutionImpl.h>
 
 namespace SCIRun {
   
   using namespace sci::cca;
   using namespace sci::cca::core;
-  
-  template<class Interface>
-  ServiceRegistryFactoryBase<Interface>::ServiceRegistryFactoryBase(const CoreFramework::pointer &framework,
-								    const std::string &serviceName)
-    : framework(framework), serviceName(serviceName), registry(0), uses(0),  lock("ServiceRegistryFactory")
+  using namespace sci::cca::tena;
+
+  struct TENAServiceInfo {
+    TENAServiceInfo() {}
+
+    TENA::Middleware::RuntimePtr runtime;
+    TENA::Middleware::Configuration configuration;
+  };
+
+  TENAServiceImpl::TENAServiceImpl()
+    : initialized(false), lock("TENAServiceImpl::lock")
   {
+    info = new TENAServiceInfo;
   }
 
-  template<class Interface>
-  ServiceRegistryFactoryBase<Interface>::~ServiceRegistryFactoryBase()
+  TENAServiceImpl::~TENAServiceImpl()
+  {
+    // FIXME [yarden]: do we need to inform the TENA middleware ?
+    delete info;
+  }
+  
+  bool TENAServiceImpl::setConfiguration()
+  {
+    // FIXME [yarden]: not implemented yet.
+    return false;
+  }
+
+  Execution::pointer TENAServiceImpl::joinExecution(const std::string &name)
   {
     Guard guard(&lock);
 
-    delete registry;
-    framework = 0;
-  }
-  
-  template<class Interface>
-  PortInfo::pointer 
-  ServiceRegistryFactoryBase<Interface>::getService(const std::string &serviceName, 
-						    const ComponentInfo::pointer &requestor)
-  {
-    Guard gurd(&lock);
-    if ( !registry )
-      registry = new ServiceRegistryCoordinator(framework);
+    if (!initialized) {
+      info->runtime = TENA::Middleware::init(info->configuration);
+      initialized = true;
+    }
     
-    uses++;
-    return new PortInfoImpl( "ServiceRegistryPort",
-			     "cca.ports.ServiceRegistry",
-			     0,
-			     new ServiceRegistryPortBase<ServiceRegistry>( registry, requestor),
-			     ProvidePort);
-  }
-  
+    ExecutionsMap::iterator iter = executions.find(name);
+    if ( iter != executions.end() )
+      return iter->second;
 
-  template<class Interface>
-  void 
-  ServiceRegistryFactoryBase<Interface>::releaseService(const std::string &servicePortName)
-  {
-    Guard guard(&lock);
-    uses--;
-    // there is no need to clean up in this case
-    
+    Execution::pointer exec = new ExecutionImpl( info->runtime->joinExecution(name) );
+    executions[name] = exec;
+
+    return exec;
   }
   
 } // end namespace SCIRun

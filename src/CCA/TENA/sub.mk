@@ -29,12 +29,9 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA
+SRCDIR   := CCA/TENA
 
-SUBDIRS := $(SRCDIR)/Core \
-	$(SRCDIR)/Plume \
-	$(SRCDIR)/TENA \
+SUBDIRS := \
+	$(SRCDIR)/TENAService \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
-
-

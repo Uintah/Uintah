@@ -20,37 +20,62 @@
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OT79
-HER
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
 */
 
-package sci {
-  	
-  package cca {
-    
-    package plume {
 
-      interface PortComponent extends Port, Component
-      {
-      }
+/*
+ *  TENAServiceImpl.h: Implementation of the CCA TENAService interface for SCIRun
+ *
+ *  Written by:
+ *   Yarden Livnat
+ *   SCI Institute
+ *   University of Utah
+ *   October 2005
+ *
+ */
 
+#ifndef CCA_TENA_TENAServiceImpl_h
+#define CCA_TENA_TENAServiceImpl_h
 
-      interface CCAComponentClassDescription
-	extends ComponentClassDescription
-      {
-	string getLibrary();
-      }
+#include <Core/Thread/Mutex.h>
 
-      interface PlumeFramework extends distributed.DistributedFramework
-      {
-      }
+namespace SCIRun {
+  
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+  using namespace sci::cca::tena;
 
-    } // plume
+  struct TENAServiceInfo;
 
-  } // cca
+  /**
+   * \class TENAServiceImpl
+   *
+   */
+  
+  class TENAServiceImpl : public TENAService
+  {
+  public:
+    TENAServiceImpl();
+    virtual ~TENAServiceImpl();
+  
+    virtual bool setConfiguration();
 
-} //sci
+    virtual Execution::pointer joinExecution(const std::string &name);
 
+  protected:
+    typedef std::map<std::string, Execution::pointer> ExecutionsMap;
+    ExecutionsMap executions;
+
+    bool initialized;
+    TENAServiceInfo *info;
+    Mutex lock;
+
+    TENAServiceImpl(const TENAServiceImpl &);
+  };
+}
+
+#endif

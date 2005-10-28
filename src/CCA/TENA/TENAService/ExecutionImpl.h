@@ -20,37 +20,49 @@
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OT79
-HER
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
 */
 
-package sci {
-  	
-  package cca {
-    
-    package plume {
 
-      interface PortComponent extends Port, Component
-      {
-      }
+/*
+ *  ExecutionImpl.h: Implementation of the CCA Execution interface for SCIRun
+ *
+ *  Written by:
+ *   Yarden Livnat
+ *   SCI Institute
+ *   University of Utah
+ *   October 2005
+ *
+ */
+
+#ifndef CCA_TENA_ExecutionImpl_h
+#define CCA_TENA_ExecutionImpl_h
 
 
-      interface CCAComponentClassDescription
-	extends ComponentClassDescription
-      {
-	string getLibrary();
-      }
+namespace SCIRun {
+  
+  using namespace sci::cca::tena;
 
-      interface PlumeFramework extends distributed.DistributedFramework
-      {
-      }
+  /**
+   * \class ExecutionImpl
+   *
+   */
+  
+  class ExecutionImpl : public Execution
+  {
+  public:
+    ExecutionImpl(TENA::Middleware::ExecutionPtr execution) : execution(execution) {}
+    virtual ~ExecutionImpl() {}
 
-    } // plume
+    virtual TENA::Middleware::ExecutionPtr getExecution() { return execution; }
 
-  } // cca
+  protected:
+    TENA::Middleware::ExecutionPtr execution;
+    ExecutionImpl(const ExecutionImpl &);
+  };
+}
 
-} //sci
-
+#endif
