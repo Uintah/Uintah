@@ -87,7 +87,7 @@ MaskLatticeAlgoT<FDST, LDST, FSRC, LSRC>::execute(FieldHandle field_h)
   Transform trans = inmesh->get_transform();
   mesh->set_transform(trans);
   
-  FDST *ofield = scinew FDST(mesh, ifield->basis_order());
+  FDST *ofield = scinew FDST(mesh);
 
   typename LDST::iterator iter, iend;
   mesh->begin(iter);
