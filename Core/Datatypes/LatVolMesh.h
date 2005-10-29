@@ -576,43 +576,26 @@ public:
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords, 
 		       typename Elem::index_type ci, 
-		       typename Edge::index_type ei, 
+		       unsigned which_edge, 
 		       unsigned div_per_unit) const
   {    
     // Needs to match unit_edges in Basis/HexTrilinearLgn.cc
     // compare get_nodes order to the basis order
-    typename Edge::array_type edges;
-    get_edges(edges, ci);
-    unsigned count = 0;
-    typename Edge::array_type::iterator iter = edges.begin();
-    while (iter != edges.end()) {
-      if (ei == *iter++) break;
-      ++count;
-    }
-    int emap[] = {0,2,8,10,3,1,11,9,4,5,7,6};
-    basis_.approx_edge(emap[count], div_per_unit, coords);
+    int emap[] = {0, 2, 8, 10, 3, 1, 11, 9, 4, 5, 7, 6};
+    basis_.approx_edge(emap[which_edge], div_per_unit, coords);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
   void pwl_approx_face(vector<vector<vector<double> > > &coords, 
 		       typename Elem::index_type ci, 
-		       typename Face::index_type fi, 
+		       unsigned which_face, 
 		       unsigned div_per_unit) const
   {
     // Needs to match unit_edges in Basis/HexTrilinearLgn.cc
     // compare get_nodes order to the basis order
-
-    typename Face::array_type faces;
-    get_faces(faces, ci);
-    unsigned count = 0;
-    typename Face::array_type::iterator iter = faces.begin();
-    while (iter != faces.end()) {
-      if (fi == *iter++) break;
-      ++count;
-    }
-    int fmap[] = {0,5,4,2,1,3};
-    basis_.approx_face(fmap[count], div_per_unit, coords);
+    int fmap[] = {0, 5, 4, 2, 1, 3};
+    basis_.approx_face(fmap[which_face], div_per_unit, coords);
   }
   
   bool get_coords(vector<double> &coords, 

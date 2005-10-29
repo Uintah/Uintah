@@ -779,27 +779,27 @@ public:
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords, 
 		       typename Cell::index_type ci, 
-		       typename Edge::index_type ei, 
+		       unsigned which_edge, 
 		       unsigned div_per_unit) const
   {
     // Needs to match UnitEdges in Basis/TetLinearLgn.cc 
     // compare get_nodes order to the basis order
     // map mesh order to basis order
     
-    int basis_idx[] = {0, 2, 3, 1, 5, 4};
-    basis_.approx_edge(basis_idx[ei%6], div_per_unit, coords); 
+    int emap[] = {0, 2, 3, 1, 5, 4};
+    basis_.approx_edge(emap[which_edge], div_per_unit, coords); 
   }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
   void pwl_approx_face(vector<vector<vector<double> > > &coords, 
 		       typename Cell::index_type ci, 
-		       typename Face::index_type fi, 
+		       unsigned which_face, 
 		       unsigned div_per_unit) const
   {
     // Needs to match UnitEdges in Basis/TetLinearLgn.cc 
     // compare get_nodes order to the basis order
-    basis_.approx_face(fi%4, div_per_unit, coords); 
+    basis_.approx_face(which_face, div_per_unit, coords); 
   }
 
   bool  get_coords(vector<double> &coords, 

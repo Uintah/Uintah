@@ -863,20 +863,20 @@ public:
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords, 
 		       typename Elem::index_type ci, 
-		       typename Edge::index_type ei, 
+		       unsigned which_edge, 
 		       unsigned div_per_unit) const
   {    
-    LatVolMesh<Basis>::pwl_approx_edge(coords, ci, ei, div_per_unit);
+    LatVolMesh<Basis>::pwl_approx_edge(coords, ci, which_edge, div_per_unit);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
   void pwl_approx_face(vector<vector<vector<double> > > &coords, 
 		       typename Elem::index_type ci, 
-		       typename Face::index_type fi, 
+		       unsigned which_face, 
 		       unsigned div_per_unit) const
   {
-    LatVolMesh<Basis>::pwl_approx_face(coords, ci, fi, div_per_unit);
+    LatVolMesh<Basis>::pwl_approx_face(coords, ci, which_face, div_per_unit);
   }
   
   bool get_coords(vector<double> &coords, 

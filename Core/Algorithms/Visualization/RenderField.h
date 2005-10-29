@@ -746,6 +746,7 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 
     typename Fld::mesh_type::Edge::array_type::iterator edge_iter;
     edge_iter = edges.begin();
+    int ecount = 0;
     while (edge_iter != edges.end()) {
 
       typename Fld::mesh_type::Node::array_type nodes;
@@ -761,13 +762,16 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
       typename edge_ht_t::const_iterator it = rendered_edges.find(pstr.str());
 
       if (it != rendered_edges.end()) {
+	++ecount;
 	continue;
       } else {
 	rendered_edges.insert(pstr.str());
       }
-    
+      // following print is useful for debugging edge ordering
+      //      cout << "elem: " << *eiter << " count " << ecount 
+      //	   << " edge" << eidx << std::endl;
       vector<vector<double> > coords;
-      mesh->pwl_approx_edge(coords, *eiter, eidx, div);
+      mesh->pwl_approx_edge(coords, *eiter, ecount++, div);
       vector<vector<double> >::iterator coord_iter = coords.begin();
       do {
 	vector<double> &c0 = *coord_iter++;
@@ -1027,6 +1031,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 
     typename Fld::mesh_type::Face::array_type::iterator face_iter;
     face_iter = face_indecies.begin();
+    int fcount = 0;
     while (face_iter != face_indecies.end()) {
       typename Fld::mesh_type::Node::array_type nodes;
       typename Fld::mesh_type::Face::index_type fidx = *face_iter++;
@@ -1041,17 +1046,17 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
       typename face_ht_t::const_iterator it = rendered_faces.find(pstr.str());
 
       if (it != rendered_faces.end()) {
+	++fcount;
 	continue;
       } else {
 	rendered_faces.insert(pstr.str());
       }
 
-
       //coords organized as scanlines of quad/tri strips.
       vector<vector<vector<double> > > coords;
-      mesh->pwl_approx_face(coords, *eiter, fidx, div);
-      const int face_sz = mesh->get_basis().vertices_of_face();
+      mesh->pwl_approx_face(coords, *eiter, fcount++, div);
 
+      const int face_sz = mesh->get_basis().vertices_of_face();
       vector<vector<vector<double> > >::iterator coord_iter = coords.begin();
       while (coord_iter != coords.end()) {
 	vector<vector<double> > &sl = *coord_iter++;

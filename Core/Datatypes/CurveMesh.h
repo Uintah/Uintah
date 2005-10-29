@@ -224,11 +224,11 @@ public:
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords, 
 		       typename Elem::index_type, 
-		       typename Edge::index_type, 
+		       unsigned which_edge, 
 		       unsigned div_per_unit) const
   {
     // only one edge in the unit edge.
-    basis_.approx_edge(0, div_per_unit, coords); 
+    basis_.approx_edge(which_edge, div_per_unit, coords); 
   }
 
   //! Generate the list of points that make up a sufficiently accurate
@@ -514,7 +514,7 @@ CurveMesh<Basis>::get_size(typename Edge::index_type idx) const
   vector<Point> pledge;
   vector<vector<double> > coords;
   // Perhaps there is a better choice for the number of divisions.
-  pwl_approx_edge(coords, idx, idx, 5);
+  pwl_approx_edge(coords, idx, 0, 5);
   
   double total = 0.0L;
   vector<vector<double> >::iterator iter = coords.begin();
