@@ -247,15 +247,15 @@ public:
 
   Basis& get_basis() { return basis_; }
 
-  void pwl_approx_edge(vector<vector<double> > &coords, 
-		       typename Elem::index_type ci, 
-		       typename Edge::index_type ei, 
-		       unsigned div_per_unit) const
+  void pwl_approx_edge(vector<vector<double> > &, 
+		       typename Elem::index_type, 
+		       unsigned, 
+		       unsigned) const
   {}
 
-  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
-		       typename Elem::index_type ci, 
-		       typename Face::index_type ei, 
+  void pwl_approx_face(vector<vector<vector<double> > > &, 
+		       typename Elem::index_type, 
+		       unsigned, 
 		       unsigned div_per_unit) const
   {}
 

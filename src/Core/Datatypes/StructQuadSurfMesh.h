@@ -254,22 +254,13 @@ public:
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords, 
 		       typename ImageMesh<Basis>::Elem::index_type ci, 
-		       typename ImageMesh<Basis>::Edge::index_type ei, 
+		       unsigned which_edge, 
 		       unsigned div_per_unit) const
   {    
     // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
     // compare get_nodes order to the basis order
-    int basis_emap[] = {0, 2, 3, 1}; 
-    typename ImageMesh<Basis>::Edge::array_type edges;
-    get_edges(edges, ci);
-    unsigned count = 0;
-    typename ImageMesh<Basis>::Edge::array_type::iterator iter = edges.begin();
-    while (iter != edges.end()) {
-      if (ei == *iter++) break;
-      ++count;
-    }
-
-    this->basis_.approx_edge(basis_emap[count], div_per_unit, coords); 
+    int emap[] = {0, 2, 3, 1}; 
+    this->basis_.approx_edge(emap[which_edge], div_per_unit, coords); 
   }
 
 

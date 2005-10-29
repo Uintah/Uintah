@@ -286,23 +286,12 @@ public:
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords, 
 		       typename Elem::index_type ci, 
-		       typename Edge::index_type ei, 
+		       unsigned, 
 		       unsigned div_per_unit) const
   {    
     // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
     // compare get_nodes order to the basis order
-
-    //FIX_ME MC delete this comment when this is verified.
-
-    typename Edge::array_type edges;
-    get_edges(edges, ci);
-    unsigned count = 0;
-    typename Edge::array_type::iterator iter = edges.begin();
-    while (iter != edges.end()) {
-      if (ei == *iter++) break;
-      ++count;
-    }
-    basis_.approx_edge(count, div_per_unit, coords); 
+    basis_.approx_edge(0, div_per_unit, coords); 
   }
 
   //! Generate the list of points that make up a sufficiently accurate

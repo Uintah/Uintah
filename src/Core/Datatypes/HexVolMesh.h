@@ -468,60 +468,25 @@ public:
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords, 
 		       typename Cell::index_type ci, 
-		       typename Edge::index_type ei, 
+		       unsigned which_edge, 
 		       unsigned div_per_unit) const
   {
-    typename Edge::array_type edges;
-    get_edges(edges, ci);
-    PEdge e = edges_[ei];
-    unsigned count = 0;
-    typename Edge::array_type::iterator iter = edges.begin();
-    while (iter != edges.end()) {
-      if (e == edges_[*iter++]) break;
-      ++count;
-    }
-    basis_.approx_edge(count, div_per_unit, coords); 
+    unsigned emap[] = {0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7};
+    basis_.approx_edge(emap[which_edge], div_per_unit, coords); 
   }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
   void pwl_approx_face(vector<vector<vector<double> > > &coords, 
 		       typename Cell::index_type ci, 
-		       typename Face::index_type ei, 
+		       unsigned which_face, 
 		       unsigned div_per_unit) const
   {
-    typename Face::array_type faces;
-    get_faces(faces, ci);
-    PFace e = faces_[ei];
-    unsigned count = 0;
-    typename Face::array_type::iterator iter = faces.begin();
-    while (iter != faces.end()) {
-      if (e == faces_[*iter++]) break;
-      ++count;
-    }
+
     // map the order we have faces to the way the basis expects it for hexes.
     // this needs to be unified for all hex types to avoid this switch.
-    switch (count) {
-    case 0:      
-      break;
-    case 1:
-      count = 5;
-      break;
-    case 2:
-      count = 1;
-      break;
-    case 3:
-      //count = 3;
-      break;
-    case 4:
-      //count = 2;
-      break;
-    case 5:
-      count = 2;
-      break;
-    };
-    
-    basis_.approx_face(count, div_per_unit, coords); 
+    unsigned fmap[] = {0, 5, 1, 3, 4, 2};
+    basis_.approx_face(fmap[which_face], div_per_unit, coords); 
   }
 
   bool get_coords(vector<double> &coords, 
@@ -1347,7 +1312,8 @@ HexVolMesh<Basis>::get_edges(typename Edge::array_type &array, typename Face::in
 
 template <class Basis>
 void
-HexVolMesh<Basis>::get_edges(typename Edge::array_type &array, typename Cell::index_type idx) const
+HexVolMesh<Basis>::get_edges(typename Edge::array_type &array, 
+			     typename Cell::index_type idx) const
 {
   array.clear();
   const int off = idx * 8;

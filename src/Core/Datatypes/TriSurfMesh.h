@@ -362,29 +362,20 @@ public:
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords, 
 		       typename Elem::index_type ci, 
-		       typename Edge::index_type ei, 
+		       unsigned which_edge, 
 		       unsigned div_per_unit) const
   {    
     // Needs to match unit_edges in Basis/TriLinearLgn.cc 
     // compare get_nodes order to the basis order
-    int basis_idx[] = {1, 2, 0};
-    
-    typename Edge::array_type edges;
-    get_edges(edges, ci);
-    unsigned count = 0;
-    typename Edge::array_type::iterator iter = edges.begin();
-    while (iter != edges.end()) {
-      if (ei == *iter++) break;
-      ++count;
-    }
-    basis_.approx_edge(basis_idx[count], div_per_unit, coords); 
+    int emap[] = {1, 2, 0};
+    basis_.approx_edge(emap[which_edge], div_per_unit, coords); 
   }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
   void pwl_approx_face(vector<vector<vector<double> > > &coords, 
 		       typename Elem::index_type ci, 
-		       typename Face::index_type fi, 
+		       unsigned, 
 		       unsigned div_per_unit) const
   {
     basis_.approx_face(0, div_per_unit, coords);
