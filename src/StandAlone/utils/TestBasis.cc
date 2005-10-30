@@ -83,10 +83,6 @@ double CrvIntegral(FIELD *field, FBASIS& f)
 { 
   vector<double> coords(1);
 
-  typename FIELD::fdata_type &d = field->fdata();
-  for(int i=0; i<f.number_of_vertices(); i++)
-    d[i] = 1;
-
   double vol=0;
   for(int i=0; i<f.GaussianNum; i++) {
     double val;
@@ -102,10 +98,6 @@ template<class FIELD, class FBASIS>
 double FaceIntegral(FIELD *field, FBASIS& f)
 { 
   vector<double> coords(2);
-
-  typename FIELD::fdata_type &d = field->fdata();
-  for(int i=0; i<f.number_of_vertices(); i++)
-    d[i] = 1;
 
   double vol=0;
   for(int i=0; i<f.GaussianNum; i++) {
@@ -123,10 +115,6 @@ template<class FIELD, class FBASIS>
 double CellIntegral(FIELD *field, FBASIS& f)
 { 
   vector<double> coords(3);
-
-  typename FIELD::fdata_type &d = field->fdata();
-  for(int i=0; i<f.number_of_vertices(); i++)
-    d[i] = 1;
 
   double vol=0;
   for(int i=0; i<f.GaussianNum; i++) {
@@ -188,8 +176,11 @@ void Test1D()
   typedef GenericField<MESH, FBASIS, vector<double> > FIELD;
   FIELD *field = scinew FIELD(mesh);
   field->resize_fdata();
-
   FBASIS f;
+  typename FIELD::fdata_type &d = field->fdata();
+  for(int i=0; i<f.number_of_vertices(); i++)
+    d[i] = 1;
+
   cerr << "Crv integral " << CrvIntegral(field, f) << endl; 
 }
 
@@ -242,8 +233,11 @@ void Test2D()
   typedef GenericField<MESH, FBASIS, vector<double> > FIELD;
   FIELD *field = scinew FIELD(mesh);
   field->resize_fdata();
-
   FBASIS f;
+  typename FIELD::fdata_type &d = field->fdata();
+  for(int i=0; i<f.number_of_vertices(); i++)
+    d[i] = 1;
+
   cerr << "Face integral " << CellIntegral(field, f) << endl; 
 }
 
@@ -256,11 +250,23 @@ void Test3D()
   n.resize(nnode);
   typename MESH::basis_type u;
  
+  Transform t;
+  t.rotate(Vector(1,0,0), Vector(0,1,0));
+  t.pre_scale(Vector(1,2,3));
+  //  t.print();
+
   for(int i=0; i<u.number_of_vertices(); i++) {
-    Point p(u.unit_vertices[i][0]+1, u.unit_vertices[i][1]+2, u.unit_vertices[i][2]+3);
+    int ii=i;
+ //    if (i==0) ii=1;
+//     else if (i==1) ii=0;
+
+    Point p(u.unit_vertices[ii][0], u.unit_vertices[ii][1], u.unit_vertices[ii][2]);
+    //if (i==3)
+    //  p.z(-p.z());
+     p=t*p;
     if ((unsigned)i<n.size()) {
       mesh->add_point(p);
-      n[i]=i;
+      n[i]=ii;
       if (u.polynomial_order()==3) {
 	vector<Point> d(3);
 	d[0]=d[1]=d[2]=Point(0,0,0);
@@ -270,6 +276,10 @@ void Test3D()
     else
       mesh->get_basis().add_node_value(p);
   }
+//   typename MESH::Node::index_type ii=n[0];
+//   n[0]=n[2];
+//   n[2]=ii;
+
   typename  MESH::Elem::index_type ei=mesh->add_elem(n); 
   cerr<<"Element index: " << ei << "\n"; 
   mesh->synchronize(MESH::EDGES_E);
@@ -281,8 +291,13 @@ void Test3D()
   Point p;
 
   mesh->interpolate(p, coords, 0);
- 
   cerr << "Transform L->G " << coords[0] <<", " << coords[1] <<", " << coords[2] << " => " << p << endl;
+ 
+  vector<Point> Jv;
+  mesh->derivate(coords, 0, Jv);
+//   cerr << Jv[0] << endl;
+//   cerr << Jv[1] << endl;
+//   cerr << Jv[2] << endl;
 
   vector<double> lc(u.domain_dimension());
   
@@ -296,9 +311,17 @@ void Test3D()
   typedef GenericField<MESH, FBASIS, vector<double> > FIELD;
   FIELD *field = scinew FIELD(mesh);
   field->resize_fdata();
-
   FBASIS f;
+  typename FIELD::fdata_type &d = field->fdata();
+  for(int i=0; i<f.number_of_vertices(); i++)
+    d[i] = 1;
+  
+  d[0]=0;
   cerr << "Cell integral " << CellIntegral(field, f) << endl;  
+
+//   DenseMatrix *g;
+//   field->cell_gradient(ei, g);
+//   g->print();
 }
 
 
@@ -325,8 +348,8 @@ main(int argc, char **argv)
     Test2D<TriSurfMesh<TriQuadraticLgn<Point> >, TriLinearLgn<double>, 3 >();
     srand48(0);
     Test2D<TriSurfMesh<TriCubicHmt<Point> >, TriLinearLgn<double>, 3 >();
-    srand48(0);
-    //    Test2D<TriSurfMesh<TriCubicHmtScaleFactors<Point> >, TriLinearLgn<double>, 3 >();
+//     srand48(0);
+//     Test2D<TriSurfMesh<TriCubicHmtScaleFactors<Point> >, TriLinearLgn<double>, 3 >();
   }
 
   {
@@ -339,11 +362,12 @@ main(int argc, char **argv)
     srand48(0);
     Test2D<QuadSurfMesh<QuadBicubicHmt<Point> >, QuadBilinearLgn<double>, 4 >();
   }
-
+ 
   {
     cerr<<"TestTetVolMesh\n";
     
     srand48(0);
+    //    for(int i=0; i<1000; i++)
     Test3D<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double>, 4 >();
     srand48(0);
     Test3D<TetVolMesh<TetQuadraticLgn<Point> >, TetLinearLgn<double>, 4 >();
@@ -351,7 +375,7 @@ main(int argc, char **argv)
     Test3D<TetVolMesh<TetCubicHmt<Point> >, TetLinearLgn<double>, 4 >(); 
   }
 
-  if (0) {
+  {
     cerr<<"TestPrismVolMesh\n";
     
     srand48(0);
@@ -374,6 +398,6 @@ main(int argc, char **argv)
     srand48(0);
     //Test3D<HexVolMesh<HexTricubicHmtScaleFactors<Point> >, HexTrilinearLgn<double>, 8 >();    
   }
-
+  
   return 0;  
 }    
