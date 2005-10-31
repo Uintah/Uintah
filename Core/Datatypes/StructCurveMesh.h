@@ -210,6 +210,98 @@ public:
 			int) const
   { ASSERTFAIL("not implemented") }
 
+
+  
+  class ElemData 
+  {
+  public:
+    ElemData(const StructCurveMesh<Basis>& msh, 
+	     const typename ScanlineMesh<Basis>::Elem::index_type ind) :
+      mesh_(msh),
+      index_(ind)
+    {}
+    
+    // the following designed to coordinate with ::get_nodes
+    inline 
+    unsigned node0_index() const {
+      return (index_);
+    }
+    inline 
+    unsigned node1_index() const {
+      return (index_ + 1);
+    }
+
+
+    // the following designed to coordinate with ::get_edges
+    inline 
+    unsigned edge0_index() const {
+      return index_; 
+    }
+
+    inline 
+    const Point node0() const {
+      return mesh_.points_[int(index_)];
+    }
+    inline 
+    const Point node1() const {
+      return mesh_.points_[index_+1];
+    }
+
+  private:
+    const StructCurveMesh<Basis>          &mesh_;
+    const typename ScanlineMesh<Basis>::Elem::index_type     index_;
+  };
+
+  friend class ElemData;
+
+ //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an edge.
+  void pwl_approx_edge(vector<vector<double> > &coords, 
+		       typename ScanlineMesh<Basis>::Elem::index_type ci, 
+		       unsigned, 
+		       unsigned div_per_unit) const
+  {    
+    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+    // compare get_nodes order to the basis order
+    this->basis_.approx_edge(0, div_per_unit, coords); 
+  }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an face.
+  void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+		       typename ScanlineMesh<Basis>::Elem::index_type ci, 
+		       typename Face::index_type fi, 
+		       unsigned div_per_unit) const
+  {
+    ASSERTFAIL("ScanlineMesh has no faces");
+  }
+  
+  bool get_coords(vector<double> &coords, 
+		  const Point &p,
+		  typename ScanlineMesh<Basis>::Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    return this->basis_.get_coords(coords, p, ed); 
+  }
+  
+  void interpolate(Point &pt, const vector<double> &coords, 
+		   typename ScanlineMesh<Basis>::Elem::index_type idx) const
+  {
+    ElemData ed(*this, idx);
+    pt = this->basis_.interpolate(coords, ed);
+  }
+
+  // get the Jacobian matrix
+  void derivate(const vector<double> &coords, 
+		typename ScanlineMesh<Basis>::Elem::index_type idx, 
+		vector<Point> &J) const
+  {
+    ElemData ed(*this, idx);
+    this->basis_.derivate(coords, ed, J);
+  }
+
+
+
   virtual bool is_editable() const { return false; }
     
   virtual void io(Piostream&);
