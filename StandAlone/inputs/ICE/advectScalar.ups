@@ -166,7 +166,7 @@
       <dbg_Matls>           [0]         </dbg_Matls>
       <dbg_Level>           1         </dbg_Level>
   <!--
-      <debug label = "switchDebug_EQ_RF_press"/>
+      <debug label = "switchDebug_equil_press"/>
       <debug label = "switchDebug_press"/>
       <debug label = "switchDebug_vel_FC"/>            
       <debug label = "switchDebug_explicit_press"/>   
