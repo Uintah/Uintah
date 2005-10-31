@@ -45,7 +45,7 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   
   // Turn off all the debuging switches
   switchDebug_Initialize           = false;
-  switchDebug_EQ_RF_press         = false;
+  switchDebug_equil_press         = false;
   switchDebug_vel_FC              = false;
   switchDebug_Temp_FC             = false;
   switchDebug_PressDiffRF         = false;
@@ -102,8 +102,8 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
       child->getAttributes(debug_attr);
       if (debug_attr["label"]      == "switchDebug_Initialize")
        switchDebug_Initialize            = true;
-      else if (debug_attr["label"] == "switchDebug_EQ_RF_press")
-       switchDebug_EQ_RF_press          = true;
+      else if (debug_attr["label"] == "switchDebug_equil_press")
+       switchDebug_equil_press          = true;
       else if (debug_attr["label"] == "switchDebug_PressDiffRF")
        switchDebug_PressDiffRF          = true;
       else if (debug_attr["label"] == "switchDebug_vel_FC")
