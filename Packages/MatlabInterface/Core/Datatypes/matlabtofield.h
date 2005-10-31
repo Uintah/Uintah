@@ -708,8 +708,9 @@ bool MatlabToFieldAlgo::addedges(SCIRun::LockingHandle<MESH>& handle)
      
 		handle->add_edge(edge);
 	}
-		  
- }
+
+  return (true);
+}
 
 template <class MESH>
 bool MatlabToFieldAlgo::addfaces(SCIRun::LockingHandle<MESH>& handle)
@@ -760,6 +761,8 @@ bool MatlabToFieldAlgo::addfaces(SCIRun::LockingHandle<MESH>& handle)
     }
     handle->add_elem(face);
   }
+  
+  return (true);
 }
 
 template <class MESH>
