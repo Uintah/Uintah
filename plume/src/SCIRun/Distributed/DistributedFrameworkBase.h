@@ -75,6 +75,9 @@ namespace SCIRun {
     virtual DistributedFramework::pointer getParent() { return parent; }
 
     virtual FrameworkID::pointer getFrameworkID();
+
+    virtual int createChild( const std::string &framework, const std::string &where);
+
     virtual SSIDL::array1<DistributedFramework::pointer> getChildren();
     virtual void shutdownFramework();
     virtual AbstractFramework::pointer  createEmptyFramework() { return 0; }
