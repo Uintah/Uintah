@@ -275,7 +275,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     } 
     
    //---- P R I N T   D A T A ------   
-    if (d_ice->switchDebug_EQ_RF_press) {
+    if (d_ice->switchDebug_equil_press) {
       ostringstream desc;
       desc << "BOT_computeRFPress_patch_" << patch->getID();
       d_ice->printData( 0, patch, 1, desc.str(), "Press_CC_RF", press_new);
