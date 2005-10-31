@@ -74,8 +74,8 @@ public:
                               FieldHandle& output,
                               FieldHandle objectfield) = 0;
                               
-  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-                                            const TypeDescription *ofsrc);
+  static CompileInfoHandle get_compile_info(FieldHandle input,
+                                            FieldHandle object);
 
   inline void distance(Point c, Point t1, Point t2, Point t3, Point t4, double& dist);                                            
   inline void distance(Point c, Point t1, Point t2, Point t3, double& dist);
@@ -89,7 +89,7 @@ public:
 
 };
 
-template<class FIELD, class OBJECTFIELD>
+template<class FIELD, class OBJECTFIELD, class OUTFIELD>
 class DistanceToFieldAlgoT : public DistanceToFieldAlgo
 {
 public:
@@ -115,8 +115,8 @@ public:
 
 };
 
-template<class FIELD, class OBJECTFIELD>
-bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter,
+template<class FIELD, class OBJECTFIELD, class OUTFIELD>
+bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter *reporter,
                               FieldHandle input,
                               FieldHandle& output,
                               FieldHandle objectfield)
@@ -149,7 +149,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
 
   if (field->basis_order() == 0)
   {
-    FIELD* ofield = scinew FIELD(mesh,0);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh,0);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -295,7 +295,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
   }
   else
   {
-    FIELD* ofield = scinew FIELD(mesh,1);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh,1);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -445,8 +445,8 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute(ProgressReporter *reporter
 
 
 
-template<class FIELD, class OBJECTFIELD>
-bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *reporter,
+template<class FIELD, class OBJECTFIELD, class OUTFIELD>
+bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressReporter *reporter,
                               FieldHandle input,
                               FieldHandle& output,
                               FieldHandle objectfield)
@@ -479,7 +479,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
 
   if (field->basis_order() == 0)
   {
-    FIELD* ofield = scinew FIELD(mesh,0);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh,0);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -613,7 +613,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
   }
   else
   {
-    FIELD* ofield = scinew FIELD(mesh,1);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh,1);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -751,8 +751,8 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_signed(ProgressReporter *r
 
 
 
-template<class FIELD, class OBJECTFIELD>
-bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter *reporter,
+template<class FIELD, class OBJECTFIELD, class OUTFIELD>
+bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(ProgressReporter *reporter,
                               FieldHandle input,
                               FieldHandle& output,
                               FieldHandle objectfield)
@@ -785,7 +785,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
 
   if (field->basis_order() == 0)
   {
-    FIELD* ofield = scinew FIELD(mesh,0);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh,0);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -919,7 +919,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
   }
   else
   {
-    FIELD* ofield = scinew FIELD(mesh,1);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh,1);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -1056,8 +1056,8 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_unsigned(ProgressReporter 
 }
 
 
-template<class FIELD, class OBJECTFIELD>
-bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter *reporter,
+template<class FIELD, class OBJECTFIELD, class OUTFIELD>
+bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(ProgressReporter *reporter,
                               FieldHandle input,
                               FieldHandle& output,
                               FieldHandle objectfield)
@@ -1090,7 +1090,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
 
   if (field->basis_order() == 0)
   {
-    FIELD* ofield = scinew FIELD(mesh,0);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh,0);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -1224,7 +1224,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD>::execute_isinside(ProgressReporter 
   }
   else
   {
-    FIELD* ofield = scinew FIELD(mesh,1);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh,1);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 

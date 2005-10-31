@@ -26,40 +26,33 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/DistanceToField.h>
+#include <Packages/ModelCreation/Core/Fields/MergeFields.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
 CompileInfoHandle
-DistanceToFieldAlgo::get_compile_info(FieldHandle srcfield,FieldHandle objectfield)
+MergeFieldsAlgo::get_compile_info(SCIRun::FieldHandle field)
 {
-
-  const TypeDescription *fsrc = srcfield->get_type_description();
-  const TypeDescription *ofsrc = objectfield->get_type_description();
-  const TypeDescription *fieldtype = srcfield->get_type_description(0);
-  
-  std::string outfield  = fieldtype->get_name() + "<double> ";
-
+  const TypeDescription *fsrc = field->get_type_description();
+  const TypeDescription *msrc = field->mesh()->get_type_description();
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   std::string include_path(TypeDescription::cc_to_h(__FILE__));
-  std::string algo_name("DistanceToFieldAlgoT");
-  std::string base_name("DistanceToFieldAlgo");
+  std::string algo_name("MergeFieldsAlgoT");
+  std::string base_name("MergeFieldsAlgo");
 
   CompileInfoHandle ci = 
     scinew CompileInfo(algo_name + "." +
-                       fsrc->get_filename() + "." +
-                       ofsrc->get_filename() + ".",
+                       fsrc->get_filename() + ".",
                        base_name, 
                        algo_name, 
-                       fsrc->get_name() + "," + ofsrc->get_name() + "," + outfield);
+                       fsrc->get_name()+","+msrc->get_name());
 
   // Add in the include path to compile this obj
   ci->add_include(include_path);
   ci->add_namespace("ModelCreation");   
   fsrc->fill_compile_info(ci.get_rep());
-  ofsrc->fill_compile_info(ci.get_rep());
   return(ci);
 }
 

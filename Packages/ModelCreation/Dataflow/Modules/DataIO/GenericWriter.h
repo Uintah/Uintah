@@ -139,14 +139,14 @@ GenericWriter<HType>::execute()
 
   // CODE FOR FILENAME INPUT PORT ////
   StringIPort* filenameport;
-  if (filenameport = dynamic_cast<StringIPort *>("Filename"))
+  if (filenameport = dynamic_cast<StringIPort *>(getIPort("Filename")))
   {
-    String filenameH;
+    StringHandle filenameH;
     filenameport->get(filenameH);
     if (filenameH.get_rep())
     {
-      filename_.set(filenameH->set());
-      gui_->reset();
+      filename_.set(filenameH->get());
+      ctx->reset();
     }
   }
   ////////////////////////////////////

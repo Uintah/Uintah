@@ -40,6 +40,7 @@
  */
 
 #include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/StringPort.h>
 #include <Dataflow/Modules/DataIO/GenericWriter.h>
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 
@@ -144,6 +145,22 @@ MatrixWriter::execute()
     remark("No data on input port.");
     return;
   }
+
+
+  // CODE FOR FILENAME INPUT PORT ////
+  StringIPort* filenameport;
+  if (filenameport = dynamic_cast<StringIPort *>(getIPort("Filename")))
+  {
+    StringHandle filenameH;
+    filenameport->get(filenameH);
+    if (filenameH.get_rep())
+    {
+      filename_.set(filenameH->get());
+      ctx->reset();
+    }
+  }
+  ////////////////////////////////////
+
 
   // If no name is provided, return.
   const string fn(filename_.get());

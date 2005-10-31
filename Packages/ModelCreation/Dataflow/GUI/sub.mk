@@ -20,8 +20,10 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ColorMapWriter.tcl\
 	$(SRCDIR)/ColorMap2Reader.tcl\
 	$(SRCDIR)/ColorMap2Writer.tcl\
-        $(SRCDIR)/ComputeDataArray.tcl\
+  $(SRCDIR)/ComputeDataArray.tcl\
 	$(SRCDIR)/ComputeFieldData.tcl\
+	$(SRCDIR)/ComputeFieldsData.tcl\
+	$(SRCDIR)/CreateFieldData.tcl\
 	$(SRCDIR)/DataArrayInfo.tcl\
 	$(SRCDIR)/FieldDataElemToNode.tcl\
 	$(SRCDIR)/FieldDataNodeToElem.tcl\

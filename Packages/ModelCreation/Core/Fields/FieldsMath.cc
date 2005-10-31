@@ -52,6 +52,7 @@
 #include <Packages/ModelCreation/Core/Fields/FieldDataNodeToElem.h>
 #include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
 #include <Packages/ModelCreation/Core/Fields/MappingMatrixToField.h>
+#include <Packages/ModelCreation/Core/Fields/MergeFields.h>
 
 #include <Core/Algorithms/Fields/FieldCount.h>
 #include <Dataflow/Modules/Fields/Unstructure.h>
@@ -130,10 +131,8 @@ bool FieldsMath::DistanceToField(FieldHandle input, FieldHandle& output, FieldHa
   {
 
     Handle<DistanceToFieldAlgo> algo;
-    const TypeDescription *ftd = input->get_type_description();
-    const TypeDescription *oftd = object->get_type_description();
     
-    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(ftd,oftd);
+    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(input,object);
     
     if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
     {
@@ -211,10 +210,8 @@ bool FieldsMath::SignedDistanceToField(FieldHandle input, FieldHandle& output, F
       (dynamic_cast<CurveMesh*>(object->mesh().get_rep())))   
   {  
     Handle<DistanceToFieldAlgo> algo;
-    const TypeDescription *ftd = input->get_type_description();
-    const TypeDescription *oftd = object->get_type_description();
     
-    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(ftd,oftd);
+    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(input,object);
     
     if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
     {
@@ -281,10 +278,8 @@ bool FieldsMath::IsInsideSurfaceField(FieldHandle input, FieldHandle& output, Fi
       (dynamic_cast<CurveMesh*>(object->mesh().get_rep())))   
   {  
     Handle<DistanceToFieldAlgo> algo;
-    const TypeDescription *ftd = input->get_type_description();
-    const TypeDescription *oftd = object->get_type_description();
     
-    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(ftd,oftd);
+    CompileInfoHandle ci = DistanceToFieldAlgo::get_compile_info(input,object);
     
     if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
     {
@@ -942,6 +937,41 @@ bool FieldsMath::MappingMatrixToField(FieldHandle input, FieldHandle& output, Ma
   }    
   
   return(true);
+}
+
+
+bool FieldsMath::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields, bool forcepointcloud)
+{
+  if (inputs.size() == 0)
+  {
+    error("MappingMatrixToField: No input field");
+    return(false);
+  } 
+
+  if (inputs[0].get_rep() == 0)
+  {
+    error("MappingMatrixToField: No input field");
+    return(false);
+  } 
+
+  Handle<MergeFieldsAlgo> algo;
+  CompileInfoHandle ci = MergeFieldsAlgo::get_compile_info(inputs[0]);
+    
+  if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
+  {
+    error("MergeFields: Could not dynamically compile algorithm");
+//    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+    return(false);
+  }
+    
+  if(!(algo->mergefields(pr_, inputs, output, tolerance, mergefields,forcepointcloud)))
+  {
+    error("MergeFields: The dynamically compiled function return error");
+    return(false);
+  }    
+  
+  return(true);
+
 }
 
 

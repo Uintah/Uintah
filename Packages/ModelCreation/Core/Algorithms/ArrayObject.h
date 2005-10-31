@@ -55,13 +55,14 @@ class ArrayObject {
   public:
     inline ArrayObject(SCIRun::ProgressReporter *pr);
           
-    bool create_inputdata(SCIRun::FieldHandle& field, std::string name);
-    bool create_inputdata(SCIRun::MatrixHandle& matrix, std::string name);
+    bool create_inputdata(SCIRun::FieldHandle field, std::string name);
+    bool create_inputdata(SCIRun::MatrixHandle matrix, std::string name);
     bool create_inputindex(std::string name, std::string sizename);
-    bool create_inputlocation(SCIRun::FieldHandle& field, std::string locname, std::string xname, std::string yname, std::string zname);
-    bool create_inputelement(SCIRun::FieldHandle& field, std::string name);
+    bool create_inputlocation(SCIRun::FieldHandle field, std::string locname, std::string xname, std::string yname, std::string zname);
+    bool create_inputelement(SCIRun::FieldHandle field, std::string name);
     
     bool create_outputdata(SCIRun::FieldHandle& field, std::string datatype, std::string name,SCIRun::FieldHandle& ofield);
+    bool create_outputdata(SCIRun::FieldHandle& field, std::string datatype, std::string basistype, std::string name,SCIRun::FieldHandle& ofield);
     bool create_outputdata(int size, std::string datatype, std::string name,SCIRun::MatrixHandle& omatrix);    
     
     // This inline code should almost give direct data access and should 

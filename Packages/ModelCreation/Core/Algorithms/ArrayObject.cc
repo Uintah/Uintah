@@ -51,7 +51,7 @@ void ArrayObject::clear()
   zname_ = "";
 }
 
-bool ArrayObject::create_inputdata(SCIRun::FieldHandle& field, std::string name)
+bool ArrayObject::create_inputdata(SCIRun::FieldHandle field, std::string name)
 {
   clear();
   
@@ -83,7 +83,7 @@ bool ArrayObject::create_inputdata(SCIRun::FieldHandle& field, std::string name)
   return(true);
 }
 
-bool ArrayObject::create_inputdata(SCIRun::MatrixHandle& matrix, std::string name)
+bool ArrayObject::create_inputdata(SCIRun::MatrixHandle matrix, std::string name)
 {
   clear();
   
@@ -122,7 +122,7 @@ bool ArrayObject::create_inputindex(std::string name, std::string sizename)
   return(true);
 }
 
-bool ArrayObject::create_inputlocation(SCIRun::FieldHandle& field, std::string locname, std::string xname, std::string yname, std::string zname)
+bool ArrayObject::create_inputlocation(SCIRun::FieldHandle field, std::string locname, std::string xname, std::string yname, std::string zname)
 {
   clear();
   
@@ -153,7 +153,7 @@ bool ArrayObject::create_inputlocation(SCIRun::FieldHandle& field, std::string l
   return(true);
 }
 
-bool ArrayObject::create_inputelement(SCIRun::FieldHandle& field, std::string name)
+bool ArrayObject::create_inputelement(SCIRun::FieldHandle field, std::string name)
 {
   clear();
   
@@ -232,6 +232,63 @@ bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string data
   ofield = field_;
   return(true);
 }
+
+
+bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string datatype, std::string basistype, std::string name, SCIRun::FieldHandle& ofield)
+{
+  clear();
+  
+  if (field.get_rep() == 0) 
+  {
+    error("No input data field");
+    return(false);
+  }
+  name_ = name;
+  
+  SCIRun::CompileInfoHandle ci = ArrayObjectFieldCreateAlgo::get_compile_info(field,datatype,basistype);
+  if (!SCIRun::DynamicCompilation::compile(ci,fieldcreatealgo_,false,pr_))
+  {
+    error("Dynamic compilation failed");
+    return(false);
+  }  
+
+  if(!(fieldcreatealgo_->createfield(field,field_)))
+  {
+    error("Could not create output field");
+    return(false);
+  }
+
+  SCIRun::CompileInfoHandle ci2 = ArrayObjectFieldDataAlgo::get_compile_info(field_);
+  if (!SCIRun::DynamicCompilation::compile(ci2,fielddataalgo_,false,pr_))
+  {
+    error("Dynamic compilation failed");
+    return(false);
+  }  
+  
+  if (!(fielddataalgo_->setfield(field_)))
+  {
+    error("Could not link field with dynamic algorithm");
+    return(false);  
+  }
+  
+  size_ = fielddataalgo_->size();
+  type_ = INVALID;
+  
+  if (fielddataalgo_->isscalar()) type_ = FIELDSCALAR;
+  if (fielddataalgo_->isvector()) type_ = FIELDVECTOR;
+  if (fielddataalgo_->istensor()) type_ = FIELDTENSOR;  
+  
+  if (type_ == INVALID)
+   {
+    error("Could not link field with dynamic algorithm");
+    return(false);  
+  }
+   
+  ofield = field_;
+  return(true);
+}
+
+
 
 bool ArrayObject::create_outputdata(int size, std::string datatype, std::string name, SCIRun::MatrixHandle& omatrix)
 {    

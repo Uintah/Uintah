@@ -143,9 +143,13 @@ void ComposeVectorArray::execute()
     return;
   }
 
-  X = dynamic_cast<Matrix *>(X->dense());
-  Y = dynamic_cast<Matrix *>(Y->dense());
-  Z = dynamic_cast<Matrix *>(Z->dense());
+  MatrixHandle temp;
+  temp = dynamic_cast<Matrix *>(X->dense()); 
+  X = temp;
+  temp = dynamic_cast<Matrix *>(Y->dense());
+  Y = temp;
+  temp = dynamic_cast<Matrix *>(Z->dense());
+  Z = temp;
   
   V = dynamic_cast<Matrix *>(scinew DenseMatrix(n,3));
   
