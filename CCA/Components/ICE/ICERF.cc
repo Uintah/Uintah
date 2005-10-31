@@ -323,7 +323,7 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     }
         
    //---- P R I N T   D A T A ------   
-    if (switchDebug_EQ_RF_press) {
+    if (switchDebug_equil_press) {
       ostringstream desc;
       desc << "BOT_computeRFPress_patch_" << patch->getID();
       printData(0, patch, 1, desc.str(), "Press_CC_RF", press_new);
