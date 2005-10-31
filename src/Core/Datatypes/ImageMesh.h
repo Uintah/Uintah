@@ -324,11 +324,7 @@ public:
       Point p(index_.i_, index_.j_ + 1, 0.0);
       return mesh_.transform_.project(p);
     }
-    inline 
-    const Point node4() const {
-      Point p(index_.i_, index_.j_, 0.0);
-      return mesh_.transform_.project(p);
-    }
+
 
   private:
     const ImageMesh<Basis>          &mesh_;
