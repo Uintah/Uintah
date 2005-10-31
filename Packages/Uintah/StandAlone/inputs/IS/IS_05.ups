@@ -287,7 +287,7 @@
        <dbg_Level>            0        </dbg_Level> 
        
        <debug label = "switchDebug_Initialize"/>        
-       <debug label = "switchDebug_EQ_RF_press"/> 
+       <debug label = "switchDebug_equil_press"/> 
        <debug label = "switchDebug_vel_FC"/> 
        <debug label = "switchDebug_setupMatrix"/>               
        <debug label = "switchDebug_explicit_press"/>      

@@ -193,7 +193,7 @@
       <debug label = "switchDebug_explicit_press"/>
       <debug label = "switchDebug_Exchange_FC"/>
       <!--
-      <debug label = "switchDebug_EQ_RF_press"/>
+      <debug label = "switchDebug_equil_press"/>
        <debug label = "switchDebug_press"/>
        <debug label = "switchDebug_vel_FC"/>            
        <debug label = "switchDebug_explicit_press"/>   
@@ -214,25 +214,21 @@
         <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
         
-        <ImplicitSolver>
-           <max_outer_iterations>      20    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
-           <Parameters variable="implicitPressure">
+        <ImplicitSolver>            
+            <max_outer_iterations>          1     </max_outer_iterations>
+            <outer_iteration_tolerance>     1e-8  </outer_iteration_tolerance>
+            <iters_before_timestep_restart> 10    </iters_before_timestep_restart>
+            <Parameters variable = "implicitPressure">
             <tolerance>1.e-8    </tolerance>
 
-	     <!-- CGSolver options -->
-            <norm>     LInfinity  </norm>
-            <criteria> Absolute   </criteria>
-
-	     <!-- Hypre options -->
-	     <solver>         hybrid  </solver>
-	     <preconditioner> pfmg    </preconditioner>
-	     <maxiterations>  7500    </maxiterations>
-	     <npre>           1       </npre>
-	     <npost>          1       </npost>
-	     <skip>           0       </skip>
-	     <jump>           0       </jump>
+             <!-- Hypre options -->
+             <solver>         amg     </solver>
+             <preconditioner> none    </preconditioner>
+             <maxiterations>  7500    </maxiterations>
+             <npre>           1       </npre>
+             <npost>          1       </npost>
+             <skip>           0       </skip>
+             <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
         

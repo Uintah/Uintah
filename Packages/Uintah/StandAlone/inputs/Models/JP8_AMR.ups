@@ -304,11 +304,11 @@
        <dbg_SigFigs>         5          </dbg_SigFigs> 
        <dbg_Level>            1         </dbg_Level>
 
-       <debug label = "switchDebug_EQ_RF_press"/>
+       <debug label = "switchDebug_equil_press"/>
        <debug label = "switchDebug_AMR_refine"/>
        <debug label = "switchDebug_AMR_refineInterface"/> 
        <debug label = "switchDebug_Initialize"/>        
-       <debug label = "switchDebug_EQ_RF_press"/> 
+       <debug label = "switchDebug_equil_press"/> 
        <debug label = "switchDebug_vel_FC"/> 
        <debug label = "switchDebug_setupMatrix"/>               
        <debug label = "switchDebug_explicit_press"/>      
