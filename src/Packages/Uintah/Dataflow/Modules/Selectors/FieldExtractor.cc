@@ -326,8 +326,6 @@ FieldExtractorAlgo::get_compile_info( const Uintah::TypeDescription *vt,
   static const string template_class_name("FieldExtractorAlgoT");
   static const string base_class_name("FieldExtractorAlgo");
 
-  cerr<<"include path is: "<<include_path<<"\n";
-
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
 		       vt->getFileName() + ".",

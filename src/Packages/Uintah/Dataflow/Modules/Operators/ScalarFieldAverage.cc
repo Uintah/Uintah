@@ -84,7 +84,7 @@ void ScalarFieldAverage::execute(void)
   if ( !hTF->get_property( "time", t ) ){
     cerr<<"No time in database"<<endl; }
 
-  if( hTF->mesh()->get_type_name(0) != "LatVolMesh"){
+  if( hTF->mesh()->get_type_name(0) != "LatVolMesh<HexTrilinearLgn<Point> > "){
     error("Field is not a LatVolMesh based field");
     return;
   }
@@ -188,11 +188,13 @@ ScalarFieldAverageAlgo::get_compile_info(const SCIRun::TypeDescription *td1,
 		       td1->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       td1->get_name() + "." +
+                       td1->get_name() + "," +
                        td2->get_name() );
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  // add the namespace
+  rval->add_namespace("Uintah");
   td1->fill_compile_info(rval);
   td2->fill_compile_info(rval);
   return rval;
