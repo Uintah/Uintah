@@ -260,7 +260,7 @@
      <dbg_Matls>           [0,1]       </dbg_Matls>
      <dbg_SigFigs>         10          </dbg_SigFigs>
      <!--<debug label = "switchTestConservation"/>
-         <debug label = "switchDebug_EQ_RF_press"/>-->
+         <debug label = "switchDebug_equil_press"/>-->
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->

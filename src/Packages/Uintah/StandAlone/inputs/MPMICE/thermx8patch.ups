@@ -163,7 +163,7 @@
      <dbg_EndIndex>        [7,6,5] </dbg_EndIndex>
      <dbg_SigFigs>         15      </dbg_SigFigs>
      <!--
-     <debug label = "switchDebug_EQ_RF_press"/>
+     <debug label = "switchDebug_equil_press"/>
      <debug label = "switchDebug_vel_FC"/>
      <debug label = "switchDebug_LagrangianSpecificVol"/>
      <debug label = "switchDebug_Source_Sink"/>
@@ -172,7 +172,7 @@
      -->
      <!--
      <debug label = "switchDebug_Initialize"/>
-     <debug label = "switchDebug_EQ_RF_press"/>
+     <debug label = "switchDebug_equil_press"/>
      <debug label = "switchDebug_vel_FC"/>           
      <debug label = "switchDebug_Exchange_FC"/>           
      <debug label = "switchDebug_explicit_press"/>   

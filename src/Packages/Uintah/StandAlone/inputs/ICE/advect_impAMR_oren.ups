@@ -192,7 +192,7 @@
       <dbg_SigFigs>         16          </dbg_SigFigs>
       
 <!--
-       <debug label = "switchDebug_EQ_RF_press"/>
+       <debug label = "switchDebug_equil_press"/>
        <debug label = "switchDebug_updatePressure"/>
        <debug label = "switchDebug_vel_FC"/>            
        <debug label = "switchDebug_AMR_refine"/>
