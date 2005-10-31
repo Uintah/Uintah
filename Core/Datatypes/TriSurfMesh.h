@@ -229,7 +229,7 @@ public:
   bool get_neighbor(typename Face::index_type &neighbor, 
 		    typename Face::index_type face,
 		    typename Edge::index_type edge) const;
-  void get_neighbors(typename Node::array_type &array, 
+  void get_neighbors(vector<typename Node::index_type> &array, 
 		     typename Node::index_type idx) const;
 
   //! Get the size of an elemnt (length, area, volume)
@@ -263,7 +263,7 @@ public:
 
   int get_valence(typename Node::index_type idx) const
   {
-    typename Node::array_type nodes;
+    vector<typename Node::index_type> nodes;
     get_neighbors(nodes, idx);
     return (int)nodes.size();
   }
@@ -832,7 +832,7 @@ TriSurfMesh<Basis>::compute_node_neighbors()
 //! Returns all nodes that share an edge with this node 
 template <class Basis>
 void
-TriSurfMesh<Basis>::get_neighbors(typename Node::array_type &array, 
+TriSurfMesh<Basis>::get_neighbors(vector<typename Node::index_type> &array, 
 				  typename Node::index_type idx) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
