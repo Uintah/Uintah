@@ -81,10 +81,10 @@ namespace SCIRun {
   {
     Guard guard(&ports_lock);
     
-    if ( ports.find(name) != ports.end() )
+    if ( componentPorts.find(name) != componentPorts.end() )
       throw CCAException::create("Port already exist", PortAlreadyDefined);
 
-    ports[name] = PortInfo::pointer(  new PortInfoImpl(name, type, properties, UsePort) );
+    componentPorts[name] = PortInfo::pointer(  new PortInfoImpl(name, type, properties, UsePort) );
   }
 
   template<class Interface>
@@ -93,14 +93,14 @@ namespace SCIRun {
   {
     Guard guard(&ports_lock);
     
-    typename PortMap::iterator iter = ports.find(name);
-    if ( iter == ports.end() )
+    typename PortMap::iterator iter = componentPorts.find(name);
+    if ( iter == componentPorts.end() )
       throw CCAException::create("Port does not exist", PortNotDefined);
 
     if (iter->second->isConnected())
       throw CCAException::create("Can not release port ["+name+"]: port in use");
 
-    ports.erase(iter);
+    componentPorts.erase(iter);
   }
 
   template<class Interface>
@@ -112,10 +112,10 @@ namespace SCIRun {
   {
     Guard guard(&ports_lock);
 
-    if ( ports.find(name) != ports.end() )
+    if ( componentPorts.find(name) != componentPorts.end() )
       throw CCAException::create("Port already exist", PortAlreadyDefined);
 
-    ports[name] = PortInfo::pointer( new PortInfoImpl(name, type, propertied, port, ProvidePort) );
+    componentPorts[name] = PortInfo::pointer( new PortInfoImpl(name, type, propertied, port, ProvidePort) );
   }
 
   template<class Interface>
@@ -124,12 +124,12 @@ namespace SCIRun {
   {
     Guard guard(&ports_lock);
     
-    typename PortMap::iterator port = ports.find(name);
-    if ( port == ports.end() )
+    typename PortMap::iterator port = componentPorts.find(name);
+    if ( port == componentPorts.end() )
       throw CCAException::create("Port ["+name+"] does not exist ", PortNotDefined);
 
     // FIXME [yarden]: we should have a notion of a provided port connection!
-    ports.erase(port);
+    componentPorts.erase(port);
   }
 
   template<class Interface>
@@ -146,8 +146,8 @@ namespace SCIRun {
   {
     Guard guard(&ports_lock);
     
-    typename PortMap::iterator iter = ports.find(name);
-    if ( iter == ports.end() ) 
+    typename PortMap::iterator iter = componentPorts.find(name);
+    if ( iter == componentPorts.end() ) 
       throw CCAException::create("Port ["+name+"] does not exist", PortNotDefined);
 
     PortInfo::pointer port = (*iter).second;
@@ -184,8 +184,8 @@ namespace SCIRun {
     
     Guard guard(&ports_lock, Guard::AlreadyLocked);
     
-    typename PortMap::iterator iter = ports.find(name);
-    if ( iter == ports.end() )
+    typename PortMap::iterator iter = componentPorts.find(name);
+    if ( iter == componentPorts.end() )
       throw CCAException::create("Port ["+name+"] does not exist", PortNotDefined);
 
     PortInfo::pointer port = iter->second;
@@ -207,8 +207,8 @@ namespace SCIRun {
     {
       Guard guard(&ports_lock);
     
-      typename PortMap::iterator iter = ports.find(name);
-      if ( iter == ports.end() )
+      typename PortMap::iterator iter = componentPorts.find(name);
+      if ( iter == componentPorts.end() )
 	throw CCAException::create("Can not realease unknown port ["+name+"]");
       
       port = (*iter).second;
@@ -255,8 +255,8 @@ namespace SCIRun {
   {
     Guard guard(&ports_lock);
     
-    typename PortMap::iterator port = ports.find(name);
-    if ( port == ports.end() )
+    typename PortMap::iterator port = componentPorts.find(name);
+    if ( port == componentPorts.end() )
       throw CCAException::create("Port ["+name+"] does not exist", PortNotDefined);
 
     return port->second->getProperties();

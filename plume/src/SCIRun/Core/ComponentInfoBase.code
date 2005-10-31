@@ -77,7 +77,7 @@ namespace SCIRun {
     Guard guard(&ports_lock);
 
     SSIDL::array1<PortInfo::pointer> array;
-    for (PortMap::const_iterator i=ports.begin(); i!=ports.end(); ++i)
+    for (PortMap::const_iterator i=componentPorts.begin(); i!=componentPorts.end(); ++i)
       array.push_back((*i).second);
     return array;
   }
@@ -87,8 +87,8 @@ namespace SCIRun {
   {
     Guard guard(&ports_lock);
 
-    PortMap::const_iterator info = ports.find(name);
-    if ( info == ports.end() ) return PortInfo::pointer(0);
+    PortMap::const_iterator info = componentPorts.find(name);
+    if ( info == componentPorts.end() ) return PortInfo::pointer(0);
     return (*info).second;
   }
 
@@ -97,8 +97,8 @@ namespace SCIRun {
   {
     Guard guard(&ports_lock);
 
-    PortMap::const_iterator info = ports.find(portName);
-    if ( info == ports.end() ) return;
+    PortMap::const_iterator info = componentPorts.find(portName);
+    if ( info == componentPorts.end() ) return;
 
     info->second->disconnect(from);
   }
