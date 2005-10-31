@@ -226,6 +226,8 @@ TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
   rval->add_include(include_path);
   rval->add_post_include(class_declaration);
   field_td->fill_compile_info(rval);
+  rval->add_data_include("../src/Core/Geometry/Vector.h");
+  rval->add_data_include("../src/Core/Geometry/Tensor.h");
   return rval;
 }
 
