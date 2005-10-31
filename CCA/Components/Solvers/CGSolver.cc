@@ -1168,7 +1168,7 @@ public:
     }
 
     //__________________________________
-    //  Pull the solution out of subsched new DW and put it in ours
+    //  Pull the solution out of subsched new DW and put it into our X
     if(modifies_x){
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
@@ -1183,11 +1183,11 @@ public:
           CellIterator iter(l, h);
 
           typename Types::sol_type Xnew;
-         typename Types::const_type X;
+          typename Types::const_type X;
           new_dw->getModifiable(Xnew, X_label, matl, patch);
          
           subsched->get_dw(3)->get(X, X_label, matl, patch, Ghost::None, 0);
-          Xnew.copy(X);
+          Xnew.copy(X, l, h);
         }
       }
     } else {
