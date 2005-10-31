@@ -270,7 +270,7 @@ public:
   //! piecewise linear approximation of an face.
   void pwl_approx_face(vector<vector<vector<double> > > &coords, 
 		       typename ScanlineMesh<Basis>::Elem::index_type ci, 
-		       typename Face::index_type fi, 
+		       typename ScanlineMesh<Basis>::Face::index_type fi, 
 		       unsigned div_per_unit) const
   {
     ASSERTFAIL("ScanlineMesh has no faces");
