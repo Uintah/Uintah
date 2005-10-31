@@ -158,6 +158,9 @@ GradientAlgo::get_compile_info(const TypeDescription *ftd,
   rval->add_include(include_path);
   ftd->fill_compile_info(rval);
   mtd->fill_compile_info(rval);
+  btd->fill_compile_info(rval);
+  dtd->fill_compile_info(rval);
+  otd->fill_compile_info(rval);
   ctd->fill_compile_info(rval);
 
   return rval;
