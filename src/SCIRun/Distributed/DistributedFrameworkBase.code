@@ -69,6 +69,13 @@ namespace SCIRun {
   }
   
   template<class Interface>
+  int DistributedFrameworkBase<Interface>::createChild( const std::string &framework, const std::string &where)
+  {
+    std::string cmd = "xterm -e ssh " + where + " " + framework + "--attach " + getFrameworkID()->getString() + "&\n";
+    return system(cmd.c_str());
+  }
+
+  template<class Interface>
   void DistributedFrameworkBase<Interface>::addChild( const DistributedFramework::pointer &child)
   {
     Guard guard(&children_lock);

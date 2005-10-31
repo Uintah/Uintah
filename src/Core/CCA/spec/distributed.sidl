@@ -46,6 +46,8 @@ package sci {
 	DistributedFramework getParent();
 	array<DistributedFramework,1> getChildren();
 
+	int createChild(in string framework, in string where);
+
 	// protected:
 	void addChild(in DistributedFramework child);
 	void removeChild(in DistributedFramework child);
