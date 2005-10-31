@@ -857,7 +857,7 @@ public:
   virtual MaskedLatVolMesh *clone() { return new MaskedLatVolMesh(*this); }
   virtual ~MaskedLatVolMesh() {}
 
-  Basis &get_basis() { return  LatVolMesh<Basis>::get_basis; }
+  Basis &get_basis() { return  LatVolMesh<Basis>::get_basis(); }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
@@ -866,7 +866,9 @@ public:
 		       unsigned which_edge, 
 		       unsigned div_per_unit) const
   {    
-    LatVolMesh<Basis>::pwl_approx_edge(coords, ci, which_edge, div_per_unit);
+    typename LatVolMesh<Basis>::Elem::index_type i(this, ci.i_, 
+						   ci.j_, ci.k_);
+    LatVolMesh<Basis>::pwl_approx_edge(coords, i, which_edge, div_per_unit);
   }
 
   //! Generate the list of points that make up a sufficiently accurate
@@ -876,7 +878,9 @@ public:
 		       unsigned which_face, 
 		       unsigned div_per_unit) const
   {
-    LatVolMesh<Basis>::pwl_approx_face(coords, ci, which_face, div_per_unit);
+    typename LatVolMesh<Basis>::Elem::index_type i(this, ci.i_, 
+						   ci.j_, ci.k_);
+    LatVolMesh<Basis>::pwl_approx_face(coords, i, which_face, div_per_unit);
   }
   
   bool get_coords(vector<double> &coords, 
