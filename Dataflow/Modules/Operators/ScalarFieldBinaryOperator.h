@@ -62,47 +62,46 @@ class ScalarFieldBinaryOperatorAlgo:  public DynamicAlgoBase, public BinaryField
 {
 public:
   virtual FieldHandle execute( FieldHandle left,
-                               FieldHandle right, GuiInt op) = 0;
+                               FieldHandle right, int op) = 0;
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *ftd);
                                
-protected:
-    template<class FieldLeft, class FieldRight, class ScalarField>      
-    void performOperation(FieldLeft* left_field, FieldRight *right_field,
-			  ScalarField* scalarField, GuiInt op );
 };
 
-template< class IFIELD >
+template< class FIELD >
 class ScalarFieldBinaryOperatorAlgoT : public ScalarFieldBinaryOperatorAlgo
 {
   virtual FieldHandle execute( FieldHandle left,
-                               FieldHandle right, GuiInt op);
+                               FieldHandle right, int op);
+protected:
+    void performOperation(FIELD* left_field, FIELD *right_field,
+			  FIELD* scalarField, int op );
 };
 
-template< class IFIELD >
+template< class FIELD >
 FieldHandle
-ScalarFieldBinaryOperatorAlgoT<IFIELD>::execute( FieldHandle left,
-                                                 FieldHandle right,
-                                                 GuiInt op)
+ScalarFieldBinaryOperatorAlgoT<FIELD>::execute( FieldHandle left, 
+                                                FieldHandle right,
+                                                 int op)
 {
-  IFIELD *lf = (IFIELD*)(left.get_rep());
-  IFIELD *rf = (IFIELD*)(right.get_rep());
-  typename IFIELD::mesh_handle_type mh = left->get_typed_mesh();
+  FIELD *lf = (FIELD*)(left.get_rep());
+  FIELD *rf = (FIELD*)(right.get_rep());
+  typename FIELD::mesh_handle_type mh = lf->get_typed_mesh();
   mh.detach();
-  typename IFIELD::mesh_type *mesh = mh.get_rep();
+  typename FIELD::mesh_type *mesh = mh.get_rep();
 
-  IFIELD *sf = scinew IFIELD( mesh );
-  peformOperation( lf, rf, sf, op ); 
+  FIELD *sf = scinew FIELD( mesh );
+  performOperation( lf, rf, sf, op ); 
   return sf;
 }
 
 
-template<class FieldLeft, class FieldRight, class ScalarField>
+template<class FIELD >
 void 
-ScalarFieldBinaryOperatorAlgo::performOperation(FieldLeft* left_field,
-					   FieldRight *right_field,
-					   ScalarField* scalarField,
-                                           GuiInt op)
+ScalarFieldBinaryOperatorAlgoT<FIELD>::performOperation(FIELD* left_field,
+					   FIELD *right_field,
+					   FIELD* scalarField,
+                                           int op)
 {
   //  cout << "ScalarFieldBinaryOperator::performOperation:start\n";
   bool successful = initField(left_field, right_field, scalarField);
@@ -113,7 +112,7 @@ ScalarFieldBinaryOperatorAlgo::performOperation(FieldLeft* left_field,
 
   //  cout << "ScalarFieldBinaryOperator::performOperation:fields have been initialized.\n";
   
-  switch(op.get()) {
+  switch(op) {
   case 0: // Add
     computeScalars(left_field, right_field, scalarField,
 		   AddOp());
@@ -136,7 +135,7 @@ ScalarFieldBinaryOperatorAlgo::performOperation(FieldLeft* left_field,
     break;
   default:
     std::cerr << "ScalarFieldBinaryOperator::performOperation: "
-	      << "Unexpected Operation Type #: " << op.get() << "\n";
+	      << "Unexpected Operation Type #: " << op << "\n";
   }
   //  cout << "ScalarFieldBinaryOperator::performOperation:end\n";
 }

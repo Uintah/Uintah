@@ -63,14 +63,14 @@ void ScalarFieldBinaryOperator::execute(void)
   if(!in_left->get(left_FH)){
     error("Didn't get a handle to left field");
     return;
-  } else if( left_FH->query_scalar_interface(this).get_rep() ){
+  } else if( !left_FH->query_scalar_interface(this).get_rep() ){
     error("Left input is not a Scalar field");
   }
 
   if(!in_right->get(right_FH)){
     error("Didn't get a handle to right field");
     return;
-  } else if( right_FH->query_scalar_interface(this).get_rep() ){
+  } else if( !right_FH->query_scalar_interface(this).get_rep() ){
     error("Right input is not a Scalar field");
   }
 
@@ -83,7 +83,7 @@ void ScalarFieldBinaryOperator::execute(void)
     return;
   }
 
-  FieldHandle fh =  algo->execute( left_FH, right_FH, guiOperation );
+  FieldHandle fh =  algo->execute( left_FH, right_FH, guiOperation.get() );
       
   if( fh.get_rep() != 0 )
     sfout->send(fh);
@@ -107,6 +107,8 @@ ScalarFieldBinaryOperatorAlgo::get_compile_info(const SCIRun::TypeDescription *f
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  // Add in name space
+  rval->add_namespace("Uintah");
   ftd->fill_compile_info(rval);
   return rval;
 }

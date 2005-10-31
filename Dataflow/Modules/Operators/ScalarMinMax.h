@@ -68,7 +68,7 @@ ScalarMinMaxAlgoCountT<FIELD>::execute(FieldHandle field,
 				       int& n_mins, double& max_val,
 				       IntVector& max_idx, int& n_maxs)
 {
-  FIELD *fld = field->get_rep();
+  FIELD *fld = (FIELD *)field.get_rep();
   typename FIELD::mesh_type *m = fld->get_typed_mesh().get_rep();
 
   IntVector offset(0,0,0);

@@ -20,8 +20,8 @@ class ScalarFieldAverageAlgo: public DynamicAlgoBase
 {
 public:
 
-  virtual FieldHandle fillField(FieldHandle sfh, FieldHandle afh) = 0;
-  virtual FieldHandle averageField(FieldHandle sfh, FieldHandle afh) = 0;
+  virtual void fillField(FieldHandle sfh, FieldHandle afh) = 0;
+  virtual void averageField(FieldHandle sfh, FieldHandle afh) = 0;
 
   static CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *td1,
                                             const SCIRun::TypeDescription *td2);
@@ -31,8 +31,8 @@ template <class ScalarField1, class ScalarField2>
 class ScalarFieldAverageAlgoT: public ScalarFieldAverageAlgo
 {
 public:
-  virtual FieldHandle fillField(FieldHandle fh, FieldHandle afh) = 0;
-  virtual FieldHandle averageField(FieldHandle fh, FieldHandle afh) = 0;
+  virtual void fillField(FieldHandle fh, FieldHandle afh);
+  virtual void averageField(FieldHandle fh, FieldHandle afh);
 
 private:
   void initField(ScalarField1* scalarField1,
@@ -50,7 +50,7 @@ private:
     
 
 template<class ScalarField1, class ScalarField2>
-FieldHandle
+void
 ScalarFieldAverageAlgoT<ScalarField1,
                         ScalarField2>::fillField(FieldHandle sfh, 
                                                  FieldHandle afh)
@@ -61,8 +61,9 @@ ScalarFieldAverageAlgoT<ScalarField1,
   computeScalars( inField, aveField, NoOp() ); 
   computeAverages( inField, aveField); 
 }
+
 template<class ScalarField1, class ScalarField2>
-FieldHandle
+void
 ScalarFieldAverageAlgoT<ScalarField1,
                         ScalarField2>::averageField(FieldHandle sfh, 
                                                     FieldHandle afh)
