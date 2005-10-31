@@ -75,7 +75,7 @@ void
  ComposeTensorArray::execute()
 {
 
-  MatrixHandle eigvec1, eigvec2, eigval1, eigval2, eigval3, tensor;
+  MatrixHandle eigvec1, eigvec2, eigval1, eigval2, eigval3, tensor, temp;
   MatrixIPort  *iport;
   MatrixOPort  *oport;
 
@@ -126,7 +126,8 @@ void
   eigvec1n = 0;
   if (eigvec1.get_rep())
   {
-    eigvec1 = dynamic_cast<Matrix *>(eigvec1->dense());
+    temp = dynamic_cast<Matrix *>(eigvec1->dense());
+    eigvec1 = temp;
     if (eigvec1->ncols() != 3)
     {
       error("The EigenVector1 matrix needs to have three columns");
@@ -151,7 +152,8 @@ void
   eigvec2n = 0;
   if (eigvec2.get_rep())
   {
-    eigvec2 = dynamic_cast<Matrix *>(eigvec2->dense());
+    temp = dynamic_cast<Matrix *>(eigvec2->dense());
+    eigvec2 = temp;
     if (eigvec2->ncols() != 3)
     {
       error("The EigenVector2 matrix needs to have three columns");
@@ -176,7 +178,8 @@ void
   eigval1n = 0;
   if (eigval1.get_rep())
   {
-    eigval1 = dynamic_cast<Matrix *>(eigval1->dense());
+    temp = dynamic_cast<Matrix *>(eigval1->dense());
+    eigval1 = temp;
     if (eigval1->ncols() != 1)
     {
       error("The EigenValue1 matrix needs to have only one columns");
@@ -201,7 +204,8 @@ void
   eigval2n = 0;
   if (eigval2.get_rep())
   {
-    eigval2 = dynamic_cast<Matrix *>(eigval2->dense());
+    temp = dynamic_cast<Matrix *>(eigval2->dense());
+    eigval2 = temp;
     if (eigval2->ncols() != 1)
     {
       error("The EigenValue2 matrix needs to have only one columns");
@@ -226,7 +230,8 @@ void
   eigval3n = 0;
   if (eigval3.get_rep())
   {
-    eigval3 = dynamic_cast<Matrix *>(eigval3->dense());
+    temp = dynamic_cast<Matrix *>(eigval3->dense());
+    eigval3 = temp;
     if (eigval3->ncols() != 1)
     {
       error("The EigenValue3 matrix needs to have only one columns");

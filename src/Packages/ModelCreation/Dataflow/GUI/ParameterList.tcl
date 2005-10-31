@@ -606,6 +606,9 @@ itcl_class ModelCreation_Script_ParameterList {
       
       set w .ui[modname]
       if {[winfo exists $w]} {
+
+	update_all_data
+
         set paramlist [$w.paramlist childsite]  
         set d [$paramlist.d childsite]  
      
@@ -702,6 +705,8 @@ itcl_class ModelCreation_Script_ParameterList {
     method add_parameter {} {
       global $this-data
       global $this-new_field_count
+
+      update_all_data
 
       set len [llength [set $this-data]]
       

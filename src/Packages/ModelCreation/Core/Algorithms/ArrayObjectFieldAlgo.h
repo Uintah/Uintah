@@ -42,6 +42,7 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Containers/HashTable.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Dataflow/Network/Module.h>
 
 #include <Packages/ModelCreation/Core/Algorithms/TVMMath.h>
@@ -402,7 +403,7 @@ void ArrayObjectFieldLocationElemAlgoT<FIELD>::getnextlocation(TensorVectorMath:
 template<class FIELD>
 int ArrayObjectFieldLocationElemAlgoT<FIELD>::size()
 {
-  typename FIELD::mesh_type::Node::size_type s;
+  typename FIELD::mesh_type::Elem::size_type s;
   mesh_->size(s);
   return(static_cast<int>(s));
 }
@@ -412,11 +413,23 @@ int ArrayObjectFieldLocationElemAlgoT<FIELD>::size()
 class ArrayObjectFieldCreateAlgo : public SCIRun::DynamicAlgoBase {
   public:
     virtual bool createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output) = 0;
-    static  SCIRun::CompileInfoHandle get_compile_info(SCIRun::FieldHandle field,std::string datatype);
+    static  SCIRun::CompileInfoHandle get_compile_info(SCIRun::FieldHandle field,std::string datatype, std::string basistype = "input");
 };
 
 template<class FIELD>
 class ArrayObjectFieldCreateAlgoT : public ArrayObjectFieldCreateAlgo {
+  public:
+    virtual bool createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output);
+};
+
+template<class FIELD>
+class ArrayObjectFieldCreateNodeAlgoT : public ArrayObjectFieldCreateAlgo {
+  public:
+    virtual bool createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output);
+};
+
+template<class FIELD>
+class ArrayObjectFieldCreateElemAlgoT : public ArrayObjectFieldCreateAlgo {
   public:
     virtual bool createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output);
 };
@@ -432,6 +445,31 @@ bool ArrayObjectFieldCreateAlgoT<FIELD>::createfield(SCIRun::FieldHandle input,S
   ofield->resize_fdata();
   return(true);
 }
+
+template<class FIELD>
+bool ArrayObjectFieldCreateElemAlgoT<FIELD>::createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output)
+{
+  typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(input->mesh().get_rep());
+  if (mesh == 0) return(false);
+  FIELD* ofield = scinew FIELD(mesh, 0);
+  output = dynamic_cast<SCIRun::Field *>(ofield);
+  if (output.get_rep() == 0) return(false);
+  ofield->resize_fdata();
+  return(true);
+}
+
+template<class FIELD>
+bool ArrayObjectFieldCreateNodeAlgoT<FIELD>::createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output)
+{
+  typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(input->mesh().get_rep());
+  if (mesh == 0) return(false);
+  FIELD* ofield = scinew FIELD(mesh, 1);
+  output = dynamic_cast<SCIRun::Field *>(ofield);
+  if (output.get_rep() == 0) return(false);
+  ofield->resize_fdata();
+  return(true);
+}
+
 
 ////////// ArrayObjectFieldElemAlgo //////////////////
 
@@ -683,12 +721,12 @@ template<class FIELD, class LOC>
 void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getlength(TensorVectorMath::Scalar& length)
 {
   typename FIELD::mesh_type::Edge::array_type a;
-  mesh_->synchronize(EDGES_E);
+  mesh_->synchronize(SCIRun::Mesh::EDGES_E);
   mesh_->get_edges(a, *it_);
   length = 0.0;
   for (size_t p=0;p<a.size();p++)
   {
-    length += mesh_->size(a[p]);
+    length += mesh_->get_size(a[p]);
   }
 }
 
@@ -787,12 +825,12 @@ template<class FIELD, class LOC>
 void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getarea(TensorVectorMath::Scalar& area)
 {
   typename FIELD::mesh_type::Face::array_type a;
-  mesh_->synchronize(FACES_E);
+  mesh_->synchronize(SCIRun::Mesh::FACES_E);
   mesh_->get_faces(a, *it_);
   area = 0.0;
   for (size_t p=0;p<a.size();p++)
   {
-    area += mesh_->size(a[p]);
+    area += mesh_->get_size(a[p]);
   }
 }
 

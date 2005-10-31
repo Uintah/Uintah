@@ -13,10 +13,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FieldsData
 
 SRCS     += \
-	$(SRCDIR)/DistanceToField.cc\
-	$(SRCDIR)/DistanceToBoundary.cc\
 	$(SRCDIR)/ComputeFieldData.cc\
-	$(SRCDIR)/FieldDataElemToNode.cc\
+	$(SRCDIR)/ComputeFieldsData.cc\
+	$(SRCDIR)/CreateFieldData.cc\
+	$(SRCDIR)/DistanceToBoundary.cc\
+	$(SRCDIR)/DistanceToField.cc\
+  $(SRCDIR)/FieldDataElemToNode.cc\
 	$(SRCDIR)/FieldDataNodeToElem.cc\
 	$(SRCDIR)/IsInsideField.cc\
 	$(SRCDIR)/SignedDistanceToField.cc\

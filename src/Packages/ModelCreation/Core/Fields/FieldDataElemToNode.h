@@ -116,6 +116,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
                               FieldHandle& output,
                               std::string method)
 {     
+
   output = 0;
   
   FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
@@ -138,9 +139,11 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
      return(false);   
   }
 
+
   // Create the field with the new mesh and data location.
   FIELD *ofield = scinew FIELD(field->get_typed_mesh(), 1);
   ofield->resize_fdata();
+  
   
   typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
 
@@ -149,9 +152,9 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
     typename FIELD::mesh_type::Edge::array_type edgearray;
     typename FIELD::mesh_type::Node::iterator it, eit;
 
+    mesh->synchronize(SCIRun::Mesh::EDGES_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
     mesh->begin(it);
     mesh->end(eit);
-    mesh->synchronize(SCIRun::Mesh::EDGES_E);
 
     if ((method == "Interpolate")||(method == "Average"))
     {
@@ -168,7 +171,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
         ofield->set_value(val,*(it));
         ++it;
-        reporter->update_progress(*(it),*(eit));         
       }
     }
     
@@ -196,7 +198,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
-          reporter->update_progress(*(it),*(eit));         
         }
       }
       else
@@ -230,7 +231,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
-          reporter->update_progress(*(it),*(eit));         
         }    
       }
       else
@@ -254,7 +254,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         }
         ofield->set_value(val,*(it));
         ++it;
-        reporter->update_progress(*(it),*(eit));                 
       }
     }
 
@@ -276,7 +275,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           int idx = static_cast<int>((valarray.size()/2));
           ofield->set_value(valarray[idx],*(it));
           ++it;
-          reporter->update_progress(*(it),*(eit));                   
         }
       }
       else
@@ -292,9 +290,9 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
     typename FIELD::mesh_type::Face::array_type facearray;
     typename FIELD::mesh_type::Node::iterator it, eit;
 
+    mesh->synchronize(SCIRun::Mesh::FACES_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
     mesh->begin(it);
     mesh->end(eit);
-    mesh->synchronize(SCIRun::Mesh::FACES_E);
 
     if ((method == "Interpolate")||(method == "Average"))
     {
@@ -311,7 +309,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
         ofield->set_value(val,*(it));
         ++it;
-        reporter->update_progress(*(it),*(eit));         
       }
     }
     
@@ -339,7 +336,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
-          reporter->update_progress(*(it),*(eit));         
         }
       }
       else
@@ -373,7 +369,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
-          reporter->update_progress(*(it),*(eit));         
         }    
       }
       else
@@ -397,7 +392,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         }
         ofield->set_value(val,*(it));
         ++it;
-        reporter->update_progress(*(it),*(eit));         
       }
     }
 
@@ -419,7 +413,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           int idx = static_cast<int>((valarray.size()/2));
           ofield->set_value(valarray[idx],*(it));
           ++it;
-          reporter->update_progress(*(it),*(eit));         
         }
       }
       else
@@ -430,16 +423,14 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
     }
   }
 
-
-
   if (mesh->dimensionality() == 3)
   {
     typename FIELD::mesh_type::Cell::array_type cellarray;
     typename FIELD::mesh_type::Node::iterator it, eit;
 
+    mesh->synchronize(SCIRun::Mesh::CELLS_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
     mesh->begin(it);
     mesh->end(eit);
-    mesh->synchronize(SCIRun::Mesh::CELLS_E);
 
     if ((method == "Interpolate")||(method == "Average"))
     {
@@ -456,7 +447,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
         ofield->set_value(val,*(it));
         ++it;
-        reporter->update_progress(*(it),*(eit));                 
       }
     }
     
@@ -484,7 +474,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
-          reporter->update_progress(*(it),*(eit));         
         }
       }
       else
@@ -518,7 +507,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           }
           ofield->set_value(val,*(it));
           ++it;
-          reporter->update_progress(*(it),*(eit));         
         }    
       }
       else
@@ -542,7 +530,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
         }
         ofield->set_value(val,*(it));
         ++it;
-        reporter->update_progress(*(it),*(eit));                 
       }
     }
 
@@ -564,7 +551,6 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
           int idx = static_cast<int>((valarray.size()/2));
           ofield->set_value(valarray[idx],*(it));
           ++it;
-          reporter->update_progress(*(it),*(eit));         
         }
       }
       else

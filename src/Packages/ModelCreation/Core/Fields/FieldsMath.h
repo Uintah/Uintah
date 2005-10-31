@@ -98,6 +98,9 @@ class FieldsMath {
     bool SplitFieldByElementData(FieldHandle input, FieldHandle& output);
     bool MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix);
 
+    // Gather Fields but then properly
+    bool MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields = true, bool forcepointcloud = false);
+
   private:
     Module* module_;
     ProgressReporter* pr_;

@@ -74,7 +74,7 @@ ReplicateDataArray::~ReplicateDataArray(){
 void
  ReplicateDataArray::execute()
 {
-  MatrixHandle Input,Size,Output;
+  MatrixHandle Input,Size,Output, temp;
   MatrixIPort* iport;
   MatrixOPort* oport;
   
@@ -140,7 +140,8 @@ void
   }
   
   Output = dynamic_cast<Matrix *>(scinew DenseMatrix(rows*n,cols));
-  Input = dynamic_cast<Matrix *>(Input->dense());
+  temp = dynamic_cast<Matrix *>(Input->dense());
+  Input = temp;
  
   if ((Output.get_rep() == 0)||(Input.get_rep()==0))
   {

@@ -76,7 +76,7 @@ itcl_class ModelCreation_TensorVectorMath_ComputeDataArray {
         pack $help.help -side top -fill both -expand yes
 
         makeSciButtonPanel $w $w $this
-        moveToCursor $w
+ #       moveToCursor $w
     }
     
     method labelcombo { win text1 arglist var} {

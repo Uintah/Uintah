@@ -1,8 +1,8 @@
-itcl_class ModelCreation_FieldsData_ComputeFieldData {
+itcl_class ModelCreation_FieldsData_ComputeFieldsData {
    inherit Module
 
     constructor {config} {
-        set name ComputeFieldData
+        set name ComputeFieldsData
         set_defaults
     }
 
@@ -33,16 +33,18 @@ itcl_class ModelCreation_FieldsData_ComputeFieldData {
 
         toplevel $w
 
-        iwidgets::labeledframe $w.inf -labeltext "Create Scalar Array"
+        iwidgets::labeledframe $w.inf -labeltext "Create New Field Data"
         set infoframe [$w.inf childsite]
         frame $infoframe.info
         pack $infoframe.info -side left
         set info $infoframe.info
         label $info.info1 -text "Function: RESULT = function(DATA,A,B,C,...)"
-        label $info.info2 -text "Input array: DATA (scalar/vector/tensor: data from field port) "
+        label $info.info2  -text "Input array: DATA1 (scalar/vector/tensor: data from field port) "
+        label $info.info2a -text "Input array: DATA2 (scalar/vector/tensor: data from field port) "
+        label $info.info2b -text "Input array: DATA3 (scalar/vector/tensor: data from field port) "
         label $info.info3 -text "Input array: X, Y, Z (scalar: Cartensian coordinates of node/element)"
         label $info.info4 -text "Input array: POS (vector: vector with node/element position)"
-        label $info.info5 -text "Input array: A, B, C, ... (scalar/vector/tensor: data from matrix ports)"
+        label $info.info5 -text "Input array: A, B, C, ... (scalar/vector/tensor: data from field data ports)"
         label $info.info6 -text "Input array: INDEX (scalar: number of the element)"
         label $info.info7 -text "Input array: SIZE (scalar: number of elements)"
         label $info.info8 -text "Input array: ELEMENT (element: object containing element properties)"
@@ -50,13 +52,15 @@ itcl_class ModelCreation_FieldsData_ComputeFieldData {
 
         grid $info.info1 -row 0 -column 0 -columnspan 2 -sticky w
         grid $info.info2 -row 1 -column 0 -sticky w
-        grid $info.info3 -row 2 -column 0 -sticky w
-        grid $info.info4 -row 3 -column 0 -sticky w
-        grid $info.info5 -row 4 -column 0 -sticky w
-        grid $info.info6 -row 1 -column 1 -sticky w
-        grid $info.info7 -row 2 -column 1 -sticky w
-        grid $info.info8 -row 3 -column 1 -sticky w
-        grid $info.info9 -row 4 -column 1 -sticky w
+        grid $info.info2a -row 2 -column 0 -sticky w        
+        grid $info.info2b -row 3 -column 0 -sticky w
+        grid $info.info3 -row 4 -column 0 -sticky w
+        grid $info.info4 -row 5 -column 0 -sticky w
+        grid $info.info5 -row 1 -column 1 -sticky w
+        grid $info.info6 -row 2 -column 1 -sticky w
+        grid $info.info7 -row 3 -column 1 -sticky w
+        grid $info.info8 -row 4 -column 1 -sticky w
+        grid $info.info9 -row 5 -column 1 -sticky w
 
         pack $w.inf -side top -anchor w -fill x
 

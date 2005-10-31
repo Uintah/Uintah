@@ -154,7 +154,7 @@ SCIRun::CompileInfoHandle
 }
 
 SCIRun::CompileInfoHandle 
-    ArrayObjectFieldCreateAlgo::get_compile_info(SCIRun::FieldHandle field,std::string datatype)
+    ArrayObjectFieldCreateAlgo::get_compile_info(SCIRun::FieldHandle field,std::string datatype, std::string basistype)
 {
   if (datatype == "Scalar") datatype = "double";
   if ((datatype == "input")||(datatype == "Same as Input"))
@@ -171,8 +171,11 @@ SCIRun::CompileInfoHandle
   // converted when reading the data, hence separate algorithms are
   // implemented for those cases
 
+  
   std::string algo_name = "ArrayObjectFieldCreateAlgoT";
   std::string algo_base = "ArrayObjectFieldCreateAlgo";
+  if ((basistype == "linear")||(basistype == "Linear")) algo_name = "ArrayObjectFieldCreateNodeAlgoT"; 
+  if ((basistype == "constant")||(basistype == "Constant")) algo_name = "ArrayObjectFieldCreateElemAlgoT"; 
 
   std::string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
 

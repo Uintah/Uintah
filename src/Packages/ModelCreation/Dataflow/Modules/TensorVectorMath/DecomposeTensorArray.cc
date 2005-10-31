@@ -72,7 +72,7 @@ DecomposeTensorArray::~DecomposeTensorArray(){
 void
  DecomposeTensorArray::execute()
 {
-  MatrixHandle eigvec1, eigvec2, eigvec3, eigval1, eigval2, eigval3,tensor;
+  MatrixHandle eigvec1, eigvec2, eigvec3, eigval1, eigval2, eigval3,tensor, temp;
   MatrixIPort* iport;
   MatrixOPort* oport;
   
@@ -100,6 +100,9 @@ void
     error("TensorArray is empty");
     return;
   }
+
+  temp = dynamic_cast<Matrix *>(tensor->dense());
+  tensor = temp;
 
   int n = tensor->nrows();
   

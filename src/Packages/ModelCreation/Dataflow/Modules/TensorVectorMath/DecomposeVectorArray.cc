@@ -69,7 +69,7 @@ DecomposeVectorArray::~DecomposeVectorArray(){
 
 void DecomposeVectorArray::execute()
 {
-  MatrixHandle X,Y,Z,V;
+  MatrixHandle X,Y,Z,V, temp;
   MatrixOPort *oport;
   MatrixIPort *iport;
   
@@ -101,7 +101,8 @@ void DecomposeVectorArray::execute()
     return;
   }
   
-  V = dynamic_cast<Matrix *>(V->dense());
+  temp = dynamic_cast<Matrix *>(V->dense());
+  V = temp;
   
   X = dynamic_cast<Matrix *>(scinew DenseMatrix(n,1));
   if (X.get_rep() == 0)
