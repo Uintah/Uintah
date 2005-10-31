@@ -93,7 +93,7 @@ namespace SCIRun {
     virtual void destroyComponent();
 
   protected:
-    PortMap ports;
+    PortMap componentPorts;
     
     Component::pointer component;
     

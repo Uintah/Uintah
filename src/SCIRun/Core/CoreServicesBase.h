@@ -63,7 +63,7 @@ namespace SCIRun {
     typedef typename ComponentInfoBase<Interface>::PortMap PortMap;
 
     using ComponentInfoBase<Interface>::ports_lock;
-    using ComponentInfoBase<Interface>::ports;
+    using ComponentInfoBase<Interface>::componentPorts;
 
     //using typename ComponentInfoBase<Interface>::ports_lock;
     //using typename ComponentInfoBase<Interface>::ports;
