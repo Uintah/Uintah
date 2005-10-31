@@ -81,12 +81,6 @@ proc setIcons { { w . } { size small } } {
     }
 }
 
-rename toplevel __TCL_toplevel__
-proc toplevel { args } {
-    set win [uplevel 1 __TCL_toplevel__ $args]
-    setIcons [lindex $args 0]
-    return $win
-}
 
 # envBool <variable name>
 #
@@ -143,6 +137,19 @@ proc safeSetWindowGeometry { w geom } {
 
     wm geometry $w ${width}x${height}+${xoff}+${yoff}
 }
+
+rename toplevel __TCL_toplevel__
+proc toplevel { args } {
+    set win [uplevel 1 __TCL_toplevel__ $args]
+    setIcons [lindex $args 0]
+    set varname [string range $win 3 end]-ui_geometry
+    upvar \#0 $varname geometry
+    if { [info exists geometry] } {
+	safeSetWindowGeometry $win $geometry
+    }
+    return $win
+}
+
 
 proc geometryTrace { args } {
     global geometry Subnet

@@ -48,6 +48,11 @@ itcl_class Module {
     }
 			
     constructor {config} {
+	if { [$this have_ui] } {
+	    global ModuleSavedVars
+	    lappend ModuleSavedVars([modname]) ui_geometry
+	}
+
 	global $this-gui-x $this-gui-y
         set $this-gui-x -1
         set $this-gui-y -1
@@ -809,6 +814,12 @@ itcl_class Module {
     # 'tab' is the indent string to make it look pretty
     method writeStateToScript { scriptVar prefix { tab "" }} {
 	if [isaSubnetIcon [modname]] return
+
+	
+	if { [winfo exists .ui[modname]] } {
+	    setGlobal [modname]-ui_geometry [winfo geometry .ui[modname]]
+	}
+
 	upvar 1 $scriptVar script
 	set module [modname]
 	set write_vars ""
