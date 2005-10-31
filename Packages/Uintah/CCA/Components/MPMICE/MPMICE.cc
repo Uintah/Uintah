@@ -151,7 +151,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
   //__________________________________
   //  I C E
-
   if(!dataArchiver){
     throw InternalError("MPMICE needs a dataArchiver component to work", __FILE__, __LINE__);
   }
@@ -337,12 +336,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   all_matls);
-
-  if (d_ice->d_RateForm) {
-    d_ice->schedulecomputeDivThetaVel_CC(     sched, ice_patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  all_matls);
-  }
   
   d_ice->scheduleComputeTempFC(               sched, ice_patches, ice_matls_sub,
                                                                   mpm_matls_sub,
@@ -611,7 +604,7 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->cMassLabel,          mpm_matl,  gac, 1);
   t->requires(Task::NewDW, Ilb->press_force_CCLabel,  mpm_matl,  gac, 1);
   t->requires(Task::OldDW, Mlb->pXLabel,              mpm_matl,  Ghost::None);
-  t->requires(Task::OldDW, Mlb->pSizeLabel,         mpm_matl,  Ghost::None);
+  t->requires(Task::OldDW, Mlb->pSizeLabel,           mpm_matl,  Ghost::None);
    
   t->computes(Mlb->pPressureLabel,   mpm_matl);
   t->computes(Mlb->gradPAccNCLabel,  mpm_matl);
@@ -836,7 +829,6 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   sched->addTask(t, patches, mpm_matls);
 }
 
-//______________________________________________________________________
 /*_____________________________________________________________________
  Function~  MPMICE::scheduleComputePressure--
  Note:  Handles both Rate and Equilibration form of solution technique
@@ -852,45 +844,34 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                           getLevel(patches)->getGrid()->numLevels()))
     return;
   Task* t = NULL;
-  if (d_ice->d_RateForm) {     // R A T E   F O R M
-    if (cout_doing.active())
-      cout_doing << "MPMICE::scheduleComputeRateFormPressure" << endl;
+  if (cout_doing.active())
+    cout_doing << "MPMICE::scheduleComputeEquilibrationPressure" << endl;
 
-    t = scinew Task("MPMICE::computeRateFormPressure",
-              this, &MPMICE::computeRateFormPressure);
-  }
-  if (d_ice->d_EqForm) {       // E Q   F O R M
-    if (cout_doing.active())
-      cout_doing << "MPMICE::scheduleComputeEquilibrationPressure" << endl;
-
-    t = scinew Task("MPMICE::computeEquilibrationPressure",
-              this, &MPMICE::computeEquilibrationPressure);
-  }
+  t = scinew Task("MPMICE::computeEquilibrationPressure",
+            this, &MPMICE::computeEquilibrationPressure);
                               // I C E
-  t->requires(Task::OldDW,Ilb->temp_CCLabel,         ice_matls, Ghost::None);
-  t->requires(Task::OldDW,Ilb->rho_CCLabel,          ice_matls, Ghost::None);
-  t->requires(Task::OldDW,Ilb->sp_vol_CCLabel,       ice_matls, Ghost::None);
-  t->requires(Task::NewDW,Ilb->specific_heatLabel,   ice_matls, Ghost::None);
-  t->requires(Task::NewDW,Ilb->gammaLabel,           ice_matls, Ghost::None);
+  Ghost::GhostType  gn  = Ghost::None;
+  t->requires(Task::OldDW,Ilb->temp_CCLabel,       ice_matls, gn);  
+  t->requires(Task::OldDW,Ilb->rho_CCLabel,        ice_matls, gn);  
+  t->requires(Task::OldDW,Ilb->sp_vol_CCLabel,     ice_matls, gn);  
+  t->requires(Task::NewDW,Ilb->specific_heatLabel, ice_matls, gn);  
+  t->requires(Task::NewDW,Ilb->gammaLabel,         ice_matls, gn);  
 
                               // M P M
-  t->requires(Task::NewDW,MIlb->temp_CCLabel,        mpm_matls, Ghost::None);
-  t->requires(Task::NewDW,Ilb->rho_CCLabel,          mpm_matls, Ghost::None);
-  t->requires(Task::NewDW,Ilb->sp_vol_CCLabel,       mpm_matls, Ghost::None);
+  t->requires(Task::NewDW,MIlb->temp_CCLabel,      mpm_matls, gn);  
+  t->requires(Task::NewDW,Ilb->rho_CCLabel,        mpm_matls, gn);  
+  t->requires(Task::NewDW,Ilb->sp_vol_CCLabel,     mpm_matls, gn);  
  
-  if (d_ice->d_EqForm) {      // E Q   F O R M
-    t->requires(Task::OldDW,Ilb->press_CCLabel,      press_matl, Ghost::None);
-    t->requires(Task::OldDW,Ilb->vel_CCLabel,        ice_matls,  Ghost::None);
-    t->requires(Task::NewDW,MIlb->vel_CCLabel,       mpm_matls,  Ghost::None);
-  }
+ 
+  t->requires(Task::OldDW,Ilb->press_CCLabel,      press_matl, gn);
+  t->requires(Task::OldDW,Ilb->vel_CCLabel,        ice_matls,  gn);
+  t->requires(Task::NewDW,MIlb->vel_CCLabel,       mpm_matls,  gn);
+
 
   computesRequires_CustomBCs(t, "EqPress", Ilb, ice_matls, 
                             d_ice->d_customBC_var_basket);
                               
                               //  A L L _ M A T L S
-  if (d_ice->d_RateForm) {   
-    t->computes(Ilb->matl_press_CCLabel);
-  }
   t->computes(Ilb->f_theta_CCLabel);
   t->computes(Ilb->compressiblityLabel, ice_matls);
   t->computes(Ilb->compressiblityLabel, mpm_matls);
@@ -1864,7 +1845,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
     }  // cell iterator
     //---- P R I N T   D A T A ------
-    if(d_ice -> switchDebug_EQ_RF_press)  {
+    if(d_ice -> switchDebug_equil_press)  {
       ostringstream desc1;
       desc1<< "TOP_equilibration_patch_"<< patch->getID();
       d_ice->printData( 0, patch, 1, desc1.str(), "Press_CC_top", press); 
@@ -2099,7 +2080,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 #endif
     
   //---- P R I N T   D A T A ------
-    if(d_ice -> switchDebug_EQ_RF_press)  { 
+    if(d_ice -> switchDebug_equil_press)  { 
       ostringstream desc1;
       desc1<< "BOT_equilibration_patch_"<<patch->getID();
 

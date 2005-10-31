@@ -69,9 +69,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   MIlb = scinew MPMICELabel();
 
   d_doAMR               = doAMR;
-  d_useLockStep         = false;
-  d_RateForm            = false;
-  d_EqForm              = false; 
+  d_useLockStep         = false; 
   d_add_heat            = false;
   d_impICE              = false;
   d_useCompatibleFluxes = false;
@@ -226,18 +224,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   if(!child->getAttribute("technique",solution_technique)){
     throw ProblemSetupException("Nothing specified for solution technique", __FILE__, __LINE__);
   }
-  if (solution_technique == "RateForm") {
-    d_RateForm = true;
-    cout_norm << "Solution Technique = Rate Form " << endl;
-  } 
-  if (solution_technique == "EqForm") {
-    d_EqForm = true;
-    cout_norm << "Solution Technique = Equilibration Form " << endl;
-  }
-  if (d_RateForm == false && d_EqForm == false ) {
-    string warn="ERROR:\nMust specify EqForm or RateForm in ICE solution";
-    throw ProblemSetupException(warn, __FILE__, __LINE__);
-  }
+
     
   cout_norm << "cfl = " << d_CFL << endl;
   cout_norm << "max_iteration_equilibration "<<d_max_iter_equilibration<<endl;
@@ -764,33 +751,23 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
     return;
 
   Task* t = 0;
-  if (d_EqForm) {             // EQ 
-    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeStableTimestep \t\t\tL-"
-               <<level->getIndex() << endl;
-    t = scinew Task("ICE::actuallyComputeStableTimestep",
-                     this, &ICE::actuallyComputeStableTimestep);
-  } else if (d_RateForm) {    // RF
-    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeStableTimestepRF " << endl;
-    t = scinew Task("ICE::actuallyComputeStableTimestepRF",
-                      this, &ICE::actuallyComputeStableTimestepRF);
-  }
+  cout_doing << d_myworld->myrank() << " ICE::scheduleComputeStableTimestep \t\t\tL-"
+             <<level->getIndex() << endl;
+  t = scinew Task("ICE::actuallyComputeStableTimestep",
+                   this, &ICE::actuallyComputeStableTimestep);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
-                            // COMMON TO EQ AND RATE FORM
+                            
   t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);  
   t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
   t->requires(Task::NewDW, lb->thermalCondLabel,   gn,  0);
   t->requires(Task::NewDW, lb->gammaLabel,         gn,  0);
-  t->requires(Task::NewDW, lb->specific_heatLabel, gn,  0);
-                            
-  if (d_EqForm){            // EQ      
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gn,  0);   
-    t->requires(Task::NewDW, lb->viscosityLabel,   gn,  0);        
-  } else if (d_RateForm){   // RATE FORM
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gac, 1);   
-  }
+  t->requires(Task::NewDW, lb->specific_heatLabel, gn,  0);   
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gn,  0);   
+  t->requires(Task::NewDW, lb->viscosityLabel,   gn,  0);        
+  
   t->computes(d_sharedState->get_delt_label());
   sched->addTask(t,level->eachPatch(), ice_matls); 
   
@@ -849,12 +826,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   
   scheduleComputePressure(                sched, patches, d_press_matl,
                                                           all_matls);
-
-  if (d_RateForm) {
-    schedulecomputeDivThetaVel_CC(        sched, patches, ice_matls_sub,        
-                                                          mpm_matls_sub,        
-                                                          all_matls);           
-  }
 
   scheduleComputeTempFC(                   sched, patches, ice_matls_sub,  
                                                            mpm_matls_sub,
@@ -1007,18 +978,12 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
     return;
 
   Task* t = 0;
-  if (d_RateForm) {     //RATE FORM
-    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeRateFormPressure" << endl;
-    t = scinew Task("ICE::computeRateFormPressure",
-                     this, &ICE::computeRateFormPressure);
-  }
-  else if (d_EqForm) {       // EQ 
-    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeEquilibrationPressure" 
-               << "\t\t\tL-" << levelIndex<< endl;
-    t = scinew Task("ICE::computeEquilibrationPressure",
-                     this, &ICE::computeEquilibrationPressure);
-  }         
-                        // EQ & RATE FORM
+  
+  cout_doing << d_myworld->myrank() << " ICE::scheduleComputeEquilibrationPressure" 
+             << "\t\t\tL-" << levelIndex<< endl;
+  t = scinew Task("ICE::computeEquilibrationPressure",
+            this, &ICE::computeEquilibrationPressure);        
+
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   Ghost::GhostType  gn = Ghost::None;
   t->requires(Task::OldDW,lb->press_CCLabel, press_matl, oims, gn);
@@ -1037,10 +1002,6 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(lb->sumKappaLabel,        press_matl, oims);
   t->computes(lb->press_equil_CCLabel,  press_matl, oims);
   t->computes(lb->sum_imp_delPLabel,    press_matl, oims);  //  initialized for implicit
- 
-  if (d_RateForm) {     // RATE FORM
-    t->computes(lb->matl_press_CCLabel, press_matl,oims);
-  }
 
   computesRequires_CustomBCs(t, "EqPress", lb, ice_matls->getUnion(),
                             d_customBC_var_basket); 
@@ -1095,20 +1056,13 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
     return;
 
   Task* t = 0;
-  if (d_RateForm) {     //RATE FORM
-    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeFaceCenteredVelocitiesRF" 
-               << "\t\t\t\t\tL-" << levelIndex<< endl;
-    t = scinew Task("ICE::computeFaceCenteredVelocitiesRF",
-              this, &ICE::computeFaceCenteredVelocitiesRF);
-  }
-  else if (d_EqForm) {       // EQ 
-    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeVel_FC" 
-               << "\t\t\t\t\tL-" << levelIndex<< endl;
-               
-    t = scinew Task("ICE::computeVel_FC",
-              this, &ICE::computeVel_FC, recursion);
-  }
-                      // EQ  & RATE FORM 
+
+  cout_doing << d_myworld->myrank() << " ICE::scheduleComputeVel_FC" 
+             << "\t\t\t\t\tL-" << levelIndex<< endl;
+
+  t = scinew Task("ICE::computeVel_FC",
+            this, &ICE::computeVel_FC, recursion);
+
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  t->requires(Task::OldDW, lb->delTLabel);    For AMR
@@ -1118,15 +1072,6 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
   t->requires(Task::OldDW,lb->vel_CCLabel,         ice_matls,  gac,1);
   t->requires(Task::NewDW,lb->vel_CCLabel,         mpm_matls,  gac,1);
   
-  if (d_RateForm) {     //RATE FORM
-    t->requires(Task::NewDW,lb->DLabel,                        gac, 1);
-    t->requires(Task::NewDW,lb->matl_press_CCLabel,            gac, 1);
-    t->requires(Task::NewDW,lb->vol_frac_CCLabel,              gac, 1);
-    t->requires(Task::NewDW,lb->speedSound_CCLabel,            gac, 1);
-    t->computes(lb->press_diffX_FCLabel);
-    t->computes(lb->press_diffY_FCLabel);
-    t->computes(lb->press_diffZ_FCLabel); 
-  }
   t->computes(lb->uvel_FCLabel);
   t->computes(lb->vvel_FCLabel);
   t->computes(lb->wvel_FCLabel);
@@ -1363,12 +1308,6 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->vol_fracY_FCLabel, ice_matls, gac,2);
   t->requires(Task::NewDW, lb->vol_fracZ_FCLabel, ice_matls, gac,2);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel, Ghost::None);
-  
-  if (d_RateForm) {   // RATE FORM
-    t->requires(Task::NewDW,lb->press_diffX_FCLabel, gac, 1);
-    t->requires(Task::NewDW,lb->press_diffY_FCLabel, gac, 1);
-    t->requires(Task::NewDW,lb->press_diffZ_FCLabel, gac, 1);
-  }
 
   if(d_turbulence){
     t->requires(Task::NewDW,lb->uvel_FCMELabel,   ice_matls, gac, 3);
@@ -1398,22 +1337,19 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
     return;
 
   Task* t;              // EQ
-    cout_doing << d_myworld->myrank() << " ICE::scheduleAccumulateEnergySourceSinks" 
-               << "\t\t\tL-" << levelIndex << endl;
-               
-    t = scinew Task("ICE::accumulateEnergySourceSinks",
-              this, &ICE::accumulateEnergySourceSinks);
+  cout_doing << d_myworld->myrank() << " ICE::scheduleAccumulateEnergySourceSinks" 
+             << "\t\t\tL-" << levelIndex << endl;
+
+  t = scinew Task("ICE::accumulateEnergySourceSinks",
+            this, &ICE::accumulateEnergySourceSinks);
                      
-  if (d_RateForm) {     //RATE FORM
-    cout_doing << d_myworld->myrank() << " ICE::scheduleAccumulateEnergySourceSinks_RF" << endl;
-    t = scinew Task("ICE::accumulateEnergySourceSinks_RF",
-              this, &ICE::accumulateEnergySourceSinks_RF);
-  }
+
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  t->requires(Task::OldDW, lb->delTLabel);  FOR AMR
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
+  t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
   t->requires(Task::NewDW, lb->compressiblityLabel,                gn);
   t->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, gac,1);
   t->requires(Task::NewDW, lb->thermalCondLabel,  ice_matls, gac,1);
@@ -1422,26 +1358,8 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->vol_fracX_FCLabel, ice_matls, gac,2);
   t->requires(Task::NewDW, lb->vol_fracY_FCLabel, ice_matls, gac,2);
   t->requires(Task::NewDW, lb->vol_fracZ_FCLabel, ice_matls, gac,2);
-
-  if (d_EqForm) {       //EQ FORM
-    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
-    t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gn);
-  }
-  if (d_RateForm) {     //RATE FORM
-    t->requires(Task::NewDW, lb->f_theta_CCLabel,            gn,0);
-    t->requires(Task::OldDW, lb->vel_CCLabel,     ice_matls, gn,0);    
-    t->requires(Task::NewDW, lb->vel_CCLabel,     mpm_matls, gn,0);    
-    t->requires(Task::NewDW, lb->pressX_FCLabel,  press_matl,oims, gac,1);
-    t->requires(Task::NewDW, lb->pressY_FCLabel,  press_matl,oims, gac,1);
-    t->requires(Task::NewDW, lb->pressZ_FCLabel,  press_matl,oims, gac,1);
-    t->requires(Task::NewDW, lb->uvel_FCMELabel,             gac,1);
-    t->requires(Task::NewDW, lb->vvel_FCMELabel,             gac,1);
-    t->requires(Task::NewDW, lb->wvel_FCMELabel,             gac,1);
-    t->requires(Task::NewDW, lb->press_diffX_FCLabel,        gac,1);     
-    t->requires(Task::NewDW, lb->press_diffY_FCLabel,        gac,1);     
-    t->requires(Task::NewDW, lb->press_diffZ_FCLabel,        gac,1);
-    t->requires(Task::NewDW, lb->vol_frac_CCLabel,           gac,1);          
-  }
+  t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gn);
+  
   t->computes(lb->int_eng_source_CCLabel);
   t->computes(lb->heatCond_src_CCLabel);
   sched->addTask(t, patches, matls);
@@ -1500,18 +1418,10 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
     return;
 
   Task* t = 0;
-
-  if (d_RateForm) {     //RATE FORM
-    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeLagrangianSpecificVolumeRF" << endl;
-    t = scinew Task("ICE::computeLagrangianSpecificVolumeRF",
-               this,&ICE::computeLagrangianSpecificVolumeRF);
-  }
-  else if (d_EqForm) {       // EQ 
-    cout_doing << d_myworld->myrank() << " ICE::scheduleComputeLagrangianSpecificVolume" 
-               << "\t\t\tL-"<< levelIndex<< endl;
-    t = scinew Task("ICE::computeLagrangianSpecificVolume",
-               this,&ICE::computeLagrangianSpecificVolume);
-  }
+  cout_doing << d_myworld->myrank() << " ICE::scheduleComputeLagrangianSpecificVolume" 
+             << "\t\t\tL-"<< levelIndex<< endl;
+  t = scinew Task("ICE::computeLagrangianSpecificVolume",
+             this,&ICE::computeLagrangianSpecificVolume);
 
   Ghost::GhostType  gn  = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1523,18 +1433,12 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   t->requires(Task::NewDW, lb->Tdot_CCLabel,              gn);  
   t->requires(Task::NewDW, lb->f_theta_CCLabel,           gn);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel,          gac,1);
-  t->requires(Task::OldDW, lb->temp_CCLabel,   ice_matls, gn);
-  t->requires(Task::NewDW, lb->temp_CCLabel,   mpm_matls, gn); 
-  if (d_RateForm) {         // RATE FORM
-    t->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,1);
-    t->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,1);
-    t->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,1);        
-  }
-  if (d_EqForm) {           // EQ FORM
-    t->requires(Task::NewDW, lb->compressiblityLabel,          gn);
-    t->requires(Task::NewDW, lb->specific_heatLabel,ice_matls, gn);
-    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims,gn);
-  }
+  t->requires(Task::OldDW, lb->temp_CCLabel,        ice_matls, gn);
+  t->requires(Task::NewDW, lb->temp_CCLabel,        mpm_matls, gn); 
+  t->requires(Task::NewDW, lb->compressiblityLabel,            gn);
+  t->requires(Task::NewDW, lb->specific_heatLabel,  ice_matls, gn);
+  t->requires(Task::NewDW, lb->delP_DilatateLabel,  press_matl,oims,gn);
+    
   if(d_models.size() > 0){
     t->requires(Task::NewDW, lb->modelVol_srcLabel,    gn);
   }
@@ -1600,17 +1504,11 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     return;
 
   Task* t = 0;
-  if (d_RateForm) {     //RATE FORM
-    cout_doing << d_myworld->myrank() << " ICE::scheduleAddExchangeToMomentumAndEnergy_RF" << endl;
-    t=scinew Task("ICE::addExchangeToMomentumAndEnergyRF",
-                  this, &ICE::addExchangeToMomentumAndEnergyRF);
-  }
-  else if (d_EqForm) {       // EQ 
-    cout_doing << d_myworld->myrank() << " ICE::scheduleAddExchangeToMomentumAndEnergy" 
-               << "\t\t\tL-"<< levelIndex << endl;
-    t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
-                  this, &ICE::addExchangeToMomentumAndEnergy);
-  }
+
+  cout_doing << d_myworld->myrank() << " ICE::scheduleAddExchangeToMomentumAndEnergy" 
+             << "\t\t\tL-"<< levelIndex << endl;
+  t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
+                this, &ICE::addExchangeToMomentumAndEnergy);
 
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -1631,15 +1529,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
   t->requires(Task::NewDW,  lb->int_eng_L_CCLabel,        gn);
   t->requires(Task::NewDW,  lb->sp_vol_CCLabel,           gn);      
   t->requires(Task::NewDW,  lb->vol_frac_CCLabel,         gn);      
-  if (d_RateForm) {         // RATE FORM
-    t->requires(Task::NewDW, lb->f_theta_CCLabel,         gn);      
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,          gn);      
-    t->requires(Task::NewDW, lb->rho_CCLabel,             gn);      
-    t->requires(Task::NewDW, lb->speedSound_CCLabel,      gn);        
-    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, gn, oims);
-    t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls,  gn); 
-  }
-
+ 
   computesRequires_CustomBCs(t, "CC_Exchange", lb, ice_matls,
                              d_customBC_var_basket); 
 
@@ -2442,7 +2332,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
 
    //---- P R I N T   D A T A ------  
-    if (switchDebug_EQ_RF_press) {
+    if (switchDebug_equil_press) {
     
       new_dw->allocateTemporary(n_iters_equil_press,  patch);
       ostringstream desc,desc1;
@@ -2566,7 +2456,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         }
       }
 
-      if (switchDebug_EQ_RF_press) {
+      if (switchDebug_equil_press) {
         n_iters_equil_press[c] = count;
       }
     }     // end of cell interator
@@ -2625,7 +2515,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
 
    //---- P R I N T   D A T A ------   
-    if (switchDebug_EQ_RF_press) {
+    if (switchDebug_equil_press) {
       ostringstream desc;
       desc << "BOT_equilibration_patch_" << patch->getID();
       printData( 0, patch, 1, desc.str(), "Press_CC_equil", press_new);
@@ -3715,11 +3605,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       press_force.initialize(Vector(0.,0.,0.));
       mom_source.initialize(Vector(0.,0.,0.));
       
-      if(d_RateForm){        // R A T E  F O R M 
-        new_dw->get(press_diffX_FC,lb->press_diffX_FCLabel,indx,patch,gac, 1);
-        new_dw->get(press_diffY_FC,lb->press_diffY_FCLabel,indx,patch,gac, 1);
-        new_dw->get(press_diffZ_FC,lb->press_diffZ_FCLabel,indx,patch,gac, 1);
-      }
       //__________________________________
       // Compute Viscous Terms 
       SFCXVariable<Vector> tau_X_FC;
@@ -3833,34 +3718,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         mom_source[c].z( (-pressure_source * areaZ +
                            viscous_source + 
                            mass * gravity.z() * include_term) * delT );
-      }
-      //__________________________________
-      //  RATE FORM:   Tack on contribution
-      //  due to grad press_diff_FC
-      if(d_RateForm){
-        double press_diff_source;
-        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-          IntVector c = *iter;
-          right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
-          top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
-          front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
-
-          //__________________________________
-          //    X - M O M E N T U M 
-          press_diff_source = (press_diffX_FC[right] - press_diffX_FC[left]);
-          mom_source[c].x(mom_source[c].x() -
-                        press_diff_source * areaX * include_term * delT);
-          //__________________________________
-          //    Y - M O M E N T U M 
-          press_diff_source = (press_diffY_FC[top] - press_diffY_FC[bottom]);
-          mom_source[c].y(mom_source[c].y() -
-                        press_diff_source * areaY * include_term * delT);
-          //__________________________________
-          //    Z - M O M E N T U M 
-          press_diff_source = (press_diffZ_FC[front] - press_diffZ_FC[back]);
-          mom_source[c].z(mom_source[c].z() -
-                        press_diff_source * areaZ * include_term * delT); 
-        }
       }
 
       setBC(press_force, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 

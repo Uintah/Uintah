@@ -745,7 +745,7 @@ namespace Uintah {
      
       // Debugging switches
       bool switchDebug_Initialize;
-      bool switchDebug_EQ_RF_press;
+      bool switchDebug_equil_press;
       bool switchDebug_vel_FC;
       bool switchDebug_Temp_FC;
       bool switchDebug_PressDiffRF;
@@ -776,8 +776,6 @@ namespace Uintah {
       // flags
       bool d_doAMR;
       int  d_surroundingMatl_indx;
-      bool d_RateForm;
-      bool d_EqForm;
       bool d_impICE;
       bool d_recompile;
       bool d_useLockStep;
