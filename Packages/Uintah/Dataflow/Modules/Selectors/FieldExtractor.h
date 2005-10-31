@@ -398,7 +398,6 @@ FieldExtractorAlgoT<Var, T>::build_field(QueryInfo& qinfo, IntVector& offset,
                                         FIELD* field, int remove_boundary)
 {
   // Initialize the data
-  cerr<<"Trying to initialize the data\n";
   field->fdata().initialize(T(0));
 
   //  WallClockTimer my_timer;

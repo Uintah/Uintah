@@ -440,12 +440,12 @@ void NodeHedgehog::execute()
     return;
   }
 
-  if( vfield->get_type_name(1) != "Vector" ){
-    error ("First field must be a Vector field.");
+  if ( !vfield->query_vector_interface(this).get_rep() ){
+    error("Input is not a Vector field.");
     return;
   }
-  
-  if(vfield->mesh()->get_type_name(0) != "LatVolMesh") {
+  if(vfield->mesh()->get_type_name(0) != 
+     "LatVolMesh<HexTrilinearLgn<Point> > ") {
     error("First field is not a LatVolMesh based field.");
     return;
   }
