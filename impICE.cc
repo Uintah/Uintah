@@ -43,6 +43,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   int levelIndex = getLevel(patches)->getIndex();
+  const MaterialSubset* press_matl = one_matl;
   
   Task::WhichDW whichDW;
   if(firstIteration) {
@@ -66,7 +67,8 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   t->requires( Task::ParentNewDW,   
                           lb->sumKappaLabel, one_matl,oims,gn,0);      
 
-  t->computes(lb->matrixLabel,  one_matl, oims);
+  t->computes(lb->matrixLabel,   one_matl,   oims);
+  t->computes(lb->imp_delPLabel, press_matl, oims);
   sched->addTask(t, patches, all_matls);                     
 }
 
@@ -384,12 +386,15 @@ void ICE::setupMatrix(const ProcessorGroup*,
     Vector dx     = patch->dCell();
     int numMatls  = d_sharedState->getNumMatls();
     CCVariable<Stencil7> A; 
+    CCVariable<double> imp_delP;
     constCCVariable<double> sumKappa;
    
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->allocateAndPut(A,    lb->matrixLabel,  0, patch, gn, 0);
-    parent_new_dw->get(sumKappa, lb->sumKappaLabel,0, patch, gn, 0); 
+    new_dw->allocateAndPut(A,       lb->matrixLabel,    0, patch, gn, 0);
+    new_dw->allocateAndPut(imp_delP,lb->imp_delPLabel,  0, patch, gn, 0);
+    parent_new_dw->get(sumKappa,    lb->sumKappaLabel,  0, patch, gn, 0);
+    imp_delP.initialize(0.0); // you need to intialize the extra cells
     
     IntVector right, left, top, bottom, front, back;
     IntVector R_CC, L_CC, T_CC, B_CC, F_CC, BK_CC;
@@ -744,8 +749,7 @@ void ICE::updatePressure(const ProcessorGroup*,
       sum_imp_delP[c] = sum_imp_delP_old[c] + imp_delP[c];
       press_CC[c] = press_equil[c] + sum_imp_delP[c];
       press_CC[c] = max(1.0e-12, press_CC[c]);   // C L A M P
-    }  
-   
+    }   
     //__________________________________
     //  set boundary conditions   
     preprocess_CustomBCs("update_press_CC",parent_old_dw,parent_new_dw, 
@@ -758,8 +762,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     delete_CustomBCs(d_customBC_var_basket);
     
     set_imp_DelP_BC(imp_delP, patch);
-    
-
+     
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
       ostringstream desc;
@@ -856,11 +859,11 @@ void ICE::computeDel_P(const ProcessorGroup*,
  Function~  ICE::implicitPressureSolve-- 
 _____________________________________________________________________*/
 void ICE::implicitPressureSolve(const ProcessorGroup* pg,
-		                  const PatchSubset* patch_sub, 
-		                  const MaterialSubset*,       
-		                  DataWarehouse* ParentOldDW,    
+		                const PatchSubset* patch_sub, 
+		                const MaterialSubset*,       
+		                DataWarehouse* ParentOldDW,    
                                 DataWarehouse* ParentNewDW,    
-		                  LevelP level,                 
+		                LevelP level,                 
                                 Scheduler* sched,
                                 const MaterialSubset* ice_matls,
                                 const MaterialSubset* mpm_matls)
@@ -926,9 +929,10 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   max_vartype max_RHS = 1/d_SMALL_NUM;
   double smallest_max_RHS_sofar = max_RHS; 
   int counter = 0;
-  bool restart   = false;
-  bool recursion = true;
-  bool firstIter = true;
+  bool restart    = false;
+  bool recursion  = true;
+  bool firstIter  = true;
+  bool modifies_X = true;
   //const VarLabel* whichInitialGuess = lb->initialGuessLabel;
   const VarLabel* whichInitialGuess = NULL;
   
@@ -937,8 +941,6 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     //__________________________________
     // schedule the tasks
     subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
-   
-
 
     scheduleSetupMatrix(    subsched, level,  patch_set,  one_matl, 
                                                           all_matls,
@@ -946,10 +948,10 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
     solver->scheduleSolve(level, subsched, press_matlSet,
                           lb->matrixLabel,   Task::NewDW,
-                          lb->imp_delPLabel, false,
+                          lb->imp_delPLabel, modifies_X,
                           lb->rhsLabel,      Task::OldDW,
                           whichInitialGuess, Task::OldDW,
-			     solver_parameters);
+			  solver_parameters);
 
     scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
                                                           mpm_matls, 
