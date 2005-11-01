@@ -72,7 +72,7 @@ Schlieren::execute(void)
 
   //##################################################################    
 
-  FieldHandle fh =  algo->execute( hTF );
+  FieldHandle fh =  algo->execute( hTF, dx_.get(), dy_.get(), dz_.get() );
   if( fh.get_rep() != 0 ){
     sfout_->send(fh);
   }

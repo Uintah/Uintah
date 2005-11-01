@@ -26,7 +26,8 @@ class SchlierenAlgo: public DynamicAlgoBase, public UnaryFieldOperator
 {
 public:
 
-  virtual FieldHandle execute( FieldHandle density ) = 0;
+  virtual FieldHandle execute( FieldHandle density,
+                               double dx, double dy, double dz) = 0;
   static CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *ftd);
  };  
 
@@ -34,23 +35,27 @@ template<class FIELD>
 class SchlierenAlgoT: public SchlierenAlgo
 {
 public:
-  virtual FieldHandle execute(FieldHandle scalarfh);
+  virtual FieldHandle execute(FieldHandle scalarfh,
+                               double dx, double dy, double dz);
 private:
-  void computeSchlierenImage(FIELD* density, FIELD* output);
+  void computeSchlierenImage(FIELD* density,
+                             double dx, double dy, double dz,
+                             FIELD* output);
 };
 
 template<class FIELD >
 FieldHandle
-SchlierenAlgoT<FIELD>::execute(FieldHandle scalarfh)
+SchlierenAlgoT<FIELD>::execute(FieldHandle scalarfh,
+                               double dx, double dy, double dz)
 {
   FIELD *density = (FIELD *)(scalarfh.get_rep());
-  typename FIELD::mesh_handle_type mh = scalarfh->get_typed_mesh();
+  typename FIELD::mesh_handle_type mh = density->get_typed_mesh();
   mh.detach();
   typename FIELD::mesh_type *mesh = mh.get_rep();
 
   FIELD *scalarField = scinew FIELD(mesh);
 
-  computeSchlierenImage( density, scalarField );
+  computeSchlierenImage( density, dx, dy, dz, scalarField );
 
   return scalarField;
 }
@@ -61,17 +66,13 @@ SchlierenAlgoT<FIELD>::execute(FieldHandle scalarfh)
 template<class FIELD >       
 void
 SchlierenAlgoT<FIELD>::computeSchlierenImage(FIELD* density, 
-                                                  FIELD* output)
+                                             double dx, double dy, double dz,
+                                             FIELD* output)
 {
 
   typedef typename FIELD::mesh_type MESH;
 
   initField(density, output);
-  // Grab the values from the GUI at the beginning of the loop (so
-  // that the user doesn't change them in the middle.
-  double dx = dx_.get();
-  double dy = dy_.get();
-  double dz = dz_.get();
 
   // only works with cell Centered data
   ASSERT( density->basis_order() == 0 );
