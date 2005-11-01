@@ -382,7 +382,7 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   if(d_myworld->myrank() == 0){
     cout << "Compiling initialization taskgraph...\n";
   }
- 
+
   double start = Time::currentSeconds();
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
   d_scheduler->mapDataWarehouse(Task::NewDW, 1);
@@ -426,8 +426,6 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 
   if(d_output)
     d_output->executedTimestep(0, grid);
-
-  
 }
 //______________________________________________________________________
 bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
@@ -446,7 +444,12 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
     return false;
   
   if (d_myworld->myrank() == 0) {
-    cout << "  ADDING ANOTHER LEVEL TO THE GRID\n";
+    cout << "  ADDING ANOTHER LEVEL TO THE GRID:";
+    for (int i = 0; i < currentGrid->numLevels(); i++) {
+      cout << " Level " << i << " has " << currentGrid->getLevel(i)->numPatches() << " patches...";
+    }
+    cout << endl;
+
   }
 
   // reset the d_scheduler here - it doesn't hurt anything here
