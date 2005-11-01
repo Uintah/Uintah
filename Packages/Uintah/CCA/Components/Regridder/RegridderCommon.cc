@@ -178,6 +178,20 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
       d_latticeRefinementRatio[i] = lastRatio;
   }
 
+  // get lattice refinement ratio, expand it to max levels
+  regrid_spec->get("max_patches_to_combine", d_patchesToCombine);
+  size = (int) d_patchesToCombine.size();
+  if (size == 0) {
+    d_patchesToCombine.push_back(IntVector(1,1,1));
+    size = 1;
+  }
+  lastRatio = d_patchesToCombine[size - 1];
+  if (size < d_maxLevels) {
+    d_patchesToCombine.resize(d_maxLevels);
+    for (int i = size; i < d_maxLevels; i++)
+      d_patchesToCombine[i] = lastRatio;
+  }
+
   // get other init parameters
   d_cellCreationDilation = IntVector(1,1,1);
   d_cellDeletionDilation = IntVector(1,1,1);
@@ -193,6 +207,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_cellNum.resize(d_maxLevels);
   d_patchNum.resize(d_maxLevels);
   d_patchSize.resize(d_maxLevels);
+  d_maxPatchSize.resize(d_maxLevels);
   d_patchActive.resize(d_maxLevels);
   d_patchCreated.resize(d_maxLevels);
   d_patchDeleted.resize(d_maxLevels);
@@ -203,6 +218,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_cellNum[0] = high-low - level0->getExtraCells()*IntVector(2,2,2);
   const Patch* patch = level0->selectPatchForCellIndex(IntVector(0,0,0));
   d_patchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
+  d_maxPatchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
   d_patchNum[0] = calculateNumberOfPatches(d_cellNum[0], d_patchSize[0]);
   d_patchActive[0] = new CCVariable<int>;
   d_patchCreated[0] = new CCVariable<int>;
@@ -220,6 +236,8 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
     d_cellNum[k] = d_cellNum[k-1] * d_cellRefinementRatio[k-1];
     d_patchSize[k] = d_patchSize[k-1] * d_cellRefinementRatio[k-1] /
       d_latticeRefinementRatio[k-1];
+    d_maxPatchSize[k] = d_patchSize[k] * d_patchesToCombine[k-1]; 
+    d_latticeRefinementRatio[k-1];
     d_patchNum[k] = calculateNumberOfPatches(d_cellNum[k], d_patchSize[k]);
     d_patchActive[k] = new CCVariable<int>;
     d_patchCreated[k] = new CCVariable<int>;
