@@ -250,7 +250,7 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     t->requires( Task::NewDW, lb->vol_frac_CCLabel,     patches,  gac,2); 
     t->requires( Task::NewDW, lb->sp_vol_CCLabel,       patches,  gac,1);
     t->requires( Task::NewDW, lb->rhsLabel,             patches, nd, one_matl,   oims,gn,0);
-    //t->requires( Task::OldDW, lb->initialGuessLabel, patches, nd, one_matl,   oims,gn,0);
+
     //__________________________________
     // SetupRHS
     if(d_models.size() > 0){  
@@ -372,8 +372,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   subNewDW->transferFrom(ParentNewDW,lb->uvel_FCLabel,      patches, all_matls_s); 
   subNewDW->transferFrom(ParentNewDW,lb->vvel_FCLabel,      patches, all_matls_s); 
   subNewDW->transferFrom(ParentNewDW,lb->wvel_FCLabel,      patches, all_matls_s);
-  
-  //subNewDW->transferFrom(ParentOldDW,lb->initialGuessLabel, patch_sub, one_matl);  
+    
   //__________________________________
   //  Iteration Loop
   max_vartype max_RHS = 1/d_SMALL_NUM;
@@ -382,7 +381,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   bool restart   = false;
   bool recursion = true;
   bool firstIter = true;
-  //const VarLabel* whichInitialGuess = lb->initialGuessLabel;
+  bool modifies_X = true;
 
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
     //__________________________________
@@ -416,10 +415,9 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 
     solver->scheduleSolve(grid->getLevel(0), subsched, press_matlSet,
                           lb->matrixLabel,   Task::NewDW,
-                          lb->imp_delPLabel, false,
+                          lb->imp_delPLabel, modifies_X,
                           lb->rhsLabel,      Task::NewDW,
-                          whichInitialGuess, 
-                          Task::NewDW, // Guess doesn't exist yet
+                          whichInitialGuess, Task::NewDW,
 			     solver_parameters);
 
 #else
@@ -1272,15 +1270,11 @@ void ICE::schedule_bogus_imp_delP(SchedulerP& sched,
   cout_doing << d_myworld->myrank() 
              << " ICE::schedule_bogus_impDelP"<<endl;
 
-  Task* t = scinew Task("bogus_imp_delP",
-                        this, &ICE::bogus_imp_delP);
+  Task* t = scinew Task("bogus_imp_delP",this, &ICE::bogus_imp_delP);
     
   GridP grid = perProcPatches->getUnion()->get(0)->getLevel()->getGrid();
-  for (int L = 0; L < grid->numLevels(); L++) {
-    const PatchSubset* patches = grid->getLevel(L)->allPatches()->getUnion();
-    
-    t->computes(lb->imp_delPLabel, patches, Task::NormalDomain, press_matl,Task::OutOfDomain);
-  }
+
+  t->modifies(lb->imp_delPLabel,  press_matl,Task::OutOfDomain);
   sched->addTask(t, perProcPatches, all_matls); 
 }
 /*___________________________________________________________________ 
@@ -1297,7 +1291,7 @@ void ICE::bogus_imp_delP(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){  
     const Patch* patch = patches->get(p);
     CCVariable<double> imp_delP;
-    new_dw->allocateAndPut(imp_delP,lb->imp_delPLabel, 0,patch);
+    new_dw->getModifiable(imp_delP,lb->imp_delPLabel, 0,patch);
     imp_delP.initialize(0.0);
   } 
 }
