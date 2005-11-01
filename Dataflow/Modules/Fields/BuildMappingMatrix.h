@@ -304,6 +304,8 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
   MDST *dst_mesh = dynamic_cast<MDST *>(d->dst_meshH.get_rep());
   BBox src_search_bbox=src_mesh->get_bounding_box();
   BBox dst_search_bbox=dst_mesh->get_bounding_box();
+  src_mesh->synchronize(Mesh::LOCATE_E);
+  dst_mesh->synchronize(Mesh::LOCATE_E);
   if (exhaustive_search && dist>0) {
     src_search_bbox.extend(src_search_bbox.min()-Vector(dist, dist, dist));
     src_search_bbox.extend(src_search_bbox.max()+Vector(dist, dist, dist));
