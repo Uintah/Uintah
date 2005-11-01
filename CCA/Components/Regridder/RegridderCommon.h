@@ -133,6 +133,8 @@ WARNING
     SizeList d_cellNum;
     SizeList d_patchNum;
     SizeList d_patchSize;
+    SizeList d_maxPatchSize;
+    SizeList d_patchesToCombine;
 
     vector< CCVariable<int>* > d_patchActive;
     vector< CCVariable<int>* > d_patchCreated;
