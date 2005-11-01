@@ -12,9 +12,9 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
-
 #include <mpi.h>
 
 using namespace Uintah;
@@ -253,42 +253,37 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
   for (int i = toplevel; i >= 0; i--) {
     rdbg << "  gathering on level TOP " << toplevel << " Level " << i << endl;
     const Level* l = oldGrid->getLevel(i).get_rep();
-    
+    int levelIdx = l->getIndex();
+
+    int numSubpatches = d_patchNum[i+1].x() * d_patchNum[i+1].y() * d_patchNum[i+1].z();
+  
     // place to end up with all subpatches
     vector<SubPatchFlagP> allSubpatches(l->numPatches());
+    vector<int> recvbuf(numSubpatches); // buffer to recv data (and hold pointers from allSubpatches)
     if (d_myworld->size() > 1) {
-      // get ordered list of patch-proc assignment
-      vector<int> procAssignment(l->numPatches());
+
+      // num subpatches per patch - this is dynamic per patch, as on the regrid before
+      // we could have combined several patches together
+      vector<int> nsppp(l->numPatches());
+      vector<int> recvcounts(d_myworld->size(),0);
       for (Level::const_patchIterator iter = l->patchesBegin(); iter != l->patchesEnd(); iter++) {
-        procAssignment[(*iter)->getLevelIndex()] = lb->getPatchwiseProcessorAssignment(*iter);
+        const Patch* patch = *iter;
+        IntVector patchRefinement = 
+          ((patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex()) / d_patchSize[i]) * 
+          d_latticeRefinementRatio[i];
+        int nsp = patchRefinement.x() * patchRefinement.y() * patchRefinement.z();
+        nsppp[(*iter)->getLevelIndex()] = nsp;
+        recvcounts[lb->getPatchwiseProcessorAssignment(patch)] += nsp;
       }
-      // gives us number of things on each proc
-      vector<int> sorted_processorAssignment = procAssignment;
-      sort(sorted_processorAssignment.begin(), sorted_processorAssignment.end());
       
-      vector<int> displs;
-      vector<int> recvcounts(d_myworld->size(),0); // init the counts to 0
+      vector<int> displs(d_myworld->size(),0);
       
-      int numSubpatches = d_patchNum[i+1].x() * d_patchNum[i+1].y() * d_patchNum[i+1].z();
-
-      // num subpatches per patch
-      int nsppp = d_latticeRefinementRatio[i].x() * d_latticeRefinementRatio[i].y() * d_latticeRefinementRatio[i].z();
-
-      int offsetProc = 0;
-      for (int p = 0; p < (int)sorted_processorAssignment.size(); p++) {
-        // set the offsets for the MPI_Gatherv
-        while ( offsetProc <= sorted_processorAssignment[p]) {
-          // the while part is in case there are fewer procs than patches, and we 
-          // have the proc assignment being something like '0 2'
-          displs.push_back(p*nsppp);
-          offsetProc++;
-        }
-        recvcounts[sorted_processorAssignment[p]] += nsppp;
+      for (int p = 1; p < (int)displs.size(); p++) {
+        displs[p] = displs[p-1]+recvcounts[p-1];
       }
     
-      // create the buffers to send/recv the data
-      int* recvbuf = scinew int[numSubpatches];
-      int* sendbuf = scinew int[recvcounts[d_myworld->myrank()]];
+      // create the buffers to send the data
+      vector<int> sendbuf(recvcounts[d_myworld->myrank()]);
 
       int sendbufindex = 0;
 
@@ -311,32 +306,52 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
 
         // the subpatchSorter's index is in terms of the numbers of the subpatches
         int index = subpatchSorter[lb->getPatchwiseProcessorAssignment(patch)];
+        int nsp = nsppp[patch->getLevelIndex()];
+        int proc = lb->getPatchwiseProcessorAssignment(patch);
 
-        subpatchSorter[lb->getPatchwiseProcessorAssignment(patch)]+=nsppp;
+        IntVector patchRefinement =
+          ((patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex()) / d_patchSize[i]) *
+          d_latticeRefinementRatio[i];
+
+
+        subpatchSorter[proc] += nsp;
         IntVector patchIndex = patch->getInteriorCellLowIndex()/d_patchSize[i];
 
-        // create the recv buffers to 
+        // create the recv buffers to put the data in
+        // recvbuf ensure that the data be received in a contiguous array, and allSubpatches will
+        // index into it
         SubPatchFlagP spf1 = scinew SubPatchFlag;
+        
         spf1->initialize(d_latticeRefinementRatio[i]*patchIndex,
-                         d_latticeRefinementRatio[i]*(patchIndex+IntVector(1,1,1)), &recvbuf[index]);
+                         d_latticeRefinementRatio[i]*patchIndex+patchRefinement, &recvbuf[index]);
 
-        allSubpatches[index/nsppp] = spf1;
+        allSubpatches[patch->getLevelIndex()] = spf1;
 
-        if (procAssignment[patch->getLevelIndex()] != d_myworld->myrank())
+        if (proc != d_myworld->myrank())
           continue;
         
         // get the variable and prepare to send it: put its base pointer in the send buffer
         PerPatch<SubPatchFlagP> spf2;
         dw->get(spf2, d_activePatchesLabel, 0, patch);
-        for (int idx = 0; idx < nsppp; idx++) {
+        for (int idx = 0; idx < nsppp[patch->getLevelIndex()]; idx++) {
           sendbuf[idx + sendbufindex] = spf2.get()->subpatches_[idx];
         }
-        sendbufindex += nsppp;
+        sendbufindex += nsp;
       }
 
-      MPI_Allgatherv(sendbuf, sendbufindex, MPI_INT, 
-                     recvbuf, &recvcounts[0], &displs[0], MPI_INT, d_myworld->getComm());
-
+      // if we are going to try to use superpatches, then have proc 0 do the work, and broadcast when we're done
+#if 1
+      if (d_maxPatchSize[levelIdx] == d_patchSize[levelIdx]) {
+#endif
+        MPI_Allgatherv(&sendbuf[0], sendbufindex, MPI_INT, 
+                       &recvbuf[0], &recvcounts[0], &displs[0], MPI_INT, d_myworld->getComm());
+#if 1
+      }
+      else {
+        MPI_Gatherv(&sendbuf[0], sendbufindex, MPI_INT,
+                    &recvbuf[0], &recvcounts[0], &displs[0], MPI_INT, 0, d_myworld->getComm());
+      }
+#endif
     }
     else {
       // for the single-proc case, just put the subpatches in the same container
@@ -350,47 +365,56 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
       rdbg << "   Got data\n";
 
     }
-    // loop over each patch's subpatches (these will be the patches on level+1)
-    IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
-    for (unsigned j = 0; j < allSubpatches.size(); j++) {
-      rdbg << "   Doing subpatches index " << j << endl;
-      for (CellIterator iter(allSubpatches[j].get_rep()->low_, allSubpatches[j].get_rep()->high_); 
-           !iter.done(); iter++) {
-        IntVector idx(*iter);
-        
-        // if that subpatch is active...
-        if ((*allSubpatches[j].get_rep())[idx]) {
-          // add this subpatch to become the next level's patch
-          rdbg << "Adding normal subpatch " << idx << " to level " << i+1 << endl;
-          d_patches[i+1].insert(idx);
+#if 1
+    if (d_maxPatchSize[levelIdx] == d_patchSize[levelIdx] || d_myworld->myrank() == 0) {
+#endif
+      // loop over each patch's subpatches (these will be the patches on level+1)
+      IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
+      for (unsigned j = 0; j < allSubpatches.size(); j++) {
+        rdbg << "   Doing subpatches index " << j << endl;
+        for (CellIterator iter(allSubpatches[j].get_rep()->low_, allSubpatches[j].get_rep()->high_); 
+             !iter.done(); iter++) {
+          IntVector idx(*iter);
           
-          if (i > 0) { // don't dilate onto level 0
-            IntVector range = Ceil(d_minBoundaryCells.asVector()/d_patchSize[i].asVector());
-            for (CellIterator inner(IntVector(-1,-1,-1)*range, range+IntVector(1,1,1)); !inner.done(); inner++) {
-              // "dilate" each subpatch, adding it to the patches on the coarser level
-              IntVector dilate_idx = (idx + *inner) / d_latticeRefinementRatio[i];
-              // we need to wrap around for periodic boundaries
-              if (((dilate_idx.x() < 0 || dilate_idx.x() >= d_patchNum[i].x()) && !periodic.x()) ||
-                  ((dilate_idx.y() < 0 || dilate_idx.y() >= d_patchNum[i].y()) && !periodic.y()) ||
-                  ((dilate_idx.z() < 0 || dilate_idx.z() >= d_patchNum[i].z()) && !periodic.z()))
-                continue;
-                
-              // if it was periodic, get it in the proper range
-              for (int d = 0; d < 3; d++) {
-                while (dilate_idx[d] < 0) dilate_idx[d] += d_patchNum[i][d];
-                while (dilate_idx[d] >= d_patchNum[i][d]) dilate_idx[d] -= d_patchNum[i][d];
-              }
-
-              rdbg << "  Adding dilated subpatch " << dilate_idx << endl;
-              d_patches[i].insert(dilate_idx);
-            }
+          // if that subpatch is active...
+          if ((*allSubpatches[j].get_rep())[idx]) {
+            // add this subpatch to become the next level's patch
+            rdbg << d_myworld->myrank() << " Adding normal subpatch " << idx << " to level " << i+1 << endl;
+            d_patches[i+1].insert(idx);
           }
-        } // end if allSubpatches[j][idx]
-        else {
-          //           rdbg << " NOT adding subpatch " << idx << " to level " << i+1 << endl;
+          else {
+            //           rdbg << " NOT adding subpatch " << idx << " to level " << i+1 << endl;
+          }
         }
-      } // end for celliterator
-    } // end for unsigned j
+      }
+      // do patch dilation here instead of in above loop so we can dilate the upper level's dilation...
+      if (i > 0) { // don't dilate onto level 0
+        IntVector range = Ceil(d_minBoundaryCells.asVector()/d_patchSize[i].asVector());
+        for (subpatchset::iterator iter = d_patches[i+1].begin(); iter != d_patches[i+1].end(); iter++) {
+          IntVector idx(*iter);
+          for (CellIterator inner(IntVector(-1,-1,-1)*range, range+IntVector(1,1,1)); !inner.done(); inner++) {
+            // "dilate" each subpatch, adding it to the patches on the coarser level
+            IntVector dilate_idx = (idx + *inner) / d_latticeRefinementRatio[i];
+            // we need to wrap around for periodic boundaries
+            if (((dilate_idx.x() < 0 || dilate_idx.x() >= d_patchNum[i].x()) && !periodic.x()) ||
+                ((dilate_idx.y() < 0 || dilate_idx.y() >= d_patchNum[i].y()) && !periodic.y()) ||
+                ((dilate_idx.z() < 0 || dilate_idx.z() >= d_patchNum[i].z()) && !periodic.z()))
+              continue;
+            
+            // if it was periodic, get it in the proper range
+            for (int d = 0; d < 3; d++) {
+              while (dilate_idx[d] < 0) dilate_idx[d] += d_patchNum[i][d];
+              while (dilate_idx[d] >= d_patchNum[i][d]) dilate_idx[d] -= d_patchNum[i][d];
+            }
+            
+            rdbg << "  Adding dilated subpatch " << dilate_idx << endl;
+            d_patches[i].insert(dilate_idx);
+          } // end if allSubpatches[j][idx]
+        } // end for celliterator
+      } // end for unsigned j
+#if 1
+    } // end if (d_maxPatchSize[levelIdx] == d_patchSize[levelIdx] || d_myworld->myrank() == 0)
+#endif
   } // end for i = toplevel
 
   // put level 0's patches into the set so we can just iterate through the whole set later
@@ -402,6 +426,23 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
   rdbg << "GatherSubPatches END\n";
 }
 
+class PatchShell
+{
+public:
+  PatchShell(IntVector low, IntVector high, IntVector in_low, IntVector in_high) :
+    low(low), high(high), in_low(in_low), in_high(in_high) {}
+  PatchShell() { low = high = IntVector(-9,-9,-9); }
+  IntVector low, high, in_low, in_high;
+
+  struct Compare
+  {
+    bool operator()(PatchShell p1, PatchShell p2) const
+    { return p1.low < p2.low; }
+  };
+};
+
+
+
 Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups) 
 {
   rdbg << "CreateGrid2 BGN\n";
@@ -410,7 +451,11 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
   ProblemSpecP grid_ps = ups->findBlock("Grid");
 
   for (int levelIdx=0; levelIdx < (int)d_patches.size(); levelIdx++) {
-    if (d_patches[levelIdx].size() == 0)
+    if (
+#if 1
+        (d_maxPatchSize[levelIdx] == d_patchSize[levelIdx] || d_myworld->myrank() == 0) && 
+#endif
+        d_patches[levelIdx].size() == 0)
       break;
 
     Point anchor;
@@ -433,50 +478,157 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
 
     rdbg << "HierarchicalRegridder::regrid(): Setting extra cells to be: " << extraCells << endl;
 
-    for (subpatchset::iterator iter = d_patches[levelIdx].begin(); iter != d_patches[levelIdx].end(); iter++) {
-      IntVector idx(*iter);
-      rdbg << "   Creating patch "<< *iter << endl;
-      IntVector startCell       = idx * d_patchSize[levelIdx];
-      IntVector endCell         = (idx + IntVector(1,1,1)) * d_patchSize[levelIdx] - IntVector(1,1,1);
-      IntVector inStartCell(startCell);
-      IntVector inEndCell(endCell);
+    // now create the patches.  Do up to 2 passes.
+    // 1) if the input file specifies a patches_to_combine greater than 1,1,1, then attempt to
+    // create a superpatch configuration.
+    // 2) if not, just add it to the normal grid.  If so put all the super patches into the grid
 
-      // do extra cells - add if there is no neighboring patch
-      IntVector low(0,0,0), high(0,0,0);
-      if (d_patches[levelIdx].find(idx-IntVector(1,0,0)) == d_patches[levelIdx].end())
-        low[0] = extraCells.x();
-      if (d_patches[levelIdx].find(idx-IntVector(0,1,0)) == d_patches[levelIdx].end())
-        low[1] = extraCells.y();
-      if (d_patches[levelIdx].find(idx-IntVector(0,0,1)) == d_patches[levelIdx].end())
-        low[2] = extraCells.z();
+    // if we do the two passes, then we need to have one processor do the work and broadcast it, as 
+    // the superpatch functionality does not produce consistent results across processors
 
-      if (d_patches[levelIdx].find(idx+IntVector(1,0,0)) == d_patches[levelIdx].end())
-        high[0] = extraCells.x();
-      if (d_patches[levelIdx].find(idx+IntVector(0,1,0)) == d_patches[levelIdx].end())
-        high[1] = extraCells.y();
-      if (d_patches[levelIdx].find(idx+IntVector(0,0,1)) == d_patches[levelIdx].end())
-        high[2] = extraCells.z();
-
-      if (idx.x() == d_patchNum[levelIdx](0)-1) endCell(0) = d_cellNum[levelIdx](0)-1;
-      if (idx.y() == d_patchNum[levelIdx](1)-1) endCell(1) = d_cellNum[levelIdx](1)-1;
-      if (idx.z() == d_patchNum[levelIdx](2)-1) endCell(2) = d_cellNum[levelIdx](2)-1;
-
-      rdbg << "     Adding extra cells: " << low << ", " << high << endl;
-
-      startCell -= low;
-      endCell += high;
-
-      newLevel->addPatch(startCell, endCell + IntVector(1,1,1), inStartCell, inEndCell + IntVector(1,1,1));
-      //newPatch->setLayoutHint(oldPatch->layouthint);
-    }
+    Grid bogusGrid;
+    Level* addToLevel = newLevel.get_rep();
     IntVector periodic;
-    if(levelIdx == 0){
-      periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
-    } else {
-      periodic = newGrid->getLevel(levelIdx-1)->getPeriodicBoundaries();
+#if 1
+    if (d_maxPatchSize[levelIdx] == d_patchSize[levelIdx] || d_myworld->myrank() == 0) {
+#endif
+      if (d_maxPatchSize[levelIdx] != d_patchSize[levelIdx]) {
+        // attempt to combine the patches together so we don't have so many patches (weakness of this regridder)
+        // create a superBoxSet, and use "patches", as they have all the functionality we need
+        addToLevel = bogusGrid.addLevel(Point(0,0,0), Vector(1,1,1), -999);
+      }
+      
+      int id = -999999;
+      for (subpatchset::iterator iter = d_patches[levelIdx].begin(); iter != d_patches[levelIdx].end(); iter++) {
+        IntVector idx(*iter);
+        rdbg << d_myworld->myrank() << "   Creating patch "<< *iter << endl;
+        IntVector startCell       = idx * d_patchSize[levelIdx];
+        IntVector endCell         = (idx + IntVector(1,1,1)) * d_patchSize[levelIdx] - IntVector(1,1,1);
+        IntVector inStartCell(startCell);
+        IntVector inEndCell(endCell);
+        
+        // do extra cells - add if there is no neighboring patch
+        IntVector low(0,0,0), high(0,0,0);
+        if (d_patches[levelIdx].find(idx-IntVector(1,0,0)) == d_patches[levelIdx].end())
+          low[0] = extraCells.x();
+        if (d_patches[levelIdx].find(idx-IntVector(0,1,0)) == d_patches[levelIdx].end())
+          low[1] = extraCells.y();
+        if (d_patches[levelIdx].find(idx-IntVector(0,0,1)) == d_patches[levelIdx].end())
+          low[2] = extraCells.z();
+        
+        if (d_patches[levelIdx].find(idx+IntVector(1,0,0)) == d_patches[levelIdx].end())
+          high[0] = extraCells.x();
+        if (d_patches[levelIdx].find(idx+IntVector(0,1,0)) == d_patches[levelIdx].end())
+          high[1] = extraCells.y();
+        if (d_patches[levelIdx].find(idx+IntVector(0,0,1)) == d_patches[levelIdx].end())
+          high[2] = extraCells.z();
+        
+        if (idx.x() == d_patchNum[levelIdx](0)-1) endCell(0) = d_cellNum[levelIdx](0)-1;
+        if (idx.y() == d_patchNum[levelIdx](1)-1) endCell(1) = d_cellNum[levelIdx](1)-1;
+        if (idx.z() == d_patchNum[levelIdx](2)-1) endCell(2) = d_cellNum[levelIdx](2)-1;
+        
+        rdbg << "     Adding extra cells: " << low << ", " << high << endl;
+        
+        startCell -= low;
+        endCell += high;
+        
+        /// pass in our own id to not increment the global id
+        int patchID = (d_maxPatchSize[levelIdx] != d_patchSize[levelIdx]) ? id++ : -1;
+        const Patch* patch = addToLevel->addPatch(startCell, endCell + IntVector(1,1,1), 
+                                                  inStartCell, inEndCell + IntVector(1,1,1), patchID);
+      }
+      if(levelIdx == 0){
+        periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
+      } else {
+        periodic = newGrid->getLevel(levelIdx-1)->getPeriodicBoundaries();
+      }
+      addToLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
+      addToLevel->assignBCS(grid_ps);
+#if 1
     }
-    newLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-    newLevel->assignBCS(grid_ps);
+#endif
+
+    // do the second pass if we did the superpatch pass
+    if (d_maxPatchSize[levelIdx] != d_patchSize[levelIdx]) {
+      int size;
+      vector<PatchShell> finalPatches;
+#if 1
+      if (d_myworld->myrank() == 0) {
+#endif
+        const SuperPatchContainer* superPatches;
+        LocallyComputedPatchVarMap patchGrouper;
+        const PatchSubset* patches = addToLevel->allPatches()->getUnion();
+        patchGrouper.addComputedPatchSet(0, patches);
+        patchGrouper.makeGroups();
+        superPatches = patchGrouper.getSuperPatches(0, addToLevel);
+
+        SuperPatchContainer::const_iterator iter;
+        for (iter = superPatches->begin(); iter != superPatches->end(); iter++) {
+          const SuperPatch* superBox = *iter;
+          const Patch* firstPatch = superBox->getBoxes()[0];
+          IntVector low(firstPatch->getLowIndex()), high(firstPatch->getHighIndex());
+          IntVector in_low(firstPatch->getInteriorCellLowIndex()), in_high(firstPatch->getInteriorCellHighIndex());
+          for (unsigned int i = 1; i < superBox->getBoxes().size(); i++) {
+            // get the minimum extents containing both the expected ghost cells
+            // to be needed and the given ghost cells.
+            const Patch* memberPatch = superBox->getBoxes()[i];
+            low = Min(memberPatch->getLowIndex(), low);
+            high = Max(memberPatch->getHighIndex(), high);
+            in_low = Min(memberPatch->getInteriorCellLowIndex(), in_low);
+            in_high = Max(memberPatch->getInteriorCellHighIndex(), in_high);
+          }
+          finalPatches.push_back(PatchShell(low, high, in_low, in_high));
+          //cout << d_myworld->myrank() << "  Adding " << low << endl;
+        }
+        
+#if 1
+        // sort the superboxes.  On different iterations, the same patches can be sorted
+        // differently, and thus force the regrid to happen when normally we would do nothing
+        PatchShell::Compare compare;
+        //sort(finalPatches.begin(), finalPatches.end(), compare);
+        size = finalPatches.size();
+      }
+
+      if (d_myworld->size() > 1) {
+        MPI_Bcast(&size, 1, MPI_INT, 0, d_myworld->getComm());
+        finalPatches.resize(size);
+        MPI_Bcast(&finalPatches[0], size*4*3, MPI_INT, 0, d_myworld->getComm());
+      }
+#endif
+      for (unsigned i = 0; i < finalPatches.size(); i++) {
+        PatchShell& ps = finalPatches[i];
+        IntVector low(ps.low), high(ps.high), in_low(ps.in_low), in_high(ps.in_high);
+        // split up the superpatch into pieces no bigger than maxPatchSize
+        IntVector divisions(Ceil((in_high-in_low).asVector() / d_maxPatchSize[levelIdx]));
+        rdbg  << "  superpatch needs " << divisions << " divisions " << endl;
+        for (int x = 0; x < divisions.x(); x++) {
+          for (int y = 0; y < divisions.y(); y++) {
+            for (int z = 0; z < divisions.z(); z++) {
+              IntVector idx(x,y,z);
+
+              // we must align the combined superpatches with the lattice, so don't split it into even pieces (in cases of rounding), 
+              // but according to original patch structure
+              IntVector sub_in_low = in_low + d_maxPatchSize[levelIdx]*idx;
+              IntVector sub_in_high = Min(in_high, in_low + d_maxPatchSize[levelIdx] * (idx+IntVector(1,1,1)));
+
+              IntVector sub_low = sub_in_low, sub_high = sub_in_high;
+              for (int dim = 0; dim < 3; dim++) {
+                if (idx[dim] == 0) sub_low[dim] = low[dim];
+                if (idx[dim] == divisions[dim] - 1) sub_high[dim] = high[dim];
+              }
+              // finally add the superpatch to the real level
+              if (d_myworld->myrank() == 0)
+                rdbg << "   Using superpatch " << sub_low << " " << sub_high << " " << sub_in_low << " " << sub_in_high << endl;
+              newLevel->addPatch(sub_low, sub_high, sub_in_low, sub_in_high);
+            }
+          }
+        }
+      }
+      newLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
+      newLevel->assignBCS(grid_ps);
+      
+    }
+  
   }
 
   d_newGrid = true;
