@@ -108,20 +108,20 @@ MapDataToMeshCoord::execute()
 
   const TypeDescription *ftd = ifield->get_type_description();
   string sname = ftd->get_name("", "");
-  if (sname.find("TetVolField") == string::npos &&
-      sname.find("HexVolField") == string::npos &&
-      sname.find("TriSurfField") == string::npos &&
-      sname.find("QuadSurfField") == string::npos &&
-      sname.find("CurveField") == string::npos &&
-      sname.find("PointCloudField") == string::npos) {
+  if (sname.find("TetVolMesh") == string::npos &&
+      sname.find("HexVolMesh") == string::npos &&
+      sname.find("TriSurfMesh") == string::npos &&
+      sname.find("QuadSurfMesh") == string::npos &&
+      sname.find("CurveMesh") == string::npos &&
+      sname.find("PointCloudMesh") == string::npos) {
     error("Can't change coordinates of this field (mesh) type.");
     return;
   }
 
   int coord = gui_coord_.get();
   if (coord == 3) {
-    if (sname.find("TriSurfField") == string::npos &&
-	sname.find("QuadSurfField") == string::npos) {
+    if (sname.find("TriSurfMesh") == string::npos &&
+	sname.find("QuadSurfMesh") == string::npos) {
       error("Can't get a normal from this type of mesh.");
       return;
     }
