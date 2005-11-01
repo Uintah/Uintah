@@ -159,10 +159,10 @@ class FieldToMatlabAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
     template <class MESH>   std::string get_mesh_name(MESH* mesh);
 
     template <class MESH> bool mladdmeshheader(MESH* mesh, matlabarray mlarray);
-    template <class MESH> bool mladdnodesfield(MESH* mesh,matlabarray mlarray);
-    template <class MESH> bool mladdedgesfield(MESH* mesh,matlabarray mlarray);
-    template <class MESH> bool mladdfacesfield(MESH* mesh,matlabarray mlarray);    
-    template <class MESH> bool mladdcellsfield(MESH* mesh,matlabarray mlarray);
+    template <class MESH> bool mladdnodes(MESH* mesh,matlabarray mlarray);
+    template <class MESH> bool mladdedges(MESH* mesh,matlabarray mlarray);
+    template <class MESH> bool mladdfaces(MESH* mesh,matlabarray mlarray);    
+    template <class MESH> bool mladdcells(MESH* mesh,matlabarray mlarray);
     template <class MESH> bool mladdmeshderivatives(MESH* mesh,matlabarray mlarray);
 
     template <class MESH> bool mladdtransform(MESH* mesh,matlabarray mlarray);
@@ -670,7 +670,7 @@ bool FieldToMatlabAlgo::mladdmeshheader(MESH* mesh, matlabarray mlarray)
 }
 
 template <class MESH> 
-bool FieldToMatlabAlgo::mladdnodesfield(MESH* mesh,matlabarray mlarray)
+bool FieldToMatlabAlgo::mladdnodes(MESH* mesh,matlabarray mlarray)
 {
   matlabarray node;
 
@@ -713,10 +713,15 @@ bool FieldToMatlabAlgo::mladdnodesfield(MESH* mesh,matlabarray mlarray)
     
     while(it != it_end)
     {
-      meshH->get_point(P,*(it));
+      mesh->get_point(P,*(it));
       nodes[q++] = P.x(); nodes[q++] = P.y(); nodes[q++] = P.z(); 
       ++it;
     }
+
+    node.createdoublematrix(nodes,dims);
+    mlarray.setfield(0,"node",node);
+    
+    return (true);
   }
   else if (islagrangian(basis))
   {
@@ -732,14 +737,10 @@ bool FieldToMatlabAlgo::mladdnodesfield(MESH* mesh,matlabarray mlarray)
     return(false);
   }
 
-	node.createdoublematrix(nodes,dims);
-	mlarray.setfield(0,"node",node);
-  
-  return (true);
 }
 
 template <class MESH>
-bool FieldToMatlabAlgo::mladdedgesfield(MESH *mesh,matlabarray mlarray)
+bool FieldToMatlabAlgo::mladdedges(MESH *mesh,matlabarray mlarray)
 {
 	matlabarray edge;
 
@@ -751,6 +752,9 @@ bool FieldToMatlabAlgo::mladdedgesfield(MESH *mesh,matlabarray mlarray)
     typename MESH::Edge::size_type size;
     mesh->size(size);
 
+    typename MESH::basis_type& basis = mesh->get_basis();
+    size_t num = basis.number_of_vertices();
+
     size_t numedges = static_cast<size_t>(size);
     mesh->synchronize(SCIRun::Mesh::EDGES_E); 
 
@@ -758,9 +762,7 @@ bool FieldToMatlabAlgo::mladdedgesfield(MESH *mesh,matlabarray mlarray)
     std::vector<typename MESH::Node::index_type> edges(num*numedges);
     std::vector<long> dims(2);	
     dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numedges);
-    
-    typename MESH::basis_type& basis = mesh->get_basis();
-    size_t num = basis.NumberOfVertices;
+  
     
     // SCIRun iterators are limited in supporting any index management
     // Hence I prefer to do it with integer and convert to the required
@@ -777,6 +779,12 @@ bool FieldToMatlabAlgo::mladdedgesfield(MESH *mesh,matlabarray mlarray)
       for (size_t r = 0; r < num; r++) edges[q++] = a[r] + option_indexbase_;
       ++it;
     }
+
+    edge.createdensearray(dims,matlabarray::miUINT32);
+    edge.setnumericarray(edges); // store them as UINT32 but treat them as doubles
+    mlarray.setfield(0,"edge",edge);
+
+    return (true);
   }
   else if (islagrangian(basis))
   {
@@ -792,15 +800,11 @@ bool FieldToMatlabAlgo::mladdedgesfield(MESH *mesh,matlabarray mlarray)
     return(false);
   }
   
-	edge.createdensearray(dims,matlabarray::miUINT32);
-	edge.setnumericarray(edges); // store them as UINT32 but treat them as doubles
-	mlarray.setfield(0,"edge",edge);
 
-  return (true);
 }
 
 template <class MESH>
-bool FieldToMatlabAlgo::mladdfacesfield(MESH *mesh,matlabarray mlarray)
+bool FieldToMatlabAlgo::mladdfaces(MESH *mesh,matlabarray mlarray)
 {
 	// A lot of pointless casting, but that is the way SCIRun was setup .....
 	// Iterators and Index classes to make the code really complicated 
@@ -816,15 +820,15 @@ bool FieldToMatlabAlgo::mladdfacesfield(MESH *mesh,matlabarray mlarray)
     mesh->size(size);
     size_t numfaces = static_cast<size_t>(size);
 
+    typename MESH::basis_type& basis = mesh->get_basis();
+    size_t num = basis.number_of_vertices();
+
     mesh->synchronize(SCIRun::Mesh::FACES_E);
 
     typename MESH::Node::array_type a;
     std::vector<typename MESH::Node::index_type> faces(num*numfaces);
     std::vector<long> dims(2);	
     dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numfaces);
-
-    typename MESH::basis_type& basis = mesh->get_basis();
-    size_t num = basis.NumberOfVertices;
       
     size_t q = 0;
     typename MESH::Face::iterator it, it_end;
@@ -832,9 +836,15 @@ bool FieldToMatlabAlgo::mladdfacesfield(MESH *mesh,matlabarray mlarray)
     mesh->end(it_end);
     while (it != it_end)
     {
-      meshH->get_nodes(a,*(it));
+      mesh->get_nodes(a,*(it));
       for (size_t r = 0; r < num; r++) faces[q++] = a[r] + option_indexbase_;
     }
+
+    face.createdensearray(dims,matlabarray::miUINT32);
+    face.setnumericarray(faces); // store them as UINT32 but treat them as doubles
+    mlarray.setfield(0,"face",face);
+
+    return (true);
   }
   else if (islagrangian(basis))
   {
@@ -850,16 +860,11 @@ bool FieldToMatlabAlgo::mladdfacesfield(MESH *mesh,matlabarray mlarray)
     return(false);
   }
 
-	face.createdensearray(dims,matlabarray::miUINT32);
-	face.setnumericarray(faces); // store them as UINT32 but treat them as doubles
-	mlarray.setfield(0,"face",face);
-
-  return (true);
 }
 
 
 template <class MESH>
-bool FieldToMatlabAlgo::mladdcellsfield(MESH* mesh,matlabarray mlarray)
+bool FieldToMatlabAlgo::mladdcells(MESH* mesh,matlabarray mlarray)
 {
   // A lot of pointless casting, but that is the way SCIRun was setup .....
   // Iterators and Index classes to make the code really complicated 
@@ -875,6 +880,9 @@ bool FieldToMatlabAlgo::mladdcellsfield(MESH* mesh,matlabarray mlarray)
     mesh->size(size);
     size_t numcells = static_cast<size_t>(size);
 
+    typename MESH::basis_type& basis = mesh->get_basis();
+    size_t num = basis.number_of_vertices();
+
     mesh->synchronize(SCIRun::Mesh::CELLS_E);
 
     typename MESH::Node::array_type a;
@@ -882,8 +890,6 @@ bool FieldToMatlabAlgo::mladdcellsfield(MESH* mesh,matlabarray mlarray)
     std::vector<long> dims(2);	
     dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numcells);
 
-    typename MESH::basis_type& basis = mesh->get_basis();
-    size_t num = basis.NumberOfVertices;
           
     typename MESH::Cell::iterator it, it_end;
     mesh->begin(it);
@@ -899,6 +905,8 @@ bool FieldToMatlabAlgo::mladdcellsfield(MESH* mesh,matlabarray mlarray)
     cell.createdensearray(dims,matlabarray::miUINT32);
     cell.setnumericarray(cells); // store them as UINT32 but treat them as doubles
     mlarray.setfield(0,"cell",cell);
+
+    return (true);
   }
   else if (islagrangian(basis))
   {
@@ -914,7 +922,7 @@ bool FieldToMatlabAlgo::mladdcellsfield(MESH* mesh,matlabarray mlarray)
     return(false);
   }
   
-  return (true);
+
 }
 
 template <class MESH>
@@ -1692,7 +1700,6 @@ bool FieldToMatlabAlgo::mladdfieldedges(FIELD *field,MESH *mesh,matlabarray mlar
   if (isconstant(basis))
   {
     std::vector<typename FIELD::value_type> &fdata = field->fdata(); 
-    matlabarray fieldedge;
     fieldegde.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
     std::vector<unsigned int> mapping;
     for (size_t p = 0; p < fdata.size(); p++)
@@ -1710,6 +1717,9 @@ bool FieldToMatlabAlgo::mladdfieldedges(FIELD *field,MESH *mesh,matlabarray mlar
     typename MESH::Edge::size_type size;
     mesh->size(size);
 
+    typename MESH::basis_type& basis = mesh->get_basis();
+    size_t num = basis.number_of_vertices();
+
     size_t numedges = static_cast<size_t>(size);
     mesh->synchronize(SCIRun::Mesh::EDGES_E); 
 
@@ -1718,8 +1728,6 @@ bool FieldToMatlabAlgo::mladdfieldedges(FIELD *field,MESH *mesh,matlabarray mlar
     std::vector<long> dims(2);	
     dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numedges);
     
-    typename MESH::basis_type& basis = mesh->get_basis();
-    size_t num = basis.NumberOfVertices;
     
     // SCIRun iterators are limited in supporting any index management
     // Hence I prefer to do it with integer and convert to the required
@@ -1776,8 +1784,7 @@ bool FieldToMatlabAlgo::mladdfieldfaces(FIELD *field,MESH *mesh,matlabarray mlar
   if (isconstant(basis))
   {
     std::vector<typename FIELD::value_type> &fdata = field->fdata(); 
-    matlabarray fieldface;
-    fieldegde.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
+    fieldface.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
     std::vector<unsigned int> mapping;
     for (size_t p = 0; p < fdata.size(); p++)
     {
@@ -1794,6 +1801,9 @@ bool FieldToMatlabAlgo::mladdfieldfaces(FIELD *field,MESH *mesh,matlabarray mlar
     typename MESH::Face::size_type size;
     mesh->size(size);
 
+    typename MESH::basis_type& basis = mesh->get_basis();
+    size_t num = basis.number_of_vertices();
+
     size_t numfaces = static_cast<size_t>(size);
     mesh->synchronize(SCIRun::Mesh::FACES_E); 
 
@@ -1802,8 +1812,6 @@ bool FieldToMatlabAlgo::mladdfieldfaces(FIELD *field,MESH *mesh,matlabarray mlar
     std::vector<long> dims(2);	
     dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numfaces);
     
-    typename MESH::basis_type& basis = mesh->get_basis();
-    size_t num = basis.NumberOfVertices;
     
     // SCIRun iterators are limited in supporting any index management
     // Hence I prefer to do it with integer and convert to the required
@@ -1843,7 +1851,7 @@ bool FieldToMatlabAlgo::mladdfieldcells(FIELD *field,MESH *mesh,matlabarray mlar
   typename FIELD::basis_type basis = field->get_basis();
   typename FIELD::mesh_type::basis_type meshbasis = mesh->get_basis();
 
-  matlabarray fieldface;
+  matlabarray fieldcell;
   
   if (option_nofieldconnectivity_)
   {
@@ -1861,15 +1869,14 @@ bool FieldToMatlabAlgo::mladdfieldcells(FIELD *field,MESH *mesh,matlabarray mlar
   if (isconstant(basis))
   {
     std::vector<typename FIELD::value_type> &fdata = field->fdata(); 
-    matlabarray fieldface;
-    fieldegde.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
+    fieldcell.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
     std::vector<unsigned int> mapping;
     for (size_t p = 0; p < fdata.size(); p++)
     {
       mapping[p] = static_cast<unsigned int>(p) + option_indexbase_;
     }
-    fieldface.setnumericarray(mapping);          
-    mlarray.setfield(0,"fieldface",fieldface);
+    fieldcell.setnumericarray(mapping);          
+    mlarray.setfield(0,"fieldcell",fieldcell);
 
     return (true);
   }
@@ -1879,16 +1886,17 @@ bool FieldToMatlabAlgo::mladdfieldcells(FIELD *field,MESH *mesh,matlabarray mlar
     typename MESH::Cell::size_type size;
     mesh->size(size);
 
-    size_t numfaces = static_cast<size_t>(size);
-    mesh->synchronize(SCIRun::Mesh::FACES_E); 
+    typename MESH::basis_type& basis = mesh->get_basis();
+    size_t num = basis.number_of_vertices();
+
+    size_t numcells = static_cast<size_t>(size);
+    mesh->synchronize(SCIRun::Mesh::CELLS_E); 
 
     typename MESH::Node::array_type a;
-    std::vector<typename MESH::Node::index_type> faces(num*numfaces);
+    std::vector<typename MESH::Node::index_type> cells(num*numcells);
     std::vector<long> dims(2);	
-    dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numfaces);
+    dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numcells);
     
-    typename MESH::basis_type& basis = mesh->get_basis();
-    size_t num = basis.NumberOfVertices;
     
     // SCIRun iterators are limited in supporting any index management
     // Hence I prefer to do it with integer and convert to the required
@@ -1902,12 +1910,12 @@ bool FieldToMatlabAlgo::mladdfieldcells(FIELD *field,MESH *mesh,matlabarray mlar
     while (it != it_end)
     {
       mesh->get_nodes(a,*(it));
-      for (size_t r = 0; r < num; r++) faces[q++] = a[r] + option_indexbase_;
+      for (size_t r = 0; r < num; r++) cells[q++] = a[r] + option_indexbase_;
       ++it;
     }
     
-    fieldface.setnumericarray(faces);          
-    mlarray.setfield(0,"fieldface",fieldface);
+    fieldcell.setnumericarray(cells);          
+    mlarray.setfield(0,"fieldcell",fieldcell);
     return (true);
   }
 
