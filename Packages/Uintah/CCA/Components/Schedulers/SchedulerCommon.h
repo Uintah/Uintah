@@ -4,7 +4,6 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
@@ -20,7 +19,7 @@ namespace Uintah {
   class Output;
   class DetailedTask;
   class DetailedTasks;
-
+  class LocallyComputedPatchVarMap;
 /**************************************
 
 CLASS
@@ -190,7 +189,7 @@ WARNING
     ofstream* memlogfile;
     bool emit_taskgraph;
     GhostOffsetVarMap m_ghostOffsetVarMap;
-    LocallyComputedPatchVarMap m_locallyComputedPatchVarMap;
+    LocallyComputedPatchVarMap* m_locallyComputedPatchVarMap;
 
     //! These are to store which vars we have to copy to the new grid
     //! in a copy data task.  Set in scheduleDataCopy and used in

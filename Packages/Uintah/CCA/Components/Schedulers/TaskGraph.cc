@@ -78,7 +78,7 @@ TaskGraph::overlaps(Task::Dependency* comp, Task::Dependency* req) const
       return false;
     ps1 = comp->task->getPatchSet()->getUnion();
     if(comp->patches_dom == Task::CoarseLevel
-       || comp->patches_dom == Task::FineLevel){
+       || comp->patches_dom == Task::FineLevel) {
       SCI_THROW(InternalError("Should not compute onto another level!", __FILE__, __LINE__));
       // This may not be a big deal if it were needed, but I didn't
       // think that it should be allowed - Steve
@@ -98,7 +98,8 @@ TaskGraph::overlaps(Task::Dependency* comp, Task::Dependency* req) const
       ps2 = saveHandle2.get_rep();
     }
   }
-  if(!PatchSubset::overlaps(ps1, ps2))
+
+  if(!PatchSubset::overlaps(ps1, ps2)) // && !(ps1->size() == 0 && (!req->patches || ps2->size() == 0) && comp->task->getType() == Task::OncePerProc))
     return false;
 
   const MaterialSubset* ms1 = comp->matls;
@@ -282,7 +283,7 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
 	  } else if(req->var->typeDescription()->isReductionVariable()){
 	    if(compiter->second->task->isReductionTask())
 	      add=true;
-	  } else if(overlaps(compiter->second, req))
+          } else if(overlaps(compiter->second, req))
 	    add=true;
 	}
 	if(!add)
@@ -323,18 +324,18 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
 	  
 	  if (!sortinfo.find(edge->comp->task)->second.visited &&
 	      !edge->comp->task->isReductionTask()) {
-	    cerr << "\nWARNING: A task, '" << task->getName() << "', that ";
+	    cout << "\nWARNING: A task, '" << task->getName() << "', that ";
 	    if (modifies)
-	      cerr << "modifies '";
+	      cout << "modifies '";
 	    else
-	      cerr << "requires '";
-	    cerr << req->var->getName() << "' was added before computing task";
-	    cerr << ", '" << edge->comp->task->getName() << "'\n";
-	    cerr << "  Required/modified by: " << *task << '\n';
-	    cerr << "  req: " << *req << '\n';
-	    cerr << "  Computed by: " << *edge->comp->task << '\n';
-	    cerr << "  comp: " << *comp << '\n';
-	    cerr << "\n";
+	      cout << "requires '";
+	    cout << req->var->getName() << "' was added before computing task";
+	    cout << ", '" << edge->comp->task->getName() << "'\n";
+	    cout << "  Required/modified by: " << *task << '\n';
+	    cout << "  req: " << *req << '\n';
+	    cout << "  Computed by: " << *edge->comp->task << '\n';
+	    cout << "  comp: " << *comp << '\n';
+	    cout << "\n";
 	  }
 	  count++;
 	  if(dbg.active()){
@@ -349,42 +350,42 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
       if(count == 0 && (!req->matls || req->matls->size() > 0) 
 	 && (!req->patches || req->patches->size() > 0)){
 	if(req->patches){
-	  cerr << req->patches->size() << " Patches: ";
+	  cout << req->patches->size() << " Patches: ";
 	  for(int i=0;i<req->patches->size();i++)
-	    cerr << req->patches->get(i)->getID() << " ";
-	  cerr << '\n';
+	    cout << req->patches->get(i)->getID() << " ";
+	  cout << '\n';
 	} else if(req->reductionLevel) {
-	  cerr << "On level " << req->reductionLevel->getIndex() << '\n';
+	  cout << "On level " << req->reductionLevel->getIndex() << '\n';
 	} else if(task->getPatchSet()){
-	  cerr << "Patches from task: ";
+	  cout << "Patches from task: ";
 	  const PatchSet* patches = task->getPatchSet();
 	  for(int i=0;i<patches->size();i++){
 	    const PatchSubset* pat=patches->getSubset(i);
 	    for(int i=0;i<pat->size();i++)
-	      cerr << pat->get(i)->getID() << " ";
-	    cerr << " ";
+	      cout << pat->get(i)->getID() << " ";
+	    cout << " ";
 	  }
-	  cerr << '\n';
+	  cout << '\n';
 	} else {
-	  cerr << "On global level\n";
+	  cout << "On global level\n";
 	}
 	if(req->matls){
-	  cerr << req->matls->size() << " Matls: ";
+	  cout << req->matls->size() << " Matls: ";
 	  for(int i=0;i<req->matls->size();i++)
-	    cerr << req->matls->get(i) << " ";
-	  cerr << '\n';
+	    cout << req->matls->get(i) << " ";
+	  cout << '\n';
 	} else if(task->getMaterialSet()){
-	  cerr << "Matls from task: ";
+	  cout << "Matls from task: ";
 	  const MaterialSet* matls = task->getMaterialSet();
 	  for(int i=0;i<matls->size();i++){
 	    const MaterialSubset* mat = matls->getSubset(i);
 	    for(int i=0;i<mat->size();i++)
-	      cerr << mat->get(i) << " ";
-	    cerr << " ";
+	      cout << mat->get(i) << " ";
+	    cout << " ";
 	  }
-	  cerr << '\n';
+	  cout << '\n';
 	} else {
-	  cerr << "No matls\n";
+	  cout << "No matls\n";
 	}
 	SCI_THROW(InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName(), __FILE__, __LINE__));
       }
@@ -586,7 +587,9 @@ TaskGraph::createDetailedTasks( LoadBalancer* lb, bool useInternalDeps )
 	  const MaterialSubset* mss = ms->getSubset(m);
 	  if(lb->inNeighborhood(pss, mss) || 
              (task->getType() == Task::Output 
-              && d_myworld->myrank() % lb->getNthProc() == 0)) 
+              && d_myworld->myrank() % lb->getNthProc() == 0) ||
+             task->getType() == Task::OncePerProc)
+                                                                
 
 	    createDetailedTask(dt, task, pss, mss);
 	}
@@ -677,14 +680,15 @@ void CompTable::remembercomp(Data* newData, const ProcessorGroup* pg)
   // can't have two computes for the same variable (need modifies)
   if(newData->comp->deptype != Task::Modifies){
     if(data.lookup(newData)){
-      cerr << "Multiple compute found:\n";
-      cerr << "matl: " << newData->matl << "\n";
-      cerr << "patch: " << *newData->patch << "\n";
-      cerr << *newData->comp << "\n";
-      cerr << *newData->task << "\n";
-      cerr << "It was originally computed by the following task(s):\n";
+      cout << "Multiple compute found:\n";
+      cout << "matl: " << newData->matl << "\n";
+      cout << "patch: " << *newData->patch << "\n";
+      cout << *newData->comp << "\n";
+      cout << *newData->task << "\n";
+      cout << "It was originally computed by the following task(s):\n";
       for(Data* old = data.lookup(newData); old != 0; old = data.nextMatch(newData, old)){
-	old->comp->task->displayAll(cerr);
+        cout << *old->task << endl;
+	old->comp->task->displayAll(cout);
       }
       SCI_THROW(InternalError("Multiple computes for variable: "+newData->comp->var->getName(), __FILE__, __LINE__));
     }
@@ -865,6 +869,9 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
     if(dbg.active())
       dbg << d_myworld->myrank() << "  req: " << *req << '\n';
 
+    if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
+      continue;
+
     constHandle<PatchSubset> patches =
       req->getPatchesUnderDomain(task->patches);
     if (req->var->typeDescription()->isReductionVariable() &&
@@ -887,6 +894,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
       ASSERT(req->patches == NULL);
       ASSERT(task->patches->size() == 1);
       const Patch* origPatch = task->patches->get(0);
+      const Level* origLevel = origPatch->getLevel();
       if (req->patches_dom == Task::CoarseLevel) {
         // change the ghost cells to reflect coarse level
         IntVector ratio = origPatch->getLevel()->getRefinementRatio();
@@ -898,8 +906,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
         otherLevelLow = origPatch->getLowIndex() - ghost;
         otherLevelHigh = origPatch->getHighIndex() + ghost;
 
-        otherLevelLow = origPatch->getLevel()->mapCellToCoarser(otherLevelLow);
-        otherLevelHigh = origPatch->getLevel()->mapCellToCoarser(otherLevelHigh) + 
+        otherLevelLow = origLevel->mapCellToCoarser(otherLevelLow);
+        otherLevelHigh = origLevel->mapCellToCoarser(otherLevelHigh) + 
           ratio - IntVector(1,1,1);
       }
       else {
@@ -907,8 +915,9 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
                                           req->var->getBoundaryLayer(),
                                           req->gtype, req->numGhostCells,
                                           otherLevelLow, otherLevelHigh);
-        otherLevelLow = origPatch->getLevel()->mapCellToFiner(otherLevelLow);
-        otherLevelHigh = origPatch->getLevel()->mapCellToFiner(otherLevelHigh);
+
+        otherLevelLow = origLevel->mapCellToFiner(otherLevelLow);
+        otherLevelHigh = origLevel->mapCellToFiner(otherLevelHigh);
       }
     }
 
@@ -979,9 +988,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
           for (int j = 0; j < fromNeighbors.size(); j++) {
             const Patch* fromNeighbor = fromNeighbors[j];
 
+	    if(!(lb->inNeighborhood(neighbor) || lb->inNeighborhood(fromNeighbor)))
+              continue;
             IntVector from_l;
             IntVector from_h;
-            if (req->patches_dom == Task::OtherGridDomain) {
+            if (req->patches_dom == Task::OtherGridDomain && fromNeighbor->getLevel()->getIndex() > 0) {
               // DON'T send extra cells
               from_l = Max(fromNeighbor->getInteriorLowIndex(basis), l);
               from_h = Min(fromNeighbor->getInteriorHighIndex(basis), h);
@@ -1001,11 +1012,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
             dbg << d_myworld->myrank() << "        Neighbor: patch " << fromNeighbor->getID() << " low= " << from_l 
                 << ", high=" << from_h << '\n';
 
-	    if(!(lb->inNeighborhood(neighbor) || lb->inNeighborhood(fromNeighbor)))
-              continue;
 	    for(int m=0;m<matls->size();m++){
-	      if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
-	        continue;
 	      int matl = matls->get(m);
 
 	      // creator is the task that performs the original compute.
@@ -1034,7 +1041,10 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	        // find the tasks that up to this point require the variable
 	        // that we are modifying (i.e., the ones that use the computed
 	        // variable before we modify it), and put a dependency between
-	        // this task and those tasks
+	        // those tasks and this tasks
+                // i.e., the task that requires data computed by a task on this processor
+                // needs to finish its task before this task, which modifies the data
+                // computed by the same task
 	        list<DetailedTask*> requireBeforeModifiedTasks;
 	        creator->findRequiringTasks(req->var,
 					    requireBeforeModifiedTasks);
@@ -1049,8 +1059,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
                       static ProgressiveWarning warn("WARNING - task that requires with Ghost cells *and* modifies may not be correct",10);
                       warn.invoke();
                       dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
-                      cout <<  d_myworld->myrank() << " RGM: var: " << *req->var << " compute: " 
-                           << *creator << " mod " << *task << " PRT " << *prevReqTask << " " << from_l << " " << from_h << endl;
+                      // cout <<  d_myworld->myrank() << " RGM: var: " << *req->var << " compute: " 
+                      //      << *creator << " mod " << *task << " PRT " << *prevReqTask << " " << from_l << " " << from_h << endl;
                     }
 		  } else if(prevReqTask != task){
 		    // dep requires what is to be modified before it is to be
@@ -1060,6 +1070,36 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 		      dbg << d_myworld->myrank() << "       Requires to modifies dependency from "
 			  << prevReqTask->getName()
                            << " to " << task->getName() << " (created by " << creator->getName() << ")\n";
+                    }
+                    if (creator->getPatches()->size() > 1) {
+                      // if the creator works on many patches, then don't create links between patches that don't touch
+                      const PatchSubset* psub = task->getPatches();
+                      const PatchSubset* req_sub = prevReqTask->getPatches();
+                      if (psub->size() == 1 && req_sub->size() == 1) {
+                        const Patch* p = psub->get(0);
+                        const Patch* req_patch = req_sub->get(0);
+                        Patch::selectType n;
+                        IntVector low, high;
+                        
+                        Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(),
+                                                                                 false);
+                        
+                        req_patch->computeVariableExtents(req->var->typeDescription()->getType(),
+                                                          req->var->getBoundaryLayer(),
+                                                          Ghost::AroundCells, 2,
+                                                          low, high);
+
+                        req_patch->getLevel()->selectPatches(low, high, n);
+                        bool found = false;
+                        for (int i = 0; i < n.size(); i++) {
+                          if (n[i]->getID() == p->getID()) {
+                            found = true;
+                            break;
+                          }
+                        }
+                        if (!found)
+                          continue;
+                      }
                     }
 		    dt->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0,
 					        matl, from_l, from_h);
@@ -1082,7 +1122,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	DetailedTask* creator;
 	Task::Dependency* comp = 0;
 	if(!ct.findcomp(req, 0, matl, creator, comp, d_myworld)){
-	  cerr << "Failure finding " << *req << " for " 
+	  cout << "Failure finding " << *req << " for " 
 	       << task->getTask()->getName() << "\n"; 
 	  SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
 	}
@@ -1094,9 +1134,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	}
       }
     } 
-    else if (patches && patches->empty() && req->patches_dom == Task::FineLevel) {
-      // this is a coarsen task where there aren't any fine patches.  Perfectly
-      // legal, so do nothing
+    else if (patches && patches->empty() && 
+             (req->patches_dom == Task::FineLevel || task->getTask()->getType() == Task::OncePerProc))
+    {
+      // this is a either coarsen task where there aren't any fine patches, or a PerProcessor task where
+      // there aren't any patches on this processor.  Perfectly legal, so do nothing
     }
     else {
       ostringstream desc;

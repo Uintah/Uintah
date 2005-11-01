@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -61,6 +62,8 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   // Default mapping...
   dwmap[Task::OldDW]=0;
   dwmap[Task::NewDW]=1;
+
+  m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
 }
 
 SchedulerCommon::~SchedulerCommon()
@@ -77,6 +80,8 @@ SchedulerCommon::~SchedulerCommon()
         delete iter->second;
   
   label_matls_.clear();
+
+  delete m_locallyComputedPatchVarMap;
 }
 
 void
@@ -611,7 +616,7 @@ getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
                      IntVector& requestedLow, IntVector& requestedHigh) const
 {
   const SuperPatch* connectedPatchGroup =
-    m_locallyComputedPatchVarMap.getConnectedPatchGroup(label, patch);
+    m_locallyComputedPatchVarMap->getConnectedPatchGroup(label, patch);
   if (connectedPatchGroup == 0)
     return 0;
 
@@ -701,7 +706,7 @@ void SchedulerCommon::doEmitTaskGraphDocs()
 void SchedulerCommon::compile()
 {
   actuallyCompile();
-  m_locallyComputedPatchVarMap.reset();
+  m_locallyComputedPatchVarMap->reset();
 
   if (dts_ != 0) {
 
@@ -715,12 +720,12 @@ void SchedulerCommon::compile()
 	  comp != 0; comp = comp->next){
 	constHandle<PatchSubset> patches =
 	  comp->getPatchesUnderDomain(dt->getPatches());
-	m_locallyComputedPatchVarMap.addComputedPatchSet(comp->var,
+	m_locallyComputedPatchVarMap->addComputedPatchSet(comp->var,
                                                          patches.get_rep());
       }
     }
   }
-  m_locallyComputedPatchVarMap.makeGroups();
+  m_locallyComputedPatchVarMap->makeGroups();
 }
 
 bool SchedulerCommon::isOldDW(int idx) const
@@ -771,8 +776,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
         
         // we don't want data with an invalid level, or requiring from a different level (remember, we are
         // using an old task graph).  That willbe copied later (and chances are, it's to modify anyway).
-        if (level == -1 || level > grid->numLevels()-1 || 
-            dep->patches_dom == Task::CoarseLevel || dep->patches_dom == Task::FineLevel)
+        if (level == -1 || level > grid->numLevels()-1 || dep->patches_dom == Task::CoarseLevel || 
+            dep->patches_dom == Task::FineLevel)
           continue;
 
         const MaterialSubset* matSubset = (dep->matls != 0) ?
@@ -874,11 +879,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       if (refineSet->size() > 0)
         sim->scheduleRefine(refineSet, sched);
     }
-    
     dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
                                      &SchedulerCommon::copyDataToNewGrid));
-    addTask(dataTasks[i], newLevel->eachPatch(), d_sharedState->allMaterials());
-
     for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++) {
       const VarLabel* var = iter->first;
       MaterialSubset* matls = iter->second;
@@ -886,7 +888,10 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       dataTasks[i]->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
       dataTasks[i]->computes(var, matls);
     }
-    sim->scheduleRefineInterface(newLevel, sched, 1, 1);
+    addTask(dataTasks[i], newLevel->eachPatch(), d_sharedState->allMaterials());
+    if (i > 0) {
+      sim->scheduleRefineInterface(newLevel, sched, 1, 1);
+    }
   }
 
   // set so the load balancer will make an adequate neighborhood, as the default
@@ -971,16 +976,16 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
         for ( int oldIdx = 0;  oldIdx < oldPatches.size(); oldIdx++) {
           const Patch* oldPatch = oldPatches[oldIdx];
           
-          //IntVector oldLowIndex = oldPatch->getLowIndex(basis, label->getBoundaryLayer());
-          //IntVector oldHighIndex = oldPatch->getHighIndex(basis, label->getBoundaryLayer());
-          IntVector oldLowIndex = oldPatch->getLowIndex(basis, IntVector(0,0,0));
-          IntVector oldHighIndex = oldPatch->getHighIndex(basis, IntVector(0,0,0));
+          IntVector oldLowIndex;
+          IntVector oldHighIndex;
 
           if (newLevel->getIndex() > 0) {
-            // compensate for the extra cells, we DON'T want to copy them over on non-coarse levels
-            // we'll interpolate those up
-            oldLowIndex += (oldPatch->getInteriorCellLowIndex() - oldPatch->getCellLowIndex());
-            oldHighIndex -= (oldPatch->getCellHighIndex() - oldPatch->getInteriorCellHighIndex());
+            oldLowIndex = oldPatch->getInteriorLowIndex(basis);
+            oldHighIndex = oldPatch->getInteriorHighIndex(basis);
+          }
+          else {
+            oldLowIndex = oldPatch->getLowIndex(basis, label->getBoundaryLayer());
+            oldHighIndex = oldPatch->getHighIndex(basis, label->getBoundaryLayer());
           }
 
           IntVector copyLowIndex = Max(newLowIndex, oldLowIndex);
@@ -1022,10 +1027,10 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             break;
           case TypeDescription::CCVariable:
             {
-              if(!oldDataWarehouse->exists(label, matl, oldPatch)) {
+              if(!oldDataWarehouse->exists(label, matl, oldPatch)) 
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
                                           "in copyDataTo CCVariable", __FILE__, __LINE__));
-              }
+
               CCVariableBase* v = oldDataWarehouse->d_ccDB.get(label, matl, oldPatch);
               CCVariableBase* newVariable;
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
