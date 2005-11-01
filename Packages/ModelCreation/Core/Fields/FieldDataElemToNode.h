@@ -43,8 +43,13 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Mesh.h>
 
-#include <sci_hash_map.h>
-#include <Packages/ModelCreation/Core/Datatypes/SelectionMask.h>
+// Basis classes
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/PrismLinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/TriLinearLgn.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

@@ -18,7 +18,7 @@ SRCS     += \
 	$(SRCDIR)/CreateFieldData.cc\
 	$(SRCDIR)/DistanceToBoundary.cc\
 	$(SRCDIR)/DistanceToField.cc\
-  $(SRCDIR)/FieldDataElemToNode.cc\
+	$(SRCDIR)/FieldDataElemToNode.cc\
 	$(SRCDIR)/FieldDataNodeToElem.cc\
 	$(SRCDIR)/IsInsideField.cc\
 	$(SRCDIR)/SignedDistanceToField.cc\

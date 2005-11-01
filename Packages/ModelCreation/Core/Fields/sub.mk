@@ -19,6 +19,8 @@ SRCS     += $(SRCDIR)/ClipBySelectionMask.cc\
             $(SRCDIR)/FieldDataElemToNode.cc\
             $(SRCDIR)/SplitFieldByElementData.cc\
             $(SRCDIR)/MergeFields.cc\
+            $(SRCDIR)/GetFieldData.cc\
+            $(SRCDIR)/SetFieldData.cc\
             $(SRCDIR)/MappingMatrixToField.cc\
 #[INSERT NEW CODE FILE HERE]
 

@@ -126,7 +126,7 @@ FieldGetStringProperty::execute()
   guistrings_.set(stringlist);
   ctx->reset();
   
-  if (!(ofport = static_cast<StringOPort *>(get_oport("string1"))))
+  if (!(ofport = static_cast<StringOPort *>(get_oport("String1"))))
   {
     error("Could not find string 1 output port");
     return; 
@@ -145,7 +145,7 @@ FieldGetStringProperty::execute()
     }
   }
  
-  if (!(ofport = static_cast<StringOPort *>(get_oport("string2"))))
+  if (!(ofport = static_cast<StringOPort *>(get_oport("String2"))))
   {
     error("Could not find string 2 output port");
     return; 
@@ -164,7 +164,7 @@ FieldGetStringProperty::execute()
     }
   }
  
-  if (!(ofport = static_cast<StringOPort *>(get_oport("string3"))))
+  if (!(ofport = static_cast<StringOPort *>(get_oport("String3"))))
   {
     error("Could not find string 3 output port");
     return; 

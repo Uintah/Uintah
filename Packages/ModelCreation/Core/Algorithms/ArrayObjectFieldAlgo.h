@@ -36,6 +36,27 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+// Basis classes
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/CrvQuadraticLgn.h>
+#include <Core/Basis/HexTricubicHmt.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/HexTriquadraticLgn.h>
+#include <Core/Basis/PrismCubicHmt.h>
+#include <Core/Basis/PrismLinearLgn.h>
+#include <Core/Basis/PrismQuadraticLgn.h>
+#include <Core/Basis/QuadBicubicHmt.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/QuadBiquadraticLgn.h>
+#include <Core/Basis/TetCubicHmt.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/TetQuadraticLgn.h>
+#include <Core/Basis/TriCubicHmt.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/TriQuadraticLgn.h>
+
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Containers/StringUtil.h>
@@ -43,6 +64,8 @@
 #include <Core/Containers/HashTable.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Mesh.h>
+#include <Core/Geometry/Tensor.h>
+#include <Core/Geometry/Vector.h>
 #include <Dataflow/Network/Module.h>
 
 #include <Packages/ModelCreation/Core/Algorithms/TVMMath.h>
@@ -413,7 +436,7 @@ int ArrayObjectFieldLocationElemAlgoT<FIELD>::size()
 class ArrayObjectFieldCreateAlgo : public SCIRun::DynamicAlgoBase {
   public:
     virtual bool createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output) = 0;
-    static  SCIRun::CompileInfoHandle get_compile_info(SCIRun::FieldHandle field,std::string datatype, std::string basistype = "input");
+    static  SCIRun::CompileInfoHandle get_compile_info(SCIRun::FieldHandle field,std::string datatype, std::string basistype = "");
 };
 
 template<class FIELD>
@@ -423,47 +446,11 @@ class ArrayObjectFieldCreateAlgoT : public ArrayObjectFieldCreateAlgo {
 };
 
 template<class FIELD>
-class ArrayObjectFieldCreateNodeAlgoT : public ArrayObjectFieldCreateAlgo {
-  public:
-    virtual bool createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output);
-};
-
-template<class FIELD>
-class ArrayObjectFieldCreateElemAlgoT : public ArrayObjectFieldCreateAlgo {
-  public:
-    virtual bool createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output);
-};
-
-template<class FIELD>
 bool ArrayObjectFieldCreateAlgoT<FIELD>::createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output)
 {
   typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(input->mesh().get_rep());
   if (mesh == 0) return(false);
-  FIELD* ofield = scinew FIELD(mesh, input->basis_order());
-  output = dynamic_cast<SCIRun::Field *>(ofield);
-  if (output.get_rep() == 0) return(false);
-  ofield->resize_fdata();
-  return(true);
-}
-
-template<class FIELD>
-bool ArrayObjectFieldCreateElemAlgoT<FIELD>::createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output)
-{
-  typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(input->mesh().get_rep());
-  if (mesh == 0) return(false);
-  FIELD* ofield = scinew FIELD(mesh, 0);
-  output = dynamic_cast<SCIRun::Field *>(ofield);
-  if (output.get_rep() == 0) return(false);
-  ofield->resize_fdata();
-  return(true);
-}
-
-template<class FIELD>
-bool ArrayObjectFieldCreateNodeAlgoT<FIELD>::createfield(SCIRun::FieldHandle input,SCIRun::FieldHandle& output)
-{
-  typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(input->mesh().get_rep());
-  if (mesh == 0) return(false);
-  FIELD* ofield = scinew FIELD(mesh, 1);
+  FIELD* ofield = scinew FIELD(mesh);
   output = dynamic_cast<SCIRun::Field *>(ofield);
   if (output.get_rep() == 0) return(false);
   ofield->resize_fdata();

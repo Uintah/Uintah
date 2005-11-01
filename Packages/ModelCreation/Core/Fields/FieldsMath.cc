@@ -28,10 +28,33 @@
 
 #include <Packages/ModelCreation/Core/Fields/FieldsMath.h>
 
+// Matrix types
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 
+// Basis classes
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/CrvQuadraticLgn.h>
+#include <Core/Basis/HexTricubicHmt.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/HexTriquadraticLgn.h>
+#include <Core/Basis/PrismCubicHmt.h>
+#include <Core/Basis/PrismLinearLgn.h>
+#include <Core/Basis/PrismQuadraticLgn.h>
+#include <Core/Basis/QuadBicubicHmt.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/QuadBiquadraticLgn.h>
+#include <Core/Basis/TetCubicHmt.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/TetQuadraticLgn.h>
+#include <Core/Basis/TriCubicHmt.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/TriQuadraticLgn.h>
+
+// Mesh types
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
@@ -53,14 +76,14 @@
 #include <Packages/ModelCreation/Core/Fields/SplitFieldByElementData.h>
 #include <Packages/ModelCreation/Core/Fields/MappingMatrixToField.h>
 #include <Packages/ModelCreation/Core/Fields/MergeFields.h>
+#include <Packages/ModelCreation/Core/Fields/GetFieldData.h>
+#include <Packages/ModelCreation/Core/Fields/SetFieldData.h>
 
 #include <Core/Algorithms/Fields/FieldCount.h>
 #include <Dataflow/Modules/Fields/Unstructure.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
 #include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
-#include <Dataflow/Modules/Fields/ChangeFieldBasis.h>
 #include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
-#include <Dataflow/Modules/Fields/ManageFieldData.h>
 
 
 namespace ModelCreation {
@@ -101,6 +124,7 @@ bool FieldsMath::DistanceToField(FieldHandle input, FieldHandle& output, FieldHa
   // This should speed up the calculation 
   bool isvol = false;
 
+/*
   if (object->mesh()->dimensionality() == 3)
   {
     MatrixHandle dummy;
@@ -113,21 +137,22 @@ bool FieldsMath::DistanceToField(FieldHandle input, FieldHandle& output, FieldHa
     object = objectsurf;
     isvol = true;
   }
+*/
 
   if (object->mesh()->dimensionality() > 2)
   {
-    error("DistanceToField: This function has only been implemented for a surface mesh");
+    error("DistanceToField: This function has only been implemented for a surface mesh, a line mesh, or a point cloud");
     return(false);
   }  
 
-  if ((dynamic_cast<TriSurfMesh*>(object->mesh().get_rep())) ||
-      (dynamic_cast<QuadSurfMesh*>(object->mesh().get_rep())) || 
-      (dynamic_cast<ImageMesh*>(object->mesh().get_rep())) ||       
-      (dynamic_cast<StructQuadSurfMesh*>(object->mesh().get_rep())) || 
-      (dynamic_cast<CurveMesh*>(object->mesh().get_rep())) ||  
-      (dynamic_cast<StructCurveMesh*>(object->mesh().get_rep())) ||   
-      (dynamic_cast<ScanlineMesh*>(object->mesh().get_rep())) ||       
-      (dynamic_cast<PointCloudMesh*>(object->mesh().get_rep())))   
+  if ((dynamic_cast<TriSurfMesh<TriLinearLgn<Point> > *>(object->mesh().get_rep())) ||
+      (dynamic_cast<QuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) || 
+      (dynamic_cast<ImageMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) ||       
+      (dynamic_cast<StructQuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) || 
+      (dynamic_cast<CurveMesh<CrvLinearLgn<Point> > *>(object->mesh().get_rep())) ||  
+      (dynamic_cast<StructCurveMesh<CrvLinearLgn<Point> > *>(object->mesh().get_rep())) ||   
+      (dynamic_cast<ScanlineMesh<CrvLinearLgn<Point> > *>(object->mesh().get_rep())) ||       
+      (dynamic_cast<PointCloudMesh<ConstantBasis<Point> >*>(object->mesh().get_rep())))   
   {
 
     Handle<DistanceToFieldAlgo> algo;
@@ -203,11 +228,10 @@ bool FieldsMath::SignedDistanceToField(FieldHandle input, FieldHandle& output, F
     return(false);
   }
 
-  if ((dynamic_cast<TriSurfMesh*>(object->mesh().get_rep())) ||
-      (dynamic_cast<QuadSurfMesh*>(object->mesh().get_rep())) ||  
-      (dynamic_cast<ImageMesh*>(object->mesh().get_rep())) ||
-      (dynamic_cast<StructQuadSurfMesh*>(object->mesh().get_rep())) || 
-      (dynamic_cast<CurveMesh*>(object->mesh().get_rep())))   
+  if ((dynamic_cast<TriSurfMesh<TriLinearLgn<Point> > *>(object->mesh().get_rep())) ||
+      (dynamic_cast<QuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) ||  
+      (dynamic_cast<ImageMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) ||
+      (dynamic_cast<StructQuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())))
   {  
     Handle<DistanceToFieldAlgo> algo;
     
@@ -271,11 +295,10 @@ bool FieldsMath::IsInsideSurfaceField(FieldHandle input, FieldHandle& output, Fi
     return(false);
   }
 
-  if ((dynamic_cast<TriSurfMesh*>(object->mesh().get_rep())) ||
-      (dynamic_cast<QuadSurfMesh*>(object->mesh().get_rep())) ||  
-      (dynamic_cast<ImageMesh*>(object->mesh().get_rep())) ||
-      (dynamic_cast<StructQuadSurfMesh*>(object->mesh().get_rep())) || 
-      (dynamic_cast<CurveMesh*>(object->mesh().get_rep())))   
+  if ((dynamic_cast<TriSurfMesh<TriLinearLgn<Point> > *>(object->mesh().get_rep())) ||
+      (dynamic_cast<QuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) ||  
+      (dynamic_cast<ImageMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())) ||
+      (dynamic_cast<StructQuadSurfMesh<QuadBilinearLgn<Point> > *>(object->mesh().get_rep())))
   {  
     Handle<DistanceToFieldAlgo> algo;
     
@@ -304,41 +327,10 @@ bool FieldsMath::IsInsideSurfaceField(FieldHandle input, FieldHandle& output, Fi
 }
 
 
-bool FieldsMath::ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, int new_basis_order)
+bool FieldsMath::ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, std::string newbasis)
 {
-
-  if (input.get_rep() == 0)
-  {
-    error("ChangeFieldBasis: no input field is given");
-    return(false);
-  }
-  
-  int basis_order = input->basis_order();
-  
-  if (basis_order == new_basis_order)
-  {
-    return(true);
-  }
-
-  // Create a field identical to the input, except for the edits.
-  const TypeDescription *fsrctd = input->get_type_description();
-  CompileInfoHandle ci = ChangeFieldBasisAlgoCreate::get_compile_info(fsrctd);
-  Handle<ChangeFieldBasisAlgoCreate> algo;
-  if (!DynamicCompilation::compile(ci, algo, pr_))
-  {
-    error("ChangeFieldBasis: Could not dynamically compile algorithm");
-    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
-    return(false);
-  }
-  
-  output = algo->execute(pr_, input, new_basis_order, interpolant);
-  if (output.get_rep() == 0)
-  {
-    error("ChangeFieldBasis: Dynamically compiled algorithm failed");
-    return(false);
-  }
-
-  return(true);
+  error("ChangeFieldBasis: algorithm not implemented");
+  return(false);
 }
 
 
@@ -362,19 +354,22 @@ bool FieldsMath::ApplyMappingMatrix(FieldHandle input, FieldHandle& output, Matr
     return(false);  
   }
 
-  std::string actype = datafield->get_type_description(1)->get_name();
 
-  // Integer data cannot be interpolated at this moment
-  if (datafield->query_scalar_interface(pr_) != NULL) { actype = "double"; }
-
-  const TypeDescription *iftd = datafield->get_type_description();
-  const TypeDescription *iltd = datafield->order_type_description();
-  const TypeDescription *oftd = input->get_type_description();
-  const TypeDescription *oltd = input->order_type_description();
+  TypeDescription::td_vec *tdv = input->get_type_description(3)->get_sub_type();
+  std::string accumtype = (*tdv)[0]->get_name();
+  if ((accumtype.find("Vector")!=std::string::npos)&&(accumtype.find("Tensor")!=std::string::npos)) { accumtype = "double"; }
+  const std::string oftn = 
+    datafield->get_type_description(0)->get_name() + "<" +
+    datafield->get_type_description(1)->get_name() + ", " +
+    datafield->get_type_description(2)->get_similar_name(accumtype,0, "<", " >, ") +
+    datafield->get_type_description(3)->get_similar_name(accumtype,0, "<", " >") + " >";
 
   CompileInfoHandle ci =
-      ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd,oftd, oltd,actype, false);
-      
+    ApplyMappingMatrixAlgo::get_compile_info(input->get_type_description(),
+            input->order_type_description(),datafield->get_type_description(),
+            oftn,datafield->order_type_description(),
+            input->get_type_description(3),accumtype);
+
   Handle<ApplyMappingMatrixAlgo> algo;      
   if (!DynamicCompilation::compile(ci, algo,pr_))
   {
@@ -383,7 +378,7 @@ bool FieldsMath::ApplyMappingMatrix(FieldHandle input, FieldHandle& output, Matr
     return(false);
   }
          
-  output = algo->execute(datafield, input->mesh(), interpolant,input->basis_order());
+  output = algo->execute(datafield, input->mesh(), interpolant);
   
   if (output.get_rep() == 0)
   {
@@ -447,21 +442,21 @@ bool FieldsMath::Unstructure(FieldHandle input,FieldHandle& output)
 
   std::string dstname = "";
   std::string srcname = input->mesh()->get_type_description()->get_name();
+  SCIRun::TypeDescription::td_vec* tdv = input->mesh()->get_type_description()->get_sub_type();
+  (*tdv)[0]->get_name();
+  std::string basisname = (*tdv)[0]->get_name();
   
-  if (srcname == get_type_description((LatVolMesh *)0)->get_name() ||
-	srcname == get_type_description((StructHexVolMesh *)0)->get_name())
+  if ((srcname.find("LatVolMesh") != std::string::npos) || (srcname.find("StructHexVolMesh") != std::string::npos))
   {
-    dstname = "HexVolField";
+    dstname = "HexVolMesh<" + basisname + "<Point> >";
   }
-  else if (srcname == get_type_description((ImageMesh *)0)->get_name() ||
-           srcname == get_type_description((StructQuadSurfMesh *)0)->get_name())
+  else if ((srcname.find("ImageMesh") != std::string::npos ) || (srcname.find("StructQuadSurfMesh") != std::string::npos ))
   {
-    dstname = "QuadSurfField";
+    dstname = "QuadSurfMesh<" + basisname + "<Point> >";
   }  
-  else if (srcname == get_type_description((ScanlineMesh *)0)->get_name() ||
-           srcname == get_type_description((StructCurveMesh *)0)->get_name())
+  else if ((srcname.find("ScanlineMesh")  != std::string::npos) || (srcname.find("StructCurveMesh")  != std::string::npos))
   {
-    dstname = "CurveField";
+    dstname = "CurveMesh<" + basisname + "<Point> >";
   }
 
   if (dstname == "")
@@ -472,8 +467,13 @@ bool FieldsMath::Unstructure(FieldHandle input,FieldHandle& output)
   else
   {
     const TypeDescription *ftd = input->get_type_description();
-    CompileInfoHandle ci = SCIRun::UnstructureAlgo::get_compile_info(ftd, dstname);
-    Handle<UnstructureAlgo> algo;
+    TypeDescription::td_vec *tdvdata = input->get_type_description(3)->get_sub_type();
+    std::string dataname = (*tdvdata)[0]->get_name();
+    
+    SCIRun::CompileInfoHandle ci = SCIRun::UnstructureAlgo::get_compile_info(ftd, 
+        dstname,input->get_type_description(2)->get_name(),dataname);
+        
+    Handle<SCIRun::UnstructureAlgo> algo;
     if (!(DynamicCompilation::compile(ci, algo, false, pr_))) 
     {
       error("Unstructure: Could not dynamically compile algorithm");
@@ -519,7 +519,7 @@ bool FieldsMath::FieldBoundary(FieldHandle input, FieldHandle& output,MatrixHand
 }
 
 
-bool FieldsMath::SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data)
+bool FieldsMath::SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data, bool keepscalartype)
 {
   int numnodes;  
   int numelems;  
@@ -548,110 +548,17 @@ bool FieldsMath::SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandl
     return(false); 
   }
   
-  int svt_flag = 0;
-  int matrix_svt_flag = svt_flag;
-
-  if (input->query_scalar_interface(pr_).get_rep())
-  {
-    svt_flag = 0;
-  }
-  else if (input->query_vector_interface(pr_).get_rep())
-  {
-    svt_flag = 1;
-  }
-  else if (input->query_tensor_interface(pr_).get_rep())
-  {
-    svt_flag = 2;
-  }
+   
+  SCIRun::CompileInfoHandle ci = SetFieldDataAlgo::get_compile_info(input,data,numnodes,numelems,keepscalartype);
   
-  if (data->nrows() == 6 || data->ncols() == 6)
-  {
-    matrix_svt_flag = 3;
-  }
-  else if (data->nrows() == 9 || data->ncols() == 9)
-  {
-    matrix_svt_flag = 2;
-  }
-  else if (data->nrows() == 3 || data->ncols() == 3)
-  {
-    matrix_svt_flag = 1;
-  }
-  else if (data->nrows() == 1 || data->ncols() == 1)
-  {
-    matrix_svt_flag = 0;
-  }
-  else
-  {
-    error("SelFieldData: Input matrix row/column size mismatch.");
-    error("SelFieldData: Input matrix does not appear to fit in the field.");
-    return(false);
-  }
-
-  int datasize = 0;
-  if (input->basis_order() == 0)
-  {
-    datasize = numelems;
-  }
-  if (input->basis_order() == 1)
-  {
-    datasize = numnodes;
-  }
-
-
-  if (matrix_svt_flag == 3 && datasize == 6)
-  {
-    if (data->nrows() == 3 || data->ncols() == 3)
-    {
-      matrix_svt_flag = 1;
-    }
-    else if (data->nrows() == 1 || data->ncols() == 1)
-    {
-      matrix_svt_flag = 0;
-    }
-  }  
-  if (matrix_svt_flag == 2 && datasize == 9)
-  {
-    if (data->nrows() == 3 || data->ncols() == 3)
-    {
-      matrix_svt_flag = 1;
-    }
-    else if (data->nrows() == 1 || data->ncols() == 1)
-    {
-      matrix_svt_flag = 0;
-    }
-  }
-  
-  if (matrix_svt_flag == 1 && datasize == 3)
-  {
-    if (data->nrows() == 1 || data->ncols() == 1)
-    {
-      matrix_svt_flag = 0;
-    }
-  }
-  
-  if ((data->nrows() == 9 || data->nrows() == 6) &&
-      (data->ncols() == 9 || data->ncols() == 6))
-  {
-    std::ostringstream oss;
-    oss << "SelFieldData: Input matrix is " << data->nrows() + "x" << data->ncols();
-    oss << ".  Using rows or columns as tensors is ambiguous.";
-    remark(oss.str());
-  }
-  else if (data->nrows() == 3 && data->ncols() == 3)
-  {
-    remark("SetFieldData: Input matrix is 3x3.  Using rows/columns for vectors is ambiguous.");
-  }
-  
-  CompileInfoHandle ci = ManageFieldDataAlgoMesh::get_compile_info(input->get_type_description(),matrix_svt_flag,-1);
-  
-  Handle<ManageFieldDataAlgoMesh> algo;
+  Handle<SetFieldDataAlgo> algo;
   if (!(DynamicCompilation::compile(ci, algo, false, pr_))) 
   {
     error("SetFieldData: Could not dynamically compile algorithm");
     return(false);    
   }
   
-  output = algo->execute(pr_, input->mesh(), data);
+  algo->setfielddata(pr_, input, output, data);
 
   if (output.get_rep() == 0)
   {
@@ -696,21 +603,6 @@ bool FieldsMath::GetFieldData(FieldHandle input, MatrixHandle& data)
     return(false);
   }
   
-  int svt_flag = 0;
-
-  if (input->query_scalar_interface(pr_).get_rep())
-  {
-    svt_flag = 0;
-  }
-  else if (input->query_vector_interface(pr_).get_rep())
-  {
-    svt_flag = 1;
-  }
-  else if (input->query_tensor_interface(pr_).get_rep())
-  {
-    svt_flag = 2;
-  }
-
   // Compute output matrix.
   if (input->basis_order() == -1)
   {
@@ -718,17 +610,16 @@ bool FieldsMath::GetFieldData(FieldHandle input, MatrixHandle& data)
   }
   else
   {
-    CompileInfoHandle ci = ManageFieldDataAlgoField::get_compile_info(input->get_type_description(), svt_flag);
+    CompileInfoHandle ci = GetFieldDataAlgo::get_compile_info(input);
     
-    Handle<ManageFieldDataAlgoField> algo;
+    Handle<GetFieldDataAlgo> algo;
     if (!DynamicCompilation::compile(ci, algo, true, pr_))
     {
       error("GetFieldData: Could not dynamically compile algorithm");
       return(false);
     }
 
-    int datasize;
-    data = algo->execute(input, datasize);
+    algo->getfielddata(pr_, input, data);
     
     if (data.get_rep() == 0)
     {
@@ -747,26 +638,18 @@ bool FieldsMath::FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std
     return(false);
   }
   
-  if (method=="Interpolate")
+  if (input->basis_order() == 0)
   {
-    if(!((dynamic_cast<SCIRun::LatVolMesh *>(input->mesh().get_rep())) ||
-         (dynamic_cast<SCIRun::ImageMesh *>(input->mesh().get_rep())) ||
-         (dynamic_cast<SCIRun::CurveMesh *>(input->mesh().get_rep())) ||
-         (dynamic_cast<SCIRun::ScanlineMesh *>(input->mesh().get_rep())) ||
-         (dynamic_cast<SCIRun::TriSurfMesh *>(input->mesh().get_rep())) ||
-         (dynamic_cast<SCIRun::TetVolMesh *>(input->mesh().get_rep()))))
-    {
-      error("FieldDataNodeToElem: Interpolation for this type of field has not yet been implemented");
-      return(false);
-    }
+    warning("FieldDataNodeToElem: The data is already located at the elements");
+    return(true);
   }
   
-  if (input->basis_order() < 1)
+   if (input->basis_order() < 0)
   {
     error("FieldDataNodeToElem: Input field has no data on the nodes");
     return(false);
   }
-
+   
   CompileInfoHandle ci = FieldDataNodeToElemAlgo::get_compile_info(input);
   
   Handle<FieldDataNodeToElemAlgo> algo;
@@ -799,26 +682,19 @@ bool FieldsMath::FieldDataElemToNode(FieldHandle input, FieldHandle& output, std
     return(false);
   }
   
-  if (input->basis_order() != 0)
+  
+  if (input->basis_order() > 0)
   {
-    error("FieldDataElemToNode: Input field has no data at the elements");
+    warning("FieldDataNodeToElem: The data is already located at the nodes");
+    return(true);
+  }
+  
+   if (input->basis_order() < 0)
+  {
+    error("FieldDataNodeToElem: Input field has no data on the nodes");
     return(false);
   }
-
-  if (method=="Interpolate")
-  {
-    if(!((dynamic_cast<SCIRun::LatVolMesh *>(input->mesh().get_rep())) ||
-         (dynamic_cast<SCIRun::ImageMesh *>(input->mesh().get_rep())) ||
-         (dynamic_cast<SCIRun::CurveMesh *>(input->mesh().get_rep())) ||
-         (dynamic_cast<SCIRun::ScanlineMesh *>(input->mesh().get_rep())) ||
-         (dynamic_cast<SCIRun::TriSurfMesh *>(input->mesh().get_rep())) ||
-         (dynamic_cast<SCIRun::TetVolMesh *>(input->mesh().get_rep()))))
-    {
-      error("FieldDataNodeToElem: Interpolation for this type of field has not yet been implemented");
-      return(false);
-    }
-  }
-
+   
   CompileInfoHandle ci = FieldDataElemToNodeAlgo::get_compile_info(input);
   
   Handle<FieldDataElemToNodeAlgo> algo;

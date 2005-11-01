@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
+#include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 
 namespace ModelCreation
 {
@@ -37,4 +37,11 @@ extern "C" void * ModelCreationInit(void *param)
 }
 
 } // end namespace
+
+namespace SCIRun {
+  extern MatrixHandle SimpleTextFileMatrix_reader(ProgressReporter *pr, const char *filename);
+  static MatrixIEPlugin SimpleTextFileMatrix_plugin("TextFile","", "",SimpleTextFileMatrix_reader,0);
+}
+
+
 

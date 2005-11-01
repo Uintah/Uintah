@@ -67,11 +67,11 @@ class FieldsMath {
     bool FieldBoundary(FieldHandle input, FieldHandle& output, MatrixHandle &interpolant);
     bool ApplyMappingMatrix(FieldHandle input, FieldHandle& output, MatrixHandle interpolant, FieldHandle datafield);
     bool Unstructure(FieldHandle input,FieldHandle& output);
-    bool ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, int newbasis_order);
+    bool ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixHandle &interpolant, std::string newbasis);
     
     // ManageFieldData split into two parts
     // Need to upgrade code for these when we are done with HO integration
-    bool SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data);
+    bool SetFieldData(FieldHandle input, FieldHandle& output,MatrixHandle data, bool keepscalartype = true);
     bool GetFieldData(FieldHandle input, MatrixHandle& data);
 	
     // Due to some oddity in the FieldDesign information like this cannot be queried directly

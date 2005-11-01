@@ -13,10 +13,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Core/Datatypes
 
 SRCS     += $(SRCDIR)/Startup.cc\
+            $(SRCDIR)/SimpleTextFile.cc\
             $(SRCDIR)/SelectionMask.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
+PSELIBS :=  Core/ImportExport\
+            Core/Datatypes Core/Util Core/Containers \
             Core/Exceptions Core/Thread Core/GuiInterface \
             Core/Geom Core/Geometry Dataflow/Network \
             Packages/ModelCreation/Core/Algorithms
