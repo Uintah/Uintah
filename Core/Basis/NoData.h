@@ -41,25 +41,37 @@ namespace SCIRun {
 
 using std::string;
 
+//! Class for describing unit geometry of NoDataBasis 
+class NoDataUnitElement {
+public: 
+  static double unit_vertices[0][0]; //!< Parametric coordinates of vertices 
+  static int unit_edges[0][0];    //!< References to vertices of unit edge 
+
+  NoDataUnitElement() {}
+  virtual ~NoDataUnitElement() {}
+
+  //!< return dimension of domain 
+  static int domain_dimension() { return -1; } 
+  //!< return number of vertices
+  static int number_of_vertices() { return 0; }
+  //!< return number of edges 
+  static int number_of_edges() { return 0; } 
+  //!< return number of vertices per face 
+  static int vertices_of_face() { return 0; } 
+  //!< return number of faces per cell 
+  static int faces_of_cell() { return 0; } 
+};
+
+
 //! Class for handling of element without storage for field variables
 template <class T> //! for compilation consistency
-class NoDataBasis : public BasisSimple<T>
+  class NoDataBasis : public BasisSimple<T>, public NoDataUnitElement
 {
 public:
   NoDataBasis() {}
   virtual ~NoDataBasis() {}
   
   int polynomial_order() const { return -1; }
-  //!< return dimension of domain 
-  static int domain_dimension() { return -1; }
-   //!< return number of vertices
-  static int number_of_vertices() { return 0; }
-  //!< return number of edges
-  static int number_of_edges() { return 0; } 
-  //!< return number of vertices per face 
-  static int vertices_of_face() { return 0; } 
-  //!< return number of faces per cell 
-  static int faces_of_cell() { return 0; } 
   
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str); 

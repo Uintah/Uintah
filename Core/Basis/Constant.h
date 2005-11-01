@@ -41,9 +41,31 @@ namespace SCIRun {
 
 using std::string;
 
+//! Class for describing unit geometry of ConstantBasis 
+class ConstantBasisElement {
+public: 
+  static double unit_vertices[0][0]; //!< Parametric coordinates of vertices 
+  static int unit_edges[0][0];    //!< References to vertices of unit edge 
+
+  ConstantBasisElement() {}
+  virtual ~ConstantBasisElement() {}
+
+  //!< return dimension of domain 
+  static int domain_dimension() { return 0; } 
+  //!< return number of vertices
+  static int number_of_vertices() { return 0; }
+  //!< return number of edges 
+  static int number_of_edges() { return 0; } 
+  //!< return number of vertices per face 
+  static int vertices_of_face() { return 0; } 
+  //!< return number of faces per cell 
+  static int faces_of_cell() { return 0; } 
+};
+
+
 //! Class for handling of element with constant field variables
 template <class T>
-class ConstantBasis : public BasisSimple<T>
+  class ConstantBasis : public BasisSimple<T>, public ConstantBasisElement
 {
 public:
   ConstantBasis() {}
@@ -51,15 +73,6 @@ public:
   
   int polynomial_order() const { return 0; }
   //!< return dimension of domain 
-  static int domain_dimension() { return 0; }
-   //!< return number of vertices
-  static int number_of_vertices() { return 0; }
-  //!< return number of edges
-  static int number_of_edges() { return 0; } 
-  //!< return number of vertices per face 
-  static int vertices_of_face() { return 0; } 
-  //!< return number of faces per cell 
-  static int faces_of_cell() { return 0; } 
 
   //! get value at parametric coordinate 
   template <class CellData>
