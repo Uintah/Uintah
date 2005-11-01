@@ -289,6 +289,7 @@ WARNING
       Normal,
       Reduction,
       InitialSend,
+      OncePerProc, // make sure to pass a PerProcessorPatchSet to the addTask function
       Output
     };
     

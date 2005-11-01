@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Containers/StringUtil.h>
@@ -728,6 +729,9 @@ namespace Uintah {
       break;
     case Task::Output:
       out << "Output";
+      break;
+    case Task::OncePerProc:
+      out << "OncePerProc";
       break;
     }
     return out;
