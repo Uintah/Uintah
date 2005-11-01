@@ -181,7 +181,8 @@ public:
 			      const Patch*);
    virtual void getRegion(constCCVariableBase&, const VarLabel*,
 			  int matlIndex, const Level* level,
-			  const IntVector& low, const IntVector& high);
+			  const IntVector& low, const IntVector& high,
+                          bool useBoundaryCells = true);
    virtual void put(CCVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 

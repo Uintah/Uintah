@@ -401,9 +401,10 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
     break;
   case TypeDescription::CCVariable:
     {
-      if(!d_ccDB.exists(label, matlIndex, patch))
+      if(!d_ccDB.exists(label, matlIndex, patch)) {
 	SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
 			      "in sendMPI", __FILE__, __LINE__));
+      }
       CCVariableBase* var = d_ccDB.get(label, matlIndex, patch);
       var->getMPIBuffer(buffer, dep->low, dep->high);
       buffer.addSendlist(var->getRefCounted());
@@ -1361,18 +1362,25 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
   var->allocate(low, high);
 
   Patch::selectType patches;
-  level->selectPatches(low, high, patches);
+
+  // make sure we grab all the patches, sometimes we might call only with an extra cell region, which
+  // selectPatches doesn't detect
+  IntVector tmpLow(low-IntVector(1,1,1));
+  IntVector tmpHigh(high+IntVector(1,1,1));
+  level->selectPatches(tmpLow, tmpHigh, patches);
   
   d_lock.readLock();
   int totalCells=0;
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
+    IntVector l(Max(patch->getLowIndex(Patch::NodeBased, label->getBoundaryLayer()), low));
+    IntVector h(Min(patch->getHighIndex(Patch::NodeBased, label->getBoundaryLayer()), high));
+    if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
+      continue;
     if(!d_ncDB.exists(label, matlIndex, patch->getRealPatch()))
       SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
     NCVariableBase* tmpVar = constVar.cloneType();
     d_ncDB.get(label, matlIndex, patch, *tmpVar);
-    IntVector l(Max(patch->getLowIndex(Patch::NodeBased, label->getBoundaryLayer()), low));
-    IntVector h(Min(patch->getHighIndex(Patch::NodeBased, label->getBoundaryLayer()), high));
 
     if (patch->isVirtual()) {
       // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
@@ -1397,24 +1405,39 @@ void
 OnDemandDataWarehouse::getRegion(constCCVariableBase& constVar,
 				 const VarLabel* label,
 				 int matlIndex, const Level* level,
-				 const IntVector& low, const IntVector& high)
+				 const IntVector& low, const IntVector& high,
+                                 bool useBoundaryCells /*=true*/)
 {
   CCVariableBase* var = constVar.cloneType();
   var->allocate(low, high);
 
   Patch::selectType patches;
-  level->selectPatches(low, high, patches);
+  
+  // make sure we grab all the patches, sometimes we might call only with an extra cell region, which
+  // selectPatches doesn't detect
+  IntVector tmpLow(low-IntVector(1,1,1));
+  IntVector tmpHigh(high+IntVector(1,1,1));
+  level->selectPatches(tmpLow, tmpHigh, patches);
   
   d_lock.readLock();
   int totalCells=0;
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
+    IntVector l, h;
+    if (useBoundaryCells) {
+      l = Max(patch->getLowIndex(Patch::CellBased, label->getBoundaryLayer()), low);
+      h = Min(patch->getHighIndex(Patch::CellBased, label->getBoundaryLayer()), high);
+    }
+    else {
+      l = Max(patch->getInteriorLowIndex(Patch::CellBased), low);
+      h = Min(patch->getInteriorHighIndex(Patch::CellBased), high);
+    }
+    if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
+      continue;
     if(!d_ccDB.exists(label, matlIndex, patch->getRealPatch()))
       SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
     CCVariableBase* tmpVar = constVar.cloneType();
     d_ccDB.get(label, matlIndex, patch, *tmpVar);
-    IntVector l(Max(patch->getLowIndex(Patch::CellBased, label->getBoundaryLayer()), low));
-    IntVector h(Min(patch->getHighIndex(Patch::CellBased, label->getBoundaryLayer()), high));
     if (patch->isVirtual()) {
       // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
       // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
@@ -2036,8 +2059,9 @@ getGridVar(VariableBase& var, DWDatabase& db,
 {
   ASSERTEQ(basis,Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));  
 
-  if(!db.exists(label, matlIndex, patch))
+  if(!db.exists(label, matlIndex, patch)) {
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
+  }
   if(patch->isVirtual()){
     db.get(label, matlIndex, patch->getRealPatch(), var);
     var.offsetGrid(patch->getVirtualOffset());
@@ -2121,9 +2145,6 @@ getGridVar(VariableBase& var, DWDatabase& db,
 	if(neighbor->isVirtual())
 	  srcvar->offsetGrid(neighbor->getVirtualOffset());
 	
-	//IntVector low = Max(lowIndex, srcvar->getLow());
-	//IntVector high= Min(highIndex, srcvar->getHigh());
-
 	if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
 	    || ( high.z() < low.z() ) ) {
 	  //SCI_THROW(InternalError("Patch doesn't overlap?", __FILE__, __LINE__));

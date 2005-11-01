@@ -492,7 +492,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
         ostr << *req << ' ';
         dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
       }
-
+      
       OnDemandDataWarehouse* posDW;
       if(!reloc_new_posLabel_ && parentScheduler){
 	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
@@ -601,7 +601,8 @@ MPIScheduler::execute()
 	TAU_USER); 
 
   if(dts_ == 0){
-    cerr << "MPIScheduler skipping execute, no tasks\n";
+    if (d_myworld->myrank() == 0)
+      cerr << "MPIScheduler skipping execute, no tasks\n";
     return;
   }
 
@@ -669,22 +670,13 @@ MPIScheduler::execute()
     numTasksDone++;
     taskdbg << me << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
 
-    switch(task->getTask()->getType()){
-    case Task::Reduction:
+    if (task->getTask()->getType() == Task::Reduction){
       if(!abort)
 	initiateReduction(task);
-      break;
-    case Task::Normal:
-    case Task::Output:
-    case Task::InitialSend:
-      {
-	initiateTask( task, abort, abort_point );
-
-      } // end case Task::InitialSend or Task::Normal
-      break;
-    default:
-      SCI_THROW(InternalError("Unknown task type", __FILE__, __LINE__));
-    } // end switch( task->getTask()->getType() )
+    }
+    else {
+      initiateTask( task, abort, abort_point );
+    }
 
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       abort = true;
