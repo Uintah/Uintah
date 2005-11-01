@@ -53,14 +53,12 @@ VectorFieldOperator::execute(void)
   
   if(!in->get(hTF)){
     error( "VectorFieldOperator::execute(): Didn't get a handle!\n" );
-    std::cerr<<"VectorFieldOperator::execute(void) Didn't get a handle\n";
     return;
   } else if ( !hTF.get_rep() ){
-    warning( "VectorFieldOperator::execute(): Input is empty!\n" );
+    error( "VectorFieldOperator::execute(): Input is empty!\n" );
     return;
-  } else if ( hTF->get_type_name(1) != "Vector" ){
+  } else if ( !hTF->query_vector_interface(this).get_rep() ){
     error( "VectorFieldOperator::execute(): Input is not a Vector Field!\n" );
-    std::cerr<<"Input is not a Vector field\n";
     return;
   }
 
@@ -79,7 +77,7 @@ VectorFieldOperator::execute(void)
 
   //##################################################################    
 
-  FieldHandle fh =  algo->execute( hTF, guiOperation );
+  FieldHandle fh =  algo->execute( hTF, guiOperation.get() );
   if( fh.get_rep() != 0 ){
     sfout->send(fh);
   }
@@ -104,6 +102,8 @@ VectorFieldOperatorAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  // Add namespace
+  rval->add_namespace("Uintah");
   ftd->fill_compile_info(rval);
   return rval;
 }
