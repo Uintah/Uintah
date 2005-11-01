@@ -1224,7 +1224,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
     return (true);
   }
   
-  if (islinear(basis)||ishermitian(basis))
+  if (islinear(basis)||ishermitian(basis)||isconstant(basis))
   {
   	T dummy; matlabarray::mitype type = mlfield.getmitype(dummy);
     if (type == matlabarray::miUNKNOWN) 
@@ -1246,7 +1246,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
     return (false);
   }
   
-  error("FieldToMatlab: Unknow basis type");
+  error("FieldToMatlab: Unknonw basis type");
   return (false);
 }
 
@@ -1262,7 +1262,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
     return (true);
   }
   
-  if (islinear(basis)||ishermitian(basis))
+  if (islinear(basis)||ishermitian(basis)||isconstant(basis))
   {
     std::vector<SCIRun::Vector> &fdata = field->fdata(); 
     mlfield.createdensearray(3,static_cast<long>(fdata.size()),matlabarray::miDOUBLE);
@@ -1302,7 +1302,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
     return (true);
   }
   
-  if (islinear(basis)||ishermitian(basis))
+  if (islinear(basis)||ishermitian(basis)||(isconstant(basis)))
   {
     std::vector<SCIRun::Tensor> &fdata = field->fdata(); 
     mlfield.createdensearray(9,static_cast<long>(fdata.size()),matlabarray::miDOUBLE);
@@ -1349,7 +1349,7 @@ bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun:
     return (true);
   }
   
-  if (islinear(basis)||ishermitian(basis))
+  if (islinear(basis)||ishermitian(basis)||isconstant(basis))
   {
   	T dummy; matlabarray::mitype type = mlfield.getmitype(dummy);
     if (type == matlabarray::miUNKNOWN) 
@@ -1405,7 +1405,7 @@ bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun:
     return (true);
   }
   
-  if (islinear(basis)||ishermitian(basis))
+  if (islinear(basis)||ishermitian(basis)||isconstant(basis))
   {
     SCIRun::FData2d<SCIRun::Vector,MESH> &fdata = field->fdata(); 
     
@@ -1455,7 +1455,7 @@ bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun:
     return (true);
   }
   
-  if (islinear(basis)||ishermitian(basis))
+  if (islinear(basis)||ishermitian(basis)||isconstant(basis))
   {
     SCIRun::FData2d<SCIRun::Tensor,MESH> &fdata = field->fdata(); 
     
@@ -1513,7 +1513,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
     return (true);
   }
   
-  if (islinear(basis)||ishermitian(basis))
+  if (islinear(basis)||ishermitian(basis)||isconstant(basis))
   {
   	T dummy; matlabarray::mitype type = mlfield.getmitype(dummy);
     if (type == matlabarray::miUNKNOWN) 
@@ -1572,7 +1572,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
     return (true);
   }
   
-  if (islinear(basis)||ishermitian(basis))
+  if (islinear(basis)||ishermitian(basis)||isconstant(basis))
   {
     SCIRun::FData3d<SCIRun::Vector,MESH> &fdata = field->fdata(); 
     
@@ -1625,7 +1625,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
     return (true);
   }
   
-  if (islinear(basis)||ishermitian(basis))
+  if (islinear(basis)||ishermitian(basis)||isconstant(basis))
   {
     SCIRun::FData3d<SCIRun::Tensor,MESH> &fdata = field->fdata(); 
     
