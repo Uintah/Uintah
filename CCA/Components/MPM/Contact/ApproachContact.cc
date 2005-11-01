@@ -123,27 +123,33 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
         switch(face) {
          case Patch::xminus:
           if(bc_type == Patch::Neighbor) { ILOW = low.x(); }
-          else if(bc_type == Patch::None){ ILOW = low.x()+1; }
+          else if(bc_type == Patch::None || 
+                  bc_type == Patch::Coarse){ ILOW = low.x()+1; }
           break;
          case Patch::xplus:
           if(bc_type == Patch::Neighbor) { IHIGH = high.x(); }
-          else if(bc_type == Patch::None){ IHIGH = high.x()-1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ IHIGH = high.x()-1; }
           break;
          case Patch::yminus:
           if(bc_type == Patch::Neighbor) { JLOW = low.y(); }
-          else if(bc_type == Patch::None){ JLOW = low.y()+1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ JLOW = low.y()+1; }
           break;
          case Patch::yplus:
           if(bc_type == Patch::Neighbor) { JHIGH = high.y(); }
-          else if(bc_type == Patch::None){ JHIGH = high.y()-1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ JHIGH = high.y()-1; }
           break;
          case Patch::zminus:
           if(bc_type == Patch::Neighbor) { KLOW = low.z(); }
-          else if(bc_type == Patch::None){ KLOW = low.z()+1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ KLOW = low.z()+1; }
           break;
          case Patch::zplus:
           if(bc_type == Patch::Neighbor) { KHIGH = high.z(); }
-          else if(bc_type == Patch::None){ KHIGH = high.z()-1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ KHIGH = high.z()-1; }
           break;
          default:
           break;
