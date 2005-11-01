@@ -73,7 +73,7 @@ DataArchive::DataArchive(const std::string& filebase,
   
   char* urltext = XMLString::transcode(d_base.getURLText());
   ProblemSpecReader psr(urltext);
-  if( verbose ) {
+  if( verbose && processor == 0) {
     cerr << "Parsing " << urltext << endl;
   }
   delete [] urltext;
