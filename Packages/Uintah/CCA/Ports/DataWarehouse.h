@@ -202,7 +202,8 @@ public:
 			     int matlIndex, const Patch*) = 0;
   virtual void getRegion(constCCVariableBase&, const VarLabel*,
   			 int matlIndex, const Level* level,
-  			 const IntVector& low, const IntVector& high) = 0;
+  			 const IntVector& low, const IntVector& high,
+                         bool useBoundaryCells = true) = 0;
   void copyOut(CCVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0)
