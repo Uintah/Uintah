@@ -1018,11 +1018,9 @@ void ImpMPM::iterate(const ProcessorGroup*,
       cerr << "dispIncQNorm/dispIncQNorm0 = "
            << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
     }
-    if ((dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp)/* &&
-                                                                      dispIncNormMax != 0.0 */)
+    if (dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp)
       dispInc = true;
-    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy /*&&
-                                                                      dispIncQNorm/(dispIncQNorm0 + 1e-100) > 0.0 */)
+    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy)
       dispIncQ = true;
     // Check to see if the residual is likely a nan, if so, we'll restart.
     bool restart_nan=false;
@@ -2294,7 +2292,9 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
     int numPatches = patch->getLevel()->numPatches();
     if(!first_iteration){
       dispIncQNorm0/=((double) numPatches);
-      dispIncNormMax/=((double) numPatches);
+      if(dispIncNormMax!=dispIncNorm){
+        dispIncNormMax/=((double) numPatches);
+      }
     }
 
     new_dw->put(sum_vartype(dispIncNorm),   lb->dispIncNorm);
