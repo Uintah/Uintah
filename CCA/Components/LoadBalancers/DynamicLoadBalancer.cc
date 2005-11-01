@@ -23,6 +23,7 @@ using namespace Uintah;
 using namespace SCIRun;
 using std::cerr;
 static DebugStream doing("DynamicLoadBalancer_doing", false);
+static DebugStream lb("DynamicLoadBalancer_lb", false);
 static DebugStream dbg("DynamicLoadBalancer", false);
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
@@ -293,6 +294,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   // first pass - grab all patches that have a significant cost and 
   // give them their own processor
 
+  /*
   for (int p = 0; p < numPatches; p++) {
     if (patch_costs[p] > .9 * avg_costPerProc) {
       d_tempAssignment[p] = currentProc;
@@ -303,6 +305,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       currentProc++;
     }
   }
+  */
 
   if (currentProc > 0) {
     int optimal_procs = (int)(totalCost /
@@ -574,6 +577,7 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl, const 
   d_state = idle;
 
   int numPatches = 0;
+  int startingID = (*(grid->getLevel(0)->patchesBegin()))->getID();
 
   for(int l=0;l<grid->numLevels();l++){
     const LevelP& level = grid->getLevel(l);
@@ -618,9 +622,10 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl, const 
             int patchid;
             if(!r->get("patch", patchid) && !r->get("region", patchid))
               throw InternalError("Cannot get patch id", __FILE__, __LINE__);
-            if (d_processorAssignment[patchid] == -1) {
+            if (d_processorAssignment[patchid-startingID] == -1) {
               // assign the patch to the processor
-              d_processorAssignment[patchid] = procnum % d_myworld->size();
+              // use the grid index
+              d_processorAssignment[patchid - startingID] = procnum % d_myworld->size();
             }
           }
         }            
@@ -628,9 +633,11 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl, const 
       }
     }
   }
-  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
+  for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
+    if (d_processorAssignment[i] == -1)
+      cout << "index " << i << " == -1\n";
     ASSERT(d_processorAssignment[i] != -1);
-
+  }
   d_oldAssignment = d_processorAssignment;
 
   if (dbg.active()) {
@@ -719,11 +726,18 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool 
 
       d_state = postLoadBalance;
 
-      if (doing.active()) {
+      if (lb.active()) {
         if (myrank == 0) {
-          doing << "  Changing the Load Balance\n";
+          LevelP curLevel = grid->getLevel(0);
+          Level::const_patchIterator iter = curLevel->patchesBegin();
+          lb << "  Changing the Load Balance\n";
           for (int i = 0; i < numPatches; i++) {
-            doing << myrank << " patch " << i << " -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - "  << "\n";
+            lb << myrank << " patch " << i << " -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getHighIndex() - (*iter)->getLowIndex()) << "\n";
+            iter++;
+            if (iter == curLevel->patchesEnd() && i+1 < numPatches) {
+              curLevel = curLevel->getFinerLevel();
+              iter = curLevel->patchesBegin();
+            }
           }
         }
       }

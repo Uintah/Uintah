@@ -48,7 +48,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
     DetailedTask* task = graph.getTask(i);
 
     const PatchSubset* patches = task->getPatches();
-    if(patches && patches->size() > 0){
+    if(patches && patches->size() > 0 && task->getTask()->getType() != Task::OncePerProc){
       const Patch* patch = patches->get(0);
 
       int idx = getPatchwiseProcessorAssignment(patch);
@@ -57,8 +57,9 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
       if (task->getTask()->getType() == Task::Output) {
         task->assignResource((idx/d_outputNthProc)*d_outputNthProc);
       }
-      else        
+      else {
         task->assignResource(idx);
+      }
 
       if( lbDebug.active() ) {
 	cerrLock.lock();
@@ -97,10 +98,15 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
       } else if( task->getTask()->getType() == Task::InitialSend){
 	// Already assigned, do nothing
 	ASSERT(task->getAssignedResourceIndex() != -1);
+      } else if( task->getTask()->getType() == Task::OncePerProc) {
+        // patch-less task, not execute-once, set to run on all procs
+        // once per patch subset (empty or not)
+        // at least one example is the multi-level (impAMRICE) pressureSolve
+        for (int i = 0; i < task->getTask()->getPatchSet()->size(); i++)
+        if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
+          task->assignResource(i);
+        }
       } else {
-#if DAV_DEBUG
-	//	cerr << "Task " << *task << " IS ASSIGNED TO PG 0!\n";
-#endif
 	task->assignResource(0);
       }
     }
@@ -295,6 +301,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
           const LevelP& fineLevel = level->getFinerLevel();
           fineLevel->selectPatches(level->mapCellToFiner(lowIndex), 
                                      level->mapCellToFiner(highIndex), n);
+
         }
 	for(int i=0;i<(int)n.size();i++){
 	  const Patch* neighbor = n[i]->getRealPatch();
@@ -340,7 +347,8 @@ LoadBalancerCommon::inNeighborhood(const PatchSubset* ps,
     if(d_neighbors.find(patch) != d_neighbors.end())
       return true;
   }
-  return false;
+  // also count a subset with no patches
+  return ps->size() == 0;
 }
 
 bool
