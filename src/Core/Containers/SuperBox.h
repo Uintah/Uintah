@@ -68,6 +68,7 @@ using namespace std;
 // Point getLow();
 // Point getHigh();
 // Volume getVolume()
+// int getID() -- unique identifier for the box
 // static Volume getVolume(Point low, Point high);
 // Value getArea(int side); -- only needed if using
 //                             InternalAreaSuperBoxEvaluator
@@ -247,10 +248,14 @@ public:
     } 
   };
 
+  // if the values are the same, sort by the first box id, so that we can keep things
+  // in order (in future iterations) when the pointers are in a different order
   struct ValueCompare {
     bool operator()(const SB* b1, const SB* b2) const
     {
-      return b1->getValue() == b2->getValue() ? b1 > b2 :
+      return b1->getValue() == b2->getValue() ? 
+        (b1->getBoxes()[0]->getID() == b2->getBoxes()[0]->getID() ? b1 > b2 : 
+         b1->getBoxes()[0]->getID() > b2->getBoxes()[0]->getID()) :
 	b1->getValue() > b2->getValue();
     } 
   };
@@ -1623,21 +1628,21 @@ operator<<(ostream& out,
   out << " - ";
   //  ::operator<<(out, high);
   out << high;
-  /*
+  
   if (superBox.getBoxes().size() == 0) {
     out << "()";
     return out;
   }
 
   out << "(";
-  vector<BoxP>::const_iterator iter = superBox.getBoxes().begin();
+  typename vector<BoxP>::const_iterator iter = superBox.getBoxes().begin();
   out << (*iter)->getID();
   
   for (++iter; iter != superBox.getBoxes().end(); ++iter) {
     out << ", " << (*iter)->getID();
   }
   out << ")";
-  */
+  
   
   return out;
 }
