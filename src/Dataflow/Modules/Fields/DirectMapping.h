@@ -217,6 +217,7 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
   FOUT *out_field = dynamic_cast<FOUT *>(out_fieldH.get_rep());
 
   src_mesh->synchronize(Mesh::LOCATE_E);
+  dst_mesh->synchronize(Mesh::LOCATE_E);
   BBox src_search_bbox, dst_search_bbox;
   if (proc == 0) {
     if (basis_order > 0) {
