@@ -707,7 +707,7 @@ bool FieldToMatlabAlgo::mladdnodesfield(MESH* mesh,matlabarray mlarray)
     SCIRun::Point P;
     unsigned int q = 0;
 
-    typename MESH::Node::Iterator it, it_end;
+    typename MESH::Node::iterator it, it_end;
     mesh->begin(it);
     mesh->end(it_end);
     
@@ -766,7 +766,7 @@ bool FieldToMatlabAlgo::mladdedgesfield(MESH *mesh,matlabarray mlarray)
     // Hence I prefer to do it with integer and convert to the required
     // class at the last moment. Hopefully the compiler is smart and
     // has a fast translation. 	
-    typename MESH::Edge::Iterator it, it_end;
+    typename MESH::Edge::iterator it, it_end;
     mesh->begin(it);
     mesh->end(it_end);
     size_t q = 0;
@@ -827,7 +827,7 @@ bool FieldToMatlabAlgo::mladdfacesfield(MESH *mesh,matlabarray mlarray)
     size_t num = basis.NumberOfVertices;
       
     size_t q = 0;
-    typename MESH::Face::Iterator it, it_end;
+    typename MESH::Face::iterator it, it_end;
     mesh->begin(it);
     mesh->end(it_end);
     while (it != it_end)
@@ -885,7 +885,7 @@ bool FieldToMatlabAlgo::mladdcellsfield(MESH* mesh,matlabarray mlarray)
     typename MESH::basis_type& basis = mesh->get_basis();
     size_t num = basis.NumberOfVertices;
           
-    typename MESH::Cell::Iterator it, it_end;
+    typename MESH::Cell::iterator it, it_end;
     mesh->begin(it);
     mesh->end(it_end);
     size_t q = 0;
@@ -1725,7 +1725,7 @@ bool FieldToMatlabAlgo::mladdfieldedges(FIELD *field,MESH *mesh,matlabarray mlar
     // Hence I prefer to do it with integer and convert to the required
     // class at the last moment. Hopefully the compiler is smart and
     // has a fast translation. 	
-    typename MESH::Edge::Iterator it, it_end;
+    typename MESH::Edge::iterator it, it_end;
     mesh->begin(it);
     mesh->end(it_end);
     size_t q = 0;
@@ -1809,7 +1809,7 @@ bool FieldToMatlabAlgo::mladdfieldfaces(FIELD *field,MESH *mesh,matlabarray mlar
     // Hence I prefer to do it with integer and convert to the required
     // class at the last moment. Hopefully the compiler is smart and
     // has a fast translation. 	
-    typename MESH::Face::Iterator it, it_end;
+    typename MESH::Face::iterator it, it_end;
     mesh->begin(it);
     mesh->end(it_end);
     size_t q = 0;
@@ -1894,7 +1894,7 @@ bool FieldToMatlabAlgo::mladdfieldcells(FIELD *field,MESH *mesh,matlabarray mlar
     // Hence I prefer to do it with integer and convert to the required
     // class at the last moment. Hopefully the compiler is smart and
     // has a fast translation. 	
-    typename MESH::Cell::Iterator it, it_end;
+    typename MESH::Cell::iterator it, it_end;
     mesh->begin(it);
     mesh->end(it_end);
     size_t q = 0;
