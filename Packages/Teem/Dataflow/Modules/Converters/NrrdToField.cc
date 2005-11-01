@@ -1136,8 +1136,10 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   if (data_center == nrrdCenterCell) {
     btd = get_type_description((ConstantBasis<double>*) 0);
   } 
+
   // Now create field based on the mesh created above and send it
   const TypeDescription *mtd = mHandle->get_type_description();
+
   CompileInfoHandle ci;
   ASSERTMSG(btd != 0, "Basis Type Description not valid");
 
@@ -1248,9 +1250,27 @@ NrrdToFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
   }
 
   string dtype_str = rank == 1 ? typeStr : extension;
-  string fname = "GenericField<" + mtd->get_name() + ", " + 
-    btd->get_similar_name(dtype_str, 0) + ", " + 
-    dtd->get_similar_name(dtype_str, 0) + " >";
+  string fname = "";
+  if (dtd != 0 ) {
+    fname = "GenericField<" + mtd->get_name() + ", " + 
+      btd->get_similar_name(dtype_str, 0) + ", " + 
+      dtd->get_similar_name(dtype_str, 0) + " >";
+  } else {
+    // build dtd string, assuming that LatVols and Images use FData
+    // and Scanlines contain vectors of the data
+    string data_str = "";
+    string mesh_str = mtd->get_name();
+    if (mesh_str.find("LatVolMesh") != string::npos) 
+      data_str = "FData3d<" + dtype_str + "," + mtd->get_name() + " >";
+    else if (mesh_str.find("ImageMesh") != string::npos) 
+      data_str = "FData2d<" + dtype_str + "," + mtd->get_name() + " >";
+    else
+      data_str = "vector<" + dtype_str + ">";
+    
+    fname = "GenericField<" + mtd->get_name() + ", " + 
+      btd->get_similar_name(dtype_str, 0) + ", " + 
+      data_str + "  >"; 
+  }
   
   CompileInfo *rval = 
     scinew CompileInfo(base_class_name + extension + "." +
