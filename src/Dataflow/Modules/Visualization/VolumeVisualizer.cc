@@ -425,7 +425,9 @@ VolumeVisualizer::execute()
   BBox bbox;
   texture_->get_bounds(bbox);;
   gui_num_clipping_planes_.set(cmap2_.size()-1);
-  while (gui_num_clipping_planes_.get() != (int)widget_.size()) {
+  while (gui_num_clipping_planes_.get() >= 0 &&
+         gui_num_clipping_planes_.get() != (int)widget_.size())
+  {
     double scale = (bbox.diagonal()).length()/30.0;
     ArrowWidget *widget = scinew ArrowWidget(this, &widget_lock_, scale, true);
     widget_.push_back(widget);
