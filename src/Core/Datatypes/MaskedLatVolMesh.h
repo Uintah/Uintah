@@ -954,9 +954,11 @@ public:
   void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
   void get_nodes(typename Node::array_type &, typename Face::index_type) const;
   void get_nodes(typename Node::array_type &, typename Cell::index_type) const;
-  void get_edges(typename Edge::array_type &, typename Face::index_type) const; 
-  void get_edges(typename Edge::array_type &, typename Cell::index_type) const;
-  void get_faces(typename Face::array_type &, typename Cell::index_type) const;
+  void get_edges(typename Edge::array_type &, typename Face::index_type) const;
+  void get_edges(typename Edge::array_type &, 
+		 const typename Cell::index_type&) const;
+  void get_faces(typename Face::array_type &, 
+		 const typename Cell::index_type&) const;
 
   // returns 26 pairs in ijk order
   void	get_neighbors_stencil(
@@ -1312,16 +1314,51 @@ MaskedLatVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Ce
 
 template <class Basis>
 void
-MaskedLatVolMesh<Basis>::get_edges(typename Edge::array_type &, typename Face::index_type) const
+MaskedLatVolMesh<Basis>::get_edges(typename Edge::array_type &array, 
+				   typename Face::index_type idx) const
 {}
+
 template <class Basis>
 void 
-MaskedLatVolMesh<Basis>::get_edges(typename Edge::array_type &, typename Cell::index_type) const
-{}
+MaskedLatVolMesh<Basis>::get_edges(typename Edge::array_type &array, 
+				   const typename Cell::index_type &idx) const
+{
+  array.resize(12);
+  array[0] = EdgeIndex(this, idx.i_, idx.j_, idx.k_, 0);
+  array[1] = EdgeIndex(this, idx.i_, idx.j_+ 1, idx.k_, 0);
+  array[2] = EdgeIndex(this, idx.i_, idx.j_, idx.k_ + 1, 0);
+  array[3] = EdgeIndex(this, idx.i_, idx.j_ + 1, idx.k_ + 1, 0);
+  
+  array[4] = EdgeIndex(this, idx.i_, idx.j_, idx.k_, 1);
+  array[5] = EdgeIndex(this, idx.i_ + 1, idx.j_, idx.k_, 1);
+  array[6] = EdgeIndex(this, idx.i_, idx.j_, idx.k_ + 1, 1);
+  array[7] = EdgeIndex(this, idx.i_ + 1, idx.j_, idx.k_ + 1, 1);
+  
+  array[8] =  EdgeIndex(this, idx.i_, idx.j_, idx.k_, 2);
+  array[9] =  EdgeIndex(this, idx.i_ + 1, idx.j_, idx.k_, 2);
+  array[10] = EdgeIndex(this, idx.i_, idx.j_ + 1, idx.k_, 2);
+  array[11] = EdgeIndex(this, idx.i_ + 1, idx.j_ + 1, idx.k_, 2);
+  
+}
 template <class Basis>
 void 
-MaskedLatVolMesh<Basis>::get_faces(typename Face::array_type &, typename Cell::index_type) const
-{}
+MaskedLatVolMesh<Basis>::get_faces(typename Face::array_type &array, 
+				   const typename Cell::index_type &idx) const
+{
+  array.resize(6);
+  const unsigned int i = idx.i_;
+  const unsigned int j = idx.j_;
+  const unsigned int k = idx.k_;
+
+  array[0] = FaceIndex(this, i, j, k, 0);
+  array[1] = FaceIndex(this, i, j, k+1, 0);
+
+  array[2] = FaceIndex(this, i, j, k, 1);
+  array[3] = FaceIndex(this, i+1, j, k, 1);
+
+  array[4] = FaceIndex(this, i, j, k, 2);
+  array[5] = FaceIndex(this, i, j+1, k, 2);
+}
 
 
 template <class Basis>
@@ -1343,7 +1380,7 @@ MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Node::ind
 template <class Basis>
 bool
 MaskedLatVolMesh<Basis>::check_valid(
-				     typename MaskedLatVolMesh<Basis>::Edge::index_type idx) const
+		 typename MaskedLatVolMesh<Basis>::Edge::index_type idx) const
 {
   
   bool val = false;
@@ -1377,7 +1414,8 @@ MaskedLatVolMesh<Basis>::check_valid(
 
 template <class Basis>
 bool
-MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Face::index_type idx) const
+MaskedLatVolMesh<Basis>::check_valid(
+                  typename MaskedLatVolMesh<Basis>::Face::index_type idx) const
 {
   if (idx.dir_ == 0)
   {
@@ -1407,7 +1445,8 @@ MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Face::ind
 
 template <class Basis>
 bool
-MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Cell::index_type i) const
+MaskedLatVolMesh<Basis>::check_valid(
+                  typename MaskedLatVolMesh<Basis>::Cell::index_type i) const
 {
   return check_valid(i.i_,i.j_,i.k_);
 }
@@ -1416,28 +1455,32 @@ MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Cell::ind
 
 template <class Basis>
 bool
-MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Node::iterator i) const
+MaskedLatVolMesh<Basis>::check_valid(
+                  typename MaskedLatVolMesh<Basis>::Node::iterator i) const
 {
   return check_valid(*i);
 }
 
 template <class Basis>
 bool
-MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Edge::iterator i) const
+MaskedLatVolMesh<Basis>::check_valid(
+                  typename MaskedLatVolMesh<Basis>::Edge::iterator i) const
 {
   return check_valid(*i);
 }
 
 template <class Basis>
 bool
-MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Face::iterator i) const
+MaskedLatVolMesh<Basis>::check_valid(
+                  typename MaskedLatVolMesh<Basis>::Face::iterator i) const
 {
   return check_valid(*i);
 }
 
 template <class Basis>
 bool
-MaskedLatVolMesh<Basis>::check_valid(typename MaskedLatVolMesh<Basis>::Cell::iterator i) const
+MaskedLatVolMesh<Basis>::check_valid(
+                  typename MaskedLatVolMesh<Basis>::Cell::iterator i) const
 {
   return check_valid(i.i_,i.j_,i.k_);
 }
