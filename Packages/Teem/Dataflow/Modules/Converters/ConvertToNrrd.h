@@ -479,7 +479,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter, nrrdCenterUnknown,
 			  nrrdCenterUnknown);
 	}
-	ndata->nrrd->axis[0].label = strdup("x");
+	ndata->nrrd->axis[0].label = airStrdup("x");
 	
 	if (with_spacing) {
 	  ndata->nrrd->axis[0].min=minP.x();
@@ -517,8 +517,8 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 
 	if (pad_data > 0) {
 	  // 1D nrrd with vector/tensor
-	  ndata->nrrd->axis[0].label = strdup(sink_label.c_str());
-	  ndata->nrrd->axis[1].label = strdup("x");
+	  ndata->nrrd->axis[0].label = airStrdup(sink_label.c_str());
+	  ndata->nrrd->axis[1].label = airStrdup("x");
 
 	  if (with_spacing) {
 	    ndata->nrrd->axis[1].min=minP.x();
@@ -527,8 +527,8 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	  }
 	} else {
 	  // 2D nrrd of scalars
-	  ndata->nrrd->axis[0].label = strdup("x");
-	  ndata->nrrd->axis[1].label = strdup("y");
+	  ndata->nrrd->axis[0].label = airStrdup("x");
+	  ndata->nrrd->axis[1].label = airStrdup("y");
 
 	  if (with_spacing) {
 	    ndata->nrrd->axis[0].min=minP.x();
@@ -583,13 +583,13 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 
 	// set labels
 	if (pad_data > 0) {
-	  ndata->nrrd->axis[0].label = strdup(sink_label.c_str());
-	  ndata->nrrd->axis[1].label = strdup("x");
-	  ndata->nrrd->axis[2].label = strdup("y");
+	  ndata->nrrd->axis[0].label = airStrdup(sink_label.c_str());
+	  ndata->nrrd->axis[1].label = airStrdup("x");
+	  ndata->nrrd->axis[2].label = airStrdup("y");
 	} else {
-	  ndata->nrrd->axis[0].label = strdup("x");
-	  ndata->nrrd->axis[1].label = strdup("y");
-	  ndata->nrrd->axis[2].label = strdup("z");
+	  ndata->nrrd->axis[0].label = airStrdup("x");
+	  ndata->nrrd->axis[1].label = airStrdup("y");
+	  ndata->nrrd->axis[2].label = airStrdup("z");
 	}
 
 	// set min, max, and spacing
@@ -651,10 +651,10 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	}
 
 	// set labels
-	ndata->nrrd->axis[0].label = strdup(sink_label.c_str());
-	ndata->nrrd->axis[1].label = strdup("x");
-	ndata->nrrd->axis[2].label = strdup("y");
-	ndata->nrrd->axis[3].label = strdup("z");
+	ndata->nrrd->axis[0].label = airStrdup(sink_label.c_str());
+	ndata->nrrd->axis[1].label = airStrdup("x");
+	ndata->nrrd->axis[2].label = airStrdup("y");
+	ndata->nrrd->axis[3].label = airStrdup("z");
       
 	if (with_spacing) {
 	  ndata->nrrd->axis[1].min=minP.x();
