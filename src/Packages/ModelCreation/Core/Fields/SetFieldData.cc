@@ -26,43 +26,58 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/DistanceToField.h>
+#include <Packages/ModelCreation/Core/Fields/SetFieldData.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
 CompileInfoHandle
-DistanceToFieldAlgo::get_compile_info(FieldHandle srcfield,FieldHandle objectfield)
+SetFieldDataAlgo::get_compile_info(FieldHandle field, MatrixHandle matrix,int numnodes, int numelements,  bool keepscalartype)
 {
 
-  std::string datatype = "double";
-  std::string fieldtype_in = srcfield->get_type_description()->get_name();
-  std::string fieldtype_object = objectfield->get_type_description()->get_name();
-  std::string fieldtype_out = srcfield->get_type_description(0)->get_name() + "<" +
-              srcfield->get_type_description(1)->get_name() + "," + 
-              srcfield->get_type_description(2)->get_similar_name(datatype, 0,"<", "> ") + "," +
-              srcfield->get_type_description(3)->get_similar_name(datatype, 0,"<", "> ") + " > ";
+  std::string algo_type = "Scalar";  
+  if ((matrix->nrows() == 3)&&((matrix->ncols()== numnodes)||(matrix->ncols()== numelements))) algo_type = "Vector";
+  if (matrix->ncols() == 3) algo_type = "Vector";
+  if (((matrix->nrows() == 6)||(matrix->nrows() == 9))&&((matrix->ncols()== numnodes)||(matrix->ncols()== numelements))) algo_type = "Tensor";
+  if ((matrix->ncols() == 6)||(matrix->ncols() == 9)) algo_type = "Tensor";
+
+  std::string algo_name = "SetField" + algo_type + "DataAlgoT";
+  std::string algo_base = "SetFieldDataAlgo";
 
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   std::string include_path(TypeDescription::cc_to_h(__FILE__));
-  std::string algo_name("DistanceToFieldAlgoT");
-  std::string base_name("DistanceToFieldAlgo");
-
+  
+  const SCIRun::TypeDescription *basistype = field->get_type_description(2);
+  const SCIRun::TypeDescription::td_vec *basis_subtype = basistype->get_sub_type();
+  const SCIRun::TypeDescription *data_type = (*basis_subtype)[0];
+  
+  std::string datatype = data_type->get_name();
+  
+  if ((algo_type == "Scalar")&&(keepscalartype == false)) datatype = "double";
+  if (algo_type == "Vector") datatype = "Vector";
+  if (algo_type == "Tensor") datatype = "Tensor";
+  
+  std::string outputtype = field->get_type_description(0)->get_name() + "<" +
+                           field->get_type_description(1)->get_name() + "," +
+                           field->get_type_description(2)->get_similar_name(datatype, 0,"<", " >") + "," +
+                           field->get_type_description(3)->get_similar_name(datatype, 0,"<", " >") + " > ";
+  
+  
   CompileInfoHandle ci = 
     scinew CompileInfo(algo_name + "." +
-                       to_filename(fieldtype_in) + "." +
-                       to_filename(fieldtype_object) + ".",
-                       base_name, 
+                       to_filename(outputtype) + ".",
+                       algo_base, 
                        algo_name, 
-                       fieldtype_in + "," + fieldtype_object + "," + fieldtype_out);
+                       outputtype);
                        
 
   // Add in the include path to compile this obj
   ci->add_include(include_path);
   ci->add_namespace("ModelCreation");   
-  srcfield->get_type_description()->fill_compile_info(ci.get_rep());
-  objectfield->get_type_description()->fill_compile_info(ci.get_rep());
+  
+  const SCIRun::TypeDescription *fsrc = field->get_type_description();
+  fsrc->fill_compile_info(ci.get_rep());
   return(ci);
 }
 

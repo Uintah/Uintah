@@ -34,11 +34,13 @@ using namespace SCIRun;
 
 CompileInfoHandle MappingMatrixToFieldAlgo::get_compile_info(FieldHandle& field)
 {
-  const SCIRun::TypeDescription *ifieldtype = field->get_type_description();
-  const SCIRun::TypeDescription *ofieldtype = field->get_type_description(0);
-  
-  std::string ifieldname = ifieldtype->get_name();
-  std::string ofieldname = ofieldtype->get_name() + "<unsigned integer> ";
+
+  std::string datatype = "unsigned int";
+  std::string fieldtype_in = field->get_type_description()->get_name();
+  std::string fieldtype_out = field->get_type_description(0)->get_name() + "<" +
+              field->get_type_description(1)->get_name() + "," + 
+              field->get_type_description(2)->get_similar_name(datatype, 0,"<", "> ") + "," +
+              field->get_type_description(3)->get_similar_name(datatype, 0,"<", "> ") + " > ";
         
   // As I use my own Tensor and Vector algorithms they need to be
   // converted when reading the data, hence separate algorithms are
@@ -51,14 +53,14 @@ CompileInfoHandle MappingMatrixToFieldAlgo::get_compile_info(FieldHandle& field)
 
   SCIRun::CompileInfoHandle ci = 
     scinew SCIRun::CompileInfo(algo_name + "." +
-                       ifieldtype->get_filename() + ".",
+                       to_filename(fieldtype_in) + ".",
                        algo_base, 
                        algo_name, 
-                       ifieldname + "," + ofieldname);
+                       fieldtype_in + "," + fieldtype_out);
 
   ci->add_include(include_path);
   ci->add_namespace("ModelCreation");
-  ifieldtype->fill_compile_info(ci.get_rep());
+  field->get_type_description()->fill_compile_info(ci.get_rep());
   return(ci);
 }
 

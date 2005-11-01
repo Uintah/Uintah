@@ -88,7 +88,7 @@ FieldGetMatrixProperty::execute()
   MatrixOPort *ofport;
   MatrixHandle fhandle;
         
-  if(!(iport = static_cast<FieldIPort *>(getIPort("field"))))
+  if(!(iport = static_cast<FieldIPort *>(getIPort("Field"))))
   {
     error("Could not find 'Field' input port");
     return;
@@ -118,7 +118,7 @@ FieldGetMatrixProperty::execute()
   ctx->reset();
  
  
-  if (!(ofport = static_cast<MatrixOPort *>(get_oport("matrix1"))))
+  if (!(ofport = static_cast<MatrixOPort *>(get_oport("Matrix1"))))
   {
     error("Could not find matrix 1 output port");
     return; 
@@ -131,7 +131,7 @@ FieldGetMatrixProperty::execute()
   }
 
  
-  if (!(ofport = static_cast<MatrixOPort *>(get_oport("matrix2"))))
+  if (!(ofport = static_cast<MatrixOPort *>(get_oport("Matrix2"))))
   {
     error("Could not find matrix 2 output port");
     return; 
@@ -144,7 +144,7 @@ FieldGetMatrixProperty::execute()
   }
         
  
-  if (!(ofport = static_cast<MatrixOPort *>(get_oport("matrix3"))))
+  if (!(ofport = static_cast<MatrixOPort *>(get_oport("Matrix3"))))
   {
     error("Could not find matrix 3 output port");
     return; 

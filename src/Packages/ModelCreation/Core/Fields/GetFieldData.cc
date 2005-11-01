@@ -26,50 +26,44 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/ModelCreation/Core/Fields/FieldDataNodeToElem.h>
+#include <Packages/ModelCreation/Core/Fields/GetFieldData.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
 CompileInfoHandle
-FieldDataNodeToElemAlgo::get_compile_info(FieldHandle field)
+GetFieldDataAlgo::get_compile_info(FieldHandle field)
 {
-  const SCIRun::TypeDescription *basis_type = field->get_type_description(2);
-  const SCIRun::TypeDescription::td_vec *basis_subtype = basis_type->get_sub_type();
-  const SCIRun::TypeDescription *data_type = (*basis_subtype)[0];
-  
-  std::string basis =  "ConstantBasis<" + data_type->get_name() +"> ";
-  std::string datatype = data_type->get_name();
-  
-  std::string algo_type = "Scalar";
-  if (datatype == "Vector") algo_type = "Vector";
-  if (datatype == "Tensor") algo_type = "Tensor";
-              
+
+  const SCIRun::TypeDescription *fsrc = field->get_type_description();
+  const SCIRun::TypeDescription *basistype = field->get_type_description(2);
+  const SCIRun::TypeDescription::td_vec *basis_subtype = basistype->get_sub_type();
+  const SCIRun::TypeDescription *datatype = (*basis_subtype)[0];  
+
+
+  std::string algo_type = "Scalar";  
+  if (datatype->get_name() == "Vector") algo_type = "Vector";
+  if (datatype->get_name() == "Tensor") algo_type = "Tensor";
+
+  std::string algo_name = "GetField" + algo_type + "DataAlgoT";
+  std::string algo_base = "GetFieldDataAlgo";
+
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  std::string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
-  std::string algo_name = "FieldData"+ algo_type +"NodeToElemAlgoT";
-  std::string base_name = "FieldDataNodeToElemAlgo";
-
-
-
-  std::string fieldtype_in = field->get_type_description()->get_name();
-  std::string fieldtype_out = field->get_type_description(0)->get_name() + "<" +
-              field->get_type_description(1)->get_name() + "," + basis + "," +
-              field->get_type_description(3)->get_similar_name(datatype, 0,"<", "> ") + " > ";
-
+  std::string include_path(TypeDescription::cc_to_h(__FILE__));
+  
   CompileInfoHandle ci = 
     scinew CompileInfo(algo_name + "." +
-                       to_filename(fieldtype_in) + "." +    
-                       to_filename(fieldtype_out) + ".",
-                       base_name,
-                       algo_name,  
-                       fieldtype_in + "," + fieldtype_out);
+                       fsrc->get_filename() + ".",
+                       algo_base, 
+                       algo_name, 
+                       fsrc->get_name());
+                       
 
   // Add in the include path to compile this obj
   ci->add_include(include_path);
-  ci->add_namespace("ModelCreation");
-  field->get_type_description()->fill_compile_info(ci.get_rep());
+  ci->add_namespace("ModelCreation");   
+  fsrc->fill_compile_info(ci.get_rep());
   return(ci);
 }
 

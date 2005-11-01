@@ -91,7 +91,9 @@ SCIRun::CompileInfoHandle
 {
   const SCIRun::TypeDescription *fieldtype = field->get_type_description();
   const SCIRun::TypeDescription *locationtype = field->order_type_description();
-  const SCIRun::TypeDescription *datatype = field->get_type_description(1);
+  const SCIRun::TypeDescription *basistype = field->get_type_description(2);
+  const SCIRun::TypeDescription::td_vec *basis_subtype = basistype->get_sub_type();
+  const SCIRun::TypeDescription *datatype = (*basis_subtype)[0];
 
   // As I use my own Tensor and Vector algorithms they need to be
   // converted when reading the data, hence separate algorithms are
@@ -156,32 +158,83 @@ SCIRun::CompileInfoHandle
 SCIRun::CompileInfoHandle 
     ArrayObjectFieldCreateAlgo::get_compile_info(SCIRun::FieldHandle field,std::string datatype, std::string basistype)
 {
+  const SCIRun::TypeDescription *basis_type = field->get_type_description(2);
+  const SCIRun::TypeDescription::td_vec *basis_subtype = basis_type->get_sub_type();
+  const SCIRun::TypeDescription *data_type = (*basis_subtype)[0];
+  const SCIRun::TypeDescription *meshtype = field->get_type_description(1);
+  
+  std::string mesh = meshtype->get_name();
+  std::string basis = "";
+  
+  if ((basistype == "constant")||(basistype == "Constant"))
+  {
+    basis = "ConstantBasis";
+  }
+  
+  if ((basistype == "linear")||(basistype == "Linear"))
+  {
+    if (mesh.find("Scanline") != std::string::npos) basis = "CrvLinearLgn";
+    if (mesh.find("Image") != std::string::npos) basis = "QuadBilinearLgn";
+    if (mesh.find("LatVol") != std::string::npos) basis = "HexTrilinearLgn";
+    if (mesh.find("Curve") != std::string::npos) basis = "CrvLinearLgn";
+    if (mesh.find("TriSurf") != std::string::npos) basis = "TriLinearLgn";
+    if (mesh.find("QuadSurf") != std::string::npos) basis = "QuadBilinearLgn";
+    if (mesh.find("TetVol") != std::string::npos) basis = "TetLinearLgn";
+    if (mesh.find("PrismVol") != std::string::npos) basis = "PrismLinearLgn";
+    if (mesh.find("HexVol") != std::string::npos) basis = "HexTrilinearLgn";
+  }
+
+  if ((basistype == "quadratic")||(basistype == "Quadratic"))
+  {
+    if (mesh.find("Scanline") != std::string::npos) basis = "CrvQuadraticLgn";
+    if (mesh.find("Image") != std::string::npos) basis = "QuadBiquadraticLgn";
+    if (mesh.find("LatVol") != std::string::npos) basis = "HexTriquadraticLgn";
+    if (mesh.find("Curve") != std::string::npos) basis = "CrvQuadraticLgn";
+    if (mesh.find("TriSurf") != std::string::npos) basis = "TriQuadraticLgn";
+    if (mesh.find("QuadSurf") != std::string::npos) basis = "QuadBiquadraticLgn";
+    if (mesh.find("TetVol") != std::string::npos) basis = "TetQuadraticLgn";
+    if (mesh.find("PrismVol") != std::string::npos) basis = "PrismQuadraticLgn";
+    if (mesh.find("HexVol") != std::string::npos) basis = "HexTriquadraticLgn";
+  }
+
+  if ((basistype == "cubic")||(basistype == "Cubic"))
+  {
+    if (mesh.find("Scanline") != std::string::npos) basis = "CrvCubicHmt";
+    if (mesh.find("Image") != std::string::npos) basis = "QuadCubicHmt";
+    if (mesh.find("LatVol") != std::string::npos) basis = "HexCubicHmt";
+    if (mesh.find("Curve") != std::string::npos) basis = "CrvCubicHmt";
+    if (mesh.find("TriSurf") != std::string::npos) basis = "TriCubicHmt";
+    if (mesh.find("QuadSurf") != std::string::npos) basis = "QuadCubicHmt";
+    if (mesh.find("TetVol") != std::string::npos) basis = "TetCubicHmt";
+    if (mesh.find("PrismVol") != std::string::npos) basis = "PrismCubicHmt";
+    if (mesh.find("HexVol") != std::string::npos) basis = "HexCubicHmt";
+  }
+
   if (datatype == "Scalar") datatype = "double";
   if ((datatype == "input")||(datatype == "Same as Input"))
   {
-    datatype = field->get_type_description(1)->get_name();
+    datatype = data_type->get_name();
   }
 
-  std::string fieldtype = field->get_type_description(0)->get_name() +
-        "<" + datatype + "> ";
-  std::string fieldtype_filename = field->get_type_description(0)->get_name() + datatype;
+  if (basis != "") basis = basis + "<" + datatype +" >";
+  if (basis == "") basis = basis_type->get_similar_name(datatype, 0, "<", " >");
 
-
+  std::string fieldtype = field->get_type_description(0)->get_name() + "<" +
+              field->get_type_description(1)->get_name() + "," + basis + "," +
+              field->get_type_description(3)->get_similar_name(datatype, 0,"<", " >") + " > ";
+              
   // As I use my own Tensor and Vector algorithms they need to be
   // converted when reading the data, hence separate algorithms are
   // implemented for those cases
-
   
   std::string algo_name = "ArrayObjectFieldCreateAlgoT";
   std::string algo_base = "ArrayObjectFieldCreateAlgo";
-  if ((basistype == "linear")||(basistype == "Linear")) algo_name = "ArrayObjectFieldCreateNodeAlgoT"; 
-  if ((basistype == "constant")||(basistype == "Constant")) algo_name = "ArrayObjectFieldCreateElemAlgoT"; 
 
   std::string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
 
   SCIRun::CompileInfoHandle ci = 
     scinew SCIRun::CompileInfo(algo_name + "." +
-                       fieldtype_filename + ".",
+                       to_filename(fieldtype) + ".",
                        algo_base, 
                        algo_name, 
                        fieldtype);

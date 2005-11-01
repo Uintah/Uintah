@@ -33,7 +33,7 @@ itcl_class ModelCreation_FieldsData_ComputeFieldData {
 
         toplevel $w
 
-        iwidgets::labeledframe $w.inf -labeltext "Create Scalar Array"
+        iwidgets::labeledframe $w.inf -labeltext "Create New Field Data"
         set infoframe [$w.inf childsite]
         frame $infoframe.info
         pack $infoframe.info -side left

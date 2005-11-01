@@ -174,9 +174,24 @@ bool MergeFieldsAlgoT<FIELD,MESH>::mergefields(SCIRun::ProgressReporter *reporte
   omesh->elem_reserve(totnumelements);
   
   typename FIELD::mesh_handle_type meshhandle = omesh;
-  FIELD *ofield = dynamic_cast<FIELD *>(scinew FIELD(meshhandle,basisorder));
+  FIELD *ofield = dynamic_cast<FIELD *>(scinew FIELD(meshhandle));
+  output = dynamic_cast<SCIRun::Field *>(ofield);
+  
+  if (output.get_rep() == 0)
+  {
+    reporter->error("Could not allocate output mesh");
+    return (false);
+  }
+  
   if (basisorder == 0) ofield->fdata().resize(totnumelements);  
-  if (basisorder > 0) ofield->fdata().resize(totnumnodes);  
+  if (basisorder == 1) ofield->fdata().resize(totnumnodes);  
+  if (basisorder > 1)
+  {
+    reporter->error("This function has not yet been implemented for higher order elements");
+    return (false);
+  }
+    
+    
     
   double Xmul = 250/(Xmax-Xmin);
   double Ymul = 250/(Ymax-Ymin);
@@ -295,8 +310,7 @@ bool MergeFieldsAlgoT<FIELD,MESH>::mergefields(SCIRun::ProgressReporter *reporte
       ++it;
     }
   }
-  
-  output = dynamic_cast<SCIRun::Field *>(ofield);
+
   return (true);
 }
 
