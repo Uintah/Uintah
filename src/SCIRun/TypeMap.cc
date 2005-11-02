@@ -38,9 +38,8 @@
  *
  */
 
-#include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/TypeMap.h>
-#include <Core/Util/NotFinished.h>
+#include <SCIRun/CCA/TypeMismatchException.h>
 
 namespace SCIRun {
 
@@ -52,10 +51,328 @@ TypeMap::~TypeMap()
 {
 }
 
-// .sci.cca.TypeMap .sci.cca.TypeMap.cloneTypeMap()
+int
+TypeMap::getInt(const std::string& key, int dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Int) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getInt", sci::cca::Int, t));
+  }
+  return intMap.get(key, dflt);
+}
+
+long
+TypeMap::getLong(const std::string& key, long dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Long) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getLong", sci::cca::Long, t));
+  }
+  return longMap.get(key, dflt);
+}
+
+float
+TypeMap::getFloat(const std::string& key, float dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Float) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getFloat", sci::cca::Float, t));
+  }
+  return floatMap.get(key, dflt);
+}
+
+double
+TypeMap::getDouble(const std::string& key, double dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Double) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getDouble", sci::cca::Double, t));
+  }
+  return doubleMap.get(key, dflt);
+}
+
+std::complex<float>
+TypeMap::getFcomplex(const std::string& key, const std::complex<float>& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Fcomplex) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getFcomplex", sci::cca::Fcomplex, t));
+  }
+  return fcomplexMap.get(key, dflt);
+}
+
+std::complex<double>
+TypeMap::getDcomplex(const std::string& key, const std::complex<double>& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Dcomplex) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getDcomplex", sci::cca::Dcomplex, t));
+  }
+  return dcomplexMap.get(key, dflt);
+}
+
+std::string
+TypeMap::getString(const std::string& key, const std::string& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::String) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getString", sci::cca::String, t));
+  }
+  return stringMap.get(key, dflt);
+}
+
+bool
+TypeMap::getBool(const std::string& key, bool dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Bool) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getBool", sci::cca::Bool, t));
+  }
+  return boolMap.get(key, dflt);
+}
+
+SSIDL::array1<int>
+TypeMap::getIntArray(const std::string& key, const SSIDL::array1<int>& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::IntArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getIntArray", sci::cca::IntArray, t));
+  }
+  return intArrayMap.get(key, dflt);
+}
+
+SSIDL::array1<long>
+TypeMap::getLongArray(const std::string& key, const SSIDL::array1<long>& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::LongArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getLongArray", sci::cca::LongArray, t));
+  }
+  return longArrayMap.get(key, dflt);
+}
+
+SSIDL::array1<float>
+TypeMap::getFloatArray(const std::string& key, const SSIDL::array1<float>& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::FloatArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getFloatArray", sci::cca::FloatArray, t));
+  }
+  return floatArrayMap.get(key, dflt);
+}
+
+SSIDL::array1<double>
+TypeMap::getDoubleArray(const std::string& key, const SSIDL::array1<double>& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::DoubleArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getDoubleArray", sci::cca::DoubleArray, t));
+  }
+  return doubleArrayMap.get(key, dflt);
+}
+
+SSIDL::array1<std::complex<float> >
+TypeMap::getFcomplexArray(const std::string& key, const SSIDL::array1<std::complex<float> >& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::FcomplexArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getFcomplexArray", sci::cca::FcomplexArray, t));
+  }
+  return fcomplexArrayMap.get(key, dflt);
+}
+
+SSIDL::array1<std::complex<double> >
+TypeMap::getDcomplexArray(const std::string& key, const SSIDL::array1<std::complex<double> >& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::DcomplexArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getDcomplexArray", sci::cca::DcomplexArray, t));
+  }
+  return dcomplexArrayMap.get(key, dflt);
+}
+
+SSIDL::array1<std::string>
+TypeMap::getStringArray(const std::string& key, const SSIDL::array1<std::string>& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::StringArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getStringArray", sci::cca::StringArray, t));
+  }
+  return stringArrayMap.get(key, dflt);
+}
+
+SSIDL::array1<bool>
+TypeMap::getBoolArray(const std::string& key, const SSIDL::array1<bool>& dflt)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::BoolArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getBoolArray", sci::cca::BoolArray, t));
+  }
+  return boolArrayMap.get(key, dflt);
+}
+
+void
+TypeMap::putInt(const std::string& key, int value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Int) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getInt", sci::cca::Int, t));
+  }
+  return intMap.put(key, value);
+}
+
+void
+TypeMap::putLong(const std::string& key, long value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Long) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getLong", sci::cca::Long, t));
+  }
+  return longMap.put(key, value);
+}
+
+void
+TypeMap::putFloat(const std::string& key, float value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Float) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getFloat", sci::cca::Float, t));
+  }
+  return floatMap.put(key, value);
+}
+
+void
+TypeMap::putDouble(const std::string& key, double value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Double) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getDouble", sci::cca::Double, t));
+  }
+  return doubleMap.put(key, value);
+}
+
+void
+TypeMap::putFcomplex(const std::string& key, const std::complex<float>& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Fcomplex) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getFcomplex", sci::cca::Fcomplex, t));
+  }
+  return fcomplexMap.put(key, value);
+}
+
+void
+TypeMap::putDcomplex(const std::string& key, const std::complex<double>& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Dcomplex) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getDcomplex", sci::cca::Dcomplex, t));
+  }
+  return dcomplexMap.put(key, value);
+}
+
+void
+TypeMap::putString(const std::string& key, const std::string& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::String) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getString", sci::cca::String, t));
+  }
+  return stringMap.put(key, value);
+}
+
+void
+TypeMap::putBool(const std::string& key, bool value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::Bool) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getBool", sci::cca::Bool, t));
+  }
+  return boolMap.put(key, value);
+}
+
+void
+TypeMap::putIntArray(const std::string& key, const SSIDL::array1<int>& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::IntArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getIntArray", sci::cca::IntArray, t));
+  }
+  return intArrayMap.put(key, value);
+}
+
+void
+TypeMap::putLongArray(const std::string& key, const SSIDL::array1<long>& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::LongArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getLongArray", sci::cca::LongArray, t));
+  }
+  return longArrayMap.put(key, value);
+}
+
+void
+TypeMap::putFloatArray(const std::string& key, const SSIDL::array1<float>& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::FloatArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getFloatArray", sci::cca::FloatArray, t));
+  }
+  return floatArrayMap.put(key, value);
+}
+
+void
+TypeMap::putDoubleArray(const std::string& key, const SSIDL::array1<double>& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::DoubleArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getDoubleArray", sci::cca::DoubleArray, t));
+  }
+  return doubleArrayMap.put(key, value);
+}
+
+void
+TypeMap::putFcomplexArray(const std::string& key, const SSIDL::array1<std::complex<float> >& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::FcomplexArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getFcomplexArray", sci::cca::FcomplexArray, t));
+  }
+  return fcomplexArrayMap.put(key, value);
+}
+
+void
+TypeMap::putDcomplexArray(const std::string& key, const SSIDL::array1<std::complex<double> >& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::DcomplexArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getDcomplexArray", sci::cca::DcomplexArray, t));
+  }
+  return dcomplexArrayMap.put(key, value);
+}
+
+void
+TypeMap::putStringArray(const std::string& key, const SSIDL::array1<std::string>& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::StringArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getStringArray", sci::cca::StringArray, t));
+  }
+  return stringArrayMap.put(key, value);
+}
+
+void
+TypeMap::putBoolArray(const std::string& key, const SSIDL::array1<bool>& value)
+{
+  sci::cca::Type t = typeOf(key);
+  if (t != sci::cca::None && t != sci::cca::BoolArray) {
+    throw sci::cca::TypeMismatchException::pointer(new TypeMismatchException("getBoolArray", sci::cca::BoolArray, t));
+  }
+  return boolArrayMap.put(key, value);
+}
+
 sci::cca::TypeMap::pointer TypeMap::cloneTypeMap()
 {
-  NOT_FINISHED("method not implemented");
   TypeMap *tm = new TypeMap();
   tm->intMap = this->intMap;
   tm->longMap = this->longMap;
@@ -76,13 +393,11 @@ sci::cca::TypeMap::pointer TypeMap::cloneTypeMap()
   return sci::cca::TypeMap::pointer(tm);  
 }
 
-// .sci.cca.TypeMap .sci.cca.TypeMap.cloneEmpty()
 sci::cca::TypeMap::pointer TypeMap::cloneEmpty()
 {
   return sci::cca::TypeMap::pointer(new TypeMap); 
 }
 
-// void .sci.cca.TypeMap.remove(in string key)
 void
 TypeMap::remove(const std::string& key)
 {
@@ -107,7 +422,6 @@ TypeMap::remove(const std::string& key)
   return;
 }
 
-// array1<string, 1> .sci.cca.TypeMap.getAllKeys(in .sci.cca.Type t)
 SSIDL::array1<std::string>
 TypeMap::getAllKeys(sci::cca::Type type)
 {
@@ -185,7 +499,6 @@ TypeMap::getAllKeys(sci::cca::Type type)
   }
 }
 
-// bool .sci.cca.TypeMap.hasKey(in string key)
 bool
 TypeMap::hasKey(const std::string& key)
 {
@@ -208,7 +521,6 @@ TypeMap::hasKey(const std::string& key)
   return false;
 }
 
-// .sci.cca.Type .sci.cca.TypeMap.typeOf(in string key)
 sci::cca::Type
 TypeMap::typeOf(const std::string& key)
 {
