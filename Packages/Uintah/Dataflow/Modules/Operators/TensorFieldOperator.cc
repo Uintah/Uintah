@@ -105,14 +105,11 @@ void TensorFieldOperator::execute(void)
 
   //##################################################################    
 
-  cerr<<"Setting values\n";
   algo->set_values(guiRow.get(), guiColumn.get(), guiPlaneSelect.get(),
                    guiDelta.get(), guiEigen2DCalcType.get(),
                    guiNx.get(), guiNy.get(), guiNz.get(),
                    guiTx.get(), guiTy.get(), guiTz.get());
-  cerr<<"values set, calling execute\n";
   FieldHandle fh =  algo->execute( hTF, guiOperation.get() );
-  cerr<<"execute calle\n";
   if( fh.get_rep() != 0 ){
     sfout->send(fh);
   }
