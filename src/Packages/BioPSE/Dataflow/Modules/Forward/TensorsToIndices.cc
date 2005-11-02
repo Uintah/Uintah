@@ -83,10 +83,14 @@ void TensorsToIndices::execute() {
   }
 
   const TypeDescription *field_src_td = ifieldH->get_type_description();
-  const string &field_src_name = field_src_td->get_name();
-  string::size_type idx = field_src_name.find('<');
-  string field_dst_name = field_src_name.substr(0,idx)+"<int>";
-
+  const string field_dst_name = 
+    ifieldH->get_type_description(0)->get_name() + "<" +
+    ifieldH->get_type_description(1)->get_name() + ", " +
+    ifieldH->get_type_description(2)->get_similar_name("int", 
+                                                       0, "<", " >, ") +
+    ifieldH->get_type_description(3)->get_similar_name("int",
+                                                       0, "<", " >") + " >";
+  
   CompileInfoHandle ci =
     TensorsToIndicesAlgo::get_compile_info(field_src_td, field_dst_name);
   Handle<TensorsToIndicesAlgo> algo;
