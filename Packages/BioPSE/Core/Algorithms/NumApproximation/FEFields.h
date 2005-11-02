@@ -33,6 +33,7 @@
 #define FEFields_h
 
 #include <Core/Geometry/Tensor.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Basis/HexTrilinearLgn.h>
@@ -44,21 +45,21 @@
 namespace BioPSE {
 using namespace SCIRun;
 
-typedef TriLinearLgn<int>                  TSIBasis;
-typedef TriLinearLgn<Tensor>               TSTBasis;
-typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+typedef TriSurfMesh<TriLinearLgn<Point> >               TSMesh;
+typedef ConstantBasis<int>                              TSIBasis;
+typedef ConstantBasis<Tensor>                           TSTBasis;
 typedef GenericField<TSMesh, TSIBasis,    vector<int> > TSFieldI;  
 typedef GenericField<TSMesh, TSTBasis, vector<Tensor> > TSFieldT;  
 
 typedef TetVolMesh<TetLinearLgn<Point> >                   TVMesh;
-typedef TetLinearLgn<int>                                  TVIBasis;
-typedef TetLinearLgn<Tensor>                               TVTBasis;
+typedef ConstantBasis<int>                                 TVIBasis;
+typedef ConstantBasis<Tensor>                              TVTBasis;
 typedef GenericField<TVMesh, TVIBasis,    vector<int> >    TVFieldI;   
 typedef GenericField<TVMesh, TVTBasis,    vector<Tensor> > TVFieldT; 
 
-typedef HexTrilinearLgn<int>                      HVIBasis;
-typedef HexTrilinearLgn<Tensor>                   HVTBasis;
-typedef HexVolMesh<HexTrilinearLgn<Point> >       HVMesh;
+typedef HexVolMesh<HexTrilinearLgn<Point> >             HVMesh;
+typedef ConstantBasis<int>                              HVIBasis;
+typedef ConstantBasis<Tensor>                           HVTBasis;
 typedef GenericField<HVMesh, HVIBasis,    vector<int> > HVFieldI;  
 typedef GenericField<HVMesh, HVTBasis, vector<Tensor> > HVFieldT; 
 
