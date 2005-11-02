@@ -89,10 +89,13 @@ void IndicesToTensors::execute() {
   }
 
   const TypeDescription *field_src_td = ifieldH->get_type_description();
-  const string &field_src_name = field_src_td->get_name();
-  string::size_type idx = field_src_name.find('<');
-  string field_dst_name = field_src_name.substr(0,idx)+"<Tensor>";
-//  cerr << "field_dst_name = "<<field_dst_name<<"\n";
+  const string field_dst_name = 
+    ifieldH->get_type_description(0)->get_name() + "<" +
+    ifieldH->get_type_description(1)->get_name() + ", " +
+    ifieldH->get_type_description(2)->get_similar_name("Tensor", 
+                                                       0, "<", " >, ") +
+    ifieldH->get_type_description(3)->get_similar_name("Tensor",
+                                                       0, "<", " >") + " >";
 
   CompileInfoHandle ci =
     IndicesToTensorsAlgo::get_compile_info(field_src_td, field_dst_name);
@@ -125,6 +128,7 @@ IndicesToTensorsAlgo::get_compile_info(const TypeDescription *field_src_td,
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   field_src_td->fill_compile_info(rval);
+  rval->add_data_include("../src/Core/Geometry/Tensor.h");
   return rval;
 }
 } // End namespace SCIRun

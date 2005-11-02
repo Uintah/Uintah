@@ -103,7 +103,7 @@ FieldHandle
 TensorsToIndicesAlgoT<FSRC, FDST>::execute(FieldHandle srcH)
 {
   FSRC *src = dynamic_cast<FSRC *>(srcH.get_rep());
-  FDST *dst = scinew FDST(src->get_typed_mesh(), src->basis_order());
+  FDST *dst = scinew FDST(src->get_typed_mesh());
   vector<pair<string, Tensor> > conds;
   typename FSRC::fdata_type::iterator in = src->fdata().begin();
   typename FDST::fdata_type::iterator out = dst->fdata().begin();
