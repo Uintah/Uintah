@@ -75,8 +75,8 @@ void ScalarFieldNormalize::execute(void)
   if(!in->get(hTF)){
     std::cerr<<"ScalarFieldNormalize::execute(void) Didn't get a handle\n";
     return;
-  } else if ( hTF->get_type_name(1) != "double" ){
-    std::cerr<<"Input is not a Scalar field\n";
+  } else if ( !hTF->query_scalar_interface(this).get_rep() ){
+    error("Input is not a Scalar field");
     return;
   }
 
@@ -87,12 +87,15 @@ void ScalarFieldNormalize::execute(void)
     CDField *output = scinew CDField( mh );
     normalizeScalarField(input, output);
     fh = output;
-  } else if( LDField *input = dynamic_cast<LDField *>(hTF.get_rep())) {
-    LVMeshHandle mh = input->get_typed_mesh();
-    mh.detach();
-    LDField *output = scinew LDField( mh );
-    normalizeScalarField(input, output);
-    fh = output;
+//   } else if( LDField *input = dynamic_cast<LDField *>(hTF.get_rep())) {
+//     LVMeshHandle mh = input->get_typed_mesh();
+//     mh.detach();
+//     LDField *output = scinew LDField( mh );
+//     normalizeScalarField(input, output);
+//     fh = output;
+  } else {
+    error("Normalization only works on Cell Centered (basis->order() == 0) double fields\n");
+    return;
   }
 
   if( fh.get_rep() != 0 ){
