@@ -212,6 +212,12 @@ ManageFieldData::execute()
     {
       outtypestring = "Vector";
     }
+    else if (gui_preserve_scalar_type_.get())
+    {
+      TypeDescription::td_vec *tdv = 
+        ifieldhandle->get_type_description(3)->get_sub_type();
+      outtypestring = (*tdv)[0]->get_name();
+    }
     else
     {
       outtypestring = "double";
@@ -226,9 +232,7 @@ ManageFieldData::execute()
       " > ";
     CompileInfoHandle ci_mesh =
       ManageFieldDataAlgoMesh::
-      get_compile_info(ifieldhandle->get_type_description(), oftn,
-		       matrix_svt_flag,
-		       gui_preserve_scalar_type_.get()?svt_flag:-1);
+      get_compile_info(ifieldhandle->get_type_description(), oftn);
     Handle<ManageFieldDataAlgoMesh> algo_mesh;
     if (!module_dynamic_compile(ci_mesh, algo_mesh)) return;
 
@@ -298,58 +302,24 @@ ManageFieldDataAlgoField::get_compile_info(const TypeDescription *fsrc,
 
 CompileInfoHandle
 ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *fsrc,
-                                          const string &fout_substituted,
-					  int svt_flag, int svt2)
+                                          const string &fout)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string base_class_name("ManageFieldDataAlgoMesh");
 
-  string extension;
-  string extension2;
-  switch (svt_flag)
-  {
-  case 3:
-    extension = "Tensor6";
-    extension2 = "Tensor";
-    break;
-
-  case 2:
-    extension = "Tensor9";
-    extension2 = "Tensor";
-    break;
-
-  case 1:
-    extension = "Vector";
-    extension2 = "Vector";
-    break;
-
-  default:
-    extension = "Scalar";
-    extension2 = "double";
-    break;
-  }
-
-  string fout;
-  if (svt_flag == 0 && svt2 == 0)
-  {
-    // Preserve file type if is scalar field.
-    fout = fsrc->get_name();
-  }
-  else
-  {
-    fout = fout_substituted;
-  }
 
   CompileInfo *rval = 
-    scinew CompileInfo(base_class_name + extension + "." +
+    scinew CompileInfo(base_class_name +
 		       to_filename(fout) + ".",
                        base_class_name, 
-                       base_class_name + extension, 
+                       base_class_name + "T", 
                        fout);
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_data_include("../src/Core/Geometry/Vector.h");
+  rval->add_data_include("../src/Core/Geometry/Tensor.h");
   fsrc->fill_compile_info(rval);
   return rval;
 }
