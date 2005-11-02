@@ -57,7 +57,7 @@ public:
 					    const TypeDescription *lsrc,
 					    const TypeDescription *fdst,
 					    const TypeDescription *ldst,
-					    const TypeDescription *dsrc);
+					    const string &fout);
 };
 
 

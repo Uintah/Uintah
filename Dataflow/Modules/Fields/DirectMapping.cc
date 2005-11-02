@@ -165,18 +165,27 @@ DirectMapping::execute()
     update = true;
   }
 
-  if( !fHandle_.get_rep() ||
-      update ||
-      error_ ) {
-
+  if( !fHandle_.get_rep() || update || error_ )
+  {
     error_ = false;
+
+    TypeDescription::td_vec *tdv = 
+      sfHandle->get_type_description(3)->get_sub_type();
+    const string outputDataType = (*tdv)[0]->get_name();
+    const string oftn =
+      dfHandle->get_type_description(0)->get_name() + "<" +
+      dfHandle->get_type_description(1)->get_name() + ", " +
+      dfHandle->get_type_description(2)->get_similar_name(outputDataType, 
+                                                          0, "<", " >, ") +
+      dfHandle->get_type_description(3)->get_similar_name(outputDataType,
+                                                          0, "<", " >") + " >";
 
     CompileInfoHandle ci =
       DirectMappingAlgo::get_compile_info(sfHandle->get_type_description(),
                                           sfHandle->order_type_description(),
                                           dfHandle->get_type_description(),
                                           dfHandle->order_type_description(),
-					  sfHandle->get_type_description(3));
+					  oftn);
 
     Handle<DirectMappingAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
@@ -208,15 +217,12 @@ DirectMappingAlgo::get_compile_info(const TypeDescription *fsrc,
                                     const TypeDescription *lsrc,
                                     const TypeDescription *fdst,
                                     const TypeDescription *ldst,
-				    const TypeDescription *dsrc)
+				    const string &fout)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("DirectMappingAlgoT");
   static const string base_class_name("DirectMappingAlgo");
-
-  string data_name = dsrc->get_name("", "");
-  const string fout = fdst->get_similar_name(data_name, 3);
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
