@@ -32,6 +32,7 @@
 #include <Core/Basis/NoData.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTricubicHmt.h>
+#include <Core/Basis/HexTricubicHmtScaleFactors.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
@@ -181,11 +182,18 @@ backwards_compat_HVFul("HexVolField<unsigned_long>", "Field",
 
 
 typedef HexTricubicHmt<double>             HTCdoubleBasis;
-typedef NoDataBasis<double>                NDdoubleBasis;
 
 typedef HexVolMesh<HexTricubicHmt<Point> > HVCubMesh;
-template class GenericField<HVCubMesh, NDdoubleBasis, vector<double> >; 
+template class GenericField<HVCubMesh, NDBasis, vector<double> >; 
 template class GenericField<HVCubMesh, HTCdoubleBasis, vector<double> >; 
+
+typedef HexTricubicHmtScaleFactors<double>             HTCSFdoubleBasis;
+typedef HexTricubicHmtScaleFactors<Vector>             HTCSFVectorBasis;
+
+typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> > HVCubSFMesh;
+template class GenericField<HVCubSFMesh, NDBasis, vector<double> >; 
+template class GenericField<HVCubSFMesh, HTCSFdoubleBasis, vector<double> >; 
+template class GenericField<HVCubSFMesh, HTCSFVectorBasis, vector<Vector> >; 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

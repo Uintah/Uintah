@@ -42,7 +42,9 @@
 // ASCII, unless you specify -binOutput.
 
 #include <Core/Geometry/Vector.h>
+#include <Core/Basis/NoData.h>
 #include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/HexTricubicHmtScaleFactors.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
@@ -56,11 +58,12 @@
 
 using namespace SCIRun;
 
-typedef HexTrilinearLgn<Vector>                FDVectorBasis;
-typedef HexTrilinearLgn<double>                FDdoubleBasis;
-typedef HexVolMesh<HexTrilinearLgn<Point> >    HVMesh;
+typedef HexTricubicHmtScaleFactors<Vector>                   FDVectorBasis;
+typedef HexTricubicHmtScaleFactors<double>                   FDdoubleBasis;
+typedef NoDataBasis<double>                                  NDBasis;
+typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> >       HVMesh;
 typedef GenericField<HVMesh, FDVectorBasis, vector<Vector> > HVFieldV;       
-typedef GenericField<HVMesh, FDdoubleBasis, vector<double> > HVField;   
+typedef GenericField<HVMesh, NDBasis, vector<double> >       HVField;   
 
 using std::cerr;
 using std::ifstream;
@@ -263,6 +266,159 @@ parse_ho_data(ifstream &nodal_in, vector<Vector> &data_vals, HVMesh *hvm)
   return npts;
 }
 
+int
+parse_ho_data52(ifstream &nodal_in, vector<Vector> &data_vals, HVMesh *hvm) 
+{
+  int npts = 0;
+  while (! nodal_in.eof()) {
+    ++npts;
+    double x[3], xdx[3], xdy[3], xdxy[3], xdz[3], xdyz[3], xdxz[3], xdxyz[3];
+    for (int j=0; j<3; j++) 
+      nodal_in >> x[j] >> xdx[j] >> xdy[j] >> xdxy[j] >> xdz[j] 
+		>> xdyz[j] >> xdxz[j] >> xdxyz[j];
+
+    if (nodal_in.eof()) break;
+
+    double f[3], fdx[3], fdy[3], fdxy[3], fdz[3], fdyz[3], fdxz[3], fdxyz[3];
+    for (int j=0; j<3; j++) 
+      nodal_in >> f[j] >> fdx[j] >> fdy[j] >> fdxy[j] >> fdz[j] 
+		>> fdyz[j] >> fdxz[j] >> fdxyz[j];
+
+    double phi, theta;
+    const double torad = 3.145926535898 / 180.;
+    // convert to radians
+    phi = f[0] * torad;
+    theta = f[1] * torad;
+    // create unit vectors
+    Vector fib_dir;
+    fib_dir.x(sin(phi) * cos(theta));
+    fib_dir.y(sin(phi) * sin(theta));
+    fib_dir.z(cos(phi));
+
+    //cerr << fib_dir << " len ->" << fib_dir.length() << endl;
+    data_vals.push_back(fib_dir);
+
+    //scale factors
+    double sf[3];
+    nodal_in >> sf[0] >> sf[1] >> sf[2];
+    string label;
+    int n;
+    nodal_in >> label >> n;
+    //    const double sf = 12.0;
+    hvm->add_point(Point(x[0],x[1],x[2]));
+    vector<Point> arr(7);
+    arr[0].x(xdx[0]);
+    arr[0].y(xdx[1]);
+    arr[0].z(xdx[2]);
+    arr[1].x(xdy[0]);
+    arr[1].y(xdy[1]);
+    arr[1].z(xdy[2]);
+    arr[2].x(xdz[0]);
+    arr[2].y(xdz[1]);
+    arr[2].z(xdz[2]);
+    arr[3].x(xdxy[0]);
+    arr[3].y(xdxy[1]);
+    arr[3].z(xdxy[2]);
+    arr[4].x(xdyz[0]);
+    arr[4].y(xdyz[1]);
+    arr[4].z(xdyz[2]);
+    arr[5].x(xdxz[0]);
+    arr[5].y(xdxz[1]);
+    arr[5].z(xdxz[2]);
+    arr[6].x(xdxyz[0]);
+    arr[6].y(xdxyz[1]);
+    arr[6].z(xdxyz[2]);
+    hvm->get_basis().add_derivative(arr);
+
+    vector<double> sfv(3);
+    sfv[0] = sf[0];
+    sfv[1] = sf[1];
+    sfv[2] = sf[2];
+    hvm->get_basis().add_scalefactors(sfv);
+    cerr << "Added point #" << npts << ": (" << x[0] << ", " << x[1] 
+	 << ", " << x[2] << ")" << endl;
+  }
+
+  cerr << "done adding points.\n";
+  return npts;
+}
+
+int
+parse_ho_data37(ifstream &nodal_in, vector<Vector> &data_vals, HVMesh *hvm) 
+{
+  int npts = 0;
+  while (! nodal_in.eof()) {
+    ++npts;
+    double x[3], xdx[3], xdy[3], xdxy[3], xdz[3], xdyz[3], xdxz[3], xdxyz[3];
+    for (int j=0; j<3; j++) 
+      nodal_in >> x[j] >> xdx[j] >> xdy[j] >> xdxy[j] >> xdz[j] 
+		>> xdyz[j] >> xdxz[j] >> xdxyz[j];
+
+    if (nodal_in.eof()) break;
+
+    double f, fdx, fdy, fdxy, fdz, fdyz, fdxz, fdxyz;
+    nodal_in >> f >> fdx >> fdy >> fdxy >> fdz 
+	     >> fdyz >> fdxz >> fdxyz;
+
+//     double phi, theta;
+//     const double torad = 3.145926535898 / 180.;
+//     // convert to radians
+//     phi = f[0] * torad;
+//     theta = f[1] * torad;
+//     // create unit vectors
+//     Vector fib_dir;
+//     fib_dir.x(sin(phi) * cos(theta));
+//     fib_dir.y(sin(phi) * sin(theta));
+//     fib_dir.z(cos(phi));
+
+//     //cerr << fib_dir << " len ->" << fib_dir.length() << endl;
+//     data_vals.push_back(fib_dir);
+
+    //scale factors
+    double sf[3];
+    nodal_in >> sf[0] >> sf[1] >> sf[2];
+    string label;
+    int n;
+    nodal_in >> label >> n;
+    //    const double sf = 12.0;
+    hvm->add_point(Point(x[0],x[1],x[2]));
+    vector<Point> arr(7);
+    arr[0].x(xdx[0]);
+    arr[0].y(xdx[1]);
+    arr[0].z(xdx[2]);
+    arr[1].x(xdy[0]);
+    arr[1].y(xdy[1]);
+    arr[1].z(xdy[2]);
+    arr[2].x(xdz[0]);
+    arr[2].y(xdz[1]);
+    arr[2].z(xdz[2]);
+    arr[3].x(xdxy[0]);
+    arr[3].y(xdxy[1]);
+    arr[3].z(xdxy[2]);
+    arr[4].x(xdyz[0]);
+    arr[4].y(xdyz[1]);
+    arr[4].z(xdyz[2]);
+    arr[5].x(xdxz[0]);
+    arr[5].y(xdxz[1]);
+    arr[5].z(xdxz[2]);
+    arr[6].x(xdxyz[0]);
+    arr[6].y(xdxyz[1]);
+    arr[6].z(xdxyz[2]);
+    hvm->get_basis().add_derivative(arr);
+
+    vector<double> sfv(3);
+    sfv[0] = sf[0];
+    sfv[1] = sf[1];
+    sfv[2] = sf[2];
+    hvm->get_basis().add_scalefactors(sfv);
+    cerr << "Added point #" << npts << ": (" << x[0] << ", " << x[1] 
+	 << ", " << x[2] << ")" << endl;
+  }
+
+  cerr << "done adding points.\n";
+  return npts;
+}
+
 
 int
 main(int argc, char **argv) {
@@ -358,6 +514,10 @@ main(int argc, char **argv) {
     npts = parse_lin_vec_data(nodal_in, data_vals, hvm);
   } else if (cols == 122) {
     npts = parse_ho_data(nodal_in, data_vals, hvm);
+  } else if (cols == 52) {
+    npts = parse_ho_data52(nodal_in, data_vals, hvm);
+  } else if (cols == 37) {
+    npts = parse_ho_data37(nodal_in, data_vals, hvm);
   } else if (cols == 25) {
     npts = parse_lin_strain_data25(nodal_in, data_vals_scalar, hvm);
   } else if (cols == 13) {
@@ -473,6 +633,12 @@ main(int argc, char **argv) {
     HVField *hv = scinew HVField(hvm);
     hv->resize_fdata();
     hv->fdata() = data_vals_scalar;
+    hvH = hv;
+  } else if (cols == 52 || cols == 37) {
+    cerr << "loading in no data" << endl;
+    HVField *hv = scinew HVField(hvm);
+    hv->resize_fdata();
+    //hv->fdata() = data_vals;
     hvH = hv;
   } else {
     cerr << "loading in vector data" << endl;
