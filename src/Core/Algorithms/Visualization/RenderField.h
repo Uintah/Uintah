@@ -84,25 +84,6 @@ sciVectorToColor(Color &c, const Vector &v)
   c = Color(fabs(v.x()), fabs(v.y()), fabs(v.z()));
 }
 
-inline bool IsPowerOf2(uint n)
-{
-  return (n & (n-1)) == 0;
-}
-
-inline unsigned int NextPowerOf2( unsigned int n)
-{
-  // if n is power of 2, return 
-  if (IsPowerOf2(n)) return n;
-  unsigned int v;
-  for(int i=31; i>=0; i--) {
-    v = n & (1 << i);
-    if (v) {
-      v = (1 << (i+1));
-      break;
-    }
-  }
-  return v;
-}
 
 //! RenderFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
@@ -1834,8 +1815,8 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
   IMesh *im = dynamic_cast<IMesh *> (mesh.get_rep());
 
   // Set up the texture parameters, power of 2 dimensions.
-  int width = NextPowerOf2(im->get_ni());
-  int height = NextPowerOf2(im->get_nj());
+  int width = Pow2(im->get_ni());
+  int height = Pow2(im->get_nj());
 
   // Use for the texture coordinates 
   double tmin_x, tmax_x, tmin_y, tmax_y;
