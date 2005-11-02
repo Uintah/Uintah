@@ -482,8 +482,6 @@ void    ICE::printVector_driver(int matl,
             is in the X direction.
             - CC Variables examine all cells including extra calls
             - (Y,Z)_FC variables examine only patch interior cells
-            - X_FC variables the mirrorCell index must be shifted by 1
-              and only examine patch interior cells
 _______________________________________________________________________ */
 template<class T>
 void    ICE::symmetryTest_driver( int matl,
@@ -497,6 +495,7 @@ void    ICE::symmetryTest_driver( int matl,
   //__________________________________
   // bulletproofing -- only works on 1 patch
   const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
   int numPatches = level->numPatches();
   if(numPatches !=1 ){
       throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
@@ -526,9 +525,14 @@ void    ICE::symmetryTest_driver( int matl,
       dumpThisMatl = true;
     }
   }
+  
+  bool onRightLevel = false;
+  if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
+    onRightLevel = true;
+  }
     
   //__________________________________
-  if ( dumpThisMatl == true && d_dbgTime_to_printData ) { 
+  if ( onRightLevel && dumpThisMatl == true && d_dbgTime_to_printData ) { 
     IntVector low, high, high_twk;
 
     if(cellShift != IntVector(0,0,0)){  // FC variables
@@ -553,13 +557,10 @@ void    ICE::symmetryTest_driver( int matl,
       if (d_dbgSymPlanes[dir] == 1){  // examine this plane of symmetry?
 
         int extraCell = 1;
-        int FC_shift = 0;
 
-        // FC_shift and ghost cells for FC Variables     
+        // ghost cells for FC Variables     
         if (is_FC_variable){
-          FC_shift = cellShift[dir] * d_dbgSymPlanes[dir];
-
-          if (FC_shift == 1){
+          if (cellShift[dir] * d_dbgSymPlanes[dir] == 1){
             high += cellShift;  // X_FC variables need to shift high
           }else{
             extraCell = 0;      // no Ghost cells for (Y,Z)_FC vars
@@ -568,9 +569,8 @@ void    ICE::symmetryTest_driver( int matl,
 
         // upper looping limit
         high_twk = high;
-        high_twk[dir] = (nCells[dir]/2);
-
-
+        high_twk[dir] = (low[dir] + extraCell) + (nCells[dir]/2);
+        
         // loop over the lower half of the plane of symmetry
         // and compare corresponding cell on the opposite side of the plane
         for(int k = low.z(); k < high_twk.z(); k++) {
@@ -583,10 +583,7 @@ void    ICE::symmetryTest_driver( int matl,
               IntVector mirrorCell = c;  // set transverse indicies
 
               // paper and pencil to figure this out
-              mirrorCell[dir] = (high[dir]-1) - (c[dir]+extraCell);
-
-              // X_FC variable shift
-              mirrorCell[dir] += FC_shift;
+              mirrorCell[dir] = low[dir] + ((high[dir]-1) - c[dir]);
 
               // calc. absolute and relative differences
               double abs_diff = 0;
@@ -640,6 +637,7 @@ void    ICE::symmetryTest_Vector( int matl,
   //__________________________________
   // bulletproofing -- only works on 1 patch
   const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
   int numPatches = level->numPatches();
   if(numPatches !=1 ){
       throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
@@ -670,8 +668,13 @@ void    ICE::symmetryTest_Vector( int matl,
       dumpThisMatl = true;
     }
   }
+  
+  bool onRightLevel = false;
+  if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
+    onRightLevel = true;
+  }
   //__________________________________
-  if ( dumpThisMatl == true && d_dbgTime_to_printData ) { 
+  if ( onRightLevel && dumpThisMatl == true && d_dbgTime_to_printData ) { 
     IntVector low, high, high_twk;
     low   = patch->getCellLowIndex();
     high  = patch->getCellHighIndex();
@@ -683,10 +686,11 @@ void    ICE::symmetryTest_Vector( int matl,
     //__________________________________
     for (int dir = 0; dir <3; dir++){
       if (d_dbgSymPlanes[dir] == 1){
-        high_twk = high;
-        high_twk[dir] = (nCells[dir]/2);
-
+      
         int extraCell = 1;
+        high_twk = high;
+        high_twk[dir] = (low[dir]+ extraCell) + (nCells[dir]/2);
+
 
         // loop over the lower half of the plane of symmetry
         // and compare with the on the opposite side of the plane
@@ -698,12 +702,12 @@ void    ICE::symmetryTest_Vector( int matl,
               
               // pencil and paper
               IntVector mirrorCell = c;
-              mirrorCell[dir] = (high[dir]-1) - (c[dir]+extraCell);
+              mirrorCell[dir] = low[dir] + ((high[dir]-1) - c[dir]);
                             
               Vector rel_diff = Vector(0);
               Vector abs_diff = Vector(0);
               
-              if( q_CC[c].length() > d_dbgSym_cutoff_value || 
+              if( q_CC[c].length()          > d_dbgSym_cutoff_value || 
                   q_CC[mirrorCell].length() > d_dbgSym_cutoff_value){
                 
                 // absolute difference
