@@ -251,9 +251,9 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 
   typename Fld::mesh_handle_type m = f->get_typed_mesh(); 
 
-  const string data_name(ifh->get_type_description(1)->get_name());
-  const string vec("Vector");
-  const string ten("Tensor");
+  TypeDescription::td_vec *tdv = 
+    ifh->get_type_description(3)->get_sub_type();
+  const string data_name = (*tdv)[0]->get_name();
 
   NrrdData *ndata = 0;
   NrrdData *npoints = 0;
@@ -262,12 +262,12 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
   int sink_size = 1;
   string sink_label = label + string(":Scalar");
   int kind = nrrdKindScalar;
-  if (data_name == ten) {
+  if (data_name == "Tensor") {
     pad_data = 7; // copy the data, and pad for tensor values
     sink_size = 7;
     kind = nrrdKind3DMaskedSymMatrix;
     sink_label = label + string(":Tensor");
-  } else if (data_name== vec) {
+  } else if (data_name== "Vector") {
     pad_data = 3; // copy the data and pad for vector values
     sink_size = 3;
     sink_label = label + string(":Vector");
