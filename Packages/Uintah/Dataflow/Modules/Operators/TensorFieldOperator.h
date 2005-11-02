@@ -9,6 +9,7 @@
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/FData.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/TypeDescription.h>
@@ -59,32 +60,53 @@ public:
 
   typedef GenericField<LVMesh, CFDdoubleBasis, FData3d<double, LVMesh> > CDField;
   typedef GenericField<LVMesh, FDdoubleBasis,  FData3d<double, LVMesh> > LDField;
-  virtual FieldHandle execute(FieldHandle tensorfh, GuiInt op) = 0;
+  virtual FieldHandle execute(FieldHandle tensorfh, int op) = 0;
+  void set_values( int row, int column, int plane, double delta,
+                           int calc_type, double nx, double ny, double nz,
+                           double tx, double ty, double tz);
+
   static CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *ftd);
 protected:
   template<class TensorField, class ScalarField>
-    void performOperation(TensorField* tensorField, 
-                          ScalarField* scalarField, GuiInt op);
+  void performOperation(TensorField* tensorField, 
+                        ScalarField* scalarField, int op);
+
+  int row_, column_, plane_, calc_type_;
+  double delta_, nx_, ny_, nz_, tx_, ty_, tz_;
 };
+
+void
+TensorFieldOperatorAlgo::set_values(int row, int column, int plane, 
+                                    double delta, int calc_type, 
+                                    double nx, double ny, double nz,
+                                    double tx, double ty, double tz)
+{
+  row_ = row; column_ = column;
+  plane_ = plane;
+  delta_ = delta;
+  calc_type_ = calc_type;
+  nx_ = nx; ny_ = ny; nz_ = nz;
+  tx_ = tx; ty_ = ty; tz_ = tz;
+}
 
 template<class TensorField>
 class TensorFieldOperatorAlgoT: public TensorFieldOperatorAlgo
 {
 public:
-  virtual FieldHandle execute(FieldHandle tensorfh, GuiInt op);
+  virtual FieldHandle execute(FieldHandle tensorfh, int op);
 };
 
 template<class TensorField>
 FieldHandle
-TensorFieldOperatorAlgoT<TensorField>::execute(FieldHandle tensorfh, GuiInt op)
+TensorFieldOperatorAlgoT<TensorField>::execute(FieldHandle tensorfh, int op)
 {
   TensorField *tensorField = (TensorField *)(tensorfh.get_rep());
-  typename TensorField::mesh_handle_type mh = tensorfield->get_typed_mesh();
+  typename TensorField::mesh_handle_type mh = tensorField->get_typed_mesh();
   mh.detach();
   typename TensorField::mesh_type *mesh = mh.get_rep();
 
   FieldHandle scalarField;
-  if( tensorField->basis_order == 0 ){
+  if( tensorField->basis_order() == 0 ){
     CDField *sf = scinew CDField( mesh );
     performOperation( tensorField, sf, op );
     scalarField = sf;
@@ -99,12 +121,12 @@ TensorFieldOperatorAlgoT<TensorField>::execute(FieldHandle tensorfh, GuiInt op)
     if(prop_name == "varname"){
       string prop_component;
       tensorField->get_property( prop_name, prop_component);
-      switch(op.get()) {
+      switch(op) {
       case 0: // extract element i,j
         scalarField->set_property("varname",
                                   string(prop_component + ":" +
-                                         to_string( guiRow.get ()) + 
-                                         "," + to_string( guiColumn.get ())),
+                                         to_string( row_) + 
+                                         "," + to_string( column_)),
                                   true);
         break;
       case 1: // extract eigen value
@@ -152,7 +174,7 @@ TensorFieldOperatorAlgoT<TensorField>::execute(FieldHandle tensorfh, GuiInt op)
       tensorField->get_property( prop_name, vartype);
       scalarField->set_property(prop_name.c_str(), vartype , true);
     } else {
-      warning( "Unknown field property, not transferred.");
+      cerr<<"Unknown field property, not transferred.\n";
     }
   }
   return scalarField;
@@ -161,36 +183,33 @@ TensorFieldOperatorAlgoT<TensorField>::execute(FieldHandle tensorfh, GuiInt op)
 template<class TensorField, class ScalarField>
 void TensorFieldOperatorAlgo::performOperation(TensorField* tensorField,
                                                ScalarField* scalarField,
-                                               GuiInt op)
+                                               int op)
 {
   initField(tensorField, scalarField);
 
-  switch(op.get()) {
+  switch(op) {
   case 0: // extract element
     computeScalars(tensorField, scalarField,
-		   TensorElementExtractionOp(guiRow.get(), guiColumn.get()));
+		   TensorElementExtractionOp(row_, column_));
     break;
   case 1: // 2D eigen-value/vector
-    if (guiEigen2DCalcType.get() == 0) {
+    if (calc_type_ == 0) {
       // e1 - e2
-      int plane = guiPlaneSelect.get();
-      if (plane == 2)
+      if (plane_ == 2)
 	computeScalars(tensorField, scalarField, Eigen2DXYOp());
-      else if (plane == 1)
+      else if (plane_ == 1)
 	computeScalars(tensorField, scalarField, Eigen2DXZOp());
       else
 	computeScalars(tensorField, scalarField, Eigen2DYZOp());
     }
     else {
       // cos(e1 - e2) / delta
-      int plane = guiPlaneSelect.get();
-      double delta = guiDelta.get();
-      if (plane == 2)
-	computeScalars(tensorField, scalarField, Eigen2DXYCosOp(delta));
-      else if (plane == 1)
-	computeScalars(tensorField, scalarField, Eigen2DXZCosOp(delta));
+      if (plane_ == 2)
+	computeScalars(tensorField, scalarField, Eigen2DXYCosOp(delta_));
+      else if (plane_ == 1)
+	computeScalars(tensorField, scalarField, Eigen2DXZCosOp(delta_));
       else
-	computeScalars(tensorField, scalarField, Eigen2DYZCosOp(delta));
+	computeScalars(tensorField, scalarField, Eigen2DYZCosOp(delta_));
     }
     break;
   case 2: // pressure
@@ -204,15 +223,13 @@ void TensorFieldOperatorAlgo::performOperation(TensorField* tensorField,
     break;
   case 5: // n . sigma. t
     {
-    double nx = guiNx.get(); double ny = guiNy.get(); double nz = guiNz.get();
-    double tx = guiTx.get(); double ty = guiTy.get(); double tz = guiTz.get();
-    computeScalars(tensorField, scalarField, NDotSigmaDotTOp(nx, ny, nz,
-                                                             tx, ty, tz));
+    computeScalars(tensorField, scalarField, NDotSigmaDotTOp(nx_, ny_, nz_,
+                                                             tx_, ty_, tz_));
     }
     break;
   default:
     std::cerr << "TensorFieldOperator::performOperation: "
-	      << "Unexpected Operation Type #: " << op.get() << "\n";
+	      << "Unexpected Operation Type #: " << op << "\n";
   }
 }
 

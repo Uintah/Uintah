@@ -2,7 +2,6 @@
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 
@@ -87,7 +86,8 @@ void TensorFieldOperator::execute(void)
   if(!in->get(hTF)){
     error("TensorFieldOperator::execute(void) Didn't get a handle");
     return;
-  } else if ( hTF->get_type_name(1) != "Matrix3" ){
+  } else if ( hTF->get_type_name(2) != "HexTrilinearLgn<Matrix3> "){
+    cerr<<hTF->get_type_name(2)<<"\n";
     error("Input is not a Tensor field");
     return;
   }
@@ -105,7 +105,14 @@ void TensorFieldOperator::execute(void)
 
   //##################################################################    
 
-  FieldHandle fh =  algo->execute( hTF, guiOperation );
+  cerr<<"Setting values\n";
+  algo->set_values(guiRow.get(), guiColumn.get(), guiPlaneSelect.get(),
+                   guiDelta.get(), guiEigen2DCalcType.get(),
+                   guiNx.get(), guiNy.get(), guiNz.get(),
+                   guiTx.get(), guiTy.get(), guiTz.get());
+  cerr<<"values set, calling execute\n";
+  FieldHandle fh =  algo->execute( hTF, guiOperation.get() );
+  cerr<<"execute calle\n";
   if( fh.get_rep() != 0 ){
     sfout->send(fh);
   }
@@ -130,6 +137,8 @@ TensorFieldOperatorAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  // add namespace
+  rval->add_namespace("Uintah");
   ftd->fill_compile_info(rval);
   return rval;
 }
