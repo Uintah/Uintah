@@ -255,12 +255,16 @@ SetupFEMatrix::execute()
   tri = false;
 
   bool index_based = true;
-  if (hField->get_type_name(0) == "TetVolField") 
+  const string hftn = hField->get_type_description()->get_name();
+  TypeDescription::td_vec *htdv = 
+    hField->get_type_description(3)->get_sub_type();
+  const string hfvaltype = (*htdv)[0]->get_name();
+  if (hftn.find("TetVolMesh") != string::npos)
   {
     remark("Input is a 'TetVolField'");
-    if (hField->get_type_name(1) == "int") {
+    if (hfvaltype == "int") {
       tet = true;
-    } else if (hField->get_type_name(1) == "Tensor") {
+    } else if (hfvaltype == "Tensor") {
       tet = true;
       index_based = false;
     } else {
@@ -273,12 +277,12 @@ SetupFEMatrix::execute()
       return;
     }
   } 
-  else if (hField->get_type_name(0) == "HexVolField") 
+  else if (hftn.find("HexVolMesh") != string::npos)
   {
     remark("Input is a 'HexVolField'");
-    if (hField->get_type_name(1) == "int") {
+    if (hfvaltype == "int") {
       hex = true;
-    } else if (hField->get_type_name(1) == "Tensor") {
+    } else if (hfvaltype == "Tensor") {
       hex = true;
       index_based = false;
     } else {
@@ -291,12 +295,12 @@ SetupFEMatrix::execute()
       return;
     }
   }
-  else if (hField->get_type_name(0) == "TriSurfField") 
+  else if (hftn.find("TriSurfField") != string::npos)
   {
     remark("Input is a 'TriSurfField'");
-    if (hField->get_type_name(1) == "int") {
+    if (hfvaltype == "int") {
       tri = true;
-    }  else if (hField->get_type_name(1) == "Tensor") {
+    }  else if (hfvaltype == "Tensor") {
        tri = true;
        index_based = false;
     } else {
@@ -315,41 +319,54 @@ SetupFEMatrix::execute()
     return;
   }
 
-  TVFieldI::handle_type tvfiH;
-  TVFieldT::handle_type tvftH;
+  TVFieldI::handle_type tvfiH(0);
+  TVFieldT::handle_type tvftH(0);
 
-  HVFieldI::handle_type hvfiH;
-  HVFieldT::handle_type hvftH;
+  HVFieldI::handle_type hvfiH(0);
+  HVFieldT::handle_type hvftH(0);
 
-  TSFieldI::handle_type tsfiH;
-  TSFieldT::handle_type tsftH;
+  TSFieldI::handle_type tsfiH(0);
+  TSFieldT::handle_type tsftH(0);
 
   if (tet) 
   {
     if (index_based)
+    {
       tvfiH = dynamic_cast<TVFieldI* >(hField.get_rep());
+    }
     else
+    {
       tvftH = dynamic_cast<TVFieldT* >(hField.get_rep());
+    }
   } 
   else if (hex)
   {
     if (index_based)
+    {
       hvfiH = dynamic_cast<HVFieldI* >(hField.get_rep());
+    }
     else
+    {
       hvftH = dynamic_cast<HVFieldT* >(hField.get_rep());
+    }
   }
   else if (tri)
   {
     if (index_based)
+    {
       tsfiH = dynamic_cast<TSFieldI* >(hField.get_rep());
+    }
     else
+    {
       tsftH = dynamic_cast<TSFieldT* >(hField.get_rep());
+    }
   } 
 
   if (hField->generation == gen_ 
       && hGblMtrx_.get_rep() 
       && lastUseCond_==uiUseCond_.get()
-      && lastUseBasis_==uiUseBasis_.get()) {
+      && lastUseBasis_==uiUseBasis_.get())
+  {
     oportMtrx_->send(hGblMtrx_);
     return;
   }
