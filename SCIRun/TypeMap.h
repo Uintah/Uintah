@@ -41,10 +41,10 @@
 #define SCIRun_TypeMap_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <Core/CCA/SSIDL/sidl_sidl.h>
-#include <vector>
+#include <SCIRun/CCA/TypeMismatchException.h>
+
+// #include <vector>
 #include <map>
-#include <list>
 #include <string>
 
 namespace SCIRun {
@@ -57,162 +57,78 @@ public:
   virtual TypeMap::pointer cloneTypeMap();
   virtual TypeMap::pointer cloneEmpty();
 
-  // get, put methods throw sci.cca.TypeMismatchException which is not handled here!
-  virtual int
-  getInt(const std::string& key, int dflt) { return intMap.get(key, dflt); }
+  virtual int getInt(const std::string& key, int dflt);
 
-  virtual long
-  getLong(const std::string& key, long dflt) { return longMap.get(key, dflt); }
+  virtual long getLong(const std::string& key, long dflt);
 
-  virtual float
-  getFloat(const std::string& key, float dflt) { return floatMap.get(key, dflt); }
+  virtual float getFloat(const std::string& key, float dflt);
 
-  virtual double
-  getDouble(const std::string& key, double dflt) { return doubleMap.get(key, dflt); }
+  virtual double getDouble(const std::string& key, double dflt);
 
-  virtual std::complex<float>
-  getFcomplex(const std::string& key, const std::complex<float>& dflt)
-  {
-    return fcomplexMap.get(key, dflt);
-  }
+  virtual std::complex<float> getFcomplex(const std::string& key, const std::complex<float>& dflt);
 
-  virtual std::complex<double>
-  getDcomplex(const std::string& key, const std::complex<double>& dflt)
-  {
-    return dcomplexMap.get(key, dflt);
-  }
+  virtual std::complex<double> getDcomplex(const std::string& key, const std::complex<double>& dflt);
 
-  virtual std::string
-  getString(const std::string& key, const std::string& dflt) { return stringMap.get(key, dflt); }
+  virtual std::string getString(const std::string& key, const std::string& dflt);
 
-  virtual bool
-  getBool(const std::string& key, bool dflt) { return boolMap.get(key, dflt); }
+  virtual bool getBool(const std::string& key, bool dflt);
 
-  virtual SSIDL::array1<int>
-  getIntArray(const std::string& key, const SSIDL::array1<int>& dflt)
-  {
-    return intArrayMap.get(key, dflt);
-  }
+  virtual SSIDL::array1<int> getIntArray(const std::string& key, const SSIDL::array1<int>& dflt);
 
-  virtual SSIDL::array1<long>
-  getLongArray(const std::string& key, const SSIDL::array1<long>& dflt)
-  {
-    return longArrayMap.get(key, dflt);
-  }
+  virtual SSIDL::array1<long> getLongArray(const std::string& key, const SSIDL::array1<long>& dflt);
 
   virtual SSIDL::array1<float>
-  getFloatArray(const std::string& key, const SSIDL::array1<float>& dflt)
-  {
-    return floatArrayMap.get(key, dflt);
-  }
+  getFloatArray(const std::string& key, const SSIDL::array1<float>& dflt);
 
   virtual SSIDL::array1<double>
-  getDoubleArray(const std::string& key, const SSIDL::array1<double>& dflt)
-  {
-    return doubleArrayMap.get(key, dflt);
-  }
+  getDoubleArray(const std::string& key, const SSIDL::array1<double>& dflt);
 
   virtual SSIDL::array1<std::complex<float> >
-  getFcomplexArray(const std::string& key, const SSIDL::array1<std::complex<float> >& dflt)
-  {
-    return fcomplexArrayMap.get(key, dflt);
-  }
+  getFcomplexArray(const std::string& key, const SSIDL::array1<std::complex<float> >& dflt);
 
   virtual SSIDL::array1<std::complex<double> >
-  getDcomplexArray(const std::string& key, const SSIDL::array1<std::complex<double> >& dflt)
-  {
-    return dcomplexArrayMap.get(key, dflt);
-  }
+  getDcomplexArray(const std::string& key, const SSIDL::array1<std::complex<double> >& dflt);
+
 
   virtual SSIDL::array1<std::string>
-  getStringArray(const std::string& key, const SSIDL::array1<std::string>& dflt)
-  {
-    return stringArrayMap.get(key, dflt);
-  }
+  getStringArray(const std::string& key, const SSIDL::array1<std::string>& dflt);
 
   virtual SSIDL::array1<bool>
-  getBoolArray(const std::string& key, const SSIDL::array1<bool>& dflt)
-  {
-    return boolArrayMap.get(key, dflt);
-  }
+  getBoolArray(const std::string& key, const SSIDL::array1<bool>& dflt);
+
+  virtual void putInt(const std::string& key, int value);
+
+  virtual void putLong(const std::string& key, long value);
+
+  virtual void putFloat(const std::string& key, float value);
+
+  virtual void putDouble(const std::string& key, double value);
+
+  virtual void putFcomplex(const std::string& key, const std::complex<float>& value);
+
+  virtual void putDcomplex(const std::string& key, const std::complex<double>& value);
+
+  virtual void putString(const std::string& key, const std::string& value);
+
+  virtual void putBool(const std::string& key, bool value);
+
+  virtual void putIntArray(const std::string& key, const SSIDL::array1<int>& value);
+
+  virtual void putLongArray(const std::string& key, const SSIDL::array1<long>& value);
+
+  virtual void putFloatArray(const std::string& key, const SSIDL::array1<float>& value);
+
+  virtual void putDoubleArray(const std::string& key, const SSIDL::array1<double>& value);
 
   virtual void
-  putInt(const std::string& key, int value) { return intMap.put(key, value); }
+  putFcomplexArray(const std::string& key, const SSIDL::array1<std::complex<float> >& value);
 
   virtual void
-  putLong(const std::string& key, long value) { return longMap.put(key, value); }
+  putDcomplexArray(const std::string& key, const SSIDL::array1<std::complex<double> >& value);
 
-  virtual void
-  putFloat(const std::string& key, float value) { return floatMap.put(key, value); }
+  virtual void putStringArray(const std::string& key, const SSIDL::array1<std::string>& value);
 
-  virtual void
-  putDouble(const std::string& key, double value) { return doubleMap.put(key, value); }
-
-  virtual void
-  putFcomplex(const std::string& key, const std::complex<float>& value)
-  {
-    return fcomplexMap.put(key, value);
-  }
-
-  virtual void
-  putDcomplex(const std::string& key, const std::complex<double>& value)
-  {
-    return dcomplexMap.put(key, value);
-  }
-
-  virtual void
-  putString(const std::string& key, const std::string& value) { return stringMap.put(key, value); }
-
-  virtual void
-  putBool(const std::string& key, bool value) { return boolMap.put(key, value); }
-
-  virtual void
-  putIntArray(const std::string& key, const SSIDL::array1<int>& value)
-  {
-    return intArrayMap.put(key, value);
-  }
-
-  virtual void
-  putLongArray(const std::string& key, const SSIDL::array1<long>& value)
-  {
-    return longArrayMap.put(key, value);
-  }
-
-  virtual void
-  putFloatArray(const std::string& key, const SSIDL::array1<float>& value)
-  {
-    return floatArrayMap.put(key, value);
-  }
-
-  virtual void
-  putDoubleArray(const std::string& key, const SSIDL::array1<double>& value)
-  {
-    return doubleArrayMap.put(key, value);
-  }
-
-  virtual void
-  putFcomplexArray(const std::string& key, const SSIDL::array1<std::complex<float> >& value)
-  {
-    return fcomplexArrayMap.put(key, value);
-  }
-
-  virtual void
-  putDcomplexArray(const std::string& key, const SSIDL::array1<std::complex<double> >& value)
-  {
-    return dcomplexArrayMap.put(key, value);
-  }
-
-  virtual void
-  putStringArray(const std::string& key, const SSIDL::array1<std::string>& value)
-  {
-    return stringArrayMap.put(key, value);
-  }
-
-  virtual void
-  putBoolArray(const std::string& key, const SSIDL::array1<bool>& value)
-  {
-    return boolArrayMap.put(key, value);
-  }
+  virtual void putBoolArray(const std::string& key, const SSIDL::array1<bool>& value);
 
   virtual void remove(const std::string& key);
 
@@ -242,6 +158,7 @@ private:
     typedef typename std::map<std::string, T>::const_iterator MapConstIter;
     std::map<std::string, T> typeMap;
   };
+
   TypeMapImpl<int> intMap;
   TypeMapImpl<long> longMap;
   TypeMapImpl<float> floatMap;
