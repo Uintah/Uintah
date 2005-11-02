@@ -234,6 +234,8 @@ ChangeFieldDataTypeAlgoCreate::get_compile_info(const TypeDescription *ftd,
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   ftd->fill_compile_info(rval);
+  rval->add_data_include("../src/Core/Geometry/Vector.h");
+  rval->add_data_include("../src/Core/Geometry/Tensor.h");
   return rval;
 }
 
