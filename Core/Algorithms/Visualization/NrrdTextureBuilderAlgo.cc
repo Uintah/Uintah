@@ -50,9 +50,9 @@ nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
 
   // Initial brick size
   int bsize[3];
-  bsize[0] = Min(NextPowerOf2(nx), max_texture_size);
-  bsize[1] = Min(NextPowerOf2(ny), max_texture_size);
-  bsize[2] = Min(NextPowerOf2(nz), max_texture_size);
+  bsize[0] = Min(Pow2(nx), max_texture_size);
+  bsize[1] = Min(Pow2(ny), max_texture_size);
+  bsize[2] = Min(Pow2(nz), max_texture_size);
   
   // Determine brick size here.
 

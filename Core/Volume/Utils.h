@@ -42,14 +42,6 @@ namespace SCIRun {
 #endif
 
 //---------------------------------------------------------------------------
-// Power of 2 functions
-//---------------------------------------------------------------------------
-
-bool IsPowerOf2(uint n);
-uint NextPowerOf2(uint n);
-uint LargestPowerOf2(uint n);
-
-//---------------------------------------------------------------------------
 // Sorting functions
 //---------------------------------------------------------------------------
 
@@ -127,14 +119,6 @@ void Sort(T* val, int n)
 //---------------------------------------------------------------------------
 // Misc Utilities
 //---------------------------------------------------------------------------
-
-template <typename T> inline
-T Clamp(T x, T l, T u)
-{
-  if (x < l) return l;
-  if (x > u) return u;
-  return x;
-}
 
 template <typename T> inline
 int MinIndex(T x, T y, T z)

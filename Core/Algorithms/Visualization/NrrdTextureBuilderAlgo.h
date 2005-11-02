@@ -40,6 +40,7 @@
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Math/MiscMath.h>
 
 namespace SCIRun {
 

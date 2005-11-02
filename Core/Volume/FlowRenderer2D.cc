@@ -661,8 +661,8 @@ FlowRenderer2D::build_flow_tex()
     }
     w_ = w;
     h_ = h;
-    buffer_width_ = NextPowerOf2( w );
-    buffer_height_ = NextPowerOf2( h );
+    buffer_width_ = Pow2( w );
+    buffer_height_ = Pow2( h );
 
     // Array3 is ordered opposite what OpenGL expects, 
     // switch height and width.
@@ -1411,8 +1411,8 @@ void
 FlowRenderer2D::create_pbuffers(int w, int h)
 {
   int psize[2];
-  psize[0] = NextPowerOf2(w);
-  psize[1] = NextPowerOf2(h);
+  psize[0] = Pow2(w);
+  psize[1] = Pow2(h);
   if(!adv_buffer_ && use_pbuffer_) {
      adv_buffer_ = new Pbuffer( psize[0], psize[1], GL_FLOAT, 
                                  32, true, GL_FALSE);

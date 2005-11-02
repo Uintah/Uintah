@@ -230,19 +230,37 @@ inline void SWAP(T& a, T& b) {
   b = temp;
 }
 
-// Returns the next higher number that is a power of 2
+// Fast way to check for power of two
+inline bool IsPowerOf2(unsigned int n)
+{
+  return (n & (n-1)) == 0;
+}
+
+
+
+// Returns a number Greater Than or Equal to dim
+// that is an exact power of 2
 // Used for determining what size of texture to
 // allocate to store an image
 inline unsigned int
 Pow2(const unsigned int dim) {
-  unsigned int val = 1;
-  while (val < dim) { val = val << 1; };
+  if (IsPowerOf2(dim)) return dim;
+  unsigned int val = 4;
+  while (val < dim) val = val << 1;;
   return val;
 }
 
+// Returns a number Less Than or Equal to dim
+// that is an exact power of 2
+inline unsigned int
+LargestPowerOf22(const unsigned int dim) {
+  if (IsPowerOf2(dim)) return dim;
+  return Pow2(dim) >> 1;
+}
 
-// Returns the power of 2 of the next higher number
-// See above function
+
+// Returns the power of 2 of the next higher number thas is a power of 2
+// Log2 of Pow2 funciton above
 inline unsigned int
 Log2(const unsigned int dim) {
   unsigned int log = 0;

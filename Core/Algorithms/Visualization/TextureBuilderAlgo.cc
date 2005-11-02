@@ -58,9 +58,9 @@ texture_build_bricks(vector<TextureBrickHandle>& bricks,
     ShaderProgramARB::max_texture_size_1() :
     ShaderProgramARB::max_texture_size_4();
   // initial brick size
-  brick_size[0] = Min(NextPowerOf2(data_size[0]), max_texture_size);
-  brick_size[1] = Min(NextPowerOf2(data_size[1]), max_texture_size);
-  brick_size[2] = Min(NextPowerOf2(data_size[2]), max_texture_size);
+  brick_size[0] = Min(Pow2(data_size[0]), max_texture_size);
+  brick_size[1] = Min(Pow2(data_size[1]), max_texture_size);
+  brick_size[2] = Min(Pow2(data_size[2]), max_texture_size);
   // number of bytes per brick
   brick_nb = brick_size[0]*brick_size[1]*brick_size[2]*nb[0];
   
@@ -81,15 +81,15 @@ texture_build_bricks(vector<TextureBrickHandle>& bricks,
     sp[1] = data_size[1] - (num_brick[1]-1)*(brick_size[1]-1);
     sp[2] = data_size[2] - (num_brick[2]-1)*(brick_size[2]-1);
     // size of padding
-    brick_pad[0] = NextPowerOf2(sp[0]) - sp[0];
-    brick_pad[1] = NextPowerOf2(sp[1]) - sp[1];
-    brick_pad[2] = NextPowerOf2(sp[2]) - sp[2];
+    brick_pad[0] = Pow2(sp[0]) - sp[0];
+    brick_pad[1] = Pow2(sp[1]) - sp[1];
+    brick_pad[2] = Pow2(sp[2]) - sp[2];
     // sort padding
     int idx[3];
     SortIndex(brick_pad, idx);
     // split largest one
     size[idx[2]] = (int)ceil(size[idx[2]]/2.0);
-    brick_size[idx[2]] = NextPowerOf2(size[idx[2]]);
+    brick_size[idx[2]] = Pow2(size[idx[2]]);
     brick_nb = brick_size[0]*brick_size[1]*brick_size[2]*nb[0];
   }
 
@@ -101,9 +101,9 @@ texture_build_bricks(vector<TextureBrickHandle>& bricks,
   num_brick[1] = (int)ceil((double)(data_size[1]-1)/(brick_size[1]-1));
   num_brick[2] = (int)ceil((double)(data_size[2]-1)/(brick_size[2]-1));
   // padded sizes of last bricks
-  brick_pad[0] = NextPowerOf2(data_size[0] - (num_brick[0]-1)*(brick_size[0]-1));
-  brick_pad[1] = NextPowerOf2(data_size[1] - (num_brick[1]-1)*(brick_size[1]-1));
-  brick_pad[2] = NextPowerOf2(data_size[2] - (num_brick[2]-1)*(brick_size[2]-1));
+  brick_pad[0] = Pow2(data_size[0] - (num_brick[0]-1)*(brick_size[0]-1));
+  brick_pad[1] = Pow2(data_size[1] - (num_brick[1]-1)*(brick_size[1]-1));
+  brick_pad[2] = Pow2(data_size[2] - (num_brick[2]-1)*(brick_size[2]-1));
   // delete previous bricks (if any)
   bricks.clear();
   bricks.reserve(num_brick[0]*num_brick[1]*num_brick[2]);

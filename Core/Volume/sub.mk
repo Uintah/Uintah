@@ -39,7 +39,6 @@ SRCS +=	$(SRCDIR)/CM2Shader.cc \
 	$(SRCDIR)/Texture.cc \
 	$(SRCDIR)/TextureBrick.cc \
 	$(SRCDIR)/TextureRenderer.cc \
-	$(SRCDIR)/Utils.cc \
 	$(SRCDIR)/VideoCardInfo.c \
 	$(SRCDIR)/VolShader.cc \
 	$(SRCDIR)/VolumeRenderer.cc
