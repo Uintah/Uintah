@@ -54,6 +54,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
+#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <iostream>
 #include <algorithm>
@@ -224,11 +225,8 @@ void FaceCuttingPlane::execute(void)
   infield_ = (FieldIPort *) get_iport("Scalar Field");
   icmap_ = (ColorMapIPort *)get_iport("ColorMap");
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
-
+  
   FieldHandle field;
-  if (!infield_->get( field ))
-    return;
-
   if (!(infield_->get( field ) && field.get_rep())) {
     warning("No data on input pipe.");
     return;
@@ -249,7 +247,7 @@ void FaceCuttingPlane::execute(void)
 
   MeshHandle mh = field->mesh();
 
-  if(mh->get_type_name(0) != "LatVolMesh"){
+  if(mh->get_type_name(0) != "LatVolMesh<HexTrilinearLgn<Point> > "){
     error("This module only works with a LatVolMesh based field as input. No action!");
     return;
   }
@@ -278,6 +276,7 @@ void FaceCuttingPlane::execute(void)
     return;
   }
   
+  
   if( trans_ == 0 ) trans_ = scinew Transform();
   algo->set_transform( field, *trans_ );
 
@@ -292,7 +291,6 @@ void FaceCuttingPlane::execute(void)
 
   int old_grid_id = grid_id;
   int cmapmin, cmapmax;
-//   cerr<<"nx, ny, nz = "<<nx<<", "<<ny<<", "<<nz<<endl;
   if(!control_widget_){
     control_widget_=scinew PointWidget(this, &control_lock_, 0.2);
     ddx_ = Vector(diagv.x()/(nx-1),0,0);
@@ -427,8 +425,8 @@ FaceCuttingPlaneAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("CuttingPlaneAlgoT");
-  static const string base_class_name("CuttingPlaneAlgo");
+  static const string template_class_name("FaceCuttingPlaneAlgoT");
+  static const string base_class_name("FaceCuttingPlaneAlgo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
@@ -439,6 +437,8 @@ FaceCuttingPlaneAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  // add namespace
+  rval->add_namespace("Uintah");
   ftd->fill_compile_info(rval);
   return rval;
 }
