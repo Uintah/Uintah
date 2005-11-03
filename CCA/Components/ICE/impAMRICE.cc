@@ -103,9 +103,10 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
   if(d_impICE) {        //  I M P L I C I T
   
     bool recursion = false;
+#if 0
     sched->mapDataWarehouse(Task::ParentOldDW, 0);
     sched->mapDataWarehouse(Task::ParentNewDW, 1);
-    
+#endif
     for(int L = 0; L<maxLevel; L++){
       LevelP level = grid->getLevel(L);
       const PatchSet* patches = level->eachPatch();
@@ -298,12 +299,13 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     t->modifies(lb->vol_fracY_FCLabel, patches);
     t->modifies(lb->vol_fracZ_FCLabel, patches);  
   }
+  t->setType(Task::OncePerProc);
   LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perproc_patches =  
-                        loadBal->createPerProcessorPatchSet(grid);
-  sched->addTask(t, perproc_patches, all_matls);
+  const PatchSet* perprocPatches = loadBal->createPerProcessorPatchSet(grid);
 
-  cout << d_myworld->myrank() << " the perproc_patches are " << *perproc_patches << "\n";
+  sched->addTask(t, perprocPatches, all_matls);
+  cout << d_myworld->myrank() << " proc_patches are " << *perprocPatches << "\n";
+
 }
 /*___________________________________________________________________ 
  Function~  ICE::multiLevelPressureSolve-- 
@@ -318,8 +320,10 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                                   const MaterialSubset* ice_matls,
                                   const MaterialSubset* mpm_matls)
 {
-  cout_doing<<"Doing multiLevelPressureSolve "<<"\t\t\t\t ICE " << endl;
+  // this function will be called exactly once per processor, regardless of the number of patches assigned
+  // get the patches our processor is responsible for
 
+  cout_doing << d_myworld->myrank() << "ICE::MultiLevelPressureSolve on patch " << *patches << endl;
   SchedulerP schedulerP(sched);
   //__________________________________
   // define Matl sets and subsets
@@ -428,6 +432,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                             all_matls);   
 #endif
 
+    // add the patchSubset size as part of the criteria if it is an empty subset.
+    // ( we need the solver to work for hypre consistency), but don't do these so TG will compile
     for(int L = maxLevel-1; L> 0; L--){
       const LevelP coarseLevel = grid->getLevel(L-1);
       scheduleCoarsen_imp_delP(  subsched,  coarseLevel,  d_press_matl, firstIter);
@@ -514,7 +520,8 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     if(restart){
       ParentNewDW->abortTimestep();
       ParentNewDW->restartTimestep();
-      return;
+      //return; - don't return - just break, some operations may require the transfers below to complete
+      break;
     }
   }  // outer iteration loop
   
@@ -537,6 +544,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   subNewDW  = subsched->get_dw(3);
   bool replace = true;
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
+
   ParentNewDW->transferFrom(subNewDW,         // press
                     lb->press_CCLabel,       patches,  d_press_matl, replace);
   ParentNewDW->transferFrom(subNewDW,
@@ -998,9 +1006,11 @@ void ICE::schedule_matrixBC_CFI_coarsePatch(SchedulerP& sched,
     Task* task = scinew Task("schedule_matrixBC_CFI_coarsePatch",
                   this, &ICE::matrixBC_CFI_coarsePatch);
 
-    //    Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gn  = Ghost::None;
     //    task->requires(Task::NewDW, lb->matrix_CFI_weightsLabel,
     //                0, Task::FineLevel, one_matl,Task::NormalDomain, gn, 0);
+
+    task->requires(Task::NewDW, lb->matrixLabel, 0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
 
     task->modifies(lb->matrixLabel);
 
@@ -1061,11 +1071,24 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
         Ghost::GhostType  gn  = Ghost::None;
         //        new_dw->get(A_CFI_weights_fine, 
         //                    lb->matrix_CFI_weightsLabel, 0,finePatch,gn,0);
-        new_dw->get(A_CFI_weights_fine, 
-                    lb->matrixLabel, 0,finePatch,gn,0);
-
         IntVector fl(finePatch->getInteriorCellLowIndex());
         IntVector fh(finePatch->getInteriorCellHighIndex());
+        IntVector cl(fineLevel->mapCellToCoarser(fl));
+        IntVector ch(fineLevel->mapCellToCoarser(fh));
+        
+        cl = Max(cl, coarsePatch->getCellLowIndex());
+        ch = Min(ch, coarsePatch->getCellHighIndex());
+        
+        // get the region of the fine patch that overlaps the coarse patch
+        // we might not have the entire patch in this proc's DW
+        fl = coarseLevel->mapCellToFiner(cl);
+        fh = coarseLevel->mapCellToFiner(ch);
+        if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
+          continue;
+        }
+
+        new_dw->getRegion(A_CFI_weights_fine, lb->matrixLabel, 0,fineLevel,fl, fh);
+
         //        cerr << "fl = " << fl << "\n";
         //        cerr << "fh = " << fh << "\n";
 

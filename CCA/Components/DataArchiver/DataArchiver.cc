@@ -822,8 +822,10 @@ DataArchiver::finalizeTimestep(double time, double delt,
     
       // can't do checkpoints on init timestep....
       if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 || 
-          d_checkpointWalltimeInterval != 0)
+          d_checkpointWalltimeInterval != 0) {
+
         initCheckpoints(sched);
+      }
     }
   }
   
@@ -848,7 +850,6 @@ DataArchiver::finalizeTimestep(double time, double delt,
         t->requires(Task::NewDW, var, matls);
         break; // this might break things later, but we'll leave it for now
       }
-      t->setType(Task::Output);
     }
     
     sched->addTask(t, 0, 0);
@@ -872,7 +873,6 @@ DataArchiver::finalizeTimestep(double time, double delt,
         t->requires(Task::NewDW, var, matls);
         break;
       }
-      t->setType(Task::Output);
     }
     sched->addTask(t, 0, 0);
     
@@ -2158,7 +2158,7 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
       ConsecutiveRangeSet matlsToSave =
         (ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
       saveItem.setMaterials(*iter, matlsToSave, prevMatls_, prevMatlSet_);
-      
+
       if (((*it).matls != ConsecutiveRangeSet::all) &&
           ((*it).matls != matlsToSave)) {
         throw ProblemSetupException((*it).labelName +
@@ -2239,7 +2239,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
      for (liter = mapIter->second.begin(); liter != mapIter->second.end(); liter++) {
        
        saveItem.setMaterials(liter->first, liter->second, prevMatls_, prevMatlSet_);
-       
+
        if (string(var->getName()) == "delT") {
          hasDelT = true;
        }

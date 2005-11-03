@@ -80,9 +80,10 @@ namespace Uintah {
                        const VarLabel* guess,
                        Task::WhichDW which_guess_dw,
                        const HypreSolverParams* params,
+                       const PatchSet* perProcPatches,
                        const HypreInterface& interface = HypreInterfaceNA) :
       HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
-                  b,which_b_dw,guess,which_guess_dw,params,interface),
+                  b,which_b_dw,guess,which_guess_dw,params,perProcPatches,interface),
       _vars(0)
       {
         _exists.resize(SStructNumData);
@@ -160,6 +161,8 @@ namespace Uintah {
     public:
       HyprePatch(const Patch* patch,
                  const int matl);  // Construction from Uintah patch
+      HyprePatch(const int level,
+                 const int matl);  // Construction from Uintah patch
       virtual ~HyprePatch(void);
       const Patch* getPatch(void) const { return _patch; }
       int          getLevel(void) const { return _level; }
@@ -223,6 +226,9 @@ namespace Uintah {
       HyprePatch_CC(const Patch* patch,
                     const int matl) :
         HyprePatch(patch,matl) {}
+      HyprePatch_CC(const int level,
+                    const int matl) :
+        HyprePatch(level, matl) {}
       virtual ~HyprePatch_CC(void) {}
 
       // Grid construction
