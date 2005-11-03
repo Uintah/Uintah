@@ -367,8 +367,7 @@ public:
   {    
     // Needs to match unit_edges in Basis/TriLinearLgn.cc 
     // compare get_nodes order to the basis order
-    int emap[] = {1, 2, 0};
-    basis_.approx_edge(emap[which_edge], div_per_unit, coords); 
+    basis_.approx_edge(which_edge, div_per_unit, coords); 
   }
 
   //! Generate the list of points that make up a sufficiently accurate
