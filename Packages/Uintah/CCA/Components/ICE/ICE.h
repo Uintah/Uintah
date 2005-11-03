@@ -338,6 +338,12 @@ namespace Uintah {
                                         const MaterialSubset* matls,
                                         DataWarehouse*, 
                                         DataWarehouse*);
+                                        
+      void computeEquilPressure_1_matl(const ProcessorGroup*,  
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw, 
+                                       DataWarehouse* new_dw);
       
       void computeVel_FC(const ProcessorGroup*, 
                          const PatchSubset*,                   

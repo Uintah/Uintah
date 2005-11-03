@@ -981,8 +981,15 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   
   cout_doing << d_myworld->myrank() << " ICE::scheduleComputeEquilibrationPressure" 
              << "\t\t\tL-" << levelIndex<< endl;
-  t = scinew Task("ICE::computeEquilibrationPressure",
-            this, &ICE::computeEquilibrationPressure);        
+
+  if(d_sharedState->getNumMatls() == 1){    
+    t = scinew Task("ICE::computeEquilPressure_1_matl",
+              this, &ICE::computeEquilPressure_1_matl); 
+  } else{
+    t = scinew Task("ICE::computeEquilibrationPressure",
+              this, &ICE::computeEquilibrationPressure);
+  }      
+
 
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   Ghost::GhostType  gn = Ghost::None;
@@ -2534,6 +2541,108 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
   }  // patch loop
 }
+ 
+/* _____________________________________________________________________ 
+ Function~  ICE::computeEquilPressure_1_matl--
+ Purpose~   Simple EOS evaluation
+_____________________________________________________________________*/ 
+void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,  
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw, 
+                                      DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << d_myworld->myrank() << " Doing computeEquilPressure_1_matl on patch "<<patch->getID()
+               << "\t\t ICE \tL-" <<L_indx<< endl;
+
+    CCVariable<double> vol_frac, sp_vol_new; 
+    CCVariable<double> speedSound, f_theta, kappa;
+    CCVariable<double> press_eq, sumKappa, sum_imp_delP;
+    constCCVariable<double> Temp,rho_CC, sp_vol_CC, cv, gamma;   
+    StaticArray<CCVariable<double> > rho_micro(1);
+    
+    Ghost::GhostType  gn = Ghost::None;
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);   
+    int indx = ice_matl->getDWIndex();
+    
+    //__________________________________
+    old_dw->get(Temp,      lb->temp_CCLabel,      indx,patch, gn,0);
+    old_dw->get(rho_CC,    lb->rho_CCLabel,       indx,patch, gn,0);
+    old_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch, gn,0);
+    new_dw->get(cv,        lb->specific_heatLabel,indx,patch, gn,0);
+    new_dw->get(gamma,     lb->gammaLabel,        indx,patch, gn,0);
+       
+    new_dw->allocateTemporary(rho_micro[0],  patch);
+
+    new_dw->transferFrom(old_dw, lb->rho_CCLabel, patches, matls);  
+    new_dw->allocateAndPut(press_eq,     lb->press_equil_CCLabel, 0,  patch);
+    new_dw->allocateAndPut(sumKappa,     lb->sumKappaLabel,       0,  patch);
+    new_dw->allocateAndPut(sum_imp_delP, lb->sum_imp_delPLabel,   0,  patch);
+    new_dw->allocateAndPut(kappa,        lb->compressiblityLabel,indx,patch);
+    new_dw->allocateAndPut(vol_frac,     lb->vol_frac_CCLabel,   indx,patch);    
+    new_dw->allocateAndPut(sp_vol_new,   lb->sp_vol_CCLabel,     indx,patch);     
+    new_dw->allocateAndPut(f_theta,      lb->f_theta_CCLabel,    indx,patch);
+    new_dw->allocateAndPut(speedSound,   lb->speedSound_CCLabel, indx,patch);       
+    sum_imp_delP.initialize(0.0);       
+
+    //---- P R I N T   D A T A ------   
+    if (switchDebug_equil_press) {
+      ostringstream desc;
+      desc << "TOP_equilibration_patch_" << patch->getID();
+      printData( indx, patch, 1, desc.str(), "temp",      Temp);
+      printData( indx, patch, 1, desc.str(), "sp_vol_CC", sp_vol_CC);
+      printData( indx, patch, 1, desc.str(), "cv",        cv);
+      printData( indx, patch, 1, desc.str(), "gamma",     gamma);
+    }
+
+    //______________________________________________________________________
+    //  Main loop
+    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
+      IntVector c = *iter;
+      vol_frac[c]      = 1.0;
+      rho_micro[0][c]  = rho_CC[c];
+      sp_vol_new[c]    = 1.0/rho_CC[c];
+      double dp_drho, dp_de, c_2;
+      //__________________________________
+      // evaluate EOS
+      ice_matl->getEOS()->computePressEOS(rho_micro[0][c],gamma[c],
+                                          cv[c], Temp[c], press_eq[c],
+                                          dp_drho, dp_de);
+                                          
+      c_2 = dp_drho + dp_de * press_eq[c]/(rho_micro[0][c] * rho_micro[0][c]);
+      speedSound[c] = sqrt(c_2);
+      
+      //  compute f_theta  
+      kappa[c]    = sp_vol_new[c]/(speedSound[c]*speedSound[c]);
+      sumKappa[c] = kappa[c];
+      f_theta[c]  = 1.0;
+    }
+    //__________________________________
+    // - apply Boundary conditions
+    StaticArray<constCCVariable<double> > placeHolder(0);
+    preprocess_CustomBCs("EqPress",old_dw, new_dw, lb,  patch, 
+                          999,d_customBC_var_basket);
+    
+    setBC(press_eq,   rho_micro, placeHolder, d_surroundingMatl_indx,
+          "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, 
+          d_customBC_var_basket);
+          
+    delete_CustomBCs(d_customBC_var_basket);      
+
+    //---- P R I N T   D A T A ------   
+    if (switchDebug_equil_press) {
+      ostringstream desc;
+      desc << "BOT_equilibration_patch_" << patch->getID();
+      printData( 0,    patch, 1, desc.str(), "Press_CC_equil", press_eq);
+    }
+  }  // patch loop
+} 
+ 
  
 /* _____________________________________________________________________
  Function~  ICE::computeTempFace--
