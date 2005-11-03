@@ -42,7 +42,6 @@
 #define SCIRun_Framework_CCAException_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <Core/CCA/SSIDL/sidl_sidl.h>
 #include <string>
 
 namespace SCIRun {
@@ -56,6 +55,8 @@ namespace SCIRun {
 class CCAException : public sci::cca::CCAException
 {
 public:
+    //typedef sci::cca::CCAException::pointer CCAExceptionPtr;
+
     CCAException(const std::string &msg,
                  sci::cca::CCAExceptionType type = sci::cca::Nonstandard);
     virtual ~CCAException();
@@ -81,7 +82,7 @@ public:
     // void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)
     virtual void add(const std::string &filename, int lineno, const std::string &methodname);
 
-private:
+protected:
     mutable std::string message;
     mutable sci::cca::CCAExceptionType type;
 };
