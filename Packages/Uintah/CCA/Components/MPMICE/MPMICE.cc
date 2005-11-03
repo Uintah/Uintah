@@ -74,7 +74,12 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   }
 
   // Don't do AMRICE with MPMICE for now...
-  d_ice      = scinew ICE(myworld, false);
+  if (d_doAMR) {
+    d_ice      = scinew AMRICE(myworld);
+  }
+  else {
+    d_ice      = scinew ICE(myworld, false);
+  }
 
   d_SMALL_NUM = d_ice->d_SMALL_NUM;
   d_TINY_RHO  = d_ice->d_TINY_RHO;
@@ -281,16 +286,14 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
   // Only do scheduling on level 0 for lockstep AMR
   if(nsteps == 1 && inlevel->getIndex() > 0)
     return;
-  // Note - this will probably not work for AMR ICE...
+
   // If we have a finer level, then assume that we are doing multilevel MPMICE
   // Otherwise, it is plain-ole MPMICE
   do_mlmpmice = false;
   if(inlevel->hasFinerLevel())
     do_mlmpmice = true;
-  const LevelP& ice_level = inlevel;
-  const LevelP& mpm_level = do_mlmpmice? inlevel->getFinerLevel() : inlevel;
+  const LevelP& mpm_level = do_mlmpmice? inlevel->getGrid()->getLevel(inlevel->getGrid()->numLevels()-1) : inlevel;
 
-  const PatchSet* ice_patches = ice_level->eachPatch();
   const PatchSet* mpm_patches = mpm_level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
@@ -303,15 +306,19 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
   double AMR_subCycleVar = double(step)/double(nsteps);
   cout_doing << "---------------------------------------------------------Level ";
   if(do_mlmpmice){
-    cout_doing << ice_level->getIndex() << " (ICE) " << mpm_level->getIndex() << " (MPM)";
+    cout_doing << inlevel->getIndex() << " (ICE) " << mpm_level->getIndex() << " (MPM)";
   } else {
-    cout_doing << ice_level->getIndex();
+    cout_doing << inlevel->getIndex();
   }
   cout_doing << "  step " << step << endl;
 
  //__________________________________
  // Scheduling
-  d_ice->scheduleComputeThermoTransportProperties(sched, ice_level, ice_matls);
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* ice_patches = ice_level->eachPatch();
+    d_ice->scheduleComputeThermoTransportProperties(sched, ice_level, ice_matls);
+  }
    
   d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
   // Fracture
@@ -327,77 +334,103 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl, 
                                                                   mpm_matls);
 
+  // do coarsens in reverse order, and before the other tasks
   if(do_mlmpmice){
-    scheduleCoarsenCC_0(                      sched, ice_patches, one_matl, 
-                                                                  mpm_matls);
+    for (int l = inlevel->getGrid()->numLevels() - 1; l >= 0; l--) {
+      const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+      const PatchSet* ice_patches = ice_level->eachPatch();
+
+      scheduleCoarsenCC_0(                      sched, ice_patches, one_matl, 
+                                                                    mpm_matls);
+    }
   }
 
-  scheduleComputePressure(                    sched, ice_patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  press_matl,
-                                                                  all_matls);
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* ice_patches = ice_level->eachPatch();
+    
+    scheduleComputePressure(                    sched, ice_patches, ice_matls_sub,
+                                                                    mpm_matls_sub,
+                                                                    press_matl,
+                                                                    all_matls);
+    
   
-  d_ice->scheduleComputeTempFC(               sched, ice_patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  all_matls);
-  d_ice->scheduleComputeModelSources(         sched, ice_level,   all_matls);
+    d_ice->scheduleComputeTempFC(               sched, ice_patches, ice_matls_sub,
+                                                                    mpm_matls_sub,
+                                                                    all_matls);
+    d_ice->scheduleComputeModelSources(         sched, ice_level,   all_matls);
 
-  d_ice->scheduleUpdateVolumeFraction(        sched, ice_level,   press_matl,
-                                                                  all_matls);
+    d_ice->scheduleUpdateVolumeFraction(        sched, ice_level,   press_matl,
+                                                                    all_matls);
   
-  d_ice->scheduleComputeVel_FC(               sched, ice_patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  press_matl, 
-                                                                  all_matls, 
-                                                                  false);
+    d_ice->scheduleComputeVel_FC(               sched, ice_patches, ice_matls_sub,
+                                                                    mpm_matls_sub,
+                                                                    press_matl, 
+                                                                    all_matls, 
+                                                                    false);
                                                                
-  d_ice->scheduleAddExchangeContributionToFCVel(sched, ice_patches, ice_matls_sub,
-                                                                  all_matls,
-                                                                  false);  
-  
-  if(d_ice->d_impICE) {        //  I M P L I C I T 
-    d_ice->scheduleSetupRHS(                  sched, ice_patches, one_matl, 
-                                                                  all_matls,
-                                                                  false,
-                                                                  "computes");
+    d_ice->scheduleAddExchangeContributionToFCVel(sched, ice_patches, ice_matls_sub,
+                                                                      all_matls,
+                                                                      false);  
+  }
+  if(d_ice->d_impICE) {        //  I M P L I C I T, won't work with AMR yet
+    // we should use the AMR multi-level pressure solve
+    for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+      const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+      const PatchSet* ice_patches = ice_level->eachPatch();
+      d_ice->scheduleSetupRHS(                  sched, ice_patches, one_matl, 
+                                                                    all_matls,
+                                                                    false,
+                                                                    "computes");
                                                                   
-    d_ice->scheduleImplicitPressureSolve(     sched, ice_level,   ice_patches,
-                                                                  one_matl, 
-                                                                  press_matl,
-                                                                  ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  all_matls);
+      d_ice->scheduleImplicitPressureSolve(     sched, ice_level,   ice_patches,
+                                                                    one_matl, 
+                                                                    press_matl,
+                                                                    ice_matls_sub,
+                                                                    mpm_matls_sub,
+                                                                    all_matls);
                                                            
-    d_ice->scheduleComputeDel_P(              sched, ice_level,   ice_patches, 
-                                                                  one_matl, 
-                                                                  press_matl,
-                                                                  all_matls);
+      d_ice->scheduleComputeDel_P(              sched, ice_level,   ice_patches, 
+                                                                    one_matl, 
+                                                                    press_matl,
+                                                                    all_matls);
+    }
   }                           //  IMPLICIT AND EXPLICIT
 
                                                                   
   if(!(d_ice->d_impICE)){       //  E X P L I C I T 
-    d_ice->scheduleComputeDelPressAndUpdatePressCC(sched, ice_patches, press_matl,
-                                                                  ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  all_matls);
+    for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+      const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+      const PatchSet* ice_patches = ice_level->eachPatch();
+
+      d_ice->scheduleComputeDelPressAndUpdatePressCC(sched, ice_patches, press_matl,
+                                                                         ice_matls_sub,
+                                                                         mpm_matls_sub,
+                                                                         all_matls);
+    }
   } 
   
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
 
-  scheduleInterpolateMassBurnFractionToNC(    sched, ice_patches, mpm_matls);
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* ice_patches = ice_level->eachPatch();
 
-  d_ice->scheduleComputePressFC(              sched, ice_patches, press_matl,
-                                                                  all_matls);
-  d_ice->scheduleAccumulateMomentumSourceSinks(sched, ice_patches, press_matl,
-                                                                  ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  all_matls);
+    scheduleInterpolateMassBurnFractionToNC(    sched, ice_patches, mpm_matls);
+
+    d_ice->scheduleComputePressFC(              sched, ice_patches, press_matl,
+                                                                    all_matls);
+    d_ice->scheduleAccumulateMomentumSourceSinks(sched, ice_patches, press_matl,
+                                                                     ice_matls_sub,
+                                                                     mpm_matls_sub,
+                                                                     all_matls);
                                                                   
-  d_ice->scheduleAccumulateEnergySourceSinks( sched, ice_patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  press_matl,
-                                                                  all_matls);
+    d_ice->scheduleAccumulateEnergySourceSinks( sched, ice_patches, ice_matls_sub,
+                                                                    mpm_matls_sub,
+                                                                    press_matl,
+                                                                    all_matls);
+  }
 
   if(!d_rigidMPM){
     if(do_mlmpmice){
@@ -430,28 +463,39 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
   scheduleComputeLagrangianValuesMPM(         sched, mpm_patches, one_matl,
                                                                   mpm_matls); 
 
+  // do coarsens in reverse order, and before the other tasks
   if(do_mlmpmice){
-    scheduleCoarsenLagrangianValuesMPM(       sched, ice_patches, one_matl,
-                                                                  mpm_matls);
+    for (int l = inlevel->getGrid()->numLevels() - 1; l >= 0; l--) {
+      const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+      const PatchSet* ice_patches = ice_level->eachPatch();
+
+      scheduleCoarsenLagrangianValuesMPM(       sched, ice_patches, one_matl,
+                                                                    mpm_matls);
+    }
   }
 
-  d_ice->scheduleComputeLagrangianValues(     sched, ice_patches, ice_matls);
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* ice_patches = ice_level->eachPatch();
 
-  d_ice->scheduleAddExchangeToMomentumAndEnergy(sched, ice_patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  press_matl,
-                                                                  all_matls); 
+    d_ice->scheduleComputeLagrangianValues(     sched, ice_patches, ice_matls);
 
-  d_ice->scheduleComputeLagrangianSpecificVolume(sched, ice_patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  press_matl,
-                                                                  all_matls);
+    d_ice->scheduleAddExchangeToMomentumAndEnergy(sched, ice_patches, ice_matls_sub,
+                                                                      mpm_matls_sub,
+                                                                      press_matl,
+                                                                      all_matls); 
+
+    d_ice->scheduleComputeLagrangianSpecificVolume(sched, ice_patches, ice_matls_sub,
+                                                                       mpm_matls_sub,
+                                                                       press_matl,
+                                                                       all_matls);
                                                                   
-  d_ice->scheduleComputeLagrangian_Transported_Vars(sched, ice_patches, ice_matls);
+    d_ice->scheduleComputeLagrangian_Transported_Vars(sched, ice_patches, ice_matls);
 
 
-  scheduleComputeCCVelAndTempRates(           sched, ice_patches, mpm_matls);
+    scheduleComputeCCVelAndTempRates(           sched, ice_patches, mpm_matls);
 
+  }
   if(do_mlmpmice){
     scheduleRefineCC(                         sched, mpm_patches, mpm_matls);
   }
@@ -472,26 +516,36 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
   d_mpm->scheduleUpdateCrackFront(           sched, mpm_patches, mpm_matls);
 
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
-  d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, ice_level,ice_matls,maxMach_PSS);
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* ice_patches = ice_level->eachPatch();
+    
+    d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, ice_level,ice_matls,maxMach_PSS);
                                    
-  d_ice->scheduleAdvectAndAdvanceInTime(     sched, ice_patches, AMR_subCycleVar,
-                                                                 ice_matls_sub,
-                                                                 mpm_matls_sub,
-                                                                 press_matl,
-                                                                 ice_matls);
+    d_ice->scheduleAdvectAndAdvanceInTime(     sched, ice_patches, AMR_subCycleVar,
+                                                                   ice_matls_sub,
+                                                                   mpm_matls_sub,
+                                                                   press_matl,
+                                                                   ice_matls);
                                                                   
-  d_ice->scheduleTestConservation(           sched, ice_patches, ice_matls_sub,
-                                                                 all_matls); 
+    d_ice->scheduleTestConservation(           sched, ice_patches, ice_matls_sub,
+                                                                   all_matls); 
+  }
 
   if(d_ice->d_canAddICEMaterial){
-    //  This checks to see if the model on THIS patch says that it's
-    //  time to add a new material
-    d_ice->scheduleCheckNeedAddMaterial(sched, ice_level,   all_matls);
+    for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+      const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+
+      //  This checks to see if the model on THIS patch says that it's
+      //  time to add a new material
+      d_ice->scheduleCheckNeedAddMaterial(sched, ice_level,   all_matls);
                                                                                 
-    //  This one checks to see if the model on ANY patch says that it's
-    //  time to add a new material
-    d_ice->scheduleSetNeedAddMaterialFlag(sched, ice_level,   all_matls);
+      //  This one checks to see if the model on ANY patch says that it's
+      //  time to add a new material
+      d_ice->scheduleSetNeedAddMaterialFlag(sched, ice_level,   all_matls);
+    }
   }
+
   if(d_mpm->flags->d_canAddMPMMaterial){
     //  This checks to see if the model on THIS patch says that it's
     //  time to add a new material
@@ -658,6 +712,10 @@ void MPMICE::scheduleCoarsenCC_0(SchedulerP& sched,
                                     const MaterialSubset* one_matl,
                                     const MaterialSet* mpm_matls)
 {
+  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
+                          getLevel(patches)->getGrid()->numLevels()))
+    return;
+
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleCoarsenCC_0" << endl;
 #if 0
@@ -734,6 +792,10 @@ void MPMICE::scheduleCoarsenLagrangianValuesMPM(SchedulerP& sched,
                                    const MaterialSubset* one_matl,
                                    const MaterialSet* mpm_matls)
 {
+  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
+                          getLevel(patches)->getGrid()->numLevels()))
+    return;
+
   if (cout_doing.active())
     cout_doing << "MPMICE:scheduleCoarsenLagrangianValues mpm_matls" << endl;
 
@@ -756,9 +818,9 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* mpm_matls)
 {
-//  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-//                                getLevel(patches)->getGrid()->numLevels()))
-//    return;
+  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
+                          getLevel(patches)->getGrid()->numLevels()))
+    return;
 
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleComputeCCVelAndTempRates" << endl;
@@ -893,6 +955,9 @@ void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
                                            const PatchSet* patches,
                                             const MaterialSet* mpm_matls)
 {
+  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
+                          getLevel(patches)->getGrid()->numLevels()))
+    return;
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleInterpolateMassBurnFractionToNC" << endl;
 
@@ -2470,33 +2535,33 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      int step, 
                                      int nsteps)
 {
-  //d_ice->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
+  d_ice->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
   d_mpm->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
 }
   
 void MPMICE::scheduleRefine (const PatchSet* patches, 
                               SchedulerP& sched)
 {
-  //d_ice->scheduleRefine(patches, sched);
+  d_ice->scheduleRefine(patches, sched);
   d_mpm->scheduleRefine(patches, sched);
 }
     
 void MPMICE::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
-  //d_ice->scheduleCoarsen(coarseLevel, sched);
+  d_ice->scheduleCoarsen(coarseLevel, sched);
   d_mpm->scheduleCoarsen(coarseLevel, sched);
 }
 
 void MPMICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched)
 {
-  //d_ice->scheduleInitialErrorEstimate(coarseLevel, sched);
+  d_ice->scheduleInitialErrorEstimate(coarseLevel, sched);
   d_mpm->scheduleInitialErrorEstimate(coarseLevel, sched);
 }
                                                
 void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                    SchedulerP& sched)
 {
-  //d_ice->scheduleErrorEstimate(coarseLevel, sched);
+  d_ice->scheduleErrorEstimate(coarseLevel, sched);
   d_mpm->scheduleErrorEstimate(coarseLevel, sched);
 }
 
@@ -2901,6 +2966,7 @@ void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
       coarsePatch->getFineLevelPatches(finePatches);
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
+  
         IntVector fl(finePatch->getInteriorCellLowIndex());
         IntVector fh(finePatch->getInteriorCellHighIndex());
         IntVector cl(fineLevel->mapCellToCoarser(fl));
@@ -2980,6 +3046,7 @@ void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
       coarsePatch->getFineLevelPatches(finePatches);
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
+  
         IntVector fl(finePatch->getInteriorCellLowIndex());
         IntVector fh(finePatch->getInteriorCellHighIndex());
         IntVector cl(fineLevel->mapCellToCoarser(fl));
@@ -2987,11 +3054,12 @@ void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
     
         cl = Max(cl, coarsePatch->getCellLowIndex());
         ch = Min(ch, coarsePatch->getCellHighIndex());
-    
+
         // get the region of the fine patch that overlaps the coarse patch
         // we might not have the entire patch in this proc's DW
         fl = coarseLevel->mapCellToFiner(cl);
         fh = coarseLevel->mapCellToFiner(ch);
+    
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }

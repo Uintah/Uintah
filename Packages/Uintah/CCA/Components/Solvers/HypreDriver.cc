@@ -178,7 +178,8 @@ namespace Uintah {
                  const VarLabel* b, Task::WhichDW which_b_dw,
                  const VarLabel* guess,
                  Task::WhichDW which_guess_dw,
-                 const HypreSolverParams* params)
+                 const HypreSolverParams* params,
+                 const PatchSet* perProcPatches)
   {
     switch (interface) {
     case HypreStruct: 
@@ -186,14 +187,14 @@ namespace Uintah {
         return new HypreDriverStruct
           (level, matlset, A, which_A_dw,
            x, modifies_x, b, which_b_dw, guess, 
-           which_guess_dw, params, interface);
+           which_guess_dw, params, perProcPatches, interface);
       }
     case HypreSStruct:
       {
         return new HypreDriverSStruct
           (level, matlset, A, which_A_dw,
            x, modifies_x, b, which_b_dw, guess, 
-           which_guess_dw, params, interface);
+           which_guess_dw, params, perProcPatches, interface);
       }
     default:
       throw InternalError("Unsupported Hypre Interface: "+interface,

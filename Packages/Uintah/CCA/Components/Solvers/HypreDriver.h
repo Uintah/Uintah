@@ -63,6 +63,7 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
@@ -91,13 +92,15 @@ namespace Uintah {
                 const VarLabel* guess,
                 Task::WhichDW which_guess_dw,
                 const HypreSolverParams* params,
+                const PatchSet* perProcPatches,
                 const HypreInterface& interface = HypreInterfaceNA) :
       _level(level), _matlset(matlset),
       _A_label(A), _which_A_dw(which_A_dw),
       _X_label(x), _modifies_x(modifies_x),
       _B_label(b), _which_b_dw(which_b_dw),
       _guess_label(guess), _which_guess_dw(which_guess_dw),
-      _params(params), _interface(interface)
+      _params(params), _interface(interface),
+      _perProcPatches(perProcPatches)
       {}    
     virtual ~HypreDriver(void) {}
 
@@ -180,6 +183,7 @@ namespace Uintah {
     DataWarehouse*           _guess_dw;
 
     HypreInterface           _interface;   // Hypre interface currently in use
+    const PatchSet*          _perProcPatches;
     bool                     _requiresPar; // Solver requires ParCSR format
 
     // Hypre ParCSR interface objects. Can be used by Struct or
@@ -215,7 +219,8 @@ namespace Uintah {
                                  const VarLabel* b, Task::WhichDW which_b_dw,
                                  const VarLabel* guess,
                                  Task::WhichDW which_guess_dw,
-                                 const HypreSolverParams* params);
+                                 const HypreSolverParams* params,
+                                 const PatchSet* perProcPatches);
 
   HypreInterface& operator ++ (HypreInterface& interface);
   ostream&        operator << (ostream& os, const HypreInterface& i);
@@ -277,8 +282,8 @@ namespace Uintah {
         double tstart = SCIRun::Time::currentSeconds();
         int matl = matls->get(m);
         cout_dbg << "Doing m = " << m << "/" << matls->size()
-             << "  matl = " << matl << "\n";
-
+                 << "  matl = " << matl << "\n";
+        
         // Initialize the preconditioner
         cout_dbg << "Creating preconditioner" << "\n";
         PrecondType precondType = getPrecondType(_params->precondTitle);
@@ -292,14 +297,14 @@ namespace Uintah {
         SolverType solverType = getSolverType(_params->solverTitle);
         cout_dbg << "solverType = " << solverType << "\n";
         HypreSolverBase* solver = newHypreSolver(solverType,this,precond);
-
+        
         // Set up the preconditioner and tie it to solver
         if (precond) {
           cout_dbg << "Setting up preconditioner" << "\n";
           precond->setSolver(solver);
           precond->setup();
         }
-
+        
         // Construct Hypre linear system for the specific variable type
         // and Hypre interface
         _requiresPar = solver->requiresPar();
@@ -307,7 +312,7 @@ namespace Uintah {
         makeLinearSystem<Types>(matl);
         printMatrix("output_A");
         printRHS("output_b");
-
+        
         //-----------------------------------------------------------
         // Solve the linear system
         //-----------------------------------------------------------
@@ -323,9 +328,9 @@ namespace Uintah {
         hypre_FinalizeTiming(timeSolve);
         hypre_ClearTiming();
         timeSolve = 0; // to eliminate unused warning
-
+        
         double solve_dt = SCIRun::Time::currentSeconds()-solve_start;
-
+        
         //-----------------------------------------------------------
         // Check if converged, print solve statistics
         //-----------------------------------------------------------
@@ -338,8 +343,8 @@ namespace Uintah {
           if (_params->restart){
             if(pg->myrank() == 0)
               cout_dbg << "AMRSolver not converged in " << numIterations 
-                   << " iterations, final residual= " << finalResNorm
-                   << ", requesting smaller timestep\n";
+                       << " iterations, final residual= " << finalResNorm
+                       << ", requesting smaller timestep\n";
             //new_dw->abortTimestep();
             //new_dw->restartTimestep();
           } else {
@@ -351,11 +356,11 @@ namespace Uintah {
                                      _params->tolerance,__FILE__,__LINE__);
           }
         } // if (finalResNorm is ok)
-
-        /* Get the solution x values back into Uintah */
+        
+          /* Get the solution x values back into Uintah */
         cout_dbg << "Calling getSolution" << "\n";
         getSolution<Types>(matl);
-
+        
         /*-----------------------------------------------------------
          * Print the solution and other info
          *-----------------------------------------------------------*/
@@ -363,24 +368,24 @@ namespace Uintah {
         printSolution("output_x1");
         cout_dbg << "Iterations = " << numIterations << "\n";
         cout_dbg << "Final Relative Residual Norm = "
-             << finalResNorm << "\n";
+                 << finalResNorm << "\n";
         cout_dbg << "" << "\n";
-      
+        
         double dt = SCIRun::Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
           cout_dbg << "Solve of " << _X_label->getName() 
-               << " on level " << _level->getIndex()
-               << " completed in " << dt 
-               << " seconds (solve only: " << solve_dt 
-               << " seconds, " << numIterations
-               << " iterations, residual=" << finalResNorm << ")\n";
+                   << " on level " << _level->getIndex()
+                   << " completed in " << dt 
+                   << " seconds (solve only: " << solve_dt 
+                   << " seconds, " << numIterations
+                   << " iterations, residual=" << finalResNorm << ")\n";
         }
-
+          
         delete solver;
         delete precond;
       } // for m (matls loop)
       cout_doing << "HypreDriver::solve() END" << "\n";
-    } // end solve() for
+    } // end solve()
 
   template<class Types>
     void

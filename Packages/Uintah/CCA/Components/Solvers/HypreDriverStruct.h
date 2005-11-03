@@ -78,9 +78,10 @@ namespace Uintah {
                       const VarLabel* guess,
                       Task::WhichDW which_guess_dw,
                       const HypreSolverParams* params,
+                      const PatchSet* perProcPatches,
                       const HypreInterface& interface = HypreInterfaceNA) :
       HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
-                  b,which_b_dw,guess,which_guess_dw,params,interface) {}
+                  b,which_b_dw,guess,which_guess_dw,params, perProcPatches, interface) {}
     virtual ~HypreDriverStruct(void);
 
     // Data member modifyable access
