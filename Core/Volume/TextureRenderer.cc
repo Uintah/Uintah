@@ -555,11 +555,14 @@ namespace SCIRun {
     CHECK_OPENGL_ERROR("VolumeRenderer::load_texture end");
   }
 
-  void
-  TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
-                                 vector<int>& poly, bool normal, bool fog,
+ void
+  TextureRenderer::draw_polygons(vector<float>& vertex, 
+				 vector<float>& texcoord,
+                                 vector<int>& poly, 
+				 bool normal, bool fog,
                                  Pbuffer* buffer,
-				 vector<int> *mask, FragmentProgramARB* shader)
+				 vector<int> *mask, 
+				 FragmentProgramARB* shader)
 
   {
     di_->polycount += poly.size();

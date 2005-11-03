@@ -139,6 +139,86 @@ namespace SCIRun {
 // "MUL c.xyz, c.xyzz, n.w; \n"
 */
 
+#define VOL_GRAD_COMPUTE_2_1 \
+"PARAM dir = program.local[4]; \n" \
+"TEMP grad; \n" \
+"TEMP r; \n" \
+"TEMP p; \n" \
+"TEMP dirx; \n" \
+"TEMP diry; \n" \
+"TEMP dirz; \n" \
+"MOV v, v.xxxx; \n" \
+"MOV grad, 0; \n" /* new code */ \
+"MOV dirx.x, dir.x; \n" \
+"MOV diry.y, dir.y; \n" \
+"MOV dirz.z, dir.z; \n" \
+"ADD_SAT p, fragment.texcoord[0], dirx; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"ADD grad.x, r.x, grad.x; \n" \
+"SUB_SAT p, fragment.texcoord[0], dirx; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"SUB grad.x, r.x, grad.x; \n" \
+"ADD_SAT p, fragment.texcoord[0], diry; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"ADD grad.y, r.x, grad.y; \n" \
+"SUB_SAT p, fragment.texcoord[0], diry; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"SUB grad.y, r.x, grad.y; \n" \
+"ADD_SAT p, fragment.texcoord[0], dirz; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"ADD grad.z, r.x, grad.z; \n" \
+"SUB_SAT p, fragment.texcoord[0], dirz; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"SUB grad.z, r.x, grad.z; \n" \
+"DP3 r, grad, grad; \n" \
+"RSQ p, r.x; \n" \
+"DST p, r, p; \n" \
+"MUL p.y, p, 1.75; \n" \
+"MUL n.xyz, grad, 1.0; \n#" // The # at the end of the line is a cheap way of disabling the next instruction
+
+
+#define VOL_GRAD_COMPUTE_2_4 \
+"PARAM dir = program.local[4]; \n" \
+"TEMP grad; \n" \
+"TEMP r; \n" \
+"TEMP p; \n" \
+"TEMP dirx; \n" \
+"TEMP diry; \n" \
+"TEMP dirz; \n" \
+"MOV v, v.wwww; \n" \
+"MOV grad, 0; \n" /* new code */ \
+"MOV dirx.x, dir.x; \n" \
+"MOV diry.y, dir.y; \n" \
+"MOV dirz.z, dir.z; \n" \
+"ADD_SAT p, fragment.texcoord[0], dirx; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"ADD grad.x, r.w, grad.x; \n" \
+"SUB_SAT p, fragment.texcoord[0], dirx; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"SUB grad.x, r.w, grad.x; \n" \
+"ADD_SAT p, fragment.texcoord[0], diry; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"ADD grad.y, r.w, grad.y; \n" \
+"SUB_SAT p, fragment.texcoord[0], diry; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"SUB grad.y, r.w, grad.y; \n" \
+"ADD_SAT p, fragment.texcoord[0], dirz; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"ADD grad.z, r.w, grad.z; \n" \
+"SUB_SAT p, fragment.texcoord[0], dirz; \n" \
+"TEX r, p, texture[0], 3D; \n" \
+"SUB grad.z, r.w, grad.z; \n" \
+"DP3 r, grad, grad; \n" \
+"RSQ p, r.x; \n" \
+"DST p, r, p; \n" \
+"MUL p.y, p, 1.75; \n" \
+"MUL n.xyz, grad, 1.0; \n#" // The # at the end of the line is a cheap way of disabling the next instruction
+
+
+#define VOL_COMPUTED_GRADIENT_LOOKUP \
+"MOV v.y, p.y; \n"
+
+
 #define VOL_FRAGMENT_BLEND_HEAD \
 "TEMP n;"
 
@@ -231,15 +311,26 @@ VolShader::emit(string& s)
   } else { // dim_ == 2
     if(shading_) {
       z << VOL_VLUP_2_1;
+      if (vsize_ == 1) {
+	z << VOL_GRAD_COMPUTE_2_1;
+      }
+
       z << VOL_LIT_BODY;
+      if (vsize_ == 1) {
+	z << VOL_COMPUTED_GRADIENT_LOOKUP;
+      } else {
+	z << VOL_GLUP_2_4;
+      }
+
       if (num_cmaps_ > 1) {
-	z << VOL_GLUP_2_1;
 	z << VOL_TFLUP_MASK_HEAD;
 	for (int n = 0; n < num_cmaps_; ++n)
 	  z << VOL_TFLUP_2_1_MASK;
       } else {
-	z << VOL_GLUP_2_4;
-	z << VOL_TFLUP_2_4;
+	if (vsize_ == 1)
+	  z << VOL_TFLUP_2_1;
+	else
+	  z << VOL_TFLUP_2_4;
       }
       z << VOL_LIT_END;
     } else { // !shading_
@@ -280,7 +371,7 @@ VolShader::emit(string& s)
   z << VOL_TAIL;
 
   s = z.str();
-  //  std::cerr << s << std::endl;
+  //std::cerr << s << std::endl;
   return false;
 }
 

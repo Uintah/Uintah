@@ -242,15 +242,17 @@ VolumeVisualizer::execute()
       cmap2_.clear();
       c2 = false;
     }
-    else
-    {
-      if (texture_->nc() == 1)
-      {
-        warning("ColorMap2 requires gradient magnitude in the texture.");
-        cmap2_.clear();
-        c2 = false;
-      }
-    }
+    // Section disabled because we can now copmpute gradient on GPU
+    //    else
+    //    {
+    
+    //      if (texture_->nc() == 1)
+    //      {
+    //        warning("ColorMap2 requires gradient magnitude in the texture.");
+    //        cmap2_.clear();
+    //        c2 = false;
+    //      }
+    //  }
   }
 
   if (!c1 && !c2)
