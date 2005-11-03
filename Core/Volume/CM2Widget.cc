@@ -1661,25 +1661,17 @@ PaintCM2Widget::splat(Array3<float> &data, double width, int x0, int y0) {
   for (int y = y0-wid; y <= y0+wid; ++y)
     if (y >= 0 && y < data.dim2())
       if (flat) {
-        data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r, 
-			       (float)0.0, (float)1.0);
-        data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g, 
-			       (float)0.0, (float)1.0);
-        data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b, 
-			       (float)0.0, (float)1.0);
-        data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 
-			       (float)0.0, (float)1.0);
+        data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r, 0.0f, 1.0f);
+        data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g, 0.0f, 1.0f);
+        data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b, 0.0f, 1.0f);
+        data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a, 0.0f, 1.0f);
       } else {
         a = float(alpha_*(wid-fabs(float(y-y0)))/wid);
         oma = 1.0 - a;
-        data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r*a, 
-			       (float)0.0, (float)1.0);
-        data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g*a, 
-			       (float)0.0, (float)1.0);
-        data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b*a, 
-			       (float)0.0, (float)1.0);
-        data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a,   
-			       (float)0.0, (float)1.0);
+        data(x0, y, 0) = Clamp(oma * data(x0, y, 0) + r*a, 0.0f, 1.0f);
+        data(x0, y, 1) = Clamp(oma * data(x0, y, 1) + g*a, 0.0f, 1.0f);
+        data(x0, y, 2) = Clamp(oma * data(x0, y, 2) + b*a, 0.0f, 1.0f);
+        data(x0, y, 3) = Clamp(oma * data(x0, y, 3) + a,   0.0f, 1.0f);
       }  
 }
 
@@ -2061,129 +2053,52 @@ ColorMapCM2Widget::rasterize(CM2ShaderFactory& factory,
 void
 ColorMapCM2Widget::rasterize(Array3<float>& array)
 {
-  if(!onState_) return;
-  if(array.dim3() != 4) return;
+  if(!onState_ || array.dim3() != 4 || type_ != CM2_RECTANGLE_1D) return;
   normalize();
   int size_x = array.dim2();
   int size_y = array.dim1();
   float left = left_x_;
   float right = left_x_+width_;
+  float middle = left_x_+offset_*width_;
   float bottom = left_y_;
   float top = left_y_+height_;
 
-  int lb = int(bottom*size_y);
-  int le = int(top*size_y);
-  int ilb = Clamp(lb, 0, size_y-1);
-  int ile = Clamp(le, 0, size_y-1);
-//  int la = int((mBall.y*mSize.y+bottom)*size.y);
-  int rb = int(left*size_x);
-  int re = int(right*size_x);
-  int ra = int((offset_*width_+left)*size_x);
-  int jrb = Clamp(rb, 0, size_x-1);
-  int jre = Clamp(re, 0, size_x-1);
-  int jra = Clamp(ra, 0, size_x-1);
-  switch(type_) {
-    case CM2_RECTANGLE_ELLIPSOID: {
-      for(int i=ilb; i<=ile; i++) {
-        for(int j=jrb; j<jre; j++) {
-          float x = j/(float)size_x;
-          float y = i/(float)size_y;
-          x -= (left+right)/2;
-          y -= (bottom+top)/2;
-          x *= height_/width_;
-          float w = 1-2*sqrt(x*x+y*y)/size_y;
-          if (w < 0) w = 0;
-          float a = alpha_*w;
-          float r = faux_ ? color_.r()*w : color_.r();
-          float g = faux_ ? color_.r()*w : color_.g();
-          float b = faux_ ? color_.r()*w : color_.b();
-          array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
-          array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
-          array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
-          array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
-        }
-      }
-    } break;
+  int y1 = Clamp(int(bottom*size_y), 0, size_y-1);
+  int y2 = Clamp(int(top*size_y), 0, size_y-1);
 
-    case CM2_RECTANGLE_1D: {
-      if (shadeType_ == CM2_SHADE_FLAT) 
-      {
-        for(int i=ilb; i<=ile; i++) {
-          for(int j=jrb; j<jre; j++) {
-            array(i,j,0) = Clamp((float)color_.r(), 0.0f, 1.0f);
-            array(i,j,1) = Clamp((float)color_.g(), 0.0f, 1.0f);
-            array(i,j,2) = Clamp((float)color_.b(), 0.0f, 1.0f);
-            array(i,j,3) = Clamp(alpha_, 0.0f, 1.0f);
-          }
-        }
-      } else if (faux_) {
-        float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
-        float dr = ra <= rb+1 ? 0.0 : color_.r()/(ra-rb-1);
-        float dg = ra <= rb+1 ? 0.0 : color_.g()/(ra-rb-1);
-        float db = ra <= rb+1 ? 0.0 : color_.b()/(ra-rb-1);
-        float a = ra <= rb+1 ? alpha_ : alpha_ - abs(ra-jra)*da;
-        float r = ra <= rb+1 ? color_.r() : color_.r() - abs(ra-jra)*dr;
-        float g = ra <= rb+1 ? color_.g() : color_.g() - abs(ra-jra)*dg;
-        float b = ra <= rb+1 ? color_.b() : color_.b() - abs(ra-jra)*db;
-        for(int j=jra-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
-          for(int i=ilb; i<=ile; i++) {
-          
-            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
-            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
-            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
-            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
-          }
-        }
-        da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
-        dr = ra < re-1 ? color_.r()/(re-ra-1) : 0.0;
-        dg = ra < re-1 ? color_.g()/(re-ra-1) : 0.0;
-        db = ra < re-1 ? color_.b()/(re-ra-1) : 0.0;
-        a = alpha_ - abs(ra-jra)*da;
-        r = color_.r() - abs(ra-jra)*dr;
-        g = color_.g() - abs(ra-jra)*dg;
-        b = color_.b() - abs(ra-jra)*db;
-        for(int j=jra; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg) {
-          for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
-            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
-            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
-            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
-          }
-        }
-      } else { // !faux
-        float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
-        float a = ra <= rb+1 ? alpha_ : alpha_ - abs(ra-jra)*da;
-        for(int j=jra-1; j>=jrb; j--, a-=da) {
-          for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + 
-                                 (float)color_.r(), 0.0f, 1.0f);
-            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + 
-                                 (float)color_.g(), 0.0f, 1.0f);
-            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + 
-                                 (float)color_.b(), 0.0f, 1.0f);
-            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + 
-                                 a, 0.0f, 1.0f);
-          }
-        }
-        da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
-        a = alpha_ - abs(ra-jra)*da;
-        for(int j=jra; j<=jre; j++, a-=da) {
-          for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + 
-                                 (float)color_.r(), 0.0f, 1.0f);
-            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + 
-                                 (float)color_.g(), 0.0f, 1.0f);
-            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + 
-                                 (float)color_.b(), 0.0f, 1.0f);
-            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + 
-                                 a, 0.0f, 1.0f);
-          }
-        }
-      }  // end !faux
-    } break;
+  int x1 = Clamp(int(left*size_x), 0, size_x-1);
+  int x2 = Clamp(int(right*size_x), 0, size_x-1);
+  int xm = Clamp(int(middle*size_x), 0, size_x-1);
+  
+  float cx = float(colormap_->resolution()/2.0)/float(xm-x1);
 
-  default:
-    break;
+  const float *rgba = colormap_->get_rgba();
+  for (int y = y1; y <= y2; ++y) {
+    float c = 0.0;    
+    for (int x = x1; x <= xm; ++x) {
+      int coff = int(c)*4;
+      float a = rgba[coff+3];
+      array(y,x,0) = Clamp(array(y,x,0)*(1.0f-a) + rgba[coff+0], 0.0f, 1.0f);
+      array(y,x,1) = Clamp(array(y,x,1)*(1.0f-a) + rgba[coff+1], 0.0f, 1.0f);
+      array(y,x,2) = Clamp(array(y,x,2)*(1.0f-a) + rgba[coff+2], 0.0f, 1.0f);
+      array(y,x,3) = Clamp(array(y,x,3)*(1.0f-a) + rgba[coff+3], 0.0f, 1.0f);
+      c += cx;
+    }
+  }
+
+
+  cx = float(colormap_->resolution()/2.0)/float(x2-(xm+1));
+  for (int y = y1; y <= y2; ++y) {
+    float c = colormap_->resolution()/2.0;    
+    for (int x = xm+1; x <= x2; ++x) {
+      int coff = int(c)*4;
+      float a = rgba[coff+3];
+      array(y,x,0) = Clamp(array(y,x,0)*(1.0f-a) + rgba[coff+0], 0.0f, 1.0f);
+      array(y,x,1) = Clamp(array(y,x,1)*(1.0f-a) + rgba[coff+1], 0.0f, 1.0f);
+      array(y,x,2) = Clamp(array(y,x,2)*(1.0f-a) + rgba[coff+2], 0.0f, 1.0f);
+      array(y,x,3) = Clamp(array(y,x,3)*(1.0f-a) + rgba[coff+3], 0.0f, 1.0f);
+      c += cx;
+    }
   }
   un_normalize();
 }
