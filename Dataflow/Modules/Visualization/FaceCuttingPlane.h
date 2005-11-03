@@ -43,7 +43,8 @@ FaceCuttingPlaneAlgoT<FIELD>::get_bounds_and_dimensions( FieldHandle fld,
                                                   int& nx, int& ny, 
                                                   int& nz, BBox& bbox)
 {
-  if( fld->mesh()->get_type_name(0) != "LatVolMesh" ) return false;
+  if( fld->mesh()->get_type_name(0) != "LatVolMesh<HexTrilinearLgn<Point> > " )
+    return false;
 
   FIELD *field = (FIELD *)fld.get_rep();
   typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
@@ -63,7 +64,7 @@ FaceCuttingPlaneAlgoT<FIELD>::get_value(FieldHandle fld, Point p, double& val)
 {
 
   FIELD *lvf = (FIELD *)(fld.get_rep());
-  typename FIELD::mesh_type *mesh = lvf->get_typed_mesh();
+  typename FIELD::mesh_type *mesh = lvf->get_typed_mesh().get_rep();
 
   typename FIELD::mesh_type::Node::index_type node;
   if( mesh->locate(node, p) ){
@@ -78,7 +79,7 @@ template<class FIELD>
 void
 FaceCuttingPlaneAlgoT<FIELD>::set_transform(FieldHandle fld, Transform& t)
 {
-  if( fld->mesh()->get_type_name(0) != "LatVolMesh" ) return 0;
+ FIELD *field = (FIELD *)fld.get_rep();
   typename FIELD::mesh_handle_type mh = field->get_typed_mesh();
   
   mh->transform(t);
