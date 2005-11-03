@@ -3449,6 +3449,15 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       } 
     }  //matl loop
     delete advector;
+    
+    //__________________________________
+    //  add delP to press_equil
+    //  AMR:  hit the extra cells, BC aren't set an you need a valid pressure there
+    // THIS COULD BE TROUBLE
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) { 
+      IntVector c = *iter;
+      press_CC[c] = press_equil[c];
+    }
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
