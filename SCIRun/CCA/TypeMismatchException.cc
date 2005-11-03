@@ -39,3 +39,5 @@ TypeMismatchException::TypeMismatchException(const std::string& msg, sci::cca::T
 TypeMismatchException::~TypeMismatchException()
 {
 }
+
+}
