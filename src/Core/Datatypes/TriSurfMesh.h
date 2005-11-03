@@ -60,6 +60,7 @@
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <list>
 #include <set>
 #include <sgi_stl_warnings_on.h>
 
@@ -428,7 +429,8 @@ private:
   int prev(int i) { return ((i%3)==0) ? (i+2) : (i-1); }
 
   vector<Point>		points_;
-  vector<under_type>    edges_;
+  vector<under_type>    edges_;  // edges->halfedge map
+  vector<under_type>    halfedge_to_edge_;  // halfedge->edge map
   vector<under_type>	faces_;
   vector<under_type>	edge_neighbors_;
   vector<Vector>	normals_;   //! normalized per node normal.
@@ -497,6 +499,20 @@ typedef map<pair<int, int>, int, edgecompare> EdgeMapType;
 
 #endif
 
+#ifdef HAVE_HASH_MAP
+
+#ifdef __ECC
+typedef hash_map<pair<int, int>, list<int>, edgehash> EdgeMapType2;
+#else
+typedef hash_map<pair<int, int>, list<int>, edgehash, edgecompare> EdgeMapType2;
+#endif
+
+#else
+
+typedef map<pair<int, int>, list<int>, edgecompare> EdgeMapType2;
+
+#endif
+
 };
 
 using std::set;
@@ -557,6 +573,7 @@ template <class Basis>
 TriSurfMesh<Basis>::TriSurfMesh(const TriSurfMesh &copy)
   : points_(copy.points_),
     edges_(copy.edges_),
+    halfedge_to_edge_(copy.halfedge_to_edge_),
     faces_(copy.faces_),
     edge_neighbors_(copy.edge_neighbors_),
     normals_(copy.normals_),
@@ -761,25 +778,9 @@ TriSurfMesh<Basis>::get_edges(typename Edge::array_type &array,
   
   array.clear();
 
-  unsigned int i;
-  for (i=0; i < 3; i++)
-  {
-    const int a = idx * 3 + i;
-    const int b = a - a % 3 + (a+1) % 3;
-    int j = edges_.size()-1;
-    for (; j >= 0; j--)
-    {
-      const int c = edges_[j];
-      const int d = c - c % 3 + (c+1) % 3;
-      if (faces_[a] == faces_[c] && faces_[b] == faces_[d] ||
-	  faces_[a] == faces_[d] && faces_[b] == faces_[c])
-      {
-	array.push_back(j);
-	break;
-      }
-    }
-  }
-  ASSERT(array.size() == 3);
+  array.push_back(halfedge_to_edge_[idx * 3 + 0]);
+  array.push_back(halfedge_to_edge_[idx * 3 + 1]);
+  array.push_back(halfedge_to_edge_[idx * 3 + 2]);
 }
 
 
@@ -1504,7 +1505,8 @@ TriSurfMesh<Basis>::compute_edges()
     return;
   }
     
-  EdgeMapType edge_map;
+  EdgeMapType2 edge_map;
+  //edge_map.reserve(faces_.size());
 
   int i;
   for (i=faces_.size()-1; i >= 0; i--)
@@ -1518,16 +1520,24 @@ TriSurfMesh<Basis>::compute_edges()
     if (n0 > n1) { tmp = n0; n0 = n1; n1 = tmp; }
 
     pair<int, int> nodes(n0, n1);
-    edge_map[nodes] = i;
+    edge_map[nodes].push_front(i);
   }
 
-  typename EdgeMapType::iterator itr;
-
+  typename EdgeMapType2::iterator itr;
+  edges_.reserve(edge_map.size());
+  halfedge_to_edge_.resize(faces_.size());
   for (itr = edge_map.begin(); itr != edge_map.end(); ++itr)
   {
-    edges_.push_back((*itr).second);
+    edges_.push_back((*itr).second.front());
+
+    list<int>::iterator litr = (*itr).second.begin();
+    while (litr != (*itr).second.end())
+    {
+      halfedge_to_edge_[*litr] = edges_.size()-1;
+      ++litr;
+    }
   }
-  
+
   synchronized_ |= EDGES_E;
   edge_lock_.unlock();
 }
@@ -1736,6 +1746,7 @@ TriSurfMesh<Basis>::walk_face_orient(typename Face::index_type face,
 	synchronized_ &= ~EDGES_E;
 	synchronized_ &= ~EDGE_NEIGHBORS_E;
 	edges_.clear();
+	halfedge_to_edge_.clear();
 	compute_edges();
 	compute_edge_neighbors(0.0);
       } 
