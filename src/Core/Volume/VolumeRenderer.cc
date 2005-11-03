@@ -240,14 +240,14 @@ VolumeRenderer::draw_volume()
   const int nb0 = bricks[0]->nb(0);
   const bool use_cmap1 = cmap1_.get_rep();
   const bool use_cmap2 =
-    cmap2_.size() && nc == 2 && ShaderProgramARB::shaders_supported();
+    cmap2_.size() && /*nc == 2 && */ShaderProgramARB::shaders_supported();
   if(!use_cmap1 && !use_cmap2)
   {
     tex_->unlock_bricks();
     return;
   }
 
-  const bool use_shading = shading_ && nb0 == 4;
+  const bool use_shading = true;//shading_ && nb0 == 4;
   const GLboolean use_fog = glIsEnabled(GL_FOG);
   // glGetBooleanv(GL_FOG, &use_fog);
   GLfloat light_pos[4];
@@ -475,6 +475,7 @@ VolumeRenderer::draw_volume()
     size.clear();
     b->compute_polygons(view_ray, dt, vertex, texcoord, size);
     b->mask_polygons(size, vertex, texcoord, mask, planes_);
+    shader->setLocalParam(4, 1.0/b->nx(), 1.0/b->ny(), 1.0/b->nz(), 0.0);
     draw_polygons(vertex, texcoord, size, false, use_fog,
                   blend_num_bits_ > 8 ? blend_buffer_ : 0,
 		  &mask, shader);
