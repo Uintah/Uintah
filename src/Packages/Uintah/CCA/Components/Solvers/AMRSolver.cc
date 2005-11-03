@@ -144,13 +144,15 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     interface = HypreSStruct;
   } else {
     /* A uniform grid */
-    interface = HypreStruct;
+    interface = HypreSStruct;
   }
 
+  LoadBalancer* lb = sched->getLoadBalancer();
+  const PatchSet* perProcPatches = lb->createPerProcessorPatchSet(level->getGrid());
   HypreDriver* that = newHypreDriver
     (interface,level.get_rep(), matls, A, which_A_dw,
      x, modifies_x, b, which_b_dw, guess, 
-     which_guess_dw, dparams);
+     which_guess_dw, dparams, perProcPatches);
   Handle<HypreDriver > handle = that;
 
   switch (domType) {
@@ -220,10 +222,9 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
 
   } // end switch (domType)
 
-  LoadBalancer* lb = sched->getLoadBalancer();
   for (int i = 0; i < level->getGrid()->numLevels(); i++) {
     const LevelP l = level->getGrid()->getLevel(i);
-    const PatchSubset* subset = lb->createPerProcessorPatchSet(l)->getUnion();
+    const PatchSubset* subset = l->eachPatch()->getUnion();
     task->requires(which_A_dw, A, subset, Ghost::None, 0);
     if (modifies_x) {
       task->modifies(x, subset, 0);
@@ -238,7 +239,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     
     task->requires(which_b_dw, b, subset, Ghost::None, 0);
   }
-  const PatchSet* perProcPatches = lb->createPerProcessorPatchSet(level->getGrid());
+  task->setType(Task::OncePerProc);
 
   sched->addTask(task, perProcPatches, matls);
 

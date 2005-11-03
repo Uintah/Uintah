@@ -24,20 +24,6 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-// This guy is bad news for SCIRun type applications that make use of
-// multiple Grids that all access the same DataArchive whose patches
-// all have hard coded IDs.
-// 
-// This variable should be unique to each Grid allocated by SCIRun,
-// however, it is used in a static function (getByID) that has no
-// knowledge of which grid a patch could be in.  Fortunately getByID
-// is not used by SCIRun functions and should never be used anywhere
-// where you could have multiple Grids that access a DataArchive.
-// 
-// The point I'm trying to make, is this global variable can get you
-// into trouble when you use Patches from the DataArchive instead of
-// the simulation.
-// 
 static AtomicCounter* ids = 0;
 static Mutex ids_init("ID init");
 
@@ -1224,12 +1210,7 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
 
     IntVector old_l(region_low), old_h(region_high);
 
-    //region_low = Max(neighbor->getInteriorLowIndex(basis), region_low);
-    //region_high = Min(neighbor->getInteriorHighIndex(basis), region_high);
-    if (basis == YFaceBased) {
-      //cout << "     Yfaced : " << getID() << " (neighbor " << neighbor->getID() << ") " << old_l << " " << old_h << "  new  " << region_low << " " << region_high << endl;
-    }
-    return;
+    //return;
 
     // the intersection should be the same in 2 dimensions as the region_low and region_high range
     // adjust the third dimension
@@ -1264,14 +1245,11 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
             region_low[dim] = int_low[dim];
             region_high[dim] = int_high[dim];
             // have the normal pruning done when we get to otherdim
-            //cout <<  "     BAD INTERSECTION:  " << int_low << " " << int_high << " region: " << region_low << " " << region_high << " old: " << old_l << " " << old_h << endl;
-        
             continue;
           }
           else {
             region_low[other_diff_dim] = int_low[other_diff_dim];
             region_high[other_diff_dim] = int_high[other_diff_dim];
-            //cout <<  "     BAD INTERSECTION:  " << int_low << " " << int_high << " region: " << region_low << " " << region_high << " old: " << old_l << " " << old_h << endl;
             // do normal pruning now
           }
         }

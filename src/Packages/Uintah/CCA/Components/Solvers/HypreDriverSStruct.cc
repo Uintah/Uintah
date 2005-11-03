@@ -18,6 +18,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/MiscMath.h>
@@ -51,7 +52,22 @@ HypreDriverSStruct::HyprePatch::HyprePatch(const Patch* patch,
   _high(patch->getInteriorCellHighIndex()-IntVector(1,1,1))
   // Note: we need to subtract (1,1,1) from high because our loops are
   // cell = low; cell <= high.
-{}
+{
+}
+
+HypreDriverSStruct::HyprePatch::HyprePatch(const int level,
+                                           const int matl) :
+  //___________________________________________________________________
+  // HypreDriverSStruct::HyprePatch bogus patch constructor
+  //   for when there are no patches on a level for a processor
+  //   this is a one celled "patch"
+  //___________________________________________________________________
+  _patch(0), _matl(matl),
+  _level(level),
+  _low(IntVector(-9*(level+1),-9,-9)),
+  _high(IntVector(-9*(level+1),-9,-9))
+{
+}
 
 HypreDriverSStruct::HyprePatch::~HyprePatch(void)
   //___________________________________________________________________
@@ -182,31 +198,43 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   // Set up the grid
   //==================================================================
-  cout_dbg << "Setting up the SStruct grid" << "\n";
+  cout_dbg << _pg->myrank() << " Setting up the SStruct grid" << "\n";
   // Create an empty grid in 3 dimensions with # parts = numLevels.
   const int numDims = 3;
   const int numLevels = _level->getGrid()->numLevels();
   HYPRE_SStructGridCreate(_pg->getComm(), numDims, numLevels, &_grid);
-  cout_dbg << "Constructed empty grid, numDims " << numDims
+  cout_dbg << _pg->myrank() << " Constructed empty grid, numDims " << numDims
        << " numParts " << numLevels << "\n";
   _exists[SStructGrid] = SStructCreated;
   _vars = new HYPRE_SStructVariable[CC_NUM_VARS];
   _vars[CC_VAR] = HYPRE_SSTRUCT_VARIABLE_CELL; // We use only cell centered var
 
+  // if my processor doesn't have patches on a given level, then we need to create
+  // some bogus (irrelevent inexpensive) data so hypre doesn't crash.
+  vector<bool> useBogusLevelData(numLevels, true);
+
   // Loop over the Uintah patches that this proc owns
   for (int p = 0 ; p < _patches->size(); p++) {
     HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
     hpatch.addToGrid(_grid,_vars);
+    useBogusLevelData[_patches->get(p)->getLevel()->getIndex()] = false;
   }
+  for (int l = 0; l < numLevels; l++) {
+    if (useBogusLevelData[l]) {
+      HyprePatch_CC hpatch(l, matl);
+      hpatch.addToGrid(_grid, _vars);
+    }
+  }
+
   HYPRE_SStructGridAssemble(_grid);
   _exists[SStructGrid] = SStructAssembled;
 
   //==================================================================
   // Set up the stencil
   //==================================================================
-  cout_dbg << "Setting up the SStruct stencil" << "\n";
+  cout_dbg << _pg->myrank() << " Setting up the SStruct stencil" << "\n";
   // Prepare index offsets and stencil size
-  cout_dbg << "Symmetric = " << _params->symmetric << "\n";
+  cout_dbg << _pg->myrank() << " Symmetric = " << _params->symmetric << "\n";
   if (_params->symmetric) {
     // Unlike HypreSolver.cc, match the ordering of stencil
     // elements in Hypre and Stencil7. The original HypreSolver
@@ -245,14 +273,14 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   // Set up the SStruct unstructured connection graph _graph
   //==================================================================
-  cout_dbg << "Setting up the SStruct graph" << "\n";
+  cout_doing << _pg->myrank() << " Setting up the SStruct graph" << "\n";
   // Create an empty graph
   HYPRE_SStructGraphCreate(_pg->getComm(), _grid, &_graph);
   _exists[SStructGraph] = SStructCreated;
   // For ParCSR-requiring solvers like AMG
   if (_requiresPar) {
 #if HAVE_HYPRE_1_9
-    cout_dbg << "graph object type set to HYPRE_PARCSR" << "\n";
+    cout_dbg << _pg->myrank() << " graph object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructGraphSetObjectType(_graph, HYPRE_PARCSR);
 #else
     ostringstream msg;
@@ -267,10 +295,10 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //  each patch at every level to the graph.
   //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
   printLine("*",50);
-  cout_dbg << "Graph structured (interior) connections" << "\n";
+  cout_dbg << _pg->myrank() << " Graph structured (interior) connections" << "\n";
   printLine("*",50);
   for (int level = 0; level < numLevels; level++) {
-    cout_dbg << "  Initializing graph stencil at level " << level
+    cout_dbg << _pg->myrank() << "   Initializing graph stencil at level " << level
          << " of " << numLevels << "\n";
     HYPRE_SStructGraphSetStencil(_graph, level, CC_VAR, _stencil);
   }
@@ -283,8 +311,9 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // above this patch.
   //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
   printLine("*",50);
-  cout_dbg << "Graph unstructured connections" << "\n";
+  cout_dbg << _pg->myrank() << " Graph unstructured connections" << "\n";
   printLine("*",50);
+  cout_doing << _pg->myrank() << " Starting makeconnections\n";
 
   // Add Uintah patches that this proc owns
   for (int p = 0; p < _patches->size(); p++) {
@@ -293,7 +322,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
     int level = hpatch.getLevel();
     printLine("$",40);
-    cout_dbg << "Processing Patch" << "\n" << hpatch << "\n";
+    cout_dbg << _pg->myrank() << " Processing Patch" << "\n" << hpatch << "\n";
     patch->printPatchBCs(cout_dbg);
     printLine("$",40);
     
@@ -301,7 +330,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
       // If not at coarsest level, add fine-to-coarse connections at all
       // C/F interface faces.
       printLine("=",50);
-      cout_dbg << "Building fine-to-coarse connections" << "\n";
+      cout_dbg << _pg->myrank() << " Building fine-to-coarse connections" << "\n";
       printLine("=",50);
       hpatch.makeConnections(_graph,DoingFineToCoarse);
     } // end if (level > 0) and (patch has a CFI)
@@ -313,22 +342,23 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
       // the C/F interfaces of all next-finer level patches inscribed
       // in this patch.
       printLine("=",50);
-      cout_dbg << "Building coarse-to-fine connections" << "\n";
+      cout_dbg << _pg->myrank() << " Building coarse-to-fine connections" << "\n";
       printLine("=",50);
       hpatch.makeConnections(_graph,DoingCoarseToFine);
     } // end if (level < numLevels-1)
   } // end for p (patches)
   
   // Assemble the graph
+  cout_doing << _pg->myrank() << " Starting graph assemble\n";
   HYPRE_SStructGraphAssemble(_graph);
   _exists[SStructGraph] = SStructAssembled;
-  cout_dbg << "Assembled graph, nUVentries = "
+  cout_dbg << _pg->myrank() << " Assembled graph, nUVentries = "
        << hypre_SStructGraphNUVEntries(_graph) << "\n";
 
   //==================================================================
   // Set up the Struct left-hand-side matrix _HA
   //==================================================================
-  cout_dbg << "Setting up the SStruct matrix _HA" << "\n";
+  cout_dbg << _pg->myrank() << " Setting up the SStruct matrix _HA" << "\n";
   // Create and initialize an empty SStruct matrix
   HYPRE_SStructMatrixCreate(_pg->getComm(), _graph, &_HA);
   _exists[SStructA] = SStructCreated;
@@ -349,7 +379,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
 
   // For solvers that require ParCSR format
   if (_requiresPar) {
-    cout_dbg << "HA object type set to HYPRE_PARCSR" << "\n";
+    cout_dbg << _pg->myrank() << " HA object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructMatrixSetObjectType(_HA, HYPRE_PARCSR);
   }
   HYPRE_SStructMatrixInitialize(_HA);
@@ -360,7 +390,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // each patch at every level to the matrix.
   //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
   printLine("*",50);
-  cout_dbg << "Matrix structured (interior) entries" << "\n";
+  cout_doing << _pg->myrank() << " Matrix structured (interior) entries" << "\n";
   printLine("*",50);
   for (int p = 0 ; p < _patches->size(); p++) {
     // Read Uintah patch info into our data structure, set Uintah pointers
@@ -369,13 +399,21 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     hpatch.makeInteriorEquations(_HA, _A_dw, _A_label,
                                  _stencilSize, _params->symmetric);
   } // end for p (patches)
+  for (int l = 0; l < numLevels; l++) {
+    if (useBogusLevelData[l]) {
+      HyprePatch_CC hpatch(l, matl);
+      hpatch.makeInteriorEquations(_HA, _A_dw, _A_label, 
+                                   _stencilSize, _params->symmetric);
+    }
+  }
+
 
   //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
   // Add/update unstructured equation entries at C/F interfaces 
   // each patch at every level to the matrix.
   //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
   printLine("*",50);
-  cout_dbg << "Matrix unstructured (C/F) entries" << "\n";
+  cout_doing << _pg->myrank() << " Matrix unstructured (C/F) entries" << "\n";
   printLine("*",50);
 
   // Add Uintah patches that this proc owns
@@ -385,14 +423,14 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
     int level = hpatch.getLevel();
     printLine("$",40);
-    cout_dbg << "Processing Patch" << "\n" << hpatch << "\n";
+    cout_dbg << _pg->myrank() << " Processing Patch" << "\n" << hpatch << "\n";
     printLine("$",40);
     
     if ((level > 0) && (patch->hasCoarseFineInterfaceFace())) {
       // If not at coarsest level, add fine-to-coarse connections at all
       // C/F interface faces.
       printLine("=",50);
-      cout_dbg << "Building fine-to-coarse entries" << "\n";
+      cout_dbg << _pg->myrank() << " Building fine-to-coarse entries" << "\n";
       printLine("=",50);
       patch->printPatchBCs(cout_dbg);
       hpatch.makeConnections(_HA, _A_dw, _A_label,
@@ -406,7 +444,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
       // the C/F interfaces of all next-finer level patches inscribed
       // in this patch.
       printLine("=",50);
-      cout_dbg << "Building coarse-to-fine entries" << "\n";
+      cout_dbg << _pg->myrank() << " Building coarse-to-fine entries" << "\n";
       printLine("=",50);
       hpatch.makeConnections(_HA, _A_dw, _A_label,
                              _stencilSize, DoingCoarseToFine);
@@ -414,18 +452,19 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   } // end for p (patches)
 
   // This is an all-proc collective call
+  cout_doing << _pg->myrank() << " Starting matrixassemble\n";
   HYPRE_SStructMatrixAssemble(_HA);
   _exists[SStructA] = SStructAssembled;
 
   //==================================================================
   // Set up the Struct right-hand-side vector _HB
   //==================================================================
-  cout_dbg << "Setting up the SStruct RHS vector _HB" << "\n";
+  cout_dbg << _pg->myrank() << " Setting up the SStruct RHS vector _HB" << "\n";
   HYPRE_SStructVectorCreate(_pg->getComm(), _grid, &_HB);
   _exists[SStructB] = SStructCreated;
   // For solvers that require ParCSR format
   if (_requiresPar) {
-    cout_dbg << "HB object type set to HYPRE_PARCSR" << "\n";
+    cout_dbg << _pg->myrank() << " HB object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructVectorSetObjectType(_HB, HYPRE_PARCSR);
   }
   HYPRE_SStructVectorInitialize(_HB);
@@ -434,7 +473,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // Set RHS vector entries at the interior of
   // each patch at every level to the matrix.
   printLine("*",50);
-  cout_dbg << "Set RHS vector entries" << "\n";
+  cout_dbg << _pg->myrank() << " Set RHS vector entries" << "\n";
   printLine("*",50);
   for (int p = 0 ; p < _patches->size(); p++) {
     // Read Uintah patch info into our data structure, set Uintah pointers
@@ -442,6 +481,12 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     HyprePatch_CC hpatch(patch,matl); // Read Uintah patch data
     hpatch.makeInteriorVector(_HB, _b_dw, _B_label);
   } // end for p (patches)
+  for (int l = 0; l < numLevels; l++) {
+    if (useBogusLevelData[l]) {
+      HyprePatch_CC hpatch(l, matl);
+      hpatch.makeInteriorVectorZero(_HB, _b_dw, _B_label);
+    }
+  }
 
   HYPRE_SStructVectorAssemble(_HB);
   _exists[SStructB] = SStructAssembled;
@@ -449,12 +494,12 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   // Set up the Struct solution vector _HX
   //==================================================================
-  cout_dbg << "Setting up the SStruct solution vector _HX" << "\n";
+  cout_dbg << _pg->myrank() << " Setting up the SStruct solution vector _HX" << "\n";
   HYPRE_SStructVectorCreate(_pg->getComm(), _grid, &_HX);
   _exists[SStructX] = SStructCreated;
   // For solvers that require ParCSR format
   if (_requiresPar) {
-    cout_dbg << "HX object type set to HYPRE_PARCSR" << "\n";
+    cout_dbg << _pg->myrank() << " HX object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructVectorSetObjectType(_HX, HYPRE_PARCSR);
   }
   HYPRE_SStructVectorInitialize(_HX);
@@ -463,27 +508,39 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   // Set solution (initial guess) vector entries at the interior of
   // each patch at every level to the matrix.
   printLine("*",50);
-  cout_dbg << "Set solution vector initial guess entries" << "\n";
+  cout_dbg << _pg->myrank() << " Set solution vector initial guess entries" << "\n";
   printLine("*",50);
   if (_guess_label) {
     // If guess is provided by ICE, read it from Uintah
-    cout_dbg << "Reading initial guess from ICE" << "\n";
+    cout_dbg << _pg->myrank() << " Reading initial guess from ICE" << "\n";
     for (int p = 0 ; p < _patches->size(); p++) {
       // Read Uintah patch info into our data structure, set Uintah pointers
       const Patch* patch = _patches->get(p);
       HyprePatch_CC hpatch(patch,matl); // Read Uintah patch data
       hpatch.makeInteriorVector(_HX, _guess_dw, _guess_label);
     } // end for p (patches)
+    for (int l = 0; l < numLevels; l++) {
+      if (useBogusLevelData[l]) {
+        HyprePatch_CC hpatch(l, matl);
+        hpatch.makeInteriorVectorZero(_HX, _guess_dw, _guess_label);
+      }
+    }
   } else {
 #if 0
     // If guess is not provided by ICE, use zero as initial guess
-    cout_dbg << "Default initial guess: zero" << "\n";
+    cout_dbg << _pg->myrank() << " Default initial guess: zero" << "\n";
     for (int p = 0 ; p < _patches->size(); p++) {
       // Read Uintah patch info into our data structure, set Uintah pointers
       const Patch* patch = _patches->get(p);
       HyprePatch_CC hpatch(patch,matl); // Read Uintah patch data
       hpatch.makeInteriorVectorZero(_HX, _guess_dw, _guess_label);
     } // end for p (patches)
+    for (int l = 0; l < numLevels; l++) {
+      if (useBogusLevelData[l]) {
+        HyprePatch_CC hpatch(l, matl);
+        hpatch.makeInteriorVectorZero(_HX, _guess_dw, _guess_label);
+      }
+    }
 #endif
   }
 
@@ -492,7 +549,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
 
   // For solvers that require ParCSR format
   if (_requiresPar) {
-    cout_dbg << "Making ParCSR objects from SStruct objects" << "\n";
+    cout_dbg << _pg->myrank() << " Making ParCSR objects from SStruct objects" << "\n";
     HYPRE_SStructMatrixGetObject(_HA, (void **) &_HA_Par);
     HYPRE_SStructVectorGetObject(_HB, (void **) &_HB_Par);
     HYPRE_SStructVectorGetObject(_HX, (void **) &_HX_Par);
@@ -527,7 +584,7 @@ HypreDriverSStruct::HyprePatch_CC::addToGrid
   // Add this patch to the Hypre grid
   //___________________________________________________________________
 {
-  cout_dbg << "Adding patch " << _patch->getID()
+  cout_dbg << Parallel::getMPIRank() << " Adding patch " << (_patch?_patch->getID():-1)
        << " from "<< _low << " to " << _high
        << " Level " << _level << "\n";
   HYPRE_SStructGridSetExtents(grid, _level,
@@ -666,11 +723,21 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations
   // prepared for this patch by ICE.
   //___________________________________________________________________
 {
-  cout_doing << "Adding interior eqns in patch " << _patch->getID()
+  cout_doing << "Adding interior eqns in patch " << (_patch?_patch->getID():-1)
        << " from "<< _low << " to " << _high
        << " Level " << _level << "\n";
   CCTypes::matrix_type A;
-  A_dw->get(A, A_label, _matl, _patch, Ghost::None, 0);
+  if (_patch) {
+    A_dw->get(A, A_label, _matl, _patch, Ghost::None, 0);
+  }
+  else {
+    // should be a 1-cell object
+    ASSERT(_low == _high);
+    CCVariable<Stencil7>& Amod = A.castOffConst();
+    Amod.rewindow(_low, _high +IntVector(1,1,1));
+    Amod[_low].w = Amod[_low].e = Amod[_low].s = Amod[_low].n = Amod[_low].b = Amod[_low].t = 0;
+    Amod[_low].p = 1;
+  }
   if (symmetric) {
     //==================================================================
     // Add symmetric stencil equations to HA
@@ -833,16 +900,11 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorVectorZero
   // cells of each patch.
   //___________________________________________________________________
 {
-#if 0
   // Make a vector of zeros
   // Is this a way to create a vector of zeros in Uintah?
   CCVariable<double> V;
-  V_dw->allocateAndPut(V, V_label, _matl, _patch);
+  V.rewindow(_low, _high+IntVector(1,1,1));
   V.initialize(0.0);
-
-  // Or that?
-  CCTypes::const_type V;
-  V_dw->get(V, V_label, _matl, _patch, Ghost::None, 0);
   for(int z = _low.z(); z <= _high.z(); z++) {
     for(int y = _low.y(); y <= _high.y(); y++) {
       const double* values = &V[IntVector(_low.x(), y, z)];
@@ -855,7 +917,6 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorVectorZero
                                       const_cast<double*>(values));
     }
   }
-#endif
 } // end HyprePatch_CC::makeInteriorVector()
 
 void
@@ -949,7 +1010,9 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
     cout_doing << "Adding coarse-to-fine connections to matrix" << "\n";
     const int coarseLevel = _level;
     const int fineLevel = _level+1;
-    const IntVector& refRat = grid->getLevel(fineLevel)->getRefinementRatio();
+    const LevelP coarse = grid->getLevel(_level);
+    const LevelP fine = grid->getLevel(_level+1);
+    const IntVector& refRat = fine->getRefinementRatio();
     Level::selectType finePatches;
     _patch->getFineLevelPatches(finePatches); 
     if (finePatches.size() < 1) {
@@ -970,13 +1033,27 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
       const Patch* finePatch = finePatches[i];        
       if (finePatch->hasCoarseFineInterfaceFace()) {
         printLine("@",40);
-        cout_dbg << "finePatch " << i << " / " << finePatches.size() << "\n"
+        cout_doing << Parallel::getMPIRank() << " finePatch " << i << " / " << finePatches.size() << "\n"
              << *finePatch << "\n";
         finePatch->printPatchBCs(cout_dbg);
         printLine("@",40);
+
+        IntVector cl(_patch->getCellLowIndex() - IntVector(1,1,1)); // ghost cell
+        IntVector ch(_patch->getCellHighIndex() +IntVector(1,1,1));
+        IntVector fl(finePatch->getInteriorCellLowIndex());
+        IntVector fh(finePatch->getInteriorCellHighIndex());
+        
+        // get the region of the fine patch that overlaps the coarse patch
+        // we might not have the entire patch in this proc's DW
+        fl = Max(fl, coarse->mapCellToFiner(cl)); 
+        fh = Min(fh, coarse->mapCellToFiner(ch));
+        if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
+          continue;
+        }
+
         // Retrieve A of the fine patch, not this patch
         CCTypes::matrix_type AF;
-        A_dw->get(AF, A_label, _matl, finePatch, Ghost::None, 0);
+        A_dw->getRegion(AF, A_label, _matl, fine.get_rep(), fl, fh);
         // Iterate over coarsefine interface faces
         vector<Patch::FaceType>::const_iterator iter; 
         for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
@@ -985,6 +1062,18 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
           IntVector offset = _patch->faceDirection(face); // e.g. (-1,0,0)
           CellIterator f_iter = 
             finePatch->getFaceCellIterator(face,"alongInteriorFaceCells");
+
+          // check to make sure the face belongs to this coarse patch
+          IntVector coarseLow = (f_iter.begin() + offset) / refRat;
+          // // add extra to make sure range is >= 1 if it is a valid range
+          IntVector coarseHigh = (f_iter.end() + offset) / refRat + Abs(offset); 
+          IntVector cl = Max(coarseLow, _patch->getLowIndex());
+          IntVector ch = Min(coarseHigh, _patch->getHighIndex());
+          if (ch.x() <= cl.x() || ch.y() <= cl.y() || ch.z() <= cl.z()) {
+            continue;
+          }
+          
+
           // "opposite" = direction opposite to the patch face "face"
           int opposite = face - int(patchFaceSide(face));
           cout_dbg << "C/F Face " << face << " offset " << offset << "\n";
@@ -992,6 +1081,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
           const int numStencilEntries = 1;
           int stencilEntries[numStencilEntries] = {opposite};
           const double* stencilValues = &ZERO;
+
           for(; !f_iter.done(); f_iter++) {
             // For each fine cell at C/F interface, compute the index of
             // the neighboring coarse cell (add offset = outward normal to

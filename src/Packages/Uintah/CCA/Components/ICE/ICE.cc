@@ -311,6 +311,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     // Extract out the type of EOS and the associated parameters
     ICEMaterial *mat = scinew ICEMaterial(ps);
     sharedState->registerICEMaterial(mat);
+    if(mat->isSurroundingMatl()) {
+      d_surroundingMatl_indx = mat->getDWIndex();  //which matl. is the surrounding matl
+    } 
+
   }     
   cout_norm << "Pulled out InitialConditions block of the input file" << endl;
 
@@ -1803,6 +1807,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     Ghost::GhostType  gn  = Ghost::None; 
     Ghost::GhostType  gac = Ghost::AroundCells;
 
+    IntVector badCell(0,0,0);
     double dCFL = d_CFL;
     delt_CFL = 1000.0; 
 
@@ -1831,6 +1836,12 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           delt_CFL = std::min(A, delt_CFL);
           delt_CFL = std::min(B, delt_CFL);
           delt_CFL = std::min(C, delt_CFL);
+          if (A < 1e-20 || B < 1e-20 || C < 1e-20) {
+            if (badCell == IntVector(0,0,0)) {
+              badCell = c;
+            }
+            cout << d_myworld->myrank() << " Bad cell " << c << " (" << patch->getID() << "-" << level->getIndex() << "): " << vel_CC[c]<< endl;
+          }
         }
 //      cout << " Aggressive delT Based on currant number "<< delt_CFL << endl;
       } 
@@ -1905,6 +1916,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           
           double delt_tmp = d_CFL *vol/(sumSwept_Vol + d_SMALL_NUM);
           delt_CFL = std::min(delt_CFL, delt_tmp);
+          if (delt_CFL < 1e-20 && badCell == IntVector(0,0,0)) {
+            badCell = c;
+          }
         }  // iter loop
 //      cout << " Conservative delT based on swept volumes "<< delt_CFL<<endl;
       }  
@@ -1921,6 +1935,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond[c]);
           double A = d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
           delt_cond = std::min(A, delt_cond);
+          if (delt_cond < 1e-20 && badCell == IntVector(0,0,0)) {
+            badCell = c;
+          }
         }
       }  //
     }  // matl loop   
@@ -1943,7 +1960,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     if(delt < 1e-20) { 
       ostringstream warn;
       warn << "ERROR ICE:(L-"<< level->getIndex()
-           << "):ComputeStableTimestep: delT < 1e-20";
+           << "):ComputeStableTimestep: delT < 1e-20 on cell " << badCell;
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
     new_dw->put(delt_vartype(delt), lb->delTLabel);
@@ -2013,9 +2030,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       viscosity.initialize  ( ice_matl->getViscosity());
       thermalCond.initialize( ice_matl->getThermalConductivity());
       
-      if(ice_matl->isSurroundingMatl()) {
-        d_surroundingMatl_indx = indx;  //which matl. is the surrounding matl
-      } 
     }
     // --------bulletproofing
     if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {

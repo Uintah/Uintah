@@ -22,6 +22,8 @@
 #define SPEW 0
 //#undef SPEW
 
+//#define BRYAN
+
 using namespace Uintah;
 using namespace std;
 static DebugStream cout_doing("AMRICE_DOING_COUT", false);
@@ -159,6 +161,7 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
          iter != d_modelSetup->tvars.end(); iter++){
         TransportedVariable* tvar = *iter;
         addRefineDependencies(task, tvar->var,ND,  all_matls_sub, step, nsteps);
+        task->modifies(tvar->var);
       }
     }
     
@@ -183,7 +186,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
   if(level->getIndex() > 0){     
     cout_doing << d_myworld->myrank() 
                << " Doing refineCoarseFineInterface"<< "\t\t\t AMRICE L-" 
-               << level->getIndex() << " progressVar " << subCycleProgress<<endl;
+               << level->getIndex() << " Patches: " << *patches << " progressVar " << subCycleProgress<<endl;
     int  numMatls = d_sharedState->getNumICEMatls();
     bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
       
@@ -312,7 +315,6 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
     IntVector coarseLow  = fineLevel->mapCellToCoarser(fl);
     IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
 
-
     IntVector axes = patch->faceAxes(face);
     int P_dir = axes[0];  // principal direction      
 
@@ -410,6 +412,73 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
       }
     }
   }  // face loop
+
+#ifdef BRYAN
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+
+    //__________________________________
+    // fine level hi & lo cell iter limits
+    // coarselevel hi and low index
+    CellIterator iter_tmp = patch->getFaceCellIterator(face, "plusEdgeCells");
+    IntVector fl = iter_tmp.begin();
+    IntVector fh = iter_tmp.end(); 
+    IntVector refineRatio = fineLevel->getRefinementRatio();
+    IntVector coarseLow  = fineLevel->mapCellToCoarser(fl);
+    IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
+
+    IntVector cl, ch;
+    coarseLevel->findCellIndexRange(cl,ch);
+    coarseLow   = Max(coarseLow, cl);
+    coarseHigh  = Min(coarseHigh, ch); 
+
+    //__________________________________
+    // subCycleProgress_var near 1.0 
+    //  interpolation using the coarse_new_dw data
+
+    if(subCycleProgress_var > 1-1.e-10){ 
+     constCCVariable<varType> q_NewDW;
+     coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
+                           coarseLow, coarseHigh);
+
+     selectInterpolator(q_NewDW, 0, coarseLevel, 
+                        fineLevel, refineRatio, fl,fh, Q);
+    } else {    
+
+    //__________________________________
+    // subCycleProgress_var somewhere between 0 or 1
+    //  interpolation from both coarse new and old dw 
+      constCCVariable<varType> q_OldDW, q_NewDW;
+      coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
+                           coarseLow, coarseHigh);
+      coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
+                           coarseLow, coarseHigh);
+
+      CCVariable<varType> Q_old, Q_new;
+      fine_new_dw->allocateTemporary(Q_old, patch);
+      fine_new_dw->allocateTemporary(Q_new, patch);
+
+      Q_old.initialize(varType(d_EVIL_NUM));
+      Q_new.initialize(varType(d_EVIL_NUM));
+
+      selectInterpolator(q_OldDW, 0, coarseLevel, 
+                        fineLevel,refineRatio, fl,fh, Q_old);
+
+      selectInterpolator(q_NewDW, 0, coarseLevel, 
+                        fineLevel,refineRatio, fl,fh, Q_new);
+
+      // Linear interpolation in time
+      for(CellIterator iter(fl,fh); !iter.done(); iter++){
+        IntVector f_cell = *iter;
+        Q[f_cell] = (1. - subCycleProgress_var)*Q_old[f_cell] 
+                        + subCycleProgress_var *Q_new[f_cell];
+      }
+    }
+  }  // face loop
+
+#endif
+
   //____ B U L L E T   P R O O F I N G_______ 
   // All values must be initialized at this point
   if(subCycleProgress_var > 1-1.e-10){  
@@ -495,7 +564,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
   cout_doing << d_myworld->myrank() 
              << " AMRICE::scheduleRefine\t\t\t\tL-" 
              <<  fineLevel->getIndex() << " P-" << *patches << '\n';
-  Task* task = scinew Task("refine",this, &AMRICE::refine);
+  Task* task = scinew Task("AMRICE::refine",this, &AMRICE::refine);
 
   MaterialSubset* subset = scinew MaterialSubset;
   subset->add(0);
@@ -541,7 +610,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
     task->computes(lb->vel_CCLabel);
   }
 
-  sched->addTask(task, patches, d_sharedState->allMaterials()); 
+  sched->addTask(task, patches, d_sharedState->allICEMaterials()); 
 }
 
 /*___________________________________________________________________
@@ -775,7 +844,6 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   constCCVariable<T> coarse_q_CC;
   new_dw->getRegion(coarse_q_CC, varLabel, indx, coarseLevel, cl, ch);
   
-  
   selectInterpolator(coarse_q_CC, d_orderOfInterpolation, coarseLevel, fineLevel,
                       refineRatio, lo,hi,q_CC);
   
@@ -808,7 +876,7 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
              << " AMRICE::scheduleCoarsen\t\t\t\tL-" 
              << fineLevel->getIndex()<< "->"<<coarseLevel->getIndex()<<endl; 
              
-  Task* task = scinew Task("coarsen",this, &AMRICE::coarsen);
+  Task* task = scinew Task("AMRICE::coarsen",this, &AMRICE::coarsen);
 
   Task::DomainSpec ND   = Task::NormalDomain;                            
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
@@ -852,8 +920,9 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   task->modifies(lb->sp_vol_CCLabel);
   task->modifies(lb->temp_CCLabel);
   task->modifies(lb->vel_CCLabel);
+  task->requires(Task::NewDW, lb->specific_heatLabel, gn, 0);
 
-  sched->addTask(task, coarseLevel->eachPatch(), all_matls); 
+  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allICEMaterials()); 
   
   //__________________________________
   // schedule refluxing
@@ -893,7 +962,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
       constCCVariable<double> cv;
       CCVariable<double> rho_CC, temp, sp_vol_CC;
       CCVariable<Vector> vel_CC;
-      
+
       new_dw->get(cv,                 lb->specific_heatLabel, indx, coarsePatch, gn,0);
       new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,        indx, coarsePatch);
       new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel,     indx, coarsePatch);
@@ -1012,10 +1081,10 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     
     constCCVariable<T> fine_q_CC;
     constCCVariable<double> cv_fine, rho_CC_fine;
-    new_dw->getRegion(fine_q_CC,  varLabel,               indx, fineLevel, fl, fh);
-    new_dw->getRegion(cv_fine,    lb->specific_heatLabel, indx, fineLevel, fl, fh);
-    new_dw->getRegion(rho_CC_fine,lb->rho_CCLabel,        indx, fineLevel, fl, fh);
-    
+    new_dw->getRegion(fine_q_CC,  varLabel,               indx, fineLevel, fl, fh, false);
+    new_dw->getRegion(cv_fine,    lb->specific_heatLabel, indx, fineLevel, fl, fh, false);
+    new_dw->getRegion(rho_CC_fine,lb->rho_CCLabel,        indx, fineLevel, fl, fh, false);
+
     cout_dbg << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
              << " coarsePatch "<< cl << " " << ch << endl;
              
@@ -1082,7 +1151,7 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
              << " AMRICE::scheduleReflux_computeCorrectionFluxes\tL-" 
              << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
              
-  Task* task = scinew Task("reflux_computeCorrectionFluxes",
+  Task* task = scinew Task("AMRICE::reflux_computeCorrectionFluxes",
                            this, &AMRICE::reflux_computeCorrectionFluxes);
   
   Ghost::GhostType gn  = Ghost::None;
@@ -1158,7 +1227,7 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   task->modifies(lb->sp_vol_Y_FC_fluxLabel);
   task->modifies(lb->sp_vol_Z_FC_fluxLabel);
   
-  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMaterials()); 
+  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allICEMaterials()); 
 }
 /*___________________________________________________________________
  Function~  AMRICE::Reflux_computeCorrectionFluxesFluxes--  
@@ -1619,7 +1688,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
              << " AMRICE::scheduleReflux_applyCorrectionFluxes\t\tL-" 
              << fineLevel->getIndex() << "->"<< coarseLevel->getIndex()<< endl;
              
-  Task* task = scinew Task("reflux_applyCorrectionFluxes",
+  Task* task = scinew Task("AMRICE::reflux_applyCorrectionFluxes",
                           this, &AMRICE::reflux_applyCorrectionFluxes);
   
   Ghost::GhostType gn = Ghost::None;
@@ -1672,7 +1741,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
   task->modifies(lb->temp_CCLabel);
   task->modifies(lb->vel_CCLabel);
 
-  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMaterials()); 
+  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allICEMaterials()); 
 }
 /*___________________________________________________________________
  Function~  AMRICE::Reflux_applyCorrectionFluxes--  
