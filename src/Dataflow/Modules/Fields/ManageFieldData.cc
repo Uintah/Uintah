@@ -92,7 +92,7 @@ ManageFieldData::execute()
 
   // TODO: Using datasize this way appears to be wrong, as it depends
   // on the input DATA_AT size and not the one picked for output.
-  int datasize = 0;
+  unsigned int datasize = ifieldhandle->data_size();
   int svt_flag = 0;
   if (ifieldhandle->query_scalar_interface(this).get_rep())
   {
@@ -125,7 +125,7 @@ ManageFieldData::execute()
     else
     {
       MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-      omp->send(algo_field->execute(ifieldhandle, datasize));
+      omp->send(algo_field->execute(ifieldhandle));
     }
   }
 
@@ -222,11 +222,36 @@ ManageFieldData::execute()
     {
       outtypestring = "double";
     }
+    
+    string basisname = "";
+    if (imatrixhandle->nrows() == (int)datasize ||
+        imatrixhandle->ncols() == (int)datasize)
+    {
+      basisname = 
+        ifieldhandle->get_type_description(2)->get_similar_name(outtypestring,
+                                                                0,
+                                                                "<", " >, ");
+    }
+    else
+    {
+      if (ifieldhandle->get_type_description(2)->get_name().find("Constant") == string::npos)
+      {
+        basisname = "ConstantBasis<" + outtypestring + ">, ";
+      }
+      else
+      {
+        TypeDescription::td_vec *bdv =
+          ifieldhandle->get_type_description(1)->get_sub_type();
+        const string linear = (*bdv)[0]->get_name();
+        const string btype = linear.substr(0, linear.find_first_of('<'));
+        basisname = btype + "<" + outtypestring + ">, ";
+      }
+    }
+
     const string oftn =
       ifieldhandle->get_type_description(0)->get_name() + "<" +
       ifieldhandle->get_type_description(1)->get_name() + "," +
-      ifieldhandle->get_type_description(2)->get_similar_name(outtypestring, 0,
-                                                              "<", " >, ") +
+      basisname +
       ifieldhandle->get_type_description(3)->get_similar_name(outtypestring, 0,
                                                               "<", " >") +
       " > ";
