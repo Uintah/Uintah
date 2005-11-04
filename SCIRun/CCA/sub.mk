@@ -32,18 +32,22 @@
 SRCDIR   := SCIRun/CCA
 
 SRCS     += \
-	$(SRCDIR)/CCAComponentDescription.cc \
-	$(SRCDIR)/CCAComponentModel.cc \
-	$(SRCDIR)/CCAComponentInstance.cc \
-	$(SRCDIR)/CCAPortDescription.cc \
-	$(SRCDIR)/CCAPortInstance.cc \
-	$(SRCDIR)/ComponentID.cc \
-	$(SRCDIR)/CCAException.cc \
-	$(SRCDIR)/ConnectionID.cc
+            $(SRCDIR)/CCAComponentDescription.cc \
+            $(SRCDIR)/CCAComponentModel.cc \
+            $(SRCDIR)/CCAComponentInstance.cc \
+            $(SRCDIR)/CCAPortDescription.cc \
+            $(SRCDIR)/CCAPortInstance.cc \
+            $(SRCDIR)/ComponentID.cc \
+            $(SRCDIR)/CCAException.cc \
+            $(SRCDIR)/ConnectionID.cc \
+            $(SRCDIR)/TypeMismatchException.cc
+
 $(SRCDIR)/CCAComponentModel.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/CCAComponentDescription.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/CCAComponentInstance.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/CCAPortInstance.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ComponentID.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ConnectionID.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/CCAException.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/TypeMismatchException.o: Core/CCA/spec/cca_sidl.h
 
