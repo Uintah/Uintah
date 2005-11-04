@@ -44,14 +44,7 @@ using std::string;
 //! Class for describing unit geometry of ConstantBasis 
 class ConstantBasisElement {
 public: 
-  // To the best of my knowledge, the following two arrays are not
-  // used in this class.  I'm not sure why they are here, though it
-  // has something to do with consistency among the basis classes.
-  // These arrays where originally size [0][0].  This causes some
-  // compilation errors for certain compilers so I have made them [1][1].
-  static double unit_vertices[1][1]; //!< Parametric coordinates of vertices 
-  static int unit_edges[1][1];    //!< References to vertices of unit edge 
-
+  
   ConstantBasisElement() {}
   virtual ~ConstantBasisElement() {}
 
@@ -77,25 +70,17 @@ public:
   virtual ~ConstantBasis() {}
   
   int polynomial_order() const { return 0; }
-  //!< return dimension of domain 
 
   //! get value at parametric coordinate 
-  template <class CellData>
-  T interpolate(const vector<double> &coords, const CellData &cd) const
+  template <class ElemData>
+  T interpolate(const vector<double> &, const ElemData &cd) const
   {
     return cd.elem();
   }
   
   //! get first derivative at parametric coordinate
-  //
-  //  Removed the 'cd' parameter to quite the compiler.  However, I do
-  //  not know whether it should be used or not in this
-  //  function... I'm assuming not.  If you know more about this code
-  //  then I do, please update this comment to reflect whether 'cd'
-  //  should be used in this function or not.
-  //
-  template <class CellData>
-  void derivate(const vector<double> &coords, const CellData &/*cd*/, 
+  template <class ElemData>
+  void derivate(const vector<double> &coords, const ElemData &, 
 		vector<T> &derivs) const
   {
     vector<double>::size_type s=coords.size();

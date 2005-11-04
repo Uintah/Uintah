@@ -148,8 +148,8 @@ public:
   }
 
   //! get value at parametric coordinate
-  template <class CellData>
-  T interpolate(const vector<double> &coords, const CellData &cd) const
+  template <class ElemData>
+  T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
     double w[64];
     get_weights(coords, w);
@@ -281,8 +281,8 @@ public:
   }
   
   //! get first derivative at parametric coordinate
-  template <class CellData>
-  void derivate(const vector<double> &coords, const CellData &cd,
+  template <class ElemData>
+  void derivate(const vector<double> &coords, const ElemData &cd,
 		vector<T> &derivs) const
   {
     const double x=coords[0], y=coords[1], z=coords[2];  
@@ -558,9 +558,9 @@ public:
   }  
 
   //! get parametric coordinate for value within the element
-  template <class CellData>
+  template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
-		  const CellData &cd) const  
+		  const ElemData &cd) const  
   {
     HexLocate< HexTricubicHmtScaleFactors<T> > CL;
     return CL.get_coords(this, coords, value, cd);

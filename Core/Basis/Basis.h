@@ -52,24 +52,24 @@ public:
   int polynomial_order() const { return 0; }
 
   //! get value at parametric coordinate 
-  template <class CellData>
-  T interpolate(const vector<double> &coords, const CellData &cd) const
+  template <class ElemData>
+  T interpolate(const vector<double> &coords, const ElemData &cd) const
   {
     ASSERTFAIL("interpolate not supported by basis");
   }
   
   //! get first derivative at parametric coordinate
-  template <class CellData>
-  void derivate(const vector<double> &coords, const CellData &cd, 
+  template <class ElemData>
+  void derivate(const vector<double> &coords, const ElemData &cd, 
 		vector<T> &derivs) const
   {
     ASSERTFAIL("derivate not supported by basis");
   }
 
   //! get parametric coordinate for value within the element
-  template <class CellData>
+  template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
-		  const CellData &cd) const
+		  const ElemData &cd) const
   {
     ASSERTFAIL("get_coords not supported by basis");
   }
