@@ -113,6 +113,21 @@ namespace SCIRun {
 "TEMP w; \n"
 
 
+#define VOL_LIT_BODY_NOGRAD \
+"MAD n, v, 2.0, -1.0;		# rescale from [0,1] to [-1, 1]  \n" \
+"DP3 n.w, n, n;			# n.w = x*x + y*y + z*z \n" \
+"RSQ n.w, n.w;			# n.w = 1 / sqrt(x*x+y*y+z*z) \n" \
+"MUL n, n, n.w;			# n = n / length(normal)\n" \
+"DP3 n.w, l, n;			# calculate angle between light and normal. \n" \
+"ABS_SAT n.w, n.w;		# two-sided lighting, n.w = abs(cos(angle))  \n" \
+"MOV w, k;       # w.x = weight*ka, w.y = weight*kd, w.z = weight*ks \n" \
+"SUB w.x, k.x, w.y; # w.x = ka - kd*weight \n" \
+"ADD w.x, w.x, k.y; # w.x = ka + kd - kd*weight \n" \
+"POW n.z, n.w, k.w;   # n.z = abs(cos(angle))^ns \n" \
+"MAD n.w, n.w, w.y, w.x; # n.w = abs(cos(angle))*kd+ka\n" \
+"MUL n.z, w.z, n.z; # n.z = weight*ks*abs(cos(angle))^ns \n"
+
+
 #define VOL_LIT_BODY \
 "MAD n, v, 2.0, -1.0;		# rescale from [0,1] to [-1, 1]  \n" \
 "DP3 n.w, n, n;			# n.w = x*x + y*y + z*z \n" \
@@ -129,6 +144,9 @@ namespace SCIRun {
 "MAD n.w, n.w, w.y, w.x; # n.w = abs(cos(angle))*kd+ka\n" \
 "MUL n.z, w.z, n.z; # n.z = weight*ks*abs(cos(angle))^ns \n"
 
+
+
+
 #define VOL_LIT_END \
 "MUL n.z, n.z, c.w;\n" \
 "MAD c.xyz, c.xyzz, n.w, n.z;\n"
@@ -141,40 +159,42 @@ namespace SCIRun {
 
 #define VOL_GRAD_COMPUTE_2_1 \
 "PARAM dir = program.local[4]; \n" \
-"TEMP grad; \n" \
 "TEMP r; \n" \
 "TEMP p; \n" \
-"TEMP dirx; \n" \
-"TEMP diry; \n" \
-"TEMP dirz; \n" \
+"PARAM tmat[]  = { state.matrix.texture[0].invtrans }; \n" \
 "MOV v, v.xxxx; \n" \
-"MOV grad, 0; \n" /* new code */ \
-"MOV dirx.x, dir.x; \n" \
-"MOV diry.y, dir.y; \n" \
-"MOV dirz.z, dir.z; \n" \
-"ADD_SAT p, fragment.texcoord[0], dirx; \n" \
+"MOV n, 0; \n" \
+"MOV w.x, dir.x; \n" \
+"ADD_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"ADD grad.x, r.x, grad.x; \n" \
-"SUB_SAT p, fragment.texcoord[0], dirx; \n" \
+"ADD n.x, r.x, n.x; \n" \
+"SUB_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"SUB grad.x, r.x, grad.x; \n" \
-"ADD_SAT p, fragment.texcoord[0], diry; \n" \
+"SUB n.x, r.x, n.x; \n" \
+"MOV w, 0; \n" \
+"MOV w.y, dir.y; \n" \
+"ADD_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"ADD grad.y, r.x, grad.y; \n" \
-"SUB_SAT p, fragment.texcoord[0], diry; \n" \
+"ADD n.y, r.x, n.y; \n" \
+"SUB_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"SUB grad.y, r.x, grad.y; \n" \
-"ADD_SAT p, fragment.texcoord[0], dirz; \n" \
+"SUB n.y, r.x, n.y; \n" \
+"MOV w, 0; \n" \
+"MOV w.z, dir.z; \n" \
+"ADD_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"ADD grad.z, r.x, grad.z; \n" \
-"SUB_SAT p, fragment.texcoord[0], dirz; \n" \
+"ADD n.z, r.x, n.z; \n" \
+"SUB_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"SUB grad.z, r.x, grad.z; \n" \
-"DP3 r, grad, grad; \n" \
+"SUB n.z, r.x, n.z; \n" \
+"DP3 w.x, n.x, tmat[0]; \n" \
+"DP3 w.y, n.y, tmat[1]; \n" \
+"DP3 w.z, n.z, tmat[2]; \n" \
+"DP3 r, w, w; \n" \
 "RSQ p, r.x; \n" \
 "DST p, r, p; \n" \
 "MUL p.y, p, 1.75; \n" \
-"MUL n.xyz, grad, 1.0; \n#" // The # at the end of the line is a cheap way of disabling the next instruction
+"MUL n.xyz, w, 1.0; \n#" // The # at the end of the line is a cheap way of disabling the next instruction
 
 
 #define VOL_GRAD_COMPUTE_2_4 \
@@ -293,7 +313,7 @@ VolShader::emit(string& s)
   if(dim_ == 1) {
     if(shading_) {
       z << VOL_VLUP_1_1;
-      z << VOL_LIT_BODY;
+      z << VOL_LIT_BODY_NOGRAD;
       z << VOL_TFLUP_1_4;
       z << VOL_LIT_END;
     } else { // !shading_
@@ -315,7 +335,7 @@ VolShader::emit(string& s)
 	z << VOL_GRAD_COMPUTE_2_1;
       }
 
-      z << VOL_LIT_BODY;
+      z << VOL_LIT_BODY_NOGRAD;
       if (vsize_ == 1) {
 	z << VOL_COMPUTED_GRADIENT_LOOKUP;
       } else {
@@ -371,7 +391,7 @@ VolShader::emit(string& s)
   z << VOL_TAIL;
 
   s = z.str();
-  //std::cerr << s << std::endl;
+  //  std::cerr << s << std::endl;
   return false;
 }
 
