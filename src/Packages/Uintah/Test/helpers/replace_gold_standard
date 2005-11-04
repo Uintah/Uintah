@@ -76,12 +76,10 @@ fi
 if [ ! -d $replacement_dir/$testname/*.uda/checkpoints -o "$force" = "-m" ]; then
   echo "No checkpoints to replace, or not replacing them"
 else
-
-  if [ "$force" = "-f" -a "$do_uda" = "false" ]; then
-    yesno="yes"
-  else
-    echo "Replace the checkpoints? (Enter 'yes' or 'y' to continue.) "
-    read yesno
+  yesno="no"
+  if [ "$do_uda" == "false" ]; then
+      echo "Replace the checkpoints? (Enter 'yes' or 'y' to continue.) "
+      read yesno
   fi
   
   # remove the udas, and copy the new ones
@@ -109,8 +107,6 @@ else
     if [ "$failcode" = "0" ]; then
       echo "checkpoint successfully replaced"
     fi
-  else
-    echo "checkpoint not replaced"
   fi
 fi
 #__________________________________
