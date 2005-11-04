@@ -44,8 +44,13 @@ using std::string;
 //! Class for describing unit geometry of NoDataBasis 
 class NoDataUnitElement {
 public: 
-  static double unit_vertices[0][0]; //!< Parametric coordinates of vertices 
-  static int unit_edges[0][0];    //!< References to vertices of unit edge 
+  // To the best of my knowledge, the following two arrays are not
+  // used in this class.  I'm not sure why they are here, though it
+  // has something to do with consistency among the basis classes.
+  // These arrays where originally size [0][0].  This causes some
+  // compilation errors for certain compilers so I have made them [1][1].
+  static double unit_vertices[1][1]; //!< Parametric coordinates of vertices 
+  static int unit_edges[1][1];    //!< References to vertices of unit edge 
 
   NoDataUnitElement() {}
   virtual ~NoDataUnitElement() {}
