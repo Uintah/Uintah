@@ -138,9 +138,9 @@ public:
   virtual ~QuadLocate() {}
  
   //! find value in interpolation for given value
-  template <class CellData>
+  template <class ElemData>
   bool get_coords(const ElemBasis *pEB, vector<double> &coords, 
-		  const T& value, const CellData &cd) const  
+		  const T& value, const ElemData &cd) const  
   {          
     initial_guess(pEB, value, cd, coords);
     if (get_iterative(pEB, coords, value, cd))
@@ -161,8 +161,8 @@ protected:
   }
   
   //! find a reasonable initial guess 
-  template <class CellData>
-  void initial_guess(const ElemBasis *pElem, const T &val, const CellData &cd, 
+  template <class ElemData>
+  void initial_guess(const ElemBasis *pElem, const T &val, const ElemData &cd, 
 		     vector<double> & guess) const
   {
     double dist = DBL_MAX;

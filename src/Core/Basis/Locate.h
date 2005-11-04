@@ -171,9 +171,9 @@ public:
   virtual ~Dim3Locate() {}
  
   //! find value in interpolation for given value
-  template <class CellData>
+  template <class ElemData>
   bool get_iterative(const ElemBasis *pEB, vector<double> &x, 
-		     const T& value, const CellData &cd) const  
+		     const T& value, const ElemData &cd) const  
   {       
     vector<double> xold(3); 
     vector<T> yd(3);
@@ -210,9 +210,9 @@ public:
   virtual ~Dim2Locate() {}
  
   //! find value in interpolation for given value
-  template <class CellData>
+  template <class ElemData>
   bool get_iterative(const ElemBasis *pEB, vector<double> &x, 
-		     const T& value, const CellData &cd) const  
+		     const T& value, const ElemData &cd) const  
   {       
     vector<double> xold(2); 
     vector<T> yd(2);
@@ -252,9 +252,9 @@ public:
   virtual ~Dim1Locate() {}
 
   //! find value in interpolation for given value         
-  template <class CellData>
+  template <class ElemData>
   bool get_iterative(const ElemBasis *pElem, vector<double> &x, 
-		     const T& value, const CellData &cd) const  
+		     const T& value, const ElemData &cd) const  
   {          
     vector<double> xold(1); 
     vector<T> yd(1);
