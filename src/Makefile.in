@@ -118,7 +118,7 @@ CTAGS := ctags
 
 SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter
 
 .PHONY: prereqs
 prereqs: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
@@ -256,7 +256,7 @@ endif
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
 	rm -f on-the-fly-libs/*.*
-	rm -f BioTensor BioFEM BioImage FusionViewer
+	rm -f BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter
 
 distclean:: clean
 	rm -f config.status config.log config.cache
@@ -349,5 +349,13 @@ ifeq ($(findstring Fusion,$(LOAD_PACKAGE)),Fusion)
 	@chmod +x FusionViewer
 else
   $(OBJTOP)/FusionViewer :
+endif
+
+ifeq ($(findstring Insight,$(LOAD_PACKAGE)),Insight)
+  $(OBJTOP)/LevelSetSegmenter : $(SRCDIR)/Packages/Insight/nets/PowerApps/LevelSetSegmenter
+	@(sed -e "s%__SRC_DIR__%$(SRCTOP_ABS)%" $(SRCDIR)/Packages/Insight/nets/PowerApps/LevelSetSegmenter | sed -e "s%__OBJ_DIR__%$(OBJTOP_ABS)%" > $(OBJTOP)/LevelSetSegmenter)
+	@chmod +x LevelSetSegmenter
+else
+  $(OBJTOP)/LevelSetSegmenter :
 endif
 

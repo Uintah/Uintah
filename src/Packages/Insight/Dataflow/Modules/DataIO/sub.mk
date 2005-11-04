@@ -40,7 +40,8 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-INCLUDES += $(INSIGHT_INCLUDE)
+INCLUDES += $(INSIGHT_INCLUDE) $(TEEM_INCLUDE)
+
 SRCDIR   := Packages/Insight/Dataflow/Modules/DataIO
 
 SRCS     += \
@@ -56,11 +57,11 @@ SRCS     += \
 	$(SRCDIR)/ColorImageReaderUChar3D.cc\
 	$(SRCDIR)/ColorImageReaderFloat3D.cc\
 	$(SRCDIR)/ChooseImage.cc\
-#	$(SRCDIR)/ImageInfo.cc\
+	$(SRCDIR)/SliceReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes Dataflow/Network \
-	Packages/Insight/Dataflow/Ports \
+	Packages/Insight/Dataflow/Ports Core/Algorithms/DataIO \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \

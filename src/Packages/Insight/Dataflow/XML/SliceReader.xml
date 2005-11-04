@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE filter SYSTEM "sci_filter.dtd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
 
 <!--
    For more information, please see: http://software.sci.utah.edu
@@ -30,41 +30,34 @@
 -->
 
 
-<filter>
-  <include href="ITK/itk_ThresholdSegmentationLevelSetImageFilter.xml"/>
-  <include href="Dataflow/Modules/Filters/XML/gui_ThresholdSegmentationLevelSetImageFilter.xml"/>
 
-<filter-sci name="ThresholdSegmentationLevelSetImageFilter">
-  <package>Insight</package>
+<component name="SliceReader" category="DataIO">
+  <overview>
+    <authors>
+      <author>Darby Van Uitert</author>
+    </authors>
+    <summary>Read in a 3D volume a slice at a time.</summary>
+    <description>
 
-  <category>Filters</category>
+    <p>Read in a 3D volume a slice at a time.  Slicing is done along
+    the last axis.  This module currently only works for the case of
+    an Analyze header file (.hdr) and Analyze image file (.img). The
+    basename of these files must be the same and the image file cannot
+    be compressed. If Cast Output is checked, the output image will
+    be cast to a float image.</p>
 
-  <instantiations>
-    <instance>
-      <type name="ImageType">
-        <value>itk::Image&lt;float, 2&gt;</value>
-      </type>
-      <type name="FeatureImageType">
-        <value>itk::Image&lt;float, 2&gt;</value>
-      </type>
-     </instance>
-    <instance>
-      <type name="ImageType">
-        <value>itk::Image&lt;float, 3&gt;</value>
-      </type>
-      <type name="FeatureImageType">
-        <value>itk::Image&lt;float, 3&gt;</value>
-      </type>
-     </instance>
-  </instantiations>
-
-  <outputs>
-    <output name="OutputImage" send_intermediate="yes"/>
-  </outputs>
-
-  <includes>
-  </includes>
-
-</filter-sci>
-
-</filter>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>OutputSlice</name>
+	<datatype>Insight::ITKDatatype</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

@@ -71,6 +71,7 @@ SRCS     += \
 	$(SRCDIR)/UShortToUChar.cc\
 	$(SRCDIR)/UShortToDouble.cc\
 	$(SRCDIR)/UShortToFloat.cc\
+	$(SRCDIR)/BuildSeedVolume.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes \

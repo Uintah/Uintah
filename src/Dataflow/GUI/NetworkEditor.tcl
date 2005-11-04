@@ -42,6 +42,7 @@ set bioTensorSplashImageFile "$SCIRUN_SRCDIR/Packages/Teem/Dataflow/GUI/splash-t
 set bioFEMSplashImageFile "$SCIRUN_SRCDIR/Packages/BioPSE/Dataflow/GUI/splash-biofem.ppm"
 set bioImageSplashImageFile "$SCIRUN_SRCDIR/Packages/Teem/Dataflow/GUI/splash-bioimage.ppm"
 set fusionViewerSplashImageFile "$SCIRUN_SRCDIR/Packages/Fusion/Dataflow/GUI/splash-fusionviewer.ppm"
+set levelSetSegmenterViewerSplashImageFile "$SCIRUN_SRCDIR/main/scisplash.ppm"
 
 set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
 set ui_font "-Adobe-Helvetica-Medium-R-Normal-*-12-120-75-*"

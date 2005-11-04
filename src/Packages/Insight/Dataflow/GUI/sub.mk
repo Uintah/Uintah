@@ -73,6 +73,9 @@ SRCS := \
 	$(SRCDIR)/ImageReaderUShort2D.tcl \
 	$(SRCDIR)/ImageReaderUShort3D.tcl \
 	$(SRCDIR)/ImageToField.tcl \
+	$(SRCDIR)/BuildSeedVolume.tcl \
+	$(SRCDIR)/ThresholdSegmentationLevelSetImageFilter.tcl \
+	$(SRCDIR)/SliceReader.tcl \
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

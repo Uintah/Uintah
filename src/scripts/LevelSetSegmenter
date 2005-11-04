@@ -1,3 +1,4 @@
+#! /bin/bash
 #
 #  For more information, please see: http://software.sci.utah.edu
 # 
@@ -26,25 +27,33 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
+# This script is just a short cut to run the LevelSetSegmenter SCIRun Power App
+# It will be copied to the top of the object side of the tree.
 
-# Makefile fragment for this subdirectory
+export DISPLAY=:0.0
+export SCIRUN_OBJDIR=`cd ${0/"\/LevelSetSegmenter"/""}; pwd`
+export SCIRUN_SRCDIR=`cd ${SCIRUN_OBJDIR}/../src; pwd`
+export SCIRUN_THIRDPARTY_DIR=`cd ${SCIRUN_OBJDIR}/../Thirdparty; pwd`
+export SCIRUN_ITCL_WIDGETS=${SCIRUN_THIRDPARTY_DIR}/lib/iwidgets/scripts
+export DYLD_LIBRARY_PATH=${SCIRUN_THIRDPARTY_DIR}/lib:${SCIRUN_OBJDIR}/lib/:/usr/local/mdsplus/lib:${SCIRUN_OBJDIR}/../Freetype/lib
+export TCL_LIBRARY=${SCIRUN_THIRDPARTY_DIR}/lib/tcl
+export LOAD_PACKAGE=SCIRun,Teem,Insight
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+# Check if filenames were passed in as arguments
+if test "$1" != ""; then
+    export LEVELSETSEGMENTER_LOAD_FILE="$1"
+fi
 
-INCLUDES += $(INSIGHT_INCLUDE)
-SRCDIR   := Core/Algorithms/DataIO
+if test "$2" != ""; then
+    export LEVELSETSEGMENTER_COMMIT_DIR="$2"
+fi
 
-ifeq ($(HAVE_INSIGHT),yes)
-  SRCS     += \
-          $(SRCDIR)/AnalyzeImage.cc      \
-          $(SRCDIR)/AnalyzeReader.cc     \
-          $(SRCDIR)/DicomImage.cc        \
-          $(SRCDIR)/DicomSeriesReader.cc \
-	  $(SRCDIR)/AnalyzeSliceImageIO.cc \
-  LIBS := $(INSIGHT_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
-endif
+if test "$3" != ""; then
+    export LEVELSETSEGMENTER_COMMIT_ROOT="$3"
+fi
 
-PSELIBS := Core/Datatypes Core/Containers Core/Thread \
-	Core/Exceptions Core/Geometry Core/Util Core/Math
+if test "$4" != ""; then
+    export LEVELSETSEGMENTER_LOWRES_FILE="$4"
+fi
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+exec ${SCIRUN_OBJDIR}/scirun-bin ${SCIRUN_SRCDIR}/Packages/Insight/nets/PowerApps/LevelSetSegmenter.app 
