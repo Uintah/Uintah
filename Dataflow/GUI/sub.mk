@@ -150,6 +150,7 @@ SRCS := \
         $(SRCDIR)/SciDialog.tcl \
         $(SRCDIR)/SciButtonPanel.tcl \
         $(SRCDIR)/SciMoveToCursor.tcl \
+	$(SRCDIR)/SeedPoints.tcl \
         $(SRCDIR)/SelectField.tcl \
         $(SRCDIR)/SetProperty.tcl \
         $(SRCDIR)/ShowColorMap.tcl \
