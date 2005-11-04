@@ -33,6 +33,7 @@ DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
   d_lastLbTime = 0.0;
   d_lbTimestepInterval = 0;
   d_lastLbTimestep = 0;
+  d_timeRefineWeight = false;
 
   d_dynamicAlgorithm = static_lb;  
   d_state = checkLoadBalance;
@@ -250,8 +251,14 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   // make a list of Patch*'s and costs per patch
 
   sort(allParticles.begin(), allParticles.end(), PatchCompare());
+  int timeWeight = 1;
   for(int l=0;l<grid->numLevels();l++){
     const LevelP& level = grid->getLevel(l);
+
+    if (l > 0 && d_timeRefineWeight)
+      timeWeight *= level->timeRefinementRatio();
+
+
     for (Level::const_patchIterator iter = level->patchesBegin(); 
         iter != level->patchesEnd(); iter++) {
       Patch* patch = *iter;
@@ -262,7 +269,9 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       IntVector range = patch->getHighIndex() - patch->getLowIndex();
       float cost = allParticles[id].numParticles + d_cellFactor * 
         range.x() * range.y() * range.z();
-      dbg << d_myworld->myrank() << "  Patch: " << id << " cost: " << cost << " " << allParticles[id].numParticles << " " << range.x() * range.y() * range.z() << " " << d_cellFactor << endl;
+      cost *= timeWeight;
+      if ( d_myworld->myrank() == 0)
+        dbg << d_myworld->myrank() << "  Patch: " << id << " cost: " << cost << " " << allParticles[id].numParticles << " " << range.x() * range.y() * range.z() << " " << d_cellFactor << " TW " << timeWeight << endl;
       patch_costs.push_back(cost);
       totalCost += cost;
     }
@@ -359,7 +368,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     // re-update the cost, so we use all procs (and don't go over)
     float patchCost = patch_costs[index];
     if (currentProcCost > avg_costPerProc ||
-        (currentProcCost + patchCost > avg_costPerProc *1.2&&
+        (currentProcCost + patchCost > avg_costPerProc *1.1&&
           currentProcCost >=  .7*avg_costPerProc)) {
       // move to next proc and add this patch
       currentProc++;
@@ -731,13 +740,19 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool 
           LevelP curLevel = grid->getLevel(0);
           Level::const_patchIterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
+          vector<int> costs(numProcs);
           for (int i = 0; i < numPatches; i++) {
             lb << myrank << " patch " << i << " -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getHighIndex() - (*iter)->getLowIndex()) << "\n";
+            IntVector range = ((*iter)->getHighIndex() - (*iter)->getLowIndex());
+            costs[d_processorAssignment[i]] += range.x() * range.y() * range.z();
             iter++;
             if (iter == curLevel->patchesEnd() && i+1 < numPatches) {
               curLevel = curLevel->getFinerLevel();
               iter = curLevel->patchesBegin();
             }
+          }
+          for (int i = 0; i < numProcs; i++) {
+            lb << myrank << " proc " << i << "  has cost: " << costs[i] << endl;
           }
         }
       }
@@ -775,6 +790,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
     p->getWithDefault("cellFactor", cellFactor, .1);
     p->getWithDefault("gainThreshold", threshold, 0.0);
     p->getWithDefault("doSpaceCurve", spaceCurve, false);
+    p->getWithDefault("timeRefinementWeight", d_timeRefineWeight, false);
   }
 
   if (dynamicAlgo == "cyclic")

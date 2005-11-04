@@ -130,6 +130,7 @@ namespace Uintah {
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     float d_cellFactor;
     int d_dynamicAlgorithm;
+    bool d_timeRefineWeight;
     bool d_doSpaceCurve;
     bool d_collectParticles;
     int d_state; //< idle, postLB, checkLB, initLB
