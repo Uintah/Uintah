@@ -164,7 +164,6 @@ void AMRSimulationController::run()
        d_sharedState->d_prev_delt = delt;
      }
      iterations ++;
-     calcWallTime();
  
      // get delt and adjust it
      delt_vartype delt_var;
@@ -268,6 +267,8 @@ void AMRSimulationController::run()
 		      level);
        }
      }
+
+     calcWallTime();
 
      // Execute the current timestep, restarting if necessary
      printSimulationStats(d_sharedState,delt,t);
