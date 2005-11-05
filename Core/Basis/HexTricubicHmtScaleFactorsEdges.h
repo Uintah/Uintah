@@ -25,12 +25,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : HexTricubicHmtScaleFactors.h
+//    File   : HexTricubicHmtScaleFactorsEdges.h
 //    Author : Martin Cole, Frank B. Sachse
-//    Date   : Mar 1 2005
+//    Date   : Nov 5 2005
 
-#if !defined(HexTricubicHmtScaleFactors_h)
-#define HexTricubicHmtScaleFactors_h
+#if !defined(HexTricubicHmtScaleFactorsEdges_h)
+#define HexTricubicHmtScaleFactorsEdges_h
 
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Basis/HexTrilinearLgn.h>
@@ -42,28 +42,28 @@
 
 namespace SCIRun {
 
-//! Class for describing unit geometry of HexTricubicHmtScaleFactors
-class HexTricubicHmtScaleFactorsUnitElement : 
+//! Class for describing unit geometry of HexTricubicHmtScaleFactorsEdges
+class HexTricubicHmtScaleFactorsEdgesUnitElement : 
     public HexTrilinearLgnUnitElement {
 public:
-  HexTricubicHmtScaleFactorsUnitElement() {}
-  virtual ~HexTricubicHmtScaleFactorsUnitElement() {}
+  HexTricubicHmtScaleFactorsEdgesUnitElement() {}
+  virtual ~HexTricubicHmtScaleFactorsEdgesUnitElement() {}
 };
 
 
 //! Class for handling of element of type hexahedron with 
 //! tricubic hermitian interpolation with scale factors
 template <class T>
-class HexTricubicHmtScaleFactors : public BasisSimple<T>, 
+class HexTricubicHmtScaleFactorsEdges : public BasisSimple<T>, 
                                    public HexApprox, 
 				   public HexGaussian3<double>, 
-				   public HexTricubicHmtScaleFactorsUnitElement
+				   public HexTricubicHmtScaleFactorsEdgesUnitElement
 {
 public:
   typedef T value_type;
 
-  HexTricubicHmtScaleFactors() {}
-  virtual ~HexTricubicHmtScaleFactors() {}
+  HexTricubicHmtScaleFactorsEdges() {}
+  virtual ~HexTricubicHmtScaleFactorsEdges() {}
   
   int polynomial_order() const { return 3; }
 
@@ -154,32 +154,32 @@ public:
     double w[64];
     get_weights(coords, w);
 
-    const double &sx0=scalefactors_[cd.node0_index()][0];
-    const double &sx1=scalefactors_[cd.node1_index()][0];
-    const double &sx2=scalefactors_[cd.node2_index()][0];
-    const double &sx3=scalefactors_[cd.node3_index()][0];
-    const double &sx4=scalefactors_[cd.node4_index()][0];
-    const double &sx5=scalefactors_[cd.node5_index()][0];
-    const double &sx6=scalefactors_[cd.node6_index()][0];
-    const double &sx7=scalefactors_[cd.node7_index()][0];
+    const double &sx0=scalefactors_[cd.edge0_index()][0];
+    const double &sx1=scalefactors_[cd.edge0_index()][0];
+    const double &sx2=scalefactors_[cd.edge2_index()][0];
+    const double &sx3=scalefactors_[cd.edge2_index()][0];
+    const double &sx4=scalefactors_[cd.edge8_index()][0];
+    const double &sx5=scalefactors_[cd.edge8_index()][0];
+    const double &sx6=scalefactors_[cd.edge10_index()][0];
+    const double &sx7=scalefactors_[cd.edge10_index()][0];
 
-    const double &sy0=scalefactors_[cd.node0_index()][1];
-    const double &sy1=scalefactors_[cd.node1_index()][1];
-    const double &sy2=scalefactors_[cd.node2_index()][1];
-    const double &sy3=scalefactors_[cd.node3_index()][1];
-    const double &sy4=scalefactors_[cd.node4_index()][1];
-    const double &sy5=scalefactors_[cd.node5_index()][1];
-    const double &sy6=scalefactors_[cd.node6_index()][1];
-    const double &sy7=scalefactors_[cd.node7_index()][1];
+    const double &sy0=scalefactors_[cd.edge3_index()][1];
+    const double &sy1=scalefactors_[cd.edge1_index()][1];
+    const double &sy2=scalefactors_[cd.edge1_index()][1];
+    const double &sy3=scalefactors_[cd.edge3_index()][1];
+    const double &sy4=scalefactors_[cd.edge11_index()][1];
+    const double &sy5=scalefactors_[cd.edge9_index()][1];
+    const double &sy6=scalefactors_[cd.edge9_index()][1];
+    const double &sy7=scalefactors_[cd.edge11_index()][1];
 
-    const double &sz0=scalefactors_[cd.node0_index()][2];
-    const double &sz1=scalefactors_[cd.node1_index()][2];
-    const double &sz2=scalefactors_[cd.node2_index()][2];
-    const double &sz3=scalefactors_[cd.node3_index()][2];
-    const double &sz4=scalefactors_[cd.node4_index()][2];
-    const double &sz5=scalefactors_[cd.node5_index()][2];
-    const double &sz6=scalefactors_[cd.node6_index()][2];
-    const double &sz7=scalefactors_[cd.node7_index()][2];
+    const double &sz0=scalefactors_[cd.edge4_index()][2];
+    const double &sz1=scalefactors_[cd.edge5_index()][2];
+    const double &sz2=scalefactors_[cd.edge6_index()][2];
+    const double &sz3=scalefactors_[cd.edge7_index()][2];
+    const double &sz4=scalefactors_[cd.edge4_index()][2];
+    const double &sz5=scalefactors_[cd.edge5_index()][2];
+    const double &sz6=scalefactors_[cd.edge6_index()][2];
+    const double &sz7=scalefactors_[cd.edge7_index()][2];
 
     const T sdx0=derivs_[cd.node0_index()][0]*sx0;
     const T sdx1=derivs_[cd.node1_index()][0]*sx1;
@@ -325,32 +325,32 @@ public:
 
     derivs.resize(3);
 
-    const double &sx0=scalefactors_[cd.node0_index()][0];
-    const double &sx1=scalefactors_[cd.node1_index()][0];
-    const double &sx2=scalefactors_[cd.node2_index()][0];
-    const double &sx3=scalefactors_[cd.node3_index()][0];
-    const double &sx4=scalefactors_[cd.node4_index()][0];
-    const double &sx5=scalefactors_[cd.node5_index()][0];
-    const double &sx6=scalefactors_[cd.node6_index()][0];
-    const double &sx7=scalefactors_[cd.node7_index()][0];
+    const double &sx0=scalefactors_[cd.edge0_index()][0];
+    const double &sx1=scalefactors_[cd.edge0_index()][0];
+    const double &sx2=scalefactors_[cd.edge2_index()][0];
+    const double &sx3=scalefactors_[cd.edge2_index()][0];
+    const double &sx4=scalefactors_[cd.edge8_index()][0];
+    const double &sx5=scalefactors_[cd.edge8_index()][0];
+    const double &sx6=scalefactors_[cd.edge10_index()][0];
+    const double &sx7=scalefactors_[cd.edge10_index()][0];
 
-    const double &sy0=scalefactors_[cd.node0_index()][1];
-    const double &sy1=scalefactors_[cd.node1_index()][1];
-    const double &sy2=scalefactors_[cd.node2_index()][1];
-    const double &sy3=scalefactors_[cd.node3_index()][1];
-    const double &sy4=scalefactors_[cd.node4_index()][1];
-    const double &sy5=scalefactors_[cd.node5_index()][1];
-    const double &sy6=scalefactors_[cd.node6_index()][1];
-    const double &sy7=scalefactors_[cd.node7_index()][1];
+    const double &sy0=scalefactors_[cd.edge3_index()][1];
+    const double &sy1=scalefactors_[cd.edge1_index()][1];
+    const double &sy2=scalefactors_[cd.edge1_index()][1];
+    const double &sy3=scalefactors_[cd.edge3_index()][1];
+    const double &sy4=scalefactors_[cd.edge11_index()][1];
+    const double &sy5=scalefactors_[cd.edge9_index()][1];
+    const double &sy6=scalefactors_[cd.edge9_index()][1];
+    const double &sy7=scalefactors_[cd.edge11_index()][1];
 
-    const double &sz0=scalefactors_[cd.node0_index()][2];
-    const double &sz1=scalefactors_[cd.node1_index()][2];
-    const double &sz2=scalefactors_[cd.node2_index()][2];
-    const double &sz3=scalefactors_[cd.node3_index()][2];
-    const double &sz4=scalefactors_[cd.node4_index()][2];
-    const double &sz5=scalefactors_[cd.node5_index()][2];
-    const double &sz6=scalefactors_[cd.node6_index()][2];
-    const double &sz7=scalefactors_[cd.node7_index()][2];
+    const double &sz0=scalefactors_[cd.edge4_index()][2];
+    const double &sz1=scalefactors_[cd.edge5_index()][2];
+    const double &sz2=scalefactors_[cd.edge6_index()][2];
+    const double &sz3=scalefactors_[cd.edge7_index()][2];
+    const double &sz4=scalefactors_[cd.edge4_index()][2];
+    const double &sz5=scalefactors_[cd.edge5_index()][2];
+    const double &sz6=scalefactors_[cd.edge6_index()][2];
+    const double &sz7=scalefactors_[cd.edge7_index()][2];
 
     const T sdx0=derivs_[cd.node0_index()][0]*sx0;
     const T sdx1=derivs_[cd.node1_index()][0]*sx1;
@@ -619,14 +619,14 @@ public:
   bool get_coords(vector<double> &coords, const T& value, 
 		  const ElemData &cd) const  
   {
-    HexLocate< HexTricubicHmtScaleFactors<T> > CL;
+    HexLocate< HexTricubicHmtScaleFactorsEdges<T> > CL;
     return CL.get_coords(this, coords, value, cd);
   }
 
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
   void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
 
-  //! add scale factors (sdx, sdy, sdz) for nodes.
+  //! add scale factors (sdx, sdy, sdz) for edges.
   void add_scalefactors(const vector<double> &p) { scalefactors_.push_back(p); }
 
   static  const string type_name(int n = -1);
@@ -640,7 +640,7 @@ protected:
 
 template <class T>
 const string
-HexTricubicHmtScaleFactors<T>::type_name(int n)
+HexTricubicHmtScaleFactorsEdges<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -650,7 +650,7 @@ HexTricubicHmtScaleFactors<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    static const string nm("HexTricubicHmtScaleFactors");
+    static const string nm("HexTricubicHmtScaleFactorsEdges");
     return nm;
   } else {
     return find_type_name((T *)0);
@@ -659,14 +659,14 @@ HexTricubicHmtScaleFactors<T>::type_name(int n)
 
 template <class T>
 const TypeDescription*
-get_type_description(HexTricubicHmtScaleFactors<T> *)
+get_type_description(HexTricubicHmtScaleFactorsEdges<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
     const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription("HexTricubicHmtScaleFactors", 
+    td = scinew TypeDescription("HexTricubicHmtScaleFactorsEdges", 
 				subs, 
 				string(__FILE__),
 				"SCIRun", 
@@ -676,13 +676,13 @@ get_type_description(HexTricubicHmtScaleFactors<T> *)
 }
 
 
-const int HEXTRICUBICHMTSCALEFACTORS_VERSION = 1;
+const int HEXTRICUBICHMTSCALEFACTORSEDGES_VERSION = 1;
 template <class T>
 void
-HexTricubicHmtScaleFactors<T>::io(Piostream &stream)
+HexTricubicHmtScaleFactorsEdges<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
-                     HEXTRICUBICHMTSCALEFACTORS_VERSION);
+                     HEXTRICUBICHMTSCALEFACTORSEDGES_VERSION);
   Pio(stream, derivs_);
   Pio(stream, scalefactors_);
   stream.end_class();
@@ -695,4 +695,4 @@ HexTricubicHmtScaleFactors<T>::io(Piostream &stream)
 #  pragma reset woff 1506
 #endif
 
-#endif // HexTricubicHmtScaleFactors_h
+#endif // HexTricubicHmtScaleFactorsEdges_h
