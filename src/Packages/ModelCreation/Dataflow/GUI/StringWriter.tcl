@@ -35,9 +35,14 @@ itcl_class ModelCreation_DataIO_StringWriter {
     }
 
     method set_defaults {} {
-        global $this-filetype $this-confirm 
+        global $this-filetype 
+        global $this-increment
+        global $this-current
+        global $this-confirm        
         set $this-filetype Binary
         set $this-confirm 1
+        set $this-increment 0
+        set $this-current 0        
         if { ![envBool SCIRUN_CONFIRM_OVERWRITE] } {
             set $this-confirm 0
         }
@@ -45,6 +50,7 @@ itcl_class ModelCreation_DataIO_StringWriter {
         global $this-types
         global $this-exporttype
     }
+    
     method overwrite {} {
         global $this-confirm $this-filetype
         if {[info exists $this-confirm] && [info exists $this-filename] && \
@@ -100,6 +106,10 @@ itcl_class ModelCreation_DataIO_StringWriter {
             -defaultextension $defext \
             -formatvar $this-filetype \
             -confirmvar $this-confirm \
+            -incrementvar $this-increment \
+            -currentvar $this-current \
+            -formatvar $this-filetype \
+            -formats {None} \            
             -selectedfiletype $this-exporttype
 
         moveToCursor $w

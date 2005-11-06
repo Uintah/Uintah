@@ -39,6 +39,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PathReader.tcl\
 	$(SRCDIR)/PathWriter.tcl\
 	$(SRCDIR)/ReplicateDataArray.tcl\
+	$(SRCDIR)/SelectByFieldData.tcl\
+	$(SRCDIR)/SelectByFieldsData.tcl\
 	$(SRCDIR)/StringReader.tcl\
 	$(SRCDIR)/StringWriter.tcl\
 	$(SRCDIR)/FieldGetMatrixProperty.tcl\
