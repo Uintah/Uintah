@@ -341,7 +341,7 @@ itcl_class ModelCreation_Script_ParameterList {
             }
             
             iwidgets::entryfield $d.$p.f.name -width 25 -command "$this update_data $p" -foreground black -background $tensor_color -textbackground $tensor_color  -textfont paramlist_font
-            grid $d.$p.f.name -row 0 -column 1 -sticky snew
+            grid $d.$p.f.name -row 0 -column 3 -sticky snew
             $d.$p.f.name insert 0 $parname
             
             iwidgets::optionmenu $d.$p.f.type -command "$this update_type $p" -foreground black -background $tensor_color 

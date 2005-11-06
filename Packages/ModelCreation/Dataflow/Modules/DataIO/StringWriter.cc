@@ -110,18 +110,18 @@ StringWriter::execute()
 //determine if we should increment an index in the file name
   if (gui_increment_.get()) {
 
-  //warn the user if they try to use 'Increment' incorrectly	
-	const string::size_type loc2 = oldfilename.find("%d");
-	if(loc2 == string::npos) {
-	remark("To use the increment function, there must be a '%d' in the file name.");
-	}
-	
-  // ugly code, potential buffer overflow problem
-	char buf[1024];
-  int current=gui_current_.get();
-  sprintf(buf, filename_.get().c_str(), current);
+    //warn the user if they try to use 'Increment' incorrectly	
+    const string::size_type loc2 = oldfilename.find("%d");
+    if(loc2 == string::npos) {
+    remark("To use the increment function, there must be a '%d' in the file name.");
+    }
     
-	filename_.set(buf);
+    // ugly code, potential buffer overflow problem
+    char buf[1024];
+    int current=gui_current_.get();
+    sprintf(buf, filename_.get().c_str(), current);
+      
+    filename_.set(buf);
     gui_current_.set(current+1);
   }
 
