@@ -655,17 +655,22 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 		   
                   // Step 11: Convert J-integral to stress intensity (K)
                  
-                  // Task 11a: Find COD near crack tip (point(-d,0,0) in local coordinates)
-                  double d;
-                  if(d_doCrackPropagation)  // For crack propagation
-                    d=(rdadx<1.? 1.:rdadx)*dx_max;
-                  else  // For calculation of pure fracture parameters
-                    d=d_rJ/2.;
+                  // Task 11a: Find COD at crossPt or near crack tip
+                  Point p_d;
+                  if(CODOption==0 || CODOption==1) {
+                    double d;
+                    if(d_doCrackPropagation)  // For crack propagation
+                      d=(rdadx<1.? 1.:rdadx)*dx_max;
+                    else  // For calculation of pure fracture parameters
+	              d=d_rJ/2.;
 
-                  double x_d=l1*(-d)+x0;
-                  double y_d=m1*(-d)+y0;
-                  double z_d=n1*(-d)+z0;
-                  Point  p_d=Point(x_d,y_d,z_d);
+                    // If point (-d,0,0) is not on crack plane, adjust 'd'  
+                    if(CODOption==1) GetPositionToComputeCOD(m,origin,T,d);
+
+		    // Global coordinates of the point
+                    p_d=Point(-d*l1+x0,-d*m1+y0,-d*n1+z0);
+                  }                     
+                 if(CODOption==2) p_d=crossPt;
 
                   // Calculate displacements at point p_d
                   Vector disp_a=Vector(0.);
@@ -676,17 +681,13 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     disp_b += Gdisp[ni[k]] * S[k];
                   }
 
-                  // Tranform to local system
-                  Vector disp_a_prime=T*disp_a;
-                  Vector disp_b_prime=T*disp_b;
-
                   // Crack opening displacements
-                  Vector D = disp_a_prime - disp_b_prime;
+                  Vector D = T*(disp_a-disp_b);
 
                   // Task 11b: Get crack propagating velocity
                   double C=cfSegVel[m][idx];
 
-                  // Convert J-integral into stress intensity factors
+                  // Task 11c: Convert J-integral into stress intensity factors
 		  // cfJ is the components of J-integral in the crack-axis coordinates,
 		  // and its first component is the total energy release rate. 
                   Vector SIF;
@@ -840,7 +841,7 @@ bool Crack::FindIntersectionJPathAndCrackPlane(const int& m,
      v1=TwoPtsDirCos(pt1,pt2);
      Vector v12=Cross(v1,v2);
      v3=v12/v12.length(); 
-     // Transform matrix from global to local
+     // Transformation matrix from global to local
      Matrix3 T=Matrix3(v1.x(),v1.y(),v1.z(),v2.x(),v2.y(),v2.z(),
                        v3.x(),v3.y(),v3.z());
 
@@ -935,11 +936,11 @@ bool Crack::FindIntersectionJPathAndCrackPlane(const int& m,
      //   crack-elem coordinates (X', Y' and Z')
      
      Point p1p,p2p,p3p,crossPt1p,crossPt2p;
-     p1p     =Point(0.,0.,0.)+T*(pt1-pt1);
-     p2p     =Point(0.,0.,0.)+T*(pt2-pt1);
-     p3p     =Point(0.,0.,0.)+T*(pt3-pt1);
-     crossPt1p=Point(0.,0.,0.)+T*(crossPt1-pt1);
-     crossPt2p=Point(0.,0.,0.)+T*(crossPt2-pt1);
+     p1p       = Point(0.,0.,0.) + T*(pt1-pt1);
+     p2p       = Point(0.,0.,0.) + T*(pt2-pt1);
+     p3p       = Point(0.,0.,0.) + T*(pt3-pt1);
+     crossPt1p = Point(0.,0.,0.) + T*(crossPt1-pt1);
+     crossPt2p = Point(0.,0.,0.) + T*(crossPt2-pt1);
      if(PointInTriangle(crossPt1p,p1p,p2p,p3p)) {
        numCross++;
        crossPt=crossPt1;
@@ -1047,9 +1048,8 @@ void Crack::OutputCrackFrontResults(const int& m)
         if(i==cfSegMinIdx[m][i]) numSubCracks++;
         int node=cfSegNodes[m][i];
         Point cp=cx[m][node];
-	Vector cfPara = Vector(0.,0.,0.);
-	if(outputJ==true) cfPara=cfSegJ[m][i];
-	else              cfPara=cfSegK[m][i];
+	Vector cfJ = cfSegJ[m][i];
+	Vector cfK = cfSegK[m][i];
         outCrkFrt << setw(5) << timestep
                   << setw(15) << time
                   << setw(5)  << (i-1+2*numSubCracks)/2
@@ -1057,11 +1057,11 @@ void Crack::OutputCrackFrontResults(const int& m)
                   << setw(15) << cp.x()
                   << setw(15) << cp.y()
                   << setw(15) << cp.z()
-                  << setw(15) << cfPara.x()
-                  << setw(15) << cfPara.y()
-                  << setw(5) << cfPara.z();
-        if(cfPara.x()!=0.) 
-          outCrkFrt << setw(15) << cfPara.y()/cfPara.x() << endl;
+                  << setw(15) << cfJ.x()
+                  << setw(15) << cfK.x()
+                  << setw(15) << cfK.y();
+        if(cfK.x()!=0.) 
+          outCrkFrt << setw(15) << cfK.y()/cfK.x() << endl;
         else 
           outCrkFrt << setw(15) << "inf" << endl;
 
@@ -1075,11 +1075,11 @@ void Crack::OutputCrackFrontResults(const int& m)
 	            << setw(15) << cp.x()
 	            << setw(15) << cp.y()
 	            << setw(15) << cp.z()
-	            << setw(15) << cfPara.x()
-	            << setw(15) << cfPara.y()
-	            << setw(5) << cfPara.z();
-          if(cfPara.x()!=0.)
-	    outCrkFrt0 << setw(15) << cfPara.y()/cfPara.x() << endl;
+	            << setw(15) << cfJ.x()
+	            << setw(15) << cfK.x()
+	            << setw(15) << cfK.y();
+          if(cfK.x()!=0.)
+	    outCrkFrt0 << setw(15) << cfK.y()/cfK.x() << endl;
           else
 	    outCrkFrt0 << setw(15) << "inf" << endl;	
 	}
@@ -1092,11 +1092,11 @@ void Crack::OutputCrackFrontResults(const int& m)
 	             << setw(15) << cp.x()
 	             << setw(15) << cp.y()
  		     << setw(15) << cp.z()
-	             << setw(15) << cfPara.x()
-                     << setw(15) << cfPara.y()
-                     << setw(5) << cfPara.z();
-          if(cfPara.x()!=0.)
-            outCrkFrt1 << setw(15) << cfPara.y()/cfPara.x() << endl;
+	             << setw(15) << cfJ.x()
+                     << setw(15) << cfK.x()
+                     << setw(15) << cfK.y();
+          if(cfK.x()!=0.)
+            outCrkFrt1 << setw(15) << cfK.y()/cfK.x() << endl;
           else
             outCrkFrt1 << setw(15) << "inf" << endl;      
         }
@@ -1109,11 +1109,11 @@ void Crack::OutputCrackFrontResults(const int& m)
 	             << setw(15) << cp.x()
 	             << setw(15) << cp.y()
 		     << setw(15) << cp.z()
-	             << setw(15) << cfPara.x()
-	             << setw(15) << cfPara.y()
-                     << setw(5) << cfPara.z();
-          if(cfPara.x()!=0.)
-            outCrkFrt2 << setw(15) << cfPara.y()/cfPara.x() << endl;
+	             << setw(15) << cfJ.x()
+	             << setw(15) << cfK.x()
+                     << setw(15) << cfK.y();
+          if(cfK.x()!=0.)
+            outCrkFrt2 << setw(15) << cfK.y()/cfK.x() << endl;
           else 
             outCrkFrt2 << setw(15) << "inf" << endl;           
         }	  
@@ -1121,5 +1121,57 @@ void Crack::OutputCrackFrontResults(const int& m)
       }
     } // End of loop over i 
   } 
+}
+
+void Crack::GetPositionToComputeCOD(const int& m, const Point& origin,
+                                      const Matrix3& T, double& d)
+{
+  // m: material index 	
+  // origin: global coordinates of crack tip
+  // T: transformation matrix from global to local coordinates
+	
+  int n1,n2,n3,ns,ne;
+  double l1,l2,l,d0;
+  Point ps,pe,p;
+				      
+  for(int i=0; i<(int)ce[m].size(); i++) { // Loop over crack elements
+    n1=ce[m][i].x();
+    n2=ce[m][i].y();
+    n3=ce[m][i].z();
+
+    for(int j=0; j<3; j++) { // Loop over three edges of a triangle	  
+      if(j==0) {ns=n1; ne=n2;}
+      if(j==1) {ns=n2; ne=n3;}
+      if(j==2) {ns=n3; ne=n1;}
+
+      // Global coordinates of the two ends of the egde, as well as its length 
+      ps=cx[m][ns];
+      pe=cx[m][ne];
+      l=(ps-pe).length();
+
+      // Transfer global coordinates to local coordinates
+      ps=Point(0.,0.,0.)+T*(ps-origin);
+      pe=Point(0.,0.,0.)+T*(pe-origin);
+
+      // Direction cosines of line ps->pe
+      Vector v=TwoPtsDirCos(ps,pe);
+      if(v.z()!=0.) {
+	// Find the intersection between the line and plane z=0      
+        double t=-ps.z()/v.z();
+        double x=ps.x()+v.x()*t;
+        double y=ps.y()+v.y()*t;
+	p=Point(x,y,0.0);
+
+	// Compute the distances from the intersection the to two ends
+	l1=(p-ps).length();
+	l2=(p-pe).length();
+	if(fabs(l1+l2-l)<1.e-3*l) { // point 'p' on segment 'ps-pe'
+          // Distance from the intersection (p) to the origin
+          d0=sqrt(x*x+y*y);
+          if(d0<d && d0>1.e-3*l) d=d0;	  
+	}  
+      }	
+    }  
+  }	  
 }
 
