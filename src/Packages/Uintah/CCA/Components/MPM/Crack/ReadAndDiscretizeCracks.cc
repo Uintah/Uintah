@@ -62,12 +62,13 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   d_doCrackPropagation = false;
   useVolumeIntegral    = false; 
   smoothCrackFront     = false;
-  outputJ              = false; 
   saveCrackGeometry    = true;
 
   rdadx=1.;                     // Ratio of crack incremental to cell-size
   rJ=-1.;                       // Radius of J-integral contour
   NJ=2;                         // J-integral contour size  
+  CODOption=0;                  // Calculate COD at the intersection
+                                // between J-integral contour and crack plane
   
   computeJKInterval=0.;         // Intervals of calculating J & K
   growCrackInterval=0.;         // Interval of doing crack propagation
@@ -92,7 +93,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
      mpm_soln_ps->get("smooth_crack_front", smoothCrackFront);
      mpm_soln_ps->get("J_radius", rJ);
      mpm_soln_ps->get("dadx",rdadx);
-     mpm_soln_ps->get("outputJ",outputJ);
+     mpm_soln_ps->get("CODOption",CODOption);
   }
 
   // Get .uda directory 
