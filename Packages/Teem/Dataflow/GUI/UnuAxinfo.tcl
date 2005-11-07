@@ -160,7 +160,7 @@ itcl_class Teem_UnuAtoM_UnuAxinfo {
 	frame $win
 	pack $win -side left -padx 5 -pady 1 -fill x
 	iwidgets::optionmenu $win.om -labeltext "Kind:" \
-	    -labelpos w -command "$this update_kind $win $var"
+	    -labelpos w -command "$this update_kind $win.om $var"
 	$win.om insert end nrrdKindUnknown nrrdKindDomain nrrdKindScalar \
 	    nrrdKind3Color nrrdKind3Vector nrrdKind3Normal \
 	    nrrdKind3DSymMatrix nrrdKind3DMaskedSymMatrix nrrdKind3DMatrix \
@@ -176,6 +176,7 @@ itcl_class Teem_UnuAtoM_UnuAxinfo {
     }
     
     method update_kind {w var} {
+	global $var
 	set which [$w get]
 	
 	set $var $which
@@ -185,7 +186,7 @@ itcl_class Teem_UnuAtoM_UnuAxinfo {
 	set window .ui[modname]
 	
 	if {[winfo exists $window]} {
-	    set op $window.k
+	    set op $window.k.om
 	    $op select [set $this-kind]
 	}
     }
