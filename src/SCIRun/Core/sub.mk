@@ -37,6 +37,7 @@ SRCS     += \
 	     $(SRCDIR)/backtrace.cc \
 	     $(SRCDIR)/CCAException.cc \
 	     $(SRCDIR)/TypeMapImpl.cc \
+	     $(SRCDIR)/PropertiesImpl.cc \
 	     $(SRCDIR)/ConnectionIDImpl.cc \
              $(SRCDIR)/ConnectionInfoImpl.cc \
              $(SRCDIR)/PortInfoImpl.cc \

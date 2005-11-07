@@ -47,6 +47,7 @@
 namespace SCIRun {
   
   using namespace sci::cca;
+  using namespace sci::cca::ports;
   using namespace sci::cca::core;
   
   template<class Interface>

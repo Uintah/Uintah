@@ -27,7 +27,7 @@
 */
 
 /*
- *  TypeMapImpl.h:
+ *  PropertiesImpl.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -37,27 +37,26 @@
  *
  */
 
-#ifndef SCIRun_TypeMapImpl_h
-#define SCIRun_TypeMapImpl_h
+#ifndef SCIRun_PropertiesImpl_h
+#define SCIRun_PropertiesImpl_h
 
-#include <SCIRun/Core/TypeMapBase.h>
+#include <SCIRun/Core/PropertiesBase.h>
 
 namespace SCIRun {
 
   using namespace sci::cca;
   
-  class TypeMapImpl : public TypeMapBase<TypeMap> {
+  class PropertiesImpl : public PropertiesBase<Properties> {
   public:
-    typedef TypeMap::pointer pointer;
+    typedef Properties::pointer pointer;
 
-    TypeMapImpl();
-    virtual ~TypeMapImpl();
+    PropertiesImpl();
+    virtual ~PropertiesImpl();
 
     TypeMap::pointer cloneEmpty()
     {
-      return new TypeMapImpl; 
+      return new PropertiesImpl; 
     }
-
   };
 
 } //SCIRun namespace
