@@ -46,15 +46,13 @@ public:
 private:
 
   GuiString  inputstring_;
-  GuiString  getinputstring_;
 };
 
 
 DECLARE_MAKER(CreateString)
 CreateString::CreateString(GuiContext* ctx)
   : Module("CreateString", ctx, Source, "String", "SCIRun"),
-  inputstring_(ctx->subVar("inputstring")),
-  getinputstring_(ctx->subVar("get-inputstring"))
+  inputstring_(ctx->subVar("inputstring"))
 {
 }
 
@@ -65,7 +63,7 @@ CreateString::~CreateString()
 void CreateString::execute()
 {
   gui->lock();
-  gui->execute(getinputstring_.get());
+  gui->execute( getID()+" update_text");
   gui->unlock();
 
   StringOPort* oport;
