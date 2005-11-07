@@ -7,7 +7,7 @@
 
 <!-- \li Services interface; Bug 2781: registerUsesPort,  addProvidesPort do not support spec properties: by September 30 -->
 <!-- \li GUI Prototypes: by September 30 -->
-\li Replace Qt GUI toolkit: by November 7
+\li Replace Qt GUI toolkit: TBD
 \li Migrate loading/saving network files to a Framework service: TBD
 <!-- MPICH done, others? -->
 
