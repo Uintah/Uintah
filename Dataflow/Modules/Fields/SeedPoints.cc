@@ -41,9 +41,12 @@
 
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/Tensor.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -52,10 +55,7 @@
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Dataflow/Widgets/ArrowWidget.h>
 #include <Dataflow/Widgets/RingWidget.h>
-#include <Core/Datatypes/PointCloudMesh.h>
 
-#include <Core/Basis/Constant.h>
-#include <Core/Datatypes/GenericField.h>
 
 #include <Core/Datatypes/Clipper.h>
 #include <iostream>
