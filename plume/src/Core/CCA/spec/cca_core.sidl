@@ -89,7 +89,7 @@ package sci {
 	extends Services, ComponentInfo
       {
       }
-
+      
       // Ports
 
       enum PortType {
@@ -146,8 +146,29 @@ package sci {
 	void addComponentClassFactory( in ComponentClassFactory );
 	bool addFrameworkServiceFactory(in ServiceFactory);
 	void removeFrameworkServiceFactory(in string serviceName);
+
+	// internals
+// 	void setDefaultProperties( in Properties );
+// 	Properties getDefaultProperties();
       }
-      
+
+      interface Properties extends TypeMap 
+      {
+	void add( in TypeMap );
+	//void remove( in TypeMap );
+	void merge( in TypeMap );
+      }
+
+      package ports {
+	interface FrameworkProperties 
+	{
+	  TypeMap getProperties();
+	  void setProperties( in TypeMap );
+	  void addProperties( in TypeMap );
+	  void removeProperties(in TypeMap );
+	}
+
+      }
     } // core
 
   } // cca

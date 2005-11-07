@@ -1,5 +1,4 @@
-/*
-   For more information, please see: http://software.sci.utah.edu
+/* For more information, please see: http://software.sci.utah.edu
 
    The MIT License
 
@@ -26,8 +25,9 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+
 /*
- *  TypeMapImpl.h:
+ *  PropertiesImpl.cc:
  *
  *  Written by:
  *   Keming Zhang
@@ -37,30 +37,21 @@
  *
  */
 
-#ifndef SCIRun_TypeMapImpl_h
-#define SCIRun_TypeMapImpl_h
-
-#include <SCIRun/Core/TypeMapBase.h>
+#include <Core/CCA/spec/sci_sidl.h>
+#include <SCIRun/Core/PropertiesImpl.h>
+#include <SCIRun/Core/PropertiesBase.code>
 
 namespace SCIRun {
 
   using namespace sci::cca;
+
+  PropertiesImpl::PropertiesImpl()
+  {
+  }
   
-  class TypeMapImpl : public TypeMapBase<TypeMap> {
-  public:
-    typedef TypeMap::pointer pointer;
-
-    TypeMapImpl();
-    virtual ~TypeMapImpl();
-
-    TypeMap::pointer cloneEmpty()
-    {
-      return new TypeMapImpl; 
-    }
-
-  };
-
-} //SCIRun namespace
+  PropertiesImpl::~PropertiesImpl()
+  {
+  }
 
 
-#endif
+} // end namespace SCIRun
