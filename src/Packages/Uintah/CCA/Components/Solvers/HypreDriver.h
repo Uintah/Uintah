@@ -373,12 +373,12 @@ namespace Uintah {
         
         double dt = SCIRun::Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
-          cout_dbg << "Solve of " << _X_label->getName() 
-                   << " on level " << _level->getIndex()
-                   << " completed in " << dt 
-                   << " seconds (solve only: " << solve_dt 
-                   << " seconds, " << numIterations
-                   << " iterations, residual=" << finalResNorm << ")\n";
+          cerr << "Solve of " << _X_label->getName() 
+               << " on level " << _level->getIndex()
+               << " completed in " << dt 
+               << " seconds (solve only: " << solve_dt 
+               << " seconds, " << numIterations
+               << " iterations, residual=" << finalResNorm << ")\n";
         }
           
         delete solver;
