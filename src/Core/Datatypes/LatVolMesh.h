@@ -1679,27 +1679,36 @@ LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
 {
   const Point r = transform_.unproject(p);
 
-  const double rx = floor(r.x());
-  const double ry = floor(r.y());
-  const double rz = floor(r.z());
+  double ii = r.x();
+  double jj = r.y();
+  double kk = r.z();
 
-  // Clamp in double space to avoid overflow errors.
-  if (rx < 0.0L || ry < 0.0L || rz < 0.0L ||
-      rx >= (ni_-1) || ry >= (nj_-1) || rz >= (nk_-1))
+  if (ii>(ni_-1) && (ii-(MIN_ELEMENT_VAL))<(ni_-1)) ii=ni_-1-(MIN_ELEMENT_VAL);
+  if (jj>(nj_-1) && (jj-(MIN_ELEMENT_VAL))<(nj_-1)) jj=nj_-1-(MIN_ELEMENT_VAL);
+  if (kk>(nk_-1) && (kk-(MIN_ELEMENT_VAL))<(nk_-1)) kk=nk_-1-(MIN_ELEMENT_VAL);
+  if (ii<0 && ii>(-MIN_ELEMENT_VAL)) ii=0;
+  if (jj<0 && jj>(-MIN_ELEMENT_VAL)) jj=0;
+  if (kk<0 && kk>(-MIN_ELEMENT_VAL)) kk=0;
+
+  const unsigned int i = (unsigned int)floor(ii);
+  const unsigned int j = (unsigned int)floor(jj);
+  const unsigned int k = (unsigned int)floor(kk);
+  
+  if (i < (ni_-1) && i >= 0 &&
+      j < (nj_-1) && j >= 0 &&
+      k < (nk_-1) && k >= 0)
   {
-    cell.i_ = (unsigned int)Max(Min(rx,(double)(ni_-1)), 0.0);
-    cell.j_ = (unsigned int)Max(Min(ry,(double)(nj_-1)), 0.0);
-    cell.k_ = (unsigned int)Max(Min(rz,(double)(nk_-1)), 0.0);
+    cell.i_ = i;
+    cell.j_ = j;
+    cell.k_ = k;
     cell.mesh_ = this;
-    return false;
+    return true;
   }
-
-  cell.i_ = (unsigned int)rx;
-  cell.j_ = (unsigned int)ry;
-  cell.k_ = (unsigned int)rz;
+  cell.i_ = (unsigned int)Max(Min(ii,(double)(ni_-1)), 0.0);
+  cell.j_ = (unsigned int)Max(Min(jj,(double)(nj_-1)), 0.0);
+  cell.k_ = (unsigned int)Max(Min(kk,(double)(nk_-1)), 0.0);
   cell.mesh_ = this;
-
-  return true;
+  return false;
 }
 
 
@@ -1741,36 +1750,9 @@ LatVolMesh<Basis>::get_weights(const Point &p,
 			       typename Node::array_type &locs, 
 			       double *w)
 {
-  const Point r = transform_.unproject(p);
-  double ii = r.x();
-  double jj = r.y();
-  double kk = r.z();
-
-  if (ii>(ni_-1) && (ii-(MIN_ELEMENT_VAL))<(ni_-1)) ii=ni_-1-(MIN_ELEMENT_VAL);
-  if (jj>(nj_-1) && (jj-(MIN_ELEMENT_VAL))<(nj_-1)) jj=nj_-1-(MIN_ELEMENT_VAL);
-  if (kk>(nk_-1) && (kk-(MIN_ELEMENT_VAL))<(nk_-1)) kk=nk_-1-(MIN_ELEMENT_VAL);
-  if (ii<0 && ii>(-MIN_ELEMENT_VAL)) ii=0;
-  if (jj<0 && jj>(-MIN_ELEMENT_VAL)) jj=0;
-  if (kk<0 && kk>(-MIN_ELEMENT_VAL)) kk=0;
-
-  const unsigned int i = (unsigned int)floor(ii);
-  const unsigned int j = (unsigned int)floor(jj);
-  const unsigned int k = (unsigned int)floor(kk);
-
-  if (i < (ni_-1) && i >= 0 &&
-      j < (nj_-1) && j >= 0 &&
-      k < (nk_-1) && k >= 0)
-  {
-    locs.resize(8);
-    locs[0].i_ = i;   locs[0].j_ = j;   locs[0].k_ = k;   locs[0].mesh_=this;
-    locs[1].i_ = i+1; locs[1].j_ = j;   locs[1].k_ = k;   locs[1].mesh_=this;
-    locs[2].i_ = i+1; locs[2].j_ = j+1; locs[2].k_ = k;   locs[2].mesh_=this;
-    locs[3].i_ = i;   locs[3].j_ = j+1; locs[3].k_ = k;   locs[3].mesh_=this;
-    locs[4].i_ = i;   locs[4].j_ = j;   locs[4].k_ = k+1; locs[4].mesh_=this;
-    locs[5].i_ = i+1; locs[5].j_ = j;   locs[5].k_ = k+1; locs[5].mesh_=this;
-    locs[6].i_ = i+1; locs[6].j_ = j+1; locs[6].k_ = k+1; locs[6].mesh_=this;
-    locs[7].i_ = i;   locs[7].j_ = j+1; locs[7].k_ = k+1; locs[7].mesh_=this;
-    typename Cell::index_type idx(this, i, j, k);
+  typename Cell::index_type idx;
+  if (locate(idx, p)) {
+    get_nodes(locs, idx);
     vector<double> coords(3);
     if (get_coords(coords, p, idx)) {
       bool rval = basis_.get_weights(coords, w);
