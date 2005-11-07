@@ -1677,15 +1677,13 @@ template <class Basis>
 bool
 LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
 {
-  cerr << "locating point: " << p << std::endl;
   const Point r = transform_.unproject(p);
-  cerr << "transformed point: " << r << std::endl; 
+
   const double rx = floor(r.x());
   const double ry = floor(r.y());
   const double rz = floor(r.z());
-  cerr << "rounded: " << rx << ", " << ry << ", " << rz << std::endl;
+
   // Clamp in double space to avoid overflow errors.
-  cerr << "size" << ni_ << ", " << nj_ << ", " << nk_ << std::endl;
   if (rx < 0.0L || ry < 0.0L || rz < 0.0L ||
       rx >= (ni_-1) || ry >= (nj_-1) || rz >= (nk_-1))
   {
@@ -1693,7 +1691,6 @@ LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
     cell.j_ = (unsigned int)Max(Min(ry,(double)(nj_-1)), 0.0);
     cell.k_ = (unsigned int)Max(Min(rz,(double)(nk_-1)), 0.0);
     cell.mesh_ = this;
-    cerr << "locate failed" << std::endl;
     return false;
   }
 
