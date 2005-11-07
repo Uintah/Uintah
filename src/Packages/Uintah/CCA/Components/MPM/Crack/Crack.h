@@ -19,6 +19,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Components/MPM/Crack/CrackGeometry.h>
 
@@ -169,7 +170,6 @@ class Crack
     enum {R=0, L};                 // Right (R=0) or left (L=1)
     Output* dataArchiver;          // Data archiving information
     string udaDir;                 // Base file directory
-    bool outputJ;                  // Output J-integral (false by default) 
     string 
     GridBCType[Patch::numFaces];   // BC types of global grid
     Point GLP, GHP;                // Lowest and highest pt of real global grid 
@@ -187,10 +187,16 @@ class Crack
     bool d_doCrackPropagation;     // Do crack propagation, "no" by default
     bool calFractParameters;       // Calculate J or K at this step
     bool doCrackPropagation;       // Do crack propagation at this step
+    int  CODOption;                // CODOption=0 (by default): 
+                                   //   calculate COD at a fixed location; 
+                                   // CODOption=1: calculate COD at the farthest position 
+                                   //   on the crack element at crack-front;
+                                   // CODOption=2: calculate COD at the intersection 
+                                   //   between J-integral contour and crack plane; 
 
     // Physical parameters of cracks
     vector<string> crackType;      // Crack contact type
-    vector<double> cmu;            // Crack surface frcition coefficients
+    vector<double> cmu;            // Crack surface friction coefficient
 
     vector<CrackGeometry*> d_crackGeometry;
 
@@ -299,6 +305,7 @@ class Crack
     void   FindPlaneEquation(const Point&,const Point&,const Point&,
                              double&,double&,double&,double&);
     short  PointInTriangle(const Point&,const Point&,const Point&,const Point&); 
+    void   GetPositionToComputeCOD(const int&,const Point&,const Matrix3&,double&);
     void   OutputCrackFrontResults(const int&);    
 
            // Private methods in CrackPropagation.cc
