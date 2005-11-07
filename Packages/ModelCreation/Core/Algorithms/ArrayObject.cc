@@ -107,7 +107,7 @@ bool ArrayObject::create_inputdata(SCIRun::MatrixHandle matrix, std::string name
   if (ncols_ == 3) type_ = MATRIXVECTOR;
   if ((ncols_ == 6)||(ncols_ == 9)) type_ = MATRIXTENSOR;
   
-  if (type_ == INVALID) return(FALSE);    
+  if (type_ == INVALID) return(false);    
 
   return(true);
 }
@@ -294,7 +294,7 @@ bool ArrayObject::create_outputdata(int size, std::string datatype, std::string 
 {    
   clear();
   
-  if (size_ == 0)
+  if (size == 0)
   {
     error("Output matrix size is 0");
     return(false);
