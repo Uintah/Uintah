@@ -40,7 +40,7 @@
  */
 
 #include <Dataflow/Ports/Colormap2Port.h>
-#include <Dataflow/Modules/DataIO/GenericReader.h>
+#include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericReader.h>
 //#include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 
 namespace ModelCreation {

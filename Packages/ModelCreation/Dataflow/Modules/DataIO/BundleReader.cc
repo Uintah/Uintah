@@ -40,7 +40,7 @@
 #include <Dataflow/Ports/BundlePort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Modules/DataIO/GenericReader.h>
+#include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericReader.h>
 
 namespace ModelCreation {
 

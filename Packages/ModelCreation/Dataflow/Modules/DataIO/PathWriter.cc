@@ -40,7 +40,7 @@
  */
 
 #include <Dataflow/Ports/PathPort.h>
-#include <Dataflow/Modules/DataIO/GenericWriter.h>
+#include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
 
 
 

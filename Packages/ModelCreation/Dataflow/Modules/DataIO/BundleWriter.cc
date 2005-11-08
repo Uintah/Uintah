@@ -39,7 +39,7 @@
 #include <Dataflow/Ports/BundlePort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Modules/DataIO/GenericWriter.h>
+#include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
 
 namespace ModelCreation {
 
