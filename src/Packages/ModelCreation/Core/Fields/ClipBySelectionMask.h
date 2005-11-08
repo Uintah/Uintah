@@ -176,7 +176,7 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
       }
       else
       {
-        if (counter > (onode.size()/2)) keepelement = true;
+        if (counter > (onodes.size()/2)) keepelement = true;
       }
     }
       
@@ -226,7 +226,7 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
     double *d = scinew double[nrows];
     if ((rr ==0)||(cc==0)||(d==0))
     {
-      error("ClipFieldBySelectionMask: Could not allocate Interpolant Matrix");
+      pr->error("ClipFieldBySelectionMask: Could not allocate Interpolant Matrix");
       return(false);
     }
     interpolant = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d));
@@ -251,7 +251,7 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
   }
   else if (field->basis_order == 0)
   {
-    FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
+    FIELD *field = dynamic_cast<FIELD *>(input.get_rep());
 
     const int nrows = elemmap.size();
     const int ncols = field->fdata().size();
@@ -260,7 +260,7 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
     double *d = scinew double[nrows];
     if ((rr ==0)||(cc==0)||(d==0))
     {
-      error("ClipFieldBySelectionMask: Could not allocate Interpolant Matrix");
+      pr->error("ClipFieldBySelectionMask: Could not allocate Interpolant Matrix");
       return(false);
     }
 
@@ -287,8 +287,8 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
   }
   else
   {
-    mod->warning("ClipFieldBySelectionMask: Unable to copy data at this field data location");
-    mod->warning("ClipFieldBySelectionMask: No interpolant computed for field data location");
+    pr->warning("ClipFieldBySelectionMask: Unable to copy data at this field data location");
+    pr->warning("ClipFieldBySelectionMask: No interpolant computed for field data location");
     interpolant = 0;
   }
 

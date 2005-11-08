@@ -516,7 +516,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
             objectmesh->get_point(p2,nodes[2]);
             if(sdistance(p,p0,p1,p2,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -537,10 +537,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
             objectmesh->get_point(p2,nodes[2]);
             if (sdistance(p,p0,p1,p2,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -570,7 +570,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
             objectmesh->get_point(p3,nodes[3]);
             if(sdistance(p,p0,p1,p2,p3,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -592,10 +592,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
             objectmesh->get_point(p3,nodes[3]);
             if (sdistance(p,p0,p1,p2,p3,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -650,7 +650,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
             objectmesh->get_point(p2,nodes[2]);
             if(sdistance(p,p0,p1,p2,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -671,10 +671,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
             objectmesh->get_point(p2,nodes[2]);
             if (sdistance(p,p0,p1,p2,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -704,7 +704,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
             objectmesh->get_point(p3,nodes[3]);
             if(sdistance(p,p0,p1,p2,p3,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -726,10 +726,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
             objectmesh->get_point(p3,nodes[3]);
             if (sdistance(p,p0,p1,p2,p3,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -822,7 +822,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
             objectmesh->get_point(p2,nodes[2]);
             if(sdistance(p,p0,p1,p2,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -843,10 +843,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
             objectmesh->get_point(p2,nodes[2]);
             if (sdistance(p,p0,p1,p2,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -876,7 +876,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
             objectmesh->get_point(p3,nodes[3]);
             if(sdistance(p,p0,p1,p2,p3,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -898,10 +898,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
             objectmesh->get_point(p3,nodes[3]);
             if (sdistance(p,p0,p1,p2,p3,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -956,7 +956,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
             objectmesh->get_point(p2,nodes[2]);
             if(sdistance(p,p0,p1,p2,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -977,10 +977,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
             objectmesh->get_point(p2,nodes[2]);
             if (sdistance(p,p0,p1,p2,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -1010,7 +1010,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
             objectmesh->get_point(p3,nodes[3]);
             if(sdistance(p,p0,p1,p2,p3,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -1032,10 +1032,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
             objectmesh->get_point(p3,nodes[3]);
             if (sdistance(p,p0,p1,p2,p3,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -1127,7 +1127,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
             objectmesh->get_point(p2,nodes[2]);
             if(sdistance(p,p0,p1,p2,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -1148,10 +1148,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
             objectmesh->get_point(p2,nodes[2]);
             if (sdistance(p,p0,p1,p2,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -1181,7 +1181,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
             objectmesh->get_point(p3,nodes[3]);
             if(sdistance(p,p0,p1,p2,p3,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -1203,10 +1203,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
             objectmesh->get_point(p3,nodes[3]);
             if (sdistance(p,p0,p1,p2,p3,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -1261,7 +1261,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
             objectmesh->get_point(p2,nodes[2]);
             if(sdistance(p,p0,p1,p2,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -1282,10 +1282,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
             objectmesh->get_point(p2,nodes[2]);
             if (sdistance(p,p0,p1,p2,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -1315,7 +1315,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
             objectmesh->get_point(p3,nodes[3]);
             if(sdistance(p,p0,p1,p2,p3,dist)) 
             {
-              absdist = abs(dist);
+              absdist = fabs(dist);
               break;
             }
             ++bt;
@@ -1337,10 +1337,10 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
             objectmesh->get_point(p3,nodes[3]);
             if (sdistance(p,p0,p1,p2,p3,d))
             {
-              if(abs(d) < absdist ) 
+              if(fabs(d) < absdist ) 
               {
                 dist = d;
-                absdist = abs(d);
+                absdist = fabs(d);
               }
             }
             ++bt;
@@ -1529,7 +1529,6 @@ inline bool DistanceToFieldAlgo::sdistance(Point c,Point t1,Point t2, Point t3, 
   Vector n = Cross(Vector(t2-t1),Vector(t3-t2));
   if (Dot(n,n) < 1e-16)
   { // Element has no size, skip this one
-    std::cout << "dot(n,n) = 0\n"; 
     return(false);
   }
   
@@ -1679,7 +1678,7 @@ inline bool DistanceToFieldAlgo::sdistance(Point c,Point t1,Point t2, Point t3, 
   double d1, d2;
   if(!(sdistance(c,t1,t2,t3,d1))) return(false);
   if(!(sdistance(c,t3,t4,t1,d2))) return(false);
-  dist = abs(d1)<abs(d2)?d1:d2;
+  dist = fabs(d1)<fabs(d2)?d1:d2;
   return(true);
 }
 

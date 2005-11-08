@@ -116,7 +116,7 @@ bool SetFieldScalarDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     if (((data->ncols() ==1)&&(data->nrows() == size))||
         ((data->ncols() ==size)&&(data->nrows() == 1)))
@@ -149,7 +149,7 @@ bool SetFieldScalarDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     if (((data->ncols() ==1)&&(data->nrows() == size))||
         ((data->ncols() ==size)&&(data->nrows() == 1)))
@@ -208,7 +208,7 @@ bool SetFieldVectorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     if ((data->ncols() ==3)&&(data->nrows() == size))
     {
@@ -262,7 +262,7 @@ bool SetFieldVectorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     if ((data->ncols() ==3)&&(data->nrows() == size))
     {
@@ -342,7 +342,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     if ((data->ncols() ==6)&&(data->nrows() == size))
     {
@@ -469,7 +469,7 @@ bool SetFieldTensorDataAlgoT<FIELD>::setfielddata(SCIRun::ProgressReporter *repo
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     if ((data->ncols() ==6)&&(data->nrows() == size))
     {
