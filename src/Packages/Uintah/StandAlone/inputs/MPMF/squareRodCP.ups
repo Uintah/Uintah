@@ -81,7 +81,7 @@
                         <center>     [0.,    0.,   4.6188e-3] </center>
                         <point_axis1>[15.98e-3, 0.0, -4.6188e-3] </point_axis1>
                         <point_axis2>[0.0, 15.98e-3, -4.6188e-3] </point_axis2>
-                        <extent>quarter</extent>
+                        <extent>90</extent>
                         <resolution_circumference>16</resolution_circumference>
                       </partial_ellipse>
                    </crack_segments>
