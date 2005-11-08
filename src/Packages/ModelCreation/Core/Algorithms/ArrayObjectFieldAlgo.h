@@ -720,7 +720,7 @@ void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getlength(TensorVectorMath::Scala
 template<class FIELD, class LOC>
 void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getarea(TensorVectorMath::Scalar& area)
 {
-  length = mesh_->get_area(*it_);
+  area = mesh_->get_area(*it_);
 }
 
 template<class FIELD, class LOC>
