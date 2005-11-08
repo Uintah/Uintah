@@ -49,6 +49,8 @@
 // CANNOT INSTANTIATE EVERY PIECE, ALTHOUGH NEWER COMPILERS LIKE GCC4, WILL CHECK
 // THE CODE EVEN IF IT IS NOT USED.....
 
+#include <math.h>
+
 // STL STUFF
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -1032,7 +1034,7 @@ bool FieldToMatlabAlgo::mladdxyzmesh1d(MESH* mesh,matlabarray mlarray)
     mesh->synchronize(SCIRun::Mesh::NODES_E);
     typename MESH::Node::size_type size;
 
-    meshH->size(size);
+    mesh->size(size);
     unsigned int numnodes = static_cast<unsigned int>(size);
     x.createdensearray(static_cast<long>(numnodes),1,matlabarray::miDOUBLE);
     y.createdensearray(static_cast<long>(numnodes),1,matlabarray::miDOUBLE);
@@ -1045,7 +1047,7 @@ bool FieldToMatlabAlgo::mladdxyzmesh1d(MESH* mesh,matlabarray mlarray)
     SCIRun::Point P;
     for (unsigned int p = 0; p < numnodes ; p++)
     {
-      meshH->get_point(P,typename MESH::Node::index_type(p));
+      mesh->get_point(P,typename MESH::Node::index_type(p));
       xbuffer[p] = P.x();
       ybuffer[p] = P.y();
       zbuffer[p] = P.z();
@@ -1640,7 +1642,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
     unsigned int dim2 = fdata.dim2();
     unsigned int dim3 = fdata.dim3();  
 
-    SCIRun::Tensore ***dataptr = fdata.get_dataptr();
+    SCIRun::Tensor ***dataptr = fdata.get_dataptr();
 
     std::vector<double> data(dim1*dim2*dim3*9);
     for (p=0,q=0;q<dim1;q++)
@@ -1700,7 +1702,7 @@ bool FieldToMatlabAlgo::mladdfieldedges(FIELD *field,MESH *mesh,matlabarray mlar
   if (isconstant(basis))
   {
     std::vector<typename FIELD::value_type> &fdata = field->fdata(); 
-    fieldegde.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
+    fieldedge.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
     std::vector<unsigned int> mapping;
     for (size_t p = 0; p < fdata.size(); p++)
     {
