@@ -171,12 +171,30 @@ inline int Floor(double d)
   }
 }
 
+inline int Floor(float d)
+{
+  if(d<0){
+    int i=-(int)-d;
+    if((float)i == d)
+      return i;
+    else
+      return i-1;
+  } else {
+    return (int)d;
+  }
+}
+
 // this version is twice as fast for negative numbers
 // (on an available Pentium 4 machine, only about 25%
 // faster on Powerbook G4)
 // than the more robust version above, but will only
 //work for fabs(d) <= offset, use with caution
 inline int Floor(double d, int offset)
+{
+   return (int)(d + offset) - offset;
+}
+
+inline int Floor(float d, int offset)
 {
    return (int)(d + offset) - offset;
 }
@@ -195,11 +213,30 @@ inline int Ceil(double d)
   }
 }
 
+inline int Ceil(float d)
+{
+  if(d<0){
+    int i=-(int)-d;
+    return i;
+  } else {
+    int i=(int)d;
+    if((float)i == d)
+      return i;
+    else
+      return i+1;
+  }
+}
+
 // using the same trick as above, this
 // version of Ceil is a bit faster for
 // the architectures it has been tested
 // on (Pentium4, Powerbook G4)
 inline int Ceil(double d, int offset)
+{
+   return (int)(d - offset) + offset;
+}
+
+inline int Ceil(float d, int offset)
 {
    return (int)(d - offset) + offset;
 }
