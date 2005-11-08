@@ -41,7 +41,7 @@
 
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/StringPort.h>
-#include <Dataflow/Modules/DataIO/GenericWriter.h>
+#include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 
 

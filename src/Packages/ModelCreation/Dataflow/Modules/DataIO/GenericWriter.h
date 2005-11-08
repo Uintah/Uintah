@@ -50,8 +50,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Persistent/Pstreams.h>
+#include <Core/Datatypes/String.h>
+#include <Dataflow/Ports/StringPort.h>
 
-namespace SCIRun {
+using namespace SCIRun;
+
+namespace ModelCreation {
 
 
 template <class HType>
@@ -153,6 +157,7 @@ GenericWriter<HType>::execute()
 
 
   // If no name is provided, return.
+
   const string fn(filename_.get());
   if (fn == "")
   {
