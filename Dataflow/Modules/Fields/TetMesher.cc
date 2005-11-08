@@ -35,12 +35,12 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/NoData.h>
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <algorithm>
