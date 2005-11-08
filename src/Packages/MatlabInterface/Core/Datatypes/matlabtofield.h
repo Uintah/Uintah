@@ -936,7 +936,7 @@ bool MatlabToFieldAlgo::addfield(SCIRun::FData2d<SCIRun::Tensor,MESH> &fdata)
   unsigned int dim1 = fdata.dim1();
   unsigned int dim2 = fdata.dim2();
 
-  if (mlarray.getm() == 6)
+  if (mlfield.getm() == 6)
   { // Compressed tensor data : xx,yy,zz,xy,xz,yz
     if (numdata > (6*fdata.size())) numdata = (6*fdata.size()); // make sure we do not copy more data than there are elements
     unsigned int q,r,p;
@@ -974,7 +974,7 @@ bool MatlabToFieldAlgo::addfield(SCIRun::FData3d<SCIRun::Tensor,MESH> &fdata)
   unsigned int dim3 = fdata.dim3();
         
   unsigned int numdata = fielddata.size();
-  if (mlarray.getm() == 6)
+  if (mlfield.getm() == 6)
   { // Compressed tensor data : xx,yy,zz,xy,xz,yz
     if (numdata > (6*fdata.size())) numdata = (6*fdata.size()); // make sure we do not copy more data than there are elements
     unsigned int q,r,s,p;

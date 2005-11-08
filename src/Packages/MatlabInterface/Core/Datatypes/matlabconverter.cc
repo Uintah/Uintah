@@ -32,6 +32,7 @@
  * DATE: 17 OCT 2004
  */
 
+#include <math.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
 
 

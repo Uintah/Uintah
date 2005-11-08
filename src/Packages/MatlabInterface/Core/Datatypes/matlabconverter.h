@@ -55,6 +55,13 @@
  * SCIRun data types have a lot of different classes, hence we need to include
  * a large number of class definitions......
  */
+
+#include <math.h>
+
+// FIXING PROBLEMS WITH MESH DEFINITIONS
+namespace SCIRun {
+  inline double pow(double p, double r) { return(::pow(p,r)); }
+}
  
 #include <sgi_stl_warnings_off.h>
 #include <vector>
