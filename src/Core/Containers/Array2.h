@@ -43,16 +43,20 @@
 #ifndef SCI_Containers_Array2_h
 #define SCI_Containers_Array2_h 1
 
+#ifndef SCI_NOPERSISTENT
 #include <sci_defs/template_defs.h>
 #include <Core/Persistent/Persistent.h>
+#endif
 
 namespace SCIRun {
 
 class RigorousTest;
 
 template<class T> class Array2;
+#ifndef SCI_NOPERSISTENT
 template<class T> void Pio(Piostream& stream, Array2<T>& data);
 template<class T> void Pio(Piostream& stream, Array2<T>*& data);
+#endif // #ifndef SCI_NOPERSISTENT
 
 /**************************************
 
@@ -142,6 +146,7 @@ public:
   //Rigorous Tests
   static void test_rigorous(RigorousTest* __test);
 
+#ifndef SCI_NOPERSISTENT
 #if defined(_AIX)
   template <typename Type> 
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<Type>&);
@@ -151,6 +156,7 @@ public:
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<T>&);
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<T>*&);
 #endif
+#endif // #ifndef SCI_NOPERSISTENT
 };
 
 template<class T>
@@ -233,6 +239,8 @@ void Array2<T>::copy(const Array2<T> &copy)
 
 #define Array2_VERSION 1
 
+#ifndef SCI_NOPERSISTENT
+
 template<class T>
 void Pio(Piostream& stream, Array2<T>& data)
 {
@@ -262,6 +270,7 @@ void Pio(Piostream& stream, Array2<T>*& data) {
   }
   Pio(stream, *data);
 }
+#endif // #ifndef SCI_NOPERSISTENT
 
 } // End namespace SCIRun
 

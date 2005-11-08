@@ -43,7 +43,9 @@
 #ifndef SCI_Containers_Array3_h
 #define SCI_Containers_Array3_h 1
 
+#ifndef SCI_NOPERSISTENT
 #include <sci_defs/template_defs.h>
+#endif // #ifndef SCI_NOPERSISTENT
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -54,8 +56,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#ifndef SCI_NOPERSISTENT
 #include <Core/Persistent/Persistent.h>
-
+#endif // #ifndef SCI_NOPERSISTENT
 
 
 namespace SCIRun {
@@ -63,9 +66,11 @@ namespace SCIRun {
 class RigorousTest;
 
 template<class T> class Array3;
+#ifndef SCI_NOPERSISTENT
 template<class T> void Pio(Piostream& stream, Array3<T>& array);
 template<class T> void Pio(Piostream& stream, Array3<T>& array, const string&);
 template<class T> void Pio(Piostream& stream, Array3<T>*& array);
+#endif // #ifndef SCI_NOPERSISTENT
 
 /**************************************
 
@@ -166,6 +171,7 @@ public:
   //Rigorous Tests
   static void test_rigorous(RigorousTest* __test);
     
+#ifndef SCI_NOPERSISTENT
 #if defined(_AIX)
   template <typename type>
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<type>&);
@@ -180,6 +186,7 @@ public:
 					     const string &);
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>*&);
 #endif
+#endif // #ifndef SCI_NOPERSISTENT
 };
 
 template<class T>
@@ -293,6 +300,8 @@ Array3<T>::get_onedim_byte( unsigned char *v )
 
 #define ARRAY3_VERSION 1
 
+#ifndef SCI_NOPERSISTENT
+
 template<class T>
 void Pio(Piostream& stream, Array3<T>& data)
 {
@@ -359,6 +368,7 @@ void Pio(Piostream& stream, Array3<T>& data,
     
   stream.end_class();
 }
+#endif // #ifndef SCI_NOPERSISTENT
 
 template<class T>
 int
