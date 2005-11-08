@@ -95,13 +95,13 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else if (input->basis_order() == 0)
   {
-    typename FIELD::mesh_type* mesh = field->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = input->mesh().get_rep();
     typename FIELD::mesh_type::Elem::size_type size;
     typename FIELD::mesh_type::Elem::iterator it, it_end;
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,1));
     if (output.get_rep() == 0)
@@ -118,6 +118,7 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     }
 
     size_t k = 0;
+    FIELD* field = dynamic_cast<FIELD*>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
@@ -129,13 +130,13 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else 
   {
-    typename FIELD::mesh_type* mesh = field->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = input->mesh().get_rep();
     typename FIELD::mesh_type::Node::size_type size;
     typename FIELD::mesh_type::Node::iterator it, it_end;
     
     mesh->size(size);
-    mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->begin(it); 
+    mesh->end(it_end);
     
     output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,1));
     if (output.get_rep() == 0)
@@ -152,6 +153,8 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     }
 
     size_t k = 0;
+
+    FIELD* field = dynamic_cast<FIELD *>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
@@ -176,13 +179,13 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else if (input->basis_order() == 0)
   {
-    typename FIELD::mesh_type* mesh = field->mesh().get_rep();
+    typename FIELD::mesh_type* mesh =input->mesh().get_rep();
     typename FIELD::mesh_type::Elem::size_type size;
     typename FIELD::mesh_type::Elem::iterator it, it_end;
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,3));
     if (output.get_rep() == 0)
@@ -199,6 +202,7 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     }
 
     size_t k = 0;
+    FIELD* field = dynamic_cast<FIELD *>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
@@ -212,13 +216,13 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else 
   {
-    typename FIELD::mesh_type* mesh = field->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = input->mesh().get_rep();
     typename FIELD::mesh_type::Node::size_type size;
     typename FIELD::mesh_type::Node::iterator it, it_end;
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,3));
     if (output.get_rep() == 0)
@@ -235,6 +239,8 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     }
 
     size_t k = 0;
+
+    FIELD* field = dynamic_cast<FIELD*>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
@@ -262,13 +268,13 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else if (input->basis_order() == 0)
   {
-    typename FIELD::mesh_type* mesh = field->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = input->mesh().get_rep();
     typename FIELD::mesh_type::Elem::size_type size;
     typename FIELD::mesh_type::Elem::iterator it, it_end;
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,9));
     if (output.get_rep() == 0)
@@ -285,6 +291,8 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     }
 
     size_t k = 0;
+
+    FIELD* field = dynamic_cast<FIELD*>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
@@ -305,13 +313,13 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else 
   {
-    typename FIELD::mesh_type* mesh = field->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = input->mesh().get_rep();
     typename FIELD::mesh_type::Node::size_type size;
     typename FIELD::mesh_type::Node::iterator it, it_end;
     
     mesh->size(size);
     mesh->begin(it);
-    mesh_>end(it_end);
+    mesh->end(it_end);
     
     output = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(size,9));
     if (output.get_rep() == 0)
@@ -328,6 +336,7 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     }
 
     size_t k = 0;
+    FIELD* field = dynamic_cast<FIELD*>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
