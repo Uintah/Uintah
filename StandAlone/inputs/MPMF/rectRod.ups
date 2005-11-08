@@ -74,7 +74,7 @@
                         <center>     [0.,    0.,    0.0] </center>
                         <point_axis1>[0., -0.02,    0.0] </point_axis1>
                         <point_axis2>[0.,   0.0, -0.035] </point_axis2>
-                        <extent>quarter</extent>
+                        <extent>90</extent>
                         <resolution_circumference>32</resolution_circumference>
                       </partial_ellipse>
                    </crack_segments>
