@@ -122,23 +122,32 @@ void CreateParametersBundle::execute()
 
     if (partypes_[p] == "string")
     {
-      NrrdString nrrdstring(parvalues_[p]);
-      handle->setNrrdString(parnames_[p],nrrdstring);  
+      StringHandle str = scinew String(parvalues_[p]);
+      handle->setString(parnames_[p],str);  
     }
     else if (partypes_[p] == "double")
     {
-      NrrdScalar nrrdscalar(parvalues_[p],partypes_[p]);
-      handle->setNrrdScalar(parnames_[p],nrrdscalar);
+      MatrixHandle scalar = dynamic_cast<Matrix*>(scinew DenseMatrix(1,1));
+      std::istringstream iss(parvalues_[p]);
+      double val; iss >> val;
+      scalar->put(0,0,val);
+      handle->setMatrix(parnames_[p],scalar);
     }
     else if (partypes_[p] == "float")
     {
-      NrrdScalar nrrdscalar(parvalues_[p],partypes_[p]);
-      handle->setNrrdScalar(parnames_[p],nrrdscalar);
+      MatrixHandle scalar = dynamic_cast<Matrix*>(scinew DenseMatrix(1,1));
+      std::istringstream iss(parvalues_[p]);
+      double val; iss >> val;
+      scalar->put(0,0,val);
+      handle->setMatrix(parnames_[p],scalar);
     }
     else if (partypes_[p] == "integer")
     {
-      NrrdScalar nrrdscalar(parvalues_[p],"int32");
-      handle->setNrrdScalar(parnames_[p],nrrdscalar);
+      MatrixHandle scalar = dynamic_cast<Matrix*>(scinew DenseMatrix(1,1));
+      std::istringstream iss(parvalues_[p]);
+      double val; iss >> val;
+      scalar->put(0,0,val);
+      handle->setMatrix(parnames_[p],scalar);
     }
   }
  
