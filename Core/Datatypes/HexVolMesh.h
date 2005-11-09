@@ -1617,6 +1617,7 @@ template <class Basis>
 bool
 HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
 {
+  if (basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
   // Check last cell found first.  Copy cache to cell first so that we
   // don't care about thread safeness, such that worst case on
   // context switch is that cache is not found.

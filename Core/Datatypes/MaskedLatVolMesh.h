@@ -1648,6 +1648,9 @@ template <class Basis>
 bool
 MaskedLatVolMesh<Basis>::locate(typename Cell::index_type &idx, const Point &p)
 {
+  if (this->basis_.polynomial_order() > 1) {
+    if (elem_locate(idx, *this, p) && check_valid(idx)) return true;
+  }
   typename LatVolMesh<Basis>::Cell::index_type i(this,idx.i_,idx.j_,idx.k_);
   bool lat = LatVolMesh<Basis>::locate(i,p);
   idx.i_ = i.i_; idx.j_ = i.j_; idx.k_ = i.k_; idx.mesh_ = this;

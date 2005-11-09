@@ -1677,6 +1677,7 @@ template <class Basis>
 bool
 LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
 {
+  if (basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
   const Point r = transform_.unproject(p);
 
   double ii = r.x();
