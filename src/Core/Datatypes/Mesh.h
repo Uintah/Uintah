@@ -102,6 +102,25 @@ public:
   double MIN_ELEMENT_VAL;
 };
 
+//! General case locate, search each elem.
+template <class Msh>
+bool elem_locate(typename Msh::Elem::index_type &elem,
+		 Msh &msh, const Point &p) 
+{
+  typename Msh::Elem::iterator iter, end;
+  msh.begin(iter);
+  msh.end(end);
+  vector<double> coords(msh.dimensionality());
+  while (iter != end) {
+    if (msh.get_coords(coords, p, *iter)) {
+      elem = *iter;
+      return true;
+    }
+    ++iter;
+  }
+  return false;
+}
+
 } // end namespace SCIRun
 
 #endif // Datatypes_Mesh_h

@@ -488,6 +488,7 @@ template <class Basis>
 bool
 ScanlineMesh<Basis>::locate(typename Edge::index_type &elem, const Point &p)
 {
+  if (basis_.polynomial_order() > 1) return elem_locate(elem, *this, p);
   const Point r = transform_.unproject(p);
   elem = (unsigned int)(r.x());
 

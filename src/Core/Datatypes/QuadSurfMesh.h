@@ -813,6 +813,7 @@ bool
 QuadSurfMesh<Basis>::locate(typename Face::index_type &face, 
 			    const Point &p) const
 {  
+  if (basis_.polynomial_order() > 1) return elem_locate(face, *this, p);
   typename Face::iterator bi, ei;
   begin(bi);
   end(ei);

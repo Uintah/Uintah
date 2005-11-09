@@ -469,6 +469,7 @@ template <class Basis>
 bool
 StructCurveMesh<Basis>::locate(typename ScanlineMesh<Basis>::Edge::index_type &idx, const Point &p) const
 {
+  if (this->basis_.polynomial_order() > 1) return elem_locate(idx, *this, p);
   typename ScanlineMesh<Basis>::Edge::iterator ei;
   typename ScanlineMesh<Basis>::Edge::iterator eie;
   double cosa, closest=DBL_MAX;

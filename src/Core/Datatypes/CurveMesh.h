@@ -583,6 +583,7 @@ template <class Basis>
 bool
 CurveMesh<Basis>::locate(typename Edge::index_type &idx, const Point &p) const
 {
+  if (basis_.polynomial_order() > 1) return elem_locate(idx, *this, p);
   typename Edge::iterator ei;
   typename Edge::iterator eie;
   double cosa, closest=DBL_MAX;

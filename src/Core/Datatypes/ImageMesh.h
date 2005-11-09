@@ -871,6 +871,7 @@ template<class Basis>
 bool
 ImageMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
 {
+  if (basis_.polynomial_order() > 1) return elem_locate(face, *this, p);
   const Point r = transform_.unproject(p);
 
   const double rx = floor(r.x());

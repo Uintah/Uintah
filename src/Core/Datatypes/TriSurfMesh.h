@@ -914,6 +914,7 @@ template <class Basis>
 bool
 TriSurfMesh<Basis>::locate(typename Face::index_type &loc, const Point &p) const
 {
+  if (basis_.polynomial_order() > 1) return elem_locate(loc, *this, p);
   typename Face::iterator fi, fie;
   begin(fi);
   end(fie);

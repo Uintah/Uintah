@@ -637,6 +637,7 @@ StructQuadSurfMesh<Basis>::locate(
 			    typename ImageMesh<Basis>::Face::index_type &face, 
 			    const Point &p) const
 {
+  if (this->basis_.polynomial_order() > 1) return elem_locate(face, *this, p);
   typename ImageMesh<Basis>::Face::iterator bi, ei;
   begin(bi);
   end(ei);
