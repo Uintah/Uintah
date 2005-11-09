@@ -912,7 +912,7 @@ Optional Features:
 --enable-perfex         Use perfex hardware counters (sgi only)
 --enable-package=<list> Use the SCIRun packages specified by list. example:
                           --enable-package='BioPSE Teem'
---disable-dataflow      Do not build Dataflow
+--disable-dataflow      Do not build Dataflow component model
 --disable-scirun        Do not require SCIRun components
 --enable-exename=<name> Use name for executable name instead of the default:
                           scirun
@@ -3033,8 +3033,10 @@ path_to_src=`echo $0 | sed 's/\/configure//'`
 
 
 BUILD_DATAFLOW="$sci_required_dataflow"
-if test "$sci_required_dataflow"; then
-  DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW"
+if test "$sci_required_dataflow" = "yes"; then
+  DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW 1"
+else
+  sci_required_scirun=no
 fi
 
 
@@ -6683,7 +6685,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6686:" \
+echo "$as_me:6688:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
