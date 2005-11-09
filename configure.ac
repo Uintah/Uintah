@@ -522,7 +522,7 @@ SCI_ARG_ENABLE(package,
   [package=""])
 SCI_ARG_ENABLE(dataflow,
   AC_HELP_STRING(--disable-dataflow,
-                 Do not build Dataflow),
+                 Do not build Dataflow component model),
   [sci_required_dataflow=no],
   [sci_required_dataflow=yes])
 SCI_ARG_ENABLE(scirun,
@@ -649,8 +649,10 @@ path_to_src=`echo $0 | sed 's/\/configure//'`
 
  
 BUILD_DATAFLOW="$sci_required_dataflow"
-if test "$sci_required_dataflow"; then
-  DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW"
+if test "$sci_required_dataflow" = "yes"; then
+  DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW 1"
+else
+  sci_required_scirun=no
 fi
 AC_SUBST(DEF_BUILD_DATAFLOW)
 AC_SUBST(BUILD_DATAFLOW)

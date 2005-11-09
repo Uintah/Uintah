@@ -38,6 +38,8 @@
  *
  */
 
+#include <sci_defs/dataflow_defs.h>
+
 #include <SCIRun/Internal/FrameworkInternalException.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalFrameworkServiceDescription.h>
@@ -49,7 +51,7 @@
 #include <SCIRun/Internal/FrameworkProxyService.h>
 #include <SCIRun/SCIRunFramework.h>
 
-#ifdef BUILD_DATAFLOW
+#if BUILD_DATAFLOW
  #include <SCIRun/Dataflow/DataflowScheduler.h>
 #endif
 #include <iostream>
@@ -68,7 +70,7 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
     addService(new InternalFrameworkServiceDescription(this, "cca.ComponentRepository", &ComponentRegistry::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.ComponentEventService", &ComponentEventService::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.ConnectionEventService", &ConnectionEventService::create));
-#ifdef BUILD_DATAFLOW
+#if BUILD_DATAFLOW
     addService(new InternalFrameworkServiceDescription(this, "cca.DataflowScheduler", &DataflowScheduler::create));
 #endif
     addService(new InternalFrameworkServiceDescription(this, "cca.FrameworkProperties", &FrameworkProperties::create));
