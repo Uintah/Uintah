@@ -837,6 +837,7 @@ Thread::initialize()
   unlock_scheduler();
   if (!getenv("THREAD_NO_CATCH_SIGNALS"))
     install_signal_handlers();
+  numProcessors();  //initialize the processor count;
 }
 
 
