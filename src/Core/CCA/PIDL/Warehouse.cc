@@ -40,24 +40,25 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include "Warehouse.h"
+#include <Core/CCA/PIDL/Warehouse.h>
 #include <Core/CCA/PIDL/InvalidReference.h>
 #include <Core/CCA/PIDL/Object.h>
 #include <Core/CCA/PIDL/ServerContext.h>
 #include <Core/CCA/PIDL/URL.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Thread/Guard.h>
+
 #include <iostream>
 #include <sstream>
 #include <string>
+
 using namespace SCIRun;
-using namespace std;
-using std::map;
 
 Warehouse::Warehouse()
   : mutex("PIDL::Warehouse lock"),
-    condition("PIDL::Warehouse objects>0 condition")
+    condition("PIDL::Warehouse objects>0 condition"),
+    nextID(1)
 {
-  nextID=1;
 }
 
 Warehouse::~Warehouse()
@@ -67,52 +68,50 @@ Warehouse::~Warehouse()
 void Warehouse::run()
 {
   mutex.lock();
-  while(objects.size() > 0)
+  while (objects.size() > 0) {
     condition.wait(mutex);
+  }
   mutex.unlock();
 }
 
 int Warehouse::registerObject(Object* object)
 {
-  mutex.lock();
-  int id=nextID++;
-  objects[id]=object;
-  mutex.unlock();
+  Guard g(&mutex);
+  int id = nextID++;
+  objects[id] = object;
   return id;
 }
 
 
 int Warehouse::registerObject(int id, Object* object)
 {
-  mutex.lock();
-  objects[id]=object;
-  mutex.unlock();
+  Guard g(&mutex);
+  objects[id] = object;
   return id;
 }
 
 
 Object* Warehouse::unregisterObject(int id)
 {
-  mutex.lock();
-  map<int, Object*>::iterator iter=objects.find(id);
-  if(iter == objects.end())
+  Guard g(&mutex);
+  std::map<int, Object*>::iterator iter = objects.find(id);
+  if (iter == objects.end()) {
     throw SCIRun::InternalError("Object not in wharehouse", __FILE__, __LINE__);
+  }
   objects.erase(id);
-  if(objects.size() == 0)
+  if (objects.size() == 0) {
     condition.conditionSignal();
-  mutex.unlock();
+  }
   return iter->second;
 }
 
 Object* Warehouse::lookupObject(int id)
 {
-  mutex.lock();
-  map<int, Object*>::iterator iter=objects.find(id);
-  if(iter == objects.end()){
-    mutex.unlock();
+  Guard g(&mutex);
+  std::map<int, Object*>::iterator iter = objects.find(id);
+  if (iter == objects.end()) {
     return 0;
   } else {
-    mutex.unlock();
     return iter->second;
   }
 }
@@ -122,12 +121,14 @@ Object* Warehouse::lookupObject(const std::string& str)
   std::istringstream i(str);
   int objid;
   i >> objid;
-  if(!i)
+  if (!i) {
     throw InvalidReference("Cannot parse object ID ("+str+")");
+  }
   char x;
   i >> x;
-  if(i) // If there are more characters, we have a problem...
+  if (i) { // If there are more characters, we have a problem...
     throw InvalidReference("Extra characters after object ID ("+str+")");
+  }
   return lookupObject(objid);
 }
 
