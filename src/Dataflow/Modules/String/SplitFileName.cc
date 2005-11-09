@@ -69,7 +69,7 @@ void
  SplitFileName::execute()
 {
   StringIPort *iport;
-  StringOPort *pn_oport, *fn_oport, *ext_oport;
+  StringOPort *pn_oport, *fn_oport, *ext_oport, *fnext_oport;
   
   if(!(iport = dynamic_cast<StringIPort*>(get_iport(0))))
   {
@@ -83,7 +83,7 @@ void
   }
   if(!(fn_oport = dynamic_cast<StringOPort*>(get_oport(1))))
   {
-    error("Could not find filename output port");
+    error("Could not find filename base output port");
     return;
   }
   if(!(ext_oport = dynamic_cast<StringOPort*>(get_oport(2))))
@@ -91,10 +91,15 @@ void
     error("Could not find extension output port");
     return;
   }
+  if(!(fnext_oport = dynamic_cast<StringOPort*>(get_oport(3))))
+  {
+    error("Could not find filename output port");
+    return;
+  }
   
   StringHandle filenameH;
-  StringHandle fnH, pnH, extH;
-  std::string filename, fn, pn, ext;
+  StringHandle fnH, pnH, extH, fnextH;
+  std::string filename, fn, pn, ext, fnext;
   iport->get(filenameH);
   
   if (filenameH.get_rep() == 0)
@@ -135,13 +140,17 @@ void
     ext = "";
   }
 
+  fnext = fn+ext;
+
   pnH = dynamic_cast<String *>(scinew String(pn));
   fnH = dynamic_cast<String *>(scinew String(fn));
   extH = dynamic_cast<String *>(scinew String(ext));
+  fnextH = dynamic_cast<String *>(scinew String(fnext));
 
   pn_oport->send(pnH);
   fn_oport->send(fnH);
   ext_oport->send(extH);
+  fnext_oport->send(extH);
 }
 
 void
