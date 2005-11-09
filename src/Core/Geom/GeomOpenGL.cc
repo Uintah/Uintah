@@ -6531,7 +6531,12 @@ HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double)
 void
 TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  if (!pre_draw(di, matl, 1)) return;
+  double old_ambient = di->ambient_scale_;
+  di->ambient_scale_ = 15;
+  if (!pre_draw(di, matl, 1)) {
+    di->ambient_scale_ = old_ambient;
+    return;
+  }
   glEnable(GL_TEXTURE_2D);
   bool bound = glIsTexture(texname_);
   if (!bound)
@@ -6567,6 +6572,7 @@ TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   glBindTexture(GL_TEXTURE_2D, 0);
   glDisable(GL_TEXTURE_2D);
+  di->ambient_scale_ = old_ambient;
   post_draw(di);
 }
 
