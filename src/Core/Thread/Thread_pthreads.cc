@@ -77,6 +77,8 @@ extern "C" {
 #include <stdlib.h>
 #include <string>
 #include <unistd.h>
+#include <fstream>
+#include <string>
 
 #include <TauProfilerForSCIRun.h>
 
@@ -388,11 +390,26 @@ Thread::join()
   }
 }
 
-
 int
 Thread::numProcessors()
 {
-  return 1;
+  static int np = 0;
+  if (np == 0) {
+    std::ifstream cpuinfo("/proc/cpuinfo");
+    if (cpuinfo) {
+      int count = 0;
+      while (!cpuinfo.eof()) {
+	std::string str;
+	cpuinfo >> str;
+	if (str == "processor") {
+	  ++count;
+	} 
+      }
+      np = count;
+    }
+    if (np == 0) np = 1;
+  }
+  return np;
 }
 
 
