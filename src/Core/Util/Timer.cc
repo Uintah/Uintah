@@ -255,7 +255,7 @@ void TimeThrottle::wait_for_time(double endtime)
     sginap(nticks);
 #else
 #ifdef _WIN32
-    Sleep(delta*1e6); // windows Sleep is in ms
+    Sleep(delta*1e3); // windows Sleep is in ms
 #else
     timespec delay, remaining;
     remaining.tv_sec = SCIRun::Floor(delta);

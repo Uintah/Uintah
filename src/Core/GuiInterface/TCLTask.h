@@ -55,6 +55,9 @@ namespace SCIRun {
 #define TCLCONST
 #endif
 
+#ifdef _WIN32
+#define EXPERIMENTAL_TCL_THREAD
+#endif
 
 class TCLTask : public Runnable {
     int argc;
@@ -74,6 +77,9 @@ public:
     static void unlock();
     void mainloop_waitstart();
     void release_mainloop();
+#ifdef EXPERIMENTAL_TCL_THREAD
+    static void setTCLEventCallback();
+#endif
 };
 
 } // End namespace SCIRun

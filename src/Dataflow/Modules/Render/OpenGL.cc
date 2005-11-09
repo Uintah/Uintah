@@ -63,6 +63,7 @@ namespace C_Magick {
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
+#include <Core/Thread/Time.h>
 #undef near
 #undef far
 #define SHARE __declspec(dllimport)
@@ -1263,14 +1264,21 @@ OpenGL::redraw_frame()
         char fname[256];
         sprintf(fname, movie_name_.c_str(), current_movie_frame_);
 
-	timeval tv;
-
-	gettimeofday(&tv, 0);
 	ostringstream timestr;
+#ifndef _WIN32
+	timeval tv;
+	gettimeofday(&tv, 0);
 	timestr << "." << tv.tv_sec << ".";
 	timestr.fill('0');
 	timestr.width(6);
 	timestr << tv.tv_usec;
+#else
+  long m_sec = Time::currentSeconds();
+  timestr << "." << m_sec /1000 << ".";
+	timestr.fill('0');
+	timestr.width(3);
+  timestr << m_sec % 1000;
+#endif
 
         string fullpath = string(fname) + string(timestr.str()) + 
 	                  string(".ppm");

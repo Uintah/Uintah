@@ -904,6 +904,7 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
                                        int color_index,
                                        FragmentProgramARB* shader)
 {
+#ifndef _WIN32
   if( draw_level_outline_ ){
 
     if(shader) shader->release(); // shader messes with line drawing. why?
@@ -999,6 +1000,7 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
     if(shader) shader->bind();   
     glColor4f(1.0,1.0,1.0,1.0);
   }
+#endif
 }
 
 } // namespace SCIRun
