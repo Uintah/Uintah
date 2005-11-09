@@ -33,6 +33,10 @@
  */
  
 #include <Packages/CardioWave/Core/Datatypes/CardioWaveConverter.h>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+
 
 using namespace std;
 using namespace SCIRun;
@@ -131,9 +135,9 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
   }  
   
   // Now we know we have a compatible system
-  // Try toopen the file
+  // Try to open the file
   
-  if (!(fid = fopen(filename.c_str(),"rb")))
+  if (!(fid = ::fopen(filename.c_str(),"rb")))
   {
     // Could not open file some how
     posterror(pr,std::string("Could not open file: ")+filename);
@@ -141,10 +145,10 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
   }
   
   // Each header of CW file is maximal 128 bytes
-  if ((fread(static_cast<void*>(&header[0]),1,128,fid)!=128))
+  if ((::fread(static_cast<void*>(&header[0]),1,128,fid)!=128))
   {
     posterror(pr,std::string("Could not open header of CardioWave file: ") + filename);
-    fclose(fid);
+    ::fclose(fid);
     return(false);
   }
   
@@ -161,7 +165,7 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
   if ((swapbyte != 'B')&&(swapbyte != 'L'))
   {
     posterror(pr,"Could not read byte encoding order from file: this is not a valid CardioWave file");
-    fclose(fid);
+    ::fclose(fid);
     return(false);
   }
   
@@ -573,10 +577,129 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
     if (mh->is_sparse()) filetype = "spr"; else filetype = "vec";
   }
   
-  if ((filetype != "spr")&&(filetype != "vec")&&(filetype != "ivec")&&(filetype != "bvec"))
+  if ((filetype != "spr")&&(filetype != "vec")&&(filetype != "ivec")&&(filetype != "bvec")&&(filetype != "mem")&&(filetype != "stim"))
   {
     posterror(pr,"Specified file type is not supported");
     return(false);
+  }
+  
+  if (filetype == "mem")
+  {
+    if (mh->is_sparse())
+    {
+      posterror(pr,"Data is a sparse matrix and not a dense matrix needed to export data");
+      return(false);    
+    }  
+  
+    double *data = mh->get_data_pointer();
+    size_t size =  mh->get_data_size();
+    
+    if ((data == 0)||(size==0))
+    {
+      posterror(pr,"No data is stored in matrix, stopping due to empty matrix condition");
+      return(false);
+    }
+    
+    if (!((mh->nrows()==3)||(mh->ncols()==3)))
+    {
+      posterror(pr,"Matrix is not a Nx3 or 3xN matrix");
+      return(false);  
+    }  
+    
+    if ((mh->nrows()==3)&&(mh->ncols() != 3))
+    {
+      mh = dynamic_cast<SCIRun::Matrix *>(mh->transpose());
+      data = mh->get_data_pointer();
+      size = mh->get_data_size();    
+    }
+
+    int ss,ii,ee;
+    int r = 0;
+    
+    std::ofstream memfile;
+    
+    try
+    {
+      memfile.open(filename.c_str(),std::ofstream::out);
+      for (size_t p=0; p < mh->nrows(); p++)
+      { 
+        ss = static_cast<int>(data[r++]);
+        ii = static_cast<int>(data[r++]);
+        ee = static_cast<int>(data[r++]);
+        memfile << ss << " " << ii << " " << ee << std::endl;
+      }
+      memfile.close();
+    }
+    catch (...)
+    {
+      posterror(pr,"Could not write membrane connection file");
+      return(false);
+    }
+  
+    return(true);
+  }
+  
+
+  
+  if (filetype == "stim")
+  {
+    if (mh->is_sparse())
+    {
+      posterror(pr,"Data is a sparse matrix and not a dense matrix needed to export data");
+      return(false);    
+    }  
+  
+    double *data = mh->get_data_pointer();
+    size_t size =  mh->get_data_size();
+    
+    if ((data == 0)||(size==0))
+    {
+      posterror(pr,"No data is stored in matrix, stopping due to empty matrix condition");
+      return(false);
+    }
+    
+    if (!((mh->nrows()==5)||(mh->ncols()==5)))
+    {
+      posterror(pr,"Matrix is not a Nx5 or 5xN matrix");
+      return(false);  
+    }  
+    
+    if ((mh->nrows()==5)&&(mh->ncols() != 5))
+    {
+      mh = dynamic_cast<SCIRun::Matrix *>(mh->transpose());
+      data = mh->get_data_pointer();
+      size = mh->get_data_size();    
+    }
+
+    int nn,loc;
+    double start,stop,strength;
+    int r = 0;
+    
+    std::ofstream stimfile;
+    
+    try
+    {
+      stimfile.open(filename.c_str(),std::ofstream::out);
+      for (size_t p=0; p < mh->nrows(); p++)
+      { 
+        nn = static_cast<int>(data[r++]);
+        start = data[r++];
+        stop = data[r++];
+        strength = data[r++];
+        loc = static_cast<int>(data[r++]);
+        char cloc = 'I';
+        if (loc == 1) cloc = 'E';  
+        stimfile << nn << " " << start << ", " << stop << ", " << strength << ", " << cloc << std::endl;
+      }
+      stimfile.close();
+    }
+    catch (...)
+    {
+      posterror(pr,"Could not write stimulation file");
+      return(false);
+    }
+  
+    return(true);
   }
   
   if (filetype == "bvec")
@@ -755,7 +878,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
      
     std::string header(static_cast<size_t>(128),'\0');
 
-    header[0] = 'B';
+    header[0] = 'V';
     header[1] = 'B';
     header[2] = '8'; // We do not yet support byte vectors of size 2
     header[3] = ':';
