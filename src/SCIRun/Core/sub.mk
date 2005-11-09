@@ -52,6 +52,7 @@ SRCS     += \
 	     $(SRCDIR)/CoreFrameworkImpl.cc \
 	     $(SRCDIR)/BuilderServiceImpl.cc \
 	     $(SRCDIR)/ServiceRegistryCoordinator.cc \
+	     $(SRCDIR)/FrameworkPropertiesImpl.cc \
 #             $(SRCDIR)/CoreFrameworkException.cc \
 #             $(SRCDIR)/ComponentEvent.cc \
 #             $(SRCDIR)/ConnectionEvent.cc \
@@ -61,7 +62,8 @@ SRCS     += \
 #             $(SRCDIR)/ComponentRepositoryService.cc \
 #             $(SRCDIR)/FrameworkPropertiesService.cc \
 
-$(SRCDIR)/TypeMap.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/TypeMapImpl.o: Core/CCA/spec/sci_sidl.h
+$(SRCDIR)/PropertiesImpl.o: Core/CCA/spec/sci_sidl.h
 $(SRCDIR)/ConnectionID.o: Core/CCA/spec/sci_sidl.h
 $(SRCDIR)/FrameworkID.o: Core/CCA/spec/sci_sidl.h 
 $(SRCDIR)/ConnectionInfo.o: Core/CCA/spec/sci_sidl.h 
@@ -76,7 +78,7 @@ $(SRCDIR)/ComponentClassDescription.o: Core/CCA/spec/sci_sidl.h
 $(SRCDIR)/ComponentEventService.o: Core/CCA/spec/sci_sidl.h 
 $(SRCDIR)/ConnectionEventService.o: Core/CCA/spec/sci_sidl.h 
 $(SRCDIR)/ComponentRepositoryService.o: Core/CCA/spec/sci_sidl.h 
-$(SRCDIR)/FrameworkPropertiesService.o: Core/CCA/spec/sci_sidl.h 
+$(SRCDIR)/FrameworkPropertiesImpl.o: Core/CCA/spec/sci_sidl.h 
 $(SRCDIR)/BuilderService.o: Core/CCA/spec/sci_sidl.h \
 
 

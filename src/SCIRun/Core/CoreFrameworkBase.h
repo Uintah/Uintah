@@ -89,6 +89,7 @@ namespace SCIRun {
     virtual ComponentID::pointer lookupComponentID(const std::string &);
     virtual SSIDL::array1<ComponentID::pointer> getComponentIDs();
     virtual SSIDL::array1<ConnectionID::pointer> getConnectionIDs(const SSIDL::array1<ComponentID::pointer> &);
+    virtual Properties::pointer getDefaultProperties();
 
     // component manipulations
     virtual ComponentInfo::pointer  createInstance(const std::string &, const std::string &, const TypeMap::pointer&) ;

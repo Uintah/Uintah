@@ -56,12 +56,18 @@ namespace SCIRun {
   {
   public:
     typedef BuilderService::pointer pointer;
-    
-    BuilderServiceImpl(const CoreFramework::pointer &);
-    
     virtual ~BuilderServiceImpl();
-    
+
     static pointer create(const CoreFramework::pointer &framework);
+
+  private:
+    friend class ServiceFactory;
+
+    BuilderServiceImpl(const CoreFramework::pointer &);
+
+    // prevent using these directly
+    BuilderServiceImpl(const BuilderServiceImpl&);
+    BuilderServiceImpl& operator=(const BuilderServiceImpl&);
   };
 
 } // namespace SCIRun

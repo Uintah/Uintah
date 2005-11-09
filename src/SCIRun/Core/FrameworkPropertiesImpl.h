@@ -26,27 +26,40 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-package sci {
-  	
-  package cca {
-    
-    package tena {
 
-      class Execution {}
+/*
+ *  FrameworkPropertiesImpl.h:  get and set CCA framework properties
+ *
+ *  Written by:
+ *   Ayla Khan
+ *   Scientific Computing and Imaging Institute
+ *   University of Utah
+ *   September 2004
+ *
+ *   Copyright (C) 2004 SCI Institute
+ */
 
-      interface GlobalTENAService extends Port
-      {
-      }
 
-      interface TENAService extends Port 
-      {
-	Execution joinExecution( in string name );
-      }
-      
-      
-    } // tena
+#ifndef SCIRun_FrameworkPropertiesImpl_h
+#define SCIRun_FrameworkPropertiesImpl_h
 
-  } // cca
+#include <SCIRun/Core/FrameworkPropertiesBase.h>
 
-} //sci
+namespace SCIRun {
 
+  using namespace sci::cca;
+  using namespace sci::cca::core;
+  using namespace sci::cca::core::ports;
+
+  class FrameworkPropertiesImpl : public FrameworkPropertiesBase<FrameworkProperties>
+  {
+  public:
+    FrameworkPropertiesImpl(const CoreFramework::pointer &framework);
+    virtual ~FrameworkPropertiesImpl();
+
+    static pointer create(const CoreFramework::pointer &framework);
+  };
+  
+} // namespace
+
+#endif

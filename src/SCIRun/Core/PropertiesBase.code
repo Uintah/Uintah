@@ -68,4 +68,17 @@ namespace SCIRun {
   void PropertiesBase<Interface>::remove( const TypeMap::pointer &properties)
   {
   }
+
+  template<class Interface>
+  Properties::pointer PropertiesBase<Interface>::clone()
+  {
+    return pidl_cast<Properties::pointer>(this->cloneTypeMap());
+  }
+
+  template<class Interface>
+  TypeMap::pointer PropertiesBase<Interface>::cloneEmpty()
+  {
+    return new PropertiesBase<Interface>;
+  }
+  
 } // end namespace SCIRun

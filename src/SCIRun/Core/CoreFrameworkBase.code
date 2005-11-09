@@ -48,6 +48,7 @@
 #include <SCIRun/Core/ComponentInfoImpl.h>
 #include <SCIRun/Core/ServiceInfoImpl.h>
 #include <SCIRun/Core/TypeMapImpl.h>
+#include <SCIRun/Core/PropertiesImpl.h>
 
 // default factories
 #include <SCIRun/Core/UnknownComponentClassFactory.h>
@@ -56,6 +57,7 @@
 // Services
 //#include <SCIRun/Distributed/FrameworkPropertiesService.h>
 #include <SCIRun/Core/BuilderServiceImpl.h>
+#include <SCIRun/Core/FrameworkPropertiesImpl.h>
 #include <SCIRun/Core/ServiceRegistryFactoryBase.code>
 
 #include <Core/Thread/Guard.h>
@@ -75,14 +77,12 @@ namespace SCIRun {
       factory_lock("CoreFrameworkBase::factory_lock"),
       service_lock("CoreFrameworkBase::service_lock")
   {
+    // Components Factories
     addComponentClassFactory( ComponentClassFactory::pointer( new UnknownComponentClassFactory ));
-    //addServiceFactory(new StdFrameworkServiceFactory<FrameworkPropertiesService>("cca.FrameworkProperties"));
-    addFrameworkServiceFactory( ServiceFactory::pointer
-				( new SingletonServiceFactory<BuilderServiceImpl>(pointer(this), 
-										 "cca.BuilderService")));
-//     addFrameworkServiceFactory( ServiceFactory::pointer
-// 				( new ServiceRegistryFactoryBase<ServiceFactory>(pointer(this), 
-// 									     "cca.ports.ServiceRegistry")));
+
+    // Services Factories
+    addFrameworkServiceFactory( new SingletonServiceFactory<BuilderServiceImpl>(this, "cca.BuilderService"));
+    addFrameworkServiceFactory( new SingletonServiceFactory<FrameworkPropertiesImpl>(this, "cca.FrameworkPropertiesService"));
     addFrameworkServiceFactory( new ServiceRegistryFactoryBase<ServiceFactory>(this, "cca.ports.ServiceRegistry"));
   }
   
@@ -396,6 +396,18 @@ namespace SCIRun {
     factories[factory->getClassName()] = factory;
   }
   
+  template<class Interface>
+  Properties::pointer
+  CoreFrameworkBase<Interface>::getDefaultProperties()
+  {
+    Properties::pointer properties = new PropertiesImpl;
+    properties->putString("config_dir", ".pllume");
+    properties->putString("config_file", "plumerc");
+    properties->putString("cache_file",  "plume.cache");
+
+    return properties;
+  }
+
 } // SCIRun namespace
 
 #endif // 

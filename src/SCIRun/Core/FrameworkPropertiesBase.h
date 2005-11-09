@@ -47,6 +47,7 @@ namespace SCIRun {
 
   using namespace sci::cca;
   using namespace sci::cca::core;
+  using namespace sci::cca::core::ports;
 
   /**
    * An implementation of the sci::cca::ports::FrameworkProperties
@@ -64,15 +65,16 @@ namespace SCIRun {
   public:
     virtual ~FrameworkPropertiesBase();
     
+    /** ? */
+    PortInfo::pointer getService(const std::string& ); 
+
     virtual Properties::pointer getProperties();
     virtual void setProperties(const Properties::pointer& properties);
+    virtual void addProperties(const Properties::pointer& properties);
+    virtual void removeProperties(const Properties::pointer& properties);
 
-    static std::string CONFIG_DIR;
-    static std::string CONFIG_FILE;
-    static std::string CACHE_FILE;
-
-protected:
-    FrameworkProperties(const CoreFramework::pointer &framework);
+  protected:
+    FrameworkPropertiesBase(const CoreFramework::pointer &framework);
 
     /** Gets user logged in on the controlling terminal of the process
         or a null pointer (see man getlogin(3)) */
@@ -97,7 +99,7 @@ protected:
     /** Persistent framework properties from file. */
     bool writePropertiesToFile();
 
-    Properties::pointer frameworkProperties;
+    Properties::pointer properties;
 };
 
 }

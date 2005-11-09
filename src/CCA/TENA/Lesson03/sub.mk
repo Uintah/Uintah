@@ -29,10 +29,22 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA/TENA
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SUBDIRS := \
-	$(SRCDIR)/TENAService \
-	$(SRCDIR)/Lesson03 \
+SRCDIR   := CCA/TENA/Lesson03
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+INCLUDES += $(TENA_INCLUDES) $(TENA_DEFINES) -I../src/CCA/TENA/Lesson03 -I$(TENA_INCLUDE_DIR)/OMs/Lesson_03-v2
+
+SRCS     += $(SRCDIR)/PublishPerson.cc \
+#	$(SRCDIR)/SubscribePerson.cc
+
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
+           Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+
+LIBS := $(TENA_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+#include $(SCIRUN_SCRIPTS)/program.mk
+
+$(SRCDIR)/TENAService.o: Core/CCA/spec/sci_sidl.h

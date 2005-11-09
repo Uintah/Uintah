@@ -66,11 +66,11 @@ namespace SCIRun {
     
     try {
       std::cerr << "TENAServiceProvider: setup\n";
-      services->registerUsesPort("registry", "cca.ports.ServiceRegistry", 0);
+      services->registerUsesPort("registry", "cca.ServiceRegistry", 0);
 
       ServiceRegistry::pointer registry = pidl_cast<ServiceRegistry::pointer>(services->getPort("registry"));
 
-      registry->addSingletonService("cca.ports.TENAService", new TENAServiceImpl() );
+      registry->addSingletonService("cca.tena.TENAService", new TENAServiceImpl(services) );
  
       services->releasePort("registry");
     }
