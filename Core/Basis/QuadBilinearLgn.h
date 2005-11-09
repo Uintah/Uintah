@@ -37,6 +37,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Basis/Locate.h>
 
+#include <Core/Basis/share.h>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off 'implicit conversion... loss of accuracy' messages.
 #  pragma set woff 1506
@@ -50,11 +51,11 @@ using std::string;
 class QuadBilinearLgnUnitElement {
 public: 
   //!< Parametric coordinates of vertices of unit edge
-  static double unit_vertices[4][2];
+  static SHARE double unit_vertices[4][2];
   //!< References to vertices of unit edge  
-  static int unit_edges[4][2]; 
+  static SHARE int unit_edges[4][2]; 
   //!< References to vertices of unit face 
-  static int unit_faces[1][4]; 
+  static SHARE int unit_faces[1][4]; 
   
   QuadBilinearLgnUnitElement() {}
   virtual ~QuadBilinearLgnUnitElement() {}

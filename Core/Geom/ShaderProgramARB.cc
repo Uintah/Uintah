@@ -226,6 +226,10 @@ ShaderProgramARB::valid()
 void
 ShaderProgramARB::init_shaders_supported()
 {
+#ifdef _WIN32
+  supported_ = false;
+  return;
+#endif
   if(!init_)
   {
     ShaderProgramARB_init_Mutex.lock();

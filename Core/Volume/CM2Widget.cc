@@ -1948,7 +1948,7 @@ ColorMapCM2Widget::rasterize(CM2ShaderFactory& factory,
                              Pbuffer* pbuffer)
 {
   if (!onState_) return;
- 
+#ifndef _WIN32
   CM2BlendType blend = CM2_BLEND_RASTER;
   if (pbuffer) {
     if(pbuffer->need_shader())
@@ -2048,6 +2048,7 @@ ColorMapCM2Widget::rasterize(CM2ShaderFactory& factory,
   un_normalize();
   shader->release();
   //  if (pbuffer) pbuffer->bind(GL_FRONT);
+#endif
 }
 
 void
