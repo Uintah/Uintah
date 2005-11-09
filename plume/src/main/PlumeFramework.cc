@@ -46,6 +46,7 @@
 #include <Core/CCA/spec/sci_sidl.h>
 
 #include <SCIRun/Plume/PlumeFrameworkImpl.h>
+#include <SCIRun/Core/PropertiesImpl.h>
 #include <Core/Thread/Thread.h>
 #include <main/SimpleManager.h>
 
@@ -54,6 +55,8 @@
 using namespace SCIRun;
 using namespace sci::cca;
 using namespace sci::cca::ports;
+using namespace sci::cca::core;
+using namespace sci::cca::core::ports;
 using namespace sci::cca::distributed;
 
 #define VERSION "2.0.0" // this needs to be synced with the contents of
@@ -62,6 +65,7 @@ using namespace sci::cca::distributed;
 void init();
 void usage();
 void parse_args( int argc, char *argv[]);
+void add_args( const CoreFramework::pointer &framework, int argc, char *argv[]);
 
 static std::string attach_url = "";
 static std::string parent_url = "";
@@ -84,6 +88,9 @@ main(int argc, char *argv[])
       DistributedFramework::pointer parent;
       if ( parent_url != "" ) parent = pidl_cast<DistributedFramework::pointer>(PIDL::objectFrom(URL(parent_url)));
       framework = new PlumeFrameworkImpl(parent);
+
+      // add argv to local framework properties 
+      add_args( framework, argc, argv);
     }
 
     if ( framework.isNull() ) {
@@ -135,6 +142,28 @@ usage()
   std::cout << "      [[-p | --parent] parent-framework-url    : parent framework\n";
   std::cout << "      [--app] app-class-name                   : start an application\n";
   exit( 0 );
+}
+
+void add_args( const CoreFramework::pointer &framework, int argc, char *argv[])
+{
+  SSIDL::array1<std::string> args;
+  for (int i=0; i<argc; i++)
+    args.push_back(argv[i]);
+  
+  Properties::pointer properties = new PropertiesImpl;
+  properties->putStringArray("args", args);
+
+  Services::pointer services = framework->getServices("default", "cca.unknown", 0);
+  
+  services->registerUsesPort("properties", "cca.FrameworkProperties", 0);
+  {
+    FrameworkProperties::pointer frameworkProperties = pidl_cast<FrameworkProperties::pointer>( services->getPort("properties"));
+    frameworkProperties->addProperties(properties);
+  }
+  services->releasePort("properties");
+  services->unregisterUsesPort("properties");
+
+  framework->releaseServices(services);
 }
 
 void

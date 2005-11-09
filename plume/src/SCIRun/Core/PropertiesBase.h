@@ -58,7 +58,9 @@ namespace SCIRun {
     virtual void add(const TypeMap::pointer &);
     virtual void remove(const TypeMap::pointer &);
     virtual void merge(const TypeMap::pointer &);
+    virtual Properties::pointer clone();
 
+    virtual TypeMap::pointer cloneEmpty(); // override TypeMap::cloneEmpty
   };
 
 } //SCIRun namespace

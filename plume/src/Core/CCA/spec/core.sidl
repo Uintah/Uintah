@@ -33,10 +33,6 @@ package sci {
     
     package core {
 
-//        interface PortComponent  extends Component, ports.GoPort
-//        {
-//        }
-
       // Connection
       interface ConnectionInfo extends ConnectionID
       {
@@ -125,7 +121,7 @@ package sci {
 	ComponentID lookupComponentID(in string);
 	array<ComponentID,1> getComponentIDs();
 	array<ConnectionID,1> getConnectionIDs( in array<ComponentID,1>);
-	
+
 	// component manipulations
 	ComponentInfo createInstance( in string name, in string type, in TypeMap properties);
 	array<cca.ComponentClassDescription> listAllComponentTypes(in bool);
@@ -149,7 +145,7 @@ package sci {
 
 	// internals
 // 	void setDefaultProperties( in Properties );
-// 	Properties getDefaultProperties();
+ 	Properties getDefaultProperties();
       }
 
       interface Properties extends TypeMap 
@@ -157,15 +153,16 @@ package sci {
 	void add( in TypeMap );
 	//void remove( in TypeMap );
 	void merge( in TypeMap );
+	Properties clone();
       }
 
       package ports {
-	interface FrameworkProperties 
+	interface FrameworkProperties extends Port
 	{
-	  TypeMap getProperties();
-	  void setProperties( in TypeMap );
-	  void addProperties( in TypeMap );
-	  void removeProperties(in TypeMap );
+	  Properties getProperties();
+	  void setProperties( in Properties );
+	  void addProperties( in Properties );
+	  void removeProperties(in Properties );
 	}
 
       }

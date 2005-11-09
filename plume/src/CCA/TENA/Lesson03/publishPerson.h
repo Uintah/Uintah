@@ -26,27 +26,53 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-package sci {
-  	
-  package cca {
-    
-    package tena {
 
-      class Execution {}
+/*
+ *  PublishPerson.h
+ *
+ *  Written by:
+ *   Yarden Livnat
+ *   SCI Institute
+ *   University of Utah
+ *   November 2005
+ *
+ */
 
-      interface GlobalTENAService extends Port
-      {
-      }
+#ifndef SCIRun_CCA_TENA_Lesson03_PublishPerson_h
+#define SCIRun_CCA_TENA_Lesson03_PublishPerson_h
 
-      interface TENAService extends Port 
-      {
-	Execution joinExecution( in string name );
-      }
-      
-      
-    } // tena
+#include <Core/CCA/spec/sci_sidl.h>
 
-  } // cca
+namespace SCIRun {
 
-} //sci
+  using namespace sci::cca;
+  
+  class Hello : public Component {
+  public:
+    Hello();
+    ~Hello();
 
+    void setServices(const Services::pointer& svc);
+    int go();
+
+  private:
+    Services::pointer services;
+    std::string text;
+
+    Hello(const Hello&);
+    Hello& operator=(const Hello&);
+  };
+
+  class HelloGoPort : public  sci::cca::ports::GoPort {
+  public:
+    HelloGoPort(Hello *hello) : hello(hello) {}
+    int go() { return hello->go(); }
+  private:
+    Hello *hello;
+  };
+  
+  
+} //namespace SCIRun
+
+
+#endif

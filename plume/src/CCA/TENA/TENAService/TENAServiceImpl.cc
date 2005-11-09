@@ -49,19 +49,25 @@ namespace SCIRun {
   
   using namespace sci::cca;
   using namespace sci::cca::core;
+  using namespace sci::cca::core::ports;
   using namespace sci::cca::tena;
 
   struct TENAServiceInfo {
-    TENAServiceInfo() {}
+    TENAServiceInfo() : programConfig("TENAService: programConfig") {}
 
     TENA::Middleware::RuntimePtr runtime;
-    TENA::Middleware::Configuration configuration;
+    DCT::Utils::BasicConfiguration programConfig;
+    TENA::Middleware::Configuration *tenaConfig;
   };
 
-  TENAServiceImpl::TENAServiceImpl()
-    : initialized(false), lock("TENAServiceImpl::lock")
+  TENAServiceImpl::TENAServiceImpl(const Services::pointer &services)
+    : services(services), initialized(false), lock("TENAServiceImpl::lock")
   {
     info = new TENAServiceInfo;
+
+    info->programConfig.addSettings()
+      ("executionName", DCT::Utils::Value<std::string>(), "Execution to join")
+      ("verbosity",     DCT::Utils::Value<unsigned int>().setDefault(1), "Verbosity");
   }
 
   TENAServiceImpl::~TENAServiceImpl()
@@ -70,10 +76,28 @@ namespace SCIRun {
     delete info;
   }
   
+  
   bool TENAServiceImpl::setConfiguration()
   {
-    // FIXME [yarden]: not implemented yet.
-    return false;
+    services->registerUsesPort("config", "cca.FrameworkProperties", 0);
+    try {
+      FrameworkProperties::pointer frameworkProperties = pidl_cast<FrameworkProperties::pointer>(services->getPort("config"));
+      Properties::pointer properties = frameworkProperties->getProperties();
+      SSIDL::array1<std::string> args = properties->getStringArray("program arguments", 0);
+      int size = args.size();
+      char **argv = new char *[args.size()];
+      for (int i=0; i<size; i++)
+	argv[i] = strdup(args[i].c_str());
+   
+      info->tenaConfig = new TENA::Middleware::Configuration( size, argv );
+      delete argv;
+    }
+    catch (const CCAException::pointer &) {
+      std::cerr << "TENAService::setConfiguration error\n";
+      return false;
+    }
+    
+    return true;
   }
 
   Execution::pointer TENAServiceImpl::joinExecution(const std::string &name)
@@ -81,7 +105,8 @@ namespace SCIRun {
     Guard guard(&lock);
 
     if (!initialized) {
-      info->runtime = TENA::Middleware::init(info->configuration);
+      if ( !setConfiguration() ) return 0;
+      info->runtime = TENA::Middleware::init( *info->tenaConfig );
       initialized = true;
     }
     

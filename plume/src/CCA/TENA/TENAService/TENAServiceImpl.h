@@ -59,7 +59,7 @@ namespace SCIRun {
   class TENAServiceImpl : public TENAService
   {
   public:
-    TENAServiceImpl();
+    TENAServiceImpl(const Services::pointer &services);
     virtual ~TENAServiceImpl();
   
     virtual bool setConfiguration();
@@ -68,6 +68,8 @@ namespace SCIRun {
 
   protected:
     typedef std::map<std::string, Execution::pointer> ExecutionsMap;
+
+    Services::pointer services;
     ExecutionsMap executions;
 
     bool initialized;

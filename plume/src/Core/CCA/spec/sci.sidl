@@ -29,7 +29,7 @@
 version sci 0.2;
 
 #include "cca.sidl"
-#include "cca_core.sidl"
+#include "core.sidl"
 #include "distributed.sidl"
 #include "plume.sidl"
 #include "core_example.sidl"
