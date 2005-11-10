@@ -32,7 +32,7 @@ package sci {
     
     package tena {
 
-      class Execution {}
+      class TENAExecution {}
 
       interface GlobalTENAService extends Port
       {
@@ -40,7 +40,7 @@ package sci {
 
       interface TENAService extends Port 
       {
-	Execution joinExecution( in string name );
+	TENAExecution joinExecution( in string name );
       }
       
       

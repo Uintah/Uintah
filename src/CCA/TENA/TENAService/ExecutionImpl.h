@@ -51,7 +51,7 @@ namespace SCIRun {
    *
    */
   
-  class ExecutionImpl : public Execution
+  class ExecutionImpl : public TENAExecution
   {
   public:
     ExecutionImpl(TENA::Middleware::ExecutionPtr execution) : execution(execution) {}

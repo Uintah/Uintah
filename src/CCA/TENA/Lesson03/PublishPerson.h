@@ -41,8 +41,8 @@
 #ifndef SCIRun_CCA_TENA_Lesson03_PublishPerson_h
 #define SCIRun_CCA_TENA_Lesson03_PublishPerson_h
 
-#include <Core/CCA/spec/sci_sidl.h>
-#include <TENA/Middleware/config.h>
+//#include <Core/CCA/spec/sci_sidl.h>
+//#include <TENA/Middleware/config.h>
 #include <Lesson_03/Person/BasicImpl/PublisherImpl.h>
 
 namespace SCIRun {
@@ -62,7 +62,7 @@ namespace SCIRun {
   private:
     Services::pointer services;
 
-    updateServant( Lesson_03::Person::ServantPtr person, long updateCount );
+    void updateServant( Lesson_03::Person::ServantPtr person, long updateCount );
 
     PublishPerson(const PublishPerson&);
     PublishPerson& operator=(const PublishPerson&);
@@ -71,7 +71,7 @@ namespace SCIRun {
   class PublishPersonGoPort : public  sci::cca::ports::GoPort {
   public:
     PublishPersonGoPort(PublishPerson *publishPerson) : publishPerson(publishPerson) {}
-    int go() { return publishPerspn->go(); }
+    int go() { return publishPerson->go(); }
   private:
     PublishPerson *publishPerson;
   };

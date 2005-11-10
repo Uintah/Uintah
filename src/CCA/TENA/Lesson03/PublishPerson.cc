@@ -28,7 +28,7 @@
 
 
 /*
- *  PublishPerson.h
+ *  PublishPerson.cc
  *
  *  Written by:
  *   Yarden Livnat
@@ -39,8 +39,14 @@
  */
 
 
-#include <ace/OS.h>             // for ACE_OS::sleep()
+#include <Core/CCA/spec/sci_sidl.h>
+
+#include <TENA/Middleware/config.h>
 #include <CCA/TENA/Lesson03/PublishPerson.h>
+#include <CCA/TENA/TENAService/ExecutionImpl.h>
+
+#include <ace/OS.h>             // for ACE_OS::sleep()
+
 #include <iostream>
 //#include <unistd.h>
 
@@ -83,29 +89,29 @@ int PublishPerson::go()
   std::cerr << "PublishPerson ";
 
   try { 
-    TENAService::pointer tenaService = pidl_cast<TENAService::pointer>(services.getPort("tena"));
-    Execution::pointer execution = tenaService->joinExecution("tenaTest");
+    TENAService::pointer tenaService = pidl_cast<TENAService::pointer>(services->getPort("tena"));
+    TENAExecution::pointer execution = tenaService->joinExecution("tenaTest");
     services->releasePort("tena");
     
     if ( execution.isNull() ) {
-      std::cerr << "could not join execution \"tenaTest\"\n";
-      return;
+      std::cerr << "PublishPerson: could not join execution \"tenaTest\"\n";
+      return 1;
     }
     
     ExecutionImpl *impl = dynamic_cast<ExecutionImpl *>(execution.getPointer());
     if ( !impl ) {
-      std::cerr << "Execution is not ExecutionImpl ?!\n";
-      return;
+      std::cerr << "PublishPerson: Execution is not ExecutionImpl ?!\n";
+      return 1;
     }
     
     ExecutionPtr exec = impl->getExecution();
     
-    std::string sessionName("lesson03");
+    std::string sessionName("Lesson03_Publish");
     
     // from Lesson03
     SessionPtr session = exec->createSession( sessionName );
     
-    Lesson_03::Person::PublicationInfoPtr publicationInfo = new Lesson_03::Person::BasicImpl::PublicationInfoImpl;
+    Lesson_03::Person::PublicationInfoPtr publicationInfo( new Lesson_03::Person::BasicImpl::PublicationInfoImpl );
     
     // Create a ServantFactory to create Person objects.
     Lesson_03::Person::ServantFactoryPtr servantFactory = 
