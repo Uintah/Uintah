@@ -172,12 +172,6 @@ StreamLines::execute()
     update = true;
   }
 
-  if (gValue_.get() == 0 &&
-      !sfHandle->query_scalar_interface(this).get_rep()) {
-    error("Usage of Seed data is only available for Scalar data.");
-    return;
-  }
-
   double tolerance = gTolerance_.get();
   double stepsize = gStepsize_.get();
   int maxsteps = gMaxsteps_.get();
@@ -233,9 +227,16 @@ StreamLines::execute()
 	return;
       }
 
+      string dsttype = "double";
+      if (value == 0) dsttype = sfdtd->get_name();
+      const string dftn =
+        "GenericField<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<" +
+        dsttype + ">, vector<" + dsttype + "> > ";
+
       const TypeDescription *vtd = vfHandle->get_type_description();
       CompileInfoHandle aci =
-	StreamLinesAccAlgo::get_compile_info(sftd, sltd, vtd, value);
+	StreamLinesAccAlgo::get_compile_info(sftd, sltd, vtd,
+                                             dftn, value);
       Handle<StreamLinesAccAlgo> accalgo;
       if (!module_dynamic_compile(aci, accalgo)) return;
       
@@ -559,8 +560,8 @@ StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
 
 CompileInfoHandle
 StreamLinesAlgo::get_compile_info(const TypeDescription *fsrc,
-				  const TypeDescription *dsrc,
 				  const TypeDescription *sloc,
+				  const TypeDescription *dsrc,
 				  int value)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -592,6 +593,7 @@ CompileInfoHandle
 StreamLinesAccAlgo::get_compile_info(const TypeDescription *fsrc,
 				     const TypeDescription *sloc,
 				     const TypeDescription *vfld,
+                                     const string &fdst,
 				     int value)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -600,15 +602,16 @@ StreamLinesAccAlgo::get_compile_info(const TypeDescription *fsrc,
   static const string base_class_name("StreamLinesAccAlgo");
 
   CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
+    scinew CompileInfo(template_class_name + (value?"M":"F") + "." +
 		       fsrc->get_filename() + "." +
 		       sloc->get_filename() + "." +
 		       vfld->get_filename() + ".",
                        base_class_name, 
-                       template_class_name, 
+                       template_class_name + (value?"M":"F"),
 		       fsrc->get_name() + ", " +
 		       sloc->get_name() + ", " +
-		       vfld->get_name());
+		       vfld->get_name() + ", " +
+                       fdst);
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);

@@ -123,13 +123,13 @@ public:
 };
 
 
-template <class SFIELD, class STYPE, class SLOC>
+template <class FSRC, class STYPE, class SLOC>
 void
-StreamLinesAlgoT<SFIELD, STYPE, SLOC>::
+StreamLinesAlgoT<FSRC, STYPE, SLOC>::
 parallel_generate( int proc, SLData *d)
 {
-  SFIELD *sfield = (SFIELD *) d->seed_field_h.get_rep();
-  typename SFIELD::mesh_handle_type smesh = sfield->get_typed_mesh();
+  FSRC *sfield = (FSRC *) d->seed_field_h.get_rep();
+  typename FSRC::mesh_handle_type smesh = sfield->get_typed_mesh();
 
 
   typedef CrvLinearLgn<STYPE> DatBasisL;
@@ -152,7 +152,7 @@ parallel_generate( int proc, SLData *d)
   smesh->begin(seed_iter);
   smesh->end(seed_iter_end);
 
-  typename SFIELD::fdata_type::iterator data_iter = sfield->fdata().begin();
+  typename FSRC::fdata_type::iterator data_iter = sfield->fdata().begin();
 
   int count = 0;
 
@@ -283,9 +283,9 @@ parallel_generate( int proc, SLData *d)
 }
 
 
-template <class SFIELD, class STYPE, class SLOC>
+template <class FSRC, class STYPE, class SLOC>
 FieldHandle
-StreamLinesAlgoT<SFIELD, STYPE, SLOC>::
+StreamLinesAlgoT<FSRC, STYPE, SLOC>::
 execute(FieldHandle seed_field_h,
 	VectorFieldInterfaceHandle vfi,
 	double tolerance,
@@ -315,27 +315,14 @@ execute(FieldHandle seed_field_h,
   d.fh = FieldHandle(cf);
 
   Thread::parallel(this,
-                   &StreamLinesAlgoT<SFIELD, STYPE, SLOC>::parallel_generate,
+                   &StreamLinesAlgoT<FSRC, STYPE, SLOC>::parallel_generate,
                    np, &d);
 
   cf->freeze();
 
   return cf;
-
-#if 0
-  CMesh::Node::size_type count;
-  cf->get_typed_mesh()->size(count);
-  if (((unsigned int)count) == 0)
-  {
-    delete cf;
-    return 0;
-  }
-  else
-  {
-    return cf;
-  }
-#endif
 }
+
 
 
 class StreamLinesAccAlgo : public DynamicAlgoBase
@@ -352,15 +339,21 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
 					    const TypeDescription *sloc,
 					    const TypeDescription *vfld,
+                                            const string &fdst,
 					    int value);
 
 };
 
 
-template <class SFIELD, class SLOC, class VFLD>
+
+template <class FSRC, class SLOC, class VFLD, class FDST>
 class StreamLinesAccAlgoT : public StreamLinesAccAlgo
 {
 public:
+
+  void FindNodes(vector<Point>& nodes, Point seed, int maxsteps, 
+		 VFLD *vfield, bool remove_colinear_p, bool back);
+
 
   virtual FieldHandle execute(FieldHandle seed_field_h,
 			      FieldHandle vfield_h,
@@ -369,20 +362,22 @@ public:
 			      int value,
 			      bool remove_colinear_p);
 
-  void FindNodes(vector<Point>& nodes, Point seed, int maxsteps, 
-		 VFLD *vfield, bool remove_colinear_p, bool back);
+  virtual void set_result_value(FDST *cf,
+                                typename FDST::mesh_type::Node::index_type di,
+                                FSRC *sfield,
+                                typename SLOC::index_type si,
+                                double data) = 0;
 };
 
 
-template <class SFIELD, class SLOC, class VFLD>
+template <class FSRC, class SLOC, class VFLD, class FDST>
 void
-StreamLinesAccAlgoT<SFIELD, SLOC, VFLD>::
-FindNodes(vector<Point> &v,
-	  Point seed,
-	  int maxsteps,
-	  VFLD *vfield,
-	  bool remove_colinear_p,
-	  bool back)
+StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::FindNodes(vector<Point> &v,
+                                                       Point seed,
+                                                       int maxsteps,
+                                                       VFLD *vfield,
+                                                       bool remove_colinear_p,
+                                                       bool back)
 {
   typename VFLD::mesh_handle_type vmesh = vfield->get_typed_mesh();
 
@@ -446,28 +441,26 @@ FindNodes(vector<Point> &v,
     v.erase(StreamLinesCleanupPoints(v, 1.0e-6), v.end());
   }
 }
-						  
 
 
-template <class SFIELD, class SLOC, class VFLD>
+template <class FSRC, class SLOC, class VFLD, class FDST>
 FieldHandle
-StreamLinesAccAlgoT<SFIELD, SLOC, VFLD>::
-execute(FieldHandle seed_field_h,
-	FieldHandle vfield_h,
-	int maxsteps,
-	int direction,
-	int value,
-	bool remove_colinear_p)
+StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(FieldHandle seed_field_h,
+                                                     FieldHandle vfield_h,
+                                                     int maxsteps,
+                                                     int direction,
+                                                     int value,
+                                                     bool remove_colinear_p)
 {
-  SFIELD *sfield = (SFIELD *) seed_field_h.get_rep();
-  typename SFIELD::mesh_handle_type smesh = sfield->get_typed_mesh();
+  FSRC *sfield = (FSRC *) seed_field_h.get_rep();
+  typename FSRC::mesh_handle_type smesh = sfield->get_typed_mesh();
 
   VFLD *vfield = (VFLD *) vfield_h.get_rep();
 
   vfield->mesh()->synchronize(Mesh::FACE_NEIGHBORS_E);
 
-  CMesh::handle_type cmesh = scinew CMesh();
-  CField *cf = scinew CField(cmesh);
+  typename FDST::mesh_handle_type cmesh = scinew typename FDST::mesh_type();
+  FDST *cf = scinew FDST(cmesh);
 
   Point seed;
   typename VFLD::mesh_type::Elem::index_type elem;
@@ -475,14 +468,12 @@ execute(FieldHandle seed_field_h,
   nodes.reserve(maxsteps);
 
   vector<Point>::iterator node_iter;
-  CMesh::Node::index_type n1, n2;
+  typename FDST::mesh_type::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
   typename SLOC::iterator seed_iter, seed_iter_end;
   smesh->begin(seed_iter);
   smesh->end(seed_iter_end);
-
-  typename SFIELD::fdata_type::iterator data_iter = sfield->fdata().begin();
 
   int count = 0;
 
@@ -494,7 +485,6 @@ execute(FieldHandle seed_field_h,
     if (!vfield->get_typed_mesh()->locate(elem, seed))
     {
       ++seed_iter;
-      ++data_iter;
       ++count;
       continue;
     }
@@ -525,7 +515,6 @@ execute(FieldHandle seed_field_h,
 
     if (node_iter != nodes.end())
     {
-      lock.lock();
       n1 = cf->get_typed_mesh()->add_node(*node_iter);
 
       ostringstream str;
@@ -534,12 +523,12 @@ execute(FieldHandle seed_field_h,
 
       cf->resize_fdata();
 
-      if( value == 0 )
-	cf->set_value((*data_iter), n1);
+      if (value == 0)
+        set_result_value(cf, n1, sfield, *seed_iter, 0);
       else if( value == 1)
-	cf->set_value((double)(*seed_iter), n1);
+        set_result_value(cf, n1, sfield, *seed_iter, (double)*seed_iter);
       else if (value == 2)
-	cf->set_value((double)abs(cc), n1);
+        set_result_value(cf, n1, sfield, *seed_iter, (double)abs(cc));
 
       ++node_iter;
 
@@ -549,13 +538,13 @@ execute(FieldHandle seed_field_h,
       {
 	n2 = cf->get_typed_mesh()->add_node(*node_iter);
 	cf->resize_fdata();
-
-	if( value == 0 )
-	  cf->set_value((*data_iter), n2);
-	else if( value == 1)
-	  cf->set_value((double)(*seed_iter), n2);
-	else if(value == 2)
-	  cf->set_value((double)abs(cc), n2);
+        
+        if (value == 0)
+          set_result_value(cf, n2, sfield, *seed_iter, 0);
+        else if( value == 1)
+          set_result_value(cf, n2, sfield, *seed_iter, (double)*seed_iter);
+        else if (value == 2)
+          set_result_value(cf, n2, sfield, *seed_iter, (double)abs(cc));
 
 	cf->get_typed_mesh()->add_edge(n1, n2);
 
@@ -564,11 +553,9 @@ execute(FieldHandle seed_field_h,
 
 	cc++;
       }
-      lock.unlock();
     }
 
     ++seed_iter;
-    ++data_iter;
     ++count;
   }
 
@@ -578,6 +565,41 @@ execute(FieldHandle seed_field_h,
 
   return FieldHandle(cf);
 }
+
+
+template <class FSRC, class SLOC, class VFLD, class FDST>
+class StreamLinesAccAlgoTM : public StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>
+{
+public:
+
+  virtual void set_result_value(FDST *cf,
+                                typename FDST::mesh_type::Node::index_type di,
+                                FSRC *sfield,
+                                typename SLOC::index_type si,
+                                double data)
+  {
+    cf->set_value(data, di);
+  }
+};
+
+
+template <class FSRC, class SLOC, class VFLD, class FDST>
+class StreamLinesAccAlgoTF : public StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>
+{
+public:
+
+  virtual void set_result_value(FDST *cf,
+                                typename FDST::mesh_type::Node::index_type di,
+                                FSRC *sfield,
+                                typename SLOC::index_type si,
+                                double data)
+  {
+    typename FDST::value_type val;
+    sfield->value(val, si);
+    cf->set_value(val, di);
+  }
+};
+
 
 } // end namespace SCIRun
 
