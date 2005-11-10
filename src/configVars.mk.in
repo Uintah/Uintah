@@ -335,9 +335,8 @@ ifeq ($(BUILD_SCIRUN2),yes)
   QT_MOC_BIN := @QT_MOC_BIN@
                                                                                                  
   DEF_NCURSES := @DEF_NCURSES@
-  INC_NCURSES_H := @INC_NCURSES_H@
-  NCURSES_LIB_FLAG := @NCURSES_LIB_FLAG@
-  NCURSES_LIB_DIR_FLAG := @NCURSES_LIB_DIR_FLAG@
+  NCURSES_INCLUDE := @INC_NCURSES_H@
+  NCURSES_LIBRARY := @NCURSES_LIB_DIR_FLAG@ @NCURSES_LIB_FLAG@
 
   HAVE_TAO := @HAVE_TAO@
   TAO_LIBRARY := @TAO_LIB_DIR_FLAG@ @TAO_LIB_FLAG@
