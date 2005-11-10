@@ -43,8 +43,6 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-//#define myGoPort PDEdriverGoPort
-
 namespace SCIRun {
 
 class PDEdriver : public sci::cca::Component {
@@ -60,15 +58,15 @@ private:
   sci::cca::Services::pointer services;
 };
 
-class myGoPort : public virtual sci::cca::ports::GoPort {
+class PDEGoPort : public virtual sci::cca::ports::GoPort {
 public:
-  myGoPort(const sci::cca::Services::pointer &svc);
-  virtual ~myGoPort(){}
+  PDEGoPort(const sci::cca::Services::pointer &svc) : services(svc) {}
+  virtual ~PDEGoPort(){}
   virtual int go();
 
 private:
   void updateProgress(int counter);
-  sci::cca::Services::pointer svc;
+  sci::cca::Services::pointer services;
   sci::cca::ports::Progress::pointer pPtr;
 };
 
