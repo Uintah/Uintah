@@ -28,7 +28,7 @@
 
 
 /*
- *  newmain.cc: CCA-ified version of SCIRun
+ *  main.cc: CCA-ified version of SCIRun
  *
  *  Written by:
  *   Steven G. Parker
@@ -46,9 +46,10 @@
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
 
+
 #include <sci_defs/mpi_defs.h>
-#include <sci_defs/qt_defs.h>
 #include <sci_mpi.h>
+#include <sci_defs/qt_defs.h>
 #include <iostream>
 
 using namespace SCIRun;
@@ -115,7 +116,7 @@ parse_args( int argc, char *argv[])
 int
 main(int argc, char *argv[]) {
   bool framework = true;
-  
+
   bool loadNet = parse_args( argc, argv);
   create_sci_environment(0,0);
   

@@ -29,9 +29,9 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
-
 SRCDIR   := SCIRun
+
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCS     += \
             $(SRCDIR)/SCIRunFramework.cc \
@@ -48,11 +48,14 @@ SRCS     += \
             $(SRCDIR)/SCIRunLoader.cc
 
 
-SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Internal \
-           $(SRCDIR)/Corba $(SRCDIR)/Tao
+SUBDIRS := \
+            $(SRCDIR)/CCA \
+            $(SRCDIR)/Internal \
+            $(SRCDIR)/Corba \
+            $(SRCDIR)/Tao
 
 ifeq ($(BUILD_DATAFLOW),yes)
-  SUBDIRS += $(SRCDIR)/Dataflow 
+  SUBDIRS += $(SRCDIR)/Dataflow
 endif
 
 ifeq ($(HAVE_VTK),yes)
@@ -60,25 +63,27 @@ ifeq ($(HAVE_VTK),yes)
 endif
 
 ifeq ($(HAVE_BABEL),yes)
- ifeq ($(HAVE_RUBY),yes)
-  SUBDIRS += $(SRCDIR)/Bridge
- endif
  SUBDIRS += $(SRCDIR)/Babel
 endif
 
+ifeq ($(BUILD_BRIDGE),yes)
+   SUBDIRS += $(SRCDIR)/Bridge
+endif
+
 include $(SCIRUN_SCRIPTS)/recurse.mk
+
 ifeq ($(HAVE_GLOBUS),yes)
   PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
-            Core/GuiInterface Core/CCA/spec \
-            Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
-            Core/globus_threads Core/CCA/Comm
+             Core/GuiInterface Core/CCA/spec \
+             Core/CCA/PIDL Core/CCA/SSIDL \
+             Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
+             Core/globus_threads Core/CCA/Comm
 else
   PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
-            Core/GuiInterface Core/CCA/spec \
-            Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions Core/Thread \
-            Core/TkExtensions Core/Init Core/CCA/Comm
+             Core/GuiInterface Core/CCA/spec \
+             Core/CCA/PIDL Core/CCA/SSIDL \
+             Core/Exceptions Core/Thread \
+             Core/TkExtensions Core/Init Core/CCA/Comm
 endif
 
 ifeq ($(BUILD_DATAFLOW),yes)
@@ -104,3 +109,8 @@ ifeq ($(HAVE_BABEL),yes)
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+SUBDIRS := \
+           $(SRCDIR)/StandAlone
+
+include $(SCIRUN_SCRIPTS)/recurse.mk

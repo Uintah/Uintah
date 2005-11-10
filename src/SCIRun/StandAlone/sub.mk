@@ -28,72 +28,62 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := main
+SRCDIR := SCIRun/StandAlone
 
 ########################################################################
 #
-# scirun (aka PROGRAM_PSE)
+# SCIRun2 Stuff:
 #
 
-SRCS    := $(SRCDIR)/main.cc
+
+########################################################################
+#
+# sr
+#
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Dataflow Core
+  PSELIBS := Core/CCA
 else
-  PSELIBS := Dataflow/Network Core/Containers Dataflow/TCLThread \
-	Core/GuiInterface Core/Thread Core/Exceptions Core/Util \
-	Core/TkExtensions Core/Comm Core/ICom Core/Services Core/XMLUtil \
-	Core/SystemCall Core/Geom Core/Init Core/Basis
-
-  ifeq ($(HAVE_PTOLEMY), yes)   
-        PSELIBS += Packages/Ptolemy/Core/Comm
-  endif
-
-  ifeq ($(OS_NAME),Darwin)
-    PSELIBS += Core/Datatypes Core/ImportExport Core/Persistent
+  PSELIBS := SCIRun Core/Exceptions Core/Thread Core/Util \
+			 Core/CCA/Comm Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL
+  ifeq ($(HAVE_GLOBUS),yes)   
+	PSELIBS += Core/globus_threads
   endif
 endif
 
-LIBS :=  $(XML_LIBRARY)
-ifeq ($(NEED_SONAME),yes)
-  LIBS := $(LIBS) $(XML_LIBRARY) $(TK_LIBRARY) $(DL_LIBRARY) $(Z_LIBRARY) $(SCISOCK_LIBRARY)
+LIBS := $(GLOBUS_LIBRARY)
+
+ifeq ($(HAVE_MPI),yes)
+  LIBS += $(MPI_LIBRARY) 
 endif
 
-PROGRAM := $(PROGRAM_PSE)
-
-ifeq ($(OS_NAME),Darwin)
-  PROGRAM_LDFLAGS := $(PROGRAM_LDFLAGS) -bind_at_load
-endif
-
+PROGRAM := sr
+SRCS := $(SRCDIR)/main.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-
 ########################################################################
 #
-# scirunremote
+# ploader
 #
 
-SRCS     := $(SRCDIR)/scirunremote.cc
-
+# build the SCIRun CCA Component Loader here
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Dataflow Core
+  PSELIBS := Core/CCA/Component
 else
-  PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
-        Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-        Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Init
-  ifeq ($(OS_NAME),Darwin)
-    PSELIBS += Core/Datatypes Core/ImportExport
+  PSELIBS := SCIRun Core/Exceptions Core/Thread Core/CCA/Comm \
+			 Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL
+  ifeq ($(HAVE_GLOBUS),yes)
+	PSELIBS += Core/CCA/Comm/DT \
+			   Core/globus_threads
   endif
 endif
 
-LIBS := $(LIBS) $(XML_LIBRARY)  $(DL_LIBRARY) $(Z_LIBRARY)
-
-PROGRAM := scirunremote
-
-ifeq ($(OS_NAME),Darwin)
-  PROGRAM_LDFLAGS := $(PROGRAM_LDFLAGS) -bind_at_load
+ifeq ($(HAVE_MPI),yes)
+  LIBS := $(MPI_LIBRARY) 
 endif
 
+PROGRAM := ploader
+SRCS := $(SRCDIR)/ploader.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ########################################################################
