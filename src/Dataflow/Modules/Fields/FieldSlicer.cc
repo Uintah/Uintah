@@ -430,11 +430,11 @@ FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
   // Structured meshs have a set_point method which is needed. However, it is not
   // defined for gridded meshes. As such, the include file defined below contains a
   // compiler flag so that when needed in FieldSlicer.h it is compiled.
-  if( iftd->get_name().find("StructHexVolMesh"  ) == 0 ||
-      iftd->get_name().find("StructQuadSurfMesh") == 0 ||
-      iftd->get_name().find("StructCurveMesh"   ) == 0 ||
-      iftd->get_name().find("PointCloudMesh"    ) == 0 ) {
-
+  if( iftd->get_name().find("StructHexVolMesh"  ) != string::npos ||
+      iftd->get_name().find("StructQuadSurfMesh") != string::npos ||
+      iftd->get_name().find("StructCurveMesh"   ) != string::npos ||
+      iftd->get_name().find("PointCloudMesh"    ) != string::npos )
+  {
     string header_path(include_path);  // Get the right path 
 
     // Insert the Dynamic header file name.
