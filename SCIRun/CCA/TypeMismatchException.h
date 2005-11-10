@@ -35,16 +35,13 @@
 
 namespace SCIRun {
 
-class TypeMismatchException : virtual public sci::cca::TypeMismatchException, virtual public SCIRun::CCAException
+class TypeMismatchException : virtual public sci::cca::TypeMismatchException
 {
 public:
   TypeMismatchException(const std::string& msg, sci::cca::Type reqType, sci::cca::Type actualType);
   virtual ~TypeMismatchException();
 
-  virtual sci::cca::CCAExceptionType getCCAExceptionType()
-  {
-    return type;
-  }
+  virtual sci::cca::CCAExceptionType getCCAExceptionType() { return type; }
 
   // .sci.cca.Type .sci.cca.TypeMismatchException.getRequestedType()
   virtual inline sci::cca::Type getRequestedType() { return requestType; }
@@ -52,9 +49,28 @@ public:
   // .sci.cca.Type .sci.cca.TypeMismatchException.getActualType()
   virtual inline sci::cca::Type getActualType() { return actualType; }
 
+  // string .SSIDL.BaseException.getNote()
+  virtual inline std::string
+  getNote() { return message; }
+
+  // void .SSIDL.BaseException.setNote(in string message)
+  virtual inline void
+  setNote(const std::string& message) { this->message = message; }
+
+  // string .SSIDL.BaseException.getTrace()
+  virtual std::string getTrace();
+
+  // void .SSIDL.BaseException.add(in string traceline)
+  virtual void add(const ::std::string &traceline);
+
+  // void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)
+  virtual void add(const std::string &filename, int lineno, const std::string &methodname);
+
 private:
   sci::cca::Type requestType;
   sci::cca::Type actualType;
+  mutable std::string message;
+  mutable sci::cca::CCAExceptionType type;
 };
 
 } // end namespace SCIRun

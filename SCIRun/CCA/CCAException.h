@@ -82,7 +82,7 @@ public:
     // void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)
     virtual void add(const std::string &filename, int lineno, const std::string &methodname);
 
-protected:
+private:
     mutable std::string message;
     mutable sci::cca::CCAExceptionType type;
 };

@@ -31,13 +31,30 @@
 
 namespace SCIRun {
 
-TypeMismatchException::TypeMismatchException(const std::string& msg, sci::cca::Type reqType, sci::cca::Type actualType)
-  : SCIRun::CCAException(msg, sci::cca::Nonstandard), requestType(reqType), actualType(actualType)
+TypeMismatchException::TypeMismatchException(const std::string& msg, sci::cca::Type reqType, sci::cca::Type actualType) : type(sci::cca::Nonstandard)
 {
 }
 
 TypeMismatchException::~TypeMismatchException()
 {
+}
+
+// TODO: implement stack trace
+std::string TypeMismatchException::getTrace()
+{
+    NOT_FINISHED("string .SSIDL.BaseException.getTrace()");
+    return std::string(0);
+}
+
+// TODO: implement add functions
+void TypeMismatchException::add(const std::string &traceline)
+{
+    NOT_FINISHED("void .SSIDL.BaseException.add(in string traceline)");
+}
+
+void TypeMismatchException::add(const std::string &filename, int lineno, const std::string &methodname)
+{
+    NOT_FINISHED("void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)");
 }
 
 }
