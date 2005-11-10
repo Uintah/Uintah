@@ -190,8 +190,9 @@ bool MergeFieldsAlgoT<FIELD,MESH>::mergefields(SCIRun::ProgressReporter *reporte
     reporter->error("This function has not yet been implemented for higher order elements");
     return (false);
   }
-    
-    
+
+  int actnumnodes = 0;      
+  int actnumelements = 0;  
     
   double Xmul = 250/(Xmax-Xmin);
   double Ymul = 250/(Ymax-Ymin);
@@ -271,6 +272,7 @@ bool MergeFieldsAlgoT<FIELD,MESH>::mergefields(SCIRun::ProgressReporter *reporte
                 
             if (!(localindex_assigned[nodeq]))
             {
+              actnumnodes++;
               newnodes[q] = omesh->add_point(P);
               if(basisorder > 0)
               {
@@ -287,6 +289,7 @@ bool MergeFieldsAlgoT<FIELD,MESH>::mergefields(SCIRun::ProgressReporter *reporte
             imesh->get_center(P,nodeq);
           
             newnodes[q] = omesh->add_point(P);
+            actnumnodes++;
             if(basisorder > 0)
             {
               ofield->set_value(ifield->value(nodeq),newnodes[q]);
@@ -301,15 +304,20 @@ bool MergeFieldsAlgoT<FIELD,MESH>::mergefields(SCIRun::ProgressReporter *reporte
       {
         typename MESH::Elem::index_type idx = omesh->add_elem(newnodes);
         ofield->set_value(ifield->value((*it)),idx);
+        actnumelements++;
       }
       else
       {
         omesh->add_elem(newnodes);
+        actnumelements++;
       }
       
       ++it;
     }
   }
+
+  if (basisorder == 0) ofield->fdata().resize(actnumelements);  
+  if (basisorder == 1) ofield->fdata().resize(actnumnodes);  
 
   return (true);
 }
