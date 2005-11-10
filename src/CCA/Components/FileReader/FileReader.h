@@ -45,9 +45,9 @@
 
 namespace SCIRun {
 
-class myPDEdescriptionPort : public virtual sci::cca::ports::PDEdescriptionPort {
+class FRPDEdescriptionPort : public virtual sci::cca::ports::PDEdescriptionPort {
 public:
-   virtual ~myPDEdescriptionPort() {}
+   virtual ~FRPDEdescriptionPort() {}
    virtual int getPDEdescription(SSIDL::array1<double> &nodes, 
 				 SSIDL::array1<int> &boundaries,
 				 SSIDL::array1<int> &dirichletNodes,

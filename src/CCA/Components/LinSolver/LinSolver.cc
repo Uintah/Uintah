@@ -67,20 +67,20 @@ LinSolver::~LinSolver()
 void LinSolver::setServices(const sci::cca::Services::pointer& svc)
 {
   services = svc;
-  myLinSolverPort::pointer lsp(new myLinSolverPort);
+  LSLinSolverPort::pointer lsp(new LSLinSolverPort);
 
   svc->addProvidesPort(lsp, "linsolver", "sci.cca.ports.LinSolverPort",
-    sci::cca::TypeMap::pointer(0));
+                       sci::cca::TypeMap::pointer(0));
 
   LSComponentIcon::pointer ciPortPtr = LSComponentIcon::pointer(new LSComponentIcon);
 
   svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon",
-    sci::cca::TypeMap::pointer(0));
+                       sci::cca::TypeMap::pointer(0));
 }
 
 int 
-myLinSolverPort::jacobi(const SSIDL::array2<double> &A, 
-            const SSIDL::array1<double> &b,
+LSLinSolverPort::jacobi(const SSIDL::array2<double> &A, 
+                        const SSIDL::array1<double> &b,
                         SSIDL::array1< double>& x)
 {
   //we might set the accurracy by UI
@@ -128,20 +128,20 @@ myLinSolverPort::jacobi(const SSIDL::array2<double> &A,
 
 std::string LSComponentIcon::getDisplayName()
 {
-    return "Jacobi Linear Solver";
+  return "Jacobi Linear Solver";
 }
 
 std::string LSComponentIcon::getDescription()
 {
-    return "Jacobi Linear Solver Component";
+  return "Jacobi Linear Solver Component";
 }
 
 int LSComponentIcon::getProgressBar()
 {
-    return 0;
+  return 0;
 }
  
 std::string LSComponentIcon::getIconShape()
 {
-    return "RECT";
+  return "RECT";
 }
