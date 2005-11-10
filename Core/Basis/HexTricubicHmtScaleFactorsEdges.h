@@ -627,7 +627,7 @@ public:
   void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
 
   //! add scale factors (sdx, sdy, sdz) for edges.
-  void add_scalefactors(const vector<double> &p) { scalefactors_.push_back(p); }
+  void add_scalefactors(const vector<double> &p) { scalefactors_.push_back(p[0]); }
 
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);
@@ -635,7 +635,7 @@ public:
 protected:
   //! support data
   vector<vector<T> >          derivs_; 
-  vector<vector<double> >          scalefactors_; 
+  vector<double >          scalefactors_; 
 };
 
 template <class T>
