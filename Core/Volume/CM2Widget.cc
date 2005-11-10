@@ -2077,7 +2077,7 @@ ColorMapCM2Widget::rasterize(Array3<float>& array)
   for (int y = y1; y <= y2; ++y) {
     float c = 0.0;    
     for (int x = x1; x <= xm; ++x) {
-      int coff = int(c)*4;
+      int coff = Clamp(int(c), 0, colormap_->resolution()-1)*4;
       float a = rgba[coff+3];
       array(y,x,0) = Clamp(array(y,x,0)*(1.0f-a) + rgba[coff+0], 0.0f, 1.0f);
       array(y,x,1) = Clamp(array(y,x,1)*(1.0f-a) + rgba[coff+1], 0.0f, 1.0f);
@@ -2092,7 +2092,7 @@ ColorMapCM2Widget::rasterize(Array3<float>& array)
   for (int y = y1; y <= y2; ++y) {
     float c = colormap_->resolution()/2.0;    
     for (int x = xm+1; x <= x2; ++x) {
-      int coff = int(c)*4;
+      int coff = Clamp(int(c), 0, colormap_->resolution()-1)*4;
       float a = rgba[coff+3];
       array(y,x,0) = Clamp(array(y,x,0)*(1.0f-a) + rgba[coff+0], 0.0f, 1.0f);
       array(y,x,1) = Clamp(array(y,x,1)*(1.0f-a) + rgba[coff+1], 0.0f, 1.0f);
