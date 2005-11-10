@@ -38,8 +38,7 @@
  *   Copyright (C) 2004 SCI Institute
  */
 
-#include <sci_defs/babel_defs.h>
-#include <sci_defs/vtk_defs.h>
+#include <sci_metacomponents.h>
 
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/SCIRunFramework.h>
