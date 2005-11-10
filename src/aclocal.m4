@@ -1051,6 +1051,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_awk=no
   sci_required_babel=no
   sci_required_blas=no
+  sci_required_ncurses=no
   sci_required_crypto=no
   sci_required_dataflow=yes
   sci_required_etags=no
@@ -1131,6 +1132,7 @@ case $1 in
   ;;
   SCIRun2)
     sci_required_babel=yes
+    sci_required_ncurses=yes
     sci_required_uuid=yes
   ;;
   Plume)

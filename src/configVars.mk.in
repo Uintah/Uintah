@@ -333,11 +333,16 @@ ifeq ($(BUILD_SCIRUN2),yes)
 
   QT_DEFS := -DQT_THREAD_SUPPORT -DQT_NO_XIM
   QT_MOC_BIN := @QT_MOC_BIN@
+                                                                                                 
+  DEF_NCURSES := @DEF_NCURSES@
+  INC_NCURSES_H := @INC_NCURSES_H@
+  NCURSES_LIB_FLAG := @NCURSES_LIB_FLAG@
+  NCURSES_LIB_DIR_FLAG := @NCURSES_LIB_DIR_FLAG@
 
   HAVE_TAO := @HAVE_TAO@
   TAO_LIBRARY := @TAO_LIB_DIR_FLAG@ @TAO_LIB_FLAG@
   TAO_INCLUDE := @INC_TAO_H@
-
+ 
   HAVE_VTK := @HAVE_VTK@
   VTK_LIBRARY := @VTK_LIB_DIR_FLAG@ @VTK_LIB_FLAG@
   VTK_INCLUDE := @INC_VTK_H@
