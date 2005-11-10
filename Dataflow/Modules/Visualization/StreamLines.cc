@@ -215,6 +215,8 @@ StreamLines::execute()
     const TypeDescription *sfdtd = 
       (*sField->get_type_description(3)->get_sub_type())[0];
     const TypeDescription *sltd = sField->order_type_description();
+    string dsttype = "double";
+    if (value == 0) dsttype = sfdtd->get_name();
 
     vField->mesh()->synchronize(Mesh::LOCATE_E);
     vField->mesh()->synchronize(Mesh::EDGES_E);
@@ -227,8 +229,6 @@ StreamLines::execute()
 	return;
       }
 
-      string dsttype = "double";
-      if (value == 0) dsttype = sfdtd->get_name();
       const string dftn =
         "GenericField<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<" +
         dsttype + ">, vector<" + dsttype + "> > ";
@@ -245,7 +245,7 @@ StreamLines::execute()
 				  remove_colinear);
     } else {
       CompileInfoHandle ci =
-	StreamLinesAlgo::get_compile_info(sftd, sfdtd, sltd, value);
+	StreamLinesAlgo::get_compile_info(sftd, dsttype, sltd, value);
       Handle<StreamLinesAlgo> algo;
       if (!module_dynamic_compile(ci, algo)) return;
       
@@ -560,7 +560,7 @@ StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
 
 CompileInfoHandle
 StreamLinesAlgo::get_compile_info(const TypeDescription *fsrc,
-				  const TypeDescription *dsrc,
+				  const string &dsrc,
 				  const TypeDescription *sloc,
 				  int value)
 {
@@ -570,14 +570,13 @@ StreamLinesAlgo::get_compile_info(const TypeDescription *fsrc,
   static const string base_class_name("StreamLinesAlgo");
 
   CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
+    scinew CompileInfo(template_class_name + (value?"M":"F") + "." +
 		       fsrc->get_filename() + "." +
-		       (value ? dsrc->get_filename() : "double") + "." +
 		       sloc->get_filename() + ".",
                        base_class_name, 
-                       template_class_name, 
+                       template_class_name + (value?"M":"F"), 
 		       fsrc->get_name() + ", " +
-		       (value ? dsrc->get_name() : "double") + ", " +
+		       dsrc + ", " +
 		       sloc->get_name());
 
   // Add in the include path to compile this obj
@@ -619,9 +618,6 @@ StreamLinesAccAlgo::get_compile_info(const TypeDescription *fsrc,
   rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
   fsrc->fill_compile_info(rval);
   vfld->fill_compile_info(rval);
-  CField cf;
-  const TypeDescription *crvf = cf.get_type_description();
-  crvf->fill_compile_info(rval);
   return rval;
 }
 
