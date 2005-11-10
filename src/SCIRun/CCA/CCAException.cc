@@ -40,7 +40,6 @@
 
 #include <SCIRun/CCA/CCAException.h>
 #include <Core/Util/NotFinished.h>
-//#include <iostream>
 
 namespace SCIRun {
 
