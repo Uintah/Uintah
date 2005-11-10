@@ -79,8 +79,8 @@ void PDEdriver::setServices(const sci::cca::Services::pointer& svc)
   //register provides ports here ...  
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
 
-  myGoPort *gop = new myGoPort(svc);
-  svc->addProvidesPort(myGoPort::pointer(gop),"go","sci.cca.ports.GoPort", props);
+  PDEGoPort *gop = new PDEGoPort(svc);
+  svc->addProvidesPort(PDEGoPort::pointer(gop),"go","sci.cca.ports.GoPort", props);
   svc->addProvidesPort(PDEComponentIcon::pointer(new PDEComponentIcon), "icon", "sci.cca.ports.ComponentIcon", svc->createTypeMap());
 
   svc->registerUsesPort("pde","sci.cca.ports.PDEdescriptionPort", svc->createTypeMap());
@@ -92,17 +92,13 @@ void PDEdriver::setServices(const sci::cca::Services::pointer& svc)
   svc->registerUsesPort("progress","sci.cca.ports.Progress", svc->createTypeMap());
 }
 
-myGoPort::myGoPort(const sci::cca::Services::pointer& svc) {
-  this->svc = svc;
-}
-
-void myGoPort::updateProgress(int counter)
+void PDEGoPort::updateProgress(int counter)
 {
   if (pPtr.isNull()) return;
   pPtr->updateProgress(counter);
 }
 
-int myGoPort::go() 
+int PDEGoPort::go() 
 {
   //driver's go() acts like a main()
   SSIDL::array1<double> nodes;
@@ -117,7 +113,7 @@ int myGoPort::go()
   int size = 0;
   int progCtr = 0;
   try {
-    sci::cca::Port::pointer progPort = svc->getPort("progress");  
+    sci::cca::Port::pointer progPort = services->getPort("progress");  
     pPtr = pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
   }
   catch (const sci::cca::CCAException::pointer &e) {
@@ -125,7 +121,7 @@ int myGoPort::go()
   }  
   sci::cca::ports::PDEdescriptionPort::pointer pdePort;
   try {
-    sci::cca::Port::pointer pp = svc->getPort("pde");   
+    sci::cca::Port::pointer pp = services->getPort("pde");   
     pdePort = pidl_cast<sci::cca::ports::PDEdescriptionPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
@@ -133,12 +129,12 @@ int myGoPort::go()
     return 1;
   }
   pdePort->getPDEdescription(nodes, boundries, dirichletNodes, dirichletValues);
-  svc->releasePort("pde");
+  services->releasePort("pde");
   updateProgress(++progCtr);
 
   sci::cca::ports::MeshPort::pointer meshPort;
   try {
-    sci::cca::Port::pointer pp = svc->getPort("mesh");  
+    sci::cca::Port::pointer pp = services->getPort("mesh");  
     meshPort = pidl_cast<sci::cca::ports::MeshPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
@@ -146,12 +142,12 @@ int myGoPort::go()
     return 1;
   }
   meshPort->triangulate(nodes, boundries, triangles);
-  svc->releasePort("mesh");
+  services->releasePort("mesh");
   updateProgress(++progCtr);
 
   sci::cca::ports::FEMmatrixPort::pointer fem_matrixPort;
   try {
-    sci::cca::Port::pointer pp = svc->getPort("fem_matrix");    
+    sci::cca::Port::pointer pp = services->getPort("fem_matrix");    
     fem_matrixPort = pidl_cast<sci::cca::ports::FEMmatrixPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
@@ -161,12 +157,12 @@ int myGoPort::go()
   fem_matrixPort->makeFEMmatrices(triangles, nodes,
                                   dirichletNodes, dirichletValues,
                                   Ag, fg, size);
-  svc->releasePort("fem_matrix");
+  services->releasePort("fem_matrix");
   updateProgress(++progCtr);
 
   sci::cca::ports::LinSolverPort::pointer linsolverPort;
   try {
-    sci::cca::Port::pointer pp = svc->getPort("linsolver"); 
+    sci::cca::Port::pointer pp = services->getPort("linsolver"); 
     linsolverPort = pidl_cast<sci::cca::ports::LinSolverPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
@@ -189,12 +185,12 @@ int myGoPort::go()
 
   // linsolverPort->setCallerDistribution("DMatrix",arrr); 
   linsolverPort->jacobi(Ag, fg, x);
-  svc->releasePort("linsolver");
+  services->releasePort("linsolver");
   updateProgress(++progCtr);
 
   sci::cca::ports::ViewPort::pointer viewPort;
   try {
-    sci::cca::Port::pointer pp = svc->getPort("viewer");    
+    sci::cca::Port::pointer pp = services->getPort("viewer");    
     viewPort = pidl_cast<sci::cca::ports::ViewPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
@@ -202,10 +198,10 @@ int myGoPort::go()
     return 1;
   }
   viewPort->view2dPDE(nodes, triangles, x);
-  svc->releasePort("viewer");
+  services->releasePort("viewer");
   updateProgress(++progCtr);
 
-  svc->releasePort("progress");
+  services->releasePort("progress");
   return 0;
 }
 
