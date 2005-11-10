@@ -41,13 +41,13 @@
 #ifndef SCIRun_BuilderService_h
 #define SCIRun_BuilderService_h
 
-#include <sci_defs/ruby_defs.h>
+#include <sci_metacomponents.h>
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 
-#ifdef HAVE_RUBY
+#ifdef BUILD_BRIDGE
   #include <SCIRun/Bridge/AutoBridge.h>
 #endif
 
@@ -241,7 +241,7 @@ class BuilderService : public sci::cca::ports::BuilderService,
     /** ? */
     void emitConnectionEvent(ConnectionEvent* event);
 
-#ifdef HAVE_RUBY
+#ifdef BUILD_BRIDGE
     AutoBridge autobr;
 #endif
   };

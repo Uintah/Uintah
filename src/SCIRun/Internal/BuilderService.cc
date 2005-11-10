@@ -72,6 +72,7 @@ BuilderService::createInstance(const std::string& instanceName,
                    const std::string& className,
                    const sci::cca::TypeMap::pointer& properties)
 {
+    // generate unique name here???
     return framework->createComponentInstance(instanceName, className, properties);
 }
 
@@ -411,7 +412,7 @@ BuilderService::getBridgablePortList(
 {
   SSIDL::array1<std::string> availablePorts;
 
-#ifdef HAVE_RUBY
+#ifdef BUILD_BRIDGE
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
   if (!cid1 || !cid2)
@@ -447,7 +448,7 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
                                const sci::cca::ComponentID::pointer& c2,
                                const std::string& port2)
 {
-#ifdef HAVE_RUBY
+#ifdef BUILD_BRIDGE
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
   if (!cid1 || !cid2) {

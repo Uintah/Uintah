@@ -69,11 +69,14 @@
 #endif
 
 #include <iostream>
-using namespace std;
+
+#ifndef DEBUG
+  #define DEBUG 0
+#endif
+
 using namespace SCIRun;
 
-const std::string BridgeComponentModel::DEFAULT_PATH =
-    std::string("/src/CCA/Components/xml");
+const std::string BridgeComponentModel::DEFAULT_PATH("/src/CCA/Components/xml");
 
 int BridgeComponent::bridgeID(0);
 
@@ -112,10 +115,10 @@ void BridgeComponentModel::buildComponentList()
   }
 
   destroyComponentList();
-  string component_path = sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
+  std::string component_path = sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
   while(component_path != ""){
     unsigned int firstColon = component_path.find(':');
-    string dir;
+    std::string dir;
     if(firstColon < component_path.size()){
       dir=component_path.substr(0, firstColon);
       component_path = component_path.substr(firstColon+1);
@@ -124,11 +127,11 @@ void BridgeComponentModel::buildComponentList()
       component_path="";
     }
     Dir d(dir);
-    vector<string> files;
+    std::vector<std::string> files;
     d.getFilenamesBySuffix(".bridge", files);
-    for(vector<string>::iterator iter = files.begin();
+    for(std::vector<std::string>::iterator iter = files.begin();
 	iter != files.end(); iter++){
-      string& file = *iter;
+      std::string& file = *iter;
       readComponentDescription(dir+"/"+file);
     }
   }
@@ -157,7 +160,7 @@ void BridgeComponentModel::readComponentDescription(const std::string& file)
   DOMNodeList* list = doc->getElementsByTagName(to_xml_ch_ptr("component"));
   int nlist = list->getLength();
   if(nlist == 0){
-    cerr << "WARNING: file " << file << " has no components!\n";
+    std::cerr << "WARNING: file " << file << " has no components!\n";
   }
   for (int i=0;i<nlist;i++){
     DOMNode* d = list->item(i);
@@ -165,7 +168,7 @@ void BridgeComponentModel::readComponentDescription(const std::string& file)
     BridgeComponentDescription* cd = new BridgeComponentDescription(this);
     DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("name"));
     if (name==0) {
-      cout << "ERROR: Component has no name." << "\n";
+      std::cout << "ERROR: Component has no name." << "\n";
       cd->type = "unknown type";
     } else {
       cd->type = to_char_ptr(name->getNodeValue());
@@ -174,9 +177,11 @@ void BridgeComponentModel::readComponentDescription(const std::string& file)
     lock_components.lock(); 
     componentDB_type::iterator iter = components.find(cd->type);
     if(iter != components.end()){
-      cerr << "WARNING: Component multiply defined: " << cd->type << '\n';
+      std::cerr << "WARNING: Component multiply defined: " << cd->type << '\n';
     } else {
-      cerr << "Added Bridge component of type: " << cd->type << '\n';
+#if DEBUG
+      std::cerr << "Added Bridge component of type: " << cd->type << '\n';
+#endif
       components[cd->type]=cd;
     }
     lock_components.unlock();
@@ -196,7 +201,9 @@ BridgeComponentModel::createServices(const std::string& instanceName,
 bool BridgeComponentModel::haveComponent(const std::string& type)
 {
   SCIRun::Guard g1(&lock_components);
-  cerr << "Bridge looking for component of type: " << type << '\n';
+#if DEBUG
+  std::cerr << "Bridge looking for component of type: " << type << '\n';
+#endif
   return components.find(type) != components.end();
 }
 
@@ -210,38 +217,40 @@ BridgeComponentModel::createInstance(const std::string& name,
 {
   std::string type=t;
   std::string loaderName="";
-  cerr<<"creating component <"<<name<<","<<type<<"> with loader:"<<loaderName<<"\n";
+#if DEBUG
+  std::cerr << "creating component <" << name << "," << type << "> with loader:" << loaderName << std::endl;
+#endif
   BridgeComponent* component;
   if(loaderName==""){  //local component
     lock_components.lock();  
     componentDB_type::iterator iter = components.find(type);
     lock_components.unlock();
-    string so_name;
+    std::string so_name;
     if(iter == components.end()) {
       //on the fly building of bridges (don't have specific .cca files)      
       type = type.substr(type.find(":")+1); //removing bridge:
-      string lastname=type.substr(type.find('.')+1);
+      std::string lastname=type.substr(type.find('.')+1);
       so_name = "on-the-fly-libs/"+lastname+".so";
     } else {
-      string lastname=type.substr(type.find('.')+1);  
+      std::string lastname=type.substr(type.find('.')+1);  
       so_name="lib/libCCA_Components_"+lastname+".so";
     }
     LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
     if(!handle){
-      cerr << "Cannot load component " << type << '\n';
-      cerr << SOError() << '\n';
+      std::cerr << "Cannot load component " << type << '\n';
+      std::cerr << SOError() << '\n';
       return 0;
     }
     
-    string makername = "make_"+type;
+    std::string makername = "make_"+type;
     for(int i=0;i<(int)makername.size();i++)
       if(makername[i] == '.')
 	makername[i]='_';
     
     void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
     if(!maker_v){
-      cerr <<"Cannot load component " << type << '\n';
-      cerr << SOError() << '\n';
+      std::cerr <<"Cannot load component " << type << '\n';
+      std::cerr << SOError() << '\n';
       return 0;
     }
     BridgeComponent* (*maker)() = (BridgeComponent* (*)())(maker_v);
@@ -260,7 +269,7 @@ bool BridgeComponentModel::destroyInstance(ComponentInstance *ci)
 {
   BridgeComponentInstance* cca_ci = dynamic_cast<BridgeComponentInstance*>(ci);
   if(!cca_ci){
-	cerr<<"error: in destroyInstance() cca_ci is 0"<<"\n";  	
+	std::cerr<<"error: in destroyInstance() cca_ci is 0"<<"\n";  	
     return false;
   }
   return true;	
@@ -271,7 +280,7 @@ string BridgeComponentModel::getName() const
   return "Bridge";
 }
 
-void BridgeComponentModel::listAllComponentTypes(vector<ComponentDescription*>& list,
+void BridgeComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
 					      bool /*listInternal*/)
 {
   SCIRun::Guard g1(&lock_components);
