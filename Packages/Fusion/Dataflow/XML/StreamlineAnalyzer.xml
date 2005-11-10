@@ -44,6 +44,14 @@
         <name>Input Streamlines</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+        <name>Input Centroids</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Input Separatrices</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
@@ -52,6 +60,10 @@
       </port>
       <port>
         <name>Output Centroids</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Output Separatrices</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>

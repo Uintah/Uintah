@@ -426,7 +426,7 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 }
 
 template< class NTYPE >
-class NIMRODPerturbedConverterAlgoT : public NIMRODConverterAlgo
+class NIMRODComplexConverterAlgoT : public NIMRODConverterAlgo
 {
 public:
 
@@ -439,7 +439,7 @@ public:
 
 template< class NTYPE >
 NrrdDataHandle
-NIMRODPerturbedConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
+NIMRODComplexConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 						vector< int >& mesh,
 						vector< int >& data,
 						vector< int >& modes)

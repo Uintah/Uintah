@@ -82,10 +82,13 @@ protected:
   unsigned int showIslands_;
   unsigned int overlaps_;
 
-  FieldHandle fieldout_;
-  FieldHandle pcfieldout_;
+  FieldHandle slfieldout_;
+  FieldHandle pccfieldout_;
+  FieldHandle pcsfieldout_;
 
-  int fGeneration_;
+  int slfGeneration_;
+  int pccfGeneration_;
+  int pcsfGeneration_;
 };
 
 
@@ -109,7 +112,9 @@ StreamlineAnalyzer::StreamlineAnalyzer(GuiContext* context)
     scalarField_(1),
     showIslands_(0),
     overlaps_(0),
-    fGeneration_(-1)
+    slfGeneration_(-1),
+    pccfGeneration_(-1),
+    pcsfGeneration_(-1)
 {
 }
 
@@ -125,36 +130,100 @@ StreamlineAnalyzer::execute()
   cerr << "StreamlineAnalyzer getting ports " << endl;
 
   FieldIPort* ifp = (FieldIPort *)get_iport("Input Streamlines");
-  FieldHandle fieldin;
+  FieldHandle slfieldin;
 
   cerr << "StreamlineAnalyzer getting field " << endl;
 
-  if (!(ifp->get(fieldin))) {
+  if (!(ifp->get(slfieldin))) {
     error( "No handle or representation." );
     return;
   }
 
   cerr << "StreamlineAnalyzer getting field rep" << endl;
 
-  if (!(fieldin.get_rep())) {
+  if (!(slfieldin.get_rep())) {
     error( "No handle or representation." );
     return;
   }
 
   cerr << "StreamlineAnalyzer getting type " << endl;
 
-  if (fieldin->get_type_description(0)->get_name() != "CurveField" &&
-      fieldin->get_type_description(0)->get_name() != "StructCurveField") {
+  if (slfieldin->get_type_description(0)->get_name() != "CurveField" &&
+      slfieldin->get_type_description(0)->get_name() != "StructCurveField") {
     error("Only available for (Struct)CurveFields.");
     return;
   }
 
   cerr << "StreamlineAnalyzer getting interface " << endl;
 
-  if (!fieldin->query_scalar_interface(this).get_rep()) {
+  if (!slfieldin->query_scalar_interface(this).get_rep()) {
     error("Only available for Scalar data.");
     return;
   }
+
+  // Check to see if the input field has changed.
+  if( slfGeneration_ != slfieldin->generation ) {
+    slfGeneration_ = slfieldin->generation;
+    update = true;
+  }
+
+
+  // Get a handle to the input centroid field port.
+  ifp = (FieldIPort *) get_iport("Input Centroids");
+  FieldHandle pccfieldin;
+
+  // The field input is optional.
+  if (ifp->get(pccfieldin) && pccfieldin.get_rep()) {
+    
+    if (pccfieldin->get_type_description(0)->get_name() != "PointCloudField" &&
+	pccfieldin->get_type_description(1)->get_name() != "double") {
+      error("Only available for Point Cloud Fields of type double.");
+      return;
+    }
+
+    if (!pccfieldin->query_scalar_interface(this).get_rep()) {
+      error("Only available for Scalar data.");
+      return;
+    }
+
+    // Check to see if the input field has changed.
+    if( pccfGeneration_ != pccfieldin->generation ) {
+      pccfGeneration_ = pccfieldin->generation;
+      update = true;
+    }
+
+  } else {
+    pccfGeneration_ = -1;
+  }
+
+  // Get a handle to the input separatrices field port.
+  ifp = (FieldIPort *) get_iport("Input Separatrices");
+  FieldHandle pcsfieldin;
+
+  // The field input is optional.
+  if (ifp->get(pcsfieldin) && pcsfieldin.get_rep()) {
+    
+    if (pcsfieldin->get_type_description(0)->get_name() != "PointCloudField" &&
+	pcsfieldin->get_type_description(1)->get_name() != "double") {
+      error("Only available for Point Cloud Fields of type double.");
+      return;
+    }
+
+    if (!pcsfieldin->query_scalar_interface(this).get_rep()) {
+      error("Only available for Scalar data.");
+      return;
+    }
+
+    // Check to see if the input field has changed.
+    if( pcsfGeneration_ != pcsfieldin->generation ) {
+      pcsfGeneration_ = pcsfieldin->generation;
+      update = true;
+    }
+
+  } else {
+    pcsfGeneration_ = -1;
+  }
+
 
   cerr << "StreamlineAnalyzer getting gui " << endl;
 
@@ -260,16 +329,13 @@ StreamlineAnalyzer::execute()
 
   // If no data or a changed recalcute.
   if( update ||
-      !fieldout_.get_rep() ||
-      fGeneration_ != fieldin->generation ) {
-
-    fGeneration_ = fieldin->generation;
+      !slfieldout_.get_rep()) {
 
     Vector* tmpvec;
 
-    const TypeDescription *ftd = fieldin->get_type_description();
+    const TypeDescription *ftd = slfieldin->get_type_description();
     const TypeDescription *ttd = scalarField_ ?
-      fieldin->get_type_description(1) :
+      slfieldin->get_type_description(1) :
       get_type_description(tmpvec);
 
     const string otd = curveMesh_ ?
@@ -284,26 +350,36 @@ StreamlineAnalyzer::execute()
 
     vector< pair< unsigned int, unsigned int > > topology;
 
-    pcfieldout_ = algo->execute(fieldin, fieldout_, planes_,
-				color_, showIslands_, overlaps_,
-				maxWindings_, override_, topology);
+    algo->execute(slfieldin, slfieldout_,
+		  pccfieldin, pccfieldout_,
+		  pcsfieldin, pcsfieldout_,
+		  planes_,
+		  color_, showIslands_, overlaps_,
+		  maxWindings_, override_, topology);
   }
 
   cerr << "StreamlineAnalyzer sending data " << endl;
 
   // Get a handle to the output field port.
-  if ( fieldout_.get_rep() ) {
+  if ( slfieldout_.get_rep() ) {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output Poincare");
 
     // Send the data downstream
-    ofp->send(fieldout_);
+    ofp->send(slfieldout_);
   }
 
-  if ( pcfieldout_.get_rep() ) {
+  if ( pccfieldout_.get_rep() ) {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output Centroids");
 
     // Send the data downstream
-    ofp->send(pcfieldout_);
+    ofp->send(pccfieldout_);
+  }
+
+  if ( pcsfieldout_.get_rep() ) {
+    FieldOPort* ofp = (FieldOPort *) get_oport("Output Separatrices");
+
+    // Send the data downstream
+    ofp->send(pcsfieldout_);
   }
 
   cerr << "StreamlineAnalyzer done " << endl;

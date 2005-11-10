@@ -61,17 +61,21 @@ class StreamlineAnalyzerAlgo : public DynamicAlgoBase
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle& src,
-			      FieldHandle& dst,
-			      vector< double > &planes,
-			      unsigned int color,
-			      unsigned int showIslands,
-			      unsigned int overlaps,
-			      unsigned int maxWindings,
-			      unsigned int override,
-			      vector< pair< unsigned int,
-			                    unsigned int > > &topology ) = 0;
-
+  virtual void execute(FieldHandle& slsrc,
+		       FieldHandle& dst,
+		       FieldHandle& pccsrc,
+		       FieldHandle& pccdst,
+		       FieldHandle& pcssrc,
+		       FieldHandle& pcsdst,
+		       vector< double > &planes,
+		       unsigned int color,
+		       unsigned int showIslands,
+		       unsigned int overlaps,
+		       unsigned int maxWindings,
+		       unsigned int override,
+		       vector< pair< unsigned int,
+		       unsigned int > > &topology ) = 0;
+  
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *iftd,
 					    const TypeDescription *tftd,
@@ -84,16 +88,20 @@ class StreamlineAnalyzerAlgoT : public StreamlineAnalyzerAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle& src,
-			      FieldHandle& dst,
-			      vector< double > &planes,
-			      unsigned int color,
-			      unsigned int showIslands,
-			      unsigned int overlaps,
-			      unsigned int maxWindings,
-			      unsigned int override,
-			      vector< pair< unsigned int,
-			      unsigned int > > &topology );
+  virtual void execute(FieldHandle& src,
+		       FieldHandle& dst,
+		       FieldHandle& pccsrc,
+		       FieldHandle& pccdst,
+		       FieldHandle& pcssrc,
+		       FieldHandle& pcsdst,
+		       vector< double > &planes,
+		       unsigned int color,
+		       unsigned int showIslands,
+		       unsigned int overlaps,
+		       unsigned int maxWindings,
+		       unsigned int override,
+		       vector< pair< unsigned int,
+		       unsigned int > > &topology );
 
 protected:
   Point interpert( Point lastPt, Point currPt, double t ) {
@@ -150,6 +158,7 @@ protected:
 		  unsigned int &nnodes,
 		  unsigned int winding,
 		  unsigned int twist,
+		  bool CCWstreamline,
 		  Vector Centroid );
 
   virtual void
@@ -568,7 +577,7 @@ SafetyFactor( vector< Point >& points, unsigned int maxWindings,
   double angle = 0;
   double safetyFactorAve = 0;
 
-  int skip = 1;
+  unsigned int skip = 1;
 
   double minDiff = 1.0e12;
   unsigned int winding, winding2;
@@ -588,13 +597,12 @@ SafetyFactor( vector< Point >& points, unsigned int maxWindings,
     double tmp = angle / (2.0*M_PI);
 
     if( i < maxWindings ) {
-       cerr << i << "  "
-	    << safetyFactorAve << "  "
-	    << tmp << endl;
+        cerr << i << "  SafetyFactor "
+ 	    << safetyFactorAve << "  "
+ 	    << tmp << endl;
 
       bool groupCCW = ccw(Vector( (Vector) points[0] - centroid ), 
 			  Vector( (Vector) points[i] - centroid ));
-
 
       if( 1 || groupCCW == twistCCW ) {
 	if( minDiff > fabs(ceil(tmp) - tmp) ) {
@@ -797,13 +805,13 @@ BoundingBoxCheck( vector< Point >& points, unsigned nbins ) {
     if( maxPt.z() < points[i].z() ) maxPt.z( points[i].z() );
   }
 
-  // If any section is greater than 25% of the bounding box diagonal
+  // If any section is greater than 33% of the bounding box diagonal
   // discard it.
   double len2 = (maxPt-minPt).length2();
 
   for( unsigned int i=0; i<n-nbins; i++ ) {
     if( ((Vector) points[i] - (Vector) points[i+nbins]).length2() >
-	0.25 * len2 ) {
+	0.33 * len2 ) {
 
       return false;
     }
@@ -824,49 +832,62 @@ FingerCheck( vector< Point >& points, unsigned int nbins ) {
   double dotProdStdDevLength = 0;
   double dotProdStdDevAngle  = 0;
 
-//  unsigned int n = points.size();
+  unsigned int n = points.size();
 
-  for( unsigned int i=1; i<nbins; i++ ) {
+  int cc = 0;
 
-    Vector v0 = Vector( points[i] - points[0  ] );
-    Vector v1 = Vector( points[i] - points[nbins] );
+  for( unsigned int i=0; i<n-nbins; i++ ) {
+    for( unsigned int j=i+1; j<i+nbins; j++ ) {
 
-    double dotProd = Dot( v0, v1 );
-
-    if( dotProd < 0 )
-      return pair< pair< double, double >, pair< double, double > >
-	(pair< double, double >(-1,1.0e12),pair< double, double >(-1,1.0e12));
-
-    dotProdAveLength += sqrt(dotProd / v0.length2());
-
-    dotProd /= (v0.length() * v1.length());
-    dotProdAveAngle += dotProd;
-
-//     cerr << i
+      Vector v0 = Vector( points[j] - points[i      ] );
+      Vector v1 = Vector( points[j] - points[i+nbins] );
+      
+      double dotProd = Dot( v0, v1 );
+      
+      if( dotProd < 0 )
+	return pair< pair< double, double >, pair< double, double > >
+	  (pair< double, double >(-1,1.0e12),pair< double, double >(-1,1.0e12));
+      
+      dotProdAveLength += sqrt(dotProd / v0.length2());
+      
+      dotProd /= (v0.length() * v1.length());
+      dotProdAveAngle += dotProd;
+      
+//     cerr << j
 // 	 << " Len Dot Prod " << sqrt(dotProd) << "  "
 // 	 << " Ang Dot Prod " << dotProd << endl;
+
+      cc++;
+    }
   }
 
-  dotProdAveLength /= (nbins-1);
-  dotProdAveAngle  /= (nbins-1);
+  dotProdAveLength /= cc;
+  dotProdAveAngle  /= cc;
 
-  for( unsigned int i=1; i<nbins; i++ ) {
 
-    Vector v0 = Vector( points[i] - points[0    ] );
-    Vector v1 = Vector( points[i] - points[nbins] );
+  cc = 0;
 
-    double dotProd = Dot( v0, v1 ) / (v0.length2() );
+  for( unsigned int i=0; i<n-nbins; i++ ) {
+    for( unsigned int j=i+1; j<i+nbins; j++ ) {
 
-    dotProdStdDevLength += ((sqrt(dotProd) - dotProdAveLength) *
-			    (sqrt(dotProd) - dotProdAveLength));
+      Vector v0 = Vector( points[j] - points[i      ] );
+      Vector v1 = Vector( points[j] - points[i+nbins] );
 
-    dotProd *= (v0.length() / v1.length());
-    dotProdStdDevAngle  += ((dotProd - dotProdAveAngle) *
-			    (dotProd - dotProdAveAngle));
+      double dotProd = Dot( v0, v1 ) / (v0.length2() );
+
+      dotProdStdDevLength += ((sqrt(dotProd) - dotProdAveLength) *
+			      (sqrt(dotProd) - dotProdAveLength));
+
+      dotProd *= (v0.length() / v1.length());
+      dotProdStdDevAngle  += ((dotProd - dotProdAveAngle) *
+			      (dotProd - dotProdAveAngle));
+
+      cc++;
+    }
   }
 
-  dotProdStdDevLength = sqrt(dotProdStdDevLength/(nbins-2));
-  dotProdStdDevAngle  = sqrt(dotProdStdDevAngle /(nbins-2));
+  dotProdStdDevLength = sqrt(dotProdStdDevLength/(cc-1));
+  dotProdStdDevAngle  = sqrt(dotProdStdDevAngle /(cc-1));
 
   return pair< pair< double, double >, pair< double, double > >
     ( pair< double, double >( dotProdAveLength, dotProdStdDevLength ),
@@ -875,10 +896,14 @@ FingerCheck( vector< Point >& points, unsigned int nbins ) {
 
 
 template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
-FieldHandle
+void
 StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD, TYPE>::
 execute(FieldHandle& ifield_h,
 	FieldHandle& ofield_h,
+	FieldHandle& ipccfield_h,
+	FieldHandle& opccfield_h,
+	FieldHandle& ipcsfield_h,
+	FieldHandle& opcsfield_h,
 	vector< double > &planes,
 	unsigned int color,
 	unsigned int showIslands,
@@ -898,11 +923,70 @@ execute(FieldHandle& ifield_h,
   bool curveField =
     (ofield->get_type_description(0)->get_name() == "CurveField");
 
-  // Point Cloud Field.
-  typename PCFIELD::mesh_type *pcmesh = scinew typename PCFIELD::mesh_type();
-  PCFIELD *pcfield = scinew PCFIELD(pcmesh, ifield->basis_order());
 
-  FieldHandle pcfield_h = FieldHandle(pcfield);
+  // Point Cloud Field of centroids.
+  vector< vector < Vector > > baseCentroids;
+
+  if( ipccfield_h.get_rep() ) {
+    PCFIELD *ipcfield = (PCFIELD *) ipccfield_h.get_rep();
+    typename PCFIELD::mesh_handle_type ipcmesh = ipcfield->get_typed_mesh();
+
+    typename PCFIELD::mesh_type::Node::iterator inodeItr, inodeEnd;
+
+    ipcmesh->begin( inodeItr );
+    ipcmesh->end( inodeEnd );
+
+    Point pt;
+
+    while (inodeItr != inodeEnd) {
+      ipcmesh->get_center(pt, *inodeItr);
+
+      vector < Vector > baseCentroid;
+      baseCentroid.push_back( (Vector) pt );
+      baseCentroids.push_back( baseCentroid );
+
+//       cerr << "input " << pt << endl;
+
+      ++inodeItr;
+    }
+  }
+
+  typename PCFIELD::mesh_type *opccmesh = scinew typename PCFIELD::mesh_type();
+  PCFIELD *opccfield = scinew PCFIELD(opccmesh, ifield->basis_order());
+
+  opccfield_h = FieldHandle(opccfield);
+
+  // Point Cloud Field of Separatrices.
+  vector< vector < Vector > > baseSeparatrices;
+
+  if( ipcsfield_h.get_rep() ) {
+    PCFIELD *ipcfield = (PCFIELD *) ipcsfield_h.get_rep();
+    typename PCFIELD::mesh_handle_type ipcmesh = ipcfield->get_typed_mesh();
+
+    typename PCFIELD::mesh_type::Node::iterator inodeItr, inodeEnd;
+
+    ipcmesh->begin( inodeItr );
+    ipcmesh->end( inodeEnd );
+
+    Point pt;
+
+    while (inodeItr != inodeEnd) {
+      ipcmesh->get_center(pt, *inodeItr);
+
+      vector < Vector > baseSeparatrix;
+      baseSeparatrix.push_back( (Vector) pt );
+      baseSeparatrices.push_back( baseSeparatrix );
+
+//       cerr << "input " << pt << endl;
+
+      ++inodeItr;
+    }
+  }
+
+  typename PCFIELD::mesh_type *opcsmesh = scinew typename PCFIELD::mesh_type();
+  PCFIELD *opcsfield = scinew PCFIELD(opcsmesh, ifield->basis_order());
+
+  opcsfield_h = FieldHandle(opcsfield);
 
 
   // Input iterators
@@ -912,7 +996,10 @@ execute(FieldHandle& ifield_h,
   typename IFIELD::mesh_type::Node::index_type inodeNext;
   vector< typename IFIELD::mesh_type::Node::index_type > inodeGlobalStart;
 
+  imesh->begin( inodeItr );
   imesh->end( inodeEnd );
+
+  if(inodeItr == inodeEnd) return;
 
   topology.clear();
 
@@ -925,13 +1012,13 @@ execute(FieldHandle& ifield_h,
   Point lastPt, currPt;
   double lastAng, currAng;
 
-
   // Get the direction of the streamline winding.
-  imesh->begin( inodeItr );
   imesh->get_center(lastPt, *inodeItr);
   lastAng = atan2( lastPt.y(), lastPt.x() );
 
   ++inodeItr;
+  if(inodeItr == inodeEnd) return;
+
   imesh->get_center(currPt, *inodeItr);
   currAng = atan2( currPt.y(), currPt.x() );
 
@@ -1000,9 +1087,12 @@ execute(FieldHandle& ifield_h,
       }
 
       // If overriding skip all the other points.
-      if( override )
-	*inodeItr = inodeNext;
-      else
+      if( override ) {
+	while (*inodeItr != inodeNext)
+	  ++inodeItr;
+
+	--inodeItr;
+      } else
 	points.push_back( point );
     }
 
@@ -1028,7 +1118,24 @@ execute(FieldHandle& ifield_h,
 	windings.push_back( 0 );
 
       } else {
-	
+
+	unsigned int desiredWinding = 0;
+
+	if( baseCentroids.size() ) {
+
+	  desiredWinding = (unsigned int) (*in);
+
+	  in = ifield->fdata().begin();
+
+	  typename IFIELD::mesh_type::Node::iterator inodeTmp;
+	  imesh->begin( inodeTmp );
+
+	  while( *inodeTmp != inodeNext ) {
+	    ++inodeTmp;
+	    ++in;
+	  }
+	}
+
 	if( points.size() < maxWindings )
 	  cerr << "Streamline " << count << " has too few points ("
 	       << points.size() << ") to determine the winding accurately"
@@ -1077,7 +1184,7 @@ execute(FieldHandle& ifield_h,
 // 	  if( groupCCW != twistCCW )
 // 	    continue;
 
-	  // If any section is greater than 25% of the bounding box
+	  // If any section is greater than 33% of the bounding box
 	  // diagonal skip it.
 	  if( !BoundingBoxCheck( points, i ) )
 	    continue;
@@ -1090,11 +1197,13 @@ execute(FieldHandle& ifield_h,
 	      fingers.first.second > 0 &&
 	      fingers.second.first > 0 &&
 	      fingers.second.second > 0 ) {
-//  	    cerr << points.size()-1 << " fingers "
-// 		 << fingers.first.first << "  "
-// 		 << fingers.first.second << "  "
-// 		 << fingers.second.first << "  "
-// 		 << fingers.second.second << "  ";
+
+  	    cerr << i << " fingers "
+ 		 << fingers.first.first << "  "
+ 		 << fingers.first.second << "  "
+ 		 << fingers.second.first << "  "
+ 		 << fingers.second.second << "  "
+		 << endl;
 
 	    if( LengthMin.second > fingers.first.second ){
 	      LengthMin2 = LengthMin;
@@ -1227,6 +1336,10 @@ execute(FieldHandle& ifield_h,
 	  windings.push_back( 0 );
 	}
 
+	// This is for island analysis.
+	if( desiredWinding && windings[count] != desiredWinding )
+	  windings[count] = 0;
+
 	// Make sure the best can pass the bounding box check.
 	if( windings[count] && !BoundingBoxCheck( points, windings[count] ) ) {
 	    windings[count] = 0;
@@ -1280,6 +1393,7 @@ execute(FieldHandle& ifield_h,
       count++;
     }
   }
+
 
   // Now bin the points.
   for( unsigned int c=0; c<count; c++ ) {
@@ -1335,7 +1449,8 @@ execute(FieldHandle& ifield_h,
       // instead.
       if( nearPI && lastAng < 0 ) lastAng += 2 * M_PI;
 
-      ++in; ++inodeItr;
+      ++inodeItr;
+      ++in;
       
       ostringstream str;
       str << "Streamline " << c+1 << " Node Index";
@@ -1382,7 +1497,8 @@ execute(FieldHandle& ifield_h,
 	lastPt  = currPt;
 	lastAng = currAng;
     
-	++in; ++inodeItr;
+	++inodeItr;
+	++in;
       }
     }
     
@@ -1415,8 +1531,11 @@ execute(FieldHandle& ifield_h,
     // Get the centroid of each group and all groups.
     Vector centroid(0,0,0);
     vector< Vector > localCentroids;
+    vector< Vector > localSeparatrices[2];
 
     localCentroids.resize(windings[c]);
+    localSeparatrices[0].resize(windings[c]);
+    localSeparatrices[1].resize(windings[c]);
 
     unsigned int cc = 0;
 
@@ -1441,6 +1560,7 @@ execute(FieldHandle& ifield_h,
     unsigned int islands2 = 0;
     unsigned int islands = 0;
     unsigned int twist = 0;
+    bool completeIslands = true;
 
     if( cc == windings[c]) {
       centroid /= cc;
@@ -1469,7 +1589,9 @@ execute(FieldHandle& ifield_h,
 	
 	unsigned int tmpNnodes = 0;
 	unsigned int turns = 0;
-	
+
+	unsigned int startIndex,  middleIndex,  endIndex;
+
 	if( bins[p][i].size() >= 3 ) {
 	  for( unsigned int j=1; j<bins[p][i].size(); j++ ) {
 	    bool CCW =
@@ -1481,11 +1603,18 @@ execute(FieldHandle& ifield_h,
 		islands++;
 	      
 	      turns++;
+
+	      if( turns == 1 )
+		startIndex = j - 1;
+	      else if( turns == 2 )
+		middleIndex = j - 1;
+	      else if( turns == 3 )
+		endIndex = j - 1;
 	    }
 
 	    // Count the number of nodes between the first and third
 	    // turn. This count gives a complete winding of the island.
-	    if( 0 < turns )
+	    if( turns > 0 )
 	      tmpNnodes++;
 	    
 	    if( turns == 3 )
@@ -1494,18 +1623,44 @@ execute(FieldHandle& ifield_h,
 	    lastCCW = CCW;
 	  }
 
-// 	  cerr << i << " turns " << turns
-// 	       << "  " << tmpNnodes
-// 	       << "  " << nnodes << endl;
+//  	  cerr << i << " turns " << turns
+//  	       << "  " << tmpNnodes
+//  	       << "  " << nnodes << endl;
 
 	  if( overlaps && turns == 3 && nnodes > tmpNnodes )
 	    nnodes = tmpNnodes;
+
+	  if( turns >= 2 ) {
+	    localSeparatrices[0][i] = (Vector) bins[p][i][startIndex].first;
+	    localSeparatrices[1][i] = (Vector) bins[p][i][middleIndex].first;
+	  }
+
+	  if( turns == 3 ) {
+	    unsigned int index0 = (middleIndex - startIndex ) / 2;
+	    unsigned int index1 = (   endIndex - middleIndex) / 2;
+
+ 	    cerr << "Indexes " <<  startIndex << "  "
+ 		 << middleIndex << "  " << endIndex << endl;
+
+ 	    cerr << "Indexes mid " <<  index0 << "  " << index1 << endl;
+
+	    localCentroids[i] =
+	      ( (Vector) bins[p][i][ startIndex + index0].first + 
+		(Vector) bins[p][i][middleIndex - index0].first + 
+		(Vector) bins[p][i][middleIndex + index1].first + 
+		(Vector) bins[p][i][   endIndex - index1].first ) / 4.0;
+	  } else
+	    completeIslands = false;
 	}
       }
 
     } else {
       cerr << "Can not determine the numbers of twists or islands" << endl;
     }
+
+    if( overlaps )
+      removeOverlaps( bins[p], nnodes,
+		      windings[c], twist, CCWstreamline, centroid );
 
     // If the twists is a factorial of the winding then rebin the points.
     if( !override && windings[c] && twist != 1 &&
@@ -1527,7 +1682,7 @@ execute(FieldHandle& ifield_h,
 
       if( islands ) 
 	cerr << "that contains " << islands << " islands"
-	     << " (" << islands2 << ")";
+	     << (completeIslands ? " (Complete)" : "");
 
       cerr << " and has " << nnodes << " nodes"
 	   << endl;
@@ -1573,14 +1728,100 @@ execute(FieldHandle& ifield_h,
 
 
       if( islands ) {
-	typename PointCloudField<TYPE>::mesh_type::Node::index_type n;
 
-	for( unsigned int i=0; i<windings[c]; i++ ) {
-	  n = pcmesh->add_point((Point) localCentroids[i]);
+	if( baseCentroids.size() ) {
 
-	  pcfield->resize_fdata();
+	  unsigned int cc = 0;
 
-	  pcfield->set_value( color_value, n);
+	  while( cc < windings.size() ) {
+	    if( cc <= c && c < cc+windings[cc] )
+	      break;
+	    else
+	      cc += windings[cc];
+	  }
+
+	  cerr << "Searching winding " << cc << endl;
+
+	  for( unsigned int i=0; i<windings[c]; i++ ) {
+	    
+	    unsigned int index;
+	    double mindist = 1.0e12;
+	    
+	    for( unsigned int j=cc; j<cc+windings[cc]; j++ ) {
+
+	      double dist =
+		(localCentroids[i] - baseCentroids[j][0]).length();
+	      
+	      if( mindist > dist ) {
+		mindist = dist;
+		index = j;
+	      }
+	    }
+
+	    cerr << cc << "  " << i << "  "
+		 << index << " index " << localCentroids[i] << endl;
+	    
+	    baseCentroids[index].push_back( localCentroids[i] );	      
+	  }
+
+	} else {
+	  // In order to find the next group after the first find the
+	  // mutual primes (Blankinship Algorithm). In this case we only
+	  // care about the first one becuase the second is just the
+	  // number of windings done to get there.
+
+	  unsigned int skip;
+
+	  for( skip=1; skip<windings[c]; skip++ )
+	    if( skip * twist % windings[c] == 1 )
+	      break;
+
+// 	  if( !CCWstreamline )
+// 	    skip = windings[c] - skip;
+
+
+	  typename PCFIELD::mesh_type::Node::index_type n;
+
+	  for( unsigned int i=0; i<windings[c]; i++ ) {
+	    // Centroids
+	    n = opccmesh->add_point((Point) localCentroids[i]);
+	    opccfield->resize_fdata();
+	    opccfield->set_value( windings[c], n);
+
+	    // Separatrices
+	    unsigned int j = (i+skip) % windings[c];
+
+	    unsigned int ii, jj;
+
+	    if( (localSeparatrices[0][i] - localSeparatrices[0][j]).length() <
+		(localSeparatrices[0][i] - localSeparatrices[1][j]).length() )
+	      jj = 0;
+	    else
+	      jj = 1;
+
+	    if( (localSeparatrices[0][i] - localSeparatrices[jj][j]).length() <
+		(localSeparatrices[1][i] - localSeparatrices[jj][j]).length() )
+	      ii = 0;
+	    else
+	      ii = 1;
+
+	    n = opcsmesh->add_point((Point) ((localSeparatrices[ii][i] +
+					      localSeparatrices[jj][j])/2.0));
+
+ 	    opcsfield->resize_fdata();
+// 	    opcsfield->set_value( (double) windings[c], n);
+ 	    opcsfield->set_value( (double) n, n);
+
+//  	    n = opcsmesh->add_point((Point) localSeparatrices[0][i]);
+// 	    opcsfield->resize_fdata();
+// 	    opcsfield->set_value(0, n);
+
+//  	    n = opcsmesh->add_point((Point) localSeparatrices[1][j]);
+// 	    opcsfield->resize_fdata();
+// 	    opcsfield->set_value(1, n);
+
+ 	    cerr << c << "  Separatrices " << i << "  " << j << endl;
+	  }
 	}
       }
 
@@ -1588,9 +1829,6 @@ execute(FieldHandle& ifield_h,
 
 	// Add the points into the return field.
 	for( unsigned int p=0; p<planes.size(); p++ ) {
-	  if( overlaps )
-	    removeOverlaps( bins[p], nnodes, windings[c], twist, centroid );
-
 	  for( unsigned int i=0; i<windings[c]; i++ ) {
 	    lock.lock();
 
@@ -1626,7 +1864,93 @@ execute(FieldHandle& ifield_h,
     }
   }
 
-  return pcfield_h;
+
+  if( baseCentroids.size() ) {
+
+    typename PCFIELD::mesh_type::Node::index_type n;
+
+    vector< Vector > newCentroid;
+    vector< double > newStdDev;
+
+    newCentroid.resize( baseCentroids.size() );
+    newStdDev.resize  ( baseCentroids.size() );
+
+    for( unsigned int i=0; i<baseCentroids.size(); i++ ) {
+
+      if( baseCentroids[i].size() ) {
+
+	newCentroid[i] = Vector(0,0,0);
+	for( unsigned int j=1; j<baseCentroids[i].size(); j++ )
+	  newCentroid[i] += baseCentroids[i][j];
+	
+	newCentroid[i] /= (double) (baseCentroids[i].size() - 1);
+
+	newStdDev[i] = 0.0;
+	for( unsigned int j=1; j<baseCentroids[i].size(); j++ ) {
+	  cerr << "length " << i << "  " << j << "  "
+	       << (baseCentroids[i][j]-newCentroid[i]).length2() << endl;
+	  newStdDev[i] += (baseCentroids[i][j]-newCentroid[i]).length2();
+	}
+
+	newStdDev[i] = sqrt( newStdDev[i] /
+			     (double) (baseCentroids[i].size() - 2) );
+      }
+    }
+
+    unsigned int cc = 0;
+
+    double minSD = 1.0e12;
+    unsigned int index;
+
+    while( cc < windings.size() ) {
+      cerr << "Searching winding " << cc << endl;
+
+      for( unsigned int i=cc; i<cc+windings[cc]; i++ ) {
+
+	cerr << "Std dev. " << i << "  " << newStdDev[i] << endl;
+
+	if( minSD > newStdDev[i] ) {
+	  minSD = newStdDev[i];
+	  index = i;
+	}
+      }
+
+      n = opccmesh->add_point((Point) newCentroid[index]);
+      
+      opccfield->resize_fdata();
+
+      cerr << "New centroid " << newCentroid[index]
+	   << " index " << index << endl;
+
+      opccfield->set_value( windings[index], n );
+
+      cc += windings[cc];
+
+      minSD = 1.0e12;
+    }
+
+//     for( unsigned int i=0; i<baseCentroids.size(); i++ ) {
+
+//       if( baseCentroids[i].size() ) {
+// 	Vector tmpCentroid(0,0,0);
+	
+// 	for( unsigned int j=1; j<baseCentroids[i].size(); j++ )
+// 	  tmpCentroid += baseCentroids[i][j];
+	
+// 	tmpCentroid /= (double) (baseCentroids[i].size() - 1);
+	
+// // 	cerr << tmpCentroid << endl;
+
+// 	n = opcmesh->add_point((Point) tmpCentroid);
+//       } else {
+// 	n = opcmesh->add_point((Point) baseCentroids[i][0]);
+//       }
+
+//       opcfield->resize_fdata();
+
+//       opcfield->set_value( i, n );
+//     }
+  }
 }
 
 
@@ -1638,8 +1962,9 @@ removeOverlaps( vector< vector < pair< Point, double > > > &bins,
 		unsigned int &nnodes,
 		unsigned int winding,
 		unsigned int twist,
+		bool CCWstreamline,
 		Vector centroid )
-{
+ {
   unsigned int islands2;
 
   unsigned int overlap = 1;
@@ -1734,14 +2059,16 @@ removeOverlaps( vector< vector < pair< Point, double > > > &bins,
       if( skip * twist % winding == 1 )
 	break;
 
+    if( !CCWstreamline )
+      skip = winding - skip;
 
     for( unsigned int i=0, j=skip; i<skip*winding; i+=skip, j+=skip ) {
       unsigned int i0 = i % winding;
       unsigned int j0 = j % winding;
 
-// 	    cerr << i0 << " angle bounds "
-// 		 << angleMinMax[i0].first << "  "
-// 		 << angleMinMax[i0].second;
+//    cerr << i0 << " angle bounds "
+//	   << angleMinMax[i0].first << "  "
+// 	   << angleMinMax[i0].second;
 
       if( angleMinMax[i0].first < angleMinMax[j0].second ) {
 	// Skip the through zero angles that go through zero.
@@ -1751,29 +2078,29 @@ removeOverlaps( vector< vector < pair< Point, double > > > &bins,
 	    angleMinMax[j0].second < 2.0 * M_PI - 2.0 * sectionAngle ) {
 	  overlap++;
 
-// 		cerr << " overlaps " << overlap;
+// 	  cerr << " overlaps " << overlap;
 
-// 		cerr  << "  " << 2.0 * sectionAngle << "  "
-// 		     << 2.0 * M_PI - 2.0 * sectionAngle;
+// 	  cerr  << "  " << 2.0 * sectionAngle << "  "
+// 		<< 2.0 * M_PI - 2.0 * sectionAngle;
 	} else {
-// 		cerr << " near zero "
-// 		     << 2.0 * sectionAngle << "  "
-// 		     << 2.0 * M_PI - 2.0 * sectionAngle;
+// 	  cerr << " near zero "
+// 	       << 2.0 * sectionAngle << "  "
+// 	       << 2.0 * M_PI - 2.0 * sectionAngle;
 	}
       }
 
       if( angleMinMax[i0].first > angleMinMax[i0].second ) {
 	flipped++;
-// 	    cerr << " through zero ";
+// 	cerr << " through zero ";
       }
 
-// 	  cerr << endl;
+//    cerr << endl;
     }
 
     if( overlap || flipped > 1 ) {
 
-// 	  cerr << " OVERLAPS " << overlap
-// 	       << " FLIPPED " << flipped << endl;
+//    cerr << " OVERLAPS " << overlap
+//      << " FLIPPED " << flipped << endl;
 
       if( nnodes > 2 )
 	nnodes--;

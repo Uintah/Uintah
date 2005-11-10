@@ -581,7 +581,7 @@ NIMRODConverter::execute(){
 
 	if( nHandles[mesh_[K]]->nrrd->axis[0].size !=
 	    nHandles[data_[0]]->nrrd->axis[cc-1].size ) {
-	  error( "Perturbed Mode Mesh - Data dimension mismatch." );
+	  error( "Complex Mode Mesh - Data dimension mismatch." );
 	  error_ = true;
 	  return;
 	}
@@ -599,7 +599,7 @@ NIMRODConverter::execute(){
 	}
       }
 
-      convertStr = "Perturbed";
+      convertStr = "Complex";
     }
 
     if( conversion_ ) {
