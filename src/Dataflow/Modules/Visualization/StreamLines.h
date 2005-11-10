@@ -538,9 +538,9 @@ execute(FieldHandle seed_field_h,
       if( value == 0 )
 	cf->set_value((*data_iter), n1);
       else if( value == 1)
-	cf->set_value((double)abs(cc), n1);
-      else
 	cf->set_value((double)(*seed_iter), n1);
+      else if (value == 2)
+	cf->set_value((double)abs(cc), n1);
 
       ++node_iter;
 
@@ -554,9 +554,9 @@ execute(FieldHandle seed_field_h,
 	if( value == 0 )
 	  cf->set_value((*data_iter), n2);
 	else if( value == 1)
-	  cf->set_value((double)abs(cc), n2);
-	else
 	  cf->set_value((double)(*seed_iter), n2);
+	else if(value == 2)
+	  cf->set_value((double)abs(cc), n2);
 
 	cf->get_typed_mesh()->add_edge(n1, n2);
 
