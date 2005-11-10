@@ -91,40 +91,6 @@ static const int pick_buffer_size = 512;
 static const double pick_window = 10.0;
 
 
-bool
-OpenGL::query(GuiInterface* gui)
-{
-  gui->lock();
-#ifndef _WIN32
-  int have_opengl=glXQueryExtension
-    (Tk_Display(Tk_MainWindow(the_interp)), NULL, NULL);
-  gui->unlock();
-  if (!have_opengl)
-    cerr << "glXQueryExtension() returned NULL.\n"
-      "** XFree86 NOTE **  Do you have the line 'Load \"glx\"'"
-      " in the Modules section of your XF86Config file?\n";
-#else
-  int have_opengl = 0;
-
-  HWND hwnd = Tk_GetHWND(Tk_WindowId(Tk_MainWindow(the_interp)));
-  HDC dc = GetDC(hwnd);
-  // get the current pixel format index 
-  int iPixelFormat = GetPixelFormat(dc); 
-  PIXELFORMATDESCRIPTOR  pfd;
-
-  // obtain a detailed description of that pixel format 
-  DescribePixelFormat(dc, iPixelFormat, 
-                      sizeof(PIXELFORMATDESCRIPTOR), &pfd); 
-  have_opengl = ((pfd.dwFlags & PFD_SUPPORT_OPENGL) == PFD_SUPPORT_OPENGL);
- 
-  gui->unlock();
-  if (!have_opengl)
-    cerr << "DescribePixelFormat found no OpenGL  support for TKWin DC\n";
-
-#endif
-  return have_opengl;
-}
-
 OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
   xres_(0),
   yres_(0),
