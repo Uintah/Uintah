@@ -49,8 +49,6 @@
 namespace SCIRun {
 
 typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
-typedef CrvLinearLgn<double>            DatBasis;
-typedef GenericField<CMesh, DatBasis, vector<double> > CField;
  
 using namespace std;
 
@@ -91,7 +89,7 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    const TypeDescription *dsrc,
+					    const string &dsrc,
 					    const TypeDescription *sloc,
 					    int value);
 protected:
@@ -120,6 +118,12 @@ public:
 			      bool remove_colinear_p,
 			      int method,
 			      int np);
+
+  virtual void set_result_value(Field *cf,
+                                CMesh::Node::index_type di,
+                                SFLD *sfield,
+                                typename SLOC::index_type si,
+                                double data) = 0;
 };
 
 
@@ -130,7 +134,6 @@ parallel_generate( int proc, SLData *d)
 {
   FSRC *sfield = (FSRC *) d->seed_field_h.get_rep();
   typename FSRC::mesh_handle_type smesh = sfield->get_typed_mesh();
-
 
   typedef CrvLinearLgn<STYPE> DatBasisL;
   typedef GenericField<CMesh, DatBasisL, vector<STYPE> > CFieldL;
@@ -148,32 +151,28 @@ parallel_generate( int proc, SLData *d)
   CMesh::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
-  typename SLOC::iterator seed_iter, seed_iter_end;
-  smesh->begin(seed_iter);
-  smesh->end(seed_iter_end);
-
-  typename FSRC::fdata_type::iterator data_iter = sfield->fdata().begin();
+  typename SLOC::iterator siter, siter_end;
+  smesh->begin(siter);
+  smesh->end(siter_end);
 
   int count = 0;
 
-  while (seed_iter != seed_iter_end)
+  while (siter != siter_end)
   {
     // If this seed doesn't "belong" to this parallel thread,
     // ignore it and continue on the next seed.
     if (count%d->np != proc) {
-      ++seed_iter;
-      ++data_iter;
+      ++siter;
       ++count;
       continue;
     }
 
-    smesh->get_point(seed, *seed_iter);
+    smesh->get_point(seed, *siter);
 
     // Is the seed point inside the field?
     if (!d->vfi->interpolate(test, seed))
     {
-      ++seed_iter;
-      ++data_iter;
+      ++siter;
       ++count;
       continue;
     }
@@ -233,15 +232,15 @@ parallel_generate( int proc, SLData *d)
       cfield->resize_fdata();
 
       if( d->value == 0 )
-	cfield->set_value((*data_iter), n1);
+        set_result_value(cfield, n1, sfield, *siter, 0);
       else if( d->value == 1 )
-	cfield->set_value((double)(*seed_iter), n1);
+        set_result_value(cfield, n1, sfield, *siter, (double)(*siter));
       else if( d->value == 2)
-	cfield->set_value((double)abs(cc), n1);
+        set_result_value(cfield, n1, sfield, *siter, (double)abs(cc));
       else if( d->value == 3)
-	cfield->set_value( length, n1);
+        set_result_value(cfield, n1, sfield, *siter, length);
       else if( d->value == 4)
-	cfield->set_value( length, n1);
+        set_result_value(cfield, n1, sfield, *siter, length);
 
       ++node_iter;
 
@@ -252,17 +251,20 @@ parallel_generate( int proc, SLData *d)
 	cfield->resize_fdata();
 
 	if( d->value == 0 )
-	  cfield->set_value((*data_iter), n2);
+          set_result_value(cfield, n2, sfield, *siter, 0);
 	else if( d->value == 1 )
-	  cfield->set_value((double)(*seed_iter), n2);
+          set_result_value(cfield, n2, sfield, *siter, (double)(*siter));
 	else if( d->value == 2)
-	  cfield->set_value((double)abs(cc), n2);
-	else if( d->value == 3) {
+          set_result_value(cfield, n2, sfield, *siter, (double)abs(cc));
+	else if( d->value == 3)
+        {
 	  length += Vector( *node_iter-p1 ).length();
-	  cfield->set_value( length, n2);
+          set_result_value(cfield, n2, sfield, *siter, length);
 	  p1 = *node_iter;
-	} else if( d->value == 4)
-	  cfield->set_value( length, n2);
+	}
+        else if( d->value == 4)
+          set_result_value(cfield, n2, sfield, *siter, length);
+
 
 	cfield->get_typed_mesh()->add_edge(n1, n2);
 
@@ -274,8 +276,7 @@ parallel_generate( int proc, SLData *d)
       d->lock.unlock();
     }
 
-    ++seed_iter;
-    ++data_iter;
+    ++siter;
     ++count;
   }
 
@@ -309,8 +310,11 @@ execute(FieldHandle seed_field_h,
   d.met=met;
   d.np=np;
 
+  typedef CrvLinearLgn<STYPE> DatBasisL;
+  typedef GenericField<CMesh, DatBasisL, vector<STYPE> > CFieldL;
+
   CMesh::handle_type cmesh = scinew CMesh();
-  CField *cf = scinew CField(cmesh);
+  CFieldL *cf = scinew CFieldL(cmesh);
   
   d.fh = FieldHandle(cf);
 
@@ -322,6 +326,45 @@ execute(FieldHandle seed_field_h,
 
   return cf;
 }
+
+
+template <class SFLD, class STYPE, class SLOC>
+class StreamLinesAlgoTM : public StreamLinesAlgoT<SFLD, STYPE, SLOC>
+{
+public:
+  virtual void set_result_value(Field *f,
+                                CMesh::Node::index_type di,
+                                SFLD *sfield,
+                                typename SLOC::index_type si,
+                                double data)
+  {
+    typedef CrvLinearLgn<STYPE> DatBasisL;
+    typedef GenericField<CMesh, DatBasisL, vector<STYPE> > CFieldL;
+    CFieldL *cf = (CFieldL *) f;
+    cf->set_value(data, di);
+  }
+};
+
+
+template <class SFLD, class STYPE, class SLOC>
+class StreamLinesAlgoTF : public StreamLinesAlgoT<SFLD, STYPE, SLOC>
+{
+public:
+  virtual void set_result_value(Field *f,
+                                CMesh::Node::index_type di,
+                                SFLD *sfield,
+                                typename SLOC::index_type si,
+                                double data)
+  {
+    typedef CrvLinearLgn<STYPE> DatBasisL;
+    typedef GenericField<CMesh, DatBasisL, vector<STYPE> > CFieldL;
+    CFieldL *cf = (CFieldL *) f;
+    typename CFieldL::value_type val;
+    sfield->value(val, si);
+    cf->set_value(val, di);
+  }
+};
+
 
 
 
@@ -471,20 +514,20 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(FieldHandle seed_field_h,
   typename FDST::mesh_type::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
-  typename SLOC::iterator seed_iter, seed_iter_end;
-  smesh->begin(seed_iter);
-  smesh->end(seed_iter_end);
+  typename SLOC::iterator siter, siter_end;
+  smesh->begin(siter);
+  smesh->end(siter_end);
 
   int count = 0;
 
-  while (seed_iter != seed_iter_end)
+  while (siter != siter_end)
   {
-    smesh->get_point(seed, *seed_iter);
+    smesh->get_point(seed, *siter);
 
     // Is the seed point inside the field?
     if (!vfield->get_typed_mesh()->locate(elem, seed))
     {
-      ++seed_iter;
+      ++siter;
       ++count;
       continue;
     }
@@ -524,11 +567,11 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(FieldHandle seed_field_h,
       cf->resize_fdata();
 
       if (value == 0)
-        set_result_value(cf, n1, sfield, *seed_iter, 0);
+        set_result_value(cf, n1, sfield, *siter, 0);
       else if( value == 1)
-        set_result_value(cf, n1, sfield, *seed_iter, (double)*seed_iter);
+        set_result_value(cf, n1, sfield, *siter, (double)*siter);
       else if (value == 2)
-        set_result_value(cf, n1, sfield, *seed_iter, (double)abs(cc));
+        set_result_value(cf, n1, sfield, *siter, (double)abs(cc));
 
       ++node_iter;
 
@@ -540,11 +583,11 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(FieldHandle seed_field_h,
 	cf->resize_fdata();
         
         if (value == 0)
-          set_result_value(cf, n2, sfield, *seed_iter, 0);
+          set_result_value(cf, n2, sfield, *siter, 0);
         else if( value == 1)
-          set_result_value(cf, n2, sfield, *seed_iter, (double)*seed_iter);
+          set_result_value(cf, n2, sfield, *siter, (double)*siter);
         else if (value == 2)
-          set_result_value(cf, n2, sfield, *seed_iter, (double)abs(cc));
+          set_result_value(cf, n2, sfield, *siter, (double)abs(cc));
 
 	cf->get_typed_mesh()->add_edge(n1, n2);
 
@@ -555,7 +598,7 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(FieldHandle seed_field_h,
       }
     }
 
-    ++seed_iter;
+    ++siter;
     ++count;
   }
 
