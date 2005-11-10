@@ -560,8 +560,8 @@ StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
 
 CompileInfoHandle
 StreamLinesAlgo::get_compile_info(const TypeDescription *fsrc,
-				  const TypeDescription *sloc,
 				  const TypeDescription *dsrc,
+				  const TypeDescription *sloc,
 				  int value)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
