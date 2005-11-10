@@ -64,10 +64,10 @@ namespace SCIRun {
   
     virtual bool setConfiguration();
 
-    virtual Execution::pointer joinExecution(const std::string &name);
+    virtual TENAExecution::pointer joinExecution(const std::string &name);
 
   protected:
-    typedef std::map<std::string, Execution::pointer> ExecutionsMap;
+    typedef std::map<std::string, TENAExecution::pointer> ExecutionsMap;
 
     Services::pointer services;
     ExecutionsMap executions;

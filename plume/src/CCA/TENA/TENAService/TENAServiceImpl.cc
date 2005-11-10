@@ -100,7 +100,7 @@ namespace SCIRun {
     return true;
   }
 
-  Execution::pointer TENAServiceImpl::joinExecution(const std::string &name)
+  TENAExecution::pointer TENAServiceImpl::joinExecution(const std::string &name)
   {
     Guard guard(&lock);
 
@@ -114,7 +114,7 @@ namespace SCIRun {
     if ( iter != executions.end() )
       return iter->second;
 
-    Execution::pointer exec = new ExecutionImpl( info->runtime->joinExecution(name) );
+    TENAExecution::pointer exec = new ExecutionImpl( info->runtime->joinExecution(name) );
     executions[name] = exec;
 
     return exec;

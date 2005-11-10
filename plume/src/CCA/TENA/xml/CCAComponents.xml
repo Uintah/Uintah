@@ -35,7 +35,11 @@
     </component>
   </library>
   <library name="libCCA_TENA_Lesson03.so">
-    <component name="cca.tena.Lesson03.PublishPerson">
+    <component name="cca.tena.lesson03.PublishPerson">
+    </component>
+    <component name="cca.tena.lesson03.SubscribePerson">
+    </component>
+    <component name="cca.tena.lesson03.Lesson03">
     </component>
   </library>
 </metacomponentmodel>

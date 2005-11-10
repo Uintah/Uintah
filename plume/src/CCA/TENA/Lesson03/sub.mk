@@ -33,10 +33,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/TENA/Lesson03
 
-INCLUDES += $(TENA_INCLUDES) $(TENA_DEFINES) -I../src/CCA/TENA/Lesson03 -I$(TENA_INCLUDE_DIR)/OMs/Lesson_03-v2
+INCLUDES += $(TENA_INCLUDES) $(TENA_DEFINES) -I$(TENA_OM_DEF_DIR)/Lesson_03-v2 -I$(TENA_OM_IMPL_DIR)/Lesson_03-v2
 
 SRCS     += $(SRCDIR)/PublishPerson.cc \
-#	$(SRCDIR)/SubscribePerson.cc
+	$(SRCDIR)/SubscribePerson.cc \
+	$(SRCDIR)/Lesson03.cc
 
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
            Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
