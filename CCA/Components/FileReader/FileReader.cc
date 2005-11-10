@@ -69,12 +69,12 @@ void FileReader::setServices(const sci::cca::Services::pointer& svc)
 {
   services = svc;
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  myPDEdescriptionPort::pointer pdep(new myPDEdescriptionPort);
+  FRPDEdescriptionPort::pointer pdep(new FRPDEdescriptionPort);
   svc->addProvidesPort(pdep,"pde","sci.cca.ports.PDEdescriptionPort", props);
 }
 
 int
-myPDEdescriptionPort::getPDEdescription(::SSIDL::array1<double> &nodes, 
+FRPDEdescriptionPort::getPDEdescription(::SSIDL::array1<double> &nodes, 
 					::SSIDL::array1<int> &boundaries,
 					::SSIDL::array1<int> &dirichletNodes,
 					::SSIDL::array1<double> &dirichletValues)

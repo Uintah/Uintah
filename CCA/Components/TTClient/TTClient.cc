@@ -92,15 +92,15 @@ void TTClient::setServices(const sci::cca::Services::pointer& svc)
 
 int ttUIPort::ui() 
 {
-#if HAVE_QT
+#ifdef HAVE_QT
     bool ok;
-    int res = QInputDialog::getInteger("TTClient", "TTClient iterate count (from [0, 1000]):",
-        TTCl->getCount(), 0, 1000, 1, &ok);
-    if (ok) {
+    int res = QInputDialog::getInteger("TTClient", "TTClient iterate count (from [1, 1000]):",
+        TTCl->getCount(), 1, 1000, 1, &ok);
+    if (ok && res > 0) {
       TTCl->setCount(res);
     }
 #else
-    std::cerr << "UI not available, using default (count = " << count << ")." << std::endl;
+    std::cerr << "UI not available, using default (count = " << TTCl->getCount() << ")." << std::endl;
 #endif
   return 0;
 }
