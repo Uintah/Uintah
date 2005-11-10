@@ -235,7 +235,7 @@ StreamLines::execute()
 
       const TypeDescription *vtd = vfHandle->get_type_description();
       CompileInfoHandle aci =
-	StreamLinesAccAlgo::get_compile_info(sftd, sfdtd, sltd, vtd, value);
+	StreamLinesAccAlgo::get_compile_info(sftd, sltd, vtd, value);
       Handle<StreamLinesAccAlgo> accalgo;
       if (!module_dynamic_compile(aci, accalgo)) return;
       
@@ -590,7 +590,6 @@ StreamLinesAlgo::get_compile_info(const TypeDescription *fsrc,
 
 CompileInfoHandle
 StreamLinesAccAlgo::get_compile_info(const TypeDescription *fsrc,
-				     const TypeDescription *dsrc,
 				     const TypeDescription *sloc,
 				     const TypeDescription *vfld,
 				     int value)
@@ -603,13 +602,11 @@ StreamLinesAccAlgo::get_compile_info(const TypeDescription *fsrc,
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
 		       fsrc->get_filename() + "." +
-		       (value ? dsrc->get_filename() : "double") + "." +
 		       sloc->get_filename() + "." +
 		       vfld->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
 		       fsrc->get_name() + ", " +
-		       (value ? dsrc->get_name() : "double") + ", " +
 		       sloc->get_name() + ", " +
 		       vfld->get_name());
 
