@@ -46,12 +46,28 @@
 #include <Dataflow/Network/Port.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/sci_system.h>
 #include <iostream>
 #include <queue>
 
 using namespace SCIRun;
 using namespace std;
 
+
+
+static bool
+regression_rerun_callback(void *data)
+{
+  static int counter = 0;
+  Network *net = (Network *)data;
+  if (counter > 0)
+  {
+    counter--;
+    net->schedule_all();
+    return false;
+  }
+  return true;
+}
 
 
 static bool
@@ -77,6 +93,7 @@ Scheduler::Scheduler(Network* net)
   {
     // Arbitrary low regression quit callback priority.  Should
     // probably be lower.
+    add_callback(regression_rerun_callback, net, -500);
     add_callback(regression_quit_callback, 0, -1000);
   }
 }

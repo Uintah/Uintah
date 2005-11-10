@@ -60,53 +60,70 @@
 using namespace SCIRun;
 using namespace std;
 
+
 Network::Network()
   : the_lock("Network lock"), sched(0)
 {
 }
+
  
 Network::~Network()
 {
 }
 
+
 // For now, we just use a simple mutex for both reading and writing
-void Network::read_lock()
+void
+Network::read_lock()
 {
     the_lock.lock();
 }
 
-void Network::read_unlock()
+
+void
+Network::read_unlock()
 {
     the_lock.unlock();
 }
 
-void Network::write_lock()
+
+void
+Network::write_lock()
 {
     the_lock.lock();
 }
 
-void Network::write_unlock()
+
+void
+Network::write_unlock()
 {
     the_lock.unlock();
 }
 
-int Network::nmodules()
+
+int
+Network::nmodules()
 {
     return modules.size();
 }
 
-Module* Network::module(int i)
+
+Module*
+Network::module(int i)
 {
     return modules[i];
 }
 
 
-Connection* Network::connection(int i)
+Connection*
+Network::connection(int i)
 {
     return connections[i];
 }
 
-string Network::connect(Module* m1, int p1, Module* m2, int p2)
+
+string
+Network::connect(Module* m1, int p1, Module* m2, int p2)
 {
     if (p1 >= m1->numOPorts() || p2 >= m2->numIPorts())
     {
@@ -124,14 +141,20 @@ string Network::connect(Module* m1, int p1, Module* m2, int p2)
     return conn->id;
 }
 
+
 int
 Network::disconnect(const string& connId)
 {
   unsigned int i;
   for (i = 0; i < connections.size(); i++)
+  {
     if (connections[i]->id == connId)
+    {
       break;
-  if (i == connections.size()) {
+    }
+  }
+  if (i == connections.size())
+  {
     return 0;
   }
  
@@ -139,6 +162,7 @@ Network::disconnect(const string& connId)
   connections.erase(connections.begin() + i);
   return 1;
 }
+
 
 static string
 remove_spaces(const string& str)
@@ -154,9 +178,10 @@ remove_spaces(const string& str)
 
 // SCIRunComponentModel uses Network::add_module2 to instantiate a
 // SCIRun module in the SCIRun2 framework.
-Module* Network::add_module2(const string& packageName,
-			     const string& categoryName,
-			     const string& moduleName)
+Module*
+Network::add_module2(const string& packageName,
+                     const string& categoryName,
+                     const string& moduleName)
 {
   Module* module = add_module(packageName, categoryName, moduleName);
   module->getGui()->eval("addModule2 "+packageName+" "+categoryName+
@@ -164,7 +189,9 @@ Module* Network::add_module2(const string& packageName,
   return module;
 }
 
-Module* Network::add_module(const string& packageName,
+
+Module*
+Network::add_module(const string& packageName,
                             const string& categoryName,
                             const string& moduleName)
 { 
@@ -194,7 +221,9 @@ Module* Network::add_module(const string& packageName,
   return mod;
 }
 
-void Network::add_instantiated_module(Module* mod)
+
+void
+Network::add_instantiated_module(Module* mod)
 {
   if(!mod) {
     cerr << "Error: can't add instanated module\n";
@@ -216,24 +245,35 @@ void Network::add_instantiated_module(Module* mod)
   gui->eval("addModule2 unknown unknown unknown "+mod->id);
 }
 
-Module* Network::get_module_by_id(const string& id)
+
+Module*
+Network::get_module_by_id(const string& id)
 {
     MapStringModule::iterator mod;
     mod = module_ids.find(id);
-    if (mod != module_ids.end()) {
+    if (mod != module_ids.end())
+    {
 	return (*mod).second;
-    } else {
+    }
+    else
+    {
 	return 0;
     }
 }
 
+
+
 namespace SCIRun {
+
 class DeleteModuleThread : public Runnable 
 {
 private:
+
   Network *net_;
   Module *module_;
+
 public:
+
   DeleteModuleThread(Network *net, Module *module) :
     net_(net),
     module_(module)
@@ -241,7 +281,9 @@ public:
     ASSERT(net);
     ASSERT(module);
   }
-  void run() {
+
+  void run()
+  {
     Network::MapStringModule::iterator const mpos = 
       net_->module_ids.find(module_->getID());
     ASSERT(mpos != net_->module_ids.end());
@@ -260,9 +302,10 @@ public:
 }
 
 
-/* delete_module will start a seperate thead that 
-   waits until a module is done executing before deleting it */
-int Network::delete_module(const string& id)
+// Delete_module will start a seperate thead that waits until a module
+// is done executing before deleting it.
+int
+Network::delete_module(const string& id)
 {
   Module* module_ptr = get_module_by_id(id);
   if (!module_ptr) return 0;
@@ -275,15 +318,32 @@ int Network::delete_module(const string& id)
   return 1;
 }
 
-void Network::schedule()
+
+void
+Network::schedule()
 {
   sched->do_scheduling();
 }
 
-void Network::attach(Scheduler* _sched)
+
+void
+Network::schedule_all()
 {
-  sched=_sched;
+  for(int i=0; i<nmodules(); i++)
+  {
+    Module* m = module(i);
+    m->need_execute = true;
+  }
+  schedule();
 }
+
+
+void
+Network::attach(Scheduler* _sched)
+{
+  sched = _sched;
+}
+
 
 void
 Network::disable_connection(const string& connId)
@@ -297,7 +357,8 @@ Network::disable_connection(const string& connId)
 }
 
 
-Scheduler* Network::get_scheduler()
+Scheduler*
+Network::get_scheduler()
 {
   return sched;
 }

@@ -170,11 +170,7 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "scheduleok"){
     net->schedule();
   } else if(args[1] == "scheduleall"){
-    for(int i=0;i<net->nmodules();i++){
-      Module* m=net->module(i);
-      m->need_execute=1;
-    }
-    net->schedule();
+    net->schedule_all();
   } else if(args[1] == "reset_scheduler"){
     for(int i=0;i<net->nmodules();i++){
       Module* m=net->module(i);

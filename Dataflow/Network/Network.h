@@ -118,6 +118,7 @@ public:
   Module* get_module_by_id(const string& id);
 
   void schedule();
+  void schedule_all();
   Scheduler* get_scheduler();
   void attach(Scheduler*);
 
