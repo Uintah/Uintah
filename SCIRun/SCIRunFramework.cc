@@ -38,11 +38,7 @@
  *
  */
 
-#include <sci_defs/babel_defs.h>
-#include <sci_defs/ruby_defs.h>
-#include <sci_defs/vtk_defs.h>
-#include <sci_defs/tao_defs.h>
-#include <sci_defs/dataflow_defs.h>
+#include <sci_metacomponents.h>
 
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
@@ -53,21 +49,18 @@
 #include <SCIRun/CCA/ComponentID.h>
 #include <SCIRun/CCA/CCAException.h>
 
-#if HAVE_RUBY
-#include <SCIRun/Bridge/BridgeComponentModel.h>
+#ifdef BUILD_BRIDGE
+  #include <SCIRun/Bridge/BridgeComponentModel.h>
 #endif
-
 #if HAVE_BABEL 
-#include <SCIRun/Babel/BabelComponentModel.h>
+  #include <SCIRun/Babel/BabelComponentModel.h>
 #endif
-
 #if HAVE_VTK
-#include <SCIRun/Vtk/VtkComponentModel.h>
+  #include <SCIRun/Vtk/VtkComponentModel.h>
 #endif
-
 #if HAVE_TAO
-#include <SCIRun/Corba/CorbaComponentModel.h>
-#include <SCIRun/Tao/TaoComponentModel.h>
+  #include <SCIRun/Corba/CorbaComponentModel.h>
+  #include <SCIRun/Tao/TaoComponentModel.h>
 #endif
 
 #include <SCIRun/ComponentInstance.h>
@@ -94,11 +87,11 @@ SCIRunFramework::SCIRunFramework()
   models.push_back(internalServices = new InternalComponentModel(this));
   models.push_back(cca = new CCAComponentModel(this));
 
-#if BUILD_DATAFLOW
+#ifdef BUILD_DATAFLOW
   models.push_back(dflow = new SCIRunComponentModel(this));
 #endif
 
-#if HAVE_RUBY
+#ifdef BUILD_BRIDGE
   models.push_back(new BridgeComponentModel(this));
 #endif
 
