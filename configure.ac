@@ -328,6 +328,12 @@ SCI_ARG_WITH(insight,
   [with_insight="$withval"
    sci_required_insight=yes],
   [with_insight=""])
+SCI_ARG_WITH(ncurses,
+  AC_HELP_STRING(--with-ncurses=DIR,
+                 Use the Ncurses installation in DIR),
+  [with_ncurses="$withval"
+   sci_required_ncurses=yes],
+  [with_ncurses=""])
 SCI_ARG_WITH(qt,
   AC_HELP_STRING(--with-qt=DIR,
                  Use the Qt installation in DIR),
@@ -4441,6 +4447,39 @@ AC_SUBST(INC_GLOBUS_H)
 AC_SUBST(GLOBUS_LIB_FLAG)
 AC_SUBST(GLOBUS_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/globus_testdefs.h"
+
+##  --  search for ncurses  ----------------------------------------------
+                                                                                                 
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+                                                                                                 
+if test "$enable_scirun2" = "yes" -o "$sci_required_ncurses" = "yes"; then
+  _sci_optional=required
+fi
+                                                                                                 
+if test "$with_ncurses"; then
+  _sci_lib="$with_ncurses/lib"
+  _sci_inc="$with_ncurses/include"
+  _sci_optional=specific
+fi
+                                                                                                 
+SCI_TRY_LINK(NCURSES,ncurses library,curses.h menu.h,$_sci_inc,ncurses panel menu,$_sci_lib,,,$_sci_optional)
+                                                                                                 
+if test "$HAVE_NCURSES" = "yes"; then
+   DEF_NCURSES="#define HAVE_NCURSES 1"
+fi
+                                                                                                 
+if test "$with_ncurses" && test ! "$DEF_NCURSES"; then
+  echo
+  AC_MSG_ERROR(One or more of the ncurses components is missing.)
+fi
+                                                                                                 
+AC_SUBST(HAVE_NCURSES)
+AC_SUBST(DEF_NCURSES)
+AC_SUBST(INC_NCURSES_H)
+AC_SUBST(NCURSES_LIB_FLAG)
+AC_SUBST(NCURSES_LIB_DIR_FLAG)
 
 ##  --  search for Qt  ----------------------------------------------------
 
