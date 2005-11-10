@@ -75,21 +75,21 @@ void Hello::setServices(const sci::cca::Services::pointer& svc)
     svc->registerForRelease(sci::cca::ComponentRelease::pointer(this));
     sci::cca::TypeMap::pointer props = svc->createTypeMap();
 
-    myUIPort *uip = new myUIPort();
+    HelloUIPort *uip = new HelloUIPort();
     uip->setParent(this);
-    myUIPort::pointer uiPortPtr = myUIPort::pointer(uip);
+    HelloUIPort::pointer uiPortPtr = HelloUIPort::pointer(uip);
 
     svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort",
                          sci::cca::TypeMap::pointer(0));
 
-    myGoPort *gp = new myGoPort(svc);
+    HelloGoPort *gp = new HelloGoPort(svc);
     gp->setParent(this);
-    myGoPort::pointer goPortPtr = myGoPort::pointer(gp);
+    HelloGoPort::pointer goPortPtr = HelloGoPort::pointer(gp);
 
     svc->addProvidesPort(goPortPtr, "go", "sci.cca.ports.GoPort",
                          sci::cca::TypeMap::pointer(0));
 
-    myComponentIcon::pointer ciPortPtr = myComponentIcon::pointer(new myComponentIcon);
+    HelloComponentIcon::pointer ciPortPtr = HelloComponentIcon::pointer(new HelloComponentIcon);
 
     svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon",
                          sci::cca::TypeMap::pointer(0));
@@ -115,7 +115,7 @@ std::cerr << "Hello::releaseServices" << std::endl;
 }
 
 
-int myUIPort::ui()
+int HelloUIPort::ui()
 {
 #if HAVE_QT
     QMessageBox::information(0, "Hello", com->text);
@@ -125,12 +125,7 @@ int myUIPort::ui()
     return 0;
 }
 
-myGoPort::myGoPort(const sci::cca::Services::pointer& svc)
-{
-    this->services = svc;
-}
-
-int myGoPort::go()
+int HelloGoPort::go()
 {
     if (services.isNull()) {
         std::cerr << "Null services!\n";
@@ -150,8 +145,8 @@ int myGoPort::go()
         return 1;
     }
 
-    sci::cca::ports::Progress::pointer pPtr =
-        pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
+     sci::cca::ports::Progress::pointer pPtr =
+         pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
 
     sci::cca::ports::StringPort::pointer sp =
         pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
@@ -165,29 +160,29 @@ int myGoPort::go()
       com->text = name.c_str();
     }
 
-    pPtr->updateProgress(myComponentIcon::STEPS);
+    pPtr->updateProgress(HelloComponentIcon::STEPS);
     services->releasePort("stringport");
     services->releasePort("progress");
 
     return 0;
 }
 
-std::string myComponentIcon::getDisplayName()
+std::string HelloComponentIcon::getDisplayName()
 {
     return std::string("Hello Component");
 }
 
-std::string myComponentIcon::getDescription()
+std::string HelloComponentIcon::getDescription()
 {
     return std::string("The Hello component is a sample CCA component that uses a sci::cca::StringPort.");
 }
 
-int myComponentIcon::getProgressBar()
+int HelloComponentIcon::getProgressBar()
 {
     return STEPS;
 }
 
-std::string myComponentIcon::getIconShape()
+std::string HelloComponentIcon::getIconShape()
 {
     return std::string("RECT");
 }

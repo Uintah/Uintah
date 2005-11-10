@@ -48,31 +48,31 @@ namespace SCIRun {
 
 class Hello;
 
-class myUIPort : public sci::cca::ports::UIPort {
+class HelloUIPort : public sci::cca::ports::UIPort {
 public:
-    virtual ~myUIPort() {}
-    int ui();
-    void setParent(Hello *com) { this->com = com; }
-    Hello *com;
+  virtual ~HelloUIPort() {}
+  int ui();
+  void setParent(Hello *com) { this->com = com; }
+  Hello *com;
 };
 
-class myGoPort : public sci::cca::ports::GoPort {
+class HelloGoPort : public sci::cca::ports::GoPort {
 public:
-    virtual ~myGoPort() {}
+  virtual ~HelloGoPort() {}
 
-    myGoPort(const sci::cca::Services::pointer& svc);
-    int go();
-    void setParent(Hello *com) { this->com = com; }
-    Hello *com;
+  HelloGoPort(const sci::cca::Services::pointer& svc) : services(svc) {}
+  int go();
+  void setParent(Hello *com) { this->com = com; }
+  Hello *com;
 
 private:
-    sci::cca::Services::pointer services;
+  sci::cca::Services::pointer services;
 };
 
-class myComponentIcon : public sci::cca::ports::ComponentIcon {
+class HelloComponentIcon : public sci::cca::ports::ComponentIcon {
 public:
-  myComponentIcon() {}
-  virtual ~myComponentIcon() {}
+  HelloComponentIcon() {}
+  virtual ~HelloComponentIcon() {}
 
   virtual std::string getDisplayName();
   virtual std::string getDescription();
@@ -84,20 +84,20 @@ public:
 // demonstrate use of Go port, UI port and ComponentRelease
 class Hello : public sci::cca::Hello {
 public:
-    Hello();
-    virtual ~Hello();
-    virtual void setServices(const sci::cca::Services::pointer& svc);
-    virtual void releaseServices(const sci::cca::Services::pointer& svc);
-    std::string text;
+  Hello();
+  virtual ~Hello();
+  virtual void setServices(const sci::cca::Services::pointer& svc);
+  virtual void releaseServices(const sci::cca::Services::pointer& svc);
+  std::string text;
 
 private:
-    void setCommunicator(int comm) {
-        //MPI_COMM_COM=MPI_COMM_WORLD; //*(MPI_Comm*)(comm);
-    }
-    Hello(const Hello&);
-    Hello& operator=(const Hello&);
+  void setCommunicator(int comm) {
+    //MPI_COMM_COM=MPI_COMM_WORLD; //*(MPI_Comm*)(comm);
+  }
+  Hello(const Hello&);
+  Hello& operator=(const Hello&);
 
-    sci::cca::Services::pointer services;
+  sci::cca::Services::pointer services;
 };
   
 } //namespace SCIRun
