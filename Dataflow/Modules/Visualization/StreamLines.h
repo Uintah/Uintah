@@ -350,7 +350,6 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    const TypeDescription *dsrc,
 					    const TypeDescription *sloc,
 					    const TypeDescription *vfld,
 					    int value);
@@ -358,7 +357,7 @@ public:
 };
 
 
-template <class SFIELD, class STYPE, class SLOC, class VFLD>
+template <class SFIELD, class SLOC, class VFLD>
 class StreamLinesAccAlgoT : public StreamLinesAccAlgo
 {
 public:
@@ -375,9 +374,9 @@ public:
 };
 
 
-template <class SFIELD, class STYPE, class SLOC, class VFLD>
+template <class SFIELD, class SLOC, class VFLD>
 void
-StreamLinesAccAlgoT<SFIELD, STYPE, SLOC, VFLD>::
+StreamLinesAccAlgoT<SFIELD, SLOC, VFLD>::
 FindNodes(vector<Point> &v,
 	  Point seed,
 	  int maxsteps,
@@ -450,9 +449,9 @@ FindNodes(vector<Point> &v,
 						  
 
 
-template <class SFIELD, class STYPE, class SLOC, class VFLD>
+template <class SFIELD, class SLOC, class VFLD>
 FieldHandle
-StreamLinesAccAlgoT<SFIELD, STYPE, SLOC, VFLD>::
+StreamLinesAccAlgoT<SFIELD, SLOC, VFLD>::
 execute(FieldHandle seed_field_h,
 	FieldHandle vfield_h,
 	int maxsteps,
