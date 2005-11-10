@@ -184,6 +184,10 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
       d_rigid_body = true;
       Vector defaultDir(1,1,1);
       child->getWithDefault("direction",d_contact_dirs, defaultDir);
+      child->getWithDefault("stop_time",d_stop_time, 
+                                        std::numeric_limits<double>::max());
+      child->getWithDefault("velocity_after_stop",d_vel_after_stop, 
+                                                  Vector(0,0,0));
    }
 
    if(flags->d_useLoadCurves){
@@ -1030,8 +1034,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
 #ifdef __APPLE__
 #  define isnan  __isnand
 #endif
-    if ((isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax)) 
-        && isnan(dispIncQNorm0)){
+    if (isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax)){ 
       restart_nan=true;
       cerr << "Restarting due to a nan residual" << endl;
     }
@@ -1174,9 +1177,11 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         // external force and copy the data
         constParticleVariable<Vector> pExternalForce;
         ParticleVariable<Vector> pExternalForce_new;
+        constParticleVariable<Point> px;
         old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
         new_dw->allocateAndPut(pExternalForce_new,
                                lb->pExtForceLabel_preReloc,  pset);
+        old_dw->get(px,        lb->pXLabel,                  pset);
                                                                                 
         // Iterate over the particles
         ParticleSubset::iterator iter = pset->begin();
@@ -1188,9 +1193,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
       }
 
       // Prescribe an external heat rate to some particles
-      constParticleVariable<Point> px;
       ParticleVariable<double> pExtHeatRate;
-      old_dw->get(px,                      lb->pXLabel,                 pset);
       new_dw->allocateAndPut(pExtHeatRate, lb->pExternalHeatRateLabel,  pset);
 
       ParticleSubset::iterator iter = pset->begin();
@@ -2512,6 +2515,17 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         ke += .5*pmass[idx]*pvelnew[idx].length2();
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
         CMV += pvelnew[idx]*pmass[idx];
+      }
+ 
+      if(mpm_matl->getIsRigid()) {
+        const double tcurr = d_sharedState->getElapsedTime(); 
+        if(tcurr >= d_stop_time){
+          for(ParticleSubset::iterator iter = pset->begin();
+              iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            pvelnew[idx] = d_vel_after_stop;
+          }
+        }
       }
 
       new_dw->deleteParticles(delete_particles);

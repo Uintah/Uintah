@@ -449,6 +449,8 @@ private:
   int              d_num_iters_to_increase_delT;
   double           d_delT_decrease_factor;
   double           d_delT_increase_factor;
+  double           d_stop_time;     // for rigid contact
+  Vector           d_vel_after_stop;     // for rigid contact
 
   std::list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, ...
 
