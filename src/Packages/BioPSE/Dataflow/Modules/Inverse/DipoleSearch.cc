@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -63,14 +63,14 @@ using std::endl;
 namespace BioPSE {
 using namespace SCIRun;
 
-class DipoleSearch : public Module {   
+class DipoleSearch : public Module {
   typedef SCIRun::ConstantBasis<Vector>                           PCVBasis;
   typedef SCIRun::ConstantBasis<double>                           PCDBasis;
   typedef SCIRun::PointCloudMesh<ConstantBasis<Point> >           PCMesh;
   typedef SCIRun::GenericField<PCMesh, PCVBasis, vector<Vector> > PCFieldV;
   typedef SCIRun::GenericField<PCMesh, PCDBasis, vector<double> > PCFieldD;
   typedef TetVolMesh<TetLinearLgn<Point> >                        TVMesh;
-  
+
   FieldIPort     *seeds_iport_;
   FieldIPort     *mesh_iport_;
   MatrixIPort    *misfit_iport_;
@@ -87,14 +87,14 @@ class DipoleSearch : public Module {
   MatrixHandle leadfield_selectH_;
   FieldHandle simplexH_;
   FieldHandle dipoleH_;
-  
+
   int seed_counter_;
   string state_;
   Array1<double> misfit_;
   Array2<double> dipoles_;
   Array1<int> cell_visited_;
   Array1<double> cell_err_;
-  Array1<Vector> cell_dir_;  
+  Array1<Vector> cell_dir_;
   int use_cache_;
   int stop_search_;
   int last_intermediate_;
@@ -136,10 +136,11 @@ int DipoleSearch::MAX_EVALS_ = 1001;
 double DipoleSearch::CONVERGENCE_ = 0.0001;
 double DipoleSearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
 
+
 DipoleSearch::DipoleSearch(GuiContext *context)
-  : Module("DipoleSearch", context, Filter, "Inverse", "BioPSE"), 
-  mylock_("pause lock for DipoleSearch"), 
-  use_cache_gui_(context->subVar("use_cache_gui_"))
+  : Module("DipoleSearch", context, Filter, "Inverse", "BioPSE"),
+    mylock_("pause lock for DipoleSearch"),
+    use_cache_gui_(context->subVar("use_cache_gui_"))
 {
   mylock_.unlock();
   state_ = "SEEDING";
@@ -147,24 +148,30 @@ DipoleSearch::DipoleSearch(GuiContext *context)
   seed_counter_ = 0;
 }
 
-DipoleSearch::~DipoleSearch(){}
+
+DipoleSearch::~DipoleSearch()
+{
+}
 
 
-//! Initialization sets up our dipole search matrix, and misfit vector, and 
+//! Initialization sets up our dipole search matrix, and misfit vector, and
 //!   resizes and initializes our caching vectors
 
-void DipoleSearch::initialize_search() {
+void
+DipoleSearch::initialize_search()
+{
   // cast the mesh based class up to a tetvolmesh
   PCMesh *seeds_mesh =
     (PCMesh*)dynamic_cast<PCMesh*>(seedsH_->mesh().get_rep());
 
-  // iterate through the nodes and copy the positions into our 
+  // iterate through the nodes and copy the positions into our
   //  simplex search matrix (`dipoles')
   PCMesh::Node::iterator ni; seeds_mesh->begin(ni);
   PCMesh::Node::iterator nie; seeds_mesh->end(nie);
   misfit_.resize(NDIPOLES_);
   dipoles_.resize(NDIPOLES_, NDIM_+3);
-  for (int nc=0; ni != nie; ++ni, nc++) {
+  for (int nc=0; ni != nie; ++ni, nc++)
+  {
     Point p;
     seeds_mesh->get_center(p, *ni);
     dipoles_(nc,0)=p.x(); dipoles_(nc,1)=p.y(); dipoles_(nc,2)=p.z();
@@ -172,7 +179,7 @@ void DipoleSearch::initialize_search() {
   }
   // this last dipole entry contains our test dipole
   int j;
-  for (j=0; j<NDIM_+3; j++) 
+  for (j=0; j<NDIM_+3; j++)
     dipoles_(NSEEDS_,j)=0;
 
   TVMesh::Cell::size_type csize;
@@ -187,14 +194,18 @@ void DipoleSearch::initialize_search() {
 
 //! Find the misfit and optimal orientation for a single dipole
 
-void DipoleSearch::send_and_get_data(int which_dipole, 
-				     TVMesh::Cell::index_type ci) {
-  if (!mylock_.tryLock()) {
+void
+DipoleSearch::send_and_get_data(int which_dipole, TVMesh::Cell::index_type ci)
+{
+  if (!mylock_.tryLock())
+  {
     msgStream_ << "Thread is paused\n";
     mylock_.lock();
     mylock_.unlock();
     msgStream_ << "Thread is unpaused\n";
-  } else {
+  }
+  else
+  {
     mylock_.unlock();
   }
 
@@ -204,11 +215,12 @@ void DipoleSearch::send_and_get_data(int which_dipole,
   // each column is an interpolant vector or index/weight pairs
   // we just have one entry for each -- index=leadFieldColumn, weight=1
   DenseMatrix *leadfield_select_out = scinew DenseMatrix(2, 3);
-  for (j=0; j<3; j++) {
+  for (j=0; j<3; j++)
+  {
     (*leadfield_select_out)[0][j] = ci*3+j;
     (*leadfield_select_out)[1][j] = 1;
   }
-  
+
   PCMesh::handle_type pcm = scinew PCMesh;
   for (j=0; j<NSEEDS_; j++)
     pcm->add_point(Point(dipoles_(j,0), dipoles_(j,1), dipoles_(j,2)));
@@ -220,7 +232,7 @@ void DipoleSearch::send_and_get_data(int which_dipole,
   pcm->add_point(Point(dipoles_(which_dipole, 0), dipoles_(which_dipole, 1),
 		       dipoles_(which_dipole, 2)));
   PCFieldV *pcd = scinew PCFieldV(pcm);
-  
+
   // send out data
   leadfield_selectH_ = leadfield_select_out;
   leadfield_select_oport_->send_intermediate(leadfield_selectH_);
@@ -244,39 +256,46 @@ void DipoleSearch::send_and_get_data(int which_dipole,
   cell_dir_[ci] = Vector(mH->get(0, 0), mH->get(1, 0), mH->get(2, 0));
   for (j=0; j<3; j++)
     dipoles_(which_dipole,j+3) = mH->get(j, 0);
-}  
+}
 
 
 //! pre_search gets called once for each seed dipole.  It sends out
 //!   one of the seeds, reads back the results, and fills the data
 //!   into the caches and the search matrix
 //! return "fail" if any seeds are out of mesh or if we don't get
-//!   back a misfit or optimal orientation after a send 
+//!   back a misfit or optimal orientation after a send
 
-int DipoleSearch::pre_search() {
+int
+DipoleSearch::pre_search()
+{
   if (seed_counter_ == 0) {
     initialize_search();
   }
 
   // send out a seed dipole and get back the misfit and the optimal orientation
   TVMesh::Cell::index_type ci;
-  if (!vol_mesh_->locate(ci, Point(dipoles_(seed_counter_,0), 
-				   dipoles_(seed_counter_,1), 
-				   dipoles_(seed_counter_,2)))) {
+  if (!vol_mesh_->locate(ci, Point(dipoles_(seed_counter_,0),
+				   dipoles_(seed_counter_,1),
+				   dipoles_(seed_counter_,2))))
+  {
     warning("Seedpoint " + to_string(seed_counter_) + " is outside of mesh.");
     return 0;
-  } 
-  if (cell_visited_[ci]) {
+  }
+  if (cell_visited_[ci])
+  {
     warning("Redundant seedpoints found.");
     misfit_[seed_counter_]=cell_err_[ci];
-  } else {
+  }
+  else
+  {
     cell_visited_[ci]=1;
     send_and_get_data(seed_counter_, ci);
   }
   seed_counter_++;
 
   // done seeding, prepare for search phase
-  if (seed_counter_ == NSEEDS_) {
+  if (seed_counter_ == NSEEDS_)
+  {
     seed_counter_ = 0;
     state_ = "START_SEARCHING";
   }
@@ -286,19 +305,27 @@ int DipoleSearch::pre_search() {
 
 //! Evaluate a test dipole.  Return the optimal orientation.
 
-Vector DipoleSearch::eval_test_dipole() {
+Vector
+DipoleSearch::eval_test_dipole()
+{
   TVMesh::Cell::index_type ci;
-  if (vol_mesh_->locate(ci, Point(dipoles_(NSEEDS_,0), 
-				  dipoles_(NSEEDS_,1), 
-				  dipoles_(NSEEDS_,2)))) {
-    if (!cell_visited_[ci] || !use_cache_) {
+  if (vol_mesh_->locate(ci, Point(dipoles_(NSEEDS_,0),
+				  dipoles_(NSEEDS_,1),
+				  dipoles_(NSEEDS_,2))))
+  {
+    if (!cell_visited_[ci] || !use_cache_)
+    {
       cell_visited_[ci]=1;
       send_and_get_data(NSEEDS_, ci);
-    } else {
+    }
+    else
+    {
       misfit_[NSEEDS_]=cell_err_[ci];
     }
     return (cell_dir_[ci]);
-  } else {
+  }
+  else
+  {
     misfit_[NSEEDS_]=OUT_OF_BOUNDS_MISFIT_;
     return (Vector(0,0,1));
   }
@@ -307,29 +334,36 @@ Vector DipoleSearch::eval_test_dipole() {
 
 //! Check to see if any of the neighbors of the "best" dipole are better.
 
-int DipoleSearch::find_better_neighbor(int best, Array1<double>& sum) {
+int
+DipoleSearch::find_better_neighbor(int best, Array1<double>& sum)
+{
   Point p(dipoles_(best, 0), dipoles_(best, 1), dipoles_(best, 2));
   TVMesh::Cell::index_type ci;
   vol_mesh_->locate(ci, p);
   TVMesh::Cell::array_type ca;
   vol_mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
   vol_mesh_->get_neighbors(ca, ci);
-  for (unsigned int n=0; n<ca.size(); n++) {
+  for (unsigned int n=0; n<ca.size(); n++)
+  {
     Point p1;
     vol_mesh_->get_center(p1, ca[n]);
     dipoles_(NSEEDS_,0)=p1.x();
     dipoles_(NSEEDS_,1)=p1.y();
     dipoles_(NSEEDS_,2)=p1.z();
     eval_test_dipole();
-    if (misfit_[NSEEDS_] < misfit_[best]) {
+    if (misfit_[NSEEDS_] < misfit_[best])
+    {
       misfit_[best] = misfit_[NSEEDS_];
       int i;
-      for (i=0; i<NDIM_; i++) {
+      for (i=0; i<NDIM_; i++)
+      {
 	sum[i] = sum[i] + dipoles_(NSEEDS_,i)-dipoles_(best,i);
 	dipoles_(best,i) = dipoles_(NSEEDS_,i);
       }
       for (i=NDIM_; i<NDIM_+3; i++)
+      {
 	dipoles_(best,i) = dipoles_(NSEEDS_,i);  // copy orientation data
+      }
     }
     return 1;
   }
@@ -340,21 +374,26 @@ int DipoleSearch::find_better_neighbor(int best, Array1<double>& sum) {
 //! Take a single simplex step.  Evaluate a new position -- if it's
 //! better then an existing vertex, swap them.
 
-double DipoleSearch::simplex_step(Array1<double>& sum, double factor,
-				  int worst) {
+double
+DipoleSearch::simplex_step(Array1<double>& sum, double factor, int worst)
+{
   double factor1 = (1 - factor)/NDIM_;
   double factor2 = factor1-factor;
   int i;
-  for (i=0; i<NDIM_; i++) 
+  for (i=0; i<NDIM_; i++)
+  {
     dipoles_(NSEEDS_,i) = sum[i]*factor1 - dipoles_(worst,i)*factor2;
+  }
 
   // evaluate the new guess
   eval_test_dipole();
 
   // if this is better, swap it with the worst one
-  if (misfit_[NSEEDS_] < misfit_[worst]) {
+  if (misfit_[NSEEDS_] < misfit_[worst])
+  {
     misfit_[worst] = misfit_[NSEEDS_];
-    for (i=0; i<NDIM_; i++) {
+    for (i=0; i<NDIM_; i++)
+    {
       sum[i] = sum[i] + dipoles_(NSEEDS_,i)-dipoles_(worst,i);
       dipoles_(worst,i) = dipoles_(NSEEDS_,i);
     }
@@ -365,38 +404,49 @@ double DipoleSearch::simplex_step(Array1<double>& sum, double factor,
   return misfit_[NSEEDS_];
 }
 
+
 //! The simplex has been constructed -- now let's search for a minimal misfit
 
-void DipoleSearch::simplex_search() {
+void
+DipoleSearch::simplex_search()
+{
   Array1<double> sum(NDIM_);  // sum of the entries in the search matrix rows
   sum.initialize(0);
   int i, j;
-  for (i=0; i<NSEEDS_; i++) 
+  for (i=0; i<NSEEDS_; i++)
     for (j=0; j<NDIM_; j++)
-      sum[j]+=dipoles_(i,j); 
+      sum[j]+=dipoles_(i,j);
 
   double relative_tolerance;
   int num_evals = 0;
 
-  for( ;; ) {
+  for( ;; )
+  {
     int best, worst, next_worst;
     best = 0;
-    if (misfit_[0] > misfit_[1]) {
+    if (misfit_[0] > misfit_[1])
+    {
       worst = 0;
       next_worst = 1;
-    } else {
+    }
+    else
+    {
       worst = 1;
       next_worst = 0;
     }
     int i;
-    for (i=0; i<NSEEDS_; i++) {
+    for (i=0; i<NSEEDS_; i++)
+    {
       if (misfit_[i] <= misfit_[best]) best=i;
-      if (misfit_[i] > misfit_[worst]) {
+      if (misfit_[i] > misfit_[worst])
+      {
 	next_worst = worst;
 	worst = i;
-      } else 
-	if (misfit_[i] > misfit_[next_worst] && (i != worst)) 
-	  next_worst=i;
+      }
+      else if (misfit_[i] > misfit_[next_worst] && (i != worst))
+      {
+        next_worst=i;
+      }
       relative_tolerance = 2*(misfit_[worst]-misfit_[best])/
 	(misfit_[worst]+misfit_[best]);
     }
@@ -404,8 +454,10 @@ void DipoleSearch::simplex_search() {
     if (num_evals > MAX_EVALS_ || stop_search_) break;
 
     // make sure all of our neighbors are worse than us...
-    if (relative_tolerance < CONVERGENCE_) {
-      if (misfit_[best]>1.e-12 && find_better_neighbor(best, sum)) {
+    if (relative_tolerance < CONVERGENCE_)
+    {
+      if (misfit_[best]>1.e-12 && find_better_neighbor(best, sum))
+      {
 	num_evals++;
 	continue;
       }
@@ -414,35 +466,45 @@ void DipoleSearch::simplex_search() {
 
     double step_misfit = simplex_step(sum, -1, worst);
     num_evals++;
-    if (step_misfit <= misfit_[best]) {
+    if (step_misfit <= misfit_[best])
+    {
       step_misfit = simplex_step(sum, 2, worst);
       num_evals++;
-    } else if (step_misfit >= misfit_[worst]) {
+    }
+    else if (step_misfit >= misfit_[worst])
+    {
       double old_misfit = misfit_[worst];
       step_misfit = simplex_step(sum, 0.5, worst);
       num_evals++;
-      if (step_misfit >= old_misfit) {
-	for (i=0; i<NSEEDS_; i++) {
-	  if (i != best) {
+      if (step_misfit >= old_misfit)
+      {
+	for (i=0; i<NSEEDS_; i++)
+        {
+	  if (i != best)
+          {
 	    int j;
-	    for (j=0; j<NDIM_; j++) {
-	      dipoles_(i,j) = dipoles_(NSEEDS_,j) = 
+	    for (j=0; j<NDIM_; j++)
+            {
+	      dipoles_(i,j) = dipoles_(NSEEDS_,j) =
 		0.5 * (dipoles_(i,j) + dipoles_(best,j));
 	      dipoles_(NSEEDS_,j)=dipoles_(i,j);
 	    }
 	    Vector dir = eval_test_dipole();
 	    misfit_[i] = misfit_[NSEEDS_];
-	    dipoles_(i,3) = dir.x(); 
-	    dipoles_(i,4) = dir.y(); 
-	    dipoles_(i,5) = dir.z(); 
+	    dipoles_(i,3) = dir.x();
+	    dipoles_(i,4) = dir.y();
+	    dipoles_(i,5) = dir.z();
 	    num_evals++;
 	  }
 	}
       }
       sum.initialize(0);
-      for (i=0; i<NSEEDS_; i++) {
+      for (i=0; i<NSEEDS_; i++)
+      {
 	for (j=0; j<NDIM_; j++)
-	  sum[j]+=dipoles_(i,j); 
+        {
+	  sum[j]+=dipoles_(i,j);
+        }
       }
     }
   }
@@ -453,68 +515,90 @@ void DipoleSearch::simplex_search() {
 //! Read the input fields.  Check whether the inputs are valid,
 //! and whether they've changed since last time.
 
-void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
+void
+DipoleSearch::read_field_ports(int &valid_data, int &new_data)
+{
   FieldHandle mesh;
-  valid_data=1;
-  new_data=0;
+  valid_data = 1;
+  new_data = 0;
   const TypeDescription *mtd = mesh->mesh()->get_type_description();
   const string &mtdn = mtd->get_name();
   if (mesh_iport_->get(mesh) && mesh.get_rep() &&
       mtdn == get_type_description((TVMesh*)0)->get_name())
   {
-    if (!meshH_.get_rep() || (meshH_->generation != mesh->generation)) {
-      new_data=1;
-      meshH_=mesh;
+    if (!meshH_.get_rep() || (meshH_->generation != mesh->generation))
+    {
+      new_data = 1;
+      meshH_ = mesh;
       // cast the mesh base class up to a tetvolmesh
-      vol_mesh_=
-	(TVMesh*)dynamic_cast<TVMesh*>(mesh->mesh().get_rep());
-    } else {
+      vol_mesh_ = (TVMesh*)dynamic_cast<TVMesh*>(mesh->mesh().get_rep());
+    }
+    else
+    {
       remark("Same VolumeMesh as previous run.");
     }
-  } else {
-    valid_data=0;
+  }
+  else
+  {
+    valid_data = 0;
     remark("Didn't get a valid VolumeMesh.");
   }
-  
-  FieldHandle seeds;    
-  const TypeDescription *std = seeds->get_type_description();  
+
+  FieldHandle seeds;
+  const TypeDescription *std = seeds->get_type_description();
   const string &stdn = std->get_name();
 
-  if (!seeds_iport_->get(seeds)) {
+  if (!seeds_iport_->get(seeds))
+  {
     warning("No input seeds.");
     valid_data=0;
-  } else if (!seeds.get_rep()) {
+  }
+  else if (!seeds.get_rep())
+  {
     warning("Empty seeds handle.");
     valid_data=0;
-  } else if (stdn == ((PCFieldD*)0)->get_type_description()->get_name())
+  }
+  else if (stdn == ((PCFieldD*)0)->get_type_description()->get_name())
   {
     warning("Seeds typename should have been PointCloudField<double>.");
     valid_data=0;
-  } else {
+  }
+  else
+  {
     PCFieldD *d=dynamic_cast<PCFieldD*>(seeds.get_rep());
     PCMesh::Node::size_type nsize; d->get_typed_mesh()->size(nsize);
-    if (nsize != (unsigned int)NSEEDS_){
+    if (nsize != (unsigned int)NSEEDS_)
+    {
       msgStream_ << "Got "<< nsize <<" seeds, instead of "<<NSEEDS_<<"\n";
       valid_data=0;
-    } else if (!seedsH_.get_rep() || 
-	       (seedsH_->generation != seeds->generation)) {
+    }
+    else if (!seedsH_.get_rep() || (seedsH_->generation != seeds->generation))
+    {
       new_data = 1;
       seedsH_=seeds;
-    } else {
+    }
+    else
+    {
       remark("Using same seeds as before.");
     }
   }
 }
 
-void DipoleSearch::organize_last_send() {
+
+void
+DipoleSearch::organize_last_send()
+{
   int bestIdx=0;
   double bestMisfit = misfit_[0];
   int i;
   for (i=1; i<misfit_.size(); i++)
-    if (misfit_[i] < bestMisfit) {
+  {
+    if (misfit_[i] < bestMisfit)
+    {
       bestMisfit = misfit_[i];
       bestIdx = i;
     }
+  }
 
   Point best_pt(dipoles_(bestIdx,0), dipoles_(bestIdx,1), dipoles_(bestIdx,2));
   TVMesh::Cell::index_type best_cell_idx;
@@ -523,7 +607,8 @@ void DipoleSearch::organize_last_send() {
   msgStream_ << "DipoleSearch -- the dipole was found in cell " << best_cell_idx << "\n    at position " << best_pt << " with a misfit of " << bestMisfit << "\n";
 
   DenseMatrix *leadfield_select_out = scinew DenseMatrix(2, 3);
-  for (i=0; i<3; i++) {
+  for (i=0; i<3; i++)
+  {
     (*leadfield_select_out)[0][i] = best_cell_idx*3+i;
     (*leadfield_select_out)[1][i] = 1;
   }
@@ -535,11 +620,14 @@ void DipoleSearch::organize_last_send() {
   dipoleH_ = pcd;
 }
 
+
 //! If we have an old solution and the inputs haven't changed, send that
 //! one.  Otherwise, if the input is valid, run a simplex search to find
 //! a dipole with minimal misfit.
 
-void DipoleSearch::execute() {
+void
+DipoleSearch::execute()
+{
   int valid_data, new_data;
   // point cloud of vectors -- the seed positions/orientations for our search
   seeds_iport_ = (FieldIPort *)get_iport("DipoleSeeds");
@@ -552,7 +640,7 @@ void DipoleSearch::execute() {
 
   // matrix of selection columns (for MatrixSelectVector) to pull out the
   //    appropriate x/y/z columns from the leadfield matrix
-  leadfield_select_oport_ = 
+  leadfield_select_oport_ =
     (MatrixOPort *)get_oport("LeadFieldSelectionMatrix");
   // point cloud of vectors -- the latest simplex (for vis)
   simplex_oport_ = (FieldOPort *)get_oport("DipoleSimplex");
@@ -561,8 +649,10 @@ void DipoleSearch::execute() {
 
   read_field_ports(valid_data, new_data);
   if (!valid_data) return;
-  if (!new_data) {
-    if (simplexH_.get_rep()) { // if we have valid old data
+  if (!new_data)
+  {
+    if (simplexH_.get_rep())
+    { // if we have valid old data
       // send old data and clear ports
       leadfield_select_oport_->send(leadfield_selectH_);
       simplex_oport_->send(simplexH_);
@@ -571,7 +661,9 @@ void DipoleSearch::execute() {
       misfit_iport_->get(dummy_mat);
       dir_iport_->get(dummy_mat);
       return;
-    } else {
+    }
+    else
+    {
       return;
     }
   }
@@ -579,16 +671,21 @@ void DipoleSearch::execute() {
   last_intermediate_=0;
 
   // we have new, valid data -- run the simplex search
-  for( ;; ) {
-    if (state_ == "SEEDING") {
+  for( ;; )
+  {
+    if (state_ == "SEEDING")
+    {
       if (!pre_search()) break;
-    } else if (state_ == "START_SEARCHING") {
+    }
+    else if (state_ == "START_SEARCHING")
+    {
       simplex_search();
       state_ = "DONE";
     }
     if (stop_search_ || state_ == "DONE") break;
   }
-  if (last_intermediate_) { // last sends were send_intermediates
+  if (last_intermediate_)
+  { // last sends were send_intermediates
     // gotta do final sends and clear the ports
     organize_last_send();
     leadfield_select_oport_->send(leadfield_selectH_);
@@ -607,22 +704,38 @@ void DipoleSearch::execute() {
 
 //! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
-void DipoleSearch::tcl_command(GuiArgs& args, void* userdata)
+void
+DipoleSearch::tcl_command(GuiArgs& args, void* userdata)
 {
-  if (args[1] == "pause") {
+  if (args[1] == "pause")
+  {
     if (mylock_.tryLock())
+    {
       msgStream_ << "TCL initiating pause..."<<endl;
-    else 
-      msgStream_ << "Can't lock -- already locked"<<endl;
-  } else if (args[1] == "unpause") {
-    if (mylock_.tryLock())
-      msgStream_ << "Can't unlock -- already unlocked"<<endl;
+    }
     else
+    {
+      msgStream_ << "Can't lock -- already locked"<<endl;
+    }
+  }
+  else if (args[1] == "unpause")
+  {
+    if (mylock_.tryLock())
+    {
+      msgStream_ << "Can't unlock -- already unlocked"<<endl;
+    }
+    else
+    {
       msgStream_ << "TCL initiating unpause..."<<endl;
+    }
     mylock_.unlock();
-  } else if (args[1] == "stop") {
+  }
+  else if (args[1] == "stop")
+  {
     stop_search_=1;
-  } else {
+  }
+  else
+  {
     Module::tcl_command(args, userdata);
   }
 }
