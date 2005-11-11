@@ -172,7 +172,7 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
   ball_->Init();
   
   // 0 - Axes, visible
-  viewwindow_objs_.push_back( createGenAxes() );
+  viewwindow_objs_.push_back(scinew GeomViewerItem(createGenAxes(),"Axis",0) );
   viewwindow_objs_draw_.push_back(true);              
 
   // 1 - Unicam control sphere, not visible by default.
