@@ -957,6 +957,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 #else
 
   error( "No MDS PLUS availible." );
+  return NULL;
 
 #endif
 }
