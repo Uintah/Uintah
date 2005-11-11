@@ -99,7 +99,7 @@ PersistentTypeID backwards_compat_SCM("StructCurveMesh", "Mesh",
 //NoData
 template class GenericField<CMesh, NDBasis, vector<double> >; 
 
-//Linear
+//Constant
 template class GenericField<CMesh, CFDTensorBasis, vector<Tensor> >;       
 template class GenericField<CMesh, CFDVectorBasis, vector<Vector> >;       
 template class GenericField<CMesh, CFDdoubleBasis, vector<double> >;       
