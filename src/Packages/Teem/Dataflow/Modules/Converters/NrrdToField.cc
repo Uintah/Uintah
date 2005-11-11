@@ -109,11 +109,17 @@ public:
   FieldIPort* ifield_;
   FieldOPort* ofield_;
 
-  GuiInt      permute_;
-  GuiInt      build_eigens_;
-  GuiString   quad_or_tet_;
-  GuiString   struct_unstruct_;
-  GuiString   datasets_;
+  GuiInt      gPermute_;
+  GuiInt      gBuildEigens_;
+  GuiString   gQuadOrTet_;
+  GuiString   gStructOrUnstruct_;
+  GuiString   gDatasets_;
+
+  int      permute_;
+  int      buildEigens_;
+  string   quadOrTet_;
+  string   structOrUnstruct_;
+
   int         data_generation_, points_generation_;
   int         connect_generation_, origfield_generation_;
   bool        has_error_;
@@ -166,19 +172,18 @@ public:
 				      int build_eigens,
 				      int permute,
 				      const string &quad_or_tet,
-				      const string &struct_unstruct);
-  
+				      const string &struct_or_unstruct);  
 };
 
 
 DECLARE_MAKER(NrrdToField)
 NrrdToField::NrrdToField(GuiContext* ctx)
   : Module("NrrdToField", ctx, Source, "Converters", "Teem"),
-    permute_(ctx->subVar("permute")),
-    build_eigens_(ctx->subVar("build-eigens")),
-    quad_or_tet_(ctx->subVar("quad-or-tet")),
-    struct_unstruct_(ctx->subVar("struct-unstruct")),
-    datasets_(ctx->subVar("datasets")),
+    gPermute_(ctx->subVar("permute")),
+    gBuildEigens_(ctx->subVar("build-eigens")),
+    gQuadOrTet_(ctx->subVar("quad-or-tet")),
+    gStructOrUnstruct_(ctx->subVar("struct-or-unstruct")),
+    gDatasets_(ctx->subVar("datasets")),
     data_generation_(-1), points_generation_(-1),
     connect_generation_(-1), origfield_generation_(-1),
     has_error_(false), last_field_(0)
@@ -301,8 +306,8 @@ NrrdToField::execute(){
     datasetsStr.append( "{Original Field : (none)} " );
   }
 
-  datasets_.reset();
-  if( datasetsStr != datasets_.get() ) {
+  gDatasets_.reset();
+  if( datasetsStr != gDatasets_.get() ) {
     // Update the dataset names and dims in the GUI.
     ostringstream str;
     str << id << " set_names {" << datasetsStr << "}";
@@ -310,15 +315,30 @@ NrrdToField::execute(){
     gui->execute(str.str().c_str());
   }
 
+  if( buildEigens_      != gBuildEigens_.get() || 
+      permute_          != gPermute_.get() ||
+      quadOrTet_        != gQuadOrTet_.get() ||
+      structOrUnstruct_ != gStructOrUnstruct_.get() ) {
+
+    buildEigens_      = gBuildEigens_.get();
+    permute_          = gPermute_.get();
+    quadOrTet_        = gQuadOrTet_.get();
+    structOrUnstruct_ = gStructOrUnstruct_.get();
+
+    do_execute = true;
+  }
+
   if (has_error_)
     do_execute = true;
 
   // execute the module
   if (do_execute) {
-    last_field_ = create_field_from_nrrds(dataH, pointsH, connectH, origfieldH,
-					  build_eigens_.get(), permute_.get(), 
-					  quad_or_tet_.get(),
-					  struct_unstruct_.get());
+    last_field_ = create_field_from_nrrds(dataH, pointsH,
+					  connectH, origfieldH,
+					  buildEigens_,
+					  permute_, 
+					  quadOrTet_,
+					  structOrUnstruct_);
     
   } 
   if (last_field_ != 0) {
@@ -348,7 +368,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 				     int build_eigens,
 				     int permute,
 				     const string &quad_or_tet, 
-				     const string &struct_unstruct) {
+				     const string &struct_or_unstruct) {
 				    
   MeshHandle mHandle;
   int idim = 1, jdim = 1, kdim = 1; // initialize to 1 so it will at least go through i,j,k loops once.
@@ -690,11 +710,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 
     case 2:
       // data 1D ask if point cloud or structcurvemesh
-      if (struct_unstruct == "PointCloud") {
+      if (struct_or_unstruct == "PointCloud") {
 	mHandle = scinew PCMesh();
 	btd = get_type_description((ConstantBasis<double>*)0);
 	topology_ = UNSTRUCTURED;
-      } else if (struct_unstruct == "StructCurve") {
+      } else if (struct_or_unstruct == "StructCurve") {
 	topology_ = STRUCTURED;
 	mHandle = scinew SCMesh( points->axis[1].size );
 	btd = get_type_description((CrvLinearLgn<double>*)0);
