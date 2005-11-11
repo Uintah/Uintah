@@ -162,8 +162,8 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   typename FDST::mesh_handle_type outmesh = scinew typename FDST::mesh_type();
 
   bool pointCloud =
-    (outmesh->get_type_description()->get_name() == 
-     "PointCloudMesh<ConstantBasis<Point> >");
+    (outmesh->get_type_description()->get_name().find( "PointCloud") !=
+     string::npos );
 
 #ifdef HAVE_HASH_MAP
   typedef hash_map<typename FSRC::mesh_type::Node::index_type,
@@ -189,8 +189,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
 
   typename FSRC::mesh_type::Node::iterator bn, en;
   mesh->begin(bn); mesh->end(en);
-  while (bn != en)
-  {
+  while (bn != en) {
     ASSERT(nodemap.find(*bn) == nodemap.end());
     Point np;
     mesh->get_center(np, *bn);
@@ -208,11 +207,10 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
       mesh->get_nodes(onodes, *bi);
       typename FDST::mesh_type::Node::array_type nnodes(onodes.size());
 
-      for (unsigned int i=0; i<onodes.size(); i++)
-	{
-	  ASSERT(nodemap.find(onodes[i]) != nodemap.end());
-	  nnodes[i] = nodemap[onodes[i]];
-	}
+      for (unsigned int i=0; i<onodes.size(); i++) {
+	ASSERT(nodemap.find(onodes[i]) != nodemap.end());
+	nnodes[i] = nodemap[onodes[i]];
+      }
 
       elemmap[*bi] = outmesh->add_elem(nnodes);
       ++bi;
@@ -224,12 +222,10 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
 
   FDST *ofield = scinew FDST(outmesh);
 
-  if (field_h->basis_order() == 1)
-  {
+  if (field_h->basis_order() == 1) {
     typename node_hash_type::iterator hitr = nodemap.begin();
 
-    while (hitr != nodemap.end())
-    {
+    while (hitr != nodemap.end()) {
       typename FSRC::value_type val;
       ifield->value(val, (*hitr).first);
       ofield->set_value(val, (*hitr).second);
@@ -240,21 +236,17 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
 
   // Point clouds do not have elements so skip.
   else if (!pointCloud &&
-	   field_h->basis_order() == 0)
-  {
+	   field_h->basis_order() == 0) {
     typename elem_hash_type::iterator hitr = elemmap.begin();
     
-    while (hitr != elemmap.end())
-    {
+    while (hitr != elemmap.end()) {
       typename FSRC::value_type val;
       ifield->value(val, (*hitr).first);
       ofield->set_value(val, (*hitr).second);
 
       ++hitr;
     }
-  }
-  else
-  {
+  } else {
     module->warning("Unable to copy data at this field data location.");
   }
 
