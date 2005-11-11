@@ -1286,10 +1286,10 @@ void
 EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
 {
   if (!ctx_) return;
-  ctx_->lock();
+  gui->lock();
 
   if(ctx_->width()<3 || ctx_->height()<3 || !ctx_->make_current()) {
-    ctx_->unlock(); 
+    gui->unlock(); 
     return; 
   }
   CHECK_OPENGL_ERROR("dummy")
@@ -1371,9 +1371,7 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   ctx_->swap();
   ctx_->release();
   CHECK_OPENGL_ERROR("dummy");
-  cerr << "Drew\n";
-  ctx_->unlock();
-  cerr << "Drew down\n";
+  gui->unlock();
 }
 
 void
