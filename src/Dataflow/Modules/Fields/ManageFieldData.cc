@@ -345,6 +345,7 @@ ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *fsrc,
   rval->add_include(include_path);
   rval->add_data_include("../src/Core/Geometry/Vector.h");
   rval->add_data_include("../src/Core/Geometry/Tensor.h");
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
   fsrc->fill_compile_info(rval);
   return rval;
 }
