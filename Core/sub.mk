@@ -59,9 +59,9 @@ SUBDIRS := \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
 	$(SRCDIR)/Volume \
-	$(SRCDIR)/2d \
 	$(SRCDIR)/ICom \
 	$(SRCDIR)/XMLUtil \
+#	$(SRCDIR)/2d \
 #	$(SRCDIR)/Util/Comm \
 #	$(SRCDIR)/Parts \
 #	$(SRCDIR)/PartsGui \

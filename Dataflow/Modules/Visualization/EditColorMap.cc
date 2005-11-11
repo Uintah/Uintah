@@ -43,8 +43,6 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Math/MinMax.h>
-#include <Core/2d/Point2d.h>
-#include <Core/2d/Vector2d.h>
 
 #include <Core/Geom/TkOpenGLContext.h>
 #include <tcl.h>
@@ -729,12 +727,12 @@ EditColorMap::GetClosestLineSegment(float time, float val,
   //     { | P - (B + t0(M)) |   0 < t0 < 1 }
   //     { | P - (B + M) |       t0 >= 1 }
 
-  Point2d P(time, val*aspect_ratio);
+  Point P(time, val*aspect_ratio, 0.);
   for(int j = 0; j < 3; j++) {
-    Point2d P1(rgbT_[i-1], rgbs_[i-1][j] * aspect_ratio);
-    Point2d P2(rgbT_[i],   rgbs_[i][j] * aspect_ratio);
+    Point P1(rgbT_[i-1], rgbs_[i-1][j] * aspect_ratio, 0.0);
+    Point P2(rgbT_[i],   rgbs_[i][j] * aspect_ratio, 0.0);
     
-    Vector2d M = P2 - P1;
+    Vector M = P2 - P1;
     // M.length2 is the same as Dot(M,M).
     //
     // We could delay the division with M.length2(), but more often
@@ -781,10 +779,10 @@ EditColorMap::GetClosestLineSegment(float time, float val,
   // See comment above for derivation.
 
   {
-    Point2d P1(alphaT_[i-1], alphas_[i-1] * aspect_ratio);
-    Point2d P2(alphaT_[i],   alphas_[i] * aspect_ratio);
+    Point P1(alphaT_[i-1], alphas_[i-1] * aspect_ratio, 0.0);
+    Point P2(alphaT_[i],   alphas_[i] * aspect_ratio, 0.0);
 
-    Vector2d M = P2 - P1;
+    Vector M = P2 - P1;
     double t0 = Dot(M, P-P1)/M.length2();
     double min1;
     int point;
