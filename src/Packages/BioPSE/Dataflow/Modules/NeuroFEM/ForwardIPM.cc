@@ -64,8 +64,8 @@ typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
 typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
 typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
 
-typedef HexTrilinearLgn<Tensor>                HVTensorBasis;
-typedef TetLinearLgn<Tensor>                   TVTensorBasis;
+typedef ConstantBasis<Tensor>                HVTensorBasis;
+typedef ConstantBasis<Tensor>                TVTensorBasis;
 typedef GenericField<TVMesh, TVTensorBasis, vector<Tensor> > TVTField;
 typedef GenericField<HVMesh, HVTensorBasis, vector<Tensor> > HVTField;  
 class ForwardIPM : public Module {
