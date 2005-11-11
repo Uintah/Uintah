@@ -139,6 +139,7 @@ double DipoleSearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
 
 DipoleSearch::DipoleSearch(GuiContext *context)
   : Module("DipoleSearch", context, Filter, "Inverse", "BioPSE"),
+    meshH_(0),
     mylock_("pause lock for DipoleSearch"),
     use_cache_gui_(context->subVar("use_cache_gui_"))
 {
@@ -518,68 +519,75 @@ DipoleSearch::simplex_search()
 void
 DipoleSearch::read_field_ports(int &valid_data, int &new_data)
 {
-  FieldHandle mesh;
   valid_data = 1;
   new_data = 0;
-  const TypeDescription *mtd = mesh->mesh()->get_type_description();
-  const string &mtdn = mtd->get_name();
-  if (mesh_iport_->get(mesh) && mesh.get_rep() &&
-      mtdn == get_type_description((TVMesh*)0)->get_name())
+  FieldHandle mesh(0);
+  if (mesh_iport_->get(mesh) && mesh.get_rep())
   {
-    if (!meshH_.get_rep() || (meshH_->generation != mesh->generation))
+    const string &mtdn = mesh->mesh()->get_type_description()->get_name();
+    if (mtdn == get_type_description((TVMesh*)0)->get_name())
     {
-      new_data = 1;
-      meshH_ = mesh;
-      // cast the mesh base class up to a tetvolmesh
-      vol_mesh_ = (TVMesh*)dynamic_cast<TVMesh*>(mesh->mesh().get_rep());
+      if (!meshH_.get_rep() || (meshH_->generation != mesh->generation))
+      {
+        new_data = 1;
+        meshH_ = mesh;
+
+        // Cast the mesh base class up to a tetvolmesh.
+        vol_mesh_ = (TVMesh*)dynamic_cast<TVMesh*>(mesh->mesh().get_rep());
+      }
+      else
+      {
+        remark("Same VolumeMesh as previous run.");
+      }
     }
     else
     {
-      remark("Same VolumeMesh as previous run.");
+      valid_data = 0;
+      remark("Didn't get a valid VolumeMesh.");
     }
   }
   else
   {
-    valid_data = 0;
-    remark("Didn't get a valid VolumeMesh.");
+    valid_data = false;
+    error("No input available on the mesh field port.");
   }
-
+  
   FieldHandle seeds;
-  const TypeDescription *std = seeds->get_type_description();
-  const string &stdn = std->get_name();
-
   if (!seeds_iport_->get(seeds))
   {
     warning("No input seeds.");
-    valid_data=0;
+    valid_data = 0;
   }
   else if (!seeds.get_rep())
   {
     warning("Empty seeds handle.");
-    valid_data=0;
-  }
-  else if (stdn == ((PCFieldD*)0)->get_type_description()->get_name())
-  {
-    warning("Seeds typename should have been PointCloudField<double>.");
-    valid_data=0;
+    valid_data = 0;
   }
   else
   {
-    PCFieldD *d=dynamic_cast<PCFieldD*>(seeds.get_rep());
-    PCMesh::Node::size_type nsize; d->get_typed_mesh()->size(nsize);
-    if (nsize != (unsigned int)NSEEDS_)
+    PCFieldD *d = dynamic_cast<PCFieldD*>(seeds.get_rep());
+    if (d == NULL)
     {
-      msgStream_ << "Got "<< nsize <<" seeds, instead of "<<NSEEDS_<<"\n";
-      valid_data=0;
-    }
-    else if (!seedsH_.get_rep() || (seedsH_->generation != seeds->generation))
-    {
-      new_data = 1;
-      seedsH_=seeds;
+      warning("Seeds typename should have been PointCloudField<double>.");
+      valid_data = 0;
     }
     else
     {
-      remark("Using same seeds as before.");
+      PCMesh::Node::size_type nsize; d->get_typed_mesh()->size(nsize);
+      if (nsize != (unsigned int)NSEEDS_)
+      {
+        msgStream_ << "Got "<< nsize <<" seeds, instead of "<<NSEEDS_<<"\n";
+        valid_data=0;
+      }
+      else if (!seedsH_.get_rep() || (seedsH_->generation != seeds->generation))
+      {
+        new_data = 1;
+        seedsH_ = seeds;
+      }
+      else
+      {
+        remark("Using same seeds as before.");
+      }
     }
   }
 }
