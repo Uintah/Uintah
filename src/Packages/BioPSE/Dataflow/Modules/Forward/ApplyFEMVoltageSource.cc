@@ -112,16 +112,11 @@ void ApplyFEMVoltageSource::execute()
     return;
   }
 
-  TVMesh::handle_type mesh;
-  TVField *field;
-
-  if (hField->get_type_name(0)!="TetVolField" && hField->get_type_name(1)!="int"){
+  TVMesh::handle_type mesh = dynamic_cast<TVMesh *>(hField->mesh().get_rep());
+  if (mesh.get_rep() == 0)
+  {
     error("Supplied field is not of type TVField.");
     return;
-  }
-  else {
-    field = dynamic_cast<TVField*> (hField.get_rep());
-    mesh = field->get_typed_mesh();
   }
   
   //-- polling Field for Dirichlet BC
