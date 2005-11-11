@@ -449,9 +449,10 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
   FieldHandle mesh;
   valid_data=1;
   new_data=0;
+  TVFieldI *meshTV = 0;
   if (mesh_iport_->get(mesh) && mesh.get_rep() &&
-      (mesh->get_type_name(0) == "TetVolField") &&
-      (mesh->get_type_name(1) == "int")) {
+      (meshTV = dynamic_cast<TVFieldI *>(mesh.get_rep())))
+  {
     if (!mesh_in_.get_rep() || (mesh_in_->generation != mesh->generation)) {
       new_data=1;
       mesh_in_=mesh;
@@ -459,11 +460,11 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
       remark("Same VolumeMesh as previous run.");
     }
   } else {
-    valid_data=0;
-    warning("Didn't get a valid VolumeMesh.");
+    valid_data = 0;
+    error("Didn't get a valid VolumeMesh.");
+    error("Expected TetVolMesh with constant basis and int data.");
   }
 
-  TVFieldI *meshTV = dynamic_cast<TVFieldI *>(mesh.get_rep());
   Array1<Tensor> tens;
   pair<int,int> minmax;
   minmax.second=1;
@@ -484,7 +485,7 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
     }
   } else {
     valid_data=0;
-    warning("Didn't get valid ConductivityParams.");
+    error("Didn't get valid ConductivityParams.");
   }
 }
 
