@@ -292,7 +292,7 @@ MDSPlusReader::nids( const std::string signal, unsigned int **nids )
 
   return nnids;
 #else
-  return NULL;
+  return 0;
 #endif
 }
 
