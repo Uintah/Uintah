@@ -155,7 +155,7 @@ void add_args( const CoreFramework::pointer &framework, int argc, char *argv[])
 
   Services::pointer services = framework->getServices("default", "cca.unknown", 0);
   
-  services->registerUsesPort("properties", "cca.FrameworkProperties", 0);
+  services->registerUsesPort("properties", "cca.FrameworkPropertiesService", 0);
   {
     FrameworkProperties::pointer frameworkProperties = pidl_cast<FrameworkProperties::pointer>( services->getPort("properties"));
     frameworkProperties->addProperties(properties);

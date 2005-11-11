@@ -83,7 +83,7 @@ namespace SCIRun {
     // Services Factories
     addFrameworkServiceFactory( new SingletonServiceFactory<BuilderServiceImpl>(this, "cca.BuilderService"));
     addFrameworkServiceFactory( new SingletonServiceFactory<FrameworkPropertiesImpl>(this, "cca.FrameworkPropertiesService"));
-    addFrameworkServiceFactory( new ServiceRegistryFactoryBase<ServiceFactory>(this, "cca.ports.ServiceRegistry"));
+    addFrameworkServiceFactory( new ServiceRegistryFactoryBase<ServiceFactory>(this, "cca.ServiceRegistry"));
   }
   
   template<class Interface>
