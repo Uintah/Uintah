@@ -130,8 +130,8 @@ public:
   void get_normal(Vector &result, vector<double> &coords, 
 		  typename ImageMesh<Basis>::Elem::index_type eidx) 
   {
-    if (basis_.polynomial_order() < 2) {
-      typename Node::array_type arr(3);
+    if (this->basis_.polynomial_order() < 2) {
+      typename ImageMesh<Basis>::Node::array_type arr(3);
       get_nodes(arr, eidx);
 
       const double c0_0 = fabs(coords[0]);
