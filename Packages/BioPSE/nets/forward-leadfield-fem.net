@@ -65,7 +65,6 @@ set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 138 
 set m7 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 21 366]
 set m8 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 3 74]
 set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 3 426]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 640 610]
 set m11 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 395 141]
 set m12 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 395 220]
 set m13 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 21 146]
@@ -122,15 +121,6 @@ set $m9-faces-on {0}
 set $m9-node_display_type {Spheres}
 set $m9-node_scale [expr 0.03 * ${global-scale}]
 set $m9-resolution {7}
-
-set $m10-nodes-on {1}
-set $m10-edges-on {1}
-set $m10-faces-on {0}
-set $m10-node_display_type {Spheres}
-set $m10-edge_display_type {Cylinders}
-set $m10-node_scale [expr 0.01 * ${global-scale}]
-set $m10-edge_scale [expr 0.01 * ${global-scale}]
-set $m10-resolution {7}
 
 set $m12-def-color-r {0.3}
 set $m12-def-color-g {0.3}
