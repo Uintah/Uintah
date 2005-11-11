@@ -196,7 +196,8 @@ ClipByFunction::execute()
     algo->u5 = gui_uservar5_.get();
 
     if (!(fHandle->basis_order() == 0 && gMode == 0 ||
-          fHandle->basis_order() == 1 && gMode != 0))
+          fHandle->basis_order() == 1 && gMode != 0) &&
+        fHandle->mesh()->dimensionality() > 0)
     {
       warning("Basis doesn't match clip location, value will always be zero.");
     }
@@ -226,7 +227,8 @@ ClipByFunction::execute()
     int *rr = matrix->rows;
     int *cc = matrix->columns;
     double *data = matrix->a;
-    for (unsigned int i = 0; i < matrix->nrows(); ++i) {
+    for (int i = 0; i < matrix->nrows(); ++i)
+    {
       if (rr[i+1] == rr[i]) continue; // No entires on this row
       int col = cc[rr[i]];
       if (data[rr[i]] > 0.0) {
