@@ -39,11 +39,12 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Core/Basis/Constant.h>
 #include <Core/Basis/QuadBilinearLgn.h>
-#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Basis/TetLinearLgn.h>
-#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -63,8 +64,8 @@ class InsertElectrodes : public Module {
   typedef SCIRun::CurveMesh<CrvLinearLgn<Point> >                        CMesh;
   typedef SCIRun::CrvLinearLgn<double>                          CFDdoubleBasis;
   typedef SCIRun::GenericField<CMesh, CFDdoubleBasis, vector<double> >  CField;
-  typedef SCIRun::TetLinearLgn<double>                          TFDdoubleBasis;
-  typedef SCIRun::TetLinearLgn<int>                                TFDintBasis;
+  typedef SCIRun::ConstantBasis<double>                         TFDdoubleBasis;
+  typedef SCIRun::ConstantBasis<int>                               TFDintBasis;
   typedef SCIRun::TetVolMesh<TetLinearLgn<Point> >                      TVMesh;
   typedef SCIRun::GenericField<TVMesh, TFDdoubleBasis, 
 			       vector<double> >                       TVFieldD;
