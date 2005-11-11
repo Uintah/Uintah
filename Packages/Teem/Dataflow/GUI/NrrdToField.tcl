@@ -42,13 +42,13 @@ itcl_class Teem_Converters_NrrdToField {
 	global $this-permute
 	global $this-build-eigens
 	global $this-quad-or-tet
-	global $this-struct-unstruct
+	global $this-struct-or-unstruct
 	global $this-datasets
 
 	set $this-permute 0
 	set $this-build-eigens 0
 	set $this-quad-or-tet "Auto"
-	set $this-struct-unstruct "Auto"
+	set $this-struct-or-unstruct "Auto"
 	set $this-datasets ""
     }
 
@@ -94,11 +94,11 @@ itcl_class Teem_Converters_NrrdToField {
 	set pccurve [$w.f.options.pccurve childsite]
 
 	radiobutton $pccurve.auto -text "Auto" \
-	    -variable $this-struct-unstruct -value "Auto"
+	    -variable $this-struct-or-unstruct -value "Auto"
 	radiobutton $pccurve.pc -text "Point Cloud" \
-	    -variable $this-struct-unstruct -value "PointCloud"
+	    -variable $this-struct-or-unstruct -value "PointCloud"
 	radiobutton $pccurve.curve -text "Struct Curve" \
-	    -variable $this-struct-unstruct -value "StructCurve"
+	    -variable $this-struct-or-unstruct -value "StructCurve"
 	pack $pccurve.auto $pccurve.pc $pccurve.curve  -side left -anchor nw -padx 3
 
 	# Input Dataset
