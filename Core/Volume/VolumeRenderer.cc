@@ -29,7 +29,7 @@
 //    Author : Milan Ikits
 //    Date   : Thu Jul  8 00:04:15 2004
 
-#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Volume/VolumeRenderer.h>
 #include <Core/Volume/VolShader.h>
 #include <Core/Geom/ShaderProgramARB.h>

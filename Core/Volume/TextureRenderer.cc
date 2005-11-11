@@ -29,7 +29,7 @@
 //    Author : Milan Ikits
 //    Date   : Wed Jul  7 23:34:20 2004
 
-#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Volume/TextureRenderer.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/Environment.h>

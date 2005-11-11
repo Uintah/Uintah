@@ -1603,267 +1603,14 @@ OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomHandle obj)
 void
 OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
 {
-  drawinfo_->viewwindow = viewwindow;
+  GeomViewerItem *gvi  = dynamic_cast<GeomViewerItem *>(obj.get_rep());
+  ASSERT(gvi)
+  viewwindow->setDI(drawinfo_, gvi->getString());
   obj->draw(drawinfo_, viewer->default_material_.get_rep(), current_time_);
 }
 
 
 
-void
-ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
-{
-  tclID_ = (string) tclID;
-
-  GuiInt useglobal(ctx_->subVar(tclID+"-useglobal", false));
-  if (useglobal.valid() && useglobal.get())
-  {
-    setState(drawinfo, "global");
-    return;
-  }
-
-  GuiString type(ctx_->subVar(tclID+"-type", false));
-  if (type.valid())
-  {
-    if (type.get() == "Default")
-    {
-      // 'Default' should be unreachable now, subsumed by useglobal variable.
-      type.set("Gouraud"); // semi-backwards compatability.
-      setState(drawinfo,"global");
-      return; // if they are using the default, con't change
-    }
-    else if (type.get() == "Wire")
-    {
-    drawinfo->set_drawtype(DrawInfoOpenGL::WireFrame);
-    drawinfo->lighting=0;
-    }
-    else if (type.get() == "Flat")
-    {
-      drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
-      drawinfo->lighting=0;
-    }
-    else if (type.get() == "Gouraud")
-    {
-      drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
-      drawinfo->lighting=1;
-    }
-    else
-    {
-      cerr << "Unknown shading(" << type.get() << "), defaulting to phong\n";
-      drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
-      drawinfo->lighting=1;
-    }
-  }
-
-  // Now see if they want a bounding box.
-  GuiInt debug(ctx_->subVar(tclID+"-debug", false));
-  if (debug.valid())
-    drawinfo->debug = debug.get();
-
-
-  GuiString movieName(ctx_->subVar(tclID+"-movieName", false));
-  if (movieName.valid())
-    renderer_->movie_name_ = movieName.get();
-
-  GuiInt sync(ctx_->subVar(tclID+"-sync_with_execute", false));
-  if (sync.valid()) {
-    renderer_->doing_sync_frame_ = sync.get();
-  }
-
-  GuiInt movie(ctx_->subVar(tclID+"-movie", false));
-  if (movie.valid())
-  {
-    if (!movie.get())
-    {
-      renderer_->doing_movie_p_ = 0;
-      renderer_->make_MPEG_p_ = 0;
-    }
-    else if (!renderer_->doing_movie_p_)
-    {
-      GuiInt movieFrame(ctx_->subVar(tclID+"-movieFrame", false));
-      if (movieFrame.valid())
-        renderer_->current_movie_frame_ = movieFrame.get();
-
-      renderer_->doing_movie_p_ = 1;
-      if (movie.get() == 1)
-        renderer_->make_MPEG_p_ = 0;
-      else if (movie.get() == 2)
-        renderer_->make_MPEG_p_ = 1;
-    }
-  }
-
-  GuiInt clip(ctx_->subVar(tclID+"-clip", false));
-  if (clip.valid())
-  {
-    drawinfo->check_clip = clip.get();
-  }
-  drawinfo->init_clip(); // set clipping
-
-  GuiInt cull(ctx_->subVar(tclID+"-cull", false));
-  if (cull.valid())
-  {
-    drawinfo->cull = cull.get();
-  }
-
-  GuiInt dl(ctx_->subVar(tclID+"-dl", false));
-  if (dl.valid())
-  {
-    drawinfo->dl = dl.get();
-  }
-
-  GuiInt fog(ctx_->subVar(tclID+"-fog", false));
-  if (fog.valid())
-  {
-    drawinfo->fog = fog.get();
-  }
-
-  GuiInt lighting(ctx_->subVar(tclID+"-light", false));
-  if (lighting.valid())
-  {
-    drawinfo->lighting=lighting.get();
-  }
-
-  drawinfo->currently_lit=drawinfo->lighting;
-  drawinfo->init_lighting(drawinfo->lighting);
-}
-
-
-void
-ViewWindow::setMovie( int state )
-{
-  GuiInt movie(ctx_->subVar(tclID_+"-movie",false));
-  if (movie.valid())
-  {
-    movie.set( state );
-    movie.reset();
-    renderer_->doing_movie_p_ = state;
-    renderer_->make_MPEG_p_ = state;
-  }
-}
-
-
-void
-ViewWindow::setMovieFrame( int movieframe )
-{
-  GuiInt movieFrame(ctx_->subVar(tclID_+"-movieFrame",false));
-  if (movieFrame.valid())
-  {
-    movieFrame.set( movieframe );
-    movieFrame.reset();
-  }
-}
-
-
-void
-ViewWindow::setMessage( string message )
-{
-  GuiString movieMessage(ctx_->subVar(tclID_+"-message",false));
-  if (movieMessage.valid())
-  {
-    movieMessage.set( message );
-    movieMessage.reset();
-  }
-}
-
-
-void
-ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
-{
-  map<string,int>::iterator tag_iter = obj_tag_.find(name);
-  if (tag_iter != obj_tag_.end())
-  {
-    // if found
-    setState(drawinfo,to_string((*tag_iter).second));
-  }
-}
-
-
-// Set the bits for the clipping planes that are on.
-void
-ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
-{
-  GuiString val(ctx_->subVar("clip-visible",false));
-  GuiInt clipnum(ctx_->subVar("clip-num",false));
-  int i = clipnum.get();
-
-  drawinfo->clip_planes = 0; // set them all of for default
-  if (val.valid() && clipnum.valid())
-  {
-    int cur_flag = CLIP_P5;
-    if (i > 0 && i < 7)
-    {
-      while(i--)
-      {
-        const string istr = to_string(i+1);
-        GuiInt clip_visible(ctx_->subVar("clip-visible-"+ istr,false));
-                
-        if (!clip_visible.valid()) continue;
-
-        if (!clip_visible.get())
-        {
-          glDisable((GLenum)(GL_CLIP_PLANE0+i));
-        }
-        else
-        {
-          double plane[4];
-          GuiDouble x(ctx_->subVar("clip-normal-x-"+ istr,false));
-          GuiDouble y(ctx_->subVar("clip-normal-y-"+ istr,false));
-          GuiDouble z(ctx_->subVar("clip-normal-z-"+ istr,false));
-          GuiDouble d(ctx_->subVar("clip-normal-d-"+ istr,false));
-
-          if (!x.valid() || !y.valid() || ! z.valid() || !d.valid())
-          {
-            cerr << "Error: clipping plane " << i << " has invalid values.\n";
-            continue;
-          }
-        
-          plane[0] = x.get();
-          plane[1] = y.get();
-          plane[2] = z.get();
-          plane[3] = d.get();
-        
-          double mag = sqrt(plane[0]*plane[0] +
-                            plane[1]*plane[1] +
-                            plane[2]*plane[2]);
-          plane[0] /= mag;
-          plane[1] /= mag;
-          plane[2] /= mag;
-          plane[3] = -plane[3]; // so moves in planes direction...
-
-          glClipPlane((GLenum)(GL_CLIP_PLANE0+i),plane);        
-        
-          if (drawinfo->check_clip)
-            glEnable((GLenum)(GL_CLIP_PLANE0+i));
-          else
-            glDisable((GLenum)(GL_CLIP_PLANE0+i));
-        
-          drawinfo->clip_planes |= cur_flag;
-        }
-        cur_flag >>= 1; // shift the bit we are looking at...
-      }
-    }
-  }
-}
-
-
-void
-ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
-{
-  drawinfo->mouse_action = mouse_action_;
-}
-
-void
-ViewWindow::maybeSaveMovieFrame() {
-  // Check to see if we are doing synchronized movie frames
-  GuiInt sync(ctx_->subVar("global-sync_with_execute", false));
-  if (sync.valid()) {
-    if (sync.get()) {
-      // This doesn't actually cause a redraw, so call redraw after we
-      // tell it that the next frame is synchronized.
-      renderer_->scheduleSyncFrame();
-      redraw();
-    }
-  }
-}
 
 void
 GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
@@ -1871,11 +1618,11 @@ GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
 
   // Here we need to query the ViewWindow with our name and give it our
   // di so it can change things if they need to be.
-  di->viewwindow->setDI(di, name_);
+  //  di->viewwindow->setDI(di, name_);
 
   BBox bb;
   child_->get_bounds(bb);
-  if (!(di->debug && bb.valid()))
+  if (!(di->show_bbox && bb.valid()))
   {
     child_->draw(di,m,time);
   }
@@ -2470,8 +2217,6 @@ OpenGL::render_rotation_axis(const View &view,
       cliplist[ii] = true;
     }
   }
-
-  drawinfo_->viewwindow = view_window_;
 
   // Use depthrange to force the icon to move forward.
   // Ideally the rest of the scene should be drawn at 0.05 1.0,

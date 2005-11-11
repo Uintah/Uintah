@@ -61,6 +61,7 @@ public:
     Point project(const Point& p) const;
     Vector project(const Vector& v) const;
     Vector normal() const;
+    void get(double (&abcd)[4]) const;
 
    // changes the plane ( n and d )
    

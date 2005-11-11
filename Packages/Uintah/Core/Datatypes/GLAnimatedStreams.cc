@@ -1,7 +1,7 @@
 #include "GLAnimatedStreams.h"
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Malloc/Allocator.h>
 #include <GL/gl.h>
 #include <math.h>

@@ -245,5 +245,16 @@ Plane::Intersect(Point s, Vector v, double &t) const
 }
 #endif
 
+
+
+void
+Plane::get(double (&abcd)[4]) const
+{
+  abcd[0] = n.x();
+  abcd[1] = n.y();
+  abcd[2] = n.z();
+  abcd[3] = d;
+}
+
 } // End namespace SCIRun
 

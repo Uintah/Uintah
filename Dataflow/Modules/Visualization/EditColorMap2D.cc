@@ -36,7 +36,11 @@
 #include <Core/Containers/Array3.h>
 #include <Core/Persistent/Pstreams.h>
 
+#include <sci_defs/ogl_defs.h>
 #include <sci_gl.h>
+#include <sci_glu.h>
+#include <sci_glx.h>
+
 #include <Core/Volume/CM2Shader.h>
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Geom/ShaderProgramARB.h>
@@ -44,7 +48,6 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Geom/ColorMap.h>
-#include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Util/Endian.h>
 #include <stdio.h>
@@ -411,6 +414,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
       redraw();
     }
   } else if (args[1] == "redraw") {
+    cerr << "redraw\n";
     histo_dirty_ |= gui_histo_.changed();
     redraw();
   } else if (args[1] == "destroygl") {
@@ -1281,10 +1285,11 @@ EditColorMap2D::draw_texture(GLuint &texture_id)
 void
 EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
 {
-  gui->lock();
+  if (!ctx_) return;
+  ctx_->lock();
 
-  if(!ctx_ || ctx_->width()<3 || ctx_->height()<3 || !ctx_->make_current()) {
-    gui->unlock(); 
+  if(ctx_->width()<3 || ctx_->height()<3 || !ctx_->make_current()) {
+    ctx_->unlock(); 
     return; 
   }
   CHECK_OPENGL_ERROR("dummy")
@@ -1365,8 +1370,10 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   
   ctx_->swap();
   ctx_->release();
-  CHECK_OPENGL_ERROR("dummy")
-  gui->unlock();
+  CHECK_OPENGL_ERROR("dummy");
+  cerr << "Drew\n";
+  ctx_->unlock();
+  cerr << "Drew down\n";
 }
 
 void

@@ -30,7 +30,7 @@
 //    Date   : Thu Jul  8 00:04:15 2004
 
 #include <Core/Datatypes/ImageField.h>
-#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Volume/FlowRenderer2D.h>
 #include <Core/Volume/VolShader.h>

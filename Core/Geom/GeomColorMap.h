@@ -43,9 +43,6 @@
 #ifndef SCI_Geom_GeomColorMap_h 
 #define SCI_Geom_GeomColorMap_h 1
 
-#ifdef SCI_OPENGL
-#include <Core/Geom/GeomOpenGL.h>
-#endif
 #include <Core/Geom/GeomContainer.h>
 #include <Core/Geom/ColorMap.h>
 

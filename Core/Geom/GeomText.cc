@@ -442,13 +442,17 @@ GeomTextTexture::build_transform(Transform &modelview) {
   xform_to_origin.post_translate(xlat2);
 
   Transform xform_rotate;
-  Vector normal = Cross(left_,up_).normal(), left = left_.normal(), up = up_.normal();
+  Vector normal = Cross(left_,up_).normal();
+  Vector left = left_.normal();
+  Vector up = up_.normal();
   Vector x(1.,0.,0), y(0.,1.,0.), z(0.,0.,1.);
   double dx, dy, dz;
   bool done = false;
   while (!done) {
     done = true;
-    dx = fabs(Dot(left, x.normal())), dy = fabs(Dot(up,y.normal())), dz = fabs(Dot(normal, z.normal()));
+    dx = fabs(Dot(left, x.normal()));
+    dy = fabs(Dot(up,y.normal()));
+    dz = fabs(Dot(normal, z.normal()));
     if (dx < 0.999 && dx <= dy && dx <= dz) {
       xform_rotate.rotate(x, left);
       done = false;
@@ -464,10 +468,12 @@ GeomTextTexture::build_transform(Transform &modelview) {
     xform_rotate.project(Vector(0.,0.,1.),z);
   }
 
-
   //std::cerr << text_ << ": origin: " << origin_ << "  left: " << left_ << "  up: " << up_ << " normal: " << normal << " x: " << x << " y: " << y << " z: " << z << " dx: " << dx << " dy: " << dy << " dz: " << dz << std::endl;
   Transform xform_scale;
-  Vector scales (Dot(left, x.normal()), Dot(up,y.normal()), Dot(normal, z.normal()));
+  Vector scales (Dot(left, x.normal()), 
+		 Dot(up,y.normal()),
+		 Dot(normal, z.normal()));
+
   scales /= ury-lly;
   scales *= up_.length();
   xform_scale.post_scale(scales);

@@ -43,9 +43,6 @@
 #ifndef SCI_Geom_GeomDL_h 
 #define SCI_Geom_GeomDL_h 1
 
-#ifdef SCI_OPENGL
-#include <Core/Geom/GeomOpenGL.h>
-#endif
 #include <Core/Geom/GeomContainer.h>
 
 #include <list>

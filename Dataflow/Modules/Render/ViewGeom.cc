@@ -40,7 +40,6 @@
  */
 
 
-#include <Core/Geom/GeomOpenGL.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/BBoxCache.h>
 #include <Core/Thread/CrowdMonitor.h>

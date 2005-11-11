@@ -63,7 +63,7 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Geom/GeomObj.h>
-#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Geom/Light.h>
 #include <Core/Geom/Lighting.h>
 #include <Core/Geom/GeomRenderMode.h>
