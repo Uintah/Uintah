@@ -126,7 +126,44 @@ public:
 
   void get_normal(Vector &,
 		  const typename ImageMesh<Basis>::Node::index_type &) const;
+  
+  void get_normal(Vector &result, vector<double> &coords, 
+		  typename ImageMesh<Basis>::Elem::index_type eidx) 
+  {
+    if (basis_.polynomial_order() < 2) {
+      typename Node::array_type arr(3);
+      get_nodes(arr, eidx);
 
+      const double c0_0 = fabs(coords[0]);
+      const double c1_0 = fabs(coords[1]);
+      const double c0_1 = fabs(coords[0] - 1.0L);
+      const double c1_1 = fabs(coords[1] - 1.0L);
+
+      if (c0_0 < 1e-7 && c1_0 < 1e-7) {
+	// arr[0]
+	result = normals_(arr[0].i_, arr[0].j_);
+	return;
+      } else if (c0_1 < 1e-7 && c1_0 < 1e-7) {
+	// arr[1]
+	result = normals_(arr[1].i_, arr[1].j_);
+	return;
+      } else if (c0_1 < 1e-7 && c1_1 < 1e-7) {
+	// arr[2]
+	result = normals_(arr[2].i_, arr[2].j_);
+	return;
+      } else if (c0_0 < 1e-7 && c1_1 < 1e-7) {
+	// arr[3]
+	result = normals_(arr[3].i_, arr[3].j_);
+	return;
+      }
+    }
+
+    ElemData ed(*this, eidx);
+    vector<Point> Jv;
+    this->basis_.derivate(coords, ed, Jv);
+    result = Cross(Jv[0].asVector(), Jv[1].asVector());
+    result.normalize();
+  }
   //! get the center point (in object space) of an element
   void get_center(Point &,
 		  const typename ImageMesh<Basis>::Node::index_type &) const;
@@ -410,6 +447,8 @@ StructQuadSurfMesh<Basis>::get_normal(Vector &result,
 {
   result = normals_(idx.i_, idx.j_);
 }
+
+
 
 template <class Basis>
 void

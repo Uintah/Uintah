@@ -207,6 +207,10 @@ PROGRAM := $(SRCDIR)/UCSDToHexVol
 SRCS := $(SRCDIR)/UCSDToHexVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/UCSD_HO_edge_sfToHexVol
+SRCS := $(SRCDIR)/UCSD_HO_edge_sfToHexVol.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/VistaToNrrd
 SRCS := $(SRCDIR)/VistaToNrrd.cc
 include $(SCIRUN_SCRIPTS)/program.mk

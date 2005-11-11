@@ -266,8 +266,10 @@ public:
   { ASSERTFAIL("ScanlineMesh::get_weights for cells isn't supported"); }
 
   void get_point(Point &p, typename Node::index_type i) const { get_center(p, i); }
-  void get_normal(Vector &/*normal*/, typename Node::index_type /*index*/) const
-  { ASSERTFAIL("not implemented") }
+  void get_normal(Vector &, typename Node::index_type) const
+  { ASSERTFAIL("not implemented"); }
+  void get_normal(Vector &, vector<double> &, typename Elem::index_type) 
+  { ASSERTFAIL("not implemented"); }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

@@ -33,6 +33,7 @@
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTricubicHmt.h>
 #include <Core/Basis/HexTricubicHmtScaleFactors.h>
+#include <Core/Basis/HexTricubicHmtScaleFactorsEdges.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
@@ -194,6 +195,9 @@ typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> > HVCubSFMesh;
 template class GenericField<HVCubSFMesh, NDBasis, vector<double> >; 
 template class GenericField<HVCubSFMesh, HTCSFdoubleBasis, vector<double> >; 
 template class GenericField<HVCubSFMesh, HTCSFVectorBasis, vector<Vector> >; 
+
+typedef HexVolMesh<HexTricubicHmtScaleFactorsEdges<Point> > HVCubSFEMesh;
+template class GenericField<HVCubSFEMesh, NDBasis, vector<double> >; 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

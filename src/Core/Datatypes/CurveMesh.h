@@ -318,7 +318,9 @@ public:
 
   void get_normal(Vector & /* result */, 
 		  typename Node::index_type /* index */) const
-  { ASSERTFAIL("not implemented") }
+  { ASSERTFAIL("not implemented"); }
+  void get_normal(Vector &, vector<double> &, typename Elem::index_type) 
+  { ASSERTFAIL("not implemented"); }
 
   //! use these to build up a new contour mesh
   typename Node::index_type add_node(const Point &p)
