@@ -226,7 +226,9 @@ ViewWindow::itemAdded(GeomViewerItem* si)
   const string &name = si->name_;
   map<string,GuiInt*>::iterator gui_iter = visible_.find(name);
   if(gui_iter==visible_.end()){
+    gui_->lock();
     visible_.insert(make_pair(name,scinew GuiInt(ctx_->subVar(name))));
+    gui_->unlock();
     if (!visible_[name]->valid()) 
       visible_[name]->set(1);
     obj_tag_[name] = maxtag_++;
@@ -1697,8 +1699,9 @@ void
 ViewWindow::redraw()
 {
   need_redraw_=0;
+  gui_->lock();
   ctx_->reset(); // Get animation variables
-
+  gui_->unlock();
   double ct = gui_current_time_.get();
   // Find out whether to draw the axes or not.  Generally, this is handled
   //  in the centerGenAxes case of the tcl_command, but for the first redraw
@@ -1713,7 +1716,9 @@ void
 ViewWindow::redraw(double tbeg, double tend, int nframes, double framerate)
 {
   need_redraw_=0;
-  ctx_->reset();   // Get animation variables
+  gui_->lock();
+  ctx_->reset(); // Get animation variables
+  gui_->unlock();
   renderer_->redraw(tbeg, tend, nframes, framerate);
 }
 
@@ -1908,11 +1913,12 @@ void
 ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 {
   tclID_ = (string) tclID;
-
+  gui_->lock();
   GuiInt useglobal(ctx_->subVar(tclID+"-useglobal", false));
   if (useglobal.valid() && useglobal.get())
   {
     setState(drawinfo, "global");
+    gui_->unlock();
     return;
   }
 
@@ -1924,6 +1930,7 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
       // 'Default' should be unreachable now, subsumed by useglobal variable.
       type.set("Gouraud"); // semi-backwards compatability.
       setState(drawinfo,"global");
+      gui_->unlock();
       return; // if they are using the default, con't change
     }
     else if (type.get() == "Wire")
@@ -2020,12 +2027,14 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 
   drawinfo->currently_lit=drawinfo->lighting;
   drawinfo->init_lighting(drawinfo->lighting);
+  gui_->unlock();
 }
 
 
 void
 ViewWindow::setMovie( int state )
 {
+  gui_->lock();
   GuiInt movie(ctx_->subVar(tclID_+"-movie",false));
   if (movie.valid())
   {
@@ -2034,42 +2043,49 @@ ViewWindow::setMovie( int state )
     renderer_->doing_movie_p_ = state;
     renderer_->make_MPEG_p_ = state;
   }
+  gui_->unlock();
 }
 
 
 void
 ViewWindow::setMovieFrame( int movieframe )
 {
+  gui_->lock();
   GuiInt movieFrame(ctx_->subVar(tclID_+"-movieFrame",false));
   if (movieFrame.valid())
   {
     movieFrame.set( movieframe );
     movieFrame.reset();
   }
+  gui_->unlock();
 }
 
 
 void
 ViewWindow::setMessage( string message )
 {
+  gui_->lock();
   GuiString movieMessage(ctx_->subVar(tclID_+"-message",false));
   if (movieMessage.valid())
   {
     movieMessage.set( message );
     movieMessage.reset();
   }
+  gui_->unlock();
 }
 
 
 void
 ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 {
+  gui_->lock();
   map<string,int>::iterator tag_iter = obj_tag_.find(name);
   if (tag_iter != obj_tag_.end())
   {
     // if found
     setState(drawinfo,to_string((*tag_iter).second));
   }
+  gui_->unlock();
 }
 
 
@@ -2077,6 +2093,7 @@ ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 void
 ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
 {
+  gui_->lock();
   GuiString visible(ctx_->subVar("clip-visible",false));
   if (visible.valid()) {
     drawinfo->clip_planes = 0; // reset to 0
@@ -2098,6 +2115,7 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
     }
   }
   drawinfo->init_clip();
+  gui_->unlock();
 }
 
 
@@ -2109,6 +2127,7 @@ ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
 
 void
 ViewWindow::maybeSaveMovieFrame() {
+  gui_->lock();
   // Check to see if we are doing synchronized movie frames
   GuiInt sync(ctx_->subVar("global-sync_with_execute", false));
   if (sync.valid()) {
@@ -2119,6 +2138,7 @@ ViewWindow::maybeSaveMovieFrame() {
       redraw();
     }
   }
+  gui_->unlock();
 }
 
 
