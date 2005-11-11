@@ -1187,7 +1187,8 @@ template <class Basis>
 bool
 TriSurfMesh<Basis>::synchronize(unsigned int tosync)
 {
-  if (tosync & EDGES_E && !(synchronized_ & EDGES_E))
+  if (tosync & EDGES_E && !(synchronized_ & EDGES_E) ||
+      tosync & LOCATE_E && !(synchronized_ & EDGES_E))
     compute_edges();
   if (tosync & NORMALS_E && !(synchronized_ & NORMALS_E)) 
     compute_normals();
