@@ -45,9 +45,18 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/StructQuadSurfField.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+
+#include <Core/Containers/FData.h>
+
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/StructQuadSurfMesh.h>
+
+#include <Core/Datatypes/GenericField.h>
 
 #include <sstream>
 using std::ostringstream;
@@ -56,6 +65,21 @@ namespace Fusion {
 
 using namespace std;
 using namespace SCIRun;
+
+typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
+typedef CrvLinearLgn<double>            CDatBasis;
+typedef GenericField<CMesh, CDatBasis, vector<double> > CSField;
+typedef GenericField<CMesh, CDatBasis, vector<Vector> > CVField;
+
+typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQSMesh;
+typedef QuadBilinearLgn<double>                     SQSDatBasis;
+typedef GenericField<SQSMesh, SQSDatBasis, FData2d<double,SQSMesh> > SQSSField;
+typedef GenericField<SQSMesh, SQSDatBasis, FData2d<Vector,SQSMesh> > SQSVField;
+
+typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+typedef ConstantBasis<double>                 PCDatBasis;
+typedef GenericField<PCMesh, PCDatBasis, vector<double> > PCField;  
+
 
 class StreamlineAnalyzerAlgo : public DynamicAlgoBase
 {
@@ -77,13 +101,14 @@ public:
 		       unsigned int > > &topology ) = 0;
   
   //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *iftd,
-					    const TypeDescription *tftd,
-					    const string otd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
+					    const TypeDescription *mtd,
+					    const TypeDescription *btd,
+					    const TypeDescription *dtd);
 };
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 class StreamlineAnalyzerAlgoT : public StreamlineAnalyzerAlgo
 {
 public:
@@ -185,9 +210,9 @@ protected:
 };
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
-class StreamlineAnalyzerAlgoScalar :
-  public StreamlineAnalyzerAlgoT< IFIELD, OFIELD, PCFIELD, TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
+class StreamlineAnalyzerAlgoTScalar :
+  public StreamlineAnalyzerAlgoT< IFIELD, OFIELD, PCFIELD >
 {
 protected:  
   virtual void
@@ -214,9 +239,9 @@ protected:
 
 };
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
-class StreamlineAnalyzerAlgoVector :
-  public StreamlineAnalyzerAlgoT< IFIELD, OFIELD, PCFIELD, TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
+class StreamlineAnalyzerAlgoTVector :
+  public StreamlineAnalyzerAlgoT< IFIELD, OFIELD, PCFIELD >
 {
 protected:  
   virtual void
@@ -243,9 +268,9 @@ protected:
 };
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 void
-StreamlineAnalyzerAlgoScalar<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoTScalar<IFIELD, OFIELD, PCFIELD>::
 loadCurve( FieldHandle &field_h,
 	   vector < pair< Point, double > > &nodes,
 	   unsigned int nplanes,
@@ -256,27 +281,26 @@ loadCurve( FieldHandle &field_h,
 	   unsigned int color,
 	   double color_value ) {
 
-  CurveField<TYPE> *ofield = (CurveField<TYPE> *) field_h.get_rep();
-  typename CurveField<TYPE>::mesh_handle_type omesh = ofield->get_typed_mesh();
-
-  typename CurveField<TYPE>::mesh_type::Node::index_type n1, n2;
+  CSField *ofield = (CSField *) field_h.get_rep();
+  typename CSField::mesh_handle_type omesh = ofield->get_typed_mesh();
+  typename CSField::mesh_type::Node::index_type n1, n2;
 
   n1 = omesh->add_node(nodes[0].first);
   ofield->resize_fdata();
   if( color == 0 )
     ofield->set_value( nodes[0].second, n1);
   else if( color == 1 )
-    ofield->set_value( (TYPE) color_value, n1);
+    ofield->set_value( (double) color_value, n1);
   else if( color == 2 )
-    ofield->set_value( (TYPE) (0*nbins+bin), n1);
+    ofield->set_value( (double) (0*nbins+bin), n1);
   else if( color == 3 )
-    ofield->set_value( (TYPE) color_value, n1);
+    ofield->set_value( (double) color_value, n1);
   else if( color == 4 )
-    ofield->set_value( (TYPE) bin, n1);
+    ofield->set_value( (double) bin, n1);
   else if( color == 5 )
-    ofield->set_value( (TYPE) 0, n1);
+    ofield->set_value( (double) 0, n1);
   else
-    ofield->set_value( (TYPE) color_value, n1);
+    ofield->set_value( (double) color_value, n1);
   
   for( unsigned int i=1; i<nnodes; i++ ) {
     n2 = omesh->add_node(nodes[i].first);
@@ -285,17 +309,17 @@ loadCurve( FieldHandle &field_h,
     if( color == 0 )
       ofield->set_value(nodes[i].second, n2);
     else if( color == 1 )
-      ofield->set_value( (TYPE) color_value, n2);
+      ofield->set_value( (double) color_value, n2);
     else if( color == 2 )
-      ofield->set_value( (TYPE) (i*nbins+bin), n2);
+      ofield->set_value( (double) (i*nbins+bin), n2);
     else if( color == 3 )
-      ofield->set_value( (TYPE) color_value, n2);
+      ofield->set_value( (double) color_value, n2);
     else if( color == 4 )
-      ofield->set_value( (TYPE) bin, n2);
+      ofield->set_value( (double) bin, n2);
     else if( color == 5 )
-      ofield->set_value( (TYPE) i, n2);
+      ofield->set_value( (double) i, n2);
     else
-      ofield->set_value( (TYPE) color_value, n2);
+      ofield->set_value( (double) color_value, n2);
     
     omesh->add_edge(n1, n2);
 	      
@@ -304,9 +328,9 @@ loadCurve( FieldHandle &field_h,
 }
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 void
-StreamlineAnalyzerAlgoScalar<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoTScalar<IFIELD, OFIELD, PCFIELD>::
 loadSurface( FieldHandle &field_h,
 	     vector < pair< Point, double > > &nodes,
 	     unsigned int nplanes,
@@ -317,12 +341,9 @@ loadSurface( FieldHandle &field_h,
 	     unsigned int color,
 	     double color_value ) {
   
-  StructQuadSurfField<TYPE> *ofield =
-    (StructQuadSurfField<TYPE> *) field_h.get_rep();
-  typename StructQuadSurfField<TYPE>::mesh_handle_type omesh =
-    ofield->get_typed_mesh();
-
-  typename StructQuadSurfField<TYPE>::mesh_type::Node::index_type n1;
+  SQSSField *ofield = (SQSSField *) field_h.get_rep();
+  typename SQSSField::mesh_handle_type omesh = ofield->get_typed_mesh();
+  typename SQSSField::mesh_type::Node::index_type n1;
 
   n1.mesh_ = omesh.get_rep();
 
@@ -337,23 +358,23 @@ loadSurface( FieldHandle &field_h,
     if( color == 0 )
       ofield->set_value( nodes[i].second, n1);
     else if( color == 1 )
-      ofield->set_value( (TYPE) color_value, n1);
+      ofield->set_value( (double) color_value, n1);
     else if( color == 2 )
-      ofield->set_value( (TYPE) (i*nbins+bin), n1);
+      ofield->set_value( (double) (i*nbins+bin), n1);
     else if( color == 3 )
-      ofield->set_value( (TYPE) color_value, n1);
+      ofield->set_value( (double) color_value, n1);
     else if( color == 4 )
-      ofield->set_value( (TYPE) bin, n1);
+      ofield->set_value( (double) bin, n1);
     else if( color == 5 )
-      ofield->set_value( (TYPE) i, n1);
+      ofield->set_value( (double) i, n1);
     else
-      ofield->set_value( (TYPE) color_value, n1);
+      ofield->set_value( (double) color_value, n1);
   }
 }
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 void
-StreamlineAnalyzerAlgoVector<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoTVector<IFIELD, OFIELD, PCFIELD>::
 loadCurve( FieldHandle &field_h,
 	   vector < pair< Point, double > > &nodes,
 	   unsigned int nplanes,
@@ -367,10 +388,9 @@ loadCurve( FieldHandle &field_h,
   if( nnodes < 2 )
     return;
 
-  CurveField<TYPE> *ofield = (CurveField<TYPE> *) field_h.get_rep();
-  typename CurveField<TYPE>::mesh_handle_type omesh = ofield->get_typed_mesh();
-
-  typename CurveField<TYPE>::mesh_type::Node::index_type n1, n2;
+  CSField *ofield = (CSField *) field_h.get_rep();
+  typename CSField::mesh_handle_type omesh = ofield->get_typed_mesh();
+  typename CSField::mesh_type::Node::index_type n1, n2;
 
   Vector tangent(1,1,1);
 
@@ -396,7 +416,7 @@ loadCurve( FieldHandle &field_h,
   else
     tangent *= color_value;
  
-  ofield->set_value( (TYPE) tangent, n1);
+  ofield->set_value( (Vector) tangent, n1);
   
   for( i=1; i<nnodes-1; i++ ) {
     n2 = omesh->add_node(nodes[i].first);
@@ -420,7 +440,7 @@ loadCurve( FieldHandle &field_h,
     else
       tangent *= color_value;
  
-    ofield->set_value( (TYPE) tangent, n2);
+    ofield->set_value( (Vector) tangent, n2);
     
     omesh->add_edge(n1, n2);
 	      
@@ -447,15 +467,15 @@ loadCurve( FieldHandle &field_h,
   else
     tangent *= color_value;
  
-  ofield->set_value( (TYPE) tangent, n2);
+  ofield->set_value( (Vector) tangent, n2);
     
   omesh->add_edge(n1, n2);	      
 }
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 void
-StreamlineAnalyzerAlgoVector<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoTVector<IFIELD, OFIELD, PCFIELD>::
 loadSurface( FieldHandle &field_h,
 	     vector < pair< Point, double > > &nodes,
 	     unsigned int nplanes,
@@ -469,12 +489,9 @@ loadSurface( FieldHandle &field_h,
   if( nnodes < 2 )
     return;
 
-  StructQuadSurfField<TYPE> *ofield =
-    (StructQuadSurfField<TYPE> *) field_h.get_rep();
-  typename StructQuadSurfField<TYPE>::mesh_handle_type omesh =
-    ofield->get_typed_mesh();
-
-  typename StructQuadSurfField<TYPE>::mesh_type::Node::index_type n1;
+  SQSVField *ofield = (SQSVField *) field_h.get_rep();
+  typename SQSVField::mesh_handle_type omesh = ofield->get_typed_mesh();
+  typename SQSVField::mesh_type::Node::index_type n1;
 
   n1.mesh_ = omesh.get_rep();
 
@@ -503,7 +520,7 @@ loadSurface( FieldHandle &field_h,
   else
     tangent *= color_value;
  
-  ofield->set_value( (TYPE) tangent, n1);
+  ofield->set_value( (Vector) tangent, n1);
 
   for( unsigned int i=1; i<nnodes-1; i++ ) {
 
@@ -529,7 +546,7 @@ loadSurface( FieldHandle &field_h,
     else
       tangent *= color_value;
  
-    ofield->set_value( (TYPE) tangent, n1);
+    ofield->set_value( (Vector) tangent, n1);
   }
 
   n1.i_ = i;
@@ -553,13 +570,13 @@ loadSurface( FieldHandle &field_h,
   else
     tangent *= color_value;
  
-  ofield->set_value( (TYPE) tangent, n1);
+  ofield->set_value( (Vector) tangent, n1);
 }
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 double
-StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
 SafetyFactor( vector< Point >& points, unsigned int maxWindings,
 	      pair< unsigned int, unsigned int > &safetyFactor,
 	      pair< unsigned int, unsigned int > &safetyFactor2 ) {
@@ -640,9 +657,9 @@ SafetyFactor( vector< Point >& points, unsigned int maxWindings,
 }
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 double
-StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
 CentroidCheck2( vector< Point >& points, unsigned int nbins,
 		pair< unsigned int, unsigned int > &safetyFactor ) {
 
@@ -693,9 +710,9 @@ CentroidCheck2( vector< Point >& points, unsigned int nbins,
 }
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 double
-StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
 CentroidCheck( vector< Point >& points, unsigned int nbins,
 	       pair< unsigned int, unsigned int > &safetyFactor ) {
 
@@ -785,9 +802,9 @@ CentroidCheck( vector< Point >& points, unsigned int nbins,
   return stddev;
 }
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 bool
-StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
 BoundingBoxCheck( vector< Point >& points, unsigned nbins ) {
 
   unsigned int n = points.size();
@@ -821,9 +838,9 @@ BoundingBoxCheck( vector< Point >& points, unsigned nbins ) {
 }
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 pair< pair< double, double >, pair< double, double > >
-StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
 FingerCheck( vector< Point >& points, unsigned int nbins ) {
 
   double dotProdAveLength = 0;
@@ -895,9 +912,9 @@ FingerCheck( vector< Point >& points, unsigned int nbins ) {
 }
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 void
-StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
 execute(FieldHandle& ifield_h,
 	FieldHandle& ofield_h,
 	FieldHandle& ipccfield_h,
@@ -916,12 +933,13 @@ execute(FieldHandle& ifield_h,
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
 
   typename OFIELD::mesh_type *omesh = scinew typename OFIELD::mesh_type();
-  OFIELD *ofield = scinew OFIELD(omesh, ifield->basis_order());
+  OFIELD *ofield = scinew OFIELD(omesh);
 
   ofield_h = FieldHandle(ofield);
 
   bool curveField =
-    (ofield->get_type_description(0)->get_name() == "CurveField");
+    (ofield->get_type_description(1)->get_name().find("Curve") !=
+     string::npos );
 
 
   // Point Cloud Field of centroids.
@@ -952,7 +970,7 @@ execute(FieldHandle& ifield_h,
   }
 
   typename PCFIELD::mesh_type *opccmesh = scinew typename PCFIELD::mesh_type();
-  PCFIELD *opccfield = scinew PCFIELD(opccmesh, ifield->basis_order());
+  PCFIELD *opccfield = scinew PCFIELD(opccmesh);
 
   opccfield_h = FieldHandle(opccfield);
 
@@ -984,7 +1002,7 @@ execute(FieldHandle& ifield_h,
   }
 
   typename PCFIELD::mesh_type *opcsmesh = scinew typename PCFIELD::mesh_type();
-  PCFIELD *opcsfield = scinew PCFIELD(opcsmesh, ifield->basis_order());
+  PCFIELD *opcsfield = scinew PCFIELD(opcsmesh);
 
   opcsfield_h = FieldHandle(opcsfield);
 
@@ -1708,7 +1726,7 @@ execute(FieldHandle& ifield_h,
 	dims[0] = nnodes;
 	dims[1] = (planes.size()+1) * windings[c];
       
-	((StructQuadSurfMesh *) omesh)->set_dim( dims );
+	((SQSMesh *) omesh)->set_dim( dims );
 
 	ofield->resize_fdata();
       }
@@ -1784,7 +1802,7 @@ execute(FieldHandle& ifield_h,
 
 	  for( unsigned int i=0; i<windings[c]; i++ ) {
 	    // Centroids
-	    n = opccmesh->add_point((Point) localCentroids[i]);
+	    n = opccmesh->add_node((Point) localCentroids[i]);
 	    opccfield->resize_fdata();
 	    opccfield->set_value( windings[c], n);
 
@@ -1805,18 +1823,18 @@ execute(FieldHandle& ifield_h,
 	    else
 	      ii = 1;
 
-	    n = opcsmesh->add_point((Point) ((localSeparatrices[ii][i] +
-					      localSeparatrices[jj][j])/2.0));
+	    n = opcsmesh->add_node((Point) ((localSeparatrices[ii][i] +
+					     localSeparatrices[jj][j])/2.0));
 
  	    opcsfield->resize_fdata();
 // 	    opcsfield->set_value( (double) windings[c], n);
  	    opcsfield->set_value( (double) n, n);
 
-//  	    n = opcsmesh->add_point((Point) localSeparatrices[0][i]);
+//  	    n = opcsmesh->add_node((Point) localSeparatrices[0][i]);
 // 	    opcsfield->resize_fdata();
 // 	    opcsfield->set_value(0, n);
 
-//  	    n = opcsmesh->add_point((Point) localSeparatrices[1][j]);
+//  	    n = opcsmesh->add_node((Point) localSeparatrices[1][j]);
 // 	    opcsfield->resize_fdata();
 // 	    opcsfield->set_value(1, n);
 
@@ -1830,6 +1848,7 @@ execute(FieldHandle& ifield_h,
 	// Add the points into the return field.
 	for( unsigned int p=0; p<planes.size(); p++ ) {
 	  for( unsigned int i=0; i<windings[c]; i++ ) {
+
 	    lock.lock();
 
 	    if( curveField )
@@ -1915,7 +1934,7 @@ execute(FieldHandle& ifield_h,
 	}
       }
 
-      n = opccmesh->add_point((Point) newCentroid[index]);
+      n = opccmesh->add_node((Point) newCentroid[index]);
       
       opccfield->resize_fdata();
 
@@ -1941,9 +1960,9 @@ execute(FieldHandle& ifield_h,
 	
 // // 	cerr << tmpCentroid << endl;
 
-// 	n = opcmesh->add_point((Point) tmpCentroid);
+// 	n = opcmesh->add_node((Point) tmpCentroid);
 //       } else {
-// 	n = opcmesh->add_point((Point) baseCentroids[i][0]);
+// 	n = opcmesh->add_node((Point) baseCentroids[i][0]);
 //       }
 
 //       opcfield->resize_fdata();
@@ -1955,9 +1974,9 @@ execute(FieldHandle& ifield_h,
 
 
 
-template< class IFIELD, class OFIELD, class PCFIELD, class TYPE >
+template< class IFIELD, class OFIELD, class PCFIELD >
 unsigned int
-StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD, TYPE>::
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
 removeOverlaps( vector< vector < pair< Point, double > > > &bins,
 		unsigned int &nnodes,
 		unsigned int winding,
