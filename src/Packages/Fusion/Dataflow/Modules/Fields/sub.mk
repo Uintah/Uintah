@@ -41,10 +41,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 
 SRCS     += \
-	$(SRCDIR)/IsoValueController.cc\
-	$(SRCDIR)/StreamlineAnalyzer.cc\
-	$(SRCDIR)/NIMRODConverter.cc\
-	$(SRCDIR)/VULCANConverter.cc\
+	$(SRCDIR)/IsoValueController.cc \
+	$(SRCDIR)/NIMRODConverter.cc \
+	$(SRCDIR)/StreamlineAnalyzer.cc \
+	$(SRCDIR)/VULCANConverter.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Persistent Core/Containers Core/Util \

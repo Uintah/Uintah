@@ -47,48 +47,17 @@
 
 #include <Core/Datatypes/FieldInterface.h>
 
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/QuadSurfField.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
 
 #include <Core/Containers/StringUtil.h>
 
+#include <Packages/Fusion/Dataflow/Modules/Fields/IsoValueController.h>
 
 namespace Fusion {
 
 using namespace SCIRun;
-
-class IsoValueController : public Module {
-public:
-  IsoValueController(GuiContext*);
-
-  virtual ~IsoValueController();
-
-  virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
-
-private:
-  GuiString IsoValueStr_;
-
-  int nvalues_;
-  vector< double > isovalues_;
-
-  double prev_min_;
-  double prev_max_;
-  int last_generation_;
- 
-  MatrixHandle mHandleIsoValue_;
-  MatrixHandle mHandleIndex_;
-
-  FieldHandle fHandle_;
-  FieldHandle fHandle_N_1D_;
-  FieldHandle fHandle_ND_;
-  GeomHandle  gHandle_;
-
-  bool error_;
-};
-
 
 DECLARE_MAKER(IsoValueController)
 IsoValueController::IsoValueController(GuiContext* context)
@@ -304,31 +273,14 @@ void IsoValueController::execute() {
   }
 
 
+  // Copy the name of field to the downstream field.
+  string fldname;
+  if (!fHandle_->get_property("name",fldname))
+    fldname = string("Isosurface");
+
+
   // Output field.
   if (fHandles_N_1D.size() && fHandles_N_1D[0].get_rep()) {
-
-    FieldOPort *ofieldN_1D_port = (FieldOPort *)get_oport("(N-1)D Fields");
-    if (!ofieldN_1D_port) {
-      error("Unable to initialize oport '(N-1)D Fields'.");
-      return;
-    }
-
-    FieldOPort *ofieldND_port = (FieldOPort *)get_oport("(N)D Fields");
-    if (!ofieldND_port) {
-      error("Unable to initialize oport '(N)D Fields'.");
-      return;
-    }
-
-    GeometryOPort *ogeometry_port = (GeometryOPort *)get_oport("Axis Geometry");
-    if (!ogeometry_port) {
-      error("Unable to initialize oport 'Axis Geometry'.");
-      return;
-    }
-
-    // Copy the name of field to the downstream field.
-    string fldname;
-    if (!fHandle_->get_property("name",fldname))
-      fldname = string("Isosurface");
 
     for (unsigned int i=0; i<fHandles_N_1D.size(); i++) {
       fHandles_N_1D[i]->set_property("name",fldname, false);
@@ -337,58 +289,55 @@ void IsoValueController::execute() {
 
     // Single field.
     if (fHandles_N_1D.size() == 1) {
-      ofieldN_1D_port->send(fHandles_N_1D[0]);
-      ofieldND_port->send(fHandles_ND[0]);
+
+      fHandle_N_1D_ = fHandles_N_1D[0];
+      fHandle_ND_   = fHandles_ND[0];
 
     // Multiple fields.
     } else {
-      const TypeDescription *mtd = fHandles_N_1D[0]->get_type_description(0);
-      
-      if( mtd->get_name() == "TriSurfField" ) {
-	vector<TriSurfField<double> *> tfields_N_1D(fHandles_N_1D.size());
-	vector<TriSurfField<double> *> tfields_ND(fHandles_ND.size());
-	for (unsigned int i=0; i<fHandles_N_1D.size(); i++) {
-	  tfields_N_1D[i] = (TriSurfField<double> *)(fHandles_N_1D[i].get_rep());
-	  tfields_ND[i] = (TriSurfField<double> *)(fHandles_ND[i].get_rep());
-	}
+      const TypeDescription *ftd = fHandles_N_1D[0]->get_type_description();
+      CompileInfoHandle ci = IsoValueControllerAlgo::get_compile_info(ftd);
+	
+      Handle<IsoValueControllerAlgo> algo;
+      if (!module_dynamic_compile(ci, algo)) return;
+	
+      algo->execute(fHandles_N_1D, fHandles_ND,
+		    fHandle_N_1D_, fHandle_ND_ );
+    }
+  }
 
-	ofieldN_1D_port->send(append_fields(tfields_N_1D));
-	ofieldND_port->send(append_fields(tfields_ND));
 
-      } else if( mtd->get_name() == "CurveField" ) {
+  if (fHandles_N_1D.size() && fHandles_N_1D[0].get_rep()) {
 
-	vector<CurveField<double> *> cfields_N_1D(fHandles_N_1D.size());
-	vector<CurveField<double> *> cfields_ND(fHandles_ND.size());
-	for (unsigned int i=0; i<fHandles_N_1D.size(); i++) {
-	  cfields_N_1D[i] = (CurveField<double> *)(fHandles_N_1D[i].get_rep());
-	  cfields_ND[i] = (CurveField<double> *)(fHandles_ND[i].get_rep());
-	}
-
-	ofieldN_1D_port->send(append_fields(cfields_N_1D));
-	ofieldND_port->send(append_fields(cfields_ND));
-
-      } else if( mtd->get_name() == "QuadSurfField" ) {
-
-	vector<QuadSurfField<double> *> qfields_N_1D(fHandles_N_1D.size());
-	vector<QuadSurfField<double> *> qfields_ND(fHandles_ND.size());
-	for (unsigned int i=0; i<fHandles_N_1D.size(); i++) {
-	  qfields_N_1D[i] = (QuadSurfField<double> *)(fHandles_N_1D[i].get_rep());
-	  qfields_ND[i] = (QuadSurfField<double> *)(fHandles_ND[i].get_rep());
-	}
-
-	ofieldN_1D_port->send(append_fields(qfields_N_1D));
-	ofieldND_port->send(append_fields(qfields_ND));
-
-      } else {
-	warning("Unable to append field: " + mtd->get_name() );
-	ofieldN_1D_port->send(fHandles_N_1D[0]);
-	ofieldND_port->send(fHandles_ND[0]);
-      }
+    FieldOPort *ofieldN_1D_port = (FieldOPort *)get_oport("(N-1)D Fields");
+    if (!ofieldN_1D_port) {
+      error("Unable to initialize oport '(N-1)D Fields'.");
+      return;
+    }
+  
+    FieldOPort *ofieldND_port = (FieldOPort *)get_oport("(N)D Fields");
+    if (!ofieldND_port) {
+      error("Unable to initialize oport '(N)D Fields'.");
+      return;
     }
 
+    ofieldND_port->send(fHandle_N_1D_);
+    ofieldND_port->send(fHandle_ND_);
+  }
+
+
+  if( gHandles.size() ) {
+    GeometryOPort *ogeometry_port =
+      (GeometryOPort *)get_oport("Axis Geometry");
+
+    if (!ogeometry_port) {
+      error("Unable to initialize oport 'Axis Geometry'.");
+      return;
+    }    
+    
     for (unsigned int i=0; i<gHandles.size(); i++)
       ogeometry_port->addObj(gHandles[i],fldname);
-
+    
     if (gHandles.size())
       ogeometry_port->flushViews();
   }
@@ -400,4 +349,24 @@ IsoValueController::tcl_command(GuiArgs& args, void* userdata)
   Module::tcl_command(args, userdata);
 }
 
+CompileInfoHandle
+IsoValueControllerAlgo::get_compile_info(const TypeDescription *ftd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("IsoValueControllerAlgoT");
+  static const string base_class_name("IsoValueControllerAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftd->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftd->fill_compile_info(rval);
+  return rval;
+}
 } // End namespace Fusion
