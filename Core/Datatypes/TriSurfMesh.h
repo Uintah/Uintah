@@ -170,7 +170,7 @@ public:
     const TriSurfMesh<Basis>          &mesh_;
     const typename Elem::index_type    index_;
     typename Edge::array_type          edges_;
-   };
+  };
 
   TriSurfMesh();
   TriSurfMesh(const TriSurfMesh &copy);
@@ -293,11 +293,45 @@ public:
   {ASSERTFAIL("TriSurfMesh::get_weights(Cells) not supported."); }
 
   void get_point(Point &result, typename Node::index_type index) const
-    { result = points_[index]; }
+  { result = points_[index]; }
   void get_normal(Vector &result, typename Node::index_type index) const
-    { result = normals_[index]; }
+  { result = normals_[index]; }
   void set_point(const Point &point, typename Node::index_type index)
-    { points_[index] = point; }
+  { points_[index] = point; }
+
+  void get_normal(Vector &result, vector<double> &coords, 
+		  typename Elem::index_type eidx) 
+  {
+    if (basis_.polynomial_order() < 2) {
+      typename Node::array_type arr(3);
+      get_nodes(arr, eidx);
+
+      const double c0_0 = fabs(coords[0]);
+      const double c1_0 = fabs(coords[1]);
+      const double c0_1 = fabs(coords[0] - 1.0L);
+      const double c1_1 = fabs(coords[1] - 1.0L);
+
+      if (c0_0 < 1e-7 && c1_0 < 1e-7) {
+	// arr[0]
+	result = normals_[arr[0]];
+	return;
+      } else if (c0_1 < 1e-7 && c1_0 < 1e-7) {
+	// arr[1]
+	result = normals_[arr[1]];
+	return;
+      } else if (c0_0 < 1e-7 && c1_1 < 1e-7) {
+	// arr[2]
+	result = normals_[arr[2]];
+	return;
+      }
+    }
+
+    ElemData ed(*this, eidx);
+    vector<Point> Jv;
+    basis_.derivate(coords, ed, Jv);
+    result = Cross(Jv[0].asVector(), Jv[1].asVector());
+    result.normalize();
+  }
 
 
   void get_random_point(Point &, typename Face::index_type, int seed=0) const;
@@ -359,7 +393,7 @@ public:
   const Point &point(typename Node::index_type i) { return points_[i]; }
   Basis& get_basis() { return basis_; }
 
- //! Generate the list of points that make up a sufficiently accurate
+  //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords, 
 		       typename Elem::index_type ci, 
@@ -446,70 +480,70 @@ private:
 
 #ifdef HAVE_HASH_MAP
 
-struct edgehash
-{
-  size_t operator()(const pair<int, int> &a) const
+  struct edgehash
   {
-    hash<int> hasher;
-    return hasher(hasher(a.first) + a.second);
-  }
+    size_t operator()(const pair<int, int> &a) const
+    {
+      hash<int> hasher;
+      return hasher(hasher(a.first) + a.second);
+    }
 #ifdef __ECC
 
-  static const size_t bucket_size = 4;
-  static const size_t min_buckets = 8;
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
 
-  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
-  {
-    return a.first < b.first || a.first == b.first && a.second < b.second;
-  }
+    bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+    {
+      return a.first < b.first || a.first == b.first && a.second < b.second;
+    }
 #endif
-};
+  };
 
-struct edgecompare
-{
-  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+  struct edgecompare
   {
-    return a.first == b.first && a.second == b.second;
-  }
-};
+    bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+    {
+      return a.first == b.first && a.second == b.second;
+    }
+  };
 
 #else
 
-struct edgecompare
-{
-  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+  struct edgecompare
   {
-    return a.first < b.first || a.first == b.first && a.second < b.second;
-  }
-};
+    bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+    {
+      return a.first < b.first || a.first == b.first && a.second < b.second;
+    }
+  };
 
 #endif
 
 #ifdef HAVE_HASH_MAP
 
 #ifdef __ECC
-typedef hash_map<pair<int, int>, int, edgehash> EdgeMapType;
+  typedef hash_map<pair<int, int>, int, edgehash> EdgeMapType;
 #else
-typedef hash_map<pair<int, int>, int, edgehash, edgecompare> EdgeMapType;
+  typedef hash_map<pair<int, int>, int, edgehash, edgecompare> EdgeMapType;
 #endif
 
 #else
 
-typedef map<pair<int, int>, int, edgecompare> EdgeMapType;
+  typedef map<pair<int, int>, int, edgecompare> EdgeMapType;
 
 #endif
 
 #ifdef HAVE_HASH_MAP
 
 #ifdef __ECC
-typedef hash_map<pair<int, int>, list<int>, edgehash> EdgeMapType2;
+  typedef hash_map<pair<int, int>, list<int>, edgehash> EdgeMapType2;
 #else
-typedef hash_map<pair<int, int>, list<int>, edgehash, edgecompare> EdgeMapType2;
+  typedef hash_map<pair<int, int>, list<int>, edgehash, edgecompare> EdgeMapType2;
 #endif
 
 #else
 
-typedef map<pair<int, int>, list<int>, edgecompare> EdgeMapType2;
+  typedef map<pair<int, int>, list<int>, edgecompare> EdgeMapType2;
 
 #endif
 
@@ -947,7 +981,7 @@ TriSurfMesh<Basis>::locate(typename Cell::index_type &loc, const Point &) const
 template <class Basis>
 int
 TriSurfMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l, 
-				 double *w)
+				double *w)
 {
   typename Face::index_type idx;
   if (locate(idx, p))
@@ -963,7 +997,7 @@ TriSurfMesh<Basis>::get_weights(const Point &p, typename Face::array_type &l,
 template <class Basis>
 int 
 TriSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l, 
-				 double *w)
+				double *w)
 {
   typename Face::index_type idx;
   if (locate(idx, p))
@@ -1202,7 +1236,7 @@ TriSurfMesh<Basis>::compute_normals()
     Vector v1 = p3 - p2;
     Vector n = Cross(v0, v1);
     face_normals[*iter] = n;
-//    cerr << "normal mag: " << n.length() << endl;
+    //    cerr << "normal mag: " << n.length() << endl;
     ++iter;
   }
   //Averaging the normals.
@@ -1346,7 +1380,7 @@ TriSurfMesh<Basis>::bisect_element(const typename Face::index_type face)
 
     if (do_normals)
       normals[edge] = Vector((normals_[faces_[f0+edge]] + 
-			     normals_[faces_[next(f0+edge)]]).safe_normalize());
+			      normals_[faces_[next(f0+edge)]]).safe_normalize());
 
   }
   face_lock_.lock();

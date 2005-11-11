@@ -1066,12 +1066,17 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	    mesh->interpolate(pnts[1], c1, *eiter);
 	    mesh->interpolate(pnts[2], c2, *eiter);
 
+	    if (with_normals) {	      
+	      mesh->get_normal(norms[0], c0, *eiter);
+	      mesh->get_normal(norms[1], c1, *eiter);
+	      mesh->get_normal(norms[2], c2, *eiter);
+	    }
+
 #if defined(DEBUG_PRINT)
 	    cout << "p0: " << pnts[0] << std::endl;
 	    cout << "p1: " << pnts[1] << std::endl;
 	    cout << "p2: " << pnts[2] << std::endl;
 #endif	  
-	    //FIX_ME need to interp normals in meshes that have normals
 	  
 	    // get the field variables values at the approx (if they exist)
 	    if (sfld->basis_order() >= 0) {
@@ -1107,13 +1112,19 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	    mesh->interpolate(pnts[2], c1, *eiter);
 	    mesh->interpolate(pnts[3], c0, *eiter);
 
+	    if (with_normals) {	      
+	      mesh->get_normal(norms[0], c2, *eiter);
+	      mesh->get_normal(norms[1], c3, *eiter);
+	      mesh->get_normal(norms[2], c1, *eiter);
+	      mesh->get_normal(norms[3], c0, *eiter);
+	    }
+
 #if defined(DEBUG_PRINT)
 	    print_coords("c0: ", c0);
 	    print_coords("c1: ", c1);
 	    print_coords("c2: ", c2);
 	    print_coords("c3: ", c3);
 #endif
-	    //FIX_ME need to interp normals in meshes that have normals
 
 	    // get the field variables values at the approx (if they exist)
 	    if (sfld->basis_order() >= 0) {

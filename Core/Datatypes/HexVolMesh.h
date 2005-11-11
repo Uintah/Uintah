@@ -386,7 +386,13 @@ public:
     { points_[index] = point; }
 
   void get_normal(Vector &, typename Node::index_type /*index*/) const
-  { ASSERTFAIL("not implemented") }
+  { ASSERTFAIL("not implemented"); }
+
+  void get_normal(Vector &result, vector<double> &coords, 
+		  typename Elem::index_type eidx) 
+  {
+    ASSERTFAIL("not implemented");
+  }
 
   void get_random_point(Point &p, typename Cell::index_type i, 
 			int seed = 0) const;

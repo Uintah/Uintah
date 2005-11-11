@@ -154,32 +154,32 @@ public:
     double w[64];
     get_weights(coords, w);
 
-    const double &sx0=scalefactors_[cd.edge0_index()];
-    const double &sx1=scalefactors_[cd.edge0_index()];
-    const double &sx2=scalefactors_[cd.edge2_index()];
-    const double &sx3=scalefactors_[cd.edge2_index()];
-    const double &sx4=scalefactors_[cd.edge8_index()];
-    const double &sx5=scalefactors_[cd.edge8_index()];
-    const double &sx6=scalefactors_[cd.edge10_index()];
-    const double &sx7=scalefactors_[cd.edge10_index()];
+    const double sx0=scalefactors_[cd.edge0_index()];
+    const double sx1=scalefactors_[cd.edge0_index()];
+    const double sx2=scalefactors_[cd.edge2_index()];
+    const double sx3=scalefactors_[cd.edge2_index()];
+    const double sx4=scalefactors_[cd.edge8_index()];
+    const double sx5=scalefactors_[cd.edge8_index()];
+    const double sx6=scalefactors_[cd.edge10_index()];
+    const double sx7=scalefactors_[cd.edge10_index()];
 
-    const double &sy0=scalefactors_[cd.edge3_index()];
-    const double &sy1=scalefactors_[cd.edge1_index()];
-    const double &sy2=scalefactors_[cd.edge1_index()];
-    const double &sy3=scalefactors_[cd.edge3_index()];
-    const double &sy4=scalefactors_[cd.edge11_index()];
-    const double &sy5=scalefactors_[cd.edge9_index()];
-    const double &sy6=scalefactors_[cd.edge9_index()];
-    const double &sy7=scalefactors_[cd.edge11_index()];
+    const double sy0=scalefactors_[cd.edge3_index()];
+    const double sy1=scalefactors_[cd.edge1_index()];
+    const double sy2=scalefactors_[cd.edge1_index()];
+    const double sy3=scalefactors_[cd.edge3_index()];
+    const double sy4=scalefactors_[cd.edge11_index()];
+    const double sy5=scalefactors_[cd.edge9_index()];
+    const double sy6=scalefactors_[cd.edge9_index()];
+    const double sy7=scalefactors_[cd.edge11_index()];
 
-    const double &sz0=scalefactors_[cd.edge4_index()];
-    const double &sz1=scalefactors_[cd.edge5_index()];
-    const double &sz2=scalefactors_[cd.edge6_index()];
-    const double &sz3=scalefactors_[cd.edge7_index()];
-    const double &sz4=scalefactors_[cd.edge4_index()];
-    const double &sz5=scalefactors_[cd.edge5_index()];
-    const double &sz6=scalefactors_[cd.edge6_index()];
-    const double &sz7=scalefactors_[cd.edge7_index()];
+    const double sz0=scalefactors_[cd.edge4_index()];
+    const double sz1=scalefactors_[cd.edge5_index()];
+    const double sz2=scalefactors_[cd.edge6_index()];
+    const double sz3=scalefactors_[cd.edge7_index()];
+    const double sz4=scalefactors_[cd.edge4_index()];
+    const double sz5=scalefactors_[cd.edge5_index()];
+    const double sz6=scalefactors_[cd.edge6_index()];
+    const double sz7=scalefactors_[cd.edge7_index()];
 
     const T sdx0=derivs_[cd.node0_index()][0]*sx0;
     const T sdx1=derivs_[cd.node1_index()][0]*sx1;
@@ -325,32 +325,32 @@ public:
 
     derivs.resize(3);
 
-    const double &sx0=scalefactors_[cd.edge0_index()];
-    const double &sx1=scalefactors_[cd.edge0_index()];
-    const double &sx2=scalefactors_[cd.edge2_index()];
-    const double &sx3=scalefactors_[cd.edge2_index()];
-    const double &sx4=scalefactors_[cd.edge8_index()];
-    const double &sx5=scalefactors_[cd.edge8_index()];
-    const double &sx6=scalefactors_[cd.edge10_index()];
-    const double &sx7=scalefactors_[cd.edge10_index()];
+    const double sx0=scalefactors_[cd.edge0_index()];
+    const double sx1=scalefactors_[cd.edge0_index()];
+    const double sx2=scalefactors_[cd.edge2_index()];
+    const double sx3=scalefactors_[cd.edge2_index()];
+    const double sx4=scalefactors_[cd.edge8_index()];
+    const double sx5=scalefactors_[cd.edge8_index()];
+    const double sx6=scalefactors_[cd.edge10_index()];
+    const double sx7=scalefactors_[cd.edge10_index()];
 
-    const double &sy0=scalefactors_[cd.edge3_index()];
-    const double &sy1=scalefactors_[cd.edge1_index()];
-    const double &sy2=scalefactors_[cd.edge1_index()];
-    const double &sy3=scalefactors_[cd.edge3_index()];
-    const double &sy4=scalefactors_[cd.edge11_index()];
-    const double &sy5=scalefactors_[cd.edge9_index()];
-    const double &sy6=scalefactors_[cd.edge9_index()];
-    const double &sy7=scalefactors_[cd.edge11_index()];
+    const double sy0=scalefactors_[cd.edge3_index()];
+    const double sy1=scalefactors_[cd.edge1_index()];
+    const double sy2=scalefactors_[cd.edge1_index()];
+    const double sy3=scalefactors_[cd.edge3_index()];
+    const double sy4=scalefactors_[cd.edge11_index()];
+    const double sy5=scalefactors_[cd.edge9_index()];
+    const double sy6=scalefactors_[cd.edge9_index()];
+    const double sy7=scalefactors_[cd.edge11_index()];
 
-    const double &sz0=scalefactors_[cd.edge4_index()];
-    const double &sz1=scalefactors_[cd.edge5_index()];
-    const double &sz2=scalefactors_[cd.edge6_index()];
-    const double &sz3=scalefactors_[cd.edge7_index()];
-    const double &sz4=scalefactors_[cd.edge4_index()];
-    const double &sz5=scalefactors_[cd.edge5_index()];
-    const double &sz6=scalefactors_[cd.edge6_index()];
-    const double &sz7=scalefactors_[cd.edge7_index()];
+    const double sz0=scalefactors_[cd.edge4_index()];
+    const double sz1=scalefactors_[cd.edge5_index()];
+    const double sz2=scalefactors_[cd.edge6_index()];
+    const double sz3=scalefactors_[cd.edge7_index()];
+    const double sz4=scalefactors_[cd.edge4_index()];
+    const double sz5=scalefactors_[cd.edge5_index()];
+    const double sz6=scalefactors_[cd.edge6_index()];
+    const double sz7=scalefactors_[cd.edge7_index()];
 
     const T sdx0=derivs_[cd.node0_index()][0]*sx0;
     const T sdx1=derivs_[cd.node1_index()][0]*sx1;
@@ -627,7 +627,7 @@ public:
   void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
 
   //! add scale factors (sdx, sdy, sdz) for edges.
-  void add_scalefactors(const vector<double> &p) { scalefactors_.push_back(p[0]); }
+  void add_scalefactors(const double &p) { scalefactors_.push_back(p); }
 
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);

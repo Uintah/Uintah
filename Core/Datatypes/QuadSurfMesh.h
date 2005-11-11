@@ -269,6 +269,46 @@ public:
 
   void get_point(Point &p, typename Node::index_type i) const { p = points_[i]; }
   void get_normal(Vector &n, typename Node::index_type i) const { n = normals_[i]; }
+
+  void get_normal(Vector &result, vector<double> &coords, 
+		  typename Elem::index_type eidx) 
+  {
+
+    if (basis_.polynomial_order() < 2) {
+      typename Node::array_type arr(3);
+      get_nodes(arr, eidx);
+
+      const double c0_0 = fabs(coords[0]);
+      const double c1_0 = fabs(coords[1]);
+      const double c0_1 = fabs(coords[0] - 1.0L);
+      const double c1_1 = fabs(coords[1] - 1.0L);
+
+      if (c0_0 < 1e-7 && c1_0 < 1e-7) {
+	// arr[0]
+	result = normals_[arr[0]];
+	return;
+      } else if (c0_1 < 1e-7 && c1_0 < 1e-7) {
+	// arr[1]
+	result = normals_[arr[1]];
+	return;
+      } else if (c0_1 < 1e-7 && c1_1 < 1e-7) {
+	// arr[2]
+	result = normals_[arr[2]];
+	return;
+      } else if (c0_0 < 1e-7 && c1_1 < 1e-7) {
+	// arr[3]
+	result = normals_[arr[3]];
+	return;
+      }
+    }
+    
+    ElemData ed(*this, eidx);
+    vector<Point> Jv;
+    basis_.derivate(coords, ed, Jv);
+    result = Cross(Jv[0].asVector(), Jv[1].asVector());
+    result.normalize();
+  }
+
   void set_point(const Point &p, typename Node::index_type i) { points_[i] = p; }
 
   int get_valence(typename Node::index_type /*idx*/) const { return 0; }

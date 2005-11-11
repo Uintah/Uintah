@@ -501,6 +501,15 @@ public:
     
   void get_normal(Vector &, const typename Node::index_type &) const
   { ASSERTFAIL("not implemented") }
+  void get_normal(Vector &result, vector<double> &coords, 
+		  typename Elem::index_type eidx) 
+  {
+    ElemData ed(*this, eidx);
+    vector<Point> Jv;
+    basis_.derivate(coords, ed, Jv);
+    result = Cross(Jv[0].asVector(), Jv[1].asVector());
+    result.normalize();
+  }
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const typename Node::index_type &) const;

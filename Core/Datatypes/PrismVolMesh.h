@@ -752,9 +752,11 @@ public:
   void get_point(Point &result, typename Node::index_type index) const
   { result = points_[index]; }
 
-  void get_normal(Vector &/* result */, typename Node::index_type /* index */) const
+  void get_normal(Vector &, typename Node::index_type) const
   { ASSERTFAIL("not implemented") }
-
+  void get_normal(Vector &, vector<double> &, typename Elem::index_type) 
+  { ASSERTFAIL("not implemented"); }
+  
   void set_point(const Point &point, typename Node::index_type index)
   { points_[index] = point; }
 
