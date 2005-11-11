@@ -47,6 +47,7 @@
 #include <Dataflow/Ports/Colormap2Port.h>
 #include <Core/Volume/VideoCardInfo.h>
 #include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Geom/GeomSticky.h>
 
 #include <Dataflow/Widgets/ArrowWidget.h>
 #include <Core/Thread/CrowdMonitor.h>
@@ -431,18 +432,24 @@ VolumeVisualizer::execute()
          gui_num_clipping_planes_.get() != (int)widget_.size())
   {
     double scale = (bbox.diagonal()).length()/30.0;
+    Point p = (bbox.min()+bbox.diagonal()/2.0);
+
     ArrowWidget *widget = scinew ArrowWidget(this, &widget_lock_, scale, true);
     widget_.push_back(widget);
     widget->Connect(geom_oport_);
     widget->SetCurrentMode(0);
-    widget_switch_.push_back(widget->GetWidget());
+    GeomSwitch *swtch = (GeomSwitch *)widget->GetWidget().get_rep();
+    swtch->set_state(1);
+    //    GeomHandle obj = 
+    //      scinew GeomStickyRotate(widget->GetWidget(), p, -bbox.diagonal());
+    //    obj = scinew GeomSwitch(obj);
+    widget_switch_.push_back(swtch);
     ((GeomSwitch *)(widget_switch_.back().get_rep()))->set_state(1);
     widget_id_.push_back(geom_oport_->addObj(widget_switch_.back(),
 					     "Clipping plane " +
 					     to_string(widget_.size()),
 					     &widget_lock_));
 
-    Point p = (bbox.min()+bbox.diagonal()/2.0);
     widget->SetDirection(bbox.diagonal());
     widget->SetScale(scale);
     widget->SetLength(scale*2);

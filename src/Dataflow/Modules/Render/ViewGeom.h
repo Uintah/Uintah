@@ -44,7 +44,6 @@
 
 #include <Core/Geom/IndexedGroup.h>
 #include <Core/Geom/GeomObj.h>
-#include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomSave.h>
 #include <Core/Geometry/BBox.h>
@@ -94,9 +93,7 @@ public:
 
   virtual GeomObj* clone();
 
-#ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
-#endif
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
     

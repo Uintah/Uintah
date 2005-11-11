@@ -41,6 +41,7 @@
  */
 
 #include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Geom/GeomSave.h>
 #include <Core/Geom/GeomTri.h>

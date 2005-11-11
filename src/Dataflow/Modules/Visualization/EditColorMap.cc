@@ -26,6 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <sci_defs/ogl_defs.h>
+#include <sci_gl.h>
+#include <sci_glu.h>
+#include <sci_glx.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
@@ -42,7 +46,6 @@
 #include <Core/2d/Point2d.h>
 #include <Core/2d/Vector2d.h>
 
-#include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/TkOpenGLContext.h>
 #include <tcl.h>
 #include <tk.h>

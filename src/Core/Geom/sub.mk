@@ -37,6 +37,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/ColorMap.cc		                \
 	$(SRCDIR)/ColorMapTex.cc	                \
 	$(SRCDIR)/DirectionalLight.cc	                \
+	$(SRCDIR)/DrawInfoOpenGL.cc	                \
 	$(SRCDIR)/FreeType.cc		                \
 	$(SRCDIR)/GeomArrows.cc		                \
 	$(SRCDIR)/GeomBillboard.cc	                \

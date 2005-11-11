@@ -59,7 +59,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/Material.h>
-#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/PointLight.h>
 #include <Core/Geom/GeomScene.h>
@@ -1228,10 +1228,10 @@ ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
   switch(action){
   case MouseStart:
     {
-      if (gui_inertia_mode_.get()) {
-	gui_inertia_mode_.set(0);
-	redraw();
-      }
+      //      if (gui_inertia_mode_.get()) {
+      //	gui_inertia_mode_.set(0);
+      //	redraw();
+      //      }
       total_x_=0;
       total_y_=0;
       total_z_=0;
@@ -1902,5 +1902,224 @@ ViewWindow::createGenAxes() {
   
   return all;
 }
+
+
+void
+ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
+{
+  tclID_ = (string) tclID;
+
+  GuiInt useglobal(ctx_->subVar(tclID+"-useglobal", false));
+  if (useglobal.valid() && useglobal.get())
+  {
+    setState(drawinfo, "global");
+    return;
+  }
+
+  GuiString type(ctx_->subVar(tclID+"-type", false));
+  if (type.valid())
+  {
+    if (type.get() == "Default")
+    {
+      // 'Default' should be unreachable now, subsumed by useglobal variable.
+      type.set("Gouraud"); // semi-backwards compatability.
+      setState(drawinfo,"global");
+      return; // if they are using the default, con't change
+    }
+    else if (type.get() == "Wire")
+    {
+    drawinfo->set_drawtype(DrawInfoOpenGL::WireFrame);
+    drawinfo->lighting=0;
+    }
+    else if (type.get() == "Flat")
+    {
+      drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
+      drawinfo->lighting=0;
+    }
+    else if (type.get() == "Gouraud")
+    {
+      drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
+      drawinfo->lighting=1;
+    }
+    else
+    {
+      cerr << "Unknown shading(" << type.get() << "), defaulting to phong\n";
+      drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
+      drawinfo->lighting=1;
+    }
+  }
+
+
+  // Now see if they want a bounding box.
+  GuiInt show_bbox(ctx_->subVar(tclID+"-debug", false));
+  if (show_bbox.valid())
+    drawinfo->show_bbox = show_bbox.get();
+
+
+  GuiString movieName(ctx_->subVar(tclID+"-movieName", false));
+  if (movieName.valid())
+    renderer_->movie_name_ = movieName.get();
+
+  GuiInt sync(ctx_->subVar(tclID+"-sync_with_execute", false));
+  if (sync.valid()) {
+    renderer_->doing_sync_frame_ = sync.get();
+  }
+
+  GuiInt movie(ctx_->subVar(tclID+"-movie", false));
+  if (movie.valid())
+  {
+    if (!movie.get())
+    {
+      renderer_->doing_movie_p_ = 0;
+      renderer_->make_MPEG_p_ = 0;
+    }
+    else if (!renderer_->doing_movie_p_)
+    {
+      GuiInt movieFrame(ctx_->subVar(tclID+"-movieFrame", false));
+      if (movieFrame.valid())
+        renderer_->current_movie_frame_ = movieFrame.get();
+
+      renderer_->doing_movie_p_ = 1;
+      if (movie.get() == 1)
+        renderer_->make_MPEG_p_ = 0;
+      else if (movie.get() == 2)
+        renderer_->make_MPEG_p_ = 1;
+    }
+  }
+
+  GuiInt clip(ctx_->subVar(tclID+"-clip", false));
+  if (clip.valid())
+  {
+    drawinfo->check_clip = clip.get();
+  }
+  setClip(drawinfo);
+
+  GuiInt cull(ctx_->subVar(tclID+"-cull", false));
+  if (cull.valid())
+  {
+    drawinfo->cull = cull.get();
+  }
+
+  GuiInt dl(ctx_->subVar(tclID+"-dl", false));
+  if (dl.valid())
+  {
+    drawinfo->dl = dl.get();
+  }
+
+  GuiInt fog(ctx_->subVar(tclID+"-fog", false));
+  if (fog.valid())
+  {
+    drawinfo->fog = fog.get();
+  }
+
+  GuiInt lighting(ctx_->subVar(tclID+"-light", false));
+  if (lighting.valid())
+  {
+    drawinfo->lighting=lighting.get();
+  }
+
+  drawinfo->currently_lit=drawinfo->lighting;
+  drawinfo->init_lighting(drawinfo->lighting);
+}
+
+
+void
+ViewWindow::setMovie( int state )
+{
+  GuiInt movie(ctx_->subVar(tclID_+"-movie",false));
+  if (movie.valid())
+  {
+    movie.set( state );
+    movie.reset();
+    renderer_->doing_movie_p_ = state;
+    renderer_->make_MPEG_p_ = state;
+  }
+}
+
+
+void
+ViewWindow::setMovieFrame( int movieframe )
+{
+  GuiInt movieFrame(ctx_->subVar(tclID_+"-movieFrame",false));
+  if (movieFrame.valid())
+  {
+    movieFrame.set( movieframe );
+    movieFrame.reset();
+  }
+}
+
+
+void
+ViewWindow::setMessage( string message )
+{
+  GuiString movieMessage(ctx_->subVar(tclID_+"-message",false));
+  if (movieMessage.valid())
+  {
+    movieMessage.set( message );
+    movieMessage.reset();
+  }
+}
+
+
+void
+ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
+{
+  map<string,int>::iterator tag_iter = obj_tag_.find(name);
+  if (tag_iter != obj_tag_.end())
+  {
+    // if found
+    setState(drawinfo,to_string((*tag_iter).second));
+  }
+}
+
+
+// Set the bits for the clipping planes that are on.
+void
+ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
+{
+  GuiString visible(ctx_->subVar("clip-visible",false));
+  if (visible.valid()) {
+    drawinfo->clip_planes = 0; // reset to 0
+    for (int i = 0; i < 6; ++i) {
+      const string istr = to_string(i+1);
+      GuiInt visible(ctx_->subVar("clip-visible-"+ istr,false));
+      GuiDouble x(ctx_->subVar("clip-normal-x-"+ istr,false));
+      GuiDouble y(ctx_->subVar("clip-normal-y-"+ istr,false));
+      GuiDouble z(ctx_->subVar("clip-normal-z-"+ istr,false));
+      GuiDouble d(ctx_->subVar("clip-normal-d-"+ istr,false));
+      if (!(visible.valid() && x.valid() && 
+            y.valid() && z.valid() && d.valid()))
+        continue;
+      
+      if (visible.get() != 0)
+        drawinfo->clip_planes |= 1 << i;
+      
+      drawinfo->planes[i] = Plane(x.get(), y.get(), z.get(), d.get());
+    }
+  }
+  drawinfo->init_clip();
+}
+
+
+void
+ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
+{
+  drawinfo->mouse_action = mouse_action_;
+}
+
+void
+ViewWindow::maybeSaveMovieFrame() {
+  // Check to see if we are doing synchronized movie frames
+  GuiInt sync(ctx_->subVar("global-sync_with_execute", false));
+  if (sync.valid()) {
+    if (sync.get()) {
+      // This doesn't actually cause a redraw, so call redraw after we
+      // tell it that the next frame is synchronized.
+      renderer_->scheduleSyncFrame();
+      redraw();
+    }
+  }
+}
+
 
 } // End namespace SCIRun

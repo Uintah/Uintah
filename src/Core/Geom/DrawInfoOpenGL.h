@@ -26,10 +26,9 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
   
 /*
- *  GeomOpenGL.h: Displayable Geometry
+ *  DrawInfoOpenGL.h: Displayable Geometry
  *
  *  Written by:
  *   Steven G. Parker & David Weinstein
@@ -40,18 +39,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_Geom_GeomOpenGL_h
-#define SCI_Geom_GeomOpenGL_h 1
+#ifndef SCI_Geom_DrawInfoOpenGL_h
+#define SCI_Geom_DrawInfoOpenGL_h 1
 
+#include <sci_defs/ogl_defs.h>
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Plane.h>
 
 #include <map>
 #include <list>
@@ -65,34 +63,38 @@ class ViewWindow;
 class Material;
 class GeomDL;
 
-const int CLIP_P0 = 1;
-const int CLIP_P1 = 2;
-const int CLIP_P2 = 4;
-const int CLIP_P3 = 8;
-const int CLIP_P4 = 16;
-const int CLIP_P5 = 32;
-
 const int MULTI_TRANSP_FIRST_PASS=2; // 1 is just if you are doing mpasses...
 
 struct DrawInfoOpenGL {
+public:
     DrawInfoOpenGL();
     ~DrawInfoOpenGL();
 
-    int polycount;
     enum DrawType {
 	WireFrame,
 	Flat,
 	Gouraud
     };
+
 private:
     DrawType drawtype;
 public:
     void set_drawtype(DrawType dt);
     inline DrawType get_drawtype() {return drawtype;}
-
+    bool dl_lookup(GeomDL *obj, unsigned int &state, unsigned int &dl);
+    bool dl_update(GeomDL *obj, unsigned int state);
+    bool dl_addnew(GeomDL *obj, unsigned int state, unsigned int &dl);
+    bool dl_remove(GeomDL *obj);
     void init_lighting(int use_light);
     void init_clip(void);
+    void init_view(double znear, double zfar, Point& eyep, Point& lookat);
+    void reset();
+    bool init_font(int a);
+    void set_material(Material*);
+
+    int polycount;
     int lighting;
+    int show_bbox;
     int currently_lit;
     int pickmode;
     int pickchild;
@@ -100,14 +102,14 @@ public:
     int fog;
     int cull;
     int dl;
+    bool mouse_action;
 
-    int check_clip; // see if you should ignore clipping planes
-    
+    // clipping plane info
+    int check_clip; // see if you should ignore clipping planes    
     int clip_planes; // clipping planes that are on
+    Plane planes[6]; // clipping plane equations
 
     Material* current_matl;
-    void set_material(Material*);
-
     int ignore_matl;
 
     GLUquadricObj* qobj;
@@ -116,17 +118,8 @@ public:
     int axis;     // which axis you are working with...
     int dir;      // direction +/- -> depends on the view...
 
-    double abs_val; // value wi/respect view
-    double axis_val; // value wi/respect axis -> pt for comparison...
-
-    double axis_delt; // delta wi/respect axis
-
     int multiple_transp; // if you have multiple transparent objects...
 
-    void init_view(double znear, double zfar, Point& eyep, Point& lookat);
-
-    ViewWindow* viewwindow;
-  
     double ambient_scale_;
     double diffuse_scale_;
     double specular_scale_;
@@ -137,14 +130,10 @@ public:
     double polygon_offset_factor_; // so lines and points are offset from faces
     double polygon_offset_units_; // so lines and points are offset from faces
 
-#ifndef _WIN32
+#ifndef _WIN32 //used only for x fonts, should use freetype
     Display *dpy;
 #endif
-    int debug;
-    void reset();
 
-    // Font support.
-    bool init_font(int a);
 
     int    fontstatus[GEOM_FONT_COUNT];
     GLuint fontbase[GEOM_FONT_COUNT];
@@ -154,16 +143,12 @@ public:
 
     std::map<GeomDL *, std::pair<unsigned int, unsigned int> > dl_map_;
     std::list<unsigned int> dl_freelist_;
-    bool dl_lookup(GeomDL *obj, unsigned int &state, unsigned int &dl);
-    bool dl_update(GeomDL *obj, unsigned int state);
-    bool dl_addnew(GeomDL *obj, unsigned int state, unsigned int &dl);
-    bool dl_remove(GeomDL *obj);
 
-    bool mouse_action;
+
 };
 
 } // End namespace SCIRun
 
 
-#endif /* SCI_Geom_GeomOpenGL_h */
+#endif /* SCI_Geom_DrawInfoOpenGL_h */
 

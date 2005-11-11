@@ -40,10 +40,12 @@
  *  Copyright (c) 199? SCI Group
  */
 
+#include <Core/Malloc/Allocator.h>
 #include <Core/Geom/ColorMapTex.h>
 #include <Core/Geom/GeomColorMap.h>
 #include <Core/Geom/GeomQuads.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Geom/DrawInfoOpenGL.h>
+
 
 namespace SCIRun {
 
