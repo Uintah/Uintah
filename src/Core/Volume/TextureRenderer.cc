@@ -29,6 +29,12 @@
 //    Author : Milan Ikits
 //    Date   : Wed Jul  7 23:34:20 2004
 
+
+#include <sci_defs/ogl_defs.h>
+#include <sci_gl.h>
+#include <sci_glu.h>
+#include <sci_glx.h>
+
 #include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Volume/TextureRenderer.h>
 #include <Core/Util/NotFinished.h>
@@ -565,7 +571,7 @@ namespace SCIRun {
 				 FragmentProgramARB* shader)
 
   {
-    di_->polycount += poly.size();
+    di_->polycount_ += poly.size();
     float mvmat[16];
     if(fog) {
       glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
@@ -648,7 +654,7 @@ namespace SCIRun {
                                            Pbuffer* buffer,
 					   vector<int> *mask)
   {
-    di_->polycount += poly.size();
+    di_->polycount_ += poly.size();
     float mvmat[16];
     if(fog) {
       glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);

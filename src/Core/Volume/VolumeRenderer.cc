@@ -29,6 +29,11 @@
 //    Author : Milan Ikits
 //    Date   : Thu Jul  8 00:04:15 2004
 
+#include <sci_defs/ogl_defs.h>
+#include <sci_gl.h>
+#include <sci_glu.h>
+#include <sci_glx.h>
+
 #include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Volume/VolumeRenderer.h>
 #include <Core/Volume/VolShader.h>
@@ -215,7 +220,7 @@ VolumeRenderer::draw_volume()
       break;
     }
   
-  set_interactive_mode(adaptive_ && (cmap2_updating || di_->mouse_action));
+  set_interactive_mode(adaptive_ && (cmap2_updating || di_->mouse_action_));
 
   const double rate = imode_ ? irate_ : sampling_rate_;
   const Vector diag = tex_->bbox().diagonal();
@@ -236,7 +241,7 @@ VolumeRenderer::draw_volume()
 
   //--------------------------------------------------------------------------
 
-  const int nc = bricks[0]->nc();
+  //  const int nc = bricks[0]->nc();
   const int nb0 = bricks[0]->nb(0);
   const bool use_cmap1 = cmap1_.get_rep();
   const bool use_cmap2 =
@@ -599,7 +604,7 @@ VolumeRenderer::multi_level_draw()
       break;
     }
   
-  set_interactive_mode(adaptive_ && (cmap2_updating || di_->mouse_action));
+  set_interactive_mode(adaptive_ && (cmap2_updating || di_->mouse_action_));
   
   // set sampling rate based on interaction.
   double rate = imode_ ? irate_ : sampling_rate_;

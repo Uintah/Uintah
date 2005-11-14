@@ -39,6 +39,11 @@
  *  Copyright (C) 2005 Scientific Computing and Imaging Institute
  */
 
+#include <sci_defs/ogl_defs.h>
+#include <sci_gl.h>
+#include <sci_glu.h>
+#include <sci_glx.h>
+
 #include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Geom/GeomDL.h>
 #include <Core/Geom/Material.h>
@@ -84,25 +89,24 @@ quad_error(GLenum code)
 typedef void (*gluQuadricCallbackType)();
 
 DrawInfoOpenGL::DrawInfoOpenGL() :
-  polycount(0),
-  lighting(1),
-  show_bbox(0),
-  currently_lit(1),
-  pickmode(1),
-  pickchild(0),
-  npicks(0),
-  fog(0),
-  cull(0),
-  dl(0),
-  mouse_action(0),
-  check_clip(1),
-  clip_planes(0),
-  current_matl(0),
-  ignore_matl(0),
-  qobj(0),
-  axis(0),
-  dir(0),
-  multiple_transp(0),
+  polycount_(0),
+  lighting_(1),
+  show_bbox_(0),
+  currently_lit_(1),
+  pickmode_(1),
+  pickchild_(0),
+  npicks_(0),
+  fog_(0),
+  cull_(0),
+  display_list_p_(0),
+  mouse_action_(0),
+  check_clip_(1),
+  clip_planes_(0),
+  current_matl_(0),
+  ignore_matl_(0),
+  qobj_(0),
+  axis_(0),
+  dir_(0),
   ambient_scale_(1.0),
   diffuse_scale_(1.0),
   specular_scale_(1.0),
@@ -113,25 +117,26 @@ DrawInfoOpenGL::DrawInfoOpenGL() :
   polygon_offset_factor_(0.0),
   polygon_offset_units_(0.0),
   using_cmtexture_(0),
-  cmtexture_(0)
+  cmtexture_(0),
+  drawtype_(Gouraud)
 {
   for (int i=0; i < GEOM_FONT_COUNT; i++)
   {
-    fontstatus[i] = 0;
-    fontbase[i] = 0;
+    fontstatus_[i] = 0;
+    fontbase_[i] = 0;
   }
 
-  qobj=gluNewQuadric();
+  qobj_=gluNewQuadric();
 
-  if ( !qobj )
+  if ( !qobj_ )
   {
     printf( "Error in GeomOpenGL.cc: DrawInfoOpenGL(): gluNewQuadric()\n" );
   }
 
 #ifdef _WIN32
-  gluQuadricCallback(qobj, /* FIX (GLenum)GLU_ERROR*/ 0, (void (__stdcall*)())quad_error);
+  gluQuadricCallback(qobj_, /* FIX (GLenum)GLU_ERROR*/ 0, (void (__stdcall*)())quad_error);
 #else
-  gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
+  gluQuadricCallback(qobj_, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
 #endif
 }
 
@@ -139,15 +144,15 @@ DrawInfoOpenGL::DrawInfoOpenGL() :
 void
 DrawInfoOpenGL::reset()
 {
-  polycount=0;
-  current_matl=0;
-  ignore_matl=0;
-  fog=0;
-  cull=0;
-  check_clip = 0;
-  pickmode =0;
-  pickchild =0;
-  npicks =0;
+  polycount_ = 0;
+  current_matl_ = 0;
+  ignore_matl_ = 0;
+  fog_ = 0;
+  cull_ = 0;
+  check_clip_ = 0;
+  pickmode_ = 0;
+  pickchild_ = 0;
+  npicks_ = 0;
 }
 
 
@@ -163,23 +168,29 @@ DrawInfoOpenGL::~DrawInfoOpenGL()
 }
 
 
+DrawInfoOpenGL::DrawType
+DrawInfoOpenGL::get_drawtype()
+{
+  return drawtype_;
+}
+
 void
 DrawInfoOpenGL::set_drawtype(DrawType dt)
 {
-  drawtype = dt;
-  switch(drawtype)
+  drawtype_ = dt;
+  switch(drawtype_)
   {
   case DrawInfoOpenGL::WireFrame:
-    gluQuadricDrawStyle(qobj, (GLenum)GLU_LINE);
+    gluQuadricDrawStyle(qobj_, (GLenum)GLU_LINE);
     glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     break;
   case DrawInfoOpenGL::Flat:
-    gluQuadricDrawStyle(qobj, (GLenum)GLU_FILL);
+    gluQuadricDrawStyle(qobj_, (GLenum)GLU_FILL);
     glShadeModel(GL_FLAT);
     glPolygonMode(GL_FRONT_AND_BACK,(GLenum)GL_FILL);
     break;
   case DrawInfoOpenGL::Gouraud:
-    gluQuadricDrawStyle(qobj, (GLenum)GLU_FILL);
+    gluQuadricDrawStyle(qobj_, (GLenum)GLU_FILL);
     glShadeModel(GL_SMOOTH);
     glPolygonMode(GL_FRONT_AND_BACK,(GLenum)GL_FILL);
     break;
@@ -193,29 +204,29 @@ DrawInfoOpenGL::init_lighting(int use_light)
   if (use_light)
   {
     glEnable(GL_LIGHTING);
-    switch(drawtype)
+    switch(drawtype_)
     {
     case DrawInfoOpenGL::WireFrame:
-      gluQuadricNormals(qobj, (GLenum)GLU_SMOOTH);
+      gluQuadricNormals(qobj_, (GLenum)GLU_SMOOTH);
       break;
     case DrawInfoOpenGL::Flat:
-      gluQuadricNormals(qobj, (GLenum)GLU_FLAT);
+      gluQuadricNormals(qobj_, (GLenum)GLU_FLAT);
       break;
     case DrawInfoOpenGL::Gouraud:
-      gluQuadricNormals(qobj, (GLenum)GLU_SMOOTH);
+      gluQuadricNormals(qobj_, (GLenum)GLU_SMOOTH);
       break;
     }
   }
   else
   {
     glDisable(GL_LIGHTING);
-    gluQuadricNormals(qobj,(GLenum)GLU_NONE);
+    gluQuadricNormals(qobj_,(GLenum)GLU_NONE);
   }
-  if (fog)
+  if (fog_)
     glEnable(GL_FOG);
   else
     glDisable(GL_FOG);
-  if (cull)
+  if (cull_)
     glEnable(GL_CULL_FACE);
   else
     glDisable(GL_CULL_FACE);
@@ -228,9 +239,9 @@ DrawInfoOpenGL::init_clip(void)
 {
   for (int num = 0; num < 6; num++) {
     GLdouble plane[4];
-    planes[num].get(plane); 
+    planes_[num].get(plane); 
     glClipPlane((GLenum)(GL_CLIP_PLANE0+num),plane); 
-    if (check_clip && clip_planes & (1 << num))
+    if (check_clip_ && clip_planes_ & (1 << num))
       glEnable((GLenum)(GL_CLIP_PLANE0+num));
     else 
       glDisable((GLenum)(GL_CLIP_PLANE0+num));
@@ -241,7 +252,7 @@ DrawInfoOpenGL::init_clip(void)
 void
 DrawInfoOpenGL::set_material(Material* matl)
 {
-  if (matl==current_matl || ignore_matl)
+  if (matl==current_matl_ || ignore_matl_)
   {
     return;     
   }
@@ -259,11 +270,11 @@ DrawInfoOpenGL::set_material(Material* matl)
   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
   (matl->emission*emission_scale_).get_color(color);
   glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
-  if (!current_matl || matl->shininess != current_matl->shininess)
+  if (!current_matl_ || matl->shininess != current_matl_->shininess)
   {
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess*shininess_scale_);
   }     
-  current_matl=matl;
+  current_matl_=matl;
 }
 
 
@@ -345,50 +356,48 @@ DrawInfoOpenGL::init_view( double /*znear*/, double /*zfar*/,
 
   // this is what you rip the view vector from
   // just use the "Z" axis, normalized
-  view = Vector(model_mat[0*4+2],model_mat[1*4+2],model_mat[2*4+2]);
+  view_ = Vector(model_mat[0*4+2],model_mat[1*4+2],model_mat[2*4+2]);
 
-  view.normalize();
+  view_.normalize();
 
   // 0 is X, 1 is Y, 2 is Z
-  dir = 1;
+  dir_ = 1;
 
-  if (Abs(view.x()) > Abs(view.y()))
+  if (Abs(view_.x()) > Abs(view_.y()))
   {
-    if (Abs(view.x()) > Abs(view.z()))
+    if (Abs(view_.x()) > Abs(view_.z()))
     { // use x dir
-      axis=0;
-      if (view.x() < 0)
+      axis_=0;
+      if (view_.x() < 0)
       {
-        dir=-1;
+        dir_=-1;
       }
     }
     else
     { // use z dir
-      axis=2;
-      if (view.z() < 0)
+      axis_=2;
+      if (view_.z() < 0)
       {
-        dir=-1;
+        dir_=-1;
       }
     }
   }
-  else if (Abs(view.y()) > Abs(view.z()))
+  else if (Abs(view_.y()) > Abs(view_.z()))
   { // y greates
-    axis=1;
-    if (view.y() < 0)
+    axis_=1;
+    if (view_.y() < 0)
     {
-      dir=-1;
+      dir_=-1;
     }
   }
   else
   { // z is the one
-    axis=2;
-    if (view.z() < 0)
+    axis_=2;
+    if (view_.z() < 0)
     {
-      dir=-1;
+      dir_=-1;
     }
   }
-
-  multiple_transp = 0;
 }
 
 
@@ -398,9 +407,9 @@ DrawInfoOpenGL::init_font(int a)
 #ifndef _WIN32
   if (a > GEOM_FONT_COUNT || a < 0) { return false; }
 
-  if ( fontstatus[a] == 0 )
+  if ( fontstatus_[a] == 0 )
   {
-    dpy = XOpenDisplay( NULL );
+    Display *dpy = XOpenDisplay( NULL );
 
     static const char *fontname[GEOM_FONT_COUNT] = {
       "-schumacher-clean-medium-r-normal-*-*-60-*-*-*-*-*",
@@ -415,25 +424,25 @@ DrawInfoOpenGL::init_font(int a)
     {
       cerr << "DrawInfoOpenGL::init_font: font '" << fontname[a]
            << "' not found.\n";
-      fontstatus[a] = 2;
+      fontstatus_[a] = 2;
       return false;
     }
     Font id = fontInfo->fid;
     unsigned int first = fontInfo->min_char_or_byte2;
     unsigned int last = fontInfo->max_char_or_byte2;
 
-    fontbase[a] = glGenLists((GLuint) last+1);
+    fontbase_[a] = glGenLists((GLuint) last+1);
 
-    if (fontbase[a] == 0)
+    if (fontbase_[a] == 0)
     {
       cerr << "DrawInfoOpenGL::init_font: Out of display lists.\n";
-      fontstatus[a] = 2;
+      fontstatus_[a] = 2;
       return false;
     }
-    glXUseXFont(id, first, last-first+1, fontbase[a]+first);
-    fontstatus[a] = 1;
+    glXUseXFont(id, first, last-first+1, fontbase_[a]+first);
+    fontstatus_[a] = 1;
   }
-  if (fontstatus[a] == 1)
+  if (fontstatus_[a] == 1)
   {
     return true;
   }
@@ -442,7 +451,7 @@ DrawInfoOpenGL::init_font(int a)
 #else // WIN32
   if (a > GEOM_FONT_COUNT || a < 0) { return false; }
 
-  if ( fontstatus[a] == 0 )
+  if ( fontstatus_[a] == 0 )
   {
     HDC hDC = wglGetCurrentDC();
     if (!hDC)
@@ -456,18 +465,18 @@ DrawInfoOpenGL::init_font(int a)
     // rasterize the standard character set.
     first = 0;
     count = 256;
-    fontbase[a] =  glGenLists(count);
+    fontbase_[a] =  glGenLists(count);
 
-    if (fontbase[a] == 0)
+    if (fontbase_[a] == 0)
     {
       cerr << "DrawInfoOpenGL::init_font: Out of display lists.\n";
-      fontstatus[a] = 2;
+      fontstatus_[a] = 2;
       return false;
     }
-    wglUseFontBitmaps( hDC, first, count, fontbase[a]+first );
-    fontstatus[a] = 1;
+    wglUseFontBitmaps( hDC, first, count, fontbase_[a]+first );
+    fontstatus_[a] = 1;
   }
-  if (fontstatus[a] == 1)
+  if (fontstatus_[a] == 1)
   {
     return true;
   }

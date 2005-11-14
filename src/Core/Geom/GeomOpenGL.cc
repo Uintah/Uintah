@@ -152,34 +152,34 @@ GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 {
   /* All primitives that get drawn must check the return value of this
      function to determine if they get drawn or not */
-  if ((!di->pickmode)||(di->pickmode&&di->pickchild))
+  if ((!di->pickmode_)||(di->pickmode_&&di->pickchild_))
   {
-    if (lit && di->lighting && !di->currently_lit)
+    if (lit && di->lighting_ && !di->currently_lit_)
     {
-      di->currently_lit=1;
+      di->currently_lit_=1;
       glEnable(GL_LIGHTING);
       switch(di->get_drawtype())
       {
       case DrawInfoOpenGL::WireFrame:
-        gluQuadricNormals(di->qobj, (GLenum)GLU_SMOOTH);
+        gluQuadricNormals(di->qobj_, (GLenum)GLU_SMOOTH);
         glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
         break;
       case DrawInfoOpenGL::Flat:
-        gluQuadricNormals(di->qobj, (GLenum)GLU_FLAT);
+        gluQuadricNormals(di->qobj_, (GLenum)GLU_FLAT);
         glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
         break;
       case DrawInfoOpenGL::Gouraud:
-        gluQuadricNormals(di->qobj, (GLenum)GLU_SMOOTH);
+        gluQuadricNormals(di->qobj_, (GLenum)GLU_SMOOTH);
         glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
         break;
       }
 
     }
-    if ((!lit || !di->lighting) && di->currently_lit)
+    if ((!lit || !di->lighting_) && di->currently_lit_)
     {
-      di->currently_lit=0;
+      di->currently_lit_=0;
       glDisable(GL_LIGHTING);
-      gluQuadricNormals(di->qobj, (GLenum)GLU_NONE);
+      gluQuadricNormals(di->qobj_, (GLenum)GLU_NONE);
       switch(di->get_drawtype())
       {
       case DrawInfoOpenGL::WireFrame:
@@ -211,7 +211,7 @@ GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 int
 GeomObj::post_draw(DrawInfoOpenGL* di)
 {
-  if (di->pickmode && di->pickchild)
+  if (di->pickmode_ && di->pickchild_)
   {
 #ifdef SCI_64BITS
     glPopName();
@@ -233,7 +233,7 @@ void
 GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   int n = positions.size();
-  di->polycount += 6 * n;
+  di->polycount_ += 6 * n;
 
   // Draw shafts - they are the same for all draw types.
   double shaft_scale = headlength;
@@ -308,8 +308,8 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
         glPushMatrix();
         glTranslated( from.x(), from.y(), from.z() );
         glRotated( RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-        di->polycount += 2*(nu-1)*(nv-1);
-        gluCylinder(di->qobj, rad, rad, axis.length(), nu, nv);
+        di->polycount_ += 2*(nu-1)*(nv-1);
+        gluCylinder(di->qobj_, rad, rad, axis.length(), nu, nv);
         glPopMatrix();
       }
     }
@@ -343,8 +343,8 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
         glPushMatrix();
         glTranslated( from.x(), from.y(), from.z() );
         glRotated( RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-        di->polycount += 2*(nu-1)*(nv-1);
-        gluCylinder(di->qobj, rad, rad, axis.length(), nu, nv);
+        di->polycount_ += 2*(nu-1)*(nv-1);
+        gluCylinder(di->qobj_, rad, rad, axis.length(), nu, nv);
         glPopMatrix();
       }
     }
@@ -659,20 +659,20 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
         glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
         double bot_rad = 0.5 * headwidth;
         double top_rad = 0.01 * headwidth;
-        di->polycount += 2 * (nu - 1) * (nv - 1);
-        gluCylinder(di->qobj, bot_rad, top_rad, headlength, nu, nv);
+        di->polycount_ += 2 * (nu - 1) * (nv - 1);
+        gluCylinder(di->qobj_, bot_rad, top_rad, headlength, nu, nv);
         if (bot_rad > 1.e-6)
         {
           // Bottom endcap
-          di->polycount += 2*(nu-1)*(nvdisc-1);
-          gluDisk(di->qobj, 0, bot_rad, nu, nvdisc);
+          di->polycount_ += 2*(nu-1)*(nvdisc-1);
+          gluDisk(di->qobj_, 0, bot_rad, nu, nvdisc);
         }
         if (top_rad > 1.e-6)
         {
           // Top endcap
           glTranslated(0, 0, headlength);
-          di->polycount += 2 * (nu - 1) * (nvdisc - 1);
-          gluDisk(di->qobj, 0, top_rad, nu, nvdisc);
+          di->polycount_ += 2 * (nu - 1) * (nvdisc - 1);
+          gluDisk(di->qobj_, 0, top_rad, nu, nvdisc);
         }
         glPopMatrix();
       }
@@ -706,20 +706,20 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
         glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
         double bot_rad = 0.5*headwidth;
         double top_rad = 0.01*headwidth;
-        di->polycount+=2*(nu-1)*(nv-1);
-        gluCylinder(di->qobj, bot_rad, top_rad, headlength, nu, nv);
+        di->polycount_+=2*(nu-1)*(nv-1);
+        gluCylinder(di->qobj_, bot_rad, top_rad, headlength, nu, nv);
         if (bot_rad > 1.e-6)
         {
           // Bottom endcap
-          di->polycount+=2*(nu-1)*(nvdisc-1);
-          gluDisk(di->qobj, 0, bot_rad, nu, nvdisc);
+          di->polycount_+=2*(nu-1)*(nvdisc-1);
+          gluDisk(di->qobj_, 0, bot_rad, nu, nvdisc);
         }
         if (top_rad > 1.e-6)
         {
           // Top endcap
           glTranslated(0, 0, headlength);
-          di->polycount+=2*(nu-1)*(nvdisc-1);
-          gluDisk(di->qobj, 0, top_rad, nu, nvdisc);
+          di->polycount_+=2*(nu-1)*(nvdisc-1);
+          gluDisk(di->qobj_, 0, top_rad, nu, nvdisc);
         }
         glPopMatrix();
       }
@@ -762,7 +762,7 @@ GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 
   if ( !pre_draw(di, m, 0) ) return;
 
-  if ( !di->dl )
+  if ( !di->display_list_p_ )
   {
     child_->draw(di,m,time);  // do not use display list
   }
@@ -770,7 +770,7 @@ GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
   {
     // Compute current state.
     const unsigned int current_state =
-      (di->get_drawtype() << 1) | di->lighting;
+      (di->get_drawtype() << 1) | di->lighting_;
 
     unsigned int state, display_list;
     if (di->dl_lookup(this, state, display_list))
@@ -779,7 +779,7 @@ GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
       {
         di->dl_update(this, current_state);
 
-        const int pre_polycount = di->polycount; // remember poly count
+        const int pre_polycount_ = di->polycount_; // remember poly count
         
         // Fill in the display list.
         // Don't use COMPILE_AND_EXECUTE as it is slower (NVidia linux).
@@ -789,18 +789,18 @@ GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
         glCallList(display_list);
 
         // Update poly count;
-        polygons_ = di->polycount - pre_polycount;
+        polygons_ = di->polycount_ - pre_polycount_;
       }
       else
       {
         // Display the child using the display_list.
         glCallList(display_list);
-        di->polycount += polygons_;
+        di->polycount_ += polygons_;
       }
     }
     else if (di->dl_addnew(this, current_state, display_list))
     {
-      const int pre_polycount = di->polycount; // remember poly count
+      const int pre_polycount_ = di->polycount_; // remember poly count
         
       // Fill in the display list.
       // Don't use COMPILE_AND_EXECUTE as it is slower (NVidia linux).
@@ -810,7 +810,7 @@ GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
       glCallList(display_list);
 
       // Update poly count;
-      polygons_ = di->polycount - pre_polycount;
+      polygons_ = di->polycount_ - pre_polycount_;
     }
     else
     {
@@ -931,15 +931,15 @@ GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushMatrix();
   glTranslated(bottom.x(), bottom.y(), bottom.z());
   glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-  di->polycount+=2*(nu-1)*(nv-1);
-  gluCylinder(di->qobj, rad, rad, height, nu, nv);
+  di->polycount_+=2*(nu-1)*(nv-1);
+  gluCylinder(di->qobj_, rad, rad, height, nu, nv);
   // Bottom endcap
-  di->polycount+=2*(nu-1)*(nvdisc-1);
-  gluDisk(di->qobj, 0, rad, nu, nvdisc);
+  di->polycount_+=2*(nu-1)*(nvdisc-1);
+  gluDisk(di->qobj_, 0, rad, nu, nvdisc);
   // Top endcap
   glTranslated(0, 0, height);
-  di->polycount+=2*(nu-1)*(nvdisc-1);
-  gluDisk(di->qobj, 0, rad, nu, nvdisc);
+  di->polycount_+=2*(nu-1)*(nvdisc-1);
+  gluDisk(di->qobj_, 0, rad, nu, nvdisc);
   glPopMatrix();
   post_draw(di);
 }
@@ -953,8 +953,8 @@ GeomCone::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushMatrix();
   glTranslated(bottom.x(), bottom.y(), bottom.z());
   glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-  di->polycount+=2*(nu-1)*(nv-1);
-  gluCylinder(di->qobj, bot_rad, top_rad, height, nu, nv);
+  di->polycount_+=2*(nu-1)*(nv-1);
+  gluCylinder(di->qobj_, bot_rad, top_rad, height, nu, nv);
   glPopMatrix();
   post_draw(di);
 }
@@ -968,20 +968,20 @@ GeomCappedCone::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushMatrix();
   glTranslated(bottom.x(), bottom.y(), bottom.z());
   glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-  di->polycount+=2*(nu-1)*(nv-1);
-  gluCylinder(di->qobj, bot_rad, top_rad, height, nu, nv);
+  di->polycount_+=2*(nu-1)*(nv-1);
+  gluCylinder(di->qobj_, bot_rad, top_rad, height, nu, nv);
   if (bot_rad > 1.e-6)
   {
     // Bottom endcap
-    di->polycount+=2*(nu-1)*(nvdisc1-1);
-    gluDisk(di->qobj, 0, bot_rad, nu, nvdisc1);
+    di->polycount_+=2*(nu-1)*(nvdisc1-1);
+    gluDisk(di->qobj_, 0, bot_rad, nu, nvdisc1);
   }
   if (top_rad > 1.e-6)
   {
     // Top endcap
     glTranslated(0, 0, height);
-    di->polycount+=2*(nu-1)*(nvdisc2-1);
-    gluDisk(di->qobj, 0, top_rad, nu, nvdisc2);
+    di->polycount_+=2*(nu-1)*(nvdisc2-1);
+    gluDisk(di->qobj_, 0, top_rad, nu, nvdisc2);
   }
   glPopMatrix();
   post_draw(di);
@@ -993,7 +993,7 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
 
-  di->polycount += points_.size() * nu_ / 2;
+  di->polycount_ += points_.size() * nu_ / 2;
 
   const bool texturing =
     di->using_cmtexture_ && indices_.size() == points_.size() / 2;
@@ -1095,10 +1095,10 @@ ColorMapTex::draw(DrawInfoOpenGL *di, Material *matl, double time)
 {
   if (child_.get_rep())
   {
-    const bool lit = di->lighting;
-    di->lighting = false;
+    const bool lit = di->lighting_;
+    di->lighting_ = false;
     child_->draw(di, matl, time);
-    di->lighting = lit;
+    di->lighting_ = lit;
   }
 }
 
@@ -1111,8 +1111,8 @@ GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushMatrix();
   glTranslated(bottom.x(), bottom.y(), bottom.z());
   glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-  di->polycount+=2*(nu-1)*(nv-1);
-  gluCylinder(di->qobj, rad, rad, height, nu, nv);
+  di->polycount_+=2*(nu-1)*(nv-1);
+  gluCylinder(di->qobj_, rad, rad, height, nu, nv);
   glPopMatrix();
   post_draw(di);
 }
@@ -1123,7 +1123,7 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
 
-  di->polycount+=points_.size() * nu_ * 2;
+  di->polycount_+=points_.size() * nu_ * 2;
 
   const bool texturing =
     di->using_cmtexture_ && indices_.size() == points_.size();
@@ -1209,7 +1209,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
 
-  di->polycount+=points_.size() * nu_ * 2;
+  di->polycount_+=points_.size() * nu_ * 2;
 
   const bool texturing =
     di->using_cmtexture_ && indices_.size() == points_.size();
@@ -1329,8 +1329,8 @@ GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushMatrix();
   glTranslated(cen.x(), cen.y(), cen.z());
   glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-  di->polycount+=2*(nu-1)*(nv-1);
-  gluDisk(di->qobj, 0, rad, nu, nv);
+  di->polycount_+=2*(nu-1)*(nv-1);
+  gluDisk(di->qobj_, 0, rad, nu, nv);
   glPopMatrix();
   post_draw(di);
 }
@@ -1359,7 +1359,7 @@ void
 TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 0)) return;
-  di->polycount+=2;
+  di->polycount_+=2;
 
   if (!convolve)
   {
@@ -1501,7 +1501,7 @@ void
 TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
 {
   if (!pre_draw(di, matl, 0)) return;
-  di->polycount += 2;
+  di->polycount_ += 2;
 
   // First find which ones need to be drawn.
 
@@ -1635,7 +1635,7 @@ void
 GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
-  di->polycount+=2*(nu-1)*(nv-1);
+  di->polycount_+=2*(nu-1)*(nv-1);
   Vector uu(u/(nu-1));
   Vector vv(v/(nv-1));
   glPushMatrix();
@@ -1812,7 +1812,7 @@ GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   if (image)
   {
-    di->polycount+=2*nu*nv;
+    di->polycount_+=2*nu*nv;
     Vector uu(u/nu);
     Vector vv(v/nv);
     if (!pre_draw(di,matl,0)) return;
@@ -1846,7 +1846,7 @@ GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
 
   if (!pre_draw(di, matl, 1)) return;
-  di->polycount+=2*(nu-1)*(nv-1);
+  di->polycount_+=2*(nu-1)*(nv-1);
   Vector uu(u/(nu-1));
   Vector vv(v/(nv-1));
   switch(di->get_drawtype())
@@ -2059,9 +2059,9 @@ GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
 
-  di->polycount += (nrows-1)*(ncols-1)*2;
+  di->polycount_ += (nrows-1)*(ncols-1)*2;
 
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
     for (int j=0;j<ncols-1;j++)
     {
@@ -2112,7 +2112,7 @@ GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
 void
 GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-  if (di->pickmode)
+  if (di->pickmode_)
   {
     for (unsigned int i=0; i<objs.size(); i++)
     {
@@ -2152,7 +2152,7 @@ void
 GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 0)) return;
-  di->polycount++;
+  di->polycount_++;
   // Set line width. Set it
   GLfloat lw;
   glGetFloatv(GL_LINE_WIDTH, &lw);
@@ -2173,7 +2173,7 @@ GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 0)) return;
 
-  di->polycount+=points_.size()/6;
+  di->polycount_+=points_.size()/6;
 
   glLineWidth(line_width_);
 
@@ -2255,31 +2255,31 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   const double lvz = fabs(matrix[10]);
   if (lvx >= lvy && lvx >= lvz)
   {
-    di->axis = 0;
-    if (matrix[2] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 0;
+    if (matrix[2] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
 
   }
   else if (lvy >= lvx && lvy >= lvz)
   {
-    di->axis = 1;
-    if (matrix[6] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 1;
+    if (matrix[6] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
   }
   else if (lvz >= lvx && lvz >= lvy)
   {
-    di->axis = 2;
-    if (matrix[10] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 2;
+    if (matrix[10] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
   }
 
   vector<unsigned int> &clist =
-    (di->axis==0)?xindices_:((di->axis==1)?yindices_:zindices_);
+    (di->axis_==0)?xindices_:((di->axis_==1)?yindices_:zindices_);
 
   bool &reverse =
-    (di->axis==0)?xreverse_:((di->axis==1)?yreverse_:zreverse_);
+    (di->axis_==0)?xreverse_:((di->axis_==1)?yreverse_:zreverse_);
 
-  di->polycount+=points_.size()/6;
+  di->polycount_+=points_.size()/6;
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -2315,8 +2315,8 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   }
 
-  if (di->dir == 1 && reverse ||
-      di->dir == -1 && !reverse)
+  if (di->dir_ == 1 && reverse ||
+      di->dir_ == -1 && !reverse)
   {
     std::reverse(clist.begin(), clist.end());
     reverse = !reverse;
@@ -2349,7 +2349,7 @@ GeomCLineStrips::draw(DrawInfoOpenGL* di, Material* matl, double)
   for (int i = 0; i < n_strips; i++)
   {
     const int n_points = points_[i].size()/3;
-    di->polycount += n_points-1;
+    di->polycount_ += n_points-1;
     glVertexPointer(3, GL_FLOAT, 0, &(points_[i].front()));
     glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[i].front()));
 
@@ -2380,7 +2380,7 @@ void
 TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 0)) return;  // lighting is turned off here.
-  di->polycount+=pts.size()/2;
+  di->polycount_+=pts.size()/2;
 
   static Vector view;  // shared by all of them - should be in ViewWindow!
 
@@ -2700,10 +2700,10 @@ GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double time)
 void
 GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-  if (draw_only_on_pick_ && !di->pickmode) return;
-  if (di->pickmode)
+  if (draw_only_on_pick_ && !di->pickmode_) return;
+  if (di->pickmode_)
   {
-    ++di->npicks;
+    ++di->npicks_;
 #ifdef SCI_64BITS
     unsigned long o=(unsigned long)this;
     unsigned int o1=(o>>32)&0xffffffff;
@@ -2713,21 +2713,21 @@ GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 #else
     glPushName((GLuint)this);
 #endif
-    di->pickchild =1;
+    di->pickchild_ =1;
   }
   if (selected_ && highlight_.get_rep())
   {
     di->set_material(highlight_.get_rep());
-    int old_ignore=di->ignore_matl;
-    di->ignore_matl=1;
+    int old_ignore=di->ignore_matl_;
+    di->ignore_matl_=1;
     child_->draw(di, highlight_.get_rep(), time);
-    di->ignore_matl=old_ignore;
+    di->ignore_matl_=old_ignore;
   }
   else
   {
     child_->draw(di, matl, time);
   }
-  if (di->pickmode)
+  if (di->pickmode_)
   {
 #ifdef SCI_64BITS
     glPopName();
@@ -2736,9 +2736,9 @@ GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
     glPopName();
 #endif
         
-    if ((--di->npicks)<1)
+    if ((--di->npicks_)<1)
     { // Could have multiple picks in stack.
-      di->pickchild=0;
+      di->pickchild_=0;
     }
   }
 }
@@ -2748,7 +2748,7 @@ void
 GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
 {
   if (!pre_draw(di, matl, 0)) return;
-  di->polycount+=verts.size()-1;
+  di->polycount_+=verts.size()-1;
   glBegin(GL_LINE_STRIP);
   if (times.size() == verts.size())
   {
@@ -2790,7 +2790,7 @@ GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
       glVertex3fv(d+4);
       d+=7;
     }
-    di->polycount+=(d-&data[0])/7-1;
+    di->polycount_+=(d-&data[0])/7-1;
     glEnd();
   }
   else
@@ -2832,7 +2832,7 @@ GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
       return;
     d=&data[7*istart];
     dend=&data[7*iend]+7;
-    di->polycount+=(dend-d)/7-1;
+    di->polycount_+=(dend-d)/7-1;
     glBegin(GL_LINE_STRIP);
     if (drawmode == 2)
     {
@@ -2864,9 +2864,9 @@ GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 0)) { return; }
 
-  di->polycount+=points_.size()/3;
+  di->polycount_+=points_.size()/3;
 
-  if (di->pickmode)
+  if (di->pickmode_)
   {
     if (pickable)
     {
@@ -2939,7 +2939,7 @@ GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 0)) { return; }
 
-  di->polycount+=points_.size()/3;
+  di->polycount_+=points_.size()/3;
 
   sort();
 
@@ -2950,29 +2950,29 @@ GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
   const double lvz = fabs(matrix[10]);
   if (lvx >= lvy && lvx >= lvz)
   {
-    di->axis = 0;
-    if (matrix[2] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 0;
+    if (matrix[2] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
 
   }
   else if (lvy >= lvx && lvy >= lvz)
   {
-    di->axis = 1;
-    if (matrix[6] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 1;
+    if (matrix[6] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
   }
   else if (lvz >= lvx && lvz >= lvy)
   {
-    di->axis = 2;
-    if (matrix[10] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 2;
+    if (matrix[10] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
   }
 
   vector<unsigned int> &clist =
-    (di->axis==0)?xindices_:((di->axis==1)?yindices_:zindices_);
+    (di->axis_==0)?xindices_:((di->axis_==1)?yindices_:zindices_);
 
   bool &reverse =
-    (di->axis==0)?xreverse_:((di->axis==1)?yreverse_:zreverse_);
+    (di->axis_==0)?xreverse_:((di->axis_==1)?yreverse_:zreverse_);
 
   glVertexPointer(3, GL_FLOAT, 0, &(points_[0]));
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -3006,8 +3006,8 @@ GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  if (di->dir == 1 && reverse ||
-      di->dir == -1 && !reverse)
+  if (di->dir_ == 1 && reverse ||
+      di->dir_ == -1 && !reverse)
   {
     std::reverse(clist.begin(), clist.end());
     reverse = !reverse;
@@ -3211,7 +3211,7 @@ void
 GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
-  di->polycount+=(verts.size()-1)*2*20;
+  di->polycount_+=(verts.size()-1)*2*20;
   Array1<Point> circle1;
   Array1<Point> circle2;
   Array1<Point>* p1=&circle1;
@@ -3311,9 +3311,9 @@ GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushMatrix();
 
   glTranslated(cen.x(), cen.y(), cen.z());
-  di->polycount+=2*(nu-1)*(nv-1);
+  di->polycount_+=2*(nu-1)*(nv-1);
 
-  gluSphere(di->qobj, rad, nu, nv);
+  gluSphere(di->qobj_, rad, nu, nv);
 
   glPopMatrix();
   post_draw(di);
@@ -3325,7 +3325,7 @@ GeomSuperquadric::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
 
-  di->polycount += nu_ * nv_;
+  di->polycount_ += nu_ * nv_;
 
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -3359,7 +3359,7 @@ GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   if (!pre_draw(di, matl, 1)) return;
 
-  di->polycount += 2 * (nu_-1) * (nv_-1) * centers_.size();
+  di->polycount_ += 2 * (nu_-1) * (nv_-1) * centers_.size();
 
   const bool using_texture =
     di->using_cmtexture_ && indices_.size() == centers_.size();
@@ -3383,7 +3383,7 @@ GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
     glPushMatrix();
 
     glTranslated(centers_[i].x(), centers_[i].y(), centers_[i].z());
-    gluSphere(di->qobj, ulr?radii_[i]:global_radius_, nu_, nv_);
+    gluSphere(di->qobj_, ulr?radii_[i]:global_radius_, nu_, nv_);
         
     glPopMatrix();
   }
@@ -3455,12 +3455,12 @@ void
 GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
-  di->polycount+=4;
+  di->polycount_+=4;
 
   switch(di->get_drawtype())
   {
   case DrawInfoOpenGL::WireFrame:
-    if (di->currently_lit)
+    if (di->currently_lit_)
     {
       Vector n1(Plane(p1, p2, p3).normal());
       glBegin(GL_LINE_STRIP);
@@ -3506,7 +3506,7 @@ GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
      * a given vertex.  I don't think there is a faster way to do this
      * using flat shading.
      */
-    if (di->currently_lit)
+    if (di->currently_lit_)
     {
       Vector n1(Plane(p1, p2, p3).normal());
       Vector n2(Plane(p1, p2, p4).normal());
@@ -3600,7 +3600,7 @@ GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushMatrix();
   glTranslated(cen.x(), cen.y(), cen.z());
   glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-  di->polycount+=2*(nu-1)*(nv-1);
+  di->polycount_+=2*(nu-1)*(nv-1);
 
   // Draw the torus
   SinCosTable tab1(nu, 0, 2*Pi);
@@ -3744,8 +3744,8 @@ void
 GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
-  di->polycount++;
-  if (di->currently_lit)
+  di->polycount_++;
+  if (di->currently_lit_)
   {
     switch(di->get_drawtype())
     {
@@ -3813,8 +3813,8 @@ GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
   if (!pre_draw(di, matl, 1)) return;
   if (verts.size() <= 2)
     return;
-  di->polycount+=verts.size()/3;
-  if (di->currently_lit)
+  di->polycount_+=verts.size()/3;
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -3919,11 +3919,11 @@ void
 GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
-  di->polycount += size();
+  di->polycount_ += size();
 
   glShadeModel(GL_FLAT);
   glDisable(GL_NORMALIZE);
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -4006,7 +4006,7 @@ void
 GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
-  di->polycount += size();
+  di->polycount_ += size();
 
   SortPolys();
 
@@ -4017,33 +4017,33 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
   const double lvz = fabs(matrix[10]);
   if (lvx >= lvy && lvx >= lvz)
   {
-    di->axis = 0;
-    if (matrix[2] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 0;
+    if (matrix[2] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
 
   }
   else if (lvy >= lvx && lvy >= lvz)
   {
-    di->axis = 1;
-    if (matrix[6] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 1;
+    if (matrix[6] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
   }
   else if (lvz >= lvx && lvz >= lvy)
   {
-    di->axis = 2;
-    if (matrix[10] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 2;
+    if (matrix[10] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
   }
 
   vector<unsigned int> &clist =
-    (di->axis==0)?xlist_:((di->axis==1)?ylist_:zlist_);
+    (di->axis_==0)?xlist_:((di->axis_==1)?ylist_:zlist_);
 
   bool &reverse =
-    (di->axis==0)?xreverse_:((di->axis==1)?yreverse_:zreverse_);
+    (di->axis_==0)?xreverse_:((di->axis_==1)?yreverse_:zreverse_);
 
   glShadeModel(GL_FLAT);
   glDisable(GL_NORMALIZE);
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -4102,8 +4102,8 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  if (di->dir == 1 && reverse ||
-      di->dir == -1 && !reverse)
+  if (di->dir_ == 1 && reverse ||
+      di->dir_ == -1 && !reverse)
   {
     std::reverse(clist.begin(), clist.end());
     reverse = !reverse;
@@ -4135,9 +4135,9 @@ void
 GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
-  di->polycount += size();
+  di->polycount_ += size();
 
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -4226,7 +4226,7 @@ void
 GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
-  di->polycount += size();
+  di->polycount_ += size();
 
   SortPolys();
 
@@ -4237,31 +4237,31 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
   const double lvz = fabs(matrix[10]);
   if (lvx >= lvy && lvx >= lvz)
   {
-    di->axis = 0;
-    if (matrix[2] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 0;
+    if (matrix[2] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
 
   }
   else if (lvy >= lvx && lvy >= lvz)
   {
-    di->axis = 1;
-    if (matrix[6] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 1;
+    if (matrix[6] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
   }
   else if (lvz >= lvx && lvz >= lvy)
   {
-    di->axis = 2;
-    if (matrix[10] > 0) { di->dir = 1; }
-    else { di->dir = -1; }
+    di->axis_ = 2;
+    if (matrix[10] > 0) { di->dir_ = 1; }
+    else { di->dir_ = -1; }
   }
 
   vector<unsigned int> &clist =
-    (di->axis==0)?xlist_:((di->axis==1)?ylist_:zlist_);
+    (di->axis_==0)?xlist_:((di->axis_==1)?ylist_:zlist_);
 
   bool &reverse =
-    (di->axis==0)?xreverse_:((di->axis==1)?yreverse_:zreverse_);
+    (di->axis_==0)?xreverse_:((di->axis_==1)?yreverse_:zreverse_);
 
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -4320,8 +4320,8 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  if (di->dir == 1 && reverse ||
-      di->dir == -1 && !reverse)
+  if (di->dir_ == 1 && reverse ||
+      di->dir_ == -1 && !reverse)
   {
     std::reverse(clist.begin(), clist.end());
     reverse = !reverse;
@@ -4358,9 +4358,9 @@ GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
   // DAVE: Hack for 3d texture mapping
   if (!pre_draw(di,matl,1)) return;
 
-  di->polycount += size();
+  di->polycount_ += size();
 
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -4430,7 +4430,7 @@ GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   //  return;
   if (!pre_draw(di,matl,1)) return;
-  di->polycount += size();
+  di->polycount_ += size();
 
   if (cmap)
   { // use 1D texturing.
@@ -4459,7 +4459,7 @@ GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
     return; // don't draw if no color map.
   }
 
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
     float *pts=&points[0];
     float *nrmls=&normals[0];
@@ -4521,214 +4521,95 @@ GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     return;
   }
 
-#if 0
-  if (di->multiple_transp)
-  { // multiple transparent objects!!!
-    if (!sorted_p_)
-    {
-      SortPolys(); // Sort the iso-surface.
-    }
+  if (!pre_draw(di,matl,1)) return; // yes, this is lit.
 
-    Array1<float>& check = (di->axis==0)?xc:(di->axis==1)?yc:zc;
+  di->polycount_ += size();
 
-    const int sort_dir = di->dir;
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
-    Array1<int> &cur_list = (di->axis==0)?xlist:((di->axis==1)?ylist:zlist);
-
-    if (di->multiple_transp & MULTI_TRANSP_FIRST_PASS)
-    {
-      int list_pos=0;
-      if (sort_dir == -1) list_pos = cur_list.size()-1;
-      if (!pre_draw(di,matl,1)) return; // yes, this is lit.
-
-      di->polycount += size();
-    }
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    if (!has_color)
+  if (!has_color)
     {
       glColor4f(0,1.0,0.0,alpha_);
     }
-    else
-    {
-      glColor4f(r,g,b,alpha_);
-    }
-
-    glDepthMask(GL_FALSE); // no zbuffering for now.
-#ifdef SCI_NORM_OGL
-    glEnable(GL_NORMALIZE);
-#else
-    glDisable(GL_NORMALIZE);
-#endif
-    glBegin(GL_TRIANGLES); // just spit out triangles.
-
-    if (di->currently_lit)
-    {
-
-      if (sort_dir == -1)
-      { // toggle based on direction.
-        while ((list_pos >= 0) && (check[cur_list[list_pos]] >= di->axis_val))
-        {
-          int nindex = cur_list[list_pos]*3;
-          int pindex = nindex*3;
-        
-          glNormal3fv(&normals[nindex]);
-          glVertex3fv(&points[pindex]);
-          glVertex3fv(&points[pindex+3]);
-          glVertex3fv(&points[pindex+6]);
-        
-          list_pos--;
-        }
-      }
-      else
-      {
-        while ((list_pos < (cur_list.size())) &&
-               (check[cur_list[list_pos]] <= di->axis_val))
-        {
-          int nindex = cur_list[list_pos]*3;
-          int pindex = nindex*3;
-        
-          glNormal3fv(&normals[nindex]);
-          glVertex3fv(&points[pindex]);
-          glVertex3fv(&points[pindex+3]);
-          glVertex3fv(&points[pindex+6]);
-        
-          list_pos++;
-        }
-      }
-    }
-    else
-    { // don't emit the normals.
-      if (sort_dir == -1)
-      { // toggle based on direction.
-        while ((list_pos >= 0) && (check[cur_list[list_pos]] >= di->axis_val))
-        {
-          int nindex = cur_list[list_pos]*3;
-          int pindex = nindex*3;
-        
-          glVertex3fv(&points[pindex]);
-          glVertex3fv(&points[pindex+3]);
-          glVertex3fv(&points[pindex+6]);
-        
-          list_pos--;
-        }
-      }
-      else
-      {
-        while ((list_pos < (cur_list.size())) &&
-               (check[cur_list[list_pos]] <= di->axis_val))
-        {
-          int nindex = cur_list[list_pos]*3;
-          int pindex = nindex*3;
-        
-          glVertex3fv(&points[pindex]);
-          glVertex3fv(&points[pindex+3]);
-          glVertex3fv(&points[pindex+6]);
-        
-          list_pos++;
-        }
-      }
-    }
-    glEnd();
-
-    glDepthMask(GL_TRUE); // turn zbuff back on.
-    glDisable(GL_BLEND);
-    glEnable(GL_NORMALIZE);
-  }
   else
-#endif
-  {
-    if (!pre_draw(di,matl,1)) return; // yes, this is lit.
-
-    di->polycount += size();
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-
-    if (!has_color)
-    {
-      glColor4f(0,1.0,0.0,alpha_);
-    }
-    else
     {
       glColor4f(r,g,b,alpha_);
     }
 
-    if (!sorted_p_)
+  if (!sorted_p_)
     {
       SortPolys(); // sort the iso-surface.
     }
 
-    glDepthMask(GL_FALSE); // no zbuffering for now.
+  glDepthMask(GL_FALSE); // no zbuffering for now.
 #ifdef SCI_NORM_OGL
-    glEnable(GL_NORMALIZE);
+  glEnable(GL_NORMALIZE);
 #else
-    glDisable(GL_NORMALIZE);
+  glDisable(GL_NORMALIZE);
 #endif
 
-    GLdouble matrix[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, matrix);
-    const double lvx = fabs(matrix[2]);
-    const double lvy = fabs(matrix[6]);
-    const double lvz = fabs(matrix[10]);
-    if (lvx >= lvy && lvx >= lvz)
+  GLdouble matrix[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, matrix);
+  const double lvx = fabs(matrix[2]);
+  const double lvy = fabs(matrix[6]);
+  const double lvz = fabs(matrix[10]);
+  if (lvx >= lvy && lvx >= lvz)
     {
-      di->axis = 0;
-      if (matrix[2] > 0) { di->dir = 1; }
-      else { di->dir = -1; }
+      di->axis_ = 0;
+      if (matrix[2] > 0) { di->dir_ = 1; }
+      else { di->dir_ = -1; }
 
     }
-    else if (lvy >= lvx && lvy >= lvz)
+  else if (lvy >= lvx && lvy >= lvz)
     {
-      di->axis = 1;
-      if (matrix[6] > 0) { di->dir = 1; }
-      else { di->dir = -1; }
+      di->axis_ = 1;
+      if (matrix[6] > 0) { di->dir_ = 1; }
+      else { di->dir_ = -1; }
     }
-    else if (lvz >= lvx && lvz >= lvy)
+  else if (lvz >= lvx && lvz >= lvy)
     {
-      di->axis = 2;
-      if (matrix[10] > 0) { di->dir = 1; }
-      else { di->dir = -1; }
+      di->axis_ = 2;
+      if (matrix[10] > 0) { di->dir_ = 1; }
+      else { di->dir_ = -1; }
     }
 
-    const vector<pair<float, unsigned int> >&cur_list =
-      (di->axis==0)?xlist_:((di->axis==1)?ylist_:zlist_);
+  const vector<pair<float, unsigned int> >&cur_list =
+    (di->axis_==0)?xlist_:((di->axis_==1)?ylist_:zlist_);
 
-    const int sort_dir = (di->dir<0)?-1:1;
-    const unsigned int sort_start = (sort_dir>0)?0:(cur_list.size()-1);
-    unsigned int i;
-    unsigned int ndone = 0;
-    glBegin(GL_TRIANGLES);
-    if (di->currently_lit)
+  const int sort_dir = (di->dir_<0)?-1:1;
+  const unsigned int sort_start = (sort_dir>0)?0:(cur_list.size()-1);
+  unsigned int i;
+  unsigned int ndone = 0;
+  glBegin(GL_TRIANGLES);
+  if (di->currently_lit_)
     {
       for (i = sort_start ; ndone < cur_list.size(); ndone++, i += sort_dir)
-      {
-        const unsigned int nindex = cur_list[i].second * 3;
-        const unsigned int pindex = nindex * 3;
-        glNormal3fv(&normals[nindex]);
-        glVertex3fv(&points[pindex+0]);
-        glVertex3fv(&points[pindex+3]);
-        glVertex3fv(&points[pindex+6]);
-      }
+        {
+          const unsigned int nindex = cur_list[i].second * 3;
+          const unsigned int pindex = nindex * 3;
+          glNormal3fv(&normals[nindex]);
+          glVertex3fv(&points[pindex+0]);
+          glVertex3fv(&points[pindex+3]);
+          glVertex3fv(&points[pindex+6]);
+        }
     }
-    else
+  else
     {
       for (i = sort_start; ndone < cur_list.size(); ndone++, i += sort_dir)
-      {
-        const int pindex = cur_list[i].second * 9;
+        {
+          const int pindex = cur_list[i].second * 9;
 
-        glVertex3fv(&points[pindex+0]);
-        glVertex3fv(&points[pindex+3]);
-        glVertex3fv(&points[pindex+6]);
-      }
+          glVertex3fv(&points[pindex+0]);
+          glVertex3fv(&points[pindex+3]);
+          glVertex3fv(&points[pindex+6]);
+        }
     }
-    glEnd();
+  glEnd();
 
-    glDepthMask(GL_TRUE); // turn zbuff back on.
-    glDisable(GL_BLEND);
-    glEnable(GL_NORMALIZE);
-  }
+  glDepthMask(GL_TRUE); // turn zbuff back on.
+  glDisable(GL_BLEND);
+  glEnable(GL_NORMALIZE);
   post_draw(di);
 }
 
@@ -4738,9 +4619,9 @@ GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di,matl,1)) return;
 
-  di->polycount += 6;
+  di->polycount_ += 6;
 
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -4879,7 +4760,7 @@ GeomSimpleBox::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di,matl,1)) return;
 
-  di->polycount += 6;
+  di->polycount_ += 6;
 
 #ifdef SCI_NORM_OGL
   glEnable(GL_NORMALIZE);
@@ -4944,7 +4825,7 @@ GeomCBox::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di,matl,1)) return;
 
-  di->polycount += 6;
+  di->polycount_ += 6;
 
 #ifdef SCI_NORM_OGL
   glEnable(GL_NORMALIZE);
@@ -5045,7 +4926,7 @@ GeomBoxes::draw(DrawInfoOpenGL* di, Material* matl, double)
                  centers_[i].y()-edge/2.0,
                  centers_[i].z()-edge/2.0);
 
-    di->polycount += 6;
+    di->polycount_ += 6;
 
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -5117,9 +4998,9 @@ GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
     return;
   if (!pre_draw(di,matl,1)) return;
 
-  di->polycount += size();
+  di->polycount_ += size();
 
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -5208,9 +5089,9 @@ GeomTrianglesVP::draw(DrawInfoOpenGL* di, Material* matl, double)
     return;
   if (!pre_draw(di,matl,1)) return;
 
-  di->polycount += size();
+  di->polycount_ += size();
 
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -5284,9 +5165,9 @@ GeomTrianglesVPC::draw(DrawInfoOpenGL* di, Material* matl, double)
     return;
   if (!pre_draw(di,matl,1)) return;
 
-  di->polycount += size();
+  di->polycount_ += size();
 
-  if (di->currently_lit)
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -5385,7 +5266,7 @@ GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
   matrix[8]=axis.x(); matrix[9]=axis.y(); matrix[10]=axis.z();matrix[11]=0;
   matrix[12]=0;       matrix[13]=0;       matrix[14]=0;       matrix[15]=1;
   glMultMatrixd(matrix);
-  di->polycount+=2*(nu-1)*(nv-1);
+  di->polycount_+=2*(nu-1)*(nv-1);
 
   // Draw the torus
   double a1=start_angle;
@@ -5526,8 +5407,8 @@ GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
   if (!pre_draw(di, matl, 1)) return;
   if (verts.size() <= 2)
     return;
-  di->polycount+=verts.size()-2;
-  if (di->currently_lit)
+  di->polycount_+=verts.size()-2;
+  if (di->currently_lit_)
   {
     glDisable(GL_NORMALIZE);
     switch(di->get_drawtype())
@@ -5608,8 +5489,8 @@ GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
     return;
   if (!pre_draw(di, matl, 1)) return;
 
-  di->polycount += size();
-  if (di->currently_lit)
+  di->polycount_ += size();
+  if (di->currently_lit_)
   {
 #ifdef SCI_NORM_OGL     
     glEnable(GL_NORMALIZE);
@@ -5954,7 +5835,7 @@ GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
   glDisable(GL_LIGHTING);
   glRasterPos3d( at.x(), at.y(), at.z() );
   glPushAttrib (GL_LIST_BIT);
-  glListBase(di->fontbase[fontindex]);
+  glListBase(di->fontbase_[fontindex]);
   glCallLists(text.size(), GL_UNSIGNED_BYTE, (GLubyte *)text.c_str());
   glPopAttrib ();
   post_draw(di);
@@ -5993,7 +5874,7 @@ GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
     if (indexing) { glTexCoord1f(index_[i]); }
 
     glRasterPos3d( location_[i].x(), location_[i].y(), location_[i].z() );
-    glListBase(di->fontbase[fontindex_]);
+    glListBase(di->fontbase_[fontindex_]);
     glCallLists(text_[i].size(), GL_UNSIGNED_BYTE,
                 (GLubyte *)text_[i].c_str());
   }
@@ -6045,7 +5926,7 @@ GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
       if (indexing) { glTexCoord1f(index_[i]); }
 
       glRasterPos3d( location_[i].x(), location_[i].y(), location_[i].z() );
-      glListBase(di->fontbase[fontindex_]);
+      glListBase(di->fontbase_[fontindex_]);
       glCallLists(text_[i].size(), GL_UNSIGNED_BYTE,
                   (GLubyte *)text_[i].c_str());
     }
@@ -6411,7 +6292,7 @@ GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 #endif
     glActiveTexture(GL_TEXTURE0);
 #endif
-  di->polycount++;
+  di->polycount_++;
   post_draw(di);
 }
 
