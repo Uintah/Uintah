@@ -103,10 +103,10 @@ Gradient::execute()
   {
     fGeneration_ = fieldin->generation;
 
-    const TypeDescription *ftd = fieldin->get_type_description(0);
-    const TypeDescription *mtd = fieldin->get_type_description(1);
-    const TypeDescription *btd = fieldin->get_type_description(2);
-    const TypeDescription *dtd = fieldin->get_type_description(3);
+    const TypeDescription *ftd = fieldin->get_type_description(Field::FIELD_NAME_ONLY_E);
+    const TypeDescription *mtd = fieldin->get_type_description(Field::MESH_TD_E);
+    const TypeDescription *btd = fieldin->get_type_description(Field::BASIS_TD_E);
+    const TypeDescription *dtd = fieldin->get_type_description(Field::FDATA_TD_E);
 
     CompileInfoHandle ci =
       GradientAlgo::get_compile_info(ftd, mtd, btd, dtd, otd);

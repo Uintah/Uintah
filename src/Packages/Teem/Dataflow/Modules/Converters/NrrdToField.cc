@@ -440,8 +440,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     // Attempt to use the mesh provided
     mHandle = origfieldH->mesh();
     const TypeDescription *mtd = mHandle->get_type_description();
-    const TypeDescription *btd = origfieldH->get_type_description(2);
-    const TypeDescription *dtd = origfieldH->get_type_description(3);
+    const TypeDescription *btd = origfieldH->get_type_description(Field::BASIS_TD_E);
+    const TypeDescription *dtd = origfieldH->get_type_description(Field::FDATA_TD_E);
     // verify the data will "fit" into the mesh passed in
     if (has_data_) {
       const TypeDescription *td = origfieldH->get_type_description();

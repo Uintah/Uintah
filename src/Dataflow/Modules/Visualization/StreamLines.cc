@@ -213,7 +213,7 @@ StreamLines::execute()
     const TypeDescription *sftd = sField->get_type_description();
     
     const TypeDescription *sfdtd = 
-      (*sField->get_type_description(3)->get_sub_type())[0];
+      (*sField->get_type_description(Field::FDATA_TD_E)->get_sub_type())[0];
     const TypeDescription *sltd = sField->order_type_description();
     string dsttype = "double";
     if (value == 0) dsttype = sfdtd->get_name();

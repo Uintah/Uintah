@@ -37,10 +37,10 @@ CompileInfoHandle MappingMatrixToFieldAlgo::get_compile_info(FieldHandle& field)
 
   std::string datatype = "unsigned int";
   std::string fieldtype_in = field->get_type_description()->get_name();
-  std::string fieldtype_out = field->get_type_description(0)->get_name() + "<" +
-              field->get_type_description(1)->get_name() + "," + 
-              field->get_type_description(2)->get_similar_name(datatype, 0,"<", "> ") + "," +
-              field->get_type_description(3)->get_similar_name(datatype, 0,"<", "> ") + " > ";
+  std::string fieldtype_out = field->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+              field->get_type_description(Field::MESH_TD_E)->get_name() + "," + 
+              field->get_type_description(Field::BASIS_TD_E)->get_similar_name(datatype, 0,"<", "> ") + "," +
+              field->get_type_description(Field::FDATA_TD_E)->get_similar_name(datatype, 0,"<", "> ") + " > ";
         
   // As I use my own Tensor and Vector algorithms they need to be
   // converted when reading the data, hence separate algorithms are

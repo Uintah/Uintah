@@ -89,7 +89,7 @@ void ForwardMagneticField::execute(){
   FieldHandle magnitudes;
   // create algo.
   const string new_field_type =
-    detectors->get_type_description(0)->get_name() + "<double> ";  
+    detectors->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<double> ";  
   const TypeDescription *efld_td = efld->get_type_description();
   const TypeDescription *ctfld_td = ctfld->get_type_description();
   const TypeDescription *detfld_td = detectors->get_type_description();

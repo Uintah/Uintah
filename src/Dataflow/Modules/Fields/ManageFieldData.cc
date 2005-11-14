@@ -215,7 +215,7 @@ ManageFieldData::execute()
     else if (gui_preserve_scalar_type_.get())
     {
       TypeDescription::td_vec *tdv = 
-        ifieldhandle->get_type_description(3)->get_sub_type();
+        ifieldhandle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
       outtypestring = (*tdv)[0]->get_name();
     }
     else
@@ -228,20 +228,20 @@ ManageFieldData::execute()
         imatrixhandle->ncols() == (int)datasize)
     {
       basisname = 
-        ifieldhandle->get_type_description(2)->get_similar_name(outtypestring,
+        ifieldhandle->get_type_description(Field::BASIS_TD_E)->get_similar_name(outtypestring,
                                                                 0,
                                                                 "<", " >, ");
     }
     else
     {
-      if (ifieldhandle->get_type_description(2)->get_name().find("Constant") == string::npos)
+      if (ifieldhandle->get_type_description(Field::BASIS_TD_E)->get_name().find("Constant") == string::npos)
       {
         basisname = "ConstantBasis<" + outtypestring + ">, ";
       }
       else
       {
         TypeDescription::td_vec *bdv =
-          ifieldhandle->get_type_description(1)->get_sub_type();
+          ifieldhandle->get_type_description(Field::MESH_TD_E)->get_sub_type();
         const string linear = (*bdv)[0]->get_name();
         const string btype = linear.substr(0, linear.find_first_of('<'));
         basisname = btype + "<" + outtypestring + ">, ";
@@ -249,10 +249,10 @@ ManageFieldData::execute()
     }
 
     const string oftn =
-      ifieldhandle->get_type_description(0)->get_name() + "<" +
-      ifieldhandle->get_type_description(1)->get_name() + "," +
+      ifieldhandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      ifieldhandle->get_type_description(Field::MESH_TD_E)->get_name() + "," +
       basisname +
-      ifieldhandle->get_type_description(3)->get_similar_name(outtypestring, 0,
+      ifieldhandle->get_type_description(Field::FDATA_TD_E)->get_similar_name(outtypestring, 0,
                                                               "<", " >") +
       " > ";
     CompileInfoHandle ci_mesh =

@@ -166,11 +166,11 @@ AttractNormals::execute()
   const TypeDescription *ltd = ifieldhandle->order_type_description();
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
   const string oftn = 
-    ifieldhandle->get_type_description(0)->get_name() + "<" +
-    ifieldhandle->get_type_description(1)->get_name() + ", " +
-    ifieldhandle->get_type_description(2)->get_similar_name("Vector",
+    ifieldhandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+    ifieldhandle->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+    ifieldhandle->get_type_description(Field::BASIS_TD_E)->get_similar_name("Vector",
                                                             0, "<", " >, ") +
-    ifieldhandle->get_type_description(3)->get_similar_name("Vector",
+    ifieldhandle->get_type_description(Field::FDATA_TD_E)->get_similar_name("Vector",
                                                             0, "<", " >") +
     " > ";
 

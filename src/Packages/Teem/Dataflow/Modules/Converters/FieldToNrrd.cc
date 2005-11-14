@@ -122,7 +122,7 @@ void FieldToNrrd::execute()
   }
   
   const string meshstr =
-    field_handle->get_type_description(0)->get_name().substr(0, 6);
+    field_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name().substr(0, 6);
   if (!(field_handle->mesh()->is_editable() || meshstr == "Struct"))
   {
     if (opoints_->nconnections())

@@ -277,8 +277,12 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
     {
       // Check field type - this only works for CurveFields<double>
       // extracted from a TriSurf
-      if ( (hFieldBoundary->get_type_name(0) == "CurveField") &&
-           (hFieldBoundary->get_type_name(1) == "double") )
+      const TypeDescription *mtd = 
+	hFieldBoundary->get_type_description(Field::MESH_TD_E);
+      const TypeDescription *dtd = 
+	hFieldBoundary->get_type_description(Field::FDATA_TD_E);
+      if (mtd->get_name().find("CurveMesh") != string::npos &&
+	  dtd->get_name().find("double") != string::npos)
       {
         remark("Field boundary input is a CField");
         hCurveBoundary = dynamic_cast<CField*> ( hFieldBoundary.get_rep() );

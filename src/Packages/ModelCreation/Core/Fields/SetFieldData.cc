@@ -48,7 +48,7 @@ SetFieldDataAlgo::get_compile_info(FieldHandle field, MatrixHandle matrix,int nu
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   std::string include_path(TypeDescription::cc_to_h(__FILE__));
   
-  const SCIRun::TypeDescription *basistype = field->get_type_description(2);
+  const SCIRun::TypeDescription *basistype = field->get_type_description(Field::BASIS_TD_E);
   const SCIRun::TypeDescription::td_vec *basis_subtype = basistype->get_sub_type();
   const SCIRun::TypeDescription *data_type = (*basis_subtype)[0];
   
@@ -58,10 +58,10 @@ SetFieldDataAlgo::get_compile_info(FieldHandle field, MatrixHandle matrix,int nu
   if (algo_type == "Vector") datatype = "Vector";
   if (algo_type == "Tensor") datatype = "Tensor";
   
-  std::string outputtype = field->get_type_description(0)->get_name() + "<" +
-                           field->get_type_description(1)->get_name() + "," +
-                           field->get_type_description(2)->get_similar_name(datatype, 0,"<", " >") + "," +
-                           field->get_type_description(3)->get_similar_name(datatype, 0,"<", " >") + " > ";
+  std::string outputtype = field->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+                           field->get_type_description(Field::MESH_TD_E)->get_name() + "," +
+                           field->get_type_description(Field::BASIS_TD_E)->get_similar_name(datatype, 0,"<", " >") + "," +
+                           field->get_type_description(Field::FDATA_TD_E)->get_similar_name(datatype, 0,"<", " >") + " > ";
   
   
   CompileInfoHandle ci = 

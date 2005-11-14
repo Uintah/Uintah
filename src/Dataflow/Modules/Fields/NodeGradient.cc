@@ -99,7 +99,7 @@ NodeGradient::execute()
     return;
   }
   
-  if (fieldin->get_type_description(1)->get_name().find("LatVolMesh", 0) == 
+  if (fieldin->get_type_description(Field::MESH_TD_E)->get_name().find("LatVolMesh", 0) == 
       string::npos)
   {
     error("This module only works on fields with based on LatVolMesh.");

@@ -355,20 +355,20 @@ bool FieldsMath::ApplyMappingMatrix(FieldHandle input, FieldHandle& output, Matr
   }
 
 
-  TypeDescription::td_vec *tdv = input->get_type_description(3)->get_sub_type();
+  TypeDescription::td_vec *tdv = input->get_type_description(Field::FDATA_TD_E)->get_sub_type();
   std::string accumtype = (*tdv)[0]->get_name();
   if ((accumtype.find("Vector")!=std::string::npos)&&(accumtype.find("Tensor")!=std::string::npos)) { accumtype = "double"; }
   const std::string oftn = 
-    datafield->get_type_description(0)->get_name() + "<" +
-    datafield->get_type_description(1)->get_name() + ", " +
-    datafield->get_type_description(2)->get_similar_name(accumtype,0, "<", " >, ") +
-    datafield->get_type_description(3)->get_similar_name(accumtype,0, "<", " >") + " >";
+    datafield->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+    datafield->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+    datafield->get_type_description(Field::BASIS_TD_E)->get_similar_name(accumtype,0, "<", " >, ") +
+    datafield->get_type_description(Field::FDATA_TD_E)->get_similar_name(accumtype,0, "<", " >") + " >";
 
   CompileInfoHandle ci =
     ApplyMappingMatrixAlgo::get_compile_info(input->get_type_description(),
             input->order_type_description(),datafield->get_type_description(),
             oftn,datafield->order_type_description(),
-            input->get_type_description(3),accumtype);
+            input->get_type_description(Field::FDATA_TD_E),accumtype);
 
   Handle<ApplyMappingMatrixAlgo> algo;      
   if (!DynamicCompilation::compile(ci, algo,pr_))
@@ -467,11 +467,11 @@ bool FieldsMath::Unstructure(FieldHandle input,FieldHandle& output)
   else
   {
     const TypeDescription *ftd = input->get_type_description();
-    TypeDescription::td_vec *tdvdata = input->get_type_description(3)->get_sub_type();
+    TypeDescription::td_vec *tdvdata = input->get_type_description(Field::FDATA_TD_E)->get_sub_type();
     std::string dataname = (*tdvdata)[0]->get_name();
     
     SCIRun::CompileInfoHandle ci = SCIRun::UnstructureAlgo::get_compile_info(ftd, 
-        dstname,input->get_type_description(2)->get_name(),dataname);
+        dstname,input->get_type_description(Field::BASIS_TD_E)->get_name(),dataname);
         
     Handle<SCIRun::UnstructureAlgo> algo;
     if (!(DynamicCompilation::compile(ci, algo, false, pr_))) 

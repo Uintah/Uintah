@@ -143,10 +143,10 @@ main(int argc, char **argv)
 	 << ".  Exiting..." << std::endl;
     return 2;
   }
-  if (handle->get_type_description(0)->get_name() != "HexVolField") 
+  if (handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "HexVolField") 
   {
     cerr << "Error -- input field wasn't a HexVolField (type_name=" 
-	 << handle->get_type_description(0)->get_name() << std::endl;
+	 << handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() << std::endl;
     return 2;
   }
 

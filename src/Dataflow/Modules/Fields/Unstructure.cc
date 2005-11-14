@@ -151,7 +151,7 @@ Unstructure::execute()
     else {
       const TypeDescription *ftd = ifieldhandle->get_type_description();
       TypeDescription::td_vec *tdv = 
-	ifieldhandle->get_type_description(3)->get_sub_type();
+	ifieldhandle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
       string data_name = (*tdv)[0]->get_name();
       
       CompileInfoHandle ci = UnstructureAlgo::get_compile_info(ftd, dstname, 

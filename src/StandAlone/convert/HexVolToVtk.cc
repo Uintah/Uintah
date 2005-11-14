@@ -70,9 +70,10 @@ main(int argc, char **argv) {
 	 << std::endl;
     exit(0);
   }
-  if (handle->get_type_name(0) != "HexVolField") {
+  const TypeDescription *mtd = handle->get_type_description(Field::MESH_TD_E);
+  if (mtd->get_name().find("HexVolMesh") == string::npos) {
     cerr << "Error -- input field wasn't a HexVolField (type_name="
-	 << handle->get_type_name(0) << std::endl;
+	 << mtd->get_name() << std::endl;
     exit(0);
   }
 

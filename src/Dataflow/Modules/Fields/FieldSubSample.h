@@ -152,9 +152,9 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
   unsigned int jstop_stride;
   unsigned int kstop_stride; 
 
-  if( field_h->get_type_description(0)->get_name() == "StructHexVolField" ||
-      field_h->get_type_description(0)->get_name() == "StructQuadSurfField" ||
-      field_h->get_type_description(0)->get_name() == "StructCurveField" ) {
+  if( field_h->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "StructHexVolField" ||
+      field_h->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "StructQuadSurfField" ||
+      field_h->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "StructCurveField" ) {
 
     // Account for the modulo of stride so that the last node will be
     // included even if it "partial" cell when compared to the others.
@@ -213,7 +213,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
   imesh->begin( icellItr );
   omesh->begin( ocellItr );
-  string mesh_name = ifield->get_type_description(1)->get_name();
+  string mesh_name = ifield->get_type_description(Field::MESH_TD_E)->get_name();
   // For structured geometery we need to set the correct location.
   if(mesh_name.find("LatVolMesh") != string::npos ||
      mesh_name.find("ImageMesh") != string::npos  ||

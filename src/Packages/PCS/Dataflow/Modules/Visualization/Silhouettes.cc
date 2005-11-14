@@ -221,8 +221,8 @@ Silhouettes::execute(){
       geomflush = true;
     }
 
-    const TypeDescription *ftd = fHandle->get_type_description(0);
-    const TypeDescription *ttd = fHandle->get_type_description(1);
+    const TypeDescription *ftd = fHandle->get_type_description(Field::FIELD_NAME_ONLY_E);
+    const TypeDescription *ttd = fHandle->get_type_description(Field::MESH_TD_E);
 
     CompileInfoHandle ci = SilhouettesAlgo::get_compile_info(ftd, ttd);
     Handle<SilhouettesAlgo> algo;

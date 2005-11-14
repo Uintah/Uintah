@@ -37,7 +37,7 @@ GetFieldDataAlgo::get_compile_info(FieldHandle field)
 {
 
   const SCIRun::TypeDescription *fsrc = field->get_type_description();
-  const SCIRun::TypeDescription *basistype = field->get_type_description(2);
+  const SCIRun::TypeDescription *basistype = field->get_type_description(Field::BASIS_TD_E);
   const SCIRun::TypeDescription::td_vec *basis_subtype = basistype->get_sub_type();
   const SCIRun::TypeDescription *datatype = (*basis_subtype)[0];  
 

@@ -170,14 +170,14 @@ DirectMapping::execute()
     error_ = false;
 
     TypeDescription::td_vec *tdv = 
-      sfHandle->get_type_description(3)->get_sub_type();
+      sfHandle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
     const string outputDataType = (*tdv)[0]->get_name();
     const string oftn =
-      dfHandle->get_type_description(0)->get_name() + "<" +
-      dfHandle->get_type_description(1)->get_name() + ", " +
-      dfHandle->get_type_description(2)->get_similar_name(outputDataType, 
+      dfHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      dfHandle->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+      dfHandle->get_type_description(Field::BASIS_TD_E)->get_similar_name(outputDataType, 
                                                           0, "<", " >, ") +
-      dfHandle->get_type_description(3)->get_similar_name(outputDataType,
+      dfHandle->get_type_description(Field::FDATA_TD_E)->get_similar_name(outputDataType,
                                                           0, "<", " >") + " >";
 
     CompileInfoHandle ci =

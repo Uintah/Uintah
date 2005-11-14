@@ -938,7 +938,7 @@ execute(FieldHandle& ifield_h,
   ofield_h = FieldHandle(ofield);
 
   bool curveField =
-    (ofield->get_type_description(1)->get_name().find("Curve") !=
+    (ofield->get_type_description(Field::MESH_TD_E)->get_name().find("Curve") !=
      string::npos );
 
 

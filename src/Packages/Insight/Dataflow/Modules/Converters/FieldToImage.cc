@@ -120,7 +120,7 @@ bool FieldToImage::run( const FieldHandle &fh)
   typedef GenericField<IMesh, IBasis, FData2d<data, IMesh> > IF;
   typedef ITKImageField<data> ITKIF;
 
-  string mesh_type = fh->get_type_description(1)->get_name();
+  string mesh_type = fh->get_type_description(Field::MESH_TD_E)->get_name();
 
   // try to dynamically cast to the itk types first, then use
   // get_type_description to see if they are regular latvols or images
@@ -265,7 +265,7 @@ bool FieldToImage::run_vector( const FieldHandle &fh)
 
   FieldType current_type;
 
-  string mesh_type = fh->get_type_description(1)->get_name();
+  string mesh_type = fh->get_type_description(Field::MESH_TD_E)->get_name();
 
   // try to dynamically cast to the itk types first, then use
   // get_type_description to see if they are regular latvols or images

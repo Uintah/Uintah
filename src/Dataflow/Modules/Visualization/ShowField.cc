@@ -380,7 +380,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
   const TypeDescription *ftd = fld_handle->get_type_description();
   const TypeDescription *ltd = fld_handle->order_type_description();
   // description for just the data in the field
-  cur_field_data_type_ = fld_handle->get_type_description(1)->get_name();
+  cur_field_data_type_ = fld_handle->get_type_description(Field::MESH_TD_E)->get_name();
   cur_field_basis_order_ = fld_handle->basis_order();
 
   if (recompile_nonvector)
@@ -487,7 +487,7 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     }
 
     const TypeDescription *data_type_description =
-      fld_handle->get_type_description(1);
+      fld_handle->get_type_description(Field::MESH_TD_E);
     const string fdt = data_type_description->get_name();
     int basis_order = fld_handle->basis_order();
     if (!fetch_typed_algorithm(fld_handle, vfld_handle,
@@ -590,10 +590,10 @@ ShowField::execute()
 
     if (vfld_handle->mesh().get_rep() != fld_handle->mesh().get_rep()) {
       // If not the same mesh make sure they are the same type.
-      if( fld_handle->get_type_description(0)->get_name() !=
-	  vfld_handle->get_type_description(0)->get_name() ||
-	  fld_handle->get_type_description(1)->get_name() !=
-	  vfld_handle->get_type_description(1)->get_name() ) {
+      if( fld_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() !=
+	  vfld_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() ||
+	  fld_handle->get_type_description(Field::MESH_TD_E)->get_name() !=
+	  vfld_handle->get_type_description(Field::MESH_TD_E)->get_name() ) {
 	error("The input fields must have the same mesh type.");
 	error_ = true;
 	return;

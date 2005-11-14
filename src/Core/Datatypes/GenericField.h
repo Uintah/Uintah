@@ -127,7 +127,9 @@ public:
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
   static  const string type_name(int n = -1);
-  virtual const TypeDescription* get_type_description(int n = -1) const;
+ 
+  virtual 
+  const TypeDescription* get_type_description(td_info_e td = FULL_TD_E) const;
 
   // -- mutability --
   virtual void freeze();
@@ -664,10 +666,8 @@ const string GenericField<Mesh, Basis, FData>::type_name(int n)
 
 template <class Mesh, class Basis, class FData>
 const TypeDescription *
-GenericField<Mesh, Basis, FData>::get_type_description(int n) const
+GenericField<Mesh, Basis, FData>::get_type_description(td_info_e td) const
 {
-  ASSERT((n >= -1) && n <= 3);
-
   static string name(type_name(0));
   static string namesp("SCIRun");
   static string path(__FILE__);
@@ -675,33 +675,43 @@ GenericField<Mesh, Basis, FData>::get_type_description(int n) const
   const TypeDescription *sub2 = SCIRun::get_type_description((Basis*)0);
   const TypeDescription *sub3 = SCIRun::get_type_description((FData*)0);
 
-  if (n == -1) {
-    static TypeDescription* tdn1 = 0;
-    if (tdn1 == 0) {
-      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(3);
-      (*subs)[0] = sub1;
-      (*subs)[1] = sub2;
-      (*subs)[2] = sub3;
-      tdn1 = scinew TypeDescription(name, subs, path, namesp, 
-				    TypeDescription::FIELD_E);
-    } 
-    return tdn1;
-  }
-  else if(n == 0) {
-    static TypeDescription* tdn0 = 0;
-    if (tdn0 == 0) {
-      tdn0 = scinew TypeDescription(name, 0, path, namesp, 
-				    TypeDescription::FIELD_E);
+  switch (td) {
+  default:
+  case FULL_TD_E:
+    {
+      static TypeDescription* tdn1 = 0;
+      if (tdn1 == 0) {
+	TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(3);
+	(*subs)[0] = sub1;
+	(*subs)[1] = sub2;
+	(*subs)[2] = sub3;
+	tdn1 = scinew TypeDescription(name, subs, path, namesp, 
+				      TypeDescription::FIELD_E);
+      } 
+      return tdn1;
     }
-    return tdn0;
-  }
-  else if(n == 1) {
-    return sub1;
-  }
-  else if(n == 2) {
-    return sub2;
-  }
-  return sub3;
+  case FIELD_NAME_ONLY_E:
+    {
+      static TypeDescription* tdn0 = 0;
+      if (tdn0 == 0) {
+	tdn0 = scinew TypeDescription(name, 0, path, namesp, 
+				      TypeDescription::FIELD_E);
+      }
+      return tdn0;
+    }
+  case MESH_TD_E:
+    {
+      return sub1;
+    }
+  case BASIS_TD_E:
+    {
+      return sub2;
+    }
+  case FDATA_TD_E:
+    {
+      return sub3;
+    }
+  };
 }
 
 template <class T>

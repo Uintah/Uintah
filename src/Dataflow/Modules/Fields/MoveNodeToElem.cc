@@ -122,15 +122,15 @@ MoveNodeToElem::execute()
   {
     const TypeDescription *ftd = ifield->get_type_description();
     TypeDescription::td_vec *tdv = 
-      ifield->get_type_description(3)->get_sub_type();
+      ifield->get_type_description(Field::FDATA_TD_E)->get_sub_type();
     const string actype = (*tdv)[0]->get_name();
     const string btype =
       "ConstantBasis<" + actype + "> ";
     const string fts =
-      ifield->get_type_description(0)->get_name() + "<" +
-      ifield->get_type_description(1)->get_name() + "," +
+      ifield->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      ifield->get_type_description(Field::MESH_TD_E)->get_name() + "," +
       btype + "," +
-      ifield->get_type_description(3)->get_name() + "> ";
+      ifield->get_type_description(Field::FDATA_TD_E)->get_name() + "> ";
     CompileInfoHandle ci = MoveNodeToElemAlgo::get_compile_info(ftd, fts, ext);
     Handle<MoveNodeToElemAlgo> algo;
     if (!DynamicCompilation::compile(ci, algo, false, this))

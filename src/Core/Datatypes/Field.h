@@ -49,6 +49,14 @@ typedef LockingHandle<TensorFieldInterface> TensorFieldInterfaceHandle;
 class SHARE Field: public PropertyManager
 {
 public:
+  enum  td_info_e {
+    FULL_TD_E,
+    FIELD_NAME_ONLY_E,
+    MESH_TD_E,
+    BASIS_TD_E,
+    FDATA_TD_E
+  };
+
   Field();
 
   virtual ~Field();
@@ -60,7 +68,8 @@ public:
   //! Required virtual functions
   virtual MeshHandle mesh() const = 0;
   virtual void mesh_detach() = 0;
-  virtual const TypeDescription* get_type_description(int n = -1) const = 0; 
+  virtual const TypeDescription* 
+  get_type_description(td_info_e td = FULL_TD_E) const = 0; 
   
 
   //! Required interfaces
@@ -76,7 +85,6 @@ public:
   virtual void io(Piostream &stream);
 
   //! All instantiable classes need to define this.
-  virtual const string get_type_name(int n = -1) const;
   virtual bool is_scalar() const = 0;
 
   virtual unsigned int data_size() const = 0;
