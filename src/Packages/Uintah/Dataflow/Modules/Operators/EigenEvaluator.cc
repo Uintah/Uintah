@@ -81,7 +81,10 @@ void EigenEvaluator::execute(void) {
   if(!in->get(hTF)){
     std::cerr<<"EigenEvaluator::execute(void) Didn't get a handle\n";
     return;
-  } else if ( hTF->get_type_name(1) != "Matrix3" ){
+  }
+
+  const TypeDescription *td = hTF->get_type_description(Field::MESH_TD_E);
+  if ( td->get_name().find("Matrix3") == string::npos ){
     std::cerr<<"Input is not a Tensor field\n";
     return;
   }

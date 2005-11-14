@@ -444,12 +444,11 @@ void NodeHedgehog::execute()
     error("Input is not a Vector field.");
     return;
   }
-  if(vfield->mesh()->get_type_name(0) != 
-     "LatVolMesh<HexTrilinearLgn<Point> > ") {
+  const TypeDescription *td = vfield->get_type_description(Field::MESH_TD_E);
+  if(td->get_name().find("LatVolMesh") == string::npos ) {
     error("First field is not a LatVolMesh based field.");
     return;
   }
-
   LVMesh *mesh;
   CVField* cfld = dynamic_cast<CVField *>(vfield.get_rep());
   LVField* lfld = 0;

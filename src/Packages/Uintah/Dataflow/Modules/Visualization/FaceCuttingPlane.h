@@ -43,8 +43,11 @@ FaceCuttingPlaneAlgoT<FIELD>::get_bounds_and_dimensions( FieldHandle fld,
                                                   int& nx, int& ny, 
                                                   int& nz, BBox& bbox)
 {
-  if( fld->mesh()->get_type_name(0) != "LatVolMesh<HexTrilinearLgn<Point> > " )
+  const TypeDescription *td = 
+    fld->get_type_description(Field::MESH_TD_E);
+  if( td->get_name().find("LatVolMesh") == string::npos ){
     return false;
+  }
 
   FIELD *field = (FIELD *)fld.get_rep();
   typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
