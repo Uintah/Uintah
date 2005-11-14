@@ -72,14 +72,6 @@ Mesh::type_name(int n)
   return name;
 }
 
-const string
-Mesh::get_type_name(int n) const
-{
-  ASSERT(n==0);
-  return get_type_description()->get_name();
-}
-
-
 //! Return the transformation that takes a 0-1 space bounding box 
 //! to the current bounding box of this mesh.
 void Mesh::get_canonical_transform(Transform &t) 
