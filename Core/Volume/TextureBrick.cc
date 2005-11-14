@@ -597,6 +597,8 @@ NrrdTextureBrick::get_type_description(tb_td_info_e tdi) const
       } 
       td = tdn1;
     }
+    break;
+
   case TextureBrick::TB_NAME_ONLY_E :
     {
       static TypeDescription* tdn0 = 0;
@@ -605,11 +607,14 @@ NrrdTextureBrick::get_type_description(tb_td_info_e tdi) const
       }
       td = tdn0;
     }
+    break;
+
   case TextureBrick::DATA_TD_E :
     {
       static TypeDescription* tdnn = 0;
       td = tdnn;
     }
+    break;
   };
   return td;
 } 
