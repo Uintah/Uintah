@@ -151,7 +151,7 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
   
   IMesh* m = scinew IMesh(size_x, size_y, min, max);
   
-  IF::mesh_handle_type mh(m);
+  typename IF::mesh_handle_type mh(m);
   
   FieldHandle fh;
   
@@ -228,7 +228,7 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
   
   LVMesh* m = scinew LVMesh(size_x, size_y, size_z, min, max);
   
-  LVF::mesh_handle_type mh(m);
+  typename LVF::mesh_handle_type mh(m);
   
   FieldHandle fh;
   
