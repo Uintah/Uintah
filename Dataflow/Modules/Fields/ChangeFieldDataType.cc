@@ -111,7 +111,7 @@ ChangeFieldDataType::execute()
   // The output port is required.
   FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
 
-  const string old_data_str = fh->get_type_description(1)->get_name();
+  const string old_data_str = fh->get_type_description(Field::MESH_TD_E)->get_name();
   const string new_data_str = outputdatatype_.get();
 
   if (generation_ != fh.get_rep()->generation) 
@@ -149,11 +149,11 @@ ChangeFieldDataType::execute()
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrc_td = fh->get_type_description();
     const string oftn = 
-      fh->get_type_description(0)->get_name() + "<" +
-      fh->get_type_description(1)->get_name() + ", " +
-      fh->get_type_description(2)->get_similar_name(new_data_str,
+      fh->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      fh->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+      fh->get_type_description(Field::BASIS_TD_E)->get_similar_name(new_data_str,
 							 0, "<", " >, ") +
-      fh->get_type_description(3)->get_similar_name(new_data_str,
+      fh->get_type_description(Field::FDATA_TD_E)->get_similar_name(new_data_str,
 							 0, "<", " >") + " >";
 
   CompileInfoHandle create_ci =

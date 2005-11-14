@@ -130,18 +130,18 @@ MoveElemToNode::execute()
   {
     const TypeDescription *ftd = ifield->get_type_description();
     TypeDescription::td_vec *tdv = 
-      ifield->get_type_description(3)->get_sub_type();
+      ifield->get_type_description(Field::FDATA_TD_E)->get_sub_type();
     const string actype = (*tdv)[0]->get_name();
     TypeDescription::td_vec *bdv =
-      ifield->get_type_description(1)->get_sub_type();
+      ifield->get_type_description(Field::MESH_TD_E)->get_sub_type();
     const string linear = (*bdv)[0]->get_name();
     const string btype =
       linear.substr(0, linear.find_first_of('<')) + "<" + actype + "> ";
     const string fts =
-      ifield->get_type_description(0)->get_name() + "<" +
-      ifield->get_type_description(1)->get_name() + "," +
+      ifield->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      ifield->get_type_description(Field::MESH_TD_E)->get_name() + "," +
       btype + "," +
-      ifield->get_type_description(3)->get_name() + "> ";
+      ifield->get_type_description(Field::FDATA_TD_E)->get_name() + "> ";
 
     CompileInfoHandle ci = MoveElemToNodeAlgo::get_compile_info(ftd, fts, ext);
     Handle<MoveElemToNodeAlgo> algo;

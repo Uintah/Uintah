@@ -138,9 +138,15 @@ void AnisoSphereModel::execute() {
   // get electrode handle
   FieldHandle hElectrodes;
   hInElectrodes->get(hElectrodes);
+
+  const TypeDescription *mtd = 
+    hElectrodes->get_type_description(Field::MESH_TD_E);
+  const TypeDescription *dtd = 
+    hElectrodes->get_type_description(Field::FDATA_TD_E);
+
   if(!hElectrodes.get_rep() ||
-     !(hElectrodes->get_type_name(1).find("PointCloudMesh") != string::npos) ||
-     !(hElectrodes->get_type_name(3).find("double") != string::npos))
+     !(mtd->get_name().find("PointCloudMesh") != string::npos) ||
+     !(dtd->get_name().find("double") != string::npos))
   {
     error("input electrode field is not of type 'PointCloudField<double>'");
     return;

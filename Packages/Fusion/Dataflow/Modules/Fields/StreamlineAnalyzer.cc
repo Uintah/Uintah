@@ -146,12 +146,12 @@ StreamlineAnalyzer::execute()
 
   cerr << "StreamlineAnalyzer getting type " << endl;
 
-  cerr << slfieldin->get_type_description(0)->get_name() << endl;
-  cerr << slfieldin->get_type_description(1)->get_name() << endl;
-  cerr << slfieldin->get_type_description(2)->get_name() << endl;
-  cerr << slfieldin->get_type_description(3)->get_name() << endl;
+  cerr << slfieldin->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() << endl;
+  cerr << slfieldin->get_type_description(Field::MESH_TD_E)->get_name() << endl;
+  cerr << slfieldin->get_type_description(Field::BASIS_TD_E)->get_name() << endl;
+  cerr << slfieldin->get_type_description(Field::FDATA_TD_E)->get_name() << endl;
 
-  string if_name = slfieldin->get_type_description(1)->get_name();
+  string if_name = slfieldin->get_type_description(Field::MESH_TD_E)->get_name();
 
   if (if_name.find("CurveMesh")       != string::npos &&
       if_name.find("StructCurveMesh") != string::npos ) {
@@ -180,8 +180,8 @@ StreamlineAnalyzer::execute()
   // The field input is optional.
   if (ifp->get(pccfieldin) && pccfieldin.get_rep()) {
     
-    string pc_name = pccfieldin->get_type_description(1)->get_name();
-    string pc_type = pccfieldin->get_type_description(3)->get_name();
+    string pc_name = pccfieldin->get_type_description(Field::MESH_TD_E)->get_name();
+    string pc_type = pccfieldin->get_type_description(Field::FDATA_TD_E)->get_name();
 
     if (pc_name.find( "PointCloudMesh") != string::npos &&
 	pc_type.find( "double")         != string::npos ) {
@@ -211,8 +211,8 @@ StreamlineAnalyzer::execute()
   // The field input is optional.
   if (ifp->get(pcsfieldin) && pcsfieldin.get_rep()) {
     
-    string pc_name = pccfieldin->get_type_description(1)->get_name();
-    string pc_type = pccfieldin->get_type_description(3)->get_name();
+    string pc_name = pccfieldin->get_type_description(Field::MESH_TD_E)->get_name();
+    string pc_type = pccfieldin->get_type_description(Field::FDATA_TD_E)->get_name();
 
     if (pc_name.find( "PointCloudMesh") != string::npos &&
 	pc_type.find( "double")         != string::npos ) {

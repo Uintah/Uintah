@@ -132,17 +132,17 @@ TransformData::execute()
 
     if (outputDataType == "input") {
       TypeDescription::td_vec *tdv = 
-			fHandle->get_type_description(3)->get_sub_type();
+			fHandle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
       outputDataType = (*tdv)[0]->get_name();
     }
     const TypeDescription *ftd = fHandle->get_type_description();
     const TypeDescription *ltd = fHandle->order_type_description();
     const string oftn = 
-      fHandle->get_type_description(0)->get_name() + "<" +
-      fHandle->get_type_description(1)->get_name() + ", " +
-      fHandle->get_type_description(2)->get_similar_name(outputDataType, 
+      fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      fHandle->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+      fHandle->get_type_description(Field::BASIS_TD_E)->get_similar_name(outputDataType, 
 							 0, "<", " >, ") +
-      fHandle->get_type_description(3)->get_similar_name(outputDataType,
+      fHandle->get_type_description(Field::FDATA_TD_E)->get_similar_name(outputDataType,
 							 0, "<", " >") + " >";
     int hoffset = 0;
     Handle<TransformDataAlgo> algo;

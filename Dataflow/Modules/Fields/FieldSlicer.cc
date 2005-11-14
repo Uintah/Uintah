@@ -185,7 +185,7 @@ void FieldSlicer::execute(){
 
   // Get the dimensions of the mesh.
   // this should be part of the dynamic compilation....
-  string mesh_type = fHandle->get_type_description(1)->get_name();
+  string mesh_type = fHandle->get_type_description(Field::MESH_TD_E)->get_name();
 
   //FIX_ME MC how do i detect a "ITKLatVolField"
   if( mesh_type.find("LatVolMesh") != string::npos ||
@@ -221,13 +221,13 @@ void FieldSlicer::execute(){
     dims = 1;
 
   } else {
-    error( fHandle->get_type_description(0)->get_name() );
+    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
     error( "Only availible for regular topology e.g. uniformly gridded or structure gridded data." );
     return;
   }
 
   if( fHandle->basis_order() != 1 ) {
-    error( fHandle->get_type_description(0)->get_name() );
+    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
     error( "Currently only availible for node data." );
     return;
   }
@@ -315,7 +315,7 @@ void FieldSlicer::execute(){
   if( !fHandle_.get_rep() || updateAll || updateField || updateMatrix )
   {
     const TypeDescription *ftd = fHandle->get_type_description();
-    const TypeDescription *ttd = fHandle->get_type_description(3);
+    const TypeDescription *ttd = fHandle->get_type_description(Field::FDATA_TD_E);
 
     CompileInfoHandle ci = FieldSlicerAlgo::get_compile_info(ftd,ttd);
     Handle<FieldSlicerAlgo> algo;

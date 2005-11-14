@@ -112,13 +112,13 @@ void FieldFrenet::execute(){
       ftd->get_name().find("StructQuadSurfField") != 0 &&
       ftd->get_name().find("StructCurveField"   ) != 0 ) {
 
-    error( fHandle->get_type_description(0)->get_name() );
+    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
     error( "Only availible for structured data." );
     return;
   }
 
   if( fHandle->basis_order() != 1 ) {
-    error( fHandle->get_type_description(0)->get_name() );
+    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
     error( "Currently only availible for node data." );
     return;
   }
@@ -144,7 +144,7 @@ void FieldFrenet::execute(){
     direction_ = Direction_.get();
     axis_ = Axis_.get();
 
-    const TypeDescription *btd = fHandle->get_type_description(0);
+    const TypeDescription *btd = fHandle->get_type_description(Field::FIELD_NAME_ONLY_E);
 
     CompileInfoHandle ci = FieldFrenetAlgo::get_compile_info(ftd,btd, dims);
     Handle<FieldFrenetAlgo> algo;

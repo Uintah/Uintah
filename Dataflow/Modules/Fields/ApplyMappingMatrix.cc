@@ -116,15 +116,15 @@ ApplyMappingMatrix::execute()
     mGeneration_  = imatrix->generation;
 
     TypeDescription::td_vec *tdv = 
-      sfield->get_type_description(3)->get_sub_type();
+      sfield->get_type_description(Field::FDATA_TD_E)->get_sub_type();
     string accumtype = (*tdv)[0]->get_name();
     if (sfield->query_scalar_interface(this) != NULL) { accumtype = "double"; }
     const string oftn = 
-      dfield->get_type_description(0)->get_name() + "<" +
-      dfield->get_type_description(1)->get_name() + ", " +
-      dfield->get_type_description(2)->get_similar_name(accumtype,
+      dfield->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      dfield->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+      dfield->get_type_description(Field::BASIS_TD_E)->get_similar_name(accumtype,
                                                         0, "<", " >, ") +
-      dfield->get_type_description(3)->get_similar_name(accumtype,
+      dfield->get_type_description(Field::FDATA_TD_E)->get_similar_name(accumtype,
                                                         0, "<", " >") + " >";
 
     CompileInfoHandle ci =
@@ -133,7 +133,7 @@ ApplyMappingMatrix::execute()
 					    dfield->get_type_description(),
                                             oftn,
 					    dfield->order_type_description(),
-					    sfield->get_type_description(3),
+					    sfield->get_type_description(Field::FDATA_TD_E),
 					    accumtype);
     Handle<ApplyMappingMatrixAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;

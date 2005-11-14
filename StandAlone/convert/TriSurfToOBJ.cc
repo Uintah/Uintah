@@ -76,10 +76,13 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<argv[1]<<".  Exiting...\n";
     exit(0);
   }
-  if (handle->get_type_name(0) != "TriSurfField") {
-    cerr << "Error -- input field wasn't a TriSurfField (type_name="<<handle->get_type_name(0)<<"\n";
+  const TypeDescription *mtd = handle->get_type_description(Field::MESH_TD_E);
+  if (mtd->get_name().find("TriSurfMesh") == string::npos) {
+    cerr << "Error -- input field didn't have a TriSurfMesh (type_name="
+	 << mtd->get_name() << std::endl;
     exit(0);
   }
+
   typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
   MeshHandle mb = handle->mesh();
   TSMesh *tsm = dynamic_cast<TSMesh *>(mb.get_rep());

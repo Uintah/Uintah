@@ -92,7 +92,7 @@ void CastMLVtoHV::execute()
   last_gen_ = ifieldH->generation;
 
   // we expect that the input field is a MaskedLatVolField
-  if (ifieldH.get_rep()->get_type_description(0)->get_name() !=
+  if (ifieldH.get_rep()->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() !=
       "MaskedLatVolField")
   {
     error("Input volume is not a MaskedLatVolField.");

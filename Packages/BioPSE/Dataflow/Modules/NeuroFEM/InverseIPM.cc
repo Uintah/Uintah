@@ -492,7 +492,7 @@ InverseIPM::execute()
     warning("CondMesh field required to continue.");
     return;
   }
-  string mesh_type = condmesh->get_type_description(1)->get_name();
+  string mesh_type = condmesh->get_type_description(Field::MESH_TD_E)->get_name();
   if (mesh_type.find("TetVolMesh") != string::npos &&
       mesh_type.find("HexVolMesh") != string::npos)
   {

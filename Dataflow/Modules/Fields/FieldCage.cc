@@ -165,7 +165,7 @@ FieldCage::execute()
 
     // for Image and LatVols have the field cage coordinates 
     // correspond to the exact corner cooords
-    string field_type = fld_handle->get_type_description(1)->get_name();
+    string field_type = fld_handle->get_type_description(Field::MESH_TD_E)->get_name();
     if( field_type.find("LatVolMesh") != string::npos) {
       // use min coords of latvol
       // this should be dynamically compiled....

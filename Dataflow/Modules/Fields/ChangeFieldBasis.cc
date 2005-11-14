@@ -167,7 +167,7 @@ ChangeFieldBasis::execute()
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrctd = fh->get_type_description();
   TypeDescription::td_vec *tdv = 
-    fh->get_type_description(3)->get_sub_type();
+    fh->get_type_description(Field::FDATA_TD_E)->get_sub_type();
   string actype = (*tdv)[0]->get_name();
   string btype = "NoDataBasis<double> ";
   if (basis_order == 0)
@@ -180,15 +180,15 @@ ChangeFieldBasis::execute()
     // distributed linearly and use that as our type.  This should be
     // replaced with a table indicating what type is linear for each
     // mesh type.
-    TypeDescription::td_vec *bdv = fh->get_type_description(1)->get_sub_type();
+    TypeDescription::td_vec *bdv = fh->get_type_description(Field::MESH_TD_E)->get_sub_type();
     string linear = (*bdv)[0]->get_name();
     btype = linear.substr(0, linear.find_first_of('<')) + "<" + actype + "> ";
   }
   const string fdsts =
-    fh->get_type_description(0)->get_name() + "<" +
-    fh->get_type_description(1)->get_name() + "," +
+    fh->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+    fh->get_type_description(Field::MESH_TD_E)->get_name() + "," +
     btype + "," +
-    fh->get_type_description(3)->get_name() + "> ";
+    fh->get_type_description(Field::FDATA_TD_E)->get_name() + "> ";
   CompileInfoHandle ci =
     ChangeFieldBasisAlgo::get_compile_info(fsrctd, fdsts);
   Handle<ChangeFieldBasisAlgo> algo;
@@ -202,15 +202,15 @@ ChangeFieldBasis::execute()
   if (ef.get_rep() && interpolant.get_rep())
   {
     const string oftn = 
-      ef->get_type_description(0)->get_name() + "<" +
-      ef->get_type_description(1)->get_name() + ", " +
-      ef->get_type_description(2)->get_similar_name(actype, 0, "<", " >, ") +
-      ef->get_type_description(3)->get_similar_name(actype, 0, "<", " >") +
+      ef->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      ef->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+      ef->get_type_description(Field::BASIS_TD_E)->get_similar_name(actype, 0, "<", " >, ") +
+      ef->get_type_description(Field::FDATA_TD_E)->get_similar_name(actype, 0, "<", " >") +
       " >";
     if (fh->query_scalar_interface(this) != NULL) { actype = "double"; }
     const TypeDescription *iftd = fh->get_type_description();
     const TypeDescription *iltd = fh->order_type_description();
-    const TypeDescription *idtd = fh->get_type_description(3);
+    const TypeDescription *idtd = fh->get_type_description(Field::FDATA_TD_E);
     const TypeDescription *oftd = ef->get_type_description();
     const TypeDescription *oltd = ef->order_type_description();
     CompileInfoHandle ci =

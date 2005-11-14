@@ -100,11 +100,11 @@ VectorMagnitude::execute()
 
     const TypeDescription *vftd = fieldin->get_type_description();
     const string oftn = 
-      fieldin->get_type_description(0)->get_name() + "<" +
-      fieldin->get_type_description(1)->get_name() + ", " +
-      fieldin->get_type_description(2)->get_similar_name("double",
+      fieldin->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      fieldin->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+      fieldin->get_type_description(Field::BASIS_TD_E)->get_similar_name("double",
                                                          0, "<", " >, ") +
-      fieldin->get_type_description(3)->get_similar_name("double",
+      fieldin->get_type_description(Field::FDATA_TD_E)->get_similar_name("double",
 							 0, "<", " >") + " > ";
     CompileInfoHandle ci = VectorMagnitudeAlgo::get_compile_info(vftd, oftn);
 

@@ -118,10 +118,10 @@ TextureBuilderAlgoT<VFIELD,
   MRLatVolField<value_type> *mrvfld = 0;
   MRLatVolField<Vector>     *mrgfld = 0;
 
-  if( vHandle->get_type_description(0)->get_name() == "MRLatVolField" )
+  if( vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "MRLatVolField" )
     mrvfld = (MRLatVolField<value_type>*) vfld;
 
-  if( gfld && gHandle->get_type_description(0)->get_name() == "MRLatVolField" )
+  if( gfld && gHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "MRLatVolField" )
     mrgfld = (MRLatVolField<Vector>*) gfld;
 
   if( mrvfld ) {

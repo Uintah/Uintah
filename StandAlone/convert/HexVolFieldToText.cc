@@ -143,10 +143,10 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(1)->get_name().find("HexVolField") != 
+  if (handle->get_type_description(Field::MESH_TD_E)->get_name().find("HexVolField") != 
       string::npos) {
     cerr << "Error -- input field wasn't a HexVolField (type_name="
-	 << handle->get_type_description(1)->get_name() << std::endl;
+	 << handle->get_type_description(Field::MESH_TD_E)->get_name() << std::endl;
     return 2;
   }
 

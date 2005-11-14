@@ -96,12 +96,6 @@ Field::io(Piostream& stream)
   stream.end_class();
 }
 
-const string
-Field::get_type_name(int n) const
-{
-  return get_type_description(n)->get_name();
-}
-
 
 ScalarFieldInterfaceHandle
 Field::query_scalar_interface(ProgressReporter *reporter)

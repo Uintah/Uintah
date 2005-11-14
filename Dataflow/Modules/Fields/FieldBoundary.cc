@@ -116,19 +116,19 @@ FieldBoundary::execute()
     if (tri_fh_.get_rep() && interp_mh_.get_rep())
     {
       TypeDescription::td_vec *tdv = 
-        input->get_type_description(3)->get_sub_type();
+        input->get_type_description(Field::FDATA_TD_E)->get_sub_type();
       string actype = (*tdv)[0]->get_name();
       const string oftn = 
-        tri_fh_->get_type_description(0)->get_name() + "<" +
-        tri_fh_->get_type_description(1)->get_name() + ", " +
-        tri_fh_->get_type_description(2)->get_similar_name(actype,
+        tri_fh_->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+        tri_fh_->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+        tri_fh_->get_type_description(Field::BASIS_TD_E)->get_similar_name(actype,
                                                            0, "<", " >, ") +
-        tri_fh_->get_type_description(3)->get_similar_name(actype,
+        tri_fh_->get_type_description(Field::FDATA_TD_E)->get_similar_name(actype,
                                                            0, "<", " >") +
         " >";
       if (input->query_scalar_interface(this) != NULL) { actype = "double"; }
       const TypeDescription *iftd = input->get_type_description();
-      const TypeDescription *idtd = input->get_type_description(3);
+      const TypeDescription *idtd = input->get_type_description(Field::FDATA_TD_E);
       const TypeDescription *iltd = input->order_type_description();
       const TypeDescription *oftd = tri_fh_->get_type_description();
       const TypeDescription *oltd = tri_fh_->order_type_description();

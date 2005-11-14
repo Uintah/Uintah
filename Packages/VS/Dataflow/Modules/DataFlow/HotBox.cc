@@ -2453,11 +2453,11 @@ HotBox::executeHighlight()
       delete inj0stream;
       return;
     }
-    if(inj0GeomFilehandle_->get_type_description(0)->get_name() !=
+    if(inj0GeomFilehandle_->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() !=
 	"TriSurfField")
     {
       cerr << "Error -- input field isn't a TriSurfField (typename=";
-      cerr << inj0GeomFilehandle_->get_type_description(0)->get_name();
+      cerr << inj0GeomFilehandle_->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name();
     }
     else
     {
@@ -2518,11 +2518,11 @@ HotBox::executeHighlight()
       delete inj1stream;
       return;
     }
-    if(inj1GeomFilehandle_->get_type_description(0)->get_name() !=
+    if(inj1GeomFilehandle_->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() !=
 	"TriSurfField")
     {
       cerr << "Error -- input field isn't a TriSurfField (typename=";
-      cerr << inj1GeomFilehandle_->get_type_description(0)->get_name();
+      cerr << inj1GeomFilehandle_->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name();
     }
     else
     {

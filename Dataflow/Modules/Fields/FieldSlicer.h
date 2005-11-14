@@ -160,7 +160,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   }
 
   // Build the correct output field given the input field and and type.
-  string mesh_type = ifield->get_type_description(1)->get_name(); // FIX_ME DVU
+  string mesh_type = ifield->get_type_description(Field::MESH_TD_E)->get_name(); // FIX_ME DVU
 
   // 3D LatVol to 2D Image
   if( mesh_type.find("LatVolMesh") != string::npos ) 
@@ -419,7 +419,7 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
 
 #ifndef SET_POINT_DEFINED
   // For structured geometery we need to set the correct plane.
-  string field_type = ifield->get_type_description(1)->get_name();
+  string field_type = ifield->get_type_description(Field::MESH_TD_E)->get_name();
   if( field_type.find("LatVolMesh") != string::npos ||
       field_type.find("ImageMesh") != string::npos ||
       field_type.find("ScanlineMesh") != string::npos )

@@ -104,10 +104,10 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<hvName<<".  Exiting...\n";
     return 2;
   }
-  if (hhandle->get_type_description(1)->get_name().find("HexVolField") != 
+  if (hhandle->get_type_description(Field::MESH_TD_E)->get_name().find("HexVolField") != 
       string::npos) {
     cerr << "Error -- input field wasn't a HexVolField (type_name="
-	 << hhandle->get_type_description(1)->get_name() << std::endl;
+	 << hhandle->get_type_description(Field::MESH_TD_E)->get_name() << std::endl;
     return 2;
   }
 
@@ -126,11 +126,11 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<pcName<<".  Exiting...\n";
     return 2;
   }
-  if (phandle->get_type_description(1)->get_name().find("PointCloudField") != 
+  if (phandle->get_type_description(Field::MESH_TD_E)->get_name().find("PointCloudField") != 
       string::npos) 
   {
     cerr << "Error -- input field wasn't a PointCloudField (type_name="
-	 << phandle->get_type_description(1)->get_name() << std::endl;
+	 << phandle->get_type_description(Field::MESH_TD_E)->get_name() << std::endl;
     return 2;
   }
   typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;  

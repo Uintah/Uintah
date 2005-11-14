@@ -39,10 +39,10 @@ DistanceToFieldAlgo::get_compile_info(FieldHandle srcfield,FieldHandle objectfie
   std::string datatype = "double";
   std::string fieldtype_in = srcfield->get_type_description()->get_name();
   std::string fieldtype_object = objectfield->get_type_description()->get_name();
-  std::string fieldtype_out = srcfield->get_type_description(0)->get_name() + "<" +
-              srcfield->get_type_description(1)->get_name() + "," + 
-              srcfield->get_type_description(2)->get_similar_name(datatype, 0,"<", "> ") + "," +
-              srcfield->get_type_description(3)->get_similar_name(datatype, 0,"<", "> ") + " > ";
+  std::string fieldtype_out = srcfield->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+              srcfield->get_type_description(Field::MESH_TD_E)->get_name() + "," + 
+              srcfield->get_type_description(Field::BASIS_TD_E)->get_similar_name(datatype, 0,"<", "> ") + "," +
+              srcfield->get_type_description(Field::FDATA_TD_E)->get_similar_name(datatype, 0,"<", "> ") + " > ";
 
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   std::string include_path(TypeDescription::cc_to_h(__FILE__));

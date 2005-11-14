@@ -167,8 +167,8 @@ TransformData2::execute()
 
     if (fHandle0->mesh().get_rep() != fHandle1->mesh().get_rep()) {
       // If not the same mesh make sure they are the same type.
-      if( fHandle0->get_type_description(1)->get_name() !=
-	  fHandle1->get_type_description(1)->get_name()) {
+      if( fHandle0->get_type_description(Field::MESH_TD_E)->get_name() !=
+	  fHandle1->get_type_description(Field::MESH_TD_E)->get_name()) {
 	error("The input fields must have the same mesh type.");
 	error_ = true;
 	return;
@@ -201,23 +201,23 @@ TransformData2::execute()
 
     if (outputDataType == "input 0") {
       TypeDescription::td_vec *tdv = 
-	fHandle0->get_type_description(3)->get_sub_type();
+	fHandle0->get_type_description(Field::FDATA_TD_E)->get_sub_type();
       outputDataType = (*tdv)[0]->get_name();
     }
     else if (outputDataType == "input 1") {
       TypeDescription::td_vec *tdv = 
-	fHandle1->get_type_description(3)->get_sub_type();
+	fHandle1->get_type_description(Field::FDATA_TD_E)->get_sub_type();
       outputDataType = (*tdv)[0]->get_name();
     }
     const TypeDescription *ftd0 = fHandle0->get_type_description();
     const TypeDescription *ftd1 = fHandle1->get_type_description();
     const TypeDescription *ltd = fHandle0->order_type_description();
     const string oftn = 
-      fHandle0->get_type_description(0)->get_name() + "<" +
-      fHandle0->get_type_description(1)->get_name() + ", " +
-      fHandle0->get_type_description(2)->get_similar_name(outputDataType, 
+      fHandle0->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+      fHandle0->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+      fHandle0->get_type_description(Field::BASIS_TD_E)->get_similar_name(outputDataType, 
 							  0, "<", " >, ") +
-      fHandle0->get_type_description(3)->get_similar_name(outputDataType,
+      fHandle0->get_type_description(Field::FDATA_TD_E)->get_similar_name(outputDataType,
 							  0, "<", " >") + " >";
     int hoffset = 0;
     Handle<TransformData2Algo> algo;

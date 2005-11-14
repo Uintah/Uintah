@@ -90,11 +90,11 @@ void IndicesToTensors::execute() {
 
   const TypeDescription *field_src_td = ifieldH->get_type_description();
   const string field_dst_name = 
-    ifieldH->get_type_description(0)->get_name() + "<" +
-    ifieldH->get_type_description(1)->get_name() + ", " +
-    ifieldH->get_type_description(2)->get_similar_name("Tensor", 
+    ifieldH->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+    ifieldH->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+    ifieldH->get_type_description(Field::BASIS_TD_E)->get_similar_name("Tensor", 
                                                        0, "<", " >, ") +
-    ifieldH->get_type_description(3)->get_similar_name("Tensor",
+    ifieldH->get_type_description(Field::FDATA_TD_E)->get_similar_name("Tensor",
                                                        0, "<", " >") + " >";
 
   CompileInfoHandle ci =

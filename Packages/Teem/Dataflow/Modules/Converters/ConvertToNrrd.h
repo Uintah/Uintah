@@ -252,7 +252,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
   typename Fld::mesh_handle_type m = f->get_typed_mesh(); 
 
   TypeDescription::td_vec *tdv = 
-    ifh->get_type_description(3)->get_sub_type();
+    ifh->get_type_description(Field::FDATA_TD_E)->get_sub_type();
   const string data_name = (*tdv)[0]->get_name();
 
   NrrdData *ndata = 0;
@@ -675,7 +675,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 
     // check for transform
     const string meshstr =
-      ifh->get_type_description(0)->get_name().substr(0, 6);
+      ifh->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name().substr(0, 6);
     
     if (!(ifh->mesh()->is_editable() && meshstr != "Struct"))
     {

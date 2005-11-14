@@ -123,10 +123,10 @@ TextureBuilder::execute()
     error( "No scalar field handle or representation" );
     return;
   }
-  string mesh_name = vHandle->get_type_description(1)->get_name();
+  string mesh_name = vHandle->get_type_description(Field::MESH_TD_E)->get_name();
   if( mesh_name.find("LatVolMesh", 0) == string::npos &&
-      vHandle->get_type_description(0)->get_name() != "MRLatVolField" &&
-      vHandle->get_type_description(0)->get_name() != "ITKLatVolField" ) {
+      vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "MRLatVolField" &&
+      vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "ITKLatVolField" ) {
       
     error( "Only availible for regular topology with uniformly gridded data." );
     return;
@@ -158,14 +158,14 @@ TextureBuilder::execute()
 
     double vmin = DBL_MAX, vmax = -DBL_MAX;
 
-    if( vHandle->get_type_description(0)->get_name() == "MRLatVolField" ) {
+    if( vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "MRLatVolField" ) {
       // Warning::Temporary Hack!
       // In order to get the colors mapped correctly we need the min and max
       // values for every level of a Multi-level field.  This
       // temporary solution needs to be flushed out either in the sfi->minmax
       // algorithm or someplace else. We don't want to have to handle every
       // posible scalar type here.
-      if( vHandle->get_type_description(1)->get_name() == "double" ) {
+      if( vHandle->get_type_description(Field::MESH_TD_E)->get_name() == "double" ) {
 	MRLatVolField<double>* vmrfield = 
 	  (MRLatVolField< double > *) vHandle.get_rep();
 
@@ -228,10 +228,10 @@ TextureBuilder::execute()
       gfield_last_generation_ = -1;
 
     } else {
-      string mesh_name = gHandle->get_type_description(1)->get_name();
+      string mesh_name = gHandle->get_type_description(Field::MESH_TD_E)->get_name();
       if( mesh_name.find("LatVolMesh", 0) == string::npos &&
- 	  gHandle->get_type_description(0)->get_name() != "MRLatVolField" &&
-	  gHandle->get_type_description(0)->get_name() != "ITKLatVolField" ) {
+ 	  gHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "MRLatVolField" &&
+	  gHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "ITKLatVolField" ) {
     
 	error( "Only availible for regular topology with uniformly gridded data." );
 	return;
@@ -285,17 +285,17 @@ TextureBuilder::execute()
   if( update ) {
     const TypeDescription* vftd = vHandle->get_type_description();
     const TypeDescription* gftd = (gHandle.get_rep() ?
-				   gHandle->get_type_description(0) :
-				   vHandle->get_type_description(0));
+				   gHandle->get_type_description(Field::FIELD_NAME_ONLY_E) :
+				   vHandle->get_type_description(Field::FIELD_NAME_ONLY_E));
     const TypeDescription* gmtd = (gHandle.get_rep() ?
-				   gHandle->get_type_description(1) :
-				   vHandle->get_type_description(1));
+				   gHandle->get_type_description(Field::MESH_TD_E) :
+				   vHandle->get_type_description(Field::MESH_TD_E));
     const TypeDescription* gbtd = (gHandle.get_rep() ?
-				   gHandle->get_type_description(2) :
-				   vHandle->get_type_description(2));
+				   gHandle->get_type_description(Field::BASIS_TD_E) :
+				   vHandle->get_type_description(Field::BASIS_TD_E));
     const TypeDescription* gdtd = (gHandle.get_rep() ?
-				   gHandle->get_type_description(3) :
-				   vHandle->get_type_description(3));
+				   gHandle->get_type_description(Field::FDATA_TD_E) :
+				   vHandle->get_type_description(Field::FDATA_TD_E));
 
     CompileInfoHandle ci = TextureBuilderAlgo::get_compile_info(vftd, gftd,
 								gmtd, gbtd,

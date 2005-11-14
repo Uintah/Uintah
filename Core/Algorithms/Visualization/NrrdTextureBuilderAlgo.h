@@ -221,7 +221,7 @@ NrrdTextureBuilderAlgoT<VTYPE,
 					   double gmin, double gmax,
 					   int ni, int nj, int /*nk*/)
 {
-  if (brick->get_type_description(0)->get_name() == "NrrdTextureBrick") {
+  if (brick->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "NrrdTextureBrick") {
 
     NrrdTextureBrick *nbrick = (NrrdTextureBrick *) brick.get_rep();
     nbrick->set_nrrds(vHandle, gHandle);

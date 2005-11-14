@@ -197,7 +197,7 @@ void FieldSubSample::execute(){
   int dims = 0;
 
   // Get the dimensions of the mesh.
-  string mesh_type = fHandle->get_type_description(1)->get_name();
+  string mesh_type = fHandle->get_type_description(Field::MESH_TD_E)->get_name();
   if( mesh_type.find("LatVolMesh") != string::npos ||
       mesh_type.find("StructHexVolMesh") != string::npos ) 
   {
@@ -234,14 +234,14 @@ void FieldSubSample::execute(){
     dims = 1;
 
   } else {
-    error( fHandle->get_type_description(0)->get_name() );
+    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
     error( "Only availible for regular topology e.g. uniformly gridded or structure gridded data." );
     return;
   }
 
   if( fHandle->basis_order() != 0 &&
       fHandle->basis_order() != 1 ) {
-    error( fHandle->get_type_description(0)->get_name() );
+    error( fHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );
     error( "Currently only availible for cell or node data." );
     return;
   }

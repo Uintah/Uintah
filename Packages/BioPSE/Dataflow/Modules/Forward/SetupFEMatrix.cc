@@ -257,7 +257,7 @@ SetupFEMatrix::execute()
   bool index_based = true;
   const string hftn = hField->get_type_description()->get_name();
   TypeDescription::td_vec *htdv = 
-    hField->get_type_description(3)->get_sub_type();
+    hField->get_type_description(Field::FDATA_TD_E)->get_sub_type();
   const string hfvaltype = (*htdv)[0]->get_name();
   if (hftn.find("TetVolMesh") != string::npos)
   {

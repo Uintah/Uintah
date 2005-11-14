@@ -35,7 +35,7 @@ using namespace SCIRun;
 CompileInfoHandle
 FieldDataNodeToElemAlgo::get_compile_info(FieldHandle field)
 {
-  const SCIRun::TypeDescription *basis_type = field->get_type_description(2);
+  const SCIRun::TypeDescription *basis_type = field->get_type_description(Field::BASIS_TD_E);
   const SCIRun::TypeDescription::td_vec *basis_subtype = basis_type->get_sub_type();
   const SCIRun::TypeDescription *data_type = (*basis_subtype)[0];
   
@@ -54,9 +54,9 @@ FieldDataNodeToElemAlgo::get_compile_info(FieldHandle field)
 
 
   std::string fieldtype_in = field->get_type_description()->get_name();
-  std::string fieldtype_out = field->get_type_description(0)->get_name() + "<" +
-              field->get_type_description(1)->get_name() + "," + basis + "," +
-              field->get_type_description(3)->get_similar_name(datatype, 0,"<", "> ") + " > ";
+  std::string fieldtype_out = field->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+              field->get_type_description(Field::MESH_TD_E)->get_name() + "," + basis + "," +
+              field->get_type_description(Field::FDATA_TD_E)->get_similar_name(datatype, 0,"<", "> ") + " > ";
 
   CompileInfoHandle ci = 
     scinew CompileInfo(algo_name + "." +

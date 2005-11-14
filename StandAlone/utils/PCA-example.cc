@@ -83,11 +83,11 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     exit(0);
   }
-  if (handle->get_type_description(1)->get_name().find("PointCloudMesh") !=
+  if (handle->get_type_description(Field::MESH_TD_E)->get_name().find("PointCloudMesh") !=
       string::npos) 
   {
     cerr << "Error -- input field wasn't a PointCloudField (type_name="
-	 << handle->get_type_description(1)->get_name() << std::endl;
+	 << handle->get_type_description(Field::MESH_TD_E)->get_name() << std::endl;
     exit(0);
   }
 
