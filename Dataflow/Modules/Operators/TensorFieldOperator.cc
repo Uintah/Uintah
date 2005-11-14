@@ -86,8 +86,10 @@ void TensorFieldOperator::execute(void)
   if(!in->get(hTF)){
     error("TensorFieldOperator::execute(void) Didn't get a handle");
     return;
-  } else if ( hTF->get_type_name(2) != "HexTrilinearLgn<Matrix3> "){
-    cerr<<hTF->get_type_name(2)<<"\n";
+  }
+
+  const SCIRun::TypeDescription *tftd =  hTF->get_type_description();
+  if ( tftd->get_name().find("Matrix3") == string::npos ){
     error("Input is not a Tensor field");
     return;
   }
@@ -95,7 +97,6 @@ void TensorFieldOperator::execute(void)
   //##################################################################
 
 
-  const SCIRun::TypeDescription *tftd = hTF->get_type_description();
   CompileInfoHandle ci = TensorFieldOperatorAlgo::get_compile_info(tftd);
   Handle<TensorFieldOperatorAlgo> algo;
   if( !module_dynamic_compile(ci, algo) ){
