@@ -247,7 +247,8 @@ void FaceCuttingPlane::execute(void)
 
   MeshHandle mh = field->mesh();
 
-  if(mh->get_type_name(0) != "LatVolMesh<HexTrilinearLgn<Point> > "){
+  const SCIRun::TypeDescription *ftd = field->get_type_description();
+  if( ftd->get_name().find("LatVolMesh") == string::npos ){
     error("This module only works with a LatVolMesh based field as input. No action!");
     return;
   }
@@ -268,7 +269,6 @@ void FaceCuttingPlane::execute(void)
     return;
   }
 
-  const SCIRun::TypeDescription *ftd = field->get_type_description();
   CompileInfoHandle ci = FaceCuttingPlaneAlgo::get_compile_info(ftd);
   Handle<FaceCuttingPlaneAlgo> algo;
   if( !module_dynamic_compile(ci, algo) ){

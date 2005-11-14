@@ -539,9 +539,10 @@ void GLAnimatedStreams::AdvanceStreams(int start, int end) {
 bool  
 GLAnimatedStreams::interpolate(FieldHandle texfld_, const Point& p, Vector& val)
 {
-  //  const string field_type = texfld_->get_type_name(0);
-  //const string type = texfld_->get_type_name(1);
-  if( texfld_->get_type_name(0) == "LatVolField" ){
+
+  const TypeDescription *td = 
+    texfld_->get_type_description(Field::MESH_TD_E);
+  if( td->get_name().find("LatVolField") != string::npos ) {
     VectorFieldInterfaceHandle vfi(texfld_->query_vector_interface());
     // use virtual field interpolation
     if( vfi.get_rep() != 0 ){

@@ -84,7 +84,8 @@ void ScalarFieldAverage::execute(void)
   if ( !hTF->get_property( "time", t ) ){
     cerr<<"No time in database"<<endl; }
 
-  if( hTF->mesh()->get_type_name(0) != "LatVolMesh<HexTrilinearLgn<Point> > "){
+  const SCIRun::TypeDescription *td1 = hTF->get_type_description();
+  if( td1->get_name().find("LatVolMesh") == string::npos ){
     error("Field is not a LatVolMesh based field");
     return;
   }
@@ -95,7 +96,6 @@ void ScalarFieldAverage::execute(void)
   CompileInfoHandle ci;
   Handle<ScalarFieldAverageAlgo> algo;
 
-  const SCIRun::TypeDescription *td1 = hTF->get_type_description();
   const SCIRun::TypeDescription *td2;
   if( hTF->basis_order() == 0 && aveFieldHandle == 0){
     mh.detach();

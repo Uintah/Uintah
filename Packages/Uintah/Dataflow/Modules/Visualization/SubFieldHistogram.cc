@@ -104,7 +104,7 @@ void SubFieldHistogram::execute(void)
 {
 
   infield = (FieldIPort *)get_iport("Scalar Field");
-  in_subfield = (FieldIPort *)get_iport("Scalar SubField");
+ in_subfield = (FieldIPort *)get_iport("Scalar SubField");
   incolormap = (ColorMapIPort *)get_iport("Color Map");
   ogeom = (GeometryOPort *)get_oport("Geometry");
 
@@ -148,8 +148,10 @@ void SubFieldHistogram::execute(void)
     return;
   }
 
-  if( field->get_type_name(0) == "double" &&
-      sub_field->get_type_name(0) == "int" ){
+  const TypeDescription *td = field->get_type_description();
+  const TypeDescription *std = sub_field->get_type_description();
+  if( td->get_name().find("double") != string::npos &&
+      std->get_name().find("int") != string::npos){
     postMessage("Field type mismatch in "+name+" cannot make histogram\n");
     return;
   }
@@ -158,9 +160,6 @@ void SubFieldHistogram::execute(void)
   for(int i = 0; i < 255; i++){
     count_[i] = 0;
   }
-  cerr<<"made it to dynamic cast\n";
-  cerr<<field->get_type_name(0)<<" "<<field->get_type_name(1)<<"\n";
-  cerr<<sub_field->get_type_name(0)<<" "<<sub_field->get_type_name(1)<<"\n";
 
   CDField *cdfld = dynamic_cast<CDField*>(field.get_rep());
   CIField *cifld = dynamic_cast<CIField*>(sub_field.get_rep());

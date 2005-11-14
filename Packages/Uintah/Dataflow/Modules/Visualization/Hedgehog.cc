@@ -13,6 +13,7 @@
  */
 
 #include <Core/Containers/Array1.h>
+#include <Core/Util/NotFinished.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -158,8 +159,7 @@ public:
         //                                  findyz,
         //                                  findxz
   virtual void tcl_command(GuiArgs&, void*);
-  bool interpolate(FieldHandle f, const Point& p, Vector& val);
-  bool interpolate(FieldHandle f, const Point& p, double& val);
+
 //  bool get_dimensions(FieldHandle f, int& nx, int& ny, int& nz);
 //  template <class Mesh>  bool get_dimensions(Mesh, int&, int&, int&);
 
@@ -220,20 +220,22 @@ void Hedgehog::execute()
 
   // get the scalar field and ColorMap...if you can
   FieldHandle vfield;
-  if (!invectorfield->get( vfield ))
-    return;
-
-
-  if( vfield->get_type_name(1) != "Vector" ){
-    cerr<<"First field must be a Vector field.\n";
+  if (!invectorfield->get( vfield )){
+    warning("NodeHedgehog::execute() - No data from input vector port.");
     return;
   }
-  
-  if(vfield->get_type_name(0) != "LatVolField" ){
-    cerr<<"Not a LatVolField\n";
+
+  const TypeDescription *td = vfield->get_type_description(Field::MESH_TD_E);
+  if(td->get_name().find("LatVolMesh") == string::npos ) {
+    error("First field is not a LatVolMesh based field.");
+    return;
   }
+
+  VectorFieldInterfaceHandle vfi = 0;  
 
   LVMesh *mesh;
+  int nx, ny, nz;
+
   CVField* cfld = dynamic_cast<CVField *>(vfield.get_rep());
   if( !cfld ){
     LVField* lfld = dynamic_cast<LVField *>(vfield.get_rep());
@@ -241,21 +243,40 @@ void Hedgehog::execute()
       error("Incoming field does not use a LatVolMesh");
       return;
     } else {
+      vfi = lfld->query_vector_interface(this).get_rep() ;
+
       mesh = lfld->get_typed_mesh().get_rep();
+      // use the mesh for the geometry
+      nx = mesh->get_ni();
+      ny = mesh->get_nj();
+      nz = mesh->get_nk();
     }
   } else {
+    vfi = cfld->query_vector_interface(this).get_rep() ;
     mesh = cfld->get_typed_mesh().get_rep();
+    // use the mesh for the geometry
+    // CC data needs to be computed on a mesh 1 size smaller
+    nx = mesh->get_ni()-1;
+    ny = mesh->get_nj()-1;
+    nz = mesh->get_nk()-1;
   }
 
+  if( vfi == 0 ){
+    error("First field must be a Vector field.");
+    return;
+  }
 
   FieldHandle ssfield;
   int have_sfield=inscalarfield->get( ssfield );
+  ScalarFieldInterfaceHandle sfi = 0;
   if( have_sfield ){
-    if( !ssfield->is_scalar() ){
-      cerr<<"Second field is not a scalar field.  No Colormapping.\n";
+    sfi = ssfield->query_scalar_interface(this).get_rep();
+    if( sfi == 0 ){
+      warning("Second field is not a scalar field.  No Colormapping.");
       have_sfield = 0;
     }
   }
+  
   ColorMapHandle cmap;
   int have_cmap=inColorMap->get( cmap );
   if(!have_cmap){
@@ -313,13 +334,8 @@ void Hedgehog::execute()
 
   // if field size or location change we need to update the widgets
   BBox box;  Point min, max;
-  box = vfield->mesh()->get_bounding_box();
+  box = mesh->get_bounding_box();
   min = box.min(); max = box.max();
-  int nx, ny, nz;
-  // use the mesh for the geometry
-  nx = mesh->get_ni();
-  ny = mesh->get_nj();
-  nz = mesh->get_nk();
   if( iPoint_ != min ){
     iPoint_ = min;
     need_find3d = 1;
@@ -398,8 +414,7 @@ void Hedgehog::execute()
     v2 = D - center,
     v3 = I - center;
     
-  cerr << "unum = "<<u_num<<"  vnum="<<v_num<<"  wnum="<<w_num<<"\n";
-  //    u_num=v_num=w_num=4;
+  //u_num=v_num=w_num=4;
 
   // calculate the corner and the
   // u and v vectors of the cutting plane
@@ -417,8 +432,7 @@ void Hedgehog::execute()
 				      drawcylinders.get(), shaft_rad.get() );
   for (int i = 0; i < u_num; i++)
     for (int j = 0; j < v_num; j++)
-      for(int k = 0; k < w_num; k++)
-      {
+      for(int k = 0; k < w_num; k++){
 	Point p = corner + u * ((double) i/(u_num-1)) + 
 	  v * ((double) j/(v_num-1)) +
 	  w * ((double) k/(w_num-1));
@@ -426,26 +440,26 @@ void Hedgehog::execute()
 	// Query the vector field...
 	Vector vv;
 	//int ii=0;
-	if ( interpolate( vfield, p, vv)){
+	if ( vfi->interpolate( vv, p) ){
 	  if(have_sfield){
 	    // get the color from cmap for p 	    
 	    MaterialHandle matl;
 	    double sval;
 	    //			    ii=0;
-	    if ( interpolate(ssfield, p, sval) )
+	    if ( sfi->interpolate( sval, p) )
 	      matl = cmap->lookup( sval);
 	    else
 	    {
 	      matl = outcolor;
 	    }
 
-	    if(vv.length()*lenscale > 1.e-10)
+	    if(vv.length()*lenscale > 1.e-10){
 	      arrows->add(p, vv*lenscale, matl, matl, matl);
+            }
 	  } else {
-	    if(vv.length()*lenscale > 1.e-10)
+	    if(vv.length()*lenscale > 1.e-10){
 	      arrows->add(p, vv*lenscale, shaft, back, head);
-	    //else
-	    //    cerr << "vv.length()="<<vv.length()<<"\n";
+            }
 	  }
 	}
       }
@@ -506,36 +520,5 @@ void Hedgehog::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-bool  
-Hedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
-{
-  //const string type = vfld->get_type_name(1);
-  if( vfld->mesh()->get_type_name(0) == "LatVolMesh"){
-    // use virtual field interpolation
-    VectorFieldInterfaceHandle vfi(vfld->query_vector_interface());
-    if( vfi.get_rep() != 0 ){
-      return vfi->interpolate( val, p);
-    } 
-  }    
-  return false;
-}
-
-
-bool  
-Hedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
-{
-  //const string field_type = sfld->get_type_name(0);
-  //const string type = sfld->get_type_name(1);
-  if( sfld->mesh()->get_type_name(0) == "LatVolMesh" ){
-    // use virtual field interpolation
-    ScalarFieldInterfaceHandle sfi(sfld->query_scalar_interface());
-    if( sfi.get_rep() != 0){
-      return sfi->interpolate( val, p);
-    }
-  } else {
-    return false;
-  }
-  return false;
-}
 
 } // End namespace Uintah
