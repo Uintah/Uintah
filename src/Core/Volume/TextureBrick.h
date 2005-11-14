@@ -97,9 +97,15 @@ public:
 		     vector<int> &masks,
 		     vector<Plane> &planes);
 		     
+  enum tb_td_info_e {
+    FULL_TD_E,
+    TB_NAME_ONLY_E,
+    DATA_TD_E
+  };
 
   static const string type_name(int n = -1);
-  virtual const TypeDescription* get_type_description(int n = -1) const;
+  virtual const TypeDescription* 
+  get_type_description(tb_td_info_e td = FULL_TD_E) const = 0;
 
 protected:
   void compute_edge_rays(BBox &bbox, vector<Ray> &edges) const;
@@ -142,7 +148,8 @@ public:
   { data_[0] = n0; data_[1] = n1; }
 
   static const string type_name(int n = -1);
-  virtual const TypeDescription* get_type_description(int n = -1) const;
+  virtual const TypeDescription* 
+  get_type_description(tb_td_info_e td = FULL_TD_E) const;
 
 protected:
   NrrdDataHandle data_[2];
@@ -165,7 +172,8 @@ public:
   T* data(int c) { return data_[c]; }
 
   static const string type_name(int n = -1);
-  virtual const TypeDescription* get_type_description(int n = -1) const;
+  virtual const TypeDescription* 
+  get_type_description(tb_td_info_e td = FULL_TD_E) const;
  
 protected:
   T* data_[2];
@@ -219,38 +227,42 @@ TextureBrickT<T>::type_name(int n)
 
 template <typename T> 
 const TypeDescription*
-TextureBrickT<T>::get_type_description(int n) const
+TextureBrickT<T>::get_type_description(tb_td_info_e tdi) const
 {
-  ASSERT((n >= -1) && n <= 1);
-
   TypeDescription* td = 0;
   static string name( type_name(0) );
   static string namesp("SCIRun");
   static string path(__FILE__);
 
-  if (n == -1) {
-    static TypeDescription* tdn1 = 0;
-    if (tdn1 == 0) {
-      const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-      (*subs)[0] = sub;
-      tdn1 = scinew TypeDescription(name, subs, path, namesp);
-    } 
-    td = tdn1;
-  }
-  else if(n == 0) {
-    static TypeDescription* tdn0 = 0;
-    if (tdn0 == 0) {
-      tdn0 = scinew TypeDescription(name, 0, path, namesp);
+  switch (tdi) {
+  default:
+  case FULL_TD_E:
+    {
+      static TypeDescription* tdn1 = 0;
+      if (tdn1 == 0) {
+	const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+	TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+	(*subs)[0] = sub;
+	tdn1 = scinew TypeDescription(name, subs, path, namesp);
+      } 
+      td = tdn1;
     }
-    td = tdn0;
-  }
-  else {
-    static TypeDescription* tdnn = 0;
-    if (tdnn == 0) {
-      tdnn = (TypeDescription *) SCIRun::get_type_description((T*)0);
+  case TB_NAME_ONLY_E:
+    {
+      static TypeDescription* tdn0 = 0;
+      if (tdn0 == 0) {
+	tdn0 = scinew TypeDescription(name, 0, path, namesp);
+      }
+      td = tdn0;
     }
-    td = tdnn;
+  case DATA_TD_E:
+    {
+      static TypeDescription* tdnn = 0;
+      if (tdnn == 0) {
+	tdnn = (TypeDescription *) SCIRun::get_type_description((T*)0);
+      }
+      td = tdnn;
+    }
   }
   return td;
 } 

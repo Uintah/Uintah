@@ -491,37 +491,6 @@ TextureBrick::type_name(int n)
 }
 
 
-const TypeDescription*
-TextureBrick::get_type_description(int n) const
-{
-  ASSERT((n >= -1) && n <= 1);
-
-  TypeDescription* td = 0;
-  static string name( type_name(0) );
-  static string namesp("SCIRun");
-  static string path(__FILE__);
-
-  if (n == -1) {
-    static TypeDescription* tdn1 = 0;
-    if (tdn1 == 0) {
-      tdn1 = scinew TypeDescription(name, 0, path, namesp);
-    } 
-    td = tdn1;
-  }
-  else if(n == 0) {
-    static TypeDescription* tdn0 = 0;
-    if (tdn0 == 0) {
-      tdn0 = scinew TypeDescription(name, 0, path, namesp);
-    }
-    td = tdn0;
-  }
-  else {
-    static TypeDescription* tdnn = 0;
-    td = tdnn;
-  }
-  return td;
-} 
-
 NrrdTextureBrick::NrrdTextureBrick(NrrdDataHandle n0, NrrdDataHandle n1,
 				   int nx, int ny, int nz, int nc, int *nb,
 				   int ox, int oy, int oz,
@@ -611,33 +580,37 @@ NrrdTextureBrick::type_name(int n)
 
 
 const TypeDescription*
-NrrdTextureBrick::get_type_description(int n) const
+NrrdTextureBrick::get_type_description(tb_td_info_e tdi) const
 {
-  ASSERT((n >= -1) && n <= 1);
-
   TypeDescription* td = 0;
   static string name( type_name(0) );
   static string namesp("SCIRun");
   static string path(__FILE__);
 
-  if (n == -1) {
-    static TypeDescription* tdn1 = 0;
-    if (tdn1 == 0) {
-      tdn1 = scinew TypeDescription(name, 0, path, namesp);
-    } 
-    td = tdn1;
-  }
-  else if(n == 0) {
-    static TypeDescription* tdn0 = 0;
-    if (tdn0 == 0) {
-      tdn0 = scinew TypeDescription(name, 0, path, namesp);
+  switch (tdi) {
+  default:
+  case TextureBrick::FULL_TD_E:
+    {
+      static TypeDescription* tdn1 = 0;
+      if (tdn1 == 0) {
+	tdn1 = scinew TypeDescription(name, 0, path, namesp);
+      } 
+      td = tdn1;
     }
-    td = tdn0;
-  }
-  else {
-    static TypeDescription* tdnn = 0;
-    td = tdnn;
-  }
+  case TextureBrick::TB_NAME_ONLY_E :
+    {
+      static TypeDescription* tdn0 = 0;
+      if (tdn0 == 0) {
+	tdn0 = scinew TypeDescription(name, 0, path, namesp);
+      }
+      td = tdn0;
+    }
+  case TextureBrick::DATA_TD_E :
+    {
+      static TypeDescription* tdnn = 0;
+      td = tdnn;
+    }
+  };
   return td;
 } 
 
