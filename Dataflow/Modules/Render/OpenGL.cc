@@ -853,7 +853,7 @@ OpenGL::redraw_frame()
     glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
     view_window_->setState(drawinfo_, "global");
-    drawinfo_->pickmode=0;
+    drawinfo_->pickmode_=0;
 
     CHECK_OPENGL_ERROR("after setting up the graphics state: ");
 
@@ -1116,14 +1116,14 @@ OpenGL::redraw_frame()
     double pps;
     if (timer.time() > 0)
     {
-      pps = drawinfo_->polycount/timer.time();
+      pps = drawinfo_->polycount_/timer.time();
     }
     else
     {
-      pps = drawinfo_->polycount;
+      pps = drawinfo_->polycount_;
     }
     str << view_window_->id_ << " updatePerf \"";
-    str << drawinfo_->polycount << " polygons in " << timer.time()
+    str << drawinfo_->polycount_ << " polygons in " << timer.time()
         << " seconds\" \"" << pps
         << " polygons/second\"" << " \"" << fps_whole << "."
         << fps_tenths << " frames/sec\"" << '\0';
@@ -1378,10 +1378,9 @@ OpenGL::real_get_pick(int x, int y,
               lookat.x(), lookat.y(), lookat.z(),
               up.x(), up.y(), up.z());
 
-    drawinfo_->lighting=0;
+    drawinfo_->lighting_=0;
     drawinfo_->set_drawtype(DrawInfoOpenGL::Flat);
-    drawinfo_->pickmode=1;
-    //drawinfo_->pickable=0;
+    drawinfo_->pickmode_=1;
 
     // Draw it all.
     view_window_->do_for_visible(this,
@@ -1405,9 +1404,9 @@ OpenGL::real_get_pick(int x, int y,
     GLuint min_z;
 #ifdef SCI_64BITS
     unsigned long hit_obj=0;
-    GLuint hit_obj_index = 0x12345678;
+    //    GLuint hit_obj_index = 0x12345678;
     unsigned long hit_pick=0;
-    GLuint hit_pick_index = 0x12345678;  // need for object indexing
+    //    GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #else
     GLuint hit_obj = 0;
     //GLuint hit_obj_index = 0x12345678;  // need for object indexing
@@ -1622,7 +1621,7 @@ GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
 
   BBox bb;
   child_->get_bounds(bb);
-  if (!(di->show_bbox && bb.valid()))
+  if (!(di->show_bbox_ && bb.valid()))
   {
     child_->draw(di,m,time);
   }
@@ -2188,9 +2187,9 @@ OpenGL::render_rotation_axis(const View &view,
   view_window_->setState(drawinfo_, "global");
 
   // Disable fog for the orientation axis.
-  const bool fog = drawinfo_->fog;
+  const bool fog = drawinfo_->fog_;
   if (fog) { glDisable(GL_FOG); }
-  drawinfo_->fog = false;
+  drawinfo_->fog_ = false;
 
   // Set up Lighting
   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
@@ -2226,7 +2225,7 @@ OpenGL::render_rotation_axis(const View &view,
   axis_obj->draw(drawinfo_, 0, current_time_);
   glDepthRange(0.0, 1.0);
 
-  drawinfo_->fog = fog;  // Restore fog state.
+  drawinfo_->fog_ = fog;  // Restore fog state.
   if (fog) { glEnable(GL_FOG); }
 
   glMatrixMode(GL_PROJECTION);

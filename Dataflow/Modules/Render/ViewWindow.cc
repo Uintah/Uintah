@@ -1936,23 +1936,23 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
     else if (type.get() == "Wire")
     {
     drawinfo->set_drawtype(DrawInfoOpenGL::WireFrame);
-    drawinfo->lighting=0;
+    drawinfo->lighting_=0;
     }
     else if (type.get() == "Flat")
     {
       drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
-      drawinfo->lighting=0;
+      drawinfo->lighting_=0;
     }
     else if (type.get() == "Gouraud")
     {
       drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
-      drawinfo->lighting=1;
+      drawinfo->lighting_=1;
     }
     else
     {
       cerr << "Unknown shading(" << type.get() << "), defaulting to phong\n";
       drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
-      drawinfo->lighting=1;
+      drawinfo->lighting_=1;
     }
   }
 
@@ -1960,7 +1960,7 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   // Now see if they want a bounding box.
   GuiInt show_bbox(ctx_->subVar(tclID+"-debug", false));
   if (show_bbox.valid())
-    drawinfo->show_bbox = show_bbox.get();
+    drawinfo->show_bbox_ = show_bbox.get();
 
 
   GuiString movieName(ctx_->subVar(tclID+"-movieName", false));
@@ -1997,36 +1997,36 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   GuiInt clip(ctx_->subVar(tclID+"-clip", false));
   if (clip.valid())
   {
-    drawinfo->check_clip = clip.get();
+    drawinfo->check_clip_ = clip.get();
   }
   setClip(drawinfo);
 
   GuiInt cull(ctx_->subVar(tclID+"-cull", false));
   if (cull.valid())
   {
-    drawinfo->cull = cull.get();
+    drawinfo->cull_ = cull.get();
   }
 
   GuiInt dl(ctx_->subVar(tclID+"-dl", false));
   if (dl.valid())
   {
-    drawinfo->dl = dl.get();
+    drawinfo->display_list_p_ = dl.get();
   }
 
   GuiInt fog(ctx_->subVar(tclID+"-fog", false));
   if (fog.valid())
   {
-    drawinfo->fog = fog.get();
+    drawinfo->fog_ = fog.get();
   }
 
   GuiInt lighting(ctx_->subVar(tclID+"-light", false));
   if (lighting.valid())
   {
-    drawinfo->lighting=lighting.get();
+    drawinfo->lighting_=lighting.get();
   }
 
-  drawinfo->currently_lit=drawinfo->lighting;
-  drawinfo->init_lighting(drawinfo->lighting);
+  drawinfo->currently_lit_=drawinfo->lighting_;
+  drawinfo->init_lighting(drawinfo->lighting_);
   gui_->unlock();
 }
 
@@ -2096,7 +2096,7 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
   gui_->lock();
   GuiString visible(ctx_->subVar("clip-visible",false));
   if (visible.valid()) {
-    drawinfo->clip_planes = 0; // reset to 0
+    drawinfo->clip_planes_ = 0; // reset to 0
     for (int i = 0; i < 6; ++i) {
       const string istr = to_string(i+1);
       GuiInt visible(ctx_->subVar("clip-visible-"+ istr,false));
@@ -2109,9 +2109,9 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
         continue;
       
       if (visible.get() != 0)
-        drawinfo->clip_planes |= 1 << i;
+        drawinfo->clip_planes_ |= 1 << i;
       
-      drawinfo->planes[i] = Plane(x.get(), y.get(), z.get(), d.get());
+      drawinfo->planes_[i] = Plane(x.get(), y.get(), z.get(), d.get());
     }
   }
   drawinfo->init_clip();
@@ -2122,7 +2122,7 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
 void
 ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
 {
-  drawinfo->mouse_action = mouse_action_;
+  drawinfo->mouse_action_ = mouse_action_;
 }
 
 void

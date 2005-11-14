@@ -39,112 +39,89 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_Geom_DrawInfoOpenGL_h
-#define SCI_Geom_DrawInfoOpenGL_h 1
-
-#include <sci_defs/ogl_defs.h>
-#include <sci_gl.h>
-#include <sci_glu.h>
-#include <sci_glx.h>
+#ifndef SCI_Core_Geom_DrawInfoOpenGL_h
+#define SCI_Core_Geom_DrawInfoOpenGL_h 1
 
 #include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
 #include <Core/Geometry/Plane.h>
 
 #include <map>
 #include <list>
 
+class GLUquadric;
+
 namespace SCIRun {
-
-
-#define GEOM_FONT_COUNT 5
 
 class ViewWindow;
 class Material;
 class GeomDL;
 
-const int MULTI_TRANSP_FIRST_PASS=2; // 1 is just if you are doing mpasses...
+const int     GEOM_FONT_COUNT = 5;
 
 struct DrawInfoOpenGL {
 public:
-    DrawInfoOpenGL();
-    ~DrawInfoOpenGL();
+  DrawInfoOpenGL();
+  ~DrawInfoOpenGL();
 
-    enum DrawType {
-	WireFrame,
-	Flat,
-	Gouraud
-    };
+  enum DrawType {
+    WireFrame,
+    Flat,
+    Gouraud
+  };
 
+  typedef std::map<GeomDL *, std::pair<unsigned int, unsigned int> > dl_map_t;
+  typedef std::list<unsigned int> dl_list_t;
+
+  void          set_drawtype(DrawType dt);
+  DrawType      get_drawtype();
+  bool          dl_lookup(GeomDL *obj, unsigned int &state, unsigned int &dl);
+  bool          dl_update(GeomDL *obj, unsigned int state);
+  bool          dl_addnew(GeomDL *obj, unsigned int state, unsigned int &dl);
+  bool          dl_remove(GeomDL *obj);
+  void          init_lighting(int use_light);
+  void          init_clip(void);
+  void          init_view(double znear, double zfar, Point& eyep, Point& lookat);
+  bool          init_font(int a);
+  void          set_material(Material*);
+  void          reset();
+
+  int           polycount_;
+  int           lighting_;
+  int           show_bbox_;
+  int           currently_lit_;
+  int           pickmode_;
+  int           pickchild_;
+  int           npicks_;
+  int           fog_;
+  int           cull_;
+  int           display_list_p_;
+  bool          mouse_action_;
+  int           check_clip_; // see if you should ignore clipping planes    
+  int           clip_planes_; // clipping planes that are on
+  Plane         planes_[6]; // clipping plane equations
+  Material*     current_matl_;
+  int           ignore_matl_;
+  GLUquadric*   qobj_;
+  Vector        view_;  // view vector...
+  int           axis_;     // which axis you are working with...
+  int           dir_;      // direction +/- -> depends on the view...
+  double        ambient_scale_;
+  double        diffuse_scale_;
+  double        specular_scale_;
+  double        emission_scale_;
+  double        shininess_scale_;
+  double        point_size_; // so points can be thicker than 1 pixel
+  double        line_width_; // so lines can be thicker than 1 pixel
+  double        polygon_offset_factor_; // so lines & points are offset from faces
+  double        polygon_offset_units_; // so lines & points are offset from faces
+  int           fontstatus_[GEOM_FONT_COUNT];
+  unsigned int  fontbase_[GEOM_FONT_COUNT];
+  int           using_cmtexture_;
+  unsigned int  cmtexture_;  // GeomColorMap texture, 1D
+  dl_map_t      dl_map_;
+  dl_list_t     dl_freelist_;
 private:
-    DrawType drawtype;
-public:
-    void set_drawtype(DrawType dt);
-    inline DrawType get_drawtype() {return drawtype;}
-    bool dl_lookup(GeomDL *obj, unsigned int &state, unsigned int &dl);
-    bool dl_update(GeomDL *obj, unsigned int state);
-    bool dl_addnew(GeomDL *obj, unsigned int state, unsigned int &dl);
-    bool dl_remove(GeomDL *obj);
-    void init_lighting(int use_light);
-    void init_clip(void);
-    void init_view(double znear, double zfar, Point& eyep, Point& lookat);
-    void reset();
-    bool init_font(int a);
-    void set_material(Material*);
-
-    int polycount;
-    int lighting;
-    int show_bbox;
-    int currently_lit;
-    int pickmode;
-    int pickchild;
-    int npicks;
-    int fog;
-    int cull;
-    int dl;
-    bool mouse_action;
-
-    // clipping plane info
-    int check_clip; // see if you should ignore clipping planes    
-    int clip_planes; // clipping planes that are on
-    Plane planes[6]; // clipping plane equations
-
-    Material* current_matl;
-    int ignore_matl;
-
-    GLUquadricObj* qobj;
-
-    Vector view;  // view vector...
-    int axis;     // which axis you are working with...
-    int dir;      // direction +/- -> depends on the view...
-
-    int multiple_transp; // if you have multiple transparent objects...
-
-    double ambient_scale_;
-    double diffuse_scale_;
-    double specular_scale_;
-    double emission_scale_;
-    double shininess_scale_;
-    double point_size_; // so points can be thicker than 1 pixel
-    double line_width_; // so lines can be thicker than 1 pixel
-    double polygon_offset_factor_; // so lines and points are offset from faces
-    double polygon_offset_units_; // so lines and points are offset from faces
-
-#ifndef _WIN32 //used only for x fonts, should use freetype
-    Display *dpy;
-#endif
-
-
-    int    fontstatus[GEOM_FONT_COUNT];
-    GLuint fontbase[GEOM_FONT_COUNT];
-
-    int using_cmtexture_;
-    GLuint cmtexture_;  // GeomColorMap texture, 1D
-
-    std::map<GeomDL *, std::pair<unsigned int, unsigned int> > dl_map_;
-    std::list<unsigned int> dl_freelist_;
-
-
+  DrawType      drawtype_;
 };
 
 } // End namespace SCIRun

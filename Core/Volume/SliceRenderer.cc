@@ -29,9 +29,11 @@
 //    Author : Milan Ikits
 //    Date   : Wed Jul  7 23:37:16 2004
 
-#include <string>
 
+#include <sci_defs/ogl_defs.h>
 #include <sci_gl.h>
+#include <sci_glu.h>
+#include <sci_glx.h>
 
 #include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Volume/SliceRenderer.h>
@@ -41,6 +43,7 @@
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <string>
 #include <sgi_stl_warnings_on.h>
 
 using std::cerr;
