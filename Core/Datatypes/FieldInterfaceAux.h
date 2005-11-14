@@ -115,7 +115,7 @@ SFInterface<F, L>::finterpolate(double &result, const Point &p) const
   typename F::mesh_handle_type mh = field_->get_typed_mesh();
   
   typename Msh::Elem::index_type ei;
-  mh->locate(ei, p);
+  if (! mh->locate(ei, p)) return false;
   vector<double> coords(3, .0L);
   if (mh->get_coords(coords, p, ei)) {
     typename F::value_type rval;
@@ -317,7 +317,7 @@ VFInterface<F, L>::finterpolate(Vector &result, const Point &p) const
   typename F::mesh_handle_type mh = field_->get_typed_mesh();
   
   typename Msh::Elem::index_type ei;
-  mh->locate(ei, p);
+  if (! mh->locate(ei, p)) return false;
   vector<double> coords(3, .0L);
   if (mh->get_coords(coords, p, ei)) {
     field_->interpolate(result, coords, ei);
@@ -582,7 +582,7 @@ TFInterface<F, L>::finterpolate(Tensor &result, const Point &p) const
   typename F::mesh_handle_type mh = field_->get_typed_mesh();
   
   typename Msh::Elem::index_type ei;
-  mh->locate(ei, p);
+  if (! mh->locate(ei, p)) return false;
   vector<double> coords(3, .0L);
   if (mh->get_coords(coords, p, ei)) {
     field_->interpolate(result, coords, ei);
