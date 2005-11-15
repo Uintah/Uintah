@@ -483,7 +483,7 @@ NrrdSetupTexture::execute()
   // Create SCIRun data structure wrapped around nvout
   if (compute_justvalue)
   {
-    last_nvnrrd_->generation++;
+    last_nvnrrd_->generation = last_nvnrrd_->compute_new_generation();
 
     NrrdOPort *onvnrrd = (NrrdOPort *)get_oport("Normal/Value");
     onvnrrd->send(last_nvnrrd_);
