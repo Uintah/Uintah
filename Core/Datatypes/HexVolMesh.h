@@ -1130,14 +1130,24 @@ template <class Basis>
 bool
 HexVolMesh<Basis>::synchronize(unsigned int tosync)
 {
-  if (tosync & EDGES_E && !(synchronized_ & EDGES_E)) compute_edges();
-  if (tosync & FACES_E && !(synchronized_ & FACES_E)) compute_faces();
-  if (tosync & LOCATE_E && !(synchronized_ & LOCATE_E)) {
+  if (tosync & EDGES_E && !(synchronized_ & EDGES_E))
+  {
+    compute_edges();
+  }
+  if (tosync & FACES_E && !(synchronized_ & FACES_E) ||
+      tosync & LOCATE_E && !(synchronized_ & FACES_E))
+  {
+    compute_faces();
+  }
+  if (tosync & LOCATE_E && !(synchronized_ & LOCATE_E))
+  {
     compute_grid();
     if (!(synchronized_ & FACES_E)) compute_faces();
   }
-  if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E)) 
+  if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E))
+  {
     compute_node_neighbors();
+  }
   return true;
 }
 
