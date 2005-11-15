@@ -322,7 +322,7 @@ void VolumeSlicer::execute()
     unsigned int rgbsize;
     is >> rgbsize;
     vector< Color > rgbs(rgbsize);
-    for (int i = 0; i < rgbsize; i++)
+    for (unsigned int i = 0; i < rgbsize; i++)
     {
       double r, g, b;
       is >> r >> g >> b;
