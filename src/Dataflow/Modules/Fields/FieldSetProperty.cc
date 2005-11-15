@@ -334,7 +334,7 @@ void FieldSetProperty::execute() {
     // Update the handles and generation numbers.
     // NOTE: This is done in place, e.g. the nrrd is not copied.
     fHandle_ = nHandle;
-    fHandle_->generation++;
+    fHandle_->generation = fHandle_->compute_new_generation();
     nGeneration_ = nHandle->generation;
   }
 
