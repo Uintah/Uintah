@@ -564,7 +564,7 @@ proc createSubnetMenu { { menu "" } { subnet 0 } } {
 	if { [winfo exists $menu ] } {
 	    $menu entryconfigure Sub-Networks -state disabled
 	}
-	.main_menu configure Sub-Netowrks configure -state disabled
+	.main_menu configure Sub-Networks configure -state disabled
     } else {
 	if { [winfo exists $menu ] } {
 	    $menu entryconfigure Sub-Networks -state normal
