@@ -178,6 +178,7 @@ GenericReader<HType>::execute()
     return;
   }
   outport->send(handle_);
+  if (!outport->get_cache()) { handle_ = 0; }
 }
 
 } // End namespace SCIRun
