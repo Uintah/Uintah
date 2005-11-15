@@ -39,6 +39,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/DirectionalLight.cc	                \
 	$(SRCDIR)/DrawInfoOpenGL.cc	                \
 	$(SRCDIR)/FreeType.cc		                \
+	$(SRCDIR)/FreeTypeTextTexture.cc                \
 	$(SRCDIR)/GeomArrows.cc		                \
 	$(SRCDIR)/GeomBillboard.cc	                \
 	$(SRCDIR)/GeomBox.cc		                \
@@ -66,7 +67,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomSphere.cc		                \
 	$(SRCDIR)/GeomSticky.cc		                \
 	$(SRCDIR)/GeomSwitch.cc		                \
-	$(SRCDIR)/GeomStippleOccluded.cc		                \
+	$(SRCDIR)/GeomStippleOccluded.cc		\
 	$(SRCDIR)/GeomTetra.cc		                \
 	$(SRCDIR)/GeomTexSlices.cc	                \
 	$(SRCDIR)/GeomTexRectangle.cc	    		\
@@ -88,6 +89,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Light.cc		    		\
 	$(SRCDIR)/Lighting.cc		    		\
 	$(SRCDIR)/Material.cc		    		\
+	$(SRCDIR)/NrrdTextureObj.cc	    		\
 	$(SRCDIR)/OpenGLContext.cc	    		\
 	$(SRCDIR)/OpenGLViewport.cc	    		\
 	$(SRCDIR)/Path.cc		    		\
