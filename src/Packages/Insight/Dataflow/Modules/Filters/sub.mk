@@ -61,7 +61,7 @@ SRCS += ${SRC_GEN} \
 	${SRCDIR}/BinaryErodeImageFilter.cc \
 	${SRCDIR}/GrayscaleDilateImageFilter.cc \
 	${SRCDIR}/GrayscaleErodeImageFilter.cc \
-	${SRCDIR}/ThresholdSegmentationLevelSetImageFilter.tcl \
+	${SRCDIR}/ThresholdSegmentationLevelSetImageFilter.cc \
 #[INSERT NEW CODE FILE HERE]
 
 $(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
