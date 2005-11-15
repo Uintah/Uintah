@@ -1,0 +1,73 @@
+# SCIRun Network v1.25.0
+
+
+set name {ConstantBasisSamplePlane}
+set bbox {10 25 518 158}
+set creationDate {Tue Nov 15 2005}
+set creationTime {12:43:25}
+set runDate {}
+set runTime {}
+set notes {}
+set geometry {553x333+506+206}
+
+# Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set m1 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 184 99]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 104]
+
+# Create a SCIRun->FieldsData->DirectMapping Module
+set m3 [addModuleAtPosition "SCIRun" "FieldsData" "DirectMapping" 10 34]
+
+# Create a SCIRun->FieldsCreate->SamplePlane Module
+set m4 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 184 32]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 357 25]
+
+# Create the Connections between Modules
+set c1 [addConnection $m4 0 $m1 0]
+set c2 [addConnection $m3 0 $m2 0]
+set c3 [addConnection $m2 0 Subnet 0]
+set c4 [addConnection Subnet 0 $m4 0]
+set c5 [addConnection Subnet 0 $m3 0]
+set c6 [addConnection Subnet 1 $m5 0]
+set c7 [addConnection $m1 0 $m3 1]
+set c8 [addConnection $m1 1 Subnet 1]
+set c9 [addConnection $m5 0 $m2 1]
+set c10 [addConnection Subnet 0 $m5 1]
+
+# Set GUI variables for the SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set $m1-ui_geometry {438x163+632+318}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m2-nodes-on {0}
+set $m2-edges-on {0}
+set $m2-use-transparency {1}
+set $m2-has_scalar_data {1}
+set $m2-active_tab {Faces}
+set $m2-node_scale {0.03}
+set $m2-edge_scale {0.015}
+set $m2-scalars_scale {0.3}
+set $m2-ui_geometry {364x635+32+176}
+
+# Set GUI variables for the SCIRun->FieldsData->DirectMapping Module
+set $m3-interpolation_basis {constant}
+set $m3-ui_geometry {396x294+207+432}
+
+# Set GUI variables for the SCIRun->FieldsCreate->SamplePlane Module
+set $m4-sizex {203}
+set $m4-sizey {203}
+set $m4-auto_size {1}
+set $m4-axis {2}
+set $m4-data-at {Faces}
+set $m4-ui_geometry {342x332+648+190}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m5-main_frame {.uiSCIRun_Visualization_RescaleColorMap_0}
+set $m5-min {285.661825627}
+set $m5-max {827.088192271}
+set $m5-ui_geometry {291x116+745+147}
+
+
+::netedit scheduleok
