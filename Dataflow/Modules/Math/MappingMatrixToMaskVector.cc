@@ -98,10 +98,12 @@ MappingMatrixToMaskVector::execute()
   int *rr = matrix->rows;
   int *cc = matrix->columns;
   double *data = matrix->a;
-  for (unsigned int i = 0; i < matrix->nrows(); ++i) {
+  for (int i = 0; i < matrix->nrows(); ++i)
+  {
     if (rr[i+1] == rr[i]) continue; // No entires on this row
     int col = cc[rr[i]];
-    if (data[rr[i]] > 0.0) {
+    if (data[rr[i]] > 0.0)
+    {
       mask[col] = 1;
     }
   }
