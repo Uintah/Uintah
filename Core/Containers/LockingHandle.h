@@ -201,6 +201,7 @@ void LockingHandle<T>::detach()
     rep->lock.lock();
     if(rep->ref_cnt==1){
 	rep->lock.unlock();
+        rep->generation = rep->compute_new_generation();
 	return; // We have the only copy
     }
     T* oldrep=rep;
