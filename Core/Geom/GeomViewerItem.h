@@ -27,22 +27,20 @@
 */
 
 
-#ifndef SCI_Render_ViewGeom_h
-#define SCI_Render_ViewGeom_h 1
+#ifndef SCI_Core_Geom_GeomViewerItem_h
+#define SCI_Core_Geom_GeomViewerItem_h 1
 
 /*
- *  ViewGeom.h: ?
+ *  GeomViewerItem.h:
  *
- *  Written by:
- *   Author: ?
  *   Department of Computer Science
  *   University of Utah
- *   Date: ?
+ *   Date: November, 2005
  *
- *  Copyright (C) 199? SCI Group
+ *  Copyright (C) 2005 SCI Group
  */
 
-#include <Core/Geom/IndexedGroup.h>
+#include <Core/Geom/GeomContainer.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomSave.h>
@@ -54,26 +52,28 @@
 namespace SCIRun {
 
 class CrowdMonitor;
-class GeometryComm;
 
-/* this is basicaly a indexed group that also has some simple message
- * stuff
- */	
+class GeomViewerItem: public GeomContainer {
+private:  
+  string name_;
+  CrowdMonitor *crowd_lock_;
 
-class GeomViewerPort: public GeomIndexedGroup {
-  GeometryComm* msg_head;
-  GeometryComm* msg_tail;
+  GeomViewerItem();
+  static Persistent *maker();
 
-  int portno;
-    
 public:
-  friend class Viewer;
-  GeomViewerPort(int num) : msg_head(0), msg_tail(0), portno(num){}
-  virtual ~GeomViewerPort() {}
+  GeomViewerItem(GeomHandle,const string&, CrowdMonitor* lock);
 
-  GeometryComm* getHead(void) { return msg_head; }
+  CrowdMonitor *crowd_lock() { return crowd_lock_; }
+
+  virtual GeomObj* clone();
+
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+    
+  string& getString(void) { return name_;}
 };
-
 
 } // End namespace SCIRun
 

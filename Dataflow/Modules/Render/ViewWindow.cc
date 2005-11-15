@@ -69,6 +69,7 @@
 #include <Core/Geom/GeomGroup.h>     
 #include <Core/Geom/GeomSticky.h>     
 #include <Core/Geom/Material.h>
+#include <Core/Geom/GeomViewerItem.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -223,7 +224,7 @@ ViewWindow::~ViewWindow()
 void
 ViewWindow::itemAdded(GeomViewerItem* si)
 {
-  const string &name = si->name_;
+  const string &name = si->getString();
   map<string,GuiInt*>::iterator gui_iter = visible_.find(name);
   if(gui_iter==visible_.end()){
     gui_->lock();
@@ -240,7 +241,7 @@ ViewWindow::itemAdded(GeomViewerItem* si)
 void
 ViewWindow::itemDeleted(GeomViewerItem *si)
 {
-  const string &name = si->name_;
+  const string &name = si->getString();
   map<string,GuiInt*>::iterator gui_iter = visible_.find(name);
   if (gui_iter == visible_.end()) { // if not found
     cerr << name << " has dissappeared from the viewer\n";
@@ -255,7 +256,7 @@ ViewWindow::itemRenamed(GeomViewerItem *si, string newname)
 {
   const int need_redraw_cache = need_redraw_;
   itemDeleted(si);
-  si->name_ = newname;
+  si->getString() = newname;
   itemAdded(si);
   need_redraw_ = need_redraw_cache;
 }
@@ -272,16 +273,16 @@ ViewWindow::get_bounds(BBox& bbox)
     for ( ; serIter.first != serIter.second; serIter.first++) {
       GeomViewerItem *si=(GeomViewerItem*)((*serIter.first).second.get_rep());
       // Look up the name to see if it should be drawn...
-      map<string,GuiInt*>::iterator gui_iter = visible_.find(si->name_);
+      map<string,GuiInt*>::iterator gui_iter = visible_.find(si->getString());
       if (gui_iter != visible_.end()) { // if found
 	if ((*gui_iter).second->get()) {
-	  if(si->crowd_lock_) si->crowd_lock_->readLock();
+	  if(si->crowd_lock()) si->crowd_lock()->readLock();
 	  si->get_bounds(bbox);
-	  if(si->crowd_lock_) si->crowd_lock_->readUnlock();
+	  if(si->crowd_lock()) si->crowd_lock()->readUnlock();
 	}
       }
       else {
-	cerr << "Warning: object " << si->name_
+	cerr << "Warning: object " << si->getString()
 	     << " not in visibility database...\n";
 	si->get_bounds(bbox);
       }
@@ -321,9 +322,9 @@ ViewWindow::get_bounds_all(BBox& bbox)
     // items in the scene are all GeomViewerItem's...
     for ( ; serIter.first != serIter.second; serIter.first++) {
       GeomViewerItem *si=(GeomViewerItem*)((*serIter.first).second.get_rep());
-      if(si->crowd_lock_) si->crowd_lock_->readLock();
+      if(si->crowd_lock()) si->crowd_lock()->readLock();
       si->get_bounds(bbox);
-      if(si->crowd_lock_) si->crowd_lock_->readUnlock();
+      if(si->crowd_lock()) si->crowd_lock()->readUnlock();
     }
   }
 
@@ -1730,7 +1731,7 @@ ViewWindow::update_mode_string(GeomHandle pick_obj)
   if(!si){
     ms += "GeomObj";
   } else {
-    ms+=si->name_;
+    ms+=si->getString();
   }
   if(pick_n_ != 0x12345678)
     ms+=", index="+to_string(pick_n_);
@@ -1784,31 +1785,31 @@ ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 	GeomViewerItem *si =
 	  (GeomViewerItem*)((*serIter.first).second.get_rep());
 	// Look up the name to see if it should be drawn...
-	map<string,GuiInt*>::iterator gui_iter = visible_.find(si->name_);
+	map<string,GuiInt*>::iterator gui_iter = visible_.find(si->getString());
 	if (gui_iter != visible_.end()) { // if found
 	  if ((*gui_iter).second->get())
 	  {
 	    const bool transparent =
-	      strstr(si->name_.c_str(), "TransParent") ||
-	      strstr(si->name_.c_str(), "Transparent");
-	    const bool culledtext = strstr(si->name_.c_str(), "Culled Text");
-	    const bool sticky = strstr(si->name_.c_str(), "Sticky");
+	      strstr(si->getString().c_str(), "TransParent") ||
+	      strstr(si->getString().c_str(), "Transparent");
+	    const bool culledtext = strstr(si->getString().c_str(), "Culled Text");
+	    const bool sticky = strstr(si->getString().c_str(), "Sticky");
 	    if ((pass == 0 && !transparent && !culledtext && !sticky) ||
 		(pass == 1 && transparent && !culledtext && !sticky) ||
 		(pass == 2 && culledtext && !sticky) ||
 		(pass == 3 && sticky))
 	    {
-	      if(si->crowd_lock_)
-		si->crowd_lock_->readLock();
+	      if(si->crowd_lock())
+		si->crowd_lock()->readLock();
 	      (r->*pmf)(viewer_, this, si);
-	      if(si->crowd_lock_)
-		si->crowd_lock_->readUnlock();
+	      if(si->crowd_lock())
+		si->crowd_lock()->readUnlock();
 	    }
 	  }
 	}
 	else
 	{
-	  cerr << "Warning: Object " << si->name_ <<
+	  cerr << "Warning: Object " << si->getString() <<
 	    " not in visibility database.\n";
 	}
       }

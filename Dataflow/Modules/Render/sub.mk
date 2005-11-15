@@ -50,7 +50,6 @@ SRCS     += \
 	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/SynchronizeGeometry.cc\
 	$(SRCDIR)/Tex.cc\
-	$(SRCDIR)/ViewGeom.cc\
 	$(SRCDIR)/ViewWindow.cc\
 	$(SRCDIR)/ViewSlices.cc\
 	$(SRCDIR)/Viewer.cc\

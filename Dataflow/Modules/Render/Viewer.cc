@@ -51,6 +51,7 @@
 #include <Core/Geom/DirectionalLight.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/HeadLight.h>
+#include <Core/Geom/GeomViewerItem.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/CleanupManager.h>

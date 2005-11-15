@@ -79,6 +79,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomTriangles.cc	                \
 	$(SRCDIR)/GeomTube.cc		                \
 	$(SRCDIR)/GeomVertexPrim.cc	                \
+	$(SRCDIR)/GeomViewerItem.cc			\
 	$(SRCDIR)/GuiGeom.cc		    		\
 	$(SRCDIR)/GuiView.cc		    		\
 	$(SRCDIR)/HeadLight.cc		    		\
