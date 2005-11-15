@@ -61,6 +61,8 @@ public:
   Datatype(const Datatype&);
   Datatype& operator=(const Datatype&);
   virtual ~Datatype();
+
+  static int compute_new_generation();
 };
 
 } // End namespace SCIRun
