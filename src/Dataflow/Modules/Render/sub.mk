@@ -47,9 +47,7 @@ SRCS     += \
 	$(SRCDIR)/Camera.cc\
 	$(SRCDIR)/EditPath.cc\
 	$(SRCDIR)/OpenGL.cc\
-	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/SynchronizeGeometry.cc\
-	$(SRCDIR)/Tex.cc\
 	$(SRCDIR)/ViewWindow.cc\
 	$(SRCDIR)/ViewSlices.cc\
 	$(SRCDIR)/Viewer.cc\
