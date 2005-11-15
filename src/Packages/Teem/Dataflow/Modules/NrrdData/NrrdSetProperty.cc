@@ -336,7 +336,7 @@ void NrrdSetProperty::execute() {
     // Update the handles and generation numbers.
     // NOTE: This is done in place, e.g. the nrrd is not copied.
     nHandle_ = nHandle;
-    nHandle_->generation++;
+    nHandle_->generation = nHandle_->compute_new_generation();
     nGeneration_ = nHandle->generation;
   }
 
