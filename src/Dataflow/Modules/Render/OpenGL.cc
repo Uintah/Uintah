@@ -50,6 +50,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Util/Environment.h>
+#include <Core/Geom/GeomViewerItem.h>
 #include <sci_values.h>
 
 #ifdef HAVE_MAGICK
@@ -1611,84 +1612,6 @@ OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
 
 
 
-void
-GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
-{
-
-  // Here we need to query the ViewWindow with our name and give it our
-  // di so it can change things if they need to be.
-  //  di->viewwindow->setDI(di, name_);
-
-  BBox bb;
-  child_->get_bounds(bb);
-  if (!(di->show_bbox_ && bb.valid()))
-  {
-    child_->draw(di,m,time);
-  }
-  else
-  {
-    const Point &min(bb.min());
-    const Point &max(bb.max());
-
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glDepthMask(GL_FALSE);
-
-    glDisable(GL_LIGHTING);     
-
-    glBegin(GL_QUADS);
-
-    //top
-    glColor4f(0.0, 0.0, 1.0, 0.4);
-    glVertex3d(max.x(),min.y(),max.z());
-    glVertex3d(max.x(),max.y(),max.z());
-    glVertex3d(min.x(),max.y(),max.z());
-    glVertex3d(min.x(),min.y(),max.z());
-
-    //bottom
-    glColor4f(0.0, 0.0, 1.0, 0.2);
-    glVertex3d(max.x(),max.y(),min.z());
-    glVertex3d(max.x(),min.y(),min.z());
-    glVertex3d(min.x(),min.y(),min.z());
-    glVertex3d(min.x(),max.y(),min.z());
-
-    //right
-    glColor4f(1.0, 0.0, 0.0, 0.4);
-    glVertex3d(max.x(),min.y(),min.z());
-    glVertex3d(max.x(),max.y(),min.z());
-    glVertex3d(max.x(),max.y(),max.z());
-    glVertex3d(max.x(),min.y(),max.z());
-
-    //left
-    glColor4f(1.0, 0.0, 0.0, 0.2);
-    glVertex3d(min.x(),min.y(),max.z());
-    glVertex3d(min.x(),max.y(),max.z());
-    glVertex3d(min.x(),max.y(),min.z());
-    glVertex3d(min.x(),min.y(),min.z());
-
-    //top
-    glColor4f(0.0, 1.0, 0.0, 0.4);
-    glVertex3d(min.x(),max.y(),max.z());
-    glVertex3d(max.x(),max.y(),max.z());
-    glVertex3d(max.x(),max.y(),min.z());
-    glVertex3d(min.x(),max.y(),min.z());
-
-    //bottom
-    glColor4f(0.0, 1.0, 0.0, 0.2);
-    glVertex3d(min.x(),min.y(),min.z());
-    glVertex3d(max.x(),min.y(),min.z());
-    glVertex3d(max.x(),min.y(),max.z());
-    glVertex3d(min.x(),min.y(),max.z());
-
-    glEnd();
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
-    glDisable(GL_CULL_FACE);
-  }
-}
 
 
 void
