@@ -50,6 +50,7 @@ SRCS     += \
 	$(SRCDIR)/SynchronizeGeometry.cc\
 	$(SRCDIR)/ViewWindow.cc\
 	$(SRCDIR)/ViewSlices.cc\
+	$(SRCDIR)/Painter.cc\
 	$(SRCDIR)/Viewer.cc\
 	$(SRCDIR)/glMath.cc\
 #[INSERT NEW CODE FILE HERE]
