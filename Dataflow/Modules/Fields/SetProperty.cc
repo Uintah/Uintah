@@ -67,7 +67,9 @@ SetProperty::~SetProperty()
 {
 }
 
-void SetProperty::execute() {
+void
+SetProperty::execute()
+{
   FieldIPort *ifield = (FieldIPort *)get_iport("Input");
   FieldOPort *ofield = (FieldOPort *)get_oport("Output");
 
@@ -79,14 +81,18 @@ void SetProperty::execute() {
     return;
   }
 
-  fldH->generation++;
+  fldH->generation = fldH->compute_new_generation();
 
   // set this new property
-  if (mesh_prop_.get()) {
-    fldH->mesh()->generation++;
+  if (mesh_prop_.get())
+  {
+    fldH->mesh()->generation = fldH->mesh()->compute_new_generation();
     fldH->mesh()->set_property(prop_.get(), val_.get(), false);
-  } else 
+  }
+  else
+  { 
     fldH->set_property(prop_.get(), val_.get(), false);
+  }
   
   ofield->send(fldH);
 }

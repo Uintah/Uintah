@@ -281,16 +281,15 @@ void SolveMatrix::execute()
   if(use_previous_soln.get() && solution.get_rep() && 
      solution->nrows() == rhs->nrows()){
     solution.detach();
-    solution->generation++;
   } else {
-    solution=scinew ColumnMatrix(rhs->nrows());
+    solution = scinew ColumnMatrix(rhs->nrows());
     solution->zero();
     string units;
     if (rhs->get_property("units", units))
       solution->set_property("units", units, false);
   }
   
-  int size=matrix->nrows();
+  int size = matrix->nrows();
   if(matrix->ncols() != size){
     error("Matrix should be square, but is " +
 	  to_string(size) + " x " + to_string(matrix->ncols()));
