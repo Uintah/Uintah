@@ -131,6 +131,7 @@ SRCS := \
         $(SRCDIR)/PathReader.tcl \
         $(SRCDIR)/PathWidget.tcl \
         $(SRCDIR)/PathWriter.tcl \
+        $(SRCDIR)/Painter.tcl \
         $(SRCDIR)/PlanarTransformField.tcl \
         $(SRCDIR)/PointLatticeMap.tcl \
         $(SRCDIR)/PointWidget.tcl \
