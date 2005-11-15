@@ -677,9 +677,7 @@ itcl_class ViewWindow {
            # appear after all the other windows and thus on systems without
            # pbuffers, we don't get the drawing window obscured.  Three seconds
            # seems to be enough time.
-            # after 3000 "SciRaise $w; $this switchvisual"
-            SciRaise $w
-            switchvisual
+            after 3000 "SciRaise $w; $this switchvisual"
         } else {
             SciRaise $w
             switchvisual
