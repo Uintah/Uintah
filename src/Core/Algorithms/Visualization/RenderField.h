@@ -710,6 +710,12 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
     vcol1 = scinew Material();
     vcol1->transparency = 1.0;
   }
+
+  bool constant = sfld->basis_order() == 0;
+  bool curve_fld = mesh->dimensionality() == 1;
+  
+  if (constant && !curve_fld) def_color = true;
+
 #if defined(DEBUG_PRINT)
   cout << endl << "-- edges --" << endl;
 #endif
@@ -773,6 +779,7 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 	  sfld->interpolate(val0, c0, *eiter);
 	  sfld->interpolate(val1, c1, *eiter);
 	}
+
 	// add the geom_obj for this part....
 	add_edge_geom(lines, cylinders, p0, p1, val0, val1,
 		      def_color, vec_color, cyl, vcol0, vcol1);
