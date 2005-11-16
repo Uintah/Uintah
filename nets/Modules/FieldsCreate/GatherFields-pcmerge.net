@@ -71,6 +71,8 @@ set c4 [addConnection $m4 0 $m1 1]
 # Setup GUI for the SCIRun->FieldsCreate->GatherFields Module
 
 # Setup GUI for the SCIRun->Visualization->ShowField Module
+setGlobal $m2-edges-on {0}
+setGlobal $m2-faces-on {0}
 setGlobal $m2-nodes-usedefcolor {1}
 setGlobal $m2-normalize-vectors {}
 setGlobal $m2-has_scalar_data {1}

@@ -113,6 +113,7 @@ set "$m3-ViewWindow_0-Faces (1)" {1}
 
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
 set $m4-edges-on {0}
+set $m4-faces-on {0}
 set $m4-has_scalar_data {1}
 set $m4-node_display_type {Spheres}
 set $m4-node_scale {0.0142}
