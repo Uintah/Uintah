@@ -56,7 +56,7 @@ using namespace sci::cca::ports;
 using namespace sci::cca::tena;
 using namespace TENA::Middleware;
 
-extern "C" Component::pointer make_cca_tena_PublishPerson()
+extern "C" Component::pointer make_cca_tena_lesson03_PublishPerson()
 {
     return Component::pointer(new PublishPerson());
 }
