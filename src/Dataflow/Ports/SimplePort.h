@@ -107,6 +107,10 @@ public:
       handle_ = 0;
     }
   }
+  bool get_cache()
+  {
+    return cache_;
+  }
 
   virtual bool have_data();
   virtual void resend(Connection* conn);
