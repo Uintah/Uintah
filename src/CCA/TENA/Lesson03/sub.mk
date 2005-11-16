@@ -42,7 +42,7 @@ SRCS     += $(SRCDIR)/PublishPerson.cc \
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
            Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 
-LIBS := $(TENA_LIBRARY)
+LIBS := $(TENA_LIBRARY) -lLesson_03-v2-$(TENA_PLATFORM)-v5.1_0 -L/opt/OM/impl/TENA/lib -lLesson_03-v2-basic-v1-$(TENA_PLATFORM)-v5.1
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

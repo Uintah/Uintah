@@ -55,7 +55,7 @@ namespace SCIRun {
 
     TypeMap::pointer cloneEmpty()
     {
-      return new PropertiesImpl; 
+      return TypeMap::pointer(new PropertiesImpl); 
     }
   };
 

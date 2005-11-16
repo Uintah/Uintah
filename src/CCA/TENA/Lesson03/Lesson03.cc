@@ -40,7 +40,7 @@
 #include <CCA/TENA/Lesson03/Lesson03.h>
 #include <SCIRun/Core/CCAException.h>
 
-extern "C" sci::cca::Component::pointer make_cca_plume_Lesson03()
+extern "C" sci::cca::Component::pointer make_cca_tena_lesson03_Lesson03()
 {
     return sci::cca::Component::pointer(new SCIRun::Lesson03());
 }

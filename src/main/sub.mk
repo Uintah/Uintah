@@ -39,30 +39,6 @@ ifeq ($(BUILD_SCIRUN2),yes)
 
   ########################################################################
   #
-  # Plume
-  #
-  SRCS      := $(SRCDIR)/plume.cc $(SRCDIR)/PlumeTest.cc
-
-  ifeq ($(LARGESOS),yes)
-    PSELIBS := Core/CCA
-  else
-    PSELIBS := SCIRun/Plume SCIRun/Distributed SCIRun/Core \
-	Core/Exceptions Core/CCA/Comm \
-        Core/CCA/PIDL Core/CCA/spec Core/Util \
-        Core/CCA/SSIDL Core/Thread \
-	CCA/Core/Hello CCA/Core/World
-  endif
-
-  LIBS :=  -L/usr/local/lib -lbfd /usr/local/lib/libiberty.a
-
-  PROGRAM := plume
-
-  include $(SCIRUN_SCRIPTS)/program.mk
-
-
-
-  ########################################################################
-  #
   # PlumeFramework
   #
   SRCS      := $(SRCDIR)/PlumeFramework.cc $(SRCDIR)/SimpleManager.cc
