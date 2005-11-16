@@ -108,9 +108,9 @@ PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Datatypes Core/Math Core/Containers Core/Thread \
 	Core/GuiInterface Core/Util Core/TkExtensions
 
-LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TK_LIBRARY) $(FREETYPE_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
+LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TK_LIBRARY) $(FREETYPE_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
 
-INCLUDES += $(FTGL_INCLUDE) $(FREETYPE_INCLUDE)
+INCLUDES += $(FTGL_INCLUDE) $(FREETYPE_INCLUDE) $(TEEM_INCLUDE)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
