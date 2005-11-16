@@ -106,6 +106,7 @@ ImpMPM::~ImpMPM()
   delete d_solver;
   delete heatConductionModel;
   delete thermalContactModel;
+  MPMPhysicalBCFactory::clean();
 }
 
 void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
@@ -190,10 +191,10 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
                                                   Vector(0,0,0));
    }
 
-   if(flags->d_useLoadCurves){
-    MPMPhysicalBCFactory::create(prob_spec);
-    if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
-     throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?", __FILE__, __LINE__);
+   MPMPhysicalBCFactory::create(prob_spec);
+   if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
+     if(flags->d_useLoadCurves){
+       throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?", __FILE__, __LINE__);
     }
    }
 
@@ -1034,7 +1035,8 @@ void ImpMPM::iterate(const ProcessorGroup*,
 #ifdef __APPLE__
 #  define isnan  __isnand
 #endif
-    if (isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax)){ 
+    if ((isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax))
+        && isnan(dispIncQNorm0)){
       restart_nan=true;
       cerr << "Restarting due to a nan residual" << endl;
     }
