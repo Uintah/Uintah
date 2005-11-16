@@ -200,7 +200,6 @@ public:
   virtual void update_progress(unsigned int n, unsigned int max);
 
   port_range_type getIPorts(const string &name);
-  port_range_type getOPorts(const string &name);
   IPort* getIPort(const string &name);
   OPort* getOPort(const string &name);
   OPort* getOPort(int idx);
@@ -208,7 +207,6 @@ public:
 
   // next 6 are Deprecated
   port_range_type get_iports(const string &name);
-  port_range_type get_oports(const string &name);
   IPort* get_iport(const string &name);
   OPort* get_oport(const string &name);
   OPort* get_oport(int idx);
