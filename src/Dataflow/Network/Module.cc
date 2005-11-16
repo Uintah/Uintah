@@ -454,11 +454,6 @@ port_range_type Module::get_iports(const string &name)
   return iports[name];
 }
 
-port_range_type Module::get_oports(const string &name)
-{
-  return oports[name];
-}
-
 IPort* Module::get_iport(int item)
 {
   return iports[item];
@@ -481,6 +476,11 @@ OPort* Module::get_oport(const string& name)
   OPort *p = getOPort(name);
   if (p == 0) throw "Unable to initialize oport '" + name + "'.";
   return p;
+}
+
+port_range_type Module::getIPorts(const string &name)
+{
+  return get_iports(name);
 }
 
 IPort* Module::getIPort(const string &name)
