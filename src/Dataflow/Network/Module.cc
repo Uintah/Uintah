@@ -510,6 +510,14 @@ OPort* Module::getOPort(int item)
   return oports[item];
 }
 
+bool Module::oport_cached(const string &name)
+{
+  OPort *p = getOPort(name);
+  if (p == 0) { throw "Unable to initialize oport '" + name + "'."; }
+  return p->have_data();
+}
+
+
 void Module::connection(Port::ConnectionState mode, int which_port, bool is_oport)
 {
   if(!is_oport && lastportdynamic && 

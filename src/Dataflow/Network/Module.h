@@ -205,6 +205,8 @@ public:
   OPort* getOPort(int idx);
   IPort* getIPort(int idx);
 
+  bool oport_cached(const string &name);
+
   // next 6 are Deprecated
   port_range_type get_iports(const string &name);
   IPort* get_iport(const string &name);
