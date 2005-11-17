@@ -126,7 +126,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>advect2mat.uda</filebase>
-      <outputInterval>.00</outputInterval>
+      <outputInterval>.001</outputInterval>
       <save label="vel_CC"/>
       <save label="press_CC"/>
       <save label="rho_CC"/>

@@ -68,7 +68,6 @@
 		    <velocity>[0.0,0.0,0.0]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
-		<velocity_field>0</velocity_field>
 	    </material>
 	    <material>
                 <burn type = "null" />
@@ -92,7 +91,6 @@
 		    <velocity>[0.0,-208.0,0.0]</velocity>
 		    <temperature>294</temperature>
  		</geom_object>
-		<velocity_field>1</velocity_field>
 	    </material>
 	    <contact>
 	      <type>rigid</type>

@@ -58,7 +58,6 @@
 		    <temperature>300.</temperature>
  		</geom_object>
 
-		<velocity_field>0</velocity_field>
 
 	    </material>
 

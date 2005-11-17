@@ -64,7 +64,6 @@
 		    <velocity>[0.0,0.0,-1.e-2]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
-		<velocity_field>0</velocity_field>
 	    </material>
 
 	    <material>
@@ -86,7 +85,6 @@
 		    <velocity>[0.0,0.0,-.5e-2]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
-		<velocity_field>1</velocity_field>
 	    </material>
 
 	    <contact>

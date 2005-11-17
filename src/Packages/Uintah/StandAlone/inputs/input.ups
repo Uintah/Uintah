@@ -188,7 +188,6 @@
 		   </union> 
 	  	   <res>[2,2,2]</res>
 		  </geom_object>
-		<velocity_field>1</velocity_field>
 	    </material>
 	</MPM>
 
