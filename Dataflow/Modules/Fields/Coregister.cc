@@ -86,10 +86,12 @@ Coregister::Coregister(GuiContext* ctx)
 {
 }
 
+
 Coregister::~Coregister()
 {
   if (mr_) { delete mr_; mr_ = 0; }
 }
+
 
 void
 Coregister::execute()
@@ -119,7 +121,6 @@ Coregister::execute()
 
   mobileM = mobilePC->get_typed_mesh();
 
-  
   fixedM->size(nnodes);
   if (nnodes < 3) {
     error("Fixed PointCloudField needs at least 3 input points.");
@@ -192,9 +193,12 @@ Coregister::execute()
   omat->send(dm);
 }
 
+
 //! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
-void Coregister::tcl_command(GuiArgs& args, void* userdata) {
+void
+Coregister::tcl_command(GuiArgs& args, void* userdata)
+{
   if (args[1] == "stop") {
     abort_ = 1;
   } else {
