@@ -38,17 +38,18 @@ void MPMPetscSolver::initialize()
 {
 #ifdef HAVE_PETSC
 #ifdef LOG
-  int argc = 9;
+  int argc = 2;
 #else
   int argc = 2;
 #endif
   char** argv;
   argv = new char*[argc];
   argv[0] = "ImpMPM::problemSetup";
-  //argv[1] = "-on_error_attach_debugger";
-  //argv[1] = "-start_in_debugger";
-  argv[1] = "-no_signal_handler";
+  argv[1] = "-on_error_attach_debugger";
 #ifdef LOG
+  argv[0] = "-log_summary";
+  argv[1] = "-log_info";
+#if 0
   argv[2] = "-log_exclude_actions";
   argv[3] = "-log_exclude_objects";
   argv[4] = "-log_info";
@@ -56,7 +57,7 @@ void MPMPetscSolver::initialize()
   argv[6] = "-trdump";
   argv[7] = "-trmalloc_log";
   argv[8] = "-log_summary";
-  //argv[2] = "-log_summary";
+#endif
 #endif
 
   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
@@ -184,25 +185,23 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   int globalrows = (int)d_totalNodes;
   int globalcolumns = (int)d_totalNodes; 
 #endif
-#if 0 
-  cerr << "me = " << me << endl;
-  cerr << "numlrows = " << numlrows << endl;
-  cerr << "numlcolumns = " << numlcolumns << endl;
-  cerr << "globalrows = " << globalrows << endl;
-  cerr << "globalcolumns = " << globalcolumns << endl;
-#endif
-  int *diag;
+  int *diag, *onnz;
   diag = new int[numlrows];
+  onnz = new int[numlrows];
   for (int i = 0; i < numlrows; i++) 
     diag[i] = 1;
 
   map<int,int>::const_iterator itr;
   for (itr=dof_diag.begin(); itr != dof_diag.end(); itr++) {
-    //    cerr << "diag_before[" << itr->first << "]=" << itr->second << endl;
     diag[itr->first] = itr->second;
   }
 
 #if 0
+  cerr << "me = " << me << endl;
+  cerr << "numlrows = " << numlrows << endl;
+  cerr << "numlcolumns = " << numlcolumns << endl;
+  cerr << "globalrows = " << globalrows << endl;
+  cerr << "globalcolumns = " << globalcolumns << endl;
   for (int i = 0; i < numlrows; i++) 
     cerr << "diag[" << i << "] = " << diag[i] << endl;
 #endif
@@ -210,28 +209,46 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #ifdef HAVE_PETSC
   PetscTruth exists;
   PetscObjectExists((PetscObject)d_A,&exists);
-  //if (exists == PETSC_FALSE) {
 #if 0
-    MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-		    globalcolumns, PETSC_DEFAULT, PETSC_NULL, PETSC_DEFAULT,
-		    PETSC_NULL, &d_A);
-#endif
-#if 1
     // This one works
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-		    globalcolumns, PETSC_DEFAULT, diag, 
-		    PETSC_DEFAULT,PETSC_NULL, &d_A);
-    MatSetOption(d_A,MAT_KEEP_ZEROED_ROWS);
+                    globalcolumns, PETSC_DEFAULT, diag, 
+                    PETSC_DEFAULT,PETSC_NULL, &d_A);
 #endif
-   /* 
-     Create vectors.  Note that we form 1 vector from scratch and
-     then duplicate as needed.
-  */
+#if 1
+    // This one is much faster
+    int ONNZ_MAX=57;
+    int DIAG_MAX=81;
+    if(d_DOFsPerNode==1){
+      ONNZ_MAX=19;
+      DIAG_MAX=27;
+    }
+
+    for (int i = 0; i < numlrows; i++){ 
+      onnz[i]=ONNZ_MAX;
+      if(diag[i]==1){
+         onnz[i]=0;
+      }
+      diag[i]=min(diag[i],DIAG_MAX);
+    }
+
+    MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
+                    globalcolumns, PETSC_DEFAULT, diag, 
+                    PETSC_DEFAULT, onnz, &d_A);
+
+    if(d_DOFsPerNode==3){
+      MatSetOption(d_A, MAT_USE_INODES);
+    }
+#endif
+    MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS);
+
+    // Create vectors.  Note that we form 1 vector from scratch and
+    // then duplicate as needed.
+
     VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_B);
     VecDuplicate(d_B,&d_diagonal);
     VecDuplicate(d_B,&d_x);
     VecDuplicate(d_B,&d_t);
-  //}
 #endif
 
   delete[] diag;
