@@ -130,7 +130,6 @@
                   <velocity>[0.0,0.0,0]</velocity>
                   <temperature>300</temperature>
                </geom_object>
-              <velocity_field>2</velocity_field>
          </material>
 
            <contact>

@@ -95,7 +95,6 @@
           <velocity>[0.0, 0.0, 40.0e0]</velocity>
           <temperature>696</temperature>
         </geom_object>
-        <velocity_field>0</velocity_field>
       </material>
 
       <material name = "OFHCCu">
@@ -167,7 +166,6 @@
           <velocity>[0.0, 0.0, 0.0]</velocity>
           <temperature>696</temperature>
         </geom_object>
-        <velocity_field>1</velocity_field>
       </material>
 
       <contact>

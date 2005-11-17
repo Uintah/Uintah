@@ -474,7 +474,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>0</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -915,7 +914,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>1</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -1301,7 +1299,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>2</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -1682,7 +1679,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>3</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -2073,7 +2069,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>4</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -2444,7 +2439,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>5</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -2805,7 +2799,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>6</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -3146,7 +3139,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>7</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -3507,7 +3499,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>8</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -3868,7 +3859,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>9</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -4229,7 +4219,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>10</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -4530,7 +4519,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>11</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -4821,7 +4809,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>12</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -5147,7 +5134,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>13</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -5473,7 +5459,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>14</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -5744,7 +5729,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>15</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -5965,7 +5949,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>16</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -6171,7 +6154,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>17</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -6342,7 +6324,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>18</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -6543,7 +6524,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>19</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -6684,7 +6664,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>20</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -6820,7 +6799,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>21</velocity_field>
 	    </material>
 	    <material name = "HMX">
                 <burn type = "null" />
@@ -6900,7 +6878,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>22</velocity_field>
 	    </material>
 	    <material name = "HMX">
                 <burn type = "null" />
@@ -6965,7 +6942,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>23</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -7016,7 +6992,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>24</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -7082,7 +7057,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>25</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -7123,7 +7097,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>26</velocity_field>
 	    </material>
 
 	    <material name = "HMX">
@@ -7174,7 +7147,6 @@
 		    <velocity>[0.0,0.0,0]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>27</velocity_field>
 	    </material>
 
             <material name = "Piston" >
@@ -7199,7 +7171,6 @@
 		    <velocity>[0.0,0.0,-.01]</velocity>
 		    <temperature>0</temperature>
  		</geom_object>
-		<velocity_field>28</velocity_field>
 	    </material>
 
 	    <contact>

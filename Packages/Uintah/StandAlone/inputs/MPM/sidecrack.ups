@@ -76,7 +76,6 @@
 		    <toughness_max>  2000.0 </toughness_max>
 		    <toughness_variation>1</toughness_variation>
  		</geom_object>
-		<velocity_field>0</velocity_field>
 
 	    </material>
 

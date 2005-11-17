@@ -115,7 +115,6 @@
           <velocity>[0.0,0.0,0.0]</velocity>
           <temperature>294</temperature>
         </geom_object>
-        <velocity_field>0</velocity_field>
       </material>
       <!--
       <material name = "Copper Coating">
@@ -163,7 +162,6 @@
           <velocity>[0.0,-800.0,0.0]</velocity>
           <temperature>294</temperature>
         </geom_object>
-        <velocity_field>1</velocity_field>
       </material>
       -->
       <material name="Hard Steel Core">
@@ -209,7 +207,6 @@
           <velocity>[0.0,-800.0,0.0]</velocity>
           <temperature>294</temperature>
         </geom_object>
-        <velocity_field>1</velocity_field>
       </material>
       <!--
       <contact>

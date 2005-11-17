@@ -71,7 +71,6 @@
 		    <velocity>[0.0,0.0,-0.005]</velocity>
 		    <temperature>300</temperature>
  		</geom_object>
-		<velocity_field>0</velocity_field>
 	    </material>
 	    
 	    <material>
@@ -97,7 +96,6 @@
 		    <velocity>[0.,0.,0.]</velocity>
 		    <temperature>300.</temperature>
                </geom_object>
-		<velocity_field>1</velocity_field>
 
 	    </material>
 
