@@ -334,6 +334,12 @@ SCI_ARG_WITH(ncurses,
   [with_ncurses="$withval"
    sci_required_ncurses=yes],
   [with_ncurses=""])
+SCI_ARG_WITH(babel,
+  AC_HELP_STRING(--with-babel=DIR,
+  Use the Babel installation in DIR (strongly recommended for SCIRun2)),
+  [with_babel="$withval"
+   sci_required_babel=yes],
+  [with_babel=""])
 SCI_ARG_WITH(qt,
   AC_HELP_STRING(--with-qt=DIR,
                  Use the Qt installation in DIR),
@@ -3814,14 +3820,15 @@ fi
 
 SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,$_sci_optional)
   
-BABEL_BIN=""
-
+BABEL_BIN=
 AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
 AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
   
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-   DEF_BABEL="#define HAVE_BABEL 1"
-   HAVE_BABEL="yes"
+  ## check for compatible version (0.10.0 or greater)
+  SCI_CHECK_VERSION($BABEL_BIN,--version,0.10.0,,echo configure: error: wrong Babel version.; exit)
+  DEF_BABEL="#define HAVE_BABEL 1"
+  HAVE_BABEL="yes"
 fi
   
 if test "$with_babel" && test ! "$DEF_BABEL"; then
@@ -5067,6 +5074,9 @@ if test "$enable_scirun2" = "yes"; then
         AC_MSG_WARN([cannot find uuid_generate or uuid_create.  Will use custom uuid generation instead.])
         ;;
     esac
+  fi
+  if test "$HAVE_BABEL" != "yes"; then
+    AC_MSG_WARN([could not find a Babel installation (recommended for SCIRun2).])
   fi
   BUILD_SCIRUN2="yes"
 else
