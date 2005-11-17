@@ -109,7 +109,8 @@ ApplyMappingMatrix::execute()
   // Check to see if the source has changed.
   if( sfGeneration_ != sfield->generation ||
       dfGeneration_ != dfield->generation ||
-      mGeneration_  != imatrix->generation )
+      mGeneration_  != imatrix->generation ||
+      !oport_cached("Output"))
   {
     sfGeneration_ = sfield->generation;
     dfGeneration_ = dfield->generation;

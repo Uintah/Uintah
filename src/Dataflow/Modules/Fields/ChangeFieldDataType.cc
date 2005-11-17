@@ -130,9 +130,10 @@ ChangeFieldDataType::execute()
       fldname_.set("--- No Name ---");
     }
   }
-  else if (new_data_str == last_data_str_)
+  else if (new_data_str == last_data_str_ && oport_cached("Output Field"))
   {
     oport->send(outputfield_);
+    if (!oport->have_data()) { outputfield_ = 0; }
     return;
   }
   last_data_str_ = new_data_str;
@@ -143,6 +144,7 @@ ChangeFieldDataType::execute()
     outputfield_ = fh;
     remark("Passing field from input port to output port unchanged.");
     oport->send(outputfield_);
+    if (!oport->have_data()) { outputfield_ = 0; }
     return;
   }
 
@@ -191,6 +193,7 @@ ChangeFieldDataType::execute()
   }
     
   oport->send(outputfield_);
+  if (!oport->have_data()) { outputfield_ = 0; }
 }
 
     
