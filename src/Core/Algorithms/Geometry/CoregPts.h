@@ -60,16 +60,16 @@ protected:
   int allowTranslate_;
   int validTransPtsA_;
   int validTrans_;
-  Array1<Point> origPtsA_;
-  Array1<Point> origPtsP_;
-  Array1<Point> transPtsA_;
+  vector<Point> origPtsA_;
+  vector<Point> origPtsP_;
+  vector<Point> transPtsA_;
   Transform transform_;
 public:
   virtual ~CoregPts();
   CoregPts(int allowScale=1, int allowRotate=1, int allowTranslate=1);
-  void setOrigPtsA(Array1<Point> a);
-  void setOrigPtsP(Array1<Point> p);
-  int getTransPtsA(Array1<Point> &p);
+  void setOrigPtsA(const vector<Point> &a);
+  void setOrigPtsP(const vector<Point> &p);
+  int getTransPtsA(vector<Point> &p);
   int getTrans(Transform &t);
   void invalidate();
   virtual int computeTrans()=0;
@@ -106,9 +106,9 @@ private:
   int NDIM_;
   int NSEEDS_;
   Array2<double> params_;
-  Array1<double> misfit_;
+  vector<double> misfit_;
   void compute_misfit(int idx);
-  double simplex_step(Array1<double>&sum, double factor, int worst);
+  double simplex_step(vector<double>&sum, double factor, int worst);
 public:
   CoregPtsSimplexSearch(int maxIters, double misfitTol, int &abort,
 			ScalarFieldInterfaceHandle dField, 

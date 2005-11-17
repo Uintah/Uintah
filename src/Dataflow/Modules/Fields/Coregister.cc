@@ -44,7 +44,6 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Algorithms/Geometry/CoregPts.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
@@ -82,12 +81,14 @@ Coregister::Coregister(GuiContext* ctx)
     allowRotate_(ctx->subVar("allowRotate")),
     allowTranslate_(ctx->subVar("allowTranslate")), seed_(ctx->subVar("seed")),
     iters_(ctx->subVar("iters")), misfitTol_(ctx->subVar("misfitTol")),
-    method_(ctx->subVar("method"))
+    method_(ctx->subVar("method")),
+    mr_(0)
 {
 }
 
 Coregister::~Coregister()
 {
+  if (mr_) { delete mr_; mr_ = 0; }
 }
 
 void
@@ -132,7 +133,7 @@ Coregister::execute()
 
   MatrixOPort *omat = (MatrixOPort *)get_oport("Transform");
 
-  Array1<Point> fixedPts, mobilePts;
+  vector<Point> fixedPts, mobilePts;
   Transform trans;
 
   PCMesh::Node::iterator fni, fne, mni, mne;
@@ -141,12 +142,12 @@ Coregister::execute()
   Point p;
   while (fni != fne) {
     fixedM->get_center(p, *fni);
-    fixedPts.add(p);
+    fixedPts.push_back(p);
     ++fni;
   }
   while (mni != mne) {
     mobileM->get_center(p, *mni);
-    mobilePts.add(p);
+    mobilePts.push_back(p);
     ++mni;
   }
 
@@ -173,6 +174,7 @@ Coregister::execute()
     }
     int seed = seed_.get();
     seed_.set(seed+1);
+    if (mr_) { delete mr_; }
     mr_ = scinew MusilRNG(seed);
     (*mr_)();
     abort_=0;
@@ -185,17 +187,16 @@ Coregister::execute()
   coreg->getTrans(trans);
   double misfit;
   coreg->getMisfit(misfit);
-//  Array1<Point> transformedPts;
-//  coreg->getTransPtsA(transformedPts);
-  //cerr << "Here's the misfit: "<<misfit<<"\n";
-  DenseMatrix *dm = scinew DenseMatrix(trans);
-  omat->send(MatrixHandle(dm));
+
+  MatrixHandle dm(scinew DenseMatrix(trans));
+  omat->send(dm);
 }
+
 //! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
 void Coregister::tcl_command(GuiArgs& args, void* userdata) {
   if (args[1] == "stop") {
-    abort_=1;
+    abort_ = 1;
   } else {
     Module::tcl_command(args, userdata);
   }

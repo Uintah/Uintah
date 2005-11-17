@@ -41,58 +41,89 @@ using std::cerr;
 
 namespace SCIRun {
 
-CoregPts::~CoregPts() {
-}
-
 CoregPts::CoregPts(int allowScale, int allowRotate, int allowTranslate) :
-  allowScale_(allowScale), allowRotate_(allowRotate), 
-  allowTranslate_(allowTranslate) 
+  allowScale_(allowScale), allowRotate_(allowRotate),
+  allowTranslate_(allowTranslate)
 {
 }
 
-void CoregPts::setOrigPtsA(Array1<Point> a) { 
-  origPtsA_ = a; 
-  invalidate(); 
+
+CoregPts::~CoregPts()
+{
 }
 
-void CoregPts::setOrigPtsP(Array1<Point> p) { 
-  origPtsP_ = p; 
-  invalidate(); 
+
+void
+CoregPts::setOrigPtsA(const vector<Point> &a)
+{
+  origPtsA_ = a;
+  invalidate();
 }
 
-int CoregPts::getTransPtsA(Array1<Point> &p) { 
-  if (computeTransPtsA()) { 
-    p = transPtsA_ ; 
-    return 1; 
-  } else 
-    return 0; 
+
+void
+CoregPts::setOrigPtsP(const vector<Point> &p)
+{
+  origPtsP_ = p;
+  invalidate();
 }
 
-int CoregPts::getTrans(Transform &t) {
-  if (computeTrans()) { 
-    t = transform_; 
-    return 1; 
-  } else 
-    return 0; 
+
+int
+CoregPts::getTransPtsA(vector<Point> &p)
+{
+  if (computeTransPtsA())
+  {
+    p = transPtsA_ ;
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
-void CoregPts::invalidate() { 
-  validTransPtsA_ = 0; 
-  validTrans_ = 0; 
+
+int
+CoregPts::getTrans(Transform &t)
+{
+  if (computeTrans())
+  {
+    t = transform_;
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
-int CoregPts::computeTransPtsA() {
+
+void
+CoregPts::invalidate()
+{
+  validTransPtsA_ = 0;
+  validTrans_ = 0;
+}
+
+
+int
+CoregPts::computeTransPtsA()
+{
   if (validTransPtsA_) return 1;
   if (!validTrans_)
     if (!computeTrans()) return 0;
   transPtsA_.resize(0);
-  for (int i=0; i<origPtsA_.size(); i++)
-    transPtsA_.add(transform_.project(origPtsA_[i]));
+  for (unsigned int i=0; i<origPtsA_.size(); i++)
+    transPtsA_.push_back(transform_.project(origPtsA_[i]));
   validTransPtsA_ = 1;
   return 1;
 }
 
-int CoregPts::getMisfit(double &misfit) {
+
+int
+CoregPts::getMisfit(double &misfit)
+{
   if (!computeTransPtsA())
     return 0;
   misfit=0;
@@ -103,8 +134,11 @@ int CoregPts::getMisfit(double &misfit) {
   return 1;
 }
 
-CoregPtsAnalytic::~CoregPtsAnalytic() {
+
+CoregPtsAnalytic::~CoregPtsAnalytic()
+{
 }
+
 
 CoregPtsAnalytic::CoregPtsAnalytic(int allowScale, int allowRotate,
 				   int allowTranslate) :
@@ -112,12 +146,16 @@ CoregPtsAnalytic::CoregPtsAnalytic(int allowScale, int allowRotate,
 {
 }
 
-int CoregPtsAnalytic::computeTrans() {
+
+int
+CoregPtsAnalytic::computeTrans()
+{
   unsigned int i;
   if (validTrans_) return 1;
 
   // make sure we have the right number of points
-  int npts = Min(origPtsA_.size(), origPtsP_.size());
+  unsigned int npts = Min((unsigned int)origPtsA_.size(),
+                          (unsigned int)origPtsP_.size());
   if (npts < 3) return 0;
 
   // make sure the three A points aren't colinear
@@ -153,7 +191,7 @@ int CoregPtsAnalytic::computeTrans() {
   //  TCp   : Translate the vertices to have the same centroid as p
 
   Transform TCp, Bpt, S, Theta, Ba, TC_a;
-  
+
   // first, compute the mid-points of a and p
   Point Cp(AffineCombination(origPtsP_[0], 1./3,
 			     origPtsP_[1], 1./3,
@@ -167,41 +205,41 @@ int CoregPtsAnalytic::computeTrans() {
     TCp.pre_translate(Cp.asVector());
   else
     TCp.pre_translate(Ca.asVector());
-  
+
   Point a[3], p[3];
   if (allowRotate_) {
     // find the normal and tangents for triangle a and for triangle p
     Vector a20=Cross(a01, a21);
     a20.normalize();
     a20.find_orthogonal(a01, a21);
-    
+
     Vector p20=Cross(p01, p21);
     p20.normalize();
     p20.find_orthogonal(p01, p21);
-    
+
     Transform temp;
     double d[16];
     temp.load_frame(Point(0,0,0), a01, a21, a20);
     temp.get_trans(&(d[0]));
     Ba.set(d);
-    
+
     Bpt.load_frame(Point(0,0,0), p01, p21, p20);
-    
+
     //  Bpt.load_identity();
     //  Ba.load_identity();
-    
+
     // find optimal rotation theta
     // this is easier if we transform the points through the above transform
     // into their "canonical" position -- triangles centered at the origin,
     // and lying in the xy plane.
-    
-    double ra[3], rp[3], theta[3];  
-    
+
+    double ra[3], rp[3], theta[3];
+
     for (i=0; i<3; i++) {
       // build the canonically-posed vertices
       a[i]=Ba.project(TC_a.project(origPtsA_[i]));
       p[i]=Bpt.unproject(TCp.unproject(origPtsP_[i]));
-      
+
       // compute their distance from the origin
       ra[i] = a[i].asVector().length();
       rp[i] = p[i].asVector().length();
@@ -212,18 +250,18 @@ int CoregPtsAnalytic::computeTrans() {
       Vector pvn(p[i].asVector());
       pvn.normalize();
       theta[i] = Acos(Dot(avn,pvn));
-      
+
       // make sure we have the sign right
-      if (Cross(avn,pvn).z() < 0) theta[i]*=-1;    
+      if (Cross(avn,pvn).z() < 0) theta[i]*=-1;
     }
-    
+
     double theta_best = -theta[0] + Atan((ra[1]*rp[1]*Sin(theta[0]-theta[1])+
 					  ra[2]*rp[2]*Sin(theta[0]-theta[2]))/
 					 (ra[0]*rp[0]+
 					  ra[1]*rp[1]*Cos(theta[0]-theta[1])+
 					  ra[2]*rp[2]*Cos(theta[0]-theta[2])));
     Theta.pre_rotate(-theta_best, Vector(0,0,1));
-    
+
     // lastly, rotate the a points into position and solve for scale
   }
 
@@ -235,11 +273,11 @@ int CoregPtsAnalytic::computeTrans() {
       scale_num += Dot(av[i], p[i].asVector());
       scale_denom += av[i].length2();
     }
-    
+
     double scale = scale_num/scale_denom;
     S.pre_scale(Vector(scale, scale, scale));
   }
-    
+
   transform_.load_identity();
   transform_.pre_trans(TC_a);
   transform_.pre_trans(Ba);
@@ -283,7 +321,7 @@ int CoregPtsAnalytic::computeTrans() {
   cerr << "\nRotated (by "<<theta_best<<") xy-plane Translated A points:\n";
   for (i=0; i<3; i++)
     cerr << Theta.project(a[i]) << "\n";
-  
+
   cerr << "\nScaled (by "<<scale<<") Rotated xy-plane Translated A points:\n";
   for (i=0; i<3; i++)
     cerr << S.project(Theta.project(a[i])) << "\n";
@@ -295,7 +333,7 @@ int CoregPtsAnalytic::computeTrans() {
   cerr << "\nCoregistered A points:\n";
   for (i=0; i<3; i++)
     cerr << transPtsA_[i] << "\n";
-  
+
   cerr << "\nMisfit = "<<misfit<<"\n";
 
   cerr << "\n\n\nTCp:\n";
@@ -323,8 +361,11 @@ int CoregPtsAnalytic::computeTrans() {
   return 1;
 }
 
-CoregPtsProcrustes::~CoregPtsProcrustes() {
+
+CoregPtsProcrustes::~CoregPtsProcrustes()
+{
 }
+
 
 CoregPtsProcrustes::CoregPtsProcrustes(int allowScale, int allowRotate,
 				       int allowTranslate) :
@@ -332,16 +373,22 @@ CoregPtsProcrustes::CoregPtsProcrustes(int allowScale, int allowRotate,
 {
 }
 
-int CoregPtsProcrustes::computeTrans() {
+
+int
+CoregPtsProcrustes::computeTrans()
+{
   cerr << "ERROR - CoregPtsProcrustes::computeTrans() not yet implemented.\n";
   return 0;
 }
 
-CoregPtsSimplexSearch::~CoregPtsSimplexSearch() {
+
+CoregPtsSimplexSearch::~CoregPtsSimplexSearch()
+{
 }
 
+
 CoregPtsSimplexSearch::CoregPtsSimplexSearch(int maxIters, double misfitTol,
-					     int &abort, 
+					     int &abort,
 					     ScalarFieldInterfaceHandle dField,
 					     MusilRNG &mr,
 					     int allowScale, int allowRotate,
@@ -356,7 +403,10 @@ CoregPtsSimplexSearch::CoregPtsSimplexSearch(int maxIters, double misfitTol,
   misfit_.resize(NSEEDS_+1);
 }
 
-int CoregPtsSimplexSearch::getMisfit(double &misfit) {
+
+int
+CoregPtsSimplexSearch::getMisfit(double &misfit)
+{
   if (!computeTransPtsA())
     return 0;
   misfit=0;
@@ -370,7 +420,10 @@ int CoregPtsSimplexSearch::getMisfit(double &misfit) {
   return 1;
 }
 
-void CoregPtsSimplexSearch::compute_misfit(int idx) {
+
+void
+CoregPtsSimplexSearch::compute_misfit(int idx)
+{
   // set up the transform_ matrix based on params_(idx, xx)
   // theta, phi, rot, transx, transy, transz, scale;
   // order: translate to the origin, rotate, scale, translate, translate back
@@ -391,15 +444,17 @@ void CoregPtsSimplexSearch::compute_misfit(int idx) {
 }
 
 
-double CoregPtsSimplexSearch::simplex_step(Array1<double>& sum, double factor,
-					   int worst) {
+double
+CoregPtsSimplexSearch::simplex_step(vector<double>& sum, double factor,
+                                    int worst)
+{
   double factor1 = (1 - factor)/NDIM_;
   double factor2 = factor1-factor;
   int i;
-  for (i=0; i<NDIM_; i++) 
+  for (i=0; i<NDIM_; i++)
     params_(NSEEDS_,i) = sum[i]*factor1 - params_(worst,i)*factor2;
 
-  
+
   // evaluate the new guess
   compute_misfit(NSEEDS_);
 
@@ -419,13 +474,15 @@ double CoregPtsSimplexSearch::simplex_step(Array1<double>& sum, double factor,
 //! find the iterative least-squares fit between two uncorrelated point clouds
 //!  using a simplex search
 
-int CoregPtsSimplexSearch::computeTrans() {
+int
+CoregPtsSimplexSearch::computeTrans()
+{
   BBox bbox;
   origPtsCenter_ = origPtsA_[0];
   bbox.extend(origPtsA_[0]);
   int i,j;
-  for (i=1; i<origPtsA_.size(); i++) {
-    origPtsCenter_+=origPtsA_[i].asVector(); 
+  for (i=1; i< (int)origPtsA_.size(); i++) {
+    origPtsCenter_+=origPtsA_[i].asVector();
     bbox.extend(origPtsA_[i]);
   }
   origPtsCenter_/=origPtsA_.size();
@@ -460,11 +517,10 @@ int CoregPtsSimplexSearch::computeTrans() {
   // error isn't below "tolerance", and we haven't been told to "abort",
   // we continue to iterate...
 
-  Array1<double> sum(NDIM_);
-  sum.initialize(0);
+  vector<double> sum(NDIM_, 0);
   for (i=0; i<NSEEDS_; i++)
     for (j=0; j<NDIM_; j++)
-      sum[j]+=params_(i,j);
+      sum[j] += params_(i,j);
 
   double relative_tolerance = 99.9; // Give default value to remove
 				    // compiler warning.
@@ -494,7 +550,7 @@ int CoregPtsSimplexSearch::computeTrans() {
 	(misfit_[worst]+misfit_[best]);
     }
 
-    if (relative_tolerance < misfitTol_ || num_evals > maxIters_ || abort_) 
+    if (relative_tolerance < misfitTol_ || num_evals > maxIters_ || abort_)
       break;
 
     double step_misfit = simplex_step(sum, -1, worst);
@@ -511,21 +567,23 @@ int CoregPtsSimplexSearch::computeTrans() {
 	  if (i != best) {
 	    int j;
 	    for (j=0; j<NDIM_; j++)
-	      params_(i,j) = params_(NSEEDS_,j) = 
+	      params_(i,j) = params_(NSEEDS_,j) =
 		0.5 * (params_(i,j) + params_(best,j));
 	    misfit_[i] = misfit_[NSEEDS_];
 	    num_evals++;
 	  }
 	}
       }
-      sum.initialize(0);
+      std::fill(sum.begin(), sum.end(), 0.0);
       for (i=0; i<NSEEDS_; i++) {
 	for (j=0; j<NDIM_; j++)
-	  sum[j]+=params_(i,j); 
+	  sum[j]+=params_(i,j);
       }
     }
   }
   cerr << "Coregistration -- num_evals = "<<num_evals << "\n";
   return 1;
 }
-}
+
+
+} // namespace SCIRun
