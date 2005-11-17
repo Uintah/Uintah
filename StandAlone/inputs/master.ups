@@ -175,7 +175,6 @@
 		   <res>[2,2,2]</res>
  		</geom_object>
 		<temperature>12</temperature>
-		<velocity_field>1</velocity_field>
 	    </material>
 	    <material>
 		<density>1.0</density>
@@ -202,7 +201,6 @@
 		  <res>[2,2,2]</res>
  		</geom_object>
 		<temperature>12</temperature>
-		<velocity_field>1</velocity_field>
 	     </material>
 
 	    <material>
@@ -223,7 +221,6 @@
 		    <res>[2,2,2]</res>
 		</geom_object>
 		<temperature>12</temperature>
-		<velocity_field>2</velocity_field>
 	    </material>
 
 	    <material>
@@ -246,7 +243,6 @@
                     <res>[2,2,2]</res>
 		</geom_object>
 		<temperature>12</temperature>
-		<velocity_field>3</velocity_field>
 	    </material>
 
 	    <material>
@@ -268,7 +264,6 @@
 	            <res>[2,2,2]</res>
 		</geom_object>
 		<temperature>12</temperature>
-		<velocity_field>4</velocity_field>
 	    </material>
 
 	    <material>
@@ -300,7 +295,6 @@
 		  <res>[2,2,2]</res>
 		</geom_object>
 		<temperature>12</temperature>
-		<velocity_field>1</velocity_field>
 	    </material>
 
 	    <contact>
