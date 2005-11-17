@@ -139,9 +139,9 @@ ClipByFunction::execute()
   string function = gFunction_.get();
 
   if( mode_     != mode ||
-      function_ != function ) {
+      function_ != function )
+  {
     update = true;
-    
     mode_      = mode;
     function_ = function;
   }
@@ -149,8 +149,8 @@ ClipByFunction::execute()
   if( !fHandle_.get_rep() ||
       !mHandle_.get_rep() ||
       update ||
-      error_ ) {
-
+      error_ )
+  {
     error_ = false;
 
     // remove trailing white-space from the function string
@@ -210,6 +210,7 @@ ClipByFunction::execute()
   {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Clipped");
     ofield_port->send(fHandle_);
+    if (!ofield_port->have_data()) { fHandle_ = 0; }
   }
 
   if( mHandle_.get_rep() )
@@ -237,6 +238,10 @@ ClipByFunction::execute()
     }
     NrrdOPort *nrrd_oport = (NrrdOPort *)get_oport("MaskVector");
     nrrd_oport->send(nrrdH);
+    if (!omatrix_port->have_data() || !omatrix_port->have_data())
+    {
+      mHandle_ = 0;
+    }
   }
 }
 

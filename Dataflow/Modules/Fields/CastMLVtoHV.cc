@@ -85,7 +85,7 @@ void CastMLVtoHV::execute()
       !ifieldH.get_rep())
     return;
   
-  if (ifieldH->generation == last_gen_) {
+  if (ifieldH->generation == last_gen_ && ofieldH_.get_rep()) {
     oport_->send(ofieldH_);
     return;
   }
@@ -135,6 +135,7 @@ void CastMLVtoHV::execute()
   ofieldH_ = algo->execute(ifieldH, ifieldH->basis_order());
 
   oport_->send(ofieldH_);
+  if (!oport_->have_data()) { ofieldH_ = 0; }
 }
 
 
