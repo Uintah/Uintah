@@ -144,6 +144,10 @@ DirectMapping::execute()
     update = true;
   }
 
+  if (!oport_cached("Remapped Destination")) {
+    update = true;
+  }
+
   std::string interpolation_basis = gInterpolation_basis_.get();
   int map_source_to_single_dest = gMap_source_to_single_dest_.get();
   int exhaustive_search = gExhaustive_search_.get();
