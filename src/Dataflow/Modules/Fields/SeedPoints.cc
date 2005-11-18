@@ -89,10 +89,10 @@ public:
 
   vector<GuiDouble*> seeds_;
 
-  GuiInt gui_num_seeds_;
+  GuiInt    gui_num_seeds_;
   GuiDouble gui_probe_scale_;
-  GuiInt gui_send_;
-  GuiInt gui_widget_;
+  GuiInt    gui_send_;
+  GuiInt    gui_widget_;
   GuiDouble red_;
   GuiDouble green_;
   GuiDouble blue_;

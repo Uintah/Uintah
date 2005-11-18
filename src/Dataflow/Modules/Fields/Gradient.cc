@@ -98,8 +98,8 @@ Gradient::execute()
   }
 
   // If no data or a changed recalcute.
-  FieldHandle fieldout(0);
-  if( fGeneration_ != fieldin->generation )
+  FieldHandle fieldout;
+  if( fGeneration_ != fieldin->generation || !oport_cached("Output Gradient"))
   {
     fGeneration_ = fieldin->generation;
 

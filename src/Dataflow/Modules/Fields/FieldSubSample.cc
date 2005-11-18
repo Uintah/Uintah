@@ -166,10 +166,15 @@ FieldSubSample::FieldSubSample(GuiContext *context)
 {
 }
 
-FieldSubSample::~FieldSubSample(){
+
+FieldSubSample::~FieldSubSample()
+{
 }
 
-void FieldSubSample::execute(){
+
+void
+FieldSubSample::execute()
+{
   update_state(NeedData);
 
   bool updateAll    = false;
@@ -326,6 +331,7 @@ void FieldSubSample::execute(){
   {
     FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
     ofield_port->send( fHandle_ );
+    if (!ofield_port->have_data()) { fHandle_ = 0; }
   }
 }
 

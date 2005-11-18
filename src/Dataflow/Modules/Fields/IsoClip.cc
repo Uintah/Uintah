@@ -142,7 +142,9 @@ IsoClip::execute()
   const double isoval = gui_isoval_.get();
   if (last_field_generation_ == ifieldhandle->generation &&
       last_isoval_ == isoval &&
-      last_lte_ == gui_lte_.get())
+      last_lte_ == gui_lte_.get() &&
+      oport_cached("Clipped") &&
+      oport_cached("Mapping"))
   {
     // We're up to date, return.
     return;

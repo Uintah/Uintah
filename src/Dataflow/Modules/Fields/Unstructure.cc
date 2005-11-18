@@ -74,8 +74,7 @@ DECLARE_MAKER(Unstructure)
 Unstructure::Unstructure(GuiContext* context)
   : Module("Unstructure", context, Filter, "FieldsGeometry", "SCIRun"),
     gPointCloud_(context->subVar("point-cloud")),
-    last_generation_(0),
-    ofieldhandle_(0)
+    last_generation_(0)
 {
 }
 
@@ -111,7 +110,8 @@ Unstructure::execute()
     last_generation_ = ifieldhandle->generation;
   }
 
-  if( update ) {
+  if( !ofieldhandle_.get_rep() || update )
+  {
     string dstname("");
     string dst_basis_name("NoDataBasis");
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
@@ -174,6 +174,7 @@ Unstructure::execute()
 
     // Send the data downstream
     ofp->send(ofieldhandle_);
+    if (!ofp->have_data()) { ofieldhandle_ = 0; }
   }
 }
 

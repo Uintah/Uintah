@@ -127,7 +127,10 @@ MapDataToMeshCoord::execute()
     }
   }
       
-  if (last_generation_ != ifield->generation || last_gui_coord_ != coord) {
+  if (last_generation_ != ifield->generation ||
+      last_gui_coord_ != coord ||
+      !oport_cached("Output Field"))
+  {
     last_generation_ = ifield->generation;
     last_gui_coord_ = coord;
 

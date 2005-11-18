@@ -92,13 +92,14 @@ FieldSetProperty::FieldSetProperty(GuiContext* context)
 {
 }
 
+
 FieldSetProperty::~FieldSetProperty()
 {
 }
 
-void FieldSetProperty::execute() {
-
-
+void
+FieldSetProperty::execute()
+{
   FieldIPort *inrrd_port = (FieldIPort *)get_iport("Input");
   FieldHandle nHandle;
 
@@ -112,7 +113,8 @@ void FieldSetProperty::execute() {
 
   // If no data or a change recreate the nrrd.
   if( !fHandle_.get_rep() ||
-      nGeneration_ != nHandle->generation ) {
+      nGeneration_ != nHandle->generation )
+  {
     nGeneration_ = nHandle->generation;
   
     // Add the current properties to the display.
@@ -344,6 +346,7 @@ void FieldSetProperty::execute() {
   {
     FieldOPort *onrrd_port = (FieldOPort *) get_oport("Output");
     onrrd_port->send( fHandle_ );
+    if (!onrrd_port->have_data()) { fHandle_ = 0; }
   }
 }
 

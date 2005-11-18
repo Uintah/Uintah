@@ -132,11 +132,12 @@ PlanarTransformField::execute()
 
   axis = Axis_.get();
 
-  if (field_generation_ != fieldin->generation ||
+  if (!fieldout_.get_rep() ||
+      field_generation_ != fieldin->generation ||
       axis_ != axis ||
       tx_ != tx ||
-      ty_ != ty ) {
-
+      ty_ != ty )
+  {
     field_generation_ = fieldin->generation;
 
     axis_ = axis;
@@ -157,6 +158,7 @@ PlanarTransformField::execute()
   {
     FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
     ofp->send(fieldout_);
+    if (!ofp->have_data()) { fieldout_ = 0; }
   }
 }
 

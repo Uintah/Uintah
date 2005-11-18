@@ -177,8 +177,8 @@ TransformData3::execute()
 
   if( !fHandle_.get_rep() ||
       update ||
-      error_ ) {
-
+      error_ )
+  {
     error_ = false;
 
     // remove trailing white-space from the function string
@@ -285,9 +285,11 @@ TransformData3::execute()
     fHandle_ = algo->execute(fHandle0, fHandle1, fHandle2);
   }
 
-  if( fHandle_.get_rep() ) {
+  if( fHandle_.get_rep() )
+  {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
     ofield_port->send(fHandle_);
+    if (!ofield_port->have_data()) { fHandle_ = 0; }
   }
 }
 

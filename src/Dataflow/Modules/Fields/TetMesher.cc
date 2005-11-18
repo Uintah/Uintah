@@ -74,18 +74,20 @@ private:
 
 DECLARE_MAKER(TetMesher)
   
-  TetMesher::TetMesher(GuiContext* ctx) : 
-    Module("TetMesher", ctx, Filter, "FieldsCreate", "SCIRun")
+TetMesher::TetMesher(GuiContext* ctx)
+  : Module("TetMesher", ctx, Filter, "FieldsCreate", "SCIRun")
 { 
 }
+
 
 TetMesher::~TetMesher()
 {
 }
 
-void TetMesher::execute() 
-{
 
+void
+TetMesher::execute() 
+{
   // FIX: Camal is NOT THreadsafe hence we need to make it thread safe by adding a mutex
   // Lock the tetmesher so no other module can address the tetmesher at the same time
   TetMesherMutex.lock();
@@ -162,10 +164,11 @@ void TetMesher::execute()
   
   // Unlock the TetMesher, so the nextr module can use it
   TetMesherMutex.unlock();
-  
 }
 
-bool TetMesher::read_tri_file(int &npoints, double *&points, int &ntris, int *&tris)
+
+bool
+TetMesher::read_tri_file(int &npoints, double *&points, int &ntris, int *&tris)
 {
   FieldIPort *trisurf = (FieldIPort *) get_iport("TriSurf");
   if (!trisurf) {
@@ -234,8 +237,11 @@ bool TetMesher::read_tri_file(int &npoints, double *&points, int &ntris, int *&t
   return true;
 }
 
-bool TetMesher::write_tet_file(const int &npoints, double* const points, 
-                    const int &ntets, int* const tets, const int &noldpoints, double* const oldpoints)
+
+bool
+TetMesher::write_tet_file(const int &npoints, double* const points, 
+                          const int &ntets, int* const tets,
+                          const int &noldpoints, double* const oldpoints)
 {
   typedef TetVolMesh<TetLinearLgn<Point> > my_tetvolmesh;
   typedef GenericField<TetVolMesh<TetLinearLgn<Point> >, NoDataBasis<double>, vector<double> > my_tetvolfield;
@@ -270,13 +276,13 @@ bool TetMesher::write_tet_file(const int &npoints, double* const points,
   my_tetvolfield* tvf = scinew my_tetvolfield(tvm);
   FieldHandle tvH = dynamic_cast<Field*>(tvf);
   FieldOPort *ofld = (FieldOPort *)get_oport("TetVol");
-  if (!ofld) return false;
   ofld->send(tvH);
 
   cout << "Finished loading " << ntets << " tetrahedrons.\n\n";
 
   return true;
 }
+
 
 } // end namespace SCIRun
 

@@ -58,16 +58,22 @@ private:
   FieldOPort*              ofld_;
 };
 
+
 DECLARE_MAKER(TetVol2QuadraticTetVol)
+
 TetVol2QuadraticTetVol::TetVol2QuadraticTetVol(GuiContext* ctx)
   : Module("TetVol2QuadraticTetVol", ctx, Filter, "FieldsGeometry", "SCIRun")
 {
 }
 
-TetVol2QuadraticTetVol::~TetVol2QuadraticTetVol(){
+
+TetVol2QuadraticTetVol::~TetVol2QuadraticTetVol()
+{
 }
 
-void TetVol2QuadraticTetVol::execute()
+
+void
+TetVol2QuadraticTetVol::execute()
 {
   ifld_ = (FieldIPort *)get_iport("InputTetField");
   FieldHandle fld_handle;
@@ -92,12 +98,10 @@ void TetVol2QuadraticTetVol::execute()
 
   FieldHandle ofld_handle = algo->convert_quadratic(fld_handle);
 
-  // debug_tets(((TetVolField<double>*)fld_handle.get_rep())->get_typed_mesh(), 
-  //   ((QuadraticTetVolField<double>*)ofld_handle.get_rep())->get_typed_mesh());
-
   ofld_ = (FieldOPort *)get_oport("OutputQuadraticTet");
   ofld_->send(ofld_handle);
 }
+
 
 void 
 TetVol2QuadraticTetVol::debug_tets(TetVolMeshHandle in, 
