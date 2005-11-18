@@ -56,7 +56,7 @@ namespace SCIRun {
 class QuadToTri : public Module {
 private:
   int last_generation_;
-  FieldHandle ofieldhandle;
+  FieldHandle ofieldhandle_;
 
 public:
 
@@ -96,9 +96,11 @@ QuadToTri::execute()
   FieldOPort *ofp = (FieldOPort *)get_oport("TriSurf");
 
   // Cache generation.
-  if (ifieldhandle->generation == last_generation_)
+  if (ofieldhandle_.get_rep() &&
+      ifieldhandle->generation == last_generation_)
   {
-    ofp->send(ofieldhandle);
+    ofp->send(ofieldhandle_);
+    if (!ofp->have_data()) { ofieldhandle_ = 0 ; }
     return;
   }
   last_generation_ = ifieldhandle->generation;
@@ -114,7 +116,7 @@ QuadToTri::execute()
     Handle<ImgToTriAlgo> ialgo;
     if (DynamicCompilation::compile(ici, ialgo, true, this))
     {
-      if (!ialgo->execute(ifieldhandle, ofieldhandle, this))
+      if (!ialgo->execute(ifieldhandle, ofieldhandle_, this))
       {
 	warning("ImgToTri conversion failed to copy data.");
 	return;
@@ -132,7 +134,7 @@ QuadToTri::execute()
     Handle<QuadToTriAlgo> qalgo;
     if (DynamicCompilation::compile(qci, qalgo, true, this))
     {
-      if (!qalgo->execute(ifieldhandle, ofieldhandle, this))
+      if (!qalgo->execute(ifieldhandle, ofieldhandle_, this))
       {
 	warning("QuadToTri conversion failed to copy data.");
 	return;
@@ -144,7 +146,8 @@ QuadToTri::execute()
       return;
     }
   }
-  ofp->send(ofieldhandle);
+  ofp->send(ofieldhandle_);
+  if (!ofp->have_data()) { ofieldhandle_ = 0; }
 }
 
 CompileInfoHandle

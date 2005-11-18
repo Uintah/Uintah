@@ -121,6 +121,7 @@ VectorMagnitude::execute()
 
     // Send the data downstream
     ofp->send(fieldout_);
+    if (!ofp->have_data()) { fieldout_ = 0; }
   }
 }
 

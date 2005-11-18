@@ -48,7 +48,8 @@
 
 namespace SCIRun {
 
-class ReplaceScalarDataValue : public Module {
+class ReplaceScalarDataValue : public Module
+{
   GuiDouble oldvalue_;
   GuiDouble newvalue_;
 public:
@@ -61,9 +62,9 @@ public:
 DECLARE_MAKER(ReplaceScalarDataValue)
 
 
-  ReplaceScalarDataValue::ReplaceScalarDataValue(GuiContext* ctx)
-    : Module("ReplaceScalarDataValue", ctx, Filter,"FieldsData", "SCIRun"),
-      oldvalue_(ctx->subVar("oldvalue")), newvalue_(ctx->subVar("newvalue"))
+ReplaceScalarDataValue::ReplaceScalarDataValue(GuiContext* ctx)
+  : Module("ReplaceScalarDataValue", ctx, Filter,"FieldsData", "SCIRun"),
+    oldvalue_(ctx->subVar("oldvalue")), newvalue_(ctx->subVar("newvalue"))
 {
 }
 

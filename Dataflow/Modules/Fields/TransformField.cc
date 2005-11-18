@@ -117,7 +117,8 @@ TransformField::execute()
   }
 
   if (ifield_generation_ != ifield->generation ||
-      imatrix_generation_ != imatrix->generation)
+      imatrix_generation_ != imatrix->generation ||
+      !oport_cached("Transformed Field"))
   {
     ifield_generation_ = ifield->generation;
     imatrix_generation_ = imatrix->generation;

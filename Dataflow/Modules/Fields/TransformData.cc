@@ -169,6 +169,7 @@ TransformData::execute()
   if( fHandle_.get_rep() ) {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
     ofield_port->send(fHandle_);
+    if (!ofield_port->have_data()) { fHandle_ = 0; }
   }
 }
 

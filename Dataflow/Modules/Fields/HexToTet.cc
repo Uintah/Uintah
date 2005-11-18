@@ -56,7 +56,7 @@ namespace SCIRun {
 class HexToTet : public Module {
 private:
   int last_generation_;
-  FieldHandle ofieldhandle;
+  FieldHandle ofieldhandle_;
 
 public:
 
@@ -96,9 +96,11 @@ HexToTet::execute()
   FieldOPort *ofp = (FieldOPort *)get_oport("TetVol");
 
   // Cache generation.
-  if (ifieldhandle->generation == last_generation_)
+  if (ofieldhandle_.get_rep() &&
+      ifieldhandle->generation == last_generation_)
   {
-    ofp->send(ofieldhandle);
+    ofp->send(ofieldhandle_);
+    if (!ofp->have_data()) { ofieldhandle_ = 0; }
     return;
   }
   last_generation_ = ifieldhandle->generation;
@@ -107,7 +109,7 @@ HexToTet::execute()
   Handle<HexToTetAlgo> halgo;
   if (DynamicCompilation::compile(hci, halgo, true, this))
   {
-    if (!halgo->execute(ifieldhandle, ofieldhandle, this))
+    if (!halgo->execute(ifieldhandle, ofieldhandle_, this))
     {
       warning("HexToTet conversion failed to copy data.");
       return;
@@ -119,7 +121,7 @@ HexToTet::execute()
     Handle<LatToTetAlgo> lalgo;
     if (DynamicCompilation::compile(lci, lalgo, true, this))
     {
-      if (!lalgo->execute(ifieldhandle, ofieldhandle, this))
+      if (!lalgo->execute(ifieldhandle, ofieldhandle_, this))
       {
 	warning("LatToTet conversion failed to copy data.");
 	return;
@@ -132,7 +134,8 @@ HexToTet::execute()
       return;
     }
   }
-  ofp->send(ofieldhandle);
+  ofp->send(ofieldhandle_);
+  if (!ofp->have_data()) { ofieldhandle_ = 0; }
 }
 
 

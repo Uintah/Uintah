@@ -65,7 +65,6 @@ ScalarFieldStats::ScalarFieldStats(GuiContext* ctx)
     is_fixed_(ctx->subVar("is_fixed")),
     nbuckets_(ctx->subVar("nbuckets"))
 {
-
 }
 
 
@@ -74,11 +73,13 @@ ScalarFieldStats::~ScalarFieldStats()
 {
 }
 
+
 void
 ScalarFieldStats::clear_histogram()
 {
   gui->execute(id + " clear_data");
 }
+
 
 void
 ScalarFieldStats::fill_histogram( vector<int>& hits)
@@ -101,6 +102,7 @@ ScalarFieldStats::fill_histogram( vector<int>& hits)
   gui->execute(id + " graph_data " + smin + " "
 	       + smax + " " + data );
 }
+
 
 void
 ScalarFieldStats::execute()
@@ -126,7 +128,6 @@ ScalarFieldStats::execute()
 
   algo->execute(ifieldhandle, this);
 }
-
 
 
 CompileInfoHandle

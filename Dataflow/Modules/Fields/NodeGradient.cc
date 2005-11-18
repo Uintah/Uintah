@@ -124,6 +124,7 @@ NodeGradient::execute()
   {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
     ofp->send(fieldout_);
+    if (!ofp->have_data()) { fieldout_ = 0; }
   }
 }
 

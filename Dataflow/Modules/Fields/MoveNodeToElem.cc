@@ -118,7 +118,7 @@ MoveNodeToElem::execute()
     return;
   }
 
-  if (ifield_generation_ != ifield->generation)
+  if (ifield_generation_ != ifield->generation || !ofp->have_data())
   {
     const TypeDescription *ftd = ifield->get_type_description();
     TypeDescription::td_vec *tdv = 

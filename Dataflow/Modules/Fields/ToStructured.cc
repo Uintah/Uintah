@@ -67,8 +67,7 @@ private:
 DECLARE_MAKER(ToStructured)
 ToStructured::ToStructured(GuiContext* ctx)
   : Module("ToStructured", ctx, Filter, "FieldsGeometry", "SCIRun"),
-    last_generation_(0),
-    ofieldhandle_(0)
+    last_generation_(0)
 {
 }
 
@@ -91,7 +90,8 @@ ToStructured::execute()
     return;
   }
 
-  if (ifieldhandle->generation != last_generation_)
+  if (!ofieldhandle_.get_rep() ||
+      ifieldhandle->generation != last_generation_)
   {
     last_generation_ = ifieldhandle->generation;
     ofieldhandle_ = ifieldhandle;
@@ -139,6 +139,7 @@ ToStructured::execute()
 
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
   ofield_port->send(ofieldhandle_);
+  if (!ofield_port->have_data()) { ofieldhandle_ = 0; }
 }
 
 

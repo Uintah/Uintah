@@ -134,7 +134,8 @@ PointLatticeMap::execute()
   // Return if nothing in gui or fields has changed
   if (pcf->generation == pcf_generation_ &&
       lvf->generation == lvf_generation_ &&
-      epsilon_() == epsilon_cache_) return;
+      epsilon_() == epsilon_cache_ &&
+      oport_->have_data()) return;
 
   pcf_generation_ = pcf->generation;
   lvf_generation_ = lvf->generation;

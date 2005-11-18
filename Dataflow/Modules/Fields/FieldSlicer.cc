@@ -130,10 +130,15 @@ FieldSlicer::FieldSlicer(GuiContext *context)
 {
 }
 
-FieldSlicer::~FieldSlicer(){
+
+FieldSlicer::~FieldSlicer()
+{
 }
 
-void FieldSlicer::execute(){
+
+void
+FieldSlicer::execute()
+{
   update_state(NeedData);
   reset_vars();
 
@@ -356,6 +361,7 @@ void FieldSlicer::execute(){
     }
 
     ofield_port->send( fHandle_ );
+    if (!ofield_port->have_data()) { fHandle_ = 0; }
   }
 
   // Get a handle to the output double port.
@@ -368,6 +374,7 @@ void FieldSlicer::execute(){
     }
 
     omatrix_port->send(mHandle_);
+    if (!omatrix_port->have_data()) { mHandle_ = 0; }
   }
 }
 
