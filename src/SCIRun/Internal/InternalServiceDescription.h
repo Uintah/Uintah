@@ -46,30 +46,32 @@
 
 namespace SCIRun {
   
-  class InternalComponentModel;
+class InternalComponentModel;
   
-  /** \class InternalServiceDescription
-   *
-   *
-   */
-  class InternalServiceDescription : public ComponentDescription
-  {
-  public:
-    InternalServiceDescription(InternalComponentModel* model, const std::string&serviceType);
-    virtual ~InternalServiceDescription();
+/** \class InternalServiceDescription
+ *
+ *
+ */
+class InternalServiceDescription : public ComponentDescription
+{
+public:
+  InternalServiceDescription(InternalComponentModel* model, const std::string&serviceType);
+  virtual ~InternalServiceDescription();
     
-    /** */
-    virtual std::string getType() const;
-    /** */
-    virtual ComponentModel* getModel() const;
+  /** */
+  virtual std::string getType() const;
+  /** */
+  virtual ComponentModel* getModel() const;
     
-  private:
-    InternalComponentModel* model;
-    std::string serviceType;
+protected:
+  std::string serviceType;
+
+private:
+  InternalComponentModel* model;
     
-    InternalServiceDescription(const InternalServiceDescription&);
-    InternalServiceDescription& operator=(const InternalServiceDescription&);
-  };
+  InternalServiceDescription(const InternalServiceDescription&);
+  InternalServiceDescription& operator=(const InternalServiceDescription&);
+};
   
 } // end namespace SCIRun
 
