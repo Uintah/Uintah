@@ -54,6 +54,7 @@ public:
   static int domain_dimension() { return 1; } //!< return dimension of domain 
   
   static int number_of_vertices() { return 3; } //!< return number of vertices
+  static int number_of_mesh_vertices() { return 2; } //!< return number of vertices in mesh
   static int number_of_edges() { return 2; } //!< return number of edges
   
   static int vertices_of_face() { return 0; } //!< return number of vertices per face 

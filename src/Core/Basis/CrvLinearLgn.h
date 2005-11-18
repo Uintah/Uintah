@@ -60,6 +60,8 @@ public:
   static int domain_dimension() { return 1; } 
   //!< return number of vertices
   static int number_of_vertices() { return 2; }
+  //!< return number of vertices in mesh
+  static int number_of_mesh_vertices() { return 2; }
   //!< return number of edges 
   static int number_of_edges() { return 1; } 
   //!< return number of vertices per face 

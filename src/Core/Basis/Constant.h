@@ -48,16 +48,15 @@ public:
   ConstantBasisElement() {}
   virtual ~ConstantBasisElement() {}
 
-  //!< return dimension of domain 
-  static int domain_dimension() { return 0; } 
-  //!< return number of vertices
-  static int number_of_vertices() { return 0; }
-  //!< return number of edges 
-  static int number_of_edges() { return 0; } 
-  //!< return number of vertices per face 
-  static int vertices_of_face() { return 0; } 
-  //!< return number of faces per cell 
-  static int faces_of_cell() { return 0; } 
+  
+  static int domain_dimension() { return 0; } //!< return dimension of domain 
+  
+  static int number_of_vertices() { return 0; } //!< return number of vertices
+  static int number_of_mesh_vertices() { return 0; } //!< return number of vertices
+  static int number_of_edges() { return 0; }  //!< return number of edges 
+  
+  static int vertices_of_face() { return 0; } //!< return number of vertices per face 
+  static int faces_of_cell() { return 0; } //!< return number of faces per cell 
 };
 
 
