@@ -52,14 +52,15 @@ public:
   QuadBiquadraticLgnUnitElement() {}
   virtual ~QuadBiquadraticLgnUnitElement() {}
   
-  static int domain_dimension() { return 2; } //! return dimension of domain 
+  static int domain_dimension() { return 2; } //!< return dimension of domain 
   
-  static int number_of_vertices() { return 8; } //! return number of vertices
-  static int number_of_edges() { return 4; } //! return number of edges
+  static int number_of_vertices() { return 8; } //!< return number of vertices
+  static int number_of_mesh_vertices() { return 4; } //!< return number of vertices in mesh
+  static int number_of_edges() { return 4; } //!< return number of edges
   
-  static int vertices_of_face() { return 4; } //! return number of vertices per face 
+  static int vertices_of_face() { return 4; } //!< return number of vertices per face 
 
-  static int faces_of_cell() { return 4; } //! return number of faces per cell 
+  static int faces_of_cell() { return 4; } //!< return number of faces per cell 
 };
 
 
