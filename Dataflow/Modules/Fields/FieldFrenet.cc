@@ -86,10 +86,15 @@ FieldFrenet::FieldFrenet(GuiContext *context)
 {
 }
 
-FieldFrenet::~FieldFrenet(){
+
+FieldFrenet::~FieldFrenet()
+{
 }
 
-void FieldFrenet::execute(){
+
+void
+FieldFrenet::execute()
+{
   update_state(NeedData);
 
   FieldHandle fHandle;
@@ -162,10 +167,11 @@ void FieldFrenet::execute(){
   }
 }
 
+
 CompileInfoHandle
 FieldFrenetAlgo::get_compile_info(const TypeDescription *ftd,
-				   const TypeDescription *btd,
-				   const unsigned int dim)
+                                  const TypeDescription *btd,
+                                  const unsigned int dim)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -192,8 +198,8 @@ FieldFrenetAlgo::get_compile_info(const TypeDescription *ftd,
   // compiler flag so that when needed in FieldSlicer.h it is compiled.
   if( ftd->get_name().find("StructHexVolField"  ) == 0 ||
       ftd->get_name().find("StructQuadSurfField") == 0 ||
-      ftd->get_name().find("StructCurveField"   ) == 0 ) {
-
+      ftd->get_name().find("StructCurveField"   ) == 0 )
+  {
     string header_path(include_path);  // Get the right path 
 
     // Insert the Dynamic header file name.
@@ -205,5 +211,6 @@ FieldFrenetAlgo::get_compile_info(const TypeDescription *ftd,
   ftd->fill_compile_info(rval);
   return rval;
 }
+
 
 } // End namespace SCIRun

@@ -428,7 +428,7 @@ CubitInterface::execute()
   cleanup();
   typedef ConstantBasis<double> CBF;
   typedef GenericField<TVMesh, CBF, vector<double> > TVField;
-  TVField *f = scinew TVField(mesh);
+  FieldHandle f = scinew TVField(mesh);
   oport_->send(f);
 }
 
