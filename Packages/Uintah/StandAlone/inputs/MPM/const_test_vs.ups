@@ -52,7 +52,6 @@
 		   <G>12.e6</G>
 		   <K>32.e6</K>
 	        </constitutive_model>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
@@ -92,7 +91,6 @@
 		    <Gamma>1.0</Gamma>
 		    <DCp_DTemperature>3.30773</DCp_DTemperature>
                 </constitutive_model>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>

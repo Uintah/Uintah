@@ -60,7 +60,6 @@
 		    <direction_of_symm>[0,1,0]</direction_of_symm>
                 </constitutive_model>
 		<is_rigid>true</is_rigid>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
@@ -87,7 +86,6 @@
 		    <fiber_stretch>2.0</fiber_stretch>
 		    <direction_of_symm>[0,1,0]</direction_of_symm>
                 </constitutive_model>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
