@@ -78,7 +78,8 @@ DECLARE_MAKER(FieldBoundary)
 FieldBoundary::FieldBoundary(GuiContext* ctx) : 
   Module("FieldBoundary", ctx, Filter, "FieldsCreate", "SCIRun"),
   infield_gen_(-1),
-  tri_fh_(0), interp_mh_(0)
+  tri_fh_(0),
+  interp_mh_(0)
 {
 }
 
@@ -100,7 +101,8 @@ FieldBoundary::execute()
     error("No input field data.");
     return;
   }
-  else if (infield_gen_ != input->generation)
+  else if (infield_gen_ != input->generation ||
+           !osurf_->have_data() || !ointerp_->have_data())
   {
     infield_gen_ = input->generation;
     MeshHandle mesh = input->mesh();
@@ -152,6 +154,11 @@ FieldBoundary::execute()
 
   osurf_->send(tri_fh_);
   ointerp_->send(interp_mh_);
+  if (!osurf_->have_data() || !ointerp_->have_data())
+  {
+    tri_fh_ = 0;
+    interp_mh_ = 0;
+  }
 }
 
 
