@@ -71,7 +71,6 @@
       <material>
         <burn type = "null" />
         <density>1.e9</density>
-        <toughness>10.e12</toughness>
         <thermal_conductivity>1.0</thermal_conductivity>
         <specific_heat>5</specific_heat>
         <constitutive_model type="hypo_elastic">

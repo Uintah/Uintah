@@ -54,7 +54,6 @@
                     <hardening_modulus>0.0</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1</specific_heat>
 		<geom_object>
@@ -78,7 +77,6 @@
                     <hardening_modulus>0.0</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1</specific_heat>
 		<geom_object>

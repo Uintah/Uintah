@@ -46,7 +46,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 		<geom_object>
@@ -70,7 +69,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -3005,7 +3003,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -5360,7 +5357,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -7310,7 +7306,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -8920,7 +8915,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -10260,7 +10254,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -11430,7 +11423,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -12395,7 +12387,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -13155,7 +13146,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -13765,7 +13755,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -14295,7 +14284,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -14615,7 +14603,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -14825,7 +14812,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -14940,7 +14926,6 @@
                     <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 

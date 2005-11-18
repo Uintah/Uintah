@@ -86,7 +86,6 @@
 		   <he_constant_2>20.0</he_constant_2>
 		   <he_PR>.49</he_PR>
 	        </constitutive_model>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>401.0</thermal_conductivity>
 		<specific_heat>1</specific_heat>
                 <geom_object>

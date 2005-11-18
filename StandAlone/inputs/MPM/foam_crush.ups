@@ -51,7 +51,6 @@
                     <bulk_modulus>10.2e6</bulk_modulus>
                     <shear_modulus>7.2e6</shear_modulus>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 		<geom_object>
@@ -72,7 +71,6 @@
                     <bulk_modulus>10.2e4</bulk_modulus>
                     <shear_modulus>7.2e4</shear_modulus>
                 </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
