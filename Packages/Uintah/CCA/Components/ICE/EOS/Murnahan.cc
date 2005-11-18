@@ -98,6 +98,6 @@ void Murnahan::hydrostaticTempAdjustment(Patch::FaceType,
                                          const Vector&,
                                          CCVariable<double>&)
 { 
-  throw InternalError( "ERROR:ICE:EOS:Murnahan: hydrostaticTempAdj() \n"
-                       " has not been implemented", __FILE__, __LINE__ );
+//  throw InternalError( "ERROR:ICE:EOS:Murnahan: hydrostaticTempAdj() \n"
+//                       " has not been implemented", __FILE__, __LINE__ );
 }
