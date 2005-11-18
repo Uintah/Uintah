@@ -169,7 +169,7 @@
       <!--
       <contact>
         <type>rigid</type>
-        <vel_fields>[0,0,0]</vel_fields>
+        <materials>[0]</materials>
         <direction>[0,1,0]</direction>
         <stop_time>999999.9</stop_time>
       </contact>
@@ -177,7 +177,7 @@
       <contact>
         <type>friction</type>
         <mu>0.25</mu>
-        <vel_fields>[0,0,0]</vel_fields>
+        <materials>[0,0,0]</materials>
       </contact>
     </MPM>
   </MaterialProperties>

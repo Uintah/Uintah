@@ -86,7 +86,7 @@
 
 	    <contact>
 	      <type>rigid</type>
-	      <vel_fields>[0,1,0]</vel_fields>
+	      <materials>[0,1]</materials>
 	      <stop_time>999999.9 </stop_time>
 	    </contact>
 	</MPM>
