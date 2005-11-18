@@ -173,7 +173,6 @@
                   <bulk_modulus>          117.0e9       </bulk_modulus>
                   <shear_modulus>          43.8e9       </shear_modulus>
                 </constitutive_model>
-                <toughness>                10.e6        </toughness>
                 <thermal_conductivity>     400.0        </thermal_conductivity>
                 <specific_heat>            386.0        </specific_heat>
               <geom_object>

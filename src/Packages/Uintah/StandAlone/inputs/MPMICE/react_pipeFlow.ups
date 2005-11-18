@@ -217,7 +217,6 @@
              <bulk_modulus>       43.875e3               </bulk_modulus>
              <shear_modulus>      117.0e3                </shear_modulus>
          </constitutive_model>
-         <toughness>             10.e7                   </toughness>
          <thermal_conductivity>  1.0                     </thermal_conductivity>
          <specific_heat>         652.9                   </specific_heat>
          <gamma>                 1.289                   </gamma>

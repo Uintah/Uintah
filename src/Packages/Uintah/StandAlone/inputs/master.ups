@@ -158,7 +158,6 @@
 		    <youngs_modulus>1.e5</youngs_modulus>
 		    <poissons_ratio>0.33</poissons_ratio>
 		</elastic>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
@@ -184,7 +183,6 @@
 		    <he_constant_3>7.e4</he_constant_3>
 		    <he_constant_4>1.32e6</he_constant_4>
 		</comp_mooney_rivlin>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
@@ -209,7 +207,6 @@
 		    <bulk_modulus>4.e4</bulk_modulus>
 		    <shear_modulus>3.8e3</shear_modulus>
 	   	</comp_neo_hook>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
@@ -232,7 +229,6 @@
 		    <hardening_modulus>129240</hardening_modulus>
 	            <alpha> 0. </alpha>
 		</comp_neo_hook_plastic>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
@@ -254,7 +250,6 @@
 		    <beta>0.3</beta>
 		    <max_equiv_strain>0.001</max_equiv_strain>
 		</hyper_elastic_damage>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
@@ -277,7 +272,6 @@
 		    <gamma>0.75</gamma>
 		    <max_equiv_strain>0.001</max_equiv_strain>
 		</visco_elastic_damage>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>

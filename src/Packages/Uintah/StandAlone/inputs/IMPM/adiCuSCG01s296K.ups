@@ -84,7 +84,6 @@
       <material>
         <is_rigid>             true   </is_rigid>
         <density>              8930.0 </density>
-        <toughness>            10.e6  </toughness>
         <thermal_conductivity> 386.0  </thermal_conductivity>
         <specific_heat>        414.0  </specific_heat>
         <room_temp>            294.0  </room_temp>
@@ -107,7 +106,6 @@
 
       <material name = "OFHCCu">
         <density>              8930.0 </density>
-        <toughness>            10.e6  </toughness>
         <thermal_conductivity> 386.0  </thermal_conductivity>
         <specific_heat>        414.0  </specific_heat>
         <room_temp>            294.0  </room_temp>

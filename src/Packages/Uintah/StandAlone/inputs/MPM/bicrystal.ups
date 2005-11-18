@@ -44,7 +44,6 @@
 		   <G>7.2e5</G>
 		   <K>10.2e5</K>
 	        </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>1.0e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
@@ -68,7 +67,6 @@
 		   <G>7.2e5</G>
 		   <K>10.2e5</K>
 	        </constitutive_model>
-                <toughness>10.e6</toughness>
                 <thermal_conductivity>1.0e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
