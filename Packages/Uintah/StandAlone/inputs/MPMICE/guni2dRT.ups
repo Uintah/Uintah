@@ -278,7 +278,7 @@
 
             <contact>
               <type>approach</type>
-              <vel_fields>              [0,1,0]         </vel_fields>
+              <materials>              [0,1]         </materials>
               <mu> 0.0 </mu>
             </contact>
       </MPM>

@@ -241,7 +241,7 @@
           </material>
         <contact>                                 
           <type>                     rigid              </type>
-          <vel_fields>              [0,0,0]             </vel_fields>
+          <materials>              [0]             </materials>
         </contact>                                
       </MPM>
       <!-- __________________________________-->

@@ -88,7 +88,7 @@
 
 	    <contact>
 	      <type>single_velocity</type>
-	      <vel_fields>[0,1,0]</vel_fields>
+	      <materials>[0,1]</materials>
 	    </contact>
 	</MPM>
 

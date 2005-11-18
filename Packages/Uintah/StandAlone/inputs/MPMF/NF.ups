@@ -138,7 +138,7 @@
 	    <contact>
 	      <type>friction</type>
               <mu>0.1</mu>
-	      <vel_fields>[0,0,0]</vel_fields>
+	      <materials>[0]</materials>
 	    </contact>
 	</MPM>
 

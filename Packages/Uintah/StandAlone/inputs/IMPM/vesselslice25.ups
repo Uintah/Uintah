@@ -116,7 +116,7 @@
                <type>rigid</type>
                <direction>[0,1,0]</direction>
                <stop_time>9999.99</stop_time>
-               <vel_fields>[1,2,3]</vel_fields>
+               <materials>[1,2,3]</materials>
             </contact>
 
 	</MPM>

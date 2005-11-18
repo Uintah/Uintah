@@ -527,7 +527,7 @@
 
       <contact>
         <type>approach</type>
-        <vel_fields>              [0,0,0]         </vel_fields>
+        <materials>              [0]         </materials>
         <mu> 0.0 </mu>
       </contact>
       <thermal_contact></thermal_contact>
