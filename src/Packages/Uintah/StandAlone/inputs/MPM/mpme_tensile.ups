@@ -128,7 +128,7 @@
 
 	    <contact>
 	      <type>rigid</type>
-	      <vel_fields>[1,0,0]</vel_fields>
+	      <materials>[1,0]</materials>
               <stop_time>10.0</stop_time>
               <direction>[1,0,0]</direction>
 	    </contact>

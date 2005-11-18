@@ -250,7 +250,7 @@
 
             <contact>
               <type>rigid</type>
-              <vel_fields>[0,1,0]</vel_fields>
+              <materials>[0,1]</materials>
               <stop_time>9.0 </stop_time>
             
 	<direction>[0, 0, 1]</direction>

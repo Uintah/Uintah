@@ -10300,7 +10300,7 @@
 
 	    <contact>
 	      <type>friction</type>
-	      <vel_fields>[0,1,0]</vel_fields>
+	      <materials>[0,1]</materials>
 	      <mu> .5 </mu>
 	    </contact>
 	</MPM>

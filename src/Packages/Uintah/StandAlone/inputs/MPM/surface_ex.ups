@@ -62,7 +62,7 @@
 
             <contact>
                <type>null</type>
-               <vel_fields>[1,2,3]</vel_fields>
+               <materials>[1,2,3]</materials>
             </contact>
 
             <thermal_contact></thermal_contact>

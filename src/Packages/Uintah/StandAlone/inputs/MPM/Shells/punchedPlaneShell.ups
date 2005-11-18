@@ -123,7 +123,7 @@
 
        <contact>
          <type>       rigid      </type>
-         <vel_fields> [0,0,0]    </vel_fields>
+         <materials> [0]    </materials>
          <stop_time>  9999999.99 </stop_time>
          <direction>  [0,0,1]    </direction>
        </contact>
