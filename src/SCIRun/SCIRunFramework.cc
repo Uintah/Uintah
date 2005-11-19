@@ -174,15 +174,13 @@ SCIRunFramework::createComponentInstance(const std::string& name,
     throw sci::cca::CCAException::pointer(
       new CCAException("Unknown class name for " + name));
   }
-  properties->putString("cca.className", className);
+
   ComponentInstance* ci;
 #if HAVE_BABEL 
   if (mod->getName() == "babel") {
     // create gov.cca.TypeMap from Babel Component Model?
     ci = ((BabelComponentModel*) mod)->createInstance(name, type);
-    if (ci) {
-      ci->setComponentProperties(properties);
-    } else {
+    if (! ci) {
       std::cerr << "Error: failed to create BabelComponentInstance"
                 << std::endl;
       return ComponentID::pointer(0);
