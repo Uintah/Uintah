@@ -47,7 +47,7 @@
 
 namespace SCIRun {
 
-  ComponentEventService::ComponentEventService(SCIRunFramework* framework)
+ComponentEventService::ComponentEventService(SCIRunFramework* framework)
   : InternalFrameworkServiceInstance(framework, "internal:ComponentEventService"),
     lock_listeners("ComponentEventService::listeners lock"),
     lock_events("ComponentEventService::events lock")
@@ -56,119 +56,113 @@ namespace SCIRun {
 
 ComponentEventService::~ComponentEventService()
 {
-  //  std::cout << "EventService destroyed..." << std::endl;
+//  std::cout << "EventService destroyed..." << std::endl;
 }
 
 InternalFrameworkServiceInstance* ComponentEventService::create(SCIRunFramework* framework)
 {
-    ComponentEventService* n = new ComponentEventService(framework);
-    n->addReference();
-    return n;
+  ComponentEventService* n = new ComponentEventService(framework);
+  return n;
 }
 
 sci::cca::Port::pointer ComponentEventService::getService(const std::string&)
 {
-    return sci::cca::Port::pointer(this);
+  return sci::cca::Port::pointer(this);
 }
 
 void
-ComponentEventService::addComponentEventListener(sci::cca::ports::ComponentEventType type,
-                         const sci::cca::ports::ComponentEventListener::pointer& l,
-                         bool playInitialEvents)
+ComponentEventService::addComponentEventListener(sci::cca::ports::ComponentEventType type, const sci::cca::ports::ComponentEventListener::pointer& l, bool playInitialEvents)
 {
-    Listener *listener = new Listener(type, l);
-    lock_listeners.lock();
-    listeners.push_back(listener);
-    lock_listeners.unlock();
-    if (playInitialEvents) {
-        // send listener all events stored in vector
-        lock_events.lock();
-        for (std::vector<sci::cca::ports::ComponentEvent::pointer>::iterator iter =
-                events.begin();
-                iter != events.end(); iter++) {
-            listener->l->componentActivity((*iter));
-        }
-        lock_events.unlock();
+  Listener *listener = new Listener(type, l);
+  lock_listeners.lock();
+  listeners.push_back(listener);
+  lock_listeners.unlock();
+  if (playInitialEvents) {
+    // send listener all events stored in vector
+    lock_events.lock();
+    for (std::vector<sci::cca::ports::ComponentEvent::pointer>::iterator iter =
+           events.begin();
+         iter != events.end(); iter++) {
+      listener->l->componentActivity((*iter));
     }
+    lock_events.unlock();
+  }
 }
 
 void
-ComponentEventService::removeComponentEventListener(
-                                  sci::cca::ports::ComponentEventType type,
-                const sci::cca::ports::ComponentEventListener::pointer& l)
+ComponentEventService::removeComponentEventListener(sci::cca::ports::ComponentEventType type, const sci::cca::ports::ComponentEventListener::pointer& l)
 {
-    SCIRun::Guard g1(&lock_listeners);
-    for (std::vector<Listener*>::iterator iter = listeners.begin();
-            iter != listeners.end(); iter++) {
-        if ((*iter)->type == type && (*iter)->l == l) {
-            delete *iter;
-        }
+  SCIRun::Guard g1(&lock_listeners);
+  for (std::vector<Listener*>::iterator iter = listeners.begin();
+       iter != listeners.end(); iter++) {
+    if ((*iter)->type == type && (*iter)->l == l) {
+      // listeners.erase(iter);
+      delete *iter;
     }
+  }
 }
 
 void
 ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y)
 {
-    ComponentInstance* ci = framework->lookupComponent(id->getInstanceName());
-    if (ci) {
-        std::string cn = ci->getClassName();
-        unsigned int firstColon = cn.find(':');
-        std::string modelName;
-        if (firstColon != std::string::npos) {
-            modelName = cn.substr(0, firstColon);
-        } else {
-            modelName = cn;
-        }
-        sci::cca::TypeMap::pointer properties;
-        if (modelName == "CCA") {
-            // empty string argument gets component properties;
-            properties =
-                ((CCAComponentInstance*)ci)->getPortProperties("");
-            if (properties.isNull()) {
-                properties = TypeMap::pointer(new TypeMap);
-            }
-        } else {
-            properties = TypeMap::pointer(new TypeMap);
-        }
-        properties->putInt("x", x);
-        properties->putInt("y", y);
-
-        sci::cca::ports::ComponentEvent::pointer ce =
-            ComponentEvent::pointer(
-                new ComponentEvent(sci::cca::ports::ComponentMoved, id, properties)
-            );
-        emitComponentEvent(ce);
+  ComponentInstance* ci = framework->lookupComponent(id->getInstanceName());
+  if (ci) {
+    std::string cn = ci->getClassName();
+    unsigned int firstColon = cn.find(':');
+    std::string modelName;
+    if (firstColon != std::string::npos) {
+      modelName = cn.substr(0, firstColon);
     } else {
-      // throw exception?
-      std::cerr << "Error: could not locate component instance for "
-                << id->getInstanceName() << " in ComponentEventService::moveComponent."
-                << std::endl;
+      modelName = cn;
     }
+    sci::cca::TypeMap::pointer properties;
+    if (modelName == "CCA") {
+      // empty string argument gets component properties;
+      properties =
+        ((CCAComponentInstance*)ci)->getPortProperties("");
+      if (properties.isNull()) {
+        properties = TypeMap::pointer(new TypeMap);
+      }
+    } else {
+      properties = TypeMap::pointer(new TypeMap);
+    }
+    properties->putInt("x", x);
+    properties->putInt("y", y);
+
+    sci::cca::ports::ComponentEvent::pointer ce =
+      ComponentEvent::pointer(new ComponentEvent(sci::cca::ports::ComponentMoved, id, properties));
+    emitComponentEvent(ce);
+  } else {
+    // throw exception?
+    std::cerr << "Error: could not locate component instance for "
+              << id->getInstanceName() << " in ComponentEventService::moveComponent."
+              << std::endl;
+  }
 }
 
 void
 ComponentEventService::emitComponentEvent(const sci::cca::ports::ComponentEvent::pointer& event)
 {
-    // iterate through listeners and call connectionActivity
-    // should the event type to be emitted be ALL?
-    if (event->getEventType() == sci::cca::ports::AllComponentEvents) {
-        return;
-    }
+  // iterate through listeners and call connectionActivity
+  // should the event type to be emitted be ALL?
+  if (event->getEventType() == sci::cca::ports::AllComponentEvents) {
+    return;
+  }
 
-    lock_listeners.lock();
-    for (std::vector<Listener*>::iterator iter=listeners.begin();
-            iter != listeners.end(); iter++) {
-        if ((*iter)->type == sci::cca::ports::AllComponentEvents ||
-                (*iter)->type == event->getEventType()) {
-            (*iter)->l->componentActivity(event);
-        }
+  lock_listeners.lock();
+  for (std::vector<Listener*>::iterator iter=listeners.begin();
+       iter != listeners.end(); iter++) {
+    if ((*iter)->type == sci::cca::ports::AllComponentEvents ||
+        (*iter)->type == event->getEventType()) {
+      (*iter)->l->componentActivity(event);
     }
-    lock_listeners.unlock();
+  }
+  lock_listeners.unlock();
 
-    // how to keep track of events?
-    lock_events.lock();
-    events.push_back(event);
-    lock_events.unlock();
+  // how to keep track of events?
+  lock_events.lock();
+  events.push_back(event);
+  lock_events.unlock();
 }
 
 } // end namespace SCIRun
