@@ -48,38 +48,67 @@
 
 namespace SCIRun {
 
-  InternalFrameworkServiceDescription::InternalFrameworkServiceDescription(
-        InternalComponentModel* model,
-	const std::string& serviceType,
-	InternalFrameworkServiceInstance* (*create)(SCIRunFramework*))
-    : InternalServiceDescription(model, serviceType), create(create), singleton_instance(0)
+InternalFrameworkServiceDescription::InternalFrameworkServiceDescription(
+                                                                         InternalComponentModel* model,
+                                                                         const std::string& serviceType,
+                                                                         InternalFrameworkServiceInstance* (*create)(SCIRunFramework*))
+  : InternalServiceDescription(model, serviceType), create(create), singleton_instance(0)
 {
 }
   
-  InternalFrameworkServiceDescription::~InternalFrameworkServiceDescription()
-  {
-    std::cerr << "What if singleton_instance is refcounted?" << std::endl;
-    if(singleton_instance) {
-      delete singleton_instance;
+InternalFrameworkServiceDescription::~InternalFrameworkServiceDescription()
+{
+  //std::cerr << "What if singleton_instance is refcounted?" << std::endl;
+  if (singleton_instance) {
+    // hack until these classes get derived from SIDL interfaces
+    try {
+      sci::cca::Port::pointer port = pidl_cast<sci::cca::Port::pointer>(singleton_instance->getService(serviceType));
+      if (! port.isNull()) {
+        port->deleteReference();
+      }
+    }
+    catch(const Exception &e) {
+      std::cerr << e.message() << std::endl;
+    }
+    catch(...) {
+      std::cerr << "Caught unexpected exception!\n";
     }
   }
+  singleton_instance = 0;
+}
 
-  InternalFrameworkServiceInstance *InternalFrameworkServiceDescription::get(SCIRunFramework *fwk) 
-  {
-    if ( singleton_instance == 0 ) {
-      singleton_instance = create(fwk);
-      fwk->registerComponent(singleton_instance, singleton_instance->getInstanceName());
+InternalFrameworkServiceInstance *InternalFrameworkServiceDescription::get(SCIRunFramework *fwk) 
+{
+  if ( singleton_instance == 0 ) {
+    singleton_instance = create(fwk);
+
+    // hack until these classes get derived from SIDL interfaces
+    try {
+      sci::cca::Port::pointer port = pidl_cast<sci::cca::Port::pointer>(singleton_instance->getService(serviceType));
+      if (! port.isNull()) {
+std::cerr << "InternalFrameworkServiceDescription::get(..): have port!!!" << std::endl;
+        port->addReference();
+      }
     }
-    return singleton_instance;
+    catch(const Exception &e) {
+      std::cerr << e.message() << std::endl;
+    }
+    catch(...) {
+      std::cerr << "Caught unexpected exception!\n";
+    }
+
+    fwk->registerComponent(singleton_instance, singleton_instance->getInstanceName());
   }
+  return singleton_instance;
+}
 
-  void InternalFrameworkServiceDescription::release(SCIRunFramework *fwk)
-  {
-    if ( singleton_instance == 0 ) return;
+void InternalFrameworkServiceDescription::release(SCIRunFramework *fwk)
+{
+  if ( singleton_instance == 0 ) return;
 
-    singleton_instance->decrementUseCount();
-//     if ( singleton_instance->decrementUseCount() ) 
-//       throw FrameworkInternalException("service ["+singleton_instance->getInstanceName()+"] released too many times");
-  }
+  singleton_instance->decrementUseCount();
+// if ( singleton_instance->decrementUseCount() ) 
+//   throw FrameworkInternalException("service ["+singleton_instance->getInstanceName()+"] released too many times");
+}
 
-} // end namespace SCIRun
+} // end namespace SCIRunS

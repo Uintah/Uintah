@@ -84,7 +84,6 @@ InternalFrameworkServiceInstance*
 FrameworkProperties::create(SCIRunFramework* framework)
 {
     FrameworkProperties* fp = new FrameworkProperties(framework);
-    fp->addReference();
     return fp;
 }
 

@@ -112,7 +112,6 @@ ComponentRegistry::~ComponentRegistry()
 InternalFrameworkServiceInstance* ComponentRegistry::create(SCIRunFramework* framework)
 {
   ComponentRegistry* n = new ComponentRegistry(framework);
-  n->addReference();
   return n;
 }
 

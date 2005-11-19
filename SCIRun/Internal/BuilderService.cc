@@ -144,7 +144,6 @@ InternalFrameworkServiceInstance*
 BuilderService::create(SCIRunFramework* framework)
 {
   BuilderService* n = new BuilderService(framework);
-  n->addReference();
   return n;
 }
 

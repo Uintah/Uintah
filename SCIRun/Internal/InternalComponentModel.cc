@@ -83,6 +83,7 @@ InternalComponentModel::~InternalComponentModel()
   for (FrameworkServicesMap::iterator iter=frameworkServices.begin(); iter != frameworkServices.end(); iter++) {
     delete iter->second;
   }
+  framework = 0;
 }
 
 void InternalComponentModel::addService(InternalFrameworkServiceDescription* desc)
@@ -109,7 +110,6 @@ InternalComponentModel::getFrameworkService(const std::string& type,
   if ( service ) {
     service->incrementUseCount();
     port = service->getService(type);
-    port->addReference();
   }
 
   return port;
@@ -165,6 +165,7 @@ InternalComponentModel::releaseFrameworkService(const std::string& type,
   lock_frameworkServices.lock();
   FrameworkServicesMap::iterator iter = frameworkServices.find(type);
   lock_frameworkServices.unlock();
+
   if (iter == frameworkServices.end()) { 
     return false; 
   }
@@ -175,25 +176,27 @@ InternalComponentModel::releaseFrameworkService(const std::string& type,
 }
 
 #if 0
-  InternalComponentDescription* cd = iter->second;
-  InternalComponentInstance* ci;
-  if (cd->isSingleton) {
-    ci = cd->singleton_instance;
-  } else {
-    std::string cname = "internal: " + type + " for " + componentName;
-    ci = dynamic_cast<InternalComponentInstance*>(
-						  framework->lookupComponent(cname));
-    if (!ci) {
-      throw InternalError("Cannot find Service component of type: " +
-			  type + " for component " + componentName, __FILE__, __LINE__);
-    }
-  }
-  if (!ci->decrementUseCount()) {
-    throw InternalError("Service released without correspond get",
-			__FILE__, __LINE__);
-  }
-  return true;
-}
+/////////////////////////////////////////////////////////////////////////////
+//   InternalComponentDescription* cd = iter->second;
+//   InternalComponentInstance* ci;
+//   if (cd->isSingleton) {
+//     ci = cd->singleton_instance;
+//   } else {
+//     std::string cname = "internal: " + type + " for " + componentName;
+//     ci = dynamic_cast<InternalComponentInstance*>(
+// 						  framework->lookupComponent(cname));
+//     if (!ci) {
+//       throw InternalError("Cannot find Service component of type: " +
+// 			  type + " for component " + componentName, __FILE__, __LINE__);
+//     }
+//   }
+//   if (!ci->decrementUseCount()) {
+//     throw InternalError("Service released without correspond get",
+// 			__FILE__, __LINE__);
+//   }
+//   return true;
+// }
+/////////////////////////////////////////////////////////////////////////////
 #endif
 
 bool InternalComponentModel::haveComponent(const std::string& /*name*/)
