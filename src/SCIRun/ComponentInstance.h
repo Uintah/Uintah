@@ -63,40 +63,40 @@ class PortInstanceIterator;
 class ComponentInstance
 {
 public:
-    ComponentInstance(SCIRunFramework* framework,
-                      const std::string& instanceName,
-                      const std::string& className,
-                      const sci::cca::TypeMap::pointer& tm);
-    virtual ~ComponentInstance();
+  ComponentInstance(SCIRunFramework* framework,
+                    const std::string& instanceName,
+                    const std::string& className,
+                    const sci::cca::TypeMap::pointer& tm);
+  virtual ~ComponentInstance();
 
-    /** The framework to which this component instance belongs, i.e. the
-        framework in which it was instantiated. */
-    SCIRunFramework* framework;
+  /** The framework to which this component instance belongs, i.e. the
+      framework in which it was instantiated. */
+  SCIRunFramework* framework;
 
-    /** Returns a pointer to the port named \em name.  If no such port exists in
-        this component, returns a null pointer. */
-    virtual PortInstance* getPortInstance(const std::string& name) = 0;
+  /** Returns a pointer to the port named \em name.  If no such port exists in
+      this component, returns a null pointer. */
+  virtual PortInstance* getPortInstance(const std::string& name) = 0;
 
-    /** Returns the list of ports associated with this component. */
-    virtual PortInstanceIterator* getPorts() = 0;
+  /** Returns the list of ports associated with this component. */
+  virtual PortInstanceIterator* getPorts() = 0;
 
-    inline void
-    setInstanceName(const std::string &name) { instanceName = name; }
+  inline void
+  setInstanceName(const std::string &name) { instanceName = name; }
 
-    inline std::string
-    getInstanceName() const { return instanceName; }
+  inline std::string
+  getInstanceName() const { return instanceName; }
 
-    inline std::string
-    getClassName() const { return className; }
+  inline std::string
+  getClassName() const { return className; }
         
-    inline sci::cca::TypeMap::pointer&
-    getComponentProperties() { return comProperties; }
+  inline sci::cca::TypeMap::pointer&
+  getComponentProperties() { return properties; }
         
-    void
-    setComponentProperties(const sci::cca::TypeMap::pointer &tm);
+  void
+  setComponentProperties(const sci::cca::TypeMap::pointer &tm);
 
-    bool
-    releaseComponentCallback(const sci::cca::Services::pointer &svc);
+  bool
+  releaseComponentCallback(const sci::cca::Services::pointer &svc);
 
 protected:
   /** The unique name of this component instance. */
@@ -105,7 +105,7 @@ protected:
   /** The type of the component. */
   std::string className;
 
-  sci::cca::TypeMap::pointer comProperties;
+  sci::cca::TypeMap::pointer properties;
 
   /** See interface ComponentRelease */
   sci::cca::ComponentRelease::pointer releaseCallback;

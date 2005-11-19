@@ -39,6 +39,7 @@
  */
 
 #include <SCIRun/ComponentInstance.h>
+#include <SCIRun/SCIRunFramework.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -48,8 +49,14 @@ ComponentInstance::ComponentInstance(SCIRunFramework* framework,
                                      const std::string &className,
                                      const sci::cca::TypeMap::pointer &tm)
     : framework(framework), instanceName(instanceName),
-      className(className), comProperties(tm), releaseCallback(0)
+      className(className), properties(tm), releaseCallback(0)
 {
+  if (properties.isNull()) {
+    properties = framework->createTypeMap();
+  }
+  // cca.className is a CCA standardized key (see BuilderService documentation):
+  properties->putString("cca.className", className);
+  properties->putString("cca.instanceName", instanceName);
 }
 
 ComponentInstance::~ComponentInstance()
@@ -60,7 +67,7 @@ void
 ComponentInstance::setComponentProperties(const sci::cca::TypeMap::pointer &tm)
 {
     // TODO: check properties - do not allow cca.className to be changed
-    comProperties = tm;
+    properties = tm;
 }
 
 bool
