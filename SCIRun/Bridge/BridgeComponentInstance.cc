@@ -60,7 +60,7 @@ BridgeComponentInstance::BridgeComponentInstance(SCIRunFramework* framework,
 {
   mutex = new Mutex("getPort mutex");
   SCIRunComponentModel::initGuiInterface();
-  comProperties->putBool("bridge", true);
+  properties->putBool("bridge", true);
   bmdl = new BridgeModule(component);
 }
 
