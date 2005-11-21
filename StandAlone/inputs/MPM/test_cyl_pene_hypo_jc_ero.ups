@@ -276,7 +276,7 @@
       <contact>
         <type>friction</type>
         <mu>0.25</mu>
-        <materials>[0,0,0]</materials>
+        <materials>[0,1]</materials>
       </contact>
     </MPM>
   </MaterialProperties>
