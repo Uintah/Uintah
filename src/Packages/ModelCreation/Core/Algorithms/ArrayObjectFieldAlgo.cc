@@ -91,7 +91,7 @@ SCIRun::CompileInfoHandle
 {
   const SCIRun::TypeDescription *fieldtype = field->get_type_description();
   const SCIRun::TypeDescription *locationtype = field->order_type_description();
-  const SCIRun::TypeDescription *basistype = field->get_type_description(Field::BASIS_TD_E);
+  const SCIRun::TypeDescription *basistype = field->get_type_description(SCIRun::Field::BASIS_TD_E);
   const SCIRun::TypeDescription::td_vec *basis_subtype = basistype->get_sub_type();
   const SCIRun::TypeDescription *datatype = (*basis_subtype)[0];
 
@@ -158,10 +158,10 @@ SCIRun::CompileInfoHandle
 SCIRun::CompileInfoHandle 
     ArrayObjectFieldCreateAlgo::get_compile_info(SCIRun::FieldHandle field,std::string datatype, std::string basistype)
 {
-  const SCIRun::TypeDescription *basis_type = field->get_type_description(Field::BASIS_TD_E);
+  const SCIRun::TypeDescription *basis_type = field->get_type_description(SCIRun::Field::BASIS_TD_E);
   const SCIRun::TypeDescription::td_vec *basis_subtype = basis_type->get_sub_type();
   const SCIRun::TypeDescription *data_type = (*basis_subtype)[0];
-  const SCIRun::TypeDescription *meshtype = field->get_type_description(Field::MESH_TD_E);
+  const SCIRun::TypeDescription *meshtype = field->get_type_description(SCIRun::Field::MESH_TD_E);
   
   std::string mesh = meshtype->get_name();
   std::string basis = "";
@@ -219,9 +219,9 @@ SCIRun::CompileInfoHandle
   if (basis != "") basis = basis + "<" + datatype +" >";
   if (basis == "") basis = basis_type->get_similar_name(datatype, 0, "<", " >");
 
-  std::string fieldtype = field->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
-              field->get_type_description(Field::MESH_TD_E)->get_name() + "," + basis + "," +
-              field->get_type_description(Field::FDATA_TD_E)->get_similar_name(datatype, 0,"<", " >") + " > ";
+  std::string fieldtype = field->get_type_description(SCIRun::Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+              field->get_type_description(SCIRun::Field::MESH_TD_E)->get_name() + "," + basis + "," +
+              field->get_type_description(SCIRun::Field::FDATA_TD_E)->get_similar_name(datatype, 0,"<", " >") + " > ";
               
   // As I use my own Tensor and Vector algorithms they need to be
   // converted when reading the data, hence separate algorithms are
