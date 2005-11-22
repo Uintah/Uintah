@@ -54,6 +54,7 @@
 #include <Core/Basis/HexTriquadraticLgn.h>
 #include <Core/Basis/HexTricubicHmt.h>
 #include <Core/Basis/HexTricubicHmtScaleFactors.h>
+#include <Core/Basis/HexTricubicHmtScaleFactorsEdges.h>
 
 #include <Core/Geometry/Point.h>
 
@@ -128,15 +129,14 @@ double CellIntegral(FIELD *field, FBASIS& f)
   return vol;
 }
 
-template<typename MESH, typename FBASIS, const int nnode>
+template<typename MESH, typename FBASIS>
 void Test1D()
 {   
   MESH *mesh = new MESH();
 
+  typename MESH::basis_type u;
   typename MESH::Node::array_type n;
-  n.resize(nnode);
-  typedef typename MESH::basis_type basis_type;
-  basis_type u;
+  n.resize(u.number_of_mesh_vertices());
 
   for(int i=0; i<u.number_of_vertices(); i++) {
     Point p(u.unit_vertices[i][0]+1, u.unit_vertices[i][0]+2, u.unit_vertices[i][0]+3);
@@ -146,7 +146,7 @@ void Test1D()
       if (u.polynomial_order()==3) {
 	vector<Point> d(1);
 	d[0]=Point(0,0,0);
-	mesh->get_basis().add_derivative(d);
+	mesh->get_basis().add_derivatives(d);
       }
     }
     else
@@ -184,15 +184,15 @@ void Test1D()
   cerr << "Crv integral " << CrvIntegral(field, f) << endl; 
 }
 
-template<typename MESH, typename FBASIS, const int nnode>
+template<typename MESH, typename FBASIS>
 void Test2D()
 {
   MESH *mesh = new MESH();
 
-  typename MESH::Node::array_type n;
-  n.resize(nnode);
   typename MESH::basis_type u;
- 
+  typename MESH::Node::array_type n;
+  n.resize(u.number_of_mesh_vertices());
+  
   for(int i=0; i<u.number_of_vertices(); i++) {
     Point p(u.unit_vertices[i][0]+1, u.unit_vertices[i][1]+2, 3);
     if ((unsigned)i<n.size()) {
@@ -201,7 +201,7 @@ void Test2D()
       if (u.polynomial_order()==3) {
 	vector<Point> d(2);
 	d[0]=d[1]=Point(0,0,0);
-	mesh->get_basis().add_derivative(d);
+	mesh->get_basis().add_derivatives(d);
       }
     }
     else
@@ -241,14 +241,14 @@ void Test2D()
   cerr << "Face integral " << CellIntegral(field, f) << endl; 
 }
 
-template<typename MESH, typename FBASIS, const int nnode>
+template<typename MESH, typename FBASIS>
 void Test3D()
 {
   MESH *mesh = new MESH();
 
-  typename MESH::Node::array_type n;
-  n.resize(nnode);
   typename MESH::basis_type u;
+  typename MESH::Node::array_type n;
+  n.resize(u.number_of_mesh_vertices());
  
   Transform t;
   t.rotate(Vector(1,0,0), Vector(0,1,0));
@@ -270,7 +270,7 @@ void Test3D()
       if (u.polynomial_order()==3) {
 	vector<Point> d(3);
 	d[0]=d[1]=d[2]=Point(0,0,0);
-	mesh->get_basis().add_derivative(d);
+	mesh->get_basis().add_derivatives(d);
       }
     }
     else
@@ -332,35 +332,35 @@ main(int argc, char **argv)
     cerr<<"TestCrvMesh\n";
     
     srand48(0);
-    Test1D<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double>, 2 >();
+    Test1D<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double> >();
     srand48(0);
-    Test1D<CurveMesh<CrvQuadraticLgn<Point> >, CrvLinearLgn<double>, 2 >();
+    Test1D<CurveMesh<CrvQuadraticLgn<Point> >, CrvLinearLgn<double> >();
     srand48(0);
-    Test1D<CurveMesh<CrvCubicHmt<Point> >, CrvLinearLgn<double>, 2 >(); 
+    Test1D<CurveMesh<CrvCubicHmt<Point> >, CrvLinearLgn<double> >(); 
    }
 
   {
     cerr<<"TestTriSurfMesh\n";
     
     srand48(0);
-    Test2D<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<double>, 3 >();
+    Test2D<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<double> >();
     srand48(0);
-    Test2D<TriSurfMesh<TriQuadraticLgn<Point> >, TriLinearLgn<double>, 3 >();
+    Test2D<TriSurfMesh<TriQuadraticLgn<Point> >, TriLinearLgn<double> >();
     srand48(0);
-    Test2D<TriSurfMesh<TriCubicHmt<Point> >, TriLinearLgn<double>, 3 >();
+    Test2D<TriSurfMesh<TriCubicHmt<Point> >, TriLinearLgn<double> >();
 //     srand48(0);
-//     Test2D<TriSurfMesh<TriCubicHmtScaleFactors<Point> >, TriLinearLgn<double>, 3 >();
+//     Test2D<TriSurfMesh<TriCubicHmtScaleFactors<Point> >, TriLinearLgn<double> >();
   }
 
   {
     cerr<<"TestQuadSurfMesh\n";
     
     srand48(0);
-    Test2D<QuadSurfMesh<QuadBilinearLgn<Point> >, QuadBilinearLgn<double>, 4 >();
+    Test2D<QuadSurfMesh<QuadBilinearLgn<Point> >, QuadBilinearLgn<double> >();
     srand48(0);
-    Test2D<QuadSurfMesh<QuadBiquadraticLgn<Point> >, QuadBilinearLgn<double>, 4 >();
+    Test2D<QuadSurfMesh<QuadBiquadraticLgn<Point> >, QuadBilinearLgn<double> >();
     srand48(0);
-    Test2D<QuadSurfMesh<QuadBicubicHmt<Point> >, QuadBilinearLgn<double>, 4 >();
+    Test2D<QuadSurfMesh<QuadBicubicHmt<Point> >, QuadBilinearLgn<double> >();
   }
  
   {
@@ -368,35 +368,37 @@ main(int argc, char **argv)
     
     srand48(0);
     //    for(int i=0; i<1000; i++)
-    Test3D<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double>, 4 >();
+    Test3D<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double> >();
     srand48(0);
-    Test3D<TetVolMesh<TetQuadraticLgn<Point> >, TetLinearLgn<double>, 4 >();
+    Test3D<TetVolMesh<TetQuadraticLgn<Point> >, TetLinearLgn<double> >();
     srand48(0);
-    Test3D<TetVolMesh<TetCubicHmt<Point> >, TetLinearLgn<double>, 4 >(); 
+    Test3D<TetVolMesh<TetCubicHmt<Point> >, TetLinearLgn<double> >(); 
   }
 
   {
     cerr<<"TestPrismVolMesh\n";
     
     srand48(0);
-    Test3D<PrismVolMesh<PrismLinearLgn<Point> >, PrismLinearLgn<double>, 6 >();
+    Test3D<PrismVolMesh<PrismLinearLgn<Point> >, PrismLinearLgn<double> >();
     srand48(0);
-    Test3D<PrismVolMesh<PrismQuadraticLgn<Point> >, PrismLinearLgn<double>, 6 >();
+    Test3D<PrismVolMesh<PrismQuadraticLgn<Point> >, PrismLinearLgn<double> >();
     srand48(0);
-    Test3D<PrismVolMesh<PrismCubicHmt<Point> >, PrismLinearLgn<double>, 6 >(); 
+    Test3D<PrismVolMesh<PrismCubicHmt<Point> >, PrismLinearLgn<double> >(); 
   }
 
   {
     cerr<<"TestHexVolMesh\n";
     
     srand48(0);
-    Test3D<HexVolMesh<HexTrilinearLgn<Point> >, HexTrilinearLgn<double>, 8 >();
+    Test3D<HexVolMesh<HexTrilinearLgn<Point> >, HexTrilinearLgn<double> >();
     srand48(0);
-    Test3D<HexVolMesh<HexTriquadraticLgn<Point> >, HexTrilinearLgn<double>, 8 >();
+    Test3D<HexVolMesh<HexTriquadraticLgn<Point> >, HexTrilinearLgn<double> >();
     srand48(0);
-    Test3D<HexVolMesh<HexTricubicHmt<Point> >, HexTrilinearLgn<double>, 8 >();  
-    srand48(0);
-    //Test3D<HexVolMesh<HexTricubicHmtScaleFactors<Point> >, HexTrilinearLgn<double>, 8 >();    
+    Test3D<HexVolMesh<HexTricubicHmt<Point> >, HexTrilinearLgn<double> >();  
+    //    srand48(0);
+    //    Test3D<HexVolMesh<HexTricubicHmtScaleFactors<Point> >, HexTrilinearLgn<double> >();   
+    //    srand48(0);
+    //    Test3D<HexVolMesh<HexTricubicHmtScaleFactorsEdges<Point> >, HexTrilinearLgn<double> >();    
   }
   
   return 0;  
