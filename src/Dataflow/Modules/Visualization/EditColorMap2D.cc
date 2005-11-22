@@ -1003,7 +1003,7 @@ EditColorMap2D::execute()
       (!h.get_rep() || h->generation == hist_generation_) &&
       !gui_faux_.changed() && !gui_histo_.changed() &&
       !just_resend_selection_ && !force_execute_ &&
-      !cmap_dirty_ && !histo_dirty_)
+      !cmap_dirty_ && !histo_dirty_ && cmap_oport_->have_data())
     return;
   force_execute_ = false;
 
