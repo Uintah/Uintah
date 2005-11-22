@@ -40,7 +40,10 @@ extern "C" void * ModelCreationInit(void *param)
 
 namespace SCIRun {
   extern MatrixHandle SimpleTextFileMatrix_reader(ProgressReporter *pr, const char *filename);
-  static MatrixIEPlugin SimpleTextFileMatrix_plugin("Simple TextFile","", "",SimpleTextFileMatrix_reader,0);
+  extern bool SimpleTextFileMatrix_writer(ProgressReporter *pr, MatrixHandle matrix, const char *filename);
+
+  static MatrixIEPlugin SimpleTextFileMatrix_plugin("TextFile","", "",SimpleTextFileMatrix_reader,SimpleTextFileMatrix_writer);
+
 }
 
 
