@@ -328,7 +328,7 @@ parse_ho_data52(ifstream &nodal_in, vector<Vector> &data_vals, HVMesh *hvm)
     arr[6].x(xdxyz[0]);
     arr[6].y(xdxyz[1]);
     arr[6].z(xdxyz[2]);
-    hvm->get_basis().add_derivative(arr);
+    hvm->get_basis().add_derivatives(arr);
 
     vector<double> sfv(3);
     sfv[0] = sf[0];
@@ -404,7 +404,7 @@ parse_ho_data37(ifstream &nodal_in, vector<Vector> &data_vals, HVMesh *hvm)
     arr[6].x(xdxyz[0]);
     arr[6].y(xdxyz[1]);
     arr[6].z(xdxyz[2]);
-    hvm->get_basis().add_derivative(arr);
+    hvm->get_basis().add_derivatives(arr);
 
     vector<double> sfv(3);
     sfv[0] = sf[0];

@@ -165,7 +165,7 @@ parse_ho_data33(ifstream &nodal_in, vector<Vector> &data_vals, HVMesh *hvm)
     arr[6].x(xdxyz[0]);
     arr[6].y(xdxyz[1]);
     arr[6].z(xdxyz[2]);
-    hvm->get_basis().add_derivative(arr);
+    hvm->get_basis().add_derivatives(arr);
 
     cerr << "Added point #" << npts << ": (" << x[0] << ", " << x[1] 
 	 << ", " << x[2] << ")" << endl;
