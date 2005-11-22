@@ -53,7 +53,7 @@ public:
 //! Class for handling of element of type triangle with 
 //! cubic hermitian interpolation with scale factors
 template <class T>
-class TriCubicHmtScaleFactors : public BasisSimple<T>, 
+class TriCubicHmtScaleFactors : public BasisAddDerivativesScaleFactors<T>, 
                                 public TriApprox, 
 				public TriGaussian3<double>,
 				public TriCubicScaleFactorsHmtUnitElement
@@ -94,17 +94,17 @@ public:
     get_weights(coords, w); 
 
     unsigned elem=cd.elem_index();
-    const T sdx0=derivs_[cd.node0_index()][0]*scalefactors_[elem][0];
-    const T sdx1=derivs_[cd.node1_index()][0]*scalefactors_[elem][0];
-    const T sdx2=derivs_[cd.node2_index()][0]*scalefactors_[elem][0];
+    const T sdx0=this->derivs_[cd.node0_index()][0]*this->scalefactors_[elem][0];
+    const T sdx1=this->derivs_[cd.node1_index()][0]*this->scalefactors_[elem][0];
+    const T sdx2=this->derivs_[cd.node2_index()][0]*this->scalefactors_[elem][0];
 
-    const T sdy0=derivs_[cd.node0_index()][1]*scalefactors_[elem][1];
-    const T sdy1=derivs_[cd.node1_index()][1]*scalefactors_[elem][1];
-    const T sdy2=derivs_[cd.node2_index()][1]*scalefactors_[elem][1];
+    const T sdy0=this->derivs_[cd.node0_index()][1]*this->scalefactors_[elem][1];
+    const T sdy1=this->derivs_[cd.node1_index()][1]*this->scalefactors_[elem][1];
+    const T sdy2=this->derivs_[cd.node2_index()][1]*this->scalefactors_[elem][1];
 
-    const T sdxy0=derivs_[cd.node0_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
-    const T sdxy1=derivs_[cd.node1_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
-    const T sdxy2=derivs_[cd.node2_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
+    const T sdxy0=this->derivs_[cd.node0_index()][2]*this->scalefactors_[elem][0]*this->scalefactors_[elem][1];
+    const T sdxy1=this->derivs_[cd.node1_index()][2]*this->scalefactors_[elem][0]*this->scalefactors_[elem][1];
+    const T sdxy2=this->derivs_[cd.node2_index()][2]*this->scalefactors_[elem][0]*this->scalefactors_[elem][1];
 
     return (T)(w[0]  * cd.node0()
 	       +w[1]  * sdx0
@@ -131,17 +131,17 @@ public:
 
     unsigned elem=cd.elem_index();
 
-    const T sdx0=derivs_[cd.node0_index()][0]*scalefactors_[elem][0];
-    const T sdx1=derivs_[cd.node1_index()][0]*scalefactors_[elem][0];
-    const T sdx2=derivs_[cd.node2_index()][0]*scalefactors_[elem][0];
+    const T sdx0=this->derivs_[cd.node0_index()][0]*this->scalefactors_[elem][0];
+    const T sdx1=this->derivs_[cd.node1_index()][0]*this->scalefactors_[elem][0];
+    const T sdx2=this->derivs_[cd.node2_index()][0]*this->scalefactors_[elem][0];
 
-    const T sdy0=derivs_[cd.node0_index()][1]*scalefactors_[elem][1];
-    const T sdy1=derivs_[cd.node1_index()][1]*scalefactors_[elem][1];
-    const T sdy2=derivs_[cd.node2_index()][1]*scalefactors_[elem][1];
+    const T sdy0=this->derivs_[cd.node0_index()][1]*this->scalefactors_[elem][1];
+    const T sdy1=this->derivs_[cd.node1_index()][1]*this->scalefactors_[elem][1];
+    const T sdy2=this->derivs_[cd.node2_index()][1]*this->scalefactors_[elem][1];
 
-    const T sdxy0=derivs_[cd.node0_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
-    const T sdxy1=derivs_[cd.node1_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
-    const T sdxy2=derivs_[cd.node2_index()][2]*scalefactors_[elem][0]*scalefactors_[elem][1];
+    const T sdxy0=this->derivs_[cd.node0_index()][2]*this->scalefactors_[elem][0]*this->scalefactors_[elem][1];
+    const T sdxy1=this->derivs_[cd.node1_index()][2]*this->scalefactors_[elem][0]*this->scalefactors_[elem][1];
+    const T sdxy2=this->derivs_[cd.node2_index()][2]*this->scalefactors_[elem][0]*this->scalefactors_[elem][1];
 
     derivs.resize(2);
 
@@ -177,20 +177,9 @@ public:
     return CL.get_coords(this, coords, value, cd);
   }
 
-  //! add derivative values (dx, dy, dxy) for nodes.
-  void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }
-
-  //! add scale factors (sdx, sdy) for nodes.
-  void add_scalefactors(const vector<T> &p) { scalefactors_.push_back(p); }
-
   static const string type_name(int n = -1);
 
-  virtual void io (Piostream& str);
-
-protected:
-  //! support data 
-  vector<vector<T> > derivs_; 
-  vector<vector<double> > scalefactors_; 
+  virtual void io (Piostream& str); 
 };
 
 
@@ -237,8 +226,8 @@ void
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      TRICUBICHMTSCALEFACTORS_VERSION);
-  Pio(stream, derivs_);
-  Pio(stream, scalefactors_);
+  Pio(stream, this->derivs_);
+  Pio(stream, this->scalefactors_);
   stream.end_class();
 }
 

@@ -66,7 +66,7 @@ public:
 //! Class for handling of element of type curve with 
 //! quadratic lagrangian interpolation
 template <class T>
-  class CrvQuadraticLgn : public BasisSimple<T>, 
+  class CrvQuadraticLgn : public BasisAddNodes<T>, 
                           public CrvApprox, 
 			  public CrvGaussian2<double>, 
 			  public CrvQuadraticLgnUnitElement
@@ -97,11 +97,10 @@ public:
   {
     double w[3];
     get_weights(coords, w); 
-    //    cerr << "?" << w[0] << '\t' << w[1] << '\t'<< w[2] << '\t' << endl;
-    //    cerr << "?" << cd.node0() << '\t' << cd.node1() << '\t'<< nodes_[cd.edge0_index()] << '\t' << endl;
+ 
     return T(w[0] * cd.node0() +
 	     w[1] * cd.node1() +
-	     w[2] * nodes_[cd.edge0_index()]);
+	     w[2] * this->nodes_[cd.edge0_index()]);
   }
     
   //! get first derivative at parametric coordinate
@@ -115,12 +114,9 @@ public:
 
     derivs[0] = T((-3 + 4*x) * cd.node0() 
 		  +(-1 + 4*x)* cd.node1()
-		  +(4 - 8*x)* nodes_[cd.edge0_index()]);
+		  +(4 - 8*x)* this->nodes_[cd.edge0_index()]);
   }
   
-  //! add a node value corresponding to edge
-  void add_node_value(const T &p) { nodes_.push_back(p); }
-
   static  const string type_name(int n = -1);
 
   //! get parametric coordinate for value within the element
@@ -133,11 +129,6 @@ public:
   }
      
   virtual void io (Piostream& str);
-protected:
-  //! Additional support values.
-  //! Quadratic Lagrangian only needs additional nodes stored for each edge
-  //! in the topology.
-  vector<T>          nodes_; 
 };
 
 
@@ -183,7 +174,7 @@ CrvQuadraticLgn<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      CRVQUADRATICLGN_VERSION);
-  Pio(stream, nodes_);
+  Pio(stream, this->nodes_);
   stream.end_class();
 }
   

@@ -67,7 +67,7 @@ public:
 //! Class for handling of element of type prism with 
 //! quadratic lagrangian interpolation
 template <class T>
-class PrismQuadraticLgn : public BasisSimple<T>, 
+class PrismQuadraticLgn : public BasisAddNodes<T>, 
                           public PrismApprox, 
 			  public PrismGaussian2<double>, 
 			  public PrismQuadraticLgnUnitElement
@@ -118,15 +118,15 @@ public:
 	      w[3]  * cd.node3() +
 	      w[4]  * cd.node4() +
 	      w[5]  * cd.node5() +
-	      w[6]  * nodes_[cd.edge0_index()] +
-	      w[7]  * nodes_[cd.edge1_index()] +
-	      w[8]  * nodes_[cd.edge2_index()] +
-	      w[9]  * nodes_[cd.edge3_index()] +
-	      w[10] * nodes_[cd.edge4_index()] +
-	      w[11] * nodes_[cd.edge5_index()] +
-	      w[12] * nodes_[cd.edge6_index()] +
-	      w[13] * nodes_[cd.edge7_index()] +
-	      w[14] * nodes_[cd.edge8_index()]);
+	      w[6]  * this->nodes_[cd.edge0_index()] +
+	      w[7]  * this->nodes_[cd.edge1_index()] +
+	      w[8]  * this->nodes_[cd.edge2_index()] +
+	      w[9]  * this->nodes_[cd.edge3_index()] +
+	      w[10] * this->nodes_[cd.edge4_index()] +
+	      w[11] * this->nodes_[cd.edge5_index()] +
+	      w[12] * this->nodes_[cd.edge6_index()] +
+	      w[13] * this->nodes_[cd.edge7_index()] +
+	      w[14] * this->nodes_[cd.edge8_index()]);
   }
   
   //! get first derivative at parametric coordinate
@@ -143,28 +143,28 @@ public:
 	-(-1 + 4*x - 2*z)*(-1 + z)*cd.node1()
 	+(-1 + 4*x + 4*y - 2*z)*z*cd.node3()
 	+z*(-3 + 4*x + 2*z)*cd.node4()
-	+4*(-1 + 2*x + y)*(-1 +z)*nodes_[cd.edge0_index()]
-	-4*y*(-1 + z)*nodes_[cd.edge1_index()]
-	+4*y*(-1 + z)*nodes_[cd.edge2_index()]
-	+4*(-1 + z)*z*nodes_[cd.edge3_index()]
-	-4*(-1 + z)*z*nodes_[cd.edge4_index()]
-	-4*(-1 + 2*x + y)*z*nodes_[cd.edge6_index()]
-	+4*y*z*nodes_[cd.edge7_index()]
-	-4*y*z*nodes_[cd.edge8_index()]);
+	+4*(-1 + 2*x + y)*(-1 +z)*this->nodes_[cd.edge0_index()]
+	-4*y*(-1 + z)*this->nodes_[cd.edge1_index()]
+	+4*y*(-1 + z)*this->nodes_[cd.edge2_index()]
+	+4*(-1 + z)*z*this->nodes_[cd.edge3_index()]
+	-4*(-1 + z)*z*this->nodes_[cd.edge4_index()]
+	-4*(-1 + 2*x + y)*z*this->nodes_[cd.edge6_index()]
+	+4*y*z*this->nodes_[cd.edge7_index()]
+	-4*y*z*this->nodes_[cd.edge8_index()]);
       
     derivs[1]=
       T(-((-1 + z)*(-3 + 4*x + 4*y + 2*z))*cd.node0()
 	-((-1 + 4*y - 2*z)*(-1 + z))*cd.node2()
 	+(-1 + 4*x + 4*y - 2*z)*z*cd.node3()
 	+z*(-3 + 4*y + 2*z)*cd.node5()
-	+4*x*(-1 + z)*nodes_[cd.edge0_index()]
-	-4*x*(-1 + z)*nodes_[cd.edge1_index()]
-	+4*(-1 + x + 2*y)*(-1 + z)*nodes_[cd.edge2_index()]
-	+4*(-1 + z)*z*nodes_[cd.edge3_index()]
-	-4*(-1 + z)*z*nodes_[cd.edge5_index()]
-	-4*x*z*nodes_[cd.edge6_index()]
-	+4*x*z*nodes_[cd.edge7_index()]
-	-4*(-1 + x + 2*y)*z*nodes_[cd.edge8_index()]);
+	+4*x*(-1 + z)*this->nodes_[cd.edge0_index()]
+	-4*x*(-1 + z)*this->nodes_[cd.edge1_index()]
+	+4*(-1 + x + 2*y)*(-1 + z)*this->nodes_[cd.edge2_index()]
+	+4*(-1 + z)*z*this->nodes_[cd.edge3_index()]
+	-4*(-1 + z)*z*this->nodes_[cd.edge5_index()]
+	-4*x*z*this->nodes_[cd.edge6_index()]
+	+4*x*z*this->nodes_[cd.edge7_index()]
+	-4*(-1 + x + 2*y)*z*this->nodes_[cd.edge8_index()]);
       
     derivs[2]=
       T(-((-1 + x + y)*(-3 + 2*x + 2*y + 4*z))*cd.node0()
@@ -173,15 +173,15 @@ public:
 	+(-1 + x + y)*(1 + 2*x + 2*y - 4*z)*cd.node3()
 	+x*(-3 + 2*x + 4*z)*cd.node4()
 	+y*(-3 + 2*y + 4*z)*cd.node5()
-	+4*x*(-1 + x + y)*nodes_[cd.edge0_index()]
-	-4*x*y*nodes_[cd.edge1_index()]
-	+4*y*(-1 + x + y)*nodes_[cd.edge2_index()]
-	+4*(-1 + x + y)*(-1 + 2*z)*nodes_[cd.edge3_index()]
-	+x*(4 - 8*z)*nodes_[cd.edge4_index()]
-	+y*(4 - 8*z)*nodes_[cd.edge5_index()]
-	-4*x*(-1 + x + y)*nodes_[cd.edge6_index()]
-	+4*x*y*nodes_[cd.edge7_index()]
-	-4*y*(-1 + x + y)*nodes_[cd.edge8_index()]);
+	+4*x*(-1 + x + y)*this->nodes_[cd.edge0_index()]
+	-4*x*y*this->nodes_[cd.edge1_index()]
+	+4*y*(-1 + x + y)*this->nodes_[cd.edge2_index()]
+	+4*(-1 + x + y)*(-1 + 2*z)*this->nodes_[cd.edge3_index()]
+	+x*(4 - 8*z)*this->nodes_[cd.edge4_index()]
+	+y*(4 - 8*z)*this->nodes_[cd.edge5_index()]
+	-4*x*(-1 + x + y)*this->nodes_[cd.edge6_index()]
+	+4*x*y*this->nodes_[cd.edge7_index()]
+	-4*y*(-1 + x + y)*this->nodes_[cd.edge8_index()]);
   }  
 
   //! get parametric coordinate for value within the element
@@ -193,19 +193,9 @@ public:
     return CL.get_coords(this, coords, value, cd);
   }  
   
-  //! add a node value corresponding to edge
-  void add_node_value(const T &p) { nodes_.push_back(p); }
-
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);
-
-protected:
-  //! Additional support values.
-
-  //! Quadratic Lagrangian only needs additional nodes stored for each edge
-  //! in the topology.
-  vector<T>          nodes_; 
 };
 
 
@@ -252,7 +242,7 @@ PrismQuadraticLgn<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      PRISMQUADRATICLGN_VERSION);
-  Pio(stream, nodes_);
+  Pio(stream, this->nodes_);
   stream.end_class();
 }
 

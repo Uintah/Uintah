@@ -54,7 +54,7 @@ public:
 //! Class for handling of element of type hexahedron with 
 //! tricubic hermitian interpolation with scale factors
 template <class T>
-class HexTricubicHmtScaleFactorsEdges : public BasisSimple<T>, 
+class HexTricubicHmtScaleFactorsEdges : public BasisAddDerivativesScaleFactorsEdges<T>, 
                                    public HexApprox, 
 				   public HexGaussian3<double>, 
 				   public HexTricubicHmtScaleFactorsEdgesUnitElement
@@ -154,95 +154,95 @@ public:
     double w[64];
     get_weights(coords, w);
 
-    const double sx0=scalefactors_[cd.edge0_index()];
-    const double sx1=scalefactors_[cd.edge0_index()];
-    const double sx2=scalefactors_[cd.edge2_index()];
-    const double sx3=scalefactors_[cd.edge2_index()];
-    const double sx4=scalefactors_[cd.edge8_index()];
-    const double sx5=scalefactors_[cd.edge8_index()];
-    const double sx6=scalefactors_[cd.edge10_index()];
-    const double sx7=scalefactors_[cd.edge10_index()];
+    const double sx0=this->scalefactors_[cd.edge0_index()];
+    const double sx1=this->scalefactors_[cd.edge0_index()];
+    const double sx2=this->scalefactors_[cd.edge2_index()];
+    const double sx3=this->scalefactors_[cd.edge2_index()];
+    const double sx4=this->scalefactors_[cd.edge8_index()];
+    const double sx5=this->scalefactors_[cd.edge8_index()];
+    const double sx6=this->scalefactors_[cd.edge10_index()];
+    const double sx7=this->scalefactors_[cd.edge10_index()];
 
-    const double sy0=scalefactors_[cd.edge3_index()];
-    const double sy1=scalefactors_[cd.edge1_index()];
-    const double sy2=scalefactors_[cd.edge1_index()];
-    const double sy3=scalefactors_[cd.edge3_index()];
-    const double sy4=scalefactors_[cd.edge11_index()];
-    const double sy5=scalefactors_[cd.edge9_index()];
-    const double sy6=scalefactors_[cd.edge9_index()];
-    const double sy7=scalefactors_[cd.edge11_index()];
+    const double sy0=this->scalefactors_[cd.edge3_index()];
+    const double sy1=this->scalefactors_[cd.edge1_index()];
+    const double sy2=this->scalefactors_[cd.edge1_index()];
+    const double sy3=this->scalefactors_[cd.edge3_index()];
+    const double sy4=this->scalefactors_[cd.edge11_index()];
+    const double sy5=this->scalefactors_[cd.edge9_index()];
+    const double sy6=this->scalefactors_[cd.edge9_index()];
+    const double sy7=this->scalefactors_[cd.edge11_index()];
 
-    const double sz0=scalefactors_[cd.edge4_index()];
-    const double sz1=scalefactors_[cd.edge5_index()];
-    const double sz2=scalefactors_[cd.edge6_index()];
-    const double sz3=scalefactors_[cd.edge7_index()];
-    const double sz4=scalefactors_[cd.edge4_index()];
-    const double sz5=scalefactors_[cd.edge5_index()];
-    const double sz6=scalefactors_[cd.edge6_index()];
-    const double sz7=scalefactors_[cd.edge7_index()];
+    const double sz0=this->scalefactors_[cd.edge4_index()];
+    const double sz1=this->scalefactors_[cd.edge5_index()];
+    const double sz2=this->scalefactors_[cd.edge6_index()];
+    const double sz3=this->scalefactors_[cd.edge7_index()];
+    const double sz4=this->scalefactors_[cd.edge4_index()];
+    const double sz5=this->scalefactors_[cd.edge5_index()];
+    const double sz6=this->scalefactors_[cd.edge6_index()];
+    const double sz7=this->scalefactors_[cd.edge7_index()];
 
-    const T sdx0=derivs_[cd.node0_index()][0]*sx0;
-    const T sdx1=derivs_[cd.node1_index()][0]*sx1;
-    const T sdx2=derivs_[cd.node2_index()][0]*sx2;
-    const T sdx3=derivs_[cd.node3_index()][0]*sx3;
-    const T sdx4=derivs_[cd.node4_index()][0]*sx4;
-    const T sdx5=derivs_[cd.node5_index()][0]*sx5;
-    const T sdx6=derivs_[cd.node6_index()][0]*sx6;
-    const T sdx7=derivs_[cd.node7_index()][0]*sx7;
+    const T sdx0=this->derivs_[cd.node0_index()][0]*sx0;
+    const T sdx1=this->derivs_[cd.node1_index()][0]*sx1;
+    const T sdx2=this->derivs_[cd.node2_index()][0]*sx2;
+    const T sdx3=this->derivs_[cd.node3_index()][0]*sx3;
+    const T sdx4=this->derivs_[cd.node4_index()][0]*sx4;
+    const T sdx5=this->derivs_[cd.node5_index()][0]*sx5;
+    const T sdx6=this->derivs_[cd.node6_index()][0]*sx6;
+    const T sdx7=this->derivs_[cd.node7_index()][0]*sx7;
 
-    const T sdy0=derivs_[cd.node0_index()][1]*sy0;
-    const T sdy1=derivs_[cd.node1_index()][1]*sy1;
-    const T sdy2=derivs_[cd.node2_index()][1]*sy2;
-    const T sdy3=derivs_[cd.node3_index()][1]*sy3;
-    const T sdy4=derivs_[cd.node4_index()][1]*sy4;
-    const T sdy5=derivs_[cd.node5_index()][1]*sy5;
-    const T sdy6=derivs_[cd.node6_index()][1]*sy6;
-    const T sdy7=derivs_[cd.node7_index()][1]*sy7;
+    const T sdy0=this->derivs_[cd.node0_index()][1]*sy0;
+    const T sdy1=this->derivs_[cd.node1_index()][1]*sy1;
+    const T sdy2=this->derivs_[cd.node2_index()][1]*sy2;
+    const T sdy3=this->derivs_[cd.node3_index()][1]*sy3;
+    const T sdy4=this->derivs_[cd.node4_index()][1]*sy4;
+    const T sdy5=this->derivs_[cd.node5_index()][1]*sy5;
+    const T sdy6=this->derivs_[cd.node6_index()][1]*sy6;
+    const T sdy7=this->derivs_[cd.node7_index()][1]*sy7;
 
-    const T sdz0=derivs_[cd.node0_index()][2]*sz0;
-    const T sdz1=derivs_[cd.node1_index()][2]*sz1;
-    const T sdz2=derivs_[cd.node2_index()][2]*sz2;
-    const T sdz3=derivs_[cd.node3_index()][2]*sz3;
-    const T sdz4=derivs_[cd.node4_index()][2]*sz4;
-    const T sdz5=derivs_[cd.node5_index()][2]*sz5;
-    const T sdz6=derivs_[cd.node6_index()][2]*sz6;
-    const T sdz7=derivs_[cd.node7_index()][2]*sz7;
+    const T sdz0=this->derivs_[cd.node0_index()][2]*sz0;
+    const T sdz1=this->derivs_[cd.node1_index()][2]*sz1;
+    const T sdz2=this->derivs_[cd.node2_index()][2]*sz2;
+    const T sdz3=this->derivs_[cd.node3_index()][2]*sz3;
+    const T sdz4=this->derivs_[cd.node4_index()][2]*sz4;
+    const T sdz5=this->derivs_[cd.node5_index()][2]*sz5;
+    const T sdz6=this->derivs_[cd.node6_index()][2]*sz6;
+    const T sdz7=this->derivs_[cd.node7_index()][2]*sz7;
 
-    const T sdxy0=derivs_[cd.node0_index()][3]*sx0*sy0;
-    const T sdxy1=derivs_[cd.node1_index()][3]*sx1*sy1;
-    const T sdxy2=derivs_[cd.node2_index()][3]*sx2*sy2;
-    const T sdxy3=derivs_[cd.node3_index()][3]*sx3*sy3;
-    const T sdxy4=derivs_[cd.node4_index()][3]*sx4*sy4;
-    const T sdxy5=derivs_[cd.node5_index()][3]*sx5*sy5;
-    const T sdxy6=derivs_[cd.node6_index()][3]*sx6*sy6;
-    const T sdxy7=derivs_[cd.node7_index()][3]*sx7*sy7;
+    const T sdxy0=this->derivs_[cd.node0_index()][3]*sx0*sy0;
+    const T sdxy1=this->derivs_[cd.node1_index()][3]*sx1*sy1;
+    const T sdxy2=this->derivs_[cd.node2_index()][3]*sx2*sy2;
+    const T sdxy3=this->derivs_[cd.node3_index()][3]*sx3*sy3;
+    const T sdxy4=this->derivs_[cd.node4_index()][3]*sx4*sy4;
+    const T sdxy5=this->derivs_[cd.node5_index()][3]*sx5*sy5;
+    const T sdxy6=this->derivs_[cd.node6_index()][3]*sx6*sy6;
+    const T sdxy7=this->derivs_[cd.node7_index()][3]*sx7*sy7;
 
-    const T sdyz0=derivs_[cd.node0_index()][4]*sy0*sz0;
-    const T sdyz1=derivs_[cd.node1_index()][4]*sy1*sz1;
-    const T sdyz2=derivs_[cd.node2_index()][4]*sy2*sz2;
-    const T sdyz3=derivs_[cd.node3_index()][4]*sy3*sz3;
-    const T sdyz4=derivs_[cd.node4_index()][4]*sy4*sz4;
-    const T sdyz5=derivs_[cd.node5_index()][4]*sy5*sz5;
-    const T sdyz6=derivs_[cd.node6_index()][4]*sy6*sz6;
-    const T sdyz7=derivs_[cd.node7_index()][4]*sy7*sz7;
+    const T sdyz0=this->derivs_[cd.node0_index()][4]*sy0*sz0;
+    const T sdyz1=this->derivs_[cd.node1_index()][4]*sy1*sz1;
+    const T sdyz2=this->derivs_[cd.node2_index()][4]*sy2*sz2;
+    const T sdyz3=this->derivs_[cd.node3_index()][4]*sy3*sz3;
+    const T sdyz4=this->derivs_[cd.node4_index()][4]*sy4*sz4;
+    const T sdyz5=this->derivs_[cd.node5_index()][4]*sy5*sz5;
+    const T sdyz6=this->derivs_[cd.node6_index()][4]*sy6*sz6;
+    const T sdyz7=this->derivs_[cd.node7_index()][4]*sy7*sz7;
 
-    const T sdxz0=derivs_[cd.node0_index()][5]*sx0*sz0;
-    const T sdxz1=derivs_[cd.node1_index()][5]*sx1*sz1;
-    const T sdxz2=derivs_[cd.node2_index()][5]*sx2*sz2;
-    const T sdxz3=derivs_[cd.node3_index()][5]*sx3*sz3;
-    const T sdxz4=derivs_[cd.node4_index()][5]*sx4*sz4;
-    const T sdxz5=derivs_[cd.node5_index()][5]*sx5*sz5;
-    const T sdxz6=derivs_[cd.node6_index()][5]*sx6*sz6;
-    const T sdxz7=derivs_[cd.node7_index()][5]*sx7*sz7;
+    const T sdxz0=this->derivs_[cd.node0_index()][5]*sx0*sz0;
+    const T sdxz1=this->derivs_[cd.node1_index()][5]*sx1*sz1;
+    const T sdxz2=this->derivs_[cd.node2_index()][5]*sx2*sz2;
+    const T sdxz3=this->derivs_[cd.node3_index()][5]*sx3*sz3;
+    const T sdxz4=this->derivs_[cd.node4_index()][5]*sx4*sz4;
+    const T sdxz5=this->derivs_[cd.node5_index()][5]*sx5*sz5;
+    const T sdxz6=this->derivs_[cd.node6_index()][5]*sx6*sz6;
+    const T sdxz7=this->derivs_[cd.node7_index()][5]*sx7*sz7;
 
-    const T sdxyz0=derivs_[cd.node0_index()][6]*sx0*sy0*sz0;
-    const T sdxyz1=derivs_[cd.node1_index()][6]*sx1*sy1*sz1;
-    const T sdxyz2=derivs_[cd.node2_index()][6]*sx2*sy2*sz2;
-    const T sdxyz3=derivs_[cd.node3_index()][6]*sx3*sy3*sz3;
-    const T sdxyz4=derivs_[cd.node4_index()][6]*sx4*sy4*sz4;
-    const T sdxyz5=derivs_[cd.node5_index()][6]*sx5*sy5*sz5;
-    const T sdxyz6=derivs_[cd.node6_index()][6]*sx6*sy6*sz6;
-    const T sdxyz7=derivs_[cd.node7_index()][6]*sx7*sy7*sz7;
+    const T sdxyz0=this->derivs_[cd.node0_index()][6]*sx0*sy0*sz0;
+    const T sdxyz1=this->derivs_[cd.node1_index()][6]*sx1*sy1*sz1;
+    const T sdxyz2=this->derivs_[cd.node2_index()][6]*sx2*sy2*sz2;
+    const T sdxyz3=this->derivs_[cd.node3_index()][6]*sx3*sy3*sz3;
+    const T sdxyz4=this->derivs_[cd.node4_index()][6]*sx4*sy4*sz4;
+    const T sdxyz5=this->derivs_[cd.node5_index()][6]*sx5*sy5*sz5;
+    const T sdxyz6=this->derivs_[cd.node6_index()][6]*sx6*sy6*sz6;
+    const T sdxyz7=this->derivs_[cd.node7_index()][6]*sx7*sy7*sz7;
 
     return (T)(w[0]  * cd.node0()+
 	       w[1]  * sdx0	 +
@@ -325,95 +325,95 @@ public:
 
     derivs.resize(3);
 
-    const double sx0=scalefactors_[cd.edge0_index()];
-    const double sx1=scalefactors_[cd.edge0_index()];
-    const double sx2=scalefactors_[cd.edge2_index()];
-    const double sx3=scalefactors_[cd.edge2_index()];
-    const double sx4=scalefactors_[cd.edge8_index()];
-    const double sx5=scalefactors_[cd.edge8_index()];
-    const double sx6=scalefactors_[cd.edge10_index()];
-    const double sx7=scalefactors_[cd.edge10_index()];
+    const double sx0=this->scalefactors_[cd.edge0_index()];
+    const double sx1=this->scalefactors_[cd.edge0_index()];
+    const double sx2=this->scalefactors_[cd.edge2_index()];
+    const double sx3=this->scalefactors_[cd.edge2_index()];
+    const double sx4=this->scalefactors_[cd.edge8_index()];
+    const double sx5=this->scalefactors_[cd.edge8_index()];
+    const double sx6=this->scalefactors_[cd.edge10_index()];
+    const double sx7=this->scalefactors_[cd.edge10_index()];
 
-    const double sy0=scalefactors_[cd.edge3_index()];
-    const double sy1=scalefactors_[cd.edge1_index()];
-    const double sy2=scalefactors_[cd.edge1_index()];
-    const double sy3=scalefactors_[cd.edge3_index()];
-    const double sy4=scalefactors_[cd.edge11_index()];
-    const double sy5=scalefactors_[cd.edge9_index()];
-    const double sy6=scalefactors_[cd.edge9_index()];
-    const double sy7=scalefactors_[cd.edge11_index()];
+    const double sy0=this->scalefactors_[cd.edge3_index()];
+    const double sy1=this->scalefactors_[cd.edge1_index()];
+    const double sy2=this->scalefactors_[cd.edge1_index()];
+    const double sy3=this->scalefactors_[cd.edge3_index()];
+    const double sy4=this->scalefactors_[cd.edge11_index()];
+    const double sy5=this->scalefactors_[cd.edge9_index()];
+    const double sy6=this->scalefactors_[cd.edge9_index()];
+    const double sy7=this->scalefactors_[cd.edge11_index()];
 
-    const double sz0=scalefactors_[cd.edge4_index()];
-    const double sz1=scalefactors_[cd.edge5_index()];
-    const double sz2=scalefactors_[cd.edge6_index()];
-    const double sz3=scalefactors_[cd.edge7_index()];
-    const double sz4=scalefactors_[cd.edge4_index()];
-    const double sz5=scalefactors_[cd.edge5_index()];
-    const double sz6=scalefactors_[cd.edge6_index()];
-    const double sz7=scalefactors_[cd.edge7_index()];
+    const double sz0=this->scalefactors_[cd.edge4_index()];
+    const double sz1=this->scalefactors_[cd.edge5_index()];
+    const double sz2=this->scalefactors_[cd.edge6_index()];
+    const double sz3=this->scalefactors_[cd.edge7_index()];
+    const double sz4=this->scalefactors_[cd.edge4_index()];
+    const double sz5=this->scalefactors_[cd.edge5_index()];
+    const double sz6=this->scalefactors_[cd.edge6_index()];
+    const double sz7=this->scalefactors_[cd.edge7_index()];
 
-    const T sdx0=derivs_[cd.node0_index()][0]*sx0;
-    const T sdx1=derivs_[cd.node1_index()][0]*sx1;
-    const T sdx2=derivs_[cd.node2_index()][0]*sx2;
-    const T sdx3=derivs_[cd.node3_index()][0]*sx3;
-    const T sdx4=derivs_[cd.node4_index()][0]*sx4;
-    const T sdx5=derivs_[cd.node5_index()][0]*sx5;
-    const T sdx6=derivs_[cd.node6_index()][0]*sx6;
-    const T sdx7=derivs_[cd.node7_index()][0]*sx7;
+    const T sdx0=this->derivs_[cd.node0_index()][0]*sx0;
+    const T sdx1=this->derivs_[cd.node1_index()][0]*sx1;
+    const T sdx2=this->derivs_[cd.node2_index()][0]*sx2;
+    const T sdx3=this->derivs_[cd.node3_index()][0]*sx3;
+    const T sdx4=this->derivs_[cd.node4_index()][0]*sx4;
+    const T sdx5=this->derivs_[cd.node5_index()][0]*sx5;
+    const T sdx6=this->derivs_[cd.node6_index()][0]*sx6;
+    const T sdx7=this->derivs_[cd.node7_index()][0]*sx7;
 
-    const T sdy0=derivs_[cd.node0_index()][1]*sy0;
-    const T sdy1=derivs_[cd.node1_index()][1]*sy1;
-    const T sdy2=derivs_[cd.node2_index()][1]*sy2;
-    const T sdy3=derivs_[cd.node3_index()][1]*sy3;
-    const T sdy4=derivs_[cd.node4_index()][1]*sy4;
-    const T sdy5=derivs_[cd.node5_index()][1]*sy5;
-    const T sdy6=derivs_[cd.node6_index()][1]*sy6;
-    const T sdy7=derivs_[cd.node7_index()][1]*sy7;
+    const T sdy0=this->derivs_[cd.node0_index()][1]*sy0;
+    const T sdy1=this->derivs_[cd.node1_index()][1]*sy1;
+    const T sdy2=this->derivs_[cd.node2_index()][1]*sy2;
+    const T sdy3=this->derivs_[cd.node3_index()][1]*sy3;
+    const T sdy4=this->derivs_[cd.node4_index()][1]*sy4;
+    const T sdy5=this->derivs_[cd.node5_index()][1]*sy5;
+    const T sdy6=this->derivs_[cd.node6_index()][1]*sy6;
+    const T sdy7=this->derivs_[cd.node7_index()][1]*sy7;
 
-    const T sdz0=derivs_[cd.node0_index()][2]*sz0;
-    const T sdz1=derivs_[cd.node1_index()][2]*sz1;
-    const T sdz2=derivs_[cd.node2_index()][2]*sz2;
-    const T sdz3=derivs_[cd.node3_index()][2]*sz3;
-    const T sdz4=derivs_[cd.node4_index()][2]*sz4;
-    const T sdz5=derivs_[cd.node5_index()][2]*sz5;
-    const T sdz6=derivs_[cd.node6_index()][2]*sz6;
-    const T sdz7=derivs_[cd.node7_index()][2]*sz7;
+    const T sdz0=this->derivs_[cd.node0_index()][2]*sz0;
+    const T sdz1=this->derivs_[cd.node1_index()][2]*sz1;
+    const T sdz2=this->derivs_[cd.node2_index()][2]*sz2;
+    const T sdz3=this->derivs_[cd.node3_index()][2]*sz3;
+    const T sdz4=this->derivs_[cd.node4_index()][2]*sz4;
+    const T sdz5=this->derivs_[cd.node5_index()][2]*sz5;
+    const T sdz6=this->derivs_[cd.node6_index()][2]*sz6;
+    const T sdz7=this->derivs_[cd.node7_index()][2]*sz7;
 
-    const T sdxy0=derivs_[cd.node0_index()][3]*sx0*sy0;
-    const T sdxy1=derivs_[cd.node1_index()][3]*sx1*sy1;
-    const T sdxy2=derivs_[cd.node2_index()][3]*sx2*sy2;
-    const T sdxy3=derivs_[cd.node3_index()][3]*sx3*sy3;
-    const T sdxy4=derivs_[cd.node4_index()][3]*sx4*sy4;
-    const T sdxy5=derivs_[cd.node5_index()][3]*sx5*sy5;
-    const T sdxy6=derivs_[cd.node6_index()][3]*sx6*sy6;
-    const T sdxy7=derivs_[cd.node7_index()][3]*sx7*sy7;
+    const T sdxy0=this->derivs_[cd.node0_index()][3]*sx0*sy0;
+    const T sdxy1=this->derivs_[cd.node1_index()][3]*sx1*sy1;
+    const T sdxy2=this->derivs_[cd.node2_index()][3]*sx2*sy2;
+    const T sdxy3=this->derivs_[cd.node3_index()][3]*sx3*sy3;
+    const T sdxy4=this->derivs_[cd.node4_index()][3]*sx4*sy4;
+    const T sdxy5=this->derivs_[cd.node5_index()][3]*sx5*sy5;
+    const T sdxy6=this->derivs_[cd.node6_index()][3]*sx6*sy6;
+    const T sdxy7=this->derivs_[cd.node7_index()][3]*sx7*sy7;
 
-    const T sdyz0=derivs_[cd.node0_index()][4]*sy0*sz0;
-    const T sdyz1=derivs_[cd.node1_index()][4]*sy1*sz1;
-    const T sdyz2=derivs_[cd.node2_index()][4]*sy2*sz2;
-    const T sdyz3=derivs_[cd.node3_index()][4]*sy3*sz3;
-    const T sdyz4=derivs_[cd.node4_index()][4]*sy4*sz4;
-    const T sdyz5=derivs_[cd.node5_index()][4]*sy5*sz5;
-    const T sdyz6=derivs_[cd.node6_index()][4]*sy6*sz6;
-    const T sdyz7=derivs_[cd.node7_index()][4]*sy7*sz7;
+    const T sdyz0=this->derivs_[cd.node0_index()][4]*sy0*sz0;
+    const T sdyz1=this->derivs_[cd.node1_index()][4]*sy1*sz1;
+    const T sdyz2=this->derivs_[cd.node2_index()][4]*sy2*sz2;
+    const T sdyz3=this->derivs_[cd.node3_index()][4]*sy3*sz3;
+    const T sdyz4=this->derivs_[cd.node4_index()][4]*sy4*sz4;
+    const T sdyz5=this->derivs_[cd.node5_index()][4]*sy5*sz5;
+    const T sdyz6=this->derivs_[cd.node6_index()][4]*sy6*sz6;
+    const T sdyz7=this->derivs_[cd.node7_index()][4]*sy7*sz7;
 
-    const T sdxz0=derivs_[cd.node0_index()][5]*sx0*sz0;
-    const T sdxz1=derivs_[cd.node1_index()][5]*sx1*sz1;
-    const T sdxz2=derivs_[cd.node2_index()][5]*sx2*sz2;
-    const T sdxz3=derivs_[cd.node3_index()][5]*sx3*sz3;
-    const T sdxz4=derivs_[cd.node4_index()][5]*sx4*sz4;
-    const T sdxz5=derivs_[cd.node5_index()][5]*sx5*sz5;
-    const T sdxz6=derivs_[cd.node6_index()][5]*sx6*sz6;
-    const T sdxz7=derivs_[cd.node7_index()][5]*sx7*sz7;
+    const T sdxz0=this->derivs_[cd.node0_index()][5]*sx0*sz0;
+    const T sdxz1=this->derivs_[cd.node1_index()][5]*sx1*sz1;
+    const T sdxz2=this->derivs_[cd.node2_index()][5]*sx2*sz2;
+    const T sdxz3=this->derivs_[cd.node3_index()][5]*sx3*sz3;
+    const T sdxz4=this->derivs_[cd.node4_index()][5]*sx4*sz4;
+    const T sdxz5=this->derivs_[cd.node5_index()][5]*sx5*sz5;
+    const T sdxz6=this->derivs_[cd.node6_index()][5]*sx6*sz6;
+    const T sdxz7=this->derivs_[cd.node7_index()][5]*sx7*sz7;
 
-    const T sdxyz0=derivs_[cd.node0_index()][6]*sx0*sy0*sz0;
-    const T sdxyz1=derivs_[cd.node1_index()][6]*sx1*sy1*sz1;
-    const T sdxyz2=derivs_[cd.node2_index()][6]*sx2*sy2*sz2;
-    const T sdxyz3=derivs_[cd.node3_index()][6]*sx3*sy3*sz3;
-    const T sdxyz4=derivs_[cd.node4_index()][6]*sx4*sy4*sz4;
-    const T sdxyz5=derivs_[cd.node5_index()][6]*sx5*sy5*sz5;
-    const T sdxyz6=derivs_[cd.node6_index()][6]*sx6*sy6*sz6;
-    const T sdxyz7=derivs_[cd.node7_index()][6]*sx7*sy7*sz7;
+    const T sdxyz0=this->derivs_[cd.node0_index()][6]*sx0*sy0*sz0;
+    const T sdxyz1=this->derivs_[cd.node1_index()][6]*sx1*sy1*sz1;
+    const T sdxyz2=this->derivs_[cd.node2_index()][6]*sx2*sy2*sz2;
+    const T sdxyz3=this->derivs_[cd.node3_index()][6]*sx3*sy3*sz3;
+    const T sdxyz4=this->derivs_[cd.node4_index()][6]*sx4*sy4*sz4;
+    const T sdxyz5=this->derivs_[cd.node5_index()][6]*sx5*sy5*sz5;
+    const T sdxyz6=this->derivs_[cd.node6_index()][6]*sx6*sy6*sz6;
+    const T sdxyz7=this->derivs_[cd.node7_index()][6]*sx7*sy7*sz7;
 
     derivs[0]=
       T(6*(-1 + x)*x*y12*(1 + 2*y)*z12*(1 + 2*z)*cd.node0()
@@ -623,19 +623,8 @@ public:
     return CL.get_coords(this, coords, value, cd);
   }
 
-  //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
-  void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
-
-  //! add scale factors (sdx, sdy, sdz) for edges.
-  void add_scalefactors(const double &p) { scalefactors_.push_back(p); }
-
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);
-
-protected:
-  //! support data
-  vector<vector<T> >          derivs_; 
-  vector<double >          scalefactors_; 
 };
 
 template <class T>
@@ -683,8 +672,8 @@ HexTricubicHmtScaleFactorsEdges<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      HEXTRICUBICHMTSCALEFACTORSEDGES_VERSION);
-  Pio(stream, derivs_);
-  Pio(stream, scalefactors_);
+  Pio(stream, this->derivs_);
+  Pio(stream, this->scalefactors_);
   stream.end_class();
 }
 

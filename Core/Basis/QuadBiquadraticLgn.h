@@ -67,7 +67,7 @@ public:
 //! Class for handling of element of type quad with 
 //! biquadratic lagrangian interpolation
 template <class T>
-class QuadBiquadraticLgn : public BasisSimple<T>, 
+class QuadBiquadraticLgn : public BasisAddNodes<T>, 
                            public QuadApprox, 
 			   public QuadGaussian3<double>, 
 			   public QuadBiquadraticLgnUnitElement
@@ -108,10 +108,10 @@ public:
 	       w[1] * cd.node1() +
 	       w[2] * cd.node2() +
 	       w[3] * cd.node3() +
-	       w[4] * nodes_[cd.edge0_index()] +
-	       w[5] * nodes_[cd.edge1_index()] +
-	       w[6] * nodes_[cd.edge2_index()] +
-	       w[7] * nodes_[cd.edge3_index()]);
+	       w[4] * this->nodes_[cd.edge0_index()] +
+	       w[5] * this->nodes_[cd.edge1_index()] +
+	       w[6] * this->nodes_[cd.edge2_index()] +
+	       w[7] * this->nodes_[cd.edge3_index()]);
   }
   
   //! get first derivative at parametric coordinate
@@ -128,20 +128,20 @@ public:
 	-((-1 + 4*x - 2*y)*(-1 + y))*cd.node1()
 	+y*(-3+ 4*x + 2*y)*cd.node2()
 	+(-1 + 4*x - 2*y)*y*cd.node3()
-	+4*(-1 + 2*x)*(-1 + y)*nodes_[cd.edge0_index()]
-	-4*(-1 + y)*y*nodes_[cd.edge1_index()]
-	+(4 - 8*x)*y*nodes_[cd.edge2_index()]
-	+4*(-1 + y)*y*nodes_[cd.edge3_index()]);
+	+4*(-1 + 2*x)*(-1 + y)*this->nodes_[cd.edge0_index()]
+	-4*(-1 + y)*y*this->nodes_[cd.edge1_index()]
+	+(4 - 8*x)*y*this->nodes_[cd.edge2_index()]
+	+4*(-1 + y)*y*this->nodes_[cd.edge3_index()]);
     
     derivs[1]=
       T(-((-1 + x)*(-3 + 2*x +4*y))*cd.node0()
 	+x*(-1 - 2*x + 4*y)*cd.node1()
 	+x*(-3 + 2*x + 4*y)*cd.node2()
 	+(-1 + x)*(1 + 2*x -4*y)*cd.node3()
-	+4*(-1 + x)*x*nodes_[cd.edge0_index()]
-	+x*(4 -8*y)*nodes_[cd.edge1_index()]
-	-4*(-1 + x)*x*nodes_[cd.edge2_index()]
-	+4*(-1 + x)*(-1 +2*y)*nodes_[cd.edge3_index()]);
+	+4*(-1 + x)*x*this->nodes_[cd.edge0_index()]
+	+x*(4 -8*y)*this->nodes_[cd.edge1_index()]
+	-4*(-1 + x)*x*this->nodes_[cd.edge2_index()]
+	+4*(-1 + x)*(-1 +2*y)*this->nodes_[cd.edge3_index()]);
   }  
   
   //! get parametric coordinate for value within the element
@@ -153,18 +153,9 @@ public:
     return CL.get_coords(this, coords, value, cd);
   }  
 
-  //! add a node value corresponding to edge
-  void add_node_value(const T &p) { nodes_.push_back(p); }
-
   static  const string type_name(int n = -1);
-  virtual void io (Piostream& str);
-  
-protected:
-  //! Additional support values.
 
-  //! Quadratic Lagrangian only needs additional nodes stored for each edge
-  //! in the topology.
-  vector<T>          nodes_; 
+  virtual void io (Piostream& str);
 };
 
 
@@ -211,7 +202,7 @@ QuadBiquadraticLgn<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      QUADBIQUADRATICLGN_VERSION );
-  Pio(stream, nodes_);
+  Pio(stream, this->nodes_);
   stream.end_class();
 }
 

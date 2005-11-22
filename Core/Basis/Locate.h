@@ -66,7 +66,7 @@ Point difference(const Point& interp, const Point& value);
  
 
 template<class T>
-inline void InverseMatrix3x3(const T *p, T *q) 
+inline T InverseMatrix3x3(const T *p, T *q) 
 {
   const T a=p[0], b=p[1], c=p[2];
   const T d=p[3], e=p[4], f=p[5];
@@ -84,6 +84,8 @@ inline void InverseMatrix3x3(const T *p, T *q)
   q[6]=(d*h-e*g)*detinvp;
   q[7]=(b*g-a*h)*detinvp;
   q[8]=(a*e-b*d)*detinvp;
+  
+  return detp;
 }
 
 template <class T>

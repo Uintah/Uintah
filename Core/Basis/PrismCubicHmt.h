@@ -53,7 +53,7 @@ public:
 //! Class for handling of element of type prism with 
 //! cubic hermitian interpolation
 template <class T>
-class PrismCubicHmt : public BasisSimple<T>, 
+class PrismCubicHmt : public BasisAddDerivatives<T>, 
                       public PrismApprox, 
 		      public PrismGaussian2<double>, 
 		      public PrismCubicHmtUnitElement 
@@ -112,29 +112,29 @@ public:
     get_weights(coords, w); 
     
     return (T)(w[0]  * cd.node0()                   +
-	       w[1]  * derivs_[cd.node0_index()][0] +
-	       w[2]  * derivs_[cd.node0_index()][1] +
-	       w[3]  * derivs_[cd.node0_index()][2] +
+	       w[1]  * this->derivs_[cd.node0_index()][0] +
+	       w[2]  * this->derivs_[cd.node0_index()][1] +
+	       w[3]  * this->derivs_[cd.node0_index()][2] +
 	       w[4]  * cd.node1()		    +
-	       w[5]  * derivs_[cd.node1_index()][0] +
-	       w[6]  * derivs_[cd.node1_index()][1] +
-	       w[7]  * derivs_[cd.node1_index()][2] +
+	       w[5]  * this->derivs_[cd.node1_index()][0] +
+	       w[6]  * this->derivs_[cd.node1_index()][1] +
+	       w[7]  * this->derivs_[cd.node1_index()][2] +
 	       w[8]  * cd.node2()		    +
-	       w[9]  * derivs_[cd.node2_index()][0] +
-	       w[10] * derivs_[cd.node2_index()][1] +
-	       w[11] * derivs_[cd.node2_index()][2] +
+	       w[9]  * this->derivs_[cd.node2_index()][0] +
+	       w[10] * this->derivs_[cd.node2_index()][1] +
+	       w[11] * this->derivs_[cd.node2_index()][2] +
 	       w[12] * cd.node3()		    +
-	       w[13] * derivs_[cd.node3_index()][0] +
-	       w[14] * derivs_[cd.node3_index()][1] +
-	       w[15] * derivs_[cd.node3_index()][2] +
+	       w[13] * this->derivs_[cd.node3_index()][0] +
+	       w[14] * this->derivs_[cd.node3_index()][1] +
+	       w[15] * this->derivs_[cd.node3_index()][2] +
 	       w[16] * cd.node4()		    +
-	       w[17] * derivs_[cd.node4_index()][0] +
-	       w[18] * derivs_[cd.node4_index()][1] +
-	       w[19] * derivs_[cd.node4_index()][2] +
+	       w[17] * this->derivs_[cd.node4_index()][0] +
+	       w[18] * this->derivs_[cd.node4_index()][1] +
+	       w[19] * this->derivs_[cd.node4_index()][2] +
 	       w[20] * cd.node5()		    +
-	       w[21] * derivs_[cd.node5_index()][0] +
-	       w[22] * derivs_[cd.node5_index()][1] +
-	       w[23] * derivs_[cd.node5_index()][2]);
+	       w[21] * this->derivs_[cd.node5_index()][0] +
+	       w[22] * this->derivs_[cd.node5_index()][1] +
+	       w[23] * this->derivs_[cd.node5_index()][2]);
   }
   
   //! get first derivative at parametric coordinate
@@ -153,69 +153,69 @@ public:
 
     derivs[0]=
       T(-((-1 + z)*(-6*x + 6*x2 + z*(-1 + 2*z)))*cd.node0()
-	-((1 - 4*x + 3*x2 - y2)*(-1 + z))*derivs_[cd.node0_index()][0]
-	+2*x*y*(-1 + z)*derivs_[cd.node0_index()][1]
-	-(z12*z)*derivs_[cd.node0_index()][2]
+	-((1 - 4*x + 3*x2 - y2)*(-1 + z))*this->derivs_[cd.node0_index()][0]
+	+2*x*y*(-1 + z)*this->derivs_[cd.node0_index()][1]
+	-(z12*z)*this->derivs_[cd.node0_index()][2]
 	+(-1 + z)*(-6*x + 6*x2 + z*(-1 + 2*z))*cd.node1()
-	-(x*(-2 + 3*x)*(-1 + z))*derivs_[cd.node1_index()][0]
-	-2*x*y*(-1 + z)*derivs_[cd.node1_index()][1]
-	+z12*z*derivs_[cd.node1_index()][2]
-	-(y2*(-1 + z))*derivs_[cd.node2_index()][0]
+	-(x*(-2 + 3*x)*(-1 + z))*this->derivs_[cd.node1_index()][0]
+	-2*x*y*(-1 + z)*this->derivs_[cd.node1_index()][1]
+	+z12*z*this->derivs_[cd.node1_index()][2]
+	-(y2*(-1 + z))*this->derivs_[cd.node2_index()][0]
 	+z*(1- 6*x + 6*x2 - 3*z + 2*z2)*cd.node3()
-	+(1 - 4*x + 3*x2 - y2)*z*derivs_[cd.node3_index()][0]
-	-2*x*y*z*derivs_[cd.node3_index()][1]
-	-((-1 + z)*z2)*derivs_[cd.node3_index()][2]
+	+(1 - 4*x + 3*x2 - y2)*z*this->derivs_[cd.node3_index()][0]
+	-2*x*y*z*this->derivs_[cd.node3_index()][1]
+	-((-1 + z)*z2)*this->derivs_[cd.node3_index()][2]
 	+z*(-1 + 6*x - 6*x2 + 3*z - 2*z2)*cd.node4()
-	+x*(-2 + 3*x)*z*derivs_[cd.node4_index()][0]
-	+2*x*y*z*derivs_[cd.node4_index()][1]
-	+(-1 + z)*z2*derivs_[cd.node4_index()][2]
-	+y2*z*derivs_[cd.node5_index()][0]);
+	+x*(-2 + 3*x)*z*this->derivs_[cd.node4_index()][0]
+	+2*x*y*z*this->derivs_[cd.node4_index()][1]
+	+(-1 + z)*z2*this->derivs_[cd.node4_index()][2]
+	+y2*z*this->derivs_[cd.node5_index()][0]);
 
     derivs[1]=
       T(-((-1 + z)*(-6*y + 6*y2 + z*(-1 + 2*z)))*cd.node0()
-	+2*x*y*(-1 + z)*derivs_[cd.node0_index()][0]
-	+(-1 + x2 + 4*y - 3*y2)*(-1 + z)*derivs_[cd.node0_index()][1]
-	-(z12*z)*derivs_[cd.node0_index()][2]
-	-(x2*(-1 + z))*derivs_[cd.node1_index()][1]
+	+2*x*y*(-1 + z)*this->derivs_[cd.node0_index()][0]
+	+(-1 + x2 + 4*y - 3*y2)*(-1 + z)*this->derivs_[cd.node0_index()][1]
+	-(z12*z)*this->derivs_[cd.node0_index()][2]
+	-(x2*(-1 + z))*this->derivs_[cd.node1_index()][1]
 	+(-1 + z)*(-6*y + 6*y2 + z*(-1 + 2*z))*cd.node2()
-	-2*x*y*(-1 + z)*derivs_[cd.node2_index()][0]
-	-(y*(-2 + 3*y)*(-1 + z))*derivs_[cd.node2_index()][1]
-	+z12*z*derivs_[cd.node2_index()][2]
+	-2*x*y*(-1 + z)*this->derivs_[cd.node2_index()][0]
+	-(y*(-2 + 3*y)*(-1 + z))*this->derivs_[cd.node2_index()][1]
+	+z12*z*this->derivs_[cd.node2_index()][2]
 	+z*(1 - 6*y + 6*y2 - 3*z + 2*z2)*cd.node3()
-	-2*x*y*z*derivs_[cd.node3_index()][0]
-	-((-1 + x2 + 4*y - 3*y2)*z)*derivs_[cd.node3_index()][1]
-	-((-1 + z)*z2)*derivs_[cd.node3_index()][2]
-	+x2*z*derivs_[cd.node4_index()][1]
+	-2*x*y*z*this->derivs_[cd.node3_index()][0]
+	-((-1 + x2 + 4*y - 3*y2)*z)*this->derivs_[cd.node3_index()][1]
+	-((-1 + z)*z2)*this->derivs_[cd.node3_index()][2]
+	+x2*z*this->derivs_[cd.node4_index()][1]
 	+z*(-1 + 6*y - 6*y2 + 3*z - 2*z2)*cd.node5()
-	+2*x*y*z*derivs_[cd.node5_index()][0]
-	+y*(-2 + 3*y)*z*derivs_[cd.node5_index()][1]
-	+(-1 + z)*z2*derivs_[cd.node5_index()][2]);
+	+2*x*y*z*this->derivs_[cd.node5_index()][0]
+	+y*(-2 + 3*y)*z*this->derivs_[cd.node5_index()][1]
+	+(-1 + z)*z2*this->derivs_[cd.node5_index()][2]);
 
     derivs[2]=
       T(-((-1 + x + y)*(2*x2 - y + 2*y2 - x*(1 + 2*y) + 6*(-1 + z)*z))*cd.node0()
-	+x*(-1 + 2*x - x2 + y2)*derivs_[cd.node0_index()][0]
-	+(x2 - y12)*y*derivs_[cd.node0_index()][1]
-	-((-1 + x + y)*(1 - 4*z + 3*z2))*derivs_[cd.node0_index()][2]
+	+x*(-1 + 2*x - x2 + y2)*this->derivs_[cd.node0_index()][0]
+	+(x2 - y12)*y*this->derivs_[cd.node0_index()][1]
+	-((-1 + x + y)*(1 - 4*z + 3*z2))*this->derivs_[cd.node0_index()][2]
 	+x*(1 - 3*x + 2*x2 - 6*z + 6*z2)*cd.node1()
-	-((-1 + x)*x2)*derivs_[cd.node1_index()][0]
-	-(x2*y)*derivs_[cd.node1_index()][0]
-	+x*(1 - 4*z + 3*z2)*derivs_[cd.node1_index()][0]
+	-((-1 + x)*x2)*this->derivs_[cd.node1_index()][0]
+	-(x2*y)*this->derivs_[cd.node1_index()][0]
+	+x*(1 - 4*z + 3*z2)*this->derivs_[cd.node1_index()][0]
 	+y*(1 - 3*y + 2*y2 - 6*z + 6*z2)*cd.node2()
-	-(x*y2)*derivs_[cd.node2_index()][0]
-	-((-1 + y)*y2)*derivs_[cd.node2_index()][1]
-	+y*(1 - 4*z + 3*z2)*derivs_[cd.node2_index()][2]
+	-(x*y2)*this->derivs_[cd.node2_index()][0]
+	-((-1 + y)*y2)*this->derivs_[cd.node2_index()][1]
+	+y*(1 - 4*z + 3*z2)*this->derivs_[cd.node2_index()][2]
 	+(-1 + x + y)*(2*x2 - y + 2*y2 - x*(1 + 2*y) + 6*(-1 + z)*z)*cd.node3()
-	+x*(1 - 2*x + x2 - y2)*derivs_[cd.node3_index()][0]
-	+(-x2 + y12)*y*derivs_[cd.node3_index()][1]
-	-((-1 + x + y)*z*(-2 + 3*z))*derivs_[cd.node3_index()][2]
+	+x*(1 - 2*x + x2 - y2)*this->derivs_[cd.node3_index()][0]
+	+(-x2 + y12)*y*this->derivs_[cd.node3_index()][1]
+	-((-1 + x + y)*z*(-2 + 3*z))*this->derivs_[cd.node3_index()][2]
 	+x*(-1 + 3*x - 2*x2 + 6*z - 6*z2)*cd.node4()
-	+(-1 + x)*x2*derivs_[cd.node4_index()][0]
-	+x2*y*derivs_[cd.node4_index()][1]
-	+x*z*(-2 + 3*z)*derivs_[cd.node4_index()][2]
+	+(-1 + x)*x2*this->derivs_[cd.node4_index()][0]
+	+x2*y*this->derivs_[cd.node4_index()][1]
+	+x*z*(-2 + 3*z)*this->derivs_[cd.node4_index()][2]
 	+y*(-1 + 3*y - 2*y2 + 6*z - 6*z2)*cd.node5()
-	+x*y2*derivs_[cd.node5_index()][0]
-	+(-1 + y)*y2*derivs_[cd.node5_index()][1]
-	+y*z*(-2 + 3*z)*derivs_[cd.node5_index()][2]);
+	+x*y2*this->derivs_[cd.node5_index()][0]
+	+(-1 + y)*y2*this->derivs_[cd.node5_index()][1]
+	+y*z*(-2 + 3*z)*this->derivs_[cd.node5_index()][2]);
   }  
 
   //! get parametric coordinate for value within the element
@@ -228,16 +228,9 @@ public:
     return CL.get_coords(this, coords, value, cd);
   }  
  
-  //! add derivative values (dx, dy, dz) for nodes.
-  void add_derivative(const vector<T> p) { derivs_.push_back(p); }
-
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);
-
-protected:
-  //! support data (node data is elsewhere)
-  vector<vector<T> >          derivs_;  
 };
 
 
@@ -284,7 +277,7 @@ PrismCubicHmt<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      PRISMCUBICHMT_VERSION);
-  Pio(stream, derivs_);
+  Pio(stream, this->derivs_);
   stream.end_class();
 }
 
