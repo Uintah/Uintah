@@ -389,7 +389,7 @@ void
        e11 = e11/norm; e12 = e12/norm; e13 = e13/norm;
              
        // Get absoulte values of the eigen vector
-       ea1 = abs(e11); ea2 = abs(e12); ea3 = abs(e13);
+       ea1 = fabs(e11); ea2 = fabs(e12); ea3 = fabs(e13);
 
        // determine the two other normal directions
        if ((ea1 >= ea2)&&(ea1 >= ea3))
