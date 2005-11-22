@@ -1248,8 +1248,8 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         return (0);      
       }
       
-      numfield = m;
-      if (n!=3) { numfield = n; mlfield.transpose(); }
+      numfield = n;
+      if (m!=3) { numfield = m; mlfield.transpose(); }
       datasize = 3;
     }
     else if (fieldtype == "Tensor")
@@ -1261,9 +1261,9 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         return (0);      
       }
       
-      numfield = m;
-      datasize = n;
-      if ((n!=6)&&(n!=9)) { numfield = n; mlfield.transpose(); datasize = m; }      
+      numfield = n;
+      datasize = m;
+      if ((m!=6)&&(m!=9)) { numfield = m; mlfield.transpose(); datasize = n; }      
     }
     else if (fieldtype == "")
     {
@@ -1274,15 +1274,15 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         return (0);      
       }
         
-      numfield = m;
+      numfield = n;
       if (m == 1) fieldtype = "double";
       if (m == 3) fieldtype = "Vector";
       if ((m == 6)||(m == 9)) fieldtype = "Tensor";
       datasize = m;
       
-      if ((n!=1)&&(n!=3)&&(n!=6)&&(n!=9)) 
+      if ((m!=1)&&(m!=3)&&(m!=6)&&(m!=9)) 
       {
-        numfield = n; 
+        numfield = m; 
         if (n == 1) fieldtype = "double";
         if (n == 3) fieldtype = "Vector";
         if ((n == 6)||(n == 9)) fieldtype = "Tensor";          
@@ -1299,8 +1299,8 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
         return (0);      
       }
         
-      numfield = m;      
-      if (n!=1) { numfield = n; mlfield.transpose(); }
+      numfield = n;      
+      if (m!=1) { numfield = m; mlfield.transpose(); }
       datasize = 1;
     }
   }
