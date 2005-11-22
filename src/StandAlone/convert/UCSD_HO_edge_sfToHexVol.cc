@@ -373,7 +373,9 @@ main(int argc, char **argv) {
       }
       e = *eptr;
       std::cerr << "adding sf: " << e.sf_ << std::endl;
-      hvm->get_basis().add_scalefactors(e.sf_);
+      vector<double> sf;
+      sf.push_back(e.sf_);
+      hvm->get_basis().add_scalefactors(sf);
     }
 
   }
