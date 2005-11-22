@@ -191,6 +191,11 @@ GatherFields::execute()
     fGeneration_.pop_back();
   }
 
+  if (fHandle_.get_rep() == 0)
+  {
+    update = true;
+  }
+
   if( force_pointcloud_ != gui_force_pointcloud_.get() ||
       update ||
       error_ )
