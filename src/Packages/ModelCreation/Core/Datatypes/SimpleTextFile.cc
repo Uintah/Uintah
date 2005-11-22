@@ -176,5 +176,44 @@ MatrixHandle SimpleTextFileMatrix_reader(ProgressReporter *pr, const char *filen
 }
 
 
+bool SimpleTextFileMatrix_writer(ProgressReporter *pr, MatrixHandle matrix, const char *filename)
+{
+
+  std::ofstream outputfile;
+
+  MatrixHandle temp = matrix->dense();
+  matrix = temp;
+  
+  if (matrix.get_rep() == 0)
+  {
+    if (pr) pr->error("Empty matrix detected");
+    return(false);
+  }
+
+  double* dataptr = matrix->get_data_pointer();
+
+  try
+  {
+    outputfile.open(filename);
+  }
+  catch (...)
+  {
+    if (pr) pr->error("Could not open file: "+std::string(filename));
+    return (false);
+  }
+    
+  size_t k = 0;
+  for (size_t p=0; p<matrix->nrows(); p++)  
+  {
+    for (size_t q=0; q<matrix->ncols(); q++)  
+    {
+      outputfile << dataptr[k++] << " ";
+    }
+    outputfile << "\n";
+  }  
+  
+  return (true);
+}
+
 } // end namespace
 
