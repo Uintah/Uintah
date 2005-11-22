@@ -229,6 +229,9 @@ public:
     cout << "\n";
     cout << "main.cc: RegressionKiller: Regression test timed out\n";
     cout << "         after " << seconds << " seconds.  Killing SCIRun.\n\n";
+    cout << "ERROR: KILL REQUIRED TO CONTINUE.";
+    cout.flush();
+    cerr.flush();
     Thread::exitAll(1);
   }
 };
