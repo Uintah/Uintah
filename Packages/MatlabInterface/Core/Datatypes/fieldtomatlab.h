@@ -501,10 +501,29 @@ bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::QuadSurfMesh<BASIS>* me
 template <class FIELD, class BASIS>
 bool FieldToMatlabAlgo::mladdfield(FIELD* field, SCIRun::TetVolMesh<BASIS>* mesh,matlabarray mlarray)
 {
-  return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlarray) &&
+  std::cout << mladdfieldheader(field,mlarray);
+  std::cout << "wrote header\n";
+ 
+  std::cout <<  mladdfielddata(field,mesh,mlarray);
+  std::cout << "field data\n";
+ 
+  std::cout <<  mladdmeshheader(mesh,mlarray);
+  std::cout << "mesh header\n";
+  
+  std::cout << mladdnodes(mesh,mlarray);
+  std::cout << "wrote nodes\n";
+  
+  std::cout << mladdcells(mesh,mlarray);
+  std::cout << "wrote cells\n";
+
+
+  return (true);
+/*
+ return ( mladdfieldheader(field,mlarray) && mladdfielddata(field,mesh,mlarray) &&
            mladdfieldcells(field,mesh,mlarray) && mladdfieldcellderivatives(field,mesh,mlarray) &&
            mladdmeshheader(mesh,mlarray) && mladdnodes(mesh,mlarray) &&
            mladdcells(mesh,mlarray) && mladdmeshderivatives(mesh,mlarray) );
+*/
 }
 
 template <class FIELD, class BASIS>
@@ -840,6 +859,7 @@ bool FieldToMatlabAlgo::mladdfaces(MESH *mesh,matlabarray mlarray)
     {
       mesh->get_nodes(a,*(it));
       for (size_t r = 0; r < num; r++) faces[q++] = a[r] + option_indexbase_;
+      ++it;
     }
 
     face.createdensearray(dims,matlabarray::miUINT32);
@@ -902,6 +922,7 @@ bool FieldToMatlabAlgo::mladdcells(MESH* mesh,matlabarray mlarray)
     {
       mesh->get_nodes(a,*(it));
       for (size_t r = 0; r < num; r++) cells[q++] = a[r] + option_indexbase_;
+      ++it;
     }
 
     cell.createdensearray(dims,matlabarray::miUINT32);
