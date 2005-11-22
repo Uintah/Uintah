@@ -11,18 +11,19 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-
-#include <Packages/CardioWave/share/share.h>
 
 namespace CardioWave {
 
 using namespace SCIRun;
 
-class CardioWaveSHARE RakeVectorsToThetaPhi : public Module {
+class  RakeVectorsToThetaPhi : public Module {
 public:
   RakeVectorsToThetaPhi(GuiContext *context);
   virtual ~RakeVectorsToThetaPhi();
@@ -43,6 +44,13 @@ RakeVectorsToThetaPhi::~RakeVectorsToThetaPhi(){
 
 void RakeVectorsToThetaPhi::execute()
 {
+
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+  typedef LockingHandle<PCMesh> PCMeshHandle;
+  typedef GenericField<PCMesh, ConstantBasis<double>, vector<double> > PCField_double;
+  typedef GenericField<PCMesh, ConstantBasis<Vector>, vector<Vector> > PCField_Vector;
+
+
   // must find ports and have valid data on inputs
   FieldIPort *imesh = (FieldIPort*)get_iport("Vectors");
   if (!imesh) {
@@ -67,7 +75,7 @@ void RakeVectorsToThetaPhi::execute()
       !meshH.get_rep())
     return;
 
-  PointCloudField<Vector> *vecfld = dynamic_cast<PointCloudField<Vector> *>(meshH.get_rep());
+  PCField_Vector *vecfld = dynamic_cast<PCField_Vector *>(meshH.get_rep());
   if (!vecfld)
   {
     error("Input field wasn't a PointCloudField<Vector>.");
@@ -88,8 +96,8 @@ void RakeVectorsToThetaPhi::execute()
   ColumnMatrix *thetas = new ColumnMatrix(npts);
   ColumnMatrix *phis = new ColumnMatrix(npts);
 
-  PointCloudMeshHandle pcmH = vecfld->get_typed_mesh();
-  PointCloudMesh::Node::iterator nb, ne;
+  PCMeshHandle pcmH = vecfld->get_typed_mesh();
+  PCMesh::Node::iterator nb, ne;
   pcmH->begin(nb);
   pcmH->end(ne);
   Point p1, p2;

@@ -11,17 +11,20 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/LatVolField.h>
+
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array1.h>
-
-#include <Packages/CardioWave/share/share.h>
 
 namespace CardioWave {
 
 using namespace SCIRun;
 
-class CardioWaveSHARE CreateSimpleMesh : public Module {
+class CreateSimpleMesh : public Module {
 	GuiInt	xdim_;
 	GuiInt	ydim_;
 	GuiInt	zdim_;
@@ -81,11 +84,16 @@ CreateSimpleMesh::execute()
   double fib2x = fib2x_.get();
   double fib2y = fib2y_.get();
   double fib2z = fib2z_.get();
+  
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef LockingHandle<LVMesh> LVMeshHandle;
+  typedef GenericField<LVMesh, HexTrilinearLgn<int>, FData3d<int, LVMesh> > LVField;
 
-  LatVolMesh *mesh = scinew LatVolMesh(xdim, ydim, zdim, Point(0,0,0),
+
+  LVMesh *mesh = scinew LVMesh(xdim, ydim, zdim, Point(0,0,0),
 				       Point((xdim-1)*dx, (ydim-1)*dy,
 					     (zdim-1)*dz));
-  LatVolField<int> *fld = scinew LatVolField<int>(mesh, 1);
+  LVField *fld = scinew LVField(mesh);
   Vector v1(fib1x, fib1y, fib1z);
   if (!v1.length()) {
     error("fib1 was zero length.");

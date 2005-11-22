@@ -27,7 +27,12 @@
  */
 
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -95,18 +100,18 @@ HexIntMask::parse_exclude_list(const string &guistr, vector<int> &exclude)
     {
       if ((str[i] >= '0' && str[i] <= '9') || str[i] == '-')
       {
-	last = i;
-	skipping_p = false;
+        last = i;
+        skipping_p = false;
       }
     }
     if (!skipping_p)
     {
       if ((str[i] < '0' || str[i] > '9') && str[i] != '-')
       {
-	const string val = str.substr(last, i-last);
-	int v = atoi(val.c_str());
-	exclude.push_back(v);
-	skipping_p = true;
+        const string val = str.substr(last, i-last);
+        int v = atoi(val.c_str());
+        exclude.push_back(v);
+        skipping_p = true;
       }
     }
   }
@@ -116,6 +121,12 @@ HexIntMask::parse_exclude_list(const string &guistr, vector<int> &exclude)
 void
 HexIntMask::execute()
 {
+  typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
+  typedef LockingHandle<HVMesh> HVMeshHandle;
+  typedef GenericField<HVMesh, HexTrilinearLgn<int>, vector<int> > HVField_int;
+  typedef GenericField<HVMesh, ConstantBasis<int>, vector<int> > HVField_int_const;
+  typedef GenericField<HVMesh, HexTrilinearLgn<double>, vector<double> > HVField_double;
+
   FieldIPort *ifieldport = (FieldIPort *)get_iport("Input HexVol");
   if (!ifieldport) {
     error("Unable to initialize iport 'Input HexVol'.");
@@ -128,8 +139,8 @@ HexIntMask::execute()
     return;
   }
 
-  HexVolField<int> *hvfield =
-    dynamic_cast<HexVolField<int> *>(ifieldhandle.get_rep());
+  HVField_int *hvfield =
+    dynamic_cast<HVField_int *>(ifieldhandle.get_rep());
 
   if (hvfield == 0)
   {
@@ -152,34 +163,26 @@ HexIntMask::execute()
   vector<int> exclude;
   parse_exclude_list(last_gui_exclude_, exclude);
 
-#if 0
-  for (unsigned int i = 0; i < exclude.size(); i++)
-  {
-    cout << "\nExcluding " << exclude[i] << "\n";
-  }
-  cout << "\n";
-#endif
+  HVMeshHandle hvmesh = hvfield->get_typed_mesh();
+  HVMeshHandle clipped = scinew HVMesh();
+  HVField_int_const *ofield = 0;
 
-  HexVolMeshHandle hvmesh = hvfield->get_typed_mesh();
-  HexVolMeshHandle clipped = scinew HexVolMesh();
-  HexVolField<int> *ofield = 0;
-
-  HexVolMesh::Cell::size_type ncells;
+  HVMesh::Cell::size_type ncells;
   hvmesh->size(ncells);
-  HexVolMesh::Node::size_type nnodes;
+  HVMesh::Node::size_type nnodes;
   hvmesh->size(nnodes);
-  HexVolMesh::Node::iterator bni, eni;
-  HexVolMesh::Cell::iterator bci, eci;
+  HVMesh::Node::iterator bni, eni;
+  HVMesh::Cell::iterator bci, eci;
   
   if (hvfield->basis_order() == 0) {
 #ifdef HAVE_HASH_MAP
     typedef hash_map<unsigned int,
-      HexVolMesh::Node::index_type,
+      HVMesh::Node::index_type,
       hash<unsigned int>,
       equal_to<unsigned int> > hash_type;
 #else
     typedef map<unsigned int,
-      HexVolMesh::Node::index_type,
+      HVMesh::Node::index_type,
       equal_to<unsigned int> > hash_type;
 #endif
     
@@ -188,10 +191,10 @@ HexIntMask::execute()
       hvmesh->begin(bni);
       hvmesh->end(eni);
       while (bni != eni) {
-	Point p;
-	hvmesh->get_center(p, *bni);
-	nodemap[(unsigned int) *bni] = clipped->add_point(p);
-	++bni;
+        Point p;
+        hvmesh->get_center(p, *bni);
+        nodemap[(unsigned int) *bni] = clipped->add_point(p);
+        ++bni;
       }
     }
 
@@ -206,12 +209,12 @@ HexIntMask::execute()
       hvfield->value(val, *bci);
       if (std::find(exclude.begin(), exclude.end(), val) == exclude.end())
       {
-	usedcell[*bci]=true;
-	HexVolMesh::Node::array_type onodes;
-	hvmesh->get_nodes(onodes, *bci);
-	unsigned int i;
-	for (i = 0; i < onodes.size(); i++)
-	  usednode[onodes[i]]=true;
+        usedcell[*bci]=true;
+        HVMesh::Node::array_type onodes;
+        hvmesh->get_nodes(onodes, *bci);
+        unsigned int i;
+        for (i = 0; i < onodes.size(); i++)
+          usednode[onodes[i]]=true;
       }
       ++bci;
     }
@@ -226,64 +229,64 @@ HexIntMask::execute()
       hvmesh->begin(bci);
       hvmesh->end(eci);
       while (bci != eci) {
-	HexVolMesh::Node::array_type onodes;
-	hvmesh->get_nodes(onodes, *bci);
-	unsigned int i;
-	for (i=0; i<onodes.size() && !usedcellPlusHull[*bci]; i++)
-	  usedcellPlusHull[*bci] = usedcellPlusHull[*bci] || 
-	    usednode[onodes[i]];
-	if (usedcellPlusHull[*bci]) 
-	  for (i=0; i<onodes.size(); i++)
-	    usednodePlusHull[onodes[i]]=true;
-	++bci;
+        HVMesh::Node::array_type onodes;
+        hvmesh->get_nodes(onodes, *bci);
+        unsigned int i;
+        for (i=0; i<onodes.size() && !usedcellPlusHull[*bci]; i++)
+          usedcellPlusHull[*bci] = usedcellPlusHull[*bci] || 
+            usednode[onodes[i]];
+        if (usedcellPlusHull[*bci]) 
+          for (i=0; i<onodes.size(); i++)
+            usednodePlusHull[onodes[i]]=true;
+        ++bci;
       }
       usednode=usednodePlusHull;
       usedcell=usedcellPlusHull;
     }
 
-    vector<HexVolMesh::Elem::index_type> elemmap;
+    vector<HVMesh::Elem::index_type> elemmap;
 
     hvmesh->begin(bci);
     hvmesh->end(eci);
     while (bci != eci)
     {
       if (usedcell[*bci]) {
-	HexVolMesh::Node::array_type onodes;
-	hvmesh->get_nodes(onodes, *bci);
-	HexVolMesh::Node::array_type nnodes(onodes.size());
+        HVMesh::Node::array_type onodes;
+        hvmesh->get_nodes(onodes, *bci);
+        HVMesh::Node::array_type nnodes(onodes.size());
 	
-	for (unsigned int i = 0; i < onodes.size(); i++)
-	{
-	  if (nodemap.find((unsigned int)onodes[i]) == nodemap.end())
-	  {
-	    Point np;
-	    hvmesh->get_center(np, onodes[i]);
-	    nodemap[(unsigned int)onodes[i]] = clipped->add_point(np);
-	  }
-	  nnodes[i] = nodemap[(unsigned int)onodes[i]];
-	}
-	
-	clipped->add_elem(nnodes);
-	elemmap.push_back(*bci);
+        for (unsigned int i = 0; i < onodes.size(); i++)
+        {
+          if (nodemap.find((unsigned int)onodes[i]) == nodemap.end())
+          {
+            Point np;
+            hvmesh->get_center(np, onodes[i]);
+            nodemap[(unsigned int)onodes[i]] = clipped->add_point(np);
+          }
+          nnodes[i] = nodemap[(unsigned int)onodes[i]];
+        }
+        
+        clipped->add_elem(nnodes);
+        elemmap.push_back(*bci);
       }
       ++bci;
     }
     
     if (elemmap.size() > 0)
     {
-      ofield = scinew HexVolField<int>(clipped, 0);
+      ofield = scinew HVField_int_const(clipped);
       ofield->copy_properties(hvfield);
       
       int val;
       for (unsigned int i = 0; i < elemmap.size(); i++)
       {
-	hvfield->value(val, elemmap[i]);
-	ofield->set_value(val, (HexVolMesh::Elem::index_type)i);
+        hvfield->value(val, elemmap[i]);
+        ofield->set_value(val, (HVMesh::Elem::index_type)i);
       }
     }
   } else {
-    vector<HexVolMesh::Node::index_type> nodemap;
-    vector<HexVolMesh::Node::index_type> invnodemap(nnodes);
+    vector<HVMesh::Node::index_type> nodemap;
+    vector<HVMesh::Node::index_type> invnodemap(nnodes);
     vector<bool> valid(nnodes, false);
     
     // find which nodes are valid
@@ -293,7 +296,7 @@ HexIntMask::execute()
       int val;
       hvfield->value(val, *bni);
       if (std::find(exclude.begin(), exclude.end(), val) == exclude.end())
-	valid[*bni] = true;
+      valid[*bni] = true;
       ++bni;
     }
       
@@ -308,14 +311,14 @@ HexIntMask::execute()
     hvmesh->begin(bci);
     hvmesh->end(eci);
     while (bci != eci) {
-      HexVolMesh::Node::array_type onodes;
+      HVMesh::Node::array_type onodes;
       hvmesh->get_nodes(onodes, *bci);
       unsigned int i;
       for (i = 0; i < onodes.size() && usedcell[*bci]; i++)
-	usedcell[*bci] = usedcell[*bci] && valid[onodes[i]];
+        usedcell[*bci] = usedcell[*bci] && valid[onodes[i]];
       if (usedcell[*bci])
-	for (i = 0; i < onodes.size(); i++)
-	  usednode[onodes[i]]=true;
+      for (i = 0; i < onodes.size(); i++)
+        usednode[onodes[i]]=true;
       ++bci;
     }
 
@@ -329,16 +332,16 @@ HexIntMask::execute()
       hvmesh->begin(bci);
       hvmesh->end(eci);
       while (bci != eci) {
-	HexVolMesh::Node::array_type onodes;
-	hvmesh->get_nodes(onodes, *bci);
-	unsigned int i;
-	for (i=0; i<onodes.size() && !usedcellPlusHull[*bci]; i++)
-	  usedcellPlusHull[*bci] = usedcellPlusHull[*bci] || 
-	    usednode[onodes[i]];
-	if (usedcellPlusHull[*bci]) 
-	  for (i=0; i<onodes.size(); i++)
-	    usednodePlusHull[onodes[i]]=true;
-	++bci;
+        HVMesh::Node::array_type onodes;
+        hvmesh->get_nodes(onodes, *bci);
+        unsigned int i;
+        for (i=0; i<onodes.size() && !usedcellPlusHull[*bci]; i++)
+          usedcellPlusHull[*bci] = usedcellPlusHull[*bci] || 
+        usednode[onodes[i]];
+        if (usedcellPlusHull[*bci]) 
+          for (i=0; i<onodes.size(); i++)
+            usednodePlusHull[onodes[i]]=true;
+        ++bci;
       }
       usednode=usednodePlusHull;
       usedcell=usedcellPlusHull;
@@ -350,11 +353,11 @@ HexIntMask::execute()
     hvmesh->begin(bni);
     while (bni != eni) {
       if (usednode[*bni] || !last_gui_delete_nodes_) {
-	Point np;
-	hvmesh->get_center(np, *bni);
-	clipped->add_point(np);
-	invnodemap[*bni] = nodemap.size();
-	nodemap.push_back(*bni);
+        Point np;
+        hvmesh->get_center(np, *bni);
+        clipped->add_point(np);
+        invnodemap[*bni] = nodemap.size();
+        nodemap.push_back(*bni);
       }
       ++bni;
     }
@@ -363,12 +366,12 @@ HexIntMask::execute()
     hvmesh->begin(bci);
     while (bci != eci) {
       if (usedcell[*bci]) {
-	HexVolMesh::Node::array_type onodes;
-	hvmesh->get_nodes(onodes, *bci);
-	HexVolMesh::Node::array_type nnodes(onodes.size());
-	for (unsigned int i = 0; i < onodes.size(); i++)
-	  nnodes[i] = invnodemap[onodes[i]];
-	clipped->add_elem(nnodes);
+        HVMesh::Node::array_type onodes;
+        hvmesh->get_nodes(onodes, *bci);
+        HVMesh::Node::array_type nnodes(onodes.size());
+        for (unsigned int i = 0; i < onodes.size(); i++)
+          nnodes[i] = invnodemap[onodes[i]];
+        clipped->add_elem(nnodes);
       }
       ++bci;
     }
@@ -377,14 +380,14 @@ HexIntMask::execute()
     // copy the field data - map it to the right nodes
     if (nodemap.size() > 0)
     {
-      ofield = scinew HexVolField<int>(clipped,1);
+      ofield = scinew HVField_int_const(clipped);
       ofield->copy_properties(hvfield);
       
       int val;
       for (unsigned int i = 0; i < nodemap.size(); i++)
       {
-	hvfield->value(val, nodemap[i]);
-	ofield->set_value(val, (HexVolMesh::Node::index_type)i);
+        hvfield->value(val, nodemap[i]);
+        ofield->set_value(val, (HVMesh::Node::index_type)i);
       }
     }
   }

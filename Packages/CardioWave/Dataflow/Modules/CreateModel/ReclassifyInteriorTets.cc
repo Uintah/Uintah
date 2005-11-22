@@ -12,19 +12,20 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 
 extern "C" {
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
 }
 
-#include <Packages/CardioWave/share/share.h>
-
 namespace CardioWave {
 
 using namespace SCIRun;
 
-class CardioWaveSHARE ReclassifyInteriorTets : public Module {
+class ReclassifyInteriorTets : public Module {
   GuiString	threshold_;
   GuiString     tag_;
 public:
@@ -48,6 +49,14 @@ ReclassifyInteriorTets::~ReclassifyInteriorTets(){
 }
 
 void ReclassifyInteriorTets::execute(){
+
+  typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+  typedef LockingHandle<TVMesh> TVMeshHandle;
+  typedef GenericField<TVMesh, TetLinearLgn<double>, vector<double> > TVField_double;
+  typedef GenericField<TVMesh, TetLinearLgn<Vector>, vector<Vector> > TVField_Vector;
+  typedef GenericField<TVMesh, ConstantBasis<Vector>, vector<Vector> > TVField_Vector_const;
+
+
   double threshold = atof(threshold_.get().c_str());
 
   // must find ports and have valid data on inputs
@@ -68,7 +77,7 @@ void ReclassifyInteriorTets::execute(){
       !meshH.get_rep())
     return;
 
-  TetVolField<Vector> *tv_old = dynamic_cast<TetVolField<Vector> *>(meshH.get_rep());
+  TVField_Vector *tv_old = dynamic_cast<TVField_Vector *>(meshH.get_rep());
   if (!tv_old) {
     error("Input field wasn't a TetVolField<Vector>.");
     return;
@@ -79,22 +88,22 @@ void ReclassifyInteriorTets::execute(){
     return;
   }
 
-  TetVolMeshHandle mesh = tv_old->get_typed_mesh();
+  TVMeshHandle mesh = tv_old->get_typed_mesh();
 
-  TetVolMesh::Node::array_type nodes;
+  TVMesh::Node::array_type nodes;
   Point centroid, p;
-  TetVolMesh::Node::size_type nnodes;
+  TVMesh::Node::size_type nnodes;
   mesh->size(nnodes);
-  TetVolMesh::Cell::size_type ncells;
+  TVMesh::Cell::size_type ncells;
   mesh->size(ncells);
 
   int tag = atoi(tag_.get().c_str());
 
   // copy the fdata for valid nodes
-  TetVolField<Vector> *tv_new = scinew TetVolField<Vector>(mesh, 0 );
+  TVField_Vector_const *tv_new = scinew TVField_Vector_const(mesh);
 
   // find the tets with centroid far from their nodes
-  TetVolMesh::Cell::iterator cb, ce; mesh->begin(cb); mesh->end(ce);
+  TVMesh::Cell::iterator cb, ce; mesh->begin(cb); mesh->end(ce);
   int i;
   while (cb!=ce) {
     mesh->get_nodes(nodes, *cb);

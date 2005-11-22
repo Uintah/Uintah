@@ -10,16 +10,18 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/Vector.h>
-
-#include <Packages/CardioWave/share/share.h>
 
 namespace CardioWave {
 
 using namespace SCIRun;
 
-class CardioWaveSHARE VectorFieldsToTensorField : public Module {
+class VectorFieldsToTensorField : public Module {
 public:
   VectorFieldsToTensorField(GuiContext *context);
   virtual ~VectorFieldsToTensorField();
@@ -44,6 +46,14 @@ VectorFieldsToTensorField::~VectorFieldsToTensorField()
 void
 VectorFieldsToTensorField::execute()
 {
+
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef LockingHandle<LVMesh> LVMeshHandle;
+  typedef GenericField<LVMesh, HexTrilinearLgn<int>, FData3d<int, LVMesh> > LVField_int;
+  typedef GenericField<LVMesh, ConstantBasis<int>, FData3d<int, LVMesh> > LVField_int_const;
+  typedef GenericField<LVMesh, HexTrilinearLgn<double>, FData3d<double, LVMesh> > LVField_double;
+  typedef GenericField<LVMesh, HexTrilinearLgn<Vector>, FData3d<Vector, LVMesh> > LVField_Vector;
+  
   FieldIPort *iev1 = (FieldIPort*)get_iport("Major Eigenvectors");
   if (!iev1) {
     error("Unable to initialize iport 'Major Eigenvectors'.");
@@ -80,27 +90,27 @@ VectorFieldsToTensorField::execute()
     return;
   }
 
-  LatVolField<Vector> *ev1 = 
-    dynamic_cast<LatVolField<Vector> *>(ev1H.get_rep());
+  LVField_Vector *ev1 = 
+    dynamic_cast<LVField_Vector *>(ev1H.get_rep());
   if (!ev1) {
     error("Major eigenvector field isn't a LatVolField<Vector>.");
     return;
   }
 
-  LatVolField<Vector> *ev2 = 
-    dynamic_cast<LatVolField<Vector> *>(ev2H.get_rep());
+  LVField_Vector *ev2 = 
+    dynamic_cast<LVField_Vector *>(ev2H.get_rep());
   if (!ev2) {
     error("Median eigenvector field isn't a LatVolField<Vector>.");
     return;
   }
 
-  LatVolField<double> *mask = 0;
+  LVField_double *mask = 0;
   if (maskH.get_rep())
-    mask = dynamic_cast<LatVolField<double> *>(maskH.get_rep());
+    mask = dynamic_cast<LVField_double *>(maskH.get_rep());
     
-  LatVolMeshHandle ev1mesh = ev1->get_typed_mesh();
-  LatVolMeshHandle ev2mesh = ev2->get_typed_mesh();
-  LatVolMeshHandle maskmesh;
+  LVMeshHandle ev1mesh = ev1->get_typed_mesh();
+  LVMeshHandle ev2mesh = ev2->get_typed_mesh();
+  LVMeshHandle maskmesh;
   if (mask) maskmesh = mask->get_typed_mesh();
 
   if (ev1->basis_order() != ev2->basis_order()) {
@@ -130,15 +140,33 @@ VectorFieldsToTensorField::execute()
     }
   }
 
-
-  LatVolField<int> *tfield = scinew LatVolField<int>(ev1mesh, ev1->basis_order());
-
+  int *tidx;
+  FieldHandle ofield;
+  
+  if (ev1->basis_order() == 0)
+  {
+    LVField_int_const *tfield = scinew LVField_int_const(ev1mesh);
+    ofield = dynamic_cast<Field *>(tfield);
+    tidx = tfield->fdata().begin();
+  }
+  else if (ev1->basis_order() == 1)
+  {
+    LVField_int *tfield = scinew LVField_int(ev1mesh);
+    ofield = dynamic_cast<Field *>(tfield);
+    tidx = tfield->fdata().begin();  
+  }
+  else
+  {
+    error("Higher order elements are not supported");
+    return;
+  }
+  
   Vector *v1 = ev1->fdata().begin();
   Vector *v2 = ev2->fdata().begin();
   double *maskiter=0;
   if (mask) maskiter = mask->fdata().begin();
 
-  int *tidx = tfield->fdata().begin();
+
   vector<pair<string, Tensor> > conds;
   Tensor t(Vector(0,0,0), Vector(0,0,0), Vector(0,0,0));
   pair<string, Tensor> cond;
@@ -166,7 +194,7 @@ VectorFieldsToTensorField::execute()
     ++tidx;
     if (mask) ++maskiter;
   }
-  tfield->set_property("conductivity_table", conds, false);
-  otfld->send(tfield);
+  ofield->set_property("conductivity_table", conds, false);
+  otfld->send(ofield);
 }
 } // End namespace CardioWave

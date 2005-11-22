@@ -27,8 +27,11 @@
  */
 
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/TetVolField.h>
+
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -43,7 +46,8 @@ namespace CardioWave {
 using std::priority_queue;
 
 using namespace SCIRun;
-
+typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
+  
 class HexMeshCuthillMcKee : public Module {
 private:
   unsigned int last_generation_;
@@ -63,8 +67,8 @@ public:
 class pair_greater
 {
 public:
-  bool operator()(const pair<int, HexVolMesh::Node::index_type> &a,
-		  const pair<int, HexVolMesh::Node::index_type> &b)
+  bool operator()(const pair<int, HVMesh::Node::index_type> &a,
+		  const pair<int, HVMesh::Node::index_type> &b)
   {
     return a.first > b.first;
   }
@@ -89,6 +93,10 @@ HexMeshCuthillMcKee::~HexMeshCuthillMcKee()
 void
 HexMeshCuthillMcKee::execute()
 {
+  typedef LockingHandle<HVMesh> HVMeshHandle;
+  typedef GenericField<HVMesh, HexTrilinearLgn<int>, vector<int> > HVField_int;
+  typedef GenericField<HVMesh, HexTrilinearLgn<double>, vector<double> > HVField_double;
+
   FieldIPort *ifieldport = (FieldIPort *)get_iport("HexVol");
   if (!ifieldport) {
     error("Unable to initialize iport 'HexVol'.");
@@ -101,8 +109,8 @@ HexMeshCuthillMcKee::execute()
     return;
   }
 
-  HexVolField<int> *hvfield =
-    dynamic_cast<HexVolField<int> *>(ifieldhandle.get_rep());
+  HVField_int *hvfield =
+    dynamic_cast<HVField_int *>(ifieldhandle.get_rep());
 
   if (hvfield == 0)
   {
@@ -126,10 +134,10 @@ HexMeshCuthillMcKee::execute()
   }
   last_generation_ = hvfield->generation;
 
-  HexVolMeshHandle hvmesh = hvfield->get_typed_mesh();
-  HexVolMeshHandle bwmesh = scinew HexVolMesh();
+  HVMeshHandle hvmesh = hvfield->get_typed_mesh();
+  HVMeshHandle bwmesh = scinew HVMesh();
 
-  HexVolMesh::Node::size_type nnodes;
+  HVMesh::Node::size_type nnodes;
   hvmesh->size(nnodes);
 
   vector<int> node_get_new_idx(nnodes); // get new node idx from old node idx
@@ -139,7 +147,7 @@ HexMeshCuthillMcKee::execute()
   vector<int> visited(nnodes, 0);         // set to 1 when we visit a node
 
   // in our priority queue, we store a priority and an (old node) index
-  typedef pair<int, HexVolMesh::Node::index_type> np_type;
+  typedef pair<int, HVMesh::Node::index_type> np_type;
 
   // internally store the queue as a vector, and pop lower priority nodes 1st
   typedef std::priority_queue<np_type, vector<np_type>, pair_greater> pq_type;
@@ -148,7 +156,7 @@ HexMeshCuthillMcKee::execute()
   pq_type *next_queue = scinew pq_type;
   pq_type *swap_queue;
 
-  HexVolMesh::Node::iterator nbi, nei;
+  HVMesh::Node::iterator nbi, nei;
   hvmesh->begin(nbi); hvmesh->end(nei);
 
   hvmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
@@ -159,7 +167,7 @@ HexMeshCuthillMcKee::execute()
   // pre-process -- build up neighbor lists
   while (nbi != nei) {
 
-    vector<HexVolMesh::Node::index_type> neighbors;
+    vector<HVMesh::Node::index_type> neighbors;
     hvmesh->get_neighbors(neighbors, *nbi);
     for (unsigned int i = 0; i < neighbors.size(); i++) {
 	
@@ -178,7 +186,7 @@ HexMeshCuthillMcKee::execute()
   while(curr_new_idx != -1) {
 
     // find the least-connected, non-visited node
-    HexVolMesh::Node::index_type fewest_nbrs_idx;
+    HVMesh::Node::index_type fewest_nbrs_idx;
     int fewest_nbrs_num=-1;
     hvmesh->begin(nbi);
     while (nbi != nei) {
@@ -204,7 +212,7 @@ HexMeshCuthillMcKee::execute()
       // for all the nodes on this level, push their unvisited neighbors onto 
       //   the next_queue
       while (!curr_queue->empty()) {
-	HexVolMesh::Node::index_type curr_old_idx = curr_queue->top().second;
+	HVMesh::Node::index_type curr_old_idx = curr_queue->top().second;
 	node_get_new_idx[curr_old_idx] = curr_new_idx;
 	node_get_old_idx[curr_new_idx] = curr_old_idx;
 	curr_new_idx--;
@@ -220,7 +228,7 @@ HexMeshCuthillMcKee::execute()
 	  if (!visited[nbr_idx]) {
 	    visited[nbr_idx] = 1;
 	    next_queue->push(np_type((int)(node_nbrs[nbr_idx].size()),
-				 (HexVolMesh::Node::index_type)nbr_idx));
+				 (HVMesh::Node::index_type)nbr_idx));
 	  }
 	}
       }
@@ -259,32 +267,32 @@ HexMeshCuthillMcKee::execute()
   hvmesh->begin(nbi);
   while (nbi != nei) {
     Point p;
-    hvmesh->get_center(p,(HexVolMesh::Node::index_type)node_get_old_idx[*nbi]);
+    hvmesh->get_center(p,(HVMesh::Node::index_type)node_get_old_idx[*nbi]);
     bwmesh->add_point(p);
     ++nbi;
   }
 
   // build up the elements for the new mesh
-  HexVolMesh::Cell::iterator cbi, cei;
+  HVMesh::Cell::iterator cbi, cei;
   hvmesh->begin(cbi);
   hvmesh->end(cei);
   while (cbi != cei) {
-    HexVolMesh::Node::array_type onodes;
+    HVMesh::Node::array_type onodes;
     hvmesh->get_nodes(onodes, *cbi);
-    HexVolMesh::Node::array_type nnodes(onodes.size());
+    HVMesh::Node::array_type nnodes(onodes.size());
     for (unsigned int i = 0; i < onodes.size(); i++)
       nnodes[i] = node_get_new_idx[onodes[i]];
     bwmesh->add_elem(nnodes);
     ++cbi;
   }
 
-  HexVolField<int> *bwfield = scinew HexVolField<int>(bwmesh, 1);
+  HVField_int *bwfield = scinew HVField_int(bwmesh);
   hvmesh->begin(nbi);
   while (nbi != nei) {
     int val;
     hvfield->value(val, *nbi);
     bwfield->set_value(val,
-		       (HexVolMesh::Node::index_type)node_get_new_idx[*nbi]);
+		       (HVMesh::Node::index_type)node_get_new_idx[*nbi]);
     ++nbi;
   }
 
@@ -296,7 +304,7 @@ HexMeshCuthillMcKee::execute()
   bwmesh->end(nei);
   while(nbi != nei) {
 
-	vector<HexVolMesh::Node::index_type> neighbors;
+	vector<HVMesh::Node::index_type> neighbors;
     bwmesh->get_neighbors(neighbors, *nbi);
 
     for (unsigned int i = 0; i < neighbors.size(); i++) {
