@@ -51,7 +51,7 @@ public:
 //! Class for handling of element of type tetrahedron with 
 //! cubic hermitian interpolation
 template <class T>
-class TetCubicHmt : public BasisSimple<T>, 
+class TetCubicHmt : public BasisAddDerivatives<T>, 
                     public TetApprox, 
 		    public TetGaussian3<double>, 
 		    public TetCubicHmtUnitElement
@@ -97,21 +97,21 @@ public:
     get_weights(coords, w); 
 
     return (T)(w[0]  * cd.node0()                   +
-	       w[1]  * derivs_[cd.node0_index()][0] +
-	       w[2]  * derivs_[cd.node0_index()][1] +
-	       w[3]  * derivs_[cd.node0_index()][2] +
+	       w[1]  * this->derivs_[cd.node0_index()][0] +
+	       w[2]  * this->derivs_[cd.node0_index()][1] +
+	       w[3]  * this->derivs_[cd.node0_index()][2] +
 	       w[4]  * cd.node1()		    +
-	       w[5]  * derivs_[cd.node1_index()][0] +
-	       w[6]  * derivs_[cd.node1_index()][1] +
-	       w[7]  * derivs_[cd.node1_index()][2] +
+	       w[5]  * this->derivs_[cd.node1_index()][0] +
+	       w[6]  * this->derivs_[cd.node1_index()][1] +
+	       w[7]  * this->derivs_[cd.node1_index()][2] +
 	       w[8]  * cd.node2()		    +
-	       w[9]  * derivs_[cd.node2_index()][0] +
-	       w[10] * derivs_[cd.node2_index()][1] +
-	       w[11] * derivs_[cd.node2_index()][2] +
+	       w[9]  * this->derivs_[cd.node2_index()][0] +
+	       w[10] * this->derivs_[cd.node2_index()][1] +
+	       w[11] * this->derivs_[cd.node2_index()][2] +
 	       w[12] * cd.node3()		    +
-	       w[13] * derivs_[cd.node3_index()][0] +
-	       w[14] * derivs_[cd.node3_index()][1] +
-	       w[15] * derivs_[cd.node3_index()][2]);
+	       w[13] * this->derivs_[cd.node3_index()][0] +
+	       w[14] * this->derivs_[cd.node3_index()][1] +
+	       w[15] * this->derivs_[cd.node3_index()][2]);
   }
   
   //! get first derivative at parametric coordinate
@@ -126,39 +126,39 @@ public:
  
     derivs[0]=
       T(6*(-1 + x)*x*cd.node0()
-	+(1 + 3*x*x + 2*x*(-2 + y) - y - z*z)*derivs_[cd.node0_index()][0]
-	-2*x*y*derivs_[cd.node0_index()][1]
-	+(-1 + z)*z*derivs_[cd.node0_index()][2]
+	+(1 + 3*x*x + 2*x*(-2 + y) - y - z*z)*this->derivs_[cd.node0_index()][0]
+	-2*x*y*this->derivs_[cd.node0_index()][1]
+	+(-1 + z)*z*this->derivs_[cd.node0_index()][2]
 	-6*(-1 + x)*x*cd.node1()
-	+x*(-2 + 3*x)*derivs_[cd.node1_index()][0]
-	+2*x*y*derivs_[cd.node1_index()][1]
-	-((-1 + z)*z)*derivs_[cd.node1_index()][2]
-	+(y - 2*x*y)*derivs_[cd.node2_index()][0]
-	+z*z*derivs_[cd.node3_index()][0]);
+	+x*(-2 + 3*x)*this->derivs_[cd.node1_index()][0]
+	+2*x*y*this->derivs_[cd.node1_index()][1]
+	-((-1 + z)*z)*this->derivs_[cd.node1_index()][2]
+	+(y - 2*x*y)*this->derivs_[cd.node2_index()][0]
+	+z*z*this->derivs_[cd.node3_index()][0]);
 
     derivs[1]=
       T(6*(-1 + y)*y*cd.node0()
-	+(-1 + x)*x*derivs_[cd.node0_index()][0]
-	+(1 - x*x + 3*y*y + 2*y*(-2 + z) - z)*derivs_[cd.node0_index()][1]
-	-2*y*z*derivs_[cd.node0_index()][2]
-	+x*x*derivs_[cd.node1_index()][1]
+	+(-1 + x)*x*this->derivs_[cd.node0_index()][0]
+	+(1 - x*x + 3*y*y + 2*y*(-2 + z) - z)*this->derivs_[cd.node0_index()][1]
+	-2*y*z*this->derivs_[cd.node0_index()][2]
+	+x*x*this->derivs_[cd.node1_index()][1]
 	-6*(-1 + y)*y*cd.node2()
-	-((-1 + x)*x)*derivs_[cd.node2_index()][0]
-	+y*(-2 + 3*y)*derivs_[cd.node2_index()][1]
-	+2*y*z*derivs_[cd.node2_index()][2]
-	+(z - 2*y*z)*derivs_[cd.node3_index()][1]);
+	-((-1 + x)*x)*this->derivs_[cd.node2_index()][0]
+	+y*(-2 + 3*y)*this->derivs_[cd.node2_index()][1]
+	+2*y*z*this->derivs_[cd.node2_index()][2]
+	+(z - 2*y*z)*this->derivs_[cd.node3_index()][1]);
 
     derivs[2]=
       T(6*(-1 + z)*z*cd.node0()
-	-2*x*z*derivs_[cd.node0_index()][0]
-	+(-1 + y)*y*derivs_[cd.node0_index()][1]
-	+(1 - x - y*y - 4*z + 2*x*z + 3*z*z)*derivs_[cd.node0_index()][2]
-	+(x - 2*x*z)*derivs_[cd.node1_index()][2]
-	+y*y*derivs_[cd.node2_index()][2]
+	-2*x*z*this->derivs_[cd.node0_index()][0]
+	+(-1 + y)*y*this->derivs_[cd.node0_index()][1]
+	+(1 - x - y*y - 4*z + 2*x*z + 3*z*z)*this->derivs_[cd.node0_index()][2]
+	+(x - 2*x*z)*this->derivs_[cd.node1_index()][2]
+	+y*y*this->derivs_[cd.node2_index()][2]
 	-6*(-1 + z)*z*cd.node3()
-	+2*x*z*derivs_[cd.node3_index()][0]
-	-((-1 + y)*y)*derivs_[cd.node3_index()][1]
-	+z*(-2 + 3*z)*derivs_[cd.node3_index()][2]);
+	+2*x*z*this->derivs_[cd.node3_index()][0]
+	-((-1 + y)*y)*this->derivs_[cd.node3_index()][1]
+	+z*(-2 + 3*z)*this->derivs_[cd.node3_index()][2]);
   }
   
   //! get parametric coordinate for value within the element
@@ -170,19 +170,9 @@ public:
     return CL.get_coords(this, coords, value, cd);
   }
  
-  //! add derivative values (dx, dy, dz) for nodes.
-  void add_derivative(const vector<T>  &p) { derivs_.push_back(p); }
-
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);
-
-protected:
-  //! support data (node data is elsewhere)
-
-  //! Cubic Hermitian only needs additonal derivatives stored at each node
-  //! in the topology.
-  vector<vector<T> >          derivs_; 
 };
 
 
@@ -230,7 +220,7 @@ TetCubicHmt<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      TETCUBICHMT_VERSION);
-  Pio(stream, derivs_);
+  Pio(stream, this->derivs_);
   stream.end_class();
 }
 

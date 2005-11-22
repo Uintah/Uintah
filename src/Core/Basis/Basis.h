@@ -1,7 +1,7 @@
 //  
 //  For more information, please see: http://software.sci.utah.edu
 //  
-//  he MIT License
+//  The MIT License
 //  
 //  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 //  University of Utah.
@@ -41,7 +41,7 @@ namespace SCIRun {
 using std::vector;
 
 
-//! Class for handling of element with constant field variables
+//! Class for describing interfaces to basis elements
 template <class T>
 class BasisSimple 
 {
@@ -81,7 +81,7 @@ public:
   }
 
   //! add a derivative value 
-  void add_derivative(const vector<T> &p) 
+  void add_derivatives(const vector<T> &p) 
   {
     ASSERTFAIL("add_derivative not supported by basis");
   }
@@ -92,8 +92,98 @@ public:
     ASSERTFAIL("add_scalefactors not supported by basis");
   }
 
+  //! return number of additional nodes
+  inline int size_node_values()
+  {
+    return -1;
+  }
+
+  //! return number of additional derivatives
+  inline int size_derivatives()
+  {
+    return -1;
+  }
 };
 
+
+//! Class for describing interfaces to basis elements with additional nodes
+template <class T>
+  class BasisAddNodes : public BasisSimple<T> 
+{
+public:
+  BasisAddNodes() {}
+  virtual ~BasisAddNodes() {}
+
+  //! add a node value corresponding to edge
+  inline void add_node_value(const T &p) { nodes_.push_back(p); }
+
+  //! return node value
+  inline T& node_values(int i) { return &nodes_[i]; }
+
+  //! return number of additional nodes
+  inline int size_node_values() { nodes_.size(); }
+
+protected:
+  vector<T>          nodes_;  
+};
+
+
+//! Class for describing interfaces to basis elements with additional derivatives
+template <class T>
+  class BasisAddDerivatives : public BasisSimple<T> 
+{
+public:
+  BasisAddDerivatives() {}
+  virtual ~BasisAddDerivatives() {}
+
+  //! add derivative values (dx, dy, dxy) for nodes.
+  inline void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }
+
+  //! return number of additional derivatives
+  inline int size_derivatives() { derivs_.size(); }
+
+ protected:
+  vector<vector<T> > derivs_; 
+};
+
+
+//! Class for describing interfaces to basis elements with additional derivatives
+//! and scale factors at nodes
+template <class T>
+  class BasisAddDerivativesScaleFactors : public BasisAddDerivatives<T> 
+{
+public:
+  BasisAddDerivativesScaleFactors() {}
+  virtual ~BasisAddDerivativesScaleFactors() {}
+
+  //! add scale factors (sdx, sdy) for nodes.
+  inline void add_scalefactors(const vector<T> &p) { scalefactors_.push_back(p); }
+
+  //! return number of additional derivatives
+  inline int size_scalefactors() { scalefactors_.size(); }
+
+ protected:
+  vector<vector<double> > scalefactors_; 
+};
+
+//! Class for describing interfaces to basis elements with additional derivatives
+//! and scale factors at edges
+template <class T>
+  class BasisAddDerivativesScaleFactorsEdges : public BasisAddDerivatives<T> 
+{
+public:
+  BasisAddDerivativesScaleFactorsEdges() {}
+  virtual ~BasisAddDerivativesScaleFactorsEdges() {}
+
+  //! add scale factors (sdx, sdy) for nodes.
+  inline void add_scalefactors(const vector<T> &p) { scalefactors_.push_back(p[0]); }
+
+  //! return number of additional derivatives
+  inline int size_scalefactors() { scalefactors_.size(); }
+
+ protected:
+  vector<double> scalefactors_; 
+};
 
 }
 #endif // Basis_h

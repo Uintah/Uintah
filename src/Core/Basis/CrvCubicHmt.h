@@ -53,7 +53,7 @@ public:
 //! Class for handling of element of type curve with 
 //! cubic hermitian interpolation
 template <class T>
-class CrvCubicHmt : public BasisSimple<T>, 
+class CrvCubicHmt : public BasisAddDerivatives<T>, 
                     public CrvApprox, 
 		    public CrvGaussian3<double>, 
 		    public CrvCubicHmtUnitElement
@@ -90,9 +90,9 @@ public:
     double w[4];
     get_weights(coords, w); 
     return T(w[0] * cd.node0() +
-	     w[1] * derivs_[cd.node0_index()] +
+	     w[1] * this->derivs_[cd.node0_index()][0] +
 	     w[2] * cd.node1() +
-	     w[3] * derivs_[cd.node1_index()]);
+	     w[3] * this->derivs_[cd.node1_index()][0]);
   }
   
   //! get first derivative at parametric coordinate
@@ -105,13 +105,10 @@ public:
     derivs.resize(1);
 
     derivs[0] = T(6*(-1 + x)*x * cd.node0() 
-		  +(1 - 4*x + 3*x*x) * derivs_[cd.node0_index()] 
+		  +(1 - 4*x + 3*x*x) * this->derivs_[cd.node0_index()][0] 
 		  -6*(-1 + x)*x * cd.node1() 
-		  +x*(-2 + 3*x) * derivs_[cd.node1_index()]);
+		  +x*(-2 + 3*x) * this->derivs_[cd.node1_index()][0]);
   }
-
-  //! add a derivative value (dx) for nodes
-  void add_derivative(const vector<T> &p) { derivs_.push_back(p[0]); };
 
   static  const string type_name(int n = -1);
 
@@ -125,12 +122,6 @@ public:
   }
      
   virtual void io (Piostream& str);
-protected:
-  //! Additional support values.
-
-  //! Cubic Hermitian only needs additonal derivatives stored at each node
-  //! in the topology.
-  vector<T>          derivs_; 
 };
 
 
@@ -177,7 +168,7 @@ CrvCubicHmt<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      CRVCUBICHMT_BASIS_VERSION);
-  Pio(stream, derivs_);
+  Pio(stream, this->derivs_);
   stream.end_class();
 }
  

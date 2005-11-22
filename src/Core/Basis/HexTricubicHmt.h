@@ -52,7 +52,7 @@ public:
 //! Class for handling of element of type hexahedron with 
 //! tricubic hermitian interpolation
 template <class T>
-class HexTricubicHmt : public BasisSimple<T>, 
+class HexTricubicHmt : public BasisAddDerivatives<T>, 
                        public HexApprox, 
 		       public HexGaussian3<double>, 
 		       public HexTricubicHmtUnitElement
@@ -152,69 +152,69 @@ public:
     double w[64];
     get_weights(coords, w); 
     return (T)(w[0]  * cd.node0() +
-	       w[1]  * derivs_[cd.node0_index()][0] +
-	       w[2]  * derivs_[cd.node0_index()][1] +
-	       w[3]  * derivs_[cd.node0_index()][2] +
-	       w[4]  * derivs_[cd.node0_index()][3] +
-	       w[5]  * derivs_[cd.node0_index()][4] +
-	       w[6]  * derivs_[cd.node0_index()][5] +
-	       w[7]  * derivs_[cd.node0_index()][6] +
+	       w[1]  * this->derivs_[cd.node0_index()][0] +
+	       w[2]  * this->derivs_[cd.node0_index()][1] +
+	       w[3]  * this->derivs_[cd.node0_index()][2] +
+	       w[4]  * this->derivs_[cd.node0_index()][3] +
+	       w[5]  * this->derivs_[cd.node0_index()][4] +
+	       w[6]  * this->derivs_[cd.node0_index()][5] +
+	       w[7]  * this->derivs_[cd.node0_index()][6] +
 	       w[8]  * cd.node1()		    +
-	       w[9]  * derivs_[cd.node1_index()][0] +
-	       w[10] * derivs_[cd.node1_index()][1] +
-	       w[11] * derivs_[cd.node1_index()][2] +
-	       w[12] * derivs_[cd.node1_index()][3] +
-	       w[13] * derivs_[cd.node1_index()][4] +  
-	       w[14] * derivs_[cd.node1_index()][5] +
-	       w[15] * derivs_[cd.node1_index()][6] +
+	       w[9]  * this->derivs_[cd.node1_index()][0] +
+	       w[10] * this->derivs_[cd.node1_index()][1] +
+	       w[11] * this->derivs_[cd.node1_index()][2] +
+	       w[12] * this->derivs_[cd.node1_index()][3] +
+	       w[13] * this->derivs_[cd.node1_index()][4] +  
+	       w[14] * this->derivs_[cd.node1_index()][5] +
+	       w[15] * this->derivs_[cd.node1_index()][6] +
 	       w[16] * cd.node2()		    +
-	       w[17] * derivs_[cd.node2_index()][0] +
-	       w[18] * derivs_[cd.node2_index()][1] +
-	       w[19] * derivs_[cd.node2_index()][2] +
-	       w[20] * derivs_[cd.node2_index()][3] +
-	       w[21] * derivs_[cd.node2_index()][4] +
-	       w[22] * derivs_[cd.node2_index()][5] +
-	       w[23] * derivs_[cd.node2_index()][6] +
+	       w[17] * this->derivs_[cd.node2_index()][0] +
+	       w[18] * this->derivs_[cd.node2_index()][1] +
+	       w[19] * this->derivs_[cd.node2_index()][2] +
+	       w[20] * this->derivs_[cd.node2_index()][3] +
+	       w[21] * this->derivs_[cd.node2_index()][4] +
+	       w[22] * this->derivs_[cd.node2_index()][5] +
+	       w[23] * this->derivs_[cd.node2_index()][6] +
 	       w[24] * cd.node3()		    +
-	       w[25] * derivs_[cd.node3_index()][0] +
-	       w[26] * derivs_[cd.node3_index()][1] +
-	       w[27] * derivs_[cd.node3_index()][2] +
-	       w[28] * derivs_[cd.node3_index()][3] +
-	       w[29] * derivs_[cd.node3_index()][4] +
-	       w[30] * derivs_[cd.node3_index()][5] +
-	       w[31] * derivs_[cd.node3_index()][6] +
+	       w[25] * this->derivs_[cd.node3_index()][0] +
+	       w[26] * this->derivs_[cd.node3_index()][1] +
+	       w[27] * this->derivs_[cd.node3_index()][2] +
+	       w[28] * this->derivs_[cd.node3_index()][3] +
+	       w[29] * this->derivs_[cd.node3_index()][4] +
+	       w[30] * this->derivs_[cd.node3_index()][5] +
+	       w[31] * this->derivs_[cd.node3_index()][6] +
 	       w[32] * cd.node4()		    +
-	       w[33] * derivs_[cd.node4_index()][0] +
-	       w[34] * derivs_[cd.node4_index()][1] +
-	       w[35] * derivs_[cd.node4_index()][2] +
-	       w[36] * derivs_[cd.node4_index()][3] +
-	       w[37] * derivs_[cd.node4_index()][4] +
-	       w[38] * derivs_[cd.node4_index()][5] +
-	       w[39] * derivs_[cd.node4_index()][6] +
+	       w[33] * this->derivs_[cd.node4_index()][0] +
+	       w[34] * this->derivs_[cd.node4_index()][1] +
+	       w[35] * this->derivs_[cd.node4_index()][2] +
+	       w[36] * this->derivs_[cd.node4_index()][3] +
+	       w[37] * this->derivs_[cd.node4_index()][4] +
+	       w[38] * this->derivs_[cd.node4_index()][5] +
+	       w[39] * this->derivs_[cd.node4_index()][6] +
 	       w[40] * cd.node5()		    +
-	       w[41] * derivs_[cd.node5_index()][0] +
-	       w[42] * derivs_[cd.node5_index()][1] +
-	       w[43] * derivs_[cd.node5_index()][2] +
-	       w[44] * derivs_[cd.node5_index()][3] +
-	       w[45] * derivs_[cd.node5_index()][4] +
-	       w[46] * derivs_[cd.node5_index()][5] +
-	       w[47] * derivs_[cd.node5_index()][6] +
+	       w[41] * this->derivs_[cd.node5_index()][0] +
+	       w[42] * this->derivs_[cd.node5_index()][1] +
+	       w[43] * this->derivs_[cd.node5_index()][2] +
+	       w[44] * this->derivs_[cd.node5_index()][3] +
+	       w[45] * this->derivs_[cd.node5_index()][4] +
+	       w[46] * this->derivs_[cd.node5_index()][5] +
+	       w[47] * this->derivs_[cd.node5_index()][6] +
 	       w[48] * cd.node6()		    +
-	       w[49] * derivs_[cd.node6_index()][0] +
-	       w[50] * derivs_[cd.node6_index()][1] +
-	       w[51] * derivs_[cd.node6_index()][2] +
-	       w[52] * derivs_[cd.node6_index()][3] +
-	       w[53] * derivs_[cd.node6_index()][4] +
-	       w[54] * derivs_[cd.node6_index()][5] +
-	       w[55] * derivs_[cd.node6_index()][6] +
+	       w[49] * this->derivs_[cd.node6_index()][0] +
+	       w[50] * this->derivs_[cd.node6_index()][1] +
+	       w[51] * this->derivs_[cd.node6_index()][2] +
+	       w[52] * this->derivs_[cd.node6_index()][3] +
+	       w[53] * this->derivs_[cd.node6_index()][4] +
+	       w[54] * this->derivs_[cd.node6_index()][5] +
+	       w[55] * this->derivs_[cd.node6_index()][6] +
 	       w[56] * cd.node7()		    +
-	       w[57] * derivs_[cd.node7_index()][0] +
-	       w[58] * derivs_[cd.node7_index()][1] +
-	       w[59] * derivs_[cd.node7_index()][2] +
-	       w[60] * derivs_[cd.node7_index()][3] +
-	       w[61] * derivs_[cd.node7_index()][4] +
-	       w[62] * derivs_[cd.node7_index()][5] +
-	       w[63] * derivs_[cd.node7_index()][6]);
+	       w[57] * this->derivs_[cd.node7_index()][0] +
+	       w[58] * this->derivs_[cd.node7_index()][1] +
+	       w[59] * this->derivs_[cd.node7_index()][2] +
+	       w[60] * this->derivs_[cd.node7_index()][3] +
+	       w[61] * this->derivs_[cd.node7_index()][4] +
+	       w[62] * this->derivs_[cd.node7_index()][5] +
+	       w[63] * this->derivs_[cd.node7_index()][6]);
   }
   
   //! get first derivative at parametric coordinate
@@ -234,201 +234,201 @@ public:
 
     derivs[0]=
       T(6*(-1 + x)*x*y12*(1 + 2*y)*z12*(1 + 2*z)*cd.node0()
-	+(1 - 4*x + 3*x2)*y12*(1 + 2*y)*z12*(1 + 2*z)*derivs_[cd.node0_index()][0]
-	+6*(-1 + x)*x*y12*y*z12*(1 + 2*z)*derivs_[cd.node0_index()][1]
-	+6*(-1 + x)*x*y12*(1 + 2*y)*z12*z*derivs_[cd.node0_index()][2]
-	+(1 - 4*x + 3*x2)*y12*y*z12*(1 + 2*z)*derivs_[cd.node0_index()][3]
-	+6*(-1 + x)*x*y12*y*z12*z*derivs_[cd.node0_index()][4]
-	+(1 - 4*x + 3*x2)*y12*(1 + 2*y)*z12*z*derivs_[cd.node0_index()][5]
-	+(1 - 4*x + 3*x2)*y12*y*z12*z*derivs_[cd.node0_index()][6]
+	+(1 - 4*x + 3*x2)*y12*(1 + 2*y)*z12*(1 + 2*z)*this->derivs_[cd.node0_index()][0]
+	+6*(-1 + x)*x*y12*y*z12*(1 + 2*z)*this->derivs_[cd.node0_index()][1]
+	+6*(-1 + x)*x*y12*(1 + 2*y)*z12*z*this->derivs_[cd.node0_index()][2]
+	+(1 - 4*x + 3*x2)*y12*y*z12*(1 + 2*z)*this->derivs_[cd.node0_index()][3]
+	+6*(-1 + x)*x*y12*y*z12*z*this->derivs_[cd.node0_index()][4]
+	+(1 - 4*x + 3*x2)*y12*(1 + 2*y)*z12*z*this->derivs_[cd.node0_index()][5]
+	+(1 - 4*x + 3*x2)*y12*y*z12*z*this->derivs_[cd.node0_index()][6]
 	-6*(-1 + x)*x*y12*(1 + 2*y)*z12*(1 + 2*z)*cd.node1()
-	+x*(-2 + 3*x)*y12*(1 + 2*y)*z12*(1 + 2*z)*derivs_[cd.node1_index()][0]
-	-6*(-1 + x)*x*y12*y*z12*(1 + 2*z)*derivs_[cd.node1_index()][1]
-	-6*(-1 + x)*x*y12*(1 + 2*y)*z12*z*derivs_[cd.node1_index()][2]
-	+x*(-2 + 3*x)*y12*y*z12*(1 + 2*z)*derivs_[cd.node1_index()][3]
-	-6*(-1 + x)*x*y12*y*z12*z*derivs_[cd.node1_index()][4]
-	+x*(-2 + 3*x)*y12*(1 + 2*y)*z12*z*derivs_[cd.node1_index()][5]
-	+x*(-2 + 3*x)*y12*y*z12*z*derivs_[cd.node1_index()][6]
+	+x*(-2 + 3*x)*y12*(1 + 2*y)*z12*(1 + 2*z)*this->derivs_[cd.node1_index()][0]
+	-6*(-1 + x)*x*y12*y*z12*(1 + 2*z)*this->derivs_[cd.node1_index()][1]
+	-6*(-1 + x)*x*y12*(1 + 2*y)*z12*z*this->derivs_[cd.node1_index()][2]
+	+x*(-2 + 3*x)*y12*y*z12*(1 + 2*z)*this->derivs_[cd.node1_index()][3]
+	-6*(-1 + x)*x*y12*y*z12*z*this->derivs_[cd.node1_index()][4]
+	+x*(-2 + 3*x)*y12*(1 + 2*y)*z12*z*this->derivs_[cd.node1_index()][5]
+	+x*(-2 + 3*x)*y12*y*z12*z*this->derivs_[cd.node1_index()][6]
 	+6*(-1 + x)*x*y2*(-3 + 2*y)*z12*(1 + 2*z)*cd.node2()
-	-(x*(-2 + 3*x)*y2*(-3 + 2*y)*z12*(1 + 2*z))*derivs_[cd.node2_index()][0]
-	-6*(-1 + x)*x*(-1 + y)*y2*z12*(1 + 2*z)*derivs_[cd.node2_index()][1]
-	+6*(-1 + x)*x*y2*(-3 + 2*y)*z12*z*derivs_[cd.node2_index()][2]
-	+x*(-2 + 3*x)*(-1 + y)*y2*z12*(1 + 2*z)*derivs_[cd.node2_index()][3]
-	-6*(-1 + x)*x*(-1 + y)*y2*z12*z*derivs_[cd.node2_index()][4]
-	-(x*(-2 + 3*x)*y2*(-3 + 2*y)*z12*z)*derivs_[cd.node2_index()][5]
-	+x*(-2 + 3*x)*(-1 + y)*y2*z12*z*derivs_[cd.node2_index()][6]
+	-(x*(-2 + 3*x)*y2*(-3 + 2*y)*z12*(1 + 2*z))*this->derivs_[cd.node2_index()][0]
+	-6*(-1 + x)*x*(-1 + y)*y2*z12*(1 + 2*z)*this->derivs_[cd.node2_index()][1]
+	+6*(-1 + x)*x*y2*(-3 + 2*y)*z12*z*this->derivs_[cd.node2_index()][2]
+	+x*(-2 + 3*x)*(-1 + y)*y2*z12*(1 + 2*z)*this->derivs_[cd.node2_index()][3]
+	-6*(-1 + x)*x*(-1 + y)*y2*z12*z*this->derivs_[cd.node2_index()][4]
+	-(x*(-2 + 3*x)*y2*(-3 + 2*y)*z12*z)*this->derivs_[cd.node2_index()][5]
+	+x*(-2 + 3*x)*(-1 + y)*y2*z12*z*this->derivs_[cd.node2_index()][6]
 	-6*(-1 + x)*x*y2*(-3 + 2*y)*z12*(1 + 2*z)*cd.node3()
-	-((1 - 4*x + 3*x2)*y2*(-3 + 2*y)*z12*(1 + 2*z))*derivs_[cd.node3_index()][0]
-	+6*(-1 + x)*x*(-1 + y)*y2*z12*(1 + 2*z)*derivs_[cd.node3_index()][2]
-	-6*(-1 + x)*x*y2*(-3 + 2*y)*z12*z*derivs_[cd.node3_index()][3]
-	+(1 - 4*x + 3*x2)*(-1 + y)*y2*z12*(1 + 2*z)*derivs_[cd.node3_index()][4]
-	+6*(-1 + x)*x*(-1 + y)*y2*z12*z*derivs_[cd.node3_index()][5]
-	-((1 - 4*x + 3*x2)*y2*(-3 + 2*y)*z12*z)*derivs_[cd.node3_index()][6]
-	+(1 - 4*x + 3*x2)*(-1 + y)*y2*z12*z*derivs_[cd.node3_index()][7]
+	-((1 - 4*x + 3*x2)*y2*(-3 + 2*y)*z12*(1 + 2*z))*this->derivs_[cd.node3_index()][0]
+	+6*(-1 + x)*x*(-1 + y)*y2*z12*(1 + 2*z)*this->derivs_[cd.node3_index()][2]
+	-6*(-1 + x)*x*y2*(-3 + 2*y)*z12*z*this->derivs_[cd.node3_index()][3]
+	+(1 - 4*x + 3*x2)*(-1 + y)*y2*z12*(1 + 2*z)*this->derivs_[cd.node3_index()][4]
+	+6*(-1 + x)*x*(-1 + y)*y2*z12*z*this->derivs_[cd.node3_index()][5]
+	-((1 - 4*x + 3*x2)*y2*(-3 + 2*y)*z12*z)*this->derivs_[cd.node3_index()][6]
+	+(1 - 4*x + 3*x2)*(-1 + y)*y2*z12*z*this->derivs_[cd.node3_index()][7]
 	-6*(-1 + x)*x*y12*(1 + 2*y)*z2*(-3 + 2*z)*cd.node4()
-	-((1 - 4*x + 3*x2)*y12*(1 + 2*y)*z2*(-3 + 2*z))*derivs_[cd.node4_index()][0]
-	-6*(-1 + x)*x*y12*y*z2*(-3 + 2*z)*derivs_[cd.node4_index()][1]
-	+6*(-1 + x)*x*y12*(1 + 2*y)*(-1 + z)*z2*derivs_[cd.node4_index()][2]
-	-((1 - 4*x + 3*x2)*y12*y*z2*(-3 + 2*z))*derivs_[cd.node4_index()][3]
-	+6*(-1 + x)*x*y12*y*(-1 + z)*z2*derivs_[cd.node4_index()][4]
-	+(1 - 4*x + 3*x2)*y12*(1 + 2*y)*(-1 + z)*z2*derivs_[cd.node4_index()][5]
-	+(1 - 4*x + 3*x2)*y12*y*(-1 + z)*z2*derivs_[cd.node4_index()][6]
+	-((1 - 4*x + 3*x2)*y12*(1 + 2*y)*z2*(-3 + 2*z))*this->derivs_[cd.node4_index()][0]
+	-6*(-1 + x)*x*y12*y*z2*(-3 + 2*z)*this->derivs_[cd.node4_index()][1]
+	+6*(-1 + x)*x*y12*(1 + 2*y)*(-1 + z)*z2*this->derivs_[cd.node4_index()][2]
+	-((1 - 4*x + 3*x2)*y12*y*z2*(-3 + 2*z))*this->derivs_[cd.node4_index()][3]
+	+6*(-1 + x)*x*y12*y*(-1 + z)*z2*this->derivs_[cd.node4_index()][4]
+	+(1 - 4*x + 3*x2)*y12*(1 + 2*y)*(-1 + z)*z2*this->derivs_[cd.node4_index()][5]
+	+(1 - 4*x + 3*x2)*y12*y*(-1 + z)*z2*this->derivs_[cd.node4_index()][6]
 	+6*(-1 + x)*x*y12*(1 + 2*y)*z2*(-3 + 2*z)*cd.node5()
-	-(x*(-2 + 3*x)*y12*(1 + 2*y)*z2*(-3 + 2*z))*derivs_[cd.node5_index()][0]
-	+6*(-1 + x)*x*y12*y*z2*(-3 + 2*z)*derivs_[cd.node5_index()][1]
-	-6*(-1 + x)*x*y12*(1 + 2*y)*(-1 + z)*z2*derivs_[cd.node5_index()][2]
-	-(x*(-2 + 3*x)*y12*y*z2*(-3 + 2*z))*derivs_[cd.node5_index()][3]
-	-6*(-1 + x)*x*y12*y*(-1 + z)*z2*derivs_[cd.node5_index()][4]
-	+x*(-2 + 3*x)*y12*(1 + 2*y)*(-1 + z)*z2*derivs_[cd.node5_index()][5]
-	+x*(-2 + 3*x)*y12*y*(-1 + z)*z2*derivs_[cd.node5_index()][6]
+	-(x*(-2 + 3*x)*y12*(1 + 2*y)*z2*(-3 + 2*z))*this->derivs_[cd.node5_index()][0]
+	+6*(-1 + x)*x*y12*y*z2*(-3 + 2*z)*this->derivs_[cd.node5_index()][1]
+	-6*(-1 + x)*x*y12*(1 + 2*y)*(-1 + z)*z2*this->derivs_[cd.node5_index()][2]
+	-(x*(-2 + 3*x)*y12*y*z2*(-3 + 2*z))*this->derivs_[cd.node5_index()][3]
+	-6*(-1 + x)*x*y12*y*(-1 + z)*z2*this->derivs_[cd.node5_index()][4]
+	+x*(-2 + 3*x)*y12*(1 + 2*y)*(-1 + z)*z2*this->derivs_[cd.node5_index()][5]
+	+x*(-2 + 3*x)*y12*y*(-1 + z)*z2*this->derivs_[cd.node5_index()][6]
 	-6*(-1 + x)*x*y2*(-3 + 2*y)*z2*(-3 + 2*z)*cd.node6()
-	+x*(-2 + 3*x)*y2*(-3 + 2*y)*z2*(-3 + 2*z)*derivs_[cd.node6_index()][0]
-	+6*(-1 + x)*x*(-1 + y)*y2*z2*(-3 + 2*z)*derivs_[cd.node6_index()][1]
-	+6*(-1 + x)*x*y2*(-3 + 2*y)*(-1 + z)*z2*derivs_[cd.node6_index()][2]
-	-(x*(-2 + 3*x)*(-1 + y)*y2*z2*(-3 + 2*z))*derivs_[cd.node6_index()][3]
-	-6*(-1 + x)*x*(-1 + y)*y2*(-1 + z)*z2*derivs_[cd.node6_index()][4]
-	-(x*(-2 + 3*x)*y2*(-3 + 2*y)*(-1 + z)*z2)*derivs_[cd.node6_index()][5]
-	+x*(-2 + 3*x)*(-1 + y)*y2*(-1 + z)*z2*derivs_[cd.node6_index()][6]
+	+x*(-2 + 3*x)*y2*(-3 + 2*y)*z2*(-3 + 2*z)*this->derivs_[cd.node6_index()][0]
+	+6*(-1 + x)*x*(-1 + y)*y2*z2*(-3 + 2*z)*this->derivs_[cd.node6_index()][1]
+	+6*(-1 + x)*x*y2*(-3 + 2*y)*(-1 + z)*z2*this->derivs_[cd.node6_index()][2]
+	-(x*(-2 + 3*x)*(-1 + y)*y2*z2*(-3 + 2*z))*this->derivs_[cd.node6_index()][3]
+	-6*(-1 + x)*x*(-1 + y)*y2*(-1 + z)*z2*this->derivs_[cd.node6_index()][4]
+	-(x*(-2 + 3*x)*y2*(-3 + 2*y)*(-1 + z)*z2)*this->derivs_[cd.node6_index()][5]
+	+x*(-2 + 3*x)*(-1 + y)*y2*(-1 + z)*z2*this->derivs_[cd.node6_index()][6]
 	+6*(-1 + x)*x*y2*(-3 +  2*y)*z2*(-3 + 2*z)*cd.node7()
-	+(1 - 4*x + 3*x2)*y2*(-3 + 2*y)*z2*(-3 + 2*z)*derivs_[cd.node7_index()][0]
-	-6*(-1 + x)*x*(-1 + y)*y2*z2*(-3 + 2*z)*derivs_[cd.node7_index()][1]
-	-6*(-1 + x)*x*y2*(-3 + 2*y)*(-1 + z)*z2*derivs_[cd.node7_index()][2]
-	-((1 - 4*x + 3*x2)*(-1 + y)*y2*z2*(-3 + 2*z))*derivs_[cd.node7_index()][3]
-	+6*(-1 + x)*x*(-1 + y)*y2*(-1 + z)*z2*derivs_[cd.node7_index()][4]
-	-((1 - 4*x + 3*x2)*y2*(-3 + 2*y)*(-1 + z)*z2)*derivs_[cd.node7_index()][5]
-	+(1 - 4*x + 3*x2)*(-1 + y)*y2*(-1 + z)*z2*derivs_[cd.node7_index()][6]);
+	+(1 - 4*x + 3*x2)*y2*(-3 + 2*y)*z2*(-3 + 2*z)*this->derivs_[cd.node7_index()][0]
+	-6*(-1 + x)*x*(-1 + y)*y2*z2*(-3 + 2*z)*this->derivs_[cd.node7_index()][1]
+	-6*(-1 + x)*x*y2*(-3 + 2*y)*(-1 + z)*z2*this->derivs_[cd.node7_index()][2]
+	-((1 - 4*x + 3*x2)*(-1 + y)*y2*z2*(-3 + 2*z))*this->derivs_[cd.node7_index()][3]
+	+6*(-1 + x)*x*(-1 + y)*y2*(-1 + z)*z2*this->derivs_[cd.node7_index()][4]
+	-((1 - 4*x + 3*x2)*y2*(-3 + 2*y)*(-1 + z)*z2)*this->derivs_[cd.node7_index()][5]
+	+(1 - 4*x + 3*x2)*(-1 + y)*y2*(-1 + z)*z2*this->derivs_[cd.node7_index()][6]);
       
     derivs[1]=
       T(6*x12*(1 + 2*x)*(-1 + y)*y*z12*(1 + 2*z)*cd.node0()
-	+6*x12*x*(-1 + y)*y*z12*(1 + 2*z)*derivs_[cd.node0_index()][0]
-	+x12*(1 + 2*x)*(1 - 4*y + 3*y2)*z12*(1 + 2*z)*derivs_[cd.node0_index()][1]
-	+6*x12*(1 + 2*x)*(-1 + y)*y*z12*z*derivs_[cd.node0_index()][2]
-	+x12*x*(1 - 4*y + 3*y2)*z12*(1 + 2*z)*derivs_[cd.node0_index()][3]
-	+x12*(1 + 2*x)*(1 - 4*y + 3*y2)*z12*z*derivs_[cd.node0_index()][4]
-	+6*x12*x*(-1 + y)*y*z12*z*derivs_[cd.node0_index()][5]
-	+x12*x*(1 - 4*y + 3*y2)*z12*z*derivs_[cd.node0_index()][6]
+	+6*x12*x*(-1 + y)*y*z12*(1 + 2*z)*this->derivs_[cd.node0_index()][0]
+	+x12*(1 + 2*x)*(1 - 4*y + 3*y2)*z12*(1 + 2*z)*this->derivs_[cd.node0_index()][1]
+	+6*x12*(1 + 2*x)*(-1 + y)*y*z12*z*this->derivs_[cd.node0_index()][2]
+	+x12*x*(1 - 4*y + 3*y2)*z12*(1 + 2*z)*this->derivs_[cd.node0_index()][3]
+	+x12*(1 + 2*x)*(1 - 4*y + 3*y2)*z12*z*this->derivs_[cd.node0_index()][4]
+	+6*x12*x*(-1 + y)*y*z12*z*this->derivs_[cd.node0_index()][5]
+	+x12*x*(1 - 4*y + 3*y2)*z12*z*this->derivs_[cd.node0_index()][6]
 	-6*x2*(-3 + 2*x)*(-1 + y)*y*z12*(1 + 2*z)*cd.node1()
-	+6*(-1 + x)*x2*(-1 + y)*y*z12*(1 + 2*z)*derivs_[cd.node1_index()][0]
-	-(x2*(-3 + 2*x)*(1 - 4*y + 3*y2)*z12*(1 + 2*z))*derivs_[cd.node1_index()][1]
-	-6*x2*(-3 + 2*x)*(-1 + y)*y*z12*z*derivs_[cd.node1_index()][2]
-	+(-1 + x)*x2*(1 - 4*y + 3*y2)*z12*(1 + 2*z)*derivs_[cd.node1_index()][3]
-	-(x2*(-3 + 2*x)*(1 - 4*y + 3*y2)*z12*z)*derivs_[cd.node1_index()][4]
-	+6*(-1 + x)*x2*(-1 + y)*y*z12*z*derivs_[cd.node1_index()][5]
-	+(-1 + x)*x2*(1 - 4*y + 3*y2)*z12*z*derivs_[cd.node1_index()][6]
+	+6*(-1 + x)*x2*(-1 + y)*y*z12*(1 + 2*z)*this->derivs_[cd.node1_index()][0]
+	-(x2*(-3 + 2*x)*(1 - 4*y + 3*y2)*z12*(1 + 2*z))*this->derivs_[cd.node1_index()][1]
+	-6*x2*(-3 + 2*x)*(-1 + y)*y*z12*z*this->derivs_[cd.node1_index()][2]
+	+(-1 + x)*x2*(1 - 4*y + 3*y2)*z12*(1 + 2*z)*this->derivs_[cd.node1_index()][3]
+	-(x2*(-3 + 2*x)*(1 - 4*y + 3*y2)*z12*z)*this->derivs_[cd.node1_index()][4]
+	+6*(-1 + x)*x2*(-1 + y)*y*z12*z*this->derivs_[cd.node1_index()][5]
+	+(-1 + x)*x2*(1 - 4*y + 3*y2)*z12*z*this->derivs_[cd.node1_index()][6]
 	+6*x2*(-3 + 2*x)*(-1 + y)*y*z12*(1 + 2*z)*cd.node2()
-	-6*(-1 + x)*x2*(-1 + y)*y*z12*(1 + 2*z)*derivs_[cd.node2_index()][0]
-	-(x2*(-3 + 2*x)*y*(-2 + 3*y)*z12*(1 + 2*z))*derivs_[cd.node2_index()][1]
-	+6*x2*(-3 + 2*x)*(-1 + y)*y*z12*z*derivs_[cd.node2_index()][2]
-	+(-1 + x)*x2*y*(-2 + 3*y)*z12*(1 + 2*z)*derivs_[cd.node2_index()][3]
-	-(x2*(-3 + 2*x)*y*(-2 + 3*y)*z12*z)*derivs_[cd.node2_index()][4]
-	-6*(-1 + x)*x2*(-1 + y)*y*z12*z*derivs_[cd.node2_index()][5]
-	+(-1 + x)*x2*y*(-2 + 3*y)*z12*z*derivs_[cd.node2_index()][6]
+	-6*(-1 + x)*x2*(-1 + y)*y*z12*(1 + 2*z)*this->derivs_[cd.node2_index()][0]
+	-(x2*(-3 + 2*x)*y*(-2 + 3*y)*z12*(1 + 2*z))*this->derivs_[cd.node2_index()][1]
+	+6*x2*(-3 + 2*x)*(-1 + y)*y*z12*z*this->derivs_[cd.node2_index()][2]
+	+(-1 + x)*x2*y*(-2 + 3*y)*z12*(1 + 2*z)*this->derivs_[cd.node2_index()][3]
+	-(x2*(-3 + 2*x)*y*(-2 + 3*y)*z12*z)*this->derivs_[cd.node2_index()][4]
+	-6*(-1 + x)*x2*(-1 + y)*y*z12*z*this->derivs_[cd.node2_index()][5]
+	+(-1 + x)*x2*y*(-2 + 3*y)*z12*z*this->derivs_[cd.node2_index()][6]
 	-6*x12*(1 + 2*x)*(-1 + y)*y*z12*(1 + 2*z)*cd.node3()
-	-6*x12*x*(-1 + y)*y*z12*(1 + 2*z)*derivs_[cd.node3_index()][0]
-	+x12*(1 + 2*x)*y*(-2 + 3*y)*z12*(1 + 2*z)*derivs_[cd.node3_index()][1]
-	-6*x12*(1 + 2*x)*(-1 + y)*y*z12*z*derivs_[cd.node3_index()][2]
-	+x12*x*y*(-2 + 3*y)*z12*(1 + 2*z)*derivs_[cd.node3_index()][3]
-	+x12*(1 + 2*x)*y*(-2 + 3*y)*z12*z*derivs_[cd.node3_index()][4]
-	-6*x12*x*(-1 + y)*y*z12*z*derivs_[cd.node3_index()][5]
-	+x12*x*y*(-2 + 3*y)*z12*z*derivs_[cd.node3_index()][6]
+	-6*x12*x*(-1 + y)*y*z12*(1 + 2*z)*this->derivs_[cd.node3_index()][0]
+	+x12*(1 + 2*x)*y*(-2 + 3*y)*z12*(1 + 2*z)*this->derivs_[cd.node3_index()][1]
+	-6*x12*(1 + 2*x)*(-1 + y)*y*z12*z*this->derivs_[cd.node3_index()][2]
+	+x12*x*y*(-2 + 3*y)*z12*(1 + 2*z)*this->derivs_[cd.node3_index()][3]
+	+x12*(1 + 2*x)*y*(-2 + 3*y)*z12*z*this->derivs_[cd.node3_index()][4]
+	-6*x12*x*(-1 + y)*y*z12*z*this->derivs_[cd.node3_index()][5]
+	+x12*x*y*(-2 + 3*y)*z12*z*this->derivs_[cd.node3_index()][6]
 	-6*x12*(1 + 2*x)*(-1 + y)*y*z2*(-3 + 2*z)*cd.node4()
-	-6*x12*x*(-1 + y)*y*z2*(-3 + 2*z)*derivs_[cd.node4_index()][0]
-	-(x12*(1 + 2*x)*(1 - 4*y + 3*y2)*z2*(-3 + 2*z))*derivs_[cd.node4_index()][1]
-	+6*x12*(1 + 2*x)*(-1 + y)*y*(-1 + z)*z2*derivs_[cd.node4_index()][2]
-	-(x12*x*(1 - 4*y + 3*y2)*z2*(-3 + 2*z))*derivs_[cd.node4_index()][3]
-	+x12*(1 + 2*x)*(1 - 4*y + 3*y2)*(-1 + z)*z2*derivs_[cd.node4_index()][4]
-	+6*x12*x*(-1 + y)*y*(-1 + z)*z2*derivs_[cd.node4_index()][5]
-	+x12*x*(1 - 4*y + 3*y2)*(-1 + z)*z2*derivs_[cd.node4_index()][6]
+	-6*x12*x*(-1 + y)*y*z2*(-3 + 2*z)*this->derivs_[cd.node4_index()][0]
+	-(x12*(1 + 2*x)*(1 - 4*y + 3*y2)*z2*(-3 + 2*z))*this->derivs_[cd.node4_index()][1]
+	+6*x12*(1 + 2*x)*(-1 + y)*y*(-1 + z)*z2*this->derivs_[cd.node4_index()][2]
+	-(x12*x*(1 - 4*y + 3*y2)*z2*(-3 + 2*z))*this->derivs_[cd.node4_index()][3]
+	+x12*(1 + 2*x)*(1 - 4*y + 3*y2)*(-1 + z)*z2*this->derivs_[cd.node4_index()][4]
+	+6*x12*x*(-1 + y)*y*(-1 + z)*z2*this->derivs_[cd.node4_index()][5]
+	+x12*x*(1 - 4*y + 3*y2)*(-1 + z)*z2*this->derivs_[cd.node4_index()][6]
 	+6*x2*(-3 + 2*x)*(-1 + y)*y*z2*(-3 + 2*z)*cd.node5()
-	-6*(-1 + x)*x2*(-1 + y)*y*z2*(-3 + 2*z)*derivs_[cd.node5_index()][0]
-	+x2*(-3 + 2*x)*(1 - 4*y + 3*y2)*z2*(-3 + 2*z)*derivs_[cd.node5_index()][1]
-	-6*x2*(-3 + 2*x)*(-1 + y)*y*(-1 + z)*z2*derivs_[cd.node5_index()][2]
-	-((-1 + x)*x2*(1 - 4*y + 3*y2)*z2*(-3 + 2*z))*derivs_[cd.node5_index()][3]
-	-(x2*(-3 + 2*x)*(1 - 4*y + 3*y2)*(-1 + z)*z2)*derivs_[cd.node5_index()][4]
-	+6*(-1 + x)*x2*(-1 + y)*y*(-1 + z)*z2*derivs_[cd.node5_index()][5]
-	+(-1 + x)*x2*(1 - 4*y + 3*y2)*(-1 + z)*z2*derivs_[cd.node5_index()][6]
+	-6*(-1 + x)*x2*(-1 + y)*y*z2*(-3 + 2*z)*this->derivs_[cd.node5_index()][0]
+	+x2*(-3 + 2*x)*(1 - 4*y + 3*y2)*z2*(-3 + 2*z)*this->derivs_[cd.node5_index()][1]
+	-6*x2*(-3 + 2*x)*(-1 + y)*y*(-1 + z)*z2*this->derivs_[cd.node5_index()][2]
+	-((-1 + x)*x2*(1 - 4*y + 3*y2)*z2*(-3 + 2*z))*this->derivs_[cd.node5_index()][3]
+	-(x2*(-3 + 2*x)*(1 - 4*y + 3*y2)*(-1 + z)*z2)*this->derivs_[cd.node5_index()][4]
+	+6*(-1 + x)*x2*(-1 + y)*y*(-1 + z)*z2*this->derivs_[cd.node5_index()][5]
+	+(-1 + x)*x2*(1 - 4*y + 3*y2)*(-1 + z)*z2*this->derivs_[cd.node5_index()][6]
 	-6*x2*(-3 + 2*x)*(-1 + y)*y*z2*(-3 + 2*z)*cd.node6()
-	+6*(-1 + x)*x2*(-1 + y)*y*z2*(-3 + 2*z)*derivs_[cd.node6_index()][0]
-	+x2*(-3 + 2*x)*y*(-2 + 3*y)*z2*(-3 + 2*z)*derivs_[cd.node6_index()][1]
-	+6*x2*(-3 + 2*x)*(-1 + y)*y*(-1 + z)*z2*derivs_[cd.node6_index()][2]
-	-((-1 + x)*x2*y*(-2 + 3*y)*z2*(-3 + 2*z))*derivs_[cd.node6_index()][3]
-	-(x2*(-3 + 2*x)*y*(-2 + 3*y)*(-1 + z)*z2)*derivs_[cd.node6_index()][4]
-	-6*(-1 + x)*x2*(-1 + y)*y*(-1 + z)*z2*derivs_[cd.node6_index()][5]
-	+(-1 + x)*x2*y*(-2 + 3*y)*(-1 + z)*z2*derivs_[cd.node6_index()][6]
+	+6*(-1 + x)*x2*(-1 + y)*y*z2*(-3 + 2*z)*this->derivs_[cd.node6_index()][0]
+	+x2*(-3 + 2*x)*y*(-2 + 3*y)*z2*(-3 + 2*z)*this->derivs_[cd.node6_index()][1]
+	+6*x2*(-3 + 2*x)*(-1 + y)*y*(-1 + z)*z2*this->derivs_[cd.node6_index()][2]
+	-((-1 + x)*x2*y*(-2 + 3*y)*z2*(-3 + 2*z))*this->derivs_[cd.node6_index()][3]
+	-(x2*(-3 + 2*x)*y*(-2 + 3*y)*(-1 + z)*z2)*this->derivs_[cd.node6_index()][4]
+	-6*(-1 + x)*x2*(-1 + y)*y*(-1 + z)*z2*this->derivs_[cd.node6_index()][5]
+	+(-1 + x)*x2*y*(-2 + 3*y)*(-1 + z)*z2*this->derivs_[cd.node6_index()][6]
 	+6*x12*(1 + 2*x)*(-1 + y)*y*z2*(-3 + 2*z)*cd.node7()
-	+6*x12*x*(-1 + y)*y*z2*(-3 + 2*z)*derivs_[cd.node7_index()][0]
-	-(x12*(1 + 2*x)*y*(-2 + 3*y)*z2*(-3 + 2*z))*derivs_[cd.node7_index()][1]
-	-6*x12*(1 + 2*x)*(-1 + y)*y*(-1 + z)*z2*derivs_[cd.node7_index()][2]
-	-(x12*x*y*(-2 + 3*y)*z2*(-3 + 2*z))*derivs_[cd.node7_index()][3]
-	+x12*(1 + 2*x)*y*(-2 + 3*y)*(-1 + z)*z2*derivs_[cd.node7_index()][4]
-	-6*x12*x*(-1 + y)*y*(-1 + z)*z2*derivs_[cd.node7_index()][5]
-	+x12*x*y*(-2 + 3*y)*(-1 + z)*z2*derivs_[cd.node7_index()][6]);
+	+6*x12*x*(-1 + y)*y*z2*(-3 + 2*z)*this->derivs_[cd.node7_index()][0]
+	-(x12*(1 + 2*x)*y*(-2 + 3*y)*z2*(-3 + 2*z))*this->derivs_[cd.node7_index()][1]
+	-6*x12*(1 + 2*x)*(-1 + y)*y*(-1 + z)*z2*this->derivs_[cd.node7_index()][2]
+	-(x12*x*y*(-2 + 3*y)*z2*(-3 + 2*z))*this->derivs_[cd.node7_index()][3]
+	+x12*(1 + 2*x)*y*(-2 + 3*y)*(-1 + z)*z2*this->derivs_[cd.node7_index()][4]
+	-6*x12*x*(-1 + y)*y*(-1 + z)*z2*this->derivs_[cd.node7_index()][5]
+	+x12*x*y*(-2 + 3*y)*(-1 + z)*z2*this->derivs_[cd.node7_index()][6]);
       
     derivs[2]=
       T(6*x12*(1 + 2*x)*y12*(1 + 2*y)*(-1 + z)*z*cd.node0()
-	+6*x12*x*y12*(1 + 2*y)*(-1 + z)*z*derivs_[cd.node0_index()][0]
-	+6*x12*(1 + 2*x)*y12*y*(-1 + z)*z*derivs_[cd.node0_index()][1]
-	+x12*(1 + 2*x)*y12*(1 + 2*y)*(1 - 4*z + 3*z2)*derivs_[cd.node0_index()][2]
-	+6*x12*x*y12*y*(-1 + z)*z*derivs_[cd.node0_index()][3]
-	+x12*(1 + 2*x)*y12*y*(1 - 4*z + 3*z2)*derivs_[cd.node0_index()][4]
-	+x12*x*y12*(1 + 2*y)*(1 - 4*z + 3*z2)*derivs_[cd.node0_index()][5]
-	+x12*x*y12*y*(1 - 4*z + 3*z2)*derivs_[cd.node0_index()][6]
+	+6*x12*x*y12*(1 + 2*y)*(-1 + z)*z*this->derivs_[cd.node0_index()][0]
+	+6*x12*(1 + 2*x)*y12*y*(-1 + z)*z*this->derivs_[cd.node0_index()][1]
+	+x12*(1 + 2*x)*y12*(1 + 2*y)*(1 - 4*z + 3*z2)*this->derivs_[cd.node0_index()][2]
+	+6*x12*x*y12*y*(-1 + z)*z*this->derivs_[cd.node0_index()][3]
+	+x12*(1 + 2*x)*y12*y*(1 - 4*z + 3*z2)*this->derivs_[cd.node0_index()][4]
+	+x12*x*y12*(1 + 2*y)*(1 - 4*z + 3*z2)*this->derivs_[cd.node0_index()][5]
+	+x12*x*y12*y*(1 - 4*z + 3*z2)*this->derivs_[cd.node0_index()][6]
 	-6*x2*(-3 + 2*x)*y12*(1 + 2*y)*(-1 + z)*z*cd.node1()
-	+6*(-1 + x)*x2*y12*(1 + 2*y)*(-1 + z)*z*derivs_[cd.node1_index()][0]
-	-6*x2*(-3 + 2*x)*y12*y*(-1 + z)*z*derivs_[cd.node1_index()][1]
-	-(x2*(-3 + 2*x)*y12*(1 + 2*y)*(1 - 4*z + 3*z2))*derivs_[cd.node1_index()][2]
-	+6*(-1 + x)*x2*y12*y*(-1 + z)*z*derivs_[cd.node1_index()][3]
-	-(x2*(-3 + 2*x)*y12*y*(1 - 4*z + 3*z2))*derivs_[cd.node1_index()][4]
-	+(-1 + x)*x2*y12*(1 + 2*y)*(1 - 4*z + 3*z2)*derivs_[cd.node1_index()][5]
-	+(-1 + x)*x2*y12*y*(1 - 4*z + 3*z2)*derivs_[cd.node1_index()][6]
+	+6*(-1 + x)*x2*y12*(1 + 2*y)*(-1 + z)*z*this->derivs_[cd.node1_index()][0]
+	-6*x2*(-3 + 2*x)*y12*y*(-1 + z)*z*this->derivs_[cd.node1_index()][1]
+	-(x2*(-3 + 2*x)*y12*(1 + 2*y)*(1 - 4*z + 3*z2))*this->derivs_[cd.node1_index()][2]
+	+6*(-1 + x)*x2*y12*y*(-1 + z)*z*this->derivs_[cd.node1_index()][3]
+	-(x2*(-3 + 2*x)*y12*y*(1 - 4*z + 3*z2))*this->derivs_[cd.node1_index()][4]
+	+(-1 + x)*x2*y12*(1 + 2*y)*(1 - 4*z + 3*z2)*this->derivs_[cd.node1_index()][5]
+	+(-1 + x)*x2*y12*y*(1 - 4*z + 3*z2)*this->derivs_[cd.node1_index()][6]
 	+6*x2*(-3 + 2*x)*y2*(-3 + 2*y)*(-1 + z)*z*cd.node2()
-	-6*(-1 + x)*x2*y2*(-3 + 2*y)*(-1 + z)*z*derivs_[cd.node2_index()][0]
-	-6*x2*(-3 + 2*x)*(-1 + y)*y2*(-1 + z)*z*derivs_[cd.node2_index()][1]
-	+x2*(-3 + 2*x)*y2*(-3 + 2*y)*(1 - 4*z + 3*z2)*derivs_[cd.node2_index()][2]
-	+6*(-1 + x)*x2*(-1 + y)*y2*(-1 + z)*z*derivs_[cd.node2_index()][3]
-	-(x2*(-3 + 2*x)*(-1 + y)*y2*(1 - 4*z + 3*z2))*derivs_[cd.node2_index()][4]
-	-((-1 + x)*x2*y2*(-3 + 2*y)*(1 - 4*z + 3*z2))*derivs_[cd.node2_index()][5]
-	+(-1 + x)*x2*(-1 + y)*y2*(1 - 4*z + 3*z2)*derivs_[cd.node2_index()][6]
+	-6*(-1 + x)*x2*y2*(-3 + 2*y)*(-1 + z)*z*this->derivs_[cd.node2_index()][0]
+	-6*x2*(-3 + 2*x)*(-1 + y)*y2*(-1 + z)*z*this->derivs_[cd.node2_index()][1]
+	+x2*(-3 + 2*x)*y2*(-3 + 2*y)*(1 - 4*z + 3*z2)*this->derivs_[cd.node2_index()][2]
+	+6*(-1 + x)*x2*(-1 + y)*y2*(-1 + z)*z*this->derivs_[cd.node2_index()][3]
+	-(x2*(-3 + 2*x)*(-1 + y)*y2*(1 - 4*z + 3*z2))*this->derivs_[cd.node2_index()][4]
+	-((-1 + x)*x2*y2*(-3 + 2*y)*(1 - 4*z + 3*z2))*this->derivs_[cd.node2_index()][5]
+	+(-1 + x)*x2*(-1 + y)*y2*(1 - 4*z + 3*z2)*this->derivs_[cd.node2_index()][6]
 	-6*x12*(1 + 2*x)*y2*(-3 + 2*y)*(-1 + z)*z*cd.node3()
-	-6*x12*x*y2*(-3 + 2*y)*(-1 + z)*z*derivs_[cd.node3_index()][0]
-	+6*x12*(1 + 2*x)*(-1 + y)*y2*(-1 + z)*z*derivs_[cd.node3_index()][1]
-	-(x12*(1 + 2*x)*y2*(-3 + 2*y)*(1 - 4*z + 3*z2))*derivs_[cd.node3_index()][2]
-	+6*x12*x*(-1 + y)*y2*(-1 + z)*z*derivs_[cd.node3_index()][3]
-	+x12*(1 + 2*x)*(-1 + y)*y2*(1 - 4*z + 3*z2)*derivs_[cd.node3_index()][4]
-	-(x12*x*y2*(-3 + 2*y)*(1 - 4*z + 3*z2))*derivs_[cd.node3_index()][5]
-	+x12*x*(-1 + y)*y2*(1 - 4*z + 3*z2)*derivs_[cd.node3_index()][6]
+	-6*x12*x*y2*(-3 + 2*y)*(-1 + z)*z*this->derivs_[cd.node3_index()][0]
+	+6*x12*(1 + 2*x)*(-1 + y)*y2*(-1 + z)*z*this->derivs_[cd.node3_index()][1]
+	-(x12*(1 + 2*x)*y2*(-3 + 2*y)*(1 - 4*z + 3*z2))*this->derivs_[cd.node3_index()][2]
+	+6*x12*x*(-1 + y)*y2*(-1 + z)*z*this->derivs_[cd.node3_index()][3]
+	+x12*(1 + 2*x)*(-1 + y)*y2*(1 - 4*z + 3*z2)*this->derivs_[cd.node3_index()][4]
+	-(x12*x*y2*(-3 + 2*y)*(1 - 4*z + 3*z2))*this->derivs_[cd.node3_index()][5]
+	+x12*x*(-1 + y)*y2*(1 - 4*z + 3*z2)*this->derivs_[cd.node3_index()][6]
 	-6*x12*(1 + 2*x)*y12*(1 + 2*y)*(-1 + z)*z*cd.node4()
-	-6*x12*x*y12*(1 + 2*y)*(-1 + z)*z*derivs_[cd.node4_index()][0]
-	-6*x12*(1 + 2*x)*y12*y*(-1 + z)*z*derivs_[cd.node4_index()][1]
-	+x12*(1 + 2*x)*y12*(1 + 2*y)*z*(-2 + 3*z)*derivs_[cd.node4_index()][2]
-	-6*x12*x*y12*y*(-1 + z)*z*derivs_[cd.node4_index()][3]
-	+x12*(1 + 2*x)*y12*y*z*(-2 + 3*z)*derivs_[cd.node4_index()][4]
-	+x12*x*y12*(1 + 2*y)*z*(-2 + 3*z)*derivs_[cd.node4_index()][5]
-	+x12*x*y12*y*z*(-2 + 3*z)*derivs_[cd.node4_index()][6]
+	-6*x12*x*y12*(1 + 2*y)*(-1 + z)*z*this->derivs_[cd.node4_index()][0]
+	-6*x12*(1 + 2*x)*y12*y*(-1 + z)*z*this->derivs_[cd.node4_index()][1]
+	+x12*(1 + 2*x)*y12*(1 + 2*y)*z*(-2 + 3*z)*this->derivs_[cd.node4_index()][2]
+	-6*x12*x*y12*y*(-1 + z)*z*this->derivs_[cd.node4_index()][3]
+	+x12*(1 + 2*x)*y12*y*z*(-2 + 3*z)*this->derivs_[cd.node4_index()][4]
+	+x12*x*y12*(1 + 2*y)*z*(-2 + 3*z)*this->derivs_[cd.node4_index()][5]
+	+x12*x*y12*y*z*(-2 + 3*z)*this->derivs_[cd.node4_index()][6]
 	+6*x2*(-3 + 2*x)*y12*(1 + 2*y)*(-1 + z)*z*cd.node5()
-	-6*(-1 + x)*x2*y12*(1 + 2*y)*(-1 + z)*z*derivs_[cd.node5_index()][0]
-	+6*x2*(-3 + 2*x)*y12*y*(-1 + z)*z*derivs_[cd.node5_index()][1]
-	-(x2*(-3 + 2*x)*y12*(1 + 2*y)*z*(-2 + 3*z))*derivs_[cd.node5_index()][2]
-	-6*(-1 + x)*x2*y12*y*(-1 + z)*z*derivs_[cd.node5_index()][3]
-	-(x2*(-3 + 2*x)*y12*y*z*(-2 + 3*z))*derivs_[cd.node5_index()][4]
-	+(-1 + x)*x2*y12*(1 + 2*y)*z*(-2 + 3*z)*derivs_[cd.node5_index()][5]
-	+(-1 + x)*x2*y12*y*z*(-2 + 3*z)*derivs_[cd.node5_index()][6]
+	-6*(-1 + x)*x2*y12*(1 + 2*y)*(-1 + z)*z*this->derivs_[cd.node5_index()][0]
+	+6*x2*(-3 + 2*x)*y12*y*(-1 + z)*z*this->derivs_[cd.node5_index()][1]
+	-(x2*(-3 + 2*x)*y12*(1 + 2*y)*z*(-2 + 3*z))*this->derivs_[cd.node5_index()][2]
+	-6*(-1 + x)*x2*y12*y*(-1 + z)*z*this->derivs_[cd.node5_index()][3]
+	-(x2*(-3 + 2*x)*y12*y*z*(-2 + 3*z))*this->derivs_[cd.node5_index()][4]
+	+(-1 + x)*x2*y12*(1 + 2*y)*z*(-2 + 3*z)*this->derivs_[cd.node5_index()][5]
+	+(-1 + x)*x2*y12*y*z*(-2 + 3*z)*this->derivs_[cd.node5_index()][6]
 	-6*x2*(-3 + 2*x)*y2*(-3 + 2*y)*(-1 + z)*z*cd.node6()
-	+6*(-1 + x)*x2*y2*(-3 + 2*y)*(-1 + z)*z*derivs_[cd.node6_index()][0]
-	+6*x2*(-3 + 2*x)*(-1 + y)*y2*(-1 + z)*z*derivs_[cd.node6_index()][1]
-	+x2*(-3 + 2*x)*y2*(-3 + 2*y)*z*(-2 + 3*z)*derivs_[cd.node6_index()][2]
-	-6*(-1 + x)*x2*(-1 + y)*y2*(-1 + z)*z*derivs_[cd.node6_index()][3]
-	-(x2*(-3 + 2*x)*(-1 + y)*y2*z*(-2 + 3*z))*derivs_[cd.node6_index()][4]
-	-((-1 + x)*x2*y2*(-3 + 2*y)*z*(-2 + 3*z))*derivs_[cd.node6_index()][5]
-	+(-1 + x)*x2*(-1 + y)*y2*z*(-2 + 3*z)*derivs_[cd.node6_index()][6]
+	+6*(-1 + x)*x2*y2*(-3 + 2*y)*(-1 + z)*z*this->derivs_[cd.node6_index()][0]
+	+6*x2*(-3 + 2*x)*(-1 + y)*y2*(-1 + z)*z*this->derivs_[cd.node6_index()][1]
+	+x2*(-3 + 2*x)*y2*(-3 + 2*y)*z*(-2 + 3*z)*this->derivs_[cd.node6_index()][2]
+	-6*(-1 + x)*x2*(-1 + y)*y2*(-1 + z)*z*this->derivs_[cd.node6_index()][3]
+	-(x2*(-3 + 2*x)*(-1 + y)*y2*z*(-2 + 3*z))*this->derivs_[cd.node6_index()][4]
+	-((-1 + x)*x2*y2*(-3 + 2*y)*z*(-2 + 3*z))*this->derivs_[cd.node6_index()][5]
+	+(-1 + x)*x2*(-1 + y)*y2*z*(-2 + 3*z)*this->derivs_[cd.node6_index()][6]
 	+6*x12*(1 + 2*x)*y2*(-3 + 2*y)*(-1 + z)*z*cd.node7()
-	+6*x12*x*y2*(-3 + 2*y)*(-1 + z)*z*derivs_[cd.node7_index()][0]
-	-6*x12*(1 + 2*x)*(-1 + y)*y2*(-1 + z)*z*derivs_[cd.node7_index()][1]
-	-(x12*(1 + 2*x)*y2*(-3 + 2*y)*z*(-2 + 3*z))*derivs_[cd.node7_index()][2]
-	-6*x12*x*(-1 + y)*y2*(-1 + z)*z*derivs_[cd.node7_index()][3]
-	+x12*(1 + 2*x)*(-1 + y)*y2*z*(-2 + 3*z)*derivs_[cd.node7_index()][4]
-	-(x12*x*y2*(-3 + 2*y)*z*(-2 + 3*z))*derivs_[cd.node7_index()][5]
-	+x12*x*(-1 + y)*y2*z*(-2 + 3*z)*derivs_[cd.node7_index()][6]);
+	+6*x12*x*y2*(-3 + 2*y)*(-1 + z)*z*this->derivs_[cd.node7_index()][0]
+	-6*x12*(1 + 2*x)*(-1 + y)*y2*(-1 + z)*z*this->derivs_[cd.node7_index()][1]
+	-(x12*(1 + 2*x)*y2*(-3 + 2*y)*z*(-2 + 3*z))*this->derivs_[cd.node7_index()][2]
+	-6*x12*x*(-1 + y)*y2*(-1 + z)*z*this->derivs_[cd.node7_index()][3]
+	+x12*(1 + 2*x)*(-1 + y)*y2*z*(-2 + 3*z)*this->derivs_[cd.node7_index()][4]
+	-(x12*x*y2*(-3 + 2*y)*z*(-2 + 3*z))*this->derivs_[cd.node7_index()][5]
+	+x12*x*(-1 + y)*y2*z*(-2 + 3*z)*this->derivs_[cd.node7_index()][6]);
   }
   
 
@@ -441,16 +441,10 @@ public:
     return CL.get_coords(this, coords, value, cd);
   }
     
-  //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
-  void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
-
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);
-
-protected:
-  //! support data (node data is elsewhere)
-  vector<vector<T> >          derivs_; 
 };
+
 
 template <class T>
 const string
@@ -495,7 +489,7 @@ HexTricubicHmt<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      HEXTRICUBICHMT_VERSION);
-  Pio(stream, derivs_);
+  Pio(stream, this->derivs_);
   stream.end_class();
 }
 

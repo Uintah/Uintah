@@ -52,7 +52,7 @@ public:
 //! Class for handling of element of type quad with 
 //! bicubic hermitian interpolation
 template <class T>
-class QuadBicubicHmt : public BasisSimple<T>, 
+class QuadBicubicHmt : public BasisAddDerivatives<T>, 
                        public QuadApprox, 
 		       public QuadGaussian2<double>, 
 		       public QuadBicubicHmtUnitElement
@@ -91,17 +91,17 @@ public:
     double w[12];
     get_weights(coords, w); 
     return (T)(w[0]  * cd.node0()                   +
-	       w[1]  * derivs_[cd.node0_index()][0] +
-	       w[2]  * derivs_[cd.node0_index()][1] +
+	       w[1]  * this->derivs_[cd.node0_index()][0] +
+	       w[2]  * this->derivs_[cd.node0_index()][1] +
 	       w[3]  * cd.node1()		    +
-	       w[4]  * derivs_[cd.node1_index()][0] +
-	       w[5]  * derivs_[cd.node1_index()][1] +
+	       w[4]  * this->derivs_[cd.node1_index()][0] +
+	       w[5]  * this->derivs_[cd.node1_index()][1] +
 	       w[6]  * cd.node2()		    +
-	       w[7]  * derivs_[cd.node2_index()][0] +
-	       w[8]  * derivs_[cd.node2_index()][1] +
+	       w[7]  * this->derivs_[cd.node2_index()][0] +
+	       w[8]  * this->derivs_[cd.node2_index()][1] +
 	       w[9]  * cd.node3()		    +
-	       w[10] * derivs_[cd.node3_index()][0] +
-	       w[11] * derivs_[cd.node3_index()][1]);
+	       w[10] * this->derivs_[cd.node3_index()][0] +
+	       w[11] * this->derivs_[cd.node3_index()][1]);
   }
   
   //! get first derivative at parametric coordinate
@@ -115,31 +115,31 @@ public:
 
     derivs[0]=
       T(-((-1 + y)*(-6*x + 6*x*x + y*(-1 + 2*y)))*cd.node0()
-	-((1 - 4*x + 3*x*x)*(-1 + y))*derivs_[cd.node0_index()][0]
-	-((y-1)*(y-1)*y)*derivs_[cd.node0_index()][1]
+	-((1 - 4*x + 3*x*x)*(-1 + y))*this->derivs_[cd.node0_index()][0]
+	-((y-1)*(y-1)*y)*this->derivs_[cd.node0_index()][1]
 	+(-1 + y)*(-6*x + 6*x*x + y*(-1 + 2*y))*cd.node1()
-	-(x*(-2 + 3*x)*(-1 + y))*derivs_[cd.node1_index()][0]
-	+(y-1)*(y-1)*y*derivs_[cd.node1_index()][1]
+	-(x*(-2 + 3*x)*(-1 + y))*this->derivs_[cd.node1_index()][0]
+	+(y-1)*(y-1)*y*this->derivs_[cd.node1_index()][1]
 	+y*(-1 + 6*x - 6*x*x + 3*y - 2*y*y)*cd.node2()
-	+x*(-2 + 3*x)*y*derivs_[cd.node2_index()][0]
-	+(-1 + y)*y*y*derivs_[cd.node2_index()][1]
+	+x*(-2 + 3*x)*y*this->derivs_[cd.node2_index()][0]
+	+(-1 + y)*y*y*this->derivs_[cd.node2_index()][1]
 	+y*(1 - 6*x + 6*x*x - 3*y + 2*y*y)*cd.node3()
-	+(1 - 4*x + 3*x*x)*y*derivs_[cd.node3_index()][0]
-	-((-1 + y)*y*y)*derivs_[cd.node3_index()][1]);
+	+(1 - 4*x + 3*x*x)*y*this->derivs_[cd.node3_index()][0]
+	-((-1 + y)*y*y)*this->derivs_[cd.node3_index()][1]);
 	
     derivs[1]= 
       T(-((-1 + x)*(-x + 2*x*x + 6*(-1 + y)*y))*cd.node0()
-	-((x-1)*(x-1)*x)*derivs_[cd.node0_index()][0]
-	-((-1 + x)*(1 - 4*y + 3*y*y))*derivs_[cd.node0_index()][1]
+	-((x-1)*(x-1)*x)*this->derivs_[cd.node0_index()][0]
+	-((-1 + x)*(1 - 4*y + 3*y*y))*this->derivs_[cd.node0_index()][1]
 	+x*(1 - 3*x + 2*x*x - 6*y + 6*y*y)*cd.node1()
-	-((-1 + x)*x*x)*derivs_[cd.node1_index()][0]
-	+x*(1 - 4*y + 3*y*y)*derivs_[cd.node1_index()][1]
+	-((-1 + x)*x*x)*this->derivs_[cd.node1_index()][0]
+	+x*(1 - 4*y + 3*y*y)*this->derivs_[cd.node1_index()][1]
 	+x*(-1 + 3*x - 2*x*x + 6*y - 6*y*y)*cd.node2()
-	+(-1 + x)*x*x*derivs_[cd.node2_index()][0]
-	+x*y*(-2 + 3*y)*derivs_[cd.node2_index()][1]
+	+(-1 + x)*x*x*this->derivs_[cd.node2_index()][0]
+	+x*y*(-2 + 3*y)*this->derivs_[cd.node2_index()][1]
 	+(-1 + x)*(-x + 2*x*x + 6*(-1 + y)*y)*cd.node3()
-	+(x-1)*(x-1)*x*derivs_[cd.node3_index()][0]
-	-((-1 + x)*y*(-2 + 3*y))*derivs_[cd.node3_index()][1]);
+	+(x-1)*(x-1)*x*this->derivs_[cd.node3_index()][0]
+	-((-1 + x)*y*(-2 + 3*y))*this->derivs_[cd.node3_index()][1]);
   }
   
   //! get parametric coordinate for value within the element
@@ -151,18 +151,8 @@ public:
     return CL.get_coords(this, coords, value, cd);
   }  
 
-  //! add derivative values (dx, dy) for nodes.
-  void add_derivative(const vector<T> &p) { derivs_.push_back(p); }
-
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);
-
-protected:
-  //! support data (node data is elsewhere)
-
-  //! Cubic Hermitian only needs additonal derivatives stored at each node
-  //! in the topology.
-  vector<vector<T> >          derivs_; 
 };
 
 template <class T>
@@ -208,7 +198,7 @@ QuadBicubicHmt<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      QUADBICUBICHMT_VERSION);
-  Pio(stream, derivs_);
+  Pio(stream, this->derivs_);
   stream.end_class();
 }
 

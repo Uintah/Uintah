@@ -66,7 +66,7 @@ public:
 //! Class for handling of element of type triangle with 
 //! linear quadratic interpolation
 template <class T>
-class TriQuadraticLgn : public BasisSimple<T>, 
+class TriQuadraticLgn : public BasisAddNodes<T>, 
                         public TriApprox, 
 			public TriGaussian3<double>, 
 			public TriQuadraticLgnUnitElement 
@@ -104,9 +104,9 @@ public:
     return (T)(w[0] * cd.node0() +
 	       w[1] * cd.node1() +
 	       w[2] * cd.node2() +
-	       w[3] * nodes_[cd.edge0_index()] +
-	       w[4] * nodes_[cd.edge1_index()] +
-	       w[5] * nodes_[cd.edge2_index()]);
+	       w[3] * this->nodes_[cd.edge0_index()] +
+	       w[4] * this->nodes_[cd.edge1_index()] +
+	       w[5] * this->nodes_[cd.edge2_index()]);
   }
   
   //! get first derivative at parametric coordinate
@@ -120,15 +120,15 @@ public:
 
     derivs[0]=T((-3 + 4*x + 4*y)*cd.node0()
 		+(-1 + 4*x)*cd.node1()
-		-4*(-1 + 2*x + y)*nodes_[cd.edge0_index()]
-		+4*y*nodes_[cd.edge1_index()]
-		-4*y*nodes_[cd.edge2_index()]);
+		-4*(-1 + 2*x + y)*this->nodes_[cd.edge0_index()]
+		+4*y*this->nodes_[cd.edge1_index()]
+		-4*y*this->nodes_[cd.edge2_index()]);
 
     derivs[1]=T((-3 + 4*x + 4*y)*cd.node0()
 		+(-1 +4*y)*cd.node2()
-		-4*x*nodes_[cd.edge0_index()]
-		+4*x*nodes_[cd.edge1_index()]
-		-4*(-1 + x +2*y)*nodes_[cd.edge2_index()]);
+		-4*x*this->nodes_[cd.edge0_index()]
+		+4*x*this->nodes_[cd.edge1_index()]
+		-4*(-1 + x +2*y)*this->nodes_[cd.edge2_index()]);
   }
 
   //! get the parametric coordinate for value within the element
@@ -140,19 +140,9 @@ public:
     return CL.get_coords(this, coords, value, cd);
   }
  
-  //! add a node value corresponding to edge
-  void add_node_value(const T &p) { nodes_.push_back(p); }
-
   static const string type_name(int n = -1);
 
   virtual void io (Piostream& str);
-
-protected:
-  //! Additional support values.
-
-  //! Quadratic Lagrangian only needs additional nodes stored for each edge
-  //! in the topology.
-  vector<T>          nodes_; 
 };
 
 
@@ -198,7 +188,7 @@ TriQuadraticLgn<T>::io(Piostream &stream)
 {
   stream.begin_class(get_type_description(this)->get_name(),
                      TRIQUADRATICLGN_VERSION);
-  Pio(stream, nodes_);
+  Pio(stream, this->nodes_);
   stream.end_class();
 }
 
