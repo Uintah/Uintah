@@ -169,7 +169,7 @@ public:
   void add_node_value(const T &p) { this->nodes_.push_back(p); }
 
   //! return number of additional nodes
-  int size_node_values() { this->nodes_.size(); }
+  int size_node_values() { return nodes_.size(); }
 
   static const string type_name(int n = -1);
 
