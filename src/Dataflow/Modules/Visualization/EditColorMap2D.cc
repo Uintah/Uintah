@@ -437,7 +437,8 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
 
 
 void
-EditColorMap2D::faux_changed() {
+EditColorMap2D::faux_changed()
+{
   gui_faux_.reset();
   const bool faux = gui_faux_.get();
   for (unsigned int w = 0; w < widgets_.size(); ++w)
@@ -446,6 +447,7 @@ EditColorMap2D::faux_changed() {
       cmap_dirty_ = true;
     }
 }
+
 
 void
 EditColorMap2D::add_triangle_widget()
@@ -474,6 +476,7 @@ EditColorMap2D::add_rectangle_widget()
   force_execute();
 }
 
+
 void
 EditColorMap2D::add_paint_widget()
 {
@@ -485,6 +488,7 @@ EditColorMap2D::add_paint_widget()
   select_widget(widgets_.size()-1, 1);
   force_execute();
 }
+
 
 void
 EditColorMap2D::delete_selected_widget()
@@ -531,8 +535,10 @@ EditColorMap2D::save_file(bool save_ppm)
   }
 }
 
+
 void
-EditColorMap2D::load_file() {
+EditColorMap2D::load_file()
+{
   // The implementation of this was taken almost directly from
   // NrrdReader Module.  
   filename_.reset();
@@ -786,7 +792,8 @@ EditColorMap2D::tcl_unpickle()
 
 
 bool
-EditColorMap2D::select_widget(int widget, int object) {
+EditColorMap2D::select_widget(int widget, int object)
+{
   int changed = false;
   if (widget == -1 && object == -1) {
     changed = gui_selected_widget_.changed() || gui_selected_object_.changed();
@@ -837,8 +844,10 @@ EditColorMap2D::push(int x, int y, int button)
   redraw();
 }
 
+
 void
-EditColorMap2D::mouse_pick(int x, int y, int b) {
+EditColorMap2D::mouse_pick(int x, int y, int b)
+{
   const bool right_button_down = (b==3);
   if (!right_button_down)
     for (mouse_widget_ = widgets_.size()-1; mouse_widget_>=0; mouse_widget_--)
@@ -852,6 +861,7 @@ EditColorMap2D::mouse_pick(int x, int y, int b) {
 	  (mouse_object_ = widgets_[mouse_widget_]->pick2
 	   (x, height_-1-y, width_, height_, right_button_down))) break;
 }
+
 
 void
 EditColorMap2D::set_window_cursor(int x, int y)
@@ -918,8 +928,10 @@ EditColorMap2D::release(int x, int y)
   paint_widget_ = 0;
 }
 
+
 void
-EditColorMap2D::get_1D_colormaps() {
+EditColorMap2D::get_1D_colormaps()
+{
   port_range_type range = get_iports("Colormap");
   set<ColorMapIPort *> valid;
   if (range.first != range.second) {
@@ -973,8 +985,6 @@ EditColorMap2D::get_1D_colormaps() {
 }
 
     
-
-
 
 void
 EditColorMap2D::execute()
@@ -1049,8 +1059,9 @@ EditColorMap2D::execute()
 }
 
 
-void EditColorMap2D::save_ppm_file(string filename, int sx, int sy, int bpp,
-				   const unsigned char * buf)
+void
+EditColorMap2D::save_ppm_file(string filename, int sx, int sy, int bpp,
+                              const unsigned char * buf)
 {
   int R = 3;
   int G = 2;
@@ -1118,6 +1129,7 @@ EditColorMap2D::init_shader_factory()
     use_back_buffer_ = false;
   }
 }
+
 
 void
 EditColorMap2D::build_colormap_texture()
@@ -1213,8 +1225,6 @@ EditColorMap2D::build_colormap_texture()
   glPopMatrix();
 
 } 
-
-
 
 
 void
@@ -1373,8 +1383,10 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   gui->unlock();
 }
 
+
 void
-EditColorMap2D::gui_color_change(GuiArgs &args) {
+EditColorMap2D::gui_color_change(GuiArgs &args)
+{
   int n = args.get_int(2);
   resize_gui();
   if (n < 0 || n >= gui_num_entries_.get()) return;
@@ -1398,8 +1410,10 @@ EditColorMap2D::gui_color_change(GuiArgs &args) {
   }
 }
 
+
 void
-EditColorMap2D::gui_shade_change(GuiArgs &args) {
+EditColorMap2D::gui_shade_change(GuiArgs &args)
+{
   int n = args.get_int(2);
   resize_gui();  // make sure the guivar vector exists
   if (n < 0 || n >= gui_num_entries_.get()) return;
@@ -1411,8 +1425,10 @@ EditColorMap2D::gui_shade_change(GuiArgs &args) {
   force_execute();
 }
 
+
 void
-EditColorMap2D::gui_toggle_change(GuiArgs &args) {
+EditColorMap2D::gui_toggle_change(GuiArgs &args)
+{
   int n = args.get_int(2);
   resize_gui();  // make sure the guivar vector exists
   if (n < 0 || n >= gui_num_entries_.get()) return;
