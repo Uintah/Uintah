@@ -10,11 +10,14 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 
-#include <Packages/CardioWave/share/share.h>
+#include <Core/Geometry/Vector.h>
 
 #include <deque>
 
@@ -23,7 +26,7 @@ namespace CardioWave {
 using namespace SCIRun;
 using std::deque;
 
-class CardioWaveSHARE FloodFillNewValue : public Module {
+class FloodFillNewValue : public Module {
 public:
   FloodFillNewValue(GuiContext *context);
   virtual ~FloodFillNewValue();
@@ -44,6 +47,18 @@ FloodFillNewValue::~FloodFillNewValue(){
 }
 
 void FloodFillNewValue::execute(){
+
+
+  typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+
+  typedef GenericField<HVMesh, HexTrilinearLgn<int>, vector<int> > HVField_int;
+  typedef GenericField<HVMesh, HexTrilinearLgn<char>, vector<char> > HVField_char;
+  typedef GenericField<HVMesh, ConstantBasis<char>, vector<char> > HVField_char_const;
+  typedef GenericField<HVMesh, HexTrilinearLgn<double>, vector<double> > HVField_double;
+  typedef GenericField<PCMesh, ConstantBasis<double>, vector<double> > PCField_double;
+
+
   string pname;
 
   pname="Volume";
@@ -57,8 +72,8 @@ void FloodFillNewValue::execute(){
     error("Not a valid field in '" + pname + "'.");
     return;
   }
-  HexVolField<int> *hvf =
-    dynamic_cast<HexVolField<int> *>(volH.get_rep());
+  HVField_int *hvf =
+    dynamic_cast<HVField_int *>(volH.get_rep());
   if (!hvf) {
     error("Input was not a valid HexVolField<int>.");
     return;
@@ -75,8 +90,11 @@ void FloodFillNewValue::execute(){
     error("Not a valid field in '" + pname + "'.");
     return;
   }
-  PointCloudField<double> *pcf =
-    dynamic_cast<PointCloudField<double> *>(ptH.get_rep());
+  
+  
+  
+  PCField_double *pcf =
+    dynamic_cast<PCField_double *>(ptH.get_rep());
   if (!pcf) {
     error("Input was not a PointCloudField<double>.");
     return;
@@ -92,14 +110,14 @@ void FloodFillNewValue::execute(){
     return;
   }
 
-  PointCloudMesh::Node::index_type node0(0);
+  PCMesh::Node::index_type node0(0);
   Point p;
   pcf->get_typed_mesh()->get_center(p, node0);
   int basis_order = hvf->basis_order();
   
   if (basis_order == 1) {
     hvf->get_typed_mesh()->synchronize(Mesh::LOCATE_E);
-    HexVolMesh::Node::index_type loc;
+    HVMesh::Node::index_type loc;
     if (!hvf->get_typed_mesh()->locate(loc, p)) {
       ovol->send(volH);
       return;
@@ -127,13 +145,13 @@ void FloodFillNewValue::execute(){
     // when the stack is empty, we're done.
     
     volH.detach();
-    hvf = dynamic_cast<HexVolField<int> *>(volH.get_rep());
+    hvf = dynamic_cast<HVField_int *>(volH.get_rep());
     
-    HexVolField<char> *mask_vol = 
-      scinew HexVolField<char>(hvf->get_typed_mesh(),1);
+    HVField_char *mask_vol = 
+      scinew HVField_char(hvf->get_typed_mesh());
     
   // set up the mask volume
-    HexVolMesh::Node::iterator curr_node, last_node;
+    HVMesh::Node::iterator curr_node, last_node;
     hvf->get_typed_mesh()->begin(curr_node);
     hvf->get_typed_mesh()->end(last_node);
     while(curr_node != last_node) {
@@ -146,7 +164,7 @@ void FloodFillNewValue::execute(){
     }
     
     // make our queue
-    deque<HexVolMesh::Node::index_type> Q;
+    deque<HVMesh::Node::index_type> Q;
     hvf->set_value(new_val, loc);
     mask_vol->set_value(2, loc);
     Q.push_back(loc);
@@ -156,12 +174,12 @@ void FloodFillNewValue::execute(){
     
     // flood fill
     while (!Q.empty()) {
-      HexVolMesh::Node::index_type curr = Q.front();
+      HVMesh::Node::index_type curr = Q.front();
       Q.pop_front();
 
-      vector<HexVolMesh::Node::index_type> nbrs;
+      vector<HVMesh::Node::index_type> nbrs;
       hvf->get_typed_mesh()->get_neighbors(nbrs, curr);
-      vector<HexVolMesh::Node::index_type>::iterator iter = nbrs.begin();
+      vector<HVMesh::Node::index_type>::iterator iter = nbrs.begin();
 
       while (iter != nbrs.end()) {
 	char nbr_val;
@@ -176,7 +194,7 @@ void FloodFillNewValue::execute(){
     
     delete mask_vol;
   } else {
-    HexVolMesh::Cell::index_type loc;
+    HVMesh::Cell::index_type loc;
     if (!hvf->get_typed_mesh()->locate(loc, p)) {
       ovol->send(volH);
       return;
@@ -206,13 +224,13 @@ void FloodFillNewValue::execute(){
     // when the stack is empty, we're done.
     
     volH.detach();
-    hvf = dynamic_cast<HexVolField<int> *>(volH.get_rep());
+    hvf = dynamic_cast<HVField_int *>(volH.get_rep());
     
-    HexVolField<char> *mask_vol = 
-      scinew HexVolField<char>(hvf->get_typed_mesh(), 0);
+    HVField_char_const *mask_vol = 
+      scinew HVField_char_const(hvf->get_typed_mesh());
     
   // set up the mask volume
-    HexVolMesh::Cell::iterator curr_cell, last_cell;
+    HVMesh::Cell::iterator curr_cell, last_cell;
     hvf->get_typed_mesh()->begin(curr_cell);
     hvf->get_typed_mesh()->end(last_cell);
     while(curr_cell != last_cell) {
@@ -225,18 +243,18 @@ void FloodFillNewValue::execute(){
     }
     
     // make our queue
-    deque<HexVolMesh::Cell::index_type> Q;
+    deque<HVMesh::Cell::index_type> Q;
     hvf->set_value(new_val, loc);
     mask_vol->set_value(2, loc);
     Q.push_back(loc);
 
     // flood fill
     while (!Q.empty()) {
-      HexVolMesh::Cell::index_type curr = Q.front();
+      HVMesh::Cell::index_type curr = Q.front();
       Q.pop_front();
-      HexVolMesh::Cell::array_type nbrs;
+      HVMesh::Cell::array_type nbrs;
       hvf->get_typed_mesh()->get_neighbors(nbrs, curr);
-      HexVolMesh::Cell::array_type::iterator iter = nbrs.begin();
+      HVMesh::Cell::array_type::iterator iter = nbrs.begin();
       while (iter != nbrs.end()) {
 	char nbr_val;
 	if (mask_vol->value(nbr_val, *iter) && nbr_val == 1) {

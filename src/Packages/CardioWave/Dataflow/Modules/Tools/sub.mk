@@ -13,19 +13,7 @@ include	$(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR	:= Packages/CardioWave/Dataflow/Modules/Tools
 
 SRCS	+= \
-	$(SRCDIR)/PrintF.cc\
-	$(SRCDIR)/CreateString.cc\
-	$(SRCDIR)/CreateScalar.cc\
 	$(SRCDIR)/CreateParametersBundle.cc\
-  $(SRCDIR)/FileSelector.cc\
-#	$(SRCDIR)/ScalarRange.cc\
-#	$(SRCDIR)/SetBundleName.cc\
-#	$(SRCDIR)/SetColorMapName.cc\
-#	$(SRCDIR)/SetColorMap2Name.cc\
-#	$(SRCDIR)/SetFieldName.cc\
-#	$(SRCDIR)/SetMatrixName.cc\
-#	$(SRCDIR)/SetNrrdName.cc\
-#	$(SRCDIR)/SetPathName.cc\
 
 #[INSERT NEW CODE FILE HERE]
 

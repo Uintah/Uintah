@@ -12,20 +12,21 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/StringUtil.h>
 
 extern "C" {
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
 }
 
-#include <Packages/CardioWave/share/share.h>
 
 namespace CardioWave {
 
 using namespace SCIRun;
 
-class CardioWaveSHARE RemoveInteriorTets : public Module {
+class RemoveInteriorTets : public Module {
   GuiString	threshold_;
 public:
   RemoveInteriorTets(GuiContext *context);
@@ -48,6 +49,12 @@ RemoveInteriorTets::~RemoveInteriorTets(){
 
 void RemoveInteriorTets::execute()
 {
+
+  typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+  typedef LockingHandle<TVMesh> TVMeshHandle;
+  typedef GenericField<TVMesh, TetLinearLgn<double>, vector<double> > TVField_double;
+  typedef GenericField<TVMesh, TetLinearLgn<Vector>, vector<Vector> > TVField_Vector;
+  
   double threshold = atof(threshold_.get().c_str());
 
   // must find ports and have valid data on inputs
@@ -68,7 +75,7 @@ void RemoveInteriorTets::execute()
       !meshH.get_rep())
     return;
 
-  TetVolField<Vector> *tv_old = dynamic_cast<TetVolField<Vector> *>(meshH.get_rep());
+  TVField_Vector *tv_old = dynamic_cast<TVField_Vector *>(meshH.get_rep());
   if (!tv_old)
   {
     error("Input field wasn't a TetVolField<Vector>.");
@@ -81,20 +88,20 @@ void RemoveInteriorTets::execute()
     return;
   }
 
-  TetVolMeshHandle old_mesh = tv_old->get_typed_mesh();
+  TVMeshHandle old_mesh = tv_old->get_typed_mesh();
 
-  TetVolMesh::Node::array_type nodes;
+  TVMesh::Node::array_type nodes;
   Point centroid, p;
-  TetVolMesh::Node::size_type nnodes;
+  TVMesh::Node::size_type nnodes;
   old_mesh->size(nnodes);
-  TetVolMesh::Cell::size_type ncells;
+  TVMesh::Cell::size_type ncells;
   old_mesh->size(ncells);
 
   vector<bool> cell_valid(ncells, true);
   vector<bool> node_valid(nnodes, false);
 
   // find the tets with centroid far from their nodes
-  TetVolMesh::Cell::iterator cb, ce; old_mesh->begin(cb); old_mesh->end(ce);
+  TVMesh::Cell::iterator cb, ce; old_mesh->begin(cb); old_mesh->end(ce);
   int i;
   while (cb!=ce) {
     old_mesh->get_nodes(nodes, *cb);
@@ -120,13 +127,13 @@ void RemoveInteriorTets::execute()
     ++cb;
   }
 
-  TetVolMesh *new_mesh = scinew TetVolMesh;
+  TVMesh *new_mesh = scinew TVMesh;
 
   // add the remaining nodes to a new mesh and make a map of old-to-new 
   //   node indices
   int count=0;
   vector<int> node_map(nnodes, -1);
-  TetVolMesh::Node::iterator nb, ne; old_mesh->begin(nb); old_mesh->end(ne);
+  TVMesh::Node::iterator nb, ne; old_mesh->begin(nb); old_mesh->end(ne);
   while(nb!=ne) {
     if (node_valid[*nb]) {
       old_mesh->get_center(p, *nb);
@@ -157,7 +164,7 @@ void RemoveInteriorTets::execute()
   msgStream_ << "RemoveInteriorTets: ncells="<<count<<"\n";
 
   // copy the fdata for valid nodes
-  TetVolField<Vector> *tv_new = scinew TetVolField<Vector>(new_mesh,1);
+  TVField_Vector *tv_new = scinew TVField_Vector(new_mesh);
   count=0;
   old_mesh->begin(nb);
   while(nb!=ne) {

@@ -12,19 +12,20 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+
 
 extern "C" {
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
 }
 
-#include <Packages/CardioWave/share/share.h>
-
 namespace CardioWave {
 
 using namespace SCIRun;
 
-class CardioWaveSHARE SetupFVM2 : public Module {
+class SetupFVM2 : public Module {
   GuiDouble	bathsig_;
   GuiDouble	fibersig1_;
   GuiDouble	fibersig2_;
@@ -59,6 +60,13 @@ SetupFVM2::~SetupFVM2(){
 }
 
 void SetupFVM2::execute(){
+
+  typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
+  typedef LockingHandle<HVMesh> HVMeshHandle;
+  typedef GenericField<HVMesh, HexTrilinearLgn<int>, vector<int> > HVField_int;
+  typedef GenericField<HVMesh, HexTrilinearLgn<double>, vector<double> > HVField_double;
+
+
   double bathsig = bathsig_.get();
   double fibersig1 = fibersig1_.get();
   double fibersig2 = fibersig2_.get();
@@ -82,7 +90,7 @@ void SetupFVM2::execute(){
     return;
   }
 
-  HexVolField<int> *fld = dynamic_cast<HexVolField<int> *>(fldH.get_rep());
+  HVField_int *fld = dynamic_cast<HVField_int *>(fldH.get_rep());
   if (!fld) {
     error("Input field wasn't a HexVolField<int>.");
     return;
@@ -94,9 +102,9 @@ void SetupFVM2::execute(){
     return;
   }
   
-  HexVolMeshHandle m = fld->get_typed_mesh();
-  HexVolMesh::Node::size_type nnodes;
-  HexVolMesh::Cell::size_type ncells;
+  HVMeshHandle m = fld->get_typed_mesh();
+  HVMesh::Node::size_type nnodes;
+  HVMesh::Cell::size_type ncells;
   m->size(nnodes);
   m->size(ncells);
 
@@ -110,7 +118,7 @@ void SetupFVM2::execute(){
   
   // fill in mesh from SCIRun field
 
-  HexVolMesh::Node::iterator nb, ne; m->begin(nb); m->end(ne);
+  HVMesh::Node::iterator nb, ne; m->begin(nb); m->end(ne);
   int cnt=0;
   Point p;
   FILE *IDFILE=0;
@@ -166,8 +174,8 @@ void SetupFVM2::execute(){
   }
   if (IDFILE) fclose(IDFILE);
 
-  HexVolMesh::Cell::iterator cb, ce; m->begin(cb); m->end(ce);
-  HexVolMesh::Node::array_type nodes;
+  HVMesh::Cell::iterator cb, ce; m->begin(cb); m->end(ce);
+  HVMesh::Node::array_type nodes;
   cnt=0;
 
   while(cb != ce) {

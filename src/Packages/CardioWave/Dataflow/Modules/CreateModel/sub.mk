@@ -45,7 +45,7 @@ PSELIBS := Packages/CardioWave/Core/Algorithms \
 	Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/GeomInterface Core/Datatypes Core/Geometry \
+        Core/Geom Core/GeomInterface Core/Datatypes Core/Basis Core/Geometry \
         Core/TkExtensions 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 

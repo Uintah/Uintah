@@ -12,19 +12,19 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 
 extern "C" {
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
 }
 
-#include <Packages/CardioWave/share/share.h>
-
 namespace CardioWave {
 
 using namespace SCIRun;
 
-class CardioWaveSHARE SetupFVMatrix : public Module {
+class SetupFVMatrix : public Module {
   GuiDouble	sigx1_;
   GuiDouble	sigy1_;
   GuiDouble	sigz1_;
@@ -64,6 +64,13 @@ SetupFVMatrix::~SetupFVMatrix(){
 }
 
 void SetupFVMatrix::execute(){
+
+  typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
+  typedef LockingHandle<HVMesh> HVMeshHandle;
+  typedef GenericField<HVMesh, HexTrilinearLgn<int>, vector<int> > HVField_int;
+  typedef GenericField<HVMesh, HexTrilinearLgn<double>, vector<double> > HVField_double;
+  typedef GenericField<HVMesh, HexTrilinearLgn<Vector>, vector<Vector> > HVField_Vector;
+  
   double sigx1 = sigx1_.get();
   double sigy1 = sigy1_.get();
   double sigz1 = sigz1_.get();
@@ -114,36 +121,28 @@ void SetupFVMatrix::execute(){
       !secFiberOrientH.get_rep())
     return;
   
-#if 0
-  if (primFiberOrientH->mesh()->generation != cellTypeH->mesh()->generation ||
-      secFiberOrientH->mesh()->generation != cellTypeH->mesh()->generation)
-  {
-    error("Input fields have to have the same mesh.");
-    return;
-  }
-#endif
 
-  HexVolField<Vector> *fo1 = dynamic_cast<HexVolField<Vector> *>(primFiberOrientH.get_rep());
-  HexVolField<Vector> *fo2 = dynamic_cast<HexVolField<Vector> *>(secFiberOrientH.get_rep());
-  HexVolField<int> *ct = dynamic_cast<HexVolField<int> *>(cellTypeH.get_rep());
+  HVField_Vector *fo1 = dynamic_cast<HVField_Vector *>(primFiberOrientH.get_rep());
+  HVField_Vector *fo2 = dynamic_cast<HVField_Vector *>(secFiberOrientH.get_rep());
+  HVField_int *ct = dynamic_cast<HVField_int *>(cellTypeH.get_rep());
 
   if (!fo1) {
-    error("PrimFiberOrientation field wasn't a HexVolField<Vector>.");
+    error("PrimFiberOrientation field wasn't a HexVolField of type Vector.");
     return;
   }
   if (!fo2) {
-    error("SecFiberOrientation field wasn't a HexVolField<Vector>.");
+    error("SecFiberOrientation field wasn't a HexVolField of type Vector.");
     return;
   }
   if (!ct) {
-    error("CellType field wasn't a HexVolField<int>.");
+    error("CellType field wasn't a HexVolField of type int.");
     return;
   }
 
   
-  HexVolMeshHandle m = fo1->get_typed_mesh();
-  HexVolMesh::Node::size_type nnodes;
-  HexVolMesh::Cell::size_type ncells;
+  HVMeshHandle m = fo1->get_typed_mesh();
+  HVMesh::Node::size_type nnodes;
+  HVMesh::Cell::size_type ncells;
   m->size(nnodes);
   m->size(ncells);
 
@@ -155,7 +154,7 @@ void SetupFVMatrix::execute(){
   
   // fill in mesh from SCIRun field
 
-  HexVolMesh::Node::iterator nb, ne; m->begin(nb); m->end(ne);
+  HVMesh::Node::iterator nb, ne; m->begin(nb); m->end(ne);
   int cnt=0;
   Point p;
 
@@ -216,8 +215,8 @@ void SetupFVMatrix::execute(){
     ++nb;
   }
   
-  HexVolMesh::Cell::iterator cb, ce; m->begin(cb); m->end(ce);
-  HexVolMesh::Node::array_type nodes;
+  HVMesh::Cell::iterator cb, ce; m->begin(cb); m->end(ce);
+  HVMesh::Node::array_type nodes;
   cnt=0;
 
   while(cb != ce) {
