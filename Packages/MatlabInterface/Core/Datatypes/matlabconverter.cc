@@ -621,7 +621,6 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle)
         }
         else
         {
-                              
           DenseMatrix* dmptr;                                                     // pointer to a new dense matrix
                       
           int m = static_cast<int>(ma.getm());
@@ -764,8 +763,10 @@ void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlma
     dims[0] = tmatrix->ncols();
     mlmat.createdensearray(dims,dataformat);
     mlmat.setnumericarray(tmatrix->get_data_pointer(),mlmat.getnumelements());
+    
+    delete tmatrix;
   }
- if (scimat->is_dense_col_maj())
+  if (scimat->is_dense_col_maj())
   {
     DenseColMajMatrix* tmatrix;
     tmatrix = scimat->as_dense_col_maj();
@@ -800,6 +801,8 @@ void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlma
     mlmat.setnumericarray(tmatrix->get_val(),tmatrix->get_nnz());
     mlmat.setrowsarray(tmatrix->get_col(),tmatrix->get_nnz());
     mlmat.setcolsarray(tmatrix->get_row(),tmatrix->nrows()+1);
+
+    delete tmatrix;
   }
 }
 
