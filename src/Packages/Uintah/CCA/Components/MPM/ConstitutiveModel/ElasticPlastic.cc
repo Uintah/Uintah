@@ -711,8 +711,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                            pLocalizedLabel_preReloc,              pset);
 
     // Allocate variable to store internal heating rate
-    ParticleVariable<double> pIntHeatRate;
-    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
+    ParticleVariable<double> pdTdt;
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
                            pset);
 
     // Get the plastic strain
@@ -725,7 +725,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Assign zero internal heating by default - modify if necessary.
-      pIntHeatRate[idx] = 0.0;
+      pdTdt[idx] = 0.0;
 
       //  cout << getpid() << " idx = " << idx 
       //       << " vel = " << pVelocity[idx] << endl;
@@ -1152,7 +1152,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
         // Calculate Tdot (internal plastic heating rate)
         double Tdot = state->yieldStress*state->plasticStrainRate*fac;
-        pIntHeatRate[idx] = Tdot*d_isothermal;
+        pdTdt[idx] = Tdot*d_isothermal;
       }
 
       //-----------------------------------------------------------------------
@@ -1442,7 +1442,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   ParticleVariable<Matrix3>      pDeformGrad_new, pStress_new, pRotation_new;
   ParticleVariable<double>       pVolume_deformed, pPlasticStrain_new, 
                                  pDamage_new, pPorosity_new, pStrainRate_new,
-                                 pPlasticStrainRate_new, pIntHeatRate;
+                                 pPlasticStrainRate_new, pdTdt;
 
   // Local variables
   Matrix3 DispGrad(0.0); // Displacement gradient
@@ -1503,8 +1503,8 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVolume_deformed, 
                            lb->pVolumeDeformedLabel,              pset);
-    new_dw->allocateAndPut(pIntHeatRate, 
-                           lb->pInternalHeatRateLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt, 
+                           lb->pdTdtLabel_preReloc,   pset);
 
     // LOCAL
     new_dw->allocateAndPut(pRotation_new,    
@@ -1543,7 +1543,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
         pStress_new[idx] = Zero;
         pDeformGrad_new[idx] = One; 
         pVolume_deformed[idx] = pVolume[idx];
-        pIntHeatRate[idx] = 0.0;
+        pdTdt[idx] = 0.0;
       }
       new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
       delete interpolator;
@@ -1557,7 +1557,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Assign zero internal heating by default - modify if necessary.
-      pIntHeatRate[idx] = 0.0;
+      pdTdt[idx] = 0.0;
 
       // Calculate the displacement gradient
       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S);
@@ -1720,7 +1720,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
         // Calculate Tdot (internal plastic heating rate)
         double Tdot = state->yieldStress*state->plasticStrainRate*fac;
-        pIntHeatRate[idx] = Tdot*d_isothermal;
+        pdTdt[idx] = Tdot*d_isothermal;
 
         // No failure implemented for implcit time integration
         pLocalized_new[idx] = pLocalized[idx];

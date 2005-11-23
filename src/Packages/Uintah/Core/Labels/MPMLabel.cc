@@ -23,8 +23,8 @@ MPMLabel::MPMLabel()
 
   // Heat flux from fire
 
-  heatFlux_CCLabel = 
-    VarLabel::create("heatFlux_CC",  CCVariable<double>::getTypeDescription());
+  heatRate_CCLabel = 
+    VarLabel::create("heatRate_CC",  CCVariable<double>::getTypeDescription());
 
   // Particle Variables
 
@@ -87,7 +87,7 @@ MPMLabel::MPMLabel()
   pSp_volLabel      = VarLabel::create( "p.sp_vol",
 			ParticleVariable<double>::getTypeDescription() ); 
   
-  pInternalHeatRateLabel = VarLabel::create( "p.internalHeatRate",
+  pdTdtLabel = VarLabel::create( "p.dTdt",
 			ParticleVariable<double>::getTypeDescription() );
   
   pExternalHeatRateLabel = VarLabel::create( "p.externalHeatRate",
@@ -180,7 +180,7 @@ MPMLabel::MPMLabel()
   pSp_volLabel_preReloc = VarLabel::create( "p.Sp_vol+",
 			ParticleVariable<double>::getTypeDescription() );  
                      
-  pInternalHeatRateLabel_preReloc = VarLabel::create( "p.internalHeatRate+",
+  pdTdtLabel_preReloc = VarLabel::create( "p.dTdt+",
 			ParticleVariable<double>::getTypeDescription() );
 
   pExternalHeatRateLabel_preReloc = VarLabel::create( "p.externalHeatRate+",
@@ -572,7 +572,7 @@ MPMLabel::MPMLabel()
 
 MPMLabel::~MPMLabel()
 {
-  VarLabel::destroy(heatFlux_CCLabel);
+  VarLabel::destroy(heatRate_CCLabel);
   //non PermanentParticleState
   VarLabel::destroy(pVolumeDeformedLabel);
   VarLabel::destroy(pTemperatureGradientLabel);
@@ -607,8 +607,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTempPreviousLabel_preReloc); // for thermal stress
   VarLabel::destroy(pSp_volLabel); 
   VarLabel::destroy(pSp_volLabel_preReloc); 
-  VarLabel::destroy(pInternalHeatRateLabel);
-  VarLabel::destroy(pInternalHeatRateLabel_preReloc);
+  VarLabel::destroy(pdTdtLabel);
+  VarLabel::destroy(pdTdtLabel_preReloc);
   VarLabel::destroy(pExternalHeatRateLabel);
   VarLabel::destroy(pExternalHeatRateLabel_preReloc);
   VarLabel::destroy(pSurfLabel);

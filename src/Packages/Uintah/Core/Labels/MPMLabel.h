@@ -23,7 +23,7 @@ using std::vector;
       const VarLabel* partCountLabel;
       
       // Heat flux from fire
-      const VarLabel* heatFlux_CCLabel;
+      const VarLabel* heatRate_CCLabel;
 
       //non PermanentParticleState
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
@@ -63,8 +63,8 @@ using std::vector;
       const VarLabel* pTempPreviousLabel_preReloc; //for thermal stress  
       const VarLabel* pSp_volLabel; 
       const VarLabel* pSp_volLabel_preReloc;
-      const VarLabel* pInternalHeatRateLabel; //for heat conduction
-      const VarLabel* pInternalHeatRateLabel_preReloc; //for heat conduction
+      const VarLabel* pdTdtLabel; //for heat conduction
+      const VarLabel* pdTdtLabel_preReloc; //for heat conduction
       const VarLabel* pExternalHeatRateLabel; //for heat conduction
       const VarLabel* pExternalHeatRateLabel_preReloc; //for heat conduction
       const VarLabel* pParticleIDLabel;

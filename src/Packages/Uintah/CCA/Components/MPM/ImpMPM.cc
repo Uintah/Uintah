@@ -258,7 +258,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pErosionLabel);  //  only used for imp -> exp transition
   t->computes(d_sharedState->get_delt_label());
 
-  t->computes(lb->heatFlux_CCLabel);
+  t->computes(lb->heatRate_CCLabel);
 
   if (d_switchCriteria) {
     d_switchCriteria->scheduleInitialize(level,sched);
@@ -302,7 +302,7 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
     cellNAPID.initialize(0);
 
     CCVariable<double> heatFlux;
-    new_dw->allocateAndPut(heatFlux,lb->heatFlux_CCLabel,0,patch);
+    new_dw->allocateAndPut(heatFlux,lb->heatRate_CCLabel,0,patch);
     heatFlux.initialize(1.0);
 
     for(int m=0;m<matls->size();m++){
@@ -469,9 +469,9 @@ void ImpMPM::scheduleProjectCCHeatSourceToNodes(SchedulerP& sched,
   t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,1);
   t->requires(Task::NewDW,lb->gVolumeLabel,             Ghost::AroundCells,1);
   t->requires(Task::NewDW,lb->cVolumeLabel,             Ghost::AroundCells,1);
-  t->requires(Task::OldDW,lb->heatFlux_CCLabel,         Ghost::AroundCells,1);
+  t->requires(Task::OldDW,lb->heatRate_CCLabel,         Ghost::AroundCells,1);
 
-  t->computes(lb->heatFlux_CCLabel);
+  t->computes(lb->heatRate_CCLabel);
   t->modifies(lb->gExternalHeatRateLabel);
   t->computes(lb->NC_CCweightLabel, one_matl);
 
@@ -1252,10 +1252,10 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
       CCVariable<double> CCheatrate_copy;
 
       new_dw->get(gvolume,         lb->gVolumeLabel,          dwi, patch,gac,1);
-      old_dw->get(CCheatrate,      lb->heatFlux_CCLabel,      dwi, patch,gac,1);
+      old_dw->get(CCheatrate,      lb->heatRate_CCLabel,      dwi, patch,gac,1);
       new_dw->get(cvolume,         lb->cVolumeLabel,          dwi, patch,gac,1);
       new_dw->getModifiable(gextHR,lb->gExternalHeatRateLabel,dwi, patch);
-      new_dw->allocateAndPut(CCheatrate_copy,  lb->heatFlux_CCLabel, dwi,patch);
+      new_dw->allocateAndPut(CCheatrate_copy,  lb->heatRate_CCLabel, dwi,patch);
 
       // carry forward heat rate.
       CCheatrate_copy.copyData(CCheatrate);
