@@ -81,7 +81,7 @@ public:
 
   //! get weight factors at parametric coordinate 
   inline
-  int get_weights(const vector<double> &coords, double *w) const
+  void get_weights(const vector<double> &coords, double *w) const
   {
     const double x=coords[0], y=coords[1], z=coords[2];
     w[0]  = (-1 + x)*(-1 + y)*(-1 + z)*(-1 + 2*x + 2*y + 2*z);
@@ -104,7 +104,6 @@ public:
     w[17] = -4*x*(-1 + y)*y*z;
     w[18] = -4*(-1 + x)*x*y*z;
     w[19] = +4*(-1 + x)*(-1 + y)*y*z;
-    return 20;
   }
   //! get value at parametric coordinate 
   template <class ElemData>
@@ -135,6 +134,75 @@ public:
 	       w[19] * this->nodes_[cd.edge11_index()]);
   }
   
+  //! get derivative weight factors at parametric coordinate 
+  inline
+  void get_derivate_weights(const vector<double> &coords, double *w) const
+  {
+    const double x=coords[0], y=coords[1], z=coords[2];
+    w[0]=(-1 + y)*(-1 + z)*(-3 + 4*x + 2*y + 2*z);
+    w[1]=-((-1 + y)*(-1 + z)*(1 - 4*x + 2*y + 2*z));
+    w[2]=-(y*(-3 + 4*x + 2*y - 2*z)*(-1 + z));
+    w[3]=+y*(1 - 4*x + 2*y - 2*z)*(-1 + z);
+    w[4]=-((-1 + y)*(-1 + 4*x + 2*y - 2*z)*z);
+    w[5]=+(-1 + y)*(3 - 4*x + 2*y - 2*z)*z;
+    w[6]=+y*z*(-5 + 4*x + 2*y + 2*z);
+    w[7]=+y*(1 + 4*x - 2*y - 2*z)*z;
+    w[8]=-4*(-1 + 2*x)*(-1 + y)*(-1 + z);
+    w[9]=+4*(-1 + y)*y*(-1 + z);
+    w[10]=+4*(-1 + 2*x)*y*(-1 + z);
+    w[11]=+4*y*(-1 + y + z - y*z);
+    w[12]=+4*z*(-1 + y + z - y*z);
+    w[13]=+4*(-1 + y)*(-1 + z)*z;
+    w[14]=+4*y*(-1 + z)*z;
+    w[15]=-4*y*(-1 + z)*z;
+    w[16]=+4*(-1 + 2*x)*(-1 + y)*z;
+    w[17]=-4*(-1 + y)*y*z;
+    w[18]=+4*(1 - 2*x)*y*z;
+    w[19]=+4*(-1 + y)*y*z;
+    
+    w[20]=(-1 + x)*(-1 + z)*(-3 + 2*x + 4*y + 2*z);
+    w[21]=+x*(1 + 2*x - 4*y - 2*z)*(-1 + z);
+    w[22]=-(x*(-3 + 2*x + 4*y - 2*z)*(-1 + z));
+    w[23]=-((-1 + x)*(-1 + z)*(1 + 2*x - 4*y + 2*z));
+    w[24]=-((-1 + x)*(-1 + 2*x + 4*y - 2*z)*z);
+    w[25]=+x*(1 - 2*x + 4*y - 2*z)*z;
+    w[26]=+x*z*(-5 + 2*x + 4*y + 2*z);
+    w[27]=+(-1 + x)*(3 + 2*x - 4*y - 2*z)*z;
+    w[28]=+4*x*(-1 + x + z - x*z);
+    w[29]=+4*x*(-1 + 2*y)*(-1 + z);
+    w[30]=+4*(-1 + x)*x*(-1 + z);
+    w[31]=-4*(-1 + x)*(-1 + 2*y)*(-1 + z);
+    w[32]=+4*z*(-1 + x + z - x*z);
+    w[33]=+4*x*(-1 + z)*z;
+    w[34]=+4*(-1 + x)*(-1 + z)*z;
+    w[35]=-4*x*(-1 + z)*z;
+    w[36]=+4*(-1 + x)*x*z;
+    w[37]=+4*x*(1 - 2*y)*z;
+    w[38]=-4*(-1 + x)*x*z;
+    w[39]=+4*(-1 + x)*(-1 + 2*y)*z;
+    
+    w[40]=(-1 + x)*(-1 + y)*(-3 + 2*x + 2*y + 4*z);
+    w[41]=+x*(-1 + y)*(1 + 2*x - 2*y - 4*z);
+    w[42]=+x*y*(1 - 2*x - 2*y + 4*z);
+    w[43]=-((-1 + x)*y*(-1 + 2*x - 2*y + 4*z));
+    w[44]=-((-1 + x)*(-1 + y)*(1 + 2*x + 2*y - 4*z));
+    w[45]=+x*(-1 + y)*(3 - 2*x + 2*y - 4*z);
+    w[46]=+x*y*(-5 + 2*x + 2*y + 4*z);
+    w[47]=+(-1 + x)*y*(3 + 2*x - 2*y - 4*z);
+    w[48]=+4*x*(-1 + x + y - x*y);
+    w[49]=+4*x*(-1 + y)*y;
+    w[50]=+4*(-1 + x)*x*y;
+    w[51]=+4*y*(-1 + x + y - x*y);
+    w[52]=-4*(-1 + x)*(-1 + y)*(-1 + 2*z);
+    w[53]=+4*x*(-1 + y)*(-1 + 2*z);
+    w[54]=+4*(-1 + x)*y*(-1 + 2*z);
+    w[55]=+4*x*y*(1 - 2*z);
+    w[56]=+4*(-1 + x)*x*(-1 + y);
+    w[57]=-4*x*(-1 + y)*y;
+    w[58]=-4*(-1 + x)*x*y;
+    w[59]=+4*(-1 + x)*(-1 + y)*y;
+  }
+
   //! get first derivative at parametric coordinate
   template <class ElemData>
   void derivate(const vector<double> &coords, const ElemData &cd, 
@@ -205,8 +273,7 @@ public:
 		+4*(-1 + x)*x*(-1 + y)*this->nodes_[cd.edge8_index()]
 		-4*x*(-1 + y)*y*this->nodes_[cd.edge9_index()]
 		-4*(-1 + x)*x*y*this->nodes_[cd.edge10_index()]
-		+4*(-1 + x)*(-1 + y)*y*this->nodes_[cd.edge11_index()]); 
-    
+		+4*(-1 + x)*(-1 + y)*y*this->nodes_[cd.edge11_index()]);  
   }
 
   //! get parametric coordinate for value within the element

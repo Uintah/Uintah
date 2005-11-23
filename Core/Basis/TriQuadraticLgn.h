@@ -80,18 +80,15 @@ public:
   int polynomial_order() const { return 2; }
   
   inline
-  int get_weights(const vector<double> &coords, double *w) const
+  void get_weights(const vector<double> &coords, double *w) const
   {
     const double x=coords[0], y=coords[1];  
-
     w[0] = (1 + 2*x*x - 3*y + 2*y*y + x*(-3 + 4*y));
     w[1] = +x*(-1 + 2*x);
     w[2] = +y*(-1+ 2*y);
     w[3] = -4*x*(-1 + x + y);
     w[4] = +4*x*y;
     w[5] = -4*y*(-1 + x + y);
-    
-    return 6;
   }
   
   //! get value at parametric coordinate
@@ -109,6 +106,25 @@ public:
 	       w[5] * this->nodes_[cd.edge2_index()]);
   }
   
+  //! get derivative weight factors at parametric coordinate 
+  inline
+  void get_derivate_weights(const vector<double> &coords, double *w) const
+  {
+   const double x=coords[0], y=coords[1];  
+    w[0] = (-3 + 4*x + 4*y);
+    w[1] = (-1 + 4*x);
+    w[2] = 0;
+    w[3] = -4*(-1 + 2*x + y);
+    w[4] = +4*y;
+    w[5] = -4*y;
+    w[6] = (-3 + 4*x + 4*y);
+    w[7] = 0;
+    w[8] = (-1 +4*y);
+    w[9] = -4*x;
+    w[10] = 4*x;
+    w[11] = -4*(-1 + x +2*y);
+  }
+
   //! get first derivative at parametric coordinate
   template <class ElemData>
   void derivate(const vector<double> &coords, const ElemData &cd, 
