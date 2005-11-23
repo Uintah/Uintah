@@ -265,7 +265,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
   constNCVariable<Vector>        gVelocity;
   constNCVariable<Vector>        GVelocity; 
   ParticleVariable<int>          pFailed_new;
-  ParticleVariable<double>       pVol_new, pIntHeatRate, pFailureStrain_new;
+  ParticleVariable<double>       pVol_new, pdTdt, pFailureStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
   ParticleVariable<Matrix3>      pDeformRate;
 
@@ -319,8 +319,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     // Allocate space for updated particle variables
     new_dw->allocateAndPut(pVol_new, 
                            lb->pVolumeDeformedLabel,              pset);
-    new_dw->allocateAndPut(pIntHeatRate, 
-                           lb->pInternalHeatRateLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt, 
+                           lb->pdTdtLabel_preReloc,   pset);
     new_dw->allocateAndPut(pDefGrad_new,
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pBeBar_new, 
@@ -344,7 +344,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
       
       // Assign zero internal heating by default - modify if necessary.
-      pIntHeatRate[idx] = 0.0;
+      pdTdt[idx] = 0.0;
 
       interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S,pSize[idx]);
 
@@ -494,7 +494,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gDisp;
   ParticleVariable<int>          pFailed_new;
-  ParticleVariable<double>       pVol_new, pIntHeatRate, pFailureStrain_new;
+  ParticleVariable<double>       pVol_new, pdTdt, pFailureStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
 
   // Local variables 
@@ -534,8 +534,8 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
     // Allocate space for updated particle variables
     new_dw->allocateAndPut(pVol_new, 
                            lb->pVolumeDeformedLabel,              pset);
-    new_dw->allocateAndPut(pIntHeatRate, 
-                           lb->pInternalHeatRateLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt, 
+                           lb->pdTdtLabel_preReloc,   pset);
     new_dw->allocateAndPut(pDefGrad_new,
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pBeBar_new, 
@@ -557,7 +557,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
       particleIndex idx = *iter;
       
       // Assign zero internal heating by default - modify if necessary.
-      pIntHeatRate[idx] = 0.0;
+      pdTdt[idx] = 0.0;
 
       interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S);
       // Compute the displacement gradient and the deformation gradient

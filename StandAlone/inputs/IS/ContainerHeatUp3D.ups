@@ -229,7 +229,7 @@
     <save label = "g.temperatureStar"/>
     <save label = "g.externalHeatRate"/>
     <save label = "g.mass"/>
-    <save label = "heatFlux_CC"/>
+    <save label = "heatRate_CC"/>
 
     <checkpoint cycle = "2" timestepInterval = "10"/>
   </DataArchiver>

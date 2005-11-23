@@ -246,7 +246,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   t->computes(Ilb->sp_vol_CCLabel);
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(MIlb->NC_CCweightLabel, one_matl);
-  t->computes(Mlb->heatFlux_CCLabel);
+  t->computes(Mlb->heatRate_CCLabel);
 
   if (d_switchCriteria) {
     d_switchCriteria->scheduleInitialize(level,sched);
@@ -836,11 +836,11 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,      gn);  
   t->requires(Task::NewDW, Ilb->mom_L_ME_CCLabel,       gn);
   t->requires(Task::NewDW, Ilb->eng_L_ME_CCLabel,       gn);
-  t->requires(Task::OldDW, Mlb->heatFlux_CCLabel,       gn);
+  t->requires(Task::OldDW, Mlb->heatRate_CCLabel,       gn);
 
   t->computes(Ilb->dTdt_CCLabel);
   t->computes(Ilb->dVdt_CCLabel);
-  t->computes(Mlb->heatFlux_CCLabel);
+  t->computes(Mlb->heatRate_CCLabel);
 
   sched->addTask(t, patches, mpm_matls);
 }
@@ -1094,7 +1094,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
 
       CCVariable<double> heatFlux;
-      new_dw->allocateAndPut(heatFlux, Mlb->heatFlux_CCLabel,    indx, patch);
+      new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel,    indx, patch);
       heatFlux.initialize(0.0);
 
       // Ignore the dummy materials that are used when particles are
@@ -1677,11 +1677,11 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
       new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gn, 0);
       new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gn, 0);
       new_dw->get(eng_L_ME_CC,     Ilb->eng_L_ME_CCLabel,    indx,patch,gn, 0);
-      old_dw->get(old_heatRate,    Mlb->heatFlux_CCLabel,    indx,patch,gn, 0);
+      old_dw->get(old_heatRate,    Mlb->heatRate_CCLabel,    indx,patch,gn, 0);
 
       new_dw->allocateAndPut(dTdt_CC,     Ilb->dTdt_CCLabel,    indx, patch);
       new_dw->allocateAndPut(dVdt_CC,     Ilb->dVdt_CCLabel,    indx, patch);
-      new_dw->allocateAndPut(heatRate,    Mlb->heatFlux_CCLabel,indx, patch);
+      new_dw->allocateAndPut(heatRate,    Mlb->heatRate_CCLabel,indx, patch);
 
       dTdt_CC.initialize(0.0);
       dVdt_CC.initialize(Vector(0.0));
@@ -2403,7 +2403,7 @@ void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
     add_matl->add(addedMaterialIndex);
     add_matl->addReference();
     t->computes(MIlb->vel_CCLabel,       add_matl);
-    t->computes(Mlb->heatFlux_CCLabel,   add_matl);
+    t->computes(Mlb->heatRate_CCLabel,   add_matl);
     t->computes(Ilb->rho_CCLabel,        add_matl);
     t->computes(Ilb->temp_CCLabel,       add_matl);
     t->computes(Ilb->sp_vol_CCLabel,     add_matl);
@@ -2496,7 +2496,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     int indx = d_sharedState->getNumMatls() - 1;
     double p_ref = d_sharedState->getRefPress();
     CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
-    CCVariable<double>  heatFlux_CC;
+    CCVariable<double>  heatRate_CC;
     CCVariable<Vector> vel_CC;
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     new_dw->allocateTemporary(rho_micro, patch);
@@ -2505,9 +2505,9 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);
     new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);
     new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
-    new_dw->allocateAndPut(heatFlux_CC,Mlb->heatFlux_CCLabel, indx,patch);
+    new_dw->allocateAndPut(heatRate_CC,Mlb->heatRate_CCLabel, indx,patch);
 
-    heatFlux_CC.initialize(0.0);
+    heatRate_CC.initialize(0.0);
 
     mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
                                          Temp_CC,     vel_CC, 0,patch);

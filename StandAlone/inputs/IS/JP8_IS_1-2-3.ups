@@ -57,7 +57,7 @@
        <carry_over var="scalar-f" />
        <carry_over var="cumulativeEnergyReleased" />
        <carry_over var="NC_CCweight" />
-       <carry_over var="heatFlux_CC" />
+       <carry_over var="heatRate_CC" />
 
  </SimulationComponent>
 
@@ -321,7 +321,7 @@
     <save label="p.particleID"/>
     <save label="p.mass"/>
     <save label="p.temperature"/>
-    <save label="heatFlux_CC"/>
+    <save label="heatRate_CC"/>
     <!-- 
     <save label="p.volume"/>
     <save label="p.stress"/> 

@@ -656,8 +656,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                            pPlasticTempIncLabel_preReloc,         pset);
 
     // Allocate variable to store internal heating rate
-    ParticleVariable<double> pIntHeatRate;
-    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
+    ParticleVariable<double> pdTdt;
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
                            pset);
 
     // Get the plastic strain
@@ -670,7 +670,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Assign zero internal heating by default - modify if necessary.
-      pIntHeatRate[idx] = 0.0;
+      pdTdt[idx] = 0.0;
 
       //cerr << getpid() << " idx = " << idx << endl;
       // Calculate the velocity gradient (L) from the grid velocity
@@ -1060,7 +1060,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
         // Alternative approach
         double Tdot = flowStress*epdot*taylorQuinney/(rho_cur*C_p);
-        pIntHeatRate[idx] = Tdot;
+        pdTdt[idx] = Tdot;
         double dT = Tdot*delT;
         pPlasticTempInc_new[idx] = dT;
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx] + dT; 
@@ -1258,7 +1258,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   ParticleVariable<double>       pVolume_deformed, pPlasticStrain_new, 
                                  pDamage_new, pPorosity_new, pStrainRate_new,
                                  pPlasticTemp_new, pPlasticTempInc_new,
-                                 pIntHeatRate;
+                                 pdTdt;
 
   // Local variables
   Matrix3 DispGrad(0.0); // Displacement gradient
@@ -1322,8 +1322,8 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVolume_deformed, 
                            lb->pVolumeDeformedLabel,              pset);
-    new_dw->allocateAndPut(pIntHeatRate, 
-                           lb->pInternalHeatRateLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt, 
+                           lb->pdTdtLabel_preReloc,   pset);
 
     // LOCAL
     new_dw->allocateAndPut(pLeftStretch_new, 
@@ -1368,7 +1368,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
         pStress_new[idx] = Zero;
         pDeformGrad_new[idx] = One; 
         pVolume_deformed[idx] = pMass[idx]/rho_0;
-        pIntHeatRate[idx] = 0.0;
+        pdTdt[idx] = 0.0;
       }
       new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
       delete interpolator;
@@ -1382,7 +1382,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Assign zero internal heating by default - modify if necessary.
-      pIntHeatRate[idx] = 0.0;
+      pdTdt[idx] = 0.0;
 
       // Calculate the displacement gradient
       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S);
@@ -1538,7 +1538,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
         double C_p = matl->getSpecificHeat();
         double Tdot = flowStress*state->plasticStrainRate*taylorQuinney/
                       (rho_cur*C_p);
-        pIntHeatRate[idx] = Tdot;
+        pdTdt[idx] = Tdot;
         double dT = Tdot*delT;
         pPlasticTempInc_new[idx] = dT;
         pPlasticTemp_new[idx] = pPlasticTemp[idx] + dT; 

@@ -461,8 +461,8 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(history6,         pHistory6Label_preReloc,      pset);
 
     // Allocate variable to store internal heating rate
-    ParticleVariable<double> pIntHeatRate;
-    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc,pset);
+    ParticleVariable<double> pdTdt;
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,pset);
     //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
     double c1 = d_initialData.c1;
@@ -494,7 +494,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Assign zero internal heating by default - modify if necessary.
-      pIntHeatRate[idx] = 0.0;
+      pdTdt[idx] = 0.0;
       // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
