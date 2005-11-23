@@ -24,8 +24,8 @@ SteadyState::SteadyState(ProblemSpecP& ps)
     cout << "num_steps  = " << d_numSteps << endl;
   }
 
-  heatFlux_CCLabel = 
-    VarLabel::create("heatFlux_CC",CCVariable<double>::getTypeDescription());
+  heatRate_CCLabel = 
+    VarLabel::create("heatRate_CC",CCVariable<double>::getTypeDescription());
 
   heatFluxSumLabel = 
     VarLabel::create("heatFluxSum",sum_vartype::getTypeDescription() );
@@ -37,7 +37,7 @@ SteadyState::SteadyState(ProblemSpecP& ps)
 
 SteadyState::~SteadyState()
 {
-  VarLabel::destroy(heatFlux_CCLabel);
+  VarLabel::destroy(heatRate_CCLabel);
   VarLabel::destroy(heatFluxSumLabel);
   VarLabel::destroy(heatFluxSumTimeDerivativeLabel);
 }
@@ -85,7 +85,7 @@ void SteadyState::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   container->add(d_material);
   container->addReference();
 
-  t->requires(Task::NewDW, heatFlux_CCLabel,container,Ghost::None);
+  t->requires(Task::NewDW, heatRate_CCLabel,container,Ghost::None);
   t->requires(Task::OldDW, heatFluxSumLabel);
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
 
@@ -112,7 +112,7 @@ void SteadyState::switchTest(const ProcessorGroup* group,
     const Patch* patch = patches->get(p);  
     
     constCCVariable<double> heatFlux;
-    new_dw->get(heatFlux, heatFlux_CCLabel,0,patch,Ghost::None,0);
+    new_dw->get(heatFlux, heatRate_CCLabel,0,patch,Ghost::None,0);
     
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       heatFluxSum += heatFlux[*iter];

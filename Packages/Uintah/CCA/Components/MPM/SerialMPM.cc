@@ -237,7 +237,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pVolumeLabel);
   t->computes(lb->pTemperatureLabel);
   t->computes(lb->pTempPreviousLabel); // for therma  stresm analysis
-  t->computes(lb->pInternalHeatRateLabel);
+  t->computes(lb->pdTdtLabel);
   t->computes(lb->pVelocityLabel);
   t->computes(lb->pExternalForceLabel);
   t->computes(lb->pParticleIDLabel);
@@ -318,7 +318,7 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   t->computes(lb->pVolumeLabel,            add_matl);
   t->computes(lb->pTemperatureLabel,       add_matl);
   t->computes(lb->pTempPreviousLabel,      add_matl); // for thermal stress 
-  t->computes(lb->pInternalHeatRateLabel,  add_matl);
+  t->computes(lb->pdTdtLabel,  add_matl);
   t->computes(lb->pVelocityLabel,          add_matl);
   t->computes(lb->pExternalForceLabel,     add_matl);
   t->computes(lb->pParticleIDLabel,        add_matl);
@@ -557,7 +557,7 @@ void SerialMPM::scheduleExMomInterpolated(SchedulerP& sched,
 
 /////////////////////////////////////////////////////////////////////////
 /*!  **WARNING** In addition to the stresses and deformations, the internal 
- *               heat rate in the particles (pInternalHeatRateLabel) 
+ *               heat rate in the particles (pdTdtLabel) 
  *               is computed here */
 /////////////////////////////////////////////////////////////////////////
 void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,

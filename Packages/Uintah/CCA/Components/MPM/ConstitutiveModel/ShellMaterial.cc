@@ -648,8 +648,8 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pRotMass,   pRotMassLabel,           pset);
 
     // Allocate variable to store internal heating rate
-    ParticleVariable<double> pIntHeatRate;
-    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
+    ParticleVariable<double> pdTdt;
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
                            pset);
 
     // Initialize contants
@@ -666,7 +666,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Assign zero internal heating by default - modify if necessary.
-      pIntHeatRate[idx] = 0.0;
+      pdTdt[idx] = 0.0;
 
       // Find the surrounding nodes, interpolation functions and derivatives
 

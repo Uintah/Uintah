@@ -283,8 +283,8 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     // Allocate variable to store internal heating rate
-    ParticleVariable<double> pIntHeatRate;
-    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
+    ParticleVariable<double> pdTdt;
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
                            pset);
 
     double C1 = d_initialData.C1;
@@ -299,7 +299,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
       
       // Assign zero internal heating by default - modify if necessary.
-      pIntHeatRate[idx] = 0.0;
+      pdTdt[idx] = 0.0;
 
       // Get the node indices that surround the cell
       ASSERT(patch->getBox().contains(px[idx]));
