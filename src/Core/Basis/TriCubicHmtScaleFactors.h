@@ -65,7 +65,7 @@ public:
   virtual ~TriCubicHmtScaleFactors() {}
 
   inline
-  int get_weights(const vector<double> &coords, double *w) const
+  void get_weights(const vector<double> &coords, double *w) const
   {
     const double x=coords[0], y=coords[1];  
     const double x2=x*x, x3=x2*x, y2=y*y, y3=y2*y;
@@ -82,8 +82,6 @@ public:
     w[9]  = -(x*y2*(-3 + 2*y));
     w[10] = +(-1 + y)*y2;
     w[11] = +x*(-1 + y)*y2;
-    
-    return 12;
   }
 
   //! get value at parametric coordinate 
@@ -120,6 +118,35 @@ public:
 	       +w[11] * sdxy2);
   }
   
+  //! get derivative weight factors at parametric coordinate 
+  inline
+  void get_derivate_weights(const vector<double> &coords, double *w) const
+  {
+    const double x=coords[0], y=coords[1];  
+    const double x2=x*x, x3=x2*x, y2=y*y;
+    const double y12=(y-1)*(y-1);
+    w[0] = 6*(-1 + x)*x;
+    w[1] = (-4*x + 3*x2 + y12*(1 + 2*y));
+    w[2] = 6*(-1 + x)*x*y;
+    w[3] = (-4*x + 3*x2 + y12)*y;
+    w[4] = -6*(-1 + x)*x;
+    w[5] = x*(-2 + 3*x);
+    w[6] = -6*(-1 + x)*x*y;
+    w[7] = x*(-2 + 3*x)*y;
+    w[8] = (3 - 2*y)*y2;
+    w[9] = (-1 + y)*y2;
+    w[10] = 6*(-1 + y)*y;
+    w[11] = 6*x*(-1 + y)*y;
+    w[12] = (1 - 3*x2 + 2*x3 - 4*y + 3*y2);
+    w[13] = x*(1 - 2*x + x2 - 4*y + 3*y2);
+    w[14] = (3 - 2*x)*x2;
+    w[15] = (-1 + x)*x2;
+    w[16] = -6*(-1 + y)*y;
+    w[17] = -6*x*(-1 + y);
+    w[18] = y*(-2 + 3*y);
+    w[19] = x*y*(-2 + 3*y);
+  }
+
   //! get first derivative at parametric coordinate
   template <class ElemData>
   void derivate(const vector<double> &coords, const ElemData &cd, 

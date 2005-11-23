@@ -82,7 +82,7 @@ public:
 
   //! get weight factors at parametric coordinate 
   inline
-  int get_weights(const vector<double> &coords, double *w) const
+  void get_weights(const vector<double> &coords, double *w) const
   { 
     const double x=coords[0], y=coords[1], z=coords[2];  
       
@@ -101,8 +101,6 @@ public:
     w[12] = -4*x*(-1 + x +y)*z;
     w[13] = +4*x*y*z;
     w[14] = -4*y*(-1 + x + y)*z;
-
-    return 15;
   }
 
   //! get value at parametric coordinate 
@@ -129,6 +127,58 @@ public:
 	      w[14] * this->nodes_[cd.edge8_index()]);
   }
   
+ //! get derivative weight factors at parametric coordinate 
+  inline
+  void get_derivate_weights(const vector<double> &coords, double *w) const
+  {
+    const double x=coords[0], y=coords[1], z=coords[2];  
+    w[0]=-(-1 + z)*(-3 + 4*x + 4*y + 2*z);
+    w[1]=-(-1 + 4*x - 2*z)*(-1 + z);
+    w[2]=0;
+    w[3]=+(-1 + 4*x + 4*y - 2*z)*z;
+    w[4]=+z*(-3 + 4*x + 2*z);
+    w[5]=0;
+    w[6]=+4*(-1 + 2*x + y)*(-1 +z);
+    w[7]=-4*y*(-1 + z);
+    w[8]=+4*y*(-1 + z);
+    w[9]=+4*(-1 + z)*z;
+    w[10]=-4*(-1 + z)*z;
+    w[11]=0;
+    w[12]=-4*(-1 + 2*x + y)*z;
+    w[13]=+4*y*z;
+    w[14]=-4*y*z;
+    w[15]=-((-1 + z)*(-3 + 4*x + 4*y + 2*z));
+    w[16]=0;
+    w[17]=-((-1 + 4*y - 2*z)*(-1 + z));
+    w[18]=+(-1 + 4*x + 4*y - 2*z)*z;
+    w[19]=0;
+    w[20]=+z*(-3 + 4*y + 2*z);
+    w[21]=+4*x*(-1 + z);
+    w[22]=-4*x*(-1 + z);
+    w[23]=+4*(-1 + x + 2*y)*(-1 + z);
+    w[24]=4*(-1 + z)*z;
+    w[25]=0;
+    w[26]=-4*(-1 + z)*z;
+    w[27]=-4*x*z;
+    w[28]=+4*x*z;
+    w[29]=-4*(-1 + x + 2*y)*z;
+    w[30]=-((-1 + x + y)*(-3 + 2*x + 2*y + 4*z));
+    w[31]=+x*(-1 - 2*x + 4*z);
+    w[32]=+y*(-1 - 2*y + 4*z);
+    w[33]=+(-1 + x + y)*(1 + 2*x + 2*y - 4*z);
+    w[34]=+x*(-3 + 2*x + 4*z);
+    w[35]=+y*(-3 + 2*y + 4*z);
+    w[36]=+4*x*(-1 + x + y);
+    w[37]=-4*x*y;
+    w[38]=+4*y*(-1 + x + y);
+    w[39]=+4*(-1 + x + y)*(-1 + 2*z);
+    w[40]=+x*(4 - 8*z);
+    w[41]=+y*(4 - 8*z);
+    w[42]=-4*x*(-1 + x + y);
+    w[43]=+4*x*y;
+    w[44]=-4*y*(-1 + x + y);
+  }
+
   //! get first derivative at parametric coordinate
   template <class ElemData>
   void derivate(const vector<double> &coords, const ElemData &cd, 

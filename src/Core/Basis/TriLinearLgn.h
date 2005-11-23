@@ -305,15 +305,13 @@ public:
   }
 
   inline
-  int get_weights(const vector<double> &coords, double *w) const
+  void get_weights(const vector<double> &coords, double *w) const
   {
     const double x = coords[0], y = coords[1];  
 
     w[0] = (1 - x - y);
     w[1] = x;
     w[2] = y;
-
-    return 3;
   }
 
   //! get value at parametric coordinate
@@ -328,6 +326,18 @@ public:
 	       w[2] * cd.node2());
   }
   
+  //! get derivative weight factors at parametric coordinate 
+  inline
+  void get_derivate_weights(const vector<double> &coords, double *w) const
+  {
+    w[0] = -1;
+    w[1] = 1;
+    w[2] = 0;
+    w[3] = -1;
+    w[4] = 0;
+    w[5] = 1;
+  }
+
   //! get first derivative at parametric coordinate
   template <class ElemData>
   void derivate(const vector<double> &coords, const ElemData &cd, 

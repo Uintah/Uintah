@@ -303,16 +303,13 @@ public:
   int polynomial_order() const { return 1; }
 
   inline
-  int get_weights(const vector<double> &coords, double *w) const
+  void get_weights(const vector<double> &coords, double *w) const
   { 
     const double x = coords[0], y = coords[1], z = coords[2];  
-
     w[0] = (1. - x - y - z);
     w[1] = x;
     w[2] = y;
     w[3] = z;
-
-    return 4;
   }
 
   //! get value at parametric coordinate 
@@ -328,6 +325,24 @@ public:
 	       w[3] * cd.node3());
   }
   
+  //! get derivative weight factors at parametric coordinate 
+  inline
+  void get_derivate_weights(const vector<double> &coords, double *w) const
+  {
+    w[0] = -1;
+    w[1] = 1;
+    w[2] = 0;
+    w[3] = 0;
+    w[4] = -1;
+    w[5] = 0;
+    w[6] = 1;
+    w[7] = 0;
+    w[8] = -1;
+    w[9] = 0;
+    w[10] = 0;
+    w[11] = 1;
+  }
+
   //! get first derivative at parametric coordinate
   template <class ElemData>
   void derivate(const vector<double> &coords, const ElemData &cd, 
