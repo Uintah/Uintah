@@ -53,6 +53,7 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <sgi_stl_warnings_off.h>
 #include <set>
+#include <numeric>
 #include <iostream>
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
