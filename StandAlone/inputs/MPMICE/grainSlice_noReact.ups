@@ -284,7 +284,6 @@
               <momentum>       [0.0,    1.e15, 1.e15, 1.e15,   1.e15, 1.e15]   </momentum>
               <heat>           [1.e15,  1.e15, 1.e15, 10.0,   1.e15, 1.e15]    </heat>
           </exchange_coefficients>
-          <mass_exchange>               false         </mass_exchange>
        </exchange_properties>
     </MaterialProperties>
        
