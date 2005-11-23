@@ -935,8 +935,8 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                               
                               //  A L L _ M A T L S
   t->computes(Ilb->f_theta_CCLabel);
-  t->computes(Ilb->compressiblityLabel, ice_matls);
-  t->computes(Ilb->compressiblityLabel, mpm_matls);
+  t->computes(Ilb->compressibilityLabel, ice_matls);
+  t->computes(Ilb->compressibilityLabel, mpm_matls);
 
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(Ilb->vol_frac_CCLabel);
@@ -1880,7 +1880,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocateAndPut(f_theta[m],    Ilb->f_theta_CCLabel,   indx,patch);
       new_dw->allocateAndPut(speedSound[m], Ilb->speedSound_CCLabel,indx,patch);
       new_dw->allocateAndPut(sp_vol_new[m], Ilb->sp_vol_CCLabel,    indx,patch);
-      new_dw->allocateAndPut(kappa[m],     Ilb->compressiblityLabel,indx,patch);
+      new_dw->allocateAndPut(kappa[m],     Ilb->compressibilityLabel,indx,patch);
     }
 
     press_new.copyData(press);
