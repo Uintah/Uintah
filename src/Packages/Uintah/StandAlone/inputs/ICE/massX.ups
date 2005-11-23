@@ -235,7 +235,6 @@
             <momentum>          [1.0e10]          </momentum>
             <heat>              [1.0e10]          </heat>
          </exchange_coefficients>
-         <mass_exchange> true </mass_exchange>
        </exchange_properties>
 
     </MaterialProperties>           
