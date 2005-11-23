@@ -225,7 +225,6 @@
             <momentum>          [1e10]            </momentum>
             <heat>              [1e10]              </heat>
         </exchange_coefficients>
-        <mass_exchange> true </mass_exchange>
         </exchange_properties>
     </MaterialProperties> 
 </Uintah_specification>
