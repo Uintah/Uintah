@@ -1009,7 +1009,7 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(lb->vol_frac_CCLabel);
   t->computes(lb->sp_vol_CCLabel);
   t->computes(lb->rho_CCLabel);
-  t->computes(lb->compressiblityLabel);
+  t->computes(lb->compressibilityLabel);
   t->computes(lb->sumKappaLabel,        press_matl, oims);
   t->computes(lb->press_equil_CCLabel,  press_matl, oims);
   t->computes(lb->sum_imp_delPLabel,    press_matl, oims);  //  initialized for implicit
@@ -1189,7 +1189,7 @@ void ICE::scheduleUpdateVolumeFraction(SchedulerP& sched,
     task->requires( Task::NewDW, lb->sp_vol_CCLabel,     gn);
     task->requires( Task::NewDW, lb->rho_CCLabel,        gn);    
     task->requires( Task::NewDW, lb->modelVol_srcLabel,  gn);
-    task->requires( Task::NewDW, lb->compressiblityLabel,gn);
+    task->requires( Task::NewDW, lb->compressibilityLabel,gn);
     task->modifies(lb->sumKappaLabel, press_matl);  
     task->modifies(lb->vol_frac_CCLabel);
     
@@ -1361,7 +1361,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 //  t->requires(Task::OldDW, lb->delTLabel);  FOR AMR
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
-  t->requires(Task::NewDW, lb->compressiblityLabel,                gn);
+  t->requires(Task::NewDW, lb->compressibilityLabel,                gn);
   t->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, gac,1);
   t->requires(Task::NewDW, lb->thermalCondLabel,  ice_matls, gac,1);
   t->requires(Task::NewDW, lb->rho_CCLabel,                  gac,1);
@@ -1446,7 +1446,7 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   t->requires(Task::NewDW, lb->vol_frac_CCLabel,          gac,1);
   t->requires(Task::OldDW, lb->temp_CCLabel,        ice_matls, gn);
   t->requires(Task::NewDW, lb->temp_CCLabel,        mpm_matls, gn); 
-  t->requires(Task::NewDW, lb->compressiblityLabel,            gn);
+  t->requires(Task::NewDW, lb->compressibilityLabel,            gn);
   t->requires(Task::NewDW, lb->specific_heatLabel,  ice_matls, gn);
   t->requires(Task::NewDW, lb->delP_DilatateLabel,  press_matl,oims,gn);
     
@@ -2335,7 +2335,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocateAndPut(rho_CC_new[m],lb->rho_CCLabel,        indx,patch);    
       new_dw->allocateAndPut(sp_vol_new[m],lb->sp_vol_CCLabel,     indx,patch);    
       new_dw->allocateAndPut(f_theta[m],   lb->f_theta_CCLabel,    indx,patch);    
-      new_dw->allocateAndPut(kappa[m],     lb->compressiblityLabel,indx,patch); 
+      new_dw->allocateAndPut(kappa[m],     lb->compressibilityLabel,indx,patch); 
       new_dw->allocateAndPut(speedSound_new[m], lb->speedSound_CCLabel,
                                                                    indx,patch);
     }
@@ -2597,7 +2597,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     new_dw->allocateAndPut(press_eq,     lb->press_equil_CCLabel, 0,  patch);
     new_dw->allocateAndPut(sumKappa,     lb->sumKappaLabel,       0,  patch);
     new_dw->allocateAndPut(sum_imp_delP, lb->sum_imp_delPLabel,   0,  patch);
-    new_dw->allocateAndPut(kappa,        lb->compressiblityLabel,indx,patch);
+    new_dw->allocateAndPut(kappa,        lb->compressibilityLabel,indx,patch);
     new_dw->allocateAndPut(vol_frac,     lb->vol_frac_CCLabel,   indx,patch);    
     new_dw->allocateAndPut(sp_vol_new,   lb->sp_vol_CCLabel,     indx,patch);     
     new_dw->allocateAndPut(f_theta,      lb->f_theta_CCLabel,    indx,patch);
@@ -3649,7 +3649,7 @@ void ICE::updateVolumeFraction(const ProcessorGroup*,
       new_dw->get(rho_CC[m],      lb->rho_CCLabel,             indx,patch,gn,0);
       new_dw->get(sp_vol[m],      lb->sp_vol_CCLabel,          indx,patch,gn,0);
       new_dw->get(modVolSrc[m],   lb->modelVol_srcLabel,       indx,patch,gn,0);
-      new_dw->get(kappa[m],       lb->compressiblityLabel,     indx,patch,gn,0);
+      new_dw->get(kappa[m],       lb->compressibilityLabel,     indx,patch,gn,0);
     }
 
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
@@ -3913,7 +3913,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       
       new_dw->get(sp_vol_CC,    lb->sp_vol_CCLabel,     indx,patch,gac,1);
       new_dw->get(rho_CC,       lb->rho_CCLabel,        indx,patch,gac,1);
-      new_dw->get(kappa,        lb->compressiblityLabel,indx,patch,gn, 0);
+      new_dw->get(kappa,        lb->compressibilityLabel,indx,patch,gn, 0);
       new_dw->get(vol_frac,     lb->vol_frac_CCLabel,   indx,patch,gn, 0);
        
       new_dw->allocateAndPut(int_eng_source, 
@@ -4245,7 +4245,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn, 0);
       new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn, 0);
       new_dw->get(f_theta,    lb->f_theta_CCLabel,    indx,patch,gn, 0);
-      new_dw->get(kappa,      lb->compressiblityLabel,indx,patch,gn, 0);
+      new_dw->get(kappa,      lb->compressibilityLabel,indx,patch,gn, 0);
 
       //__________________________________
       //  compute sp_vol_L * mass
