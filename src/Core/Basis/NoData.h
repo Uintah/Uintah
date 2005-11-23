@@ -106,7 +106,7 @@ const TypeDescription* get_type_description(NoDataBasis<T> *)
     const TypeDescription *sub = get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription(NoDataBasis<T>::type_name(-1), subs, 
+    td = scinew TypeDescription("NoDataBasis", subs, 
 				string(__FILE__), 
 				"SCIRun", 
 				TypeDescription::BASIS_E);
