@@ -121,7 +121,7 @@ public:
   inline T& node_values(int i) { return &nodes_[i]; }
 
   //! return number of additional nodes
-  inline int size_node_values() { nodes_.size(); }
+  inline int size_node_values() { return nodes_.size(); }
 
 protected:
   vector<T>          nodes_;  
@@ -140,7 +140,7 @@ public:
   inline void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }
 
   //! return number of additional derivatives
-  inline int size_derivatives() { derivs_.size(); }
+  inline int size_derivatives() { return derivs_.size(); }
 
  protected:
   vector<vector<T> > derivs_; 
@@ -160,7 +160,7 @@ public:
   inline void add_scalefactors(const vector<double> &p) { scalefactors_.push_back(p); }
 
   //! return number of additional derivatives
-  inline int size_scalefactors() { scalefactors_.size(); }
+  inline int size_scalefactors() { return scalefactors_.size(); }
 
  protected:
   vector<vector<double> > scalefactors_; 
@@ -179,7 +179,7 @@ public:
   inline void add_scalefactors(const vector<double> &p) { scalefactors_.push_back(p[0]); }
 
   //! return number of additional derivatives
-  inline int size_scalefactors() { scalefactors_.size(); }
+  inline int size_scalefactors() { return scalefactors_.size(); }
 
  protected:
   vector<double> scalefactors_; 
