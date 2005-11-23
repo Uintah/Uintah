@@ -310,8 +310,8 @@ namespace Uintah {
         _requiresPar = solver->requiresPar();
         cout_dbg << "Making linear system" << "\n";
         makeLinearSystem<Types>(matl);
-        printMatrix("output_A");
-        printRHS("output_b");
+        //printMatrix("output_A");
+        // RHS("output_b");
         
         //-----------------------------------------------------------
         // Solve the linear system
@@ -365,7 +365,7 @@ namespace Uintah {
          * Print the solution and other info
          *-----------------------------------------------------------*/
         cout_dbg << "Print the solution vector" << "\n";
-        printSolution("output_x1");
+       // printSolution("output_x1");
         cout_dbg << "Iterations = " << numIterations << "\n";
         cout_dbg << "Final Relative Residual Norm = "
                  << finalResNorm << "\n";
