@@ -221,9 +221,6 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
         iter != pset->end(); iter++){
        particleIndex idx = *iter;
 
-      // Assign zero internal heating by default - modify if necessary.
-      pdTdt[idx] = 0.0;
-
        // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
 
@@ -246,6 +243,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
       deformationGradientInc = velGrad * delT + Identity;
+      double Jinc = deformationGradientInc.Determinant();
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
@@ -260,10 +258,14 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       double dp_de   = (gamma - 1.0)*rhoM;
 
       p = (gamma - 1.0)*rhoM*cv*ptemp[idx];
+      double P = p - 101325.;
 
       double tmp = dp_drho + dp_de * p /(rhoM * rhoM);
 
-      pstress[idx] = Identity*(-p);
+      pstress[idx] = Identity*(-P);
+
+      // Temp increase due to P*dV work
+      pdTdt[idx] = (-p)*(Jinc-1.)*(1./(rhoM*cv))/delT;
 
       Vector pvelocity_idx = pvelocity[idx];
       c_dil = sqrt(tmp);
