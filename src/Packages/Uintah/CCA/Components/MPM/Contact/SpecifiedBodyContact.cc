@@ -23,6 +23,7 @@
 #include <iostream>
 #include <fstream>
 #include <limits>
+#include <numeric>
 #include <sgi_stl_warnings_on.h>
 using std::cerr;
 
