@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <list>
+#include <numeric>
 
 using namespace std;
 using namespace SCIRun;
