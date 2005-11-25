@@ -47,13 +47,13 @@ public:
   
   ConstantBasisElement() {}
   virtual ~ConstantBasisElement() {}
-
   
   static int domain_dimension() { return 0; } //!< return dimension of domain 
   
   static int number_of_vertices() { return 0; } //!< return number of vertices
   static int number_of_mesh_vertices() { return 0; } //!< return number of vertices
   static int number_of_edges() { return 0; }  //!< return number of edges 
+  static int dofs() { return 1; } //!< return degrees of freedom
   
   static int vertices_of_face() { return 0; } //!< return number of vertices per face 
   static int faces_of_cell() { return 0; } //!< return number of faces per cell 
@@ -69,6 +69,12 @@ public:
   virtual ~ConstantBasis() {}
   
   int polynomial_order() const { return 0; }
+
+  inline
+  void get_weights(const vector<double> &coords, double *w) const
+  {
+    w[0]=1;
+  }
 
   //! get value at parametric coordinate 
   template <class ElemData>
@@ -86,6 +92,12 @@ public:
     derivs.resize(s);
     for(vector<double>::size_type si=0; si<s; si++)
       derivs[si] = T(0);
+  }
+
+  //! get derivative weight factors at parametric coordinate 
+  inline
+  void get_weights_weights(const vector<double> &coords, double *w) const
+  {
   }
 
   static  const string type_name(int n = -1);

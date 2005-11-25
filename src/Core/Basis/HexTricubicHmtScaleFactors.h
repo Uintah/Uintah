@@ -48,6 +48,8 @@ class HexTricubicHmtScaleFactorsUnitElement :
 public:
   HexTricubicHmtScaleFactorsUnitElement() {}
   virtual ~HexTricubicHmtScaleFactorsUnitElement() {}
+
+  static int dofs() { return 64; } //!< return degrees of freedom
 };
 
 

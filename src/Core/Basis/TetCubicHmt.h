@@ -46,6 +46,8 @@ class TetCubicHmtUnitElement : public TetLinearLgnUnitElement {
 public:
   TetCubicHmtUnitElement() {}
   virtual ~TetCubicHmtUnitElement() {}
+
+  static int dofs() { return 16; } //!< return degrees of freedom
 };
 
 //! Class for handling of element of type tetrahedron with 

@@ -46,6 +46,8 @@ class HexTricubicHmtUnitElement : public HexTrilinearLgnUnitElement {
 public:
   HexTricubicHmtUnitElement() {};
   virtual ~HexTricubicHmtUnitElement() {};
+
+  static int dofs() { return 64; } //!< return degrees of freedom
 };
 
 
