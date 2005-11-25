@@ -1005,7 +1005,8 @@ TriSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
     get_nodes(l,idx);
     vector<double> coords(2);
     if (get_coords(coords, p, idx)) {
-      return basis_.get_weights(coords, w);
+      basis_.get_weights(coords, w);
+      return basis_.dofs();
     }
   }
   return 0;

@@ -609,7 +609,8 @@ StructQuadSurfMesh<Basis>::get_weights(const Point &p,
     get_nodes(l,idx);
     vector<double> coords(2);
     if (get_coords(coords, p, idx)) {
-      return this->basis_.get_weights(coords, w);
+      this->basis_.get_weights(coords, w);
+      return this->basis_.dofs();      
     }
   }
   return 0;
