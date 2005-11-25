@@ -46,6 +46,8 @@ class QuadBicubicHmtUnitElement : public QuadBilinearLgnUnitElement {
 public:
   QuadBicubicHmtUnitElement() {}
   virtual ~QuadBicubicHmtUnitElement() {}
+
+  static int dofs() { return 12; } //!< return degrees of freedom
 };
 
 

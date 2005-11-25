@@ -47,6 +47,8 @@ class TriCubicScaleFactorsHmtUnitElement : public TriLinearLgnUnitElement {
 public:
   TriCubicScaleFactorsHmtUnitElement() {}
   virtual ~TriCubicScaleFactorsHmtUnitElement() {}
+
+  static int dofs() { return 12; } //!< return degrees of freedom
 };
 
 

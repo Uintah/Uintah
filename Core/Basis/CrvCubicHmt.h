@@ -47,6 +47,8 @@ class CrvCubicHmtUnitElement : public CrvLinearLgnUnitElement {
 public:
   CrvCubicHmtUnitElement() {}
   virtual ~CrvCubicHmtUnitElement() {}
+
+  static int dofs() { return 4; } //!< return degrees of freedom
 };
 
 

@@ -56,17 +56,20 @@ public:
   CrvLinearLgnUnitElement() {}
   virtual ~CrvLinearLgnUnitElement() {}
 
-  //!< return dimension of domain 
+  //! return dimension of domain 
   static int domain_dimension() { return 1; } 
-  //!< return number of vertices
+  //! return number of vertices
   static int number_of_vertices() { return 2; }
-  //!< return number of vertices in mesh
+  //! return number of vertices in mesh
   static int number_of_mesh_vertices() { return 2; }
-  //!< return number of edges 
+  //! return degrees of freedom
+  static int dofs() { return 2; }
+
+  //! return number of edges 
   static int number_of_edges() { return 1; } 
-  //!< return number of vertices per face 
+  //! return number of vertices per face 
   static int vertices_of_face() { return 0; } 
-  //!< return number of faces per cell 
+  //! return number of faces per cell 
   static int faces_of_cell() { return 0; } 
 };
 

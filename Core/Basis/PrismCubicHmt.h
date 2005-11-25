@@ -47,6 +47,8 @@ class PrismCubicHmtUnitElement : public PrismLinearLgnUnitElement {
 public:
   PrismCubicHmtUnitElement() {}
   virtual ~PrismCubicHmtUnitElement() {}
+
+   static int dofs() { return 24; } //!< return degrees of freedom
 };
 
 

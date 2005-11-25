@@ -48,6 +48,8 @@ class HexTricubicHmtScaleFactorsEdgesUnitElement :
 public:
   HexTricubicHmtScaleFactorsEdgesUnitElement() {}
   virtual ~HexTricubicHmtScaleFactorsEdgesUnitElement() {}
+
+  static int dofs() { return 64; } //!< return degrees of freedom
 };
 
 
