@@ -1756,8 +1756,8 @@ LatVolMesh<Basis>::get_weights(const Point &p,
     get_nodes(locs, idx);
     vector<double> coords(3);
     if (get_coords(coords, p, idx)) {
-      bool rval = basis_.get_weights(coords, w);
-      return rval;
+      basis_.get_weights(coords, w);
+      return basis_.dofs();
     }
   }
   return 0;

@@ -45,7 +45,7 @@ typedef LockingHandle<Mesh> MeshHandle;
 
 // Maximum number of weights get_weights will return.
 // Currently at 15 for QuadraticLatVolMesh.
-#define MESH_WEIGHT_MAXSIZE 15
+#define MESH_WEIGHT_MAXSIZE 64
 #define MESH_NO_NEIGHBOR 0xffffffff // 32 bit under_type!
 
 class Mesh : public PropertyManager {
