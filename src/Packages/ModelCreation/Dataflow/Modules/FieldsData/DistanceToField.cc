@@ -132,7 +132,7 @@ void DistanceToField::execute()
 
     if(!(fieldmath.DistanceToField(input,output,object)))
     {
-      error("Dynamically compile algorithm failed");
+      error("Dynamically compiled algorithm failed");
       return;
     }
   

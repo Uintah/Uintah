@@ -87,6 +87,8 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 {
   typename FIELD::value_type val;
 
+  FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
+
   if (input->basis_order() == -1)
   {
     reporter->warning("GetFieldData: No data present in field");
@@ -95,7 +97,7 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else if (input->basis_order() == 0)
   {
-    typename FIELD::mesh_type* mesh = input->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = field->get_typed_mesh().get_rep();
     typename FIELD::mesh_type::Elem::size_type size;
     typename FIELD::mesh_type::Elem::iterator it, it_end;
     
@@ -118,7 +120,6 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     }
 
     size_t k = 0;
-    FIELD* field = dynamic_cast<FIELD*>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
@@ -130,7 +131,7 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else 
   {
-    typename FIELD::mesh_type* mesh = input->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = field->get_typed_mesh().get_rep();
     typename FIELD::mesh_type::Node::size_type size;
     typename FIELD::mesh_type::Node::iterator it, it_end;
     
@@ -154,7 +155,6 @@ bool GetFieldScalarDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 
     size_t k = 0;
 
-    FIELD* field = dynamic_cast<FIELD *>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
@@ -171,6 +171,8 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 {
   typename FIELD::value_type val;
 
+  FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
+
   if (input->basis_order() == -1)
   {
     reporter->warning("GetFieldData: No data present in field");
@@ -179,7 +181,7 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else if (input->basis_order() == 0)
   {
-    typename FIELD::mesh_type* mesh =input->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = field->get_typed_mesh().get_rep();
     typename FIELD::mesh_type::Elem::size_type size;
     typename FIELD::mesh_type::Elem::iterator it, it_end;
     
@@ -202,7 +204,6 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     }
 
     size_t k = 0;
-    FIELD* field = dynamic_cast<FIELD *>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
@@ -216,7 +217,7 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else 
   {
-    typename FIELD::mesh_type* mesh = input->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = field->get_typed_mesh().get_rep();
     typename FIELD::mesh_type::Node::size_type size;
     typename FIELD::mesh_type::Node::iterator it, it_end;
     
@@ -240,7 +241,6 @@ bool GetFieldVectorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 
     size_t k = 0;
 
-    FIELD* field = dynamic_cast<FIELD*>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
@@ -260,6 +260,8 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 {
   typename FIELD::value_type val;
 
+  FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
+
   if (input->basis_order() == -1)
   {
     reporter->warning("GetFieldData: No data present in field");
@@ -268,7 +270,7 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else if (input->basis_order() == 0)
   {
-    typename FIELD::mesh_type* mesh = input->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = field->get_typed_mesh().get_rep();
     typename FIELD::mesh_type::Elem::size_type size;
     typename FIELD::mesh_type::Elem::iterator it, it_end;
     
@@ -292,7 +294,6 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
 
     size_t k = 0;
 
-    FIELD* field = dynamic_cast<FIELD*>(input.get_rep());
     while (it != it_end)
     {
       val = field->value(*it);
@@ -313,7 +314,7 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
   }
   else 
   {
-    typename FIELD::mesh_type* mesh = input->mesh().get_rep();
+    typename FIELD::mesh_type* mesh = field->get_typed_mesh().get_rep();
     typename FIELD::mesh_type::Node::size_type size;
     typename FIELD::mesh_type::Node::iterator it, it_end;
     
@@ -336,7 +337,7 @@ bool GetFieldTensorDataAlgoT<FIELD>::getfielddata(SCIRun::ProgressReporter *repo
     }
 
     size_t k = 0;
-    FIELD* field = dynamic_cast<FIELD*>(input.get_rep());
+
     while (it != it_end)
     {
       val = field->value(*it);

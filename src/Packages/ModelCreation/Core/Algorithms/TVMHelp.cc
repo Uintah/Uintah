@@ -180,8 +180,8 @@ void TVMHelp::createhelplist()
     add("fracanisotropy()","SCALAR = fracanisotropy(TENSOR)","Fractional anisotropy of tensor");
 
     add("vec1()","VECTOR = vec1(TENSOR)","First column vector of tensor");
-    add("vec2()","VECTOR = vec1(TENSOR)","Second column vector of tensor");
-    add("vec3()","VECTOR = vec1(TENSOR)","Third column vector of tensor");
+    add("vec2()","VECTOR = vec2(TENSOR)","Second column vector of tensor");
+    add("vec3()","VECTOR = vec3(TENSOR)","Third column vector of tensor");
 
     add("AND()","SCALAR = AND(SCALAR/VECTOR/TENSOR,SCALAR/VECOR/TENSOR)","Boolean 'and' operation");
     add("OR()","SCALAR = OR(SCALAR/VECOR/TENSOR,SCALAR/VECOR/TENSOR)","Boolean 'or' operation");
@@ -202,6 +202,49 @@ void TVMHelp::createhelplist_element()
     add("length()","SCALAR = length(ELEMENT)","Compute the length of the element");
     add("area()","SCALAR = area(ELEMENT)","Compute the volume of the element");
     add("volume()","SCALAR = volume(ELEMENT)","Compute the volume of the element");
+}
+
+
+std::string TVMHelp::gethelp(bool addelem )
+{
+ 
+  createhelplist();
+  if (addelem)
+  {
+    createhelplist_element();
+  }
+  
+  helphtml_ = std::string("<h4>Tensor/Vector/Scalar functions</h4>\n");
+
+  helplist_.sort();
+  
+  std::list<TVMHelpEntry>::iterator it;
+  std::string oldname;
+
+  for (it = helplist_.begin(); it != helplist_.end(); it++)
+  {
+    std::string helptext;
+    if (oldname != (*it).functionname) helptext = "<h5>"+(*it).functionname+"</h5>\n";
+    helptext += "<p>"+(*it).functionsyntax+"</p>\n";
+    helptext += "<p>"+(*it).description+"</p>\n";
+    helphtml_ += helptext;    
+    oldname = (*it).functionname;
+  }  
+
+  return(helphtml_);
+}
+
+void TVMHelp::add(std::string functionname,std::string functionsyntax, std::string description)
+{
+  TVMHelpEntry entry;
+  entry.functionname = functionname;
+  entry.functionsyntax = functionsyntax;
+  entry.description = description;
+  helplist_.push_back(entry);
+}
+
+TVMHelp::TVMHelp()
+{
 }
 
 } //end namespace

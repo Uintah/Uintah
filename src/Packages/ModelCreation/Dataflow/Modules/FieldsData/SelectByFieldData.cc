@@ -273,6 +273,8 @@ void SelectByFieldData::execute()
   }
 }
 
+extern std::string tvm_help_field;
+
 void
  SelectByFieldData::tcl_command(GuiArgs& args, void* userdata)
 {
@@ -287,7 +289,7 @@ void
     TensorVectorMath::TVMHelp Help;
     gui->lock();
     gui->eval("global " + getID() +"-help");
-    gui->eval("set " + getID() + "-help {" + Help.gethelp(true) +"}");
+    gui->eval("set " + getID() + "-help {" + tvm_help_field +"}");
     gui->unlock();
     return;
   }

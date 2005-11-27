@@ -27,14 +27,23 @@
 */
 
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
+#include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
 
 namespace ModelCreation
 {
 
+std::string tvm_help_matrix;
+std::string tvm_help_field;
+
 extern "C" void * ModelCreationInit(void *param) 
 {
+  TensorVectorMath::TVMHelp Help;
+  tvm_help_matrix = Help.gethelp(false);
+  tvm_help_field  = Help.gethelp(true);
+
   return 0;
 }
+
 
 } // end namespace
 

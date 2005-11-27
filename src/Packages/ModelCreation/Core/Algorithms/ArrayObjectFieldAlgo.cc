@@ -116,7 +116,7 @@ SCIRun::CompileInfoHandle
                        algo_name, 
                        fieldtype->get_name() + "," + locationtype->get_name());
 
-  ci->add_include(include_path);
+  ci->add_data_include(include_path);
   ci->add_namespace("ModelCreation");
   fieldtype->fill_compile_info(ci.get_rep());
   return(ci);
@@ -240,9 +240,9 @@ SCIRun::CompileInfoHandle
                        fieldtype);
 
   // Add in the include path to compile this obj
-  ci->add_include(include_path);
   ci->add_namespace("ModelCreation");  
   field->get_type_description()->fill_compile_info(ci.get_rep());
+  ci->add_data_include(include_path);
   return(ci);
 }
 
@@ -347,9 +347,10 @@ SCIRun::CompileInfoHandle ArrayObjectFieldElemAlgo::get_compile_info(SCIRun::Fie
                        algo_name, 
                        fieldtype->get_name() + "," + locationtype->get_name());
 
-  ci->add_include(include_path);
   ci->add_namespace("ModelCreation");
   fieldtype->fill_compile_info(ci.get_rep());
+  ci->add_data_include(include_path);
+
   return(ci);
 }
 
