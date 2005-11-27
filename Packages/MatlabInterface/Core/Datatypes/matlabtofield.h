@@ -63,11 +63,10 @@
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 
 // FData classes
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
 #include <Core/Containers/FData.h>
 
-// Field class files
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/GenericField.h>
 
 // Basis classes
 #include <Core/Basis/NoData.h>
@@ -104,6 +103,12 @@
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
+
+// Field class files
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/GenericField.h>
+
+
 
 /*
  * FILE: matlabconverter_fieldtomatlab.h
