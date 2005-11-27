@@ -75,8 +75,28 @@ public:
 };
 
 
-template<class FIELD>
-class FieldDataElemToNodeAlgoT : public FieldDataElemToNodeAlgo
+template<class FIELD, class OFIELD>
+class FieldDataScalarElemToNodeAlgoT : public FieldDataElemToNodeAlgo
+{
+public:
+  virtual bool execute(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              std::string method);                          
+};
+
+template<class FIELD, class OFIELD>
+class FieldDataVectorElemToNodeAlgoT : public FieldDataElemToNodeAlgo
+{
+public:
+  virtual bool execute(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              std::string method);                          
+};
+
+template<class FIELD, class OFIELD>
+class FieldDataTensorElemToNodeAlgoT : public FieldDataElemToNodeAlgo
 {
 public:
   virtual bool execute(ProgressReporter *reporter,
@@ -86,37 +106,9 @@ public:
 };
 
 
-// Do i have the following operators available; < > == etc.
-// If not I cannot do operations like max, min, and median
 
-inline bool has_compare(char) { return(true); }
-inline bool has_compare(unsigned char) { return(true); }
-inline bool has_compare(short) { return(true); }
-inline bool has_compare(unsigned short) { return(true); }
-inline bool has_compare(int) { return(true); }
-inline bool has_compare(unsigned int) { return(true); }
-inline bool has_compare(float) { return(true); }
-inline bool has_compare(double) { return(true); }
-inline bool has_compare(SCIRun::Tensor) { return(false); }
-inline bool has_compare(SCIRun::Vector) { return(false); }
-
-inline void zero(char &c) { c = 0; }
-inline void zero(unsigned char &c) { c = 0; }
-inline void zero(short &c) { c = 0; }
-inline void zero(unsigned short &c) { c = 0; }
-inline void zero(int &c) { c = 0; }
-inline void zero(unsigned int &c) { c = 0; }
-inline void zero(double &c) { c = 0.0; }
-inline void zero(float &c) { c = 0.0; }
-inline void zero(SCIRun::Vector &c) { c = SCIRun::Vector(0.0,0.0,0.0); }
-inline void zero(SCIRun::Tensor &c) { c = SCIRun::Tensor(0.0); }
-
-inline void sort(std::vector<SCIRun::Vector>::iterator beg,std::vector<SCIRun::Vector>::iterator end) {return; } 
-inline void sort(std::vector<SCIRun::Tensor>::iterator beg,std::vector<SCIRun::Tensor>::iterator end) {return; }  
-
-
-template<class FIELD>
-bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
+template<class FIELD, class OFIELD>
+bool FieldDataScalarElemToNodeAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
                               FieldHandle input,
                               FieldHandle& output,
                               std::string method)
@@ -146,9 +138,8 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
 
 
   // Create the field with the new mesh and data location.
-  FIELD *ofield = scinew FIELD(field->get_typed_mesh(), 1);
+  OFIELD *ofield = scinew OFIELD(field->get_typed_mesh());
   ofield->resize_fdata();
-  
   
   typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
 
@@ -167,8 +158,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
       {
         mesh->get_edges(edgearray, *(it));
         int nsize = edgearray.size();
-        typename FIELD::value_type val;
-        zero(val);
+        typename FIELD::value_type val = 0.0;
         for (size_t p = 0; p < nsize; p++)
         {
           val = val + field->value(edgearray[p]);
@@ -181,68 +171,46 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
     
     if (method == "Max")
     {
-      typename FIELD::value_type test;
-      if (has_compare(test))
+      while (it != eit)
       {
-        while (it != eit)
+        mesh->get_edges(edgearray, *(it));
+        int nsize = edgearray.size();
+        typename FIELD::value_type val = 0.0;
+        typename FIELD::value_type tval = 0.0;
+        if (nsize > 0)
         {
-          mesh->get_edges(edgearray, *(it));
-          int nsize = edgearray.size();
-          typename FIELD::value_type val;
-          zero(val);
-          typename FIELD::value_type tval;
-          zero(tval);
-          if (nsize > 0)
+          val = field->value(edgearray[0]);
+          for (size_t p = 1; p < nsize; p++)
           {
-            val = field->value(edgearray[0]);
-            for (size_t p = 1; p < nsize; p++)
-            {
-              tval = field->value(edgearray[p]);
-              if (tval > val) val = tval;
-            }
+            tval = field->value(edgearray[p]);
+            if (tval > val) val = tval;
           }
-          ofield->set_value(val,*(it));
-          ++it;
         }
-      }
-      else
-      {
-        reporter->error("Maximum has not been implemented for this type of data");
-        return(false);
+        ofield->set_value(val,*(it));
+        ++it;
       }
     }
     
     if (method == "Min")
     {
-      typename FIELD::value_type test;
-      if (has_compare(test))
+      while (it != eit)
       {
-        while (it != eit)
+        mesh->get_edges(edgearray, *it);
+        int nsize = edgearray.size();
+        typename FIELD::value_type val = 0.0;
+        typename FIELD::value_type tval = 0.0;
+        if (nsize > 0)
         {
-          mesh->get_edges(edgearray, *it);
-          int nsize = edgearray.size();
-          typename FIELD::value_type val;
-          zero(val);
-          typename FIELD::value_type tval;
-          zero(tval);
-          if (nsize > 0)
+          val = field->value(edgearray[0]);
+          for (size_t p = 1; p < nsize; p++)
           {
-            val = field->value(edgearray[0]);
-            for (size_t p = 1; p < nsize; p++)
-            {
-              tval = field->value(edgearray[p]);
-              if (tval < val) val = tval;
-            }
+            tval = field->value(edgearray[p]);
+            if (tval < val) val = tval;
           }
-          ofield->set_value(val,*(it));
-          ++it;
-        }    
-      }
-      else
-      {
-        reporter->error("Maximum has not been implemented for this type of data");
-        return(false);
-      }
+        }
+        ofield->set_value(val,*(it));
+        ++it;
+      }    
     }
 
     if (method == "Sum")
@@ -251,8 +219,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
       {
         mesh->get_edges(edgearray, *(it));
         int nsize = edgearray.size();
-        typename FIELD::value_type val;
-        zero(val);
+        typename FIELD::value_type val = 0.0;
         for (size_t p = 0; p < nsize; p++)
         {
           val += field->value(edgearray[p]);
@@ -264,29 +231,20 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
 
     if (method == "Median")
     {
-      typename FIELD::value_type test;
-      if (has_compare(test))
-      {    
-        while (it != eit)
-        {
-          mesh->get_edges(edgearray, *(it));
-          int nsize = edgearray.size();
-          std::vector<typename FIELD::value_type> valarray(nsize);
-          for (size_t p = 0; p < nsize; p++)
-          {
-            valarray[p] = field->value(edgearray[p]);
-          }
-          sort(valarray.begin(),valarray.end());
-          int idx = static_cast<int>((valarray.size()/2));
-          ofield->set_value(valarray[idx],*(it));
-          ++it;
-        }
-      }
-      else
+      while (it != eit)
       {
-        reporter->error("Median has not been implemented for this type of data");
-        return(false);
-      }      
+        mesh->get_edges(edgearray, *(it));
+        int nsize = edgearray.size();
+        std::vector<typename FIELD::value_type> valarray(nsize);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          valarray[p] = field->value(edgearray[p]);
+        }
+        sort(valarray.begin(),valarray.end());
+        int idx = static_cast<int>((valarray.size()/2));
+        ofield->set_value(valarray[idx],*(it));
+        ++it;
+      }
     }
   }
 
@@ -305,8 +263,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
       {
         mesh->get_faces(facearray, *(it));
         int nsize = facearray.size();
-        typename FIELD::value_type val;
-        zero(val);
+        typename FIELD::value_type val = 0.0;
         for (size_t p = 0; p < nsize; p++)
         {
           val = val + field->value(facearray[p]);
@@ -319,68 +276,46 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
     
     if (method == "Max")
     {
-      typename FIELD::value_type test;
-      if (has_compare(test))
+      while (it != eit)
       {
-        while (it != eit)
+        mesh->get_faces(facearray, *(it));
+        int nsize = facearray.size();
+        typename FIELD::value_type val = 0.0;
+        typename FIELD::value_type tval = 0.0;
+        if (nsize > 0)
         {
-          mesh->get_faces(facearray, *(it));
-          int nsize = facearray.size();
-          typename FIELD::value_type val;
-          zero(val);
-          typename FIELD::value_type tval;
-          zero(tval);
-          if (nsize > 0)
+          val = field->value(facearray[0]);
+          for (size_t p = 1; p < nsize; p++)
           {
-            val = field->value(facearray[0]);
-            for (size_t p = 1; p < nsize; p++)
-            {
-              tval = field->value(facearray[p]);
-              if (tval > val) val = tval;
-            }
+            tval = field->value(facearray[p]);
+            if (tval > val) val = tval;
           }
-          ofield->set_value(val,*(it));
-          ++it;
         }
-      }
-      else
-      {
-        reporter->error("Maximum has not been implemented for this type of data");
-        return(false);
+        ofield->set_value(val,*(it));
+        ++it;
       }
     }
     
     if (method == "Min")
     {
-      typename FIELD::value_type test;
-      if (has_compare(test))
+      while (it != eit)
       {
-        while (it != eit)
+        mesh->get_faces(facearray, *it);
+        int nsize = facearray.size();
+        typename FIELD::value_type val = 0.0;
+        typename FIELD::value_type tval = 0.0;
+        if (nsize > 0)
         {
-          mesh->get_faces(facearray, *it);
-          int nsize = facearray.size();
-          typename FIELD::value_type val;
-          zero(val);
-          typename FIELD::value_type tval;
-          zero(tval);
-          if (nsize > 0)
+          val = field->value(facearray[0]);
+          for (size_t p = 1; p < nsize; p++)
           {
-            val = field->value(facearray[0]);
-            for (size_t p = 1; p < nsize; p++)
-            {
-              tval = field->value(facearray[p]);
-              if (tval < val) val = tval;
-            }
+            tval = field->value(facearray[p]);
+            if (tval < val) val = tval;
           }
-          ofield->set_value(val,*(it));
-          ++it;
-        }    
-      }
-      else
-      {
-        reporter->error("Maximum has not been implemented for this type of data");
-        return(false);
-      }
+        }
+        ofield->set_value(val,*(it));
+        ++it;
+      }    
     }
 
     if (method == "Sum")
@@ -389,8 +324,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
       {
         mesh->get_faces(facearray, *(it));
         int nsize = facearray.size();
-        typename FIELD::value_type val;
-        zero(val);
+        typename FIELD::value_type val = 0.0;
         for (size_t p = 0; p < nsize; p++)
         {
           val += field->value(facearray[p]);
@@ -402,29 +336,20 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
 
     if (method == "Median")
     {
-      typename FIELD::value_type test;
-      if (has_compare(test))
-      {    
-        while (it != eit)
-        {
-          mesh->get_faces(facearray, *(it));
-          int nsize = facearray.size();
-          std::vector<typename FIELD::value_type> valarray(nsize);
-          for (size_t p = 0; p < nsize; p++)
-          {
-            valarray[p] = field->value(facearray[p]);
-          }
-          sort(valarray.begin(),valarray.end());
-          int idx = static_cast<int>((valarray.size()/2));
-          ofield->set_value(valarray[idx],*(it));
-          ++it;
-        }
-      }
-      else
+      while (it != eit)
       {
-        reporter->error("Median has not been implemented for this type of data");
-        return(false);
-      }      
+        mesh->get_faces(facearray, *(it));
+        int nsize = facearray.size();
+        std::vector<typename FIELD::value_type> valarray(nsize);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          valarray[p] = field->value(facearray[p]);
+        }
+        sort(valarray.begin(),valarray.end());
+        int idx = static_cast<int>((valarray.size()/2));
+        ofield->set_value(valarray[idx],*(it));
+        ++it;
+      }
     }
   }
 
@@ -443,8 +368,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
       {
         mesh->get_cells(cellarray, *(it));
         int nsize = cellarray.size();
-        typename FIELD::value_type val;
-        zero(val);
+        typename FIELD::value_type val = 0.0;
         for (size_t p = 0; p < nsize; p++)
         {
           val = val + field->value(cellarray[p]);
@@ -457,68 +381,46 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
     
     if (method == "Max")
     {
-      typename FIELD::value_type test;
-      if (has_compare(test))
+      while (it != eit)
       {
-        while (it != eit)
+        mesh->get_cells(cellarray, *(it));
+        int nsize = cellarray.size();
+        typename FIELD::value_type val = 0.0;
+        typename FIELD::value_type tval = 0.0;
+        if (nsize > 0)
         {
-          mesh->get_cells(cellarray, *(it));
-          int nsize = cellarray.size();
-          typename FIELD::value_type val;
-          zero(val);
-          typename FIELD::value_type tval;
-          zero(tval);
-          if (nsize > 0)
+          val = field->value(cellarray[0]);
+          for (size_t p = 1; p < nsize; p++)
           {
-            val = field->value(cellarray[0]);
-            for (size_t p = 1; p < nsize; p++)
-            {
-              tval = field->value(cellarray[p]);
-              if (tval > val) val = tval;
-            }
+            tval = field->value(cellarray[p]);
+            if (tval > val) val = tval;
           }
-          ofield->set_value(val,*(it));
-          ++it;
         }
-      }
-      else
-      {
-        reporter->error("Maximum has not been implemented for this type of data");
-        return(false);
+        ofield->set_value(val,*(it));
+        ++it;
       }
     }
     
     if (method == "Min")
     {
-      typename FIELD::value_type test;
-      if (has_compare(test))
+      while (it != eit)
       {
-        while (it != eit)
+        mesh->get_cells(cellarray, *it);
+        int nsize = cellarray.size();
+        typename FIELD::value_type val = 0.0;
+        typename FIELD::value_type tval = 0.0;
+        if (nsize > 0)
         {
-          mesh->get_cells(cellarray, *it);
-          int nsize = cellarray.size();
-          typename FIELD::value_type val;
-          zero(val);
-          typename FIELD::value_type tval;
-          zero(tval);
-          if (nsize > 0)
+          val = field->value(cellarray[0]);
+          for (size_t p = 1; p < nsize; p++)
           {
-            val = field->value(cellarray[0]);
-            for (size_t p = 1; p < nsize; p++)
-            {
-              tval = field->value(cellarray[p]);
-              if (tval < val) val = tval;
-            }
+            tval = field->value(cellarray[p]);
+            if (tval < val) val = tval;
           }
-          ofield->set_value(val,*(it));
-          ++it;
-        }    
-      }
-      else
-      {
-        reporter->error("Maximum has not been implemented for this type of data");
-        return(false);
-      }
+        }
+        ofield->set_value(val,*(it));
+        ++it;
+      }    
     }
 
     if (method == "Sum")
@@ -527,8 +429,7 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
       {
         mesh->get_cells(cellarray, *(it));
         int nsize = cellarray.size();
-        typename FIELD::value_type val;
-        zero(val);
+        typename FIELD::value_type val = 0.0;
         for (size_t p = 0; p < nsize; p++)
         {
           val += field->value(cellarray[p]);
@@ -540,35 +441,480 @@ bool FieldDataElemToNodeAlgoT<FIELD>::execute(ProgressReporter *reporter,
 
     if (method == "Median")
     {
-      typename FIELD::value_type test;
-      if (has_compare(test))
-      {    
-        while (it != eit)
-        {
-          mesh->get_cells(cellarray, *(it));
-          int nsize = cellarray.size();
-          std::vector<typename FIELD::value_type> valarray(nsize);
-          for (size_t p = 0; p < nsize; p++)
-          {
-            valarray[p] = field->value(cellarray[p]);
-          }
-          sort(valarray.begin(),valarray.end());
-          int idx = static_cast<int>((valarray.size()/2));
-          ofield->set_value(valarray[idx],*(it));
-          ++it;
-        }
-      }
-      else
+      while (it != eit)
       {
-        reporter->error("Median has not been implemented for this type of data");
-        return(false);
-      }      
+        mesh->get_cells(cellarray, *(it));
+        int nsize = cellarray.size();
+        std::vector<typename FIELD::value_type> valarray(nsize);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          valarray[p] = field->value(cellarray[p]);
+        }
+        sort(valarray.begin(),valarray.end());
+        int idx = static_cast<int>((valarray.size()/2));
+        ofield->set_value(valarray[idx],*(it));
+        ++it;
+      }
     }
   }
 
   output = dynamic_cast<SCIRun::Field *>(ofield);
   return(true);
 }
+
+
+
+
+template<class FIELD, class OFIELD>
+bool FieldDataVectorElemToNodeAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              std::string method)
+{     
+  output = 0;
+  
+  FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
+  if (field == 0)
+  {
+    reporter->error("FieldDataElemToNode: Object is not valid");
+    return(false);
+  }
+
+  if (field->basis_order() > 0)
+  {
+     reporter->warning("FieldDataElemToNode: Data is already located at nodes");
+     output = input;
+     return(true);   
+  }
+  
+  if (field->basis_order() != 0)
+  {
+     reporter->error("FieldDataElemToNode: Data is not located at elements");
+     return(false);   
+  }
+
+
+  // Create the field with the new mesh and data location.
+  OFIELD *ofield = scinew OFIELD(field->get_typed_mesh());
+  ofield->resize_fdata();
+  
+  typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
+
+  if (mesh->dimensionality() == 1)
+  {
+    typename FIELD::mesh_type::Edge::array_type edgearray;
+    typename FIELD::mesh_type::Node::iterator it, eit;
+
+    mesh->synchronize(SCIRun::Mesh::EDGES_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
+    mesh->begin(it);
+    mesh->end(eit);
+
+    if ((method == "Interpolate")||(method == "Average"))
+    {
+      while (it != eit)
+      {
+        mesh->get_edges(edgearray, *(it));
+        int nsize = edgearray.size();
+        SCIRun::Vector val = SCIRun::Vector(0.0,0.0,0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val = val + field->value(edgearray[p]);
+        }
+        val = val*(1.0/static_cast<double>(nsize));
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+    
+    if (method == "Max")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+    
+    if (method == "Min")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+
+    if (method == "Sum")
+    {
+      while (it != eit)
+      {
+        mesh->get_edges(edgearray, *(it));
+        int nsize = edgearray.size();
+        SCIRun::Vector val = SCIRun::Vector(0.0,0.0,0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val += field->value(edgearray[p]);
+        }
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+
+    if (method == "Median")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+  }
+
+  if (mesh->dimensionality() == 2)
+  {
+    typename FIELD::mesh_type::Face::array_type facearray;
+    typename FIELD::mesh_type::Node::iterator it, eit;
+
+    mesh->synchronize(SCIRun::Mesh::FACES_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
+    mesh->begin(it);
+    mesh->end(eit);
+
+    if ((method == "Interpolate")||(method == "Average"))
+    {
+      while (it != eit)
+      {
+        mesh->get_faces(facearray, *(it));
+        int nsize = facearray.size();
+        SCIRun::Vector val = SCIRun::Vector(0.0,0.0,0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val = val + field->value(facearray[p]);
+        }
+        val = val*(1.0/static_cast<double>(nsize));
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+    
+    if (method == "Max")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+    
+    if (method == "Min")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+
+    if (method == "Sum")
+    {
+      while (it != eit)
+      {
+        mesh->get_faces(facearray, *(it));
+        int nsize = facearray.size();
+        SCIRun::Vector val = SCIRun::Vector(0.0,0.0,0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val += field->value(facearray[p]);
+        }
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+
+    if (method == "Median")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+  }
+
+  if (mesh->dimensionality() == 3)
+  {
+    typename FIELD::mesh_type::Cell::array_type cellarray;
+    typename FIELD::mesh_type::Node::iterator it, eit;
+
+    mesh->synchronize(SCIRun::Mesh::CELLS_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
+    mesh->begin(it);
+    mesh->end(eit);
+
+    if ((method == "Interpolate")||(method == "Average"))
+    {
+      while (it != eit)
+      {
+        mesh->get_cells(cellarray, *(it));
+        int nsize = cellarray.size();
+        SCIRun::Vector val = SCIRun::Vector(0.0,0.0,0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val = val + field->value(cellarray[p]);
+        }
+        val = val*(1.0/static_cast<double>(nsize));
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+    
+    if (method == "Max")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+    
+    if (method == "Min")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+
+    if (method == "Sum")
+    {
+      while (it != eit)
+      {
+        mesh->get_cells(cellarray, *(it));
+        int nsize = cellarray.size();
+        SCIRun::Vector val = SCIRun::Vector(0.0,0.0,0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val += field->value(cellarray[p]);
+        }
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+
+    if (method == "Median")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+  }
+
+  output = dynamic_cast<SCIRun::Field *>(ofield);
+  return(true);
+}
+
+
+
+
+
+template<class FIELD, class OFIELD>
+bool FieldDataTensorElemToNodeAlgoT<FIELD,OFIELD>::execute(ProgressReporter *reporter,
+                              FieldHandle input,
+                              FieldHandle& output,
+                              std::string method)
+{     
+  output = 0;
+  
+  FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
+  if (field == 0)
+  {
+    reporter->error("FieldDataElemToNode: Object is not valid");
+    return(false);
+  }
+
+  if (field->basis_order() > 0)
+  {
+     reporter->warning("FieldDataElemToNode: Data is already located at nodes");
+     output = input;
+     return(true);   
+  }
+  
+  if (field->basis_order() != 0)
+  {
+     reporter->error("FieldDataElemToNode: Data is not located at elements");
+     return(false);   
+  }
+
+
+  // Create the field with the new mesh and data location.
+  OFIELD *ofield = scinew OFIELD(field->get_typed_mesh());
+  ofield->resize_fdata();
+  
+  typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
+
+  if (mesh->dimensionality() == 1)
+  {
+    typename FIELD::mesh_type::Edge::array_type edgearray;
+    typename FIELD::mesh_type::Node::iterator it, eit;
+
+    mesh->synchronize(SCIRun::Mesh::EDGES_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
+    mesh->begin(it);
+    mesh->end(eit);
+
+    if ((method == "Interpolate")||(method == "Average"))
+    {
+      while (it != eit)
+      {
+        mesh->get_edges(edgearray, *(it));
+        int nsize = edgearray.size();
+        SCIRun::Tensor val = SCIRun::Tensor(0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val = val + field->value(edgearray[p]);
+        }
+        val = val*(1.0/static_cast<double>(nsize));
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+    
+    if (method == "Max")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+    
+    if (method == "Min")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+
+    if (method == "Sum")
+    {
+      while (it != eit)
+      {
+        mesh->get_edges(edgearray, *(it));
+        int nsize = edgearray.size();
+        SCIRun::Tensor val = SCIRun::Tensor(0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val += field->value(edgearray[p]);
+        }
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+
+    if (method == "Median")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+  }
+
+  if (mesh->dimensionality() == 2)
+  {
+    typename FIELD::mesh_type::Face::array_type facearray;
+    typename FIELD::mesh_type::Node::iterator it, eit;
+
+    mesh->synchronize(SCIRun::Mesh::FACES_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
+    mesh->begin(it);
+    mesh->end(eit);
+
+    if ((method == "Interpolate")||(method == "Average"))
+    {
+      while (it != eit)
+      {
+        mesh->get_faces(facearray, *(it));
+        int nsize = facearray.size();
+        SCIRun::Tensor val = SCIRun::Tensor(0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val = val + field->value(facearray[p]);
+        }
+        val = val*(1.0/static_cast<double>(nsize));
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+    
+    if (method == "Max")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+    
+    if (method == "Min")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+
+    if (method == "Sum")
+    {
+      while (it != eit)
+      {
+        mesh->get_faces(facearray, *(it));
+        int nsize = facearray.size();
+        SCIRun::Tensor val = SCIRun::Tensor(0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val += field->value(facearray[p]);
+        }
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+
+    if (method == "Median")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+  }
+
+  if (mesh->dimensionality() == 3)
+  {
+    typename FIELD::mesh_type::Cell::array_type cellarray;
+    typename FIELD::mesh_type::Node::iterator it, eit;
+
+    mesh->synchronize(SCIRun::Mesh::CELLS_E | SCIRun::Mesh::NODE_NEIGHBORS_E);
+    mesh->begin(it);
+    mesh->end(eit);
+
+    if ((method == "Interpolate")||(method == "Average"))
+    {
+      while (it != eit)
+      {
+        mesh->get_cells(cellarray, *(it));
+        int nsize = cellarray.size();
+        SCIRun::Tensor val = SCIRun::Tensor(0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val = val + field->value(cellarray[p]);
+        }
+        val = val*(1.0/static_cast<double>(nsize));
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+    
+    if (method == "Max")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+    
+    if (method == "Min")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+
+    if (method == "Sum")
+    {
+      while (it != eit)
+      {
+        mesh->get_cells(cellarray, *(it));
+        int nsize = cellarray.size();
+        SCIRun::Tensor val = SCIRun::Tensor(0.0);
+        for (size_t p = 0; p < nsize; p++)
+        {
+          val += field->value(cellarray[p]);
+        }
+        ofield->set_value(val,*(it));
+        ++it;
+      }
+    }
+
+    if (method == "Median")
+    {
+      reporter->error("FieldDataElemToNode: Operation not defined for this datatype");
+      return(false);
+    }
+  }
+
+  output = dynamic_cast<SCIRun::Field *>(ofield);
+  return(true);
+}
+
+
+
 
 
 } // namespace ModelCreation

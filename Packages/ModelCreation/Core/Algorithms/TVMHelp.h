@@ -52,63 +52,17 @@ class TVMHelp {
   
   public:
   
-    inline TVMHelp();
-    inline std::string gethelp(bool addelem = false);
+    TVMHelp();
+    std::string gethelp(bool addelem = false);
     
   private:
-    inline void add(std::string functionname,std::string syntax,std::string description);
+    void add(std::string functionname,std::string syntax,std::string description);
     void createhelplist();
     void createhelplist_element();
     
     std::string helphtml_;
     std::list<TVMHelpEntry> helplist_;
 };
-
-inline std::string TVMHelp::gethelp(bool addelem)
-{
-  if (helphtml_ == "")
-  {
-    createhelplist();
-    if (addelem)
-    {
-      createhelplist_element();
-    }
-    
-    helphtml_ = "<h4>Tensor/Vector/Scalar functions</h4>\n";
-
-    helplist_.sort();
-    
-    std::list<TVMHelpEntry>::iterator it;
-    std::string oldname;
-
-    for (it = helplist_.begin(); it != helplist_.end(); it++)
-    {
-      std::string helptext;
-      if (oldname != (*it).functionname) helptext = "<h5>"+(*it).functionname+"</h5>\n";
-      helptext += "<p>"+(*it).functionsyntax+"</p>\n";
-      helptext += "<p>"+(*it).description+"</p>\n";
-      helphtml_ += helptext;    
-      oldname = (*it).functionname;
-    }  
-  }
-
-  return(helphtml_);
-}
-
-inline void TVMHelp::add(std::string functionname,std::string functionsyntax, std::string description)
-{
-  TVMHelpEntry entry;
-  entry.functionname = functionname;
-  entry.functionsyntax = functionsyntax;
-  entry.description = description;
-  helplist_.push_back(entry);
-}
-
-inline TVMHelp::TVMHelp() :
-  helphtml_("")
-{
-}
-
 
 
 } // end namespace

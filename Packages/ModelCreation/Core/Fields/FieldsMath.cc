@@ -613,7 +613,7 @@ bool FieldsMath::GetFieldData(FieldHandle input, MatrixHandle& data)
     CompileInfoHandle ci = GetFieldDataAlgo::get_compile_info(input);
     
     Handle<GetFieldDataAlgo> algo;
-    if (!DynamicCompilation::compile(ci, algo, true, pr_))
+    if (!DynamicCompilation::compile(ci, algo, false, pr_))
     {
       error("GetFieldData: Could not dynamically compile algorithm");
       return(false);

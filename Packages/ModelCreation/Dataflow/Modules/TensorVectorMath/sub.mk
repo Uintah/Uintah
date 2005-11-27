@@ -28,7 +28,9 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Packages/ModelCreation/Core/Algorithms      
+        Packages/ModelCreation/Core/Algorithms \
+        Packages/ModelCreation/Core/Datatypes      
+
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -212,6 +212,8 @@ void ComputeDataArray::execute()
   
 }
 
+extern std::string tvm_help_matrix;
+
 void ComputeDataArray::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
@@ -222,10 +224,9 @@ void ComputeDataArray::tcl_command(GuiArgs& args, void* userdata)
 
   if( args[1] == "gethelp" )
   {
-    TensorVectorMath::TVMHelp Help;
     gui->lock();
     gui->eval("global " + getID() +"-help");
-    gui->eval("set " + getID() + "-help {" + Help.gethelp() +"}");
+    gui->eval("set " + getID() + "-help {" + tvm_help_matrix +"}");
     gui->unlock();
   }
 

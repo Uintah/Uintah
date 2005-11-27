@@ -34,7 +34,11 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <sgi_stl_warnings_on.h>
+
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
 
 // Basis classes
 #include <Core/Basis/NoData.h>
@@ -56,6 +60,8 @@
 #include <Core/Basis/TriCubicHmt.h>
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Basis/TriQuadraticLgn.h>
+
+#include <Core/Containers/FData.h>
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>

@@ -280,7 +280,7 @@ bool MergeFieldsAlgoT<FIELD,MESH>::mergefields(SCIRun::ProgressReporter *reporte
               } 
               localindex[nodeq] = newnodes[q];
               localindex_assigned[nodeq] = true;            
-              node_index_.insert(node_index_type::value_type(key,newnodes[q]));
+              node_index_.insert(typename node_index_type::value_type(key,newnodes[q]));
             }
           }
           else

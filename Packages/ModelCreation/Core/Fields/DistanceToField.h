@@ -149,7 +149,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter 
 
   if (field->basis_order() == 0)
   {
-    OUTFIELD* ofield = scinew OUTFIELD(mesh,0);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -295,7 +295,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute(ProgressReporter 
   }
   else
   {
-    OUTFIELD* ofield = scinew OUTFIELD(mesh,1);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -479,7 +479,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
 
   if (field->basis_order() == 0)
   {
-    OUTFIELD* ofield = scinew OUTFIELD(mesh,0);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -613,7 +613,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_signed(ProgressRe
   }
   else
   {
-    OUTFIELD* ofield = scinew OUTFIELD(mesh,1);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -785,7 +785,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
 
   if (field->basis_order() == 0)
   {
-    OUTFIELD* ofield = scinew OUTFIELD(mesh,0);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -919,7 +919,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_unsigned(Progress
   }
   else
   {
-    OUTFIELD* ofield = scinew OUTFIELD(mesh,1);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -1090,7 +1090,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
 
   if (field->basis_order() == 0)
   {
-    OUTFIELD* ofield = scinew OUTFIELD(mesh,0);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 
@@ -1224,7 +1224,7 @@ bool DistanceToFieldAlgoT<FIELD,OBJECTFIELD,OUTFIELD>::execute_isinside(Progress
   }
   else
   {
-    OUTFIELD* ofield = scinew OUTFIELD(mesh,1);
+    OUTFIELD* ofield = scinew OUTFIELD(mesh);
     ofield->resize_fdata();
     output = dynamic_cast<SCIRun::Field* >(ofield);
 

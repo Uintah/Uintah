@@ -12,7 +12,7 @@ itcl_class ModelCreation_FieldsData_CreateFieldData {
       global $this-basis
       global $this-help
 
-      set $this-function "RESULT = abs(DATA);"
+      set $this-function "RESULT = 1;"
       set $this-format "Scalar"
       set $this-basis "Linear"
       set $this-help ""
@@ -40,7 +40,7 @@ itcl_class ModelCreation_FieldsData_CreateFieldData {
         frame $infoframe.info
         pack $infoframe.info -side left
         set info $infoframe.info
-        label $info.info1 -text "Function: RESULT = function(DATA,A,B,C,...)"
+        label $info.info1 -text "Function: RESULT = function(A,B,C,...)"
         label $info.info3 -text "Input array: X, Y, Z (scalar: Cartensian coordinates of node/element)"
         label $info.info4 -text "Input array: POS (vector: vector with node/element position)"
         label $info.info5 -text "Input array: A, B, C, ... (scalar/vector/tensor: data from matrix ports)"
