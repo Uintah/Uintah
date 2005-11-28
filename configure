@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL OGL_ERR_MACRO AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY JAVA_PATH PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR HAVE_UUID UUID_LIB_FLAG BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL OGL_ERR_MACRO AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS COMPILE_AVR DEF_HAVE_AVR DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR HAVE_UUID UUID_LIB_FLAG BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -33257,6 +33257,540 @@ esac
 
 
 
+##  --  search for Java ------------------------
+
+## Sun distribution only
+
+## check env for JAVA_HOME, JAVAHOME (Ptolemy II)?
+#AC_MSG_CHECKING(for Java)
+
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+_cca_version=1.0.0
+_sci_cca_tp_base=/usr/sci/projects
+_sci_cca_tp_subdir=CCA/Thirdparty/$_cca_version
+_sci_cca_tp_path=$_sci_tp_base/$_sci_cca_tp_subdir/$sci_tp_arch
+
+## Sun RPMs or bin installer usually install in /usr/java
+## Suse RPMs usually install in /usr/lib/jvm
+_java_top_guess="$_sci_cca_tp_path/java /usr/java /usr/lib/jvm /usr/local/lib"
+_java_top=
+
+if test "$sci_required_java" = "yes" ; then
+  _sci_optional=required
+fi
+
+if test "$with_java" = "yes"; then
+  _sci_optional=required
+  for d in $_java_top_guess; do
+    _jni_h=`find $d -follow -name "jni.h" -print 2>/dev/null`
+    if test -f "$_jni_h"; then
+        _jni_h_dir=`dirname $_jni_h`
+        _java_top=`dirname $_jni_h_dir`
+        echo "$as_me:$LINENO: result: Found Java top directory $_java_top" >&5
+echo "${ECHO_T}Found Java top directory $_java_top" >&6
+        _sci_inc=_jni_h_dir
+        break
+    fi
+  done
+elif test "$with_java"; then
+  _sci_optional=specific
+  _sci_inc="$with_java/include"
+  _java_top=$with_java
+fi
+
+if test "$_sci_optional" != "optional"; then
+  _java_lib_dir=`find $_java_top -follow -name "libjava.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+  if test -d "$_java_lib_dir"; then
+    _sci_lib="$_sci_lib $_java_lib_dir"
+  fi
+
+  _jvm_lib_dir=`find $_java_top -follow -name server -prune -o -name "libjvm.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+  if test -d "$_jvm_lib_dir"; then
+    _sci_lib="$_sci_lib $_jvm_lib_dir"
+  fi
+
+
+##
+## SCI_TRY_LINK (JAVA):  java JNI libraries
+##
+## arguments mean:
+## arg 1 : variable base name (e.g., MATH)
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.  (-framework is also allowed for Mac support.)
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
+## arg 7 : extra link flags
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : JAVA
+## arg 2 : java JNI libraries
+## arg 3 : jni.h
+## arg 4 : $_sci_inc
+## arg 5 : java jvm
+## arg 6 : $_sci_lib
+## arg 7 :
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : $_sci_optional
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_JAVA        => lib path
+##      JAVA_LIB_DIR_FLAG   => all the -L's
+##      JAVA_LIB_FLAG       => all the -l's
+##      HAVE_JAVA           => yes or no
+##      INC_JAVA_H          => all the -I's
+##      HAVE_JAVA_H         => yes or no
+
+if test 9 != 9; then
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for java JNI libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for java JNI libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+echo "$as_me:$LINENO: checking for java JNI libraries ($_sci_optional)" >&5
+echo $ECHO_N "checking for java JNI libraries ($_sci_optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+     echo
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for java JNI libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for java JNI libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+# If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
+
+for inc in $_sci_inc; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
+     echo ""
+     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for JAVA include files." >&5
+echo "$as_me: error: Please do not specify /usr/include as the location for JAVA include files." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
+        # Has some other -?.
+        if test "$debugging" = "yes"; then
+          echo
+          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of JAVA check.  Skipping $inc." >&5
+echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of JAVA check.  Skipping $inc." >&2;}
+        fi
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "\-I"`
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        _sci_includes="$_sci_includes -I$inc"
+     fi
+  else
+     # It already has -I so just add it directly.
+     _sci_includes="$_sci_includes $inc"
+  fi
+done
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "java jvm"; then
+
+   found_framework=no
+   for lib in "" java jvm; do
+
+      if test -z "$lib"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of JAVA check (disregarding $lib)." >&5
+echo "$as_me: WARNING: Only -l options are allowed in arg 5 of JAVA check (disregarding $lib)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      the_lib=`echo $lib | grep "\-l"`
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
+         # If the lib arg does not have -l on it, then add -l.
+         final_lib=-l$lib
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      _sci_libs="$_sci_libs $final_lib"
+   done
+fi
+
+### Take care of arg 6 (the list of lib paths)
+
+if test -n "$_sci_lib"; then
+
+   for path in "" $_sci_lib; do
+
+      if test -z "$path"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of JAVA check (disregarding $path)." >&5
+echo "$as_me: WARNING: Only -L options are allowed in arg 6 of JAVA check (disregarding $path)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+      else
+         echo
+         { echo "$as_me:$LINENO: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
+echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+      fi
+   done
+fi
+
+if test "$_sci_optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $_sci_lib; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for JAVA only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for JAVA only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $_sci_inc
+  __sci_pass=false
+  __sci_first_time=true
+  for value in "" $_sci_inc; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test -n "$_sci_inc" && test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for JAVA only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for JAVA only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs  $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__extern_c="no"
+__sci_pound_includes=""
+
+for inc in "" jni.h; do
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh.
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
+#include <$inc>"
+    fi
+done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+eval LIB_DIR_JAVA='"$_sci_lib"'
+
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in "" $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
+
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
+eval JAVA_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $LIBS; do
+  bad_l_arg=`echo "$_lib" | grep "\-L"`
+  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
+eval JAVA_LIB_FLAG="'$final_libs'"
+eval HAVE_JAVA="yes"
+
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
+
+eval INC_JAVA_H="'$final_incs'"
+eval HAVE_JAVA_H="yes"
+
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval LIB_DIR_JAVA=''
+eval JAVA_LIB_DIR_FLAG=''
+eval JAVA_LIB_FLAG=''
+eval HAVE_JAVA="no"
+eval INC_JAVA_H=''
+eval HAVE_JAVA_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "$_sci_optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required JAVA failed.
+    To see the failed compile information, look in config.log,
+    search for JAVA. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required JAVA failed.
+    To see the failed compile information, look in config.log,
+    search for JAVA. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+
+if test "$_sci_optional" = "specific"; then
+  #echo specific
+  # Make sure the exact includes were found
+  for i in "" jni.h; do
+    #echo looking for $_sci_inc/$i
+    if test ! -e $_sci_inc/$i; then
+     { { echo "$as_me:$LINENO: error: Specifically requested JAVA include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested JAVA include file '$_sci_inc/$i' was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in "" java jvm; do
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested JAVA library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested JAVA library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_TRY_LINK (JAVA):  java JNI libraries
+##
+
+
+fi
+
 ##  --  search for Camal (Sandia meshing library) ------------------------
 
 _sci_optional=optional
@@ -47074,54 +47608,13 @@ sci_defs_files="$sci_defs_files include/sci_defs/insight_testdefs.h"
 
 ##  --  search for Ptolemy II ---------------------------------------------------
 if test "$sci_required_ptolemyII" = "yes"; then
-
-  echo "$as_me:$LINENO: checking for Java." >&5
-echo $ECHO_N "checking for Java.... $ECHO_C" >&6
-
-  # check for Java
-  # Java version check should go here
-  if test -z "$with_java"; then
-
-    { echo "$as_me:$LINENO: WARNING: Java is required by the Ptolemy package." >&5
-echo "$as_me: WARNING: Java is required by the Ptolemy package." >&2;}
-    echo "$as_me:$LINENO: checking for environment variable JAVA_HOME or JAVAHOME" >&5
-echo $ECHO_N "checking for environment variable JAVA_HOME or JAVAHOME... $ECHO_C" >&6
-
-    if test -z "$JAVA_HOME"; then
-      if test -z "$JAVAHOME"; then # Ptolemy build uses JAVAHOME
-
-	{ echo "$as_me:$LINENO: WARNING: Package Ptolemy requires Java." >&5
-echo "$as_me: WARNING: Package Ptolemy requires Java." >&2;}
-	{ { echo "$as_me:$LINENO: error: Use the --with-java=DIR option or set the environment variable JAVA_HOME to the directory that contains your Java distribution." >&5
-echo "$as_me: error: Use the --with-java=DIR option or set the environment variable JAVA_HOME to the directory that contains your Java distribution." >&2;}
-   { (exit 1); exit 1; }; }
-
-      else # JAVAHOME set in environment
-	jdir="$JAVAHOME"
-      fi
-    else # JAVA_HOME set in environment
-      jdir="$JAVA_HOME"
-    fi
-  else # --with-java
-    jdir="$with_java"
-  fi
-
-  if test -d "$jdir"; then
-    echo "$as_me:$LINENO: result: $jdir" >&5
-echo "${ECHO_T}$jdir" >&6
-
-    JAVA_PATH="$jdir"
-  else
-
+  echo "$as_me:$LINENO: checking for Ptolemy II." >&5
+echo $ECHO_N "checking for Ptolemy II.... $ECHO_C" >&6
+  if test "$HAVE_JAVA" = "no"; then
     { { echo "$as_me:$LINENO: error: Java installation directory is missing." >&5
 echo "$as_me: error: Java installation directory is missing." >&2;}
    { (exit 1); exit 1; }; }
-
   fi
-
-  echo "$as_me:$LINENO: checking for Ptolemy II." >&5
-echo $ECHO_N "checking for Ptolemy II.... $ECHO_C" >&6
-
 
   # search here
   if test "$with_ptolemyII"; then
@@ -47133,7 +47626,8 @@ echo $ECHO_N "checking for Ptolemy II.... $ECHO_C" >&6
 echo "${ECHO_T}$pdir" >&6
 
     PTOLEMY_PATH="$pdir"
-    PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:$JAVA_PATH/jre:/lib/rt.jar"
+    #PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:$JAVA_PATH/jre:/lib/rt.jar"
+    PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:/lib/rt.jar"
     HAVE_PTOLEMY="yes"
     DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
   else
@@ -47141,9 +47635,7 @@ echo "${ECHO_T}$pdir" >&6
 echo "$as_me: error: Ptolemy II directory is missing." >&2;}
    { (exit 1); exit 1; }; }
   fi
-
 fi
-
 
 
 
@@ -62229,7 +62721,6 @@ s,@INSIGHT_LIB_FLAG@,$INSIGHT_LIB_FLAG,;t t
 s,@INSIGHT_LIB_DIR_FLAG@,$INSIGHT_LIB_DIR_FLAG,;t t
 s,@HAVE_PTOLEMY@,$HAVE_PTOLEMY,;t t
 s,@DEF_PTOLEMY@,$DEF_PTOLEMY,;t t
-s,@JAVA_PATH@,$JAVA_PATH,;t t
 s,@PTOLEMY_PATH@,$PTOLEMY_PATH,;t t
 s,@PTOLEMY_CLASSPATH@,$PTOLEMY_CLASSPATH,;t t
 s,@XALAN_PATH@,$XALAN_PATH,;t t

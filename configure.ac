@@ -2884,6 +2884,63 @@ esac
 AC_SUBST(F_LIB_FLAG)
 AC_SUBST(F_LIB_DIR_FLAG)
 
+##  --  search for Java ------------------------
+
+## Sun distribution only
+
+## check env for JAVA_HOME, JAVAHOME (Ptolemy II)?
+#AC_MSG_CHECKING(for Java)
+
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+_cca_version=1.0.0
+_sci_cca_tp_base=/usr/sci/projects
+_sci_cca_tp_subdir=CCA/Thirdparty/$_cca_version
+_sci_cca_tp_path=$_sci_tp_base/$_sci_cca_tp_subdir/$sci_tp_arch
+
+## Sun RPMs or bin installer usually install in /usr/java
+## Suse RPMs usually install in /usr/lib/jvm
+_java_top_guess="$_sci_cca_tp_path/java /usr/java /usr/lib/jvm /usr/local/lib"
+_java_top=
+
+if test "$sci_required_java" = "yes" ; then
+  _sci_optional=required
+fi
+
+if test "$with_java" = "yes"; then
+  _sci_optional=required
+  for d in $_java_top_guess; do
+    _jni_h=`find $d -follow -name "jni.h" -print 2>/dev/null`
+    if test -f "$_jni_h"; then
+        _jni_h_dir=`dirname $_jni_h`
+        _java_top=`dirname $_jni_h_dir`
+        AC_MSG_RESULT(Found Java top directory $_java_top)
+        _sci_inc=_jni_h_dir
+        break
+    fi
+  done
+elif test "$with_java"; then
+  _sci_optional=specific
+  _sci_inc="$with_java/include"
+  _java_top=$with_java
+fi
+
+if test "$_sci_optional" != "optional"; then
+  _java_lib_dir=`find $_java_top -follow -name "libjava.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+  if test -d "$_java_lib_dir"; then
+    _sci_lib="$_sci_lib $_java_lib_dir"
+  fi
+
+  _jvm_lib_dir=`find $_java_top -follow -name server -prune -o -name "libjvm.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+  if test -d "$_jvm_lib_dir"; then
+    _sci_lib="$_sci_lib $_jvm_lib_dir"
+  fi
+
+  SCI_TRY_LINK(JAVA, java JNI libraries, jni.h, $_sci_inc, java jvm, $_sci_lib,,,$_sci_optional)
+fi
+
 ##  --  search for Camal (Sandia meshing library) ------------------------
 
 _sci_optional=optional
@@ -3673,44 +3730,10 @@ sci_defs_files="$sci_defs_files include/sci_defs/insight_testdefs.h"
 
 ##  --  search for Ptolemy II ---------------------------------------------------
 if test "$sci_required_ptolemyII" = "yes"; then
-
-  AC_MSG_CHECKING(for Java.)
-
-  # check for Java
-  # Java version check should go here
-  if test -z "$with_java"; then
-
-    AC_MSG_WARN(Java is required by the Ptolemy package.)
-    AC_MSG_CHECKING(for environment variable JAVA_HOME or JAVAHOME)
-
-    if test -z "$JAVA_HOME"; then
-      if test -z "$JAVAHOME"; then # Ptolemy build uses JAVAHOME
-
-	AC_MSG_WARN(Package Ptolemy requires Java.)
-	AC_MSG_ERROR(Use the --with-java=DIR option or set the environment variable JAVA_HOME to the directory that contains your Java distribution.)
-
-      else # JAVAHOME set in environment
-	jdir="$JAVAHOME"
-      fi
-    else # JAVA_HOME set in environment
-      jdir="$JAVA_HOME"
-    fi
-  else # --with-java
-    jdir="$with_java"
-  fi
-
-  if test -d "$jdir"; then
-    AC_MSG_RESULT($jdir)
-
-    JAVA_PATH="$jdir"
-  else
-
-    AC_MSG_ERROR(Java installation directory is missing.)
-
-  fi
-
   AC_MSG_CHECKING(for Ptolemy II.)
-
+  if test "$HAVE_JAVA" = "no"; then
+    AC_MSG_ERROR(Java installation directory is missing.)
+  fi
 
   # search here
   if test "$with_ptolemyII"; then
@@ -3721,18 +3744,17 @@ if test "$sci_required_ptolemyII" = "yes"; then
     AC_MSG_RESULT($pdir)
 
     PTOLEMY_PATH="$pdir"
-    PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:$JAVA_PATH/jre:/lib/rt.jar"
+    #PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:$JAVA_PATH/jre:/lib/rt.jar"
+    PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:/lib/rt.jar"
     HAVE_PTOLEMY="yes"
     DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
   else
     AC_MSG_ERROR(Ptolemy II directory is missing.)
   fi
-
 fi
 
 AC_SUBST(HAVE_PTOLEMY)
 AC_SUBST(DEF_PTOLEMY)
-AC_SUBST(JAVA_PATH)
 AC_SUBST(PTOLEMY_PATH)
 AC_SUBST(PTOLEMY_CLASSPATH)
 sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
