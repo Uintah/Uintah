@@ -49,6 +49,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <Core/Containers/FData.h>
 
 namespace SCIRun {
 
