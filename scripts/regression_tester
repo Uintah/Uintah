@@ -6,7 +6,7 @@ hostname=`uname -n`
 
 if test ${#GOLD_STANDARD} = 0; 
     then
-    test_dir=/home/jas/SCIRun/TestData
+    test_dir=/home/jas/mnt/TestData
 else
     test_dir=${GOLD_STANDARD}
 fi
@@ -23,7 +23,7 @@ if test "$hostname" = "$hostname_inf";
 else
     if test ! -d $test_dir/dbg
     then 
-    	/home/jas/bin/mount_testdata;
+    	/home/jas/bin/smount TestData;
 	did_mount=1;
     fi
 fi
@@ -62,6 +62,7 @@ do_arches=0
 do_mpmarches=0
 do_examples=0
 do_remove=0
+do_restart=0
 
 ALL=
 
@@ -84,6 +85,7 @@ usage () {
     echo "  -dbg           use the dbg TestData"
     echo "  -opt           use the opt TestData"
     echo "  -nompi         do not use mpi"
+    echo "  -restart       restart and compare with the original uda.000"
     echo "  -clean         remove the *.out *.compare and uda directories"
     echo "  -h[elp]        display this help and exit"
     echo;
@@ -144,6 +146,9 @@ for arg in $*; do
         -nompi)
             echo; echo "Not using mpi . . ."
             MPI_RUN="no";;
+        -restart)
+            echo; echo "Doing restart tests . . ."
+            do_restart=1;;
         *)
 	    usage ;;
     esac
@@ -243,6 +248,7 @@ run_test () {
 	cd ..
 	continue;
     fi
+
 }
 
 
@@ -262,6 +268,37 @@ compare_results () {
     fi
 }
 
+run_restart () {
+    if test $do_restart -eq 1; 
+        then
+        cd $results
+        
+
+        uda_new=`echo $uda | tr -d "/"`
+
+        echo; echo "Running $MPI sus $opts -restart -t 0 -copy $uda_new.000"
+        ../sus $opts -restart -t 0 -copy $uda_new.000 &> $n.out_restart
+        success=`grep "successfully" $n.out_restart`
+        if test -n "$success";
+            then 
+            echo $success
+            echo "Comparing restart results"
+            echo "compare_uda $uda_new.000 $uda_new.001"
+            ../compare_uda $uda_new.000 $uda_new.001 &> $n.compare_restart
+            compare=`grep "passed" $n.compare_restart`
+            if test -n "$compare";
+                then
+                echo $compare
+            else
+                echo; echo "FAILURE running compare_uda on restart test . . ."
+            fi
+        else
+            echo; echo "FAILURE running sus . . ."
+        fi
+        cd ..
+    fi
+}
+
 mpm_test () {
     echo; echo "Testing $mpm_test_cases"
     
@@ -277,6 +314,8 @@ mpm_test () {
 	fi
 
 	compare_results
+        
+        run_restart
 
     done
 }
@@ -297,9 +336,13 @@ mpmice_test () {
 	    then
 	    udadir=guni2d
 	fi
-	
+        if test "$n" = "TRWnoz";
+            then
+            cp ../$INPUTS/$CASE/complex_MPM_geometries/trwnozzlentop3_01mesh.{pts,tri} ../
+        fi
+          	
 	compare_results
-
+        run_restart
     done
 }
 model_test () {
@@ -320,6 +363,7 @@ model_test () {
 	fi
 	
 	compare_results
+        run_restart
 
     done
 }
@@ -337,7 +381,7 @@ impm_test () {
 	fi
 	
 	compare_results
-
+        run_restart
     done
 }
 
@@ -352,7 +396,7 @@ smpm_test () {
 	udadir=$n
 
 	compare_results
-
+        run_restart
     done
 }
 
@@ -371,6 +415,7 @@ ice_test () {
 	fi
 
 	compare_results
+        run_restart
 
     done
 }
@@ -399,7 +444,7 @@ arches_test () {
 	fi
 
 	compare_results
-
+        run_restart
     done
 }
 
@@ -422,7 +467,7 @@ mpmarches_test () {
 	udadir=$n
 	
 	compare_results
-
+        run_restart
     done
 }
 
@@ -444,7 +489,7 @@ examples_test () {
 	udadir=$n
 
 	compare_results
-
+        run_restart
     done
 }
 
@@ -523,7 +568,7 @@ if test $do_remove -eq 1; then
 fi
 
 if test "$hostname" != "$hostname_inf" && test $did_mount -eq 1; then
-    /home/jas/bin/unmount_testdata
+    /home/jas/bin/sunmount TestData
 fi
 
 if test "$hostname" = "$hostname_inf"; then
