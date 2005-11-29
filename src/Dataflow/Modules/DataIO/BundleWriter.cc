@@ -52,8 +52,6 @@ public:
   virtual ~BundleWriter();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 protected:
   GuiString guiTypes_;
   GuiString guiFileType_;
@@ -87,13 +85,4 @@ BundleWriter::execute()
   exporting_ = false;
   GenericWriter<BundleHandle>::execute();
 }
-
-void
-BundleWriter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
-
-
-
 
