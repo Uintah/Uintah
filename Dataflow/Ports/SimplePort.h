@@ -117,7 +117,7 @@ private:
   enum SendType {SEND_NORMAL=0, SEND_INTERMEDIATE=1};
   enum DerefType {DEREF_NEVER=0, DEREF_ALWAYS=1, DEREF_NOCACHE=2};
 
-  void do_send(const T&, SendType type = SEND_NORMAL, DerefType deref);
+  void do_send(const T&, SendType type, DerefType deref);
 
   bool cache_;
   bool sent_something_;
