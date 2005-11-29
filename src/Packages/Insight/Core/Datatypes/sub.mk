@@ -46,13 +46,14 @@ SRCS     += $(SRCDIR)/ITKDatatype.cc \
 	$(SRCDIR)/ITKImageField.h \
 	$(SRCDIR)/cd_templates.cc \
 	$(SRCDIR)/cd_templates_fields_0.cc \
-	$(SRCDIR)/cd_templates_fields_1.cc \
+	$(SRCDIR)/cd_templates_fields_1.cc \
 
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \
-	Core/Math Core/Geom Core/Util Core/Datatypes 
+	Core/Math Core/Geom Core/Util Core/Datatypes \
+  Core/Basis
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(INSIGHT_LIBRARY)
 

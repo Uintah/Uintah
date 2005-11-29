@@ -36,11 +36,48 @@
 #ifndef Datatypes_ITKImageField_h
 #define Datatypes_ITKImageField_h
 
-#include <Core/Basis/QuadBilinearLgn.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Util/TypeDescription.h>
 #include <Core/Geometry/Tensor.h>
+#include <Core/Geometry/Vector.h>
+
+
+// To make SCIRun compile on OSX 10.4, certain classes need to be defined before
+// including GenericField.h, if not SCIRun does not compile.
+// Apparently a templated class needs to have its templated datatypes defined before
+// it is defined itself. 
+// I just put the missing ones here, to make the Insight Package compile properly.
+// -- jeroen
+
+namespace Insight {
+
+template <class Data> class ITKFData2d;
+template <class Data> class ITKImageField;
+
+}
+
+namespace SCIRun {
+
+  const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Vector>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<double>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<float>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<int>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<long>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<short>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<char>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned int>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned short>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned char>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned long>*);
+
+}
+
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
@@ -580,42 +617,5 @@ void Pio(Piostream& stream, ITKFData2d<T>& data)
 
 } // end namespace Insight
 
-
-namespace SCIRun {
-  using namespace Insight;
-  
-  const TypeDescription* 
-  get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData2d<SCIRun::Vector>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData2d<double>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData2d<float>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData2d<int>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData2d<short>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData2d<char>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData2d<unsigned int>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData2d<unsigned short>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData2d<unsigned char>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData2d<unsigned long>*);
-}
 
 #endif // Datatypes_ITKImageField_h
