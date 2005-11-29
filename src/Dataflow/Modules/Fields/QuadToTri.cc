@@ -99,8 +99,7 @@ QuadToTri::execute()
   if (ofieldhandle_.get_rep() &&
       ifieldhandle->generation == last_generation_)
   {
-    ofp->send(ofieldhandle_);
-    if (!ofp->have_data()) { ofieldhandle_ = 0 ; }
+    ofp->send_and_dereference(ofieldhandle_, true);
     return;
   }
   last_generation_ = ifieldhandle->generation;
@@ -146,8 +145,7 @@ QuadToTri::execute()
       return;
     }
   }
-  ofp->send(ofieldhandle_);
-  if (!ofp->have_data()) { ofieldhandle_ = 0; }
+  ofp->send_and_dereference(ofieldhandle_, true);
 }
 
 CompileInfoHandle

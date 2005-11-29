@@ -94,6 +94,6 @@ SetProperty::execute()
     fldH->set_property(prop_.get(), val_.get(), false);
   }
   
-  ofield->send(fldH);
+  ofield->send_and_dereference(fldH);
 }
 } // End namespace SCIRun

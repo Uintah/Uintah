@@ -427,7 +427,7 @@ Probe::execute()
   if (gui_show_value_.get()) { gui_value_.set(valstr.str()); }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Probe Point");
-  ofp->send(ofield);
+  ofp->send_and_dereference(ofield);
 
   if (input_field_p)
   {
@@ -454,7 +454,7 @@ Probe::execute()
     }
     MatrixHandle cm = scinew ColumnMatrix(1);
     cm->put(0, 0, index);
-    mp->send(cm);
+    mp->send_and_dereference(cm);
   }
 }
 

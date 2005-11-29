@@ -151,7 +151,7 @@ ApplyMappingMatrix::execute()
   if (fHandle_.get_rep())
   {
     FieldOPort *ofp = (FieldOPort *)get_oport("Output");
-    ofp->send(fHandle_);
+    ofp->send_and_dereference(fHandle_, true);
   }
 }
 

@@ -95,7 +95,7 @@ ChangeCoordinates::execute()
   algo->execute(field->mesh(), oldsystem, newsystem);
 
   FieldOPort *ofld = (FieldOPort *)get_oport("Output Field");
-  ofld->send(field);
+  ofld->send_and_dereference(field);
 }
 
 CompileInfo *

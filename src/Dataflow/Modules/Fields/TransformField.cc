@@ -132,7 +132,7 @@ TransformField::execute()
     ofield->mesh()->transform(trans);
     
     FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
-    ofp->send(ofield);
+    ofp->send_and_dereference(ofield);
   }
 }
 

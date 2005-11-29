@@ -150,7 +150,7 @@ void BundleSetBundle::execute()
     handle->set_property("name",bundleName,false);
   }
         
-  oport->send(handle);
+  oport->send_and_dereference(handle);
   
   update_state(Completed);
 }

@@ -190,7 +190,7 @@ Coregister::execute()
   coreg->getMisfit(misfit);
 
   MatrixHandle dm(scinew DenseMatrix(trans));
-  omat->send(dm);
+  omat->send_and_dereference(dm);
 }
 
 

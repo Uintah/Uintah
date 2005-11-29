@@ -97,7 +97,8 @@ ManageFieldMesh::execute()
     return;
   }
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-  omp->send(algo_extract->execute(ifieldhandle->mesh()));
+  MatrixHandle mtmp(algo_extract->execute(ifieldhandle->mesh()));
+  omp->send_and_dereference(mtmp);
 
   // Compute output field.
   FieldHandle result_field;
@@ -133,7 +134,7 @@ ManageFieldMesh::execute()
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  ofp->send(result_field);
+  ofp->send_and_dereference(result_field);
 }
 
 

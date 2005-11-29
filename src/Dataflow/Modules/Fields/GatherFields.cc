@@ -118,7 +118,7 @@ GatherFields::execute()
     typedef GenericField<PCMesh, NDBasis, vector<double> > PCField;
     FieldHandle empty = scinew PCField(scinew PCMesh());
 
-    ofield_port->send(empty);
+    ofield_port->send_and_dereference(empty);
 #else
     ofield_port->send( fHandle_ );
 #endif
@@ -295,8 +295,7 @@ GatherFields::execute()
   if( fHandle_.get_rep() )
   {
     FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
-    ofield_port->send( fHandle_ );
-    if (!ofield_port->have_data()) { fHandle_ = 0; }
+    ofield_port->send_and_dereference( fHandle_, true );
   }    
 }
 

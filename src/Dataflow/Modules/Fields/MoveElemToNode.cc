@@ -97,7 +97,7 @@ MoveElemToNode::execute()
     if (ifield->basis_order() != 0)
     {
       remark("Field is already cell centered.  Passing through.");
-      ofp->send(ifield);
+      ofp->send_and_dereference(ifield);
       return;
     }
     ext = "Lat";
@@ -107,7 +107,7 @@ MoveElemToNode::execute()
     if (ifield->basis_order() != 0)
     {
       remark("Field is already cell centered.  Passing through.");
-      ofp->send(ifield);
+      ofp->send_and_dereference(ifield);
       return;
     }
     ext = "SHex";
@@ -151,9 +151,9 @@ MoveElemToNode::execute()
       return;
     }
 
-    FieldHandle ofield = algo->execute(this, ifield);
+    FieldHandle ofield(algo->execute(this, ifield));
   
-    ofp->send(ofield);
+    ofp->send_and_dereference(ofield);
   }
 }
 

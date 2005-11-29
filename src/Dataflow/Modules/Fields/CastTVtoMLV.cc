@@ -148,7 +148,8 @@ void CastTVtoMLV::execute()
     }
     ++ib;
   }
-  oport_->send(lv);
+  FieldHandle tmp(lv);
+  oport_->send_and_dereference(tmp);
 }
 
 } // End namespace SCIRun

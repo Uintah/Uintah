@@ -107,7 +107,7 @@ ReplaceScalarDataValue::execute()
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, oldvalue, newvalue));
 
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-  ofield_port->send(ofieldhandle);
+  ofield_port->send_and_dereference(ofieldhandle);
 }
 
 

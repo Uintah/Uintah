@@ -190,8 +190,9 @@ RefineTetVol::execute()
     ++ci;
     out->set_value(levels_[cidx], cidx);
   }
-  
-  out_port->send(FieldHandle(out));
+
+  FieldHandle ftmp(out);
+  out_port->send_and_dereference(ftmp);
 }
 
 void 

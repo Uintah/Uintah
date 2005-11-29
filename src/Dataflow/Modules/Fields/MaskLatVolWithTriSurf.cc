@@ -188,6 +188,7 @@ MaskLatVolWithTriSurf::execute()
   // go through all of the nodes in the LatVolField and see if they're
   // inside the TriSurf (count face crossings)
 
-  omask->send(FieldHandle(mask));
+  FieldHandle ftmp(mask);
+  omask->send_and_dereference(ftmp);
 }
 } // End namespace SCIRun

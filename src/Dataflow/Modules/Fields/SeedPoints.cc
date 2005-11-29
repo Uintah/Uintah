@@ -449,7 +449,7 @@ SeedPoints::execute()
       error("Unable to initialize oport 'SeedPoints Point'.");
       return;
     }
-    ofp->send(ofield);
+    ofp->send_and_dereference(ofield);
     gui_send_.set(0);
   }
 }

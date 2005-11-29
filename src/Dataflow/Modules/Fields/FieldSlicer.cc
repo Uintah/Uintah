@@ -360,8 +360,7 @@ FieldSlicer::execute()
       return;
     }
 
-    ofield_port->send( fHandle_ );
-    if (!ofield_port->have_data()) { fHandle_ = 0; }
+    ofield_port->send_and_dereference( fHandle_, true );
   }
 
   // Get a handle to the output double port.
@@ -373,8 +372,7 @@ FieldSlicer::execute()
       return;
     }
 
-    omatrix_port->send(mHandle_);
-    if (!omatrix_port->have_data()) { mHandle_ = 0; }
+    omatrix_port->send_and_dereference(mHandle_, true);
   }
 }
 

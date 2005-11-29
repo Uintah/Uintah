@@ -156,10 +156,10 @@ ChangeFieldBasis::execute()
   {
     // No changes, just send the original through (it may be nothing!).
     remark("Passing field from input port to output port unchanged.");
-    ofport->send(fh);
+    ofport->send_and_dereference(fh);
 
     MatrixHandle m(SparseRowMatrix::identity(fh->data_size()));
-    omport->send(m);
+    omport->send_and_dereference(m);
 
     return;
   }
@@ -235,8 +235,8 @@ ChangeFieldBasis::execute()
     }
   }
 
-  ofport->send(ef);
-  omport->send(interpolant);
+  ofport->send_and_dereference(ef);
+  omport->send_and_dereference(interpolant);
 }
 
     

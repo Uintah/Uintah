@@ -275,12 +275,10 @@ ClipLattice::execute()
     FieldHandle ofield = algo->execute(ifieldhandle, top, bottom, nrrdh);
 
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    ofield_port->send(ofield);
+    ofield_port->send_and_dereference(ofield);
 
     NrrdOPort *nrrd_oport = (NrrdOPort *)get_oport("MaskVector");
-    nrrd_oport->send(nrrdh);
-
-
+    nrrd_oport->send_and_dereference(nrrdh);
   }
 }
 

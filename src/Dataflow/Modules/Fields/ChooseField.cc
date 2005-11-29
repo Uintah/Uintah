@@ -120,7 +120,7 @@ ChooseField::execute()
     ifield->get(field);
   }
   
-  ofld->send(field);
+  ofld->send_and_dereference(field);
 }
 
 } // End namespace SCIRun

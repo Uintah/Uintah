@@ -389,7 +389,7 @@ ChangeFieldBounds::execute()
   fh->mesh_detach();
   fh->mesh()->transform(t);
 
-  oport->send(fh);
+  oport->send_and_dereference(fh);
 
   // The output port is required.
   MatrixOPort *moport = (MatrixOPort*)get_oport("Transformation Matrix");
@@ -397,11 +397,12 @@ ChangeFieldBounds::execute()
   // convert the transform into a matrix and send it out   
   DenseMatrix *matrix_transform = scinew DenseMatrix(t);
   MatrixHandle mh = matrix_transform;
-  moport->send(mh);
+  moport->send_and_dereference(mh);
 }
 
     
-void ChangeFieldBounds::widget_moved(bool last, BaseWidget*)
+void
+ChangeFieldBounds::widget_moved(bool last, BaseWidget*)
 {
   if (last) {
     Point center, right, down, in;
