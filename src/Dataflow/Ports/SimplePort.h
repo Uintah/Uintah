@@ -99,6 +99,8 @@ public:
 
   void send(const T&);
   void send_intermediate(const T&);
+  void send_and_dereference(T&, bool caching_here = false);
+
   void set_cache( bool cache = true )
   {
     cache_ = cache;
@@ -113,8 +115,9 @@ public:
 
 private:
   enum SendType {SEND_NORMAL=0, SEND_INTERMEDIATE=1};
+  enum DerefType {DEREF_NEVER=0, DEREF_ALWAYS=1, DEREF_NOCACHE=2};
 
-  void do_send(const T&, SendType type = SEND_NORMAL);
+  void do_send(const T&, SendType type = SEND_NORMAL, DerefType deref);
 
   bool cache_;
   bool sent_something_;
@@ -188,7 +191,6 @@ void
 SimpleOPort<T>::reset()
 {
   sent_something_ = false;
-  //handle_ = 0;
 }
 
 
@@ -238,19 +240,28 @@ template<class T>
 void
 SimpleOPort<T>::send(const T& data)
 {
-  do_send(data, SEND_NORMAL);
+  do_send(data, SEND_NORMAL, DEREF_NEVER);
 }
 
 template<class T>
 void
 SimpleOPort<T>::send_intermediate(const T& data)
 {
-  do_send(data, SEND_INTERMEDIATE);
+  do_send(data, SEND_INTERMEDIATE, DEREF_NEVER);
 }
+
 
 template<class T>
 void
-SimpleOPort<T>::do_send(const T& data, SendType type)
+SimpleOPort<T>::send_and_dereference(T& data, bool save_when_caching)
+{
+  do_send(data, SEND_NORMAL, save_when_caching?DEREF_ALWAYS:DEREF_NOCACHE);
+}
+
+
+template<class T>
+void
+SimpleOPort<T>::do_send(const T& data, SendType type, DerefType deref)
 {
   handle_ = cache_ ? data : 0;
 
@@ -267,7 +278,19 @@ SimpleOPort<T>::do_send(const T& data, SendType type)
     // Add the new message.
     Connection* conn = connections[i];
     SimplePortComm<T>* msg = scinew SimplePortComm<T>(data);
+    if (i == nconnections()-1 &&
+        (deref == DEREF_ALWAYS ||
+         deref == DEREF_NOCACHE && !handle_.get_rep()))
+    {
+      ((T &)data) = 0;
+    }
     ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
+  }
+  if (nconnections() == 0 &&
+      (deref == DEREF_ALWAYS ||
+       deref == DEREF_NOCACHE && !handle_.get_rep()))
+  {
+    ((T &)data) = 0;
   }
 
   sent_something_ = true;
