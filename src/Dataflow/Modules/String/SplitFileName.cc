@@ -51,8 +51,6 @@ public:
   virtual ~SplitFileName();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -151,12 +149,6 @@ void
   fn_oport->send(fnH);
   ext_oport->send(extH);
   fnext_oport->send(extH);
-}
-
-void
- SplitFileName::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun
