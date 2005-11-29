@@ -46,7 +46,7 @@
 #include <Core/Thread/Mailbox.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Util/Environment.h>
 
 namespace SCIRun {
@@ -230,16 +230,16 @@ SimpleOPort<T>::detach(Connection *conn, bool blocked)
 }
 
 
-//! Declare specialization for field ports.
-//! Field ports must only send const fields i.e. frozen fields.
-//! Definition in FieldPort.cc
-template<>
-void SimpleOPort<FieldHandle>::send(const FieldHandle& data);
-
 template<class T>
 void
 SimpleOPort<T>::send(const T& data)
 {
+  if (data.get_rep())
+  {
+    PropertyManager *pm = dynamic_cast<PropertyManager *>(data.get_rep());
+    if (pm && !pm->is_frozen())
+      pm->freeze();
+  }
   do_send(data, SEND_NORMAL, DEREF_NEVER);
 }
 
@@ -247,6 +247,12 @@ template<class T>
 void
 SimpleOPort<T>::send_intermediate(const T& data)
 {
+  if (data.get_rep())
+  {
+    PropertyManager *pm = dynamic_cast<PropertyManager *>(data.get_rep());
+    if (pm && !pm->is_frozen())
+      pm->freeze();
+  }
   do_send(data, SEND_INTERMEDIATE, DEREF_NEVER);
 }
 
@@ -255,6 +261,12 @@ template<class T>
 void
 SimpleOPort<T>::send_and_dereference(T& data, bool save_when_caching)
 {
+  if (data.get_rep())
+  {
+    PropertyManager *pm = dynamic_cast<PropertyManager *>(data.get_rep());
+    if (pm && !pm->is_frozen())
+      pm->freeze();
+  }
   do_send(data, SEND_NORMAL, save_when_caching?DEREF_ALWAYS:DEREF_NOCACHE);
 }
 

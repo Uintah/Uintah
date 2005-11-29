@@ -53,36 +53,5 @@ OPort* make_FieldOPort(Module* module, const string& name) {
 template<> string SimpleIPort<FieldHandle>::port_type_("Field");
 template<> string SimpleIPort<FieldHandle>::port_color_("yellow");
 
-
-//! Specialization for field ports.
-//! Field ports must only send const fields i.e. frozen fields.
-template<>
-void SimpleOPort<FieldHandle>::send(const FieldHandle& data)
-{
-  if (data.get_rep() && (! data->is_frozen()))
-    data->freeze();
-
-  do_send(data, SEND_NORMAL, DEREF_NEVER);
-}
-
-template<>
-void SimpleOPort<FieldHandle>::send_intermediate(const FieldHandle& data)
-{
-  if (data.get_rep() && (! data->is_frozen()))
-    data->freeze();
-
-  do_send(data, SEND_INTERMEDIATE, DEREF_NEVER);
-}
-
-template<>
-void SimpleOPort<FieldHandle>::send_and_dereference(FieldHandle& data,
-                                                    bool save_when_caching)
-{
-  if (data.get_rep() && (! data->is_frozen()))
-    data->freeze();
-
-  do_send(data, SEND_NORMAL, save_when_caching?DEREF_ALWAYS:DEREF_NOCACHE);
-}
-
 } // End namespace SCIRun
 
