@@ -32,6 +32,8 @@
 #if !defined(Bases_h)
 #define Bases_h
 
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/CrvQuadraticLgn.h>
 #include <Core/Basis/CrvCubicHmt.h>
