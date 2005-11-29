@@ -55,5 +55,10 @@ PSELIBS := \
 
 LIBS := $(XML_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
+ifeq ($(HAVE_PETSC),)
+LIBS := $(LIBS) $(PETSC_LIBRARY) 
+endif
+
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
