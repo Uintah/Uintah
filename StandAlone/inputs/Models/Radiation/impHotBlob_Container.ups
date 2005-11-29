@@ -39,7 +39,7 @@
         <BCType id = "all"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "all"   label = "scalar-f"    var = "Neumann">
+        <BCType id = "all"   label = "scalar-f"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -56,7 +56,7 @@
         <BCType id = "all"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "all" label = "scalar-f"    var = "Neumann">
+        <BCType id = "all" label = "scalar-f"       var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -70,10 +70,10 @@
         <BCType id = "all"   label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "all"   label = "Density"    var = "Neumann">
+        <BCType id = "all"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "all" label = "scalar-f"    var = "Neumann">
+        <BCType id = "all" label = "scalar-f"       var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>                  
@@ -81,7 +81,7 @@
         <BCType id = "0"     label = "Pressure"     var = "Neumann">
                               <value> 0 </value>
         </BCType>
-        <BCType id = "all"   label = "Velocity"   var = "Neumann">
+        <BCType id = "all"   label = "Velocity"     var = "Neumann">
                               <value> [0.0,0.0,0.0] </value>
         </BCType>
         <BCType id = "all"   label = "Temperature"  var = "Neumann">
@@ -145,11 +145,11 @@
     <!--____________________________________________________________________-->
        <Level>
            <Box label="1">
-              <lower>        [-1.0,-1.0,-0.03]    </lower>
-              <upper>        [1.0,  1.0, 0.03]    </upper>
+              <lower>        [-1.0,-1.0,-1.0]    </lower>
+              <upper>        [1.0,  1.0, 1.0]    </upper>
               <extraCells>   [1,1,1]              </extraCells>
               <patches>      [1,1,1]              </patches>
-              <resolution>   [100,100,1]          </resolution>
+              <resolution>   [20,20,20]          </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -166,6 +166,9 @@
       <save label="delP_Dilatate"/>
       <save label="scalar-f"/>
       <save label="vol_frac_CC"/>
+      <save label="int_eng_L_CC"/>
+      <save label="eng_L_ME_CC"/>
+      <save label="heatRate_CC"/>
       
       
       <save label= "cellType_CC"/>
@@ -179,12 +182,9 @@
       <save label="qfluxB"/>
       <save label="radiationSrc"/>
       <save label="solidEmission"/>
-      <save label="isGasSolidInterface"/>
+      <save label="insideSolid"/>
       <save label="CO2"/>
-      <save label="H2O"/>
-      <save label="TempX_FC"/>
-      <save label="TempY_FC"/>
-      <save label="TempZ_FC"/>      
+      <save label="H2O"/>     
       
       <save label="p.x"/>
       <save label="p.particleID"/>
@@ -242,8 +242,8 @@
 	     <!-- Hypre options -->
 	     <solver>         hybrid  </solver>
 	     <preconditioner> pfmg    </preconditioner>
-	     <tolerance>      1.e-10  </tolerance>
-	     <maxiterations>  7500    </maxiterations>
+	     <tolerance>      1.e-6  </tolerance>
+	     <maxiterations>  200    </maxiterations>
 	     <npre>           1       </npre>
 	     <npost>          1       </npost>
 	     <skip>           0       </skip>
@@ -286,7 +286,7 @@
           <include href="inputs/MPM/MaterialData/GursonYieldSteel.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
           <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
-          <initial_material_temperature>  300.0 </initial_material_temperature>
+          <initial_material_temperature>  293.0 </initial_material_temperature>
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
           <initial_std_porosity>          0.001 </initial_std_porosity>
           <critical_porosity>             0.3   </critical_porosity>
@@ -312,7 +312,7 @@
               </difference>  
               <res>                 [2,2,2]            </res>
               <velocity>            [0.0,0.0,0.0]      </velocity>
-              <temperature>        300.0               </temperature>
+              <temperature>        293.0               </temperature>
             </geom_object>
          </material>
        </MPM>
@@ -349,7 +349,7 @@
                <velocity>      [0.0,0.0,0.0]            </velocity>
                <density>       1.7899909957225715000    </density>
                <pressure>      101325.0                 </pressure>
-               <temperature>   300.0                    </temperature>
+               <temperature>   293.0                    </temperature>
            </geom_object>
            
            <geom_object>
@@ -366,9 +366,14 @@
             </difference>
             <res>              [2,2,2]               </res>           
             <velocity>         [0.0,0.0,0.0]         </velocity>      
-            <density>          0.176907505349598     </density>       
+            <density>          1.7899909957225715000 </density>       
             <pressure>         101325.0              </pressure>      
-            <temperature>      2000                  </temperature>   
+            <temperature>      293                  </temperature>  
+            
+        <!--    <density>          0.268498649358386     </density>       
+            <pressure>         101325.0              </pressure>      
+            <temperature>      2000                  </temperature>  -->          
+             
            </geom_object>
          </material>
       </ICE>       
@@ -395,7 +400,7 @@
                   <min>       [ -6.0, -6.0, -6.0 ]   </min>
                   <max>       [ 6.0, 6.0, 6.0 ]      </max>
                 </box>
-            <scalar>    0.00   </scalar>
+            <scalar>    1.00   </scalar>
         </geom_object>
         <geom_object>
               <sphere label = "Donut">
@@ -437,6 +442,19 @@
                <tolerance>      1.0e-8     </tolerance>
              </LinearSolver>
           </DORadiationModel>
+            <!-- absorbing solid geometry -->
+            <geom_object>
+              <difference>
+                <sphere label = "SteelBall">
+                   <origin>           [0.0,0.0,0.0]   </origin>
+                   <radius>           0.2             </radius>
+                </sphere>
+                <sphere label = "inside">
+                   <origin>           [0.0,0.0,0.0]   </origin>
+                   <radius>           0.1             </radius>
+                </sphere>                
+              </difference> 
+            </geom_object>
         </RadiationModel>
       </Model>
  
