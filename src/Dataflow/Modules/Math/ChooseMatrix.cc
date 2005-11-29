@@ -117,7 +117,7 @@ ChooseMatrix::execute()
     imatrix->get(matrix);
   }
   
-  ofld->send(matrix);
+  ofld->send_and_dereference(matrix);
 }
 
 } // End namespace SCIRun

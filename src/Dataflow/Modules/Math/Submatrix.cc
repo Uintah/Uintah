@@ -159,12 +159,12 @@ Submatrix::execute()
   if (minrow == 0 && maxrow == (imatrix->nrows()-1) &&
       mincol == 0 && maxcol == (imatrix->ncols()-1))
   {
-    omp->send(imatrix);
+    omp->send_and_dereference(imatrix);
   }
   else
   {
-    MatrixHandle omatrix = imatrix->submatrix(minrow, mincol, maxrow, maxcol);
-    omp->send(omatrix);
+    MatrixHandle omatrix(imatrix->submatrix(minrow, mincol, maxrow, maxcol));
+    omp->send_and_dereference(omatrix);
   }
 }
 

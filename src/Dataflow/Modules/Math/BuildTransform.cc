@@ -135,20 +135,24 @@ BuildTransform::BuildTransform(GuiContext* ctx) :
   widget_switch_ = box_widget_->GetWidget();
 }
 
+
 BuildTransform::~BuildTransform()
 {
   delete box_widget_;
 }
 
-void BuildTransform::execute()
+
+void
+BuildTransform::execute()
 {
   imatrix_ = (MatrixIPort *)get_iport("Matrix");
   omatrix_ = (MatrixOPort *)get_oport("Matrix");
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
   string which_transform=which_transform_gui_.get();
 
-  // create the widget
-  if (!have_been_initialized_) {
+  // Create the widget.
+  if (!have_been_initialized_)
+  {
     Point C, R, D, I;
     box_widget_->GetPosition(C,R,D,I);
     C=Point(0,0,0); R=Point(1,0,0); D=Point(0,1,0), I=Point(0,0,1);
@@ -249,10 +253,13 @@ void BuildTransform::execute()
   }
 
   DenseMatrix *dm = scinew DenseMatrix(local_transform);
-  omatrix_->send(MatrixHandle(dm));
+  MatrixHandle mtmp(dm);
+  omatrix_->send_and_dereference(mtmp);
 }
 
-void BuildTransform::widget_moved(bool last, BaseWidget*)
+
+void
+BuildTransform::widget_moved(bool last, BaseWidget*)
 {
   // only re-execute if this was a widget-release event
   if (last) {
@@ -260,7 +267,10 @@ void BuildTransform::widget_moved(bool last, BaseWidget*)
   }
 }
 
-void BuildTransform::tcl_command(GuiArgs& args, void* userdata) {
+
+void
+BuildTransform::tcl_command(GuiArgs& args, void* userdata)
+{
   if (args[1] == "hide_widget") {
     ((GeomSwitch *)(widget_switch_.get_rep()))->set_state(0);
     if (ogeom_) ogeom_->flushViews();
@@ -292,5 +302,6 @@ void BuildTransform::tcl_command(GuiArgs& args, void* userdata) {
     Module::tcl_command(args, userdata);
   }
 }
+
 
 } // End namespace SCIRun

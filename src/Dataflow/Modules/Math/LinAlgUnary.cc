@@ -220,7 +220,8 @@ void LinAlgUnary::execute() {
     return;
   }
 
-  omat_->send(MatrixHandle(m));
+  MatrixHandle mtmp(m);
+  omat_->send_and_dereference(mtmp);
 }
 
 

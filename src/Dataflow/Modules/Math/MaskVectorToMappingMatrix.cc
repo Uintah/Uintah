@@ -103,8 +103,8 @@ MaskVectorToMappingMatrix::execute()
   
   rr[dim] = dim;  
 
-  SparseRowMatrix *matrix = scinew SparseRowMatrix(dim, dim, rr, cc, dim, data);
-  matrix_oport_->send(matrix);
+  MatrixHandle mtmp(scinew SparseRowMatrix(dim, dim, rr, cc, dim, data));
+  matrix_oport_->send_and_dereference(mtmp);
 }
 
 } // End namespace SCIRun

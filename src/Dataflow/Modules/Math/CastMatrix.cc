@@ -72,11 +72,15 @@ CastMatrix::CastMatrix(GuiContext* ctx)
 {
 }
 
+
 CastMatrix::~CastMatrix()
 {
 }
 
-void CastMatrix::execute() {
+
+void
+CastMatrix::execute()
+{
   imat_ = (MatrixIPort *)get_iport("Input");
   omat_ = (MatrixOPort *)get_oport("Output");
   
@@ -110,6 +114,7 @@ void CastMatrix::execute() {
     error("CastMatrix: unknown cast type "+newtype);
     return;
   }
-  omat_->send(omH);
+  omat_->send_and_dereference(omH);
 }
+
 } // End namespace SCIRun

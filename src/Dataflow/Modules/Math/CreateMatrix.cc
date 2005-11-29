@@ -83,7 +83,7 @@ void CreateMatrix::execute()
     return;
   }
   
-  oport->send(handle);
+  oport->send_and_dereference(handle);
 }
 
 } // End namespace SCIRun

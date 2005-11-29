@@ -158,13 +158,13 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which,
   }	    
 
   ovec->set_cache( cache );
-  ovec->send(matrix);
-
+  ovec->send_and_dereference(matrix);
 
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
 
-  osel->send(MatrixHandle(selected));
+  MatrixHandle stmp(selected);
+  osel->send_and_dereference(stmp);
 }
 
 

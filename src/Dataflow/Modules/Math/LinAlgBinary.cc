@@ -112,7 +112,8 @@ void LinAlgBinary::execute() {
       error("Addition requires A and B must be the same size.");
       return;
     }
-    omat_->send(aH + bH);
+    MatrixHandle mtmp(aH + bH);
+    omat_->send_and_dereference(mtmp);
     return;
   } else if (op == "Mult") {
     if (!aH.get_rep()) {
@@ -130,7 +131,8 @@ void LinAlgBinary::execute() {
             " columns, B contains " + to_string(bH->nrows()) + " rows.");
       return;
     }
-    omat_->send(aH * bH);
+    MatrixHandle mtmp(aH * bH);
+    omat_->send_and_dereference(mtmp);
     return;
   } else if (op == "Function") {
     if (aH->nrows()*aH->ncols() != bH->nrows()*bH->ncols()) {
@@ -189,8 +191,8 @@ void LinAlgBinary::execute() {
     {
       x[i] = algo->user_function(a[i], b[i]);
     }
-    omat_->send(m);
-
+    omat_->send_and_dereference(m);
+    return;
   } else if (op == "SelectColumns") {
     if (!aH.get_rep() || !bH.get_rep()) {
       error("Can't have an empty input matrix for SelectColumns.");
@@ -215,13 +217,18 @@ void LinAlgBinary::execute() {
       }
     }
     if (dynamic_cast<DenseMatrix *>(aH.get_rep()))
-      omat_->send(MatrixHandle(cd));
+    {
+      MatrixHandle mtmp(cd);
+      omat_->send_and_dereference(mtmp);
+    }
     else if (dynamic_cast<ColumnMatrix *>(aH.get_rep())) {
-      omat_->send(MatrixHandle(cd->column()));
+      MatrixHandle mtmp(cd->column());
       delete cd;
+      omat_->send_and_dereference(mtmp);
     } else {
-      omat_->send(MatrixHandle(cd->sparse()));
+      MatrixHandle mtmp(cd->sparse());
       delete cd;
+      omat_->send_and_dereference(mtmp);
     }
     return;
   } else if (op == "SelectRows") {
@@ -248,13 +255,18 @@ void LinAlgBinary::execute() {
       }
     }
     if (dynamic_cast<DenseMatrix *>(aH.get_rep()))
-      omat_->send(MatrixHandle(cd));
+    {
+      MatrixHandle mtmp(cd);
+      omat_->send_and_dereference(mtmp);
+    }
     else if (dynamic_cast<ColumnMatrix *>(aH.get_rep())) {
-      omat_->send(MatrixHandle(cd->column()));
+      MatrixHandle mtmp(cd->column());
       delete cd;
+      omat_->send_and_dereference(mtmp);
     } else {
-      omat_->send(MatrixHandle(cd->sparse()));
+      MatrixHandle mtmp(cd->sparse());
       delete cd;
+      omat_->send_and_dereference(mtmp);
     }
     return;
   } else if (op == "NormalizeAtoB") {
@@ -297,7 +309,7 @@ void LinAlgBinary::execute() {
     const double scale = (bmax - bmin)/(amax - amin);
     for (i=0; i<na; i++)
       anew[i] = (a[i]-amin)*scale+bmin;
-    omat_->send(anewH);
+    omat_->send_and_dereference(anewH);
   } else {
     warning("Don't know operation "+op);
     return;

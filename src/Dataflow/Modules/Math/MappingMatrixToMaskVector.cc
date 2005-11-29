@@ -107,7 +107,7 @@ MappingMatrixToMaskVector::execute()
     }
   }
 
-  nrrd_oport_->send(nrrdH);
+  nrrd_oport_->send_and_dereference(nrrdH);
 }
 
 } // End namespace SCIRun

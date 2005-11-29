@@ -81,7 +81,8 @@ AppendMatrix::~AppendMatrix()
 {
 }
 
-void AppendMatrix::concat_cols(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) {
+void
+AppendMatrix::concat_cols(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) {
 
     int r, c;
     for (r = 0; r <= m1H->nrows()-1; r++)
@@ -102,8 +103,9 @@ void AppendMatrix::concat_cols(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *
 
 }
 
-void AppendMatrix::concat_rows(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) {
 
+void
+AppendMatrix::concat_rows(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) {
     int r, c;
     for (r = 0; r <= m1H->nrows()-1; r++)
     {
@@ -123,7 +125,10 @@ void AppendMatrix::concat_rows(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *
 
 }
 
-void AppendMatrix::execute() {
+
+void
+AppendMatrix::execute()
+{
   imatA_ = (MatrixIPort *)get_iport("Optional BaseMatrix");
   imatB_ = (MatrixIPort *)get_iport("SubMatrix");
   omat_ = (MatrixOPort *)get_oport("CompositeMatrix");
@@ -195,10 +200,11 @@ void AppendMatrix::execute() {
 
   if (omatrix)
   {
-    matrixH_=omatrix;
+    matrixH_ = omatrix;
     omat_->send(matrixH_);
   }
 }
+
 
 void
 AppendMatrix::tcl_command(GuiArgs& args, void* userdata)
