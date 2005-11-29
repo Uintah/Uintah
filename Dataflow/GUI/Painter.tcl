@@ -52,6 +52,7 @@ itcl_class SCIRun_Render_Painter {
 
     method update_clut_range {args} {
 	upvar \#0 [modname]-min min [modname]-max max
+        if { ![info exists min] || ![info exists max] } return;
 	set ww [expr $max-$min]
 	set wl [expr $min+$ww/2]
 	set rez [expr $ww/1000]
@@ -120,10 +121,10 @@ itcl_class SCIRun_Render_Painter {
 	# the focus belowis to generate keypress events 
 	bind $w <Enter>		"focus $w; $this-c enter $w"
 	bind $w <Leave>		"$this-c leave %W"
-	bind $w <Motion>	"$this-c motion   $w %x %y %s %t %X %Y"
+	bind $w <Motion>	"$this-c motion   $w %b %s %X %Y %x %y %t"
+	bind $w <ButtonPress>	"$this-c button   $w %b %s %X %Y %x %y %t"
+	bind $w <ButtonRelease>	"$this-c release  $w %b %s %X %Y %x %y %t"
 	bind $w <KeyPress>	"$this-c keypress $w %k %K %t"
-	bind $w <ButtonPress>	"$this-c button   $w %b %s %X %Y %x %y"
-	bind $w <ButtonRelease> "$this-c release  $w %b %s %X %Y"
 	return $w
     }
 
@@ -161,10 +162,6 @@ itcl_class SCIRun_Render_Painter {
 	labeledSlider $f.slice Slice: $prefix-slice 0 255 1
 	$f.slice.scale configure -command \
 	    "$this-c rebind $gl"
-
-	labeledSlider $f.zoom "Zoom %:" $prefix-zoom 1 2000 3
-	$f.zoom.scale configure -command \
-	    "$this-c redraw $gl"
 
 	labeledSlider $f.clutww "Window Width:" [modname]-clut_ww 1 2000 3
 	$f.clutww.scale configure -command \
@@ -257,14 +254,14 @@ itcl_class SCIRun_Render_Painter {
 	pack $w.e -side bottom -fill x
 	pack $w.f -expand 1 -fill both
 
-	control_panel $w.cp
-	show_control_panel $w
+#	control_panel $w.cp
+#	show_control_panel $w
 
 	set winname [join [string tolower $title] ""]
 	gl_frame $w.f.$winname
 	pack $w.f.$winname -expand 1 -fill both
 
-	add_viewport_tab $w $title $winname-viewport0 $w.f.$winname
+#	add_viewport_tab $w $title $winname-viewport0 $w.f.$winname
     }
 
     method four_view { w main } {

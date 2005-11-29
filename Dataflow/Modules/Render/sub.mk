@@ -51,6 +51,7 @@ SRCS     += \
 	$(SRCDIR)/ViewWindow.cc\
 	$(SRCDIR)/ViewSlices.cc\
 	$(SRCDIR)/Painter.cc\
+	$(SRCDIR)/PainterTools.cc\
 	$(SRCDIR)/Viewer.cc\
 	$(SRCDIR)/glMath.cc\
 #[INSERT NEW CODE FILE HERE]
