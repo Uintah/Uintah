@@ -89,7 +89,7 @@ Centroids::execute()
   FieldHandle ofieldhandle(algo->execute(ifieldhandle));
   
   FieldOPort *ofieldPort = (FieldOPort*)get_oport("PointCloudField");
-  ofieldPort->send(ofieldhandle);
+  ofieldPort->send_and_dereference(ofieldhandle);
 }
 
 

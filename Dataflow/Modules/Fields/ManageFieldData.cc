@@ -125,7 +125,8 @@ ManageFieldData::execute()
     else
     {
       MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-      omp->send(algo_field->execute(ifieldhandle));
+      MatrixHandle mh(algo_field->execute(ifieldhandle));
+      omp->send_and_dereference(mh);
     }
   }
 
@@ -281,7 +282,7 @@ ManageFieldData::execute()
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  ofp->send(result_field);
+  ofp->send_and_dereference(result_field);
 }
 
 

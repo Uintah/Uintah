@@ -157,8 +157,7 @@ PlanarTransformField::execute()
   if ( fieldout_.get_rep() )
   {
     FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
-    ofp->send(fieldout_);
-    if (!ofp->have_data()) { fieldout_ = 0; }
+    ofp->send_and_dereference(fieldout_, true);
   }
 }
 

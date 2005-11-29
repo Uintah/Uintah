@@ -209,8 +209,7 @@ ClipByFunction::execute()
   if( fHandle_.get_rep() )
   {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Clipped");
-    ofield_port->send(fHandle_);
-    if (!ofield_port->have_data()) { fHandle_ = 0; }
+    ofield_port->send_and_dereference(fHandle_, true);
   }
 
   if( mHandle_.get_rep() )
@@ -238,7 +237,7 @@ ClipByFunction::execute()
     }
     NrrdOPort *nrrd_oport = (NrrdOPort *)get_oport("MaskVector");
     nrrd_oport->send(nrrdH);
-    if (!omatrix_port->have_data() || !omatrix_port->have_data())
+    if (!omatrix_port->have_data() || !nrrd_oport->have_data())
     {
       mHandle_ = 0;
     }

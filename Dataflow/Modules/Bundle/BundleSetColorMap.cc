@@ -153,7 +153,7 @@ void BundleSetColorMap::execute()
     handle->set_property("name",bundlename,false);
   }
         
-  oport->send(handle);
+  oport->send_and_dereference(handle);
   
   update_state(Completed);  
 }

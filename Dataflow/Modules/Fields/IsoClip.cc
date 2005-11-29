@@ -216,10 +216,10 @@ IsoClip::execute()
 				     interp);
   
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Clipped");
-  ofield_port->send(ofield);
+  ofield_port->send_and_dereference(ofield);
 
   MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
-  omatrix_port->send(interp);
+  omatrix_port->send_and_dereference(interp);
 }
 
 

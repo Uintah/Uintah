@@ -345,8 +345,7 @@ FieldSetProperty::execute()
   if( fHandle_.get_rep() )
   {
     FieldOPort *onrrd_port = (FieldOPort *) get_oport("Output");
-    onrrd_port->send( fHandle_ );
-    if (!onrrd_port->have_data()) { fHandle_ = 0; }
+    onrrd_port->send_and_dereference( fHandle_, true );
   }
 }
 

@@ -246,7 +246,8 @@ PointLatticeMap::execute()
   //  matrix->dense()->print();
 
   // Send the mapping matrix downstream
-  oport_->send(matrix);
+  MatrixHandle mtmp(matrix);
+  oport_->send_and_dereference(mtmp);
 
   //Done!
 }

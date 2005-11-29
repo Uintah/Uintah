@@ -264,8 +264,8 @@ ClipField::execute()
       bmin.x(bmin.x() - size_estimate);
       bmax.x(bmax.x() + size_estimate);
     }
-    if (fabs(bmax.y() - bmin.y()) < 1.0e-6)
-    {
+    if (fabs(bmax.y() - bmin.y()) < 1.0e-6) 
+   {
       bmin.y(bmin.y() - size_estimate);
       bmax.y(bmax.y() + size_estimate);
     }
@@ -348,7 +348,8 @@ ClipField::execute()
     do_clip_p = true;
   }
 
-  if (do_clip_p || ifieldhandle->generation != last_input_generation_)
+  if (do_clip_p || ifieldhandle->generation != last_input_generation_ ||
+      !ofield_.get_rep())
   {
     last_input_generation_ = ifieldhandle->generation;
     exec_mode_.set("");
@@ -384,7 +385,7 @@ ClipField::execute()
   if (ofield_.get_rep())
   {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    ofield_port->send(ofield_);
+    ofield_port->send_and_dereference(ofield_, true);
   }
 }
 

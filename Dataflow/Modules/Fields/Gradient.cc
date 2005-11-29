@@ -120,7 +120,7 @@ Gradient::execute()
   if ( fieldout.get_rep() )
   {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
-    ofp->send(fieldout);
+    ofp->send_and_dereference(fieldout);
   }
 }
 

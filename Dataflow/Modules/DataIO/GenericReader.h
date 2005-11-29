@@ -177,8 +177,7 @@ GenericReader<HType>::execute()
     error("Unable to initialize oport.");
     return;
   }
-  outport->send(handle_);
-  if (!outport->have_data()) { handle_ = 0; }
+  outport->send_and_dereference(handle_, true);
 }
 
 } // End namespace SCIRun

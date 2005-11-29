@@ -164,13 +164,14 @@ FieldMeasures::execute()
 
   // Execute and Send (ha, no extraneous local variables here!)
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Measures Matrix");
-  omp->send(MatrixHandle(algo->execute(this, mesh,
-				       xFlag_.get(),
-				       yFlag_.get(),
-				       zFlag_.get(), 
-				       idxFlag_.get(), 
-				       sizeFlag_.get(), 
-				       nNbrsFlag_.get())));
+  MatrixHandle mh(algo->execute(this, mesh,
+                                xFlag_.get(),
+                                yFlag_.get(),
+                                zFlag_.get(), 
+                                idxFlag_.get(), 
+                                sizeFlag_.get(), 
+                                nNbrsFlag_.get()));
+  omp->send_and_dereference(mh);
 }
 
 
