@@ -377,7 +377,7 @@ void VolumeSlicer::execute()
     double vmin = tex_->vmin();
     double vmax = tex_->vmax();
     outcmap->Scale(vmin, vmax);
-    ocmap_->send(outcmap);
+    ocmap_->send_and_dereference(outcmap);
   }
 }
 

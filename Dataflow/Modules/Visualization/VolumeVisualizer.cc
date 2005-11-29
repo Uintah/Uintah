@@ -473,7 +473,7 @@ VolumeVisualizer::execute()
     ColorMapHandle outcmap;
     outcmap = new ColorMap(*cmap1.get_rep()); 
     outcmap->Scale(texture_->vmin(), texture_->vmax());
-    cmap_oport_->send(outcmap);
+    cmap_oport_->send_and_dereference(outcmap);
   }
 }
 
