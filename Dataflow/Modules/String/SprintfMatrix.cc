@@ -167,7 +167,7 @@ void SprintfMatrix::execute()
                 // If so we transpose the whole matrix
                 if (currentmatrix->is_dense_col_maj())
                 {
-                  currentmatrix = dynamic_cast<Matrix *>(currentmatrix->dense());
+                  currentmatrix = currentmatrix->dense();
                 }
               }
             }
@@ -181,7 +181,7 @@ void SprintfMatrix::execute()
           if(currentmatrix.get_rep())
           {
             dataptr = currentmatrix->get_data_pointer();
-            if (matrixindex < currentmatrix->get_data_size())
+            if (matrixindex < (int)currentmatrix->get_data_size())
             {
               datavalue = dataptr[matrixindex++];
             }
@@ -189,7 +189,7 @@ void SprintfMatrix::execute()
             {
               datavalue = 0.0;
             }
-            if (matrixindex == currentmatrix->get_data_size()) 
+            if (matrixindex == (int)currentmatrix->get_data_size()) 
             { 
               currentmatrix = 0; 
               if (inputport == (numIPorts()-1)) { lastdata = true; lastport = true; }
@@ -262,8 +262,8 @@ void SprintfMatrix::execute()
     
   }
 
-  StringHandle handle = dynamic_cast<String *>(scinew String(output));
-  oport->send(handle); 
+  StringHandle handle(scinew String(output));
+  oport->send_and_dereference(handle); 
 }
 
 } // End namespace SCIRun

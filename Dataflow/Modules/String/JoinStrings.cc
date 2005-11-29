@@ -56,7 +56,6 @@ JoinStrings::~JoinStrings(){
 
 void  JoinStrings::execute()
 {
-  StringHandle output;
   StringHandle input;
   
   std::string str = "";
@@ -92,8 +91,8 @@ void  JoinStrings::execute()
     return;
   }
   
-  output = dynamic_cast<String *>(scinew String(str));
-  oport->send(output);
+  StringHandle output(scinew String(str));
+  oport->send_and_dereference(output);
 }
 
 } // End namespace SCIRun

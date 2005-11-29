@@ -96,7 +96,6 @@ void
   }
   
   StringHandle filenameH;
-  StringHandle fnH, pnH, extH, fnextH;
   std::string filename, fn, pn, ext, fnext;
   iport->get(filenameH);
   
@@ -140,15 +139,15 @@ void
 
   fnext = fn+ext;
 
-  pnH = dynamic_cast<String *>(scinew String(pn));
-  fnH = dynamic_cast<String *>(scinew String(fn));
-  extH = dynamic_cast<String *>(scinew String(ext));
-  fnextH = dynamic_cast<String *>(scinew String(fnext));
+  StringHandle pnH(scinew String(pn));
+  StringHandle fnH(scinew String(fn));
+  StringHandle extH(scinew String(ext));
+  StringHandle fnextH(scinew String(fnext));
 
-  pn_oport->send(pnH);
-  fn_oport->send(fnH);
-  ext_oport->send(extH);
-  fnext_oport->send(extH);
+  pn_oport->send_and_dereference(pnH);
+  fn_oport->send_and_dereference(fnH);
+  ext_oport->send_and_dereference(extH);
+  fnext_oport->send_and_dereference(extH);
 }
 
 } // End namespace SCIRun

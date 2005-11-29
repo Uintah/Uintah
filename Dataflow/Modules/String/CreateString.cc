@@ -75,8 +75,8 @@ void CreateString::execute()
   // TCL HAS A TENDENCY TO ADD A LINEFEED AT THE END
   std::string str = inputstring_.get();
   if((str.size() > 0)&&(str[str.size()-1] == '\n')) str = str.substr(0,str.size()-1); 
-  StringHandle handle = reinterpret_cast<String *>(scinew String(str));
-  oport->send(handle);
+  StringHandle handle(scinew String(str));
+  oport->send_and_dereference(handle);
 }
 
 } // End namespace SCIRun
