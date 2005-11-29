@@ -49,8 +49,6 @@ public:
   virtual ~BundleSetBundle();
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiString     guiBundle1Name_;
   GuiString     guiBundle2Name_;
@@ -157,7 +155,3 @@ void BundleSetBundle::execute()
   update_state(Completed);
 }
 
-void BundleSetBundle::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}

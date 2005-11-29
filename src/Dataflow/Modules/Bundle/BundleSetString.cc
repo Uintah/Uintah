@@ -50,7 +50,6 @@ public:
 
   virtual ~BundleSetString();
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString     guistring1name_;
@@ -157,11 +156,5 @@ BundleSetString::execute()
   oport->send(handle);
   
   update_state(Completed);  
-}
-
-void
-BundleSetString::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 

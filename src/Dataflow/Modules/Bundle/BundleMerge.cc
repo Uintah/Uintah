@@ -51,8 +51,6 @@ public:
   virtual ~BundleMerge();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -90,8 +88,3 @@ BundleMerge::execute(){
  
 }
 
-void
-BundleMerge::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}

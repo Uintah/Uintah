@@ -52,8 +52,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiString     guimatrix1name_;
   GuiString     guimatrix2name_;
@@ -159,10 +157,4 @@ void BundleSetMatrix::execute()
   
   update_state(Completed);  
 }
-
-void BundleSetMatrix::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
-
 

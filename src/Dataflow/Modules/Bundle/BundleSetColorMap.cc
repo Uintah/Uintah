@@ -52,8 +52,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiString     guicolormap1name_;
   GuiString     guicolormap2name_;
@@ -160,10 +158,6 @@ void BundleSetColorMap::execute()
   update_state(Completed);  
 }
 
-void BundleSetColorMap::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 
 
