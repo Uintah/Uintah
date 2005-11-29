@@ -56,7 +56,6 @@ public:
   MappingMatrixToMaskVector(GuiContext*);
   virtual ~MappingMatrixToMaskVector();
   virtual void	execute();
-  virtual void	tcl_command(GuiArgs&, void*);
 };
 
 
@@ -109,12 +108,6 @@ MappingMatrixToMaskVector::execute()
   }
 
   nrrd_oport_->send(nrrdH);
-}
-
-void
-MappingMatrixToMaskVector::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun

@@ -26,8 +26,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiInt    nrows_;
   GuiInt    ncols_;
@@ -86,12 +84,6 @@ void CreateMatrix::execute()
   }
   
   oport->send(handle);
-}
-
-void
- CreateMatrix::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun

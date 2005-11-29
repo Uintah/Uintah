@@ -50,7 +50,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
   void debug_tets(TetVolMeshHandle in, 
 		  QuadraticTetVolMeshHandle out);
 private:
@@ -155,10 +154,6 @@ TetVol2QuadraticTetVol::debug_tets(TetVolMeshHandle in,
 
 }
 
-void TetVol2QuadraticTetVol::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace SCIRun
 

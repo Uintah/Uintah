@@ -57,7 +57,7 @@ public:
 
   bool			types_equal_p(FieldHandle);
   virtual void		execute();
-  virtual void		tcl_command(GuiArgs&, void*);
+
   GuiString		outputdatatype_;   // the out field type
   GuiString		inputdatatype_;    // the input field type
   GuiString		fldname_;          // the input field name
@@ -197,26 +197,6 @@ ChangeFieldDataType::execute()
 }
 
     
-void
-ChangeFieldDataType::tcl_command(GuiArgs& args, void* userdata)
-{
-  if (args.count() < 2)
-  {
-    args.error("ChangeFieldDataType needs a minor command");
-    return;
-  }
- 
-  if (args[1] == "execute" || args[1] == "update_widget")
-  {
-    want_to_execute();
-  }
-  else
-  {
-    Module::tcl_command(args, userdata);
-  }
-}
-
-
 CompileInfoHandle
 ChangeFieldDataTypeAlgoCreate::get_compile_info(const TypeDescription *ftd,
                                                 const string &fdstname)
