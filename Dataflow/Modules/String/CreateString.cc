@@ -41,7 +41,6 @@ public:
 
   virtual ~CreateString();
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
 
@@ -78,12 +77,6 @@ void CreateString::execute()
   if((str.size() > 0)&&(str[str.size()-1] == '\n')) str = str.substr(0,str.size()-1); 
   StringHandle handle = reinterpret_cast<String *>(scinew String(str));
   oport->send(handle);
-}
-
-void
- CreateString::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun

@@ -58,8 +58,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
   
   GuiString formatstring_;
@@ -266,12 +264,6 @@ void SprintfMatrix::execute()
 
   StringHandle handle = dynamic_cast<String *>(scinew String(output));
   oport->send(handle); 
-}
-
-void
- SprintfMatrix::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun

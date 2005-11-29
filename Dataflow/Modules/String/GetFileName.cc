@@ -52,8 +52,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiString filename_;
   
@@ -82,12 +80,6 @@ void
   
   StringHandle handle = dynamic_cast<String *>(scinew String(filename_.get()));
   oport->send(handle);
-}
-
-void
- GetFileName::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun

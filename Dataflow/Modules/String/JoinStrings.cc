@@ -42,8 +42,6 @@ public:
   virtual ~JoinStrings();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -96,12 +94,6 @@ void  JoinStrings::execute()
   
   output = dynamic_cast<String *>(scinew String(str));
   oport->send(output);
-}
-
-void
- JoinStrings::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun

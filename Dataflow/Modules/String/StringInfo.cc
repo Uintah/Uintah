@@ -42,8 +42,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiString  inputstring_;
   GuiString  update_;
@@ -90,12 +88,6 @@ void StringInfo::execute()
   gui->lock();
   gui->execute(update_.get());
   gui->unlock();
-}
-
-void
- StringInfo::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun
