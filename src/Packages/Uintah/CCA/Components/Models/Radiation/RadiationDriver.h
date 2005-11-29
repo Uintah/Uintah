@@ -37,6 +37,7 @@ WARNING
 
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
@@ -55,7 +56,7 @@ namespace Uintah {
   class ProcessorGroup;
   class Models_RadiationModel;
   class ICELabel;
-
+  
 class RadiationDriver : public ModelInterface {
 
  public:
@@ -110,7 +111,9 @@ class RadiationDriver : public ModelInterface {
   void scheduleCopyValues(const LevelP& level,
                           SchedulerP& sched,
                           const PatchSet* patches,
-                          const MaterialSet* matls);
+                          const MaterialSubset* mss_G,
+                          const MaterialSubset* mss_S,
+                          const MaterialSet* matls_set_GS);
 
   void scheduleComputeProps(const LevelP& level,
                             SchedulerP& sched,
@@ -182,6 +185,7 @@ class RadiationDriver : public ModelInterface {
   VarLabel* radiationSrc_CCLabel;
   VarLabel* solidEmissionLabel;
   VarLabel* isGasSolidInterfaceLabel;
+  VarLabel* insideSolidLabel;
 
  private:
 
@@ -207,6 +211,8 @@ class RadiationDriver : public ModelInterface {
 
   const ProcessorGroup* d_myworld;
   SimulationStateP d_sharedState;
+
+  vector<GeometryPiece*> d_geom_pieces;
 
   void initialize(const ProcessorGroup*,
                   const PatchSubset* patches,
@@ -264,22 +270,11 @@ class RadiationDriver : public ModelInterface {
                      const Patch* patch,                        
                      DataWarehouse* new_dw);
                 
-  template<class T> 
-  void emmission(CellIterator iter,
-                 IntVector adj_offset, 
-                 const double cellFaceArea, 
-                 const double delT,
-                 CCVariable<double>& solidEmission,
-                 constCCVariable<double>& isGasSolidInterface,
-                 constCCVariable<double>& vol_frac_solid,                         
-                 T& Temp_FC,                                         
-                 CCVariable<double>& energySrc_solid);
-
   void modifyThermoTransportProperties(const ProcessorGroup*, 
                                        const PatchSubset* patches,        
                                        const MaterialSubset*,             
                                        DataWarehouse*,                    
-                                       DataWarehouse* new_dw);             
+                                       DataWarehouse* new_dw);         
 
 }; // End class RadiationDriver
 } // End namespace Uintah
