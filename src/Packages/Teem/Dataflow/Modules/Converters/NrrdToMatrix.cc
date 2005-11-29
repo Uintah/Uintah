@@ -75,8 +75,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   MatrixHandle create_matrix_from_nrrds(NrrdDataHandle dataH,
 					NrrdDataHandle rowsH,
 					NrrdDataHandle colsH,
@@ -105,11 +103,15 @@ NrrdToMatrix::NrrdToMatrix(GuiContext* ctx)
 {
 }
 
-NrrdToMatrix::~NrrdToMatrix(){
+
+NrrdToMatrix::~NrrdToMatrix()
+{
 }
 
+
 void
- NrrdToMatrix::execute(){
+NrrdToMatrix::execute()
+{
   // Get ports
   ndata_ = (NrrdIPort *)get_iport("Data");
   nrows_ = (NrrdIPort *)get_iport("Rows");
@@ -167,21 +169,25 @@ void
   if (has_error_)
     do_execute = true;
   
+  if (!last_matrix_.get_rep())
+    do_execute = true;
+
   if (do_execute) {
     last_matrix_ = create_matrix_from_nrrds(dataH, rowsH, colsH, cols_.get());
   }
 
   if (last_matrix_ != 0) {
     has_error_ = false;
-    omat_->send(last_matrix_);  
+    omat_->send_and_dereference(last_matrix_, true);
   }
 }
 
+
 MatrixHandle
-NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rowsH,
-				       NrrdDataHandle colsH, int cols) {
-
-
+NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH,
+                                       NrrdDataHandle rowsH,
+				       NrrdDataHandle colsH, int cols)
+{
   // Determine if we have data, rows, columns to indicate whether it is
   // a dense or sparse matrix
   bool has_data = false, has_rows = false, has_cols = false;
@@ -266,49 +272,49 @@ NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rows
     }
   } else if (has_data && has_rows && has_cols) {
     // sparse matrix
-
-      // rows and cols should be of type nrrdTypeInt
-      if (rowsH->nrrd->type != nrrdTypeInt || colsH->nrrd->type != nrrdTypeInt) {
-        error("Rows and Columns nrrds must both be of type nrrdTypeInt");
-	has_error_ = true;
-        return 0;
-      }
+    
+    // rows and cols should be of type nrrdTypeInt
+    if (rowsH->nrrd->type != nrrdTypeInt || colsH->nrrd->type != nrrdTypeInt) {
+      error("Rows and Columns nrrds must both be of type nrrdTypeInt");
+      has_error_ = true;
+      return 0;
+    }
       
-      if (dataH->nrrd->dim != 1 || rowsH->nrrd->dim != 1 || colsH->nrrd->dim != 1) {
-	error("All nrrds must be 1 dimension for a SparseRowMatrix.");
-	has_error_ = true;
-	return 0;
-      }
-      switch(dataH->nrrd->type) {
-      case nrrdTypeChar:
-	matrix = create_sparse_matrix<char>(dataH, rowsH, colsH, cols);
-	break;
-      case nrrdTypeUChar:
-	matrix = create_sparse_matrix<unsigned char>(dataH, rowsH, colsH, cols);
-	break;
-      case nrrdTypeShort:
-	matrix = create_sparse_matrix<short>(dataH, rowsH, colsH, cols);
-	break;
-      case nrrdTypeUShort:
-	matrix = create_sparse_matrix<unsigned short>(dataH, rowsH, colsH, cols);
-	break;
-      case nrrdTypeInt:
-	matrix = create_sparse_matrix<int>(dataH, rowsH, colsH, cols);
-	break;
-      case nrrdTypeUInt:
-	matrix = create_sparse_matrix<unsigned int>(dataH, rowsH, colsH, cols);
-	break;
-      case nrrdTypeFloat:
-	matrix = create_sparse_matrix<float>(dataH, rowsH, colsH, cols);
-	break;
-      case nrrdTypeDouble:
-	matrix = create_sparse_matrix<double>(dataH, rowsH, colsH, cols);
-	break;
-      default:
-	error("Unkown nrrd type.");
-	has_error_ = true;
-	return 0;
-      }
+    if (dataH->nrrd->dim != 1 || rowsH->nrrd->dim != 1 || colsH->nrrd->dim != 1) {
+      error("All nrrds must be 1 dimension for a SparseRowMatrix.");
+      has_error_ = true;
+      return 0;
+    }
+    switch(dataH->nrrd->type) {
+    case nrrdTypeChar:
+      matrix = create_sparse_matrix<char>(dataH, rowsH, colsH, cols);
+      break;
+    case nrrdTypeUChar:
+      matrix = create_sparse_matrix<unsigned char>(dataH, rowsH, colsH, cols);
+      break;
+    case nrrdTypeShort:
+      matrix = create_sparse_matrix<short>(dataH, rowsH, colsH, cols);
+      break;
+    case nrrdTypeUShort:
+      matrix = create_sparse_matrix<unsigned short>(dataH, rowsH, colsH, cols);
+      break;
+    case nrrdTypeInt:
+      matrix = create_sparse_matrix<int>(dataH, rowsH, colsH, cols);
+      break;
+    case nrrdTypeUInt:
+      matrix = create_sparse_matrix<unsigned int>(dataH, rowsH, colsH, cols);
+      break;
+    case nrrdTypeFloat:
+      matrix = create_sparse_matrix<float>(dataH, rowsH, colsH, cols);
+      break;
+    case nrrdTypeDouble:
+      matrix = create_sparse_matrix<double>(dataH, rowsH, colsH, cols);
+      break;
+    default:
+      error("Unkown nrrd type.");
+      has_error_ = true;
+      return 0;
+    }
   } else {
     error("Must have data to convert to any type of Matrix.  Must have rows and columns for a SparseRowMatrix.");
     has_error_ = true;
@@ -318,9 +324,11 @@ NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rows
   return matrix;
 }
 
+
 template<class PTYPE> 
 MatrixHandle 
-NrrdToMatrix::create_column_matrix(NrrdDataHandle dataH) {
+NrrdToMatrix::create_column_matrix(NrrdDataHandle dataH)
+{
   remark("Creating column matrix");
   int rows = dataH->nrrd->axis[0].size;
 
@@ -339,9 +347,11 @@ NrrdToMatrix::create_column_matrix(NrrdDataHandle dataH) {
   return result;
 }
 
+
 template<class PTYPE>
 MatrixHandle 
-NrrdToMatrix::create_dense_matrix(NrrdDataHandle dataH) {
+NrrdToMatrix::create_dense_matrix(NrrdDataHandle dataH)
+{
   remark("Creating dense matrix");
   int rows = dataH->nrrd->axis[1].size;
   int cols = dataH->nrrd->axis[0].size;
@@ -363,11 +373,12 @@ NrrdToMatrix::create_dense_matrix(NrrdDataHandle dataH) {
   return result;
 }
 
+
 template<class PTYPE>
 MatrixHandle 
 NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
-				   NrrdDataHandle colsH, int cols) {
-
+				   NrrdDataHandle colsH, int cols)
+{
   remark("Creating sparse row matrix");
   Nrrd *data_n = dataH->nrrd;
   Nrrd *rows_n = rowsH->nrrd;
@@ -462,7 +473,6 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
     d[i] = data_d[i];
   }
 
-
   SparseRowMatrix *matrix = scinew SparseRowMatrix(rows, cols, rr, cc, nnz, d);
 
   MatrixHandle result(matrix);
@@ -470,12 +480,6 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
   return result;
 }
 
-
-void
- NrrdToMatrix::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Teem
 

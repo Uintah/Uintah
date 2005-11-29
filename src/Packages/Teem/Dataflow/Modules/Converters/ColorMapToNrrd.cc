@@ -88,7 +88,8 @@ ColorMapToNrrd::execute()
     return;
   }
 
-  if (colormap_generation_ != cmapH->generation)
+  if (colormap_generation_ != cmapH->generation ||
+      !nout_->have_data())
   {
     colormap_generation_ = cmapH->generation;
 
@@ -110,7 +111,7 @@ ColorMapToNrrd::execute()
     // Send the data nrrd.
     nd->nrrd->axis[0].label = airStrdup("Colors");
     NrrdDataHandle dataH(nd);
-    nout_->send(dataH);
+    nout_->send_and_dereference(dataH);
   }
 }
 
