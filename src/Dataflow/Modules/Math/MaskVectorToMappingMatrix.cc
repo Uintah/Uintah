@@ -56,7 +56,6 @@ public:
   MaskVectorToMappingMatrix(GuiContext*);
   virtual ~MaskVectorToMappingMatrix();
   virtual void	execute();
-  virtual void	tcl_command(GuiArgs&, void*);
 };
 
 
@@ -106,12 +105,6 @@ MaskVectorToMappingMatrix::execute()
 
   SparseRowMatrix *matrix = scinew SparseRowMatrix(dim, dim, rr, cc, dim, data);
   matrix_oport_->send(matrix);
-}
-
-void
- MaskVectorToMappingMatrix::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun
