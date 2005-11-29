@@ -42,9 +42,9 @@
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 
-#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/GenericField.h>
 
 #include <Packages/Insight/share/share.h>
@@ -202,15 +202,15 @@ BuildSeedVolume::execute()
     f->value(rad, *ibi);
 
     // convert to image space
-    x = x / spacing_x;
-    y = y / spacing_y;
+    x = static_cast<int>(x / spacing_x);
+    y = static_cast<int>(y / spacing_y);
     x_rad = rad / spacing_x;
     y_rad = rad / spacing_y;
 
     // fill in that pixel
     int radsq = x_rad * y_rad;
-    for(int r=y-y_rad; r <=(y+y_rad); r++) {
-      for(int c=x-x_rad; c <= (x+x_rad); c++) {
+    for(int r=y-static_cast<int>(y_rad); r <=(y+static_cast<int>(y_rad)); r++) {
+      for(int c=x-static_cast<int>(x_rad); c <= (x+static_cast<int>(x_rad)); c++) {
 	// check if point is within volume and
 	// should be part of the circle
 	// if so fill it in

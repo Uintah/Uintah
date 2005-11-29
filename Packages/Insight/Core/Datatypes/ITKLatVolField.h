@@ -36,11 +36,47 @@
 #ifndef Datatypes_ITKLatVolField_h
 #define Datatypes_ITKLatVolField_h
 
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Util/TypeDescription.h>
 #include <Core/Geometry/Tensor.h>
+#include <Core/Geometry/Vector.h>
+
+
+// To make SCIRun compile on OSX 10.4, certain classes need to be defined before
+// including GenericField.h, if not SCIRun does not compile.
+// Apparently a templated class needs to have its templated datatypes defined before
+// it is defined itself. 
+// I just put the missing ones here, to make the Insight Package compile properly.
+// -- jeroen
+
+
+namespace Insight {
+
+template <class Data> class ITKFData3d;
+template <class Data> class ITKLatVolField;
+
+}
+
+namespace SCIRun {
+  
+  const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Vector>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<double>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<float>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<int>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<short>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<char>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned int>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned short>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned char>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned long>*);
+}
+
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
@@ -735,41 +771,5 @@ void Pio(Piostream& stream, ITKFData3d<T>& data)
 
 } // end namespace Insight
 
-namespace SCIRun {
-  using namespace Insight;
-  
-  const TypeDescription* 
-  get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData3d<SCIRun::Vector>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData3d<double>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData3d<float>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData3d<int>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData3d<short>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData3d<char>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData3d<unsigned int>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData3d<unsigned short>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData3d<unsigned char>*);
-  
-  const TypeDescription*
-  get_type_description(Insight::ITKFData3d<unsigned long>*);
-}
 
 #endif // Datatypes_ITKLatVolField_h

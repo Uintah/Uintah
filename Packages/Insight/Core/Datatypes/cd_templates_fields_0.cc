@@ -27,11 +27,6 @@
 */
 
 #include <Core/Persistent/PersistentSTL.h>
-#include <Core/Geometry/Tensor.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
 
 
@@ -48,6 +43,36 @@ using namespace SCIRun;
 using namespace Insight;
 
 typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+
+
+const TypeDescription* get_type_description(ITKLatVolField<Tensor> *);
+const TypeDescription* get_type_description(ITKLatVolField<Vector> *);
+const TypeDescription* get_type_description(ITKLatVolField<double> *);
+const TypeDescription* get_type_description(ITKLatVolField<float> *);
+const TypeDescription* get_type_description(ITKLatVolField<int> *);
+const TypeDescription* get_type_description(ITKLatVolField<short> *);
+const TypeDescription* get_type_description(ITKLatVolField<char> *);
+const TypeDescription* get_type_description(ITKLatVolField<unsigned int> *);
+const TypeDescription* get_type_description(ITKLatVolField<unsigned short> *);
+const TypeDescription* get_type_description(ITKLatVolField<unsigned char> *);
+const TypeDescription* get_type_description(ITKLatVolField<unsigned long> *);
+const TypeDescription* get_type_description(ITKLatVolField<unsigned long> *);
+
+
+const TypeDescription* get_type_description(ITKFData3d<Tensor> *);
+const TypeDescription* get_type_description(ITKFData3d<Vector> *);
+const TypeDescription* get_type_description(ITKFData3d<double> *);
+const TypeDescription* get_type_description(ITKFData3d<float> *);
+const TypeDescription* get_type_description(ITKFData3d<int> *);
+const TypeDescription* get_type_description(ITKFData3d<short> *);
+const TypeDescription* get_type_description(ITKFData3d<char> *);
+const TypeDescription* get_type_description(ITKFData3d<unsigned int> *);
+const TypeDescription* get_type_description(ITKFData3d<unsigned short> *);
+const TypeDescription* get_type_description(ITKFData3d<unsigned char> *);
+const TypeDescription* get_type_description(ITKFData3d<unsigned long> *);
+const TypeDescription* get_type_description(ITKFData3d<unsigned long> *);
+
+
 
 typedef HexTrilinearLgn<Tensor>             FDTensorBasis;
 typedef HexTrilinearLgn<Vector>             FDVectorBasis;
@@ -99,20 +124,6 @@ template class ITKLatVolField<unsigned int>;
 template class ITKLatVolField<unsigned short>;
 template class ITKLatVolField<unsigned char>;
 template class ITKLatVolField<unsigned long>;
-
-
-const TypeDescription* get_type_description(ITKLatVolField<Tensor> *);
-const TypeDescription* get_type_description(ITKLatVolField<Vector> *);
-const TypeDescription* get_type_description(ITKLatVolField<double> *);
-const TypeDescription* get_type_description(ITKLatVolField<float> *);
-const TypeDescription* get_type_description(ITKLatVolField<int> *);
-const TypeDescription* get_type_description(ITKLatVolField<short> *);
-const TypeDescription* get_type_description(ITKLatVolField<char> *);
-const TypeDescription* get_type_description(ITKLatVolField<unsigned int> *);
-const TypeDescription* get_type_description(ITKLatVolField<unsigned short> *);
-const TypeDescription* get_type_description(ITKLatVolField<unsigned char> *);
-const TypeDescription* get_type_description(ITKLatVolField<unsigned long> *);
-const TypeDescription* get_type_description(ITKLatVolField<unsigned long> *);
 
 
 namespace SCIRun {

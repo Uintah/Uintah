@@ -39,17 +39,66 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Packages/Insight/Core/Datatypes/ITKImageField.h>
-#include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
 
-#include <Core/Datatypes/GenericField.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Geometry/Tensor.h>
+#include <Core/Geometry/Vector.h>
+
+// Making sure classes are defined in an order so that the compiler will not fail.
+
+namespace Insight {
+
+template <class Data> class ITKFData3d;
+template <class Data> class ITKFData2d;
+template <class Data> class ITKImageField;
+template <class Data> class ITKLatVolField;
+
+}
+
+namespace SCIRun {
+  
+  const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Vector>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<double>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<float>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<int>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<long>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<short>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<char>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned int>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned short>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned char>*);
+  const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned long>*);
+
+  const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Vector>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<double>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<float>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<int>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<long>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<short>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<char>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned int>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned short>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned char>*);
+  const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned long>*);
+
+}
+
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Containers/FData.h>
+
+
+#include <Packages/Insight/Core/Datatypes/ITKImageField.h>
+#include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
+#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Dataflow/Ports/FieldPort.h>
+
+#include <Core/Datatypes/GenericField.h>
+
 
 #include "itkVector.h"
 #include "itkRGBPixel.h"

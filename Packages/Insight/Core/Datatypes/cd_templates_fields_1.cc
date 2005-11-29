@@ -27,12 +27,7 @@
 */
 
 #include <Core/Persistent/PersistentSTL.h>
-#include <Core/Geometry/Tensor.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Basis/QuadBilinearLgn.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Packages/Insight/Core/Datatypes/ITKImageField.h>
-#include <Core/Datatypes/ImageMesh.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
