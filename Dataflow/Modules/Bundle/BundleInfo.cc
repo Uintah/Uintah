@@ -51,8 +51,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiString tclInfoString_;
 };
@@ -104,13 +102,4 @@ BundleInfo::execute()
   
   update_state(Completed);  
 }
-
-void
-BundleInfo::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
-
-
-
 

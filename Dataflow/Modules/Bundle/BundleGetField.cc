@@ -53,7 +53,6 @@ public:
   virtual ~BundleGetField();
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString             guifield1name_;
@@ -164,10 +163,6 @@ void BundleGetField::execute()
   update_state(Completed);
 }
 
-void BundleGetField::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 
 

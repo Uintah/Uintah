@@ -52,7 +52,6 @@ public:
   virtual ~BundleGetColorMap2();
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString             guicolormap21name_;
@@ -158,10 +157,5 @@ void BundleGetColorMap2::execute()
     oport->send(handle);
   }
   update_state(Completed);      
-}
-
-void BundleGetColorMap2::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 

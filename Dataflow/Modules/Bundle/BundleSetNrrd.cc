@@ -52,8 +52,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiString     guinrrd1name_;
   GuiString     guinrrd2name_;
@@ -160,10 +158,6 @@ void BundleSetNrrd::execute()
   update_state(Completed);  
 }
 
-void BundleSetNrrd::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 
 

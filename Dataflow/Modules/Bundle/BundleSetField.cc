@@ -52,8 +52,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiString     guifield1name_;
   GuiString     guifield2name_;
@@ -159,11 +157,4 @@ void BundleSetField::execute()
   
   update_state(Completed);  
 }
-
-void
-BundleSetField::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
-
 

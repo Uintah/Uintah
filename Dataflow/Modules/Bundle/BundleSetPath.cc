@@ -50,7 +50,6 @@ public:
 
   virtual ~BundleSetPath();
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString     guipath1name_;
@@ -159,9 +158,4 @@ BundleSetPath::execute()
   update_state(Completed);  
 }
 
-void
-BundleSetPath::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 

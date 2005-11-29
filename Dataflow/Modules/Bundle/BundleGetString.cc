@@ -52,7 +52,6 @@ public:
   virtual ~BundleGetString();
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString             guistring1name_;
@@ -164,9 +163,5 @@ void BundleGetString::execute()
   update_state(Completed);        
 }
 
-void BundleGetString::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 
