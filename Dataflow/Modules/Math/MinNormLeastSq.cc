@@ -136,12 +136,12 @@ MinNormLeastSq::execute()
   ColumnMatrix* w_vec = new ColumnMatrix(3);
   w_vec->set_data(x);   
   MatrixHandle w_vecH(w_vec);
-  w_omat_->send(w_vecH);
+  w_omat_->send_and_dereference(w_vecH);
 
   ColumnMatrix* bprime_vec = new ColumnMatrix(size);
   bprime_vec->set_data(bprime);
   MatrixHandle bprime_vecH(bprime_vec);
-  bprime_omat_->send(bprime_vecH);
+  bprime_omat_->send_and_dereference(bprime_vecH);
 }    
 
 } // End namespace SCIRun

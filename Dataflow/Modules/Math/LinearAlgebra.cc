@@ -155,19 +155,19 @@ LinearAlgebra::execute()
 		      imh[0], imh[1], imh[2], imh[3], imh[4]);
 
   MatrixOPort *omatrix_port1 = (MatrixOPort *)get_oport("o1");
-  omatrix_port1->send(omh[0]);
+  omatrix_port1->send_and_dereference(omh[0]);
 
   MatrixOPort *omatrix_port2 = (MatrixOPort *)get_oport("o2");
-  omatrix_port2->send(omh[1]);
+  omatrix_port2->send_and_dereference(omh[1]);
 
   MatrixOPort *omatrix_port3 = (MatrixOPort *)get_oport("o3");
-  omatrix_port3->send(omh[2]);
+  omatrix_port3->send_and_dereference(omh[2]);
 
   MatrixOPort *omatrix_port4 = (MatrixOPort *)get_oport("o4");
-  omatrix_port4->send(omh[3]);
+  omatrix_port4->send_and_dereference(omh[3]);
 
   MatrixOPort *omatrix_port5 = (MatrixOPort *)get_oport("o5");
-  omatrix_port5->send(omh[4]);
+  omatrix_port5->send_and_dereference(omh[4]);
 }
 
 

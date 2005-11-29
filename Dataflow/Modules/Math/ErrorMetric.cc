@@ -125,11 +125,14 @@ ErrorMetric::ErrorMetric(GuiContext* ctx)
 {
 }
 
+
 ErrorMetric::~ErrorMetric()
 {
 }
 
-void ErrorMetric::execute()
+
+void
+ErrorMetric::execute()
 {
      ivec1P_ = (MatrixIPort *)get_iport("Vec1");
      ivec2P_ = (MatrixIPort *)get_iport("Vec2");
@@ -230,8 +233,9 @@ void ErrorMetric::execute()
          error("Unknown ErrorMetric::methodTCL_ - " + meth);
          *val=0;
      }
-     errorP_->send(errorH);
+     errorP_->send_and_dereference(errorH);
 }
+
 
 } // End namespace SCIRun
 

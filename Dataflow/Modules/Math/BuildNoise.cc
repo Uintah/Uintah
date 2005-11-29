@@ -67,11 +67,15 @@ BuildNoise::BuildNoise(GuiContext* ctx)
 {
 }
 
+
 BuildNoise::~BuildNoise()
 {
 }
 
-void BuildNoise::execute() {
+
+void
+BuildNoise::execute()
+{
   MatrixIPort *isignal = (MatrixIPort *)get_iport("Signal");
   MatrixOPort *onoise = (MatrixOPort *)get_oport("Noise");
 
@@ -120,6 +124,7 @@ void BuildNoise::execute() {
       double perturb = rnd * sigma * sqrt((-2.0 * log(rnd*rnd)) / (rnd*rnd));
       matH->put(r, c, perturb);
     }
-  onoise->send(matH);
+  onoise->send_and_dereference(matH);
 }
+
 } // End namespace SCIRun
