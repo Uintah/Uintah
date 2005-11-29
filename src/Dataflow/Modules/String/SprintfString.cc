@@ -221,8 +221,8 @@ void
     }
   }
 
-  StringHandle handle = dynamic_cast<String *>(scinew String(output));
-  oport->send(handle); 
+  StringHandle handle(scinew String(output));
+  oport->send_and_dereference(handle); 
 }
 
 } // End namespace SCIRun

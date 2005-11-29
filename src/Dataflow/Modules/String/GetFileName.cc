@@ -78,8 +78,8 @@ void
     return;
   }
   
-  StringHandle handle = dynamic_cast<String *>(scinew String(filename_.get()));
-  oport->send(handle);
+  StringHandle handle(scinew String(filename_.get()));
+  oport->send_and_dereference(handle);
 }
 
 } // End namespace SCIRun
