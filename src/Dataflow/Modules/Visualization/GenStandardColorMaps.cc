@@ -180,7 +180,7 @@ void GenStandardColorMaps::execute()
    if ( genMap(cmap, tclRes, resolution.get(), gamma.get(), faux.get()) ) 
    {
      ColorMapOPort *outport = (ColorMapOPort *)get_oport("ColorMap");
-     outport->send(cmap);
+     outport->send_and_dereference(cmap);
    }
 } 
 //--------------------------------------------------------------- 

@@ -117,7 +117,7 @@ ChooseColorMap::execute()
     icolormap->get(colormap);
   }
   
-  ofld->send(colormap);
+  ofld->send_and_dereference(colormap);
 }
 
 } // End namespace SCIRun

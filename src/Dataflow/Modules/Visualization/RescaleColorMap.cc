@@ -220,7 +220,7 @@ RescaleColorMap::execute()
   if( cHandle_.get_rep() )
   {
     ColorMapOPort *ocolormap_port = (ColorMapOPort *) get_oport("ColorMap");
-    ocolormap_port->send( cHandle_ );
+    ocolormap_port->send_and_dereference( cHandle_, true );
   }
 }
 } // End namespace SCIRun

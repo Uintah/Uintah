@@ -587,14 +587,14 @@ Isosurface::execute()
   if( build_field && fHandle_.get_rep() )
   {
     FieldOPort *ofield_port = (FieldOPort *) get_oport("Surface");
-    ofield_port->send( fHandle_ );
+    ofield_port->send_and_dereference( fHandle_, true);
   }
 
   // Send the mapping matrix downstream
   if( build_interp && mHandle_.get_rep() )
   {
     MatrixOPort *omatrix_port = (MatrixOPort *) get_oport("Mapping");
-    omatrix_port->send( mHandle_ );
+    omatrix_port->send_and_dereference( mHandle_, true );
   }
 }
 
