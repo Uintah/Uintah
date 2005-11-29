@@ -47,77 +47,25 @@
     </description>
   </overview>
   <io>
-    <inputs lastportdynamic="no">
+    <inputs lastportdynamic="yes">
       <!-- one of (device port file) -->
       <port>
-	<name>Nrrd1</name>
+	<name>Paint Data</name>
 	<description>
 	  <p>
           </p>
 	</description>
-	<datatype>SCIRun::Nrrd</datatype>
-	<componentname>Nrrd1</componentname>
-      </port>
-      <port>
-	<name>Nrrd2</name>
-	<description>
-	  <p>
-          </p>
-	</description>
-	<datatype>SCIRun::Nrrd</datatype>
-	<componentname>Nrrd2</componentname>
-      </port>
-      <port>
-	<name>Nrrd1ColorMap</name>
-	<description>
-	  <p>
-          </p>
-	</description>
-	<datatype>SCIRun::ColorMap</datatype>
-	<componentname>GenStandardColorMap</componentname>
-      </port>
-      <port>
-	<name>Nrrd2ColorMap</name>
-	<description>
-	  <p>
-          </p>
-	</description>
-	<datatype>SCIRun::ColorMap</datatype>
-	<componentname>GenStandardColorMap</componentname>
-      </port>
-      <port>
-	<name>InputColorMap2</name>
-	<description>
-	  <p>
-          </p>
-	</description>
-	<datatype>SCIRun::ColorMap2</datatype>
-      </port>
-      <port>
-	<name>NrrdGradient</name>
-	<description>
-	  <p>
-          </p>
-	</description>
-	<datatype>SCIRun::Nrrd</datatype>
-	<componentname>NrrdGradient</componentname>
+	<datatype>SCIRun::Bundle</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-	<name>Geometry</name>
+	<name>Paint Data</name>
 	<description>
 	  <p>
-             A scene graph is sent out through this port expecting to be 
-             rendered by the downstream port.
           </p>
 	</description>
-	<datatype>SCIRun::Geometry</datatype>
-	<componentname>Viewer</componentname>
-      </port>
-      <port>
-	<name>ColorMap2</name>
-	<datatype>SCIRun::ColorMap2</datatype>
+	<datatype>SCIRun::Bundle</datatype>
       </port>
     </outputs>
   </io>
