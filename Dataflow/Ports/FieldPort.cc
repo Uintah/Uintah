@@ -62,16 +62,23 @@ void SimpleOPort<FieldHandle>::send(const FieldHandle& data)
   if (data.get_rep() && (! data->is_frozen()))
     data->freeze();
 
-  do_send(data, SEND_NORMAL);
+  do_send(data, SEND_NORMAL, DEREF_NEVER);
 }
 
 template<>
 void SimpleOPort<FieldHandle>::send_intermediate(const FieldHandle& data)
 {
+  do_send(data, SEND_INTERMEDIATE, DEREF_NEVER);
+}
+
+template<>
+void SimpleOPort<FieldHandle>::send_and_dereference(FieldHandle& data,
+                                                    bool save_when_caching)
+{
   if (data.get_rep() && (! data->is_frozen()))
     data->freeze();
 
-  do_send(data, SEND_INTERMEDIATE);
+  do_send(data, SEND_NORMAL, save_when_caching?DEREF_ALWAYS:DEREF_NOCACHE);
 }
 
 } // End namespace SCIRun

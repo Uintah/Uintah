@@ -57,7 +57,7 @@ void SimpleOPort<BundleHandle>::send(const BundleHandle& data)
   if (data.get_rep() && (! data->is_frozen()))
     data->freeze();
 
-  do_send(data, SEND_NORMAL);
+  do_send(data, SEND_NORMAL, DEREF_NEVER);
 }
 
 template<>
@@ -66,7 +66,18 @@ void SimpleOPort<BundleHandle>::send_intermediate(const BundleHandle& data)
   if (data.get_rep() && (! data->is_frozen()))
     data->freeze();
 
-  do_send(data, SEND_INTERMEDIATE);
+  do_send(data, SEND_INTERMEDIATE, DEREF_NEVER);
+}
+
+
+template<>
+void SimpleOPort<BundleHandle>::send_and_dereference(BundleHandle& data,
+                                                     bool save_when_caching)
+{
+  if (data.get_rep() && (! data->is_frozen()))
+    data->freeze();
+
+  do_send(data, SEND_NORMAL, save_when_caching?DEREF_ALWAYS:DEREF_NOCACHE);
 }
 
 } // End namespace SCIRun
