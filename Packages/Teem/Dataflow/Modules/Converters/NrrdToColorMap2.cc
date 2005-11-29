@@ -75,7 +75,8 @@ NrrdToColorMap2::execute()
   if(image_port) {
     NrrdDataHandle h;
     image_port->get(h);
-    if(h.get_rep() && h->generation != in_nrrd_gen_) {
+    if (h.get_rep() && (h->generation != in_nrrd_gen_ || !ocmap_h_.get_rep()))
+    {
       ocmap_h_ = 0;
       in_nrrd_gen_ = h->generation;
       if(h->nrrd->dim != 3) {
@@ -110,7 +111,7 @@ NrrdToColorMap2::execute()
 
   ColorMap2OPort* cmap_port = (ColorMap2OPort*)get_oport("Output Colormap");
   if (cmap_port) {
-    cmap_port->send(ocmap_h_);
+    cmap_port->send_and_dereference(ocmap_h_, true);
   }
 }
 

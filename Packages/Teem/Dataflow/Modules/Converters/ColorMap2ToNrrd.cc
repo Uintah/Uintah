@@ -84,7 +84,8 @@ ColorMap2ToNrrd::execute()
     return;
   }
 
-  if (cmap2->generation != last_generation_)
+  if (cmap2->generation != last_generation_ ||
+      !oport_cached("Output Image"))
   {
     last_generation_ = cmap2->generation;
 
@@ -132,7 +133,6 @@ ColorMap2ToNrrd::execute()
       }
     }
 
-    NrrdDataHandle nrrd_h(nd);
 
     NrrdOPort* nrrd_port = (NrrdOPort*)get_oport("Output Image");
     if (!nrrd_port)
@@ -140,7 +140,8 @@ ColorMap2ToNrrd::execute()
       error("Could not open output port 'Output Image'.");
       return;
     }
-    nrrd_port->send(nrrd_h);
+    NrrdDataHandle nrrd_h(nd);
+    nrrd_port->send_and_dereference(nrrd_h);
   }
 }
 

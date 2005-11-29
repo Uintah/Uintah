@@ -100,7 +100,11 @@ void
     return;
   }
 
-  if (matrix_generation_ != matH->generation) {
+  if (matrix_generation_ != matH->generation ||
+      !ndata_->have_data() &&
+      !nrows_->have_data() &&
+      !ncols_->have_data())
+  {
     matrix_generation_ = matH->generation;
     Matrix* matrix = matH.get_rep();
     
@@ -134,9 +138,9 @@ MatrixToNrrd::create_and_send_column_matrix_nrrd(MatrixHandle matH) {
     ++val;
   }
 
-  // send the data nrrd
+  // Send the data nrrd.
   NrrdDataHandle dataH(nd);
-  ndata_->send(dataH);  
+  ndata_->send_and_dereference(dataH);  
 }
 
 
@@ -165,7 +169,7 @@ MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH) {
   }
   // send the data nrrd
   NrrdDataHandle dataH(nd);
-  ndata_->send(dataH);  
+  ndata_->send_and_dereference(dataH);  
 }
 
 void
@@ -219,9 +223,9 @@ MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH) {
   NrrdDataHandle rowsH(rows_n);
   NrrdDataHandle colsH(cols_n);
   
-  ndata_->send(dataH);
-  nrows_->send(rowsH);
-  ncols_->send(colsH);
+  ndata_->send_and_dereference(dataH);
+  nrows_->send_and_dereference(rowsH);
+  ncols_->send_and_dereference(colsH);
 }
 
 

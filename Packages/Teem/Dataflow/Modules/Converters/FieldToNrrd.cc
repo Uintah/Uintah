@@ -149,7 +149,10 @@ void FieldToNrrd::execute()
     compute_data_p = false;
   }
 
-  if (ifield_generation_ != field_handle->generation)
+  if (ifield_generation_ != field_handle->generation ||
+      (points_handle_.get_rep() == 0 &&
+       connect_handle_.get_rep() == 0 &&
+       data_handle_.get_rep() == 0))
   {
     ifield_generation_ = field_handle->generation;
     points_handle_ = connect_handle_ = data_handle_ = 0;
@@ -166,23 +169,22 @@ void FieldToNrrd::execute()
 			  compute_data_p, label_.get());
   }
   
-  // set the Nrrd names and send them
+  // Set the Nrrd names and send them.
   string property;
   string nrrd_name = "Unknown";
   if (field_handle->get_property( "name", property ) && property != "Unknown") 
     nrrd_name = property;
   if (points_handle_ != 0) {
-    opoints_->send(points_handle_);
     points_handle_->set_property("Name", nrrd_name + "-Points", false);
+    opoints_->send_and_dereference(points_handle_, true);
   }
   if (connect_handle_ != 0) {
-    oconnect_->send(connect_handle_);
     connect_handle_->set_property("Name", nrrd_name + "-Connectivity", false);
+    oconnect_->send_and_dereference(connect_handle_, true);
   }
   if (data_handle_ != 0) {
-    odata_->send(data_handle_);
     data_handle_->set_property("Name", nrrd_name + "-Data", false);
+    odata_->send_and_dereference(data_handle_, true);
   }
-
 }
 

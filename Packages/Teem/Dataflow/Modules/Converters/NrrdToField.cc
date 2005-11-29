@@ -190,13 +190,16 @@ NrrdToField::NrrdToField(GuiContext* ctx)
 {
 }
 
-NrrdToField::~NrrdToField(){
+
+NrrdToField::~NrrdToField()
+{
 }
 
 
 
 void
-NrrdToField::execute(){
+NrrdToField::execute()
+{
   // Get ports
   ndata_ = (NrrdIPort *)get_iport("Data");
   npoints_ = (NrrdIPort *)get_iport("Points");
@@ -252,19 +255,27 @@ NrrdToField::execute(){
   } 
   
   // check the generations to see if we need to re-execute
-  if (dataH != 0 && data_generation_ != dataH->generation) {
+  if (dataH.get_rep() != 0 &&
+      data_generation_ != dataH->generation)
+  {
     data_generation_ = dataH->generation;
     do_execute = true;
   }
-  if (pointsH != 0 && points_generation_ != pointsH->generation) {
+  if (pointsH.get_rep() != 0 &&
+      points_generation_ != pointsH->generation)
+  {
     points_generation_ = pointsH->generation;
     do_execute = true;
   }
-  if (connectH != 0 && connect_generation_ != connectH->generation) {
+  if (connectH.get_rep() != 0 &&
+      connect_generation_ != connectH->generation)
+  {
     connect_generation_ = connectH->generation;
     do_execute = true;
   }
-  if (origfieldH != 0 && origfield_generation_ != origfieldH->generation) {
+  if (origfieldH.get_rep() != 0 &&
+      origfield_generation_ != origfieldH->generation)
+  {
     origfield_generation_ = origfieldH->generation;
     do_execute = true;
   }
@@ -331,6 +342,9 @@ NrrdToField::execute(){
   if (has_error_)
     do_execute = true;
 
+  if (!last_field_.get_rep())
+    do_execute = true;
+
   // execute the module
   if (do_execute) {
     last_field_ = create_field_from_nrrds(dataH, pointsH,
@@ -341,7 +355,8 @@ NrrdToField::execute(){
 					  structOrUnstruct_);
     
   } 
-  if (last_field_ != 0) {
+  if (last_field_.get_rep() != 0)
+  {
     has_error_ = false;
     // set the name of the field to be that
     // of data or points, depending on what is defined
@@ -356,9 +371,10 @@ NrrdToField::execute(){
       field_name = "Unknown";
     }
     last_field_->set_property("name", field_name, false);
-    ofield_->send(last_field_);  
+    ofield_->send_and_dereference(last_field_, true);
   }
 }
+
 
 FieldHandle 
 NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
