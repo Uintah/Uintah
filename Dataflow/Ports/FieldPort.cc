@@ -68,6 +68,9 @@ void SimpleOPort<FieldHandle>::send(const FieldHandle& data)
 template<>
 void SimpleOPort<FieldHandle>::send_intermediate(const FieldHandle& data)
 {
+  if (data.get_rep() && (! data->is_frozen()))
+    data->freeze();
+
   do_send(data, SEND_INTERMEDIATE, DEREF_NEVER);
 }
 
