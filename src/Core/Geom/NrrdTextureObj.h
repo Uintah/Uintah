@@ -60,18 +60,21 @@ public:
                  bool repeatx = true, 
                  bool repeaty = true);
 
+  NrrdTextureObj(NrrdDataHandle nrrd, int axis, int slice);
+
   ~NrrdTextureObj();
-  //  void			draw_quad(double coords[]);
+  void                  set_minmax(float min, float max);
+  void                  set_dirty();
+  void			draw_quad(float coords[]);
   void			draw_quad(double, double, double, double);
   void			set_alpha(double);
   void			set_color(double, double, double, double);
   int			width() { return width_; };
   int		        height() { return height_; };
-
-private:
   bool			bind();
+private:
+
   void			rescale_to_power_of_2();
-  
   NrrdDataHandle	nrrd_;
   string		filename_;
   int			fromfile_;
@@ -83,6 +86,10 @@ private:
   unsigned int		texture_id_;
   bool			repeat_x_;
   bool			repeat_y_;
+  int                   axis_;
+  int                   slice_;
+  float                 min_;
+  float                 max_;
 };
 
 }
