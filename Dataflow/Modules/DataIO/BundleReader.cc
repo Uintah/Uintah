@@ -52,8 +52,6 @@ public:
   virtual ~BundleReader();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 protected:
   GuiString guiTypes_;
   GuiString guiFileType_;
@@ -89,11 +87,6 @@ BundleReader::execute()
   GenericReader<BundleHandle>::execute();
 }
 
-void
-BundleReader::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 
 
