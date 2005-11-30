@@ -106,6 +106,9 @@ typedef LockingHandle<NrrdData> NrrdDataHandle;
 //  nrrdTypeFloat,         
 //  nrrdTypeDouble,
 
+
+unsigned int string_to_nrrd_type(const string &str);
+
 template <class T>
 unsigned int get_nrrd_type();
 
