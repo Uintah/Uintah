@@ -99,6 +99,9 @@ public:
       inline void set_iteration_number(int iteration_number) {
 	d_iteration_number = iteration_number;
       }
+      inline void setAdiabaticAirEnthalpy(double H_air) {
+	d_H_air = H_air;
+      }
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
@@ -186,11 +189,14 @@ private:
       const ProcessorGroup* d_myworld;
       int d_conv_scheme;
       int d_limiter_type;
+      int d_boundary_limiter_type;
+      bool d_central_limiter;
       bool d_radRKsteps;
       bool d_radImpsteps;
       bool d_dynScalarModel;
       double d_turbPrNo;
       int d_iteration_number;
+      double d_H_air;
 
 }; // End class EnthalpySolver
 } // End namespace Uintah

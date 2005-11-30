@@ -135,6 +135,10 @@ public:
 	return 0;
       }
 
+      inline double getAdiabaticAirEnthalpy() const{
+	return d_H_air;
+      }
+
 protected :
 
 private:

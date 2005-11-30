@@ -97,6 +97,8 @@ public:
 	}
       virtual double recomputeTimestep(double current_dt) = 0;
       
+      virtual double getAdiabaticAirEnthalpy() const = 0;
+
       virtual bool restartableTimesteps() = 0;
 protected:
    const ProcessorGroup* d_myworld;

@@ -363,7 +363,7 @@ void ThermalNOxSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
 				       &thermalnoxVars, &constthermalnoxVars,
-				       d_conv_scheme, d_turbPrNo);
+				       d_conv_scheme);
    // Calculate  the NOx source terms (i.e R.H.S side)
     // inputs : [u,v,w]VelocityMS, thermalnoxSP, densityCP, viscosityCTS
     // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM

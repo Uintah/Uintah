@@ -155,6 +155,10 @@ public:
 	d_3d_periodic = periodic;
       }
 
+      inline double getAdiabaticAirEnthalpy() const{
+	return d_H_air;
+      }
+
 protected :
 
 private:
@@ -235,6 +239,7 @@ private:
       const MPMArchesLabel* d_MAlab;
 
       bool d_reactingFlow;
+      PhysicalConstants* d_physicalConsts;
       bool d_calcEnthalpy;
       bool d_radiationCalc;
       bool d_DORadiationCalc;
@@ -253,11 +258,11 @@ private:
       IntVector d_denRef;
       MixingModel* d_mixingModel;
       BoundaryCondition* d_bc;
-      PhysicalConstants* d_physicalConsts;
       bool d_empirical_soot;
       double d_sootFactor;
       bool d_3d_periodic;
       bool d_inverse_density_average;
+      double d_H_air;
 #ifdef PetscFilter
       Filter* d_filter;
 #endif

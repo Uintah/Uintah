@@ -96,8 +96,27 @@ ReactiveScalarSolver::problemSetup(const ProblemSpecP& params)
 	  cout << "WARNING! Running central scheme for scalar," << endl;
 	  cout << "which can be unstable." << endl;
 	}
-	  else throw InvalidValue("Flux limiter type "
+          else if (limiter_type == "l2up") d_limiter_type = 3;
+            else if (limiter_type == "upwind") d_limiter_type = 4;
+	      else throw InvalidValue("Flux limiter type "
 		                           "not supported: " + limiter_type, __FILE__, __LINE__);
+  }
+  string boundary_limiter_type;
+  d_boundary_limiter_type = 3;
+  if (d_limiter_type < 3) {
+    db->getWithDefault("boundary_limiter_type",boundary_limiter_type,"l2up");
+    if (boundary_limiter_type == "none") {
+	  d_boundary_limiter_type = 2;
+	  cout << "WARNING! Running central scheme for scalar on the boundaries," << endl;
+	  cout << "which can be unstable." << endl;
+    }
+      else if (boundary_limiter_type == "l2up") d_boundary_limiter_type = 3;
+        else if (boundary_limiter_type == "upwind") d_boundary_limiter_type = 4;
+	  else throw InvalidValue("Flux limiter type on the boundary"
+		                  "not supported: " + boundary_limiter_type, __FILE__, __LINE__);
+    d_central_limiter = false;
+    if (d_limiter_type < 2)
+      db->getWithDefault("central_limiter",d_central_limiter,false);
   }
 
   // make source and boundary_condition objects
@@ -116,6 +135,7 @@ ReactiveScalarSolver::problemSetup(const ProblemSpecP& params)
   }
   d_linearSolver->problemSetup(db);
   d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
+  d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
   d_dynScalarModel = d_turbModel->getDynScalarModel();
 }
 
@@ -387,7 +407,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
 				       &reactscalarVars, &constReactscalarVars,
-				       d_conv_scheme, d_turbPrNo);
+				       d_conv_scheme);
 
     // Calculate reactscalar source terms
     // inputs : [u,v,w]VelocityMS, reactscalarSP, densityCP, viscosityCTS
@@ -416,7 +436,9 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  	          &reactscalarVars,
 						  &constReactscalarVars,
 					          wall_celltypeval, 
-						  d_limiter_type); 
+						  d_limiter_type, 
+						  d_boundary_limiter_type,
+						  d_central_limiter); 
     }
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, reactscalCoefSBLM

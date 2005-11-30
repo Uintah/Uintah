@@ -70,6 +70,14 @@ NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
   d_numMixingVars = 1;
   // Define mixing table, which includes call reaction model constructor
   readMixingTable(d_inputfile);
+  if (!d_adiab_enth_inputs) {
+    if (!(Enthalpy_index == -1))
+      d_H_air=tableLookUp(0.0, 0.0, 0.0, Enthalpy_index);
+    else {
+      cout << "No way provided to compute adiabatic enthalpy" << endl;
+      exit (1);
+    }
+  }
 }
 
       

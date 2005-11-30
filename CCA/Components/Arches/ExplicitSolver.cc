@@ -212,6 +212,10 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 #endif
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   d_mixedModel=d_turbModel->getMixedModel();
+  if (d_enthalpySolve) {
+    d_H_air = d_props->getAdiabaticAirEnthalpy();
+    d_enthalpySolver->setAdiabaticAirEnthalpy(d_H_air);
+  }
 }
 
 // ****************************************************************************
@@ -258,6 +262,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 			   	      d_timeIntegratorLabels[curr_level]);
     
     sched_getDensityGuess(sched, patches, matls,
+			   	      d_timeIntegratorLabels[curr_level]);
+    sched_checkDensityGuess(sched, patches, matls,
 			   	      d_timeIntegratorLabels[curr_level]);
 
     for (int index = 0;index < nofScalars; index ++) {
@@ -2203,8 +2209,6 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,const PatchSet* patches,
 
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(parent_old_dw, d_lab->d_densityCPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -2222,6 +2226,8 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,const PatchSet* patches,
     tsk->computes(d_lab->d_densityGuessLabel);
   else
     tsk->modifies(d_lab->d_densityGuessLabel);
+
+  tsk->computes(timelabels->negativeDensityGuess);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -2245,6 +2251,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
+  double negativeDensityGuess = 0.0;
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -2255,7 +2262,6 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
     CCVariable<double> densityGuess;
     constCCVariable<double> density;
-    constCCVariable<double> old_density;
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
@@ -2268,7 +2274,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
       cellInfoP.setData(scinew CellInformation(patch));
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
-    //CellInformation* cellinfo = cellInfoP.get().get_rep();
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values)
@@ -2284,8 +2290,6 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 		     matlIndex, patch);
     old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,
 		     matlIndex, patch);
-    parent_old_dw->get(old_density, d_lab->d_densityCPLabel, matlIndex, patch, 
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -2297,229 +2301,213 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 		patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-
     
-//    double factor_old, factor_new, factor_divide;
-//    factor_old = timelabels->factor_old;
-//    factor_new = timelabels->factor_new;
-//    factor_divide = timelabels->factor_divide;
-/*
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  IntVector xplusCell(colX+1, colY, colZ);
-	  IntVector xminusCell(colX-1, colY, colZ);
-	  IntVector yplusCell(colX, colY+1, colZ);
-	  IntVector yminusCell(colX, colY-1, colZ);
-	  IntVector zplusCell(colX, colY, colZ+1);
-	  IntVector zminusCell(colX, colY, colZ-1);
+// Need to skip first timestep since we start with unprojected velocities
+//    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+//    if (currentTimeStep > 1) {
+      IntVector idxLo = patch->getCellFORTLowIndex();
+      IntVector idxHi = patch->getCellFORTHighIndex();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector xplusCell(colX+1, colY, colZ);
+	    IntVector xminusCell(colX-1, colY, colZ);
+	    IntVector yplusCell(colX, colY+1, colZ);
+	    IntVector yminusCell(colX, colY-1, colZ);
+	    IntVector zplusCell(colX, colY, colZ+1);
+	    IntVector zminusCell(colX, colY, colZ-1);
 	  
 
-	  densityGuess[currCell] -= delta_t * 0.5* (
-	  ((density[currCell]+density[xplusCell])*uVelocity[xplusCell] -
-	   (density[currCell]+density[xminusCell])*uVelocity[currCell]) /
-	  cellinfo->sew[colX] +
-	  ((density[currCell]+density[yplusCell])*vVelocity[yplusCell] -
-	   (density[currCell]+density[yminusCell])*vVelocity[currCell]) /
-	  cellinfo->sns[colY] +
-	  ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
-	   (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
-	  cellinfo->stb[colZ]);
-//	  densityGuess[currCell] = (factor_old*old_density[currCell]+
-//			  factor_new*densityGuess[currCell])/factor_divide;
+	    densityGuess[currCell] -= delta_t * 0.5* (
+	    ((density[currCell]+density[xplusCell])*uVelocity[xplusCell] -
+	     (density[currCell]+density[xminusCell])*uVelocity[currCell]) /
+	    cellinfo->sew[colX] +
+	    ((density[currCell]+density[yplusCell])*vVelocity[yplusCell] -
+	     (density[currCell]+density[yminusCell])*vVelocity[currCell]) /
+	    cellinfo->sns[colY] +
+	    ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
+	     (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
+	    cellinfo->stb[colZ]);
+	    if (densityGuess[currCell] < 0.0) negativeDensityGuess = 1.0;
+          }
+        }
+      } 
+      if (d_boundaryCondition->anyArchesPhysicalBC()) {
+        bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+        bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+        bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+        bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+        bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+        bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+        int outlet_celltypeval = d_boundaryCondition->outletCellType();
+        int pressure_celltypeval = d_boundaryCondition->pressureCellType();
+        if (xminus) {
+          int colX = idxLo.x();
+          for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+            for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+              IntVector currCell(colX, colY, colZ);
+              IntVector xminusCell(colX-1, colY, colZ);
+	
+ 	      if ((cellType[xminusCell] == outlet_celltypeval)||
+	          (cellType[xminusCell] == pressure_celltypeval)) {
+                densityGuess[xminusCell] = densityGuess[currCell];
+	      }
+            }
+          }
+        }
+        if (xplus) {
+          int colX = idxHi.x();
+          for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+            for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+              IntVector currCell(colX, colY, colZ);
+              IntVector xplusCell(colX+1, colY, colZ);
+
+ 	      if ((cellType[xplusCell] == outlet_celltypeval)||
+	          (cellType[xplusCell] == pressure_celltypeval)) {
+                densityGuess[xplusCell] = densityGuess[currCell];
+              }
+            }
+          }
+        }
+        if (yminus) {
+          int colY = idxLo.y();
+          for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+            for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+              IntVector currCell(colX, colY, colZ);
+              IntVector yminusCell(colX, colY-1, colZ);
+	
+ 	      if ((cellType[yminusCell] == outlet_celltypeval)||
+	          (cellType[yminusCell] == pressure_celltypeval)) {
+                densityGuess[yminusCell] = densityGuess[currCell];
+              }
+            }
+          }
+        }
+        if (yplus) {
+          int colY = idxHi.y();
+          for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+            for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+              IntVector currCell(colX, colY, colZ);
+              IntVector yplusCell(colX, colY+1, colZ);
+
+ 	      if ((cellType[yplusCell] == outlet_celltypeval)||
+	          (cellType[yplusCell] == pressure_celltypeval)) {
+                densityGuess[yplusCell] = densityGuess[currCell];
+              }
+            }
+          }
+        }
+        if (zminus) {
+          int colZ = idxLo.z();
+          for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+            for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+              IntVector currCell(colX, colY, colZ);
+              IntVector zminusCell(colX, colY, colZ-1);
+
+ 	      if ((cellType[zminusCell] == outlet_celltypeval)||
+	          (cellType[zminusCell] == pressure_celltypeval)) {
+                densityGuess[zminusCell] = densityGuess[currCell];
+              }
+            }
+          }
+        }
+        if (zplus) {
+          int colZ = idxHi.z();
+          for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+            for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+              IntVector currCell(colX, colY, colZ);
+              IntVector zplusCell(colX, colY, colZ+1);
+
+ 	      if ((cellType[zplusCell] == outlet_celltypeval)||
+	          (cellType[zplusCell] == pressure_celltypeval)) {
+                densityGuess[zplusCell] = densityGuess[currCell];
+              }
+            }
+          }
         }
       }
-    } 
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-  int outlet_celltypeval = d_boundaryCondition->outletCellType();
-  if (!(outlet_celltypeval == -10)) {
-  if (xminus) {
-    int colX = idxLo.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
+   // }
+      new_dw->put(sum_vartype(negativeDensityGuess), timelabels->negativeDensityGuess);
+  }
+}
+//****************************************************************************
+// Schedule check for negative density guess
+//****************************************************************************
+void 
+ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,const PatchSet* patches,
+				  const MaterialSet* matls,
+			   	  const TimeIntegratorLabel* timelabels)
+{
+  string taskname =  "ExplicitSolver::checkDensityGuess" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
+			  &ExplicitSolver::checkDensityGuess,
+			  timelabels);
 
-        if (cellType[xminusCell] == outlet_celltypeval) {
-           densityGuess[xminusCell] = delta_t * maxAbsU *
-               (density[currCell] - density[xminusCell]) /
-	       cellinfo->dxep[colX-1];
-//	   densityGuess[xminusCell] = (factor_old*old_density[xminusCell]+
-//			  factor_new*densityGuess[xminusCell])/factor_divide;
-	}
-      }
-    }
-  }
-  if (xplus) {
-    int colX = idxHi.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
+  Task::WhichDW parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
+  else parent_old_dw = Task::OldDW;
 
-        if (cellType[xplusCell] == outlet_celltypeval) {
-           densityGuess[xplusCell] -= delta_t * maxUxplus *
-               (density[xplusCell] - density[currCell]) /
-	       cellinfo->dxpw[colX+1];
-//	   densityGuess[xplusCell] = (factor_old*old_density[xplusCell]+
-//			  factor_new*densityGuess[xplusCell])/factor_divide;
-	}
-      }
-    }
-  }
-  if (yminus) {
-    int colY = idxLo.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
+  Task::WhichDW old_values_dw;
+  if (timelabels->use_old_values)
+    old_values_dw = parent_old_dw;
+  else 
+    old_values_dw = Task::NewDW;
 
-        if (cellType[yminusCell] == outlet_celltypeval) {
-           densityGuess[yminusCell] = delta_t * maxAbsV *
-               (density[currCell] - density[yminusCell]) /
-	       cellinfo->dynp[colY-1];
-//	   densityGuess[yminusCell] = (factor_old*old_density[yminusCell]+
-//			  factor_new*densityGuess[yminusCell])/factor_divide;
-	}
-      }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
+  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
 
-        if (cellType[yplusCell] == outlet_celltypeval) {
-           densityGuess[yplusCell] -= delta_t * maxAbsV *
-               (density[yplusCell] - density[currCell]) /
-	       cellinfo->dyps[colY+1];
-//	   densityGuess[yplusCell] = (factor_old*old_density[yplusCell]+
-//			  factor_new*densityGuess[yplusCell])/factor_divide;
-	}
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
 
-        if (cellType[zminusCell] == outlet_celltypeval) {
-           densityGuess[zminusCell] = delta_t * maxAbsW *
-               (density[currCell] - density[zminusCell]) /
-	       cellinfo->dztp[colZ-1];
-//	   densityGuess[zminusCell] = (factor_old*old_density[zminusCell]+
-//			  factor_new*densityGuess[zminusCell])/factor_divide;
-	}
-      }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
+  tsk->modifies(d_lab->d_densityGuessLabel);
 
-        if (cellType[zplusCell] == outlet_celltypeval) {
-           densityGuess[zplusCell] -= delta_t * maxAbsW *
-               (density[zplusCell] - density[currCell]) /
-	       cellinfo->dzpb[colZ+1];
-//	   densityGuess[zplusCell] = (factor_old*old_density[zplusCell]+
-//			  factor_new*densityGuess[zplusCell])/factor_divide;
-	}
-      }
-    }
-  }
-  }
-  int pressure_celltypeval = d_boundaryCondition->pressureCellType();
-  if (!(pressure_celltypeval == -10)) {
-  if (xminus) {
-    int colX = idxLo.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-	
-        if (cellType[xminusCell] == pressure_celltypeval)
-          densityGuess[xminusCell] = densityGuess[currCell];
-      }
-    }
-  }
-  if (xplus) {
-    int colX = idxHi.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+// Actually check for negative density guess
+//****************************************************************************
+void 
+ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
+			   const PatchSubset* patches,
+			   const MaterialSubset*,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw,
+			   const TimeIntegratorLabel* timelabels)
+{
+  DataWarehouse* parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  else parent_old_dw = old_dw;
 
-        if (cellType[xplusCell] == pressure_celltypeval)
-          densityGuess[xplusCell] = densityGuess[currCell];
-      }
-    }
-  }
-  if (yminus) {
-    int colY = idxLo.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-	
-        if (cellType[yminusCell] == pressure_celltypeval)
-          densityGuess[yminusCell] = densityGuess[currCell];
-      }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
+  double negativeDensityGuess = 0.0;
+  sum_vartype nDG;
+  new_dw->get(nDG, timelabels->negativeDensityGuess);
+  negativeDensityGuess = nDG;
 
-        if (cellType[yplusCell] == pressure_celltypeval)
-          densityGuess[yplusCell] = densityGuess[currCell];
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
+  for (int p = 0; p < patches->size(); p++) {
 
-        if (cellType[zminusCell] == pressure_celltypeval)
-          densityGuess[zminusCell] = densityGuess[currCell];
-      }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+		     getArchesMaterial(archIndex)->getDWIndex(); 
 
-        if (cellType[zplusCell] == pressure_celltypeval)
-          densityGuess[zplusCell] = densityGuess[currCell];
-      }
-    }
-  }
-  }
-*/
+    CCVariable<double> densityGuess;
+
+
+    DataWarehouse* old_values_dw;
+    if (timelabels->use_old_values)
+      old_values_dw = parent_old_dw;
+    else
+      old_values_dw = new_dw;
+
+    new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,
+		     matlIndex, patch);
+    if (negativeDensityGuess > 0.0) {
+      if (pc->myrank() == 0)
+        cout << "WARNING: got negative density guess. Reverting to old density" << endl;
+      old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,
+		             matlIndex, patch);
+    }   
   }
 }
 //****************************************************************************

@@ -133,6 +133,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   db->getWithDefault("turnonMixedModel",d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",d_recompile,false);
+  db->getWithDefault("scalarUnderflowCheck",d_underflow,false);
 
   // physical constant
   // physical constants
@@ -597,26 +598,14 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",
 			   this, &Arches::computeStableTimeStep);
 
-  if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  }
-  else {
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  }
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -668,26 +657,14 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    if (d_MAlab) {
-      new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
-		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->get(den, d_lab->d_densityCPLabel, 
-		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    }
-    else {
-      new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(den, d_lab->d_densityCPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(den, d_lab->d_densityCPLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(visc, d_lab->d_viscosityCTSLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
@@ -785,6 +762,39 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 
 	  delta_t2=Min(1.0/tmp_time, delta_t2);
 	}
+      }
+    }
+    
+    if (d_underflow) {
+      indexLow = patch->getCellFORTLowIndex();
+      indexHigh = patch->getCellFORTHighIndex();
+
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	  for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector xplusCell(colX+1, colY, colZ);
+	    IntVector yplusCell(colX, colY+1, colZ);
+	    IntVector zplusCell(colX, colY, colZ+1);
+	    IntVector xminusCell(colX-1, colY, colZ);
+	    IntVector yminusCell(colX, colY-1, colZ);
+	    IntVector zminusCell(colX, colY, colZ-1);
+	    double tmp_time;
+
+	    tmp_time = 0.5* (
+            ((den[currCell]+den[xplusCell])*Max(uVelocity[xplusCell],0.0) -
+             (den[currCell]+den[xminusCell])*Min(uVelocity[currCell],0.0)) /
+            cellinfo->sew[colX] +
+            ((den[currCell]+den[yplusCell])*Max(vVelocity[yplusCell],0.0) -
+             (den[currCell]+den[yminusCell])*Min(vVelocity[currCell],0.0)) /
+            cellinfo->sns[colY] +
+            ((den[currCell]+den[zplusCell])*Max(wVelocity[zplusCell],0.0) -
+             (den[currCell]+den[zminusCell])*Min(wVelocity[currCell],0.0)) /
+            cellinfo->stb[colZ])+small_num;
+
+	    delta_t2=Min(den[currCell]/tmp_time, delta_t2);
+	  }
+        }
       }
     }
 
