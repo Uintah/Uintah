@@ -194,7 +194,7 @@ void AnalyzeNrrdReader::execute(){
 
   // Send nrrd data downstream
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
-  onrrd_->send(sciNrrdHandle);
+  onrrd_->send_and_dereference(sciNrrdHandle);
 
   /*
   Since, in this case, nrrd didn't allocate the data, you might call
@@ -209,7 +209,6 @@ void AnalyzeNrrdReader::execute(){
   error("(AnalyzeNrrdReader::execute) Cannot read Analyze files.  Insight module needs to be included.");
   return;
 #endif
-
 }
 
 /*===========================================================================*/
@@ -224,7 +223,8 @@ void AnalyzeNrrdReader::execute(){
 //
 // void* userdata - ???
 // 
-void AnalyzeNrrdReader::tcl_command(GuiArgs& args, void* userdata)
+void
+AnalyzeNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2){
     args.error("AnalyzeNrrdReader needs a minor command");

@@ -183,8 +183,8 @@ DicomNrrdReader::~DicomNrrdReader(){
 //
 // Arguments   : none
 //
-void DicomNrrdReader::execute(){
-
+void DicomNrrdReader::execute()
+{
 #ifdef HAVE_INSIGHT
 
   gui->execute(id + " sync_filenames");
@@ -215,7 +215,7 @@ void DicomNrrdReader::execute(){
   // Send nrrd data downstream.
   NrrdDataHandle sciNrrdHandle(sciNrrd);
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
-  onrrd_->send(sciNrrdHandle);
+  onrrd_->send_and_dereference(sciNrrdHandle);
 
   /*
   Since, in this case, nrrd didn't allocate the data, you might call
@@ -397,7 +397,8 @@ void DicomNrrdReader::split_filenames( string src, vector<string> &container )
 //
 // void* userdata - ???
 // 
-void DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
+void
+DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2){
     args.error("DicomNrrdReader needs a minor command");
