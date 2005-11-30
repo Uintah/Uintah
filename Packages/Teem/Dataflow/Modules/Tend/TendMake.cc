@@ -51,8 +51,8 @@ private:
   NrrdIPort*      inevals_;
   NrrdIPort*      inevecs_;
   NrrdOPort*      onrrd_;
-
 };
+
 
 DECLARE_MAKER(TendMake)
 
@@ -63,6 +63,7 @@ TendMake::TendMake(SCIRun::GuiContext *ctx) :
 
 TendMake::~TendMake() {
 }
+
 
 void 
 TendMake::execute()
@@ -113,9 +114,8 @@ TendMake::execute()
   nrrd->nrrd = nout;
 
   NrrdDataHandle out(nrrd);
-
-  onrrd_->send(out);
-
+  onrrd_->send_and_dereference(out);
 }
+
 
 } // End namespace SCITeem

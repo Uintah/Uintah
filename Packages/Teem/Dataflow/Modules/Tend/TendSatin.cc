@@ -104,10 +104,9 @@ TendSatin::execute()
 
   nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymMatrix;
 
-  NrrdDataHandle out(nrrd);
-
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-  onrrd_->send(out);
+  NrrdDataHandle out(nrrd);
+  onrrd_->send_and_dereference(out);
 }
 
 

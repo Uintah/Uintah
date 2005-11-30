@@ -177,7 +177,8 @@ TendAnvol::execute()
   //nrrd->nrrd = ntup;
   nrrd->nrrd = nout;
   //nrrd->copy_sci_data(*nrrd_handle.get_rep()); 
-  onrrd_->send(NrrdDataHandle(nrrd));
+  NrrdDataHandle ntmp(nrrd);
+  onrrd_->send_and_dereference(ntmp);
 }
 
 } // End namespace SCITeem

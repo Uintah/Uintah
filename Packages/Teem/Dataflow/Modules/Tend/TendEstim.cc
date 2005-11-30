@@ -55,7 +55,6 @@ private:
   NrrdIPort*      inbmat_;
   NrrdIPort*      indwi_;
   NrrdOPort*      otens_;
-  //NrrdOPort*      oerr_;
 
   GuiInt       knownB0_;
   GuiInt       use_default_threshold_;
@@ -96,17 +95,6 @@ TendEstim::execute()
       error("Empty input Bmat Nrrd.");
       return;
     }
-    //sliced_bmat = nrrdNew();
-    // slice the tuple axis off to send to tendEstim
-//     if (nrrdSlice(sliced_bmat, bmat_handle->nrrd, 0, 0)) {
-//       char *err = biffGetDone(NRRD);
-//       error(string("Error Slicing away bmat tuple axis: ") + err);
-//       free(err);
-//       return;
-//     }
-    //} else {
-    //error("Empty input Bmat Port.");
-    //return;
   }
   if (!indwi_->get(dwi_handle))
     return;
@@ -128,7 +116,6 @@ TendEstim::execute()
 
   int knownB0 = knownB0_.get(); // TRUE for brains, FALSE for dog hearts
   Nrrd* dummy = nrrdNew();
-  //if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd, sliced_bmat, 
   if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd, 
 			  bmat_handle->nrrd, knownB0, threshold, 
 			  soft_.get(), scale_.get()))
@@ -140,13 +127,11 @@ TendEstim::execute()
   }
   nrrdNuke(dummy);
 
-  //nrrdNuke(sliced_bmat);
   nout->axis[0].kind = nrrdKind3DMaskedSymMatrix;
   NrrdData *output = scinew NrrdData;
   output->nrrd = nout;
-  //output->copy_sci_data(*dwi_handle.get_rep());
-  //output->nrrd->axis[0].label = airStrdup("Unknown:Tensor");
-  otens_->send(NrrdDataHandle(output));
+  NrrdDataHandle ntmp(output);
+  otens_->send_and_dereference(ntmp);
   update_state(Completed);
 }
 
