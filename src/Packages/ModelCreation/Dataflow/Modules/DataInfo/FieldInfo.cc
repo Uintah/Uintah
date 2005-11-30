@@ -64,8 +64,15 @@ private:
   GuiString gui_sizey_;
   GuiString gui_sizez_;
 
-  int              generation_;
-
+  int generation_;
+  double min_;
+  double max_;
+  Point  center_;
+  Vector size_;
+  int    numelems_;
+  int    numnodes_;
+  int    numdata_;
+  
   void clear_vals();
   void update_input_attributes(FieldHandle);
 
@@ -94,7 +101,12 @@ FieldInfo::FieldInfo(GuiContext* ctx)
     gui_sizex_(ctx->subVar("sizex", false)),
     gui_sizey_(ctx->subVar("sizey", false)),
     gui_sizez_(ctx->subVar("sizez", false)),
-    generation_(-1)
+    generation_(-1),
+    min_(0.0),
+    max_(0.0),
+    numelems_(0),
+    numnodes_(0),
+    numdata_(0)
 {
   gui_fldname_.set("---");
   gui_generation_.set("---");
@@ -192,6 +204,9 @@ FieldInfo::update_input_attributes(FieldHandle f)
     gui_sizex_.set(to_string(size.x()));
     gui_sizey_.set(to_string(size.y()));
     gui_sizez_.set(to_string(size.z()));
+    
+    size_ = size;
+    center_ = center;
   }
   else
   {
@@ -202,6 +217,9 @@ FieldInfo::update_input_attributes(FieldHandle f)
     gui_sizex_.set("--- N/A ---");
     gui_sizey_.set("--- N/A ---");
     gui_sizez_.set("--- N/A ---");
+
+    size_ = Vector(0.0,0.0,0.0);
+    center_ = Point(0.0,0.0,0.0);
   }
 
   ScalarFieldInterfaceHandle sdi = f->query_scalar_interface(this);
@@ -211,11 +229,17 @@ FieldInfo::update_input_attributes(FieldHandle f)
     sdi->compute_min_max(minmax.first,minmax.second);
     gui_datamin_.set(to_string(minmax.first));
     gui_datamax_.set(to_string(minmax.second));
+    
+    min_ = minmax.first;
+    max_ = minmax.second;
   }
   else
   {
     gui_datamin_.set("--- N/A ---");
     gui_datamax_.set("--- N/A ---");
+    
+    min_ = 0.0;
+    max_ = 0.0;
   }
 
   // Do this last, sometimes takes a while.
@@ -246,14 +270,29 @@ FieldInfo::update_input_attributes(FieldHandle f)
   gui_numnodes_.set(num_nodes);
   gui_numelems_.set(num_elems);
   gui_numdata_.set(num_data);
+
+  std::istringstream iss_nnodes(num_nodes);
+  std::istringstream iss_nelems(num_elems);
+  iss_nnodes >> numnodes_;
+  iss_nelems >> numelems_;
+  switch(f->basis_order())
+  {
+    case 1:
+      numdata_ = numnodes_;
+      break;
+    case 0:
+      numdata_ = numelems_;
+      break;
+    default:
+      numdata_ = 0;
+      break;
+  }
 }
 
 
 void
 FieldInfo::execute()
-{
-
-  
+{  
   FieldIPort *iport = (FieldIPort*)get_iport("Input Field");
 
   // The input port (with data) is required.
@@ -273,27 +312,6 @@ FieldInfo::execute()
 
   MatrixOPort* oport;
 
-  std::istringstream iss_nnodes(gui_numnodes_.get());
-  std::istringstream iss_nelems(gui_numelems_.get());
-  int numnodes; 
-  int numelems;
-  int numdata;
-  iss_nnodes >> numnodes;
-  iss_nelems >> numelems;
-  switch(fh->basis_order())
-  {
-    case 1:
-      numdata = numnodes;
-      break;
-    case 0:
-      numdata = numelems;
-      break;
-    default:
-      numdata = 0;
-      break;
-  }
-
-
   if (oport = dynamic_cast<MatrixOPort *>(get_oport("NumNodes")))
   {
     MatrixHandle nnodes = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
@@ -308,7 +326,7 @@ FieldInfo::execute()
       error("Could not allocate enough memory for output matrix");
       return;
     }    
-    dataptr[0] = static_cast<double>(numnodes);
+    dataptr[0] = static_cast<double>(numnodes_);
     oport->send(nnodes);
   }
 
@@ -326,7 +344,7 @@ FieldInfo::execute()
       error("Could not allocate enough memory for output matrix");
       return;
     }    
-    dataptr[0] = static_cast<double>(numelems);
+    dataptr[0] = static_cast<double>(numelems_);
     oport->send(nelems);
   }
 
@@ -344,9 +362,86 @@ FieldInfo::execute()
       error("Could not allocate enough memory for output matrix");
       return;
     }    
-    dataptr[0] = static_cast<double>(numdata);
+    dataptr[0] = static_cast<double>(numdata_);
     oport->send(ndata);
   }
+
+  if (oport = dynamic_cast<MatrixOPort *>(get_oport("DataMin")))
+  {
+    MatrixHandle data = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
+    if(data.get_rep() == 0)
+    {
+      error("Could not allocate enough memory for output matrix");
+      return;
+    }
+    double* dataptr = data->get_data_pointer();
+    if (dataptr == 0)
+    {
+      error("Could not allocate enough memory for output matrix");
+      return;
+    }    
+    dataptr[0] = static_cast<double>(min_);
+    oport->send(data);
+  }
+
+  if (oport = dynamic_cast<MatrixOPort *>(get_oport("DataMax")))
+  {
+    MatrixHandle data = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
+    if(data.get_rep() == 0)
+    {
+      error("Could not allocate enough memory for output matrix");
+      return;
+    }
+    double* dataptr = data->get_data_pointer();
+    if (dataptr == 0)
+    {
+      error("Could not allocate enough memory for output matrix");
+      return;
+    }    
+    dataptr[0] = static_cast<double>(max_);
+    oport->send(data);
+  }
+
+  if (oport = dynamic_cast<MatrixOPort *>(get_oport("FieldSize")))
+  {
+    MatrixHandle data = dynamic_cast<Matrix *>(scinew DenseMatrix(1,3));
+    if(data.get_rep() == 0)
+    {
+      error("Could not allocate enough memory for output matrix");
+      return;
+    }
+    double* dataptr = data->get_data_pointer();
+    if (dataptr == 0)
+    {
+      error("Could not allocate enough memory for output matrix");
+      return;
+    }    
+    dataptr[0] = static_cast<double>(size_.x());
+    dataptr[1] = static_cast<double>(size_.y());
+    dataptr[2] = static_cast<double>(size_.z());
+    oport->send(data);
+  }
+
+  if (oport = dynamic_cast<MatrixOPort *>(get_oport("FieldCenter")))
+  {
+    MatrixHandle data = dynamic_cast<Matrix *>(scinew DenseMatrix(1,3));
+    if(data.get_rep() == 0)
+    {
+      error("Could not allocate enough memory for output matrix");
+      return;
+    }
+    double* dataptr = data->get_data_pointer();
+    if (dataptr == 0)
+    {
+      error("Could not allocate enough memory for output matrix");
+      return;
+    }    
+    dataptr[0] = static_cast<double>(center_.x());
+    dataptr[1] = static_cast<double>(center_.y());
+    dataptr[2] = static_cast<double>(center_.z());
+    oport->send(data);
+  }
+
 
 }
 
