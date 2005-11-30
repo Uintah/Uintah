@@ -67,16 +67,19 @@ PersistentTypeID PropertyManager::type_id("PropertyManager",
 
 
 PropertyManager::PropertyManager() : 
-  frozen_(false)
+  frozen_(false),
+  pmlock_("PropertyManager lock")
 {
 }
 
 
 // PropertyManagers are created thawed.  Only non transient data is copied.
 PropertyManager::PropertyManager(const PropertyManager &copy) :
-  frozen_(false)
+  frozen_(false),
+  pmlock_("PropertyManager lock")
 {
-  lock.lock();
+  pmlock_.lock();
+  ((PropertyManager &)copy).pmlock_.lock();
   map_type::const_iterator pi = copy.properties_.begin();
   while (pi != copy.properties_.end())
   {
@@ -86,7 +89,8 @@ PropertyManager::PropertyManager(const PropertyManager &copy) :
     }
     ++pi;
   }
-  lock.unlock();
+  ((PropertyManager &)copy).pmlock_.unlock();
+  pmlock_.unlock();
 }
 
 
@@ -101,9 +105,12 @@ PropertyManager::operator=(const PropertyManager &src)
 void
 PropertyManager::copy_properties( const PropertyManager *src)
 {
-  thaw();
-  lock.lock();
+  pmlock_.lock();
 
+  clear_transient();
+  frozen_ = false;
+
+  ((PropertyManager *)src)->pmlock_.lock();
   map_type::const_iterator pi = src->properties_.begin();
   while (pi != src->properties_.end())
   {
@@ -113,43 +120,46 @@ PropertyManager::copy_properties( const PropertyManager *src)
     }
     ++pi;
   }
+  ((PropertyManager *)src)->pmlock_.unlock();
+
+  frozen_ = true;
   
-  lock.unlock();
-  freeze();
+  pmlock_.unlock();
 }
 
 
 bool
 PropertyManager::operator==(const PropertyManager &pm)
 {
-  if (nproperties() != pm.nproperties())
-    return false;
-
-  lock.lock();
-
   bool result = true;
+
+  pmlock_.lock();
+
+  if (nproperties() != pm.nproperties())
+  {
+    result = false;
+  }
+
+  ((PropertyManager &)pm).pmlock_.lock();
   map_type::const_iterator pi = pm.properties_.begin();
-  
-  while (pi != pm.properties_.end()) {
-    
+  while (result && pi != pm.properties_.end())
+  {
     map_type::iterator loc = properties_.find(pi->first);
 
     if (loc == properties_.end() )
     {
       result = false;
-      break;
     }
-
-    if( *(pi->second) != *(loc->second) )
+    else if( *(pi->second) != *(loc->second) )
     {
       result = false;
-      break;
     }
 
     ++pi;
   }
+  ((PropertyManager &)pm).pmlock_.unlock();
 
-  lock.unlock();
+  pmlock_.unlock();
 
   return result;
 }
@@ -164,6 +174,7 @@ PropertyManager::operator!=(const PropertyManager &pm)
 
 PropertyManager::~PropertyManager()
 {
+  pmlock_.lock();
   // Clear all the properties.
   map_type::iterator pi = properties_.begin();
   while (pi != properties_.end())
@@ -171,6 +182,7 @@ PropertyManager::~PropertyManager()
     delete pi->second;
     ++pi;
   }
+  pmlock_.unlock();
 }
 
 
@@ -180,30 +192,30 @@ PropertyManager::thaw()
   // Assert that detach has been called on any handles to this PropertyManager.
   ASSERT(ref_cnt <= 1);
   // Clean up properties.
-  lock.lock();
+  pmlock_.lock();
 
   clear_transient();
   frozen_ = false;
 
-  lock.unlock();
+  pmlock_.unlock();
 }
 
 
 void
 PropertyManager::freeze()
 {
-  lock.lock();
+  pmlock_.lock();
 
   frozen_ = true;
 
-  lock.unlock();
+  pmlock_.unlock();
 }
 
 
 bool 
 PropertyManager::is_property(const string &name)
 {
-  lock.lock();
+  pmlock_.lock();
 
   bool ans;
   map_type::iterator loc = properties_.find(name);
@@ -212,7 +224,7 @@ PropertyManager::is_property(const string &name)
   else
     ans = false;
 
-  lock.unlock();
+  pmlock_.unlock();
 
   return ans;
 } 
@@ -223,16 +235,17 @@ PropertyManager::get_property_name(size_t index)
 {
   if (index < nproperties())
   {
-    lock.lock();
+    pmlock_.lock();
 
     map_type::const_iterator pi = properties_.begin();
 
     for(size_t i=0; i<index; i++ )
       ++pi;
+    
+    string result = pi->first;
+    pmlock_.unlock();
 
-    lock.unlock();
-
-    return pi->first;
+    return result;
   }
   else
   {
@@ -244,7 +257,7 @@ PropertyManager::get_property_name(size_t index)
 void
 PropertyManager::remove_property( const string &name )
 {
-  lock.lock();
+  pmlock_.lock();
 
   map_type::iterator loc = properties_.find(name);
   if (loc != properties_.end())
@@ -252,24 +265,29 @@ PropertyManager::remove_property( const string &name )
     properties_.erase(name);
   }
 
-  lock.unlock();
+  pmlock_.unlock();
 }
 
 
 void
 PropertyManager::clear_transient()
 {
-  map_type::iterator iter = properties_.begin();
-  if (iter != properties_.end())
-  {
-    pair<const string, PropertyBase *> p = *iter;
-    
-    if (p.second->transient())
+  bool found;
+  do {
+    found = false;
+    map_type::iterator iter = properties_.begin();
+    while (iter != properties_.end())
     {
-      properties_.erase(iter);
+      pair<const string, PropertyBase *> p = *iter;
+      if (p.second->transient())
+      {
+        properties_.erase(iter);
+        found = true;
+        break;
+      }
+      ++iter;
     }
-    ++iter;
-  }
+  } while (found);
 }
 
 
@@ -285,7 +303,7 @@ PropertyManager::io(Piostream &stream)
     stream.begin_class("PropertyManager", PROPERTYMANAGER_VERSION);
   if ( stream.writing() )
   {
-    lock.lock();
+    pmlock_.lock();
     unsigned int nprop = nproperties();
     Pio(stream, nprop);
     map_type::iterator i = properties_.begin(); 
@@ -297,13 +315,13 @@ PropertyManager::io(Piostream &stream)
       stream.io( p, PropertyBase::type_id );
       ++i;
     }
-    lock.unlock();
+    pmlock_.unlock();
   }
   else
   {
     unsigned int size;
     Pio( stream, size );
-    lock.lock();
+    pmlock_.lock();
 
     string name;
     Persistent *p = 0;
@@ -317,7 +335,7 @@ PropertyManager::io(Piostream &stream)
 	properties_[name]->set_transient(true);
       }
     }
-    lock.unlock();
+    pmlock_.unlock();
   }
 
   stream.end_class();

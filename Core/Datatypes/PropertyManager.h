@@ -241,6 +241,7 @@ protected:
   void clear_transient();
 
   bool frozen_;
+  Mutex pmlock_;
 };
 
 
@@ -254,14 +255,14 @@ PropertyManager::set_property(const string &name,  const T& obj,
 	 <<" freezing now!" << std::endl;
     freeze();
   }
-  lock.lock();
+  pmlock_.lock();
   map_type::iterator loc = properties_.find(name);
   if (loc != properties_.end())
   {
     delete loc->second;
   }
   properties_[name] = scinew Property<T>(obj, is_transient);
-  lock.unlock();
+  pmlock_.unlock();
 }
 
 
@@ -269,7 +270,7 @@ template<class T>
 bool 
 PropertyManager::get_property(const string &name, T &ref)
 {
-  lock.lock();
+  pmlock_.lock();
 
   bool ans = false;
   map_type::iterator loc = properties_.find(name);
@@ -281,7 +282,7 @@ PropertyManager::get_property(const string &name, T &ref)
     }
   }
   
-  lock.unlock();
+  pmlock_.unlock();
   return ans;
 } 
 
