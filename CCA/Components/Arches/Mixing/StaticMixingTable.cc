@@ -125,7 +125,8 @@ StaticMixingTable::computeProps(const InletStream& inStream,
 	  exit (1);
 	}
 
-        if (inStream.d_initEnthalpy)
+        if ((inStream.d_initEnthalpy)||
+	   (Abs(adia_enthalpy-enthalpy)/Abs(adia_enthalpy) < 1.0e-5))
           	current_heat_loss = zero_heat_loss;
         else
   		current_heat_loss=(adia_enthalpy-enthalpy)/(sensible_enthalpy+small);
