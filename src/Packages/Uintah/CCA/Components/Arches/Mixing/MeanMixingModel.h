@@ -143,6 +143,10 @@ public:
       inline Integrator* getIntegrator() const {
       }  
 
+      inline double getAdiabaticAirEnthalpy() const{
+	return d_H_air;
+      }
+
 protected :
 
 private:
@@ -187,6 +191,7 @@ private:
       // Implemented either as a k-d tree or 2D vector data structure.
       MixRxnTable* d_mixTable;
       ReactionModel* d_rxnModel;
+      double d_H_air;
       
 
 }; // end class MeanMixingModel

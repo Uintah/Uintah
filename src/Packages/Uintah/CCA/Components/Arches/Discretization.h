@@ -128,7 +128,7 @@ public:
 				CellInformation* cellinfo,
 				ArchesVariables* vars,
 				ArchesConstVariables* constvars,
-				int conv_scheme, double prandtlno);
+				int conv_scheme);
 
       ////////////////////////////////////////////////////////////////////////
       // Documentation here
@@ -180,7 +180,9 @@ public:
 				   ArchesVariables* vars,
 				   ArchesConstVariables* constvars,
 				   const int wall_celltypeval,
-				   int limiter_type);
+				   int limiter_type,
+				   int boundary_limiter_type,
+				   bool central_limiter);
 
 
       void computeDivergence(const ProcessorGroup*,
@@ -195,6 +197,9 @@ public:
 	d_filter = filter;
       }
 #endif
+      inline void setTurbulentPrandtlNumber(double turbPrNo) {
+	d_turbPrNo = turbPrNo;
+      }
 
 protected:
 
@@ -212,6 +217,7 @@ private:
 #ifdef PetscFilter
       Filter* d_filter;
 #endif
+      double d_turbPrNo;
 }; // end class Discretization
 
 } // End namespace Uintah

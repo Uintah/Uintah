@@ -412,6 +412,9 @@ namespace Uintah {
       const VarLabel* d_avUxplus_label;
       const VarLabel* d_avUxplusPred_label;
       const VarLabel* d_avUxplusInterm_label;
+      const VarLabel* d_negativeDensityGuess_label;
+      const VarLabel* d_negativeDensityGuessPred_label;
+      const VarLabel* d_negativeDensityGuessInterm_label;
 // filtered convection terms in momentum eqn
       const VarLabel* d_filteredRhoUjULabel;
       const VarLabel* d_filteredRhoUjVLabel;

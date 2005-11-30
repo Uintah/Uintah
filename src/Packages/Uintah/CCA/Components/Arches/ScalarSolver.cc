@@ -96,8 +96,27 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
 	  cout << "WARNING! Running central scheme for scalar," << endl;
 	  cout << "which can be unstable." << endl;
 	}
-	  else throw InvalidValue("Flux limiter type "
+          else if (limiter_type == "l2up") d_limiter_type = 3;
+            else if (limiter_type == "upwind") d_limiter_type = 4;
+	      else throw InvalidValue("Flux limiter type "
 		                           "not supported: " + limiter_type, __FILE__, __LINE__);
+  }
+  string boundary_limiter_type;
+  d_boundary_limiter_type = 3;
+  if (d_limiter_type < 3) {
+    db->getWithDefault("boundary_limiter_type",boundary_limiter_type,"l2up");
+    if (boundary_limiter_type == "none") {
+	  d_boundary_limiter_type = 2;
+	  cout << "WARNING! Running central scheme for scalar on the boundaries," << endl;
+	  cout << "which can be unstable." << endl;
+    }
+      else if (boundary_limiter_type == "l2up") d_boundary_limiter_type = 3;
+        else if (boundary_limiter_type == "upwind") d_boundary_limiter_type = 4;
+	  else throw InvalidValue("Flux limiter type on the boundary"
+		                  "not supported: " + boundary_limiter_type, __FILE__, __LINE__);
+    d_central_limiter = false;
+    if (d_limiter_type < 2)
+      db->getWithDefault("central_limiter",d_central_limiter,false);
   }
 
   // make source and boundary_condition objects
@@ -116,6 +135,7 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   }
   d_linearSolver->problemSetup(db);
   d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
+  d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
   d_dynScalarModel = d_turbModel->getDynScalarModel();
 }
 
@@ -393,7 +413,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
 				       &scalarVars, &constScalarVars,
-				       d_conv_scheme, d_turbPrNo);
+				       d_conv_scheme);
 
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
@@ -418,7 +438,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		                                  (pc, patch,  index, cellinfo,
 				  	          &scalarVars, &constScalarVars,
 					          wall_celltypeval, 
-						  d_limiter_type); 
+						  d_limiter_type,
+						  d_boundary_limiter_type,
+						  d_central_limiter); 
     } 
 
     // for scalesimilarity model add scalarflux to the source of scalar eqn.
@@ -702,6 +724,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
           if (scalarVars.scalar[currCell] < - epsilon) {
 	    scalar_clipped = 1.0;
 	    cout << "scalar got clipped to 0 at " << currCell << " , scalar value was " << scalarVars.scalar[currCell] << endl;
+	    cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> in the <ARCHES> section of the input file" << endl;
           }
 	  scalarVars.scalar[currCell] = 0.0;
 	}

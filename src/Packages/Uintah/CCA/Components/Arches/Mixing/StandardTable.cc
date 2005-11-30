@@ -86,6 +86,18 @@ StandardTable::problemSetup(const ProblemSpecP& params)
     tablevalues.push_back(tv);
   }
   table->setup(false);
+  if (!d_adiab_enth_inputs) {
+    vector<double> ind_vars;
+    ind_vars.push_back(0.0);
+    if(!d_adiabatic) ind_vars.push_back(0.0);
+    if (d_numMixStatVars > 0) ind_vars.push_back(0.0);
+    if (!(Enthalpy_index == -1))
+      d_H_air=table->interpolate(Enthalpy_index, ind_vars);  
+    else {
+      cout << "No way provided to compute adiabatic enthalpy" << endl;
+      exit (1);
+    }
+  }
 }
 
       
