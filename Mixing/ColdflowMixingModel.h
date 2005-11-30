@@ -123,6 +123,9 @@ public:
       inline Integrator* getIntegrator() const {
         return 0;
       }
+      inline double getAdiabaticAirEnthalpy() const{
+	return 0.0;
+      }
 
 
 

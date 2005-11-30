@@ -138,6 +138,9 @@ public:
       inline std::string getPDFShape() const {
 	return d_pdfShape;
       }
+      inline double getAdiabaticAirEnthalpy() const{
+	return 0.0;
+      }
       //***warning** compute totalvars from number of species and dependent vars
       inline int getTotalVars() const {
 	return d_depStateSpaceVars;

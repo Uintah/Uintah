@@ -154,6 +154,10 @@ public:
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
+      void sched_checkDensityGuess(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+			        const TimeIntegratorLabel* timelabels);
+
       void sched_updateDensityGuess(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
@@ -174,6 +178,10 @@ public:
         return true;
       }
   
+      inline double getAdiabaticAirEnthalpy() const{
+	return d_H_air;
+      }
+
 protected :
 
 private:
@@ -262,6 +270,13 @@ private:
 			  DataWarehouse* new_dw,
 			  const TimeIntegratorLabel* timelabels);
 
+      void checkDensityGuess(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels);
+
       void updateDensityGuess(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
@@ -327,6 +342,7 @@ private:
       double d_u_norm,d_v_norm,d_w_norm, d_rho_norm;
       bool d_calScalar;
       bool d_dynScalarModel;
+      double d_H_air;
 
 }; // End class PicardNonlinearSolver
 } // End namespace Uintah

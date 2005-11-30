@@ -284,6 +284,7 @@ private:
     TimeIntegratorLabel* init_timelabel;
     bool init_timelabel_allocated;
     bool d_dynScalarModel;
+    bool d_underflow;
 
 }; // end class Arches
 

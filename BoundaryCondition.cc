@@ -2108,6 +2108,12 @@ BoundaryCondition::mmscalarWallBC( const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
   //fortran call
   fort_mmscalarwallbc(idxLo, idxHi,
+		      vars->scalarConvectCoeff[Arches::AE], vars->scalarConvectCoeff[Arches::AW],
+		      vars->scalarConvectCoeff[Arches::AN], vars->scalarConvectCoeff[Arches::AS],
+		      vars->scalarConvectCoeff[Arches::AT], vars->scalarConvectCoeff[Arches::AB],
+		      vars->scalarNonlinearSrc, vars->scalarLinearSrc,
+		      constvars->cellType, d_mmWallID);
+  fort_mmscalarwallbc(idxLo, idxHi,
 		      vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
 		      vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
 		      vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
@@ -2862,22 +2868,11 @@ BoundaryCondition::scalarLisolve_mm(const ProcessorGroup*,
 		   constvars->scalarCoeff[Arches::AT], 
 		   constvars->scalarCoeff[Arches::AB], 
 		   constvars->scalarCoeff[Arches::AP], 
-		   constvars->scalarNonlinearSrc, constvars->old_density,
+		   constvars->scalarNonlinearSrc, constvars->density_guess,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb, 
 		   delta_t,
 		   constvars->cellType, d_mmWallID);
 
-     for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-       for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-	for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-	  IntVector currCell(ii,jj,kk);
-	  if (vars->scalar[currCell] > 1.0)
-	    vars->scalar[currCell] = 1.0;
-	  else if (vars->scalar[currCell] < 0.0)
-	    vars->scalar[currCell] = 0.0;
-	}
-      }
-    }
 
     vars->residScalar = 1.0E-7;
     vars->truncScalar = 1.0;
@@ -2965,7 +2960,7 @@ BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
 			    constvars->scalarCoeff[Arches::AT], 
 			    constvars->scalarCoeff[Arches::AB], 
 			    constvars->scalarCoeff[Arches::AP], 
-			    constvars->scalarNonlinearSrc, constvars->old_density,
+			    constvars->scalarNonlinearSrc, constvars->density_guess,
 			    cellinfo->sew, cellinfo->sns, cellinfo->stb, 
 			    delta_t,
 			    constvars->cellType, d_mmWallID);

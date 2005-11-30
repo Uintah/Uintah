@@ -45,6 +45,7 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
   db->require("adiabatic",d_adiabatic);
   db->require("rxnvars",d_numRxnVars);
   // Set up for MixingModel table
+  db->require("h_air",d_H_air);
   string rxnModel;
   db->require("reaction_model",rxnModel);
   if (rxnModel == "EquilibriumReactionModel")
