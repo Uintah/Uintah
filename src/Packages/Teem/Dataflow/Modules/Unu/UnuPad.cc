@@ -164,7 +164,6 @@ UnuPad::execute()
     dim_.reset();
     load_gui();
     gui->execute(id.c_str() + string(" init_axes"));
-
   }
 
   dim_.reset();
@@ -180,7 +179,8 @@ UnuPad::execute()
   bool changed = false;
 
   if( last_pad_style_ != pad_style_.get() ||
-      last_pad_value_ != pad_value_.get() ) {
+      last_pad_value_ != pad_value_.get() )
+  {
     last_pad_style_ = pad_style_.get();
     last_pad_value_ = pad_value_.get();
 
@@ -227,7 +227,6 @@ UnuPad::execute()
 
     NrrdData *nrrd = scinew NrrdData;
     nrrd->nrrd = nout;
-    //nrrd->copy_sci_data(*nrrdH.get_rep());
     last_nrrdH_ = nrrd;
 
     // Copy the properies, kinds, and labels.
