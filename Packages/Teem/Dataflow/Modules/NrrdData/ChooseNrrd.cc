@@ -119,7 +119,7 @@ ChooseNrrd::execute()
     inrrd->get(nrrd);
   }
   
-  onrrd->send(nrrd);
+  onrrd->send_and_dereference(nrrd);
 }
 
 } // End namespace SCITeem

@@ -98,9 +98,10 @@ NrrdSetProperty::~NrrdSetProperty()
 {
 }
 
-void NrrdSetProperty::execute() {
 
-
+void
+NrrdSetProperty::execute()
+{
   NrrdIPort *inrrd_port = (NrrdIPort *)get_iport("Input");
   NrrdDataHandle nHandle;
 
@@ -114,7 +115,8 @@ void NrrdSetProperty::execute() {
 
   // If no data or a change recreate the nrrd.
   if( !nHandle_.get_rep() ||
-      nGeneration_ != nHandle->generation ) {
+      nGeneration_ != nHandle->generation )
+  {
     nGeneration_ = nHandle->generation;
   
     // Add the current properties to the display.
@@ -345,7 +347,7 @@ void NrrdSetProperty::execute() {
   if( nHandle_.get_rep() )
   {
     NrrdOPort *onrrd_port = (NrrdOPort *) get_oport("Output");
-    onrrd_port->send( nHandle_ );
+    onrrd_port->send_and_dereference( nHandle_, true );
   }
 }
 

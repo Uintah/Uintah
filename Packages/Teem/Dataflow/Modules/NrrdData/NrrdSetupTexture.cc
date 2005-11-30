@@ -499,7 +499,7 @@ NrrdSetupTexture::execute()
 
     NrrdOPort *onvnrrd = (NrrdOPort *)get_oport("Normal/Value");
     last_nvnrrd_ = nvout_handle;
-    onvnrrd->send(nvout_handle);
+    onvnrrd->send_and_dereference(nvout_handle);
   }
 
   if (gmout)
@@ -513,7 +513,7 @@ NrrdSetupTexture::execute()
     gmout_handle->copy_properties(nin_handle.get_rep());
 
     NrrdOPort *ogmnrrd = (NrrdOPort *)get_oport("Gradient Magnitude");
-    ogmnrrd->send(gmout_handle);
+    ogmnrrd->send_and_dereference(gmout_handle);
   }
 }
 
