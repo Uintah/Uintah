@@ -55,7 +55,7 @@ PSELIBS := \
 
 LIBS := $(XML_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
-ifeq ($(HAVE_PETSC),)
+ifeq ($(HAVE_PETSC),yes)
 LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
