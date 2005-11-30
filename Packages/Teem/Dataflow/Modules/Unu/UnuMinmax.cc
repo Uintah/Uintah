@@ -58,8 +58,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
   NrrdOPort*         onrrd_;
 
@@ -162,12 +160,6 @@ void
     gui->execute(id + " make_min_max");
 
   }
-}
-
-void
- UnuMinmax::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace Teem

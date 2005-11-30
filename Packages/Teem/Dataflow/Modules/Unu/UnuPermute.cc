@@ -195,8 +195,8 @@ UnuPermute::execute()
     }
   }
 
-  if (!changed && !new_dataset) {
-    onrrd_->send(last_nrrdH_);
+  if (!changed && !new_dataset && last_nrrdH_.get_rep()) {
+    onrrd_->send_and_dereference(last_nrrdH_, true);
     return;
   }
 
@@ -213,7 +213,7 @@ UnuPermute::execute()
   nrrd->nrrd = nout;
 
   last_nrrdH_ = nrrd;
-  onrrd_->send(last_nrrdH_);
+  onrrd_->send_and_dereference(last_nrrdH_, true);
 }
 
 void 

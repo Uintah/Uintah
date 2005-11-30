@@ -184,7 +184,7 @@ Unu2op::execute()
   nrrdKeyValueCopy(nout, nin2);
   NrrdDataHandle out(nrrd);
 
-  onrrd_->send(out);
+  onrrd_->send_and_dereference(out);
 }
 
 unsigned int

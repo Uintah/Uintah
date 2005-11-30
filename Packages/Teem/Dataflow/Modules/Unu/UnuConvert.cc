@@ -94,11 +94,12 @@ UnuConvert::execute()
     return;
   }
 
-  int type=type_.get();
+  int type = type_.get();
   if (last_generation_ == nrrdH->generation &&
       last_type_ == type &&
-      last_nrrdH_.get_rep()) {
-    onrrd_->send(last_nrrdH_);
+      last_nrrdH_.get_rep())
+  {
+    onrrd_->send_and_dereference(last_nrrdH_, true);
     return;
   }
 
@@ -118,8 +119,7 @@ UnuConvert::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  //nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
-  onrrd_->send(last_nrrdH_);
+  onrrd_->send_and_dereference(last_nrrdH_, true);
 }
 

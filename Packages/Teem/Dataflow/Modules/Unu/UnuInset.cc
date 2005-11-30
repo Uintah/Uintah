@@ -55,8 +55,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   NrrdIPort*      inrrd_;
   NrrdIPort*      isub_;
   NrrdOPort*      onrrd_;
@@ -77,7 +75,8 @@ UnuInset::~UnuInset(){
 }
 
 void
- UnuInset::execute(){
+UnuInset::execute()
+{
   NrrdDataHandle nrrd_handle;
   NrrdDataHandle sub_handle;
 
@@ -189,14 +188,9 @@ void
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send(out);
+  onrrd_->send_and_dereference(out);
 }
 
-void
- UnuInset::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Teem
 

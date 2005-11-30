@@ -115,9 +115,9 @@ UnuGamma::execute()
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
   nrrdKeyValueCopy(nout, nin);
-  NrrdDataHandle out(nrrd);
 
-  onrrd_->send(out);
+  NrrdDataHandle out(nrrd);
+  onrrd_->send_and_dereference(out);
 }
 
 

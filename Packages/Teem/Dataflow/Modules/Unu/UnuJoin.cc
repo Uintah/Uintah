@@ -170,7 +170,7 @@ UnuJoin::execute()
   }
   
   vector<Nrrd*> arr(nrrds.size());
-  if (do_join)
+  if (do_join || !onrrd_handle_.get_rep())
   {
     NrrdData *onrrd = scinew NrrdData();
     int i = 0;
@@ -218,6 +218,6 @@ UnuJoin::execute()
     onrrd_handle_ = onrrd;
   }
 
-  onrrd_->send(onrrd_handle_);
+  onrrd_->send_and_dereference(onrrd_handle_, true);
 }
 

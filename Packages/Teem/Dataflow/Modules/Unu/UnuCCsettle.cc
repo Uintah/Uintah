@@ -54,8 +54,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
@@ -114,13 +112,7 @@ void
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send(out);
-}
-
-void
- UnuCCsettle::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  onrrd_->send_and_dereference(out);
 }
 
 } // End namespace Teem

@@ -97,14 +97,16 @@ UnuProject::execute()
   bool need_execute = false;
   if (old_axis_ != axis_.get() || 
       old_measure_ != measure_.get() ||
-      old_generation_ != nrrd_handle->generation) {
+      old_generation_ != nrrd_handle->generation)
+  {
     old_axis_ = axis_.get();
     old_measure_ = measure_.get();
     old_generation_ = nrrd_handle->generation;
     need_execute = true;
   }
 
-  if (need_execute) {
+  if (need_execute || !last_nrrdH_.get_rep())
+  {
     Nrrd *nin = nrrd_handle->nrrd;
     Nrrd *nout = nrrdNew();
     
@@ -116,10 +118,11 @@ UnuProject::execute()
     
     NrrdData *nrrd = scinew NrrdData;
     nrrd->nrrd = nout;
-    //nrrd->copy_sci_data(*nrrd_handle.get_rep());
     last_nrrdH_ = nrrd;
   }
-  onrrd_->send(last_nrrdH_);
+
+  onrrd_->send_and_dereference(last_nrrdH_, true);
 }
+
 
 } // End namespace SCITeem

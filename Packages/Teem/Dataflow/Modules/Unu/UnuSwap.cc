@@ -48,8 +48,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
@@ -111,13 +109,7 @@ void
   nout->axis[axisA_.get()].kind = nin->axis[axisB_.get()].kind;
   nout->axis[axisB_.get()].kind = nin->axis[axisA_.get()].kind;
 
-  onrrd_->send(out);
-}
-
-void
- UnuSwap::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  onrrd_->send_and_dereference(out);
 }
 
 } // End namespace Teem

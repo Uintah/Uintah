@@ -111,7 +111,7 @@ UnuFlip::execute()
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send(out);
+  onrrd_->send_and_dereference(out);
 
 }
 

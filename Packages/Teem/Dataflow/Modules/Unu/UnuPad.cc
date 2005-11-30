@@ -205,8 +205,8 @@ UnuPad::execute()
     }
   }
 
-  if ( changed) { 
-
+  if ( changed || !last_nrrdH_.get_rep())
+  {
     Nrrd *nin = nrrdH->nrrd;
     Nrrd *nout = nrrdNew();
     int *minp = &(min[0]);
@@ -250,6 +250,6 @@ UnuPad::execute()
   if (last_nrrdH_.get_rep())
   {
     NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
-    onrrd->send(last_nrrdH_);
+    onrrd->send_and_dereference(last_nrrdH_, true);
   }
 }

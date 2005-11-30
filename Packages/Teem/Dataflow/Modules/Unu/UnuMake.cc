@@ -62,8 +62,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
   void read_file_and_create_nrrd();
   int  parse_gui_vars();
@@ -598,11 +596,12 @@ int UnuMake::parse_gui_vars() {
   return dimension_;
 }
 
-void UnuMake::execute()
+
+void
+UnuMake::execute()
 {
   update_state(NeedData);
   
-  //get_nrrd_info(read_handle_);
   read_file_and_create_nrrd(); 
   
   // Do nothing if dimension_ is 0. This happens if the
@@ -618,18 +617,7 @@ void UnuMake::execute()
 
   // Send the data downstream.
   NrrdOPort *outport = (NrrdOPort *)get_oport("OutputNrrd");
-  outport->send(read_handle_);
+  outport->send_and_dereference(read_handle_); // always read, so always clear
 
   update_state(Completed);
 }
-
-
-void UnuMake::tcl_command(GuiArgs& args, void* userdata)
-{
-
-    Module::tcl_command(args, userdata);
-
-
-} // End namespace Teem
-
-

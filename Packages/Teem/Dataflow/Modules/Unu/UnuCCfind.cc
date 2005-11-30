@@ -54,15 +54,13 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
   
   GuiInt          connectivity_;
-  GuiString    type_;
-  GuiInt       usetype_;
+  GuiString       type_;
+  GuiInt          usetype_;
 
   unsigned int get_type(const string &type);
 };
@@ -129,13 +127,7 @@ void
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send(out);
-}
-
-void
- UnuCCfind::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  onrrd_->send_and_dereference(out);
 }
 
 unsigned int
