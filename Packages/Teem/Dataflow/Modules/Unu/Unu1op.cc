@@ -54,7 +54,6 @@ private:
   GuiInt       usetype_;
 
   unsigned int get_op(const string &op);
-  unsigned int get_type(const string &type);
 };
 
 DECLARE_MAKER(Unu1op)
@@ -96,7 +95,7 @@ Unu1op::execute()
 
   if (!usetype_.get()) {
     ntmp = nrrdNew();
-    if (nrrdConvert(ntmp, nin, get_type(type_.get()))) {
+    if (nrrdConvert(ntmp, nin, string_to_nrrd_type(type_.get()))) {
       char *err = biffGetDone(NRRD);
       error(string("Error converting nrrd: ") + err);
       free(err);
@@ -125,33 +124,6 @@ Unu1op::execute()
   onrrd_->send_and_dereference(out);
 }
 
-unsigned int
-Unu1op::get_type(const string &type) {
-  if (type == "nrrdTypeChar")
-    return nrrdTypeChar;
-  else if (type == "nrrdTypeUChar") 
-    return nrrdTypeUChar;
-  else if (type == "nrrdTypeShort")
-    return nrrdTypeShort;
-  else if (type == "nrrdTypeUShort")
-    return nrrdTypeUShort;
-  else if (type == "nrrdTypeInt")
-    return nrrdTypeInt;
-  else if (type == "nrrdTypeUInt")
-    return nrrdTypeUInt;
-  else if (type == "nrrdTypeLLong")
-    return nrrdTypeLLong;
-  else if (type == "nrrdTypeULLong")
-    return nrrdTypeULLong;
-  else if (type == "nrrdTypeFloat")
-    return nrrdTypeFloat;
-  else if (type == "nrrdTypeDouble")
-    return nrrdTypeDouble;
-  else {
-    error("Unknown nrrd type. Defaulting to nrrdTypeFloat");
-    return nrrdTypeFloat;
-  }
-}
 
 unsigned int
 Unu1op::get_op(const string &op) {

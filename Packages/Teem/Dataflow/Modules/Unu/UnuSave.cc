@@ -75,11 +75,14 @@ UnuSave::UnuSave(GuiContext* ctx)
 {
 }
 
+
 UnuSave::~UnuSave(){
 }
 
+
 void
- UnuSave::execute(){
+UnuSave::execute()
+{
   NrrdDataHandle nrrd_handle;
 
   update_state(NeedData);
@@ -156,7 +159,6 @@ void
     biffDone(NRRD);
     return;
   }
-
 }
 
 } // End namespace Teem

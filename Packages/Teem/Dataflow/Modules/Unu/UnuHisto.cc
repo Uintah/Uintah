@@ -56,8 +56,6 @@ private:
   GuiDouble    max_;
   GuiInt       useinputmax_;
   GuiString    type_;
-  
-  unsigned int get_type(string type);
 };
 
 DECLARE_MAKER(UnuHisto)
@@ -116,7 +114,7 @@ UnuHisto::execute()
   nrrdRangeNew(min, max);
   nrrdRangeSafeSet(range, nin, nrrdBlind8BitRangeState);
 
-  unsigned int type = get_type(type_.get());
+  unsigned int type = string_to_nrrd_type(type_.get());
 
   if (nrrdHisto(nout, nin, range, weight, bins_.get(), type)) {
     char *err = biffGetDone(NRRD);
@@ -131,27 +129,5 @@ UnuHisto::execute()
   onrrd_->send_and_dereference(out);
 }
 
-
-unsigned int
-UnuHisto::get_type(string type) {
-  if (type == "nrrdTypeChar") 
-    return nrrdTypeChar;
-  else if (type == "nrrdTypeUChar")  
-    return nrrdTypeUChar;
-  else if (type == "nrrdTypeShort")  
-    return nrrdTypeShort;
-  else if (type == "nrrdTypeUShort") 
-    return nrrdTypeUShort;
-  else if (type == "nrrdTypeInt")  
-    return nrrdTypeInt;
-  else if (type == "nrrdTypeUInt")   
-    return nrrdTypeUInt;
-  else if (type == "nrrdTypeFloat") 
-    return nrrdTypeFloat;
-  else if (type == "nrrdTypeDouble")  
-    return nrrdTypeDouble;
-  else    
-    return nrrdTypeUInt;
-}
 
 } // End namespace SCITeem

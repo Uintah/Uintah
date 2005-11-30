@@ -71,9 +71,6 @@ public:
   int             inrrd1_generation_;
   int             num_inrrd2_;
   NrrdDataHandle  last_nrrdH_;
-
-
-  unsigned int get_type(const string &t);
 };
 
 
@@ -88,11 +85,15 @@ UnuJhisto::UnuJhisto(GuiContext* ctx)
 {
 }
 
-UnuJhisto::~UnuJhisto(){
+
+UnuJhisto::~UnuJhisto()
+{
 }
 
+
 void
- UnuJhisto::execute(){
+UnuJhisto::execute()
+{
   NrrdDataHandle weight_handle;
   NrrdDataHandle nrrd_handle1;
 
@@ -398,7 +399,8 @@ void
 
     if (nrrdHistoJoint(nout, (const Nrrd**)&nrrds[0], 
 		       (const NrrdRange**)range,
-		       (int)nrrds.size(), weight, bin, get_type(type_.get()), 
+		       (int)nrrds.size(), weight, bin,
+                       string_to_nrrd_type(type_.get()), 
 		       clamp)) {
       char *err = biffGetDone(NRRD);
       error(string("Error performing Unu Jhisto: ") +  err);
@@ -437,29 +439,6 @@ void
     
   }
   onrrd_->send_and_dereference(last_nrrdH_, true);
-}
-
-  
-unsigned int 
-UnuJhisto::get_type(const string &type) {
-  if (type == "nrrdTypeChar") 
-    return nrrdTypeChar;
-  else if (type == "nrrdTypeUChar")  
-    return nrrdTypeUChar;
-  else if (type == "nrrdTypeShort")  
-    return nrrdTypeShort;
-  else if (type == "nrrdTypeUShort") 
-    return nrrdTypeUShort;
-  else if (type == "nrrdTypeInt")  
-    return nrrdTypeInt;
-  else if (type == "nrrdTypeUInt")   
-    return nrrdTypeUInt;
-  else if (type == "nrrdTypeFloat") 
-    return nrrdTypeFloat;
-  else if (type == "nrrdTypeDouble")  
-    return nrrdTypeDouble;
-  else    
-    return nrrdTypeUInt;
 }
 
 } // End namespace Teem

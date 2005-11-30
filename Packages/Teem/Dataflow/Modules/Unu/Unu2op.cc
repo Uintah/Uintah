@@ -58,7 +58,6 @@ private:
   bool         second_nrrd_;
 
   unsigned int get_op(const string &op);
-  unsigned int get_type(const string &type);
 };
 
 DECLARE_MAKER(Unu2op)
@@ -125,7 +124,8 @@ Unu2op::execute()
   if (!usetype_.get()) {
     if (first_nrrd_) {
       ntmp1 = nrrdNew();
-      if (nrrdConvert(ntmp1, nrrd_handle1->nrrd, get_type(type_.get()))) {
+      if (nrrdConvert(ntmp1, nrrd_handle1->nrrd,
+                      string_to_nrrd_type(type_.get()))) {
 	char *err = biffGetDone(NRRD);
 	error(string("Error converting nrrd: ") + err);
 	free(err);
@@ -134,7 +134,8 @@ Unu2op::execute()
     }
     if (second_nrrd_) {
       ntmp2 = nrrdNew();
-      if (nrrdConvert(ntmp2, nrrd_handle2->nrrd, get_type(type_.get()))) {
+      if (nrrdConvert(ntmp2, nrrd_handle2->nrrd,
+                      string_to_nrrd_type(type_.get()))) {
 	char *err = biffGetDone(NRRD);
 	error(string("Error converting nrrd: ") + err);
 	free(err);
@@ -230,35 +231,6 @@ Unu2op::get_op(const string &op) {
     return nrrdBinaryOpEqual;
   }
 }
-
-unsigned int
-Unu2op::get_type(const string &type) {
-  if (type == "nrrdTypeChar")
-    return nrrdTypeChar;
-  else if (type == "nrrdTypeUChar") 
-    return nrrdTypeUChar;
-  else if (type == "nrrdTypeShort")
-    return nrrdTypeShort;
-  else if (type == "nrrdTypeUShort")
-    return nrrdTypeUShort;
-  else if (type == "nrrdTypeInt")
-    return nrrdTypeInt;
-  else if (type == "nrrdTypeUInt")
-    return nrrdTypeUInt;
-  else if (type == "nrrdTypeLLong")
-    return nrrdTypeLLong;
-  else if (type == "nrrdTypeULLong")
-    return nrrdTypeULLong;
-  else if (type == "nrrdTypeFloat")
-    return nrrdTypeFloat;
-  else if (type == "nrrdTypeDouble")
-    return nrrdTypeDouble;
-  else {
-    error("Unknown nrrd type. Defaulting to nrrdTypeFloat");
-    return nrrdTypeFloat;
-  }
-}
-
 
 } // End namespace SCITeem
 

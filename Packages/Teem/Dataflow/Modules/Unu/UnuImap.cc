@@ -67,8 +67,6 @@ private:
   GuiInt       useinputmax_;
   GuiString    type_;
   GuiInt       usetype_;
-
-  unsigned int get_type(string type);
 };
 
 
@@ -153,7 +151,9 @@ void
       return;
     }
   } else {
-    if (nrrdApply1DIrregMap(nout, nin, range, dmap, nacl, get_type(type_.get()), rescale)) {
+    if (nrrdApply1DIrregMap(nout, nin, range, dmap, nacl,
+                            string_to_nrrd_type(type_.get()), rescale))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error Mapping Nrrd to Lookup Table: ") + err);
       free(err);
@@ -178,28 +178,6 @@ void
   onrrd_->send_and_dereference(out);
 }
 
-
-unsigned int
-UnuImap::get_type(string type) {
-  if (type == "nrrdTypeChar") 
-    return nrrdTypeChar;
-  else if (type == "nrrdTypeUChar")  
-    return nrrdTypeUChar;
-  else if (type == "nrrdTypeShort")  
-    return nrrdTypeShort;
-  else if (type == "nrrdTypeUShort") 
-    return nrrdTypeUShort;
-  else if (type == "nrrdTypeInt")  
-    return nrrdTypeInt;
-  else if (type == "nrrdTypeUInt")   
-    return nrrdTypeUInt;
-  else if (type == "nrrdTypeFloat") 
-    return nrrdTypeFloat;
-  else if (type == "nrrdTypeDouble")  
-    return nrrdTypeDouble;
-  else    
-    return nrrdTypeUInt;
-}
 
 } // End namespace Teem
 

@@ -61,8 +61,6 @@ private:
   GuiInt          connectivity_;
   GuiString       type_;
   GuiInt          usetype_;
-
-  unsigned int get_type(const string &type);
 };
 
 
@@ -101,7 +99,8 @@ void
   Nrrd *nout = nrrdNew();
 
   if (!usetype_.get()) {
-    if (nrrdCCFind(nout, NULL, nin, get_type(type_.get()), connectivity_.get())) {
+    if (nrrdCCFind(nout, NULL, nin,
+                   string_to_nrrd_type(type_.get()), connectivity_.get())) {
       char *err = biffGetDone(NRRD);
       error(string("Error performing CC find nrrd: ") + err);
       free(err);
@@ -130,19 +129,6 @@ void
   onrrd_->send_and_dereference(out);
 }
 
-unsigned int
-UnuCCfind::get_type(const string &type) {
-  if (type == "nrrdTypeUChar") 
-    return nrrdTypeUChar;
-  else if (type == "nrrdTypeUShort")
-    return nrrdTypeUShort;
-  else if (type == "nrrdTypeInt")
-    return nrrdTypeInt;
-  else {
-    error("Unknown nrrd type. Defaulting to nrrdTypeInt");
-    return nrrdTypeInt;
-  }
-}
 
 } // End namespace Teem
 
