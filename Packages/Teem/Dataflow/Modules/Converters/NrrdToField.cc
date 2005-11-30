@@ -131,8 +131,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // dataH is a handle to the nrrd containing data.  If there
   // is not data, pass a 0. Only the regular data must have a
   // valid dataH. The nrrd should be a 1D array of data values
@@ -1207,12 +1205,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   
   return ofield_handle;  
   
-}
-
-void
-NrrdToField::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 

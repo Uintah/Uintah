@@ -61,7 +61,7 @@ public:
   NrrdReader(SCIRun::GuiContext* ctx);
   virtual ~NrrdReader();
   virtual void execute();
-  virtual void tcl_command(GuiArgs& args, void* userdata);
+
 private:
   bool read_nrrd();
   bool read_file(string filename);
@@ -125,9 +125,9 @@ NrrdReader::read_nrrd()
 #else
   time_t new_filemodification = buf.st_mtime;
 #endif
-    if(!read_handle_.get_rep() || 
-  fn != old_filename_ || 
-  new_filemodification != old_filemodification_)
+  if(!read_handle_.get_rep() || 
+     fn != old_filename_ || 
+     new_filemodification != old_filemodification_)
   {
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
@@ -199,7 +199,9 @@ NrrdReader::read_nrrd()
 }
 
 
-bool NrrdReader::read_file(string fn){
+bool
+NrrdReader::read_file(string fn)
+{
 
   NrrdData *n = scinew NrrdData;
   if (nrrdLoad(n->nrrd=nrrdNew(), airStrdup(fn.c_str()), 0)) {
@@ -217,7 +219,11 @@ bool NrrdReader::read_file(string fn){
   return false;
 }
 
-bool NrrdReader::write_tmpfile(string filename, string* tmpfilename, string conv_command){
+
+bool
+NrrdReader::write_tmpfile(string filename, string* tmpfilename,
+                          string conv_command)
+{
   string::size_type loc = filename.find_last_of("/");
   const string basefilename =
     (loc==string::npos)?filename:filename.substr(loc+1);
@@ -254,6 +260,7 @@ bool NrrdReader::write_tmpfile(string filename, string* tmpfilename, string conv
   return true;
 }
 
+
 void
 NrrdReader::execute()
 {
@@ -268,19 +275,7 @@ NrrdReader::execute()
 
   // Send the data downstream.
   NrrdOPort *outport = (NrrdOPort *)get_oport("Output Data");
-  outport->send(read_handle_);
+  outport->send_and_dereference(read_handle_, true);
 
   update_state(Completed);
-}
-
-
-void 
-NrrdReader::tcl_command(GuiArgs& args, void* userdata)
-{
-  if(args.count() < 2)
-  {
-    args.error("NrrdReader needs a minor command");
-    return;
-  }
-  Module::tcl_command(args, userdata);
 }

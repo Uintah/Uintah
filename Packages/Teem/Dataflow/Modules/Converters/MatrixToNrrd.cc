@@ -66,8 +66,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   void create_and_send_column_matrix_nrrd(MatrixHandle mat);
   void create_and_send_dense_matrix_nrrd(MatrixHandle mat);
   void create_and_send_sparse_matrix_nrrd(MatrixHandle mat);
@@ -228,12 +226,6 @@ MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH) {
   ncols_->send_and_dereference(colsH);
 }
 
-
-void
- MatrixToNrrd::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Teem
 

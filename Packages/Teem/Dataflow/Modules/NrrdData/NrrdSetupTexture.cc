@@ -498,8 +498,8 @@ NrrdSetupTexture::execute()
     nvout_handle->copy_properties(nin_handle.get_rep());
 
     NrrdOPort *onvnrrd = (NrrdOPort *)get_oport("Normal/Value");
-    onvnrrd->send(nvout_handle);
     last_nvnrrd_ = nvout_handle;
+    onvnrrd->send(nvout_handle);
   }
 
   if (gmout)
