@@ -740,4 +740,35 @@ void get_nrrd_compile_type( const unsigned int type,
   }
 }
 
+
+unsigned int
+string_to_nrrd_type(const string &str)
+{
+  if (str == "nrrdTypeChar")
+    return nrrdTypeChar;
+  else if (str == "nrrdTypeUChar")
+    return nrrdTypeUChar;
+  else if (str == "nrrdTypeShort")
+    return nrrdTypeShort;
+  else if (str == "nrrdTypeUShort")
+    return nrrdTypeUShort;
+  else if (str == "nrrdTypeInt")
+    return nrrdTypeInt;
+  else if (str == "nrrdTypeUInt")
+    return nrrdTypeUInt;
+  else if (str == "nrrdTypeLLong")
+    return nrrdTypeLLong;
+  else if (str == "nrrdTypeULLong")
+    return nrrdTypeULLong;
+  else if (str == "nrrdTypeFloat")
+    return nrrdTypeFloat;
+  else if (str == "nrrdTypeDouble")
+    return nrrdTypeDouble;
+  else
+  {
+    ASSERTFAIL("Unknown nrrd string type");
+    return nrrdTypeFloat;
+  }
+}
+
 }  // end namespace SCIRun
