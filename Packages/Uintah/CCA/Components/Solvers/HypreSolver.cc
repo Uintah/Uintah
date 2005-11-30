@@ -519,6 +519,12 @@ namespace Uintah {
         } else {
           throw InternalError("Unknown solver type: "+params->solvertype, __FILE__, __LINE__);
         }
+        
+        //__________________________________
+        // Test for convergence
+        double residualNormalization = params->getResidualNormalizationFactor();
+        final_res_norm = final_res_norm/residualNormalization;
+        
         if(final_res_norm > params->tolerance || finite(final_res_norm) == 0){
           if(params->restart){
             if(pg->myrank() == 0)
@@ -533,6 +539,8 @@ namespace Uintah {
                                      params->tolerance,__FILE__,__LINE__);
           }
         }
+        //__________________________________
+        // Push the solution into Uintah data structure
         double solve_dt = Time::currentSeconds()-solve_start;
 
         for(int p=0;p<patches->size();p++){
@@ -564,7 +572,8 @@ namespace Uintah {
             }
           }
         }
-
+        //__________________________________
+        // clean up
         HYPRE_StructMatrixDestroy(HA);
         HYPRE_StructVectorDestroy(HB);
         HYPRE_StructVectorDestroy(HX);
@@ -583,7 +592,8 @@ namespace Uintah {
         tstart = Time::currentSeconds();
       }
     }
-
+    
+    //______________________________________________________________________
     void setupPrecond(const ProcessorGroup* pg,
                       HYPRE_PtrToSolverFcn& precond,
                       HYPRE_PtrToSolverFcn& pcsetup,
@@ -666,7 +676,7 @@ namespace Uintah {
         throw InternalError("Unknown preconditionertype in destroyPrecond: "+params->precondtype, __FILE__, __LINE__);
       }
     }
-
+  //______________________________________________________________________
   private:
     const Level* level;
     const MaterialSet* matlset;
@@ -680,7 +690,8 @@ namespace Uintah {
     Task::WhichDW which_guess_dw;
     const HypreSolver2Params* params;
   };
-
+  
+  //______________________________________________________________________
   SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params, const string& varname)
   {
     HypreSolver2Params* p = new HypreSolver2Params();
@@ -718,7 +729,8 @@ namespace Uintah {
     p->restart=true;
     return p;
   }
-
+  
+  //______________________________________________________________________
   void HypreSolver2::scheduleSolve(const LevelP& level, SchedulerP& sched,
                                    const MaterialSet* matls,
                                    const VarLabel* A,    Task::WhichDW which_A_dw,  

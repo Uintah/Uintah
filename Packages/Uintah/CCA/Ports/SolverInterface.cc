@@ -14,4 +14,5 @@ SolverInterface::~SolverInterface()
 SolverParameters::~SolverParameters()
 {
   solveOnExtraCells = true;
+  residualNormalization = 1;
 }
