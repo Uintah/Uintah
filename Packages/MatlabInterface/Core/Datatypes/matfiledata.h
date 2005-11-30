@@ -192,6 +192,9 @@ class matfiledata : public matfilebase {
 	template<class T> void getandcastvector(std::vector<T> &vec);
 	template<class T> void putandcastvector(std::vector<T> &vec,mitype type);
 
+	template<class ITERATOR> void putandcast(ITERATOR is,ITERATOR ie,mitype type);
+
+
 	// Access functions per element. 
 	template<class T> T getandcastvalue(long index);
 	template<class T> void putandcastvalue(T value,long index);
@@ -870,6 +873,104 @@ template<class T> void matfiledata::putandcastvalue(T val,long index)
            throw unknown_type();           
     }
 }
+
+
+
+template<class ITERATOR> 
+void matfiledata::putandcast(ITERATOR is, ITERATOR ie, mitype type)
+{
+  clear();
+  
+  // determine size
+  ITERATOR it = is;
+  long dsize = 0;
+  while(it != ie) { dsize++; ++it; } 
+  
+  
+	if (dsize == 0) return;
+    
+  newdatabuffer(dsize*elsize(type),type);
+    
+  switch (type)
+  {
+    case miINT8: 
+      { 
+        int p = 0;
+        signed char *ptr = static_cast<signed char *>(databuffer());
+        while(is != ie) {ptr[p++] = static_cast<signed char>(*is); ++is; }
+      }
+      break;
+    case miUINT8: case miUTF8:
+      { 
+        int p = 0;
+        unsigned char *ptr = static_cast<unsigned char *>(databuffer());
+        while(is != ie) {ptr[p++] = static_cast<unsigned char>(*is); ++is; }
+      }
+      break;
+    case miINT16: 
+      { 
+        int p = 0;
+        signed short *ptr = static_cast<signed short *>(databuffer());
+        while(is != ie) {ptr[p++] = static_cast<signed short>(*is); ++is; }
+      }
+      break;
+    case miUINT16: case miUTF16:
+      { 
+        int  p = 0;
+        unsigned short *ptr = static_cast<unsigned short *>(databuffer());
+        while(is != ie) {ptr[p++] = static_cast<unsigned short>(*is); ++is; }
+      }
+      break;
+	case miINT32: 
+      { 
+        int p = 0;
+        signed int *ptr = static_cast<signed int *>(databuffer());
+        while(is != ie) {ptr[p++] = static_cast<signed int>(*is); ++is; }
+      }
+      break;
+	case miUINT32: case miUTF32:
+      { 
+        int p = 0;
+        unsigned int *ptr = static_cast<unsigned int *>(databuffer());
+        while(is != ie) {ptr[p++] = static_cast<unsigned int>(*is); ++is; }
+      }
+      break;
+#ifdef JGS_MATLABIO_USE_64INTS	   	
+	case miINT64: 
+      { 
+        int p = 0;
+        int64 *ptr = static_cast<int64 *>(databuffer());
+        while(is != ie) {ptr[p++] = static_cast<int64>(*is); ++is; }
+      }
+      break;
+	case miUINT64: 
+      { 
+        int p = 0;
+        uint64 *ptr = static_cast<uint64 *>(databuffer());
+        while(is != ie) {ptr[p++] = static_cast<uint64>(*is); ++is; }
+      }
+      break;
+#endif	   
+	case miSINGLE: 
+      { 
+        int p = 0;
+        float *ptr = static_cast<float *>(databuffer());
+        while(is != ie) {ptr[p++] = static_cast<float>(*is); ++is; }
+      }
+      break;
+  case miDOUBLE: 
+      { 
+        int p = 0;
+        double *ptr = static_cast<double *>(databuffer());
+        while(is != ie) {ptr[p++] = static_cast<double>(*is); ++is; }
+      }
+      break;
+  default:
+      throw unknown_type();              
+  }
+}
+
+
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1424
