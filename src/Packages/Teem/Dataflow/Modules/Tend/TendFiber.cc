@@ -349,12 +349,8 @@ TendFiber::execute()
     bool failed;
     if (failed = tenFiberTrace(tfx, nout, start)) {
       char *err = biffGetDone(TEN);
-//      error(string("Error tracing fiber: ") + err);
       free(err);
-//      return;
     }
-//    cerr << "nout->axis[0].size="<<nout->axis[0].size<<"\n";
-//    cerr << "nout->axis[1].size="<<nout->axis[1].size<<"\n";
 
     fibers.resize(fiberIdx+1);
     if (!failed) {
@@ -374,23 +370,20 @@ TendFiber::execute()
   CMesh *cm = scinew CMesh;
   CMesh::Node::array_type a;
   a.resize(2);
-//  cerr << "got "<<fibers.size()<<" fibers.\n";
   for (int i=0; i<fibers.size(); i++) {
     if (fibers[i].size()) {
       a[1] = cm->add_point(fibers[i][0]);
-//      cerr << "   fiber["<<i<<"] has "<<fibers[i].size()<<" nodes.\n";
-//      cerr << "     adding point: "<<fibers[i][0]<<"\n";
       for (int j=1; j<fibers[i].size(); j++) {
 	a[0] = a[1];
 	a[1] = cm->add_point(fibers[i][j]);
-//	cerr << "     adding point: "<<fibers[i][j]<<"\n";
 	cm->add_elem(a);
       }
     }
   }
   
-  CField *cf = scinew CField(cm);
-  ofibers_->send(cf);
+  FieldHandle ftmp(scinew CField(cm));
+  ofibers_->send_and_dereference(ftmp);
 }
+
 
 } // End namespace SCITeem

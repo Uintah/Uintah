@@ -142,20 +142,8 @@ TendEval::execute()
     tdata += 7;
   }
   nrrdAxisInfoCopy(nout->nrrd, nin, NULL, NRRD_AXIS_INFO_SIZE_BIT);
-//   string lname;
-//   string enames[3] = {"Major", "Medium", "Minor"};
-//   int init=false;
-//   for (int i=2; i>=0; i--) {
-//     if (useComp[i]) { 
-//       if (init) 
-// 	lname += ",";
-//       lname += enames[i];
-//       lname += "Eigenvalue:Scalar";
-//       init = true;
-//     }
-//   }
-//   strcpy(nout->nrrd->axis[0].label, lname.c_str());
-  onrrd_->send(NrrdDataHandle(nout));
+  NrrdDataHandle ntmp(nout);
+  onrrd_->send_and_dereference(ntmp);
 }
 
 } // End namespace SCITeem

@@ -103,13 +103,13 @@ TendEvq::execute()
   nrrd->nrrd = nout;
 
   NrrdDataHandle out(nrrd);
-
-  onrrd_->send(out);
-
+  onrrd_->send_and_dereference(out);
 }
 
+
 unsigned int
-TendEvq::get_anisotropy(const string &an) {
+TendEvq::get_anisotropy(const string &an)
+{
   if (an == "cl1")
     return tenAniso_Cl1;
   else if (an == "cl2")
@@ -142,8 +142,8 @@ TendEvq::get_anisotropy(const string &an) {
     error("Unkown anisotropy metric.  Using trace");
     return tenAniso_Tr;
   }
-  
 }
+
 
 } // End namespace SCITeem
 

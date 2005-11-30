@@ -96,8 +96,7 @@ TendAnplot::execute()
 
   NrrdDataHandle out(nrrd);
 
-  onrrd_->send(out);
-
+  onrrd_->send_and_dereference(out);
 }
 
 unsigned int

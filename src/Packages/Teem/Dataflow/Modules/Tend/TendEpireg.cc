@@ -190,7 +190,6 @@ TendEpireg::execute()
   float threshold;
   if (use_default_threshold_.get()) threshold = AIR_NAN;
   else threshold = threshold_.get();
-//  cerr << "threshold = "<<threshold<<"\n";
   if (tenEpiRegister4D(nout, nin, ngrad, reference_.get(),
 		       blur_x_.get(), blur_y_.get(), fitting_.get(), 
 		       threshold, cc_analysis_.get(),
@@ -208,9 +207,8 @@ TendEpireg::execute()
 
   NrrdData *output = scinew NrrdData;
   output->nrrd = nout;
-  //output->copy_sci_data(*nrrd_handle.get_rep());
-  //output->nrrd->axis[0].label = airStrdup(nin->axis[0].label);
-  onrrd_->send(NrrdDataHandle(output));
+  NrrdDataHandle ntmp(output);
+  onrrd_->send_and_dereference(ntmp);
 
   update_state(Completed);
 }

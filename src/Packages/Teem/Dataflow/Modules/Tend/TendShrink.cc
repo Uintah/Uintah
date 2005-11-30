@@ -96,8 +96,7 @@ TendShrink::execute()
   nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymMatrix;
 
   NrrdDataHandle out(nrrd);
-
-  onrrd_->send(out);
+  onrrd_->send_and_dereference(out);
 }
 
 } // End namespace SCITeem
