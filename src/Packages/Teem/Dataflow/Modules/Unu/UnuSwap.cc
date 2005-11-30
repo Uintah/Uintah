@@ -65,11 +65,13 @@ UnuSwap::UnuSwap(GuiContext* ctx)
 {
 }
 
-UnuSwap::~UnuSwap(){
+UnuSwap::~UnuSwap()
+{
 }
 
 void
- UnuSwap::execute(){
+UnuSwap::execute()
+{
   NrrdDataHandle nrrd_handle;
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");

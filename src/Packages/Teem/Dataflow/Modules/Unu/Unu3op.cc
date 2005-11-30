@@ -62,8 +62,6 @@ private:
   bool         third_nrrd_;
 
   unsigned int get_op(const string &op);
-  unsigned int get_type(const string &op);
-  
 };
 
 DECLARE_MAKER(Unu3op)
@@ -144,7 +142,8 @@ Unu3op::execute()
   if (!usetype_.get()) {
     if (first_nrrd_) {
       ntmp1 = nrrdNew();
-      if (nrrdConvert(ntmp1, nrrd_handle1->nrrd, get_type(type_.get()))) {
+      if (nrrdConvert(ntmp1, nrrd_handle1->nrrd,
+                      string_to_nrrd_type(type_.get()))) {
 	char *err = biffGetDone(NRRD);
 	error(string("Error converting nrrd: ") + err);
 	free(err);
@@ -153,7 +152,8 @@ Unu3op::execute()
     }
     if (second_nrrd_) {
       ntmp2 = nrrdNew();
-      if (nrrdConvert(ntmp2, nrrd_handle2->nrrd, get_type(type_.get()))) {
+      if (nrrdConvert(ntmp2, nrrd_handle2->nrrd,
+                      string_to_nrrd_type(type_.get()))) {
 	char *err = biffGetDone(NRRD);
 	error(string("Error converting nrrd: ") + err);
 	free(err);
@@ -162,7 +162,8 @@ Unu3op::execute()
     }
     if (third_nrrd_) {
       ntmp3 = nrrdNew();
-      if (nrrdConvert(ntmp3, nrrd_handle3->nrrd, get_type(type_.get()))) {
+      if (nrrdConvert(ntmp3, nrrd_handle3->nrrd,
+                      string_to_nrrd_type(type_.get()))) {
 	char *err = biffGetDone(NRRD);
 	error(string("Error converting nrrd: ") + err);
 	free(err);
@@ -255,36 +256,6 @@ Unu3op::get_op(const string &op) {
     return nrrdTernaryOpAdd;
   }
 }
-
-unsigned int
-Unu3op::get_type(const string &type) {
-  if (type == "nrrdTypeChar")
-    return nrrdTypeChar;
-  else if (type == "nrrdTypeUChar") 
-    return nrrdTypeUChar;
-  else if (type == "nrrdTypeShort")
-    return nrrdTypeShort;
-  else if (type == "nrrdTypeUShort")
-    return nrrdTypeUShort;
-  else if (type == "nrrdTypeInt")
-    return nrrdTypeInt;
-  else if (type == "nrrdTypeUInt")
-    return nrrdTypeUInt;
-  else if (type == "nrrdTypeLLong")
-    return nrrdTypeLLong;
-  else if (type == "nrrdTypeULLong")
-    return nrrdTypeULLong;
-  else if (type == "nrrdTypeFloat")
-    return nrrdTypeFloat;
-  else if (type == "nrrdTypeDouble")
-    return nrrdTypeDouble;
-  else {
-    error("Unknown nrrd type. Defaulting to nrrdTypeFloat");
-    return nrrdTypeFloat;
-  }
-}
-
-
 
 } // End namespace SCITeem
 
