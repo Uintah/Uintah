@@ -128,6 +128,8 @@ Properties::problemSetup(const ProblemSpecP& params)
   else
     throw InvalidValue("Mixing Model not supported" + mixModel, __FILE__, __LINE__);
   d_mixingModel->problemSetup(db);
+  if (d_calcEnthalpy)
+    d_H_air = d_mixingModel->getAdiabaticAirEnthalpy();
   // Read the mixing variable streams, total is noofStreams 0 
   d_numMixingVars = d_mixingModel->getNumMixVars();
   d_numMixStatVars = d_mixingModel->getNumMixStatVars();
@@ -728,7 +730,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    h2o[currCell] = outStream.getH2O();
 	    enthalpyRXN[currCell] = outStream.getEnthalpy();
 // Uncomment the next line to check enthalpy transport in adiabatic case
-//	    enthalpyRXN[currCell] -= enthalpy[currCell];
+	    enthalpyRXN[currCell] -= enthalpy[currCell];
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	    if (d_steadyflamelet)
@@ -903,9 +905,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_cpINLabel);
     tsk->computes(d_lab->d_co2INLabel);
-    /*
     tsk->computes(d_lab->d_enthalpyRXNLabel);
-    */
     if (d_mixingModel->getNumRxnVars())
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
   }
@@ -1021,9 +1021,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     CCVariable<double> tempIN_new;
     CCVariable<double> cpIN_new;
     CCVariable<double> co2IN_new;
-    /*
     CCVariable<double> enthalpyRXN_new;
-    */
     CCVariable<double> reactScalarSrc_new;
     constCCVariable<double> solidTemp;
 
@@ -1060,11 +1058,9 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 			     matlIndex, patch);
       co2IN_new.copyData(co2IN);
 
-      /*
       new_dw->allocateAndPut(enthalpyRXN_new, d_lab->d_enthalpyRXNLabel, 
 			     matlIndex, patch);
-      enthalpyRXN_new.copyData(enthalpyRXN);
-      */
+      enthalpyRXN_new.initialize(0.0);
 
       if (d_mixingModel->getNumRxnVars()) {
 	new_dw->allocateAndPut(reactScalarSrc_new, d_lab->d_reactscalarSRCINLabel,
@@ -1557,7 +1553,7 @@ Properties::averageRKProps(const ProcessorGroup*,
 	    else
 	    new_enthalpy[currCell] = fe_enthalpy[currCell];
 
-	  density_guess[currCell] = predicted_density;
+	  //density_guess[currCell] = predicted_density;
 
 	}
       }

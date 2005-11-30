@@ -93,6 +93,7 @@ namespace Uintah {
     const VarLabel* maxuxplus_out;
     const VarLabel* avuxplus_in;
     const VarLabel* avuxplus_out;
+    const VarLabel* negativeDensityGuess;
 
 
     TimeIntegratorLabel(const ArchesLabel* lab, 
@@ -137,6 +138,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplus_label;
 	    avuxplus_in = lab->d_avUxplus_label;
 	    avuxplus_out = lab->d_avUxplus_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
 	  break;
 
 	  case TimeIntegratorStepType::FE:
@@ -176,6 +178,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplus_label;
 	    avuxplus_in = lab->d_avUxplus_label;
 	    avuxplus_out = lab->d_avUxplus_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
 	  break;
 
 	  case TimeIntegratorStepType::Predictor:
@@ -215,6 +218,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplusPred_label;
 	    avuxplus_in = lab->d_avUxplus_label;
 	    avuxplus_out = lab->d_avUxplusPred_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuessPred_label;
 	  break;
 
 	  case TimeIntegratorStepType::OldPredictor:
@@ -254,6 +258,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplusPred_label;
 	    avuxplus_in = lab->d_avUxplus_label;
 	    avuxplus_out = lab->d_avUxplusPred_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuessPred_label;
 	  break;
 
 	  case TimeIntegratorStepType::Corrector:
@@ -293,6 +298,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplus_label;
 	    avuxplus_in = lab->d_avUxplusPred_label;
 	    avuxplus_out = lab->d_avUxplus_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
 	  break;
 
 	  case TimeIntegratorStepType::OldCorrector:
@@ -332,6 +338,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplus_label;
 	    avuxplus_in = lab->d_avUxplusPred_label;
 	    avuxplus_out = lab->d_avUxplus_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
 	  break;
 
 	  case TimeIntegratorStepType::CorrectorRK3:
@@ -371,6 +378,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplus_label;
 	    avuxplus_in = lab->d_avUxplusInterm_label;
 	    avuxplus_out = lab->d_avUxplus_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
 	  break;
 
 	  case TimeIntegratorStepType::Intermediate:
@@ -410,6 +418,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplusInterm_label;
 	    avuxplus_in = lab->d_avUxplusPred_label;
 	    avuxplus_out = lab->d_avUxplusInterm_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuessInterm_label;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation1:
@@ -449,6 +458,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplusPred_label;
 	    avuxplus_in = lab->d_avUxplus_label;
 	    avuxplus_out = lab->d_avUxplusPred_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuessPred_label;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation2:
@@ -488,6 +498,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplusInterm_label;
 	    avuxplus_in = lab->d_avUxplusPred_label;
 	    avuxplus_out = lab->d_avUxplusInterm_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuessInterm_label;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation3:
@@ -527,6 +538,7 @@ namespace Uintah {
 	    maxuxplus_out = lab->d_maxUxplus_label;
 	    avuxplus_in = lab->d_avUxplusInterm_label;
 	    avuxplus_out = lab->d_avUxplus_label;
+	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
 	  break;
 
 	  default: 

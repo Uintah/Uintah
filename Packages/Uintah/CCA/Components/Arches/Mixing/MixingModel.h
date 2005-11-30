@@ -99,6 +99,7 @@ public:
       virtual int getNumMixVars() const = 0; // Get number of mixing variables
       virtual int getNumMixStatVars() const = 0;
       virtual int getNumRxnVars() const = 0;
+      virtual double getAdiabaticAirEnthalpy() const = 0;
 
       virtual bool getCOOutput() const = 0;
       virtual bool getSulfurChem() const = 0;

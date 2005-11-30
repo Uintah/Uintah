@@ -113,6 +113,10 @@ public:
 	return d_numRxnVars;
       }
 
+      inline double getAdiabaticAirEnthalpy() const{
+	return d_H_air;
+      }
+
       inline bool getCOOutput() const{
 	return 0;
       }
