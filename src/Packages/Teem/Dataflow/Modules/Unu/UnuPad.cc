@@ -217,13 +217,13 @@ UnuPad::execute()
 	(last_pad_style_ == "Wrap" &&
 	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryWrap)) ||
 	(last_pad_style_ == "Pad" &&
-	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryPad, last_pad_value_)) ) {
-
+	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryPad, last_pad_value_)) )
+    {
 	char *err = biffGetDone(NRRD);
 	error(string("Trouble resampling: ") + err);
 	msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
 	free(err);
-      }
+    }
 
     NrrdData *nrrd = scinew NrrdData;
     nrrd->nrrd = nout;
@@ -232,7 +232,8 @@ UnuPad::execute()
     // Copy the properies, kinds, and labels.
     nrrd->copy_properties(nrrdH.get_rep());
 
-    for( int i=0; i<nin->dim; i++ ) {
+    for( int i=0; i<nin->dim; i++ )
+    {
       nout->axis[i].kind  = nin->axis[i].kind;
       nout->axis[i].label = nin->axis[i].label;
     }
@@ -245,10 +246,10 @@ UnuPad::execute()
       nout->axis[0].kind = nrrdKindDomain;
   }
 
-
   if (last_nrrdH_.get_rep())
   {
     NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
     onrrd->send_and_dereference(last_nrrdH_, true);
   }
 }
+
