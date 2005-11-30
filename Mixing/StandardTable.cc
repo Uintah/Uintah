@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Core/Math/MiscMath.h>
 #include <math.h>
 #include <stdio.h>
 #include <iostream>
@@ -171,7 +172,8 @@ StandardTable::computeProps(const InletStream& inStream,
 	  exit (1);
 	}
 
-        if (inStream.d_initEnthalpy)
+        if ((inStream.d_initEnthalpy)||
+	   (Abs(adiab_enthalpy-enthalpy)/Abs(adiab_enthalpy) < 1.0e-5))
           	current_heat_loss = zero_heat_loss;
         else
   		current_heat_loss=(adiab_enthalpy-enthalpy)/(sensible_enthalpy+small);
