@@ -65,7 +65,6 @@
 // FData classes
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
-#include <Core/Containers/FData.h>
 
 
 // Basis classes
@@ -103,6 +102,8 @@
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
+
+#include <Core/Containers/FData.h>
 
 // Field class files
 #include <Core/Datatypes/Field.h>
