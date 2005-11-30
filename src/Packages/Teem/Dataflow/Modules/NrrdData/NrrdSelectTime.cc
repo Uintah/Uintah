@@ -159,13 +159,14 @@ NrrdSelectTime::send_selection(NrrdDataHandle in,
   onrrd_handle->copy_properties(in.get_rep());
 
   onrrd->set_cache( cache );
-  onrrd->send(onrrd_handle);
+  onrrd->send_and_dereference(onrrd_handle);
 
 
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
 
-  osel->send(MatrixHandle(selected));
+  MatrixHandle stmp(selected);
+  osel->send_and_dereference(stmp);
 }
 
 
