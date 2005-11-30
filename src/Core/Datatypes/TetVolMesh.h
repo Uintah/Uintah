@@ -59,6 +59,7 @@
 #include <sgi_stl_warnings_off.h>
 #include   <vector>
 #include   <set>
+#include   <cmath>
 #include <sgi_stl_warnings_on.h>
 
 #include <float.h> // for DBL_MAX
@@ -2414,7 +2415,7 @@ TetVolMesh<Basis>::compute_grid()
   {
     // Cubed root of number of cells to get a subdivision ballpark.
     typename Cell::size_type csize;  size(csize);
-    const int s = (int)(ceil(pow((double)csize , (1.0/3.0)))) / 2 + 1;
+    const int s = (int)(ceil(std::pow((double)csize , (1.0/3.0)))) / 2 + 1;
     const Vector cell_epsilon = bb.diagonal() * (1.0e-4 / s);
     bb.extend(bb.min() - cell_epsilon*2);
     bb.extend(bb.max() + cell_epsilon*2);
