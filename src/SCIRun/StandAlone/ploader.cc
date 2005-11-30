@@ -49,7 +49,6 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <sci_mpi.h>
-#include <sci_defs/qt_defs.h>
 
 using namespace std;
 using namespace SCIRun;
