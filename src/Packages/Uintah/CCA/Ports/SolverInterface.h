@@ -16,16 +16,23 @@ namespace Uintah {
   class VarLabel;
   class SolverParameters {
   public:
-    SolverParameters() : solveOnExtraCells(false) {}
+    SolverParameters() : solveOnExtraCells(false), residualNormalization(1) {}
     void setSolveOnExtraCells(bool s) {
       solveOnExtraCells = s;
     }
     bool getSolveOnExtraCells() const {
       return solveOnExtraCells;
     }
+    void setResidualNormalizationFactor(double s) {
+      residualNormalization = s;
+    }
+    double getResidualNormalizationFactor() const {
+      return residualNormalization;
+    }
     virtual ~SolverParameters();
   private:
     bool solveOnExtraCells;
+    double residualNormalization;
   };
   
   class SolverInterface : public UintahParallelPort {
