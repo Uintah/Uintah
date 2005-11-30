@@ -265,7 +265,8 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
                                         const MPMMaterial* matl,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
-  //___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
+  //___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES
+  //__________________________________ IN A GIVEN PATCH FOR A GIVEN MATERIAL
   //___________________________________CALLED ONCE PER TIME STEP
   //___________________________________CONTAINS A COPY OF computeStableTimestep
 {
@@ -279,7 +280,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Matrix3 Identity;
-    Matrix3 rightCauchyGreentilde_new, leftCauchyGreentilde_new;
+    Matrix3 RCG_tilde, LCG_tilde;
     Matrix3 pressure, deviatoric_stress, fiber_stress;
     double I1tilde,I2tilde,I4tilde,lambda_tilde;
     double dWdI4tilde, d2WdI4tilde2;
@@ -306,9 +307,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass,pvolume;
-    ParticleVariable<double> pvolume_deformed;
-    ParticleVariable<double> stretch;
-    ParticleVariable<double> fail;
+    ParticleVariable<double> fail,pdTdt,stretch,pvolume_deformed;
     constParticleVariable<double> fail_old;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> pfiberdir;
@@ -323,8 +322,9 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pfiberdir,           lb->pFiberDirLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(fail_old,            pFailureLabel,                pset);//fail
+    old_dw->get(fail_old,            pFailureLabel,                pset);
     old_dw->get(psize,               lb->pSizeLabel,               pset);
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
@@ -332,12 +332,9 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
+    new_dw->allocateAndPut(fail,             pFailureLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
     new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-    new_dw->allocateAndPut(fail,             pFailureLabel_preReloc,     pset);//fail
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);//internal heating rate
     //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
     double c1 = d_initialData.c1;
@@ -387,168 +384,161 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       // carry forward fiber direction
       pfiberdir_carry[idx] = pfiberdir[idx];
-      deformed_fiber_vector =pfiberdir[idx]; // not actually deformed yet
 
       //_______________________UNCOUPLE DEVIATORIC AND DILATIONAL PARTS
       //_______________________Ftilde=J^(-1/3)*F
       //_______________________Fvol=J^1/3*Identity
 
       //_______________________right Cauchy Green (C) tilde and invariants
-      rightCauchyGreentilde_new = deformationGradient_new[idx].Transpose()
-        * deformationGradient_new[idx]*pow(J,-(2./3.));
-      I1tilde = rightCauchyGreentilde_new.Trace();
-      I2tilde = .5*(I1tilde*I1tilde -
-                 (rightCauchyGreentilde_new*rightCauchyGreentilde_new).Trace());
-      I4tilde = Dot(deformed_fiber_vector,
-                    (rightCauchyGreentilde_new*deformed_fiber_vector));
+      Matrix3 RCG = deformationGradient_new[idx].Transpose()*
+                    deformationGradient_new[idx];
+      RCG_tilde = RCG*pow(J,-(2./3.));
+
+      I1tilde = RCG_tilde.Trace();
+      I2tilde = .5*(I1tilde*I1tilde - (RCG_tilde*RCG_tilde).Trace());
+      I4tilde = Dot(pfiberdir[idx],(RCG_tilde*pfiberdir[idx]));
       lambda_tilde = sqrt(I4tilde);
       double I4 = I4tilde*pow(J,(2./3.));// For diagnostics only
       stretch[idx] = sqrt(I4);
-      deformed_fiber_vector = deformationGradient_new[idx]*deformed_fiber_vector
+
+
+      deformed_fiber_vector = deformationGradient_new[idx]*pfiberdir[idx]
         *(1./lambda_tilde*pow(J,-(1./3.)));
       Matrix3 DY(deformed_fiber_vector,deformed_fiber_vector);
+      Matrix3 leftCauchyGreentilde_new = deformationGradient_new[idx]
+        * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
+
 
       //________________________________left Cauchy Green (B) tilde
-      leftCauchyGreentilde_new = deformationGradient_new[idx]
+      LCG_tilde = deformationGradient_new[idx]
         * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
 
       //________________________________strain energy derivatives
-      if (lambda_tilde < 1.)
-        {dWdI4tilde = 0.;
+      if (lambda_tilde < 1.){
+        dWdI4tilde = 0.;
         d2WdI4tilde2 = 0.;
         shear = 2.*c1+c2;
-        }
-      else
-        if (lambda_tilde < lambda_star)
-          {
-            dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)
-              /lambda_tilde/lambda_tilde;
-            d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
-               -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
-              /(lambda_tilde*lambda_tilde*lambda_tilde);
+      }
+      else{
+        double lam_til_sq=lambda_tilde*lambda_tilde;
+        double lam_til_cub=lam_til_sq*lambda_tilde;
+        if (lambda_tilde < lambda_star) {
+           dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)/lam_til_sq;
+           d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
+              -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))/lam_til_cub;
 
-            shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
-                                      -2.*dWdI4tilde*lambda_tilde);
-          }
-        else
-          {
-            dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
-            d2WdI4tilde2 = -0.25*c6
-              /(lambda_tilde*lambda_tilde*lambda_tilde*lambda_tilde);
-            shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
-                                      -2.*dWdI4tilde*lambda_tilde);
-          }
+        }
+        else {
+           double lam_til_4th=lam_til_sq*lam_til_sq;
+           dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
+           d2WdI4tilde2 = -0.25*c6/lam_til_4th;
+        }
+        shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lam_til_sq
+                                 -2.*dWdI4tilde*lambda_tilde);
+      }
 
       // Compute deformed volume and local wave speed
       double rho_cur = rho_orig/J;
       pvolume_deformed[idx]=pmass[idx]/rho_cur;
       c_dil = sqrt((Bulk+1./3.*shear)/rho_cur);
+      p = Bulk*log(J)/J; // p -= qVisco;
+      if (p >= -1.e-5 && p <= 1.e-5){
+          p = 0.;
+      }
 
       // Compute bulk viscosity
-      /*
-      double qVisco = 0.0;
-      if (flag->d_artificial_viscosity) {
-        Matrix3 tensorD = (velGrad + velGrad.Transpose())*0.5;
-        double Dkk = tensorD.Trace();
-        double c_bulk = sqrt(Bulk/rho_cur);
-        qVisco = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
-      }
-      */
       //________________________________Failure and stress terms
       fail[idx] = 0.;
-      if (failure == 1)
-        {double matrix_failed = 0.;
+      if (failure != 1){
+        deviatoric_stress = (LCG_tilde*(c1+c2*I1tilde)
+             - LCG_tilde*LCG_tilde*c2
+             - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
+        fiber_stress = (DY - Identity*(1./3.))*(2./J)*dWdI4tilde*I4tilde;
+
+        p = Bulk*log(J)/J; // p -= qVisco;
+        if (p >= -1.e-5 && p <= 1.e-5){
+            p = 0.;
+        }
+      }
+      else {
+        double matrix_failed = 0.;
         double fiber_failed = 0.;
-        //________________________________Mooney Rivlin deviatoric term +failure of matrix
-        Matrix3 RCG;
-        RCG = deformationGradient_new[idx].Transpose()*deformationGradient_new[idx];
+        //________     _______Mooney Rivlin deviatoric term +failure of matrix
         double e1,e2,e3;//eigenvalues of C=symm.+pos.def.->Dis<=0
-        double Q,R,Dis;
         double pi = 3.1415926535897932384;
         double I1 = RCG.Trace();
         double I2 = .5*(I1*I1 -(RCG*RCG).Trace());
         double I3 = RCG.Determinant();
-        Q = (1./9.)*(3.*I2-pow(I1,2));
-        R = (1./54.)*(-9.*I1*I2+27.*I3+2.*pow(I1,3));
-        Dis = pow(Q,3)+pow(R,2);
-        if (Dis <= 1.e-5 && Dis >= 0.)
-          {if (R >= -1.e-5 && R<= 1.e-5)
+        double Q = (1./9.)*(3.*I2-pow(I1,2));
+        double R = (1./54.)*(-9.*I1*I2+27.*I3+2.*pow(I1,3));
+        double Dis = pow(Q,3)+pow(R,2);
+        if (Dis <= 1.e-5 && Dis >= 0.){
+           if (R >= -1.e-5 && R<= 1.e-5){
             e1 = e2 = e3 = I1/3.;
-          else
-            {
+            }
+          else {
               e1 = 2.*pow(R,1./3.)+I1/3.;
               e3 = -pow(R,1./3.)+I1/3.;
               if (e1 < e3) swap(e1,e3);
               e2=e3;
             }
-          }
-        else
-          {double theta = acos(R/pow(-Q,3./2.));
+        }
+        else{
+          double theta = acos(R/pow(-Q,3./2.));
           e1 = 2.*pow(-Q,1./2.)*cos(theta/3.)+I1/3.;
           e2 = 2.*pow(-Q,1./2.)*cos(theta/3.+2.*pi/3.)+I1/3.;
           e3 = 2.*pow(-Q,1./2.)*cos(theta/3.+4.*pi/3.)+I1/3.;
           if (e1 < e2) swap(e1,e2);
           if (e1 < e3) swap(e1,e3);
           if (e2 < e3) swap(e2,e3);
-          };
+        }
         double max_shear_strain = (e1-e3)/2.;
-        if (max_shear_strain > crit_shear || fail_old[idx]== 1.0 || fail_old[idx] == 3.0)
-          {deviatoric_stress = Identity*0.;
+        if (max_shear_strain > crit_shear || fail_old[idx]== 1.0 
+                                          || fail_old[idx] == 3.0){
+          deviatoric_stress = Identity*0.;
           fail[idx] = 1.;
           matrix_failed = 1.;
-          }
-        else
-         {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
-               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+        }
+        else{
+           deviatoric_stress = (LCG_tilde*(c1+c2*I1tilde)
+               - LCG_tilde*LCG_tilde*c2
                - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
-          }
+        }
         //________________________________fiber stress term + failure of fibers
-        if (stretch[idx] > crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
-          {fiber_stress = Identity*0.;
+        if (stretch[idx] > crit_stretch || fail_old[idx] == 2.
+                                        || fail_old[idx] == 3.) {
+          fiber_stress = Identity*0.;
           fail[idx] = 2.;
           fiber_failed =1.;
-          }
-        else
-          {fiber_stress = (DY*dWdI4tilde*I4tilde
-                           - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
-          }
-        if ( (matrix_failed + fiber_failed) == 2. || fail_old[idx] == 3.)
-          fail[idx] = 3.;
-        //________________________________hydrostatic pressure term
-        if (fail[idx] == 1.0 ||fail[idx] == 3.0)
-          pressure = Identity*0.;
-        else
-          {
-            p = Bulk*log(J)/J; // p -= qVisco;
-            if (p >= -1.e-5 && p <= 1.e-5)
-              p = 0.;
-            pressure = Identity*p;
-          }
-        //_______________________________Cauchy stress
-        pstress[idx] = pressure + deviatoric_stress + fiber_stress;
         }
-      else
-        {
-          deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
-               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
-               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
+        else{
           fiber_stress = (DY*dWdI4tilde*I4tilde
-                          - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
-          p = Bulk*log(J)/J; // p -= qVisco;
-          if (p >= -1.e-5 && p <= 1.e-5)
-            p = 0.;
-          pressure = Identity*p;
-          //Cauchy stress
-          pstress[idx] = pressure + deviatoric_stress + fiber_stress;
+                           - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
         }
+        if ( (matrix_failed + fiber_failed) == 2. || fail_old[idx] == 3.){
+          fail[idx] = 3.;
+        }
+        //________________________________hydrostatic pressure term
+        if (fail[idx] == 1.0 || fail[idx] == 3.0){
+          pressure = Identity*p;
+        }
+        //_______________________________Cauchy stress
+      }
+
+      pressure = Identity*p;
+      //Cauchy stress
+      pstress[idx] = pressure + deviatoric_stress + fiber_stress;
       //________________________________end stress
+
 
       // Compute the strain energy for all the particles
       U = .5*log(J)*log(J)*Bulk;
-      if (lambda_tilde < lambda_star)
+      if (lambda_tilde < lambda_star){
         W = c1*(I1tilde-3.)+c2*(I2tilde-3.)+(exp(c4*(lambda_tilde-1.)-1.))*c3;
-      else
-        W = c1*(I1tilde-3.)+c2*(I2tilde-3.)+c5*lambda_tilde+c6*log(lambda_tilde);
+      }
+      else{
+        W =c1*(I1tilde-3.)+c2*(I2tilde-3.)+c5*lambda_tilde+c6*log(lambda_tilde);
+      }
 
       double e = (U + W)*pvolume_deformed[idx]/J;
 
