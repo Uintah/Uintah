@@ -35,7 +35,6 @@ public:
   GageProbe(SCIRun::GuiContext *ctx);
   virtual ~GageProbe();
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
 
 private:
   NrrdIPort* inrrd_;
@@ -91,8 +90,11 @@ GageProbe::GageProbe(SCIRun::GuiContext *ctx)
   printf("result is %s\n", result.c_str());
 }
 
-GageProbe::~GageProbe(){
+
+GageProbe::~GageProbe()
+{
 }
+
 
 void
 GageProbe::execute()
@@ -358,17 +360,15 @@ GageProbe::execute()
   //send the nrrd to the output
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  onrrd_->send(NrrdDataHandle(nrrd));
+  NrrdDataHandle ntmp(nrrd);
+  onrrd_->send_and_dereference(ntmp);
 }
 
-void GageProbe::setGageKind(gageKind *& kind, gageKind *newkind){
-  kind = newkind;
-}
 
 void
- GageProbe::tcl_command(GuiArgs& args, void* userdata)
+GageProbe::setGageKind(gageKind *& kind, gageKind *newkind)
 {
-  Module::tcl_command(args, userdata);
+  kind = newkind;
 }
 
 } //End namespace SCITeem
