@@ -170,7 +170,7 @@ UnuRmapN::execute()
   out->copy_properties(nrrd_handle.get_rep());
 
   NrrdOPort *onrrd = (NrrdOPort *)get_oport("OutputNrrd");
-  onrrd->send(out);
+  onrrd->send_and_dereference(out);
 }
 
 

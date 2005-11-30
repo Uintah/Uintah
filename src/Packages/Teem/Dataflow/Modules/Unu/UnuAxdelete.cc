@@ -115,7 +115,7 @@ UnuAxdelete::execute()
     // Copy the properties.
     out->copy_properties(nrrd_handle.get_rep());
     
-    onrrd_->send(out);
+    onrrd_->send_and_dereference(out);
   } else {
 
     if (nrrdAxesDelete(nout, nin, axis)) {
@@ -143,10 +143,10 @@ UnuAxdelete::execute()
 	nout->axis[i-offset].kind = nin->axis[i].kind;
     }
 
-    onrrd_->send(out);
+    onrrd_->send_and_dereference(out);
   }
-
 }
+
 
 } // End namespace SCITeem
 

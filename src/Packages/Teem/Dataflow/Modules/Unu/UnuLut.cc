@@ -54,8 +54,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
   NrrdIPort*      inrrd_;
   NrrdIPort*      ilut_;
@@ -165,14 +163,9 @@ void
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send(out);
+  onrrd_->send_and_dereference(out);
 }
 
-void
- UnuLut::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 unsigned int
 UnuLut::get_type(string type) {

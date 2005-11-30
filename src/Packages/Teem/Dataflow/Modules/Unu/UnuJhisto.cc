@@ -55,8 +55,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   NrrdIPort*      weight_;
   NrrdIPort*      inrrd1_;
   NrrdOPort*      onrrd_;
@@ -176,7 +174,8 @@ void
   }
 
 
-  if( need_execute) {
+  if( need_execute || !last_nrrdH_.get_rep())
+  {
     // Determine the number of bins given
     string bins = bins_.get();
     int binsLen = 0;
@@ -437,15 +436,10 @@ void
     delete max;
     
   }
-  onrrd_->send(last_nrrdH_);
-}
-  
-void
-  UnuJhisto::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  onrrd_->send_and_dereference(last_nrrdH_, true);
 }
 
+  
 unsigned int 
 UnuJhisto::get_type(const string &type) {
   if (type == "nrrdTypeChar") 

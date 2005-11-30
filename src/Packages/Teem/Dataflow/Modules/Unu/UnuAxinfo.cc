@@ -188,15 +188,15 @@ void UnuAxinfo::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  
+
   NrrdDataHandle out(nrrd);
   
   // Copy the properties.
   out->copy_properties(nh.get_rep());
   
-  oport->send(out);
-
+  oport->send_and_dereference(out);
 }
+
 
 } // end SCITeem namespace
 

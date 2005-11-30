@@ -298,7 +298,10 @@ UnuCrop::execute()
     }
   }
 
-  if( update ) {
+  if( update ||
+      !last_nrrdH_.get_rep() ||
+      !last_matrixH_.get_rep())
+  {
     Nrrd *nin = nrrdH->nrrd;
     Nrrd *nout = nrrdNew();
 
@@ -371,13 +374,13 @@ UnuCrop::execute()
   if (last_nrrdH_.get_rep())
   {
     NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
-    onrrd->send(last_nrrdH_);
+    onrrd->send_and_dereference(last_nrrdH_, true);
   }
 
   if (last_matrixH_.get_rep())
   {
     MatrixOPort* omatrix = (MatrixOPort *)get_oport("Selected Index");
-    omatrix->send( last_matrixH_ );
+    omatrix->send_and_dereference( last_matrixH_, true );
   }
 }
 

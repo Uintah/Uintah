@@ -100,7 +100,7 @@ UnuAxsplit::execute()
   // Copy the properties.
   out->copy_properties(nrrd_handle.get_rep());
 
-  onrrd_->send(out);
+  onrrd_->send_and_dereference(out);
 }
 
 } // End namespace SCITeem

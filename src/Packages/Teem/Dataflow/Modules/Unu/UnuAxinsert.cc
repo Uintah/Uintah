@@ -125,9 +125,9 @@ UnuAxinsert::execute()
   if (axis == nin->dim) 
     nout->axis[axis].kind = nrrdKindStub;
 
-  onrrd_->send(out);
-
+  onrrd_->send_and_dereference(out);
 }
+
 
 } // End namespace SCITeem
 

@@ -54,8 +54,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
   NrrdIPort*      inrrd_;
 
@@ -159,12 +157,6 @@ void
     return;
   }
 
-}
-
-void
- UnuSave::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace Teem

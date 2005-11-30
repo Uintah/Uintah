@@ -54,8 +54,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
@@ -179,12 +177,6 @@ void
   }
 
   onrrd_->send(out);
-}
-
-void
- UnuReshape::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace Teem

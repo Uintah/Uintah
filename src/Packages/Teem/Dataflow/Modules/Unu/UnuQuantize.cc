@@ -139,8 +139,9 @@ UnuQuantize::execute()
       last_minf_ == minf &&
       last_maxf_ == maxf &&
       last_nbits_ == nbits &&
-      last_nrrdH_.get_rep()) {
-    onrrd_->send(last_nrrdH_);
+      last_nrrdH_.get_rep())
+  {
+    onrrd_->send_and_dereference(last_nrrdH_, true);
     return;
   }
 
@@ -149,7 +150,6 @@ UnuQuantize::execute()
   nrrdH.detach(); 
 
   Nrrd *nin = nrrdH->nrrd;
-
 
   msgStream_ << "Quantizing -- min="<<minf<<
     " max="<<maxf<<" nbits="<<nbits<<endl;
@@ -168,6 +168,6 @@ UnuQuantize::execute()
   last_maxf_ = maxf;
   last_nbits_ = nbits;
   last_nrrdH_ = nrrd;
-  onrrd_->send(last_nrrdH_);
+  onrrd_->send_and_dereference(last_nrrdH_, true);
 }
 

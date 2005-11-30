@@ -219,9 +219,8 @@ UnuCmedian::execute()
       free(err);
       return;
     }
-    //nrrd_joined->nrrd->axis[0].label = airStrdup(nin->axis[0].label);
-    //nrrd_joined->copy_sci_data(*nrrd_handle.get_rep());
-    onrrd_->send(NrrdDataHandle(nrrd_joined));
+    NrrdDataHandle ntmp(nrrd_joined);
+    onrrd_->send_and_dereference(ntmp);
   } else {
     Nrrd *nout_filtered;
     nout_filtered = do_filter(nrrd_handle->nrrd);
@@ -231,8 +230,8 @@ UnuCmedian::execute()
     }
     NrrdData *nrrd_out = scinew NrrdData;
     nrrd_out->nrrd = nout_filtered;
-    //nrrd_out->copy_sci_data(*nrrd_handle.get_rep());
-    onrrd_->send(NrrdDataHandle(nrrd_out));
+    NrrdDataHandle ntmp(nrrd_out);
+    onrrd_->send_and_dereference(ntmp);
   }
 }
 
