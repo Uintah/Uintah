@@ -43,7 +43,6 @@
  *   Lorena Kreda, Northeastern University, November 2003
  */
 
-#include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
