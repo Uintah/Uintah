@@ -211,8 +211,6 @@ UnuCmedian::execute()
     }
     // Join the filtered nrrds along the first axis
     NrrdData *nrrd_joined = scinew NrrdData;
-    nrrd_joined->nrrd = nrrdNew();
-    
     if (nrrdJoin(nrrd_joined->nrrd, &out[0], out.size(), 0, 1)) {
       char *err = biffGetDone(NRRD);
       error(string("Join Error: ") +  err);
@@ -228,9 +226,7 @@ UnuCmedian::execute()
       error("Error filtering, returning");
       return;
     }
-    NrrdData *nrrd_out = scinew NrrdData;
-    nrrd_out->nrrd = nout_filtered;
-    NrrdDataHandle ntmp(nrrd_out);
+    NrrdDataHandle ntmp(scinew NrrdData(nout_filtered));
     onrrd_->send_and_dereference(ntmp);
   }
 }

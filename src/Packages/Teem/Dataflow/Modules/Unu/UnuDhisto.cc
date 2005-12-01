@@ -109,10 +109,7 @@ UnuDhisto::execute()
     }
   }
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
-
-  NrrdDataHandle out(nrrd);
+  NrrdDataHandle out(scinew NrrdData(nout));
   onrrd_->send_and_dereference(out);
 }
 

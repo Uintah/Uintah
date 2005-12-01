@@ -155,7 +155,6 @@ UnuQuantize::execute()
     " max="<<maxf<<" nbits="<<nbits<<endl;
   NrrdRange *range = nrrdRangeNew(minf, maxf);
   NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nrrdNew();
   if (nrrdQuantize(nrrd->nrrd, nin, range, nbits)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble quantizing: ") + err);

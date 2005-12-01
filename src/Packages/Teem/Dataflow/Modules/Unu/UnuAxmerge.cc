@@ -161,10 +161,7 @@ UnuAxmerge::execute()
 
   delete ax;
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout[1-ni];
-
-  NrrdDataHandle out(nrrd);
+  NrrdDataHandle out(scinew NrrdData(nout[1-ni]));
 
   // Copy the properties.
   out->copy_properties(nrrd_handle.get_rep());

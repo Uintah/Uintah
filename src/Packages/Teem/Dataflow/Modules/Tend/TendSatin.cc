@@ -99,13 +99,10 @@ TendSatin::execute()
     return;
   }
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
-
-  nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymMatrix;
+  nout->axis[0].kind = nrrdKind3DMaskedSymMatrix;
 
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-  NrrdDataHandle out(nrrd);
+  NrrdDataHandle out(scinew NrrdData(nout));
   onrrd_->send_and_dereference(out);
 }
 

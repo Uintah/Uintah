@@ -162,10 +162,7 @@ TendEvecRGB::execute()
   nout->axis[0].kind = nrrdKind3Vector;
   remark("nrrdKind changed to nrrdKind3Vector");
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
-
-  NrrdDataHandle ntmp(nrrd);
+  NrrdDataHandle ntmp(scinew NrrdData(nout));
   onrrd_->send_and_dereference(ntmp);
 }
 

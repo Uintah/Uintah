@@ -114,11 +114,8 @@ TendSim::execute()
   }
 
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
-
-  NrrdDataHandle out(nrrd);
-  onrrd_->send_and_dereference(out);
+  NrrdDataHandle ntmp(scinew NrrdData(nout));
+  onrrd_->send_and_dereference(ntmp);
 }
 
 } // End namespace SCITeem

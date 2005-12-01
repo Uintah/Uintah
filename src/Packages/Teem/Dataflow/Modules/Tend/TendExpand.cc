@@ -95,12 +95,9 @@ TendExpand::execute()
     return;
   }
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
+  nout->axis[0].kind = nrrdKind3DMatrix;
 
-  nrrd->nrrd->axis[0].kind = nrrdKind3DMatrix;
-
-  NrrdDataHandle out(nrrd);
+  NrrdDataHandle out(scinew NrrdData(nout));
   onrrd_->send_and_dereference(out);
 }
 

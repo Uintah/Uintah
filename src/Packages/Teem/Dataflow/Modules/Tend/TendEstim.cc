@@ -128,10 +128,9 @@ TendEstim::execute()
   nrrdNuke(dummy);
 
   nout->axis[0].kind = nrrdKind3DMaskedSymMatrix;
-  NrrdData *output = scinew NrrdData;
-  output->nrrd = nout;
-  NrrdDataHandle ntmp(output);
+  NrrdDataHandle ntmp(scinew NrrdData(nout));
   otens_->send_and_dereference(ntmp);
+
   update_state(Completed);
 }
 

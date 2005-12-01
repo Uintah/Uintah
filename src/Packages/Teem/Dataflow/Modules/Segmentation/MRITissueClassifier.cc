@@ -3538,14 +3538,13 @@ MRITissueClassifier::gaussian(const NrrdDataHandle &data, double sigma)
   info->type = data->nrrd->type;
   info->renormalize = AIR_TRUE;
   NrrdData *nrrd = scinew NrrdData;
-  if (nrrdSpatialResample(nrrd->nrrd=nrrdNew(), data->nrrd, info)) {
+  if (nrrdSpatialResample(nrrd->nrrd, data->nrrd, info)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") +  err);
     msgStream_ << "  input Nrrd: data->nrrd->dim=" << data->nrrd->dim << "\n";
     free(err);
   }
   nrrdResampleInfoNix(info); 
-  //nrrd->copy_sci_data(*data.get_rep());
   return nrrd;
 }
 
@@ -3974,7 +3973,6 @@ NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_ints(int x, int y, int z)
 {
   NrrdData *data = scinew NrrdData();
-  data->nrrd = nrrdNew();  
   if (nrrdAlloc(data->nrrd, nrrdTypeInt, 3, x, y, z)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble create_nrrd_of_ints: ") +  err);
@@ -3987,7 +3985,6 @@ NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_floats(int x, int y, int z) 
 {
   NrrdData *data = scinew NrrdData();
-  data->nrrd = nrrdNew();
   nrrdAlloc(data->nrrd, nrrdTypeFloat, 3, x, y, z);
   return data;
 }
@@ -4006,7 +4003,6 @@ NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_ints(int x, int y)
 {
   NrrdData *data = scinew NrrdData();
-  data->nrrd = nrrdNew();
   nrrdAlloc(data->nrrd, nrrdTypeInt, 2, x, y);
   return data;
 }
@@ -4015,7 +4011,6 @@ NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_floats(int x, int y) 
 {
   NrrdData *data = scinew NrrdData();
-  data->nrrd = nrrdNew();
   nrrdAlloc(data->nrrd, nrrdTypeFloat, 2, x, y);
   return data;
 }

@@ -490,9 +490,7 @@ NrrdSetupTexture::execute()
   }
   else
   {
-    NrrdData *nvnd = scinew NrrdData;
-    nvnd->nrrd = nvout;
-    NrrdDataHandle nvout_handle(nvnd);
+    NrrdDataHandle nvout_handle(scinew NrrdData(nvout));
 
     // Copy the properties
     nvout_handle->copy_properties(nin_handle.get_rep());
@@ -505,9 +503,7 @@ NrrdSetupTexture::execute()
   if (gmout)
   {
     // Create SCIRun data structure wrapped around gmout
-    NrrdData *gmnd = scinew NrrdData;
-    gmnd->nrrd = gmout;
-    NrrdDataHandle gmout_handle(gmnd);
+    NrrdDataHandle gmout_handle(scinew NrrdData(gmout));
 
     // Copy the properties
     gmout_handle->copy_properties(nin_handle.get_rep());

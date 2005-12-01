@@ -205,9 +205,7 @@ TendEpireg::execute()
     delete mat;
   }
 
-  NrrdData *output = scinew NrrdData;
-  output->nrrd = nout;
-  NrrdDataHandle ntmp(output);
+  NrrdDataHandle ntmp(scinew NrrdData(nout));
   onrrd_->send_and_dereference(ntmp);
 
   update_state(Completed);
