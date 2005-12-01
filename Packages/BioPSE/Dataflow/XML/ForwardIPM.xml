@@ -38,8 +38,11 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Invoke the NeuroFEM ipm program to solve the forward problem for the inputs.</summary>
+    <summary>Invoke the NeuroFEM ipm program to solve the forward
+problem for the inputs.</summary>
     <description>
+      <p>Invoke the NeuroFEM ipm program to solve the forward problem
+for the inputs.</p>
     </description>
   </overview>
   <io>
@@ -71,7 +74,4 @@
       </port>
     </outputs>
   </io>
-  
-  <testing>
-  </testing>
 </component>

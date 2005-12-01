@@ -38,11 +38,9 @@
       This module can be used to display the contents of a string.
     </summary>
     <description>
-      This module shows the contents of a string.
+      <p>This module shows the contents of a string.</p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -53,16 +51,5 @@
     <outputs>
     </outputs>
   </io>
-  <gui>
-    <description>
-      The string contents will be shown in the GUI.
-    </description>
-    <parameter>
-      <widget>Place Widget Name Here</widget>
-      <label>Place Label Name Here</label>
-    </parameter>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

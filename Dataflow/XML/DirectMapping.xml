@@ -38,12 +38,27 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>The DirectMapping module takes two Fields as input, the first of which, Source, contains geometry and data values; the second, Destination, contains geometry only. DirectMapping takes a field and finds data values for the destination geometry and outputs the resulting Field.</summary>
+    <summary>The DirectMapping module takes two Fields as input, the
+first of which, Source, contains geometry and data values; the second,
+Destination, contains geometry only. DirectMapping takes a field and
+finds data values for the destination geometry and outputs the
+resulting Field.</summary>
     <description>
       <p>
-        DirectMapping will find the corresponding data value in the Source for each node in the Destination Field. The data values can be stored at the nodes, cells, edges, or faces of the mesh at either the input or output ports.  If the geometries of the input ports are different, the module will calculate data values for the Destination by interpolation.
+        DirectMapping will find the corresponding data value in the
+Source for each node in the Destination Field. The data values can be
+stored at the nodes, cells, edges, or faces of the mesh at either the
+input or output ports.  If the geometries of the input ports are
+different, the module will calculate data values for the Destination
+by interpolation.
       </p>
-<p> The DirectMapping GUI contains a check box for Enable Interpolation and Use Closest Element If Not Interpable.  The Enable Interpolation check box allows the user to select the option of interpolation.  The user can also select the option of choosing the closest element when a data value cannot be interpolated.  The Maximum Closeness option indicates the maximum distance between points of interpolation and data values.</p>
+      <p> The DirectMapping GUI contains a check box for Enable
+Interpolation and Use Closest Element If Not Interpable.  The Enable
+Interpolation check box allows the user to select the option of
+interpolation.  The user can also select the option of choosing the
+closest element when a data value cannot be interpolated.  The Maximum
+Closeness option indicates the maximum distance between points of
+interpolation and data values.</p>
     </description>
   </overview>
   <io>
@@ -64,20 +79,19 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
-<nets>
-<net id="DirectMapping">
-<title>DirectMapping Regression Test</title>
+  <nets>
+    <net id="DirectMapping">
+      <title>DirectMapping Regression Test</title>
 
-<p>SamplePlane is used to place a cutting plane through the utah torso
-model, and then the voltage values from the torso field are
+      <p>SamplePlane is used to place a cutting plane through the utah
+torso model, and then the voltage values from the torso field are
 interpolated onto this cutting plane.  The field boundary is also
 displayed for reference.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsData/DirectMapping.net.</p>
+      <p>This network can be found at
+src/nets/Modules/FieldsData/DirectMapping.net.</p>
 
-</net>
-</nets>
+    </net>
+  </nets>
 </component>
 

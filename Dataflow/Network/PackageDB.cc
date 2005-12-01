@@ -35,8 +35,6 @@
 
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/ComponentNode.h>
-#include <Dataflow/Network/PackageDBHandler.h>
-#include <Core/XMLUtil/StrX.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Containers/StringUtil.h>
@@ -53,23 +51,6 @@
 #include <vector>
 
 using namespace std;
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#  define IRIX
-#  pragma set woff 1375
-#endif
-
-#include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/sax/SAXException.hpp>
-#include <xercesc/sax/SAXParseException.hpp>
-#include <xercesc/parsers/XercesDOMParser.hpp>
-#include <xercesc/dom/DOMNamedNodeMap.hpp>
-#include <xercesc/sax/ErrorHandler.hpp>
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#  pragma reset woff 1375
-#endif
-
 #include <sys/stat.h>
 
 #ifdef __APPLE__
@@ -95,8 +76,8 @@ namespace SCIRun {
   } package;
 
   typedef std::map<int,char*>::iterator char_iter;
-  typedef std::map<int,inport_node*>::iterator inport_iter;
-  typedef std::map<int,outport_node*>::iterator outport_iter;
+//  typedef std::map<int,inport_node*>::iterator inport_iter;
+//  typedef std::map<int,outport_node*>::iterator outport_iter;
   typedef std::map<string,int>::iterator string_iter;
   typedef std::map<string,category*>::iterator category_iter;
   typedef std::map<string,ModuleInfo*>::iterator module_iter;
@@ -124,12 +105,12 @@ bool
 PackageDB::findMaker(ModuleInfo* moduleInfo)
 {
   string cat_bname, pak_bname;
-  if(moduleInfo->packageName == "SCIRun") {
+  if(moduleInfo->package_name_ == "SCIRun") {
     cat_bname = "Dataflow_Modules_";
     pak_bname = "Dataflow";
   } else {
-    cat_bname = "Packages_" + moduleInfo->packageName + "_Dataflow_Modules_";
-    pak_bname = "Packages_" + moduleInfo->packageName + "_Dataflow";
+    cat_bname = "Packages_" + moduleInfo->package_name_ + "_Dataflow_Modules_";
+    pak_bname = "Packages_" + moduleInfo->package_name_ + "_Dataflow";
   }
   string errstr;
 
@@ -140,8 +121,8 @@ PackageDB::findMaker(ModuleInfo* moduleInfo)
 
   // If package is FieldsChoose, FieldsCreate, FieldsHandle Fields Packages,
   // or UnuA-M, UnuN-Z
-  string cat_name = moduleInfo->categoryName;
-  if((cat_name.substr(0, 6) == "Fields")&&(moduleInfo->packageName == "SCIRun"))
+  string cat_name = moduleInfo->category_name_;
+  if((cat_name.substr(0, 6) == "Fields")&&(moduleInfo->package_name_ == "SCIRun"))
     { cat_name = "Fields"; }
   else if (cat_name.substr(0, 7) == "UnuAtoM") { cat_name = "Unu"; }
   else if (cat_name.substr(0, 7) == "UnuNtoZ") { cat_name = "Unu"; }
@@ -153,23 +134,23 @@ PackageDB::findMaker(ModuleInfo* moduleInfo)
 
 
   if (!category_so && !package_so) {
-    printMessage("Unable to load all of package '" + moduleInfo->packageName +
-		 "' (category '" + moduleInfo->categoryName + "' failed) :\n" 
+    printMessage("Unable to load all of package '" + moduleInfo->package_name_ +
+		 "' (category '" + moduleInfo->category_name_ + "' failed) :\n" 
 		 + errstr);
     return false;
   }
 
-  string makename = "make_" + moduleInfo->moduleName;
+  string makename = "make_" + moduleInfo->module_name_;
   if (category_so)
-    moduleInfo->maker = 
+    moduleInfo->maker_ = 
       (ModuleMaker)GetHandleSymbolAddress(category_so,makename.c_str());
-  if (!moduleInfo->maker && package_so)
-    moduleInfo->maker = 
+  if (!moduleInfo->maker_ && package_so)
+    moduleInfo->maker_ = 
       (ModuleMaker)GetHandleSymbolAddress(package_so,makename.c_str());
-  if (!moduleInfo->maker) {
+  if (!moduleInfo->maker_) {
     // the messages happen elsewere...
-    if (moduleInfo->optional != "true") {
-      printMessage("Unable to load module '" + moduleInfo->moduleName +
+    if (!moduleInfo->optional_) {
+      printMessage("Unable to load module '" + moduleInfo->module_name_ +
 		   "' :\n - can't find symbol '" + makename + "'\n");
     }
     return false;
@@ -191,18 +172,11 @@ PackageDB::loadPackage(bool resolve)
   category_iter ci;
   package_iter pi;
   string packageElt;
-  component_node* node = 0;
   int mod_count = 0;
-  string notset(NOT_SET);
+  string notset("notset");
   string packagePath;
 
   printMessage("Loading packages, please wait...");
-
-  //#ifdef __APPLE__
-  //  // A hack around a gcc (apple) init bug
-  //  GetLibrarySymbolAddress( "lib/libCore_Datatypes.dylib",
-  //			   "__ZN6SCIRun10CurveFieldINS_6TensorEE2ioERNS_9PiostreamE");
-  //#endif
 
   // the format of PACKAGE_PATH is a colon seperated list of paths to the
   // root(s) of package source trees.
@@ -291,68 +265,40 @@ PackageDB::loadPackage(bool resolve)
 
     new_package = new package;
     new_package->name = packageElt;
-    packages.insert(std::pair<int,
-		    package*>(packages.size(),new_package));
+    packages.insert(std::pair<int, package*>(packages.size(), new_package));
 
     mod_count += files->size();
 
-    for (char_iter i=files->begin();
-	 i!=files->end();
-	 i++) {
-      if (node) DestroyComponentNode(node);
-      node = CreateComponentNode(1);
-      ReadComponentNodeFromFile(node,(xmldir+"/"+(*i).second).c_str(), gui_);
+    for (char_iter i=files->begin(); i != files->end();  i++) 
+    {
+      new_module = new ModuleInfo;
+      new_module->package_name_ = packageElt;
+      new_module->maker_ = 0;
+      if (! read_component_file(*new_module, 
+				(xmldir+"/"+(*i).second).c_str())) 
+      {
+	printMessage("Unable to read or validate " + 
+		     xmldir+"/"+(*i).second + "\n  Module not loaded.\n");
+	continue;
+      }
 
-      if (notset==node->name||notset==node->category) continue;
-
-      ci = new_package->categories.find(string(node->category));
-      if (ci==new_package->categories.end()) {
+      ci = new_package->categories.find(new_module->category_name_);
+      if (ci==new_package->categories.end()) 
+      {
 	new_category = new category;
-	new_category->name = string(node->category);
+	new_category->name = new_module->category_name_;
 	new_package->categories.insert(std::pair<string,
-	  category*>(new_category->name,new_category));
+				       category*>(new_category->name, 
+						  new_category));
 	ci = new_package->categories.find(string(new_category->name));
       }
       
-      mi = (*ci).second->modules.find(string(node->name));
-      if (mi==(*ci).second->modules.end()) {
-	IPortInfo* ipinfo;
-	OPortInfo* opinfo;
-	new_module = new ModuleInfo;
-	new_module->moduleName = node->name;
-	new_module->categoryName = node->category;
-	new_module->optional = node->optional;
-	new_module->packageName = packageElt;
-	new_module->help_description = node->overview->description;
-	new_module->maker = 0;
-	new_module->uiFile = "not currently used";
-	new_module->iports = scinew std::map<int,IPortInfo*>;
-	new_module->oports = scinew std::map<int,OPortInfo*>;
-	new_module->lastportdynamic = node->io->lastportdynamic;
-	for (inport_iter i1 = node->io->inports->begin();
-	     i1!=node->io->inports->end();
-	     i1++) {
-	  ipinfo = scinew IPortInfo;
-	  ipinfo->name = string(((*i1).second)->name);
-	  ipinfo->datatype = string(((*i1).second)->datatype);
-	  ipinfo->maker = (iport_maker)0;
-	  new_module->iports->insert(
-	    std::pair<int,IPortInfo*>(new_module->iports->size(),
-					    ipinfo));
-	}
-	for (outport_iter i2 = node->io->outports->begin();
-	     i2!=node->io->outports->end();
-	     i2++) {
-	  opinfo = scinew OPortInfo;
-	  opinfo->name = string(((*i2).second)->name);
-	  opinfo->datatype = string(((*i2).second)->datatype);
-	  opinfo->maker = (oport_maker)0;
-	  new_module->oports->insert(
-	    std::pair<int,OPortInfo*>(new_module->oports->size(),
-					    opinfo));
-	}
+      mi = (*ci).second->modules.find(new_module->module_name_);
+      if (mi==(*ci).second->modules.end()) 
+      {
 	(*ci).second->modules.insert(std::pair<string,
-	   ModuleInfo*>(string(new_module->moduleName),new_module));
+				     ModuleInfo*>(new_module->module_name_,
+						  new_module));
       }
     }
   }
@@ -384,8 +330,8 @@ PackageDB::loadPackage(bool resolve)
 	    registerModule((*mi).second);
 	    numreg++;
 	  } else {
-	    string mname = (*mi).second->moduleName;
-	    if (((*mi).second)->optional != "true") {
+	    string mname = (*mi).second->module_name_;
+	    if (! ((*mi).second)->optional_) {
 	      printMessage("Unable to load module '" + mname +
 			   "' :\n - can't find symbol 'make_" + mname + "'");
 	    }
@@ -413,23 +359,23 @@ void
 PackageDB::registerModule(ModuleInfo* info) 
 {
   Package* package;
-  if(!db_->lookup(info->packageName,package))
+  if(!db_->lookup(info->package_name_,package))
     {
-      db_->insert(info->packageName,package=new Package);
-      packageList_.push_back( info->packageName );
+      db_->insert(info->package_name_,package=new Package);
+      packageList_.push_back( info->package_name_ );
     }
   
   Category* category;
-  if(!package->lookup(info->categoryName,category))
-    package->insert(info->categoryName,category=new Category);
+  if(!package->lookup(info->category_name_,category))
+    package->insert(info->category_name_,category=new Category);
   
   ModuleInfo* moduleInfo;
-  if(!category->lookup(info->moduleName,moduleInfo)) {
+  if(!category->lookup(info->module_name_,moduleInfo)) {
     moduleInfo=new ModuleInfo;
-    category->insert(info->moduleName,info);
+    category->insert(info->module_name_,info);
   } else cerr << "WARNING: Overriding multiply registered module "
-	      << info->packageName << "." << info->categoryName << "."
-	      << info->moduleName << "\n";  
+	      << info->package_name_ << "." << info->category_name_ << "."
+	      << info->module_name_ << "\n";  
 }
  
 Module*
@@ -458,40 +404,8 @@ PackageDB::instantiateModule(const string& packageName,
 	 << "." << categoryName << "." << moduleName << "\n";
     return 0;
   }
-  
-#if 0
-  // This was McQ's somewhat silly replacement for TCL's tclIndex/auto_path
-  // mechanism.  The idea was that there would be a path in the index.cc
-  // that pointed to a TCL file to source before instantiating a module
-  // of some particular class for the frist time -- sortof a TCL-end class
-  // constructor for the module's class.
-  // Steve understandably doesn't like new, fragile mechanisms where
-  // perfectly good old, traditional ones already exist, so he if0'd this
-  // away and added the "lappend auto_path" at package-load-time, above.
-  // This code is still here 'cause Some Day it might be nice to allow the
-  // source of the TCL files to be stored in the .so (as strings) and eval'd
-  // here.  This was the "faraway vision" that drove me to do things this way
-  // in the first place, but since that vision seems to have stalled
-  // indefinately in lieu of Useful Work, there's no reason not to use
-  // auto_path (except that it produces yet one more file to maintain).  And
-  // auto_path is useful if you write global f'ns and want to use them in lots
-  // of your modules -- auto_path nicely handles this whereas the code below
-  // doesn't handle it at all.
-  // Some day it might be nice to actually achieve the "package is one .so
-  // and that's all" vision, but not today.  :)
-  //                                                      -mcq 99/10/6
-  
-  if(moduleInfo->uiFile!="") {
-    string result;
-    if(!TCL::eval("source " + moduleInfo->uiFile , result)) {
-      cerr << "Can't source UI file " << moduleInfo->uiFile << "...\n";
-      cerr << "  TCL Error: " << result << "\n";
-    }
-    moduleInfo->uiFile="";                       // Don't do it again
-  }
-#endif
 
-  if(!moduleInfo->maker){
+  if(!moduleInfo->maker_){
     if(!findMaker(moduleInfo)){
       cerr << "ERROR: Cannot find maker for module: " << packageName 
 	   << "." << categoryName << "." << moduleName << "\n";
@@ -501,7 +415,7 @@ PackageDB::instantiateModule(const string& packageName,
 
   ASSERT(gui_);
   GuiContext* module_context = gui_->createContext(instanceName);
-  Module *module = (moduleInfo->maker)(module_context);
+  Module *module = (moduleInfo->maker_)(module_context);
   if(!module)
     return 0;
   
@@ -509,13 +423,13 @@ PackageDB::instantiateModule(const string& packageName,
   // If this module doesn't, then set it's package and category here.
   string unknown("unknown");
   if (unknown == module->packageName)
-    module->packageName=packageName;
+    module->packageName = packageName;
   if (unknown == module->categoryName)
-    module->categoryName=categoryName;
-
-  if (moduleInfo->help_description != "(null string)")
+    module->categoryName = categoryName;
+  
+  if (moduleInfo->help_description_ != "(null string)")
   {
-    module->description = moduleInfo->help_description;
+    module->description = moduleInfo->help_description_;
   }
   else
   {
@@ -523,7 +437,7 @@ PackageDB::instantiateModule(const string& packageName,
   }
 
   // copy other fields 
-  module->lastportdynamic = moduleInfo->lastportdynamic;
+  module->lastportdynamic = moduleInfo->last_port_dynamic_;
   
   return module;
 }

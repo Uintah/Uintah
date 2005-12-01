@@ -1089,6 +1089,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_uuid=no
   sci_required_vdt=no
   sci_required_vtk=no 
+  sci_required_xercesc=no
 
   plume_checked=no
 
@@ -1121,6 +1122,7 @@ case $1 in
     sci_required_lapack=yes
     sci_required_perl=yes
     sci_required_tools=yes
+    sci_required_xercesc=yes
   ;;
   Fusion)
   ;;
@@ -1134,6 +1136,7 @@ case $1 in
     sci_required_babel=yes
     sci_required_ncurses=yes
     sci_required_uuid=yes
+    sci_required_xercesc=yes
   ;;
   Plume)
     if test "$plume_checked" = "no"; then
@@ -1163,6 +1166,7 @@ case $1 in
     sci_required_oogl=yes
     sci_required_audio=yes 
     sci_required_teem=yes
+    sci_required_xercesc=yes
   ;;
   Insight)
     sci_required_insight=yes

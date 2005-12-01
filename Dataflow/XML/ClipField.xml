@@ -41,32 +41,32 @@
     <summary>Select a subset of a field.</summary>
     <description>
       <p>
-        The ClipField module clips out a subset of a field.  It does so by
-        preserving all of the elements in the input field that match the
-        clipping criteria.  By default this is every element who's center is
-        within the clipping widget or clipping field.  As a side
-        effect of this algorithm any degenerate non-element items in the input
-        field are discarded by the clip.
+        The ClipField module clips out a subset of a field.  It does
+so by preserving all of the elements in the input field that match the
+clipping criteria.  By default this is every element who's center is
+within the clipping widget or clipping field.  As a side effect of
+this algorithm any degenerate non-element items in the input field are
+discarded by the clip.
       </p>
       <p>
-        The module runs in one of two different modes.  If a field
-	is connected to the "Clip Field" port, the module will clip
-	the input field such that only those elements inside of the
-	clip field are preserved.  If no Clip Field is connected 
-	then the GUI widget is used to select which portion of the
-	input field to preserve.
+        The module runs in one of two different modes.  If a field is
+connected to the "Clip Field" port, the module will clip the input
+field such that only those elements inside of the clip field are
+preserved.  If no Clip Field is connected then the GUI widget is used
+to select which portion of the input field to preserve.
       </p>
       <p>
         The type of the field is preserved in the clip, as well as the
-        data values if possible.  Some field types are structured and
-        thus not clippable.  This includes the LatVolField, ImageField,
-        and Scanline field types.  There is an <modref package="SCIRun" name="Unstructure"/> module that
-        can be used to convert these fields to appropriately
-        unstructured versions before clipping.
+data values if possible.  Some field types are structured and thus not
+clippable.  This includes the LatVolField, ImageField, and Scanline
+field types.  There is an <modref package="SCIRun"
+name="Unstructure"/> module that can be used to convert these fields
+to appropriately unstructured versions before clipping.
       </p>
       <p>
 	Functional clipping has been deprecated from this module.  Use
-	the new and much faster <modref package="SCIRun" name="ClipByFunction"/> module if that is needed.
+the new and much faster <modref package="SCIRun"
+name="ClipByFunction"/> module if that is needed.
       </p>
     </description>
   </overview>
@@ -92,29 +92,30 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
-<nets>
-<net id="ClipField-mesh">
-<title>ClipField-mesh Regression Test</title>
+  <nets>
+    <net id="ClipField-mesh">
+      <title>ClipField-mesh Regression Test</title>
 
-<p>The ClipField module is used to extract a spherical input mesh from
-it's bounding <modref package="SCIRun" name="SampleLattice"/>.  The
-remaining cubes are the elements that the bounding box covers but that
-do not actually fall inside of the input field.</p>
+      <p>The ClipField module is used to extract a spherical input
+mesh from it's bounding <modref package="SCIRun"
+name="SampleLattice"/>.  The remaining cubes are the elements that the
+bounding box covers but that do not actually fall inside of the input
+field.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsCreate/ClipField-mesh.net.</p>
+      <p>This network can be found at
+src/nets/Modules/FieldsCreate/ClipField-mesh.net.</p>
 
-</net>
-<net id="ClipField-widget">
-<title>ClipField-widget Regression Test</title>
+    </net>
+    <net id="ClipField-widget">
+      <title>ClipField-widget Regression Test</title>
 
-<p>In this network the ClipField module widget is used to select a chunk
-of the input field for extraction.  Further editing could be done by
-hand.</p>
+      <p>In this network the ClipField module widget is used to select
+a chunk of the input field for extraction.  Further editing could be
+done by hand.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsCreate/ClipField-widget.net.</p>
+      <p>This network can be found at
+src/nets/Modules/FieldsCreate/ClipField-widget.net.</p>
 
-</net>
-</nets>
+    </net>
+  </nets>
 </component>

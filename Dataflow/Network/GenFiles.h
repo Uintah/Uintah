@@ -52,7 +52,7 @@ namespace SCIRun {
 // within the PSE source tree whose path is given
 // by "psepath".
 
-int GenComponent(component_node* node, char* package, char* psepath);
+int GenComponent(const ModuleInfo &mi, char* package, char* psepath);
 
 
 ///////////////////////////////

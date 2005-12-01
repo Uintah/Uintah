@@ -38,9 +38,10 @@
     <authors>
       <author>Robert Van Uitert</author>
     </authors>
-    <summary>Calculation of magnetic field at given detector points due to specificed dipoles. </summary>
+    <summary>Calculation of magnetic field at given detector points
+due to specificed dipoles. </summary>
     <description>
-      The modules calculates the magnetic field due to given dipoles at specified detector positions based on the Biot-Savart law.
+      <p>The modules calculates the magnetic field due to given dipoles at specified detector positions based on the Biot-Savart law.</p>
     </description>
   </overview>
   <io>
@@ -49,30 +50,32 @@
       <port>
 	<name>Electric Field</name>
 	<description>
-	  <p>Takes a handle to the field containing the electric field in the same geometry as the Conductivity Tensors port.</p>
+	  <p>Takes a handle to the field containing the electric field
+in the same geometry as the Conductivity Tensors port.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
 	<name>Conductivity Tensors</name>
 	<description>
-	  <p>Takes a handle to the field containing the conductivity tensors of the geometry.</p>
+	  <p>Takes a handle to the field containing the conductivity
+tensors of the geometry.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
 	<name>Dipole Sources</name>
 	<description>
-	  <p>Takes a handle to the field containing dipole positions and
-	  their moment values</p>
+	  <p>Takes a handle to the field containing dipole positions
+and their moment values</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
 	<name>Detector Locations</name>
 	<description>
-	  <p>Takes a handle to the field containing detector positions and
-	  their normalized orientations</p>
+	  <p>Takes a handle to the field containing detector positions
+and their normalized orientations</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
@@ -83,20 +86,19 @@
       <port>
 	<name>Magnetic Field</name>
 	<description>
-	  <p>Output Magnetic Field at detector point. PointCloud of Vectors.</p>
+	  <p>Output Magnetic Field at detector point. PointCloud of
+Vectors.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
         <name>Magnitudes</name>
 	<description>
-	  <p>Magnitudes of magnetic field in the detector directions.</p>
+	  <p>Magnitudes of magnetic field in the detector
+directions.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
   </io>
-  
-  <testing>
-  </testing>
 </component>

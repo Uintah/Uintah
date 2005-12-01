@@ -39,9 +39,10 @@
       <author>David Weinstein</author>
     </authors>
     <summary>
-      Change the Separating Surface into a QuadSurf
+      Change the Separating Surface into a QuadSurf.
     </summary>
     <description>
+      <p>Change the Separating Surface into a QuadSurf.</p>
     </description>
   </overview>
   <io>
@@ -58,6 +59,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>
