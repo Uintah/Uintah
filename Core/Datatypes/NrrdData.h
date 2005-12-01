@@ -57,6 +57,7 @@ public:
   Nrrd *nrrd;
 
   NrrdData();
+  NrrdData(Nrrd *nrrd);
   NrrdData(LockingHandle<Datatype> data_owner);
   NrrdData(const NrrdData&);
   virtual ~NrrdData();

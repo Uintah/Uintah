@@ -64,6 +64,15 @@ NrrdData::NrrdData() :
 }
 
 
+NrrdData::NrrdData(Nrrd *n) :
+  nrrd(n),
+  write_nrrd_(true),
+  embed_object_(false),
+  data_owner_(0)
+{
+}
+
+
 NrrdData::NrrdData(LockingHandle<Datatype> data_owner) : 
   nrrd(nrrdNew()),
   write_nrrd_(true),
@@ -74,10 +83,10 @@ NrrdData::NrrdData(LockingHandle<Datatype> data_owner) :
 
 
 NrrdData::NrrdData(const NrrdData &copy) :
+  nrrd(nrrdNew()),
   data_owner_(0),
   nrrd_fname_(copy.nrrd_fname_)
 {
-  nrrd = nrrdNew();
   nrrdCopy(nrrd, copy.nrrd);
 }
 
@@ -160,8 +169,8 @@ void NrrdData::io(Piostream& stream)
 	  nrrdNix(nrrd);
 	  data_owner_ = 0;
 	}
-	// Make sure we put a zero pointer in the fiedl. There is no nrrd
-	nrrd = 0;
+	// Make sure we put a zero pointer in the field. There is no nrrd
+	nrrd = nrrdNew();
       }
 
       // This is the old code, which needs some update in the way
@@ -186,7 +195,7 @@ void NrrdData::io(Piostream& stream)
 	nrrd_fname_ = path + nrrd_fname_.substr(2,nrrd_fname_.length());
       }
 
-      if (nrrdLoad(nrrd = nrrdNew(), nrrd_fname_.c_str(), 0)) 
+      if (nrrdLoad(nrrd, nrrd_fname_.c_str(), 0)) 
       {
 	// Need to upgade error reporting
 	char *err = biffGet(NRRD);
@@ -214,7 +223,6 @@ void NrrdData::io(Piostream& stream)
 	  nrrdNix(nrrd);
 	  data_owner_ = 0;
 	}
-	nrrd = 0;
       }
 
       // Create a new nrrd structure
