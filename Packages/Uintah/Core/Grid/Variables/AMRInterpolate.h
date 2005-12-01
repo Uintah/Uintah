@@ -5,9 +5,9 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/MiscMath.h>
-
 #include <sstream>
 using namespace std;
 
@@ -15,7 +15,7 @@ namespace Uintah {
 
 
 /*___________________________________________________________________
- Function~  AMRICE::piecewiseConstantInterpolation--
+ Function~ piecewiseConstantInterpolation--
  ____________________________________________________________________*/
 template<class T>
   void piecewiseConstantInterpolation(constCCVariable<T>& q_CL,// course level
@@ -32,7 +32,7 @@ template<class T>
 }
 
 /*___________________________________________________________________
- Function~  AMRICE::linearInterpolation--
+ Function~ linearInterpolation--
  
  X-Y PLANE 1
 
@@ -137,7 +137,7 @@ template<class T>
 }
 
 /*___________________________________________________________________
- Function~  AMRICE::QuadraticInterpolation--
+ Function~  QuadraticInterpolation--
  X-Y PLANE
                    x
            |     |----||
@@ -328,7 +328,7 @@ template<class T>
   }
 }
 /*___________________________________________________________________
- Function~  AMRICE::interpolationTest_helper--
+ Function~  interpolationTest_helper--
 _____________________________________________________________________*/
 template<class T>
   void interpolationTest_helper( CCVariable<T>& q_FineLevel,
