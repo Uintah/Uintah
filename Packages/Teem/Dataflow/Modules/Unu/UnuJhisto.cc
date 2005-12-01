@@ -138,8 +138,8 @@ UnuJhisto::execute()
   port_range_type nrange = get_iports("InputNrrd2");
   if (nrange.first == nrange.second) { return; }
 
-  vector<Nrrd*> nrrds;
-  nrrds.push_back(nrrd_handle1->nrrd);
+  vector<NrrdDataHandle> nrrds;
+  nrrds.push_back(nrrd_handle1);
 
   int max_dim = nin1->dim;
   port_map_type::iterator pi = nrange.first;
@@ -151,7 +151,7 @@ UnuJhisto::execute()
       if (nrrd->nrrd->dim > max_dim)
 	max_dim = nrrd->nrrd->dim;
       
-      nrrds.push_back(nrrd->nrrd);
+      nrrds.push_back(nrrd);
     }
     ++pi; 
   }
@@ -237,9 +237,11 @@ UnuJhisto::execute()
       }
       i++;
     }
-    
+
+    Nrrd **nrrds_array = scinew Nrrd *[nrrds.size()];
     NrrdRange **range = scinew NrrdRange *[nrrds.size()];
     for (unsigned int d = 0; d< nrrds.size(); d++) {
+      nrrds_array[d] = nrrds[d]->nrrd;
       range[d] = nrrdRangeNew(AIR_NAN, AIR_NAN);
     }
     
@@ -397,10 +399,11 @@ UnuJhisto::execute()
       }
     }
 
-    if (nrrdHistoJoint(nout, (const Nrrd**)&nrrds[0], range,
+    if (nrrdHistoJoint(nout, nrrds_array, range,
 		       (int)nrrds.size(), weight, bin,
                        string_to_nrrd_type(type_.get()), 
-		       clamp)) {
+		       clamp))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error performing Unu Jhisto: ") +  err);
       free(err);
@@ -412,7 +415,8 @@ UnuJhisto::execute()
     if (nrrds.size()) {
 
       if (airIsNaN(range[0]->min) || airIsNaN(range[0]->max)) {
-	NrrdRange *minmax = nrrdRangeNewSet(nrrds[0], nrrdBlind8BitRangeFalse);
+	NrrdRange *minmax = nrrdRangeNewSet(nrrds_array[0],
+                                            nrrdBlind8BitRangeFalse);
 	if (airIsNaN(range[0]->min)) range[0]->min = minmax->min;
 	if (airIsNaN(range[0]->max)) range[0]->max = minmax->max;
 	nrrdRangeNix(minmax);
@@ -427,6 +431,7 @@ UnuJhisto::execute()
       nrrdRangeNix(range[d]);
     }
     delete [] range;
+    delete [] nrrds_array;
 
     delete bin;
     delete min;
