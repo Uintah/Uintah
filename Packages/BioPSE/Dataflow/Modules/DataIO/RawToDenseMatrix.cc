@@ -165,8 +165,9 @@ void RawToDenseMatrix::execute(){
   handle_->set_property("time-start", start_.get(), true);
   handle_->set_property("time-end", end_.get(), true);
 
-  oport_->send(handle_);
+  oport_->send_and_dereference(handle_, true);
 }
+
 
 void
 RawToDenseMatrix::tcl_command(GuiArgs& args, void* userdata)
