@@ -28,7 +28,7 @@
 
 
 
-#package require Iwidgets 3.0
+package require Iwidgets 3.0
 
 proc ComponentWizard { {window .componentWizard} } {
     set w $window 
@@ -62,14 +62,14 @@ proc ComponentWizard { {window .componentWizard} } {
     wm withdraw $w; # immediately withdraw it to avoid flicker
 
     wm title $w "Component Wizard"
-    wm minsize .componentWizard 470 600
+    wm minsize .componentWizard 320 550
 
     # Override the 'destroy' button on the window decoration to just close the window.
     wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
 
     # Tab panel
     iwidgets::tabnotebook $w.tabs 
-    pack $w.tabs -padx $PADi -pady $PADi -fill both -expand yes
+    pack $w.tabs -fill both -expand yes
 
     # Horizontal separator
     frame $w.separator -height 2 -relief sunken -borderwidth 2
@@ -79,11 +79,6 @@ proc ComponentWizard { {window .componentWizard} } {
     frame $w.buttons
     pack $w.buttons -ipadx $PADi -ipady $PADi -fill x -expand no
 
-#    button $w.buttons.open -text "Open" 
-#    pack $w.buttons.open -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
-
-#    button $w.buttons.save -text "Save" -command "array set $d \[array get $tmpd\]"
-#    pack $w.buttons.save -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
 
     button $w.buttons.close -text "Close" -command "wm withdraw $w"
     button $w.buttons.help -text "Help" -command "showHelp"
@@ -97,13 +92,6 @@ proc ComponentWizard { {window .componentWizard} } {
     set overview [$w.tabs add -label "Description"]
     make_description_pane $overview $tmpd
 
-    # For now, under the 'simple is better' ideology, turn off the Implementation and Testing panes.
-    #set implementation [$w.tabs add -label "Implementation"]
-    #make_implementation_pane $implementation $tmpd
-    #
-    #set testing [$w.tabs add -label "Testing"]
-    #make_testing_pane $testing $tmpd
-    
     $w.tabs view "I/O"
 
     moveToCursor $w "leave_up"
@@ -127,13 +115,15 @@ proc make_io_gui_pane {p d} {
 
     # Create the main frames  (Canvas Frame (cf), Command Frame (cmds), Check Button Frame (cbf))
     frame $p.cf
-    frame $p.cmds -border 1 -relief groove
-    frame $p.cbf  -border 1 -relief groove
+    frame $p.cont
+    frame $p.cont.cmds 
+    frame $p.cont.cbf  
 
     # Create the canvas
 
-    canvas $p.cf.c -relief sunken -borderwidth 3 -background #036
-    pack $p.cf.c -expand y -fill both
+    canvas $p.cf.c -width 3i -height 3i -relief sunken \
+	-borderwidth 3 -background #036
+    pack $p.cf.c -fill both -expand yes
 
     if { ![info exists ${d}(hasgui)] } {
         set ${d}(hasgui) 0
@@ -142,33 +132,28 @@ proc make_io_gui_pane {p d} {
         set ${d}(dynamicport) 0
     }
 
-    checkbutton $p.cbf.hasgui -text "Has GUI" -variable ${d}(hasgui) \
+    checkbutton $p.cont.cbf.hasgui -text "Has GUI" -variable ${d}(hasgui) \
         -command "eval gui $p.cf.c \[set ${d}(hasgui)\]"
-    TooltipMultiline $p.cbf.hasgui \
+    TooltipMultiline $p.cont.cbf.hasgui \
         "Adds the 'UI' button to the module and creates a 'method ui {}' to the module's\n" \
         ".tcl file.  NOTE: The module creator must fill in the 'guts' of this method in\n" \
         "order to create the actual GUI."
 
     global ${d}.dynamicport
-    checkbutton $p.cbf.dynamicport -text "Last port is dynamic" -variable ${d}(dynamicport)
-    TooltipMultiline $p.cbf.dynamicport \
+    checkbutton $p.cont.cbf.dynamicport -text "Last port is dynamic" -variable ${d}(dynamicport)
+    TooltipMultiline $p.cont.cbf.dynamicport \
         "If selected, the last input port will be dynamic.  This means that\n" \
         "any time a pipe is connected to it, another new port will be dynamically\n" \
         "created.  This allows an 'infinite' number of inputs to this module."
 
-    pack $p.cbf.dynamicport $p.cbf.hasgui -side left -fill x -expand yes
+    pack $p.cont.cbf.dynamicport $p.cont.cbf.hasgui -side top -anchor w
 
-    make_icon $p.cf.c 1.5i 1.375i [set ${d}(hasgui)] $d
+    make_icon $p.cf.c 1.0i .375i [set ${d}(hasgui)] $d
 
     set modframe $p.cf.c.moduleFakeModule
-    button $p.cmds.add_iport -text "Add Input Port"  -command "eval add_port $modframe i $d"
-    button $p.cmds.add_oport -text "Add Output Port" -command "eval add_port $modframe o $d"
+    button $p.cont.cmds.add_iport -text "Add Input Port"  -command "eval add_port $modframe i $d"
+    button $p.cont.cmds.add_oport -text "Add Output Port" -command "eval add_port $modframe o $d"
 
-    #button $p.cmds.add_ifile -text "Add Input File"   -command ""
-    #button $p.cmds.add_ofile -text "Add Output File"  -command ""
-    #button $p.cmds.add_idev -text "Add Input Device"  -command ""
-    #button $p.cmds.add_odev -text "Add Output Device" -command ""
-    
     if [info exists ${d}(iports)] {
     } else {
         set ${d}(iports) [list]
@@ -180,75 +165,58 @@ proc make_io_gui_pane {p d} {
     configPorts $modframe "i" $d
     configPorts $modframe "o" $d
 
-#    set guidescript $p.guidescript
-#    create_text_entry $guidescript "Description:" $d guidescript
-    frame $p.cp -bd 1 -relief sunken
+
+    frame $p.cp
 
     frame $p.cp.name
-    label $p.cp.name.label -text "Module Name: " -width 20 -anchor e
-    entry $p.cp.name.entry -textvar ${d}(title) -width 30
+    label $p.cp.name.label -text "Module Name:" -width 1
+    entry $p.cp.name.entry -textvar ${d}(title) 
 
     TooltipMultiWidget "$p.cp.name.label $p.cp.name.entry" \
         "The name for this module.  Names begin with a capital letter and must not contain spaces."
 
     frame $p.cp.pack
-    label $p.cp.pack.label -text "Package: " -width 20 -anchor e
-    entry $p.cp.pack.entry -textvar ${d}(package) -width 30
+    label $p.cp.pack.label -text "Package:" -width 1
+    entry $p.cp.pack.entry -textvar ${d}(package) 
 
     TooltipMultiWidget "$p.cp.pack.label $p.cp.pack.entry" \
         "The Pacakge in which to place this module.  Examples: SCIRun, BioPSE, MatlabInterface, etc..."
 
     frame $p.cp.cat
-    label $p.cp.cat.label -text "Category: " -width 20 -anchor e
-    entry $p.cp.cat.entry -textvar ${d}(category) -width 30
+    label $p.cp.cat.label -text "Category:" -width 1
+    entry $p.cp.cat.entry -textvar ${d}(category) 
 
     TooltipMultiWidget "$p.cp.cat.label $p.cp.cat.entry" \
         "The Category in which to place this module.  Examples: DataIO, Math, Visualization, etc..."
 
-    pack $p.cmds.add_iport -padx $PADi -pady $PADi -ipady $PADi -expand no -side top -fill x
-    pack $p.cmds.add_oport -padx $PADi -pady $PADi -ipady $PADi -expand no -side top -fill x
+    pack $p.cont.cmds.add_iport -padx $PADi -pady $PADi -ipady $PADi -expand no -side top -fill x
+    pack $p.cont.cmds.add_oport -padx $PADi -pady $PADi -ipady $PADi -expand no -side top -fill x
 
-    pack $p.cp.name $p.cp.pack $p.cp.cat -side top -pady $PADi
 
-    pack $p.cp.name.label $p.cp.name.entry -side left
-    pack $p.cp.pack.label $p.cp.pack.entry -side left
-    pack $p.cp.cat.label $p.cp.cat.entry -side left
-    
-    trace variable ${d}(hasgui) w "update_gui_entry_bind"
+    pack $p.cp.pack.label $p.cp.pack.entry -side left -fill x -expand yes -anchor w
+    pack $p.cp.cat.label $p.cp.cat.entry -side left -fill x -expand yes -anchor w
+    pack $p.cp.name.label $p.cp.name.entry -side left -fill x -expand yes -anchor w
+
+    pack $p.cp.name $p.cp.cat $p.cp.pack -anchor w -side top -fill x -expand yes     
     trace variable ${d}(title)  w "update_title_entry_bind"
 
-    #pack $p.cmds.add_ifile -padx $PADi -pady $PADi -ipady $PADi -expand yes -side top -anchor nw -fill x
-    #pack $p.cmds.add_ofile -padx $PADi -pady $PADi -ipady $PADi -expand yes -side top -anchor nw -fill x
-    #pack $p.cmds.add_idev -padx $PADi -pady $PADi  -ipady $PADi -expand yes -side top -anchor nw -fill x
-    #pack $p.cmds.add_odev -padx $PADi -pady $PADi  -ipady $PADi -expand yes -side top -anchor nw -fill x
-
     ### Packing:
-    #    .cf (Canvas Frame) | .cmds (Command Frame)
+    #    .cf (Canvas Frame) | .cont.cmds (Command Frame)
     #    .cbf (Check Buttons Frame)
     #    .cp (Name entries)
     #
-    grid $p.cf   -sticky news -padx 5 -pady 2
-    grid $p.cmds -column 1 -row 0 -sticky nws -pady 2
-    grid $p.cbf  -sticky ew -padx 5 -pady 2 -ipadx 5 -ipady 2
-    grid $p.cp   -columnspan 2 -ipady 5 -pady 5 -padx 5 -sticky ew
 
-#    pack $guidescript -fill x -side bottom -anchor sw \
-#        -padx $PADi 
-}
+    pack $p.cont.cmds $p.cont.cbf -side left -fill x -expand yes
+    pack $p.cf -fill both -expand yes
+    pack $p.cont -side top -fill x -expand yes -anchor e
+    pack $p.cp -side top -fill both -expand yes -anchor w
 
-################################################################
-#
-# update_gui_entry_bind name1 name2 op
-#
-#    name1, name2, and op are provided by the 'trace' command (and are not used).
-#
-proc update_gui_entry_bind { name1 name2 op } {
-    global uiinfo .componentWizard.tmpdata
-    if { [set .componentWizard.tmpdata(hasgui)] } {
-        text_entry_set_state $uiinfo normal
-    } else {
-        text_entry_set_state $uiinfo disable
-    }
+
+#    grid $p.cf   -sticky news -padx 5 -pady 2
+#    grid $p.cmds -column 1 -row 0 -sticky nws -pady 2
+#    grid $p.cbf  -sticky ew -padx 5 -pady 2 -ipadx 5 -ipady 2
+#    grid $p.cp   -columnspan 2 -ipady 5 -pady 5 -padx 5 -sticky ew
+
 }
 
 ################################################################
@@ -280,15 +248,6 @@ proc make_description_pane {p d} {
                     {"It should provide a general description of the purpose of the module."}\
                     {"You may manually enter this information later in the module's XML file."}] \n]
 
-    global uiinfo
-    set uiinfo $p.uiinfo
-    create_text_entry $uiinfo "GUI Information:" $d uiinfo \
-        [join [concat {"This information will be stored in the GUI section of the module help."} \
-                    {"It should include information about the various GUI elements for this module."}\
-                    {"If you do not have this information at this time, add a general description"}\
-                    {"and then later manually add the details to the module's XML file."}] \n]
-    text_entry_set_state $uiinfo disable
-
     set descript $p.descript
     create_text_entry $descript "Description:" $d descript \
         [join [concat {"This information will be stored in the Description section of the module help."} \
@@ -296,64 +255,15 @@ proc make_description_pane {p d} {
                     {"module performs its job.  You may manually enter this information"}\
                     {"later in the module's XML file."}] \n]
 
-    set lexamplesr $p.lexamplesr
-    label $lexamplesr -text "Example network: "
-
-    set eexamplesr $p.eexamplesr
-    prompted_entry $eexamplesr "<enter example network filename>" "
-            global $d;
-            set ${d}(examplesr) \[get_prompted_entry $eexamplesr\];
-        " 
-    if [info exists ${d}(examplesr)] {
-        set_prompted_entry $p.eexamplesr [set ${d}(examplesr)]
-    }
-
-    TooltipMultiWidget "$lexamplesr $eexamplesr" \
-        [join [concat {"Enter the name of an example network that shows the utility of this module."} \
-                   {"If you do not yet have such a network, you can create it later and add"} \
-                   {"this information manually to the module's XML file."}] \n]
 
     pack $authors  -side top -fill both -expand true -padx .1c -pady .1c
     pack $summary  -side top -anchor w -fill x -expand true -padx .1c -pady .1c
     pack $descript -side top -anchor w -fill x -expand true -padx .1c -pady .1c
-    pack $uiinfo   -side top -anchor w -fill x -expand true -padx .1c -pady .1c
-
-    pack $lexamplesr -side left -anchor e -padx .1c -pady .1c
-    pack $eexamplesr -side left -anchor w -padx .1c -pady .1c
-
 }
 
-proc make_implementation_pane {p d} {
-    global $d
-
-    set ccfiles $p.ccfiles
-    create_clb_entry $ccfiles ".cc files:" "<enter the basename of a .cc file>" \
-        $d ccfiles
-
-    set cfiles $p.cfiles
-    create_clb_entry $cfiles ".c files:" "<enter the basename of a .c file>" \
-        $d cfiles
-        
-    set ffiles $p.ffiles
-    create_clb_entry $ffiles ".f files:" "<enter the basename of a .f file>" \
-        $d ffiles
-
-    pack $ccfiles -side top -fill both -expand true -padx .1c -pady .1c
-    pack $cfiles -side top -fill both -expand true -padx .1c -pady .1c
-    pack $ffiles -side top -fill both -expand true -padx .1c -pady .1c
-}
-
-proc make_testing_pane {p d} {
-    global $d
-
-    set testing $p.testing
-    create_text_entry $testing "Testing Info:" $d testing
-
-    pack $testing -side top -expand yes -fill both 
-}
 
 proc create_clb_entry {f label prompt array index} {
-    frame $f -relief ridge -borderwidth .1c
+    frame $f 
 
     set l $f.l
     label $l -text $label
@@ -396,7 +306,7 @@ proc create_text_entry {f label array index {tip "" }} {
         Tooltip $l $tip
     }
 
-    text $t -wrap word -yscrollcommand "$sy set" -height 5 -width 60
+    text $t -wrap word -yscrollcommand "$sy set" -height 5
     if [info exists ${array}($index)] {
        $t insert 1.0 [set ${array}($index)]  
     }
@@ -483,7 +393,7 @@ proc make_icon {canvas modx mody {gui 0} d} {
     
     # Stick it in the canvas
     
-    $canvas create window $modx $mody -window $modframe -tags FakeModule -anchor center
+    $canvas create window $modx $mody -window $modframe -tags FakeModule -anchor n
 }
 
 proc add_port {modframe type d} {
@@ -564,7 +474,7 @@ proc edit_port {portnum} {
     wm withdraw $w; # immediately withdraw it to avoid flicker
 
     wm title $w "Edit Port Information"
-    wm minsize $w 400 200
+   ### wm minsize $w 400 200
 
     set f $w.f
     global $f
@@ -605,51 +515,6 @@ proc edit_port {portnum} {
         [join [concat {"The type of data that this port will send/receive."} \
                    {"Examples:  SCIRun::Matrix, SCIRun::Geometry, SCIRun::Field..."}] \n]
 
-    set fdescript $w.fdescript
-    global $fdescript
-    frame $fdescript
-
-    set ldescript $fdescript.l
-    global $ldescript
-    label $ldescript -text "Description:"
-    pack $ldescript -side top -anchor w -padx 5
-
-    Tooltip $ldescript \
-        [join [concat {"Information that will be provided to the user as part of the Module's help."} \
-                   {"It should include a description of what data comes from/goes to the port."} ] \n]
-
-    set edescript $fdescript.e
-    global $edescript
-    set sydescript $fdescript.sy
-    global $sydescript
-    prompted_text $edescript "<textual description of port data>" "" \
-        -wrap word -yscrollcommand "$sydescript set" -height 5 -width 50
-    pack $edescript -side left -fill x -expand true -padx 5
-    if [info exists ${portnum}(descript)] {
-        set_prompted_text $edescript [set ${portnum}(descript)]
-    }
-    scrollbar $sydescript -orient vert -command "$edescript yview"
-    pack $sydescript -side right -fill y -padx 5
-
-    #set fcompnames $w.fcompnames
-    #global $fcompnames
-    #frame $fcompnames -relief ridge -borderwidth .1c
-
-    #set lcompnames $fcompnames.lcompnames
-    #global $lcompnames
-    #label $lcompnames -text "Component Names:"
-    #pack $lcompnames -side top -anchor w -padx 5
-
-    #set clbcompnames $fcompnames.clbcompnames
-    #global $clbcompnames
-    #combo_listbox $clbcompnames "<enter new component names here>"
-    #if [info exists ${portnum}(compnames)] {
-    #   global $clbcompnames.listbox
-    #    foreach compname [set ${portnum}(compnames)] {
-    #        $clbcompnames.listbox insert end $compname
-    #    }
-    #}
-    #pack $clbcompnames -side left -fill both -expand yes -padx 5
 
     set fbuttons $w.fcubbonts
     global $fbuttons
@@ -666,8 +531,6 @@ proc edit_port {portnum} {
     pack $close $save -side right -padx 5 -pady 2 -ipadx .1c -ipady 2
 
     pack $f -fill x -expand yes -side top -padx 2 -pady 2
-    pack $fdescript -fill both -expand yes -side top
-    #pack $fcompnames -fill both -expand yes -side top
     pack $fbuttons -fill both -expand yes -side top
 
     moveToCursor $w "leave_up"
@@ -682,8 +545,6 @@ proc save_port_edit {portnum} {
     global $portnum
     set ${portnum}(name) [get_prompted_entry .edit_$portnum.f.ename] 
     set ${portnum}(datatype) [get_prompted_entry .edit_$portnum.f.edatatype] 
-    set ${portnum}(descript) [get_prompted_text .edit_$portnum.fdescript.e] 
-    #set ${portnum}(compnames) [.edit_$portnum.fcompnames.clbcompnames.listbox get 0 end] 
 }
 
 proc remove_port {icon portnum type d} {
@@ -709,27 +570,23 @@ proc generateXML { d } {
     ######################################################################
     # Make sure that the user has entered all the necessary data!
     if { ![info exists ${d}(title)] || ![llength [set ${d}(title)]] } {
-      createSciDialog -title "Module Creation Error" -message "Please entery a 'Module Name'" -error
+      createSciDialog -title "Module Creation Error" -message "Please enter a 'Module Name'" -error
       return
     }
     if { ![info exists ${d}(package)] || ![llength [set ${d}(package)]] } {
-      createSciDialog -title "Module Creation Error" -message "Please entery a 'Package'" -error
+      createSciDialog -title "Module Creation Error" -message "Please enter a 'Package'" -error
       return
     }
     if { ![info exists ${d}(category)] || ![llength [set ${d}(category)]] } {
-      createSciDialog -title "Module Creation Error" -message "Please entery a 'Category'" -error
+      createSciDialog -title "Module Creation Error" -message "Please enter a 'Category'" -error
       return
     }
     if { ![info exists ${d}(summary)] || ![llength [set ${d}(summary)]] } {
-      createSciDialog -title "Module Creation Error" -message "Please entery a 'Summary' (On the 'Description' tab)" -error
+      createSciDialog -title "Module Creation Error" -message "Please enter a 'Summary' (On the 'Description' tab)" -error
       return
     }
     if { ![info exists ${d}(descript)] || ![llength [set ${d}(descript)]] } {
-      createSciDialog -title "Module Creation Error" -message "Please entery a 'Description' (On the 'Description' tab)" -error
-      return
-    }
-    if { [set ${d}(hasgui)] && (![info exists ${d}(uiinfo)] || ![llength [set ${d}(uiinfo)]]) } {
-      createSciDialog -title "Module Creation Error" -message "Please entery 'GUI Information' (On the 'Description' tab)" -error
+      createSciDialog -title "Module Creation Error" -message "Please enter a 'Description' (On the 'Description' tab)" -error
       return
     }
     #
@@ -746,17 +603,24 @@ proc generateXML { d } {
     set firstLetter [string toupper [string index $title 0]]
     set ${d}(title) $firstLetter[string range $title 1 end]
 
+    puts $id "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
+    puts $id "<!DOCTYPE component SYSTEM \"../src/Dataflow/XML/component.dtd\">"
+
     puts $id "<component name=\"[set ${d}(title)]\" category=\"[set ${d}(category)]\" optional=\"false\">"
 
     # OVERVIEW
     puts $id "  <overview>"
+    puts $id "    <authors>"
     if {[info exists ${d}(authors)]} {
-      puts $id "    <authors>"
       foreach name [set ${d}(authors)] { 
         puts $id "      <author>$name</author>"
       }
-      puts $id "    </authors>"
-    }
+    } else {
+	createSciDialog -title "Module Creation Error" -error \
+	    -message "Please provide at least one Author name.\n(Description Tab->Add button.)"
+                return
+    }    
+    puts $id "    </authors>"
 
     # SUMMARY
     puts $id "    <summary>"
@@ -765,22 +629,12 @@ proc generateXML { d } {
 
     # DESCRIPTION
     puts $id "    <description>"
-    puts $id "      [set ${d}(descript)]" 
+    puts $id "      <p>"
+    puts $id "        [set ${d}(descript)]" 
+    puts $id "      </p>"
     puts $id "    </description>"
 
-    # EXAMPLE
-    if {[info exists ${d}(examplesr)]} {
-      if {[llength [set ${d}(examplesr)]]} {
-        puts $id "    <examplesr>"
-        puts $id "      [set ${d}(examplesr)]"
-        puts $id "    </examplesr>"
-      }
-    }
     puts $id "  </overview>"
-
-    # IMPLEMENTATION
-    puts $id "  <implementation>"
-    puts $id "  </implementation>"
 
     # IO
     puts $id "  <io>"
@@ -810,8 +664,9 @@ proc generateXML { d } {
         }
     }
     puts $id "    </inputs>"
-    puts $id "    <outputs>"
+
     if {[info exists ${d}(oports)]} {
+      puts $id "    <outputs>"
       foreach port [set ${d}(oports)] {
         global $port
 	if {![info exists ${port}(name)] || \
@@ -827,26 +682,20 @@ proc generateXML { d } {
         puts $id "        <datatype>[set ${port}(datatype)]</datatype>"
         puts $id "      </port>"
       }
+      puts $id "    </outputs>"
     }
-    puts $id "    </outputs>"
     puts $id "  </io>"
 
     # GUI
     if {[set ${d}(hasgui)]} {
         puts $id "  <gui>"
         puts $id "    <description>"
-        puts $id "      [set ${d}(uiinfo)]" 
+        puts $id "      <p>"
+        puts $id "        gui exists" 
+        puts $id "      </p>"
         puts $id "    </description>"
-        puts $id "    <parameter>"
-        puts $id "      <widget>Place Widget Name Here</widget>"
-        puts $id "      <label>Place Label Name Here</label>"
-        puts $id "    </parameter>"
         puts $id "  </gui>"
     }
-
-    # TESTING
-    puts $id "  <testing>"
-    puts $id "  </testing>"
 
     puts $id "</component>"
     close $id

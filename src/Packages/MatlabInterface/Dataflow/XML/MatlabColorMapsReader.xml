@@ -34,142 +34,134 @@
 <component name="MatlabColorMapsReader" category="DataIO">
   <overview>
     <authors>
-	<author>Jeroen Stinstra</author>
+      <author>Jeroen Stinstra</author>
     </authors>
 	
-	<summary> 
-	The MatlabColorMapsReader module reads a matrix from a MATLAB file
+    <summary> The MatlabColorMapsReader module reads a matrix from a
+MATLAB file
 	</summary>
 	
     <description>
 	
-	<section>
+      <section>
 	<title>Module description</title>
 
-	</section>
+      </section>
 	
-	<section>
+      <section>
 	<title>See Also </title>
 	<p>
-	<modref package="MatlabInterface" name="Matlab" />,	
-	<modref package="MatlabInterface" name="MatlabBundelsReader" />,	
-	<modref package="MatlabInterface" name="MatlabBundlesWriter" />,	
-	<modref package="MatlabInterface" name="MatlabDataReader" />,	
-	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
-	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
-	<modref package="MatlabInterface" name="MatlabFieldsWriter" />,
-	<modref package="MatlabInterface" name="MatlabColorMapsReader" />,
-	<modref package="MatlabInterface" name="MatlabColorMapsReader" />,
-	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />,
-	<modref package="MatlabInterface" name="MatlabNrrdsReader" />	
+	<modref package="MatlabInterface" name="Matlab" />, <modref
+package="MatlabInterface" name="MatlabBundelsReader" />, <modref
+package="MatlabInterface" name="MatlabBundlesWriter" />, <modref
+package="MatlabInterface" name="MatlabDataReader" />, <modref
+package="MatlabInterface" name="MatlabDataWriter" />, <modref
+package="MatlabInterface" name="MatlabFieldsReader" />, <modref
+package="MatlabInterface" name="MatlabFieldsWriter" />, <modref
+package="MatlabInterface" name="MatlabColorMapsReader" />, <modref
+package="MatlabInterface" name="MatlabColorMapsReader" />, <modref
+package="MatlabInterface" name="MatlabNrrdsWriter" />, <modref
+package="MatlabInterface" name="MatlabNrrdsReader" />	
 	</p>
-	</section>
+      </section>
 	
-  </description>   
+    </description>   
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
         <name>filename</name>
         <datatype>SCIRun::String</datatype>
-        <description>filename</description>
       </port>         
     </inputs>
     <outputs>
       <port>
         <name>ColorMap1</name>
-		<datatype>SCIRun::ColorMap</datatype>
-		<description>
-		<p> ColorMap imported from the MATLAB file using port 1. </p>
-		</description>
+	<datatype>SCIRun::ColorMap</datatype>
       </port>
-	  <port>
+      <port>
         <name>ColorMap2</name>
-		<datatype>SCIRun::ColorMap</datatype>
-		<description>
-		<p> ColorMap imported from the MATLAB file using port 2. </p>
-		</description>
+	<datatype>SCIRun::ColorMap</datatype>
       </port>
-	  <port>
+      <port>
         <name>ColorMap3</name>
-		<datatype>SCIRun::ColorMap</datatype>
-		<description>
-		<p> ColorMap imported from the MATLAB file using port 3. </p>
-		</description>
+	<datatype>SCIRun::ColorMap</datatype>
       </port>
-	  <port>
+      <port>
         <name>ColorMap4</name>
-		<datatype>SCIRun::ColorMap</datatype>
-		<description>
-		<p> ColorMap imported from the MATLAB file using port 4. </p>
-		</description>		
+	<datatype>SCIRun::ColorMap</datatype>
       </port>
-	  <port>
+      <port>
         <name>ColorMap5</name>
-		<datatype>SCIRun::ColorMap</datatype>
-		<description>
-		<p> ColorMap imported from the MATLAB file using port 5. </p>
-		</description>		
+	<datatype>SCIRun::ColorMap</datatype>
       </port>
-	  <port>
+      <port>
         <name>ColorMap6</name>
-		<datatype>SCIRun::ColorMap</datatype>
-		<description>
-		<p> ColorMap imported from the MATLAB file using port 6. </p>
-		</description>		
+	<datatype>SCIRun::ColorMap</datatype>
       </port>
     </outputs>
   </io>
  
-   <gui>
+  <gui>
 
     <parameter>
-    <widget> Entry </widget>
-	<label> .mat file </label>
-	<description> The name of the MATLAB file </description>
-	</parameter>
+      <widget> Entry </widget>
+      <label> .mat file </label>
+      <description>
+	<p> The name of the MATLAB file </p>
+      </description>
+    </parameter>
 
     <parameter>
-    <widget> Button </widget>
-	<label> Open </label>
-	<description> Opens the file specified in the MATLAB file entrybox </description>
-	</parameter>
+      <widget> Button </widget>
+      <label> Open </label>
+      <description>
+	<p>Opens the file specified in the MATLAB file entrybox </p>
+      </description>
+    </parameter>
 
     <parameter>
-    <widget> Button </widget>
-	<label> Browse </label>
-	<description> Open a filesectionbox and choose a MATLAB file </description>
-	</parameter>
+      <widget> Button </widget>
+      <label> Browse </label>
+      <description>
+	<p>Open a filesectionbox and choose a MATLAB file </p>
+      </description>
+    </parameter>
 
     <parameter>
-    <widget> Listbox </widget>
-	<label> matlab matrix selector </label>
-	<description> Displays the matrices that are stored in the MATLAB file and an information 
-	              string describing the data in the matrix</description>
-	</parameter>
+      <widget> Listbox </widget>
+      <label> matlab matrix selector </label>
+      <description>
+	<p>Displays the matrices that are stored in the MATLAB file
+and an information string describing the data in the matrix</p>
+      </description>
+    </parameter>
 
     <parameter>
-    <widget> Button </widget>
-	<label> Port N </label>
-	<description> Button for selecting which output port is used to export the data. The button highlighted
-	white is currently selected one. Selecting a matrix from the list below will put that matrix
-	on the port whose label is highlighted in white. </description>
-	</parameter>
+      <widget> Button </widget>
+      <label> Port N </label>
+      <description>
+	<p>Button for selecting which output port is used to export
+the data. The button highlighted white is currently selected one.
+Selecting a matrix from the list below will put that matrix on the
+port whose label is highlighted in white. </p>
+      </description>
+    </parameter>
 	
-	 <parameter>
-    <widget>  Checkbox </widget>
-	<label> Disable Matlab to C++ conversion (data will be transposed) </label>
-	<description> Large dataset are often ordered such that the first dimension is the one that is accessed most. 
-	For example the dimension time is often the last one. Because Matlab and C++ use different ordering, a favorable
-	ordering may get lost by importing a matrix directly. By switching on this option the matrix is transposed, but
-	the ordering in memory stays the same. This often saves a lot of swapping to virtual memory for large datasets.
-	</description>
-	</parameter>
-
-  </gui>
+    <parameter>
+      <widget>  Checkbox </widget>
+      <label> Disable Matlab to C++ conversion (data will be
+transposed) </label>
+      <description>
+	<p>Large dataset are often ordered such that the first
+dimension is the one that is accessed most. For example the dimension
+time is often the last one. Because Matlab and C++ use different
+ordering, a favorable ordering may get lost by importing a matrix
+directly. By switching on this option the matrix is transposed, but
+the ordering in memory stays the same. This often saves a lot of
+swapping to virtual memory for large datasets.</p>
  
-  <testing>
-  </testing>
+      </description>
+    </parameter>
+  </gui>
 </component>

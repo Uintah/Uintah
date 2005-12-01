@@ -37,31 +37,33 @@
     <authors>
       <author>Lorena Kreda</author>
     </authors>
+    <summary>?</summary>
+    <description>
+      <p>></p>
+    </description>
   </overview>
-  <implementation>
-  </implementation>
-
   <io>
+    <inputs>
+    </inputs>
     <outputs>
       <!-- one of (device port file) -->
       <port>
 	<name>Electrode Parameters</name>
 	<description>
-	  <p>Sends handle to Matrix containing electrode params to downstream modules</p>
+	  <p>Sends handle to Matrix containing electrode params to
+downstream modules</p>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
 	<name>Current Pattern Index Vector</name>
 	<description>
-	  <p>Sends handle to a Column Matrix of current pattern indicies to facilitate looping</p>
+	  <p>Sends handle to a Column Matrix of current pattern
+indicies to facilitate looping</p>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>
-
-  <testing>
-  </testing>
 </component>
 

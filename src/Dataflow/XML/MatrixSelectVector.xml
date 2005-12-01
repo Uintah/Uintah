@@ -39,16 +39,16 @@
       <author>David Weinstein</author>
       <author>Michael Callahan</author>
     </authors>
-    <summary><p>The MatrixSelectVector module allows users to select a single
+    <summary>The MatrixSelectVector module allows users to select a single
     row or column from a matrix.  The user can also select a range of rows
     or columns and send them to the output port one at a time.  The
     MatrixSelectVector module has three input ports: Matrix, Weight Vector
-    and Current Index, which may run concurrently or one at a time.</p> 
+    and Current Index, which may run concurrently or one at a time.
       
-      <p>This module allows the user to animate points on a mesh if computing
+    This module allows the user to animate points on a mesh if computing
     a whole time series of results packaged within a row or column.  As
     data propogates throughout the image, the Viewer window displays the
-    animation of points on the mesh.</p>  
+    animation of points on the mesh.
     </summary>
       <description>
 	<p>The MatrixSelectVector module runs in one of three different modes: interactive mode uses
@@ -111,7 +111,7 @@ second entry.</p></description>
 	 
   </overview>
   <io>
-    <inputs lastportdynamic="no"> /usr/local/gnu/bin/emacs
+    <inputs lastportdynamic="no">
       <port>
         <name>Matrix</name>
 	<datatype>SCIRun::Matrix</datatype>
@@ -139,18 +139,4 @@ second entry.</p></description>
   <gui>
     <img>../Modules/Math/doc/MatrixSelectVectorUI.jpg</img>
   </gui>
-  <testing>
-  </testing>
 </component>
-
-
-
-
-
-
-
-
-
-
-
-

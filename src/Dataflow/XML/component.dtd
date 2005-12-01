@@ -64,7 +64,7 @@
 <!ELEMENT title %Inline;>
 
 <!-- Top level -->
-<!ELEMENT component (overview, implementation?, io, gui?, nets?, testing?)>
+<!ELEMENT component (overview, io, gui?, nets?, testing?)>
 <!ATTLIST component 
         name CDATA #REQUIRED
         category CDATA #REQUIRED
@@ -89,52 +89,32 @@
 <!-- Net descriptions -->
 <!ELEMENT nets (net+)>
 <!ELEMENT net (title, %DescFlow;)>
-<!ATTLIST net
-        id ID #IMPLIED>
-
-<!-- All the extra code files needed to build this component -->
-<!ELEMENT implementation (ccfile | cfile | ffile)+>
-
-<!-- The name of a single .cc file -->
-<!ELEMENT ccfile (#PCDATA)>
-
-<!-- The name of a single .c file -->
-<!ELEMENT cfile (#PCDATA)>
-
-<!-- The name of a single .f file -->
-<!ELEMENT ffile (#PCDATA)>
+<!ATTLIST net id CDATA #REQUIRED>
 
 <!-- Component's inputs and outputs  -->
-<!ELEMENT io (inputs, outputs)>
+<!ELEMENT io (inputs, outputs?)>
 
 <!-- Component's inputs.  Inputs may come from a file, port, or device.  -->
-<!ELEMENT inputs (file | port | device)+>
+<!ELEMENT inputs (port*)>
 <!ATTLIST inputs lastportdynamic (yes | no) "no">
 
 <!-- Component's outputs.  Outputs may be sent to a file, port, or device. -->
-<!ELEMENT outputs (file | port | device)+>
-
-<!-- Describe content of file (i.e. temperature data) and the datatype
-     contained in the file. --> 
-<!ELEMENT file (description, datatype)>
+<!ELEMENT outputs (port*)>
 
 <!-- Describe data on port (i.e. temperature data) and the datatype being
      transmitted.  --> 
-<!ELEMENT port (name, description, datatype, componentname*)>
+<!ELEMENT port (name, description?, datatype, componentname*)>
 
 <!-- The user-defined name for this port -->
 <!ELEMENT name (#PCDATA)>
 
-<!-- Describe data on device -->
-<!ELEMENT device (devicename, description)>
-
 <!-- GUI description (words and pictures) -->
 <!-- Note: '(img, caption?)*' part of content model is obsolete. Use -->
 <!-- figure and figref elements within a description element instead. -->
-<!ELEMENT gui ((description, parameter+, (img, caption?)*))+>
+<!ELEMENT gui (description?, parameter*, (img, caption?)*)>
 
 <!-- Description of 1 gui parameter. -->
-<!ELEMENT parameter (widget, datatype, label, description)>
+<!ELEMENT parameter (widget, label, description)>
 
 <!-- Name of gui widget (e.g. slider, text entry, checkbox)-->
 <!ELEMENT widget (#PCDATA)>

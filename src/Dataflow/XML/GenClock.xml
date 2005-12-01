@@ -39,40 +39,36 @@
       <author>Allen R. Sanderson</author>
     </authors>
     <summary>
-      <p>
         Generates a clock for rendering animations.
-      </p>
     </summary>
     <description>
       <p>This module adds a clock to the view. It is most useful when
-      rendering animations. It has a single input which is matrix
-      containing one value, the time. The output is geometry. </p>
+rendering animations. It has a single input which is matrix containing
+one value, the time. The output is geometry. </p>
       <p>The clock type may be either a digital or analog. When
-      creating an analog clock it is possible to also display the time
-      digitally.</p> <p>The clock style sets the border and color. If
-      the time is displayed digitally the format can be set using a C
-      style format.</p> <p>The clock range sets beginning and end time
-      for an analog clock.</p> <p>The clock size sets size.</p> <p>The
-      clock location set the location to be in one of the viewer
-      corners.</p>
+creating an analog clock it is possible to also display the time
+digitally.</p> 
+      <p>The clock style sets the border and color. If the time is
+displayed digitally the format can be set using a C style format.</p> 
+      <p>The clock range sets beginning and end time for an analog
+clock.</p> 
+      <p>The clock size sets size.</p> 
+      <p>The clock location set the location to be in one of the
+viewer corners.</p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
-     <port>
-       <name>Time Matrix</name>
-       <datatype>SCIRun::Matrix</datatype>
-     </port>
+      <port>
+	<name>Time Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
-     <port>
-       <name>Clock</name>
-       <datatype>SCIRun::Geometry</datatype>
-     </port>
+      <port>
+	<name>Clock</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>

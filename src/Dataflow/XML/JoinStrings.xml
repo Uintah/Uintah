@@ -38,14 +38,13 @@
       This module merges multiple strings into one string.
     </summary>
     <description>
-      This module merges multiple strings into one string. The strings are read
-      from the left most port to the right most port and are put into one string.
-      (The string of the left most input port is the first string in the merged
-      data).
+      <p>This module merges multiple strings into one string. The
+strings are read from the left most port to the right most port and
+are put into one string.</p>
+      <p>(The string of the left most input port is the first string
+in the merged data).</p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="yes">
       <port>
@@ -60,9 +59,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

@@ -44,9 +44,9 @@
     <description>
       <p>
         This converts a LatVolField into a StructHexVolField, an
-        ImageField into a StructQuadSurfField, or a ScanlineField into
-        a StructCurveField.  Data values and locations are preserved
-        in the transformation.
+ImageField into a StructQuadSurfField, or a ScanlineField into a
+StructCurveField.  Data values and locations are preserved in the
+transformation.
       </p>
     </description>
   </overview>
@@ -64,8 +64,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
-<nets>
-</nets>
 </component>
