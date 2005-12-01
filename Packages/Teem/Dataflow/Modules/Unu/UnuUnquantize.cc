@@ -125,10 +125,7 @@ void
     }    
   }
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
-
-  NrrdDataHandle out(nrrd);
+  NrrdDataHandle out(scinew NrrdData(nout));
 
   // Copy the properties.
   out->copy_properties(nrrd_handle.get_rep());

@@ -107,10 +107,7 @@ UnuAxdelete::execute()
 	   a<nout->dim && nout->axis[a].size > 1;
 	   a++);
     }
-    NrrdData *nrrd = scinew NrrdData;
-    nrrd->nrrd = nout;
-    
-    NrrdDataHandle out(nrrd);
+    NrrdDataHandle out(scinew NrrdData(nout));
     
     // Copy the properties.
     out->copy_properties(nrrd_handle.get_rep());
@@ -124,10 +121,7 @@ UnuAxdelete::execute()
       free(err);
     }
 
-    NrrdData *nrrd = scinew NrrdData;
-    nrrd->nrrd = nout;
-    
-    NrrdDataHandle out(nrrd);
+    NrrdDataHandle out(scinew NrrdData(nout));
     
     // Copy the properties.
     out->copy_properties(nrrd_handle.get_rep());

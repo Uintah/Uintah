@@ -282,7 +282,7 @@ UnuResample::execute()
   last_generation_ = nrrdH->generation;
 
   NrrdData *nrrd = scinew NrrdData;
-  if (nrrdSpatialResample(nrrd->nrrd=nrrdNew(), nin, info)) {
+  if (nrrdSpatialResample(nrrd->nrrd, nin, info)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") +  err);
     msgStream_ << "  input Nrrd: nin->dim=" << nin->dim << "\n";

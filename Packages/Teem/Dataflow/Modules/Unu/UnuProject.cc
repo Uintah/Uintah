@@ -116,9 +116,7 @@ UnuProject::execute()
       free(err);
     }
     
-    NrrdData *nrrd = scinew NrrdData;
-    nrrd->nrrd = nout;
-    last_nrrdH_ = nrrd;
+    last_nrrdH_ = scinew NrrdData(nout);
   }
 
   onrrd_->send_and_dereference(last_nrrdH_, true);

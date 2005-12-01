@@ -408,10 +408,7 @@ UnuJhisto::execute()
       return;
     }
 
-
-    NrrdData *nrrd = scinew NrrdData;
-    nrrd->nrrd = nout;    
-    last_nrrdH_ = nrrd;
+    last_nrrdH_ = scinew NrrdData(nout);
 
     if (nrrds.size()) {
 

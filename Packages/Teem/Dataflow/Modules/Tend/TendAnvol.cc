@@ -167,17 +167,7 @@ TendAnvol::execute()
     return;
   }
 
-  NrrdData *nrrd = scinew NrrdData;
-
-  //Nrrd *ntup = nrrdNew();
-  //nrrdAxesInsert(ntup, nout, 0);
-  //ntup->axis[0].label = airStrdup("Aniso:Scalar");
-  //nrrd->copy_sci_data(*nrrd_handle.get_rep());
-  //nrrdNuke(nout);
-  //nrrd->nrrd = ntup;
-  nrrd->nrrd = nout;
-  //nrrd->copy_sci_data(*nrrd_handle.get_rep()); 
-  NrrdDataHandle ntmp(nrrd);
+  NrrdDataHandle ntmp(scinew NrrdData(nout));
   onrrd_->send_and_dereference(ntmp);
 }
 

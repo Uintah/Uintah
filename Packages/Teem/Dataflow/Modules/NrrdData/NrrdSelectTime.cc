@@ -108,7 +108,6 @@ NrrdSelectTime::send_selection(NrrdDataHandle in,
   if ((int)time_axis == in->nrrd->dim - 1)
   {
     NrrdData *out = scinew NrrdData(in.get_rep());
-    out->nrrd = nrrdNew();
 
     // Copy all of the nrrd header from in to out.
     if (nrrdBasicInfoCopy(out->nrrd, in->nrrd,
@@ -143,10 +142,10 @@ NrrdSelectTime::send_selection(NrrdDataHandle in,
   }
   else
   {
-    // do the slice
+    // Do the slice.
     NrrdData *out = scinew NrrdData();
-    out->nrrd = nrrdNew();
-    if (nrrdSlice(out->nrrd, in->nrrd, time_axis, which)) {
+    if (nrrdSlice(out->nrrd, in->nrrd, time_axis, which))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Trouble slicing: ") + err);
       free(err);

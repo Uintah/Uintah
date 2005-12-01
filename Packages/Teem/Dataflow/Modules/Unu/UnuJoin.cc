@@ -172,7 +172,6 @@ UnuJoin::execute()
   vector<Nrrd*> arr(nrrds.size());
   if (do_join || !onrrd_handle_.get_rep())
   {
-    NrrdData *onrrd = scinew NrrdData();
     int i = 0;
     string new_label("");
     vector<NrrdDataHandle>::iterator iter = nrrds.begin();
@@ -205,7 +204,7 @@ UnuJoin::execute()
     join_axis_.reset();
     incr_dim_.reset();
 
-    onrrd->nrrd = nrrdNew();
+    NrrdData *onrrd = scinew NrrdData();
     if (nrrdJoin(onrrd->nrrd, &arr[0], nrrds.size(),
 		 join_axis_.get(), incr_dim_.get()))
     {

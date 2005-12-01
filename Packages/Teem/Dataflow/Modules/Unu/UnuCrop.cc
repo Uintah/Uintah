@@ -350,11 +350,16 @@ UnuCrop::execute()
     delete min;
     delete max;
 
-    NrrdData *nrrd = scinew NrrdData;
+    NrrdData *nrrd;
     if (crop_successful)
-      nrrd->nrrd = nout;
+    {
+      nrrd = scinew NrrdData(nout);
+    }
     else
-      nrrd->nrrd = nin;
+    {
+      // TODO:  Doesn't this delete twice when the ninhandle goes away?
+      nrrd = scinew NrrdData(nin);
+    }
 
     last_nrrdH_ = NrrdDataHandle(nrrd);
 

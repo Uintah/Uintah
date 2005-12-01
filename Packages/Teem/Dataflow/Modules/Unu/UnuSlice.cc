@@ -96,12 +96,8 @@ UnuSlice::execute()
     free(err);
   }
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
-  //nrrd->copy_sci_data(*nrrd_handle.get_rep()); 
-
-  NrrdDataHandle ntmp(nrrd);
-  onrrd_->send_and_dereference(ntmp);
+  NrrdDataHandle out(scinew NrrdData(nout));
+  onrrd_->send_and_dereference(out);
 }
 
 

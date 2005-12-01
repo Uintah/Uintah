@@ -161,9 +161,7 @@ NrrdGradient::execute()
   nrrdResampleInfoNix(infoD);
 
   // Create SCIRun data structure wrapped around nout
-  NrrdData *nd = scinew NrrdData;
-  nd->nrrd = nout;
-  NrrdDataHandle nout_handle(nd);
+  NrrdDataHandle nout_handle(scinew NrrdData(nout));
 
   // Copy the properties
   nout_handle->copy_properties(nin_handle.get_rep());

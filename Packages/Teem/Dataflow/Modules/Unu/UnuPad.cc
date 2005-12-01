@@ -225,12 +225,10 @@ UnuPad::execute()
 	free(err);
     }
 
-    NrrdData *nrrd = scinew NrrdData;
-    nrrd->nrrd = nout;
-    last_nrrdH_ = nrrd;
+    last_nrrdH_ = scinew NrrdData(nout);
 
     // Copy the properies, kinds, and labels.
-    nrrd->copy_properties(nrrdH.get_rep());
+    last_nrrdH_->copy_properties(nrrdH.get_rep());
 
     for( int i=0; i<nin->dim; i++ )
     {
