@@ -178,17 +178,14 @@ FieldToNrrd::execute()
   if (field_handle->get_property( "name", property ) && property != "Unknown") 
     nrrd_name = property;
   if (points_handle_.get_rep()) {
-    cout << "Sending points\n";
     points_handle_->set_property("Name", nrrd_name + "-Points", false);
     opoints_->send_and_dereference(points_handle_, true);
   }
   if (connect_handle_.get_rep()) {
-    cout << "Sending connections\n";
     connect_handle_->set_property("Name", nrrd_name + "-Connectivity", false);
     oconnect_->send_and_dereference(connect_handle_, true);
   }
   if (data_handle_.get_rep()) {
-    cout << "Sending data\n";
     data_handle_->set_property("Name", nrrd_name + "-Data", false);
     odata_->send_and_dereference(data_handle_, true);
   }
