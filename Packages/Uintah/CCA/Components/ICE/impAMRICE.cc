@@ -323,7 +323,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   // this function will be called exactly once per processor, regardless of the number of patches assigned
   // get the patches our processor is responsible for
 
-  cout_doing << d_myworld->myrank() << "ICE::MultiLevelPressureSolve on patch " << *patches << endl;
+  cout_doing << d_myworld->myrank() << " ICE::MultiLevelPressureSolve on patch " << *patches << endl;
   SchedulerP schedulerP(sched);
   //__________________________________
   // define Matl sets and subsets
@@ -355,7 +355,6 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   DataWarehouse* subNewDW = subsched->get_dw(3);
 
   int maxLevel = grid->numLevels();
-
 
   //__________________________________
   //  Move data from parentOldDW to subSchedNewDW.
@@ -412,7 +411,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 #if 1
     // Level argument is not really used in this version of scheduleSolve(),
     // so just pass in the coarsest level as it always exists.
-    const VarLabel* whichInitialGuess = NULL; // Taken from impICE.cc
+    const VarLabel* whichInitialGuess = NULL; 
     MaterialSet* press_matlSet  = scinew MaterialSet();
     press_matlSet->add(0);
     press_matlSet->addReference(); 
@@ -737,7 +736,8 @@ void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
   for(int p=0;p<coarsePatches->size();p++){
     const Patch* coarsePatch = coarsePatches->get(p);
     
-    cout_doing << "Doing CoarsenPressure on patch "
+    cout_doing << d_myworld->myrank()
+               << " Doing zeroMatrix_RHS_UnderFinePatches on patch "
                << coarsePatch->getID() << "\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
                
     CCVariable<Stencil7> A; 
@@ -1041,7 +1041,7 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
   cout_doing << d_myworld->myrank() 
-             << " Doing matrixBC_CFI_coarsePatch \t\t\t ICE L-"
+             << " Doing matrixBC_CFI_coarsePatch \t\t\t ICE \tL-"
              <<coarseLevel->getIndex();
   //__________________________________
   // over all coarse patches
