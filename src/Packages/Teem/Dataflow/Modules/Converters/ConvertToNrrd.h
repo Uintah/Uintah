@@ -236,7 +236,8 @@ void* get_raw_data_ptr(Fdata &data, int pad) {
 
 template <class Fld>
 bool
-ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
+ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh,
+                                    NrrdDataHandle &pointsH,
 				    NrrdDataHandle &connectH,
 				    NrrdDataHandle &dataH,
 				    bool compute_points_p,
