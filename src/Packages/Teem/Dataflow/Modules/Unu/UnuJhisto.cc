@@ -238,8 +238,8 @@ UnuJhisto::execute()
       i++;
     }
     
-    NrrdRange **range = (NrrdRange **)calloc(nrrds.size(), sizeof(NrrdRange*));
-    for (int d=0; d<(int)nrrds.size(); d++) {
+    NrrdRange **range = scinew NrrdRange *[nrrds.size()];
+    for (unsigned int d = 0; d< nrrds.size(); d++) {
       range[d] = nrrdRangeNew(AIR_NAN, AIR_NAN);
     }
     
@@ -397,8 +397,7 @@ UnuJhisto::execute()
       }
     }
 
-    if (nrrdHistoJoint(nout, (const Nrrd**)&nrrds[0], 
-		       (const NrrdRange**)range,
+    if (nrrdHistoJoint(nout, (const Nrrd**)&nrrds[0], range,
 		       (int)nrrds.size(), weight, bin,
                        string_to_nrrd_type(type_.get()), 
 		       clamp)) {
@@ -427,8 +426,7 @@ UnuJhisto::execute()
     for (int d=0; d < (int)nrrds.size(); ++d) {
       nrrdRangeNix(range[d]);
     }
-    free(range);
-
+    delete [] range;
 
     delete bin;
     delete min;
@@ -437,6 +435,7 @@ UnuJhisto::execute()
   }
   onrrd_->send_and_dereference(last_nrrdH_, true);
 }
+
 
 } // End namespace Teem
 
