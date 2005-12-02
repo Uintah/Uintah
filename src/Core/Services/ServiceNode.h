@@ -36,9 +36,6 @@
 #ifndef JGS_CORE_SERVICES_SERVICENODE_H
 #define JGS_CORE_SERVICES_SERVICENODE_H 1
 
-#include <libxml/tree.h>
-#include <libxml/parser.h>
-
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
@@ -46,6 +43,20 @@
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1375
+#pragma set woff 3303
+#endif
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/sax/SAXException.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1375
+#pragma reset woff 3303
+#endif
 
 namespace SCIRun {
 
@@ -68,19 +79,20 @@ namespace SCIRun {
 // optimizing memory use. Using one object makes the memory management way easier.
 
 typedef struct {
-  std::string servicename;
-  std::string classname;
-  std::string classpackagename;
-  std::string	version;
-  std::map<std::string,std::string> parameter;
-} ServiceNode;
+	std::string servicename;
+	std::string classname;
+    std::string classpackagename;
+	std::string	version;
+	std::map<std::string,std::string> parameter;
+	} ServiceNode;
+
 
 
 //////////////////////////
 // ProcessServiceNode()
 // Copies the contents of "tree" into the active fields of "node"
 
-void ProcessServiceNode(const xmlNode* tree, ServiceNode& node);
+void ProcessServiceNode(const DOMNode& tree, ServiceNode& node);
 
 //////////////////////////
 // PrintServiceNode()

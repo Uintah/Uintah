@@ -31,18 +31,12 @@
 #define Core_Util_RWS_h 1
 
 #include <Core/Util/notset.h>
-#include <string>
 
 namespace SCIRun {
-
-using std::string;
 
 //!remove leading and trailing white space from a char*
 // returns _NOTSET_ if the string is or becomes zero length
 char* removeLTWhiteSpace(char* string);
-
-//! string version.
-bool remove_lt_white_space(string &str);
 
 }
 

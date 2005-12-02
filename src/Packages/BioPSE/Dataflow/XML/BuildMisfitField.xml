@@ -59,4 +59,6 @@
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

@@ -39,12 +39,11 @@
       <author>McKay Davis</author>
     </authors>
     <summary>
-	The Painter module displays orthogonal slices of a 3D Nrrd in
-a 2D OpenGL window.
+	The Painter module displays orthogonal slices of a 3D Nrrd in a 2D OpenGL window.
     </summary>
     <description>
-      <p>The Painter module displays orthogonal slices of a 3D Nrrd in
-a 2D OpenGL window.</p>
+      <developer>
+      </developer>
     </description>
   </overview>
   <io>
@@ -62,11 +61,19 @@ a 2D OpenGL window.</p>
     <outputs>
       <port>
 	<name>Paint Data</name>
+	<description>
+	  <p>
+          </p>
+	</description>
 	<datatype>SCIRun::Bundle</datatype>
       </port>
     </outputs>
   </io>
   <gui>
+    <description>
+      <p>
+      </p>
+    </description>
     <img>../Modules/Visualization/doc/ShowFieldGUI.jpg</img>
   </gui>
   <testing>
@@ -80,4 +87,6 @@ a 2D OpenGL window.</p>
       </step>
     </plan>
   </testing>
+  <nets>
+  </nets>
 </component>

@@ -39,31 +39,33 @@
       <author>Chris Moulding</author>
     </authors>
     <summary>
+      <p>
         SampleField generates samples from any type of input field and
-outputs the samples as a PointCloudField field.
+        outputs the samples as a PointCloudField field.
+      </p>
     </summary>
     <description>
       <p>
-        SampleField generates samples from any type of input field and
-outputs the samples as a PointCloudField field.  The samples can be
-generated randomly or user selected via a 3D widget.  
+        SampleField generates samples from any type of input field and outputs
+        the samples as a PointCloudField field.  The samples can be generated
+        randomly or user selected via a 3D widget.  
       </p>
       <p>
-        The random sampling can be weighted by importance (determined
-by the data value of the sample) or left unweighted.  The random
-sampling can also be limited to the selection of node points, rather
-than points from the interior of the fields elements, by clamping the
-samples to nodes. 
+        The random sampling can be weighted by importance (determined by
+        the data value of the sample) or left unweighted.  The random sampling
+        can also be limited to the selection of node points, rather than points
+        from the interior of the fields elements, by clamping the samples to
+        nodes. 
       </p>
       <p>
-        The "uniform" distributions are a uniformly random function
-over the spacial extents of the field (i.e. the elements are weighted
-by their volume or area), whereas the "scattered" distributions are a
-uniformly random function over the elements only (i.e. all elements
-have the same weight).  The "importance weighted" distributions
-multiply the existing weight of a sample by the interpolated data
-value associated with it, while the "not weighted" distributions leave
-the existing weight of a sample unchanged.
+        The "uniform" distributions are a uniformly random function over the
+        spacial extents of the field (i.e. the elements are weighted by their
+        volume or area), whereas the "scattered" distributions are a uniformly
+        random function over the elements only (i.e. all elements have the same
+        weight).  The "importance weighted" distributions multiply the existing
+        weight of a sample by the interpolated data value associated with it,
+        while the "not weighted" distributions leave the existing weight of 
+        a sample unchanged.
       </p>
     </description>
   </overview>
@@ -88,113 +90,117 @@ the existing weight of a sample unchanged.
   <gui>
     <description>
       <p>
-        The UI has two main tabs which determine how the samples will
-be generated: Widget and Random.
+        The UI has two main tabs which determine how the samples will be
+        generated: Widget and Random.
       </p>
     </description>
     <parameter>
       <widget>radiobuttons</widget>
+      <datatype>enum</datatype>
       <label>Distribution</label>
       <description>
         <p>
-          The selected radio button determines which probability
-distribution function is used to generate random samples.
+          The selected radio button determines which probability distribution 
+          function is used to generate random samples.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>entry</widget>
+      <datatype>integer</datatype>
       <label>Seed value for RNG</label>
       <description>
         <p>
-          The number indicated is used to seed the random number
-generator.
+          The number indicated is used to seed the random number generator.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>entry</widget>
+      <datatype>integer</datatype>
       <label>number of seeds</label>
       <description>
         <p>
-          SampleField will generate the number of samples indicated
-here.
+          SampleField will generate the number of samples indicated here.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>checkbox</widget>
+      <datatype>boolean</datatype>
       <label>Clamp to nodes</label>
       <description>
         <p>
-          Checking this box will force SampleField to select node
-points from the input field as samples, rather than any point from the
-interior of the fields elements.
+          Checking this box will force SampleField to select node points from
+          the input field as samples, rather than any point from the interior
+          of the fields elements.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>radiobuttons</widget>
+      <datatype>enum</datatype>
       <label>Widget type</label>
       <description>
         <p>
-          The selected radio button determines the type of 3D widget
-used to select samples from the field.  Currently only Rake is
-supported.
+          The selected radio button determines the type of 3D widget used
+          to select samples from the field.  Currently only Rake is 
+          supported.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>entry</widget>
+      <datatype>integer</datatype>
       <label>Maximum number of samples</label>
       <description>
         <p>
-          The number of samples selected by the chosen widget is
-determined by the collar slider(s) on the widget.  The minimum number
-of samples is usually zero, sometimes higher.  The maximum number is
-set here.
+          The number of samples selected by the chosen widget is determined
+          by the collar slider(s) on the widget.  The minimum number of 
+          samples is usually zero, sometimes higher.  The maximum number is
+          set here.
         </p>
       </description>
     </parameter>
     <parameter>
       <widget>button</widget>
+      <datatype>callback function</datatype>
       <label>Execute</label>
       <description>
         <p>
-          This button forces the SampleField module (and possibly
-downstream modules) to execute.
+          This button forces the SampleField module (and possibly downstream
+          modules) to execute.
         </p>
       </description>
     </parameter>
     <img>../Modules/Fields/doc/SampleFieldGUI.jpg</img>
   </gui>
-  <nets>
-    <net id="SampleField-rakestreamlines">
-      <title>SampleField-rakestreamlines Regression Test</title>
+  <testing>
+  </testing>
+<nets>
+<net id="SampleField-rakestreamlines">
+<title>SampleField-rakestreamlines Regression Test</title>
 
-      <p>Use the rake widget from the SampleField module to select
-some seed points for streamlines in a vector field.  The vector field
-is created by using the gradients from the sphere-voltage model.  All
-of the streamlines should pass through the rake widget at regular
-intervals.</p>
+<p>Use the rake widget from the SampleField module to select some seed
+points for streamlines in a vector field.  The vector field is created
+by using the gradients from the sphere-voltage model.  All of the
+streamlines should pass through the rake widget at regular intervals.</p>
 
-      <p>This network can be found at
-src/nets/Modules/FieldsCreate/SampleField-rakestreamlines.net.</p>
+<p>This network can be found at src/nets/Modules/FieldsCreate/SampleField-rakestreamlines.net.</p>
 
-    </net>
-    <net id="SampleField-weightedrandom">
-      <title>SampleField-weightedrandom Regression Test</title>
+</net>
+<net id="SampleField-weightedrandom">
+<title>SampleField-weightedrandom Regression Test</title>
 
-      <p>Use the SampleField module to resample a point cloud field
-onto the sphere-voltage model.  In this example the density of the
-point cloud is determined by the square of the voltage magnitude in
-the original model.  This gives us a nice way to visualize the voltage
-magnitude of the original field.</p>
+<p>Use the SampleField module to resample a point cloud field onto the
+sphere-voltage model.  In this example the density of the point cloud
+is determined by the square of the voltage magnitude in the original
+model.  This gives us a nice way to visualize the voltage magnitude of
+the original field.</p>
 
-      <p>This network can be found at
-src/nets/Modules/FieldsCreate/SampleField-weightedrandom.net.</p>
+<p>This network can be found at src/nets/Modules/FieldsCreate/SampleField-weightedrandom.net.</p>
 
-    </net>
-  </nets>
+</net>
+</nets>
 </component>
 

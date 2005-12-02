@@ -48,6 +48,7 @@ SRCS     += \
         $(SRCDIR)/Signals.cc            \
 	$(SRCDIR)/Timer.cc              \
 	$(SRCDIR)/TypeDescription.cc    \
+        $(SRCDIR)/XMLParser.cc          \
         $(SRCDIR)/ProgressiveWarning.cc
 
 ifeq ($(BUILD_SCIRUN2),yes)
@@ -57,7 +58,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
 endif
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Math
-LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY)
+LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

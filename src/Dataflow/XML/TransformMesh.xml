@@ -39,21 +39,19 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>Perform a specified functional transform on all of the
-points in a field.</summary>
+   points in a field.</summary>
     <description>
-      <p>Compute the specified function on each point in the input
-field.</p>
+    	<p>Compute the specified function on each point in the
+	 input field.</p>
 
-      <p>The mesh transform is specified in the GUI as the body of a
-C++ function.  The input values to the function is 'p'.  No value is
-returned, rather set the 'result' variable to the return point.  For
-example, "result = Point(p.x() + 5, p.y(), p.z());" would return a new
-field translated by 5 in the X direction.</p>
+        <p>The mesh transform is specified in the GUI as the body of a
+	C++ function.  The input values to the function is 'p'.  No
+	value is returned, rather set the 'result' variable to the
+	return point.  For example, "result = Point(p.x() + 5, p.y(), p.z());"
+        would return a new field translated by 5 in the X
+	direction.</p>
 
-      <p>This module does not work on the mesh types that do not
-contain any implicit points.  This includes LatVolMesh, ImageMesh, and
-ScanlineMesh.  The function will not compile but give an error about
-set_point being undefined.</p>
+        <p>This module does not work on the mesh types that do not contain any implicit points.  This includes LatVolMesh, ImageMesh, and ScanlineMesh.  The function will not compile but give an error about set_point being undefined.</p>
     </description>
   </overview>
   <io>
@@ -70,21 +68,21 @@ set_point being undefined.</p>
       </port>
     </outputs>
   </io>
-  <nets>
-    <net id="TransformMesh-cylinder">
-      <title>TransformMesh-cylinder Regression Test</title>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+<nets>
+<net id="TransformMesh-cylinder">
+<title>TransformMesh-cylinder Regression Test</title>
 
-      <p>Create and draw a StructHexVolField using the TransformMesh
-module to do a nonlinear deformation of the mesh. The default
-StructHexVolField created by the module is visually indistinguishable
-from the lattice created by <modref package="SCIRun"
-name="SampleLattice"/>, so this network shows off the capabilities of
-the StructHexVolField by using the <modref package="SCIRun"
-name="TransformMesh"/> module to transform the points into a
-low-distortion cylinder.</p>
+<p>Create and draw a StructHexVolField using the TransformMesh module to do a nonlinear deformation of the mesh.
+The default StructHexVolField created by the module is visually
+indistinguishable from the lattice created by <modref package="SCIRun" name="SampleLattice"/>, so this network
+shows off the capabilities of the StructHexVolField by using the
+<modref package="SCIRun" name="TransformMesh"/> module to transform the points into a low-distortion cylinder.</p>
 
-      <p>This network can be found at
-src/nets/Modules/FieldsGeometry/TransformMesh-cylinder.net.</p>
-    </net>
-  </nets>
+<p>This network can be found at src/nets/Modules/FieldsGeometry/TransformMesh-cylinder.net.</p>
+</net>
+</nets>
 </component>

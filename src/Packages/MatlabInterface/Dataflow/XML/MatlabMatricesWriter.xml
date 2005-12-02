@@ -34,154 +34,166 @@
 <component name="MatlabMatricesWriter" category="DataIO">
   <overview>
     <authors>
-      <author>Jeroen Stinstra</author>
+		<author>Jeroen Stinstra</author>
     </authors>
-    <summary> The MatlabMatricesWriter module saves a SCIRun matrix in
-a MATLAB .mat file
+	    <summary> 
+		The MatlabMatricesWriter module saves a SCIRun matrix in a MATLAB .mat file
 		</summary>
 
     <description>
-      <section>
+	<section>
 	<title>Module Description</title>
 	<p>
-	The MatlabMatricesWriter module exports SCIRun matrices into a
-MATLAB compatible .mat file. Currently this module supports the
-fileformat of MATLAB version 5 and higher. The module has multiple
-input ports that can be used to store multiple MATLAB arrays in one
-file. Each of these matrices can be formatted into different formats.
-Firstly, the datatype of the matrix can be altered. Since matrices in
-matlab are able to use multiple dataformats, casting the data within
-the module may be a convenient way of saving space. Secondly, the
-module has the option to export the data as a structured matrix. This
-has the advantage that additional properties can be exported to matlab
-as well. Currently this feature is only used to export the values
-stored in the property manager, however future version may export more
-properties of the SCIRun matrix object.
+	The MatlabMatricesWriter module exports SCIRun matrices into a MATLAB compatible .mat file. Currently this
+	module supports the fileformat of MATLAB version 5 and higher. The module has multiple input ports that can
+	be used to store multiple MATLAB arrays in one file. Each of these matrices can be formatted into different
+	formats. Firstly, the datatype of the matrix can be altered. Since matrices in matlab are able to use 
+	multiple dataformats, casting the data within the module may be a convenient way of saving space. Secondly,
+	the module has the option to export the data as a structured matrix. This has the advantage that additional
+	properties can be exported to matlab as well. Currently this feature is only used to export the values stored
+	in the property manager, however future version may export more properties of the SCIRun matrix object.
 	</p>
 	
 	<p> Setting up the GUI: </p>
 	
 	<orderedlist>
-	  <listitem>
-	    <p>Select a filename for the MATLAB file that needs to be
-created. You can use the BROWSE button to select an existing file.</p>
-	  </listitem>
-	  <listitem>
-	    <p>Setup the format of each matrix and change the names of
-the matrices to the ones you want to use in MATLAB.</p>
-	  </listitem>
-	  <listitem>
-	    <p>Execute the module and the file will be written.</p>
-	  </listitem>
+		<listitem>
+		Select a filename for the MATLAB file that needs to be created. You can use the BROWSE button to select an
+		existing file.
+		</listitem>
+		<listitem>
+		Setup the format of each matrix and change the names of the matrices to the ones you want to use in MATLAB.
+		</listitem>
+		<listitem>
+		Execute the module and the file will be written.
+		</listitem>
 	</orderedlist>
-      </section>
+	</section>
 	
-      <section>
+	<section>
 	<title>See Also </title>
 	<p>
-	<modref package="MatlabInterface" name="Matlab" />, <modref
-package="MatlabInterface" name="MatlabBundelsReader" />, <modref
-package="MatlabInterface" name="MatlabBundlesWriter" />, <modref
-package="MatlabInterface" name="MatlabDataReader" />, <modref
-package="MatlabInterface" name="MatlabDataWriter" />, <modref
-package="MatlabInterface" name="MatlabFieldsReader" />, <modref
-package="MatlabInterface" name="MatlabFieldsWriter" />, <modref
-package="MatlabInterface" name="MatlabMatricesReader" />, <modref
-package="MatlabInterface" name="MatlabMatricesReader" />, <modref
-package="MatlabInterface" name="MatlabNrrdsWriter" />, <modref
-package="MatlabInterface" name="MatlabNrrdsReader" />		
+	<modref package="MatlabInterface" name="Matlab" />,	
+	<modref package="MatlabInterface" name="MatlabBundelsReader" />,	
+	<modref package="MatlabInterface" name="MatlabBundlesWriter" />,	
+	<modref package="MatlabInterface" name="MatlabDataReader" />,	
+	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
+	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsWriter" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsReader" />		
 	</p>
-      </section>
+	</section>
 	
-    </description>   
+	</description>   
 
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
         <name>Matrix1</name>
-	<datatype>SCIRun::Matrix</datatype>
+		<datatype>SCIRun::Matrix</datatype>
+		<description>
+		Matrix input port 1
+		</description>
       </port>
-      <port>
+	  <port>
         <name>Matrix2</name>
-	<datatype>SCIRun::Matrix</datatype>
+		<datatype>SCIRun::Matrix</datatype>
+		<description>
+		Matrix input port 2
+		</description>
       </port>
-      <port>
+	  <port>
         <name>Matrix3</name>
-	<datatype>SCIRun::Matrix</datatype>
+		<datatype>SCIRun::Matrix</datatype>
+		<description>
+		Matrix input port 3
+		</description>
       </port>
-      <port>
+	  <port>
         <name>Matrix4</name>
-	<datatype>SCIRun::Matrix</datatype>
+		<datatype>SCIRun::Matrix</datatype>
+		<description>
+		Matrix input port 4
+		</description>
       </port>
-      <port>
+	  <port>
         <name>Matrix5</name>
-	<datatype>SCIRun::Matrix</datatype>
+		<datatype>SCIRun::Matrix</datatype>
+		<description>
+		Matrix input port 5
+		</description>
       </port>
-      <port>
+	  <port>
         <name>Matrix6</name>
-	<datatype>SCIRun::Matrix</datatype>
+		<datatype>SCIRun::Matrix</datatype>
+		<description>
+		Matrix input port 6
+		</description>		
       </port>
       <port>
         <name>filename</name>
         <datatype>SCIRun::String</datatype>
+        <description>filename</description>
       </port>          
-    </inputs>
+	</inputs>
+    <outputs>
+    </outputs>
   </io>
   
   <gui>
-    <parameter>
-      <widget> Entry </widget>
-      <label> .mat file </label>
-      <description>
-	<p>The name of the MATLAB file </p>
-      </description>
-    </parameter>
+   <parameter>
+    <widget> Entry </widget>
+	<label> .mat file </label>
+	<description> The name of the MATLAB file </description>
+	</parameter>
 
     <parameter>
-      <widget> Button </widget>
-      <label> Browse </label>
-      <description>
-	<p> Open a filesectionbox and choose a MATLAB file </p>
-      </description>
-    </parameter>
+    <widget> Button </widget>
+	<label> Browse </label>
+	<description> Open a filesectionbox and choose a MATLAB file </description>
+	</parameter>
 	
-    <parameter>
-      <widget> Entry </widget>
-      <label> Port N </label>
-      <description> 
-	<p>Enter the name of the MATLAB matrix here. When the matrix
-is loaded into MATLAB it will have this name.</p>
-      </description>
-    </parameter>
+	<parameter>
+    <widget> Entry </widget>
+	<label> Port N </label>
+	<description> 
+	Enter the name of the MATLAB matrix here. When the matrix is loaded
+	into MATLAB it will have this name.
+	</description>
+	</parameter>
 	
-    <parameter>
-      <widget> Popup Menu </widget>
-      <label> Array Type </label>
-      <description>
-	<p>Use this button to select the output format. In case
-"numeric array" is selected, the matrix will be exported as a plain
-dense or sparse matrix without any additional information. This is the
-default option and will be sufficient in most cases. In case "struct
-array" is chosen, a structured MATLAB array will be created with a
-field .data containing the matrix and a field .property containing the
-properties from the property manager. Note: that not every type in the
-property manager can be converted to matlab currently. Hence, this
-latter option is meant for future expansions of this module. </p>
-      </description>
-    </parameter>
+	<parameter>
+    <widget> Popup Menu </widget>
+	<label> Array Type </label>
+	<description>
+	Use this button to select the output format. In case "numeric array" is selected, the matrix will
+	be exported as a plain dense or sparse matrix without any additional information. This is the 
+	default option and will be sufficient in most cases. In case "struct array" is chosen, a structured
+	MATLAB array will be created with a field .data containing the matrix and a field .property containing
+	the properties from the property manager. Note: that not every type in the property manager can be
+	converted to matlab currently. Hence, this latter option is meant for future expansions of this module. 
+	</description>
+	</parameter>
 	
-    <parameter>
-      <widget> Popup Menu </widget>
-      <label> Data type </label>
-      <description>
-	<p>Use this menu to select the datatype of the MATLAB matrix.
-By default the matrix will be exported as doubles which seems the most
-logical choice, as matlab predominately uses doubles. However one can
-opt to use a different format, for instance for integer. The module
-will automatically cast the data into the proper format before
-exporting the data to disk.</p>
-      </description>
-    </parameter>
+	<parameter>
+	<widget> Popup Menu </widget>
+	<label> Data type </label>
+	<description>
+	Use this menu to select the datatype of the MATLAB matrix. By default the matrix will be exported as 
+	doubles which seems the most logical choice, as matlab predominately uses doubles. However one can
+	opt to use a different format, for instance for integer. The module will automatically
+	cast the data into the proper format before exporting the data to disk.
+	</description>
+	</parameter>
+
   </gui>
+
+  <testing>
+  </testing>
 </component>

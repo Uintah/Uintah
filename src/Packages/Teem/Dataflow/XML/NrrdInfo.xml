@@ -37,33 +37,42 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
-    <summary>NrrdInfo is used to view the attributes of
-Nrrd's.</summary>
+    <summary>NrrdInfo is used to view the attributes of Nrrd's.</summary>
     <description>
       <p> Display in the ui all attributes of the input nrrd for each
 axis in the Nrrd. Display all info in the modules UI. The data type,
-dimensionality, and label, data center, kind, size, spacing, min, max
-along each axis in the Nrrd.  If it is not stored in the Nrrd --- is
+dimensionality, and label, data center, kind, size, spacing, min, max along
+each axis in the Nrrd.  If it is not stored in the Nrrd --- is
 displayed. </p>
     </description>
     <examplesr>Teem/nets/test/NrrdInfo-test.net</examplesr>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
         <name>Query Nrrd</name>
+        <datatype>SCIRun::Nrrd</datatype>
 	<description>
           <p>
              The NrrdData that will be queried for attributes to
 display.
           </p>
         </description>
-        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
 
     </outputs>
   </io>
+  <gui>
+    <description>
+      <p>
+      </p>
+    </description>
+  </gui>
+  <testing>
+  </testing>
 </component>
 

@@ -34,16 +34,15 @@
 <component name="Camera" category="Render">
   <overview>
     <authors>
-      <author>McKAy Davis</author>
+	<author>McKAy Davis</author>
     </authors>
-    <summary>?</summary>
+    <summary></summary>
     <description>
-      <p>?</p>
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
-    <inputs>
-    </inputs>
     <outputs>
       <port>
         <name>Geometry</name>
@@ -52,5 +51,7 @@
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>
 

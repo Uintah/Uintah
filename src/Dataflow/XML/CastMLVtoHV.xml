@@ -37,12 +37,13 @@
       <author>Chris Moulding</author>
     </authors>
     <summary>
+      <p>
       Convert a LatVolField to a HexVolField
+      </p>
     </summary>
-    <description>
-      <p>Convert a LatVolField to a HexVolField</p>
-    </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -70,5 +71,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>
 

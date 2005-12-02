@@ -38,13 +38,12 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>MatrixInfo is used to view the attributes of
-matrices.</summary>
+    <summary>MatrixInfo is used to view the attributes of matrices.</summary>
     <description>
       <p>
         MatrixInfo is purely an informational Module.  It performs no
-modification on input data.  Upon execution it displays attributes
-about the input matrix in the UI.
+	modification on input data.  Upon execution it displays
+	attributes about the input matrix in the UI.
       </p>
       <p>
 	Matrix Attributes displayed:
@@ -58,15 +57,16 @@ about the input matrix in the UI.
       <p>
 	Typename - The C++ typename of the input Matrix Type.
       </p>
-      <p> # Rows - The number of rows in the input matrix.
+      <p>	
+        # Rows - The number of rows in the input matrix.
       </p>
       <p>
         # Columns - The number of columns in the input matrix.
       </p>
       <p>
-	# Elements - The size of the matrix.  This is Rows x Columns
-for non sparse matrices.  For sparse matrices this is the number of
-nonzero elements in the array.
+	# Elements - The size of the matrix.  This is Rows x Columns for non
+        sparse matrices.  For sparse matrices this is the number of nonzero
+        elements in the array.
       </p>
     </description>
   </overview>
@@ -77,5 +77,13 @@ nonzero elements in the array.
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
+    <outputs>
+      <port>
+      </port>
+    </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>

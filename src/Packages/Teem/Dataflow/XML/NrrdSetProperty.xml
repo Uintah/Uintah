@@ -42,9 +42,10 @@
       Set a Property for a Nrrd.
     </summary>
     <description>
-      <p>Set a Property for a Nrrd.  The property can then be used by
-downstream modules to determine various things about the Nrrd.  This
-module is only used for editing string properties.</p>
+      <p>Set a Property for a Nrrd.  The property can then be
+      used by downstream modules to determine various things about
+      the Nrrd.  This module is only used for editing string
+      properties.</p>
 
       <p>The properties most commonly set are:</p>
 
@@ -52,15 +53,15 @@ module is only used for editing string properties.</p>
       <p>units:  What units are used when measuring a Nrrd.</p>
 
       <p>Properties are generally used for domain specific
-information, such that the number used in the base SCIRun module set
-is quite limited.</p>
+      information, such that the number used in the base SCIRun module
+      set is quite limited.</p>
 
       <p>There are also several properties which are not currenty
-editable with this module.  These include the multi-value properties
-and properties which are not just strings.  These include the minmax
-property which is a cache of the min and max values for a Nrrd, and
-the conductivities_table which contains conductivities for an indexed
-Nrrd.</p>
+      editable with this module.  These include the multi-value
+      properties and properties which are not just strings.  These
+      include the minmax property which is a cache of the min and max
+      values for a Nrrd, and the conductivities_table which contains
+      conductivities for an indexed Nrrd.</p>
       
     </description>
   </overview>
@@ -78,4 +79,6 @@ Nrrd.</p>
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

@@ -233,7 +233,7 @@ GenCategory(char* catname, char* package, char* psepath)
 }
 
 int
-GenComponent(const ModuleInfo &mi, char* package, char* psepath)
+GenComponent(component_node* n, char* package, char* psepath)
 {
 #if DEBUG
   printf ("Begin GenComp\n");
@@ -250,12 +250,11 @@ GenComponent(const ModuleInfo &mi, char* package, char* psepath)
   const char *packdir = packstring.c_str();
 
   /* generate a skeleton .cc file */
-  length = mi.module_name_.size() + strlen(psepath)+
-    strlen(packdir) + mi.category_name_.size() + 50;
+  length = strlen(n->name)+strlen(psepath)+
+    strlen(packdir)+strlen(n->category)+50;
   filename = new char[length];
   sprintf(filename,"%s/%sDataflow/Modules/%s/%s.cc",
-	  psepath, packdir, 
-	  mi.category_name_.c_str(), mi.module_name_.c_str());
+	  psepath,packdir,n->category,n->name);
   file = fopen(filename,"w");
 
   if( file == NULL ) {
@@ -263,55 +262,53 @@ GenComponent(const ModuleInfo &mi, char* package, char* psepath)
     return 0;
   }
 
-  const char* mname = mi.module_name_.c_str();
-  const char* cname = mi.category_name_.c_str();
-  fprintf(file,component_skeleton,mname,
+  fprintf(file,component_skeleton,n->name,
 	  sci_getenv("USER"),"TODAY'S DATE HERE",
 	  package,
-	  mname,mname,mname,
-	  mname,mname,mname,mname,
-	  cname,package,mname,mname,
-	  mname,mname,package);
+	  n->name,n->name,n->name,
+	  n->name,n->name,n->name,n->name,
+	  n->category,package,n->name,n->name,
+	  n->name,n->name,package);
   fclose(file);
   delete[] filename;
 
   /* generate a full component .xml file */
-  length = strlen(mname)+strlen(psepath)+
+  length = strlen(n->name)+strlen(psepath)+
     strlen(packdir)+50;
   filename = new char[length];
   sprintf(filename,"%s/%sDataflow/XML/%s.xml",psepath,
-	  packdir,mname);
-  write_component_file(mi, filename);
+	  packdir,n->name);
+  WriteComponentNodeToFile(n,filename);
   delete[] filename;
 
-  if (mi.has_gui_node_) {
+  if (n->gui->parameters->size()) {
     /* generate a skeleton .tcl file */
-    length = strlen(mname)+strlen(psepath)+
+    length = strlen(n->name)+strlen(psepath)+
       strlen(packdir)+50;
     filename = new char[length];
     sprintf(filename,"%s/%sDataflow/GUI/%s.tcl",psepath,
-	    packdir,mname);
+	    packdir,n->name);
     file = fopen(filename,"w");
-    fprintf(file,gui_skeleton,package,cname,mname,mname,filename);
+    fprintf(file,gui_skeleton,package,n->category,n->name,n->name,filename);
     fclose(file);
     delete[] filename;
   }
 
   /* edit the category sub.mk file - add the new component */
-  char* modname = new char[strlen(mname)+50];
-  sprintf(modname,"\t$(SRCDIR)/%s.cc\\\n",mname);
-  strbuf = new char[strlen(psepath)+strlen(packdir)+strlen(cname)+50];
+  char* modname = new char[strlen(n->name)+50];
+  sprintf(modname,"\t$(SRCDIR)/%s.cc\\\n",n->name);
+  strbuf = new char[strlen(psepath)+strlen(packdir)+strlen(n->category)+50];
   sprintf(strbuf,"%s/%sDataflow/Modules/%s/sub.mk",
-	  psepath,packdir,cname);
+	  psepath,packdir,n->category);
   InsertStringInFile(strbuf,"#[INSERT NEW CODE FILE HERE]",modname);
   delete[] strbuf;
   delete[] modname;
 
-  if (mi.has_gui_node_) {
+  if (n->gui->parameters->size()) {
     /* edit the GUI sub.mk file - add the new component */
-    modname = new char[strlen(mname)+50];
-    sprintf(modname,"\t$(SRCDIR)/%s.tcl\\\n",mname);
-    strbuf = new char[strlen(psepath)+strlen(packdir)+strlen(cname)+50];
+    modname = new char[strlen(n->name)+50];
+    sprintf(modname,"\t$(SRCDIR)/%s.tcl\\\n",n->name);
+    strbuf = new char[strlen(psepath)+strlen(packdir)+strlen(n->category)+50];
     sprintf(strbuf,"%s/%sDataflow/GUI/sub.mk",psepath,packdir);
     InsertStringInFile(strbuf,"#[INSERT NEW TCL FILE HERE]",modname);
     delete[] strbuf;

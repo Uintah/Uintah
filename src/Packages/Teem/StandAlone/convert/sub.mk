@@ -36,7 +36,7 @@ PSELIBS := Core Packages/Teem/Core
 else
 PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Math Core/Thread Core/Geometry Core/Math Core/Util
 endif
-LIBS := $(TEEM_LIBRARY) $(LAPACK_LIBRARY) $(XML2_LIBRARY) $(M_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(LAPACK_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
 
 INCLUDES += $(TEEM_INCLUDE)
 

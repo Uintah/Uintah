@@ -30,6 +30,7 @@
 
 #include <Core/Services/ServiceDB.h>
 
+#include <Core/XMLUtil/StrX.h>
 #include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Util/FileUtils.h>
 
@@ -47,6 +48,22 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#  define IRIX
+#  pragma set woff 1375
+#endif
+
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/sax/SAXException.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#  pragma reset woff 1375
+#endif
 
 
 #ifdef __APPLE__
@@ -131,7 +148,7 @@ ServiceDB::findmaker(ServiceInfo* info)
     }
   
   string errstr;
- 
+
   // try the large version of the shared library
   LIBRARY_HANDLE package_so = findlib("lib" + pak_bname+lib_ext);
   if (!package_so) errstr = string(" - ")+SOError()+string("\n");

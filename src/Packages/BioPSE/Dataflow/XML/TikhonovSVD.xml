@@ -37,14 +37,11 @@
       <author>Alireza Ghodrati</author>
     </authors>
     <summary>
-      Solve inverse problem using Tikhonov regularization by using
-SVD.
+      Solve inverse problem using Tikhonov regularization by using SVD.
     </summary>
-    <description>
-      <p>Solve inverse problem using Tikhonov regularization by using
-SVD.</p>
-    </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -84,5 +81,9 @@ SVD.</p>
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>
 

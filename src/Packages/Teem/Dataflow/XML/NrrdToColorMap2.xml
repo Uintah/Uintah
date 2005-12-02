@@ -45,12 +45,14 @@
       <p>Typically this is used to create a precise image to texture
 your volume vis with.  The inputs to EditTransferFunc2 take a
 ColorMap2 and a nrrd. That nrrd is a 2d histogram, which can be saved
-and converted to an image readable by 3rd party painting programs. You
-can then paint the areas of the image as you wish, and convert it back
-to a nrrd, then feed it to this module to send downstream as a
+and converted to an image readable by 3rd party painting programs.
+You can then paint the areas of the image as you wish, and convert it
+back to a nrrd, then feed it to this module to send downstream as a
 ColorMap2.</p>
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -65,5 +67,9 @@ ColorMap2.</p>
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>
 

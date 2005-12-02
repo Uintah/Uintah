@@ -200,41 +200,53 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
   } else if (args[1] == "create_pac_cat_mod") {
     if (args.count()!=7)
       throw "create_pac_cat_mod needs 5 arguments";
-    ModuleInfo mi;
-    bool success = read_component_file(mi, args[6].c_str());
-    if (! success)
+    component_node* n = CreateComponentNode(1);
+    int check = ReadComponentNodeFromFile(n,args[6].c_str(), gui);
+    if (check!=1)
       throw "NetworkEditor: 0) XML file did not pass validation: " + 
 	args[2] + ".  Please see the messages window for details.";
+
+    if (n->name==NOT_SET||n->category==NOT_SET)
+      throw "NetworkEditor: XML file does not define"
+	" a component name and/or does not define a"
+	"  category: " + args[2];
 
     if (!(GenPackage((char*)args[3].c_str(),(char*)args[2].c_str()) &&
           GenCategory((char*)args[4].c_str(),(char*)args[3].c_str(),
                       (char*)args[2].c_str()) &&
-          GenComponent(mi, (char*)args[3].c_str(),(char*)args[2].c_str())))
+          GenComponent(n, (char*)args[3].c_str(),(char*)args[2].c_str())))
       throw "Unable to create new package, category or module."
 	"  Check your paths and names and try again.";
   } else if (args[1] == "create_cat_mod") {
     if (args.count()!=7)
       throw "create_cat_mod needs 3 arguments";
-    ModuleInfo mi;
-    bool success = read_component_file(mi, args[6].c_str());
-    if (!success)
+    component_node* n = CreateComponentNode(1);
+    int check = ReadComponentNodeFromFile(n,args[6].c_str(), gui);
+    if (check!=1)
       throw "NetworkEditor: 1) XML file did not pass validation: " + 
 	args[2] + ".  Please see the messages window for details.";
-
+    if (n->name==NOT_SET||n->category==NOT_SET)
+      throw "NetworkEditor: XML file does not define"
+	" a component name and/or does not define a"
+	"  category: " + args[2];
     if (!(GenCategory((char*)args[4].c_str(),(char*)args[3].c_str(),
                       (char*)args[2].c_str()) &&
-          GenComponent(mi, (char*)args[3].c_str(),(char*)args[2].c_str())))
+          GenComponent(n, (char*)args[3].c_str(),(char*)args[2].c_str())))
       throw "Unable to create new category or module."
 	"  Check your paths and names and try again.";
   } else if (args[1] == "create_mod"){
     if (args.count()!=7) 
       throw "create_mod needs 3 arguments";
-    ModuleInfo mi;
-    bool success = read_component_file(mi, args[6].c_str());
-    if (! success)
+    component_node* n = CreateComponentNode(1);
+    int check = ReadComponentNodeFromFile(n,args[6].c_str(), gui);
+    if (check!=1)
       throw "NetworkEditor: 2) XML file did not pass validation: " + 
 	args[2] + ".  Please see the messages window for details.";
-    if (!(GenComponent(mi, (char*)args[3].c_str(),(char*)args[2].c_str())))
+    if (n->name==NOT_SET||n->category==NOT_SET)
+      throw "NetworkEditor: XML file does not define"
+	" a component name and/or does not define a"
+	"  category: " + args[2];
+    if (!(GenComponent(n, (char*)args[3].c_str(),(char*)args[2].c_str())))
       throw "Unable to create new module."
 	"  Check your paths and names and try again.";
   } else if (args[1] == "sci_system" && args.count() > 2) {
@@ -263,12 +275,9 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
       throw "netedit module_oports cant find "+
 	args[2]+"->"+args[3]+"->"+args[4];
     string result("");
-
-    vector<OPortInfo*>::const_iterator i2 = info->oports_.begin();
-    while (i2 < info->oports_.end())
-    {
-      OPortInfo* op = *i2++;
-      result += op->datatype + " ";
+    for (std::map<int,OPortInfo*>::iterator op = info->oports->begin(); 
+         op != info->oports->end(); ++op) {
+      result += (*op).second->datatype + " ";
     }
     args.result(result);
   } else if (args[1] == "module_iport_datatypes") {
@@ -280,11 +289,9 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
       throw "netedit module_oports cant find "+
 	args[2]+"->"+args[3]+"->"+args[4];
     string result("");
-    vector<IPortInfo*>::const_iterator i1 = info->iports_.begin();
-    while (i1 < info->iports_.end())
-    {
-      IPortInfo* ip = *i1++;
-      result += ip->datatype + " ";
+    for (std::map<int,IPortInfo*>::iterator ip = info->iports->begin(); 
+         ip != info->iports->end(); ++ip) {
+      result += (*ip).second->datatype + " ";
     }
     args.result(result);
   } else if (args[1] == "presave") {

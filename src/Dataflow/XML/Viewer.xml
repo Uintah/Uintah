@@ -39,37 +39,38 @@
       <author>Steven G. Parker</author>
     </authors>
     <summary>The Viewer displays interactive graphical output to the
-computer screen. Use the Viewer to see a geometry, or spatial data.
-The Viewer provides access to many simulation parameters and controls,
-thus, indirectly initiates new iterations of the simulation steps
-important to computational steering.</summary>
+    computer screen. Use the Viewer to see a geometry, or spatial
+    data. The Viewer provides access to many simulation parameters
+    and controls, thus, indirectly initiates new iterations of the
+    simulation steps important to computational steering.</summary>
     <description>
-      <p>Autoview restores the display back to a default condition.
-This is very useful when objects disappear from the view window due to
-a combination of settings. 
+      <p>Autoview restores the display back to a default
+      condition. This is very useful when objects disappear from the 
+      view window due to a combination of settings. 
       </p>
       <p>Set Home View captures the setting of the current view so you
-can return to it later by clicking the "Go home" button.
+      can return to it later by clicking the "Go
+      home" button.
       </p>
       <p>Go home restores the current home view.
       </p>
       <p>Views lists a number of standard viewing angles and
-orientations. The view directions align with the Cartesian axes of the
-objects. The ``Up vector'' choice sets the orientation of the objects
-when viewed along the selected axis.
+      orientations. The view directions align with the Cartesian 
+      axes of the objects. The ``Up vector'' choice sets the 
+      orientation of the objects when viewed along the selected axis.
       </p> 
-      <p>From the Viewer window, the left corner of the control panel
-contains performance indicators that document the current rendering
-speed for the display. More advanced graphics performance results in a
-higher drawing rate.
+      <p>From the Viewer window, the left corner of the control panel 
+      contains performance indicators that document the current 
+      rendering speed for the display. More advanced graphics
+      performance results in a higher drawing rate.
       </p>
-      <p> A small plus sign (``+'') appears in the lower right corner
-of the Viewer window. Clicking on the plus sign reveals the extended
-control panel.
+      <p> A small plus sign (``+'') appears in the lower right corner 
+      of the Viewer window. Clicking on the plus sign reveals the 
+      extended control panel.
       </p>
       <p>For further documentation see <rlink
-path="../../../doc/User/Guide/usersguide/srug5.html">Visualization
-with the Viewer</rlink>.
+      path="../../../doc/User/Guide/usersguide/srug5.html">Visualization
+      with the Viewer</rlink>.
       </p>
     </description>
   </overview>
@@ -84,4 +85,6 @@ with the Viewer</rlink>.
   <gui>
     <img>../Modules/Render/doc/ViewerUI.jpg</img>
   </gui>
+  <testing>
+  </testing>
 </component>

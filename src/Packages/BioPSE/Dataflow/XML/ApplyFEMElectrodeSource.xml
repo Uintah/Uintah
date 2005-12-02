@@ -38,29 +38,26 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Due to course current dipoles, the
-ApplyFEMElectrodeSource module changes and recreates the right-hand
-side (RHS) for the Finite Elements discretization approach.</summary>
+    <summary>Due to course current dipoles, the ApplyFEMElectrodeSource module changes and recreates the right-hand side (RHS) for the Finite
+    Elements discretization approach.</summary>
     <description>
       <p>Version Date: March 2001</p><p>Version: 1.0</p>
       <orderedlist>
 	<listitem>
-	  <p>The ApplyFEMElectrodeSource module creates and fills a
-new ColumnMatrix, according to mesh and dipole parameters in
-situations where it does not locate a ColumnMatrix on its input that
-contains an RHS to modify, or when the module finds a ColumnMatrix of
-a different size than the number of nodes in the mesh.</p>
+	  <p>The ApplyFEMElectrodeSource module creates and fills a new ColumnMatrix,
+	  according to mesh and dipole parameters in situations where it does not locate a ColumnMatrix on its input
+	  that contains an RHS to modify, or when the module finds a ColumnMatrix of a 
+	  different size than the number of nodes in the mesh.</p>
 	</listitem>
 	<listitem>
 	  <p>We assume the mesh to be a TetVolField(int) type,
-containing indices to the conductivity tensor lookup table. The
-documentation for the <modref package="BioPSE" name="SetupFEMatrix"/>
-module provides further documentation about this mesh.</p>
+	  containing indices to the conductivity tensor lookup table.
+	  The documentation for the <modref package="BioPSE" name="SetupFEMatrix"/> module provides further documentation about this mesh.</p>
 	</listitem>
 	<listitem>
 	  <p>Dipoles are represented as nodes in TetVolMesh. The
-corresponding value are vectors representing dipole moments. Thus, the
-module expects dipoles as TetVolField(Vector) field</p>
+	  corresponding value are vectors representing dipole
+	  moments. Thus, the module expects dipoles as TetVolField(Vector) field</p>
 	</listitem>
       </orderedlist>
     </description>
@@ -71,8 +68,7 @@ module expects dipoles as TetVolField(Vector) field</p>
       <port>
 	<name>Mesh</name>
 	<description>
-	  <p>Takes handle to the field containing condictivity
-mesh</p>
+	  <p>Takes handle to the field containing condictivity mesh</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
 	<componentname>FieldReader</componentname>
@@ -81,7 +77,7 @@ mesh</p>
 	<name>Dipole Sources</name>
 	<description>
 	  <p>Takes handle to the field containing dipole positions and
-their moment values</p>
+	  their moment values</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
 	<componentname>FieldReader</componentname>
@@ -98,7 +94,7 @@ their moment values</p>
 	<name>Input RHS</name>
 	<description>
 	  <p>Takes handle to the matrix containing RHS for FE
-discretization obtained from SetupFEMatrix</p>
+	  discretization obtained from SetupFEMatrix</p>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
 	<componentname>SetupFEMatrix</componentname>
@@ -107,8 +103,8 @@ discretization obtained from SetupFEMatrix</p>
       <port>
 	<name>Current Pattern</name>
 	<description>
-	  <p>Takes handle to the matrix containing current pattern to
-apply when using the electrode set option</p>
+	  <p>Takes handle to the matrix containing current pattern
+	  to apply when using the electrode set option</p>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
 	<componentname>MatrixReader</componentname>
@@ -120,8 +116,8 @@ apply when using the electrode set option</p>
       <port>
 	<name>Electrode Parameters</name>
 	<description>
-	  <p>Takes handle to the matrix containing electrode
-parameters for use with the electrode set option</p>
+	  <p>Takes handle to the matrix containing electrode parameters
+	  for use with the electrode set option</p>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
 	<componentname>MatrixReader</componentname>
@@ -137,8 +133,7 @@ parameters for use with the electrode set option</p>
       <port>
 	<name>Boundary Transfer Matrix</name>
 	<description>
-	  <p>Takes a handle to a SparseRowMatrix relating boundary
-nodes to mesh nodes</p>
+	  <p>Takes a handle to a SparseRowMatrix relating boundary nodes to mesh nodes</p>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
 	<componentname>MatrixReader</componentname>
@@ -150,8 +145,7 @@ nodes to mesh nodes</p>
       <port>
 	<name>Output RHS</name>
 	<description>
-	  <p>Sends handle to Matrix containing dipole terms to
-downstream modules</p>
+	  <p>Sends handle to Matrix containing dipole terms to downstream modules</p>
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
 	<componentname>SolveMatrix</componentname>
@@ -163,4 +157,7 @@ downstream modules</p>
       </port>
     </outputs>
   </io>
+  
+  <testing>
+  </testing>
 </component>

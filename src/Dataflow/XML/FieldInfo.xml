@@ -38,13 +38,15 @@
       <author>McKay Davis</author>
     </authors>
     <summary>
+      <p>
         FieldInfo is used to view the attributes of fields.
+      </p>
     </summary>
     <description>
       <p>
         FieldInfo is purely an informational Module.  It performs no
-modification on input data.  Upon execution it displays attributes
-about the input field in the UI.
+	modification on input data.  Upon execution it displays
+	attributes about the input field in the UI.
       </p>
       <p>
 	Field Attributes displayed:
@@ -60,65 +62,69 @@ about the input field in the UI.
       </p>
       <p>
 	Center - The X,Y,Z coordinates of the average center of the
-nodes in the Field.
+	nodes in the Field.
       </p>
       <p>
 	Size - The X,Y,Z coordinates of the grid-aligned bounding box
-that encloses the Field.
+	that encloses the Field.
       </p>
       <p>
 	Data min,max - Only valid for scalar type input fields. Prints
-the respective min and max scalar values of the data associated with
-the input field.
+	the respective min and max scalar values of the data
+	associated with the input field.
       </p>
-      <p> # Nodes - The number of X,Y,Z points in the input field.
+      <p>	
+	# Nodes - The number of X,Y,Z points in the input field.
       </p>
       <p>
 	# Elements - The number of highest dimension elements in the
-input field.  Ex.  For a PointCloudField this would equal the number
-of nodes.  For a TetVolField this would equal the number of
-tetrahedral cells in the input field.
+        input field.  Ex.  For a PointCloudField this would equal
+        the number of nodes.  For a TetVolField this would equal the
+        number of tetrahedral cells in the input field.
       </p>
       <p>
 	Data at - The location of the data values associated with the
-input field.
+	input field.
       </p>
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
         <name>Input Field</name>
+        <datatype>SCIRun::Field</datatype>
 	<description>
           <p>
             The field to be edited.
           </p>
         </description>
-        <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
+    <outputs>
+
+    </outputs>
   </io>
   <gui>
     <description>
       <p>
         The input field attributes describe the field on the input
-port.  The Field Name, Typename, Bounding Box Min, Bounding Box Max,
-Data Min, Data Max, # of Nodes, # of Elements, and the Data At
-location.
+        port.  The Field Name, Typename, Bounding Box Min, Bounding Box Max, Data Min, Data Max, # of Nodes, # of Elements, and the Data At location.
       </p>
     </description>
   </gui>
-  <nets>
-    <net id="FieldInfo">
-      <title>FieldInfo Regression Test</title>
+  <testing>
+  </testing>
+<nets>
+<net id="FieldInfo">
+<title>FieldInfo Regression Test</title>
 
-      <p>Read in a field and examine some details with the FieldInfo
-module.</p>
+<p>Read in a field and examine some details with the FieldInfo module.</p>
 
-      <p>This network can be found at
-src/nets/Modules/FieldsOther/FieldInfo.net.</p>
+<p>This network can be found at src/nets/Modules/FieldsOther/FieldInfo.net.</p>
 
-    </net>
-  </nets>
+</net>
+</nets>
 </component>
 

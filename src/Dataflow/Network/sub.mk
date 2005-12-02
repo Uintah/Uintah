@@ -33,22 +33,22 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/Network
 
-SRCS     += $(SRCDIR)/ComponentNode.cc \
-	$(SRCDIR)/Connection.cc \
-	$(SRCDIR)/GenFiles.cc \
-	$(SRCDIR)/Module.cc \
+SRCS     += $(SRCDIR)/Connection.cc \
 	$(SRCDIR)/ModuleHelper.cc \
 	$(SRCDIR)/Network.cc \
+	$(SRCDIR)/Port.cc \
+	$(SRCDIR)/Module.cc \
 	$(SRCDIR)/NetworkEditor.cc \
 	$(SRCDIR)/PackageDB.cc \
-	$(SRCDIR)/Port.cc \
+	$(SRCDIR)/GenFiles.cc \
+	$(SRCDIR)/ComponentNode.cc \
 	$(SRCDIR)/SkeletonFiles.cc \
+	$(SRCDIR)/PackageDBHandler.cc \
 	$(SRCDIR)/Scheduler.cc
 
 PSELIBS := Dataflow/Comm Core/XMLUtil Core/Exceptions Core/Thread \
-	Core/Containers Core/GuiInterface Core/Util Core/GeomInterface \
-	Core/XMLUtil
-LIBS := $(TCL_LIBRARY) $(XML2_LIBRARY)
+	Core/Containers Core/GuiInterface Core/Util Core/GeomInterface
+LIBS := $(TCL_LIBRARY) $(XML_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

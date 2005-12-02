@@ -32,18 +32,19 @@
 <component name="TimeControls" category="Time">
   <overview>
     <authors>
-      <author>Martin Cole</author>
+	Martin Cole
     </authors>
-    <summary>Global time controls.</summary>
+    <summary>
+	Global time controls.  
+    </summary>
     <description>
-      <p>
 	Allows downstream modules the ability to synchronize itself 
-	with a global notion of time.</p>
+	with a global notion of time.
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
-    <inputs>
-    </inputs>
     <outputs>
       <port>
         <name>time</name>
@@ -51,5 +52,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>
 
