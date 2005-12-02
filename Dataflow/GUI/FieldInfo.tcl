@@ -90,7 +90,7 @@ itcl_class SCIRun_FieldsOther_FieldInfo {
 	
 	entrypair $att.l1 "Name" $this-fldname
 	entrypair $att.l1a "Generation" $this-generation
-	labelpair $att.l2 "Typename" $this-typename
+	labelpair $att.l2 "Type" $this-typename
         labelpair3 $att.l3 "Center (x,y,z)" $this-cx $this-cy $this-cz
         labelpair3 $att.l4 "Size (x,y,z)" $this-sizex $this-sizey $this-sizez
 	labelpair2 $att.l5 "Data min,max" $this-datamin $this-datamax
