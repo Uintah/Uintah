@@ -332,7 +332,9 @@ Network::schedule_all()
 {
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
-    cout << "STARTING NEW EXECUTION\n";
+    static int excounter = 0;
+    excounter++;
+    cout << "STARTING EXECUTION " + to_string(excounter) + "\n";
   }
 
   for(int i=0; i<nmodules(); i++)
