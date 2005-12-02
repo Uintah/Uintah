@@ -454,11 +454,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
              - LCG_tilde*LCG_tilde*c2
              - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
         fiber_stress = (DY - Identity*(1./3.))*(2./J)*dWdI4tilde*I4tilde;
-
-        p = Bulk*log(J)/J; // p -= qVisco;
-        if (p >= -1.e-5 && p <= 1.e-5){
-            p = 0.;
-        }
       }
       else {
         double matrix_failed = 0.;
@@ -520,7 +515,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
         }
         //________________________________hydrostatic pressure term
         if (fail[idx] == 1.0 || fail[idx] == 3.0){
-          pressure = Identity*p;
+          p = 0.;
         }
         //_______________________________Cauchy stress
       }
