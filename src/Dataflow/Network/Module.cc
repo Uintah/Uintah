@@ -364,7 +364,7 @@ void Module::update_state(State st)
 
   if (sci_getenv_p("SCI_REGRESSION_TESTING") && st == Completed)
   {
-    cout << id << ":RUNTIME: " << time << "\n";
+    cout << id  + ":RUNTIME: " + to_string(time) + "\n";
   }
 }
 
