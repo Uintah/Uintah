@@ -71,7 +71,6 @@ NrrdTextureObj::NrrdTextureObj(const string &filename,
   max_(airNaN())
 
 {
-  nrrd_->nrrd = nrrdNew();
   if (nrrdLoad(nrrd_->nrrd, filename.c_str(), 0))
   {
     string errstr = 
@@ -220,7 +219,7 @@ NrrdTextureObj::rescale_to_power_of_2()
   info->renormalize = AIR_TRUE;
 
   NrrdData *nrrd = scinew NrrdData;
-  if (nrrdSpatialResample(nrrd->nrrd=nrrdNew(), nin, info)) {
+  if (nrrdSpatialResample(nrrd->nrrd, nin, info)) {
     char *err = biffGetDone(NRRD);
     throw string("Trouble resampling: ") + err;
     free(err);
