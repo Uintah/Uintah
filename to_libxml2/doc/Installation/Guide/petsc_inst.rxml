@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section id="sec.petsc">
+  <title id="title.petsc"><acronym>PETSc</acronym> Installation</title>
+
+  <section>
+    <title>Introduction</title>
+
+    <para>
+      The <ulink url="http://www-unix.mcs.anl.gov/petsc/petsc-2/">Portable,
+      Extensible, Toolkit for Scientific Computation</ulink>
+      (<acronym>PETSc</acronym>) is a library of data structures and
+      functions for the parallel solution of partial differential equations.
+    </para>
+    <para>
+      When <acronym>PETSc</acronym> libraries are installed, and SCIRun
+      is configured to use them, SCIRun's SolveMatrix module enables the
+      use of <acronym>PETSc</acronym> solvers.
+    </para>
+    <para>
+      The installation of <acronym>PETSc</acronym> is optional.  SolveMatrix
+      provides built-in solvers if <acronym>PETSc</acronym> is not available.
+    </para>
+    <para>
+      <acronym>PETSc</acronym> is built and installed from its source
+      code distribution.  SCIRun supports <acronym>PETSc</acronym>
+      versions 2.1.5 and 2.1.6.  These are older versions of PETSc and
+      are available via a web browser from the following site:
+      <literallayout class="monospaced">
+<ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/software_old">ftp://ftp.mcs.anl.gov/pub/petsc/software_old</ulink>
+      </literallayout>
+    </para>
+    <note>
+      <para>
+	<itemizedlist>
+	  <listitem os="linux">
+	    <para>
+	      The SCIRun <phrase
+	      os="linux"><acronym>RPM</acronym></phrase><phrase
+	      os="osx"><acronym>binary tarball</acronym></phrase>
+	      distribution does <emphasis>not</emphasis> include
+	      support for <acronym>PETSc</acronym>.
+	      <acronym>PETSc</acronym> support is available only
+	      through the SCIRun source code distribution.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      SCIRun  supports only the uniprocessor build of
+	      <acronym>PETSc</acronym>.  SCIRun assumes a shared memory
+	      architecture, while multi-processor
+	      <acronym>PETSc</acronym> assumes a distributed memory
+	      architecture.
+	    </para>
+	  </listitem>
+	  <listitem os="linux;irix">
+	    <para>
+	      <acronym>BLAS</acronym> or <acronym>ATLAS</acronym> and
+	      <acronym>LAPACK</acronym> libraries must be installed
+	      before installing <acronym>PETSc</acronym>.  See <xref
+	      linkend="sec.blas_lapack_inst"/> for <ulink
+	      url="http://www.netlib.org/blas/"><acronym>BLAS</acronym></ulink>
+	      and <ulink
+	      url="http://www.netlib.org/lapack/"><acronym>LAPACK</acronym></ulink>
+	      installation instructions.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      <acronym>PETSc</acronym> must be installed before
+	      installing SCIRun. See <xref
+	      
+	      linkend="sec.petsc_inst"/> for
+	      <acronym>PETSc</acronym> installation instructions.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      SCIRun must be configured to support
+	      <acronym>PETSc</acronym>.  See <xref
+	      linkend="sec.petsc_sr_config"/> for information on
+	      configuring SCIRun to use <acronym>PETSc</acronym>.
+	    </para>
+	  </listitem>
+	</itemizedlist>
+      </para>
+      <para>
+	Start a terminal application before proceeding.  Command line
+	tools are used to install <acronym>PETSc</acronym> and
+	<acronym>BLAS</acronym>/<acronym>LAPACK</acronym>.
+      </para>
+    </note>
+
+  </section>
+
+  <section id="sec.petsc_download">
+    <title id="title.petsc_download">Download and Unpack</title>
+    <para>
+      Download and unpack <acronym>PETSc</acronym>'s source distribution:
+      <orderedlist>
+	<listitem>
+	  <para>
+	    Browser download:
+	    <literallayout class="monospaced">
+<ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/software_old/v2.1.6.petsc.tar.gz</ulink>
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Unpack:
+	    <literallayout class="monospaced">
+gunzip -c v2.1.6.petsc.tar.gz | tar xvf -
+	    </literallayout>
+	    creates the directory
+	    <filename>petsc-<replaceable>x.x.x</replaceable></filename> where
+	    <replaceable>x.x.x</replaceable> is the <acronym>PETSc</acronym> version.
+	  </para>
+	</listitem>
+      </orderedlist>
+    </para>
+  </section>
+
+  <section id="sec.petsc_inst">
+    <title id="title.petsc_inst">Build</title>
+
+    <para>
+       Follow the steps below to build <acronym>PETSc</acronym>.  See
+       the <ulink
+       url="http://www-unix.mcs.anl.gov/petsc/petsc-2/documentation/installation.html"><acronym>PETSc</acronym>
+       installation home page</ulink> for complete installation
+       instructions.
+      <orderedlist>
+	<listitem>
+	  <para>
+	    Change the working directory to the petsc directory:
+	    <literallayout class="monospaced">
+cd <replaceable>path_to</replaceable>/petsc-<replaceable>x.x.x</replaceable>
+
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Set <envar>PETSC_DIR</envar> environment variable.  For an
+	    sh-type shell:
+	    <literallayout class="monospaced">
+PETSC_DIR=`pwd`; export PETSC_DIR      
+	    </literallayout>
+	    for a csh-type shell:
+	    <literallayout class="monospaced">
+setenv PETSC_DIR `pwd`
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Choose system type and optimization level:
+	    <literallayout class="monospaced">
+<phrase os="linux">make PETSC_ARCH=linux BOPT=O_c++</phrase>
+<phrase os="osx">make PETSC_ARCH=macx BOPT=O_c++</phrase>
+<phrase os="irix">make PETSC_ARCH=<replaceable>os-type</replaceable> BOPT=O_c++</phrase>
+	    </literallayout>
+	    <phrase os="irix">
+	    where <replaceable>os-type</replaceable> is one of
+	    <literal>IRIX</literal> (for a 32-bit
+	    Irix build) or <literal>IRIX64</literal> (for a 64 bit Irix build).
+	    </phrase>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para os="osx">
+	    Configure <acronym>PETSc</acronym>:
+	    <literallayout class="monospaced">
+./config/configure.py --with-mpi=0
+	    </literallayout>
+	  </para>
+	  <para os="linux;irix">
+	    Configure <acronym>PETSc</acronym>:
+	    <literallayout os="linux;irix" class="monospaced">
+./config/configure.py --with-mpi=0 --with-blas-lapack-dir=<replaceable>blas-lapack-lib-path</replaceable>
+	    </literallayout>
+	    for example:
+	    <literallayout>
+./config/configure.py --with-mpi=0 --with-blas-lapack-dir=/usr/local/lib
+	    </literallayout>
+	    Option <option>--with-blas-lapack-dir</option> applies if
+	    <acronym>ATLAS</acronym> (rather than
+	    <acronym>BLAS</acronym>) is used.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Build <acronym>PETSc</acronym>:
+	    <literallayout class="monospaced">
+make all
+make test      
+	    </literallayout>
+	  </para>
+	</listitem>
+      </orderedlist>
+    </para>
+
+  </section>
+
+  <section id="sec.petsc_sr_config">
+    <title id="title.petsc_sr_config">SCIRun <acronym>PETSc</acronym>
+    Configure Options</title>
+
+    <para>The configure options below add support for PETSc
+    in SCIRun.  Include these options in the SCIRun
+    <command>configure</command> command (see <xref linkend="sec.build-sr"
+    />).
+    <variablelist>
+      <varlistentry>
+	<term><option>--with-unipetsc=<replaceable>path-to-petsc</replaceable></option></term>
+	<listitem>
+	  <para>Specifies the path to the <acronym>PETSc</acronym> directory.
+	  </para>
+	</listitem>
+      </varlistentry>
+      <varlistentry os="linux;irix">
+	<term><option>--with-blas=<replaceable>path-to-blas-libs</replaceable></option></term>
+	<listitem>
+	  <para>Specifies the path to the <acronym>BLAS</acronym> libraries.
+	  Not needed if using a vendor supplied library or if the
+	  <acronym>BLAS</acronym> <acronym>RPM</acronym> was
+	  installed.</para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><option>--with-atlas=<replaceable>path-to-atlas-libs</replaceable></option></term>
+	<listitem>
+	  <para>Specifies the path to the <acronym>ATLAS</acronym>
+	  libraries.  Not needed if using a vendor supplied
+	  library.</para>
+	</listitem>
+      </varlistentry>
+       <varlistentry>
+	<term><option>--with-lapack=<replaceable>path-to-lapack-libs</replaceable></option></term>
+	<listitem>
+	  <para>Specifies the path to the <acronym>LAPACK</acronym>
+	  libraries.  Not needed if using a vendor supplied library or
+	  if the <acronym>LAPACK</acronym> <acronym>RPM</acronym> was
+	  installed.</para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+    </para>
+    <para>Here is an example SCIRun  <command>configure</command> command:
+    <literallayout class="monospaced">
+../src/configure \
+--enable-package="BioPSE MatlabInterface Teem" \
+--with-unipetsc=/usr/local/petsc \
+<phrase os="linux;irix">--with-thirdparty=/usr/local/SCIRun/Thirdparty/1.22.0/Irix/CC-32bit \
+--with-blas=/usr/local/lib \
+--with-lapack=/usr/local/lib</phrase>
+<phrase os="osx">--with-thirdparty=/usr/local/SCIRun/Thirdparty_osx</phrase>
+    </literallayout></para>
+  </section>
+
+  <section>
+    <title>The SolveMatrix Module</title>
+
+    <para>When SCIRun is built with <acronym>PETSc</acronym> support, the
+    SolveMatrix module allows the user choose to from one of 12
+    <acronym>PETSc</acronym> solvers.</para>
+
+    <para>SolveMatrix passes a copy of matrix data on its input ports
+    to a call of <acronym>PETSc</acronym>'s <function>SLESSolve</function>
+    function. SolveMatrix charts the progress of the solution while
+    <acronym>PETSc</acronym> iterates.
+    </para>
+  </section>
+
+</section>

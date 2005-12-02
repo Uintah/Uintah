@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you mays not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="MatlabFieldsWriter" category="DataIO">
+  <overview>
+    <authors>
+	<author>Jeroen Stinstra</author>
+    </authors>
+	<summary> 
+	The MatlabFieldsWriter Module saves a SCIRun Field object into a MATLAB .mat file.
+	</summary>
+    <description>
+	<section>
+	<title>Module Description</title>
+	<p>
+	The MatlabFieldsWriter module exports SCIRun Field objects into a MATLAB compatible .mat file. Currently this
+	module supports the fileformat of MATLAB version 5 and higher. The module has multiple input ports that can
+	be used to store multiple MATLAB arrays in one file. All fields except for Scanline, Images, and LatVols will be
+	stored as structured matrices. Only Scanlines, Images and LatVols have the possiblity to be stored as dense matrices.
+	The format in which the fields are exported is described in the documentation of the MatlabFieldsReader module.
+	</p>
+	
+	<p> Setting up the GUI: </p>
+	
+	<orderedlist>
+		<listitem>
+		Select a filename for the MATLAB file that needs to be created. You can use the BROWSE button to select an
+		existing file.
+		</listitem>
+		<listitem>
+		Setup the format of each matrix and change the names of the matrices to the ones you want to use in MATLAB.
+		</listitem>
+		<listitem>
+		Execute the module and the file will be written.
+		</listitem>
+	</orderedlist>
+	</section>
+	
+	<section>
+	<title>See Also </title>
+	<p>
+	<modref package="MatlabInterface" name="Matlab" />,	
+	<modref package="MatlabInterface" name="MatlabBundelsReader" />,	
+	<modref package="MatlabInterface" name="MatlabBundlesWriter" />,	
+	<modref package="MatlabInterface" name="MatlabDataReader" />,	
+	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
+	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsWriter" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsReader" />	
+	</p>
+	</section>	
+	
+	
+	</description>   
+  
+  
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field1</name>
+		<datatype>SCIRun::Field</datatype>
+		<description>
+		Field input port 1
+		</description>	
+      </port>
+	  <port>
+        <name>Field2</name>
+		<datatype>SCIRun::Field</datatype>
+		<description>
+		Field input port 2
+		</description>	
+      </port>
+	  <port>
+        <name>Field3</name>
+		<datatype>SCIRun::Field</datatype>
+		<description>
+		Field input port 3
+		</description>	
+      </port>
+	  <port>
+        <name>Field4</name>
+		<datatype>SCIRun::Field</datatype>
+		<description>
+		Field input port 4
+		</description>			
+      </port>
+	  <port>
+        <name>Field5</name>
+		<datatype>SCIRun::Field</datatype>
+		<description>
+		Field input port 5
+		</description>	
+      </port>
+	  <port>
+        <name>Field6</name>
+		<datatype>SCIRun::Field</datatype>
+		<description>
+		Field input port 6
+		</description>	
+      </port>
+      <port>
+        <name>filename</name>
+        <datatype>SCIRun::String</datatype>
+        <description>filename</description>
+      </port>             
+	</inputs>
+    <outputs>
+    </outputs>
+  </io>
+ 
+  <gui>
+   <parameter>
+    <widget> Entry </widget>
+	<label> .mat file </label>
+	<description> The name of the MATLAB file </description>
+	</parameter>
+
+    <parameter>
+    <widget> Button </widget>
+	<label> Browse </label>
+	<description> Open a filesectionbox and choose a MATLAB file </description>
+	</parameter>
+	
+	<parameter>
+    <widget> Entry </widget>
+	<label> Port N </label>
+	<description> 
+	Enter the name of the MATLAB matrix here. When the matrix is loaded
+	into MATLAB it will have this name.
+	</description>
+	</parameter>
+	
+	<parameter>
+    <widget> Popup Menu </widget>
+	<label> Array Type </label>
+	<description>
+	Use this button to select the output format. In case "numeric array" is selected, the Field object will
+	be exported as a plain dense matrix without any additional information However this option is currently
+	only available for ScanlineFields, ImageFields, and LatVolFields. In case "struct array" is chosen, a structured
+	MATLAB array will be created. The layout of the array structure represents the geometry and the field data.
+	For a description of the structure of this array, see the documentation of the MatlabFieldsReader module.
+	</description>
+	</parameter>
+
+  </gui>
+
+  <testing>
+  </testing>
+</component>

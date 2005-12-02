@@ -1,0 +1,38 @@
+
+inPackage=
+outPackage=
+
+templateArgv[0]=heyhey
+
+   
+  PORT
+  iStringPort
+  oStringPort
+  EOF_PORT
+   
+  PORT
+  Margaritaville
+  Margaritaville
+  EOF_PORT
+ 
+
+  
+       
+  PORTMETHOD
+  string getString
+  getString
+  EOF_PORTMETHOD
+   
+  PORTMETHOD
+  int m1
+  m1
+  EOF_PORTMETHOD
+ 
+  
+       
+  PORTMETHOD
+  void jimmy_buffet
+  jimmy_buffet
+  EOF_PORTMETHOD
+ 
+

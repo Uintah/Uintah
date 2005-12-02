@@ -1,0 +1,221 @@
+# SCIRun Network v1.24.0
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+set name {Main}
+set bbox {15 8 540 683}
+set creationDate {Mon Feb 07 2005}
+set creationTime {18:16:28}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a SCIRun->FieldsCreate->SampleLattice Module
+set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleLattice" 106 8]
+
+# Create a SCIRun->Render->Viewer Module
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 214 639]
+
+# Create a SCIRun->FieldsData->TransformData Module
+set m3 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 38 79]
+
+# Create a SCIRun->Visualization->VolumeVisualizer Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 223 564]
+
+# Create a SCIRun->Visualization->EditColorMap2D Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 375 481]
+
+# Create a Teem->Converters->FieldToNrrd Module
+set m6 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 15 149]
+
+# Create a SCIRun->Visualization->NrrdTextureBuilder Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 159 481]
+
+# Create a Teem->UnuNtoZ->UnuQuantize Module
+set m8 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 139 300]
+
+# Create a Teem->NrrdData->NrrdSetupTexture Module
+set m9 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 60 225]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m3 0]
+set c2 [addConnection $m3 0 $m6 0]
+set c3 [addConnection $m7 0 $m4 0]
+set c4 [addConnection $m4 0 $m2 0]
+set c5 [addConnection $m6 2 $m9 0]
+set c6 [addConnection $m9 0 $m7 0]
+set c7 [addConnection $m9 1 $m8 0]
+set c8 [addConnection $m8 0 $m7 1]
+set c9 [addConnection $m5 0 $m4 2]
+
+# Set GUI variables for the SCIRun->FieldsCreate->SampleLattice Module
+set $m1-sizex {64}
+set $m1-sizey {64}
+set $m1-sizez {64}
+
+$m2 addViewer
+set $m2-ViewWindow_0-geometry 654x640+364+39
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m2-ViewWindow_0-view-eyep-x {6.60573556843}
+set $m2-ViewWindow_0-view-eyep-y {6.76991766798}
+set $m2-ViewWindow_0-view-eyep-z {-7.05365233527}
+set $m2-ViewWindow_0-view-lookat-x {}
+set $m2-ViewWindow_0-view-lookat-y {}
+set $m2-ViewWindow_0-view-lookat-z {}
+set $m2-ViewWindow_0-view-up-x {0.772558188739}
+set $m2-ViewWindow_0-view-up-y {-0.100628143793}
+set $m2-ViewWindow_0-view-up-z {0.626919310349}
+set $m2-ViewWindow_0-view-fov {20.0}
+set $m2-ViewWindow_0-view-eyep_offset-x {}
+set $m2-ViewWindow_0-view-eyep_offset-y {}
+set $m2-ViewWindow_0-view-eyep_offset-z {}
+set $m2-ViewWindow_0-sr {1}
+set $m2-ViewWindow_0-do_stereo {0}
+set $m2-ViewWindow_0-ortho-view {0}
+set $m2-ViewWindow_0-trackViewWindow0 {1}
+set $m2-ViewWindow_0-raxes {1}
+set $m2-ViewWindow_0-ambient-scale {1.0}
+set $m2-ViewWindow_0-diffuse-scale {1.0}
+set $m2-ViewWindow_0-specular-scale {0.4}
+set $m2-ViewWindow_0-emission-scale {1.0}
+set $m2-ViewWindow_0-shininess-scale {1.0}
+set $m2-ViewWindow_0-polygon-offset-factor {1.0}
+set $m2-ViewWindow_0-polygon-offset-units {0.0}
+set $m2-ViewWindow_0-point-size {1.0}
+set $m2-ViewWindow_0-line-width {1.0}
+set $m2-ViewWindow_0-sbase {0.4}
+set $m2-ViewWindow_0-bgcolor-r {                0}
+set $m2-ViewWindow_0-bgcolor-g {                0}
+set $m2-ViewWindow_0-bgcolor-b {                0}
+set $m2-ViewWindow_0-fogusebg {1}
+set $m2-ViewWindow_0-fogcolor-r {0.0}
+set $m2-ViewWindow_0-fogcolor-g {0.0}
+set $m2-ViewWindow_0-fogcolor-b {1.0}
+set $m2-ViewWindow_0-fog-start {0.0}
+set $m2-ViewWindow_0-fog-end {0.714265}
+set $m2-ViewWindow_0-fog-visibleonly {1}
+set $m2-ViewWindow_0-currentvisual {0}
+set $m2-ViewWindow_0-caxes {0}
+set $m2-ViewWindow_0-pos {}
+set $m2-ViewWindow_0-clip-num {}
+set $m2-ViewWindow_0-clip-visible {}
+set $m2-ViewWindow_0-clip-selected {}
+set $m2-ViewWindow_0-clip-visible-1 {}
+set $m2-ViewWindow_0-clip-normal-x-1 {}
+set $m2-ViewWindow_0-clip-normal-y-1 {}
+set $m2-ViewWindow_0-clip-normal-z-1 {}
+set $m2-ViewWindow_0-clip-normal-d-1 {}
+set $m2-ViewWindow_0-clip-visible-2 {}
+set $m2-ViewWindow_0-clip-normal-x-2 {}
+set $m2-ViewWindow_0-clip-normal-y-2 {}
+set $m2-ViewWindow_0-clip-normal-z-2 {}
+set $m2-ViewWindow_0-clip-normal-d-2 {}
+set $m2-ViewWindow_0-clip-visible-3 {}
+set $m2-ViewWindow_0-clip-normal-x-3 {}
+set $m2-ViewWindow_0-clip-normal-y-3 {}
+set $m2-ViewWindow_0-clip-normal-z-3 {}
+set $m2-ViewWindow_0-clip-normal-d-3 {}
+set $m2-ViewWindow_0-clip-visible-4 {}
+set $m2-ViewWindow_0-clip-normal-x-4 {}
+set $m2-ViewWindow_0-clip-normal-y-4 {}
+set $m2-ViewWindow_0-clip-normal-z-4 {}
+set $m2-ViewWindow_0-clip-normal-d-4 {}
+set $m2-ViewWindow_0-clip-visible-5 {}
+set $m2-ViewWindow_0-clip-normal-x-5 {}
+set $m2-ViewWindow_0-clip-normal-y-5 {}
+set $m2-ViewWindow_0-clip-normal-z-5 {}
+set $m2-ViewWindow_0-clip-normal-d-5 {}
+set $m2-ViewWindow_0-clip-visible-6 {}
+set $m2-ViewWindow_0-clip-normal-x-6 {}
+set $m2-ViewWindow_0-clip-normal-y-6 {}
+set $m2-ViewWindow_0-clip-normal-z-6 {}
+set $m2-ViewWindow_0-clip-normal-d-6 {}
+set $m2-ViewWindow_0-global-light0 {1}
+set $m2-ViewWindow_0-global-light1 {0}
+set $m2-ViewWindow_0-global-light2 {0}
+set $m2-ViewWindow_0-global-light3 {0}
+set $m2-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m2-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m2-ViewWindow_0-global-light {1}
+set $m2-ViewWindow_0-global-fog {0}
+set $m2-ViewWindow_0-global-debug {0}
+set $m2-ViewWindow_0-global-clip {0}
+set $m2-ViewWindow_0-global-cull {0}
+set $m2-ViewWindow_0-global-dl {0}
+set $m2-ViewWindow_0-global-type {Gouraud}
+set "$m2-ViewWindow_0-VolumeRenderer Transparent (1)" {1}
+
+# Set GUI variables for the SCIRun->FieldsData->TransformData Module
+set $m3-function {result = sqrt(x*x + y*y + z*z);
+}
+
+# Set GUI variables for the SCIRun->Visualization->VolumeVisualizer Module
+set $m4-shading {1}
+set $m4-ambient {0.5}
+set $m4-diffuse {0.5}
+set $m4-shine {30}
+
+# Set GUI variables for the SCIRun->Visualization->EditColorMap2D Module
+set $m5-panx {0.0}
+set $m5-pany {0.0}
+set $m5-scale_factor {1.0}
+set $m5-histo {0.5}
+set $m5-name-0 {Generic}
+set $m5-0-color-r {1.0}
+set $m5-0-color-g {1.0}
+set $m5-0-color-b {1.0}
+set $m5-0-color-a {1.0}
+set $m5-state-0 {t 0.167969 0.278906 1.00391 0.0398437 0.5}
+set $m5-shadeType-0 {0}
+set $m5-on-0 {1}
+set $m5-name-1 {Generic}
+set $m5-1-color-r {1.0}
+set $m5-1-color-g {1.0}
+set $m5-1-color-b {0.699999988079}
+set $m5-1-color-a {1.0}
+set $m5-state-1 {r 0 0.638672 0.0546875 0.0703125 1.11719 0.5}
+set $m5-shadeType-1 {0}
+set $m5-on-1 {1}
+set $m5-marker {end}
+
+# Open the SCIRun->Visualization->EditColorMap2D UI
+$m5 initialize_ui
+
+# Set GUI variables for the SCIRun->Visualization->NrrdTextureBuilder Module
+set $m7-card_mem {256}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
+set $m8-realmin {0.686140656471}
+set $m8-realmax {0.999999403954}
+set $m8-nbits {8}
+
+# Set GUI variables for the Teem->NrrdData->NrrdSetupTexture Module
+set $m9-realmin {0.0274928699614}
+set $m9-realmax {1.73205080757}
+
+
+::netedit scheduleok

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<component name="UnuMake" category="UnuAtoM">
+  <overview>
+    <authors>
+      <author>Darby Van Uitert</author>
+    </authors>
+    <summary>Create a nrrd (or nrrd header) from scratch. The data can be in one
+or more files, or coming from stdin. This provides an easy way of providing
+the bare minimum information about some data so as to wrap it in a nrrd,
+either to pass on for further unu processing, or to save to disk. However,
+with -h , this creates only a detached nrrd header file, without ever reading
+or writing data. When reading multiple files, each file must contain the data
+for one slice along the slowest axis. Nearly all the options below refer to
+the finished nrrd resulting from joining all the slices together, with the
+exception of -ls , -bs , and -e , which apply to every input slice file. When
+reading data from many seperate files, it may be easier to put their filenames
+in a response file; there can be one or more filenames per line of the
+response file.</summary>
+    <description>
+    <p>Create a nrrd (or nrrd header) from scratch. The data can be in one
+or more files, or coming from stdin. This provides an easy way of providing
+the bare minimum information about some data so as to wrap it in a nrrd,
+either to pass on for further unu processing, or to save to disk. However,
+with -h , this creates only a detached nrrd header file, without ever reading
+or writing data. When reading multiple files, each file must contain the data
+for one slice along the slowest axis. Nearly all the options below refer to
+the finished nrrd resulting from joining all the slices together, with the
+exception of -ls , -bs , and -e , which apply to every input slice file. When
+reading data from many seperate files, it may be easier to put their filenames
+in a response file; there can be one or more filenames per line of the
+response file.</p>
+     <p>Write Header : Check to write out a .nhdr file.  This file can be specified by browsing to it by clicking the Specify Header File button.</p>
+     <p>Kind : Specify the kind of the first axis. Other axes kinds may be set using <modref package="Teem" name="UnuAxinfo"/>.</p>
+     <p>Size : Specify the sizes separated by a single space.  This indicates the number of samples along each axis.</p>
+     <p>Spacing : These float values will indicate the spacing between samples. These should be separated by white space.</p>
+     <p>Labels : Short string labels for each axis.  These labels should be separated by a space.</p>
+     <p>Content :Specifies the content string of the nrrd, which is
+      built upon by many nrrd function to record a history of
+      operations.</p>
+      <p>Line Skip : number of ascii lines to skip before reading data</p>
+      <p>Byte Skip : number of bytes to skip (after skipping ascii lines, if
+       any) before reading data. Can use -bs -1 to skip a
+       binary header of unknown length in raw-encoded data.</p>
+      <p>Endoding :output file format. Possibilities include raw, ascii, text, hex.</p>
+      <p>Endianness : Endianness of data; relevent for any data with value
+      representation bigger than 8 bits, with a non-ascii
+      encoding: little for Intel and friends; big for everyone
+       else. Defaults to endianness of this machine.</p>
+      <p>Kev Value Pairs : key/value string pairs to be stored in nrrd. Each
+      key/value pair must be a single string.</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>OutputNrrd</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <parameter>
+      <widget>Label</widget>
+      <label>Autogenerated GUI explanation</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

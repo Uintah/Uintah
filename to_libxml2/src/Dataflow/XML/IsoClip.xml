@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="IsoClip" category="FieldsCreate">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>Clip a scalar field to a specified isovalue.</summary>
+    <description>
+
+    <p>The IsoClip module is used to clip a TetVol or TriSurf field
+    along a particular isovalue.  The isovalue is specified by the
+    entry in the GUI.  The new field can contain either the values
+    less than or greater than the isovalue, as selected by the user. </p>
+
+    <p> In order to compute where the cuts
+    are to be made, the input field must contain scalar values at the
+    nodes.  If the input field contains element centered data then either
+    just use <modref package="SCIRun" name="ClipByFunction"/> to determine which elements to keep or
+    interpolate the elements onto a node-centered field. </p>
+
+    <p> Only TetVol and TriSurf fields are supported by this general
+    clipping.  Other fields should be converted into these types if
+    they are to be clipped.  See <modref package="SCIRun" name="HexToTet"/>, <modref package="SCIRun" name="QuadToTri"/>, and <modref package="SCIRun" name="Unstructure"/>
+    for an idea of how to do this conversion. </p>
+
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Optional Isovalue</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Clipped</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Mapping</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+<nets>
+<net id="IsoClip-boundarytest">
+<title>IsoClip-boundarytest Regression Test</title>
+
+<p>Test the IsoClip module to make sure that the outer clip boundary is
+consistent.  We do this by creating a regular lattice with a distance
+function at the nodes, then converting that lattice into a tetrahedral
+mesh and doing the IsoClip to get a sphere.  The sphere is then run
+through <modref package="SCIRun" name="FieldBoundary"/> and half of it is clipped away with
+<modref package="SCIRun" name="ClipByFunction"/> so that we can see the interior.  If everything is
+working properly we will then see a relatively smooth hemispherical
+bowl.  If the adjacent tetrahedra are miscut then the interior has a
+rough geode appearance because all of the miscut tetrahera are added
+to the boundary.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/IsoClip-boundarytest.net.</p>
+
+</net>
+<net id="IsoClip-datatest">
+<title>IsoClip-datatest Regression Test</title>
+
+<p>Test the IsoClip module to make sure that the data from the input
+field is preserved in the output field.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/IsoClip-datatest.net.</p>
+
+</net>
+<net id="IsoClip-probe">
+<title>IsoClip-probe Regression Test</title>
+
+<p>Example network demonstrating the use of a <modref package="SCIRun" name="Probe"/> widget to determine
+where an IsoClip should take place.  A Tetrahedral mesh is created by
+mapping the distance function onto a unit lattice.  Then the probe is
+used to extract an isovalue from that Tetrahedral mesh which is then
+passed through <modref package="SCIRun" name="ManageFieldData"/> to convert it into a matrix and then
+used by IsoCilp to determine which value to clip against.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/IsoClip-probe.net.</p>
+
+</net>
+<net id="IsoClip-tet">
+<title>IsoClip-tet Regression Test</title>
+
+<p>Test networks for the IsoClip module.  TetVolMesh and TriSurfMesh
+field types are both supported by the IsoClip module so we make sure
+that they are both working.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/IsoClip-tet.net.</p>
+
+</net>
+</nets>
+</component>

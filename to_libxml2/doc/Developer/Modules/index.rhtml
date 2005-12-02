@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3c.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::HTML) %-->
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script type="text/javascript" src="../../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new IndexDocument();</script>
+    <title>Index to SCIRun Modules by Package</title>
+    <style type="text/css">
+      div.doc-group {
+        width: 400px;
+	float: none;
+	margin-left: auto;
+	margin-right: auto;
+      }
+      p {
+        width: 380px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script type="text/javascript">doc.preContent();</script>
+
+    <div class="page-title">
+      <h1>Module Descriptions by Package</h1>
+      <h2>v. <!--%= doc.edition %--></h2>
+    </div>
+
+    <div class="doc-group">
+      <h1>Packages</h1>
+      <h2><a href="SCIRun.html">SCIRun</a></h2>
+      <p>Modules providing a base set of datatypes and algorithms</p>
+
+      <h2><a href="BioPSE.html">BioPSE</a></h2>
+      <p>Modules solving bioelectric field problems</p>
+
+      <h2><a  href="Insight.html">Insight</a></h2>
+      <p>Modules encapsulating <a href="http://www.itk.org">ITK toolkit</a> filters</p>
+
+      <h2><a href="MatlabInterface.html">MatlabInterface</a></h2>
+      <p>Modules interacting with the Matlab system</p>
+
+      <h2><a href="Teem.html">Teem</a></h2>
+      <p>Modules supporting the supporting of N-dimensional raster
+      data using the <a href="http://teem.sourceforge.net">Teem</a>
+      libary</p>
+
+      <h2><a href="DataIO.html">DataIO</a></h2>
+      <p>Modules for reading data stored in non-SCIRun
+      formats. Formats HDF5 and MDSplus are currently supported. The
+      modules convert both geometry and data into Nrrds.  The Teem
+      package must also be installed.
+      </p>
+
+      <h2><a href="Fusion.html">Fusion</a></h2>
+      <p>Modules for transforming Nrrd geometry and data to SCIRun
+      fields. Contains additional modules, e.g., conversion of NIMROD
+      data from cylindrical to cartesian coordinates.  The Teem
+      package must also be installed.
+      </p>
+
+    </div>
+    <script type="text/javascript">doc.postContent();</script>
+  </body>
+</html>

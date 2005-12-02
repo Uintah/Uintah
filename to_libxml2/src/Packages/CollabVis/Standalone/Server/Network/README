@@ -1,0 +1,6 @@
+* We will need to protect many of our data structures with mutexes. This
+  is especially critical for NetDispatchManager.
+
+* We also need a way to keep track of which client sent the data (DONE)
+
+* Now using Appleseeds for our low-level socket code...

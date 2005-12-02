@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="TextureBuilder" category="Visualization" optional="true">
+  <overview>
+    <authors>
+      <author>Kurt Zimmerman</author>
+      <author>Milan Ikits</author>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary> This module builds a 3D Texture for use with an
+              OpenGL volume renderer.
+    </summary>
+    <description>
+      <p>The TextureBuilder module is used to create 3D volume textures for use by the <modref package="SCIRun" name="VolumeVisualizer"/> and <modref package="SCIRun" name="VolumeSlicer"/> modules.  The two inputs are a scalar LatVolField and an optional vector LatVolField that are packed into an appropriate texture.  Both fields must have the same dimensionality.  The Gradient Field input port is used for lighting and ColorMap2 filtering and is only required if those two features are to be used.  It can be computed from the scalar field using the <modref package="SCIRun" name="NodeGradient"/> module if needed.  See also the <modref package="SCIRun" name="NrrdTextureBuilder"/> module.</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Scalar Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Gradient Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Texture</name>
+	<datatype>SCIRun::Texture</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

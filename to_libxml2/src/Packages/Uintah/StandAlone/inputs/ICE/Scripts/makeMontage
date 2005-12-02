@@ -1,0 +1,19 @@
+#!/bin/csh
+#__________________________________
+# This script stitches 2 folders of jpgs together
+# All of the images need to be the same size, so you 
+# should use ppm_to_mpg to resize and add labels.      
+       
+       
+set size = "640x960"  # size of a single image
+
+set dir1 = "200^3"    #path to jpgs that you want on the left half
+set dir2 = "300^3"    #path to jpgs that you want on the right half
+set fname = "combined" 
+
+/usr/bin/rm -rf $fname*
+foreach T ( $dir1/*.jpg )
+ set num = `basename $T .jpg`
+ echo "working on jpg # " $num
+ montage -geometry $size $dir1/$num.jpg $dir2/$num.jpg $fname.$num.jpg
+end

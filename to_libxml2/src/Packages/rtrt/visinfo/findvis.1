@@ -1,0 +1,95 @@
+.TH findvis 1 ""
+.SH NAME
+findvis \- list OpenGL-capable Visuals meeting specified selection criteria
+.SH SYNOPSIS
+.ft 7
+.nf
+findvis \f2options\fP \f2specification...\fP
+
+\f2options:\fP
+	-1
+	-id
+	-display \f2X11-display-name\fP
+	-help
+
+\f2specification:  expression or sort-key\fP
+
+\f2expression:  C expression with the following operators and variables:\fP
+
+	|| && < <= > >= == != + - * / % ! ( )
+
+	r g b a rgb rgba ci
+	accumr accumg accumb accuma accumrgb accumrgba
+	z s ms
+	id level overlay main underlay
+	sb db mono stereo aux
+
+\f2sort-key:
+	\fPmin\f2 variable
+	\fPmax\f2 variable
+.fi
+.ft 1
+.SH DESCRIPTION
+.I findvis
+describes OpenGL-capable X11 Visuals that meet user-specified selection
+criteria.
+.PP
+The selection criteria
+consist of C expressions involving attributes of Visuals, plus
+sort keys that affect the order in which the Visuals will be listed.
+.PP
+Expressions involve decimal and hexadecimal constants, plus the
+variables and operators listed above.
+The operators are applied with normal C syntax and semantics.
+.PP
+Take care when using operators (especially ``!'') in expressions,
+since they are metacharacters for some shells.
+.PP
+Sort keys consist of the word \f7min\fP or \f7max\fP followed by a
+variable.
+Visuals with the largest (\f7max\fP) or smallest (\f7min\fP)
+values of the given variable will be listed first.
+.PP
+See the examples below, and
+.IR visPixelFormat (3)
+for a more complete description of selection criteria.
+.PP
+The options are as follows:
+.TP
+-1
+List only the first matching Visual, rather than all matching Visuals.
+.TP
+-id
+List only the Visual ID of matching Visuals, rather than a one-line
+description of the Visual.
+This is particularly useful in shell scripts, for passing a Visual ID
+to a program without Visual-selection ability.
+.TP
+-display \f2X11-display-name\fP
+Use the specified X11 display, rather than the default display given by
+the environment variable DISPLAY.
+.TP
+-help
+Print a usage summary.
+.SH EXAMPLES
+.TP
+\f7findvis rgb overlay\fP
+Display all rgb overlay Visuals, if any exist.
+.TP
+\f7findvis "max ci"
+Display all color-index Visuals, sorted with the deepest Visuals first.
+.TP
+\f7findvis -1 -id "db, max rgb, max z"
+Display the Visual ID of the double-buffered Visual with largest RGB
+and depth buffers.
+.TP
+\f7findvis "r != g || g != b"
+Display Visuals in which the color channels are not all the same size.
+.SH DIAGNOSTICS
+Exit status is 0 if any matching Visuals are found,
+1 if no matching Visuals are found,
+and 2 if the specification string is syntactically incorrect or if
+some other exception condition occurs.
+.SH "SEE ALSO"
+.IR visPixelFormat (3),
+.IR visGetGLXVisualInfo (3)
