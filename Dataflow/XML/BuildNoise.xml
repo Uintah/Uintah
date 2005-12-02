@@ -59,4 +59,6 @@
   <gui>
     <img>../Modules/Math/doc/BuildNoiseUI.jpg</img>
   </gui>
+  <testing>
+  </testing>
 </component>

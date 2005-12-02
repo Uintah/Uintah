@@ -64,4 +64,6 @@ The output field is a tetrahedral field of elements.
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

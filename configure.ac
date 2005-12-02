@@ -396,20 +396,6 @@ SCI_ARG_WITH(xalan,
    sci_required_xalan=yes],
   [with_xalan=""])
 
-SCI_ARG_WITH(xerces,
-  AC_HELP_STRING(--with-xerces=DIR,
-                 Use the xerces installation in DIR),
-  [with_xerces="$withval"
-   sci_required_xerces=yes],
-  [with_xerces=""])
-
-SCI_ARG_WITH(libxml2,
-  AC_HELP_STRING(--with-libxml2=DIR,
-                 Use the libxml2 installation in DIR),
-  [with_libxml2="$withval"
-   sci_required_libxml2=yes],
-  [with_libxml2=""])
-
 SCI_ARG_WITH(mdsplus,
   AC_HELP_STRING(--with-mdsplus=DIR,
                  Use the mdsplus installation in DIR),
@@ -2401,16 +2387,17 @@ AC_SUBST(TK_VERSION)
 AC_SUBST(ITCL_WIDGETS)
 
 ##  --  search for xerces-c++ --
-if test "$sci_required_xercesc" = "yes"; then
-  if test "$with_xerces"; then
-    _xer_lib_path="$with_xerces/lib"
-    _xer_inc="$with_xerces/include"
-  else
-    _xer_lib_path="$sci_thirdparty_lib"
-    _xer_inc="$sci_thirdparty_include"
-  fi
+_sci_optional=required
+if test "$with_xercesc"; then
+  _xer_lib_path="$with_xercesc/lib"
+  _xer_inc="$with_xercesc/include"
+  _sci_optional=specific
+else
+  _xer_lib_path="$sci_thirdparty_lib"
+  _xer_inc="$sci_thirdparty_include"
+fi
 
-  _xer_lib="xerces-c"
+_xer_lib="xerces-c"
 #case $host in
 #  *aix*)
       # Needed on blue pacific for stricmp
@@ -2418,58 +2405,17 @@ if test "$sci_required_xercesc" = "yes"; then
 #      ;;
 #esac
 
-  SCI_TRY_LINK(XERCES_C,xerces library and headers, xercesc/dom/DOMNamedNodeMap.hpp xercesc/util/PlatformUtils.hpp xercesc/parsers/XercesDOMParser.hpp xercesc/dom/DOMNode.hpp xercesc/util/XMLUni.hpp xercesc/sax/SAXException.hpp xercesc/sax/SAXParseException.hpp xercesc/sax/ErrorHandler.hpp,$_xer_inc,$_xer_lib,$_xer_lib_path,,[
-    DOMNode *node = 0;
-    node->getNodeName();
-  ],required)
-  
-  SCI_SUBST_THIRDPARTY_DIR(XERCES_C_LIB_DIR_FLAG)
-  SCI_SUBST_THIRDPARTY_DIR(INC_XERCES_C_H)
-
-  AC_SUBST(XERCES_C_LIB_FLAG)
-  AC_SUBST(XERCES_C_LIB_DIR_FLAG)
-  AC_SUBST(INC_XERCESC_H)
-fi
-
-##  --  search for libxml2 --
-_sci_optional=required
-if test "$with_libxml2"; then
-   #FIX_ME MC these should be set from the defaults in a source compilation of the package
-  _xml2_lib_path=/usr/lib
-  _xml2_inc="/usr/include/libxml2"
-  _sci_optional=specific
-else
-  _xml2_lib_path=/usr/lib
-  _xml2_inc="/usr/include/libxml2"
-fi
-
-_xml2_lib="xml2"
-
-SCI_TRY_LINK(XML2,xml2 library and headers, libxml/tree.h libxml/parser.h,$_xml2_inc,$_xml2_lib,$_xml2_lib_path,,[
-#if defined(LIBXML_TREE_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
-  xmlDocPtr doc = NULL;       /* document pointer */
-  xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;/* node pointers */
-  xmlDtdPtr dtd = NULL;       /* DTD pointer */
-  char buff[256];
-  int i, j;
-
-  LIBXML_TEST_VERSION;
-
-  /* 
-   * Creates a new document, a node and set it as a root node
-   */
-  doc = xmlNewDoc(BAD_CAST "1.0");
-  root_node = xmlNewNode(NULL, BAD_CAST "root");
-  xmlDocSetRootElement(doc, root_node);
-#else
-  //create compile error so configure fails
-  WrongVersionOrNotInstalled *x = 0;
-#endif
+SCI_TRY_LINK(XERCES_C,xerces library and headers, xercesc/dom/DOMNamedNodeMap.hpp xercesc/util/PlatformUtils.hpp xercesc/parsers/XercesDOMParser.hpp xercesc/dom/DOMNode.hpp xercesc/util/XMLUni.hpp xercesc/sax/SAXException.hpp xercesc/sax/SAXParseException.hpp xercesc/sax/ErrorHandler.hpp,$_xer_inc,$_xer_lib,$_xer_lib_path,,[
+  DOMNode *node = 0;
+  node->getNodeName();
 ],$_sci_optional)
   
-AC_SUBST(XML2_LIB_FLAG)
-AC_SUBST(XML2_LIB_DIR_FLAG)
-AC_SUBST(INC_XML2_H)
+SCI_SUBST_THIRDPARTY_DIR(XERCES_C_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_XERCES_C_H)
+
+AC_SUBST(XERCES_C_LIB_FLAG)
+AC_SUBST(XERCES_C_LIB_DIR_FLAG)
+AC_SUBST(INC_XERCESC_H)
 
 ##  ----------------------------------------------------------------------
 ##  ----------  required checks for optional libraries and headers  ------

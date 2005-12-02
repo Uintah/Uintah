@@ -43,6 +43,8 @@
       <p>Version Date: May 1999</p><p>Version: 1.0</p>
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -61,4 +63,8 @@
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>

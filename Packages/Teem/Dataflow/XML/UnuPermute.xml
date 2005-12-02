@@ -58,4 +58,6 @@ eachother. </p>
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

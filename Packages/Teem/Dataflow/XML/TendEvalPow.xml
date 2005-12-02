@@ -35,13 +35,11 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
-    <summary>Modify shape by raising eigenvalues to some
-power.</summary>
+    <summary>Modify shape by raising eigenvalues to some power.</summary>
     <description>
-      <p>Modify shape by raising eigenvalues to some power. The
-orientation of the tensor is unchanged.</p>
-      <p>Power: Power to which to raise all the eigenvalues. This
-value should be a float. </p>
+      <p>Modify shape by raising eigenvalues to some power. 
+      The orientation of the tensor is unchanged.</p>
+      <p>Power: Power to which to raise all the eigenvalues. This value should be a float. </p>
     </description>
     <examplesr></examplesr>
   </overview>
@@ -59,4 +57,6 @@ value should be a float. </p>
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

@@ -39,10 +39,9 @@
       <author>David Weinstein</author>
     </authors>
     <summary>
-      Create Separating surfaces from a SegLatVolField.
+      Create Separating surfaces from a SegLatVolField
     </summary>
     <description>
-      <p>Create Separating surfaces from a SegLatVolField.</p>
     </description>
   </overview>
   <io>
@@ -59,4 +58,6 @@
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

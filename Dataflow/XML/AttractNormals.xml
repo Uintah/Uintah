@@ -38,19 +38,19 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Make a new vector field that points to the input
-point.</summary>
+    <summary>Make a new vector field that points to the input point.</summary>
     <description>
       <p>
         This creates a new vector field containing the same geometry
-and data location as the input field.  It works in two modes. If the
-input PointCloudField contains only one point, all of the vectors in
-the output field will be attracted to that input point.  If the input
-PointCloudField contains two or more points, the first two points will
-be used as a line and all the vectors in the output field will be
-attracted to that line. If the input field contains scalar values, the
-vectors in the output field will be scaled by those values.  Otherwise
-they will all be normalized.
+        and data location as the input field.  It works in two modes.
+        If the input PointCloudField contains only one point, all of the
+        vectors in the output field will be attracted to that input
+        point.  If the input PointCloudField contains two or more points,
+        the first two points will be used as a line and all the
+        vectors in the output field will be attracted to that line.
+        If the input field contains scalar values, the vectors in the
+        output field will be scaled by those values.  Otherwise they
+        will all be normalized.
       </p>
     </description>
   </overview>
@@ -72,17 +72,18 @@ they will all be normalized.
       </port>
     </outputs>
   </io>
-  <nets>
-    <net id="AttractNormals">
-      <title>AttractNormals Regression Test</title>
+  <testing>
+  </testing>
+<nets>
+<net id="AttractNormals">
+<title>AttractNormals Regression Test</title>
 
-      <p>Use AttractNormals to make a vector field all point to the
-same location.  The location in this network is determined by a probe,
-but it could be the first point of any input field.</p>
+<p>Use AttractNormals to make a vector field all point to the same
+location.  The location in this network is determined by a probe, but
+it could be the first point of any input field.</p>
 
-      <p>This network can be found at
-src/nets/Modules/FieldsData/AttractNormals.net.</p>
+<p>This network can be found at src/nets/Modules/FieldsData/AttractNormals.net.</p>
 
-    </net>
-  </nets>
+</net>
+</nets>
 </component>

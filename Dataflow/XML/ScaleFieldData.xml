@@ -42,14 +42,14 @@
     <description>
       <p>
         Scale the data values in a field by the values in the input
-matrix.  Only the first column of the input matrix is used to do the
-scale.  If there are not enough values in the input matrix, they are
-repeated as necessary.  For instance, a Column matrix containing 2 and
-3 would scale half the values in a large field by 2, and the other
-half by 3.  Generally the <modref package="SCIRun"
-name="ManageFieldData"/> module would be used to extract a matrix from
-one field to be multiplied by another field.  Any type of input field
-is accepted.
+        matrix.  Only the first column of the input matrix is used to
+        do the scale.  If there are not enough values in the input
+        matrix, they are repeated as necessary.  For instance, a
+        Column matrix containing 2 and 3 would scale half the values
+        in a large field by 2, and the other half by 3.  Generally the
+        <modref package="SCIRun" name="ManageFieldData"/> module would be used to extract a matrix from
+        one field to be multiplied by another field.  Any type of
+        input field is accepted.
       </p>
     </description>
   </overview>
@@ -71,4 +71,6 @@ is accepted.
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

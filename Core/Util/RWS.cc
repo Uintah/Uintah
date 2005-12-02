@@ -32,79 +32,45 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <Core/Util/notset.h>
 
 namespace SCIRun {
-using std::string;
 
 const char _NOTSET_[] = "(null string)";
 
-bool remove_lt_white_space(string &str)
+char* removeLTWhiteSpace(char* string)
 {
-  string::iterator iter = str.begin();
-
-  int idx1 = 0;
-  while ((iter < str.end())) 
-  {
-    if (*iter == ' '  || *iter == '\t' || 
-	*iter == '\n' || *iter == '\r') 
-    {
-      ++iter; ++idx1;
-    } 
-    else break;
-  }
-  str.erase(0, idx1);
-
-  string::reverse_iterator riter = str.rbegin();
-  int idx2 = str.size() - 1;
-  while ((riter < str.rend())) 
-  {
-    if (*riter == ' '  || *riter == '\t' || 
-	*riter == '\n' || *riter == '\r') 
-    {
-      ++riter; --idx2;
-    } 
-    else break;
-  }
-
-  str.erase(idx2 + 1, str.size());
-  return true;
-}
-
-char* removeLTWhiteSpace(char* str)
-{
-  char* newstr = 0;
+  char* newstring = 0;
   int index1 = 0, index2 = 0;
 
-  index2 = strlen(str)-1;
+  index2 = strlen(string)-1;
 
-  newstr = new char[index2+2];
-  newstr[0] = '\0';
+  newstring = new char[index2+2];
+  newstring[0] = '\0';
 
   while ((index1<=index2) &&
-         (str[index1]==' '||
-          str[index1]=='\t' ||
-          str[index1]=='\n' ||
-          str[index1]=='\r')) index1++;
+         (string[index1]==' '||
+          string[index1]=='\t' ||
+          string[index1]=='\n' ||
+          string[index1]=='\r')) index1++;
 
   while ((index2>=index1) &&
-         (str[index2]==' '||
-          str[index2]=='\t' ||
-          str[index2]=='\n' ||
-          str[index2]=='\r')) index2--;
+         (string[index2]==' '||
+          string[index2]=='\t' ||
+          string[index2]=='\n' ||
+          string[index2]=='\r')) index2--;
 
   if (index1>index2) 
     return NOT_SET;
 
-  str[index2+1]='\0';
-  sprintf(newstr,"%s",&str[index1]);
+  string[index2+1]='\0';
+  sprintf(newstring,"%s",&string[index1]);
 
-  sprintf(str,"%s",newstr);
+  sprintf(string,"%s",newstring);
 
-  delete[] newstr;
+  delete[] newstring;
 
-  return str;
+  return string;
 }
 
 }

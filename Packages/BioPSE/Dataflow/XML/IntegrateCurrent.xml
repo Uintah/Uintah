@@ -41,8 +41,8 @@
       <p>Version Date: January 2003</p>
       <p>Version: 1.0</p>
       <p>IntegrateCurrent calculates current flow across a surface.
-Required inputs are the electric field, mesh with conductivities, and
-a surface enclosing the current source(s).</p>
+Required inputs are the electric field, mesh with conductivities,
+and a surface enclosing the current source(s).</p>
     </description>
   </overview>
   <io>
@@ -63,4 +63,6 @@ a surface enclosing the current source(s).</p>
     <outputs>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

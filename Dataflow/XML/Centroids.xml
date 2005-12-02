@@ -39,17 +39,17 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>Computes a PointCloudField containing all of the element
-centers for a field.</summary>
+  centers for a field.</summary>
     <description>
-      <p>The Centriods module computes a PointCloudField containing
-all of the element centers for a field.  For instance, if the input
-field is a TetVolField then the output field would contain the center
-of each tetrahedra.  An input PointCloudField would return the same
-data locations.</p>
+      The Centriods module computes a PointCloudField containing all
+      of the element centers for a field.  For instance, if the input
+      field is a TetVolField then the output field would contain the
+      center of each tetrahedra.  An input PointCloudField would return
+      the same data locations.
 
-      <p>The output field is always a PointCloudField of doubles, and
-contains no data.  If data is needed at the points then an
-interpolation module should be used to recover them.</p> 
+      The output field is always a PointCloudField of doubles, and
+      contains no data.  If data is needed at the points then an
+      interpolation module should be used to recover them.
     </description>
   </overview>
   <io>
@@ -66,16 +66,17 @@ interpolation module should be used to recover them.</p>
       </port>
     </outputs>
   </io>
-  <nets>
-    <net id="Centroids">
-      <title>Centroids Regression Test</title>
+  <testing>
+  </testing>
+<nets>
+<net id="Centroids">
+<title>Centroids Regression Test</title>
 
-      <p>Create a PointCloudField containing the center points of the
-faces from an ImageField.</p>
+<p>Create a PointCloudField containing the center points of the faces
+from an ImageField.</p>
 
-      <p>This network can be found at
-src/nets/Modules/FieldsCreate/Centroids.net.</p>
+<p>This network can be found at src/nets/Modules/FieldsCreate/Centroids.net.</p>
 
-    </net>
-  </nets>
+</net>
+</nets>
 </component>

@@ -44,8 +44,7 @@ that these files live side by side, the NrrdData will not load
 properly if they are moved, as it holds the full path to the nrrd it
 wraps. The .nrrd file can of course be relocated on its own, and used
 as any other nrrd independently from the NrrdData (.nd) file.</p>
-      <p>To save out just a nrrd or some other format, use <modref
-package="Teem" name="UnuSave"/>.</p>
+      <p>To save out just a nrrd or some other format, use <modref package="Teem" name="UnuSave"/>.</p>
     </description>
     <examplesr>Teem/nets/test/io.net</examplesr>
   </overview>
@@ -59,4 +58,6 @@ package="Teem" name="UnuSave"/>.</p>
     <outputs>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

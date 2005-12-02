@@ -39,16 +39,15 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>
-      Convert a structured field into an unstructured field for
-editing.
+      Convert a structured field into an unstructured field for editing.
     </summary>
     <description>
       <p>
-        This converts a LatVolField into a HexVolField, an ImageField
-into a QuadSurfField, or a ScanlineField into a CurveField.  The
-structured meshes are not editable, as that operation does not
-preserve structure.  Data values and locations are preserved in the
-transformation.
+        This converts a LatVolField into a HexVolField, an ImageField into a
+        QuadSurfField, or a ScanlineField into a CurveField.  The
+        structured meshes are not editable, as that operation does not
+        preserve structure.  Data values and locations are preserved
+        in the transformation.
       </p>
     </description>
   </overview>
@@ -66,18 +65,21 @@ transformation.
       </port>
     </outputs>
   </io>
-  <nets>
-    <net id="Unstructure">
-      <title>Unstructure Regression Test</title>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+<nets>
+<net id="Unstructure">
+<title>Unstructure Regression Test</title>
 
-      <p>Convert an ImageField into a QuadSurfMesh using the
-Unstructure module.  Then clip out part of the QuadSurfMesh using the
+<p>Convert an ImageField into a QuadSurfMesh using the Unstructure
+module.  Then clip out part of the QuadSurfMesh using the
 ClipByFunction module and display the two fields for comparison
 purposes.</p>
 
-      <p>This network can be found at
-src/nets/Modules/FieldsGeometry/Unstructure.net.</p>
+<p>This network can be found at src/nets/Modules/FieldsGeometry/Unstructure.net.</p>
 
-    </net>
-  </nets>
+</net>
+</nets>
 </component>

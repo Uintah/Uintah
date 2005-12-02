@@ -37,21 +37,26 @@
       <author>Chris Moulding</author>
     </authors>
     <summary>
-       Convert a TetVolField to a MaskedLatVolField
-     </summary>
+      <p>
+      Convert a TetVolField to a MaskedLatVolField
+      </p>
+    </summary>
     <description>
       <p>
-      CastTVtoMLV will create a regular grid representation of a
-TetVolField.
+      CastTVtoMLV will create a regular grid representation of a TetVolField.
       </p>
-      <p> First it creates a XxYxZ MaskedLatVolField specified by the
-dimensions in the GUI.  Then it scales and transform the field to
-envelop the input TetVolField.  Then it masks out any rectangular
-elements that do not intersect with the input TetVolField.  All Values
-are then interpolated to the new field.
+      <p>	
+      First it creates a XxYxZ MaskedLatVolField specified by the
+      dimensions in the GUI.  Then it scales and transform
+      the field to envelop the input TetVolField.  Then it masks out any
+      rectangular elements that do not intersect with the input
+      TetVolField.  All Values are then interpolated to the new
+      field.
       </p>	    
     </description>    
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -79,5 +84,9 @@ are then interpolated to the new field.
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>
 

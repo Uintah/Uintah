@@ -32,15 +32,15 @@
 
 <component name="ColorMapToNrrd" category="Converters">
   <overview>
-    <authors>
-      <author>Michael Callahan</author>
-    </authors>
+    <author>Michael Callahan</author>
     <summary>Convert a SCIRun ColorMap to a Nrrd.
     </summary>
     <description>
       <p>Convert a SCIRun ColorMap to a Nrrd in the format 4xN.</p>
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -55,5 +55,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>
 

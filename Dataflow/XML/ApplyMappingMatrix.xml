@@ -39,13 +39,14 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>
-      Apply a mapping matrix to project the data from one field onto
-the mesh of another field.
+      Apply a mapping matrix to project the data from one
+      field onto the mesh of another field.
     </summary>
     <description>
       <p>
-        This module maps the "Source" field onto the geometry of the
-"Destination" field using the "Mapping" matrix to do the projection.
+        This module maps the "Source" field onto the geometry of
+        the "Destination" field using the "Mapping" matrix to do
+	the projection.
       </p>
     </description>
   </overview>
@@ -71,4 +72,6 @@ the mesh of another field.
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

@@ -39,24 +39,37 @@
       <author>McKay Davis</author>
     </authors>
     <summary>
+      <p>
         Generates Axes Geometry for rendering graphs.
+      </p>
     </summary>
     <description>
-      <p>Generates Axes Geometry for rendering graphs.</p>
+      <p>
+      </p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">
-      <port>
-	<name>Field</name>
-	<datatype>SCIRun::Field</datatype>
-      </port>
+     <port>
+       <name>Field</name>
+       <datatype>SCIRun::Field</datatype>
+     </port>
     </inputs>
     <outputs>
-      <port>
-	<name>Axes</name>
-	<datatype>SCIRun::Geometry</datatype>
-      </port>
+     <port>
+       <name>Axes</name>
+       <datatype>SCIRun::Geometry</datatype>
+     </port>
+<!--
+     <port>
+       <name>Transform</name>
+       <datatype>SCIRun::Matrix</datatype>
+     </port>
+-->
     </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>

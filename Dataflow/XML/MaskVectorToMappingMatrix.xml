@@ -9,12 +9,14 @@
       <author>McKay Davis</author>
     </authors>
     <summary>
-      Converts a Mask Vector to a Mapping Matrix.
+      Converts a Mask Vector to a Mapping Matrix
     </summary>
     <description>
-      <p>Converts a Mask Vector to a Mapping Matrix.</p>
+      Converts a Mask Vector to a Mapping Matrix
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -29,5 +31,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>
 

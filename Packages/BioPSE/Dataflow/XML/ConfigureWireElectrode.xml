@@ -36,7 +36,6 @@
     </authors>
     <summary>Configure an electrode.</summary>
     <description>
-      <p>Configure an electrode.</p>
     </description>
   </overview>
   <io>
@@ -53,4 +52,6 @@
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

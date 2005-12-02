@@ -38,9 +38,11 @@
       This Module gets a filename and stores it in a string.
     </summary>
     <description>
-      <p>This Module gets a filename and stores it in a string.</p>
+      This Module gets a filename and stores it in a string.
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
     </inputs>
@@ -51,5 +53,16 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <description>
+      Select the filename to be put in the string.
+    </description>
+    <parameter>
+      <widget>Place Widget Name Here</widget>
+      <label>Place Label Name Here</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
 </component>
 

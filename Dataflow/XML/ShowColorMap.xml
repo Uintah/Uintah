@@ -41,7 +41,7 @@
     <summary>Display a ColorMap with index values.</summary>
     <description>
       <p>ShowColorMap creates a geometry overlay containing the input
-colormap and numerical values for it's range.</p>
+      colormap and numerical values for it's range.</p>
     </description>
   </overview>
   <io>
@@ -58,4 +58,6 @@ colormap and numerical values for it's range.</p>
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

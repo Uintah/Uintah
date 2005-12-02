@@ -43,8 +43,8 @@
     </summary>
     <description>
 
-      <p> Make a LatVolField that fits the source field.  The value
-type of the LatVolField is the same as that of the input field.  If
+      <p> Make a LatVolField that fits the source field.  The value type of
+the LatVolField is the same as that of the input field.  If
 there is no input field specified, then create a unit volume of
 doubles.  The size parameters refer to the number of nodes in the
 volume, not the number of cells.  Thus a 2x2x2 node lattice will only
@@ -59,8 +59,8 @@ cause the lattice to be twice as far across (50% bigger on each side).
 </p>
 
       <p> No interpolation is done onto the new field.  It is
-recommended that the <modref package="SCIRun" name="DirectMapping"/>
-module be used if those values are needed. </p>
+recommended that the <modref package="SCIRun" name="DirectMapping"/> module be used if those values
+are needed. </p>
 
     </description>
   </overview>
@@ -78,17 +78,18 @@ module be used if those values are needed. </p>
       </port>
     </outputs>
   </io>
-  <nets>
-    <net id="SampleLattice">
-      <title>SampleLattice Regression Test</title>
+  <testing>
+  </testing>
+<nets>
+<net id="SampleLattice">
+<title>SampleLattice Regression Test</title>
 
-      <p>Create and draw a LatVolField using the SampleLattice module.
- The lattice is not fitted to any input field nor is it transformed so
-the output is a box ranging from [-1, -1, -1] to [1, 1, 1].</p>
+<p>Create and draw a LatVolField using the SampleLattice module.  The
+lattice is not fitted to any input field nor is it transformed so the
+output is a box ranging from [-1, -1, -1] to [1, 1, 1].</p>
 
-      <p>This network can be found at
-src/nets/Modules/FieldsCreate/SampleLattice.net.</p>
+<p>This network can be found at src/nets/Modules/FieldsCreate/SampleLattice.net.</p>
 
-    </net>
-  </nets>
+</net>
+</nets>
 </component>

@@ -35,15 +35,15 @@
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      This module splits a filename in: pathname, filename (base), and
-extension.
+      This module splits a filename in: pathname, filename (base), and extension.
     </summary>
     <description>
-      <p>This module splits a filename in: pathname, filename (base),
-and extension. To get the full filename back, just merge the three
-resulting strings together.</p>
+      This module splits a filename in: pathname, filename (base), and extension.
+      To get the full filename back, just merge the three resulting strings together.
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -70,5 +70,9 @@ resulting strings together.</p>
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
 </component>
 

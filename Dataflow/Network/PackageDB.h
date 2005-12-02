@@ -39,88 +39,85 @@
 
 namespace SCIRun {
 
-class GuiInterface;
-using namespace std;
-typedef struct {
-  string name;
-  string datatype;
-  iport_maker maker;
-} IPortInfo;
+  class GuiInterface;
+  using namespace std;
+    typedef struct {
+      string name;
+      string datatype;
+      iport_maker maker;
+    } IPortInfo;
 
-typedef struct {
-  string name;
-  string datatype;
-  oport_maker maker;
-} OPortInfo;
+    typedef struct {
+      string name;
+      string datatype;
+      oport_maker maker;
+    } OPortInfo;
 
-struct ModuleInfo 
-{
-  string                       package_name_;
-  string                       category_name_;
-  string                       module_name_;
-  bool                         optional_;
-  vector<string>               authors_;
-  string                       help_description_;
-  string                       summary_;
-  ModuleMaker                  maker_;
-  std::vector<IPortInfo*>      iports_;
-  std::vector<OPortInfo*>      oports_;
-  bool                         last_port_dynamic_;
-  bool                         has_gui_node_;
-};
+    typedef struct {
+      string packageName;
+      string categoryName;
+      string moduleName;
+      string optional;
+      string help_description;
+      ModuleMaker maker;
+      string uiFile;
+      std::map<int,IPortInfo*>* iports;
+      std::map<int,OPortInfo*>* oports;
+      char lastportdynamic;
+    } ModuleInfo;
 
-typedef AVLTree<string,ModuleInfo*> Category;
-typedef AVLTree<string,Category*> Package;
-typedef AVLTree<string,Package*> Packages;
+    typedef AVLTree<string,ModuleInfo*> Category;
+    typedef AVLTree<string,Category*> Package;
+    typedef AVLTree<string,Package*> Packages;
     
-typedef AVLTreeIter<string,ModuleInfo*> CategoryIter;
-typedef AVLTreeIter<string,Category*> PackageIter;
-typedef AVLTreeIter<string,Package*> PackagesIter;
+    typedef AVLTreeIter<string,ModuleInfo*> CategoryIter;
+    typedef AVLTreeIter<string,Category*> PackageIter;
+    typedef AVLTreeIter<string,Package*> PackagesIter;
 
-class SHARE PackageDB {
-public:
-  PackageDB(GuiInterface* gui);
-  ~PackageDB();
+    class SHARE PackageDB {
+    public:
+      PackageDB(GuiInterface* gui);
+      ~PackageDB();
 
-  void		loadPackage(bool resolve=true);
-  void		setGui(GuiInterface* gui);
-  Module*		instantiateModule(const string& packageName,
+      void		loadPackage(bool resolve=true);
+      void		setGui(GuiInterface* gui);
+      Module*		instantiateModule(const string& packageName,
 					  const string& categoryName,
 					  const string& moduleName,
 					  const string& instanceName);
-  bool		haveModule(const string& packageName,
-			   const string& categoryName,
-			   const string& moduleName) const;
-  vector<string>	packageNames () const;
-  vector<string>	categoryNames(const string& packageName) const;
-  vector<string>	moduleNames  (const string& packageName,
+      bool		haveModule(const string& packageName,
+				   const string& categoryName,
+				   const string& moduleName) const;
+      vector<string>	packageNames () const;
+      vector<string>	categoryNames(const string& packageName) const;
+      vector<string>	moduleNames  (const string& packageName,
 				      const string& categoryName) const;
-  ModuleInfo*	GetModuleInfo(const string& name,
-			      const string& catname,
-			      const string& packname);
-  // Used if the module has changed categories.
-  string		getCategoryName(const string &packName,
+      ModuleInfo*	GetModuleInfo(const string& name,
+				      const string& catname,
+				      const string& packname);
+      // Used if the module has changed categories.
+      string		getCategoryName(const string &packName,
 					const string &catName,
 					const string &modName);
-private:
+    private:
 
-  bool		findMaker(ModuleInfo* info);
-  void		registerModule(ModuleInfo* info);
-  void		gui_exec(const string&);
-  void		printMessage(const string&);
-  vector<string>	delayed_commands_;
-  Packages *        db_;
-  vector<string>    packageList_;
-  GuiInterface *	gui_;
-};
+      bool		findMaker(ModuleInfo* info);
+      void		registerModule(ModuleInfo* info);
+      void		gui_exec(const string&);
+      void		printMessage(const string&);
+      vector<string>	delayed_commands_;
+      Packages *        db_;
+      vector<string>    packageList_;
+      GuiInterface *	gui_;
+    };
 
-// PackageDB is intended to be a singleton class, but nothing will break
-// if you instantiate it many times.  This is the singleton instance,
-// on which you should invoke operations:
+    // PackageDB is intended to be a singleton class, but nothing will break
+    // if you instantiate it many times.  This is the singleton instance,
+    // on which you should invoke operations:
 #if defined(_WIN32) && !defined(BUILD_Dataflow_Network)
-__declspec(dllimport) PackageDB* packageDB;
+     __declspec(dllimport) PackageDB* packageDB;
 #else
-extern PackageDB* packageDB;
+     extern PackageDB* packageDB;
 #endif
 
 } // End namespace SCIRun

@@ -40,21 +40,21 @@
     </authors>
     <summary>
       Compute the derivative of a scalar lattice and output it as a
-vector lattice.
+  vector lattice.
     </summary>
     <description>
-      <p>The NodeGradient module computes the derivative of a scalar
-field and converts it to a vector field. The gradient is the
-derivative of three dimensions; the first component in the X
-direction, the second component in the Y direction, and the third
-component in the Z direction grid, computing the general direction of
-"flow" at a specific point on the geometry.</p>
+      <p>The NodeGradient module computes the derivative of a scalar field
+      and converts it to a vector field. The gradient is the
+      derivative of three dimensions; the first component in the X
+      direction, the second component in the Y direction, and the
+      third component in the Z direction grid, computing the general
+      direction of "flow" at a specific point on the geometry.</p>
 
       <p>NodeGradient only supports computation of the gradient on
-node centered LatVolFields of scalar type.  The NodeGradient module
-has no GUI. If NodeGradient recieves as input a Field type it does not
-support, an error message appears in the Error frame of the SCIRun
-environment.</p>
+      node centered LatVolFields of scalar type.  The NodeGradient
+      module has no GUI. If NodeGradient recieves as input a Field
+      type it does not support, an error message appears in the Error
+      frame of the SCIRun environment.</p>
     </description>
   </overview>
   <io>
@@ -71,4 +71,6 @@ environment.</p>
       </port>
     </outputs>
   </io>
+  <testing>
+  </testing>
 </component>

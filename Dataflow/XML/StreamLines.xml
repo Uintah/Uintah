@@ -40,17 +40,19 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>
-         The StreamLines module visualizes vector fields by generating
+      <p>
+        The StreamLines module visualizes vector fields by generating
 curves that interpolate the flow of vectors in a Field. 
+      </p>
     </summary>
     <description>
       <p>
-The StreamLines module visualizes vector fields by generating curves
-that interpolate the flow of vectors in a Field.
+The StreamLines module visualizes vector fields by
+generating curves that interpolate the flow of vectors in a Field.
       </p>
 
-      <p> The Flow Field input port is the vector field on which the
-path intergration of the seed points will be performed.  This may be a
+<p> The Flow Field input port is the vector field on which the path
+intergration of the seed points will be performed.  This may be a
 vector field with any volume geometry type.  Surfaces and lower order
 fields do not currently work due to numerical error.  The second input
 port, Seeds, contains the initial values for which the flow will be
@@ -59,11 +61,11 @@ are used.  Seeds which are not contained within the flow field are
 just discarded.  The module requires use of both field inputs in order
 to execute.</p>
 
-      <p> The StreamLines module has one output, Streamlines, a
-CurveMesh, representing a collection of stream lines computed for the
-Flow field given the set of initial seed points.</p>
+<p> The StreamLines module has one output, Streamlines, a CurveMesh,
+representing a collection of stream lines computed for the Flow field
+given the set of initial seed points.</p>
 
-      <p> This module uses one of several similar numeric integration
+<p> This module uses one of several similar numeric integration
 methods.  They are taken directly from Numerical Analysis by David
 Kincaid and Ward Cheney, c1991.  Adams-Bashforth is a Multi-Step
 method that offers the fastest performance by reusing existing samples
@@ -80,22 +82,21 @@ the step size of the algorithm is adjusted dynamically as the stream
 moves through the flow field. </p>
 
 
-      <p> All of the computation methods are similar in that they take
-a step, (based upon the Step Size indicated) examine the derivative at
+<p> All of the computation methods are similar in that they take a
+step, (based upon the Step Size indicated) examine the derivative at
 that point, and then procede in that new direction.  Adaptive
 Runge-Kutta-Fehlberg also determines if a stepsize correction is
-necessary. This determination is based upon the Error Tolerance value.
+necessary. This determination is based upon the Error Tolerance
+value. </p>
+
+<p> The StreamLines GUI includes text fields for Error Tolerance, Step
+Size, and Maximum Steps. The Error Tolerance text field represents the
+margin of error when doing an adaptive calculation of the stream
+lines.  Maximum Steps represents the maximum number of iterations.
 </p>
 
-      <p> The StreamLines GUI includes text fields for Error
-Tolerance, Step Size, and Maximum Steps. The Error Tolerance text
-field represents the margin of error when doing an adaptive
-calculation of the stream lines.  Maximum Steps represents the maximum
-number of iterations.
-</p>
-
-      <p>The user can specify whether streamlines are computed in
-negative and/or, positive directions by changing the Direction radio
+<p>The user can specify whether streamlines are computed in negative
+and/or, positive directions by changing the Direction radio
 buttons. The Color Style options are based on either the seed number,
 integration step, distance from the seed, or the total distance, which
 will affect how values are attached to the output field.  By selecting
@@ -108,23 +109,26 @@ is similar to the integration step but based on the cord length
 distance from the seed. Whereas the total length is based on the total
 cord length from the seed point.</p>
 
-      <p> The Filter Colinear Points check box is a postprocess on the
+<p> The Filter Colinear Points check box is a postprocess on the
 streams.  It passes over the streams and removes all points that are
 too close together, as well as points that are colinear.  It is useful
 for rendering the streamlines as it greatly simplifies them while
 retaining their visual appearance.</p>
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
         <name>Flow field</name>
         <description>
           <p>
-            Flow field is the field to be visualized.  It can be 2D or
-3D and can be structured or unstructured. StreamLines is more
-effective if Flow field represents the flow present in a field rather
-than the gradient of a generic field. 
+            Flow field is the field to be visualized.  It can be 
+     	    2D or 3D and can be structured or unstructured.
+	    StreamLines is more effective if Flow field represents the
+	    flow present in a field rather than the gradient of a generic
+	    field. 
           </p>
         </description>
         <datatype>SCIRun::Field</datatype>
@@ -135,8 +139,8 @@ than the gradient of a generic field.
         <name>Seeds</name>
         <description>
           <p>
-            Seeds is a field whose nodes will be used as seed points,
-or starting points, for the generation of the stream lines.
+            Seeds is a field whose nodes will be used as seed points, or
+            starting points, for the generation of the stream lines.
           </p>
         </description>
         <datatype>SCIRun::Field</datatype>
@@ -161,18 +165,19 @@ or starting points, for the generation of the stream lines.
   <gui>
     <description>
       <p>
-        The GUI for StreamLines allows the user to control the
-parameters for the advection algorithm (Runge-Kutta-Fehlberg) used to
-extract the streamlines. 
+        The GUI for StreamLines allows the user to control the 
+        parameters for the advection algorithm (Runge-Kutta-Fehlberg)
+        used to extract the streamlines. 
       </p>
     </description>
+    <img>../Modules/Visualization/doc/StreamLinesGUI.jpg</img>
     <parameter>
       <widget>Button</widget>
       <label>Execute</label>
       <description>
         <p>
           Sends a request to the scheduler to have this component
-executed.
+          executed.
         </p>
       </description>
     </parameter>
@@ -182,8 +187,8 @@ executed.
       <description>
         <p>
           The value entered here will control the RKF step-size
-variable.  It will adaptively change the step-size based on how close
-the local truncation error is to this value.
+          variable.  It will adaptively change the step-size based on
+          how close the local truncation error is to this value.
         </p>
       </description>
     </parameter>
@@ -193,7 +198,7 @@ the local truncation error is to this value.
       <description>
         <p>
           The value entered here will provide RKF with the initial
-step size.
+          step size.
         </p>
       </description>
     </parameter>
@@ -203,43 +208,54 @@ step size.
       <description>
         <p>
           The value entered here will be the maximum number of nodes
-allowed in a single stream line (to prevent infinite run time). 
+          allowed in a single stream line (to prevent infinite run
+          time). 
         </p>
       </description>
     </parameter>
-    <img>../Modules/Visualization/doc/StreamLinesGUI.jpg</img>
   </gui>
-  <nets>
-    <net id="StreamLines-cellwalk">
-      <title>StreamLines-cellwalk Regression Test</title>
+  <testing>
+    <plan>
+      <description>
+        <p>
+        </p>
+      </description>
+      <step>
+        <p>
+          nothing yet.
+        </p>
+      </step>
+    </plan>
+  </testing>
+<nets>
+<net id="StreamLines-cellwalk">
+<title>StreamLines-cellwalk Regression Test</title>
 
-      <p>Test the StreamLine cellwalk code by making a synthetic cell
-centered lattice vortex data set and then computing a set of
-streamlines through that data set.</p>
+<p>Test the StreamLine cellwalk code by making a synthetic cell centered
+lattice vortex data set and then computing a set of streamlines
+through that data set.</p>
 
-      <p>This network can be found at
-src/nets/Modules/Visualization/StreamLines-cellwalk.net.</p>
+<p>This network can be found at src/nets/Modules/Visualization/StreamLines-cellwalk.net.</p>
 
-    </net>
-    <net id="StreamLines-lic">
-      <title>StreamLines-lic Regression Test</title>
+</net>
+<net id="StreamLines-lic">
+<title>StreamLines-lic Regression Test</title>
 
-      <p>Use the StreamLines module to create a line interval
-convolution like visualization of a vector data set.  First the scalar
-voltages for the utahtorso-lowres model are loaded in and then the
-gradient is taken of that data set.  Then 1000 seeds are randomly
-picked from inside the torso.  These are then streamlined and colored
-according to which seed they are.  Since the seeds are randomly
-distributed this results in a random but unique color per streamline.
-Finally all of the 1000 streamlines are displayed as transparent lines
-along with a reference torso boundary and the heart model.  For full
-3D effect the model should be rotated interactively.</p>
+<p>Use the StreamLines module to create a line interval convolution like
+visualization of a vector data set.  First the scalar voltages for the
+utahtorso-lowres model are loaded in and then the gradient is taken of
+that data set.  Then 1000 seeds are randomly picked from inside the
+torso.  These are then streamlined and colored according to which seed
+they are.  Since the seeds are randomly distributed this results in
+a random but unique color per streamline.  Finally all of the 1000
+streamlines are displayed as transparent lines along with a reference
+torso boundary and the heart model.  For full 3D effect the model should
+be rotated interactively.</p>
 
-      <p>This network can be found at
-src/nets/Modules/Visualization/StreamLines-lic.net.</p>
+<p>This network can be found at src/nets/Modules/Visualization/StreamLines-lic.net.</p>
 
-    </net>
-  </nets>
+</net>
+</nets>
 </component>
 
 

@@ -29,19 +29,22 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
+
 <component name="CreateString" category="String">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
-    <summary>This module can be used to create a string.</summary>
+    <summary>
+      This module can be used to create a string.
+    </summary>
     <description>
-      <p>
       This module allows the user to create a string by typing its 
       contents into an edit box in the GUI.
-      </p>
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
     <inputs lastportdynamic="no">
     </inputs>
@@ -52,4 +55,16 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <description>
+      Enter the text of the string here.
+    </description>
+    <parameter>
+      <widget>Place Widget Name Here</widget>
+      <label>Place Label Name Here</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
 </component>
+
