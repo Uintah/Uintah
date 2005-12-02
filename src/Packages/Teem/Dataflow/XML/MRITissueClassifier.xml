@@ -36,13 +36,14 @@
       <author>McKay Davis</author>
     </authors>
     <summary>
+	Tolga Tasdizen's MRI Tissue Classifier Code.
+    </summary>
+    <description>
       <p>
 	Tolga Tasdizen's MRI Tissue Classifier Code
       </p>
-    </summary>
+    </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no"> 
       <port>
@@ -64,7 +65,6 @@
         <name>FATSAT</name>
 	<datatype>SCIRun::Nrrd</datatype>
       </port>
-
     </inputs>
     <outputs>
       <port>
@@ -73,9 +73,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

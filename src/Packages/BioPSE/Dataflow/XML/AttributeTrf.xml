@@ -39,9 +39,10 @@
     <summary>
       Transform attributes
     </summary>
+    <description>
+      <p> Transform attributes</p>
+    </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -56,9 +57,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

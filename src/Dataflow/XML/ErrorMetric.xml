@@ -39,8 +39,10 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Compute and visualize error between two vectors.</summary>
+    <summary>Compute and visualize error between two
+vectors.</summary>
     <description>
+      <p>Compute and visualize error between two vectors.</p>
     </description>
   </overview>
   <io>
@@ -64,6 +66,4 @@
   <gui>
     <img>../Modules/Math/doc/ErrorMetricUI.jpg</img>
   </gui>
-  <testing>
-  </testing>
 </component>

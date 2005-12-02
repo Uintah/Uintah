@@ -38,15 +38,13 @@
     <summary>Describe everything about one sample in a DT volume.
     </summary>
     <description>
-    <p>Describe everything about one sample in a DT volume.</p>
-    <p>X : the x corrdinate to sample (integer).</p>
-    <p>Y : the y corrdinate to sample (integer).</p>
-    <p>Z : the z corrdinate to sample (integer).</p>
+      <p>Describe everything about one sample in a DT volume.</p>
+      <p>X : the x corrdinate to sample (integer).</p>
+      <p>Y : the y corrdinate to sample (integer).</p>
+      <p>Z : the z corrdinate to sample (integer).</p>
     </description>
     <examplesr>Teem/nets/test/NrrdInfo-test.net</examplesr>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -58,12 +56,4 @@
 
     </outputs>
   </io>
-  <gui>
-    <description>
-      <p>
-      </p>
-    </description>
-  </gui>
-  <testing>
-  </testing>
 </component>
