@@ -110,47 +110,62 @@ MatrixInfo::clear_vals()
 void
 MatrixInfo::update_input_attributes(MatrixHandle m)
 {
+  const bool regressing = sci_getenv_p("SCI_REGRESSION_TESTING");
+
   string matrixname;
-  if (m->get_property("name", matrixname))
+  if (!m->get_property("name", matrixname))
   {
-    gui_matrixname_.set(matrixname);
+    matrixname = "--- Name Not Assigned ---";
   }
-  else
-  {
-    gui_matrixname_.set("--- Name Not Assigned ---");
-  }
+  gui_matrixname_.set(matrixname);
+  if (regressing) { remark("Name: " + matrixname); }
 
   gui_generation_.set(to_string(m->generation));
+  if (regressing) { remark("Generation: " + to_string(m->generation)); }
 
   // Set the typename.
+  string kind;
+  string size;
   if (m->is_sparse())
   {
-    gui_typename_.set("SparseRowMatrix");
-    gui_elements_.set(to_string(m->sparse()->get_nnz()));
+    kind = "SparseRowMatrix";
+    size = to_string(m->sparse()->get_nnz());
   }
   else if (m->is_column())
   {
-    gui_typename_.set("ColumnMatrix");
-    gui_elements_.set(to_string(m->ncols() * m->nrows()));
+    kind = "ColumnMatrix";
+    size = to_string(m->ncols() * m->nrows());
   }
   else if (m->is_dense_col_maj())
   {
-    gui_typename_.set("DenseColMajMatrix");
-    gui_elements_.set(to_string(m->ncols() * m->nrows()));
+    kind = "DenseColMajMatrix";
+    size = to_string(m->ncols() * m->nrows());
   }
   else if (m->is_dense())
   {
-    gui_typename_.set("DenseMatrix");
-    gui_elements_.set(to_string(m->ncols() * m->nrows()));
+    kind = "DenseMatrix";
+    size = to_string(m->ncols() * m->nrows());
   }
   else
   {
-    gui_typename_.set("Unknown");
-    gui_elements_.set("*");
+    kind = "Unknown";
+    size = "*";
+  }
+  gui_typename_.set(kind);
+  gui_elements_.set(size);
+  if (regressing)
+  {
+    remark("Type: " + kind);
   }
 
   gui_rows_.set(to_string(m->nrows()));
   gui_cols_.set(to_string(m->ncols()));
+  if (regressing)
+  {
+    remark("Rows: " + to_string(m->nrows()));
+    remark("Cols: " + to_string(m->ncols()));
+    remark("Elems: " + size);
+  }
 }
 
 
