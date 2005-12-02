@@ -127,11 +127,11 @@ itcl_class Teem_NrrdData_NrrdInfo {
 		    
 		    labelpair $t.l "Label" $this-label0
 		    labelpair $t.k "Kind" $this-kind0
-		    labelpair $t.c "Center" $this-center0
 		    labelpair $t.sz "Size" $this-size0
-		    labelpair $t.sp "Spacing" $this-spacing0
 		    labelpair $t.mn "Min" $this-min0
 		    labelpair $t.mx "Max" $this-max0
+		    labelpair $t.c "Center" $this-center0
+		    labelpair $t.sp "Spacing" $this-spacing0
 		    labelpair $t.sd "Space Direction" $this-spaceDir0
 		    
 		    pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx $t.sd \
@@ -146,11 +146,11 @@ itcl_class Teem_NrrdData_NrrdInfo {
 		    
 		    labelpair $t.l "Label" $this-label$i
 		    labelpair $t.k "Kind" $this-kind$i
-		    labelpair $t.c "Center" $this-center$i
 		    labelpair $t.sz "Size" $this-size$i
-		    labelpair $t.sp "Spacing" $this-spacing$i
 		    labelpair $t.mn "Min" $this-min$i
 		    labelpair $t.mx "Max" $this-max$i
+		    labelpair $t.c "Center" $this-center$i
+		    labelpair $t.sp "Spacing" $this-spacing$i
 		    labelpair $t.sd "Space Direction" $this-spaceDir$i
 		    
 		    pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx $t.sd \
@@ -164,11 +164,11 @@ itcl_class Teem_NrrdData_NrrdInfo {
 		    
 		labelpair $t.l "Label" $this-label0
 		labelpair $t.k "Kind" $this-kind0
-		labelpair $t.c "Center" $this-center0
 		labelpair $t.sz "Size" $this-size0
-		labelpair $t.sp "Spacing" $this-spacing0
 		labelpair $t.mn "Min" $this-min0
 		labelpair $t.mx "Max" $this-max0
+		labelpair $t.c "Center" $this-center0
+		labelpair $t.sp "Spacing" $this-spacing0
 		labelpair $t.sd "Space Direction" $this-spaceDir0
 		
 		pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx $t.sd \
@@ -194,7 +194,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	set att [$w.att childsite]
 	
 	labelpair $att.name "Name" $this-name
-	labelpair $att.type "C Type" $this-type
+	labelpair $att.type "Data Type" $this-type
 	labelpair $att.dim "Dimension" $this-dimension
 	labelpair $att.orig "Space Origin" $this-origin
 	
