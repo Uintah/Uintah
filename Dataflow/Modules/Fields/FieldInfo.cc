@@ -142,39 +142,48 @@ FieldInfo::clear_vals()
 void
 FieldInfo::update_input_attributes(FieldHandle f)
 {
+  const bool regressing = sci_getenv_p("SCI_REGRESSION_TESTING");
+  
   // Name
   string fldname;
-  if (f->get_property("name",fldname))
+  if (!f->get_property("name",fldname))
   {
-    gui_fldname_.set(fldname);
+    fldname = "--- Name Not Assigned ---";
   }
-  else
-  {
-    gui_fldname_.set("--- Name Not Assigned ---");
-  }
+  gui_fldname_.set(fldname);
+  if (regressing) { remark("Name: " + fldname); }
 
   // Generation
-  gui_generation_.set(to_string(f->generation));
+  const string gen = to_string(f->generation);
+  gui_generation_.set(gen);
+  if (regressing) { remark("Generation: " + gen); }
 
   // Typename
   const string &tname = f->get_type_description()->get_name();
   gui_typename_.set(tname);
+  if (regressing) { remark("Typename: " + tname); }
 
   // Basis
   static char *at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
+  string dataat;
   switch(f->basis_order())
   {
   case 1:
-    gui_dataat_.set("Nodes (linear basis)");
+    dataat = "Nodes (linear basis)";
     break;
   case 0:
-    gui_dataat_.set(at_table[f->mesh()->dimensionality()] +
-                    string(" (constant basis)"));
+    dataat = at_table[f->mesh()->dimensionality()] +
+      string(" (constant basis)");
     break;
   case -1:
-    gui_dataat_.set("None");
+    dataat = "None";
+    break;
+  default:
+    dataat = "High Order Basis";
     break;
   }
+  gui_dataat_.set(dataat);
+  if (regressing) { remark("Data At: " + dataat); }
 
   Point center;
   Vector size;
@@ -190,6 +199,17 @@ FieldInfo::update_input_attributes(FieldHandle f)
     gui_sizex_.set(to_string(size.x()));
     gui_sizey_.set(to_string(size.y()));
     gui_sizez_.set(to_string(size.z()));
+    if (regressing)
+    {
+      remark("Center: "
+             + to_string(center.x()) + " "
+             + to_string(center.y()) + " "
+             + to_string(center.z()));
+      remark("Size: "
+             + to_string(size.x()) + " "
+             + to_string(size.y()) + " "
+             + to_string(size.z()));
+    }
   }
   else
   {
@@ -209,6 +229,11 @@ FieldInfo::update_input_attributes(FieldHandle f)
     sdi->compute_min_max(minmax.first,minmax.second);
     gui_datamin_.set(to_string(minmax.first));
     gui_datamax_.set(to_string(minmax.second));
+    if (regressing)
+    {
+      remark("Data Min: " + to_string(minmax.first));
+      remark("Data Max: " + to_string(minmax.second));
+    }
   }
   else
   {
@@ -229,6 +254,11 @@ FieldInfo::update_input_attributes(FieldHandle f)
 
   gui_numnodes_.set(num_nodes);
   gui_numelems_.set(num_elems);
+  if (regressing)
+  {
+    remark("Num Nodes: " + num_nodes);
+    remark("Num Elems: " + num_elems);
+  }
 }
 
 
