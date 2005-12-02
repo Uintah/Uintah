@@ -58,11 +58,10 @@ using namespace std;
 static bool
 regression_rerun_callback(void *data)
 {
-  static int counter = 1;
+  static int counter = 2;
   Network *net = (Network *)data;
   if (counter > 1 )
   {
-    cout << "STARTING NEW EXECUTION\n";
     counter--;
     net->schedule_all();
     return false;
@@ -76,7 +75,7 @@ regression_quit_callback(void *)
 {
   std::cout.flush();
   std::cerr.flush();
-  //sci_system("ps aux | grep ../src/nets");
+  sci_system("ps aux | grep 'scirun -r' | grep -v grep" );
   Thread::exitAll(0);
   return false;
 }
@@ -91,7 +90,7 @@ Scheduler::Scheduler(Network* net)
 {
   net->attach(this);
 
-  if (sci_getenv("SCI_REGRESSION_TESTING"))
+  if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
     // Arbitrary low regression quit callback priority.  Should
     // probably be lower.
