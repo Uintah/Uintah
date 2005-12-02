@@ -161,7 +161,7 @@ FieldInfo::update_input_attributes(FieldHandle f)
   // Typename
   const string &tname = f->get_type_description()->get_name();
   gui_typename_.set(tname);
-  if (regressing) { remark("Typename: " + tname); }
+  if (regressing) { remark("Type: " + tname); }
 
   // Basis
   static char *at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
