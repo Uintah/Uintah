@@ -160,7 +160,7 @@ ImageImporter::execute()
 		 3, 3, image->columns, image->rows))
     {
       char *err = biffGetDone(NRRD);
-      error(string("Error creating NRRD: ") + err + "\n");
+      error(string("Error creating NRRD: ") + err);
       free(err);
     }
     nrrd->axis[0].kind = nrrdKind3Vector;

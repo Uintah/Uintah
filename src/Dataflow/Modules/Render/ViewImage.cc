@@ -629,7 +629,7 @@ ViewImage::ViewImage(GuiContext* ctx) :
     } catch (...) {
       fonts_.clear();
       error("Error loading fonts.\n"
-	    "Please set SCIRUN_FONT_PATH to a directory with scirun.ttf\n");
+	    "Please set SCIRUN_FONT_PATH to a directory with scirun.ttf");
     }
   }
   runner_ = scinew RealDrawer(this);
@@ -2121,7 +2121,7 @@ ViewImage::send_mip_slices(SliceWindow &window)
 {
   GeometryOPort *geom = (GeometryOPort *)get_oport("Geometry");
   if (!geom) {
-    error("Cannot find port Geometry!\n");
+    error("Cannot find port Geometry!");
     return;
   }
   for (int axis = 0; axis < 3; ++axis)
@@ -2349,7 +2349,7 @@ ViewImage::execute()
     for (i = 0; i < 3; i++)
       if (nrrd1->nrrd->axis[i].size != nrrd2->nrrd->axis[i].size) {
 	error("Both input nrrds must have same dimensions.");
-	error("  Only rendering first inpput.");
+	error("  Only rendering first input.");
 	nrrd2 = 0;
       } else
 	max_slice_[i] = nrrd1->nrrd->axis[i].size-1;
@@ -2889,7 +2889,7 @@ void
 ViewImage::send_slice(NrrdSlice &slice) {
   GeometryOPort *geom = (GeometryOPort *)get_oport("Geometry");
   if (!geom) {
-    error("Cannot find port Geometry!\n");
+    error("Cannot find port Geometry!");
     return;
   }
   slice.do_lock();

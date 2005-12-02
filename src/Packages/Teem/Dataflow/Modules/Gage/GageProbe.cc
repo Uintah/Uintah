@@ -158,7 +158,7 @@ GageProbe::execute()
     setGageKind(kind, gageKindScl);
   } else if (field_kind_.get() == "Scalar"){
     warning("Field Kind is not set in the input Nrrd, making a guess based "\
-    "upon the GUI settings\n");
+    "upon the GUI settings.");
     setGageKind(kind, gageKindScl);
   } else if (nin->axis[0].size == 3){
     //first axis has three values, guess it's a vector field  (%p)\n",kind
@@ -168,10 +168,10 @@ GageProbe::execute()
     setGageKind(kind, gageKindVec);
   } else if (field_kind_.get() == "Vector"){
     warning("Field Kind is not set in the input Nrrd, making a guess based "\
-    "upon the GUI settings\n");
+    "upon the GUI settings.");
     setGageKind(kind, gageKindVec);
   } else {
-    error("Cannot set gageKind.\n");
+    error("Cannot set gageKind.");
     return;
   }
   
