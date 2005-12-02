@@ -58,10 +58,11 @@ using namespace std;
 static bool
 regression_rerun_callback(void *data)
 {
-  static int counter = 0;
+  static int counter = 2;
   Network *net = (Network *)data;
-  if (counter > 0)
+  if (counter > 1 )
   {
+    cout << "STARTING NEW EXECUTION\n";
     counter--;
     net->schedule_all();
     return false;
@@ -75,6 +76,7 @@ regression_quit_callback(void *)
 {
   std::cout.flush();
   std::cerr.flush();
+  sci_system("ps aux | grep ../src/nets");
   Thread::exitAll(0);
   return false;
 }
