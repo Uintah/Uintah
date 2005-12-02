@@ -104,7 +104,7 @@ TetMesher::execute()
   if (!ret_value) 
   {
     // printf("Failed read input\n");
-    error("Failed read input\n");
+    error("Failed read input.");
   }
 
     // mesh the volume
@@ -118,7 +118,7 @@ TetMesher::execute()
     if (!ret_value) 
     {
       // printf("Failed setting boundary mesh\n");
-      error("Failed setting boundary mesh\n");
+      error("Failed setting boundary mesh.");
     }
 
       // generate the mesh
@@ -128,7 +128,7 @@ TetMesher::execute()
       if (!ret_value) 
       {
         // printf("Failed generating mesh\n");
-        error("Failed generating mesh\n");
+        error("Failed generating mesh.");
       }
     }
 
@@ -140,7 +140,7 @@ TetMesher::execute()
       ret_value = tet_mesher.get_mesh(new_points, tetpoints, num_tets, tets);
       if (!ret_value) {
         // printf("Failed reading tet mesh\n");
-        error("Failed reading tet mesh\n");
+        error("Failed reading tet mesh.");
       }
     }
   }
@@ -152,7 +152,7 @@ TetMesher::execute()
     if (!ret_value) 
     {
       // printf("Failed writing tet mesh file\n");
-      error("Failed writing tet mesh file\n");
+      error("Failed writing tet mesh file.");
     }
   }
 
@@ -172,7 +172,7 @@ TetMesher::read_tri_file(int &npoints, double *&points, int &ntris, int *&tris)
 {
   FieldIPort *trisurf = (FieldIPort *) get_iport("TriSurf");
   if (!trisurf) {
-    error("Unable to initialize iport TriSurf");
+    error("Unable to initialize iport TriSurf.");
     return false;
   }
   FieldHandle trisurfH;

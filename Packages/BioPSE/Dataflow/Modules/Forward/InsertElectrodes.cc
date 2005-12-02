@@ -490,7 +490,7 @@ InsertElectrodes::execute()
     return;
   }
   if (imeshH->basis_order() != 0) {
-    error("Input FEM didn't have data at CELL\n");
+    error("Input FEM didn't have data at CELL.");
     return;
   }
   vector<pair<int, double> > dirichlet_nodes;

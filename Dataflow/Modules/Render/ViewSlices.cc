@@ -3316,7 +3316,7 @@ ViewSlices::initialize_fonts() {
   } catch (...) {
     delete_all_fonts();
     error("Error loading font file: "+fontfile);
-    error("Please set SCIRUN_FONT_PATH to a directory with scirun.ttf\n");
+    error("Please set SCIRUN_FONT_PATH to a directory with scirun.ttf");
   }
 }
 

@@ -512,7 +512,7 @@ Viewer::delete_patch_portnos(int portid)
       GeomViewerPort *pi;
       if(!(pi = ((GeomViewerPort*)ports_.getObj(portno_map_[i]).get_rep())))
       {
-	warning("Geometry message sent to bad port!!!\n");
+	warning("Geometry message sent to bad port!");
 	continue;
       }
       GeomIndexedGroup::IterIntGeomObj iter = pi->getIter();
@@ -559,7 +559,7 @@ Viewer::detachPort(int portid)
   GeomViewerPort* pi;
   if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
   {
-    warning("Geometry message sent to bad port!!!\n");
+    warning("Geometry message sent to bad port!");
     return;
   }
   delAll(pi);
@@ -712,7 +712,7 @@ ViewerMessage::ViewerMessage(const string& rid, double tbeg, double tend,
 {
   if (nframes <= 0)
   {
-    std::cerr << "nframes shouldn't be zero for animation.\n";
+    std::cerr << "nframes shouldn't be zero for animation.";
     nframes = 1;
   }
 }
@@ -784,7 +784,7 @@ Viewer::flushPort(int portid)
   GeomViewerPort* pi;
   if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
   {
-    warning("Geometry message sent to bad port!!!\n");
+    warning("Geometry message sent to bad port!");
     return;
   }
   GeometryComm* gmsg=pi->msg_head;

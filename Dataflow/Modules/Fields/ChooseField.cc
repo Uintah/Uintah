@@ -103,17 +103,17 @@ ChooseField::execute()
       ++pi;
     }
     if (!found_valid) {
-      error("Didn't find any valid fields\n");
+      error("Didn't find any valid fields.");
       return;
     }
   } else {
     // use the index specified
     int idx=port_index_.get();
-    if (idx<0) { error("Can't choose a negative port"); return; }
+    if (idx<0) { error("Can't choose a negative port."); return; }
     while (pi != range.second && idx != 0) { ++pi ; idx--; }
     int port_number=pi->second;
     if (pi == range.second || ++pi == range.second) { 
-      error("Selected port index out of range"); return; 
+      error("Selected port index out of range."); return; 
     }
 
     ifield = (FieldIPort *)get_iport(port_number);
