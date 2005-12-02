@@ -70,7 +70,7 @@ itcl_class SCIRun_Math_MatrixInfo {
 	
 	entrypair $att.l1 "Name" $this-matrixname
 	entrypair $att.l2 "Generation" $this-generation
-	labelpair $att.l3 "Typename" $this-typename
+	labelpair $att.l3 "Type" $this-typename
 	labelpair $att.l7 "# Rows" $this-rows
 	labelpair $att.l8 "# Columns" $this-cols
 	labelpair $att.l9 "# Elements" $this-elements
