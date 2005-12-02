@@ -36,10 +36,10 @@
 <component name="BuildSeedVolume" category="Converters">
   <overview>
     <authors>
-      <author>Darby Van Uitert</author>
+    <author>Darby Van Uitert</author>
     </authors>
     <summary>
-    Given a point cloud of doubles, create a binary ITK Image of unsigned chars.
+    >Given a point cloud of doubles, create a binary ITK Image of unsigned chars.
     </summary>
     <description>
     </description>
@@ -62,8 +62,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
-<nets>
-</nets>
 </component>

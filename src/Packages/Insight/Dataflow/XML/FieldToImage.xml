@@ -33,14 +33,13 @@
 <component name="FieldToImage" category="Converters">
   <overview>
     <authors>
+    <author>Darby J Van Uitert</author>
     </authors>
     <summary>
     </summary>
-    <description>Converts a SCIRun Field to an ITK Image.  The data is referenced, not copied.  This module currenlty works for ImageField, ITKImageField, LatVolField, or ITKLatVolField.
+    <description><p>Converts a SCIRun Field to an ITK Image.  The data is referenced, not copied.  This module currenlty works for ImageField, ITKImageField, LatVolField, or ITKLatVolField.</p>
   </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -55,9 +54,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 
