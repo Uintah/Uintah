@@ -41,11 +41,11 @@
     <summary>Convert a QuadSurfField into a TriSurfField.</summary>
     <description>
       <p>
-        Given a QuadSurfField (or anything that supports the same interface)
-        as input, produce a TriSurfField as output -- each Quad element gets
-        split into 2 Tris.  In order to produce consistent splits across
-        faces, we alternate between two different templates for how to do
-        the split.
+        Given a QuadSurfField (or anything that supports the same
+interface) as input, produce a TriSurfField as output -- each Quad
+element gets split into 2 Tris.  In order to produce consistent splits
+across faces, we alternate between two different templates for how to
+do the split.
       </p>
     </description>
   </overview>
@@ -63,18 +63,18 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
-<nets>
-<net id="QuadToTri-img">
-<title>QuadToTri-img Regression Test</title>
+  <nets>
+    <net id="QuadToTri-img">
+      <title>QuadToTri-img Regression Test</title>
 
-<p>Use QuadToTri to convert an ImageField or QuadSurfField into a
-TriSurfField.  The TriSurfField is then displayed in comparison with
-the original field for verification that it was properly triangulated.</p>
+      <p>Use QuadToTri to convert an ImageField or QuadSurfField into
+a TriSurfField.  The TriSurfField is then displayed in comparison with
+the original field for verification that it was properly
+triangulated.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsGeometry/QuadToTri-img.net.</p>
+      <p>This network can be found at
+src/nets/Modules/FieldsGeometry/QuadToTri-img.net.</p>
 
-</net>
-</nets>
+    </net>
+  </nets>
 </component>

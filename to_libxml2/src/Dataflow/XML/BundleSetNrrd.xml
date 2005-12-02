@@ -32,22 +32,20 @@
 <component name="BundleSetNrrd" category="Bundle">
   <overview>
     <authors>
-    Jeroen Stinstra
+      <author>Jeroen Stinstra</author>
     </authors>
     <summary>
       This module adds a 'nrrd' object to a bundle stream.
     </summary>
     <description>
-      This module adds a 'nrrd' object to a bundle stream.
-      In the GUI a name can be specified for the object, which
-      will be used to cataloge the object in the stream. In case
-      the 'nrrd' object has a name property this one can be used as well
-      to name the object in the stream. The module has three input ports,
-      so three 'nrrd' objects can be inserted at the same time.
+      <p>This module adds a 'nrrd' object to a bundle stream. In the
+GUI a name can be specified for the object, which will be used to
+cataloge the object in the stream. In case the 'nrrd' object has a
+name property this one can be used as well to name the object in the
+stream. The module has three input ports, so three 'nrrd' objects can
+be inserted at the same time.</p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -74,9 +72,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

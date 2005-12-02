@@ -41,12 +41,12 @@
     <summary>Convert a HexVolField into a TetVolField.</summary>
     <description>
       <p>
-        Given a Hex field (or anything that supports the same interface)
-	as input, produce a TetVol as output -- each Hex element gets
-        split into 5 Tets.  In order to produce consistent splits across
-        faces, we alternate between two different templates for how to do
-        the split.  Currently HexVolMesh, StructHexVolMesh, and
-        LatVolMesh fields can be converted into TetVolMeshes.
+        Given a Hex field (or anything that supports the same
+interface) as input, produce a TetVol as output -- each Hex element
+gets split into 5 Tets.  In order to produce consistent splits across
+faces, we alternate between two different templates for how to do the
+split.  Currently HexVolMesh, StructHexVolMesh, and LatVolMesh fields
+can be converted into TetVolMeshes.
       </p>
     </description>
   </overview>
@@ -64,21 +64,20 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
-<nets>
-<net id="HexToTet-hex">
-<title>HexToTet-hex Regression Test</title>
+  <nets>
+    <net id="HexToTet-hex">
+      <title>HexToTet-hex Regression Test</title>
 
-<p>Convert a Hexahedral field into a Tetrahedral field using the HexToTet
-module, and draw both the Hex and Tet fields for reference.  The code
-for converting the various hexahedral meshes into tets is different
-internally, so we do the tests for each of the various hexahedral
-field types independently.  There should be no visual difference
-between the results of these three test networks.</p>
+      <p>Convert a Hexahedral field into a Tetrahedral field using the
+HexToTet module, and draw both the Hex and Tet fields for reference.
+The code for converting the various hexahedral meshes into tets is
+different internally, so we do the tests for each of the various
+hexahedral field types independently.  There should be no visual
+difference between the results of these three test networks.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsGeometry/HexToTet-hex.net.</p>
+      <p>This network can be found at
+src/nets/Modules/FieldsGeometry/HexToTet-hex.net.</p>
 
-</net>
-</nets>
+    </net>
+  </nets>
 </component>

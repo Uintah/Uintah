@@ -42,14 +42,13 @@
     <description>
       <p>
 	Replace all instances of the specified old data value from a
-	field with the specified new data value.  Returns a cloned
-	field.
+field with the specified new data value.  Returns a cloned field.
       </p>
       <p>
 	Useful for relabeling features in segmented datasets.  Allows
-	you to replace an old data value with a new one.  For example,
-	you could use this to reclassify all of the gray matter nodes
-	(value 5) as white matter nodes (value 4).
+you to replace an old data value with a new one.  For example, you
+could use this to reclassify all of the gray matter nodes (value 5) as
+white matter nodes (value 4).
       </p>
     </description>
   </overview>
@@ -67,8 +66,4 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>

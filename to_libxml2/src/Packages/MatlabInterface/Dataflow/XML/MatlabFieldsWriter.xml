@@ -23,152 +23,139 @@
 <component name="MatlabFieldsWriter" category="DataIO">
   <overview>
     <authors>
-	<author>Jeroen Stinstra</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-	<summary> 
-	The MatlabFieldsWriter Module saves a SCIRun Field object into a MATLAB .mat file.
+    <summary> The MatlabFieldsWriter Module saves a SCIRun Field
+object into a MATLAB .mat file.
 	</summary>
     <description>
-	<section>
+      <section>
 	<title>Module Description</title>
 	<p>
-	The MatlabFieldsWriter module exports SCIRun Field objects into a MATLAB compatible .mat file. Currently this
-	module supports the fileformat of MATLAB version 5 and higher. The module has multiple input ports that can
-	be used to store multiple MATLAB arrays in one file. All fields except for Scanline, Images, and LatVols will be
-	stored as structured matrices. Only Scanlines, Images and LatVols have the possiblity to be stored as dense matrices.
-	The format in which the fields are exported is described in the documentation of the MatlabFieldsReader module.
+	The MatlabFieldsWriter module exports SCIRun Field objects
+into a MATLAB compatible .mat file. Currently this module supports the
+fileformat of MATLAB version 5 and higher. The module has multiple
+input ports that can be used to store multiple MATLAB arrays in one
+file. All fields except for Scanline, Images, and LatVols will be
+stored as structured matrices. Only Scanlines, Images and LatVols have
+the possiblity to be stored as dense matrices. The format in which the
+fields are exported is described in the documentation of the
+MatlabFieldsReader module.
 	</p>
 	
 	<p> Setting up the GUI: </p>
 	
 	<orderedlist>
-		<listitem>
-		Select a filename for the MATLAB file that needs to be created. You can use the BROWSE button to select an
-		existing file.
-		</listitem>
-		<listitem>
-		Setup the format of each matrix and change the names of the matrices to the ones you want to use in MATLAB.
-		</listitem>
-		<listitem>
-		Execute the module and the file will be written.
-		</listitem>
+	  <listitem>
+	    <p>Select a filename for the MATLAB file that needs to be
+created. You can use the BROWSE button to select an existing file.</p>
+	  </listitem>
+	  <listitem>
+	    <p>Setup the format of each matrix and change the names of
+the matrices to the ones you want to use in MATLAB.</p>
+	  </listitem>
+	  <listitem>
+	    <p>Execute the module and the file will be written.</p>
+	  </listitem>
 	</orderedlist>
-	</section>
+      </section>
 	
-	<section>
+      <section>
 	<title>See Also </title>
 	<p>
-	<modref package="MatlabInterface" name="Matlab" />,	
-	<modref package="MatlabInterface" name="MatlabBundelsReader" />,	
-	<modref package="MatlabInterface" name="MatlabBundlesWriter" />,	
-	<modref package="MatlabInterface" name="MatlabDataReader" />,	
-	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
-	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
-	<modref package="MatlabInterface" name="MatlabFieldsWriter" />,
-	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
-	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
-	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />,
-	<modref package="MatlabInterface" name="MatlabNrrdsReader" />	
+	<modref package="MatlabInterface" name="Matlab" />, <modref
+package="MatlabInterface" name="MatlabBundelsReader" />, <modref
+package="MatlabInterface" name="MatlabBundlesWriter" />, <modref
+package="MatlabInterface" name="MatlabDataReader" />, <modref
+package="MatlabInterface" name="MatlabDataWriter" />, <modref
+package="MatlabInterface" name="MatlabFieldsReader" />, <modref
+package="MatlabInterface" name="MatlabFieldsWriter" />, <modref
+package="MatlabInterface" name="MatlabMatricesReader" />, <modref
+package="MatlabInterface" name="MatlabMatricesReader" />, <modref
+package="MatlabInterface" name="MatlabNrrdsWriter" />, <modref
+package="MatlabInterface" name="MatlabNrrdsReader" />	
 	</p>
-	</section>	
+      </section>	
 	
 	
-	</description>   
+    </description>   
   
   
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
         <name>Field1</name>
-		<datatype>SCIRun::Field</datatype>
-		<description>
-		Field input port 1
-		</description>	
+	<datatype>SCIRun::Field</datatype>
       </port>
-	  <port>
+      <port>
         <name>Field2</name>
-		<datatype>SCIRun::Field</datatype>
-		<description>
-		Field input port 2
-		</description>	
+	<datatype>SCIRun::Field</datatype>
       </port>
-	  <port>
+      <port>
         <name>Field3</name>
-		<datatype>SCIRun::Field</datatype>
-		<description>
-		Field input port 3
-		</description>	
+	<datatype>SCIRun::Field</datatype>
       </port>
-	  <port>
+      <port>
         <name>Field4</name>
-		<datatype>SCIRun::Field</datatype>
-		<description>
-		Field input port 4
-		</description>			
+	<datatype>SCIRun::Field</datatype>
       </port>
-	  <port>
+      <port>
         <name>Field5</name>
-		<datatype>SCIRun::Field</datatype>
-		<description>
-		Field input port 5
-		</description>	
+	<datatype>SCIRun::Field</datatype>
       </port>
-	  <port>
+      <port>
         <name>Field6</name>
-		<datatype>SCIRun::Field</datatype>
-		<description>
-		Field input port 6
-		</description>	
+	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
         <name>filename</name>
         <datatype>SCIRun::String</datatype>
-        <description>filename</description>
       </port>             
-	</inputs>
-    <outputs>
-    </outputs>
+    </inputs>
   </io>
  
   <gui>
-   <parameter>
-    <widget> Entry </widget>
-	<label> .mat file </label>
-	<description> The name of the MATLAB file </description>
-	</parameter>
+    <parameter>
+      <widget> Entry </widget>
+      <label> .mat file </label>
+      <description>
+	<p>The name of the MATLAB file </p>
+      </description>
+    </parameter>
 
     <parameter>
-    <widget> Button </widget>
-	<label> Browse </label>
-	<description> Open a filesectionbox and choose a MATLAB file </description>
-	</parameter>
+      <widget> Button </widget>
+      <label> Browse </label>
+      <description>
+	<p> Open a filesectionbox and choose a MATLAB file </p>
+      </description>
+    </parameter>
 	
-	<parameter>
-    <widget> Entry </widget>
-	<label> Port N </label>
-	<description> 
-	Enter the name of the MATLAB matrix here. When the matrix is loaded
-	into MATLAB it will have this name.
-	</description>
-	</parameter>
+    <parameter>
+      <widget> Entry </widget>
+      <label> Port N </label>
+      <description> 
+	<p>Enter the name of the MATLAB matrix here. When the matrix
+is loaded into MATLAB it will have this name.</p>
+      </description>
+    </parameter>
 	
-	<parameter>
-    <widget> Popup Menu </widget>
-	<label> Array Type </label>
-	<description>
-	Use this button to select the output format. In case "numeric array" is selected, the Field object will
-	be exported as a plain dense matrix without any additional information However this option is currently
-	only available for ScanlineFields, ImageFields, and LatVolFields. In case "struct array" is chosen, a structured
-	MATLAB array will be created. The layout of the array structure represents the geometry and the field data.
-	For a description of the structure of this array, see the documentation of the MatlabFieldsReader module.
-	</description>
-	</parameter>
+    <parameter>
+      <widget> Popup Menu </widget>
+      <label> Array Type </label>
+      <description>
+	<p>Use this button to select the output format. In case
+"numeric array" is selected, the Field object will be exported as a
+plain dense matrix without any additional information However this
+option is currently only available for ScanlineFields, ImageFields,
+and LatVolFields. In case "struct array" is chosen, a structured
+MATLAB array will be created. The layout of the array structure
+represents the geometry and the field data. For a description of the
+structure of this array, see the documentation of the
+MatlabFieldsReader module.</p>
+      </description>
+    </parameter>
 
   </gui>
-
-  <testing>
-  </testing>
 </component>

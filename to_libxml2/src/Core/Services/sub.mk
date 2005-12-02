@@ -53,6 +53,6 @@ PSELIBS := \
 	Core/SystemCall \
 	Core/XMLUtil 
 
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML2_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

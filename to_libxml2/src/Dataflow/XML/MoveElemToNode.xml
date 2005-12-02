@@ -38,18 +38,18 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Make a new field with data at nodes instead of elements.</summary>
+    <summary>Make a new field with data at nodes instead of
+elements.</summary>
     <description>
 
       <p>MoveElemToNode creates a new field with the data at the mesh
-      nodes rather than at the elements.  This currently only works on
-      LatVolField, StructHexVolField, ImageField, and
-      StuctQuadSurfField field types.  The data must be at cells/faces
-      as appropriate to the field type.  A new field is created such
-      that the data remains at the same positions in space but occupy
-      the nodes of the new mesh rather than being located at the
-      cell/face locations.  This is the opposite of
-      <modref package="SCIRun" name="MoveNodeToElem"/>.</p>
+nodes rather than at the elements.  This currently only works on
+LatVolField, StructHexVolField, ImageField, and StuctQuadSurfField
+field types.  The data must be at cells/faces as appropriate to the
+field type.  A new field is created such that the data remains at the
+same positions in space but occupy the nodes of the new mesh rather
+than being located at the cell/face locations.  This is the opposite
+of <modref package="SCIRun" name="MoveNodeToElem"/>.</p>
 
     </description>
   </overview>
@@ -67,28 +67,30 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
-<nets>
-<net id="MoveElemToNode-img">
-<title>MoveElemToNode-img Regression Test</title>
+  <nets>
+    <net id="MoveElemToNode-img">
+      <title>MoveElemToNode-img Regression Test</title>
 
-<p>Test the MoveElemToNode module by moving the data in an ImageField
-from the faces onto the nodes while retaining the same data locations.
-The ImageField is transformed first so that the positions are better tested.</p>
+      <p>Test the MoveElemToNode module by moving the data in an
+ImageField from the faces onto the nodes while retaining the same data
+locations. The ImageField is transformed first so that the positions
+are better tested.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsData/MoveElemToNode-img.net.</p>
+      <p>This network can be found at
+src/nets/Modules/FieldsData/MoveElemToNode-img.net.</p>
 
-</net>
-<net id="MoveElemToNode-lat">
-<title>MoveElemToNode-lat Regression Test</title>
+    </net>
+    <net id="MoveElemToNode-lat">
+      <title>MoveElemToNode-lat Regression Test</title>
 
-<p>Test the MoveElemToNode module by moving the data in a LatVolField
-from the cells onto the nodes while retaining the same data locations.
-The LatVolField is transformed first so that the positions are better tested.</p>
+      <p>Test the MoveElemToNode module by moving the data in a
+LatVolField from the cells onto the nodes while retaining the same
+data locations. The LatVolField is transformed first so that the
+positions are better tested.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsData/MoveElemToNode-lat.net.</p>
+      <p>This network can be found at
+src/nets/Modules/FieldsData/MoveElemToNode-lat.net.</p>
 
-</net>
-</nets>
+    </net>
+  </nets>
 </component>

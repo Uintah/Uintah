@@ -38,7 +38,8 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
-    <summary>RefineTetVol subdivides or simplifies a TetVolField</summary>
+    <summary>RefineTetVol subdivides or simplifies a
+TetVolField</summary>
     <description>
       <p>
 Subdivide the input TetVolField, or simplify it.  Gui control allows
@@ -50,7 +51,8 @@ Note: simplification is not yet implemented.
       <p>
 The output field is a cell centered refined version of the input
 field. The data indicates the current subdivision level for that tet.
-Use <modref package="SCIRun" name="ChangeFieldBasis"/> and <modref package="SCIRun" name="DirectMapping"/> to get data values for
+Use <modref package="SCIRun" name="ChangeFieldBasis"/> and <modref
+package="SCIRun" name="DirectMapping"/> to get data values for
 calculation.
       </p>
       <p>
@@ -82,6 +84,4 @@ simplification to level i. A 0 at any cell indicates no change at all.
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

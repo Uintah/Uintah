@@ -31,10 +31,13 @@
 <component name="TrigCurrentPattern" category="Forward">
   <overview>
     <authors>
+      <author>?</author>
     </authors>
+    <summary>?</summary>
+    <description>
+      <p>?</p>
+    </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -53,9 +56,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

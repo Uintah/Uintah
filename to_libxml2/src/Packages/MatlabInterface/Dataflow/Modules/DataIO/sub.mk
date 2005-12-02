@@ -65,7 +65,7 @@ PSELIBS := Core/Persistent Core/Containers Core/Util \
 	Packages/MatlabInterface/Core/Datatypes \
 	Core/Services Core/ICom Core/SystemCall
 
-LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY) $(XML_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY) $(XML2_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

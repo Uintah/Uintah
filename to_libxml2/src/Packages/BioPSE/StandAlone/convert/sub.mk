@@ -47,7 +47,7 @@ PSELIBS := \
 	Core/Util	\
         Core/Basis
 endif
-LIBS := $(XML_LIBRARY) $(LAPACK_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(LAPACK_LIBRARY) $(M_LIBRARY)
 
 PROGRAM := $(SRCDIR)/ContinuityToTetVolDouble
 SRCS := $(SRCDIR)/ContinuityToTetVolDouble.cc
