@@ -90,6 +90,7 @@ FreeTypeTextTexture::render_text_to_texture()
   const unsigned int hei = int(ceil(bbox.max().y()))+1;
 
   // 3 dimensions = alpha x X x Y
+  
   NrrdDataHandle nrrd = scinew NrrdData();
   nrrdAlloc(nrrd->nrrd, nrrdTypeUChar, 3, 1, wid, hei);
   memset(nrrd->nrrd->data, 0, wid*hei);
@@ -101,9 +102,10 @@ FreeTypeTextTexture::render_text_to_texture()
   }
 
   Nrrd *nout = nrrdNew();
-  nrrdFlip(nout, nrrd->nrrd, 2);
-  nrrd->nrrd = nout;
-  texture_ = scinew NrrdTextureObj(nrrd, false, false);
+  nrrdFlip(nout, nrrd->nrrd, 2); // Is there a flip in place?
+
+  NrrdDataHandle ndout(scinew NrrdData(nout));
+  texture_ = scinew NrrdTextureObj(ndout, false, false);
   texture_->set_color(0.0, 0.0, 0.0, 1.0);
   //  texture_->set_alpha(0.76);
   dirty_ = false;
