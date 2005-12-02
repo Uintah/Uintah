@@ -50,238 +50,158 @@ public:
 
   void clear_vals();
   void update_input_attributes(NrrdDataHandle);
+  void update_axis_var(const char *name, int axis, const string &val,
+                       const char *pname);
+
   virtual void execute();
 
 private:
   int                 generation_;
+  GuiString           gui_name_;
+  GuiString           gui_type_;
+  GuiString           gui_dimension_;
+  GuiString           gui_origin_;
 };
 
 DECLARE_MAKER(NrrdInfo)
 
 NrrdInfo::NrrdInfo(GuiContext* ctx)
   : Module("NrrdInfo", ctx, Source, "NrrdData", "Teem"),
-    generation_(-1)
+    generation_(-1),
+    gui_name_(ctx->subVar("name")),
+    gui_type_(ctx->subVar("type")),
+    gui_dimension_(ctx->subVar("dimension")),
+    gui_origin_(ctx->subVar("origin"))
 {
 }
 
-NrrdInfo::~NrrdInfo(){
+
+NrrdInfo::~NrrdInfo()
+{
 }
+
 
 void
 NrrdInfo::clear_vals() 
 {
-  gui->execute(string("set ") + id + "-type \"---\"");
-  gui->execute(string("set ") + id + "-name \"---\"");
+  gui_name_.set("---");
+  gui_type_.set("---");
 
   gui->execute(id + " delete_tabs");
+}
 
-#if 0
-  gui->execute(string("set ") + id + "-type \"---\"");
-  gui->execute(string("set ") + id + "-dimension 0");
-  gui->execute(string("set ") + id + "-label0 \"---\"");
-  gui->execute(string("set ") + id + "-kind0 \"---\"");
 
-  for (int i = 0; i < nh->nrrd->dim; i++) {
-    ostringstream str;
-    
-    str << "set " << id << "-size" << i 
-	<< " \"---\"";    
-    gui->execute(str.str());
-    str.clear();
-
-    str << "set " << id << "-center" << i 
-	<< " \"---\"";    
-    gui->execute(str.str());
-    str.clear();
-
-    str << "set " << id << "-label" << i 
-	<< " \"---\"";    
-    gui->execute(str.str());
-    str.clear();
-
-    str << "set " << id << "-kind" << i 
-	<< " \"---\"";    
-    gui->execute(str.str());
-    str.clear();
-
-    str << "set " << id << "-spacing" << i 
-	<< " \"---\"";    
-    gui->execute(str.str());
-    str.clear();
-
-    str << "set " << id << "-min" << i 
-	<< " \"---\"";    
-    gui->execute(str.str());
-    str.clear();
-
-    str << "set " << id << "-max" << i 
-	<< " \"---\"";    
-    gui->execute(str.str());
+void
+NrrdInfo::update_axis_var(const char *name, int axis, const string &val,
+                          const char *pname)
+{
+  ostringstream ostr;
+  ostr << "set " << id << "-" << name << axis << " {" << val << "}";
+  gui->execute(ostr.str());
+  if (sci_getenv_p("SCI_REGRESSION_TESTING"))
+  {
+    remark("Axis " + to_string(axis) + " " + pname + ": " + val);
   }
-#endif
-
 }
 
 
 void
 NrrdInfo::update_input_attributes(NrrdDataHandle nh) 
 {
+  const bool regressing = sci_getenv_p("SCI_REGRESSION_TESTING");
+
   string name;
-  if (nh->get_property( "Name", name)) { 
-    gui->execute(string("set ") + id + "-name \"" + name+"\"");
-  } else {
-    gui->execute(string("set ") + id + "-name \"Unknown\"");
+  if (!nh->get_property( "Name", name)) { 
+    name = "Unknown";
   }
+  gui_name_.set(name);
+  if (regressing) { remark("Name: " + name); }
 
-  switch (nh->nrrd->type) {
-  case nrrdTypeChar :  
-    gui->execute(string("set ") + id + "-type \"char\"");
-    break;
-  case nrrdTypeUChar : 
-    gui->execute(string("set ") + id + "-type \"unsigned char\"");
-    break;
-  case nrrdTypeShort : 
-    gui->execute(string("set ") + id + "-type \"short\"");
-    break;
-  case nrrdTypeUShort :
-    gui->execute(string("set ") + id + "-type \"unsigned short\"");
-    break;
-  case nrrdTypeInt : 
-    gui->execute(string("set ") + id + "-type \"int\"");
-    break;
-  case nrrdTypeUInt :  
-    gui->execute(string("set ") + id + "-type \"unsigned int\"");
-    break;
-  case nrrdTypeLLong : 
-    gui->execute(string("set ") + id + "-type \"long long\"");
-    break;
-  case nrrdTypeULLong :
-    gui->execute(string("set ") + id + "-type \"unsigned long long\"");
-    break;
-  case nrrdTypeFloat :
-    gui->execute(string("set ") + id + "-type \"float\"");
-    break;
-  case nrrdTypeDouble :
-    gui->execute(string("set ") + id + "-type \"double\"");
-    break;
-  }
+  string nrrdtype, stmp;
+  get_nrrd_compile_type(nh->nrrd->type, nrrdtype, stmp);
+  gui_type_.set(nrrdtype);
+  if (regressing) { remark("Data Type: " + nrrdtype); }
 
-  gui->execute(string("set ") + id + "-dimension " + to_string(nh->nrrd->dim));
+  gui_dimension_.set(to_string(nh->nrrd->dim));
+  if (regressing) { remark("Dimension: " + to_string(nh->nrrd->dim)); }
+
+  // TODO: Set Origin here.
 
   // Tuple Axis
-//   gui->execute(string("set ") + id + "-label0 {" + 
-// 	       string(nh->nrrd->axis[0].label) + "}");
-
-//   gui->execute(string("set ") + id + "-size0 " + 
-// 	       to_string(nh->nrrd->axis[0].size));
-
-//   gui->execute(id + " fill_tuple_tab");
-
-  //for (int i = 1; i < nh->nrrd->dim; i++) {
-  for (int i = 0; i < nh->nrrd->dim; i++) {
-    ostringstream sz, cntr, lab, kind, spac, min, max;
-    
-    sz << "set " << id << "-size" << i 
-	<< " " << nh->nrrd->axis[i].size;
-    
-    gui->execute(sz.str());
-
-    cntr << "set " << id << "-center" << i << " ";
-
-    switch (nh->nrrd->axis[i].center) {
-    case nrrdCenterUnknown :
-      cntr << "Unknown";
-      break;
-    case nrrdCenterNode :
-      cntr << "Node";
-      break;
-    case nrrdCenterCell :
-      cntr << "Cell";
-      break;
+  for (int i = 0; i < nh->nrrd->dim; i++)
+  {
+    string labelstr;
+    if (nh->nrrd->axis[i].label == NULL ||
+        string(nh->nrrd->axis[i].label).length() == 0)
+    {
+      labelstr = "---";
     }
-
-    gui->execute(cntr.str());
-
-    if (nh->nrrd->axis[i].label == NULL || string(nh->nrrd->axis[i].label).length() == 0) {
-      lab << "set " << id << "-label" << i 
-	  << " {" << "---" << "}";
-      gui->execute(lab.str());
-    } else {
-      lab << "set " << id << "-label" << i 
-	  << " {" << nh->nrrd->axis[i].label << "}";
-      gui->execute(lab.str());
+    else
+    {
+      labelstr = nh->nrrd->axis[i].label;
     }
+    update_axis_var("label", i, labelstr, "Label");
 
+    string kindstr;
     switch(nh->nrrd->axis[i].kind) {
     case nrrdKindDomain:
-      kind << "set " << id << "-kind" << i 
-           << " {nrrdKindDomain}";
-      gui->execute(kind.str());
+      kindstr = "nrrdKindDomain";
       break;
     case nrrdKindScalar:
-      kind << "set " << id << "-kind" << i 
-           << " {nrrdKindScalar}";
-      gui->execute(kind.str());
+      kindstr = "nrrdKindScalar";
       break;
     case nrrdKind3Color:
-      kind << "set " << id << "-kind" << i 
-           << " {nrrdKind3Color}";
-      gui->execute(kind.str());
+      kindstr = "nrrdKind3Color";
       break;
     case nrrdKind3Vector:
-      kind << "set " << id << "-kind" << i 
-           << " {nrrdKind3Vector}";
-      gui->execute(kind.str());
+      kindstr = "nrrdKind3Vector";
       break;
     case nrrdKind3Normal:
-      kind << "set " << id << "-kind" << i 
-           << " {nrrdKind3Normal}";
-      gui->execute(kind.str());
+      kindstr = "nrrdKind3Normal";
       break;
     case nrrdKind3DSymMatrix:
-      kind << "set " << id << "-kind" << i 
-           << " {nrrdKind3DSymMatrix}";
-      gui->execute(kind.str());
+      kindstr = "nrrdKind3DSymMatrix";
       break;
     case nrrdKind3DMaskedSymMatrix:
-      kind << "set " << id << "-kind" << i 
-           << " {nrrdKind3DMaskedSymMatrix}";
-      gui->execute(kind.str());
+      kindstr = "nrrdKind3DMaskedSymMatrix";
       break;
     case nrrdKind3DMatrix:
-      kind << "set " << id << "-kind" << i 
-           << " {nrrdKind3DMatrix}";
-      gui->execute(kind.str());
+      kindstr = "nrrdKind3DMatrix";
       break;
     case nrrdKindList:
-      kind << "set " << id << "-kind" << i 
-           << " {nrrdKindList}";
-      gui->execute(kind.str());
-      break;	
+      kindstr = "nrrdKindList";
+      break;
     case nrrdKindStub:
-      kind << "set " << id << "-kind" << i 
-           << " {nrrdKindStub}";
-      gui->execute(kind.str());
+      kindstr = "nrrdKindStub";
       break;	
     default:
       nh->nrrd->axis[i].kind = nrrdKindUnknown;
-      kind << "set " << id << "-kind" << i 
-           << " {" << "nrrdKindUnknown" << "}";
-      gui->execute(kind.str());
+      kindstr = "nrrdKindUnknown";
       break;
     }
+    update_axis_var("kind", i, kindstr, "Kind");
 
-    spac << "set " << id << "-spacing" << i 
-	 << " " << nh->nrrd->axis[i].spacing;
-    gui->execute(spac.str());
+    update_axis_var("size", i, to_string(nh->nrrd->axis[i].size), "Size");
 
-    min << "set " << id << "-min" << i 
-	<< " " << nh->nrrd->axis[i].min;
-    gui->execute(min.str());
+    update_axis_var("min", i, to_string(nh->nrrd->axis[i].min), "Min");
+    update_axis_var("max", i, to_string(nh->nrrd->axis[i].max), "Max");
 
-    max << "set " << id << "-max" << i 
-	<< " " << nh->nrrd->axis[i].max;
-    gui->execute(max.str());
+    string locstr;
+    switch (nh->nrrd->axis[i].center) {
+    case nrrdCenterUnknown :
+      locstr = "Unknown";
+      break;
+    case nrrdCenterNode :
+      locstr = "Node";
+      break;
+    case nrrdCenterCell :
+      locstr = "Cell";
+      break;
+    }
+    update_axis_var("center", i, locstr, "Center");
+
+    update_axis_var("spacing", i, to_string(nh->nrrd->axis[i].spacing), "Spacing");
+    update_axis_var("spaceDir", i, "---", "Spacing Direction");
   }
 
   gui->execute(id + " add_tabs");
