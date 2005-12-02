@@ -33,14 +33,13 @@
 <component name="Image2DToImage3D" category="Converters">
   <overview>
     <authors>
+    <author>Darby J Van Uitert</author>
     </authors>
     <summary>
     </summary>
-    <description>This module allows you to cast an 2D image to 3D image. The resulting 3D image will have a single slice. See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on the itk::CastImageFilter.
+    <description><p>This module allows you to cast an 2D image to 3D image. The resulting 3D image will have a single slice. See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on the itk::CastImageFilter.</p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -55,9 +54,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

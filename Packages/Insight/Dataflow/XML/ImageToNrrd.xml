@@ -31,10 +31,11 @@
 <component name="ImageToNrrd" category="Converters">
   <overview>
     <authors>
+    <author>Darby J Van Uitert</author>
     </authors>
+    <summary></summary>
+    <description><p>Convert an ITK Image to a NRRD.</p></description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -49,9 +50,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

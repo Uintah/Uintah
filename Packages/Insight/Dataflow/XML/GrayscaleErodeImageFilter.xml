@@ -31,6 +31,7 @@
 <component name="GrayscaleErodeImageFilter" category="Filters">
   <overview>
     <authors>
+    <author>Darby J Van Uitert</author>
     </authors>
     <summary>
     </summary>
@@ -42,8 +43,6 @@
 <p>The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values &gt; 0 are candidates for affecting the center pixel.</p>
   </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">  
       <port>

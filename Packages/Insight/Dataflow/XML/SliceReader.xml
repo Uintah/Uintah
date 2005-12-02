@@ -34,7 +34,7 @@
 <component name="SliceReader" category="DataIO">
   <overview>
     <authors>
-      <author>Darby Van Uitert</author>
+    <author>Darby Van Uitert</author>
     </authors>
     <summary>Read in a 3D volume a slice at a time.</summary>
     <description>
@@ -58,6 +58,4 @@
       </port>
     </outputs>
   </io>
-  <testing>
-  </testing>
 </component>

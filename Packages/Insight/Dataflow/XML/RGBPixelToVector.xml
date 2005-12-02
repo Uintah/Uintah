@@ -33,14 +33,13 @@
 <component name="RGBPixelToVector" category="Converters">
   <overview>
     <authors>
+    <author>Darby J Van Uitert</author>
     </authors>
     <summary>
     </summary>
-    <description>Converts an image of type itk::RGBPixel to an image of type itk::Vector. See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on the itk::VectorCastImageFilter.
+    <description><p>Converts an image of type itk::RGBPixel to an image of type itk::Vector. See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on the itk::VectorCastImageFilter.</p>
     </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -55,9 +54,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 

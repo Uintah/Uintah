@@ -31,10 +31,13 @@
 <component name="NrrdToImage" category="Converters">
   <overview>
     <authors>
+    <author>Darby J Van Uitert</author>
     </authors>
+    <summary></summary>
+    <description>
+    <p>Convert a NRRD to an Image.</p>
+    </description>
   </overview>
-  <implementation>
-  </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
@@ -49,9 +52,5 @@
       </port>
     </outputs>
   </io>
-  <gui>
-  </gui>
-  <testing>
-  </testing>
 </component>
 
