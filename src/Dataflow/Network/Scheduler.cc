@@ -58,7 +58,7 @@ using namespace std;
 static bool
 regression_rerun_callback(void *data)
 {
-  static int counter = 2;
+  static int counter = 1;
   Network *net = (Network *)data;
   if (counter > 1 )
   {
@@ -76,7 +76,7 @@ regression_quit_callback(void *)
 {
   std::cout.flush();
   std::cerr.flush();
-  sci_system("ps aux | grep ../src/nets");
+  //sci_system("ps aux | grep ../src/nets");
   Thread::exitAll(0);
   return false;
 }
