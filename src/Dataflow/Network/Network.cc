@@ -50,6 +50,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Util/Environment.h>
 
 #ifdef _WIN32
 #include <io.h>
@@ -329,6 +330,11 @@ Network::schedule()
 void
 Network::schedule_all()
 {
+  if (sci_getenv_p("SCI_REGRESSION_TESTING"))
+  {
+    cout << "STARTING NEW EXECUTION\n";
+  }
+
   for(int i=0; i<nmodules(); i++)
   {
     Module* m = module(i);
