@@ -202,6 +202,18 @@ class Tensor {
     inline double zz() const;
 
    // operators defined for this class
+   
+    inline double operator<(const Tensor&);
+    inline double operator<=(const Tensor&);
+    inline double operator>(const Tensor&);
+    inline double operator>=(const Tensor&);
+    
+    inline double operator<(const double&);
+    inline double operator<=(const double&);
+    inline double operator>(const double&);
+    inline double operator>=(const double&);
+  
+     
     inline Tensor& operator=(const Tensor&);
     inline double& operator[](int idx);
     inline double operator[](int idx) const;
@@ -2379,6 +2391,48 @@ inline void Tensor::compute_tensor()
 inline double* Tensor::getdataptr()
 {
   return(d_);
+}
+
+
+
+inline double Tensor::operator<(const Tensor& t)
+{
+  return(static_cast<double>(norm() < t.norm()));
+}
+
+inline double Tensor::operator<=(const Tensor& t)
+{
+  return(static_cast<double>(norm() <= t.norm()));
+}
+
+inline double Tensor::operator>(const Tensor& t)
+{
+  return(static_cast<double>(norm() > t.norm()));
+}
+
+inline double Tensor::operator>=(const Tensor& t)
+{
+  return(static_cast<double>(norm() >= t.norm()));
+}
+
+inline double Tensor::operator<(const double& d)
+{
+  return(static_cast<double>(norm() < d));
+}
+
+inline double Tensor::operator<=(const double& d)
+{
+  return(static_cast<double>(norm() <= d));
+}
+
+inline double Tensor::operator>(const double& d)
+{
+  return(static_cast<double>(norm() > d));
+}
+
+inline double Tensor::operator>=(const double& d)
+{
+  return(static_cast<double>(norm() >= d));
 }
 
 
