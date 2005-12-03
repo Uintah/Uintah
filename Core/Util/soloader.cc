@@ -183,11 +183,13 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
   LIBRARY_HANDLE lh;
   lh = dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
 
-  if( lh == 0 ) { 
-    // dlopen of absolute path failed...  Perhaps they have a DYLD_LIBRARY_PATH var set...
-    // If so, if we try again without the path, then maybe it will succeed...
-    lh = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
-  }
+  // commented out the following, as it breaks error reporing.  Don't try to 
+  // load a second time without dlerror being called and reported.
+//   if( lh == 0 ) { 
+//     // dlopen of absolute path failed...  Perhaps they have a DYLD_LIBRARY_PATH var set...
+//     // If so, if we try again without the path, then maybe it will succeed...
+//     lh = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
+//   }
   return lh;
   //#else
   //return dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
