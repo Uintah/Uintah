@@ -63,7 +63,7 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Core/Geom Core/Thread Core/Containers \
 	Core/GuiInterface Core/TkExtensions Core/Util \
 	Core/TkExtensions Core/Datatypes Core/GeomInterface \
-	Core/Basis Core/Volume
+	Core/Basis Core/Volume Core/Bundle
 
 INCLUDES += $(MPEG_INCLUDE) $(MAGICK_INCLUDE) $(TEEM_INCLUDE)
 
