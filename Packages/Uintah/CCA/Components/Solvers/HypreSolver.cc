@@ -522,9 +522,6 @@ namespace Uintah {
         
         //__________________________________
         // Test for convergence
-        double residualNormalization = params->getResidualNormalizationFactor();
-        final_res_norm = final_res_norm/residualNormalization;
-        
         if(final_res_norm > params->tolerance || finite(final_res_norm) == 0){
           if(params->restart){
             if(pg->myrank() == 0)
