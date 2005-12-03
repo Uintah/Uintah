@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
 
 <!--
    For more information, please see: http://software.sci.utah.edu
