@@ -1558,7 +1558,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
     unsigned int dim2 = fdata.dim2();
     unsigned int dim3 = fdata.dim3();
 
-   T **dataptr = fdata.get_dataptr();
+   T ***dataptr = fdata.get_dataptr();
           
     std::vector<T> data(dim1*dim2*dim3);
     for (p=0,q=0;q<dim1;q++)
