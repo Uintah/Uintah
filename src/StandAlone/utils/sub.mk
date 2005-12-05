@@ -50,18 +50,6 @@ PROGRAM := $(SRCDIR)/MaskLatVolWithHexVol
 SRCS := $(SRCDIR)/MaskLatVolWithHexVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/SingleHex
-SRCS := $(SRCDIR)/SingleHex.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/SingleTet
-SRCS := $(SRCDIR)/SingleTet.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/SinglePrism
-SRCS := $(SRCDIR)/SinglePrism.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
 PROGRAM := $(SRCDIR)/SwapFaces
 SRCS := $(SRCDIR)/SwapFaces.cc
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -92,6 +80,10 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TestBasis
 SRCS := $(SRCDIR)/TestBasis.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/UnitElementMesh
+SRCS := $(SRCDIR)/UnitElementMesh.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 
