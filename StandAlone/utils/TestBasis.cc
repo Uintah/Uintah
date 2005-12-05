@@ -34,27 +34,7 @@
 #include <fstream>
 #include <stdlib.h>
 
-#include <Core/Basis/CrvLinearLgn.h>
-#include <Core/Basis/CrvQuadraticLgn.h>
-#include <Core/Basis/CrvCubicHmt.h>
-#include <Core/Basis/QuadBilinearLgn.h>
-#include <Core/Basis/QuadBiquadraticLgn.h>
-#include <Core/Basis/QuadBicubicHmt.h>
-#include <Core/Basis/TriLinearLgn.h>
-#include <Core/Basis/TriQuadraticLgn.h>
-#include <Core/Basis/TriCubicHmt.h>
-#include <Core/Basis/TriCubicHmtScaleFactors.h>
-#include <Core/Basis/TetLinearLgn.h>
-#include <Core/Basis/TetQuadraticLgn.h>
-#include <Core/Basis/TetCubicHmt.h>
-#include <Core/Basis/PrismLinearLgn.h>
-#include <Core/Basis/PrismQuadraticLgn.h>
-#include <Core/Basis/PrismCubicHmt.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Basis/HexTriquadraticLgn.h>
-#include <Core/Basis/HexTricubicHmt.h>
-#include <Core/Basis/HexTricubicHmtScaleFactors.h>
-#include <Core/Basis/HexTricubicHmtScaleFactorsEdges.h>
+#include <Core/Basis/Bases.h>
 
 #include <Core/Geometry/Point.h>
 
@@ -316,8 +296,7 @@ void Test3D()
   for(int i=0; i<f.number_of_vertices(); i++)
     d[i] = 1;
   
-  d[0]=0;
-  cerr << "Cell integral " << CellIntegral(field, f) << endl;  
+   cerr << "Cell integral " << CellIntegral(field, f) << endl;  
 
 //   DenseMatrix *g;
 //   field->cell_gradient(ei, g);
