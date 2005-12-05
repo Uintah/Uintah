@@ -464,31 +464,32 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
         double I1 = RCG.Trace();
         double I2 = .5*(I1*I1 -(RCG*RCG).Trace());
         double I3 = RCG.Determinant();
-        double Q = (1./9.)*(3.*I2-pow(I1,2));
-        double R = (1./54.)*(-9.*I1*I2+27.*I3+2.*pow(I1,3));
-        double Dis = pow(Q,3)+pow(R,2);
+        double Q = (1./9.)*(3.*I2-I1*I1);
+        double R = (1./54.)*(-9.*I1*I2+27.*I3+2.*(I1*I1*I1));
+        double Dis = Q*Q*Q+R*R;
         if (Dis <= 1.e-5 && Dis >= 0.){
-           if (R >= -1.e-5 && R<= 1.e-5){
+          if (R >= -1.e-5 && R<= 1.e-5){
             e1 = e2 = e3 = I1/3.;
-            }
+          }
           else {
               e1 = 2.*pow(R,1./3.)+I1/3.;
               e3 = -pow(R,1./3.)+I1/3.;
               if (e1 < e3) swap(e1,e3);
               e2=e3;
-            }
+          }
         }
         else{
           double theta = acos(R/pow(-Q,3./2.));
-          e1 = 2.*pow(-Q,1./2.)*cos(theta/3.)+I1/3.;
-          e2 = 2.*pow(-Q,1./2.)*cos(theta/3.+2.*pi/3.)+I1/3.;
-          e3 = 2.*pow(-Q,1./2.)*cos(theta/3.+4.*pi/3.)+I1/3.;
+          double sqrt_negQ=sqrt(-Q);
+          e1 = 2.*sqrt_negQ*cos(theta/3.)+I1/3.;
+          e2 = 2.*sqrt_negQ*cos(theta/3.+2.*pi/3.)+I1/3.;
+          e3 = 2.*sqrt_negQ*cos(theta/3.+4.*pi/3.)+I1/3.;
           if (e1 < e2) swap(e1,e2);
           if (e1 < e3) swap(e1,e3);
           if (e2 < e3) swap(e2,e3);
         }
         double max_shear_strain = (e1-e3)/2.;
-        if (max_shear_strain > crit_shear || fail_old[idx]== 1.0 
+        if (max_shear_strain > crit_shear || fail_old[idx] == 1.0 
                                           || fail_old[idx] == 3.0){
           deviatoric_stress = Identity*0.;
           fail[idx] = 1.;
