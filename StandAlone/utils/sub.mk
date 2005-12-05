@@ -58,6 +58,10 @@ PROGRAM := $(SRCDIR)/SingleTet
 SRCS := $(SRCDIR)/SingleTet.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/SinglePrism
+SRCS := $(SRCDIR)/SinglePrism.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/SwapFaces
 SRCS := $(SRCDIR)/SwapFaces.cc
 include $(SCIRUN_SCRIPTS)/program.mk

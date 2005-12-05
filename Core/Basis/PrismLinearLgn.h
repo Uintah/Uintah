@@ -93,7 +93,7 @@ public:
     const double dz = v1[2] - p1z;
 
     for(unsigned i = 0; i <= div_per_unit; i++) {
-      const double d = (double)div_per_unit / (double)i;
+      const double d = (double)i / (double)div_per_unit;
       vector<double> &tmp = coords[i];
       tmp.resize(3);
       tmp[0] = p1x + d * dx;
@@ -108,25 +108,25 @@ public:
   virtual void approx_face(const unsigned face, const unsigned div_per_unit, 
 			   vector<vector<vector<double> > > &coords) const
   {	
-    int fe = (PrismLinearLgnUnitElement::unit_faces[face][4] != -1 ? 2 : 1);
+    int fe = (PrismLinearLgnUnitElement::unit_faces[face][3] != -1 ? 2 : 1);
     coords.resize(fe * div_per_unit);
 	
-    for(int f = 0; f<2; f++) {
+    for(int f = 0; f < fe; f++) {
       double *v0, *v1, *v2;
 
       if (f==0) {
 	v0 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][0]];
 	v1 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][1]];
-	v2 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][3]];
+	v2 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][2]];
       } else {
 	v0 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][2]];
 	v1 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][3]];
-	v2 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][1]];
+	v2 = PrismLinearLgnUnitElement::unit_vertices[PrismLinearLgnUnitElement::unit_faces[face][0]];
       }
 
       const double d = 1. / div_per_unit;
       for(unsigned j = 0; j < div_per_unit; j++) {
-	const double dj = (double)div_per_unit / (double)j;
+	const double dj = (double)j / (double)div_per_unit;
 	unsigned e = 0;
 	coords[j + f * div_per_unit].resize((div_per_unit - j) * 2 + 1);
 	vector<double> &tmp = coords[j + f * div_per_unit][e++];
@@ -135,7 +135,7 @@ public:
 	tmp[1] = v0[1] + dj * (v2[1] - v0[1]);
 	tmp[2] = v0[2] + dj * (v2[2] - v0[2]);
 	for(unsigned i = 0; i < div_per_unit - j; i++) {
-	  const double di = (double)div_per_unit / (double)i;
+	  const double di =  (double)i / (double)div_per_unit;
 	  vector<double> &tmp1 = coords[j + f * div_per_unit][e++]; 
 	  tmp1.resize(3);
 	  tmp1[0] = v0[0] + (dj + d) * (v2[0] - v0[0]) + di * (v1[0] - v0[0]);
