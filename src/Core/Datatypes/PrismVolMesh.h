@@ -859,10 +859,8 @@ public:
 		       unsigned which_edge, 
 		       unsigned div_per_unit) const
   {    
-    // Needs to match unit_edges in Basis/QuadBilinearLgn.cc 
+    // Needs to match unit_edges in Basis/PrismLinearLgn.cc 
     // compare get_nodes order to the basis order
-
-    //FIX_ME MC delete this comment when this is verified.
     basis_.approx_edge(which_edge, div_per_unit, coords); 
   }
 
@@ -873,10 +871,6 @@ public:
 		       unsigned which_face, 
 		       unsigned div_per_unit) const
   {
-    // Needs to match unit_faces in Basis/QuadBilinearLgn.cc 
-    // compare get_nodes order to the basis order
-
-    //FIX_ME MC delete this comment when this is verified.
     basis_.approx_face(which_face, div_per_unit, coords);
   }
   
@@ -1726,7 +1720,7 @@ void
 PrismVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Edge::index_type idx) const
 {
   array.resize(2);
-  pair<typename Edge::index_type, typename Edge::index_type> edge = typename Edge::edgei(idx);
+  pair<typename Edge::index_type, typename Edge::index_type> edge = Edge::edgei(idx);
   array[0] = cells_[edge.first];
   array[1] = cells_[edge.second];
 }
@@ -1809,12 +1803,14 @@ PrismVolMesh<Basis>::get_edges(typename Edge::array_type &/*array*/,
 
 template <class Basis>
 void
-PrismVolMesh<Basis>::get_edges(typename Edge::array_type &array, typename Cell::index_type idx) const
+PrismVolMesh<Basis>::get_edges(typename Edge::array_type &array, 
+			       typename Cell::index_type idx) const
 {
   array.resize(PRISM_NEDGES);
-  const unsigned int base = idx * PRISM_NEDGES;
-  for (int i=0; i<PRISM_NEDGES; i++)
-    array[base + i] = i;
+  for (int i = 0; i < PRISM_NEDGES; i++)
+  {
+    array[i] = idx * PRISM_NEDGES + i;
+  }
 }
 
 
@@ -1841,9 +1837,10 @@ void
 PrismVolMesh<Basis>::get_faces(typename Face::array_type &array, typename Cell::index_type idx) const
 {
   array.resize(PRISM_NFACES);
-  const unsigned int base = idx * PRISM_NFACES;
-  for (unsigned int i=0; i<PRISM_NFACES; i++)
-    array[i] = base + i;
+  for (int i = 0; i < PRISM_NFACES; i++)
+  {
+    array[i] = idx * PRISM_NFACES + i;
+  }
 }
 
 template <class Basis>
@@ -1996,10 +1993,13 @@ template <class Basis>
 void
 PrismVolMesh<Basis>::get_center(Point &p, typename Edge::index_type idx) const
 {
+  const double s = 1.0/2.0;
   typename Node::array_type arr;
-  
   get_nodes(arr, idx);
-  get_center(p, arr);
+  get_point(p, arr[0]);
+  const Point &p1 = point(arr[1]);
+  p.asVector() += p1.asVector();
+  p.asVector() *= s;
 }
 
 
@@ -2007,10 +2007,16 @@ template <class Basis>
 void
 PrismVolMesh<Basis>::get_center(Point &p, typename Face::index_type idx) const
 {
+  const double s = 1.0/3.0;
   typename Node::array_type arr;
-  
   get_nodes(arr, idx);
-  get_center(p, arr);
+  get_point(p, arr[0]);
+  const Point &p1 = point(arr[1]);
+  const Point &p2 = point(arr[2]);
+
+  p.asVector() += p1.asVector();
+  p.asVector() += p2.asVector();
+  p.asVector() *= s;
 }
 
 
@@ -2018,10 +2024,12 @@ template <class Basis>
 void
 PrismVolMesh<Basis>::get_center(Point &p, typename Cell::index_type idx) const
 {
-  typename Node::array_type arr;
-  
-  get_nodes(arr, idx);
-  get_center(p, arr);
+  ElemData ed(*this, idx);
+  vector<double> coords(3);
+  coords[0] = 0.5;
+  coords[1] = 0.5;
+  coords[2] = 0.5;
+  p = basis_.interpolate(coords, ed);
 }
 
 template <class Basis>

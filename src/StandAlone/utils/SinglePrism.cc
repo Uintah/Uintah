@@ -25,25 +25,62 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : PrimLinearLgn.cc
-//    Author : Martin Cole, Frank B. Sachse
-//    Date   : Dec 04 2004
+//    File   : SinglePrism.cc
+//    Author : Martin Cole
+//    Date   : Mon Dec  5 13:23:20 2005
 
 #include <Core/Basis/PrismLinearLgn.h>
+#include <Core/Datatypes/PrismVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 
-namespace SCIRun {
+#include <Core/Persistent/Pstreams.h>
 
-double PrismLinearLgnUnitElement::unit_vertices[6][3] = 
-  {{0,0,0}, {1,0,0}, {0,1,0}, 
-   {0,0,1}, {1,0,1}, {0,1,1}};
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
 
-int PrismLinearLgnUnitElement::unit_edges[9][3] = 
-  {{0,1}, {0,2}, {0,3},
-   {1,2}, {1,4}, {2,5},
-   {3,4}, {3,5}, {4,5}};
+using std::cerr;
+using std::ifstream;
+using std::endl;
 
-int PrismLinearLgnUnitElement::unit_faces[5][4] = 
-  {{0,1,2,-1}, {5,4,3,-1}, {4,5,2,1}, {3,4,1,0}, {0,2,5,3}};
+using namespace SCIRun;
 
-} //namespace SCIRun
+int
+main(int argc, char **argv) {
+  typedef PrismVolMesh<PrismLinearLgn<Point> > PVMesh;
+  PVMesh *pvm = new PVMesh();
 
+  Point p1(0.,0.,0.);
+  Point p2(1.,0.,0.);
+  Point p3(0.,1.,0.);
+  Point p4(0.,0.,1.);
+  Point p5(1.,0.,1.);
+  Point p6(0.,1.,1.);
+
+
+  pvm->add_point(p1);
+  pvm->add_point(p2);
+  pvm->add_point(p3);
+  pvm->add_point(p4);
+  pvm->add_point(p5);
+  pvm->add_point(p6);
+
+  pvm->add_prism(0, 1, 2, 3, 4, 5);
+
+  typedef PrismLinearLgn<double>  DatBasis;
+  typedef GenericField<PVMesh, DatBasis, vector<double> > PVField;
+  PVField *pv = scinew PVField(pvm);
+  pv->resize_fdata();
+
+  const double div = 1./6.;
+  PVField::fdata_type &d = pv->fdata();
+  for (int i = 0; i < 6; ++i) {
+    d[i] = div*i;
+  }
+
+  FieldHandle pvH(pv);
+  TextPiostream out_stream("SinglePrism.pvd.fld", Piostream::Write);
+  Pio(out_stream, pvH);
+
+  return 0;  
+}    

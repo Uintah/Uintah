@@ -361,6 +361,8 @@ main(int argc, char **argv) {
     HVMesh::Edge::iterator iter, end;
     hvm->begin(iter);
     hvm->end(end);
+    int ecount = 0;
+    double max = 0.0;
     while (iter != end) {
       HVMesh::Node::array_type arr;
       hvm->get_nodes(arr, *iter);
@@ -377,7 +379,8 @@ main(int argc, char **argv) {
       sf.push_back(e.sf_);
       hvm->get_basis().add_scalefactors(sf);
     }
-
+    std::cerr << "added "  << ecount << " scale factors. (max:" 
+	      << max << ")" << std::endl;
   }
 
   FieldHandle hvH;  
