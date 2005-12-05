@@ -164,7 +164,7 @@ while t<tfinal
         dxp=0.;
         for ig=1:2
             dvp=dvp+ag(nodes(ig))*dt*Ss(ig);
-            dxp=dxp+vg(nodes(ig))*dt*Ss(ig);
+            dxp=dxp+vg_new(nodes(ig))*dt*Ss(ig);
         end
         vp(ip)=vp(ip)+dvp;
         xp(ip)=xp(ip)+dxp;
