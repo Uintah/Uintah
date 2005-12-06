@@ -65,7 +65,7 @@ SRCS += ${SRCDIR}/BinaryDilateImageFilter.cc \
 	${SRCDIR}/CurvatureFlowImageFilter.cc \
 	${SRCDIR}/DiscreteGaussianImageFilter.cc \
 	${SRCDIR}/ExtractImageFilter.cc \
-	${SRCDIR}/GradientAnistropicDiffusionImageFilter.cc \
+	${SRCDIR}/GradientAnisotropicDiffusionImageFilter.cc \
 	${SRCDIR}/GradientMagnitudeImageFilter.cc \
 	${SRCDIR}/GradientRecursiveGaussianImageFilter.cc \
 	${SRCDIR}/GrayscaleDilateImageFilter.cc \
@@ -78,7 +78,7 @@ SRCS += ${SRCDIR}/BinaryDilateImageFilter.cc \
 	${SRCDIR}/ThresholdSegmentationLevelSetImageFilter.cc \
 	${SRCDIR}/UnaryFunctorImageFilter.cc \
 	${SRCDIR}/VectorConfidenceConnectedImageFilter.cc \
-	${SRCDIR}/VectorCurvatureAnistropicDiffusionImageFilter.cc \
+	${SRCDIR}/VectorCurvatureAnisotropicDiffusionImageFilter.cc \
 	${SRCDIR}/VectorGradientAnisotropicDiffusionImageFilter.cc \
 	${SRCDIR}/VectorIndexSelectionCastImageFilter.cc \
 	${SRCDIR}/WatershedImageFilter.cc \
