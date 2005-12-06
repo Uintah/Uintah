@@ -89,12 +89,27 @@ void create_unit_element_mesh()
 
   typedef GenericField<MESH, FBASIS, vector<double> > FIELD;
   FIELD *field = scinew FIELD(mesh);
-  field->resize_fdata();
+  field->fdata().clear();
   FBASIS f;
-  typename FIELD::fdata_type &d = field->fdata();
-  for(int i=0; i<f.number_of_vertices(); i++)
-    d[i] = 1;
 
+  int local_dimension_elem=(f.number_of_mesh_vertices() || !f.dofs() ? 0 : 1);
+  int local_dimension_nodes=f.number_of_mesh_vertices();
+  int local_dimension_add_nodes=f.number_of_mesh_vertices()-f.number_of_vertices();
+  int local_dimension_derivatives=f.dofs()-local_dimension_nodes-local_dimension_add_nodes-local_dimension_elem;
+
+  for(int i=0; i<f.dofs(); i++) {
+    cerr << i << endl;
+    if (i<local_dimension_nodes+local_dimension_elem)
+      field->fdata().push_back(1);
+    else if (i<local_dimension_nodes+local_dimension_elem+local_dimension_add_nodes)
+      field->get_basis().add_node_value(1);
+    else {
+      vector<double> d(3);
+      d[0]=d[1]=d[2]=0;
+      d.resize(domain_dimension);
+      field->get_basis().add_derivatives(d);
+    }
+  }
   FieldHandle fH(field);
   TextPiostream out_stream("a.fld", Piostream::Write);
   Pio(out_stream, fH);
@@ -110,7 +125,7 @@ main(int argc, char **argv)
     cerr << argv[0] << "[-CurveMeshLinear][-CurveMeshQuadratic][-CurveMeshCubic]" << endl;
     cerr << "\t[-TriSurfMeshLinear][-TriSurfMeshQuadratic][-TriSurfMeshCubic]" << endl;
     cerr << "\t[-QuadSurfMeshLinear][-QuadSurfMeshQuadratic][-QuadSurfMeshCubic]" << endl;
-    cerr << "\t[-TetVolMeshLinear][-TetVolMeshQuadratic][-TetVolMeshCubic]" << endl;
+    cerr << "\t[-TetVolMeshConstant][-TetVolMeshLinear][-TetVolMeshQuadratic][-TetVolMeshCubic]" << endl;
     cerr << "\t[-PrismVolMeshLinear][-PrismVolMeshQuadratic][-PrismVolMeshCubic]" << endl;
     cerr << "\t[-HexVolMeshLinear][-HexVolMeshQuadratic][-HexVolMeshCubic]" << endl;
     exit(-1);
@@ -139,7 +154,9 @@ main(int argc, char **argv)
     else if (!strcmp(argv[currArg],"-QuadSurfMeshCubic")) 
       create_unit_element_mesh<QuadSurfMesh<QuadBicubicHmt<Point> >, QuadBicubicHmt<double> >();
 
-   else if (!strcmp(argv[currArg],"-TetVolMeshLinear")) 
+    else if (!strcmp(argv[currArg],"-TetVolMeshConstant")) 
+      create_unit_element_mesh<TetVolMesh<TetLinearLgn<Point> >, ConstantBasis<double> >();
+        else if (!strcmp(argv[currArg],"-TetVolMeshLinear")) 
       create_unit_element_mesh<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double> >();
     else if (!strcmp(argv[currArg],"-TetVolMeshQuadratic")) 
       create_unit_element_mesh<TetVolMesh<TetQuadraticLgn<Point> >, TetQuadraticLgn<double> >();
