@@ -11,19 +11,12 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <iostream>
+#include <string>
 #include <stdio.h>
 
-#include <xercesc/util/XMLUni.hpp>
-#include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/parsers/XercesDOMParser.hpp>
-#include <xercesc/dom/DOMElement.hpp>
-#include <xercesc/dom/DOMNode.hpp>
-#include <xercesc/dom/DOMException.hpp> 
-#include <xercesc/sax/ErrorHandler.hpp>
-#include <xercesc/sax/SAXException.hpp>
-#include <xercesc/sax/SAXParseException.hpp>
-#include <xercesc/sax/SAXException.hpp>
-#include <xercesc/sax/SAXParseException.hpp>
+#include <libxml/tree.h>
+#include <libxml/parser.h>
+
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -45,56 +38,30 @@ ProblemSpecReader::readInputFile()
 
   ProblemSpecP prob_spec;
   static bool initialized = false;
-  try {
-    if (!initialized) {
-      XMLPlatformUtils::Initialize();
-      initialized = true;
-    }
 
-    // Instantiate the DOM parser.
-    XercesDOMParser* parser = new XercesDOMParser;
-    parser->setDoValidation(false);
-#if 0    
-    ErrorHandler handler;
-    parser->setErrorHandler(&handler);
-#endif
-    
-    // Parse the input file
-    // No exceptions just yet, need to add
-    
-    parser->parse(d_filename.c_str());
-
-#if 0    
-    if(handler.foundError){
-      throw ProblemSetupException("Error reading file: "+d_filename, __FILE__, __LINE__);
-    }
-#endif
-    
-    // Adopt the Node so we can delete the parser but keep the document
-    // contents.  THIS NODE WILL NEED TO BE RELEASED MANUALLY LATER!!!!
-    //DOMNode* node = parser->getDocument()->cloneNode(true);
-    DOMDocument* doc = parser->adoptDocument();
-    //#if !defined( _AIX )
-    //DOMDocument* doc = dynamic_cast<DOMDocument*>(node);
-    //#else
-    //DOMDocument* doc = static_cast<DOMDocument*>(node);
-    //#endif
-
-    if( !doc ) {
-      cout << "Parse failed!\n";
-      throw InternalError( "Parse failed!\n", __FILE__, __LINE__ );
-    }
-
-    delete parser;
-
-    // Add the parser contents to the ProblemSpecP
-    prob_spec = scinew ProblemSpec(doc->getDocumentElement());
-  } catch(const XMLException& toCatch) {
-    char* ch = XMLString::transcode(toCatch.getMessage());
-    string ex("XML Exception: " + string(ch));
-    delete [] ch;
-    throw ProblemSetupException(ex, __FILE__, __LINE__);
+  if (!initialized) {
+    LIBXML_TEST_VERSION;
+    initialized = true;
   }
+  
+  xmlDocPtr doc; /* the resulting document tree */
+  
+  doc = xmlReadFile(d_filename, 0, 0);
+
+#if 0
+  (XML_PARSE_DTDATTR |
+   XML_PARSE_DTDVALID |
+   XML_PARSE_PEDANTIC));
+#endif  
+
+  /* check if parsing suceeded */
+  if (doc == 0) {
+    throw ProblemSetupException("Error reading file: "+d_filename, __FILE__, __LINE__);
+  }
+  
+  // you must free doc when you are done.
+  // Add the parser contents to the ProblemSpecP
+  prob_spec = scinew ProblemSpec(xmlDocGetRootElement(doc));
 
   resolveIncludes(prob_spec);
   d_xmlData = prob_spec;
@@ -118,7 +85,7 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
 
   ProblemSpecP child = params->getFirstChild();
   while (child != 0) {
-    if (child->getNodeType() == DOMNode::ELEMENT_NODE) {
+    if (child->getNodeType() == XML_ELEMENT_NODE) {
       string str = child->getNodeName();
       // look for the include tag
       if (str == "include") {
@@ -146,7 +113,7 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
             //make include be created from same document that created params
             ProblemSpecP newnode = child->importNode(incChild, true);
             resolveIncludes(newnode);
-            params->getNode()->insertBefore(newnode->getNode(), child->getNode());
+            xmlAddPrevSibling(newnode->getNode(), child->getNode());
             incChild = incChild->getNextSibling();
           }
           ProblemSpecP temp = child->getNextSibling();
@@ -166,6 +133,3 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
   }
 
 }
-
-
-
