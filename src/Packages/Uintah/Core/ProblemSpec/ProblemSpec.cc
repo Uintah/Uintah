@@ -3,6 +3,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -15,19 +16,8 @@
 #  define IRIX
 #  pragma set woff 1375
 #endif
-#include <xercesc/dom/DOMImplementation.hpp>
-#include <xercesc/dom/DOMImplementationRegistry.hpp>
-#include <xercesc/dom/DOMElement.hpp>
-#include <xercesc/dom/DOMException.hpp>
-#include <xercesc/dom/DOMNode.hpp>
-#include <xercesc/dom/DOMText.hpp>
-#include <xercesc/dom/DOMNamedNodeMap.hpp>
-#include <xercesc/dom/DOMWriter.hpp>
-#include <xercesc/framework/LocalFileFormatTarget.hpp>
-#include <xercesc/framework/StdOutFormatTarget.hpp>
-#include <xercesc/parsers/XercesDOMParser.hpp>
-#include <xercesc/util/XMLString.hpp>
-#include <xercesc/util/PlatformUtils.hpp>
+
+#include <libxml/tree.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #  pragma reset woff 1375
@@ -39,24 +29,21 @@ using namespace SCIRun;
 using namespace std;
 
 // Forward Declarations
-std::ostream& operator<<(std::ostream& out, const DOMNode & toWrite);
+//std::ostream& operator<<(std::ostream& out, const xmlNode & toWrite);
 //std::ostream& operator<<(std::ostream& out, const DOMText & toWrite);
 
 ProblemSpec::~ProblemSpec()
 {
   // the problem spec doesn't allocate any new memory.
-  //delete d_node;
 }
 
 ProblemSpecP
 ProblemSpec::findBlock() const
 {
-  //ProblemSpecP prob_spec = scinew ProblemSpec(d_node, d_write);
-
-  const DOMNode* child = d_node->getFirstChild();
+  const xmlNode* child = d_node->children;
   if (child != 0) {
-    if (child->getNodeType() == DOMNode::TEXT_NODE) {
-      child = child->getNextSibling();
+    if (child->type == XML_TEXT_NODE) {
+      child = child->next;
     }
   }
   if (child == NULL)
@@ -70,26 +57,24 @@ ProblemSpec::findBlock(const string& name) const
 {
   if (d_node == 0)
     return 0;
-  const DOMNode *child = d_node->getFirstChild();
+  const xmlNode *child = d_node->children;
   while (child != 0) {
-    const char* s = XMLString::transcode(child->getNodeName());
-    string child_name(s);
-    delete [] s;
+    string child_name(to_char_ptr(child->name));
     if (name == child_name) {
       return scinew ProblemSpec(child, d_write);
     }
-    child = child->getNextSibling();
+    child = child->next;
   }
   return 0;
 }
 
 ProblemSpecP ProblemSpec::findNextBlock() const
 {
-  const DOMNode* found_node = d_node->getNextSibling();
+  const xmlNode* found_node = d_node->next;
   
   if (found_node != 0) {
-    if (found_node->getNodeType() == DOMNode::TEXT_NODE) {
-      found_node = found_node->getNextSibling();
+    if (found_node->type == XML_TEXT_NODE) {
+      found_node = found_node->next;
     }
   }
     
@@ -107,18 +92,15 @@ ProblemSpec::findNextBlock(const string& name) const
   // Iterate through all of the child nodes of the next node
   // until one is found that has this name
 
-  const DOMNode* found_node = d_node->getNextSibling();
+  const xmlNode* found_node = d_node->next;
 
   while(found_node != 0){
-    const char *s = XMLString::transcode(found_node->getNodeName());
-    string c_name(s);
-    delete [] s;
-
+    string c_name(to_char_ptr(found_node->name));
     if (c_name == name) {
       break;
     }
 
-    found_node = found_node->getNextSibling();
+    found_node = found_node->next;
   }
   if (found_node == NULL) {
      return 0;
@@ -131,61 +113,52 @@ ProblemSpec::findNextBlock(const string& name) const
 ProblemSpecP
 ProblemSpec::findTextBlock()
 {
-   for (DOMNode* child = d_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-     if (child->getNodeType() == DOMNode::TEXT_NODE) {
+   for (xmlNode* child = d_node->children; child != 0;
+        child = child->next) {
+     if (child->type == XML_TEXT_NODE) {
        return scinew ProblemSpec(child, d_write);
       }
    }
-
    return NULL;
 }
 
 string
 ProblemSpec::getNodeName() const
 {
-
-  char*s = XMLString::transcode(d_node->getNodeName());
-  string name(s);
-  delete [] s;
-  return name;
+  return string(to_char_ptr(d_node->name));
 }
 
 short
 ProblemSpec::getNodeType() 
 {
-  return d_node->getNodeType();
+  return d_node->type;
 }
 
 ProblemSpecP
 ProblemSpec::importNode(ProblemSpecP src, bool deep) 
 {
-  DOMNode* d = d_node->getOwnerDocument()->importNode(src->getNode(), deep);
+  xmlNode* d = xmlDocCopyNode(src->d_node, d_node->doc, deep ? 1 : 0);
   if (d)
     return scinew ProblemSpec(d, d_write);
   else
     return 0;
 }
 
-ProblemSpecP
+void
 ProblemSpec::replaceChild(ProblemSpecP toreplace, 
                           ProblemSpecP replaced) 
 {
-  DOMNode* d = d_node->replaceChild(toreplace->getNode(), replaced->getNode());
+  xmlNode* d = xmlReplaceNode(toreplace->d_node, replaced->d_node);
+
   if (d)
-    return scinew ProblemSpec(d, d_write);
-  else
-    return 0;
+    xmlFreeNode(d);
 }
 
-ProblemSpecP
+void
 ProblemSpec::removeChild(ProblemSpecP child)
 {
-  DOMNode* d = d_node->removeChild(child->getNode());
-  if (d)
-    return scinew ProblemSpec(d, d_write);
-  else 
-    return 0;
+  xmlUnlinkNode(child->getNode());
+  xmlFreeNode(child->getNode());
 }
 
 //______________________________________________________________________
@@ -242,13 +215,11 @@ ProblemSpec::get(const string& name, double &value)
     return ps;
   }
   else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char* s = XMLString::transcode(child->getNodeValue());
-        string stringValue(s);
-        delete [] s;
+    xmlNode* found_node = node->d_node;
+    for (xmlNode* child = found_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+        string stringValue = getNodeValue();
         checkForInputError(stringValue,"double"); 
         istringstream ss(stringValue);
         ss >> value;
@@ -269,13 +240,11 @@ ProblemSpec::get(const string& name, unsigned int &value)
     return ps;
   }
   else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char* s = XMLString::transcode(child->getNodeValue());
-        string stringValue(s);
-        delete [] s;
+    xmlNode* found_node = node->d_node;
+    for (xmlNode* child = found_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+        string stringValue = getNodeValue();
         checkForInputError(stringValue,"int");
         istringstream ss(stringValue);
         ss >> value;
@@ -297,13 +266,11 @@ ProblemSpec::get(const string& name, int &value)
     return ps;
   }
   else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char* s = XMLString::transcode(child->getNodeValue());
-        string stringValue(s);
-        delete [] s;
+    xmlNode* found_node = node->d_node;
+    for (xmlNode* child = found_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+        string stringValue = getNodeValue();
         checkForInputError(stringValue,"int");
         istringstream ss(stringValue);
         ss >> value;
@@ -326,13 +293,11 @@ ProblemSpec::get(const string& name, long &value)
     return ps;
   }
   else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char* s = XMLString::transcode(child->getNodeValue());
-        string stringValue(s);
-        delete [] s;
+    xmlNode* found_node = node->d_node;
+    for (xmlNode* child = found_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+        string stringValue = getNodeValue();
         checkForInputError(stringValue,"int");
         stringstream ss(stringValue);
         ss >> value;
@@ -354,13 +319,11 @@ ProblemSpec::get(const string& name, bool &value)
     return ps;
   }
   else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char *s = XMLString::transcode(child->getNodeValue());
-        string cmp(s);
-        delete [] s;
+    xmlNode* found_node = node->d_node;
+    for (xmlNode* child = found_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+        string cmp = getNodeValue();
         // Slurp up any spaces that were put in before or after the cmp string.
         istringstream result_stream(cmp);
         string nospace_cmp;
@@ -392,15 +355,13 @@ ProblemSpec::get(const string& name, string &value)
     return ps;
   }
   else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char *s = XMLString::transcode(child->getNodeValue());
+    xmlNode* found_node = node->d_node;
+    for (xmlNode* child = found_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
         //__________________________________
         // This little bit of magic removes all spaces
-        string tmp(s);
-        delete [] s;
+        string tmp = getNodeValue();
         istringstream value_tmp(tmp);
         value_tmp >> value; 
       }
@@ -434,13 +395,12 @@ ProblemSpec::get(const string& name,
     return ps;
   }
   else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char *s = XMLString::transcode(child->getNodeValue());
-        string_value = string(s);
-        delete [] s;
+    xmlNode* found_node = node->d_node;
+    for (xmlNode* child = found_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+        string_value = getNodeValue();
+
         // Parse out the [num,num,num]
         // Now pull apart the string_value
         string::size_type i1 = string_value.find("[");
@@ -523,13 +483,11 @@ ProblemSpec::get(const string& name,
     return ps;
   }
   else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char *s = XMLString::transcode(child->getNodeValue());
-        string_value = string(s);
-        delete [] s;
+    xmlNode* found_node = node->d_node;
+    for (xmlNode* child = found_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+        string_value = getNodeValue();
         
         istringstream in(string_value);
         char c,next;
@@ -566,14 +524,11 @@ ProblemSpec::get(const string& name,
     return ps;
   }
   else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char *s = XMLString::transcode(child->getNodeValue());
-        string_value = string(s);
-        delete [] s;
-
+    xmlNode* found_node = node->d_node;
+    for (xmlNode* child = found_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+        string_value = getNodeValue();
         parseIntVector(string_value, value);
       }
     }
@@ -594,13 +549,11 @@ ProblemSpec::get(const string& name, vector<IntVector>& value)
     return ps;
   }
   else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char *s = XMLString::transcode(child->getNodeValue());
-        string_value = string(s);
-        delete [] s;
+    xmlNode* found_node = node->d_node;
+    for (xmlNode* child = found_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+        string_value = getNodeValue();
 
         istringstream in(string_value);
         char c;
@@ -641,7 +594,7 @@ ProblemSpec::get(const string& name, vector<IntVector>& value)
           // add the char to the string
           result += c;
         }  // end while (!in.eof())
-      } // end if (child->getNodeType() == DOMNode::TEXT_NODE)
+      } // end if (child->type == XML_TEXT_NODE)
     }
   }
   return ps;
@@ -672,12 +625,10 @@ void ProblemSpec::parseIntVector(const string& string_value, IntVector& value)
 
 bool ProblemSpec::get(int &value)
 {
-   for (DOMNode *child = d_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-         const char* s = XMLString::transcode(child->getNodeValue());
-         value = atoi(s);
-         delete [] s;
+   for (xmlNode *child = d_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+         value = atoi(getNodeValue().c_str());
          return true;
       }
    }
@@ -686,12 +637,10 @@ bool ProblemSpec::get(int &value)
 
 bool ProblemSpec::get(long &value)
 {
-   for (DOMNode *child = d_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-         const char* s = XMLString::transcode(child->getNodeValue());
-         value = atoi(s);
-         delete [] s;
+   for (xmlNode *child = d_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+         value = atoi(getNodeValue().c_str());
          return true;
       }
    }
@@ -700,12 +649,10 @@ bool ProblemSpec::get(long &value)
 
 bool ProblemSpec::get(double &value)
 {
-   for (DOMNode *child = d_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-         const char* s = XMLString::transcode(child->getNodeValue());
-         value = atof(s);
-         delete [] s;
+   for (xmlNode *child = d_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
+         value = atof(getNodeValue().c_str());
          return true;
       }
    }
@@ -714,13 +661,11 @@ bool ProblemSpec::get(double &value)
 
 bool ProblemSpec::get(string &value)
 {
-   for (DOMNode *child = d_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-        const char* s = XMLString::transcode(child->getNodeValue());
+   for (xmlNode *child = d_node->children; child != 0;
+        child = child->next) {
+      if (child->type == XML_TEXT_NODE) {
         // Remove the white space from the front and back of the string
-        string tmp(s);
-        delete [] s;
+        string tmp(getNodeValue());
         istringstream tmp_str(tmp);
         string w;
         while(tmp_str>>w) value += w;
@@ -733,12 +678,10 @@ bool ProblemSpec::get(string &value)
 bool ProblemSpec::get(Vector &value)
 {
   string string_value;
-  for (DOMNode* child = d_node->getFirstChild(); child != 0;
-      child = child->getNextSibling()) {
-    if (child->getNodeType() == DOMNode::TEXT_NODE) {
-     const char *s = XMLString::transcode(child->getNodeValue());
-     string_value = string(s);
-     delete [] s;
+  for (xmlNode* child = d_node->children; child != 0;
+      child = child->next) {
+    if (child->type == XML_TEXT_NODE) {
+     string_value = getNodeValue();
      // Parse out the [num,num,num]
      // Now pull apart the string_value
      string::size_type i1 = string_value.find("[");
@@ -770,7 +713,7 @@ ProblemSpec::getWithDefault(const string& name,
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
-    //create DOMNode to add to the tree
+    //create xmlNode to add to the tree
     appendElement(name.c_str(), defaultVal);
 
     // set default values
@@ -787,7 +730,7 @@ ProblemSpec::getWithDefault(const string& name,
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
-    //create DOMNode to add to the tree
+    //create xmlNode to add to the tree
     appendElement(name.c_str(), defaultVal);
 
     // set default values
@@ -804,7 +747,7 @@ ProblemSpec::getWithDefault(const string& name,
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
-    //create DOMNode to add to the tree
+    //create xmlNode to add to the tree
     appendElement(name.c_str(), defaultVal);
 
     // set default values
@@ -822,7 +765,7 @@ ProblemSpec::getWithDefault(const string& name,
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
-    //create DOMNode to add to the tree
+    //create xmlNode to add to the tree
     appendElement(name.c_str(), defaultVal);
 
     // set default values
@@ -839,7 +782,7 @@ ProblemSpec::getWithDefault(const string& name,
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
-    //create DOMNode to add to the tree
+    //create xmlNode to add to the tree
     appendElement(name.c_str(), defaultVal);
 
     // set default values
@@ -858,7 +801,7 @@ ProblemSpec::getWithDefault(const string& name,
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
-    //create DOMNode to add to the tree
+    //create xmlNode to add to the tree
     appendElement(name.c_str(), defaultVal);
 
     // set default values
@@ -877,7 +820,7 @@ ProblemSpec::getWithDefault(const string& name,
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
-    //create DOMNode to add to the tree
+    //create xmlNode to add to the tree
     appendElement(name.c_str(), defaultVal);
 
     // set default values
@@ -897,7 +840,7 @@ ProblemSpec::getWithDefault(const string& name,
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
-    //create DOMNode to add to the tree
+    //create xmlNode to add to the tree
     appendElement(name.c_str(), defaultVal);
 
     // set default values
@@ -921,7 +864,7 @@ ProblemSpec::getWithDefault(const string& name,
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
-    // add DOMNode to the tree
+    // add xmlNode to the tree
     appendElement(name.c_str(), defaultVal);
     // set default values
     ps = this;
@@ -944,28 +887,13 @@ void ProblemSpec::appendElement(const char* name, const string& value,
   for (int i = 0; i < tabs; i++)
     ostr << "\t";
 
-   XMLCh* str = XMLString::transcode(ostr.str().c_str());
-
-   DOMText *leader = d_node->getOwnerDocument()->createTextNode(str);
-   delete [] str;
-   d_node->appendChild(leader);
-
-   str = XMLString::transcode(name);
-   DOMElement *newElem = d_node->getOwnerDocument()->createElement(str);
-   delete [] str;
-   d_node->appendChild(newElem);
-
-   str = XMLString::transcode(value.c_str());
-   DOMText *newVal = d_node->getOwnerDocument()->createTextNode(str);
-   delete [] str;
-   newElem->appendChild(newVal);
-
-   if (trail) {
-     str = XMLString::transcode("\n");
-     DOMText *trailer = d_node->getOwnerDocument()->createTextNode(str);
-     delete [] str;
-     d_node->appendChild(trailer);
-   }
+  appendText(ostr.str().c_str());
+  
+  xmlNewChild(d_node, 0, BAD_CAST name, BAD_CAST value.c_str());
+  
+  if (trail) {
+    appendText("\n");
+  }
 }
 
 //basically to make sure correct overloaded function is called
@@ -1192,115 +1120,50 @@ void ProblemSpec::require(const string& name,
 
 }
 
-ProblemSpecP
-ProblemSpec::getOptional(const string& name, 
-                         string &value)
-{
-  ProblemSpecP ps = this;
-  DOMNode* attr_node;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
-    return ps;
-  }
-  else {
-    DOMNode* found_node = node->d_node;
-    cout << "node name = " << found_node->getNodeName() << endl;
-    if (found_node->getNodeType() == DOMNode::ELEMENT_NODE) {
-      // We have an element node and attributes
-      DOMNamedNodeMap* attr = found_node->getAttributes();
-      unsigned long num_attr = attr->getLength();
-      if (num_attr >= 1)
-        attr_node = attr->item(0);
-      else 
-        return ps = 0;
-      if (attr_node->getNodeType() == DOMNode::ATTRIBUTE_NODE) {
-        const char *s = XMLString::transcode(attr_node->getNodeValue());
-        value = string(s);
-        delete [] s;
-      }
-      else {
-        ps = 0;
-      }
-    }
-  }
-          
-  return ps;
-}
-
-void
-ProblemSpec::requireOptional(const string& name, string& value)
-{
- // Check if the prob_spec is NULL
-
-  if (! this->getOptional(name,value))
-      throw ParameterNotFound(name, __FILE__, __LINE__);
-}
-
 void
 ProblemSpec::getAttributes(map<string,string>& attributes)
 {
-  DOMNamedNodeMap* attr = d_node->getAttributes();
-  unsigned long num_attr = attr->getLength();
+  attributes.clear();
 
-  for (unsigned long i = 0; i<num_attr; i++) {
-    const char* attrName = XMLString::transcode(attr->item(i)->getNodeName());
-    string name(attrName);
-    delete [] attrName;
+  xmlAttr* attr = d_node->properties;
 
-    const char* attrValue = XMLString::transcode(attr->item(i)->getNodeValue());
-    string value(attrValue);
-    delete [] attrValue;
-
-    attributes[name]=value;
+  for (; attr != 0; attr = attr->next) {
+    if (attr->type == XML_ATTRIBUTE_NODE) {
+      attributes[to_char_ptr(attr->name)] = to_char_ptr(attr->children->content);
+    }
   }
 }
 
 bool
 ProblemSpec::getAttribute(const string& attribute, string& result)
 {
-  DOMNamedNodeMap* attr = d_node->getAttributes();
 
-  const XMLCh* attrName = XMLString::transcode(attribute.c_str());
-  const DOMNode* n = attr->getNamedItem(attrName);
+  map<string, string> attributes;
+  getAttributes(attributes);
 
-  if(n == 0)
-     return false;
-  const char* s = XMLString::transcode(n->getNodeValue());
-  result=s;
-  delete [] s;
-  delete [] attrName;
-  return true;
+  map<string,string>::iterator iter = attributes.find(attribute);
+
+  if (iter != attributes.end()) {
+    result = iter->second;
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 void
 ProblemSpec::setAttribute(const string& name, 
                           const string& value)
 {
-  XMLCh* attrName = XMLString::transcode(name.c_str());
-  XMLCh* attrValue = XMLString::transcode(value.c_str());
-
-  DOMElement * casted;
-#if !defined(_AIX)
-  casted = dynamic_cast<DOMElement*>(d_node);
-  if( !casted ) {
-    cerr << "Dynamic_cast of ProblemSpec.cc: d_node failed\n";
-  }
-#else
-  casted = static_cast<DOMElement*>(d_node);
-#endif
-
-  casted->setAttribute(attrName, attrValue);
-
-  delete [] attrName;
-  delete [] attrValue;
+  xmlNewProp(d_node, BAD_CAST name.c_str(), BAD_CAST value.c_str());
 }
 
 
 ProblemSpecP
 ProblemSpec::getFirstChild() 
 {
-  DOMNode* d = d_node->getFirstChild();
+  xmlNode* d = d_node->children;
   if (d)
     return scinew ProblemSpec(d, d_write);
   else
@@ -1310,7 +1173,7 @@ ProblemSpec::getFirstChild()
 ProblemSpecP
 ProblemSpec::getNextSibling() 
 {
-  DOMNode* d = d_node->getNextSibling();
+  xmlNode* d = d_node->next;
   if (d)
     return scinew ProblemSpec(d, d_write);
   else
@@ -1320,27 +1183,14 @@ ProblemSpec::getNextSibling()
 string
 ProblemSpec::getNodeValue() 
 {
-  const char* value = XMLString::transcode(d_node->getNodeValue());
-  string ret(value);
-  delete [] value;
+  string ret(to_char_ptr(d_node->children->content));
   return ret;
-}
-
-ProblemSpecP
-ProblemSpec::createElement(char* str) 
-{
-  XMLCh* newstr = XMLString::transcode(str);
-  DOMNode* ret = d_node->getOwnerDocument()->createElement(newstr);
-  delete [] newstr;
-  return scinew ProblemSpec(ret, d_write);
 }
 
 void
 ProblemSpec::appendText(const char* str)
 {
-  XMLCh* newstr = XMLString::transcode(str);
-  d_node->appendChild(d_node->getOwnerDocument()->createTextNode(newstr));
-  delete [] newstr;
+  xmlNewTextChild(d_node, 0, BAD_CAST "name", BAD_CAST str);
 }
 
 // append element with associated string
@@ -1355,45 +1205,35 @@ ProblemSpec::appendChild(const char *str,
     ostr << "\n";
   for (int i = 0; i < tabs; i++)
     ostr << "\t";
+
   appendText(ostr.str().c_str());
   
-  XMLCh* newstr = XMLString::transcode(str);
-  DOMNode* elt = d_node->getOwnerDocument()->createElement(newstr);
-
-  delete [] newstr;
-  newstr = XMLString::transcode("\n");
+  xmlNode* elt = xmlNewChild(d_node, 0, BAD_CAST str, 0);
   
-  // add trailing newline
-  d_node->appendChild(elt);
-  d_node->appendChild(d_node->getOwnerDocument()->createTextNode(newstr));
-  delete [] newstr;
   return scinew ProblemSpec(elt, d_write);
 }
 
 void
 ProblemSpec::appendChild(ProblemSpecP pspec) 
 {
-  d_node->appendChild(pspec->d_node);
+  xmlAddChild(d_node, pspec->d_node);
 }
 
 void
 ProblemSpec::addStylesheet(char* type, char* name) 
 {
+#if 0
    ASSERT((strcmp(type, "css") == 0) || strcmp(type, "xsl") == 0);
 
-   XMLCh* str1 = XMLString::transcode("xml-stylesheet");
+   string str1 = "xml-stylesheet";
 
    ostringstream str;
    str << " type=\"text/" << type << "\" href=\"" << name << "\"";
-   XMLCh* str2 = XMLString::transcode(str.str().c_str());
+   string str2 = str.str().c_str();
 
-   DOMProcessingInstruction* pi = d_node->getOwnerDocument()->createProcessingInstruction(str1,str2);
-
-   delete [] str1;
-   delete [] str2;
-
-   d_node->getOwnerDocument()->insertBefore((DOMNode*)pi, (DOMNode*)(d_node->getOwnerDocument()->getDocumentElement()));
-
+   xmlAddPrevSibling(xmlDocGetRootElement(d_node->doc),
+                     xmlNewDocPI(d_node->doc, BAD_CAST str1.c_str(), BAD_CAST str2.c_str()));
+#endif
 }
 
 // filename is a default param (NULL)
@@ -1402,52 +1242,21 @@ ProblemSpec::addStylesheet(char* type, char* name)
 void
 ProblemSpec::output(char* filename) const 
 {
-  XMLCh* tempStr = XMLString::transcode("LS");
-  DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(tempStr);
-  delete [] tempStr;
-
-  DOMWriter* writer = ((DOMImplementationLS*)impl)->createDOMWriter();
-  if (writer->canSetFeature(XMLUni::fgDOMWRTFormatPrettyPrint, true))
-    writer->setFeature(XMLUni::fgDOMWRTFormatPrettyPrint, true);
-
-  XMLFormatTarget *target;
-  if (filename == NULL)
-    target = new StdOutFormatTarget();
-  else
-    target = new LocalFileFormatTarget(filename);
-
-  try {
-    // do the serialization through DOMWriter::writeNode();
-    writer->writeNode(target, *(d_node->getOwnerDocument()));
-  }
-  catch (const XMLException& toCatch) {
-    char* message = XMLString::transcode(toCatch.getMessage());
-    string ex(message);
-    delete [] message;
-    throw ProblemSetupException(ex, __FILE__, __LINE__);
-  }
-  catch (const DOMException& toCatch) {
-    char* message = XMLString::transcode(toCatch.msg);
-    string ex(message);
-    delete [] message;
-    throw ProblemSetupException(ex, __FILE__, __LINE__);
+  if (filename) {
+    xmlSaveFormatFileEnc(filename, d_node->doc, "UTF-8", 1);
   }
 }
 
 void
 ProblemSpec::releaseDocument() 
 {
-  // You would think this would delete the memory, but Xerces keeps a
-  // handle on the memory for later use.  It looks like Xerces
-  // maintains a memory pool that is never released to the system or
-  // resized smaller.
-  d_node->getOwnerDocument()->release();
+  xmlFreeDoc(d_node->doc);
 }
 
 ProblemSpecP
 ProblemSpec::getRootNode()
 {
-  DOMNode* root_node = d_node->getOwnerDocument()->getDocumentElement();
+  xmlNode* root_node = xmlDocGetRootElement(d_node->doc);
   return scinew ProblemSpec(root_node,d_write);
 }
 
@@ -1462,15 +1271,15 @@ ProblemSpec::getTypeDescription()
 ProblemSpecP
 ProblemSpec::createDocument(const string& name) 
 {
-  const XMLCh* str = XMLString::transcode(name.c_str());
-  const XMLCh* implstr = XMLString::transcode("LS");
-  DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(implstr);
-  DOMDocument* doc = impl->createDocument(0,str,0);
-  delete [] str;
-  delete [] implstr;
+  xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
+  xmlNodePtr node = xmlNewDocRawNode(doc, 0, BAD_CAST name.c_str(), 0);
 
-  return scinew ProblemSpec(doc->getDocumentElement());
+  xmlDocSetRootElement(doc, node);
+
+  return scinew ProblemSpec(node);
 }
+
+#if 0
 
 void
 outputContent(ostream& target, const char *chars /**to_write*/)
@@ -1508,31 +1317,33 @@ namespace Uintah {
   ostream&
   operator<<(ostream& out, ProblemSpecP pspec)
   {
-    out << *(pspec->getNode()->getOwnerDocument());
+    out << *(pspec->getNode()->doc);
     return out;
   }
+  
 }
 
+
 ostream&
-operator<<(ostream& target, const DOMNode& toWrite) 
+operator<<(ostream& target, const xmlNode& toWrite) 
 {
   // Get the name and value out for convenience
-  const char *nodeName = XMLString::transcode(toWrite.getNodeName());
-  const char *nodeValue = XMLString::transcode(toWrite.getNodeValue());
+  const char *nodeName = XMLString::transcode(toWrite.name);
+  const char *nodeValue = XMLString::transcode(toWrite.children->content);
 
   // nodeValue will be sometimes be deleted in outputContent, but
   // will not always call outputContent
   bool valueDeleted = false;
 
-  switch (toWrite.getNodeType()) {
-  case DOMNode::TEXT_NODE:
+  switch (toWrite.type) {
+  case XML_TEXT_NODE:
     {
       outputContent(target, nodeValue);
       valueDeleted = true;
       break;
     }
 
-  case DOMNode::PROCESSING_INSTRUCTION_NODE :
+  case XML_PI_NODE :
     {
       target  << "<?"
               << nodeName
@@ -1542,7 +1353,7 @@ operator<<(ostream& target, const DOMNode& toWrite)
       break;
     }
 
-  case DOMNode::DOCUMENT_NODE :
+  case XML_DOCUMENT_NODE :
     {
       // Bug here:  we need to find a way to get the encoding name
       //   for the default code page on the system where the
@@ -1551,24 +1362,24 @@ operator<<(ostream& target, const DOMNode& toWrite)
       //MLCh *enc_name = XMLPlatformUtils::fgTransService->getEncodingName();
       target << "<?xml version='1.0' encoding='ISO-8859-1' ?>\n";
 
-      DOMNode *brother = toWrite.getNextSibling();
+      xmlNode *brother = toWrite.next;
       while(brother != 0)
         {
           target << *brother << endl;
-          brother = brother->getNextSibling();
+          brother = brother->next;
         }
 
-      DOMNode *child = toWrite.getFirstChild();
+      xmlNode *child = toWrite.children;
       while(child != 0)
         {
           target << *child << endl;
-          child = child->getNextSibling();
+          child = child->next;
         }
 
       break;
     }
 
-  case DOMNode::ELEMENT_NODE :
+  case XML_ELEMENT_NODE :
     {
       // Output the element start tag.
       target << '<' << nodeName;
@@ -1577,8 +1388,8 @@ operator<<(ostream& target, const DOMNode& toWrite)
       DOMNamedNodeMap *attributes = toWrite.getAttributes();
       int attrCount = static_cast<int>(attributes->getLength());
       for (int i = 0; i < attrCount; i++) {
-        DOMNode  *attribute = attributes->item(i);
-        char* attrName = XMLString::transcode(attribute->getNodeName());
+        xmlNode  *attribute = attributes->item(i);
+        char* attrName = XMLString::transcode(attribute->name);
         target  << ' ' << attrName
                 << " = \"";
         //  Note that "<" must be escaped in attribute values.
@@ -1590,13 +1401,13 @@ operator<<(ostream& target, const DOMNode& toWrite)
 
       //  Test for the presence of children, which includes both
       //  text content and nested elements.
-      DOMNode *child = toWrite.getFirstChild();
+      xmlNode *child = toWrite.children;
       if (child != 0) {
         // There are children. Close start-tag, and output children.
         target << ">";
         while(child != 0) {
           target << *child;
-          child = child->getNextSibling();
+          child = child->next;
         }
 
         // Done with children.  Output the end tag.
@@ -1609,22 +1420,22 @@ operator<<(ostream& target, const DOMNode& toWrite)
       break;
     }
 
-  case DOMNode::ENTITY_REFERENCE_NODE:
+  case XML_ENTITY_REF_NODE:
     {
-      DOMNode *child;
-      for (child = toWrite.getFirstChild(); child != 0;
-           child = child->getNextSibling())
+      xmlNode *child;
+      for (child = toWrite.children; child != 0;
+           child = child->next)
         target << *child;
       break;
     }
 
-  case DOMNode::CDATA_SECTION_NODE:
+  case XML_CDATA_SECTION_NODE:
     {
       target << "<![CDATA[" << nodeValue << "]]>";
       break;
     }
 
-  case DOMNode::COMMENT_NODE:
+  case XML_COMMENT_NODE:
     {
       target << "<!--" << nodeValue << "-->";
       break;
@@ -1632,7 +1443,7 @@ operator<<(ostream& target, const DOMNode& toWrite)
 
   default:
     cerr << "Unrecognized node type = "
-         << (long)toWrite.getNodeType() << endl;
+         << (long)toWrite.type << endl;
   }
 
   delete [] nodeName;
@@ -1648,3 +1459,5 @@ operator<<(ostream& target, const DOMText& toWrite) {
   delete [] p;
   return target;
 }
+
+#endif
