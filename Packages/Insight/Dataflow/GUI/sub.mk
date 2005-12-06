@@ -58,9 +58,7 @@ SRCS := \
 	$(SRCDIR)/BinaryDilateImageFilter.tcl\
 	$(SRCDIR)/BinaryErodeImageFilter.tcl\
 	$(SRCDIR)/ChooseImage.tcl\
-	$(SRCDIR)/ColorImageReaderUChar2D.tcl\
 	$(SRCDIR)/ColorImageReaderFloat2D.tcl\
-	$(SRCDIR)/ColorImageReaderUChar3D.tcl\
 	$(SRCDIR)/ColorImageReaderFloat3D.tcl\
 	$(SRCDIR)/ExtractImageFilter.tcl\
 	$(SRCDIR)/GrayscaleDilateImageFilter.tcl\
@@ -68,10 +66,6 @@ SRCS := \
 	$(SRCDIR)/ImageFileWriter.tcl \
 	$(SRCDIR)/ImageReaderFloat2D.tcl \
 	$(SRCDIR)/ImageReaderFloat3D.tcl \
-	$(SRCDIR)/ImageReaderUChar2D.tcl \
-	$(SRCDIR)/ImageReaderUChar3D.tcl \
-	$(SRCDIR)/ImageReaderUShort2D.tcl \
-	$(SRCDIR)/ImageReaderUShort3D.tcl \
 	$(SRCDIR)/ImageToField.tcl \
 	$(SRCDIR)/BuildSeedVolume.tcl \
 	$(SRCDIR)/ThresholdSegmentationLevelSetImageFilter.tcl \
