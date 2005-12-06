@@ -55,8 +55,7 @@ SRCDIR   := Packages/Insight/Dataflow/Modules/Filters
 CATEGORY := Filters
 #CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) SCIRun.GenerateSCIRunCode 
 
-SRCS += 
-	${SRCDIR}/BinaryDilateImageFilter.cc \
+SRCS += ${SRCDIR}/BinaryDilateImageFilter.cc \
 	${SRCDIR}/BinaryErodeImageFilter.cc \
 	${SRCDIR}/BinaryThresholdImageFilter.cc \
 	${SRCDIR}/CannySegmentationLevelSetImageFilter.cc \
