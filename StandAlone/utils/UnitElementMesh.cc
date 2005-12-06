@@ -49,6 +49,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <assert.h>
 
 using std::cerr;
 using std::ifstream;
@@ -95,7 +96,7 @@ void create_unit_element_mesh()
   int local_dimension_elem=(f.number_of_mesh_vertices() || !f.dofs() ? 0 : 1);
   int local_dimension_nodes=f.number_of_mesh_vertices();
   int local_dimension_add_nodes=f.number_of_mesh_vertices()-f.number_of_vertices();
-  int local_dimension_derivatives=f.dofs()-local_dimension_nodes-local_dimension_add_nodes-local_dimension_elem;
+  //  int local_dimension_derivatives=f.dofs()-local_dimension_nodes-local_dimension_add_nodes-local_dimension_elem;
 
   for(int i=0; i<f.dofs(); i++) {
     cerr << i << endl;
