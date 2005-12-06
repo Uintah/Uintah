@@ -99,7 +99,6 @@ void create_unit_element_mesh()
   //  int local_dimension_derivatives=f.dofs()-local_dimension_nodes-local_dimension_add_nodes-local_dimension_elem;
 
   for(int i=0; i<f.dofs(); i++) {
-    cerr << i << endl;
     if (i<local_dimension_nodes+local_dimension_elem)
       field->fdata().push_back(1);
     else if (i<local_dimension_nodes+local_dimension_elem+local_dimension_add_nodes)
@@ -164,13 +163,17 @@ main(int argc, char **argv)
     else if (!strcmp(argv[currArg],"-TetVolMeshCubic")) 
       create_unit_element_mesh<TetVolMesh<TetCubicHmt<Point> >, TetCubicHmt<double> >();
  
-   else if (!strcmp(argv[currArg],"-PrismVolMeshLinear")) 
+    else if (!strcmp(argv[currArg],"-PrismVolMeshConstant")) 
+      create_unit_element_mesh<PrismVolMesh<PrismLinearLgn<Point> >, ConstantBasis<double> >();
+    else if (!strcmp(argv[currArg],"-PrismVolMeshLinear")) 
       create_unit_element_mesh<PrismVolMesh<PrismLinearLgn<Point> >, PrismLinearLgn<double> >();
     else if (!strcmp(argv[currArg],"-PrismVolMeshQuadratic")) 
       create_unit_element_mesh<PrismVolMesh<PrismLinearLgn<Point> >, PrismQuadraticLgn<double> >();
     else if (!strcmp(argv[currArg],"-PrismVolMeshCubic")) 
       create_unit_element_mesh<PrismVolMesh<PrismCubicHmt<Point> >, PrismCubicHmt<double> >();
   
+    else if (!strcmp(argv[currArg],"-HexVolMeshConstant")) 
+      create_unit_element_mesh<HexVolMesh<HexTrilinearLgn<Point> >, ConstantBasis<double> >();
     else if (!strcmp(argv[currArg],"-HexVolMeshLinear")) 
       create_unit_element_mesh<HexVolMesh<HexTrilinearLgn<Point> >, HexTrilinearLgn<double> >();
     else if (!strcmp(argv[currArg],"-HexVolMeshQuadratic")) 
