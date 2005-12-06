@@ -306,6 +306,9 @@ Log2(const unsigned int dim) {
   return log;
 }
 
+// Takes the square root of "value" and tries to find two factors that
+// are closest to that square root.
+void findFactorsNearRoot(const int value, int& factor1, int& factor2);
 
 
 } // End namespace SCIRun
