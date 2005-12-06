@@ -40,34 +40,55 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-PATH_TO_SCIRUN := $(shell cd $(SRCTOP) ; pwd)
-PATH_TO_PACKAGE := $(PATH_TO_SCIRUN)/Packages/Insight
+#PATH_TO_SCIRUN := $(shell cd $(SRCTOP) ; pwd)
+#PATH_TO_PACKAGE := $(PATH_TO_SCIRUN)/Packages/Insight
 
 INCLUDES += $(INSIGHT_INCLUDE)
 
 SRCDIR   := Packages/Insight/Dataflow/Modules/Filters
 
-XMLS_PATH := $(PATH_TO_SCIRUN)/Packages/Insight/Dataflow/Modules/Filters/XML
-XMLS :=  $(shell ls $(XMLS_PATH)/sci_*.xml)
+#XMLS_PATH := $(PATH_TO_SCIRUN)/Packages/Insight/Dataflow/Modules/Filters/XML
+#XMLS :=  $(shell ls $(XMLS_PATH)/sci_*.xml)
 
-SRC_GEN := $(patsubst $(XMLS_PATH)/sci_%.xml, $(SRCDIR)/%.cc, $(XMLS))
+#SRC_GEN := $(patsubst $(XMLS_PATH)/sci_%.xml, $(SRCDIR)/%.cc, $(XMLS))
 
 CATEGORY := Filters
-CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) SCIRun.GenerateSCIRunCode 
+#CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) SCIRun.GenerateSCIRunCode 
 
-SRCS += ${SRC_GEN} \
-	${SRCDIR}/ExtractImageFilter.cc \
+SRCS += 
 	${SRCDIR}/BinaryDilateImageFilter.cc \
 	${SRCDIR}/BinaryErodeImageFilter.cc \
+	${SRCDIR}/BinaryThresholdImageFilter.cc \
+	${SRCDIR}/CannySegmentationLevelSetImageFilter.cc \
+	${SRCDIR}/ConfidenceConnectedImageFilter.cc \
+	${SRCDIR}/ConnectedThresholdImageFilter.cc \
+	${SRCDIR}/CurvatureAnisotropicDiffusionImageFilter.cc \
+	${SRCDIR}/CurvatureFlowImageFilter.cc \
+	${SRCDIR}/DiscreteGaussianImageFilter.cc \
+	${SRCDIR}/ExtractImageFilter.cc \
+	${SRCDIR}/GradientAnistropicDiffusionImageFilter.cc \
+	${SRCDIR}/GradientMagnitudeImageFilter.cc \
+	${SRCDIR}/GradientRecursiveGaussianImageFilter.cc \
 	${SRCDIR}/GrayscaleDilateImageFilter.cc \
 	${SRCDIR}/GrayscaleErodeImageFilter.cc \
+	${SRCDIR}/IsolatedConnectedImageFilter.cc \
+	${SRCDIR}/MeanImageFilter.cc \
+	${SRCDIR}/NeighborhoodConnectedImageFilter.cc \
+	${SRCDIR}/ReflectImageFilter.cc \
+	${SRCDIR}/RescaleIntensityImageFilter.cc \
 	${SRCDIR}/ThresholdSegmentationLevelSetImageFilter.cc \
+	${SRCDIR}/UnaryFunctorImageFilter.cc \
+	${SRCDIR}/VectorConfidenceConnectedImageFilter.cc \
+	${SRCDIR}/VectorCurvatureAnistropicDiffusionImageFilter.cc \
+	${SRCDIR}/VectorGradientAnisotropicDiffusionImageFilter.cc \
+	${SRCDIR}/VectorIndexSelectionCastImageFilter.cc \
+	${SRCDIR}/WatershedImageFilter.cc \
 #[INSERT NEW CODE FILE HERE]
 
-$(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
-	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateCC.xsl $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/$*.cc
-	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateXML.xsl $(PATH_TO_PACKAGE)/Dataflow/XML/$*.xml
-	cp $(PATH_TO_SCIRUN)/$@ $@
+#$(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
+#	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateCC.xsl $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/$*.cc
+#	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateXML.xsl $(PATH_TO_PACKAGE)/Dataflow/XML/$*.xml
+#	cp $(PATH_TO_SCIRUN)/$@ $@
 
 PSELIBS := Packages/Insight/Core/Datatypes \
 	Core/Datatypes Dataflow/Network Dataflow/Ports \
@@ -75,7 +96,6 @@ PSELIBS := Packages/Insight/Core/Datatypes \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface 
 
-#        Core/TkExtensions 
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(INSIGHT_LIBRARY) $(BLAS_LIBRARY)
 
