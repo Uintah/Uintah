@@ -143,8 +143,7 @@ $
 \STATE Initial Guess \\
   $eos(T_m, P)  \compute ,\rhoM$ \\
   $\theta_m = \frac{\rho_m}{\rhoM}$  \\
-  $eos(T_m, \rhoM)  \compute P_{{eos}_m}, \dpdrho, \frac{dP}{de}$ \\ 
-  $c_m =  \sqrt{ \frac {\B{(} \dpdrho + \frac{dP}{de} * P_{{eos}_m } \B{)}} {\rho^{o^2}_m} }$
+  $eos(T_m, \rhoM)  \compute P_{{eos}_m}, \dpdrho, \frac{dP}{de}$ 
 %
 \WHILE{ $|1 - \sum{\theta_m}| <$ convergence criteria}
     
@@ -160,7 +159,7 @@ $
     \FOR{$m=1$ to All Matls}
       \STATE $ eos(P, T_m) \compute  \rhoM$ 
       \STATE $ eos(\rhoM, T_m) \compute   P_{{eos}_m}, \dpdrho, \frac{dP}{de}$ 
-      \STATE $c_m = \sqrt{ \frac {\B{(}\dpdrho + \frac{dP}{de} * P_{{eos}_m } \B{)}} {\rho^{o^2}_m} }$
+      \STATE $c_m = \sqrt{ \dpdrho + \frac{dP}{de}  \frac{P_{{eos}_m }}{\rho^{o^2}_m} }$
       \STATE $ \theta_m =  \frac{\rho_m}{\rhoM}$
     \ENDFOR
 
