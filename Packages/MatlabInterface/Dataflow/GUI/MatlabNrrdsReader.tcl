@@ -120,7 +120,8 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
     iwidgets::scrolledlistbox $childframe.listbox -selectmode single \
           -selectioncommand "$this ChooseMatrix" \
           -width 500p -height 300p \
-          -selectbackground #ffc0c0		set $this-matriceslistbox $childframe.listbox
+          -selectbackground #ffc0c0		
+    set $this-matriceslistbox $childframe.listbox
 		$childframe.listbox component listbox configure -listvariable $this-matrixinfotexts
 		pack $childframe.listbox -fill both -expand yes
 
