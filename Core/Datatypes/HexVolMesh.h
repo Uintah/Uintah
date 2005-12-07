@@ -145,6 +145,8 @@ public:
     }
 
     // the following designed to coordinate with ::get_edges
+    // use the mapping as in approx_edge to match basis order.
+    //unsigned emap[] = {0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7};
     inline 
     unsigned edge0_index() const {
       return edges_[0];
@@ -163,35 +165,35 @@ public:
     }
     inline 
     unsigned edge4_index() const {
-      return edges_[4];
-    }
-    inline 
-    unsigned edge5_index() const {
-      return edges_[5];
-    }
-    inline 
-    unsigned edge6_index() const {
-      return edges_[6];
-    }
-    inline 
-    unsigned edge7_index() const {
-      return edges_[7];
-    }
-    inline 
-    unsigned edge8_index() const {
       return edges_[8];
     }
     inline 
-    unsigned edge9_index() const {
+    unsigned edge5_index() const {
       return edges_[9];
     }
     inline 
-    unsigned edge10_index() const {
+    unsigned edge6_index() const {
       return edges_[10];
     }
     inline 
-    unsigned edge11_index() const {
+    unsigned edge7_index() const {
       return edges_[11];
+    }
+    inline 
+    unsigned edge8_index() const {
+      return edges_[4];
+    }
+    inline 
+    unsigned edge9_index() const {
+      return edges_[5];
+    }
+    inline 
+    unsigned edge10_index() const {
+      return edges_[6];
+    }
+    inline 
+    unsigned edge11_index() const {
+      return edges_[7];
     }
 
     inline 
