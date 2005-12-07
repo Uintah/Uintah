@@ -76,6 +76,8 @@ public:
   static int vertices_of_face() { return 3; } 
   //! return number of faces per cell 
   static int faces_of_cell() { return 1; }
+
+  static double volume() { return 0.; } //!< return volume
 };
 
 
