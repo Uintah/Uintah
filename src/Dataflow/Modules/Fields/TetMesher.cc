@@ -88,9 +88,6 @@ TetMesher::~TetMesher()
 void
 TetMesher::execute() 
 {
-  // FIX: Camal is NOT THreadsafe hence we need to make it thread safe by adding a mutex
-  // Lock the tetmesher so no other module can address the tetmesher at the same time
-  TetMesherMutex.lock();
   
   bool ret_value = true;
   
@@ -100,12 +97,17 @@ TetMesher::execute()
   double *points = NULL; // array allocated in read_tri_file
   double *tetpoints = NULL;
   int num_tris = 0, num_points = 0;
+
   ret_value = read_tri_file(num_points, points, num_tris, tris);
   if (!ret_value) 
   {
     // printf("Failed read input\n");
     error("Failed read input.");
   }
+
+  // FIX: Camal is NOT THreadsafe hence we need to make it thread safe by adding a mutex
+  // Lock the tetmesher so no other module can address the tetmesher at the same time
+  TetMesherMutex.lock();
 
     // mesh the volume
 
@@ -176,7 +178,14 @@ TetMesher::read_tri_file(int &npoints, double *&points, int &ntris, int *&tris)
     return false;
   }
   FieldHandle trisurfH;
-  if (!trisurf->get(trisurfH)) return false;
+  trisurf->get(trisurfH);
+  
+  if (trisurfH.get_rep() == 0)
+  {
+    error("No field on input");
+    return (false);
+  }
+  
   TriSurfMesh<TriLinearLgn<Point> > *tsm = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >* >(trisurfH->mesh().get_rep());
   if (!tsm)
   {
