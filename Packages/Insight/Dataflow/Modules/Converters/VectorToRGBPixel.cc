@@ -28,7 +28,7 @@
 
 
 /*
- *  Image2DToImage3D.cc:
+ *  VectorToRGBPixel.cc:
  *
  *  Written by:
  *   darbyb
@@ -41,14 +41,16 @@
 
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
-#include <itkCastImageFilter.h>
 #include <itkVectorCastImageFilter.h>
+#include <itkVector.h>
+#include <itkRGBPixel.h>
+
 
 namespace Insight {
 
 using namespace SCIRun;
 
-class Image2DToImage3D : public Module {
+class VectorToRGBPixel : public Module {
 public:
   // Declare Ports
   ITKDatatypeIPort* inport_InputImage_;
@@ -57,9 +59,9 @@ public:
   ITKDatatypeOPort* outport_OutputImage_;
   ITKDatatypeHandle outhandle_OutputImage_;
 
-  Image2DToImage3D(GuiContext*);
+  VectorToRGBPixel(GuiContext*);
 
-  virtual ~Image2DToImage3D();
+  virtual ~VectorToRGBPixel();
 
   virtual void execute();
 
@@ -70,64 +72,20 @@ public:
   // refers to the last template type of the filter intstantiation.
   template<class InputImageType, class OutputImageType > 
   bool run( itk::Object* );
-  template<class InputImageType, class OutputImageType > 
-  bool run2( itk::Object* );
-
 };
 
 
-DECLARE_MAKER(Image2DToImage3D)
-Image2DToImage3D::Image2DToImage3D(GuiContext* ctx)
-  : Module("Image2DToImage3D", ctx, Source, "Converters", "Insight")
+DECLARE_MAKER(VectorToRGBPixel)
+VectorToRGBPixel::VectorToRGBPixel(GuiContext* ctx)
+  : Module("VectorToRGBPixel", ctx, Source, "Converters", "Insight")
 {
 }
 
-Image2DToImage3D::~Image2DToImage3D(){
+VectorToRGBPixel::~VectorToRGBPixel(){
 }
 
 template<class InputImageType, class OutputImageType>
-bool Image2DToImage3D::run( itk::Object *obj_InputImage) 
-{
-  InputImageType *data_InputImage = dynamic_cast<  InputImageType * >(obj_InputImage);
-  
-  if( !data_InputImage ) {
-    return false;
-  }
-
-
-  typedef typename itk::CastImageFilter< InputImageType, OutputImageType > CasterType;
-
-  // create a new one
-  typename CasterType::Pointer caster = CasterType::New();
-  
-  // set inputs 
-  caster->SetInput(dynamic_cast<InputImageType* >(inhandle_InputImage_.get_rep()->data_.GetPointer()));   
-  
-
-  // execute the filter
-  try {
-   caster->Update();
-  } catch ( itk::ExceptionObject & err ) {
-     error("ExceptionObject caught!");
-     error(err.GetDescription());
-  }
-
-  // get filter output
-  
-  
-  ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
-  
-  out_OutputImage_->data_ = caster->GetOutput();
-  
-  outhandle_OutputImage_ = out_OutputImage_; 
-  outport_OutputImage_->send(outhandle_OutputImage_);
-  
-  return true;
-}
-
-
-template<class InputImageType, class OutputImageType>
-bool Image2DToImage3D::run2( itk::Object *obj_InputImage) 
+bool VectorToRGBPixel::run( itk::Object *obj_InputImage) 
 {
   InputImageType *data_InputImage = dynamic_cast<  InputImageType * >(obj_InputImage);
   
@@ -166,7 +124,7 @@ bool Image2DToImage3D::run2( itk::Object *obj_InputImage)
   return true;
 }
 
-void Image2DToImage3D::execute(){
+void VectorToRGBPixel::execute(){
   // check input ports
   inport_InputImage_ = (ITKDatatypeIPort *)get_iport("InputImage");
   if(!inport_InputImage_) {
@@ -193,16 +151,16 @@ void Image2DToImage3D::execute(){
   
   // can we operate on it?
   if(0) { }
-  else if(run< itk::Image<float, 2>, itk::Image<float, 3> >( data_InputImage )) {} 
-  else if(run2< itk::Image<itk::Vector<float>, 2>, itk::Image<itk::Vector<float>, 3> >( data_InputImage )) {} 
+  else if(run< itk::Image<itk::Vector<float>, 2>, itk::Image<itk::RGBPixel<float>, 2> >( data_InputImage )) {}
+  else if(run< itk::Image<itk::Vector<float>, 3>, itk::Image<itk::RGBPixel<float>, 3> >( data_InputImage )) {}
   else {
     // error
     error("Incorrect input type");
     return;
-  }
+  } 
 }
 
-void Image2DToImage3D::tcl_command(GuiArgs& args, void* userdata)
+void VectorToRGBPixel::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

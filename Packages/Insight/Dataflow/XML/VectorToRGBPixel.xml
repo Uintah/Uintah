@@ -30,22 +30,26 @@
 -->
 
 
-<component name="ColorImageReaderFloat2D" category="DataIO">
+<component name="VectorToRGBPixel" category="Converters">
   <overview>
     <authors>
     <author>Darby J Van Uitert</author>
     </authors>
     <summary>
     </summary>
-    <description><p>This module uses the itk::ImageFileReader to read in a 2D Color Image as floats.  The output is an image of Vectors of size three. See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.</p>
-  </description>
+    <description><p>Converts an image of type itk::Vector to an image of type itk::RGBPixel. See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on the itk::VectorCastImageFilter.</p>
+    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
+      <port>
+        <name>InputImage</name>
+        <datatype>Insight::ITKDatatype</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
-        <name>Image</name>
+        <name>OutputImage</name>
         <datatype>Insight::ITKDatatype</datatype>
       </port>
     </outputs>

@@ -43,6 +43,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Insight/Dataflow/Modules/Converters
 
 SRCS     += \
+	$(SRCDIR)/BuildSeedVolume.cc\
 	$(SRCDIR)/FieldToImage.cc\
 	$(SRCDIR)/Image2DToImage3D.cc\
 	$(SRCDIR)/Image3DToImage2D.cc\
@@ -50,7 +51,7 @@ SRCS     += \
 	$(SRCDIR)/ImageToNrrd.cc\
 	$(SRCDIR)/NrrdToImage.cc\
 	$(SRCDIR)/RGBPixelToVector.cc\
-	$(SRCDIR)/BuildSeedVolume.cc\
+	$(SRCDIR)/VectorToRGBPixel.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes \
