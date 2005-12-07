@@ -110,6 +110,11 @@ Painter::CLUTLevelsTool::mouse_button_press(MouseState &mouse) {
   return mouse_motion(mouse); 
 }
 
+string *
+Painter::CLUTLevelsTool::mouse_button_release(MouseState &mouse) {
+  return scinew string("Done");
+}
+
 
 string *
 Painter::CLUTLevelsTool::mouse_motion(MouseState &mouse) {
@@ -140,6 +145,11 @@ Painter::ZoomTool::mouse_button_press(MouseState &mouse) {
   return 0;
 }
 
+string *
+Painter::ZoomTool::mouse_button_release(MouseState &mouse) {
+  return scinew string("Done");
+}
+
 
 string *
 Painter::ZoomTool::mouse_motion(MouseState &mouse) {
@@ -165,6 +175,10 @@ Painter::AutoviewTool::mouse_button_press(MouseState &mouse) {
   return 0;
 }
 
+string *
+Painter::AutoviewTool::mouse_button_release(MouseState &mouse) {
+  return scinew string("Done");
+}
 
 Painter::ProbeTool::ProbeTool(Painter *painter) : 
   PainterTool(painter, "Probe")
@@ -177,6 +191,11 @@ Painter::ProbeTool::mouse_button_press(MouseState &mouse) {
   painter_->for_each(&Painter::set_probe);
   painter_->redraw_all();
   return 0;
+}
+
+string *
+Painter::ProbeTool::mouse_button_release(MouseState &mouse) {
+  return scinew string("Done");
 }
 
 
@@ -206,6 +225,11 @@ Painter::PanTool::mouse_button_press(MouseState &mouse) {
   return 0;
 }
 
+
+string *
+Painter::PanTool::mouse_button_release(MouseState &mouse) {
+  return scinew string("Done");
+}
 
 string *
 Painter::PanTool::mouse_motion(MouseState &mouse) {
@@ -666,5 +690,226 @@ Painter::CropTool::get_crop_vectors(SliceWindow &window, int pick)
   
   return make_pair(x_delta, y_delta);
 }
+
+
+Painter::FloodfillTool::FloodfillTool(Painter *painter) :
+  PainterTool(painter, "Flood Fill"),
+  value_(0.0),
+  min_(0.0),
+  max_(0.0),
+  start_pos_(0,0,0)
+{
+}
+
+
+Painter::FloodfillTool::~FloodfillTool()
+{
+}
+
+string *
+Painter::FloodfillTool::mouse_button_press(MouseState &mouse)
+{
+  if (!mouse.window_ || !painter_->current_volume_) 
+    return scinew string("No window or current layer");
+  
+  if (mouse.button_ == 1) {
+    min_ = painter_->current_volume_->data_max_;
+    max_ = painter_->current_volume_->data_min_;
+    start_pos_ = mouse.position_;
+  }
+
+  return mouse_motion(mouse);
+}
+
+
+struct less_than_Point
+{
+  bool operator()(const Point &p1, const Point &p2) const
+  {
+
+    bool val = ((p1.x() < p2.x()) || (p1.y() < p2.y()) || (p1.z() < p2.z()));
+    cerr << "Comparing: " << p1 << p2 << " = " << int(val) << std::endl;
+    return val;
+  }
+};
+
+string *
+Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
+{
+  if (mouse.button_ != 1) return 0;
+  vector<Point> todo;
+  for (int i = 0; i < 3; ++i)
+    start_pos_(i) = Floor(start_pos_(i));
+  todo.push_back(start_pos_);
+
+  Nrrd *nrrd = painter_->current_volume_->nrrd_->nrrd;
+  NrrdDataHandle done = new NrrdData();
+  nrrdAlloc(done->nrrd, nrrdTypeUChar, 3, 
+            nrrd->axis[0].size, nrrd->axis[1].size, nrrd->axis[2].size);
+
+  memset(done->nrrd->data, 0, 
+         nrrd->axis[0].size*nrrd->axis[1].size*nrrd->axis[2].size);
+
+  vector<Vector> neighbors;
+  neighbors.push_back(Vector( 1,0,0));
+  neighbors.push_back(Vector(-1,0,0));
+  neighbors.push_back(Vector(0, 1,0));
+  neighbors.push_back(Vector(0,-1,0));
+  neighbors.push_back(Vector(0,0, 1));
+  neighbors.push_back(Vector(0,0,-1));
+
+  int counter = 0;
+  do {
+    counter++;
+    Point pos = todo.back();
+    todo.pop_back();
+    painter_->set_value(done->nrrd, pos, 1.0);
+    painter_->set_value(nrrd, pos, value_);
+
+    for (unsigned int n = 0; n < neighbors.size(); ++n) {
+      Point neighborpos = pos + neighbors[n];
+      double neighborval = painter_->get_value(nrrd, neighborpos);
+      bool range = (neighborval >= min_ && neighborval <= max_);
+      if (range && painter_->get_value(done->nrrd, neighborpos) < 0.5) {
+        todo.push_back(neighborpos);
+      }
+    }
+  } while (!todo.empty());
+
+  painter_->for_each(&Painter::rebind_slice);
+  painter_->redraw_all();
+  return scinew string("Done");
+}
+
+string *
+Painter::FloodfillTool::mouse_motion(MouseState &mouse)
+{
+  double val =  painter_->get_value(painter_->current_volume_->nrrd_->nrrd, 
+                                    mouse.position_);
+
+  if (mouse.state_ & MouseState::BUTTON_1_E) {
+    min_ = Min(min_, val);
+    max_ = Max(max_, val);
+    cerr << "Min: " << min_ << "  Max: " << max_ << std::endl;
+  }
+  
+  if (mouse.state_ & MouseState::BUTTON_3_E) {
+    value_ = val;
+    cerr << "value: " << value_ << std::endl;
+  }
+
+  
+  return 0;
+}
+
+string *
+Painter::FloodfillTool::draw(SliceWindow &window)
+{
+  return 0;
+}
+
+string *
+Painter::FloodfillTool::draw_mouse(MouseState &mouse)
+{
+  return 0;
+}
+
+
+
+
+Painter::PixelPaintTool::PixelPaintTool(Painter *painter) :
+  PainterTool(painter, "Pixel Paint")
+{
+}
+
+
+Painter::PixelPaintTool::~PixelPaintTool()
+{
+}
+
+string *
+Painter::PixelPaintTool::mouse_button_press(MouseState &mouse)
+{
+  return mouse_motion(mouse);
+}
+
+string *
+Painter::PixelPaintTool::mouse_button_release(MouseState &mouse)
+{
+  if (mouse.state_ & MouseState::BUTTON_2_E)
+    return new string ("Done");
+  return 0;
+}
+
+string *
+Painter::PixelPaintTool::mouse_motion(MouseState &mouse)
+{
+  if (!painter_->current_volume_) return 0;
+
+  if (mouse.state_ & MouseState::BUTTON_1_E) {
+    painter_->set_value(painter_->current_volume_->nrrd_->nrrd, 
+                        mouse.position_, value_);
+    painter_->for_each(&Painter::rebind_slice);
+    painter_->redraw_all();
+  }
+
+  if (mouse.state_ & MouseState::BUTTON_3_E) {
+    value_ =  painter_->get_value(painter_->current_volume_->nrrd_->nrrd, 
+                                  mouse.position_);
+  }
+
+  return 0;
+}
+
+
+
+/*
+
+Painter::TemplateTool::TemplateTool(Painter *painter) :
+  PainterTool(painter, "Template")
+{
+}
+
+
+Painter::TemplateTool::~TemplateTool()
+{
+}
+
+string *
+Painter::TemplateTool::mouse_button_press(MouseState &mouse)
+{
+  return 0;
+}
+
+string *
+Painter::TemplateTool::mouse_button_release(MouseState &mouse)
+{
+  return 0;
+}
+
+string *
+Painter::TemplateTool::mouse_motion(MouseState &mouse)
+{
+  return 0;
+}
+
+string *
+Painter::TemplateTool::draw(SliceWindow &window)
+{
+  return 0;
+}
+
+string *
+Painter::TemplateTool::draw_mouse(MouseState &mouse)
+{
+  return 0;
+}
+*/
+
+
+      
+
+
+
 
 } // End namespace SCIRun
