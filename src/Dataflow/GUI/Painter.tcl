@@ -244,30 +244,38 @@ itcl_class SCIRun_Render_Painter {
 	toplevel $w
 	wm title $w "[modname] $title"
 	wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
+        four_view $w
 
-	frame $w.f -bd 0 -background red
-	set img [image create photo -width 1 -height 1]
-	button $w.e -height 4 -bd 2 -relief raised -image $img \
-	    -cursor based_arrow_down
-	button $w.b -text "New Slice Viewer Window" -command "$this create_ui"
-	pack $w.b -anchor w
-	pack $w.e -side bottom -fill x
-	pack $w.f -expand 1 -fill both
+# 	frame $w.f -bd 0 -background red
+# 	set img [image create photo -width 1 -height 1]
+# 	button $w.e -height 4 -bd 2 -relief raised -image $img \
+# 	    -cursor based_arrow_down
+# 	button $w.b -text "New Slice Viewer Window" -command "$this create_ui"
+# 	pack $w.b -anchor w
+# 	pack $w.e -side bottom -fill x
 
 #	control_panel $w.cp
 #	show_control_panel $w
 
-	set winname [join [string tolower $title] ""]
-	gl_frame $w.f.$winname
-	pack $w.f.$winname -expand 1 -fill both
+#        set winname [join [string tolower $title] ""]
+#        gl_frame $w.f.01-$winname
+
+#         gl_frame $w.f.02-$winname
+
+#         gl_frame $w.f.03-$winname
+
+#         gl_frame $w.f.04-$winname
+
+
+
 
 #	add_viewport_tab $w $title $winname-viewport0 $w.f.$winname
     }
 
-    method four_view { w main } {
+    method four_view { w } {
 	iwidgets::panedwindow $w.topbot -orient horizontal -thickness 0 \
 	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
-	    -sashcursor sb_v_double_arrow -width 500 -height 500
+	    -sashcursor sb_v_double_arrow -width 800 -height 800
 	pack $w.topbot -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 	
 	$w.topbot add top -margin 0 -minimum 0
@@ -302,11 +310,10 @@ itcl_class SCIRun_Render_Painter {
 	pack $top.lr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 	pack $bot.lr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 
-	
-	pack [gl_frame $topl "Top Left" $main] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
-	pack [gl_frame $topr "Top Right" $main] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
-	pack [gl_frame $botl "Bottom Left" $main] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
-	pack [gl_frame $botr "Bottom Right" $main] -expand 1 -fill both
+ 	pack [gl_frame $topl.gl1] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+ 	pack [gl_frame $topr.gl2] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+ 	pack [gl_frame $botl.gl3] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+ 	pack [gl_frame $botr.gl4] -expand 1 -fill both
 
 
     }

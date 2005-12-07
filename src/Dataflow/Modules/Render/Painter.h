@@ -64,7 +64,7 @@
 #include <Core/Datatypes/Field.h> 
 #include <Core/Exceptions/GuiException.h>
 #include <Core/Geom/Material.h>
-#include <Core/Geom/NrrdTextureObj.h>
+#include <Core/Geom/ColorMappedNrrdTextureObj.h>
 #include <Core/Geom/FreeTypeTextTexture.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomCull.h>
@@ -143,6 +143,7 @@ class Painter : public Module
   public:
     CLUTLevelsTool(Painter *painter);
     string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
     string *            mouse_motion(MouseState &);
   private:
     double              scale_;
@@ -155,6 +156,7 @@ class Painter : public Module
   public:
     ZoomTool(Painter *painter);
     string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
     string *            mouse_motion(MouseState &);
   private:
     double              zoom_;
@@ -165,12 +167,14 @@ class Painter : public Module
   public:
     AutoviewTool(Painter *painter);
     string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
   };
 
   class ProbeTool : public PainterTool {
   public:
     ProbeTool(Painter *painter);
     string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
     string *            mouse_motion(MouseState &);
   };
 
@@ -179,6 +183,7 @@ class Painter : public Module
   public:
     PanTool(Painter *painter);
     string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
     string *            mouse_motion(MouseState &);
   private:
     double              x_;
@@ -224,6 +229,48 @@ class Painter : public Module
   };
 
 
+  class BrushTool : public PainterTool {
+  public:
+    BrushTool(Painter *painter);
+    ~BrushTool();
+    string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
+    string *            mouse_motion(MouseState &);
+    string *            draw(SliceWindow &window);
+    string *            draw_mouse(MouseState &);
+  private:
+    double              value_;
+    double              radius_;
+  };
+
+  class FloodfillTool : public PainterTool {
+  public:
+    FloodfillTool(Painter *painter);
+    ~FloodfillTool();
+    string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
+    string *            mouse_motion(MouseState &);
+    string *            draw(SliceWindow &window);
+    string *            draw_mouse(MouseState &);
+  private:
+    double              value_;
+    double              min_;
+    double              max_;
+    Point               start_pos_;
+  };
+
+  class PixelPaintTool : public PainterTool {
+  public:
+    PixelPaintTool(Painter *painter);
+    ~PixelPaintTool();
+    string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
+    string *            mouse_motion(MouseState &);
+  private:
+    double              value_;
+  };
+    
+
 
   friend class PainterTool;
 
@@ -235,8 +282,12 @@ class Painter : public Module
   };
 
 
-  struct NrrdVolume { 
+  class NrrdVolume { 
+  public:
     NrrdVolume		(GuiContext*ctx);
+    Point               index_to_world(vector<int> index);
+    DenseMatrix         build_index_to_world_matrix();
+
     NrrdDataHandle	nrrd_;
     GuiString           name_;
     UIdouble		opacity_;
@@ -245,39 +296,27 @@ class Painter : public Module
     Semaphore           semaphore_;
     float               data_min_;
     float               data_max_;
+    int                 colormap_;
   };
 
   struct SliceWindow;
   struct WindowLayout;
 
   struct NrrdSlice {
-    NrrdSlice(NrrdVolume *, SliceWindow *);
-    string		name_;
+    NrrdSlice(Painter *, NrrdVolume *, SliceWindow *);
+    void                bind();
+    void                draw();
+    Painter *           painter_;
     NrrdVolume *	volume_;
     SliceWindow	*	window_;
-    NrrdDataHandle      nrrd_;
 
-    int			axis_;
-    int			slice_num_;
-    int			slab_min_;
-    int			slab_max_;
-    
     bool		nrrd_dirty_;
     bool		tex_dirty_;
     bool		geom_dirty_;
 
-    unsigned int	mode_;
-    unsigned int	tex_wid_;
-    unsigned int	tex_hei_;
-    unsigned int	wid_;
-    unsigned int	hei_;
-
-    float		tex_coords_[8];  // s,t * 4 corners
     float		pos_coords_[12]; // x,y,z * 4 corners
-    GLuint		tex_name_;
 
-    NrrdTextureObj *    texture_;
-
+    ColorMappedNrrdTextureObj *    texture_;
 
     //    Mutex		lock_;
     //    Thread *	owner_;
@@ -289,8 +328,10 @@ class Painter : public Module
   typedef vector<NrrdSlices>		NrrdVolumeSlices;
 
   struct SliceWindow { 
-    SliceWindow(GuiContext *ctx);
+    SliceWindow(Painter &painter, GuiContext *ctx);
 
+    void                setup_gl_view();
+    Painter &           painter_;
     string		name_;
     WindowLayout *	layout_;
     OpenGLViewport *	viewport_;
@@ -310,23 +351,16 @@ class Painter : public Module
     UIdouble		y_;
 
     bool		redraw_;
-      
-    UIint		auto_levels_;
     UIint		mode_;
-    UIint		crosshairs_;
-    UIint		snoop_;
-    UIint		invert_;
-    UIint		reverse_;
-      
     UIint		show_guidelines_;
-    UIdouble		fusion_;
-    
     int			cursor_pixmap_;
 
     GLdouble		gl_modelview_matrix_[16];
     GLdouble		gl_projection_matrix_[16];
     GLint		gl_viewport_[4];
   };
+  friend struct SliceWindow;
+
   typedef vector<SliceWindow *>	SliceWindows;
 
   struct WindowLayout {
@@ -369,6 +403,7 @@ class Painter : public Module
   typedef map<string, ColorMapHandle> colormap_map_t;
 
   colormap_map_t	colormaps_;
+  vector<string>        colormap_names_;
   int			colormap_generation_;
 
 
@@ -377,12 +412,6 @@ class Painter : public Module
   PainterTool *         tool_;
   
   MouseState            mouse_;
-
-
-  int			pick_;
-
-
-
 
   int			max_slice_[3];
   int			cur_slice_[3];
@@ -433,17 +462,10 @@ class Painter : public Module
   // Methods for drawing to the GL window
   void			redraw_all();
   int			redraw_window(SliceWindow &);
-  void			setup_gl_view(SliceWindow &);
-  int			draw_slice(NrrdSlice &);
-  void			bind_slice(NrrdSlice &,float *tex=0,bool filter=true);
-  bool			bind_nrrd(Nrrd &);
-  void			draw_slice_quad(NrrdSlice &);
   void			draw_guide_lines(SliceWindow &, float, float, float);
   void			draw_slice_lines(SliceWindow &);
   void			draw_slice_arrows(SliceWindow &);
-  void			draw_dark_slice_regions(SliceWindow &);
-
-
+  
   // Methods to render TrueType text labels
   void			initialize_fonts();
   void			delete_all_fonts();
@@ -456,15 +478,9 @@ class Painter : public Module
 				   FreeTypeText::anchor_e, 
 				   FreeTypeFace *font = 0); 
 
-  // Slice extraction and colormapping
-  float *		apply_colormap(NrrdSlice &, float *);
-  template <class T> 
-  void			apply_colormap_to_raw_data(float *, T *, int, int,
-						   const float *, int,
-						   double, double);
+
   void			set_slice_coords(NrrdSlice &slice, bool origin);
   int			extract_window_slices(SliceWindow &);
-  int			extract_slice(NrrdSlice &);
   int			extract_mip_slices(NrrdVolume *);
 
   // Methods to send geometry to Viewer
@@ -475,6 +491,8 @@ class Painter : public Module
   // Misc
   void			update_background_threshold();
   double		get_value(const Nrrd *, int, int, int);
+  double		get_value(const Nrrd *, const Point &p);
+  bool   		set_value(Nrrd *, const Point &p, double val);
 
   // Methods for navigating around the slices
   void			set_axis(SliceWindow &, unsigned int axis);
@@ -521,14 +539,14 @@ class Painter : public Module
   int			set_paint_dirty(SliceWindow &);
   int			autoview(SliceWindow &);
 
-  int			setup_slice_nrrd(NrrdSlice &);
   int			rebind_slice(NrrdSlice &);
   int			set_slice_nrrd_dirty(NrrdSlice &);
   int			update_slice_from_window(NrrdSlice &);
 
   int                   set_probe(SliceWindow &window);
 
-  int                  create_volume(NrrdVolumes *copies = 0);
+  int                   create_volume(NrrdVolumes *copies = 0);
+  ColorMapHandle        get_colormap(int id);
 
 public:
   Painter(GuiContext* ctx);
