@@ -393,7 +393,11 @@ public:
   void get_normal(Vector &result, vector<double> &coords, 
 		  typename Elem::index_type eidx) 
   {
-    ASSERTFAIL("not implemented");
+    ElemData ed(*this, eidx);
+    vector<Point> Jv;
+    basis_.derivate(coords, ed, Jv);
+    result = Cross(Jv[0].asVector(), Jv[1].asVector());
+    result.normalize();
   }
 
   void get_random_point(Point &p, typename Cell::index_type i, 
@@ -466,6 +470,8 @@ public:
   //		 typename Face::index_type &face, double &u, double &v);
 
   virtual bool		synchronize(unsigned int);
+
+  virtual bool has_normals() const { return basis_.polynomial_order() > 1; }
 
   double pyramid_volume(const typename Node::array_type &, 
 			const Point &) const;
