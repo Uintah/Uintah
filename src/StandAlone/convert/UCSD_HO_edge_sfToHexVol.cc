@@ -377,7 +377,9 @@ main(int argc, char **argv) {
       std::cerr << "adding sf: " << e.sf_ << std::endl;
       vector<double> sf;
       sf.push_back(e.sf_);
+      if (e.sf_ > max) max = e.sf_;
       hvm->get_basis().add_scalefactors(sf);
+      ecount++;
     }
     std::cerr << "added "  << ecount << " scale factors. (max:" 
 	      << max << ")" << std::endl;
