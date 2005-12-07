@@ -151,22 +151,8 @@ void RGBPixelToVector::execute(){
   
   // can we operate on it?
   if(0) { }
-  else if(run< itk::Image<itk::RGBPixel<unsigned char>, 2>, itk::Image<itk::Vector<unsigned char>, 2> >( data_InputImage )) {} 
-  else if(run< itk::Image<itk::RGBPixel<unsigned short>, 2>, itk::Image<itk::Vector<unsigned short>, 2> >( data_InputImage )) {} 
-  else if(run< itk::Image<itk::RGBPixel<double>, 2>, itk::Image<itk::Vector<double>, 2> >( data_InputImage )) {}
   else if(run< itk::Image<itk::RGBPixel<float>, 2>, itk::Image<itk::Vector<float>, 2> >( data_InputImage )) {}
-  else if(run< itk::Image<itk::RGBPixel<int>, 2>, itk::Image<itk::Vector<int>, 2> >( data_InputImage )) {}
-  else if(run< itk::Image<itk::RGBPixel<unsigned long>, 2>, itk::Image<itk::Vector<unsigned long>, 2> >( data_InputImage )) {}
-  else if(run< itk::Image<itk::RGBPixel<char>, 2>, itk::Image<itk::Vector<char>, 2> >( data_InputImage )) {} 
-  else if(run< itk::Image<itk::RGBPixel<short>, 2>, itk::Image<itk::Vector<short>, 2> >( data_InputImage )) {} 
-  else if(run< itk::Image<itk::RGBPixel<unsigned char>, 3>, itk::Image<itk::Vector<unsigned char>, 3> >( data_InputImage )) {} 
-  else if(run< itk::Image<itk::RGBPixel<unsigned short>, 3>, itk::Image<itk::Vector<unsigned short>, 3> >( data_InputImage )) {} 
-  else if(run< itk::Image<itk::RGBPixel<double>, 3>, itk::Image<itk::Vector<double>, 3> >( data_InputImage )) {}
   else if(run< itk::Image<itk::RGBPixel<float>, 3>, itk::Image<itk::Vector<float>, 3> >( data_InputImage )) {}
-  else if(run< itk::Image<itk::RGBPixel<int>, 3>, itk::Image<itk::Vector<int>, 3> >( data_InputImage )) {}
-  else if(run< itk::Image<itk::RGBPixel<unsigned long>, 3>, itk::Image<itk::Vector<unsigned long>, 3> >( data_InputImage )) {}
-  else if(run< itk::Image<itk::RGBPixel<char>, 3>, itk::Image<itk::Vector<char>, 3> >( data_InputImage )) {} 
-  else if(run< itk::Image<itk::RGBPixel<short>, 3>, itk::Image<itk::Vector<short>, 3> >( data_InputImage )) {} 
   else {
     // error
     error("Incorrect input type");

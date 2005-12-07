@@ -41,7 +41,7 @@
 
 #include <Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageFileReader.h"
-#include "itkRGBPixel.h"
+#include "itkVector.h"
 
 namespace Insight {
 
@@ -88,7 +88,7 @@ void
     return;
   }
 
-  typedef itk::ImageFileReader<itk::Image<itk::RGBPixel<float>, 3> > FileReaderType;
+  typedef itk::ImageFileReader<itk::Image<itk::Vector<float>, 3> > FileReaderType;
   
   // create a new reader
   FileReaderType::Pointer reader = FileReaderType::New();

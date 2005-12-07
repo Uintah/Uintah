@@ -273,7 +273,6 @@ bool ImageToNrrd::run( itk::Object* obj1)
 template<class InputImageType, unsigned nrrdtype>
 bool ImageToNrrd::run2( itk::Object* obj1) 
 {
-  cerr << "run2\n";
   InputImageType* n = dynamic_cast< InputImageType * >(obj1);
   if( !n ) {
     return false;

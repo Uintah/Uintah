@@ -192,22 +192,8 @@ void Image3DToImage2D::execute(){
   
   // can we operate on it?
   if(0) { }
-  else if(run< itk::Image<unsigned char, 3>, itk::Image<unsigned char, 2> >( data_InputImage )) {} 
-  else if(run< itk::Image<char, 3>, itk::Image<char, 2> >( data_InputImage )) {} 
-  else if(run< itk::Image<double, 3>, itk::Image<double, 2> >( data_InputImage )) {} 
   else if(run< itk::Image<float, 3>, itk::Image<float, 2> >( data_InputImage )) {} 
-  else if(run< itk::Image<int, 3>, itk::Image<int, 2> >( data_InputImage )) {} 
-  else if(run< itk::Image<unsigned long, 3>, itk::Image<unsigned long, 2> >( data_InputImage )) {} 
-  else if(run< itk::Image<unsigned short, 3>, itk::Image<unsigned short, 2> >( data_InputImage )) {} 
-  else if(run< itk::Image<short, 3>, itk::Image<short, 2> >( data_InputImage )) {} 
-  else if(run2< itk::Image<itk::Vector<unsigned char>, 3>, itk::Image<itk::Vector<unsigned char>, 2> >( data_InputImage )) {} 
-  else if(run2< itk::Image<itk::Vector<char>, 3>, itk::Image<itk::Vector<char>, 2> >( data_InputImage )) {} 
-  else if(run2< itk::Image<itk::Vector<unsigned short>, 3>, itk::Image<itk::Vector<unsigned short>, 2> >( data_InputImage )) {} 
-  else if(run2< itk::Image<itk::Vector<short>, 3>, itk::Image<itk::Vector<short>, 2> >( data_InputImage )) {} 
-  else if(run2< itk::Image<itk::Vector<int>, 3>, itk::Image<itk::Vector<int>, 2> >( data_InputImage )) {} 
   else if(run2< itk::Image<itk::Vector<float>, 3>, itk::Image<itk::Vector<float>, 2> >( data_InputImage )) {} 
-  else if(run2< itk::Image<itk::Vector<double>, 3>, itk::Image<itk::Vector<double>, 2> >( data_InputImage )) {} 
-  else if(run2< itk::Image<itk::Vector<unsigned long>, 3>, itk::Image<itk::Vector<unsigned long>, 2> >( data_InputImage )) {} 
   else {
     // error
     error("Incorrect input type");
