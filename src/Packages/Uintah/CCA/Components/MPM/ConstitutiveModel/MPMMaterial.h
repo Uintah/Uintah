@@ -143,7 +143,6 @@ WARNING
 
    // for implicit rigid body contact
    bool d_is_rigid;
-   bool d_includeFlowWork;
 
    std::vector<GeometryObject*> d_geom_objs;
 
