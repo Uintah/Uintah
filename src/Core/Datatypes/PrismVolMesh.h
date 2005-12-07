@@ -2365,37 +2365,8 @@ template <class Basis>
 bool
 PrismVolMesh<Basis>::inside(typename Cell::index_type idx, const Point &p)
 {
-  Point center;
-  get_center(center, idx);
-  
-  typename Face::array_type faces;
-  get_faces(faces, idx);
-
-  for (unsigned int i=0; i<PRISM_NFACES; i++) {
-    typename Node::array_type ra;
-    get_nodes(ra, faces[i]);
-    const Point &p0 = point(ra[0]);
-    const Point &p1 = point(ra[1]);
-    const Point &p2 = point(ra[2]);
-
-    const Vector v0(p0 - p1), v1(p2 - p1);
-    const Vector normal = Cross(v0, v1);
-    const Vector off0(p - p1);
-    const Vector off1(center - p1);
-
-    double dotprod = Dot(off0, normal);
-
-    // Account for round off - the point may be on the plane!!
-    if( fabs( dotprod ) < MIN_ELEMENT_VAL )
-      continue;
-
-    // If orientated correctly the second dot product is not needed.
-    // Only need to check to see if the sign is negitive.
-    if (dotprod * Dot(off1, normal) < 0.0)
-      return false;
-  }
-
-  return true;
+  vector<double> c(3);
+  return get_coords(c, p, idx);
 }
 
 template <class Basis>
