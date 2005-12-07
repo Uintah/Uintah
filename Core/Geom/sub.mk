@@ -36,6 +36,7 @@ SRCDIR   := Core/Geom
 SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/ColorMap.cc		                \
 	$(SRCDIR)/ColorMapTex.cc	                \
+	$(SRCDIR)/ColorMappedNrrdTextureObj.cc          \
 	$(SRCDIR)/DirectionalLight.cc	                \
 	$(SRCDIR)/DrawInfoOpenGL.cc	                \
 	$(SRCDIR)/FreeType.cc		                \
