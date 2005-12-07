@@ -47,21 +47,23 @@ public:
   NoDataUnitElement() {}
   virtual ~NoDataUnitElement() {}
 
-  //!< return dimension of domain 
+  //! return dimension of domain 
   static int domain_dimension() { return -1; } 
-  //!< return number of vertices
+  //! return number of vertices
   static int number_of_vertices() { return 0; }
-  //!< return number of vertices in mesh
+  //! return number of vertices in mesh
   static int number_of_mesh_vertices() { return 0; }
-  //!< return degrees of freedom
+  //! return degrees of freedom
   static int dofs() { return 0; } 
 
-  //!< return number of edges 
+  //! return number of edges 
   static int number_of_edges() { return 0; } 
-  //!< return number of vertices per face 
+  //! return number of vertices per face 
   static int vertices_of_face() { return 0; } 
-  //!< return number of faces per cell 
+  //! return number of faces per cell 
   static int faces_of_cell() { return 0; } 
+
+  static double volume() { return 0.; } //!< return volume
 };
 
 

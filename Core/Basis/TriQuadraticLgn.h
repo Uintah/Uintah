@@ -63,6 +63,8 @@ public:
   static int vertices_of_face() { return 3; } //!< return number of vertices per face 
 
   static int faces_of_cell() { return 4; } //!< return number of faces per cell 
+
+  static double volume() { return 0.; } //!< return volume
 };
 
 //! Class for handling of element of type triangle with 

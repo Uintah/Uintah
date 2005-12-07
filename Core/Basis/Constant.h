@@ -42,11 +42,11 @@ namespace SCIRun {
 using std::string;
 
 //! Class for describing unit geometry of ConstantBasis 
-class ConstantBasisElement {
+class ConstantBasisUnitElement {
 public: 
   
-  ConstantBasisElement() {}
-  virtual ~ConstantBasisElement() {}
+  ConstantBasisUnitElement() {}
+  virtual ~ConstantBasisUnitElement() {}
   
   static int domain_dimension() { return 0; } //!< return dimension of domain 
   
@@ -57,12 +57,14 @@ public:
   
   static int vertices_of_face() { return 0; } //!< return number of vertices per face 
   static int faces_of_cell() { return 0; } //!< return number of faces per cell 
+
+  static double volume() { return 0.; } //!< return volume
 };
 
 
 //! Class for handling of element with constant field variables
 template <class T>
-  class ConstantBasis : public BasisSimple<T>, public ConstantBasisElement
+  class ConstantBasis : public BasisSimple<T>, public ConstantBasisUnitElement
 {
 public:
   ConstantBasis() {}
