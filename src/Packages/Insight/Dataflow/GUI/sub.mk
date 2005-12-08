@@ -44,19 +44,39 @@ SRCS := \
 	$(INSIGHT_TCL_GEN) \
 	$(SRCDIR)/BinaryDilateImageFilter.tcl\
 	$(SRCDIR)/BinaryErodeImageFilter.tcl\
+	$(SRCDIR)/BuildSeedVolume.tcl \
+	$(SRCDIR)/CannySegmentationLevelSetImageFilter.tcl \
 	$(SRCDIR)/ChooseImage.tcl\
 	$(SRCDIR)/ColorImageReaderFloat2D.tcl\
 	$(SRCDIR)/ColorImageReaderFloat3D.tcl\
+	$(SRCDIR)/ConfidenceConnectedImageFilter.tcl \
+	$(SRCDIR)/ConnectedThresholdImageFilter.tcl \
+	$(SRCDIR)/CurvatureAnisotropicDiffusionImageFilter.tcl \
+	$(SRCDIR)/CurvatureFlowImageFilter.tcl \
+	$(SRCDIR)/DiscreteGaussianImageFilter.tcl \
 	$(SRCDIR)/ExtractImageFilter.tcl\
+	$(SRCDIR)/GradientAnisotropicDiffusionImageFilter.tcl \
+	$(SRCDIR)/GradientMagnitudeImageFilter.tcl \
+	$(SRCDIR)/GradientRecursiveGaussianImageFilter.tcl \
 	$(SRCDIR)/GrayscaleDilateImageFilter.tcl\
 	$(SRCDIR)/GrayscaleErodeImageFilter.tcl\
 	$(SRCDIR)/ImageFileWriter.tcl \
 	$(SRCDIR)/ImageReaderFloat2D.tcl \
 	$(SRCDIR)/ImageReaderFloat3D.tcl \
 	$(SRCDIR)/ImageToField.tcl \
-	$(SRCDIR)/BuildSeedVolume.tcl \
-	$(SRCDIR)/ThresholdSegmentationLevelSetImageFilter.tcl \
+	$(SRCDIR)/IsolatedConnectedImageFilter.tcl \
+	$(SRCDIR)/MeanImageFilter.tcl\
+	$(SRCDIR)/NeighborhoodConnectedImageFilter.tcl \
+	$(SRCDIR)/ReflectImageFilter.tcl \
+	$(SRCDIR)/RescaleIntensityImageFilter.tcl \
 	$(SRCDIR)/SliceReader.tcl \
+	$(SRCDIR)/ThresholdSegmentationLevelSetImageFilter.tcl \
+	$(SRCDIR)/UnaryFunctorImageFilter.tcl \
+	$(SRCDIR)/VectorConfidenceConnectedImageFilter.tcl \
+	$(SRCDIR)/VectorCurvatureAnisotropicDiffusionImageFilter.tcl \
+	$(SRCDIR)/VectorGradientAnisotropicDiffusionImageFilter.tcl \
+	$(SRCDIR)/VectorIndexSelectionCastImageFilter.tcl \
+	$(SRCDIR)/WatershedImageFilter.tcl \
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
