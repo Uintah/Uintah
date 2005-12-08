@@ -3731,7 +3731,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/insight_testdefs.h"
 ##  --  search for Ptolemy II ---------------------------------------------------
 if test "$sci_required_ptolemyII" = "yes"; then
   AC_MSG_CHECKING(for Ptolemy II.)
-  if test "$HAVE_JAVA" = "no"; then
+  if test "$HAVE_JAVA" != "yes"; then
     AC_MSG_WARN(Java installation directory is missing.)
   fi
 
