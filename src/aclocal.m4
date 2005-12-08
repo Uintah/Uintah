@@ -1179,7 +1179,7 @@ case $1 in
   ;;
   Ptolemy)
     sci_required_ptolemyII=yes
-    sci_required_java=yes
+    sci_required_java=no
   ;;
   *)
     AC_MSG_WARN(In aclocal.m4: No known dependencies for Package $1)

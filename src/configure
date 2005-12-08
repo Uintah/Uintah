@@ -2833,7 +2833,7 @@ case SCIRun2 in
   ;;
   Ptolemy)
     sci_required_ptolemyII=yes
-    sci_required_java=yes
+    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package SCIRun2" >&5
@@ -2933,7 +2933,7 @@ case Plume in
   ;;
   Ptolemy)
     sci_required_ptolemyII=yes
-    sci_required_java=yes
+    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Plume" >&5
@@ -3177,7 +3177,7 @@ case $i in
   ;;
   Ptolemy)
     sci_required_ptolemyII=yes
-    sci_required_java=yes
+    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package $i" >&5
@@ -3278,7 +3278,7 @@ case Teem in
   ;;
   Ptolemy)
     sci_required_ptolemyII=yes
-    sci_required_java=yes
+    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Teem" >&5
@@ -3379,7 +3379,7 @@ case DataIO in
   ;;
   Ptolemy)
     sci_required_ptolemyII=yes
-    sci_required_java=yes
+    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package DataIO" >&5
@@ -3482,7 +3482,7 @@ case Ptolemy in
   ;;
   Ptolemy)
     sci_required_ptolemyII=yes
-    sci_required_java=yes
+    sci_required_java=no
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Ptolemy" >&5
