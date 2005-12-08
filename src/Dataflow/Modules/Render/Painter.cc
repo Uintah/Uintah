@@ -1596,6 +1596,7 @@ Painter::execute()
 	error("Nrrd #"+to_string(n)+
 	      " has different dimensions than a previous nrrd.");
 	error("Both input nrrds must have same dimensions. Stopping.");
+        TCLTask::unlock();
 	return;
       }     
       center_[a] = size*scale_[a]/2.0;
