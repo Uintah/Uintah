@@ -98,15 +98,11 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
   }
 
 //______________________________________________________________________
-// MULTI-LEVEL IMPLICIT PRESSURE SOLVE (one outer iteration)
-#if 1
+// MULTI-LEVEL IMPLICIT/EXPLICIT PRESSURE SOLVE
   if(d_impICE) {        //  I M P L I C I T
   
     bool recursion = false;
-#if 0
-    sched->mapDataWarehouse(Task::ParentOldDW, 0);
-    sched->mapDataWarehouse(Task::ParentNewDW, 1);
-#endif
+
     for(int L = 0; L<maxLevel; L++){
       LevelP level = grid->getLevel(L);
       const PatchSet* patches = level->eachPatch();
@@ -123,8 +119,32 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                    ice_matls_sub,
                                                    mpm_matls_sub,
                                                    all_matls);
+    for(int L = 0; L<maxLevel; L++){
+      LevelP level = grid->getLevel(L);
+      const PatchSet* patches = level->eachPatch();
+
+      scheduleComputeDel_P(                   sched,  level, patches,  
+                                                             one_matl,
+                                                             d_press_matl,
+                                                             all_matls);     
+    }
   }
-#endif
+  //__________________________________
+  if(!d_impICE){         //  E X P L I C I T (for debugging)
+    for(int L = 0; L<maxLevel; L++){
+      LevelP level = grid->getLevel(L);
+      const PatchSet* patches = level->eachPatch();
+      scheduleComputeDelPressAndUpdatePressCC(sched, patches,d_press_matl,     
+                                                           ice_matls_sub,  
+                                                           mpm_matls_sub,  
+                                                           all_matls);
+    }  
+    for(int L = maxLevel-1; L> 0; L--){
+      const LevelP coarseLevel = grid->getLevel(L-1);
+      scheduleCoarsen_delP(  sched,  coarseLevel,  d_press_matl, 
+                                                   lb->delP_DilatateLabel);
+    }                                                              
+  }
 //______________________________________________________________________
 
   for(int L = 0; L<maxLevel; L++){
@@ -134,18 +154,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels())){
       continue;
     }    
-    if(!d_impICE){         //  E X P L I C I T
-      scheduleComputeDelPressAndUpdatePressCC(sched, patches,d_press_matl,     
-                                                             ice_matls_sub,  
-                                                             mpm_matls_sub,  
-                                                             all_matls);     
-    } else {
-      scheduleComputeDel_P(                   sched,  level, patches,  
-                                                             one_matl,
-                                                             d_press_matl,
-                                                             all_matls);    
-
-    }
     
     scheduleComputePressFC(                 sched, patches, d_press_matl,
                                                             all_matls);
@@ -435,7 +443,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     // ( we need the solver to work for hypre consistency), but don't do these so TG will compile
     for(int L = maxLevel-1; L> 0; L--){
       const LevelP coarseLevel = grid->getLevel(L-1);
-      scheduleCoarsen_imp_delP(  subsched,  coarseLevel,  d_press_matl, firstIter);
+      scheduleCoarsen_delP(  subsched,  coarseLevel,  d_press_matl, lb->imp_delPLabel);
     }
 
     for(int L = 0; L<maxLevel; L++){
@@ -579,41 +587,41 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 
 
 /*______________________________________________________________________
- Function~  ICE::scheduleCoarsen_imp_delP--
+ Function~  ICE::scheduleCoarsen_delP--
  Purpose:  After the implicit pressure solve is performed on all levels 
  you need to project/coarsen the fine level solution onto the coarser levels
  _____________________________________________________________________*/
-void ICE::scheduleCoarsen_imp_delP(SchedulerP& sched, 
-                                   const LevelP& coarseLevel,
-                                   const MaterialSubset* press_matl,
-                                   bool firstIter)
+void ICE::scheduleCoarsen_delP(SchedulerP& sched, 
+                               const LevelP& coarseLevel,
+                               const MaterialSubset* press_matl,
+                               const VarLabel* variable)
 {                                                                          
-  cout_doing << d_myworld->myrank()<< " ICE::scheduleCoarsen_imp_delP\t\t\t\t\tL-" 
-             << coarseLevel->getIndex() << endl;
+  cout_doing << d_myworld->myrank()<< " ICE::scheduleCoarsen_"<< variable->getName()
+             <<"\t\t\t\t\tL-" << coarseLevel->getIndex() << endl;
 
-  Task* t = scinew Task("ICE::coarsen_imp_delP",
-                  this, &ICE::coarsen_imp_delP, firstIter);
+  Task* t = scinew Task("ICE::coarsen_delP",
+                  this, &ICE::coarsen_delP, variable);
 
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   Ghost::GhostType  gn = Ghost::None;
 
-  t->requires(Task::NewDW, lb->imp_delPLabel,
+  t->requires(Task::NewDW, variable,
               0, Task::FineLevel,  press_matl,oims, gn, 0);
 
-  t->modifies(lb->imp_delPLabel, d_press_matl, oims);        
+  t->modifies(variable, d_press_matl, oims);        
 
   sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
 }
 
 /* _____________________________________________________________________
- Function~  ICE::Coarsen_imp_delP
+ Function~  ICE::Coarsen_delP
  _____________________________________________________________________  */
-void ICE::coarsen_imp_delP(const ProcessorGroup*,
-                           const PatchSubset* coarsePatches,
-                           const MaterialSubset* matls,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw,
-                           bool firstIter)
+void ICE::coarsen_delP(const ProcessorGroup*,
+                       const PatchSubset* coarsePatches,
+                       const MaterialSubset* matls,
+                       DataWarehouse*,
+                       DataWarehouse* new_dw,
+                       const VarLabel* variable)
 { 
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
@@ -621,10 +629,11 @@ void ICE::coarsen_imp_delP(const ProcessorGroup*,
   for(int p=0;p<coarsePatches->size();p++){
     const Patch* coarsePatch = coarsePatches->get(p);
     
-    cout_doing << d_myworld->myrank()<< " Doing Coarsen_imp_delP on patch "
-               << coarsePatch->getID() << "\t\t\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
-    CCVariable<double> imp_delP;                  
-    new_dw->getModifiable(imp_delP, lb->imp_delPLabel, 0, coarsePatch);
+    cout_doing << d_myworld->myrank()<< " Doing Coarsen_" << variable->getName()
+               << " on patch " << coarsePatch->getID() 
+               << "\t\t\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
+    CCVariable<double> delP;                  
+    new_dw->getModifiable(delP, variable, 0, coarsePatch);
    
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
@@ -653,8 +662,8 @@ void ICE::coarsen_imp_delP(const ProcessorGroup*,
         continue;
       }
 
-      constCCVariable<double> fine_imp_delP;
-      new_dw->getRegion(fine_imp_delP,  lb->imp_delPLabel, 0, fineLevel, fl, fh);
+      constCCVariable<double> fine_delP;
+      new_dw->getRegion(fine_delP,  variable, 0, fineLevel, fl, fh);
 
       //cout << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
       //         << " coarsePatch "<< cl << " " << ch << endl;
@@ -664,7 +673,7 @@ void ICE::coarsen_imp_delP(const ProcessorGroup*,
       // iterate over coarse level cells
       for(CellIterator iter(cl, ch); !iter.done(); iter++){
         IntVector c = *iter;
-        double imp_delP_tmp(0.0);
+        double delP_tmp(0.0);
         IntVector fineStart = coarseLevel->mapCellToFiner(c);
 
         // for each coarse level cell iterate over the fine level cells   
@@ -672,16 +681,16 @@ void ICE::coarsen_imp_delP(const ProcessorGroup*,
                                             !inside.done(); inside++){
           IntVector fc = fineStart + *inside;
 
-          imp_delP_tmp += fine_imp_delP[fc] * fineCellVol;
+          delP_tmp += fine_delP[fc] * fineCellVol;
         }
-        imp_delP[c] =imp_delP_tmp / coarseCellVol;
+        delP[c] =delP_tmp / coarseCellVol; 
       }
     }
 
     if (switchDebug_updatePressure) {
       ostringstream desc;
-      desc << "BOT_coarsen_imp_delP" << coarsePatch->getID();
-      printData( 0, coarsePatch, 0,desc.str(), "imp_delP",imp_delP);
+      desc << "BOT_coarsen_delP" << coarsePatch->getID();
+      printData( 0, coarsePatch, 0,desc.str(), "delP",delP);
     }  
 
   } // for patches
@@ -1067,10 +1076,6 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
         // ghost node interpolation can be developed at
         // a later stage.
         constCCVariable<Stencil7>A_CFI_weights_fine;
-        //        constCCVariable<double>A_CFI_weights_fine;
-        Ghost::GhostType  gn  = Ghost::None;
-        //        new_dw->get(A_CFI_weights_fine, 
-        //                    lb->matrix_CFI_weightsLabel, 0,finePatch,gn,0);
         IntVector fl(finePatch->getInteriorCellLowIndex());
         IntVector fh(finePatch->getInteriorCellHighIndex());
         IntVector cl(fineLevel->mapCellToCoarser(fl));
@@ -1088,9 +1093,6 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
         }
 
         new_dw->getRegion(A_CFI_weights_fine, lb->matrixLabel, 0,fineLevel,fl, fh);
-
-        //        cerr << "fl = " << fl << "\n";
-        //        cerr << "fh = " << fh << "\n";
 
         //__________________________________
         // Iterate over coarsefine interface faces
@@ -1126,14 +1128,9 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
              patchFace == Patch::zplus){
             element -= 1;   // w, s, b
           }
-          //          cerr << "patchFace = " << patchFace << "\n";
-          //          cerr << "offset    = " << offset    << "\n";
-          //          cerr << "element   = " << element   << "\n";
           
           for(; !c_iter.done(); c_iter++){
             IntVector c = *c_iter;
-            //            cerr << "impAMRICE " << c << " A.p " << A_coarse[c].p
-            //                 << " += A[" << element << " ] " << A_coarse[c][element] << "\n";
             A_coarse[c].p += A_coarse[c][element];
             A_coarse[c][element] = 0.0;
             
@@ -1149,9 +1146,6 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
               IntVector fc = fineStart + *inside - offset;
               if ((fl.x() <= fc.x()) && (fl.y() <= fc.y()) && (fl.z() <= fc.z()) &&
                   (fc.x() <  fh.x()) && (fc.y() <  fh.y()) && (fc.z() <  fh.z())) {
-                //                cerr << "impAMRICE sum_weights += A["
-                //                     << fc << "][" << patchFace << "] ";
-                //                cerr << A_CFI_weights_fine[fc][patchFace] << "\n";
                 sum_weights += A_CFI_weights_fine[fc][patchFace];
               }
             }
