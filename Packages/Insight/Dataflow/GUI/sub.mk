@@ -41,7 +41,6 @@
 SRCDIR := Packages/Insight/Dataflow/GUI
 
 SRCS := \
-	$(INSIGHT_TCL_GEN) \
 	$(SRCDIR)/BinaryDilateImageFilter.tcl\
 	$(SRCDIR)/BinaryErodeImageFilter.tcl\
 	$(SRCDIR)/BuildSeedVolume.tcl \
