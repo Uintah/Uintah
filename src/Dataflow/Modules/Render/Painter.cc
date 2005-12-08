@@ -1863,7 +1863,7 @@ Painter::handle_gui_keypress(GuiArgs &args) {
     }
     else if (args[4] == "bracketright") {
       if (current_volume_) {
-        current_volume_->colormap_ = Min(colormap_names_.size(), 
+        current_volume_->colormap_ = Min(int(colormap_names_.size()), 
                                          current_volume_->colormap_+1);
         for_each(&Painter::rebind_slice);
         for_each(&Painter::redraw_window);
