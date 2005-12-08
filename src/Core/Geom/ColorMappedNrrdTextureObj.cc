@@ -43,7 +43,7 @@
 #include <sci_glu.h>
 #include <sci_glx.h>
 #include <Core/Datatypes/NrrdData.h>
-
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geom/ColorMappedNrrdTextureObj.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Containers/StringUtil.h>
@@ -82,10 +82,12 @@ ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin,
     throw "ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(nrrd) nrrd not valid";
 
   nrrd_ = new NrrdData;
-//   nrrdAlloc(nrrd_->nrrd, nin->nrrd->nrrd->type, 3, 
-//             nin->nrrd->axis[0]->size, width_, height_);
 
-  NrrdDataHandle tmp = new NrrdData;
+  NrrdDataHandle tmp1 = new NrrdData;
+  NrrdDataHandle tmp2 = nrrd_;
+  if (!ShaderProgramARB::texture_non_power_of_two()) 
+    tmp2 = new NrrdData;
+
   if (min_slice != max_slice) {
     int *min = new int[nin->nrrd->dim];
     int *max = new int[nin->nrrd->dim];
@@ -95,15 +97,21 @@ ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin,
     }
     min[axis] = Min(min_slice, max_slice);
     max[axis] = Max(min_slice, max_slice);
-    NRRD_EXEC(nrrdCrop(tmp->nrrd, nin->nrrd, min, max));
-    NRRD_EXEC(nrrdProject(nrrd_->nrrd, tmp->nrrd, axis, 
+    NRRD_EXEC(nrrdCrop(tmp1->nrrd, nin->nrrd, min, max));
+    NRRD_EXEC(nrrdProject(tmp2->nrrd, tmp1->nrrd, axis, 
                           nrrdMeasureMax, nrrdTypeDefault));
   } else {
-    NRRD_EXEC(nrrdSlice(nrrd_->nrrd, nin->nrrd, axis, min_slice));
+    NRRD_EXEC(nrrdSlice(tmp2->nrrd, nin->nrrd, axis, min_slice));
   }
-  
-  //  width_ = nrrd_->nrrd->axis[0].size;
-  //  height_ = nrrd_->nrrd->axis[1].size;
+  wid_ = tmp2->nrrd->axis[0].size;
+  hei_ = tmp2->nrrd->axis[1].size;
+
+  if (!ShaderProgramARB::texture_non_power_of_two()) {
+    int min[2] = { 0, 0 };
+    int max[2] = { Pow2(wid_)-1, Pow2(hei_)-1 };
+    NRRD_EXEC(nrrdPad(nrrd_->nrrd, tmp2->nrrd, 
+                      min,max,nrrdBoundaryPad, 0.0));
+  }
 }
 
 
@@ -302,18 +310,21 @@ ColorMappedNrrdTextureObj::draw_quad(float coords[])
     return;
   }
 
+  float x = float(wid_)/nrrd_->nrrd->axis[0].size;
+  float y = float(hei_)/nrrd_->nrrd->axis[1].size;
+  
   glBegin(GL_QUADS);
 
   glTexCoord2d(0.0, 0.0); 
   glVertex3fv(coords);
 
-  glTexCoord2d(1.0, 0.0);
+  glTexCoord2d(x, 0.0);
   glVertex3fv(coords+3);
   
-  glTexCoord2d(1.0, 1.0);
+  glTexCoord2d(x, y);
   glVertex3fv(coords+6);
   
-  glTexCoord2d(0.0, 1.0);
+  glTexCoord2d(0.0, y);
   glVertex3fv(coords+9);
   glEnd();
 

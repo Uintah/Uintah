@@ -78,11 +78,13 @@ private:
   ColorMapHandle        colormap_;
   NrrdDataHandle	nrrd_;
   bool			dirty_;
+  //  vector<unsigned int>  texture_id_;
   unsigned int		texture_id_;
   float                 data_min_;
   float                 data_max_;
   float                 clut_min_;
   float                 clut_max_;
+  int                   wid_, hei_;
 
 };
 
