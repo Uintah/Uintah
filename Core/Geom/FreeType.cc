@@ -277,8 +277,9 @@ FreeTypeText::layout()
 FreeTypeText::~FreeTypeText() 
 {
 #ifdef HAVE_FREETYPE
-  for (unsigned int i = 0; i < glyphs_.size(); ++i) {
-    FT_Done_Glyph(glyphs_[i]->glyph_);
+  while (!glyphs_.empty()) {
+    delete glyphs_.back();
+    glyphs_.pop_back();
   }
 #endif
 }
@@ -320,44 +321,47 @@ FreeTypeText::render(int width, int height, unsigned char *buffer)
 #endif
   //  BBox bbox;
   //get_bounds(bbox);
-
+  FT_BBox glyph_bbox;
   FT_Vector delta;
   delta.x = Round(position_.x()*64.0);
   delta.y = Round(position_.y()*64.0);
 
-
-  FT_BBox glyph_bbox;
   for (unsigned int i = 0; i < glyphs_.size(); ++i) {
     FT_Glyph temp_glyph;
     if (FT_Glyph_Copy(glyphs_[i]->glyph_, &temp_glyph))
-      throw InternalError("FreeType Unable to Copy Glyph: "+text_[i], __FILE__, __LINE__);
-    
+      throw InternalError("FreeType Unable to Copy Glyph: "+
+                          text_[i], __FILE__, __LINE__);
+
     FT_Glyph_Transform(temp_glyph, 0, &delta);
     FT_Glyph_Get_CBox(temp_glyph, ft_glyph_bbox_truncate, &glyph_bbox);
-    if (glyph_bbox.xMax <= 0 || glyph_bbox.xMin >= width ||
-	glyph_bbox.yMax <= 0 || glyph_bbox.yMin >= height)
-      continue;
 
-    if (FT_Glyph_To_Bitmap(&temp_glyph, FT_RENDER_MODE_NORMAL, 0, 1)) {
-      throw InternalError("FreeType Unable to Render Glyph: "+text_[i], __FILE__, __LINE__);
-    } else {
-      FT_BitmapGlyph bitmap_glyph = FT_BitmapGlyph(temp_glyph);
+    if (glyph_bbox.xMax > 0 && glyph_bbox.xMin < width &&
+	glyph_bbox.yMax > 0 && glyph_bbox.yMin < height) {
+
+      if (FT_Glyph_To_Bitmap(&temp_glyph, FT_RENDER_MODE_NORMAL, 0, 1)) {
+        FT_Done_Glyph(temp_glyph);
+        throw InternalError("FreeType Unable to Render Glyph: "+
+                            text_[i], __FILE__, __LINE__);
+      }
+
+      FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph)temp_glyph;
+
       ASSERT(bitmap_glyph->bitmap.num_grays == 256);
       ASSERT(bitmap_glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY);
+
       int top = bitmap_glyph->top;
       int left = bitmap_glyph->left;
       // render glyph here
       for (int y = 0; y < bitmap_glyph->bitmap.rows; ++y) {
-	if (top-y < 0 || top-y >= height) continue;
-	for (int x = 0; x < bitmap_glyph->bitmap.width; ++x) {
-	  if (left+x < 0 || left+x >= width) continue;
-	  unsigned char val = bitmap_glyph->bitmap.buffer[y*Abs(bitmap_glyph->bitmap.pitch)+x];
-	  buffer[(top-y)*width+left+x] = val;
-	}
+        if (top-y < 0 || top-y >= height) continue;
+        for (int x = 0; x < bitmap_glyph->bitmap.width; ++x) {
+          if (left+x < 0 || left+x >= width) continue;
+          buffer[(top-y)*width+left+x] =
+            bitmap_glyph->bitmap.buffer[y*Abs(bitmap_glyph->bitmap.pitch)+x];
+        }
       }
-
-      FT_Done_Glyph(temp_glyph);
     }
+    FT_Done_Glyph(temp_glyph);
   }
 #endif
 }
