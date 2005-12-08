@@ -232,8 +232,6 @@ BinaryErodeImageFilter::execute()
   if(0) { }
   else if(run< itk::Image<float, 2>, itk::Image<float, 2> >( data_InputImage )) { }
   else if(run< itk::Image<float, 3>, itk::Image<float, 3> >( data_InputImage )) { }
-  else if(run< itk::Image<double, 2>, itk::Image<double, 2> >( data_InputImage )) { }
-  else if(run< itk::Image<double, 3>, itk::Image<double, 3> >( data_InputImage )) { }
   else {
     // error
     error("Incorrect input type");
