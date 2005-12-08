@@ -175,6 +175,9 @@ ComputeCurrent::execute()
     ofield->set_value(vec,*fi);
     ++fi;
   }
-  ofield_port->send(ofield);
+
+  FieldHandle ftmp(ofield);
+  ofield_port->send_and_dereference(ftmp);
 }
+
 } // End namespace BioPSE

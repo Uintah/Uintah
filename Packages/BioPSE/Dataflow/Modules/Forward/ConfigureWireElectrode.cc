@@ -76,11 +76,15 @@ ConfigureWireElectrode::ConfigureWireElectrode(GuiContext *context)
 {
 }
 
+
 ConfigureWireElectrode::~ConfigureWireElectrode()
 {
 }
 
-void ConfigureWireElectrode::execute() {
+
+void
+ConfigureWireElectrode::execute()
+{
   FieldIPort* ielec = (FieldIPort *) get_iport("Electrode");
   FieldOPort* oelec = (FieldOPort *) get_oport("Electrode");
   
@@ -112,7 +116,6 @@ void ConfigureWireElectrode::execute() {
     return;
   }
   double du=M_PI*2./nu;
-
 
   CMesh::Node::iterator ni, ne;
   CMesh::Node::size_type nn;
@@ -170,6 +173,8 @@ void ConfigureWireElectrode::execute() {
     quadFld->set_value(voltage, *qni);
     ++qni;
   }
-  oelec->send(quadFld);
+  FieldHandle qfield(quadFld);
+  oelec->send_and_dereference(qfield);
 }
+
 } // End namespace BioPSE

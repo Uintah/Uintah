@@ -43,24 +43,6 @@ namespace BioPSE {
 using namespace SCIRun;
 
 
-class ForwardMagneticField : public Module {
-public:
-  ForwardMagneticField(GuiContext *context);
-
-  virtual ~ForwardMagneticField();
-
-  virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
-private:
-  FieldIPort* electricFieldP_;
-  FieldIPort* cond_tens_;
-  FieldIPort* sourceLocationP_;
-  FieldIPort* detectorPtsP_;
-  FieldOPort* magneticFieldAtPointsP_;
-  FieldOPort* magnitudeFieldP_;
-};
-
 class CalcFMFieldBase : public DynamicAlgoBase
 {
 public:

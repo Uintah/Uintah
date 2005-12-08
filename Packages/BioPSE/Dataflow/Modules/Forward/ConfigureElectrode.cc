@@ -73,7 +73,10 @@ ConfigureElectrode::~ConfigureElectrode()
 {
 }
 
-void ConfigureElectrode::execute() {
+
+void
+ConfigureElectrode::execute()
+{
   FieldIPort* ielec = (FieldIPort *) get_iport("Electrode");
   FieldOPort* oelec = (FieldOPort *) get_oport("Electrode");
   
@@ -99,6 +102,9 @@ void ConfigureElectrode::execute() {
   elecFld->fdata()[*ni]=voltage;
 
   elecFld->set_property("active_side", active, false);
-  oelec->send(elecFld);
+
+  FieldHandle efield(elecFld);
+  oelec->send_and_dereference(efield);
 }
+
 } // End namespace BioPSE

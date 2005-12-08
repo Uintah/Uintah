@@ -217,7 +217,7 @@ void InsertVoltageSource::execute() {
   }
   imeshH->set_property("dirichlet", dirichlet, false);
   imeshH->set_property("conductivity_table", conds, false);
-  omesh->send(imeshH);
+  omesh->send_and_dereference(imeshH);
 }
 } // End namespace BioPSE
 

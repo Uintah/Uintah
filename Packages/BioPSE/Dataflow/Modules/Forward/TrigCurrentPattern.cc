@@ -56,8 +56,6 @@ public:
   virtual ~TrigCurrentPattern();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 DECLARE_MAKER(TrigCurrentPattern)
@@ -155,15 +153,8 @@ void
   }
 
   //! Sending result
-  oportCurrentVector_->send(MatrixHandle(currentPattern));       
-
-
-}
-
-void
- TrigCurrentPattern::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  MatrixHandle cmatrix(currentPattern);
+  oportCurrentVector_->send_and_dereference(cmatrix);
 }
 
 } // End namespace BioPSE

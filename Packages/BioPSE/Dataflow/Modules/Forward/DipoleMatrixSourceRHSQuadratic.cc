@@ -66,7 +66,6 @@ private:
   MatrixIPort              *irhs;
   MatrixOPort              *orhs;
   TetVolMesh::Cell::index_type loc;
-  int gen;
 };
 
 DECLARE_MAKER(DipoleMatrixSourceRHSQuadratic)
@@ -126,11 +125,10 @@ DipoleMatrixSourceRHSQuadratic::execute()
     
   MatrixHandle rhsh;
   ColumnMatrix* rhs = scinew ColumnMatrix(nnodes);
-  rhsh=rhs;
+  rhsh = rhs;
   ColumnMatrix* rhsIn;
 
   // if the user passed in a vector the right size, copy it into ours
-
   rhsIn = dynamic_cast<ColumnMatrix*>(mat_handle2.get_rep());
   if (mat_handle2.get_rep() && rhsIn &&
       ((unsigned int)(rhsIn->nrows()) == nnodes))
@@ -154,9 +152,7 @@ DipoleMatrixSourceRHSQuadratic::execute()
     hDipField = dynamic_cast<PointCloudField<Vector>*> (mp.get_rep());
   }
 
-
   //go over all dipoles
-
   PointCloudMesh::Node::iterator ii;
   PointCloudMesh::Node::iterator ii_end;
   hDipField->get_typed_mesh()->begin(ii);
@@ -199,11 +195,10 @@ DipoleMatrixSourceRHSQuadratic::execute()
     {
       msgStream_ << "Dipole: "<<p<<" not located within mesh!\n";
     }
-
-    gen=rhsh->generation;
   }
+
   orhs = (MatrixOPort *)get_oport("OutPut RHS");
-  orhs->send(rhsh);
+  orhs->send_and_dereference(rhsh);
 }
 
 
