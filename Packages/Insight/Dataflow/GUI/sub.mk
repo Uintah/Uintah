@@ -40,19 +40,6 @@
 
 SRCDIR := Packages/Insight/Dataflow/GUI
 
-PATH_TO_SCIRUN := $(shell cd $(SRCTOP) ; pwd)
-PATH_TO_PACKAGE := $(PATH_TO_SCIRUN)/Packages/Insight
-
-CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) SCIRun.GenerateSCIRunCode 
-
-XMLS_PATH = $(PATH_TO_SCIRUN)/Packages/Insight/Dataflow/Modules/Filters/XML
-XMLS :=  $(shell ls $(XMLS_PATH)/sci_*.xml)
-
-INSIGHT_TCL_GEN := $(patsubst $(XMLS_PATH)/sci_%.xml, $(SRCDIR)/%.tcl, $(XMLS))
-
-Packages/Insight/Dataflow/GUI/%.tcl:  Packages/Insight/Dataflow/Modules/Filters/XML/sci_%.xml
-	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateTCL.xsl $(PATH_TO_PACKAGE)/Dataflow/GUI/$*.tcl
-
 SRCS := \
 	$(INSIGHT_TCL_GEN) \
 	$(SRCDIR)/BinaryDilateImageFilter.tcl\
