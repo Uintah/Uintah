@@ -47611,9 +47611,8 @@ if test "$sci_required_ptolemyII" = "yes"; then
   echo "$as_me:$LINENO: checking for Ptolemy II." >&5
 echo $ECHO_N "checking for Ptolemy II.... $ECHO_C" >&6
   if test "$HAVE_JAVA" = "no"; then
-    { { echo "$as_me:$LINENO: error: Java installation directory is missing." >&5
-echo "$as_me: error: Java installation directory is missing." >&2;}
-   { (exit 1); exit 1; }; }
+    { echo "$as_me:$LINENO: WARNING: Java installation directory is missing." >&5
+echo "$as_me: WARNING: Java installation directory is missing." >&2;}
   fi
 
   # search here
