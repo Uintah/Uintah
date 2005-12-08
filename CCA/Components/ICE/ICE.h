@@ -237,10 +237,10 @@ namespace Uintah {
                                          const MaterialSet* all_matls);
 //__________________________________ 
 //  I M P L I C I T   A M R I C E                                                       
-      void scheduleCoarsen_imp_delP(SchedulerP& sched, 
-                                    const LevelP& level,
-                                    const MaterialSubset* press_matl,
-                                    bool firstIter);
+      void scheduleCoarsen_delP(SchedulerP& sched, 
+                                const LevelP& level,
+                                const MaterialSubset* press_matl,
+                                const VarLabel* variable);
                                      
       void scheduleCompute_matrix_CFI_weights(SchedulerP& sched, 
                                               const LevelP& coarseLevel,
@@ -589,12 +589,12 @@ namespace Uintah {
       void zeroMatrix_RHS_UnderFinePatches(const PatchSubset* coarsePatches,
                                            DataWarehouse* new_dw);
                                       
-      void coarsen_imp_delP(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse*,
-                            DataWarehouse* new_dw,
-                            bool firstIter);
+      void coarsen_delP(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse*,
+                        DataWarehouse* new_dw,
+                        const VarLabel* variable);
                            
      void compute_matrix_CFI_weights(const ProcessorGroup*,
                                      const PatchSubset* finePatches,
