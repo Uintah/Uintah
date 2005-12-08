@@ -70,6 +70,8 @@ private:
 
   GuiInt size_x_;
   GuiInt size_y_;
+  GuiInt size_z_;
+  GuiInt z_value_;
   GuiInt auto_size_;
   GuiInt axis_;
   GuiDouble padpercent_;
@@ -89,6 +91,8 @@ SamplePlane::SamplePlane(GuiContext* ctx) :
   Module("SamplePlane", ctx, Filter, "FieldsCreate", "SCIRun"),
   size_x_(ctx->subVar("sizex")),
   size_y_(ctx->subVar("sizey")),
+  size_z_(ctx->subVar("sizez")),
+  z_value_(ctx->subVar("z_value")),
   auto_size_(ctx->subVar("auto_size")),
   axis_(ctx->subVar("axis")),
   padpercent_(ctx->subVar("padpercent")),
@@ -161,12 +165,15 @@ SamplePlane::execute()
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   DataTypeEnum datatype;
+  unsigned int sizex, sizey, sizez;
+
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
-    datatype = SCALAR;
-  }
-  else
-  {
+    datatype = SCALAR;  
+    // Create blank mesh.
+    sizex = Max(2, size_x_.get());
+    sizey = Max(2, size_y_.get());
+  } else {
     datatype = SCALAR;
     if (ifieldhandle->query_vector_interface(this).get_rep())
     {
@@ -177,6 +184,75 @@ SamplePlane::execute()
       datatype = VECTOR;
     }
   
+
+    int basis_order = 1;
+    if( auto_size_.get() ){   // Guess at the size of the sample plane.
+      // Currently we have only a simple algorithm for LatVolFields.
+      typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+      const TypeDescription *mtd = 
+        ifieldhandle->get_type_description(Field::MESH_TD_E);
+      if(mtd->get_name().find("LatVolMesh") != string::npos) {
+        LVMesh *lvm = (LVMesh *)((ifieldhandle->mesh()).get_rep());
+        basis_order = ifieldhandle->basis_order();
+        switch( axis ) {
+        case 0:
+          sizex = Max(2, (int)lvm->get_nj());
+          size_x_.set( sizex );
+          sizey = Max(2, (int)lvm->get_nk());
+          size_y_.set( sizey );
+          sizez = Max(2, (int)lvm->get_ni());
+          if( basis_order == 0 ){
+            size_z_.set( sizez - 1 );
+          } else {
+            size_z_.set( sizez );
+          }
+          gui->execute(id+" edit_scale");
+          break;
+        case 1: 
+          sizex =  Max(2, (int)lvm->get_ni());
+          size_x_.set( sizex );
+          sizey =  Max(2, (int)lvm->get_nk());
+          size_y_.set( sizey );
+          sizez = Max(2, (int)lvm->get_nj());
+          if( basis_order == 0 ){
+            size_z_.set( sizez - 1 );
+          } else {
+            size_z_.set( sizez );
+          }
+          gui->execute(id+" edit_scale");
+          break;
+        case 2:
+          sizex =  Max(2, (int)lvm->get_ni());
+          size_x_.set( sizex );
+          sizey =  Max(2, (int)lvm->get_nj());
+          size_y_.set( sizey );
+          sizez =  Max(2, (int)lvm->get_nk());
+          if( basis_order == 0 ){
+            size_z_.set( sizez - 1 );
+          } else {
+            size_z_.set( sizez );
+          }
+          gui->execute(id+" edit_scale");
+          break;
+        default:
+          warning("Custom axis, resize manually.");
+          sizex = Max(2, size_x_.get());
+          sizey = Max(2, size_y_.get());
+          break;
+        }
+      } else {
+        warning("No autosize algorithm for this field type, resize manually.");
+        sizex = Max(2, size_x_.get());
+        sizey = Max(2, size_y_.get());
+        auto_size_.set(0);
+        gui->execute(id+" edit_scale");
+      }
+    } else {
+      // Create blank mesh.
+      sizex = Max(2, size_x_.get());
+      sizey = Max(2, size_y_.get());
+    }
+
     // Compute Transform.
     BBox box = ifieldhandle->mesh()->get_bounding_box();
 
@@ -187,7 +263,19 @@ SamplePlane::execute()
     {
       Point loc(box.min());
       position_.reset();
-      double dist = position_.get()/2.0 + 0.5;
+      double dist;
+      if ( !auto_size_.get() ) {
+        dist = position_.get()/2.0 + 0.5;
+      } else {
+        if( basis_order == 0 ) {
+          dist = double( z_value_.get() )/size_z_.get() + 0.5/size_z_.get();
+          position_.set( ( dist - 0.5 ) * 2.0 );
+        } else {
+          dist = double( z_value_.get() )/size_z_.get();
+          position_.set( ( dist - 0.5 ) * 2.0 );
+        }
+      }
+        
       switch (axis)
       {
       case 0:
@@ -208,48 +296,6 @@ SamplePlane::execute()
 
       trans.pre_translate(Vector(loc));
     }
-  }
-  
-  unsigned int sizex, sizey;
-  if( auto_size_.get() ){   // Guess at the size of the sample plane.
-    // Currently we have only a simple algorithm for LatVolFields.
-    typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
-    if(LVMesh *lvm = dynamic_cast<LVMesh *>((ifieldhandle->mesh()).get_rep())) 
-    {
-      switch( axis ) {
-      case 0:
-        sizex = Max(2, (int)lvm->get_nj());
-        size_x_.set( sizex );
-        sizey = Max(2, (int)lvm->get_nk());
-        size_y_.set( sizey );
-        break;
-      case 1: 
-        sizex =  Max(2, (int)lvm->get_ni());
-        size_x_.set( sizex );
-        sizey =  Max(2, (int)lvm->get_nk());
-        size_y_.set( sizey );
-        break;
-      case 2:
-        sizex =  Max(2, (int)lvm->get_ni());
-        size_x_.set( sizex );
-        sizey =  Max(2, (int)lvm->get_nj());
-        size_y_.set( sizey );
-        break;
-      default:
-        warning("Custom axis, resize manually.");
-        sizex = Max(2, size_x_.get());
-        sizey = Max(2, size_y_.get());
-        break;
-      }
-    } else {
-      warning("No autosize algorithm for this field type, resize manually.");
-      sizex = Max(2, size_x_.get());
-      sizey = Max(2, size_y_.get());
-    }
-  } else {
-    // Create blank mesh.
-    sizex = Max(2, size_x_.get());
-    sizey = Max(2, size_y_.get());
   }
 
   Point minb(0.0, 0.0, 0.0);
