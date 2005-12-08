@@ -90,9 +90,6 @@ class AnisoSphereModel : public Module {
 
   bool condMatrix;
 
-  ColumnMatrix *radii;
-  DenseMatrix  *cond;
-
 public:
   
   AnisoSphereModel(GuiContext *context);
@@ -121,8 +118,10 @@ DECLARE_MAKER(AnisoSphereModel)
 
 AnisoSphereModel::~AnisoSphereModel() {}
 
-void AnisoSphereModel::execute() {
 
+void
+AnisoSphereModel::execute()
+{
   condMatrix = false;
   
   // get input ports
@@ -179,7 +178,7 @@ void AnisoSphereModel::execute() {
   int numElectrodes = (int)electrodePositions.size();
 
   // get size of the spheres
-  radii = scinew ColumnMatrix(4);
+  ColumnMatrix *radii = scinew ColumnMatrix(4);
   radii->put(SCALP, r_scalp.get());
   radii->put(SKULL, r_skull.get());
   radii->put(CBSF,  r_cbsf.get());
@@ -187,7 +186,7 @@ void AnisoSphereModel::execute() {
 
   // get conductivity information: if there is a matrix at the input port, take those values,
   // otherwise take the values from the gui
-  cond = scinew DenseMatrix(4,2);
+  DenseMatrix *cond = scinew DenseMatrix(4,2);
   if(condMatrix) {
     for(int i=0; i<4; i++) {
       cond->put(i, RAD, hConductivities->get(i, RAD)); // radial
@@ -240,11 +239,16 @@ void AnisoSphereModel::execute() {
   radii->set_property("units", unitss, false);
 
   // send out results
-  hOutElectrodes->send(newElectrodePositions);
-  hOutConductivities->send(cond);
-  hOutRadii->send(radii);
+  FieldHandle epfield(newElectrodePositions);
+  hOutElectrodes->send_and_dereference(epfield);
+  
+  MatrixHandle cmatrix(cond);
+  hOutConductivities->send_and_dereference(cmatrix);
 
+  MatrixHandle rmatrix(radii);
+  hOutRadii->send(rmatrix);
 }
+
 
 } // end namespace BioPSE
 

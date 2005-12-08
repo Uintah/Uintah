@@ -39,6 +39,24 @@ namespace BioPSE {
 
 using namespace SCIRun;
 
+class ForwardMagneticField : public Module {
+public:
+  ForwardMagneticField(GuiContext *context);
+
+  virtual ~ForwardMagneticField();
+
+  virtual void execute();
+
+private:
+  FieldIPort* electricFieldP_;
+  FieldIPort* cond_tens_;
+  FieldIPort* sourceLocationP_;
+  FieldIPort* detectorPtsP_;
+  FieldOPort* magneticFieldAtPointsP_;
+  FieldOPort* magnitudeFieldP_;
+};
+
+
 DECLARE_MAKER(ForwardMagneticField)
 
 ForwardMagneticField::ForwardMagneticField(GuiContext* ctx)
@@ -46,12 +64,14 @@ ForwardMagneticField::ForwardMagneticField(GuiContext* ctx)
 {
 }
 
-ForwardMagneticField::~ForwardMagneticField(){
+ForwardMagneticField::~ForwardMagneticField()
+{
 }
 
-void ForwardMagneticField::execute(){
-  
 
+void
+ForwardMagneticField::execute()
+{
 // J = (sigma)*E + J(source)
   electricFieldP_ = (FieldIPort *)get_iport("Electric Field");
   FieldHandle efld;
@@ -74,7 +94,6 @@ void ForwardMagneticField::execute(){
     error("Must have Vector field as Dipole Sources input");
     return;
   }
-  
   
   detectorPtsP_ = (FieldIPort *)get_iport("Detector Locations");
   FieldHandle detectors;
@@ -124,18 +143,12 @@ void ForwardMagneticField::execute(){
     return;
   }
   magneticFieldAtPointsP_ = (FieldOPort *)get_oport("Magnetic Field");
-  magneticFieldAtPointsP_->send(magnetic_field);
+  magneticFieldAtPointsP_->send_and_dereference(magnetic_field);
   
   magnitudeFieldP_ = (FieldOPort *)get_oport("Magnitudes");
-  magnitudeFieldP_->send(magnitudes);
-  report_progress(ProgressReporter::Done);
+  magnitudeFieldP_->send_and_dereference(magnitudes);
 }
 
-void 
-ForwardMagneticField::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 CalcFMFieldBase::~CalcFMFieldBase()
 {
@@ -145,7 +158,8 @@ CompileInfoHandle
 CalcFMFieldBase::get_compile_info(const TypeDescription *efldtd, 
 				  const TypeDescription *ctfldtd,
 				  const TypeDescription *detfldtd,
-				  const string &mags) {
+				  const string &mags)
+{
   static const string ns("BioPSE");
   static const string template_class("CalcFMField");
   CompileInfo *rval = scinew CompileInfo(template_class + "." +
@@ -168,7 +182,8 @@ CalcFMFieldBase::get_compile_info(const TypeDescription *efldtd,
 }
 
 const string& 
-CalcFMFieldBase::get_h_file_path() {
+CalcFMFieldBase::get_h_file_path()
+{
   static const string path(TypeDescription::cc_to_h(__FILE__));
   return path;
 }

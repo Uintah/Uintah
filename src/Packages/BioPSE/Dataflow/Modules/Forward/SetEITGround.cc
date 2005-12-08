@@ -238,10 +238,12 @@ void SetEITGround::execute()
     }
 
     //! Sending results
-    oportGndPot_->send(MatrixHandle(gndPot)); 
-    oportElectrodePot_->send(MatrixHandle(electrodePot)); 
-
+    MatrixHandle gpmatrix(gndPot);
+    oportGndPot_->send_and_dereference(gpmatrix);
+    MatrixHandle epmatrix(electrodePot);
+    oportElectrodePot_->send_and_dereference(epmatrix);
 }
+
 
 } // End namespace BioPSE
 

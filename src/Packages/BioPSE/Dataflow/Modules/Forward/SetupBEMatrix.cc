@@ -161,13 +161,14 @@ SetupBEMatrix::execute()
       old_conductivities[i] = conductivities[i];
     }
 
-    if(new_fields>(no_of_fields+2) || new_nesting || new_conductivities )  // If the input fields are new
+   if(new_fields>(no_of_fields+2) || new_nesting || new_conductivities )  // If the input fields are new
        build_Zoi(meshes, nesting, conductivities, input, output, hZoi_);
-    else
+   else
        remark("Field inputs are old. Resending stored matrix.");
 
-     // -- sending handles to cloned objects
-   oportMatrix_->send(MatrixHandle(hZoi_->clone()));
+   // -- sending handles to cloned objects
+   MatrixHandle hzoi(hZoi_->clone());
+   oportMatrix_->send_and_dereference(hzoi);
 
    return;
 }

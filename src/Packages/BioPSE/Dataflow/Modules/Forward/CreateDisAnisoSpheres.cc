@@ -102,12 +102,19 @@ public:
 
 DECLARE_MAKER(CreateDisAnisoSpheres)
 
-  CreateDisAnisoSpheres::CreateDisAnisoSpheres(GuiContext *context) : Module("CreateDisAnisoSpheres", context, Filter, "Forward", "BioPSE") {}
+CreateDisAnisoSpheres::CreateDisAnisoSpheres(GuiContext *context) : Module("CreateDisAnisoSpheres", context, Filter, "Forward", "BioPSE")
+{
+}
 
-CreateDisAnisoSpheres::~CreateDisAnisoSpheres() {}
 
-void CreateDisAnisoSpheres::execute() {
+CreateDisAnisoSpheres::~CreateDisAnisoSpheres()
+{
+}
 
+
+void
+CreateDisAnisoSpheres::execute()
+{
   // get input ports
   hInField = (FieldIPort*)get_iport("Mesh");
   hInRadii = (MatrixIPort*)get_iport("SphereRadii");
@@ -182,19 +189,17 @@ void CreateDisAnisoSpheres::execute() {
     }
   }
 
-  // update output
-  if(!tet) {
-    newHexField->set_property("units", units, false);
-    hOutField->send(newHexField);
-  }
-  else {
-    newTetField->set_property("units", units, false);
-    hOutField->send(newTetField);
-  }
-
+  // Update output.
+  FieldHandle ftmp;
+  if (!tet) { ftmp = newHexField; } else { ftmp = newTetField; }
+  ftmp->set_property("units", units, false);
+  hOutField->send_and_dereference(ftmp);
 }
 
-void CreateDisAnisoSpheres::processHexField() {
+
+void
+CreateDisAnisoSpheres::processHexField()
+{
   LockingHandle<HVField > hexField = dynamic_cast<HVField* >(field_.get_rep());
   HVMesh::handle_type mesh_ = hexField->get_typed_mesh();
   HVMesh *newMesh_   = scinew HVMesh(*mesh_->clone()); 
@@ -243,7 +248,10 @@ void CreateDisAnisoSpheres::processHexField() {
   newHexField->set_property("conductivity_table", tensor, false);
 }
 
-void CreateDisAnisoSpheres::processTetField() {
+
+void
+CreateDisAnisoSpheres::processTetField()
+{
   LockingHandle<TVField > tetField = dynamic_cast<TVField* >(field_.get_rep());
   TVMesh::handle_type mesh_ = tetField->get_typed_mesh();
   TVMesh *newMesh_   = scinew TVMesh(*mesh_->clone());
@@ -283,7 +291,11 @@ void CreateDisAnisoSpheres::processTetField() {
   newTetField->set_property("conductivity_table", tensor, false);
 }
 
-void CreateDisAnisoSpheres::assignCompartment(Point center, double distance, vector<double> &tensor) {
+
+void
+CreateDisAnisoSpheres::assignCompartment(Point center, double distance,
+                                         vector<double> &tensor)
+{
   if(distance <= radius->get(BRAIN)) { // brain
     getCondTensor(center, BRAIN, tensor);
   }
@@ -308,7 +320,11 @@ void CreateDisAnisoSpheres::assignCompartment(Point center, double distance, vec
   }
 }
 
-void CreateDisAnisoSpheres::getCondTensor(Point center, int comp, vector<double> &tensor) {
+
+void
+CreateDisAnisoSpheres::getCondTensor(Point center, int comp,
+                                     vector<double> &tensor)
+{
   // radial vector
   Vector radial = center.vector();
 
@@ -394,7 +410,7 @@ void CreateDisAnisoSpheres::getCondTensor(Point center, int comp, vector<double>
     conductivity->get(comp, TAN) * tangential1.z() * tangential1.z() +
     conductivity->get(comp, TAN) * tangential2.z() * tangential2.z();
   if(fabs(tensor[5]) < eps) tensor[5] = 0.0;
-
 }
+
 
 } // end of namespace BioPSE

@@ -103,9 +103,11 @@ void IndicesToTensors::execute() {
   if (!module_dynamic_compile(ci, algo)) return;
 
   FieldHandle ofieldH = algo->execute(ifieldH);
-  ofieldport->send(ofieldH);
+  ofieldport->send_and_dereference(ofieldH);
 }
+
 } // End namespace BioPSE
+
 
 namespace SCIRun {
 CompileInfoHandle

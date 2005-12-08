@@ -88,11 +88,7 @@ class DipoleInAnisoSpheres : public Module {
   int numDipoles, numElectrodes;
   bool condMatrix, condOut, radiiOut;
 
-  PCFieldV *pDipoles; 
-  PCFieldI *pElectrodes;
-  PCFieldD *nElectrodes;
   SphericalVolumeConductor *svc;
-  PCMesh *newElectrodeMesh;
 
   GuiDouble accuracy;
   GuiDouble expTerms;
@@ -102,9 +98,8 @@ public:
   DipoleInAnisoSpheres(GuiContext *context);
   virtual ~DipoleInAnisoSpheres();
   virtual void execute();
-  //virtual void tcl_command(GuiArgs& args, void *userdata);
-
 }; 
+
 
 DECLARE_MAKER(DipoleInAnisoSpheres)
 
@@ -114,10 +109,15 @@ DipoleInAnisoSpheres::DipoleInAnisoSpheres(GuiContext *context) :
   expTerms(context->subVar("expTerms"))
 {}
 
-DipoleInAnisoSpheres::~DipoleInAnisoSpheres() {}
 
-void DipoleInAnisoSpheres::execute() {
+DipoleInAnisoSpheres::~DipoleInAnisoSpheres()
+{
+}
 
+
+void
+DipoleInAnisoSpheres::execute()
+{
   // get input ports
   hInSource = (FieldIPort*)get_iport("Dipole Sources");
   hInElectrodes = (FieldIPort*)get_iport("Electrodes");
@@ -173,9 +173,8 @@ void DipoleInAnisoSpheres::execute() {
     return;
   }
   
-  
   // get dipole info from input port
-  pDipoles  = dynamic_cast<PCFieldV*>(hSource.get_rep());
+  PCFieldV *pDipoles  = dynamic_cast<PCFieldV*>(hSource.get_rep());
   if(!pDipoles) {
     error("dipoles were not or type PointCloudField<Vector>");
     return;
@@ -206,7 +205,7 @@ void DipoleInAnisoSpheres::execute() {
   }
 
   // get electrode position info from input port 
-  pElectrodes = dynamic_cast<PCFieldI*>(hElectrodes.get_rep());
+  PCFieldI *pElectrodes = dynamic_cast<PCFieldI*>(hElectrodes.get_rep());
   if(!pElectrodes) {
 	error("electrodes were not of type PointCloudField<int>");
 	return;
@@ -260,9 +259,9 @@ void DipoleInAnisoSpheres::execute() {
   expTerms.set(svc->getNumberOfSeriesTerms());
 
   // create new output field containing the potential values
-  newElectrodeMesh = scinew PCMesh(*hMeshE->clone());
+  PCMesh *newElectrodeMesh = scinew PCMesh(*hMeshE->clone());
   PCMesh::handle_type hNewMesh(newElectrodeMesh);
-  nElectrodes = scinew PCFieldD(hNewMesh);
+  PCFieldD *nElectrodes = scinew PCFieldD(hNewMesh);
   
   // set new electrode values
   vector<double>& newElectrodeValues = nElectrodes->fdata();
@@ -271,13 +270,9 @@ void DipoleInAnisoSpheres::execute() {
   }
 
   // send result to output port
-  hOutPotentials->send(nElectrodes);
-
+  FieldHandle ftmp(nElectrodes);
+  hOutPotentials->send_and_dereference(ftmp);
 }
 
-//void DipoleInAnisoSpheres::tcl_command(GuiArgs& args, void *userdata) {
-//cout << args[1] << endl;
-//Module::tcl_command(args, userdata);
-//}
 
 } // end namespace BioPSE

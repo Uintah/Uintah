@@ -40,16 +40,8 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 
-//#include <Core/Datatypes/TetVolField.h>
-//#include <Core/Datatypes/TriSurfField.h>
-//#include <Core/Datatypes/PointCloudField.h>
-//#include <Dataflow/Modules/Fields/FieldInfo.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-//#include <Dataflow/Widgets/BoxWidget.h>
-//#include <Core/Malloc/Allocator.h>
-//#include <Core/Math/MinMax.h>
-//#include <Core/Math/Trig.h>
 
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -76,8 +68,6 @@ public:
   virtual ~ElectrodeManager();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -93,11 +83,14 @@ ElectrodeManager::ElectrodeManager(GuiContext* ctx)
 {
 }
 
-ElectrodeManager::~ElectrodeManager(){
+
+ElectrodeManager::~ElectrodeManager()
+{
 }
 
+
 void
- ElectrodeManager::execute()
+ElectrodeManager::execute()
 {
   electrodeParams_ = (MatrixOPort *)get_oport("Electrode Parameters");
   currPattIndicies_ = (MatrixOPort *)get_oport("Current Pattern Index Vector");
@@ -133,16 +126,12 @@ void
   }
 
   //! Sending result
-  electrodeParams_->send(MatrixHandle(elParams)); 
-  currPattIndicies_->send(MatrixHandle(currPattIndicies));
-
+  MatrixHandle ehandle(elParams);
+  electrodeParams_->send_and_dereference(ehandle);
+  MatrixHandle chandle(currPattIndicies);
+  currPattIndicies_->send_and_dereference(chandle);
 }
 
-void
- ElectrodeManager::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace BioPSE
 

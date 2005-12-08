@@ -98,11 +98,15 @@ DipoleInSphere::DipoleInSphere(GuiContext *context)
 {
 }
 
+
 DipoleInSphere::~DipoleInSphere()
 {
 }
 
-void DipoleInSphere::execute() {
+
+void
+DipoleInSphere::execute()
+{
   update_state(NeedData);
   
   FieldIPort *iportGeom_ = (FieldIPort *)get_iport("Sphere");
@@ -170,8 +174,10 @@ void DipoleInSphere::execute() {
       
       update_state(JustStarted);
       fillOneSphere(dip_mtrx, hNewSurf, hBSurf);
-      oportPot_->send(FieldHandle(hNewSurf));
-      oportMag_->send(FieldHandle(hBSurf));
+      FieldHandle pfield(hNewSurf);
+      oportPot_->send_and_dereference(pfield);
+      FieldHandle mfield(hBSurf);
+      oportMag_->send_and_dereference(mfield);
     }
     else {
       warning("No dipole info found in the mesh supplied or supplied field is not of type PointCloudField<Vector>.");
@@ -183,8 +189,10 @@ void DipoleInSphere::execute() {
   }
 }
 
-void DipoleInSphere::fillOneSphere(DenseMatrix& dips, TSFieldS* hSurf, 
-				   TSFieldV* hBSurf) 
+
+void
+DipoleInSphere::fillOneSphere(DenseMatrix& dips, TSFieldS* hSurf, 
+                              TSFieldV* hBSurf) 
 {  
   TSMesh::handle_type hMesh = hSurf->get_typed_mesh();
   vector<double>& data = hSurf->fdata();
@@ -255,4 +263,5 @@ void DipoleInSphere::fillOneSphere(DenseMatrix& dips, TSFieldS* hSurf,
     ++niter;
   }
 }
+
 } // End namespace BioPSE

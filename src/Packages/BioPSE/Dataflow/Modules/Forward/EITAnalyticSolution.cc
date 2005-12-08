@@ -88,8 +88,6 @@ public:
 
   //! Public methods
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -102,8 +100,11 @@ EITAnalyticSolution::EITAnalyticSolution(GuiContext* context)
 {
 }
 
-EITAnalyticSolution::~EITAnalyticSolution(){
+
+EITAnalyticSolution::~EITAnalyticSolution()
+{
 }
+
 
 double
 EITAnalyticSolution::pot2DHomogeneous(int L, float r, float theta, 
@@ -131,10 +132,11 @@ EITAnalyticSolution::pot2DHomogeneous(int L, float r, float theta,
   return u;
 }
 
+
 double
 EITAnalyticSolution::pot2DTwoConcentric(int L, float r, float theta, 
-               float r0, float r1, int k, 
-               float sigma0, float sigma1) 
+                                        float r0, float r1, int k, 
+                                        float sigma0, float sigma1) 
 {
   double u; // computed potential value
 
@@ -178,9 +180,10 @@ EITAnalyticSolution::pot2DTwoConcentric(int L, float r, float theta,
   return u;
 }
 
-void
-EITAnalyticSolution::execute(){
 
+void
+EITAnalyticSolution::execute()
+{
   //! Input ports
   MatrixIPort*  iportCurrentPatternIndex_;
   FieldIPort*   iportField_;
@@ -387,15 +390,10 @@ EITAnalyticSolution::execute(){
   } 
 
   //! Sending result
-  oportPotentialVector_->send(MatrixHandle(potential));       
-
+  MatrixHandle pmatrix(potential);
+  oportPotentialVector_->send_and_dereference(pmatrix);
 }
 
-void
- EITAnalyticSolution::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace BioPSE
 
