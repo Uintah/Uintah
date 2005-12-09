@@ -177,7 +177,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass,ptemp;
+    constParticleVariable<double> pmass,ptemp,pvolume;
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
@@ -187,12 +187,13 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(px,                          lb->pXLabel,                 pset);
     old_dw->get(pmass,                       lb->pMassLabel,              pset);
+    old_dw->get(pvolume,                     lb->pVolumeLabel,            pset);
     old_dw->get(ptemp,                       lb->pTemperatureLabel,       pset);
     old_dw->get(pvelocity,                   lb->pVelocityLabel,          pset);
     old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
-    old_dw->get(psize,                     lb->pSizeLabel,              pset);
+    old_dw->get(psize,                       lb->pSizeLabel,              pset);
     
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
@@ -214,8 +215,6 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
 
     double gamma = d_initialData.gamma;
     double cv    = d_initialData.cv;
-
-    double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
@@ -252,7 +251,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       // get the volumetric part of the deformation
       J    = deformationGradient_new[idx].Determinant();
 
-      pvolume_deformed[idx]=(pmass[idx]/rho_orig)*J;
+      pvolume_deformed[idx]=pvolume[idx]*Jinc;
       double rhoM = pmass[idx]/pvolume_deformed[idx];
       double dp_drho = (gamma - 1.0)*cv*ptemp[idx];
       double dp_de   = (gamma - 1.0)*rhoM;
@@ -313,6 +312,11 @@ double IdealGasMP::computeRhoMicroCM(double press,
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;
 
+  if(Temp > 10000){
+    cerr << "For this model you need to pass in the temperature in place " ;
+    cerr <<  "of the reference pressure" << endl;
+  }
+
   return  press/((gamma - 1.0)*cv*Temp);
 }
 
@@ -323,6 +327,11 @@ void IdealGasMP::computePressEOSCM(const double rhoM,double& pressure,
 {
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;
+
+  if(Temp > 10000){
+    cerr << "For this model you need to pass in the temperature in place " ;
+    cerr <<  "of the reference pressure" << endl;
+  }
 
   pressure   = (gamma - 1.0)*rhoM*cv*Temp;
   dp_drho = (gamma - 1.0)*cv*Temp;
