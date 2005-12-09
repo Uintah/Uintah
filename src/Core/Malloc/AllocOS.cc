@@ -108,9 +108,9 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
     OSHunk* hunk=(OSHunk*)ptr;
     if((long)ptr == -1){
 #ifdef SCI_64BITS
-       fprintf(stderr, "Error allocating memory (%ld bytes requested)\nmmap: errno=%d\n", asize, errno);
+       fprintf(stderr, "Error allocating memory (%lu bytes requested)\nmmap: errno=%d\n", asize, errno);
 #else
-       fprintf(stderr, "Error allocating memory (%d bytes requested)\nmmap: errno=%d\n", asize, errno);
+       fprintf(stderr, "Error allocating memory (%u bytes requested)\nmmap: errno=%d\n", asize, errno);
 #endif
        
        if(allocator){
