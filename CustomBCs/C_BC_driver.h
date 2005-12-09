@@ -3,7 +3,6 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/MMS_BCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/NG_NozzleBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 
@@ -18,7 +17,6 @@ namespace Uintah {
     customBC_var_basket() {
       Lodi_var_basket = 0;
       lv = 0;
-      ng = 0;
       sv = 0;
     };
     ~customBC_var_basket() {};
@@ -27,11 +25,6 @@ namespace Uintah {
     Lodi_variable_basket* Lodi_var_basket;
     Lodi_vars* lv;
     bool setLodiBcs;
- 
-    // Northrup Grumman Boundary Conditions
-    bool usingNG_nozzle;
-    bool setNGBcs;
-    NG_BC_vars* ng;
     
     // Micro slip boundary conditions
     bool usingMicroSlipBCs;
@@ -45,7 +38,6 @@ namespace Uintah {
     mms_vars* mms_v;
     mms_variable_basket* mms_var_basket;
     
-    Output* dataArchiver; 
     SimulationStateP sharedState;
 
   };
