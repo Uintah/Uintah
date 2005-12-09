@@ -175,6 +175,62 @@ parse_ho_data33(ifstream &nodal_in, vector<Vector> &data_vals, HVMesh *hvm)
   return npts;
 }
 
+int
+parse_ho_data28(ifstream &nodal_in, vector<Vector> &data_vals, HVMesh *hvm) 
+{
+  int npts = 0;
+  while (! nodal_in.eof()) {
+    ++npts;
+    double x[3], xdx[3], xdy[3], xdxy[3], xdz[3], xdyz[3], xdxz[3], xdxyz[3];
+    for (int j=0; j<3; j++) 
+      nodal_in >> x[j] >> xdx[j] >> xdy[j] >> xdxy[j] >> xdz[j] 
+		>> xdyz[j] >> xdxz[j] >> xdxyz[j];
+
+    if (nodal_in.eof()) break;
+
+    double f[3];
+    for (int j=0; j<3; j++) 
+      nodal_in >> f[j];
+
+    data_vals.push_back(Vector(f[0],f[1],f[2]));
+
+    string label;
+    int n;
+    nodal_in >> label >> n;
+    //    const double sf = 12.0;
+    hvm->add_point(Point(x[0],x[1],x[2]));
+    vector<Point> arr(7);
+    arr[0].x(xdx[0]);
+    arr[0].y(xdx[1]);
+    arr[0].z(xdx[2]);
+    arr[1].x(xdy[0]);
+    arr[1].y(xdy[1]);
+    arr[1].z(xdy[2]);
+    arr[2].x(xdz[0]);
+    arr[2].y(xdz[1]);
+    arr[2].z(xdz[2]);
+    arr[3].x(xdxy[0]);
+    arr[3].y(xdxy[1]);
+    arr[3].z(xdxy[2]);
+    arr[4].x(xdyz[0]);
+    arr[4].y(xdyz[1]);
+    arr[4].z(xdyz[2]);
+    arr[5].x(xdxz[0]);
+    arr[5].y(xdxz[1]);
+    arr[5].z(xdxz[2]);
+    arr[6].x(xdxyz[0]);
+    arr[6].y(xdxyz[1]);
+    arr[6].z(xdxyz[2]);
+    hvm->get_basis().add_derivatives(arr);
+
+    cerr << "Added point #" << npts << ": (" << x[0] << ", " << x[1] 
+	 << ", " << x[2] << ")" << endl;
+  }
+
+  cerr << "done adding points.\n";
+  return npts;
+}
+
 
 int
 main(int argc, char **argv) {
@@ -256,7 +312,7 @@ main(int argc, char **argv) {
     while (hiter != aux_headers.end()) {
       cout << *hiter++ << ", " << endl;
     }
-    cout << endl << "There are " << aux_headers.size() << " columns." << endl;
+    cout << endl << "AUX: There are " << aux_headers.size() << " columns." << endl;
   }
 
   int npts = 0;
@@ -266,6 +322,8 @@ main(int argc, char **argv) {
 
   if (headers.size() == 33) {
     npts = parse_ho_data33(nodal_in, data_vals, hvm);
+  } else if (headers.size() == 28) {
+    npts = parse_ho_data28(nodal_in, data_vals, hvm);
   } else {
     cerr << "Dont know what to do with " << headers.size()
 	 << " columns of data" << endl;
@@ -277,7 +335,7 @@ main(int argc, char **argv) {
     if (aux_headers.size() == 17) {
       npts = parse_edge_sf_17(aux_nodal_in, tbl);
     } else {
-      cerr << "Dont know what to do with " << aux_headers.size()
+      cerr << "AUX: Dont know what to do with " << aux_headers.size()
 	   << " columns of aux data" << endl;
       return (1 << 1);
     }
@@ -392,7 +450,7 @@ main(int argc, char **argv) {
     hv->resize_fdata();
     hv->fdata() = data_vals_scalar;
     hvH = hv;
-  } else if (headers.size() == 33) {
+  } else if (headers.size() == 33 || headers.size() == 28) {
     cerr << "loading in no data" << endl;
     HVField *hv = scinew HVField(hvm);
     hv->resize_fdata();
