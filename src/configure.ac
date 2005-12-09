@@ -2435,8 +2435,8 @@ fi
 _sci_optional=required
 if test "$with_libxml2"; then
    #FIX_ME MC these should be set from the defaults in a source compilation of the package
-  _xml2_lib_path=/usr/lib
-  _xml2_inc="/usr/include/libxml2"
+  _xml2_lib_path="$with_libxml2/lib"
+  _xml2_inc="$with_libxml2/include/libxml2"
   _sci_optional=specific
 else
   _xml2_lib_path=/usr/lib
@@ -2455,7 +2455,7 @@ SCI_TRY_LINK(XML2,xml2 library and headers, libxml/tree.h libxml/parser.h,$_xml2
 
   LIBXML_TEST_VERSION;
 
-  /* 
+  /*
    * Creates a new document, a node and set it as a root node
    */
   doc = xmlNewDoc(BAD_CAST "1.0");
