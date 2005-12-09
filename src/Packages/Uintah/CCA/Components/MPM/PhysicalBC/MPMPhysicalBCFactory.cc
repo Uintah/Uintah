@@ -18,11 +18,12 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
 {
   ProblemSpecP test = ps->findBlock("PhysicalBC");
    if (!test)     // bullet proofing
-    throw ProblemSetupException("**ERROR** No <PhysicalBC> block in input file.",
+    throw ProblemSetupException("**ERROR** No<PhysicalBC> block in input file.",
                                 __FILE__, __LINE__);
-   
+
    ProblemSpecP current_ps = ps->findBlock("PhysicalBC")->findBlock("MPM");
-   
+
+
    for(ProblemSpecP child = current_ps->findBlock("force"); child != 0;
        child = child->findNextBlock("force") )
    {
