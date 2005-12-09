@@ -103,13 +103,16 @@ DECLARE_MAKER(Tikhonov)
 {
 }
 
+
 //! Destructor
 Tikhonov::~Tikhonov()
 {
 }
 
+
 //! Create Identity Matrix
-DenseMatrix *Tikhonov::mat_identity(int len) 
+DenseMatrix *
+Tikhonov::mat_identity(int len) 
 {
   DenseMatrix *eye = scinew DenseMatrix(len, len);
   // Does this make sure all the elements are 0?
@@ -121,8 +124,10 @@ DenseMatrix *Tikhonov::mat_identity(int len)
   return eye;
 }
 
+
 //! This function computes A^T * A for a DenseMatrix 
-DenseMatrix *Tikhonov::mat_trans_mult_mat(DenseMatrix *A) 
+DenseMatrix *
+Tikhonov::mat_trans_mult_mat(DenseMatrix *A) 
 {
   int nRows = A->nrows();
   int nCols = A->ncols();
@@ -154,8 +159,10 @@ DenseMatrix *Tikhonov::mat_trans_mult_mat(DenseMatrix *A)
   return B;
 }
 
+
 //! This function returns the multiplication of A and B
-DenseMatrix *Tikhonov::mat_mult(DenseMatrix *A, DenseMatrix *B) 
+DenseMatrix *
+Tikhonov::mat_mult(DenseMatrix *A, DenseMatrix *B) 
 {
   int nRows = B->nrows();
   int nCols = B->ncols();
@@ -186,7 +193,8 @@ DenseMatrix *Tikhonov::mat_mult(DenseMatrix *A, DenseMatrix *B)
 }
 
 //! This function make sure that the matrix is a DenseMatrix.
-DenseMatrix *Tikhonov::make_dense(MatrixHandle A) 
+DenseMatrix *
+Tikhonov::make_dense(MatrixHandle A) 
 {
   DenseMatrix *Adense = dynamic_cast<DenseMatrix *>(A.get_rep());
   if (Adense) 
@@ -209,7 +217,8 @@ DenseMatrix *Tikhonov::make_dense(MatrixHandle A)
 }
 
 //! This function make sure that the matrix is a ColumnMatrix.
-ColumnMatrix *Tikhonov::make_column(MatrixHandle A) 
+ColumnMatrix *
+Tikhonov::make_column(MatrixHandle A) 
 {
   ColumnMatrix *Acol = dynamic_cast<ColumnMatrix *>(A.get_rep());
   if (Acol) 
@@ -232,9 +241,10 @@ ColumnMatrix *Tikhonov::make_column(MatrixHandle A)
 }
 
 //! Find Corner
-double Tikhonov::FindCorner(Array1<double> &rho, Array1<double> &eta, 
-			    Array1<double> &lambdaArray, 
-			    ColumnMatrix *kapa, int *lambda_index, int nLambda)
+double
+Tikhonov::FindCorner(Array1<double> &rho, Array1<double> &eta, 
+                     Array1<double> &lambdaArray, 
+                     ColumnMatrix *kapa, int *lambda_index, int nLambda)
 {
   Array1<double> deta, ddeta, drho, ddrho, lrho, leta;
 
@@ -285,7 +295,8 @@ double Tikhonov::FindCorner(Array1<double> &rho, Array1<double> &eta,
 }
 
 //! Module execution
-void Tikhonov::execute()
+void
+Tikhonov::execute()
 {
   MatrixIPort *iportForMat = (MatrixIPort *)get_iport("ForwardMat");
   MatrixIPort *iportRegMat = (MatrixIPort *)get_iport("RegularizationMat");
@@ -312,14 +323,10 @@ void Tikhonov::execute()
     error("Couldn't get handle to the measured data.");
     return;
   }
- 	
-
    
   // TYPE CHECK
   DenseMatrix *matrixForMatD = make_dense(hMatrixForMat);
   ColumnMatrix *matrixMeasDatD = make_column(hMatrixMeasDat);
- 
-	
 
   // DIMENSION CHECK!!
   int M = matrixForMatD->nrows();
@@ -495,21 +502,17 @@ void Tikhonov::execute()
   DenseMatrix  *InverseMatrix =scinew DenseMatrix(N, M);
 
   regForMatrix->invert();
-//  if (regForMatrix->invert()) {
-//    error("Matrix not invertible.");
-//    return;
-//  }
 
   Mult(*InverseMatrix,*regForMatrix,*(matrixForMatD->transpose()));
 
-
-
   //...........................................................
   // SEND RESULTS TO THE OUTPUT PORTS
-  oportInvSol->send(MatrixHandle(mat_AtrY));
-  oportRegParam->send(MatrixHandle(RegParameter));
-  oportRegInvMat->send(MatrixHandle(InverseMatrix));
-
+  MatrixHandle AtrYHandle(mat_AtrY);
+  oportInvSol->send_and_dereference(AtrYHandle);
+  MatrixHandle RegParameterHandle(RegParameter);
+  oportRegParam->send_and_dereference(RegParameterHandle);
+  MatrixHandle InverseMatrixHandle(InverseMatrix);
+  oportRegInvMat->send_and_dereference(InverseMatrixHandle);
 }
   
 } // End namespace BioPSE

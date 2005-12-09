@@ -635,9 +635,6 @@ namespace BioPSE
             str << lambda << " ; update idletasks";
             gui->execute(str.str().c_str());
           }
-	
-
-		
       } 
 	
     ColumnMatrix  *RegParameter =scinew ColumnMatrix(1);
@@ -651,9 +648,6 @@ namespace BioPSE
     oportInvSol->send(MatrixHandle(solution));
     oportRegParam->send(MatrixHandle(RegParameter));
     oportRegInvMat->send(MatrixHandle(InverseMat));
-	    	
-
-
   }
   
 } // End namespace BioPSE
