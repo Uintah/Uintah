@@ -46,18 +46,14 @@ ProblemSpecReader::readInputFile()
   
   xmlDocPtr doc; /* the resulting document tree */
   
-  doc = xmlReadFile(d_filename, 0, 0);
-
-#if 0
-  (XML_PARSE_DTDATTR |
-   XML_PARSE_DTDVALID |
-   XML_PARSE_PEDANTIC));
-#endif  
-
+  doc = xmlReadFile(d_filename.c_str(), 0, XML_PARSE_PEDANTIC);
+  
   /* check if parsing suceeded */
   if (doc == 0) {
     throw ProblemSetupException("Error reading file: "+d_filename, __FILE__, __LINE__);
   }
+  
+
   
   // you must free doc when you are done.
   // Add the parser contents to the ProblemSpecP

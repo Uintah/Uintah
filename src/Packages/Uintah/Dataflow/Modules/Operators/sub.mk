@@ -45,7 +45,7 @@ PSELIBS := \
 	Core/Malloc \
 	Core/Util \
 
-LIBS := $(XML_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

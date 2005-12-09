@@ -196,17 +196,17 @@ WARNING
 
       //////////
       // append a node with given value (of varied types) to this node
-      void appendElement(const char* name, const std::string& val, bool trail=0, int tabs=1);
-      void appendElement(const char* name, const char* value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, int value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, long value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, const IntVector& value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, const Point& value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, const Vector& value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, double value, bool trail=0, int tabs=1);
-      void appendElement(const char* name, const vector<double>& val,bool trail=0, int tabs=1);
-      void appendElement(const char* name, const vector<int>& val, bool trail=0, int tabs=1);
-      void appendElement(const char* name, bool value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const std::string& val, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const char* value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, int value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, long value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const IntVector& value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const Point& value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const Vector& value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, double value, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const vector<double>& val,bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, const vector<int>& val, bool trail=0, int tabs=1);
+      ProblemSpecP appendElement(const char* name, bool value, bool trail=0, int tabs=1);
 
 
 
@@ -275,7 +275,7 @@ WARNING
 
       //////////
       // Output the DOMTree.  
-      void output(char* filename = 0) const;
+      void output(const char* filename = 0) const;
 
       inline bool operator == (const ProblemSpec& a) const {
 	return a.d_node == d_node;
