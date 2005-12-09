@@ -97,7 +97,7 @@ private:
   GuiDouble gui_sampling_rate_hi_;
   GuiDouble gui_sampling_rate_lo_;
   GuiDouble gui_gradient_min_;
-  GuiDouble gui_gradient_max_;;
+  GuiDouble gui_gradient_max_;
   GuiInt gui_adaptive_;
   GuiInt gui_cmap_size_;
   GuiInt gui_sw_raster_;
