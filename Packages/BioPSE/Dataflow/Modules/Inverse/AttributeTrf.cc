@@ -97,7 +97,9 @@ void AttributeTrf::execute()
     error("Input field was not a TriSurfField.");
     return;
   }
-  oportAttrib->send(MatrixHandle(surfaceLaplacian(tsm)));
+
+  MatrixHandle smat(surfaceLaplacian(tsm));
+  oportAttrib->send_and_dereference(smat);
 }
 
 } // End namespace BioPSE

@@ -899,7 +899,6 @@ SurfaceToSurface::solveDense(int nr, int nc, double **A, double *x,
 void
 SurfaceToSurface::execute()
 {
-
   MeshHandle mesh;
   MatrixHandle mh;
   SurfaceHandle surfHandle;
@@ -1047,7 +1046,7 @@ SurfaceToSurface::execute()
   setBdryCorticalBC(Phi_c, st, ns, nc);
   msgStream_ << "made it out!\n";
 
-  osurf->send(surfHandle);
+  osurf->send_and_dereference(surfHandle);
 
   int i;
   for (i=0; i<ns; i++) if (mesh->nodes[i]->bc == 0) msgStream_ << "WRONG!\n";
@@ -1061,7 +1060,7 @@ SurfaceToSurface::execute()
     //   st->points[st->bcIdx[i-nv]]<<"  mesh="<<mesh->nodes[i]->p<<"!\n";
   }
 
-  omesh->send(mesh);
+  omesh->send_and_dereference(mesh);
   msgStream_ << "Done with SurfaceToSurface::execute (timer="
 	     <<timer.time()<<")\n";
   timer.stop();

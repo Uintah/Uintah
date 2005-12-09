@@ -137,10 +137,15 @@ ConductivitySearch::ConductivitySearch(GuiContext *context)
   seed_counter_ = 0;
 }
 
-ConductivitySearch::~ConductivitySearch(){}
+
+ConductivitySearch::~ConductivitySearch()
+{
+}
 
 
-void ConductivitySearch::build_basis_matrices() {
+void
+ConductivitySearch::build_basis_matrices()
+{
   TVFieldI::handle_type tviH;
   tviH = dynamic_cast<TVFieldI *>(mesh_in_.get_rep());
   TetVolFieldTensorHandle tvtH;
@@ -182,8 +187,9 @@ void ConductivitySearch::build_basis_matrices() {
 
 //! Initialization sets up our conductivity search matrix, our misfit vector,
 //!   and our stiffness matrix frame
-
-void ConductivitySearch::initialize_search() {
+void
+ConductivitySearch::initialize_search()
+{
   // fill in our random conductivities and build our stiffness matrix frame
   misfit_.resize(NCONDUCTIVITIES_);
   conductivities_.resize(NCONDUCTIVITIES_, NDIM_);
@@ -222,8 +228,9 @@ void ConductivitySearch::initialize_search() {
 
 //! Scale the basis matrix data by the conductivities and sum
 
-MatrixHandle ConductivitySearch::build_composite_matrix(int 
-							which_conductivity) {
+MatrixHandle
+ConductivitySearch::build_composite_matrix(int which_conductivity)
+{
   MatrixHandle fem_mat = AmatH_;
   fem_mat.detach();
   SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(fem_mat.get_rep());
@@ -238,8 +245,9 @@ MatrixHandle ConductivitySearch::build_composite_matrix(int
 
 
 //! Find the misfit and optimal orientation for a single conductivity
-
-void ConductivitySearch::send_and_get_data(int which_conductivity) {
+void
+ConductivitySearch::send_and_get_data(int which_conductivity)
+{
   if (!mylock_.tryLock()) {
     mylock_.lock();
     mylock_.unlock();
@@ -305,8 +313,9 @@ int ConductivitySearch::pre_search() {
 
 
 //! Evaluate a test conductivity.
-
-void ConductivitySearch::eval_test_conductivity() {
+void
+ConductivitySearch::eval_test_conductivity()
+{
   
   int in_range=1;
   for (int i=0; i<NDIM_; i++)
@@ -325,9 +334,9 @@ void ConductivitySearch::eval_test_conductivity() {
 
 //! Take a single simplex step.  Evaluate a new position -- if it's
 //! better then an existing vertex, swap them.
-
-double ConductivitySearch::simplex_step(Array1<double>& sum, double factor,
-					int worst) {
+double
+ConductivitySearch::simplex_step(Array1<double>& sum, double factor, int worst)
+{
   double factor1 = (1 - factor)/NDIM_;
   double factor2 = factor1-factor;
   int i;
@@ -352,7 +361,9 @@ double ConductivitySearch::simplex_step(Array1<double>& sum, double factor,
 
 //! The simplex has been constructed -- now let's search for a minimal misfit
 
-void ConductivitySearch::simplex_search() {
+void
+ConductivitySearch::simplex_search()
+{
   Array1<double> sum(NDIM_); // sum of the entries in the search matrix rows
   sum.initialize(0);
   int i, j;
@@ -443,9 +454,10 @@ void ConductivitySearch::simplex_search() {
 
 //! Read the input fields.  Check whether the inputs are valid,
 //! and whether they've changed since last time.
-
-void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data, 
-							int &new_data) {
+void
+ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data, 
+                                                   int &new_data)
+{
   FieldHandle mesh;
   valid_data=1;
   new_data=0;
@@ -494,7 +506,9 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
 //! one.  Otherwise, if the input is valid, run a simplex search to find
 //! a conductivity with minimal misfit.
 
-void ConductivitySearch::execute() {
+void
+ConductivitySearch::execute()
+{
   int valid_data, new_data;
   mesh_iport_ = (FieldIPort *)get_iport("FiniteElementMesh");
   cond_params_iport_ = (MatrixIPort *)get_iport("ConductivityParameters");
