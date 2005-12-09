@@ -199,7 +199,7 @@ void Pio(Piostream& stream, Quaternion& q){
 }
  */
 
-Quaternion pow(const Quaternion& q, double p){  
+Quaternion Pow(const Quaternion& q, double p){  
   if (q.v.length()> NUM_ZERO){
     double theta=p*acos(q.a);
     return Quaternion(cos(theta), (q.v).normal()*sin(theta));
@@ -209,7 +209,7 @@ Quaternion pow(const Quaternion& q, double p){
 }
 
 Quaternion Slerp(const Quaternion& lq, const Quaternion& rq, double h){
-  return lq*pow((lq.get_inv())*rq, h);
+  return lq*Pow((lq.get_inv())*rq, h);
 }
 
 std::ostream& operator<<(std::ostream& out , const Quaternion& q){

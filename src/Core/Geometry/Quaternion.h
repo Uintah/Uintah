@@ -88,7 +88,7 @@ class Quaternion {
 				    // doesn't make sense otherwise in most cases	 
   void from_matrix(const double matr[4][4]);
   friend Quaternion Slerp(const Quaternion&, const Quaternion&, double);
-  friend Quaternion pow(const Quaternion&, double);
+  friend Quaternion Pow(const Quaternion&, double);
 public:
 
   Quaternion(): a(1), v(Vector(0, 0, 0)){};
