@@ -34,7 +34,7 @@ PSELIBS := \
 	Core/Thread     \
 	Core/Geometry   
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(FLIBS)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(FLIBS)
 
 ifneq ($(HAVE_PETSC),)
 LIBS := $(LIBS) $(PETSC_LIBRARY) 

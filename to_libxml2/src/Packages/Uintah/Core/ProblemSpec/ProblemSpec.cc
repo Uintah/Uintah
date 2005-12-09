@@ -48,7 +48,7 @@ ProblemSpec::findBlock() const
   }
   if (child == NULL)
      return 0;
-  else
+  else 
      return scinew ProblemSpec(child, d_write);
 }
 
@@ -61,6 +61,10 @@ ProblemSpec::findBlock(const string& name) const
   while (child != 0) {
     string child_name(to_char_ptr(child->name));
     if (name == child_name) {
+      xmlNode* dbl_child = child->children;
+      while (dbl_child != 0) {
+        dbl_child = dbl_child->next;
+      }
       return scinew ProblemSpec(child, d_write);
     }
     child = child->next;
@@ -207,24 +211,17 @@ checkForInputError(const string& stringValue,
 ProblemSpecP
 ProblemSpec::get(const string& name, double &value)
 {
-  ProblemSpecP ps = this;
+  ProblemSpecP ps;
 
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
     return ps;
   }
   else {
-    xmlNode* found_node = node->d_node;
-    for (xmlNode* child = found_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        string stringValue = getNodeValue();
-        checkForInputError(stringValue,"double"); 
-        istringstream ss(stringValue);
-        ss >> value;
-      }
-    }
+    checkForInputError(stringValue,"double"); 
+    istringstream ss(stringValue);
+    ss >> value;
   }
           
   return ps;
@@ -233,23 +230,17 @@ ProblemSpec::get(const string& name, double &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, unsigned int &value)
 {
-  ProblemSpecP ps = this;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
+  ProblemSpecP ps;
+
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
     return ps;
   }
   else {
-    xmlNode* found_node = node->d_node;
-    for (xmlNode* child = found_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        string stringValue = getNodeValue();
-        checkForInputError(stringValue,"int");
-        istringstream ss(stringValue);
-        ss >> value;
-      }
-    }
+    checkForInputError(stringValue,"int"); 
+    istringstream ss(stringValue);
+    ss >> value;
   }
           
   return ps;
@@ -259,88 +250,67 @@ ProblemSpec::get(const string& name, unsigned int &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, int &value)
 {
-  ProblemSpecP ps = this;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
+  ProblemSpecP ps;
+
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
     return ps;
   }
   else {
-    xmlNode* found_node = node->d_node;
-    for (xmlNode* child = found_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        string stringValue = getNodeValue();
-        checkForInputError(stringValue,"int");
-        istringstream ss(stringValue);
-        ss >> value;
-      }
-    }
+    checkForInputError(stringValue,"int");
+    istringstream ss(stringValue);
+    ss >> value;
   }
-          
-  return ps;
 
+  return ps;
 }
 
 
 ProblemSpecP
 ProblemSpec::get(const string& name, long &value)
 {
-  ProblemSpecP ps = this;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
+  ProblemSpecP ps;
+
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
     return ps;
   }
   else {
-    xmlNode* found_node = node->d_node;
-    for (xmlNode* child = found_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        string stringValue = getNodeValue();
-        checkForInputError(stringValue,"int");
-        stringstream ss(stringValue);
-        ss >> value;
-      }
-    }
+    checkForInputError(stringValue,"int");
+    istringstream ss(stringValue);
+    ss >> value;
   }
-          
-  return ps;
 
+  return ps;
 }
 
 ProblemSpecP
 ProblemSpec::get(const string& name, bool &value)
 {
-  ProblemSpecP ps = this;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
+  ProblemSpecP ps;
+
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
     return ps;
   }
   else {
-    xmlNode* found_node = node->d_node;
-    for (xmlNode* child = found_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        string cmp = getNodeValue();
-        // Slurp up any spaces that were put in before or after the cmp string.
-        istringstream result_stream(cmp);
-        string nospace_cmp;
-        result_stream >> nospace_cmp;
-        if (nospace_cmp == "false") {
-         value = false;
-        }
-        else if  (nospace_cmp == "true") {
-         value = true;
-        } else {
-         string error = name + "Must be either true or false";
-         throw ProblemSetupException(error, __FILE__, __LINE__);
-        }
-      }
+    // Slurp up any spaces that were put in before or after the cmp string.
+    istringstream result_stream(stringValue);
+    string nospace_cmp;
+    result_stream >> nospace_cmp;
+    if (nospace_cmp == "false") {
+      value = false;
+    }
+    else if  (nospace_cmp == "true") {
+      value = true;
+    } else {
+      string error = name + "Must be either true or false";
+      throw ProblemSetupException(error, __FILE__, __LINE__);
     }
   }
-          
   return ps;
 
 }
@@ -348,6 +318,7 @@ ProblemSpec::get(const string& name, bool &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, string &value)
 {
+  // the other gets will call this one to get the string...
   ProblemSpecP ps = this;
   ProblemSpecP node = findBlock(name);
   if (node == 0) {
@@ -355,19 +326,9 @@ ProblemSpec::get(const string& name, string &value)
     return ps;
   }
   else {
-    xmlNode* found_node = node->d_node;
-    for (xmlNode* child = found_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        //__________________________________
-        // This little bit of magic removes all spaces
-        string tmp = getNodeValue();
-        istringstream value_tmp(tmp);
-        value_tmp >> value; 
-      }
-    }
+    value = node->getNodeValue();
   }
-          
+
   return ps;
 
 }
@@ -387,40 +348,32 @@ ProblemSpec::get(const string& name,
                  Vector &value)
 {
 
-  string string_value;
-  ProblemSpecP ps = this;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
+  ProblemSpecP ps;
+
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
     return ps;
   }
   else {
-    xmlNode* found_node = node->d_node;
-    for (xmlNode* child = found_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        string_value = getNodeValue();
-
-        // Parse out the [num,num,num]
-        // Now pull apart the string_value
-        string::size_type i1 = string_value.find("[");
-        string::size_type i2 = string_value.find_first_of(",");
-        string::size_type i3 = string_value.find_last_of(",");
-        string::size_type i4 = string_value.find("]");
-        
-        string x_val(string_value,i1+1,i2-i1-1);
-        string y_val(string_value,i2+1,i3-i2-1);
-        string z_val(string_value,i3+1,i4-i3-1);
-       
-        checkForInputError(x_val, "double"); 
-        checkForInputError(y_val, "double");
-        checkForInputError(z_val, "double");
-
-        value.x(atof(x_val.c_str()));
-        value.y(atof(y_val.c_str()));
-        value.z(atof(z_val.c_str()));   
-      }
-    }
+    // Parse out the [num,num,num]
+    // Now pull apart the stringValue
+    string::size_type i1 = stringValue.find("[");
+    string::size_type i2 = stringValue.find_first_of(",");
+    string::size_type i3 = stringValue.find_last_of(",");
+    string::size_type i4 = stringValue.find("]");
+    
+    string x_val(stringValue,i1+1,i2-i1-1);
+    string y_val(stringValue,i2+1,i3-i2-1);
+    string z_val(stringValue,i3+1,i4-i3-1);
+    
+    checkForInputError(x_val, "double"); 
+    checkForInputError(y_val, "double");
+    checkForInputError(z_val, "double");
+    
+    value.x(atof(x_val.c_str()));
+    value.y(atof(y_val.c_str()));
+    value.z(atof(z_val.c_str()));   
   }
           
   return ps;
@@ -475,39 +428,30 @@ ProblemSpec::get(const string& name,
                  vector<string>& value)
 {
 
-  string string_value;
-  ProblemSpecP ps = this;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
+  ProblemSpecP ps;
+
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
     return ps;
   }
   else {
-    xmlNode* found_node = node->d_node;
-    for (xmlNode* child = found_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        string_value = getNodeValue();
-        
-        istringstream in(string_value);
-        char c,next;
-        string result;
-        while (!in.eof()) {
-         in >> c;
-         if (c == '[' || c == ',' || c == ' ' || c == ']')
-           continue;
-         next = in.peek();
-         result += c;
-         if (next == ',' ||  next == ' ' || next == ']') {
-           // push next string onto stack
-           value.push_back(result);
-           result.erase();
-         }
-        }
+    istringstream in(stringValue);
+    char c,next;
+    string result;
+    while (!in.eof()) {
+      in >> c;
+      if (c == '[' || c == ',' || c == ' ' || c == ']')
+        continue;
+      next = in.peek();
+      result += c;
+      if (next == ',' ||  next == ' ' || next == ']') {
+        // push next string onto stack
+        value.push_back(result);
+        result.erase();
       }
     }
   }
-  
   return ps;
 } 
 
@@ -515,25 +459,17 @@ ProblemSpecP
 ProblemSpec::get(const string& name, 
                  IntVector &value)
 {
+  ProblemSpecP ps;
 
-  string string_value;
-  ProblemSpecP ps = this;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
     return ps;
   }
   else {
-    xmlNode* found_node = node->d_node;
-    for (xmlNode* child = found_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        string_value = getNodeValue();
-        parseIntVector(string_value, value);
-      }
-    }
+    parseIntVector(stringValue, value);
   }
-          
+
   return ps;
 
 }
@@ -541,62 +477,55 @@ ProblemSpec::get(const string& name,
 ProblemSpecP
 ProblemSpec::get(const string& name, vector<IntVector>& value)
 {
-  string string_value;
-  ProblemSpecP ps = this;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
+  ProblemSpecP ps;
+
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
     return ps;
   }
   else {
-    xmlNode* found_node = node->d_node;
-    for (xmlNode* child = found_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        string_value = getNodeValue();
-
-        istringstream in(string_value);
-        char c;
-        bool first_bracket = false;
-        bool inner_bracket = false;
-        string result;
-        // what we're going to do is look for the first [ then pass it.
-        // then if we find another [, make a string out of it until we see ],
-        // then pass that into parseIntVector, and repeat.
-        while (!in.eof()) {
-          in >> c;
-          if (c == ' ' || (c == ',' && !inner_bracket))
-            continue;
-          if (c == '[') {
-            if (!first_bracket) {
-              first_bracket = true;
-              continue;
-            }
-            else {
-              inner_bracket = true;
-            }
-          }
-          else if (c == ']') {
-            if (inner_bracket) {
-              // parse the string for an IntVector
-              IntVector val;
-              result += c;
-              // it should be [num,num,num] by now
-              parseIntVector(result, val);
-              value.push_back(val);
-              result.erase();
-              inner_bracket = false;
-              continue;
-            }
-            else
-              break; // end parsing on outer ]
-          }
-          // add the char to the string
+    istringstream in(stringValue);
+    char c;
+    bool first_bracket = false;
+    bool inner_bracket = false;
+    string result;
+    // what we're going to do is look for the first [ then pass it.
+    // then if we find another [, make a string out of it until we see ],
+    // then pass that into parseIntVector, and repeat.
+    while (!in.eof()) {
+      in >> c;
+      if (c == ' ' || (c == ',' && !inner_bracket))
+        continue;
+      if (c == '[') {
+        if (!first_bracket) {
+          first_bracket = true;
+          continue;
+        }
+        else {
+          inner_bracket = true;
+        }
+      }
+      else if (c == ']') {
+        if (inner_bracket) {
+          // parse the string for an IntVector
+          IntVector val;
           result += c;
-        }  // end while (!in.eof())
-      } // end if (child->type == XML_TEXT_NODE)
-    }
+          // it should be [num,num,num] by now
+          parseIntVector(result, val);
+          value.push_back(val);
+          result.erase();
+          inner_bracket = false;
+          continue;
+        }
+        else
+          break; // end parsing on outer ]
+      }
+      // add the char to the string
+      result += c;
+    }  // end while (!in.eof())
   }
+  
   return ps;
 }
 
@@ -625,84 +554,65 @@ void ProblemSpec::parseIntVector(const string& string_value, IntVector& value)
 
 bool ProblemSpec::get(int &value)
 {
-   for (xmlNode *child = d_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-         value = atoi(getNodeValue().c_str());
-         return true;
-      }
-   }
-   return false;
+  string stringValue;
+  if (!get(stringValue))
+    return false;
+  value = atoi(stringValue.c_str());
+  return true;
 }
 
 bool ProblemSpec::get(long &value)
 {
-   for (xmlNode *child = d_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-         value = atoi(getNodeValue().c_str());
-         return true;
-      }
-   }
-   return false;
+  string stringValue;
+  if (!get(stringValue))
+    return false;
+  value = atoi(stringValue.c_str());
+  return true;
 }
 
 bool ProblemSpec::get(double &value)
 {
-   for (xmlNode *child = d_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-         value = atof(getNodeValue().c_str());
-         return true;
-      }
-   }
-   return false;
+  string stringValue;
+  if (!get(stringValue))
+    return false;
+  value = atof(stringValue.c_str());
+  return true;
 }
 
 bool ProblemSpec::get(string &value)
 {
-   for (xmlNode *child = d_node->children; child != 0;
-        child = child->next) {
-      if (child->type == XML_TEXT_NODE) {
-        // Remove the white space from the front and back of the string
-        string tmp(getNodeValue());
-        istringstream tmp_str(tmp);
-        string w;
-        while(tmp_str>>w) value += w;
-        return true;
-      }
-   }
-   return false;
+  string tmp = getNodeValue();
+  if (tmp == "")
+    return false;
+  istringstream tmp_str(tmp);
+  string w;
+  while(tmp_str>>w) value += w;
+  return true;
 }
 
 bool ProblemSpec::get(Vector &value)
 {
-  string string_value;
-  for (xmlNode* child = d_node->children; child != 0;
-      child = child->next) {
-    if (child->type == XML_TEXT_NODE) {
-     string_value = getNodeValue();
-     // Parse out the [num,num,num]
-     // Now pull apart the string_value
-     string::size_type i1 = string_value.find("[");
-     string::size_type i2 = string_value.find_first_of(",");
-     string::size_type i3 = string_value.find_last_of(",");
-     string::size_type i4 = string_value.find("]");
-
-     string x_val(string_value,i1+1,i2-i1-1);
-     string y_val(string_value,i2+1,i3-i2-1);
-     string z_val(string_value,i3+1,i4-i3-1);
-
-     checkForInputError(x_val, "double"); 
-     checkForInputError(y_val, "double");
-     checkForInputError(z_val, "double");
-
-     value.x(atof(x_val.c_str()));
-     value.y(atof(y_val.c_str()));
-     value.z(atof(z_val.c_str()));      
-    }
-  }        
-  return false;
+  string stringValue;
+  if (!get(stringValue))
+    return false;
+  // Now pull apart the stringValue
+  string::size_type i1 = stringValue.find("[");
+  string::size_type i2 = stringValue.find_first_of(",");
+  string::size_type i3 = stringValue.find_last_of(",");
+  string::size_type i4 = stringValue.find("]");
+  
+  string x_val(stringValue,i1+1,i2-i1-1);
+  string y_val(stringValue,i2+1,i3-i2-1);
+  string z_val(stringValue,i3+1,i4-i3-1);
+  
+  checkForInputError(x_val, "double"); 
+  checkForInputError(y_val, "double");
+  checkForInputError(z_val, "double");
+  
+  value.x(atof(x_val.c_str()));
+  value.y(atof(y_val.c_str()));
+  value.z(atof(z_val.c_str()));      
+  return true;
 }
 
 
@@ -878,7 +788,7 @@ ProblemSpec::getWithDefault(const string& name,
 }
 
 // add newline before, then tabs tabs, and then if trail is true, ending whitespace
-void ProblemSpec::appendElement(const char* name, const string& value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, const string& value,
                                 bool trail /*=0*/, int tabs /*=1*/) 
 {
   ostringstream ostr;
@@ -889,74 +799,75 @@ void ProblemSpec::appendElement(const char* name, const string& value,
 
   appendText(ostr.str().c_str());
   
-  xmlNewChild(d_node, 0, BAD_CAST name, BAD_CAST value.c_str());
+  xmlNode* newnode = xmlNewChild(d_node, 0, BAD_CAST name, BAD_CAST value.c_str());
   
   if (trail) {
     appendText("\n");
   }
+  return scinew ProblemSpec(newnode, d_write);
 }
 
 //basically to make sure correct overloaded function is called
-void ProblemSpec::appendElement(const char* name, const char* value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, const char* value,
                                 bool trail /*=0*/, int tabs /*=1*/) {
-  appendElement(name, string(value), trail, tabs);
+  return appendElement(name, string(value), trail, tabs);
 }
 
 
-void ProblemSpec::appendElement(const char* name, int value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, int value,
                                 bool trail /*=0*/, int tabs /*=1*/) 
 {
    ostringstream val;
    val << value;
-   appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, long value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, long value,
                                 bool trail /*=0*/, int tabs /*=1*/) 
 {
    ostringstream val;
    val << value;
-   appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, const IntVector& value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, const IntVector& value,
                                 bool trail /*=0*/, int tabs /*=1*/) 
 {
    ostringstream val;
    val << '[' << value.x() << ", " << value.y() << ", " << value.z() << ']';
-   appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str(), trail, tabs);
 }
 
-void ProblemSpec::appendElement(const char* name, const Point& value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, const Point& value,
                                 bool trail /*=0*/, int tabs /*=1*/) 
 {
    ostringstream val;
    val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " << setprecision(17) << value.z() << ']';
-   appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, const Vector& value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, const Vector& value,
                                 bool trail /*=0*/, int tabs /*=1*/)
 {
    ostringstream val;
    val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " << setprecision(17) << value.z() << ']';
-   appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, double value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, double value,
                                 bool trail /*=0*/, int tabs /*=1*/)
 {
    ostringstream val;
    val << setprecision(17) << value;
-   appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, const vector<double>& value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, const vector<double>& value,
                                 bool trail /*=0*/, int tabs /*=1*/)
 {
    ostringstream val;
@@ -968,11 +879,11 @@ void ProblemSpec::appendElement(const char* name, const vector<double>& value,
      
    }
    val << ']';
-   appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, const vector<int>& value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, const vector<int>& value,
                                 bool trail /*=0*/, int tabs /*=1*/)
 {
    ostringstream val;
@@ -984,17 +895,17 @@ void ProblemSpec::appendElement(const char* name, const vector<int>& value,
      
    }
    val << ']';
-   appendElement(name, val.str(), trail, tabs);
+   return appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, bool value,
+ProblemSpecP ProblemSpec::appendElement(const char* name, bool value,
                                 bool trail /*=0*/, int tabs /*=1*/)
 {
   if (value)
-    appendElement(name, string("true"), trail, tabs);
+    return appendElement(name, string("true"), trail, tabs);
   else
-    appendElement(name, string("false"), trail, tabs);
+    return appendElement(name, string("false"), trail, tabs);
 }
 
 void ProblemSpec::require(const string& name, double& value)
@@ -1183,14 +1094,22 @@ ProblemSpec::getNextSibling()
 string
 ProblemSpec::getNodeValue() 
 {
-  string ret(to_char_ptr(d_node->children->content));
+  string ret;
+  for (xmlNode *child = d_node->children; child != 0;
+       child = child->next) {
+    if (child->type == XML_TEXT_NODE) {
+      ret = to_char_ptr(child->content);
+      break;
+    }
+  }
   return ret;
 }
 
 void
 ProblemSpec::appendText(const char* str)
 {
-  xmlNewTextChild(d_node, 0, BAD_CAST "name", BAD_CAST str);
+  //FIX
+  //xmlNewTextChild(d_node, 0, BAD_CAST "name", BAD_CAST str);
 }
 
 // append element with associated string
@@ -1222,7 +1141,6 @@ ProblemSpec::appendChild(ProblemSpecP pspec)
 void
 ProblemSpec::addStylesheet(char* type, char* name) 
 {
-#if 0
    ASSERT((strcmp(type, "css") == 0) || strcmp(type, "xsl") == 0);
 
    string str1 = "xml-stylesheet";
@@ -1233,14 +1151,13 @@ ProblemSpec::addStylesheet(char* type, char* name)
 
    xmlAddPrevSibling(xmlDocGetRootElement(d_node->doc),
                      xmlNewDocPI(d_node->doc, BAD_CAST str1.c_str(), BAD_CAST str2.c_str()));
-#endif
 }
 
 // filename is a default param (NULL)
 //   call with no parameters or NULL to output
 //   to stdout
 void
-ProblemSpec::output(char* filename) const 
+ProblemSpec::output(const char* filename) const 
 {
   if (filename) {
     xmlSaveFormatFileEnc(filename, d_node->doc, "UTF-8", 1);
@@ -1279,185 +1196,3 @@ ProblemSpec::createDocument(const string& name)
   return scinew ProblemSpec(node);
 }
 
-#if 0
-
-void
-outputContent(ostream& target, const char *chars /**to_write*/)
-{
-  //const char* chars = strdup(to_char_ptr(to_write));
-  unsigned int len = chars?(unsigned)strlen(chars):0;
-  for (unsigned int index = 0; index < len; index++) {
-    switch (chars[index]) {
-    case chAmpersand :
-      target << "&amp;";
-      break;
-
-    case chOpenAngle :
-      target << "&lt;";
-      break;
-
-    case chCloseAngle:
-      target << "&gt;";
-      break;
-
-    case chDoubleQuote :
-      target << "&quot;";
-      break;
-
-    default:
-      // If it is none of the special characters, print it as such
-      target << chars[index];
-      break;
-    }
-  }
-  delete[] chars;
-}
-
-namespace Uintah {
-  ostream&
-  operator<<(ostream& out, ProblemSpecP pspec)
-  {
-    out << *(pspec->getNode()->doc);
-    return out;
-  }
-  
-}
-
-
-ostream&
-operator<<(ostream& target, const xmlNode& toWrite) 
-{
-  // Get the name and value out for convenience
-  const char *nodeName = XMLString::transcode(toWrite.name);
-  const char *nodeValue = XMLString::transcode(toWrite.children->content);
-
-  // nodeValue will be sometimes be deleted in outputContent, but
-  // will not always call outputContent
-  bool valueDeleted = false;
-
-  switch (toWrite.type) {
-  case XML_TEXT_NODE:
-    {
-      outputContent(target, nodeValue);
-      valueDeleted = true;
-      break;
-    }
-
-  case XML_PI_NODE :
-    {
-      target  << "<?"
-              << nodeName
-              << ' '
-              << nodeValue
-              << "?>";
-      break;
-    }
-
-  case XML_DOCUMENT_NODE :
-    {
-      // Bug here:  we need to find a way to get the encoding name
-      //   for the default code page on the system where the
-      //   program is running, and plug that in for the encoding
-      //   name.
-      //MLCh *enc_name = XMLPlatformUtils::fgTransService->getEncodingName();
-      target << "<?xml version='1.0' encoding='ISO-8859-1' ?>\n";
-
-      xmlNode *brother = toWrite.next;
-      while(brother != 0)
-        {
-          target << *brother << endl;
-          brother = brother->next;
-        }
-
-      xmlNode *child = toWrite.children;
-      while(child != 0)
-        {
-          target << *child << endl;
-          child = child->next;
-        }
-
-      break;
-    }
-
-  case XML_ELEMENT_NODE :
-    {
-      // Output the element start tag.
-      target << '<' << nodeName;
-
-      // Output any attributes on this element
-      DOMNamedNodeMap *attributes = toWrite.getAttributes();
-      int attrCount = static_cast<int>(attributes->getLength());
-      for (int i = 0; i < attrCount; i++) {
-        xmlNode  *attribute = attributes->item(i);
-        char* attrName = XMLString::transcode(attribute->name);
-        target  << ' ' << attrName
-                << " = \"";
-        //  Note that "<" must be escaped in attribute values.
-        outputContent(target, XMLString::transcode(attribute->getNodeValue(\
-                                                                           )));
-        target << '"';
-        delete [] attrName;
-      }
-
-      //  Test for the presence of children, which includes both
-      //  text content and nested elements.
-      xmlNode *child = toWrite.children;
-      if (child != 0) {
-        // There are children. Close start-tag, and output children.
-        target << ">";
-        while(child != 0) {
-          target << *child;
-          child = child->next;
-        }
-
-        // Done with children.  Output the end tag.
-        target << "</" << nodeName << ">";
-      } else {
-        //  There were no children.  Output the short form close of the
-        //  element start tag, making it an empty-element tag.
-        target << "/>";
-      }
-      break;
-    }
-
-  case XML_ENTITY_REF_NODE:
-    {
-      xmlNode *child;
-      for (child = toWrite.children; child != 0;
-           child = child->next)
-        target << *child;
-      break;
-    }
-
-  case XML_CDATA_SECTION_NODE:
-    {
-      target << "<![CDATA[" << nodeValue << "]]>";
-      break;
-    }
-
-  case XML_COMMENT_NODE:
-    {
-      target << "<!--" << nodeValue << "-->";
-      break;
-    }
-
-  default:
-    cerr << "Unrecognized node type = "
-         << (long)toWrite.type << endl;
-  }
-
-  delete [] nodeName;
-  if (!valueDeleted)
-    delete [] nodeValue;
-  return target;
-}
-
-ostream&
-operator<<(ostream& target, const DOMText& toWrite) {
-  const char *p = XMLString::transcode(toWrite.getData());
-  target << p;
-  delete [] p;
-  return target;
-}
-
-#endif

@@ -43,7 +43,7 @@ else
         Packages/Uintah/CCA/Components/PatchCombiner
 endif
 
-LIBS := $(XML_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
         $(CANTERA_LIBRARY) \
         $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 

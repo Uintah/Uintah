@@ -29,6 +29,6 @@ PSELIBS := \
 	Packages/Uintah/CCA/Components/Solvers \
 	Packages/Uintah/CCA/Components/SwitchingCriteria
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

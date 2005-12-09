@@ -16,7 +16,7 @@ PSELIBS := \
 	Core/XMLUtil \
 	Core/Exceptions
 
-LIBS 	:= $(XML_LIBRARY)
+LIBS 	:= $(XML2_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
@@ -34,7 +34,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 #	Packages/Uintah/Core/ProblemSpec \
 #	Packages/Uintah/CCA/Components/ProblemSpecification \
 #endif
-#LIBS 	:= $(XML_LIBRARY)
+#LIBS 	:= $(XML2_LIBRARY)
 #include $(SCIRUN_SCRIPTS)/program.mk
 
 
