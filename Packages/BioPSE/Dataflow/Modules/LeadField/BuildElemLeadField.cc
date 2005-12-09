@@ -179,7 +179,7 @@ void BuildElemLeadField::execute() {
       }
     counter++;
   }
-  leadfield_=leadfield_mat;
+  leadfield_ = leadfield_mat;
   leadfield_oport->send(leadfield_);
 } 
 } // End namespace BioPSE

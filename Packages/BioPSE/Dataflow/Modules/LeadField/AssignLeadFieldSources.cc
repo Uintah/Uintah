@@ -201,10 +201,15 @@ AssignLeadFieldSources::execute()
   for (unsigned int ui=0; ui<nsize; ui++) 
     ofield2->fdata()[ui]=node_sums[ui]/node_refs[ui];
 
-  ofp->send(FieldHandle(ofield));
-  ofp2->send(FieldHandle(ofield2));
-  ofp3->send(FieldHandle(pc));
-  ofp4->send(FieldHandle(pc2));
+  FieldHandle ofieldh(ofield);
+  ofp->send_and_dereference(ofieldh);
+  FieldHandle ofield2h(ofield2);
+  ofp2->send_and_dereference(ofield2h);
+  FieldHandle pch(pc);
+  ofp3->send_and_dereference(pch);
+  FieldHandle pc2h(pc2);
+  ofp4->send_and_dereference(pc2h);
 }
+
 } // End namespace BioPSE
 
