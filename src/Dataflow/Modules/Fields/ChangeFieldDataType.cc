@@ -66,7 +66,7 @@ public:
   FieldHandle           outputfield_;
 };
 
-DECLARE_MAKER(ChangeFieldDataType);
+DECLARE_MAKER(ChangeFieldDataType)
 
 ChangeFieldDataType::ChangeFieldDataType(GuiContext* ctx)
   : Module("ChangeFieldDataType", ctx, Filter, "FieldsData", "SCIRun"),
