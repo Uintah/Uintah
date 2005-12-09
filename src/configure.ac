@@ -396,13 +396,6 @@ SCI_ARG_WITH(xalan,
    sci_required_xalan=yes],
   [with_xalan=""])
 
-SCI_ARG_WITH(xerces,
-  AC_HELP_STRING(--with-xerces=DIR,
-                 Use the xerces installation in DIR),
-  [with_xerces="$withval"
-   sci_required_xerces=yes],
-  [with_xerces=""])
-
 SCI_ARG_WITH(libxml2,
   AC_HELP_STRING(--with-libxml2=DIR,
                  Use the libxml2 installation in DIR),
@@ -2400,47 +2393,16 @@ AC_SUBST(TK_VERSION)
 
 AC_SUBST(ITCL_WIDGETS)
 
-##  --  search for xerces-c++ --
-if test "$sci_required_xercesc" = "yes"; then
-  if test "$with_xerces"; then
-    _xer_lib_path="$with_xerces/lib"
-    _xer_inc="$with_xerces/include"
-  else
-    _xer_lib_path="$sci_thirdparty_lib"
-    _xer_inc="$sci_thirdparty_include"
-  fi
-
-  _xer_lib="xerces-c"
-#case $host in
-#  *aix*)
-      # Needed on blue pacific for stricmp
-#      _xer_lib="xerces-c cfgdce"
-#      ;;
-#esac
-
-  SCI_TRY_LINK(XERCES_C,xerces library and headers, xercesc/dom/DOMNamedNodeMap.hpp xercesc/util/PlatformUtils.hpp xercesc/parsers/XercesDOMParser.hpp xercesc/dom/DOMNode.hpp xercesc/util/XMLUni.hpp xercesc/sax/SAXException.hpp xercesc/sax/SAXParseException.hpp xercesc/sax/ErrorHandler.hpp,$_xer_inc,$_xer_lib,$_xer_lib_path,,[
-    DOMNode *node = 0;
-    node->getNodeName();
-  ],required)
-  
-  SCI_SUBST_THIRDPARTY_DIR(XERCES_C_LIB_DIR_FLAG)
-  SCI_SUBST_THIRDPARTY_DIR(INC_XERCES_C_H)
-
-  AC_SUBST(XERCES_C_LIB_FLAG)
-  AC_SUBST(XERCES_C_LIB_DIR_FLAG)
-  AC_SUBST(INC_XERCESC_H)
-fi
-
 ##  --  search for libxml2 --
 _sci_optional=required
+
 if test "$with_libxml2"; then
-   #FIX_ME MC these should be set from the defaults in a source compilation of the package
   _xml2_lib_path="$with_libxml2/lib"
   _xml2_inc="$with_libxml2/include/libxml2"
   _sci_optional=specific
 else
-  _xml2_lib_path=/usr/lib
-  _xml2_inc="/usr/include/libxml2"
+  _xml2_lib_path="$sci_thirdparty_lib"
+  _xml2_inc="$sci_thirdparty_include/libxml2"
 fi
 
 _xml2_lib="xml2"
