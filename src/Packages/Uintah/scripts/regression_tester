@@ -18,7 +18,7 @@ hostname_inf=`uname -n | grep inf`
 
 if test "$hostname" = "$hostname_inf";
     then
-    test_dir=/usr/sci/projects/Uintah/tester/Linux-TestData
+    test_dir=/home/csafe/csafe-tester/Linux/TestData
     lamboot;
 else
     if test ! -d $test_dir/dbg
