@@ -63,15 +63,6 @@
 #include <sci_defs/ieeefp_defs.h>
 #include <sci_defs/hypre_defs.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#define IRIX
-#pragma set woff 1375
-#endif
-#include <xercesc/util/PlatformUtils.hpp>
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1375
-#endif
-
 #ifdef USE_VAMPIR
 #include <Packages/Uintah/Core/Parallel/Vampir.h>
 #endif
@@ -632,8 +623,6 @@ main( int argc, char** argv )
     thrownException = true;
   }
   
-  // Shutdown XML crap
-  XMLPlatformUtils::Terminate();
   Uintah::TypeDescription::deleteAll();
   
   /*
