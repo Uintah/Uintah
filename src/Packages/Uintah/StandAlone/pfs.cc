@@ -17,9 +17,6 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <xercesc/dom/DOMException.hpp> 
-
-
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
@@ -226,8 +223,6 @@ main(int argc, char *argv[])
     cerr << "Caught exception: " << e.message() << '\n';
     if(e.stackTrace())
       cerr << "Stack trace: " << e.stackTrace() << '\n';
-  } catch (DOMException& e){
-    cerr << "Caught Xerces DOM exception, code: " << e.code << '\n';
   } catch(...){
     cerr << "Caught unknown exception\n";
   }
