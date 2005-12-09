@@ -114,7 +114,7 @@ ExtractSingleSurface::execute()
   //	 cerr <<"  "<<i<<"  "<<ts->bcVal[i]<<"  "<<ts->points[ts->bcIdx[i]]<<"\n";
 
   FieldHandle sh2(qsf);
-  ofp->send(sh2);
+  ofp->send_and_dereference(sh2);
 }    
 
 } // End namespace BioPSE
