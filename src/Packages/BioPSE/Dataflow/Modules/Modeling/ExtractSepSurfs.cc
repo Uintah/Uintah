@@ -620,7 +620,7 @@ void ExtractSepSurfs::execute()
   SepSurf *surf = new SepSurf(qsmH);
   buildSurfs(*slvf, *surf);
   FieldHandle fH(surf);
-  ofp->send(fH);
+  ofp->send_and_dereference(fH);
 }
 
 } // End namespace BioPSE

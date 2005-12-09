@@ -440,11 +440,12 @@ ModifyConductivities::execute()
 
   // Forward the matrix results.
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-  omp->send(omatrix);
+  MatrixHandle omatrix_handle(omatrix);
+  omp->send_and_dereference(omatrix_handle);
 
   // Forward the field results.
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  ofp->send(field);
+  ofp->send_and_dereference(field);
 }
 
 

@@ -123,7 +123,7 @@ SegFieldToLatVol::execute()
     return;
   }
   FieldHandle lvfH(lvf);
-  ofp->send(lvfH);
+  ofp->send_and_dereference(lvfH);
 }
 } // End namespace BioPSE
 

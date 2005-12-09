@@ -407,7 +407,9 @@ void SmoothSepSurf::execute()
     osurf->send(sh2);
 }
 
-void SmoothSepSurf::tcl_command(TCLArgs& args, void* userdata)
+
+void
+SmoothSepSurf::tcl_command(TCLArgs& args, void* userdata)
 {
     if(args.count() < 2){
 	args.error("SmoothSepSurf needs a minor command");
@@ -437,58 +439,5 @@ void SmoothSepSurf::tcl_command(TCLArgs& args, void* userdata)
 }
 
 } // End namespace Modules
+
 } // End namespace DaveW
-
-
-//
-// $Log$
-// Revision 1.2  2004/05/20 16:27:19  darbyb
-// Changed license.  In the case where there was no license, added it.  I have compiled SCIRun, BioPSE, Teem and MatlabInterface.  I wasn't able to compile and check the doc stuff though. I will be doing Insight, DataIO, and Fusion later today.
-//
-// Revision 1.1  2003/03/06 07:42:52  dmw
-// - Adding segmentation processing modules into BioPSE
-//
-// Revision 1.10  2000/10/29 04:02:46  dmw
-// cleaning up DaveW tree
-//
-// Revision 1.9  2000/03/17 09:25:35  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.8  2000/02/02 21:53:59  dmw
-// Makefile, index - added new modules and removed no-longer-used
-// libraries
-// Radiosity - fixed 64-bit include guards
-// EEG/Makefile.in - removed InvEEGSolve from Makefile
-// SmoothSepSurf - constrained relaxation
-// ErrorMetrix - no idea
-// all others are just new modules
-//
-// Revision 1.7  1999/12/09 00:05:24  dmw
-// new modules
-//
-// Revision 1.6  1999/12/07 02:55:56  dmw
-// added constrained surface smoothing for SmoothSepSurf, fixed ErrorMetric.tcl to work with new bltGraph, and fixed a bug in VDTtoMesh converter
-//
-// Revision 1.5  1999/11/17 00:32:01  dmw
-// fixed a bug in SmoothSepSurf (nrows has to equal ncols) and added a flag to STreeExtractSurf so the node numbers dont change
-//
-// Revision 1.4  1999/10/07 02:06:29  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:25  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/25 03:47:39  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/24 06:23:03  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:14  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
