@@ -3,7 +3,6 @@
 SRCDIR   := Packages/Uintah/CCA/Components/ICE/CustomBCs
 
 SRCS     += $(SRCDIR)/C_BC_driver.cc \
-       $(SRCDIR)/NG_NozzleBCs.cc \
        $(SRCDIR)/microSlipBCs.cc \
        $(SRCDIR)/LODI2.cc\
        $(SRCDIR)/MMS_BCs.cc

@@ -1340,11 +1340,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
         int index = mpm_matl->getDWIndex();
         ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
         setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
-        //__________________________________
-        //  hardwiring for Northrup Grumman nozzle   
-        #define SerialMPM_1
-        #include "../MPMICE/NGC_nozzle.i"
-        #undef SerialMPM_1
       }
 
     }

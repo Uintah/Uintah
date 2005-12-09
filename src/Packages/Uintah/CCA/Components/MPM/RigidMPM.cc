@@ -407,13 +407,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       
       
       //__________________________________
-      //  hardwiring for Northrup Grumman nozzle
-      #define RigidMPM_1
-      #include "../MPMICE/NGC_nozzle.i"
-      #undef RigidMPM_1
-      
-      
-      //__________________________________
       //  particle debugging label-- carry forward
       if (flags->d_with_color) {
         constParticleVariable<double> pColor;
