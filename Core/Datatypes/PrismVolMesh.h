@@ -995,7 +995,22 @@ protected:
 
   unsigned int		     synchronized_;
   Basis                      basis_;
-};
+
+  // BEGIN HACK:  These 'hack' variables where put in to allow the SGI
+  // to compile the constructor for the 'all_edges_' variable.  For
+  // some reason, the linux/mac (gnu) compilers were ok with what
+  // looked like an incorrect specification of the constructor (i.e.,
+  // using the integer constant '100' as the first parameter).  I
+  // tried to place 'just the type' as the first parameter for the
+  // constructor, but this did not work.  Eventually I had to create
+  // these variables and pass them in to get it to take.  DO NOT USE
+  // THESE VARIABLES for anything but the constructors that they are in.
+  //
+  typename Edge::index_type      hack_eit; // THESE 2 VARIABLE ONLY USED FOR
+  std::allocator< typename Edge::index_type > hack_eit_alloc;   // THEIR TYPES.
+  // END HACK
+
+}; // end class PrismVolMesh
 
 
 template <class Basis>
@@ -1077,8 +1092,8 @@ PrismVolMesh<Basis>::PrismVolMesh() :
   edges_(edge_hasher_),
 #else
   edge_comp_(cells_),
-  all_edges_(100,edge_hasher_,edge_comp_),
-  edges_(100,edge_hasher_,edge_comp_),
+  all_edges_(hack_eit,edge_hasher_,edge_comp_,hack_eit_alloc),
+  edges_(hack_eit,edge_hasher_,edge_comp_,hack_eit_alloc),
 #endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_edges_(edge_comp_),
@@ -1095,8 +1110,8 @@ PrismVolMesh<Basis>::PrismVolMesh() :
   faces_(face_hasher_),
 #else
   face_comp_(cells_),
-  all_faces_(100,face_hasher_,face_comp_),
-  faces_(100,face_hasher_,face_comp_),
+  all_faces_(hack_eit,face_hasher_,face_comp_, hack_eit_alloc),
+  faces_(hack_eit,face_hasher_,face_comp_,hack_eit_alloc),
 #endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_faces_(face_comp_),
@@ -1127,8 +1142,8 @@ PrismVolMesh<Basis>::PrismVolMesh(const PrismVolMesh &copy):
   edges_(edge_hasher_),
 #else
   edge_comp_(cells_),
-  all_edges_(100,edge_hasher_,edge_comp_),
-  edges_(100,edge_hasher_,edge_comp_),
+  all_edges_(hack_eit,edge_hasher_,edge_comp_,hack_eit_alloc),
+  edges_(hack_eit,edge_hasher_,edge_comp_,hack_eit_alloc),
 #endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_edges_(edge_comp_),
@@ -1144,8 +1159,8 @@ PrismVolMesh<Basis>::PrismVolMesh(const PrismVolMesh &copy):
   faces_(face_hasher_),
 #else
   face_comp_(cells_),
-  all_faces_(100,face_hasher_,face_comp_),
-  faces_(100,face_hasher_,face_comp_),
+  all_faces_(hack_eit,face_hasher_,face_comp_,hack_eit_alloc),
+  faces_(hack_eit,face_hasher_,face_comp_,hack_eit_alloc),
 #endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_faces_(face_comp_),

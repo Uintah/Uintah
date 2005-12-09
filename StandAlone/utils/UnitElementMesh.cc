@@ -57,6 +57,14 @@ using std::endl;
 
 using namespace SCIRun;
 
+// !!!WARNING!!! The 'test_vector' is not (and SHOULD NOT be) used.
+// It is here so that on the SGI, a vector of vector of Point will be
+// instantiated and the compilation will go through... otherwise, the
+// compiler can't find it (while deep in template instantiation code)
+// and throws an error.  This most likely could (and should) be
+// wrapped in #if SGI but that will have to wait until later.
+vector< vector< SCIRun::Point > > test_vector;
+
 template<typename MESH, typename FBASIS>
 void create_unit_element_mesh()
 {
