@@ -77,8 +77,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
 
   bool write_par_file(string filename);
@@ -217,14 +215,13 @@ send_result_file(MatrixOPort *positions_port, MatrixOPort *moments_port,
   matstream >> tmp >> px >> py >> pz;
 
   // write dipole position to DenseMatrix
-  DenseMatrix *dm_pos = scinew DenseMatrix(pos,3);
+  MatrixHandle dm_pos = scinew DenseMatrix(pos,3);
 
-  (*dm_pos)[0][0] = px;
-  (*dm_pos)[0][1] = py;
-  (*dm_pos)[0][2] = pz;
+  dm_pos->put(0, 0, px);
+  dm_pos->put(0, 1, py);
+  dm_pos->put(0, 2, pz);
 
-  MatrixHandle pos_handle(dm_pos);
-  positions_port->send(pos_handle);
+  positions_port->send_and_dereference(dm_pos);
 
   // Get dipople momnent
   getline(matstream, tmp);
@@ -256,7 +253,7 @@ send_result_file(MatrixOPort *positions_port, MatrixOPort *moments_port,
   }
 
   MatrixHandle vec_handle(dm_vec);
-  moments_port->send(vec_handle);
+  moments_port->send_and_dereference(vec_handle);
 	
   matstream.close();
  
@@ -631,11 +628,5 @@ InverseIPM::execute()
   }
 }
 
-
-void
-InverseIPM::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace SCIRun

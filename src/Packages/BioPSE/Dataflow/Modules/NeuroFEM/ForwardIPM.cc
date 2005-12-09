@@ -80,8 +80,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
 
   bool write_par_file(string filename);
@@ -626,8 +624,7 @@ send_result_file(ProgressReporter *pr, MatrixOPort *result_port,
   }
   pr->remark("Done building output matrix.");
   
-  result_port->send(dm);
-  
+  result_port->send_and_dereference(dm);
 
   return true;
 }
@@ -1017,11 +1014,5 @@ ForwardIPM::execute()
   }
 }
 
-
-void
-ForwardIPM::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace SCIRun
