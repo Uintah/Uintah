@@ -135,7 +135,7 @@ public:
 };
 
 
-DECLARE_MAKER(SetupFEMatrix);
+DECLARE_MAKER(SetupFEMatrix)
 
 
 SetupFEMatrix::SetupFEMatrix(GuiContext *context) : 
