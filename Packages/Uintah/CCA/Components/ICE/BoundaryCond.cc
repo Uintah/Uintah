@@ -360,13 +360,6 @@ void setBC(CCVariable<double>& press_CC,
 						  mat_id,child);
                                           
         //__________________________________
-        //  hardwiring for NGC nozzle simulation
-        if (bc_kind == "Custom" && custom_BC_basket->setNGBcs) {
-          setNGC_Nozzle_BC<CCVariable<double>,double>
-          (patch, face, press_CC, "Pressure", "CC",
-           bound, bc_kind,mat_id, child, sharedState,custom_BC_basket->ng);
-        }
-        //__________________________________
         //  method of manufactured solutions
         if (bc_kind == "MMS_1" && custom_BC_basket->set_MMS_BCs) {
           set_MMS_press_BC(patch, face, press_CC, bound,  bc_kind,
@@ -532,16 +525,6 @@ void setBC(CCVariable<double>& var_CC,
         // Apply the boundary condition
         IveSetBC =  setNeumanDirichletBC<double>
 	  (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx,mat_id,child);
-         
-        //__________________________________
-        //  hardwiring for NGC nozzle simulation   
-        if ( (desc == "Temperature" || desc == "Density") && 
-              bc_kind == "Custom" && custom_BC_basket->setLodiBcs) {
-          setNGC_Nozzle_BC<CCVariable<double>,double>
-                (patch, face, var_CC, desc,"CC", bound, 
-                 bc_kind,mat_id, child, sharedState, 
-                 custom_BC_basket->ng);
-        }
         
         if ( desc == "Temperature" &&custom_BC_basket->setMicroSlipBcs) {
           set_MicroSlipTemperature_BC(patch,face,var_CC,
@@ -648,12 +631,6 @@ void setBC(CCVariable<Vector>& var_CC,
 						mat_id,child);
         //__________________________________
         //  Custom Boundary Conditions
-        if ( custom_BC_basket->setLodiBcs) {
-          setNGCVelocity_BC(patch,face,var_CC,desc,
-                            bound, bc_kind,  mat_id, child, sharedState,
-                            custom_BC_basket->ng);
-        }
-        
         if ( custom_BC_basket->setMicroSlipBcs) {
           set_MicroSlipVelocity_BC(patch,face,var_CC,desc,
                             bound, bc_kind, bc_value,
@@ -878,7 +855,6 @@ void setBC(CCVariable<double>& var,
   constCCVariable<double> placeHolder;
   
   basket->setLodiBcs      = false;
-  basket->setNGBcs        = false;
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
   
@@ -901,7 +877,6 @@ void setBC(CCVariable<double>& press_CC,
          
   customBC_var_basket* basket  = scinew customBC_var_basket();
   basket->setLodiBcs      = false;
-  basket->setNGBcs        = false;
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
   
@@ -920,7 +895,6 @@ void setBC(CCVariable<Vector>& variable,
 { 
   customBC_var_basket* basket  = scinew customBC_var_basket();
   basket->setLodiBcs      = false;
-  basket->setNGBcs        = false;
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
    
