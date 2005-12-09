@@ -59,9 +59,9 @@
 #include <sgi_stl_warnings_off.h>
 #include   <vector>
 #include   <set>
-#include   <cmath>
 #include <sgi_stl_warnings_on.h>
 
+#include <math.h>
 #include <float.h> // for DBL_MAX
 
 namespace SCIRun {
@@ -219,7 +219,7 @@ public:
 	const int n1 = cells_[e.second] & mask;
 	return Min(n0, n1) << size | Max(n0, n1);
       }
-#ifdef __ECC
+# ifdef __ECC
 
       // These are particularly needed by ICC's hash stuff
       static const size_t bucket_size = 4;
@@ -229,18 +229,18 @@ public:
       bool operator()(index_type ei1, index_type ei2) const {
         return lessEdge::lessthen(cells_, ei1, ei2);
       }
-#endif // endif ifdef __ICC
+# endif // endif ifdef __ICC
     };   
 
-#ifdef __ECC
+# ifdef __ECC
     // The comparator function needs to be a member of CellEdgeHasher
     typedef hash_multiset<index_type, CellEdgeHasher> HalfEdgeSet;
     typedef hash_set<index_type, CellEdgeHasher> EdgeSet;
-#else
+# else
     typedef eqEdge EdgeComparitor;
     typedef hash_multiset<index_type, CellEdgeHasher, EdgeComparitor> HalfEdgeSet;
     typedef hash_set<index_type, CellEdgeHasher, EdgeComparitor> EdgeSet;
-#endif // end ifdef __ECC
+# endif // end ifdef __ECC
 #else // ifdef HAVE_HASH_SET
     typedef lessEdge EdgeComparitor;
     typedef multiset<index_type, EdgeComparitor> HalfEdgeSet;
@@ -283,7 +283,7 @@ public:
 		Mid(f1_n0, f1_n1, f1_n2) == Mid(f2_n0, f2_n1, f2_n2) &&
 		Min(f1_n0, f1_n1, f1_n2) == Min(f2_n0, f2_n1, f2_n2));
       }
-    };
+    }; // end struct TetVolMesh::Face::eqFace
     
     struct lessFace : public binary_function<index_type, index_type, bool>
     {
@@ -321,7 +321,7 @@ public:
       {
         return lessthen(cells_, fi1, fi2);
       }
-    };
+    }; // end struct TetVolMesh::Face::lessFace
     
 #ifdef HAVE_HASH_SET
     struct CellFaceHasher: public unary_function<size_t, index_type>
@@ -343,7 +343,7 @@ public:
 	return Min(n0,n1,n2)<<size*2 | Mid(n0,n1,n2)<<size | Max(n0,n1,n2);
       }
 
-#ifdef __ECC
+# ifdef __ECC
 
       // These are particularly needed by ICC's hash stuff
       static const size_t bucket_size = 4;
@@ -353,19 +353,19 @@ public:
       bool operator()(index_type fi1, index_type fi2) const {
         return lessFace::lessthen(cells_, fi1, fi2);
       }
-#endif // endif ifdef __ICC
+# endif // __ICC
 
-    };
+    }; // end struct TetVolMesh::Face::CellFaceHasher
 
-#ifdef __ECC
+# ifdef __ECC
     // The comparator function needs to be a member of CellFaceHasher
     typedef hash_multiset<index_type, CellFaceHasher> HalfFaceSet;
     typedef hash_set<index_type, CellFaceHasher> FaceSet;
-#else
+# else
     typedef eqFace FaceComparitor;
     typedef hash_multiset<index_type, CellFaceHasher,FaceComparitor> HalfFaceSet;
     typedef hash_set<index_type, CellFaceHasher, FaceComparitor> FaceSet;
-#endif // end ifdef __ECC
+# endif // end ifdef __ECC
 #else // ifdef HAVE_HASH_SET
     typedef lessFace FaceComparitor;
     typedef multiset<index_type, FaceComparitor> HalfFaceSet;
@@ -374,12 +374,11 @@ public:
     typedef typename FaceSet::iterator		iterator;
     typedef FaceIndex<under_type>               size_type;
     typedef vector<index_type>                  array_type;
-  };					
+  }; // end struct TetVolMesh::Face;
   
 
   typedef Cell Elem;
   enum { ELEMENTS_E = CELLS_E };
-
 
 
   friend class ElemData;
@@ -457,7 +456,7 @@ public:
   private:
     const TetVolMesh<Basis>          &mesh_;
     const typename Cell::index_type  index_;
-   };
+  };  // end class TetVolMesh::ElemData
 
 
   TetVolMesh();
@@ -881,9 +880,9 @@ protected:
   typedef LockingHandle<typename Edge::EdgeSet> EdgeSetHandle;
 #ifdef HAVE_HASH_SET
   typename Edge::CellEdgeHasher	edge_hasher_;
-#ifndef __ECC
+# ifndef __ECC
   typename Edge::EdgeComparitor	edge_comp_;
-#endif
+# endif
 #else // ifdef HAVE_HASH_SET
   typename Edge::EdgeComparitor  edge_comp_;
 #endif
@@ -900,9 +899,9 @@ protected:
   typedef LockingHandle<typename Face::FaceSet> FaceSetHandle;
 #ifdef HAVE_HASH_SET
   typename Face::CellFaceHasher	face_hasher_;
-#ifndef __ECC
+# ifndef __ECC
   typename Face::FaceComparitor  face_comp_;
-#endif
+# endif
 #else // ifdef HAVE_HASH_SET
   typename Face::FaceComparitor	face_comp_;
 #endif
@@ -932,7 +931,22 @@ protected:
 
   unsigned int		synchronized_;
   Basis                 basis_;
-};
+
+  // BEGIN HACK:  These 'hack' variables where put in to allow the SGI
+  // to compile the constructor for the 'all_edges_' variable.  For
+  // some reason, the linux/mac (gnu) compilers were ok with what
+  // looked like an incorrect specification of the constructor (i.e.,
+  // using the integer constant '100' as the first parameter).  I
+  // tried to place 'just the type' as the first parameter for the
+  // constructor, but this did not work.  Eventually I had to create
+  // these variables and pass them in to get it to take.  DO NOT USE
+  // THESE VARIABLES for anything but the constructors that they are in.
+  //
+  typename Edge::index_type      hack_eit; // THESE 2 VARIABLE ONLY USED FOR
+  std::allocator< typename Edge::index_type > hack_eit_alloc;   // THEIR TYPES.
+  // END HACK
+
+}; // end class TetVolMesh
 
 template <class Basis>
 template <class Iter, class Functor>
@@ -1014,8 +1028,12 @@ TetVolMesh<Basis>::TetVolMesh() :
   edges_(edge_hasher_),
 #  else
   edge_comp_(cells_),
-  all_edges_((int)100,edge_hasher_,edge_comp_),
-  edges_(100,edge_hasher_,edge_comp_),
+  all_edges_( hack_eit, //TetVolMesh::Edge::index_type,
+              edge_hasher_,
+              edge_comp_,
+              hack_eit_alloc
+            ),
+  edges_(hack_eit,edge_hasher_,edge_comp_,hack_eit_alloc),
 #  endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_edges_(edge_comp_),
@@ -1027,14 +1045,14 @@ TetVolMesh<Basis>::TetVolMesh() :
   //! Unique Faces
 #ifdef HAVE_HASH_SET
   face_hasher_(cells_),
-#ifdef __ECC
+#  ifdef __ECC
   all_faces_(face_hasher_),
   faces_(face_hasher_),
-#else
+#  else
   face_comp_(cells_),
-  all_faces_(100,face_hasher_,face_comp_),
-  faces_(100,face_hasher_,face_comp_),
-#endif // ifdef __ECC
+  all_faces_(hack_eit,face_hasher_,face_comp_, hack_eit_alloc),
+  faces_(hack_eit,face_hasher_,face_comp_,hack_eit_alloc),
+#  endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_faces_(face_comp_),
   faces_(face_comp_),
@@ -1059,14 +1077,14 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   cells_lock_("TetVolMesh cells_ fill lock"),
 #ifdef HAVE_HASH_SET
   edge_hasher_(cells_),
-#ifdef __ECC
+#  ifdef __ECC
   all_edges_(edge_hasher_),
   edges_(edge_hasher_),
-#else
+#  else
   edge_comp_(cells_),
-  all_edges_(100,edge_hasher_,edge_comp_),
-  edges_(100,edge_hasher_,edge_comp_),
-#endif // ifdef __ECC
+  all_edges_(hack_eit,edge_hasher_,edge_comp_,hack_eit_alloc),
+  edges_(hack_eit,edge_hasher_,edge_comp_, hack_eit_alloc),
+#  endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_edges_(edge_comp_),
   edges_(edge_comp_),
@@ -1076,14 +1094,14 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
 
 #ifdef HAVE_HASH_SET
   face_hasher_(cells_),
-#ifdef __ECC
+#  ifdef __ECC
   all_faces_(face_hasher_),
   faces_(face_hasher_),
-#else
+#  else
   face_comp_(cells_),
-  all_faces_(100,face_hasher_,face_comp_),
-  faces_(100,face_hasher_,face_comp_),
-#endif // ifdef __ECC
+  all_faces_(hack_eit,face_hasher_,face_comp_,hack_eit_alloc),
+  faces_(hack_eit,face_hasher_,face_comp_,hack_eit_alloc),
+#  endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_faces_(face_comp_),
   faces_(face_comp_),
@@ -2415,7 +2433,7 @@ TetVolMesh<Basis>::compute_grid()
   {
     // Cubed root of number of cells to get a subdivision ballpark.
     typename Cell::size_type csize;  size(csize);
-    const int s = (int)(ceil(std::pow((double)csize , (1.0/3.0)))) / 2 + 1;
+    const int s = (int)(ceil(pow((double)csize , (1.0/3.0)))) / 2 + 1;
     const Vector cell_epsilon = bb.diagonal() * (1.0e-4 / s);
     bb.extend(bb.min() - cell_epsilon*2);
     bb.extend(bb.max() + cell_epsilon*2);
@@ -3148,13 +3166,13 @@ TetVolMesh<Basis>::refine_elements(const typename Cell::array_type &cells,
 			    cell_2_cell_map_t &green_children)
 {
 #ifdef HAVE_HASH_MAP
-#ifdef __ECC
+#  ifdef __ECC
   typedef hash_multimap<typename Edge::index_type, typename Node::index_type, typename Edge::CellEdgeHasher>  HalfEdgeMap;
   HalfEdgeMap inserted_nodes(edge_hasher_);
-#else
+#  else
   typedef hash_multimap<typename Edge::index_type, typename Node::index_type, typename Edge::CellEdgeHasher, typename Edge::EdgeComparitor>  HalfEdgeMap;
   HalfEdgeMap inserted_nodes(100, edge_hasher_, edge_comp_);
-#endif // ifdef __ECC
+#  endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   typedef multimap<typename Edge::index_type, typename Node::index_type, typename Edge::EdgeComparitor>  HalfEdgeMap;
   HalfEdgeMap inserted_nodes(edge_comp_);

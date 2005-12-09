@@ -283,7 +283,10 @@ PackageDB::loadPackage(bool resolve)
     std::map<int,char*>* files;
     files = GetFilenamesEndingWith((char*)xmldir.c_str(),".xml");
 
-    if (!files) {
+    // WARNING... looks like the 'files' variable is memory leaked...
+    // both in the failure case directly below and in the success case.
+
+    if (!files || files->size() == 0) {
       printMessage("Unable to load package " + packageElt +
 		   ":\n - Couldn't find *.xml in " + xmldir );
       continue;

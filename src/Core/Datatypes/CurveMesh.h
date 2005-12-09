@@ -673,7 +673,7 @@ template <class Basis>
 void
 CurveMesh<Basis>::io(Piostream& stream)
 {
-  int version = stream.begin_class(type_name(), CURVE_MESH_VERSION);
+  int version = stream.begin_class(type_name(-1), CURVE_MESH_VERSION);
 
   Mesh::io(stream);
 
