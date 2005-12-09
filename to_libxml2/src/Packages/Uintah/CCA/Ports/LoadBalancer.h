@@ -10,7 +10,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 
-#include <xercesc/util/XMLURL.hpp>
+#include <string>
 
 namespace Uintah {
 
@@ -110,7 +110,7 @@ WARNING
     virtual int getNthProc() { return 1; }
 
     //! Tells the load balancer on which procs data was output.
-    virtual void restartInitialize(ProblemSpecP&, XMLURL /*tsurl*/, const GridP&) {}
+    virtual void restartInitialize(ProblemSpecP&, std::string file /*tsurl*/, const GridP&) {}
   private:
     LoadBalancer(const LoadBalancer&);
     LoadBalancer& operator=(const LoadBalancer&);

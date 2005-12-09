@@ -14,9 +14,6 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
 
-#include <xercesc/util/XMLString.hpp>
-#include <xercesc/util/XMLURL.hpp>
-
 #include <iostream> // debug only
 
 using namespace Uintah;
@@ -579,7 +576,7 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
     } 
 
 void
-DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl, const GridP& grid)
+DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const GridP& grid)
 {
   // here we need to grab the uda data to reassign patch data to the 
   // processor that will get the data
@@ -600,6 +597,9 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl, const 
   for (unsigned i = 0; i < d_processorAssignment.size(); i++)
     d_processorAssignment[i]= -1;
 
+  // strip off the timestep.xml
+  string dir = tsurl.substr(0, tsurl.find_last_of(',')+1);
+
   ASSERT(pspec != 0);
   ProblemSpecP datanode = pspec->findBlock("Data");
   if(datanode == 0)
@@ -616,12 +616,10 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl, const 
         if(datafile == "")
           throw InternalError("timestep href not found", __FILE__, __LINE__);
         
-        XMLURL dataurl(tsurl, datafile.c_str());
-        char* urltext = XMLString::transcode(dataurl.getURLText());
+        string dataxml = tsurl + datafile;
 
         // open the datafiles
-        ProblemSpecReader psr(urltext);
-        delete [] urltext;
+        ProblemSpecReader psr(dataxml);
 
         ProblemSpecP dataDoc = psr.readInputFile();
         if (!dataDoc)
