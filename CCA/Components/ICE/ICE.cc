@@ -189,9 +189,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
         read_MicroSlip_BC_inputs(prob_spec, d_customBC_var_basket->Slip_var_basket);
   d_customBC_var_basket->using_MMS_BCs =
         read_MMS_BC_inputs(prob_spec,       d_customBC_var_basket->mms_var_basket);    
-        
-  d_customBC_var_basket->usingNG_nozzle = using_NG_hack(prob_spec);
-  d_customBC_var_basket->dataArchiver   = dataArchiver;
   d_customBC_var_basket->sharedState    = sharedState;
 
   //__________________________________
@@ -4745,7 +4742,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
     /*`==========TESTING==========*/ 
     if(d_customBC_var_basket->usingLodi || 
-       d_customBC_var_basket->usingNG_nozzle ||
        d_customBC_var_basket->usingMicroSlipBCs){ 
       StaticArray<CCVariable<double> > temp_CC_Xchange(numALLMatls);
       StaticArray<CCVariable<Vector> > vel_CC_Xchange(numALLMatls);      
