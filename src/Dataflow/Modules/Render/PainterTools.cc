@@ -188,9 +188,7 @@ Painter::ProbeTool::ProbeTool(Painter *painter) :
 
 string *
 Painter::ProbeTool::mouse_button_press(MouseState &mouse) {
-  painter_->for_each(&Painter::set_probe);
-  painter_->redraw_all();
-  return 0;
+  return mouse_motion(mouse);
 }
 
 string *
@@ -203,6 +201,7 @@ string *
 Painter::ProbeTool::mouse_motion(MouseState &mouse) {
   painter_->for_each(&Painter::set_probe);
   painter_->redraw_all();
+  cerr << "prob emotions\n";
   return 0;
 }
 
@@ -284,6 +283,8 @@ Painter::CropTool::mouse_motion(MouseState &mouse) {
   const int p = painter_->x_axis(window);
   const int s = painter_->y_axis(window);
 
+  vector<int> max_slice = painter_->current_volume_->max_index();
+
   //  UIint *uimin[3] = { &crop_min_x_, &crop_min_y_, &crop_min_z_ };
   // UIint *uimax[3] = { &crop_min_x_, &crop_min_y_, &crop_min_z_ };
   int uiminpad[3] = {0,0,0}; //{crop_min_pad_x_(), crop_min_pad_y_(), crop_min_pad_z_()};
@@ -325,10 +326,10 @@ Painter::CropTool::mouse_motion(MouseState &mouse) {
       crop_delta_x[p] = -min(p)-uiminpad[p];
     if (min(s)+crop_delta_y[s] < -uiminpad[s])
       crop_delta_y[s] = -min(s)-uiminpad[s];
-    if (max(p)+crop_delta_x[p] > (painter_->max_slice_[p]+uimaxpad[p]+1.0))
-      crop_delta_x[p] = (painter_->max_slice_[p]+uimaxpad[p]+1.0)-max(p);
-    if (max(s)+crop_delta_y[s] > (painter_->max_slice_[s]+uimaxpad[s]+1.0))
-      crop_delta_y[s] = (painter_->max_slice_[s]+uimaxpad[s]+1.0)-max(s);
+    if (max(p)+crop_delta_x[p] > (max_slice[p]+uimaxpad[p]+1.0))
+      crop_delta_x[p] = (max_slice[p]+uimaxpad[p]+1.0)-max(p);
+    if (max(s)+crop_delta_y[s] > (max_slice[s]+uimaxpad[s]+1.0))
+      crop_delta_y[s] = (max_slice[s]+uimaxpad[s]+1.0)-max(s);
 
     min += crop_delta_x;
     min += crop_delta_y; 
@@ -354,8 +355,8 @@ Painter::CropTool::mouse_motion(MouseState &mouse) {
     if (min(i) < -uiminpad[i]) {
       min(i) = -uiminpad[i];
     }
-    if (max(i) > (painter_->max_slice_[i]+uimaxpad[i]+1.0)) 
-      max(i) = (painter_->max_slice_[i]+uimaxpad[i]+1.0);    
+    if (max(i) > (max_slice[i]+uimaxpad[i]+1.0)) 
+      max(i) = (max_slice[i]+uimaxpad[i]+1.0);    
   }
 
   for (i = 0; i < 3; ++i)
@@ -405,17 +406,19 @@ Painter::CropTool::draw(SliceWindow &window) {
   int p = painter_->x_axis(window);
   int s = painter_->y_axis(window);
   
+  Vector scale = painter_->current_volume_->scale();
+
   double ll[3], ur[3], lr[3], ul[3], upper[3], lower[3], left[3], right[3];
-  ll[0] = draw_bbox_.min().x()*painter_->scale_[0];
-  ll[1] = draw_bbox_.min().y()*painter_->scale_[1];
-  ll[2] = draw_bbox_.min().z()*painter_->scale_[2];
+  ll[0] = draw_bbox_.min().x()*scale[0];
+  ll[1] = draw_bbox_.min().y()*scale[1];
+  ll[2] = draw_bbox_.min().z()*scale[2];
 
-  ur[0] = draw_bbox_.max().x()*painter_->scale_[0];
-  ur[1] = draw_bbox_.max().y()*painter_->scale_[1];
-  ur[2] = draw_bbox_.max().z()*painter_->scale_[2];
+  ur[0] = draw_bbox_.max().x()*scale[0];
+  ur[1] = draw_bbox_.max().y()*scale[1];
+  ur[2] = draw_bbox_.max().z()*scale[2];
 
-  ll[axis] = int(window.slice_num_)*painter_->scale_[axis];
-  ur[axis] = int(window.slice_num_)*painter_->scale_[axis];
+  ll[axis] = int(window.slice_num_)*scale[axis];
+  ur[axis] = int(window.slice_num_)*scale[axis];
   int i;
   for (i = 0; i < 3; ++i) {
     lr[i] = p==i?ur[i]:ll[i];
@@ -571,17 +574,19 @@ Painter::CropTool::compute_crop_pick_boxes(SliceWindow &window)
   int p = painter_->x_axis(window);
   int s = painter_->y_axis(window);
   
+  Vector scale = painter_->current_volume_->scale();
+
   Point ll, ur, lr, ul;
-  ll(0) = draw_bbox_.min().x()*painter_->scale_[0];
-  ll(1) = draw_bbox_.min().y()*painter_->scale_[1];
-  ll(2) = draw_bbox_.min().z()*painter_->scale_[2];
+  ll(0) = draw_bbox_.min().x()*scale[0];
+  ll(1) = draw_bbox_.min().y()*scale[1];
+  ll(2) = draw_bbox_.min().z()*scale[2];
 
-  ur(0) = draw_bbox_.max().x()*painter_->scale_[0];
-  ur(1) = draw_bbox_.max().y()*painter_->scale_[1];
-  ur(2) = draw_bbox_.max().z()*painter_->scale_[2];
+  ur(0) = draw_bbox_.max().x()*scale[0];
+  ur(1) = draw_bbox_.max().y()*scale[1];
+  ur(2) = draw_bbox_.max().z()*scale[2];
 
-  ll(axis) = int(window.slice_num_)*painter_->scale_[axis];
-  ur(axis) = int(window.slice_num_)*painter_->scale_[axis];
+  ll(axis) = int(window.slice_num_)*scale[axis];
+  ur(axis) = int(window.slice_num_)*scale[axis];
   int i;
   for (i = 0; i < 3; ++i) {
     lr(i) = p==i?ur(i):ll(i);
@@ -683,10 +688,11 @@ Painter::CropTool::get_crop_vectors(SliceWindow &window, int pick)
   const int x_ax = painter_->x_axis(window);
   const int y_ax = painter_->y_axis(window);
   Vector x_delta(0.0, 0.0, 0.0), y_delta(0.0, 0.0, 0.0);
+  Vector scale = painter_->current_volume_->scale();
   if (pick != 6 && pick != 8)
-    x_delta[x_ax] = one/painter_->scale_[x_ax];
+    x_delta[x_ax] = one/scale[x_ax];
   if (pick != 5 && pick != 7)
-    y_delta[y_ax] = -one/painter_->scale_[y_ax];
+    y_delta[y_ax] = -one/scale[y_ax];
   
   return make_pair(x_delta, y_delta);
 }
@@ -713,6 +719,12 @@ Painter::FloodfillTool::mouse_button_press(MouseState &mouse)
     return scinew string("No window or current layer");
   
   if (mouse.button_ == 1) {
+    NrrdVolume *volume = painter_->current_volume_;
+    if (!volume) return 0;
+    
+    vector<int> index = volume->world_to_index(mouse.position_);
+    if (!volume->index_valid(index)) return 0;
+
     min_ = painter_->current_volume_->data_max_;
     max_ = painter_->current_volume_->data_min_;
     start_pos_ = mouse.position_;
@@ -722,25 +734,18 @@ Painter::FloodfillTool::mouse_button_press(MouseState &mouse)
 }
 
 
-struct less_than_Point
-{
-  bool operator()(const Point &p1, const Point &p2) const
-  {
-
-    bool val = ((p1.x() < p2.x()) || (p1.y() < p2.y()) || (p1.z() < p2.z()));
-    cerr << "Comparing: " << p1 << p2 << " = " << int(val) << std::endl;
-    return val;
-  }
-};
-
 string *
 Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
 {
   if (mouse.button_ != 1) return 0;
   vector<Point> todo;
-  for (int i = 0; i < 3; ++i)
-    start_pos_(i) = Floor(start_pos_(i));
-  todo.push_back(start_pos_);
+
+  NrrdVolume *volume = painter_->current_volume_;
+  vector<int> index = volume->world_to_index(start_pos_);
+  if (!volume->index_valid(index)) return 0;
+
+  Point pos(index[0], index[1], index[2]);
+  todo.push_back(pos);
 
   Nrrd *nrrd = painter_->current_volume_->nrrd_->nrrd;
   NrrdDataHandle done = new NrrdData();
@@ -761,10 +766,14 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
   int counter = 0;
   do {
     counter++;
-    Point pos = todo.back();
+    pos = todo.back();
     todo.pop_back();
+    index[0] = pos(0);
+    index[1] = pos(1);
+    index[2] = pos(2);
+
     painter_->set_value(done->nrrd, pos, 1.0);
-    painter_->set_value(nrrd, pos, value_);
+    volume->set_value(index, value_);
 
     for (unsigned int n = 0; n < neighbors.size(); ++n) {
       Point neighborpos = pos + neighbors[n];
@@ -784,8 +793,16 @@ Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
 string *
 Painter::FloodfillTool::mouse_motion(MouseState &mouse)
 {
-  double val =  painter_->get_value(painter_->current_volume_->nrrd_->nrrd, 
-                                    mouse.position_);
+  if (mouse.state_ & MouseState::BUTTON_1_E == 0 &&
+      mouse.state_ & MouseState::BUTTON_3_E) return 0;
+
+  NrrdVolume *volume = painter_->current_volume_;
+  if (!volume) return 0;
+
+  vector<int> index = volume->world_to_index(mouse.position_);
+  if (!volume->index_valid(index)) return 0;
+  double val;
+  volume->get_value(index, val);
 
   if (mouse.state_ & MouseState::BUTTON_1_E) {
     min_ = Min(min_, val);
@@ -844,18 +861,23 @@ Painter::PixelPaintTool::mouse_button_release(MouseState &mouse)
 string *
 Painter::PixelPaintTool::mouse_motion(MouseState &mouse)
 {
-  if (!painter_->current_volume_) return 0;
+  NrrdVolume *volume = painter_->current_volume_;
+  if (!volume) return 0;
 
   if (mouse.state_ & MouseState::BUTTON_1_E) {
-    painter_->set_value(painter_->current_volume_->nrrd_->nrrd, 
-                        mouse.position_, value_);
+    vector<int> index = 
+      volume->world_to_index(mouse.position_);
+    if (!volume->index_valid(index)) return 0;
+    volume->set_value(index, value_);
     painter_->for_each(&Painter::rebind_slice);
     painter_->redraw_all();
   }
 
   if (mouse.state_ & MouseState::BUTTON_3_E) {
-    value_ =  painter_->get_value(painter_->current_volume_->nrrd_->nrrd, 
-                                  mouse.position_);
+    vector<int> index = 
+      volume->world_to_index(mouse.position_);
+    if (!volume->index_valid(index)) return 0;
+    volume->get_value(index, value_);
   }
 
   return 0;

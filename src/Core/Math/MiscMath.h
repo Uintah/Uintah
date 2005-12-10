@@ -290,7 +290,7 @@ Pow2(const unsigned int dim) {
 // Returns a number Less Than or Equal to dim
 // that is an exact power of 2
 inline unsigned int
-LargestPowerOf22(const unsigned int dim) {
+LargestPowerOf2(const unsigned int dim) {
   if (IsPowerOf2(dim)) return dim;
   return Pow2(dim) >> 1;
 }

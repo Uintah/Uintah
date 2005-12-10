@@ -46,6 +46,8 @@
 #include <string>
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Geom/ColorMap.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
 namespace SCIRun {
 
@@ -60,12 +62,12 @@ public:
   ~ColorMappedNrrdTextureObj();
 
   void                  set_colormap(ColorMapHandle &cmap);
-  void                  set_data_minmax(float min, float max);
   void                  set_clut_minmax(float min, float max);
   void                  set_dirty();
-  void			draw_quad(float coords[]);
-  bool			bind();
+  void			draw_quad(Point &min, Vector &xdir, Vector &ydir);
+  bool                  dirty_p() { return dirty_; }
 private:
+  bool			bind(int x, int y);
   float *               apply_colormap();
   template <class T> 
   void			apply_colormap_to_raw_data(float *dst,
@@ -78,14 +80,12 @@ private:
   ColorMapHandle        colormap_;
   NrrdDataHandle	nrrd_;
   bool			dirty_;
-  //  vector<unsigned int>  texture_id_;
-  unsigned int		texture_id_;
-  float                 data_min_;
-  float                 data_max_;
+  vector<unsigned int>  texture_id_;
+  vector<pair<unsigned int, unsigned int> >  xdiv_;
+  vector<pair<unsigned int, unsigned int> >  ydiv_;
   float                 clut_min_;
   float                 clut_max_;
-  int                   wid_, hei_;
-
+  float *               data_;
 };
 
 }
