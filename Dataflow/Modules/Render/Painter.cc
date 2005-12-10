@@ -800,9 +800,10 @@ Painter::draw_position_label(SliceWindow &window)
       vector<int> index = current_volume_->world_to_index(mouse_.position_);
 
       if (current_volume_->index_valid(index)) {
-      Point pos(index[0], index[1], index[2]);
-        const string value = "Value: " + 
-          to_string(get_value(current_volume_->nrrd_->nrrd, pos));
+        Point pos(index[0], index[1], index[2]);
+        double val;
+        current_volume_->get_value(index, val);
+        const string value = "Value: " + to_string(val);
         draw_label(window, value, 0, y_pos*4, FreeTypeText::sw, font);
         string pos_text = ("S: "+to_string(index[0])+
                            " C: "+to_string(index[1])+
@@ -966,139 +967,6 @@ Painter::draw_label(SliceWindow &window, string text, int x, int y,
   glBindTexture(GL_TEXTURE_2D, 0);
   glDisable(GL_TEXTURE_2D);
 }  
-
-
-double
-Painter::get_value(const Nrrd *nrrd, const Point &p) {
-  return get_value(nrrd, (int)p.x(), (int)p.y(), (int)p.z());
-}
-
-
-double
-Painter::get_value(const Nrrd *nrrd, int x, int y, int z) {
-  ASSERT(nrrd->dim >= 3);
-  const int position = nrrd->axis[0].size*(z*nrrd->axis[1].size+y)+x;
-  switch (nrrd->type) {
-  case nrrdTypeChar: {
-    char *slicedata = (char *)nrrd->data;
-    return (double)slicedata[position];
-    BREAK;
-  }
-  case nrrdTypeUChar: {
-    unsigned char *slicedata = (unsigned char *)nrrd->data;
-    return (double)slicedata[position];
-    BREAK;
-  }
-  case nrrdTypeShort: {
-    short *slicedata = (short *)nrrd->data;
-    return (double)slicedata[position];
-    BREAK;
-  }
-  case nrrdTypeUShort: {
-    unsigned short *slicedata = (unsigned short *)nrrd->data;
-    return (double)slicedata[position];
-    BREAK;
-  }
-  case nrrdTypeInt: {
-    int *slicedata = (int *)nrrd->data;
-    return (double)slicedata[position];
-    BREAK;
-  }
-  case nrrdTypeUInt: {
-    unsigned int *slicedata = (unsigned int *)nrrd->data;
-    return (double)slicedata[position];
-    BREAK;
-  }
-  case nrrdTypeLLong: {
-    signed long long *slicedata = (signed long long *)nrrd->data;
-    return (double)slicedata[position];
-    BREAK;
-  }
-  case nrrdTypeULLong: {
-    unsigned long long *slicedata = (unsigned long long *)nrrd->data;
-    return (double)slicedata[position];
-    BREAK;
-  }
-  case nrrdTypeFloat: {
-    float *slicedata = (float *)nrrd->data;
-    return (double)slicedata[position];
-    BREAK;
-  }
-  case nrrdTypeDouble: {
-    double *slicedata = (double *)nrrd->data;
-    return (double)slicedata[position];
-    BREAK;
-  }
-  default: error("Unsupported data type: "+nrrd->type);
-  }
-  return 0.0;
-}
-
-
-
-
-bool
-Painter::set_value(Nrrd *nrrd, const Point &p, double val) {
-  ASSERT(nrrd->dim >= 3);
-  const int position = 
-    nrrd->axis[0].size*(int(p.z())*nrrd->axis[1].size+int(p.y()))+int(p.x());
-
-  const int max = nrrd->axis[0].size*nrrd->axis[1].size*nrrd->axis[2].size;
-
-  if (position < 0 || position >= max)
-    return false;
-
-  switch (nrrd->type) {
-  case nrrdTypeChar: {
-    char *slicedata = (char *)nrrd->data;
-    slicedata[position] = (char)val;
-  } break;
-  case nrrdTypeUChar: {
-    unsigned char *slicedata = (unsigned char *)nrrd->data;
-    slicedata[position] = (unsigned char)val;
-    } break;;
-  case nrrdTypeShort: {
-    short *slicedata = (short *)nrrd->data;
-    slicedata[position] = (short)val;
-    } break;;
-  case nrrdTypeUShort: {
-    unsigned short *slicedata = (unsigned short *)nrrd->data;
-    slicedata[position] = (unsigned short)val;
-    } break;;
-  case nrrdTypeInt: {
-    int *slicedata = (int *)nrrd->data;
-    slicedata[position] = (int)val;
-    } break;;
-  case nrrdTypeUInt: {
-    unsigned int *slicedata = (unsigned int *)nrrd->data;
-    slicedata[position] = (unsigned int)val;
-    } break;;
-  case nrrdTypeLLong: {
-    signed long long *slicedata = (signed long long *)nrrd->data;
-    slicedata[position] = (signed long long)val;
-    } break;;
-  case nrrdTypeULLong: {
-    unsigned long long *slicedata = (unsigned long long *)nrrd->data;
-    slicedata[position] = (unsigned long long)val;
-    } break;;
-  case nrrdTypeFloat: {
-    float *slicedata = (float *)nrrd->data;
-    slicedata[position] = (float)val;
-    } break;;
-  case nrrdTypeDouble: {
-    double *slicedata = (double *)nrrd->data;
-    slicedata[position] = (double)val;
-    } break;;
-  default: { 
-    error("Unsupported data type: "+nrrd->type);
-    } break;;
-  }
-  return true;
-}
-
-
-
-
 
 
 void
