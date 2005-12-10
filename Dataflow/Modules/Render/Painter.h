@@ -281,12 +281,29 @@ class Painter : public Module
     num_display_modes_e
   };
 
-
   class NrrdVolume { 
   public:
     NrrdVolume		(GuiContext*ctx);
-    Point               index_to_world(vector<int> index);
+    Point               index_to_world(const vector<int> &index);
+    vector<int>         world_to_index(const Point &p);
     DenseMatrix         build_index_to_world_matrix();
+    bool                index_valid(const vector<int> &index);
+    template<class T>
+    void                get_value(const vector<int> &index, T &);
+    template<class T>         
+    void                set_value(const vector<int> &index, const T &val);
+
+    Point               center(int axis = -1, int slice = -1);
+    Point               min(int axis = -1, int slice = -1);
+    Point               max(int axis = -1, int slice = -1);
+
+    Vector              scale();
+    double              scale(int axis);
+
+    vector<int>         max_index();
+    int                 max_index(int axis);
+
+    bool                inside_p(const Point &p);
 
     NrrdDataHandle	nrrd_;
     GuiString           name_;
@@ -306,6 +323,7 @@ class Painter : public Module
     NrrdSlice(Painter *, NrrdVolume *, SliceWindow *);
     void                bind();
     void                draw();
+    void	        set_coords();
     Painter *           painter_;
     NrrdVolume *	volume_;
     SliceWindow	*	window_;
@@ -314,7 +332,9 @@ class Painter : public Module
     bool		tex_dirty_;
     bool		geom_dirty_;
 
-    float		pos_coords_[12]; // x,y,z * 4 corners
+    Point               pos_;
+    Vector              xdir_;
+    Vector              ydir_;
 
     ColorMappedNrrdTextureObj *    texture_;
 
@@ -331,6 +351,9 @@ class Painter : public Module
     SliceWindow(Painter &painter, GuiContext *ctx);
 
     void                setup_gl_view();
+    void		next_slice();
+    void		prev_slice();
+
     Painter &           painter_;
     string		name_;
     WindowLayout *	layout_;
@@ -340,6 +363,9 @@ class Painter : public Module
     NrrdSlice		paint_under_;
     NrrdSlice		paint_;
     NrrdSlice		paint_over_;
+
+    Point               center_;
+    Vector              normal_;
 
     UIint		slice_num_;
     UIint		axis_;
@@ -413,11 +439,8 @@ class Painter : public Module
   
   MouseState            mouse_;
 
-  int			max_slice_[3];
   int			cur_slice_[3];
   int			slab_width_[3];
-  double		scale_[3];
-  double		center_[3];
   UIint			show_colormap2_;
   UIint			painting_;
 
@@ -429,9 +452,6 @@ class Painter : public Module
   UIdouble		font_b_;
   UIdouble		font_a_;
 
-  UIint			dim0_;
-  UIint			dim1_;
-  UIint			dim2_;
   UIint			geom_flushed_;
 
   UIdouble		background_threshold_;
@@ -439,8 +459,6 @@ class Painter : public Module
 
   PaintCM2Widget *	paint_widget_;
   Mutex			paint_lock_;
-
-  float *		temp_tex_data_;
 
   //! Ports
   BundleOPort *         bundle_oport_;
@@ -464,7 +482,6 @@ class Painter : public Module
   int			redraw_window(SliceWindow &);
   void			draw_guide_lines(SliceWindow &, float, float, float);
   void			draw_slice_lines(SliceWindow &);
-  void			draw_slice_arrows(SliceWindow &);
   
   // Methods to render TrueType text labels
   void			initialize_fonts();
@@ -479,7 +496,6 @@ class Painter : public Module
 				   FreeTypeFace *font = 0); 
 
 
-  void			set_slice_coords(NrrdSlice &slice, bool origin);
   int			extract_window_slices(SliceWindow &);
   int			extract_mip_slices(NrrdVolume *);
 
@@ -496,8 +512,6 @@ class Painter : public Module
 
   // Methods for navigating around the slices
   void			set_axis(SliceWindow &, unsigned int axis);
-  void			next_slice(SliceWindow &);
-  void			prev_slice(SliceWindow &);
   void			zoom_in(SliceWindow &);
   void			zoom_out(SliceWindow &);
 
@@ -541,7 +555,6 @@ class Painter : public Module
 
   int			rebind_slice(NrrdSlice &);
   int			set_slice_nrrd_dirty(NrrdSlice &);
-  int			update_slice_from_window(NrrdSlice &);
 
   int                   set_probe(SliceWindow &window);
 
@@ -560,6 +573,139 @@ public:
 
 
 };
+
+
+
+template<class T>
+void
+Painter::NrrdVolume::get_value(const vector<int> &index, T &value) {
+  const Nrrd *nrrd = nrrd_->nrrd;
+  ASSERT(index_valid(index));
+  ASSERT(int(index.size()) == nrrd->dim);
+
+  int position = index[0];
+  int mult_factor = nrrd->axis[0].size;
+  for (int a = 1; a < nrrd->dim; ++a) {
+    position += index[a] * mult_factor;
+    mult_factor *= nrrd->axis[a].size;
+  }
+
+  const int blah = nrrd->axis[0].size*(index[2]*nrrd->axis[1].size+index[1])+index[0];
+  ASSERT(blah == position);
+
+  switch (nrrd->type) {
+  case nrrdTypeChar: {
+    char *slicedata = (char *)nrrd->data;
+    value = (T)slicedata[position];
+  } break;
+  case nrrdTypeUChar: {
+    unsigned char *slicedata = (unsigned char *)nrrd->data;
+    value = (T)slicedata[position];
+  } break;
+  case nrrdTypeShort: {
+    short *slicedata = (short *)nrrd->data;
+    value = (T)slicedata[position];
+  } break;
+  case nrrdTypeUShort: {
+    unsigned short *slicedata = (unsigned short *)nrrd->data;
+    value = (T)slicedata[position];
+  } break;
+  case nrrdTypeInt: {
+    int *slicedata = (int *)nrrd->data;
+    value = (T)slicedata[position];
+  } break;
+  case nrrdTypeUInt: {
+    unsigned int *slicedata = (unsigned int *)nrrd->data;
+    value = (T)slicedata[position];
+  } break;
+  case nrrdTypeLLong: {
+    signed long long *slicedata = (signed long long *)nrrd->data;
+    value = (T)slicedata[position];
+  } break;
+  case nrrdTypeULLong: {
+    unsigned long long *slicedata = (unsigned long long *)nrrd->data;
+    value = (T)slicedata[position];
+  } break;
+  case nrrdTypeFloat: {
+    float *slicedata = (float *)nrrd->data;
+    value = (T)slicedata[position];
+  } break;
+  case nrrdTypeDouble: {
+    double *slicedata = (double *)nrrd->data;
+    value = (T)slicedata[position];
+  } break;
+  default: {
+    throw "Unsupported data type: "+to_string(nrrd->type);
+  } break;
+  }
+}
+
+
+
+template <class T>
+void
+Painter::NrrdVolume::set_value(const vector<int> &index, const T &val) {
+  const Nrrd *nrrd = nrrd_->nrrd;
+  ASSERT(index_valid(index));
+  ASSERT(int(index.size()) == nrrd->dim);
+
+  int position = index[0];
+  int mult_factor = nrrd->axis[0].size;
+  for (int a = 1; a < nrrd->dim; ++a) {
+    position += index[a] * mult_factor;
+    mult_factor *= nrrd->axis[a].size;
+  }
+
+  const int blah = nrrd->axis[0].size*(index[2]*nrrd->axis[1].size+index[1])+index[0];
+  ASSERT(blah == position);
+
+  switch (nrrd->type) {
+  case nrrdTypeChar: {
+    char *slicedata = (char *)nrrd->data;
+    slicedata[position] = (char)val;
+  } break;
+  case nrrdTypeUChar: {
+    unsigned char *slicedata = (unsigned char *)nrrd->data;
+    slicedata[position] = (unsigned char)val;
+    } break;
+  case nrrdTypeShort: {
+    short *slicedata = (short *)nrrd->data;
+    slicedata[position] = (short)val;
+    } break;
+  case nrrdTypeUShort: {
+    unsigned short *slicedata = (unsigned short *)nrrd->data;
+    slicedata[position] = (unsigned short)val;
+    } break;
+  case nrrdTypeInt: {
+    int *slicedata = (int *)nrrd->data;
+    slicedata[position] = (int)val;
+    } break;
+  case nrrdTypeUInt: {
+    unsigned int *slicedata = (unsigned int *)nrrd->data;
+    slicedata[position] = (unsigned int)val;
+    } break;
+  case nrrdTypeLLong: {
+    signed long long *slicedata = (signed long long *)nrrd->data;
+    slicedata[position] = (signed long long)val;
+    } break;
+  case nrrdTypeULLong: {
+    unsigned long long *slicedata = (unsigned long long *)nrrd->data;
+    slicedata[position] = (unsigned long long)val;
+    } break;
+  case nrrdTypeFloat: {
+    float *slicedata = (float *)nrrd->data;
+    slicedata[position] = (float)val;
+    } break;
+  case nrrdTypeDouble: {
+    double *slicedata = (double *)nrrd->data;
+    slicedata[position] = (double)val;
+    } break;
+  default: { 
+    throw "Unsupported data type: "+to_string(nrrd->type);
+    } break;
+  }
+}
+
 
 }
 
