@@ -37,6 +37,8 @@
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Basis/Locate.h>
 
+#include <Core/Basis/share.h>
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off 'implicit conversion... loss of accuracy' messages.
 #  pragma set woff 1506
@@ -129,8 +131,7 @@ public:
       return check_coords(coords);
     return false; 
   }
- 
-protected:
+
   inline bool check_coords(const vector<double> &x) const  
   {  
     if (x[0]>=-Dim3Locate<ElemBasis>::thresholdDist && 
@@ -140,6 +141,7 @@ protected:
     return false;
   }
 
+protected:
   //! find a reasonable initial guess for starting Newton iteration.
   //! Reasonable means near and with a derivative!=0 
   template <class ElemData>
@@ -300,6 +302,13 @@ public:
   {
     CrvLocate< CrvLinearLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
+  }
+ 
+  //! get arc length for edge
+  template <class ElemData>
+  double get_arc_length(const unsigned edge, const ElemData &cd) const  
+  {
+    return get_arc1d_length<CrvGaussian1<double> >(this, edge, cd);
   }
  
   static  const string type_name(int n = -1);

@@ -197,6 +197,13 @@ public:
     return CL.get_coords(this, coords, value, cd);
   }
  
+  //! get arc length for edge
+  template <class ElemData>
+  double get_arc_length(const unsigned edge, const ElemData &cd) const  
+  {
+    return get_arc3d_length<CrvGaussian2<double> >(this, edge, cd);
+  }
+ 
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);

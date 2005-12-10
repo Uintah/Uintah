@@ -74,6 +74,13 @@ public:
     ASSERTFAIL("get_coords not supported by basis");
   }
 
+  //! get arc length for edge
+  template <class ElemData>
+  double get_arc_length(const unsigned edge, const ElemData &cd) const  
+  {
+    ASSERTFAIL("get_arc_length not supported by basis");
+  }
+ 
   //! add a node value 
   void add_node_value(const T &p) 
   {
