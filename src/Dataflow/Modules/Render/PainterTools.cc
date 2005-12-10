@@ -738,52 +738,70 @@ string *
 Painter::FloodfillTool::mouse_button_release(MouseState &mouse)
 {
   if (mouse.button_ != 1) return 0;
-  vector<Point> todo;
 
   NrrdVolume *volume = painter_->current_volume_;
   vector<int> index = volume->world_to_index(start_pos_);
   if (!volume->index_valid(index)) return 0;
 
-  Point pos(index[0], index[1], index[2]);
-  todo.push_back(pos);
+  // Array to hold which indices to visit next
+  vector<vector<int> > todo;
 
-  Nrrd *nrrd = painter_->current_volume_->nrrd_->nrrd;
+  // Push back the first seed point
+  todo.push_back(index);
+
+  // Allocated a nrrd to mark where the flood fill has visited
   NrrdDataHandle done = new NrrdData();
   nrrdAlloc(done->nrrd, nrrdTypeUChar, 3, 
-            nrrd->axis[0].size, nrrd->axis[1].size, nrrd->axis[2].size);
+            volume->nrrd_->nrrd->axis[0].size, 
+            volume->nrrd_->nrrd->axis[1].size, 
+            volume->nrrd_->nrrd->axis[2].size);
 
+  // Set the visited nrrd to empty
   memset(done->nrrd->data, 0, 
-         nrrd->axis[0].size*nrrd->axis[1].size*nrrd->axis[2].size);
+         volume->nrrd_->nrrd->axis[0].size *
+         volume->nrrd_->nrrd->axis[1].size * 
+         volume->nrrd_->nrrd->axis[2].size);
 
-  vector<Vector> neighbors;
-  neighbors.push_back(Vector( 1,0,0));
-  neighbors.push_back(Vector(-1,0,0));
-  neighbors.push_back(Vector(0, 1,0));
-  neighbors.push_back(Vector(0,-1,0));
-  neighbors.push_back(Vector(0,0, 1));
-  neighbors.push_back(Vector(0,0,-1));
+  while (!todo.empty()) {
+    // Grab the index off the end of the array
+    index = todo.back();
 
-  int counter = 0;
-  do {
-    counter++;
-    pos = todo.back();
+    // Remove it from the array
     todo.pop_back();
-    index[0] = pos(0);
-    index[1] = pos(1);
-    index[2] = pos(2);
 
-    painter_->set_value(done->nrrd, pos, 1.0);
+    // Set the voxel at the index to the flood fill value
     volume->set_value(index, value_);
 
-    for (unsigned int n = 0; n < neighbors.size(); ++n) {
-      Point neighborpos = pos + neighbors[n];
-      double neighborval = painter_->get_value(nrrd, neighborpos);
-      bool range = (neighborval >= min_ && neighborval <= max_);
-      if (range && painter_->get_value(done->nrrd, neighborpos) < 0.5) {
-        todo.push_back(neighborpos);
+    // Mark this voxel as visited
+    nrrd_set_value(done->nrrd, index, (unsigned char)1);
+
+    // For each axis
+    for (unsigned int a = 0; a < index.size(); ++a) {
+      // Visit the previous and next neighbor indices along this axis
+      for (int dir = -1; dir < 2; dir +=2) {
+        // Neighbor index starts as current index
+        vector<int> neighbor_index = index;
+        // Index adjusted in direction we're looking at along axis
+        neighbor_index[a] = neighbor_index[a] + dir;
+        // Bail if this index is outside the volume
+        if (!volume->index_valid(neighbor_index)) continue;
+
+        // Check to see if flood fill has already been here
+        unsigned char visited;
+        nrrd_get_value(done->nrrd, neighbor_index, visited);
+        // Bail if the voxel has been visited
+        if (visited) continue;
+
+        // Now check to see if this pixel is a candidate to be filled
+        double neighborval;
+        volume->get_value(neighbor_index, neighborval);
+        // Bail if the voxel is outside the flood fill range
+        if (neighborval < min_ || neighborval > max_) continue;
+        
+        todo.push_back(neighbor_index);
       }
     }
-  } while (!todo.empty());
+  }
 
   painter_->for_each(&Painter::rebind_slice);
   painter_->redraw_all();

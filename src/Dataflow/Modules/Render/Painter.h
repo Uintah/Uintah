@@ -289,9 +289,9 @@ class Painter : public Module
     DenseMatrix         build_index_to_world_matrix();
     bool                index_valid(const vector<int> &index);
     template<class T>
-    void                get_value(const vector<int> &index, T &);
-    template<class T>         
-    void                set_value(const vector<int> &index, const T &val);
+    void                get_value(const vector<int> &index, T &value);
+    template<class T>
+    void                set_value(const vector<int> &index, T value);
 
     Point               center(int axis = -1, int slice = -1);
     Point               min(int axis = -1, int slice = -1);
@@ -506,9 +506,6 @@ class Painter : public Module
 
   // Misc
   void			update_background_threshold();
-  double		get_value(const Nrrd *, int, int, int);
-  double		get_value(const Nrrd *, const Point &p);
-  bool   		set_value(Nrrd *, const Point &p, double val);
 
   // Methods for navigating around the slices
   void			set_axis(SliceWindow &, unsigned int axis);
@@ -576,22 +573,21 @@ public:
 
 
 
-template<class T>
-void
-Painter::NrrdVolume::get_value(const vector<int> &index, T &value) {
-  const Nrrd *nrrd = nrrd_->nrrd;
-  ASSERT(index_valid(index));
-  ASSERT(int(index.size()) == nrrd->dim);
 
+
+template<class T>
+static void
+nrrd_get_value(const Nrrd *nrrd, 
+               const vector<int> &index, 
+               T &value)
+{
+  ASSERT(int(index.size()) == nrrd->dim);
   int position = index[0];
   int mult_factor = nrrd->axis[0].size;
   for (int a = 1; a < nrrd->dim; ++a) {
     position += index[a] * mult_factor;
     mult_factor *= nrrd->axis[a].size;
   }
-
-  const int blah = nrrd->axis[0].size*(index[2]*nrrd->axis[1].size+index[1])+index[0];
-  ASSERT(blah == position);
 
   switch (nrrd->type) {
   case nrrdTypeChar: {
@@ -643,21 +639,18 @@ Painter::NrrdVolume::get_value(const vector<int> &index, T &value) {
 
 
 template <class T>
-void
-Painter::NrrdVolume::set_value(const vector<int> &index, const T &val) {
-  const Nrrd *nrrd = nrrd_->nrrd;
-  ASSERT(index_valid(index));
+static void
+nrrd_set_value(Nrrd *nrrd, 
+               const vector<int> &index, 
+               T val)
+{
   ASSERT(int(index.size()) == nrrd->dim);
-
   int position = index[0];
   int mult_factor = nrrd->axis[0].size;
   for (int a = 1; a < nrrd->dim; ++a) {
     position += index[a] * mult_factor;
     mult_factor *= nrrd->axis[a].size;
   }
-
-  const int blah = nrrd->axis[0].size*(index[2]*nrrd->axis[1].size+index[1])+index[0];
-  ASSERT(blah == position);
 
   switch (nrrd->type) {
   case nrrdTypeChar: {
@@ -704,6 +697,25 @@ Painter::NrrdVolume::set_value(const vector<int> &index, const T &val) {
     throw "Unsupported data type: "+to_string(nrrd->type);
     } break;
   }
+}
+
+
+
+
+
+template<class T>
+void
+Painter::NrrdVolume::get_value(const vector<int> &index, T &value) {
+  ASSERT(index_valid(index));
+  nrrd_get_value(nrrd_->nrrd, index, value);
+}
+
+
+template <class T>
+void
+Painter::NrrdVolume::set_value(const vector<int> &index, T value) {
+  ASSERT(index_valid(index));
+  nrrd_set_value(nrrd_->nrrd, index, value);
 }
 
 
