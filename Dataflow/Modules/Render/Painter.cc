@@ -84,8 +84,29 @@
 
 namespace SCIRun {
 
-
-
+  /* Todo:
+     X - Persistent volume state when re-executing
+       - Show other windows slice correctly
+       - Automatic world space grid
+       - Automatic index space grid
+       - Remove TCLTask::lock and replace w/ volume lock
+       - Fix Non-origin world_to_index conversion
+       - Send Bundles correctly
+       - Add tool support for ITK filters
+       - View to choose tools
+       - Change tools to store error codes
+       - Add keybooard to tools
+       - Migrate all operations to tools (next_siice, zoom, etc)
+       - Use FreeTypeTextTexture class for text
+       - Faster painting, using current window buffer
+       - Support for RGB/RGBA nrrds
+       - Support for Time Axis
+       - Use GPU/3DTextures for applying colormap when supported
+       - Remove clever offseting for non-power-of-2 suported machines
+       - Removal of for_each
+       - Support applying CM2
+  */
+     
 Painter::RealDrawer::~RealDrawer()
 {
 }
@@ -242,9 +263,11 @@ Painter::WindowLayout::WindowLayout(GuiContext */*ctx*/) :
 }
 
 
-Painter::NrrdVolume::NrrdVolume(GuiContext *ctx) :
+Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
+                                const string &name,
+                                NrrdDataHandle &nrrd) :
   nrrd_(0),
-  name_(ctx->subVar("name")),
+  name_(ctx->subVar("name"), name),
   opacity_(ctx->subVar("opacity"), 1.0),
   clut_min_(ctx->subVar("clut_min"), 0.0),
   clut_max_(ctx->subVar("clut_max"), 1.0),
@@ -252,9 +275,36 @@ Painter::NrrdVolume::NrrdVolume(GuiContext *ctx) :
   data_min_(0),
   data_max_(1.0),
   colormap_(0)
-            
 {
+  set_nrrd(nrrd);
 }
+
+void
+Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd) 
+{
+  nrrd_ = nrrd;
+  for (int a = 0; a < nrrd_->nrrd->dim; ++a) {
+    if (nrrd_->nrrd->axis[a].min > nrrd_->nrrd->axis[a].max)
+      SWAP(nrrd_->nrrd->axis[a].min,nrrd_->nrrd->axis[a].max);
+    if (nrrd_->nrrd->axis[a].spacing < 0.0)
+      nrrd_->nrrd->axis[a].spacing *= -1.0;
+  }
+
+  NrrdRange range;
+  nrrdRangeSet(&range, nrrd_->nrrd, 0);
+  if (data_min_ != range.min || data_max_ != range.max) {
+    data_min_ = range.min;
+    data_max_ = range.max;
+    clut_min_ = range.min;
+    clut_max_ = range.max;
+    opacity_ = 1.0;
+  }
+}
+
+
+  
+
+
 
 
 DECLARE_MAKER(Painter)
@@ -263,6 +313,7 @@ Painter::Painter(GuiContext* ctx) :
   Module("Painter", ctx, Filter, "Render", "SCIRun"),
   layouts_(),
   volumes_(),
+  volume_map_(),
   current_volume_(0),
   nrrd_generations_(),
   cm2_generation_(-1),
@@ -408,7 +459,7 @@ void
 Painter::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
   if (!window.show_guidelines_()) return;
   if (mouse_.window_ != &window) return;
-  Vector tmp = window.screen_to_world(1, 0) - window.screen_to_world(0, 0);
+  Vector tmp = window.x_dir();
   tmp[window.axis_] = 0;
   const float one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
 
@@ -513,7 +564,7 @@ void
 Painter::draw_slice_lines(SliceWindow &window)
 {
   if (!current_volume_) return;
-  Vector tmp = window.screen_to_world(1, 0) - window.screen_to_world(0, 0);
+  Vector tmp = window.x_dir();
   tmp[window.axis_] = 0;
   double screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
 
@@ -643,7 +694,7 @@ Painter::NrrdVolume::inside_p(const Point &p) {
 int
 Painter::x_axis(SliceWindow &window)
 {
-  Vector dir = window.screen_to_world(1,0)-window.screen_to_world(0,0);
+  Vector dir = window.x_dir();
   Vector adir = Abs(dir);
   if ((adir[0] > adir[1]) && (adir[0] > adir[2])) return 0;
   if ((adir[1] > adir[0]) && (adir[1] > adir[2])) return 1;
@@ -661,7 +712,7 @@ Painter::x_axis(SliceWindow &window)
 int
 Painter::y_axis(SliceWindow &window)
 {
-  Vector dir = window.screen_to_world(0,1)-window.screen_to_world(0,0);
+  Vector dir = window.y_dir();
   Vector adir = Abs(dir);
   if ((adir[0] > adir[1]) && (adir[0] > adir[2])) return 0;
   if ((adir[1] > adir[0]) && (adir[1] > adir[2])) return 1;
@@ -1262,6 +1313,20 @@ Painter::SliceWindow::world_to_screen(Point &world)
 }
 
 
+Vector
+Painter::SliceWindow::x_dir()
+{
+  return screen_to_world(1,0) - screen_to_world(0,0);
+}
+
+Vector
+Painter::SliceWindow::y_dir()
+{
+  return screen_to_world(0,1) - screen_to_world(0,0);
+}
+
+
+
 Point
 Painter::NrrdVolume::index_to_world(const vector<int> &index) {
   unsigned int dim = index.size()+1;
@@ -1291,8 +1356,6 @@ Painter::NrrdVolume::world_to_index(const Point &p) {
       world_coords[i] = p(i);
     else       
       world_coords[i] = 0.0;;
-  //  cerr << "world2index: " << p << std::endl;
-  //  transform.print();
   transform.solve(world_coords, index_matrix, 1);
   vector<int> return_val(index_matrix.nrows()-1);
   for (unsigned int i = 0; i < return_val.size(); ++i) {
@@ -1301,6 +1364,26 @@ Painter::NrrdVolume::world_to_index(const Point &p) {
   
   return return_val;
 }
+
+
+vector<double> 
+Painter::NrrdVolume::vector_to_index(const Vector &v) {
+  DenseMatrix transform = build_index_to_world_matrix();
+  ColumnMatrix index_matrix(transform.ncols());
+  ColumnMatrix world_coords(transform.nrows());
+  for (int i = 0; i < transform.nrows(); ++i)
+    if (i < 3) 
+      world_coords[i] = v[i];
+    else       
+      world_coords[i] = 0.0;;
+  int tmp, tmp2;
+  transform.mult_transpose(world_coords, index_matrix, tmp, tmp2);
+  vector<double> return_val(index_matrix.nrows()-1);
+  for (unsigned int i = 0; i < return_val.size(); ++i)
+    return_val[i] = index_matrix[i];
+  return return_val;
+}
+
 
 
 DenseMatrix
@@ -1347,13 +1430,15 @@ Painter::execute()
   }
 
   vector<NrrdDataHandle> nrrds;
+  vector<string> nrrd_names;
   colormaps_.clear();
   colormap_names_.clear();
 
   for (unsigned int b = 0; b < bundles_.size(); ++b) {
     int numNrrds = bundles_[b]->numNrrds();
     for (int n = 0; n < numNrrds; n++) {
-      NrrdDataHandle nrrdH = bundles_[b]->getNrrd(bundles_[b]->getNrrdName(n));
+      string name = bundles_[b]->getNrrdName(n);
+      NrrdDataHandle nrrdH = bundles_[b]->getNrrd(name);
       if (!nrrdH.get_rep()) continue;
       if (nrrdH->nrrd->dim < 3)
       {
@@ -1361,8 +1446,9 @@ Painter::execute()
         continue;
       }
       nrrds.push_back(nrrdH);
+      nrrd_names.push_back(name);
     }
-
+    
     int numColormaps = bundles_[b]->numColormaps();
     for (int n = 0; n < numColormaps; n++) {
       const string name = bundles_[b]->getColormapName(n);
@@ -1373,83 +1459,36 @@ Painter::execute()
       }
     }
   }
-
+  
   if (!nrrds.size()) {
     error ("Unable to get an input nrrd.");
     return;
-  }
-
+  }    
   
-  
-
-
-  bool re_extract = true;
-
-//     colormap_.get_rep()?(colormap_generation_ != colormap_->generation):false;
-//   if (colormap_.get_rep())
-//     colormap_generation_ = colormap_->generation;
-
   update_state(Module::Executing);
   TCLTask::lock();
-
+  
   while(volumes_.size() < nrrds.size())
     volumes_.push_back(0);
-
-  bool do_autoview = false;
-
-  NrrdRange *range = scinew NrrdRange;
+  
   for (unsigned int n = 0; n < nrrds.size(); ++n) {
-    NrrdDataHandle nrrdH = nrrds[n];
-    nrrdRangeSet(range, nrrdH->nrrd, 0);
-    //    Nrrd *nrrd = nrrdH->nrrd;
-    for (int a = 0; a < nrrdH->nrrd->dim; ++a) {
-      if (nrrdH->nrrd->axis[a].min > nrrdH->nrrd->axis[a].max)
-	SWAP(nrrdH->nrrd->axis[a].min,nrrdH->nrrd->axis[a].max);
-      if (nrrdH->nrrd->axis[a].spacing < 0.0)
-	nrrdH->nrrd->axis[a].spacing *= -1.0;
-    }
-      
-    if (nrrdH.get_rep()) { // && nrrdH->generation != nrrd_generations_[n]) {
-
-      re_extract = true;
-      nrrd_generations_[n] = nrrdH->generation;
-      if (volumes_[n]) {
-	delete volumes_[n];
-	volumes_[n] = 0;
+    if (volume_map_.find(nrrd_names[n]) == volume_map_.end()) 
+      {
+        volume_map_[nrrd_names[n]] =  
+          new NrrdVolume(ctx->subVar(nrrd_names[n]), nrrd_names[n], nrrds[n]);
+      } else {
+        volume_map_[nrrd_names[n]]->set_nrrd(nrrds[n]); 
       }
-      volumes_[n] = scinew NrrdVolume(ctx->subVar("nrrd"+to_string(n), false));
-      volumes_[n]->nrrd_ = nrrdH;
-      volumes_[n]->data_min_ = range->min;
-      volumes_[n]->data_max_ = range->max;
-      volumes_[n]->clut_min_ = range->min;
-      volumes_[n]->clut_max_ = range->max;
-      volumes_[n]->name_.set("nrrd"+to_string(n));
-
-      current_volume_ = volumes_[n];      
-      //      if (n == 0) 
-      //	extract_mip_slices(volumes_[n]);	
-    }
+    volumes_[n] = volume_map_[nrrd_names[n]];
   }
+  current_volume_ = volumes_.back();      
 
-  delete range;
+  for_each(&Painter::extract_window_slices);
+  for_each(&Painter::autoview);
 
-  // Mark all windows slices dirty
-  if (re_extract) {
-    for_each(&Painter::extract_window_slices);
-    for (int n = 0; n < 3; ++n)
-      if (mip_slices_[n])
-	rebind_slice(*mip_slices_[n]);
-  }
-  if (do_autoview)
-    for_each(&Painter::autoview);
-  redraw_all();
   TCLTask::unlock();
 
   update_state(Module::Completed);
-  TCLTask::lock();
-  if (executing_) --executing_;
-  TCLTask::unlock();
-
 }
 
 
@@ -2116,6 +2155,12 @@ Painter::autoview(SliceWindow &window) {
     hei -= 2*Ceil(bbox.max().y() - bbox.min().y())+4;
   }
   
+//   Vector xdir = window.x_dir();
+//   vector<double> x_index = current_volume_->vector_to_index(xdir);
+//   for (int i = 0; i < x_index.size(); ++i) 
+//     cerr << x_index[i] << ", ";
+//   cerr << " <- x_index\n";
+
   int xax = x_axis(window);
   int yax = y_axis(window);
 
@@ -2145,18 +2190,11 @@ Painter::autoview(SliceWindow &window) {
 int
 Painter::create_volume(NrrdVolumes *copies) {
   if (!current_volume_) return -1;
+  NrrdDataHandle nrrd = scinew NrrdData();
+  nrrdCopy(nrrd->nrrd, current_volume_->nrrd_->nrrd);
   NrrdVolume *volume = 
-    scinew NrrdVolume(ctx->subVar("nrrd"+to_string(volumes_.size()), false));
-  volume->nrrd_ = scinew NrrdData();
-  nrrdCopy(volume->nrrd_->nrrd, current_volume_->nrrd_->nrrd);
-  if (copies) {
-    volume->data_min_ = current_volume_->data_min_;
-    volume->data_max_ = current_volume_->data_max_;
-    volume->clut_min_ = current_volume_->clut_min_;
-    volume->clut_max_ = current_volume_->clut_max_;
-  }
-  //  else
-  //    nrrdSetValue(volume->nrrd_->nrrd, 0.0); 
+    scinew NrrdVolume(ctx->subVar("nrrd"+to_string(volumes_.size()), false),
+                      "blah", nrrd);
   volumes_.push_back(volume);
   current_volume_ = volume;
   return volumes_.size()-1;

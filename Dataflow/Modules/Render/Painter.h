@@ -282,9 +282,13 @@ class Painter : public Module
 
   class NrrdVolume { 
   public:
-    NrrdVolume		(GuiContext*ctx);
+    NrrdVolume		(GuiContext *ctx, 
+                         const string &name,
+                         NrrdDataHandle &);
+    void                set_nrrd(NrrdDataHandle &);
     Point               index_to_world(const vector<int> &index);
     vector<int>         world_to_index(const Point &p);
+    vector<double>      vector_to_index(const Vector &v);
     DenseMatrix         build_index_to_world_matrix();
     bool                index_valid(const vector<int> &index);
     template<class T>
@@ -356,6 +360,8 @@ class Painter : public Module
     void		zoom_out();
     Point		world_to_screen(Point &);
     Point		screen_to_world(unsigned int x, unsigned int y);
+    Vector		x_dir();
+    Vector		y_dir();
 
     Painter &           painter_;
     string		name_;
@@ -398,8 +404,7 @@ class Painter : public Module
   typedef map<string, WindowLayout *>	WindowLayouts;
 
   typedef vector<NrrdVolume *>		NrrdVolumes;
-
-
+  typedef map<string, NrrdVolume *>	NrrdVolumeMap;
 
 
   class RealDrawer : public Runnable {
@@ -414,6 +419,7 @@ class Painter : public Module
   
   WindowLayouts		layouts_;
   NrrdVolumes		volumes_;
+  NrrdVolumeMap         volume_map_;
   NrrdDataHandle	gradient_;
   ColorMap2Handle	cm2_;
 
