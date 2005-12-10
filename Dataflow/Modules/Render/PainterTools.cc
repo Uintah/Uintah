@@ -201,7 +201,6 @@ string *
 Painter::ProbeTool::mouse_motion(MouseState &mouse) {
   painter_->for_each(&Painter::set_probe);
   painter_->redraw_all();
-  cerr << "prob emotions\n";
   return 0;
 }
 
@@ -209,7 +208,7 @@ Painter::ProbeTool::mouse_motion(MouseState &mouse) {
 
 Painter::PanTool::PanTool(Painter *painter) : 
   PainterTool(painter, "Pan"),
-  x_(0.0), y_(0.0), window_(0)
+  center_(0,0,0), window_(0)
 {
 }
 
@@ -219,8 +218,7 @@ Painter::PanTool::mouse_button_press(MouseState &mouse) {
   if (!mouse.window_)
     return scinew string("Cant Pan, mouse not in window");
   window_ = mouse.window_;
-  x_ = window_->x_;
-  y_ = window_->y_;
+  center_ = window_->center_;
   return 0;
 }
 
@@ -233,8 +231,12 @@ Painter::PanTool::mouse_button_release(MouseState &mouse) {
 string *
 Painter::PanTool::mouse_motion(MouseState &mouse) {
   const float scale = 100.0/window_->zoom_;
-  window_->x_ = x_ - mouse.dx_ * scale;
-  window_->y_ = y_ + mouse.dy_ * scale;
+  int xax = painter_->x_axis(*window_);
+  int yax = painter_->y_axis(*window_);
+  window_->center_(xax) = center_(xax) - mouse.dx_ * scale;
+  window_->center_(yax) = center_(yax) + mouse.dy_ * scale;
+  //  window_->y_ = center_(painter_->y_axis(*window_)) + mouse.dy_ * scale;
+  //  window_->y_ = y_ + mouse.dy_ * scale;
   painter_->redraw_window(*window_);
   return 0; 
 }
@@ -392,8 +394,7 @@ Painter::CropTool::mouse_button_release(MouseState &mouse) {
 string *
 Painter::CropTool::draw(SliceWindow &window) {
   float unscaled_one = 1.0;
-  Vector tmp = painter_->screen_to_world(window, 1, 0) - 
-    painter_->screen_to_world(window, 0, 0);
+  Vector tmp = window.screen_to_world(1, 0) - window.screen_to_world(0, 0);
   tmp[window.axis_] = 0;
   float screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
   if (screen_space_one > unscaled_one) 
@@ -453,11 +454,11 @@ Painter::CropTool::draw(SliceWindow &window) {
   glColor4d(0.0, 0.0, 0.0, 0.75);
 
 
-  Point sll = painter_->screen_to_world(window, 0, 0);
-  Point slr = painter_->screen_to_world(window, window.viewport_->width(), 0);
-  Point sul = painter_->screen_to_world(window, 0, window.viewport_->height());
-  Point sur = painter_->screen_to_world(window, window.viewport_->width(), 
-                                        window.viewport_->height());
+  Point sll = window.screen_to_world(0, 0);
+  Point slr = window.screen_to_world(window.viewport_->width(), 0);
+  Point sul = window.screen_to_world(0, window.viewport_->height());
+  Point sur = window.screen_to_world(window.viewport_->width(), 
+                                     window.viewport_->height());
 
   glBegin(GL_QUADS);
   
@@ -593,10 +594,10 @@ Painter::CropTool::compute_crop_pick_boxes(SliceWindow &window)
     ul(i) = s==i?ur(i):ll(i);
   }
   
-  ll = painter_->world_to_screen(window, ll);
-  lr = painter_->world_to_screen(window, lr);
-  ur = painter_->world_to_screen(window, ur);
-  ul = painter_->world_to_screen(window, ul);
+  ll = window.world_to_screen(ll);
+  lr = window.world_to_screen(lr);
+  ur = window.world_to_screen(ur);
+  ul = window.world_to_screen(ul);
 
   Vector delta(3.0, 3.0, 1.0);
   pick_boxes_.reserve(9);
@@ -681,8 +682,7 @@ pair<Vector, Vector>
 Painter::CropTool::get_crop_vectors(SliceWindow &window, int pick) 
 {
 
-  Vector tmp = (painter_->screen_to_world(window, 1, 0) - 
-                painter_->screen_to_world(window, 0, 0));
+  Vector tmp = window.screen_to_world(1, 0) - window.screen_to_world(0, 0);
   tmp[window.axis_] = 0;
   const float one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
   const int x_ax = painter_->x_axis(window);

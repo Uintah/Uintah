@@ -85,17 +85,6 @@
 namespace SCIRun {
 
 
-#define NRRD_EXEC(__nrrd_command__) \
-  if (__nrrd_command__) { \
-    char *err = biffGetDone(NRRD); \
-    error(string("Error on line #")+to_string(__LINE__) + \
-	  string(" executing nrrd command: \n")+ \
-          string(#__nrrd_command__)+string("\n")+ \
-          string("Message: ")+string(err)); \
-    free(err); \
-    return 0; \
-  }
-
 
 Painter::RealDrawer::~RealDrawer()
 {
@@ -238,8 +227,6 @@ Painter::SliceWindow::SliceWindow(Painter &painter, GuiContext *ctx) :
   zoom_(ctx->subVar("zoom"), 100.0),
   slab_min_(ctx->subVar("slab_min"), 0),
   slab_max_(ctx->subVar("slab_max"), 0),
-  x_(ctx->subVar("posx"),0.0),
-  y_(ctx->subVar("posy"),0.0),
   redraw_(true),
   mode_(ctx->subVar("mode"),0),
   show_guidelines_(ctx->subVar("show_guidelines"),1),
@@ -343,26 +330,22 @@ Painter::render_window(SliceWindow &window) {
   window.setup_gl_view();
   CHECK_OPENGL_ERROR();
   
-
   for (unsigned int s = 0; s < window.slices_.size(); ++s)
     window.slices_[s]->draw();
 
-
-  //  draw_dark_slice_regions(window);
   draw_slice_lines(window);
-  //  draw_slice_arrows(window);
-  if (mouse_.window_ == &window)
-    mouse_.position_ = screen_to_world(window, mouse_.x_, mouse_.y_);
-  draw_guide_lines(window, mouse_.position_.x(), 
-                   mouse_.position_.y(), mouse_.position_.z());
+
+  draw_guide_lines(window, 
+                   mouse_.position_.x(), 
+                   mouse_.position_.y(),
+                   mouse_.position_.z());
   
   if (tool_) 
     tool_->draw(window);
 
-  //  if (!crop_) {
-  //  set_window_cursor(window, 0);
   draw_all_labels(window);
   window.viewport_->release();
+
   CHECK_OPENGL_ERROR();
   return 1;
 }
@@ -425,7 +408,7 @@ void
 Painter::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
   if (!window.show_guidelines_()) return;
   if (mouse_.window_ != &window) return;
-  Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
+  Vector tmp = window.screen_to_world(1, 0) - window.screen_to_world(0, 0);
   tmp[window.axis_] = 0;
   const float one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
 
@@ -465,10 +448,9 @@ Painter::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
   }
 
     
-  Point cvll = screen_to_world(window, 0, 0);
-  Point cvur = screen_to_world(window, 
-			       window.viewport_->max_width(), 
-			       window.viewport_->max_height());
+  Point cvll = window.screen_to_world(0, 0);
+  Point cvur = window.screen_to_world(window.viewport_->max_width(), 
+                                      window.viewport_->max_height());
   cvll(window.axis_) = 0;
   cvur(window.axis_) = 0;
   glColor4dv(white);
@@ -531,7 +513,7 @@ void
 Painter::draw_slice_lines(SliceWindow &window)
 {
   if (!current_volume_) return;
-  Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
+  Vector tmp = window.screen_to_world(1, 0) - window.screen_to_world(0, 0);
   tmp[window.axis_] = 0;
   double screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
 
@@ -661,7 +643,7 @@ Painter::NrrdVolume::inside_p(const Point &p) {
 int
 Painter::x_axis(SliceWindow &window)
 {
-  Vector dir = screen_to_world(window,1,0)-screen_to_world(window,0,0);
+  Vector dir = window.screen_to_world(1,0)-window.screen_to_world(0,0);
   Vector adir = Abs(dir);
   if ((adir[0] > adir[1]) && (adir[0] > adir[2])) return 0;
   if ((adir[1] > adir[0]) && (adir[1] > adir[2])) return 1;
@@ -679,7 +661,7 @@ Painter::x_axis(SliceWindow &window)
 int
 Painter::y_axis(SliceWindow &window)
 {
-  Vector dir = screen_to_world(window,0,1)-screen_to_world(window,0,0);
+  Vector dir = window.screen_to_world(0,1)-window.screen_to_world(0,0);
   Vector adir = Abs(dir);
   if ((adir[0] > adir[1]) && (adir[0] > adir[2])) return 0;
   if ((adir[1] > adir[0]) && (adir[1] > adir[2])) return 1;
@@ -715,8 +697,8 @@ Painter::SliceWindow::setup_gl_view()
   //  const Point center = painter_.current_volume_->center(axis_, slice_num_);
   double hwid = viewport_->width()*50.0/zoom_();
   double hhei = viewport_->height()*50.0/zoom_();
-  double cx = double(x_()) + center(painter_.x_axis(*this));
-  double cy = double(y_()) + center(painter_.y_axis(*this));
+  double cx = center(painter_.x_axis(*this));
+  double cy = center(painter_.y_axis(*this));
   double maxz = center(axis_) + Max(hwid, hhei);
 
   glMatrixMode(GL_PROJECTION);
@@ -1241,48 +1223,41 @@ Painter::SliceWindow::next_slice()
 
 
 void
-Painter::zoom_in(SliceWindow &window)
+Painter::SliceWindow::zoom_in()
 {
-  window.zoom_ *= 1.1;
-  window.redraw_ = true;
+  zoom_ *= 1.1;
+  redraw_ = true;
 }
 
 void
-Painter::zoom_out(SliceWindow &window)
+Painter::SliceWindow::zoom_out()
 {
-  window.zoom_ /= 1.1;
-  window.redraw_ = true;
+  zoom_ /= 1.1;
+  redraw_ = true;
 }
   
 Point
-Painter::screen_to_world(SliceWindow &window, 
-                         unsigned int x, unsigned int y) {
-  Point center(0,0,0);
-//   if (current_volume_) {
-//     center = current_volume_->center(window.axis_, window.slice_num_);
-//     center = world_to_screen(window, center);
-//  }
+Painter::SliceWindow::screen_to_world(unsigned int x, unsigned int y) {
   GLdouble xyz[3];
-
-  gluUnProject(double(x), double(y), 0,//window.center_(window.axis_),
-	       window.gl_modelview_matrix_, 
-	       window.gl_projection_matrix_,
-	       window.gl_viewport_,
+  gluUnProject(double(x), double(y), 0,
+	       gl_modelview_matrix_, 
+	       gl_projection_matrix_,
+	       gl_viewport_,
 	       xyz+0, xyz+1, xyz+2);
-  xyz[window.axis_] = window.center_(window.axis_);
+  xyz[axis_] = center_(axis_);
   return Point(xyz[0], xyz[1], xyz[2]);
 }
 
 
 Point
-Painter::world_to_screen(SliceWindow &window, Point &world)
+Painter::SliceWindow::world_to_screen(Point &world)
 {
   GLdouble xyz[3];
-  gluProject(double(world(0)), double(world(1)), double(world(2)),
-	       window.gl_modelview_matrix_, 
-	       window.gl_projection_matrix_,
-	       window.gl_viewport_,
-	       xyz+0, xyz+1, xyz+2);
+  gluProject(world(0), world(1), world(2),
+             gl_modelview_matrix_, 
+             gl_projection_matrix_,
+	     gl_viewport_,
+             xyz+0, xyz+1, xyz+2);
   return Point(xyz[0], xyz[1], xyz[2]);
 }
 
@@ -1554,7 +1529,7 @@ Painter::update_mouse_state(GuiArgs &args, bool reset) {
   mouse_.dx_ = mouse_.X_ - mouse_.pick_x_;
   mouse_.dy_ = mouse_.Y_ - mouse_.pick_y_;
   if (mouse_.window_) 
-    mouse_.position_ = screen_to_world(*mouse_.window_, mouse_.x_, mouse_.y_);
+    mouse_.position_ = mouse_.window_->screen_to_world(mouse_.x_, mouse_.y_);
 }
 
 
@@ -1585,14 +1560,14 @@ Painter::handle_gui_mouse_button_press(GuiArgs &args) {
       break;
     case 4:
       if (mouse_.state_ & MouseState::CONTROL_E == MouseState::CONTROL_E) 
-        zoom_in(*mouse_.window_);
+        mouse_.window_->zoom_in();
       else
         mouse_.window_->next_slice();
       break;
       
     case 5:
       if (mouse_.state_ & MouseState::SHIFT_E == MouseState::SHIFT_E) 
-        zoom_out(*mouse_.window_);
+        mouse_.window_->zoom_out();
       else
         mouse_.window_->prev_slice();
       break;
@@ -1670,8 +1645,8 @@ Painter::handle_gui_keypress(GuiArgs &args) {
     double pan_delta = Round(3.0/(window.zoom_()/100.0));
     if (pan_delta < 1.0) pan_delta = 1.0;
 
-    if (args[4] == "equal" || args[4] == "plus") zoom_in(window);
-    else if (args[4] == "minus" || args[4] == "underscore") zoom_out(window);
+    if (args[4] == "equal" || args[4] == "plus") window.zoom_in();
+    else if (args[4] == "minus" || args[4] == "underscore") window.zoom_out();
     else if (args[4] == "less" || args[4] == "comma") window.prev_slice();
     else if (args[4] == "greater" || args[4] == "period") window.next_slice();
     else if (args[4] == "bracketleft") {
@@ -1727,12 +1702,12 @@ Painter::handle_gui_keypress(GuiArgs &args) {
       window.mode_ = (window.mode_+1)%num_display_modes_e;
       extract_window_slices(window);
       redraw_window(window);
-    } else if (args[4] == "Left") {
-      window.x_ += pan_delta;
-      redraw_window(window);
-    } else if (args[4] == "Right") {
-      window.x_ -= pan_delta;
-      redraw_window(window);
+//     } else if (args[4] == "Left") {
+//       window.x_ += pan_delta;
+//       redraw_window(window);
+//     } else if (args[4] == "Right") {
+//       window.x_ -= pan_delta;
+//       redraw_window(window);
     } else if (args[4] == "Down") {
 //       window.y_ += pan_delta;
 //       redraw_window(window);
@@ -2131,18 +2106,14 @@ Painter::autoview(SliceWindow &window) {
   if (!current_volume_) return 0;
   int wid = window.viewport_->width();
   int hei = window.viewport_->height();
-  int xtr = 0;
-  int ytr = 0;
   FreeTypeFace *font = fonts_["orientation"];
   if (font)
   {
     FreeTypeText dummy("X", font);
     BBox bbox;
     dummy.get_bounds(bbox);
-    xtr = Ceil(bbox.max().x() - bbox.min().x())+2;
-    ytr = Ceil(bbox.max().y() - bbox.min().y())+2;
-    wid -= 2*xtr;
-    hei -= 2*ytr;
+    wid -= 2*Ceil(bbox.max().x() - bbox.min().x())+4;
+    hei -= 2*Ceil(bbox.max().y() - bbox.min().y())+4;
   }
   
   int xax = x_axis(window);
@@ -2163,8 +2134,6 @@ Painter::autoview(SliceWindow &window) {
 
   window.zoom_ = Min(w_ratio*100.0, h_ratio*100.0);
   if (window.zoom_ < 1.0) window.zoom_ = 100.0;
-  window.x_ = 0.0;
-  window.y_ = 0.0;
   window.center_(xax) = current_volume_->center()(xax);
   window.center_(yax) = current_volume_->center()(yax);
 

@@ -186,8 +186,7 @@ class Painter : public Module
     string *            mouse_button_release(MouseState &);
     string *            mouse_motion(MouseState &);
   private:
-    double              x_;
-    double              y_;
+    Point               center_;
     SliceWindow *       window_;
   };
 
@@ -353,6 +352,10 @@ class Painter : public Module
     void                setup_gl_view();
     void		next_slice();
     void		prev_slice();
+    void		zoom_in();
+    void		zoom_out();
+    Point		world_to_screen(Point &);
+    Point		screen_to_world(unsigned int x, unsigned int y);
 
     Painter &           painter_;
     string		name_;
@@ -373,9 +376,6 @@ class Painter : public Module
     UIint		slab_min_;
     UIint		slab_max_;
       
-    UIdouble		x_;
-    UIdouble		y_;
-
     bool		redraw_;
     UIint		mode_;
     UIint		show_guidelines_;
@@ -509,15 +509,10 @@ class Painter : public Module
 
   // Methods for navigating around the slices
   void			set_axis(SliceWindow &, unsigned int axis);
-  void			zoom_in(SliceWindow &);
-  void			zoom_out(SliceWindow &);
 
   // Methods for cursor/coordinate projection and its inverse
   int			x_axis(SliceWindow &);
   int			y_axis(SliceWindow &);
-  Point			world_to_screen(SliceWindow &, Point &);
-  Point			screen_to_world(SliceWindow &,
-					unsigned int x, unsigned int y);
 
   // Methods called by tcl_command
   void                  update_mouse_state(GuiArgs &args, bool reset = false);
