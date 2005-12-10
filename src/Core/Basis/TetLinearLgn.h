@@ -32,10 +32,7 @@
 #if !defined(TetLinearLgn_h)
 #define TetLinearLgn_h
 
-#include <Core/Basis/Basis.h>
-#include <Core/Datatypes/TypeName.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Basis/Locate.h>
+#include <Core/Basis/CrvLinearLgn.h>
 
 #include <Core/Basis/share.h>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -365,6 +362,13 @@ public:
   {
     TetLocate< TetLinearLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
+  }
+ 
+  //! get arc length for edge
+  template <class ElemData>
+  double get_arc_length(const unsigned edge, const ElemData &cd) const  
+  {
+    return get_arc3d_length<CrvGaussian1<double> >(this, edge, cd);
   }
  
   static  const string type_name(int n = -1);

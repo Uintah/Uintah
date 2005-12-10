@@ -32,12 +32,7 @@
 #if !defined(TriLinearLgn_h)
 #define TriLinearLgn_h
 
-#include <Core/Basis/Basis.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Datatypes/TypeName.h>
-#include <Core/Basis/Locate.h>
-
-#include <Core/Basis/share.h>
+#include <Core/Basis/CrvLinearLgn.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off 'implicit conversion... loss of accuracy' messages.
@@ -147,7 +142,6 @@ public:
 
 //! Class for searching of parametric coordinates related to a 
 //! value in Tri meshes and fields
-//! to do
 template <class ElemBasis>
 class TriLocate : public Dim2Locate<ElemBasis> {
 public:
@@ -167,7 +161,7 @@ public:
     return false;
   }
 
-protected:
+
   inline bool check_coords(const vector<double> &x) const  
   {  
     if (x[0]>=-Dim2Locate<ElemBasis>::thresholdDist)
@@ -178,6 +172,7 @@ protected:
     return false;
   }
   
+protected:
   //! find a reasonable initial guess 
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, const ElemData &cd, 
@@ -361,6 +356,13 @@ public:
   {
     TriLocate< TriLinearLgn<T> > CL;
     return CL.get_coords(this, coords, value, cd);
+  }
+ 
+  //! get arc length for edge
+  template <class ElemData>
+  double get_arc_length(const unsigned edge, const ElemData &cd) const  
+  {
+    return get_arc2d_length<CrvGaussian1<double> >(this, edge, cd);
   }
  
   static const string type_name(int n = -1);
