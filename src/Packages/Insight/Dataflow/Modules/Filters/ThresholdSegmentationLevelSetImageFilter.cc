@@ -144,7 +144,7 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   // or the input data has changed. If
   // this is the case, set the inputs.
 
-  if(!filter_  || 
+  if(filter_ == 0 || 
      inhandle_SeedImage_->generation != last_SeedImage_ || 
      inhandle_FeatureImage_->generation != last_FeatureImage_) {
      
@@ -170,7 +170,7 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
 
   // set filter parameters
    
-  
+  //dynamic_cast<FilterType* >(filter_.GetPointer())->AbortGenerateDataOff(); 
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetLowerThreshold( gui_lower_threshold_.get() ); 
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetUpperThreshold( gui_upper_threshold_.get() ); 
@@ -208,8 +208,8 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
 
   } catch ( itk::ExceptionObject & err ) {
-     error("ExceptionObject caught!");
-     error(err.GetDescription());
+     warning("ExceptionObject caught!");
+     warning(err.GetDescription());
   }
 
   // get filter output
@@ -386,7 +386,6 @@ ThresholdSegmentationLevelSetImageFilter::ConstProcessEvent(const itk::Object * 
 void 
 ThresholdSegmentationLevelSetImageFilter::update_after_iteration()
 {
-
   if(gui_update_OutputImage_.get() && iterationCounter_OutputImage%gui_update_iters_OutputImage_.get() == 0 && iterationCounter_OutputImage > 0) {
 
     // determine type and call do it
@@ -400,8 +399,8 @@ ThresholdSegmentationLevelSetImageFilter::update_after_iteration()
       return;
     }
   }
-  iterationCounter_OutputImage++;
 
+  iterationCounter_OutputImage++;
 }
 
 
@@ -447,8 +446,24 @@ ThresholdSegmentationLevelSetImageFilter::Observe( itk::Object *caller )
 void 
 ThresholdSegmentationLevelSetImageFilter::tcl_command(GuiArgs& args, void* userdata)
 {
-  Module::tcl_command(args, userdata);
+  if(args.count() < 2){
+    args.error("ThresholdSegmentationLevelSetImageFilter needs a minor command");
+    return;
+  }
 
+  if (args[1] == "stop_segmentation") {
+    // since we only support float images in 2 and 3 dimensions, we 
+    // only have 2 cases to check for
+    typedef itk::ThresholdSegmentationLevelSetImageFilter< itk::Image<float,2>, itk::Image<float, 2> > FilterType2D;
+    typedef itk::ThresholdSegmentationLevelSetImageFilter< itk::Image<float,3>, itk::Image<float, 3> > FilterType3D;
+    if (dynamic_cast<FilterType2D *>(filter_.GetPointer())) {
+      dynamic_cast<FilterType2D *>(filter_.GetPointer())->AbortGenerateDataOn();
+    } else if (dynamic_cast<FilterType3D *>(filter_.GetPointer())) {
+      dynamic_cast<FilterType3D *>(filter_.GetPointer())->AbortGenerateDataOn();
+    }
+  } else {
+    Module::tcl_command(args, userdata);
+  }
 }
 
 

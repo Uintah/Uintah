@@ -51,7 +51,6 @@
          global $this-smoothing_conductance
          global $this-update_OutputImage
          global $this-update_iters_OutputImage
-	 global $this-stop
 
          set_defaults
     }
@@ -72,9 +71,7 @@
          set $this-smoothing_conductance 0.5
          set $this-update_OutputImage 0
          set $this-update_iters_OutputImage 10
-	 set $this-stop 0
-
-    }
+     }
 
 
     method ui {} {
@@ -187,7 +184,7 @@
         pack $w.updatesOutputImage        
 
 	button $w.stop -text "Stop Segmentation" \
-	    -command "$this stop_segmentation"
+	    -command "$this-c stop_segmentation"
 	pack $w.stop -side top -anchor n
 
         frame $w.buttons
@@ -196,12 +193,4 @@
 	pack $w.buttons -side top 
 
     }
-
-     method stop_segmentation {} {
-	 global $this-stop
-	 if {[set $this-stop] == 0} {
-	     set $this-stop 1
-	 }
-     }
-
 }
