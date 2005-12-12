@@ -86,6 +86,9 @@ namespace SCIRun {
 
   /* Todo:
      X - Persistent volume state when re-executing
+       - Add support for 2, 4, 5-D nrrds
+       - Add back in MIP mode
+       - Geometry output port
        - Show other windows slice correctly
        - Automatic world space grid
        - Automatic index space grid
@@ -238,9 +241,6 @@ Painter::SliceWindow::SliceWindow(Painter &painter, GuiContext *ctx) :
   layout_(0),
   viewport_(0),
   slices_(),
-  paint_under_(0,0, this),
-  paint_(0,0, this),
-  paint_over_(0,0, this),
   center_(0,0,0),
   normal_(1,0,0),
   slice_num_(ctx->subVar("slice"), 0),
@@ -302,10 +302,6 @@ Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd)
 }
 
 
-  
-
-
-
 
 DECLARE_MAKER(Painter)
 
@@ -315,47 +311,24 @@ Painter::Painter(GuiContext* ctx) :
   volumes_(),
   volume_map_(),
   current_volume_(0),
-  nrrd_generations_(),
-  cm2_generation_(-1),
-  cm2_buffer_under_(256, 256, 4),
-  cm2_buffer_(256, 256, 4),
-  cm2_buffer_over_(256, 256, 4),
   colormaps_(),
-  colormap_generation_(-1),
   tool_(0),
-  show_colormap2_(ctx->subVar("show_colormap2"),0),
-  painting_(ctx->subVar("painting"),0),
-  texture_filter_(ctx->subVar("texture_filter"),0),
   anatomical_coordinates_(ctx->subVar("anatomical_coordinates"), 1),
   show_text_(ctx->subVar("show_text"), 1),
   font_r_(ctx->subVar("color_font-r"), 1.0),
   font_g_(ctx->subVar("color_font-g"), 1.0),
   font_b_(ctx->subVar("color_font-b"), 1.0),
   font_a_(ctx->subVar("color_font-a"), 1.0),
-  geom_flushed_(ctx->subVar("geom_flushed"), 0),
-  background_threshold_(ctx->subVar("background_threshold"), 0.0),
-  gradient_threshold_(ctx->subVar("gradient_threshold"), 0.0),
-  paint_widget_(0),
-  paint_lock_("Painter paint lock"),
   bundle_oport_((BundleOPort *)get_oport("Paint Data")),
   freetype_lib_(0),
   fonts_(),
   font_size_(ctx->subVar("font_size"),15.0),
   runner_(0),
   runner_thread_(0),
-  slice_lock_("Slice lock"),
   fps_(0.0),
   current_layout_(0),
   executing_(0)
 {
-  nrrd_generations_.resize(2);
-  nrrd_generations_[0] = -1;
-  nrrd_generations_[1] = -1;
-
-  for (int a = 0; a < 3; ++a) {
-    mip_slices_[a] = 0;
-  }
-
   runner_ = scinew RealDrawer(this);
   runner_thread_ = scinew Thread(runner_, string(id+" OpenGL drawer").c_str());
   mouse_.window_ = 0;
@@ -417,27 +390,9 @@ Painter::real_draw_all()
   if (for_each(&Painter::render_window)) 
     for_each(&Painter::swap_window);
   TCLTask::unlock();
-  send_all_geometry();
 }
 
   
-void
-Painter::send_all_geometry()
-{
-  if (tool_) return;
-  TCLTask::lock();
-  slice_lock_.writeLock();
-  int flush = for_each(&Painter::send_mip_textures);
-  flush += for_each(&Painter::send_slice_textures);  
-  slice_lock_.writeUnlock();
-  TCLTask::unlock();
-  if (flush) 
-  {
-    //    geom_oport_->flushViewsAndWait();
-    //    geom_flushed_ = 1;
-  }
-}
-
 
 void
 Painter::redraw_all()
@@ -744,17 +699,16 @@ Painter::SliceWindow::setup_gl_view()
   glGetDoublev(GL_PROJECTION_MATRIX, gl_projection_matrix_);
   CHECK_OPENGL_ERROR();
 
-  const Point center = center_;
   //  const Point center = painter_.current_volume_->center(axis_, slice_num_);
   double hwid = viewport_->width()*50.0/zoom_();
   double hhei = viewport_->height()*50.0/zoom_();
-  double cx = center(painter_.x_axis(*this));
-  double cy = center(painter_.y_axis(*this));
-  double maxz = center(axis_) + Max(hwid, hhei);
+  double cx = center_(painter_.x_axis(*this));
+  double cy = center_(painter_.y_axis(*this));
+  double maxz = center_(axis_) + Max(hwid, hhei);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(cx - hwid, cx + hwid, cy - hhei, cy + hhei, -maxz, maxz);
+  glOrtho(cx - hwid, cx + hwid, cy - hhei, cy + hhei, -2*maxz, 2*maxz);
   glGetIntegerv(GL_VIEWPORT, gl_viewport_);
   glGetDoublev(GL_MODELVIEW_MATRIX, gl_modelview_matrix_);
   glGetDoublev(GL_PROJECTION_MATRIX, gl_projection_matrix_);
@@ -783,7 +737,7 @@ Painter::draw_window_label(SliceWindow &window)
   }
 
   if (window.mode_ == slab_e) text = "SLAB - "+text;
-  if (window.mode_ == mip_e) text = "MIP - "+text;
+  //  if (window.mode_ == mip_e) text = "MIP - "+text;
   draw_label(window, text, window.viewport_->width() - 2, 0, 
 	     FreeTypeText::se, fonts_["view"]);
 
@@ -1116,7 +1070,6 @@ Painter::extract_window_slices(SliceWindow &window) {
   for (unsigned int s = window.slices_.size(); s < volumes_.size(); ++s)
     window.slices_.push_back(scinew NrrdSlice(this, volumes_[s], &window));
   for_each(window, &Painter::set_slice_nrrd_dirty);
-  set_slice_nrrd_dirty(window.paint_);
 
   return window.slices_.size();
 }
@@ -1130,109 +1083,6 @@ Painter::set_slice_nrrd_dirty(NrrdSlice &slice) {
 }
 
 
-
-int
-Painter::extract_mip_slices(NrrdVolume *volume)
-{
-  return 0;
-#if 0
-  if (!volume || !volume->nrrd_.get_rep()) { return 0; }
-  for (int axis = 0; axis < 3; ++axis) {
-    if (!mip_slices_[axis]) {
-      mip_slices_[axis] = scinew NrrdSlice(this, volume, 0);
-    }
-      
-    NrrdSlice &slice = *mip_slices_[axis];
-    slice.do_lock();
-    slice.volume_ = volume;
-
-    slice.nrrd_ = scinew NrrdData;
-
-    NrrdDataHandle temp1 = scinew NrrdData;
-    
-    int max[3];
-    for (int i = 0; i < 3; i++) {
-      max[i] = max_slice_[i];
-    }
-    
-    NRRD_EXEC(nrrdProject(temp1->nrrd, slice.volume_->nrrd_->nrrd, 
-			  axis, 2, nrrdTypeDefault));
-    slice.nrrd_dirty_ = false;
-    slice.tex_dirty_ = true;
-    slice.geom_dirty_ = false;
-    
-//     int minp[2] = { 0, 0 };
-//     int maxp[2] = { slice.tex_wid_-1, slice.tex_hei_-1 };
-    
-//     NRRD_EXEC(nrrdPad(slice.nrrd_->nrrd, temp1->nrrd, 
-// 		      minp,maxp,nrrdBoundaryPad, 0.0));
-    set_slice_coords(slice, true);
-    slice.do_unlock();
-  }
-  return 1;
-#endif
-}
-
-
-int
-Painter::send_mip_textures(SliceWindow &window)
-{
-  return 0;
-#if 0
-  int value = 0;
-  for (int axis = 0; axis < 3; ++axis)
-  {
-    if (!mip_slices_[axis]) continue;
-    NrrdSlice &slice = *mip_slices_[axis];
-    if (!slice.tex_dirty_) continue;
-    value++;
-    slice.do_lock();
-
-    //    apply_colormap(slice, temp_tex_data_);
-
-    window.viewport_->make_current();
-    //    bind_slice(slice);
-    window.viewport_->release();
-
-    string name = "MIP Slice"+to_string(slice.axis_);
-
-    TexSquare *mintex = scinew TexSquare();
-    tobjs_[name+"-min"] = mintex;
-    slice.slice_num_ = 0;
-    set_slice_coords(slice, false);
-    mintex->set_coords(slice.tex_coords_, slice.pos_coords_);
-    //    mintex->set_texname(slice.tex_name_);
-    Vector normal(axis==0?1.0:0.0, axis==1?-1.0:0.0, axis==2?1.0:0.0);
-    mintex->set_normal(normal);
-
-    Vector *minvec = scinew 
-      Vector(axis==0?1.0:0.0, axis==1?1.0:0.0, axis==2?1.0:0.0);
-    GeomCull *mincull = scinew GeomCull(mintex, minvec);
-
-    TexSquare *maxtex = scinew TexSquare();
-    tobjs_[name+"-max"] = maxtex;
-    slice.slice_num_ = max_slice_[axis];
-    set_slice_coords(slice, false);
-    maxtex->set_coords(slice.tex_coords_, slice.pos_coords_);
-    //    maxtex->set_texname(slice.tex_name_);
-    maxtex->set_normal(normal);
-
-    Vector *maxvec = scinew 
-      Vector(axis==0?-1.0:0.0, axis==1?-1.0:0.0, axis==2?-1.0:0.0);
-    GeomCull *maxcull = scinew GeomCull(maxtex, maxvec);
-
-    GeomGroup *group = scinew GeomGroup();
-    group->add(mincull);
-    group->add(maxcull);
-    
-    GeomHandle gobj = group;
-    slice.do_unlock();
-    //    if (gobjs_[name]) geom_oport_->delObj(gobjs_[name]);
-    //    gobjs_[name] = geom_oport_->addObj(gobj, name, &slice_lock_);
-  }
-  return value;
-#endif
-}
 
 
 void
@@ -1644,13 +1494,6 @@ void
 Painter::handle_gui_mouse_button_release(GuiArgs &args) {
   update_mouse_state(args);
 
-  if (mouse_.button_ == 1 && painting_) { 
-    painting_ = 2;
-    if (!executing_) {
-      ++executing_;
-      want_to_execute();
-    }
-  }
 
   if (tool_) {
     string *err = tool_->mouse_button_release(mouse_);
@@ -1796,11 +1639,8 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
   else if (args[1] == "button")   handle_gui_mouse_button_press(args);
   else if (args[1] == "release")  handle_gui_mouse_button_release(args);
   else if (args[1] == "keypress") handle_gui_keypress(args);
-  else if (args[1] == "background_thresh") update_background_threshold();
-  else if (args[1] == "gradient_thresh")for_each(&Painter::set_paint_dirty);
-  else if (args[1] == "undo") undo_paint_stroke();
   else if (args[1] == "set_font_sizes") set_font_sizes(font_size_());
-  else if(args[1] == "setgl") {
+  else if (args[1] == "setgl") {
     TkOpenGLContext *context = \
       scinew TkOpenGLContext(args[2], args.get_int(4), 256, 256);
     XSync(context->display_, 0);
@@ -1863,213 +1703,12 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
     //	fabs(cache_wl - clut_wl_) < 0.0001) return;
     for_each(&Painter::rebind_slice);
     for_each(&Painter::redraw_window);
-    for (int n = 0; n < 3; ++n)
-      if (mip_slices_[n])
-	rebind_slice(*mip_slices_[n]);
   } else 
     Module::tcl_command(args, userdata);
 }
 
 
 
-int
-Painter::send_slice_textures(NrrdSlice &slice) {
-  return 0;
-#if 0
-  if (!slice.geom_dirty_) return 0;
-  slice.do_lock();
-  string name = "Slice"+to_string(slice.axis_);
-  if (tobjs_[name] == 0) 
-    tobjs_[name] = scinew TexSquare();
-  //  tobjs_[name]->set_texname(slice.tex_name_);
-  set_slice_coords(slice, false);
-  tobjs_[name]->set_coords(slice.tex_coords_, slice.pos_coords_);
-  int axis = slice.axis_;
-  Vector normal(axis==0?1.0:0.0, axis==1?-1.0:0.0, axis==2?1.0:0.0);
-  tobjs_[name]->set_normal(normal);
-  set_slice_coords(slice, true);
-  GeomHandle gobj = tobjs_[name];
-  slice.geom_dirty_ = false;
-  slice.do_unlock();
-
-  //  if (gobjs_[name]) geom_oport_->delObj(gobjs_[name]);
-  //  gobjs_[name] = geom_oport_->addObj(gobj, name, &slice_lock_);
-  return 1;
-#endif
-}
-
-int
-Painter::set_paint_dirty(SliceWindow &window) 
-{
-  window.paint_.nrrd_dirty_ = true;
-  return 1;
-}
-
-void
-Painter::rasterize_widgets_to_cm2(int min, int max, Array3<float> &buffer) 
-{
-  buffer.initialize(0.0);
-  for (int i = min; i <= max; ++i)
-    cm2_->widgets()[i]->rasterize(buffer);
-}
-
-
-bool
-Painter::rasterize_colormap2() {
-  if (!cm2_.get_rep()) return false;
-  if (cm2_generation_ == cm2_->generation) return false;
-  cm2_generation_ = cm2_->generation;
-
-  const int last_widget = cm2_->widgets().size() - 1;
-  int selected = cm2_->selected();
-  if (selected < 0 || selected > int(cm2_->widgets().size())) 
-    selected = last_widget;
-
-  rasterize_widgets_to_cm2(0, selected-1, cm2_buffer_under_);
-  rasterize_widgets_to_cm2(selected, selected, cm2_buffer_);
-  rasterize_widgets_to_cm2(selected+1, last_widget, cm2_buffer_over_);
-
-  for_each(&Painter::set_paint_dirty);
-
-  return true;
-}
-
-
-void
-Painter::apply_colormap2_to_slice(Array3<float> &cm2, NrrdSlice &slice)
-{
-#if 0
-  slice.do_lock();
-  slice.tex_dirty_ = true;
-
-  const unsigned int y_ax = y_axis(*slice.window_);
-  const unsigned int x_ax = x_axis(*slice.window_);
-  const unsigned int z = slice.slice_num_;
-  const Nrrd* value_nrrd = volumes_[0]->nrrd_->nrrd;
-  const Nrrd* grad_nrrd = gradient_->nrrd;
-  const double min = clut_wl_ - clut_ww_/2.0;
-  const double scale = 255.999 / clut_ww_;
-  float *paintdata =  (float *)slice.nrrd_->nrrd->data;  
-  const int grad_thresh = Round(gradient_threshold_()*255.0);
-  int grad, cval, pos;
-  double val;
-
-  for (int y = 0; y <= max_slice_[y_ax]; ++y) {
-    for (int x = 0; x < max_slice_[x_ax]; ++x) {
-      pos = (y*slice.tex_wid_+x)*4;
-      grad = int(get_value(grad_nrrd,
-			   (x_ax==0)?x:((y_ax==0)?y:z),
-			   (x_ax==1)?x:((y_ax==1)?y:z),
-			   (x_ax==2)?x:((y_ax==2)?y:z)));
-      if (grad < grad_thresh) {
-	paintdata[pos] = 0.0;
-	paintdata[pos+1] = 0.0;
-	paintdata[pos+2] = 0.0;
-	paintdata[pos+3] = 1.0;
-      } else {
-	val = get_value(value_nrrd, 
-			(x_ax==0)?x:((y_ax==0)?y:z),
-			(x_ax==1)?x:((y_ax==1)?y:z),
-			(x_ax==2)?x:((y_ax==2)?y:z));
-	cval = Floor((val-min)*scale);
-	
-	if (cval >= 0 && cval <= 255) {
-	  memcpy(paintdata+pos, 
-		 &cm2(grad, cval, 0), 
-		 4*sizeof(float));
-	} else {
-	  paintdata[pos] = 0.0;
-	  paintdata[pos+1] = 0.0;
-	  paintdata[pos+2] = 0.0;
-	  paintdata[pos+3] = 0.0;
-	}
-      }
-    }
-  }
-  slice.do_unlock();
-#endif
-}
-
-
-
-int
-Painter::extract_window_paint(SliceWindow &window) {
-  if (!gradient_.get_rep() || !cm2_.get_rep()) return 0;
-  if (window.slices_.empty()) return 0;
-  rasterize_colormap2();
-
-  if (!window.paint_.nrrd_dirty_) return 0;
-  window.paint_.nrrd_dirty_ = false;
-
-  window.paint_under_.volume_ = volumes_[0];
-  window.paint_.volume_ = volumes_[0];
-  window.paint_over_.volume_ = volumes_[0];
-
-  apply_colormap2_to_slice(cm2_buffer_under_, window.paint_under_);
-  apply_colormap2_to_slice(cm2_buffer_, window.paint_);
-  apply_colormap2_to_slice(cm2_buffer_over_, window.paint_over_);
-  
-  return 3;
-}
-
-
-void
-Painter::do_paint(SliceWindow &window) {
-#if 0
-  if (!paint_lock_.tryLock()) return;
-  if (!paint_widget_ || !gradient_.get_rep() || !paint_widget_) {
-    paint_lock_.unlock();
-    return;
-  }
-  int xyz[3];
-  for (int i = 0; i < 3; ++i) {
-    xyz[i] = Floor(mouse_.position_(i)/scale_[i]);
-    if (xyz[i] < 0 || xyz[i] > max_slice_[i]) return;
-  }
-  const double gradient = 
-    get_value(gradient_->nrrd, xyz[0], xyz[1], xyz[2])/255.0;
-  if (gradient < gradient_threshold_) return;
-  const double value = 
-    get_value(volumes_[0]->nrrd_->nrrd,xyz[0],xyz[1],xyz[2]);
-  paint_widget_->add_coordinate(make_pair(value, gradient));
-  rasterize_widgets_to_cm2(cm2_->selected(), cm2_->selected(), cm2_buffer_);
-  for_each(&Painter::extract_current_paint);
-  paint_lock_.unlock();
-#endif
-}
-
-int
-Painter::extract_current_paint(SliceWindow &window)
-{
-  apply_colormap2_to_slice(cm2_buffer_, window.paint_);
-  window.redraw_ = true;
-  return 1;
-}
-
-
-void
-Painter::update_background_threshold() {
-#if 0
-  const double min = clut_wl_ - clut_ww_/2.0;
-  double alpha = (background_threshold_() - min) / clut_ww_;
-  TexSquareMap::iterator iter = tobjs_.begin();
-  while (iter != tobjs_.end()) {
-    iter->second->set_alpha_cutoff(alpha);
-    iter++;
-  }  
-#endif
-  //  if (geom_oport_) geom_oport_->flushViews();
-}
-
-void
-Painter::undo_paint_stroke() {
-  if (!paint_widget_) return;
-  if (paint_widget_->pop_stroke()) {
-    painting_ = 2;
-    want_to_execute();
-  }
-}
-  
 void
 Painter::delete_all_fonts() {
   FontMap::iterator fiter = fonts_.begin();
@@ -2200,10 +1839,5 @@ Painter::create_volume(NrrdVolumes *copies) {
   return volumes_.size()-1;
 }
 
-
-
-
-
-  
     
 } // end namespace SCIRun

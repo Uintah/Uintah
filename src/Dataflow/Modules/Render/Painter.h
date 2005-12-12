@@ -352,7 +352,6 @@ class Painter : public Module
 
   struct SliceWindow { 
     SliceWindow(Painter &painter, GuiContext *ctx);
-
     void                setup_gl_view();
     void		next_slice();
     void		prev_slice();
@@ -362,16 +361,14 @@ class Painter : public Module
     Point		screen_to_world(unsigned int x, unsigned int y);
     Vector		x_dir();
     Vector		y_dir();
+    int                 x_axis();
+    int                 y_axis();
 
     Painter &           painter_;
     string		name_;
     WindowLayout *	layout_;
     OpenGLViewport *	viewport_;
     NrrdSlices		slices_;
-
-    NrrdSlice		paint_under_;
-    NrrdSlice		paint_;
-    NrrdSlice		paint_over_;
 
     Point               center_;
     Vector              normal_;
@@ -408,7 +405,7 @@ class Painter : public Module
 
 
   class RealDrawer : public Runnable {
-    Painter *	module_;
+    Painter *           module_;
     TimeThrottle	throttle_;
   public:
     bool		dead_;
@@ -420,37 +417,18 @@ class Painter : public Module
   WindowLayouts		layouts_;
   NrrdVolumes		volumes_;
   NrrdVolumeMap         volume_map_;
-  NrrdDataHandle	gradient_;
-  ColorMap2Handle	cm2_;
-
   NrrdVolume *          current_volume_;
-
-
-  vector<int>		nrrd_generations_;
-  int			cm2_generation_;
-  Array3<float>		cm2_buffer_under_;
-  Array3<float>		cm2_buffer_;
-  Array3<float>		cm2_buffer_over_;
 
   typedef map<string, ColorMapHandle> colormap_map_t;
 
   colormap_map_t	colormaps_;
   vector<string>        colormap_names_;
-  int			colormap_generation_;
-
-
-  NrrdSlice *		mip_slices_[3];
-
   PainterTool *         tool_;
-  
   MouseState            mouse_;
 
   int			cur_slice_[3];
   int			slab_width_[3];
-  UIint			show_colormap2_;
-  UIint			painting_;
 
-  UIint			texture_filter_;
   UIint			anatomical_coordinates_;
   UIint			show_text_;
   UIdouble		font_r_;
@@ -458,21 +436,9 @@ class Painter : public Module
   UIdouble		font_b_;
   UIdouble		font_a_;
 
-  UIint			geom_flushed_;
-
-  UIdouble		background_threshold_;
-  UIdouble		gradient_threshold_;
-
-  PaintCM2Widget *	paint_widget_;
-  Mutex			paint_lock_;
-
   //! Ports
   BundleOPort *         bundle_oport_;
   vector<BundleHandle>  bundles_;
-
-  typedef		map<string,TexSquare*> TexSquareMap;
-  TexSquareMap		tobjs_;
-  map<string,GeomID>    gobjs_;
 
   FreeTypeLibrary *	freetype_lib_;
   typedef		map<string, FreeTypeFace *> FontMap;
@@ -481,7 +447,6 @@ class Painter : public Module
   
   RealDrawer *		runner_;
   Thread *		runner_thread_;
-  CrowdMonitor		slice_lock_;
 
   // Methods for drawing to the GL window
   void			redraw_all();
@@ -503,15 +468,6 @@ class Painter : public Module
 
 
   int			extract_window_slices(SliceWindow &);
-  int			extract_mip_slices(NrrdVolume *);
-
-  // Methods to send geometry to Viewer
-  int			send_mip_textures(SliceWindow &);
-  int			send_slice_textures(NrrdSlice &slice);
-  void			send_all_geometry();
-
-  // Misc
-  void			update_background_threshold();
 
   // Methods for navigating around the slices
   void			set_axis(SliceWindow &, unsigned int axis);
@@ -529,14 +485,6 @@ class Painter : public Module
   void			handle_gui_mouse_enter(GuiArgs &args);
   void			handle_gui_mouse_leave(GuiArgs &args);
 
-  // Methods for Painting into 2D Transfer Function
-  void			undo_paint_stroke();
-  int			extract_window_paint(SliceWindow &window);
-  int			extract_current_paint(SliceWindow &window);
-  void			apply_colormap2_to_slice(Array3<float> &, NrrdSlice &);
-  bool			rasterize_colormap2();
-  void			rasterize_widgets_to_cm2(int min, int max, Array3<float> &);
-  void			do_paint(SliceWindow &);
 
   typedef int (SCIRun::Painter::* SliceWindowFunc)(SliceWindow &);
   typedef int (SCIRun::Painter::* WindowLayoutFunc)(WindowLayout &);
@@ -548,7 +496,6 @@ class Painter : public Module
 
   int			render_window(SliceWindow &);
   int			swap_window(SliceWindow &);
-  int			set_paint_dirty(SliceWindow &);
   int			autoview(SliceWindow &);
 
   int			rebind_slice(NrrdSlice &);
