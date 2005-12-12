@@ -66,15 +66,16 @@ inline double d_arc_length(const vector<T>& derivs)
 template <>
 inline double d_arc_length(const vector<Point>& derivs)
 {
-  double rc=0.;
-  for(int i=0; i<derivs.size(); i++)
-    rc+=sqrt(derivs[i].x()*derivs[i].x()+derivs[i].y()*derivs[i].y()+derivs[i].z()*derivs[i].z());
+  double rc = 0.;
+  for(unsigned int i = 0; i<derivs.size(); i++)
+    rc += sqrt(derivs[i].x() * derivs[i].x() + derivs[i].y() *
+	       derivs[i].y() + derivs[i].z() * derivs[i].z());
   return rc;
 }
 
 
 template <class NumApprox, class ElemBasis, class ElemData>
-  double get_arc1d_length(const ElemBasis *pEB, const unsigned edge, 
+double get_arc1d_length(const ElemBasis *pEB, const unsigned edge, 
 			const ElemData &cd)
 {
   const double *v0 = pEB->unit_vertices[pEB->unit_edges[edge][0]];
@@ -95,7 +96,7 @@ template <class NumApprox, class ElemBasis, class ElemData>
  
 
 template <class NumApprox, class ElemBasis, class ElemData>
-  double get_arc2d_length(const ElemBasis *pEB, const unsigned edge, 
+double get_arc2d_length(const ElemBasis *pEB, const unsigned edge, 
 			const ElemData &cd)
 {
   const double *v0 = pEB->unit_vertices[pEB->unit_edges[edge][0]];
@@ -118,7 +119,7 @@ template <class NumApprox, class ElemBasis, class ElemData>
  
 
 template <class NumApprox, class ElemBasis, class ElemData>
-  double get_arc3d_length(const ElemBasis *pEB, const unsigned edge, 
+double get_arc3d_length(const ElemBasis *pEB, const unsigned edge, 
 			const ElemData &cd)
 {
   const double *v0 = pEB->unit_vertices[pEB->unit_edges[edge][0]];
@@ -221,12 +222,12 @@ double getnextx3(vector<double> &x, vector<double> &xold,
 // locate for Point 
 template <>
 double getnextx3(vector<double> &x, vector<double> &xold, 
-		const Point& y, const vector<Point>& yd);
+		 const Point& y, const vector<Point>& yd);
       
 // locate for scalar value 
 template <class T>
 double getnextx3(vector<double> &x, vector<double> &xold, 
-		const T& y, const vector<T>& yd)
+		 const T& y, const vector<T>& yd)
 {
   x[0] -= (yd[0] ? y/yd[0] : 0.);
   x[1] -= (yd[1] ? y/yd[1] : 0.);
