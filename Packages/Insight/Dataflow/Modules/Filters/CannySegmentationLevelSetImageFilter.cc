@@ -168,7 +168,7 @@ CannySegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Obje
   // set filter parameters
    
   
-  dynamic_cast<FilterType* >(filter_.GetPointer())->SetMaximumIterations( gui_iterations_.get() ); 
+  dynamic_cast<FilterType* >(filter_.GetPointer())->SetNumberOfIterations( gui_iterations_.get() ); 
   
   if( gui_reverse_expansion_direction_.get() ) {
     dynamic_cast<FilterType* >(filter_.GetPointer())->ReverseExpansionDirectionOn( );   
@@ -199,8 +199,8 @@ CannySegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Obje
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
 
   } catch ( itk::ExceptionObject & err ) {
-     error("ExceptionObject caught!");
-     error(err.GetDescription());
+     warning("ExceptionObject caught!");
+     warning(err.GetDescription());
   }
 
   // get filter output
@@ -435,7 +435,24 @@ CannySegmentationLevelSetImageFilter::Observe( itk::Object *caller )
 void 
 CannySegmentationLevelSetImageFilter::tcl_command(GuiArgs& args, void* userdata)
 {
-  Module::tcl_command(args, userdata);
+  if(args.count() < 2){
+    args.error("ThresholdSegmentationLevelSetImageFilter needs a minor command");
+    return;
+  }
+
+  if (args[1] == "stop_segmentation") {
+    // since we only support float images in 2 and 3 dimensions, we 
+    // only have 2 cases to check for
+    typedef itk::CannySegmentationLevelSetImageFilter< itk::Image<float,2>, itk::Image<float, 2>, float > FilterType2D;
+    typedef itk::CannySegmentationLevelSetImageFilter< itk::Image<float,3>, itk::Image<float, 3>, float > FilterType3D;
+    if (dynamic_cast<FilterType2D *>(filter_.GetPointer())) {
+      dynamic_cast<FilterType2D *>(filter_.GetPointer())->AbortGenerateDataOn();
+    } else if (dynamic_cast<FilterType3D *>(filter_.GetPointer())) {
+      dynamic_cast<FilterType3D *>(filter_.GetPointer())->AbortGenerateDataOn();
+    }
+  } else {
+    Module::tcl_command(args, userdata);
+  }
 
 }
 

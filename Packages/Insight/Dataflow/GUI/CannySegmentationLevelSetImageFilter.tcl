@@ -156,7 +156,13 @@
         label $w.updatesOutputImage.i.l -text "Send Intermediate Interval:"
         entry $w.updatesOutputImage.i.e -textvariable $this-update_iters_OutputImage -width 10
         pack $w.updatesOutputImage.i.l $w.updatesOutputImage.i.e -side left -anchor w -padx 2 -pady 2
-        pack $w.updatesOutputImage        
+        pack $w.updatesOutputImage 
+
+
+	button $w.stop -text "Stop Segmentation" \
+	    -command "$this-c stop_segmentation"
+	pack $w.stop -side top -anchor n
+       
         frame $w.buttons
 	makeSciButtonPanel $w.buttons $w $this
 	moveToCursor $w
