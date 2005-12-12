@@ -40,7 +40,6 @@
  *
  */
 
-#include <BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -52,15 +51,20 @@
 #include <Core/Math/Gaussian.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
 #include <iostream>
-using std::endl;
-#include <stdio.h>
-#include <math.h>
 
 
 namespace BioPSE {
 
+using std::endl;
 using namespace SCIRun;
+
+typedef TetVolMesh<TetLinearLgn<Point> >                   TVMesh;
+typedef ConstantBasis<int>                                 TVIBasis;
+typedef GenericField<TVMesh, TVIBasis,    vector<int> >    TVFieldI;   
 
 class ConductivitySearch : public Module {    
   FieldIPort     *mesh_iport_;
@@ -147,8 +151,6 @@ void
 ConductivitySearch::build_basis_matrices()
 {
   TVFieldI::handle_type tviH;
-  tviH = dynamic_cast<TVFieldI *>(mesh_in_.get_rep());
-  TetVolFieldTensorHandle tvtH;
   Tensor zero(0);
   Tensor identity(1);
 
@@ -167,7 +169,7 @@ ConductivitySearch::build_basis_matrices()
 
   MatrixHandle aH;
   vector<pair<string, Tensor> > tens(NDIM_, pair<string, Tensor>("", zero));
-  BuildFEMatrix::build_FEMatrix(tviH, tvtH, true, tens, aH, unitsScale);
+  BuildFEMatrix<TVFieldI>::build_FEMatrix(mesh_in_, tens, aH, unitsScale);
   AmatH_ = aH;
   AmatH_.detach(); // this will be our global "shape" information
   
@@ -175,7 +177,7 @@ ConductivitySearch::build_basis_matrices()
   for (int i=0; i<NDIM_; i++) {
     tens[i].first=to_string(i);
     tens[i].second=identity;
-    BuildFEMatrix::build_FEMatrix(tviH, tvtH, true, tens, aH, unitsScale);
+    BuildFEMatrix<TVFieldI>::build_FEMatrix(mesh_in_, tens, aH, unitsScale);
     SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(aH.get_rep());
     data_basis_[i].resize(m->nnz);
     for (int j=0; j<m->nnz; j++)
