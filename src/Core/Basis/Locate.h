@@ -58,7 +58,7 @@ template <class T>
 inline double d_arc_length(const vector<T>& derivs)
 {
   double rc=0.;
-  for(int i=0; i<derivs.size(); i++)
+  for(unsigned int i=0; i<derivs.size(); i++)
     rc+=sqrt(derivs[i]*derivs[i]);
   return rc;
 }
