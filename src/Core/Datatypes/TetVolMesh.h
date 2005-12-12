@@ -3585,7 +3585,7 @@ template <class Basis>
 const TypeDescription*
 TetVolMesh<Basis>::get_type_description() const
 {
-  return SCIRun::get_type_description((TetVolMesh *)0);
+  return SCIRun::get_type_description((TetVolMesh<Basis> *)0);
 }
 
 template <class Basis>
