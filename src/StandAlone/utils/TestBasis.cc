@@ -144,14 +144,14 @@ void Test()
       p=Point(u.unit_vertices[i][0], u.unit_vertices[i][1], u.unit_vertices[i][2]);
       break;
     default:
-      assert(0);
+      ASSERTFAIL("unknown dimension");
     }
     if ((unsigned)i<n.size()) {
       mesh->add_point(p);
       n[i]=i;
       if (u.polynomial_order()==3) {
 	vector<Point> d(u.domain_dimension());
-	for(int i=0; i<d.size();i++)
+	for(unsigned int i=0; i<d.size();i++)
 	  d[i]=Point(0,0,0);
 	mesh->get_basis().add_derivatives(d);
       }
@@ -165,7 +165,7 @@ void Test()
   mesh->synchronize(MESH::EDGES_E);
 
   vector<double> coords(u.domain_dimension());
-  for(int i=0; i<coords.size();i++)
+  for(unsigned int i=0; i<coords.size();i++)
     coords[i]=drand48();
   Point p;
   
@@ -204,7 +204,7 @@ void Test()
     cerr << "Cell integral " << CellIntegral(field, f) << endl;  
     break;
   default:
-    assert(0);
+    ASSERTFAIL("unknown dimension");
   }
 
   delete field;
