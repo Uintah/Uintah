@@ -557,7 +557,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	make_labeled_radio $text.size \
 	    "Text Size:" "$this-c rerender_text" left \
 	    $this-text-fontsize \
-	    {{"T" 0} {"S" 1} {"M" 2} {"L" 3} {"XL" 4}}
+	    {{"XS" 0} {"S" 1} {"M" 2} {"L" 3} {"XL" 4}}
 
 	pack $text.show.data $text.show.nodes $text.show.edges \
 	    $text.show.faces $text.show.cells \
