@@ -47,9 +47,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/Bases.h>
 #include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -61,7 +60,6 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
-#include <Packages/BioPSE/Core/Algorithms/NumApproximation/ReferenceElement.h>
 
 namespace BioPSE {
 
