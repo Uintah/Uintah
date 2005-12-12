@@ -46,13 +46,10 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/Bases.h>
 #include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/HexVolMesh.h>
-#include <Core/Basis/TriLinearLgn.h>
 #include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/GenericField.h>
@@ -65,7 +62,6 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
-#include <Packages/BioPSE/Core/Algorithms/NumApproximation/ReferenceElement.h>
 
 namespace BioPSE {
 
@@ -312,124 +308,124 @@ ApplyFEMCurrentSource::execute_dipole()
     oportWeights->send(MatrixHandle(w));
     oportRhs->send(MatrixHandle(rhs));
   }
-  else if (hHexMesh)
-  {
-    hHexMesh->synchronize(Mesh::LOCATE_E);
+//   else if (hHexMesh)
+//   {
+//     hHexMesh->synchronize(Mesh::LOCATE_E);
 	
-    //! Computing contributions of dipoles to RHS
-    PCMesh::Node::iterator ii;
-    PCMesh::Node::iterator ii_end;
-    hDipField->get_typed_mesh()->begin(ii);
-    hDipField->get_typed_mesh()->end(ii_end);
-    //vector<double> weights;
-    ReferenceElement rE;
-    for (; ii != ii_end; ++ii)
-    {
-      // Position of the dipole.
-      Point pos;
-      hDipField->get_typed_mesh()->get_point(pos, *ii);
-      // Correct unit of dipole moment -> should be checked.
-      const Vector &dir = hDipField->value(*ii);
+//     //! Computing contributions of dipoles to RHS
+//     PCMesh::Node::iterator ii;
+//     PCMesh::Node::iterator ii_end;
+//     hDipField->get_typed_mesh()->begin(ii);
+//     hDipField->get_typed_mesh()->end(ii_end);
+//     //vector<double> weights;
+//     ReferenceElement rE;
+//     for (; ii != ii_end; ++ii)
+//     {
+//       // Position of the dipole.
+//       Point pos;
+//       hDipField->get_typed_mesh()->get_point(pos, *ii);
+//       // Correct unit of dipole moment -> should be checked.
+//       const Vector &dir = hDipField->value(*ii);
 
-      HVMesh::Cell::index_type loc;
-      if (hHexMesh->locate(loc, pos))
-      {
-        msgStream_ << "Source p="<<pos<<" dir="<< dir <<
-          " found in elem "<< loc <<endl;
-      }
-      else
-      {
-        msgStream_ << "Dipole: "<< pos <<
-          " not located within mesh!"<<endl;
-      }
+//       HVMesh::Cell::index_type loc;
+//       if (hHexMesh->locate(loc, pos))
+//       {
+//         msgStream_ << "Source p="<<pos<<" dir="<< dir <<
+//           " found in elem "<< loc <<endl;
+//       }
+//       else
+//       {
+//         msgStream_ << "Dipole: "<< pos <<
+//           " not located within mesh!"<<endl;
+//       }
 
-      // Get dipole in reference element.
-      HVMesh::Node::array_type n_array;
-      hHexMesh->get_nodes(n_array, loc);
-      Point a, b;
-      hHexMesh->get_point(a, n_array[0]);
-      hHexMesh->get_point(b, n_array[6]);
-      const double drx = rE.isp1(pos.x(), a.x(), b.x());
-      const double dry = rE.isp2(pos.y(), a.y(), b.y());
-      const double drz = rE.isp3(pos.z(), a.z(), b.z());
+//       // Get dipole in reference element.
+//       HVMesh::Node::array_type n_array;
+//       hHexMesh->get_nodes(n_array, loc);
+//       Point a, b;
+//       hHexMesh->get_point(a, n_array[0]);
+//       hHexMesh->get_point(b, n_array[6]);
+//       const double drx = rE.isp1(pos.x(), a.x(), b.x());
+//       const double dry = rE.isp2(pos.y(), a.y(), b.y());
+//       const double drz = rE.isp3(pos.z(), a.z(), b.z());
 
-      // Update rhs
-      for (int i=0; i <8; i++)
-      {
-        const double val =
-          dir[0] * rE.dphidx(i, drx, dry, drz) / rE.dpsi1dx(a.x(), b.x()) +
-          dir[1] * rE.dphidy(i, drx, dry, drz) / rE.dpsi2dy(a.y(), b.y()) +
-          dir[2] * rE.dphidz(i, drx, dry, drz) / rE.dpsi3dz(a.z(), b.z());
-        rhs->put((int)n_array[i], val);
-      }
-    }
-    oportRhs->send(MatrixHandle(rhs));
-  }
-  else if (hTriMesh)
-  {
-    hTriMesh->synchronize(Mesh::LOCATE_E);
+//       // Update rhs
+//       for (int i=0; i <8; i++)
+//       {
+//         const double val =
+//           dir[0] * rE.dphidx(i, drx, dry, drz) / rE.dpsi1dx(a.x(), b.x()) +
+//           dir[1] * rE.dphidy(i, drx, dry, drz) / rE.dpsi2dy(a.y(), b.y()) +
+//           dir[2] * rE.dphidz(i, drx, dry, drz) / rE.dpsi3dz(a.z(), b.z());
+//         rhs->put((int)n_array[i], val);
+//       }
+//     }
+//     oportRhs->send(MatrixHandle(rhs));
+//   }
+//   else if (hTriMesh)
+//   {
+//     hTriMesh->synchronize(Mesh::LOCATE_E);
 
-    //! Computing contributions of dipoles to RHS.
-    PCMesh::Node::iterator ii;
-    PCMesh::Node::iterator ii_end;
-    hDipField->get_typed_mesh()->begin(ii);
-    hDipField->get_typed_mesh()->end(ii_end);
-    vector<double> weights;
-    for (; ii != ii_end; ++ii)
-    {
-      // Position of the dipole.
-      Point pos;
-      hDipField->get_typed_mesh()->get_point(pos, *ii);
-      // Correct unit of dipole moment -> should be checked.
-      const Vector &dir = hDipField->value(*ii);
+//     //! Computing contributions of dipoles to RHS.
+//     PCMesh::Node::iterator ii;
+//     PCMesh::Node::iterator ii_end;
+//     hDipField->get_typed_mesh()->begin(ii);
+//     hDipField->get_typed_mesh()->end(ii_end);
+//     vector<double> weights;
+//     for (; ii != ii_end; ++ii)
+//     {
+//       // Position of the dipole.
+//       Point pos;
+//       hDipField->get_typed_mesh()->get_point(pos, *ii);
+//       // Correct unit of dipole moment -> should be checked.
+//       const Vector &dir = hDipField->value(*ii);
 
-      TSMesh::Face::index_type loc;
-      if (hTriMesh->locate(loc, pos))
-      {
-        msgStream_ << "Source pos="<<pos<<" dir="<<dir<<
-          " found in elem "<< loc <<endl;
+//       TSMesh::Face::index_type loc;
+//       if (hTriMesh->locate(loc, pos))
+//       {
+//         msgStream_ << "Source pos="<<pos<<" dir="<<dir<<
+//           " found in elem "<< loc <<endl;
 
-        if (fabs(dir.x()) > 0.000001)
-        {
-          weights.push_back(loc*3);
-          weights.push_back(dir.x());
-        }
-        if (fabs(dir.y()) > 0.000001)
-        {
-          weights.push_back(loc*3+1);
-          weights.push_back(dir.y());
-        }
-        if (fabs(dir.z()) > 0.000001)
-        {
-          weights.push_back(loc*3+2);
-          weights.push_back(dir.z());
-        }
+//         if (fabs(dir.x()) > 0.000001)
+//         {
+//           weights.push_back(loc*3);
+//           weights.push_back(dir.x());
+//         }
+//         if (fabs(dir.y()) > 0.000001)
+//         {
+//           weights.push_back(loc*3+1);
+//           weights.push_back(dir.y());
+//         }
+//         if (fabs(dir.z()) > 0.000001)
+//         {
+//           weights.push_back(loc*3+2);
+//           weights.push_back(dir.z());
+//         }
 	
-        Vector g1, g2, g3;
-        hTriMesh->get_gradient_basis(loc, g1, g2, g3);
+//         Vector g1, g2, g3;
+//         hTriMesh->get_gradient_basis(loc, g1, g2, g3);
 
-        const double s1 = Dot(g1, dir);
-        const double s2 = Dot(g2, dir);
-        const double s3 = Dot(g3, dir);
+//         const double s1 = Dot(g1, dir);
+//         const double s2 = Dot(g2, dir);
+//         const double s3 = Dot(g3, dir);
 		
-        TSMesh::Node::array_type face_nodes;
-        hTriMesh->get_nodes(face_nodes, loc);
-        (*rhs)[face_nodes[0]] += s1;
-        (*rhs)[face_nodes[1]] += s2;
-        (*rhs)[face_nodes[2]] += s3;
-      }
-      else
-      {
-        msgStream_ << "Dipole: "<< pos <<" not located within mesh!"<<endl;
-      }
-    } // end for loop
+//         TSMesh::Node::array_type face_nodes;
+//         hTriMesh->get_nodes(face_nodes, loc);
+//         (*rhs)[face_nodes[0]] += s1;
+//         (*rhs)[face_nodes[1]] += s2;
+//         (*rhs)[face_nodes[2]] += s3;
+//       }
+//       else
+//       {
+//         msgStream_ << "Dipole: "<< pos <<" not located within mesh!"<<endl;
+//       }
+//     } // end for loop
 
-    ColumnMatrix* w = scinew ColumnMatrix(weights.size());
-    for (int i=0; i < (int)weights.size(); i++) { w->put(i, weights[i]); }
+//     ColumnMatrix* w = scinew ColumnMatrix(weights.size());
+//     for (int i=0; i < (int)weights.size(); i++) { w->put(i, weights[i]); }
 
-    oportWeights->send(MatrixHandle(w));
-    oportRhs->send(MatrixHandle(rhs));
-  }
+//     oportWeights->send(MatrixHandle(w));
+//     oportRhs->send(MatrixHandle(rhs));
+//   }
 }
 
 
