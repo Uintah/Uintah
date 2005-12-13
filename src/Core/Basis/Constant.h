@@ -44,6 +44,8 @@ using std::string;
 //! Class for describing unit geometry of ConstantBasis 
 class ConstantBasisUnitElement {
 public: 
+  static double unit_vertices[1][1]; //!< Parametric coordinates of vertices 
+  static int unit_edges[1][1];    //!< References to vertices of unit edge 
   
   ConstantBasisUnitElement() {}
   virtual ~ConstantBasisUnitElement() {}
