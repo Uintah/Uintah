@@ -302,6 +302,7 @@ bool ArrayObject::create_outputdata(int size, std::string datatype, std::string 
   
   name_ = name;
   size_ = size;
+  idx_ = 0;
   
   if (datatype == "Scalar")  { ncols_ = 1; type_ = MATRIXSCALAR; }
   if (datatype == "Vector")  { ncols_ = 3; type_ = MATRIXVECTOR; }
@@ -316,6 +317,7 @@ bool ArrayObject::create_outputdata(int size, std::string datatype, std::string 
     return(false);
   }
   
+  data_ = matrix_->get_data_pointer();
   omatrix = matrix_;
 }
 

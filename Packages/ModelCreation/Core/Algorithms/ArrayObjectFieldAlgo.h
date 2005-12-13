@@ -146,6 +146,7 @@ template<class FIELD, class LOC>
 void ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::getnextscalar(TensorVectorMath::Scalar& scalar)
 {
   typename FIELD::value_type t;
+  if (field_->basis_order() == -1) { scalar = 0.0; return; }
   field_->value(t,(*it_));
   scalar = static_cast<double>(t);
   ++it_;  
@@ -154,6 +155,7 @@ void ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::getnextscalar(TensorVectorMath:
 template<class FIELD, class LOC>
 void ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::setnextscalar(TensorVectorMath::Scalar& scalar)
 {
+  if (field_->basis_order() == -1) { return; }
   typename FIELD::value_type t = static_cast<typename FIELD::value_type>(scalar);
   field_->set_value(t,(*it_));
   ++it_;  
@@ -218,6 +220,7 @@ template<class FIELD, class LOC>
 void ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::getnextvector(TensorVectorMath::Vector& vector)
 {
   SCIRun::Vector v;
+  if (field_->basis_order() == -1) { vector = 0.0; return; }
   field_->value(v,(*it_));
   vector = TensorVectorMath::Vector(v.x(),v.y(),v.y());
   ++it_;  
@@ -226,6 +229,7 @@ void ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::getnextvector(TensorVectorMath:
 template<class FIELD, class LOC>
 void ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::setnextvector(TensorVectorMath::Vector& vector)
 {
+  if (field_->basis_order() == -1) { return; }
   SCIRun::Vector v(vector.x(),vector.y(),vector.z());
   field_->set_value(v,(*it_));
   ++it_;  
@@ -290,6 +294,9 @@ void ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::getnexttensor(TensorVectorMath:
 {
   // The SCIRun Tensor class is very limited and badly designed, hence we use a newly
   // designed class with more possiblities, we just convert between both.
+
+  if (field_->basis_order() == -1) { tensor = 0.0; return; }
+
   SCIRun::Tensor t;
   field_->value(t,(*it_));
   tensor = TensorVectorMath::Tensor(t.mat_[0][0],t.mat_[1][0],t.mat_[2][0],t.mat_[1][1],t.mat_[2][1],t.mat_[2][2]);
@@ -299,6 +306,7 @@ void ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::getnexttensor(TensorVectorMath:
 template<class FIELD, class LOC>
 void ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::setnexttensor(TensorVectorMath::Tensor& tensor)
 {
+  if (field_->basis_order() == -1) { return; }
   field_->set_value(SCIRun::Tensor(tensor.getdataptr()),(*it_));
   ++it_;  
 }
