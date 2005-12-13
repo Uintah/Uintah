@@ -24,6 +24,7 @@ SRCS     += \
 	$(SRCDIR)/ParticleVariable_special.cc \
 	$(SRCDIR)/ComputeSet.cc \
 	$(SRCDIR)/ComputeSet_special.cc \
+	$(SRCDIR)/AMRInterpolate.cc \
 	$(SRCDIR)/ugc_templates.cc 
 
 #

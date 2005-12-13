@@ -111,6 +111,9 @@ void AMRICE::addRefineDependencies(Task* task,
     cout_dbg << " requires from CoarseNewDW ";
     task->requires(Task::CoarseNewDW, var, 0, Task::CoarseLevel, matls, DS, gac, 1);
   }
+
+  task->modifies(var, matls, DS);
+
   cout_dbg <<""<<endl;
 }
 /*___________________________________________________________________
@@ -146,12 +149,6 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
     addRefineDependencies(task, lb->temp_CCLabel,  ND,  all_matls_sub,step, nsteps);
     addRefineDependencies(task, lb->vel_CCLabel,   ND,  all_matls_sub,step, nsteps);
     
-    task->modifies(lb->press_CCLabel, d_press_matl, oims);
-    task->modifies(lb->rho_CCLabel);
-    task->modifies(lb->sp_vol_CCLabel);
-    task->modifies(lb->temp_CCLabel);
-    task->modifies(lb->vel_CCLabel);
-
     //__________________________________
     // Model Variables.
     if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -161,10 +158,9 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
          iter != d_modelSetup->tvars.end(); iter++){
         TransportedVariable* tvar = *iter;
         addRefineDependencies(task, tvar->var,ND,  all_matls_sub, step, nsteps);
-        task->modifies(tvar->var);
       }
     }
-    sched->addTask(task, fineLevel->eachPatch(), all_matls);
+    sched->addTask(task, fineLevel->eachPatch(), d_sharedState->allICEMaterials());
   }
 }
 /*______________________________________________________________________
@@ -293,7 +289,7 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
 {
   cout_dbg << *patch << " ";
   patch->printPatchBCs(cout_dbg);
-  
+  IntVector refineRatio = fineLevel->getRefinementRatio();
   //__________________________________
   // Iterate over coarsefine interface faces
   vector<Patch::FaceType>::const_iterator iter;  
@@ -304,51 +300,14 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
     //__________________________________
     // fine level hi & lo cell iter limits
     // coarselevel hi and low index
-    CellIterator iter_tmp = patch->getFaceCellIterator(face, "plusEdgeCells");
-    IntVector fl = iter_tmp.begin();
-    IntVector fh = iter_tmp.end(); 
-    IntVector refineRatio = fineLevel->getRefinementRatio();
-    IntVector coarseLow  = fineLevel->mapCellToCoarser(fl);
-    IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
 
-    IntVector axes = patch->faceAxes(face);
-    int P_dir = axes[0];  // principal direction      
-
-    //__________________________________
-    // enlarge the coarselevel foot print by oneCell
-    // x-           x+        y-       y+       z-        z+
-    // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
-    IntVector oneCell = patch->faceDirection(face);
-    if( face == Patch::xminus || face == Patch::yminus 
-                              || face == Patch::zminus) {
-      coarseHigh -= oneCell;
-    }
-    if( face == Patch::xplus || face == Patch::yplus 
-                             || face == Patch::zplus) {
-      coarseLow  -= oneCell;
-    }
-
-    //__________________________________
-    // for higher order interpolation increase the coarse level foot print
-    // by the order of interpolation - 1
-    if(d_orderOfInterpolation >= 1){
-      IntVector interOrder(1,1,1);
-      coarseLow  -= interOrder;
-      coarseHigh += interOrder;
-    } 
-
-    //__________________________________
-    // coarseHigh and coarseLow cannot lie outside
-    // of the coarselevel index range
-    IntVector cl, ch;
-    coarseLevel->findCellIndexRange(cl,ch);
-    coarseLow   = Max(coarseLow, cl);
-    coarseHigh  = Min(coarseHigh, ch); 
+    IntVector cl, ch, fl, fh;
+    getCoarseFineFaceRange(patch, coarseLevel, face, d_orderOfInterpolation, cl, ch, fl, fh);
 
     cout_dbg<< " face " << face << " refineRatio "<< refineRatio
             << " BC type " << patch->getBCType(face)
             << " FineLevel iterator" << fl << " " << fh 
-            << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
+            << " \t coarseLevel iterator " << cl << " " << ch <<endl;
 
     //__________________________________
     // subCycleProgress_var near 1.0 
@@ -356,7 +315,7 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
     if(subCycleProgress_var > 1-1.e-10){ 
      constCCVariable<varType> q_NewDW;
      coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
-                           coarseLow, coarseHigh);
+                           cl, ch);
 
      selectInterpolator(q_NewDW, d_orderOfInterpolation, coarseLevel, 
                         fineLevel, refineRatio, fl,fh, Q);
@@ -366,10 +325,8 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
     // subCycleProgress_var somewhere between 0 or 1
     //  interpolation from both coarse new and old dw 
       constCCVariable<varType> q_OldDW, q_NewDW;
-      coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
-                           coarseLow, coarseHigh);
-      coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
-                           coarseLow, coarseHigh);
+      coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel, cl, ch);
+      coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel, cl, ch);
 
       CCVariable<varType> Q_old, Q_new;
       fine_new_dw->allocateTemporary(Q_old, patch);
@@ -541,56 +498,59 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
                                SchedulerP& sched)
 {
   const Level* fineLevel = getLevel(patches);
-  cout_doing << d_myworld->myrank() 
-             << " AMRICE::scheduleRefine\t\t\t\tL-" 
-             <<  fineLevel->getIndex() << " P-" << *patches << '\n';
-  Task* task = scinew Task("AMRICE::refine",this, &AMRICE::refine);
-
-  MaterialSubset* subset = scinew MaterialSubset;
-  subset->add(0);
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  
-  task->requires(Task::NewDW, lb->press_CCLabel,
-               0, Task::CoarseLevel, subset, Task::OutOfDomain, gac,1);
-                 
-  task->requires(Task::NewDW, lb->rho_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
-               
-  task->requires(Task::NewDW, lb->sp_vol_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
-  
-  task->requires(Task::NewDW, lb->temp_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
-  
-  task->requires(Task::NewDW, lb->vel_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
-
-  //__________________________________
-  // Model Variables.
-  if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-    vector<TransportedVariable*>::iterator iter;
-
-    for(iter = d_modelSetup->tvars.begin();
-       iter != d_modelSetup->tvars.end(); iter++){
-      TransportedVariable* tvar = *iter;
-      task->requires(Task::NewDW, tvar->var,
-                  0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
-      if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
-        task->computes(tvar->var);
+  if(fineLevel->getIndex() > 0  && doICEOnLevel(fineLevel->getIndex(), fineLevel->getGrid()->numLevels())){
+    const Level* fineLevel = getLevel(patches);
+    cout_doing << d_myworld->myrank() 
+               << " AMRICE::scheduleRefine\t\t\t\tL-" 
+               <<  fineLevel->getIndex() << " P-" << *patches << '\n';
+    Task* task = scinew Task("AMRICE::refine",this, &AMRICE::refine);
+    
+    MaterialSubset* subset = scinew MaterialSubset;
+    
+    subset->add(0);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    
+    task->requires(Task::NewDW, lb->press_CCLabel,
+                   0, Task::CoarseLevel, subset, Task::OutOfDomain, gac,1);
+    
+    task->requires(Task::NewDW, lb->rho_CCLabel,
+                   0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+    
+    task->requires(Task::NewDW, lb->sp_vol_CCLabel,
+                   0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+    
+    task->requires(Task::NewDW, lb->temp_CCLabel,
+                   0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+    
+    task->requires(Task::NewDW, lb->vel_CCLabel,
+                   0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+    
+    //__________________________________
+    // Model Variables.
+    if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+      vector<TransportedVariable*>::iterator iter;
+      
+      for(iter = d_modelSetup->tvars.begin();
+          iter != d_modelSetup->tvars.end(); iter++){
+        TransportedVariable* tvar = *iter;
+        task->requires(Task::NewDW, tvar->var,
+                       0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
+        if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
+          task->computes(tvar->var);
+        }
       }
     }
+    
+    // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
+    if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
+      task->computes(lb->press_CCLabel, subset, Task::OutOfDomain);
+      task->computes(lb->rho_CCLabel);
+      task->computes(lb->sp_vol_CCLabel);
+      task->computes(lb->temp_CCLabel);
+      task->computes(lb->vel_CCLabel);
+    }
+    sched->addTask(task, patches, d_sharedState->allICEMaterials());
   }
-  
-  // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
-  if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
-    task->computes(lb->press_CCLabel);
-    task->computes(lb->rho_CCLabel);
-    task->computes(lb->sp_vol_CCLabel);
-    task->computes(lb->temp_CCLabel);
-    task->computes(lb->vel_CCLabel);
-  }
-
-  sched->addTask(task, patches, d_sharedState->allICEMaterials()); 
 }
 
 /*___________________________________________________________________
@@ -784,38 +744,18 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   IntVector refineRatio = fineLevel->getRefinementRatio();
                        
   // region of fine space that will correspond to the coarse we need to get
-  IntVector fl, fh;
-  Ghost::GhostType  gac = Ghost::AroundCells;
-
-  finePatch->computeVariableExtents(varLabel->typeDescription()->getType(),
-                                    IntVector(0,0,0), gac,1, fl, fh); 
-  
-  // coarse region we need to get from the dw
-  IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
-  IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + refineRatio - IntVector(1,1,1);
-  
-  //__________________________________
-  // coarseHigh and coarseLow cannot lie outside
-  // of the coarselevel index range
-  IntVector cl_tmp, ch_tmp;
-  coarseLevel->findCellIndexRange(cl_tmp,ch_tmp);
-  cl = Max(cl_tmp, cl);
-  ch = Min(ch_tmp, ch);
-
-  // fine region to work over
-  IntVector lo = finePatch->getInteriorCellLowIndex();
-  IntVector hi = finePatch->getInteriorCellHighIndex();
+  IntVector cl, ch, fl, fh;
+  getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, 1);
 
   cout_dbg <<" coarseToFineOperator: " << varLabel->getName()
-           <<" finePatch  "<< finePatch->getID() << " "
-           << lo<<" "<< hi<< " fl " << fl << " fh " << fh
+           <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
            <<" coarseRegion " << cl << " " << ch <<endl;
   
   constCCVariable<T> coarse_q_CC;
   new_dw->getRegion(coarse_q_CC, varLabel, indx, coarseLevel, cl, ch);
   
   selectInterpolator(coarse_q_CC, d_orderOfInterpolation, coarseLevel, fineLevel,
-                      refineRatio, lo,hi,q_CC);
+                     refineRatio, fl, fh,q_CC);
   
   //____ B U L L E T   P R O O F I N G_______ 
   // All fine patch interior values must be initialized at this point
@@ -1032,20 +972,9 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
                           
   for(int i=0;i<finePatches.size();i++){
     const Patch* finePatch = finePatches[i];
-    
-    IntVector fl(finePatch->getInteriorCellLowIndex());
-    IntVector fh(finePatch->getInteriorCellHighIndex());
 
-    IntVector cl(fineLevel->mapCellToCoarser(fl));
-    IntVector ch(fineLevel->mapCellToCoarser(fh));
-    
-    cl = Max(cl, coarsePatch->getCellLowIndex());
-    ch = Min(ch, coarsePatch->getCellHighIndex());
-
-    // get the region of the fine patch that overlaps the coarse patch
-    // we might not have the entire patch in this proc's DW
-    fl = coarseLevel->mapCellToFiner(cl);
-    fh = coarseLevel->mapCellToFiner(ch);
+    IntVector cl, ch, fl, fh;
+    getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
 
     if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
       continue;
@@ -1053,6 +982,7 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     
     constCCVariable<T> fine_q_CC;
     constCCVariable<double> cv_fine, rho_CC_fine;
+
     new_dw->getRegion(fine_q_CC,  varLabel,               indx, fineLevel, fl, fh, false);
     new_dw->getRegion(cv_fine,    lb->specific_heatLabel, indx, fineLevel, fl, fh, false);
     new_dw->getRegion(rho_CC_fine,lb->rho_CCLabel,        indx, fineLevel, fl, fh, false);
@@ -1906,18 +1836,11 @@ void AMRICE::refluxOperator_applyCorrectionFluxes(
 /*_____________________________________________________________________
  Function~  AMRICE::scheduleInitialErrorEstimate--
 ______________________________________________________________________*/
-void AMRICE::scheduleInitialErrorEstimate(const LevelP& /*coarseLevel*/,
-                                          SchedulerP& /*sched*/)
+void AMRICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                          SchedulerP& sched)
 {
 #if 0
   scheduleErrorEstimate(coarseLevel, sched);
-  
-  //__________________________________
-  // Models
-  for(vector<ModelInterface*>::iterator iter = d_models.begin();
-     iter != d_models.end(); iter++){
-    (*iter)->scheduleErrorEstimate(coarseLevel, sched);;
-  }
 #endif
 }
 
@@ -1951,10 +1874,10 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->computes(lb->mag_grad_vol_frac_CCLabel);
   t->computes(lb->mag_grad_press_CCLabel);
   
-  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
-  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials(), oims);
+  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials(), oims);
   
-  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
   
   //__________________________________
   // Models
