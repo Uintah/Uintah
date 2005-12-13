@@ -33,15 +33,14 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/ICom
 
-SRCS     += $(SRCDIR)/sshAgent.cc \
-			$(SRCDIR)/IComAddress.cc \
-			$(SRCDIR)/IComPacket.cc \
-			$(SRCDIR)/IComSocket.cc \
-			$(SRCDIR)/IComVirtualSocket.cc \
-			$(SRCDIR)/IComINetSocket.cc \
-			$(SRCDIR)/IComInternalSocket.cc \
-			$(SRCDIR)/IComSslSocket.cc \
-			$(SRCDIR)/IComRHostList.cc
+SRCS     += $(SRCDIR)/IComAddress.cc \
+	    $(SRCDIR)/IComPacket.cc \
+	    $(SRCDIR)/IComSocket.cc \
+	    $(SRCDIR)/IComVirtualSocket.cc \
+	    $(SRCDIR)/IComINetSocket.cc \
+	    $(SRCDIR)/IComInternalSocket.cc \
+	    $(SRCDIR)/IComSslSocket.cc \
+	    $(SRCDIR)/IComRHostList.cc
 
 PSELIBS := \
 	Core/Thread \
