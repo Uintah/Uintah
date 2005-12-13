@@ -3404,6 +3404,7 @@ GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
   glTranslated(-cen.x(), -cen.y(), -cen.z());
   GeomSphere::draw(di, matl, 1);
   glPopMatrix();
+  post_draw(di);
 }
 
 
