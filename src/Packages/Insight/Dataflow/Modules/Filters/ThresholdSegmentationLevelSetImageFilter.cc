@@ -144,7 +144,7 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   // or the input data has changed. If
   // this is the case, set the inputs.
 
-  if(filter_ == 0 || 
+  if(!filter_ || 
      inhandle_SeedImage_->generation != last_SeedImage_ || 
      inhandle_FeatureImage_->generation != last_FeatureImage_) {
      
