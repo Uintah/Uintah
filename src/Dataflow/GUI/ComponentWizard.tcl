@@ -62,15 +62,14 @@ proc ComponentWizard { {window .componentWizard} } {
     wm withdraw $w; # immediately withdraw it to avoid flicker
 
     wm title $w "Component Wizard"
-#    wm minsize .componentWizard 470 600
+    wm minsize .componentWizard 470 600
 
     # Override the 'destroy' button on the window decoration to just close the window.
     wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
 
     # Tab panel
-    frame $w.tabs
-    iwidgets::tabnotebook $w.tabs.tabs 
-    
+    iwidgets::tabnotebook $w.tabs 
+    pack $w.tabs -padx $PADi -pady $PADi -fill both -expand yes
 
     # Horizontal separator
     frame $w.separator -height 2 -relief sunken -borderwidth 2
@@ -92,10 +91,10 @@ proc ComponentWizard { {window .componentWizard} } {
 
     pack $w.buttons.close $w.buttons.help $w.buttons.create -side left -expand yes -fill x -padx $PADi
 
-    set io_gui [$w.tabs.tabs add -label "I/O"]
+    set io_gui [$w.tabs add -label "I/O"]
     make_io_gui_pane $io_gui $tmpd
 
-    set overview [$w.tabs.tabs add -label "Description"]
+    set overview [$w.tabs add -label "Description"]
     make_description_pane $overview $tmpd
 
     # For now, under the 'simple is better' ideology, turn off the Implementation and Testing panes.
@@ -105,10 +104,7 @@ proc ComponentWizard { {window .componentWizard} } {
     #set testing [$w.tabs add -label "Testing"]
     #make_testing_pane $testing $tmpd
     
-    $w.tabs.tabs view "I/O"
-
-    pack $w.tabs -fill both -expand yes
-    pack $w.tabs.tabs -padx $PADi -pady $PADi -fill both -expand yes
+    $w.tabs view "I/O"
 
     moveToCursor $w "leave_up"
 }
@@ -231,11 +227,10 @@ proc make_io_gui_pane {p d} {
     #    .cbf (Check Buttons Frame)
     #    .cp (Name entries)
     #
-#     grid $p.cf   -sticky news -padx 5 -pady 2
-#     grid $p.cmds -column 1 -row 0 -sticky nws -pady 2
-#     grid $p.cbf  -sticky ew -padx 5 -pady 2 -ipadx 5 -ipady 2
-#     grid $p.cp   -columnspan 2 -ipady 5 -pady 5 -padx 5 -sticky ew
-    pack $p.cf $p.cmds $p.cbf $p.cf -expand 1 -fill both
+    grid $p.cf   -sticky news -padx 5 -pady 2
+    grid $p.cmds -column 1 -row 0 -sticky nws -pady 2
+    grid $p.cbf  -sticky ew -padx 5 -pady 2 -ipadx 5 -ipady 2
+    grid $p.cp   -columnspan 2 -ipady 5 -pady 5 -padx 5 -sticky ew
 
 #    pack $guidescript -fill x -side bottom -anchor sw \
 #        -padx $PADi 
@@ -265,7 +260,7 @@ proc update_gui_entry_bind { name1 name2 op } {
 proc update_title_entry_bind { name1 name2 op } {
     global .componentWizard.tmpdata
 
-    set p [.componentWizard.tabs.tabs childsite "I/O"]
+    set p [.componentWizard.tabs childsite "I/O"]
     set title_pentry $p.cf.c.moduleFakeModule.ff.title
     set tmp [set .componentWizard.tmpdata(title)]
 
