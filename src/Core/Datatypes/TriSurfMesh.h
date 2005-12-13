@@ -300,7 +300,7 @@ public:
   { points_[index] = point; }
 
   void get_normal(Vector &result, vector<double> &coords, 
-		  typename Elem::index_type eidx) 
+		  typename Elem::index_type eidx, unsigned int) 
   {
     if (basis_.polynomial_order() < 2) {
       typename Node::array_type arr(3);

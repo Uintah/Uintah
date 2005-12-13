@@ -52,7 +52,9 @@ public:
   static SHARE int unit_edges[3][2]; 
   //!< References to vertices of unit face
   static SHARE int unit_faces[1][3]; 
-  
+  //!< References to normal of unit face
+  static SHARE double unit_face_normals[1][3];
+
   TriLinearLgnUnitElement() {}
   virtual ~TriLinearLgnUnitElement() {}
 

@@ -1042,7 +1042,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 
       //coords organized as scanlines of quad/tri strips.
       vector<vector<vector<double> > > coords;
-      mesh->pwl_approx_face(coords, *eiter, fcount++, div);
+      mesh->pwl_approx_face(coords, *eiter, fcount, div);
 
       const int face_sz = mesh->get_basis().vertices_of_face();
       vector<vector<vector<double> > >::iterator coord_iter = coords.begin();
@@ -1074,9 +1074,9 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	    mesh->interpolate(pnts[2], c2, *eiter);
 
 	    if (with_normals) {	      
-	      mesh->get_normal(norms[0], c0, *eiter);
-	      mesh->get_normal(norms[1], c1, *eiter);
-	      mesh->get_normal(norms[2], c2, *eiter);
+	      mesh->get_normal(norms[0], c0, *eiter, fcount);
+	      mesh->get_normal(norms[1], c1, *eiter, fcount);
+	      mesh->get_normal(norms[2], c2, *eiter, fcount);
 	    }
 
 #if defined(DEBUG_PRINT)
@@ -1120,10 +1120,10 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	    mesh->interpolate(pnts[3], c0, *eiter);
 
 	    if (with_normals) {	      
-	      mesh->get_normal(norms[0], c2, *eiter);
-	      mesh->get_normal(norms[1], c3, *eiter);
-	      mesh->get_normal(norms[2], c1, *eiter);
-	      mesh->get_normal(norms[3], c0, *eiter);
+	      mesh->get_normal(norms[0], c2, *eiter, fcount);
+	      mesh->get_normal(norms[1], c3, *eiter, fcount);
+	      mesh->get_normal(norms[2], c1, *eiter, fcount);
+	      mesh->get_normal(norms[3], c0, *eiter, fcount);
 	    }
 
 #if defined(DEBUG_PRINT)
@@ -1150,6 +1150,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	  }
 	}
       }
+      ++fcount;
     }
     ++eiter;
   }

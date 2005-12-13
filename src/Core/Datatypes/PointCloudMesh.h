@@ -228,7 +228,8 @@ public:
   { points_[i] = p; }
   void get_normal(Vector &, typename Node::index_type) const
   { ASSERTFAIL("not implemented") }
-  void get_normal(Vector &, vector<double> &, typename Elem::index_type) 
+  void get_normal(Vector &, vector<double> &, typename Elem::index_type, 
+		  unsigned int) 
   { ASSERTFAIL("not implemented"); }
 
   //! use these to build up a new PointCloudField mesh

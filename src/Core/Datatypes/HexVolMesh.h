@@ -45,6 +45,8 @@
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
@@ -391,12 +393,38 @@ public:
   { ASSERTFAIL("not implemented"); }
 
   void get_normal(Vector &result, vector<double> &coords, 
-		  typename Elem::index_type eidx) 
+		  typename Elem::index_type eidx, unsigned int f) 
   {
     ElemData ed(*this, eidx);
     vector<Point> Jv;
     basis_.derivate(coords, ed, Jv);
-    result = Cross(Jv[0].asVector(), Jv[1].asVector());
+
+    // load the matrix with the Jacobian
+    DenseMatrix J(3, Jv.size());
+    int i = 0;
+    vector<Point>::iterator iter = Jv.begin();
+    while(iter != Jv.end()) {
+      Point &p = *iter++;
+      J.put(i, 0, p.x());
+      J.put(i, 1, p.y());
+      J.put(i, 2, p.z());
+      ++i;
+    }
+    J.invert();
+    unsigned fmap[] = {0, 5, 1, 3, 4, 2};
+    unsigned face = fmap[f];
+    ColumnMatrix localV(3);
+
+    localV.put(0, basis_.unit_face_normals[face][0]);
+    localV.put(1, basis_.unit_face_normals[face][1]);
+    localV.put(2, basis_.unit_face_normals[face][2]);
+
+    ColumnMatrix m(3);
+    Mult(m, J, localV);
+
+    result.x(m.get(0));
+    result.y(m.get(1));
+    result.z(m.get(2));
     result.normalize();
   }
 

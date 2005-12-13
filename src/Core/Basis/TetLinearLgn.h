@@ -47,25 +47,34 @@ using std::string;
 //! Class for describing unit geometry of TetLinearLgn 
 class TetLinearLgnUnitElement {
 public:
-  static SHARE double unit_vertices[4][3]; //!< Parametric coordinates of vertices of unit edge
-  static SHARE int unit_edges[6][2]; //!< References to vertices of unit edge
-  static SHARE int unit_faces[4][3];  //!< References to vertices of unit face
-  
+  //!< Parametric coordinates of vertices of unit edge
+  static SHARE double unit_vertices[4][3];
+  //!< References to vertices of unit edge 
+  static SHARE int unit_edges[6][2]; 
+  //!< References to vertices of unit face
+  static SHARE int unit_faces[4][3];  
+  //!< References to normals of unit faces
+  static SHARE double unit_face_normals[4][3];
+
   TetLinearLgnUnitElement() {}
   virtual ~TetLinearLgnUnitElement() {}
   
-  static int domain_dimension() { return 3; } //!< return dimension of domain 
-  
-  static int number_of_vertices() { return 4; } //!< return number of vertices
-  static int number_of_mesh_vertices() { return 4; } //!< return number of vertices in mesh
-  static int number_of_edges() { return 6; } //!< return number of edges
-  static int dofs() { return 4; } //!< return degrees of freedom
-  
-  static int vertices_of_face() { return 3; } //!< return number of vertices per face 
-
-  static int faces_of_cell() { return 4; } //!< return number of faces per cell 
-
-  static double volume() { return 1./6.; } //!< return volume
+  //!< return dimension of domain 
+  static int domain_dimension() { return 3; } 
+  //!< return number of vertices
+  static int number_of_vertices() { return 4; } 
+  //!< return number of vertices in mesh
+  static int number_of_mesh_vertices() { return 4; }
+  //!< return number of edges 
+  static int number_of_edges() { return 6; }
+  //!< return degrees of freedom 
+  static int dofs() { return 4; } 
+  //!< return number of vertices per face 
+  static int vertices_of_face() { return 3; } 
+  //!< return number of faces per cell 
+  static int faces_of_cell() { return 4; } 
+  //!< return volume
+  static double volume() { return 1./6.; } 
 };
 
 

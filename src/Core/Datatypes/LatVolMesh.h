@@ -754,7 +754,8 @@ public:
 
   void get_normal(Vector &, const typename Node::index_type &) const
   { ASSERTFAIL("not implemented"); }
-  void get_normal(Vector &, vector<double> &, typename Elem::index_type) 
+  void get_normal(Vector &, vector<double> &, typename Elem::index_type,
+		  unsigned int) 
   { ASSERTFAIL("not implemented"); }
   void get_random_point(Point &, 
 			const typename Elem::index_type &, int seed=0) const;
