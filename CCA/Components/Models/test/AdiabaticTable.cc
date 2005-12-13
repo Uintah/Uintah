@@ -879,10 +879,10 @@ void AdiabaticTable::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  gac, 1);
   
   t->computes(d_scalar->mag_grad_scalarLabel);
-  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
-  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials(), Task::OutOfDomain);
+  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials(), Task::OutOfDomain);
   
-  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allICEMaterials());
 }
 /*_____________________________________________________________________
  Function~  AdiabaticTable::errorEstimate--

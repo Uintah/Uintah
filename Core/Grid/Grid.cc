@@ -125,19 +125,6 @@ void Grid::performConsistencyCheck() const
              << " "<< C_box.min() << " "<< C_box.max() << endl;
         throw InvalidGrid(desc.str(),__FILE__,__LINE__);
       }
-      
-      //__________________________________
-      // fine grid must have an even number of cells
-      Vector cells = (Fbox_max - Fbox_min)/dx_fineLevel;
-      IntVector i_cells( Round(cells.x()), 
-                         Round(cells.y()), 
-                         Round(cells.z()) );
-      if ( i_cells.x()%2 != 0 || i_cells.y()%2 != 0 || i_cells.z()%2 != 0 ){
-        ostringstream desc;
-        desc << " The finer Level " << fineLevel->getIndex()
-             << " must have an even number of cells " <<  i_cells << endl;
-        //throw InvalidGrid(desc.str()); 
-      }
     }
   }
 }
@@ -413,6 +400,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
              << patches.y() << "," << patches.z() << ")\n";
       }
       
+      IntVector refineRatio = level->getRefinementRatio();
       level->setPatchDistributionHint(patches);
       for(int i=0;i<patches.x();i++){
         for(int j=0;j<patches.y();j++){
@@ -427,7 +415,19 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             endcell += IntVector(endcell.x() == highPointCell.x() ? extraCells.x():0,
                                  endcell.y() == highPointCell.y() ? extraCells.y():0,
                                  endcell.z() == highPointCell.z() ? extraCells.z():0);
+
             
+            if (inStartCell.x() % refineRatio.x() || inEndCell.x() % refineRatio.x() || 
+                inStartCell.y() % refineRatio.y() || inEndCell.y() % refineRatio.y() || 
+                inStartCell.z() % refineRatio.z() || inEndCell.z() % refineRatio.z()) {
+              ostringstream desc;
+              desc << "The finer patch boundaries (" << inStartCell << "->" << inEndCell 
+                   << ") do not coincide with a coarse cell"
+                   << "\n(i.e., they are not divisible by te refinement ratio " << refineRatio << ')';
+              throw InvalidGrid(desc.str(),__FILE__,__LINE__);
+
+            }
+
             Patch* p = level->addPatch(startcell, endcell,
                                        inStartCell, inEndCell);
             p->setLayoutHint(IntVector(i,j,k));

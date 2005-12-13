@@ -26,6 +26,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -3268,22 +3269,11 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
  
-        IntVector fl(finePatch->getInteriorCellLowIndex());
-        IntVector fh(finePatch->getInteriorCellHighIndex());
-        IntVector cl(fineLevel->mapCellToCoarser(fl));
-        IntVector ch(fineLevel->mapCellToCoarser(fh));
-        
-        cl = Max(cl, coarsePatch->getCellLowIndex());
-        ch = Min(ch, coarsePatch->getCellHighIndex());
-
-        // get the region of the fine patch that overlaps the coarse patch
-        // we might not have the entire patch in this proc's DW
-        fl = level->mapCellToFiner(cl);
-        fh = level->mapCellToFiner(ch);
+        IntVector cl, ch, fl, fh;
+        getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }
-        
         constCCVariable<int> fineErrorFlag;
         new_dw->getRegion(fineErrorFlag, 
                           d_sharedState->get_refineFlag_label(), 0, 

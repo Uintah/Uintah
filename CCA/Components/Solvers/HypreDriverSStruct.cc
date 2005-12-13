@@ -16,6 +16,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
@@ -1038,15 +1039,8 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections
         finePatch->printPatchBCs(cout_dbg);
         printLine("@",40);
 
-        IntVector cl(_patch->getCellLowIndex() - IntVector(1,1,1)); // ghost cell
-        IntVector ch(_patch->getCellHighIndex() +IntVector(1,1,1));
-        IntVector fl(finePatch->getInteriorCellLowIndex());
-        IntVector fh(finePatch->getInteriorCellHighIndex());
-        
-        // get the region of the fine patch that overlaps the coarse patch
-        // we might not have the entire patch in this proc's DW
-        fl = Max(fl, coarse->mapCellToFiner(cl)); 
-        fh = Min(fh, coarse->mapCellToFiner(ch));
+        IntVector cl, ch, fl, fh;
+        getCoarseLevelRange(finePatch, coarse.get_rep(), cl, ch, fl, fh, 1);
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }

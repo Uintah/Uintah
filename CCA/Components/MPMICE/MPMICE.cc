@@ -781,6 +781,7 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
     t->computes(MIlb->NC_CCweightLabel, one_matl);
     
     sched->addTask(t, patches, mpm_matls);
+    cout << "   Schedule LagMPM " << *patches << " " << *mpm_matls << endl;
   }
 }
 
@@ -2539,11 +2540,32 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
   d_mpm->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
 }
   
-void MPMICE::scheduleRefine (const PatchSet* patches, 
-                              SchedulerP& sched)
+void MPMICE::scheduleRefine(const PatchSet* patches, 
+                            SchedulerP& sched)
 {
   d_ice->scheduleRefine(patches, sched);
   d_mpm->scheduleRefine(patches, sched);
+
+  
+  Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
+
+  // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
+  if (patches == getLevel(patches)->eachPatch()) {
+    if(d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels())) {
+      task->computes(Mlb->heatRate_CCLabel);
+    }
+    if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                                  getLevel(patches)->getGrid()->numLevels())) {
+      task->computes(MIlb->NC_CCweightLabel);
+      task->computes(MIlb->vel_CCLabel);
+      //task->computes(Ilb->rho_CCLabel); 
+      task->computes(Ilb->temp_CCLabel);
+      task->computes(Ilb->sp_vol_CCLabel);
+      //task->computes(Ilb->speedSound_CCLabel); 
+    }
+  }
+  sched->addTask(task, patches, d_sharedState->allMPMMaterials());
 }
     
 void MPMICE::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
@@ -2715,6 +2737,106 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    sched->addTask(t, patches, matls);
  }
 
+void
+MPMICE::refine(const ProcessorGroup*,
+               const PatchSubset* patches,
+               const MaterialSubset* /*matls*/,
+               DataWarehouse*,
+               DataWarehouse* new_dw)
+{
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      //if (cout_doing.active()) {
+      cout <<"Doing refine on patch "
+           << patch->getID() << " material # = " << dwi << endl;
+      //}
+      
+      if(d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
+                             getLevel(patches)->getGrid()->numLevels())) {
+        // for now, create 0 heat flux
+        CCVariable<double> heatFlux;
+        new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel, dwi, patch);
+        heatFlux.initialize(0.0);
+      }
+
+      if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                                    getLevel(patches)->getGrid()->numLevels())) {
+        NCVariable<double> NC_CCweight;
+        CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
+        CCVariable<Vector> vel_CC;
+        cout << "A\n";
+        new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,    0, patch);
+        new_dw->allocateTemporary(rho_micro, patch);
+        cout << "B\n";
+        new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,    dwi,patch);
+        cout << "C\n";
+        new_dw->allocateTemporary(rho_CC,patch);
+        cout << "D\n";
+        //new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,dwi,patch);
+        cout << "E\n";
+        new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      dwi,patch);
+        cout << "F\n";
+        new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       dwi,patch);
+        mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
+                                             Temp_CC,     vel_CC,  
+                                             d_sharedState->getNumMatls(),patch);  
+        setBC(rho_micro, "Density",      patch, d_sharedState, dwi, new_dw);    
+        setBC(Temp_CC,   "Temperature",  patch, d_sharedState, dwi, new_dw);    
+        setBC(vel_CC,    "Velocity",     patch, d_sharedState, dwi, new_dw);
+        for (CellIterator iter = patch->getExtraCellIterator();
+             !iter.done();iter++){
+          sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
+        }
+      
+        //__________________________________
+        //    B U L L E T   P R O O F I N G
+        IntVector neg_cell;
+        ostringstream warn;
+        if( !d_ice->areAllValuesPositive(rho_CC, neg_cell) ) {
+          warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
+              <<neg_cell << " rho_CC is negative\n";
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+        }
+        if( !d_ice->areAllValuesPositive(Temp_CC, neg_cell) ) {
+          warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
+              <<neg_cell << " Temp_CC is negative\n";
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+        }
+        if( !d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) ) {
+          warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
+              <<neg_cell << " sp_vol_CC is negative\n";
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+        }
+      
+
+          
+        //__________________________________
+        // - Initialize NC_CCweight = 0.125
+        // - Find the walls with symmetry BC and
+        //   double NC_CCweight
+        NC_CCweight.initialize(0.125);
+        for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+            face=Patch::nextFace(face)){
+          int mat_id = 0; 
+          if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+            for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars"); 
+                !iter.done(); iter++) {
+              NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
 
 //______________________________________________________________________
 //
@@ -2733,29 +2855,11 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* finePatch = patches->get(p);
     
+    
     // region of fine space that will correspond to the coarse we need to get
-    IntVector fl, fh;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    
-    finePatch->computeVariableExtents(variable->typeDescription()->getType(),
-                                      IntVector(0,0,0), gac,1, fl, fh); 
-  
-    // coarse region we need to get from the dw
-    IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
-    IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + refineRatio - IntVector(1,1,1);
-    
-    //__________________________________
-    // coarseHigh and coarseLow cannot lie outside
-    // of the coarselevel index range
-    IntVector cl_tmp, ch_tmp;
-    coarseLevel->findCellIndexRange(cl_tmp,ch_tmp);
-    cl = Max(cl_tmp, cl);
-    ch = Min(ch_tmp, ch);
-    
-    // fine region to work over
-    IntVector lo = finePatch->getCellLowIndex();
-    IntVector hi = finePatch->getCellHighIndex();
-  
+    IntVector cl, ch, fl, fh;
+    getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, 1);
+
     if (cout_doing.active()) {
       cout_doing<<"Doing refineVariableCC (" << variable->getName() 
                 << ") on patch "<<finePatch->getID()
@@ -2778,7 +2882,7 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
 //                             refineRatio, lo, hi, fine_q_CC);
 
       piecewiseConstantInterpolation<T>(coarse_q_CC, fineLevel,
-                             lo, hi, fine_q_CC);
+                                        fl, fh, fine_q_CC);
     }
   }
 }
@@ -2799,28 +2903,9 @@ void MPMICE::refineExtensiveVariableCC(const ProcessorGroup*,
     const Patch* finePatch = patches->get(p);
                                                                                 
     // region of fine space that will correspond to the coarse we need to get
-    IntVector fl, fh;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    
-    finePatch->computeVariableExtents(variable->typeDescription()->getType(),
-                                      IntVector(0,0,0), gac,1, fl, fh); 
-  
-    // coarse region we need to get from the dw
-    IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
-    IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + refineRatio - IntVector(1,1,1);
-    
-    //__________________________________
-    // coarseHigh and coarseLow cannot lie outside
-    // of the coarselevel index range
-    IntVector cl_tmp, ch_tmp;
-    coarseLevel->findCellIndexRange(cl_tmp,ch_tmp);
-    cl = Max(cl_tmp, cl);
-    ch = Min(ch_tmp, ch);
-    
-    // fine region to work over
-    IntVector lo = finePatch->getCellLowIndex();
-    IntVector hi = finePatch->getCellHighIndex();
-  
+    IntVector cl, ch, fl, fh;
+    getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, 1);
+
     if (cout_doing.active()) {
       cout_doing<<"Doing refineExtensiveVariableCC (" << variable->getName()
                 << ") on patch "<<finePatch->getID()
@@ -2891,18 +2976,8 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
   
-        IntVector fl(finePatch->getInteriorCellLowIndex());
-        IntVector fh(finePatch->getInteriorCellHighIndex());
-        IntVector cl(fineLevel->mapCellToCoarser(fl));
-        IntVector ch(fineLevel->mapCellToCoarser(fh));
-    
-        cl = Max(cl, coarsePatch->getCellLowIndex());
-        ch = Min(ch, coarsePatch->getCellHighIndex());
-    
-        // get the region of the fine patch that overlaps the coarse patch
-        // we might not have the entire patch in this proc's DW
-        fl = coarseLevel->mapCellToFiner(cl);
-        fh = coarseLevel->mapCellToFiner(ch);
+        IntVector cl, ch, fl, fh;
+        getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }
@@ -2967,18 +3042,8 @@ void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
   
-        IntVector fl(finePatch->getInteriorCellLowIndex());
-        IntVector fh(finePatch->getInteriorCellHighIndex());
-        IntVector cl(fineLevel->mapCellToCoarser(fl));
-        IntVector ch(fineLevel->mapCellToCoarser(fh));
-    
-        cl = Max(cl, coarsePatch->getCellLowIndex());
-        ch = Min(ch, coarsePatch->getCellHighIndex());
-    
-        // get the region of the fine patch that overlaps the coarse patch
-        // we might not have the entire patch in this proc's DW
-        fl = coarseLevel->mapCellToFiner(cl);
-        fh = coarseLevel->mapCellToFiner(ch);
+        IntVector cl, ch, fl, fh;
+        getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }
@@ -3047,19 +3112,8 @@ void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
   
-        IntVector fl(finePatch->getInteriorCellLowIndex());
-        IntVector fh(finePatch->getInteriorCellHighIndex());
-        IntVector cl(fineLevel->mapCellToCoarser(fl));
-        IntVector ch(fineLevel->mapCellToCoarser(fh));
-    
-        cl = Max(cl, coarsePatch->getCellLowIndex());
-        ch = Min(ch, coarsePatch->getCellHighIndex());
-
-        // get the region of the fine patch that overlaps the coarse patch
-        // we might not have the entire patch in this proc's DW
-        fl = coarseLevel->mapCellToFiner(cl);
-        fh = coarseLevel->mapCellToFiner(ch);
-    
+        IntVector cl, ch, fl, fh;
+        getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }

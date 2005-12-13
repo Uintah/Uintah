@@ -321,6 +321,11 @@ public:
   virtual void scheduleCoarsen(const LevelP& coarseLevel, 
                                SchedulerP& sched);
 
+  void refine(const ProcessorGroup*,
+              const PatchSubset* patches,
+              const MaterialSubset* matls,
+              DataWarehouse*,
+              DataWarehouse* new_dw);
 
   virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                             SchedulerP& sched);
