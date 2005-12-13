@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h> 
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -646,18 +647,8 @@ void ICE::coarsen_delP(const ProcessorGroup*,
     for(int i=0;i<finePatches.size();i++){
       const Patch* finePatch = finePatches[i];
 
-      IntVector fl(finePatch->getInteriorCellLowIndex());
-      IntVector fh(finePatch->getInteriorCellHighIndex());
-      IntVector cl(fineLevel->mapCellToCoarser(fl));
-      IntVector ch(fineLevel->mapCellToCoarser(fh));
-
-      cl = Max(cl, coarsePatch->getCellLowIndex());
-      ch = Min(ch, coarsePatch->getCellHighIndex());
-
-      // get the region of the fine patch that overlaps the coarse patch
-      // we might not have the entire patch in this proc's DW
-      fl = coarseLevel->mapCellToFiner(cl);
-      fh = coarseLevel->mapCellToFiner(ch);
+      IntVector cl, ch, fl, fh;
+      getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
       if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
         continue;
       }
@@ -766,21 +757,12 @@ void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
     for(int i=0;i<finePatches.size();i++){
       const Patch* finePatch = finePatches[i];
 
-      IntVector fl(finePatch->getInteriorCellLowIndex());
-      IntVector fh(finePatch->getInteriorCellHighIndex());
-      IntVector cl(fineLevel->mapCellToCoarser(fl));
-      IntVector ch(fineLevel->mapCellToCoarser(fh));
-
-      cl = Max(cl, coarsePatch->getCellLowIndex());
-      ch = Min(ch, coarsePatch->getCellHighIndex());
-
-      // get the region of the fine patch that overlaps the coarse patch
-      // we might not have the entire patch in this proc's DW
-      fl = coarseLevel->mapCellToFiner(cl);
-      fh = coarseLevel->mapCellToFiner(ch);
+      IntVector cl, ch, fl, fh;
+      getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
       if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
         continue;
       }
+
       IntVector refinementRatio = fineLevel->getRefinementRatio();
 
       // iterate over coarse level cells
@@ -909,6 +891,8 @@ void ICE::compute_matrix_CFI_weights(const ProcessorGroup*,
 
   const Level* fineLevel = getLevel(finePatches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+  IntVector refineRatio = fineLevel->getRefinementRatio();
+                       
   //Vector c_dx = coarseLevel->dCell();
   //Vector inv_c_dx = Vector(1.0)/c_dx;
   
@@ -931,45 +915,14 @@ void ICE::compute_matrix_CFI_weights(const ProcessorGroup*,
          iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
       Patch::FaceType face = *iter;
 
-      //__________________________________
-      // fine level hi & lo cell iter limits
-      // coarselevel hi and low index
-      CellIterator iter_tmp = finePatch->getFaceCellIterator(face, "plusEdgeCells");
-      IntVector fl = iter_tmp.begin();
-      IntVector fh = iter_tmp.end(); 
-      IntVector refineRatio = fineLevel->getRefinementRatio();
-      IntVector coarseLow  = fineLevel->mapCellToCoarser(fl);
-      IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
-
-      IntVector axes = finePatch->faceAxes(face);
-      //int P_dir = axes[0];  // principal direction      
-
-      //__________________________________
-      // enlarge the coarselevel foot print by oneCell
-      // x-           x+        y-       y+       z-        z+
-      // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
+      IntVector cl, ch, fl, fh;
+      getCoarseFineFaceRange(finePatch, coarseLevel, face, 1, cl, ch, fl, fh);
       IntVector oneCell = finePatch->faceDirection(face);
-      if( face == Patch::xminus || face == Patch::yminus 
-                                || face == Patch::zminus) {
-        coarseHigh -= oneCell;
-      }
-      if( face == Patch::xplus || face == Patch::yplus 
-                               || face == Patch::zplus) {
-        coarseLow  -= oneCell;
-      } 
-
-      //__________________________________
-      // coarseHigh and coarseLow cannot lie outside
-      // of the coarselevel index range
-      IntVector cl, ch;
-      coarseLevel->findCellIndexRange(cl,ch);
-      coarseLow   = Max(coarseLow, cl);
-      coarseHigh  = Min(coarseHigh, ch); 
 
       cout_dbg<< " face " << face << " refineRatio "<< refineRatio
               << " BC type " << finePatch->getBCType(face)
               << " FineLevel iterator" << fl << " " << fh 
-              << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
+              << " \t coarseLevel iterator " << cl << " " << ch <<endl;
 
       //__________________________________
       //  get the data
@@ -977,7 +930,7 @@ void ICE::compute_matrix_CFI_weights(const ProcessorGroup*,
       Ghost::GhostType  gn  = Ghost::None;
       constCCVariable<double> vol_frac_coarse, vol_frac_fine;
       new_dw->getRegion(vol_frac_coarse, lb->vol_frac_CCLabel, matl, coarseLevel,
-                        coarseLow, coarseHigh);
+                        cl, ch);
                         
       new_dw->get(vol_frac_fine, lb->vol_frac_CCLabel, matl, finePatch, gn,0);
       
@@ -1076,18 +1029,9 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
         // ghost node interpolation can be developed at
         // a later stage.
         constCCVariable<Stencil7>A_CFI_weights_fine;
-        IntVector fl(finePatch->getInteriorCellLowIndex());
-        IntVector fh(finePatch->getInteriorCellHighIndex());
-        IntVector cl(fineLevel->mapCellToCoarser(fl));
-        IntVector ch(fineLevel->mapCellToCoarser(fh));
-        
-        cl = Max(cl, coarsePatch->getCellLowIndex());
-        ch = Min(ch, coarsePatch->getCellHighIndex());
-        
-        // get the region of the fine patch that overlaps the coarse patch
-        // we might not have the entire patch in this proc's DW
-        fl = coarseLevel->mapCellToFiner(cl);
-        fh = coarseLevel->mapCellToFiner(ch);
+
+        IntVector cl, ch, fl, fh;
+        getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }
