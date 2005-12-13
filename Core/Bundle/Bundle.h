@@ -209,12 +209,6 @@ class Bundle : public PropertyManager {
     std::string getNrrdName(int index);
       // Implementation in cc file, with NRRD/MATRIX compatibility
 
-//    NrrdScalar getNrrdScalar(std::string name) {return NrrdScalar(getNrrd(name)); }
-//    NrrdString getNrrdString(std::string name) {return NrrdString(getNrrd(name)); }  
-//    void setNrrdScalar(std::string name, NrrdScalar scalar) { NrrdDataHandle nrrd = scalar.gethandle(); set<NrrdData>(name,nrrd); }
-//    void setNrrdString(std::string name, NrrdString string) { NrrdDataHandle nrrd = string.gethandle(); set<NrrdData>(name,nrrd); }
-
-  
     //! The basic functions for managing colormaps
     //!  getcolormap     -> Retrieve a Handle to a colormap stored in the bundle
     //!  setcolormap     -> Add a colormap with a name, if it already exists the

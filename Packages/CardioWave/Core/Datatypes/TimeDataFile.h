@@ -45,7 +45,6 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/NrrdString.h>
 #include <Core/Exceptions/Exception.h>
 
 
