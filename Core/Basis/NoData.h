@@ -47,6 +47,9 @@ public:
   NoDataUnitElement() {}
   virtual ~NoDataUnitElement() {}
 
+  static double unit_vertices[1][1]; //!< Parametric coordinates of vertices 
+  static int unit_edges[1][1];    //!< References to vertices of unit edge 
+
   //! return dimension of domain 
   static int domain_dimension() { return -1; } 
   //! return number of vertices
