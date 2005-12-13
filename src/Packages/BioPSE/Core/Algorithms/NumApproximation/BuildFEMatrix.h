@@ -220,7 +220,7 @@ class BuildFEMatrix: public Datatype {
       J[8]=Jv[2].z();
 	
       double detJ=InverseMatrix3x3(J, Ji);
-      assert(detJ>0);
+      ASSERT(detJ>0);
       detJ*=w[i]*hMesh_->get_basis().volume();
 
       const double& Ji0=Ji[0];
@@ -266,13 +266,13 @@ class BuildFEMatrix: public Datatype {
   void parallel(int proc)
   {
     domain_dimension=mb_.domain_dimension();
-    assert(domain_dimension>0);
+    ASSERT(domain_dimension>0);
 
     local_dimension_nodes=mb_.number_of_mesh_vertices();
     local_dimension_add_nodes=mb_.number_of_mesh_vertices()-mb_.number_of_vertices();
     local_dimension_derivatives=0;
     local_dimension=local_dimension_nodes+local_dimension_add_nodes+local_dimension_derivatives; //!< degrees of freedom (dofs) of system 
-    assert(mb_.dofs()==local_dimension);
+    ASSERT(mb_.dofs()==local_dimension);
 
     typename Mesh::Node::size_type mns;
     hMesh_->size(mns);
@@ -436,8 +436,8 @@ class BuildFEMatrix: public Datatype {
 	    dofi=neib_dofs.size()-1;
 	}
       }
-      assert(dofi!=-1);
-      assert(neib_dofs.size()==local_dimension);
+      ASSERT(dofi!=-1);
+      ASSERT(neib_dofs.size()==local_dimension);
 #ifdef DEBUG
       cerr << i << ", " << j << " (" << dofi << ") ";
 #endif 
