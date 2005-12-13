@@ -189,25 +189,6 @@ public:
     gen_ = SFP.gen_;
     UseBasis_ = SFP.UseBasis_;
 
-    //! Compute the scale of this geometry based on its "units" property
-    double unitsScale = 1.;
-    string units;
-    if (SFP.UseCond_==1 /*&& fieldH->mesh()->get_property("units", units)*/) 
-      if(SFP.fieldH_->get_property("units", units)) {
-#ifdef DEBUG
-	cerr << "SetupFEMatrixAlgoT::execute units" << endl;
-#endif
-	//	    msgStream_  << "units = "<< units <<"\n";
-	if (units == "mm") unitsScale = 1./1000;
-	else if (units == "cm") unitsScale = 1./100;
-	else if (units == "dm") unitsScale = 1./10;
-	else if (units == "m") unitsScale = 1./1;
-	else {
-	  //	      warning("Did not recognize units of mesh '" + units + "'.");
-	}
-	//	    msgStream_ << "unitsScale = "<< unitsScale <<"\n";
-      }
-
     nprocessors_ = SFP.nprocessors_;
     if (nprocessors_ > Thread::numProcessors() * 4) 
       nprocessors_ = Thread::numProcessors() * 4;
@@ -219,18 +200,18 @@ public:
 	  tens.size() != (unsigned int)(dataBasis_.size())) {
 	gen_ = SFP.fieldH_->mesh()->generation;
 	//! Need to build basis matrices
-	build_basis_matrices(SFP.fieldH_, tens.size(), unitsScale);
+	build_basis_matrices(SFP.fieldH_, tens.size());
       }
       //! Have basis matrices, compute combined matrix
       hGblMtrx_ = build_composite_matrix(tens);
     } else           
       BuildFEMatrix<FIELD>::build_FEMatrix(SFP.fieldH_, tens, hGblMtrx_, 
-					   unitsScale, nprocessors_);
+					   1.0, nprocessors_);
   
     return hGblMtrx_;
   }
 
-  void build_basis_matrices(FieldHandle fieldH, unsigned int nconds, double unitsScale)
+  void build_basis_matrices(FieldHandle fieldH, unsigned int nconds)
   {
 #ifdef DEBUG
     cerr << "SetupFEMatrixAlgoT::build_basis_matrices" << endl;
@@ -241,7 +222,7 @@ public:
     MatrixHandle aH;
     vector<pair<string, Tensor> > tens(nconds, pair<string, Tensor>("", zero));
     BuildFEMatrix<FIELD>::build_FEMatrix(fieldH, tens, aH, 
-					 unitsScale, nprocessors_);
+					 1.0, nprocessors_);
     AmatH_ = aH;
     AmatH_.detach(); //! Store our matrix shape
     
@@ -249,8 +230,8 @@ public:
     for (unsigned int i=0; i<nconds; i++) {
       tens[i].first=to_string(i);
       tens[i].second=identity;
-      BuildFEMatrix<FIELD>::build_FEMatrix(fieldH, tens, aH, 
-					   unitsScale, nprocessors_);
+      BuildFEMatrix<FIELD>::build_FEMatrix(fieldH, tens, aH,
+                                           1.0, nprocessors_);
       SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(aH.get_rep());
       dataBasis_[i].resize(m->nnz);
       for (int j=0; j<m->nnz; j++)

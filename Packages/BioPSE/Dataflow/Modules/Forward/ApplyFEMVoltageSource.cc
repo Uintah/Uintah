@@ -154,7 +154,6 @@ void ApplyFEMVoltageSource::execute()
   }
   else{
     rhs->set_property("units", string("volts"), false);
- //   msgStream_ << "The supplied RHS doesn't correspond to the mesh in size. Creating own one..." << endl;
     rhs->zero();
   }
   

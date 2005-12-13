@@ -158,10 +158,6 @@ CreateDisAnisoSpheres::execute()
   conductivity->put(AIR, RAD, 0.0);
   conductivity->put(AIR, TAN, 0.0);
 
-  // get units
-  string units;
-  radii_->get_property("units", units);
-
   // process the mesh
   const TypeDescription *mtd = field_->get_type_description(Field::MESH_TD_E);
   const TypeDescription *dtd = field_->get_type_description(Field::FDATA_TD_E);
@@ -192,7 +188,13 @@ CreateDisAnisoSpheres::execute()
   // Update output.
   FieldHandle ftmp;
   if (!tet) { ftmp = newHexField; } else { ftmp = newTetField; }
-  ftmp->set_property("units", units, false);
+
+  // Why don't we just do copy_properties?
+  string units;
+  if (radii_->get_property("units", units))
+  {
+    ftmp->set_property("units", units, false);
+  }
   hOutField->send_and_dereference(ftmp);
 }
 

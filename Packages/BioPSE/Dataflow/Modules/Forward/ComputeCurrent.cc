@@ -131,9 +131,6 @@ ComputeCurrent::execute()
     error("No conductivity_table found in Sigmas.");
     return;
   }
-  int have_units = 0;
-  string units;
-  if (sigmasH->mesh()->get_property("units", units)) have_units=1;
 
   // For each cell in the mesh, find the dot product of the gradient
   // vector and the conductivity tensor.  The result is a vector field
@@ -147,7 +144,7 @@ ComputeCurrent::execute()
   mesh->begin(fi);
   mesh->end(fe);
 
-  TVFieldCV *ofield = new TVFieldCV(mesh);
+  TVFieldCV *ofield = scinew TVFieldCV(mesh);
 
   while (fi != fe) {
     Vector vec;
@@ -166,12 +163,6 @@ ComputeCurrent::execute()
 		 -(s.mat_[1][0]*e.x()+s.mat_[1][1]*e.y()+s.mat_[1][2]*e.z()),
 		 -(s.mat_[2][0]*e.x()+s.mat_[2][1]*e.y()+s.mat_[2][2]*e.z()));
 
-    if (have_units) {
-      if (units == "mm") vec/=1000;
-      else if (units == "cm") vec/=100;
-      else if (units == "dm") vec/=10;
-      else warning("Unrecognized units '"  + units +"' will be ignored.");
-    }
     ofield->set_value(vec,*fi);
     ++fi;
   }

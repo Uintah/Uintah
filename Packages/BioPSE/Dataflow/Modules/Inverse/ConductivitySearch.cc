@@ -154,22 +154,9 @@ ConductivitySearch::build_basis_matrices()
   Tensor zero(0);
   Tensor identity(1);
 
-  double unitsScale = 1;
-  string units;
-  if (mesh_in_->get_property("units", units)) {
-    if (units == "mm") unitsScale = 1./1000;
-    else if (units == "cm") unitsScale = 1./100;
-    else if (units == "dm") unitsScale = 1./10;
-    else if (units == "m") unitsScale = 1./1;
-    else
-    {
-      warning("Didn't recognize units of mesh: " + units + ".");
-    }
-  }
-
   MatrixHandle aH;
   vector<pair<string, Tensor> > tens(NDIM_, pair<string, Tensor>("", zero));
-  BuildFEMatrix<TVFieldI>::build_FEMatrix(mesh_in_, tens, aH, unitsScale);
+  BuildFEMatrix<TVFieldI>::build_FEMatrix(mesh_in_, tens, aH, 1.0);
   AmatH_ = aH;
   AmatH_.detach(); // this will be our global "shape" information
   
@@ -177,7 +164,7 @@ ConductivitySearch::build_basis_matrices()
   for (int i=0; i<NDIM_; i++) {
     tens[i].first=to_string(i);
     tens[i].second=identity;
-    BuildFEMatrix<TVFieldI>::build_FEMatrix(mesh_in_, tens, aH, unitsScale);
+    BuildFEMatrix<TVFieldI>::build_FEMatrix(mesh_in_, tens, aH, 1.0);
     SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(aH.get_rep());
     data_basis_[i].resize(m->nnz);
     for (int j=0; j<m->nnz; j++)

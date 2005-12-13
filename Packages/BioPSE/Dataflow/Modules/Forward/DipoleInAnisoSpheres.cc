@@ -39,7 +39,6 @@
  * to do:    -> correct handling of multiple dipoles
  *           -> review conversion of dipole positions
  *           -> documentation
- *           -> check for units (length scales)
  */
 
 #include <Dataflow/Network/Module.h>
@@ -232,15 +231,6 @@ DipoleInAnisoSpheres::execute()
   radii[CBSF]  = hRadii->get(CBSF,0);
   radii[BRAIN] = hRadii->get(BRAIN,0);
 
-  // get units of the radii
-  string units;
-  double unitsScale = 1;
-  hRadii->get_property("units", units);
-  if (units == "mm") unitsScale = 1./1000;
-  else if (units == "cm") unitsScale = 1./100;
-  else if (units == "dm") unitsScale = 1./10;
-  else if (units == "m") unitsScale = 1./1;
-
   // get conductivities
   ColumnMatrix radCond(4);
   ColumnMatrix tanCond(4);
@@ -254,7 +244,7 @@ DipoleInAnisoSpheres::execute()
 
   // compute potential at the selected points (i.e. at the electrodes)
   ColumnMatrix result(numElectrodes);
-  svc = scinew SphericalVolumeConductor(dipoleMatrix, electrodeMatrix, radii, radCond, tanCond, result, numDipoles, numElectrodes, accuracy.get(), unitsScale);
+  svc = scinew SphericalVolumeConductor(dipoleMatrix, electrodeMatrix, radii, radCond, tanCond, result, numDipoles, numElectrodes, accuracy.get(), 1.0);
   svc->computePotential();
   expTerms.set(svc->getNumberOfSeriesTerms());
 
