@@ -3397,14 +3397,16 @@ GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
 void
 GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  pre_draw(di,matl,1);
+
+  // no pre_draw, done in GeomSphere::draw
   glPushMatrix();
   glTranslated(cen.x(), cen.y(), cen.z());
   glMultMatrixd(m_tensor_matrix);
   glTranslated(-cen.x(), -cen.y(), -cen.z());
   GeomSphere::draw(di, matl, 1);
   glPopMatrix();
-  post_draw(di);
+  // no post_draw, done in GeomSphere::draw
+
 }
 
 
