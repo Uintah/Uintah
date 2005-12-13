@@ -52,7 +52,6 @@ SUBDIRS := \
 	$(SRCDIR)/Math \
 	$(SRCDIR)/OS \
 	$(SRCDIR)/Persistent \
-	$(SRCDIR)/Process \
 	$(SRCDIR)/Services \
 	$(SRCDIR)/SystemCall \
 	$(SRCDIR)/Thread \
