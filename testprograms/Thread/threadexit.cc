@@ -55,8 +55,10 @@ public:
 
 class Display: public Runnable {
 public:
-  Display(const int buff_size, Globals *globals, const int stopper):
-    buff_size(buff_size), globals(globals), stopper(stopper)
+  Display(const int buff_size, Globals *globals, const int stopper) :
+    buff_size(buff_size), 
+    globals(globals), 
+    stopper(stopper)
   {
     buffer = new int[buff_size];
     buffer_display = new int[buff_size];
@@ -69,13 +71,13 @@ public:
     if (buffer_display)
       delete[] buffer_display;
   }
-  Globals *globals;
 
   int buff_size;
+  Globals *globals;
+  int stopper;
   int *buffer;
   int *buffer_display;
 
-  int stopper;
 
   void print_test() {
     if (buff_size <= 0) {
