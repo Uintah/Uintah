@@ -44,26 +44,21 @@ FieldDataElemToNodeAlgo::get_compile_info(FieldHandle field)
   std::string basis = "";
   
   if (mesh.find("Scanline") != std::string::npos) basis = "CrvLinearLgn";
-  if (mesh.find("Image") != std::string::npos) basis = "QuadBilinearLgn";
-  if (mesh.find("LatVol") != std::string::npos) basis = "HexTrilinearLgn";
-  if (mesh.find("Curve") != std::string::npos) basis = "CrvLinearLgn";
-  if (mesh.find("TriSurf") != std::string::npos) basis = "TriLinearLgn";
+  if (mesh.find("Image") != std::string::npos)    basis = "QuadBilinearLgn";
+  if (mesh.find("LatVol") != std::string::npos)   basis = "HexTrilinearLgn";
+  if (mesh.find("Curve") != std::string::npos)    basis = "CrvLinearLgn";
+  if (mesh.find("TriSurf") != std::string::npos)  basis = "TriLinearLgn";
   if (mesh.find("QuadSurf") != std::string::npos) basis = "QuadBilinearLgn";
-  if (mesh.find("TetVol") != std::string::npos) basis = "TetLinearLgn";
+  if (mesh.find("TetVol") != std::string::npos)   basis = "TetLinearLgn";
   if (mesh.find("PrismVol") != std::string::npos) basis = "PrismLinearLgn";
-  if (mesh.find("HexVol") != std::string::npos) basis = "HexTrilinearLgn";
+  if (mesh.find("HexVol") != std::string::npos)   basis = "HexTrilinearLgn";
 
   std::string datatype = data_type->get_name();
-  
-  std::string algo_type = "Scalar";
-  if (datatype == "Vector") algo_type = "Vector";
-  if (datatype == "Tensor") algo_type = "Tensor";
-  
   basis = basis + "<" + datatype + " >";
 
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   std::string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
-  std::string algo_name("FieldData" +algo_type+ "ElemToNodeAlgoT");
+  std::string algo_name("FieldDataElemToNodeAlgoT");
   std::string base_name("FieldDataElemToNodeAlgo");
 
   std::string fieldtype_in = field->get_type_description()->get_name();

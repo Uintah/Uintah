@@ -231,7 +231,6 @@ void SelectByFieldData::execute()
   // Add as well the output object
   MatrixHandle omatrix;
   
-  std::cout << "n = " <<  n << "\n";
   if(!(outputlist[0].create_outputdata(n,"Scalar","SELECT",omatrix)))
   {
     return;

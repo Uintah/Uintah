@@ -224,7 +224,7 @@ std::string TVMHelp::gethelp(bool addelem )
   for (it = helplist_.begin(); it != helplist_.end(); it++)
   {
     std::string helptext;
-    if (oldname != (*it).functionname) helptext = \n"==="+(*it).functionname+"===\n";
+    if (oldname != (*it).functionname) helptext = "\n==="+(*it).functionname+"===\n";
     helptext += ""+(*it).functionsyntax+"\n";
     helptext += ""+(*it).description+"\n";
     helphtml_ += helptext;    
