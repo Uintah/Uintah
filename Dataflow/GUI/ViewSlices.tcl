@@ -27,42 +27,6 @@
 #
 
 
-itk::usual Linkedpane {
-    keep -background -cursor -sashcursor
-}
-
-
-
-# Linked Pane is just a iwidgets::Panedwindow that is linked to another one while moving
-class Linkedpane {
-    inherit ::iwidgets::Panedwindow
-    private variable other ""
-    constructor { args } { 
-        eval ::iwidgets::Panedwindow::constructor $args
-    }
-    public method set_link { w } { set other $w }
-
-    protected method _startGrip {where num { from_link 0 } } {
-	if { !$from_link && [winfo exists $other] } { 
-	    $other _startGrip $where $num 1
-	}
-        ::iwidgets::Panedwindow::_startGrip $where $num
-    }
-
-    protected method _endGrip {where num {from_link 0}} {
-	if { !$from_link && [winfo exists $other] } { 
-	    $other _endGrip $where $num 1
-	}
-	::iwidgets::Panedwindow::_endGrip $where $num
-    }
-
-    protected method _moveSash {where num {from_link 0}} {
-	if { !$from_link && [winfo exists $other] } { 
-	    $other _moveSash $where $num 1
-	}
-	::iwidgets::Panedwindow::_moveSash $where $num
-    }
-}
 	
     
 itcl_class SCIRun_Render_ViewSlices {

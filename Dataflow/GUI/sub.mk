@@ -118,6 +118,7 @@ SRCS := \
         $(SRCDIR)/LinAlgBinary.tcl \
         $(SRCDIR)/LinAlgUnary.tcl \
         $(SRCDIR)/LinearAlgebra.tcl \
+        $(SRCDIR)/Linkedpane.tcl \
         $(SRCDIR)/ManageFieldData.tcl \
         $(SRCDIR)/MapDataToMeshCoord.tcl \
         $(SRCDIR)/MaskLattice.tcl \
