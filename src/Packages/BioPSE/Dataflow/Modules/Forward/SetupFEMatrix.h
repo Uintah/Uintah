@@ -79,8 +79,8 @@ namespace BioPSE {
       FieldHandle fieldH_;
       int UseCond_;
       int UseBasis_;
-      int nprocessors_;
       int gen_;
+      int nprocessors_;
   };
 
         

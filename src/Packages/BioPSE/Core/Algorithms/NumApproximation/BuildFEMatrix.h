@@ -205,7 +205,7 @@ class BuildFEMatrix: public Datatype {
 
     int local_dimension2=2*local_dimension;
 
-    for(int i=0; i<d.size(); i++) { // loop over Gaussian points
+    for(int i = 0; i < (int)d.size(); i++) { // loop over Gaussian points
       vector<Point> Jv;
       hMesh_->derivate(p[i], c_ind, Jv);
       double J[9], Ji[9];
@@ -254,13 +254,13 @@ class BuildFEMatrix: public Datatype {
   }
     
 
-  inline void add_lcl_gbl(int row, const vector<int> &cols, const vector<double> &lcl_a 
-			  )
+  inline void add_lcl_gbl(int row, const vector<int> &cols, 
+			  const vector<double> &lcl_a)
   {
-    for (int i=0; i<lcl_a.size(); i++) 
+    for (int i = 0; i < (int)lcl_a.size(); i++) 
       pA_->add(row, cols[i], lcl_a[i]);
   }
-
+  
 
   // -- callback routine to execute in parallel
   void parallel(int proc)
@@ -311,27 +311,41 @@ class BuildFEMatrix: public Datatype {
     typename Mesh::Node::array_type na;
     typename Mesh::Edge::array_type ea;
     vector<int> neib_dofs;
-    neib_dofs.resize(local_dimension*8); //!< estimated size of neighboring dofs
+    //!< estimated size of neighboring dofs
+    neib_dofs.resize(local_dimension*8);
 
-    for (int i=start_gd; i<end_gd; i++) { //!< loop over system dofs for this thread 
+    //!< loop over system dofs for this thread 
+    for (int i=start_gd; i<end_gd; i++) { 
       rows_[i]=mycols.size();
-	
+      
       neib_dofs.clear();
-      if (i<global_dimension)  //!< check for nodes
-	hMesh_->get_cells(ca, typename Mesh::Node::index_type(i)); //!< get neighboring cells for node
-      else if (i<global_dimension+global_dimension_add_nodes)  //!< check for additional nodes at edges
-	hMesh_->get_cells(ca, typename Mesh::Edge::index_type(i-global_dimension)); //!< get neighboring cells for node
-      else {  //!< check for derivatives - to do
+      //!< check for nodes
+      if (i<global_dimension) {
+	//!< get neighboring cells for node
+	hMesh_->get_cells(ca, typename Mesh::Node::index_type(i)); 
+      } else if (i<global_dimension+global_dimension_add_nodes) {
+	//!< check for additional nodes at edges
+	//!< get neighboring cells for node
+	hMesh_->get_cells(ca, 
+			  typename Mesh::Edge::index_type(i-global_dimension));
+      } else {  
+	//!< check for derivatives - to do
       }
 	  
-      for(int j=0; j<ca.size(); j++) {
-	hMesh_->get_nodes(na, ca[j]); //! get neighboring nodes
-	for(int k=0; k<na.size(); k++)
+      for(int j = 0; j < (int)ca.size(); j++) {
+	//! get neighboring nodes
+	hMesh_->get_nodes(na, ca[j]); 
+
+	for(int k = 0; k < (int)na.size(); k++)
 	  neib_dofs.push_back(na[k]);
-	if (global_dimension_add_nodes) { //!< check for additional nodes at edges
-	  hMesh_->get_edges(ea, ca[j]); //!< get neighboring edges
-	  for(int k=0; k<ea.size(); k++)
-	    neib_dofs.push_back(global_dimension+ea[k]);
+
+	//!< check for additional nodes at edges
+	if (global_dimension_add_nodes) {
+	  //!< get neighboring edges 
+	  hMesh_->get_edges(ea, ca[j]); 
+
+	  for(int k = 0; k < (int)ea.size(); k++)
+	    neib_dofs.push_back(global_dimension + ea[k]);
 	}
       }
 	
@@ -341,7 +355,7 @@ class BuildFEMatrix: public Datatype {
 #endif
 
       for (unsigned int j=0; j<neib_dofs.size(); j++)
-	if (j == 0 || neib_dofs[j] != mycols.back()) {
+	if (j == 0 || neib_dofs[j] != (int)mycols.back()) {
 	  mycols.push_back(neib_dofs[j]);
 #ifdef DEBUG
 	  cerr << neib_dofs[j] << ' ';
@@ -411,33 +425,42 @@ class BuildFEMatrix: public Datatype {
   vector<double> lsml; //!< line of local stiffnes matrix
   lsml.resize(local_dimension);
       	  
-  for (int i=start_gd; i<end_gd; i++) { //!< loop over system dofs for this thread 
-    if (i<global_dimension)  //!< check for nodes
-      hMesh_->get_cells(ca, typename Mesh::Node::index_type(i)); //!< get neighboring cells for node
-    else if (i<global_dimension+global_dimension_add_nodes)  //!< check for additional nodes at edges
-      hMesh_->get_cells(ca, typename Mesh::Edge::index_type(i-global_dimension)); //!< get neighboring cells for additional node
-    else {  //!< check for derivatives - to do
+  //!< loop over system dofs for this thread 
+  for (int i=start_gd; i<end_gd; i++) { 
+    if (i < global_dimension) {  
+      //!< check for nodes
+      //!< get neighboring cells for node
+      hMesh_->get_cells(ca, typename Mesh::Node::index_type(i)); 
+    } else if (i < global_dimension + global_dimension_add_nodes) { 
+      //!< check for additional nodes at edges
+      //!< get neighboring cells for additional node
+      hMesh_->get_cells(ca, 
+			typename Mesh::Edge::index_type(i-global_dimension));
+    } else {  
+      //!< check for derivatives - to do
     }
 	  
-    for(int j=0; j<ca.size(); j++) { //!< loop over elements attributed elements
+    //!< loop over elements attributed elements
+    for(int j = 0; j < (int)ca.size(); j++) { 
       neib_dofs.clear();
-      int dofi=-1; //!< index of global dof in local dofs
+      int dofi = -1; //!< index of global dof in local dofs
       hMesh_->get_nodes(na, ca[j]); //!< get neighboring nodes
-      for(int k=0; k<na.size(); k++) {
+      for(int k = 0; k < (int)na.size(); k++) {
 	neib_dofs.push_back(na[k]);
-	if (na[k]==i)
+	if ((int)na[k] == i)
 	  dofi=neib_dofs.size()-1;
       }
-      if (global_dimension_add_nodes) { //!< check for additional nodes at edges
+      //!< check for additional nodes at edges
+      if (global_dimension_add_nodes) { 
 	hMesh_->get_edges(ea, ca[j]); //!< get neighboring edges
-	for(int k=0; k<ea.size(); k++) {
-	  neib_dofs.push_back(global_dimension+ea[k]);
-	  if (na[k]==i)
-	    dofi=neib_dofs.size()-1;
+	for(int k = 0; k < (int)ea.size(); k++) {
+	  neib_dofs.push_back(global_dimension + ea[k]);
+	  if ((int)na[k] == i)
+	    dofi = neib_dofs.size() - 1;
 	}
       }
       ASSERT(dofi!=-1);
-      ASSERT(neib_dofs.size()==local_dimension);
+      ASSERT((int)neib_dofs.size() == local_dimension);
 #ifdef DEBUG
       cerr << i << ", " << j << " (" << dofi << ") ";
 #endif 
