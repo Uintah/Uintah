@@ -52,7 +52,7 @@
 //           Transform global to local
 //           Integrate constant value over volume 
 
-using std::cerr;
+using std::cout;
 using std::ifstream;
 using std::endl;
 
@@ -135,10 +135,10 @@ void Test()
     Point p;
     switch(u.domain_dimension()) {
     case 1:
-      p=Point(u.unit_vertices[i][0]+1, u.unit_vertices[i][0]+2, u.unit_vertices[i][0]+3);
+      p=Point(u.unit_vertices[i][0], 0, 0);
       break;
     case 2:
-      p=Point(u.unit_vertices[i][0]+1, u.unit_vertices[i][1]+2, 3);
+      p=Point(u.unit_vertices[i][0], u.unit_vertices[i][1], 0);
       break;
     case 3:
       p=Point(u.unit_vertices[i][0], u.unit_vertices[i][1], u.unit_vertices[i][2]);
@@ -161,7 +161,7 @@ void Test()
   }
 
   typename MESH::Elem::index_type e0=mesh->add_elem(n); 
-  cerr<<"Element index: " << e0 << "\n"; 
+  cout<<"Element index: " << e0 << "\n"; 
   mesh->synchronize(MESH::EDGES_E);
 
   vector<double> coords(u.domain_dimension());
@@ -170,19 +170,25 @@ void Test()
   Point p;
   
   mesh->interpolate(p, coords, 0);
-  cerr << "Transform L->G " << coords[0] << " => " << p << endl;
+  cout << "Transform L->G ";
+  for(unsigned int i=0; i<coords.size();i++)
+    cout << coords[0];
+  cout << " => " << p << endl;
 
   vector<double> lc(u.domain_dimension());
   bool rc=mesh->get_coords(lc, p, 0);
-  cerr << "Transform G->L " << p << " => ";
-  if (rc) 
-    cerr << lc[0] << endl;
+  cout << "Transform G->L " << p << " => ";
+  if (rc) {
+    for(unsigned int i=0; i<coords.size();i++)
+      cout << lc[0];
+    cout << endl;
+  }
   else
-    cerr << " not found" << endl;
+    cout << " not found" << endl;
 
   typename MESH::ElemData cmcd(*mesh, e0);
   for(int i=0; i<u.number_of_edges(); i++)
-    cerr << "Edge " << i << " arc length " << mesh->get_basis().get_arc_length(i, cmcd) << endl;
+    cout << "Edge " << i << " arc length " << mesh->get_basis().get_arc_length(i, cmcd) << endl;
 
 
   typedef GenericField<MESH, FBASIS, vector<double> > FIELD;
@@ -195,13 +201,13 @@ void Test()
 
   switch(u.domain_dimension()) {
   case 1:
-    cerr << "Crv integral " << CrvIntegral(field, f) << endl; 
+    cout << "Crv integral " << CrvIntegral(field, f) << endl; 
     break;
   case 2:
-    cerr << "Face integral " << CellIntegral(field, f) << endl; 
+    cout << "Face integral " << CellIntegral(field, f) << endl; 
     break;
   case 3:
-    cerr << "Cell integral " << CellIntegral(field, f) << endl;  
+    cout << "Cell integral " << CellIntegral(field, f) << endl;  
     break;
   default:
     ASSERTFAIL("unknown dimension");
@@ -215,7 +221,7 @@ int
 main(int argc, char **argv) 
 {
   {
-    cerr<<"TestCrvMesh\n";
+    cout<<"TestCrvMesh\n";
     
     srand48(0);
     Test<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double> >();
@@ -226,7 +232,7 @@ main(int argc, char **argv)
    }
 
   {
-    cerr<<"TestTriSurfMesh\n";
+    cout<<"TestTriSurfMesh\n";
     
     srand48(0);
     Test<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<double> >();
@@ -239,7 +245,7 @@ main(int argc, char **argv)
   }
 
   {
-    cerr<<"TestQuadSurfMesh\n";
+    cout<<"TestQuadSurfMesh\n";
     
     srand48(0);
     Test<QuadSurfMesh<QuadBilinearLgn<Point> >, QuadBilinearLgn<double> >();
@@ -250,7 +256,7 @@ main(int argc, char **argv)
   }
  
   {
-    cerr<<"TestTetVolMesh\n";
+    cout<<"TestTetVolMesh\n";
     
     srand48(0);
     //    for(int i=0; i<1000; i++)
@@ -262,7 +268,7 @@ main(int argc, char **argv)
   }
 
   {
-    cerr<<"TestPrismVolMesh\n";
+    cout<<"TestPrismVolMesh\n";
     
     srand48(0);
     Test<PrismVolMesh<PrismLinearLgn<Point> >, PrismLinearLgn<double> >();
@@ -273,7 +279,7 @@ main(int argc, char **argv)
   }
 
   {
-    cerr<<"TestHexVolMesh\n";
+    cout<<"TestHexVolMesh\n";
     
     srand48(0);
     Test<HexVolMesh<HexTrilinearLgn<Point> >, HexTrilinearLgn<double> >();
