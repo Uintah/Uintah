@@ -38,8 +38,6 @@
 #include <Dataflow/Ports/BundlePort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Bundle/Bundle.h>
-#include <Core/Datatypes/NrrdString.h>
-#include <Core/Datatypes/NrrdScalar.h>
 #include <vector>
 #include <string>
 
