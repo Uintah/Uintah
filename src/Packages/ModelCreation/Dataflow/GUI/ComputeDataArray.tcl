@@ -14,6 +14,7 @@ itcl_class ModelCreation_TensorVectorMath_ComputeDataArray {
       set $this-function "RESULT = abs(A);"
       set $this-help ""
       set $this-format "Scalar"
+      
     }
 
     method update_text {} {
@@ -31,6 +32,8 @@ itcl_class ModelCreation_TensorVectorMath_ComputeDataArray {
             return
         }
         toplevel $w
+
+        $this-c gethelp     
 
         iwidgets::labeledframe $w.inf -labeltext "Create Data Array"
         set infoframe [$w.inf childsite]
@@ -68,10 +71,10 @@ itcl_class ModelCreation_TensorVectorMath_ComputeDataArray {
         iwidgets::labeledframe $w.hf -labeltext "available functions"
         set help [$w.hf childsite]
         option add *textBackground white	
-        iwidgets::scrolledhtml $help.help -height 60 -hscrollmode dynamic
+        iwidgets::scrolledtext $help.help -height 60 -hscrollmode dynamic
               
-        $this-c gethelp              
-        $help.help render [set $this-help]
+         
+        $help.help insert end [set $this-help]
         pack $w.hf -side top -anchor w -fill both -expand yes
         pack $help.help -side top -fill both -expand yes
 

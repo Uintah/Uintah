@@ -13,6 +13,7 @@ itcl_class ModelCreation_FieldsData_SelectByFieldData {
 
       set $this-function "SELECT = (DATA < A);"
       set $this-help ""
+      
     }
 
     method update_text {} {
@@ -28,7 +29,8 @@ itcl_class ModelCreation_FieldsData_SelectByFieldData {
         if {[winfo exists $w]} {
             return
         }
-        $this-c gethelp
+
+        $this-c gethelp      
 
         toplevel $w
 

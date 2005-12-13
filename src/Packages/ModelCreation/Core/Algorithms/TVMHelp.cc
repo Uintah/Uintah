@@ -214,7 +214,7 @@ std::string TVMHelp::gethelp(bool addelem )
     createhelplist_element();
   }
   
-  helphtml_ = std::string("<h4>Tensor/Vector/Scalar functions</h4>\n");
+  helphtml_ = std::string("Tensor/Vector/Scalar functions\n\n");
 
   helplist_.sort();
   
@@ -224,9 +224,9 @@ std::string TVMHelp::gethelp(bool addelem )
   for (it = helplist_.begin(); it != helplist_.end(); it++)
   {
     std::string helptext;
-    if (oldname != (*it).functionname) helptext = "<h5>"+(*it).functionname+"</h5>\n";
-    helptext += "<p>"+(*it).functionsyntax+"</p>\n";
-    helptext += "<p>"+(*it).description+"</p>\n";
+    if (oldname != (*it).functionname) helptext = \n"==="+(*it).functionname+"===\n";
+    helptext += ""+(*it).functionsyntax+"\n";
+    helptext += ""+(*it).description+"\n";
     helphtml_ += helptext;    
     oldname = (*it).functionname;
   }  

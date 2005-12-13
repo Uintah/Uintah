@@ -13,6 +13,8 @@ itcl_class ModelCreation_FieldsData_SelectByFieldsData {
 
       set $this-function "SELECT = (DATA < A);"
       set $this-help ""
+
+
     }
 
     method update_text {} {
@@ -28,8 +30,8 @@ itcl_class ModelCreation_FieldsData_SelectByFieldsData {
         if {[winfo exists $w]} {
             return
         }
+        
         $this-c gethelp
-
         toplevel $w
 
         iwidgets::labeledframe $w.inf -labeltext "Select Nodes/Elements from Field"

@@ -16,6 +16,7 @@ itcl_class ModelCreation_FieldsData_CreateFieldData {
       set $this-format "Scalar"
       set $this-basis "Linear"
       set $this-help ""
+
     }
 
     method update_text {} {
@@ -31,9 +32,10 @@ itcl_class ModelCreation_FieldsData_CreateFieldData {
         if {[winfo exists $w]} {
             return
         }
-        $this-c gethelp
 
         toplevel $w
+
+        $this-c gethelp
 
         iwidgets::labeledframe $w.inf -labeltext "Create Scalar Array"
         set infoframe [$w.inf childsite]
@@ -83,11 +85,11 @@ itcl_class ModelCreation_FieldsData_CreateFieldData {
         iwidgets::labeledframe $w.hf -labeltext "available functions"
         set help [$w.hf childsite]
         option add *textBackground white	
-        iwidgets::scrolledhtml $help.help -height 60 -hscrollmode dynamic
+        iwidgets::scrolledtext $help.help -height 60 -hscrollmode dynamic
         pack $w.hf -side top -anchor w -fill both -expand yes
         pack $help.help -side top -fill both -expand yes
 
-        $help.help render [set $this-help]
+        $help.help insert end [set $this-help]
 
         makeSciButtonPanel $w $w $this
  #       moveToCursor $w
