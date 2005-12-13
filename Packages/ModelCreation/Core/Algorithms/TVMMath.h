@@ -65,6 +65,7 @@ class Vector {
 
     // operators defined for this class
     inline Vector& operator=(const Vector&);
+    inline Vector& operator=(const double&);
     inline double& operator[](int idx);
     inline double operator[](int idx) const;
     inline double& operator()(int idx);
@@ -1165,6 +1166,11 @@ inline double Vector::operator!=(const Vector& vec) const
 inline Vector& Vector::operator=(const Vector& vec)
 {
     d_[0]=vec.d_[0]; d_[1]=vec.d_[1]; d_[2]=vec.d_[2]; return(*this);
+}
+
+inline Vector& Vector::operator=(const double& d)
+{
+    d_[0]=d; d_[1]=d; d_[2]=d; return(*this);
 }
 
 inline double& Vector::operator[](int idx)

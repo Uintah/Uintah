@@ -30,22 +30,24 @@
 #ifndef MODELCREATION_CORE_FIELDS_FIELDDATANODETOELEM_H
 #define MODELCREATION_CORE_FIELDS_FIELDDATANODETOELEM_H 1
 
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/Field.h>
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Util/ProgressReporter.h>
 
+// Basis classes
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
+
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Mesh.h>
 
-// Basis classes
-#include <Core/Basis/NoData.h>
-#include <Core/Basis/Constant.h>
+
 
 
 #include <sgi_stl_warnings_off.h>
