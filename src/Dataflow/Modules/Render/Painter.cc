@@ -86,6 +86,8 @@ namespace SCIRun {
 
   /* Todo:
      X - Persistent volume state when re-executing
+     X - Fix Non-origin world_to_index conversion
+     X - Use FreeTypeTextTexture class for text
        - Add support for 2, 4, 5-D nrrds
        - Add back in MIP mode
        - Geometry output port
@@ -93,14 +95,12 @@ namespace SCIRun {
        - Automatic world space grid
        - Automatic index space grid
        - Remove TCLTask::lock and replace w/ volume lock
-       - Fix Non-origin world_to_index conversion
        - Send Bundles correctly
        - Add tool support for ITK filters
        - View to choose tools
        - Change tools to store error codes
        - Add keybooard to tools
        - Migrate all operations to tools (next_siice, zoom, etc)
-       - Use FreeTypeTextTexture class for text
        - Faster painting, using current window buffer
        - Support for RGB/RGBA nrrds
        - Support for Time Axis
@@ -722,9 +722,7 @@ string
 double_to_string(double val)
 {
   char s[50];
-  cerr << "printing: " << val << std::endl;
   snprintf(s, 49, "%1.2f", val);
-  cerr << "DONE printing: " << val << std::endl;
   return string(s);
 }
 
@@ -1108,7 +1106,7 @@ Painter::NrrdVolume::world_to_index(const Point &p) {
   ColumnMatrix world_coords(transform.nrows());
   for (int i = 0; i < transform.nrows(); ++i)
     if (i < 3) 
-      world_coords[i] = p(i);
+      world_coords[i] = p(i)-transform.get(i,transform.ncols()-1);
     else       
       world_coords[i] = 0.0;;
   transform.solve(world_coords, index_matrix, 1);
