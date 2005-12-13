@@ -502,7 +502,7 @@ public:
   void get_normal(Vector &, const typename Node::index_type &) const
   { ASSERTFAIL("not implemented") }
   void get_normal(Vector &result, vector<double> &coords, 
-		  typename Elem::index_type eidx) 
+		  typename Elem::index_type eidx, unsigned int) 
   {
     ElemData ed(*this, eidx);
     vector<Point> Jv;

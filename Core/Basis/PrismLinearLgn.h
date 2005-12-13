@@ -45,25 +45,34 @@ namespace SCIRun {
 //! Class for describing unit geometry of PrismLinearLgn 
 class PrismLinearLgnUnitElement {
 public:
-  static SHARE double unit_vertices[6][3]; //!< Parametric coordinates of vertices of unit edge
-  static SHARE int unit_edges[9][3]; //!< References to vertices of unit edge
-  static SHARE int unit_faces[5][4]; //!< References to vertices of unit face
- 
+  //!< Parametric coordinates of vertices of unit edge
+  static SHARE double unit_vertices[6][3];
+  //!< References to vertices of unit edge 
+  static SHARE int unit_edges[9][3]; 
+  //!< References to vertices of unit face
+  static SHARE int unit_faces[5][4]; 
+   //!< References to normal of unit face
+  static SHARE double unit_face_normals[5][3];
+
   PrismLinearLgnUnitElement() {};
   virtual ~PrismLinearLgnUnitElement() {}
-  
-  static int domain_dimension() { return 3; } //!< return dimension of domain 
-  
-  static int number_of_vertices() { return 6; } //!< return number of vertices
-  static int number_of_mesh_vertices() { return 6; } //!< return number of vertices in mesh
-  static int number_of_edges() { return 9; } //!< return number of edges
-  static int dofs() { return 6; } //!< return degrees of freedom
- 
-  static int vertices_of_face() { return 3; } //!< return number of vertices per face 
 
-  static int faces_of_cell() { return 5; } //!< return number of faces per cell 
-
-  static double volume() { return 0.5; } //!< return volume
+  //!< return dimension of domain 
+  static int domain_dimension() { return 3; } 
+  //!< return number of vertices
+  static int number_of_vertices() { return 6; } 
+  //!< return number of vertices in mesh
+  static int number_of_mesh_vertices() { return 6; }
+  //!< return number of edges 
+  static int number_of_edges() { return 9; } 
+  //!< return degrees of freedom
+  static int dofs() { return 6; } 
+  //!< return number of vertices per face 
+  static int vertices_of_face() { return 3; } 
+  //!< return number of faces per cell 
+  static int faces_of_cell() { return 5; } 
+  //!< return volume
+  static double volume() { return 0.5; } 
 };
 
 //! Class for creating geometrical approximations of Prism meshes

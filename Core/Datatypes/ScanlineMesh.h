@@ -268,7 +268,8 @@ public:
   void get_point(Point &p, typename Node::index_type i) const { get_center(p, i); }
   void get_normal(Vector &, typename Node::index_type) const
   { ASSERTFAIL("not implemented"); }
-  void get_normal(Vector &, vector<double> &, typename Elem::index_type) 
+  void get_normal(Vector &, vector<double> &, typename Elem::index_type,
+		  unsigned int) 
   { ASSERTFAIL("not implemented"); }
 
   virtual void io(Piostream&);

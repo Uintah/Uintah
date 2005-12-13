@@ -40,5 +40,10 @@ QuadBilinearLgnUnitElement::unit_edges[4][2] = {{0,1}, {1,2}, {2,3}, {3,0}};
 int 
 QuadBilinearLgnUnitElement::unit_faces[1][4] = {{0,1,2,3}};
 
+double 
+QuadBilinearLgnUnitElement::unit_face_normals[1][3] = 
+  {{0.000000e+00, 0.000000e+00, 1.000000e+00}};
+
+
 } //namespace SCIRun
 

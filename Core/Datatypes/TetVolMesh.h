@@ -634,7 +634,8 @@ public:
   void get_normal(Vector &, typename Node::index_type) const
   { ASSERTFAIL("not implemented") }
 
-  void get_normal(Vector &, vector<double> &, typename Elem::index_type) 
+  void get_normal(Vector &, vector<double> &, typename Elem::index_type,
+		  unsigned int) 
   { ASSERTFAIL("not implemented"); }
 
   void set_point(const Point &point, typename Node::index_type index)

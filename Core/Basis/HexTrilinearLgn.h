@@ -46,26 +46,34 @@ using std::string;
 //! Class for describing unit geometry of HexTrilinearLgn 
 class HexTrilinearLgnUnitElement {
 public:
-  static double unit_vertices[8][3]; //!< Parametric coordinates of vertices of unit edge 
-  static int unit_edges[12][2];  //!< References to vertices of unit edge  
-  static int unit_faces[6][4];  //!< References to vertices of unit face 
+  //!< Parametric coordinates of vertices of unit edge 
+  static double unit_vertices[8][3];
+  //!< References to vertices of unit edge   
+  static int unit_edges[12][2]; 
+  //!< References to vertices of unit face  
+  static int unit_faces[6][4];  
+  //!< References to normals of unit face 
+  static double unit_face_normals[6][3];  
  
   HexTrilinearLgnUnitElement() {}
   virtual ~HexTrilinearLgnUnitElement() {}
-  
-  static int domain_dimension() { return 3; } //!< return dimension of domain 
-  
-  static int number_of_vertices() { return 8; } //!< return number of vertices
-  static int number_of_mesh_vertices() { return 8; } //!< return number of vertices
-  static int dofs() { return 8; } //!< return degrees of freedom
 
-  static int number_of_edges() { return 12; } //!< return number of edges
-  
-  static int vertices_of_face() { return 4; } //!< return number of vertices per face 
-
-  static int faces_of_cell() { return 6; } //!< return number of faces per cell 
-
-  static double volume() { return 1; } //!< return volume
+  //!< return dimension of domain 
+  static int domain_dimension() { return 3; } 
+  //!< return number of vertices
+  static int number_of_vertices() { return 8; } 
+  //!< return number of vertices
+  static int number_of_mesh_vertices() { return 8; } 
+  //!< return degrees of freedom
+  static int dofs() { return 8; } 
+  //!< return number of edges
+  static int number_of_edges() { return 12; } 
+  //!< return number of vertices per face 
+  static int vertices_of_face() { return 4; } 
+  //!< return number of faces per cell 
+  static int faces_of_cell() { return 6; } 
+  //!< return volume
+  static double volume() { return 1; } 
 };
 
 

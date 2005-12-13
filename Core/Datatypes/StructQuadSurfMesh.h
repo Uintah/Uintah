@@ -128,7 +128,8 @@ public:
 		  const typename ImageMesh<Basis>::Node::index_type &) const;
   
   void get_normal(Vector &result, vector<double> &coords, 
-		  typename ImageMesh<Basis>::Elem::index_type eidx) 
+		  typename ImageMesh<Basis>::Elem::index_type eidx,
+		  unsigned int) 
   {
     if (this->basis_.polynomial_order() < 2) {
       typename ImageMesh<Basis>::Node::array_type arr(3);

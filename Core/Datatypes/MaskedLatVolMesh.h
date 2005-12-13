@@ -1023,7 +1023,8 @@ public:
   void get_normal(Vector &/*normal*/, 
 		  typename Node::index_type /*index*/) const
   { ASSERTFAIL("not implemented") }
-  void get_normal(Vector &, vector<double> &, typename Elem::index_type) 
+  void get_normal(Vector &, vector<double> &, typename Elem::index_type,
+		  unsigned int) 
   { ASSERTFAIL("not implemented"); }
 
   virtual void io(Piostream&);

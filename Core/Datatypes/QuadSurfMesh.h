@@ -271,7 +271,7 @@ public:
   void get_normal(Vector &n, typename Node::index_type i) const { n = normals_[i]; }
 
   void get_normal(Vector &result, vector<double> &coords, 
-		  typename Elem::index_type eidx) 
+		  typename Elem::index_type eidx, unsigned int) 
   {
 
     if (basis_.polynomial_order() < 2) {
