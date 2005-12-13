@@ -54,9 +54,9 @@ public:
   ~FreeTypeTextTexture();
   enum anchor_e { n, e, s, w, ne, se, sw, nw, c };
   void			set(const string &text);
-  void			draw(double x, double y, double sx, double sy,
-			     anchor_e anchor = sw);
-  //  void			draw(GLdouble coords[]);
+  void			draw(double x, double y, anchor_e anchor = sw);
+  int                   width();
+  int                   height();
 private:
   void			render_text_to_texture();
   NrrdTextureObj *	texture_;

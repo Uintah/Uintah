@@ -300,7 +300,7 @@ FreeTypeText::get_bounds(BBox& in_bb)
     FT_Glyph_Get_CBox(glyphs_[i]->glyph_, ft_glyph_bbox_truncate, &ft_bbox);
 
     Point ll(ft_bbox.xMin, ft_bbox.yMin, 0.0);
-    Point ur(ft_bbox.xMax, ft_bbox.yMax, 0.0);
+    Point ur(ft_bbox.xMax+1.0, ft_bbox.yMax+1.0, 0.0);
     ll = (ll + position_).asPoint();
     ur = (ur + position_).asPoint();
     in_bb.extend(ll);

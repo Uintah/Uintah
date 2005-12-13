@@ -47,125 +47,37 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Containers/StringUtil.h>
 
-#include <teem/air.h>
-#include <limits.h>
 
 namespace SCIRun {
 
 
-NrrdTextureObj::NrrdTextureObj(const string &filename,
-                               bool ignore_error,
-                               bool repeatx,
-                               bool repeaty) :
-  nrrd_(scinew NrrdData()),
-  filename_(filename),
-  fromfile_(1),
-  width_(1),
-  height_(1),
-  alpha_(1.0),
-  dirty_(true),
-  texture_id_(0),
-  repeat_x_(repeatx),
-  repeat_y_(repeaty),
-  min_(airNaN()),
-  max_(airNaN())
 
-{
-  if (nrrdLoad(nrrd_->nrrd, filename.c_str(), 0))
-  {
-    string errstr = 
-      "NrrdTextureObj::NrrdTextureObj(string filename) read error on filename: " +
-      filename + biffGetDone(NRRD);
-    char *err = biffGetDone(NRRD);
-    free(err);
-    nrrd_ = 0;
-    if (!ignore_error) 
-      throw errstr;
-  }
-
-  if (nrrd_.get_rep() && nrrd_->nrrd && nrrd_->nrrd->dim == 3) {
-    width_ = nrrd_->nrrd->axis[1].size;
-    height_ = nrrd_->nrrd->axis[2].size;
-    rescale_to_power_of_2();
-  } else if (!ignore_error) {
-    throw "NrrdTextureObj::NrrdTextureObj(nrrd) nrrd not valid";
-  }
-  
-  //  double d = drand48();
-  //  if (d < 0.33) 
-  //    color_[0] = color_[1] = color_[2] = color_[3] = 0.0;
-  //  else if (d < 0.66) 
-  //    color_[0] = color_[1] = color_[2] = color_[3] = 0.5;
-  //  else
-  color_[0] = color_[1] = color_[2] = color_[3] = 1.0;
-
-}
-
-// Constructor for 2D RGBA data
-NrrdTextureObj::NrrdTextureObj(NrrdDataHandle nrrd,
-                               bool repeatx,
-                               bool repeaty) :
+NrrdTextureObj::NrrdTextureObj(NrrdDataHandle nrrd) :
   nrrd_(nrrd),
-  filename_(),
-  fromfile_(0),
   width_(-1),
   height_(-1),
-  alpha_(1.0),
   dirty_(true),
-  texture_id_(0),
-  repeat_x_(repeatx),
-  repeat_y_(repeaty),
-  min_(airNaN()),
-  max_(airNaN())
-
+  texture_id_(0)
 {
   if (!nrrd_.get_rep() || !nrrd_->nrrd || nrrd_->nrrd->dim != 3) 
     throw "NrrdTextureObj::NrrdTextureObj(nrrd) nrrd not valid";
 
   width_ = nrrd_->nrrd->axis[1].size;
   height_ = nrrd_->nrrd->axis[2].size;
-  color_[0] = color_[1] = color_[2] = color_[3] = 0.0;
-  rescale_to_power_of_2();
+  color_[0] = color_[1] = color_[2] = color_[3] = 1.0;
+  pad_to_power_of_2();
 }
-
-
-NrrdTextureObj::NrrdTextureObj(NrrdDataHandle nrrd, int axis, int slice) :
-  nrrd_(nrrd),
-  filename_(),
-  fromfile_(0),
-  width_(-1),
-  height_(-1),
-  alpha_(1.0),
-  dirty_(true),
-  texture_id_(0),
-  repeat_x_(1),
-  repeat_y_(1),
-  axis_(axis),
-  slice_(slice),
-  min_(airNaN()),
-  max_(airNaN())
-{
-  if (!nrrd_.get_rep() || !nrrd_->nrrd || nrrd_->nrrd->dim != 3) 
-    throw "NrrdTextureObj::NrrdTextureObj(nrrd) nrrd not valid";
-
-  width_ = nrrd_->nrrd->axis[(axis+1)%3].size;
-  height_ = nrrd_->nrrd->axis[(axis+2)%3].size;
-  color_[0] = color_[1] = color_[2] = color_[3] = 0.0;
-  rescale_to_power_of_2();
-}
-
 
 
 NrrdTextureObj::~NrrdTextureObj()
 {
+  if (glIsTexture(texture_id_)) {
+    glDeleteTextures(1, &texture_id_);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+  nrrd_ = 0;
 }
 
-void
-NrrdTextureObj::set_alpha(double a)
-{
-  alpha_ = a;
-  dirty_ = true;
-}
 
 void
 NrrdTextureObj::set_color(double r, double g, double b, double a)
@@ -179,55 +91,22 @@ NrrdTextureObj::set_color(double r, double g, double b, double a)
 
 
 void
-NrrdTextureObj::rescale_to_power_of_2()
+NrrdTextureObj::pad_to_power_of_2()
 {
-  return;
   if (!nrrd_.get_rep() || !nrrd_->nrrd) return;
-  Nrrd *nin = nrrd_->nrrd;
-  
-  NrrdResampleInfo *info = nrrdResampleInfoNew();
-  NrrdKernel *kern = nrrdKernelBox;
-  double p[NRRD_KERNEL_PARMS_NUM];
-  memset(p, 0, NRRD_KERNEL_PARMS_NUM * sizeof(double));
-  p[0] = 1.0;
+  NrrdDataHandle nout = scinew NrrdData();
+  int minp[3] = { 0, 0, 0 };
+  int maxp[3] = { nrrd_->nrrd->axis[0].size, 
+                  Pow2(nrrd_->nrrd->axis[1].size)-1, 
+                  Pow2(nrrd_->nrrd->axis[2].size)-1 };
 
-  for (int a = 0; a < nin->dim; a++) {
-    info->samples[a] = nin->axis[a].size;
-    info->kernel[a] = 0;
-    //    if ((a == 1 && repeat_x_) || (a == 2 && repeat_y_)) {
-    if (a) {
-      
-      info->samples[a] = Pow2(nin->axis[a].size);
-      info->kernel[a] = kern;
-
-      if (!(airExists(nin->axis[a].min) && airExists(nin->axis[a].max))) {
-	nrrdAxisInfoMinMaxSet(nin, a, nin->axis[a].center ? 
-			      nin->axis[a].center : nrrdDefCenter);
-      }
-      info->min[a] = nin->axis[a].min;
-      if ((a == 1 && repeat_x_) || (a == 2 && repeat_y_))
-	info->max[a] = nin->axis[a].max;
-      else 
-	info->max[a] = nin->axis[a].min + 
-	  Pow2(int(ceil(nin->axis[a].max-nin->axis[a].min)));
-
-    }      
-    memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
-  }    
-  info->boundary = nrrdBoundaryBleed;
-  info->type = nin->type;
-  info->renormalize = AIR_TRUE;
-
-  NrrdData *nrrd = scinew NrrdData;
-  if (nrrdSpatialResample(nrrd->nrrd, nin, info)) {
+  if (nrrdPad(nout->nrrd, nrrd_->nrrd, minp, maxp, nrrdBoundaryBleed)) {
     char *err = biffGetDone(NRRD);
-    throw string("Trouble resampling: ") + err;
-    free(err);
+    string error = string("Trouble resampling: ") + err;
+    free (err);
+    throw error;
   }
-  nrrdResampleInfoNix(info); 
-
-  //  nrrdSave(("/tmp/out"+to_string(info->samples[1])+"x"+to_string(info->samples[2])+".png").c_str(),nrrd->nrrd,0);
-  nrrd_ = nrrd;
+  nrrd_ = nout;
 }
 
 
@@ -235,13 +114,14 @@ bool
 NrrdTextureObj::bind()
 {
   if (!nrrd_.get_rep() || !nrrd_->nrrd) return false;
+
   const bool bound = glIsTexture(texture_id_);
-  if (!bound) {
+
+  if (!bound)
     glGenTextures(1, &texture_id_);
-  }
-  CHECK_OPENGL_ERROR();  
-  glBindTexture(GL_TEXTURE_3D, texture_id_);
-  CHECK_OPENGL_ERROR();  
+
+  glBindTexture(GL_TEXTURE_2D, texture_id_);
+  CHECK_OPENGL_ERROR();
   if (bound && !dirty_) return true;
   dirty_ = false;
   Nrrd nrrd = *nrrd_->nrrd;
@@ -257,7 +137,7 @@ NrrdTextureObj::bind()
     pixtype = GL_RGBA;
   else {
     prim = 0;
-    pixtype = GL_RED;
+    pixtype = GL_ALPHA;
   }
   GLenum type = 0;
   switch (nrrd.type) {
@@ -271,100 +151,14 @@ NrrdTextureObj::bind()
   default: throw "Cant bind nrrd"; break;
   }
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, nrrd_->nrrd->axis[0].size);
-  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, nrrd_->nrrd->axis[1].size);
-  unsigned char *data = (unsigned char *)nrrd.data;
-  CHECK_OPENGL_ERROR();  
-  switch (axis_) {
-  case 0: glPixelStorei(GL_UNPACK_SKIP_PIXELS, slice_); break;
-  case 1: glPixelStorei(GL_UNPACK_SKIP_ROWS, slice_); break;
-  case 2: glPixelStorei(GL_UNPACK_SKIP_IMAGES, slice_); break;
-  default:break;
-  }
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  CHECK_OPENGL_ERROR();
 
-  const bool rescale = (!airIsNaN(min_) && !airIsNaN(min_));
-  if (rescale) {
-    float newmax = 1.0;
-
-    switch (nrrd.type) {
-    case nrrdTypeChar:
-      newmax = float(SCHAR_MAX); break;
-    case nrrdTypeUChar: 
-      newmax = float(UCHAR_MAX); break;
-    case nrrdTypeShort: 
-      newmax = float(SHRT_MAX); break;
-    case nrrdTypeUShort: 
-      newmax = float(USHRT_MAX); break;
-    case nrrdTypeInt:
-      newmax = float(INT_MAX); break;
-    case nrrdTypeUInt: 
-      newmax = float(UINT_MAX); break;
-    default:
-      newmax = 1.0; break;
-    }
-    const float scale = newmax / (Max(min_, max_)-Min(min_, max_));
-    const float bias = -min_/(Max(min_, max_)-Min(min_, max_));//
-
-    glPixelTransferf(GL_RED_SCALE, scale);
-    glPixelTransferf(GL_BLUE_SCALE, scale);
-    glPixelTransferf(GL_GREEN_SCALE, scale);
-    glPixelTransferf(GL_ALPHA_SCALE, scale);
-
-    glPixelTransferf(GL_RED_BIAS, bias);
-    glPixelTransferf(GL_BLUE_BIAS, bias);
-    glPixelTransferf(GL_GREEN_BIAS, bias);
-    glPixelTransferf(GL_ALPHA_BIAS, bias);
-    CHECK_OPENGL_ERROR();  
-    
-  }
-
-
-
-  CHECK_OPENGL_ERROR();  
-  //  glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  //  glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  //  const GLint filter_mode= /*GL_LINEAR */GL_NEAREST;
-  //  const GLint filter_mode= GL_LINEAR;
-  CHECK_OPENGL_ERROR();  
-  const GLint filter_mode= GL_NEAREST;
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, filter_mode);
-  CHECK_OPENGL_ERROR();  
-  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, filter_mode);
-  CHECK_OPENGL_ERROR();  
-  glPixelTransferf(GL_ALPHA_SCALE, alpha_);
-  glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16,//GL_RGBA,//pixtype,
-               axis_==0 ? 1 : nrrd.axis[0].size,
-               axis_==1 ? 1 : nrrd.axis[1].size,
-               axis_==2 ? 1 : nrrd.axis[2].size,
-	       0, GL_LUMINANCE,type, data);
-  CHECK_OPENGL_ERROR();  
-
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0); 
-  switch (axis_) {
-  case 0: glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0); break;
-  case 1: glPixelStorei(GL_UNPACK_SKIP_ROWS, 0); break;
-  default:
-  case 2: glPixelStorei(GL_UNPACK_SKIP_IMAGES, 0); break;
-  }
-  CHECK_OPENGL_ERROR();  
-
-  if (rescale) {
-    glPixelTransferf(GL_RED_SCALE, 1.0);
-    glPixelTransferf(GL_BLUE_SCALE, 1.0);
-    glPixelTransferf(GL_GREEN_SCALE, 1.0);
-    glPixelTransferf(GL_ALPHA_SCALE, 1.0);
-
-    glPixelTransferf(GL_RED_BIAS, 0.0);
-    glPixelTransferf(GL_BLUE_BIAS, 0.0);
-    glPixelTransferf(GL_GREEN_BIAS, 0.0);
-    glPixelTransferf(GL_ALPHA_BIAS, 0.0);
-    CHECK_OPENGL_ERROR();  
-  }
-
-
-
-
+  glTexImage2D(GL_TEXTURE_2D, 0, pixtype,
+	       nrrd.axis[prim].size, nrrd.axis[prim+1].size, 
+	       0, pixtype, type, nrrd.data);
+  CHECK_OPENGL_ERROR();
   return true;
 }
 
@@ -374,6 +168,7 @@ NrrdTextureObj::draw_quad(double x, double y, double w, double h)
 {
   if (bind()) {
     glEnable(GL_TEXTURE_2D);
+    CHECK_OPENGL_ERROR();
     if (nrrd_->nrrd->axis[0].size == 1) {
       glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
       glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color_);
@@ -382,9 +177,11 @@ NrrdTextureObj::draw_quad(double x, double y, double w, double h)
       glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);;
       glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, black);
     }
-
+    CHECK_OPENGL_ERROR();
   } else {
     glDisable(GL_TEXTURE_2D);
+    return;
+    CHECK_OPENGL_ERROR();
   }
     
 
@@ -392,19 +189,16 @@ NrrdTextureObj::draw_quad(double x, double y, double w, double h)
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glShadeModel(GL_FLAT);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   glColor4fv(color_);
-  //  glColor4d(1.0, 1.0, 1.0, 1.0);//color_);
+  CHECK_OPENGL_ERROR();
 
+  double tx = double(width_)/nrrd_->nrrd->axis[1].size;
+  double ty = double(height_)/nrrd_->nrrd->axis[2].size;
   glBegin(GL_QUADS);
   glTexCoord2d(0.0, 0.0);
   glVertex3d(x, y, 0.0);
-  
-  double tx = (repeat_x_?w/width_:double(width_)/nrrd_->nrrd->axis[1].size);
-  double ty = (repeat_y_?h/height_:double(height_)/nrrd_->nrrd->axis[2].size);
-  //tx = 1.0;
-  //ty = 1.0;
+
   glTexCoord2d(tx, 0.0);
   glVertex3d(x+w, y, 0.0);
 
@@ -415,70 +209,9 @@ NrrdTextureObj::draw_quad(double x, double y, double w, double h)
   glVertex3d(x, y+h, 0.0);
 
   glEnd();
+
   glDisable(GL_TEXTURE_2D);
+  CHECK_OPENGL_ERROR();
 }
-
-
-void
-NrrdTextureObj::draw_quad(float coords[]) 
-{
-  CHECK_OPENGL_ERROR();  
-  if (bind()) {
-    glEnable(GL_TEXTURE_3D);
-#if 0
-    CHECK_OPENGL_ERROR();  
-    if (nrrd_->nrrd->axis[0].size == 1) {
-      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
-      glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color_);
-    }  else {
-      GLfloat black[] = { 0.0, 0.0, 0.0, 0.0 };
-      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);;
-      glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, black);
-    }
-#endif
-  } else {
-    glDisable(GL_TEXTURE_3D);
-  }
-  CHECK_OPENGL_ERROR();  
-  
-
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  CHECK_OPENGL_ERROR();  
-
-  glBegin(GL_QUADS);
-
-  glTexCoord3d(0.0, 0.0, 0.0); 
-  glVertex3fv(coords);
-
-  glTexCoord3d(axis_ == 2 ? 1.0 : 0.0, 
-               0.0,
-               axis_ == 2 ? 0.0 : 1.0);
-  glVertex3fv(coords+3);
-  
-  glTexCoord3d(axis_ == 0 ? 0.0 : 1.0, 
-               axis_ == 1 ? 0.0 : 1.0,
-               axis_ == 2 ? 0.0 : 1.0);
-  glVertex3fv(coords+6);
-  
-  
-  glTexCoord3d(axis_ == 1 ? 1.0 : 0.0, 
-               axis_ == 1 ? 0.0 : 1.0,
-               0.0);
-  glVertex3fv(coords+9);
-  glEnd();
-  CHECK_OPENGL_ERROR(); 
-  glDisable(GL_TEXTURE_3D); 
-
-}
-
-
-void
-NrrdTextureObj::set_minmax(float min, float max)
-{
-  min_ = Min(min,max);
-  max_ = Max(min,max);
-  dirty_ = true;
-}
-  
 
 }

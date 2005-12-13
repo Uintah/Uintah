@@ -363,6 +363,8 @@ class Painter : public Module
     Vector		y_dir();
     int                 x_axis();
     int                 y_axis();
+    void                render_text();
+    void		render_orientation_text();
 
     Painter &           painter_;
     string		name_;
@@ -458,13 +460,7 @@ class Painter : public Module
   void			initialize_fonts();
   void			delete_all_fonts();
   void			set_font_sizes(double size);
-  void			draw_all_labels(SliceWindow &);
-  void			draw_window_label(SliceWindow &);
-  void			draw_orientation_labels(SliceWindow &);
-  void			draw_position_label(SliceWindow &);
-  void			draw_label(SliceWindow &, string, int, int, 
-				   FreeTypeText::anchor_e, 
-				   FreeTypeFace *font = 0); 
+
 
 
   int			extract_window_slices(SliceWindow &);

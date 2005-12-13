@@ -332,6 +332,7 @@ Painter::Painter(GuiContext* ctx) :
   runner_ = scinew RealDrawer(this);
   runner_thread_ = scinew Thread(runner_, string(id+" OpenGL drawer").c_str());
   mouse_.window_ = 0;
+  mouse_.position_ = Point(0,0,0);
   initialize_fonts();
 }
 
@@ -367,7 +368,7 @@ Painter::render_window(SliceWindow &window) {
   if (tool_) 
     tool_->draw(window);
 
-  draw_all_labels(window);
+  window.render_text();
   window.viewport_->release();
 
   CHECK_OPENGL_ERROR();
@@ -716,92 +717,17 @@ Painter::SliceWindow::setup_gl_view()
 }
 
 
-void
-Painter::draw_window_label(SliceWindow &window)
-{
-  string text;
-  if (anatomical_coordinates_()) { 
-    switch (window.axis_) {
-    case 0: text = "Sagittal"; break;
-    case 1: text = "Coronal"; break;
-    default:
-    case 2: text = "Axial"; break;
-    }
-  } else {
-    switch (window.axis_) {
-    case 0: text = "YZ Plane"; break;
-    case 1: text = "XZ Plane"; break;
-    default:
-    case 2: text = "XY Plane"; break;
-    }
-  }
-
-  if (window.mode_ == slab_e) text = "SLAB - "+text;
-  //  if (window.mode_ == mip_e) text = "MIP - "+text;
-  draw_label(window, text, window.viewport_->width() - 2, 0, 
-	     FreeTypeText::se, fonts_["view"]);
-
-  if (string(sci_getenv("USER")) == string("mdavis"))
-    draw_label(window, "fps: "+to_string(fps_), 
-	       0, window.viewport_->height() - 2,
-	       FreeTypeText::nw, fonts_["default"]);
-}
-
 
 string
 double_to_string(double val)
 {
   char s[50];
-  sprintf(s, "%.2g", val);
+  cerr << "printing: " << val << std::endl;
+  snprintf(s, 49, "%1.2f", val);
+  cerr << "DONE printing: " << val << std::endl;
   return string(s);
 }
 
-
-void
-Painter::draw_position_label(SliceWindow &window)
-{
-  FreeTypeFace *font = fonts_["default"];
-  if (!font) return;
-  
-  const string zoom_text = "Zoom: "+to_string(window.zoom_())+"%";
-  string position_text;
-  position_text = ("X: "+double_to_string(mouse_.position_.x())+
-                   " Y: "+double_to_string(mouse_.position_.y())+
-                   " Z: "+double_to_string(mouse_.position_.z()));
-    
-  FreeTypeText position(position_text, font);
-  BBox bbox;
-  position.get_bounds(bbox);
-  int y_pos = Ceil(bbox.max().y())+2;
-  draw_label(window, position_text, 0, 0, FreeTypeText::sw, font);
-  draw_label(window, zoom_text, 0, y_pos, FreeTypeText::sw, font);
-  if (current_volume_) {
-    const float ww = (current_volume_->clut_max_ - current_volume_->clut_min_);
-    const float wl = current_volume_->clut_min_ + ww/2.0;
-    const string clut = "WL: " + to_string(wl) +  " -- WW: " + to_string(ww);
-    draw_label(window, clut, 0, y_pos*2, FreeTypeText::sw, font);
-    const string minmax = "Min: " + to_string(current_volume_->clut_min_) + 
-      " -- Max: " + to_string(current_volume_->clut_max_);
-    draw_label(window, minmax, 0, y_pos*3, FreeTypeText::sw, font);
-    if (mouse_.window_ && current_volume_) {
-      vector<int> index = current_volume_->world_to_index(mouse_.position_);
-
-      if (current_volume_->index_valid(index)) {
-        Point pos(index[0], index[1], index[2]);
-        double val;
-        current_volume_->get_value(index, val);
-        const string value = "Value: " + to_string(val);
-        draw_label(window, value, 0, y_pos*4, FreeTypeText::sw, font);
-        string pos_text = ("S: "+to_string(index[0])+
-                           " C: "+to_string(index[1])+
-                           " A: "+to_string(index[2]));
-        draw_label(window, pos_text, 0, y_pos*5, FreeTypeText::sw, font);
-      }
-        
-    }
-  }
-      
-}  
 
 
 // Right	= -X
@@ -811,17 +737,17 @@ Painter::draw_position_label(SliceWindow &window)
 // Inferior	= -Z
 // Superior	= +Z
 void
-Painter::draw_orientation_labels(SliceWindow &window)
+Painter::SliceWindow::render_orientation_text()
 {
-  FreeTypeFace *font = fonts_["orientation"];
+  FreeTypeFace *font = painter_.fonts_["orientation"];
   if (!font) return;
 
-  int prim = x_axis(window);
-  int sec = y_axis(window);
+  int prim = painter_.x_axis(*this);
+  int sec = painter_.y_axis(*this);
   
   string ltext, rtext, ttext, btext;
 
-  if (anatomical_coordinates_()) {
+  if (painter_.anatomical_coordinates_()) {
     switch (prim % 3) {
     case 0: ltext = "R"; rtext = "L"; break;
     case 1: ltext = "P"; rtext = "A"; break;
@@ -854,106 +780,22 @@ Painter::draw_orientation_labels(SliceWindow &window)
   if (prim >= 3) SWAP (ltext, rtext);
   if (sec >= 3) SWAP (ttext, btext);
 
-  draw_label(window, ltext, 2, window.viewport_->height()/2, 
-	     FreeTypeText::w, font);
-  draw_label(window, rtext, window.viewport_->width()-2, 
-	     window.viewport_->height()/2, FreeTypeText::e, font);
-  draw_label(window, btext, window.viewport_->width()/2, 2, 
-	     FreeTypeText::s, font);
-  draw_label(window, ttext, window.viewport_->width()/2, 
-	     window.viewport_->height()-2, FreeTypeText::n, font);
+  FreeTypeTextTexture texture(ltext, font);
+  texture.draw(2, viewport_->height()/2,
+               FreeTypeTextTexture::w);
+
+  texture.set(rtext);
+  texture.draw(viewport_->width()-2, viewport_->height()/2,
+               FreeTypeTextTexture::e);
+
+  texture.set(btext);
+  texture.draw(viewport_->width()/2, 2,
+               FreeTypeTextTexture::s);
+
+  texture.set(ttext);
+  texture.draw(viewport_->width()/2, viewport_->height()-2, 
+               FreeTypeTextTexture::n);
 }
-
-
-void
-Painter::draw_label(SliceWindow &window, string text, int x, int y,
-		       FreeTypeText::anchor_e anchor, 
-		       FreeTypeFace *font)
-{
-  if (!font && fonts_.size()) 
-    font = fonts_["default"];
-  if (!font) return;
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glScaled(2.0, 2.0, 2.0);
-  glTranslated(-.5, -.5, -.5);
-
-  BBox bbox;
-  FreeTypeText fttext(text, font);
-  fttext.get_bounds(bbox);
-  if (bbox.min().y() < 0) {
-    fttext.set_position(Point(0, -bbox.min().y(), 0));
-    bbox.reset();
-    fttext.get_bounds(bbox);
-  }
-
-  unsigned int wid = Pow2(Ceil(bbox.max().x()));
-  unsigned int hei = Pow2(Ceil(bbox.max().y()));
-  GLubyte *buf = scinew GLubyte[wid*hei];
-  memset(buf, 0, wid*hei);
-  fttext.render(wid, hei, buf);
-  
-  glEnable(GL_TEXTURE_2D);
-  GLuint tex_id;
-  glGenTextures(1, &tex_id);
-  
-  glBindTexture(GL_TEXTURE_2D, tex_id);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, wid, hei, 0, 
-	       GL_ALPHA, GL_UNSIGNED_BYTE, buf);
-  delete [] buf;
-  
-  double px = x;
-  double py = y;
-
-  switch (anchor) {
-  case FreeTypeText::s:  px -= bbox.max().x()/2.0; break;
-  case FreeTypeText::se: px -= bbox.max().x();     break;
-  case FreeTypeText::e:  px -= bbox.max().x();     
-                         py -= bbox.max().y()/2.0; break;
-  case FreeTypeText::ne: px -= bbox.max().x();     
-                         py -= bbox.max().y();     break;
-  case FreeTypeText::n:  px -= bbox.max().x()/2.0; 
-                         py -= bbox.max().y();     break;
-  case FreeTypeText::nw: py -= bbox.max().y();     break;
-  case FreeTypeText::w:  py -= bbox.max().y()/2.0; break;
-  default: // lowerleft do noting
-  case FreeTypeText::sw: break;
-  }
-
-  
-  const double dx = 1.0/window.viewport_->width();
-  const double dy = 1.0/window.viewport_->height();
-  
-  glBegin(GL_QUADS);
-  
-  glTexCoord2f(0.0, 0.0);
-  glVertex3f(px*dx, py*dy, 0.0);
-  
-  glTexCoord2f(1.0, 0.0);
-  glVertex3f(dx*(px+wid), py*dy, 0.0);
-  
-  glTexCoord2f(1.0, 1.0);
-  glVertex3f(dx*(px+wid), dy*(py+hei) , 0.0);
-  
-  glTexCoord2f(0.0, 1.0);
-  glVertex3f(px*dx, dy*(py+hei), 0.0);
-  
-  glEnd();
-  glDeleteTextures(1, &tex_id);
-  glBindTexture(GL_TEXTURE_2D, 0);
-  glDisable(GL_TEXTURE_2D);
-}  
 
 
 void
@@ -1031,15 +873,78 @@ Painter::NrrdSlice::draw()
 }
 
 
-
 void
-Painter::draw_all_labels(SliceWindow &window) {
-  if (!show_text_) return;
-  glColor4d(font_r_, font_g_, font_b_, font_a_);
-  draw_position_label(window);
-  draw_orientation_labels(window);
-  draw_window_label(window);
+Painter::SliceWindow::render_text() {
+  if (!painter_.show_text_) return;
 
+  FreeTypeFace *font = painter_.fonts_["default"];
+  if (!font) return;
+  
+  FreeTypeTextTexture text("X: "+double_to_string(painter_.mouse_.position_.x())+
+                           " Y: "+double_to_string(painter_.mouse_.position_.y())+
+                           " Z: "+double_to_string(painter_.mouse_.position_.z()), font);
+  text.draw(0,0);
+  const int y_pos = text.height()+2;
+  text.set("Zoom: "+to_string(zoom_())+"%");
+  text.draw(0, y_pos);
+    
+  NrrdVolume *vol = painter_.current_volume_;
+  if (vol) {
+    const float ww = vol->clut_max_ - vol->clut_min_;
+    const float wl = vol->clut_min_ + ww/2.0;
+    text.set("WL: " + to_string(wl) +  " -- WW: " + to_string(ww));
+    text.draw(0, y_pos*2);
+
+    text.set("Min: " + to_string(vol->clut_min_) + " -- Max: " + to_string(vol->clut_max_));
+    text.draw(0, y_pos*3);
+
+    if (this == painter_.mouse_.window_) {
+      vector<int> index = vol->world_to_index(painter_.mouse_.position_);
+      if (vol->index_valid(index)) {
+        double val;
+        vol->get_value(index, val);
+        text.set("Value: " + to_string(val));
+        text.draw(0,y_pos*4);
+        
+        text.set("S: "+to_string(index[0])+" C: "+to_string(index[1])+
+                 " A: "+to_string(index[2]));
+        text.draw(0, y_pos*5);
+      }
+    }
+  }
+
+
+  if (string(sci_getenv("USER")) == string("mdavis")) {
+    text.set("fps: "+to_string(painter_.fps_));
+    text.draw(0, viewport_->height() - 2, FreeTypeTextTexture::nw);
+  }
+
+  render_orientation_text();
+
+  font = painter_.fonts_["view"];
+  if (!font) return;
+  string str;
+  if (painter_.anatomical_coordinates_()) { 
+    switch (axis_) {
+    case 0: str = "Sagittal"; break;
+    case 1: str = "Coronal"; break;
+    default:
+    case 2: str = "Axial"; break;
+    }
+  } else {
+    switch (axis_) {
+    case 0: str = "YZ Plane"; break;
+    case 1: str = "XZ Plane"; break;
+    default:
+    case 2: str = "XY Plane"; break;
+    }
+  }
+
+  if (mode_ == slab_e) str = "SLAB - "+str;
+  else if (mode_ == mip_e) str = "MIP - "+str;
+
+  text = FreeTypeTextTexture(str, font);
+  text.draw(viewport_->width() - 2, 0, FreeTypeTextTexture::se);
 }
 
 

@@ -44,6 +44,9 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/BBox.h>
+#include <sci_gl.h>
+#include <sci_glu.h>
+#include <sci_glx.h>
 
 namespace SCIRun {  
 
@@ -68,7 +71,23 @@ void
 FreeTypeTextTexture::set(const string &text) 
 {
   text_ = text;
+  dirty_ = true;
 }
+
+int
+FreeTypeTextTexture::width() {
+  ASSERT(texture_);
+  return texture_->width();
+}
+
+int
+FreeTypeTextTexture::height() {
+  ASSERT(texture_);
+  return texture_->height();
+}
+
+
+
 
 void
 FreeTypeTextTexture::render_text_to_texture()
@@ -85,12 +104,10 @@ FreeTypeTextTexture::render_text_to_texture()
     fttext.get_bounds(bbox);
   }
 
-  // +1 is for some error in ft bbox
-  const unsigned int wid = int(ceil(bbox.max().x()))+1;
-  const unsigned int hei = int(ceil(bbox.max().y()))+1;
+  const int wid = Ceil(bbox.diagonal().x());
+  const int hei = Ceil(bbox.diagonal().y());
 
   // 3 dimensions = alpha x X x Y
-  
   NrrdDataHandle nrrd = scinew NrrdData();
   nrrdAlloc(nrrd->nrrd, nrrdTypeUChar, 3, 1, wid, hei);
   memset(nrrd->nrrd->data, 0, wid*hei);
@@ -101,19 +118,13 @@ FreeTypeTextTexture::render_text_to_texture()
     texture_ = 0;
   }
 
-  Nrrd *nout = nrrdNew();
-  nrrdFlip(nout, nrrd->nrrd, 2); // Is there a flip in place?
-
-  NrrdDataHandle ndout(scinew NrrdData(nout));
-  texture_ = scinew NrrdTextureObj(ndout, false, false);
-  texture_->set_color(0.0, 0.0, 0.0, 1.0);
-  //  texture_->set_alpha(0.76);
+  texture_ = scinew NrrdTextureObj(nrrd);
   dirty_ = false;
 }
   
 
 void
-FreeTypeTextTexture::draw(double x, double y, double sx, double sy,
+FreeTypeTextTexture::draw(double x, double y,
 			  FreeTypeTextTexture::anchor_e anchor)
 {
   if (dirty_)
@@ -141,9 +152,30 @@ FreeTypeTextTexture::draw(double x, double y, double sx, double sy,
   default: // lowerleft do noting
   case FreeTypeTextTexture::sw: break;
   }
-  x = ceil(x);
-  y = ceil(y);
+
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+  glScaled(2.0, 2.0, 2.0);
+  glTranslated(-.5, -.5, -.5);
+  GLint gl_viewport[4];
+  glGetIntegerv(GL_VIEWPORT, gl_viewport);;
+  CHECK_OPENGL_ERROR();
+
+  x = Floor(x) / double(gl_viewport[2] - gl_viewport[0]);
+  y = Floor(y) / double(gl_viewport[3] - gl_viewport[1]);
+  w = w / double(gl_viewport[2] - gl_viewport[0]);
+  h = h / double(gl_viewport[3] - gl_viewport[1]);
+  
   texture_->draw_quad(x, y, w, h);
+
+  glPopMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  CHECK_OPENGL_ERROR();
 }
 
 
