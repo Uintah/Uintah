@@ -128,10 +128,7 @@ IntegrateCurrent::execute()
     error("No conductivity_table found in Sigmas.");
     return;
   }
-  int have_units = 0;
-  string units;
-  if (sigmasH->mesh()->get_property("units", units)) have_units=1;
-  
+
   // for each face in tris, find its area, centroid, and normal
   // for that centroid, look up its sigma and efield in the tetvol fields
   // compute (sigma * efield * area) and dot it with the face normal
@@ -171,12 +168,7 @@ IntegrateCurrent::execute()
     current += fabs(Dot(c,normal)) * area;
     ++fi;
   }
-  if (have_units) {
-    if (units == "mm") current/=1000;
-    else if (units == "cm") current/=100;
-    else if (units == "dm") current/=10;
-    else warning("Unrecognized units '"  + units +"' will be ignored.");
-  }
   current_.set(current);
 }
+
 } // End namespace BioPSE

@@ -497,9 +497,6 @@ InsertElectrodes::execute()
   imeshH->get_property("dirichlet", dirichlet_nodes);
   vector<pair<string, Tensor> > conds;
   imeshH->get_property("conductivity_table", conds);
-  int have_units = 0;
-  string units;
-  if (imeshH->mesh()->get_property("units", units)) have_units=1;
 
   port_range_type range = get_iports("Electrodes");
   if (range.first != range.second)
@@ -585,7 +582,6 @@ InsertElectrodes::execute()
                         //  because nodes have been moved
     imeshH->set_property("dirichlet", dirichlet_nodes, false);
     imeshH->set_property("conductivity_table", conds, false);
-    if (have_units) imeshH->mesh()->set_property("units", units, false);
     omesh->send(imeshH);
     if (elecElemsH.get_rep())
     {
