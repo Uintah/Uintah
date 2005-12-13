@@ -58,7 +58,7 @@ public:
   static int number_of_mesh_vertices() { return 3; } //!< return number of vertices in mesh
   static int dofs() { return 6; } //!< return degrees of freedom
 
-  static int number_of_edges() { return 9; } //!< return number of edges
+  static int number_of_edges() { return 3; } //!< return number of edges
   
   static int vertices_of_face() { return 3; } //!< return number of vertices per face 
 
