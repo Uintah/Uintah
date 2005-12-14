@@ -70,14 +70,19 @@ namespace BioPSE {
 using namespace SCIRun;
 
 template<class Field>
-class BuildFEMatrix: public Datatype {
+class BuildFEMatrix {
+public:
 
+  static bool build_FEMatrix(FieldHandle hField,
+			     vector<pair<string, Tensor> >& tens,
+			     MatrixHandle& hA, double unitsScale,
+			     int num_procs=1);
+
+private:
   typedef typename Field::basis_type FieldType;
   typedef typename Field::mesh_type Mesh;
   typedef typename Field::mesh_type::basis_type MeshType;
   typedef typename Field::mesh_handle_type MeshHandle;
-
-  typedef LockingHandle<BuildFEMatrix> BuildFEMatrixHandle;
 
   //! Private data members
   MeshType mb_;
@@ -97,10 +102,14 @@ class BuildFEMatrix: public Datatype {
   vector<pair<string, Tensor> >& tens_;
   double unitsScale_;
   int domain_dimension;
-  int local_dimension_nodes, local_dimension_add_nodes, local_dimension_derivatives, local_dimension;
-  int global_dimension_nodes, global_dimension_add_nodes, global_dimension_derivatives, global_dimension;
-
-public:
+  int local_dimension_nodes;
+  int local_dimension_add_nodes;
+  int local_dimension_derivatives;
+  int local_dimension;
+  int global_dimension_nodes;
+  int global_dimension_add_nodes;
+  int global_dimension_derivatives;
+  int global_dimension;
 
   BuildFEMatrix(FieldHandle hField,
                 vector<pair<string, Tensor> >& tens,
@@ -123,12 +132,6 @@ public:
 
   virtual ~BuildFEMatrix() {}
 
-  static bool build_FEMatrix(FieldHandle hField,
-			     vector<pair<string, Tensor> >& tens,
-			     MatrixHandle& hA, double unitsScale,
-			     int num_procs=1);
-
-private:
 
   //!< p is the gaussian points
   //!< w is the gaussian weights
@@ -163,8 +166,6 @@ private:
 
   // -- Callback routine to execute in parallel.
   void parallel(int proc);
-
-  virtual void io(Piostream&) {}
 };
 
 
@@ -188,15 +189,15 @@ BuildFEMatrix<Field>::build_FEMatrix(FieldHandle hField,
 
   hA = 0;
 
-  BuildFEMatrixHandle hMaker =
-    new BuildFEMatrix(hField, tens, hA, unitsScale, np);
+  BuildFEMatrix *hMaker =
+    scinew BuildFEMatrix(hField, tens, hA, unitsScale, np);
 
-  Thread::parallel(hMaker.get_rep(), &BuildFEMatrix::parallel, np);
+  Thread::parallel(hMaker, &BuildFEMatrix::parallel, np);
 
   // -- refer to the object one more time not to make it die before
-  hMaker = 0;
+  delete hMaker;
 
-  return hA.get_rep()!=0;
+  return hA.get_rep() != 0;
 }
 
 
