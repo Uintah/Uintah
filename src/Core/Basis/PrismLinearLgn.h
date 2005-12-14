@@ -48,7 +48,7 @@ public:
   //!< Parametric coordinates of vertices of unit edge
   static SHARE double unit_vertices[6][3];
   //!< References to vertices of unit edge 
-  static SHARE int unit_edges[9][3]; 
+  static SHARE int unit_edges[9][2];
   //!< References to vertices of unit face
   static SHARE int unit_faces[5][4]; 
    //!< References to normal of unit face
