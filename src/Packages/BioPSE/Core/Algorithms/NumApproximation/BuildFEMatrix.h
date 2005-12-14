@@ -63,7 +63,7 @@
 #include <Core/Datatypes/GenericField.h>
 
 
-#define DEBUG 1
+//#define BUILDFEM_DEBUG
 
 namespace BioPSE {
 
@@ -109,12 +109,12 @@ class BuildFEMatrix: public Datatype {
       hField_(hField),
       hA_(hA),
       np_(np),
+      rows_(NULL),
+      allCols_(NULL),
       barrier_("BuildFEMatrix barrier"),
       colIdx_(np+1),
       tens_(tens),
-      unitsScale_(unitsScale),
-      rows_(NULL),
-      allCols_(NULL)
+      unitsScale_(unitsScale)
       {
 	pField_= dynamic_cast<Field *>(hField.get_rep());
 	hMesh_ = pField_->get_typed_mesh();
@@ -286,7 +286,7 @@ class BuildFEMatrix: public Datatype {
     global_dimension_derivatives=pField_->get_basis().size_derivatives();
     global_dimension=global_dimension_nodes+global_dimension_add_nodes+global_dimension_derivatives;
 
-#ifdef DEBUG
+#ifdef BUILDFEM_DEBUG
     cerr << "Gdn " <<  global_dimension_nodes << endl;
     cerr << "Gdan " <<  global_dimension_add_nodes << endl;
     cerr << "Gdd " <<  global_dimension_derivatives << endl;
@@ -353,14 +353,14 @@ class BuildFEMatrix: public Datatype {
       }
 	
       sort(neib_dofs.begin(), neib_dofs.end());
-#ifdef DEBUG
+#ifdef BUILDFEM_DEBUG
       cerr << i << ' ';
 #endif
 
       for (unsigned int j=0; j<neib_dofs.size(); j++)
 	if (j == 0 || neib_dofs[j] != (int)mycols.back()) {
 	  mycols.push_back(neib_dofs[j]);
-#ifdef DEBUG
+#ifdef BUILDFEM_DEBUG
 	  cerr << neib_dofs[j] << ' ';
 	}
       cerr << endl;	
@@ -464,12 +464,12 @@ class BuildFEMatrix: public Datatype {
       }
       ASSERT(dofi!=-1);
       ASSERT((int)neib_dofs.size() == local_dimension);
-#ifdef DEBUG
+#ifdef BUILDFEM_DEBUG
       cerr << i << ", " << j << " (" << dofi << ") ";
 #endif 
       build_local_matrix(ca[j], dofi, lsml, ni_points, ni_weights, ni_derivatives);
-#ifdef DEBUG
-      for(int j=0 ; j<lsml.size(); j++)
+#ifdef BUILDFEM_DEBUG
+      for(unsigned int j=0 ; j<lsml.size(); j++)
 	cerr << lsml[j] << ' ';
       cerr << endl;
 #endif
@@ -483,15 +483,13 @@ class BuildFEMatrix: public Datatype {
       sum+=pA_->get(i,j);
       sumabs+=fabs(pA_->get(i,j));
     }
-#ifdef DEBUG
+#ifdef BUILDFEM_DEBUG
     cerr << sum << " " << sumabs << endl;
 #endif
   }
 
   barrier_.wait(np_);
   }
-
-  
 
   virtual void io(Piostream&) {};
 };
