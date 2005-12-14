@@ -1359,6 +1359,11 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       return (0);
     }
     
+    if (meshbasistype == "")
+    {
+      meshbasistype = "constant";
+    }
+    
     // Now pointcloud does store data at nodes as constant
     if (meshbasistype != "constant")
     {
@@ -1367,7 +1372,19 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
     }
   
     meshbasis = "ConstantBasis";
-                                                                          
+    
+    if (fieldbasistype == "")
+    {
+      if (numfield == numnodes)
+      {
+        fieldbasistype = "constant";
+      }
+      else if (numfield == 0)
+      {
+        fieldbasistype = "nodata";
+      } 
+    }
+  
     if ((fieldbasistype != "nodata")&&(fieldbasistype != "constant"))
     {
       if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (element is a point, hence no linear/higher order interpolation is supported)"));
