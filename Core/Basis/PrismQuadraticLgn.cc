@@ -40,7 +40,7 @@ double PrismQuadraticLgnUnitElement::unit_vertices[15][3] =
    {0,0,0.5}, {1,0,0.5}, {0,1,0.5}, 
    {0.5,0,1}, {0.5,0.5,1}, {0,0.5,1}};
 
-int PrismQuadraticLgnUnitElement::unit_edges[9][3] =
+int PrismQuadraticLgnUnitElement::unit_edges[9][2] =
   {{0,1}, {1,2}, {2,0},
    {0,3}, {1,4}, {2,5},
    {3,4}, {4,5}, {5,3}};

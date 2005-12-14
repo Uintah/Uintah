@@ -45,7 +45,7 @@ namespace SCIRun {
 class PrismQuadraticLgnUnitElement {
 public:
   static double unit_vertices[15][3]; //!< Parametric coordinates of vertices of unit edge
-  static int unit_edges[9][3]; //!< References to vertices of unit edge
+  static int unit_edges[9][2]; //!< References to vertices of unit edge
   static int unit_faces[5][4]; //!< References to vertices of unit face
   
   PrismQuadraticLgnUnitElement() {}
