@@ -62,10 +62,10 @@ inline double d_arc_length(const vector<T>& derivs, const vector<double>& dv)
 }
 
 template <>
-  inline double d_arc_length(const vector<Point>& derivs, const vector<double>& dv)
+inline double d_arc_length(const vector<Point>& derivs, const vector<double>& dv)
 {
-  const int dvsize=dv.size();
-  assert(derivs.size()==dvsize);
+  const unsigned int dvsize=dv.size();
+  ASSERT(derivs.size()==dvsize);
   vector<double> Jdv(3);
   Jdv[0]=Jdv[1]=Jdv[2]=0.;
   for(unsigned int i = 0; i<dvsize; i++) {
