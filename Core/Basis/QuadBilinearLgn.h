@@ -47,13 +47,13 @@ using std::string;
 //! Class for describing unit geometry of QuadBilinearLgn 
 class QuadBilinearLgnUnitElement {
 public: 
-  //!< Parametric coordinates of vertices of unit edge
+  //! Parametric coordinates of vertices of unit edge
   static SHARE double unit_vertices[4][2];
-  //!< References to vertices of unit edge  
+  //! References to vertices of unit edge  
   static SHARE int unit_edges[4][2]; 
-  //!< References to vertices of unit face 
+  //! References to vertices of unit face 
   static SHARE int unit_faces[1][4]; 
-  //!< References to normal of unit face
+  //! References to normal of unit face
   static SHARE double unit_face_normals[1][3];
 
   QuadBilinearLgnUnitElement() {}
@@ -64,7 +64,7 @@ public:
   static int number_of_vertices() { return 4; }
   //! return number of vertices in mesh
   static int number_of_mesh_vertices() { return 4; }
-  //!< return degrees of freedom
+  //! return degrees of freedom
   static int dofs() { return 4; } 
 
   //! return number of edges
@@ -74,6 +74,14 @@ public:
   //! return number of faces per cell 
   static int faces_of_cell() { return 1; }
 
+  static inline double length(int edge) { //!< return length
+    const double *v0 = unit_vertices[unit_edges[edge][0]];
+    const double *v1 = unit_vertices[unit_edges[edge][1]];
+    const double dx = v1[0] - v0[0];
+    const double dy = v1[1] - v0[1];
+    return sqrt(dx*dx+dy*dy);
+  } 
+  static double area(int /* face */) { return 1; } //!< return area
   static double volume() { return 0.; } //!< return volume
 };
 

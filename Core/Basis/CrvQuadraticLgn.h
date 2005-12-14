@@ -43,26 +43,15 @@
 namespace SCIRun {
 
 //! Class for describing unit geometry of CrvLinearLgn 
-class CrvQuadraticLgnUnitElement {
+  class CrvQuadraticLgnUnitElement : public CrvLinearLgnUnitElement {
 public: 
   static double unit_vertices[3][1]; //!< Parametric coordinates of vertices of unit edge
-  static int unit_edges[1][2];    //!< References to vertices of unit edge 
 
   CrvQuadraticLgnUnitElement() {}
   virtual ~CrvQuadraticLgnUnitElement() {}
   
-  static int domain_dimension() { return 1; } //!< return dimension of domain 
-  
   static int number_of_vertices() { return 3; } //!< return number of vertices
-  static int number_of_mesh_vertices() { return 2; } //!< return number of vertices in mesh
-  static int number_of_edges() { return 1; } //!< return number of edges
   static int dofs() { return 3; } //!< return degrees of freedom
-  
-  static int vertices_of_face() { return 0; } //!< return number of vertices per face 
-
-  static int faces_of_cell() { return 0; } //!< return number of faces per cell 
-
-  static double volume() { return 0.; } //!< return volume
 };
 
 

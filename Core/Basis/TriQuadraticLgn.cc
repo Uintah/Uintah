@@ -34,8 +34,6 @@
 namespace SCIRun {
 
 double TriQuadraticLgnUnitElement::unit_vertices[6][2] = {{0,0}, {1,0}, {0,1}, {0.5,0}, {0.5,0.5}, {0,0.5}};
-int TriQuadraticLgnUnitElement::unit_edges[3][2] = {{0,1}, {1,2}, {2,0}};
-int TriQuadraticLgnUnitElement::unit_faces[1][3] = {{0,1,2}};
-  
+ 
 } //namespace SCIRun
 

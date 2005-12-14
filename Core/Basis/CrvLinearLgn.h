@@ -74,6 +74,8 @@ public:
   //! return number of faces per cell 
   static int faces_of_cell() { return 0; } 
 
+  static double length(int /* edge */) { return 1.; } //!< return length
+  static double area(int /* face */) { return 0.; } //!< return area
   static double volume() { return 0.; } //!< return volume
 };
 
