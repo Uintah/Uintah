@@ -59,9 +59,9 @@
 using std::endl;
 
 namespace BioPSE {
-#define DEBUG 0
+//#define SETUPFEM_DEBUG
 
-#ifdef DEBUG
+#ifdef SETUPFEM_DEBUG
 using std::cerr;
 #endif
 
@@ -151,14 +151,14 @@ public:
   //! virtual interface. 
   virtual MatrixHandle execute(const SetupFEMatrixParam& SFP)
   {
-#ifdef DEBUG
+#ifdef SETUPFEM_DEBUG
     cerr << "SetupFEMatrixAlgoT::execute" << endl;
 #endif
     FIELD *pField= dynamic_cast<FIELD *>(SFP.fieldH_.get_rep());
     ASSERT(pField);
 	
     const string hftn = SFP.fieldH_->get_type_description()->get_name();
-#ifdef DEBUG
+#ifdef SETUPFEM_DEBUG
     cerr << "SetupFEMatrixAlgoT::execute " << hftn << endl;
 #endif
     TypeDescription::td_vec *htdv = 
@@ -213,7 +213,7 @@ public:
 
   void build_basis_matrices(FieldHandle fieldH, unsigned int nconds)
   {
-#ifdef DEBUG
+#ifdef SETUPFEM_DEBUG
     cerr << "SetupFEMatrixAlgoT::build_basis_matrices" << endl;
 #endif
     Tensor zero(0);
@@ -242,7 +242,7 @@ public:
 
   MatrixHandle build_composite_matrix(const vector<pair<string,Tensor> >&tens)
   {
-#ifdef DEBUG
+#ifdef SETUPFEM_DEBUG
     cerr << "SetupFEMatrixAlgoT::build_composite_matrix" << endl;
 #endif
     MatrixHandle fem_mat = AmatH_;
