@@ -47,33 +47,34 @@ using std::string;
 //! Class for describing unit geometry of TetLinearLgn 
 class TetLinearLgnUnitElement {
 public:
-  //!< Parametric coordinates of vertices of unit edge
+  //! Parametric coordinates of vertices of unit edge
   static SHARE double unit_vertices[4][3];
-  //!< References to vertices of unit edge 
+  //! References to vertices of unit edge 
   static SHARE int unit_edges[6][2]; 
-  //!< References to vertices of unit face
+  //! References to vertices of unit face
   static SHARE int unit_faces[4][3];  
-  //!< References to normals of unit faces
+  //! References to normals of unit faces
   static SHARE double unit_face_normals[4][3];
 
   TetLinearLgnUnitElement() {}
   virtual ~TetLinearLgnUnitElement() {}
   
-  //!< return dimension of domain 
+  //! return dimension of domain 
   static int domain_dimension() { return 3; } 
-  //!< return number of vertices
+  //! return number of vertices
   static int number_of_vertices() { return 4; } 
-  //!< return number of vertices in mesh
+  //! return number of vertices in mesh
   static int number_of_mesh_vertices() { return 4; }
-  //!< return number of edges 
+  //! return number of edges 
   static int number_of_edges() { return 6; }
-  //!< return degrees of freedom 
+  //! return degrees of freedom 
   static int dofs() { return 4; } 
-  //!< return number of vertices per face 
+  //! return number of vertices per face 
   static int vertices_of_face() { return 3; } 
-  //!< return number of faces per cell 
+  //! return number of faces per cell 
   static int faces_of_cell() { return 4; } 
-  //!< return volume
+
+  //! return volume
   static double volume() { return 1./6.; } 
 };
 

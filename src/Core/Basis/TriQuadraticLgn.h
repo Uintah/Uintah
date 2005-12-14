@@ -42,29 +42,15 @@
 namespace SCIRun {
 
 //! Class for describing unit geometry of TriQuadraticLgn 
-class TriQuadraticLgnUnitElement {
+  class TriQuadraticLgnUnitElement : public TriLinearLgnUnitElement {
 public: 
-  
-  static double unit_vertices[6][2]; //!< Parametric coordinates of vertices of unit edge
-  static int unit_edges[3][2]; //!< References to vertices of unit edge 
-  static int unit_faces[1][3]; //!< References to vertices of unit face
+  static SHARE double unit_vertices[6][2]; //!< Parametric coordinates of vertices of unit edge
   
   TriQuadraticLgnUnitElement() {}
   virtual ~TriQuadraticLgnUnitElement() {}
-  
-  static int domain_dimension() { return 2; } //!< return dimension of domain 
-  
+    
   static int number_of_vertices() { return 6; } //!< return number of vertices
-  static int number_of_mesh_vertices() { return 3; } //!< return number of vertices in mesh
   static int dofs() { return 6; } //!< return degrees of freedom
-
-  static int number_of_edges() { return 3; } //!< return number of edges
-  
-  static int vertices_of_face() { return 3; } //!< return number of vertices per face 
-
-  static int faces_of_cell() { return 4; } //!< return number of faces per cell 
-
-  static double volume() { return 0.; } //!< return volume
 };
 
 //! Class for handling of element of type triangle with 

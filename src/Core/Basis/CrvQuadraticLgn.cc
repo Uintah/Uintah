@@ -34,7 +34,6 @@
 namespace SCIRun {
 
 double CrvQuadraticLgnUnitElement::unit_vertices[3][1] = {{0}, {1}, {0.5}};
-int CrvQuadraticLgnUnitElement::unit_edges[1][2] = {{0, 1}};
 
 } //namespace SCIRun
 
