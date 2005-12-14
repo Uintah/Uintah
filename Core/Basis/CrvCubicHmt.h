@@ -121,8 +121,6 @@ public:
 		  +x*(-2 + 3*x) * this->derivs_[cd.node1_index()][0]);
   }
 
-  static  const string type_name(int n = -1);
-
   //! get parametric coordinate for value within the element
   template <class ElemData>
   bool get_coords(vector<double> &coords, const T& value, 
@@ -139,6 +137,22 @@ public:
     return get_arc1d_length<CrvGaussian2<double> >(this, edge, cd);
   }
  
+  //! get area
+  template <class ElemData>
+    double get_area(const unsigned /* face */, const ElemData & /* cd */) const  
+  {
+    return 0.;
+  }
+ 
+  //! get volume
+  template <class ElemData>
+    double get_volume(const ElemData & /* cd */) const  
+  {
+    return 0.;
+  }
+  
+  static  const string type_name(int n = -1);
+
   virtual void io (Piostream& str);
 };
 

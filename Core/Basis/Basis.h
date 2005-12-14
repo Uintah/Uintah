@@ -74,11 +74,25 @@ public:
     ASSERTFAIL("get_coords not supported by basis");
   }
 
-  //! get arc length for edge
+  //! get arc length for edge of element
   template <class ElemData>
   double get_arc_length(const unsigned edge, const ElemData &cd) const  
   {
     ASSERTFAIL("get_arc_length not supported by basis");
+  }
+ 
+  //! get area for face of element
+  template <class ElemData>
+  double get_area(const unsigned face, const ElemData &cd) const  
+  {
+    ASSERTFAIL("get_area not supported by basis");
+  }
+ 
+  //! get volume for element
+  template <class ElemData>
+  double get_volume(const ElemData &cd) const  
+  {
+    ASSERTFAIL("get_volume not supported by basis");
   }
  
   //! add a node value 
