@@ -34,10 +34,10 @@
 namespace SCIRun {
 
 double PrismLinearLgnUnitElement::unit_vertices[6][3] = 
-  {{0,0,0}, {1,0,0}, {0,1,0}, 
+  {{0,0,0}, {1,0,0}, {0,1,0},
    {0,0,1}, {1,0,1}, {0,1,1}};
 
-int PrismLinearLgnUnitElement::unit_edges[9][3] = 
+int PrismLinearLgnUnitElement::unit_edges[9][2] = 
   {{0,1}, {0,2}, {0,3},
    {1,2}, {1,4}, {2,5},
    {3,4}, {3,5}, {4,5}};
