@@ -122,9 +122,9 @@ void Test()
 {   
   MESH *mesh = new MESH();
 
-  Transform t;
-  t.rotate(Vector(1,0,0), Vector(0,1,0));
-  t.pre_scale(Vector(1,2,3));
+  //Transform t;
+  //t.rotate(Vector(1,0,0), Vector(0,1,0));
+  //t.pre_scale(Vector(1,2,3));
   //  t.print();
 
   typename MESH::basis_type u;
