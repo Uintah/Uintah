@@ -1,6 +1,7 @@
 
 #ifndef Uintah_AMRInterpolate_h
 #define Uintah_AMRInterpolate_h
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>

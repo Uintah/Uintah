@@ -1,4 +1,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
+#include <Core/Math/MinMax.h>
+
+using namespace SCIRun;
 
 namespace Uintah {
 
