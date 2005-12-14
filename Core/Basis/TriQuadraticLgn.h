@@ -28,7 +28,7 @@
 //    File   : TriQuadraticLgn.h
 //    Author : Martin Cole, Frank Sachse
 //    Date   : Dec 04 2004
-
+ 
 #if !defined(TriQuadraticLgn_h)
 #define TriQuadraticLgn_h
 
@@ -43,7 +43,7 @@ namespace SCIRun {
 
 //! Class for describing unit geometry of TriQuadraticLgn 
 class TriQuadraticLgnUnitElement {
-public:
+public: 
   
   static double unit_vertices[6][2]; //!< Parametric coordinates of vertices of unit edge
   static int unit_edges[3][2]; //!< References to vertices of unit edge 

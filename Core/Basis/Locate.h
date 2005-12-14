@@ -55,22 +55,26 @@ using std::endl;
 
 //default case
 template <class T>
-inline double d_arc_length(const vector<T>& derivs)
+inline double d_arc_length(const vector<T>& derivs, const vector<double>& dv)
 {
-  double rc=0.;
-  for(unsigned int i=0; i<derivs.size(); i++)
-    rc+=sqrt(derivs[i]*derivs[i]);
-  return rc;
+  ASSERT(0); // to do
+  return 0;  
 }
 
 template <>
-inline double d_arc_length(const vector<Point>& derivs)
+  inline double d_arc_length(const vector<Point>& derivs, const vector<double>& dv)
 {
-  double rc = 0.;
-  for(unsigned int i = 0; i<derivs.size(); i++)
-    rc += sqrt(derivs[i].x() * derivs[i].x() + derivs[i].y() *
-	       derivs[i].y() + derivs[i].z() * derivs[i].z());
-  return rc;
+  const int dvsize=dv.size();
+  assert(derivs.size()==dvsize);
+  vector<double> Jdv(3);
+  Jdv[0]=Jdv[1]=Jdv[2]=0.;
+  for(unsigned int i = 0; i<dvsize; i++) {
+    Jdv[0]+=dv[i]*derivs[i].x();
+    Jdv[1]+=dv[i]*derivs[i].y();
+    Jdv[2]+=dv[i]*derivs[i].z();
+  }
+  
+  return sqrt(Jdv[0]*Jdv[0]+Jdv[1]*Jdv[1]+Jdv[2]*Jdv[2]);
 }
 
 
@@ -80,18 +84,18 @@ double get_arc1d_length(const ElemBasis *pEB, const unsigned edge,
 {
   const double *v0 = pEB->unit_vertices[pEB->unit_edges[edge][0]];
   const double *v1 = pEB->unit_vertices[pEB->unit_edges[edge][1]];
-  double dv0=v1[0]-v0[0];
+  vector<double> dv(1);
+  dv[0]=v1[0]-v0[0];
   double arc_length=0.;
   
   for(int i=0; i<NumApprox::GaussianNum; i++) {
-    vector<double> coords;
-    coords.resize(1);
-    coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv0;
+    vector<double> coords(1);
+    coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
     vector<typename ElemBasis::value_type> derivs;
     pEB->derivate(coords, cd, derivs);
-    arc_length+=NumApprox::GaussianWeights[i]*d_arc_length(derivs);
+    arc_length+=NumApprox::GaussianWeights[i]*d_arc_length(derivs, dv);
   }
-  return arc_length*sqrt(dv0*dv0);
+  return arc_length;
 }
  
 
@@ -101,20 +105,27 @@ double get_arc2d_length(const ElemBasis *pEB, const unsigned edge,
 {
   const double *v0 = pEB->unit_vertices[pEB->unit_edges[edge][0]];
   const double *v1 = pEB->unit_vertices[pEB->unit_edges[edge][1]];
-  double dv0=v1[0]-v0[0];
-  double dv1=v1[1]-v0[1];
+  vector<double> dv(2);
+  dv[0]=v1[0]-v0[0];
+  dv[1]=v1[1]-v0[1];
   double arc_length=0.;
   
   for(int i=0; i<NumApprox::GaussianNum; i++) {
-    vector<double> coords;
-    coords.resize(2);
-    coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv0;
-    coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*dv1;
+    vector<double> coords(2);
+    coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
+    coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*dv[1];
+    //    cerr << "C " << coords[0] << " " << coords[1] << endl;
+ 
     vector<typename ElemBasis::value_type> derivs;
     pEB->derivate(coords, cd, derivs);
-    arc_length+=NumApprox::GaussianWeights[i]*d_arc_length(derivs);
+    //   cerr << "D ";
+    //     for(int j=0; j<derivs.size(); j++)
+    //      cerr << derivs[j] << " ";
+    // cerr << endl;
+    //    cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_arc_length(derivs, dv) << endl;
+    arc_length+=NumApprox::GaussianWeights[i]*d_arc_length(derivs, dv);
   }
-  return arc_length*sqrt(dv0*dv0+dv1*dv1);
+  return arc_length;
 }
  
 
@@ -124,22 +135,23 @@ double get_arc3d_length(const ElemBasis *pEB, const unsigned edge,
 {
   const double *v0 = pEB->unit_vertices[pEB->unit_edges[edge][0]];
   const double *v1 = pEB->unit_vertices[pEB->unit_edges[edge][1]];
-  double dv0=v1[0]-v0[0];
-  double dv1=v1[1]-v0[1];
-  double dv2=v1[2]-v0[2];
+  vector<double> dv(3);
+  dv[0]=v1[0]-v0[0];
+  dv[1]=v1[1]-v0[1];
+  dv[2]=v1[2]-v0[2];
   double arc_length=0.;
   
   for(int i=0; i<NumApprox::GaussianNum; i++) {
-    vector<double> coords;
-    coords.resize(3);
-    coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv0;
-    coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*dv1;
-    coords[2]=v0[2]+NumApprox::GaussianPoints[i][0]*dv2;
+    vector<double> coords(3);
+    coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
+    coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*dv[1];
+    coords[2]=v0[2]+NumApprox::GaussianPoints[i][0]*dv[2];
     vector<typename ElemBasis::value_type> derivs;
     pEB->derivate(coords, cd, derivs);
-    arc_length+=NumApprox::GaussianWeights[i]*d_arc_length(derivs);
+    //    cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_arc_length(derivs, dv) << endl;
+    arc_length+=NumApprox::GaussianWeights[i]*d_arc_length(derivs, dv);
   }
-  return arc_length*sqrt(dv0*dv0+dv1*dv1+dv2*dv2);
+  return arc_length;
 }
  
 
