@@ -453,7 +453,7 @@ std::string Method::fullname() const
   } else if (myinterface) {
     n = myinterface->fullname();
   } else {
-    std::cerr << "ERROR: Method does not have an associated class or interface" << std::endl;
+    std::cerr << "ERROR: Method " << name << " does not have an associated class or interface" << std::endl;
     exit(1);
   }
   return n + "." + name;
