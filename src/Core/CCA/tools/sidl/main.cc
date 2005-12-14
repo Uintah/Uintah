@@ -44,16 +44,13 @@ extern int yyparse();
 extern FILE* yyin;
 extern Specification* parse_spec;
 
-
 bool doing_cia = false;
 bool foremit;
-
-using std::vector;
 
 const char* find_cpp()
 {
   struct stat s;
-  vector<const char*> possible_cpps;
+  std::vector<const char*> possible_cpps;
 
   possible_cpps.push_back( "/usr/lib/gcc-lib/i586-mandrake-linux/egcs-2.91.66/cpp" );
   possible_cpps.push_back( "/usr/lib/gcc-lib/i386-redhat-linux/2.7.2.3/cpp" );
@@ -94,6 +91,9 @@ int main(int argc, char* argv[])
   std::string outfile;
   bool emit_header = false;
 
+  std::vector<std::string> include_files;
+  bool parse_includes = false;
+
   SpecificationList specs;
 
   for (int i = 1; i < argc; i++) {
@@ -118,26 +118,8 @@ int main(int argc, char* argv[])
           std::cerr << "No file specified for -I" << std::endl;
           exit(1);
         }
-        foremit = false;
-        char* ccabuf = new char[strlen(cpp) + strlen(argv[i]) + 10];
-        sprintf(ccabuf, "%s %s", cpp, argv[i]);
-        yyin = popen(ccabuf, "r");
-        delete[] ccabuf;
-        if (!yyin) {
-          std::cerr << "Error opening file: " << argv[i] << std::endl;
-          failed = true;
-        }
-        if (yyparse()) {
-          std::cerr << "Error parsing file: " << argv[i] << std::endl;
-          failed = true;
-        }
-        if (pclose(yyin) == -1) {
-          perror("pclose");
-          failed = true;
-        }
-        parse_spec->isImport = true;
-        specs.add(parse_spec);
-        parse_spec = 0;
+        parse_includes = true;
+        include_files.push_back(std::string(argv[i]));
       } else {
         std::cerr << "Unknown option: " << argv[i] << std::endl;
         exit(1);
@@ -165,6 +147,31 @@ int main(int argc, char* argv[])
         specs.add(parse_spec);
         parse_spec = 0;
         done_builtin = true;
+      }
+
+      if (parse_includes) {
+        foremit = false;
+        for (unsigned int i = 0; i < include_files.size(); i++) {
+          char* ccabuf = new char[strlen(cpp) + include_files[i].length() + 10];
+          sprintf(ccabuf, "%s %s", cpp, include_files[i].c_str());
+          yyin = popen(ccabuf, "r");
+          delete[] ccabuf;
+          if (!yyin) {
+            std::cerr << "Error opening file: " << include_files[i] << std::endl;
+            failed = true;
+          }
+          if (yyparse()) {
+            std::cerr << "Error parsing file: " << include_files[i] << std::endl;
+            failed = true;
+          }
+          if (pclose(yyin) == -1) {
+            perror("pclose");
+            failed = true;
+          }
+          parse_spec->isImport = true;
+          specs.add(parse_spec);
+          parse_spec = 0;
+        }
       }
 
       foremit = true;
@@ -220,21 +227,25 @@ int main(int argc, char* argv[])
     }
     std::string hname = outfile;
     int l = hname.length()-1;
-    while(l>0 && hname[l] != '.')
+    while(l > 0 && hname[l] != '.') {
       l--;
-    if (l>0)
+    }
+    if (l > 0) {
       hname = hname.substr(0, l);
+    }
     hname += ".h";
-    if (emit_header)
+    if (emit_header) {
       specs.emit(devnull, out, hname);
-    else
+    } else {
       specs.emit(out, devnull, hname);
+    }
   } else {
     std::string hname = "stdout";
-    if (emit_header)
+    if (emit_header) {
       specs.emit(devnull, std::cout, hname);
-    else
+    } else {
       specs.emit(std::cout, devnull, hname);
+    }
   }
   return 0;
 }
