@@ -164,6 +164,8 @@ private:
       pA_->add(row, cols[i], lcl_a[i]);
   }
 
+  void setup();
+
   // -- Callback routine to execute in parallel.
   void parallel(int proc);
 };
@@ -178,10 +180,12 @@ BuildFEMatrix<Field>::build_FEMatrix(FieldHandle hField,
 {
   int np = Thread::numProcessors();
 
-  if ( np > 2 ) {
+  if ( np > 2 )
+  {
     np /= 2;
-    if (np>10) {
-      np=5;
+    if (np > 10)
+    {
+      np = 5;
     }
   }
 
@@ -305,6 +309,37 @@ BuildFEMatrix<Field>::build_local_matrix(typename Mesh::Elem::index_type c_ind,
   }
 }
 
+template <class Field>
+void
+BuildFEMatrix<Field>::setup()
+{
+  domain_dimension = mb_.domain_dimension();
+  ASSERT(domain_dimension>0);
+
+  local_dimension_nodes = mb_.number_of_mesh_vertices();
+  local_dimension_add_nodes = mb_.number_of_mesh_vertices()-mb_.number_of_vertices();
+  local_dimension_derivatives = 0;
+  local_dimension = local_dimension_nodes + local_dimension_add_nodes + local_dimension_derivatives; //!< degrees of freedom (dofs) of system
+  ASSERT(mb_.dofs()==local_dimension);
+
+  typename Mesh::Node::size_type mns;
+  hMesh_->size(mns);
+  global_dimension_nodes = mns;
+  global_dimension_add_nodes = pField_->get_basis().size_node_values();
+  global_dimension_derivatives = pField_->get_basis().size_derivatives();
+  global_dimension = global_dimension_nodes+global_dimension_add_nodes+global_dimension_derivatives;
+
+#ifdef BUILDFEM_DEBUG
+  cerr << "Gdn " <<  global_dimension_nodes << endl;
+  cerr << "Gdan " <<  global_dimension_add_nodes << endl;
+  cerr << "Gdd " <<  global_dimension_derivatives << endl;
+  cerr << "Gdd " <<  global_dimension << endl;
+#endif
+
+  hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
+  rows_ = scinew int[global_dimension+1];
+}
+
 
 // -- callback routine to execute in parallel
 template <class Field>
@@ -315,47 +350,24 @@ BuildFEMatrix<Field>::parallel(int proc)
   cerr << "BuildFEMatrix::parallel" << endl;
 #endif
 
-  domain_dimension = mb_.domain_dimension();
-  ASSERT(domain_dimension>0);
+  if (proc == 0)
+  {
+    setup();
+  }
 
-  local_dimension_nodes=mb_.number_of_mesh_vertices();
-  local_dimension_add_nodes=mb_.number_of_mesh_vertices()-mb_.number_of_vertices();
-  local_dimension_derivatives=0;
-  local_dimension=local_dimension_nodes+local_dimension_add_nodes+local_dimension_derivatives; //!< degrees of freedom (dofs) of system
-  ASSERT(mb_.dofs()==local_dimension);
+  barrier_.wait(np_);
 
-  typename Mesh::Node::size_type mns;
-  hMesh_->size(mns);
-  global_dimension_nodes=mns;
-  global_dimension_add_nodes=pField_->get_basis().size_node_values();
-  global_dimension_derivatives=pField_->get_basis().size_derivatives();
-  global_dimension=global_dimension_nodes+global_dimension_add_nodes+global_dimension_derivatives;
-
-#ifdef BUILDFEM_DEBUG
-  cerr << "Gdn " <<  global_dimension_nodes << endl;
-  cerr << "Gdan " <<  global_dimension_add_nodes << endl;
-  cerr << "Gdd " <<  global_dimension_derivatives << endl;
-  cerr << "Gdd " <<  global_dimension << endl;
-#endif
-
-  typename Mesh::Elem::iterator ci, cb, ce;
-  hMesh_->begin(cb);
-  hMesh_->end(ce);
+  //typename Mesh::Elem::iterator ci, cb, ce;
+  //hMesh_->begin(cb);
+  //hMesh_->end(ce);
 
   //! distributing dofs among processors
-  int start_gd = global_dimension * proc/np_;
-  int end_gd  = global_dimension * (proc+1)/np_;
+  const int start_gd = global_dimension * proc/np_;
+  const int end_gd  = global_dimension * (proc+1)/np_;
 
   //! creating sparse matrix structure
   vector<unsigned int> mycols;
   mycols.reserve((end_gd - start_gd)*local_dimension*8);  //<! rough estimate
-
-  if (proc==0) {
-    hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
-    rows_ = scinew int[global_dimension+1];
-  }
-
-  barrier_.wait(np_);
 
   typename Mesh::Elem::array_type ca;
   typename Mesh::Node::array_type na;
@@ -363,9 +375,9 @@ BuildFEMatrix<Field>::parallel(int proc)
   vector<int> neib_dofs;
 
   //! loop over system dofs for this thread
-  for (int i=start_gd; i<end_gd; i++)
+  for (int i = start_gd; i<end_gd; i++)
   {
-    rows_[i]=mycols.size();
+    rows_[i] = mycols.size();
 
     neib_dofs.clear();
     //! check for nodes
@@ -378,7 +390,7 @@ BuildFEMatrix<Field>::parallel(int proc)
     {
       //! check for additional nodes at edges
       //! get neighboring cells for node
-      const int ii=i-global_dimension_nodes;
+      const int ii = i-global_dimension_nodes;
       hMesh_->get_cells(ca, typename Mesh::Edge::index_type(ii));
     }
     else
@@ -386,12 +398,12 @@ BuildFEMatrix<Field>::parallel(int proc)
       //! check for derivatives - to do
     }
 	
-    for(int j = 0; j < (int)ca.size(); j++)
+    for(unsigned int j = 0; j < ca.size(); j++)
     {
       //! get neighboring nodes
       hMesh_->get_nodes(na, ca[j]);
 
-      for(int k = 0; k < (int)na.size(); k++)
+      for(unsigned int k = 0; k < na.size(); k++)
         neib_dofs.push_back(na[k]);
 
       //! check for additional nodes at edges
@@ -400,7 +412,7 @@ BuildFEMatrix<Field>::parallel(int proc)
         //! get neighboring edges
         hMesh_->get_edges(ea, ca[j]);
 
-        for(int k = 0; k < (int)ea.size(); k++)
+        for(unsigned int k = 0; k < ea.size(); k++)
           neib_dofs.push_back(global_dimension + ea[k]);
       }
     }
@@ -426,37 +438,37 @@ BuildFEMatrix<Field>::parallel(int proc)
 #endif
   }
 
-  colIdx_[proc]=mycols.size();
+  colIdx_[proc] = mycols.size();
 
   //! check point
   barrier_.wait(np_);
 
-  int st=0;
+  int st = 0;
   if (proc == 0)
   {
-    for(int i=0;i<np_;i++)
+    for(int i=0; i<np_; i++)
     {
-      int ns=colIdx_[i];
-      colIdx_[i]=st;
-      st+=ns;
+      const int ns = colIdx_[i];
+      colIdx_[i] = st;
+      st += ns;
     }
 
-    colIdx_[np_]=st;
-    allCols_=scinew int[st];
+    colIdx_[np_] = st;
+    allCols_ = scinew int[st];
   }
 
   //! check point
   barrier_.wait(np_);
 
   //! updating global column by each of the processors
-  int s=colIdx_[proc];
-  int n=mycols.size();
+  const int s = colIdx_[proc];
+  const int n = mycols.size();
 
   for(int i=0; i<n; i++)
     allCols_[i+s] = mycols[i];
 
-  for(int i=start_gd;i<end_gd;i++)
-    rows_[i]+=s;
+  for(int i = start_gd; i<end_gd; i++)
+    rows_[i] += s;
 
   //! check point
   barrier_.wait(np_);
@@ -464,7 +476,7 @@ BuildFEMatrix<Field>::parallel(int proc)
   //! the main thread makes the matrix
   if (proc == 0)
   {
-    rows_[global_dimension]=st;
+    rows_[global_dimension] = st;
     pA_ = scinew SparseRowMatrix(global_dimension, global_dimension, rows_, allCols_, st);
     hA_ = pA_;
   }
@@ -473,12 +485,11 @@ BuildFEMatrix<Field>::parallel(int proc)
   barrier_.wait(np_);
 
   //! zeroing in parallel
-  int ns=colIdx_[proc];
-  int ne=colIdx_[proc+1];
+  const int ns = colIdx_[proc];
+  const int ne = colIdx_[proc+1];
   double* a = &pA_->a[ns], *ae=&pA_->a[ne];
 
-  while(a<ae)
-    *a++=0.;
+  while (a<ae) *a++=0.0;
 
   vector<vector<double> > ni_points;
   vector<double> ni_weights;
@@ -489,7 +500,7 @@ BuildFEMatrix<Field>::parallel(int proc)
   lsml.resize(local_dimension);
       	
   //! loop over system dofs for this thread
-  for (int i=start_gd; i<end_gd; i++)
+  for (int i = start_gd; i<end_gd; i++)
   {
     if (i < global_dimension_nodes)
     {
@@ -519,7 +530,7 @@ BuildFEMatrix<Field>::parallel(int proc)
       {
 	neib_dofs.push_back(na[k]);
 	if ((int)na[k] == i)
-	  dofi=neib_dofs.size()-1;
+	  dofi = neib_dofs.size()-1;
       }
       //! check for additional nodes at edges
       if (global_dimension_add_nodes)
@@ -549,11 +560,11 @@ BuildFEMatrix<Field>::parallel(int proc)
 
   for (int i=start_gd; i<end_gd; i++)
   {
-    double sum=0, sumabs=0;
+    double sum=0.0, sumabs=0.0;
     for (int j=0; j<global_dimension; j++)
     {
-      sum+=pA_->get(i,j);
-      sumabs+=fabs(pA_->get(i,j));
+      sum += pA_->get(i,j);
+      sumabs += fabs(pA_->get(i,j));
     }
 #ifdef BUILDFEM_DEBUG
     cerr << sum << " " << sumabs << endl;
