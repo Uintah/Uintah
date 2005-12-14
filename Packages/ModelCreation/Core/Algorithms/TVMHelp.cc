@@ -226,7 +226,7 @@ std::string TVMHelp::gethelp(bool addelem )
     std::string helptext;
     if (oldname != (*it).functionname) helptext = "\n==="+(*it).functionname+"===\n";
     helptext += ""+(*it).functionsyntax+"\n";
-    helptext += ""+(*it).description+"\n";
+    helptext += ""+(*it).description+"\n\n";
     helphtml_ += helptext;    
     oldname = (*it).functionname;
   }  

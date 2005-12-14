@@ -116,8 +116,8 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
   SelectionMask selmask(selinput);
   int clipmode = -1;
   
-  typename FIELD::mesh_typ::Node::size_type nnodes;
-  typename FIELD::mesh_typ::Elem::size_type nelems;
+  typename FIELD::mesh_type::Node::size_type nnodes;
+  typename FIELD::mesh_type::Elem::size_type nelems;
   mesh->size(nnodes);
   mesh->size(nelems);
   
@@ -211,7 +211,7 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
     pr->update_progress(*(bi),*(ei));     
   }
 
-  FIELD *ofield = scinew FIELD(clipped, field->basis_order());
+  FIELD *ofield = scinew FIELD(clipped);
   output = dynamic_cast<Field *>(ofield);
   output->copy_properties(input.get_rep());
 
@@ -249,7 +249,7 @@ bool ClipBySelectionMaskAlgoT<FIELD>::execute(ProgressReporter *pr,
     rr[i] = i; // An extra entry goes on the end of rr.
 
   }
-  else if (field->basis_order == 0)
+  else if (field->basis_order() == 0)
   {
     FIELD *field = dynamic_cast<FIELD *>(input.get_rep());
 

@@ -72,11 +72,11 @@ itcl_class ModelCreation_FieldsData_SelectByFieldData {
         iwidgets::labeledframe $w.hf -labeltext "Available Functions"
         set help [$w.hf childsite]
         option add *textBackground white	
-        iwidgets::scrolledhtml $help.help -height 60 -hscrollmode dynamic
+        iwidgets::scrolledtext $help.help -height 60 -hscrollmode dynamic
         pack $w.hf -side top -anchor w -fill both -expand yes
         pack $help.help -side top -fill both -expand yes
 
-        $help.help render [set $this-help]
+        $help.help insert end [set $this-help]
 
         makeSciButtonPanel $w $w $this
     }
