@@ -427,13 +427,11 @@ public:
         double dnew = ::Dot(Q, Rnew, iter, flops, memrefs);
 
         // Calculate error term
-        double residualNormalization = params->getResidualNormalizationFactor();
         
         switch(params->norm){
         case CGSolverParams::L1:
           {
             double err = ::L1(Q, iter, flops, memrefs);
-            err /= residualNormalization;
             new_dw->put(sum_vartype(err), err_label);
           }
           break;
@@ -443,7 +441,6 @@ public:
         case CGSolverParams::LInfinity:
           {
             double err = ::LInf(Q, iter, flops, memrefs);
-            err /= residualNormalization;
             new_dw->put(max_vartype(err), err_label);
           }
           break;
