@@ -956,8 +956,8 @@ protected:
 #if defined(__digital__) || defined(_AIX) || defined(__ECC)
   mutable
 #endif
-  typename Edge::EdgeSet		edges_;
-  Mutex			edge_lock_;
+  typename Edge::EdgeSet edges_;
+  Mutex                  edge_lock_;
 
   typedef LockingHandle<typename Face::HalfFaceSet> HalfFaceSetHandle;
   typedef LockingHandle<typename Face::FaceSet> FaceSetHandle;
@@ -976,8 +976,8 @@ protected:
 #if defined(__digital__) || defined(_AIX) || defined(__ECC)
   mutable
 #endif
-  typename Face::FaceSet		faces_;
-  Mutex			face_lock_;
+  typename Face::FaceSet faces_;
+  Mutex                  face_lock_;
 
   typedef vector<vector<typename Cell::index_type> > NodeNeighborMap;
   //  typedef LockingHandle<NodeMap> NodeMapHandle;
@@ -992,7 +992,7 @@ protected:
   //!  The grid is only built if synchronize(Mesh::LOCATE_E) is called.
   LockingHandle<SearchGrid>  grid_;
   Mutex                      grid_lock_; // Bad traffic!
-  typename Cell::index_type           locate_cache_;
+  typename Cell::index_type  locate_cache_;
 
   unsigned int		     synchronized_;
   Basis                      basis_;
@@ -1284,7 +1284,7 @@ PrismVolMesh<Basis>::compute_edges()
   }
   edges_.clear();
   all_edges_.clear();
-  unsigned int num_edges = (cells_.size()) /  PRISM_NNODES *  PRISM_NEDGES;
+  unsigned int num_edges = (cells_.size()) / PRISM_NNODES * PRISM_NEDGES;
   for (unsigned int i = 0; i < num_edges; i++) {
     edges_.insert(i);
     all_edges_.insert(i);
@@ -1603,7 +1603,8 @@ PrismVolMesh<Basis>::delete_cell_node_neighbors(typename Cell::index_type idx)
 //! Given two nodes (n0, n1), return all edge indexes that span those two nodes
 template <class Basis>
 bool
-PrismVolMesh<Basis>::is_edge(typename Node::index_type n0, typename Node::index_type n1,
+PrismVolMesh<Basis>::is_edge(typename Node::index_type n0,
+			     typename Node::index_type n1,
 			     typename Edge::array_type *array)
 {
   ASSERTMSG(synchronized_ & EDGES_E,
@@ -1719,10 +1720,12 @@ PrismVolMesh<Basis>::is_face(typename Node::index_type n0,
 
 template <class Basis>
 void
-PrismVolMesh<Basis>::get_nodes(typename Node::array_type &array, typename Edge::index_type idx) const
+PrismVolMesh<Basis>::get_nodes(typename Node::array_type &array,
+			       typename Edge::index_type idx) const
 {
   array.resize(2);
-  pair<typename Edge::index_type, typename Edge::index_type> edge = Edge::edgei(idx);
+  pair<typename Edge::index_type, typename Edge::index_type> edge =
+    Edge::edgei(idx);
   array[0] = cells_[edge.first];
   array[1] = cells_[edge.second];
 }
@@ -1797,7 +1800,7 @@ PrismVolMesh<Basis>::get_edges(typename Edge::array_type &/*array*/,
 template <class Basis>
 void
 PrismVolMesh<Basis>::get_edges(typename Edge::array_type &/*array*/,
-			typename Face::index_type /*idx*/) const
+			       typename Face::index_type /*idx*/) const
 {
   ASSERTFAIL("Not implemented yet");
 }
@@ -1805,14 +1808,13 @@ PrismVolMesh<Basis>::get_edges(typename Edge::array_type &/*array*/,
 
 template <class Basis>
 void
-PrismVolMesh<Basis>::get_edges(typename Edge::array_type &array, 
+PrismVolMesh<Basis>::get_edges(typename Edge::array_type &array,
 			       typename Cell::index_type idx) const
 {
   array.resize(PRISM_NEDGES);
-  for (int i = 0; i < PRISM_NEDGES; i++)
-  {
-    array[i] = idx * PRISM_NEDGES + i;
-  }
+  const unsigned int base = idx * PRISM_NEDGES;
+  for (unsigned int i=0; i<PRISM_NEDGES; i++)
+    array[i] = base + i;
 }
 
 
@@ -1836,7 +1838,8 @@ PrismVolMesh<Basis>::get_faces(typename Face::array_type &/*array*/,
 
 template <class Basis>
 void
-PrismVolMesh<Basis>::get_faces(typename Face::array_type &array, typename Cell::index_type idx) const
+PrismVolMesh<Basis>::get_faces(typename Face::array_type &array,
+			       typename Cell::index_type idx) const
 {
   array.resize(PRISM_NFACES);
   for (int i = 0; i < PRISM_NFACES; i++)
@@ -1847,10 +1850,12 @@ PrismVolMesh<Basis>::get_faces(typename Face::array_type &array, typename Cell::
 
 template <class Basis>
 void
-PrismVolMesh<Basis>::get_cells(typename Cell::array_type &array, typename Edge::index_type idx) const
+PrismVolMesh<Basis>::get_cells(typename Cell::array_type &array,
+			       typename Edge::index_type idx) const
 {
   pair<typename Edge::HalfEdgeSet::const_iterator,
-    typename Edge::HalfEdgeSet::const_iterator> range = all_edges_.equal_range(idx);
+    typename Edge::HalfEdgeSet::const_iterator> range =
+    all_edges_.equal_range(idx);
   
   //! ASSERT that this cell's edges have been computed
   ASSERT(range.first != range.second);
@@ -1865,10 +1870,12 @@ PrismVolMesh<Basis>::get_cells(typename Cell::array_type &array, typename Edge::
 
 template <class Basis>
 void
-PrismVolMesh<Basis>::get_cells(typename Cell::array_type &array, typename Face::index_type idx) const
+PrismVolMesh<Basis>::get_cells(typename Cell::array_type &array,
+			       typename Face::index_type idx) const
 {
   pair<typename Face::HalfFaceSet::const_iterator, 
-    typename Face::HalfFaceSet::const_iterator> range = all_faces_.equal_range(idx);
+    typename Face::HalfFaceSet::const_iterator> range =
+    all_faces_.equal_range(idx);
   
   //! ASSERT that this cell's faces have been computed
   ASSERT(range.first != range.second);
@@ -1883,7 +1890,8 @@ PrismVolMesh<Basis>::get_cells(typename Cell::array_type &array, typename Face::
 
 template <class Basis>
 void
-PrismVolMesh<Basis>::get_cells(typename Cell::array_type &array, typename Node::index_type idx) const
+PrismVolMesh<Basis>::get_cells(typename Cell::array_type &array,
+			       typename Node::index_type idx) const
 {
   ASSERTMSG(is_frozen(),"only call get_cells with a node index if frozen!!");
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
@@ -1898,7 +1906,8 @@ PrismVolMesh<Basis>::get_cells(typename Cell::array_type &array, typename Node::
 //! call the one below instead
 template <class Basis>
 bool
-PrismVolMesh<Basis>::get_neighbor(typename Cell::index_type &neighbor, typename Cell::index_type from,
+PrismVolMesh<Basis>::get_neighbor(typename Cell::index_type &neighbor,
+				  typename Cell::index_type from,
 				  typename Face::index_type idx) const
 {
   ASSERT(idx/PRISM_NFACES == from);
@@ -1918,7 +1927,8 @@ PrismVolMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
   ASSERTMSG(synchronized_ & FACE_NEIGHBORS_E,
 	    "Must call synchronize FACE_NEIGHBORS_E on PrismVolMesh first.");
   pair<typename Face::HalfFaceSet::const_iterator,
-       typename Face::HalfFaceSet::const_iterator> range = all_faces_.equal_range(idx);
+       typename Face::HalfFaceSet::const_iterator> range =
+    all_faces_.equal_range(idx);
 
   // ASSERT that this face was computed
   ASSERT(range.first != range.second);

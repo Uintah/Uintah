@@ -85,7 +85,8 @@ public:
   //! Approximate edge for element by piecewise linear segments
   //! return: coords gives parametric coordinates of the approximation.
   //! Use interpolate with coordinates to get the world coordinates.
-  virtual void approx_edge(const unsigned edge, const unsigned div_per_unit, 
+  virtual void approx_edge(const unsigned edge,
+			   const unsigned div_per_unit, 
 			   vector<vector<double> > &coords) const
   {
     coords.resize(div_per_unit + 1);
@@ -100,7 +101,7 @@ public:
     const double dy = v1[1] - p1y;
     const double dz = v1[2] - p1z;
 
-    for(unsigned i = 0; i <= div_per_unit; i++) {
+    for(unsigned int i = 0; i <= div_per_unit; i++) {
       const double d = (double)i / (double)div_per_unit;
       vector<double> &tmp = coords[i];
       tmp.resize(3);
@@ -113,13 +114,14 @@ public:
   //! Approximate faces for element by piecewise linear elements
   //! return: coords gives parametric coordinates at the approximation point.
   //! Use interpolate with coordinates to get the world coordinates.
-  virtual void approx_face(const unsigned face, const unsigned div_per_unit, 
+  virtual void approx_face(const unsigned face,
+			   const unsigned div_per_unit, 
 			   vector<vector<vector<double> > > &coords) const
   {	
-    int fe = (PrismLinearLgnUnitElement::unit_faces[face][3] != -1 ? 2 : 1);
+    unsigned int fe = (PrismLinearLgnUnitElement::unit_faces[face][3] == -1 ? 1 : 2);
     coords.resize(fe * div_per_unit);
 	
-    for(int f = 0; f < fe; f++) {
+    for(unsigned int f = 0; f<fe; f++) {
       double *v0, *v1, *v2;
 
       if (f==0) {
@@ -133,16 +135,19 @@ public:
       }
 
       const double d = 1. / div_per_unit;
-      for(unsigned j = 0; j < div_per_unit; j++) {
+      for(unsigned int j = 0; j < div_per_unit; j++) {
+	unsigned int k = j + f * div_per_unit;
 	const double dj = (double)j / (double)div_per_unit;
-	unsigned e = 0;
-	coords[j + f * div_per_unit].resize((div_per_unit - j) * 2 + 1);
-	vector<double> &tmp = coords[j + f * div_per_unit][e++];
+	unsigned int e = 0;
+	coords[k].resize((div_per_unit - j) * 2 + 1);
+	vector<double> &tmp = coords[k][e++];
+	tmp.resize(3);
 	tmp.resize(3);
  	tmp[0] = v0[0] + dj * (v2[0] - v0[0]);
 	tmp[1] = v0[1] + dj * (v2[1] - v0[1]);
 	tmp[2] = v0[2] + dj * (v2[2] - v0[2]);
-	for(unsigned i = 0; i < div_per_unit - j; i++) {
+
+	for(unsigned int i = 0; i < div_per_unit - j; i++) {
 	  const double di =  (double)i / (double)div_per_unit;
 	  vector<double> &tmp1 = coords[j + f * div_per_unit][e++]; 
 	  tmp1.resize(3);
