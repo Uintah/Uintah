@@ -27,7 +27,7 @@ using namespace std;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-#define OREN 0
+ 
 /*___________________________________________________________________
  Function~  ICE::scheduleSetupMatrix--
 _____________________________________________________________________*/
@@ -460,19 +460,12 @@ void ICE::setupMatrix(const ProcessorGroup*,
     //__________________________________
     //  Multiple stencil by delT^2 * area/dx
     double delT_2 = delT * delT;
-#if OREN
-    // Oren: scale matrix to finite volume formulation, otherwise
-    // it is hard to properly define the AMR analogue of the
-    // implicit pressure solver system.
+    
     double vol     = dx.x()*dx.y()*dx.z();
-    double tmp_e_w = vol * delT_2/( dx.x() * dx.x() );
-    double tmp_n_s = vol * delT_2/( dx.y() * dx.y() );
-    double tmp_t_b = vol * delT_2/( dx.z() * dx.z() );
-#else
-    double tmp_e_w = delT_2/( dx.x() * dx.x() );
-    double tmp_n_s = delT_2/( dx.y() * dx.y() );
-    double tmp_t_b = delT_2/( dx.z() * dx.z() );
-#endif
+    double tmp_e_w = dx.y()*dx.z() * delT_2/dx.x();
+    double tmp_n_s = dx.x()*dx.z() * delT_2/dx.y();
+    double tmp_t_b = dx.x()*dx.y() * delT_2/dx.z();
+
         
    for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){ 
       IntVector c = *iter;
@@ -486,15 +479,8 @@ void ICE::setupMatrix(const ProcessorGroup*,
       A_tmp.t *= -tmp_t_b;
       A_tmp.b *= -tmp_t_b;
 
-#if OREN
-      // Remember to scale the identity term (sumKappa) by vol
-      // as well, to match the off diagonal entries' scaling.
       A_tmp.p = vol * sumKappa[c] -
           (A_tmp.n + A_tmp.s + A_tmp.e + A_tmp.w + A_tmp.t + A_tmp.b);
-#else      
-      A_tmp.p = sumKappa[c] -
-          (A_tmp.n + A_tmp.s + A_tmp.e + A_tmp.w + A_tmp.t + A_tmp.b);
-#endif
     }  
     //__________________________________
     //  Boundary conditons on A.e, A.w, A.n, A.s, A.t, A.b
@@ -521,7 +507,8 @@ void ICE::setupRHS(const ProcessorGroup*,
                    const string computes_or_modifies)
 {
   const Level* level = getLevel(patches);
-  
+  double rhs_max = 0.0;
+      
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<< d_myworld->myrank()<<" Doing setupRHS on patch "
@@ -545,8 +532,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     
     Vector dx     = patch->dCell();
     double vol    = dx.x()*dx.y()*dx.z();
-    double invvol = 1./vol;
-
+    
     Advector* advector = d_advector->clone(new_dw,patch);
     CCVariable<double> q_advected, rhs;
     CCVariable<double> sumAdvection, massExchTerm;
@@ -573,7 +559,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     rhs.initialize(0.0);
     sumAdvection.initialize(0.0);
     massExchTerm.initialize(0.0);
-    double rhs_max = 0.0;
+
     
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -624,10 +610,10 @@ void ICE::setupRHS(const ProcessorGroup*,
     
       //__________________________________
       //  sum Advecton (<vol_frac> vel_FC)
+      //  you need to multiply by vol
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
-        sumAdvection[c] += q_advected[c];
-
+        sumAdvection[c] += q_advected[c] * vol;
       }
       //__________________________________
       //  sum mass Exchange term
@@ -635,7 +621,7 @@ void ICE::setupRHS(const ProcessorGroup*,
         pNewDW->get(burnedMass,lb->modelMass_srcLabel,indx,patch,gn,0);
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
           IntVector c = *iter;
-          massExchTerm[c] += burnedMass[c] * (sp_vol_CC[c] * invvol);
+          massExchTerm[c] += burnedMass[c] * sp_vol_CC[c];
         }
       }     
     }  //matl loop
@@ -648,30 +634,17 @@ void ICE::setupRHS(const ProcessorGroup*,
     
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
-      term1[c] = sumKappa[c] * sum_imp_delP[c]; 
+      term1[c] = vol * sumKappa[c] * sum_imp_delP[c]; 
     }    
       
     //__________________________________
     //  Form RHS
     // note:  massExchangeTerm has delT incorporated inside of it
+    // We need to include the cell volume in rhs for AMR to be properly scaled
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
-    
       rhs[c] = -term1[c] + massExchTerm[c] + sumAdvection[c];
-#if OREN
-      // Oren: Max RHS should be max(abs(rhs)) over all cells,
-      // not max(rhs^2). See implicit ICE document, p. 1.
-      rhs_max = Max(rhs_max, Abs(rhs[c]));
-      // Oren: scale RHS to finite volume formulation, otherwise
-      // it is hard to properly define the AMR analogue of the
-      // implicit pressure solver system. Notice that the max
-      // RHS is not scaled so that it is scale-invariant and
-      // can be compared against a scale-invariant tolerance
-      // in the outer iteration.
-      rhs[c] *= vol;
-#else
-      rhs_max = Max(rhs_max, rhs[c] * rhs[c]); 
-#endif
+      rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
     }
     new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
 
@@ -859,11 +832,11 @@ void ICE::computeDel_P(const ProcessorGroup*,
  Function~  ICE::implicitPressureSolve-- 
 _____________________________________________________________________*/
 void ICE::implicitPressureSolve(const ProcessorGroup* pg,
-		                const PatchSubset* patch_sub, 
-		                const MaterialSubset*,       
-		                DataWarehouse* ParentOldDW,    
+                                const PatchSubset* patch_sub, 
+                                const MaterialSubset*,       
+                                DataWarehouse* ParentOldDW,    
                                 DataWarehouse* ParentNewDW,    
-		                LevelP level,                 
+                                LevelP level,                 
                                 Scheduler* sched,
                                 const MaterialSubset* ice_matls,
                                 const MaterialSubset* mpm_matls)
@@ -933,6 +906,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   bool recursion  = true;
   bool firstIter  = true;
   bool modifies_X = true;
+  Vector dx = level->dCell();
+  double vol = dx.x() * dx.y() * dx.z();
+  solver_parameters->setResidualNormalizationFactor(vol);
   //const VarLabel* whichInitialGuess = lb->initialGuessLabel;
   const VarLabel* whichInitialGuess = NULL;
   
