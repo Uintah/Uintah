@@ -98,13 +98,13 @@ void ClipFieldBySelectionMask::execute()
   field_iport->get(input);
   selmask_iport->get(selmask);
   
-  if (input.get_rep())
+  if (input.get_rep() == 0)
   {
     warning("No Field was found on input port");
     return;
   }
   
-  if (selmask.get_rep())
+  if (selmask.get_rep() == 0)
   {
     warning("No SelectionMask was found on the input");
     return;

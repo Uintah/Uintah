@@ -50,6 +50,7 @@ ClipBySelectionMaskAlgo::get_compile_info(const TypeDescription *fsrc)
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_namespace("ModelCreation");
   fsrc->fill_compile_info(rval);
   return rval;
 }

@@ -391,6 +391,11 @@ bool FieldsMath::ApplyMappingMatrix(FieldHandle input, FieldHandle& output, Matr
 
 bool FieldsMath::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle selmask,MatrixHandle &interpolant)
 {
+  if (input.get_rep() == 0)
+  {
+    error("ClipFieldBySelectionMask: No input field is given");
+    return(false);  
+  }
 
   if (!input->mesh()->is_editable()) 
   {
@@ -410,7 +415,7 @@ bool FieldsMath::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output
   if (!DynamicCompilation::compile(ci, algo, false, pr_))
   {
     error("ClipFieldBySelectionMask: Could not compile dynamic function");
-    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+    // DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
     return(false);
   }
   
@@ -832,11 +837,17 @@ bool FieldsMath::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& outpu
 
   Handle<MergeFieldsAlgo> algo;
   CompileInfoHandle ci = MergeFieldsAlgo::get_compile_info(inputs[0]);
-    
+
+  if (ci.get_rep() == 0)
+  {
+    error("MergeFields: The input fieldtypes do not match");
+    return(false);  
+  }
+
   if (!(DynamicCompilation::compile(ci, algo, false, pr_)))
   {
     error("MergeFields: Could not dynamically compile algorithm");
-//    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+    DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
     return(false);
   }
     
