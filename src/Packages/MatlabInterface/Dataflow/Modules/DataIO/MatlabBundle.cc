@@ -186,7 +186,6 @@ class MatlabBundle : public Module, public ServiceBase
     // Ports for input and output
     BundleIPort*  bundle_iport_[NUM_BUNDLE_PORTS];
     BundleOPort*  bundle_oport_[NUM_BUNDLE_PORTS];
-    BundleHandle  bundle_handle_[NUM_BUNDLE_PORTS];
 
     std::string input_bundle_matfile_[NUM_BUNDLE_PORTS];
     std::string output_bundle_matfile_[NUM_BUNDLE_PORTS];
@@ -965,7 +964,7 @@ bool MatlabBundle::save_input_matrices()
       }
       // if the data as the same before
       // do nothing
-      if ((handle == bundle_handle_[p])&&(input_bundle_name_list_[p]==input_bundle_name_list_old_[p])&&(bundle_handle_[p]->generation == input_bundle_generation_old_[p]))
+      if ((input_bundle_name_list_[p]==input_bundle_name_list_old_[p])&&(handle->generation == input_bundle_generation_old_[p]))
       {
         // this one was not created again
         // hence we do not need to translate it again
@@ -975,8 +974,6 @@ bool MatlabBundle::save_input_matrices()
 
         continue;
       }
-      
-      bundle_handle_[p] = handle;
       
       // Create a new filename for the input matrix
       ostringstream oss;
