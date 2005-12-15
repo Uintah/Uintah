@@ -186,6 +186,10 @@ public:
     releaseFrameworkService(const std::string& type,
                             const std::string& componentName);
 
+    /** ? */
+    std::string
+    SCIRunFramework::getUniqueName(const std::string& name);
+
     /** Adds a description of a component instance (class ComponentInstance) to
         the list of active components.  The component instance description
         includes the component type name, the instance name, and the pointer to

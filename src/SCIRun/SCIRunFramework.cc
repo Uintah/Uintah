@@ -204,8 +204,7 @@ SCIRunFramework::createComponentInstance(const std::string& name,
   sci::cca::ComponentID::pointer cid = registerComponent(ci, name);
 
   emitComponentEvent(
-                     new ComponentEvent(sci::cca::ports::ComponentInstantiated, cid, properties)
-                     ); 
+    new ComponentEvent(sci::cca::ports::ComponentInstantiated, cid, properties)); 
   return cid;
 }
 
@@ -289,23 +288,26 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer &
                        cid, sci::cca::TypeMap::pointer(0)));
 }
 
+std::string
+SCIRunFramework::getUniqueName(const std::string& name)
+{
+  std::string goodname = name;
+  int count = 0;
+  Guard g1(&lock_activeInstances);
+  while (activeInstances.find(goodname) != activeInstances.end()) {
+    std::ostringstream newname;
+    newname << name << "_" << count++;
+    goodname = newname.str();
+  }
+  return goodname;
+}
+
 sci::cca::ComponentID::pointer
 SCIRunFramework::registerComponent(ComponentInstance *ci,
                                    const std::string& name)
 { 
-  std::string goodname = name;
-  int count = 0;
-  {
-    Guard g1(&lock_activeInstances);
-    while (activeInstances.find(goodname) != activeInstances.end()) {
-      std::ostringstream newname;
-      newname << name << "_" << count++;
-      goodname = newname.str();
-    }
-  }
-
   sci::cca::ComponentID::pointer cid =
-    ComponentID::pointer(new ComponentID(this, goodname));
+    ComponentID::pointer(new ComponentID(this, name));
 
   lock_compIDs.lock();
   compIDs.push_back(cid);
@@ -315,10 +317,9 @@ SCIRunFramework::registerComponent(ComponentInstance *ci,
      new ComponentEvent(sci::cca::ports::InstantiatePending,
                         cid, sci::cca::TypeMap::pointer(0)));
   ci->framework = this;
-  ci->setInstanceName(goodname);    
 
   lock_activeInstances.lock();
-  activeInstances[goodname] = ci;
+  activeInstances[name] = ci;
   lock_activeInstances.unlock();
   return cid;
 }
