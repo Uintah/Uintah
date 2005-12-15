@@ -124,9 +124,9 @@ public:
   virtual bool have_data()=0;
   virtual void resend(Connection*)=0;
 
-  virtual bool cache_flag_supported () { return false; }
-  virtual bool get_cache() { return true; }
-  virtual void set_cache( bool cache = true ) {}
+  virtual bool cache_flag_supported();
+  virtual bool get_cache();
+  virtual void set_cache(bool cache);
 
 private:
   OPort(const OPort&);
