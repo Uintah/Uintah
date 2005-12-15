@@ -44,11 +44,9 @@
 
 using namespace SCIRun;
 
-TaoComponentDescription::TaoComponentDescription(TaoComponentModel* m,
-							 const std::string& t)
+TaoComponentDescription::TaoComponentDescription(TaoComponentModel* m, const std::string& t, const std::string& library)
+  : ComponentDescription(m, t), library(library)
 {
-  this->model = m;
-  this->type = t;
 }
 
 TaoComponentDescription::~TaoComponentDescription()
