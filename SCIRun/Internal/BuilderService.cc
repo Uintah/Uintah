@@ -72,8 +72,13 @@ BuilderService::createInstance(const std::string& instanceName,
                    const std::string& className,
                    const sci::cca::TypeMap::pointer& properties)
 {
-    // generate unique name here???
+  if (instanceName.size()) {
+    if (framework->lookupComponent(instanceName) != 0) {
+      throw sci::cca::CCAException::pointer(new CCAException("Component instance name " + instanceName + " is not unique"));
+    }
     return framework->createComponentInstance(instanceName, className, properties);
+  }
+  return framework->createComponentInstance(framework->getUniqueName(className), className, properties);
 }
 
 sci::cca::ConnectionID::pointer
