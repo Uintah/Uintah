@@ -134,7 +134,7 @@ public:
   template <class ElemData>
   double get_arc_length(const unsigned edge, const ElemData &cd) const  
   {
-    return get_arc1d_length<CrvGaussian2<double> >(this, edge, cd);
+    return get_arc1d_length<CrvGaussian3<double> >(this, edge, cd);
   }
  
   //! get area

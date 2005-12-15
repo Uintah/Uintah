@@ -667,7 +667,7 @@ public:
   template <class ElemData>
     double get_volume(const ElemData & cd) const  
   {
-    return get_volume(this, cd);
+    return get_volume3(this, cd);
   }
    
   static  const string type_name(int n = -1);

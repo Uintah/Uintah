@@ -32,7 +32,6 @@
 #if !defined(TetLinearLgn_h)
 #define TetLinearLgn_h
 
-#include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/TriLinearLgn.h>
 
 #include <Core/Basis/share.h>
@@ -403,7 +402,7 @@ public:
   template <class ElemData>
     double get_volume(const ElemData & cd) const  
   {
-    return get_volume(this, cd);
+    return get_volume3(this, cd);
   }
   
   static  const string type_name(int n = -1);
