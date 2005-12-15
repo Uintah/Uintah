@@ -220,3 +220,9 @@ void OPort::issue_no_port_caching_warning()
     std::cerr << "Warning: See .scirunrc for details.\n";
   }
 }
+
+
+bool OPort::cache_flag_supported() { return false; }
+bool OPort::get_cache() { return true; }
+void OPort::set_cache(bool cache) {}
+
