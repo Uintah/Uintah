@@ -163,8 +163,7 @@ public:
     return false;
   }
 
-protected:
-  inline bool check_coords(const vector<double> &x) const  
+ inline bool check_coords(const vector<double> &x) const  
   {  
     if (x[0]>=-Dim2Locate<ElemBasis>::thresholdDist && 
 	x[0]<=Dim2Locate<ElemBasis>::thresholdDist1)
@@ -175,7 +174,8 @@ protected:
     return false;
   }
   
-  //! find a reasonable initial guess 
+protected:
+   //! find a reasonable initial guess 
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, const ElemData &cd, 
 		     vector<double> & guess) const
@@ -346,7 +346,22 @@ public:
     return get_arc2d_length<CrvGaussian1<double> >(this, edge, cd);
   }
  
+  //! get area
+  template <class ElemData>
+    double get_area(const unsigned face, const ElemData &cd) const  
+  {
+    return get_area2<QuadGaussian2<double> >(this, face, cd);
+  }
+ 
+  //! get volume
+  template <class ElemData>
+    double get_volume(const ElemData & /* cd */) const  
+  {
+    return 0.;
+  }
+  
   static  const string type_name(int n = -1);
+
   virtual void io (Piostream& str);
 };
 

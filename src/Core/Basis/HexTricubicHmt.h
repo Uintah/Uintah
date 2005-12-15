@@ -655,7 +655,21 @@ public:
   {
     return get_arc3d_length<CrvGaussian2<double> >(this, edge, cd);
   }
- 
+
+  //! get area
+  template <class ElemData>
+    double get_area(const unsigned face, const ElemData &cd) const  
+  {
+    return get_area3<QuadGaussian3<double> >(this, face, cd);
+  }
+  
+  //! get volume
+  template <class ElemData>
+    double get_volume(const ElemData & cd) const  
+  {
+    return get_volume(this, cd);
+  }
+   
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);
 };

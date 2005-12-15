@@ -33,6 +33,7 @@
 #define TetLinearLgn_h
 
 #include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/TriLinearLgn.h>
 
 #include <Core/Basis/share.h>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -53,8 +54,10 @@ public:
   static SHARE int unit_edges[6][2]; 
   //! References to vertices of unit face
   static SHARE int unit_faces[4][3];  
-  //! References to normals of unit faces
+  //! Normals of unit faces
   static SHARE double unit_face_normals[4][3];
+  //! Precalculated area of faces
+  static SHARE double unit_face_areas[4];
 
   TetLinearLgnUnitElement() {}
   virtual ~TetLinearLgnUnitElement() {}
@@ -74,8 +77,16 @@ public:
   //! return number of faces per cell 
   static int faces_of_cell() { return 4; } 
 
-  //! return volume
-  static double volume() { return 1./6.; } 
+  static inline double length(int edge) { //!< return length
+    const double *v0 = unit_vertices[unit_edges[edge][0]];
+    const double *v1 = unit_vertices[unit_edges[edge][1]];
+    const double dx = v1[0] - v0[0];
+    const double dy = v1[1] - v0[1];
+    const double dz = v1[2] - v0[2];
+    return sqrt(dx*dx+dy*dy+dz*dz);
+  } 
+  static double area(int face) { return unit_face_areas[face]; } //!< return area
+  static double volume() { return 1./6.; } //!< return volume
 };
 
 
@@ -381,6 +392,20 @@ public:
     return get_arc3d_length<CrvGaussian1<double> >(this, edge, cd);
   }
  
+  //! get area
+  template <class ElemData>
+    double get_area(const unsigned face, const ElemData &cd) const  
+  {
+    return get_area3<TriGaussian2<double> >(this, face, cd);
+  }
+ 
+  //! get volume
+  template <class ElemData>
+    double get_volume(const ElemData & cd) const  
+  {
+    return get_volume(this, cd);
+  }
+  
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);

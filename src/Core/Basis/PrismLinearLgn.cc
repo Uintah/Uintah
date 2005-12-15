@@ -45,13 +45,15 @@ int PrismLinearLgnUnitElement::unit_edges[9][2] =
 int PrismLinearLgnUnitElement::unit_faces[5][4] = 
   {{0,1,2,-1}, {5,4,3,-1}, {4,5,2,1}, {3,4,1,0}, {0,2,5,3}};
 
-double unit_face_normals[5][3] = 
+double PrismLinearLgnUnitElement::unit_face_normals[5][3] = 
   { {0.000000e+00, 0.000000e+00, 1.000000e+00}, 
     {0.000000e+00, 0.000000e+00, -1.000000e+00}, 
     {-7.071068e-01, -7.071068e-01, 0.000000e+00}, 
     {0.000000e+00, 1.000000e+00, 0.000000e+00}, 
     {1.000000e+00, 0.000000e+00, 0.000000e+00} };
 
+double PrismLinearLgnUnitElement::unit_face_areas[5] = 
+  { 0.5, .05, 1.41421356, 1., 1.};
 
 } //namespace SCIRun
 

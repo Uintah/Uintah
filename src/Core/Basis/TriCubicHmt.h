@@ -42,34 +42,18 @@
 namespace SCIRun {
 
 //! Class for describing unit geometry of TriCubicHmt
-class TriCubicHmtUnitElement  {
+  class TriCubicHmtUnitElement : public TriLinearLgnUnitElement {
   public:
   //! Parametric coordinates of vertices of unit edge
   static double unit_vertices[4][2];
-  //! References to vertices of unit edge 
-  static int unit_edges[3][2]; 
-  //! References to vertices of unit face
-  static int unit_faces[1][3]; 
-  
+
   TriCubicHmtUnitElement() {}
   virtual ~TriCubicHmtUnitElement() {}
-  //! return dimension of domain 
-  static int domain_dimension() { return 2; } 
+
   //! return number of vertices
   static int number_of_vertices() { return 4; }
-  //! return number of vertices in mesh
-  static int number_of_mesh_vertices() { return 3; }
-  //!< return degrees of freedom
+  //! return degrees of freedom
   static int dofs() { return 10; } 
-
-  //! return number of edges 
-  static int number_of_edges() { return 3; } 
-  //! return number of vertices per face 
-  static int vertices_of_face() { return 3; } 
-  //! return number of faces per cell 
-  static int faces_of_cell() { return 1; } 
-
-  static double volume() { return 0.; } //!< return volume
 };
 
 
@@ -146,9 +130,10 @@ public:
     w[13] = 7*x*(-1 + x + 2*y);
     w[14] = -2*x*(-1 + x + 2*y);
     w[15] = x*(-1 + 2*x + 2*y);
-    w[16] = x*(-1 + x + 4*y);
-    w[17] = (-2*x*x + x*(2 - 4*y) + y*(-2 + 3*y));
-    w[18] = -27*x*(-1 + x + 2*y);
+    w[16] = (7*x*x - 6*(-1 + y)*y + 7*x*(-1 + 2*y));
+    w[17] = x*(-1 + x + 4*y);
+    w[18] = (-2*x*x + x*(2 - 4*y) + y*(-2 + 3*y));
+    w[19] = -27*x*(-1 + x + 2*y);
   }
 
   //! get first derivative at parametric coordinate
@@ -201,6 +186,20 @@ public:
     return get_arc2d_length<CrvGaussian2<double> >(this, edge, cd);
   }
  
+  //! get area
+  template <class ElemData>
+    double get_area(const unsigned face, const ElemData &cd) const  
+  {
+    return get_area2<TriGaussian3<double> >(this, face, cd);
+  }
+ 
+  //! get volume
+  template <class ElemData>
+    double get_volume(const ElemData & /* cd */) const  
+  {
+    return 0.;
+  }
+  
   //! add a node value corresponding to center of triangle
   void add_node_value(const T &p) { this->nodes_.push_back(p); }
 

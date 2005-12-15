@@ -33,6 +33,8 @@
 #define PrismLinearLgn_h
 
 #include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
 
 #include <Core/Basis/share.h>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -45,34 +47,45 @@ namespace SCIRun {
 //! Class for describing unit geometry of PrismLinearLgn 
 class PrismLinearLgnUnitElement {
 public:
-  //!< Parametric coordinates of vertices of unit edge
+  //! Parametric coordinates of vertices of unit edge
   static SHARE double unit_vertices[6][3];
-  //!< References to vertices of unit edge 
-  static SHARE int unit_edges[9][2];
-  //!< References to vertices of unit face
+  //! References to vertices of unit edge 
+  static SHARE int unit_edges[9][2]; 
+  //! References to vertices of unit face
   static SHARE int unit_faces[5][4]; 
-   //!< References to normal of unit face
+  //! Normals of unit face
   static SHARE double unit_face_normals[5][3];
+  //! Precalculated area of faces
+  static SHARE double unit_face_areas[5];
 
   PrismLinearLgnUnitElement() {};
   virtual ~PrismLinearLgnUnitElement() {}
 
-  //!< return dimension of domain 
+  //! return dimension of domain 
   static int domain_dimension() { return 3; } 
-  //!< return number of vertices
+  //! return number of vertices
   static int number_of_vertices() { return 6; } 
-  //!< return number of vertices in mesh
+  //! return number of vertices in mesh
   static int number_of_mesh_vertices() { return 6; }
-  //!< return number of edges 
+  //! return number of edges 
   static int number_of_edges() { return 9; } 
-  //!< return degrees of freedom
+  //! return degrees of freedom
   static int dofs() { return 6; } 
-  //!< return number of vertices per face 
+  //! return number of vertices per face 
   static int vertices_of_face() { return 3; } 
-  //!< return number of faces per cell 
+  //! return number of faces per cell 
   static int faces_of_cell() { return 5; } 
-  //!< return volume
-  static double volume() { return 0.5; } 
+
+  static inline double length(int edge) { //!< return length
+    const double *v0 = unit_vertices[unit_edges[edge][0]];
+    const double *v1 = unit_vertices[unit_edges[edge][1]];
+    const double dx = v1[0] - v0[0];
+    const double dy = v1[1] - v0[1];
+    const double dz = v1[2] - v0[2];
+    return sqrt(dx*dx+dy*dy+dz*dz);
+  } 
+  static double area(int face) { return unit_face_areas[face]; } //!< return area
+  static double volume() { return .5; } //!< return volume
 };
 
 //! Class for creating geometrical approximations of Prism meshes
@@ -371,6 +384,23 @@ public:
     return get_arc3d_length<CrvGaussian1<double> >(this, edge, cd);
   }
  
+  //! get area
+  template <class ElemData>
+    double get_area(const unsigned face, const ElemData &cd) const  
+  {
+    if (unit_faces[face][3]==-1) 
+      return get_area3<TriGaussian2<double> >(this, face, cd);
+    else
+      return get_area3<QuadGaussian2<double> >(this, face, cd);
+  }
+ 
+  //! get volume
+  template <class ElemData>
+    double get_volume(const ElemData & cd) const  
+  {
+    return get_volume(this, cd);
+  }
+  
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);

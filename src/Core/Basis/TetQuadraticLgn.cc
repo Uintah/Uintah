@@ -34,8 +34,6 @@
 namespace SCIRun {
 
 double TetQuadraticLgnUnitElement::unit_vertices[10][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}, {0.5,0,0}, {0.5,0.5,0}, {0,0.5,0}, {0,0,0.5}, {0.5,0,0.5}, {0,0.5,0.5} };
-int TetQuadraticLgnUnitElement::unit_edges[6][2] = {{0,1}, {1,2}, {2,0}, {0,3}, {1,3}, {2,3}};
-int TetQuadraticLgnUnitElement::unit_faces[4][3] = {{3,2,1}, {0,2,3}, {3,1,0}, {0,1,2}};
 
 } //namespace SCIRun
 
