@@ -721,7 +721,7 @@ BuilderWindow::loadFile()
             tm->putInt("x", modName_x);
             tm->putInt("y", modName_y);
 
-            cid = builder->createInstance(modName,
+            cid = builder->createInstance(std::string(),
                 modName, sci::cca::TypeMap::pointer(tm));
 
             if (! cid.isNull()) {
@@ -834,7 +834,7 @@ void BuilderWindow::instantiateComponent(
 
     sci::cca::ComponentID::pointer cid;
     try {
-        cid = builder->createInstance(cd->getComponentClassName(),
+        cid = builder->createInstance(std::string(),
             cd->getComponentClassName(), sci::cca::TypeMap::pointer(tm));
 
         if (cid.isNull()) {
