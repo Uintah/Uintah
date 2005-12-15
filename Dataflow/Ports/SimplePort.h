@@ -101,7 +101,9 @@ public:
   void send_intermediate(const T&);
   void send_and_dereference(T&, bool caching_here = false);
 
-  void set_cache( bool cache = true )
+  virtual bool cache_flag_supported() { return true; }
+  virtual bool get_cache() { return cache_; }
+  virtual void set_cache(bool cache)
   {
     cache_ = cache;
     if ( !cache )

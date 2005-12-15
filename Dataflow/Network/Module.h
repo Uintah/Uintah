@@ -207,6 +207,10 @@ public:
 
   bool oport_cached(const string &name);
 
+  bool oport_supports_cache_flag(int p);
+  bool get_oport_cache_flag(int p);
+  void set_oport_cache_flag(int p, bool val);
+
   // next 6 are Deprecated
   port_range_type get_iports(const string &name);
   IPort* get_iport(const string &name);

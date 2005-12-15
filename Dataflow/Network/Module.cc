@@ -517,6 +517,24 @@ bool Module::oport_cached(const string &name)
   return p->have_data();
 }
 
+bool Module::oport_supports_cache_flag(int p)
+{
+  if (p < numOPorts()) return false;
+  return get_oport(p)->cache_flag_supported();
+}
+
+bool Module::get_oport_cache_flag(int p)
+{
+  ASSERT(p < numOPorts());
+  return get_oport(p)->get_cache();
+}
+
+void Module::set_oport_cache_flag(int p, bool val)
+{
+  ASSERT(p < numOPorts());
+  return get_oport(p)->set_cache(val);
+}
+
 
 void Module::connection(Port::ConnectionState mode, int which_port, bool is_oport)
 {
