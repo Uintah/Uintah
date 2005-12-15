@@ -76,8 +76,7 @@
 
 namespace SCIRun {
 
-const std::string CCAComponentModel::DEFAULT_PATH =
-    std::string("/CCA/Components/xml");
+const std::string CCAComponentModel::DEFAULT_PATH("/CCA/Components/xml");
 
 
 CCAComponentModel::CCAComponentModel(SCIRunFramework* framework)
@@ -210,12 +209,9 @@ void CCAComponentModel::readComponentDescription(const std::string& file)
       std::string component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
 
       // Register this component
-      CCAComponentDescription* cd = new CCAComponentDescription(this);
-      cd->type = component_name;
-      cd->setLibrary(library_name.c_str()); // record the DLL name
-
+      CCAComponentDescription* cd = new CCAComponentDescription(this, component_name, "", library_name);
       lock_components.lock();
-      this->components[cd->type] = cd;
+      this->components[cd->getType()] = cd;
       lock_components.unlock();
     }
   }
@@ -229,6 +225,7 @@ CCAComponentModel::createServices(const std::string& instanceName,
 #if DEBUG
   std::cout << "CCAComponentModel::createServices: " << instanceName << ", " << className << std::endl;
 #endif
+// get unique name?
   CCAComponentInstance* ci = new CCAComponentInstance(framework, instanceName, className, properties, sci::cca::Component::pointer(0));
   framework->registerComponent(ci, instanceName);
   ci->addReference();
@@ -290,6 +287,7 @@ CCAComponentModel::createInstance(const std::string& name,
     for (std::vector<std::string>::iterator it = possible_paths.begin();
          it != possible_paths.end(); it++) {
       std::string so_name = *it + "/" + iter->second->getLibrary();
+std::cerr << "CCAComponentModel::createInstance: " << *it << ", " << iter->second->getLibrary() << std::endl;
       handle = GetLibraryHandle(so_name.c_str());
       if (handle) { break; }
     }
@@ -348,7 +346,9 @@ bool CCAComponentModel::destroyInstance(ComponentInstance *ci)
   //
   // TODO: using 'delete' here tends to be unstable (needs investigating,
   // possibly related to Bugzilla bug #2294).
-  cca_ci->deleteReference();
+
+  // might be the source of object deletion exceptions - remove for now
+  //cca_ci->deleteReference();
   return true;
 }
 
@@ -374,9 +374,8 @@ void CCAComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>
     //convert typeList to component description list
     //by attaching a loader (resourceReference) to it.
     for (unsigned int j = 0; j < typeList.size(); j++) {
-      CCAComponentDescription* cd = new CCAComponentDescription(this);
-      cd->type = typeList[j];
-      cd->setLoaderName(loaderList[i]->getName());
+      std::string type(typeList[j]);
+      CCAComponentDescription* cd = new CCAComponentDescription(this, type, loaderList[i]->getName());
       list.push_back(cd);
     }
   }

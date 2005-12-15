@@ -57,16 +57,17 @@ class CCAComponentModel;
  * \sa BabelComponentDescription ComponentDescription VtkComponentDescription
  * \sa InternalComponentDescription
  */
-class CCAComponentDescription : public ComponentDescription
-{
+class CCAComponentDescription : public ComponentDescription {
 public:
-  CCAComponentDescription(CCAComponentModel* model);
+  CCAComponentDescription(CCAComponentModel* model, const std::string& type, const std::string& loader = "", const std::string& library="");
   virtual ~CCAComponentDescription();
 
   /** Returns the component type name (a string). */
   virtual std::string getType() const;
+
   /** Returns a pointer to the component model type. */
   virtual const ComponentModel* getModel() const;
+
   /** ? */
   virtual std::string getLoaderName() const;
   /** ? */
@@ -74,21 +75,15 @@ public:
 
   /** Get/Set the name of the DLL for this component.  The loader will search
    *    the SIDL_DLL_PATH for a matching library name. */
-  std::string getLibrary() const
-  { return library; }
-  void setLibrary(const std::string &l)
-  { library = l; }
+  std::string getLibrary() const { return library; }
+  /** ? */
+  void setLibrary(const std::string &l) { library = l; }
 
-protected:
-  friend class CCAComponentModel;
-  friend class SCIRunLoader;
-  CCAComponentModel* model;
-  std::string type;
-  std::string loaderName;
 private:
+  std::string library;
+
   CCAComponentDescription(const CCAComponentDescription&);
   CCAComponentDescription& operator=(const CCAComponentDescription&);
-  std::string library;
 };
 
 } // end namespace SCIRun

@@ -43,8 +43,8 @@
 
 namespace SCIRun {
 
-CCAComponentDescription::CCAComponentDescription(CCAComponentModel* model)
-  : model(model)
+CCAComponentDescription::CCAComponentDescription(CCAComponentModel* model, const std::string& type, const std::string& loader, const std::string& library)
+ : ComponentDescription(model, type, loader), library(library)
 {
 }
 
@@ -69,7 +69,7 @@ std::string CCAComponentDescription::getLoaderName() const
 
 void CCAComponentDescription::setLoaderName(const std::string& loaderName)
 {
-  this->loaderName=loaderName;
+  this->loaderName = loaderName;
 }
 
 } // end namespace SCIRun
