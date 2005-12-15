@@ -123,6 +123,11 @@ public:
   virtual ~OPort();
   virtual bool have_data()=0;
   virtual void resend(Connection*)=0;
+
+  virtual bool cache_flag_supported () { return false; }
+  virtual bool get_cache() { return true; }
+  virtual void set_cache( bool cache = true ) {}
+
 private:
   OPort(const OPort&);
   OPort& operator=(const OPort&);

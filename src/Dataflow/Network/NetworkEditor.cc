@@ -140,7 +140,6 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     if(!imod)
       throw "netedit addconnection can't find input module";
     int iwhich = args.get_int(5);
-
     if (imod->lastportdynamic && iwhich >= imod->iports.size())
       iwhich = imod->iports.size()-1;
     args.result(net->connect(omod, owhich, imod, iwhich));
@@ -151,6 +150,37 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
       net->disable_connection(args[2]);
     if (!net->disconnect(args[2]))
       throw "Cannot find connection "+args[2]+" for deletion";
+  } else if(args[1] == "supportsPortCaching") {
+    if(args.count() < 4)
+      throw "netedit supportsPortCaching needs 2 args";
+    Module* omod = net->get_module_by_id(args[2]);
+    if(!omod)
+      throw "netedit supportsPortCaching can't find output module";
+    const int owhich = args.get_int(3);
+    if (owhich >= omod->numOPorts())
+      throw "netedit supportsPortCaching can't find output port";
+    args.result(omod->oport_supports_cache_flag(owhich)?"1":"0");
+  } else if(args[1] == "isPortCaching") {
+    if(args.count() < 4)
+      throw "netedit isPortCaching needs 4 args";
+    Module* omod = net->get_module_by_id(args[2]);
+    if(!omod)
+      throw "netedit isPortCaching can't find output module";
+    const int owhich = args.get_int(3);
+    if (owhich >= omod->numOPorts())
+      throw "netedit isPortCaching can't find output port";
+    args.result(omod->get_oport_cache_flag(owhich)?"1":"0");
+  } else if(args[1] == "setPortCaching") {
+    if(args.count() < 5)
+      throw "netedit setPortCaching needs 5 args";
+    Module* omod = net->get_module_by_id(args[2]);
+    if(!omod)
+      throw "netedit setPortCaching can't find output module";
+    const int owhich = args.get_int(3);
+    if (owhich >= omod->numOPorts())
+      throw "netedit setPortCaching can't find output port";
+    const int cache =  args.get_int(4);
+    omod->set_oport_cache_flag(owhich, cache);
   } else if(args[1] == "packageNames") {
     args.result(args.make_list(packageDB->packageNames()));
   } else if(args[1] == "categoryNames") {
