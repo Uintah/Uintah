@@ -108,7 +108,7 @@ NrrdToColorMap2::execute()
     return;
   }
 
-  ColorMap2OPort* cmap_port = (ColorMap2OPort*)get_oport("Output Colormap");
+  ColorMap2OPort* cmap_port = (ColorMap2OPort*)get_oport("Output ColorMap");
   if (cmap_port) {
     cmap_port->send_and_dereference(ocmap_h_, true);
   }

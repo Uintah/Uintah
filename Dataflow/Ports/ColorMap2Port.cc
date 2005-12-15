@@ -25,7 +25,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Colormap2Port.cc
+//    File   : ColorMap2Port.cc
 //    Author : Milan Ikits
 //    Date   : Mon Jul  5 18:46:29 2004
 

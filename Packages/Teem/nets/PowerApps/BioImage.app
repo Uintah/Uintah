@@ -2343,7 +2343,7 @@ class BioImageApp {
 		-fill x -padx 10 -pady 3 -expand 1
 	    pack $page.buttons -side top -expand 0 -padx 0 -fill x -pady 3
 	    
-	    set f $page.applyColormap2D
+	    set f $page.applyColorMap2D
 	    frame $f -bd 0
 	    checkbutton $f.button -text "Show Transfer Function in 2D" \
 		-variable "$mods(ViewSlices)-show_colormap2" \

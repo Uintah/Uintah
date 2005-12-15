@@ -106,10 +106,10 @@ void BundleGetColorMap::execute()
   }
 
 
-  int numColormaps = handle->numColormaps();
-  for (int p = 0; p < numColormaps; p++)
+  int numColorMaps = handle->numColorMaps();
+  for (int p = 0; p < numColorMaps; p++)
   {
-    colormaplist += "{" + handle->getColormapName(p) + "} ";
+    colormaplist += "{" + handle->getColorMapName(p) + "} ";
   }
 
   guicolormaps_.set(colormaplist);
@@ -121,9 +121,9 @@ void BundleGetColorMap::execute()
     return; 
   }
  
-  if (handle->isColormap(colormap1name))
+  if (handle->isColorMap(colormap1name))
   {
-    fhandle = handle->getColormap(colormap1name);
+    fhandle = handle->getColorMap(colormap1name);
     ofport->send(fhandle);
   }
          
@@ -133,9 +133,9 @@ void BundleGetColorMap::execute()
     return; 
   }
   
-  if (handle->isColormap(colormap2name))
+  if (handle->isColorMap(colormap2name))
   {
-    fhandle = handle->getColormap(colormap2name);
+    fhandle = handle->getColorMap(colormap2name);
     ofport->send(fhandle);
   }
       
@@ -145,9 +145,9 @@ void BundleGetColorMap::execute()
     return; 
   }
 
-  if (handle->isColormap(colormap3name))
+  if (handle->isColorMap(colormap3name))
   {
-    fhandle = handle->getColormap(colormap3name);
+    fhandle = handle->getColorMap(colormap3name);
     ofport->send(fhandle);
   }
         

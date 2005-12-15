@@ -1202,10 +1202,10 @@ Painter::execute()
       nrrd_names.push_back(name);
     }
     
-    int numColormaps = bundles_[b]->numColormaps();
+    int numColormaps = bundles_[b]->numColorMaps();
     for (int n = 0; n < numColormaps; n++) {
-      const string name = bundles_[b]->getColormapName(n);
-      ColorMapHandle cmap = bundles_[b]->getColormap(name);
+      const string name = bundles_[b]->getColorMapName(n);
+      ColorMapHandle cmap = bundles_[b]->getColorMap(name);
       if (cmap.get_rep()) {
         colormaps_[name] = cmap;
         colormap_names_.push_back(name);
