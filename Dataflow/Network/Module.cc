@@ -519,7 +519,7 @@ bool Module::oport_cached(const string &name)
 
 bool Module::oport_supports_cache_flag(int p)
 {
-  if (p < numOPorts()) return false;
+  if (p >= numOPorts()) return false;
   return get_oport(p)->cache_flag_supported();
 }
 
