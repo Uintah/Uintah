@@ -34,8 +34,6 @@
 namespace SCIRun {
 
 double TriCubicHmtUnitElement::unit_vertices[4][2] = {{0,0}, {1,0}, {0,1}, {1./3., 1./3.}};
-int TriCubicHmtUnitElement::unit_edges[3][2] = {{0,1}, {1,2}, {2,0}};
-int TriCubicHmtUnitElement::unit_faces[1][3] = {{0,1,2}};
   
 } //namespace SCIRun
 

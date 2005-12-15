@@ -42,27 +42,15 @@
 namespace SCIRun {
 
 //! Class for describing unit geometry of HexTriquadraticLgn 
-class HexTriquadraticLgnUnitElement {
+  class HexTriquadraticLgnUnitElement : public HexTrilinearLgnUnitElement {
 public:
   static double unit_vertices[20][3]; //!< Parametric coordinates of vertices of unit edge 
-  static int unit_edges[12][2];  //!< References to vertices of unit edge  
-  static int unit_faces[6][4];  //!< References to vertices of unit face 
  
-  HexTriquadraticLgnUnitElement() {};
+  HexTriquadraticLgnUnitElement() {}
   virtual ~HexTriquadraticLgnUnitElement() {}
   
-  static int domain_dimension() { return 3; } //!< return dimension of domain 
-  
   static int number_of_vertices() { return 20; } //!< return number of vertices
-  static int number_of_mesh_vertices() { return 8; } //!< return number of vertices in mesh
-  static int number_of_edges() { return 12; } //!< return number of edges
   static int dofs() { return 20; } //!< return degrees of freedom
- 
-  static int vertices_of_face() { return 4; } //!< return number of vertices per face 
-
-  static int faces_of_cell() { return 6; } //!< return number of faces per cell 
-
-  static double volume() { return 1; } //!< return volume
 };
 
 
@@ -295,6 +283,20 @@ public:
     return get_arc3d_length<CrvGaussian2<double> >(this, edge, cd);
   }
  
+  //! get area
+  template <class ElemData>
+    double get_area(const unsigned face, const ElemData &cd) const  
+  {
+    return get_area3<QuadGaussian3<double> >(this, face, cd);
+  }
+  
+  //! get volume
+  template <class ElemData>
+    double get_volume(const ElemData & cd) const  
+  {
+    return get_volume(this, cd);
+  }
+  
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str); 

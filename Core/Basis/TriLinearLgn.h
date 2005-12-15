@@ -171,7 +171,6 @@ public:
     return false;
   }
 
-
   inline bool check_coords(const vector<double> &x) const  
   {  
     if (x[0]>=-Dim2Locate<ElemBasis>::thresholdDist)
@@ -256,7 +255,7 @@ T TriGaussian3<T>::GaussianPoints[7][2] = {
 
 template <class T>
 T TriGaussian3<T>::GaussianWeights[7] = 
-  {0.1259391805, 0.1259391805, 0.1259391805, 0.1323941527, 0.1323941527, 0.1323941527, 0.0225};
+  {0.1259391805, 0.1259391805, 0.1259391805, 0.1323941527, 0.1323941527, 0.1323941527, 0.225};
 
 
 //! Class for handling of element of type triangle with 
@@ -375,6 +374,20 @@ public:
     return get_arc2d_length<CrvGaussian1<double> >(this, edge, cd);
   }
  
+  //! get area
+  template <class ElemData>
+    double get_area(const unsigned face, const ElemData &cd) const  
+  {
+    return get_area2<TriGaussian2<double> >(this, face, cd);
+  }
+ 
+  //! get volume
+  template <class ElemData>
+    double get_volume(const ElemData & /* cd */) const  
+  {
+    return 0.;
+  }
+  
   static const string type_name(int n = -1);
 
   virtual void io (Piostream& str);

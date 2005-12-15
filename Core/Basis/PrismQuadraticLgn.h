@@ -42,29 +42,16 @@
 namespace SCIRun {
 
 //! Class for describing unit geometry of PrismQuadraticLgn 
-class PrismQuadraticLgnUnitElement {
+  class PrismQuadraticLgnUnitElement : public PrismLinearLgnUnitElement {
 public:
   static double unit_vertices[15][3]; //!< Parametric coordinates of vertices of unit edge
-  static int unit_edges[9][2]; //!< References to vertices of unit edge
-  static int unit_faces[5][4]; //!< References to vertices of unit face
-  
+ 
   PrismQuadraticLgnUnitElement() {}
   virtual ~PrismQuadraticLgnUnitElement() {}
   
-  static int domain_dimension() { return 3; } //!< return dimension of domain 
-  
   static int number_of_vertices() { return 15; } //!< return number of vertices
-  static int number_of_mesh_vertices() { return 6; } //!< return number of vertices in mesh
-  static int number_of_edges() { return 9; } //!< return number of edges
   static int dofs() { return 15; } //!< return degrees of freedom
-  
-  static int vertices_of_face() { return 3; } //!< return number of vertices per face 
-
-  static int faces_of_cell() { return 5; } //!< return number of faces per cell 
-
-  static double volume() { return 0.5; } //!< return volume
 };
-
 
 
 //! Class for handling of element of type prism with 
@@ -253,6 +240,23 @@ public:
     return get_arc3d_length<CrvGaussian2<double> >(this, edge, cd);
   }
  
+  //! get area
+  template <class ElemData>
+    double get_area(const unsigned face, const ElemData &cd) const  
+  {
+    if (unit_faces[face][3]==-1) 
+      return get_area3<TriGaussian3<double> >(this, face, cd);
+    else
+      return get_area3<QuadGaussian3<double> >(this, face, cd);
+  }
+ 
+  //! get volume
+  template <class ElemData>
+    double get_volume(const ElemData & cd) const  
+  {
+    return get_volume(this, cd);
+  }
+  
   static  const string type_name(int n = -1);
 
   virtual void io (Piostream& str);

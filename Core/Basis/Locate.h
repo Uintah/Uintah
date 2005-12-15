@@ -52,8 +52,129 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
+//! default case for volume calculation - currently not needed
+template <class T>
+inline double d_volume(const vector<T>& derivs)
+{
+  ASSERT(0); // to do
+  return 0;  
+}
 
-//default case
+
+template <class ElemBasis, class ElemData>
+double get_volume(const ElemBasis *pEB, const ElemData &cd)
+{
+
+  double volume=0.;
+  
+  vector<double> coords(3);
+  for(int i=0; i<ElemBasis::GaussianNum; i++) {
+    coords[0]=ElemBasis::GaussianPoints[i][0];
+    coords[1]=ElemBasis::GaussianPoints[i][1];
+    coords[2]=ElemBasis::GaussianPoints[i][2];
+ 
+    vector<typename ElemBasis::value_type> derivs;
+    pEB->derivate(coords, cd, derivs);
+    volume+=ElemBasis::GaussianWeights[i]*d_volume(derivs);
+  }
+  return volume*pEB->volume();
+}
+ 
+
+
+//! default case for face area calculation - currently not needed
+template <class T>
+  inline double d_area(const vector<T>& derivs, const vector<double>& dv0, const vector<double>& dv1)
+{
+  ASSERT(0); // to do
+  return 0;  
+}
+
+//! area calculation on points
+template <>
+  inline double d_area(const vector<Point>& derivs, const vector<double>& dv0, const vector<double>& dv1)
+{
+  const unsigned int dvsize=derivs.size();
+  ASSERT(dv0.size()==dvsize);
+  ASSERT(dv1.size()==dvsize);
+
+  Vector Jdv0(0,0,0), Jdv1(0,0,0);
+  for(unsigned int i = 0; i<dvsize; i++) {
+    Jdv0+=dv0[i]*Vector(derivs[i].x(), derivs[i].y(), derivs[i].z());
+    Jdv1+=dv1[i]*Vector(derivs[i].x(), derivs[i].y(), derivs[i].z());
+  }
+  
+  return Cross(Jdv0, Jdv1).length();
+}
+
+
+template <class NumApprox, class ElemBasis, class ElemData>
+double get_area2(const ElemBasis *pEB, const unsigned face, 
+			const ElemData &cd)
+{
+  const double *v0 = pEB->unit_vertices[pEB->unit_faces[face][0]];
+  const double *v1 = pEB->unit_vertices[pEB->unit_faces[face][1]];
+  const double *v2 = pEB->unit_vertices[pEB->unit_faces[face][2]];
+  vector<double> d0(2), d1(2);
+  d0[0]=v1[0]-v0[0];
+  d0[1]=v1[1]-v0[1];
+  d1[0]=v2[0]-v0[0];
+  d1[1]=v2[1]-v0[1];
+  double area=0.;
+  
+  vector<double> coords(2);
+  for(int i=0; i<NumApprox::GaussianNum; i++) {
+    coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*d0[0]+NumApprox::GaussianPoints[i][1]*d1[0];
+    coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*d0[1]+NumApprox::GaussianPoints[i][1]*d1[1];
+ 
+    vector<typename ElemBasis::value_type> derivs;
+    pEB->derivate(coords, cd, derivs);
+    cerr << "D ";
+    for(int j=0; j<derivs.size(); j++)
+      cerr << derivs[j] << " ";
+    cerr << endl;
+    cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_area(derivs, d0, d1) << endl;
+    area+=NumApprox::GaussianWeights[i]*d_area(derivs, d0, d1);
+  }
+  return area*pEB->area(face);
+}
+ 
+template <class NumApprox, class ElemBasis, class ElemData>
+double get_area3(const ElemBasis *pEB, const unsigned face, 
+			const ElemData &cd)
+{
+  const double *v0 = pEB->unit_vertices[pEB->unit_faces[face][0]];
+  const double *v1 = pEB->unit_vertices[pEB->unit_faces[face][1]];
+  const double *v2 = pEB->unit_vertices[pEB->unit_faces[face][2]];
+  vector<double> d0(3), d1(3);
+  d0[0]=v1[0]-v0[0];
+  d0[1]=v1[1]-v0[1];
+  d0[2]=v1[2]-v0[2];
+  d1[0]=v2[0]-v0[0];
+  d1[1]=v2[1]-v0[1];
+  d1[2]=v2[2]-v0[2];
+  double area=0.;
+  
+  vector<double> coords(3);
+  for(int i=0; i<NumApprox::GaussianNum; i++) {
+    coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*d0[0]+NumApprox::GaussianPoints[i][1]*d1[0];
+    coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*d0[1]+NumApprox::GaussianPoints[i][1]*d1[1];
+    coords[2]=v0[2]+NumApprox::GaussianPoints[i][0]*d0[2]+NumApprox::GaussianPoints[i][1]*d1[2];
+ 
+    vector<typename ElemBasis::value_type> derivs;
+    pEB->derivate(coords, cd, derivs);
+     cerr << "D ";
+    for(int j=0; j<derivs.size(); j++)
+      cerr << derivs[j] << " ";
+    cerr << endl;
+    cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_area(derivs, d0, d1) << endl;
+    area+=NumApprox::GaussianWeights[i]*d_area(derivs, d0, d1);
+  }
+  return area*pEB->area(face);
+}
+ 
+
+//! default case for arc length calculation - currently not needed
 template <class T>
 inline double d_arc_length(const vector<T>& derivs, const vector<double>& dv)
 {
@@ -61,12 +182,13 @@ inline double d_arc_length(const vector<T>& derivs, const vector<double>& dv)
   return 0;  
 }
 
+//! arc length calculation on points
 template <>
 inline double d_arc_length(const vector<Point>& derivs, const vector<double>& dv)
 {
   const unsigned int dvsize=dv.size();
   ASSERT(derivs.size()==dvsize);
-  vector<double> Jdv(3);
+  double Jdv[3];
   Jdv[0]=Jdv[1]=Jdv[2]=0.;
   for(unsigned int i = 0; i<dvsize; i++) {
     Jdv[0]+=dv[i]*derivs[i].x();
@@ -76,7 +198,6 @@ inline double d_arc_length(const vector<Point>& derivs, const vector<double>& dv
   
   return sqrt(Jdv[0]*Jdv[0]+Jdv[1]*Jdv[1]+Jdv[2]*Jdv[2]);
 }
-
 
 template <class NumApprox, class ElemBasis, class ElemData>
 double get_arc1d_length(const ElemBasis *pEB, const unsigned edge, 
@@ -88,8 +209,8 @@ double get_arc1d_length(const ElemBasis *pEB, const unsigned edge,
   dv[0]=v1[0]-v0[0];
   double arc_length=0.;
   
+  vector<double> coords(1);
   for(int i=0; i<NumApprox::GaussianNum; i++) {
-    vector<double> coords(1);
     coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
     vector<typename ElemBasis::value_type> derivs;
     pEB->derivate(coords, cd, derivs);
@@ -110,8 +231,8 @@ double get_arc2d_length(const ElemBasis *pEB, const unsigned edge,
   dv[1]=v1[1]-v0[1];
   double arc_length=0.;
   
+  vector<double> coords(2);
   for(int i=0; i<NumApprox::GaussianNum; i++) {
-    vector<double> coords(2);
     coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
     coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*dv[1];
     //    cerr << "C " << coords[0] << " " << coords[1] << endl;
@@ -141,8 +262,8 @@ double get_arc3d_length(const ElemBasis *pEB, const unsigned edge,
   dv[2]=v1[2]-v0[2];
   double arc_length=0.;
   
+  vector<double> coords(3);
   for(int i=0; i<NumApprox::GaussianNum; i++) {
-    vector<double> coords(3);
     coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
     coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*dv[1];
     coords[2]=v0[2]+NumApprox::GaussianPoints[i][0]*dv[2];

@@ -33,6 +33,7 @@
 #define HexTrilinearLgn_h
 
 #include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off 'implicit conversion... loss of accuracy' messages.
@@ -72,8 +73,17 @@ public:
   static int vertices_of_face() { return 4; } 
   //!< return number of faces per cell 
   static int faces_of_cell() { return 6; } 
-  //!< return volume
-  static double volume() { return 1; } 
+
+  static inline double length(int edge) { //!< return length
+    const double *v0 = unit_vertices[unit_edges[edge][0]];
+    const double *v1 = unit_vertices[unit_edges[edge][1]];
+    const double dx = v1[0] - v0[0];
+    const double dy = v1[1] - v0[1];
+    const double dz = v1[2] - v0[2];
+    return sqrt(dx*dx+dy*dy+dz*dz);
+  } 
+  static double area(int face) { 1.; } //!< return area
+  static double volume() { return 1.; } //!< return volume 
 };
 
 
@@ -172,7 +182,6 @@ public:
     return false;
   }
 
-protected:
   inline bool check_coords(const vector<double> &x) const  
   {  
     if (x[0]>=-Dim3Locate<ElemBasis>::thresholdDist && 
@@ -186,6 +195,7 @@ protected:
     return false;
   }
   
+protected:
   //! find a reasonable initial guess 
   template <class ElemData>
   void initial_guess(const ElemBasis *pElem, const T &val, const ElemData &cd, 
@@ -423,11 +433,24 @@ public:
     return get_arc3d_length<CrvGaussian1<double> >(this, edge, cd);
   }
  
+  //! get area
+  template <class ElemData>
+    double get_area(const unsigned face, const ElemData &cd) const  
+  {
+    return get_area3<QuadGaussian2<double> >(this, face, cd);
+  }
+  
+  //! get volume
+  template <class ElemData>
+    double get_volume(const ElemData & cd) const  
+  {
+    return get_volume(this, cd);
+  }
+  
   static  const string type_name(int n = -1);
+
   virtual void io (Piostream& str);
 };
-
-
 
 
 template <class T>

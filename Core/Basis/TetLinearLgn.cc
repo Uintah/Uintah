@@ -46,6 +46,8 @@ double TetLinearLgnUnitElement::unit_face_normals[4][3] =
     {0.000000e+00, 1.000000e+00, 0.000000e+00}, 
     {0.000000e+00, 0.000000e+00, 1.000000e+00} };
 
+double TetLinearLgnUnitElement::unit_face_areas[4] = 
+  { 0.866, 0.5, 0.5, 0.5 };
 
 } //namespace SCIRun
 
