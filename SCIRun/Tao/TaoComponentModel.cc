@@ -165,7 +165,7 @@ void TaoComponentModel::readComponentDescription(const std::string& file)
     std::cerr << "Error during parsing: '" <<
       file << "' " << std::endl << "Exception message is:  " <<
       xmlto_string(toCatch.getMessage()) << std::endl;
-    handler.foundError=true;
+    handler.foundError = true;
     return;
   }
   catch ( ... ) {
@@ -207,15 +207,14 @@ void TaoComponentModel::readComponentDescription(const std::string& file)
     for (unsigned int j = 0; j < comps->getLength(); j++) {
       // Read the component name
       DOMElement *component = static_cast<DOMElement *>(comps->item(j));
-      std::string
-        component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
+      std::string component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
       //std::cout << "Component name = ->" << component_name << "<-" << std::endl;
 
       // Register this component
-      TaoComponentDescription* cd = new TaoComponentDescription(this, component_name);
-      cd->setLibrary(library_name.c_str()); // record the DLL name
+      TaoComponentDescription* cd = new TaoComponentDescription(this, component_name, library_name);
+      //cd->setLibrary(library_name.c_str()); // record the DLL name
       lock_components.lock();
-      this->components[cd->type] = cd;
+      this->components[cd->getType()] = cd;
       lock_components.unlock();
     }
   }
@@ -249,7 +248,9 @@ bool TaoComponentModel::destroyServices(const sci::cca::TaoServices::pointer& sv
 bool TaoComponentModel::haveComponent(const std::string& type)
 {
   SCIRun::Guard g1(&lock_components);
+#if DEBUG
   std::cerr << "Tao looking for component of type: " << type << std::endl;
+#endif
   return components.find(type) != components.end();
 }
 
