@@ -53,7 +53,7 @@ double PrismLinearLgnUnitElement::unit_face_normals[5][3] =
     {1.000000e+00, 0.000000e+00, 0.000000e+00} };
 
 double PrismLinearLgnUnitElement::unit_face_areas[5] = 
-  { 0.5, .05, 1.41421356, 1., 1.};
+  { .5, .5, 1.41421356, 1., 1.};
 
 } //namespace SCIRun
 
