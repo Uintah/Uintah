@@ -64,11 +64,10 @@ public:
   virtual ComponentModel* getModel() const;
     
 protected:
+  // duplicates type, but leave this alone for now
   std::string serviceType;
 
 private:
-  InternalComponentModel* model;
-    
   InternalServiceDescription(const InternalServiceDescription&);
   InternalServiceDescription& operator=(const InternalServiceDescription&);
 };
