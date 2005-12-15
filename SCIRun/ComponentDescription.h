@@ -66,10 +66,9 @@ class SCIRunFramework;
  * \sa ComponentModel
  * \sa SCIRunFramework
  */
-class ComponentDescription
-{
+class ComponentDescription {
 public:
-  ComponentDescription();
+  ComponentDescription(ComponentModel* model, const std::string& type, const std::string& loader = "");
   virtual ~ComponentDescription();
 
   /** Returns the type name (a string) the component described by this class. */
@@ -81,6 +80,12 @@ public:
 
   /** ?  */
   virtual std::string getLoaderName() const;
+
+protected:
+  ComponentModel *model;
+  std::string type;
+  std::string loaderName;
+
 private:
   ComponentDescription(const ComponentDescription&);
   ComponentDescription& operator=(const ComponentDescription&);
