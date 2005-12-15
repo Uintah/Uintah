@@ -32,7 +32,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Persistent/PersistentSTL.h>
-#include <Core/Volume/Colormap2.h>
+#include <Core/Volume/ColorMap2.h>
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Malloc/Allocator.h>
 

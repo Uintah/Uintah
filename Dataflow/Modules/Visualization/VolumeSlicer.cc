@@ -45,7 +45,7 @@
 #include <Core/Volume/SliceRenderer.h>
 #include <Dataflow/Ports/TexturePort.h>
 #include <Core/Geom/ShaderProgramARB.h>
-#include <Dataflow/Ports/Colormap2Port.h>
+#include <Dataflow/Ports/ColorMap2Port.h>
 
 #include <iostream>
 #include <algorithm>

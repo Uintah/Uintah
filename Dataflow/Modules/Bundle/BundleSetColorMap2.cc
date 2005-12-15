@@ -36,8 +36,7 @@
 
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Ports/BundlePort.h>
-#include <Core/Volume/Colormap2.h>
-#include <Dataflow/Ports/Colormap2Port.h>
+#include <Dataflow/Ports/ColorMap2Port.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 

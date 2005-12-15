@@ -41,7 +41,7 @@
 
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Volume/Texture.h>
-#include <Core/Volume/Colormap2.h>
+#include <Core/Volume/ColorMap2.h>
 #include <Core/Volume/CM2Widget.h>
 
 #include <Core/Geometry/Polygon.h>

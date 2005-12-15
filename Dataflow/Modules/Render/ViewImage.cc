@@ -65,7 +65,7 @@
 #include <Core/Algorithms/Visualization/RenderField.h>
 
 #include <Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/Colormap2Port.h>
+#include <Dataflow/Ports/ColorMap2Port.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
