@@ -47,31 +47,31 @@ using std::string;
 //! Class for describing unit geometry of HexTrilinearLgn 
 class HexTrilinearLgnUnitElement {
 public:
-  //!< Parametric coordinates of vertices of unit edge 
+  //! Parametric coordinates of vertices of unit edge 
   static double unit_vertices[8][3];
-  //!< References to vertices of unit edge   
+  //! References to vertices of unit edge   
   static int unit_edges[12][2]; 
-  //!< References to vertices of unit face  
+  //! References to vertices of unit face  
   static int unit_faces[6][4];  
-  //!< References to normals of unit face 
+  //! References to normals of unit face 
   static double unit_face_normals[6][3];  
  
   HexTrilinearLgnUnitElement() {}
   virtual ~HexTrilinearLgnUnitElement() {}
 
-  //!< return dimension of domain 
+  //! return dimension of domain 
   static int domain_dimension() { return 3; } 
-  //!< return number of vertices
+  //! return number of vertices
   static int number_of_vertices() { return 8; } 
-  //!< return number of vertices
+  //! return number of vertices
   static int number_of_mesh_vertices() { return 8; } 
-  //!< return degrees of freedom
+  //! return degrees of freedom
   static int dofs() { return 8; } 
-  //!< return number of edges
+  //! return number of edges
   static int number_of_edges() { return 12; } 
-  //!< return number of vertices per face 
+  //! return number of vertices per face 
   static int vertices_of_face() { return 4; } 
-  //!< return number of faces per cell 
+  //! return number of faces per cell 
   static int faces_of_cell() { return 6; } 
 
   static inline double length(int edge) {
@@ -271,6 +271,9 @@ public:
 };
 
 template <class T>
+int HexGaussian3<T>::GaussianNum = 27;
+ 
+template <class T>
 T HexGaussian3<T>::GaussianPoints[27][3] = 
   {
     {0.11270166537950, 0.11270166537950, 0.11270166537950}, {0.5, 0.11270166537950, 0.11270166537950}, {0.88729833462050, 0.11270166537950, 0.11270166537950},
@@ -437,7 +440,7 @@ public:
   template <class ElemData>
     double get_area(const unsigned face, const ElemData &cd) const  
   {
-    return get_area3<QuadGaussian2<double> >(this, face, cd);
+    return get_area3<QuadGaussian3<double> >(this, face, cd);
   }
   
   //! get volume
