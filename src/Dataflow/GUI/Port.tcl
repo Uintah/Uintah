@@ -434,12 +434,27 @@ proc findModulesToInsertOnPort { port } {
 proc insertModuleOnPortMenu { port menu } {
     # Return if this menu already exists
     if { [winfo exists $menu] } { return 1 }
+
     # Return if there is no modules that would insert on this port
     set moduleList [findModulesToInsertOnPort $port]
     if { ![llength $moduleList] } { return 0 }
 
     # create a new menu
     menu $menu -tearoff false -disabledforeground black
+
+    set pmod [pMod port]
+    set pnum [pNum port]
+    if {[pType port] == "o"} {
+        if {[netedit supportsPortCaching $pmod $pnum]} {
+            set pvar1 [join $port _]
+            set pvar "${pvar1}_cache"
+            global $pvar
+            set $pvar [netedit isPortCaching $pmod $pnum]
+            set command "netedit setPortCaching $pmod $pnum \[set $pvar\]"
+            $menu add checkbutton -label "Port Caching" \
+                -command $command -variable $pvar
+        }
+    }
 
     set added ""
     foreach path $moduleList {
