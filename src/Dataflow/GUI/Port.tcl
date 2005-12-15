@@ -519,3 +519,8 @@ proc portMenu {x y port cx cy} {
     }
 }
 
+
+proc setPortCaching {mod port val} {
+    update idletasks
+    netedit setPortCaching $mod $port $val
+}

@@ -941,6 +941,12 @@ proc counting_addSubnetToDatabase { args } {
 }
 
 
+proc counting_setPortCaching { args } {
+    global scriptCount
+    incr scriptCount(Total)
+}
+
+
 proc loading_addModuleAtPosition { args } {
     global PowerApp progressMeter
     if { [info exists progressMeter] } {
@@ -1006,6 +1012,11 @@ proc loading_addSubnetToDatabase { args } {
 }
 
 
+proc loading_setPortCaching { args } {
+    incrProgress
+    return [uplevel 1 real_setPortCaching $args]
+}
+
 
 proc renameNetworkCommands { prefix } {
     lappend commands set
@@ -1014,6 +1025,7 @@ proc renameNetworkCommands { prefix } {
     lappend commands instanceSubnet
     lappend commands addSubnetToDatabase
     lappend commands loadSubnetFromDisk
+    lappend commands setPortCaching
 
     foreach command $commands {
 	set exists [expr [llength [info commands ${prefix}${command}]] == 1]
@@ -1207,7 +1219,19 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	    }
 	}
     }
-    
+
+    append script "\n\# Disable caching on applicable ports.\n"
+    set i 0
+    foreach module $Subnet(Subnet${subnet}_Modules) {
+        incr i
+        set nports [portCount "$module 0 o"]
+        for { set j 0 } { $j < $nports} { incr j } {
+            if {![netedit isPortCaching $module $j]} {
+                append script "setPortCaching \$m$i $j 0\n"
+            }
+        }
+    }
+
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
 	$module writeStateToScript script "\$m[incr i]" $tab
