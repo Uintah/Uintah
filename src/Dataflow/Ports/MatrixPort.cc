@@ -45,6 +45,9 @@
 
 namespace SCIRun {
 
+template class SimpleIPort<MatrixHandle>;
+template class SimpleOPort<MatrixHandle>;
+
 extern "C" {
 IPort* make_MatrixIPort(Module* module, const string& name) {
   return scinew SimpleIPort<MatrixHandle>(module,name);
@@ -53,7 +56,6 @@ OPort* make_MatrixOPort(Module* module, const string& name) {
   return scinew SimpleOPort<MatrixHandle>(module,name);
 }
 }
-
 
 template<> string SimpleIPort<MatrixHandle>::port_type_("Matrix");
 template<> string SimpleIPort<MatrixHandle>::port_color_("dodgerblue");

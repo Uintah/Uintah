@@ -41,6 +41,9 @@
 
 namespace SCIRun {
 
+template class SimpleIPort<FieldHandle>;
+template class SimpleOPort<FieldHandle>;
+
 extern "C" {
 IPort* make_FieldIPort(Module* module, const string& name) {
   return scinew SimpleIPort<FieldHandle>(module,name);

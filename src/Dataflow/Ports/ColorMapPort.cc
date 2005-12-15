@@ -45,6 +45,8 @@
 
 namespace SCIRun {
 
+template class SimpleIPort<ColorMapHandle>;
+template class SimpleOPort<ColorMapHandle>;
 
 extern "C" {
 IPort* make_ColorMapIPort(Module* module, const string& name) {
