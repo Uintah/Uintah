@@ -52,6 +52,40 @@ namespace SCIRun {
   using std::cerr;
   using std::endl;
 
+  template<class T>
+    inline T InverseMatrix3x3(const T *p, T *q) 
+  {
+    const T a=p[0], b=p[1], c=p[2];
+    const T d=p[3], e=p[4], f=p[5];
+    const T g=p[6], h=p[7], i=p[8];
+      
+    const T detp=a*e*i-c*e*g+b*f*g+c*d*h-a*f*h-b*d*i;
+    const T detinvp=(detp ? 1.0/detp : 0);
+      
+    q[0]=(e*i-f*h)*detinvp;
+    q[1]=(c*h-b*i)*detinvp;
+    q[2]=(b*f-c*e)*detinvp;
+    q[3]=(f*g-d*i)*detinvp;
+    q[4]=(a*i-c*g)*detinvp;
+    q[5]=(c*d-a*f)*detinvp;
+    q[6]=(d*h-e*g)*detinvp;
+    q[7]=(b*g-a*h)*detinvp;
+    q[8]=(a*e-b*d)*detinvp;
+  
+    return detp;
+  }
+
+  template<class T>
+    inline T DetMatrix3x3(const T *p) 
+  {
+    const T a=p[0], b=p[1], c=p[2];
+    const T d=p[3], e=p[4], f=p[5];
+    const T g=p[6], h=p[7], i=p[8];
+      
+    const T detp=a*e*i-c*e*g+b*f*g+c*d*h-a*f*h-b*d*i;
+    return detp;
+  }
+
   //! default case for volume calculation - currently not needed
   template <class T>
     inline double d_volume(const vector<T>& derivs)
@@ -60,6 +94,23 @@ namespace SCIRun {
     return 0;  
   }
 
+  template <>
+    inline double d_volume(const vector<Point>& derivs)
+  {
+    double J[9];
+
+    J[0]=derivs[0].x();
+    J[3]=derivs[0].y();
+    J[6]=derivs[0].z();
+    J[1]=derivs[1].x(); 
+    J[4]=derivs[1].y();
+    J[7]=derivs[1].z();
+    J[2]=derivs[2].x();
+    J[5]=derivs[2].y();
+    J[8]=derivs[2].z();
+
+    return DetMatrix3x3(J);
+  }
 
   template <class ElemBasis, class ElemData>
     double get_volume3(const ElemBasis *pEB, const ElemData &cd)
@@ -162,11 +213,11 @@ namespace SCIRun {
  
       vector<typename ElemBasis::value_type> derivs;
       pEB->derivate(coords, cd, derivs);
-      cerr << "D ";
-      for(int j=0; j<derivs.size(); j++)
-	cerr << derivs[j] << " ";
-      cerr << endl;
-      cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_area(derivs, d0, d1) << endl;
+/*       cerr << "D "; */
+/*       for(int j=0; j<derivs.size(); j++) */
+/* 	cerr << derivs[j] << " "; */
+/*       cerr << endl; */
+/*       cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_area(derivs, d0, d1) << endl; */
       area+=NumApprox::GaussianWeights[i]*d_area(derivs, d0, d1);
     }
     return area*pEB->area(face);
@@ -213,11 +264,11 @@ namespace SCIRun {
       coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
       vector<typename ElemBasis::value_type> derivs;
       pEB->derivate(coords, cd, derivs);
-      cerr << "D ";
-      for(int j=0; j<derivs.size(); j++)
-	cerr << derivs[j] << " ";
-      cerr << endl;
-      cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_arc_length(derivs, dv) << endl;
+/*       cerr << "D "; */
+/*       for(int j=0; j<derivs.size(); j++) */
+/* 	cerr << derivs[j] << " "; */
+/*       cerr << endl; */
+/*       cerr << "w, al " << NumApprox::GaussianWeights[i] << " " << d_arc_length(derivs, dv) << endl; */
       arc_length+=NumApprox::GaussianWeights[i]*d_arc_length(derivs, dv);
     }
     return arc_length;
@@ -239,8 +290,6 @@ namespace SCIRun {
     for(int i=0; i<NumApprox::GaussianNum; i++) {
       coords[0]=v0[0]+NumApprox::GaussianPoints[i][0]*dv[0];
       coords[1]=v0[1]+NumApprox::GaussianPoints[i][0]*dv[1];
-      //    cerr << "C " << coords[0] << " " << coords[1] << endl;
- 
       vector<typename ElemBasis::value_type> derivs;
       pEB->derivate(coords, cd, derivs);
       //   cerr << "D ";
@@ -291,28 +340,6 @@ namespace SCIRun {
     Point difference(const Point& interp, const Point& value);
  
 
-  template<class T>
-    inline T InverseMatrix3x3(const T *p, T *q) 
-  {
-    const T a=p[0], b=p[1], c=p[2];
-    const T d=p[3], e=p[4], f=p[5];
-    const T g=p[6], h=p[7], i=p[8];
-      
-    const T detp=a*e*i-c*e*g+b*f*g+c*d*h-a*f*h-b*d*i;
-    const T detinvp=(detp ? 1.0/detp : 0);
-      
-    q[0]=(e*i-f*h)*detinvp;
-    q[1]=(c*h-b*i)*detinvp;
-    q[2]=(b*f-c*e)*detinvp;
-    q[3]=(f*g-d*i)*detinvp;
-    q[4]=(a*i-c*g)*detinvp;
-    q[5]=(c*d-a*f)*detinvp;
-    q[6]=(d*h-e*g)*detinvp;
-    q[7]=(b*g-a*h)*detinvp;
-    q[8]=(a*e-b*d)*detinvp;
-  
-    return detp;
-  }
 
   template <class T>
     double getnextx1(vector<double> &x, vector<double> &xold, 
