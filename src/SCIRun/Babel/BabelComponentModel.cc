@@ -81,8 +81,7 @@ extern "C" {
 
 namespace SCIRun {
 
-const std::string BabelComponentModel::DEFAULT_PATH =
-   std::string("/CCA/Components/BabelTest/xml");
+const std::string BabelComponentModel::DEFAULT_PATH("/CCA/Components/BabelTest/xml");
 
 
 BabelComponentModel::BabelComponentModel(SCIRunFramework* framework)
@@ -151,7 +150,7 @@ void BabelComponentModel::buildComponentList()
     d.getFilenamesBySuffix(".xml", files);
     for(std::vector<std::string>::iterator iter = files.begin();
         iter != files.end(); iter++) {
-      std::string& file = *iter;
+      std::string file = *iter;
 #if DEBUG
       std::cerr << "Babel Component Model: Looking at file" << file << std::endl;
 #endif
@@ -161,6 +160,7 @@ void BabelComponentModel::buildComponentList()
 }
 void BabelComponentModel::readComponentDescription(const std::string& file)
 {
+std::cerr << "BabelComponentModel::readComponentDescription: " << file << std::endl;
   // Instantiate the DOM parser.
   SCIRunErrorHandler handler;
   XercesDOMParser parser;
@@ -212,17 +212,15 @@ void BabelComponentModel::readComponentDescription(const std::string& file)
     for (unsigned int j = 0; j < comps->getLength(); j++) {
       // Read the component name
       DOMElement *component = static_cast<DOMElement *>(comps->item(j));
-      std::string
-        component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
+      std::string component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
 #if DEBUG
       std::cerr << "Component name = ->" << component_name << "<-" << std::endl;
 #endif
       // Register this component
-      BabelComponentDescription* cd = new BabelComponentDescription(this);
-      cd->type = component_name;
-      //cd->setLibrary(library_name.c_str()); // record the DLL name
+      BabelComponentDescription* cd = new BabelComponentDescription(this, component_name, library_name);
+      cd->setLibrary(library_name.c_str()); // record the DLL name
       lock_components.lock();
-      this->components[cd->type] = cd;
+      this->components[cd->getType()] = cd;
       lock_components.unlock();
     }
   }
@@ -310,6 +308,8 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string &name, 
    *  server-side binding: use "ior/impl" to find class implementation
    *  client-side binding: use language name
    *  Scope and Resolve from SCIRun/src/CCA/Components/BabelTest/xml/BabelTest.scl
+   *
+   * Note for *nix: make sure library path is in LD_LIBRARY_PATH
    */
   sidl::DLL library = sidl::Loader::findLibrary(type, "ior/impl",
                                                 sidl::Scope_SCLSCOPE, sidl::Resolve_SCLRESOLVE);
