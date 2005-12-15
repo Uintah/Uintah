@@ -45,6 +45,9 @@
 
 namespace SCIRun { // Namespace {} necessary for xlC AIX compilation.
 
+template class SimpleIPort<ImageHandle>;
+template class SimpleOPort<ImageHandle>;
+
 extern "C" {
 IPort* make_ImageIPort(Module* module, const string& name) {
   return scinew SimpleIPort<ImageHandle>(module,name);

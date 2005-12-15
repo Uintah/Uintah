@@ -42,11 +42,9 @@ SRCS     += $(SRCDIR)/BundlePort.cc		  \
             $(SRCDIR)/MatrixPort.cc               \
             $(SRCDIR)/NrrdPort.cc	          \
             $(SRCDIR)/PathPort.cc                 \
-            $(SRCDIR)/TexturePort.cc              \
-            $(SRCDIR)/TimePort.cc                 \
             $(SRCDIR)/StringPort.cc               \
-            $(SRCDIR)/templates.cc		  \
-
+            $(SRCDIR)/TexturePort.cc              \
+            $(SRCDIR)/TimePort.cc
 
 PSELIBS := \
 	Core/Containers   \

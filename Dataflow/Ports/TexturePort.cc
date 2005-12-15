@@ -24,7 +24,8 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
-//  
+
+
 //    File   : TexturePort.cc
 //    Author : Milan Ikits
 //    Date   : Thu Jul 15 15:01:21 2004
@@ -34,18 +35,16 @@
 
 namespace SCIRun {
 
+template class SimpleIPort<TextureHandle>;
+template class SimpleOPort<TextureHandle>;
+
 extern "C" {
-  
-IPort* make_TextureIPort(Module* module,
-                                      const string& name) {
+IPort* make_TextureIPort(Module* module, const string& name) {
   return scinew SimpleIPort<TextureHandle>(module,name);
 }
-  
-OPort* make_TextureOPort(Module* module,
-                                      const string& name) {
+OPort* make_TextureOPort(Module* module, const string& name) {
   return scinew SimpleOPort<TextureHandle>(module,name);
 }
-
 }
 
 template<> string SimpleIPort<TextureHandle>::port_type_("Texture");

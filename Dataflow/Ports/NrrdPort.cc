@@ -44,6 +44,9 @@
 
 namespace SCIRun {
 
+template class SimpleIPort<NrrdDataHandle>;
+template class SimpleOPort<NrrdDataHandle>;
+
 extern "C" {
   IPort* make_NrrdIPort(Module* module, const string& name) {
   return scinew SimpleIPort<NrrdDataHandle>(module,name);
