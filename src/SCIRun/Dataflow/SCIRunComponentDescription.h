@@ -69,10 +69,11 @@ public:
   
   /** Returns the component type name (a string). */
   virtual std::string getType() const;
+
   /** Returns a pointer to the component model type. */
   virtual const ComponentModel* getModel() const;
+
 private:
-  SCIRunComponentModel* model;
   std::string package;
   std::string category;
   std::string module;
