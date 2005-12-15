@@ -25,21 +25,52 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Colormap2Port.h
+//    File   : ColorMap2.h
 //    Author : Milan Ikits
-//    Date   : Mon Jul  5 18:45:35 2004
+//    Date   : Mon Jul  5 18:33:12 2004
 
-#ifndef Colormap2Port_h
-#define Colormap2Port_h
+#ifndef ColorMap2_h
+#define ColorMap2_h
 
-#include <Dataflow/Ports/SimplePort.h>
-#include <Core/Volume/Colormap2.h>
+#include <Core/Datatypes/PropertyManager.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Thread/Mutex.h>
+#include <vector>
 
 namespace SCIRun {
 
-typedef SimpleIPort<ColorMap2Handle> ColorMap2IPort;
-typedef SimpleOPort<ColorMap2Handle> ColorMap2OPort;
+class CM2Widget;
+typedef LockingHandle<CM2Widget> CM2WidgetHandle;
+
+using std::vector;
+
+class ColorMap2 : public PropertyManager
+{
+public:
+  ColorMap2();
+  ColorMap2(const ColorMap2 &copy);
+  ColorMap2(const vector<CM2WidgetHandle>& widgets,
+	    bool updating, 
+	    bool selected,
+	    pair<float,float> value_range );
+  virtual ~ColorMap2();
+
+  vector<CM2WidgetHandle> &		widgets() { return widgets_; }
+  bool &				updating() { return updating_; }
+  int &					selected() { return selected_; }
+  pair<float, float> &			value_range() { return value_range_; }
+  virtual void				io(SCIRun::Piostream&);
+  static SCIRun::PersistentTypeID	type_id;
+
+protected:
+  bool					updating_;
+  vector<CM2WidgetHandle>		widgets_;
+  int					selected_;
+  pair<float, float>			value_range_;
+};
+
+typedef SCIRun::LockingHandle<ColorMap2> ColorMap2Handle;
 
 } // End namespace SCIRun
 
-#endif // Colormap2Port_h
+#endif // ColorMap2_h

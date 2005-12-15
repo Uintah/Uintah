@@ -35,7 +35,7 @@ SRCDIR   := Dataflow/Ports
 
 SRCS     += $(SRCDIR)/BundlePort.cc		  \
 	    $(SRCDIR)/ColorMapPort.cc             \
-	    $(SRCDIR)/Colormap2Port.cc            \
+	    $(SRCDIR)/ColorMap2Port.cc            \
             $(SRCDIR)/FieldPort.cc                \
             $(SRCDIR)/GeometryPort.cc             \
 	    $(SRCDIR)/ImagePort.cc		  \

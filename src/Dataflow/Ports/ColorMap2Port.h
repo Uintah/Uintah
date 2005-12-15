@@ -25,31 +25,21 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Colormap2Port.cc
+//    File   : ColorMap2Port.h
 //    Author : Milan Ikits
-//    Date   : Mon Jul  5 18:46:29 2004
+//    Date   : Mon Jul  5 18:45:35 2004
 
-#include <Dataflow/Ports/Colormap2Port.h>
-#include <Core/Malloc/Allocator.h>
+#ifndef ColorMap2Port_h
+#define ColorMap2Port_h
+
+#include <Dataflow/Ports/SimplePort.h>
+#include <Core/Volume/ColorMap2.h>
 
 namespace SCIRun {
 
-template class SimpleIPort<ColorMap2Handle>;
-template class SimpleOPort<ColorMap2Handle>;
-
-extern "C" {
-SCIRun::IPort* make_ColorMap2IPort(SCIRun::Module* module,
-                                                const std::string& name) {
-  return scinew SCIRun::SimpleIPort<ColorMap2Handle>(module,name);
-}
-SCIRun::OPort* make_ColorMap2OPort(SCIRun::Module* module,
-                                                const std::string& name) {
-  return scinew SCIRun::SimpleOPort<ColorMap2Handle>(module,name);
-}
-}
-
-template<> std::string SCIRun::SimpleIPort<ColorMap2Handle>::port_type_("ColorMap2");
-template<> std::string SCIRun::SimpleIPort<ColorMap2Handle>::port_color_("darkseagreen");
+typedef SimpleIPort<ColorMap2Handle> ColorMap2IPort;
+typedef SimpleOPort<ColorMap2Handle> ColorMap2OPort;
 
 } // End namespace SCIRun
 
+#endif // ColorMap2Port_h

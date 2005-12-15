@@ -44,7 +44,7 @@
 
 #include <Core/Volume/VolumeRenderer.h>
 #include <Dataflow/Ports/TexturePort.h>
-#include <Dataflow/Ports/Colormap2Port.h>
+#include <Dataflow/Ports/ColorMap2Port.h>
 #include <Core/Volume/VideoCardInfo.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geom/GeomSticky.h>

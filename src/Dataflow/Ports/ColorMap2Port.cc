@@ -25,52 +25,31 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Colormap2.h
+//    File   : Colormap2Port.cc
 //    Author : Milan Ikits
-//    Date   : Mon Jul  5 18:33:12 2004
+//    Date   : Mon Jul  5 18:46:29 2004
 
-#ifndef ColorMap2_h
-#define ColorMap2_h
-
-#include <Core/Datatypes/PropertyManager.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Thread/Mutex.h>
-#include <vector>
+#include <Dataflow/Ports/ColorMap2Port.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
-class CM2Widget;
-typedef LockingHandle<CM2Widget> CM2WidgetHandle;
+template class SimpleIPort<ColorMap2Handle>;
+template class SimpleOPort<ColorMap2Handle>;
 
-using std::vector;
+extern "C" {
+SCIRun::IPort* make_ColorMap2IPort(SCIRun::Module* module,
+                                                const std::string& name) {
+  return scinew SCIRun::SimpleIPort<ColorMap2Handle>(module,name);
+}
+SCIRun::OPort* make_ColorMap2OPort(SCIRun::Module* module,
+                                                const std::string& name) {
+  return scinew SCIRun::SimpleOPort<ColorMap2Handle>(module,name);
+}
+}
 
-class ColorMap2 : public PropertyManager
-{
-public:
-  ColorMap2();
-  ColorMap2(const ColorMap2 &copy);
-  ColorMap2(const vector<CM2WidgetHandle>& widgets,
-	    bool updating, 
-	    bool selected,
-	    pair<float,float> value_range );
-  virtual ~ColorMap2();
-
-  vector<CM2WidgetHandle> &		widgets() { return widgets_; }
-  bool &				updating() { return updating_; }
-  int &					selected() { return selected_; }
-  pair<float, float> &			value_range() { return value_range_; }
-  virtual void				io(SCIRun::Piostream&);
-  static SCIRun::PersistentTypeID	type_id;
-
-protected:
-  bool					updating_;
-  vector<CM2WidgetHandle>		widgets_;
-  int					selected_;
-  pair<float, float>			value_range_;
-};
-
-typedef SCIRun::LockingHandle<ColorMap2> ColorMap2Handle;
+template<> std::string SCIRun::SimpleIPort<ColorMap2Handle>::port_type_("ColorMap2");
+template<> std::string SCIRun::SimpleIPort<ColorMap2Handle>::port_color_("darkseagreen");
 
 } // End namespace SCIRun
 
-#endif // ColorMap2_h
