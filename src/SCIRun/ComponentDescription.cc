@@ -42,7 +42,8 @@
 
 namespace SCIRun {
 
-ComponentDescription::ComponentDescription()
+ComponentDescription::ComponentDescription(ComponentModel* model, const std::string& type, const std::string& loader)
+  : model(model), type(type), loaderName(loader)
 {
 }
 
