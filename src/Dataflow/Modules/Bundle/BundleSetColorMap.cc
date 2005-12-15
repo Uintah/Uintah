@@ -113,7 +113,7 @@ void BundleSetColorMap::execute()
         
   if (ifport->get(fhandle)) 
   {
-    handle->setColormap(colormap1name,fhandle);
+    handle->setColorMap(colormap1name,fhandle);
   }
 
   // Scan colormap input port 2   
@@ -125,7 +125,7 @@ void BundleSetColorMap::execute()
         
   if (ifport->get(fhandle))
   {
-    handle->setColormap(colormap2name,fhandle);
+    handle->setColorMap(colormap2name,fhandle);
   }
 
   // Scan colormap input port 3   
@@ -137,7 +137,7 @@ void BundleSetColorMap::execute()
         
   if (ifport->get(fhandle))
   {
-    handle->setColormap(colormap3name,fhandle);
+    handle->setColorMap(colormap3name,fhandle);
   }
         
   // Now post the output

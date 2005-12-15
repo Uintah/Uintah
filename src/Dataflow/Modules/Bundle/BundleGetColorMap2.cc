@@ -105,10 +105,10 @@ void BundleGetColorMap2::execute()
     return;
   }
 
-  int numColormap2s = handle->numColormap2s();
-  for (int p = 0; p < numColormap2s; p++)
+  int numColorMap2s = handle->numColorMap2s();
+  for (int p = 0; p < numColorMap2s; p++)
   {
-    colormap2list += "{" + handle->getColormap2Name(p) + "} ";
+    colormap2list += "{" + handle->getColorMap2Name(p) + "} ";
   }
 
   guicolormap2s_.set(colormap2list);
@@ -121,9 +121,9 @@ void BundleGetColorMap2::execute()
     return; 
   }
 
-  if (handle->isColormap2(colormap21name))
+  if (handle->isColorMap2(colormap21name))
   {
-    fhandle = handle->getColormap2(colormap21name);
+    fhandle = handle->getColorMap2(colormap21name);
     ofport->send(fhandle);
   }
         
@@ -133,9 +133,9 @@ void BundleGetColorMap2::execute()
     return; 
   }
  
-  if (handle->isColormap2(colormap22name))
+  if (handle->isColorMap2(colormap22name))
   {
-    fhandle = handle->getColormap2(colormap22name);
+    fhandle = handle->getColorMap2(colormap22name);
     ofport->send(fhandle);
   }
         
@@ -145,9 +145,9 @@ void BundleGetColorMap2::execute()
     return; 
   }
  
-  if (handle->isColormap2(colormap23name))
+  if (handle->isColorMap2(colormap23name))
   {
-    fhandle = handle->getColormap2(colormap23name);
+    fhandle = handle->getColorMap2(colormap23name);
     ofport->send(fhandle);
   }
       

@@ -38,7 +38,7 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
-    <summary>Load an Image and output it as a Colormap2</summary>
+    <summary>Load an Image and output it as a ColorMap2</summary>
     <description>
       <p>The input nrrd must be and rgba image that is 512 x 256, so a
 3 dimensional nrrd that is 4 x 512 x 256</p>
@@ -62,7 +62,7 @@ ColorMap2.</p>
     </inputs>
     <outputs>
       <port>
-        <name>Output Colormap</name>
+        <name>Output ColorMap</name>
         <datatype>SCIRun::ColorMap2</datatype>
       </port>
     </outputs>

@@ -219,22 +219,22 @@ class Bundle : public PropertyManager {
     //!  getcolormapname -> Get the nth name in the bundle for building a 
     //!                     contents list
 
-    LockingHandle<ColorMap> getColormap(std::string name) 
+    LockingHandle<ColorMap> getColorMap(std::string name) 
       { return(get<ColorMap>(name)); }
     
-    void setColormap(std::string name, LockingHandle<ColorMap> &colormap) 
+    void setColorMap(std::string name, LockingHandle<ColorMap> &colormap) 
       { set<ColorMap>(name,colormap); }
     
-    void remColormap(std::string name) 
+    void remColorMap(std::string name) 
       { rem(name); }
     
-    bool isColormap(std::string name)  
+    bool isColorMap(std::string name)  
       { return(is<ColorMap>(name)); }
       
-    int numColormaps() 
+    int numColorMaps() 
       { return(num<ColorMap>()); }
       
-    std::string getColormapName(int index) 
+    std::string getColorMapName(int index) 
       { return(getName<ColorMap>(index)); }
 
     //! The basic functions for managing colormap2s
@@ -248,22 +248,22 @@ class Bundle : public PropertyManager {
     //!  getcolormap2name -> Get the nth name in the bundle for building a
     //!                      contents list
 
-    LockingHandle<ColorMap2> getColormap2(std::string name) 
+    LockingHandle<ColorMap2> getColorMap2(std::string name) 
       { return(get<ColorMap2>(name)); }
       
-    void setColormap2(std::string name, LockingHandle<ColorMap2> &colormap2) 
+    void setColorMap2(std::string name, LockingHandle<ColorMap2> &colormap2) 
       { set<ColorMap2>(name,colormap2); }
       
-    void remColormap2(std::string name) 
+    void remColorMap2(std::string name) 
       { rem(name); }
       
-    bool isColormap2(std::string name)  
+    bool isColorMap2(std::string name)  
       { return(is<ColorMap2>(name)); }
       
-    int  numColormap2s() 
+    int  numColorMap2s() 
       { return(num<ColorMap2>()); }
       
-    std::string getColormap2Name(int index) 
+    std::string getColorMap2Name(int index) 
       { return(getName<ColorMap2>(index)); }
 
     //! The basic functions for managing paths

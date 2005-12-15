@@ -2282,7 +2282,7 @@ ViewImage::execute()
   NrrdIPort *nrrd1_port = (NrrdIPort*)get_iport("Nrrd1");
   NrrdIPort *nrrd2_port = (NrrdIPort*)get_iport("Nrrd2");
   //NrrdIPort *nrrdGradient_port = (NrrdIPort*)get_iport("NrrdGradient");
-  //ColorMap2IPort* cmap_iport = (ColorMap2IPort*)get_iport("Colormap2");
+  //ColorMap2IPort* cmap_iport = (ColorMap2IPort*)get_iport("ColorMap2");
 
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
 
