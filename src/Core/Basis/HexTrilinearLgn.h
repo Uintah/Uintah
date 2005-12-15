@@ -74,7 +74,7 @@ public:
   //!< return number of faces per cell 
   static int faces_of_cell() { return 6; } 
 
-  static inline double length(int edge) { //!< return length
+  static inline double length(int edge) {
     const double *v0 = unit_vertices[unit_edges[edge][0]];
     const double *v1 = unit_vertices[unit_edges[edge][1]];
     const double dx = v1[0] - v0[0];
@@ -82,8 +82,8 @@ public:
     const double dz = v1[2] - v0[2];
     return sqrt(dx*dx+dy*dy+dz*dz);
   } 
-  static double area(int face) { 1.; } //!< return area
-  static double volume() { return 1.; } //!< return volume 
+  static double area(int /*face*/) { return 1.; }
+  static double volume() { return 1.; }
 };
 
 
