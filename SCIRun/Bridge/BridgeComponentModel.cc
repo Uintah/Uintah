@@ -165,24 +165,25 @@ void BridgeComponentModel::readComponentDescription(const std::string& file)
   for (int i = 0;i < nlist;i++) {
     DOMNode* d = list->item(i);
     //should use correct Loader pointer below.
-    BridgeComponentDescription* cd = new BridgeComponentDescription(this);
     DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("name"));
+    std::string type;
     if (name == 0) {
       std::cout << "ERROR: Component has no name." << "\n";
-      cd->type = "unknown type";
+      type = "unknown type";
     } else {
-      cd->type = to_char_ptr(name->getNodeValue());
+      type = to_char_ptr(name->getNodeValue());
     }
+    BridgeComponentDescription* cd = new BridgeComponentDescription(this, type);
  
     lock_components.lock(); 
-    componentDB_type::iterator iter = components.find(cd->type);
+    componentDB_type::iterator iter = components.find(cd->getType());
     if (iter != components.end()) {
-      std::cerr << "WARNING: Component multiply defined: " << cd->type << '\n';
+      std::cerr << "WARNING: Component multiply defined: " << cd->getType() << std::endl;
     } else {
 #if DEBUG
-      std::cerr << "Added Bridge component of type: " << cd->type << '\n';
+      std::cerr << "Added Bridge component of type: " << cd->getType() << std::endl;
 #endif
-      components[cd->type] = cd;
+      components[cd->getType()] = cd;
     }
     lock_components.unlock();
   }
