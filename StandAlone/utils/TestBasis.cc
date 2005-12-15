@@ -121,6 +121,8 @@ template<typename MESH, typename FBASIS>
 void Test()
 {   
   MESH *mesh = new MESH();
+  const TypeDescription *ftd = mesh->get_type_description();
+  cout << "Test: " << ftd->get_name() << endl;
 
   //Transform t;
   //t.rotate(Vector(1,0,0), Vector(0,1,0));
@@ -161,7 +163,8 @@ void Test()
   }
 
   typename MESH::Elem::index_type e0=mesh->add_elem(n); 
-  cout<<"Element index: " << e0 << "\n"; 
+  ASSERT(e0==0);
+  //  cout<<"Element index: " << e0 << "\n"; 
   mesh->synchronize(MESH::EDGES_E);
 
   vector<double> coords(u.domain_dimension());
@@ -188,7 +191,10 @@ void Test()
 
   typename MESH::ElemData cmcd(*mesh, e0);
   for(int i=0; i<u.number_of_edges(); i++)
-    cout << "Edge " << i << " arc length " << mesh->get_basis().get_arc_length(i, cmcd) << endl;
+    cout << "Edge " << i << " length " << mesh->get_basis().get_arc_length(i, cmcd) << endl;
+
+  for(int i=0; i<u.faces_of_cell(); i++)
+    cout << "Face " << i << " area " << mesh->get_basis().get_area(i, cmcd) << endl;
 
 
   typedef GenericField<MESH, FBASIS, vector<double> > FIELD;
@@ -221,8 +227,6 @@ int
 main(int argc, char **argv) 
 {
   {
-    cout<<"TestCrvMesh\n";
-    
     srand48(0);
     Test<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double> >();
     srand48(0);
@@ -232,8 +236,6 @@ main(int argc, char **argv)
    }
 
   {
-    cout<<"TestTriSurfMesh\n";
-    
     srand48(0);
     Test<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<double> >();
     srand48(0);
@@ -245,8 +247,6 @@ main(int argc, char **argv)
   }
 
   {
-    cout<<"TestQuadSurfMesh\n";
-    
     srand48(0);
     Test<QuadSurfMesh<QuadBilinearLgn<Point> >, QuadBilinearLgn<double> >();
     srand48(0);
@@ -256,8 +256,6 @@ main(int argc, char **argv)
   }
  
   {
-    cout<<"TestTetVolMesh\n";
-    
     srand48(0);
     //    for(int i=0; i<1000; i++)
     Test<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double> >();
@@ -268,8 +266,6 @@ main(int argc, char **argv)
   }
 
   {
-    cout<<"TestPrismVolMesh\n";
-    
     srand48(0);
     Test<PrismVolMesh<PrismLinearLgn<Point> >, PrismLinearLgn<double> >();
     srand48(0);
@@ -279,14 +275,12 @@ main(int argc, char **argv)
   }
 
   {
-    cout<<"TestHexVolMesh\n";
-    
     srand48(0);
     Test<HexVolMesh<HexTrilinearLgn<Point> >, HexTrilinearLgn<double> >();
     srand48(0);
     Test<HexVolMesh<HexTriquadraticLgn<Point> >, HexTrilinearLgn<double> >();
-    srand48(0);
-    Test<HexVolMesh<HexTricubicHmt<Point> >, HexTrilinearLgn<double> >();  
+//     srand48(0);
+//     Test<HexVolMesh<HexTricubicHmt<Point> >, HexTrilinearLgn<double> >();  
     //    srand48(0);
     //    Test<HexVolMesh<HexTricubicHmtScaleFactors<Point> >, HexTrilinearLgn<double> >();   
     //    srand48(0);
