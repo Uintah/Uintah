@@ -43,8 +43,8 @@
 
 namespace SCIRun {
 
-BabelComponentDescription::BabelComponentDescription(BabelComponentModel* model)
-  : model(model)
+BabelComponentDescription::BabelComponentDescription(BabelComponentModel* model, const std::string& type, const std::string& library)
+  : ComponentDescription(model, type), library(library)
 {
 }
 
