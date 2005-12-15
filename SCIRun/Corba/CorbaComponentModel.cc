@@ -59,8 +59,8 @@
 #include <errno.h>
 
 #ifdef __sgi
-#define IRIX
-#pragma set woff 1375
+ #define IRIX
+ #pragma set woff 1375
 #endif
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/sax/SAXException.hpp>
@@ -69,7 +69,7 @@
 #include <xercesc/dom/DOMNamedNodeMap.hpp>
 #include <xercesc/dom/DOMNodeList.hpp>
 #ifdef __sgi
-#pragma reset woff 1375
+ #pragma reset woff 1375
 #endif
 
 #include <iostream>
@@ -78,15 +78,12 @@
 #include <SCIRun/Corba/Services.h>
 
 extern "C" {
-#include <string.h>
+ #include <string.h>
 }
 
 namespace SCIRun {
 
-
-const std::string CorbaComponentModel::DEFAULT_PATH =
-    std::string("/CCA/Components/CORBA/xml");
-
+const std::string CorbaComponentModel::DEFAULT_PATH("/CCA/Components/CORBA/xml");
 
 CorbaComponentModel::CorbaComponentModel(SCIRunFramework* framework)
   : ComponentModel("corba"), framework(framework),
@@ -137,33 +134,33 @@ void CorbaComponentModel::buildComponentList()
   
   destroyComponentList();
 
-   SSIDL::array1<std::string> sArray;
-   sci::cca::TypeMap::pointer tm;
-   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+  SSIDL::array1<std::string> sArray;
+  sci::cca::TypeMap::pointer tm;
+  sci::cca::ports::FrameworkProperties::pointer fwkProperties =
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
-        framework->getFrameworkService("cca.FrameworkProperties", "")
-    );
-    if (fwkProperties.isNull()) {
-        std::cerr << "Error: Cannot find framework properties" << std::cerr;
-        //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
-    } else {
-        tm = fwkProperties->getProperties();
-        sArray = tm->getStringArray("sidl_xml_path", sArray);
+                                                             framework->getFrameworkService("cca.FrameworkProperties", "")
+                                                             );
+  if (fwkProperties.isNull()) {
+    std::cerr << "Error: Cannot find framework properties" << std::cerr;
+    //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
+  } else {
+    tm = fwkProperties->getProperties();
+    sArray = tm->getStringArray("sidl_xml_path", sArray);
+  }
+  framework->releaseFrameworkService("cca.FrameworkProperties", "");
+
+  for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
+    Dir d(*it);
+    std::cerr << "CORBA Component Model: Looking at directory: " << *it << std::endl;
+    std::vector<std::string> files;
+    d.getFilenamesBySuffix(".xml", files);
+
+    for(std::vector<std::string>::iterator iter = files.begin();
+        iter != files.end(); iter++) {
+      std::string& file = *iter;
+      std::cerr << "CORBA Component Model: Looking at file" << file << std::endl;
+      readComponentDescription(*it+"/"+file);
     }
-    framework->releaseFrameworkService("cca.FrameworkProperties", "");
-
-    for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
-        Dir d(*it);
-        std::cerr << "CORBA Component Model: Looking at directory: " << *it << std::endl;
-        std::vector<std::string> files;
-        d.getFilenamesBySuffix(".xml", files);
-
-        for(std::vector<std::string>::iterator iter = files.begin();
-            iter != files.end(); iter++) {
-          std::string& file = *iter;
-          std::cerr << "CORBA Component Model: Looking at file" << file << std::endl;
-          readComponentDescription(*it+"/"+file);
-        }
   }
 }
 
@@ -198,7 +195,7 @@ void CorbaComponentModel::readComponentDescription(const std::string& file)
 
   // Check that this document is actually describing CORBA components
   DOMElement *metacomponentmodel = static_cast<DOMElement *>(
-    document->getElementsByTagName(to_xml_ch_ptr("metacomponentmodel"))->item(0));
+                                                             document->getElementsByTagName(to_xml_ch_ptr("metacomponentmodel"))->item(0));
 
   std::string compModelName
     = to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
@@ -207,7 +204,7 @@ void CorbaComponentModel::readComponentDescription(const std::string& file)
   if ( compModelName != std::string(this->prefixName) ) {
     return;
   }
-  
+
   // Get a list of the library nodes.  Traverse the list and read component
   // elements at each list node.
   DOMNodeList* libraries
@@ -225,15 +222,13 @@ void CorbaComponentModel::readComponentDescription(const std::string& file)
     for (unsigned int j = 0; j < comps->getLength(); j++) {
       // Read the component name
       DOMElement *component = static_cast<DOMElement *>(comps->item(j));
-      std::string
-        component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
+      std::string component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
       //std::cout << "Component name = ->" << component_name << "<-" << std::endl;
 
       // Register this component
-      CorbaComponentDescription* cd = new CorbaComponentDescription(this, component_name);
-      cd->setExecPath(library_name.c_str()); // record the executable's full path
+      CorbaComponentDescription* cd = new CorbaComponentDescription(this, component_name, library_name);
       lock_components.lock();
-      this->components[cd->type] = cd;
+      this->components[cd->getType()] = cd;
       lock_components.unlock();
     }
   }
@@ -250,27 +245,27 @@ CorbaComponentModel::createInstance(const std::string& name,
                                     const std::string& type,
                                     const sci::cca::TypeMap::pointer &tm)
 {
-    corba::Component *component;
+  corba::Component *component;
 
-    lock_components.lock();
-    componentDB_type::iterator iter = components.find(type);
-    if (iter == components.end()) { // could not find this component
-        return 0;
+  lock_components.lock();
+  componentDB_type::iterator iter = components.find(type);
+  if (iter == components.end()) { // could not find this component
+    return 0;
+  }
+  lock_components.unlock();
+
+  std::string exec_name = iter->second->getExecPath();
+
+  // If the component library does not exist
+  // do not create the component instance.
+  struct stat buf;
+  if (LSTAT(exec_name.c_str(), &buf) < 0) {
+    if (errno == ENOENT) {
+      throw InternalError("File " + exec_name + " does not exist.", __FILE__, __LINE__);
+    } else {
+      throw InternalError("LSTAT on " + exec_name + " failed.", __FILE__, __LINE__);
     }
-    lock_components.unlock();
-
-    std::string exec_name = iter->second->getExecPath();
-
-    // If the component library does not exist
-    // do not create the component instance.
-    struct stat buf;
-    if (LSTAT(exec_name.c_str(), &buf) < 0) {
-        if (errno == ENOENT) {
-            throw InternalError("File " + exec_name + " does not exist.", __FILE__, __LINE__);
-        } else {
-            throw InternalError("LSTAT on " + exec_name + " failed.", __FILE__, __LINE__);
-        }
-    }
+  }
 
   component = new corba::Component();
   corba::Services *svc=new corba::Services(component);
@@ -278,21 +273,21 @@ CorbaComponentModel::createInstance(const std::string& name,
 
   sci::cca::CorbaServices::pointer services(svc);
   services->addReference();
-  std::string svc_url=services->getURL().getString();
+  std::string svc_url = services->getURL().getString();
 
-  /*    
-  pid_t child_id=fork();
-  if(child_id==0){
-    //this is child process
-    execl(exec_name.c_str(), exec_name.c_str(), svc_url.c_str(), NULL);
-    exit(0);
-  }else{
-    std::cout<<"**** main process is still running ****"<<std::endl;
-    //this is parent process
-    //do nothing
-  }
+  /*
+        pid_t child_id=fork();
+        if(child_id==0){
+        //this is child process
+        execl(exec_name.c_str(), exec_name.c_str(), svc_url.c_str(), NULL);
+        exit(0);
+        }else{
+        std::cout<<"**** main process is still running ****"<<std::endl;
+        //this is parent process
+        //do nothing
+        }
   */
-  string cmdline=exec_name+" "+svc_url.c_str()+"&";
+  std::string cmdline = exec_name + " " + svc_url + "&";
   const int status = sci_system(cmdline.c_str());
   if (status != 0) { // failed
     throw InternalError("Corba service " + cmdline + " is not available.", __FILE__, __LINE__);
@@ -302,20 +297,20 @@ CorbaComponentModel::createInstance(const std::string& name,
 
   //TODO: do we really need a "component" here?
   CorbaComponentInstance* ci =
-      new CorbaComponentInstance(framework, name, type, tm, component);
+    new CorbaComponentInstance(framework, name, type, tm, component);
   return ci;
 }
 
 bool CorbaComponentModel::destroyInstance(ComponentInstance *ci)
 {
   //TODO: pre-deletion clearance.
-  delete ci;  
+  delete ci;
   return true;
 }
 
 std::string CorbaComponentModel::getName() const
 {
-    return "Corba";
+  return "Corba";
 }
 
 void CorbaComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)

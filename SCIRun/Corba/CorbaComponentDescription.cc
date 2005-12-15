@@ -43,28 +43,24 @@
 #include <iostream>
 
 namespace SCIRun {
-  namespace vtk {
 
-    CorbaComponentDescription::CorbaComponentDescription(CorbaComponentModel* m,
-							 const std::string& t)
-    {
-      this->model = m;
-      this->type = t;
-    }
+CorbaComponentDescription::CorbaComponentDescription(CorbaComponentModel* m, const std::string& t, const std::string& execPath)
+  : ComponentDescription(m, t), execPath(execPath)
+{
+}
 
-    CorbaComponentDescription::~CorbaComponentDescription()
-    {
-    }
+CorbaComponentDescription::~CorbaComponentDescription()
+{
+}
 
-    std::string CorbaComponentDescription::getType() const
-    {
-      return type;
-    }
+std::string CorbaComponentDescription::getType() const
+{
+  return type;
+}
 
-    const ComponentModel* CorbaComponentDescription::getModel() const
-    {
-      return model;
-    }
+const ComponentModel* CorbaComponentDescription::getModel() const
+{
+  return model;
+}
 
-  }
 }

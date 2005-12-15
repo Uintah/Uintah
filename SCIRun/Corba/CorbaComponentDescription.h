@@ -46,47 +46,40 @@
 
 namespace SCIRun
 {
-  class ComponentModel;
-  class CorbaComponentModel;
+class ComponentModel;
+class CorbaComponentModel;
 
-  /**
-   * \class CorbaComponentDescription
-   *
-   * A container for information necessary to locate and instantiate a specific
-   * Corba component type in the SCIRun framework.  This class holds the type name of
-   * the component and the CorbaComponentModel instance to which it belongs.  The
-   * name of the DLL containing the executable code for this component type is
-   * also stored in this class.
-   *
-   */
-  class CorbaComponentDescription : public ComponentDescription
-    {
-    public:
-      CorbaComponentDescription(CorbaComponentModel* model, const std::string& type);
-      virtual ~CorbaComponentDescription();
+/**
+ * \class CorbaComponentDescription
+ *
+ * A container for information necessary to locate and instantiate a specific
+ * Corba component type in the SCIRun framework.  This class holds the type name of
+ * the component and the CorbaComponentModel instance to which it belongs.  The
+ * name of the DLL containing the executable code for this component type is
+ * also stored in this class.
+ *
+ */
+class CorbaComponentDescription : public ComponentDescription {
+public:
+  CorbaComponentDescription(CorbaComponentModel* model, const std::string& type, const std::string& execPath="");
+  virtual ~CorbaComponentDescription();
 
-      /** Returns the type name (a string) described by this class. */
-      virtual std::string getType() const;
-      /** Returns a pointer to the CorbaComponentModel that holds this CorbaComponentDescription.*/
-      virtual const ComponentModel* getModel() const;
+  /** Returns the type name (a string) described by this class. */
+  virtual std::string getType() const;
 
-      std::string type;
-  
-      /** Get/Set the path of the CORBA executable.*/
-      std::string getExecPath() const{ 
-	return exec_path; 
-      }
-      void setExecPath(const std::string &path){
-	exec_path=path; 
-      }
-  
-    private:
-      CorbaComponentModel* model;
-      std::string exec_path;
-  
-      CorbaComponentDescription(const CorbaComponentDescription&);
-      CorbaComponentDescription& operator=(const CorbaComponentDescription&);
-    };
+  /** Returns a pointer to the CorbaComponentModel that holds this CorbaComponentDescription.*/
+  virtual const ComponentModel* getModel() const;
+
+  /** Get/Set the path of the CORBA executable.*/
+  std::string getExecPath() const { return execPath; }
+  void setExecPath(const std::string &path) { execPath = path; }
+
+private:
+  std::string execPath;
+
+  CorbaComponentDescription(const CorbaComponentDescription&);
+  CorbaComponentDescription& operator=(const CorbaComponentDescription&);
+};
 }
 
 #endif
