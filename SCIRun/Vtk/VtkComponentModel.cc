@@ -224,11 +224,9 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
       std::cerr << "Component name = ->" << component_name << "<-" << std::endl;
 #endif
       // Register this component
-      VtkComponentDescription* cd = new VtkComponentDescription(this, component_name);
-      cd->setLibrary(library_name.c_str()); // record the DLL name
-
+      VtkComponentDescription* cd = new VtkComponentDescription(this, component_name, library_name);
       Guard g1(&lock_components);
-      this->components[cd->type] = cd;
+      this->components[cd->getType()] = cd;
     }
   }
 }
