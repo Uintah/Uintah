@@ -38,7 +38,7 @@
  *
  *  Copyright (C) 2005 SCI Group
  */
-
+ 
 #include <Dataflow/Modules/Render/Painter.h>
 #include <sci_comp_warn_fixes.h>
 #include <tcl.h>
@@ -52,6 +52,7 @@
 #include <sci_glu.h>
 #include <sci_glx.h>
 #include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/Ports/BundlePort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/NrrdPort.h>
@@ -75,6 +76,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Thread/CleanupManager.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
@@ -88,26 +90,26 @@ namespace SCIRun {
      X - Persistent volume state when re-executing
      X - Fix Non-origin world_to_index conversion
      X - Use FreeTypeTextTexture class for text
-       - Add support for 2, 4, 5-D nrrds
+     X - Send Bundles correctly
+       - Better tool mechanism to allow for customization & event fallthrough 
+       - Add support for 2, 4, 5-D nrrds (includes time and rgba)
        - Add back in MIP mode
        - Geometry output port
        - Show other windows slice correctly
        - Automatic world space grid
        - Automatic index space grid
        - Remove TCLTask::lock and replace w/ volume lock
-       - Send Bundles correctly
        - Add tool support for ITK filters
        - View to choose tools
        - Change tools to store error codes
        - Add keybooard to tools
        - Migrate all operations to tools (next_siice, zoom, etc)
        - Faster painting, using current window buffer
-       - Support for RGB/RGBA nrrds
-       - Support for Time Axis
        - Use GPU/3DTextures for applying colormap when supported
        - Remove clever offseting for non-power-of-2 suported machines
        - Removal of for_each
        - Support applying CM2
+       - Optimize build_index_to_world_matrix out
   */
      
 Painter::RealDrawer::~RealDrawer()
@@ -274,7 +276,7 @@ Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
   semaphore_(ctx->getfullname().c_str(), 1),
   data_min_(0),
   data_max_(1.0),
-  colormap_(0)
+  colormap_(ctx->subVar("colormap"), 0)
 {
   set_nrrd(nrrd);
 }
@@ -325,6 +327,7 @@ Painter::Painter(GuiContext* ctx) :
   font_size_(ctx->subVar("font_size"),15.0),
   runner_(0),
   runner_thread_(0),
+  filter_(0),
   fps_(0.0),
   current_layout_(0),
   executing_(0)
@@ -344,7 +347,11 @@ Painter::~Painter()
     runner_thread_ = 0;
   }
 }
-
+void
+Painter::set_context(Network *net) {
+  Module::set_context(net);
+  sched->add_callback(this->static_callback, this);
+}
 
 int
 Painter::render_window(SliceWindow &window) {
@@ -353,6 +360,11 @@ Painter::render_window(SliceWindow &window) {
   window.viewport_->make_current();
   window.viewport_->clear();
   window.setup_gl_view();
+  if (window.autoview_) {
+    window.autoview_ = false;
+    autoview(window);
+    window.setup_gl_view();
+  }
   CHECK_OPENGL_ERROR();
   
   for (unsigned int s = 0; s < window.slices_.size(); ++s)
@@ -433,8 +445,14 @@ Painter::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
   c[1] = y;
   c[2] = z;
 
-  vector<int> max_slice = current_volume_->max_index();
-  Vector scale = current_volume_->scale();
+  vector<int> max_slice(3,0);
+  Vector scale(1,1,1);
+
+  if (current_volume_) {
+    scale = current_volume_->scale();
+    max_slice = current_volume_->max_index();
+  }
+
 
   glColor4dv(yellow);
   for (int i = 0; i < 2; ++i) {
@@ -817,7 +835,7 @@ Painter::NrrdSlice::bind()
 
   if (tex_dirty_) {
     texture_->set_clut_minmax(volume_->clut_min_, volume_->clut_max_);
-    ColorMapHandle cmap = painter_->get_colormap(volume_->colormap_);
+    ColorMapHandle cmap = painter_->get_colormap(volume_->colormap_.get());
     texture_->set_colormap(cmap);
   }
 
@@ -878,9 +896,10 @@ Painter::SliceWindow::render_text() {
   FreeTypeFace *font = painter_.fonts_["default"];
   if (!font) return;
   
-  FreeTypeTextTexture text("X: "+double_to_string(painter_.mouse_.position_.x())+
-                           " Y: "+double_to_string(painter_.mouse_.position_.y())+
-                           " Z: "+double_to_string(painter_.mouse_.position_.z()), font);
+  FreeTypeTextTexture 
+    text("X: "+double_to_string(painter_.mouse_.position_.x())+
+         " Y: "+double_to_string(painter_.mouse_.position_.y())+
+         " Z: "+double_to_string(painter_.mouse_.position_.z()), font);
   text.draw(0,0);
   const int y_pos = text.height()+2;
   text.set("Zoom: "+to_string(zoom_())+"%");
@@ -893,7 +912,8 @@ Painter::SliceWindow::render_text() {
     text.set("WL: " + to_string(wl) +  " -- WW: " + to_string(ww));
     text.draw(0, y_pos*2);
 
-    text.set("Min: " + to_string(vol->clut_min_) + " -- Max: " + to_string(vol->clut_max_));
+    text.set("Min: " + to_string(vol->clut_min_) + 
+             " -- Max: " + to_string(vol->clut_max_));
     text.draw(0, y_pos*3);
 
     if (this == painter_.mouse_.window_) {
@@ -904,7 +924,8 @@ Painter::SliceWindow::render_text() {
         text.set("Value: " + to_string(val));
         text.draw(0,y_pos*4);
         
-        text.set("S: "+to_string(index[0])+" C: "+to_string(index[1])+
+        text.set("S: "+to_string(index[0])+
+                 " C: "+to_string(index[1])+
                  " A: "+to_string(index[2]));
         text.draw(0, y_pos*5);
       }
@@ -972,6 +993,8 @@ int
 Painter::extract_window_slices(SliceWindow &window) {
   for (unsigned int s = window.slices_.size(); s < volumes_.size(); ++s)
     window.slices_.push_back(scinew NrrdSlice(this, volumes_[s], &window));
+  for (unsigned int s = 0; s < volumes_.size(); ++s)
+    window.slices_[s]->volume_ = volumes_[s];
   for_each(window, &Painter::set_slice_nrrd_dirty);
 
   return window.slices_.size();
@@ -1146,7 +1169,11 @@ Painter::NrrdVolume::build_index_to_world_matrix() {
   DenseMatrix matrix(dim, dim);
   matrix.zero();
   for (int i = 0; i < dim-1; ++i)
-    matrix.put(i,i,nrrd->axis[i].spacing);
+    if (airExists(nrrd->axis[i].spacing))
+      matrix.put(i,i,nrrd->axis[i].spacing);
+    else 
+      matrix.put(i,i,((nrrd->axis[i].max-nrrd->axis[i].min+1.0)/
+                      nrrd->axis[i].size));
   matrix.put(dim-1, dim-1, 1.0);
   
   for (int i = 0; i < 3; ++i)
@@ -1163,25 +1190,71 @@ Painter::NrrdVolume::index_valid(const vector<int> &index) {
   return true;
 }
   
+void
+Painter::send_data()
+{
 
+  BundleHandle bundle = new Bundle();
+  for (unsigned int v = 0; v < volumes_.size(); ++v) {
+    string name = volumes_[v]->name_.get();
+    bundle->setNrrd(name, volumes_[v]->nrrd_);
+  }
+  BundleOPort *oport = (BundleOPort *)get_oport("Paint Data");
+  ASSERT(oport);
+  oport->send(bundle);  
+}
+
+
+
+bool
+Painter::receive_filter_data()
+{   
+  if (!filter_) 
+    return false;
+
+  BundleIPort *filter_port = (BundleIPort *)get_iport("Filter Data");
+  ASSERT(filter_port);
+  BundleHandle bundle = 0;
+  filter_port->get(bundle);
+  if (bundle.get_rep()) 
+    bundles_.push_back(bundle);
+  
+  return true;
+}
+
+bool
+Painter::static_callback(void *this_ptr) {
+  return ((Painter *)this_ptr)->callback();
+}
+
+bool
+Painter::callback() {
+  if (filter_) 
+    cerr << "filter = false\n";
+  filter_ = 0;
+  return true;
+}
   
 void
 Painter::execute()
 {
   update_state(Module::JustStarted);
-
   update_state(Module::NeedData);
 
+  BundleHandle bundle = 0;
   bundles_.clear();
+
+  receive_filter_data();
+
   port_range_type prange = get_iports("Paint Data");
   port_map_type::iterator pi = prange.first;
   while (pi != prange.second) {
     BundleIPort *iport = (BundleIPort *)get_iport(pi++->second);
-    BundleHandle bundle = 0;
+    
     if (iport && iport->get(bundle) && bundle.get_rep())
       bundles_.push_back(bundle);
   }
-
+    
   vector<NrrdDataHandle> nrrds;
   vector<string> nrrd_names;
   colormaps_.clear();
@@ -1213,16 +1286,8 @@ Painter::execute()
     }
   }
   
-  if (!nrrds.size()) {
-    error ("Unable to get an input nrrd.");
-    return;
-  }    
-  
   update_state(Module::Executing);
   TCLTask::lock();
-  
-  while(volumes_.size() < nrrds.size())
-    volumes_.push_back(0);
   
   for (unsigned int n = 0; n < nrrds.size(); ++n) {
     if (volume_map_.find(nrrd_names[n]) == volume_map_.end()) 
@@ -1232,14 +1297,24 @@ Painter::execute()
       } else {
         volume_map_[nrrd_names[n]]->set_nrrd(nrrds[n]); 
       }
-    volumes_[n] = volume_map_[nrrd_names[n]];
   }
-  current_volume_ = volumes_.back();      
+
+  volumes_.clear();
+  NrrdVolumeMap::iterator iter=volume_map_.begin(), last=volume_map_.end();
+  while (iter != last) {
+    volumes_.push_back(iter->second);
+    iter++;
+  }
+
+  if (volumes_.size()) 
+    current_volume_ = volumes_.back();      
 
   for_each(&Painter::extract_window_slices);
-  for_each(&Painter::autoview);
+  for_each(&Painter::mark_autoview);
 
   TCLTask::unlock();
+
+  send_data();
 
   update_state(Module::Completed);
 }
@@ -1397,7 +1472,6 @@ void
 Painter::handle_gui_mouse_button_release(GuiArgs &args) {
   update_mouse_state(args);
 
-
   if (tool_) {
     string *err = tool_->mouse_button_release(mouse_);
     if (err && *err == "Done") {
@@ -1405,14 +1479,8 @@ Painter::handle_gui_mouse_button_release(GuiArgs &args) {
       delete tool_;
       tool_ = 0;
     }
-
-//     if (tool_ && dynamic_cast<CropTool *>(tool_) == 0) {
-//       delete tool_;
-//       tool_ = 0;
-//     }
   }
 }
-
   
   
 void
@@ -1436,15 +1504,15 @@ Painter::handle_gui_keypress(GuiArgs &args) {
     else if (args[4] == "greater" || args[4] == "period") window.next_slice();
     else if (args[4] == "bracketleft") {
       if (current_volume_) {
-        current_volume_->colormap_ = Max(0, current_volume_->colormap_-1);
+        current_volume_->colormap_.set(Max(0, current_volume_->colormap_.get()-1));
         for_each(&Painter::rebind_slice);
         for_each(&Painter::redraw_window);
       }
     }
     else if (args[4] == "bracketright") {
       if (current_volume_) {
-        current_volume_->colormap_ = Min(int(colormap_names_.size()), 
-                                         current_volume_->colormap_+1);
+        current_volume_->colormap_.set(Min(int(colormap_names_.size()), 
+                                           current_volume_->colormap_.get()+1));
         for_each(&Painter::rebind_slice);
         for_each(&Painter::redraw_window);
       }
@@ -1460,6 +1528,19 @@ Painter::handle_gui_keypress(GuiArgs &args) {
       if (!tool_) 
         tool_ = scinew PixelPaintTool(this);
     }
+    else if (args[4] == "h") { 
+      if (!tool_) 
+        tool_ = scinew ITKThresholdTool(this, false);
+    }
+    else if (args[4] == "i") { 
+      if (!tool_) 
+        tool_ = scinew ITKThresholdTool(this, true);
+    }
+    else if (args[4] == "j") { 
+      if (!tool_) 
+        tool_ = scinew StatisticsTool(this);
+    }
+
     else if (args[4] == "p") { 
       if (!current_volume_) continue;
       current_volume_->opacity_ *= 1.1;
@@ -1683,6 +1764,13 @@ Painter::set_font_sizes(double size) {
 
 
 int
+Painter::mark_autoview(SliceWindow &window) {
+  window.autoview_ = true;
+  window.redraw_ = true;
+}
+  
+
+int
 Painter::autoview(SliceWindow &window) {
   if (!current_volume_) return 0;
   int wid = window.viewport_->width();
@@ -1723,23 +1811,71 @@ Painter::autoview(SliceWindow &window) {
   if (window.zoom_ < 1.0) window.zoom_ = 100.0;
   window.center_(xax) = current_volume_->center()(xax);
   window.center_(yax) = current_volume_->center()(yax);
-
   redraw_window(window);
   return 1;
 }
    
 
 int
+nrrd_type_size(Nrrd *nrrd)
+{
+  int val = 1;
+  switch (nrrd->type) {
+  case nrrdTypeChar: val = sizeof(char); break;
+  case nrrdTypeUChar: val = sizeof(unsigned char); break;
+  case nrrdTypeShort: val = sizeof(short); break;
+  case nrrdTypeUShort: val = sizeof(unsigned short); break;
+  case nrrdTypeInt: val = sizeof(int); break;
+  case nrrdTypeUInt: val = sizeof(unsigned int); break;
+  case nrrdTypeLLong: val = sizeof(signed long long); break;
+  case nrrdTypeULLong: val = sizeof(unsigned long long); break;
+  case nrrdTypeFloat: val = sizeof(float); break;
+  case nrrdTypeDouble: val = sizeof(double); break;
+  default: throw "Unsupported data type: "+to_string(nrrd->type);
+  }
+  return val;
+}
+
+
+int
 Painter::create_volume(NrrdVolumes *copies) {
   if (!current_volume_) return -1;
   NrrdDataHandle nrrd = scinew NrrdData();
   nrrdCopy(nrrd->nrrd, current_volume_->nrrd_->nrrd);
+  vector<int> max_index = current_volume_->max_index();
+  int size = max_index[0]+1;
+  for (unsigned int a = 1; a < max_index.size(); ++a)
+    size *= max_index[a]+1;
+
+  memset(nrrd->nrrd->data, 0, size*nrrd_type_size(nrrd->nrrd));
+  string name = current_volume_->name_.get()+"-Copy";
   NrrdVolume *volume = 
-    scinew NrrdVolume(ctx->subVar("nrrd"+to_string(volumes_.size()), false),
-                      "blah", nrrd);
+    scinew NrrdVolume(ctx->subVar(name, false), name, nrrd);
   volumes_.push_back(volume);
   current_volume_ = volume;
   return volumes_.size()-1;
+}
+
+
+Painter::NrrdVolume *
+Painter::create_volume(string name, int nrrdType) {
+  if (!current_volume_) return 0;
+  NrrdDataHandle nrrd = scinew NrrdData();
+  nrrdCopy(nrrd->nrrd, current_volume_->nrrd_->nrrd);
+  vector<int> max_index = current_volume_->max_index();
+  int size = max_index[0]+1;
+  for (unsigned int a = 1; a < max_index.size(); ++a)
+    size *= max_index[a]+1;
+
+
+  memset(nrrd->nrrd->data, 0, size*nrrd_type_size(nrrd->nrrd));
+  NrrdVolume *volume = 
+    scinew NrrdVolume(ctx->subVar(name, false), name, nrrd);
+  volumes_.push_back(volume);
+  //volume_map_[name] = volumes_.back();
+  current_volume_ = volume;
+  for_each(&Painter::extract_window_slices);
+  return volume;
 }
 
     
