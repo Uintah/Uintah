@@ -56,7 +56,13 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
     # when a new graph is created then this number is incremented
     # Thus repeatidly punching graph will continue to make new ones
     # without replacing old ones.
-    protected graph_id 0
+    protected display_data_id 0
+    # This array will be indexed by the name of each popup menu.  Associated
+    # with each index will be a length 2 list, the first element being the
+    # total number of selectable items in the menu, the second item is the 
+    # current number of selected items.  This array will be used to determine
+    # if the Material button should be highlighted or not.
+    protected num_mat_sel
 
 ###############################################
 
@@ -544,8 +550,8 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	    }
 	}
     }
-    method graphbutton {part_id name var_index mat_list type} {
-	puts "Starting graph button with materials: $mat_list"
+    method extract {displaymethod part_id name var_index mat_list type} {
+##	puts "Starting graph button with materials: $mat_list"
 	set val_list {}
 	set num_vals 0
 	set var_root $this-matvar_$var_index
@@ -590,7 +596,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 #	puts "num_vals  = $num_vals"
 #	puts "val_list  = $val_list"
 	if {[llength $val_list] > 0} {
-	    set call "$this-c graph $name $part_id $num_vals"
+	    set call "$this-c extract_data $displaymethod $name $part_id $num_vals"
 	    for {set i 0} { $i < [llength $val_list] } { incr i } {
 		set insert [lindex $val_list $i]
 		append call " $insert"
@@ -622,19 +628,31 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	    label $fname.label -text "$name"
 	    pack $fname.label -side left -padx 2 -pady 2
 	    
-	    button $fname.button -text "Graph" -command "$this graphbutton $part_id $name $varid { $mat_list } $type"
-	    pack $fname.button -side right -padx 2 -pady 2
+	button $fname.export -text "Export" \
+	    -command "$this extract export $part_id $name $varid {$mat_list} $type"
+        Tooltip $fname.export "Save selected data as a gnuplot useable text file" 
+	pack $fname.export -side right -padx 2 -pady 2
+
+	button $fname.table -text "Table" \
+		-command "$this extract table $part_id $name $varid {$mat_list} $type"
+        Tooltip $fname.table "Show selected data in a table"
+	pack $fname.table -side right -padx 2 -pady 2
+	    button $fname.graph -text "Graph" \
+                -command "$this extract graph $part_id $name $varid {$mat_list} $type"
+            Tooltip $fname.graph "Graph selected data"
+            
+	    pack $fname.graph -side right -padx 2 -pady 2
 
 	    make_mat_menu $fname $part_id $mat_list $varid $type
 	}
     }
     method graph_data { id var args } {
-	set w .graph[modname]$graph_id
+	set w .graph[modname]$display_data_id
         if {[winfo exists $w]} { 
             destroy $w 
 	}
 	toplevel $w
-	incr graph_id
+	incr display_data_id
 #	wm minsize $w 300 300
 
 #	puts "id = $id"
@@ -708,7 +726,144 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	pack $w.graph
     }
 
-	    	    
+    method table_data { id var args } {
+	set w .table[modname]$display_data_id
+        if {[winfo exists $w]} { 
+            destroy $w 
+	}
+	toplevel $w
+	incr display_data_id
+
+	button $w.close -text "Close" -command "destroy $w"
+	pack $w.close -side bottom -anchor s -fill x
+	
+	#seperate the materials from the types
+	set args_mat {}
+	set args_type {}
+	for {set i 0} { $i < [llength $args] } {incr i} {
+	    lappend args_mat [lindex $args $i]
+	    incr i
+	    lappend args_type [lindex $args $i]
+	}
+
+	# create the scrolled frame
+	iwidgets::scrolledframe $w.sf -width 300 -height 300 \
+		-labeltext "Data for $var, particle id $id " \
+		-vscrollmode dynamic -hscrollmode dynamic \
+		-sbwidth 10
+
+	# get the childsite to add table stuff to
+	set cs [$w.sf childsite]
+	blt::table $cs
+
+	# set up columns for time idicies
+	blt::table $cs [label $cs.time_list_title -text "TimeStep\nIndex"] \
+		0,0
+	blt::table $cs [label $cs.time_list_title2 -text "TimeStep\nNumber"] \
+		0,1
+	set time_list_length [llength $time_list]
+	for { set i 0 } { $i < $time_list_length } {incr i} {
+	    # the array index
+	    blt::table $cs [label $cs.time_index$i -text $i] [expr $i+1],0 
+	    # the actual time step
+	    blt::table $cs [label $cs.time_value$i -text [lindex $time_list $i]] [expr $i+1],1
+	}
+	
+	# now add all the variables
+	set vvlist_length [llength $var_val_list]
+	for { set i 0 } { $i < $vvlist_length } {incr i} {
+	    # extract the values for this variable
+	    set mat_index  [lindex $args_mat $i]
+	    set mat_type [lindex $args_type $i]
+	    set mat_vals [lindex $var_val_list $i]
+
+	    set line_name "Material_$mat_index"
+	    if {$mat_type != "invalid"} {
+		append line_name "_$mat_type"
+	    }
+	    
+	    set column [expr $i + 2]
+	    blt::table $cs [label $cs.top$line_name -text $line_name] 0,$column
+	    # a for loop for each time step
+	    set mat_vals_length [llength $mat_vals]
+	    for { set t 0 } { $t < $mat_vals_length } {incr t} {
+		set box_name "val$line_name"
+		append box_name "_$t"
+		blt::table $cs [label $cs.$box_name -text [lindex $mat_vals $t]] [expr $t+1],$column
+	    }
+	}
+
+	pack $w.sf -fill both -expand yes -padx 10 -pady 10
+    }	    	    
+    method export_data { id var args } {
+	puts "Exporting....."
+
+	# Seperate the materials from the types
+        # Do this first since this information is necessary to 
+        # generate a default file name.
+	set args_mat {}
+	set args_type {}
+	for {set i 0} { $i < [llength $args] } {incr i} {
+	    lappend args_mat [lindex $args $i]
+	    incr i
+	    lappend args_type [lindex $args $i]
+	}
+	set time_list_length [llength $time_list]
+
+	# Construct a default filename based on the selected data
+ 	set default_name "$var-$id"
+	set vvlist_length [llength $var_val_list]
+	for { set i 0 } { $i < $vvlist_length } { incr i } {
+            # Extract values for this variable as we construct the filename.
+            # These values will be used later for output to the file.
+	    set mat_index [lindex $args_mat $i]
+	    set mat_type [lindex $args_type $i]
+            set mat_vals [lindex $var_val_list $i]
+
+	    append default_name "-M$mat_index"
+	    if { $mat_type != "invalid" } {
+		append default_name $mat_type
+	    }
+	}
+
+	set export_name [tk_getSaveFile -initialfile $default_name \
+                            -defaultextension ".txt"]
+        # Get the actual file name w/o the path info for storing in the file
+        set first [expr {[string last "/" $export_name] + 1}]
+        set last [string length $export_name]
+        set export_file_name [string range $export_name $first $last]
+
+	if [catch { open $export_name w } export_file] {
+	    puts stderr "Cannot open file for export"
+	} else {  
+            # Print out a header line
+            puts $export_file "\# $export_file_name"
+            puts -nonewline $export_file "\# Index\tTime"
+            for { set i 0 } { $i < $vvlist_length } { incr i } {
+                set mat_index [lindex $args_mat $i]
+                set mat_type [lindex $args_type $i]
+                puts -nonewline $export_file "\tMaterial_$mat_index"
+                if { $mat_type != "invalid" } {
+                    puts -nonewline $export_file "_$mat_type"
+                }
+            }
+            puts $export_file ""
+
+            # i represents the current timestep, or the rows of text
+      	    for { set i 0 } { $i < $time_list_length } { incr i } {
+		puts -nonewline $export_file "$i\t[lindex $time_list $i]"
+                # j represents the current material, or column
+                for { set j 0 } { $j < $vvlist_length } { incr j } {
+                    puts -nonewline $export_file \
+                        "\t[lindex [lindex $var_val_list $j] $i]"
+                }
+		# Final newline
+		puts $export_file "" 	       
+	    }
+	    close $export_file
+            puts stderr "File saved successfully"
+	}	
+    }
 }
 
 
