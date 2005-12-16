@@ -396,7 +396,6 @@ void ParticleVis::execute()
 	  }
 	  double value = (*s_it)[*iter];
 	  if( sp != 0) {
-	    sp->setId((long long)((*id_it)[*iter]));
 	    obj->add( scinew GeomMaterial( sp,(cmap->lookup(value).get_rep())));
 	  }
 	  if( drawVectors.get() == 1 && hasVectors){
@@ -476,10 +475,13 @@ void ParticleVis::execute()
 void ParticleVis::geom_pick(GeomPickHandle pick,
 			    void* userdata, GeomHandle picked_obj)
 {
-  cerr << "Caught stray pick event in ParticleVis!\n";
-  cerr << "this = "<< this <<", pick = "<<pick.get_rep()<<endl;
-  cerr << "User data = "<<userdata<<endl;
-  //  cerr << "sphere index = "<<index<<endl<<endl;
+  ostringstream str;
+#if DEBUG
+  str << "Caught pick event in ParticleVis!\n";
+  str << "this = " << this << ", pick = " << pick << "\n";
+  str << "User data = " << userdata;
+  remark( str.str() );
+#endif
   
   // This variable should not need to be initialized, because if the
   // getID fails then we don't use the value.  If it succeeds then we
