@@ -402,7 +402,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
     }
     method setTime_list { args } {
 	set time_list $args
-	puts "time_list is now $time_list"
+#	puts "time_list is now $time_list"
     }
     method reset_var_val {} {
 	set var_val_list {}
@@ -410,12 +410,12 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
     method set_var_val { args } {
 	set val_list $args
 	lappend var_val_list $val_list
-	puts "Args were $args"
-	puts "New var_val_list: $var_val_list"
+#	puts "Args were $args"
+#	puts "New var_val_list: $var_val_list"
     }
     method setGraph_names { args } {
 	set graph_data_names $args
-	puts "graph_data_names is now $graph_data_names"
+#	puts "graph_data_names is now $graph_data_names"
     }
     method get_color { index } {
 	set color_scheme {
@@ -601,7 +601,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 		set insert [lindex $val_list $i]
 		append call " $insert"
 	    }
-	    puts "call =  $call"
+# 	    puts "call =  $call"
 	    eval $call
 	}
     }
@@ -665,8 +665,8 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	blt::graph $w.graph -title "Plot of $var with particle $id" \
 		-height 250 -plotbackground gray99
 
-	set max 1e-10
-	set min 1e+10
+	set max 1e-20
+	set min 1e+20
 
 	#seperate the materials from the types
 	set args_mat {}
@@ -691,11 +691,11 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	    }
 	}
 	
-	if { ($max - $min) > 1000 || ($max - $min) < 1e-3 } {
-	    $w.graph yaxis configure -logscale true -title $var
-	} else {
+# 	if { ($max - $min) > 1000 || ($max - $min) < 1e-3 } {
+# 	    $w.graph yaxis configure -logscale true -title $var
+# 	} else {
 	    $w.graph yaxis configure -title $var
-	}
+# 	}
 	
 	$w.graph xaxis configure -title "Timestep" -loose true
 	
