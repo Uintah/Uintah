@@ -178,8 +178,9 @@ private:
   void cache_value(string where, vector<Matrix3>& values);
   map< string, string > material_data_list;
 
-  void graph(string varname, vector<string> mat_list,
-	     vector<string> type_list, string particleID);
+  void extract_data(string display_mode, string varname, 
+                    vector<string> mat_list,
+                    vector<string> type_list, string particleID);
   //  void graph(string, string);
 
  

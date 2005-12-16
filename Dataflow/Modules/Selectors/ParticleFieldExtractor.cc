@@ -769,24 +769,26 @@ void ParticleFieldExtractor::tcl_command(GuiArgs& args, void* userdata) {
     args.error("Streamline needs a minor command");
     return;
   }
-  if(args[1] == "graph") {
-    string varname(args[2]);
-    string particleID(args[3]);
+  if(args[1] == "extract_data") {
+    int i = 2;
+    string displaymode(args[i++]);
+    string varname(args[i++]);
+    string particleID(args[i++]);
     int num_mat;
-    string_to_int(args[4], num_mat);
-    cerr << "Extracting " << num_mat << " materals:";
+    string_to_int(args[i++], num_mat);
+//     cerr << "Extracting " << num_mat << " materals:";
     vector< string > mat_list;
     vector< string > type_list;
-    for (int i = 5; i < 5+(num_mat*2); i++) {
-      string mat(args[i]);
+    for (int j = i; j < i+(num_mat*2); j++) {
+      string mat(args[j]);
       mat_list.push_back(mat);
-      i++;
-      string type(args[i]);
+      j++;
+      string type(args[j]);
       type_list.push_back(type);
     }
-    cerr << endl;
-    cerr << "Graphing " << varname << " with materials: " << vector_to_string(mat_list) << endl;
-    graph(varname,mat_list,type_list,particleID);
+//     cerr << endl;
+//     cerr << "Graphing " << varname << " with materials: " << vector_to_string(mat_list) << endl;
+    extract_data(displaymode,varname,mat_list,type_list,particleID);
   }
   else {
     Module::tcl_command(args, userdata);
@@ -794,8 +796,11 @@ void ParticleFieldExtractor::tcl_command(GuiArgs& args, void* userdata) {
 
 }
 
-void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
-				   vector<string> type_list, string particleID)
+void ParticleFieldExtractor::extract_data(string display_mode,
+                                          string varname, 
+                                          vector<string> mat_list,
+                                          vector<string> type_list, 
+                                          string particleID)
 {
 
   /* void DataArchive::query(std::vector<T>& values, const std::string& name,
@@ -825,9 +830,9 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
   string name_list("");
   long64 partID = atoll(particleID.c_str());
   cout << "partID = "<<partID<<endl;
-  cerr << "mat_list.size() = "<<mat_list.size()<<endl;
+//   cerr << "mat_list.size() = "<<mat_list.size()<<endl;
   for(int m = 0; m < (int)mat_list.size(); m++) {
-    cerr << "mat_list["<<m<<"] = "<<mat_list[m]<<endl;
+//     cerr << "mat_list["<<m<<"] = "<<mat_list[m]<<endl;
   }
   const TypeDescription* subtype = td->getSubType();
   switch ( subtype->getType() ) {
@@ -841,24 +846,24 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	// query the value and then cache it
 	vector< double > values;
 	int matl = atoi(mat_list[i].c_str());
-	cerr << "querying data archive for "<<varname<<" with matl="<<matl<<", particleID="<<partID<<", from time "<<times[0]<<" to time "<<times[times.size()-1]<<endl;
+//         cerr << "querying data archive for "<<varname<<" with matl="<<matl<<", particleID="<<partID<<", from time "<<times[0]<<" to time "<<times[times.size()-1]<<endl;
 	try {
 	  archive->query(values, varname, matl, partID, times[0], times[times.size()-1]);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  error("Particle Variable "+particleID+" not found.\n");
 	  return;
 	}
-	cerr << "Received data.  Size of data = " << values.size() << endl;
+// 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	cache_value(particleID+" "+varname+" "+mat_list[i],values,data);
       } else {
-	cerr << "Cache hit\n";
+// 	cerr << "Cache hit\n";
       }
       gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
   case TypeDescription::float_type:
-    cerr << "Graphing a variable of type float\n";
+//     cerr << "Graphing a variable of type float\n";
     // loop over all the materials in the mat_list
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
@@ -867,24 +872,24 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	// query the value and then cache it
 	vector< float > values;
 	int matl = atoi(mat_list[i].c_str());
-	cerr << "querying data archive for "<<varname<<" with matl="<<matl<<", particleID="<<partID<<", from time "<<times[0]<<" to time "<<times[times.size()-1]<<endl;
+// 	cerr << "querying data archive for "<<varname<<" with matl="<<matl<<", particleID="<<partID<<", from time "<<times[0]<<" to time "<<times[times.size()-1]<<endl;
 	try {
 	  archive->query(values, varname, matl, partID, times[0], times[times.size()-1]);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  error("Particle Variable "+particleID+" not found.\n");
 	  return;
 	}
-	cerr << "Received data.  Size of data = " << values.size() << endl;
+// 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	cache_value(particleID+" "+varname+" "+mat_list[i],values,data);
       } else {
-	cerr << "Cache hit\n";
+// 	cerr << "Cache hit\n";
       }
       gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
   case TypeDescription::int_type:
-    cerr << "Graphing a variable of type int\n";
+//     cerr << "Graphing a variable of type int\n";
     // loop over all the materials in the mat_list
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
@@ -899,17 +904,17 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	  error("Particle Variable "+particleID+" not found.\n");
 	  return;
 	}
-	cerr << "Received data.  Size of data = " << values.size() << endl;
+// 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	cache_value(particleID+" "+varname+" "+mat_list[i],values,data);
       } else {
-	cerr << "Cache hit\n";
+// 	cerr << "Cache hit\n";
       }
       gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
   case TypeDescription::Vector:
-    cerr << "Graphing a variable of type Vector\n";
+//     cerr << "Graphing a variable of type Vector\n";
     // loop over all the materials in the mat_list
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
@@ -924,18 +929,18 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	  error("Particle Variable "+particleID+" not found.\n");
 	  return;
 	}
-	cerr << "Received data.  Size of data = " << values.size() << endl;
+//  	cerr << "Received data.  Size of data = " << values.size() << endl;
 	data = vector_to_string(values,type_list[i]);
 	cache_value(particleID+" "+varname+" "+mat_list[i],values);
       } else {
-	cerr << "Cache hit\n";
+// 	cerr << "Cache hit\n";
       }
       gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";      
     }
     break;
   case TypeDescription::Matrix3:
-    cerr << "Graphing a variable of type Matrix3\n";
+//     cerr << "Graphing a variable of type Matrix3\n";
     // loop over all the materials in the mat_list
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
@@ -950,22 +955,24 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	  error("Particle Variable "+particleID+" not found.\n");
 	  return;
 	}
-	cerr << "Received data.  Size of data = " << values.size() << endl;
+// 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	data = vector_to_string(values,type_list[i]);
 	cache_value(particleID+" "+varname+" "+mat_list[i],values);
       } else {
-	cerr << "Cache hit\n";
+// 	cerr << "Cache hit\n";
       }
       gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";      
     }
     break;
   default:
-    cerr<<"Unknown var type\n";
+    error("Unknown var type");
+    return;
   }// else { Tensor,Other}
-  cerr << "callig graph_data with \"particleID="<<particleID<<" varname="<<varname<<" name_list="<<name_list<<endl;
-  gui->execute(id+" graph_data "+particleID.c_str()+" "+varname.c_str()+" "+
-	       name_list.c_str());
+  //cerr << "callig graph_data with \"particleID="<<particleID<<" varname="<<varname<<" name_list="<<name_list<<endl;
+  gui->execute(id+" "+display_mode.c_str()+"_data "+particleID.c_str()+" "
+               +varname.c_str()+" "
+	       +name_list.c_str());
 
 }
 
