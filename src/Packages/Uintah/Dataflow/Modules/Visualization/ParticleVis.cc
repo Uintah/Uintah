@@ -489,7 +489,7 @@ void ParticleVis::geom_pick(GeomPickHandle pick,
   
   long long id;
   if ( picked_obj->getId(id)) {
-    cerr<<"Id = "<< id <<endl;
+//     cerr<<"Id = "<< id <<endl;
     // Check to make sure that the ID is not bogus
     if( id != PARTICLE_FIELD_EXTRACTOR_BOGUS_PART_ID ) {
       // Check to see if we have a call back class
