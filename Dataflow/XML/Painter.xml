@@ -50,6 +50,15 @@
     <inputs lastportdynamic="yes">
       <!-- one of (device port file) -->
       <port>
+	<name>Filter Data</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::Bundle</datatype>
+      </port>
+
+      <port>
 	<name>Paint Data</name>
 	<description>
 	  <p>
