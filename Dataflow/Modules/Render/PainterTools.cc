@@ -871,8 +871,12 @@ Painter::PixelPaintTool::mouse_button_press(MouseState &mouse)
 string *
 Painter::PixelPaintTool::mouse_button_release(MouseState &mouse)
 {
-  if (mouse.state_ & MouseState::BUTTON_2_E)
+  if (mouse.state_ & MouseState::BUTTON_2_E) {
+    painter_->filter_ = 20;
+    painter_->send_data();
+    painter_->want_to_execute();
     return new string ("Done");
+  }
   return 0;
 }
 
@@ -901,6 +905,163 @@ Painter::PixelPaintTool::mouse_motion(MouseState &mouse)
   return 0;
 }
 
+
+
+Painter::ITKThresholdTool::ITKThresholdTool(Painter *painter, bool test) :
+  PainterTool(painter, "ITK Threshold"),
+  volume_(0),
+  value_(1.0)
+{
+  if (!painter->current_volume_) 
+    throw "No current volume";
+  volume_ = painter_->create_volume("ITK Threshold Seed"+(test?string(" TEST"):string("")),0);
+}
+
+
+Painter::ITKThresholdTool::~ITKThresholdTool()
+{
+}
+
+string *
+Painter::ITKThresholdTool::mouse_button_press(MouseState &mouse)
+{
+  return mouse_motion(mouse);
+}
+
+string *
+Painter::ITKThresholdTool::mouse_button_release(MouseState &mouse)
+{
+  if (mouse.state_ & MouseState::BUTTON_2_E) {
+    painter_->filter_ = 1;
+    painter_->send_data();
+    painter_->want_to_execute();
+    return new string ("Done");
+  }
+  return 0;
+}
+
+string *
+Painter::ITKThresholdTool::mouse_motion(MouseState &mouse)
+{
+  if (mouse.state_ & MouseState::BUTTON_1_E) {
+    vector<int> index = 
+      volume_->world_to_index(mouse.position_);
+    if (!volume_->index_valid(index)) return 0;
+    volume_->set_value(index, value_);
+    painter_->for_each(&Painter::rebind_slice);
+    painter_->redraw_all();
+  }
+
+  if (mouse.state_ & MouseState::BUTTON_3_E) {
+    vector<int> index = 
+      painter_->current_volume_->world_to_index(mouse.position_);
+    if (!painter_->current_volume_->index_valid(index)) return 0;
+    painter_->current_volume_->get_value(index, value_);
+  }
+
+  return 0;
+}
+
+Painter::StatisticsTool::StatisticsTool(Painter *painter) :
+  PainterTool(painter, "Statistics"),
+  standard_deviation_(0.0),
+  mean_(0.0),
+  values_()
+{
+}
+
+
+Painter::StatisticsTool::~StatisticsTool()
+{
+}
+
+// string *
+// Painter::StatisticsTool::mouse_button_press(MouseState &mouse)
+// {
+//   return mouse_motion(mouse);
+// }
+
+string *
+Painter::StatisticsTool::mouse_button_release(MouseState &mouse)
+{
+  NrrdVolume *vol = painter_->current_volume_;
+  if (vol && mouse.state_ & MouseState::BUTTON_1_E) {
+    vol->clut_min_ = mean_ - standard_deviation_;
+    vol->clut_max_ = mean_ + standard_deviation_;
+    painter_->for_each(&Painter::rebind_slice);
+    painter_->redraw_all();
+
+  } else if (vol && mouse.state_ & MouseState::BUTTON_2_E) {
+    vol->clut_min_ = vol->data_min_;
+    vol->clut_max_ = vol->data_max_;
+    painter_->for_each(&Painter::rebind_slice);
+    painter_->redraw_all();
+
+  } 
+    
+  if (mouse.state_ & MouseState::BUTTON_3_E)
+    return new string ("Done");
+    
+  return 0;
+}
+
+string *
+Painter::StatisticsTool::mouse_motion(MouseState &mouse)
+{
+  NrrdVolume *vol = painter_->current_volume_;
+  if (!vol) return 0;
+  if (mouse.state_ & MouseState::BUTTON_1_E) {
+    vector<int> index = vol->world_to_index(mouse.position_);
+    if (!vol->index_valid(index)) return 0;
+    double value;
+    vol->get_value(index, value);
+    values_.push_back(value);
+    recompute();
+    vol->clut_min_ = mean_ - standard_deviation_;
+    vol->clut_max_ = mean_ + standard_deviation_;
+    painter_->for_each(&Painter::rebind_slice);
+    painter_->redraw_all();
+
+  } else if (mouse.state_ & MouseState::BUTTON_2_E) {
+    values_.clear();
+    recompute();
+  }
+  return 0;
+}
+
+void
+Painter::StatisticsTool::recompute() {
+  mean_ = 0.0;
+  for (unsigned int n = 0; n < values_.size(); ++n)
+    mean_ += values_[n];
+  mean_ /= values_.size();
+  double variance = 0.0;
+  for (unsigned int n = 0; n < values_.size(); ++n)
+    variance += (values_[n]-mean_)*(values_[n]-mean_);
+  variance /= values_.size();
+  standard_deviation_ = sqrt(variance);
+}
+
+string *
+Painter::StatisticsTool::draw(SliceWindow &window)
+{
+  if (&window != painter_->mouse_.window_) return 0;
+  string std = "Standard Deviation: "+to_string(standard_deviation_);
+  string mean = "Mean: "+to_string(mean_);
+  FreeTypeTextTexture text(mean, painter_->fonts_["default"]);
+  text.draw(painter_->mouse_.x_, painter_->mouse_.y_, FreeTypeTextTexture::nw);
+  text.set(std);
+  text.draw(painter_->mouse_.x_, painter_->mouse_.y_+text.height()+2, 
+            FreeTypeTextTexture::nw);
+                      
+  return 0;
+}
+
+// string *
+// Painter::StatisticsTool::draw_mouse(MouseState &mouse)
+// {
+//   return 0;
+// }
 
 
 /*

@@ -268,6 +268,35 @@ class Painter : public Module
   private:
     double              value_;
   };
+
+  class NrrdVolume;
+  class ITKThresholdTool : public PainterTool {
+  public:
+    ITKThresholdTool(Painter *painter, bool test);
+    ~ITKThresholdTool();
+    string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
+    string *            mouse_motion(MouseState &);
+  private:
+    NrrdVolume *        volume_;
+    double              value_;
+  };
+
+  class NrrdVolume;
+  class StatisticsTool : public PainterTool {
+  public:
+    StatisticsTool(Painter *painter);
+    ~StatisticsTool();
+    //    string *            mouse_button_press(MouseState &);
+    string *            mouse_button_release(MouseState &);
+    string *            mouse_motion(MouseState &);
+    string *            draw(SliceWindow &window);
+  private:
+    void                recompute();
+    double              standard_deviation_;
+    double              mean_;
+    vector<double>      values_;
+  };
     
 
 
@@ -316,7 +345,7 @@ class Painter : public Module
     Semaphore           semaphore_;
     float               data_min_;
     float               data_max_;
-    int                 colormap_;
+    GuiInt              colormap_;
   };
 
   struct SliceWindow;
@@ -382,6 +411,7 @@ class Painter : public Module
     UIint		slab_max_;
       
     bool		redraw_;
+    bool                autoview_;
     UIint		mode_;
     UIint		show_guidelines_;
     int			cursor_pixmap_;
@@ -449,6 +479,7 @@ class Painter : public Module
   
   RealDrawer *		runner_;
   Thread *		runner_thread_;
+  int                   filter_;
 
   // Methods for drawing to the GL window
   void			redraw_all();
@@ -493,6 +524,7 @@ class Painter : public Module
   int			render_window(SliceWindow &);
   int			swap_window(SliceWindow &);
   int			autoview(SliceWindow &);
+  int			mark_autoview(SliceWindow &);
 
   int			rebind_slice(NrrdSlice &);
   int			set_slice_nrrd_dirty(NrrdSlice &);
@@ -500,7 +532,10 @@ class Painter : public Module
   int                   set_probe(SliceWindow &window);
 
   int                   create_volume(NrrdVolumes *copies = 0);
+  NrrdVolume *          create_volume(string name, int nrrdType);
   ColorMapHandle        get_colormap(int id);
+  void                  send_data();
+  bool                  receive_filter_data();
 
 public:
   Painter(GuiContext* ctx);
@@ -508,11 +543,14 @@ public:
   virtual void		execute();
   virtual void		tcl_command(GuiArgs& args, void*);
   void			real_draw_all();
+
+  static bool           static_callback(void *);
+  bool                  callback();
+
+  virtual void          set_context(Network *);
   double		fps_;
   WindowLayout *	current_layout_;
   int			executing_;
-
-
 };
 
 
@@ -642,8 +680,6 @@ nrrd_set_value(Nrrd *nrrd,
     } break;
   }
 }
-
-
 
 
 
