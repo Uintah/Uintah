@@ -367,8 +367,8 @@ void ParticleFieldExtractor::addGraphingVars(long64 particleID,
 
 void ParticleFieldExtractor::callback(long64 particleID)
 {
-  cerr<< "ParticleFieldExtractor::callback request data for index "<<
-    particleID << ".\n";
+//   cerr<< "ParticleFieldExtractor::callback request data for index "<<
+//     particleID << ".\n";
 
   ostringstream call;
   call << id << " create_part_graph_window " << particleID;
@@ -829,7 +829,7 @@ void ParticleFieldExtractor::extract_data(string display_mode,
 
   string name_list("");
   long64 partID = atoll(particleID.c_str());
-  cout << "partID = "<<partID<<endl;
+//   cout << "partID = "<<partID<<endl;
 //   cerr << "mat_list.size() = "<<mat_list.size()<<endl;
   for(int m = 0; m < (int)mat_list.size(); m++) {
 //     cerr << "mat_list["<<m<<"] = "<<mat_list[m]<<endl;
