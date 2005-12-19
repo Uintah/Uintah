@@ -74,7 +74,7 @@ public:
     gen_(-1),
     nprocessors_(1) 
   {
-  };
+  }
 
   FieldHandle fieldH_;
   int UseCond_;
@@ -97,16 +97,18 @@ public:
 };
 
 template<class FIELD>
-void create_conductivities(FIELD, ConstantBasis<Tensor>, 
-			   const SetupFEMatrixParam&, 
-			   vector<pair<string, Tensor> >&)
+void
+create_conductivities(FIELD, ConstantBasis<Tensor>, 
+                      const SetupFEMatrixParam&, 
+                      vector<pair<string, Tensor> >&)
 {
-};
+}
 
 template<class FIELD> 
-void create_conductivities(FIELD *pField, ConstantBasis<int>, 
-			   const SetupFEMatrixParam& SFP, 
-			   vector<pair<string, Tensor> > &tens)
+void
+create_conductivities(FIELD *pField, ConstantBasis<int>, 
+                      const SetupFEMatrixParam& SFP, 
+                      vector<pair<string, Tensor> > &tens)
 {
   if (!SFP.UseCond_ || !SFP.fieldH_->get_property("conductivity_table", tens)) 
   {
@@ -120,9 +122,7 @@ void create_conductivities(FIELD *pField, ConstantBasis<int>,
     for (unsigned int i = 0; i <= maxf; i++) 
       tens.push_back(pair<string, Tensor>(to_string((int)i), ten));
   }
-}; 
-  
-
+}
 
 template<class FIELD>
 class SetupFEMatrixAlgoT : public SetupFEMatrixAlgo
@@ -146,7 +146,7 @@ public:
     UseBasis_(-1), 
     nprocessors_(1)
   {
-  };
+  }
       
   //! virtual interface. 
   virtual MatrixHandle execute(const SetupFEMatrixParam& SFP)
@@ -259,10 +259,8 @@ public:
     }
     return fem_mat;
   }
-};
+};  //end class SetupFEMatrixAlgoT
 
-  
- 
 } // end namespace BioPSE
 
 #endif // SetupFEMatrix_h
