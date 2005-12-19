@@ -403,8 +403,10 @@ BuildFEMatrix<Field>::parallel(int proc)
       //! get neighboring nodes
       hMesh_->get_nodes(na, ca[j]);
 
-      for(unsigned int k = 0; k < na.size(); k++)
-        neib_dofs.push_back(na[k]);
+      for(unsigned int k = 0; k < na.size(); k++) 
+      {
+        neib_dofs.push_back((int)(na[k])); // Must cast to (int) for SGI compiler. :-(
+      }
 
       //! check for additional nodes at edges
       if (global_dimension_add_nodes)
@@ -528,7 +530,7 @@ BuildFEMatrix<Field>::parallel(int proc)
       hMesh_->get_nodes(na, ca[j]); //!< get neighboring nodes
       for(int k = 0; k < (int)na.size(); k++)
       {
-	neib_dofs.push_back(na[k]);
+	neib_dofs.push_back((int)(na[k])); // Must cast to (int) for SGI compiler :-(
 	if ((int)na[k] == i)
 	  dofi = neib_dofs.size()-1;
       }
