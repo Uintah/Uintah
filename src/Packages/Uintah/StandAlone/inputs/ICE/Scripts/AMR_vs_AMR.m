@@ -14,10 +14,10 @@ clear function;
 %________________________________
 % USER INPUTS
 uda1 = 'shockTube_MR_Explicit.uda.000';
-uda2 = 'shockTube_MR_Implicit.uda.000';
+uda2 = 'shockTube_MR_Implicit.uda.005';
 
 
-desc = 'ShockTube: 2 Levels';
+desc = 'ShockTube: 2 Levels (Implicit timestep)';
 legendText = {'Explicit L-0','Implicit L-0','Explicit L-1','Implicit L-1', 'Explicit L-2','Implicit L-2'};
 pDir = 1;                    
 symbol1 = {'+r','*r','xg'};
@@ -50,12 +50,13 @@ nDumps = length(physicalTime1) - 1;
 %_________________________________
 % Loop over all the timesteps
 for(ts = 1:nDumps )
-  ts = input('input timestep') 
-  time = sprintf('%d sec',physicalTime1(ts+1));
+  ts1 = input('input timestep (uda1)') 
+  ts2 = input('input timestep (uda2)')
+  time = sprintf('%d sec',physicalTime1(ts1+1));
   
   %find max number of levels
-  c0  = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i |grep "Number of levels" | grep -o \\[0-9\\] >& tmp1',uda1, ts,ts);
-  c0a = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i |grep "Number of levels" | grep -o \\[0-9\\] >& tmp2',uda2, ts,ts);
+  c0  = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i |grep "Number of levels" | grep -o \\[0-9\\] >& tmp1',uda1, ts1,ts1);
+  c0a = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i |grep "Number of levels" | grep -o \\[0-9\\] >& tmp2',uda2, ts2,ts2);
   [s,  maxLevel1]=unix(c0);
   [sa, maxLevel2]=unix(c0a);
   maxLevel1  = importdata('tmp1');
@@ -69,7 +70,7 @@ for(ts = 1:nDumps )
    
   % find what levels exists
   for(L = 2:maxLevel1)
-    c0 = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i >& tmp ; grep "Level: index %i" tmp',uda1, ts,ts, L-1);
+    c0 = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i >& tmp ; grep "Level: index %i" tmp',uda1, ts1,ts1, L-1);
     [levelExists{L}, result0]=unix(c0);
   end 
   
@@ -90,8 +91,8 @@ for(ts = 1:nDumps )
       %  temperature   
       if plotTemp
         clear temp1;
-        c1  = sprintf('lineextract -v temp_CC -l %i -cellCoords -timestep %i %s -o temp1 -m %i  -uda %s',level,ts,S_E,mat,uda1);
-        c1a = sprintf('lineextract -v temp_CC -l %i -cellCoords -timestep %i %s -o temp2 -m %i  -uda %s',level,ts,S_E,mat,uda2);
+        c1  = sprintf('lineextract -v temp_CC -l %i -cellCoords -timestep %i %s -o temp1 -m %i  -uda %s',level,ts1,S_E,mat,uda1);
+        c1a = sprintf('lineextract -v temp_CC -l %i -cellCoords -timestep %i %s -o temp2 -m %i  -uda %s',level,ts2,S_E,mat,uda2);
         [s1, r1]   = unix(c1);
         [s1a, r1a] = unix(c1a);
         temp1{1,L} = importdata('temp1');
@@ -105,7 +106,7 @@ for(ts = 1:nDumps )
         legend(legendText);
         xlabel('x')
         ylabel('Temperature')
-        this=sprintf('%s \n Physical time: 1) %e, 2) %e',desc, physicalTime1(ts+1), physicalTime2(ts+1));
+        this=sprintf('%s \n Physical time: Explicit: %e, Implicit: %e ',desc, physicalTime1(ts1+1), physicalTime2(ts2+1));
         title(this);
         grid on;
         if (L == maxLevel1)
@@ -118,8 +119,8 @@ for(ts = 1:nDumps )
       %______________________________
       % pressure
       if plotPress
-        c2  = sprintf('lineextract -v press_CC -l %i -cellCoords -timestep %i %s -o press1 -m 0 -uda %s',level,ts,S_E,uda1);
-        c2a = sprintf('lineextract -v press_CC -l %i -cellCoords -timestep %i %s -o press2 -m 0 -uda %s',level,ts,S_E,uda2);
+        c2  = sprintf('lineextract -v press_CC -l %i -cellCoords -timestep %i %s -o press1 -m 0 -uda %s',level,ts1,S_E,uda1);
+        c2a = sprintf('lineextract -v press_CC -l %i -cellCoords -timestep %i %s -o press2 -m 0 -uda %s',level,ts2,S_E,uda2);
         [s2, r2]    = unix(c2);
         [s2a,r2a]   = unix(c2a);
         press1{1,L} = importdata('press1');
@@ -142,8 +143,8 @@ for(ts = 1:nDumps )
       %_____________________________
       %  Density
       if plotRho
-        c3  = sprintf('lineextract -v rho_CC -l %i -cellCoords -timestep %i %s -o rho1 -m %i  -uda %s',level,ts,S_E,mat,uda1);
-        c3a = sprintf('lineextract -v rho_CC -l %i -cellCoords -timestep %i %s -o rho2 -m %i  -uda %s',level,ts,S_E,mat,uda2);
+        c3  = sprintf('lineextract -v rho_CC -l %i -cellCoords -timestep %i %s -o rho1 -m %i  -uda %s',level,ts1,S_E,mat,uda1);
+        c3a = sprintf('lineextract -v rho_CC -l %i -cellCoords -timestep %i %s -o rho2 -m %i  -uda %s',level,ts2,S_E,mat,uda2);
         [s3, r3]    = unix(c3);
         [s3a, r3a]  = unix(c3a);
         rho1{1,L} = importdata('rho1');
@@ -166,8 +167,8 @@ for(ts = 1:nDumps )
       %____________________________
       %  velocity
       if plotVel
-        c5  = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel_tmp1 -m %i  -uda %s',level,ts,S_E,mat,uda1);
-        c5a = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel_tmp2 -m %i  -uda %s',level,ts,S_E,mat,uda2);
+        c5  = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel_tmp1 -m %i  -uda %s',level,ts1,S_E,mat,uda1);
+        c5a = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel_tmp2 -m %i  -uda %s',level,ts2,S_E,mat,uda2);
         [s5, r5]  =unix(c5);
         [s5a, r5a]=unix(c5a);
         % rip out [ ] from velocity data
@@ -194,8 +195,8 @@ for(ts = 1:nDumps )
       %____________________________
       %   refineFlag
       if plotRefineFlag
-        c6 = sprintf('lineextract -v refineFlag -l %i -cellCoords -timestep %i %s -o refineFlag1 -m %i  -uda %s',level,ts,S_E,mat,uda1);
-        c6 = sprintf('lineextract -v refineFlag -l %i -cellCoords -timestep %i %s -o refineFlag2 -m %i  -uda %s',level,ts,S_E,mat,uda2);
+        c6 = sprintf('lineextract -v refineFlag -l %i -cellCoords -timestep %i %s -o refineFlag1 -m %i  -uda %s',level,ts1,S_E,mat,uda1);
+        c6 = sprintf('lineextract -v refineFlag -l %i -cellCoords -timestep %i %s -o refineFlag2 -m %i  -uda %s',level,ts2,S_E,mat,uda2);
         [s7, r7]  =unix(c7);
         [s7a, r7a]=unix(c7a);
         rF1{1,L} = importdata('refineFlag1');
