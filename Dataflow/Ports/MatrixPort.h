@@ -48,7 +48,6 @@
 
 namespace SCIRun {
 
-
 typedef SimpleIPort<MatrixHandle> MatrixIPort;
 typedef SimpleOPort<MatrixHandle> MatrixOPort;
 

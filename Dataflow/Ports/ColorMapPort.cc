@@ -45,9 +45,6 @@
 
 namespace SCIRun {
 
-template class SimpleIPort<ColorMapHandle>;
-template class SimpleOPort<ColorMapHandle>;
-
 extern "C" {
 IPort* make_ColorMapIPort(Module* module, const string& name) {
   return scinew SimpleIPort<ColorMapHandle>(module,name);
@@ -59,6 +56,9 @@ OPort* make_ColorMapOPort(Module* module, const string& name) {
 
 template<> string ColorMapIPort::port_type_("ColorMap");
 template<> string ColorMapIPort::port_color_("blueviolet");
+
+template class SimpleIPort<ColorMapHandle>;
+template class SimpleOPort<ColorMapHandle>;
 
 } // End namespace SCIRun
 

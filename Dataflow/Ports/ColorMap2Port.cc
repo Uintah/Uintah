@@ -34,9 +34,6 @@
 
 namespace SCIRun {
 
-template class SimpleIPort<ColorMap2Handle>;
-template class SimpleOPort<ColorMap2Handle>;
-
 extern "C" {
 SCIRun::IPort* make_ColorMap2IPort(SCIRun::Module* module,
                                                 const std::string& name) {
@@ -50,6 +47,9 @@ SCIRun::OPort* make_ColorMap2OPort(SCIRun::Module* module,
 
 template<> std::string SCIRun::SimpleIPort<ColorMap2Handle>::port_type_("ColorMap2");
 template<> std::string SCIRun::SimpleIPort<ColorMap2Handle>::port_color_("darkseagreen");
+
+template class SimpleIPort<ColorMap2Handle>;
+template class SimpleOPort<ColorMap2Handle>;
 
 } // End namespace SCIRun
 

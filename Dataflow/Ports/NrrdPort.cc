@@ -44,9 +44,6 @@
 
 namespace SCIRun {
 
-template class SimpleIPort<NrrdDataHandle>;
-template class SimpleOPort<NrrdDataHandle>;
-
 extern "C" {
   IPort* make_NrrdIPort(Module* module, const string& name) {
   return scinew SimpleIPort<NrrdDataHandle>(module,name);
@@ -58,6 +55,9 @@ extern "C" {
 
 template<> string SimpleIPort<NrrdDataHandle>::port_type_("Nrrd");
 template<> string SimpleIPort<NrrdDataHandle>::port_color_("cyan2");
+
+template class SimpleIPort<NrrdDataHandle>;
+template class SimpleOPort<NrrdDataHandle>;
 
 } // End namespace SCIRun
 

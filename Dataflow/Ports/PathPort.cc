@@ -44,9 +44,6 @@
 
 namespace SCIRun {
 
-template class SimpleIPort<PathHandle>;
-template class SimpleOPort<PathHandle>;
-
 extern "C" {
 IPort* make_PathIPort(Module* module, const string& name) {
   return scinew SimpleIPort<PathHandle>(module,name);
@@ -58,5 +55,8 @@ OPort* make_PathOPort(Module* module, const string& name) {
 
 template<> string SimpleIPort<PathHandle>::port_type_("Path");
 template<> string SimpleIPort<PathHandle>::port_color_("chocolate4");
+
+template class SimpleIPort<PathHandle>;
+template class SimpleOPort<PathHandle>;
 
 } // End namespace SCIRun
