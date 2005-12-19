@@ -225,7 +225,7 @@ namespace Uintah {
       return FRONT;
     }
     return -99999;
-  };
+  }
   
   //__________________________________
   static MPI_Datatype makeMPI_fflux()
