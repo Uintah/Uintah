@@ -30,6 +30,21 @@ LOG
 #define FIELDEXTRACTOR_H 1
 
 
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/MRLatVolField.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/GuiInterface/GuiVar.h> 
+#include <Core/Math/MinMax.h>
+#include <Core/Util/Timer.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
+
+#include <Dataflow/Network/Module.h> 
+#include <Dataflow/Ports/FieldPort.h>
+
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -38,19 +53,6 @@ LOG
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
-#include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/GuiInterface/GuiVar.h> 
-#include <Core/Datatypes/MRLatVolField.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Util/Timer.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Dataflow/Network/Module.h> 
-#include <Dataflow/Ports/FieldPort.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
