@@ -35,9 +35,6 @@
 
 namespace SCIRun {
 
-template class SimpleIPort<TextureHandle>;
-template class SimpleOPort<TextureHandle>;
-
 extern "C" {
 IPort* make_TextureIPort(Module* module, const string& name) {
   return scinew SimpleIPort<TextureHandle>(module,name);
@@ -49,5 +46,8 @@ OPort* make_TextureOPort(Module* module, const string& name) {
 
 template<> string SimpleIPort<TextureHandle>::port_type_("Texture");
 template<> string SimpleIPort<TextureHandle>::port_color_("wheat3");
+
+template class SimpleIPort<TextureHandle>;
+template class SimpleOPort<TextureHandle>;
 
 } // namespace SCIRun

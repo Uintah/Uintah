@@ -37,9 +37,6 @@
 
 namespace SCIRun {
 
-template class SimpleIPort<BundleHandle>;
-template class SimpleOPort<BundleHandle>;
-
 extern "C" {
   IPort* make_BundleIPort(Module* module, const string& name) {
   return scinew SimpleIPort<BundleHandle>(module,name);
@@ -51,6 +48,9 @@ extern "C" {
 
 template<> string SimpleIPort<BundleHandle>::port_type_("Bundle");
 template<> string SimpleIPort<BundleHandle>::port_color_("orange");
+
+template class SimpleIPort<BundleHandle>;
+template class SimpleOPort<BundleHandle>;
 
 } // End namespace SCIRun
 

@@ -249,6 +249,10 @@ public:
 #else
     typedef eqEdge EdgeComparitor;
     typedef hash_multiset<index_type, CellEdgeHasher, EdgeComparitor> HalfEdgeSet;
+#   if defined(__sgi)
+    typedef typename hash_multiset<index_type, CellEdgeHasher, EdgeComparitor>::size_type HESsize_type;
+    typedef typename hash_multiset<index_type, CellEdgeHasher, EdgeComparitor>::allocator_type HESallocator_type;
+#   endif
     typedef hash_set<index_type, CellEdgeHasher, EdgeComparitor> EdgeSet;
 #endif // end ifdef __ECC
 #else // ifdef HAVE_HASH_SET
@@ -468,6 +472,10 @@ public:
     typedef eqFace FaceComparitor;
     typedef hash_multiset<index_type, CellFaceHasher,FaceComparitor> HalfFaceSet;
     typedef hash_set<index_type, CellFaceHasher, FaceComparitor> FaceSet;
+#   if defined(__sgi)
+    typedef typename hash_multiset<index_type, CellFaceHasher, FaceComparitor>::size_type HFSsize_type;
+    typedef typename hash_multiset<index_type, CellFaceHasher, FaceComparitor>::allocator_type HFSallocator_type;
+#   endif
 #endif // end ifdef __ECC
 #else // ifdef HAVE_HASH_SET
     typedef lessFace FaceComparitor;
@@ -997,6 +1005,11 @@ protected:
   unsigned int		     synchronized_;
   Basis                      basis_;
 
+#if defined(__sgi)
+  Edge::HESallocator_type edge_allocator_;
+  Face::HFSallocator_type face_allocator_;
+#endif
+
 }; // end class PrismVolMesh
 
 
@@ -1079,8 +1092,14 @@ PrismVolMesh<Basis>::PrismVolMesh() :
   edges_(edge_hasher_),
 #else
   edge_comp_(cells_),
-  all_edges_((typename PrismVolMesh::Edge::index_type)0,edge_hasher_,edge_comp_),
-  edges_((typename PrismVolMesh::Edge::index_type)0,edge_hasher_,edge_comp_),
+#    if defined(__sgi)
+       // The SGI compiler can't figure this out on its own... so we have to help it: 
+  all_edges_( (Edge::HESsize_type)0, edge_hasher_, edge_comp_, edge_allocator_ ),
+  edges_( (Edge::HESsize_type)0, edge_hasher_, edge_comp_, edge_allocator_ ),
+#    else
+  all_edges_( 0, edge_hasher_, edge_comp_ ),
+  edges_( 0, edge_hasher_, edge_comp_ ),
+#    endif
 #endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_edges_(edge_comp_),
@@ -1097,8 +1116,14 @@ PrismVolMesh<Basis>::PrismVolMesh() :
   faces_(face_hasher_),
 #else
   face_comp_(cells_),
-  all_faces_((typename PrismVolMesh::Edge::index_type)0,face_hasher_,face_comp_),
-  faces_((typename PrismVolMesh::Edge::index_type)0,face_hasher_,face_comp_),
+#    if defined(__sgi)
+       // The SGI compiler can't figure this out on its own... so we have to help it: 
+  all_faces_( (Face::HFSsize_type)0, face_hasher_, face_comp_, face_allocator_ ),
+  faces_( (Face::HFSsize_type)0, face_hasher_, face_comp_, face_allocator_ ),
+#    else
+  all_faces_( 0, face_hasher_, face_comp_ ),
+  faces_( 0, face_hasher_, face_comp_ ),
+#    endif
 #endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_faces_(face_comp_),
@@ -1129,8 +1154,14 @@ PrismVolMesh<Basis>::PrismVolMesh(const PrismVolMesh &copy):
   edges_(edge_hasher_),
 #else
   edge_comp_(cells_),
-  all_edges_((typename PrismVolMesh::Edge::index_type)0,edge_hasher_,edge_comp_),
-  edges_((typename PrismVolMesh::Edge::index_type)0,edge_hasher_,edge_comp_),
+#    if defined(__sgi)
+       // The SGI compiler can't figure this out on its own... so we have to help it: 
+  all_edges_( (Edge::HESsize_type)0, edge_hasher_, edge_comp_, edge_allocator_ ),
+  edges_( (Edge::HESsize_type)0, edge_hasher_, edge_comp_, edge_allocator_ ),
+#    else
+  all_edges_( 0, edge_hasher_, edge_comp_ ),
+  edges_( 0, edge_hasher_, edge_comp_ ),
+#    endif
 #endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_edges_(edge_comp_),
@@ -1146,8 +1177,14 @@ PrismVolMesh<Basis>::PrismVolMesh(const PrismVolMesh &copy):
   faces_(face_hasher_),
 #else
   face_comp_(cells_),
-  all_faces_((typename PrismVolMesh::Edge::index_type)0,face_hasher_,face_comp_),
-  faces_((typename PrismVolMesh::Edge::index_type)0,face_hasher_,face_comp_),
+#    if defined(__sgi)
+       // The SGI compiler can't figure this out on its own... so we have to help it: 
+  all_faces_( (Face::HFSsize_type)0, face_hasher_, face_comp_, face_allocator_ ),
+  faces_( (Face::HFSsize_type)0, face_hasher_, face_comp_, face_allocator_ ),
+#    else
+  all_faces_( 0, face_hasher_, face_comp_ ),
+  faces_( 0, face_hasher_, face_comp_ ),
+#    endif
 #endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
   all_faces_(face_comp_),
