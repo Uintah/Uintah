@@ -88,7 +88,7 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
 {
 #if DEBUG
   // Using printf as cerr causes a core dump (probably cerr has not
-  // been initialized as this runs before main...)
+  // been initialized as this runs before main...)  (This may be Mac specific...)
   printf("PersistentTypeID constructor:\n");
   printf("   typename:   %s\n", typeName.c_str() );
   printf("   parentname: %s\n", parentName.c_str() );
@@ -118,8 +118,8 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
     if ((*dummy).second->maker != maker 
 	|| ((*dummy).second->parent != parentName))
     {
-      cerr << "WARNING: duplicate type in Persistent "
-	   << "Object Type Database: " << type << endl;
+      printf( "WARNING: duplicate type in Persistent Object Type Database: %s\n",
+              type.c_str() );
       persistentTypeIDMutex.unlock();
       return;
     }
@@ -140,16 +140,16 @@ PersistentTypeID::~PersistentTypeID()
 
   if (table == NULL)
   {
-    cerr << "WARNING: Persistent.cc: ~PersistentTypeID(): table is NULL\n";
-    cerr << "         For: " << type << ", " << parent << "\n";
+    printf( "WARNING: Persistent.cc: ~PersistentTypeID(): table is NULL\n" );
+    printf( "         For: %s, %s\n", type.c_str(), parent.c_str() );
     return;
   }
 
   iter = table->find(type);
   if (iter == table->end())
   {
-    cerr << "WARNING: Could not remove type from Object type database: " <<
-      type << endl;
+    printf( "WARNING: Could not remove type from Object type database: %s\n",
+            type.c_str() );
   }
   else
   {
