@@ -75,8 +75,9 @@ const string ext = ".dll";
 const string ext = ".so";
 #endif
 
-static void *FindLibrarySymbol(const string &package, const string &/* type */, 
-			const string &symbol)
+static void *
+FindLibrarySymbol(const string &package, const string &/* type */, 
+                  const string &symbol)
 {
   void* SymbolAddress = 0;
   LIBRARY_HANDLE so = 0;
@@ -115,7 +116,8 @@ static void *FindLibrarySymbol(const string &package, const string &/* type */,
   return SymbolAddress;
 }
 
-static iport_maker FindIPort(const string &package, const string &datatype)
+static iport_maker
+FindIPort(const string &package, const string &datatype)
 {
   string maker_symbol = "make_" + datatype + "IPort";
   iport_maker maker =
@@ -123,7 +125,8 @@ static iport_maker FindIPort(const string &package, const string &datatype)
   return maker;
 }  
 
-static oport_maker FindOPort(const string &package, const string &datatype)
+static oport_maker
+FindOPort(const string &package, const string &datatype)
 {
   string maker_symbol = "make_" + datatype + "OPort";
   oport_maker maker =
@@ -241,7 +244,8 @@ Module::~Module()
   
 }
 
-int Module::addOPortByName(std::string name, std::string d_type)
+int
+Module::addOPortByName(std::string name, std::string d_type)
 {
   OPort* oport;
   dynamic_port_maker = 0;
@@ -271,7 +275,8 @@ int Module::addOPortByName(std::string name, std::string d_type)
   return 0;
 }
 
-int Module::addIPortByName(std::string name, std::string d_type)
+int
+Module::addIPortByName(std::string name, std::string d_type)
 {
   IPort* iport;
   dynamic_port_maker = 0;
@@ -300,14 +305,16 @@ int Module::addIPortByName(std::string name, std::string d_type)
   return 0;
 }
 
-void Module::delete_warn() 
+void
+Module::delete_warn() 
 {
   set_show_stats(false);
   MessageBase *msg = scinew MessageBase(MessageTypes::GoAwayWarn);
   mailbox.send(msg);
 }
 
-void Module::kill_helper()
+void
+Module::kill_helper()
 {
   if (helper_thread)
   {
@@ -320,7 +327,8 @@ void Module::kill_helper()
 }
 
 
-void Module::report_progress( ProgressState state )
+void
+Module::report_progress( ProgressState state )
 {
   switch ( state ) {
   case ProgressReporter::Starting:
@@ -338,7 +346,8 @@ void Module::report_progress( ProgressState state )
   }
 }
 
-void Module::update_state(State st)
+void
+Module::update_state(State st)
 {
   state=st;
   char* s="unknown";
@@ -369,7 +378,8 @@ void Module::update_state(State st)
 }
 
 
-void Module::update_msg_state(MsgState st)
+void
+Module::update_msg_state(MsgState st)
 {
   // only change the state if the new state
   // is of higher priority
@@ -396,7 +406,8 @@ void Module::update_msg_state(MsgState st)
 }
 
 
-void Module::update_progress(double p)
+void
+Module::update_progress(double p)
 {
   if (state == JustStarted)
     update_state(Executing);
@@ -412,28 +423,32 @@ void Module::update_progress(double p)
 }
 
 
-void Module::update_progress(unsigned int n, unsigned int max)
+void
+Module::update_progress(unsigned int n, unsigned int max)
 {
   update_progress(double(n)/double(max));
 }
 
 
 // Port stuff
-void Module::add_iport(IPort* port)
+void
+Module::add_iport(IPort* port)
 {
   port->set_which_port(iports.size());
   iports.add(port);
   gui->execute("drawPorts "+id+" i");
 }
 
-void Module::add_oport(OPort* port)
+void
+Module::add_oport(OPort* port)
 {
   port->set_which_port(oports.size());
   oports.add(port);
   gui->execute("drawPorts "+id+" o");
 }
 
-void Module::remove_iport(int which)
+void
+Module::remove_iport(int which)
 {
   // remove the indicated port, then
   // collapse the remaining ports together
@@ -449,41 +464,48 @@ void Module::remove_iport(int which)
   gui->execute("drawPorts "+id+" i");
 }
 
-port_range_type Module::get_iports(const string &name)
+port_range_type
+Module::get_iports(const string &name)
 {
   return iports[name];
 }
 
-IPort* Module::get_iport(int item)
+IPort*
+Module::get_iport(int item)
 {
   return iports[item];
 }
 
-OPort* Module::get_oport(int item)
+OPort*
+Module::get_oport(int item)
 {
   return oports[item];
 }
 
-IPort* Module::get_iport(const string& name)
+IPort*
+Module::get_iport(const string& name)
 {
   IPort *p = getIPort(name);
   if (p == 0) throw "Unable to initialize iport '" + name + "'.";
   return p;
 }
 
-OPort* Module::get_oport(const string& name)
+OPort*
+Module::get_oport(const string& name)
 {
   OPort *p = getOPort(name);
   if (p == 0) throw "Unable to initialize oport '" + name + "'.";
   return p;
 }
 
-port_range_type Module::getIPorts(const string &name)
+port_range_type
+Module::getIPorts(const string &name)
 {
   return get_iports(name);
 }
 
-IPort* Module::getIPort(const string &name)
+IPort*
+Module::getIPort(const string &name)
 {
   if (iports[name].first==iports[name].second) {
     return 0;
@@ -491,7 +513,8 @@ IPort* Module::getIPort(const string &name)
   return getIPort(iports[name].first->second);
 }
 
-OPort* Module::getOPort(const string &name)
+OPort*
+Module::getOPort(const string &name)
 {
   if (oports[name].first==oports[name].second) {
     //postMessage("Unable to initialize "+name+"'s oports\n");
@@ -500,43 +523,50 @@ OPort* Module::getOPort(const string &name)
   return getOPort(oports[name].first->second);
 }
 
-IPort* Module::getIPort(int item)
+IPort*
+Module::getIPort(int item)
 {
   return iports[item];
 }
 
-OPort* Module::getOPort(int item)
+OPort*
+Module::getOPort(int item)
 {
   return oports[item];
 }
 
-bool Module::oport_cached(const string &name)
+bool
+Module::oport_cached(const string &name)
 {
   OPort *p = getOPort(name);
   if (p == 0) { throw "Unable to initialize oport '" + name + "'."; }
   return p->have_data();
 }
 
-bool Module::oport_supports_cache_flag(int p)
+bool
+Module::oport_supports_cache_flag(int p)
 {
   if (p >= numOPorts()) return false;
   return get_oport(p)->cache_flag_supported();
 }
 
-bool Module::get_oport_cache_flag(int p)
+bool
+Module::get_oport_cache_flag(int p)
 {
   ASSERT(p < numOPorts());
   return get_oport(p)->get_cache();
 }
 
-void Module::set_oport_cache_flag(int p, bool val)
+void
+Module::set_oport_cache_flag(int p, bool val)
 {
   ASSERT(p < numOPorts());
-  return get_oport(p)->set_cache(val);
+  get_oport(p)->set_cache(val);
 }
 
 
-void Module::connection(Port::ConnectionState mode, int which_port, bool is_oport)
+void
+Module::connection(Port::ConnectionState mode, int which_port, bool is_oport)
 {
   if(!is_oport && lastportdynamic && 
      dynamic_port_maker && (which_port >= first_dynamic_port)) {
@@ -550,7 +580,8 @@ void Module::connection(Port::ConnectionState mode, int which_port, bool is_opor
   // do nothing by default
 }
 
-void Module::set_context(Network* network)
+void
+Module::set_context(Network* network)
 {
   this->network=network;
   this->sched=network->get_scheduler();
@@ -567,22 +598,26 @@ void Module::set_context(Network* network)
   //helper_thread->detach();  // Join on delete.
 }
 
-void Module::setStackSize(unsigned long s)
+void
+Module::setStackSize(unsigned long s)
 {
    stacksize=s;
 }
 
-void Module::want_to_execute()
+void
+Module::want_to_execute()
 {
     need_execute=true;
     sched->do_scheduling();
 }
 
-void Module::widget_moved(bool,BaseWidget*)
+void
+Module::widget_moved(bool,BaseWidget*)
 {
 }
 
-void Module::get_position(int& x, int& y)
+void
+Module::get_position(int& x, int& y)
 {
   string result;
   if(!gui->eval(id+" get_x", result)){
@@ -704,7 +739,8 @@ parse_description(const string &in)
 }
 
 
-void Module::tcl_command(GuiArgs& args, void*)
+void
+Module::tcl_command(GuiArgs& args, void*)
 { 
   if(args.count() < 2){
     args.error("netedit needs a minor command");
@@ -787,13 +823,15 @@ void Module::tcl_command(GuiArgs& args, void*)
   }
 }
 
-void Module::setPid(int pid)
+void
+Module::setPid(int pid)
 {
   pid_=pid;
 }
 
 // Error conditions
-void Module::error(const string& str)
+void
+Module::error(const string& str)
 {
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
@@ -806,7 +844,8 @@ void Module::error(const string& str)
   update_msg_state(Error); 
 }
 
-void Module::warning(const string& str)
+void
+Module::warning(const string& str)
 {
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
@@ -819,7 +858,8 @@ void Module::warning(const string& str)
   update_msg_state(Warning); 
 }
 
-void Module::remark(const string& str)
+void
+Module::remark(const string& str)
 {
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
@@ -833,7 +873,8 @@ void Module::remark(const string& str)
 }
 
 
-void Module::msgStream_flush()
+void
+Module::msgStream_flush()
 {
   if (msgStream_.str() != "")
   {
@@ -842,12 +883,14 @@ void Module::msgStream_flush()
   }
 }
 
-bool Module::in_power_app()
+bool
+Module::in_power_app()
 {
   return (gui->eval("in_power_app") == "1");
 }
 
-void Module::postMessage(const string& str)
+void
+Module::postMessage(const string& str)
 {
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
@@ -856,7 +899,8 @@ void Module::postMessage(const string& str)
   gui->postMessage(moduleName + ": " + str, false);
 }
 
-void Module::do_execute()
+void
+Module::do_execute()
 {
   int i;
   abort_flag=0;
@@ -931,32 +975,38 @@ Module::do_synchronize()
 }
 
 
-void Module::request_multisend(OPort* p1)
+void
+Module::request_multisend(OPort* p1)
 {
   sched->request_multisend(p1);
 }
 
-int Module::numOPorts()
+int
+Module::numOPorts()
 {
   return oports.size();
 }
 
-int Module::numIPorts()
+int
+Module::numIPorts()
 {
   return iports.size();
 }
 
-GuiInterface* Module::getGui()
+GuiInterface*
+Module::getGui()
 {
   return gui;
 }
 
-void Module::reset_vars()
+void
+Module::reset_vars()
 {
   ctx->reset();
 }
 
-bool Module::haveUI()
+bool
+Module::haveUI()
 {
   string result;
   if(!gui->eval(id+" have_ui", result)){
@@ -973,7 +1023,8 @@ bool Module::haveUI()
   return (flag > 1);
 }
 
-void Module::popupUI()
+void
+Module::popupUI()
 {
   gui->execute(id+" initialize_ui");
 }
