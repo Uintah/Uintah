@@ -321,11 +321,11 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   
   for (int ii = 0; ii < d_indepvarscount; ii++) {
     fd >> indepvars_names[ii];
-    if(indepvars_names[ii]== "Hl")
+    if(indepvars_names[ii]== "heat_loss")
 	    Hl_index = ii;
-    else if(indepvars_names[ii]== "F")
+    else if(indepvars_names[ii]== "mix_frac")
 	    F_index = ii;
-    else if(indepvars_names[ii]== "Fvar")
+    else if(indepvars_names[ii]== "mix_frac_var")
 	    Fvar_index = ii;
     cout<<indepvars_names[ii]<<endl;
   }
@@ -361,25 +361,25 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
     fd >> vars_names[ii];
     if(vars_names[ii]== "Rho" || vars_names[ii]== "density")
 	    Rho_index = ii;
-    else if(vars_names[ii]== "T" || vars_names[ii]== "Temp")
+    else if(vars_names[ii]== "T" || vars_names[ii]== "temperature")
 	    T_index = ii;
-    else if(vars_names[ii]== "Cp" || vars_names[ii]== "heat_capac")
+    else if(vars_names[ii]== "Cp" || vars_names[ii]== "heat_capacity")
 	    Cp_index = ii;
-    else if(vars_names[ii]== "Entalpy")
+    else if(vars_names[ii]== "Enthalpy")
 	    Enthalpy_index = ii;
-    else if(vars_names[ii]== "Hs" || vars_names[ii]== "sensible_h")
+    else if(vars_names[ii]== "Hs" || vars_names[ii]== "sensible_heat")
 	    Hs_index = ii;
-    else if(vars_names[ii]== "CO2")
+    else if(vars_names[ii]== "CO2" || vars_names[ii]== "co2")
 	    co2_index = ii;
-    else if(vars_names[ii]== "H2O")
+    else if(vars_names[ii]== "H2O" || vars_names[ii]== "co2")
 	    h2o_index = ii;
-    else if(vars_names[ii]== "H2S")
+    else if(vars_names[ii]== "H2S" || vars_names[ii]== "h2s")
 	    h2s_index = ii;
-    else if(vars_names[ii]== "SO2")
+    else if(vars_names[ii]== "SO2" || vars_names[ii]== "so2")
 	    so2_index = ii;
-    else if(vars_names[ii]== "SO3")
+    else if(vars_names[ii]== "SO3" || vars_names[ii]== "so3")
 	    so3_index = ii;
-    else if(vars_names[ii]== "CO")
+    else if(vars_names[ii]== "CO" || vars_names[ii]== "co")
 	    co_index = ii;
     cout<<vars_names[ii]<<endl;
   }
