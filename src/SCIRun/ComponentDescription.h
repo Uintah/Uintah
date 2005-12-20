@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentDescription.h: 
+ *  ComponentDescription.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -66,10 +66,9 @@ class SCIRunFramework;
  * \sa ComponentModel
  * \sa SCIRunFramework
  */
-class ComponentDescription
-{
+class ComponentDescription {
 public:
-  ComponentDescription();
+  ComponentDescription(ComponentModel* model, const std::string& type, const std::string& library="", const std::string& loader = "");
   virtual ~ComponentDescription();
 
   /** Returns the type name (a string) the component described by this class. */
@@ -79,8 +78,19 @@ public:
       is defined. */
   virtual const ComponentModel* getModel() const = 0;
 
+  /** Get the name of the DLL for this component.  The loader will search
+   *    the SIDL_DLL_PATH for a matching library name. */
+  virtual std::string getLibrary() const;
+
   /** ?  */
   virtual std::string getLoaderName() const;
+
+protected:
+  ComponentModel *model;
+  std::string type;
+  std::string library;
+  std::string loaderName;
+
 private:
   ComponentDescription(const ComponentDescription&);
   ComponentDescription& operator=(const ComponentDescription&);

@@ -42,7 +42,8 @@
 
 namespace SCIRun {
 
-ComponentDescription::ComponentDescription()
+ComponentDescription::ComponentDescription(ComponentModel* model, const std::string& type, const std::string& library, const std::string& loader)
+  : model(model), type(type), library(library), loaderName(loader)
 {
 }
 
@@ -55,6 +56,12 @@ ComponentDescription::getLoaderName() const
 {
   //for the local loaders, the loader name is "";
   return "";
+}
+
+std::string
+ComponentDescription::getLibrary() const
+{
+  return library;
 }
 
 } // end namespace SCIRun
