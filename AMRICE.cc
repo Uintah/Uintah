@@ -72,6 +72,21 @@ void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
   refine_ps->getWithDefault("Pressure",    d_press_threshold,   1e100);
   refine_ps->getWithDefault("VolumeFrac",  d_vol_frac_threshold,1e100);
   refine_ps->getWithDefault("Velocity",    d_vel_threshold,     1e100);
+  
+  //__________________________________
+  // bullet proofing
+  int maxLevel = grid->numLevels();
+  
+  for (int i=0; i< maxLevel; i++){
+     double trr = grid->getLevel(i)->timeRefinementRatio();
+
+    if( d_useLockStep && trr != 1){
+      string warn;
+      warn ="\n INPUT FILE ERROR:\n To use the lockstep algorithm you must specify \n<Grid> \n  <time_refinement_ratio> 1 </time_refinement_ratio> \n</Grid>";
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
+    }
+  }
+  
 }
 //___________________________________________________________________              
 void AMRICE::scheduleInitialize(const LevelP& level,
