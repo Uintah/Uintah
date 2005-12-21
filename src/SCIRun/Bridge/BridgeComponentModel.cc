@@ -275,7 +275,7 @@ bool BridgeComponentModel::destroyInstance(ComponentInstance *ci)
   return true;
 }
 
-string BridgeComponentModel::getName() const
+const string BridgeComponentModel::getName() const
 {
   return "Bridge";
 }

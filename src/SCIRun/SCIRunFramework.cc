@@ -38,14 +38,12 @@
  *
  */
 
+#include <SCIRun/SCIRunFramework.h>
 #include <sci_metacomponents.h>
 
-#include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/ComponentEvent.h>
 #include <SCIRun/Internal/ComponentEventService.h>
-#include <SCIRun/CCA/CCAComponentModel.h>
 #include <SCIRun/CCA/ComponentID.h>
 #include <SCIRun/CCA/CCAException.h>
 

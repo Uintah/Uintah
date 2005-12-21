@@ -28,7 +28,7 @@
 
 
 /*
- *  TaoComponentDescription.h: 
+ *  TaoComponentDescription.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -46,46 +46,39 @@
 
 namespace SCIRun
 {
-  class ComponentModel;
-  class TaoComponentModel;
+class ComponentModel;
+class TaoComponentModel;
 
-  /**
-   * \class TaoComponentDescription
-   *
-   * A container for information necessary to locate and instantiate a specific
-   * Tao component type in the SCIRun framework.  This class holds the type name of
-   * the component and the TaoComponentModel instance to which it belongs.  The
-   * name of the DLL containing the executable code for this component type is
-   * also stored in this class.
-   *
-   */
-  class TaoComponentDescription : public ComponentDescription
-    {
-    public:
-      TaoComponentDescription(TaoComponentModel* model, const std::string& type);
-      virtual ~TaoComponentDescription();
+/**
+ * \class TaoComponentDescription
+ *
+ * A container for information necessary to locate and instantiate a specific
+ * Tao component type in the SCIRun framework.  This class holds the type name of
+ * the component and the TaoComponentModel instance to which it belongs.  The
+ * name of the DLL containing the executable code for this component type is
+ * also stored in this class.
+ *
+ */
+class TaoComponentDescription : public ComponentDescription {
+public:
+  TaoComponentDescription(TaoComponentModel* model, const std::string& type, const std::string& library = "");
+  virtual ~TaoComponentDescription();
 
-      /** Returns the type name (a string) described by this class. */
-      virtual std::string getType() const;
-      /** Returns a pointer to the TaoComponentModel that holds this TaoComponentDescription.*/
-      virtual const ComponentModel* getModel() const;
+  /** Returns the type name (a string) described by this class. */
+  virtual std::string getType() const;
 
-      std::string type;
-  
-      /** Get/Set the name of the DLL for this component.  The loader will search
-       *    the SIDL_DLL_PATH for a matching library name. */
-      std::string getLibrary() const
-      { return library; }
-      void setLibrary(const std::string &l)
-      { library = l; }
+  /** Returns a pointer to the TaoComponentModel that holds this TaoComponentDescription.*/
+  virtual const ComponentModel* getModel() const;
 
-    private:
-      TaoComponentModel* model;
-      std::string library;
-  
-      TaoComponentDescription(const TaoComponentDescription&);
-      TaoComponentDescription& operator=(const TaoComponentDescription&);
-    };
+  /** Set the name of the DLL for this component.  The loader will search
+   *    the SIDL_DLL_PATH for a matching library name. */
+  void setLibrary(const std::string &l) { library = l; }
+
+private:
+  TaoComponentDescription(const TaoComponentDescription&);
+  TaoComponentDescription& operator=(const TaoComponentDescription&);
+};
+
 }
 
 #endif

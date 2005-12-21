@@ -60,7 +60,7 @@ class BabelComponentModel;
 class BabelComponentDescription : public ComponentDescription
 {
 public:
-  BabelComponentDescription(BabelComponentModel* model);
+  BabelComponentDescription(BabelComponentModel* model, const std::string& type, const std::string& library);
   virtual ~BabelComponentDescription();
 
   /** Returns the type name (a string) the component described by this class. */
@@ -69,11 +69,11 @@ public:
   /** Returns a pointer to the component model under which the component type
       is defined. */
   virtual const ComponentModel* getModel() const;
-protected:
-  friend class BabelComponentModel;
-  BabelComponentModel* model;
-  std::string type;
-  
+
+  /** Set the name of the DLL for this component.  The loader will search
+   *    the SIDL_DLL_PATH for a matching library name. */
+  void setLibrary(const std::string &l) { library = l; }
+
 private:
   BabelComponentDescription(const BabelComponentDescription&);
   BabelComponentDescription& operator=(const BabelComponentDescription&);

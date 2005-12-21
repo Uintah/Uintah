@@ -43,13 +43,20 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/resourceReference.h>
+
+#include <libxml/xmlreader.h>
 
 namespace SCIRun
 {
 class ComponentDescription;
 class ComponentInstance;
+class SCIRunFramework;
+
+typedef std::vector<std::string> StringVector;
+typedef std::map<std::string, std::string> StringMap;
 
 /**
  * \class ComponentModel
@@ -64,7 +71,7 @@ class ComponentInstance;
 class ComponentModel
 {
 public:
-  ComponentModel(const std::string& prefixName);
+  ComponentModel(const std::string& prefixName, SCIRunFramework* framework);
   virtual ~ComponentModel();
 
   /** Returns true if component type \em type has been registered with this
@@ -83,10 +90,10 @@ public:
 
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
-  virtual bool destroyInstance(ComponentInstance* ci)= 0;
+  virtual bool destroyInstance(ComponentInstance* ci) = 0;
 
   /** Returns the name (as a string) of this component model. */
-  virtual std::string getName() const = 0;
+  virtual const std::string getName() const = 0;
 
   /** Creates a list of all the available components (as ComponentDescriptions)
       registered in this ComponentModel. */
@@ -96,22 +103,35 @@ public:
   /** ? */
   virtual void destroyComponentList() = 0;
 
-  /** ? */
-  virtual void buildComponentList() = 0;
+  /** Locate and parse all XML component model files containing component class descriptions.
+      Derived component model classes will store component class descriptions for use by the
+      \sa ComponentRepository. */
+  virtual void buildComponentList(const StringVector& files=StringVector()) = 0;
 
-  std::string getPrefixName() const { return prefixName; }
+  virtual void setComponentDescription(const std::string& type, const std::string& library) = 0;
 
-  /** Breaks a concatenated list of paths into a vector of paths. Splits on
-   * the ';' character. */
-  std::vector<std::string> splitPathString(const std::string &path);
+  const std::string getPrefixName() const { return prefixName; }
+
 
 protected:
   std::string prefixName;
+  SCIRunFramework* framework;
 
 private:
   ComponentModel(const ComponentModel&);
   ComponentModel& operator=(const ComponentModel&);
 };
+
+
+///////////////////////////////////////////////////////////////////////////
+// convenience functions
+
+bool parseComponentModelXML(const std::string& filexml, ComponentModel* model);
+bool getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths);
+
+/* Breaks a concatenated list of paths into a vector of paths. Splits on
+ * the ';' character. */
+StringVector splitPathString(const std::string& path);
 
 } // end namespace SCIRun
 

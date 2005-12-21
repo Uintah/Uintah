@@ -45,7 +45,6 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/TypeMap.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 
 namespace SCIRun {
@@ -102,7 +101,7 @@ private:
      * "sidl_xml_path": a ';' seperated list of directories where XML based
      *                  descriptions of components can be found.
      */
-    void getSidlPaths();
+    void initSidlPaths();
 
     void parseEnvVariable(std::string& input, const char token,
                           SSIDL::array1<std::string>& stringArray);

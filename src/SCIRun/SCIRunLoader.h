@@ -31,7 +31,7 @@
  *  SCIRunLoader.h: An instance of the SCIRun Parallel Component Loader
  *
  *  Written by:
- *   Kosta  & Keming Zhang 
+ *   Kosta  & Keming Zhang
  *   Department of Computer Science
  *   University of Utah
  *   April 2003
@@ -67,19 +67,19 @@ public:
 
   /** */
   virtual int createPInstance(const ::std::string& componentType,
-                              const std::string& componentName,
-                              const sci::cca::TypeMap::pointer& properties,
-                              SSIDL::array1<std::string>& componentURLs);
+			      const std::string& componentName,
+			      const sci::cca::TypeMap::pointer& properties,
+			      SSIDL::array1<std::string>& componentURLs);
 
   /** */
   virtual int createInstance(const std::string& componentType,
-                             const std::string& componentName, 
-                             const sci::cca::TypeMap::pointer& properties,
-                             std::string &componentURL);
-  
+			     const std::string& componentName,
+			     const sci::cca::TypeMap::pointer& properties,
+			     std::string &componentURL);
+
   /** */
   virtual int destroyInstance(const std::string& componentName, float timeout);
-  
+
   /** */
   virtual int getAllComponentTypes(::SSIDL::array1< ::std::string>& componentTypes);
 
@@ -89,11 +89,13 @@ public:
   /** */
   int mpi_rank;
   int mpi_size;
-  
+
 private:
   void buildComponentList();
-  void readComponentDescription(const std::string& file);
+  void readComponentDescriptions(const std::string& file);
   void destroyComponentList();
+  void setComponentDescription(const std::string& component_type, const std::string& library_name);
+
   std::string masterFrameworkURL;
 
   typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
@@ -104,4 +106,3 @@ private:
 } // end namespace SCIRun
 
 #endif
-

@@ -48,7 +48,8 @@ SCIRunComponentDescription::SCIRunComponentDescription(SCIRunComponentModel* mod
                                                        const std::string& package,
                                                        const std::string& category,
                                                        const std::string& module)
-  : model(model), package(package), category(category), module(module)
+  : ComponentDescription(model, std::string(package + "." + category + "." + module)),
+    package(package), category(category), module(module)
 {
 }
 
@@ -58,7 +59,7 @@ SCIRunComponentDescription::~SCIRunComponentDescription()
 
 std::string SCIRunComponentDescription::getType() const
 {
-  return package+"."+category+"."+module;
+  return type;
 }
 
 const ComponentModel* SCIRunComponentDescription::getModel() const

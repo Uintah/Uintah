@@ -28,7 +28,7 @@
 
 
 /*
- *  InternalServiceDescription.h: 
+ *  InternalServiceDescription.h:
  *
  *  Written by:
  *   Yarden Livnat
@@ -45,9 +45,9 @@
 #include <string>
 
 namespace SCIRun {
-  
+
 class InternalComponentModel;
-  
+
 /** \class InternalServiceDescription
  *
  *
@@ -57,22 +57,21 @@ class InternalServiceDescription : public ComponentDescription
 public:
   InternalServiceDescription(InternalComponentModel* model, const std::string&serviceType);
   virtual ~InternalServiceDescription();
-    
+
   /** */
   virtual std::string getType() const;
   /** */
   virtual ComponentModel* getModel() const;
-    
+
 protected:
+  // duplicates type, but leave this alone for now
   std::string serviceType;
 
 private:
-  InternalComponentModel* model;
-    
   InternalServiceDescription(const InternalServiceDescription&);
   InternalServiceDescription& operator=(const InternalServiceDescription&);
 };
-  
+
 } // end namespace SCIRun
 
 #endif
