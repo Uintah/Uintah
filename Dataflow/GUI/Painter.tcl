@@ -30,13 +30,9 @@
     
 itcl_class SCIRun_Render_Painter {
     inherit Module
-    protected vp_tabs ""
 
     constructor {config} {
 	set name Painter
-	uplevel \#0 trace variable $this-min w \"$this update_clut_range\"
-	uplevel \#0 trace variable $this-max w \"$this update_clut_range\"
-	
     }
 
     destructor {
@@ -50,34 +46,6 @@ itcl_class SCIRun_Render_Painter {
     }
 	    
 
-    method update_clut_range {args} {
-	upvar \#0 [modname]-min min [modname]-max max
-        if { ![info exists min] || ![info exists max] } return;
-	set ww [expr $max-$min]
-	set wl [expr $min+$ww/2]
-	set rez [expr $ww/1000]
-	foreach tab $vp_tabs {
-	    $tab.clutww.scale configure -from 0 -to $ww -resolution $rez
-	    $tab.clutwl.scale configure -from $min -to $max -resolution $rez
-	    $tab.clutww.scale set $ww
-	    $tab.clutwl.scale set $wl
-	}
-    }
-	
-
-    method labeledSlider { frame text var from to res {width 13}} {
-	frame $frame
-	pack $frame -side top -expand 1 -fill x
-	label $frame.label -text $text -anchor w -width $width
-	pack $frame.label -side left -expand 0 -fill none
-	scale $frame.scale -orient horizontal -variable $var \
-	    -from $from -to $to -resolution $res -showvalue 0 
-	entry $frame.entry -text $var -width 4 -justify right
-	pack $frame.entry -side right -expand 0 -fill x
-	pack $frame.scale -side right -expand 1 -fill x
-	pack $frame -side top -expand 0 -fill x
-	return $frame.scale
-    }
 
     method generate_window_num {} {
 	set num 1
@@ -128,99 +96,6 @@ itcl_class SCIRun_Render_Painter {
 	return $w
     }
 
-    method add_tab { w title } {
-	set f [$w.cp.tabs add -label $title].f
-	frame $f -bd 2 -relief sunken
-	pack $f -expand 1 -fill both
-	$w.cp.tabs select end
-	return $f
-    }
-	
-
-    method add_nrrd_tab { w num } {
-	set w [add_tab $w "Nrrd$num"]
-	foreach c {x y z} {
-	    checkbutton $w.flip$c -text "Nrrd$num Flip [string toupper $c]" \
-		-variable [modname]-nrrd$num-flip_$c \
-		-command "$this-c redrawall"
-	    pack $w.flip$c -side top
-	}
-
- 	foreach c {yz xz xy} {
-	    checkbutton $w.transpose$c \
-		-text "Nrrd$num Transpose [string toupper $c]" \
-		-variable [modname]-nrrd$num-transpose_$c \
-		-command "$this-c redrawall"
-	    pack $w.transpose$c -side top
-	}
-    }
-
-    method add_viewport_tab { w name prefix gl } {
-	set prefix [modname]-$prefix
-	set f [add_tab $w "$name"]
-	lappend vp_tabs $f
-	labeledSlider $f.slice Slice: $prefix-slice 0 255 1
-	$f.slice.scale configure -command \
-	    "$this-c rebind $gl"
-
-	labeledSlider $f.clutww "Window Width:" [modname]-clut_ww 1 2000 3
-	$f.clutww.scale configure -command \
-	    "$this-c rebind $gl"
-
-	labeledSlider $f.clutwl "Window Level:" [modname]-clut_wl 1 2000 3
-	$f.clutwl.scale configure -command \
-	    "$this-c rebind $gl"
-
-	labeledSlider $f.fusion "Image Fusion:" $prefix-fusion 0 1 0.001
-	$f.fusion.scale configure -command \
-	    "$this-c redraw $gl"
-	update_clut_range
-
-	frame $f.f -bd 0
-	checkbutton $f.f.guidelines -text "Show Guidelines" \
-	    -variable $prefix-show_guidelines \
-	    -command "$this-c redraw $gl"
-
-	checkbutton $f.f.mip -text "MIP" \
-	    -variable $prefix-mode \
-	    -onvalue 1 \
-	    -offvalue 0 \
-	    -command "$this-c rebind $gl"
-	pack $f.f.mip $f.f.guidelines -side left -anchor w
-
-	bind $gl <ButtonPress> "+$w.cp.tabs select \"$name\""
-	pack $f.f -side top -anchor w
-    }	
-	
-	
-    method control_panel { w } {
-	frame $w -bd 1 -relief groove
-	iwidgets::tabnotebook $w.tabs -raiseselect true \
-	    -tabpos s -backdrop gray -equaltabs -0 -bevelamount 5 \
-	    -borderwidth 0
-	pack $w.tabs -expand 1 -fill both
-    }
-
-
-
-    method show_control_panel { w } {
-	pack forget $w.e $w.cp $w.f
-	pack $w.cp -side bottom -fill both -expand 0
-	pack $w.e -side bottom -fill x
-	pack $w.f -expand 1 -fill both
-
-	$w.e configure -command "$this hide_control_panel $w" \
-	    -cursor based_arrow_up
-    }
-
-    method hide_control_panel { w } {
-	pack forget $w.e $w.cp $w.f
-	pack $w.e -side bottom -fill x
-	pack $w.f -expand 1 -fill both
-	$w.e configure -command "$this show_control_panel $w" \
-	    -cursor based_arrow_down
-    }
-
     method ui { } {
 	set children [winfo children .]
 	set pos 0
@@ -245,31 +120,6 @@ itcl_class SCIRun_Render_Painter {
 	wm title $w "[modname] $title"
 	wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
         four_view $w
-
-# 	frame $w.f -bd 0 -background red
-# 	set img [image create photo -width 1 -height 1]
-# 	button $w.e -height 4 -bd 2 -relief raised -image $img \
-# 	    -cursor based_arrow_down
-# 	button $w.b -text "New Slice Viewer Window" -command "$this create_ui"
-# 	pack $w.b -anchor w
-# 	pack $w.e -side bottom -fill x
-
-#	control_panel $w.cp
-#	show_control_panel $w
-
-#        set winname [join [string tolower $title] ""]
-#        gl_frame $w.f.01-$winname
-
-#         gl_frame $w.f.02-$winname
-
-#         gl_frame $w.f.03-$winname
-
-#         gl_frame $w.f.04-$winname
-
-
-
-
-#	add_viewport_tab $w $title $winname-viewport0 $w.f.$winname
     }
 
     method four_view { w } {
@@ -283,8 +133,6 @@ itcl_class SCIRun_Render_Painter {
 
 	set top [$w.topbot childsite top]
 	set bot [$w.topbot childsite bottom]
-
-
 	
 	Linkedpane $top.lr -orient vertical -thickness 0 \
 	    -sashheight 5000 -sashwidth 6 -sashindent 0 -sashborderwidth 2 \
@@ -310,36 +158,12 @@ itcl_class SCIRun_Render_Painter {
 	pack $top.lr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 	pack $bot.lr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 
- 	pack [gl_frame $topl.gl1] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
- 	pack [gl_frame $topr.gl2] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
- 	pack [gl_frame $botl.gl3] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+ 	pack [gl_frame $topl.gl1] -expand 1 -fill both
+ 	pack [gl_frame $topr.gl2] -expand 1 -fill both
+ 	pack [gl_frame $botl.gl3] -expand 1 -fill both
  	pack [gl_frame $botr.gl4] -expand 1 -fill both
 
 
     }
-
-    method raise_color {button color module_command} {
-        global $color
-        set windowname .ui[modname]_color
-        if {[winfo exists $windowname]} {
-	    destroy $windowname
-	}
-	# makeColorPicker now creates the $window.color toplevel.
-	makeColorPicker $windowname $color \
-	    "$this set_color $button $color $module_command" \
-	    "destroy $windowname"
-    }
-    
-    method set_color { button color { module_command "" } } {
-	upvar \#0 $color-r r $color-g g $color-b b
-	# format the r,g,b colors into a hexadecimal string representation
-	set colstr [format \#%04x%04x%04x [expr int($r * 65535)] \
-			[expr int($g * 65535)] [expr int($b * 65535)]]
-	$button config -background $colstr -activebackground $colstr
-	if { [string length $module_command] } {
-	    $this-c $module_command
-	}
-    }
-
 }
     

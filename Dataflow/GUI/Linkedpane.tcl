@@ -46,7 +46,6 @@ class LinkedPane {
     inherit ::iwidgets::Panedwindow
     private variable other ""
     constructor { args } { 
-        puts "LinkedPane $args"
         eval ::iwidgets::Panedwindow::constructor $args
     }
     public method set_link { w } { set other $w }
