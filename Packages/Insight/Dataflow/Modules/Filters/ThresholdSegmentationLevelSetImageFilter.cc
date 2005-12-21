@@ -108,6 +108,8 @@ public:
   bool run( itk::Object*  , itk::Object*   );
 
   // progress bar
+  bool check_for_input();
+  void check_for_waiting_input();
 
   void update_after_iteration();
 
@@ -219,6 +221,8 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
   
+  check_for_waiting_input();
+
   outhandle_OutputImage_ = out_OutputImage_; 
   outport_OutputImage_->send(outhandle_OutputImage_);
   
@@ -273,34 +277,58 @@ ThresholdSegmentationLevelSetImageFilter::~ThresholdSegmentationLevelSetImageFil
 {
 }
 
-void 
-ThresholdSegmentationLevelSetImageFilter::execute() 
-{
+bool
+ThresholdSegmentationLevelSetImageFilter::check_for_input() {
   // check input ports
   inport_SeedImage_ = (ITKDatatypeIPort *)get_iport("SeedImage");
   if(!inport_SeedImage_) {
     error("Unable to initialize iport");
-    return;
+    return false;
   }
 
   inport_SeedImage_->get(inhandle_SeedImage_);
 
   if(!inhandle_SeedImage_.get_rep()) {
-    return;
+    return false;
   }
 
   inport_FeatureImage_ = (ITKDatatypeIPort *)get_iport("FeatureImage");
   if(!inport_FeatureImage_) {
     error("Unable to initialize iport");
-    return;
+    return false;
   }
 
   inport_FeatureImage_->get(inhandle_FeatureImage_);
 
   if(!inhandle_FeatureImage_.get_rep()) {
-    return;
+    return false;
   }
 
+  return true;
+}
+
+
+void
+ThresholdSegmentationLevelSetImageFilter::check_for_waiting_input() {
+  inport_SeedImage_ = (ITKDatatypeIPort *)get_iport("SeedImage");
+  if (inport_SeedImage_->mailbox.numItems()) {
+    ITKDatatypeHandle temp = 0;
+    inport_SeedImage_->get(temp);
+  }
+
+  inport_FeatureImage_ = (ITKDatatypeIPort *)get_iport("FeatureImage");
+  if (inport_FeatureImage_->mailbox.numItems()) {
+    ITKDatatypeHandle temp = 0;
+    inport_FeatureImage_->get(temp);
+  }
+}
+
+
+void 
+ThresholdSegmentationLevelSetImageFilter::execute() 
+{
+
+  if (!check_for_input()) return;
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -431,6 +459,7 @@ ThresholdSegmentationLevelSetImageFilter::do_it_OutputImage()
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   out_OutputImage_->data_ = tmp;
   outhandle_OutputImage_ = out_OutputImage_; 
+  check_for_waiting_input();
   outport_OutputImage_->send_intermediate(outhandle_OutputImage_);
   return true;
 }
