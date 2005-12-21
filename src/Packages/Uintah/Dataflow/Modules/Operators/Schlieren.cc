@@ -1,9 +1,8 @@
-
-#include <Packages/Uintah/Dataflow/Modules/Operators/Schlieren.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/Schlieren.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
 #include <math.h>
 

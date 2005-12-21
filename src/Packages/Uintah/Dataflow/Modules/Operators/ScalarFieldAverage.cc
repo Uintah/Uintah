@@ -1,15 +1,18 @@
-#include "ScalarFieldAverage.h"
-#include <math.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/BBox.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/BBox.h>
+
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+
+#include "ScalarFieldAverage.h"
+
+#include <math.h>
 #include <iostream>
-//#include <SCICore/Math/Mat.h>
+
 using std::cerr;
 using std::endl;
 

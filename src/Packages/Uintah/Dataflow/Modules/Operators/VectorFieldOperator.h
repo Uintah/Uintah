@@ -1,18 +1,19 @@
 #ifndef __OPERATORS_VECTORFIELDOPERATOR_H__
 #define __OPERATORS_VECTORFIELDOPERATOR_H__
 
-#include "VectorOperatorFunctors.h"
-#include "UnaryFieldOperator.h"
-#include "OperatorThread.h"
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+
+#include "VectorOperatorFunctors.h"
+#include "UnaryFieldOperator.h"
+#include "OperatorThread.h"
 
 #include <sgi_stl_warnings_off.h>
 #include <string>

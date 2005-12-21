@@ -35,7 +35,6 @@
  */
 
 #include "FaceCuttingPlane.h"
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/ColorMap.h>
