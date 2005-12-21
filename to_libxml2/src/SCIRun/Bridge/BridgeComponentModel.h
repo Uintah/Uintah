@@ -73,7 +73,7 @@ public:
 
   virtual bool destroyInstance(ComponentInstance *ci);
 
-  virtual std::string getName() const;
+  virtual const std::string getName() const;
 
   virtual void
   listAllComponentTypes(std::vector<ComponentDescription*>&, bool);

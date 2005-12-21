@@ -44,24 +44,24 @@
 
 namespace SCIRun {
 
-  InternalServiceDescription::InternalServiceDescription(InternalComponentModel* model,
-			       const std::string& serviceType)
-  : model(model), serviceType(serviceType)
-  {
-  }
-  
-  InternalServiceDescription::~InternalServiceDescription()
-  {
-  }
-  
-  std::string InternalServiceDescription::getType() const
-  {
-    return serviceType;
-  }
-  
-  ComponentModel* InternalServiceDescription::getModel() const
-  {
-    return model;
-  }
-  
+InternalServiceDescription::InternalServiceDescription(InternalComponentModel* model,
+						       const std::string& serviceType)
+  : ComponentDescription(model, serviceType), serviceType(serviceType)
+{
+}
+
+InternalServiceDescription::~InternalServiceDescription()
+{
+}
+
+std::string InternalServiceDescription::getType() const
+{
+  return serviceType;
+}
+
+ComponentModel* InternalServiceDescription::getModel() const
+{
+  return model;
+}
+
 } // end namespace SCIRun

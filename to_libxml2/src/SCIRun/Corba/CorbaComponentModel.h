@@ -28,7 +28,7 @@
 
 
 /*
- *  CorbaComponentModel.h: 
+ *  CorbaComponentModel.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -66,9 +66,10 @@ class SCIRunFramework;
 class CorbaComponentModel : public ComponentModel
 {
 public:
-  CorbaComponentModel(SCIRunFramework* framework);
+  CorbaComponentModel(SCIRunFramework* framework,
+		    const StringVector& xmlPaths=StringVector());
   virtual ~CorbaComponentModel();
-  
+
   /** Returns true if component type \em type has been registered with this
       component model.  In other words, returns true if this ComponentModel
       knows how to instantiate component \em type. */
@@ -80,57 +81,44 @@ public:
       on failure. */
   virtual ComponentInstance*
   createInstance(const std::string &name,
-                 const std::string &type,
-                 const sci::cca::TypeMap::pointer &tm);
+		 const std::string &type,
+		 const sci::cca::TypeMap::pointer &tm);
 
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
   virtual bool destroyInstance(ComponentInstance *ci);
 
   /**  Returns the name (as a string) of this component model. */
-  virtual std::string getName() const;
+  virtual const std::string getName() const;
 
   /** Creates a list of all the available components (as ComponentDescriptions)
       registered in this ComponentModel. */
   virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-                                     bool);
+				     bool);
 
   /** ? */
   virtual void destroyComponentList();
 
   /** ? */
-  virtual void buildComponentList();
-  
+  virtual void buildComponentList(const StringVector& files=StringVector());
+
+  /** ? */
+  virtual void setComponentDescription(const std::string& type, const std::string& library);
+
   /** Get/set the directory path to component DLLs.  By default,
    * the sidlDLLPath is initialized to the environment variable
    * SIDL_DLL_PATH. */
   std::string getSidlDLLPath() const { return sidlDLLPath; }
   void setSidlDLLPath( const std::string& s) { sidlDLLPath = s; }
-  
-  /** Get/Set the filename for the DTD describing valid xml files for this
-      component model. */
-  //    std::string getGrammarFileName() const
-  //    { return grammarFileName; }
-  //    void setGrammarFileName( const std::string& s )
-  //    { grammarFileName = s; }
-  
-//   /** Breaks a concatenated list of paths into a vector of paths. Splits on
-//    * the ';' character. */
-//   std::vector<std::string> static splitPathString(const std::string &);
 
   static const std::string DEFAULT_PATH;
-  
+
 private:
-  SCIRunFramework* framework;
   typedef std::map<std::string, CorbaComponentDescription*> componentDB_type;
   componentDB_type components;
   SCIRun::Mutex lock_components;
-
-  void readComponentDescription(const std::string& file);
-
   std::string sidlDLLPath;
-  //    std::string grammarFileName;
-  
+
   CorbaComponentModel(const CorbaComponentModel&);
   CorbaComponentModel& operator=(const CorbaComponentModel&);
 };

@@ -28,7 +28,7 @@
 
 
 /*
- *  InternalComponentModel.h: 
+ *  InternalComponentModel.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -69,42 +69,42 @@ public:
 
   /** */
   virtual ComponentInstance* createInstance(const std::string& name,
-                                            const std::string& type);
+					    const std::string& type);
 
   /** */
   virtual bool destroyInstance(ComponentInstance *ci);
 
   /** */
   sci::cca::Port::pointer getFrameworkService(const std::string& type,
-                                              const std::string& componentName);
-  
-  /** */
-  bool releaseFrameworkService(const std::string& type,
-                               const std::string& componentName);
+					      const std::string& componentName);
 
   /** */
-  virtual std::string getName() const;
+  bool releaseFrameworkService(const std::string& type,
+			       const std::string& componentName);
+
+  /** */
+  virtual const std::string getName() const;
 
   /** */
   virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-                                     bool);
+				     bool);
 
   /** ? */
   virtual void destroyComponentList();
 
   /** ? */
-  virtual void buildComponentList();
+  virtual void buildComponentList(const StringVector& files=StringVector());
 
 private:
   typedef std::map<std::string, InternalFrameworkServiceDescription*> FrameworkServicesMap;
-
-  SCIRunFramework* framework;
 
   FrameworkServicesMap frameworkServices;
   SCIRun::Mutex lock_frameworkServices;
 
   void addService(InternalFrameworkServiceDescription* cd);
   //void addService(InternalComponenServicetDescription* cd);
+
+  virtual void setComponentDescription(const std::string& type, const std::string& library);
 
   InternalComponentModel(const InternalComponentModel&);
   InternalComponentModel& operator=(const InternalComponentModel&);
