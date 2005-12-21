@@ -314,7 +314,9 @@ class Painter : public Module
     NrrdVolume		(GuiContext *ctx, 
                          const string &name,
                          NrrdDataHandle &);
+    NrrdVolume          (NrrdVolume *copy, const string &name, bool clear = 0);
     void                set_nrrd(NrrdDataHandle &);
+    NrrdDataHandle      get_nrrd();
     Point               index_to_world(const vector<int> &index);
     vector<int>         world_to_index(const Point &p);
     vector<double>      vector_to_index(const Vector &v);
@@ -336,8 +338,8 @@ class Painter : public Module
     int                 max_index(int axis);
 
     bool                inside_p(const Point &p);
-
     NrrdDataHandle	nrrd_;
+    GuiContext *        gui_context_;
     GuiString           name_;
     UIdouble		opacity_;
     UIdouble            clut_min_;
@@ -346,6 +348,7 @@ class Painter : public Module
     float               data_min_;
     float               data_max_;
     GuiInt              colormap_;
+    vector<int>         stub_axes_;
   };
 
   struct SliceWindow;
@@ -386,7 +389,7 @@ class Painter : public Module
     void		prev_slice();
     void		zoom_in();
     void		zoom_out();
-    Point		world_to_screen(Point &);
+    Point		world_to_screen(const Point &);
     Point		screen_to_world(unsigned int x, unsigned int y);
     Vector		x_dir();
     Vector		y_dir();
@@ -394,6 +397,8 @@ class Painter : public Module
     int                 y_axis();
     void                render_text();
     void		render_orientation_text();
+    void		render_grid();
+    void                draw_line(const Point &, const Point &);
 
     Painter &           painter_;
     string		name_;
@@ -486,6 +491,7 @@ class Painter : public Module
   int			redraw_window(SliceWindow &);
   void			draw_guide_lines(SliceWindow &, float, float, float);
   void			draw_slice_lines(SliceWindow &);
+
   
   // Methods to render TrueType text labels
   void			initialize_fonts();

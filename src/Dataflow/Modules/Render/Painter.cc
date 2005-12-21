@@ -91,15 +91,17 @@ namespace SCIRun {
      X - Fix Non-origin world_to_index conversion
      X - Use FreeTypeTextTexture class for text
      X - Send Bundles correctly
+     X - Ability to render 2D nrrds
+     X - Automatic world space grid
+     X - Add tool support for ITK filters
+       - help mode
        - Better tool mechanism to allow for customization & event fallthrough 
-       - Add support for 2, 4, 5-D nrrds (includes time and rgba)
+       - Add support for 4, 5-D nrrds (includes time and rgba)
        - Add back in MIP mode
        - Geometry output port
        - Show other windows slice correctly
-       - Automatic world space grid
        - Automatic index space grid
        - Remove TCLTask::lock and replace w/ volume lock
-       - Add tool support for ITK filters
        - View to choose tools
        - Change tools to store error codes
        - Add keybooard to tools
@@ -110,6 +112,17 @@ namespace SCIRun {
        - Removal of for_each
        - Support applying CM2
        - Optimize build_index_to_world_matrix out
+
+       Filters:
+       confidence connected image filter
+       discrete gaussian image filter
+       gradient magnitude image filter
+       binary dilate/erode filters
+       later add greyscale dilate/erode filters
+       *aniosotropicimagediffusionfilters* (vector if supported)
+       watershed
+       
+
   */
      
 Painter::RealDrawer::~RealDrawer()
@@ -264,27 +277,92 @@ Painter::WindowLayout::WindowLayout(GuiContext */*ctx*/) :
 {
 }
 
+int
+nrrd_type_size(Nrrd *nrrd)
+{
+  int val = 0;
+  switch (nrrd->type) {
+  case nrrdTypeChar: val = sizeof(char); break;
+  case nrrdTypeUChar: val = sizeof(unsigned char); break;
+  case nrrdTypeShort: val = sizeof(short); break;
+  case nrrdTypeUShort: val = sizeof(unsigned short); break;
+  case nrrdTypeInt: val = sizeof(int); break;
+  case nrrdTypeUInt: val = sizeof(unsigned int); break;
+  case nrrdTypeLLong: val = sizeof(signed long long); break;
+  case nrrdTypeULLong: val = sizeof(unsigned long long); break;
+  case nrrdTypeFloat: val = sizeof(float); break;
+  case nrrdTypeDouble: val = sizeof(double); break;
+  default: throw "Unsupported data type: "+to_string(nrrd->type);
+  }
+  return val;
+}
+
+
+int
+nrrd_data_size(Nrrd *nrrd)
+{
+  if (!nrrd->dim) return 0;
+  unsigned int size = nrrd->axis[0].size;
+  for (int a = 1; a < nrrd->dim; ++a)
+    size *= nrrd->axis[a].size;
+  return size*nrrd_type_size(nrrd);
+}
 
 Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
                                 const string &name,
                                 NrrdDataHandle &nrrd) :
   nrrd_(0),
-  name_(ctx->subVar("name"), name),
-  opacity_(ctx->subVar("opacity"), 1.0),
-  clut_min_(ctx->subVar("clut_min"), 0.0),
-  clut_max_(ctx->subVar("clut_max"), 1.0),
-  semaphore_(ctx->getfullname().c_str(), 1),
+  gui_context_(ctx),
+  name_(gui_context_->subVar("name"), name),
+  opacity_(gui_context_->subVar("opacity"), 1.0),
+  clut_min_(gui_context_->subVar("clut_min"), 0.0),
+  clut_max_(gui_context_->subVar("clut_max"), 1.0),
+  semaphore_(gui_context_->getfullname().c_str(), 1),
   data_min_(0),
   data_max_(1.0),
-  colormap_(ctx->subVar("colormap"), 0)
+  colormap_(ctx->subVar("colormap"), 0),
+  stub_axes_()
 {
   set_nrrd(nrrd);
 }
 
+
+Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy, 
+                                const string &name,
+                                bool clear) :
+  nrrd_(scinew NrrdData()),
+  gui_context_(copy->gui_context_->get_parent()->subVar(name,0)),
+  name_(gui_context_->subVar("name"), name),
+  opacity_(gui_context_->subVar("opacity"), copy->opacity_.get()),
+  clut_min_(gui_context_->subVar("clut_min"), copy->clut_min_.get()),
+  clut_max_(gui_context_->subVar("clut_max"), copy->clut_max_.get()),
+  semaphore_(gui_context_->getfullname().c_str(), 1),
+  data_min_(copy->data_min_),
+  data_max_(copy->data_max_),
+  colormap_(gui_context_->subVar("colormap"), copy->colormap_.get()),
+  stub_axes_(copy->stub_axes_)
+{
+  nrrdCopy(nrrd_->nrrd, copy->nrrd_->nrrd);
+  if (clear) 
+    memset(nrrd_->nrrd->data, 0, nrrd_data_size(nrrd_->nrrd));
+
+  set_nrrd(nrrd_);
+}
+
+  
 void
 Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd) 
 {
   nrrd_ = nrrd;
+  if (nrrd->nrrd->dim == 2) {
+    nrrd_ = new NrrdData();
+    nrrdAxesInsert(nrrd_->nrrd, nrrd->nrrd, 2);
+    nrrd_->nrrd->axis[2].min = 0.0;
+    nrrd_->nrrd->axis[2].max = 1.0;
+    nrrd_->nrrd->axis[2].spacing = 1.0;
+    stub_axes_.push_back(2);
+  }
+
   for (int a = 0; a < nrrd_->nrrd->dim; ++a) {
     if (nrrd_->nrrd->axis[a].min > nrrd_->nrrd->axis[a].max)
       SWAP(nrrd_->nrrd->axis[a].min,nrrd_->nrrd->axis[a].max);
@@ -303,6 +381,18 @@ Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd)
   }
 }
 
+
+NrrdDataHandle
+Painter::NrrdVolume::get_nrrd() 
+{
+  NrrdDataHandle nrrd = nrrd_;
+  for (unsigned int s = 0; s < stub_axes_.size(); ++s) {
+    NrrdDataHandle nout = new NrrdData();
+    nrrdAxesDelete(nout->nrrd, nrrd->nrrd, stub_axes_[s]);
+    nrrd = nout;
+  }
+  return nrrd;
+}
 
 
 DECLARE_MAKER(Painter)
@@ -367,6 +457,8 @@ Painter::render_window(SliceWindow &window) {
   }
   CHECK_OPENGL_ERROR();
   
+  window.render_grid();
+
   for (unsigned int s = 0; s < window.slices_.size(); ++s)
     window.slices_[s]->draw();
 
@@ -588,6 +680,162 @@ Painter::draw_slice_lines(SliceWindow &window)
     SWAP(p,s);
   }
   CHECK_OPENGL_ERROR();
+}
+
+
+double div_d(double dividend, double divisor) {
+  return Floor(dividend/divisor);
+}
+
+double mod_d(double dividend, double divisor) {
+  return dividend - Floor(dividend/divisor)*divisor;
+}
+
+
+
+void
+Painter::SliceWindow::draw_line(const Point &p1, const Point &p2) {
+#if 0
+  Point s1 = world_to_screen(p1);
+  Point s2 = world_to_screen(p2);
+  Point temp1 = screen_to_world(s1.x(), s1.y());
+  Point temp2 = screen_to_world(s2.x(), s2.y());
+
+  Vector v1 = s2 - s1;
+  Vector v2(0,0,1);
+  Vector v3 = Cross(v1,v2);
+  if (v3.length() < 0.00001) return;
+  v3.normalize();
+  s1(0) = Floor(s1.x());
+  s1(1) = Floor(s1.y());
+  s2(0) = Floor(s2.x());
+  s2(1) = Floor(s2.y());
+  Point s11 = s1+v3;
+  Point s22 = s2+v3;
+
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+  glScaled(2.0, 2.0, 2.0);
+  glTranslated(-.5, -.5, -.5);
+  GLint gl_vp[4];
+  glGetIntegerv(GL_VIEWPORT, gl_vp);
+  glScaled(1.0/(gl_vp[2] - gl_vp[0]), 
+           1.0/(gl_vp[3] - gl_vp[1]), 1.0);
+  CHECK_OPENGL_ERROR();
+//   s1 = screen_to_world(s1.x(), s1.y());
+//   s2 = screen_to_world(s2.x(), s2.y());
+//   s11 = screen_to_world(s11.x(), s11.y());
+//   s22 = screen_to_world(s22.x(), s22.y());
+  glBegin(GL_QUADS);
+  glVertex3dv(&s1(0));
+  glVertex3dv(&s11(0));
+  glVertex3dv(&s22(0));
+  glVertex3dv(&s2(0));
+  glEnd();
+
+  glPopMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  CHECK_OPENGL_ERROR();
+#endif
+}
+
+
+// renders vertical and horizontal bars that represent
+// selected slices in other dimensions
+void
+Painter::SliceWindow::render_grid()
+{
+  //  double one = 100.0 / zoom_;    // World space units per one pixel
+  double units = zoom_ / 100.0;  // Pixels per world space unit
+  const double pixels = 100.0;    // Number of target pixels for grid gap
+
+  vector<double> gaps(1, 1.0);
+  gaps.push_back(1/2.0);
+  gaps.push_back(1/5.0);
+
+  double realdiff = 10000;
+  int selected = 0;
+  for (unsigned int i = 0; i < gaps.size(); ++i) {
+    bool done = false;
+    double diff = fabs(gaps[i]*units-pixels);
+    while (!done) {
+      if (fabs((gaps[i]*10.0)*units - pixels) < diff) 
+        gaps[i] *= 10.0;
+      else if (fabs((gaps[i]/10.0)*units - pixels) < diff) 
+        gaps[i] /= 10.0;
+      else
+        done = true;
+      diff = fabs(gaps[i]*units-pixels);
+    }
+
+    if (diff < realdiff) {
+      realdiff = diff;
+      selected = i;
+    }
+  }
+  double gap = gaps[selected];
+
+  Point min = screen_to_world(0,0);
+  Point max = screen_to_world(viewport_->width()-1, viewport_->height()-1);
+
+  int xax = painter_.x_axis(*this);
+  int yax = painter_.y_axis(*this);
+  min(xax) = div_d(min(xax), gap)*gap;
+  min(yax) = div_d(min(yax), gap)*gap;
+
+  glColor4d(1.0, 1.0, 1.0, 1.0);
+  glDisable(GL_TEXTURE_2D);
+  glDisable(GL_BLEND);
+  CHECK_OPENGL_ERROR();
+  FreeTypeTextTexture text("X",painter_.fonts_["default"]);
+  int num = 0;
+  Point linemin = min;
+  Point linemax = min;
+  linemax(yax) = max(yax);
+  while (linemin(xax) < max(xax)) {
+    linemin(xax) = linemax(xax) = min(xax) + gap*num;
+    glBegin(GL_LINES);
+    glVertex3dv(&linemin(0));
+    glVertex3dv(&linemax(0));
+    glEnd();
+
+    text.set(to_string(linemin(xax)));
+
+    Point pos = world_to_screen(linemin);
+    text.draw(pos.x()+1, pos.y(), FreeTypeTextTexture::sw);
+
+    pos = world_to_screen(linemax);
+    text.draw(pos.x()+1, pos.y(), FreeTypeTextTexture::nw);
+
+    num++;
+  }
+
+  num = 0;
+  linemin = linemax = min;
+  linemax(xax) = max(xax);
+  while (linemin(yax) < max(yax)) {
+    linemin(yax) = linemax(yax) = min(yax) + gap*num;
+    glBegin(GL_LINES);
+    glVertex3dv(&linemin(0));
+    glVertex3dv(&linemax(0));
+    glEnd();
+
+    text.set(to_string(linemin(yax)));
+
+    Point pos = world_to_screen(linemin);
+    text.draw(pos.x(), pos.y()+1, FreeTypeTextTexture::sw);
+
+    pos = world_to_screen(linemax);
+    text.draw(pos.x(), pos.y()+1, FreeTypeTextTexture::se);
+    
+    CHECK_OPENGL_ERROR();
+    num++;
+  }
 }
 
 
@@ -1077,7 +1325,7 @@ Painter::SliceWindow::screen_to_world(unsigned int x, unsigned int y) {
 
 
 Point
-Painter::SliceWindow::world_to_screen(Point &world)
+Painter::SliceWindow::world_to_screen(const Point &world)
 {
   GLdouble xyz[3];
   gluProject(world(0), world(1), world(2),
@@ -1193,11 +1441,11 @@ Painter::NrrdVolume::index_valid(const vector<int> &index) {
 void
 Painter::send_data()
 {
-
   BundleHandle bundle = new Bundle();
   for (unsigned int v = 0; v < volumes_.size(); ++v) {
     string name = volumes_[v]->name_.get();
-    bundle->setNrrd(name, volumes_[v]->nrrd_);
+    NrrdDataHandle nrrd = volumes_[v]->get_nrrd();
+    bundle->setNrrd(name, nrrd);
   }
   BundleOPort *oport = (BundleOPort *)get_oport("Paint Data");
   ASSERT(oport);
@@ -1229,8 +1477,8 @@ Painter::static_callback(void *this_ptr) {
 
 bool
 Painter::callback() {
-  if (filter_) 
-    cerr << "filter = false\n";
+//   if (filter_) 
+//     cerr << "filter = false\n";
   filter_ = 0;
   return true;
 }
@@ -1266,9 +1514,9 @@ Painter::execute()
       string name = bundles_[b]->getNrrdName(n);
       NrrdDataHandle nrrdH = bundles_[b]->getNrrd(name);
       if (!nrrdH.get_rep()) continue;
-      if (nrrdH->nrrd->dim < 3)
+      if (nrrdH->nrrd->dim < 2)
       {
-        warning("Nrrd with dim < 3, skipping.");
+        warning("Nrrd with dim < 2, skipping.");
         continue;
       }
       nrrds.push_back(nrrdH);
@@ -1767,6 +2015,7 @@ int
 Painter::mark_autoview(SliceWindow &window) {
   window.autoview_ = true;
   window.redraw_ = true;
+  return 1;
 }
   
 
@@ -1816,43 +2065,13 @@ Painter::autoview(SliceWindow &window) {
 }
    
 
-int
-nrrd_type_size(Nrrd *nrrd)
-{
-  int val = 1;
-  switch (nrrd->type) {
-  case nrrdTypeChar: val = sizeof(char); break;
-  case nrrdTypeUChar: val = sizeof(unsigned char); break;
-  case nrrdTypeShort: val = sizeof(short); break;
-  case nrrdTypeUShort: val = sizeof(unsigned short); break;
-  case nrrdTypeInt: val = sizeof(int); break;
-  case nrrdTypeUInt: val = sizeof(unsigned int); break;
-  case nrrdTypeLLong: val = sizeof(signed long long); break;
-  case nrrdTypeULLong: val = sizeof(unsigned long long); break;
-  case nrrdTypeFloat: val = sizeof(float); break;
-  case nrrdTypeDouble: val = sizeof(double); break;
-  default: throw "Unsupported data type: "+to_string(nrrd->type);
-  }
-  return val;
-}
+
 
 
 int
 Painter::create_volume(NrrdVolumes *copies) {
   if (!current_volume_) return -1;
-  NrrdDataHandle nrrd = scinew NrrdData();
-  nrrdCopy(nrrd->nrrd, current_volume_->nrrd_->nrrd);
-  vector<int> max_index = current_volume_->max_index();
-  int size = max_index[0]+1;
-  for (unsigned int a = 1; a < max_index.size(); ++a)
-    size *= max_index[a]+1;
-
-  memset(nrrd->nrrd->data, 0, size*nrrd_type_size(nrrd->nrrd));
-  string name = current_volume_->name_.get()+"-Copy";
-  NrrdVolume *volume = 
-    scinew NrrdVolume(ctx->subVar(name, false), name, nrrd);
-  volumes_.push_back(volume);
-  current_volume_ = volume;
+  create_volume(current_volume_->name_.get()+"-Copy", 0);
   return volumes_.size()-1;
 }
 
@@ -1860,22 +2079,11 @@ Painter::create_volume(NrrdVolumes *copies) {
 Painter::NrrdVolume *
 Painter::create_volume(string name, int nrrdType) {
   if (!current_volume_) return 0;
-  NrrdDataHandle nrrd = scinew NrrdData();
-  nrrdCopy(nrrd->nrrd, current_volume_->nrrd_->nrrd);
-  vector<int> max_index = current_volume_->max_index();
-  int size = max_index[0]+1;
-  for (unsigned int a = 1; a < max_index.size(); ++a)
-    size *= max_index[a]+1;
-
-
-  memset(nrrd->nrrd->data, 0, size*nrrd_type_size(nrrd->nrrd));
-  NrrdVolume *volume = 
-    scinew NrrdVolume(ctx->subVar(name, false), name, nrrd);
-  volumes_.push_back(volume);
+  volumes_.push_back(new NrrdVolume(current_volume_, name, 1));
   //volume_map_[name] = volumes_.back();
-  current_volume_ = volume;
+  current_volume_ = volumes_.back();
   for_each(&Painter::extract_window_slices);
-  return volume;
+  return current_volume_;
 }
 
     

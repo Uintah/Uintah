@@ -155,7 +155,8 @@ string *
 Painter::ZoomTool::mouse_motion(MouseState &mouse) {
   double scale = 1.0;//exp(log(window_->zoom_/100.0)/log(10.0));
   //  cerr << scale << std::endl;
-  window_->zoom_ = Max(1.0,zoom_+scale*(mouse.dx_+mouse.dy_));
+  //  window_->zoom_ = Max(1.0,zoom_+scale*(mouse.dx_+mouse.dy_));
+  window_->zoom_ = Max(0.00001,zoom_*Pow(1.002,mouse.dx_+mouse.dy_));
   painter_->redraw_window(*window_);
   return 0; 
 }
@@ -1040,6 +1041,21 @@ Painter::StatisticsTool::recompute() {
     variance += (values_[n]-mean_)*(values_[n]-mean_);
   variance /= values_.size();
   standard_deviation_ = sqrt(variance);
+#if 0
+  cerr << "size: " << values_.size() << std::endl;
+  cerr << "standard_deviation: " << standard_deviation_ << std::endl;
+  cerr << "variance: " << variance << std::endl;
+
+  double temp = 0.0;
+  for (unsigned int n = 0; n < values_.size(); ++n)
+    temp += values_[n]*values_[n];
+  temp /= values_.size();
+  cerr << "temp: " << temp << std::endl;
+  double temp2 = -(mean_*mean_) + temp;
+  cerr << "temp2: " << temp2 << std::endl << std::endl;
+#endif
+
+  
 }
 
 string *
