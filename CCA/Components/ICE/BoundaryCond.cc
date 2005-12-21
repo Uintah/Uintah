@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
@@ -18,7 +19,7 @@
 #include <Core/Exceptions/InternalError.h>
 
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
- // Note:  cout_dbg doesn't work if the iterator bound is
+ // Note:  BC_dbg doesn't work if the iterator bound is
  //        not defined
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream BC_doing("ICE_BC_DOING", false);
@@ -147,12 +148,16 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
 /* --------------------------------------------------------------------- 
  Function~  set_imp_DelP_BC--      
  Purpose~  set the boundary condition for the change in pressure (imp_del_P_
- computed by the semi-implicit pressure solve.  Only set the BC on coarsest
- level.  On the finer levels imp_delP is coarsen
+ computed by the semi-implicit pressure solve.  This routine takes care
+ of the BC at the edge of the computational domain and at all coarse/fine
+ interfaces.
  ---------------------------------------------------------------------  */
 void set_imp_DelP_BC( CCVariable<double>& imp_delP, 
-                      const Patch* patch)        
+                      const Patch* patch,
+                      const VarLabel* label,
+                      DataWarehouse* new_dw)        
 { 
+  BC_doing << "set_imp_DelP_BC "<< endl;
   vector<Patch::FaceType>::const_iterator itr;
   for (itr  = patch->getBoundaryFaces()->begin(); 
        itr != patch->getBoundaryFaces()->end(); ++itr){
@@ -192,9 +197,51 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
           IntVector adj = c - oneCell;
           imp_delP[c] = one_or_zero * imp_delP[adj];
         }
+        //__________________________________
+        //  debugging
+        if( BC_dbg.active() ) {
+          BC_dbg <<"Face: "<< face
+               <<"\t child " << child  <<" NumChildren "<<numChildren
+               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+	        << endl;
+        }
       } // if(foundIterator)
     } // child loop
   }  // face loop
+  
+  
+  //__________________________________
+  // On the fine levels at the coarse fine interface 
+  // set imp_delP_fine = to imp_delP_coarse
+  BC_dbg << *patch << " ";
+  patch->printPatchBCs(BC_dbg);
+
+  if(patch->hasCoarseFineInterfaceFace() ){  
+    BC_dbg << " BC at coarse/Fine interfaces " << endl;
+    //__________________________________
+    // Iterate over coarsefine interface faces
+    vector<Patch::FaceType>::const_iterator iter;  
+    for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
+         iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
+      Patch::FaceType face = *iter;
+
+      const Level* fineLevel = patch->getLevel();
+      const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+      
+      IntVector cl, ch, fl, fh;
+      getCoarseFineFaceRange(patch, coarseLevel, face, 1, cl, ch, fl, fh);
+
+      constCCVariable<double> imp_delP_coarse;
+      new_dw->getRegion(imp_delP_coarse, label, 0, coarseLevel,cl, ch);
+      
+      for(CellIterator iter(fl,fh); !iter.done(); iter++){
+        IntVector f_cell = *iter;
+        IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+        imp_delP[f_cell] =  imp_delP_coarse[c_cell];      
+      }
+    }  // face loop 
+  }  // patch has coarse fine interface 
 }
 
 
