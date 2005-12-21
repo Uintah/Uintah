@@ -98,11 +98,9 @@ FreeTypeTextTexture::render_text_to_texture()
   bbox.reset();
   FreeTypeText fttext(text_, face_);
   fttext.get_bounds(bbox);
-  if (bbox.min().y() < 0) {
-    fttext.set_position(Point(0, -bbox.min().y(), 0));
-    bbox.reset();
-    fttext.get_bounds(bbox);
-  }
+  fttext.set_position(Point(-bbox.min().x(), -bbox.min().y(), 0));
+  bbox.reset();
+  fttext.get_bounds(bbox);
 
   const int wid = Ceil(bbox.diagonal().x());
   const int hei = Ceil(bbox.diagonal().y());
