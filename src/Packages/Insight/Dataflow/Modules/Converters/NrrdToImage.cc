@@ -108,6 +108,11 @@ void NrrdToImage::execute(){
   if(!inrrd_->get(inrrd_handle_))
     return;
 
+  if (!inrrd_handle_.get_rep()) {
+    warning ("Input Nrrd == 0");
+    return;
+  }
+
   Nrrd *n = inrrd_handle_->nrrd;
   int dim = n->dim;
 
