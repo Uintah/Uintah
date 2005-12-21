@@ -43,6 +43,13 @@
 #  define BUILD_BRIDGE 1
 #endif
 
+#include <SCIRun/CCA/CCAComponentModel.h>
+#include <SCIRun/Internal/InternalComponentModel.h>
+
+#ifdef BUILD_DATAFLOW
+#  include <SCIRun/Dataflow/SCIRunComponentModel.h>
+#endif
+
 #ifdef BUILD_BRIDGE
 #  include <SCIRun/Bridge/BridgeComponentModel.h>
 #endif
