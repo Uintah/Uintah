@@ -54,11 +54,12 @@ GuiVar::GuiVar(GuiContext* ctx)
 
 GuiVar::~GuiVar()
 {
-  delete ctx;
+  if (ctx) delete ctx;
 }
 
 void GuiVar::reset()
 {
+  ASSERT(ctx);
   ctx->reset();
 }
 
