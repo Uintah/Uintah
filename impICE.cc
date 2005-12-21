@@ -158,9 +158,14 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure);
   t->requires(Task::ParentNewDW, lb->press_equil_CCLabel,press_matl,oims,gn);       
   t->requires(Task::OldDW,       lb->sum_imp_delPLabel,  press_matl,oims,gn);
-  t->requires(Task::NewDW,       lb->imp_delPLabel,      press_matl,oims,gn);
   
+  //  for setting the boundary conditions
   t->modifies(lb->imp_delPLabel,     press_matl, oims);
+  if (level->getIndex() > 0){
+    t->requires(Task::NewDW, lb->imp_delPLabel, 0,Task::CoarseLevel, press_matl, oims, gn,0);
+  }  
+
+
   t->computes(lb->sum_imp_delPLabel, press_matl, oims);
  
   computesRequires_CustomBCs(t, "imp_update_press_CC", lb, ice_matls,
@@ -764,7 +769,7 @@ void ICE::updatePressure(const ProcessorGroup*,
            
     delete_CustomBCs(d_customBC_var_basket);
     
-    set_imp_DelP_BC(imp_delP, patch);
+    set_imp_DelP_BC(imp_delP, patch, lb->imp_delPLabel, new_dw);
      
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
