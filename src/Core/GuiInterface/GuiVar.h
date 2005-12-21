@@ -70,28 +70,38 @@ class GuiSingle : public GuiVar
 {
   T value_;
 public:
-  GuiSingle(GuiContext* ctx) : GuiVar(ctx) {}
-  GuiSingle(GuiContext* ctx, const T &val) : GuiVar(ctx), value_(val)
+  GuiSingle(GuiContext* context) : GuiVar(context) {}
+  GuiSingle(GuiContext* context, const T &val) : GuiVar(context), value_(val)
   {
     ctx->set(value_);
   }
 
   virtual ~GuiSingle() {}
+  
+  inline void set_context(GuiContext *context) {
+    if (ctx) delete ctx;
+    ctx = context;
+    this->set(value_);
+  }
 
   inline T get() {
-    ctx->get(value_);
+    if (ctx)
+      ctx->get(value_);
     return value_;
   }
   inline void set(const T value) {
     value_ = value;
-    ctx->set(value_);
+    if (ctx)
+      ctx->set(value_);
   }
   // Returns true if variable exists in TCL scope and is of type T
   inline bool valid() {
+    ASSERT(ctx);
     return ctx->get(value_);
   }
 
   inline bool changed() {
+    ASSERT(ctx);
     ctx->reset();
     T temp;
     ctx->get(temp);

@@ -65,6 +65,7 @@ public:
   
   GuiInterface*		getInterface();
   GuiContext*		subVar(const string& name, bool save=true);
+  GuiContext*           get_parent() { return parent_; }
   
   bool			get(string& value);
   void			set(const string& value);
@@ -86,7 +87,6 @@ public:
   void			dontCache(); // always query GUI for value
   void			doCache();  // only query GUI if not cached already
   void			reset(); // resets the cache
-
 private:  
   void			tcl_setVarStates();  
   
