@@ -8,18 +8,17 @@
 #include "AnimatedStreams.h"
 
 #include <Core/Containers/Array1.h>
-#include <Dataflow/Network/Module.h>
 #include <Core/Geom/ColorMap.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Thread/CrowdMonitor.h>
-
 #include <Dataflow/Widgets/PointWidget.h>
 
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
 #include <algorithm>

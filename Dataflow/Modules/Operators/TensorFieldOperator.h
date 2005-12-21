@@ -1,19 +1,20 @@
 #ifndef __DERIVE_TENSORFIELDOPERATOR_H__
 #define __DERIVE_TENSORFIELDOPERATOR_H__
 
-#include "TensorOperatorFunctors.h"
-#include "UnaryFieldOperator.h"
-#include "OperatorThread.h"
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/FData.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+
+#include "TensorOperatorFunctors.h"
+#include "UnaryFieldOperator.h"
+#include "OperatorThread.h"
 
 
 #include <sgi_stl_warnings_off.h>

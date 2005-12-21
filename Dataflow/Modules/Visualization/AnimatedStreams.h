@@ -7,16 +7,16 @@
  */
 
 #include <Core/Containers/Array1.h>
-#include <Core/Thread/Mutex.h>
-#include <Dataflow/Network/Module.h>
-#include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 
 #include <Packages/Uintah/Core/Datatypes/GLAnimatedStreams.h>

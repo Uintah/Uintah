@@ -22,14 +22,15 @@
 #if !defined(SCALARMINMAX_H)
 #define SCALARMINMAX_H
 
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/StringUtil.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/FieldInterface.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Network/Module.h>
 
 namespace Uintah {

@@ -32,8 +32,8 @@ LOG
 
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/MRLatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/MRLatVolField.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h> 

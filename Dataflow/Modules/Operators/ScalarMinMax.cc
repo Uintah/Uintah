@@ -23,17 +23,12 @@
 
 #include <Packages/Uintah/Dataflow/Modules/Operators/ScalarMinMax.h>
 
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/FieldInterface.h>
-
-#include <Core/Containers/Handle.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/IntVector.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Core/Containers/StringUtil.h>
+#include <Dataflow/Ports/FieldPort.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>

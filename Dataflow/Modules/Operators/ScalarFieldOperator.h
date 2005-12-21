@@ -1,9 +1,6 @@
 #ifndef __OPERATORS_SCALARFIELDOPERATOR_H__
 #define __OPERATORS_SCALARFIELDOPERATOR_H__
 
-#include "ScalarOperatorFunctors.h"
-#include "UnaryFieldOperator.h"
-#include "OperatorThread.h"
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Containers/FData.h>
@@ -12,6 +9,11 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+
+#include "ScalarOperatorFunctors.h"
+#include "UnaryFieldOperator.h"
+#include "OperatorThread.h"
+
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>

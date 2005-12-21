@@ -1,11 +1,11 @@
 #include "TensorFieldOperator.h"
-#include <math.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 
-//#include <SCICore/Math/Mat.h>
+#include <math.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
