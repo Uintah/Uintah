@@ -285,19 +285,21 @@ namespace Uintah {
                  << "  matl = " << matl << "\n";
         
         // Initialize the preconditioner
-        cout_dbg << "Creating preconditioner" << "\n";
         PrecondType precondType = getPrecondType(_params->precondTitle);
-        cout_dbg << "precondType = " << precondType << "\n";
         HyprePrecondBase* precond = newHyprePrecond(precondType);
         // Construct Hypre solver object that uses the hypreInterface we
         // chose. Specific solver object is arbitrated in
         // HypreSolverBase. The solver is linked to the HypreDriver
         // data and the preconditioner.
-        cout_dbg << "Creating solver" << "\n";
+       
         SolverType solverType = getSolverType(_params->solverTitle);
-        cout_dbg << "solverType = " << solverType << "\n";
         HypreSolverBase* solver = newHypreSolver(solverType,this,precond);
-        
+
+        cout_dbg << "Creating preconditioner" << "\n";
+        cout_dbg << "precondType = " << precondType << "\n";
+        cout_dbg << "Creating solver" << "\n";
+        cout_dbg << "solverType = " << solverType << "\n";
+         
         // Set up the preconditioner and tie it to solver
         if (precond) {
           cout_dbg << "Setting up preconditioner" << "\n";
