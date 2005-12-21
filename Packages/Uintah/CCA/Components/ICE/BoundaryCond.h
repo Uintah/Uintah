@@ -105,7 +105,9 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
   
 
   void set_imp_DelP_BC( CCVariable<double>& imp_delP, 
-                        const Patch* patch);  
+                        const Patch* patch,
+                        const VarLabel* label,
+                        DataWarehouse* new_dw);  
 template<class T> 
   void setBC(T& variable, 
              const  string& kind,
