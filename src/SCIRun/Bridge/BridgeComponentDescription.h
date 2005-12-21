@@ -28,7 +28,7 @@
 
 
 /*
- *  BridgeComponentDescription.h: 
+ *  BridgeComponentDescription.h:
  *
  *  Written by:
  *   Kostadin Damevski
@@ -45,26 +45,23 @@
 #include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {
-  class BridgeComponentModel;
-  class BridgeComponentDescription : public ComponentDescription {
-  public:
-    BridgeComponentDescription(BridgeComponentModel* model);
-    virtual ~BridgeComponentDescription();
 
-    virtual std::string getType() const;
-    virtual const ComponentModel* getModel() const;
-    virtual std::string getLoaderName() const;
-    void setLoaderName(const std::string& loaderName);
-  protected:
-    friend class BridgeComponentModel;
-    friend class SCIRunLoader;
-    BridgeComponentModel* model;
-    std::string type;
-    std::string loaderName;
-  private:
-    BridgeComponentDescription(const BridgeComponentDescription&);
-    BridgeComponentDescription& operator=(const BridgeComponentDescription&);
-  };
+class BridgeComponentModel;
+class BridgeComponentDescription : public ComponentDescription {
+public:
+  BridgeComponentDescription(BridgeComponentModel* model, const std::string& type);
+  virtual ~BridgeComponentDescription();
+
+  virtual std::string getType() const;
+  virtual const ComponentModel* getModel() const;
+  virtual std::string getLoaderName() const;
+  void setLoaderName(const std::string& loaderName);
+
+private:
+  BridgeComponentDescription(const BridgeComponentDescription&);
+  BridgeComponentDescription& operator=(const BridgeComponentDescription&);
+};
+
 }
 
 #endif

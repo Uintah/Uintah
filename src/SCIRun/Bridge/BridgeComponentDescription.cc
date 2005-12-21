@@ -43,8 +43,8 @@
 using namespace SCIRun;
 using namespace std;
 
-BridgeComponentDescription::BridgeComponentDescription(BridgeComponentModel* model)
-  : model(model)
+BridgeComponentDescription::BridgeComponentDescription(BridgeComponentModel* model, const std::string& type)
+  : ComponentDescription(model, type)
 {
 }
 
@@ -69,5 +69,5 @@ std::string BridgeComponentDescription::getLoaderName() const
 
 void BridgeComponentDescription::setLoaderName(const std::string& loaderName)
 {
-  this->loaderName=loaderName;
+  this->loaderName = loaderName;
 }
