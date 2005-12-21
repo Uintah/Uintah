@@ -157,8 +157,9 @@ ColorMappedNrrdTextureObj::apply_colormap()
   float *data = new float[4*num];
   if (!data) return 0;
 
-  const float scale = 1.0 / (clut_max_ - clut_min_);
-  const float bias = -clut_min_*scale;
+  const float range = (clut_max_ - clut_min_);
+  const float scale = (range > 0.00001) ? (1.0 / range) : 1.0;
+  const float bias =  (range > 0.00001) ? -clut_min_*scale : 0.0;
 
   int ncolors;  
   const float *rgba;
@@ -167,6 +168,7 @@ ColorMappedNrrdTextureObj::apply_colormap()
     float *nrgba = new float[256*4];
     for (int c = 0; c < 256*4; ++c) 
       nrgba[c] = (c % 4 == 3) ? 1.0 : (c/4)/255.0;
+    nrgba[3] = 0.0;
     rgba = nrgba;
   } else {
     ncolors = colormap_->resolution();
