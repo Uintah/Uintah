@@ -759,6 +759,7 @@ void ICE::zeroMatrix_RHS_UnderFinePatches(const ProcessorGroup*,
 
       IntVector cl, ch, fl, fh;
       getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
+      
       if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
         continue;
       }
