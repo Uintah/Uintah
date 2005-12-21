@@ -7,6 +7,7 @@
 
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
@@ -508,6 +509,8 @@ void ICE::setupRHS(const ProcessorGroup*,
 {
   const Level* level = getLevel(patches);
   double rhs_max = 0.0;
+  Vector dx     = level->dCell();
+  double vol    = dx.x()*dx.y()*dx.z();
       
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -529,9 +532,6 @@ void ICE::setupRHS(const ProcessorGroup*,
     int numMatls  = d_sharedState->getNumMatls();
     delt_vartype delT;
     pOldDW->get(delT, d_sharedState->get_delt_label(), level);
-    
-    Vector dx     = patch->dCell();
-    double vol    = dx.x()*dx.y()*dx.z();
     
     Advector* advector = d_advector->clone(new_dw,patch);
     CCVariable<double> q_advected, rhs;
@@ -646,6 +646,34 @@ void ICE::setupRHS(const ProcessorGroup*,
       rhs[c] = -term1[c] + massExchTerm[c] + sumAdvection[c];
       rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
     }
+    
+    
+    //__________________________________
+    // set rhs = 0 under all fine patches
+    // For a composite grid we ignore what's happening
+    // on the coarse grid 
+    Level::selectType finePatches;
+    if(level->hasFinerLevel()){
+      patch->getFineLevelPatches(finePatches);
+    }
+
+    for(int i=0;i<finePatches.size();i++){
+      const Patch* finePatch = finePatches[i];
+
+      IntVector l, h, fl, fh;
+      getFineLevelRange(patch, finePatch, l, h, fl, fh);
+      
+      if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
+        continue;
+      }
+      rhs.initialize(0.0, l, h);
+    } 
+        
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter;
+      rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
+    }   
+    
     new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
 
     //---- P R I N T   D A T A ------  
@@ -659,6 +687,8 @@ void ICE::setupRHS(const ProcessorGroup*,
       printData( 0, patch, 0,desc.str(), "term1",            term1);
     }  
   }  // patches loop
+//  cout << " Level " << level->getIndex() << " rhs " 
+//       << rhs_max << " rhs * vol " << rhs_max * vol <<  endl;
 }
 
 /*___________________________________________________________________
