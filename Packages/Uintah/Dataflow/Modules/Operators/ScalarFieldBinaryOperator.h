@@ -36,9 +36,6 @@ WARNING
 
 ****************************************/
 
-#include "ScalarOperatorFunctors.h"
-#include "BinaryFieldOperator.h"
-#include "OperatorThread.h"
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Containers/FData.h>
@@ -47,6 +44,11 @@ WARNING
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+
+#include "ScalarOperatorFunctors.h"
+#include "BinaryFieldOperator.h"
+#include "OperatorThread.h"
+
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>

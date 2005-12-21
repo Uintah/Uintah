@@ -28,6 +28,8 @@ LOG
     Created January 5, 1999
 ****************************************/
 
+#include <Packages/Uintah/Dataflow/Modules/Selectors/FieldExtractor.h>
+
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/BBox.h>
@@ -35,6 +37,7 @@ LOG
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Timer.h>
+
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
@@ -46,10 +49,6 @@ LOG
 #include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignArray3.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-//#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-
-#include <Packages/Uintah/Dataflow/Modules/Selectors/FieldExtractor.h>
-
  
 #include <iostream> 
 #include <sstream>

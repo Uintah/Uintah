@@ -11,12 +11,13 @@
  *  Copyright (C) 2000 SCI Group
  */
 
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/FData.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
@@ -29,15 +30,15 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
 
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Widgets/FrameWidget.h>
-#include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/FData.h>
+
+#include <Packages/Uintah/Core/Grid/Box.h>
 
 
 #include <iostream>
