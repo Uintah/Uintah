@@ -26,8 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-
 #ifndef include_sci_metacomponents_h
 #define include_sci_metacomponents_h
 
@@ -42,7 +40,21 @@
 // There are currently too many SCIRun Dataflow dependencies
 // in the Bridge component model to build it without SCIRun.
 #if defined (HAVE_RUBY) && defined (HAVE_BABEL) && defined (BUILD_DATAFLOW)
-  #define BUILD_BRIDGE 1
+#  define BUILD_BRIDGE 1
+#endif
+
+#ifdef BUILD_BRIDGE
+#  include <SCIRun/Bridge/BridgeComponentModel.h>
+#endif
+#if HAVE_BABEL
+#  include <SCIRun/Babel/BabelComponentModel.h>
+#endif
+#if HAVE_VTK
+#  include <SCIRun/Vtk/VtkComponentModel.h>
+#endif
+#if HAVE_TAO
+#  include <SCIRun/Corba/CorbaComponentModel.h>
+#  include <SCIRun/Tao/TaoComponentModel.h>
 #endif
 
 #endif
