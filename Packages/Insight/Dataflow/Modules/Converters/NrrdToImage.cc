@@ -41,6 +41,7 @@
 
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageRegionIterator.h"
+#include "itkMetaDataObject.h"
 
 #include <sci_defs/teem_defs.h>
 
@@ -270,6 +271,19 @@ void NrrdToImage::create_image() {
     // increment pointers
     img_iter.operator++();
     ++i;
+  }
+
+  // handle any key/value pairs
+  for (int i=0; i<nrrdKeyValueSize(n); i++) {
+    char *key, *value;
+    nrrdKeyValueIndex(n, &key, &value, i);
+    if (NULL != key && NULL != value) {
+      // add the key/value pair to the dictionary
+      string k = key;
+      string v = value;
+      itk::MetaDataDictionary &dic = img->GetMetaDataDictionary();
+      itk::EncapsulateMetaData<string>( dic, k, v);
+    }
   }
 
   ITKDatatype* result = scinew ITKDatatype;
