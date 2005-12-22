@@ -68,7 +68,8 @@ protected:
   GuiInt gCurveMesh_;
   GuiInt gScalarField_;
   GuiInt gShowIslands_;
-  GuiInt gOverlaps_;
+  GuiInt gRemoveOverlaps_;
+  GuiInt gMergeOverlaps_;
 
   vector< double > planes_;
 
@@ -78,7 +79,8 @@ protected:
   unsigned int curveMesh_;
   unsigned int scalarField_;
   unsigned int showIslands_;
-  unsigned int overlaps_;
+  unsigned int removeOverlaps_;
+  unsigned int mergeOverlaps_;
 
   FieldHandle slfieldout_;
   FieldHandle pccfieldout_;
@@ -102,14 +104,16 @@ StreamlineAnalyzer::StreamlineAnalyzer(GuiContext* context)
     gCurveMesh_(context->subVar("curve-mesh")),
     gScalarField_(context->subVar("scalar-field")),
     gShowIslands_(context->subVar("show-islands")),
-    gOverlaps_(context->subVar("overlaps")),
+    gRemoveOverlaps_(context->subVar("remove-overlaps")),
+    gMergeOverlaps_(context->subVar("merge-overlaps")),
     color_(1),
     maxWindings_(30),
     override_(0),
     curveMesh_(1),
     scalarField_(1),
     showIslands_(0),
-    overlaps_(0),
+    removeOverlaps_(0),
+    mergeOverlaps_(0),
     slfGeneration_(-1),
     pccfGeneration_(-1),
     pcsfGeneration_(-1)
@@ -146,12 +150,8 @@ StreamlineAnalyzer::execute()
 
   cerr << "StreamlineAnalyzer getting type " << endl;
 
-  cerr << slfieldin->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() << endl;
-  cerr << slfieldin->get_type_description(Field::MESH_TD_E)->get_name() << endl;
-  cerr << slfieldin->get_type_description(Field::BASIS_TD_E)->get_name() << endl;
-  cerr << slfieldin->get_type_description(Field::FDATA_TD_E)->get_name() << endl;
-
-  string if_name = slfieldin->get_type_description(Field::MESH_TD_E)->get_name();
+  string if_name =
+    slfieldin->get_type_description(Field::MESH_TD_E)->get_name();
 
   if (if_name.find("CurveMesh")       != string::npos &&
       if_name.find("StructCurveMesh") != string::npos ) {
@@ -180,8 +180,10 @@ StreamlineAnalyzer::execute()
   // The field input is optional.
   if (ifp->get(pccfieldin) && pccfieldin.get_rep()) {
     
-    string pc_name = pccfieldin->get_type_description(Field::MESH_TD_E)->get_name();
-    string pc_type = pccfieldin->get_type_description(Field::FDATA_TD_E)->get_name();
+    string pc_name =
+      pccfieldin->get_type_description(Field::MESH_TD_E)->get_name();
+    string pc_type =
+      pccfieldin->get_type_description(Field::FDATA_TD_E)->get_name();
 
     if (pc_name.find( "PointCloudMesh") != string::npos &&
 	pc_type.find( "double")         != string::npos ) {
@@ -211,8 +213,10 @@ StreamlineAnalyzer::execute()
   // The field input is optional.
   if (ifp->get(pcsfieldin) && pcsfieldin.get_rep()) {
     
-    string pc_name = pccfieldin->get_type_description(Field::MESH_TD_E)->get_name();
-    string pc_type = pccfieldin->get_type_description(Field::FDATA_TD_E)->get_name();
+    string pc_name =
+      pccfieldin->get_type_description(Field::MESH_TD_E)->get_name();
+    string pc_type =
+      pccfieldin->get_type_description(Field::FDATA_TD_E)->get_name();
 
     if (pc_name.find( "PointCloudMesh") != string::npos &&
 	pc_type.find( "double")         != string::npos ) {
@@ -330,10 +334,16 @@ StreamlineAnalyzer::execute()
     showIslands_ = gShowIslands_.get();
   }
 
-  if( overlaps_ != (unsigned int) gOverlaps_.get() ) {
+  if( removeOverlaps_ != (unsigned int) gRemoveOverlaps_.get() ) {
     update = true;
 
-    overlaps_ = gOverlaps_.get();
+    removeOverlaps_ = gRemoveOverlaps_.get();
+  }
+
+  if( mergeOverlaps_ != (unsigned int) gMergeOverlaps_.get() ) {
+    update = true;
+
+    mergeOverlaps_ = gMergeOverlaps_.get();
   }
 
   cerr << "StreamlineAnalyzer executing " << endl;
@@ -369,7 +379,7 @@ StreamlineAnalyzer::execute()
 		  pccfieldin, pccfieldout_,
 		  pcsfieldin, pcsfieldout_,
 		  planes_,
-		  color_, showIslands_, overlaps_,
+		  color_, showIslands_, removeOverlaps_, mergeOverlaps_,
 		  maxWindings_, override_, topology);
   }
 

@@ -94,7 +94,8 @@ public:
 		       vector< double > &planes,
 		       unsigned int color,
 		       unsigned int showIslands,
-		       unsigned int overlaps,
+		       unsigned int removeOverlaps,
+		       unsigned int mergeOverlaps,
 		       unsigned int maxWindings,
 		       unsigned int override,
 		       vector< pair< unsigned int,
@@ -122,7 +123,8 @@ public:
 		       vector< double > &planes,
 		       unsigned int color,
 		       unsigned int showIslands,
-		       unsigned int overlaps,
+		       unsigned int removeOverlaps,
+		       unsigned int mergeOverlaps,
 		       unsigned int maxWindings,
 		       unsigned int override,
 		       vector< pair< unsigned int,
@@ -134,19 +136,48 @@ protected:
     return Point( Vector( lastPt ) + Vector( currPt - lastPt ) * t );
   }
 
-  bool  ccw( Vector v0, Vector v1 ) {
+  int ccw( Vector v0, Vector v1 ) {
     
-    if( v0.x() * v1.z() > v0.z() * v1.x() ) return true;         //  CCW
+    if( v0.x() * v1.z() > v0.z() * v1.x() ) return 1;         //  CCW
     
-    if( v0.x() * v1.z() < v0.z() * v1.x() ) return false;       //  CW
+    if( v0.x() * v1.z() < v0.z() * v1.x() ) return -1;        //  CW
     
-    if( v0.x() * v1.x() < 0 || v0.z()*v1.z() < 0 ) return false; //  CW
+    if( v0.x() * v1.x() < 0 || v0.z()*v1.z() < 0 ) return -1; //  CW
     
     if( v0.x()*v0.x()+v0.z()*v0.z() >=
-	v1.x()*v1.x()+v1.z()*v1.z() ) return false;              //  ON LINE
+	v1.x()*v1.x()+v1.z()*v1.z() ) return 0;               //  ON LINE
     
-    return true;                                                 //  CCW
+    return 1;                                                 //  CCW
   }
+
+  int intersect( Point l0_p0, Point l0_p1,
+		 Point l1_p0, Point l1_p1 )
+  {
+    //  See if the lines intersect.    
+    if( ( ccw( Vector(l0_p1-l0_p0), Vector(l1_p0-l0_p0)) *
+	  ccw( Vector(l0_p1-l0_p0), Vector(l1_p1-l0_p0) ) <= 0 ) &&
+	( ccw( Vector(l1_p1-l1_p0), Vector(l0_p0-l1_p0)) *
+	  ccw( Vector(l1_p1-l1_p0), Vector(l0_p1-l1_p0) ) <= 0 ) ) {
+	
+      //  See if there is not a shared point.
+      if( l0_p0 != l1_p0 && l0_p0 != l1_p1 &&
+	  l0_p1 != l1_p0 && l0_p1 != l1_p1 )
+	return 1;
+	
+      //  See if there is a shared point.
+      else if( l0_p0 == l1_p0 || l0_p0 == l1_p1 ||
+	  l0_p1 == l1_p0 || l0_p1 == l1_p1 )
+	return 2;
+	
+      //  There must be a point that is on the other line.
+      else
+	return 3;
+    }
+    
+    //  Lines do not intersect.
+    return 0;
+  }
+
 
   unsigned int factorial( unsigned int n0, unsigned int n1 ) {
 
@@ -159,8 +190,21 @@ protected:
     return 0;
   }
 
+  bool
+  IntersectCheck( vector< Point >& points, unsigned int nbins );
+
   pair< pair< double, double >, pair< double, double > >
   FingerCheck( vector< Point >& points, unsigned int nbins );
+
+  bool
+  basicChecks( vector< Point >& points,
+	       Vector centroid,
+	       unsigned int &winding,
+	       unsigned int &twist,
+	       unsigned int &skip,
+	       unsigned int &island,
+	       bool &groupCCW,
+	       unsigned int &windingNextBest );
 
   double
   SafetyFactor( vector< Point >& points, unsigned int maxWindings,
@@ -179,12 +223,20 @@ protected:
   BoundingBoxCheck( vector< Point >& points, unsigned int nbins );
 
   unsigned int
-  removeOverlaps( vector< vector < pair< Point, double > > > &bins,
-		  unsigned int &nnodes,
-		  unsigned int winding,
-		  unsigned int twist,
-		  bool CCWstreamline,
-		  Vector Centroid );
+  mergeOverlap( vector< vector < pair< Point, double > > > &bins,
+		unsigned int &nnodes,
+		unsigned int winding,
+		unsigned int twist,
+		unsigned int skip,
+		unsigned int island );
+
+  unsigned int
+  removeOverlap( vector< vector < pair< Point, double > > > &bins,
+		 unsigned int &nnodes,
+		 unsigned int winding,
+		 unsigned int twist,
+		 unsigned int skip,
+		 unsigned int island );
 
   virtual void
   loadCurve( FieldHandle &field_h,
@@ -601,7 +653,7 @@ SafetyFactor( vector< Point >& points, unsigned int maxWindings,
   unsigned int twist, twist2;
 
   bool twistCCW = ccw(Vector( (Vector) points[0] - centroid ), 
-		      Vector( (Vector) points[1] - centroid ));  
+		      Vector( (Vector) points[1] - centroid )) == 1 ? true : false;
 
   for( unsigned int i=skip, j=1; i<n; i++, j++ ) {
     Vector v0( points[i-1] - centroid );
@@ -619,7 +671,7 @@ SafetyFactor( vector< Point >& points, unsigned int maxWindings,
  	    << tmp << endl;
 
       bool groupCCW = ccw(Vector( (Vector) points[0] - centroid ), 
-			  Vector( (Vector) points[i] - centroid ));
+			  Vector( (Vector) points[i] - centroid )) == 1 ? true : false;
 
       if( 1 || groupCCW == twistCCW ) {
 	if( minDiff > fabs(ceil(tmp) - tmp) ) {
@@ -707,6 +759,30 @@ CentroidCheck2( vector< Point >& points, unsigned int nbins,
   safetyFactor = pair< unsigned int, unsigned int > ( winding, twist );
 
   return centroidStdDev;
+}
+
+template< class IFIELD, class OFIELD, class PCFIELD >
+bool
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
+IntersectCheck( vector< Point >& points, unsigned int nbins ) {
+
+  for( unsigned int i=0, j=nbins; i<nbins && j<points.size(); i++, j++ ) {
+    Point l0_p0 = points[i];
+    Point l0_p1 = points[j];
+
+    for( unsigned int k=i+1, l=j+1; k<nbins && l<points.size(); k++, l++ ) {
+      Point l1_p0 = points[k];
+      Point l1_p1 = points[l];
+
+//      cerr << nbins
+// 	   << "   " << i << "  " << j << "  " << k << "  " << l << endl;
+
+      if( j != k && intersect( l0_p0, l0_p1, l1_p0, l1_p1 ) == 1)
+	return false;
+    }
+  }
+
+  return true;
 }
 
 
@@ -822,13 +898,13 @@ BoundingBoxCheck( vector< Point >& points, unsigned nbins ) {
     if( maxPt.z() < points[i].z() ) maxPt.z( points[i].z() );
   }
 
-  // If any section is greater than 33% of the bounding box diagonal
+  // If any section is greater than 50% of the bounding box diagonal
   // discard it.
   double len2 = (maxPt-minPt).length2();
 
   for( unsigned int i=0; i<n-nbins; i++ ) {
     if( ((Vector) points[i] - (Vector) points[i+nbins]).length2() >
-	0.33 * len2 ) {
+	0.50 * len2 ) {
 
       return false;
     }
@@ -856,14 +932,15 @@ FingerCheck( vector< Point >& points, unsigned int nbins ) {
   for( unsigned int i=0; i<n-nbins; i++ ) {
     for( unsigned int j=i+1; j<i+nbins; j++ ) {
 
-      Vector v0 = Vector( points[j] - points[i      ] );
-      Vector v1 = Vector( points[j] - points[i+nbins] );
+      Vector v0 = Vector( points[i      ] - points[j] );
+      Vector v1 = Vector( points[i+nbins] - points[j] );
       
       double dotProd = Dot( v0, v1 );
       
-      if( dotProd < 0 )
+      if( dotProd < 0.0 )
 	return pair< pair< double, double >, pair< double, double > >
-	  (pair< double, double >(-1,1.0e12),pair< double, double >(-1,1.0e12));
+	  ( pair< double, double >(-1,1.0e12),
+	    pair< double, double >(-1,1.0e12) );
       
       dotProdAveLength += sqrt(dotProd / v0.length2());
       
@@ -913,6 +990,152 @@ FingerCheck( vector< Point >& points, unsigned int nbins ) {
 
 
 template< class IFIELD, class OFIELD, class PCFIELD >
+bool
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
+basicChecks( vector< Point >& points,
+	     Vector centroid,
+	     unsigned int &winding,
+	     unsigned int &twist,
+	     unsigned int &skip,
+	     unsigned int &island,
+	     bool &groupCCW,
+	     unsigned int &windingNextBest ) {
+
+  Vector v0, v1;
+
+  // Do a check for islands.
+  island = 0;
+
+  for( unsigned int i=0; i<winding; i++ ) {
+    v0 = (Vector) points[i        ] - centroid;
+    v1 = (Vector) points[i+winding] - centroid;
+
+    bool lastCCW = ccw( v0, v1 ) == 1 ? true : false;
+    v0 = v1;
+
+    for( unsigned int j=i+2*winding; j<points.size(); j+=winding ) {
+      v1 = (Vector) points[j] - centroid;
+
+      bool CCW = ccw( v0, v1 ) == 1 ? true : false;
+      v0 = v1;
+	    
+      if( CCW != lastCCW ) {
+	island++;
+	break;
+      }
+    }
+  }
+
+  // The direction of the points in a group.
+  groupCCW =
+    ccw( (Vector) points[0      ] - centroid, 
+	 (Vector) points[winding] - centroid ) == 1 ?
+    true : false;
+  
+  // Find the next group that is the same direction of the
+  // points that are in each group.
+  skip = 1;
+
+  double angleMin = 9999;
+
+  v0 = (Vector) points[0] - centroid;
+
+  for( unsigned int i=1; i<winding; i++ ) {
+    v1 = (Vector) points[i] - centroid;
+
+    // Get the direction of the twisting.
+    bool CCW = ccw( v0, v1 ) == 1 ? true : false;  
+
+    double angle = acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
+
+    if( (island || (!island && CCW == groupCCW)) &&
+	angleMin > angle ) {
+      angleMin = angle;
+      skip = i;
+    }
+  }
+
+  // In order to find the twist find the mutual primes
+  // (Blankinship Algorithm). In this case we only care about
+  // the first one becuase the second is just the number of
+  // windings done to get there.
+
+  for( twist=1; twist<winding; twist++ )
+    if( twist * skip % winding == 1 )
+      break;
+
+  if( twist == winding ) {
+    cerr << "WINDING - TWIST - SKIP ERROR  winding " << winding
+	 << " twist " << twist
+	 << " skip " << skip
+	 << endl;
+
+    return false;
+
+  } else {
+
+    // Sanity check for the twist calculation
+    double angleSum = 0;
+
+    if( winding > 2 ) {
+
+      for( unsigned int i=0; i<winding; i++ ) {
+
+	unsigned int start = i;
+	unsigned int stop  = (start +    1) % winding;
+	unsigned int next  = (start + skip) % winding;
+
+	Vector v0 = (Vector) points[start] - centroid;
+
+	do {
+	  //	cerr << start << "  " << stop << "  " << next << endl;
+
+	  Vector v1 = (Vector) points[next] - centroid;
+
+	  angleSum += acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
+
+	  start = next;
+	  next  = (start + skip) % winding;
+
+	  v0 = v1;
+	} while( start != stop );
+
+	//      cerr << angleSum / (2.0 * M_PI) << endl;
+      }
+
+      unsigned int twistCheck = (unsigned int)
+	(angleSum / (2.0 * M_PI) + M_PI/winding);
+
+      if( twistCheck != twist ) {
+	cerr << "Twist mismatch " << twistCheck <<  "  " << twist << endl;
+      }
+    }
+  }
+
+  // See if it is posible to find the next best based on the
+  // overlap which will rule out possible windings.
+  windingNextBest = 0;
+
+  if( !island ) {
+    unsigned int previous = winding - skip;
+
+    for( unsigned int j=previous; j<points.size(); j+=winding ) {
+
+      v0 = (Vector) points[      0] - (Vector) points[j];
+      v1 = (Vector) points[winding] - (Vector) points[j];
+
+      if( Dot( v0, v1 ) < 0 ) {
+	windingNextBest = j - winding;
+	break;
+      }
+    }
+  }
+
+  return true;
+}
+
+
+template< class IFIELD, class OFIELD, class PCFIELD >
 void
 StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
 execute(FieldHandle& ifield_h,
@@ -924,7 +1147,8 @@ execute(FieldHandle& ifield_h,
 	vector< double > &planes,
 	unsigned int color,
 	unsigned int showIslands,
-	unsigned int overlaps,
+	unsigned int removeOverlaps,
+	unsigned int mergeOverlaps,
 	unsigned int maxWindings,
 	unsigned int override,
 	vector< pair< unsigned int, unsigned int > > &topology)
@@ -1023,9 +1247,8 @@ execute(FieldHandle& ifield_h,
 
   vector< unsigned int > windings;
   vector< unsigned int > twists;
-
-  vector< unsigned int > windings2;
-  vector< unsigned int > twists2;
+  vector< unsigned int > skips;
+  vector< unsigned int > islands;
 
   Point lastPt, currPt;
   double lastAng, currAng;
@@ -1054,8 +1277,6 @@ execute(FieldHandle& ifield_h,
   imesh->begin( inodeItr );
   inodeNext = *inodeItr;
 
-  Vector centroid;
-
   while (inodeItr != inodeEnd) {
 
     if( *inodeItr == inodeNext ) {
@@ -1077,10 +1298,10 @@ execute(FieldHandle& ifield_h,
 	
     imesh->get_center(currPt, *inodeItr);
     currAng = atan2( currPt.y(), currPt.x() );
-      
+    
     // First look at only points that are in the correct plane.
-    if( ( CCWstreamline && lastAng <= plane && plane <= currAng) ||
-	(!CCWstreamline && currAng <= plane && plane <= lastAng) ) {
+    if( ( CCWstreamline && lastAng < plane && plane <= currAng) ||
+	(!CCWstreamline && currAng < plane && plane <= lastAng) ) {
       double t;
 
       if( fabs(currAng-lastAng) > 1.0e-12 )
@@ -1105,7 +1326,7 @@ execute(FieldHandle& ifield_h,
       }
 
       // If overriding skip all the other points.
-      if( override ) {
+      if( 0 && override ) {
 	while (*inodeItr != inodeNext)
 	  ++inodeItr;
 
@@ -1120,20 +1341,32 @@ execute(FieldHandle& ifield_h,
     ++inodeItr;
 
     // If about to start the next streamline figure out the number of
-    // windings.
+    // windings, twist, skips, islands, etc.
     if( *inodeItr == inodeNext ) {
 
-//      cerr << "Getting last check" << endl;
+      // Get the centroid for all of the points.
+      Vector centroid = Vector(0,0,0);
+
+      for( unsigned int i=0; i<points.size(); i++ )
+	centroid += (Vector) points[i];
+
+      centroid /= (double) points.size();
+
+      unsigned int winding, twist, skip, island, windingNextBest;
+      bool groupCCW;
 
       if( override ) {
-	windings.push_back( override );
+	winding = override;
 
-      } else if( points.size() < maxWindings/5 ) {
-	cerr << "Streamline " << count << " has too few points ("
-	     << points.size() << ") to determine the winding"
-	     << "!!!!!!!!!!!!!!!!!!!" << endl;
+	// Do this to get the values.
+	basicChecks( points, centroid,
+		     winding, twist, skip,
+		     island, groupCCW, windingNextBest );
 
-	windings.push_back( 0 );
+	windings.push_back( winding );
+	twists.push_back( twist );
+	skips.push_back( skip );
+	islands.push_back( island );
 
       } else {
 
@@ -1154,69 +1387,101 @@ execute(FieldHandle& ifield_h,
 	  }
 	}
 
-	if( points.size() < maxWindings )
-	  cerr << "Streamline " << count << " has too few points ("
-	       << points.size() << ") to determine the winding accurately"
-	       << "!!!!!!!!!!!!!!!!!!!" << endl;
-
-	// Get the centroid for all of the points.
-	centroid = Vector(0,0,0);
-
-	for( unsigned int i=0; i<points.size(); i++ )
-	  centroid += (Vector) points[i];
-
-	centroid /= (double) points.size();
-
-
-	// Get the direction of the twisting.
-	bool twistCCW = ccw(Vector( (Vector) points[0] - centroid ), 
-			    Vector( (Vector) points[1] - centroid ));  
-
-	pair< unsigned int, unsigned int > safetyFactor;
-
-	pair< unsigned int, unsigned int > Centroid2Min, Centroid2Min2;
-	pair< unsigned int, unsigned int > CentroidMin,  CentroidMin2;
-
 	pair< unsigned int, double > AngleMin( 0, 1.0e12);
 	pair< unsigned int, double > LengthMin( 0, 1.0e12);
       
-	pair< unsigned int, double > AngleMin2;
-	pair< unsigned int, double > LengthMin2;
+	pair< unsigned int, double > AngleMin2( 0, 1.0e12);
+	pair< unsigned int, double > LengthMin2( 0, 1.0e12);
 
-	double CentroidMinSD  = 1.0e12;
-	double Centroid2MinSD = 1.0e12;
-	double tmpMin;
-
-	bool bboxCheck = false;
-
-//	cerr << "Starting checks " << endl;
+	vector< unsigned int > windingList;
 
 	// Find the best winding for each test.
-	for( unsigned int i=2; i<maxWindings; i++ ) {
+	for( winding=2; winding<maxWindings; winding++ ) {
 	  
-	  bool groupCCW = ccw(Vector( (Vector) points[0] - centroid ), 
-			      Vector( (Vector) points[i] - centroid ));
-
-	  // If group direction is not the same as the twist direction
+	  if( points.size() < 2 * winding ) {
+	    cerr << "Streamline " << count << " has too few points ("
+		 << points.size() << ") to determine the winding accurately"
+		 << " past " << winding << " windings " << endl;
+	    break;
+	  }
+	  
+	  // If the first two connections of any group crosses another
 	  // skip it.
-// 	  if( groupCCW != twistCCW )
-// 	    continue;
-
-	  // If any section is greater than 33% of the bounding box
-	  // diagonal skip it.
-	  if( !BoundingBoxCheck( points, i ) )
+	  if( !IntersectCheck( points, winding ) )
 	    continue;
 
-	  // Do the finger check.
+	  cerr << winding << " Passed IntersectCheck\n";
+
+	  // If any finger check results in a negative dot product
+	  // skip it.
 	  pair< pair< double, double >, pair< double, double > > fingers =
-	    FingerCheck( points, i );
+	    FingerCheck( points, winding );
+
+	  if( fingers.first.first   < 0 ||
+	      fingers.first.second  < 0 ||
+	      fingers.second.first  < 0 ||
+	      fingers.second.second < 0 )
+	    continue;
+
+	  cerr << winding << " Passed FingerCheck\n";
+
+	  // Passed all checks so add it to the possibility list.
+	  windingList.push_back( winding );
+	}
+
+	for( unsigned int i=0; i<windingList.size(); i++ ) {
+	  winding = windingList[i];
+
+	  // Do the basic checks
+	  if ( basicChecks( points, centroid,
+			    winding, twist, skip,
+			    island, groupCCW, windingNextBest ) ) {
+	       
+	    cerr << "windings " << winding 
+		 << "  twists " << twist
+		 << "  skip "   << skip
+		 << "  groupCCW " << groupCCW
+		 << "  islands " << island
+		 << "  next best winding " << windingNextBest;
+	    
+	    // Basic philosophy - take the higher ordered surface
+	    // winding which will give a smoother curve.
+	    if( windingNextBest && island == 0 ) {
+	      
+	      vector< unsigned int >::iterator inList =
+		find( windingList.begin(),
+		      windingList.end(), windingNextBest );
+	    
+	      if( inList != windingList.end() ) {
+		cerr << " REMOVED" << endl;
+		
+		windingList.erase( windingList.begin()+i );
+
+		i--;
+		
+		continue;
+	      }
+	    }
+
+	    cerr << endl;
+	  } else {
+	    windingList.erase( windingList.begin()+i );
+
+	    i--;
+		
+	    continue;
+	  }
+
+	  // Do the finger check again to get the best.
+	  pair< pair< double, double >, pair< double, double > > fingers =
+	    FingerCheck( points, winding );
 
 	  if( fingers.first.first > 0 &&
 	      fingers.first.second > 0 &&
 	      fingers.second.first > 0 &&
 	      fingers.second.second > 0 ) {
 
-  	    cerr << i << " fingers "
+  	    cerr << winding << " fingers "
  		 << fingers.first.first << "  "
  		 << fingers.first.second << "  "
  		 << fingers.second.first << "  "
@@ -1226,186 +1491,139 @@ execute(FieldHandle& ifield_h,
 	    if( LengthMin.second > fingers.first.second ){
 	      LengthMin2 = LengthMin;
 	      
-	      LengthMin.first  = i;
+	      LengthMin.first  = winding;
 	      LengthMin.second = fingers.first.second;
+
+	    } else if( LengthMin2.second > fingers.first.second ){
+
+	      LengthMin2.first  = winding;
+	      LengthMin2.second = fingers.first.second;
 	    }
 	    
 	    if( AngleMin.second > fingers.second.second ){
 	      AngleMin2 = AngleMin;
 	      
-	      AngleMin.first  = i;
+	      AngleMin.first  = winding;
 	      AngleMin.second = fingers.second.second;
+
+	    } else if( AngleMin2.second > fingers.second.second ){
+	      AngleMin2.first  = winding;
+	      AngleMin2.second = fingers.second.second;
 	    }
-	  } else
-	    // If any of the dot products from the finger check are
-	    // negative skip it.
-	    continue;
-
-	  tmpMin = CentroidCheck2( points, i, safetyFactor );
-
-	  if( Centroid2MinSD > tmpMin ) {
-	    Centroid2MinSD = tmpMin;
-	    
-	    Centroid2Min2 = Centroid2Min;
-	    Centroid2Min  = safetyFactor;
 	  }
-
-
-	  tmpMin = CentroidCheck( points, i, safetyFactor );
-
-	  if( CentroidMinSD > tmpMin ) {
-	    CentroidMinSD = tmpMin;
-
-	    CentroidMin2 = CentroidMin;
-	    CentroidMin  = safetyFactor;
-	  }
-
-	  if( BoundingBoxCheck( points, i ) )
-	    bboxCheck = true;
 	}
 
-	pair< unsigned int, unsigned int > sfCheck, sfCheck2;
-
-	cerr << "Safety factor Check ";
-	cerr << SafetyFactor( points, maxWindings, sfCheck, sfCheck2 );
-	cerr << endl;
-
-
-
-	bool print = true;
-	bool showAll = true;
-
-	// Never passed the bounding box check.
-	if( !bboxCheck ) {
+	if( windingList.size() == 0 ) {
 	  windings.push_back( 0 );
-	  
-	  cerr << "FAILED all bounding box checks *********************\n";
+	  twists.push_back( 0 );
+	  skips.push_back( 0 );
+	  islands.push_back( 0 );
 
-	} else if( 1 ) {
+	// If one or two possible windings take the smallest.
+	} else if( 0 < windingList.size() && windingList.size() <= 2 ) {
 
-	  windings.push_back( sfCheck.first );
-	  windings2.push_back( sfCheck2.first );
+	  windings.push_back( windingList[0] );
 
-//	  twists.push_back( sfCheck.second );
-	  twists2.push_back( sfCheck.second );
+	// Top two windings are the same ... take the smallest.
+	} else if( LengthMin.first  == AngleMin.first &&
+		   LengthMin2.first == AngleMin2.first )  {
 
-	// All primary checks agree.
-	} else if( CentroidMin.first > 0 &&
-		   CentroidMin.first == Centroid2Min.first &&
-		   CentroidMin.first == LengthMin.first &&
-		   CentroidMin.first == AngleMin.first ) {
-	  windings.push_back( showAll ? CentroidMin.first : 0 );
-	
-	// All secondary checks agree.
-	} else if( CentroidMin2.first > 0 &&
-		   CentroidMin2.first == Centroid2Min2.first &&
-		   CentroidMin2.first == LengthMin2.first &&
-		   CentroidMin2.first == AngleMin2.first ) {
-	  windings.push_back( showAll ? CentroidMin2.first : 0 );
+	  if( LengthMin.first < LengthMin2.first )
+	    windings.push_back( LengthMin.first );
+	  else //if( LengthMin2.first < LengthMin.first )
+	    windings.push_back( LengthMin2.first );
 
-	  if( CentroidMin.first &&
-	      !BoundingBoxCheck( points, CentroidMin.first ) )
-	    cerr << CentroidMin.first << " FAILED bounding box check -------------------------------\n";
-	  if( Centroid2Min.first &&
-	      !BoundingBoxCheck( points, Centroid2Min.first ) )
-	    cerr << Centroid2Min.first << " FAILED bounding box check -------------------------------\n";
-	  if( LengthMin.first &&
-	      !BoundingBoxCheck( points, LengthMin.first ) )
-	    cerr << LengthMin.first << " FAILED bounding box check -------------------------------\n";
-	  if( AngleMin.first &&
-	      !BoundingBoxCheck( points, AngleMin.first ) )
-	    cerr << AngleMin.first << " FAILED bounding box check -------------------------------\n";
+	// Top two windings are the same but mixed ... take the smallest.
+	} else if( LengthMin.first == AngleMin2.first &&
+		   LengthMin2.first == AngleMin.first ) {
 
-	  print = true;
-	  
-	// In this case probably an island where a latter point is
-	// closer to the first point than a middle point.
-	} else if( CentroidMin.first > 0 &&
-		   CentroidMin.first < Centroid2Min.first &&
-		   Centroid2Min.first % CentroidMin.first == 0 &&
-		   CentroidMin.first == LengthMin.first &&
-		   CentroidMin.first == AngleMin.first ) {
-	  windings.push_back( showAll ? CentroidMin.first : 0 );
-	  
-	  // In this case the last three checks agree 
-	} else if( Centroid2Min.first == LengthMin.first &&
-		   Centroid2Min.first == AngleMin.first ) {
-	  
-	  // If the two bin indexs are factors of one another take the
-	  // smallest index as the winding.
-	  if( CentroidMin.first > 0 && Centroid2Min.first > 0 &&
-	      Centroid2Min.first % CentroidMin.first == 0 )
-	    windings.push_back( showAll ? CentroidMin.first : 0 );
-	  
-	  else if( CentroidMin.first > 0 && Centroid2Min.first > 0 &&
-		   CentroidMin.first % Centroid2Min.first == 0 )
-	    windings.push_back( showAll ? Centroid2Min.first : 0 );
+	  if( LengthMin.first < AngleMin.first )
+	    windings.push_back( LengthMin.first );
+	  else //if( AngleMin.first < LengthMin.first )
+	    windings.push_back( AngleMin.first );
 
-	  else if( Centroid2Min.first > 0 ) {
-	    windings.push_back( showAll ? Centroid2Min.first : 0 );
-	    print = true;
+	} else if( LengthMin.first == AngleMin.first ) {
 
-	  } else {
-	    windings.push_back( 0 );	  
-	    print = true;
-	  }
+	  windings.push_back( LengthMin.first );
+
+	} else if( LengthMin.first < AngleMin2.first ) {
+
+	  windings.push_back( LengthMin.first );
+
+	} else if( LengthMin2.first < AngleMin.first ) {
+
+	  windings.push_back( LengthMin2.first );
 
 	} else {
-	  windings.push_back( 0 );
+	  if( LengthMin.first < AngleMin.first )
+	    windings.push_back( LengthMin.first );
+	  else //if( AngleMin.first < LengthMin.first )
+	    windings.push_back( AngleMin.first );
 	}
+
+	cerr << "End of streamline A " << count
+	     << "  windings " << winding  << endl;
+	
+	if( windings[count] != 0 ) {
+
+	  winding = windings[count];
+
+	cerr << "End of streamline B " << count
+	     << "  windings " << winding  << endl;
+	
+	  // Do this again to get the values back.
+	  basicChecks( points, centroid,
+		       winding, twist, skip,
+		       island, groupCCW, windingNextBest );
+	  twists.push_back( twist );
+	  skips.push_back( skip );
+	  islands.push_back( island );
+
+	cerr << "End of streamline C " << count
+	     << "  windings " << winding  << endl;
+	
+	}
+
+	cerr << " Length selection        "
+	     << LengthMin.first << "  "
+	     << LengthMin.second << "  "
+	     << LengthMin2.first << "  "
+	     << LengthMin2.second << "  "
+	     << endl;
+
+	cerr << " Angle selection         "
+	     << AngleMin.first << "  "
+	     << AngleMin.second << "  "
+	     << AngleMin2.first << "  "
+	     << AngleMin2.second << "  "
+	     << endl;
 
 	// This is for island analysis.
 	if( desiredWinding && windings[count] != desiredWinding )
 	  windings[count] = 0;
+      }
 
-	// Make sure the best can pass the bounding box check.
-	if( windings[count] && !BoundingBoxCheck( points, windings[count] ) ) {
-	    windings[count] = 0;
+      cerr << "End of streamline " << count
+	   << "  windings " << winding 
+	   << "  twists " << twist
+	   << "  skip "   << skip
+	   << "  groupCCW " << groupCCW
+	   << "  islands " << island
+	   << "  windingNextBest " << (windingNextBest>0 ? windingNextBest : 0)
+	   << endl;
 
-	    cerr << "Best FAILED bounding box check !!!!!!!!!!!!!!!!!!!!!\n";
-
-	    print = true;
+    // If the twists is a factorial of the winding then rebin the points.
+      if( 0 && !override && winding && twist != 1 &&
+	  factorial( winding, twist ) ) {
+	
+	unsigned int fact;
+	while( fact = factorial( winding, twist ) ) {
+	  winding /= fact;
+	twist /= fact;
 	}
-
-	if( print ) {
-	  cerr << " Safety Factor selection "
-	       << sfCheck.first << "  "
-	       << sfCheck.second << "  "
-	       << sfCheck2.first << "  "
-	       << sfCheck2.second << "  "
-	       << endl;
-
-	  cerr << " Centroid selection      "
-	       << CentroidMin.first << "  "
-	       << CentroidMin.second << "  "
-	       << CentroidMin2.first << "  "
-	       << CentroidMin2.second << "  "
-	       << endl;
-
-	  cerr << " Centroid2 selection     "
-	       << Centroid2Min.first << "  "
-	       << Centroid2Min.second << "  "
-	       << Centroid2Min2.first << "  "
-	       << Centroid2Min2.second << "  "
-	       << endl;
-
-	  cerr << " Length selection        "
-	       << LengthMin.first << "  "
-	       << LengthMin.second << "  "
-	       << LengthMin2.first << "  "
-	       << LengthMin2.second << "  "
-	       << endl;
-
-	  cerr << " Angle selection         "
-	       << AngleMin.first << "  "
-	       << AngleMin.second << "  "
-	       << AngleMin2.first << "  "
-	       << AngleMin2.second << "  "
-	       << endl;
-
-	  cerr << "End of streamline " << count
-	       << "  it has a winding of " << windings[count] << endl;
-	}
+	
+	windings[count] = winding;
+	twists[count]   = twist;
       }
 
       count++;
@@ -1416,9 +1634,16 @@ execute(FieldHandle& ifield_h,
   // Now bin the points.
   for( unsigned int c=0; c<count; c++ ) {
 
-    if( windings[c] == 0 ) {
-      twists.push_back( 0 );
+    cerr << c << " STARTING" << endl;
 
+    unsigned int winding = windings[c];
+    unsigned int twist   = twists[c];
+    unsigned int skip    = skips[c];
+    unsigned int island  = islands[c];
+    bool groupCCW;
+    bool completeIslands = true;
+
+    if( winding == 0 ) {
       pair< unsigned int, unsigned int > topo( 0, 0 );
       topology.push_back(topo);
 
@@ -1487,8 +1712,8 @@ execute(FieldHandle& ifield_h,
 	if( nearPI && currAng < 0 ) currAng += 2 * M_PI;
 
 	// First look at only points that are in the correct plane.
-	if( ( CCWstreamline && lastAng <= plane && plane <= currAng) ||
-	    (!CCWstreamline && currAng <= plane && plane <= lastAng) ) {
+	if( ( CCWstreamline && lastAng < plane && plane <= currAng) ||
+	    (!CCWstreamline && currAng < plane && plane <= lastAng) ) {
 	  double t;
 
 	  if( fabs(currAng-lastAng) > 1.0e-12 )
@@ -1509,7 +1734,7 @@ execute(FieldHandle& ifield_h,
 	    bins[p][bin].push_back( pair<Point, double>(point, *in) );
 	  }
 
-	  bin = (bin + 1) % windings[c];
+	  bin = (bin + 1) % winding;
 	}
 
 	lastPt  = currPt;
@@ -1525,7 +1750,7 @@ execute(FieldHandle& ifield_h,
 
     // Validation check
     for( unsigned int p=0; p<planes.size(); p++ ) {
-      for( unsigned int i=0; i<windings[c]; i++ ) {
+      for( unsigned int i=0; i<winding; i++ ) {
 	if( nnodes > bins[p][i].size() )
 	  nnodes = bins[p][i].size();
 
@@ -1534,6 +1759,8 @@ execute(FieldHandle& ifield_h,
 	       << " bin size=" << bins[p][i].size() << endl;
 
 	  VALID = false;
+
+	  return;
 	}
       }
     }
@@ -1551,284 +1778,224 @@ execute(FieldHandle& ifield_h,
     vector< Vector > localCentroids;
     vector< Vector > localSeparatrices[2];
 
-    localCentroids.resize(windings[c]);
-    localSeparatrices[0].resize(windings[c]);
-    localSeparatrices[1].resize(windings[c]);
+    localCentroids.resize(winding);
+    localSeparatrices[0].resize(winding);
+    localSeparatrices[1].resize(winding);
 
-    unsigned int cc = 0;
-
-    for( unsigned int i=0; i<windings[c]; i++ ) {
-      Vector localCentroid(0,0,0);
-
+    for( unsigned int i=0; i<winding; i++ ) {
+      localCentroids[i] = Vector(0,0,0);
+      
       for( unsigned int j=0; j<bins[p][i].size(); j++ ) 
-	localCentroid += (Vector) bins[p][i][j].first;
+	localCentroids[i] += (Vector) bins[p][i][j].first;
 
       if( bins[p][i].size() ) {
-	localCentroids[i] = localCentroid / (double) bins[p][i].size();
+	localCentroids[i] /= (double) bins[p][i].size();
 
 	centroid += localCentroids[i];
-
-	cc++;
-
-      } else {
-	localCentroids[i] = Vector(0,0,0);
       }
     }
 
-    unsigned int islands2 = 0;
-    unsigned int islands = 0;
-    unsigned int twist = 0;
-    bool completeIslands = true;
+    centroid /= winding;
 
-    if( cc == windings[c]) {
-      centroid /= cc;
+    // Get the direction of the points within a group.
+    Vector v0 = (Vector) bins[p][0][0].first - centroid;
+    Vector v1 = (Vector) bins[p][0][1].first - centroid;
 
-      double angle = 0;
-      
-      // Determine the number of twists by totalling up the angles
-      // between each of the group centroids and dividing by 2 PI.
-      for( unsigned int i=1; i<=windings[c]; i++ ) {
-	
-	Vector v0 = localCentroids[i-1          ] - centroid;
-	Vector v1 = localCentroids[i%windings[c]] - centroid;
-	
-	angle += acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
-      }
+    groupCCW = ccw( v0, v1 ) == 1 ? true : false;
 
-      // Because the total will not be an exact integer add a delta so
-      // the rounded value will be correct.
-      twist = (unsigned int) ((angle +  M_PI/windings[c]) / (2.0*M_PI));
+//    cerr << 0 << "  " << groupCCW << endl;
 
-      // Determine if islands exists. If an island exists there will
-      // be both clockwise and counterclockwise sections when compared
-      // to the main centroid.
-      for( unsigned int i=0; i<windings[c]; i++ ) {
-	bool lastCCW = 0;
-	
-	unsigned int tmpNnodes = 0;
-	unsigned int turns = 0;
+    // Determine if islands exists. If an island exists there will
+    // be both clockwise and counterclockwise sections when compared
+    // to the main centroid.
+    for( unsigned int i=0; i<winding; i++ ) {
+      if( bins[p][i].size() >= 2 ) {
 
+	unsigned int turns = 0;	  
 	unsigned int startIndex,  middleIndex,  endIndex;
 
-	if( bins[p][i].size() >= 3 ) {
-	  for( unsigned int j=1; j<bins[p][i].size(); j++ ) {
-	    bool CCW =
-	      ccw(Vector( (Vector) bins[p][i][j-1].first - centroid ), 
-		  Vector( (Vector) bins[p][i][j  ].first - centroid ));
-	    
-	    if( j > 1 && CCW != lastCCW ) {
-	      if( turns == 0 )
-		islands++;
-	      
-	      turns++;
+	Vector v0 = (Vector) bins[p][i][0].first - centroid;
+	Vector v1 = (Vector) bins[p][i][1].first - centroid;
 
-	      if( turns == 1 )
-		startIndex = j - 1;
-	      else if( turns == 2 )
-		middleIndex = j - 1;
-	      else if( turns == 3 )
-		endIndex = j - 1;
-	    }
+	bool lastCCW = ccw( v0, v1 ) == 1 ? true : false;
+	v0 = v1;
 
-	    // Count the number of nodes between the first and third
-	    // turn. This count gives a complete winding of the island.
-	    if( turns > 0 )
-	      tmpNnodes++;
+	//	  cerr << i << "  " << 1 << "  " << lastCCW << endl;
+
+	for( unsigned int j=2; j<bins[p][i].size(); j++ ) {
+	  Vector v1 = (Vector) bins[p][i][j].first - centroid;
+
+	  bool CCW = ccw( v0, v1 ) == 1 ? true : false;
+	  v0 = v1;
 	    
+	  //	    cerr << i << "  " << j << "  " << CCW << endl;
+
+	  if( CCW != lastCCW ) {
+	    turns++;
+
+	    if( turns == 1 )      startIndex  = j - 1;
+	    else if( turns == 2 ) middleIndex = j - 1;
+	    else if( turns == 3 ) endIndex    = j - 1;
+
 	    if( turns == 3 )
 	      break;
-
-	    lastCCW = CCW;
 	  }
 
-//  	  cerr << i << " turns " << turns
-//  	       << "  " << tmpNnodes
-//  	       << "  " << nnodes << endl;
-
-	  if( overlaps && turns == 3 && nnodes > tmpNnodes )
-	    nnodes = tmpNnodes;
-
-	  if( turns >= 2 ) {
-	    localSeparatrices[0][i] = (Vector) bins[p][i][startIndex].first;
-	    localSeparatrices[1][i] = (Vector) bins[p][i][middleIndex].first;
-	  }
-
-	  if( turns == 3 ) {
-	    unsigned int index0 = (middleIndex - startIndex ) / 2;
-	    unsigned int index1 = (   endIndex - middleIndex) / 2;
-
- 	    cerr << "Indexes " <<  startIndex << "  "
- 		 << middleIndex << "  " << endIndex << endl;
-
- 	    cerr << "Indexes mid " <<  index0 << "  " << index1 << endl;
-
-	    localCentroids[i] =
-	      ( (Vector) bins[p][i][ startIndex + index0].first + 
-		(Vector) bins[p][i][middleIndex - index0].first + 
-		(Vector) bins[p][i][middleIndex + index1].first + 
-		(Vector) bins[p][i][   endIndex - index1].first ) / 4.0;
-	  } else
-	    completeIslands = false;
+	  lastCCW = CCW;
 	}
-      }
 
-    } else {
-      cerr << "Can not determine the numbers of twists or islands" << endl;
+//  	  cerr << i << " turns " << turns  << "  " << nnodes << endl;
+
+	if( turns >= 2 ) {
+	  localSeparatrices[0][i] = (Vector) bins[p][i][startIndex].first;
+	  localSeparatrices[1][i] = (Vector) bins[p][i][middleIndex].first;
+	}
+
+	if( turns == 3 ) {
+	  unsigned int index0 = (middleIndex - startIndex ) / 2;
+	  unsigned int index1 = (   endIndex - middleIndex) / 2;
+
+	  cerr << "Indexes " <<  startIndex << "  "
+	       << middleIndex << "  " << endIndex << endl;
+
+	  cerr << "Indexes mid " <<  index0 << "  " << index1 << endl;
+
+	  localCentroids[i] =
+	    ( (Vector) bins[p][i][ startIndex + index0].first + 
+	      (Vector) bins[p][i][middleIndex - index0].first + 
+	      (Vector) bins[p][i][middleIndex + index1].first + 
+	      (Vector) bins[p][i][   endIndex - index1].first ) / 4.0;
+	} else
+	  completeIslands = false;
+      }
     }
 
-    if( overlaps )
-      removeOverlaps( bins[p], nnodes,
-		      windings[c], twist, CCWstreamline, centroid );
+    if( removeOverlaps || mergeOverlaps )
+      removeOverlap( bins[p], nnodes, winding, twist, skip, island );
 
-    // If the twists is a factorial of the winding then rebin the points.
-    if( !override && windings[c] && twist != 1 &&
-	factorial( windings[c], twist ) ) {
-
-      unsigned int fact;
-      while( fact = factorial( windings[c], twist ) ) {
-	windings[c] /= fact;
-	twist /= fact;
-      }
-
-      c--;
-
-    } else {
-
-      cerr << "Surface " << c << " is a "
-	   << windings[c] << ":" << twist << " surface ("
-	   << (double) windings[c] / (double) twist << ") ";
-
-      if( islands ) 
-	cerr << "that contains " << islands << " islands"
-	     << (completeIslands ? " (Complete)" : "");
-
-      cerr << " and has " << nnodes << " nodes"
+    if( mergeOverlaps )
+      mergeOverlap( bins[p], nnodes, winding, twist, skip, island );
+    
+    cerr << "Surface " << c << " is a "
+	 << winding << ":" << twist << " surface ("
+	 << (double) winding / (double) twist << ") ";
+    
+    if( island > 0 ) 
+      cerr << "that contains " << island << " islands"
+	   << (completeIslands ? " (Complete)" : "");
+    
+    cerr << " and has " << nnodes << " nodes"
+	 << endl;
+        
+    if( island && island != winding ) {
+      cerr << "WARNING - The island count does not match the winding count" 
 	   << endl;
+    }
+    
+    // Record the topology.
+    pair< unsigned int, unsigned int > topo( winding, twist );
+    topology.push_back(topo);
 
+    if( !curveField ) {
 
-      if( islands && islands != windings[c] ) {
-	cerr << "WARNING - The island count does not match the winding count" 
-	     << endl;
-      }
-
-      twists.push_back( twist );
-
-      // Record the topology.
-      pair< unsigned int, unsigned int > topo( windings[c], twist );
-      topology.push_back(topo);
-
-      if( !curveField ) {
-
-	vector< unsigned int > dims;
+      vector< unsigned int > dims;
       
-	dims.resize(2);
+      dims.resize(2);
       
-	dims[0] = nnodes;
-	dims[1] = (planes.size()+1) * windings[c];
+      dims[0] = nnodes;
+      dims[1] = (planes.size()+1) * winding;
       
-	((SQSMesh *) omesh)->set_dim( dims );
+      ((SQSMesh *) omesh)->set_dim( dims );
 
-	ofield->resize_fdata();
-      }
+      ofield->resize_fdata();
 
-      double color_value = 0;
+      cerr << "Creating a surface of " << dims[0] << "  " << dims[1] << endl;
+    }
 
-      if( color == 1 )
-	color_value = c;
-      else if( color == 3 )
-	color_value = (islands == 0 ? 0 : c);
-      else if( color == 6 )
-	color_value = windings[c];
-      else if( color == 7 )
-	color_value = twists[c];
-      else if( color == 8 )
-	color_value = (double) windings[c] / (double) twists[c];
+    double color_value = 0;
+
+    if( color == 1 )
+      color_value = c;
+    else if( color == 3 )
+      color_value = (island == 0 ? 0 : c);
+    else if( color == 6 )
+      color_value = winding;
+    else if( color == 7 )
+      color_value = twist;
+    else if( color == 8 )
+      color_value = (double) winding / (double) twist;
 
 
-      if( islands ) {
+    if( island ) {
 
-	if( baseCentroids.size() ) {
+      if( baseCentroids.size() ) {
 
-	  unsigned int cc = 0;
+	unsigned int cc = 0;
 
-	  while( cc < windings.size() ) {
-	    if( cc <= c && c < cc+windings[cc] )
-	      break;
-	    else
-	      cc += windings[cc];
-	  }
+	while( cc < windings.size() ) {
+	  if( cc <= c && c < cc+winding )
+	    break;
+	  else
+	    cc += winding;
+	}
 
-	  cerr << "Searching winding " << cc << endl;
+	cerr << "Searching winding " << cc << endl;
 
-	  for( unsigned int i=0; i<windings[c]; i++ ) {
+	for( unsigned int i=0; i<winding; i++ ) {
 	    
-	    unsigned int index;
-	    double mindist = 1.0e12;
+	  unsigned int index;
+	  double mindist = 1.0e12;
 	    
-	    for( unsigned int j=cc; j<cc+windings[cc]; j++ ) {
+	  for( unsigned int j=cc; j<cc+winding; j++ ) {
 
-	      double dist =
-		(localCentroids[i] - baseCentroids[j][0]).length();
+	    double dist =
+	      (localCentroids[i] - baseCentroids[j][0]).length();
 	      
-	      if( mindist > dist ) {
-		mindist = dist;
-		index = j;
-	      }
+	    if( mindist > dist ) {
+	      mindist = dist;
+	      index = j;
 	    }
-
-	    cerr << cc << "  " << i << "  "
-		 << index << " index " << localCentroids[i] << endl;
-	    
-	    baseCentroids[index].push_back( localCentroids[i] );	      
 	  }
 
-	} else {
-	  // In order to find the next group after the first find the
-	  // mutual primes (Blankinship Algorithm). In this case we only
-	  // care about the first one becuase the second is just the
-	  // number of windings done to get there.
+	  cerr << cc << "  " << i << "  "
+	       << index << " index " << localCentroids[i] << endl;
+	    
+	  baseCentroids[index].push_back( localCentroids[i] );	      
+	}
 
-	  unsigned int skip;
+      } else {
 
-	  for( skip=1; skip<windings[c]; skip++ )
-	    if( skip * twist % windings[c] == 1 )
-	      break;
+	typename PCFIELD::mesh_type::Node::index_type n;
 
-// 	  if( !CCWstreamline )
-// 	    skip = windings[c] - skip;
+	for( unsigned int i=0; i<winding; i++ ) {
+	  // Centroids
+	  n = opccmesh->add_node((Point) localCentroids[i]);
+	  opccfield->resize_fdata();
+	  opccfield->set_value( winding, n);
 
+	  // Separatrices
+	  unsigned int j = (i+skip) % winding;
 
-	  typename PCFIELD::mesh_type::Node::index_type n;
+	  unsigned int ii, jj;
 
-	  for( unsigned int i=0; i<windings[c]; i++ ) {
-	    // Centroids
-	    n = opccmesh->add_node((Point) localCentroids[i]);
-	    opccfield->resize_fdata();
-	    opccfield->set_value( windings[c], n);
+	  if( (localSeparatrices[0][i] - localSeparatrices[0][j]).length() <
+	      (localSeparatrices[0][i] - localSeparatrices[1][j]).length() )
+	    jj = 0;
+	  else
+	    jj = 1;
 
-	    // Separatrices
-	    unsigned int j = (i+skip) % windings[c];
+	  if( (localSeparatrices[0][i] - localSeparatrices[jj][j]).length() <
+	      (localSeparatrices[1][i] - localSeparatrices[jj][j]).length() )
+	    ii = 0;
+	  else
+	    ii = 1;
 
-	    unsigned int ii, jj;
+	  n = opcsmesh->add_node((Point) ((localSeparatrices[ii][i] +
+					   localSeparatrices[jj][j])/2.0));
 
-	    if( (localSeparatrices[0][i] - localSeparatrices[0][j]).length() <
-		(localSeparatrices[0][i] - localSeparatrices[1][j]).length() )
-	      jj = 0;
-	    else
-	      jj = 1;
-
-	    if( (localSeparatrices[0][i] - localSeparatrices[jj][j]).length() <
-		(localSeparatrices[1][i] - localSeparatrices[jj][j]).length() )
-	      ii = 0;
-	    else
-	      ii = 1;
-
-	    n = opcsmesh->add_node((Point) ((localSeparatrices[ii][i] +
-					     localSeparatrices[jj][j])/2.0));
-
- 	    opcsfield->resize_fdata();
-// 	    opcsfield->set_value( (double) windings[c], n);
- 	    opcsfield->set_value( (double) n, n);
+	  opcsfield->resize_fdata();
+// 	    opcsfield->set_value( (double) winding, n);
+	  opcsfield->set_value( (double) n, n);
 
 //  	    n = opcsmesh->add_node((Point) localSeparatrices[0][i]);
 // 	    opcsfield->resize_fdata();
@@ -1838,51 +2005,82 @@ execute(FieldHandle& ifield_h,
 // 	    opcsfield->resize_fdata();
 // 	    opcsfield->set_value(1, n);
 
- 	    cerr << c << "  Separatrices " << i << "  " << j << endl;
-	  }
-	}
-      }
-
-      if( !showIslands || ( showIslands && islands ) ) {
-
-	// Add the points into the return field.
-	for( unsigned int p=0; p<planes.size(); p++ ) {
-	  for( unsigned int i=0; i<windings[c]; i++ ) {
-
-	    lock.lock();
-
-	    if( curveField )
-	      loadCurve( ofield_h, bins[p][i],
-			 planes.size(), windings[c], nnodes, p, i,
-			 color, color_value );
-	    else
-	      loadSurface( ofield_h, bins[p][i],
-			   planes.size()+1, windings[c], nnodes, p, i,
-			   color, color_value );
-	
-	    lock.unlock();
-	  }
-	}
-
-	// For a surface add in the first set first so that the surface is
-	// complete.
-	if( !curveField ) {
-	  for( unsigned int i=0; i<windings[c]; i++ ) {
-	    lock.lock();
-
-	    unsigned int j = (i-1 + windings[c]) % windings[c];
-
-	    loadSurface( ofield_h, bins[0][i],
-			 planes.size()+1, windings[c], nnodes,
-			 c, planes.size(), j, color );
-	
-	    lock.unlock();
-	  }
+	  cerr << c << "  Separatrices " << i << "  " << j << endl;
 	}
       }
     }
+
+    if( !showIslands || ( showIslands && island ) ) {
+
+      // Add the points into the return field.
+      for( unsigned int p=0; p<planes.size(); p++ ) {
+	for( unsigned int i=0; i<winding; i++ ) {
+
+	  lock.lock();
+
+	  if( curveField ) {
+	    cerr << "Loading curve " << p * winding + i
+		 << " plane " << planes.size() << " winding " << i;
+
+	    loadCurve( ofield_h, bins[p][i],
+		       planes.size(), winding,
+		       mergeOverlaps ? bins[p][i].size() : nnodes, p, i,
+		       color, color_value );
+
+	    cerr << " done";
+
+	  } else {
+	    cerr << "Loading surface " << p * winding + i
+		 << " plane " << planes.size() << " winding " << i;
+
+
+	    loadSurface( ofield_h, bins[p][i],
+			 planes.size()+1, winding, nnodes, p, i,
+			 color, color_value );
+
+	    cerr << " done";
+	  }
+
+	  lock.unlock();
+
+	  cerr << " unlocked " << endl;
+	}
+      }
+
+      // For a surface add in the first set first so that the surface is
+      // complete.
+      if( !curveField ) {
+	for( unsigned int i=0; i<winding; i++ ) {
+	  lock.lock();
+
+	  unsigned int j = (i-1 + winding) % winding;
+
+	  cerr << "Loading surface " << planes.size() * winding + i
+	       << " plane " << planes.size() << " winding " << j;
+
+	  loadSurface( ofield_h, bins[0][i],
+		       planes.size()+1, winding, nnodes,
+		       planes.size(), j, color, color_value );
+	
+	  cerr << " done" << endl;
+
+	  lock.unlock();
+	}
+      }
+    }
+
+    for( unsigned int p=0; p<planes.size(); p++ ) {
+	for( unsigned int i=0; i<winding; i++ ) {
+	  bins[p][i].clear();
+	}
+
+	bins[p].clear();
+    }
+
+    cerr << c << " DONE" << endl;
   }
 
+  cerr << "DONE DONE" << endl;
 
   if( baseCentroids.size() ) {
 
@@ -1973,160 +2171,570 @@ execute(FieldHandle& ifield_h,
 }
 
 
-
 template< class IFIELD, class OFIELD, class PCFIELD >
 unsigned int
 StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
-removeOverlaps( vector< vector < pair< Point, double > > > &bins,
-		unsigned int &nnodes,
-		unsigned int winding,
-		unsigned int twist,
-		bool CCWstreamline,
-		Vector centroid )
- {
-  unsigned int islands2;
+removeOverlap( vector< vector < pair< Point, double > > > &bins,
+	       unsigned int &nnodes,
+	       unsigned int winding,
+	       unsigned int twist,
+	       unsigned int skip,
+	       unsigned int island )
+{
+  Vector centroidGlobal = Vector(0,0,0);;
 
-  unsigned int overlap = 1;
-  unsigned int flipped = 0;
+  for( unsigned int i=0; i<winding; i++ )
+    for( unsigned int j=0; j<nnodes; j++ )
+      centroidGlobal += (Vector) bins[i][j].first;
+  
+  centroidGlobal /= (winding*nnodes);
+    
+  if( island ) {
 
-  while( overlap || flipped > 1 ) {
-
-    overlap = 0;
-    flipped = 0;
-
-    vector< pair< double, double > > angleMinMax;
-    angleMinMax.resize( winding );
-
-    Vector v0 = Vector( 1.0, 0, 0 );
-
-    islands2 = 0;
-
-    double offset = 0;
+    cerr << "Start nnodes " << nnodes << endl;
 
     for( unsigned int i=0; i<winding; i++ ) {
-	
-      angleMinMax[i].first  =  4.0 * M_PI;
-      angleMinMax[i].second = -4.0 * M_PI;
 
-      bool islandCheck = true;
+      unsigned int turns = 0;
+      unsigned int stopIndex;
 
-      for( unsigned int j=0; j<nnodes; j++ ) {
-	Vector v1 = Vector( (Vector) bins[i][j].first - centroid );
+      Vector v0 = (Vector) bins[i][0].first - centroidGlobal;
+      Vector v1 = (Vector) bins[i][1].first - centroidGlobal;
 
-	double angle = acos( Dot( v0, v1 ) / v1.length() );
+      bool lastCCW = (ccw(v0, v1) == 1 ? true : false);
+      v0 = v1;
 
-	if( v1.z() < 0 )
-	  angle = 2.0 * M_PI - angle;
+      for( unsigned int j=2; j<nnodes; j++ ) {
 
-	if( offset > 0 ) {
-	  angle += offset;
+	v1 = (Vector) bins[i][j].first - centroidGlobal;
 
-	  if( angle > 2.0* M_PI ) 
-	    angle -= (2.0* M_PI);
+	bool CCW = (ccw(v0, v1) == 1 ? true : false);
+	v0 = v1;
+
+	if( lastCCW != CCW ) {	      
+	  lastCCW = CCW;
+
+	  turns++;
+
+	  if( turns == 1 ) {
+	    stopIndex = j - 1;
+	  }
 	}
 
-	bool set = false;
+	if( turns == 2 ) {
 
-	if( angleMinMax[i].first > angle ) {
-	  angleMinMax[i].first = angle;
-	  set = true;
-	}
+	  Vector d0 = (Vector) bins[i][0].first - (Vector) bins[i][j].first;
 
-	if( angleMinMax[i].second < angle ) {
-	  angleMinMax[i].second = angle;
-	  set = true;
-	}
+	  for( unsigned int k=1; k<stopIndex; k++ ) {
 
-	if( islandCheck && !set) {
-	  islandCheck = false;
-	  islands2++;
+	    Vector d1 = (Vector) bins[i][k].first - (Vector) bins[i][j].first;
+
+	    cerr << i << " overlap search " << j << "  " << k << endl;
+
+	    if( Dot( d0, d1 ) < 0.0 ) {
+	      nnodes = j - 1;
+
+	      cerr << i << " break nnode after overlap " << nnodes << endl;
+	      break;
+	    } else
+	      d0 = d1;
+	  }
+	} else if( turns == 3 ) {
+	  nnodes = j - 1;
+	  cerr << i << " break nnode after 3 turns " << nnodes << endl;
+	  break;
 	}
       }
 
-      // Through zero add PI and redo.
-      if( offset == 0 &&
-	  angleMinMax[i].second - angleMinMax[i].first > M_PI ) {
-	offset = M_PI;
 
-	i--;
+      // This is a check to see if the overlap epsilon is positive or
+      // negative. If negative there is not be any overlap. But the
+      // last point will be very close to the start point. If this is
+      // the case it should be removed.
 
-	if( !islandCheck )
-	  islands2--;
-	    
-      } else if( offset > 0 ) {
-	angleMinMax[i].first  -= M_PI;
-	angleMinMax[i].second -= M_PI;
+      for( unsigned int j=0; j<2; j++ ) {
 
-	if( angleMinMax[i].first < 0 )
-	  angleMinMax[i].first += 2.0*M_PI;
+	unsigned int k = 0;
 
-	if( angleMinMax[i].second < 0 )
-	  angleMinMax[i].second += 2.0*M_PI;
+	v0 = (Vector) bins[i][k].first - (Vector) bins[i][k+nnodes-1].first;
+	v1 = (Vector) bins[i][k].first - (Vector) bins[i][k+nnodes  ].first;
+    
+	while( v1.length() < v0.length() &&
+	       k < nnodes  && k < bins[i].size() - nnodes ) {
+	  k++;
+	  v0 = (Vector) bins[i][k].first - (Vector) bins[i][k+nnodes-1].first;
+	  v1 = (Vector) bins[i][k].first - (Vector) bins[i][k+nnodes  ].first;
+	}
 
-	offset =  0;
+	if( v1.length() < v0.length() )
+	  cerr << i << "  " << j << " Length mismatch " << k << endl;
+
+	if( j == 0 && v0.length() < v1.length() )
+	  --nnodes;
+	else if( j == 1 && v0.length() < v1.length() ) {
+	  cerr << "Can not get the overlap for island " << i << endl;
+	}
       }
     }
 
-    // In order to find the next group after the first find the
-    // mutual primes (Blankinship Algorithm). In this case we only
-    // care about the first one becuase the second is just the
-    // number of windings done to get there.
 
-    unsigned int skip;
+    cerr << "End nnodes " << nnodes << endl;
 
-    for( skip=1; skip<winding; skip++ )
-      if( skip * twist % winding == 1 )
-	break;
+    return nnodes;
 
-    if( !CCWstreamline )
-      skip = winding - skip;
+  } else {
+    // First make sure none of the groups overlap themselves.
+    for( unsigned int i=0; i<winding; i++ ) {
+    
+      Vector v0 = Vector( (Vector) bins[i][0].first - centroidGlobal );
+    
+      double angleSum = 0;
+    
+      for( unsigned int j=1; j<nnodes; j++ ) {
+	Vector v1 = Vector( (Vector) bins[i][j].first - centroidGlobal );
 
+	angleSum += acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
+
+	if( angleSum > 2.0 * M_PI ) {
+	  nnodes = j;
+	  break;
+	} else
+	  v0 = v1;
+      }
+    }
+
+    centroidGlobal /= winding;
+
+    // Second make sure none of the groups overlap each other.
+    double angleSum = 4.0 * M_PI;
+
+    while ( angleSum > 2.0 * M_PI ) {
+      angleSum = 0.0;
+
+      for( unsigned int i=0; i<winding && angleSum <= 2.0 * M_PI; i++ ) {
+      
+	Vector v0 = Vector( (Vector) bins[i][0].first - centroidGlobal );
+      
+	for( unsigned int j=1; j<nnodes && angleSum <= 2.0 * M_PI; j++ ) {
+	  Vector v1 = Vector( (Vector) bins[i][j].first - centroidGlobal );
+	
+	  angleSum += acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
+	
+	  v0 = v1;
+	}
+      }
+
+      if( angleSum > 2.0 * M_PI ) {
+	--nnodes;
+      }
+    }
+
+    // Because of gaps between groups it is possible to still have over
+    // laps so check between the groups.
     for( unsigned int i=0, j=skip; i<skip*winding; i+=skip, j+=skip ) {
       unsigned int i0 = i % winding;
       unsigned int j0 = j % winding;
 
-//    cerr << i0 << " angle bounds "
-//	   << angleMinMax[i0].first << "  "
-// 	   << angleMinMax[i0].second;
+      for( unsigned int k=nnodes-1; k>0; k-- ) {
+	Vector v0 = (Vector) bins[j0][0].first - (Vector) bins[i0][k].first;
 
-      if( angleMinMax[i0].first < angleMinMax[j0].second ) {
-	// Skip the through zero angles that go through zero.
-	double sectionAngle = 2.0 * M_PI / winding;
+	for( unsigned int l=1; l<nnodes; l++ ) {
 
-	if( angleMinMax[i0].first  > 2.0 * sectionAngle ||
-	    angleMinMax[j0].second < 2.0 * M_PI - 2.0 * sectionAngle ) {
-	  overlap++;
-
-// 	  cerr << " overlaps " << overlap;
-
-// 	  cerr  << "  " << 2.0 * sectionAngle << "  "
-// 		<< 2.0 * M_PI - 2.0 * sectionAngle;
-	} else {
-// 	  cerr << " near zero "
-// 	       << 2.0 * sectionAngle << "  "
-// 	       << 2.0 * M_PI - 2.0 * sectionAngle;
+	  Vector v1 = (Vector) bins[j0][l].first - (Vector) bins[i0][k].first;
+	
+	  if( Dot( v0, v1 ) < 0.0 ) {
+	    nnodes = k;
+	    break;
+	  } else
+	    v0 = v1;
 	}
       }
+    }
 
-      if( angleMinMax[i0].first > angleMinMax[i0].second ) {
-	flipped++;
-// 	cerr << " through zero ";
+    // This is where the in between points start.
+    return (winding - skip) + winding * (nnodes+1);
+  }
+}
+
+
+template< class IFIELD, class OFIELD, class PCFIELD >
+unsigned int
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
+mergeOverlap( vector< vector < pair< Point, double > > > &bins,
+	      unsigned int &nnodes,
+	      unsigned int winding,
+	      unsigned int twist,
+	      unsigned int skip,
+	      unsigned int island )
+{
+  Vector centroidGlobal = Vector(0,0,0);;
+
+  for( unsigned int i=0; i<winding; i++ )
+    for( unsigned int j=0; j<nnodes; j++ )
+      centroidGlobal += (Vector) bins[i][j].first;
+  
+  centroidGlobal /= (winding*nnodes);
+    
+  if( island ) {
+
+    vector < pair< Point, double > > tmp_bins[winding];
+
+    for( unsigned int i=0; i<winding; i++ ) {
+      
+      // Are there points to be merged?
+      if( nnodes < bins[i].size() ) {
+
+	bool completeIsland = false;
+
+	// Is the island complete?
+	if( bins[i].size() >= 2 ) {
+
+	  unsigned int turns = 0;	  
+
+	  Vector v0 = (Vector) bins[i][0].first - centroidGlobal;
+	  Vector v1 = (Vector) bins[i][1].first - centroidGlobal;
+
+	  bool lastCCW = ccw( v0, v1 ) == 1 ? true : false;
+	  v0 = v1;
+
+	  for( unsigned int j=2; j<bins[i].size(); j++ ) {
+	    v1 = (Vector) bins[i][j].first - centroidGlobal;
+
+	    bool CCW = ccw( v0, v1 ) == 1 ? true : false;
+	    v0 = v1;
+	    
+	    if( CCW != lastCCW ) {
+	      lastCCW = CCW;
+
+	      turns++;
+
+	      if( turns == 3 )
+		break;
+	    }
+	  }
+
+	  if( turns == 3 )
+	    completeIsland = true;
+	}
+
+	if( completeIsland ) {
+
+	  // Check to see if the first overlap point is not really an
+	  // overlapping point. This happens because the spacing between
+	  // winding groups varries between groups.
+	  Vector v0 = (Vector) bins[i][0       ].first -
+	    (Vector) bins[i][nnodes].first;
+	  Vector v1 = (Vector) bins[i][nnodes-1].first -
+	    (Vector) bins[i][nnodes].first;
+	  
+	  unsigned int extra;
+	  
+	  if( Dot( v0, v1 ) < 0.0 )
+	    extra = 1;
+	  else
+	    extra = 0;
+	  
+ 	  if( extra )
+ 	    cerr << i << " adding extra " << nnodes << endl;
+	  
+	  // Store the overlapping points.
+	  for( unsigned int j=nnodes+extra; j<bins[i].size(); j++ )
+	    tmp_bins[i].push_back( bins[i][j] );
+
+ 	  cerr << i << " stored extra points " << tmp_bins[i].size() << endl;
+
+	  // Erase all of the overlapping points.
+	  bins[i].erase( bins[i].begin()+nnodes+extra, bins[i].end() );
+	  
+	  // Insert the first point so the curve is contiguous.
+	  bins[i].insert( bins[i].begin()+nnodes+extra, bins[i][0] );
+
+	  unsigned int index_prediction = 1;
+	  unsigned int prediction_true  = 0;
+	  unsigned int prediction_false = 0;
+
+	  unsigned int modulo = bins[i].size() - 1;
+ 
+	  // Insert the remaining points.
+	  for( unsigned int j=0; j<tmp_bins[i].size(); j++ ) {
+
+	    Vector v0 = (Vector) bins[i][0].first -
+	      (Vector) tmp_bins[i][j].first;
+
+	    double angle = 0;
+	    double length = 99999;
+	    unsigned int angleIndex = 0;
+	    unsigned int lengthIndex = 0;
+
+	    for( unsigned int k=1; k<bins[i].size(); k++ ) {
+
+	      Vector v1 = (Vector) bins[i][k].first -
+		(Vector) tmp_bins[i][j].first;
+
+	      double ang = acos( Dot(v0, v1) / (v0.length() * v1.length()) );
+
+	      if( angle < ang ) {
+		angle = ang;
+		angleIndex = k;
+	      }
+
+	      if( length < v1.length() ) {
+		length = v1.length();
+		lengthIndex = k;
+	      }
+
+	      // Go on.
+	      v0 = v1;
+	    }
+
+	    // Insert it between the other two.
+	    if( angle > M_PI / 3.0 )
+	      bins[i].insert( bins[i].begin()+angleIndex, tmp_bins[i][j] );
+
+	    cerr << i << "  " << modulo << "  " << j + nnodes+extra
+		 << "  Prediction " << index_prediction
+		 << " actual " << angleIndex << "  "
+		 << (angleIndex == index_prediction) << endl;
+
+	    // Check to see if the prediction and the actual index are
+	    // the same.
+	    if( angleIndex == index_prediction )
+	      prediction_true++;
+	    else // if( angleIndex != index_prediction )
+	      prediction_false++;
+
+	    // Predict where the next insertion will take place.
+	    if( (j+1) % modulo == 0 )
+	      index_prediction = 1 + (j+1) / modulo;
+	    else
+	      index_prediction = angleIndex + (j+1) / modulo + 2;
+	  }
+
+	  cerr << "Winding " << i << " inserted "
+	       << prediction_true+prediction_false << " nodes "
+	       << " True " << prediction_true
+	       << " False " << prediction_false << endl;
+
+	  // If more of the predictions are incorrect than correct
+	  // insert based on the predictions.
+	  if( 0 && prediction_true < prediction_false ) {
+
+	    cerr << "Winding " << i << " bad predicted insertion ";
+
+	    unsigned int cc = 0;
+
+	    for( unsigned int j=0; j<tmp_bins[i].size(); j++ ) {
+
+	      vector< pair< Point, double > >::iterator inList =
+		find( bins[i].begin(), bins[i].end(), tmp_bins[i][j] );
+	      
+	      if( inList != bins[i].end() ) {
+		bins[i].erase( inList );
+
+		cc++;
+	      }
+	    }
+
+	    cerr << "removed " << cc << " points" << endl;
+
+	    unsigned int index = 1;
+	    
+	    for( unsigned int j=0; j<tmp_bins[i].size(); j++ ) {
+	    
+	      // Insert it between the other two.
+	      bins[i].insert( bins[i].begin()+index, tmp_bins[i][j] );
+
+	      cerr << i << "  " << modulo << "  " << j + nnodes+extra
+		   << " actual " << index << endl;
+
+	      // Predict where the next insertion will take place.
+	      if( (j+1) % modulo == 0 )
+		index = 1 + (j+1) / modulo;
+	      else
+		index += (j+1) / modulo + 2;
+	    }
+	  }
+
+	  unsigned int start0  = 0;
+	  unsigned int end0    = 0;
+	  unsigned int start1  = 0;
+	  unsigned int end1    = 0;
+
+	  if( prediction_true > prediction_false ) {
+	    // See if any of the segments cross.
+	    for( unsigned int j=0; 0 && j<bins[i].size()-1; j++ ) {
+	      
+	      Point l0_p0 = bins[i][j].first;
+	      Point l0_p1 = bins[i][j+1].first;
+	      
+	      for( unsigned int k=j+2; k<bins[i].size()-1; k++ ) {
+		
+		Point l1_p0 = bins[i][k].first;
+		Point l1_p1 = bins[i][k+1].first;
+		
+		if( intersect( l0_p0, l0_p1, l1_p0, l1_p1 ) == 1 ) {
+		  if( start0 == 0 ) {
+		    start0  = j + 1;
+		    end1    = k + 1;
+		  } else {
+		    end0   = j + 1;
+		    start1 = k + 1;
+
+		    cerr << " merge self intersection " 
+			 << start0 << "  " << end0 << "  "
+			 << start1 << "  " << end1 << endl;
+
+		    if( 0 ) {
+		      vector < pair< Point, double > > tmp_bins[2];
+
+		      for( unsigned int l=start0; l<end0; l++ )
+			tmp_bins[0].push_back( bins[i][l] );
+
+		      for( unsigned int l=start1; l<end1; l++ )
+			tmp_bins[1].push_back( bins[i][l] );
+
+		      bins[i].erase( bins[i].begin()+start1,
+				     bins[i].begin()+end1 );
+
+		      bins[i].erase( bins[i].begin()+start0,
+				     bins[i].begin()+end0 );
+
+		      for( unsigned int l=0; l<tmp_bins[1].size(); l++ )
+			bins[i].insert( bins[i].begin()+start0,
+					tmp_bins[1][l] );
+
+		      for( unsigned int l=0; l<tmp_bins[0].size(); l++ )
+			bins[i].insert( bins[i].begin() + start1 -
+					tmp_bins[0].size() +
+					tmp_bins[1].size(),
+					tmp_bins[0][l] );
+		    }
+
+		    start0 = 0;
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  } else {
+
+      vector < pair< Point, double > > tmp_bins[winding];
+
+      for( unsigned int i=0; i<winding; i++ ) {
+
+	unsigned int j = (i+skip) % winding;
+
+	unsigned int extra = 0;
+
+	if( nnodes < bins[i].size() ) {
+	  // Check to see if the first overlapping point is really a
+	  // fill-in point. This happens because the spacing between
+	  // winding groups varries between groups.
+	  Vector v0 = (Vector) bins[j][0       ].first -
+	    (Vector) bins[i][nnodes].first;
+	  Vector v1 = (Vector) bins[i][nnodes-1].first -
+	    (Vector) bins[i][nnodes].first;
+
+	  if( Dot( v0, v1 ) < 0.0 )
+	    extra = 1;
+	}
+
+	if( extra )
+	  cerr << i << " adding extra " << endl;
+
+	// Store the overlapping points.
+	for( unsigned int j=nnodes+extra; j<bins[i].size(); j++ )
+	  tmp_bins[i].push_back( bins[i][j] );
+
+	cerr << i << " stored extra points " << tmp_bins[i].size() << endl;
+
+	// Erase all of the overlapping points.
+	bins[i].erase( bins[i].begin()+nnodes+extra, bins[i].end() );
+
+	// Insert the first point from the next winding so the curve
+	// is contiguous.
+	bins[i].push_back( bins[j][0] );
       }
 
-//    cerr << endl;
+      for( unsigned int i=0; i<winding; i++ ) {
+      
+	unsigned int winding_prediction = (i+skip)%winding;
+	unsigned int index_prediction = 1;
+	unsigned int prediction_true  = 0;
+	unsigned int prediction_false = 0;
+
+	for( unsigned int i0=0; i0<tmp_bins[i].size(); i0++ ) {
+
+	  double angle = 0;
+	  unsigned int index_wd = 0;
+	  unsigned int index_pt = 0;
+
+	  for( unsigned int j=0; j<winding; j++ ) {
+
+	    Vector v0 = (Vector) bins[j][0].first -
+	      (Vector) tmp_bins[i][i0].first;
+
+	    for( unsigned int j0=1; j0<bins[j].size(); j0++ ) {
+	      Vector v1 = (Vector) bins[j][j0].first -
+		(Vector) tmp_bins[i][i0].first;
+	
+	      double ang = acos( Dot(v0, v1) / (v0.length() * v1.length()) );
+
+	      if( angle < ang ) {
+
+		angle = ang;
+		index_wd = j;
+		index_pt = j0;
+	      }
+
+	      // Go on.
+	      v0 = v1;
+	    }
+	  }
+
+	  // Insert it between the other two.
+	  bins[index_wd].insert( bins[index_wd].begin()+index_pt,
+				 tmp_bins[i][i0] );
+
+	  cerr << "Winding prediction " << winding_prediction
+	       << " actual " << index_wd
+	       << "  Index prediction  " << index_prediction
+	       << " actual " << index_pt << "  "
+	       << (index_wd == winding_prediction &&
+		   index_pt == index_prediction) << endl;
+
+	// Check to see if the prediction of where the point was inserted
+	// is correct;
+	if( index_wd == winding_prediction && index_pt == index_prediction )
+	  prediction_true++;
+	else 
+	  prediction_false++;
+
+	// Prediction of where the next insertion will take place.
+	index_prediction = index_pt + 2;
+	winding_prediction = index_wd;
+      }
+
+      cerr << "Winding " << i << " inserted "
+	   << prediction_true+prediction_false << " nodes "
+	   << " True " << prediction_true
+	   << " False " << prediction_false << endl;
     }
 
-    if( overlap || flipped > 1 ) {
-
-//    cerr << " OVERLAPS " << overlap
-//      << " FLIPPED " << flipped << endl;
-
-      if( nnodes > 2 )
-	nnodes--;
-      else
-	overlap = flipped = 0;
-    }
+    // Remove the last point so it is possilble to see the groups.
+    for( unsigned int i=0; i<winding; i++ )
+      bins[i].erase( bins[i].end() );
   }
+
+  // Update the approximate node count.
+  nnodes = 9999;
+
+  for( unsigned int i=0; i<winding; i++ )
+    if( nnodes > bins[i].size() )
+      nnodes = bins[i].size();
 
   return nnodes;
 }
