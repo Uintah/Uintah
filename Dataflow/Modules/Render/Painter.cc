@@ -83,6 +83,7 @@
 #include <Core/Util/Timer.h>
 #include <Core/Util/Environment.h>
 #include <Core/Volume/CM2Widget.h>
+extern Tcl_Interp* the_interp;
 
 namespace SCIRun {
 
@@ -354,14 +355,23 @@ void
 Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd) 
 {
   nrrd_ = nrrd;
-  if (nrrd->nrrd->dim == 2) {
-    nrrd_ = new NrrdData();
-    nrrdAxesInsert(nrrd_->nrrd, nrrd->nrrd, 2);
+  if (nrrd_->nrrd->dim == 2) {
+    nrrdAxesInsert(nrrd_->nrrd, nrrd_->nrrd, 2);
     nrrd_->nrrd->axis[2].min = 0.0;
     nrrd_->nrrd->axis[2].max = 1.0;
     nrrd_->nrrd->axis[2].spacing = 1.0;
     stub_axes_.push_back(2);
   }
+
+  if (name_.get() == string("axis_test")) {
+    nrrdAxesInsert(nrrd_->nrrd, nrrd_->nrrd, 0);
+    nrrd_->nrrd->axis[0].min = 0.0;
+    nrrd_->nrrd->axis[0].max = 1.0;
+    nrrd_->nrrd->axis[0].spacing = 1.0;
+    stub_axes_.push_back(0);
+  }
+
+
 
   for (int a = 0; a < nrrd_->nrrd->dim; ++a) {
     if (nrrd_->nrrd->axis[a].min > nrrd_->nrrd->axis[a].max)
@@ -386,7 +396,7 @@ NrrdDataHandle
 Painter::NrrdVolume::get_nrrd() 
 {
   NrrdDataHandle nrrd = nrrd_;
-  for (unsigned int s = 0; s < stub_axes_.size(); ++s) {
+  for (int s = stub_axes_.size()-1; s >= 0 ; --s) {
     NrrdDataHandle nout = new NrrdData();
     nrrdAxesDelete(nout->nrrd, nrrd->nrrd, stub_axes_[s]);
     nrrd = nout;
@@ -407,10 +417,10 @@ Painter::Painter(GuiContext* ctx) :
   tool_(0),
   anatomical_coordinates_(ctx->subVar("anatomical_coordinates"), 1),
   show_text_(ctx->subVar("show_text"), 1),
-  font_r_(ctx->subVar("color_font-r"), 1.0),
-  font_g_(ctx->subVar("color_font-g"), 1.0),
-  font_b_(ctx->subVar("color_font-b"), 1.0),
-  font_a_(ctx->subVar("color_font-a"), 1.0),
+  font_r_(ctx->subVar("color_font_r"), 1.0),
+  font_g_(ctx->subVar("color_font_g"), 1.0),
+  font_b_(ctx->subVar("color_font_b"), 1.0),
+  font_a_(ctx->subVar("color_font_a"), 1.0),
   bundle_oport_((BundleOPort *)get_oport("Paint Data")),
   freetype_lib_(0),
   fonts_(),
@@ -519,6 +529,26 @@ void
 Painter::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
   if (!window.show_guidelines_()) return;
   if (mouse_.window_ != &window) return;
+
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+  glScaled(2.0, 2.0, 2.0);
+  glTranslated(-.5, -.5, -.5);
+  GLint gl_vp[4];
+  glGetIntegerv(GL_VIEWPORT, gl_vp);
+  glScaled(1.0/(gl_vp[2] - gl_vp[0]), 
+           1.0/(gl_vp[3] - gl_vp[1]), 1.0);
+  CHECK_OPENGL_ERROR();
+  glPopMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  CHECK_OPENGL_ERROR();
+
+
   Vector tmp = window.x_dir();
   tmp[window.axis_] = 0;
   const float one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
@@ -622,7 +652,16 @@ Painter::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
   glEnd();
 }  
 
-
+template <class T>
+unsigned int max_vector_index(vector<T> array) {
+  if (array.empty()) return 0;
+  unsigned int index = 0;
+  //  double max_val = fabs(array[index]);
+  for (int i = 1; i < array.size(); ++i) 
+    if (fabs(array[i]) > fabs(array[index]))
+      index = i;
+  return index;
+}
 
 // renders vertical and horizontal bars that represent
 // selected slices in other dimensions
@@ -630,57 +669,110 @@ void
 Painter::draw_slice_lines(SliceWindow &window)
 {
   if (!current_volume_) return;
-  Vector tmp = window.x_dir();
-  tmp[window.axis_] = 0;
-  double screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
+
+  double upp = 100.0 / window.zoom_;    // World space units per one pixel
+
+  //  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
+  //  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.8 };
+  GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
+
+  Vector scale = current_volume_->scale();
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
-  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.8 };
-  GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
+  vector<int> zero_idx(current_volume_->nrrd_->nrrd->dim, 0);
+  WindowLayouts::iterator liter = layouts_.begin();
+  WindowLayouts::iterator lend = layouts_.end();
+  while (liter != lend) {
+    ASSERT(liter->second);
+    WindowLayout &layout = *(liter->second);
+    liter++;
+    for (unsigned int win = 0; 
+         win < layout.windows_.size(); ++win) {
+      ASSERT(layout.windows_[win]);
+      SliceWindow &window2 = *(layout.windows_[win]);
+      if (&window == &window2) continue;
+      if (Dot(window.normal_, window2.normal_) > 0.999) continue;
+      Vector span = Cross(window.normal_, window2.normal_);
+      vector<double> span_index = current_volume_->vector_to_index(span);
+      int span_axis = max_vector_index(span_index);
 
-  const int axis = window.axis_;
-  int p = (axis+1)%3;
-  int s = (axis+2)%3;
+      vector<int> pos_idx = current_volume_->world_to_index(window2.center_);
+      vector<int> min_idx = pos_idx;
+      min_idx[span_axis] = 0;
+      vector<int> max_idx = pos_idx;
+      max_idx[span_axis] = current_volume_->nrrd_->nrrd->axis[span_axis].size;
+      Point min = current_volume_->index_to_world(min_idx);
+      Point max = current_volume_->index_to_world(max_idx);
+      vector<int> one_idx = zero_idx;
+      one_idx[window2.axis_] = 1;
+      double scale = (current_volume_->index_to_world(one_idx) - 
+                      current_volume_->index_to_world(zero_idx)).length();
+      Vector wid = window2.normal_;
+      wid.normalize();
+      wid *= Max(upp, scale);
+      glColor4dv(red);
+      glBegin(GL_QUADS);    
+      glVertex3dv(&min(0));
+      glVertex3dv(&max(0));
+      min = min + wid;
+      max = max + wid;
+      glVertex3dv(&max(0));
+      glVertex3dv(&min(0));
+      glEnd();
 
-  vector<int> max_slice = current_volume_->max_index();
-  Vector scale = current_volume_->scale();
 
-  double one;
-  double xyz[3];
-  int i;
-  for (int i = 0; i < 3; ++i)
-    xyz[i] = cur_slice_[i]*scale[i];
-  
+        
 
-  for (i = 0; i < 2; ++i) {
-    if (!slab_width_[p]) continue;
-    one = Max(screen_space_one, double(scale[p]*slab_width_[p]));
-
-    switch (p) {
-    case 0: glColor4dv(red); break;
-    case 1: glColor4dv(green); break;
-    default:
-    case 2: glColor4dv(blue); break;
+//       cerr << "window " << window.name_ << " drawing " 
+//            << window2.name_ 
+//            << " max span: " << span_axis << std::endl;
+#if 0
+           << " has vector: [";
+      for (int n = 0; n < index.size(); ++n)
+        cerr << index[n] << " ";
+      cerr << "]\n";
+#endif
     }
-    glBegin(GL_QUADS);    
-    if (xyz[p] >= 0 && xyz[p] <= max_slice[p]*scale[p]) {
-      glVertex3f(p==0?xyz[0]:0.0, p==1?xyz[1]:0.0, p==2?xyz[2]:0.0);
-      glVertex3f(p==0?xyz[0]+one:0.0, p==1?xyz[1]+one:0.0, p==2?xyz[2]+one:0.0);
-      glVertex3f(p==0?xyz[0]+one:(axis==0?0.0:(max_slice[s]+1)*scale[s]),
-		 p==1?xyz[1]+one:(axis==1?0.0:(max_slice[s]+1)*scale[s]),
-		 p==2?xyz[2]+one:(axis==2?0.0:(max_slice[s]+1)*scale[s]));
-      
-      glVertex3f(p==0?xyz[0]:(axis==0?0.0:(max_slice[s]+1)*scale[s]),
-		 p==1?xyz[1]:(axis==1?0.0:(max_slice[s]+1)*scale[s]),
-		 p==2?xyz[2]:(axis==2?0.0:(max_slice[s]+1)*scale[s]));
-    }
-    glEnd();
-    SWAP(p,s);
   }
-  CHECK_OPENGL_ERROR();
+
+#if 0
+
+      
+
+
+      for (i = 0; i < 2; ++i) {
+        if (!slab_width_[p]) continue;
+        one = Max(screen_space_one, double(scale[p]*slab_width_[p]));
+        
+        switch (p) {
+        case 0: glColor4dv(red); break;
+        case 1: glColor4dv(green); break;
+        default:
+        case 2: glColor4dv(blue); break;
+        }
+        glBegin(GL_QUADS);    
+        if (xyz[p] >= 0 && xyz[p] <= max_slice[p]*scale[p]) {
+          glVertex3f(p==0?xyz[0]:0.0, p==1?xyz[1]:0.0, p==2?xyz[2]:0.0);
+          glVertex3f(p==0?xyz[0]+one:0.0, p==1?xyz[1]+one:0.0, p==2?xyz[2]+one:0.0);
+          glVertex3f(p==0?xyz[0]+one:(axis==0?0.0:(max_slice[s]+1)*scale[s]),
+                     p==1?xyz[1]+one:(axis==1?0.0:(max_slice[s]+1)*scale[s]),
+                     p==2?xyz[2]+one:(axis==2?0.0:(max_slice[s]+1)*scale[s]));
+          
+          glVertex3f(p==0?xyz[0]:(axis==0?0.0:(max_slice[s]+1)*scale[s]),
+                     p==1?xyz[1]:(axis==1?0.0:(max_slice[s]+1)*scale[s]),
+                     p==2?xyz[2]:(axis==2?0.0:(max_slice[s]+1)*scale[s]));
+        }
+        glEnd();
+        SWAP(p,s);
+      }
+      CHECK_OPENGL_ERROR();
+    }
+#endif
+
 }
+
+
 
 
 double div_d(double dividend, double divisor) {
@@ -881,11 +973,13 @@ Painter::NrrdVolume::scale() {
   return index_to_world(index_one) - index_to_world(index_zero);
 }
 
+
 double
 Painter::NrrdVolume::scale(int axis) {
   ASSERT(axis >= 0 && axis < nrrd_->nrrd->dim);
   return scale()[axis];
 }
+
 
 
 vector<int>
@@ -1073,15 +1167,17 @@ Painter::NrrdSlice::bind()
 
   if (!texture_) {
     vector<int> index = volume_->world_to_index(window_->center_);
-    texture_ = scinew ColorMappedNrrdTextureObj(volume_->nrrd_, 
-                                                window_->axis_,
-                                                index[window_->axis_],
-                                                index[window_->axis_]);
+    int slice = index[window_->axis_];
+    if (slice >= 0 && slice < volume_->nrrd_->nrrd->axis[window_->axis_].size)
+        texture_ = scinew ColorMappedNrrdTextureObj(volume_->nrrd_, 
+                                                    window_->axis_,
+                                                    slice, 
+                                                    slice);
     tex_dirty_ = true;
   }
 
 
-  if (tex_dirty_) {
+  if (texture_ && tex_dirty_) {
     texture_->set_clut_minmax(volume_->clut_min_, volume_->clut_max_);
     ColorMapHandle cmap = painter_->get_colormap(volume_->colormap_.get());
     texture_->set_colormap(cmap);
@@ -1133,7 +1229,8 @@ Painter::NrrdSlice::draw()
   CHECK_OPENGL_ERROR();  
 
   bind();
-  texture_->draw_quad(pos_, xdir_, ydir_);
+  if (texture_)
+    texture_->draw_quad(pos_, xdir_, ydir_);
 }
 
 
@@ -1597,24 +1694,33 @@ Painter::handle_gui_mouse_enter(GuiArgs &args) {
 	    ("Cannot handle enter on "+args[2]).c_str());
   ASSERTMSG(current_layout_ == 0, "Haven't left window");
   current_layout_ = layouts_[args[2]];
+  update_mouse_state(args, true);
+  if (mouse_.window_)
+    redraw_window(*mouse_.window_);
 }
 
 
 void
 Painter::handle_gui_mouse_leave(GuiArgs &args) {
+  SliceWindow *left_window = mouse_.window_;
   current_layout_ = 0;
-  if (mouse_.window_) {
-    SliceWindow &window = *mouse_.window_;
-    mouse_.window_ = 0;
-    redraw_window(window);
-
-  }
+  update_mouse_state(args, true);
+  if (left_window)
+    redraw_window(*left_window);
 }
 
 void
 Painter::update_mouse_state(GuiArgs &args, bool reset) {
   ASSERT(layouts_.find(args[2]) != layouts_.end());
   WindowLayout &layout = *layouts_[args[2]];
+
+  mouse_.button_ = args.get_int(3);
+  mouse_.state_ = args.get_int(4);
+  mouse_.X_ = args.get_int(5);
+  mouse_.Y_ = args.get_int(6);
+  mouse_.x_ = args.get_int(7);
+  mouse_.y_ = layout.opengl_->height() - 1 - args.get_int(8);
+
   mouse_.window_ = 0;
   for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
     SliceWindow *window = layout.windows_[w];
@@ -1629,18 +1735,12 @@ Painter::update_mouse_state(GuiArgs &args, bool reset) {
     }
   }
 
-  mouse_.button_ = args.get_int(3);
-  mouse_.state_ = args.get_int(4);
-  mouse_.X_ = args.get_int(5);
-  mouse_.Y_ = args.get_int(6);
 
   if (reset) {
     mouse_.pick_x_ = mouse_.X_;
     mouse_.pick_y_ = mouse_.Y_;
   }    
 
-  mouse_.x_ = args.get_int(7);
-  mouse_.y_ = layout.opengl_->height() - 1 - args.get_int(8);
   mouse_.dx_ = mouse_.X_ - mouse_.pick_x_;
   mouse_.dy_ = mouse_.Y_ - mouse_.pick_y_;
   if (mouse_.window_) 
@@ -1652,7 +1752,7 @@ Painter::update_mouse_state(GuiArgs &args, bool reset) {
 void
 Painter::handle_gui_mouse_button_press(GuiArgs &args) {
   update_mouse_state(args, true);
-  ASSERT(mouse_.window_);
+  if (!mouse_.window_) return;
 
   if (!tool_) {
     switch (mouse_.button_) {
@@ -1849,7 +1949,7 @@ Painter::handle_gui_keypress(GuiArgs &args) {
     }
   }
 }
-  
+
 
 void
 Painter::tcl_command(GuiArgs& args, void* userdata) {
@@ -1876,9 +1976,19 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
     TkOpenGLContext *context = \
       scinew TkOpenGLContext(args[2], args.get_int(4), 256, 256);
     XSync(context->display_, 0);
+//     Tk_DefineCursor(tkwin, Tk_GetCursor(the_interp, tkwin, 
+//                                         ccast_unsafe(cursor_name)));
+
     ASSERT(layouts_.find(args[2]) == layouts_.end());
     layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
     layouts_[args[2]]->opengl_ = context;
+    char z = 0;
+    Tk_Cursor cursor = 
+      Tk_GetCursorFromData(the_interp, context->tkwin_, &z, &z, 1,1,0,0,
+                           //source, mask, 8, 8, 0, 0, 
+                           Tk_GetUid("black"), Tk_GetUid("black"));
+    Tk_DefineCursor(context->tkwin_, cursor);
+
   } else if(args[1] == "destroygl") {
     WindowLayouts::iterator pos = layouts_.find(args[2]);
     ASSERT(pos != layouts_.end());
