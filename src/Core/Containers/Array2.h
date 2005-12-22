@@ -142,11 +142,6 @@ public:
 
   inline T** get_dataptr() {return objs;}
 
-    
-  //////////
-  //Rigorous Tests
-  static void test_rigorous(RigorousTest* __test);
-
 #ifndef SCI_NOPERSISTENT
 #if defined(_AIX)
   template <typename Type> 
