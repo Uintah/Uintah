@@ -43,6 +43,8 @@
 
 #include <itkCommand.h>
 
+#include "itkMetaDataObject.h"
+
 namespace Insight 
 {
 
@@ -171,7 +173,28 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   update_progress(0.0);
 
   // set filter parameters
-   
+
+  // Use parameters encapsulated in the MetaDataDictionary.
+  // Build a list of key/value pairs and send it to
+  // tcl to set any corresponding guivars.
+  itk::MetaDataDictionary &dic = data_SeedImage->GetMetaDataDictionary();
+  std::vector<string> keys = dic.GetKeys();
+
+  string pairs = "[list";
+  for(int i=0; i<(int)keys.size(); i++) {
+    string value;
+    if(itk::ExposeMetaData<string>(dic, keys[i], value)) {
+      pairs += string(" [list " + keys[i] + " " + value + "]");
+    }
+  }
+  pairs += "]";
+  
+  gui->execute(id + " update_guivars_from_data_dictionary " + pairs);
+
+
+  reset_vars();
+
+
   //dynamic_cast<FilterType* >(filter_.GetPointer())->AbortGenerateDataOff(); 
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetLowerThreshold( gui_lower_threshold_.get() ); 
   
@@ -200,9 +223,9 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetSmoothingTimeStep( gui_smoothing_time_step_.get() ); 
   
-  dynamic_cast<FilterType* >(filter_.GetPointer())->SetSmoothingConductance( gui_smoothing_conductance_.get() ); 
-  
+  dynamic_cast<FilterType* >(filter_.GetPointer())->SetSmoothingConductance( gui_smoothing_conductance_.get() );
 
+  
   // execute the filter
   
   try {

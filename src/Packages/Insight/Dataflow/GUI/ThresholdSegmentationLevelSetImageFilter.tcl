@@ -193,4 +193,18 @@
 	pack $w.buttons -side top 
 
     }
+
+     method update_guivars_from_data_dictionary {pairs} {
+	 # For each pair, set the corresponding guivar.
+	 # If it doesn't exist, it won't hurt anything
+	 
+	 for {set i 0} {$i < [llength $pairs]} {incr i} {
+	     set which [lindex $pairs $i]
+	     set key [lindex $which 0]
+	     set value [lindex $which 1]
+	     global $this-$key
+	     set $this-$key $value
+	 }
+	 
+     }
 }
