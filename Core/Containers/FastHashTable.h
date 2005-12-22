@@ -133,11 +133,6 @@ public:
   //////////
   // Returns how many items are stored in the FastHash table
   int size() const;
-
-  //////////
-  //Rigorous Tests
-  static void test_rigorous(RigorousTest* __test);
-
 };
 
 // Use this class for walking through a FastHashtable

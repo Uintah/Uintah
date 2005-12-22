@@ -170,12 +170,6 @@ public:
   //////////
   // Persistent io
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, HashTable<Key, Data>&);
-    
-  //////////
-  //Rigorous Tests
-  static void test_rigorous(RigorousTest* __test);
-
-
 };
 
 

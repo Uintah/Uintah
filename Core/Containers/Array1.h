@@ -191,11 +191,6 @@ public:
   // Get the array information
   T* get_objs();
 
-
-  //////////
-  //Rigorous Tests
-  static void test_rigorous(RigorousTest* __test);
-
 #ifndef SCI_NOPERSISTENT
 #if defined(_AIX)
   template <typename Type> 

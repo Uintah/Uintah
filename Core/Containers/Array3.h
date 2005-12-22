@@ -167,10 +167,6 @@ public:
   int input( const string& );
   int output( const string&);
 
-  //////////
-  //Rigorous Tests
-  static void test_rigorous(RigorousTest* __test);
-    
 #ifndef SCI_NOPERSISTENT
 #if defined(_AIX)
   template <typename type>
