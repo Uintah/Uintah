@@ -172,7 +172,6 @@ SRCS := \
         $(SRCDIR)/TransformData3.tcl \
         $(SRCDIR)/TransformMesh.tcl \
         $(SRCDIR)/UIvar.tcl \
-        $(SRCDIR)/Unstructure.tcl \
         $(SRCDIR)/Viewer.tcl \
         $(SRCDIR)/ViewSlices.tcl \
         $(SRCDIR)/ViewWidget.tcl \

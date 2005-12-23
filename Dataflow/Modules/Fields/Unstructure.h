@@ -157,13 +157,8 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
 				      FieldHandle field_h)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(field_h.get_rep());
-  typename FSRC::mesh_handle_type mesh = ifield->get_typed_mesh();
-
-  typename FDST::mesh_handle_type outmesh = scinew typename FDST::mesh_type();
-
-  bool pointCloud =
-    (outmesh->get_type_description()->get_name().find( "PointCloud") !=
-     string::npos );
+  typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh();
+  typename FDST::mesh_handle_type omesh = scinew typename FDST::mesh_type();
 
 #ifdef HAVE_HASH_MAP
   typedef hash_map<typename FSRC::mesh_type::Node::index_type,
@@ -185,43 +180,43 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   
   node_hash_type nodemap;
   elem_hash_type elemmap;
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+  imesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
+  // Copy the points.
   typename FSRC::mesh_type::Node::iterator bn, en;
-  mesh->begin(bn); mesh->end(en);
+  imesh->begin(bn); imesh->end(en);
   while (bn != en) {
     ASSERT(nodemap.find(*bn) == nodemap.end());
     Point np;
-    mesh->get_center(np, *bn);
-    nodemap[*bn] = outmesh->add_point(np);
+    imesh->get_center(np, *bn);
+    nodemap[*bn] = omesh->add_point(np);
     ++bn;
   }
 
-  // Point clouds do not have elements so skip.
-  if( !pointCloud ) {
-    typename FSRC::mesh_type::Elem::iterator bi, ei;
-    mesh->begin(bi); mesh->end(ei);
-    while (bi != ei) {
-      // Add this element to the new mesh.
-      typename FSRC::mesh_type::Node::array_type onodes;
-      mesh->get_nodes(onodes, *bi);
-      typename FDST::mesh_type::Node::array_type nnodes(onodes.size());
+  // Copy the elements.
+  typename FSRC::mesh_type::Elem::iterator bi, ei;
+  imesh->begin(bi); imesh->end(ei);
+  while (bi != ei) {
+    // Add this element to the new mesh.
+    typename FSRC::mesh_type::Node::array_type onodes;
+    imesh->get_nodes(onodes, *bi);
+    typename FDST::mesh_type::Node::array_type nnodes(onodes.size());
 
-      for (unsigned int i=0; i<onodes.size(); i++) {
-	ASSERT(nodemap.find(onodes[i]) != nodemap.end());
-	nnodes[i] = nodemap[onodes[i]];
-      }
-
-      elemmap[*bi] = outmesh->add_elem(nnodes);
-      ++bi;
+    for (unsigned int i=0; i<onodes.size(); i++) {
+      ASSERT(nodemap.find(onodes[i]) != nodemap.end());
+      nnodes[i] = nodemap[onodes[i]];
     }
+
+    elemmap[*bi] = omesh->add_elem(nnodes);
+    ++bi;
   }
 
-  // really should copy normals
-  outmesh->synchronize(Mesh::NORMALS_E);
+  // Really should copy normals
+  omesh->synchronize(Mesh::NORMALS_E);
 
-  FDST *ofield = scinew FDST(outmesh);
+  FDST *ofield = scinew FDST(omesh);
 
+  // Copy the data at the nodes
   if (field_h->basis_order() == 1) {
     typename node_hash_type::iterator hitr = nodemap.begin();
 
@@ -234,9 +229,8 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
     }
   }
 
-  // Point clouds do not have elements so skip.
-  else if (!pointCloud &&
-	   field_h->basis_order() == 0) {
+  // Copy the data at the elements
+  else if (field_h->basis_order() == 0) {
     typename elem_hash_type::iterator hitr = elemmap.begin();
     
     while (hitr != elemmap.end()) {
