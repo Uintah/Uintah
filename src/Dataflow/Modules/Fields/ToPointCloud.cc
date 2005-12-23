@@ -28,7 +28,7 @@
 
 
 /*
- *  Unstructure: Store/retrieve values from an input matrix to/from 
+ *  ToPointCloud: Store/retrieve values from an input matrix to/from 
  *            the data of a field
  *
  *  Written by:
@@ -42,11 +42,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Modules/Fields/Unstructure.h>
-#include <Core/Datatypes/StructHexVolMesh.h>
-#include <Core/Datatypes/StructQuadSurfMesh.h>
-#include <Core/Datatypes/StructCurveMesh.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/Modules/Fields/ToPointCloud.h>
 #include <Core/Containers/Handle.h>
 
 #include <iostream>
@@ -54,11 +50,11 @@
 
 namespace SCIRun {
 
-class Unstructure : public Module
+class ToPointCloud : public Module
 {
 public:
-  Unstructure(GuiContext* ctx);
-  virtual ~Unstructure();
+  ToPointCloud(GuiContext* ctx);
+  virtual ~ToPointCloud();
   virtual void execute();
 
 protected:
@@ -67,23 +63,21 @@ protected:
 };
 
 
-DECLARE_MAKER(Unstructure)
-Unstructure::Unstructure(GuiContext* context)
-  : Module("Unstructure", context, Filter, "FieldsGeometry", "SCIRun"),
+DECLARE_MAKER(ToPointCloud)
+ToPointCloud::ToPointCloud(GuiContext* context)
+  : Module("ToPointCloud", context, Filter, "FieldsGeometry", "SCIRun"),
     last_generation_(0)
 {
 }
 
 
-
-Unstructure::~Unstructure()
+ToPointCloud::~ToPointCloud()
 {
 }
 
 
-
 void
-Unstructure::execute()
+ToPointCloud::execute()
 {
   bool update = false;
 
@@ -103,63 +97,34 @@ Unstructure::execute()
 
   if( !ofieldhandle_.get_rep() || update )
   {
-    string dstname("");
-    string dst_basis_name("NoDataBasis");
+    string dstname("PointCloudMesh<ConstantBasis<Point> >");
+    string dst_basis_name("ConstantBasis");
+
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
     const string &mtdn = mtd->get_name();
+    
+    const TypeDescription *ftd = ifieldhandle->get_type_description();
+    TypeDescription::td_vec *tdv = 
+      ifieldhandle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
+    string data_name = (*tdv)[0]->get_name();
+    
+    CompileInfoHandle ci = ToPointCloudAlgo::get_compile_info(ftd, dstname, 
+							      dst_basis_name,
+							      data_name);
+    Handle<ToPointCloudAlgo> algo;
 
-    if ((mtdn.find("LatVolMesh") != string::npos) ||
-	       (mtdn.find("StructHexVolMesh") != string::npos)) {
-      dstname = "HexVolMesh<HexTrilinearLgn<Point> >";
-      if (ifieldhandle->basis_order() == 0)
-	dst_basis_name = "ConstantBasis";
-      else if (ifieldhandle->basis_order() == 1)
-	dst_basis_name = "HexTrilinearLgn";
-    } else if ((mtdn.find("ImageMesh") != string::npos) ||
-	       (mtdn.find("StructQuadSurfMesh") != string::npos)) {
-      dstname = "QuadSurfMesh<QuadBilinearLgn<Point> >";
-      if (ifieldhandle->basis_order() == 0)
-	dst_basis_name = "ConstantBasis";
-      else if (ifieldhandle->basis_order() == 1)
-	dst_basis_name = "QuadBilinearLgn";
-    } else if ((mtdn.find("ScanlineMesh") != string::npos) ||
-	       (mtdn.find("StructCurveMesh") != string::npos)) {
-      dstname = "CurveMesh<CrvLinearLgn<Point>";
-      if (ifieldhandle->basis_order() == 0)
-	dst_basis_name = "ConstantBasis";
-      else if (ifieldhandle->basis_order() == 1)
-	dst_basis_name = "CrvLinearLgn";
-    }
+    if (!module_dynamic_compile(ci, algo)) return;
+    
+    ofieldhandle_ = algo->execute(this, ifieldhandle);
 
-    if (dstname == "") {
-      warning("Do not know how to unstructure a " + mtdn + ".");
-
-      ofieldhandle_ = ifieldhandle;
-    }
-    else {
-      const TypeDescription *ftd = ifieldhandle->get_type_description();
-      TypeDescription::td_vec *tdv = 
-	ifieldhandle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
-      string data_name = (*tdv)[0]->get_name();
-      
-      CompileInfoHandle ci = UnstructureAlgo::get_compile_info(ftd, dstname, 
-							       dst_basis_name,
-							       data_name);
-      Handle<UnstructureAlgo> algo;
-
-      if (!module_dynamic_compile(ci, algo)) return;
-
-      ofieldhandle_ = algo->execute(this, ifieldhandle);
-
-      if (ofieldhandle_.get_rep())
-	ofieldhandle_->copy_properties(ifieldhandle.get_rep());
-    }
+    if (ofieldhandle_.get_rep())
+      ofieldhandle_->copy_properties(ifieldhandle.get_rep());
   }
 
   // Get a handle to the output field port.
   if ( ofieldhandle_.get_rep() ) {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output Field");
-
+    
     // Send the data downstream
     ofp->send(ofieldhandle_);
     if (!ofp->have_data()) { ofieldhandle_ = 0; }
@@ -169,15 +134,15 @@ Unstructure::execute()
 
 
 CompileInfoHandle
-UnstructureAlgo::get_compile_info(const TypeDescription *fsrc,
+ToPointCloudAlgo::get_compile_info(const TypeDescription *fsrc,
 				  const string &mesh_dst,
 				  const string &basis_dst,
 				  const string &data_dst)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("UnstructureAlgoT");
-  static const string base_class_name("UnstructureAlgo");
+  static const string template_class_name("ToPointCloudAlgoT");
+  static const string base_class_name("ToPointCloudAlgo");
 
   const string fdstname = "GenericField<" + mesh_dst + ", " + 
     basis_dst + "<" + data_dst + ">, vector<" + data_dst + "> > ";
@@ -193,9 +158,10 @@ UnstructureAlgo::get_compile_info(const TypeDescription *fsrc,
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   rval->add_basis_include("../src/Core/Basis/Constant.h");
-  rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
-  rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
-  rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
+//   rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
+//   rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
+//   rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
 
   fsrc->fill_compile_info(rval);
   return rval;

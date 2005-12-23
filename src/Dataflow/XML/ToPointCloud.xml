@@ -33,7 +33,7 @@
 
 
 
-<component name="Unstructure" category="FieldsGeometry">
+<component name="ToPointCloud" category="FieldsGeometry">
   <overview>
     <authors>
       <author>Michael Callahan</author>
@@ -68,15 +68,15 @@
   <testing>
   </testing>
 <nets>
-<net id="Unstructure">
-<title>Unstructure Regression Test</title>
+<net id="ToPointCloud">
+<title>ToPointCloud Regression Test</title>
 
-<p>Convert an ImageField into a QuadSurfMesh using the Unstructure
+<p>Convert an ImageField into a QuadSurfMesh using the ToPointCloud
 module.  Then clip out part of the QuadSurfMesh using the
 ClipByFunction module and display the two fields for comparison
 purposes.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsGeometry/Unstructure.net.</p>
+<p>This network can be found at src/nets/Modules/FieldsGeometry/ToPointCloud.net.</p>
 
 </net>
 </nets>

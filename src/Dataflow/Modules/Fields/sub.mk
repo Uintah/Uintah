@@ -95,6 +95,7 @@ SRCS     += \
 	$(SRCDIR)/SeedPoints.cc\
 	$(SRCDIR)/SelectField.cc\
 	$(SRCDIR)/SetProperty.cc\
+	$(SRCDIR)/ToPointCloud.cc\
 	$(SRCDIR)/ToStructured.cc\
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TransformData.cc\
