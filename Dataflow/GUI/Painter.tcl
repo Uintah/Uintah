@@ -87,12 +87,12 @@ itcl_class SCIRun_Render_Painter {
 	bind $w <Configure>	"$this-c resize $w"
 	bind $w <Destroy>	"$this-c destroygl $w"
 	# the focus belowis to generate keypress events 
-	bind $w <Enter>		"focus $w; $this-c enter $w"
-	bind $w <Leave>		"$this-c leave %W"
-	bind $w <Motion>	"$this-c motion   $w %b %s %X %Y %x %y %t"
-	bind $w <ButtonPress>	"$this-c button   $w %b %s %X %Y %x %y %t"
-	bind $w <ButtonRelease>	"$this-c release  $w %b %s %X %Y %x %y %t"
-	bind $w <KeyPress>	"$this-c keypress $w %k %K %t"
+	bind $w <Enter>		"focus %W; $this-c enter %W %b %s %X %Y %x %y %t"
+	bind $w <Leave>		"$this-c leave    %W %b %s %X %Y %x %y %t"
+	bind $w <Motion>	"$this-c motion   %W %b %s %X %Y %x %y %t"
+	bind $w <ButtonPress>	"$this-c button   %W %b %s %X %Y %x %y %t"
+	bind $w <ButtonRelease>	"$this-c release  %W %b %s %X %Y %x %y %t"
+	bind $w <KeyPress>	"$this-c keypress %W %k %K %t"
 	return $w
     }
 
