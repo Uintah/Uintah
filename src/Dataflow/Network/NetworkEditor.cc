@@ -155,11 +155,16 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
       throw "netedit supportsPortCaching needs 2 args";
     Module* omod = net->get_module_by_id(args[2]);
     if(!omod)
-      throw "netedit supportsPortCaching can't find output module";
-    const int owhich = args.get_int(3);
-    if (owhich >= omod->numOPorts())
-      throw "netedit supportsPortCaching can't find output port";
-    args.result(omod->oport_supports_cache_flag(owhich)?"1":"0");
+    {
+      args.result("0");
+    }
+    else
+    {
+      const int owhich = args.get_int(3);
+      if (owhich >= omod->numOPorts())
+        throw "netedit supportsPortCaching can't find output port";
+      args.result(omod->oport_supports_cache_flag(owhich)?"1":"0");
+    }
   } else if(args[1] == "isPortCaching") {
     if(args.count() < 4)
       throw "netedit isPortCaching needs 4 args";
