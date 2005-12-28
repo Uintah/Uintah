@@ -71,11 +71,8 @@ itcl_class Fusion_Fields_StreamlineAnalyzer {
 	global $this-show-islands
 	set $this-show-islands 0
 
-	global $this-remove-overlaps
-	set $this-remove-overlaps 0
-
-	global $this-merge-overlaps
-	set $this-merge-overlaps 0
+	global $this-overlaps
+	set $this-overlaps 0
     }
 
     method ui {} {
@@ -220,26 +217,25 @@ itcl_class Fusion_Fields_StreamlineAnalyzer {
 	pack $w.misc.islands.check $w.misc.islands.label -side left
 
 
-	label $w.misc.overlaps -text "Overlaps" -width 9 -anchor w -just left
+	frame $w.misc.overlaps
+	label $w.misc.overlaps.label -text "Overlaps" \
+	    -width 9 -anchor w -just left
 
-	frame $w.misc.removeoverlaps
-	checkbutton $w.misc.removeoverlaps.check \
-	    -variable $this-remove-overlaps
-	label $w.misc.removeoverlaps.label -text "Remove" -width 7 \
-	    -anchor w -just left
-	pack $w.misc.removeoverlaps.check $w.misc.removeoverlaps.label \
-	    -side left
+	radiobutton $w.misc.overlaps.raw -text "Raw" \
+	    -variable $this-overlaps -value 0
+	radiobutton $w.misc.overlaps.remove -text "Remove" \
+	    -variable $this-overlaps -value 1
+	radiobutton $w.misc.overlaps.merge -text "Merge" \
+	    -variable $this-overlaps -value 2
+	radiobutton $w.misc.overlaps.smooth -text "Smooth" \
+	    -variable $this-overlaps -value 3
 
-	frame $w.misc.mergeoverlaps
-	checkbutton $w.misc.mergeoverlaps.check \
-	    -variable $this-merge-overlaps
-	label $w.misc.mergeoverlaps.label -text "Merge" -width 6 \
-	    -anchor w -just left
-	pack $w.misc.mergeoverlaps.check $w.misc.mergeoverlaps.label \
-	    -side left
+	pack $w.misc.overlaps.label $w.misc.overlaps.raw \
+	    $w.misc.overlaps.remove $w.misc.overlaps.merge \
+	    $w.misc.overlaps.smooth -side left -anchor w
+
 
 	pack $w.misc.islands $w.misc.overlaps \
-	    $w.misc.removeoverlaps $w.misc.mergeoverlaps \
 	    -side left -anchor w
 
 

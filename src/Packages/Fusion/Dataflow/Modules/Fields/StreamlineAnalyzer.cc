@@ -68,8 +68,7 @@ protected:
   GuiInt gCurveMesh_;
   GuiInt gScalarField_;
   GuiInt gShowIslands_;
-  GuiInt gRemoveOverlaps_;
-  GuiInt gMergeOverlaps_;
+  GuiInt gOverlaps_;
 
   vector< double > planes_;
 
@@ -79,8 +78,7 @@ protected:
   unsigned int curveMesh_;
   unsigned int scalarField_;
   unsigned int showIslands_;
-  unsigned int removeOverlaps_;
-  unsigned int mergeOverlaps_;
+  unsigned int overlaps_;
 
   FieldHandle slfieldout_;
   FieldHandle pccfieldout_;
@@ -104,16 +102,14 @@ StreamlineAnalyzer::StreamlineAnalyzer(GuiContext* context)
     gCurveMesh_(context->subVar("curve-mesh")),
     gScalarField_(context->subVar("scalar-field")),
     gShowIslands_(context->subVar("show-islands")),
-    gRemoveOverlaps_(context->subVar("remove-overlaps")),
-    gMergeOverlaps_(context->subVar("merge-overlaps")),
+    gOverlaps_(context->subVar("overlaps")),
     color_(1),
     maxWindings_(30),
     override_(0),
     curveMesh_(1),
     scalarField_(1),
     showIslands_(0),
-    removeOverlaps_(0),
-    mergeOverlaps_(0),
+    overlaps_(0),
     slfGeneration_(-1),
     pccfGeneration_(-1),
     pcsfGeneration_(-1)
@@ -334,16 +330,10 @@ StreamlineAnalyzer::execute()
     showIslands_ = gShowIslands_.get();
   }
 
-  if( removeOverlaps_ != (unsigned int) gRemoveOverlaps_.get() ) {
+  if( overlaps_ != (unsigned int) gOverlaps_.get() ) {
     update = true;
 
-    removeOverlaps_ = gRemoveOverlaps_.get();
-  }
-
-  if( mergeOverlaps_ != (unsigned int) gMergeOverlaps_.get() ) {
-    update = true;
-
-    mergeOverlaps_ = gMergeOverlaps_.get();
+    overlaps_ = gOverlaps_.get();
   }
 
   cerr << "StreamlineAnalyzer executing " << endl;
@@ -355,13 +345,15 @@ StreamlineAnalyzer::execute()
 
     const TypeDescription *ftd = slfieldin->get_type_description();
 
-    const TypeDescription *mtd = ( curveMesh_ ?
-				   get_type_description( (CMesh*) 0) : 
-				   get_type_description( (SQSMesh*) 0) );
+    const TypeDescription *mtd =
+      ( curveMesh_ ?
+	get_type_description( (StreamlineAnalyzerAlgo::CMesh*) 0) : 
+	get_type_description( (StreamlineAnalyzerAlgo::SQSMesh*) 0) );
 
-    const TypeDescription *btd = ( curveMesh_ ?
-				   get_type_description( (CDatBasis*) 0) : 
-				   get_type_description( (SQSDatBasis*) 0) );
+    const TypeDescription *btd =
+      ( curveMesh_ ?
+	get_type_description( (StreamlineAnalyzerAlgo::CDatBasis*) 0) : 
+	get_type_description( (StreamlineAnalyzerAlgo::SQSDatBasis*) 0) );
 
     const TypeDescription *dtd = ( scalarField_ ?
 				   get_type_description( (double*) 0) : 
@@ -379,7 +371,7 @@ StreamlineAnalyzer::execute()
 		  pccfieldin, pccfieldout_,
 		  pcsfieldin, pcsfieldout_,
 		  planes_,
-		  color_, showIslands_, removeOverlaps_, mergeOverlaps_,
+		  color_, showIslands_, overlaps_,
 		  maxWindings_, override_, topology);
   }
 
@@ -457,6 +449,15 @@ StreamlineAnalyzerAlgo::get_compile_info(const TypeDescription *ftd,
 					  pc_name );
 
   // Add in the include path to compile this obj
+  rval->add_basis_include("../src/Core/Basis/NoData.h");
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+
+  rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructQuadSurfMesh.h");
+
   rval->add_include(include_path);
   ftd->fill_compile_info(rval);
   rval->add_namespace("Fusion");
