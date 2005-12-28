@@ -1220,14 +1220,14 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	}
     }
 
-    append script "\n\# Disable caching on applicable ports.\n"
+    append script "\n${tab}\# Disable caching on applicable ports.\n"
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
         incr i
         set nports [portCount "$module 0 o"]
         for { set j 0 } { $j < $nports} { incr j } {
-            if {![netedit isPortCaching $module $j]} {
-                append script "setPortCaching \$m$i $j 0\n"
+            if {[netedit supportsPortCaching $module $j] && ![netedit isPortCaching $module $j]} {
+                append script "${tab}setPortCaching \$m$i $j 0\n"
             }
         }
     }
