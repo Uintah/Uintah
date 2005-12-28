@@ -66,24 +66,24 @@ namespace Fusion {
 using namespace std;
 using namespace SCIRun;
 
-typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
-typedef CrvLinearLgn<double>            CDatBasis;
-typedef GenericField<CMesh, CDatBasis, vector<double> > CSField;
-typedef GenericField<CMesh, CDatBasis, vector<Vector> > CVField;
-
-typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQSMesh;
-typedef QuadBilinearLgn<double>                     SQSDatBasis;
-typedef GenericField<SQSMesh, SQSDatBasis, FData2d<double,SQSMesh> > SQSSField;
-typedef GenericField<SQSMesh, SQSDatBasis, FData2d<Vector,SQSMesh> > SQSVField;
-
-typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
-typedef ConstantBasis<double>                 PCDatBasis;
-typedef GenericField<PCMesh, PCDatBasis, vector<double> > PCField;  
-
-
 class StreamlineAnalyzerAlgo : public DynamicAlgoBase
 {
 public:
+
+  typedef SCIRun::CurveMesh<CrvLinearLgn<Point> > CMesh;
+  typedef SCIRun::CrvLinearLgn<double>            CDatBasis;
+  typedef SCIRun::GenericField<CMesh, CDatBasis, vector<double> > CSField;
+  typedef SCIRun::GenericField<CMesh, CDatBasis, vector<Vector> > CVField;
+
+  typedef SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > SQSMesh;
+  typedef SCIRun::QuadBilinearLgn<double>                     SQSDatBasis;
+  typedef SCIRun::GenericField<SQSMesh, SQSDatBasis, FData2d<double,SQSMesh> > SQSSField;
+  typedef SCIRun::GenericField<SQSMesh, SQSDatBasis, FData2d<Vector,SQSMesh> > SQSVField;
+
+  typedef SCIRun::PointCloudMesh<ConstantBasis<Point> > PCMesh;
+  typedef SCIRun::ConstantBasis<double>                 PCDatBasis;
+  typedef SCIRun::GenericField<PCMesh, PCDatBasis, vector<double> > PCField;  
+
   //! virtual interface. 
   virtual void execute(FieldHandle& slsrc,
 		       FieldHandle& dst,
@@ -94,8 +94,7 @@ public:
 		       vector< double > &planes,
 		       unsigned int color,
 		       unsigned int showIslands,
-		       unsigned int removeOverlaps,
-		       unsigned int mergeOverlaps,
+		       unsigned int overlaps,
 		       unsigned int maxWindings,
 		       unsigned int override,
 		       vector< pair< unsigned int,
@@ -123,8 +122,7 @@ public:
 		       vector< double > &planes,
 		       unsigned int color,
 		       unsigned int showIslands,
-		       unsigned int removeOverlaps,
-		       unsigned int mergeOverlaps,
+		       unsigned int overlaps,
 		       unsigned int maxWindings,
 		       unsigned int override,
 		       vector< pair< unsigned int,
@@ -190,6 +188,85 @@ protected:
     return 0;
   }
 
+  Point circle(Point &pt1, Point &pt2, Point &pt3)
+  {
+    if (!IsPerpendicular(pt1, pt2, pt3) )
+      return CalcCircle(pt1, pt2, pt3);	
+    else if (!IsPerpendicular(pt1, pt3, pt2) )
+      return CalcCircle(pt1, pt3, pt2);	
+    else if (!IsPerpendicular(pt2, pt1, pt3) )
+      return CalcCircle(pt2, pt1, pt3);	
+    else if (!IsPerpendicular(pt2, pt3, pt1) )
+      return CalcCircle(pt2, pt3, pt1);	
+    else if (!IsPerpendicular(pt3, pt2, pt1) )
+      return CalcCircle(pt3, pt2, pt1);	
+    else if (!IsPerpendicular(pt3, pt1, pt2) )
+      return CalcCircle(pt3, pt1, pt2);	
+    else
+      return Point(-1,-1,-1);
+  }
+
+  // Check the given point are perpendicular to x or y axis 
+  bool IsPerpendicular(Point &pt1, Point &pt2, Point &pt3)
+  {
+    double d21z = pt2.z() - pt1.z();
+    double d21x = pt2.x() - pt1.x();
+    double d32z = pt3.z() - pt2.z();
+    double d32x = pt3.x() - pt2.x();
+	
+    // checking whether the line of the two pts are vertical
+    if (fabs(d21x) <= FLT_MIN && fabs(d32z) <= FLT_MIN)
+      return false;
+    
+    else if (fabs(d21z) < FLT_MIN ||
+	     fabs(d32z) < FLT_MIN ||
+	     fabs(d21x) < FLT_MIN ||
+	     fabs(d32x)<= FLT_MIN )
+      return true;
+
+    else
+      return false;
+  }
+
+  Point CalcCircle(Point &pt1, Point &pt2, Point &pt3)
+  {
+    Point center;
+      
+    double d21z = pt2.z() - pt1.z();
+    double d21x = pt2.x() - pt1.x();
+    double d32z = pt3.z() - pt2.z();
+    double d32x = pt3.x() - pt2.x();
+	
+    if (fabs(d21x) < FLT_MIN && fabs(d32z ) < FLT_MIN ) {
+
+      center.x( 0.5*(pt2.x() + pt3.x()) );
+      center.y( pt1.y() );
+      center.z( 0.5*(pt1.z() + pt2.z()) );
+
+      return center;
+    }
+	
+    // IsPerpendicular() assure that xDelta(s) are not zero
+    double aSlope = d21z / d21x;
+    double bSlope = d32z / d32x;
+
+    // checking whether the given points are colinear. 	
+    if (fabs(aSlope-bSlope) > FLT_MIN) {
+    
+      // calc center
+      center.x( (aSlope*bSlope*(pt1.z() - pt3.z()) +
+		 bSlope*(pt1.x() + pt2.x()) -
+		 aSlope*(pt2.x() + pt3.x()) ) / (2.0* (bSlope-aSlope) ) );
+
+      center.y( pt1.y() );
+
+      center.z( -(center.x() - (pt1.x()+pt2.x())/2.0) / aSlope +
+		(pt1.z()+pt2.z())/2.0 );
+    }
+
+    return center;
+  }
+
   bool
   IntersectCheck( vector< Point >& points, unsigned int nbins );
 
@@ -223,20 +300,28 @@ protected:
   BoundingBoxCheck( vector< Point >& points, unsigned int nbins );
 
   unsigned int
-  mergeOverlap( vector< vector < pair< Point, double > > > &bins,
-		unsigned int &nnodes,
-		unsigned int winding,
-		unsigned int twist,
-		unsigned int skip,
-		unsigned int island );
-
-  unsigned int
   removeOverlap( vector< vector < pair< Point, double > > > &bins,
 		 unsigned int &nnodes,
 		 unsigned int winding,
 		 unsigned int twist,
 		 unsigned int skip,
 		 unsigned int island );
+
+  unsigned int
+  smoothCurve( vector< vector < pair< Point, double > > > &bins,
+	       unsigned int &nnodes,
+	       unsigned int winding,
+	       unsigned int twist,
+	       unsigned int skip,
+	       unsigned int island );
+
+  unsigned int
+  mergeOverlap( vector< vector < pair< Point, double > > > &bins,
+		unsigned int &nnodes,
+		unsigned int winding,
+		unsigned int twist,
+		unsigned int skip,
+		unsigned int island );
 
   virtual void
   loadCurve( FieldHandle &field_h,
@@ -333,9 +418,11 @@ loadCurve( FieldHandle &field_h,
 	   unsigned int color,
 	   double color_value ) {
 
-  CSField *ofield = (CSField *) field_h.get_rep();
-  typename CSField::mesh_handle_type omesh = ofield->get_typed_mesh();
-  typename CSField::mesh_type::Node::index_type n1, n2;
+  StreamlineAnalyzerAlgo::CSField *ofield =
+    (StreamlineAnalyzerAlgo::CSField *) field_h.get_rep();
+  typename StreamlineAnalyzerAlgo::CSField::mesh_handle_type omesh =
+    ofield->get_typed_mesh();
+  typename StreamlineAnalyzerAlgo::CSField::mesh_type::Node::index_type n1, n2;
 
   n1 = omesh->add_node(nodes[0].first);
   ofield->resize_fdata();
@@ -393,9 +480,11 @@ loadSurface( FieldHandle &field_h,
 	     unsigned int color,
 	     double color_value ) {
   
-  SQSSField *ofield = (SQSSField *) field_h.get_rep();
-  typename SQSSField::mesh_handle_type omesh = ofield->get_typed_mesh();
-  typename SQSSField::mesh_type::Node::index_type n1;
+  StreamlineAnalyzerAlgo::SQSSField *ofield =
+    (StreamlineAnalyzerAlgo::SQSSField *) field_h.get_rep();
+  typename StreamlineAnalyzerAlgo::SQSSField::mesh_handle_type omesh =
+    ofield->get_typed_mesh();
+  typename StreamlineAnalyzerAlgo::SQSSField::mesh_type::Node::index_type n1;
 
   n1.mesh_ = omesh.get_rep();
 
@@ -440,9 +529,11 @@ loadCurve( FieldHandle &field_h,
   if( nnodes < 2 )
     return;
 
-  CSField *ofield = (CSField *) field_h.get_rep();
-  typename CSField::mesh_handle_type omesh = ofield->get_typed_mesh();
-  typename CSField::mesh_type::Node::index_type n1, n2;
+  StreamlineAnalyzerAlgo::CSField *ofield =
+    (StreamlineAnalyzerAlgo::CSField *) field_h.get_rep();
+  typename StreamlineAnalyzerAlgo::CSField::mesh_handle_type omesh =
+    ofield->get_typed_mesh();
+  typename StreamlineAnalyzerAlgo::CSField::mesh_type::Node::index_type n1, n2;
 
   Vector tangent(1,1,1);
 
@@ -541,9 +632,11 @@ loadSurface( FieldHandle &field_h,
   if( nnodes < 2 )
     return;
 
-  SQSVField *ofield = (SQSVField *) field_h.get_rep();
-  typename SQSVField::mesh_handle_type omesh = ofield->get_typed_mesh();
-  typename SQSVField::mesh_type::Node::index_type n1;
+  StreamlineAnalyzerAlgo::SQSVField *ofield =
+    (StreamlineAnalyzerAlgo::SQSVField *) field_h.get_rep();
+  typename StreamlineAnalyzerAlgo::SQSVField::mesh_handle_type omesh =
+    ofield->get_typed_mesh();
+  typename StreamlineAnalyzerAlgo::SQSVField::mesh_type::Node::index_type n1;
 
   n1.mesh_ = omesh.get_rep();
 
@@ -1147,8 +1240,7 @@ execute(FieldHandle& ifield_h,
 	vector< double > &planes,
 	unsigned int color,
 	unsigned int showIslands,
-	unsigned int removeOverlaps,
-	unsigned int mergeOverlaps,
+	unsigned int overlaps,
 	unsigned int maxWindings,
 	unsigned int override,
 	vector< pair< unsigned int, unsigned int > > &topology)
@@ -1812,7 +1904,7 @@ execute(FieldHandle& ifield_h,
       if( bins[p][i].size() >= 2 ) {
 
 	unsigned int turns = 0;	  
-	unsigned int startIndex,  middleIndex,  endIndex;
+	unsigned int startIndex, middleIndex, stopIndex;
 
 	Vector v0 = (Vector) bins[p][i][0].first - centroid;
 	Vector v1 = (Vector) bins[p][i][1].first - centroid;
@@ -1820,31 +1912,25 @@ execute(FieldHandle& ifield_h,
 	bool lastCCW = ccw( v0, v1 ) == 1 ? true : false;
 	v0 = v1;
 
-	//	  cerr << i << "  " << 1 << "  " << lastCCW << endl;
-
 	for( unsigned int j=2; j<bins[p][i].size(); j++ ) {
 	  Vector v1 = (Vector) bins[p][i][j].first - centroid;
 
 	  bool CCW = ccw( v0, v1 ) == 1 ? true : false;
 	  v0 = v1;
 	    
-	  //	    cerr << i << "  " << j << "  " << CCW << endl;
-
 	  if( CCW != lastCCW ) {
 	    turns++;
 
 	    if( turns == 1 )      startIndex  = j - 1;
 	    else if( turns == 2 ) middleIndex = j - 1;
-	    else if( turns == 3 ) endIndex    = j - 1;
+	    else if( turns == 3 ) stopIndex   = j - 1;
 
 	    if( turns == 3 )
 	      break;
+
+	    lastCCW = CCW;
 	  }
-
-	  lastCCW = CCW;
 	}
-
-//  	  cerr << i << " turns " << turns  << "  " << nnodes << endl;
 
 	if( turns >= 2 ) {
 	  localSeparatrices[0][i] = (Vector) bins[p][i][startIndex].first;
@@ -1853,10 +1939,12 @@ execute(FieldHandle& ifield_h,
 
 	if( turns == 3 ) {
 	  unsigned int index0 = (middleIndex - startIndex ) / 2;
-	  unsigned int index1 = (   endIndex - middleIndex) / 2;
+	  unsigned int index1 = (  stopIndex - middleIndex) / 2;
 
-	  cerr << "Indexes " <<  startIndex << "  "
-	       << middleIndex << "  " << endIndex << endl;
+	  cerr << "Indexes "
+	       << startIndex  << "  "
+	       << middleIndex << "  "
+	       << stopIndex   << endl;
 
 	  cerr << "Indexes mid " <<  index0 << "  " << index1 << endl;
 
@@ -1864,18 +1952,20 @@ execute(FieldHandle& ifield_h,
 	    ( (Vector) bins[p][i][ startIndex + index0].first + 
 	      (Vector) bins[p][i][middleIndex - index0].first + 
 	      (Vector) bins[p][i][middleIndex + index1].first + 
-	      (Vector) bins[p][i][   endIndex - index1].first ) / 4.0;
+	      (Vector) bins[p][i][  stopIndex - index1].first ) / 4.0;
 	} else
 	  completeIslands = false;
       }
     }
 
-    if( removeOverlaps || mergeOverlaps )
+    if( overlaps >= 1 )
       removeOverlap( bins[p], nnodes, winding, twist, skip, island );
 
-    if( mergeOverlaps )
+    if( overlaps == 2 )
       mergeOverlap( bins[p], nnodes, winding, twist, skip, island );
-    
+    else if( overlaps == 3 )
+      smoothCurve( bins[p], nnodes, winding, twist, skip, island );
+
     cerr << "Surface " << c << " is a "
 	 << winding << ":" << twist << " surface ("
 	 << (double) winding / (double) twist << ") ";
@@ -2024,7 +2114,7 @@ execute(FieldHandle& ifield_h,
 
 	    loadCurve( ofield_h, bins[p][i],
 		       planes.size(), winding,
-		       mergeOverlaps ? bins[p][i].size() : nnodes, p, i,
+		       overlaps > 1 ? bins[p][i].size() : nnodes, p, i,
 		       color, color_value );
 
 	    cerr << " done";
@@ -2193,10 +2283,12 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
 
     cerr << "Start nnodes " << nnodes << endl;
 
+    unsigned int avennodes = 0;
+
     for( unsigned int i=0; i<winding; i++ ) {
 
       unsigned int turns = 0;
-      unsigned int stopIndex;
+      unsigned int startIndex=0, middleIndex=0, stopIndex=0;
 
       Vector v0 = (Vector) bins[i][0].first - centroidGlobal;
       Vector v1 = (Vector) bins[i][1].first - centroidGlobal;
@@ -2211,74 +2303,99 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
 	bool CCW = (ccw(v0, v1) == 1 ? true : false);
 	v0 = v1;
 
-	if( lastCCW != CCW ) {	      
-	  lastCCW = CCW;
-
+	if( CCW != lastCCW ) {
 	  turns++;
 
-	  if( turns == 1 ) {
-	    stopIndex = j - 1;
-	  }
-	}
+	  if( turns == 1 )      startIndex  = j - 1;
+	  else if( turns == 2 ) middleIndex = j - 1;
+	  else if( turns == 3 ) stopIndex   = j - 1;
 
-	if( turns == 2 ) {
+	  if( turns == 3 )
+	    break;
 
-	  Vector d0 = (Vector) bins[i][0].first - (Vector) bins[i][j].first;
-
-	  for( unsigned int k=1; k<stopIndex; k++ ) {
-
-	    Vector d1 = (Vector) bins[i][k].first - (Vector) bins[i][j].first;
-
-	    cerr << i << " overlap search " << j << "  " << k << endl;
-
-	    if( Dot( d0, d1 ) < 0.0 ) {
-	      nnodes = j - 1;
-
-	      cerr << i << " break nnode after overlap " << nnodes << endl;
-	      break;
-	    } else
-	      d0 = d1;
-	  }
-	} else if( turns == 3 ) {
-	  nnodes = j - 1;
-	  cerr << i << " break nnode after 3 turns " << nnodes << endl;
-	  break;
+	  lastCCW = CCW;
 	}
       }
 
+      if( turns == 3 ) {
 
-      // This is a check to see if the overlap epsilon is positive or
-      // negative. If negative there is not be any overlap. But the
-      // last point will be very close to the start point. If this is
-      // the case it should be removed.
+	avennodes += (stopIndex - startIndex);
 
-      for( unsigned int j=0; j<2; j++ ) {
+      } else if( turns == 2 ) {
 
-	unsigned int k = 0;
+	unsigned int maxGap = middleIndex - startIndex;
 
-	v0 = (Vector) bins[i][k].first - (Vector) bins[i][k+nnodes-1].first;
-	v1 = (Vector) bins[i][k].first - (Vector) bins[i][k+nnodes  ].first;
-    
-	while( v1.length() < v0.length() &&
-	       k < nnodes  && k < bins[i].size() - nnodes ) {
-	  k++;
-	  v0 = (Vector) bins[i][k].first - (Vector) bins[i][k+nnodes-1].first;
-	  v1 = (Vector) bins[i][k].first - (Vector) bins[i][k+nnodes  ].first;
+	// First point is actually the start point.
+	if( startIndex == maxGap + 1 ) {
+	  stopIndex   = middleIndex;
+	  middleIndex = startIndex;
+	  startIndex  = 0;
+
+	  avennodes += (stopIndex - startIndex);
+	  
+	  turns = 3;
+	} else {
+
+	  // Worst case the index is off by two.
+	  stopIndex = middleIndex + maxGap + 1;
+
+	  // No possible over lap.
+	  if( nnodes < stopIndex - startIndex - 2 ) {
+	    avennodes += nnodes;
+	    stopIndex = nnodes + startIndex;
+	  } else {
+
+	    // See if a point overlaps
+	    unsigned int j;
+
+	    // See if the first point overlaps
+	    for( j=middleIndex+1; j<nnodes; j++ ) {
+	      if( Dot( (Vector) bins[i][j  ].first - (Vector) bins[i][0].first,
+		       (Vector) bins[i][j-1].first - (Vector) bins[i][0].first )
+		  < 0 ) {
+		avennodes += (j - 1);
+
+		stopIndex = (j-1) + startIndex;
+		break;
+	      }
+	    }
+
+	    // See if a point overlaps the first and second points
+	    for( j=middleIndex; j<nnodes; j++ ) {
+	      if( Dot( (Vector) bins[i][0].first - (Vector) bins[i][j].first,
+		       (Vector) bins[i][1].first - (Vector) bins[i][j].first )
+		  < 0 ) {
+		avennodes += (j - 1);
+
+		stopIndex = (j-1) + startIndex;
+		break;
+	      }
+	    }
+
+	    if( j == nnodes )
+	      avennodes += (stopIndex - startIndex);
+	  }
 	}
-
-	if( v1.length() < v0.length() )
-	  cerr << i << "  " << j << " Length mismatch " << k << endl;
-
-	if( j == 0 && v0.length() < v1.length() )
-	  --nnodes;
-	else if( j == 1 && v0.length() < v1.length() ) {
-	  cerr << "Can not get the overlap for island " << i << endl;
-	}
+      } else {
+	avennodes += nnodes;
       }
+
+      cerr << i << " Turns " << turns << " Indexes "
+	   <<  startIndex << "  "
+	   << middleIndex << "  "
+	   << stopIndex   << "  " 
+	   << "  nnodes " << stopIndex - startIndex
+	   << endl;
     }
 
+    nnodes = (unsigned int) ((double) avennodes / (double) winding + 0.5);
 
-    cerr << "End nnodes " << nnodes << endl;
+    cerr << "End nnodes " << nnodes;
+    
+    if( nnodes * winding != avennodes )
+      cerr << " nnodes mismatch ";
+
+    cerr << endl;
 
     return nnodes;
 
@@ -2353,6 +2470,273 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
 
     // This is where the in between points start.
     return (winding - skip) + winding * (nnodes+1);
+  }
+}
+
+
+template< class IFIELD, class OFIELD, class PCFIELD >
+unsigned int
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
+smoothCurve( vector< vector < pair< Point, double > > > &bins,
+	     unsigned int &nnodes,
+	     unsigned int winding,
+	     unsigned int twist,
+	     unsigned int skip,
+	     unsigned int island )
+{
+  Vector centroidGlobal = Vector(0,0,0);;
+
+  for( unsigned int i=0; i<winding; i++ )
+    for( unsigned int j=0; j<nnodes; j++ )
+      centroidGlobal += (Vector) bins[i][j].first;
+  
+  centroidGlobal /= (winding*nnodes);
+
+  unsigned int add = 2;
+
+  if( island ) {
+    for( unsigned int i=0; i<winding; i++ ) {
+
+      unsigned int turns = 0;
+      unsigned int startIndex=0, middleIndex=0, stopIndex=0;
+
+      Vector v0 = (Vector) bins[i][0].first - centroidGlobal;
+      Vector v1 = (Vector) bins[i][1].first - centroidGlobal;
+
+      bool lastCCW = (ccw(v0, v1) == 1 ? true : false);
+      v0 = v1;
+
+      for( unsigned int j=2; j<nnodes; j++ ) {
+
+	v1 = (Vector) bins[i][j].first - centroidGlobal;
+
+	bool CCW = (ccw(v0, v1) == 1 ? true : false);
+	v0 = v1;
+
+	if( CCW != lastCCW ) {
+	  turns++;
+
+	  if( turns == 1 )      startIndex  = j - 1;
+	  else if( turns == 2 ) middleIndex = j - 1;
+	  else if( turns == 3 ) stopIndex   = j - 1;
+
+	  if( turns == 3 )
+	    break;
+
+	  lastCCW = CCW;
+	}
+      }
+
+      // First point is actually the start point.
+      if( turns == 2 && 2*startIndex ==  middleIndex + 1 )
+	turns = 3;
+
+      unsigned int complete;
+
+      if( turns == 3 )
+	complete = 1;
+      else
+	complete = 0;
+
+      // Erase all of the overlapping points.
+      bins[i].erase( bins[i].begin()+nnodes, bins[i].end() );
+
+      //for( unsigned int s=0; s<add; s++ )
+      {
+	unsigned int nNodes = bins[i].size();
+
+	pair< Point, double > newPts[add*nNodes];
+
+	for( unsigned int j=0; j<add*nNodes; j++ )
+	  newPts[j] = pair< Point, double > (Point(0,0,0), 0 );
+	
+	for( unsigned int j=complete; j<nNodes-complete; j++ ) {
+
+	  unsigned int j_1 = (j-1+nNodes) % nNodes;
+	  unsigned int j1  = (j+1+nNodes) % nNodes;
+
+	  Vector v0 = (Vector) bins[i][j1].first - (Vector) bins[i][j  ].first;
+	  Vector v1 = (Vector) bins[i][j ].first - (Vector) bins[i][j_1].first;
+
+	  cerr << i << " smooth " << j_1 << " "  << j << " "  << j1 << "  "
+	       << ( v0.length() > v1.length() ?
+		    v0.length() / v1.length() :
+		    v1.length() / v0.length() ) << endl;
+
+	  if( Dot( v0, v1 ) > 0 &&
+	      ( v0.length() > v1.length() ?
+		v0.length() / v1.length() :
+		v1.length() / v0.length() ) < 5.0 ) {
+
+	    Vector center = (Vector) circle( bins[i][j_1].first,
+					     bins[i][j  ].first,
+					     bins[i][j1 ].first );
+
+	    double rad = ((Vector) bins[i][j].first - center).length();
+
+
+	    for( unsigned int s=0; s<add; s++ ) {
+	      Vector midPt = (Vector) bins[i][j_1].first +
+		(double) (add-s) / (double) (add+1) *
+		((Vector) bins[i][j].first - (Vector) bins[i][j_1].first );
+		
+
+	      Vector midVec = midPt - center;
+
+	      midVec.safe_normalize();
+
+	      newPts[add*j+s].first += center + midVec * rad;
+	      newPts[add*j+s].second += 1.0;
+
+	      midPt = (Vector) bins[i][j].first +
+		(double) (add-s) / (double) (add+1) *
+		((Vector) bins[i][j1].first - (Vector) bins[i][j].first );
+
+	      midVec = midPt - center;
+
+	      midVec.safe_normalize();
+
+	      newPts[add*j1+s].first += center + midVec * rad;
+	      newPts[add*j1+s].second += 1.0;
+	    }
+	  }
+	}
+
+	for( int j=nNodes-1; j>=0; j-- ) {
+
+	  for( unsigned int s=0; s<add; s++ ) {
+
+	    unsigned int k = add * j + s;
+
+	    if( newPts[k].second > 0 ) {
+	      
+	      newPts[k].first /= newPts[k].second;
+	      
+//	      cerr << i << " insert " << j << "  " << newPts[k].first << endl;
+	      
+	      bins[i].insert( bins[i].begin()+j, newPts[k] );
+	    }
+	  }
+	}
+      }
+
+      // Close the island
+      if( complete )
+	bins[i].insert( bins[i].begin(), bins[i][bins[i].size()-1] );
+    }
+  } else {
+
+    for( unsigned int i=0; i<winding; i++ ) {
+
+      unsigned int j = (i+skip) % winding;
+
+      unsigned int extra = 0;
+
+      if( nnodes < bins[i].size() ) {
+	// Check to see if the first overlapping point is really a
+	// fill-in point. This happens because the spacing between
+	// winding groups varries between groups.
+	Vector v0 = (Vector) bins[j][0       ].first -
+	  (Vector) bins[i][nnodes].first;
+	Vector v1 = (Vector) bins[i][nnodes-1].first -
+	  (Vector) bins[i][nnodes].first;
+
+	if( Dot( v0, v1 ) < 0.0 )
+	  extra = 1;
+      }
+
+      if( extra )
+	cerr << i << " adding extra " << endl;
+
+      // Erase all of the overlapping points.
+      bins[i].erase( bins[i].begin()+nnodes+extra, bins[i].end() );
+
+      // Insert the first point from the next winding so the curve
+      // is contiguous.
+      bins[i].push_back( bins[j][0] );
+
+      //for( unsigned int s=0; s<add; s++ )
+      {
+	unsigned int nNodes = bins[i].size();
+
+	pair< Point, double > newPts[add*nNodes];
+
+	for( unsigned int j=0; j<add*nNodes; j++ )
+	  newPts[j] = pair< Point, double > (Point(0,0,0), 0 );
+	
+	for( unsigned int j=1; j<nNodes-1; j++ ) {
+
+	  unsigned int j_1 = j - 1;
+	  unsigned int j1  = j + 1;
+
+	  Vector v0 = (Vector) bins[i][j1].first - (Vector) bins[i][j  ].first;
+	  Vector v1 = (Vector) bins[i][j ].first - (Vector) bins[i][j_1].first;
+
+	  cerr << i << " smooth " << j_1 << " "  << j << " "  << j1 << "  "
+	       << ( v0.length() > v1.length() ?
+		    v0.length() / v1.length() :
+		    v1.length() / v0.length() ) << endl;
+
+	  if( Dot( v0, v1 ) > 0 &&
+	      ( v0.length() > v1.length() ?
+		v0.length() / v1.length() :
+		v1.length() / v0.length() ) < 5.0 ) {
+
+	    Vector center = (Vector) circle( bins[i][j_1].first,
+					     bins[i][j  ].first,
+					     bins[i][j1 ].first );
+
+	    double rad = ((Vector) bins[i][j].first - center).length();
+
+
+	    for( unsigned int s=0; s<add; s++ ) {
+	      Vector midPt = (Vector) bins[i][j_1].first +
+		(double) (add-s) / (double) (add+1) *
+		((Vector) bins[i][j].first - (Vector) bins[i][j_1].first );
+		
+
+	      Vector midVec = midPt - center;
+
+	      midVec.safe_normalize();
+
+	      newPts[add*j+s].first += center + midVec * rad;
+	      newPts[add*j+s].second += 1.0;
+
+	      midPt = (Vector) bins[i][j].first +
+		(double) (add-s) / (double) (add+1) *
+		((Vector) bins[i][j1].first - (Vector) bins[i][j].first );
+
+	      midVec = midPt - center;
+
+	      midVec.safe_normalize();
+
+	      newPts[add*j1+s].first += center + midVec * rad;
+	      newPts[add*j1+s].second += 1.0;
+	    }
+	  }
+	}
+
+	for( int j=nNodes-1; j>=0; j-- ) {
+
+	  for( unsigned int s=0; s<add; s++ ) {
+
+	    unsigned int k = add * j + s;
+
+	    if( newPts[k].second > 0 ) {
+	      
+	      newPts[k].first /= newPts[k].second;
+	      
+//	      cerr << i << " insert " << j << "  " << newPts[k].first << endl;
+	      
+	      bins[i].insert( bins[i].begin()+j, newPts[k] );
+	    }
+	  }
+	}
+      }
+
+      // Remove the last point so it is possilble to see the groups.
+      bins[i].erase( bins[i].end() );
+    }
   }
 }
 
