@@ -97,6 +97,7 @@ public:
 		       unsigned int overlaps,
 		       unsigned int maxWindings,
 		       unsigned int override,
+		       unsigned int order,
 		       vector< pair< unsigned int,
 		       unsigned int > > &topology ) = 0;
   
@@ -125,6 +126,7 @@ public:
 		       unsigned int overlaps,
 		       unsigned int maxWindings,
 		       unsigned int override,
+		       unsigned int order,
 		       vector< pair< unsigned int,
 		       unsigned int > > &topology );
 
@@ -298,6 +300,25 @@ protected:
 
   bool
   BoundingBoxCheck( vector< Point >& points, unsigned int nbins );
+
+  unsigned int
+  islandCheck( vector< pair< Point, double > > &bins,
+	       Vector centroidGlobal,
+	       unsigned int &startIndex,
+	       unsigned int &stopIndex );
+
+  unsigned int
+  surfaceCheck( vector< vector< pair< Point, double > > > &bins,
+		unsigned int winding,
+		unsigned int skip,
+		Vector centroidGlobal,
+		unsigned int &nnodes );
+
+  unsigned int
+  surfaceCheck( vector< vector< pair< Point, double > > > &bins,
+		unsigned int i,
+		unsigned int j,
+		unsigned int nnodes );
 
   unsigned int
   removeOverlap( vector< vector < pair< Point, double > > > &bins,
@@ -758,7 +779,7 @@ SafetyFactor( vector< Point >& points, unsigned int maxWindings,
 
     double tmp = angle / (2.0*M_PI);
 
-    if( i < maxWindings ) {
+    if( i <= maxWindings ) {
         cerr << i << "  SafetyFactor "
  	    << safetyFactorAve << "  "
  	    << tmp << endl;
@@ -1243,6 +1264,7 @@ execute(FieldHandle& ifield_h,
 	unsigned int overlaps,
 	unsigned int maxWindings,
 	unsigned int override,
+	unsigned int order,
 	vector< pair< unsigned int, unsigned int > > &topology)
 {
   IFIELD *ifield = (IFIELD *) ifield_h.get_rep();
@@ -1488,7 +1510,7 @@ execute(FieldHandle& ifield_h,
 	vector< unsigned int > windingList;
 
 	// Find the best winding for each test.
-	for( winding=2; winding<maxWindings; winding++ ) {
+	for( winding=2; winding<=maxWindings; winding++ ) {
 	  
 	  if( points.size() < 2 * winding ) {
 	    cerr << "Streamline " << count << " has too few points ("
@@ -1536,9 +1558,49 @@ execute(FieldHandle& ifield_h,
 		 << "  islands " << island
 		 << "  next best winding " << windingNextBest;
 	    
+	    // Basic philosophy - take the lower ordered surface
+	    // winding which is then smoothed.
+	    if( order == 0 && windingNextBest && island == 0 ) {
+
+	      unsigned int windingNextBestTmp = windingNextBest;
+	      unsigned int islandTmp = island;
+
+	      while( windingNextBestTmp && islandTmp == 0 ) {
+		vector< unsigned int >::iterator inList =
+		  find( windingList.begin(),
+			windingList.end(), windingNextBestTmp );
+	    
+		if( inList != windingList.end() ) {
+		  cerr << " REMOVED" << endl;
+		
+		  windingList.erase( inList );
+
+		  unsigned int windingTmp = windingNextBest;
+		  unsigned int twistTmp, skipTmp;
+		  bool groupCCWTmp;
+		  
+		  if( basicChecks( points, centroid,
+				   windingTmp, twistTmp, skipTmp,
+				   islandTmp, groupCCWTmp,
+				   windingNextBestTmp ) ) {
+		    
+		    cerr << "windings " << windingTmp
+			 << "  twists " << twistTmp
+			 << "  skip "   << skipTmp
+			 << "  groupCCW " << groupCCWTmp
+			 << "  islands " << islandTmp
+			 << "  next best winding " << windingNextBestTmp;
+		  }
+		} else {
+		  windingNextBestTmp = 0;
+		  cerr << endl;
+		}
+	      }
+	    } else
+
 	    // Basic philosophy - take the higher ordered surface
 	    // winding which will give a smoother curve.
-	    if( windingNextBest && island == 0 ) {
+	    if( order == 1 && windingNextBest && island == 0 ) {
 	      
 	      vector< unsigned int >::iterator inList =
 		find( windingList.begin(),
@@ -1843,6 +1905,9 @@ execute(FieldHandle& ifield_h,
     // Validation check
     for( unsigned int p=0; p<planes.size(); p++ ) {
       for( unsigned int i=0; i<winding; i++ ) {
+
+	cerr << i << " points in bin " << bins[p][i].size() << endl;
+
 	if( nnodes > bins[p][i].size() )
 	  nnodes = bins[p][i].size();
 
@@ -1866,7 +1931,7 @@ execute(FieldHandle& ifield_h,
       p = planes.size()-1;
 
     // Get the centroid of each group and all groups.
-    Vector centroid(0,0,0);
+    Vector centroidGlobal(0,0,0);
     vector< Vector > localCentroids;
     vector< Vector > localSeparatrices[2];
 
@@ -1883,85 +1948,56 @@ execute(FieldHandle& ifield_h,
       if( bins[p][i].size() ) {
 	localCentroids[i] /= (double) bins[p][i].size();
 
-	centroid += localCentroids[i];
+	centroidGlobal += localCentroids[i];
       }
     }
 
-    centroid /= winding;
+    centroidGlobal /= winding;
 
     // Get the direction of the points within a group.
-    Vector v0 = (Vector) bins[p][0][0].first - centroid;
-    Vector v1 = (Vector) bins[p][0][1].first - centroid;
+    Vector v0 = (Vector) bins[p][0][0].first - centroidGlobal;
+    Vector v1 = (Vector) bins[p][0][1].first - centroidGlobal;
 
     groupCCW = ccw( v0, v1 ) == 1 ? true : false;
 
 //    cerr << 0 << "  " << groupCCW << endl;
 
-    // Determine if islands exists. If an island exists there will
-    // be both clockwise and counterclockwise sections when compared
-    // to the main centroid.
-    for( unsigned int i=0; i<winding; i++ ) {
-      if( bins[p][i].size() >= 2 ) {
+    if( island ) {
+      for( unsigned int i=0; i<winding; i++ ) {
 
-	unsigned int turns = 0;	  
-	unsigned int startIndex, middleIndex, stopIndex;
+	unsigned int startIndex;
+	unsigned int stopIndex;
+	
+	unsigned int turns = islandCheck( bins[p][i], centroidGlobal,
+					  startIndex, stopIndex );
 
-	Vector v0 = (Vector) bins[p][i][0].first - centroid;
-	Vector v1 = (Vector) bins[p][i][1].first - centroid;
-
-	bool lastCCW = ccw( v0, v1 ) == 1 ? true : false;
-	v0 = v1;
-
-	for( unsigned int j=2; j<bins[p][i].size(); j++ ) {
-	  Vector v1 = (Vector) bins[p][i][j].first - centroid;
-
-	  bool CCW = ccw( v0, v1 ) == 1 ? true : false;
-	  v0 = v1;
-	    
-	  if( CCW != lastCCW ) {
-	    turns++;
-
-	    if( turns == 1 )      startIndex  = j - 1;
-	    else if( turns == 2 ) middleIndex = j - 1;
-	    else if( turns == 3 ) stopIndex   = j - 1;
-
-	    if( turns == 3 )
-	      break;
-
-	    lastCCW = CCW;
-	  }
-	}
+	if( turns < 3 )
+	  completeIslands = false;
 
 	if( turns >= 2 ) {
-	  localSeparatrices[0][i] = (Vector) bins[p][i][startIndex].first;
-	  localSeparatrices[1][i] = (Vector) bins[p][i][middleIndex].first;
+// 	  localSeparatrices[0][i] = (Vector) bins[p][i][startIndex].first;
+// 	  localSeparatrices[1][i] = (Vector) bins[p][i][middleIndex].first;
 	}
 
 	if( turns == 3 ) {
-	  unsigned int index0 = (middleIndex - startIndex ) / 2;
-	  unsigned int index1 = (  stopIndex - middleIndex) / 2;
+// 	  unsigned int index0 = (middleIndex - startIndex ) / 2;
+// 	  unsigned int index1 = (  stopIndex - middleIndex) / 2;
 
-	  cerr << "Indexes "
-	       << startIndex  << "  "
-	       << middleIndex << "  "
-	       << stopIndex   << endl;
+// 	  cerr << "Indexes mid " <<  index0 << "  " << index1 << endl;
 
-	  cerr << "Indexes mid " <<  index0 << "  " << index1 << endl;
-
-	  localCentroids[i] =
-	    ( (Vector) bins[p][i][ startIndex + index0].first + 
-	      (Vector) bins[p][i][middleIndex - index0].first + 
-	      (Vector) bins[p][i][middleIndex + index1].first + 
-	      (Vector) bins[p][i][  stopIndex - index1].first ) / 4.0;
-	} else
-	  completeIslands = false;
+// 	  localCentroids[i] =
+// 	    ( (Vector) bins[p][i][ startIndex + index0].first + 
+// 	      (Vector) bins[p][i][middleIndex - index0].first + 
+// 	      (Vector) bins[p][i][middleIndex + index1].first + 
+// 	      (Vector) bins[p][i][  stopIndex - index1].first ) / 4.0;
+	}
       }
     }
 
-    if( overlaps >= 1 )
-      removeOverlap( bins[p], nnodes, winding, twist, skip, island );
 
-    if( overlaps == 2 )
+    if( overlaps == 1 )
+      removeOverlap( bins[p], nnodes, winding, twist, skip, island );
+    else if( overlaps == 2 )
       mergeOverlap( bins[p], nnodes, winding, twist, skip, island );
     else if( overlaps == 3 )
       smoothCurve( bins[p], nnodes, winding, twist, skip, island );
@@ -2114,7 +2150,7 @@ execute(FieldHandle& ifield_h,
 
 	    loadCurve( ofield_h, bins[p][i],
 		       planes.size(), winding,
-		       overlaps > 1 ? bins[p][i].size() : nnodes, p, i,
+		       bins[p][i].size(), p, i,
 		       color, color_value );
 
 	    cerr << " done";
@@ -2260,6 +2296,223 @@ execute(FieldHandle& ifield_h,
   }
 }
 
+template< class IFIELD, class OFIELD, class PCFIELD >
+unsigned int
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
+islandCheck( vector< pair< Point, double > > &bins,
+	     Vector centroidGlobal,
+	     unsigned int &startIndex,
+	     unsigned int &stopIndex )
+{
+  // Determine if islands exists. If an island exists there will be
+  // both clockwise and counterclockwise sections when compared to the
+  // main centroid.
+  unsigned int turns = 0;
+
+  unsigned int middleIndex = 0;
+
+  startIndex = stopIndex = 0;
+
+  Vector v0 = (Vector) bins[0].first - centroidGlobal;
+  Vector v1 = (Vector) bins[1].first - centroidGlobal;
+
+  bool lastCCW = (ccw(v0, v1) == 1 ? true : false);
+  v0 = v1;
+
+  for( unsigned int j=2; j<bins.size(); j++ ) {
+
+    v1 = (Vector) bins[j].first - centroidGlobal;
+
+    bool CCW = (ccw(v0, v1) == 1 ? true : false);
+    v0 = v1;
+
+    if( CCW != lastCCW ) {
+      turns++;
+
+      if( turns == 1 )      startIndex  = j - 1;
+      else if( turns == 2 ) middleIndex = j - 1;
+      else if( turns == 3 ) stopIndex   = j - 1;
+
+      if( turns == 3 )
+	break;
+
+      lastCCW = CCW;
+    }
+  }
+
+  if( turns == 3 ) {
+    cerr << "complete\n";
+
+  } else if( turns == 2 ) {
+
+    if( 2*startIndex == middleIndex + 1 ) {
+      // First point is actually the start point.
+      cerr << "First point is actually the start point.\n";
+
+      stopIndex   = middleIndex;
+      middleIndex = startIndex;
+      startIndex  = 0;
+      
+      turns = 3;
+    } else if( bins.size() < 2 * (middleIndex - startIndex) - 1 ) {
+      // No possible over lap.
+      cerr <<  "No possible over lap.\n";
+
+      stopIndex = startIndex + bins.size() - 1;
+
+    } else {	  
+      // See if the first point overlaps another section.
+      for( unsigned int  j=middleIndex+1; j<bins.size(); j++ ) {
+	if( Dot( (Vector) bins[j  ].first - (Vector) bins[0].first,
+		 (Vector) bins[j-1].first - (Vector) bins[0].first )
+	    < 0 ) {
+	  stopIndex = startIndex + (j-1);
+	  turns = 3;
+	  cerr <<  "First point overlaps another section.\n";
+	  break;
+	}
+      }
+      
+      // See if a point overlaps the first section.
+      if( turns == 2 )
+	for( unsigned int j=middleIndex; j<bins.size(); j++ ) {
+	  if( Dot( (Vector) bins[0].first - (Vector) bins[j].first,
+		   (Vector) bins[1].first - (Vector) bins[j].first )
+	      < 0 ) {
+	    stopIndex = startIndex + (j-1);
+	    turns = 3;
+	    cerr << "See if a point overlaps the first section.\n";
+	    break;
+	  }
+	}
+
+      // No overlap found
+      if( turns == 2 ) {
+	stopIndex = startIndex + bins.size() - 1;
+	cerr << "No overlap found\n";
+      }
+    }
+  } else {
+    startIndex  = 0;
+    middleIndex = 0;
+    stopIndex   = bins.size() - 1;
+  }
+
+  cerr << "Turns "
+       << turns  << "  "
+       << "Indexes "
+       << startIndex  << "  "
+       << middleIndex << "  "
+       << stopIndex   << endl;
+
+  return turns;
+}
+
+
+template< class IFIELD, class OFIELD, class PCFIELD >
+unsigned int
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
+surfaceCheck( vector< vector< pair< Point, double > > > &bins,
+	      unsigned int winding,
+	      unsigned int skip,
+	      Vector centroidGlobal,
+	      unsigned int &nnodes )
+{
+  for( unsigned int i=0; i<winding; i++ ) {
+    // First make sure none of the groups overlap themselves.
+    Vector v0 = Vector( (Vector) bins[i][0].first - centroidGlobal );
+    
+    double angleSum = 0;
+    
+    for( unsigned int j=1; j<nnodes; j++ ) {
+      Vector v1 = Vector( (Vector) bins[i][j].first - centroidGlobal );
+      
+      angleSum += acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
+      
+      if( angleSum > 2.0 * M_PI ) {
+	nnodes = j;
+	break;
+      } else
+	v0 = v1;
+    }
+  }
+
+  // Second make sure none of the groups overlap each other.
+  double angleSum = 4.0 * M_PI;
+
+  while ( angleSum > 2.0 * M_PI ) {
+    angleSum = 0.0;
+
+    for( unsigned int i=0; i<winding && angleSum <= 2.0 * M_PI; i++ ) {
+      
+      Vector v0 = Vector( (Vector) bins[i][0].first - centroidGlobal );
+      
+      for( unsigned int j=1; j<nnodes && angleSum <= 2.0 * M_PI; j++ ) {
+	Vector v1 = Vector( (Vector) bins[i][j].first - centroidGlobal );
+	
+	angleSum += acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
+	
+	v0 = v1;
+      }
+    }
+
+    if( angleSum > 2.0 * M_PI ) {
+      --nnodes;
+    }
+  }
+
+  // Because of gaps between groups it is possible to still have over
+  // laps so check between the groups.
+  for( unsigned int i=0, j=skip; i<skip*winding; i+=skip, j+=skip ) {
+    unsigned int i0 = i % winding;
+    unsigned int j0 = j % winding;
+
+    for( unsigned int k=nnodes-1; k>0; k-- ) {
+      Vector v0 = (Vector) bins[j0][0].first - (Vector) bins[i0][k].first;
+
+      for( unsigned int l=1; l<nnodes; l++ ) {
+
+	Vector v1 = (Vector) bins[j0][l].first - (Vector) bins[i0][k].first;
+	
+	if( Dot( v0, v1 ) < 0.0 ) {
+	  nnodes = k;
+	  break;
+	} else
+	  v0 = v1;
+      }
+    }
+  }
+}
+
+
+template< class IFIELD, class OFIELD, class PCFIELD >
+unsigned int
+StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
+surfaceCheck( vector< vector< pair< Point, double > > > &bins,
+	      unsigned int i,
+	      unsigned int j,
+	      unsigned int nnodes ) {
+
+  unsigned int nodes = nnodes;
+
+  while( nodes < bins[i].size() ) {
+    // Check to see if the first overlapping point is really a
+    // fill-in point. This happens because the spacing between
+    // winding groups varries between groups.
+    Vector v0 = (Vector) bins[j][0       ].first -
+      (Vector) bins[i][nodes].first;
+    Vector v1 = (Vector) bins[i][nodes-1].first -
+      (Vector) bins[i][nodes].first;
+    
+    if( Dot( v0, v1 ) < 0.0 )
+      nodes++;
+    else
+      break;
+  }
+
+  return nodes;
+}
+
 
 template< class IFIELD, class OFIELD, class PCFIELD >
 unsigned int
@@ -2279,198 +2532,61 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
   
   centroidGlobal /= (winding*nnodes);
     
+  unsigned int avennodes = 0;
+
   if( island ) {
 
-    cerr << "Start nnodes " << nnodes << endl;
-
-    unsigned int avennodes = 0;
-
     for( unsigned int i=0; i<winding; i++ ) {
 
-      unsigned int turns = 0;
-      unsigned int startIndex=0, middleIndex=0, stopIndex=0;
+      unsigned int startIndex;
+      unsigned int stopIndex;
 
-      Vector v0 = (Vector) bins[i][0].first - centroidGlobal;
-      Vector v1 = (Vector) bins[i][1].first - centroidGlobal;
+      bool completeIsland = (islandCheck( bins[i], centroidGlobal,
+					  startIndex, stopIndex ) == 3);
 
-      bool lastCCW = (ccw(v0, v1) == 1 ? true : false);
-      v0 = v1;
+      unsigned int nodes = stopIndex - startIndex + 1;
 
-      for( unsigned int j=2; j<nnodes; j++ ) {
+      if( nodes * i != avennodes )
+	cerr << i << " nnodes mismatch ";
 
-	v1 = (Vector) bins[i][j].first - centroidGlobal;
+      avennodes += nodes;
 
-	bool CCW = (ccw(v0, v1) == 1 ? true : false);
-	v0 = v1;
+      // Erase all of the overlapping points.
+      bins[i].erase( bins[i].begin()+nodes, bins[i].end() );
 
-	if( CCW != lastCCW ) {
-	  turns++;
-
-	  if( turns == 1 )      startIndex  = j - 1;
-	  else if( turns == 2 ) middleIndex = j - 1;
-	  else if( turns == 3 ) stopIndex   = j - 1;
-
-	  if( turns == 3 )
-	    break;
-
-	  lastCCW = CCW;
-	}
-      }
-
-      if( turns == 3 ) {
-
-	avennodes += (stopIndex - startIndex);
-
-      } else if( turns == 2 ) {
-
-	unsigned int maxGap = middleIndex - startIndex;
-
-	// First point is actually the start point.
-	if( startIndex == maxGap + 1 ) {
-	  stopIndex   = middleIndex;
-	  middleIndex = startIndex;
-	  startIndex  = 0;
-
-	  avennodes += (stopIndex - startIndex);
-	  
-	  turns = 3;
-	} else {
-
-	  // Worst case the index is off by two.
-	  stopIndex = middleIndex + maxGap + 1;
-
-	  // No possible over lap.
-	  if( nnodes < stopIndex - startIndex - 2 ) {
-	    avennodes += nnodes;
-	    stopIndex = nnodes + startIndex;
-	  } else {
-
-	    // See if a point overlaps
-	    unsigned int j;
-
-	    // See if the first point overlaps
-	    for( j=middleIndex+1; j<nnodes; j++ ) {
-	      if( Dot( (Vector) bins[i][j  ].first - (Vector) bins[i][0].first,
-		       (Vector) bins[i][j-1].first - (Vector) bins[i][0].first )
-		  < 0 ) {
-		avennodes += (j - 1);
-
-		stopIndex = (j-1) + startIndex;
-		break;
-	      }
-	    }
-
-	    // See if a point overlaps the first and second points
-	    for( j=middleIndex; j<nnodes; j++ ) {
-	      if( Dot( (Vector) bins[i][0].first - (Vector) bins[i][j].first,
-		       (Vector) bins[i][1].first - (Vector) bins[i][j].first )
-		  < 0 ) {
-		avennodes += (j - 1);
-
-		stopIndex = (j-1) + startIndex;
-		break;
-	      }
-	    }
-
-	    if( j == nnodes )
-	      avennodes += (stopIndex - startIndex);
-	  }
-	}
-      } else {
-	avennodes += nnodes;
-      }
-
-      cerr << i << " Turns " << turns << " Indexes "
-	   <<  startIndex << "  "
-	   << middleIndex << "  "
-	   << stopIndex   << "  " 
-	   << "  nnodes " << stopIndex - startIndex
-	   << endl;
+      // Close the island if it is complete
+      if( completeIsland )
+	bins[i].insert( bins[i].begin(), bins[i][bins[i].size()-1] );
     }
-
-    nnodes = (unsigned int) ((double) avennodes / (double) winding + 0.5);
-
-    cerr << "End nnodes " << nnodes;
-    
-    if( nnodes * winding != avennodes )
-      cerr << " nnodes mismatch ";
-
-    cerr << endl;
-
-    return nnodes;
 
   } else {
-    // First make sure none of the groups overlap themselves.
+
+    surfaceCheck( bins, winding, skip, centroidGlobal, nnodes );
+
     for( unsigned int i=0; i<winding; i++ ) {
-    
-      Vector v0 = Vector( (Vector) bins[i][0].first - centroidGlobal );
-    
-      double angleSum = 0;
-    
-      for( unsigned int j=1; j<nnodes; j++ ) {
-	Vector v1 = Vector( (Vector) bins[i][j].first - centroidGlobal );
-
-	angleSum += acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
-
-	if( angleSum > 2.0 * M_PI ) {
-	  nnodes = j;
-	  break;
-	} else
-	  v0 = v1;
-      }
-    }
-
-    centroidGlobal /= winding;
-
-    // Second make sure none of the groups overlap each other.
-    double angleSum = 4.0 * M_PI;
-
-    while ( angleSum > 2.0 * M_PI ) {
-      angleSum = 0.0;
-
-      for( unsigned int i=0; i<winding && angleSum <= 2.0 * M_PI; i++ ) {
+      unsigned int nodes = surfaceCheck( bins, i, (i+skip)%winding, nnodes );
       
-	Vector v0 = Vector( (Vector) bins[i][0].first - centroidGlobal );
-      
-	for( unsigned int j=1; j<nnodes && angleSum <= 2.0 * M_PI; j++ ) {
-	  Vector v1 = Vector( (Vector) bins[i][j].first - centroidGlobal );
-	
-	  angleSum += acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
-	
-	  v0 = v1;
-	}
-      }
+      if( nodes * i != avennodes )
+	cerr << i << " nnodes mismatch ";
 
-      if( angleSum > 2.0 * M_PI ) {
-	--nnodes;
-      }
-    }
+      avennodes += nodes;
 
-    // Because of gaps between groups it is possible to still have over
-    // laps so check between the groups.
-    for( unsigned int i=0, j=skip; i<skip*winding; i+=skip, j+=skip ) {
-      unsigned int i0 = i % winding;
-      unsigned int j0 = j % winding;
-
-      for( unsigned int k=nnodes-1; k>0; k-- ) {
-	Vector v0 = (Vector) bins[j0][0].first - (Vector) bins[i0][k].first;
-
-	for( unsigned int l=1; l<nnodes; l++ ) {
-
-	  Vector v1 = (Vector) bins[j0][l].first - (Vector) bins[i0][k].first;
-	
-	  if( Dot( v0, v1 ) < 0.0 ) {
-	    nnodes = k;
-	    break;
-	  } else
-	    v0 = v1;
-	}
-      }
+      // Erase all of the overlapping points.
+      bins[i].erase( bins[i].begin()+nodes, bins[i].end() );
     }
 
     // This is where the in between points start.
     return (winding - skip) + winding * (nnodes+1);
   }
+
+  nnodes = (unsigned int) ((double) avennodes / (double) winding + 0.5);
+
+  if( nnodes * winding != avennodes )
+    cerr << " overall nnodes mismatch ";
+
+  cerr << endl;
+
+  return nnodes;
 }
 
 
@@ -2497,71 +2613,47 @@ smoothCurve( vector< vector < pair< Point, double > > > &bins,
   if( island ) {
     for( unsigned int i=0; i<winding; i++ ) {
 
-      unsigned int turns = 0;
-      unsigned int startIndex=0, middleIndex=0, stopIndex=0;
+      unsigned int startIndex;
+      unsigned int stopIndex;
 
-      Vector v0 = (Vector) bins[i][0].first - centroidGlobal;
-      Vector v1 = (Vector) bins[i][1].first - centroidGlobal;
+      bool completeIsland;
+      bool skip;
 
-      bool lastCCW = (ccw(v0, v1) == 1 ? true : false);
-      v0 = v1;
-
-      for( unsigned int j=2; j<nnodes; j++ ) {
-
-	v1 = (Vector) bins[i][j].first - centroidGlobal;
-
-	bool CCW = (ccw(v0, v1) == 1 ? true : false);
-	v0 = v1;
-
-	if( CCW != lastCCW ) {
-	  turns++;
-
-	  if( turns == 1 )      startIndex  = j - 1;
-	  else if( turns == 2 ) middleIndex = j - 1;
-	  else if( turns == 3 ) stopIndex   = j - 1;
-
-	  if( turns == 3 )
-	    break;
-
-	  lastCCW = CCW;
-	}
+      if( islandCheck( bins[i], centroidGlobal, startIndex, stopIndex ) == 3 ) {
+	completeIsland = true;
+	skip = 0;
+      } else {
+	completeIsland = false;
+	skip = 1;
       }
 
-      // First point is actually the start point.
-      if( turns == 2 && 2*startIndex ==  middleIndex + 1 )
-	turns = 3;
+      nnodes = stopIndex - startIndex + 1;
 
-      unsigned int complete;
-
-      if( turns == 3 )
-	complete = 1;
-      else
-	complete = 0;
+      if( nnodes < 3 )
+	continue;
 
       // Erase all of the overlapping points.
       bins[i].erase( bins[i].begin()+nnodes, bins[i].end() );
 
       //for( unsigned int s=0; s<add; s++ )
       {
-	unsigned int nNodes = bins[i].size();
+	pair< Point, double > newPts[add*nnodes];
 
-	pair< Point, double > newPts[add*nNodes];
-
-	for( unsigned int j=0; j<add*nNodes; j++ )
+	for( unsigned int j=0; j<add*nnodes; j++ )
 	  newPts[j] = pair< Point, double > (Point(0,0,0), 0 );
 	
-	for( unsigned int j=complete; j<nNodes-complete; j++ ) {
+	for( unsigned int j=skip; j<nnodes-skip; j++ ) {
 
-	  unsigned int j_1 = (j-1+nNodes) % nNodes;
-	  unsigned int j1  = (j+1+nNodes) % nNodes;
+	  unsigned int j_1 = (j-1+nnodes) % nnodes;
+	  unsigned int j1  = (j+1+nnodes) % nnodes;
 
 	  Vector v0 = (Vector) bins[i][j1].first - (Vector) bins[i][j  ].first;
 	  Vector v1 = (Vector) bins[i][j ].first - (Vector) bins[i][j_1].first;
 
-	  cerr << i << " smooth " << j_1 << " "  << j << " "  << j1 << "  "
-	       << ( v0.length() > v1.length() ?
-		    v0.length() / v1.length() :
-		    v1.length() / v0.length() ) << endl;
+// 	  cerr << i << " smooth " << j_1 << " "  << j << " "  << j1 << "  "
+// 	       << ( v0.length() > v1.length() ?
+// 		    v0.length() / v1.length() :
+// 		    v1.length() / v0.length() ) << endl;
 
 	  if( Dot( v0, v1 ) > 0 &&
 	      ( v0.length() > v1.length() ?
@@ -2602,7 +2694,7 @@ smoothCurve( vector< vector < pair< Point, double > > > &bins,
 	  }
 	}
 
-	for( int j=nNodes-1; j>=0; j-- ) {
+	for( int j=nnodes-1; j>=0; j-- ) {
 
 	  for( unsigned int s=0; s<add; s++ ) {
 
@@ -2620,36 +2712,25 @@ smoothCurve( vector< vector < pair< Point, double > > > &bins,
 	}
       }
 
-      // Close the island
-      if( complete )
+      // Close the island if it is complete
+      if( completeIsland )
 	bins[i].insert( bins[i].begin(), bins[i][bins[i].size()-1] );
     }
+
   } else {
 
-    for( unsigned int i=0; i<winding; i++ ) {
+    surfaceCheck( bins, winding, skip, centroidGlobal, nnodes );
 
+    for( unsigned int i=0; i<winding; i++ ) {
       unsigned int j = (i+skip) % winding;
 
-      unsigned int extra = 0;
+      unsigned int nodes = surfaceCheck( bins, i, j, nnodes );
 
-      if( nnodes < bins[i].size() ) {
-	// Check to see if the first overlapping point is really a
-	// fill-in point. This happens because the spacing between
-	// winding groups varries between groups.
-	Vector v0 = (Vector) bins[j][0       ].first -
-	  (Vector) bins[i][nnodes].first;
-	Vector v1 = (Vector) bins[i][nnodes-1].first -
-	  (Vector) bins[i][nnodes].first;
-
-	if( Dot( v0, v1 ) < 0.0 )
-	  extra = 1;
-      }
-
-      if( extra )
-	cerr << i << " adding extra " << endl;
+      if( bins[i].size() < 2 )
+	continue;
 
       // Erase all of the overlapping points.
-      bins[i].erase( bins[i].begin()+nnodes+extra, bins[i].end() );
+      bins[i].erase( bins[i].begin()+nodes, bins[i].end() );
 
       // Insert the first point from the next winding so the curve
       // is contiguous.
@@ -2672,10 +2753,10 @@ smoothCurve( vector< vector < pair< Point, double > > > &bins,
 	  Vector v0 = (Vector) bins[i][j1].first - (Vector) bins[i][j  ].first;
 	  Vector v1 = (Vector) bins[i][j ].first - (Vector) bins[i][j_1].first;
 
-	  cerr << i << " smooth " << j_1 << " "  << j << " "  << j1 << "  "
-	       << ( v0.length() > v1.length() ?
-		    v0.length() / v1.length() :
-		    v1.length() / v0.length() ) << endl;
+// 	  cerr << i << " smooth " << j_1 << " "  << j << " "  << j1 << "  "
+// 	       << ( v0.length() > v1.length() ?
+// 		    v0.length() / v1.length() :
+// 		    v1.length() / v0.length() ) << endl;
 
 	  if( Dot( v0, v1 ) > 0 &&
 	      ( v0.length() > v1.length() ?
@@ -2765,237 +2846,191 @@ mergeOverlap( vector< vector < pair< Point, double > > > &bins,
 
     for( unsigned int i=0; i<winding; i++ ) {
       
-      // Are there points to be merged?
-      if( nnodes < bins[i].size() ) {
+      unsigned int startIndex;
+      unsigned int middleIndex;
+      unsigned int stopIndex;
 
-	bool completeIsland = false;
+      // Merge only if there are overlapping points.
+      if( islandCheck( bins[i], centroidGlobal, startIndex, stopIndex ) == 3 ) {
+	nnodes = stopIndex - startIndex + 1;
 
-	// Is the island complete?
-	if( bins[i].size() >= 2 ) {
+	if( nnodes == bins[i].size() )
+	  continue;
 
-	  unsigned int turns = 0;	  
+	// Store the overlapping points.
+	for( unsigned int j=nnodes; j<bins[i].size(); j++ )
+	  tmp_bins[i].push_back( bins[i][j] );
 
-	  Vector v0 = (Vector) bins[i][0].first - centroidGlobal;
-	  Vector v1 = (Vector) bins[i][1].first - centroidGlobal;
+	cerr << i << " stored extra points " << tmp_bins[i].size() << endl;
 
-	  bool lastCCW = ccw( v0, v1 ) == 1 ? true : false;
-	  v0 = v1;
+	// Erase all of the overlapping points.
+	bins[i].erase( bins[i].begin()+nnodes, bins[i].end() );
+	  
+	// Insert the first point so the curve is contiguous.
+	bins[i].insert( bins[i].begin()+nnodes, bins[i][0] );
 
-	  for( unsigned int j=2; j<bins[i].size(); j++ ) {
-	    v1 = (Vector) bins[i][j].first - centroidGlobal;
+	unsigned int index_prediction = 1;
+	unsigned int prediction_true  = 0;
+	unsigned int prediction_false = 0;
 
-	    bool CCW = ccw( v0, v1 ) == 1 ? true : false;
+	unsigned int modulo = bins[i].size() - 1;
+ 
+	// Insert the remaining points.
+	for( unsigned int j=0; j<tmp_bins[i].size(); j++ ) {
+
+	  Vector v0 = (Vector) bins[i][0].first -
+	    (Vector) tmp_bins[i][j].first;
+
+	  double angle = 0;
+	  double length = 99999;
+	  unsigned int angleIndex = 0;
+	  unsigned int lengthIndex = 0;
+
+	  for( unsigned int k=1; k<bins[i].size(); k++ ) {
+
+	    Vector v1 = (Vector) bins[i][k].first -
+	      (Vector) tmp_bins[i][j].first;
+
+	    double ang = acos( Dot(v0, v1) / (v0.length() * v1.length()) );
+
+	    if( angle < ang ) {
+	      angle = ang;
+	      angleIndex = k;
+	    }
+
+	    if( length < v1.length() ) {
+	      length = v1.length();
+	      lengthIndex = k;
+	    }
+
+	    // Go on.
 	    v0 = v1;
-	    
-	    if( CCW != lastCCW ) {
-	      lastCCW = CCW;
+	  }
 
-	      turns++;
+	  // Insert it between the other two.
+	  if( angle > M_PI / 3.0 )
+	    bins[i].insert( bins[i].begin()+angleIndex, tmp_bins[i][j] );
 
-	      if( turns == 3 )
-		break;
+	  cerr << i << "  " << modulo << "  " << j + nnodes
+	       << "  Prediction " << index_prediction
+	       << " actual " << angleIndex << "  "
+	       << (angleIndex == index_prediction) << endl;
+
+	  // Check to see if the prediction and the actual index are
+	  // the same.
+	  if( angleIndex == index_prediction )
+	    prediction_true++;
+	  else // if( angleIndex != index_prediction )
+	    prediction_false++;
+
+	  // Predict where the next insertion will take place.
+	  if( (j+1) % modulo == 0 )
+	    index_prediction = 1 + (j+1) / modulo;
+	  else
+	    index_prediction = angleIndex + (j+1) / modulo + 2;
+	}
+
+	cerr << "Winding " << i << " inserted "
+	     << prediction_true+prediction_false << " nodes "
+	     << " True " << prediction_true
+	     << " False " << prediction_false << endl;
+
+	// If more of the predictions are incorrect than correct
+	// insert based on the predictions.
+	if( 0 && prediction_true < prediction_false ) {
+
+	  cerr << "Winding " << i << " bad predicted insertion ";
+
+	  unsigned int cc = 0;
+
+	  for( unsigned int j=0; j<tmp_bins[i].size(); j++ ) {
+
+	    vector< pair< Point, double > >::iterator inList =
+	      find( bins[i].begin(), bins[i].end(), tmp_bins[i][j] );
+	      
+	    if( inList != bins[i].end() ) {
+	      bins[i].erase( inList );
+
+	      cc++;
 	    }
 	  }
 
-	  if( turns == 3 )
-	    completeIsland = true;
-	}
+	  cerr << "removed " << cc << " points" << endl;
 
-	if( completeIsland ) {
-
-	  // Check to see if the first overlap point is not really an
-	  // overlapping point. This happens because the spacing between
-	  // winding groups varries between groups.
-	  Vector v0 = (Vector) bins[i][0       ].first -
-	    (Vector) bins[i][nnodes].first;
-	  Vector v1 = (Vector) bins[i][nnodes-1].first -
-	    (Vector) bins[i][nnodes].first;
-	  
-	  unsigned int extra;
-	  
-	  if( Dot( v0, v1 ) < 0.0 )
-	    extra = 1;
-	  else
-	    extra = 0;
-	  
- 	  if( extra )
- 	    cerr << i << " adding extra " << nnodes << endl;
-	  
-	  // Store the overlapping points.
-	  for( unsigned int j=nnodes+extra; j<bins[i].size(); j++ )
-	    tmp_bins[i].push_back( bins[i][j] );
-
- 	  cerr << i << " stored extra points " << tmp_bins[i].size() << endl;
-
-	  // Erase all of the overlapping points.
-	  bins[i].erase( bins[i].begin()+nnodes+extra, bins[i].end() );
-	  
-	  // Insert the first point so the curve is contiguous.
-	  bins[i].insert( bins[i].begin()+nnodes+extra, bins[i][0] );
-
-	  unsigned int index_prediction = 1;
-	  unsigned int prediction_true  = 0;
-	  unsigned int prediction_false = 0;
-
-	  unsigned int modulo = bins[i].size() - 1;
- 
-	  // Insert the remaining points.
+	  unsigned int index = 1;
+	    
 	  for( unsigned int j=0; j<tmp_bins[i].size(); j++ ) {
-
-	    Vector v0 = (Vector) bins[i][0].first -
-	      (Vector) tmp_bins[i][j].first;
-
-	    double angle = 0;
-	    double length = 99999;
-	    unsigned int angleIndex = 0;
-	    unsigned int lengthIndex = 0;
-
-	    for( unsigned int k=1; k<bins[i].size(); k++ ) {
-
-	      Vector v1 = (Vector) bins[i][k].first -
-		(Vector) tmp_bins[i][j].first;
-
-	      double ang = acos( Dot(v0, v1) / (v0.length() * v1.length()) );
-
-	      if( angle < ang ) {
-		angle = ang;
-		angleIndex = k;
-	      }
-
-	      if( length < v1.length() ) {
-		length = v1.length();
-		lengthIndex = k;
-	      }
-
-	      // Go on.
-	      v0 = v1;
-	    }
-
+	    
 	    // Insert it between the other two.
-	    if( angle > M_PI / 3.0 )
-	      bins[i].insert( bins[i].begin()+angleIndex, tmp_bins[i][j] );
+	    bins[i].insert( bins[i].begin()+index, tmp_bins[i][j] );
 
-	    cerr << i << "  " << modulo << "  " << j + nnodes+extra
-		 << "  Prediction " << index_prediction
-		 << " actual " << angleIndex << "  "
-		 << (angleIndex == index_prediction) << endl;
-
-	    // Check to see if the prediction and the actual index are
-	    // the same.
-	    if( angleIndex == index_prediction )
-	      prediction_true++;
-	    else // if( angleIndex != index_prediction )
-	      prediction_false++;
+	    cerr << i << "  " << modulo << "  " << j + nnodes
+		 << " actual " << index << endl;
 
 	    // Predict where the next insertion will take place.
 	    if( (j+1) % modulo == 0 )
-	      index_prediction = 1 + (j+1) / modulo;
+	      index = 1 + (j+1) / modulo;
 	    else
-	      index_prediction = angleIndex + (j+1) / modulo + 2;
+	      index += (j+1) / modulo + 2;
 	  }
+	}
 
-	  cerr << "Winding " << i << " inserted "
-	       << prediction_true+prediction_false << " nodes "
-	       << " True " << prediction_true
-	       << " False " << prediction_false << endl;
+	unsigned int start0  = 0;
+	unsigned int end0    = 0;
+	unsigned int start1  = 0;
+	unsigned int end1    = 0;
 
-	  // If more of the predictions are incorrect than correct
-	  // insert based on the predictions.
-	  if( 0 && prediction_true < prediction_false ) {
-
-	    cerr << "Winding " << i << " bad predicted insertion ";
-
-	    unsigned int cc = 0;
-
-	    for( unsigned int j=0; j<tmp_bins[i].size(); j++ ) {
-
-	      vector< pair< Point, double > >::iterator inList =
-		find( bins[i].begin(), bins[i].end(), tmp_bins[i][j] );
+	if( prediction_true > prediction_false ) {
+	  // See if any of the segments cross.
+	  for( unsigned int j=0; 0 && j<bins[i].size()-1; j++ ) {
 	      
-	      if( inList != bins[i].end() ) {
-		bins[i].erase( inList );
-
-		cc++;
-	      }
-	    }
-
-	    cerr << "removed " << cc << " points" << endl;
-
-	    unsigned int index = 1;
-	    
-	    for( unsigned int j=0; j<tmp_bins[i].size(); j++ ) {
-	    
-	      // Insert it between the other two.
-	      bins[i].insert( bins[i].begin()+index, tmp_bins[i][j] );
-
-	      cerr << i << "  " << modulo << "  " << j + nnodes+extra
-		   << " actual " << index << endl;
-
-	      // Predict where the next insertion will take place.
-	      if( (j+1) % modulo == 0 )
-		index = 1 + (j+1) / modulo;
-	      else
-		index += (j+1) / modulo + 2;
-	    }
-	  }
-
-	  unsigned int start0  = 0;
-	  unsigned int end0    = 0;
-	  unsigned int start1  = 0;
-	  unsigned int end1    = 0;
-
-	  if( prediction_true > prediction_false ) {
-	    // See if any of the segments cross.
-	    for( unsigned int j=0; 0 && j<bins[i].size()-1; j++ ) {
+	    Point l0_p0 = bins[i][j].first;
+	    Point l0_p1 = bins[i][j+1].first;
 	      
-	      Point l0_p0 = bins[i][j].first;
-	      Point l0_p1 = bins[i][j+1].first;
-	      
-	      for( unsigned int k=j+2; k<bins[i].size()-1; k++ ) {
+	    for( unsigned int k=j+2; k<bins[i].size()-1; k++ ) {
 		
-		Point l1_p0 = bins[i][k].first;
-		Point l1_p1 = bins[i][k+1].first;
+	      Point l1_p0 = bins[i][k].first;
+	      Point l1_p1 = bins[i][k+1].first;
 		
-		if( intersect( l0_p0, l0_p1, l1_p0, l1_p1 ) == 1 ) {
-		  if( start0 == 0 ) {
-		    start0  = j + 1;
-		    end1    = k + 1;
-		  } else {
-		    end0   = j + 1;
-		    start1 = k + 1;
+	      if( intersect( l0_p0, l0_p1, l1_p0, l1_p1 ) == 1 ) {
+		if( start0 == 0 ) {
+		  start0  = j + 1;
+		  end1    = k + 1;
+		} else {
+		  end0   = j + 1;
+		  start1 = k + 1;
 
-		    cerr << " merge self intersection " 
-			 << start0 << "  " << end0 << "  "
-			 << start1 << "  " << end1 << endl;
+		  cerr << " merge self intersection " 
+		       << start0 << "  " << end0 << "  "
+		       << start1 << "  " << end1 << endl;
 
-		    if( 0 ) {
-		      vector < pair< Point, double > > tmp_bins[2];
+		  if( 0 ) {
+		    vector < pair< Point, double > > tmp_bins[2];
 
-		      for( unsigned int l=start0; l<end0; l++ )
-			tmp_bins[0].push_back( bins[i][l] );
+		    for( unsigned int l=start0; l<end0; l++ )
+		      tmp_bins[0].push_back( bins[i][l] );
 
-		      for( unsigned int l=start1; l<end1; l++ )
-			tmp_bins[1].push_back( bins[i][l] );
+		    for( unsigned int l=start1; l<end1; l++ )
+		      tmp_bins[1].push_back( bins[i][l] );
 
-		      bins[i].erase( bins[i].begin()+start1,
-				     bins[i].begin()+end1 );
+		    bins[i].erase( bins[i].begin()+start1,
+				   bins[i].begin()+end1 );
 
-		      bins[i].erase( bins[i].begin()+start0,
-				     bins[i].begin()+end0 );
+		    bins[i].erase( bins[i].begin()+start0,
+				   bins[i].begin()+end0 );
 
-		      for( unsigned int l=0; l<tmp_bins[1].size(); l++ )
-			bins[i].insert( bins[i].begin()+start0,
-					tmp_bins[1][l] );
+		    for( unsigned int l=0; l<tmp_bins[1].size(); l++ )
+		      bins[i].insert( bins[i].begin()+start0,
+				      tmp_bins[1][l] );
 
-		      for( unsigned int l=0; l<tmp_bins[0].size(); l++ )
-			bins[i].insert( bins[i].begin() + start1 -
-					tmp_bins[0].size() +
-					tmp_bins[1].size(),
-					tmp_bins[0][l] );
-		    }
-
-		    start0 = 0;
+		    for( unsigned int l=0; l<tmp_bins[0].size(); l++ )
+		      bins[i].insert( bins[i].begin() + start1 -
+				      tmp_bins[0].size() +
+				      tmp_bins[1].size(),
+				      tmp_bins[0][l] );
 		  }
+
+		  start0 = 0;
 		}
 	      }
 	    }
@@ -3005,90 +3040,75 @@ mergeOverlap( vector< vector < pair< Point, double > > > &bins,
     }
   } else {
 
-      vector < pair< Point, double > > tmp_bins[winding];
+    vector < pair< Point, double > > tmp_bins[winding];
 
-      for( unsigned int i=0; i<winding; i++ ) {
+    surfaceCheck( bins, winding, skip, centroidGlobal, nnodes );
 
-	unsigned int j = (i+skip) % winding;
+    for( unsigned int i=0; i<winding; i++ ) {
+      unsigned int j = (i+skip) % winding;
 
-	unsigned int extra = 0;
+      unsigned int nodes = surfaceCheck( bins, i, j, nnodes );
+      
+      // Store the overlapping points.
+      for( unsigned int j=nodes; j<bins[i].size(); j++ )
+	tmp_bins[i].push_back( bins[i][j] );
 
-	if( nnodes < bins[i].size() ) {
-	  // Check to see if the first overlapping point is really a
-	  // fill-in point. This happens because the spacing between
-	  // winding groups varries between groups.
-	  Vector v0 = (Vector) bins[j][0       ].first -
-	    (Vector) bins[i][nnodes].first;
-	  Vector v1 = (Vector) bins[i][nnodes-1].first -
-	    (Vector) bins[i][nnodes].first;
+      cerr << i << " stored extra points " << tmp_bins[i].size() << endl;
 
-	  if( Dot( v0, v1 ) < 0.0 )
-	    extra = 1;
+      // Erase all of the overlapping points.
+      bins[i].erase( bins[i].begin()+nodes, bins[i].end() );
+
+      // Insert the first point from the next winding so the curve
+      // is contiguous.
+      bins[i].push_back( bins[j][0] );
+    }
+
+    for( unsigned int i=0; i<winding; i++ ) {
+      
+      unsigned int winding_prediction = (i+skip)%winding;
+      unsigned int index_prediction = 1;
+      unsigned int prediction_true  = 0;
+      unsigned int prediction_false = 0;
+
+      for( unsigned int i0=0; i0<tmp_bins[i].size(); i0++ ) {
+
+	double angle = 0;
+	unsigned int index_wd = 0;
+	unsigned int index_pt = 0;
+
+	for( unsigned int j=0; j<winding; j++ ) {
+
+	  Vector v0 = (Vector) bins[j][0].first -
+	    (Vector) tmp_bins[i][i0].first;
+
+	  for( unsigned int j0=1; j0<bins[j].size(); j0++ ) {
+	    Vector v1 = (Vector) bins[j][j0].first -
+	      (Vector) tmp_bins[i][i0].first;
+	
+	    double ang = acos( Dot(v0, v1) / (v0.length() * v1.length()) );
+
+	    if( angle < ang ) {
+
+	      angle = ang;
+	      index_wd = j;
+	      index_pt = j0;
+	    }
+
+	    // Go on.
+	    v0 = v1;
+	  }
 	}
 
-	if( extra )
-	  cerr << i << " adding extra " << endl;
+	// Insert it between the other two.
+	bins[index_wd].insert( bins[index_wd].begin()+index_pt,
+			       tmp_bins[i][i0] );
 
-	// Store the overlapping points.
-	for( unsigned int j=nnodes+extra; j<bins[i].size(); j++ )
-	  tmp_bins[i].push_back( bins[i][j] );
-
-	cerr << i << " stored extra points " << tmp_bins[i].size() << endl;
-
-	// Erase all of the overlapping points.
-	bins[i].erase( bins[i].begin()+nnodes+extra, bins[i].end() );
-
-	// Insert the first point from the next winding so the curve
-	// is contiguous.
-	bins[i].push_back( bins[j][0] );
-      }
-
-      for( unsigned int i=0; i<winding; i++ ) {
-      
-	unsigned int winding_prediction = (i+skip)%winding;
-	unsigned int index_prediction = 1;
-	unsigned int prediction_true  = 0;
-	unsigned int prediction_false = 0;
-
-	for( unsigned int i0=0; i0<tmp_bins[i].size(); i0++ ) {
-
-	  double angle = 0;
-	  unsigned int index_wd = 0;
-	  unsigned int index_pt = 0;
-
-	  for( unsigned int j=0; j<winding; j++ ) {
-
-	    Vector v0 = (Vector) bins[j][0].first -
-	      (Vector) tmp_bins[i][i0].first;
-
-	    for( unsigned int j0=1; j0<bins[j].size(); j0++ ) {
-	      Vector v1 = (Vector) bins[j][j0].first -
-		(Vector) tmp_bins[i][i0].first;
-	
-	      double ang = acos( Dot(v0, v1) / (v0.length() * v1.length()) );
-
-	      if( angle < ang ) {
-
-		angle = ang;
-		index_wd = j;
-		index_pt = j0;
-	      }
-
-	      // Go on.
-	      v0 = v1;
-	    }
-	  }
-
-	  // Insert it between the other two.
-	  bins[index_wd].insert( bins[index_wd].begin()+index_pt,
-				 tmp_bins[i][i0] );
-
-	  cerr << "Winding prediction " << winding_prediction
-	       << " actual " << index_wd
-	       << "  Index prediction  " << index_prediction
-	       << " actual " << index_pt << "  "
-	       << (index_wd == winding_prediction &&
-		   index_pt == index_prediction) << endl;
+	cerr << "Winding prediction " << winding_prediction
+	     << " actual " << index_wd
+	     << "  Index prediction  " << index_prediction
+	     << " actual " << index_pt << "  "
+	     << (index_wd == winding_prediction &&
+		 index_pt == index_prediction) << endl;
 
 	// Check to see if the prediction of where the point was inserted
 	// is correct;

@@ -56,6 +56,9 @@ itcl_class Fusion_Fields_StreamlineAnalyzer {
 	global $this-maxWindings
 	set $this-maxWindings 30
 
+	global $this-order
+	set $this-order 0
+
 	global $this-override
 	set $this-override 0
 
@@ -157,29 +160,48 @@ itcl_class Fusion_Fields_StreamlineAnalyzer {
 
 #	checkbutton $w.windings.check -variable $this-override-check
 
+	frame $w.windings.values
+
 	global $this-override
 	set override [set $this-override]
-	iwidgets::spinint $w.windings.override -labeltext "Override winding: " \
+	iwidgets::spinint $w.windings.values.override \
+	    -labeltext "Override winding: " \
 	    -range {0 1000} -step 1 \
 	    -textvariable $this-override \
 	    -width 10 -fixed 10 -justify right
 	
-	$w.windings.override delete 0 end
-	$w.windings.override insert 0 $override
+	$w.windings.values.override delete 0 end
+	$w.windings.values.override insert 0 $override
 
 
 	global $this-maxWindings
 	set max [set $this-maxWindings]
-	iwidgets::spinint $w.windings.max -labeltext "Max windings: " \
+	iwidgets::spinint $w.windings.values.max \
+	    -labeltext "    Max windings: " \
 	    -range {0 1000} -step 1 \
 	    -textvariable $this-maxWindings \
 	    -width 10 -fixed 10 -justify right
 	
-	$w.windings.max delete 0 end
-	$w.windings.max insert 0 $max
+	$w.windings.values.max delete 0 end
+	$w.windings.values.max insert 0 $max
+
+	pack $w.windings.values.max $w.windings.values.override -side top
 
 
-	pack $w.windings.max $w.windings.override -side left -fill x
+	frame $w.windings.order
+	label $w.windings.order.label -text "  Order Preference"
+	radiobutton $w.windings.order.low -text "Low" \
+	    -variable $this-order -value 0
+
+	radiobutton $w.windings.order.high -text "high" \
+	    -variable $this-order -value 1
+
+	pack $w.windings.order.label \
+	    $w.windings.order.low $w.windings.order.high \
+	    -side left -anchor w
+
+	pack $w.windings.values $w.windings.order \
+	    -side left -fill x
 
 
 	frame $w.mesh -relief groove -borderwidth 2

@@ -65,6 +65,7 @@ protected:
   GuiInt gColor_;
   GuiInt gMaxWindings_;
   GuiInt gOverride_;
+  GuiInt gOrder_;
   GuiInt gCurveMesh_;
   GuiInt gScalarField_;
   GuiInt gShowIslands_;
@@ -75,6 +76,7 @@ protected:
   unsigned int color_;
   unsigned int maxWindings_;
   unsigned int override_;
+  unsigned int order_;
   unsigned int curveMesh_;
   unsigned int scalarField_;
   unsigned int showIslands_;
@@ -99,13 +101,15 @@ StreamlineAnalyzer::StreamlineAnalyzer(GuiContext* context)
     gColor_(context->subVar("color")),
     gMaxWindings_(context->subVar("maxWindings")),
     gOverride_(context->subVar("override")),
+    gOrder_(context->subVar("order")),
     gCurveMesh_(context->subVar("curve-mesh")),
     gScalarField_(context->subVar("scalar-field")),
     gShowIslands_(context->subVar("show-islands")),
     gOverlaps_(context->subVar("overlaps")),
     color_(1),
-    maxWindings_(30),
+    maxWindings_(20),
     override_(0),
+    order_(0),
     curveMesh_(1),
     scalarField_(1),
     showIslands_(0),
@@ -312,6 +316,12 @@ StreamlineAnalyzer::execute()
     override_ = gOverride_.get();
   }
 
+  if( order_ != (unsigned int) gOrder_.get() ) {
+    update = true;
+
+    order_ = gOrder_.get();
+  }
+
   if( curveMesh_ != (unsigned int) gCurveMesh_.get() ) {
     update = true;
 
@@ -372,7 +382,7 @@ StreamlineAnalyzer::execute()
 		  pcsfieldin, pcsfieldout_,
 		  planes_,
 		  color_, showIslands_, overlaps_,
-		  maxWindings_, override_, topology);
+		  maxWindings_, override_, order_, topology);
   }
 
   cerr << "StreamlineAnalyzer sending data " << endl;
