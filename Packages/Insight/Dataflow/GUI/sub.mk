@@ -54,6 +54,7 @@ SRCS := \
 	$(SRCDIR)/CurvatureFlowImageFilter.tcl \
 	$(SRCDIR)/DiscreteGaussianImageFilter.tcl \
 	$(SRCDIR)/ExtractImageFilter.tcl\
+	$(SRCDIR)/GeodesicActiveContourLevelSetImageFilter.tcl \
 	$(SRCDIR)/GradientAnisotropicDiffusionImageFilter.tcl \
 	$(SRCDIR)/GradientMagnitudeImageFilter.tcl \
 	$(SRCDIR)/GradientRecursiveGaussianImageFilter.tcl \

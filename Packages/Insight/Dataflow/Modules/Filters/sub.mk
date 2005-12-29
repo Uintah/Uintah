@@ -56,6 +56,7 @@ SRCS += ${SRCDIR}/BinaryDilateImageFilter.cc \
 	${SRCDIR}/CurvatureFlowImageFilter.cc \
 	${SRCDIR}/DiscreteGaussianImageFilter.cc \
 	${SRCDIR}/ExtractImageFilter.cc \
+	${SRCDIR}/GeodesicActiveContourLevelSetImageFilter.cc \
 	${SRCDIR}/GradientAnisotropicDiffusionImageFilter.cc \
 	${SRCDIR}/GradientMagnitudeImageFilter.cc \
 	${SRCDIR}/GradientRecursiveGaussianImageFilter.cc \
