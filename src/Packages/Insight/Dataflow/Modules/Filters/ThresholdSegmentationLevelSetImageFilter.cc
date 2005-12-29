@@ -145,7 +145,8 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   typedef typename itk::ThresholdSegmentationLevelSetImageFilter< ImageType, FeatureImageType > FilterType;
 
   // Check if filter_ has been created
-  // or the input data has changed. If
+  // or the input data has changed, or if
+  // the reset button has been pushed. If
   // this is the case, set the inputs.
 
   if(!filter_ || 
@@ -168,6 +169,7 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetFeatureImage( data_FeatureImage );
        
   }
+
 
   // reset progress bar
   update_progress(0.0);
@@ -279,7 +281,7 @@ ThresholdSegmentationLevelSetImageFilter::ThresholdSegmentationLevelSetImageFilt
      gui_smoothing_time_step_(ctx->subVar("smoothing_time_step")),
      gui_smoothing_conductance_(ctx->subVar("smoothing_conductance")),
      gui_update_OutputImage_(ctx->subVar("update_OutputImage")),
-     gui_update_iters_OutputImage_(ctx->subVar("update_iters_OutputImage")), 
+     gui_update_iters_OutputImage_(ctx->subVar("update_iters_OutputImage")),
      last_SeedImage_(-1), 
      last_FeatureImage_(-1)
 {
