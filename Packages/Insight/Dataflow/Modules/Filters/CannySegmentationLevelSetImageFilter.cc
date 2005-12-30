@@ -70,6 +70,7 @@ public:
   
   GuiInt gui_update_OutputImage_;
   GuiInt gui_update_iters_OutputImage_;
+  GuiInt gui_reset_filter_;
 
   bool execute_;
   
@@ -141,9 +142,11 @@ CannySegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Obje
   // or the input data has changed. If
   // this is the case, set the inputs.
 
-  if(!filter_  || 
+  if(gui_reset_filter_.get() == 1 | !filter_  || 
      inhandle_SeedImage_->generation != last_SeedImage_ || 
      inhandle_FeatureImage_->generation != last_FeatureImage_) {
+
+     gui_reset_filter_.set(0);
      
      last_SeedImage_ = inhandle_SeedImage_->generation;
      last_FeatureImage_ = inhandle_FeatureImage_->generation;
@@ -241,6 +244,7 @@ CannySegmentationLevelSetImageFilter::CannySegmentationLevelSetImageFilter(GuiCo
      gui_isovalue_(ctx->subVar("isovalue")),
      gui_update_OutputImage_(ctx->subVar("update_OutputImage")),
      gui_update_iters_OutputImage_(ctx->subVar("update_iters_OutputImage")), 
+     gui_reset_filter_(ctx->subVar("reset_filter")),
      last_SeedImage_(-1), 
      last_FeatureImage_(-1)
 {

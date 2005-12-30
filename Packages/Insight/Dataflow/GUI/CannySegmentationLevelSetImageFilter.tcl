@@ -48,6 +48,7 @@
          global $this-isovalue
          global $this-update_OutputImage
          global $this-update_iters_OutputImage
+    	 global $this-reset_filter
 
          set_defaults
     }
@@ -65,7 +66,7 @@
          set $this-isovalue 0.5
          set $this-update_OutputImage 0
          set $this-update_iters_OutputImage 10
-
+	 set $this-reset_filter 0
     }
 
 
@@ -162,6 +163,10 @@
 	button $w.stop -text "Stop Segmentation" \
 	    -command "$this-c stop_segmentation"
 	pack $w.stop -side top -anchor n
+
+	button $w.reset -text "Reset Filter" \
+	    -command "set $this-reset_filter 1"
+	pack $w.reset -side top -anchor n
        
         frame $w.buttons
 	makeSciButtonPanel $w.buttons $w $this
