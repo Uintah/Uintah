@@ -309,8 +309,14 @@ public:
 
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
+  //__________________________________
   // AMR
   virtual void scheduleRefineInterface(const LevelP& fineLevel,
+                                       SchedulerP& scheduler,
+                                       int step, 
+                                       int nsteps);
+                                       
+  virtual void scheduleSetBC_FineLevel(const LevelP& fineLevel,
                                        SchedulerP& scheduler,
                                        int step, 
                                        int nsteps);

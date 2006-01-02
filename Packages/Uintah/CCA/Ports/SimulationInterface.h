@@ -70,12 +70,24 @@ WARNING
      //////////
      // Insert Documentation Here:
      virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&,
-				      int step, int nsteps);
+				          int step, int nsteps);
+                                  
+     // schedule to refine coase level data to the fine level                             
      virtual void scheduleRefine(const PatchSet* patches, 
 				 SchedulerP& scheduler);
+                             
+     // schedule to refine the coarse level data to the finer level
+     // only at the coarse/fine interfaces                        
      virtual void scheduleRefineInterface(const LevelP& fineLevel, 
-				          SchedulerP& scheduler,
-					  int step, int nsteps);
+				              SchedulerP& scheduler,
+					       int step, int nsteps);
+                                     
+     // schedule to set the boundary conditions on the fine level
+     virtual void scheduleSetBC_FineLevel(const LevelP& fineLevel, 
+				              SchedulerP& scheduler,
+					       int step, int nsteps);                            
+     
+     // schedule to push the fine level data to the coarser level                                
      virtual void scheduleCoarsen(const LevelP& coarseLevel, 
 				  SchedulerP& scheduler);
 

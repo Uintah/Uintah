@@ -507,6 +507,23 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
 }
 
 /*___________________________________________________________________
+ Function~  AMRICE::scheduleSetBC_FineLevel--
+ Purpose:  
+_____________________________________________________________________*/
+void AMRICE::scheduleSetBC_FineLevel(const LevelP& fineLevel,
+                                     SchedulerP& sched,
+                                     int step, 
+                                     int nsteps)
+{
+  if(fineLevel->getIndex() > 0  && doICEOnLevel(fineLevel->getIndex(), fineLevel->getGrid()->numLevels())){
+    cout_doing << d_myworld->myrank() << " AMRICE::scheduleSetBC_FineLevel \t\t\tL-" 
+               << fineLevel->getIndex() << " progressVar "<< (double)step/(double)nsteps <<'\n';
+
+
+  }
+}
+
+/*___________________________________________________________________
  Function~  AMRICE::scheduleRefine--  
 _____________________________________________________________________*/
 void AMRICE::scheduleRefine(const PatchSet* patches,

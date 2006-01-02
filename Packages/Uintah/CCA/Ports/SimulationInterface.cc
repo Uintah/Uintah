@@ -28,6 +28,15 @@ SimulationInterface::scheduleRefineInterface(const LevelP&,
   throw InternalError("scheduleRefineInterface not implemented for this component\n",
                       __FILE__, __LINE__);
 }
+void
+SimulationInterface::scheduleSetBC_FineLevel(const LevelP&, 
+                                             SchedulerP&,
+                                             int, int)
+{
+  throw InternalError("scheduleSetBC_FineLevel not implemented for this component\n",
+                      __FILE__, __LINE__);
+}
+
 
 void
 SimulationInterface::scheduleCoarsen(const LevelP&, 
