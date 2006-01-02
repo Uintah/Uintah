@@ -47,6 +47,10 @@ WARNING
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
 					 SchedulerP& scheduler,
 					 int step, int nsteps);
+                                    
+    virtual void scheduleSetBC_FineLevel(const LevelP& fineLevel,
+					 SchedulerP& scheduler,
+					 int step, int nsteps);
     virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
     virtual void scheduleRefine (const PatchSet* patches, SchedulerP& sched);
 

@@ -2530,7 +2530,8 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
   new_dw->refinalize();
 }
 
-
+//_________________________A M R_____________________________________________
+//
 void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      SchedulerP& scheduler,
                                      int step, 
@@ -2539,7 +2540,17 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
   d_ice->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
   d_mpm->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
 }
-  
+
+//__________________________________
+void MPMICE::scheduleSetBC_FineLevel(const LevelP& fineLevel,
+                                     SchedulerP& scheduler,
+                                     int step, 
+                                     int nsteps)
+{
+  // do nothing right now
+}
+
+//__________________________________  
 void MPMICE::scheduleRefine(const PatchSet* patches, 
                             SchedulerP& sched)
 {
@@ -2567,19 +2578,21 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   }
   sched->addTask(task, patches, d_sharedState->allMPMMaterials());
 }
-    
+//__________________________________
 void MPMICE::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
   d_ice->scheduleCoarsen(coarseLevel, sched);
   d_mpm->scheduleCoarsen(coarseLevel, sched);
 }
 
+//__________________________________
 void MPMICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched)
 {
   d_ice->scheduleInitialErrorEstimate(coarseLevel, sched);
   d_mpm->scheduleInitialErrorEstimate(coarseLevel, sched);
 }
-                                               
+
+//__________________________________                                               
 void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                    SchedulerP& sched)
 {
@@ -2587,6 +2600,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   d_mpm->scheduleErrorEstimate(coarseLevel, sched);
 }
 
+//__________________________________
  void MPMICE::scheduleRefineVariableCC(SchedulerP& sched,
                                        const PatchSet* patches,
                                        const MaterialSet* matls,
@@ -2619,7 +2633,8 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    t->computes(variable);
    sched->addTask(t, patches, matls);
  }
-
+ 
+//__________________________________
  void MPMICE::scheduleRefineExtensiveVariableCC(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls,
@@ -2658,7 +2673,6 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
  }
 
  //______________________________________________________________________
-  
  template<typename T>
    void MPMICE::scheduleCoarsenVariableCC(SchedulerP& sched,
                                           const PatchSet* patches,
@@ -2685,7 +2699,8 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
      t->computes(variable);
    sched->addTask(t, patches, matls);
  }
-
+ 
+//______________________________________________________________________
  template<typename T>
    void MPMICE::scheduleMassWeightedCoarsenVariableCC(SchedulerP& sched,
                                                       const PatchSet* patches,
@@ -2711,7 +2726,8 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
      t->computes(variable);
    sched->addTask(t, patches, matls);
  }
-
+ 
+//______________________________________________________________________
  template<typename T>
    void MPMICE::scheduleCoarsenSumVariableCC(SchedulerP& sched,
                                              const PatchSet* patches,
@@ -2736,7 +2752,8 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
      t->computes(variable);
    sched->addTask(t, patches, matls);
  }
-
+ 
+//______________________________________________________________________
 void
 MPMICE::refine(const ProcessorGroup*,
                const PatchSubset* patches,
@@ -2887,7 +2904,7 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
   }
 }
 
-//
+//______________________________________________________________________
 template<typename T>
 void MPMICE::refineExtensiveVariableCC(const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -3007,6 +3024,7 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
   }
 }
 
+//______________________________________________________________________
 template<typename T>
 void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
                                            const PatchSubset* patches,
@@ -3077,6 +3095,7 @@ void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
   }
 }
 
+//______________________________________________________________________
 template<typename T>
 void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
                                   const PatchSubset* patches,

@@ -47,10 +47,20 @@ void AMRWave::problemSetup(const ProblemSpecP& params, GridP& grid,
     do_coarsen = true;
 }
 
+//__________________________________
 void AMRWave::scheduleRefineInterface(const LevelP& fineLevel,
 					 SchedulerP& scheduler,
 					 int step, int nsteps)
 {
+  // do nothing
+}
+
+//__________________________________
+void AMRWave::scheduleSetBC_FineLevel(const LevelP& fineLevel,
+					 SchedulerP& scheduler,
+					 int step, int nsteps)
+{
+  // do nothing
 }
 
 void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
