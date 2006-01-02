@@ -55,6 +55,7 @@ WARNING
     virtual void scheduleCoarsen               ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleRefine                ( const PatchSet* patches, SchedulerP& scheduler );
     virtual void scheduleRefineInterface       ( const LevelP& level, SchedulerP& scheduler, int step, int nsteps );
+    virtual void scheduleSetBC_FineLevel       ( const LevelP& level, SchedulerP& scheduler, int step, int nsteps );
 
   private:
     void initialize ( const ProcessorGroup*,

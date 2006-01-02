@@ -75,11 +75,15 @@ WARNING
 			 DataWarehouse* fineDW, 
 			 DataWarehouse* coarseDW,
 			 int step, int nsteps);
+                      
+    virtual void scheduleSetBC_FineLevel(const LevelP& fineLevel,
+					 SchedulerP& scheduler,
+					 int step, int nsteps);
 
     virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
     void coarsen(const ProcessorGroup* pg,
 	         const PatchSubset* finePatches, 
-		 const MaterialSubset* matls,
+		  const MaterialSubset* matls,
                  DataWarehouse* coarseDW, 
                  DataWarehouse* fineDW);
 
