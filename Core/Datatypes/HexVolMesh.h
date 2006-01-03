@@ -582,15 +582,13 @@ private:
 
   //! all the nodes.
   vector<Point>        points_;
-  Mutex                points_lock_;
-
   //! each 8 indecies make up a Hex
   vector<under_type>   cells_;
-  Mutex                cells_lock_;
-
   //! each 8 indecies make up a Hex
   vector<under_type>   neighbors_;
-  Mutex                nbors_lock_;
+
+  //! Fill lock, used to fill points_, cells_, neighbors_
+  Mutex                fill_lock_;
 
   //! Face information.
   struct PFace {
@@ -823,7 +821,7 @@ template <class Basis>
 template <class Iter, class Functor>
 void
 HexVolMesh<Basis>::fill_points(Iter begin, Iter end, Functor fill_ftor) {
-  points_lock_.lock();
+  fill_lock_.lock();
   Iter iter = begin;
   points_.resize(end - begin); // resize to the new size
   vector<Point>::iterator piter = points_.begin();
@@ -831,14 +829,14 @@ HexVolMesh<Basis>::fill_points(Iter begin, Iter end, Functor fill_ftor) {
     *piter = fill_ftor(*iter);
     ++piter; ++iter;
   }
-  points_lock_.unlock();
+  fill_lock_.unlock();
 }
 
 template <class Basis>
 template <class Iter, class Functor>
 void
 HexVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
-  cells_lock_.lock();
+  fill_lock_.lock();
   Iter iter = begin;
   cells_.resize((end - begin) * 8); // resize to the new size
   vector<under_type>::iterator citer = cells_.begin();
@@ -861,14 +859,14 @@ HexVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
     *citer = nodes[7];
     ++citer; ++iter;
   }
-  cells_lock_.unlock();
+  fill_lock_.unlock();
 }
 
 template <class Basis>
 template <class Iter, class Functor>
 void
 HexVolMesh<Basis>::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
-  nbors_lock_.lock();
+  fill_lock_.lock();
   Iter iter = begin;
   neighbors_.resize((end - begin) * 8); // resize to the new size
   vector<under_type>::iterator citer = neighbors_.begin();
@@ -891,7 +889,7 @@ HexVolMesh<Basis>::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
     *citer = face_nbors[7];
     ++citer; ++iter;
   }
-  nbors_lock_.unlock();
+  fill_lock_.unlock();
 }
 
 template <class Basis>
@@ -923,11 +921,9 @@ HexVolMesh<Basis>::type_name(int n)
 template <class Basis>
 HexVolMesh<Basis>::HexVolMesh() :
   points_(0),
-  points_lock_("HexVolMesh points_ fill lock"),
   cells_(0),
-  cells_lock_("HexVolMesh cells_ fill lock"),
   neighbors_(0),
-  nbors_lock_("HexVolMesh neighbors_ fill lock"),
+  fill_lock_("HexVolMesh fill lock for points_, cells_, neighbors_"),
   faces_(0),
   face_table_(),
   face_table_lock_("HexVolMesh faces_ fill lock"),
@@ -944,24 +940,46 @@ HexVolMesh<Basis>::HexVolMesh() :
 
 template <class Basis>
 HexVolMesh<Basis>::HexVolMesh(const HexVolMesh &copy):
-  points_(copy.points_),
-  points_lock_("HexVolMesh points_ fill lock"),
-  cells_(copy.cells_),
-  cells_lock_("HexVolMesh cells_ fill lock"),
-  neighbors_(copy.neighbors_),
-  nbors_lock_("HexVolMesh neighbors_ fill lock"),
-  faces_(copy.faces_),
-  face_table_(copy.face_table_),
+  points_(0),
+  cells_(0),
+  neighbors_(0),
+  fill_lock_("HexVolMesh fill lock for points_, cells_, neighbors_"),
+  faces_(0),
+  face_table_(),
   face_table_lock_("HexVolMesh faces_ fill lock"),
-  edges_(copy.edges_),
-  edge_table_(copy.edge_table_),
+  edges_(0),
+  edge_table_(),
   edge_table_lock_("HexVolMesh edge_ fill lock"),
   node_nbor_lock_("HexVolMesh node_neighbors_ fill lock"),
-  grid_(copy.grid_),
+  grid_(0),
   grid_lock_("HexVolMesh grid_ fill lock"),
   locate_cache_(0),
-  synchronized_(copy.synchronized_)
+  synchronized_(NODES_E | CELLS_E)
 {
+  HexVolMesh &lcopy = (HexVolMesh &)copy;
+
+  lcopy.fill_lock_.lock();
+  points_ = copy.points_;
+  cells_ = copy.cells_;
+  neighbors_ = copy.neighbors_;
+  lcopy.fill_lock_.unlock();
+
+  lcopy.face_table_lock_.lock();
+  face_table_ = copy.face_table_;
+  faces_ = copy.faces_;
+  synchronized_ |= copy.synchronized_ & FACES_E;
+  lcopy.face_table_lock_.unlock();
+  
+  lcopy.edge_table_lock_.lock();
+  edge_table_ = copy.edge_table_;
+  edges_ = copy.edges_;
+  synchronized_ |= copy.synchronized_ & EDGES_E;
+  lcopy.edge_table_lock_.unlock();
+
+  lcopy.grid_lock_.lock();
+  grid_ = copy.grid_;
+  synchronized_ |= copy.synchronized_ & LOCATE_E;
+  lcopy.grid_lock_.unlock();
 }
 
 template <class Basis>

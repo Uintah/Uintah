@@ -1079,9 +1079,9 @@ TetVolMesh<Basis>::TetVolMesh() :
 
 template <class Basis>
 TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
-  points_(copy.points_),
+  points_(0),
   points_lock_("TetVolMesh points_ fill lock"),
-  cells_(copy.cells_),
+  cells_(0),
   cells_lock_("TetVolMesh cells_ fill lock"),
 #ifdef HAVE_HASH_SET
   edge_hasher_(cells_),
@@ -1131,7 +1131,7 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
 
   node_neighbors_(0),
   node_neighbor_lock_("TetVolMesh node_neighbors_ fill lock"),
-  grid_(copy.grid_),
+  grid_(0),
   grid_lock_("TetVolMesh grid_ fill lock"),
   locate_cache_(0),
   synchronized_(copy.synchronized_)
@@ -1140,6 +1140,22 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~FACES_E;
   synchronized_ &= ~FACE_NEIGHBORS_E;
+
+  TetVolMesh &lcopy = (TetVolMesh &)copy;
+
+  lcopy.points_lock_.lock();
+  points_ = copy.points_;
+  lcopy.points_lock_.unlock();
+
+  lcopy.cells_lock_.lock();
+  cells_ = copy.cells_;
+  lcopy.cells_lock_.unlock();
+
+  lcopy.grid_lock_.lock();
+  grid_ = copy.grid_;
+  synchronized_ &= ~LOCATE_E;
+  synchronized_ |= copy.synchronized_ & LOCATE_E;
+  lcopy.grid_lock_.unlock();
 }
 
 template <class Basis>
