@@ -2230,7 +2230,7 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
     // Is it time to dump printData ?
     // You need to do this in the first task
     // and only on the first patch
-    if (levelIndex == 0 && p == 0) {
+    if (levelIndex == 0 && patch->getGridIndex() == 0) {
       d_dbgTime_to_printData = false;
       double time= dataArchiver->getCurrentTime() + d_SMALL_NUM;
       if (time >= d_dbgStartTime && 
