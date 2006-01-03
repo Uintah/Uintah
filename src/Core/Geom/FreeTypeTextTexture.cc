@@ -56,7 +56,8 @@ FreeTypeTextTexture::FreeTypeTextTexture(const string &text,
   text_(text),
   face_(face),
   dirty_(true)
-{  
+{
+  color_[0] = color_[1] = color_[2] = color_[3] = 1.0;
 }
 
 FreeTypeTextTexture::~FreeTypeTextTexture() 
@@ -76,14 +77,36 @@ FreeTypeTextTexture::set(const string &text)
 
 int
 FreeTypeTextTexture::width() {
-  ASSERT(texture_);
-  return texture_->width();
+  BBox bbox;
+  bbox.reset();
+  FreeTypeText fttext(text_, face_);
+  fttext.get_bounds(bbox);
+  fttext.set_position(Point(-bbox.min().x(), -bbox.min().y(), 0));
+  bbox.reset();
+  fttext.get_bounds(bbox);
+  return Ceil(bbox.diagonal().x());
 }
 
 int
 FreeTypeTextTexture::height() {
-  ASSERT(texture_);
-  return texture_->height();
+  BBox bbox;
+  bbox.reset();
+  FreeTypeText fttext(text_, face_);
+  fttext.get_bounds(bbox);
+  fttext.set_position(Point(-bbox.min().x(), -bbox.min().y(), 0));
+  bbox.reset();
+  fttext.get_bounds(bbox);
+  return Ceil(bbox.diagonal().y());
+}
+
+
+void
+FreeTypeTextTexture::set_color(double r, double g, double b, double a) 
+{  
+  color_[0] = r;
+  color_[1] = g;
+  color_[2] = b;
+  color_[3] = a;
 }
 
 
@@ -150,12 +173,13 @@ FreeTypeTextTexture::draw(double x, double y,
   default: // lowerleft do noting
   case FreeTypeTextTexture::sw: break;
   }
-
+  CHECK_OPENGL_ERROR();
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
+  CHECK_OPENGL_ERROR();
   glLoadIdentity();
   glScaled(2.0, 2.0, 2.0);
   glTranslated(-.5, -.5, -.5);
@@ -167,7 +191,7 @@ FreeTypeTextTexture::draw(double x, double y,
   y = Floor(y) / double(gl_viewport[3] - gl_viewport[1]);
   w = w / double(gl_viewport[2] - gl_viewport[0]);
   h = h / double(gl_viewport[3] - gl_viewport[1]);
-  
+  texture_->set_color(color_[0], color_[1], color_[2], color_[3]);
   texture_->draw_quad(x, y, w, h);
 
   glPopMatrix();

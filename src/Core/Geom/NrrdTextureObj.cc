@@ -96,7 +96,7 @@ NrrdTextureObj::pad_to_power_of_2()
   if (!nrrd_.get_rep() || !nrrd_->nrrd) return;
   NrrdDataHandle nout = scinew NrrdData();
   int minp[3] = { 0, 0, 0 };
-  int maxp[3] = { nrrd_->nrrd->axis[0].size, 
+  int maxp[3] = { 0, 
                   Pow2(nrrd_->nrrd->axis[1].size)-1, 
                   Pow2(nrrd_->nrrd->axis[2].size)-1 };
 
@@ -129,6 +129,7 @@ NrrdTextureObj::bind()
   GLenum pixtype;
   if (nrrd.axis[0].size == 1) 
     pixtype = GL_ALPHA;
+  
   else if (nrrd.axis[0].size == 2) 
     pixtype = GL_LUMINANCE_ALPHA;
   else if (nrrd.axis[0].size == 3) 
@@ -169,28 +170,20 @@ NrrdTextureObj::draw_quad(double x, double y, double w, double h)
   if (bind()) {
     glEnable(GL_TEXTURE_2D);
     CHECK_OPENGL_ERROR();
-    if (nrrd_->nrrd->axis[0].size == 1) {
-      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
-      glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color_);
-    }  else {
-      GLfloat black[] = { 0.0, 0.0, 0.0, 0.0 };
-      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);;
-      glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, black);
-    }
-    CHECK_OPENGL_ERROR();
   } else {
     glDisable(GL_TEXTURE_2D);
-    return;
     CHECK_OPENGL_ERROR();
+    return;
   }
-    
+
+  glColor4fv(color_);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
   glDisable(GL_CULL_FACE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glShadeModel(GL_FLAT);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-  glColor4fv(color_);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   CHECK_OPENGL_ERROR();
 
   double tx = double(width_)/nrrd_->nrrd->axis[1].size;
