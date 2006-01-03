@@ -18,6 +18,9 @@ echo "_______________________________________printData variables"
 grep dbg $iceDir/ICEDebug.cc | grep get | cut -d \" -f2
 
 echo "_______________________________________switches"
-grep switch $iceDir/ICEDebug.cc | grep == | cut -d \" -f4
+set switches = `grep switch $iceDir/ICEDebug.cc | grep == | cut -d \" -f4`
+foreach X ($switches[*]:q)
+  echo "<debug label =" '"'$X'"'"/>"
+end
 
 exit
