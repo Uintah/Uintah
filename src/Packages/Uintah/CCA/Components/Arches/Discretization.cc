@@ -1663,6 +1663,9 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
   int z_start = idxLo.z();
   int z_end = idxHi.z()+1;
   
+// Need BC's for superbee and vanLeer flux limiter
+  double c, Zup, Zdwn, psi, test;
+  if (limiter_type < 3) {
   if (xminus) {
     int colX = x_start;
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -1670,11 +1673,39 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
 
-	x_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
-			   constscal_vars->scalar[xminusCell]) *
-			   (constscal_vars->density[currCell]+
-			   constscal_vars->density[xminusCell]) *
-			   constscal_vars->uVelocity[currCell];
+	  c = constscal_vars->uVelocity[currCell] * 0.5 *
+              (constscal_vars->density[currCell] +
+	       constscal_vars->density[xminusCell]);
+
+	  if (c > 0.0) {
+
+	    Zup =   constscal_vars->scalar[xminusCell];
+
+	    Zdwn =  constscal_vars->scalar[currCell];
+	  }
+	  else {
+
+	    Zup =   constscal_vars->scalar[currCell];
+
+	    Zdwn =  constscal_vars->scalar[xminusCell];
+	  }
+
+	  if (boundary_limiter_type == 2)
+	    psi = 1.0;
+	  else if (boundary_limiter_type == 3) {
+	    test = 0.5*(constscal_vars->viscosity[currCell]+
+			constscal_vars->viscosity[xminusCell])/
+		   d_turbPrNo/cellinfo->sew[colX];
+	    if (test - 0.5 * Abs(c) > 0.0)
+	      psi = 1.0;
+	    else
+	      psi = 0.0;
+	  }
+	  else
+	    psi=0.0;
+
+	  x_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
+
         if ((constscal_vars->cellType[xminusCell] == wall_celltypeval)
 	    && (!(constscal_vars->cellType[currCell] == wall_celltypeval))) {
                      x_flux[currCell] = 0.0;
@@ -1691,11 +1722,38 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
 
-	x_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
-			   constscal_vars->scalar[xminusCell]) *
-			   (constscal_vars->density[currCell]+
-			   constscal_vars->density[xminusCell]) *
-			   constscal_vars->uVelocity[currCell];
+	  c = constscal_vars->uVelocity[currCell] * 0.5 *
+              (constscal_vars->density[currCell] +
+	       constscal_vars->density[xminusCell]);
+
+	  if (c > 0.0) {
+
+	    Zup =   constscal_vars->scalar[xminusCell];
+
+	    Zdwn =  constscal_vars->scalar[currCell];
+	  }
+	  else {
+
+	    Zup =   constscal_vars->scalar[currCell];
+
+	    Zdwn =  constscal_vars->scalar[xminusCell];
+	  }
+
+	  if (boundary_limiter_type == 2)
+	    psi = 1.0;
+	  else if (boundary_limiter_type == 3) {
+	    test = 0.5*(constscal_vars->viscosity[currCell]+
+			constscal_vars->viscosity[xminusCell])/
+		   d_turbPrNo/cellinfo->sew[colX];
+	    if (test - 0.5 * Abs(c) > 0.0)
+	      psi = 1.0;
+	    else
+	      psi = 0.0;
+	  }
+	  else
+	    psi=0.0;
+
+	  x_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
       }
     }
     x_end --;
@@ -1708,11 +1766,38 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
 
-	y_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
-			   constscal_vars->scalar[yminusCell]) *
-			   (constscal_vars->density[currCell]+
-			   constscal_vars->density[yminusCell]) *
-			   constscal_vars->vVelocity[currCell];
+	  c = constscal_vars->vVelocity[currCell] * 0.5 *
+              (constscal_vars->density[currCell] +
+	       constscal_vars->density[yminusCell]);
+
+	  if (c > 0.0) {
+
+	    Zup =   constscal_vars->scalar[yminusCell];
+
+	    Zdwn =  constscal_vars->scalar[currCell];
+	  }
+	  else {
+
+	    Zup =   constscal_vars->scalar[currCell];
+
+	    Zdwn =  constscal_vars->scalar[yminusCell];
+	  }
+
+	  if (boundary_limiter_type == 2)
+	    psi = 1.0;
+	  else if (boundary_limiter_type == 3) {
+	    test = 0.5*(constscal_vars->viscosity[currCell]+
+			constscal_vars->viscosity[yminusCell])/
+		   d_turbPrNo/cellinfo->sns[colY];
+	    if (test - 0.5 * Abs(c) > 0.0)
+	      psi = 1.0;
+	    else
+	      psi = 0.0;
+	  }
+	  else
+	    psi=0.0;
+	  
+	  y_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
       }
     }
     y_start ++;
@@ -1725,11 +1810,38 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
 
-	y_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
-			   constscal_vars->scalar[yminusCell]) *
-			   (constscal_vars->density[currCell]+
-			   constscal_vars->density[yminusCell]) *
-			   constscal_vars->vVelocity[currCell];
+	  c = constscal_vars->vVelocity[currCell] * 0.5 *
+              (constscal_vars->density[currCell] +
+	       constscal_vars->density[yminusCell]);
+
+	  if (c > 0.0) {
+
+	    Zup =   constscal_vars->scalar[yminusCell];
+
+	    Zdwn =  constscal_vars->scalar[currCell];
+	  }
+	  else {
+
+	    Zup =   constscal_vars->scalar[currCell];
+
+	    Zdwn =  constscal_vars->scalar[yminusCell];
+	  }
+
+	  if (boundary_limiter_type == 2)
+	    psi = 1.0;
+	  else if (boundary_limiter_type == 3) {
+	    test = 0.5*(constscal_vars->viscosity[currCell]+
+			constscal_vars->viscosity[yminusCell])/
+		   d_turbPrNo/cellinfo->sns[colY];
+	    if (test - 0.5 * Abs(c) > 0.0)
+	      psi = 1.0;
+	    else
+	      psi = 0.0;
+	  }
+	  else
+	    psi=0.0;
+	  
+	  y_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
       }
     }
     y_end --;
@@ -1742,11 +1854,38 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
 
-	z_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
-			   constscal_vars->scalar[zminusCell]) *
-			   (constscal_vars->density[currCell]+
-			   constscal_vars->density[zminusCell]) *
-			   constscal_vars->wVelocity[currCell];
+	  c = constscal_vars->wVelocity[currCell] * 0.5 *
+              (constscal_vars->density[currCell] +
+	       constscal_vars->density[zminusCell]);
+
+	  if (c > 0.0) {
+
+	    Zup =   constscal_vars->scalar[zminusCell];
+
+	    Zdwn =  constscal_vars->scalar[currCell];
+	  }
+	  else {
+
+	    Zup =   constscal_vars->scalar[currCell];
+
+	    Zdwn =  constscal_vars->scalar[zminusCell];
+	  }
+
+	  if (boundary_limiter_type == 2)
+	    psi = 1.0;
+	  else if (boundary_limiter_type == 3) {
+	    test = 0.5*(constscal_vars->viscosity[currCell]+
+			constscal_vars->viscosity[zminusCell])/
+		   d_turbPrNo/cellinfo->stb[colZ];
+	    if (test - 0.5 * Abs(c) > 0.0)
+	      psi = 1.0;
+	    else
+	      psi = 0.0;
+	  }
+	  else
+	    psi=0.0;
+	  
+	  z_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
       }
     }
     z_start ++;
@@ -1759,16 +1898,44 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
 
-	z_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
-			   constscal_vars->scalar[zminusCell]) *
-			   (constscal_vars->density[currCell]+
-			   constscal_vars->density[zminusCell]) *
-			   constscal_vars->wVelocity[currCell];
+	  c = constscal_vars->wVelocity[currCell] * 0.5 *
+              (constscal_vars->density[currCell] +
+	       constscal_vars->density[zminusCell]);
+
+	  if (c > 0.0) {
+
+	    Zup =   constscal_vars->scalar[zminusCell];
+
+	    Zdwn =  constscal_vars->scalar[currCell];
+	  }
+	  else {
+
+	    Zup =   constscal_vars->scalar[currCell];
+
+	    Zdwn =  constscal_vars->scalar[zminusCell];
+	  }
+
+	  if (boundary_limiter_type == 2)
+	    psi = 1.0;
+	  else if (boundary_limiter_type == 3) {
+	    test = 0.5*(constscal_vars->viscosity[currCell]+
+			constscal_vars->viscosity[zminusCell])/
+		   d_turbPrNo/cellinfo->stb[colZ];
+	    if (test - 0.5 * Abs(c) > 0.0)
+	      psi = 1.0;
+	    else
+	      psi = 0.0;
+	  }
+	  else
+	    psi=0.0;
+	  
+	  z_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
       }
     }
     z_end --;
   }
-  double c, dZloc, dZup, Zup, Zdwn, r, psi, temp1, temp2;
+  }
+  double dZloc, dZup, r, temp1, temp2;
 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -1784,42 +1951,65 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
 	       constscal_vars->density[xminusCell]);
 
 	  if (c > 0.0) {
-	    dZloc = constscal_vars->scalar[currCell] -
-		    constscal_vars->scalar[xminusCell];
+            if (limiter_type < 3) {
+	      dZloc = constscal_vars->scalar[currCell] -
+		      constscal_vars->scalar[xminusCell];
 
-	    dZup  = constscal_vars->scalar[xminusCell] -
-		    constscal_vars->scalar[xminusminusCell];
+	      dZup  = constscal_vars->scalar[xminusCell] -
+		      constscal_vars->scalar[xminusminusCell];
+	    }
 
 	    Zup =   constscal_vars->scalar[xminusCell];
 
 	    Zdwn =  constscal_vars->scalar[currCell];
 	  }
 	  else {
-	    dZloc = constscal_vars->scalar[currCell] -
-		    constscal_vars->scalar[xminusCell];
+            if (limiter_type < 3) {
+	      dZloc = constscal_vars->scalar[currCell] -
+		      constscal_vars->scalar[xminusCell];
 
-	    dZup  = constscal_vars->scalar[xplusCell] -
-		    constscal_vars->scalar[currCell];
+	      dZup  = constscal_vars->scalar[xplusCell] -
+		      constscal_vars->scalar[currCell];
+	    }
 
 	    Zup =   constscal_vars->scalar[currCell];
 
 	    Zdwn =  constscal_vars->scalar[xminusCell];
 	  }
 
-	  if (!(dZloc == 0.0)) r = dZup/dZloc;
-	  else if (dZup == dZloc) r = 1.0;
-	  else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
+          if (limiter_type < 3) {
+	    if (!(dZloc == 0.0)) r = dZup/dZloc;
+	    else if (dZup == dZloc) r = 1.0;
+	    else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
+	  }
 
 	  if (limiter_type == 0) {
 	    temp1 = min(2.0 * r,1.0);
 	    temp2 = min(r,2.0);
 	    temp1 = max(temp1, temp2);
 	    psi = max(0.0,temp1);
+	    if (central_limiter)
+	      if (psi > 1.0) psi = 2.0 - psi;
 	  }
-          else if (limiter_type == 1)
+          else if (limiter_type == 1) {
 	    psi = (Abs(r)+r)/(1.0+Abs(r));
-	  else psi = 1.0;
-	  
+	    if (central_limiter)
+	      if (psi > 1.0) psi = 2.0 - psi;
+	  }
+	  else if (limiter_type == 2)
+	    psi = 1.0;
+	  else if (limiter_type == 3) {
+	    test = 0.5*(constscal_vars->viscosity[currCell]+
+			constscal_vars->viscosity[xminusCell])/
+		   d_turbPrNo/cellinfo->sew[colX];
+	    if (test - 0.5 * Abs(c) > 0.0)
+	      psi = 1.0;
+	    else
+	      psi = 0.0;
+	  }
+	  else
+	    psi=0.0;
+
 	  x_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
       }
     }
@@ -1839,41 +2029,64 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
 	       constscal_vars->density[yminusCell]);
 
 	  if (c > 0.0) {
-	    dZloc = constscal_vars->scalar[currCell] -
-		    constscal_vars->scalar[yminusCell];
+            if (limiter_type < 3) {
+	      dZloc = constscal_vars->scalar[currCell] -
+		      constscal_vars->scalar[yminusCell];
 
-	    dZup  = constscal_vars->scalar[yminusCell] -
-		    constscal_vars->scalar[yminusminusCell];
+	      dZup  = constscal_vars->scalar[yminusCell] -
+		      constscal_vars->scalar[yminusminusCell];
+	    }
 
 	    Zup =   constscal_vars->scalar[yminusCell];
 
 	    Zdwn =  constscal_vars->scalar[currCell];
 	  }
 	  else {
-	    dZloc = constscal_vars->scalar[currCell] -
-		    constscal_vars->scalar[yminusCell];
+            if (limiter_type < 3) {
+	      dZloc = constscal_vars->scalar[currCell] -
+		      constscal_vars->scalar[yminusCell];
 
-	    dZup  = constscal_vars->scalar[yplusCell] -
-		    constscal_vars->scalar[currCell];
+	      dZup  = constscal_vars->scalar[yplusCell] -
+		      constscal_vars->scalar[currCell];
+	    }
 
 	    Zup =   constscal_vars->scalar[currCell];
 
 	    Zdwn =  constscal_vars->scalar[yminusCell];
 	  }
 
-	  if (!(dZloc == 0.0)) r = dZup/dZloc;
-	  else if (dZup == dZloc) r = 1.0;
-	  else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
+          if (limiter_type < 3) {
+	    if (!(dZloc == 0.0)) r = dZup/dZloc;
+	    else if (dZup == dZloc) r = 1.0;
+	    else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
+	  }
 
 	  if (limiter_type == 0) {
 	    temp1 = min(2.0 * r,1.0);
 	    temp2 = min(r,2.0);
 	    temp1 = max(temp1, temp2);
 	    psi = max(0.0,temp1);
+	    if (central_limiter)
+	      if (psi > 1.0) psi = 2.0 - psi;
 	  }
-          else if (limiter_type == 1)
+          else if (limiter_type == 1) {
 	    psi = (Abs(r)+r)/(1.0+Abs(r));
-	  else psi = 1.0;
+	    if (central_limiter)
+	      if (psi > 1.0) psi = 2.0 - psi;
+	  }
+	  else if (limiter_type == 2)
+	    psi = 1.0;
+	  else if (limiter_type == 3) {
+	    test = 0.5*(constscal_vars->viscosity[currCell]+
+			constscal_vars->viscosity[yminusCell])/
+		   d_turbPrNo/cellinfo->sns[colY];
+	    if (test - 0.5 * Abs(c) > 0.0)
+	      psi = 1.0;
+	    else
+	      psi = 0.0;
+	  }
+	  else
+	    psi=0.0;
 	  
 	  y_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
       }
@@ -1894,41 +2107,64 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
 	       constscal_vars->density[zminusCell]);
 
 	  if (c > 0.0) {
-	    dZloc = constscal_vars->scalar[currCell] -
-		    constscal_vars->scalar[zminusCell];
+            if (limiter_type < 3) {
+	      dZloc = constscal_vars->scalar[currCell] -
+		      constscal_vars->scalar[zminusCell];
 
-	    dZup  = constscal_vars->scalar[zminusCell] -
-		    constscal_vars->scalar[zminusminusCell];
+	      dZup  = constscal_vars->scalar[zminusCell] -
+		      constscal_vars->scalar[zminusminusCell];
+	    }
 
 	    Zup =   constscal_vars->scalar[zminusCell];
 
 	    Zdwn =  constscal_vars->scalar[currCell];
 	  }
 	  else {
-	    dZloc = constscal_vars->scalar[currCell] -
-		    constscal_vars->scalar[zminusCell];
+            if (limiter_type < 3) {
+	      dZloc = constscal_vars->scalar[currCell] -
+		      constscal_vars->scalar[zminusCell];
 
-	    dZup  = constscal_vars->scalar[zplusCell] -
-		    constscal_vars->scalar[currCell];
+	      dZup  = constscal_vars->scalar[zplusCell] -
+		      constscal_vars->scalar[currCell];
+	    }
 
 	    Zup =   constscal_vars->scalar[currCell];
 
 	    Zdwn =  constscal_vars->scalar[zminusCell];
 	  }
 
-	  if (!(dZloc == 0.0)) r = dZup/dZloc;
-	  else if (dZup == dZloc) r = 1.0;
-	  else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
+          if (limiter_type < 3) {
+	    if (!(dZloc == 0.0)) r = dZup/dZloc;
+	    else if (dZup == dZloc) r = 1.0;
+	    else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
+	  }
 
 	  if (limiter_type == 0) {
 	    temp1 = min(2.0 * r,1.0);
 	    temp2 = min(r,2.0);
 	    temp1 = max(temp1, temp2);
 	    psi = max(0.0,temp1);
+	    if (central_limiter)
+	      if (psi > 1.0) psi = 2.0 - psi;
 	  }
-          else if (limiter_type == 1)
+          else if (limiter_type == 1) {
 	    psi = (Abs(r)+r)/(1.0+Abs(r));
-	  else psi = 1.0;
+	    if (central_limiter)
+	      if (psi > 1.0) psi = 2.0 - psi;
+	  }
+	  else if (limiter_type == 2)
+	    psi = 1.0;
+	  else if (limiter_type == 3) {
+	    test = 0.5*(constscal_vars->viscosity[currCell]+
+			constscal_vars->viscosity[zminusCell])/
+		   d_turbPrNo/cellinfo->stb[colZ];
+	    if (test - 0.5 * Abs(c) > 0.0)
+	      psi = 1.0;
+	    else
+	      psi = 0.0;
+	  }
+	  else
+	    psi=0.0;
 	  
 	  z_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
       }
