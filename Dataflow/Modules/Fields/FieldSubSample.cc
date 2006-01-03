@@ -203,7 +203,7 @@ FieldSubSample::execute()
 
   // Get the dimensions of the mesh.
   string mesh_type = fHandle->get_type_description(Field::MESH_TD_E)->get_name();
-  if( mesh_type.find("LatVolMesh") != string::npos ||
+  if( mesh_type.find("LatVolMesh")       != string::npos ||
       mesh_type.find("StructHexVolMesh") != string::npos ) 
   {
     typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
@@ -215,7 +215,7 @@ FieldSubSample::execute()
 
     dims = 3;
 
-  } else if( mesh_type.find("ImageMesh") != string::npos ||
+  } else if( mesh_type.find("ImageMesh")          != string::npos ||
 	     mesh_type.find("StructQuadSurfMesh") != string::npos ) 
   {
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
@@ -227,7 +227,7 @@ FieldSubSample::execute()
 
     dims = 2;
 
-  } else if( mesh_type.find("ScanlineMesh") != string::npos ||
+  } else if( mesh_type.find("ScanlineMesh")    != string::npos ||
 	     mesh_type.find("StructCurveMesh") != string::npos ) {
     typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
     SLMesh *slmInput = (SLMesh*) fHandle->mesh().get_rep();
@@ -253,9 +253,9 @@ FieldSubSample::execute()
 
   int wrap;
 
-  if( mesh_type.find("StructHexVolMesh") != string::npos ||
+  if( mesh_type.find("StructHexVolMesh"  ) != string::npos ||
       mesh_type.find("StructQuadSurfMesh") != string::npos ||
-      mesh_type.find("StructCurveMesh") != string::npos )
+      mesh_type.find("StructCurveMesh"   ) != string::npos )
     wrap = 1;
   else
     wrap = 0;
@@ -352,12 +352,13 @@ FieldSubSampleAlgo::get_compile_info(const TypeDescription *ftd)
   // Add in the include path to compile this obj
   rval->add_include(include_path);
 
-  // Structured meshs have a set_point method which is needed. However, it is not
-  // defined for gridded meshes. As such, the include file defined below contains a
-  // compiler flag so that when needed in FieldSlicer.h it is compiled.
-  if( ftd->get_name().find("StructHexVolMesh") == 0 ||
-      ftd->get_name().find("StructQuadSurfMesh") == 0 ||
-      ftd->get_name().find("StructCurveMesh") == 0 ) {
+  // Structured meshs have a set_point method which is
+  // needed. However, it is not defined for gridded meshes. As such,
+  // the include file defined below contains a compiler flag so that
+  // when needed in FieldSlicer.h it is compiled.
+  if( ftd->get_name().find("StructHexVolMesh"  ) != string::npos ||
+      ftd->get_name().find("StructQuadSurfMesh") != string::npos ||
+      ftd->get_name().find("StructCurveMesh"   ) != string::npos ) {
 
     string header_path(include_path);  // Get the right path 
 

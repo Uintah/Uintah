@@ -56,7 +56,6 @@ protected:
   GuiString sType_;
   GuiString sValue_;
   GuiInt    iReadOnly_;
-
   vector< GuiString* > gProperty_;
   vector< GuiString* > gType_;
   vector< GuiString* > gValue_;
@@ -73,7 +72,7 @@ protected:
   vector< string > values_;
   vector< int    > readOnly_;
 
-  int nGeneration_;
+  int fGeneration_;
   FieldHandle fHandle_;
 
   int error_;
@@ -101,10 +100,10 @@ void
 FieldSetProperty::execute()
 {
   FieldIPort *inrrd_port = (FieldIPort *)get_iport("Input");
-  FieldHandle nHandle;
+  FieldHandle fHandle;
 
   // The nrrd input is required.
-  if (!inrrd_port->get(nHandle) || !(nHandle.get_rep()) ) {
+  if (!inrrd_port->get(fHandle) || !(fHandle.get_rep()) ) {
     error( "No handle or representation" );
     return;
   }
@@ -113,44 +112,92 @@ FieldSetProperty::execute()
 
   // If no data or a change recreate the nrrd.
   if( !fHandle_.get_rep() ||
-      nGeneration_ != nHandle->generation )
+      fGeneration_ != fHandle->generation )
   {
-    nGeneration_ = nHandle->generation;
+    fGeneration_ = fHandle->generation;
   
     // Add the current properties to the display.
-    for( unsigned int ic=0; ic<nHandle->nproperties(); ic++ ) {
-      int    p_int;
-      float  p_float;
-      double p_double;
-      string p_string;
+    for( unsigned int ic=0; ic<fHandle->nproperties(); ic++ ) {
+      bool           p_bool;
+      unsigned char  p_uchar;
+      char           p_char;
+      unsigned short p_ushort;
+      short          p_short;
+      unsigned int   p_uint;
+      int            p_int;
+      float          p_float;
+      double         p_double;
+      string         p_string;
 
-      string pname = nHandle->get_property_name( ic );
+      string pname = fHandle->get_property_name( ic );
       string type("other");
       string value("Can not display");
       int readonly = 1;
 
-      if( nHandle->get_property( pname, p_int ) ) {
+      if( fHandle->get_property( pname, p_bool ) ) {
+	type = string( "bool" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_bool );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( fHandle->get_property( pname, p_uchar ) ) {
+	type = string( "unsigned char" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_uchar );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( fHandle->get_property( pname, p_char ) ) {
+	type = string( "char" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_char );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( fHandle->get_property( pname, p_ushort ) ) {
+	type = string( "unsigned short" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_ushort );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( fHandle->get_property( pname, p_short ) ) {
+	type = string( "short" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_short );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( fHandle->get_property( pname, p_uint ) ) {
+	type = string( "unsigned int" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_uint );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( fHandle->get_property( pname, p_int ) ) {
 	type = string( "int" );
 	char tmpStr[128];
 	sprintf( tmpStr, "%d", p_int );
 	value = string( tmpStr );
 	readonly = 0;
 
-      } else if( nHandle->get_property( pname, p_float ) ) {
+      } else if( fHandle->get_property( pname, p_float ) ) {
 	type = string( "float" );
 	char tmpStr[128];
 	sprintf( tmpStr, "%f", p_float );
 	value = string( tmpStr );
 	readonly = 0;
 
-      } else if( nHandle->get_property( pname, p_double ) ) {
+      } else if( fHandle->get_property( pname, p_double ) ) {
 	type = string( "double" );
 	char tmpStr[128];
 	sprintf( tmpStr, "%f", p_double );
 	value = string( tmpStr );
 	readonly = 0;
 
-      } else if( nHandle->get_property( pname, p_string ) ) {
+      } else if( fHandle->get_property( pname, p_string ) ) {
 	type = string( "string" );
 	value = p_string;
 	readonly = 0;
@@ -263,22 +310,22 @@ FieldSetProperty::execute()
     string p_string;
 
     if( types_[ic] == string( "int" ) &&
-	nHandle->get_property( properties_[ic], p_int ) ) {
+	fHandle->get_property( properties_[ic], p_int ) ) {
       if( p_int != atoi( values_[ic].c_str() ) )
 	update = true;
 
     } else if( types_[ic] == string( "float" ) &&
-	nHandle->get_property( properties_[ic], p_float ) ) {
+	fHandle->get_property( properties_[ic], p_float ) ) {
       if( p_float != atof( values_[ic].c_str() ) )
 	update = true;
 
     } else if( types_[ic] == string( "double" ) &&
-	nHandle->get_property( properties_[ic], p_double ) ) {
+	fHandle->get_property( properties_[ic], p_double ) ) {
       if( p_double != atof( values_[ic].c_str() ) )
 	update = true;
 
     } else if( types_[ic] == string( "string" ) &&
-	nHandle->get_property( properties_[ic], p_string ) ) {
+	fHandle->get_property( properties_[ic], p_string ) ) {
       if( p_string != values_[ic] )
 	update = true;
     }
@@ -295,19 +342,19 @@ FieldSetProperty::execute()
 
       if( types_[ic] == "int" ) {
 	int p_int = (int) atoi(values_[ic].c_str());
-	nHandle->set_property(properties_[ic], p_int, false);
+	fHandle->set_property(properties_[ic], p_int, false);
 
       } else if( types_[ic] == "float" ) {
 	float p_float = (float) atof(values_[ic].c_str());
-	nHandle->set_property(properties_[ic], p_float, false);
+	fHandle->set_property(properties_[ic], p_float, false);
 
       } else if( types_[ic] == "double" ) {
 	double p_double = (double) atof(values_[ic].c_str());
-	nHandle->set_property(properties_[ic], p_double, false);
+	fHandle->set_property(properties_[ic], p_double, false);
 
       } else if( types_[ic] == "string" ) {
 	string p_string = (string) values_[ic];
-	nHandle->set_property(properties_[ic], p_string, false);
+	fHandle->set_property(properties_[ic], p_string, false);
 
       } else if( types_[ic] == "unknown" ) {
 	error( properties_[ic] + " has an unknown type" );
@@ -317,8 +364,8 @@ FieldSetProperty::execute()
     }
 
     // Remove the deleted properties.
-    for( unsigned int ic=0; ic<nHandle->nproperties(); ic++ ) {
-      string pname = nHandle->get_property_name( ic );
+    for( unsigned int ic=0; ic<fHandle->nproperties(); ic++ ) {
+      string pname = fHandle->get_property_name( ic );
 
       unsigned int jc;
 
@@ -330,22 +377,21 @@ FieldSetProperty::execute()
 
       // Otherwise if not found remove it.
       if( jc == entries_ )
-	nHandle->remove_property( pname );
+	fHandle->remove_property( pname );
     }
 
     // Update the handles and generation numbers.
-    // NOTE: This is done in place, e.g. the nrrd is not copied.
-    fHandle_ = nHandle;
+    // NOTE: This is done in place, e.g. the field is not copied.
+    fHandle_ = fHandle;
     fHandle_->generation = fHandle_->compute_new_generation();
-    nGeneration_ = nHandle->generation;
+    fGeneration_ = fHandle->generation;
   }
-
 
   // Send the data downstream
   if( fHandle_.get_rep() )
   {
-    FieldOPort *onrrd_port = (FieldOPort *) get_oport("Output");
-    onrrd_port->send_and_dereference( fHandle_, true );
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output");
+    ofield_port->send_and_dereference( fHandle_, true );
   }
 }
 
