@@ -281,6 +281,7 @@ public:
     this->basis_.derivate(coords, ed, J);
   }
 
+  virtual bool synchronize(unsigned int);
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -320,7 +321,7 @@ private:
   Mutex                               grid_lock_; // Bad traffic!
   typename LatVolMesh<Basis>::Cell::index_type           locate_cache_;
 
-
+  unsigned int   synchronized_;
 };
 
 
@@ -333,7 +334,8 @@ template <class Basis>
 StructHexVolMesh<Basis>::StructHexVolMesh():
   grid_(0),
   grid_lock_("StructHexVolMesh grid lock"),
-  locate_cache_(this, 0, 0, 0)
+  locate_cache_(this, 0, 0, 0),
+  synchronized_(Mesh::ALL_ELEMENTS_E)
 {}
 
 template <class Basis>
@@ -344,17 +346,27 @@ StructHexVolMesh<Basis>::StructHexVolMesh(unsigned int i,
   points_(i, j, k),
   grid_(0),
   grid_lock_("StructHexVolMesh grid lock"),
-  locate_cache_(this, 0, 0, 0)
+  locate_cache_(this, 0, 0, 0),
+  synchronized_(Mesh::ALL_ELEMENTS_E)
 {}
 
 template <class Basis>
 StructHexVolMesh<Basis>::StructHexVolMesh(const StructHexVolMesh<Basis> &copy):
   LatVolMesh<Basis>(copy),
-  grid_(copy.grid_),
+  grid_(0),
   grid_lock_("StructHexVolMesh grid lock"),
-  locate_cache_(this, 0, 0, 0)
+  locate_cache_(this, 0, 0, 0),
+  synchronized_(Mesh::ALL_ELEMENTS_E)
 {
   points_.copy( copy.points_ );
+
+  StructHexVolMesh &lcopy = (StructHexVolMesh &)copy;
+
+  lcopy.grid_lock_.lock();
+  grid_ = copy.grid_;
+  synchronized_ &= ~Mesh::LOCATE_E;
+  synchronized_ |= copy.synchronized_ & Mesh::LOCATE_E;
+  lcopy.grid_lock_.unlock();
 }
 
 template <class Basis>
@@ -571,10 +583,7 @@ StructHexVolMesh<Basis>::locate(
       return true;
   }
   
-  if (grid_.get_rep() == 0)
-  {
-    compute_grid();
-  }
+  ASSERT(synchronized_ & Mesh::LOCATE_E);
   cell.mesh_ = this;
 
   unsigned int *iter, *end;
@@ -890,7 +899,8 @@ StructHexVolMesh<Basis>::compute_grid()
 
     grid_ = scinew SearchGrid(sgc);
   }
-  
+
+  synchronized_ |= Mesh::LOCATE_E;
   grid_lock_.unlock();
 }
 
@@ -960,6 +970,17 @@ StructHexVolMesh<Basis>::set_point(const Point &p,
 {
   points_(i.i_, i.j_, i.k_) = p;
 }
+
+
+template <class Basis>
+bool
+StructHexVolMesh<Basis>::synchronize(unsigned int tosync)
+{
+  if (tosync & Mesh::LOCATE_E && !(synchronized_ & Mesh::LOCATE_E))
+    compute_grid();
+  return true;
+}  
+
 
 #define STRUCT_HEX_VOL_MESH_VERSION 1
 

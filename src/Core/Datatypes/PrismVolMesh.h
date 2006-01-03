@@ -1143,9 +1143,9 @@ PrismVolMesh<Basis>::PrismVolMesh() :
 
 template <class Basis>
 PrismVolMesh<Basis>::PrismVolMesh(const PrismVolMesh &copy):
-  points_(copy.points_),
+  points_(0),
   points_lock_("PrismVolMesh points_ fill lock"),
-  cells_(copy.cells_),
+  cells_(0),
   cells_lock_("PrismVolMesh cells_ fill lock"),
 #ifdef HAVE_HASH_SET
   edge_hasher_(cells_),
@@ -1195,7 +1195,7 @@ PrismVolMesh<Basis>::PrismVolMesh(const PrismVolMesh &copy):
 
   node_neighbors_(0),
   node_neighbor_lock_("PrismVolMesh node_neighbors_ fill lock"),
-  grid_(copy.grid_),
+  grid_(0),
   grid_lock_("PrismVolMesh grid_ fill lock"),
   locate_cache_(0),
   synchronized_(copy.synchronized_)
@@ -1204,6 +1204,22 @@ PrismVolMesh<Basis>::PrismVolMesh(const PrismVolMesh &copy):
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~FACES_E;
   synchronized_ &= ~FACE_NEIGHBORS_E;
+
+  PrismVolMesh &lcopy = (PrismVolMesh &)copy;
+
+  lcopy.points_lock_.lock();
+  points_ = copy.points_;
+  lcopy.points_lock_.unlock();
+
+  lcopy.cells_lock_.lock();
+  cells_ = copy.cells_;
+  lcopy.cells_lock_.unlock();
+
+  lcopy.grid_lock_.lock();
+  grid_ = copy.grid_;
+  synchronized_ &= LOCATE_E;
+  synchronized_ |= copy.synchronized_ & LOCATE_E;
+  lcopy.grid_lock_.unlock();
 }
 
 template <class Basis>

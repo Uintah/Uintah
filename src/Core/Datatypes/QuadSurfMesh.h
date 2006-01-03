@@ -500,8 +500,10 @@ QuadSurfMesh<Basis>::type_name(int n)
 template <class Basis>
 QuadSurfMesh<Basis>::QuadSurfMesh()
   : points_(0),
+    edges_(0),
     faces_(0),
     edge_neighbors_(0),
+    normals_(0),
     point_lock_("QuadSurfMesh point_lock_"),
     edge_lock_("QuadSurfMesh edge_lock_"),
     face_lock_("QuadSurfMesh face_lock_"),
@@ -513,18 +515,42 @@ QuadSurfMesh<Basis>::QuadSurfMesh()
 
 template <class Basis>
 QuadSurfMesh<Basis>::QuadSurfMesh(const QuadSurfMesh &copy)
-  : points_(copy.points_),
-    edges_(copy.edges_),
-    faces_(copy.faces_),
-    edge_neighbors_(copy.edge_neighbors_),
-    normals_( copy.normals_ ),
+  : points_(0),
+    edges_(0),
+    faces_(0),
+    edge_neighbors_(0),
+    normals_(0),
     point_lock_("QuadSurfMesh point_lock_"),
     edge_lock_("QuadSurfMesh edge_lock_"),
     face_lock_("QuadSurfMesh face_lock_"),
     edge_neighbor_lock_("QuadSurfMesh edge_neighbor_lock_"),
     normal_lock_("QuadSurfMesh normal_lock_"),
-    synchronized_(copy.synchronized_)
+    synchronized_(NODES_E | FACES_E | CELLS_E)
 {
+  QuadSurfMesh &lcopy = (QuadSurfMesh &)copy;
+
+  lcopy.point_lock_.lock();
+  points_ = copy.points_;
+  lcopy.point_lock_.unlock();
+  
+  lcopy.edge_lock_.lock();
+  edges_ = copy.edges_;
+  synchronized_ |= copy.synchronized_ & EDGES_E;
+  lcopy.edge_lock_.unlock();
+
+  lcopy.face_lock_.lock();
+  faces_ = copy.faces_;
+  lcopy.face_lock_.unlock();
+
+  lcopy.edge_neighbor_lock_.lock();
+  edge_neighbors_ = copy.edge_neighbors_;
+  synchronized_ |= copy.synchronized_ & EDGE_NEIGHBORS_E;
+  lcopy.edge_neighbor_lock_.unlock();
+
+  lcopy.normal_lock_.lock();
+  normals_ = copy.normals_;
+  synchronized_ |= copy.synchronized_ & NORMALS_E;
+  lcopy.normal_lock_.unlock();
 }
 
 template <class Basis>

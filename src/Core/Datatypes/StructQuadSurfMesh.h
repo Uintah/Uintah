@@ -370,7 +370,7 @@ StructQuadSurfMesh<Basis>::type_id(StructQuadSurfMesh<Basis>::type_name(-1),
 template <class Basis>
 StructQuadSurfMesh<Basis>::StructQuadSurfMesh()
   : normal_lock_("StructQuadSurfMesh Normals Lock"),
-    synchronized_(ImageMesh<Basis>::ALL_ELEMENTS_E)
+    synchronized_(Mesh::ALL_ELEMENTS_E)
 {
 }
 
@@ -380,7 +380,7 @@ StructQuadSurfMesh<Basis>::StructQuadSurfMesh(unsigned int x, unsigned int y)
     points_(x, y),
     normals_(x,y),
     normal_lock_("StructQuadSurfMesh Normals Lock"),
-    synchronized_(ImageMesh<Basis>::ALL_ELEMENTS_E)
+    synchronized_(Mesh::ALL_ELEMENTS_E)
 {
 }
 
@@ -390,8 +390,15 @@ StructQuadSurfMesh<Basis>::StructQuadSurfMesh(const StructQuadSurfMesh &copy)
     normal_lock_("StructQuadSurfMesh Normals Lock"),
     synchronized_(copy.synchronized_)
 {
+  StructQuadSurfMesh &lcopy = (StructQuadSurfMesh &)copy;
+
   points_.copy( copy.points_ );
-  normals_.copy( copy.normals_ );
+  
+  lcopy.normal_lock_.lock();
+  normals_.copy(copy.normals_);
+  synchronized_ &= ~Mesh::LOCATE_E;
+  synchronized_ |= copy.synchronized_ & Mesh::LOCATE_E;
+  lcopy.normal_lock_.unlock();
 }
 
 template <class Basis>
