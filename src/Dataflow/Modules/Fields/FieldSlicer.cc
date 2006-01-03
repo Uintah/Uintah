@@ -190,10 +190,11 @@ FieldSlicer::execute()
 
   // Get the dimensions of the mesh.
   // this should be part of the dynamic compilation....
-  string mesh_type = fHandle->get_type_description(Field::MESH_TD_E)->get_name();
+  string mesh_type =
+    fHandle->get_type_description(Field::MESH_TD_E)->get_name();
 
   //FIX_ME MC how do i detect a "ITKLatVolField"
-  if( mesh_type.find("LatVolMesh") != string::npos ||
+  if( mesh_type.find("LatVolMesh"      ) != string::npos ||
       mesh_type.find("StructHexVolMesh") != string::npos ) {
     typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
     LVMesh *lvmInput = (LVMesh*) fHandle->mesh().get_rep();
@@ -204,7 +205,7 @@ FieldSlicer::execute()
 
     dims = 3;
 
-  } else if( mesh_type.find("ImageMesh") != string::npos ||
+  } else if( mesh_type.find("ImageMesh"         ) != string::npos ||
 	     mesh_type.find("StructQuadSurfMesh") != string::npos ) {
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
     IMesh *imInput = (IMesh*) fHandle->mesh().get_rep();
@@ -214,7 +215,7 @@ FieldSlicer::execute()
 
     dims = 2;
 
-  } else if( mesh_type.find("ScanlineMesh") != string::npos ||
+  } else if( mesh_type.find("ScanlineMesh"   ) != string::npos ||
 	     mesh_type.find("StructCurveMesh") != string::npos ) {
     typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
     SLMesh *slmInput = (SLMesh*) fHandle->mesh().get_rep();
@@ -432,9 +433,10 @@ FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
   // Add in the include path to compile this obj
   rval->add_include(include_path);  
 
-  // Structured meshs have a set_point method which is needed. However, it is not
-  // defined for gridded meshes. As such, the include file defined below contains a
-  // compiler flag so that when needed in FieldSlicer.h it is compiled.
+  // Structured meshs have a set_point method which is
+  // needed. However, it is not defined for gridded meshes. As such,
+  // the include file defined below contains a compiler flag so that
+  // when needed in FieldSlicer.h it is compiled.
   if( iftd->get_name().find("StructHexVolMesh"  ) != string::npos ||
       iftd->get_name().find("StructQuadSurfMesh") != string::npos ||
       iftd->get_name().find("StructCurveMesh"   ) != string::npos ||

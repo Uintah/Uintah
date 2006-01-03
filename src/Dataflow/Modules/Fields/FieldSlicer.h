@@ -160,11 +160,11 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   }
 
   // Build the correct output field given the input field and and type.
-  string mesh_tdn = ifield->get_type_description(Field::MESH_TD_E)->get_name(); // FIX_ME DVU
+  string mesh_type =
+    ifield->get_type_description(Field::MESH_TD_E)->get_name();
 
   // 3D LatVol to 2D Image
-  if( mesh_tdn.find("LatVolMesh") != string::npos ) 
-  {  
+  if( mesh_type.find("LatVolMesh"  ) != string::npos ) {  
     typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
 
     IMesh *omesh = scinew IMesh();
@@ -185,7 +185,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
       typedef GenericField<IMesh, ConstantBasis<TYPE>, FData > OField;
       ofield = scinew OField(omesh);
     } else {
-      typedef QuadBilinearLgn<TYPE>                LinBasis;
+      typedef QuadBilinearLgn<TYPE>              LinBasis;
       typedef GenericField<IMesh, LinBasis, FData> OField;
       ofield = scinew OField(omesh);
     }
@@ -195,7 +195,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     // 3D ITKLatVolField to 2D ITKImage
 #ifdef HAVE_INSIGHT
-  } else if( mesh_tdn.find("ITKLatVolField") != string::npos ) {
+  } else if( mesh_type.find("ITKLatVolField") != string::npos ) {
     
     // These really should be ITKImageFields but the conversion will
     // not work so for now make the ImageFields instead.
@@ -217,7 +217,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
       typedef GenericField<IMesh, ConstantBasis<TYPE>, FData > OField;
       ofield = scinew OField(omesh);
     } else {
-      typedef QuadBilinearLgn<TYPE>                LinBasis;
+      typedef QuadBilinearLgn<TYPE>              LinBasis;
       typedef GenericField<IMesh, LinBasis, FData> OField;
       ofield = scinew OField(omesh);
     }
@@ -226,7 +226,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield_h = ofield;
 #endif
     // 3D StructHexVol to 2D StructQuadSurf
-  } else if( mesh_tdn.find("StructHexVolMesh") != string::npos ) {
+  } else if( mesh_type.find("StructHexVolMesh") != string::npos ) {
 
     typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQMesh;
 
@@ -242,7 +242,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
       typedef GenericField<SQMesh, ConstantBasis<TYPE>, FData > OField;
       ofield = scinew OField(omesh);
     } else {
-      typedef QuadBilinearLgn<TYPE>                 LinBasis;
+      typedef QuadBilinearLgn<TYPE>               LinBasis;
       typedef GenericField<SQMesh, LinBasis, FData> OField;
       ofield = scinew OField(omesh);
     }
@@ -252,8 +252,8 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     // 2D Image to 1D Scanline or 
     // 1D Scanline to 0D Scanline
-  } else if( mesh_tdn.find("ImageMesh") != string::npos || 
-	     mesh_tdn.find("ScanlineMesh") != string::npos) {
+  } else if( mesh_type.find("ImageMesh") != string::npos || 
+	     mesh_type.find("ScanlineMesh") != string::npos) {
 
     typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
 
@@ -272,7 +272,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
       typedef GenericField<SLMesh, ConstantBasis<TYPE>, FData > OField;
       ofield = scinew OField(omesh);
     } else {
-      typedef CrvLinearLgn<TYPE>                    LinBasis;
+      typedef CrvLinearLgn<TYPE>                  LinBasis;
       typedef GenericField<SLMesh, LinBasis, FData> OField;
       ofield = scinew OField(omesh);
     }
@@ -282,7 +282,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     // 2D ITKImage to 1D Scanline
 #ifdef HAVE_INSIGHT
-  } else if( mesh_tdn.find("ITKImageField") != string::npos ) {
+  } else if( mesh_type.find("ITKImageField") != string::npos ) {
 
     // These really should be ITKScanlineFields but the conversion will
     // not work so for now make the ScanlineFields instead.
@@ -303,7 +303,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
       typedef GenericField<SLMesh, ConstantBasis<TYPE>, FData > OField;
       ofield = scinew OField(omesh);
     } else {
-      typedef CrvLinearLgn<TYPE>                    LinBasis;
+      typedef CrvLinearLgn<TYPE>                  LinBasis;
       typedef GenericField<SLMesh, LinBasis, FData> OField;
       ofield = scinew OField(omesh);
     }
@@ -312,7 +312,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield_h = ofield;
 #endif
     // 2D StructQuadSurf to 1D StructCurve
-  } else if( mesh_tdn.find("StructQuadSurfMesh") != string::npos ) {
+  } else if( mesh_type.find("StructQuadSurfMesh") != string::npos ) {
     typedef StructCurveMesh<CrvLinearLgn<Point> > SCMesh;
 
     SCMesh *omesh = scinew SCMesh(new_i);
@@ -327,7 +327,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
       typedef GenericField<SCMesh, ConstantBasis<TYPE>, FData > OField;
       ofield = scinew OField(omesh);
     } else {
-      typedef CrvLinearLgn<TYPE>                    LinBasis;
+      typedef CrvLinearLgn<TYPE>                  LinBasis;
       typedef GenericField<SCMesh, LinBasis, FData> OField;
       ofield = scinew OField(omesh);
     }
@@ -336,7 +336,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     ofield_h = ofield;
 
     // 1D StructCurve to 0D PointCloud
-  } else if( mesh_tdn.find("StructCurveMesh") != string::npos ) {
+  } else if( mesh_type.find("StructCurveMesh") != string::npos ) {
 
     typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
     PCMesh *omesh = scinew PCMesh();
@@ -419,10 +419,12 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
 
 #ifndef SET_POINT_DEFINED
   // For structured geometery we need to set the correct plane.
-  string field_type = ifield->get_type_description(Field::MESH_TD_E)->get_name();
-  if( field_type.find("LatVolMesh") != string::npos ||
-      field_type.find("ImageMesh") != string::npos ||
-      field_type.find("ScanlineMesh") != string::npos )
+  string mesh_type =
+    ifield->get_type_description(Field::MESH_TD_E)->get_name();
+
+  if( mesh_type.find("LatVolMesh"  ) != string::npos ||
+      mesh_type.find("ImageMesh"   ) != string::npos ||
+      mesh_type.find("ScanlineMesh") != string::npos )
   {
     Transform trans = imesh->get_transform();
     double offset = 0.0;
