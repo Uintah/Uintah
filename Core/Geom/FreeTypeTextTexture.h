@@ -55,6 +55,7 @@ public:
   enum anchor_e { n, e, s, w, ne, se, sw, nw, c };
   void			set(const string &text);
   void			draw(double x, double y, anchor_e anchor = sw);
+  void                  set_color(double, double, double, double);
   int                   width();
   int                   height();
 private:
@@ -63,6 +64,7 @@ private:
   string		text_;
   FreeTypeFace *	face_;
   bool			dirty_;
+  double                color_[4];
 };
   
 }
