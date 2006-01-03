@@ -173,7 +173,8 @@ StandardTable::computeProps(const InletStream& inStream,
 	}
 
         if ((inStream.d_initEnthalpy)||
-	   (Abs(adiab_enthalpy-enthalpy)/Abs(adiab_enthalpy) < 1.0e-5))
+	    ((Abs(adiab_enthalpy-enthalpy)/Abs(adiab_enthalpy) < 1.0e-4)&&
+	     (mixFrac < 1.0e-4)))
           	current_heat_loss = zero_heat_loss;
         else
   		current_heat_loss=(adiab_enthalpy-enthalpy)/(sensible_enthalpy+small);
