@@ -87,34 +87,30 @@ itcl_class Fusion_Fields_StreamlineAnalyzer {
 
 	toplevel $w
 
-	frame $w.plane_list
-	label $w.plane_list.l -text "List of Planes:"
-	entry $w.plane_list.e -width 40 -text $this-planes-list
-	bind $w.plane_list.e <Return> "$this-c needexecute"
-	pack $w.plane_list.l $w.plane_list.e -side left -fill both -expand 1
+	frame $w.planes -relief groove -borderwidth 2
 
-	
+	frame $w.planes.list
+	label $w.planes.list.l -text "List of Planes:"
+	entry $w.planes.list.e -width 20 -text $this-planes-list
+	bind $w.planes.list.e <Return> "$this-c needexecute"
+	pack $w.planes.list.l $w.planes.list.e -side left -expand 1
+
 	###### Save the plane-quantity since the iwidget resets it
-	frame $w.plane_quant
+	frame $w.planes.quant
 	global $this-planes-quantity
 	set quantity [set $this-planes-quantity]
-	iwidgets::spinint $w.plane_quant.q \
+	iwidgets::spinint $w.planes.quant.q \
 	    -labeltext "Number of evenly-spaced planes: " \
 	    -range {0 100} -step 1 \
 	    -textvariable $this-planes-quantity \
 	    -width 10 -fixed 10 -justify right
 	
-	$w.plane_quant.q delete 0 end
-	$w.plane_quant.q insert 0 $quantity
+	$w.planes.quant.q delete 0 end
+	$w.planes.quant.q insert 0 $quantity
 
-# 	label $w.plane_quant.l -text "List of Planes:"
-# 	entry $w.plane_quant.e -width 40 -text $this-quantity-list -state disabled
-# 	pack $w.plane_quant.l $w.plane_quant.e -side left -fill both -expand 1
+	pack $w.planes.quant.q -side top -expand 1
 
-	pack $w.plane_quant.q -side top -expand 1 -fill x -pady 5
-
-
-	pack $w.plane_list $w.plane_quant -fill x
+	pack $w.planes.list $w.planes.quant -side left -fill x
 
 
 	frame $w.color -relief groove -borderwidth 2
@@ -261,7 +257,7 @@ itcl_class Fusion_Fields_StreamlineAnalyzer {
 	    -side left -anchor w
 
 
-	pack $w.plane_list $w.color $w.windings $w.mesh $w.field $w.misc \
+	pack $w.planes $w.color $w.windings $w.mesh $w.field $w.misc \
 	    -side top -padx 4 -pady 4 -fill both
 
 	makeSciButtonPanel $w $w $this
