@@ -92,6 +92,9 @@ ifeq ($(HAVE_COLLAB_VIS),yes)
 endif
 # CollabVis code end
 
+ifeq ($(IS_OSX),yes)
+  LIBS += -lSystemStubs
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -2866,7 +2866,7 @@ case $host in
     if test "$F77" = "xlf"; then
       SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
     else
-      SCI_TRY_LINK(F,fotran libraries,,$_sci_inc,gfortran,$_sci_lib,,,optional)
+      SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,gfortran,$_sci_lib,,,optional)
       if test "$HAVE_F" = "no"; then
             SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
       fi
@@ -3015,7 +3015,7 @@ case $host in
      ;;
    *)
      SCI_TRY_LINK(BLAS,atlas version of libraries and headers,cblas.h,
-             $_sci_inc,cblas f77blas atlas,$_sci_lib,$F_LIB_FLAG,,$_sci_optional)
+             $_sci_inc,cblas f77blas atlas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
      ;;
 esac
 
@@ -3047,17 +3047,17 @@ if test "$HAVE_BLAS" != "yes"; then
   case $host in
     *aix*)
        SCI_TRY_LINK(BLAS,essl library,,,
-                      essl,$_sci_lib,$F_LIB_FLAG,,required)
+                      essl,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,required)
        ;;
     *dec*)
        SCI_TRY_LINK(BLAS,cxml library,,,
-                      cxml,$_sci_lib,$F_LIB_FLAG,,required)
+                      cxml,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,required)
        ;;
     *)
        # Can't use the "specific" key word as we are testing for a number
        # of different configurations.
        SCI_TRY_LINK(BLAS,blas and cblas libraries-1,cblas.h,
-                    $_sci_inc,cblas blas,$_sci_lib,$F_LIB_FLAG,,optional)
+                    $_sci_inc,cblas blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
        if test "$HAVE_BLAS" = "yes"; then
           HAVE_CBLAS=yes
 	  AC_SUBST(HAVE_CBLAS)
@@ -3065,27 +3065,27 @@ if test "$HAVE_BLAS" != "yes"; then
 	  AC_SUBST(DEF_CBLAS)
        else
           SCI_TRY_LINK(BLAS,blas and scs libraries-2,cblas.h,
-            $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_FLAG,,optional)
+            $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
           if test "$HAVE_BLAS" = "no"; then
              #scs library should be used on the SGI altix
              #SCI_TRY_LINK(BLAS,blas and scs libraries-2,cblas.h,
-             #   $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_FLAG,,optional)
+             #   $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
              SCI_TRY_LINK(BLAS,blas and cblas libraries-2,cblas.h,
-               $_sci_inc,blas,$_sci_lib,$F_LIB_FLAG,,optional)
+               $_sci_inc,blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
              if test "$HAVE_BLAS" = "yes"; then
                 HAVE_CBLAS=yes
                 AC_SUBST(HAVE_CBLAS)
                 DEF_CBLAS="#define HAVE_CBLAS 1"
                 AC_SUBST(DEF_CBLAS)
              else
-                SCI_TRY_LINK(BLAS,blas library,,,blas g2c,$_sci_lib,$F_LIB_FLAG,,optional)
+                SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
                 if test "$HAVE_BLAS" = "no"; then
 	           SCI_TRY_LINK(BLAS,optional fblas library,,,
-		   	     fblas,$_sci_lib,$F_LIB_FLAG,,optional)
+		   	     fblas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
                 else
                    # Verify it was in the right spot
                    if test "$_sci_specific" = "yes"; then
-                     SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,specific)
+                     SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,specific)
                    fi
                 fi
              fi
@@ -3141,7 +3141,7 @@ case $host in
      fi
      ;;
    *)
-     SCI_TRY_LINK(LAPACK,lapack library,,,lapack g2c,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+     SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
      ;;
 esac
 
@@ -3495,7 +3495,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     done  
   fi
 
-# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
 # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
   SCI_TRY_LINK(PETSC,
@@ -3503,7 +3503,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
                petsc.h,
                $_sci_inc /usr/include/petsc,
                petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-               $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
+               $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
                $INC_MPI_H -DMPIPP_H,
                ,
                optional)
@@ -3518,7 +3518,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
                    petsc.h,
                    $_sci_inc /usr/include/petsc,
                    petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-                   $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
+                   $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
                    $INC_MPI_H -DMPIPP_H,
                    ,
                    optional)
@@ -3556,7 +3556,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
                  $_sci_inc /usr/include/petsc,
                  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
                  $_sci_lib,
-                 $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H,
+                 $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
                  ,
                  optional)
 
@@ -3570,7 +3570,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
                    $_sci_inc /usr/include/petsc,
                    petsc petscvec petscmat petscdm petscsnes petscts,
                    $_sci_lib,
-                   $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H,
+                   $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
                    ,
                    optional)
       if test "$HAVE_PETSC_UNI" = "yes" ; then
