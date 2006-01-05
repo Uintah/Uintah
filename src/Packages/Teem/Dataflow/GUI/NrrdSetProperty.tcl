@@ -144,7 +144,11 @@ itcl_class Teem_NrrdData_NrrdSetProperty {
 			-textvariable $this-property-$i -width 16 \
 			-state $state
 		    labelcombo $entries.e-$i.type \
-			{unknown int float double string other} \
+			{unknown bool
+			    "unsigned char"  char
+			    "unsigned short" short
+			    "unisgned int"   int
+			    float double string other} \
 			$this-type-$i \
 			$state
 		    entry $entries.e-$i.value \
