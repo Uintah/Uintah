@@ -10772,7 +10772,7 @@ if test -n "m"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -11308,7 +11308,7 @@ if test -n "X11 Xext Xaw Xi Xt Xmu"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -11848,7 +11848,7 @@ if test -n "fetchop"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -12292,7 +12292,7 @@ if test -n "pthread"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -13004,7 +13004,7 @@ if test -n "glu32 opengl32 gdi32 $GLU_OTHERS"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -13482,7 +13482,7 @@ if test -n "GLU GL $GLU_OTHERS"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -14608,7 +14608,7 @@ if test -n "c"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -15093,7 +15093,7 @@ if test -n "dl"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -15539,7 +15539,7 @@ if test -n "dl"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -15992,7 +15992,7 @@ if test -n ""; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -16443,7 +16443,7 @@ if test -n ""; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -16885,7 +16885,7 @@ if test -n ""; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -17325,7 +17325,7 @@ if test -n ""; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -17769,7 +17769,7 @@ if test -n ""; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -18222,7 +18222,7 @@ if test -n ""; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -18902,7 +18902,7 @@ if test -n "tcl"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -19442,7 +19442,7 @@ if test -n "tk $TCL_LIB_FLAG"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -19954,7 +19954,7 @@ if test -n "itcl"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -20486,7 +20486,7 @@ if test -n "itk"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -20998,7 +20998,7 @@ if test -n "BLT"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -21734,7 +21734,7 @@ if test -n "$_xer_lib"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -22214,7 +22214,7 @@ if test -n ""; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -22716,7 +22716,7 @@ if test -n "imagehlp"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -23194,7 +23194,7 @@ if test -n "exc"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -23710,7 +23710,7 @@ if test -n "z"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -24222,7 +24222,7 @@ if test -n "jpeg"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -24717,7 +24717,7 @@ if test -n "tiff"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -25254,7 +25254,7 @@ if test -n "png"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -25816,7 +25816,7 @@ if test -n "png"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -26331,7 +26331,7 @@ if test -n "mpege"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -26931,7 +26931,7 @@ if test -n "$MAGICK_LIB_FLAG"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -27495,7 +27495,7 @@ if test -n "unp scisock"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -27963,7 +27963,7 @@ if test -n "ftn fortran"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -28403,7 +28403,7 @@ if test -n "xlf90"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -28844,7 +28844,7 @@ if test -n "pgftnrtl"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -29282,7 +29282,7 @@ if test -n "gfortran"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -29720,7 +29720,7 @@ if test -n "ifcore"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -30158,7 +30158,7 @@ if test -n "g2c"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -30598,7 +30598,7 @@ if test -n "for Ufor"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -31079,7 +31079,7 @@ if test -n "xlf90"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -31417,7 +31417,7 @@ _sci_includes=''
     else
 
 ##
-## SCI_TRY_LINK (F):  fotran libraries
+## SCI_TRY_LINK (F):  fortran libraries
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -31449,7 +31449,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fotran libraries
+## arg 2 : fortran libraries
 ## arg 3 :
 ## arg 4 : $_sci_inc
 ## arg 5 : gfortran
@@ -31469,14 +31469,14 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for fotran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for fotran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
 
-echo "$as_me:$LINENO: checking for fotran libraries (optional)" >&5
-echo $ECHO_N "checking for fotran libraries (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for fortran libraries (optional)" >&5
+echo $ECHO_N "checking for fortran libraries (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -31486,8 +31486,8 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for fotran libraries must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for fotran libraries must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -31557,7 +31557,7 @@ if test -n "gfortran"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -31888,7 +31888,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fotran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries
 ##
 
 
@@ -32035,7 +32035,7 @@ if test -n "g2c"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -32477,7 +32477,7 @@ if test -n "g2c"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -32916,7 +32916,7 @@ if test -n "F77"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -33454,7 +33454,7 @@ if test -n "java jvm"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -33993,7 +33993,7 @@ if test -n "CMLTet210 CMLUtl210"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -34474,7 +34474,7 @@ if test -n "CMLTet202"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -34998,7 +34998,7 @@ if test -n ""; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -35374,7 +35374,7 @@ _sci_includes=''
 ## arg 4 : $_sci_inc
 ## arg 5 : cblas f77blas atlas
 ## arg 6 : $_sci_lib
-## arg 7 : $F_LIB_FLAG
+## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
@@ -35477,7 +35477,7 @@ if test -n "cblas f77blas atlas"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -35598,7 +35598,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -35881,7 +35881,7 @@ if test "$HAVE_BLAS" != "yes"; then
 ## arg 4 :
 ## arg 5 : essl
 ## arg 6 : $_sci_lib
-## arg 7 : $F_LIB_FLAG
+## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : required
 ##
@@ -35944,7 +35944,7 @@ if test -n "essl"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -36065,7 +36065,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -36320,7 +36320,7 @@ _sci_includes=''
 ## arg 4 :
 ## arg 5 : cxml
 ## arg 6 : $_sci_lib
-## arg 7 : $F_LIB_FLAG
+## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : required
 ##
@@ -36383,7 +36383,7 @@ if test -n "cxml"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -36504,7 +36504,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -36761,7 +36761,7 @@ _sci_includes=''
 ## arg 4 : $_sci_inc
 ## arg 5 : cblas blas
 ## arg 6 : $_sci_lib
-## arg 7 : $F_LIB_FLAG
+## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -36864,7 +36864,7 @@ if test -n "cblas blas"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -36985,7 +36985,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -37244,7 +37244,7 @@ _sci_includes=''
 ## arg 4 : $_sci_inc
 ## arg 5 : blas scs_mp
 ## arg 6 : $_sci_lib
-## arg 7 : $F_LIB_FLAG
+## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -37347,7 +37347,7 @@ if test -n "blas scs_mp"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -37468,7 +37468,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -37685,7 +37685,7 @@ _sci_includes=''
           if test "$HAVE_BLAS" = "no"; then
              #scs library should be used on the SGI altix
              #SCI_TRY_LINK(BLAS,blas and scs libraries-2,cblas.h,
-             #   $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_FLAG,,optional)
+             #   $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
 
 ##
 ## SCI_TRY_LINK (BLAS):  blas and cblas libraries-2
@@ -37725,7 +37725,7 @@ _sci_includes=''
 ## arg 4 : $_sci_inc
 ## arg 5 : blas
 ## arg 6 : $_sci_lib
-## arg 7 : $F_LIB_FLAG
+## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -37828,7 +37828,7 @@ if test -n "blas"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -37949,7 +37949,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -38206,9 +38206,9 @@ _sci_includes=''
 ## arg 2 : blas library
 ## arg 3 :
 ## arg 4 :
-## arg 5 : blas g2c
+## arg 5 : blas
 ## arg 6 : $_sci_lib
-## arg 7 : $F_LIB_FLAG
+## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -38249,10 +38249,10 @@ fi
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "blas g2c"; then
+if test -n "blas"; then
 
    found_framework=no
-   for lib in "" blas g2c; do
+   for lib in "" blas; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -38271,7 +38271,7 @@ if test -n "blas g2c"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -38392,7 +38392,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -38575,7 +38575,7 @@ echo "$as_me: error: Specifically requested BLAS include file '/$i' was not foun
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" blas g2c; do
+  for i in "" blas; do
     if test -z "$i"; then
        continue
     fi
@@ -38646,7 +38646,7 @@ _sci_includes=''
 ## arg 4 :
 ## arg 5 : fblas
 ## arg 6 : $_sci_lib
-## arg 7 : $F_LIB_FLAG
+## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -38709,7 +38709,7 @@ if test -n "fblas"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -38830,7 +38830,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -39086,7 +39086,7 @@ _sci_includes=''
 ## arg 4 :
 ## arg 5 : blas
 ## arg 6 : $_sci_lib
-## arg 7 : $F_LIB_FLAG
+## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : specific
 ##
@@ -39149,7 +39149,7 @@ if test -n "blas"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -39270,7 +39270,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -39636,7 +39636,7 @@ if test -n ""; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -40013,7 +40013,7 @@ _sci_includes=''
 ## arg 2 : lapack library
 ## arg 3 :
 ## arg 4 :
-## arg 5 : lapack g2c
+## arg 5 : lapack
 ## arg 6 : $_sci_lib
 ## arg 7 : $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -40056,10 +40056,10 @@ fi
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "lapack g2c"; then
+if test -n "lapack"; then
 
    found_framework=no
-   for lib in "" lapack g2c; do
+   for lib in "" lapack; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -40078,7 +40078,7 @@ if test -n "lapack g2c"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -40382,7 +40382,7 @@ echo "$as_me: error: Specifically requested LAPACK include file '/$i' was not fo
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" lapack g2c; do
+  for i in "" lapack; do
     if test -z "$i"; then
        continue
     fi
@@ -40519,7 +40519,7 @@ if test -n "flapack"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -40968,7 +40968,7 @@ if test -n "complib.sgimath"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -41408,7 +41408,7 @@ if test -n "complib.sgimath_mp"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -41958,7 +41958,7 @@ if test -n "mpi lam util pmpi"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -42450,7 +42450,7 @@ if test -n "mpi lam util pthread"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -42940,7 +42940,7 @@ if test -n "lam mpi"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -43429,7 +43429,7 @@ if test -n "mpi"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -43918,7 +43918,7 @@ if test -n "mpich pmpich"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -44598,7 +44598,7 @@ if test -n "mpiuni"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -45077,7 +45077,7 @@ if test -n "mpiunich pmpiunich"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -45486,7 +45486,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     done
   fi
 
-# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
 # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
 
@@ -45527,7 +45527,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
 ## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
-## arg 6 : $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG
+## arg 6 : $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG
 ## arg 7 : $INC_MPI_H -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
@@ -45631,7 +45631,7 @@ if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_L
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -45663,9 +45663,9 @@ fi
 
 ### Take care of arg 6 (the list of lib paths)
 
-if test -n "$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"; then
+if test -n "$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"; then
 
-   for path in "" $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
+   for path in "" $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
 
       if test -z "$path"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -45701,12 +45701,12 @@ fi
 
 if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG (I don't know of a better way to do this.)
+  ### Determine if there is only one item in $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
+  for value in "" $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
     if test "$value" = ""; then
       continue
     fi
@@ -45718,8 +45718,8 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
@@ -45816,7 +45816,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-eval LIB_DIR_PETSC='"$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"'
+eval LIB_DIR_PETSC='"$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -45943,9 +45943,9 @@ echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/i
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
+    if test ! -e $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -46010,7 +46010,7 @@ _sci_includes=''
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
 ## arg 5 : petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
-## arg 6 : $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG
+## arg 6 : $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG
 ## arg 7 : $INC_MPI_H -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
@@ -46114,7 +46114,7 @@ if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petsc
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -46146,9 +46146,9 @@ fi
 
 ### Take care of arg 6 (the list of lib paths)
 
-if test -n "$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"; then
+if test -n "$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"; then
 
-   for path in "" $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
+   for path in "" $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
 
       if test -z "$path"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -46184,12 +46184,12 @@ fi
 
 if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG (I don't know of a better way to do this.)
+  ### Determine if there is only one item in $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
+  for value in "" $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
     if test "$value" = ""; then
       continue
     fi
@@ -46201,8 +46201,8 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
@@ -46299,7 +46299,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-eval LIB_DIR_PETSC='"$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"'
+eval LIB_DIR_PETSC='"$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -46426,9 +46426,9 @@ echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/i
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
+    if test ! -e $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -46518,7 +46518,7 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
 ## arg 4 : $_sci_inc /usr/include/petsc
 ## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscksp
 ## arg 6 : $_sci_lib
-## arg 7 : $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H
+## arg 7 : $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -46621,7 +46621,7 @@ if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscksp"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -46742,7 +46742,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H $LIBS"
+LIBS="$_sci_libs $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -47000,7 +47000,7 @@ _sci_includes=''
 ## arg 4 : $_sci_inc /usr/include/petsc
 ## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts
 ## arg 6 : $_sci_lib
-## arg 7 : $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H
+## arg 7 : $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -47103,7 +47103,7 @@ if test -n "petsc petscvec petscmat petscdm petscsnes petscts"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -47224,7 +47224,7 @@ fi
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H $LIBS"
+LIBS="$_sci_libs $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -47931,7 +47931,7 @@ if test -n "sidl"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -48504,7 +48504,7 @@ if test -n "netsolve"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -49124,7 +49124,7 @@ if test -n "glut"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -49794,7 +49794,7 @@ if test -n "glui"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -50310,7 +50310,7 @@ if test -n "oogl"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -50849,7 +50849,7 @@ if test -n "GLEW"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -51388,7 +51388,7 @@ if test -n "freetype"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -51911,7 +51911,7 @@ if test -n "ftgl"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -52373,7 +52373,7 @@ if test -n "audio audiofile"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -52947,7 +52947,7 @@ if test -n "teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -53505,7 +53505,7 @@ if test -n "MdsLib_client"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -54023,7 +54023,7 @@ if test -n "hdf5"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -54481,7 +54481,7 @@ if test -n "perfex"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -54938,7 +54938,7 @@ if test -n "crypto"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -55406,7 +55406,7 @@ if test -n "ssl crypto"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -55927,7 +55927,7 @@ if test -n "globus_dc pthread"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -56709,7 +56709,7 @@ if test -n "ncurses panel menu"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -57220,7 +57220,7 @@ if test -n "qt-mt Xxf86vm"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -57781,7 +57781,7 @@ if test -n "ruby-static"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -58294,7 +58294,7 @@ if test -n "TAO_IORTable TAO_PortableServer TAO_IORInterceptor TAO ACE"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -58804,7 +58804,7 @@ if test -n "vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtk
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -59337,7 +59337,7 @@ if test -n "$_vdt_libs"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -59855,7 +59855,7 @@ if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HY
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -60406,7 +60406,7 @@ if test -n "boost_program_options-$boost_ver"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -60929,7 +60929,7 @@ if test -n "loki"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.

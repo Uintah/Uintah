@@ -436,7 +436,7 @@ if test -n "$5"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
 
-         if test -n "$has_minus_framework"; then
+         if test -z "$has_minus_framework"; then
             # Two rounds for this loop with respect to frameworks.
             # First round is to skip adding -l to the beginning of -framework.
             # Second round is to not add -l to the framework lib.
@@ -452,7 +452,7 @@ if test -n "$5"; then
             continue
          fi
       fi
-   
+
       the_lib=`echo $lib | grep "\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.

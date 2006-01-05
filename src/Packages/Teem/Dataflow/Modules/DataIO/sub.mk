@@ -60,9 +60,12 @@ PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY) $(INSIGHT_LIBRARY)
 
+ifeq ($(IS_OSX),yes)
+  LIBS += -lSystemStubs
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(LARGESOS),no)
-TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
+  TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
 endif
