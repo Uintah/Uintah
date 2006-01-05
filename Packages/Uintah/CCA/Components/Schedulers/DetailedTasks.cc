@@ -801,6 +801,7 @@ operator<<(ostream& out, const DetailedTask& task)
 {
   out << task.getTask()->getName();
   const PatchSubset* patches = task.getPatches();
+  const Level* level = getLevel(patches);
   if(patches){
     out << ", on patch";
     if(patches->size() > 1)
@@ -812,6 +813,7 @@ operator<<(ostream& out, const DetailedTask& task)
       out << patches->get(i)->getID();
     }
   }
+  out << ", Level " << level->getIndex();
   const MaterialSubset* matls = task.getMaterials();
   if(matls){
     out << ", on material";
