@@ -121,17 +121,65 @@ NrrdSetProperty::execute()
   
     // Add the current properties to the display.
     for( unsigned int ic=0; ic<nHandle->nproperties(); ic++ ) {
-      int    p_int;
-      float  p_float;
-      double p_double;
-      string p_string;
+      bool           p_bool;
+      unsigned char  p_uchar;
+      char           p_char;
+      unsigned short p_ushort;
+      short          p_short;
+      unsigned int   p_uint;
+      int            p_int;
+      float          p_float;
+      double         p_double;
+      string         p_string;
 
       string pname = nHandle->get_property_name( ic );
       string type("other");
       string value("Can not display");
       int readonly = 1;
 
-      if( nHandle->get_property( pname, p_int ) ) {
+      if( nHandle->get_property( pname, p_bool ) ) {
+	type = string( "bool" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_bool );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( nHandle->get_property( pname, p_uchar ) ) {
+	type = string( "unsigned char" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_uchar );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( nHandle->get_property( pname, p_char ) ) {
+	type = string( "char" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_char );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( nHandle->get_property( pname, p_ushort ) ) {
+	type = string( "unsigned short" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_ushort );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( nHandle->get_property( pname, p_short ) ) {
+	type = string( "short" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_short );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( nHandle->get_property( pname, p_uint ) ) {
+	type = string( "unsigned int" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%d", p_uint );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( nHandle->get_property( pname, p_int ) ) {
 	type = string( "int" );
 	char tmpStr[128];
 	sprintf( tmpStr, "%d", p_int );
