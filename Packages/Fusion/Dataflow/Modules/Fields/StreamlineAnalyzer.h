@@ -1402,10 +1402,10 @@ execute(FieldHandle& ifield_h,
 
     if( *inodeItr == inodeNext ) {
 
-      points.clear();
-
 //      cerr << "Starting new streamline winding "
 //	   << count << "  " << *inodeItr << endl;
+
+      points.clear();
 
       imesh->get_center(lastPt, *inodeItr);
       lastAng = atan2( lastPt.y(), lastPt.x() );      
@@ -1419,7 +1419,7 @@ execute(FieldHandle& ifield_h,
 	
     imesh->get_center(currPt, *inodeItr);
     currAng = atan2( currPt.y(), currPt.x() );
-    
+
     // First look at only points that are in the correct plane.
     if( ( CCWstreamline && lastAng < plane && plane <= currAng) ||
 	(!CCWstreamline && currAng < plane && plane <= lastAng) ) {
@@ -1432,28 +1432,16 @@ execute(FieldHandle& ifield_h,
 
       Point point = interpert( lastPt, currPt, t );
 
-      // Save the point found before the zero plane for CCW
-      // streamlines or point found after the zero plane for CW
-      // streamlines.
+      // Save the point found before the zero plane.
       if( points.size() == 0 ) {
-	typename IFIELD::mesh_type::Node::iterator inodeFirst = inodeItr;
+	--inodeItr;
 
-	--inodeFirst;
+	inodeGlobalStart.push_back( *inodeItr );
 
-	if( CCWstreamline )
-	  inodeGlobalStart.push_back( *inodeFirst );
-	else
-	  inodeGlobalStart.push_back( *inodeItr );
+	++inodeItr;
       }
 
-      // If overriding skip all the other points.
-      if( 0 && override ) {
-	while (*inodeItr != inodeNext)
-	  ++inodeItr;
-
-	--inodeItr;
-      } else
-	points.push_back( point );
+      points.push_back( point );
     }
 
     lastPt  = currPt;
@@ -1714,45 +1702,47 @@ execute(FieldHandle& ifield_h,
 	  skips.push_back( 0 );
 	  islands.push_back( 0 );
 
-	// If one or two possible windings take the smallest.
-	} else if( 0 < windingList.size() && windingList.size() <= 2 ) {
+	} else if( windingList.size() == 1 ) {
 
 	  windings.push_back( windingList[0] );
 
-	// Top two windings are the same ... take the smallest.
+	// If two possible windings take based on the order preference.
+	} else if( windingList.size() == 2 ) {
+
+	  windings.push_back( windingList[order] );
+
+	  // Top two windings are the same ...
+	  // take based on the order preference.
 	} else if( LengthMin.first  == AngleMin.first &&
 		   LengthMin2.first == AngleMin2.first )  {
-
-	  if( LengthMin.first < LengthMin2.first )
+	  
+	  if( (order == 0 && LengthMin.first < LengthMin2.first) ||
+	      (order == 1 && LengthMin.first > LengthMin2.first) )
 	    windings.push_back( LengthMin.first );
-	  else //if( LengthMin2.first < LengthMin.first )
+	  else
 	    windings.push_back( LengthMin2.first );
 
-	// Top two windings are the same but mixed ... take the smallest.
+	  // Top two windings are the same but mixed ...
+	  // take based on the order preference.
 	} else if( LengthMin.first == AngleMin2.first &&
 		   LengthMin2.first == AngleMin.first ) {
 
-	  if( LengthMin.first < AngleMin.first )
+	  if( (order == 0 && LengthMin.first < LengthMin2.first) ||
+	      (order == 1 && LengthMin.first > LengthMin2.first) )
 	    windings.push_back( LengthMin.first );
-	  else //if( AngleMin.first < LengthMin.first )
+	  else
 	    windings.push_back( AngleMin.first );
 
 	} else if( LengthMin.first == AngleMin.first ) {
 
 	  windings.push_back( LengthMin.first );
 
-	} else if( LengthMin.first < AngleMin2.first ) {
-
-	  windings.push_back( LengthMin.first );
-
-	} else if( LengthMin2.first < AngleMin.first ) {
-
-	  windings.push_back( LengthMin2.first );
-
 	} else {
-	  if( LengthMin.first < AngleMin.first )
+
+	  if( (order == 0 && LengthMin.first < LengthMin2.first) ||
+	      (order == 1 && LengthMin.first > LengthMin2.first) )
 	    windings.push_back( LengthMin.first );
-	  else //if( AngleMin.first < LengthMin.first )
+	  else
 	    windings.push_back( AngleMin.first );
 	}
 
@@ -1881,6 +1871,7 @@ execute(FieldHandle& ifield_h,
 
       imesh->get_center(lastPt, *inodeItr);
       lastAng = atan2( lastPt.y(), lastPt.x() );
+
       // If the plane is near PI which where through zero happens with
       // atan2 adjust the angle so that the through zero is at 0 - 2PI
       // instead.
