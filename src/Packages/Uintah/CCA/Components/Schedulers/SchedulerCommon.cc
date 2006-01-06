@@ -891,7 +891,6 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     addTask(dataTasks[i], newLevel->eachPatch(), d_sharedState->allMaterials());
     if (i > 0) {
       sim->scheduleRefineInterface(newLevel, sched, 1, 1);
-      sim->scheduleSetBC_FineLevel(newLevel, sched, 1, 1);
     }
   }
 
