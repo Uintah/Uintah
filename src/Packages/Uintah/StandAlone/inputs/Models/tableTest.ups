@@ -27,19 +27,19 @@
         <BCType id = "0" label = "Pressure"      var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"    var = "Neumann">
+        <BCType id = "0" label = "Velocity"    var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "all" label = "Temperature" var = "Neumann">
+        <BCType id = "0" label = "Temperature" var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" label = "Density"     var = "Neumann">
+        <BCType id = "0" label = "Density"     var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" label = "scalar-f"    var = "Neumann">
+        <BCType id = "0" label = "scalar-f"    var = "Neumann">
                               <value> 0.0</value>
         </BCType>
-        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+        <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>  
@@ -47,19 +47,19 @@
         <BCType id = "0" label = "Pressure"       var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
+        <BCType id = "0" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
+        <BCType id = "0" label = "Temperature"  var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
+        <BCType id = "0" label = "Density"      var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" label = "scalar-f"     var = "Neumann">
+        <BCType id = "0" label = "scalar-f"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
-        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+        <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
