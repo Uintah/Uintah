@@ -360,10 +360,16 @@ main( int argc, char** argv )
         usage("Error parsing -layout", argv[i], argv[0]);
       layout = IntVector(ii,jj,kk);
     } else {
-      if(filename!="")
+      if(filename!="") {
         usage("", s, argv[0]);
-      else
+      } else if( argv[i][0] == '-' ) { // Don't allow 'filename' to begin with '-'.
+        usage("Error!  It appears that the filename you specified begins with a '-'.\n"
+              "        This is not allowed.  Most likely there is problem with your\n"
+              "        command line.",
+              argv[i], argv[0]);        
+      } else {
         filename = argv[i];
+      }
     }
   }
 
