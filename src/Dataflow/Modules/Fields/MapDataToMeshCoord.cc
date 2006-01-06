@@ -106,13 +106,13 @@ MapDataToMeshCoord::execute()
     return;
   }
 
-  const TypeDescription *ftd = ifield->get_type_description();
-  string sname = ftd->get_name("", "");
-  if (sname.find("TetVolMesh") == string::npos &&
-      sname.find("HexVolMesh") == string::npos &&
-      sname.find("TriSurfMesh") == string::npos &&
-      sname.find("QuadSurfMesh") == string::npos &&
-      sname.find("CurveMesh") == string::npos &&
+  string sname = ifield->get_type_description(Field::MESH_TD_E)->get_name();
+
+  if (sname.find("TetVolMesh")     == string::npos &&
+      sname.find("HexVolMesh")     == string::npos &&
+      sname.find("TriSurfMesh")    == string::npos &&
+      sname.find("QuadSurfMesh")   == string::npos &&
+      sname.find("CurveMesh")      == string::npos &&
       sname.find("PointCloudMesh") == string::npos) {
     error("Can't change coordinates of this field (mesh) type.");
     return;
@@ -120,7 +120,7 @@ MapDataToMeshCoord::execute()
 
   int coord = gui_coord_.get();
   if (coord == 3) {
-    if (sname.find("TriSurfMesh") == string::npos &&
+    if (sname.find("TriSurfMesh")  == string::npos &&
 	sname.find("QuadSurfMesh") == string::npos) {
       error("Can't get a normal from this type of mesh.");
       return;
@@ -133,6 +133,8 @@ MapDataToMeshCoord::execute()
   {
     last_generation_ = ifield->generation;
     last_gui_coord_ = coord;
+
+    const TypeDescription *ftd = ifield->get_type_description();
 
     CompileInfoHandle ci = MapDataToMeshCoordAlgo::get_compile_info(ftd);
 
