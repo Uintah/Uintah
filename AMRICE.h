@@ -24,11 +24,6 @@ namespace Uintah {
                                          int step, 
                                          int nsteps);
                                          
-    virtual void scheduleSetBC_FineLevel(const LevelP& fineLevel,
-                                         SchedulerP& scheduler,
-                                         int step, 
-                                         int nsteps);
-                                         
     virtual void scheduleRefine (const PatchSet* patches, 
                                  SchedulerP& sched); 
                                                                     
