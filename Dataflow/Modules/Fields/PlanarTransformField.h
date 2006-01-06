@@ -82,7 +82,10 @@ PlanarTransformFieldAlgoT<FIELD>::execute(FieldHandle& ifield_h,
 
   Transform trans;
 
-  if( ifield->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "CurveField" ) {
+  string if_name =
+    ifield->get_type_description(Field::MESH_TD_E)->get_name();
+
+  if (if_name.find("CurveMesh") != string::npos ) {
     const BBox bbox = ofield->mesh()->get_bounding_box();
 
     if (bbox.valid()) {
