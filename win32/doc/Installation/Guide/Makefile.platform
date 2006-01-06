@@ -1,0 +1,112 @@
+# -*- makefile -*-
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+# Build platform specific IG.
+
+platform := ${notdir ${shell pwd}}
+treetop := ../../../..
+edition := ${treetop}/src/main/sci_version.h
+
+params_common = treetop=${treetop} profile.os=${platform} use.extensions=1
+
+stylesheet_chunk := ${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
+params_chunk = ${params_common} chunk.section.depth=2 use.id.as.filename=1
+
+stylesheet_nochunk := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
+params_nochunk = ${params_common}
+
+printfigures := ${patsubst %.gif,%.print.gif,${filter-out %.print.gif,${wildcard ../Figures/*.gif}}}
+
+# Either dsssl or fop
+processor=fop
+
+ifeq (${processor},fop)
+stylesheet_print := ${STYLESHEET_XSL_PRINT}/profile-docbook.xsl
+params_print := ${params_common} section.autolabel=1 ulink.footnotes=1 \
+  section.label.includes.component.label=1 fop.extensions=1 \
+  double.sided=1
+else
+stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
+params_print := -V %footnote-ulinks% -V %section-autolabel% \
+  -V %generate-article-toc% -V bop-footnotes
+endif
+
+rxmlsrcs := ${wildcard ../*.rxml}
+
+.PHONY: all html print clean veryclean
+.DELETE_ON_ERROR:
+
+all: html print
+
+printfigs: ${printfigures}
+
+vpath %.rxml ../
+
+# Implicit rule to generate sources for html output
+%.hxml : %.rxml
+	PLATFORM=${platform} TREETOP=${treetop} OUTPUT_MODE=html eruby --delimiters xml $< > $@
+
+# Implicit rule to generate sources for print output
+%.pxml : %.rxml
+	PLATFORM=${platform} TREETOP=${treetop} OUTPUT_MODE=print eruby --delimiters xml $< > $@
+
+# Implicit rule to generate print oriented figures.
+%.print.gif : %.gif
+	convert -density 72 -geometry '360x432>' $< GIF:$@
+
+# Build html version
+html: srig.html
+hxmlsrcs := ${subst .rxml,.hxml,${notdir ${rxmlsrcs}}}
+srig.html: ${hxmlsrcs} ${edition}
+	java com.icl.saxon.StyleSheet -w2 \
+          main.hxml ${stylesheet_nochunk} ${params_nochunk}  >$@
+	java com.icl.saxon.StyleSheet -w2 \
+          main.hxml ${stylesheet_chunk} ${params_chunk}
+
+# Build print version
+print: srig.pdf
+pxmlsrcs := ${subst .rxml,.pxml,${notdir ${rxmlsrcs}}}
+srig.pdf : ${pxmlsrcs} ${edition} ${printfigures}
+ifeq (${processor},fop)
+	java com.icl.saxon.StyleSheet -w2 -o srig.fo \
+          main.pxml ${stylesheet_print} ${params_print} >$@
+	fop -fo srig.fo -pdf srig.pdf
+else
+	openjade -t tex -V tex-backend -c ${CATALOG} -o srig.tex \
+          -d ${stylesheet_print} ${params_print} ${XML_DCL} main.pxml
+	for i in 1 2 3; do jadetex srig.tex ; done
+	dvipdfm -p letter srig.dvi
+endif
+
+clean:
+	-rm -f *.[ph]xml srig.aux srig.log srig.out srig.dvi srig.tex \
+Figures/*.*.print *~
+
+veryclean: clean
+	-rm -f *.html srig.pdf

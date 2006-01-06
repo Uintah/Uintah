@@ -1,0 +1,131 @@
+# SCIRun Network v1.25.0
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
+set name {Main}
+set bbox {19 6 536 572}
+set creationDate {Fri Dec 02 2005}
+set creationTime {14:02:22}
+set runDate {}
+set runTime {}
+set notes {}
+set geometry {800x800+0+0}
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 156 6]
+
+# Create a SCIRun->FieldsData->Gradient Module
+set m2 [addModuleAtPosition "SCIRun" "FieldsData" "Gradient" 19 99]
+
+# Create a Teem->Converters->FieldToNrrd Module
+set m3 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 109 263]
+
+# Create a Teem->Converters->FieldToNrrd Module
+set m4 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 183 100]
+
+# Create a Teem->UnuAtoM->UnuJoin Module
+set m5 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 338 344]
+
+# Create a SCIRun->FieldsData->DirectMapping Module
+set m6 [addModuleAtPosition "SCIRun" "FieldsData" "DirectMapping" 100 193]
+
+# Create a Teem->NrrdData->NrrdInfo Module
+set m7 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 371 441]
+
+# Create a Teem->UnuAtoM->UnuCrop Module
+set m8 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 120 415]
+
+# Create a Teem->NrrdData->NrrdInfo Module
+set m9 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 150 515]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m2 0]
+set c2 [addConnection $m1 0 $m4 0]
+set c3 [addConnection $m6 0 $m3 0]
+set c4 [addConnection $m2 0 $m6 0]
+set c5 [addConnection $m3 2 $m5 0]
+set c6 [addConnection $m8 0 $m9 0]
+set c7 [addConnection $m5 0 $m7 0]
+set c8 [addConnection $m5 0 $m8 0]
+set c9 [addConnection $m1 0 $m6 1]
+set c10 [addConnection $m4 2 $m5 1]
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m1-filename "$DATADIR/$DATASET/$DATASET-voltage.tvd.fld"
+
+# Set GUI variables for the Teem->Converters->FieldToNrrd Module
+set $m3-label {gradients}
+
+# Set GUI variables for the Teem->Converters->FieldToNrrd Module
+set $m4-label {potentials}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuJoin Module
+set $m5-dim {2}
+set $m5-ui_geometry {314x103+25+140}
+
+# Open the Teem->UnuAtoM->UnuJoin UI
+$m5 initialize_ui
+
+# Set GUI variables for the SCIRun->FieldsData->DirectMapping Module
+set $m6-exhaustive_search {1}
+
+# Set GUI variables for the Teem->NrrdData->NrrdInfo Module
+set $m7-name {Unknown}
+set $m7-type {double}
+set $m7-dimension {2}
+set $m7-origin {---}
+set $m7-ui_geometry {447x507+20+117}
+
+# Open the Teem->NrrdData->NrrdInfo UI
+$m7 initialize_ui
+
+# Set GUI variables for the Teem->UnuAtoM->UnuCrop Module
+set $m8-num-axes {2}
+set $m8-uis {2}
+set $m8-maxAxis0 {2}
+set $m8-absmaxAxis0 {3}
+set $m8-maxAxis1 {999}
+set $m8-absmaxAxis1 {999}
+set $m8-ui_geometry {398x223+15+94}
+
+# Open the Teem->UnuAtoM->UnuCrop UI
+$m8 initialize_ui
+
+# Set GUI variables for the Teem->NrrdData->NrrdInfo Module
+set $m9-name {Unknown}
+set $m9-type {double}
+set $m9-dimension {2}
+set $m9-origin {---}
+set $m9-ui_geometry {447x507+10+71}
+
+# Open the Teem->NrrdData->NrrdInfo UI
+$m9 initialize_ui
+
+
+::netedit scheduleok

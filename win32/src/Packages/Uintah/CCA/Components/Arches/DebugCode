@@ -1,0 +1,851 @@
+This file contains debug code snippets that someone
+might want to copy from for their own use.  The 
+objective is to clean up code and leave it bereft of
+debug statements.  I have just taken these from 
+different files, and have listed them by filename,
+if anyone (including me) wants to use them.
+
+Kumar
+March 19, 2002
+
+Properties.cc
+
+#define scalarSolve_debug
+#ifdef scalarSolve_debug
+    int itest = 9;
+    int jtest = 9;
+    int ktest = 9;
+#endif
+
+#ifdef ARCHES_DEBUG
+	    if ((colX==9) && (colY==9) && (colZ==9))
+	      cerr << "Mixture Vars at test = " << (scalar[ii])[currCell];
+#endif
+#ifdef scalarSolve_debug
+	    if ((colX==itest) && (colY==jtest) && (colZ==ktest))
+	      cerr << "Mixture Vars at test = " << (scalar[ii])[currCell] << endl;
+#endif
+
+#ifdef scalarSolve_debug
+	    if ((colX==itest) && (colY==jtest) && (colZ==ktest))
+	      cerr << "Mixture Variance Vars at test = " << (scalarVar[ii])[currCell] << endl;
+#endif
+
+#ifdef scalarSolve_debug
+	    if ((colX==itest) && (colY==jtest) && (colZ==ktest))
+	      cerr << "Enthalpy at test = " << inStream.d_enthalpy << endl;
+#endif
+
+#ifdef scalarSolve_debug
+	    if ((colX==itest) && (colY==jtest) && (colZ==ktest))
+	      cerr << "Out Density at test = " << outStream.getDensity() << endl;
+#endif
+
+#ifdef ARCHES_PRES_DEBUG
+    // Testing if correct values have been put
+    cerr << " AFTER COMPUTE PROPERTIES " << endl;
+    IntVector domLo = density.getFortLowIndex();
+    IntVector domHi = density.getFortHighIndex();
+    density.print(cerr);
+#endif
+
+#ifdef scalarSolve_debug
+
+    if (d_MAlab) {
+      cerr << " NEW DENSITY VALUES " << endl;
+
+      // code to print all values of any variable within
+      // a box, for multi-patch case
+
+      int ibot = itest;
+      int itop = itest;
+      int jbot = jtest;
+      int jtop = jtest;
+      int kbot = ktest;
+      int ktop = ktest;
+
+      cout << "Index Low and Hi for x = " << indexLow.x() << "  " << indexHigh.x() << endl;
+      cout << "Index Low and Hi for y = " << indexLow.y() << "  " << indexHigh.y() << endl;
+      cout << "Index Low and Hi for z = " << indexLow.z() << "  " << indexHigh.z() << endl;
+
+      // values above can be changed for each case as desired
+
+      bool printvalues = true;
+      int idloX = Max(indexLow.x(),ibot);
+      int idhiX = Min(indexHigh.x()-1,itop);
+      int idloY = Max(indexLow.y(),jbot);
+      int idhiY = Min(indexHigh.y()-1,jtop);
+      int idloZ = Max(indexLow.z(),kbot);
+      int idhiZ = Min(indexHigh.z()-1,ktop);
+      cout << "idloX, idhiX = " << idloX << "  " << idhiX << endl;
+      cout << "idloY, idhiY = " << idloY << "  " << idhiY << endl;
+      cout << "idloZ, idhiZ = " << idloZ << "  " << idhiZ << endl;
+      if ((idloX > idhiX) || (idloY > idhiY) || (idloZ > idhiZ))
+	printvalues = false;
+
+      if (printvalues) {
+	for (int ii = idloX; ii <= idhiX; ii++) {
+	  for (int jj = idloY; jj <= idhiY; jj++) {
+	    for (int kk = idloZ; kk <= idhiZ; kk++) {
+	      cerr.width(14);
+	      cerr << " point coordinates "<< ii << " " << jj << " " << kk;
+	      cerr << " new density = " << new_density[IntVector(ii,jj,kk)]; 
+	      cerr << " cellType = " << cellType[IntVector(ii,jj,kk)]; 
+	      cerr << " void fraction = " << voidFraction[IntVector(ii,jj,kk)] << endl; 
+	    }
+	  }
+	}
+      }
+    }
+#endif
+
+#ifdef ARCHES_DEBUG
+      cerr << "density_ref " << den_ref << endl;
+#endif
+
+#ifdef ARCHES_DEBUG
+    IntVector test(6,9,9);
+    cout << "printing test "<<test<<endl;
+#endif
+
+BoundaryCondition.cc
+
+#ifdef ARCHES_GEOM_DEBUG
+    cerr << "Just before geom init" << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+    cerr << "Patch box = " << patchBox << endl;
+#endif
+    
+#ifdef ARCHES_GEOM_DEBUG
+	cerr << "Wall Geometry box = " << geomBox << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	cerr << "Wall Intersection box = " << b << endl;
+	cerr << "Just before geom wall "<< endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	  cerr << "Wall cell type val = " << celltypeval << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	  cerr << "Pressure Geometry box = " << geomBox << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	  cerr << "Pressure Intersection box = " << b << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	    cerr << "Pressure Bdry  cell type val = " << celltypeval << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	  cerr << "Outlet Geometry box = " << geomBox << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	  cerr << "Outlet Intersection box = " << b << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	    cerr << "Flow Outlet cell type val = " << celltypeval << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	cerr << "Inlet " << ii << " Geometry box = " << geomBox << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	cerr << "Inlet " << ii << " Intersection box = " << b << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	cerr << "Flow inlet " << ii << " cell type val = " << celltypeval << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+    // Testing if correct values have been put
+    cerr << " In C++ (BoundaryCondition.cc) after flow inlet init " << endl;
+    cerr.setf(ios_base::right, ios_base::adjustfield);
+    //cerr.setf(ios_base::showpoint);
+    cerr.precision(3);
+    cerr.setf(ios_base::scientific, ios_base::floatfield);
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "Celltypes for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(2);
+	  cerr << cellType[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
+	/*#define ARCHES_GEOM_DEBUG*/
+#ifdef ARCHES_GEOM_DEBUG
+	cerr << "Domain Lo = [" << domLo.x() << "," <<domLo.y()<< "," <<domLo.z()
+	     << "] Domain hi = [" << domHi.x() << "," <<domHi.y()<< "," <<domHi.z() 
+	     << "]" << endl;
+	cerr << "Index Lo = [" << idxLo.x() << "," <<idxLo.y()<< "," <<idxLo.z()
+	     << "] Index hi = [" << idxHi.x() << "," <<idxHi.y()<< "," <<idxHi.z()
+	     << "]" << endl;
+	cerr << "Cell ID = " << cellid << endl;
+#endif
+
+#ifdef ARCHES_GEOM_DEBUG
+	cerr << "Inlet area = " << inlet_area << endl;
+#endif
+	
+#ifdef ARCHES_BC_DEBUG
+    // Testing if correct values have been put
+    cerr << " After CALPBC : " << endl;
+    cerr << "Print Pressure : " << endl;
+    pressure.print(cerr);
+    cerr << " After CALPBC : " << endl;
+    cerr << "Print U velocity : " << endl;
+    uVelocity.print(cerr);
+    cerr << "Print V velocity : " << endl;
+    vVelocity.print(cerr);
+    cerr << "Print W velocity : " << endl;
+    wVelocity.print(cerr);
+#endif
+    
+#ifdef ARCHES_BC_DEBUG
+  cerr << "AFTER UVELBC_FORT" << endl;
+  cerr << "Print UVel" << endl;
+  vars->uVelocity.print(cerr);
+  cerr << "Print UAP" << endl;
+  vars->uVelocityCoeff[Arches::AP].print(cerr);
+  cerr << "Print UAW" << endl;
+  vars->uVelocityCoeff[Arches::AW].print(cerr);
+  cerr << "Print UAE" << endl;
+  vars->uVelocityCoeff[Arches::AE].print(cerr);
+  cerr << "Print UAN" << endl;
+  vars->uVelocityCoeff[Arches::AN].print(cerr);
+  cerr << "Print UAS" << endl;
+  vars->uVelocityCoeff[Arches::AS].print(cerr);
+  cerr << "Print UAT" << endl;
+  vars->uVelocityCoeff[Arches::AT].print(cerr);
+  cerr << "Print UAB" << endl;
+  vars->uVelocityCoeff[Arches::AB].print(cerr);
+  cerr << "Print SU for U velocity: " << endl;
+  vars->uVelNonlinearSrc.print(cerr);
+  cerr << "Print SP for U velocity for:" << endl;
+  vars->uVelLinearSrc.print(cerr);
+#endif
+
+#ifdef ARCHES_BC_DEBUG
+  cerr << "AFTER VVELBC_FORT" << endl;
+  cerr << "Print VVel" << endl;
+  vars->vVelocity.print(cerr);
+  cerr << "Print VAP" << endl;
+  vars->vVelocityCoeff[Arches::AP].print(cerr);
+  cerr << "Print VAW" << endl;
+  vars->vVelocityCoeff[Arches::AW].print(cerr);
+  cerr << "Print VAE" << endl;
+  vars->vVelocityCoeff[Arches::AE].print(cerr);
+  cerr << "Print VAN" << endl;
+  vars->vVelocityCoeff[Arches::AN].print(cerr);
+  cerr << "Print VAS" << endl;
+  vars->vVelocityCoeff[Arches::AS].print(cerr);
+  cerr << "Print VAT" << endl;
+  vars->vVelocityCoeff[Arches::AT].print(cerr);
+  cerr << "Print VAB" << endl;
+  vars->vVelocityCoeff[Arches::AB].print(cerr);
+  cerr << "Print SU for V velocity: " << endl;
+  vars->vVelNonlinearSrc.print(cerr);
+  cerr << "Print SP for V velocity for:" << endl;
+  vars->vVelLinearSrc.print(cerr);
+#endif
+
+#ifdef ARCHES_BC_DEBUG
+  cerr << "AFTER WVELBC_FORT" << endl;
+  cerr << "Print WVel" << endl;
+  vars->wVelocity.print(cerr);
+  cerr << "Print WAP" << endl;
+  vars->wVelocityCoeff[Arches::AP].print(cerr);
+  cerr << "Print WAW" << endl;
+  vars->wVelocityCoeff[Arches::AW].print(cerr);
+  cerr << "Print WAE" << endl;
+  vars->wVelocityCoeff[Arches::AE].print(cerr);
+  cerr << "Print WAN" << endl;
+  vars->wVelocityCoeff[Arches::AN].print(cerr);
+  cerr << "Print WAS" << endl;
+  vars->wVelocityCoeff[Arches::AS].print(cerr);
+  cerr << "Print WAT" << endl;
+  vars->wVelocityCoeff[Arches::AT].print(cerr);
+  cerr << "Print WAB" << endl;
+  vars->wVelocityCoeff[Arches::AB].print(cerr);
+  cerr << "Print SU for W velocity: " << endl;
+  vars->wVelNonlinearSrc.print(cerr);
+  cerr << "Print SP for W velocity for:" << endl;
+  vars->wVelLinearSrc.print(cerr);
+#endif
+
+#ifdef ARCHES_BC_DEBUG
+  cerr << "AFTER FORT_PRESSBC" << endl;
+  cerr << "Print Pressure" << endl;
+  vars->pressure.print(cerr);
+  cerr << "Print PAP" << endl;
+  vars->pressCoeff[Arches::AP].print(cerr);
+  cerr << "Print PAW" << endl;
+  vars->pressCoeff[Arches::AW].print(cerr);
+  cerr << "Print PAE" << endl;
+  vars->pressCoeff[Arches::AE].print(cerr);
+  cerr << "Print PAN" << endl;
+  vars->pressCoeff[Arches::AN].print(cerr);
+  cerr << "Print PAS" << endl;
+  vars->pressCoeff[Arches::AS].print(cerr);
+  cerr << "Print PAT" << endl;
+  vars->pressCoeff[Arches::AT].print(cerr);
+  cerr << "Print PAB" << endl;
+  vars->pressCoeff[Arches::AB].print(cerr);
+  cerr << "Print SU for Pressure: " << endl;
+  vars->pressNonlinearSrc.print(cerr);
+  cerr << "Print SP for Pressure for:" << endl;
+  vars->pressLinearSrc.print(cerr);
+#endif
+
+#ifdef ARCHES_BC_DEBUG
+  cerr << "AFTER FORT_SCALARBC" << endl;
+  cerr << "Print Scalar" << endl;
+  constvars->scalar.print(cerr);
+  cerr << "Print scalar coeff, AE:" << endl;
+  vars->scalarCoeff[Arches::AE].print(cerr);
+#endif
+
+  //#define enthalpySolve_debug
+#ifdef enthalpySolve_debug
+
+      // code to print all values of any variable within
+      // a box, for multi-patch case
+
+     IntVector indexLow = patch->getCellLowIndex();
+     IntVector indexHigh = patch->getCellHighIndex();
+
+      int ibot = 0;
+      int itop = 0;
+      int jbot = 8;
+      int jtop = 8;
+      int kbot = 8;
+      int ktop = 8;
+
+      // values above can be changed for each case as desired
+
+      bool printvalues = true;
+      int idloX = Max(indexLow.x(),ibot);
+      int idhiX = Min(indexHigh.x()-1,itop);
+      int idloY = Max(indexLow.y(),jbot);
+      int idhiY = Min(indexHigh.y()-1,jtop);
+      int idloZ = Max(indexLow.z(),kbot);
+      int idhiZ = Min(indexHigh.z()-1,ktop);
+      if ((idloX > idhiX) || (idloY > idhiY) || (idloZ > idhiZ))
+	printvalues = false;
+      printvalues = false;
+
+      if (printvalues) {
+	for (int ii = idloX; ii <= idhiX; ii++) {
+	  for (int jj = idloY; jj <= idhiY; jj++) {
+	    for (int kk = idloZ; kk <= idhiZ; kk++) {
+	      cerr.width(14);
+	      cerr << " point coordinates "<< ii << " " << jj << " " << kk << endl;
+	      cerr << "Source after Radiation" << endl;
+	      cerr << "Radiation source = " << vars->src[IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Nonlinear source     = " << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << endl; 
+	    }
+	  }
+	}
+      }
+
+#endif
+
+#ifdef ARCHES_BC_DEBUG
+  cerr << "AFTER FORT_ENTHALPYBC" << endl;
+  cerr << "Print Enthalpy" << endl;
+  vars->enthalpy.print(cerr);
+  cerr << "Print enthalpy coeff, AE:" << endl;
+  vars->scalarCoeff[Arches::AE].print(cerr);
+#endif
+
+#ifdef ARCHES_BC_DEBUG
+    // Testing if correct values have been put
+    cerr << "In set flat profile : " << endl;
+    cerr << "DomLo = (" << domLo.x() << "," << domLo.y() << "," << domLo.z() << ")\n";
+    cerr << "DomHi = (" << domHi.x() << "," << domHi.y() << "," << domHi.z() << ")\n";
+    cerr << "DomLoU = (" << domLoU.x()<<","<<domLoU.y()<< "," << domLoU.z() << ")\n";
+    cerr << "DomHiU = (" << domHiU.x()<<","<<domHiU.y()<< "," << domHiU.z() << ")\n";
+    cerr << "DomLoV = (" << domLoV.x()<<","<<domLoV.y()<< "," << domLoV.z() << ")\n";
+    cerr << "DomHiV = (" << domHiV.x()<<","<<domHiV.y()<< "," << domHiV.z() << ")\n";
+    cerr << "DomLoW = (" << domLoW.x()<<","<<domLoW.y()<< "," << domLoW.z() << ")\n";
+    cerr << "DomHiW = (" << domHiW.x()<<","<<domHiW.y()<< "," << domHiW.z() << ")\n";
+    cerr << "IdxLo = (" << idxLo.x() << "," << idxLo.y() << "," << idxLo.z() << ")\n";
+    cerr << "IdxHi = (" << idxHi.x() << "," << idxHi.y() << "," << idxHi.z() << ")\n";
+    cerr << "IdxLoU = (" << idxLoU.x()<<","<<idxLoU.y()<< "," << idxLoU.z() << ")\n";
+    cerr << "IdxHiU = (" << idxHiU.x()<<","<<idxHiU.y()<< "," << idxHiU.z() << ")\n";
+    cerr << "IdxLoV = (" << idxLoV.x()<<","<<idxLoV.y()<< "," << idxLoV.z() << ")\n";
+    cerr << "IdxHiV = (" << idxHiV.x()<<","<<idxHiV.y()<< "," << idxHiV.z() << ")\n";
+    cerr << "IdxLoW = (" << idxLoW.x()<<","<<idxLoW.y()<< "," << idxLoW.z() << ")\n";
+    cerr << "IdxHiW = (" << idxHiW.x()<<","<<idxHiW.y()<< "," << idxHiW.z() << ")\n";
+    
+    cerr << " After Set Flat Profile : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "Density for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << density[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << " After Set Flat Profile : " << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cerr << "U velocity for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cerr.width(10);
+	  cerr << uVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << " After Set Flat Profile : " << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cerr << "V velocity for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << " After Set Flat Profile : " << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cerr << "W velocity for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cerr.width(10);
+	  cerr << wVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << " After Set Flat Profile : " << endl;
+    cerr << " Number of scalars = " << d_nofScalars << endl;
+    for (int indx = 0; indx < d_nofScalars; indx++) {
+      for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+	cerr << "Scalar " << indx <<" for ii = " << ii << endl;
+	for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	  for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	    cerr.width(10);
+	    cerr << (scalar[indx])[IntVector(ii,jj,kk)] << " " ; 
+	  }
+	  cerr << endl;
+	}
+      }
+    }
+#endif
+
+#ifdef scalarSolve_debug
+
+     cerr << " NEW scalar VALUES " << endl;
+     for (int ii = 5; ii <= 9; ii++) {
+       for (int jj = 7; jj <= 12; jj++) {
+	 for (int kk = 7; kk <= 12; kk++) {
+	   cerr.width(14);
+	   cerr << " point coordinates "<< ii << " " << jj << " " << kk ;
+	   cerr << " new scalar = " << vars->scalar[IntVector(ii,jj,kk)] ; 
+	   cerr << " cellType = " << constvars->cellType[IntVector(ii,jj,kk)] ; 
+	   cerr << " void fraction = " << constvars->voidFraction[IntVector(ii,jj,kk)] << endl; 
+	 }
+       }
+     }
+#endif
+
+#ifdef ARCHES_DEBUG
+    cerr << " After Scalar Explicit solve : " << endl;
+    cerr << "Print Scalar: " << endl;
+    vars->scalar.print(cerr);
+#endif
+
+  //#define enthalpySolve_debug
+#ifdef enthalpySolve_debug
+
+     cerr << " NEW enthalpy VALUES " << endl;
+
+      // code to print all values of any variable within
+      // a box, for multi-patch case
+
+     IntVector indexLow = patch->getCellLowIndex();
+     IntVector indexHigh = patch->getCellHighIndex();
+
+      int ibot = 0;
+      int itop = 0;
+      int jbot = 8;
+      int jtop = 8;
+      int kbot = 8;
+      int ktop = 8;
+
+      // values above can be changed for each case as desired
+
+      bool printvalues = true;
+      int idloX = Max(indexLow.x(),ibot);
+      int idhiX = Min(indexHigh.x()-1,itop);
+      int idloY = Max(indexLow.y(),jbot);
+      int idhiY = Min(indexHigh.y()-1,jtop);
+      int idloZ = Max(indexLow.z(),kbot);
+      int idhiZ = Min(indexHigh.z()-1,ktop);
+      if ((idloX > idhiX) || (idloY > idhiY) || (idloZ > idhiZ))
+	printvalues = false;
+
+      if (printvalues) {
+	for (int ii = idloX; ii <= idhiX; ii++) {
+	  for (int jj = idloY; jj <= idhiY; jj++) {
+	    for (int kk = idloZ; kk <= idhiZ; kk++) {
+	      cerr.width(14);
+	      cerr << " point coordinates "<< ii << " " << jj << " " << kk << endl;
+	      cerr << "Enthalpy after solve = " << vars->enthalpy[IntVector(ii,jj,kk)] << endl;
+	      cerr << "Void Fraction after solve = " << constvars->voidFraction[IntVector(ii,jj,kk)] << endl;
+	      cerr << "CellType for enthalpy solve = " << constvars->cellType[IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Printing Coefficients and Sources" << endl;
+	      cerr << "East     coefficient = " << constvars->scalarCoeff[Arches::AE][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "West     coefficient = " << constvars->scalarCoeff[Arches::AW][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "North    coefficient = " << constvars->scalarCoeff[Arches::AN][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "South    coefficient = " << constvars->scalarCoeff[Arches::AS][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Top      coefficient = " << constvars->scalarCoeff[Arches::AT][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Bottom   coefficient = " << constvars->scalarCoeff[Arches::AB][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Diagonal coefficient = " << constvars->scalarCoeff[Arches::AP][IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Nonlinear source     = " << constvars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << endl; 
+	      cerr << "Old Density          = " << constvars->old_density[IntVector(ii,jj,kk)] << endl; 
+	      cerr << "delta_t = " << delta_t << endl;
+	      
+	    }
+	  }
+	}
+      }
+
+#endif
+
+
+#ifdef ARCHES_DEBUG
+    cerr << " After Scalar Explicit solve : " << endl;
+    cerr << "Print Scalar: " << endl;
+    vars->enthalpy.print(cerr);
+#endif
+
+Discretization.cc
+
+#ifdef ARCHES_VEL_DEBUG
+    cerr << "Print wvelhat" << "\n";
+    vars->wVelRhoHat.print(cerr);
+
+    cerr << " After W Vel Explicit solve : " << "\n";
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "W Vel for ii = " << ii << "\n";
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->wVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << "\n";
+      }
+    }
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "BEFORE VELCOEF" << "\n";
+  cerr << "Print Density" << "\n";
+  coeff_vars->density.print(cerr);
+  cerr << "Print uVelocity" << "\n";
+  coeff_vars->uVelocity.print(cerr);
+  cerr << "Print vVelocity" << "\n";
+  coeff_vars->vVelocity.print(cerr);
+  cerr << "Print wVelocity" << "\n";
+  coeff_vars->wVelocity.print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "idxLou, idxHiU" << idxLoU << " " << idxHiU << "\n";
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "After UVELCOEF" << "\n";
+    cerr << "Print UAW" << "\n";
+    coeff_vars->uVelocityConvectCoeff[Arches::AW].print(cerr);
+    cerr << "Print UAE" << "\n";
+    coeff_vars->uVelocityConvectCoeff[Arches::AE].print(cerr);
+    cerr << "Print UAN" << "\n";
+    coeff_vars->uVelocityConvectCoeff[Arches::AN].print(cerr);
+    cerr << "Print UAS" << "\n";
+    coeff_vars->uVelocityConvectCoeff[Arches::AS].print(cerr);
+    cerr << "Print UAT" << "\n";
+    coeff_vars->uVelocityConvectCoeff[Arches::AT].print(cerr);
+    cerr << "Print UAB" << "\n";
+    coeff_vars->uVelocityConvectCoeff[Arches::AB].print(cerr);
+    cerr << "Print UAW" << "\n";
+    coeff_vars->uVelocityCoeff[Arches::AW].print(cerr);
+    cerr << "Print UAE" << "\n";
+    coeff_vars->uVelocityCoeff[Arches::AE].print(cerr);
+    cerr << "Print UAN" << "\n";
+    coeff_vars->uVelocityCoeff[Arches::AN].print(cerr);
+    cerr << "Print UAS" << "\n";
+    coeff_vars->uVelocityCoeff[Arches::AS].print(cerr);
+    cerr << "Print UAT" << "\n";
+    coeff_vars->uVelocityCoeff[Arches::AT].print(cerr);
+    cerr << "Print UAB" << "\n";
+    coeff_vars->uVelocityCoeff[Arches::AB].print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "After VVELCOEF" << "\n";
+    cerr << "Print VAW" << "\n";
+    coeff_vars->vVelocityConvectCoeff[Arches::AW].print(cerr);
+    cerr << "Print VAE" << "\n";
+    coeff_vars->vVelocityConvectCoeff[Arches::AE].print(cerr);
+    cerr << "Print VAN" << "\n";
+    coeff_vars->vVelocityConvectCoeff[Arches::AN].print(cerr);
+    cerr << "Print VAS" << "\n";
+    coeff_vars->vVelocityConvectCoeff[Arches::AS].print(cerr);
+    cerr << "Print VAT" << "\n";
+    coeff_vars->vVelocityConvectCoeff[Arches::AT].print(cerr);
+    cerr << "Print VAB" << "\n";
+    coeff_vars->vVelocityConvectCoeff[Arches::AB].print(cerr);
+    cerr << "Print VAW" << "\n";
+    coeff_vars->vVelocityCoeff[Arches::AW].print(cerr);
+    cerr << "Print VAE" << "\n";
+    coeff_vars->vVelocityCoeff[Arches::AE].print(cerr);
+    cerr << "Print VAN" << "\n";
+    coeff_vars->vVelocityCoeff[Arches::AN].print(cerr);
+    cerr << "Print VAS" << "\n";
+    coeff_vars->vVelocityCoeff[Arches::AS].print(cerr);
+    cerr << "Print VAT" << "\n";
+    coeff_vars->vVelocityCoeff[Arches::AT].print(cerr);
+    cerr << "Print VAB" << "\n";
+    coeff_vars->vVelocityCoeff[Arches::AB].print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "After WVELCOEF" << "\n";
+    cerr << "Print WAW" << "\n";
+    coeff_vars->wVelocityConvectCoeff[Arches::AW].print(cerr);
+    cerr << "Print WAE" << "\n";
+    coeff_vars->wVelocityConvectCoeff[Arches::AE].print(cerr);
+    cerr << "Print WAN" << "\n";
+    coeff_vars->wVelocityConvectCoeff[Arches::AN].print(cerr);
+    cerr << "Print WAS" << "\n";
+    coeff_vars->wVelocityConvectCoeff[Arches::AS].print(cerr);
+    cerr << "Print WAT" << "\n";
+    coeff_vars->wVelocityConvectCoeff[Arches::AT].print(cerr);
+    cerr << "Print WAB" << "\n";
+    coeff_vars->wVelocityConvectCoeff[Arches::AB].print(cerr);
+    cerr << "Print WAW" << "\n";
+    coeff_vars->wVelocityCoeff[Arches::AW].print(cerr);
+    cerr << "Print WAE" << "\n";
+    coeff_vars->wVelocityCoeff[Arches::AE].print(cerr);
+    cerr << "Print WAN" << "\n";
+    coeff_vars->wVelocityCoeff[Arches::AN].print(cerr);
+    cerr << "Print WAS" << "\n";
+    coeff_vars->wVelocityCoeff[Arches::AS].print(cerr);
+    cerr << "Print WAT" << "\n";
+    coeff_vars->wVelocityCoeff[Arches::AT].print(cerr);
+    cerr << "Print WAB" << "\n";
+    coeff_vars->wVelocityCoeff[Arches::AB].print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "BEFORE FORT_PRESSCOEFF" << "\n";
+  cerr << "Print density:" << "\n";
+  coeff_vars->density.print(cerr);
+  cerr << "Print uVelocity AP:" << "\n";
+  coeff_vars->uVelocityCoeff[Arches::AP].print(cerr);
+  cerr << "Print AP - V Vel Coeff: " << "\n";
+  coeff_vars->vVelocityCoeff[Arches::AP].print(cerr);
+  cerr << "Print AP - W Vel Coeff: " << "\n";
+  coeff_vars->wVelocityCoeff[Arches::AP].print(cerr);
+  cerr << "Print uVelocity:" << "\n";
+  coeff_vars->uVelocity.print(cerr);
+  cerr << "Print vVelocity: " << "\n";
+  coeff_vars->vVelocity.print(cerr);
+  cerr << "Print wVelocity: " << "\n";
+  coeff_vars->wVelocity.print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "After PRESSCOEFF" << "\n";
+  cerr << "Print PAW" << "\n";
+  coeff_vars->pressCoeff[Arches::AW].print(cerr);
+  cerr << "Print PAE" << "\n";
+  coeff_vars->pressCoeff[Arches::AE].print(cerr);
+  cerr << "Print PAN" << "\n";
+  coeff_vars->pressCoeff[Arches::AN].print(cerr);
+  cerr << "Print PAS" << "\n";
+  coeff_vars->pressCoeff[Arches::AS].print(cerr);
+  cerr << "Print PAT" << "\n";
+  coeff_vars->pressCoeff[Arches::AT].print(cerr);
+  cerr << "Print PAB" << "\n";
+  coeff_vars->pressCoeff[Arches::AB].print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "Print Density: " << "\n";
+  constcoeff_vars->density.print(cerr);
+  cerr << "Print Viscosity: " << "\n";
+  constcoeff_vars->viscosity.print(cerr);
+  cerr << "Print uVelocity: " << "\n";
+  constcoeff_vars->uVelocity.print(cerr);
+  cerr << "Print vVelocity: " << "\n";
+  constcoeff_vars->vVelocity.print(cerr);
+  cerr << "Print wVelocity: " << "\n";
+  constcoeff_vars->wVelocity.print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "SAE Convect Coeff: " << "\n";
+  coeff_vars->scalarConvectCoeff[Arches::AE].print(cerr);
+  cerr << "SAW Convect Coeff: " << "\n";
+  coeff_vars->scalarConvectCoeff[Arches::AW].print(cerr);
+  cerr << "SAN Convect Coeff: " << "\n";
+  coeff_vars->scalarConvectCoeff[Arches::AN].print(cerr);
+  cerr << "SAS Convect Coeff: " << "\n";
+  coeff_vars->scalarConvectCoeff[Arches::AS].print(cerr);
+  cerr << "SAT Convect Coeff: " << "\n";
+  coeff_vars->scalarConvectCoeff[Arches::AT].print(cerr);
+  cerr << "SAB Convect Coeff: " << "\n";
+  coeff_vars->scalarConvectCoeff[Arches::AB].print(cerr);
+  cerr << "SAE Convect Coeff: " << "\n";
+  coeff_vars->scalarCoeff[Arches::AE].print(cerr);
+  cerr << "SAW  Coeff: " << "\n";
+  coeff_vars->scalarCoeff[Arches::AW].print(cerr);
+  cerr << "SAN  Coeff: " << "\n";
+  coeff_vars->scalarCoeff[Arches::AN].print(cerr);
+  cerr << "SAS  Coeff: " << "\n";
+  coeff_vars->scalarCoeff[Arches::AS].print(cerr);
+  cerr << "SAT  Coeff: " << "\n";
+  coeff_vars->scalarCoeff[Arches::AT].print(cerr);
+  cerr << "SAB  Coeff: " << "\n";
+  coeff_vars->scalarCoeff[Arches::AB].print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "BEFORE Calculate U Velocity Diagonal :" << "\n";
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SP - U Vel Linear Source for ii = " << ii << "\n";
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << (coeff_vars->uVelLinearSrc)[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << "\n";
+      }
+    }
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "After UVELCOEF" << "\n";
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr <<"AP"<< *iter << ": " << (coeff_vars->uVelocityCoeff[Arches::AP])[*iter] << "\n" ; 
+    }
+    cerr << "AFTER Calculate U Velocity Diagonal :" << "\n";
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "AP - U Vel Coeff for ii = " << ii << "\n";
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << (coeff_vars->uVelocityCoeff[Arches::AP])
+	    [IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << "\n";
+      }
+    }
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "BEFORE Calculate V Velocity Diagonal :" << "\n";
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SP - V Vel Linear Source for ii = " << ii << "\n";
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << (coeff_vars->vVelLinearSrc)[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << "\n";
+      }
+    }
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "AFTER Calculate V Velocity Diagonal :" << "\n";
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "AP - V Vel Coeff for ii = " << ii << "\n";
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << (coeff_vars->vVelocityCoeff[Arches::AP])
+	    [IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << "\n";
+      }
+    }
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "BEFORE Calculate W Velocity Diagonal :" << "\n";
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SP - W Vel Linear Source for ii = " << ii << "\n";
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << (coeff_vars->wVelLinearSrc)[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << "\n";
+      }
+    }
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "AFTER Calculate W Velocity Diagonal :" << "\n";
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "AP - W Vel Coeff for ii = " << ii << "\n";
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << (coeff_vars->wVelocityCoeff[Arches::AP])
+	    [IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << "\n";
+      }
+    }
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "BEFORE Calculate Pressure Diagonal :" << "\n";
+  cerr << "Print SP - Pressure Linear source: " << "\n";
+  coeff_vars->pressLinearSrc.print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "AFTER Calculate Pressure Diagonal :" << "\n";
+  cerr << "Print AP - Pressure Linear source: " << "\n";
+  coeff_vars->pressCoeff[Arches::AP].print(cerr);
+  cerr << "Print nonlinear source: " << "\n";
+  coeff_vars->pressNonlinearSrc.print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "Print SSP - Scalar Linear Source" << "\n";
+  coeff_vars->scalarLinearSrc.print(cerr);
+#endif
+
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "SAP - Scalar Coeff " << "\n";
+  coeff_vars->scalarCoeff[Arches::AP].print(cerr);
+#endif
+

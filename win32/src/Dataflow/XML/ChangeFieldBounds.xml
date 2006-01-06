@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<component name="ChangeFieldBounds" category="FieldsGeometry">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+    </authors>
+    <summary>
+      <p>
+        ChangeFieldBounds is used to transform the field geometry.
+      </p>
+    </summary>
+    <description>
+      <p>
+        ChangeFieldBounds can trasform the field geometry via the UI or 
+	a widget attached to a <modref package="SCIRun" name="Viewer"/> window.
+      </p>
+      <p>
+	The output field is the transformed input field.
+      </p>
+      <p>
+	The output matrix is the resultant transformation matrix used
+	to transform the field.  It can be used to transform other
+	fields in SCIRun.
+      </p>
+      <p>
+	The UI can change the center and the size of the output
+	field.  Check the box next to the output attribute you wish to modify.
+	The 'Copy Input to Output' button will reset the
+	output values to the input values.
+      </p>
+      <p>
+	To interactively transform the input field you must attach the
+	Widget Port (the middle output port) to the viewer window.
+      </p>
+      <p>	
+	To move the widget: Shift+LeftClick on the edges of the widget
+	frame and move the transformation box around.
+      </p>
+      <p>
+	To scale the widget:  Shift+LeftClick on the spheres located on
+	each face of the widget and drag.  This will scale the output
+	field in a direction normal to the face the sphere is located
+	on.
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input Field</name>
+        <datatype>SCIRun::Field</datatype>
+	<description>
+          <p>
+            The field to be transformed.
+          </p>
+        </description>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Field</name>
+        <datatype>SCIRun::Field</datatype>
+        <description>
+          <p>
+            The transformed field.
+          </p>
+        </description>
+      </port>
+      <port>
+        <name>Transformation Widget</name>
+        <datatype>SCIRun::Geometry</datatype>
+        <description>
+          <p>
+            A box widget used to translate and/or resize the field.
+          </p>
+        </description>
+      </port>
+      <port>
+        <name>Transformation Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+        <description>
+          <p>
+            The matrix that represents the transformations made.
+          </p>
+        </description>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+      </p>
+    </description>
+    <parameter>
+      <widget>Entry</widget>
+      <label>BBox min and BBox max</label>
+      <description>
+        <p>
+          The 6 entries describe two 3D points, which are the min and
+          max points of the axis aligned bounding box of the field.
+        </p>
+      </description>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+<nets>
+<net id="ChangeFieldBounds">
+<title>ChangeFieldBounds Regression Test</title>
+
+<p>Input a field, and then use the widget from ChangeFieldBounds to
+transform the field to a new position.  Both the original and
+transformed fields are displayed, with the original being a wireframe
+and the transformed field being solid.  In addition to simply moving
+the input field we also do an asymetric scale on it such that it
+becomes flattened.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsGeometry/ChangeFieldBounds.net.</p>
+
+</net>
+</nets>
+</component>
+

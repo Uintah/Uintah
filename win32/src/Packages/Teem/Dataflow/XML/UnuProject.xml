@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="UnuProject" category="UnuNtoZ">  
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary></summary>
+    <description>
+      <p>Collapse scanlines to scalars along some axis. The scanline is
+reduced to a single scalar by "measuring" all the values in the scanline with
+some measure. The output nrrd has dimension one less than input; the output
+type depends on the measure in a non-trivial way. </p>
+      <p>Axis : the axis to project along. This should be an integer.</p>
+      <p>Projection Measure : How to measure a scanline, by summarizing all its values with
+       a single scalar. </p>
+    </description>
+    <examplesr></examplesr>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>nin</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>nout</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

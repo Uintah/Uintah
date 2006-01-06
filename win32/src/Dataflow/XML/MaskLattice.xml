@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="MaskLattice" category="FieldsData">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>
+	Convert a LatVolField into a MaskedLatVolField and apply the
+        given function to mask it out.
+    </summary>
+    <description>
+      <p>
+	Convert a LatVolField into a MaskedLatVolField and apply the
+        given function to mask it out.  This is similar to the
+        behavior of the <modref package="SCIRun" name="ClipByFunction"/> module, except that the input field
+        is masked rather than clipped out.
+      </p>
+      <p>
+        The function should be a valid C++ expression.  It will be
+	dynamically compiled into a function of the form "bool
+        inside_p(double x, double y, double z, TYPE v) { return EXPR; }"
+        where TYPE is the data type contained in the field, and EXPR is the
+        function typed into the GUI.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Output Masked Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+<nets>
+<net id="MaskLattice">
+<title>MaskLattice Regression Test</title>
+
+<p>Use the MaskLattice module to mask away a portion of an input lattice
+and display it against the original to verify that it has been masked.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/MaskLattice.net.</p>
+
+</net>
+</nets>
+</component>

@@ -1,0 +1,177 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new ReleaseNotesDocument();</script>
+    <title>Version 1.22 Release Notes</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">doc.preContent();</script>
+
+    <h1 class="page-title">
+      Release Notes - SCIRun Version 1.22 - July 14, 2004
+    </h1>
+
+    <a id="begin-toc">Content:H1,H2</a>
+
+    <h1>
+      New Projects in Version 1.22
+    </h1>
+    <ul>
+      <li>Add support for ImportExport plugins to FieldReader, Field Writer,
+MatrixReader, MatrixWriter, ColormapReader, and ColormapWriter modules.</li>
+      <li>Removal of the tuple axis in the Teem package. This caused changes in
+Teem (and sample nets), Insight, DataIO, and Fusion modules.</li>
+      <li>Using Teem 1.7</li>
+      <li>Added --server option to SCIRun.  Starts SCIRun with a simple text listener socket that mimics the TCL command prompt. </li>
+      <li>Slaving of View Windows.</li>
+      <li>More environment variables for net saving enhancements.</li>
+      <li>Better Sub-Network support.</li>
+    </ul>
+
+    <h1>
+      Data Sets
+    </h1>
+    <ul>
+      <li>New &quot;Matlab&quot; directory.</li>
+    </ul>
+
+    <h1>
+      New Modules
+    </h1>
+
+    <h2>
+      SCIRun Modules (Category in parentheses)
+    </h2> 
+
+    <ul>
+      <li>NodeGradient (FieldsData)</li>
+      <li>ApplyInterpMatrix (FieldsData)</li>
+      <li>ToStructured (FieldsGeometry)</li>
+    </ul>
+
+    <h2>
+      Teem Modules (Category in parentheses)
+    </h2>
+
+    <ul>
+      <li>More Unu and Tend modules</li>
+      <li>ImageImporter and ImageExporter (DataIO)</li>
+      <li>MatrixToNrrd (DataIO) </li>
+      <li>NrrdToMatrix (DataIO) </li>
+      <li>MRITissueClassifier (Segmentation) </li>
+    </ul>
+
+    <h2>
+      MatlabInterface Modules (Category in parentheses)
+    </h2>
+
+    <ul>
+      <li>MatlabMatricesReader (DataIO) </li>
+      <li>MatlabNrrdsReader (DataIO) </li>
+      <li>MatlabFieldsReader (DataIO) </li>
+      <li>MatlabMatricesWriter (DataIO) </li>
+      <li>MatlabNrrdsWriter (DataIO) </li>
+    </ul>
+    
+    <h1>
+      Module Enhancements
+    </h1>
+
+    <h2>
+      SCIRun Modules
+    </h2>
+
+    <ul>
+      <li>Added '?' button to open module help.</li>
+      <li>Readers and Writers</li>
+      <li>All "Choose" modules.</li>
+      <li>SampleField </li>
+      <li>MatrixSelectVector</li>
+      <li>Viewer</li>
+      <li>ManageFieldData</li>
+      <li>ClipField</li>
+      <li>ClipByFunction</li>
+      <li>FieldBoundary</li>
+      <li>IsoClip</li>
+      <li>Isosurface</li>
+      <li>FieldBoundary</li>
+      <li>ChangeFieldDataAt</li>
+      <li>ShowField.</li>
+      <li>StreamLines</li>
+      <li>FieldMeasures</li>
+      <li>Probe</li>
+      <li>FieldInfo</li>
+      <li>TransformData2</li>
+    </ul>
+
+    <h2>BioPSE Modules</h2>
+    <ul>
+      <li>ModifyConductivites</li>
+      <li>SetupFEMatrix</li>
+    </ul>
+
+
+    <h2>Teem Modules </h2>
+    <ul>
+      <li>NrrdReader</li>
+      <li>NrrdToField</li>
+      <li>FieldToNrrd</li>
+      <li>DicomToNrrd changed to DicomNrrdReader.</li>
+      <li>AnalyzeToNrrd changed to AnalyzeNrrdReader.</li>
+      <li>NrrdSelectTime</li>
+      <li>BioTensor</li>
+    </ul>
+
+    <h2>Insight Modules </h2>
+    <ul>
+      <li>Officially support ITK 1.6 (RPMS contain ITK 1.6)</li>
+      <li>FieldToImage</li>
+      <li>ImageToField</li>
+      <li>NrrdToImage</li>
+      <li>ImageToNrrd</li>
+    </ul>
+
+    <h1>Network Editor Enhancements</h1>
+    <ul>
+      <li>Better saving of .net files.</li>
+      <li>Added 'Duplicate' option to module menu.</li>
+      <li>Added 'Insert Module' option to connection menu.</li>
+      <li>Added 'Replace' option to module menu. </li>
+      <li>Added <tt>Control-Q</tt> keyboard shortcut to quit.</li>
+    </ul>
+
+    <script type="text/javascript">new Toc().build();</script>
+    <script type="text/javascript">doc.postContent();</script>
+  </body>
+
+</html>

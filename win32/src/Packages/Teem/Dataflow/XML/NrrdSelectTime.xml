@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<component name="NrrdSelectTime" category="NrrdData">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>
+      The NrrdSelectTime module allows users to select a single time
+step or column from a NrrdData that has a time axis.  The user can
+also select a range of time indecies and send them to the output port
+one at a time.  This module allows the user to animate Through a time
+series.
+    </summary>
+    <description>
+	<p>When the module runs in interactive mode, the user selects
+which vectors they want to include in the playback.  In the
+NrrdSelectTime module dialog window, Start and End sliders enable the
+user to set the playback range, the Current Value function specifies
+which row or column to send downstream, and the Delay function
+controls the time delay and speed of the animated points on the
+mesh.</p>
+      
+      <p>There are several Play Modes in the NrrdSelectTime GUI
+dialog window: Once, Loop, Bounce1, and Bounce2.  The Once mode plays
+the animation from current value to the end of the selected range of
+column and rows on the matrix.  The Loop mode plays the selected range
+endlessly, reversing directions after reaching the start or end of the
+range.  Bounce1 only plays endpoints once, while Bounce2 repeats them.
+For example, if the range is 1 through 3, Bounce1 will play { 1 2 3 2
+1 2 3 2 1 . . .}, while Bounce2 will play {1 2 3 3 2 1 2 3 3 2 1}.
+Using the Delay text field in the GUI dialog window, the user
+specifies a delay (in milliseconds) that controls the speed at which
+the selected rows or columns may be sent to the output port.</p>
+      
+      <p>The Increment entry can be used to skip through the input
+matrix by more than one element at a time.  This can be used with the
+Send Amount entry to send more than one row/column at a time. For
+instance, if both entries are set to three, the module will send three
+rows/columns at a time, which can then be mapped onto a vector field
+by the <modref package="SCIRun" name="ManageFieldData"/> module. </p>
+
+      <p>This module is much more efficient if the Time axis is the last (slowest) axis in the input NRRD.  This is because the output of each timestep is a contiguous chunk of the input and can thus be sent as a pointer offset rather than an interleaved memory copy.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no"> 
+      <port>
+        <name>Time Axis nrrd</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Current Index</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Time Slice</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Selected Index</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

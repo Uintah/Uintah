@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="TendNorm" category="Tend">  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Normalize tensor size.</summary>
+    <description>
+      <p>Normalize tensor size. This operates on the eigenvalues of the
+tensor, and allows normalizing some user-defined weighting of the
+eigenvalues by some user-defined amount .</p>
+     <p>Major : relative weights to put on major eigenvalue when performing normalization
+     (internally rescaled to have a 1.0 L1 norm). This weightings determines the
+     tensors's size. Value should be a float.</p>
+     <p>Medium : relative weights to put on medium eigenvalue when performing normalization
+     (internally rescaled to have a 1.0 L1 norm). This weightings determines the
+     tensors's size. Value should be a float.</p>
+     <p>Minor :relative weights to put on minor eigenvalue when performing normalization
+     (internally rescaled to have a 1.0 L1 norm). This weightings determines the
+     tensors's size. Value should be a float.</p>
+     <p>Amount : how much of the normalization to perform. Should be a float.</p>
+     <p>Target : target size, post normalization. This value should be a float.</p>
+    </description>
+    <examplesr></examplesr>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>nin</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>nout</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>
