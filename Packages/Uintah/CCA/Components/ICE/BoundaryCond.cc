@@ -874,8 +874,8 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
                      bc_iter = bc_iter->findNextBlock("BCType")){
       map<string,string> bc_type;
       bc_iter->getAttributes(bc_type);
-      
-      if (bc_type["id"] == "all" && numAllMatls == 0) {
+            
+      if (bc_type["id"] == "all" && numAllMatls == 1) {
         ostringstream warn;
         warn <<"\n__________________________________\n"   
              << "ERROR: This is a single material problem and you've specified 'BCType id = all' \n"
