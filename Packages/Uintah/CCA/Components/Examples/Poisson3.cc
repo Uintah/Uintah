@@ -355,13 +355,6 @@ void Poisson3::refineInterface(const ProcessorGroup*,
   }
 }
 
-void Poisson3::scheduleSetBC_FineLevel(const LevelP& fineLevel,
-				       SchedulerP& sched,
-				       int step, int nsteps)
-{
-  // do nothing
-}
-
 
 void Poisson3::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {

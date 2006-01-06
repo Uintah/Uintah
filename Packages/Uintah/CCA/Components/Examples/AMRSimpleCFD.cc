@@ -120,13 +120,6 @@ void AMRSimpleCFD::scheduleRefineInterface(const LevelP& /*fineLevel*/,
   cout_doing << "AMRSimpleCFD::scheduleRefineInterface not implemented.\n";
 }
 //______________________________________________________________________
-void AMRSimpleCFD::scheduleSetBC_FineLevel(const LevelP& /*fineLevel*/,
-					   SchedulerP& /*sched*/,
-					   int /*step*/, int /*nsteps*/)
-{
-  cout_doing << "AMRSimpleCFD::scheduleSetBC_FineLevel not implemented.\n";
-}
-//______________________________________________________________________
 //
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424 // Template parameter not used in declaring arguments.

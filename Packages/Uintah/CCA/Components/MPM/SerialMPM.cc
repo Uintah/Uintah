@@ -1096,13 +1096,6 @@ void SerialMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/,
   // do nothing for now
 }
 
-void SerialMPM::scheduleSetBC_FineLevel(const LevelP& /*fineLevel*/, 
-                                        SchedulerP& /*scheduler*/,
-                                        int /*step*/, int /*nsteps*/)
-{
-  // do nothing for now
-}
-
 void SerialMPM::scheduleCoarsen(const LevelP& /*coarseLevel*/, 
                                 SchedulerP& /*sched*/)
 {

@@ -1166,13 +1166,6 @@ void FractureMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/,
   // do nothing for now
 }
 
-void FractureMPM::scheduleSetBC_FineLevel(const LevelP& /*fineLevel*/,
-                                        SchedulerP& /*scheduler*/,
-                                        int /*step*/, int /*nsteps*/)
-{
-  // do nothing for now
-}
-
 void FractureMPM::scheduleCoarsen(const LevelP& /*coarseLevel*/,
                                 SchedulerP& /*sched*/)
 {

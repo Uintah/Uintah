@@ -208,7 +208,6 @@ void AMRSimulationController::run()
          d_sim->scheduleInitializeAddedMaterial(currentGrid->getLevel(i), d_scheduler);
          if (d_doAMR && i > 0){
            d_sim->scheduleRefineInterface(currentGrid->getLevel(i), d_scheduler, 1, 1);
-           d_sim->scheduleSetBC_FineLevel(currentGrid->getLevel(i), d_scheduler, 1, 1);
          }
        }
        d_scheduler->compile();
@@ -326,7 +325,6 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
           d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
           d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
           d_sim->scheduleRefineInterface(fineLevel, d_scheduler, step+1, numSteps);
-          d_sim->scheduleSetBC_FineLevel(fineLevel, d_scheduler, step+1, numSteps);
         }
         else {
           // look in the NewDW all the way down
@@ -336,7 +334,6 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
           d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
           d_scheduler->mapDataWarehouse(Task::CoarseNewDW, curDW+newDWStride);
           d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, numSteps, numSteps);
-          d_sim->scheduleSetBC_FineLevel(fineLevel->getGrid()->getLevel(i), d_scheduler, numSteps, numSteps);
         }
       }
     
@@ -358,8 +355,7 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
     if (rootCycle) {
       // if we're called from the coarsest level, then refineInterface all the way down
       for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
-        d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, 1, 1);
-        d_sim->scheduleSetBC_FineLevel(fineLevel->getGrid()->getLevel(i), d_scheduler, 1, 1); 
+        d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, 1, 1); 
       }
     }
   }
@@ -413,7 +409,6 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
         d_sim->scheduleInitialErrorEstimate(grid->getLevel(i), d_scheduler);
         if (i > 0) {
           d_sim->scheduleRefineInterface(grid->getLevel(i), d_scheduler, 1, 1);
-          d_sim->scheduleSetBC_FineLevel(grid->getLevel(i), d_scheduler, 1, 1);
         }
       }
     }
