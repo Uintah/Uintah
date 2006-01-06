@@ -41,7 +41,11 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Input Field</name>
+        <name>Input Original Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Input Transformed Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
@@ -58,6 +62,14 @@
       </port>
     </inputs>
     <outputs>
+      <port>
+        <name>Output Original Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Output Transformed Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
       <port>
 	<name>Isovalue</name>
 	<datatype>SCIRun::Matrix</datatype>
