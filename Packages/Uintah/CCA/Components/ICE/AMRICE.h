@@ -83,7 +83,17 @@ namespace Uintah {
                                    const MaterialSubset* matls,
                                    DataWarehouse*, 
                                    DataWarehouse* new_dw,
-                                   double factor);
+                                   const double factor);
+
+    void scheduleSetBC_FineLevel(const PatchSet* patches,
+                                 SchedulerP& scheduler,
+                                 const bool isNewLevel);
+                                                                    
+    void setBC_FineLevel(const ProcessorGroup*,
+                         const PatchSubset* patches,              
+                         const MaterialSubset*,                   
+                         DataWarehouse* fine_old_dw,              
+                         DataWarehouse* fine_new_dw);     
                                    
     void iteratorTest(const Patch* finePatch,
                       const Level* fineLevel,
