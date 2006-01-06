@@ -74,12 +74,14 @@ private:
 
   double prev_min_;
   double prev_max_;
-  int last_generation_;
+  int last_orig_generation_;
+  int last_tran_generation_;
  
   MatrixHandle mHandleIsoValue_;
   MatrixHandle mHandleIndex_;
 
-  FieldHandle fHandle_;
+  FieldHandle fHandle_orig_;
+  FieldHandle fHandle_tran_;
   FieldHandle fHandle_N_1D_;
   FieldHandle fHandle_ND_;
 
@@ -89,10 +91,10 @@ private:
 class IsoValueControllerAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(vector<FieldHandle>& fields_N_1D,
-		       vector<FieldHandle>& fields_ND,
-		       FieldHandle& field_N_1D,
-		       FieldHandle& field_ND) = 0;
+  virtual void execute(vector<FieldHandle>& fields_ND,
+		       vector<FieldHandle>& fields_N_1D,
+		       FieldHandle& field_ND,
+		       FieldHandle& field_N_1D) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *iftd);
@@ -104,30 +106,30 @@ class IsoValueControllerAlgoT : public IsoValueControllerAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(vector<FieldHandle>& fields_N_1D,
-		       vector<FieldHandle>& fields_ND,
-		       FieldHandle& field_N_1D,
-		       FieldHandle& field_ND);
+  virtual void execute(vector<FieldHandle>& fields_ND,
+		       vector<FieldHandle>& fields_N_1D,
+		       FieldHandle& field_ND,
+		       FieldHandle& field_N_1D);
 };
 
 
 template< class IFIELD >
 void
-IsoValueControllerAlgoT<IFIELD>::execute(vector<FieldHandle>& fields_N_1D,
-					 vector<FieldHandle>& fields_ND,
-					 FieldHandle& field_N_1D,
-					 FieldHandle& field_ND)
+IsoValueControllerAlgoT<IFIELD>::execute(vector<FieldHandle>& fields_ND,
+					 vector<FieldHandle>& fields_N_1D,
+					 FieldHandle& field_ND,
+					 FieldHandle& field_N_1D)
 {
-  vector<IFIELD *> tfields_N_1D(fields_N_1D.size());
   vector<IFIELD *> tfields_ND(fields_ND.size());
+  vector<IFIELD *> tfields_N_1D(fields_N_1D.size());
 
-  for (unsigned int i=0; i<fields_N_1D.size(); i++) {
-    tfields_N_1D[i] = (IFIELD *)(fields_N_1D[i].get_rep());
+  for (unsigned int i=0; i<fields_ND.size(); i++) {
     tfields_ND[i]   = (IFIELD *)(fields_ND[i].get_rep());
+    tfields_N_1D[i] = (IFIELD *)(fields_N_1D[i].get_rep());
   }
 
-  field_N_1D = append_fields(tfields_N_1D);
   field_ND   = append_fields(tfields_ND);
+  field_N_1D = append_fields(tfields_N_1D);
 }
 
 } // End namespace Fusion
