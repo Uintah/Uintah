@@ -71,6 +71,7 @@ SRCS     += \
 	$(SRCDIR)/GatherFields.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/HexToTet.cc\
+	$(SRCDIR)/InsertField.cc\
 	$(SRCDIR)/IsoClip.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldMesh.cc\
