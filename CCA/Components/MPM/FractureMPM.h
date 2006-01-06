@@ -99,9 +99,6 @@ public:
 
   void scheduleRefineInterface(const LevelP& fineLevel, SchedulerP& scheduler,
                                int step, int nsteps);
-                               
-  void scheduleSetBC_FineLevel(const LevelP& fineLevel, SchedulerP& scheduler,
-                               int step, int nsteps);
 
   void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
 

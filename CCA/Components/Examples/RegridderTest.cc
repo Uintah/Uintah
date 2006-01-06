@@ -144,10 +144,6 @@ namespace Uintah
                                                 int /*step*/, int /*nsteps*/ )
   {
   }
-  void RegridderTest::scheduleSetBC_FineLevel ( const LevelP& /*level*/, SchedulerP& /*scheduler*/, 
-                                                int /*step*/, int /*nsteps*/ )
-  {
-  }
 
   void RegridderTest::initialize (const ProcessorGroup*,
 				  const PatchSubset* patches, const MaterialSubset* matls,

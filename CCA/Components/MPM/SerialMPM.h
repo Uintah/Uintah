@@ -64,6 +64,8 @@ public:
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
 	 
+  //////////
+  // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, GridP&,
 			    SimulationStateP&);
 	 
@@ -79,19 +81,19 @@ public:
 
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
-
+  //////////
+  // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
 					     SchedulerP&);
 	 
+  //////////
+  // Insert Documentation Here:
   virtual void scheduleTimeAdvance(const LevelP& level, 
 				   SchedulerP&, int step, int nsteps );
 
   void scheduleRefine(const PatchSet* patches, SchedulerP& scheduler);
 
   void scheduleRefineInterface(const LevelP& fineLevel, SchedulerP& scheduler,
-                               int step, int nsteps);
-                               
-  void scheduleSetBC_FineLevel(const LevelP& fineLevel, SchedulerP& scheduler,
                                int step, int nsteps);
 
   void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
