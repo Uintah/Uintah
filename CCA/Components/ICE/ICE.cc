@@ -1691,6 +1691,17 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->speedSound_CCLabel,  gn, 0);
   task->requires(Task::NewDW, lb->vol_frac_CCLabel,    gn, 0);
   
+/*`==========TESTING==========*/
+// HACK TO FAKE THE TASKGRAPH OUT
+// SO YOU CAN USE GAMMA, cv and vol_frac IN AMRICE:SETBC_FINELEVEL()
+// somewhere during a timestep you have to require these
+// variables from the oldDW.  Ask Bryan about it.  1/6/05
+  task->requires(Task::OldDW, lb->specific_heatLabel,gac,2);
+  task->requires(Task::OldDW, lb->gammaLabel,        gac,2);
+  task->requires(Task::OldDW, lb->vol_frac_CCLabel, gac,2); 
+
+/*===========TESTING==========`*/;
+  
   computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
                              d_customBC_var_basket);
                              
@@ -4977,8 +4988,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);
       new_dw->allocateAndPut(mach,   lb->machLabel,     indx,patch);  
 
-      rho_CC.initialize(0.0);
-      temp.initialize(0.0);
+      rho_CC.initialize(0.987654321);
+      temp.initialize(0.987654321);
       q_advected.initialize(0.0);  
       mass_advected.initialize(0.0);
       vel_CC.initialize(Vector(0.0,0.0,0.0));

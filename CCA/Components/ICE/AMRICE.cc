@@ -187,7 +187,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
                                        const MaterialSubset*,
                                        DataWarehouse* fine_old_dw,
                                        DataWarehouse* fine_new_dw,
-                                       double subCycleProgress)
+                                       const double subCycleProgress)
 {
   const Level* level = getLevel(patches);
   if(level->getIndex() > 0){     
@@ -206,7 +206,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         CCVariable<double> press_CC, rho_CC, sp_vol_CC, temp_CC;
         CCVariable<Vector> vel_CC;
 
-        fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch);
+//        fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch);
         fine_new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx,patch);
         fine_new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx,patch);
         fine_new_dw->getModifiable(temp_CC,  lb->temp_CCLabel,   indx,patch);
@@ -218,15 +218,19 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
           ostringstream desc;     
           desc << "TOP_refineInterface_Mat_" << indx << "_patch_"
                << patch->getID()<< " step " << subCycleProgress;
-          printData(indx, patch,   1, desc.str(), "press_CC",    press_CC);
+//          printData(indx, patch,   1, desc.str(), "press_CC",    press_CC);
           printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
           printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
           printData(indx, patch,   1, desc.str(), "Temp_CC",     temp_CC);
           printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
         }
-
+/*`==========TESTING==========*/
+#if 0
+// I'm not sure that we need to refine pressure since it is a derived quantity
         refineCoarseFineBoundaries(patch, press_CC, fine_new_dw, 
                                    lb->press_CCLabel,  0,   subCycleProgress);
+#endif 
+/*===========TESTING==========`*/
 
         refineCoarseFineBoundaries(patch, rho_CC,   fine_new_dw, 
                                    lb->rho_CCLabel,    indx,subCycleProgress);
@@ -365,74 +369,9 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
     }
   }  // face loop
 
-#ifdef BRYAN
-  for (iter  = patch->getBoundaryFaces()->begin(); 
-       iter != patch->getBoundaryFaces()->end(); ++iter){
-    Patch::FaceType face = *iter;
-
-    //__________________________________
-    // fine level hi & lo cell iter limits
-    // coarselevel hi and low index
-    CellIterator iter_tmp = patch->getFaceCellIterator(face, "plusEdgeCells");
-    IntVector fl = iter_tmp.begin();
-    IntVector fh = iter_tmp.end(); 
-    IntVector refineRatio = fineLevel->getRefinementRatio();
-    IntVector coarseLow  = fineLevel->mapCellToCoarser(fl);
-    IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
-
-    IntVector cl, ch;
-    coarseLevel->findCellIndexRange(cl,ch);
-    coarseLow   = Max(coarseLow, cl);
-    coarseHigh  = Min(coarseHigh, ch); 
-
-    //__________________________________
-    // subCycleProgress_var near 1.0 
-    //  interpolation using the coarse_new_dw data
-
-    if(subCycleProgress_var > 1-1.e-10){ 
-     constCCVariable<varType> q_NewDW;
-     coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
-                           coarseLow, coarseHigh);
-
-     selectInterpolator(q_NewDW, 0, coarseLevel, 
-                        fineLevel, refineRatio, fl,fh, Q);
-    } else {    
-
-    //__________________________________
-    // subCycleProgress_var somewhere between 0 or 1
-    //  interpolation from both coarse new and old dw 
-      constCCVariable<varType> q_OldDW, q_NewDW;
-      coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
-                           coarseLow, coarseHigh);
-      coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
-                           coarseLow, coarseHigh);
-
-      CCVariable<varType> Q_old, Q_new;
-      fine_new_dw->allocateTemporary(Q_old, patch);
-      fine_new_dw->allocateTemporary(Q_new, patch);
-
-      Q_old.initialize(varType(d_EVIL_NUM));
-      Q_new.initialize(varType(d_EVIL_NUM));
-
-      selectInterpolator(q_OldDW, 0, coarseLevel, 
-                        fineLevel,refineRatio, fl,fh, Q_old);
-
-      selectInterpolator(q_NewDW, 0, coarseLevel, 
-                        fineLevel,refineRatio, fl,fh, Q_new);
-
-      // Linear interpolation in time
-      for(CellIterator iter(fl,fh); !iter.done(); iter++){
-        IntVector f_cell = *iter;
-        Q[f_cell] = (1. - subCycleProgress_var)*Q_old[f_cell] 
-                        + subCycleProgress_var *Q_new[f_cell];
-      }
-    }
-  }  // face loop
-
-#endif
-
   //____ B U L L E T   P R O O F I N G_______ 
   // All values must be initialized at this point
+  // Note only check patches that aren't on the edge of the domain
   if(subCycleProgress_var > 1-1.e-10){  
     IntVector badCell;
     CellIterator iter = patch->getExtraCellIterator();
@@ -446,7 +385,8 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
            <<fineLevel->getIndex()<<"\n ";
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
-  }  
+  }
+
   cout_dbg.setActive(false);// turn off the switch for cout_dbg
 }
 
@@ -469,10 +409,13 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
            << " Level-" << level->getIndex()<< '\n';
   DataWarehouse* coarse_old_dw = 0;
   DataWarehouse* coarse_new_dw = 0;
-  if (subCycleProgress_var != 1.0)
+  
+  if (subCycleProgress_var != 1.0){
     coarse_old_dw = fine_new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
-  if (subCycleProgress_var != 0.0)
+  }
+  if (subCycleProgress_var != 0.0){
     coarse_new_dw = fine_new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  }
   
   refine_CF_interfaceOperator<double>
     (patch, level, coarseLevel, val, label, subCycleProgress_var, matl,
@@ -496,10 +439,13 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
            << " Level-" << level->getIndex()<< '\n';
   DataWarehouse* coarse_old_dw = 0;
   DataWarehouse* coarse_new_dw = 0;
-  if (subCycleProgress_var != 1.0)
+  
+  if (subCycleProgress_var != 1.0){
     coarse_old_dw = fine_new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
-  if (subCycleProgress_var != 0.0)
+  }
+  if (subCycleProgress_var != 0.0){
     coarse_new_dw = fine_new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  }
 
   refine_CF_interfaceOperator<Vector>
     (patch, level, coarseLevel, val, label, subCycleProgress_var, matl,
@@ -507,23 +453,261 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
 }
 
 /*___________________________________________________________________
+ Function~  AMRICE::scheduleSetBC_FineLevel--
+ Purpose:  
+_____________________________________________________________________*/
+void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
+                                     SchedulerP& sched,
+                                     const bool isNewLevel) 
+{
+  const Level* fineLevel = getLevel(patches);
+  int L_indx = fineLevel->getIndex();
+  
+  if(L_indx > 0  && doICEOnLevel(L_indx, fineLevel->getGrid()->numLevels())){
+    cout_doing << d_myworld->myrank() << " AMRICE::scheduleSetBC_FineLevel \t\t\tL-" 
+               << L_indx <<" P-" << *patches << '\n';
+    
+    Task* t;
+    t = scinew Task("AMRICE::setBC_FineLevel", this, &AMRICE::setBC_FineLevel);
+    Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+    Ghost::GhostType  gn = Ghost::None;
+    Task::DomainSpec ND   = Task::NormalDomain;
+
+    // need to interpolate these intermediate values
+    t->requires(Task::NewDW, lb->gammaLabel,        0, Task::CoarseLevel, 0, ND, gn,0);
+    t->requires(Task::NewDW, lb->specific_heatLabel,0, Task::CoarseLevel, 0, ND, gn,0);
+    
+    // This conditional is a HACK to fake out the task graph.  Bryan should
+    // fix this.  We execute the task on every level we just don't tell the task
+    // graph that we are.  1/06/05
+    if (isNewLevel) {   
+      t->modifies(lb->press_CCLabel, d_press_matl, oims);
+      t->modifies(lb->rho_CCLabel);
+      t->modifies(lb->sp_vol_CCLabel);
+      t->modifies(lb->temp_CCLabel);
+      t->modifies(lb->vel_CCLabel);
+      t->computes(lb->gammaLabel);
+      t->computes(lb->specific_heatLabel);
+      t->computes(lb->vol_frac_CCLabel);
+    }
+    
+    //__________________________________
+    // Model Variables.
+    if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+      vector<TransportedVariable*>::iterator iter;
+
+      for(iter = d_modelSetup->tvars.begin();
+         iter != d_modelSetup->tvars.end(); iter++){
+        TransportedVariable* tvar = *iter;
+        if(isNewLevel){
+          t->modifies(tvar->var);
+        }
+      }
+    }
+    sched->addTask(t, patches, d_sharedState->allMaterials());
+  }
+}
+
+/*______________________________________________________________________
+ Function~  AMRICE::setBC_FineLevel
+ Purpose~   set the boundary conditions on the fine level at the edge
+ of the computational domain
+______________________________________________________________________*/
+void AMRICE::setBC_FineLevel(const ProcessorGroup*,
+                             const PatchSubset* patches,          
+                             const MaterialSubset*,               
+                             DataWarehouse* fine_old_dw,          
+                             DataWarehouse* fine_new_dw)             
+{
+  const Level* fineLevel = getLevel(patches);
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+  
+  if(fineLevel->getIndex() > 0){     
+    cout_doing << d_myworld->myrank() 
+               << " Doing setBC_FineLevel"<< "\t\t\t\t AMRICE L-" 
+               << fineLevel->getIndex() << " Patches: " << *patches <<endl;
+               
+    int  numMatls = d_sharedState->getNumMatls();
+    bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
+      
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      StaticArray<CCVariable<double> > sp_vol_CC(numMatls);
+      
+      for (int m = 0; m < numMatls; m++) {
+        ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+        int indx = matl->getDWIndex(); 
+        CCVariable<double> rho_CC, temp_CC, cv, gamma,vol_frac;
+        CCVariable<Vector> vel_CC;
+        
+        fine_new_dw->getModifiable(sp_vol_CC[m],lb->sp_vol_CCLabel,    indx,patch);
+        fine_new_dw->getModifiable(rho_CC,      lb->rho_CCLabel,       indx,patch);
+        fine_new_dw->getModifiable(temp_CC,     lb->temp_CCLabel,      indx,patch);
+        fine_new_dw->getModifiable(vel_CC,      lb->vel_CCLabel,       indx,patch);
+        fine_new_dw->allocateAndPut(gamma,      lb->gammaLabel,        indx,patch);
+        fine_new_dw->allocateAndPut(cv,         lb->specific_heatLabel,indx,patch);
+        fine_new_dw->allocateAndPut(vol_frac,   lb->vol_frac_CCLabel,  indx,patch);
+        
+
+        //__________________________________
+        // interpolate the intermediate variables (cv, gamma,vol_frac)
+        // to the finer level along the boundary edge
+        // Assumption: cv, gamma, vol_frac on the coarest level are accurate enough
+        cv.initialize(d_EVIL_NUM);
+        gamma.initialize(d_EVIL_NUM);
+        vol_frac.initialize(d_EVIL_NUM);
+
+        IntVector refineRatio = fineLevel->getRefinementRatio();
+        DataWarehouse* coarse_new_dw = fine_new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+        
+        int orderOfInterpolation = 0;
+        //__________________________________
+        // Iterate over fine level boundary faces
+        vector<Patch::FaceType>::const_iterator iter;  
+        for (iter  = patch->getBoundaryFaces()->begin(); 
+             iter != patch->getBoundaryFaces()->end(); ++iter){
+          Patch::FaceType face = *iter;
+cout << " Boundary Face " << face << " Level " << fineLevel->getIndex() << endl;
+          //__________________________________
+          // fine level hi & lo cell iter limits
+          // coarselevel hi and low index
+          IntVector cl, ch, fl, fh;
+          getCoarseFineFaceRange(patch, coarseLevel, face, orderOfInterpolation, cl, ch, fl, fh);
+
+          constCCVariable<double> cv_coarse, gamma_coarse, vol_frac_coarse;
+          coarse_new_dw->getRegion(cv_coarse,      lb->specific_heatLabel, indx, coarseLevel,cl, ch);
+          coarse_new_dw->getRegion(gamma_coarse,   lb->gammaLabel,         indx, coarseLevel,cl, ch);
+          coarse_new_dw->getRegion(vol_frac_coarse,lb->vol_frac_CCLabel,   indx, coarseLevel,cl, ch);
+
+          selectInterpolator(cv_coarse,       orderOfInterpolation, coarseLevel, 
+                             fineLevel, refineRatio, fl,fh, cv);
+                              
+          selectInterpolator(gamma_coarse,    orderOfInterpolation, coarseLevel, 
+                             fineLevel, refineRatio, fl,fh, gamma);
+                             
+          selectInterpolator(vol_frac_coarse, orderOfInterpolation, coarseLevel, 
+                             fineLevel, refineRatio, fl,fh, vol_frac);     
+        } // boundary face loop
+        
+#if 0        
+        // Worry about this later
+        // the problem is that you don't know have delT for the finer level at this point in the cycle
+        preprocess_CustomBCs("setBC_FineLevel",fine_old_dw, fine_new_dw, lb,  patch, 999,
+                       d_customBC_var_basket);
+#endif
+
+        constCCVariable<double> placeHolder;
+
+        
+        setBC(rho_CC, "Density",  placeHolder, placeHolder,
+              patch,d_sharedState, indx, fine_new_dw, d_customBC_var_basket);
+
+        setBC(vel_CC, "Velocity", 
+              patch,d_sharedState, indx, fine_new_dw, d_customBC_var_basket);       
+
+        setBC(temp_CC,"Temperature",gamma, cv,
+              patch,d_sharedState, indx, fine_new_dw, d_customBC_var_basket);
+
+        setSpecificVolBC(sp_vol_CC[m], "SpecificVol", false,rho_CC,vol_frac,
+                         patch,d_sharedState, indx);
+                         
+#if 0
+        // worry about this later
+        delete_CustomBCs(d_customBC_var_basket);
+#endif
+        //__________________________________
+        //    Model Variables                     
+        if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+          vector<TransportedVariable*>::iterator t_iter;
+          for( t_iter  = d_modelSetup->tvars.begin();
+               t_iter != d_modelSetup->tvars.end(); t_iter++){
+            TransportedVariable* tvar = *t_iter;
+
+            if(tvar->matls->contains(indx)){
+              string Labelname = tvar->var->getName();
+              CCVariable<double> q_CC;
+              fine_new_dw->getModifiable(q_CC, tvar->var, indx, patch);
+
+              if(switchDebug_AMR_refineInterface){ 
+                printData(indx, patch, 1, "TOP_setBC_FineLevel", Labelname, q_CC);
+              }
+          
+              setBC(q_CC, Labelname,  patch, d_sharedState, indx, fine_new_dw);
+
+              if(switchDebug_AMR_refineInterface){
+                printData(indx, patch, 1, "BOT_setBC_FineLevel", Labelname, q_CC);
+              }
+            }
+          }
+        }
+        
+        //__________________________________
+        //  Print Data 
+   #if 1
+        if(switchDebug_AMR_refine){
+          ostringstream desc;    
+          desc << "BOT_setBC_FineLevel_Mat_" << indx << "_patch_"<< patch->getID();
+          printData(indx, patch,   1, desc.str(), "rho_CC",    rho_CC);
+          printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol_CC[m]);
+          printData(indx, patch,   1, desc.str(), "Temp_CC",   temp_CC);
+          printVector(indx, patch, 1, desc.str(), "vel_CC", 0, vel_CC);
+        }
+    #endif
+      } // matl loop
+      
+#if 0     
+// I'm not sure that we need to set the boundary conditions on the pressure since they are 
+// a derived quantity 
+      //__________________________________
+      //  Pressure boundary condition
+      CCVariable<double> press_CC;
+      StaticArray<CCVariable<double> > placeHolder(0);
+      fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,     0,   patch);
+      
+      setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
+            "sp_vol", "Pressure", patch , d_sharedState, 0, fine_new_dw, 
+            d_customBC_var_basket);
+      
+      if(switchDebug_AMR_refine){
+        ostringstream desc;    
+        desc << "BOT_setBC_FineLevel_Mat_" << indx << "_patch_"<< patch->getID();
+        printData(indx, patch,   1, desc.str(), "press_CC",  press_CC);
+      }
+#endif   
+      
+      
+    }  // patches loop
+    cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
+  }             
+}
+
+
+/*___________________________________________________________________
  Function~  AMRICE::scheduleRefine--  
 _____________________________________________________________________*/
 void AMRICE::scheduleRefine(const PatchSet* patches,
-                               SchedulerP& sched)
+                            SchedulerP& sched)
 {
   const Level* fineLevel = getLevel(patches);
-  if(fineLevel->getIndex() > 0  && doICEOnLevel(fineLevel->getIndex(), fineLevel->getGrid()->numLevels())){
-    const Level* fineLevel = getLevel(patches);
+  int L_indx = fineLevel->getIndex();
+  
+  if(L_indx > 0  && doICEOnLevel(L_indx, fineLevel->getGrid()->numLevels())){
+    
     cout_doing << d_myworld->myrank() 
                << " AMRICE::scheduleRefine\t\t\t\tL-" 
-               <<  fineLevel->getIndex() << " P-" << *patches << '\n';
+               <<  L_indx << " P-" << *patches << '\n';
     Task* task = scinew Task("AMRICE::refine",this, &AMRICE::refine);
     
     MaterialSubset* subset = scinew MaterialSubset;
     
     subset->add(0);
     Ghost::GhostType  gac = Ghost::AroundCells;
+    
+    bool isNewLevel = false;
+    if (patches == getLevel(patches->getSubset(0))->eachPatch()){
+      isNewLevel = true;
+    }
+    
     
     task->requires(Task::NewDW, lb->press_CCLabel,
                    0, Task::CoarseLevel, subset, Task::OutOfDomain, gac,1);
@@ -550,14 +734,14 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
         TransportedVariable* tvar = *iter;
         task->requires(Task::NewDW, tvar->var,
                        0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
-        if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
+        if (isNewLevel) {
           task->computes(tvar->var);
         }
       }
     }
     
     // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
-    if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
+    if (isNewLevel) {
       task->computes(lb->press_CCLabel, subset, Task::OutOfDomain);
       task->computes(lb->rho_CCLabel);
       task->computes(lb->sp_vol_CCLabel);
@@ -565,6 +749,10 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
       task->computes(lb->vel_CCLabel);
     }
     sched->addTask(task, patches, d_sharedState->allICEMaterials());
+    
+    //__________________________________
+    // Sub Task 
+    scheduleSetBC_FineLevel(patches, sched, isNewLevel);
   }
 }
 
@@ -582,7 +770,7 @@ void AMRICE::refine(const ProcessorGroup*,
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
   
   cout_doing << d_myworld->myrank() 
-             << " Doing refine \t\t\t\t\t\t AMRICE L-"<< fineLevel->getIndex();
+             << " Doing refine \t\t\t\t\t AMRICE L-"<< fineLevel->getIndex();
   IntVector rr(fineLevel->getRefinementRatio());
   double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
   
@@ -597,13 +785,18 @@ void AMRICE::refine(const ProcessorGroup*,
     iteratorTest(finePatch, fineLevel, coarseLevel, new_dw);
 
     //testInterpolators<double>(new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,finePatch);
-    
+
+/*`==========TESTING==========*/
+// I'm not sure we need to refine the pressure since it is a dervied quantity
+#if 0    
     // refine pressure
     CCVariable<double> press_CC;
     new_dw->allocateAndPut(press_CC, lb->press_CCLabel, 0, finePatch);
     press_CC.initialize(d_EVIL_NUM);
     CoarseToFineOperator<double>(press_CC,  lb->press_CCLabel,0, new_dw, 
-                         invRefineRatio, finePatch, fineLevel, coarseLevel);   
+                         invRefineRatio, finePatch, fineLevel, coarseLevel);
+#endif   
+/*===========TESTING==========`*/ 
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -663,7 +856,7 @@ void AMRICE::refine(const ProcessorGroup*,
       if(switchDebug_AMR_refine){ 
       ostringstream desc;     
         desc << "BOT_Refine_Mat_" << indx << "_patch_"<< finePatch->getID();
-        printData(indx, finePatch,   1, desc.str(), "press_CC",  press_CC);
+//        printData(indx, finePatch,   1, desc.str(), "press_CC",  press_CC);
         printData(indx, finePatch,   1, desc.str(), "rho_CC",    rho_CC);
         printData(indx, finePatch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
         printData(indx, finePatch,   1, desc.str(), "Temp_CC",   temp);
