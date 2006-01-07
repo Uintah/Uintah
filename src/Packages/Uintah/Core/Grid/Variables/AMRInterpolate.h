@@ -12,6 +12,7 @@
 #include <Core/Math/MiscMath.h>
 #include <sstream>
 using namespace std;
+using namespace SCIRun;
 
 namespace Uintah {
 
