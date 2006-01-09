@@ -48,9 +48,11 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomContainer.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class Material : public Persistent {
+class SHARE Material : public Persistent {
 public:
   int ref_cnt;
   Mutex lock;
@@ -78,7 +80,7 @@ public:
 
 typedef LockingHandle<Material> MaterialHandle;
 
-class GeomMaterial : public GeomContainer {
+class SHARE GeomMaterial : public GeomContainer {
   MaterialHandle matl;
 public:
   GeomMaterial(GeomHandle, const MaterialHandle&);

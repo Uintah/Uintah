@@ -31,12 +31,13 @@
 #define Core_Util_RWS_h 1
 
 #include <Core/Util/notset.h>
+#include <Core/Util/share.h>
 
 namespace SCIRun {
 
 //!remove leading and trailing white space from a char*
 // returns _NOTSET_ if the string is or becomes zero length
-char* removeLTWhiteSpace(char* string);
+SHARE char* removeLTWhiteSpace(char* string);
 
 }
 

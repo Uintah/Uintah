@@ -100,7 +100,9 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     throw "netedit needs a minor command";
   }
   if(args[1] == "quit") {
+#ifndef EXPERIMENTAL_TCL_THREAD
     TCLTask::unlock();
+#endif
     Thread::exitAll(0);
   } else if (args[1] == "addmodule") {
     if(args.count() < 5)

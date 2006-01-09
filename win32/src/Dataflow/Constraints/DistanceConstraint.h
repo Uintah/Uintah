@@ -46,9 +46,11 @@
 
 #include <Dataflow/Constraints/BaseConstraint.h>
 
+#include <Dataflow/Constraints/share.h>
+
 namespace SCIRun {
 
-class DistanceConstraint : public BaseConstraint {
+class SHARE DistanceConstraint : public BaseConstraint {
 public:
    DistanceConstraint( const string& name,
 		       const Index numSchemes,

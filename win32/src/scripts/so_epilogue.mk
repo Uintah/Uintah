@@ -45,7 +45,9 @@ LIBNAME := $(LIBDIR)/lib$(subst /,_,$(SRCDIR)).$(SO_OR_A_FILE)
 ifneq ($(SRCDIR),Core/Malloc)
 ifeq ($(LARGESOS),yes)
 else
+ifneq ($(IS_WIN),yes)
 PSELIBS := $(PSELIBS) $(MALLOCLIB)
+endif
 endif
 endif
 
@@ -110,6 +112,14 @@ CLEANLIBS := $(CLEANLIBS) $(LIBNAME)
 CLEANOBJS := $(CLEANOBJS) $(OBJS)
 ifneq ($(REPOSITORY_FLAGS),)
   ALL_LIB_ASSOCIATIONS := $(ALL_LIB_ASSOCIATIONS) $(patsubst %,$(SRCDIR)/ptrepository:%,$(patsubst ./%,%,$(OBJS)))
+endif
+
+ifeq ($(IS_WIN), yes)
+  # don't build Core/Malloc for now...
+  ifneq ($(LIBNAME),lib/libCore_Malloc.dll)
+    MAKE_WHAT:=LIB
+    include $(SCIRUN_SCRIPTS)/vcproj.mk
+  endif
 endif
 
 # Try to prevent user error

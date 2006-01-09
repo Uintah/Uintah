@@ -40,6 +40,7 @@
 #include <Core/Volume/VolShader.h>
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Math/Trig.h> // for M_PI
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -57,11 +58,8 @@ namespace SCIRun {
 #endif
 
 #ifdef _WIN32
-#include <windows.h>
-#define GL_ARB_fragment_program 1
-typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
-static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
-#define GL_TEXTURE0_ARB 0x84C0
+#undef min
+#undef max
 #endif
 
 SliceRenderer::SliceRenderer(TextureHandle tex,
@@ -84,9 +82,6 @@ SliceRenderer::SliceRenderer(TextureHandle tex,
 {
   lighting_ = 1;
   mode_ = MODE_SLICE;
-#ifdef _WIN32
-  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
-#endif
   outline_colors_.resize(20);
   for(int i = 0; i < 20; i++){
     outline_colors_[i] = Color(1.0,1.0, 1.0);
@@ -907,7 +902,6 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
                                        int color_index,
                                        FragmentProgramARB* shader)
 {
-#ifndef _WIN32
   if( draw_level_outline_ ){
 
     if(shader) shader->release(); // shader messes with line drawing. why?
@@ -927,8 +921,12 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
     // specify here.
     GLint n_tex_regs = 1;
     // first is multi-texturing enabled?
+#ifndef _WIN32
     bool multitex = gluCheckExtension((GLubyte*)"GL_ARB_multitexture",
                                       glGetString(GL_EXTENSIONS));
+#else
+    bool multitex = (glActiveTexture != 0);
+#endif
     if( multitex ) //if so, how many texture units?
 #if defined(__sgi)
       n_tex_regs = 1;  // <- DON'T KNOW IF THIS IS RIGHT!!! But it
@@ -940,14 +938,14 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
 
 
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-#ifdef _WIN32
-    if (glActiveTexture) {
-#endif
     GLboolean *tex1d = new GLboolean[n_tex_regs];
     GLboolean *tex2d = new GLboolean[n_tex_regs];
     GLboolean *tex3d = new GLboolean[n_tex_regs];
     if(multitex){ // for each texture unit, mark what is enabled
       for( int i = 0; i < n_tex_regs; i++){
+#ifdef _WIN32
+        if (glActiveTexture)
+#endif
         glActiveTexture(GL_TEXTURE0+i);
         tex1d[i] = glIsEnabled(GL_TEXTURE_1D);
         glDisable(GL_TEXTURE_1D);
@@ -964,9 +962,6 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
       tex3d[0] = glIsEnabled(GL_TEXTURE_3D);
       glDisable(GL_TEXTURE_3D);
     }
-#ifdef _WIN32
-    }
-#endif
 #endif
     //    glColor4f(0.8,0.8,0.8,1.0);
     draw_polygons_wireframe(vertex, texcoord, poly, true, use_fog, 0);
@@ -1003,7 +998,6 @@ void SliceRenderer::draw_level_outline(vector<float>& vertex,
     if(shader) shader->bind();   
     glColor4f(1.0,1.0,1.0,1.0);
   }
-#endif
 }
 
 } // namespace SCIRun

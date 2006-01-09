@@ -61,11 +61,21 @@
 #include <string>
 #include <map>
 
+#include <Dataflow/Network/share.h>
+
+#ifdef _WIN32
+#define DECLARE_MAKER(name) \
+extern "C" __declspec(dllexport) Module* make_##name(GuiContext* ctx) \
+{ \
+  return new name(ctx); \
+}
+#else
 #define DECLARE_MAKER(name) \
 extern "C" Module* make_##name(GuiContext* ctx) \
 { \
   return new name(ctx); \
 }
+#endif
 
 // CollabVis code begin
 // Stupid ViewServer hack
@@ -158,7 +168,7 @@ PortManager<T>::operator[](string item)
   return port_range_type(namemap_.equal_range(item));
 }
 
-class Module : public ProgressReporter, public ModulePickable, public GuiCallback
+class SHARE Module : public ProgressReporter, public ModulePickable, public GuiCallback
 {
 public:
   enum SchedClass {

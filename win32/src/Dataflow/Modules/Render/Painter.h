@@ -85,6 +85,11 @@
 #include <Core/Util/Environment.h>
 #include <Core/Volume/CM2Widget.h>
 
+#ifdef _WIN32
+#undef min
+#undef max
+#endif
+
 
 namespace SCIRun {
 

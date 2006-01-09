@@ -43,7 +43,7 @@ const double Pi=M_PI;
 
 inline double acosh(double x)
 {
-	return (x<1) ? log(-1) : log(x+sqrt(x*x-1));
+	return (x<1) ? log(-1.0) : log(x+sqrt(x*x-1));
 }
 
 #endif

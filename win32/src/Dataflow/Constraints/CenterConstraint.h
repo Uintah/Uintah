@@ -46,11 +46,13 @@
 
 #include <Dataflow/Constraints/BaseConstraint.h>
 
+#include <Dataflow/Constraints/share.h>
+
 namespace SCIRun {
 
 // This constraint only finds the center (i.e. one-way constraint).
 
-class CenterConstraint : public BaseConstraint {
+class SHARE CenterConstraint : public BaseConstraint {
 public:
    CenterConstraint( const string& name,
 		     const Index numSchemes,

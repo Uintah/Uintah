@@ -31,7 +31,7 @@
 SRCDIR   := Core/ImportExport/ColorMap
 
 SRCS +=	$(SRCDIR)/ColorMapIEPlugin.cc \
-	$(SRCDIR)/ExecConverter.cc
+	$(SRCDIR)/ColorMapExecConverter.cc
 
 # PSELIBS and LIBS come from the ImportExport sub.mk file (one dir up).
 

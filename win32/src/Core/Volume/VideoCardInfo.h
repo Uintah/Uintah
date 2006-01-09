@@ -32,11 +32,13 @@
 #ifndef VideoCardInfo_h
 #define VideoCardInfo_h
 
+#include <Core/Volume/share.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int video_card_memory_size();
+SHARE int video_card_memory_size();
 
 #ifdef __cplusplus
 }

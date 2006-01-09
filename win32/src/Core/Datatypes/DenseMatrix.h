@@ -50,11 +50,13 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
 
 using std::vector;
 
-class DenseMatrix : public Matrix {
+class SHARE DenseMatrix : public Matrix {
   double** data;
   double*  dataptr_;
 
@@ -142,17 +144,17 @@ public:
   static PersistentTypeID type_id;
 
   //! Friend functions
-  friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  SHARE friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 };
 
 
 //! Friend functions
-void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
-void Add(double, DenseMatrix&, double, const DenseMatrix&);
-void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+SHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+SHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+SHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
+SHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
+SHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+SHARE void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 
 
 } // End namespace SCIRun

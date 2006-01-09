@@ -357,6 +357,7 @@ using std::string;
   static PFNWGLGETPBUFFERDCARBPROC wglGetPbufferDCARB = 0;
   static PFNWGLDESTROYPBUFFERARBPROC wglDestroyPbufferARB = 0;
   static PFNWGLQUERYPBUFFERARBPROC wglQueryPbufferARB = 0;
+#  define GL_CLAMP_TO_EDGE                  0x812F
 #endif
 
 static bool mInit = false;
@@ -492,6 +493,12 @@ Pbuffer::create ()
     {
       wglBindTexImageARB = (PFNWGLBINDTEXIMAGEARBPROC)wglGetProcAddress("wglBindTexImageARB");
       wglReleaseTexImageARB = (PFNWGLRELEASETEXIMAGEARBPROC)wglGetProcAddress("wglReleaseTexImageARB");
+      wglCreatePbufferARB = (PFNWGLCREATEPBUFFERARBPROC)wglGetProcAddress("wglCreatePbufferARB");
+  wglReleaseTexImageARB = (PFNWGLRELEASETEXIMAGEARBPROC)wglGetProcAddress("wglReleaseTexImageARB");
+  wglGetPbufferDCARB = (PFNWGLGETPBUFFERDCARBPROC)wglGetProcAddress("wglGetPbufferDCARB");
+  wglDestroyPbufferARB = (PFNWGLDESTROYPBUFFERARBPROC)wglGetProcAddress("wglDestroyPbufferARB");
+  wglQueryPbufferARB = (PFNWGLQUERYPBUFFERARBPROC)wglGetProcAddress("wglQueryPbufferARB");
+  wglGetExtensionsStringARB = (PFNWGLGETEXTENSIONSSTRINGARBPROC)wglGetProcAddress("wglGetExtensionsStringARB");
     }
 
     // Check for version.
@@ -655,6 +662,7 @@ Pbuffer::create ()
     attrib[i++] = GL_FALSE;
     attrib[i++] = 0;
     // create pbuffer
+
     impl_->pbuffer_ = wglCreatePbufferARB(impl_->dc_, pf, width_, height_, attrib);
     if (impl_->pbuffer_ == 0)
     {
@@ -709,13 +717,8 @@ Pbuffer::create ()
         tex_format_ = GL_RGBA;
       }
       glBindTexture(tex_target_, tex_);
-#ifdef GL_CLAMP_TO_EDGE
       glTexParameteri(tex_target_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(tex_target_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-#else
-      glTexParameteri(tex_target_, GL_TEXTURE_WRAP_S, GL_CLAMP);
-      glTexParameteri(tex_target_, GL_TEXTURE_WRAP_T, GL_CLAMP);
-#endif
       glTexParameteri(tex_target_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(tex_target_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       if (!mATI_render_texture)

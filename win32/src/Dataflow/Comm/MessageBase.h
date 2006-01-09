@@ -44,10 +44,11 @@
 #define SCI_project_MessageBase_h 1
 
 #include <Dataflow/Comm/MessageTypes.h>
+#include <Dataflow/Comm/share.h>
 
 namespace SCIRun {
 
-class MessageBase {
+class SHARE MessageBase {
 public:
     MessageTypes::MessageType type;
     MessageBase(MessageTypes::MessageType type);

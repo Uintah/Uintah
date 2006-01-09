@@ -55,6 +55,7 @@ using std::endl;
 typedef void (Tcl_LockProc)();
 
 #ifdef _WIN32
+#define SHARE __declspec(dllimport)
 #include <windows.h>
 #define GLXContext HGLRC
 #ifdef __cplusplus
@@ -69,7 +70,7 @@ int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_da
 #endif // __cplusplus
 
 #else // _WIN32
-
+#define SHARE
 #ifndef EXPERIMENTAL_TCL_THREAD
   extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
 #endif
@@ -78,7 +79,7 @@ extern "C" int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nw
 
 #endif // _WIN32
 
-extern "C" Tcl_Interp* the_interp;
+extern "C" SHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 
@@ -113,6 +114,8 @@ static void do_unlock()
 {
     ASSERT(lock_count>0);
     ASSERT(Thread::self() == owner);
+    //char* c = 0;
+    //*c = 0;
     if(--lock_count == 0){
 	owner=0;
 	tlock.unlock();

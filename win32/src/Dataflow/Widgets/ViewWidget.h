@@ -48,10 +48,12 @@
 #include <Core/Geom/View.h>
 
 
+#include <Dataflow/Widgets/share.h>
+
 namespace SCIRun {
 
 
-class ViewWidget : public BaseWidget {
+class SHARE ViewWidget : public BaseWidget {
 public:
   ViewWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 	      double AspectRatio = 1.3333);

@@ -67,6 +67,8 @@
 #include <Core/Algorithms/Visualization/Tree.h>
 
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Algorithms/Visualization/share.h>
+
 namespace SCIRun {
 
 class Screen;
@@ -75,7 +77,7 @@ typedef Time  SysTime;
 
 // SageBase
 
-class SageAlg : public DynamicAlgoBase {
+class SHARE SageAlg : public DynamicAlgoBase {
 public:
   SageAlg();
   virtual ~SageAlg();
@@ -89,7 +91,7 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *td);
 };
 
-class SageBase  : public SageAlg
+class SHARE SageBase  : public SageAlg
 {
 protected:
   int counter;
@@ -269,7 +271,7 @@ struct SageCell {
 };
     
 // Stack
-class SageStack {
+class SHARE SageStack {
 public:
   int size;
   int pos;

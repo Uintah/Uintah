@@ -31,7 +31,10 @@
 
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 
+#include <iostream>
+
 namespace SCIRun {
+
 
 using namespace std;
 
@@ -138,6 +141,7 @@ nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
       }
     }
   }
+  cout << "   ENd of nrrdTBA - " << bricks.size() << " bricks \n" ;
 }
 
 

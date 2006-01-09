@@ -48,10 +48,14 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Geometry/share.h>
+
 namespace SCIRun {
-  template<class T> class Array1;
-  class Piostream;
-class Tensor {
+
+template<class T> class Array1;
+class Piostream;
+
+class SHARE Tensor {
 private:
   Vector e1_, e2_, e3_;  // these are already scaled by the eigenvalues
   double l1_, l2_, l3_;
@@ -105,17 +109,17 @@ public:
   //! support dynamic compilation
   static const string& get_h_file_path();
 
-  friend void Pio(Piostream&, Tensor&);
+  SHARE friend void Pio(Piostream&, Tensor&);
 };
 
 inline 
 Tensor operator*(double d, const Tensor &t) {
   return t*d;
 }
-const TypeDescription* get_type_description(Tensor*);
+SHARE const TypeDescription* get_type_description(Tensor*);
 
-std::ostream& operator<<(std::ostream& os, const Tensor& t);
-std::istream& operator>>(std::istream& os, Tensor& t);
+SHARE std::ostream& operator<<(std::ostream& os, const Tensor& t);
+SHARE std::istream& operator>>(std::istream& os, Tensor& t);
 
 } // End namespace SCIRun
 

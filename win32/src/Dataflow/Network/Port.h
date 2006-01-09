@@ -46,12 +46,14 @@
 #include <string>
 #include <vector>
 
+#include <Dataflow/Network/share.h>
+
 namespace SCIRun {
 class Connection;
 class Module;
 
 
-class Port {
+class SHARE Port {
 public:
   Port(Module* module, const std::string& type_name,
        const std::string& port_name, const std::string& color_name);
@@ -103,7 +105,7 @@ private:
 };
 
 
-class IPort : public Port {
+class SHARE IPort : public Port {
 public:
   IPort(Module* module, const std::string& type_name,
 	const std::string& port_name, const std::string& color_name);
@@ -116,7 +118,7 @@ private:
 };
 
 
-class OPort : public Port {
+class SHARE OPort : public Port {
 public:
   OPort(Module* module, const std::string& type_name,
 	const std::string& port_name, const std::string& color_name);

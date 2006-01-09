@@ -43,6 +43,12 @@
 
 #include <Dataflow/Ports/NrrdPort.h>
 
+#ifdef _WIN32
+#define SHARE __declspec(dllimport)
+#else
+#define SHARE
+#endif
+
 /* bad Gordon */
 extern "C" {
   int _nrrdReadNrrdParse_keyvalue(Nrrd *nrrd, NrrdIoState *io, int useBiff);
@@ -272,11 +278,13 @@ void UnuMake::read_file_and_create_nrrd() {
     if (t_key != "" && t_val != "") {
       string temp = "\"" + t_key + ":=" + t_val + "\"";
       nio_->line = (char*)temp.c_str();
+#ifndef _WIN32
       if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd, nio_, AIR_TRUE)) {
 	string err = biffGetDone(NRRD);
 	error(err);
 	nio_->line = NULL;
       }
+#endif
       nio_->line = NULL;
     }
     
@@ -285,11 +293,13 @@ void UnuMake::read_file_and_create_nrrd() {
     if (t_key != "" && t_val != "") {
       string temp = "\"" + t_key + ":=" + t_val + "\"";
       nio_->line = (char*)temp.c_str();
+#ifndef _WIN32
       if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd, nio_, AIR_TRUE)) {
 	string err = biffGetDone(NRRD);
 	error(err);
 	nio_->line = NULL;
       }
+#endif
       nio_->line = NULL;
     }
     
@@ -298,11 +308,13 @@ void UnuMake::read_file_and_create_nrrd() {
     if (t_key != "" && t_val != "") {
       string temp = "\"" + t_key + ":=" + t_val + "\"";
       nio_->line = (char*)temp.c_str();
+#ifndef _WIN32
       if(_nrrdReadNrrdParse_keyvalue(nout_->nrrd, nio_, AIR_TRUE)) {
 	string err = biffGetDone(NRRD);
 	error(err);
 	nio_->line = NULL;
       }
+#endif
       nio_->line = NULL;
     }
     

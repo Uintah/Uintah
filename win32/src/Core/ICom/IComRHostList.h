@@ -37,7 +37,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <Core/ICom/IComAddress.h>
-
+#include <Core/ICom/share.h>
 namespace SCIRun {
 
 class IComRHostPattern {
@@ -59,7 +59,7 @@ private:
 };
 
 
-class IComRHostList {
+class SHARE IComRHostList {
 
 public:
 	// insert a comma or black space delimited list

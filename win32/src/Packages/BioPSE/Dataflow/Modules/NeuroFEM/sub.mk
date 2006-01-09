@@ -49,7 +49,7 @@ PSELIBS := Packages/BioPSE/Core/Datatypes \
 	Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Geometry Core/GeomInterface Core/TkExtensions \
-	Core/ImportExport
+	Core/ImportExport Core/Basis
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

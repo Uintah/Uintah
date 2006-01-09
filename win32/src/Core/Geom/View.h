@@ -47,10 +47,12 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/Color.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 
-class View {
+class SHARE View {
 protected:
     Point eyep_;
     Point lookat_;

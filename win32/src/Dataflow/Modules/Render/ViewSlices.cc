@@ -88,7 +88,15 @@
 #include <iostream>
 #include <map>
 
-extern Tcl_Interp* the_interp;
+#ifdef _WIN32
+#undef min
+#undef max
+#define SHARE __declspec(dllimport)
+#else
+#define SHARE
+#endif
+
+extern "C" SHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 

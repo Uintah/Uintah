@@ -39,10 +39,11 @@
 
 #include <sci_gl.h>
 
+#include <Core/Geom/share.h>
 
 namespace SCIRun {
 
-class Pbuffer
+class SHARE Pbuffer
 {
 public:
   Pbuffer(int width, int height, int format = GL_INT /* GL_INT or GL_FLOAT */,

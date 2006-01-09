@@ -50,6 +50,8 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 using std::vector;
 
@@ -61,7 +63,7 @@ class ModulePickable;
 class WidgetPickable;
 class BState;
 
-class GeomPick : public GeomContainer {
+class SHARE GeomPick : public GeomContainer {
 private:
   ModulePickable*   module_;
   void*             cbdata_;

@@ -45,15 +45,17 @@
 
 #include <Core/Geometry/Point.h>
 
+#include <Core/Geometry/share.h>
+
 namespace SCIRun {
 
   class Vector;
   class Piostream;
 
-  class BBox {
+  class SHARE BBox {
     
   protected:
-    friend void Pio( Piostream &, BBox& );
+    SHARE friend void Pio( Piostream &, BBox& );
 
   public:
     BBox();

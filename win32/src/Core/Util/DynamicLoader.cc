@@ -49,15 +49,39 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdio.h>
-#include <unistd.h>
+
+using namespace std;
 
 #ifdef _WIN32
 #include <windows.h>
+#ifdef _MSC_VER
+
+string vstext;
+void set_vc_dirs()
+{
+  string path_to_vc = PATH_TO_VC;
+  string path_to_psdk = PATH_TO_PSDK;
+  string path_to_make = PATH_TO_MSYS_BIN;
+
+  // path is path-to-vc/bin + path-to-vc/../Common7/IDE (for a dependent dll) + path_to_make
+  vstext = "@SET PATH=" + path_to_vc + "\\..\\Common7\\IDE;" + path_to_vc + "\\bin;" + path_to_make + ";%PATH%\n";
+
+  // include is path-to-vc/include and path-to-psdk/Include
+  vstext+= "@SET INCLUDE=" + path_to_vc + "\\include;" + path_to_psdk + "\\Include\n";
+
+  // lib (libpaths) is the same, with lib
+  vstext+= "@SET LIB=" + path_to_vc + "\\lib;" + path_to_psdk + "\\Lib";
+}
+
+#endif
+#define SHARE __declspec(dllexport)
+#else
+#include <unistd.h>
+#define SHARE
 #endif
 
 namespace SCIRun {
 
-using namespace std;
 
 #ifdef __APPLE__
   // This mutex is used in Core/Persistent/Persistent.cc.  It is
@@ -74,9 +98,9 @@ using namespace std;
   // Need these mutexes to be created here for use in another library
   // as they must "construct" _now_ because they are used before the
   // library that would normally construct them gets loaded...
-  Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
-  Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
-  Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
+  SHARE Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
+  SHARE Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
+  SHARE Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
@@ -329,9 +353,15 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
     fstr << "\n" << post_include_extra_ << "\n";
   }
 
+#ifdef _WIN32
+  // Delcare the maker function
+  fstr << endl << "extern \"C\" {"  << endl
+       << "__declspec(dllexport)" << base_class_name_ << "* maker() {" << endl;
+#else
   // Delcare the maker function
   fstr << endl << "extern \"C\" {"  << endl
        << base_class_name_ << "* maker() {" << endl;
+#endif
 
   // If making an empty maker, return nothing instead of newing up the class.
   // Comments out the next line that news up the class.
@@ -381,6 +411,10 @@ DynamicLoader::DynamicLoader() :
   map_lock_.lock();
   algo_map_.clear();
   map_lock_.unlock();
+
+#ifdef _MSC_VER
+  set_vc_dirs();
+#endif
 }
 
 
@@ -628,10 +662,14 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
     }
   }
   string command2 = command.substr(loc+1, command.length());
-
+  // hardcoded...
   string batch_filename = string(otfdir)+"\\" + info.filename_ + "bat";
   FILE* batch = fopen(batch_filename.c_str(), "w");
+#ifdef _MSC_VER
+  fprintf(batch, "\n%s\n%s\n%s\n", vstext.c_str(), command1.c_str(), command2.c_str());
+#else
   fprintf(batch, "\n%s\n%s\n", command1.c_str(), command2.c_str());
+#endif
   fclose(batch);
 
   si_.cb = sizeof(STARTUPINFO);

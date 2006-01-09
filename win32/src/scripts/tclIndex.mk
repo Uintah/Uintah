@@ -65,6 +65,7 @@ $(TCLINDEX): $(SRCS) $(SRCDIR)/sub.mk
 # Add this to the list of targets
 
 ALLTARGETS := $(ALLTARGETS) $(TCLINDEX)
+ALLTCLINDEXES := $(ALLTCLINDEXES) $(TCLINDEX)
 
 # Add this to the clean build
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex

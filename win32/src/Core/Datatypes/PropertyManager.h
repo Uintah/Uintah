@@ -54,11 +54,13 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
 
 using namespace std;
 
-class PropertyBase : public Datatype {
+class SHARE PropertyBase : public Datatype {
 public:
   PropertyBase(bool trans) : transient_(trans) {} 
   //PropertyBase(const PropertyBase &p) : transient_(p.transient_) {} 
@@ -85,7 +87,7 @@ protected:
 };
 
 
-class PropertyManager;
+class SHARE PropertyManager;
 
 template<class T>
 class Property : public PropertyBase {

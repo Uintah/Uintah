@@ -30,6 +30,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/GuiInterface/TCLTask.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
 #include <Dataflow/Network/NetworkEditor.h>
@@ -43,6 +44,7 @@ typedef void (Tcl_LockProc)();
 using namespace SCIRun;
 
 #ifdef _WIN32
+#  define SHARE __declspec(dllimport)
 #  ifdef __cplusplus
      extern "C" {
 #  endif // __cplusplus
@@ -55,6 +57,7 @@ using namespace SCIRun;
      }
 #  endif // __cplusplus
 #else // not _WIN32
+#  define SHARE
 #  ifndef EXPERIMENTAL_TCL_THREAD
      extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
 #  endif
@@ -62,7 +65,7 @@ using namespace SCIRun;
                            void (*nwait_func)(void*), void* nwait_func_data);
 #endif // _WIN32
 
-extern "C" Tcl_Interp* the_interp;
+extern "C" SHARE Tcl_Interp* the_interp;
 
 #include <stdio.h>
 
@@ -220,7 +223,7 @@ TCLThread::startNetworkEditor()
 
   packageDB = new PackageDB(gui);
   // load the packages
-  packageDB->loadPackage(sci_getenv_p("SCIRUN_LOAD_MODULES_ON_STARTUP"));  
+  packageDB->loadPackage(!sci_getenv_p("SCIRUN_LOAD_MODULES_ON_STARTUP"));  
 
   if (!powerapp_p)
   {
@@ -232,6 +235,9 @@ TCLThread::startNetworkEditor()
 
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->eval("activate_file_submenus");
+
+  // Test for shaders.
+  ShaderProgramARB::init_shaders_supported();
 
   // wait for main to release its semaphore
   mainloop_wait();

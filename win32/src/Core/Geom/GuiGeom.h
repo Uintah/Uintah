@@ -45,10 +45,12 @@
 
 #include <Core/GuiInterface/GuiVar.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
   class Color;
 
-  class GuiColor : public GuiVar {
+  class SHARE GuiColor : public GuiVar {
     GuiDouble r;
     GuiDouble g;
     GuiDouble b;
@@ -61,7 +63,7 @@ namespace SCIRun {
   };
 
   class Material;
-  class GuiMaterial : public GuiVar {
+  class SHARE GuiMaterial : public GuiVar {
     GuiColor ambient;
     GuiColor diffuse;
     GuiColor specular;

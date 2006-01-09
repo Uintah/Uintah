@@ -46,9 +46,11 @@
 #include <Core/Geom/GeomContainer.h>
 #include <Core/Geometry/BBox.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomBBoxCache: public GeomContainer {
+class SHARE GeomBBoxCache: public GeomContainer {
   
     bool bbox_cached;
     BBox bbox;

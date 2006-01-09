@@ -44,9 +44,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Malloc/AllocPriv.h>
 
-// irix64 KCC stuff
-#include <strings.h>
-
 #if defined(__sun) || defined(_WIN32)
 #include <string.h>
 #define bzero(p,sz)  memset(p,0, sz);
@@ -56,6 +53,8 @@
 #endif
 
 #ifndef _WIN32
+// irix64 KCC stuff
+#include <strings.h>
 #ifdef __GNUG__ 
 #define THROWCLAUSE throw()
 #else

@@ -49,10 +49,12 @@
 #include <Core/Geom/GuiGeom.h>
 #include <Core/GuiInterface/GuiVar.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 
-class GuiView : public GuiVar {
+class SHARE GuiView : public GuiVar {
     GuiPoint eyep;
     GuiPoint lookat;
     GuiVector up;

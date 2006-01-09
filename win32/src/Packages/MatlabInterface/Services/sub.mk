@@ -39,7 +39,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/MatlabInterface/Services
 
 SRCS     += \
-	$(SRCDIR)/MatlabEngine.cc \\
+	$(SRCDIR)/MatlabEngine.cc \
+	
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Containers \

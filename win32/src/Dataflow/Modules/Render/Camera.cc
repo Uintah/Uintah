@@ -45,7 +45,10 @@
 #include <Core/Geometry/Transform.h>
 #include <teem/limn.h>
 
+#ifndef _WIN32
 #include <unistd.h>
+#endif
+
 #include <math.h>
 #include <vector>
 

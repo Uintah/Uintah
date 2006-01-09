@@ -147,7 +147,7 @@ string GuiArgs::make_list(const string& item1, const string& item2)
     argv[1]= ccast_unsafe(item2);
     char* ilist=Tcl_Merge(2, argv);
     string res(ilist);
-    free(ilist);
+    Tcl_Free(ilist);
     return res;
 }
 
@@ -160,7 +160,7 @@ string GuiArgs::make_list(const string& item1, const string& item2,
     argv[2]=ccast_unsafe(item3);
     char* ilist=Tcl_Merge(3, argv);
     string res(ilist);
-    free(ilist);
+    Tcl_Free(ilist);
     return res;
 }
 
@@ -173,7 +173,7 @@ string GuiArgs::make_list(const vector<string>& items)
     }
     char* ilist=Tcl_Merge(items.size(), argv);
     string res(ilist);
-    free(ilist);
+    Tcl_Free(ilist);
     delete[] argv;
     return res;
 }

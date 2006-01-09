@@ -48,14 +48,17 @@
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/GenericField.h>
+
 #include <algorithm>
+
+#include <Dataflow/Modules/Fields/share.h>
 
 namespace SCIRun {
 
 //! This supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! FieldBoundaryAlgoAux from the DynamicAlgoBase they will have a pointer to.
-class FieldBoundaryAlgoAux : public DynamicAlgoBase
+class SHARE FieldBoundaryAlgoAux : public DynamicAlgoBase
 {
 public:
   typedef TriSurfMesh<TriLinearLgn<Point> >                    TSMesh;

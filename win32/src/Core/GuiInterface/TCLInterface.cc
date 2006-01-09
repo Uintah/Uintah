@@ -51,6 +51,7 @@
 #include <Core/Util/Environment.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Exceptions/GuiException.h>
+#include <Core/Thread/Time.h>
 #include <tcl.h>
 #include <tk.h>
 #include <iostream>
@@ -84,14 +85,23 @@ struct EventMessage {
 };
 
 static Mailbox<EventMessage*> tclQueue("TCL command mailbox", 50);
-static Tcl_Time tcl_time;
+static Tcl_Time tcl_time = {0,0};
 
+static unsigned tclThreadId = 0xffffffff;
 int eventCallback(Tcl_Event* event, int flags);
 
-
+namespace SCIRun {
+void eventSetup(ClientData cd, int flags);
+}
+#endif
+#ifdef _WIN32
+#include <windows.h>
+#define SHARE __declspec(dllimport)
+#else
+#define SHARE
 #endif
 
-extern "C" Tcl_Interp* the_interp;
+extern "C" SHARE Tcl_Interp* the_interp;
 
 TCLInterface::TCLInterface()
 {
@@ -165,7 +175,7 @@ int TCLInterface::eval(const string& str, string& result)
     EventMessage em(str, &sem);
 
     tclQueue.send(&em);
-
+    Tcl_ThreadAlert((Tcl_ThreadId)tclThreadId);
     sem.down();
     result = em.result;
     return em.code == TCL_OK;
@@ -190,11 +200,12 @@ int eventCallback(Tcl_Event* event, int flags)
 }
 
 namespace SCIRun {
+
 void eventSetup(ClientData cd, int flags)
 {
+  // set thread id if not set
+  tclThreadId = GetCurrentThreadId();
   if (tclQueue.numItems() > 0) {
-    tcl_time.sec = 0;
-    tcl_time.usec = 0;
     Tcl_SetMaxBlockTime(&tcl_time);
   }
 }
@@ -203,10 +214,10 @@ void eventCheck(ClientData cd, int flags)
   if (tclQueue.numItems() > 0) {
     Tcl_Event* event = scinew Tcl_Event;
     event->proc = eventCallback;
-    Tcl_QueueEvent(event, TCL_QUEUE_TAIL);
+    Tcl_QueueEvent(event, TCL_QUEUE_HEAD);
   }
 }
-} // end namespace SCIRun
+}
 #endif
 
 

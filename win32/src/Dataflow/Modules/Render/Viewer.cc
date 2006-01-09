@@ -56,6 +56,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/CleanupManager.h>
 #include <Core/Thread/FutureValue.h>
+#include <Core/Thread/Time.h>
 #include <Core/Util/Environment.h>
 
 #include <sci_comp_warn_fixes.h>
@@ -70,6 +71,10 @@ using std::endl;
 using std::ostream;
 
 namespace SCIRun {
+
+#ifdef _WIN32
+#define EXPERIMENTAL_TCL_THREAD
+#endif
 
 
 #ifdef __linux
@@ -471,6 +476,7 @@ Viewer::process_event()
 
   if(msg) { delete msg; }
 
+
   return 1;
 }
 
@@ -678,9 +684,13 @@ Viewer::tcl_command(GuiArgs& args, void* userdata)
       args.error(args[1]+" must have a RID");
       return;
     }
+#ifndef EXPERIMENTAL_TCL_THREAD
     gui->unlock();
+#endif
     delete_viewwindow(args[2]);
+#ifndef EXPERIMENTAL_TCL_THREAD
     gui->lock();
+#endif
   } else {
     Module::tcl_command(args, userdata);
   }

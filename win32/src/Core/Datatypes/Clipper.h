@@ -40,9 +40,11 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
 
-class Clipper : public Datatype
+class SHARE Clipper : public Datatype
 {
 public:
   virtual ~Clipper();
@@ -59,7 +61,7 @@ typedef LockingHandle<Clipper> ClipperHandle;
 
 
 
-class IntersectionClipper : public Clipper
+class SHARE IntersectionClipper : public Clipper
 {
 private:
   ClipperHandle clipper0_;
@@ -75,7 +77,7 @@ public:
 };
 
 
-class UnionClipper : public Clipper
+class SHARE UnionClipper : public Clipper
 {
 private:
   ClipperHandle clipper0_;
@@ -91,7 +93,7 @@ public:
 };
 
 
-class InvertClipper : public Clipper
+class SHARE InvertClipper : public Clipper
 {
 private:
   ClipperHandle clipper_;
@@ -106,7 +108,7 @@ public:
 };
 
   
-class BoxClipper : public Clipper
+class SHARE BoxClipper : public Clipper
 {
 private:
   Transform trans_;
@@ -123,7 +125,7 @@ public:
 
 
 template <class MESH>
-class MeshClipper : public Clipper
+class SHARE MeshClipper : public Clipper
 {
 private:
   LockingHandle<MESH> mesh_;

@@ -54,6 +54,8 @@
 #include <iostream>
 #include <sgi_stl_warnings_off.h>
 
+#include <Core/Math/share.h>
+
 namespace SCIRun {
 
 enum EndCondition {natural_ends, clamped_ends, bessel_ends, quadratic_ends};
@@ -77,7 +79,7 @@ typedef struct Quat {
   double d;
 } QUAT;
 
-class CubicPWI: public PiecewiseInterp<double> {
+class SHARE CubicPWI: public PiecewiseInterp<double> {
 public:
   CubicPWI();
   CubicPWI(const Array1<double>&, const Array1<double>&);
@@ -135,7 +137,7 @@ template <class T> inline bool Cubic3DPWI<T>::get_value(double w, T& res){
 }
 
 
-bool set_tangents(const Array1<double>&, const Array1<double>&, 
+SHARE bool set_tangents(const Array1<double>&, const Array1<double>&, 
 			       Array1<double>&, EndCondition);
 
 template <class T> bool 

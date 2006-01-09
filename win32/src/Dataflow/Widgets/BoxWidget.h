@@ -46,10 +46,11 @@
 #include <Dataflow/Widgets/BaseWidget.h>
 #include <Core/Datatypes/Clipper.h>
 
+#include <Dataflow/Widgets/share.h>
 
 namespace SCIRun {
 
-class BoxWidget : public BaseWidget {
+class SHARE BoxWidget : public BaseWidget {
 public:
   BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 	     bool is_aligned = false, bool is_slideable = false );

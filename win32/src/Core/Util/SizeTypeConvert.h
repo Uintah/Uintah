@@ -49,6 +49,11 @@
 #  include <inttypes.h>
 #endif
 
+#ifdef _WIN32
+typedef unsigned long long uint64_t;
+#endif
+
+
 namespace SCIRun{
 
   // pass in a pointer to a 64-bit int, but depending upon nByteMode it may

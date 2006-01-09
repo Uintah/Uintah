@@ -443,10 +443,14 @@ struct edgehash
 {
   size_t operator()(const pair<int, int> &a) const
   {
+#if defined(__ECC) || defined(_MSC_VER)
+    hash_compare<int> hasher;
+#else
     hash<int> hasher;
+#endif
     return hasher(hasher(a.first) + a.second);
   }
-#ifdef __ECC
+#if defined(__ECC) || defined(_MSC_VER)
 
   static const size_t bucket_size = 4;
   static const size_t min_buckets = 8;
@@ -1107,10 +1111,14 @@ struct edgehash
 {
   size_t operator()(const pair<int, int> &a) const
   {
+#if defined(__ECC) || defined(_MSC_VER)
+    hash_compare<int> hasher;
+#else
     hash<int> hasher;
+#endif
     return hasher((int)hasher(a.first) + a.second);
   }
-#ifdef __ECC
+#if defined(__ECC) || defined(_MSC_VER)
 
   static const size_t bucket_size = 4;
   static const size_t min_buckets = 8;
@@ -1144,7 +1152,7 @@ struct edgecompare
 
 #ifdef HAVE_HASH_MAP
 
-#ifdef __ECC
+#if defined(__ECC) || defined(_MSC_VER)
 typedef hash_map<pair<int, int>, int, edgehash> EdgeMapType;
 #else
 typedef hash_map<pair<int, int>, int, edgehash, edgecompare> EdgeMapType;

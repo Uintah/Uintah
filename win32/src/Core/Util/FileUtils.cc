@@ -32,11 +32,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
-#include <sys/stat.h>
+#ifndef _WIN32
 #include <unistd.h>
+#include <dirent.h>
+#else
+// use POSIX version
+#include <Core/OS/dirent.h>
+#include <io.h>
+typedef unsigned short mode_t;
+#define MAXPATHLEN 256
+#endif
+#include <sys/stat.h>
 #include <Core/Util/FileUtils.h>
-
+#include <Core/OS/Dir.h>
 namespace SCIRun {
 
 /* Normally, I would just use sed via system() to edit a file,
@@ -155,7 +163,6 @@ std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
   }
 
   closedir(dir);
-
   return newmap;
 }
 
@@ -191,4 +198,3 @@ validDir(std::string dirname)
 
 
 } // End namespace SCIRun
-

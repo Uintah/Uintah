@@ -44,6 +44,10 @@
 #define TCLCONST
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifdef HAVE_GLEW
 int sci_glew_init()
 {
@@ -293,6 +297,13 @@ OpenGLCmd(clientData, interp, argc, argv)
       attributes[idx++]=4;
 #endif
       attributes[idx++]=None;
+
+      OpenGLPtr->vi = 
+	glXChooseVisual(OpenGLPtr->display, 
+			OpenGLPtr->screen_number,
+			attributes);
+    OpenGLPtr->visualid=tempid;
+
 #else // WIN32
 
       // I am using the *PixelFormat commands from win32 because according
@@ -304,14 +315,14 @@ OpenGLCmd(clientData, interp, argc, argv)
       // is supported.  WM:VI
 
       HWND hWnd = TkWinGetHWND(Tk_WindowId(OpenGLPtr->tkwin));
-      OpenGLPtr->hDC = GetDC(hWnd);
 
-      DWORD dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-      if (OpenGLPtr->doublebuffer)
-	dwFlags |= PFD_DOUBLEBUFFER;
-      if (OpenGLPtr->stereo)
-	dwFlags |= PFD_STEREO;
-
+      // a little ugly, but we need this to be defined before pfd, and
+      // we need to follow C initialization rules
+      DWORD dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | 
+        (OpenGLPtr->doublebuffer ? PFD_DOUBLEBUFFER : 0) | (OpenGLPtr->stereo ? PFD_STEREO : 0);
+      int iPixelFormat;
+      XVisualInfo xvi;
+      int n_ret;
       PIXELFORMATDESCRIPTOR pfd = { 
 	sizeof(PIXELFORMATDESCRIPTOR),   // size of this pfd 
 	1,                     // version number 
@@ -337,23 +348,13 @@ OpenGLCmd(clientData, interp, argc, argv)
 	0, 0, 0                // layer masks ignored 
       }; 
 
-#endif
-
-#ifndef _WIN32
-      OpenGLPtr->vi = 
-	glXChooseVisual(OpenGLPtr->display, 
-			OpenGLPtr->screen_number,
-			attributes);
-    OpenGLPtr->visualid=tempid;
-    
-#else
-      int iPixelFormat = ChoosePixelFormat(OpenGLPtr->hDC, &pfd); 
+      iPixelFormat = ChoosePixelFormat(OpenGLPtr->hDC, &pfd); 
       SetPixelFormat(OpenGLPtr->hDC, iPixelFormat, &pfd);
       OpenGLPtr->visualid = iPixelFormat;
+      OpenGLPtr->hDC = GetDC(hWnd);
 
-      XVisualInfo xvi;
       xvi.screen = OpenGLPtr->screen_number;
-      int n_ret=0;
+      n_ret=0;
       OpenGLPtr->vi = XGetVisualInfo(OpenGLPtr->display,
 				     VisualScreenMask,
 				     &xvi,
@@ -841,18 +842,13 @@ OpenGLListVisuals(interp, OpenGLPtr)
 
   int  id, level, db, stereo, r,g,b,a, depth, stencil, ar, ag, ab, aa;
 
+  int  score=0;
+  char buf[200];
+  char samples_string[20] = "";
   int iPixelFormat = GetPixelFormat(OpenGLPtr->hDC);
   PIXELFORMATDESCRIPTOR pfd;
   DescribePixelFormat(OpenGLPtr->hDC,iPixelFormat,sizeof(pfd),&pfd);
 
-#ifndef _WIN32
-  int  i;
-  int nvis;
-#endif
-  int  score=0;
-  char buf[200];
-  //int able;
-  char samples_string[20] = "";
 
   // I am assuming for the sake of simplicity that overlays are not being used.
   // If that is not the case, then we will need to change this.

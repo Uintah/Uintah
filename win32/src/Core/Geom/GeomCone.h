@@ -48,9 +48,11 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geom/Material.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomCone : public GeomObj {
+class SHARE GeomCone : public GeomObj {
 protected:
     Vector v1;
     Vector v2;
@@ -86,7 +88,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class GeomCappedCone : public GeomCone {
+class SHARE GeomCappedCone : public GeomCone {
     int nvdisc1;
     int nvdisc2;
 public:

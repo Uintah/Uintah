@@ -49,13 +49,15 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/Color.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
 
 
 class Image;
 typedef LockingHandle<Image> ImageHandle;
 
-class Image : public Datatype {
+class SHARE Image : public Datatype {
     /* Complex... */
 public:
     float** rows;
@@ -82,7 +84,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class ColorImage {
+class SHARE ColorImage {
 public:
     ColorImage(int xres, int yres);
     ~ColorImage();
@@ -97,7 +99,7 @@ public:
     int yres() const;
 };
 
-class DepthImage {
+class SHARE DepthImage {
 public:
     DepthImage(int xres, int yres);
     ~DepthImage();

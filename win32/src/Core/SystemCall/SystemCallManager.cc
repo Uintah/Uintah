@@ -37,7 +37,7 @@
  
 
 #include <Core/SystemCall/SystemCallManager.h> 
-
+#include <Core/OS/Dir.h>
 namespace SCIRun {
 
 SystemCallProcess::SystemCallProcess(int processid) :
@@ -935,7 +935,13 @@ void SystemCallManager::killall()
 #endif    
 }
 
-SystemCallManager*    systemcallmanager_;
+#ifdef _WIN32
+  #define SHARE __declspec(dllexport)
+#else
+  #define SHARE
+#endif
+
+SHARE SystemCallManager*    systemcallmanager_;
 
 } // end namespace
 

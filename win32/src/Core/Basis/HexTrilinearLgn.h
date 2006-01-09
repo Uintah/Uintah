@@ -35,6 +35,8 @@
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 
+#include <Core/Basis/share.h>
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off 'implicit conversion... loss of accuracy' messages.
 #  pragma set woff 1506
@@ -45,7 +47,7 @@ namespace SCIRun {
 using std::string;
 
 //! Class for describing unit geometry of HexTrilinearLgn 
-class HexTrilinearLgnUnitElement {
+class SHARE HexTrilinearLgnUnitElement {
 public:
   //! Parametric coordinates of vertices of unit edge 
   static double unit_vertices[8][3];

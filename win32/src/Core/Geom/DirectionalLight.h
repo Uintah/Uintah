@@ -47,9 +47,11 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class DirectionalLight : public Light {
+class SHARE DirectionalLight : public Light {
     Vector v;
     Color c;
 public:

@@ -37,6 +37,11 @@
 
 #ifdef _WIN32
 #include <io.h>
+#include <direct.h>
+#include <sys/stat.h>
+#define S_IRUSR 0x0100
+#define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
+#define	S_ISREG(m)	(((m) & S_IFMT) == S_IFREG)
 #endif
 
 namespace SCIRun {

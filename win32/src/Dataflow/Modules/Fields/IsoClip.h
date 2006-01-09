@@ -85,6 +85,26 @@ private:
     double dfirst;
   };
 
+  struct edgepairequal
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first == b.first && a.second == b.second;
+    }
+  };
+
+  struct edgepairless
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b)
+    {
+      return less(a, b);
+    }
+    static bool less(const edgepair_t &a, const edgepair_t &b)
+    {
+      return a.first < b.first || a.first == b.first && a.second < b.second;
+    }
+  };
+
 #ifdef HAVE_HASH_MAP
   struct edgepairhash
   {
@@ -93,22 +113,17 @@ private:
       hash<unsigned int> h;
       return h(a.first ^ a.second);
     }
-  };
+#if defined(__ECC) || defined(_MSC_VER)
 
-  struct edgepairequal
-  {
-    bool operator()(const edgepair_t &a, const edgepair_t &b) const
-    {
-      return a.first == b.first && a.second == b.second;
-    }
-  };
-#else
-  struct edgepairless
-  {
-    bool operator()(const edgepair_t &a, const edgepair_t &b) const
-    {
-      return a.first < b.first || a.first == b.first && a.second < b.second;
-    }
+      // These are particularly needed by ICC's hash stuff
+      static const size_t bucket_size = 4;
+      static const size_t min_buckets = 8;
+      
+      // This is a less than function.
+      bool operator()(const edgepair_t & a, const edgepair_t & b) const {
+        return edgepairless::less(a,b);
+      }
+#endif // endif ifdef __ICC
   };
 #endif
 
@@ -116,6 +131,22 @@ private:
   {
     unsigned int first, second, third;
     double dsecond, dthird;
+  };
+
+  struct facetripleequal
+  {
+    bool operator()(const facetriple_t &a, const facetriple_t &b) const
+    {
+      return a.first == b.first && a.second == b.second && a.third == b.third;
+    }
+  };
+
+  struct facetripleless
+  {
+    bool operator()(const facetriple_t &a, const facetriple_t &b) const
+    {
+      return a.first < b.first || a.first == b.first && ( a.second < b.second || a.second == b.second && a.third < b.third);
+    }
   };
 
 #ifdef HAVE_HASH_MAP
@@ -127,26 +158,23 @@ private:
       return h(a.first ^ a.second ^ a.third);
     }
   };
-
-  struct facetripleequal
-  {
-    bool operator()(const facetriple_t &a, const facetriple_t &b) const
-    {
-      return a.first == b.first && a.second == b.second && a.third == b.third;
-    }
-  };
-#else
-  struct facetripleless
-  {
-    bool operator()(const facetriple_t &a, const facetriple_t &b) const
-    {
-      return a.first < b.first || a.first == b.first && ( a.second < b.second || a.second == b.second && a.third < b.third);
-    }
-  };
 #endif
+
   
 
 #ifdef HAVE_HASH_MAP
+#  if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<unsigned int,
+		   typename FIELD::mesh_type::Node::index_type> node_hash_type;
+
+  typedef hash_map<edgepair_t,
+		   typename FIELD::mesh_type::Node::index_type,
+		   edgepairhash> edge_hash_type;
+
+  typedef hash_map<facetriple_t,
+		   typename FIELD::mesh_type::Node::index_type,
+		   facetriplehash> face_hash_type;
+#  else
   typedef hash_map<unsigned int,
 		   typename FIELD::mesh_type::Node::index_type,
 		   hash<unsigned int>,
@@ -161,6 +189,7 @@ private:
 		   typename FIELD::mesh_type::Node::index_type,
 		   facetriplehash,
 		   facetripleequal> face_hash_type;
+#  endif
 #else
   typedef map<unsigned int,
 	      typename FIELD::mesh_type::Node::index_type,
@@ -726,16 +755,6 @@ private:
     double dfirst;
   };
 
-#ifdef HAVE_HASH_MAP
-  struct edgepairhash
-  {
-    unsigned int operator()(const edgepair_t &a) const
-    {
-      hash<unsigned int> h;
-      return h(a.first ^ a.second);
-    }
-  };
-
   struct edgepairequal
   {
     bool operator()(const edgepair_t &a, const edgepair_t &b) const
@@ -744,6 +763,48 @@ private:
     }
   };
 
+  struct edgepairless
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b)
+    {
+      return less(a, b);
+    }
+    static bool less(const edgepair_t &a, const edgepair_t &b)
+    {
+      return a.first < b.first || a.first == b.first && a.second < b.second;
+    }
+  };
+
+#ifdef HAVE_HASH_MAP
+  struct edgepairhash
+  {
+    unsigned int operator()(const edgepair_t &a) const
+    {
+      hash<unsigned int> h;
+      return h(a.first ^ a.second);
+    }
+#if defined(__ECC) || defined(_MSC_VER)
+
+      // These are particularly needed by ICC's hash stuff
+      static const size_t bucket_size = 4;
+      static const size_t min_buckets = 8;
+      
+      // This is a less than function.
+      bool operator()(const edgepair_t & a, const edgepair_t & b) const {
+        return edgepairless::less(a,b);
+      }
+#endif // endif ifdef __ICC
+  };
+
+
+#  if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<unsigned int,
+		   typename FIELD::mesh_type::Node::index_type> node_hash_type;
+
+  typedef hash_map<edgepair_t,
+		   typename FIELD::mesh_type::Node::index_type,
+		   edgepairhash> edge_hash_type;
+#  else
   typedef hash_map<unsigned int,
 		   typename FIELD::mesh_type::Node::index_type,
 		   hash<unsigned int>,
@@ -752,15 +813,8 @@ private:
   typedef hash_map<edgepair_t,
 		   typename FIELD::mesh_type::Node::index_type,
 		   edgepairhash, edgepairequal> edge_hash_type;
+#  endif
 #else
-  struct edgepairless
-  {
-    bool operator()(const edgepair_t &a, const edgepair_t &b) const
-    {
-      return a.first < b.first || a.first == b.first && a.second < b.second;
-    }
-  };
-
   typedef map<unsigned int,
 	      typename FIELD::mesh_type::Node::index_type,
 	      less<unsigned int> > node_hash_type;

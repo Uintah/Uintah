@@ -50,11 +50,13 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
 
 using std::vector;
 
-class DenseColMajMatrix : public Matrix
+class SHARE DenseColMajMatrix : public Matrix
 {
   double*  dataptr_;
 

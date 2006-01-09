@@ -51,9 +51,11 @@
 #include <iosfwd>  // Forward declarations for KCC C++ I/O routines
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
 
-class ColumnMatrix : public Matrix {
+class SHARE ColumnMatrix : public Matrix {
   double* data;
 
 public:
@@ -122,38 +124,38 @@ public:
   static PersistentTypeID type_id;
 
 
-  friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
-  friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+  SHARE friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
+  SHARE friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+  SHARE friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 				int& flops, int& memrefs);
-  friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+  SHARE friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 				int& flops, int& memrefs, int beg, int end);
-  friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+  SHARE friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+  SHARE friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 			       int& flops, int& memrefs);
-  friend double Dot(const ColumnMatrix&, const ColumnMatrix&);
-  friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
+  SHARE friend double Dot(const ColumnMatrix&, const ColumnMatrix&);
+  SHARE friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
 				 int& flops, int& memrefs);
-  friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
+  SHARE friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
 				 int& flops, int& memrefs, int beg, int end);
-  friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+  SHARE friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 				      const ColumnMatrix&);
-  friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+  SHARE friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 				      const ColumnMatrix&, int& flops, int& memrefs);
-  friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+  SHARE friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 				      const ColumnMatrix&, int& flops, int& memrefs,
 				      int beg, int end);
   
-  friend void Copy(ColumnMatrix&, const ColumnMatrix&);
-  friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
+  SHARE friend void Copy(ColumnMatrix&, const ColumnMatrix&);
+  SHARE friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
 				int& flops, int& refs);
-  friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
+  SHARE friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
 				int& flops, int& refs,
 				int beg, int end);
-  friend void AddScMult(ColumnMatrix&, const ColumnMatrix&, 
+  SHARE friend void AddScMult(ColumnMatrix&, const ColumnMatrix&, 
 			double s, const ColumnMatrix&);
-  friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, 
+  SHARE friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+  SHARE friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, 
 		  const ColumnMatrix&);
 };
 

@@ -49,12 +49,14 @@
 #include <string>
 #include <vector>
 
+#include <Dataflow/Constraints/share.h>
+
 namespace SCIRun {
 using std::string;
 using std::vector;
 
 
-class BaseConstraint {
+class SHARE BaseConstraint {
    friend class BaseVariable;
    friend class ConstraintSolver;
 public:

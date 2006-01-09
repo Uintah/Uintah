@@ -44,11 +44,13 @@
 #include <Core/Datatypes/NrrdData.h>
 #include <vector>
 
+#include <Core/Volume/share.h>
+
 namespace SCIRun {
 
 using std::vector;
 
-class TextureBrick
+class SHARE TextureBrick
 {
 public:
   TextureBrick(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
@@ -129,7 +131,7 @@ typedef LockingHandle<TextureBrick> TextureBrickHandle;
 
 
 
-class NrrdTextureBrick : public TextureBrick
+class SHARE NrrdTextureBrick : public TextureBrick
 {
 public:
   NrrdTextureBrick(NrrdDataHandle n0, NrrdDataHandle n1,

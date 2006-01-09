@@ -44,9 +44,11 @@
 
 #include <Core/Geom/GeomContainer.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomCull : public GeomContainer {
+class SHARE GeomCull : public GeomContainer {
   Vector *normal_;
   GeomCull(const GeomCull &copy);
 

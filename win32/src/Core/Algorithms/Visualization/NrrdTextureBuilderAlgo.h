@@ -42,6 +42,8 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Math/MiscMath.h>
 
+#include <Core/Algorithms/Visualization/share.h>
+
 namespace SCIRun {
 
 // Currently located in TextureBuilderAlgo.cc
@@ -53,13 +55,13 @@ void texture_build_bricks(vector<TextureBrickHandle>& bricks,
 
 
 // Currently located in NrrdTextureBuilderAlgo.cc
-void nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
+SHARE void nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
 		       int nx, int ny, int nz,
 		       int nc, int* nb,
 		       const BBox& ignored, int card_mem);
 
 
-class NrrdTextureBuilderAlgo : public SCIRun::DynamicAlgoBase
+class SHARE NrrdTextureBuilderAlgo : public SCIRun::DynamicAlgoBase
 {
 public:
   virtual void build(TextureHandle tHandle,

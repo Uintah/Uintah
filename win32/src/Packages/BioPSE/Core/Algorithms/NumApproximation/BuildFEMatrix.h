@@ -61,7 +61,7 @@
 #include <Core/Basis/Bases.h>
 
 #include <Core/Datatypes/GenericField.h>
-
+#include <algorithm>
 
 //#define BUILDFEM_DEBUG
 
@@ -232,7 +232,7 @@ BuildFEMatrix<Field>::create_numerical_integration(vector<vector<double> > &p,
 //! build line of the local stiffness matrix
 template <class Field>
 void
-BuildFEMatrix<Field>::build_local_matrix(typename Mesh::Elem::index_type c_ind,
+BuildFEMatrix<Field>::build_local_matrix(typename BuildFEMatrix::Mesh::Elem::index_type c_ind,
                                          int row, vector<double> &l_stiff,
                                          vector<vector<double> > &p,
                                          vector<double> &w,

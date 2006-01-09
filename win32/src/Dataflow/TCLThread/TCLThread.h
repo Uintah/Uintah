@@ -32,12 +32,14 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
 
+#include <Dataflow/TCLThread/share.h>
+
 namespace SCIRun {
 
 class Network;
 class TCLInterface;
 
-class TCLThread : public Runnable
+class SHARE TCLThread : public Runnable
 {
 public:
   TCLThread(int argc, char* argv[], Network* net, int startnetno);

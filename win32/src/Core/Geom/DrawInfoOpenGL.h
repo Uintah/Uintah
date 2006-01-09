@@ -45,6 +45,8 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Plane.h>
 
+#include <Core/Geom/share.h>
+
 #include <map>
 #include <list>
 
@@ -58,7 +60,7 @@ class GeomDL;
 
 const int     GEOM_FONT_COUNT = 5;
 
-struct DrawInfoOpenGL {
+struct SHARE DrawInfoOpenGL {
 public:
   DrawInfoOpenGL();
   ~DrawInfoOpenGL();

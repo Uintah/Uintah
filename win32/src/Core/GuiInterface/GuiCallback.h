@@ -50,6 +50,8 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/GuiInterface/share.h>
+
 namespace SCIRun {
 
   using std::string;
@@ -57,7 +59,7 @@ namespace SCIRun {
 
   class GuiVar;
 
-  class GuiArgs {
+  class SHARE GuiArgs {
     vector<string> args_;
   public:
     bool have_error_;
@@ -82,7 +84,7 @@ namespace SCIRun {
     static string make_list(const vector<string>&);
   };
 
-  class GuiCallback {
+  class SHARE GuiCallback {
   public:
     GuiCallback();
     virtual ~GuiCallback();

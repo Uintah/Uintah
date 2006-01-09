@@ -43,13 +43,14 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Services/share.h>
 namespace SCIRun {
 	
 class ServiceLog;
 typedef LockingHandle<ServiceLog> ServiceLogHandle;
 	
 	
-class ServiceLog : public ServiceBase {
+class SHARE ServiceLog : public ServiceBase {
 
 public:
   // Create a log file, that can used by multiple threads without

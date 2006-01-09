@@ -46,9 +46,11 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
+#include <Dataflow/Widgets/share.h>
+
 namespace SCIRun {
 
-class ArrowWidget : public BaseWidget {
+class SHARE ArrowWidget : public BaseWidget {
 public:
   ArrowWidget( Module* module, CrowdMonitor* lock, 
 	       double widget_scale, bool stipple_occluded = false);

@@ -103,10 +103,13 @@ private:
   {
     unsigned int operator()(const edgepair_t &a) const
     {
+#ifdef _MSC_VER
+#define hash hash_compare
+#endif
       hash<unsigned int> h;
       return h(a.first ^ a.second);
     }
-#ifdef __ECC
+#if defined(__ECC) || defined(_MSC_VER) 
     // These are particularly needed by ICC's hash stuff
     static const size_t bucket_size = 4;
     static const size_t min_buckets = 8;
@@ -119,16 +122,16 @@ private:
     
   };
 
-#ifndef __ECC
+#if !defined(__ECC) && !defined(_MSC_VER)
   typedef hash_map<edgepair_t,
 		   TSMesh::Node::index_type,
 		   edgepairhash,
 		   edgepairequal> edge_hash_type;
 #else
   typedef hash_map<edgepair_t,
-                   TriSurfMesh::Node::index_type,
+                   TSMesh::Node::index_type,
                    edgepairhash> edge_hash_type;
-#endif // __ECC
+#endif // !defined(__ECC) && !defined(_MSC_VER)
   
 #else
   struct edgepairless

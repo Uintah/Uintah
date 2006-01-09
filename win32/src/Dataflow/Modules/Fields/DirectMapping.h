@@ -67,10 +67,15 @@ class DirectMappingAlgoT : public DirectMappingAlgo
   typedef pair<typename LDST::index_type, 
     vector<typename LSRC::index_type> > dst_src_pair;
 #ifdef HAVE_HASH_MAP
+#  if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<unsigned int,
+		   dst_src_pair> hash_type;
+#  else
   typedef hash_map<unsigned int,
 		   dst_src_pair,
 		   hash<unsigned int>, 
 		   equal_to<unsigned int> > hash_type;
+#  endif
 #else
   typedef map<unsigned int,
 	      dst_src_pair,

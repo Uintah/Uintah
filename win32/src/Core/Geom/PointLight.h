@@ -47,9 +47,11 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Geometry/Point.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class PointLight : public Light {
+class SHARE PointLight : public Light {
     Point p;
     Color c;
 public:

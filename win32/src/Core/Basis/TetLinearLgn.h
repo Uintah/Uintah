@@ -253,6 +253,13 @@ public:
   static T GaussianWeights[4];
 };
 
+#ifdef _WIN32
+// force the instantiation of TetGaussian2<double>
+template class TetGaussian2<double>;
+#endif
+
+
+
 template <class T>
 int TetGaussian2<T>::GaussianNum = 4;
 

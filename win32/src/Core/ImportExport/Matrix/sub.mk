@@ -30,7 +30,7 @@
 
 SRCDIR   := Core/ImportExport/Matrix
 
-SRCS +=	$(SRCDIR)/ExecConverter.cc \
+SRCS +=	$(SRCDIR)/MatrixExecConverter.cc \
 	$(SRCDIR)/MatrixIEPlugin.cc
 
 # PSELIBS and LIBS come from the ImportExport sub.mk file (one dir up).

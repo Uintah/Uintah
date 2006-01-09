@@ -42,13 +42,19 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Malloc/Allocator.h>
 
+#ifdef _WIN32
+#define SHARE __declspec(dllexport)
+#else
+#define SHARE
+#endif
+
 namespace SCIRun {
 
 extern "C" {
-  IPort* make_NrrdIPort(Module* module, const string& name) {
+  SHARE IPort* make_NrrdIPort(Module* module, const string& name) {
   return scinew SimpleIPort<NrrdDataHandle>(module,name);
 }
-  OPort* make_NrrdOPort(Module* module, const string& name) {
+  SHARE OPort* make_NrrdOPort(Module* module, const string& name) {
   return scinew SimpleOPort<NrrdDataHandle>(module,name);
 }
 }

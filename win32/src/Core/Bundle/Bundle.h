@@ -50,9 +50,11 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Bundle/share.h>
+
 namespace SCIRun {
 
-class Bundle : public PropertyManager {
+class SHARE Bundle : public PropertyManager {
   
   public:  
   

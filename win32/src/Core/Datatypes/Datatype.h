@@ -46,10 +46,12 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Thread/Mutex.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
 
 
-class Datatype : public Persistent {
+class SHARE Datatype : public Persistent {
 public:
   //! needed for our smart pointers -- LockingHandle<T>
   int ref_cnt;

@@ -51,6 +51,8 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/ImportExport/share.h>
+
 namespace SCIRun {
 
 using std::string;
@@ -58,7 +60,7 @@ using std::map;
 
 
 //----------------------------------------------------------------------
-class MatrixIEPlugin {
+class SHARE MatrixIEPlugin {
 public:
   const string pluginname_;
 
@@ -84,7 +86,7 @@ public:
 
 
 
-class MatrixIEPluginManager {
+class SHARE MatrixIEPluginManager {
 public:
   void get_importer_list(vector<string> &results);
   void get_exporter_list(vector<string> &results);

@@ -110,6 +110,7 @@ SUBDIRS += testprograms $(PACKAGE_DIRS)
 IS_OSX := @IS_OSX@
 IS_WIN := @IS_WIN@
 IS_AIX := @IS_AIX@
+IS_DEBUG := @DEBUG@
 
 NEED_OSX_HACK := @NEED_OSX_HACK@
 ifeq ($(NEED_OSX_HACK),yes)

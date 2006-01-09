@@ -50,6 +50,8 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/ImportExport/share.h>
+
 namespace SCIRun {
 
 using std::string;
@@ -57,7 +59,7 @@ using std::map;
 
 
 //----------------------------------------------------------------------
-class FieldIEPlugin {
+class SHARE FieldIEPlugin {
 public:
   const string pluginname;
 
@@ -83,7 +85,7 @@ public:
 
 
 
-class FieldIEPluginManager {
+class SHARE FieldIEPluginManager {
 public:
   void get_importer_list(vector<string> &results);
   void get_exporter_list(vector<string> &results);

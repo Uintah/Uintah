@@ -105,6 +105,13 @@ TCLSH          := @TCL_PREFIX@/bin/tclsh@TCL_VERSION@
 TCL_VERSION    := @TCL_VERSION@
 LIB_DIR_ITCL   := @LIB_DIR_ITCL@
 
+ifeq ($(IS_WIN),yes)
+  VCDIR=projects
+  VCSOLUTION=SCIRun.sln
+  VCDEPS:=$(ALLVCPROJECTS) $(VCSOLUTION)
+endif
+
+
 # etags generation
 TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
 C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
@@ -121,7 +128,7 @@ SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter
 
 .PHONY: prereqs
-prereqs: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
+prereqs: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
 
 $(MAKEFILEDIRS):
 	@echo creating directory $@
@@ -182,6 +189,9 @@ dmg: app
 
 $(LIBDIR):
 	mkdir -p $(LIBDIR)
+
+$(VCDIR):
+	mkdir -p $@
 
 # This rule must be after the includes, so that it will find $(SIDL_EXE)
 %_sidl.o: %_sidl.cc %_sidl.h
@@ -359,3 +369,9 @@ else
   $(OBJTOP)/LevelSetSegmenter :
 endif
 
+vc: prereqs $(VCSOLUTION) $(ALLTCLINDEXES)
+
+# have to be on one line, since \ adds a space, and the space breaks the parser
+# since foreach inserts a space at the end of the line that VS can't have, remove it
+$(VCSOLUTION): $(ALLVCPROJECTS)
+	@echo -e "Microsoft Visual Studio Solution File, Format Version 8.00$(foreach project,$^,\nProject(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"$(basename $(notdir $(project)))\", \"$(project)\", \"{$($(project)_ID)}\"\n\tProjectSection(ProjectDependencies) = postProject$(foreach dep,$($(project)_PROJ_DEPS),\n\t\t{$($(dep)_ID)} = {$($(dep)_ID)}PPPPP)\n\tEndProjectSection\nEndProject)\nGlobal\n\tGlobalSection(SolutionConfiguration) = preSolution\n\t\t$(CONF_NAME) = $(CONF_NAME)\n\tEndGlobalSection\n\tGlobalSection(ProjectConfiguration) = postSolution$(foreach project,$^,\n\t\t{$($(project)_ID)}.$(CONF_NAME).ActiveCfg = $(CONF_NAME)|Win32\n\t\t{$($(project)_ID)}.$(CONF_NAME).Build.0 = $(CONF_NAME)|Win32PPPPP)\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityGlobals) = postSolution\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityAddIns) = postSolution\n\tEndGlobalSection\nEndGlobal" | sed 's,PPPPP ,,g' | sed 's,PPPPP,,g' > $@

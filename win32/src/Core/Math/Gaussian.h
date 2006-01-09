@@ -44,12 +44,15 @@
 #define SCI_GAUSSIAN_H__
 
 #include <Core/Math/MusilRNG.h>
+#include <Core/Math/Trig.h> // for M_PI
 #include <math.h>
+
+#include <Core/Math/share.h>
 
 namespace SCIRun {
 
 //   http://mathworld.wolfram.com/GaussianDistribution.html
-class Gaussian {
+class SHARE Gaussian {
 public:
   double mean_;
   double sigma_;

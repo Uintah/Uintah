@@ -58,14 +58,28 @@
 #include <tkIntPlatDecls.h>
 #include <windows.h>
 #include <sstream>
+#include <process.h>
 #endif
 
 using namespace SCIRun;
 using namespace std;
   
-extern "C" Tcl_Interp* the_interp;
+#ifdef _WIN32
+#define SHARE __declspec(dllimport)
+#else
+#define SHARE
+#endif
+
+extern "C" SHARE Tcl_Interp* the_interp;
 
 vector<int> TkOpenGLContext::valid_visuals_ = vector<int>();
+
+#if (TK_MAJOR_VERSION>=8 && TK_MINOR_VERSION>=4)
+#  define HAVE_TK_SETCLASSPROCS
+/* pointer to Tk_SetClassProcs function in the stub table */
+
+static void (*SetClassProcsPtr) _ANSI_ARGS_((Tk_Window, Tk_ClassProcs*,ClientData));
+#endif
 
 #ifndef _WIN32
 static GLXContext first_context = NULL;
@@ -74,6 +88,9 @@ static HGLRC first_context = NULL;
 #endif
 
 #ifdef _WIN32
+HINSTANCE dllHINSTANCE=0;
+
+void initGLextensions();
 
 void
 PrintErr(char* func_name)
@@ -96,21 +113,15 @@ PrintErr(char* func_name)
 	    func_name, dw, (char*)lpMsgBuf); 
     LocalFree(lpMsgBuf);
   }
+  SetLastError(0);
 }
 
 const char* TkOpenGLContext::ReportCapabilities()
 {
-  make_current();
-
   if (!this->hDC_)
     {
       return "no device context";
     }
-
-  int pixelFormat = GetPixelFormat(this->hDC_);
-  PIXELFORMATDESCRIPTOR pfd;
-
-  DescribePixelFormat(this->hDC_, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
 
   const char *glVendor = (const char *) glGetString(GL_VENDOR);
   const char *glRenderer = (const char *) glGetString(GL_RENDERER);
@@ -118,10 +129,25 @@ const char* TkOpenGLContext::ReportCapabilities()
   const char *glExtensions = (const char *) glGetString(GL_EXTENSIONS);
 
   ostringstream strm;
-  strm << "OpenGL vendor string:  " << glVendor << endl;
-  strm << "OpenGL renderer string:  " << glRenderer << endl;
-  strm << "OpenGL version string:  " << glVersion << endl;
-  strm << "OpenGL extensions:  " << glExtensions << endl;
+  if (glVendor) {
+    strm << "OpenGL vendor string:  " << glVendor << endl;
+    strm << "OpenGL renderer string:  " << glRenderer << endl;
+    strm << "OpenGL version string:  " << glVersion << endl;
+#if 0
+    strm << "OpenGL extensions:  " << glExtensions << endl;
+#endif
+  }
+  else {
+    strm << "    Invalid OpenGL context\n";
+  }
+
+#if 0
+  int pixelFormat = GetPixelFormat(this->hDC_);
+  PIXELFORMATDESCRIPTOR pfd;
+
+  DescribePixelFormat(this->hDC_, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+
+
   strm << "PixelFormat Descriptor:" << endl;
   strm << "depth:  " << static_cast<int>(pfd.cDepthBits) << endl;
   if (pfd.cColorBits <= 8)
@@ -162,12 +188,202 @@ const char* TkOpenGLContext::ReportCapabilities()
   strm << "depth size:  " << static_cast<int>(pfd.cDepthBits) << endl;
   strm << "stencil size:  " << static_cast<int>(pfd.cStencilBits) << endl;
   strm << "accum:  redSize=" << static_cast<int>(pfd.cAccumRedBits) << " greenSize=" << static_cast<int>(pfd.cAccumGreenBits) << "blueSize=" << static_cast<int>(pfd.cAccumBlueBits) << "alphaSize=" << static_cast<int>(pfd.cAccumAlphaBits) << endl;
-
+#endif
   strm << ends;
   
-  return strm.str().c_str();
+  cerr << strm.str().c_str();
+  return 0;
 }
+
+char *tkGlClassName = "TkGL";
+bool tkGlClassInitialized = false;
+WNDCLASS tkGlClass;
+WNDPROC tkWinChildProc=NULL;
+
+
+// win32 event loop
+LRESULT CALLBACK 
+WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+
+  LONG result;
+  TkOpenGLContext *tkCxt = (TkOpenGLContext*) GetWindowLong(hWnd, 0);
+  WNDCLASS childClass;
+
+  switch (msg) {
+  case WM_WINDOWPOSCHANGED:
+    /* Should be processed by DefWindowProc, otherwise a double buffered
+       context is not properly resized when the corresponding window is resized.*/
+    result = TRUE;
+    break;
+    
+  case WM_NCCREATE:
+    result = TRUE;
+    break;
+
+  case WM_DESTROY:
+    result = TRUE;
+    if (tkCxt)
+      delete tkCxt;
+    break;
+    
+  default:
+    {
+      if (tkWinChildProc == NULL) {
+	GetClassInfo(Tk_GetHINSTANCE(),TK_WIN_CHILD_CLASS_NAME,
+		     &childClass);
+	tkWinChildProc = childClass.lpfnWndProc;
+      }
+      result = tkWinChildProc(hWnd, msg, wParam, lParam);
+    }
+  }
+  Tcl_ServiceAll();
+  return result;
+}
+
+static Window
+TkGLMakeWindow(Tk_Window tkwin, Window parent, ClientData data)
+{
+  HWND parentWin;
+  int style;
+  HINSTANCE hInstance;
+  
+  TkOpenGLContext *tkCxt = (TkOpenGLContext*) data;
+  tkCxt->vi_ = new XVisualInfo();
+  tkCxt->display_ = Tk_Display(tkCxt->tkwin_);
+
+  hInstance = Tk_GetHINSTANCE();
+
+  // next register our own window class.... 
+  
+  if (!tkGlClassInitialized) {
+    tkGlClassInitialized = true;
+    tkGlClass.style = CS_HREDRAW | CS_VREDRAW;// | CS_OWNDC;
+    tkGlClass.cbClsExtra = 0;
+    tkGlClass.cbWndExtra = sizeof(long); /* To save TkCxt */
+    tkGlClass.hInstance = dllHINSTANCE;
+    tkGlClass.hbrBackground = NULL;
+    tkGlClass.lpszMenuName = NULL;
+    //tkGlClass.lpszClassName = TK_WIN_CHILD_CLASS_NAME;
+    //tkGlClass.lpfnWndProc = TkWinChildProc;
+    tkGlClass.lpszClassName = tkGlClassName;
+    tkGlClass.lpfnWndProc = WndProc;
+    tkGlClass.hIcon = NULL;
+    tkGlClass.hCursor = NULL;
+
+    RegisterClass(&tkGlClass);
+    PrintErr("MakeWindow RegisterClass");
+  }
+
+  /*
+   * Create the window, then ensure that it is at the top of the
+   * stacking order.
+   */
+
+  int x = Tk_X(tkwin), y = Tk_Y(tkwin), width = Tk_Width(tkwin), height = Tk_Height(tkwin);
+  if (width == 0 || height == 0) {
+    style = WS_POPUP;
+    parentWin = 0;
+  }
+  else {
+    style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+    parentWin = Tk_GetHWND(parent);
+  }
+
+  tkCxt->hWND_ = CreateWindow(tkGlClassName, "SCIRun GL Viewer Screen",
+			      style, x, y, width, height,
+			      parentWin, NULL, dllHINSTANCE, 
+			      NULL);
+  PrintErr("CreateWindow");
+
+  SetWindowLong(tkCxt->hWND_, 0, (LONG) tkCxt);
+
+  if (width != 0 && height != 0)
+    SetWindowPos(tkCxt->hWND_, HWND_TOP, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+
+  tkCxt->hDC_ = GetDC(tkCxt->hWND_);
+
+  // Set up the pixel format for the display....
+
+  DWORD dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL; //| PFD_GENERIC_ACCELERATED;
+  if (tkCxt->doublebuffer_)
+    dwFlags |= PFD_DOUBLEBUFFER;
+
+  PIXELFORMATDESCRIPTOR pfd = { 
+    sizeof(PIXELFORMATDESCRIPTOR),  
+    1,                     // version number 
+    dwFlags,
+    PFD_TYPE_RGBA,         // RGBA type 
+    24, // color depth
+    8, 0, 8, 0, 8, 0,  // color bits  
+    8, 0,  // alpha buffer 
+    0+0+0,// accumulation buffer 
+    0, 0, 0, 0,// accum bits 
+    32,  // 32-bit z-buffer 
+    0,// no stencil buffer 
+    0, // no auxiliary buffer 
+    PFD_MAIN_PLANE,        // main layer 
+    0,                     // reserved 
+    0, 0, 0                // layer masks ignored 
+  }; 
+
+
+  int iPixelFormat = ChoosePixelFormat(tkCxt->hDC_, &pfd);
+  PrintErr("ChoosePixelFormat");
+  
+  SetPixelFormat(tkCxt->hDC_, iPixelFormat, &pfd);
+  PrintErr("SetPixelFormat");
+
+   /* Get the actual pixel format */
+  DescribePixelFormat(tkCxt->hDC_, iPixelFormat, sizeof(pfd), &pfd);
+
+  tkCxt->context_ = wglCreateContext(tkCxt->hDC_);
+  PrintErr("wglCreateContext(context_):");
+#if 1
+   if (!first_context) {
+     if ((first_context = wglCreateContext(tkCxt->hDC_)) == NULL)
+       PrintErr("wglCreateContext(first_context):");
+   }
+  if (wglShareLists(first_context,tkCxt->context_) == FALSE)
+    PrintErr("wglShareLists");
 #endif
+
+  tkCxt->make_current();
+  initGLextensions();
+  tkCxt->ReportCapabilities();
+
+  if (!tkCxt->context_) throw scinew InternalError("Cannot create WGL Context", __FILE__, __LINE__);
+  
+  /* Just for portability, define the simplest visinfo */
+  tkCxt->vi_->visual = DefaultVisual(tkCxt->display_, DefaultScreen(tkCxt->display_));   
+  tkCxt->vi_->depth = tkCxt->vi_->visual->bits_per_rgb;
+  /*
+  * find a colormap
+  */
+
+  tkCxt->screen_number_ = Tk_ScreenNumber(tkCxt->tkwin_);
+
+  tkCxt->colormap_ = DefaultColormap(tkCxt->display_, tkCxt->screen_number_);
+
+  int result = Tk_SetWindowVisual(tkCxt->tkwin_, tkCxt->vi_->visual, 
+				  tkCxt->vi_->depth,tkCxt->colormap_ );
+  if (result != 1) throw scinew InternalError("Cannot set Tk Window Visual", 
+					      __FILE__, __LINE__);
+
+  SelectPalette(tkCxt->hDC_, ((TkWinColormap *)tkCxt->colormap_)->palette, TRUE);
+  RealizePalette(tkCxt->hDC_);
+  tkCxt->visualid_ = iPixelFormat;
+
+//   cerr << "after create window\n";
+//   PrintErr("MakeWindow setwindowpos");
+//   cerr << "after set window pos\n";
+  Window win = Tk_AttachHWND(tkCxt->tkwin_, tkCxt->hWND_);
+  XMapWindow(tkCxt->display_, win);
+  return win;
+
+}
+
+#endif // _WIN32
 
 
 TkOpenGLContext::TkOpenGLContext(const string &id, int visualid, 
@@ -176,37 +392,23 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
     id_(id)
     
 {
-#ifdef _WIN32
-  XVisualInfo visinfo;        // somewhat equivalent to pfd
-  PIXELFORMATDESCRIPTOR pfd;  
-#endif
+// #ifdef _WIN32
+//   XVisualInfo visinfo;        // somewhat equivalent to pfd
+//   PIXELFORMATDESCRIPTOR pfd;  
+// #endif
 
   mainwin_ = Tk_MainWindow(the_interp);
+  if (!mainwin_) throw scinew InternalError("Cannot find main Tk window", __FILE__, __LINE__);
+
   display_ = Tk_Display(mainwin_);
-
-#ifdef _WIN32
-  PrintErr("TkOpenGLContext::TKCopenGLContext: TkMainWindow");
-#endif
-
-  release();
-
-#ifdef _WIN32
-  PrintErr("TkOpenGLContext::TKCopenGLContext: release");
-#endif
+  if (!display_) throw scinew InternalError("Cannot find X Display", __FILE__, __LINE__);
 
   screen_number_ = Tk_ScreenNumber(mainwin_);
-  if (!mainwin_) throw InternalError("Cannot find main Tk window", __FILE__, __LINE__);
-  if (!display_) throw InternalError("Cannot find X Display", __FILE__, __LINE__);
-    
   geometry_ = 0;
-  cursor_ = 0;
-  x11_win_ = 0;
-  context_ = 0;
-  vi_ = 0;
-
-#ifdef _WIN32
-  PrintErr("TkOpenGLContext::TKCopenGLContext: Tk_ScreenNumber");
-#endif
+  cursor_   = 0;
+  x11_win_  = 0;
+  context_  = 0;
+  vi_       = 0;
 
   if (valid_visuals_.empty())
     listvisuals();
@@ -218,31 +420,17 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
       visualid_ = valid_visuals_[visualid];
     }
 
-#ifdef _WIN32
-    PrintErr("TkOpenGLContext::TKCopenGLContext: listvisuals");
-#endif
-
-#ifdef _WIN32
-#if 0
-      visualid_ = 0;
-#endif
-#endif
-
   if (visualid_) {
 
     int n;
     XVisualInfo temp_vi;
     temp_vi.visualid = visualid_;
     vi_ = XGetVisualInfo(display_, VisualIDMask, &temp_vi, &n);
-
-#ifdef _WIN32
-    PrintErr("TkOpenGLContext::TKCopenGLContext: XGetVisualInfo");
-#endif
-
     if(!vi_ || n!=1) {
-      throw InternalError("Cannot find Visual ID #"+to_string(visualid_), __FILE__, __LINE__);
+      throw scinew InternalError("Cannot find Visual ID #"+to_string(visualid_), __FILE__, __LINE__);
     }
   } else {
+
 #ifndef _WIN32
     /* Pick the right visual... */
     int idx = 0;
@@ -286,105 +474,55 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
     attributes[idx++]=None;
 
     vi_ = glXChooseVisual(display_, screen_number_, attributes);
-#else //_WIN32
-      // I am using the *PixelFormat commands from win32 because according
-      // to the Windows page, we should prefer this to wgl*PixelFormatARB.
-      // Unfortunately, this means that the Windows code will differ
-      // substantially from that of other platforms.  However, it has the
-      // advantage that we don't have to use the wglGetProc to get
-      // the procedure address, or test to see if the applicable extension
-      // is supported.  WM:VI
-
-    DWORD dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-//       if (doublebuffer_)
-    dwFlags |= PFD_DOUBLEBUFFER;
-//       if (stereo_)
-// 	dwFlags |= PFD_STEREO;
-
-      PIXELFORMATDESCRIPTOR npfd = { 
-	sizeof(PIXELFORMATDESCRIPTOR),  
-	1,                     // version number 
-	dwFlags,
-	PFD_TYPE_RGBA,         // RGBA type 
-	24, // color depth
-	0, 0, 0, 0, 0, 0,  // color bits 
-	0, 0,  // alpha buffer 
-	0,// accumulation buffer 
-	0, 0, 0, 0,// accum bits 
-	32,  // 32-bit z-buffer 
-	0,// no stencil buffer 
-	0, // no auxiliary buffer 
-	PFD_MAIN_PLANE,        // main layer 
-	0,                     // reserved 
-	0, 0, 0                // layer masks ignored 
-      }; 
-
-      pfd = npfd;
-      
-//      if (!first_context) {
-//        SetPixelFormat(hDC_, visualid_, &pfd);
-//        PrintErr("TkOpenGLContext::TKCopenGLContext: SetPixelFormat");
-//      }
-
-
-//       XVisualInfo xvi;
-//       xvi.screen = screen_number_;
-//       int n_ret=0;
-//       vi_ = XGetVisualInfo(display_,
-// 			   VisualScreenMask,
-// 			   &xvi,
-// 			   &n_ret
-// 			   );
-
-    vi_ = &visinfo;
-    vi_->visual = DefaultVisual(display_,DefaultScreen(display_));
-    vi_->depth = vi_->visual->bits_per_rgb;
-
 #endif
 
   }
-  if (!vi_) throw InternalError("Cannot find Visual", __FILE__, __LINE__);
+
+#ifndef _WIN32
+  
+  if (!vi_) throw scinew InternalError("Cannot find Visual", __FILE__, __LINE__);
   colormap_ = XCreateColormap(display_, Tk_WindowId(mainwin_), 
 			      vi_->visual, AllocNone);
+
+#endif
 
   tkwin_ = Tk_CreateWindowFromPath(the_interp, mainwin_, 
 				   ccast_unsafe(id),
 				   (char *) NULL);
 
-  if (!tkwin_) throw InternalError("Cannot create Tk Window", __FILE__, __LINE__);
+  if (!tkwin_) throw scinew InternalError("Cannot create Tk Window", __FILE__, __LINE__);
+
+
+
+#ifndef _WIN32
   Tk_GeometryRequest(tkwin_, width, height);
-
-
   int result = Tk_SetWindowVisual(tkwin_, vi_->visual, vi_->depth, colormap_);
-  if (result != 1) throw InternalError("Cannot set Tk Window Visual", __FILE__, __LINE__);
-
-  Tk_MakeWindowExist(tkwin_);
-
-#ifdef _WIN32
-   {
-     fprintf(stderr,"Before TkWinGet...\n");
-     HWND hWND = Tk_GetHWND(Tk_WindowId(tkwin_));
-     PrintErr("Tk_GetHWND");
-   
-     fprintf(stderr,"After TkWinGet...\n");
-     hDC_ = GetDC(hWND);
-     PrintErr("GetDC");
-   }
-
-   visualid_ = ChoosePixelFormat(hDC_, &pfd);
-   fprintf(stderr, "Visid %d\n", visualid_);
-   PrintErr("TkOpenGLContext:: ChoosePixelFormat");
-
-
-  int code = SetPixelFormat(hDC_, visualid_, &pfd);
-  if (code == 0)
-    fprintf(stderr, "spf == 0\n");
-  PrintErr("TkOpenGLContext::TKCopenGLContext: SetPixelFormat");
-
+  if (result != 1) throw scinew InternalError("Cannot set Tk Window Visual", __FILE__, __LINE__);
 #endif
 
+#ifdef _WIN32
+  TkClassProcs *procsPtr;
+  Tk_FakeWin *winPtr = (Tk_FakeWin*)(tkwin_);
+    
+  procsPtr = (TkClassProcs*)Tcl_Alloc(sizeof(TkClassProcs));
+  procsPtr->createProc     = TkGLMakeWindow;
+  procsPtr->geometryProc   = NULL;
+  procsPtr->modalProc      = NULL;
+  winPtr->dummy17 = (char*)procsPtr;
+  winPtr->dummy18 = (ClientData)this;
+
+  Tk_GeometryRequest(tkwin_, width, height);
+  Tk_ResizeWindow(tkwin_, width, height);
+
+#endif // _WIN32
+
+  Tk_MakeWindowExist(tkwin_);
+  if (Tk_WindowId(tkwin_) == 0) {
+    throw InternalError("Tk_MakeWindowExist failed", __FILE__, __LINE__);
+  }
+
   x11_win_ = Tk_WindowId(tkwin_);
-  if (!x11_win_) throw InternalError("Cannot get Tk X11 window ID", __FILE__, __LINE__);
+  if (!x11_win_) throw scinew InternalError("Cannot get Tk X11 window ID", __FILE__, __LINE__);
 
   XSync(display_, False);
 
@@ -394,28 +532,12 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
     first_context = glXCreateContext(display_, vi_, 0, 1);
   }
   context_ = glXCreateContext(display_, vi_, first_context, 1);
-  if (!context_) throw InternalError("Cannot create GLX Context", __FILE__, __LINE__);
+  if (!context_) throw scinew InternalError("Cannot create GLX Context", __FILE__, __LINE__);
 #else // _WIN32
 
-  PrintErr("TkOpenGLContext::TKCopenGLContext: Tk calls (up to MakeWindowExist)");
+  release();
 
-  context_ = wglCreateContext(hDC_);
-  PrintErr("TkOpenGLContext::TKOpenGLContext: wglCreateContext");
-
-  if (first_context == NULL) {
-    first_context = context_;
-  } else {
-    //wglShareLists(first_context,context_);
-    PrintErr("TkOpenGLContext::TKCopenGLContext: wglShareLists");
-  }
-
-  if (!context_) throw InternalError("Cannot create WGL Context", __FILE__, 
-				     __LINE__);
-
-
-  fprintf(stderr,"%s\n",ReportCapabilities());
-
-#endif
+#endif // _WIN32
 }
 
 
@@ -429,6 +551,10 @@ TkOpenGLContext::~TkOpenGLContext()
 #else
   if (context_ != first_context)
     wglDeleteContext(context_);
+
+  // remove the TkGL Context from the window, so it won't delete it in the callback
+  SetWindowLong(hWND_, 0, (LONG) 0);
+  DestroyWindow(hWND_);
 #endif
   XSync(display_, False);
   TCLTask::unlock();
@@ -446,12 +572,11 @@ TkOpenGLContext::make_current()
   result = glXMakeCurrent(display_, x11_win_, context_);
 #else  // _WIN32
   HGLRC current = wglGetCurrentContext();
+  PrintErr("wglGetCurrentContext");
 
   if (current != context_) {
-    
     result = wglMakeCurrent(hDC_,context_);
-    
-    PrintErr("TkOpenGLContext::make_current");
+    PrintErr("wglMakeCurrent");
   }
 
 #endif
@@ -664,7 +789,7 @@ TkOpenGLContext::listvisuals()
   vector<string> visualtags;
   vector<int> scores;
 
-  int  id, level, db, stereo, r,g,b,a, depth, stencil, ar, ag, ab, aa;
+  //int  id, level, db, stereo, r,g,b,a, depth, stencil, ar, ag, ab, aa;
 
   PrintErr("TkOpenGLContext::listvisuals");
 
@@ -776,3 +901,42 @@ TkOpenGLContext::listvisuals()
 
 #endif
 }
+
+#ifdef _WIN32
+
+// initialize > gl 1.1 stuff here
+__declspec(dllexport) PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
+__declspec(dllexport) PFNGLBLENDEQUATIONPROC glBlendEquation = 0;
+__declspec(dllexport) PFNGLTEXIMAGE3DPROC glTexImage3D = 0;
+__declspec(dllexport) PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D = 0;
+__declspec(dllexport) PFNGLMULTITEXCOORD1FPROC glMultiTexCoord1f;
+__declspec(dllexport) PFNGLMULTITEXCOORD2FVPROC glMultiTexCoord2fv = 0;
+__declspec(dllexport) PFNGLMULTITEXCOORD3FPROC glMultiTexCoord3f = 0;
+__declspec(dllexport) PFNGLCOLORTABLEPROC glColorTable = 0;
+
+void initGLextensions()
+{
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+    glBlendEquation = (PFNGLBLENDEQUATIONPROC)wglGetProcAddress("glBlendEquation");
+    glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
+    glTexSubImage3D = (PFNGLTEXSUBIMAGE3DPROC)wglGetProcAddress("glTexSubImage3D");
+    glMultiTexCoord1f = (PFNGLMULTITEXCOORD1FPROC)wglGetProcAddress("glMultiTexCoord1fARB");
+    glMultiTexCoord2fv = (PFNGLMULTITEXCOORD2FVPROC)wglGetProcAddress("glMultiTexCoord2fv");
+    glMultiTexCoord3f = (PFNGLMULTITEXCOORD3FPROC)wglGetProcAddress("glMultiTexCoord3f");
+    glColorTable = (PFNGLCOLORTABLEPROC)wglGetProcAddress("glColorTable");
+  }
+}
+
+BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
+{
+  switch (reason) {
+  case DLL_PROCESS_ATTACH:
+    dllHINSTANCE = hinstance; break;
+  default: break;
+  }
+  return TRUE;
+}
+#endif

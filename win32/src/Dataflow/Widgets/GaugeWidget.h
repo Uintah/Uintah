@@ -46,9 +46,11 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
+#include <Dataflow/Widgets/share.h>
+
 namespace SCIRun {
 
-class GaugeWidget : public BaseWidget {
+class SHARE GaugeWidget : public BaseWidget {
 public:
   GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 	       bool is_slideable = false);

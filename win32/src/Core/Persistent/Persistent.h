@@ -50,6 +50,7 @@
 
 #include <Core/Util/Assert.h>
 #include <Core/Util/ProgressReporter.h>
+#include <Core/Persistent/share.h>
 namespace SCIRun {
 
 using std::string;
@@ -59,7 +60,7 @@ using std::pair;
 class Persistent;
 
 //----------------------------------------------------------------------
-struct PersistentTypeID {
+struct SHARE PersistentTypeID {
   string type;
   string parent;
   Persistent* (*maker)();
@@ -74,7 +75,7 @@ struct PersistentTypeID {
 };
 
 //----------------------------------------------------------------------
-class Piostream {
+class SHARE Piostream {
   
 public:
 
@@ -159,14 +160,14 @@ public:
   // Returns true if bkock_io was supported (even on error).
   virtual bool block_io(void*, size_t, size_t) { return false; }
 
-  friend Piostream* auto_istream(const string& filename,
+  SHARE friend Piostream* auto_istream(const string& filename,
                                  ProgressReporter *pr = 0);
-  friend Piostream* auto_ostream(const string& filename, const string& type,
+  SHARE friend Piostream* auto_ostream(const string& filename, const string& type,
                                  ProgressReporter *pr = 0);
 };
 
 //----------------------------------------------------------------------
-class Persistent {
+class SHARE Persistent {
 public:
   virtual ~Persistent();
   virtual void io(Piostream&) = 0;

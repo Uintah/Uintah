@@ -51,11 +51,12 @@
 #include <Core/Util/Timer.h>
 #include <Core/Thread/Mutex.h>
 
+#include <Core/Util/share.h>
 namespace SCIRun {
 
   //using namespace std;
 
-class ProgressReporter 
+class SHARE ProgressReporter 
 {
 public:
   typedef enum {Starting, Compiling, CompilationDone, Done } ProgressState;

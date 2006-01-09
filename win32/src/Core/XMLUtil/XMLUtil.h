@@ -58,11 +58,8 @@ namespace SCIRun {
 #include <string>
 #include <iosfwd>
 
-/* NOT_SET is used to indicate active 
-   fields inside of data structures that
-   represent XML element trees */
-
-#define NOT_SET ((char*)_NOTSET_)
+#include <Core/Util/notset.h>
+#include <Core/XMLUtil/share.h>
 
 namespace SCIRun {
 using std::string;
@@ -182,7 +179,6 @@ bool get(const DOMNode* node,
 bool get(const DOMNode* node,
 	 const std::string& name, bool &value);
 
-extern const char _NOTSET_[];      
       
 //////////////////////////////
 // getSerializedAttributes()
@@ -198,11 +194,11 @@ char* getSerializedAttributes(DOMNode* node);
 // represents the children of the node
 // named "node".
       
-char* getSerializedChildren(DOMNode* node);
+SHARE char* getSerializedChildren(DOMNode* node);
       
       
-string xmlto_string(const DOMText* str);
-string xmlto_string(const XMLCh* const str);
+string SHARE xmlto_string(const DOMText* str);
+string SHARE xmlto_string(const XMLCh* const str);
 void invalidNode(const DOMNode* n, const string& filename);
 const XMLCh* findText(DOMNode* node);
 	

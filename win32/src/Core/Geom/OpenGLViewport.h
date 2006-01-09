@@ -45,11 +45,13 @@
 
 using std::string;
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 class TkOpenGLContext;
 
-class OpenGLViewport {
+class SHARE OpenGLViewport {
 private:
   TkOpenGLContext *	context_;
   float			x_;
