@@ -485,6 +485,13 @@ protected:
                    const MaterialSubset* matls,
                    DataWarehouse*,
                    DataWarehouse*);
+                   
+  void printSchedule(const PatchSet* patches,
+                     const string& where);
+                     
+  void printSchedule(const LevelP& level,
+                     const string& where);
+
 
   SimulationStateP d_sharedState;
   MPMLabel* lb;
