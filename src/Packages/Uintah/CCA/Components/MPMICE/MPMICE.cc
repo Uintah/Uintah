@@ -469,8 +469,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
       const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
       const PatchSet* ice_patches = ice_level->eachPatch();
 
-      scheduleCoarsenLagrangianValuesMPM(       sched, ice_patches, one_matl,
-                                                                    mpm_matls);
+      scheduleCoarsenLagrangianValuesMPM(     sched, ice_patches, one_matl,
+                                                                  mpm_matls);
     }
   }
 
@@ -2530,7 +2530,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
   new_dw->refinalize();
 }
 
-
+//______________________________________________________________________
 void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      SchedulerP& scheduler,
                                      int step, 
@@ -2539,7 +2539,8 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
   d_ice->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
   d_mpm->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
 }
-  
+
+//______________________________________________________________________
 void MPMICE::scheduleRefine(const PatchSet* patches, 
                             SchedulerP& sched)
 {
@@ -2567,19 +2568,22 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   }
   sched->addTask(task, patches, d_sharedState->allMPMMaterials());
 }
-    
+
+//______________________________________________________________________    
 void MPMICE::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
   d_ice->scheduleCoarsen(coarseLevel, sched);
   d_mpm->scheduleCoarsen(coarseLevel, sched);
 }
 
+//______________________________________________________________________
 void MPMICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched)
 {
   d_ice->scheduleInitialErrorEstimate(coarseLevel, sched);
   d_mpm->scheduleInitialErrorEstimate(coarseLevel, sched);
 }
-                                               
+
+//______________________________________________________________________                                               
 void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                    SchedulerP& sched)
 {
@@ -2587,6 +2591,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   d_mpm->scheduleErrorEstimate(coarseLevel, sched);
 }
 
+//______________________________________________________________________
  void MPMICE::scheduleRefineVariableCC(SchedulerP& sched,
                                        const PatchSet* patches,
                                        const MaterialSet* matls,
@@ -2599,16 +2604,15 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    // the sgis don't like accepting a templated function over a function call for some reason...
    void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
                         DataWarehouse*, DataWarehouse*, const VarLabel*);
+                        
    switch(variable->typeDescription()->getSubType()->getType()){
    case TypeDescription::double_type:
      func = &MPMICE::refineVariableCC<double>;
-     t=scinew Task(taskName.str().c_str(),
-                   this, func, variable);
+     t=scinew Task(taskName.str().c_str(),this, func, variable);
      break;
    case TypeDescription::Vector:
      func = &MPMICE::refineVariableCC<Vector>;
-     t=scinew Task(taskName.str().c_str(),
-                   this, func, variable);
+     t=scinew Task(taskName.str().c_str(),this, func, variable);
      break;
    default:
      throw InternalError("Unknown variable type for refine", __FILE__, __LINE__);
@@ -2619,7 +2623,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    t->computes(variable);
    sched->addTask(t, patches, matls);
  }
-
+//______________________________________________________________________
  void MPMICE::scheduleRefineExtensiveVariableCC(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls,
@@ -2632,16 +2636,15 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    // the sgis don't like accepting a templated function over a function call for some reason...
    void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
                         DataWarehouse*, DataWarehouse*, const VarLabel*);
+                        
    switch(variable->typeDescription()->getSubType()->getType()){
    case TypeDescription::double_type:
      func = &MPMICE::refineExtensiveVariableCC<double>;
-     t=scinew Task(taskName.str().c_str(),
-                   this, func, variable);
+     t=scinew Task(taskName.str().c_str(),this, func, variable);
      break;
    case TypeDescription::Vector:
      func = &MPMICE::refineExtensiveVariableCC<Vector>;
-     t=scinew Task(taskName.str().c_str(),
-                   this, func, variable);
+     t=scinew Task(taskName.str().c_str(),this, func, variable);
      break;
    default:
      throw InternalError("Unknown variable type for refine", __FILE__, __LINE__);
@@ -2658,7 +2661,6 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
  }
 
  //______________________________________________________________________
-  
  template<typename T>
    void MPMICE::scheduleCoarsenVariableCC(SchedulerP& sched,
                                           const PatchSet* patches,
@@ -2685,7 +2687,8 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
      t->computes(variable);
    sched->addTask(t, patches, matls);
  }
-
+//______________________________________________________________________
+//
  template<typename T>
    void MPMICE::scheduleMassWeightedCoarsenVariableCC(SchedulerP& sched,
                                                       const PatchSet* patches,
@@ -2703,7 +2706,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                                                                 
    Task* t=scinew Task(taskName.str().c_str(),
                        this, func, variable, defaultValue, modifies);
-   t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+   t->requires(Task::NewDW, variable,         0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
    t->requires(Task::NewDW, MIlb->cMassLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
    if(modifies)
      t->modifies(variable);
@@ -2711,7 +2714,8 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
      t->computes(variable);
    sched->addTask(t, patches, matls);
  }
-
+//______________________________________________________________________
+//
  template<typename T>
    void MPMICE::scheduleCoarsenSumVariableCC(SchedulerP& sched,
                                              const PatchSet* patches,
@@ -2729,6 +2733,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                                                                 
    Task* t=scinew Task(taskName.str().c_str(),
                        this, func, variable, defaultValue, modifies);
+                       
    t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
    if(modifies)
      t->modifies(variable);
@@ -2736,7 +2741,8 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
      t->computes(variable);
    sched->addTask(t, patches, matls);
  }
-
+//______________________________________________________________________
+//
 void
 MPMICE::refine(const ProcessorGroup*,
                const PatchSubset* patches,
@@ -2744,10 +2750,18 @@ MPMICE::refine(const ProcessorGroup*,
                DataWarehouse*,
                DataWarehouse* new_dw)
 {
+  const Level* fineLevel = getLevel(patches);
+  int num_levels = fineLevel->getGrid()->numLevels();
+  int L_indx = fineLevel->getIndex();
+  cout_doing << d_myworld->myrank() 
+             << " Doing refine \t\t\t\t\t MPMICE L-"<< L_indx;
+
+
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
+    
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -2757,35 +2771,32 @@ MPMICE::refine(const ProcessorGroup*,
            << patch->getID() << " material # = " << dwi << endl;
       //}
       
-      if(d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                             getLevel(patches)->getGrid()->numLevels())) {
+      if(d_ice->doICEOnLevel(L_indx, num_levels)) {
         // for now, create 0 heat flux
         CCVariable<double> heatFlux;
         new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel, dwi, patch);
         heatFlux.initialize(0.0);
       }
 
-      if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                                    getLevel(patches)->getGrid()->numLevels())) {
+      if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
         NCVariable<double> NC_CCweight;
         CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
         CCVariable<Vector> vel_CC;
-        cout << "A\n";
-        new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,    0, patch);
+
         new_dw->allocateTemporary(rho_micro, patch);
-        cout << "B\n";
-        new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,    dwi,patch);
-        cout << "C\n";
-        new_dw->allocateTemporary(rho_CC,patch);
-        cout << "D\n";
+        new_dw->allocateTemporary(rho_CC,    patch);
+        
+        new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch);
+        new_dw->allocateAndPut(sp_vol_CC,   Ilb->sp_vol_CCLabel,    dwi,patch);
         //new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,dwi,patch);
-        cout << "E\n";
-        new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      dwi,patch);
-        cout << "F\n";
-        new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       dwi,patch);
+        new_dw->allocateAndPut(Temp_CC,     MIlb->temp_CCLabel,     dwi,patch);
+        new_dw->allocateAndPut(vel_CC,      MIlb->vel_CCLabel,      dwi,patch);
+        
         mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
                                              Temp_CC,     vel_CC,  
                                              d_sharedState->getNumMatls(),patch);  
+        //__________________________________
+        //  Set boundary conditions                                     
         setBC(rho_micro, "Density",      patch, d_sharedState, dwi, new_dw);    
         setBC(Temp_CC,   "Temperature",  patch, d_sharedState, dwi, new_dw);    
         setBC(vel_CC,    "Velocity",     patch, d_sharedState, dwi, new_dw);
@@ -2813,16 +2824,16 @@ MPMICE::refine(const ProcessorGroup*,
               <<neg_cell << " sp_vol_CC is negative\n";
           throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
         }
-      
-
           
         //__________________________________
         // - Initialize NC_CCweight = 0.125
         // - Find the walls with symmetry BC and
         //   double NC_CCweight
         NC_CCweight.initialize(0.125);
-        for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-            face=Patch::nextFace(face)){
+        vector<Patch::FaceType>::const_iterator iter;  
+        for (iter  = patch->getBoundaryFaces()->begin(); 
+             iter != patch->getBoundaryFaces()->end(); ++iter){
+          Patch::FaceType face = *iter;
           int mat_id = 0; 
           if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
             for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars"); 
@@ -2887,6 +2898,7 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
   }
 }
 
+//______________________________________________________________________
 //
 template<typename T>
 void MPMICE::refineExtensiveVariableCC(const ProcessorGroup*,
@@ -2899,7 +2911,8 @@ void MPMICE::refineExtensiveVariableCC(const ProcessorGroup*,
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
   IntVector refineRatio(fineLevel->getRefinementRatio());
-                                                                                   for(int p=0;p<patches->size();p++){
+  
+  for(int p=0;p<patches->size();p++){
     const Patch* finePatch = patches->get(p);
                                                                                 
     // region of fine space that will correspond to the coarse we need to get
@@ -2965,10 +2978,11 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
       int indx = matls->get(m);
 
       CCVariable<T> coarse_q_CC;
-      if(modifies)
+      if(modifies){
         new_dw->getModifiable(coarse_q_CC, variable, indx, coarsePatch);
-      else
+      }else{
         new_dw->allocateAndPut(coarse_q_CC, variable, indx, coarsePatch);
+      }
       coarse_q_CC.initialize(defaultValue);
 
       Level::selectType finePatches;
@@ -3006,7 +3020,8 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 template<typename T>
 void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
                                            const PatchSubset* patches,
@@ -3031,10 +3046,11 @@ void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
       int indx = matls->get(m);
 
       CCVariable<T> coarse_q_CC;
-      if(modifies)
+      if(modifies){
         new_dw->getModifiable(coarse_q_CC, variable, indx, coarsePatch);
-      else
+      }else{
         new_dw->allocateAndPut(coarse_q_CC, variable, indx, coarsePatch);
+      }
       coarse_q_CC.initialize(defaultValue);
 
       Level::selectType finePatches;
@@ -3076,7 +3092,8 @@ void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 template<typename T>
 void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -3101,10 +3118,11 @@ void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
       int indx = matls->get(m);
 
       CCVariable<T> coarse_q_CC;
-      if(modifies)
+      if(modifies){
         new_dw->getModifiable(coarse_q_CC, variable, indx, coarsePatch);
-      else
+      }else{
         new_dw->allocateAndPut(coarse_q_CC, variable, indx, coarsePatch);
+      }  
       coarse_q_CC.initialize(defaultValue);
 
       Level::selectType finePatches;
