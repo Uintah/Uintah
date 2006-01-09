@@ -51,12 +51,14 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
 
 class String;
 typedef LockingHandle<String> StringHandle;
 
-class String : public PropertyManager {
+class SHARE String : public PropertyManager {
 
   std::string str_;
 

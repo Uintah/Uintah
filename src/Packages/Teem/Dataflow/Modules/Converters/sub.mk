@@ -61,6 +61,10 @@ PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
 	Dataflow/Network Dataflow/Ports Core/Volume \
 	Core/Basis
 
+ifeq ($(HAVE_INSIGHT),yes)
+  PSELIBS += Core/Algorithms/DataIO
+endif
+
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
 
 

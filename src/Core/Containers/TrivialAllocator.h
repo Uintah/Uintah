@@ -46,6 +46,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <Core/Containers/share.h>
+
 namespace SCIRun {
 
 class TrivialAllocator {
@@ -61,8 +63,8 @@ class TrivialAllocator {
     Mutex lock;
     int ta_disable;
 public:
-    TrivialAllocator(unsigned int size);
-    ~TrivialAllocator();
+    SHARE TrivialAllocator(unsigned int size);
+    SHARE ~TrivialAllocator();
 
     inline void* alloc();
     inline void free(void*);

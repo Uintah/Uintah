@@ -45,6 +45,8 @@
 
 #include <Core/Thread/Barrier.h>
 
+#include <Core/Thread/share.h>
+
 namespace SCIRun {
 
 /**************************************
@@ -62,7 +64,7 @@ DESCRIPTION
    thread, and these sums are added together.
    
 ****************************************/
-	class SimpleReducer : public Barrier {
+	class SHARE SimpleReducer : public Barrier {
 	public:
 	    //////////
 	    // Create a <b> SimpleReducer</i>.

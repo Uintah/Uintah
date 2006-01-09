@@ -46,9 +46,11 @@
 
 #include <Dataflow/Constraints/BaseConstraint.h>
 
+#include <Dataflow/Constraints/share.h>
+
 namespace SCIRun {
 
-class PythagorasConstraint : public BaseConstraint {
+class SHARE PythagorasConstraint : public BaseConstraint {
 public:
    PythagorasConstraint( const string& name,
 			 const Index numSchemes,

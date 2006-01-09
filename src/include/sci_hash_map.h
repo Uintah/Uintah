@@ -43,7 +43,10 @@
 #  include <hash_map>
    using std::hash_map;
    using std::hash_multimap;
+#  ifndef _MSC_VER
+   // msvc hash map is a little different
    using std::hash;
+#  endif
 #else
 #  ifdef HAVE_EXT_HASHMAP
 #    include <ext/hash_map>

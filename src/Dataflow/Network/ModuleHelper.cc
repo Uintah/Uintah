@@ -50,7 +50,12 @@
 #include <Dataflow/Network/Port.h>
 
 #include <iostream>
+#ifndef _WIN32
 #include <unistd.h>
+#else
+#include <windows.h>
+#define getpid GetCurrentThreadId
+#endif
 
 using namespace std;
 

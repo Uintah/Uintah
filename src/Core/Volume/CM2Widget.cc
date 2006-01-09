@@ -58,6 +58,19 @@
 using namespace std;
 using namespace SCIRun;
 
+#if defined(__sgi)
+#    define glActiveTexture(x) 
+#    define glMultiTexCoord1f(t,x) 
+#else
+#  ifndef GL_TEXTURE0
+#    define GL_TEXTURE0 GL_TEXTURE0_ARB
+#    define GL_TEXTURE1 GL_TEXTURE1_ARB
+#    define glActiveTexture(x) glActiveTextureARB(x)
+#    define glMultiTexCoord1f(t,x) glMultiTexCoord1fARB(t,x)
+#  endif
+#endif
+
+
 #ifdef _WIN32
   // windows doesn't have drand48
   // we can make a better solution if it becomes necessary
@@ -66,7 +79,11 @@ using namespace SCIRun;
 
 double drand48()
 {
-  srand((int) Time::currentTicks());
+  static bool initialized = false;
+  if (!initialized) {
+    srand((int) Time::currentTicks());
+    initialized = true;
+  }
   return ((double) rand())/ RAND_MAX;
 }
 
@@ -1948,7 +1965,6 @@ ColorMapCM2Widget::rasterize(CM2ShaderFactory& factory,
                              Pbuffer* pbuffer)
 {
   if (!onState_) return;
-#ifndef _WIN32
   CM2BlendType blend = CM2_BLEND_RASTER;
   if (pbuffer) {
     if(pbuffer->need_shader())
@@ -1978,19 +1994,6 @@ ColorMapCM2Widget::rasterize(CM2ShaderFactory& factory,
   double left_y = left_y_*scaley+pany;
   double width = width_*scalex;
   double height = height_*scaley;
-    
-#if defined(__sgi)
-#    define glActiveTexture(x) 
-#    define glMultiTexCoord1f(t,x) 
-#else
-#  ifndef GL_TEXTURE0
-#    define GL_TEXTURE0 GL_TEXTURE0_ARB
-#    define GL_TEXTURE1 GL_TEXTURE1_ARB
-#    define glActiveTexture(x) glActiveTextureARB(x)
-#    define glMultiTexCoord1f(t,x) glMultiTexCoord1fARB(t,x)
-#  endif
-#endif
-
   
   shader->bind();
   shader->setLocalParam(1, left_x, left_y, width, height);
@@ -2048,7 +2051,6 @@ ColorMapCM2Widget::rasterize(CM2ShaderFactory& factory,
   un_normalize();
   shader->release();
   //  if (pbuffer) pbuffer->bind(GL_FRONT);
-#endif
 }
 
 void

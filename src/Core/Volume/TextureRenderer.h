@@ -46,6 +46,8 @@
 
 #include <Core/Geometry/Polygon.h>
 
+#include <Core/Volume/share.h>
+
 namespace SCIRun {
 
 class Pbuffer;
@@ -61,7 +63,7 @@ public:
   bool alpha_dirty_;
 };
 
-class TextureRenderer : public GeomObj
+class SHARE TextureRenderer : public GeomObj
 {
 public:
   TextureRenderer(TextureHandle tex, 

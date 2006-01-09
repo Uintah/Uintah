@@ -73,6 +73,8 @@ using std::cerr;
 #endif
 
 
+#include <Core/Algorithms/Visualization/share.h>
+
 namespace SCIRun {
 class GeomEllipsoid;
 class GeomArrows;
@@ -88,9 +90,12 @@ sciVectorToColor(Color &c, const Vector &v)
 //! RenderFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderFieldBase from the DynamicAlgoBase they will have a pointer to.
-class RenderFieldBase : public DynamicAlgoBase
+class SHARE RenderFieldBase : public DynamicAlgoBase
 {
 public:
+
+#if !defined(_MSC_VER) && !!defined(__ECC)
+
   struct equal_str
   {
     bool operator()(const string &s1, const string &s2) const
@@ -107,6 +112,7 @@ public:
       return H(s.c_str());
     }
   };
+#endif
   virtual void render(FieldHandle f,
 		      bool nodes, bool edges, bool faces,
 		      ColorMapHandle color_handle, MaterialHandle def_mat,
@@ -750,7 +756,11 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
   cout << endl << "-- edges --" << endl;
 #endif
 
+#if defined(_MSC_VER) || defined(__ECC)
+  typedef hash_set<string> edge_ht_t;
+#else
   typedef hash_set<string, str_hasher, equal_str> edge_ht_t;
+#endif
   edge_ht_t rendered_edges; 
 
   // Second pass: over the edges
@@ -1211,7 +1221,11 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
   cout << endl << "-- faces --" << endl;
 #endif
 
+#if defined(_MSC_VER) || defined(__ECC)
+  typedef hash_set<string> face_ht_t;
+#else
   typedef hash_set<string, str_hasher, equal_str> face_ht_t;
+#endif
   face_ht_t rendered_faces; 
   
   mesh->synchronize(Mesh::FACES_E | Mesh::EDGES_E | Mesh::CELLS_E);
@@ -2494,7 +2508,7 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
 //! RenderVectorFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderVectorFieldBase from the DynamicAlgoBase they will have a pointer to.
-class RenderVectorFieldBase : public DynamicAlgoBase
+class SHARE RenderVectorFieldBase : public DynamicAlgoBase
 {
 public:
 
@@ -3092,7 +3106,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 //! RenderTensorFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderTensorFieldBase from the DynamicAlgoBase they will have a pointer to.
-class RenderTensorFieldBase : public DynamicAlgoBase
+class SHARE RenderTensorFieldBase : public DynamicAlgoBase
 {
 public:
 
@@ -3299,7 +3313,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 //! RenderScalarFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderScalarFieldBase from the DynamicAlgoBase they will have a pointer to.
-class RenderScalarFieldBase : public DynamicAlgoBase
+class SHARE RenderScalarFieldBase : public DynamicAlgoBase
 {
 public:
 

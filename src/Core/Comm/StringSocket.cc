@@ -42,12 +42,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <unistd.h>
 #include <string.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #ifndef _WIN32
+#include <unistd.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
@@ -55,6 +55,7 @@
 #else
 #include <winsock2.h>
 #define socklen_t int
+#define close closesocket
 #endif
 
 #include <iostream>

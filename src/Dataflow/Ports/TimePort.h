@@ -34,9 +34,11 @@
 
 #include <Dataflow/Ports/SimplePort.h>
 
+#include <Dataflow/Ports/share.h>
+
 namespace SCIRun {
 
-class TimeViewer 
+class SHARE TimeViewer 
 {
 public:
 
@@ -52,7 +54,7 @@ public:
   Mutex    lock;
 };
 
-class TimeData : public TimeViewer
+class SHARE TimeData : public TimeViewer
 {
 public:
   TimeData();

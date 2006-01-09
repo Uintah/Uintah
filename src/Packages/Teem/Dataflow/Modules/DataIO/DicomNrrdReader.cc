@@ -63,8 +63,11 @@
 #endif
 
 // Standard includes
+#ifdef _WIN32
+#include <Core/OS/dirent.h>
+#else
 #include <dirent.h>
-
+#endif
 namespace SCITeem { 
 
 using namespace SCIRun;

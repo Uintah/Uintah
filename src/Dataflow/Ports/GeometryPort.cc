@@ -54,13 +54,19 @@
 #include <iostream>
 using std::cerr;
 
+#ifdef _WIN32
+#define SHARE __declspec(dllexport)
+#else
+#define SHARE
+#endif
+
 namespace SCIRun {
 
 extern "C" {
-  IPort* make_GeometryIPort(Module* module, const string& name) {
+  SHARE IPort* make_GeometryIPort(Module* module, const string& name) {
     return scinew GeometryIPort(module,name);
   }
-  OPort* make_GeometryOPort(Module* module, const string& name) {
+  SHARE OPort* make_GeometryOPort(Module* module, const string& name) {
     return scinew GeometryOPort(module,name);
   }
 }

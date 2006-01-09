@@ -45,9 +45,11 @@
 
 #include <Core/Geom/GeomContainer.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomSwitch : public GeomContainer {
+class SHARE GeomSwitch : public GeomContainer {
 protected:
     int state;
     GeomSwitch(const GeomSwitch&);

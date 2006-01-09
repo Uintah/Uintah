@@ -52,13 +52,15 @@
 #include <winsock2.h>
 #endif
 
+#include <Core/ICom/share.h>
+
 namespace SCIRun {
 
 	// Define all the enums here
 
 	enum conntype			{ DIRECT = 1, SSH_TUNNEL = 2}; 
 
-class IComBase {
+class SHARE IComBase {
     
 	// Define all the communication errors here
   public:

@@ -47,8 +47,7 @@ SRCS     += \
         $(SRCDIR)/TikhonovSVD.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Packages/BioPSE/Core/Algorithms/NumApproximation \
-	Dataflow/Network Dataflow/Ports \
+PSELIBS := Dataflow/Network Dataflow/Ports \
 	Core/Algorithms/Geometry \
         Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \

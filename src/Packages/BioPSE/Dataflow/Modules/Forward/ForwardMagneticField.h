@@ -112,8 +112,12 @@ private:
     Point  center_;
     double volume_;
   };
-  
+
+#if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<unsigned, per_cell_cache> cache_t;
+#else
   typedef hash_map<unsigned, per_cell_cache, hash<unsigned> > cache_t;
+#endif
   cache_t                                                  cell_cache_;
 
   ElecField                                               *efld_;

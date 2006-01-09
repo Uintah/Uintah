@@ -44,6 +44,8 @@
 #ifndef SCI_Math_MiscMath_h
 #define SCI_Math_MiscMath_h 1
 
+#include <Core/Math/share.h>
+
 namespace SCIRun {
 
 // Absolute value
@@ -256,7 +258,7 @@ inline int Tile(int tile, int tf)
   }
 }
 
-double MakeReal(double value);
+double SHARE MakeReal(double value);
 
 
 template <class T>

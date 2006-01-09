@@ -58,8 +58,14 @@
 #include <fstream>
 #include <string>
 
+#ifdef _WIN32
+#define SHARE __declspec(dllimport)
+#else // _WIN32
+#define SHARE
+#endif
+
 // tcl interpreter corresponding to this module
-extern Tcl_Interp* the_interp;
+extern "C" SHARE Tcl_Interp* the_interp;
 
 using std::stack;
 
@@ -1301,7 +1307,6 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
     gui->unlock(); 
     return; 
   }
-  CHECK_OPENGL_ERROR("dummy")
   if (force_cmap_dirty) cmap_dirty_ = true;
   if (select_widget()) cmap_dirty_ = true;
 
@@ -1341,6 +1346,7 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   for(unsigned int i=0; i<widgets_.size(); i++)
     widgets_[i]->draw();
 
+  CHECK_OPENGL_ERROR("dummy 3")
   // draw outline of the image space.
   glColor4f(0.25, 0.35, 0.25, 1.0); 
   glBegin(GL_LINES);
@@ -1378,8 +1384,10 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   }
   
   ctx_->swap();
+  // check for errors before the release, as opengl will barf (at least in
+  // windows) if you do it after
+  CHECK_OPENGL_ERROR("dummy")
   ctx_->release();
-  CHECK_OPENGL_ERROR("dummy");
   gui->unlock();
 }
 

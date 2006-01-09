@@ -90,6 +90,7 @@ TendSatin::execute()
 
   Nrrd *nout = nrrdNew();
 
+#ifndef _WIN32
   if (tend_satinGen(nout, anisotropy_.get(), minca1_.get(), 
 		    maxca1_.get(), size_.get(), thickness_.get(), 
 		    boundary_.get(), torus_.get())) {
@@ -98,6 +99,9 @@ TendSatin::execute()
     free(err);
     return;
   }
+#else
+  cerr << "   tend_satinGen not available\n";
+#endif
 
   nout->axis[0].kind = nrrdKind3DMaskedSymMatrix;
 

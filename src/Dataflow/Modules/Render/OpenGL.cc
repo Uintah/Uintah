@@ -67,6 +67,8 @@ namespace C_Magick {
 #include <Core/Thread/Time.h>
 #undef near
 #undef far
+#undef min
+#undef max
 #define SHARE __declspec(dllimport)
 #else
 #define SHARE
@@ -856,7 +858,7 @@ OpenGL::redraw_frame()
     view_window_->setState(drawinfo_, "global");
     drawinfo_->pickmode_=0;
 
-    CHECK_OPENGL_ERROR("after setting up the graphics state: ");
+    //CHECK_OPENGL_ERROR("after setting up the graphics state: ");
 
     // Do the redraw loop for each time value.
     const double dt = (animate_time_end_ - animate_time_begin_)
@@ -1053,8 +1055,11 @@ OpenGL::redraw_frame()
       {
         throttle.wait_for_time(realtime);
       }
-      //gui->lock();
+
+      // unlock the gui here, as the "experimental" threaded model will have the TCL thread try to lock...
+      gui_->unlock();
       gui_->execute("update idletasks");
+      gui_->lock();
       view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
 
       // Show the pretty picture.
@@ -1091,7 +1096,7 @@ OpenGL::redraw_frame()
   viewer_->geomlock_.readUnlock();
 
   // Look for errors.
-  CHECK_OPENGL_ERROR("OpenGL::redraw after drawing objects: ");
+  //CHECK_OPENGL_ERROR("OpenGL::redraw after drawing objects: ");
 
   // Report statistics
   timer.stop();
@@ -1270,8 +1275,8 @@ OpenGL::redraw_frame()
     }
   }
 
-  gui_->execute(str.str());
   gui_->unlock();
+  gui_->execute(str.str());
 }
 
 
@@ -1399,7 +1404,7 @@ OpenGL::real_get_pick(int x, int y,
     glFlush();
     const int hits = glRenderMode(GL_RENDER);
 
-    CHECK_OPENGL_ERROR("OpenGL::real_get_pick");
+//    CHECK_OPENGL_ERROR("OpenGL::real_get_pick");
 
     gui_->unlock();
     GLuint min_z;
@@ -1740,7 +1745,7 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
 
   if (datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER/*CollabVis*/|GEOM_MATRICES))
   {
-    CHECK_OPENGL_ERROR("OpenGL::real_getData");
+//    CHECK_OPENGL_ERROR("OpenGL::real_getData");
     gui_->unlock();
   }
   result->send(res);

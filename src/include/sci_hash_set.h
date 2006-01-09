@@ -42,8 +42,8 @@
 
 #ifdef HAVE_STD_HASHMAP
 #  include <hash_set>
-   using std::hash_set;
-   using std::hash_multiset;
+   using stdext::hash_set;
+   using stdext::hash_multiset;
 #else
 #  ifdef HAVE_EXT_HASHMAP
 #    include <ext/hash_set>

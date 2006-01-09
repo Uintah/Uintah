@@ -77,6 +77,10 @@
 #include <Core/Math/Trig.h>
 #include <Core/Util/Timer.h>
 
+#ifdef _WIN32
+#include <sci_gl.h>
+#endif
+
 #ifdef HAVE_MPEG
 #include <mpege.h>
 #endif // HAVE_MPEG

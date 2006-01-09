@@ -52,13 +52,15 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 
 class Lighting;
 class GeomObj;
 
-struct GeomScene : public Persistent {
+struct SHARE GeomScene : public Persistent {
     GeomScene();
     GeomScene(const Color& bgcolor, const View& view, Lighting* lighting,
 	     GeomObj* topobj);

@@ -43,6 +43,8 @@
 #ifndef Core_Thread_ParallelBase_h
 #define Core_Thread_ParallelBase_h
 
+#include <Core/Thread/share.h>
+
 namespace SCIRun {
 
 class Semaphore;
@@ -59,7 +61,7 @@ class Semaphore;
  by a user program.  See <b>Parallel</b> instead.
    
 ****************************************/
-class ParallelBase {
+class SHARE ParallelBase {
 public:
   //////////
   // <i>The thread body</i>

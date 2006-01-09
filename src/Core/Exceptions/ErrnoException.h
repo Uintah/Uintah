@@ -47,9 +47,10 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Exceptions/share.h>
 namespace SCIRun {
 
-class ErrnoException : public Exception {
+class SHARE ErrnoException : public Exception {
 public:
   ErrnoException(const std::string&, int err, const char* file, int line);
   ErrnoException(const ErrnoException&);

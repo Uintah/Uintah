@@ -35,6 +35,8 @@
 #include <string>
 #include <vector>
 
+#include <Core/Volume/share.h>
+
 namespace SCIRun {
 
 class FragmentProgramARB;
@@ -62,7 +64,7 @@ enum CM2ShadingType
   CM2_SHADE_FALLOFF = 2
 };
 
-class CM2Shader
+class SHARE CM2Shader
 {
 public:
   CM2Shader(CM2ShaderType type, bool faux, CM2BlendType blend);
@@ -88,7 +90,7 @@ protected:
   FragmentProgramARB* program_;
 };
 
-class CM2ShaderFactory
+class SHARE CM2ShaderFactory
 {
 public:
   CM2ShaderFactory();

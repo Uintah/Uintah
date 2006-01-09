@@ -41,6 +41,10 @@
 #include <Core/Datatypes/String.h>
 #include <Dataflow/Ports/StringPort.h>
 
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
+
 namespace SCIRun {
 
 using namespace SCIRun;

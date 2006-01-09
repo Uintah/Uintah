@@ -57,7 +57,12 @@ ifeq ($(BUILD_SCIRUN2),yes)
   endif
 endif
 
-PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Math
+PSELIBS := Core/Containers Core/Exceptions Core/Thread
+
+ifeq ($(IS_WIN),yes)
+  PSELIBS += Core_OS
+endif
+
 LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

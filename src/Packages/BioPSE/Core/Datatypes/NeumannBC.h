@@ -70,13 +70,15 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Packages/BioPSE/Core/Datatypes/share.h>
+
 namespace BioPSE {
 
 using namespace SCIRun;
 
 /////////
 // Structure to hold Neumann BC related values
-class NeumannBC {
+class SHARE NeumannBC {
 public:  
   // GROUP: public data
   //////////

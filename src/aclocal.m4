@@ -456,7 +456,15 @@ if test -n "$5"; then
       the_lib=`echo $lib | grep "\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
-         final_lib=-l$lib
+         if test "$IS_VC" = "yes"; then
+           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
+             final_lib=$lib.lib
+           else
+             final_lib=$lib
+           fi
+         else
+           final_lib=-l$lib
+         fi
       else
          # It already has -l so just add it directly.
          final_lib=$lib
@@ -549,7 +557,13 @@ fi
 
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
-LDFLAGS="$_sci_lib_path $LDFLAGS"
+if test "$IS_VC" = "yes"; then
+  oldLIB=$LIB
+  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
+else
+  LDFLAGS="$_sci_lib_path $LDFLAGS"
+fi
+
 LIBS="$_sci_libs $7 $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
@@ -577,6 +591,11 @@ fi
 
 
 AC_TRY_LINK($__sci_pound_includes,[$8],[
+
+if test "$IS_VC" = "yes"; then
+  LIB=$oldLIB
+fi
+
 eval LIB_DIR_$1='"$6"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
@@ -660,7 +679,7 @@ if test "$9" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $6/lib$i.so && test ! -e $6/lib$i.a; then
+    if test ! -e $6/lib$i.so && test ! -e $6/lib$i.a && test ! -e $6/$i.lib; then
      AC_MSG_ERROR(Specifically requested $1 library file '$6/$i' (.so or .a) was not found)
     fi
   done

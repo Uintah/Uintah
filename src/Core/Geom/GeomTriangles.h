@@ -45,11 +45,12 @@
 
 #include <Core/Geom/GeomVertexPrim.h>
 
+#include <Core/Geom/share.h>
 namespace SCIRun {
 
 class Color;
 
-class GeomTriangles : public GeomVertexPrim {
+class SHARE GeomTriangles : public GeomVertexPrim {
 private:
     void add(const Point&);
     void add(const Point&, const Vector&);
@@ -88,7 +89,7 @@ public:
 };
 
 
-class GeomFastTriangles : public GeomObj {
+class SHARE GeomFastTriangles : public GeomObj {
 protected:
   vector<float> points_;
   vector<unsigned char> colors_;
@@ -134,7 +135,7 @@ public:
 
 
 
-class GeomTranspTriangles : public GeomFastTriangles
+class SHARE GeomTranspTriangles : public GeomFastTriangles
 {
 protected:
   vector<unsigned int> xlist_;
@@ -161,7 +162,7 @@ public:
 };
 
 
-class GeomTrianglesP: public GeomObj {
+class SHARE GeomTrianglesP: public GeomObj {
 protected:
     Array1<float> points;
     Array1<float> normals;
@@ -199,7 +200,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class GeomTrianglesPT1d : public GeomTrianglesP {
+class SHARE GeomTrianglesPT1d : public GeomTrianglesP {
 protected:
   Array1<float> scalars;
 public:
@@ -221,7 +222,7 @@ public:
 };
 
 
-class GeomTranspTrianglesP : public GeomTrianglesP {
+class SHARE GeomTranspTrianglesP : public GeomTrianglesP {
 protected:
   double alpha_;
 
@@ -255,7 +256,7 @@ public:
 };
 
 
-class GeomTrianglesPC: public GeomTrianglesP {
+class SHARE GeomTrianglesPC: public GeomTrianglesP {
     Array1<float> colors;
 public:
     GeomTrianglesPC();
@@ -273,7 +274,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class GeomTrianglesVP: public GeomObj {
+class SHARE GeomTrianglesVP: public GeomObj {
 protected:
     Array1<float> points;
     Array1<float> normals;
@@ -301,7 +302,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class GeomTrianglesVPC: public GeomTrianglesVP {
+class SHARE GeomTrianglesVPC: public GeomTrianglesVP {
     Array1<float> colors;
 public:
     GeomTrianglesVPC();

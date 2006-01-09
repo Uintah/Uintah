@@ -45,10 +45,12 @@
 #include <Core/Volume/Texture.h>
 #include <Core/Volume/TextureRenderer.h>
 
+#include <Core/Volume/share.h>
+
 namespace SCIRun {
 
 
-class SliceRenderer : public TextureRenderer
+class SHARE SliceRenderer : public TextureRenderer
 {
 public:
   SliceRenderer(TextureHandle tex, 

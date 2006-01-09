@@ -47,6 +47,8 @@
 
 #include <Core/Persistent/Pstreams.h>
 
+#include <Core/ImportExport/share.h>
+
 namespace SCIRun {
 
 // The implementation of these two functions is in
@@ -55,7 +57,7 @@ void
 Exec_setup_command(const char *cfilename, const string &precommand,
 		   string &command, string &tmpfilename);
 
-bool
+SHARE bool
 Exec_execute_command(ProgressReporter *pr,
 		     const string &icommand, const string &tmpfilename);
 

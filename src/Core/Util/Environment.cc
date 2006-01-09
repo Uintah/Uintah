@@ -44,8 +44,13 @@
 #include <sci_defs/environment_defs.h>
 
 #include <stdio.h>
+#ifndef _WIN32
 #include <unistd.h>
 #include <sys/param.h>
+#else
+#define MAXPATHLEN 256
+#include <direct.h>
+#endif
 
 
 #ifndef LOAD_PACKAGE
@@ -78,10 +83,8 @@ MacroSubstitute( const char * var_value )
   if (var_value==0)
     return 0;
 
-  char * var_val = strdup(var_value);
-
-  int length = (int)strlen(var_val);
-
+  char* var_val = strdup(var_value);
+  int length = strlen(var_val);
   while (cur < length-1) {
     if (var_val[cur] == '$' && var_val[cur+1]=='(') {
       cur+=2;
@@ -90,10 +93,10 @@ MacroSubstitute( const char * var_value )
 	if (var_val[cur]==')') {
 	  end = cur-1;
 	  var_val[cur]='\0';
-	  macro = new char[end-start+1];
+	  macro = new char[end-start+2];
 	  sprintf(macro,"%s",&var_val[start]);
 	  const char *env = sci_getenv(macro);
-	  delete[] macro;
+	  delete macro;
 	  if (env) 
 	    newstring += string(env);
 	  var_val[cur]=')';
@@ -109,12 +112,12 @@ MacroSubstitute( const char * var_value )
   }
 
   newstring += var_val[cur]; // don't forget the last character!
+  free(var_val);
 
   unsigned long newlength = strlen(newstring.c_str());
   char* retval = new char[newlength+1];
   sprintf(retval,"%s",newstring.c_str());
   
-  free(var_val);
   return retval;
 }
 
@@ -310,6 +313,11 @@ SCIRun::find_and_parse_scirunrc()
 void
 SCIRun::copy_and_parse_scirunrc()
 {
+#ifdef _MSC_VER
+  // native windows doesn't have "HOME"
+  // point to OBJTOP instead
+  sci_putenv("HOME", sci_getenv("SCIRUN_OBJDIR"));
+#endif
   const char* home = sci_getenv("HOME");
   const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
   ASSERT(home && srcdir);  

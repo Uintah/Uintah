@@ -44,6 +44,7 @@
 #define SCI_Geom_Pickable_h 1
 
 #include <Core/Geom/GeomPick.h>
+#include <Core/GeomInterface/share.h>
 
 namespace SCIRun {
 
@@ -60,7 +61,7 @@ struct BState {
 };
 
 
-class WidgetPickable {
+class SHARE WidgetPickable {
 
 public:
   virtual ~WidgetPickable();
@@ -73,7 +74,7 @@ public:
 };
 
 
-class ModulePickable {
+class SHARE ModulePickable {
 
 public:
   virtual ~ModulePickable();

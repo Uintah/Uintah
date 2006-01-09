@@ -47,10 +47,12 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geometry/Point.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 
-class GeomSphere : public GeomObj {
+class SHARE GeomSphere : public GeomObj {
 public:
   Point cen;
   double rad;
@@ -83,7 +85,7 @@ public:
 };
 
 
-class GeomSuperquadric : public GeomObj {
+class SHARE GeomSuperquadric : public GeomObj {
   int axis_;
   double A_, B_;
   int nu_, nv_;
@@ -117,7 +119,7 @@ public:
 };
 
 
-class GeomSpheres : public GeomObj {
+class SHARE GeomSpheres : public GeomObj {
 private:
   vector<Point> centers_;
   vector<double> radii_;

@@ -50,10 +50,12 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Core/GuiInterface/share.h>
+
 namespace SCIRun {
   class GuiContext;
 
-  class GuiVar {
+  class SHARE GuiVar {
   protected:
     GuiContext* ctx;
   public:
@@ -66,7 +68,7 @@ namespace SCIRun {
   
   
 template <class T>
-class GuiSingle : public GuiVar
+class SHARE GuiSingle : public GuiVar
 {
   T value_;
 public:
@@ -117,7 +119,7 @@ typedef GuiSingle<int> GuiInt;
 
 
 template <class T>
-class GuiTriple : public GuiVar
+class SHARE GuiTriple : public GuiVar
 {
   GuiDouble x_;
   GuiDouble y_;

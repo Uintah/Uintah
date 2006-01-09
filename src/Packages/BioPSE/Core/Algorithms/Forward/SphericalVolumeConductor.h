@@ -75,11 +75,13 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 
+#include <Packages/BioPSE/Core/Algorithms/Forward/share.h>
+
 namespace BioPSE {
 
 using namespace SCIRun;
 
-class SphericalVolumeConductor {
+class SHARE SphericalVolumeConductor {
 
 public:
 

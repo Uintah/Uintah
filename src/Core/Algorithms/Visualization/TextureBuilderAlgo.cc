@@ -32,6 +32,8 @@
 #include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
 #include <Core/Geom/ShaderProgramARB.h>
 
+#include <iostream>
+
 namespace SCIRun {
 
 

@@ -55,12 +55,14 @@
 using std::string;
 using std::vector;
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 class FreeTypeFace;
 class BBox;
 
-class FreeTypeLibrary {
+class SHARE FreeTypeLibrary {
 public:
   FreeTypeLibrary();
   virtual ~FreeTypeLibrary();
@@ -71,7 +73,7 @@ public:
 };
 
 
-class FreeTypeFace {
+class SHARE FreeTypeFace {
 public:
   FreeTypeFace(FreeTypeLibrary *, string);
   virtual ~FreeTypeFace();
@@ -94,7 +96,7 @@ private:
 };
 
 
-class FreeTypeGlyph {
+class SHARE FreeTypeGlyph {
 public:
   FreeTypeGlyph();
   virtual ~FreeTypeGlyph();
@@ -108,7 +110,7 @@ public:
 
 typedef vector<FreeTypeGlyph *> FreeTypeGlyphs;
 
-class FreeTypeText {
+class SHARE FreeTypeText {
 public:
   FreeTypeText(string text, FreeTypeFace *face, Point *pos = 0);
   virtual ~FreeTypeText();

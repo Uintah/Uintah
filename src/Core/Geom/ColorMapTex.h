@@ -46,9 +46,11 @@
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geometry/Point.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class ColorMapTex : public GeomContainer {
+class SHARE ColorMapTex : public GeomContainer {
 public:
   ColorMapTex(const Point &p1, const Point &p2, 
 	      const Point &p3,const Point &p4,

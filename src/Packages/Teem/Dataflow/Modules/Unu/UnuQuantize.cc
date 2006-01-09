@@ -113,7 +113,7 @@ UnuQuantize::execute()
     NrrdRange *range = nrrdRangeNewSet(nrrdH->nrrd, nrrdBlind8BitRangeState);
     realmin_.set(range->min);
     realmax_.set(range->max);
-    delete range;
+    nrrdRangeNix(range);
     minf_.reset();
     maxf_.reset();
     useinputmin_.reset();

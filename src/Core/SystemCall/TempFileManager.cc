@@ -39,8 +39,13 @@
 
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
- 
+
+#ifndef _WIN32
 #include <unistd.h>
+#include <sys/time.h>
+#else
+#include <io.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -49,7 +54,6 @@
 #include <sys/types.h> 
 #include <Core/OS/Dir.h> // for LSTAT, MKDIR
 #include <Core/Thread/Time.h>
-#include <sys/time.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

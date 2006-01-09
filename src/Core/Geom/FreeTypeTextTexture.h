@@ -44,11 +44,13 @@
 
 #include <Core/Geom/FreeType.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 class NrrdTextureObj;
 
-class FreeTypeTextTexture {
+class SHARE FreeTypeTextTexture {
 public:
   FreeTypeTextTexture(const string &text, FreeTypeFace *face);
   ~FreeTypeTextTexture();

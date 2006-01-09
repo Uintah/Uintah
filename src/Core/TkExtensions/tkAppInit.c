@@ -140,7 +140,7 @@ static void* wait_func_data;
  *----------------------------------------------------------------------
  */
 
-int
+SHARE int
 tkMain(argc, argv, nwait_func, nwait_func_data)
      int argc;			/* Number of command-line arguments. */
      char **argv;		/* Values of command-line arguments. */
@@ -190,7 +190,7 @@ tkMain(argc, argv, nwait_func, nwait_func_data)
  *----------------------------------------------------------------------
  */
 
-SHARE int
+/*SHARE*/ int
 Tcl_AppInit(interp)
      Tcl_Interp *interp;		/* Interpreter for application. */
 {

@@ -47,9 +47,11 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class SpotLight : public Light {
+class SHARE SpotLight : public Light {
     Point p;
     Vector v;
     float cutoff; // must be [0-90], or 180

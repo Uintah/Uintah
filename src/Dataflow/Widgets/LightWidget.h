@@ -47,6 +47,7 @@
 #include <Dataflow/Widgets/BaseWidget.h>
 
 
+#include <Dataflow/Widgets/share.h>
 namespace SCIRun {
 
 enum LightType {
@@ -55,7 +56,7 @@ enum LightType {
 
 class FrameWidget;
 
-class LightWidget : public BaseWidget {
+class SHARE LightWidget : public BaseWidget {
 public:
    LightWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    LightWidget( Module* module, CrowdMonitor* lock, 

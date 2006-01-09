@@ -45,7 +45,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef _WIN32
 #include <unistd.h>
+#else
+#define strcasecmp stricmp
+#include <io.h>
+#include <process.h>
+#endif
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <iomanip>

@@ -46,9 +46,11 @@
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/Point.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
-class GeomTorus : public GeomObj {
+class SHARE GeomTorus : public GeomObj {
 public:
     Point cen;
     Vector axis;
@@ -81,7 +83,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class GeomTorusArc : public GeomTorus {
+class SHARE GeomTorusArc : public GeomTorus {
 public:
     Vector zero;
     double start_angle;

@@ -44,11 +44,17 @@
 
 namespace SCIRun {
 
+#ifdef _WIN32
+#define SHARE __declspec(dllexport)
+#else
+#define SHARE
+#endif
+
 extern "C" {
-IPort* make_PathIPort(Module* module, const string& name) {
+SHARE IPort* make_PathIPort(Module* module, const string& name) {
   return scinew SimpleIPort<PathHandle>(module,name);
 }
-OPort* make_PathOPort(Module* module, const string& name) {
+SHARE OPort* make_PathOPort(Module* module, const string& name) {
   return scinew SimpleOPort<PathHandle>(module,name);
 }
 }

@@ -47,9 +47,11 @@
 #include <Core/Geom/ColorMap.h>
 
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
     
-class GeomColorMap : public GeomContainer
+class SHARE GeomColorMap : public GeomContainer
 {
   ColorMapHandle cmap_;
 

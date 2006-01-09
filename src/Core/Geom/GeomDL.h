@@ -47,12 +47,14 @@
 
 #include <list>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
     
 class DrawInfoOpenGL;
 using std::list;
 
-class GeomDL : public GeomContainer {
+class SHARE GeomDL : public GeomContainer {
 protected:
   int polygons_;
   list<DrawInfoOpenGL *> drawinfo_;

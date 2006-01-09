@@ -48,18 +48,20 @@
 #include <Core/Thread/FutureValue.h>
 #include <Core/Geom/GeomObj.h>
 
+#include <Dataflow/Ports/share.h>
+
 namespace SCIRun {
 class Semaphore;
 class GeometryData;
 
 
-struct GeomReply {
+struct SHARE GeomReply {
   int portid;
   GeomReply();
   GeomReply(int);
 };
 
-class GeometryComm : public MessageBase {
+class SHARE GeometryComm : public MessageBase {
 public:
   GeometryComm(Mailbox<GeomReply> *);
   GeometryComm(int, GeomID, GeomHandle,

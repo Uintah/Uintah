@@ -56,8 +56,14 @@
 
 using std::sort;
 
+#ifdef _WIN32
+#define SHARE __declspec(dllimport)
+#else // _WIN32
+#define SHARE
+#endif
+
 // tcl interpreter corresponding to this module
-extern Tcl_Interp* the_interp;
+extern "C" SHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 

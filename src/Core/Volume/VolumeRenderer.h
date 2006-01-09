@@ -40,11 +40,13 @@
 #include <Core/Volume/Texture.h>
 #include <Core/Volume/TextureRenderer.h>
 
+#include <Core/Volume/share.h>
+
 namespace SCIRun {
 
 class VolShaderFactory;
 
-class VolumeRenderer : public TextureRenderer
+class SHARE VolumeRenderer : public TextureRenderer
 {
 public:
   VolumeRenderer(TextureHandle tex, 

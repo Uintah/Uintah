@@ -49,10 +49,12 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Core/Geom/share.h>
+
 namespace SCIRun {
 
 using std::string;
-class ColorMappedNrrdTextureObj {
+class SHARE ColorMappedNrrdTextureObj {
 public:
   ColorMappedNrrdTextureObj(NrrdDataHandle &nrrd, 
                             int axis, 

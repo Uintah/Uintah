@@ -116,6 +116,8 @@ namespace SCIRun {
     // on which you should invoke operations:
 #if defined(_WIN32) && !defined(BUILD_Dataflow_Network)
      __declspec(dllimport) PackageDB* packageDB;
+#elif defined(_WIN32)
+    __declspec(dllexport) extern PackageDB* packageDB;
 #else
      extern PackageDB* packageDB;
 #endif
