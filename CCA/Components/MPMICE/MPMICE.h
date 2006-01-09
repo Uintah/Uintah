@@ -417,7 +417,10 @@ private:
                        const CCVariable<double>& press_new,
                        const CCVariable<double>& Temp,
                        const double press_ref,
-                       CCVariable<double>& rho_micro);                             
+                       CCVariable<double>& rho_micro);
+                        
+  void printSchedule(const PatchSet* patches,
+                      const string& where);                            
      
   enum bctype { NONE=0,
                 FIXED,

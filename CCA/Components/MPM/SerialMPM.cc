@@ -448,6 +448,8 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
+    
+  printSchedule(patches,"MPM::scheduleApplyExternalLoads\t\t\t\t");
  /*
   * applyExternalLoads
   *   in(p.externalForce, p.externalheatrate)
@@ -476,7 +478,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-
+    
+  printSchedule(patches,"MPM::scheduleInterpolateParticlesToGrid\t\t\t");
+  
   /* interpolateParticlesToGrid
    *   in(P.MASS, P.VELOCITY, P.NAT_X)
    *   operation(interpolate the P.MASS and P.VEL to the grid
@@ -535,8 +539,7 @@ void SerialMPM::scheduleComputeHeatExchange(SchedulerP& sched,
    *   the temperature differences)
    *   out(G.EXTERNAL_HEAT_RATE) */
 
-  if (cout_doing.active())
-    cout_doing << getpid() << " Doing MPM::ThermalContact::computeHeatExchange " << endl;
+  printSchedule(patches,"MPM::scheduleComputeHeatExchange\t\t\t\t");
 
   Task* t = scinew Task("ThermalContact::computeHeatExchange",
                         thermalContactModel,
@@ -553,6 +556,8 @@ void SerialMPM::scheduleExMomInterpolated(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
+  printSchedule(patches,"MPM::scheduleExMomInterpolated\t\t\t\t");
+  
   contactModel->addComputesAndRequiresInterpolated(sched, patches, matls);
 }
 
@@ -568,7 +573,9 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-
+  
+  printSchedule(patches,"MPM::scheduleComputeStressTensor\t\t\t\t");
+  
   // for thermal stress analysis
   scheduleComputeParticleTempFromGrid(sched, patches, matls); 
 
@@ -604,6 +611,9 @@ void SerialMPM::scheduleComputeParticleTempFromGrid(SchedulerP& sched,
                                               const MaterialSet* matls)
 {
   Ghost::GhostType gac = Ghost::AroundCells;
+  
+  printSchedule(patches,"MPM::scheduleComputeParticleTempFromGrid\t\t\t");
+  
   Task* t = scinew Task("MPM::computeParticleTempFromGrid",
                         this, &SerialMPM::computeParticleTempFromGrid);
   t->requires(Task::NewDW, lb->gTemperatureLabel, gac, NGN);
@@ -619,6 +629,8 @@ void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
+    
+  printSchedule(patches,"MPM::scheduleUpdateErosionParameter\t\t\t\t");
 
   Task* t = scinew Task("MPM::updateErosionParameter",
                         this, &SerialMPM::updateErosionParameter);
@@ -641,6 +653,7 @@ void SerialMPM::scheduleComputeAccStrainEnergy(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
+  printSchedule(patches,"MPM::scheduleComputeAccStrainEnergy\t\t");
 
   Task* t = scinew Task("MPM::computeAccStrainEnergy",
                         this, &SerialMPM::computeAccStrainEnergy);
@@ -658,6 +671,8 @@ void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
+  printSchedule(patches,"MPM::scheduleComputeArtificialViscosity\t\t");
+  
   Task* t = scinew Task("MPM::computeArtificialViscosity",
                         this, &SerialMPM::computeArtificialViscosity);
 
@@ -681,9 +696,10 @@ void SerialMPM::scheduleComputeContactArea(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  /*
-   * computeContactArea */
+  /** computeContactArea */
   if(d_bndy_traction_faces.size()>0) {
+  
+    printSchedule(patches,"MPM::scheduleComputeContactArea\t\t");
     Task* t = scinew Task("MPM::computeContactArea",
                           this, &SerialMPM::computeContactArea);
     
@@ -714,6 +730,8 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
    *   shape functions)
    * out(G.F_INTERNAL) */
 
+  printSchedule(patches,"MPM::scheduleComputeInternalForce\t\t\t\t");
+   
   Task* t = scinew Task("MPM::computeInternalForce",
                         this, &SerialMPM::computeInternalForce);
 
@@ -765,7 +783,7 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-
+  printSchedule(patches,"MPM::scheduleComputeInternalHeatRate\t\t\t\t");
   heatConductionModel->scheduleComputeInternalHeatRate(sched,patches,matls);
 }
 
@@ -782,6 +800,8 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
    *   operation(acceleration = f/m)
    *   out(G.ACCELERATION) */
 
+  printSchedule(patches,"MPM::scheduleSolveEquationsMotione\t\t\t\t");
+  
   Task* t = scinew Task("MPM::solveEquationsMotion",
                         this, &SerialMPM::solveEquationsMotion);
 
@@ -808,7 +828,7 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-
+  printSchedule(patches,"MPM::scheduleSolveHeatEquations\t\t\t\t");
   heatConductionModel->scheduleSolveHeatEquations(sched,patches,matls);
 }
 
@@ -825,6 +845,8 @@ void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
    *   operation(v* = v + a*dt)
    *   out(G.VELOCITY_STAR) */
 
+  printSchedule(patches,"MPM::scheduleIntegrateAcceleration\t\t\t\t");
+  
   Task* t = scinew Task("MPM::integrateAcceleration",
                         this, &SerialMPM::integrateAcceleration);
 
@@ -845,7 +867,7 @@ void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-
+  printSchedule(patches,"MPM::scheduleIntegrateTemperatureRate\t\t\t\t");
   heatConductionModel->scheduleIntegrateTemperatureRate(sched,patches,matls);
 }
 
@@ -863,7 +885,7 @@ void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
    *              velocity fields to feel the influence of the
    *              the others according to specific rules)
    *   out(G.VELOCITY_STAR, G.ACCELERATION) */
-
+  printSchedule(patches,"MPM::scheduleExMomIntegrated\t\t\t\t\t");
   contactModel->addComputesAndRequiresIntegrated(sched, patches, matls);
 }
 
@@ -875,7 +897,7 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-
+  printSchedule(patches,"MPM::scheduleSetGridBoundaryConditions\t\t\t");
   Task* t=scinew Task("MPM::setGridBoundaryConditions",
                       this, &SerialMPM::setGridBoundaryConditions);
                   
@@ -905,6 +927,8 @@ void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
    *   out(sum_vartpe(dampingRate)) 
    */
   if (flags->d_artificialDampCoeff > 0.0) {
+    printSchedule(patches,"MPM::scheduleCalculateDampingRate\t\t");
+    
     Task* t=scinew Task("MPM::calculateDampingRate", this, 
                         &SerialMPM::calculateDampingRate);
     t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::AroundCells, NGN);
@@ -930,6 +954,8 @@ void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
 
 //if  manual__new_material==true, DO this task OR
 //if  create_new_particles==false, DO this task
+
+  printSchedule(patches,"MPM::scheduleAddNewParticles\t\t");
   Task* t=scinew Task("MPM::addNewParticles", this, 
                       &SerialMPM::addNewParticles);
 
@@ -962,6 +988,7 @@ void SerialMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
 
 //if  create_new_particles==true, DO this task OR
 //if  manual_create_new_matl==false, DO this task 
+  printSchedule(patches,"MPM::scheduleConvertLocalizedParticles\t\t");
   Task* t=scinew Task("MPM::convertLocalizedParticles", this, 
                       &SerialMPM::convertLocalizedParticles);
 
@@ -1016,6 +1043,8 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
    *   integrate these to get new particle velocity and position)
    * out(P.VELOCITY, P.X, P.NAT_X) */
 
+  printSchedule(patches,"MPM::scheduleInterpolateToParticlesAndUpdate\t\t\t");
+  
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
                       this, &SerialMPM::interpolateToParticlesAndUpdate);
 
@@ -1085,6 +1114,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 void SerialMPM::scheduleRefine(const PatchSet* patches, 
                                SchedulerP& sched)
 {
+  printSchedule(patches,"MPM::scheduleRefine\t\t");
   Task* task = scinew Task("SerialMPM::refine", this, &SerialMPM::refine);
   sched->addTask(task, patches, d_sharedState->allMPMMaterials());
 }
@@ -3359,9 +3389,7 @@ void SerialMPM::scheduleCheckNeedAddMPMMaterial(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-
-  if (cout_doing.active())
-    cout_doing << "SerialMPM::scheduleCheckNeedAddMaterial" << endl;
+  printSchedule(patches,"MPM::scheduleCheckNeedAddMPMMateria\t\t");
 
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("MPM::checkNeedAddMPMMaterial",
@@ -3381,10 +3409,8 @@ void SerialMPM::checkNeedAddMPMMaterial(const ProcessorGroup*,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
-
-  if (cout_doing.active())
-    cout_doing <<"Doing checkNeedAddMPMMaterial:MPM: \n" ;
-
+ // printSchedule(patches,"MPM::checkNeedAddMPMMaterial\t\t");
+  
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -3396,9 +3422,7 @@ void SerialMPM::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
                                                const LevelP& level,
                                                const MaterialSet* all_matls)
 {
-
-  if (cout_doing.active())
-    cout_doing << "SerialMPM::scheduleSetNeedAddMaterialFlag" << endl;
+  printSchedule(level,"MPM::scheduleSetNeedAddMaterialFlag\t\t");
 
   Task* t= scinew Task("SerialMPM::setNeedAddMaterialFlag",
                this, &SerialMPM::setNeedAddMaterialFlag);
@@ -3455,3 +3479,23 @@ void SerialMPM::switchTest(const ProcessorGroup* group,
   max_vartype switch_condition(sw);
   new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
 }
+
+//______________________________________________________________________
+void SerialMPM::printSchedule(const PatchSet* patches,
+                              const string& where){
+  if (cout_doing.active()){
+     cout_doing << d_myworld->myrank() << " " 
+                << where << "L-"
+                << getLevel(patches)->getIndex()<< endl;
+   }  
+}
+//______________________________________________________________________
+void SerialMPM::printSchedule(const LevelP& level,
+                              const string& where){
+  if (cout_doing.active()){
+     cout_doing << d_myworld->myrank() << " " 
+                << where << "L-"
+                << level->getIndex()<< endl;
+   }  
+}
+
