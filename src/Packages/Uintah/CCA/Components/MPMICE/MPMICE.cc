@@ -950,23 +950,36 @@ void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
                                            const PatchSet* patches,
                                             const MaterialSet* mpm_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
+  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                              getLevel(patches)->getGrid()->numLevels())){
+                              
+    printSchedule(patches, "MPMICE::scheduleInterpolateMassBurnFractionToNC\t\t");  
 
-  printSchedule(patches, "MPMICE::scheduleInterpolateMassBurnFractionToNC\t\t");  
+    Task* t = scinew Task("MPMICE::interpolateMassBurnFractionToNC",
+                    this, &MPMICE::interpolateMassBurnFractionToNC);
 
-  Task* t = scinew Task("MPMICE::interpolateMassBurnFractionToNC",
-                  this, &MPMICE::interpolateMassBurnFractionToNC);
+    t->requires(Task::NewDW, MIlb->cMassLabel,        Ghost::AroundCells,1);
 
-  t->requires(Task::NewDW, MIlb->cMassLabel,        Ghost::AroundCells,1);
- 
-  if(d_ice->d_models.size() > 0){
-    t->requires(Task::NewDW,Ilb->modelMass_srcLabel, Ghost::AroundCells,1);
+    if(d_ice->d_models.size() > 0){
+      t->requires(Task::NewDW,Ilb->modelMass_srcLabel, Ghost::AroundCells,1);
+      
+      /*`==========TESTING==========*/
+      // Multiple ICE levels and a single MPM level doesn't work
+      // Issue:  ModelMass_src is computed on an ICE level
+      // and massBurnFraction is computed on a MPM Level. ModelMass_src needs to be
+      // refined to the MPMLevel upstream of this task.
+      
+      if(getLevel(patches)->getGrid()->numLevels() > 1){
+        throw InternalError("Material conversion is currently not supported in MLMPMICE", __FILE__, __LINE__);
+      }
+      /*===========TESTING==========`*/
+      
+    }
+    // only computes mpm materials
+    t->computes(Mlb->massBurnFractionLabel,mpm_matls->getUnion());
+
+    sched->addTask(t, patches, mpm_matls);
   }
-  t->computes(Mlb->massBurnFractionLabel);
-
-  sched->addTask(t, patches, mpm_matls);
 }
 
 //______________________________________________________________________
@@ -2323,6 +2336,9 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     
+    // why do we loop over all matls and not just the mpm matls?
+    // massBurnFraction is only computed for mpm matls  -Todd 
+    
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -2334,6 +2350,7 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
         new_dw->allocateAndPut(massBurnFraction, 
                                   Mlb->massBurnFractionLabel,indx,patch);
         massBurnFraction.initialize(0.);
+        
         if(d_ice->d_models.size() > 0)  { 
           constCCVariable<double> modelMass_src;
           new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx,patch, gac,1);
