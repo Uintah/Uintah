@@ -582,8 +582,8 @@ void MPMICE::scheduleRefinePressCC(SchedulerP& sched,
                                    const MaterialSubset* press_matl,
                                    const MaterialSet* matls)
 {
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleRefinePressCC" << endl;
+  printSchedule(patches,"MPMICE::scheduleRefinePressCC\t\t\t\t\t");
+    
   MaterialSet* press_matls = scinew MaterialSet();
   vector<int> pm;
   pm.push_back(0);
@@ -601,11 +601,13 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
                                            const MaterialSubset* press_matl,
                                            const MaterialSet* matls)
 {
-  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                                 getLevel(patches)->getGrid()->numLevels()))
+  const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
+  if(!d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels()))
     return;
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleInterpolatePressCCToPressNC" << endl;
+    
+  printSchedule(patches, "MPMICE::scheduleInterpolatePressCCToPressNC\t\t\t"); 
+    
   Task* t=scinew Task("MPMICE::interpolatePressCCToPressNC",
                     this, &MPMICE::interpolatePressCCToPressNC);
 
@@ -625,8 +627,7 @@ void MPMICE::scheduleRefinePAndGradP(SchedulerP& sched,
                                      const MaterialSubset* mpm_matl,
                                      const MaterialSet* all_matls)
 {
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleRefinePAndGradP" << endl;
+  printSchedule(patches, "MPMICE::scheduleRefinePAndGradP\t\t\t\t");
  
   if(d_doAMR){
     scheduleRefineVariableCC(sched, patches,all_matls,Ilb->press_force_CCLabel);
@@ -646,8 +647,7 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
                                  getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleInterpolatePAndGradP" << endl;
+  printSchedule(patches,"MPMICE::scheduleInterpolatePAndGradP\t\t\t\t");
  
   Task* t=scinew Task("MPMICE::interpolatePAndGradP",
                       this, &MPMICE::interpolatePAndGradP);
@@ -676,9 +676,8 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
 {
   if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                                 getLevel(patches)->getGrid()->numLevels())){
-    if (cout_doing.active()){
-      cout_doing << "MPMICE::scheduleInterpolateNCToCC_0" << endl;
-    }
+                                
+    printSchedule(patches, "MPMICE::scheduleInterpolateNCToCC_0\t\t\t\t");
  
     /* interpolateNCToCC */
     Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
@@ -716,8 +715,8 @@ void MPMICE::scheduleCoarsenCC_0(SchedulerP& sched,
                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleCoarsenCC_0" << endl;
+  printSchedule(patches, "MPMICE::scheduleCoarsenCC_0\t\t\t\t\t");
+ 
 #if 0
   double rho_orig = mpm_matl->getInitialDensity();
   double very_small_mass = d_TINY_RHO * cell_vol;
@@ -748,8 +747,8 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
 {
   if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                                 getLevel(patches)->getGrid()->numLevels())){
-    if (cout_doing.active())
-      cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
+
+    printSchedule(patches, "MPMICE::scheduleComputeLagrangianValuesMPM\t\t\t");
 
     /* interpolateNCToCC */
 
@@ -797,8 +796,7 @@ void MPMICE::scheduleCoarsenLagrangianValuesMPM(SchedulerP& sched,
                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  if (cout_doing.active())
-    cout_doing << "MPMICE:scheduleCoarsenLagrangianValues mpm_matls" << endl;
+   printSchedule(patches, "MPMICE:scheduleCoarsenLagrangianValues mpm_matls\t\t");
 
 #if 1
   scheduleCoarsenVariableCC(   sched, patches, mpm_matls, Ilb->rho_CCLabel,
@@ -823,8 +821,7 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleComputeCCVelAndTempRates" << endl;
+  printSchedule(patches, "MPMICE::scheduleComputeCCVelAndTempRates\t\t\t");
 
   Task* t=scinew Task("MPMICE::computeCCVelAndTempRates",
                       this, &MPMICE::computeCCVelAndTempRates);               
@@ -856,9 +853,7 @@ void MPMICE::scheduleRefineCC(SchedulerP& sched,
                                  getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleRefineCC" << endl;
-
+  printSchedule(patches, "MPMICE::scheduleRefineCC\t\t\t\t\t");
   scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->dTdt_CCLabel);
   scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->dVdt_CCLabel);
 }
@@ -872,9 +867,8 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                                  getLevel(patches)->getGrid()->numLevels()))
     return;
-                                                                                
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleInterpolateCCToNC" << endl;
+
+  printSchedule(patches, "MPMICE::scheduleInterpolateCCToNC\t\t\t\t");  
                                                                                 
   Task* t=scinew Task("MPMICE::interpolateCCToNC",
                       this, &MPMICE::interpolateCCToNC);
@@ -907,8 +901,8 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                           getLevel(patches)->getGrid()->numLevels()))
     return;
   Task* t = NULL;
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleComputeEquilibrationPressure" << endl;
+
+  printSchedule(patches, "MPMICE::scheduleComputeEquilibrationPressure\t\t\t");
 
   t = scinew Task("MPMICE::computeEquilibrationPressure",
             this, &MPMICE::computeEquilibrationPressure);
@@ -959,8 +953,8 @@ void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
   if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
                           getLevel(patches)->getGrid()->numLevels()))
     return;
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleInterpolateMassBurnFractionToNC" << endl;
+
+  printSchedule(patches, "MPMICE::scheduleInterpolateMassBurnFractionToNC\t\t");  
 
   Task* t = scinew Task("MPMICE::interpolateMassBurnFractionToNC",
                   this, &MPMICE::interpolateMassBurnFractionToNC);
@@ -2531,6 +2525,16 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
+void MPMICE::printSchedule(const PatchSet* patches,
+                           const string& where){
+  if (cout_doing.active()){
+     cout_doing << d_myworld->myrank() << " " 
+                << where << "L-"
+                << getLevel(patches)->getIndex()<< endl;
+   }  
+}
+
+//______________________________________________________________________
 void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      SchedulerP& scheduler,
                                      int step, 
@@ -2547,17 +2551,21 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   d_ice->scheduleRefine(patches, sched);
   d_mpm->scheduleRefine(patches, sched);
 
+  const Level* fineLevel = getLevel(patches);
+  int L_indx = fineLevel->getIndex();
+  int num_levels = fineLevel->getGrid()->numLevels();
+
+  cout_doing << d_myworld->myrank() << " MPMICE::scheduleRefine\t\t\t\tL-" 
+             <<  L_indx << " P-" << *patches << '\n';;
   
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
 
   // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
-  if (patches == getLevel(patches)->eachPatch()) {
-    if(d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels())) {
+  if (patches == fineLevel->eachPatch()) {
+    if(d_ice->doICEOnLevel(L_indx, num_levels)) {
       task->computes(Mlb->heatRate_CCLabel);
     }
-    if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                                  getLevel(patches)->getGrid()->numLevels())) {
+    if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
       task->computes(MIlb->NC_CCweightLabel);
       task->computes(MIlb->vel_CCLabel);
       //task->computes(Ilb->rho_CCLabel); 
@@ -2751,8 +2759,9 @@ MPMICE::refine(const ProcessorGroup*,
                DataWarehouse* new_dw)
 {
   const Level* fineLevel = getLevel(patches);
-  int num_levels = fineLevel->getGrid()->numLevels();
   int L_indx = fineLevel->getIndex();
+  int num_levels = fineLevel->getGrid()->numLevels();
+
   cout_doing << d_myworld->myrank() 
              << " Doing refine \t\t\t\t\t MPMICE L-"<< L_indx;
 
