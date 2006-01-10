@@ -225,9 +225,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 void MPMICE::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
-  if (cout_doing.active())
-    cout_doing << "\nDoing scheduleInitialize \t\t\t MPMICE L-" 
-               << level->getIndex()<<endl;
+  printSchedule(level,"MPMICE::scheduleInitialize\t\t\t");
 
   d_mpm->scheduleInitialize(level, sched);
   d_ice->scheduleInitialize(level, sched);
@@ -627,9 +625,8 @@ void MPMICE::scheduleRefinePAndGradP(SchedulerP& sched,
                                      const MaterialSubset* mpm_matl,
                                      const MaterialSet* all_matls)
 {
-  printSchedule(patches, "MPMICE::scheduleRefinePAndGradP\t\t\t\t");
- 
   if(d_doAMR){
+    printSchedule(patches, "MPMICE::scheduleRefinePAndGradP\t\t\t\t");
     scheduleRefineVariableCC(sched, patches,all_matls,Ilb->press_force_CCLabel);
   }
 }
@@ -1052,10 +1049,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing << "Doing Initialize on patch " << patch->getID() 
-                 << "\t\t\t MPMICE L-" << getLevel(patches)->getIndex() <<endl;
-    }
+    printTask(patches, patch, "Doing actuallyInitialize");
 
     NCVariable<double> NC_CCweight;
     new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,    0, patch);
@@ -1181,10 +1175,7 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
 {                            
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing<<"Doing interpolatePressCCToPressNC on patch "<<patch->getID()
-                <<"\t\t MPMICE L-" << getLevel(patches)->getIndex()<<endl;
-    }
+    printTask(patches,patch,"Doing interpolatePressCCToPressNC\t\t\t");
 
     constCCVariable<double> pressCC;
     NCVariable<double> pressNC;
@@ -1215,11 +1206,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing<<"Doing interpolatePressureToParticles on patch "
-                <<patch->getID()<<"\t\t MPMICE L-" 
-                <<getLevel(patches)->getIndex()<< endl;
-    }
+    printTask(patches,patch,"Doing interpolatePressureToParticles\t\t\t");
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
@@ -1306,10 +1293,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing << "Doing interpolateNCToCC_0 on patch "<< patch->getID()
-                 <<"\t\t\t MPMICE L-" << getLevel(patches)->getIndex()<<endl;
-    }
+    printTask(patches,patch,"Doing interpolateNCToCC_0\t\t\t\t");
 
     int numMatls = d_sharedState->getNumMPMMatls();
     Vector dx = patch->dCell();
@@ -1456,14 +1440,9 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing << "Doing computeLagrangianValuesMPM on patch "
-                 << patch->getID() <<"\t\t MPMICE L-" 
-                 <<getLevel(patches)->getIndex()<< endl;
-    }
+    printTask(patches,patch,"Doing computeLagrangianValuesMPM\t\t\t");
 
     int numMatls = d_sharedState->getNumMPMMatls();
-
     Vector dx = patch->dCell();
     double cellVol = dx.x()*dx.y()*dx.z();
     double inv_cellVol = 1.0/cellVol;
@@ -1654,10 +1633,7 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing << "Doing computeCCVelAndTempRates on patch "<< patch->getID()
-                 <<"\t\t\t MPMICE L-" <<getLevel(patches)->getIndex()<< endl;
-    }
+    printTask(patches,patch,"Doing computeCCVelAndTempRates\t\t\t");
 
     //__________________________________
     // This is where I interpolate the CC 
@@ -1720,10 +1696,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing << "Doing interpolateCCToNC on patch "<< patch->getID()
-                 <<"\t\t\t MPMICE L-" <<getLevel(patches)->getIndex()<< endl;
-    }
+    printTask(patches,patch,"Doing interpolateCCToNC\t\t\t\t");
 
     //__________________________________
     // This is where I interpolate the CC 
@@ -1802,11 +1775,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing<<"Doing computeEquilibrationPressure on patch "
-                << patch->getID() <<"\t\t MPMICE L-" 
-                << getLevel(patches)->getIndex() << endl;
-    }
+    printTask(patches,patch,"Doing computeEquilibrationPressure\t\t\t");
 
     double    converg_coeff = 100.;
     double    convergence_crit = converg_coeff * DBL_EPSILON;
@@ -2323,14 +2292,9 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing << "Doing interpolateMassBurnFractionToNC on patch "
-                 << patch->getID() <<"\t MPMICE L-" 
-                 << getLevel(patches)->getIndex() << endl;
-    }
+    printTask(patches,patch,"Doing interpolateMassBurnFractionToNC\t\t\t");
 
     // Interpolate the CC burn fraction to the nodes
-
     int numALLMatls = d_sharedState->getNumMPMMatls() + 
       d_sharedState->getNumICEMatls();
 
@@ -2398,7 +2362,7 @@ void MPMICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
 void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
                                              SchedulerP& sched)
 {
-  cout_doing << "Entering MPMICE::scheduleInitializeAddedMaterial" << endl;
+  printSchedule(level,"MPMICE::scheduleInitializeAddedMaterial\t\t\t");
 
   if(d_sharedState->needAddMaterial() > 0){
     d_ice->scheduleInitializeAddedMaterial(level,sched);
@@ -2426,9 +2390,6 @@ void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
     if (add_matl->removeReference())
       delete add_matl; // shouln't happen, but...
   }
-
-  cout_doing  << "Leaving MPMICE::scheduleInitializeAddedMaterial" << endl;
-
 }
 /*______________________________________________________________________
  Function~  setBC_rho_micro
@@ -2501,8 +2462,8 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
   new_dw->unfinalize();
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing actuallyInitializeAddedMPMMaterial on patch "
-               << patch->getID() << "\t\t\t MPMICE" << endl;
+    printTask(patches,patch,"Doing actuallyInitializeAddedMPMMaterial\t\t\t");
+   
     double junk=-9, tmp;
     int m    = d_sharedState->getNumMPMMatls() - 1;
     int indx = d_sharedState->getNumMatls() - 1;
@@ -2550,7 +2511,26 @@ void MPMICE::printSchedule(const PatchSet* patches,
                 << getLevel(patches)->getIndex()<< endl;
    }  
 }
-
+//______________________________________________________________________
+void MPMICE::printSchedule(const LevelP& level,
+                           const string& where){
+  if (cout_doing.active()){
+     cout_doing << d_myworld->myrank() << " " 
+                << where << "L-"
+                << level->getIndex()<< endl;
+   }  
+}
+//______________________________________________________________________
+void MPMICE::printTask(const PatchSubset* patches,
+                          const Patch* patch,
+                          const string& where){
+  if (cout_doing.active()){
+     cout_doing << d_myworld->myrank() << " " 
+                << where << " MPMICE L-"
+                << getLevel(patches)->getIndex()
+                << " patch " << patch->getGridIndex()<< endl;
+   }  
+}
 //______________________________________________________________________
 void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      SchedulerP& scheduler,
@@ -2572,8 +2552,7 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   int L_indx = fineLevel->getIndex();
   int num_levels = fineLevel->getGrid()->numLevels();
 
-  cout_doing << d_myworld->myrank() << " MPMICE::scheduleRefine\t\t\t\tL-" 
-             <<  L_indx << " P-" << *patches << '\n';;
+  printSchedule(patches,"MPMICE::scheduleRefine\t\t\t\t");
   
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
 
@@ -2779,13 +2758,10 @@ MPMICE::refine(const ProcessorGroup*,
   int L_indx = fineLevel->getIndex();
   int num_levels = fineLevel->getGrid()->numLevels();
 
-  cout_doing << d_myworld->myrank() 
-             << " Doing refine \t\t\t\t\t MPMICE L-"<< L_indx;
-
-
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
-
+    printTask(patches,patch,"Doing refine\t\t\t\t\t");
+     
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
     for(int m = 0; m < numMPMMatls; m++){
@@ -2891,17 +2867,13 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* finePatch = patches->get(p);
-    
+    ostringstream message;
+    message<<"Doing refineVariableCC (" << variable->getName() << ")\t\t\t";
+    printTask(patches,finePatch,message.str());    
     
     // region of fine space that will correspond to the coarse we need to get
     IntVector cl, ch, fl, fh;
     getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, 1);
-
-    if (cout_doing.active()) {
-      cout_doing<<"Doing refineVariableCC (" << variable->getName() 
-                << ") on patch "<<finePatch->getID()
-                <<"\t\t MPMICE L-" << fineLevel->getIndex()<<endl;
-    }
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -2940,16 +2912,14 @@ void MPMICE::refineExtensiveVariableCC(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* finePatch = patches->get(p);
-                                                                                
+
+    ostringstream message;
+    message<<"Doing refineExtensiveVariableCC (" << variable->getName() << ")\t\t\t";
+    printTask(patches,finePatch,message.str());
+                                                                                    
     // region of fine space that will correspond to the coarse we need to get
     IntVector cl, ch, fl, fh;
     getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, 1);
-
-    if (cout_doing.active()) {
-      cout_doing<<"Doing refineExtensiveVariableCC (" << variable->getName()
-                << ") on patch "<<finePatch->getID()
-                <<"\t\t MPMICE L-" << fineLevel->getIndex()<<endl;
-    }
                                                                                 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -2991,14 +2961,14 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  cout_doing << "Doing coarsen on variable " << variable->getName() 
-             << "\t\t\t MPMICE L-" <<fineLevel->getIndex();
   
   IntVector refineRatio(fineLevel->getRefinementRatio());
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
-    cout_doing << " patch " << coarsePatch->getID()<< endl;
+    ostringstream message;
+    message<<"Doing CoarsenVariableCC (" << variable->getName() << ")\t\t\t";
+    printTask(patches,coarsePatch,message.str());
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -3059,14 +3029,14 @@ void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  cout_doing << "Doing massWeightedCoarsen on variable " << variable->getName() 
-             << "\t\t\t MPMICE L-" <<fineLevel->getIndex();
   
   IntVector refineRatio(fineLevel->getRefinementRatio());
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
-    cout_doing << " patch " << coarsePatch->getID()<< endl;
+    ostringstream message;
+    message<<"Doing massWeightedCoarsenVariableCC (" << variable->getName() << ")\t\t";
+    printTask(patches,coarsePatch,message.str());
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -3131,14 +3101,14 @@ void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  cout_doing << "Doing coarsenSum on variable " << variable->getName() 
-             << "\t\t\t MPMICE L-" <<fineLevel->getIndex();
   
   IntVector refineRatio(fineLevel->getRefinementRatio());
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
-    cout_doing << " patch " << coarsePatch->getID()<< endl;
+    ostringstream message;
+    message<<"Doing coarsenSumVariableCC (" << variable->getName()<< ")\t\t";
+    printTask(patches,coarsePatch,message.str());
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
