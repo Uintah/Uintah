@@ -1343,10 +1343,8 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   particleIndex totalParticles=0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing actuallyInitialize on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
-
+    
+    printTask(patches, patch,"Doing actuallyInitialize\t\t\t");
 
     CCVariable<short int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
@@ -1402,9 +1400,7 @@ void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    if (cout_doing.active())
-      cout_doing <<"Doing actuallyInitializeAddedMaterial on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
-
+    printTask(patches, patch,"Doing actuallyInitializeAddedMaterial\t\t\t");
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     cout << "num MPM Matls = " << numMPMMatls << endl;
@@ -1439,9 +1435,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    if (cout_doing.active())
-      cout_doing <<"Doing interpolateParticlesToGrid on patch " << patch->getID() <<"\t\t MPM"<< endl;
-
+    printTask(patches, patch,"Doing interpolateParticlesToGrid\t\t\t");
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
@@ -1608,8 +1602,7 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
                                     DataWarehouse* new_dw)
 {
 
-  if (cout_doing.active())
-    cout_doing <<"Doing computeStressTensor:MPM: \n" ;
+  printTask(patches, patches->get(0),"Doing interpolateParticlesToGrid\t\t\t");
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
 
@@ -1645,9 +1638,7 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
 {
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing << getpid() << "Doing updateErosionParameter on patch "  << patch->getID() << "\t MPM"<< endl;
+    printTask(patches, patch,"Doing updateErosionParameter\t\t\t\t");
 
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
@@ -1719,9 +1710,7 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
   double C1 = flags->d_artificialViscCoeff2;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing computeArtificialViscosity on patch " << patch->getID() <<"\t\t MPM"<< endl;
+    printTask(patches, patch,"Doing computeArtificialViscosity\t\t\t");
 
 
     // The following scheme for removing ringing behind a shock comes from:
@@ -1811,10 +1800,7 @@ void SerialMPM::computeContactArea(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing computeContactArea on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
-
+    printTask(patches, patch,"Doing computeContactArea\t\t\t");
     
     Vector dx = patch->dCell();
     
@@ -1895,10 +1881,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing computeInternalForce on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
-
+    printTask(patches, patch,"Doing computeInternalForce\t\t\t\t");
 
     Vector dx = patch->dCell();
     double oodx[3];
@@ -2111,10 +2094,8 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
-
+    printTask(patches, patch,"Doing solveEquationsMotion\t\t\t\t");
+    
     Vector gravity = d_sharedState->getGravity();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
@@ -2168,10 +2149,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing integrateAcceleration on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
-
+    printTask(patches, patch,"Doing integrateAcceleration\t\t\t\t");
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2207,10 +2185,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing setGridBoundaryConditions on patch " << patch->getID()<<"\t\t MPM"<< endl;
-
+    printTask(patches, patch,"Doing setGridBoundaryConditions\t\t\t");
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
@@ -2259,7 +2234,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 {
   // Get the current time
   double time = d_sharedState->getElapsedTime();
-
+  
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
 
@@ -2295,10 +2270,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   // Loop thru patches to update external force vector
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing applyExternalLoads on patch "  << patch->getID() << "\t MPM"<< endl;
-
+    printTask(patches, patch,"Doing applyExternalLoads\t\t\t\t");
 
     // Place for user defined loading scenarios to be defined,
     // otherwise pExternalForce is just carried forward.
@@ -2421,10 +2393,7 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
   if (flags->d_artificialDampCoeff > 0.0) {
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-
-      if (cout_doing.active())
-        cout_doing <<"Doing calculateDampingRate on patch "   << patch->getID() << "\t MPM"<< endl;
-
+      printTask(patches, patch,"Doing calculateDampingRate\t\t\t");
 
       double alphaDot = 0.0;
       int numMPMMatls=d_sharedState->getNumMPMMatls();
@@ -2482,9 +2451,7 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
 {
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing addNewParticles on patch "  << patch->getID() << "\t MPM"<< endl;
+    printTask(patches, patch,"Doing addNewParticles\t\t\t");
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     // Find the mpm material that the void particles are going to change
@@ -2634,10 +2601,7 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
   // material are converted.
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing convertLocalizedParticles on patch " << patch->getID() << "\t MPM"<< endl;
-
+    printTask(patches, patch,"Doing convertLocalizedParticles\t\t\t");
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
@@ -2780,6 +2744,7 @@ void SerialMPM::computeParticleTempFromGrid(const ProcessorGroup*,
 {                                           
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    printTask(patches, patch,"Doing computeParticleTempFromGrid\t\t\t");
 	
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni; 
@@ -2837,12 +2802,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    if (cout_doing.active()) {
-      cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
-                 << patch->getID() << "\t MPM"<< endl;
-    }
-
+    printTask(patches, patch,"Doing interpolateToParticlesAndUpdate\t\t\t");
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni;
@@ -3229,9 +3189,7 @@ SerialMPM::initialErrorEstimate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    if (amr_doing.active()) 
-      amr_doing << "Doing SerialMPM::initialErrorEstimate on patch "<< patch->getID()<< endl;
+    printTask(patches, patch,"Doing initialErrorEstimate\t\t\t\t");
 
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
@@ -3278,10 +3236,8 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
   
     for(int p=0;p<patches->size();p++){  
       const Patch* coarsePatch = patches->get(p);
-
-      if (amr_doing.active())
-        amr_doing << "Doing SerialMPM::errorEstimate on patch " << coarsePatch->getID() << endl;
-
+      printTask(patches, coarsePatch,"Doing errorEstimate\t\t\t\t\t");
+     
       CCVariable<int> refineFlag;
       PerPatch<PatchFlagP> refinePatchFlag;
       
@@ -3339,7 +3295,7 @@ SerialMPM::refine(const ProcessorGroup*,
   // just create a particle subset if one doesn't exist
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    cout << "   doing MPM::refine on patch " << patch->getID() << "\n";
+    printTask(patches, patch,"Doing refine\t\t\t");
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
@@ -3498,4 +3454,14 @@ void SerialMPM::printSchedule(const LevelP& level,
                 << level->getIndex()<< endl;
    }  
 }
-
+//______________________________________________________________________
+void SerialMPM::printTask(const PatchSubset* patches,
+                          const Patch* patch,
+                          const string& where){
+  if (cout_doing.active()){
+     cout_doing << d_myworld->myrank() << " " 
+                << where << " MPM \tL-"
+                << getLevel(patches)->getIndex()
+                << " patch " << patch->getGridIndex()<< endl;
+   }  
+}

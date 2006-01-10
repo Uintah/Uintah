@@ -420,7 +420,14 @@ private:
                        CCVariable<double>& rho_micro);
                         
   void printSchedule(const PatchSet* patches,
-                      const string& where);                            
+                     const string& where);
+                     
+  void printSchedule(const LevelP& level,
+                     const string& where); 
+                     
+  void printTask(const PatchSubset* patches,
+                 const Patch* patch,
+                 const string& where);                         
      
   enum bctype { NONE=0,
                 FIXED,
