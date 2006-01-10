@@ -1,6 +1,7 @@
 
 #ifndef Uintah_AMRInterpolate_h
 #define Uintah_AMRInterpolate_h
+
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -10,12 +11,10 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/MiscMath.h>
+
 #include <sstream>
-using namespace std;
-using namespace SCIRun;
 
 namespace Uintah {
-
 
 /*___________________________________________________________________
  Function~ piecewiseConstantInterpolation--
@@ -98,19 +97,19 @@ template<class T>
     Vector dir = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()); 
   
     // determine the direction to the surrounding interpolation cells
-    int i = Sign(dir.x());
-    int j = Sign(dir.y());
-    int k = Sign(dir.z());
+    int i = SCIRun::Sign(dir.x());
+    int j = SCIRun::Sign(dir.y());
+    int k = SCIRun::Sign(dir.z());
     
-    i *=RoundUp(dist.x());  // if dist.x,y,z() = 0 then set (i,j,k) = 0
-    j *=RoundUp(dist.y());  // Only need surrounding coarse cell data if dist != 0
-    k *=RoundUp(dist.z());  // This is especially true for 1D and 2D problems
+    i *= SCIRun::RoundUp(dist.x());  // if dist.x,y,z() = 0 then set (i,j,k) = 0
+    j *= SCIRun::RoundUp(dist.y());  // Only need surrounding coarse cell data if dist != 0
+    k *= SCIRun::RoundUp(dist.z());  // This is especially true for 1D and 2D problems
     
     #if 0
     if(f_cell == IntVector(30,39,0) ||true){
-    cout << " c_cell " << c_cell << " f_cell " << f_cell << " offset ["<<i<<","<<j<<","<<k<<"]  "
-         << " dist " << dist << " dir "<< dir
-         << " f_cell_pos " << fine_cell_pos.asVector()<< " c_cell_pos " << coarse_cell_pos.asVector() << endl;
+    std::cout << " c_cell " << c_cell << " f_cell " << f_cell << " offset ["<<i<<","<<j<<","<<k<<"]  "
+              << " dist " << dist << " dir "<< dir
+              << " f_cell_pos " << fine_cell_pos.asVector()<< " c_cell_pos " << coarse_cell_pos.asVector() << "\n";
     }
     #endif
 
@@ -277,23 +276,23 @@ template<class T>
 #if 0
     if(f_cell == IntVector(2, 5, 4)){
       for (k = -1; k< 2; k++){
-        cout << " baseCell " << baseCell << " f_cell " << f_cell << " x " << x << " y " << y << " z " << z <<endl;
-        cout << " q_CL[baseCell + IntVector( -1, -1, k)] " << q_CL[baseCell + IntVector( -1, -1, k)]<< " w(0,0) " << w(0,0)<< endl;
-        cout << " q_CL[baseCell + IntVector(  0, -1, k)] " << q_CL[baseCell + IntVector(  0, -1, k)]<< " w(1,0) " << w(1,0)<< endl;
-        cout << " q_CL[baseCell + IntVector(  1, -1, k)] " << q_CL[baseCell + IntVector(  1, -1, k)]<< " w(2,0) " << w(2,0)<< endl;
-        cout << " q_CL[baseCell + IntVector( -1,  0, k)] " << q_CL[baseCell + IntVector(  1, -1, k)]<< " w(0,1) " << w(0,1)<< endl;
-        cout << " q_CL[baseCell + IntVector(  0,  0, k)] " << q_CL[baseCell + IntVector(  0,  0, k)]<< " w(1,1) " << w(1,1)<< endl;
-        cout << " q_CL[baseCell + IntVector(  1,  0, k)] " << q_CL[baseCell + IntVector(  1,  0, k)]<< " w(2,1) " << w(2,1)<< endl;
-        cout << " q_CL[baseCell + IntVector( -1,  1, k)] " << q_CL[baseCell + IntVector( -1,  1, k)]<< " w(0,2) " << w(0,2)<< endl;
-        cout << " q_CL[baseCell + IntVector(  0,  1, k)] " << q_CL[baseCell + IntVector(  0,  1, k)]<< " w(1,2) " << w(1,2)<< endl;
-        cout << " q_CL[baseCell + IntVector(  1,  1, k)] " << q_CL[baseCell + IntVector(  1,  1, k)]<< " w(2,2) " << w(2,2)<< endl;
-        cout << " q_XY_Plane " << q_XY_Plane[k+1] << endl;
+        std::cout << " baseCell " << baseCell << " f_cell " << f_cell << " x " << x << " y " << y << " z " << z << "\n";
+        std::cout << " q_CL[baseCell + IntVector( -1, -1, k)] " << q_CL[baseCell + IntVector( -1, -1, k)]<< " w(0,0) " << w(0,0) << "\n";
+        std::cout << " q_CL[baseCell + IntVector(  0, -1, k)] " << q_CL[baseCell + IntVector(  0, -1, k)]<< " w(1,0) " << w(1,0) << "\n";
+        std::cout << " q_CL[baseCell + IntVector(  1, -1, k)] " << q_CL[baseCell + IntVector(  1, -1, k)]<< " w(2,0) " << w(2,0) << "\n";
+        std::cout << " q_CL[baseCell + IntVector( -1,  0, k)] " << q_CL[baseCell + IntVector(  1, -1, k)]<< " w(0,1) " << w(0,1) << "\n";
+        std::cout << " q_CL[baseCell + IntVector(  0,  0, k)] " << q_CL[baseCell + IntVector(  0,  0, k)]<< " w(1,1) " << w(1,1) << "\n";
+        std::cout << " q_CL[baseCell + IntVector(  1,  0, k)] " << q_CL[baseCell + IntVector(  1,  0, k)]<< " w(2,1) " << w(2,1) << "\n";
+        std::cout << " q_CL[baseCell + IntVector( -1,  1, k)] " << q_CL[baseCell + IntVector( -1,  1, k)]<< " w(0,2) " << w(0,2) << "\n";
+        std::cout << " q_CL[baseCell + IntVector(  0,  1, k)] " << q_CL[baseCell + IntVector(  0,  1, k)]<< " w(1,2) " << w(1,2) << "\n";
+        std::cout << " q_CL[baseCell + IntVector(  1,  1, k)] " << q_CL[baseCell + IntVector(  1,  1, k)]<< " w(2,2) " << w(2,2) << "\n";
+        std::cout << " q_XY_Plane " << q_XY_Plane[k+1] << "\n";
       }
-      cout  << " plane 1 " << q_XY_Plane[0] << " plane2 " << q_XY_Plane[1] << " plane3 "<< q_XY_Plane[2]<< endl;
-      cout  << " w0_x " << w0_x << " w1_x " << w1_x << " w2_x "<< w2_x<< endl;
-      cout  << " w0_y " << w0_y << " w1_y " << w1_y << " w2_y "<< w2_y<< endl;
-      cout  << " w0_z " << w0_z << " w1_z " << w1_z << " w2_z "<< w2_z<< endl;
-      cout << " Q " << q_FineLevel[f_cell] << endl;
+      std::cout  << " plane 1 " << q_XY_Plane[0] << " plane2 " << q_XY_Plane[1] << " plane3 "<< q_XY_Plane[2] << "\n";
+      std::cout  << " w0_x " << w0_x << " w1_x " << w1_x << " w2_x "<< w2_x << "\n";
+      std::cout  << " w0_y " << w0_y << " w1_y " << w1_y << " w2_y "<< w2_y << "\n";
+      std::cout  << " w0_z " << w0_z << " w1_z " << w1_z << " w2_z "<< w2_z << "\n";
+      std::cout << " Q " << q_FineLevel[f_cell] << "\n";
    }
 #endif   
    
@@ -390,7 +389,7 @@ template<class T>
   } 
   
   if(desc == "checkError"){
-    cout  << "test " << test <<" interpolation error^2/ncell " << error/ncell << " ncells " << ncell<< endl;
+    std::cout  << "test " << test <<" interpolation error^2/ncell " << error/ncell << " ncells " << ncell << "\n";
   }
 }
 /*___________________________________________________________________
