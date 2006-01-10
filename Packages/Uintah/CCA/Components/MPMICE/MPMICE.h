@@ -154,10 +154,7 @@ public:
                                const MaterialSubset*,
                                const MaterialSubset*,
                                const MaterialSet*);
-
-  void scheduleInterpolateMassBurnFractionToNC( SchedulerP&, 
-                                                const PatchSet*,
-                                                const MaterialSet*);            
+            
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
 				    const MaterialSet*);
 
@@ -255,11 +252,6 @@ public:
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
   
-  void interpolateMassBurnFractionToNC(const ProcessorGroup*,
-                                       const PatchSubset* patch,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
   void printData( int indx,
                   const Patch* patch, 
                   int   include_EC,

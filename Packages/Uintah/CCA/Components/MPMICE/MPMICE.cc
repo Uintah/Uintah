@@ -415,8 +415,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
     const PatchSet* ice_patches = ice_level->eachPatch();
 
-    scheduleInterpolateMassBurnFractionToNC(    sched, ice_patches, mpm_matls);
-
     d_ice->scheduleComputePressFC(              sched, ice_patches, press_matl,
                                                                     all_matls);
     d_ice->scheduleAccumulateMomentumSourceSinks(sched, ice_patches, press_matl,
@@ -871,13 +869,32 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
                       this, &MPMICE::interpolateCCToNC);
   const MaterialSubset* mss = mpm_matls->getUnion();
   Ghost::GhostType  gan = Ghost::AroundNodes;
+  Ghost::GhostType  gac = Ghost::AroundCells;
                                                                                 
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
   t->requires(Task::NewDW, Ilb->dVdt_CCLabel,       gan,1);
   t->requires(Task::NewDW, Ilb->dTdt_CCLabel,       gan,1);
+  
+  if(d_ice->d_models.size() > 0){
+    t->requires(Task::NewDW, MIlb->cMassLabel,       gac,1);
+    t->requires(Task::NewDW,Ilb->modelMass_srcLabel, gac,1);
+
+    /*`==========TESTING==========*/
+    // Multiple ICE levels and a single MPM level doesn't work
+    // Issue:  ModelMass_src is computed on an ICE level
+    // and massBurnFraction is computed on a MPM Level. ModelMass_src needs to be
+    // refined to the MPMLevel upstream of this task.
+
+    if(getLevel(patches)->getGrid()->numLevels() > 1){
+      throw InternalError("Material conversion is currently not supported in MLMPMICE", __FILE__, __LINE__);
+    }
+    /*===========TESTING==========`*/
+
+  }     
                                                                                 
   t->modifies(Mlb->gVelocityStarLabel, mss);
   t->modifies(Mlb->gAccelerationLabel, mss);
+  t->computes(Mlb->massBurnFractionLabel,mss);
   t->computes(Mlb->dTdt_NCLabel);
 
   sched->addTask(t, patches, mpm_matls);
@@ -940,43 +957,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
   t->computes(Ilb->rho_CCLabel,         ice_matls);
   sched->addTask(t, patches, all_matls);
-}
-//______________________________________________________________________
-//
-void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
-                                           const PatchSet* patches,
-                                            const MaterialSet* mpm_matls)
-{
-  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                              getLevel(patches)->getGrid()->numLevels())){
-                              
-    printSchedule(patches, "MPMICE::scheduleInterpolateMassBurnFractionToNC\t\t");  
-
-    Task* t = scinew Task("MPMICE::interpolateMassBurnFractionToNC",
-                    this, &MPMICE::interpolateMassBurnFractionToNC);
-
-    t->requires(Task::NewDW, MIlb->cMassLabel,        Ghost::AroundCells,1);
-
-    if(d_ice->d_models.size() > 0){
-      t->requires(Task::NewDW,Ilb->modelMass_srcLabel, Ghost::AroundCells,1);
-      
-      /*`==========TESTING==========*/
-      // Multiple ICE levels and a single MPM level doesn't work
-      // Issue:  ModelMass_src is computed on an ICE level
-      // and massBurnFraction is computed on a MPM Level. ModelMass_src needs to be
-      // refined to the MPMLevel upstream of this task.
-      
-      if(getLevel(patches)->getGrid()->numLevels() > 1){
-        throw InternalError("Material conversion is currently not supported in MLMPMICE", __FILE__, __LINE__);
-      }
-      /*===========TESTING==========`*/
-      
-    }
-    // only computes mpm materials
-    t->computes(Mlb->massBurnFractionLabel,mpm_matls->getUnion());
-
-    sched->addTask(t, patches, mpm_matls);
-  }
 }
 
 //______________________________________________________________________
@@ -1710,7 +1690,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
       NCVariable<Vector> gacceleration, gvelocity;
-      NCVariable<double> dTdt_NC;
+      NCVariable<double> dTdt_NC,massBurnFraction;
 
       constCCVariable<double> dTdt_CC;
       constCCVariable<Vector> dVdt_CC;
@@ -1721,12 +1701,16 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       Ghost::GhostType  gan = Ghost::AroundNodes;
       new_dw->get(dTdt_CC,    Ilb->dTdt_CCLabel,   indx,patch,gan,1);
       new_dw->get(dVdt_CC,    Ilb->dVdt_CCLabel,   indx,patch,gan,1);
-
-      new_dw->allocateAndPut(dTdt_NC,     Mlb->dTdt_NCLabel,    indx, patch);
+      
+      new_dw->allocateAndPut(massBurnFraction, 
+                                      Mlb->massBurnFractionLabel,indx,patch);
+      new_dw->allocateAndPut(dTdt_NC, Mlb->dTdt_NCLabel,    indx, patch);
+      
       dTdt_NC.initialize(0.0);
+      massBurnFraction.initialize(0.);
       IntVector cIdx[8];
       //__________________________________
-      //  Take care of momentum and specific volume source
+      //  
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         patch->findCellsFromNode(*iter,cIdx);
         for(int in=0;in<8;in++){
@@ -1735,7 +1719,24 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
           dTdt_NC[*iter]       +=  dTdt_CC[cIdx[in]]*.125;
         }
       }
-    }  
+      //__________________________________
+      //  inter-material phase transformation
+      if(d_ice->d_models.size() > 0)  { 
+        constCCVariable<double> modelMass_src, mass_CC;
+        Ghost::GhostType  gac = Ghost::AroundCells;
+        new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx,patch, gac,1);
+        new_dw->get(mass_CC,      MIlb->cMassLabel,       indx,patch, gac,1);
+
+        for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+          patch->findCellsFromNode(*iter,cIdx);
+          for (int in=0;in<8;in++){
+            massBurnFraction[*iter] +=
+                     (fabs(modelMass_src[cIdx[in]])/mass_CC[cIdx[in]])*.125;
+
+          }
+        }
+      }  // if(models >0 )
+    }  // mpmMatls
   }  //patches
 }
 
@@ -2282,57 +2283,6 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
   }   // end of converged
 }
 
-//______________________________________________________________________
-//
-void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset* ,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches,patch,"Doing interpolateMassBurnFractionToNC\t\t\t");
-
-    // Interpolate the CC burn fraction to the nodes
-    int numALLMatls = d_sharedState->getNumMPMMatls() + 
-      d_sharedState->getNumICEMatls();
-
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    
-    // why do we loop over all matls and not just the mpm matls?
-    // massBurnFraction is only computed for mpm matls  -Todd 
-    
-    for (int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      int indx = matl->getDWIndex();
-      if(mpm_matl){
-        constCCVariable<double> massCC;
-        NCVariable<double> massBurnFraction;
-        new_dw->get(massCC,       MIlb->cMassLabel,          indx,patch, gac,1);
-        new_dw->allocateAndPut(massBurnFraction, 
-                                  Mlb->massBurnFractionLabel,indx,patch);
-        massBurnFraction.initialize(0.);
-        
-        if(d_ice->d_models.size() > 0)  { 
-          constCCVariable<double> modelMass_src;
-          new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx,patch, gac,1);
-          
-          IntVector cIdx[8];  
-          for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
-             patch->findCellsFromNode(*iter,cIdx);
-            for (int in=0;in<8;in++){
-              massBurnFraction[*iter] +=
-                       (fabs(modelMass_src[cIdx[in]])/massCC[cIdx[in]])*.125;
-
-            }
-          }
-        }  // if(models >0 )
-      }  //if(mpm_matl)
-    }  //ALLmatls  
-  }  //patches
-}
 //______________________________________________________________________
 bool MPMICE::needRecompile(double time, double dt, const GridP& grid) {
   if(d_recompile){
