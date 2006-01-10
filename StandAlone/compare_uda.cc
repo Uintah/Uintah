@@ -32,6 +32,8 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iterator>
+#include <algorithm>
 #include <iomanip>
 #include <math.h>
 
@@ -1104,9 +1106,17 @@ main(int argc, char** argv)
     vartypes2.resize(vars.size());
     int count = 0;
     //__________________________________
-    //  eliminate the variable to be ignored    
+    //  eliminate the variable to be ignored
+    // Create a list of ignored variables
+    stringstream iV(ignoreVar);
+    vector<string> vs;
+    copy(istream_iterator<string>(iV),istream_iterator<string>(),
+         back_inserter(vs));
+
     for (unsigned int i = 0; i < vars.size(); i++) {
-      if (vars[i] != ignoreVar){ 
+      vector<string>::iterator fs = find(vs.begin(),vs.end(),vars[i]);
+      // if vars[i] is NOT in the ignore Variables list make a pair
+      if (fs == vs.end()){ 
         vartypes1[count] = make_pair(vars[i], types[i]);
         vartypes2[count] = make_pair(vars2[i], types2[i]); 
         count ++;
