@@ -92,7 +92,7 @@ ifeq ($(HAVE_COLLAB_VIS),yes)
 endif
 # CollabVis code end
 
-ifeq ($(IS_OSX),yes)
+ifeq ($(NEED_OSX_SYSTEMSTUBS),yes)
   LIBS += -lSystemStubs
 endif
 
