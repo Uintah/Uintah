@@ -782,6 +782,11 @@ IS_OSX="no"
 IS_WIN="no"
 IS_AIX="no"
 unset NUM_CPUS
+
+NEED_OSX_SYSTEMSTUBS=no
+NEED_OSX_HACK=no
+DEF_NEED_OSX_HACK=
+
 case $host in
   *-irix*)
     SCI_CHECK_OS_VERSION(6.5,,
@@ -797,7 +802,10 @@ case $host in
     NUM_CPUS=4
     ;;
   *-darwin*)
-    SCI_CHECK_OS_VERSION(7.1,NEED_OSX_HACK=no,NEED_OSX_HACK=yes)
+    SCI_CHECK_OS_VERSION(8,NEED_OSX_SYSTEMSTUBS=yes,NEED_OSX_SYSTEMSTUBS=no)
+    if test "$NEED_OSX_SYSTEMSTUBS" = "no"; then
+       SCI_CHECK_OS_VERSION(7.1,NEED_OSX_HACK=no,NEED_OSX_HACK=yes)
+    fi
     NUM_CPUS=2
     IS_OSX="yes"
     ;;
@@ -1281,7 +1289,7 @@ case $host in
 #####
 # GCC_TEST
 #####
-     SCI_CHECK_VERSION($CC,--version,4.0.0,GCC_VERSION=4.0,)
+    SCI_CHECK_VERSION($CC,--version,4.0.0,GCC_VERSION=4.0,)
 
     if test "$GCC_VERSION" = "4.0"; then
        CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double "
@@ -1315,8 +1323,6 @@ case $host in
          FFLAGS="$FFLAGS $extra_cflags"
          ;;
     esac
-    AC_SUBST(NEED_OSX_HACK)
-    AC_SUBST(DEF_NEED_OSX_HACK)
     ;;
 
   *-pc-mingw*)
@@ -1451,6 +1457,10 @@ case $host in
     NEED_SONAME=yes
     ;;
 esac
+
+AC_SUBST(NEED_OSX_SYSTEMSTUBS)
+AC_SUBST(NEED_OSX_HACK)
+AC_SUBST(DEF_NEED_OSX_HACK)
 
 # now that we know which NBITS the user wants, we can save this info
 AC_SUBST(NBITS)
@@ -2659,7 +2669,7 @@ cat > conftest-exc.cc <<EOF
     }
 EOF
     $CXX -o conftest-exc conftest-exc.cc
-    ./conftest-exc 2>&1 /dev/null
+    ./conftest-exc > /dev/null 2>&1 
 
     if test "$?" != "0"; then
        AC_MSG_RESULT(not found)
@@ -3118,18 +3128,10 @@ sci_defs_files="$sci_defs_files include/sci_defs/blas_testdefs.h"
 
 ##  --  search for lapack stuff  -----------------------------------------
 
-# DAV, FIX ME
-# _sci_optional=optional
-#if test "$sci_required_lapack" = "yes" ; then
-#   _sci_optional=required
-#fi
-
-if test "$HAVE_F" = "yes" && test "$HAVE_BLAS" = "yes"; then
-  if test "$with_lapack"; then
-    _sci_lib="$with_lapack"
-  else
-    _sci_lib="$LIB_DIR_BLAS"
-  fi
+if test "$with_lapack"; then
+   _sci_lib="$with_lapack/lib"
+else
+   _sci_lib="$LIB_DIR_BLAS"
 fi
 
 case $host in
@@ -3141,12 +3143,12 @@ case $host in
      fi
      ;;
    *)
-     SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+     SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,,,optional)
      ;;
 esac
 
 if test "$HAVE_LAPACK" != "yes"; then
-  SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+  SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,,,optional)
 fi
 
 # In some cases, some files need complib.sgimath_mp for the lapack
@@ -3170,9 +3172,10 @@ if test "$HAVE_LAPACK" = "yes"; then
   DEF_LAPACK="#define HAVE_LAPACK 1"
 fi
 
-if test "$with_lapack" && test ! "$DEF_LAPACK"; then
+if test "$sci_required_lapack" = "yes" -o "$with_lapack" && test ! "$DEF_LAPACK"; then
   echo
-  AC_MSG_ERROR(One or more of the LAPACK components is missing.)
+  AC_MSG_WARN(Could not find LAPACK in $_sci_lib)
+  AC_MSG_ERROR(The required LAPACK component is missing.)
   echo
 fi
 

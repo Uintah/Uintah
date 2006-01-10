@@ -60,7 +60,7 @@ PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY) $(INSIGHT_LIBRARY)
 
-ifeq ($(IS_OSX),yes)
+ifeq ($(NEED_OSX_SYSTEMSTUBS),yes)
   LIBS += -lSystemStubs
 endif
 
