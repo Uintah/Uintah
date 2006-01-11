@@ -36,7 +36,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Volume/Texture.h>
-#include <Core/Datatypes/MRLatVolField.h>
+#include <Core/Datatypes/MultiLevelField.h>
 #include <Core/Volume/TextureBrick.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -113,18 +113,29 @@ TextureBuilderAlgoT<VFIELD,
 {
   VFIELD *vfld = (VFIELD *) vHandle.get_rep();
   GFIELD *gfld = (GFIELD *) gHandle.get_rep();
+  typedef MultiLevelField<typename VFIELD::mesh_type, 
+                        typename VFIELD::basis_type,
+                        typename VFIELD::fdata_type>  sMRLVF;
+  typedef MultiLevelField<typename GFIELD::mesh_type, 
+                        typename GFIELD::basis_type,
+                        typename GFIELD::fdata_type>  vMRLVF;
 
+  sMRLVF *mrvfld = 0;
+  vMRLVF *mrgfld = 0;
 
-  MRLatVolField<value_type> *mrvfld = 0;
-  MRLatVolField<Vector>     *mrgfld = 0;
+  if( vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "MultiLevelField" )
+    mrvfld = (sMRLVF*) vfld;
 
-  if( vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "MRLatVolField" )
-    mrvfld = (MRLatVolField<value_type>*) vfld;
-
-  if( gfld && gHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "MRLatVolField" )
-    mrgfld = (MRLatVolField<Vector>*) gfld;
+  if( gfld && gHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "MultiLevelField" )
+    mrgfld = (vMRLVF*) gfld;
 
   if( mrvfld ) {
+    typedef GenericField<typename VFIELD::mesh_type, 
+                         typename VFIELD::basis_type,
+                         typename VFIELD::fdata_type>  sGF;
+    typedef GenericField<typename GFIELD::mesh_type, 
+                         typename GFIELD::basis_type,
+                         typename GFIELD::fdata_type>  vGF;
     // temporary
     int nc = 1;
     int nb[2] = { 1, 0 };
@@ -136,19 +147,21 @@ TextureBuilderAlgoT<VFIELD,
       // Same number of levels?
       if( mrvfld->nlevels() == mrgfld->nlevels() ) {
 	for(int i = 0; i < mrvfld->nlevels(); i++){
-	  const MultiResLevel<value_type>*  lev = mrvfld->level(i);
-	  const MultiResLevel<Vector>    * glev = mrgfld->level(i);
+	  const MultiLevelFieldLevel<sGF>*  lev = mrvfld->level(i);
+	  const MultiLevelFieldLevel<vGF>* glev = mrgfld->level(i);
 	  // Does each level have the same number of patches?
 	  if( lev->patches.size() == glev->patches.size() ){
 	    for(unsigned int j = 0; j < lev->patches.size(); j++ ){
-	      typename MRLatVolField<value_type>::LVF *vmr;
-	      vmr =lev->patches[j].get_rep(); 
-	      MRLatVolField<Vector>::LVF* gmr = glev->patches[j].get_rep();
+	      typename sGF::field_type* vmr = 
+                lev->patches[j].get_rep(); 
+	      typename vGF::field_type* gmr = 
+                glev->patches[j].get_rep();
 	      
-	      typename MRLatVolField<value_type>::LVF::mesh_handle_type mesh =
-		vmr->get_typed_mesh();
-	      typename MRLatVolField<Vector>::LVF::mesh_handle_type gmesh =
-		gmr->get_typed_mesh();
+              typename sGF::mesh_handle_type mesh = 
+                vmr->get_typed_mesh();
+              typename vGF::mesh_handle_type gmesh = 
+                gmr->get_typed_mesh();
+
 	      
 	      // Is each patch the same size?
 	      if( mesh->get_ni() != gmesh->get_ni() ||
@@ -190,8 +203,8 @@ TextureBuilderAlgoT<VFIELD,
       get_canonical_transform(tform);
     
     for(int i = 0 ; i < mrvfld->nlevels(); i++ ){
-      const MultiResLevel<value_type> *lev =  mrvfld->level(i);
-      const MultiResLevel<Vector>    *glev = (mrgfld ? mrgfld->level(i) : 0);
+      const MultiLevelFieldLevel<sGF> *lev =  mrvfld->level(i);
+      const MultiLevelFieldLevel<vGF> *glev = (mrgfld ? mrgfld->level(i) : 0);
       vector<TextureBrickHandle> new_level;
       if( i == tHandle->nlevels() ) {
 	tHandle->add_level(new_level);
@@ -199,13 +212,11 @@ TextureBuilderAlgoT<VFIELD,
       vector<TextureBrickHandle>& bricks = tHandle->bricks(i);
       unsigned int k = 0;
       for(unsigned int j = 0; j < lev->patches.size(); j++ ){
-	typename MRLatVolField<value_type>::LVF* vmr =
-	                                           lev->patches[j].get_rep(); 
-	MRLatVolField<Vector>::LVF*     gmr = 
+	typename sGF::field_type* vmr = lev->patches[j].get_rep(); 
+	typename vGF::field_type* gmr = 
 	                              (glev ? glev->patches[j].get_rep() : 0);
 
-	typename MRLatVolField<value_type>::LVF::mesh_handle_type mesh = 
-	                                                vmr->get_typed_mesh();
+	typename sGF::mesh_handle_type mesh = vmr->get_typed_mesh();
 
 	int nx = mesh->get_ni();
 	int ny = mesh->get_nj();
@@ -241,7 +252,7 @@ TextureBuilderAlgoT<VFIELD,
       }
     }
   } else {
-    
+    // not a multi-resolution field 
     typename VFIELD::mesh_handle_type mesh = vfld->get_typed_mesh();
     int nx = mesh->get_ni();
     int ny = mesh->get_nj();

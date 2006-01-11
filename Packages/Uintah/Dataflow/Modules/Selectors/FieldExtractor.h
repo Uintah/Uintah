@@ -33,7 +33,7 @@ LOG
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/MRLatVolField.h>
+#include <Core/Datatypes/MultiLevelField.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h> 
@@ -217,15 +217,15 @@ protected:
                     FIELD* sfield, const Patch* patch, int remove_boundary);
 
 //   // Similar to build_field, but is called from build_multi_level_field.
-//   template <class FIELD>
-//   void build_patch_field(QueryInfo& qinfo,
-//                          const Patch* patch,
-//                          IntVector& offset,
-//                          FIELD* field,
-//                          int remove_boundary);
-//   // Creates a MRLatVolField.
-//   FieldHandle build_multi_level_field( QueryInfo& qinfo, int basis_order,
-//                                        int remove_boundary);
+  template <class FIELD>
+  void build_patch_field(QueryInfo& qinfo,
+                         const Patch* patch,
+                         IntVector& offset,
+                         FIELD* field,
+                         int remove_boundary);
+//   // Creates a MultiLevelField.
+   FieldHandle build_multi_level_field( QueryInfo& qinfo, int basis_order,
+                                        int remove_boundary);
 
   
 };
@@ -366,31 +366,32 @@ FieldExtractorAlgoT<Var, T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
 }
 
 // // Similar to build_field, but is called from build_multi_level_field.
-// template <class Var, class T>
-//    template<class FIELD>
-// void
-// FieldExtractorAlgoT<Var, T>::build_patch_field(QueryInfo& qinfo,
-//                                                const Patch* patch,
-//                                                IntVector& offset,
-//                                                FIELD* field,
-//                                                int remove_boundary)
-// {
-//   // Initialize the data
-//   field->fdata().initialize(T(0));
+template <class Var, class T>
+   template<class FIELD>
+void
+FieldExtractorAlgoT<Var, T>::build_patch_field(QueryInfo& qinfo,
+                                               const Patch* patch,
+                                               IntVector& offset,
+                                               FIELD* field,
+                                               int remove_boundary)
+{
+  // Initialize the data
+  field->fdata().initialize(T(0));
 
-//   map<const Patch*, list<const Patch*> >::iterator oldPatch_it =
-//     new2OldPatchMap_.find(patch);
-//   if( oldPatch_it == new2OldPatchMap_.end() ) {
+  map<const Patch*, list<const Patch*> >::iterator oldPatch_it =
+    new2OldPatchMap_.find(patch);
+  if( oldPatch_it == new2OldPatchMap_.end() ) {
 //     error("No mapping from old patches to new patches.");
-//     return;
-//   }
+    cerr<<"No mapping from old patches to new patches.\n";
+    return;
+  }
     
-//   list<const Patch*> oldPatches = (*oldPatch_it).second;
-//   for(list<const Patch*>::iterator patch_it = oldPatches.begin();
-//       patch_it != oldPatches.end(); ++patch_it){
-//     getPatchData<Var, T>(qinfo, offset, field, *patch_it, remove_boundary);
-//   }
-// }
+  list<const Patch*> oldPatches = (*oldPatch_it).second;
+  for(list<const Patch*>::iterator patch_it = oldPatches.begin();
+      patch_it != oldPatches.end(); ++patch_it){
+    getPatchData(qinfo, offset, field, *patch_it, remove_boundary);
+  }
+}
 
 // Calls query for a single-level data set.
 template <class Var, class T>
@@ -416,126 +417,129 @@ FieldExtractorAlgoT<Var, T>::build_field(QueryInfo& qinfo, IntVector& offset,
 }
 
 
-// // Creates an MRLatVolField.
-// template <class Var, class T>
-// FieldHandle
-// FieldExtractorAlgoT<Var, T>::build_multi_level_field( QueryInfo& qinfo, 
-//                                                       int basis_order,
-//                                                       int remove_boundary)
-// {
-//     typedef GenericField<LVMesh, ConstantBasis<T>, 
-//                          FData3d<T, LVMesh> > LVFieldCB;
-//     typedef GenericField<LVMesh, HexTrilinearLgn<T>, 
-//                          FData3d<T, LVMesh> > LVFieldLB;
+// // Creates an MultiLevelField.
+template <class Var, class T>
+FieldHandle
+FieldExtractorAlgoT<Var, T>::build_multi_level_field( QueryInfo& qinfo, 
+                                                      int basis_order,
+                                                      int remove_boundary)
+{
+    typedef GenericField<LVMesh, ConstantBasis<T>, 
+                         FData3d<T, LVMesh> > LVFieldCB;
+    typedef GenericField<LVMesh, HexTrilinearLgn<T>, 
+                         FData3d<T, LVMesh> > LVFieldLB;
 
-//   // Build the minimal patch set.  build_minimal_patch_grid should
-//   // eventually return the map rather than have it as a member
-//   // variable to map with all the other parameters that aren't being
-//   // used by the class.
-//   GridP grid_minimal = build_minimal_patch_grid( qinfo.grid );
+  // Build the minimal patch set.  build_minimal_patch_grid should
+  // eventually return the map rather than have it as a member
+  // variable to map with all the other parameters that aren't being
+  // used by the class.
+  GridP grid_minimal = build_minimal_patch_grid( qinfo.grid );
   
-//   if(basis_order == 0){
-//     vector<MultiResLevel<T>*> levelfields;
-//     for(int i = 0; i < grid_minimal->numLevels(); i++){
-//       LevelP level = grid_minimal->getLevel( i );
-//       vector<LockingHandle< LVFieldCB > > patchfields;
+  if(basis_order == 0){
+    vector<MultiLevelFieldLevel<LVFieldCB>*> levelfields;
+    for(int i = 0; i < grid_minimal->numLevels(); i++){
+      LevelP level = grid_minimal->getLevel( i );
+      vector<LockingHandle< LVFieldCB > > patchfields;
     
-//       // At this point we should have a mimimal patch set in our
-//       // grid_minimal, and we want to make a LatVolField for each patch.
-//       for(Level::const_patchIterator patch_it = level->patchesBegin();
-//           patch_it != level->patchesEnd(); ++patch_it){
+      // At this point we should have a mimimal patch set in our
+      // grid_minimal, and we want to make a LatVolField for each patch.
+      for(Level::const_patchIterator patch_it = level->patchesBegin();
+          patch_it != level->patchesEnd(); ++patch_it){
       
-//         IntVector patch_low, patch_high, range;
-//         BBox pbox;
-//         if( remove_boundary ==1 ){
-//           patch_low = (*patch_it)->getInteriorNodeLowIndex();
-//           patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
-//           pbox.extend((*patch_it)->getInteriorBox().lower());
-//           pbox.extend((*patch_it)->getInteriorBox().upper());
-//         } else {
-//           patch_low = (*patch_it)->getLowIndex();
-//           patch_high = (*patch_it)->getHighIndex(); 
-//           pbox.extend((*patch_it)->getBox().lower());
-//           pbox.extend((*patch_it)->getBox().upper());
-//         }
-//         // ***** This seems like a hack *****
-//         range = patch_high - patch_low + IntVector(1,1,1); 
-//         // **********************************
+        IntVector patch_low, patch_high, range;
+        BBox pbox;
+        if( remove_boundary ==1 ){
+          patch_low = (*patch_it)->getInteriorNodeLowIndex();
+          patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
+          pbox.extend((*patch_it)->getInteriorBox().lower());
+          pbox.extend((*patch_it)->getInteriorBox().upper());
+        } else {
+          patch_low = (*patch_it)->getLowIndex();
+          patch_high = (*patch_it)->getHighIndex(); 
+          pbox.extend((*patch_it)->getBox().lower());
+          pbox.extend((*patch_it)->getBox().upper());
+        }
+        // ***** This seems like a hack *****
+        range = patch_high - patch_low + IntVector(1,1,1); 
+        // **********************************
 
 
       
-//         //      cerr<<"before mesh update: range is "<<range.x()<<"x"<<
-//         //      range.y()<<"x"<< range.z()<<",  low index is "<<patch_low<<
-//         //      "high index is "<<patch_high<<" , size is  "<<
-//         //      pbox.min()<<", "<<pbox.max()<<"\n";
+        //      cerr<<"before mesh update: range is "<<range.x()<<"x"<<
+        //      range.y()<<"x"<< range.z()<<",  low index is "<<patch_low<<
+        //      "high index is "<<patch_high<<" , size is  "<<
+        //      pbox.min()<<", "<<pbox.max()<<"\n";
       
-//         LVMeshHandle mh = 0;
-//         FieldExtractor::update_mesh_handle(qinfo.level, patch_high, 
-//                                            range, pbox, qinfo.type->getType(), 
-//                                            mh, remove_boundary);
-//         LVFieldCB *field = scinew LVFieldCB( mh );
-//         set_field_properties(field, qinfo, patch_low);
+        LVMeshHandle mh = 0;
+        FieldExtractor::update_mesh_handle(qinfo.level, patch_high, 
+                                           range, pbox, qinfo.type->getType(), 
+                                           mh, remove_boundary);
+        LVFieldCB *field = scinew LVFieldCB( mh );
+        set_field_properties(field, qinfo, patch_low);
 
-//         build_patch_field<Var, T>(qinfo, (*patch_it), patch_low,
-//                                   field, remove_boundary);
-//         patchfields.push_back( field );
-//       }
-//       MultiResLevel<T> *mrlevel = scinew MultiResLevel<T>( patchfields, i );
-//       levelfields.push_back(mrlevel);
-//     }
-//   } else {
-//     vector<MultiResLevel<T>*> levelfields;
-//     for(int i = 0; i < grid_minimal->numLevels(); i++){
-//       LevelP level = grid_minimal->getLevel( i );
-//       vector<LockingHandle< LVFieldLB > > patchfields;
+        build_patch_field(qinfo, (*patch_it), patch_low,
+                                  field, remove_boundary);
+        patchfields.push_back( field );
+      }
+      MultiLevelFieldLevel<LVFieldCB> *mrlevel = scinew MultiLevelFieldLevel<LVFieldCB>( patchfields, i );
+      levelfields.push_back(mrlevel);
+    }
+    return scinew MultiLevelField<LVMesh, ConstantBasis<T>, 
+                                FData3d<T, LVMesh> >( levelfields );
+  } else {
+    vector<MultiLevelFieldLevel<LVFieldLB>*> levelfields;
+    for(int i = 0; i < grid_minimal->numLevels(); i++){
+      LevelP level = grid_minimal->getLevel( i );
+      vector<LockingHandle< LVFieldLB > > patchfields;
     
-//       // At this point we should have a mimimal patch set in our
-//       // grid_minimal, and we want to make a LatVolField for each patch.
-//       for(Level::const_patchIterator patch_it = level->patchesBegin();
-//           patch_it != level->patchesEnd(); ++patch_it){
+      // At this point we should have a mimimal patch set in our
+      // grid_minimal, and we want to make a LatVolField for each patch.
+      for(Level::const_patchIterator patch_it = level->patchesBegin();
+          patch_it != level->patchesEnd(); ++patch_it){
       
-//         IntVector patch_low, patch_high, range;
-//         BBox pbox;
-//         if( remove_boundary ==1 ){
-//           patch_low = (*patch_it)->getInteriorNodeLowIndex();
-//           patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
-//           pbox.extend((*patch_it)->getInteriorBox().lower());
-//           pbox.extend((*patch_it)->getInteriorBox().upper());
-//         } else {
-//           patch_low = (*patch_it)->getLowIndex();
-//           patch_high = (*patch_it)->getHighIndex(); 
-//           pbox.extend((*patch_it)->getBox().lower());
-//           pbox.extend((*patch_it)->getBox().upper());
-//         }
-//         // ***** This seems like a hack *****
-//         range = patch_high - patch_low + IntVector(1,1,1); 
-//         // **********************************
+        IntVector patch_low, patch_high, range;
+        BBox pbox;
+        if( remove_boundary ==1 ){
+          patch_low = (*patch_it)->getInteriorNodeLowIndex();
+          patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
+          pbox.extend((*patch_it)->getInteriorBox().lower());
+          pbox.extend((*patch_it)->getInteriorBox().upper());
+        } else {
+          patch_low = (*patch_it)->getLowIndex();
+          patch_high = (*patch_it)->getHighIndex(); 
+          pbox.extend((*patch_it)->getBox().lower());
+          pbox.extend((*patch_it)->getBox().upper());
+        }
+        // ***** This seems like a hack *****
+        range = patch_high - patch_low + IntVector(1,1,1); 
+        // **********************************
 
 
       
-//         //      cerr<<"before mesh update: range is "<<range.x()<<"x"<<
-//         //      range.y()<<"x"<< range.z()<<",  low index is "<<patch_low<<
-//         //      "high index is "<<patch_high<<" , size is  "<<
-//         //      pbox.min()<<", "<<pbox.max()<<"\n";
+        //      cerr<<"before mesh update: range is "<<range.x()<<"x"<<
+        //      range.y()<<"x"<< range.z()<<",  low index is "<<patch_low<<
+        //      "high index is "<<patch_high<<" , size is  "<<
+        //      pbox.min()<<", "<<pbox.max()<<"\n";
       
-//         LVMeshHandle mh = 0;
-//         FieldExtractor::update_mesh_handle(qinfo.level, patch_high, 
-//                                            range, pbox, qinfo.type->getType(),
-//                                            mh, remove_boundary);
-//         LVFieldLB *field = scinew LVFieldLB( mh );
-//         set_field_properties(field, qinfo, patch_low);
+        LVMeshHandle mh = 0;
+        FieldExtractor::update_mesh_handle(qinfo.level, patch_high, 
+                                           range, pbox, qinfo.type->getType(),
+                                           mh, remove_boundary);
+        LVFieldLB *field = scinew LVFieldLB( mh );
+        set_field_properties(field, qinfo, patch_low);
 
-//         build_patch_field<Var, T>(qinfo, (*patch_it), patch_low,
-//                                   field, remove_boundary );
-//         patchfields.push_back( field );
-//       }
-//       MultiResLevel<T> *mrlevel = scinew MultiResLevel<T>( patchfields, i );
-//       levelfields.push_back(mrlevel);
-//     }
-//   }
+        build_patch_field(qinfo, (*patch_it), patch_low,
+                                  field, remove_boundary );
+        patchfields.push_back( field );
+      }
+      MultiLevelFieldLevel<LVFieldLB> *mrlevel = scinew MultiLevelFieldLevel<LVFieldLB>( patchfields, i );
+      levelfields.push_back(mrlevel);
+    }
+    return scinew MultiLevelField<LVMesh, HexTrilinearLgn<T>, 
+                                FData3d<T, LVMesh> >( levelfields );
+  }
 
-//   return scinew MRLatVolField<T>( levelfields );
-// }
+}
 
 
 // This function makes a switch between building multi-level data or
@@ -549,9 +553,9 @@ FieldExtractorAlgoT<Var, T>::getData(QueryInfo& qinfo, IntVector& offset,
                                      LVMeshHandle mesh_handle,
                                      int remove_boundary, int basis_order)
 {
-//   if (qinfo.get_all_levels) {
-//     return build_multi_level_field(qinfo, basis_order, remove_boundary);
-//   } else {
+  if (qinfo.get_all_levels) {
+    return build_multi_level_field(qinfo, basis_order, remove_boundary);
+  } else {
     typedef GenericField<LVMesh, ConstantBasis<T>, 
                          FData3d<T, LVMesh> > LVFieldCB;
     typedef GenericField<LVMesh, HexTrilinearLgn<T>, 
@@ -568,7 +572,7 @@ FieldExtractorAlgoT<Var, T>::getData(QueryInfo& qinfo, IntVector& offset,
       build_field(qinfo, offset, sf, remove_boundary);
       return sf;
     }
-//   }
+  }
 }
 
 

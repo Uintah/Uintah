@@ -29,25 +29,30 @@
 //    Author : Milan Ikits
 //    Date   : Fri Jul 16 00:11:18 2004
 
-#include <sci_defs/ogl_defs.h>
-#include <Core/Containers/StringUtil.h>
 
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/MultiLevelField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Containers/StringUtil.h>
+#include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Volume/VideoCardInfo.h>
 
+#include <Dataflow/Ports/TexturePort.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 
-#include <Core/Volume/VideoCardInfo.h>
-#include <Dataflow/Ports/TexturePort.h>
-#include <Core/Geom/ShaderProgramARB.h>
-#include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
+#include <sci_defs/ogl_defs.h>
 
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Containers/FData.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/MRLatVolField.h>
+
+
+
+
 
 namespace SCIRun {
 
@@ -125,7 +130,7 @@ TextureBuilder::execute()
   }
   string mesh_name = vHandle->get_type_description(Field::MESH_TD_E)->get_name();
   if( mesh_name.find("LatVolMesh", 0) == string::npos &&
-      vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "MRLatVolField" &&
+      vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "MultiLevelField" &&
       vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "ITKLatVolField" ) {
       
     error( "Only availible for regular topology with uniformly gridded data." );
@@ -158,48 +163,93 @@ TextureBuilder::execute()
 
     double vmin = DBL_MAX, vmax = -DBL_MAX;
 
-    if( vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() == "MRLatVolField" ) {
+    if( vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->
+        get_name().find("MultiLevelField") != string::npos ){
       // Warning::Temporary Hack!
       // In order to get the colors mapped correctly we need the min and max
       // values for every level of a Multi-level field.  This
       // temporary solution needs to be flushed out either in the sfi->minmax
       // algorithm or someplace else. We don't want to have to handle every
       // posible scalar type here.
-      if( vHandle->get_type_description(Field::MESH_TD_E)->get_name() == "double" ) {
-	MRLatVolField<double>* vmrfield = 
-	  (MRLatVolField< double > *) vHandle.get_rep();
+      if( vHandle->get_type_description(Field::FDATA_TD_E)->
+          get_name().find("double") != string::npos ) {
+        typedef HexTrilinearLgn<double>          linearBasis;
+        typedef ConstantBasis<double>            constantBasis;
+        if(vHandle->get_type_description(Field::BASIS_TD_E)->
+           get_name().find("Constant") != string::npos ) {
+          typedef MultiLevelField<LVMesh, 
+            constantBasis, 
+            FData3d<double, LVMesh> > MRLVF_CB;
+          typedef GenericField<LVMesh, 
+            constantBasis, 
+            FData3d<double, LVMesh> > LVF_CB;
+          
+          MRLVF_CB* vmrfield = (MRLVF_CB*) vHandle.get_rep();
 
-	for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
-	  const MultiResLevel<double>* lev = vmrfield->level( i );
-	  for(unsigned int j = 0; j < lev->patches.size(); j++ ){
-	    // Each patch in a level corresponds to a LatVolField.
-	    // Grab the field.
-	    MRLatVolField<double>::LVF* vmr = lev->patches[j].get_rep(); 
-	    // Now, get the min_max for the scalar field.
-	    ScalarFieldInterfaceHandle sub_sfi =
-	      vmr->query_scalar_interface(this);
+          for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
+            const MultiLevelFieldLevel<LVF_CB>* lev = vmrfield->level( i );
+            for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+              // Each patch in a level corresponds to a LatVolField.
+              // Grab the field.
+              MRLVF_CB::field_type* vmr = lev->patches[j].get_rep(); 
+              // Now, get the min_max for the scalar field.
+              ScalarFieldInterfaceHandle sub_sfi =
+                vmr->query_scalar_interface(this);
 
-	    // set vmin/vmax
-	    double vmintmp, vmaxtmp;
-	    sub_sfi->compute_min_max(vmintmp, vmaxtmp);
+              // set vmin/vmax
+              double vmintmp, vmaxtmp;
+              sub_sfi->compute_min_max(vmintmp, vmaxtmp);
 
-	    if( vmin > vmintmp ) vmin = vmintmp;
-	    if( vmax < vmaxtmp ) vmax = vmaxtmp;
+              if( vmin > vmintmp ) vmin = vmintmp;
+              if( vmax < vmaxtmp ) vmax = vmaxtmp;
 
-	  }
-	}
+            }
+          }
+        } else if(vHandle->get_type_description(Field::BASIS_TD_E)->
+                  get_name().find("Linear") != string::npos ) {
+          typedef MultiLevelField<LVMesh, 
+                                linearBasis, 
+                                FData3d<double, LVMesh> > MRLVF_LB;
+          typedef GenericField<LVMesh, 
+                               linearBasis, 
+                               FData3d<double, LVMesh> > LVF_LB;
+          
+          MRLVF_LB* vmrfield =   (MRLVF_LB*) vHandle.get_rep();
+
+          for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
+            const MultiLevelFieldLevel<LVF_LB>* lev = vmrfield->level( i );
+            for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+              // Each patch in a level corresponds to a LatVolField.
+              // Grab the field.
+              MRLVF_LB::field_type* vmr = lev->patches[j].get_rep(); 
+              // Now, get the min_max for the scalar field.
+              ScalarFieldInterfaceHandle sub_sfi =
+                vmr->query_scalar_interface(this);
+
+              // set vmin/vmax
+              double vmintmp, vmaxtmp;
+              sub_sfi->compute_min_max(vmintmp, vmaxtmp);
+
+              if( vmin > vmintmp ) vmin = vmintmp;
+              if( vmax < vmaxtmp ) vmax = vmaxtmp;
+
+            }
+          }
+        } else {
+          error( "Input scalar field Basis function is not Constant or Linear.");
+        }
       } else {
-	error("Input scalar field, MRLatVolField does not contain double data.");
-	return;
+        error("Input scalar field, MultiLevelField does not contain double data.");
+        return;
       }
     } else {
       sfi->compute_min_max(vmin, vmax);
     }
-
+    
     gui_vminval_.set(vmin);
     gui_vmaxval_.set(vmax);
   }
-
+  
   // Check to see if the input scalar field or the range has changed.
   if( vfield_last_generation_ != vHandle->generation  ||
       (gui_vminval_.get() != vminval_) || 
@@ -230,8 +280,10 @@ TextureBuilder::execute()
     } else {
       string mesh_name = gHandle->get_type_description(Field::MESH_TD_E)->get_name();
       if( mesh_name.find("LatVolMesh", 0) == string::npos &&
- 	  gHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "MRLatVolField" &&
-	  gHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "ITKLatVolField" ) {
+ 	  gHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->
+          get_name().find("MultiLevelField") != string::npos &&
+	  gHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->
+          get_name().find("ITKLatVolField") != string::npos) {
     
 	error( "Only availible for regular topology with uniformly gridded data." );
 	return;
@@ -303,6 +355,7 @@ TextureBuilder::execute()
 
     Handle<TextureBuilderAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
+    cerr<<"TextureBuilder module compiled\n";
 
     algo->build(tHandle_,
 		vHandle, vminval_, vmaxval_,

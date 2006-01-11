@@ -468,8 +468,12 @@ VolumeRenderer::draw_volume()
   glPushMatrix();
   glMultMatrixd(mvmat);
 
-  float cm2scale = 1.0 / Pow2(cmap2_.size());
-  shader->setLocalParam(2, grange_, goffset_, cm2scale, cm2scale);
+  if( use_cmap2 ){
+    float cm2scale = 1.0 / Pow2(cmap2_.size());
+    shader->setLocalParam(2, grange_, goffset_, cm2scale, cm2scale);
+  } else {
+    shader->setLocalParam(2, 1, 0, 0, 0);
+  }    
 
   for(unsigned int i=0; i<bricks.size(); i++) {
     TextureBrickHandle b = bricks[i];
