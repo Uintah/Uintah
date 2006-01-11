@@ -993,9 +993,9 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
             IntVector from_l;
             IntVector from_h;
             if (req->patches_dom == Task::OtherGridDomain && fromNeighbor->getLevel()->getIndex() > 0) {
-              // DON'T send extra cells
-              from_l = Max(fromNeighbor->getInteriorLowIndex(basis), l);
-              from_h = Min(fromNeighbor->getInteriorHighIndex(basis), h);
+              // DON'T send extra cells (unless they're on the domain boundary)
+              from_l = Max(fromNeighbor->getInteriorLowIndexWithBoundary(basis), l);
+              from_h = Min(fromNeighbor->getInteriorHighIndexWithBoundary(basis), h);
             }
             else {
               from_l = Max(fromNeighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l);
