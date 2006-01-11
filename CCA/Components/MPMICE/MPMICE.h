@@ -147,13 +147,6 @@ public:
                                     const MaterialSubset*,
                                     const MaterialSubset*,
                                     const MaterialSet*);
-
-  void scheduleRefinePAndGradP(SchedulerP&, 
-                               const PatchSet*,
-                               const MaterialSubset*,
-                               const MaterialSubset*,
-                               const MaterialSubset*,
-                               const MaterialSet*);
             
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
 				    const MaterialSet*);
