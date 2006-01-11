@@ -19047,6 +19047,54 @@ sed 's/^/| /' conftest.$ac_ext >&5
 fi
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
+# win32 has hash_map in stdext namespace (7 deprecates it in std, 8 requires stdext)
+if test "$DEF_HASHMAP" = "None"; then
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <hash_map>
+                 stdext::hash_map<int, int> xx;
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  DEF_HASHMAP=HAVE_STDEXT_HASHMAP
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
 if test "$DEF_HASHMAP" = "None"; then
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -63841,7 +63889,7 @@ fi
 
 
 
-                                                  ac_config_files="$ac_config_files configVars.mk Makefile on-the-fly-libs/Makefile disjointPackageMakefile $sci_defs_files"
+                                                            ac_config_files="$ac_config_files configVars.mk Makefile on-the-fly-libs/Makefile  disjointPackageMakefile $sci_defs_files"
 
 
 ##   Only do the following if configuring with Uintah
@@ -64399,6 +64447,7 @@ do
   "configVars.mk" ) CONFIG_FILES="$CONFIG_FILES configVars.mk" ;;
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "on-the-fly-libs/Makefile" ) CONFIG_FILES="$CONFIG_FILES on-the-fly-libs/Makefile" ;;
+  "" ) CONFIG_FILES="$CONFIG_FILES " ;;
   "disjointPackageMakefile" ) CONFIG_FILES="$CONFIG_FILES disjointPackageMakefile" ;;
   "$sci_defs_files" ) CONFIG_FILES="$CONFIG_FILES $sci_defs_files" ;;
   "Packages/Uintah/tools/fspec.pl" ) CONFIG_FILES="$CONFIG_FILES Packages/Uintah/tools/fspec.pl" ;;

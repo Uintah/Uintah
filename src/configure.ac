@@ -2299,6 +2299,12 @@ if test "$DEF_HASHMAP" = "None"; then
                  std::hash_map<int, int> xx;], ,
 		 [DEF_HASHMAP=HAVE_EXT_HASHMAP])
 fi
+# win32 has hash_map in stdext namespace (7 deprecates it in std, 8 requires stdext)
+if test "$DEF_HASHMAP" = "None"; then
+  AC_TRY_COMPILE([#include <hash_map>
+                 stdext::hash_map<int, int> xx;], ,
+		 [DEF_HASHMAP=HAVE_STDEXT_HASHMAP])
+fi
 if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <ext/hash_map>
                  __gnu_cxx::hash_map<int, int> xx;], ,

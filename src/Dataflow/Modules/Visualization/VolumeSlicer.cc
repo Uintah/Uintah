@@ -197,7 +197,7 @@ void VolumeSlicer::execute()
     }
   }
   //vector<ColorMap2Handle> cmap2_array;
-  cmap2_array_.clear;
+  cmap2_array_.clear();
   if (c2)
     cmap2_array_.push_back(cmap2);
     
