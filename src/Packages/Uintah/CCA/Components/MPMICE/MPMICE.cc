@@ -2505,20 +2505,17 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   printSchedule(patches,"MPMICE::scheduleRefine\t\t\t\t");
   
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
-
-  // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
-  if (patches == fineLevel->eachPatch()) {
-    if(d_ice->doICEOnLevel(L_indx, num_levels)) {
-      task->computes(Mlb->heatRate_CCLabel);
-    }
-    if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
-      task->computes(MIlb->NC_CCweightLabel);
-      task->computes(MIlb->vel_CCLabel);
-      //task->computes(Ilb->rho_CCLabel); 
-      task->computes(Ilb->temp_CCLabel);
-      task->computes(Ilb->sp_vol_CCLabel);
-      //task->computes(Ilb->speedSound_CCLabel); 
-    }
+  
+  if(d_ice->doICEOnLevel(L_indx, num_levels)) {
+    task->computes(Mlb->heatRate_CCLabel);
+  }
+  if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
+    task->computes(MIlb->NC_CCweightLabel);
+    task->computes(MIlb->vel_CCLabel);
+    //task->computes(Ilb->rho_CCLabel); 
+    task->computes(Ilb->temp_CCLabel);
+    task->computes(Ilb->sp_vol_CCLabel);
+    //task->computes(Ilb->speedSound_CCLabel); 
   }
   sched->addTask(task, patches, d_sharedState->allMPMMaterials());
 }
