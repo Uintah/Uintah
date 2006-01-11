@@ -162,16 +162,24 @@ TextureBrick::compute_polygons(const Ray& view, double dt,
   corner[6] = Point(pmax.x(), pmax.y(), pmin.z());
   corner[7] = pmax;
 
-  double tmin = Dot(corner[0]-view.origin(), view.direction());;
+  double tmin = Dot(corner[0] - view.origin(), view.direction());;
   double tmax = tmin;
+  int maxi = 0;
   for (int i=1; i<8; i++)
   {
-    double t = Dot(corner[i]-view.origin(), view.direction());
+    double t = Dot(corner[i] - view.origin(), view.direction());
     tmin = Min(t, tmin);
-    tmax = Max(t, tmax);
+    if (t > tmax) { maxi = i; tmax = t; }
   }
-  //  tmin = (floor(tmin/dt) + 1)*dt;
-  //  tmax = floor(tmax/dt)*dt;
+
+  // Make all of the slices consistent by offsetting them to a fixed
+  // position in space (the origin).  This way they are consistent
+  // between bricks and don't change with camera zoom.
+  double tanchor = Dot(corner[maxi], view.direction());
+  double tanchor0 = floor(tanchor/dt)*dt;
+  double tanchordiff = tanchor - tanchor0;
+  tmax -= tanchordiff;
+
   compute_polygons(view, tmin, tmax, dt, vertex, texcoord, size);
 }
 
