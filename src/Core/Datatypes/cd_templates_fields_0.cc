@@ -36,7 +36,7 @@
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Containers/FData.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/MRLatVolField.h>
+#include <Core/Datatypes/MultiLevelField.h>
 
 //#include <Core/Datatypes/MaskedLatVolField.h>
 
@@ -303,28 +303,57 @@ backwards_compat_MLVFul("MaskedLatVolField<unsigned_long>", "Field",
 			FData3d<unsigned long, MLVMesh> >::maker);
 
 
-template class MRLatVolField<Tensor>;
-template class MRLatVolField<Vector>;
-template class MRLatVolField<double>;
-template class MRLatVolField<float>;
-template class MRLatVolField<int>;
-template class MRLatVolField<short>;
-template class MRLatVolField<char>;
-template class MRLatVolField<unsigned int>;
-template class MRLatVolField<unsigned short>;
-template class MRLatVolField<unsigned char>;
 
-const TypeDescription* get_type_description(MRLatVolField<Tensor> *);
-const TypeDescription* get_type_description(MRLatVolField<Vector> *);
-const TypeDescription* get_type_description(MRLatVolField<double> *);
-const TypeDescription* get_type_description(MRLatVolField<float> *);
-const TypeDescription* get_type_description(MRLatVolField<int> *);
-const TypeDescription* get_type_description(MRLatVolField<short> *);
-const TypeDescription* get_type_description(MRLatVolField<char> *);
-const TypeDescription* get_type_description(MRLatVolField<unsigned int> *);
-const TypeDescription* get_type_description(MRLatVolField<unsigned short> *);
-const TypeDescription* get_type_description(MRLatVolField<unsigned char> *);
+// const TypeDescription* get_type_description(MultiLevelField<Tensor> *);
+// const TypeDescription* get_type_description(MultiLevelField<Vector> *);
+// const TypeDescription* get_type_description(MultiLevelField<double> *);
+// const TypeDescription* get_type_description(MultiLevelField<float> *);
+// const TypeDescription* get_type_description(MultiLevelField<int> *);
+// const TypeDescription* get_type_description(MultiLevelField<short> *);
+// const TypeDescription* get_type_description(MultiLevelField<char> *);
+// const TypeDescription* get_type_description(MultiLevelField<unsigned int> *);
+// const TypeDescription* get_type_description(MultiLevelField<unsigned short> *);
+// const TypeDescription* get_type_description(MultiLevelField<unsigned char> *);
 
+//NoData
+template class MultiLevelField<LVMesh, NDBasis,  FData3d<double, LVMesh> >;
+
+//Constant
+template class MultiLevelField<LVMesh, CFDTensorBasis,  
+                             FData3d<Tensor, LVMesh> >;
+template class MultiLevelField<LVMesh, CFDVectorBasis,  
+                             FData3d<Vector, LVMesh> >;
+template class MultiLevelField<LVMesh, CFDdoubleBasis,  
+                             FData3d<double, LVMesh> >;
+template class MultiLevelField<LVMesh, CFDfloatBasis,   FData3d<float, LVMesh> >;
+template class MultiLevelField<LVMesh, CFDintBasis,     FData3d<int, LVMesh> >;
+template class MultiLevelField<LVMesh, CFDshortBasis,   FData3d<short, LVMesh> >;
+template class MultiLevelField<LVMesh, CFDcharBasis,    FData3d<char, LVMesh> >;
+template class MultiLevelField<LVMesh, CFDuintBasis,    
+			    FData3d<unsigned int, LVMesh> >;
+template class MultiLevelField<LVMesh, CFDushortBasis,  
+			    FData3d<unsigned short, LVMesh> >;
+template class MultiLevelField<LVMesh, CFDucharBasis,   
+			    FData3d<unsigned char, LVMesh> >;
+template class MultiLevelField<LVMesh, CFDulongBasis,   
+			    FData3d<unsigned long, LVMesh> >;
+
+//Linear
+template class MultiLevelField<LVMesh, FDTensorBasis,  FData3d<Tensor, LVMesh> >;
+template class MultiLevelField<LVMesh, FDVectorBasis,  FData3d<Vector, LVMesh> >;
+template class MultiLevelField<LVMesh, FDdoubleBasis,  FData3d<double, LVMesh> >;
+template class MultiLevelField<LVMesh, FDfloatBasis,   FData3d<float, LVMesh> >;
+template class MultiLevelField<LVMesh, FDintBasis,     FData3d<int, LVMesh> >;
+template class MultiLevelField<LVMesh, FDshortBasis,   FData3d<short, LVMesh> >;
+template class MultiLevelField<LVMesh, FDcharBasis,    FData3d<char, LVMesh> >;
+template class MultiLevelField<LVMesh, FDuintBasis,    
+			    FData3d<unsigned int, LVMesh> >;
+template class MultiLevelField<LVMesh, FDushortBasis,  
+			    FData3d<unsigned short, LVMesh> >;
+template class MultiLevelField<LVMesh, FDucharBasis,   
+			    FData3d<unsigned char, LVMesh> >;
+template class MultiLevelField<LVMesh, FDulongBasis,   
+			    FData3d<unsigned long, LVMesh> >;
 
 
 
