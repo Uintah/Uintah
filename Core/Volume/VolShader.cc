@@ -314,7 +314,7 @@ VolShader::emit(string& s)
     if(shading_) {
       z << VOL_VLUP_1_1;
       z << VOL_LIT_BODY_NOGRAD;
-      z << VOL_TFLUP_1_4;
+      z << VOL_TFLUP_1_1;
       z << VOL_LIT_END;
     } else { // !shading_
       if(blend_) {
