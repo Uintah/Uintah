@@ -826,12 +826,18 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   for (int i = 0; i < grid->numLevels(); i++) {
     LevelP newLevel = newDataWarehouse->getGrid()->getLevel(i);
 
+    PatchSet* refineSet = 0; 
     if (i > 0) {
-
-      PatchSet* refineSet;
-      if (i >= oldGrid->numLevels())
+#ifdef TODD_HACK
+      if (1) {
+#else
+      if (i >= oldGrid->numLevels()) {
+#endif
+        // new level - refine everywhere
         refineSet = const_cast<PatchSet*>(newLevel->eachPatch());
-      else {
+      }
+      // find patches with new space - but temporarily, refine everywhere... 
+      else if (i < oldGrid->numLevels()) {
         refineSet = scinew PatchSet;
         LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(newLevel->getIndex());
         
@@ -879,6 +885,26 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       if (refineSet->size() > 0)
         sim->scheduleRefine(refineSet, sched);
     }
+
+#ifdef TODD_HACK
+      // only copy data on the coarse level
+    if (i == 0) {
+#endif
+    // find the patches that you don't refine
+    PatchSubset* temp = scinew PatchSubset; // temp only to show empty set.  Don't pass into computes
+    constHandle<PatchSubset> modset, levelset, compset, diffset, intersection;
+    
+    if (refineSet)
+      modset = refineSet->getUnion();
+    else {
+      modset = temp;
+    }
+    levelset = newLevel->eachPatch()->getUnion();
+    
+    PatchSubset::intersectionAndDifferences(levelset, modset, intersection, compset, diffset);
+    if (compset)
+      compset->addReference();
+
     dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
                                      &SchedulerCommon::copyDataToNewGrid));
     for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++) {
@@ -886,9 +912,15 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       MaterialSubset* matls = iter->second;
       
       dataTasks[i]->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
-      dataTasks[i]->computes(var, matls);
+      if (compset && compset->size() > 0)
+        dataTasks[i]->computes(var, compset.get_rep(), matls);
+      if (modset && modset->size() > 0)
+        dataTasks[i]->modifies(var, modset.get_rep(), matls);
     }
     addTask(dataTasks[i], newLevel->eachPatch(), d_sharedState->allMaterials());
+#ifdef TODD_HACK
+    }
+#endif
     if (i > 0) {
       sim->scheduleRefineInterface(newLevel, sched, 1, 1);
     }
