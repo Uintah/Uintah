@@ -22,7 +22,7 @@
 #define SPEW 0
 //#undef SPEW
 
-//#define BRYAN
+#define BRYAN
 
 using namespace Uintah;
 using namespace std;
@@ -740,14 +740,11 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
       }
     }
     
-    // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
-    if (isNewLevel) {
-      task->computes(lb->press_CCLabel, subset, Task::OutOfDomain);
-      task->computes(lb->rho_CCLabel);
-      task->computes(lb->sp_vol_CCLabel);
-      task->computes(lb->temp_CCLabel);
-      task->computes(lb->vel_CCLabel);
-    }
+    task->computes(lb->press_CCLabel, subset, Task::OutOfDomain);
+    task->computes(lb->rho_CCLabel);
+    task->computes(lb->sp_vol_CCLabel);
+    task->computes(lb->temp_CCLabel);
+    task->computes(lb->vel_CCLabel);
     sched->addTask(task, patches, d_sharedState->allICEMaterials());
     
     //__________________________________
@@ -2047,7 +2044,7 @@ ______________________________________________________________________*/
 void AMRICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                           SchedulerP& sched)
 {
-#if 0
+#if 1
   scheduleErrorEstimate(coarseLevel, sched);
 #endif
 }
