@@ -213,8 +213,7 @@ TextureBrick::compute_polygons(const Ray& view,
     }
   up.normalize();
   right = Cross(vdir, up);
-  double t = tmax; // start at tmax
-  while (t >= tmin)
+  for (double t = tmax; t >= tmin; t -= dt)
   {
     
 #if 0 // not needed with mask_polygons code below
@@ -310,9 +309,6 @@ TextureBrick::compute_polygons(const Ray& view,
     }
     k += degree;
     size.push_back(degree);
-
-    // decrement ray parameter
-    t -= dt;
   }
 }
 
