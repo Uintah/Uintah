@@ -68,7 +68,7 @@ public:
    }
   }
   static const string type_name(int n = -1);
-  virtual const TypeDescription* get_type_description(Field::td_info_e td = FULL_TD_E) const;
+  virtual const TypeDescription* get_type_description(Field::td_info_e td = Field::FULL_TD_E) const;
 
 private:
   vector<MultiLevelFieldLevel<FIELD>* > levels_;
@@ -119,7 +119,7 @@ MultiLevelField<Mesh, Basis, FData>::get_type_description(Field::td_info_e td) c
 
   switch (td) {
   default:
-  case FULL_TD_E:
+  case Field::FULL_TD_E:
     {
       static TypeDescription* tdn1 = 0;
       if (tdn1 == 0) {
@@ -132,7 +132,7 @@ MultiLevelField<Mesh, Basis, FData>::get_type_description(Field::td_info_e td) c
       } 
       return tdn1;
     }
-  case FIELD_NAME_ONLY_E:
+  case Field::FIELD_NAME_ONLY_E:
     {
       static TypeDescription* tdn0 = 0;
       if (tdn0 == 0) {
@@ -141,15 +141,15 @@ MultiLevelField<Mesh, Basis, FData>::get_type_description(Field::td_info_e td) c
       }
       return tdn0;
     }
-  case MESH_TD_E:
+  case Field::MESH_TD_E:
     {
       return sub1;
     }
-  case BASIS_TD_E:
+  case Field::BASIS_TD_E:
     {
       return sub2;
     }
-  case FDATA_TD_E:
+  case Field::FDATA_TD_E:
     {
       return sub3;
     }
