@@ -267,6 +267,8 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
     //Level::selectType patches;
     //level->selectPatches(trackingStartIndex_ - IntVector(1,1,1), trackingEndIndex_ + IntVector(1,1,1), patches);
     const PatchSubset* patches = dt->getPatches();
+    if (getLevel(patches)->getIndex() != levelnum)
+      continue;
     for (int p = 0; patches && p < patches->size(); p++) {
 
       const Patch* patch = patches->get(p);
@@ -1012,8 +1014,8 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
           IntVector oldHighIndex;
 
           if (newLevel->getIndex() > 0) {
-            oldLowIndex = oldPatch->getInteriorLowIndex(basis);
-            oldHighIndex = oldPatch->getInteriorHighIndex(basis);
+            oldLowIndex = oldPatch->getInteriorLowIndexWithBoundary(basis);
+            oldHighIndex = oldPatch->getInteriorHighIndexWithBoundary(basis);
           }
           else {
             oldLowIndex = oldPatch->getLowIndex(basis, label->getBoundaryLayer());

@@ -1587,6 +1587,25 @@ IntVector Patch::getInteriorHighIndex(VariableBasis basis) const
   }
 }
 
+IntVector Patch::getInteriorLowIndexWithBoundary(VariableBasis basis) const
+{
+  IntVector inlow = getInteriorLowIndex(basis);
+  IntVector low = getLowIndex(basis, IntVector(0,0,0));
+  if (getBCType(xminus) == None) inlow[0] = low[0];
+  if (getBCType(yminus) == None) inlow[1] = low[1];
+  if (getBCType(zminus) == None) inlow[2] = low[2];
+  return inlow;
+}
+
+IntVector Patch::getInteriorHighIndexWithBoundary(VariableBasis basis) const
+{
+  IntVector inhigh = getInteriorHighIndex(basis);
+  IntVector high = getHighIndex(basis, IntVector(0,0,0));
+  if (getBCType(xplus) == None) inhigh[0] = high[0];
+  if (getBCType(yplus) == None) inhigh[1] = high[1];
+  if (getBCType(zplus) == None) inhigh[2] = high[2];
+  return inhigh;
+}
 
 void Patch::finalizePatch()
 {
