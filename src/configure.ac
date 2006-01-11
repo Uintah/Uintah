@@ -3143,12 +3143,12 @@ case $host in
      fi
      ;;
    *)
-     SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,,,optional)
+     SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
      ;;
 esac
 
 if test "$HAVE_LAPACK" != "yes"; then
-  SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,,,optional)
+  SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
 fi
 
 # In some cases, some files need complib.sgimath_mp for the lapack
