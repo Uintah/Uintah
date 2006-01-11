@@ -22,7 +22,7 @@
 #define SPEW 0
 //#undef SPEW
 
-#define BRYAN
+//#define BRYAN
 
 using namespace Uintah;
 using namespace std;
@@ -2044,7 +2044,7 @@ ______________________________________________________________________*/
 void AMRICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                           SchedulerP& sched)
 {
-#if 1
+#if 0
   scheduleErrorEstimate(coarseLevel, sched);
 #endif
 }
