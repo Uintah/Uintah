@@ -75,10 +75,10 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
 
   // Don't do AMRICE with MPMICE for now...
   if (d_doAMR) {
-    d_ice      = scinew AMRICE(myworld);
+    d_ice  = scinew AMRICE(myworld);
   }
   else {
-    d_ice      = scinew ICE(myworld, false);
+    d_ice  = scinew ICE(myworld, false);
   }
 
   d_SMALL_NUM = d_ice->d_SMALL_NUM;
@@ -436,12 +436,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched,
       
     scheduleInterpolatePressCCToPressNC(      sched, mpm_patches, press_matl,
                                                                   mpm_matls);
-    if(do_mlmpmice){
-      scheduleRefinePAndGradP(                sched, mpm_patches, press_matl,
-                                                                  one_matl,
-                                                                  mpm_matls_sub,
-                                                                  mpm_matls);
-    }
+
     scheduleInterpolatePAndGradP(             sched, mpm_patches, press_matl,
                                                                   one_matl,
                                                                   mpm_matls_sub,
@@ -581,11 +576,11 @@ void MPMICE::scheduleRefinePressCC(SchedulerP& sched,
   printSchedule(patches,"MPMICE::scheduleRefinePressCC\t\t\t\t\t");
     
   MaterialSet* press_matls = scinew MaterialSet();
-  vector<int> pm;
-  pm.push_back(0);
-  press_matls->addAll(pm);
+  press_matls->add(0);
   press_matls->addReference();
+
   scheduleRefineVariableCC(sched, patches, press_matls, Ilb->press_CCLabel);
+  scheduleRefineVariableCC(sched, patches, matls,       Ilb->press_force_CCLabel);
   if(press_matls->removeReference())
     delete press_matls;
 }
@@ -612,21 +607,6 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
   t->computes(MIlb->press_NCLabel, press_matl);
   
   sched->addTask(t, patches, matls);
-}
-
-//______________________________________________________________________
-//
-void MPMICE::scheduleRefinePAndGradP(SchedulerP& sched,
-                                     const PatchSet* patches,
-                                     const MaterialSubset* press_matl,
-                                     const MaterialSubset* /*one_matl*/,
-                                     const MaterialSubset* mpm_matl,
-                                     const MaterialSet* all_matls)
-{
-  if(d_doAMR){
-    printSchedule(patches, "MPMICE::scheduleRefinePAndGradP\t\t\t\t");
-    scheduleRefineVariableCC(sched, patches,all_matls,Ilb->press_force_CCLabel);
-  }
 }
 
 //______________________________________________________________________
