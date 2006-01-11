@@ -247,7 +247,6 @@ public:
     typedef hash_set<index_type, CellEdgeHasher, EdgeComparitor> EdgeSet;
 # endif // end if defined(__ECC) || defined(_MSC_VER)
 #else // do not HAVE_HASH_SET
->>>>>>> .r32940
     typedef lessEdge EdgeComparitor;
     typedef multiset<index_type, EdgeComparitor> HalfEdgeSet;
     typedef set<index_type, EdgeComparitor> EdgeSet;

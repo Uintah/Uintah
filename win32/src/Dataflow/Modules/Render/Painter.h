@@ -95,7 +95,7 @@ namespace SCIRun {
 
 class Painter : public Module
 {
-  class SliceWindow;
+  struct SliceWindow;
   struct MouseState {
     int                 button_;
     int                 dx_;
@@ -124,6 +124,58 @@ class Painter : public Module
     };
   };
 
+  struct WindowLayout;
+  struct NrrdSlice;
+  typedef vector<NrrdSlice *>		NrrdSlices;
+  typedef vector<NrrdSlices>		NrrdVolumeSlices;
+
+  // needs to go before all SliceWindow& usage
+  struct SliceWindow { 
+    SliceWindow(Painter &painter, GuiContext *ctx);
+    void                setup_gl_view();
+    void		next_slice();
+    void		prev_slice();
+    void		zoom_in();
+    void		zoom_out();
+    Point		world_to_screen(const Point &);
+    Point		screen_to_world(unsigned int x, unsigned int y);
+    Vector		x_dir();
+    Vector		y_dir();
+    int                 x_axis();
+    int                 y_axis();
+    void                render_text();
+    void		render_orientation_text();
+    void		render_grid();
+    void                draw_line(const Point &, const Point &);
+
+    Painter &           painter_;
+    string		name_;
+    WindowLayout *	layout_;
+    OpenGLViewport *	viewport_;
+    NrrdSlices		slices_;
+
+    Point               center_;
+    Vector              normal_;
+
+    UIint		slice_num_;
+    UIint		axis_;
+    UIdouble		zoom_;
+    UIint		slab_min_;
+    UIint		slab_max_;
+      
+    bool		redraw_;
+    bool                autoview_;
+    UIint		mode_;
+    UIint		show_guidelines_;
+    int			cursor_pixmap_;
+
+    GLdouble		gl_modelview_matrix_[16];
+    GLdouble		gl_projection_matrix_[16];
+    GLint		gl_viewport_[4];
+  };
+  friend struct SliceWindow;
+
+  typedef vector<SliceWindow *>	SliceWindows;
     
 
   class PainterTool {
@@ -356,7 +408,6 @@ class Painter : public Module
     vector<int>         stub_axes_;
   };
 
-  struct SliceWindow;
   struct WindowLayout;
 
   struct NrrdSlice {
@@ -384,55 +435,6 @@ class Painter : public Module
     void		do_lock();
     void		do_unlock();
   };
-  typedef vector<NrrdSlice *>		NrrdSlices;
-  typedef vector<NrrdSlices>		NrrdVolumeSlices;
-
-  struct SliceWindow { 
-    SliceWindow(Painter &painter, GuiContext *ctx);
-    void                setup_gl_view();
-    void		next_slice();
-    void		prev_slice();
-    void		zoom_in();
-    void		zoom_out();
-    Point		world_to_screen(const Point &);
-    Point		screen_to_world(unsigned int x, unsigned int y);
-    Vector		x_dir();
-    Vector		y_dir();
-    int                 x_axis();
-    int                 y_axis();
-    void                render_text();
-    void		render_orientation_text();
-    void		render_grid();
-    void                draw_line(const Point &, const Point &);
-
-    Painter &           painter_;
-    string		name_;
-    WindowLayout *	layout_;
-    OpenGLViewport *	viewport_;
-    NrrdSlices		slices_;
-
-    Point               center_;
-    Vector              normal_;
-
-    UIint		slice_num_;
-    UIint		axis_;
-    UIdouble		zoom_;
-    UIint		slab_min_;
-    UIint		slab_max_;
-      
-    bool		redraw_;
-    bool                autoview_;
-    UIint		mode_;
-    UIint		show_guidelines_;
-    int			cursor_pixmap_;
-
-    GLdouble		gl_modelview_matrix_[16];
-    GLdouble		gl_projection_matrix_[16];
-    GLint		gl_viewport_[4];
-  };
-  friend struct SliceWindow;
-
-  typedef vector<SliceWindow *>	SliceWindows;
 
   struct WindowLayout {
     WindowLayout	(GuiContext *ctx);

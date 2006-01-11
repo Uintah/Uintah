@@ -392,6 +392,7 @@ proc activate_file_submenus { } {
     bind . <Control-l> "ClearCanvas"
     bind . <Control-z> "undo"
     bind . <Control-a> "selectAll"
+    bind . <Control-e> "netedit scheduleall"
     bind . <Control-y> "redo"
     bind all <Control-q> "NiceQuit"
 }

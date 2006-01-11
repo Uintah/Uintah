@@ -45,24 +45,27 @@
    using std::hash_multimap;
 #  ifndef _MSC_VER
    // msvc hash map is a little different
-   using std::hash;
-#  endif
-#else
-#  ifdef HAVE_EXT_HASHMAP
-#    include <ext/hash_map>
-     using std::hash_map;
-     using std::hash_multimap;
      using std::hash;
 #  else
-#    ifdef HAVE_GNU_HASHMAP
-#      include <ext/hash_map>
-       using __gnu_cxx::hash_map;
-       using __gnu_cxx::hash_multimap;
-       using __gnu_cxx::hash;
-#    else
-#      undef HAVE_HASH_MAP
-#    endif
+     using std::hash_compare; // MS VC 7
 #  endif
+#elif defined(HAVE_EXT_HASHMAP)
+#  include <ext/hash_map>
+   using std::hash_map;
+   using std::hash_multimap;
+   using std::hash;
+#elif defined(HAVE_GNU_HASHMAP)
+#  include <ext/hash_map>
+   using __gnu_cxx::hash_map;
+   using __gnu_cxx::hash_multimap;
+   using __gnu_cxx::hash;
+#elif defined(HAVE_STDEXT_HASHMAP)
+#  include <hash_map>
+   using stdext::hash_map;
+   using stdext::hash_multimap;
+   using stdext::hash_compare; // MS VC 8
+#else
+#  undef HAVE_HASH_MAP
 #endif
 
 #endif // SCI_Hash_Map_h

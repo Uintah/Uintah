@@ -84,6 +84,8 @@
 
 
 #ifdef _WIN32
+#undef min
+#undef max
 #define SHARE __declspec(dllimport)
 #else
 #define SHARE
