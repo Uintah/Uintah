@@ -211,6 +211,10 @@ WARNING
      IntVector getHighIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
      IntVector getInteriorLowIndex(VariableBasis basis) const;
      IntVector getInteriorHighIndex(VariableBasis basis) const;
+
+     // do not get coarse-fine extra cells that are not the domain boundary
+     IntVector getInteriorLowIndexWithBoundary(VariableBasis basis) const;
+     IntVector getInteriorHighIndexWithBoundary(VariableBasis basis) const;
      
      IntVector getLowIndex() const
      { return d_lowIndex; }
@@ -544,7 +548,7 @@ WARNING
     /********************
       The following are needed in order to use Patch as a Box in
       Core/Container/SuperBox.h (see
-      Packages/Uintah/CCA/Components/Schedulers/LocallyComputedPatchVarMap.cc)
+      Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
     *********************/
     
     IntVector getLow() const
