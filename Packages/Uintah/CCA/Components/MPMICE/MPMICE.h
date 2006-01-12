@@ -294,7 +294,8 @@ public:
 
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
-  // AMR
+  //__________________________________
+  //   AMR
   virtual void scheduleRefineInterface(const LevelP& fineLevel,
                                        SchedulerP& scheduler,
                                        int step, 
@@ -333,21 +334,9 @@ public:
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
                                    const VarLabel* variable,
-                                   T defaultValue, bool modifies = false);
-
-  template<typename T>
-    void scheduleMassWeightedCoarsenVariableCC(SchedulerP& sched,
-                                               const PatchSet* patches,
-                                               const MaterialSet* matls,
-                                               const VarLabel* variable,
-                                               T defaultValue, bool modifies = false);
-
-  template<typename T>
-    void scheduleCoarsenSumVariableCC(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls,
-                                      const VarLabel* variable,
-                                      T defaultValue, bool modifies = false);
+                                   T defaultValue, 
+                                   bool modifies,
+                                   const string& coarsenMethod);
 
   template<typename T>
     void refineVariableCC(const ProcessorGroup*,
@@ -364,6 +353,22 @@ public:
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw,
                                    const VarLabel* variable);
+  template<typename T>                                 
+    void coarsenDriver_std(IntVector cl, 
+                           IntVector ch,
+                           IntVector refinementRatio,
+                           double ratio,
+                           const Level* coarseLevel,
+                           constCCVariable<T>& fine_q_CC,
+                           CCVariable<T>& coarse_q_CC );
+  template<typename T>
+    void coarsenDriver_massWeighted(IntVector cl, 
+                                    IntVector ch,
+                                    IntVector refinementRatio,
+                                    const Level* coarseLevel,
+                                    constCCVariable<double>& cMass,
+                                    constCCVariable<T>& fine_q_CC,
+                                    CCVariable<T>& coarse_q_CC );
 
   template<typename T>
     void coarsenVariableCC(const ProcessorGroup*,
@@ -372,25 +377,9 @@ public:
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
                            const VarLabel* variable,
-                           T defaultValue, bool modifies);
-
-  template<typename T>
-    void massWeightedCoarsenVariableCC(const ProcessorGroup*,
-                                       const PatchSubset* patch,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       const VarLabel* variable,
-                                       T defaultValue, bool modifies);
-
-  template<typename T>
-    void coarsenSumVariableCC(const ProcessorGroup*,
-                              const PatchSubset* patch,
-                              const MaterialSubset* matls,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw,
-                              const VarLabel* variable,
-                              T defaultValue, bool modifies);
+                           T defaultValue, 
+                           bool modifies,
+                           const string coarsenMethod);
 
 private:
   void setBC_rho_micro(const Patch* patch,

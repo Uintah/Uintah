@@ -697,20 +697,22 @@ void MPMICE::scheduleCoarsenCC_0(SchedulerP& sched,
   double very_small_mass = d_TINY_RHO * cell_vol;
   cmass.initialize(very_small_mass);
 #endif
+  bool modifies = false;
 
-  scheduleCoarsenSumVariableCC(sched, patches, mpm_matls, MIlb->cMassLabel,
-                               1.9531e-15);
-  scheduleMassWeightedCoarsenVariableCC(
-                              sched, patches, mpm_matls, MIlb->temp_CCLabel,0.);
-
-  scheduleMassWeightedCoarsenVariableCC(
-                              sched, patches, mpm_matls, MIlb->vel_CCLabel,
-                                                         Vector(0, 0, 0));
-  scheduleMassWeightedCoarsenVariableCC(
-                              sched, patches, mpm_matls, Ilb->sp_vol_CCLabel,
-                                                         .8479864471);
+  scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->cMassLabel,
+                            1.9531e-15,   modifies, "sum");
+                            
+  scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->temp_CCLabel,
+                            0.,           modifies,"massWeighted");
+                            
+  scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->vel_CCLabel,
+                          Vector(0, 0, 0),modifies,"massWeighted");
+                          
+  scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->sp_vol_CCLabel,
+                            0.8479864471, modifies, "massWeighted");
+                            
   scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel,
-                            1.e-12);
+                            1.e-12,       modifies, "std");
 }
 
 //______________________________________________________________________
@@ -771,19 +773,16 @@ void MPMICE::scheduleCoarsenLagrangianValuesMPM(SchedulerP& sched,
                           getLevel(patches)->getGrid()->numLevels()))
     return;
 
-   printSchedule(patches, "MPMICE:scheduleCoarsenLagrangianValues mpm_matls\t\t");
+  printSchedule(patches, "MPMICE:scheduleCoarsenLagrangianValues mpm_matls\t\t");
 
-#if 1
-  scheduleCoarsenVariableCC(   sched, patches, mpm_matls, Ilb->rho_CCLabel,
-                               1e-12, true); // modifies
-#endif
-  scheduleCoarsenSumVariableCC(sched, patches, mpm_matls, Ilb->mass_L_CCLabel,
-                                                         1.9531e-15);
-  scheduleCoarsenSumVariableCC(sched, patches, mpm_matls, Ilb->mom_L_CCLabel,
-                                                         Vector(0, 0, 0));
-  scheduleCoarsenSumVariableCC(
-                             sched, patches, mpm_matls, Ilb->int_eng_L_CCLabel,
-                                                         0.);
+  scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel,
+                            1e-12,          true, "std"); // modifies
+  scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->mass_L_CCLabel,
+                            1.9531e-15,     false, "sum");
+  scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->mom_L_CCLabel,
+                            Vector(0, 0, 0),false, "sum");
+  scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->int_eng_L_CCLabel,
+                             0.0,           false, "sum");
 }
 
 //______________________________________________________________________
@@ -1022,11 +1021,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
         face=Patch::nextFace(face)){
       int mat_id = 0; 
-#if 0
-      const BoundCondBase *sym_bcs =
-        patch->getBCValues(mat_id,"Symmetric",face);
-      if (sym_bcs != 0) {
-#endif
+
       if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
         for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars"); 
                                                   !iter.done(); iter++) {
@@ -2591,87 +2586,47 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    sched->addTask(t, patches, matls);
  }
 
+
  //______________________________________________________________________
  template<typename T>
    void MPMICE::scheduleCoarsenVariableCC(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls,
                                           const VarLabel* variable,
-                                          T defaultValue, bool modifies)
- {
-   ostringstream taskName;
-   taskName << "MPMICE::coarsenVariable(" << variable->getName() << (modifies?" modified":"") << ")";
+                                          T defaultValue, 
+                                          bool modifies,
+                                          const string& coarsenMethod)
+{
+  // The SGI compiler does't like accepting a templated function over
+  // a function call for some reason...  We use this hack to force it
+  // to figure out the correct type of the function.
+  void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
+                       DataWarehouse*, DataWarehouse*, const VarLabel*, T, bool, const string);
+  func = &MPMICE::coarsenVariableCC<T>;
+  ostringstream taskName;
 
-   // The SGI compiler does't like accepting a templated function over
-   // a function call for some reason...  We use this hack to force it
-   // to figure out the correct type of the function.
-   void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
-                        DataWarehouse*, DataWarehouse*, const VarLabel*, T, bool);
-   func = &MPMICE::coarsenVariableCC<T>;
-
-   Task* t=scinew Task(taskName.str().c_str(),
-                       this, func, variable, defaultValue, modifies);
-   t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-   if(modifies)
-     t->modifies(variable);
-   else
-     t->computes(variable);
-   sched->addTask(t, patches, matls);
- }
-//______________________________________________________________________
-//
- template<typename T>
-   void MPMICE::scheduleMassWeightedCoarsenVariableCC(SchedulerP& sched,
-                                                      const PatchSet* patches,
-                                                      const MaterialSet* matls,
-                                                      const VarLabel* variable,
-                                                      T defaultValue, bool modifies)
- {
-   ostringstream taskName;
-   taskName << "MPMICE::massWeightedCoarsenVariable(" << variable->getName() << ")";
-                                                                                
-   // the sgis don't like accepting a templated function over a function call for some reason...
-   void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
-                        DataWarehouse*, DataWarehouse*, const VarLabel*, T, bool);
-   func = &MPMICE::massWeightedCoarsenVariableCC<T>;
-                                                                                
-   Task* t=scinew Task(taskName.str().c_str(),
-                       this, func, variable, defaultValue, modifies);
-   t->requires(Task::NewDW, variable,         0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-   t->requires(Task::NewDW, MIlb->cMassLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-   if(modifies)
-     t->modifies(variable);
-   else
-     t->computes(variable);
-   sched->addTask(t, patches, matls);
- }
-//______________________________________________________________________
-//
- template<typename T>
-   void MPMICE::scheduleCoarsenSumVariableCC(SchedulerP& sched,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls,
-                                             const VarLabel* variable,
-                                             T defaultValue, bool modifies)
- {
-   ostringstream taskName;
-   taskName << "MPMICE::coarsenSumVariable(" << variable->getName() << ")";
-                                                                                
-   // the sgis don't like accepting a templated function over a function call for some reason...
-   void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
-                        DataWarehouse*, DataWarehouse*, const VarLabel*, T, bool);
-   func = &MPMICE::coarsenSumVariableCC<T>;
-                                                                                
-   Task* t=scinew Task(taskName.str().c_str(),
-                       this, func, variable, defaultValue, modifies);
-                       
-   t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-   if(modifies)
-     t->modifies(variable);
-   else
-     t->computes(variable);
-   sched->addTask(t, patches, matls);
- }
+  taskName << "MPMICE::coarsenVariable(" << variable->getName() << (modifies?" modified":"") << ")";
+  
+  Task* t=scinew Task(taskName.str().c_str(),this, func, 
+                       variable, defaultValue, modifies, coarsenMethod);
+  
+  Ghost::GhostType  gn = Ghost::None;
+  Task::DomainSpec ND   = Task::NormalDomain;
+  
+  t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, ND,gn,0);
+  
+  if(coarsenMethod == "massWeighted"){
+    t->requires(Task::NewDW, MIlb->cMassLabel, 0, Task::FineLevel, 0, ND,gn,0);
+  }
+  
+  if(modifies){
+    t->modifies(variable);
+  }else{
+    t->computes(variable);
+  }
+  sched->addTask(t, patches, matls);
+}
+ 
 //______________________________________________________________________
 //
 void
@@ -2771,9 +2726,9 @@ MPMICE::refine(const ProcessorGroup*,
             }
           }
         }
-      }
-    }
-  }
+      }  //on mpmLevel
+    }  //mpmMatls
+  }  //patches
 }
 
 
@@ -2875,6 +2830,64 @@ void MPMICE::refineExtensiveVariableCC(const ProcessorGroup*,
     }
   }
 }
+
+//__________________________________
+//  
+template<typename T>
+void MPMICE::coarsenDriver_std(IntVector cl, 
+                               IntVector ch,
+                               IntVector refinementRatio,
+                               double ratio,
+                               const Level* coarseLevel,
+                               constCCVariable<T>& fine_q_CC,
+                               CCVariable<T>& coarse_q_CC )
+{
+  T zero(0.0);
+  // iterate over coarse level cells
+  for(CellIterator iter(cl, ch); !iter.done(); iter++){
+    IntVector c = *iter;
+    T q_CC_tmp(zero);
+    IntVector fineStart = coarseLevel->mapCellToFiner(c);
+
+    // for each coarse level cell iterate over the fine level cells   
+    for(CellIterator inside(IntVector(0,0,0),refinementRatio );
+        !inside.done(); inside++){
+      IntVector fc = fineStart + *inside;
+      q_CC_tmp += fine_q_CC[fc];
+    }
+    coarse_q_CC[c] =q_CC_tmp*ratio;
+  }
+}
+//__________________________________
+//
+template<typename T>
+void MPMICE::coarsenDriver_massWeighted(IntVector cl, 
+                                        IntVector ch,
+                                        IntVector refinementRatio,
+                                        const Level* coarseLevel,
+                                        constCCVariable<double>& cMass,
+                                        constCCVariable<T>& fine_q_CC,
+                                        CCVariable<T>& coarse_q_CC )
+{
+  T zero(0.0);
+  // iterate over coarse level cells
+  for(CellIterator iter(cl, ch); !iter.done(); iter++){
+    IntVector c = *iter;
+    T q_CC_tmp(zero);
+    double mass_CC_tmp=0.;
+    IntVector fineStart = coarseLevel->mapCellToFiner(c);
+
+    // for each coarse level cell iterate over the fine level cells   
+    for(CellIterator inside(IntVector(0,0,0),refinementRatio );
+        !inside.done(); inside++){
+      IntVector fc = fineStart + *inside;
+      q_CC_tmp += fine_q_CC[fc]*cMass[fc];
+      mass_CC_tmp += cMass[fc];
+    }
+    coarse_q_CC[c] =q_CC_tmp/mass_CC_tmp;
+  }
+}
+
 //______________________________________________________________________
 //
 template<typename T>
@@ -2884,12 +2897,15 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
                                DataWarehouse*,
                                DataWarehouse* new_dw,
                                const VarLabel* variable,
-                               T defaultValue, bool modifies)
+                               T defaultValue, 
+                               bool modifies,
+                               const string coarsenMethod)
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
   IntVector refineRatio(fineLevel->getRefinementRatio());
+  double ratio = 1./(refineRatio.x()*refineRatio.y()*refineRatio.z());
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
@@ -2921,166 +2937,28 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
         
         constCCVariable<T> fine_q_CC;
         new_dw->getRegion(fine_q_CC,  variable, indx, fineLevel, fl, fh);
-        IntVector refinementRatio = fineLevel->getRefinementRatio();
-        double ratio = 1./(refinementRatio.x()*refinementRatio.y()*refinementRatio.z());
         
-        T zero(0.0);
-        // iterate over coarse level cells
-        for(CellIterator iter(cl, ch); !iter.done(); iter++){
-          IntVector c = *iter;
-          T q_CC_tmp(zero);
-          IntVector fineStart = coarseLevel->mapCellToFiner(c);
-    
-          // for each coarse level cell iterate over the fine level cells   
-          for(CellIterator inside(IntVector(0,0,0),refinementRatio );
-              !inside.done(); inside++){
-            IntVector fc = fineStart + *inside;
-            q_CC_tmp += fine_q_CC[fc];
-          }
-          coarse_q_CC[c] =q_CC_tmp*ratio;
+        //__________________________________
+        //  call the coarsening function
+        ASSERT((coarsenMethod=="std" || coarsenMethod=="sum" || coarsenMethod=="massWeighted"));
+        if(coarsenMethod == "std"){
+          coarsenDriver_std(cl, ch, refineRatio,ratio, coarseLevel, 
+                            fine_q_CC, coarse_q_CC);
         }
-      }
-    }
-  }
-}
-//______________________________________________________________________
-//
-template<typename T>
-void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
-                                           const PatchSubset* patches,
-                                           const MaterialSubset* matls,
-                                           DataWarehouse*,
-                                           DataWarehouse* new_dw,
-                                           const VarLabel* variable,
-                                           T defaultValue, bool modifies)
-{
-  const Level* coarseLevel = getLevel(patches);
-  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  
-  IntVector refineRatio(fineLevel->getRefinementRatio());
-  
-  for(int p=0;p<patches->size();p++){  
-    const Patch* coarsePatch = patches->get(p);
-    ostringstream message;
-    message<<"Doing massWeightedCoarsenVariableCC (" << variable->getName() << ")\t\t";
-    printTask(patches,coarsePatch,message.str());
-
-    for(int m = 0;m<matls->size();m++){
-      int indx = matls->get(m);
-
-      CCVariable<T> coarse_q_CC;
-      if(modifies){
-        new_dw->getModifiable(coarse_q_CC, variable, indx, coarsePatch);
-      }else{
-        new_dw->allocateAndPut(coarse_q_CC, variable, indx, coarsePatch);
-      }
-      coarse_q_CC.initialize(defaultValue);
-
-      Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches);
-      for(int i=0;i<finePatches.size();i++){
-        const Patch* finePatch = finePatches[i];
-  
-        IntVector cl, ch, fl, fh;
-        getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
-        if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
-          continue;
+        if(coarsenMethod =="sum"){
+          ratio = 1.0;
+          coarsenDriver_std(cl, ch, refineRatio,ratio, coarseLevel, 
+                            fine_q_CC, coarse_q_CC);
         }
-        
-        constCCVariable<T> fine_q_CC;
-        constCCVariable<double> cMass;
-        new_dw->getRegion(fine_q_CC,  variable, indx, fineLevel, fl, fh);
-        new_dw->getRegion(cMass,  MIlb->cMassLabel, indx, fineLevel, fl, fh);
-
-        IntVector refinementRatio = fineLevel->getRefinementRatio();
-
-        T zero(0.0);
-        // iterate over coarse level cells
-        for(CellIterator iter(cl, ch); !iter.done(); iter++){
-          IntVector c = *iter;
-          T q_CC_tmp(zero);
-          double mass_CC_tmp=0.;
-          IntVector fineStart = coarseLevel->mapCellToFiner(c);
-    
-          // for each coarse level cell iterate over the fine level cells   
-          for(CellIterator inside(IntVector(0,0,0),refinementRatio );
-              !inside.done(); inside++){
-            IntVector fc = fineStart + *inside;
-            q_CC_tmp += fine_q_CC[fc]*cMass[fc];
-            mass_CC_tmp += cMass[fc];
-          }
-          coarse_q_CC[c] =q_CC_tmp/mass_CC_tmp;
+        if(coarsenMethod == "massWeighted"){
+          constCCVariable<double> cMass;
+          new_dw->getRegion(cMass,  MIlb->cMassLabel, indx, fineLevel, fl, fh);
+          
+          coarsenDriver_massWeighted(cl,ch,refineRatio,coarseLevel,
+                                     cMass, fine_q_CC, coarse_q_CC );
         }
-      }
-    }
-  }
-}
-//______________________________________________________________________
-//
-template<typename T>
-void MPMICE::coarsenSumVariableCC(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse*,
-                                  DataWarehouse* new_dw,
-                                  const VarLabel* variable,
-                                  T defaultValue, bool modifies)
-{
-  const Level* coarseLevel = getLevel(patches);
-  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  
-  IntVector refineRatio(fineLevel->getRefinementRatio());
-  
-  for(int p=0;p<patches->size();p++){  
-    const Patch* coarsePatch = patches->get(p);
-    ostringstream message;
-    message<<"Doing coarsenSumVariableCC (" << variable->getName()<< ")\t\t";
-    printTask(patches,coarsePatch,message.str());
-
-    for(int m = 0;m<matls->size();m++){
-      int indx = matls->get(m);
-
-      CCVariable<T> coarse_q_CC;
-      if(modifies){
-        new_dw->getModifiable(coarse_q_CC, variable, indx, coarsePatch);
-      }else{
-        new_dw->allocateAndPut(coarse_q_CC, variable, indx, coarsePatch);
-      }  
-      coarse_q_CC.initialize(defaultValue);
-
-      Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches);
-      for(int i=0;i<finePatches.size();i++){
-        const Patch* finePatch = finePatches[i];
-  
-        IntVector cl, ch, fl, fh;
-        getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
-        if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
-          continue;
-        }
-        
-        constCCVariable<T> fine_q_CC;
-        new_dw->getRegion(fine_q_CC,  variable, indx, fineLevel, fl, fh);
-        IntVector refinementRatio = fineLevel->getRefinementRatio();
-        
-        T zero(0.0);
-        // iterate over coarse level cells
-        for(CellIterator iter(cl, ch); !iter.done(); iter++){
-          IntVector c = *iter;
-          T q_CC_tmp(zero);
-          IntVector fineStart = coarseLevel->mapCellToFiner(c);
-    
-          // for each coarse level cell iterate over the fine level cells   
-          for(CellIterator inside(IntVector(0,0,0),refinementRatio );
-              !inside.done(); inside++){
-            IntVector fc = fineStart + *inside;
-            q_CC_tmp += fine_q_CC[fc];
-          }
-          coarse_q_CC[c] =q_CC_tmp;
-        }
-      }
-    }
-  }
-}
-
+      }  // fine patches
+    }  // matls
+  }  // coarse level
+} 
 
