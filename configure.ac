@@ -453,11 +453,6 @@ SCI_ARG_WITH(ftgl,
    sci_required_ftgl=yes
    sci_required_freetype=yes],
   [with_ftgl=""])
-SCI_ARG_WITH(uuid,
-  AC_HELP_STRING([--with-uuid],
-                 Use UUID tools on IRIX or from ext2fs development tools on GNU/linux (SCIRun2 only, default).  Installing the ext2fs package on GNU/Linux is recommended.),
-  [sci_required_uuid=yes],
-  [with_uuid=""])
 SCI_ARG_WITH(boost,
   AC_HELP_STRING(--with-boost=DIR,
                  Use the Boost in DIR),
@@ -4561,8 +4556,7 @@ if test "$sci_required_ruby" = "yes"; then
     _sci_lib="$sci_thirdparty_lib"
     _ruby_inc="$sci_thirdparty_include"
     _sci_optional=required
-  else 
-   if test "$with_ruby"; then
+  elif test "$with_ruby"; then
      #if --with-ruby has been specified with a parameter, then use that parameter
     _sci_lib="$with_ruby/lib"
     # A standard ruby install only places include files in platform-specific directories and does
@@ -4572,7 +4566,6 @@ if test "$sci_required_ruby" = "yes"; then
     echo "Searching for ruby.h under $with_ruby"
     _ruby_inc=`find $with_ruby -name "ruby.h" -print | sed 's/ruby.h//'`
     _sci_optional=specific
-   fi
   fi
   
   # Only looking for one .h file... assuming all the rest are in the same place.
@@ -4580,7 +4573,6 @@ if test "$sci_required_ruby" = "yes"; then
 
   if test "$HAVE_RUBY" = "yes"; then
      DEF_RUBY="#define HAVE_RUBY 1"
-     HAVE_RUBY="yes"
   fi
   
   if test "$with_ruby" && test ! "$DEF_RUBY"; then
@@ -4588,6 +4580,7 @@ if test "$sci_required_ruby" = "yes"; then
     AC_MSG_ERROR(One or more of the ruby components are missing.)
     echo
   fi
+else
 fi # end sci_required_ruby
 
 AC_SUBST(HAVE_RUBY)
@@ -4989,117 +4982,9 @@ case $host in
 esac
 
 
-## -- grep of the code suggests only those dependent upon CCA need this.
-##  --  search for uuid functions, either uuid_create or uuid_generate ----
-
-if test "$sci_required_uuid" = "yes"; then
-  AC_CHECK_HEADERS(sys/uuid.h uuid/uuid.h)
-  # This is typical on SGI and ??
-  AC_MSG_CHECKING(for uuid_create in sys/uuid.h)
-  AC_TRY_COMPILE([#include <sys/types.h>
-               extern "C" {
-                  #include <sys/uuid.h>
-               }],
-  	[char* uuid_str;
-  	 uuid_t uuid;
-  	 uint_t status;
-  	 uuid_create(&uuid, &status);],
-  	[have_uuid=yes
-           AC_DEFINE(HAVE_SYS_UUID_H)], have_uuid=no)
-  AC_MSG_RESULT($have_uuid)
-  
-  if test "$have_uuid" != "yes"; then
-    # This is typical on linux and ??
-
-    AC_MSG_CHECKING(for uuid_generate in uuid/uuid.h)
-    AC_TRY_COMPILE([
-  extern "C" { // The linux uuid.h doesn't have this, so we need exter C here
-  #include <uuid/uuid.h>
-  }],
-  	[uuid_t uuid;
-  	 char uuid_str[64];
-  	 uuid_generate(uuid);
-  	 uuid_unparse(uuid, uuid_str);],
-  	[have_uuid=yes
-           AC_DEFINE(HAVE_UUID_UUID_H)], have_uuid=no)
-    AC_MSG_RESULT($have_uuid)
-  fi
-  
-  if test "$have_uuid" = "yes"; then
-    AC_MSG_CHECKING(for uuid library)
-    old_LIBS="$LIBS"
-    for i in -luuid ""; do
-      LIBS="$old_LIBS $i"
-      AC_TRY_LINK([
-  #if HAVE_SYS_UUID_H
-  #include <sys/types.h>
-  extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
-  #include <sys/uuid.h>
-  }
-  #define UUID_CREATE
-  #else
-  #if HAVE_UUID_UUID_H
-  extern "C" { // The linux uuid.h does not have this, so we need extern C here
-  #include <uuid/uuid.h>
-  }
-  #define UUID_GENERATE
-  #endif
-  #endif
-  	], [
-    uuid_t uuid;
-  #if defined(UUID_CREATE)
-    char* uuid_str;
-    uint_t status;
-    uuid_create(&uuid, &status);
-    uuid_to_string(&uuid, &uuid_str, &status);
-  #else
-  #if defined( UUID_GENERATE)
-    char uuid_str[64];
-    uuid_generate( uuid );
-    uuid_unparse(uuid, uuid_str);
-  #endif
-  #endif
-  	], [
-    UUID_LIB_FLAG=$i
-    break
-  	])
-    done
-    if test "$UUID_LIB_FLAG" != unknown; then
-      if test "$UUID_LIB_FLAG"; then
-        AC_MSG_RESULT($UUID_LIB_FLAG)
-      else
-        AC_MSG_RESULT(none required)
-      fi
-      HAVE_UUID="yes"
-    else
-      AC_MSG_RESULT(not found)
-      have_uuid=no
-      HAVE_UUID="no"
-    fi
-    LIBS="$old_LIBS"
-  fi
-fi # end sci_required_uuid
-
-AC_SUBST(HAVE_UUID)
-AC_SUBST(UUID_LIB_FLAG)
-
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
 if test "$enable_scirun2" = "yes"; then
-  if test "$have_uuid" != "yes"; then
-    case $host in
-      *linux*)
-        AC_MSG_WARN([uuid_generate function and libuuid not found.  Will use custom uuid generation instead.])
-        ;;
-      ## For now, don't check for uuid if on macintosh.
-      *-darwin*)
-        AC_MSG_WARN([Skipping uuid check on MAC. Will use custom uuid generation instead.])
-        ;;
-      *)
-        AC_MSG_WARN([cannot find uuid_generate or uuid_create.  Will use custom uuid generation instead.])
-        ;;
-    esac
-  fi
   if test "$HAVE_BABEL" != "yes"; then
     AC_MSG_WARN([could not find a Babel installation (recommended for SCIRun2).])
   fi
