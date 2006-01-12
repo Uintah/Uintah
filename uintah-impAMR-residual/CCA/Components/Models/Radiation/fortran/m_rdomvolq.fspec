@@ -1,0 +1,5 @@
+void m_rdomvolq(IntVector idxlo, IntVector idxhi, 
+	   int l,
+           OffsetArray1<double> wt,
+           CCVariable<double> cenint,
+           CCVariable<double> volq);

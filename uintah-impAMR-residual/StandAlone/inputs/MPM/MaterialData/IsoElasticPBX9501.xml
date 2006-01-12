@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- PBX 9501 -->
+<Uintah_Include>
+  <shear_modulus> 0.769e9 </shear_modulus>
+  <bulk_modulus>  1.667e9 </bulk_modulus>
+  <coeffThermalExpansion> 12.5e-5 </coeffThermalExpansion> 
+</Uintah_Include>
