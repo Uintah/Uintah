@@ -76,14 +76,17 @@ namespace Uintah {
                        const MaterialSet* matlset,
                        const VarLabel* A, Task::WhichDW which_A_dw,
                        const VarLabel* x, bool modifies_x,
+                       const VarLabel* residualLabel, bool modifiesResidual,
                        const VarLabel* b, Task::WhichDW which_b_dw,
                        const VarLabel* guess,
                        Task::WhichDW which_guess_dw,
                        const HypreSolverParams* params,
                        const PatchSet* perProcPatches,
                        const HypreInterface& interface = HypreInterfaceNA) :
-      HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
-                  b,which_b_dw,guess,which_guess_dw,params,perProcPatches,interface),
+      HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,residualLabel,
+		  modifiesResidual,
+                  b,which_b_dw,guess,which_guess_dw,params,perProcPatches,
+		  interface),
       _vars(0)
       {
         _exists.resize(SStructNumData);
@@ -98,11 +101,13 @@ namespace Uintah {
     HYPRE_SStructMatrix& getA(void) { return _HA; }  // LHS
     HYPRE_SStructVector& getB(void) { return _HB; }  // RHS
     HYPRE_SStructVector& getX(void) { return _HX; }  // Solution
+    HYPRE_SStructVector& getResidual(void) { return _HResidual; }  // Residual
 
     //---------- Data member unmodifyable access ----------
     const HYPRE_SStructMatrix& getA(void) const { return _HA; }  // LHS
     const HYPRE_SStructVector& getB(void) const { return _HB; }  // RHS
     const HYPRE_SStructVector& getX(void) const { return _HX; }  // Solution
+    const HYPRE_SStructVector& getResidual(void) const { return _HResidual; }  // Residual
 
     //---------- Common for all var types ----------
     virtual void printMatrix(const string& fileName = "output");
@@ -283,6 +288,7 @@ namespace Uintah {
     HYPRE_SStructMatrix      _HA;           // Left-hand-side matrix
     HYPRE_SStructVector      _HB;           // Right-hand-side vector
     HYPRE_SStructVector      _HX;           // Solution vector
+    HYPRE_SStructVector      _HResidual;    // Residual vector
     HYPRE_SStructGraph       _graph;        // Unstructured connection graph
     int                      _stencilSize;  // # entries in stencil
     std::vector<DataStatus>  _exists;       // Status of data types

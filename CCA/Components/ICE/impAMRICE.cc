@@ -296,9 +296,10 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
     
     //__________________________________
     //  what's produced from this task
-    t->computes(lb->press_CCLabel,    patches, nd, press_matl,oims);
-    t->modifies(lb->sum_imp_delPLabel,patches,  nd, press_matl,oims);
-    t->modifies(lb->term2Label,       patches, nd, one_matl,  oims);   
+    t->computes(lb->press_CCLabel,      patches, nd, press_matl,oims);
+    t->computes(lb->residualErrorLabel, patches, nd, press_matl,oims);
+    t->modifies(lb->sum_imp_delPLabel,  patches,  nd, press_matl,oims);
+    t->modifies(lb->term2Label,         patches, nd, one_matl,  oims);   
     
     t->modifies(lb->uvel_FCMELabel, patches);
     t->modifies(lb->vvel_FCMELabel, patches);
@@ -428,6 +429,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     solver->scheduleSolve(grid->getLevel(0), subsched, press_matlSet,
                           lb->matrixLabel,   Task::NewDW,
                           lb->imp_delPLabel, modifies_X,
+                          lb->solverResidualLabel, false,
                           lb->rhsLabel,      Task::NewDW,
                           whichInitialGuess, Task::NewDW,
 			     solver_parameters);
@@ -570,7 +572,9 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
                     lb->vol_fracY_FCLabel,   patches, all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
-                    lb->vol_fracZ_FCLabel,   patches, all_matls_sub,replace);           
+                    lb->vol_fracZ_FCLabel,   patches, all_matls_sub,replace);
+  ParentNewDW->transferFrom(subNewDW,         // residualError
+                    lb->residualErrorLabel,  patches, d_press_matl, replace);           
     
   //__________________________________
   //  Turn scrubbing back on

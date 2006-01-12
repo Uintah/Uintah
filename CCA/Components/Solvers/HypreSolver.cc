@@ -733,6 +733,8 @@ namespace Uintah {
                                    const VarLabel* A,    Task::WhichDW which_A_dw,  
                                    const VarLabel* x,
                                    bool modifies_x,
+				   const VarLabel* residualLabel,
+				   bool modifiesResidual,
                                    const VarLabel* b,    Task::WhichDW which_b_dw,  
                                    const VarLabel* guess,Task::WhichDW which_guess_dw,
                                    const SolverParameters* params)

@@ -2939,6 +2939,26 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
           }
           coarse_q_CC[c] =q_CC_tmp*ratio;
         }
+/*`==========TESTING==========*/
+      cerr << "____________________________________________L-\n";
+      cerr.setf(ios::scientific,ios::floatfield);
+      cerr.precision(5);  
+      for(int k = cl.z(); k < ch.z(); k++)  {
+        for(int j = cl.y(); j < ch.y(); j++) {
+          for(int i = cl.x(); i < ch.x(); i++) {
+           IntVector idx(i, j, k);
+           cerr << "[" << i << "," << j << "," << k << "]~ " 
+                << coarse_q_CC[idx] << "  ";
+
+           /*  cerr << "\n"; */
+          }
+         cerr << "\n";
+        }
+        cerr << "\n";
+      }
+      cerr <<" ______________________________________________\n";
+      cerr.setf(ios::scientific ,ios::floatfield); 
+/*===========TESTING==========`*/
       }
     }
   }
@@ -3011,6 +3031,26 @@ void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
           }
           coarse_q_CC[c] =q_CC_tmp/mass_CC_tmp;
         }
+/*`==========TESTING==========*/
+      cerr << "____________________________________________L-\n";
+      cerr.setf(ios::scientific,ios::floatfield);
+      cerr.precision(5);  
+      for(int k = cl.z(); k < ch.z(); k++)  {
+        for(int j = cl.y(); j < ch.y(); j++) {
+          for(int i = cl.x(); i < ch.x(); i++) {
+           IntVector idx(i, j, k);
+           cerr << "[" << i << "," << j << "," << k << "]~ " 
+                << coarse_q_CC[idx] << "  ";
+
+           /*  cerr << "\n"; */
+          }
+         cerr << "\n";
+        }
+        cerr << "\n";
+      }
+      cerr <<" ______________________________________________\n";
+      cerr.setf(ios::scientific ,ios::floatfield); 
+/*===========TESTING==========`*/
       }
     }
   }

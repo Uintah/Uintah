@@ -132,6 +132,8 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   }
   if(computes_or_modifies =="modifies"){
     t->modifies(lb->rhsLabel,          one_matl,oims);
+    t->computes(lb->residualErrorLabel,one_matl,oims);
+    t->requires( Task::NewDW, lb->solverResidualLabel,  press_matl,oims,gn,0);
   }
   
   sched->addTask(t, patches, all_matls);                     
@@ -542,7 +544,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     CCVariable<double> q_advected, rhs;
     CCVariable<double> sumAdvection, massExchTerm;
     constCCVariable<double> press_CC, oldPressure, speedSound, sumKappa;
-    constCCVariable<double> sum_imp_delP;    
+    constCCVariable<double> sum_imp_delP, solverResidual;    
     const IntVector gc(1,1,1);
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;   
@@ -558,7 +560,8 @@ void ICE::setupRHS(const ProcessorGroup*,
       new_dw->allocateAndPut(rhs, lb->rhsLabel, 0,patch);
     }
     if(computes_or_modifies == "modifies"){
-      new_dw->getModifiable(rhs, lb->rhsLabel, 0,patch);
+      new_dw->getModifiable(rhs,   lb->rhsLabel,            0,patch);
+      new_dw->get(solverResidual,  lb->solverResidualLabel, 0,patch,gn,0);
     }
         
     rhs.initialize(0.0);
@@ -652,7 +655,6 @@ void ICE::setupRHS(const ProcessorGroup*,
       rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
     }
     
-    
     //__________________________________
     // set rhs = 0 under all fine patches
     // For a composite grid we ignore what's happening
@@ -677,6 +679,18 @@ void ICE::setupRHS(const ProcessorGroup*,
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
+    }
+    //__________________________________
+    //  Compare rhs to the solver residual
+    if(computes_or_modifies == "modifies"){
+      CCVariable<double> residualError; 
+      new_dw->allocateAndPut(residualError, lb->residualErrorLabel, 0, patch, gn, 0);
+      residualError.initialize(0.0);
+      
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+        residualError[c] = Abs(Abs(rhs[c]/vol) - solverResidual[c]);
+      }
     }   
     
     new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
@@ -960,6 +974,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     solver->scheduleSolve(level, subsched, press_matlSet,
                           lb->matrixLabel,   Task::NewDW,
                           lb->imp_delPLabel, modifies_X,
+                          lb->solverResidualLabel, false,
                           lb->rhsLabel,      Task::OldDW,
                           whichInitialGuess, Task::OldDW,
 			  solver_parameters);

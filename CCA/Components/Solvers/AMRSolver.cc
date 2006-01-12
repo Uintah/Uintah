@@ -109,6 +109,8 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                          Task::WhichDW which_A_dw,  
                          const VarLabel* x,
                          bool modifies_x,
+                         const VarLabel* residualLabel,
+                         bool modifiesResidual,
                          const VarLabel* b,
                          Task::WhichDW which_b_dw,  
                          const VarLabel* guess,
@@ -151,7 +153,7 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   const PatchSet* perProcPatches = lb->createPerProcessorPatchSet(level->getGrid());
   HypreDriver* that = newHypreDriver
     (interface,level.get_rep(), matls, A, which_A_dw,
-     x, modifies_x, b, which_b_dw, guess, 
+     x, modifies_x, residualLabel, modifiesResidual, b, which_b_dw, guess, 
      which_guess_dw, dparams, perProcPatches);
   Handle<HypreDriver > handle = that;
 
@@ -231,6 +233,12 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     }
     else {
       task->computes(x, subset);
+    }
+    if (modifiesResidual) {
+      task->modifies(residualLabel, subset, 0);
+    }
+    else {
+      task->computes(residualLabel, subset);
     }
     
     if (guess) {

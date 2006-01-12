@@ -61,6 +61,8 @@ ExamplesLabel::ExamplesLabel()
 					CCVariable<Stencil7>::getTypeDescription());
   temperature_rhs = VarLabel::create("temperature_rhs",
 				     CCVariable<double>::getTypeDescription());
+  solverResidual = VarLabel::create("solverResidual",
+				     CCVariable<double>::getTypeDescription());
 
   pressure_matrix = VarLabel::create("pressure_matrix",
 				     CCVariable<Stencil7>::getTypeDescription());

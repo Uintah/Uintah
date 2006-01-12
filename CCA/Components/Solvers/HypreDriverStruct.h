@@ -74,13 +74,15 @@ namespace Uintah {
                       const MaterialSet* matlset,
                       const VarLabel* A, Task::WhichDW which_A_dw,
                       const VarLabel* x, bool modifies_x,
+                      const VarLabel* residualLabel, bool modifiesResidual,
                       const VarLabel* b, Task::WhichDW which_b_dw,
                       const VarLabel* guess,
                       Task::WhichDW which_guess_dw,
                       const HypreSolverParams* params,
                       const PatchSet* perProcPatches,
                       const HypreInterface& interface = HypreInterfaceNA) :
-      HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
+      HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,residualLabel,
+		  modifiesResidual,
                   b,which_b_dw,guess,which_guess_dw,params, perProcPatches, interface) {}
     virtual ~HypreDriverStruct(void);
 
@@ -88,11 +90,13 @@ namespace Uintah {
     HYPRE_StructMatrix& getA(void) { return _HA; }  // LHS
     HYPRE_StructVector& getB(void) { return _HB; }  // RHS
     HYPRE_StructVector& getX(void) { return _HX; }  // Solution
+    HYPRE_StructVector& getResidual(void) { return _HResidual; }  // Residual
 
     // Data member unmodifyable access
     const HYPRE_StructMatrix& getA(void) const { return _HA; }  // LHS
     const HYPRE_StructVector& getB(void) const { return _HB; }  // RHS
     const HYPRE_StructVector& getX(void) const { return _HX; }  // Solution
+    const HYPRE_StructVector& getResidual(void) const { return _HResidual; }  // Residual
 
     // Common for all var types
     virtual void gatherSolutionVector(void);
@@ -116,6 +120,7 @@ namespace Uintah {
     HYPRE_StructMatrix       _HA;                // Left-hand-side matrix
     HYPRE_StructVector       _HB;                // Right-hand-side vector
     HYPRE_StructVector       _HX;                // Solution vector
+    HYPRE_StructVector       _HResidual;         // Residual vector
 
   }; // end class HypreDriverStruct
 

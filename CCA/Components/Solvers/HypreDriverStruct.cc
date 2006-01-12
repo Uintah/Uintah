@@ -49,6 +49,7 @@ HypreDriverStruct::~HypreDriverStruct(void)
   HYPRE_StructMatrixDestroy(_HA);
   HYPRE_StructVectorDestroy(_HB);
   HYPRE_StructVectorDestroy(_HX);
+  HYPRE_StructVectorDestroy(_HResidual);
   HYPRE_StructStencilDestroy(_stencil);
   HYPRE_StructGridDestroy(_grid);
 }
@@ -307,6 +308,7 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
     }  // initialGuess
   } // patch loop
   HYPRE_StructVectorAssemble(_HX);
+  HYPRE_StructVectorAssemble(_HResidual);
 
   // If solver requires ParCSR format, convert Struct to ParCSR.
   // We would like to use the following call, but currently HYPRE only
@@ -315,6 +317,7 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
   //    HYPRE_StructMatrixGetObject(_HA, (void **) &_HA_Par);
   //    HYPRE_StructVectorGetObject(_HB, (void **) &_HB_Par);
   //    HYPRE_StructVectorGetObject(_HX, (void **) &_HX_Par);
+  //    HYPRE_StructVectorGetObject(_HResidual, (void **) &_HResidual_Par);
   //  }
 
 } // end HypreDriverStruct::makeLinearSystem_CC()
@@ -347,6 +350,12 @@ HypreDriverStruct::getSolution_CC(const int matl)
     else
       _new_dw->allocateAndPut(Xnew, _X_label, matl, patch);
 	
+    sol_type residualNew;
+    if(_modifiesResidual)
+      _new_dw->getModifiable(residualNew, _residualLabel, matl, patch);
+    else
+      _new_dw->allocateAndPut(residualNew, _residualLabel, matl, patch);
+
     // Get the solution back from hypre
     for(int z=l.z();z<h.z();z++){
       for(int y=l.y();y<h.y();y++){

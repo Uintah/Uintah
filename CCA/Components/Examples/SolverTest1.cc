@@ -100,8 +100,12 @@ SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   task->computes(lb_->pressure_rhs);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
-  solver->scheduleSolve(level, sched, sharedState_->allMaterials(), lb_->pressure_matrix, 
-    Task::NewDW, lb_->pressure, false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW, solver_parameters);
+  solver->scheduleSolve(level, sched, sharedState_->allMaterials(), 
+                        lb_->pressure_matrix, Task::NewDW, 
+                        lb_->pressure, false,
+                        lb_->solverResidual, false, 
+                        lb_->pressure_rhs, 
+                        Task::NewDW, 0, Task::OldDW, solver_parameters);
 
 }
 

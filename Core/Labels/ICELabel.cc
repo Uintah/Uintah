@@ -127,6 +127,10 @@ ICELabel::ICELabel()
     VarLabel::create("vol_fracY_FC",SFCYVariable<double>::getTypeDescription() );  
   vol_fracZ_FCLabel  = 
     VarLabel::create("vol_fracZ_FC",SFCZVariable<double>::getTypeDescription() );  
+  solverResidualLabel = 
+    VarLabel::create("solverResidual",CCVariable<double>::getTypeDescription());
+  residualErrorLabel = 
+    VarLabel::create("residualError" ,CCVariable<double>::getTypeDescription());
     
   //__________________________________
   // Face centered variables

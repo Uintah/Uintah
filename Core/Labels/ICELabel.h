@@ -71,6 +71,8 @@ namespace Uintah {
     const VarLabel* vol_fracX_FCLabel;
     const VarLabel* vol_fracY_FCLabel;    
     const VarLabel* vol_fracZ_FCLabel;
+    const VarLabel* solverResidualLabel;
+    const VarLabel* residualErrorLabel;
     
     // Face centered variables
     const VarLabel* uvel_FCLabel;

@@ -88,6 +88,7 @@ namespace Uintah {
                 const MaterialSet* matlset,
                 const VarLabel* A, Task::WhichDW which_A_dw,
                 const VarLabel* x, bool modifies_x,
+                const VarLabel* residualLabel, bool modifiesResidual,
                 const VarLabel* b, Task::WhichDW which_b_dw,
                 const VarLabel* guess,
                 Task::WhichDW which_guess_dw,
@@ -97,6 +98,7 @@ namespace Uintah {
       _level(level), _matlset(matlset),
       _A_label(A), _which_A_dw(which_A_dw),
       _X_label(x), _modifies_x(modifies_x),
+      _residualLabel(residualLabel), _modifiesResidual(modifiesResidual),
       _B_label(b), _which_b_dw(which_b_dw),
       _guess_label(guess), _which_guess_dw(which_guess_dw),
       _params(params), _interface(interface),
@@ -106,9 +108,10 @@ namespace Uintah {
 
     //---------- Data member modifyable access ----------
     // void setInterface(HypreInterface& interface) { _interface = interface; }
-    HYPRE_ParCSRMatrix& getAPar(void) { return _HA_Par; }  // LHS
-    HYPRE_ParVector&    getBPar(void) { return _HB_Par; }  // RHS
-    HYPRE_ParVector&    getXPar(void) { return _HX_Par; }  // Solution
+    HYPRE_ParCSRMatrix& getAPar(void) { return _HA_Par; }                // LHS
+    HYPRE_ParVector&    getBPar(void) { return _HB_Par; }                // RHS
+    HYPRE_ParVector&    getXPar(void) { return _HX_Par; }                // Solution
+    HYPRE_ParVector&    getResidualPar(void) { return _HResidual_Par; }  // Residual
 
     //---------- Data member unmodifyable access ----------
     const HypreSolverParams*  getParams(void) const { return _params; }
@@ -118,6 +121,7 @@ namespace Uintah {
     const HYPRE_ParCSRMatrix& getAPar(void) const { return _HA_Par; }
     const HYPRE_ParVector&    getBPar(void) const { return _HB_Par; }
     const HYPRE_ParVector&    getXPar(void) const { return _HX_Par; }
+    const HYPRE_ParVector&    getResidualPar(void) const { return _HResidual_Par; }
     
     // Utilities, HYPRE data printouts
     bool         isConvertable(const HypreInterface& to);
@@ -135,6 +139,7 @@ namespace Uintah {
                  Handle<HypreDriver>);
     template<class Types>
       void makeLinearSystem(const int matl);
+
     template<class Types>
       void getSolution(const int matl);
     virtual void gatherSolutionVector(void) = 0;
@@ -165,6 +170,8 @@ namespace Uintah {
     Task::WhichDW            _which_A_dw;
     const VarLabel*          _X_label;
     bool                     _modifies_x;
+    const VarLabel*          _residualLabel;
+    bool                     _modifiesResidual;
     const VarLabel*          _B_label;
     Task::WhichDW            _which_b_dw;
     const VarLabel*          _guess_label;
@@ -182,16 +189,17 @@ namespace Uintah {
     DataWarehouse*           _b_dw;
     DataWarehouse*           _guess_dw;
 
-    HypreInterface           _interface;   // Hypre interface currently in use
+    HypreInterface           _interface;        // Hypre interface currently in use
     const PatchSet*          _perProcPatches;
-    bool                     _requiresPar; // Solver requires ParCSR format
+    bool                     _requiresPar;      // Solver requires ParCSR format
 
     // Hypre ParCSR interface objects. Can be used by Struct or
     // SStruct to feed certain solvers. This should maybe be part of a
     // future HypreParCSR interface.
-    HYPRE_ParCSRMatrix       _HA_Par;       // Left-hand-side matrix
-    HYPRE_ParVector          _HB_Par;       // Right-hand-side vector
-    HYPRE_ParVector          _HX_Par;       // Solution vector
+    HYPRE_ParCSRMatrix       _HA_Par;           // Left-hand-side matrix
+    HYPRE_ParVector          _HB_Par;           // Right-hand-side vector
+    HYPRE_ParVector          _HX_Par;           // Solution vector
+    HYPRE_ParVector          _HResidual_Par;    // Residual vector
 
   }; // end class HypreDriver
 
@@ -216,6 +224,8 @@ namespace Uintah {
                                  const MaterialSet* matlset,
                                  const VarLabel* A, Task::WhichDW which_A_dw,
                                  const VarLabel* x, bool modifies_x,
+                                 const VarLabel* residualLabel,
+				 bool modifiesResidual,
                                  const VarLabel* b, Task::WhichDW which_b_dw,
                                  const VarLabel* guess,
                                  Task::WhichDW which_guess_dw,

@@ -63,6 +63,8 @@ namespace Uintah {
                                Task::WhichDW which_A_dw,  
                                const VarLabel* x,
                                bool modifies_x,
+                               const VarLabel* residualLabel,
+                               bool modifiesResidual,
                                const VarLabel* b,    
                                Task::WhichDW which_b_dw,  
                                const VarLabel* guess,

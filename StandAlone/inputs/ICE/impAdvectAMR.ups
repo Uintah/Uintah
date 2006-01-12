@@ -177,7 +177,8 @@
       <save label="press_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>  
-      <save label="temp_CC"/>    
+      <save label="temp_CC"/>  
+      <save label="residualError"/> 
       <checkpoint interval="0.005" cycle="2"/>"
    </DataArchiver>
 

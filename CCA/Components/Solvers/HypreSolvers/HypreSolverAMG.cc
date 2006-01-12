@@ -72,6 +72,10 @@ HypreSolverAMG::solve(void)
                          _driver->getXPar());
   
     // Retrieve convergence information
+
+    HYPRE_BoomerAMGGetResidual(parSolver, &_driver->getResidualPar());
+
+
     HYPRE_BoomerAMGGetNumIterations(parSolver,&_results.numIterations);
     HYPRE_BoomerAMGGetFinalRelativeResidualNorm(parSolver,
                                                 &_results.finalResNorm);

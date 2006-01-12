@@ -91,6 +91,7 @@ HypreDriverSStruct::~HypreDriverSStruct(void)
   }
   if (_exists[SStructX] >= SStructAssembled) {
     HYPRE_SStructVectorDestroy(_HX);
+    HYPRE_SStructVectorDestroy(_HResidual);
     _exists[SStructX] = SStructDestroyed;
   }
 
@@ -155,6 +156,7 @@ void
 HypreDriverSStruct::gatherSolutionVector(void)
 {
   HYPRE_SStructVectorGather(_HX);
+  HYPRE_SStructVectorGather(_HResidual);
 } 
 
 void
@@ -427,12 +429,15 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   //==================================================================
   cout_dbg << _pg->myrank() << " Setting up the SStruct solution vector _HX" << "\n";
   HYPRE_SStructVectorCreate(_pg->getComm(), _grid, &_HX);
+  HYPRE_SStructVectorCreate(_pg->getComm(), _grid, &_HResidual);
   _exists[SStructX] = SStructCreated;
   
   if (_requiresPar) {
     HYPRE_SStructVectorSetObjectType(_HX, HYPRE_PARCSR);
+    HYPRE_SStructVectorSetObjectType(_HResidual, HYPRE_PARCSR);
   }
   HYPRE_SStructVectorInitialize(_HX);
+  HYPRE_SStructVectorInitialize(_HResidual);
   _exists[SStructX] = SStructInitialized;
   
   if (_guess_label) {
@@ -468,6 +473,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   }
 
   HYPRE_SStructVectorAssemble(_HX);
+  HYPRE_SStructVectorAssemble(_HResidual);
   _exists[SStructX] = SStructAssembled;
 
   // For solvers that require ParCSR format
@@ -476,6 +482,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     HYPRE_SStructMatrixGetObject(_HA, (void **) &_HA_Par);
     HYPRE_SStructVectorGetObject(_HB, (void **) &_HB_Par);
     HYPRE_SStructVectorGetObject(_HX, (void **) &_HX_Par);
+    HYPRE_SStructVectorGetObject(_HResidual, (void **) &_HResidual_Par);
   }
   cout_doing << "HypreDriverSStruct::makeLinearSystem_CC() END" << "\n";
 } // end HypreDriverSStruct::makeLinearSystem_CC()
@@ -488,6 +495,7 @@ HypreDriverSStruct::getSolution_CC(const int matl)
   for (int p = 0 ; p < _patches->size(); p++) {
     HyprePatch_CC hpatch(_patches->get(p),matl); // Read Uintah patch data
     hpatch.getSolution(_HX,_new_dw,_X_label,_modifies_x);
+    hpatch.getSolution(_HResidual,_new_dw,_residualLabel,_modifiesResidual);
   } 
 } 
 

@@ -233,13 +233,15 @@ SolverParameters* DirectSolve::readParameters(ProblemSpecP& params, const string
 }
 
 void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
-			           const MaterialSet* matls,
+				const MaterialSet* matls,
                                 const VarLabel* A,    Task::WhichDW which_A_dw,  
                                 const VarLabel* x,
-			           bool modifies_x,
+				bool modifies_x,
+				const VarLabel* residualLabel,
+				bool modifiesResidual,
                                 const VarLabel* b,    Task::WhichDW which_b_dw,  
                                 const VarLabel* guess,Task::WhichDW guess_dw,
-			           const SolverParameters* params)
+				const SolverParameters* params)
 {
   if(level->numPatches() != 1)
     throw InternalError("DirectSolve only works with 1 patch", __FILE__, __LINE__);

@@ -175,6 +175,7 @@ namespace Uintah {
                  const MaterialSet* matlset,
                  const VarLabel* A, Task::WhichDW which_A_dw,
                  const VarLabel* x, bool modifies_x,
+                 const VarLabel* residualLabel, bool modifiesResidual,
                  const VarLabel* b, Task::WhichDW which_b_dw,
                  const VarLabel* guess,
                  Task::WhichDW which_guess_dw,
@@ -186,14 +187,14 @@ namespace Uintah {
       {
         return new HypreDriverStruct
           (level, matlset, A, which_A_dw,
-           x, modifies_x, b, which_b_dw, guess, 
+           x, modifies_x, residualLabel, modifiesResidual, b, which_b_dw, guess, 
            which_guess_dw, params, perProcPatches, interface);
       }
     case HypreSStruct:
       {
         return new HypreDriverSStruct
           (level, matlset, A, which_A_dw,
-           x, modifies_x, b, which_b_dw, guess, 
+           x, modifies_x, residualLabel, modifiesResidual, b, which_b_dw, guess, 
            which_guess_dw, params, perProcPatches, interface);
       }
     default:
