@@ -1086,7 +1086,6 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_tiff=no
   sci_required_tools=no
   sci_required_unipetc=no
-  sci_required_uuid=no
   sci_required_vdt=no
   sci_required_vtk=no 
 
@@ -1133,7 +1132,6 @@ case $1 in
   SCIRun2)
     sci_required_babel=yes
     sci_required_ncurses=yes
-    sci_required_uuid=yes
   ;;
   Plume)
     if test "$plume_checked" = "no"; then
@@ -1143,8 +1141,7 @@ case $1 in
       sci_required_tena=yes  
 	#    sci_required_qt=no
       enable_scirun2=yes
-      sci_required_uuid=yes
-	    
+
       if test "$package" != "all"; then
         package="$package Plume"
       fi
